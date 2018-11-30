@@ -21,28 +21,27 @@ static const double kLongIdlePeriodMS = 50.0;
 //   now + kMinIdlePeriodMS + layout.idle_period.time_limit
 static const double kMinIdlePeriodMS = 3.0;
 
-static const uint32_t kMaxTimerThreadBound = 5;       // milliseconds
-static const uint32_t kMaxTimerThreadBoundClamp = 15; // milliseconds
+static const uint32_t kMaxTimerThreadBound = 5;        // milliseconds
+static const uint32_t kMaxTimerThreadBoundClamp = 15;  // milliseconds
 
 namespace mozilla {
 
 NS_IMETHODIMP
-MainThreadIdlePeriod::GetIdlePeriodHint(TimeStamp* aIdleDeadline)
-{
+MainThreadIdlePeriod::GetIdlePeriodHint(TimeStamp* aIdleDeadline) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aIdleDeadline);
 
   TimeStamp now = TimeStamp::Now();
   TimeStamp currentGuess =
-    now + TimeDuration::FromMilliseconds(kLongIdlePeriodMS);
+      now + TimeDuration::FromMilliseconds(kLongIdlePeriodMS);
 
   currentGuess = nsRefreshDriver::GetIdleDeadlineHint(currentGuess);
-  currentGuess = NS_GetTimerDeadlineHintOnCurrentThread(currentGuess, kMaxTimerThreadBound);
+  currentGuess = NS_GetTimerDeadlineHintOnCurrentThread(currentGuess,
+                                                        kMaxTimerThreadBound);
 
   // If the idle period is too small, then just return a null time
   // to indicate we are busy. Otherwise return the actual deadline.
-  TimeDuration minIdlePeriod =
-    TimeDuration::FromMilliseconds(kMinIdlePeriodMS);
+  TimeDuration minIdlePeriod = TimeDuration::FromMilliseconds(kMinIdlePeriodMS);
   bool busySoon = currentGuess.IsNull() ||
                   (now >= (currentGuess - minIdlePeriod)) ||
                   currentGuess < mLastIdleDeadline;
@@ -54,10 +53,8 @@ MainThreadIdlePeriod::GetIdlePeriodHint(TimeStamp* aIdleDeadline)
   return NS_OK;
 }
 
-/* static */ float
-MainThreadIdlePeriod::GetLongIdlePeriod()
-{
+/* static */ float MainThreadIdlePeriod::GetLongIdlePeriod() {
   return kLongIdlePeriodMS;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

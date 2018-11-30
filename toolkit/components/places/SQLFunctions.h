@@ -56,9 +56,8 @@ namespace places {
  * @param aSearchBehavior
  *        A bitfield dictating the search behavior.
  */
-class MatchAutoCompleteFunction final : public mozIStorageFunction
-{
-public:
+class MatchAutoCompleteFunction final : public mozIStorageFunction {
+ public:
   MatchAutoCompleteFunction();
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -72,7 +71,7 @@ public:
    */
   static nsresult create(mozIStorageConnection *aDBConn);
 
-private:
+ private:
   ~MatchAutoCompleteFunction() {}
 
   /**
@@ -164,7 +163,6 @@ private:
   static bool findOnBoundary(const nsDependentCSubstring &aToken,
                              const nsACString &aSourceString);
 
-
   /**
    * Fixes a URI's spec such that it is ready to be searched.  This includes
    * unescaping escaped characters and removing certain specs that we do not
@@ -184,7 +182,6 @@ private:
                                             nsACString &aSpecBuf);
 };
 
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Frecency Calculation Function
 
@@ -202,9 +199,8 @@ private:
  *        Whether we should use the lower redirect bonus for the most recent
  *        page visit.  If not passed in, it will use a database guess.
  */
-class CalculateFrecencyFunction final : public mozIStorageFunction
-{
-public:
+class CalculateFrecencyFunction final : public mozIStorageFunction {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
@@ -215,7 +211,8 @@ public:
    *        The database connection to register with.
    */
   static nsresult create(mozIStorageConnection *aDBConn);
-private:
+
+ private:
   ~CalculateFrecencyFunction() {}
 };
 
@@ -225,9 +222,8 @@ private:
  *
  * @return a guid for the item.
  */
-class GenerateGUIDFunction final : public mozIStorageFunction
-{
-public:
+class GenerateGUIDFunction final : public mozIStorageFunction {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
@@ -238,7 +234,8 @@ public:
    *        The database connection to register with.
    */
   static nsresult create(mozIStorageConnection *aDBConn);
-private:
+
+ private:
   ~GenerateGUIDFunction() {}
 };
 
@@ -248,9 +245,8 @@ private:
  *
  * @return true if valid, false otherwise.
  */
-class IsValidGUIDFunction final : public mozIStorageFunction
-{
-public:
+class IsValidGUIDFunction final : public mozIStorageFunction {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
@@ -261,7 +257,8 @@ public:
    *        The database connection to register with.
    */
   static nsresult create(mozIStorageConnection *aDBConn);
-private:
+
+ private:
   ~IsValidGUIDFunction() {}
 };
 
@@ -273,9 +270,8 @@ private:
  *
  * @return the unreversed host of the page.
  */
-class GetUnreversedHostFunction final : public mozIStorageFunction
-{
-public:
+class GetUnreversedHostFunction final : public mozIStorageFunction {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
@@ -286,10 +282,10 @@ public:
    *        The database connection to register with.
    */
   static nsresult create(mozIStorageConnection *aDBConn);
-private:
+
+ private:
   ~GetUnreversedHostFunction() {}
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Fixup URL Function
@@ -303,9 +299,8 @@ private:
  * @return
  *        The same URL, with redundant parts removed.
  */
-class FixupURLFunction final : public mozIStorageFunction
-{
-public:
+class FixupURLFunction final : public mozIStorageFunction {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
@@ -316,10 +311,10 @@ public:
    *        The database connection to register with.
    */
   static nsresult create(mozIStorageConnection *aDBConn);
-private:
+
+ private:
   ~FixupURLFunction() {}
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Frecency Changed Notification Function
@@ -341,9 +336,8 @@ private:
  *        The place's last visit date.
  * @return newFrecency
  */
-class FrecencyNotificationFunction final : public mozIStorageFunction
-{
-public:
+class FrecencyNotificationFunction final : public mozIStorageFunction {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
@@ -354,10 +348,10 @@ public:
    *        The database connection to register with.
    */
   static nsresult create(mozIStorageConnection *aDBConn);
-private:
+
+ private:
   ~FrecencyNotificationFunction() {}
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Store Last Inserted Id Function
@@ -371,9 +365,8 @@ private:
  *        The last inserted id.
  * @return null
  */
-class StoreLastInsertedIdFunction final : public mozIStorageFunction
-{
-public:
+class StoreLastInsertedIdFunction final : public mozIStorageFunction {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
@@ -384,10 +377,10 @@ public:
    *        The database connection to register with.
    */
   static nsresult create(mozIStorageConnection *aDBConn);
-private:
+
+ private:
   ~StoreLastInsertedIdFunction() {}
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Hash Function
@@ -400,9 +393,8 @@ private:
  * @return
  *        The hash for the string.
  */
-class HashFunction final : public mozIStorageFunction
-{
-public:
+class HashFunction final : public mozIStorageFunction {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
@@ -413,7 +405,8 @@ public:
    *        The database connection to register with.
    */
   static nsresult create(mozIStorageConnection *aDBConn);
-private:
+
+ private:
   ~HashFunction() {}
 };
 
@@ -428,9 +421,8 @@ private:
  * @return
  *        The value of the query parameter as a string, or NULL if not set.
  */
-class GetQueryParamFunction final : public mozIStorageFunction
-{
-public:
+class GetQueryParamFunction final : public mozIStorageFunction {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
@@ -441,10 +433,10 @@ public:
    *        The database connection to register with.
    */
   static nsresult create(mozIStorageConnection *aDBConn);
-private:
+
+ private:
   ~GetQueryParamFunction() {}
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Get prefix function
@@ -459,9 +451,8 @@ private:
  *        If `url` is actually a URL and has a prefix, then this returns the
  *        prefix.  Otherwise this returns an empty string.
  */
-class GetPrefixFunction final : public mozIStorageFunction
-{
-public:
+class GetPrefixFunction final : public mozIStorageFunction {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
@@ -472,10 +463,10 @@ public:
    *        The database connection to register with.
    */
   static nsresult create(mozIStorageConnection *aDBConn);
-private:
+
+ private:
   ~GetPrefixFunction() {}
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Get host and port function
@@ -490,9 +481,8 @@ private:
  *        this returns the host and port substring of the URL.  Otherwise, this
  *        returns `url` itself.
  */
-class GetHostAndPortFunction final : public mozIStorageFunction
-{
-public:
+class GetHostAndPortFunction final : public mozIStorageFunction {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
@@ -503,10 +493,10 @@ public:
    *        The database connection to register with.
    */
   static nsresult create(mozIStorageConnection *aDBConn);
-private:
+
+ private:
   ~GetHostAndPortFunction() {}
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Strip prefix function
@@ -522,9 +512,8 @@ private:
  *        this returns the substring starting at the host.  Otherwise, this
  *        returns `url` itself.
  */
-class StripPrefixAndUserinfoFunction final : public mozIStorageFunction
-{
-public:
+class StripPrefixAndUserinfoFunction final : public mozIStorageFunction {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
@@ -535,10 +524,10 @@ public:
    *        The database connection to register with.
    */
   static nsresult create(mozIStorageConnection *aDBConn);
-private:
+
+ private:
   ~StripPrefixAndUserinfoFunction() {}
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Is frecency decaying function
@@ -549,9 +538,8 @@ private:
  * @return
  *        True if frecency is currently decaying and false otherwise.
  */
-class IsFrecencyDecayingFunction final : public mozIStorageFunction
-{
-public:
+class IsFrecencyDecayingFunction final : public mozIStorageFunction {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
@@ -562,10 +550,10 @@ public:
    *        The database connection to register with.
    */
   static nsresult create(mozIStorageConnection *aDBConn);
-private:
+
+ private:
   ~IsFrecencyDecayingFunction() {}
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// sqrt function
@@ -573,9 +561,8 @@ private:
 /**
  * Gets the square root of a given value.
  */
-class SqrtFunction final : public mozIStorageFunction
-{
-public:
+class SqrtFunction final : public mozIStorageFunction {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
@@ -586,10 +573,10 @@ public:
    *        The database connection to register with.
    */
   static nsresult create(mozIStorageConnection *aDBConn);
-private:
+
+ private:
   ~SqrtFunction() {}
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Note Sync Change Function
@@ -599,9 +586,8 @@ private:
  * `totalSyncChanges` in `nsINavBookmarksService` for a more detailed
  * explanation.
  */
-class NoteSyncChangeFunction final : public mozIStorageFunction
-{
-public:
+class NoteSyncChangeFunction final : public mozIStorageFunction {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
@@ -612,11 +598,12 @@ public:
    *        The database connection to register with.
    */
   static nsresult create(mozIStorageConnection *aDBConn);
-private:
+
+ private:
   ~NoteSyncChangeFunction() {}
 };
 
-} // namespace places
-} // namespace mozilla
+}  // namespace places
+}  // namespace mozilla
 
-#endif // mozilla_places_SQLFunctions_h_
+#endif  // mozilla_places_SQLFunctions_h_

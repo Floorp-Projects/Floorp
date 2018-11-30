@@ -16,9 +16,8 @@
 namespace mozilla {
 namespace gfx {
 
-class NativeFontResourceGDI final : public NativeFontResource
-{
-public:
+class NativeFontResourceGDI final : public NativeFontResource {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(NativeFontResourceGDI, override)
 
   /**
@@ -29,25 +28,23 @@ public:
    * @param aDataLength length of data.
    * @return Referenced NativeFontResourceGDI or nullptr if invalid.
    */
-  static already_AddRefed<NativeFontResourceGDI>
-    Create(uint8_t *aFontData, uint32_t aDataLength);
+  static already_AddRefed<NativeFontResourceGDI> Create(uint8_t* aFontData,
+                                                        uint32_t aDataLength);
 
   ~NativeFontResourceGDI();
 
-  already_AddRefed<UnscaledFont>
-    CreateUnscaledFont(uint32_t aIndex,
-                       const uint8_t* aInstanceData,
-                       uint32_t aInstanceDataLength) final;
+  already_AddRefed<UnscaledFont> CreateUnscaledFont(
+      uint32_t aIndex, const uint8_t* aInstanceData,
+      uint32_t aInstanceDataLength) final;
 
-private:
+ private:
   explicit NativeFontResourceGDI(HANDLE aFontResourceHandle)
-    : mFontResourceHandle(aFontResourceHandle)
-  {}
+      : mFontResourceHandle(aFontResourceHandle) {}
 
   HANDLE mFontResourceHandle;
 };
 
-} // gfx
-} // mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // mozilla_gfx_NativeFontResourceGDI_h
+#endif  // mozilla_gfx_NativeFontResourceGDI_h

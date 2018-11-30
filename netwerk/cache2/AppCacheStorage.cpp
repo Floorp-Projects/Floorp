@@ -22,25 +22,20 @@
 namespace mozilla {
 namespace net {
 
-AppCacheStorage::AppCacheStorage(nsILoadContextInfo* aInfo,
-                                 nsIApplicationCache* aAppCache)
-: CacheStorage(aInfo, true /* disk */, false /* lookup app cache */, false /* skip size check */, false /* pin */)
-, mAppCache(aAppCache)
-{
-}
+AppCacheStorage::AppCacheStorage(nsILoadContextInfo *aInfo,
+                                 nsIApplicationCache *aAppCache)
+    : CacheStorage(aInfo, true /* disk */, false /* lookup app cache */,
+                   false /* skip size check */, false /* pin */),
+      mAppCache(aAppCache) {}
 
-AppCacheStorage::~AppCacheStorage()
-{
+AppCacheStorage::~AppCacheStorage() {
   ProxyReleaseMainThread("AppCacheStorage::mAppCache", mAppCache);
 }
 
-NS_IMETHODIMP AppCacheStorage::AsyncOpenURI(nsIURI *aURI,
-                                            const nsACString & aIdExtension,
-                                            uint32_t aFlags,
-                                            nsICacheEntryOpenCallback *aCallback)
-{
-  if (!CacheStorageService::Self())
-    return NS_ERROR_NOT_INITIALIZED;
+NS_IMETHODIMP AppCacheStorage::AsyncOpenURI(
+    nsIURI *aURI, const nsACString &aIdExtension, uint32_t aFlags,
+    nsICacheEntryOpenCallback *aCallback) {
+  if (!CacheStorageService::Self()) return NS_ERROR_NOT_INITIALIZED;
 
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG(aCallback);
@@ -55,8 +50,11 @@ NS_IMETHODIMP AppCacheStorage::AsyncOpenURI(nsIURI *aURI,
   }
 
   if (!appCache) {
-    LOG(("AppCacheStorage::AsyncOpenURI entry not found in any appcache, giving up"));
-    aCallback->OnCacheEntryAvailable(nullptr, false, nullptr, NS_ERROR_CACHE_KEY_NOT_FOUND);
+    LOG(
+        ("AppCacheStorage::AsyncOpenURI entry not found in any appcache, "
+         "giving up"));
+    aCallback->OnCacheEntryAvailable(nullptr, false, nullptr,
+                                     NS_ERROR_CACHE_KEY_NOT_FOUND);
     return NS_OK;
   }
 
@@ -80,54 +78,51 @@ NS_IMETHODIMP AppCacheStorage::AsyncOpenURI(nsIURI *aURI,
   rv = noRefURI->GetScheme(scheme);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<_OldCacheLoad> appCacheLoad =
-    new _OldCacheLoad(scheme, cacheKey, aCallback, appCache,
-                      LoadInfo(), WriteToDisk(), aFlags);
+  RefPtr<_OldCacheLoad> appCacheLoad = new _OldCacheLoad(
+      scheme, cacheKey, aCallback, appCache, LoadInfo(), WriteToDisk(), aFlags);
   rv = appCacheLoad->Start();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP AppCacheStorage::OpenTruncate(nsIURI *aURI, const nsACString & aIdExtension,
-                                            nsICacheEntry **aCacheEntry)
-{
+NS_IMETHODIMP AppCacheStorage::OpenTruncate(nsIURI *aURI,
+                                            const nsACString &aIdExtension,
+                                            nsICacheEntry **aCacheEntry) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP AppCacheStorage::Exists(nsIURI *aURI, const nsACString & aIdExtension,
-                                      bool *aResult)
-{
+NS_IMETHODIMP AppCacheStorage::Exists(nsIURI *aURI,
+                                      const nsACString &aIdExtension,
+                                      bool *aResult) {
   *aResult = false;
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-NS_IMETHODIMP AppCacheStorage::AsyncDoomURI(nsIURI *aURI, const nsACString & aIdExtension,
-                                            nsICacheEntryDoomCallback* aCallback)
-{
-  if (!CacheStorageService::Self())
-    return NS_ERROR_NOT_INITIALIZED;
+NS_IMETHODIMP AppCacheStorage::AsyncDoomURI(
+    nsIURI *aURI, const nsACString &aIdExtension,
+    nsICacheEntryDoomCallback *aCallback) {
+  if (!CacheStorageService::Self()) return NS_ERROR_NOT_INITIALIZED;
 
   if (!mAppCache) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  RefPtr<_OldStorage> old = new _OldStorage(
-    LoadInfo(), WriteToDisk(), LookupAppCache(), true, mAppCache);
+  RefPtr<_OldStorage> old = new _OldStorage(LoadInfo(), WriteToDisk(),
+                                            LookupAppCache(), true, mAppCache);
   return old->AsyncDoomURI(aURI, aIdExtension, aCallback);
 }
 
-NS_IMETHODIMP AppCacheStorage::AsyncEvictStorage(nsICacheEntryDoomCallback* aCallback)
-{
-  if (!CacheStorageService::Self())
-    return NS_ERROR_NOT_INITIALIZED;
+NS_IMETHODIMP AppCacheStorage::AsyncEvictStorage(
+    nsICacheEntryDoomCallback *aCallback) {
+  if (!CacheStorageService::Self()) return NS_ERROR_NOT_INITIALIZED;
 
   nsresult rv;
 
   if (!mAppCache) {
     // Discard everything under this storage context
     nsCOMPtr<nsIApplicationCacheService> appCacheService =
-      do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID, &rv);
+        do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = appCacheService->Evict(LoadInfo());
@@ -135,48 +130,43 @@ NS_IMETHODIMP AppCacheStorage::AsyncEvictStorage(nsICacheEntryDoomCallback* aCal
   } else {
     // Discard the group
     RefPtr<_OldStorage> old = new _OldStorage(
-      LoadInfo(), WriteToDisk(), LookupAppCache(), true, mAppCache);
+        LoadInfo(), WriteToDisk(), LookupAppCache(), true, mAppCache);
     rv = old->AsyncEvictStorage(aCallback);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }
 
-  if (aCallback)
-    aCallback->OnCacheEntryDoomed(NS_OK);
+  if (aCallback) aCallback->OnCacheEntryDoomed(NS_OK);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP AppCacheStorage::AsyncVisitStorage(nsICacheStorageVisitor* aVisitor,
-                                                 bool aVisitEntries)
-{
-  if (!CacheStorageService::Self())
-    return NS_ERROR_NOT_INITIALIZED;
+NS_IMETHODIMP AppCacheStorage::AsyncVisitStorage(
+    nsICacheStorageVisitor *aVisitor, bool aVisitEntries) {
+  if (!CacheStorageService::Self()) return NS_ERROR_NOT_INITIALIZED;
 
   LOG(("AppCacheStorage::AsyncVisitStorage [this=%p, cb=%p]", this, aVisitor));
 
   nsresult rv;
 
   nsCOMPtr<nsICacheService> serv =
-    do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
+      do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<_OldVisitCallbackWrapper> cb = new _OldVisitCallbackWrapper(
-    "offline", aVisitor, aVisitEntries, LoadInfo());
+      "offline", aVisitor, aVisitEntries, LoadInfo());
   rv = nsCacheService::GlobalInstance()->VisitEntriesInternal(cb);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP AppCacheStorage::GetCacheIndexEntryAttrs(nsIURI *aURI,
-                                                       const nsACString &aIdExtension,
-                                                       bool *aHasAltData,
-                                                       uint32_t *aSizeInKB)
-{
+NS_IMETHODIMP AppCacheStorage::GetCacheIndexEntryAttrs(
+    nsIURI *aURI, const nsACString &aIdExtension, bool *aHasAltData,
+    uint32_t *aSizeInKB) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

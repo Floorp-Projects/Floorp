@@ -75,22 +75,19 @@
  * @author "Benjamin Smedberg <bsmedberg@covad.net>"
  */
 
-template<class EntryType>
-class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable
-{
+template <class EntryType>
+class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
   typedef mozilla::fallible_t fallible_t;
   static_assert(mozilla::IsPointer<typename EntryType::KeyTypePointer>::value,
                 "KeyTypePointer should be a pointer");
 
-public:
+ public:
   // Separate constructors instead of default aInitLength parameter since
   // otherwise the default no-arg constructor isn't found.
   nsTHashtable()
-    : mTable(Ops(), sizeof(EntryType), PLDHashTable::kDefaultInitialLength)
-  {}
+      : mTable(Ops(), sizeof(EntryType), PLDHashTable::kDefaultInitialLength) {}
   explicit nsTHashtable(uint32_t aInitLength)
-    : mTable(Ops(), sizeof(EntryType), aInitLength)
-  {}
+      : mTable(Ops(), sizeof(EntryType), aInitLength) {}
 
   /**
    * destructor, cleans up and deallocates
@@ -133,10 +130,9 @@ public:
    * @return    pointer to the entry class, if the key exists; nullptr if the
    *            key doesn't exist
    */
-  EntryType* GetEntry(KeyType aKey) const
-  {
+  EntryType* GetEntry(KeyType aKey) const {
     return static_cast<EntryType*>(
-      mTable.Search(EntryType::KeyToPointer(aKey)));
+        mTable.Search(EntryType::KeyToPointer(aKey)));
   }
 
   /**
@@ -151,8 +147,7 @@ public:
    * @param     aKey the key to retrieve
    * @return    pointer to the entry retrieved; never nullptr
    */
-  EntryType* PutEntry(KeyType aKey)
-  {
+  EntryType* PutEntry(KeyType aKey) {
     // infallible add
     return static_cast<EntryType*>(mTable.Add(EntryType::KeyToPointer(aKey)));
   }
@@ -164,24 +159,22 @@ public:
    *            be allocated
    */
   MOZ_MUST_USE
-  EntryType* PutEntry(KeyType aKey, const fallible_t&)
-  {
-    return static_cast<EntryType*>(mTable.Add(EntryType::KeyToPointer(aKey),
-                                              mozilla::fallible));
+  EntryType* PutEntry(KeyType aKey, const fallible_t&) {
+    return static_cast<EntryType*>(
+        mTable.Add(EntryType::KeyToPointer(aKey), mozilla::fallible));
   }
 
   /**
    * Get the entry associated with a key, or create a new entry using infallible
    * allocation and insert that.
    * @param     aKey the key to retrieve
-   * @param     aEntry will be assigned (if non-null) to the entry that was found
-   *            or created
+   * @param     aEntry will be assigned (if non-null) to the entry that was
+   * found or created
    * @return    true if a new entry was created, or false if an existing entry
    *            was found
    */
   MOZ_MUST_USE
-  bool EnsureInserted(KeyType aKey, EntryType** aEntry = nullptr)
-  {
+  bool EnsureInserted(KeyType aKey, EntryType** aEntry = nullptr) {
     auto oldCount = Count();
     EntryType* entry = PutEntry(aKey);
     if (aEntry) {
@@ -194,8 +187,7 @@ public:
    * Remove the entry associated with a key.
    * @param     aKey of the entry to remove
    */
-  void RemoveEntry(KeyType aKey)
-  {
+  void RemoveEntry(KeyType aKey) {
     mTable.Remove(EntryType::KeyToPointer(aKey));
   }
 
@@ -206,8 +198,7 @@ public:
    * @return    true if an entry was found and removed, or false if no entry
    *            was found for aKey
    */
-  bool EnsureRemoved(KeyType aKey)
-  {
+  bool EnsureRemoved(KeyType aKey) {
     auto* entry = GetEntry(aKey);
     if (entry) {
       RemoveEntry(entry);
@@ -220,10 +211,7 @@ public:
    * Remove the entry associated with a key.
    * @param aEntry   the entry-pointer to remove (obtained from GetEntry)
    */
-  void RemoveEntry(EntryType* aEntry)
-  {
-    mTable.RemoveEntry(aEntry);
-  }
+  void RemoveEntry(EntryType* aEntry) { mTable.RemoveEntry(aEntry); }
 
   /**
    * Remove the entry associated with a key, but don't resize the hashtable.
@@ -232,10 +220,7 @@ public:
    * didn't use RemoveEntry().
    * @param aEntry   the entry-pointer to remove (obtained from GetEntry)
    */
-  void RawRemoveEntry(EntryType* aEntry)
-  {
-    mTable.RawRemove(aEntry);
-  }
+  void RawRemoveEntry(EntryType* aEntry) { mTable.RawRemove(aEntry); }
 
   // This is an iterator that also allows entry removal. Example usage:
   //
@@ -245,9 +230,8 @@ public:
   //     // ... possibly call iter.Remove() once ...
   //   }
   //
-  class Iterator : public PLDHashTable::Iterator
-  {
-  public:
+  class Iterator : public PLDHashTable::Iterator {
+   public:
     typedef PLDHashTable::Iterator Base;
 
     explicit Iterator(nsTHashtable* aTable) : Base(&aTable->mTable) {}
@@ -256,7 +240,7 @@ public:
 
     EntryType* Get() const { return static_cast<EntryType*>(Base::Get()); }
 
-  private:
+   private:
     Iterator() = delete;
     Iterator(const Iterator&) = delete;
     Iterator& operator=(const Iterator&) = delete;
@@ -265,8 +249,7 @@ public:
 
   Iterator Iter() { return Iterator(this); }
 
-  Iterator ConstIter() const
-  {
+  Iterator ConstIter() const {
     return Iterator(const_cast<nsTHashtable*>(this));
   }
 
@@ -275,10 +258,7 @@ public:
    * conceptually the same as calling the destructor and then re-calling the
    * constructor.
    */
-  void Clear()
-  {
-    mTable.Clear();
-  }
+  void Clear() { mTable.Clear(); }
 
   /**
    * Measure the size of the table's entry storage. Does *not* measure anything
@@ -289,16 +269,14 @@ public:
    * @param     aMallocSizeOf the function used to measure heap-allocated blocks
    * @return    the measured shallow size of the table
    */
-  size_t ShallowSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-  {
+  size_t ShallowSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
     return mTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
   /**
    * Like ShallowSizeOfExcludingThis, but includes sizeof(*this).
    */
-  size_t ShallowSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-  {
+  size_t ShallowSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
     return aMallocSizeOf(this) + ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
@@ -307,8 +285,7 @@ public:
    * define SizeOfExcludingThis, and that method will be called on all live
    * entries.
    */
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-  {
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
     size_t n = ShallowSizeOfExcludingThis(aMallocSizeOf);
     for (auto iter = ConstIter(); !iter.Done(); iter.Next()) {
       n += (*iter.Get()).SizeOfExcludingThis(aMallocSizeOf);
@@ -319,16 +296,14 @@ public:
   /**
    * Like SizeOfExcludingThis, but includes sizeof(*this).
    */
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-  {
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
   /**
    * Swap the elements in this hashtable with the elements in aOther.
    */
-  void SwapElements(nsTHashtable<EntryType>& aOther)
-  {
+  void SwapElements(nsTHashtable<EntryType>& aOther) {
     MOZ_ASSERT_IF(this->mTable.Ops() && aOther.mTable.Ops(),
                   this->mTable.Ops() == aOther.mTable.Ops());
     mozilla::Swap(this->mTable, aOther.mTable);
@@ -341,19 +316,15 @@ public:
    * This will prevent assertions when a read-only hash is accessed on multiple
    * threads without synchronization.
    */
-  void MarkImmutable()
-  {
-    mTable.MarkImmutable();
-  }
+  void MarkImmutable() { mTable.MarkImmutable(); }
 #endif
 
-protected:
+ protected:
   PLDHashTable mTable;
 
   static PLDHashNumber s_HashKey(const void* aKey);
 
-  static bool s_MatchEntry(const PLDHashEntryHdr* aEntry,
-                           const void* aKey);
+  static bool s_MatchEntry(const PLDHashEntryHdr* aEntry, const void* aKey);
 
   static void s_CopyEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aFrom,
                           PLDHashEntryHdr* aTo);
@@ -362,7 +333,7 @@ protected:
 
   static void s_InitEntry(PLDHashEntryHdr* aEntry, const void* aKey);
 
-private:
+ private:
   // copy constructor, not implemented
   nsTHashtable(nsTHashtable<EntryType>& aToCopy) = delete;
 
@@ -372,7 +343,8 @@ private:
   static const PLDHashTableOps* Ops();
 
   // assignment operator, not implemented
-  nsTHashtable<EntryType>& operator=(nsTHashtable<EntryType>& aToEqual) = delete;
+  nsTHashtable<EntryType>& operator=(nsTHashtable<EntryType>& aToEqual) =
+      delete;
 };
 
 namespace mozilla {
@@ -384,123 +356,97 @@ namespace detail {
 //
 // We define this outside of nsTHashtable so only one copy exists for every N,
 // rather than separate copies for every EntryType used with nsTHashtable.
-template<size_t N>
-static void
-FixedSizeEntryMover(PLDHashTable*,
-                    const PLDHashEntryHdr* aFrom,
-                    PLDHashEntryHdr* aTo)
-{
+template <size_t N>
+static void FixedSizeEntryMover(PLDHashTable*, const PLDHashEntryHdr* aFrom,
+                                PLDHashEntryHdr* aTo) {
   memcpy(aTo, aFrom, N);
 }
 
-} // namespace detail
-} // namespace mozilla
+}  // namespace detail
+}  // namespace mozilla
 
 //
 // template definitions
 //
 
-template<class EntryType>
+template <class EntryType>
 nsTHashtable<EntryType>::nsTHashtable(nsTHashtable<EntryType>&& aOther)
-  : mTable(std::move(aOther.mTable))
-{
-}
+    : mTable(std::move(aOther.mTable)) {}
 
-template<class EntryType>
-nsTHashtable<EntryType>&
-nsTHashtable<EntryType>::operator=(nsTHashtable<EntryType>&& aOther)
-{
+template <class EntryType>
+nsTHashtable<EntryType>& nsTHashtable<EntryType>::operator=(
+    nsTHashtable<EntryType>&& aOther) {
   mTable = std::move(aOther.mTable);
   return *this;
 }
 
-template<class EntryType>
-nsTHashtable<EntryType>::~nsTHashtable()
-{
-}
+template <class EntryType>
+nsTHashtable<EntryType>::~nsTHashtable() {}
 
-template<class EntryType>
-/* static */ const PLDHashTableOps*
-nsTHashtable<EntryType>::Ops()
-{
+template <class EntryType>
+/* static */ const PLDHashTableOps* nsTHashtable<EntryType>::Ops() {
   // If this variable is a global variable, we get strange start-up failures on
   // WindowsCrtPatch.h (see bug 1166598 comment 20). But putting it inside a
   // function avoids that problem.
-  static const PLDHashTableOps sOps =
-  {
-    s_HashKey,
-    s_MatchEntry,
-    EntryType::ALLOW_MEMMOVE ? mozilla::detail::FixedSizeEntryMover<sizeof(EntryType)> : s_CopyEntry,
-    s_ClearEntry,
-    s_InitEntry
-  };
+  static const PLDHashTableOps sOps = {
+      s_HashKey, s_MatchEntry,
+      EntryType::ALLOW_MEMMOVE
+          ? mozilla::detail::FixedSizeEntryMover<sizeof(EntryType)>
+          : s_CopyEntry,
+      s_ClearEntry, s_InitEntry};
   return &sOps;
 }
 
 // static definitions
 
-template<class EntryType>
-PLDHashNumber
-nsTHashtable<EntryType>::s_HashKey(const void* aKey)
-{
+template <class EntryType>
+PLDHashNumber nsTHashtable<EntryType>::s_HashKey(const void* aKey) {
   return EntryType::HashKey(static_cast<KeyTypePointer>(aKey));
 }
 
-template<class EntryType>
-bool
-nsTHashtable<EntryType>::s_MatchEntry(const PLDHashEntryHdr* aEntry,
-                                      const void* aKey)
-{
-  return (static_cast<const EntryType*>(aEntry))->KeyEquals(
-    static_cast<KeyTypePointer>(aKey));
+template <class EntryType>
+bool nsTHashtable<EntryType>::s_MatchEntry(const PLDHashEntryHdr* aEntry,
+                                           const void* aKey) {
+  return (static_cast<const EntryType*>(aEntry))
+      ->KeyEquals(static_cast<KeyTypePointer>(aKey));
 }
 
-template<class EntryType>
-void
-nsTHashtable<EntryType>::s_CopyEntry(PLDHashTable* aTable,
-                                     const PLDHashEntryHdr* aFrom,
-                                     PLDHashEntryHdr* aTo)
-{
+template <class EntryType>
+void nsTHashtable<EntryType>::s_CopyEntry(PLDHashTable* aTable,
+                                          const PLDHashEntryHdr* aFrom,
+                                          PLDHashEntryHdr* aTo) {
   EntryType* fromEntry =
-    const_cast<EntryType*>(static_cast<const EntryType*>(aFrom));
+      const_cast<EntryType*>(static_cast<const EntryType*>(aFrom));
 
   new (mozilla::KnownNotNull, aTo) EntryType(std::move(*fromEntry));
 
   fromEntry->~EntryType();
 }
 
-template<class EntryType>
-void
-nsTHashtable<EntryType>::s_ClearEntry(PLDHashTable* aTable,
-                                      PLDHashEntryHdr* aEntry)
-{
+template <class EntryType>
+void nsTHashtable<EntryType>::s_ClearEntry(PLDHashTable* aTable,
+                                           PLDHashEntryHdr* aEntry) {
   static_cast<EntryType*>(aEntry)->~EntryType();
 }
 
-template<class EntryType>
-void
-nsTHashtable<EntryType>::s_InitEntry(PLDHashEntryHdr* aEntry,
-                                     const void* aKey)
-{
-  new (mozilla::KnownNotNull, aEntry) EntryType(static_cast<KeyTypePointer>(aKey));
+template <class EntryType>
+void nsTHashtable<EntryType>::s_InitEntry(PLDHashEntryHdr* aEntry,
+                                          const void* aKey) {
+  new (mozilla::KnownNotNull, aEntry)
+      EntryType(static_cast<KeyTypePointer>(aKey));
 }
 
 class nsCycleCollectionTraversalCallback;
 
-template<class EntryType>
-inline void
-ImplCycleCollectionUnlink(nsTHashtable<EntryType>& aField)
-{
+template <class EntryType>
+inline void ImplCycleCollectionUnlink(nsTHashtable<EntryType>& aField) {
   aField.Clear();
 }
 
-template<class EntryType>
-inline void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            nsTHashtable<EntryType>& aField,
-                            const char* aName,
-                            uint32_t aFlags = 0)
-{
+template <class EntryType>
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback,
+    nsTHashtable<EntryType>& aField, const char* aName, uint32_t aFlags = 0) {
   for (auto iter = aField.Iter(); !iter.Done(); iter.Next()) {
     EntryType* entry = iter.Get();
     ImplCycleCollectionTraverse(aCallback, *entry, aName, aFlags);
@@ -527,23 +473,22 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
  */
 namespace detail {
 
-class VoidPtrHashKey : public nsPtrHashKey<const void>
-{
+class VoidPtrHashKey : public nsPtrHashKey<const void> {
   typedef nsPtrHashKey<const void> Base;
 
-public:
+ public:
   explicit VoidPtrHashKey(const void* aKey) : Base(aKey) {}
 };
 
-} // namespace detail
+}  // namespace detail
 
 /**
  * See the main nsTHashtable documentation for descriptions of this class's
  * methods.
  */
-template<typename T>
-class nsTHashtable<nsPtrHashKey<T>> : protected nsTHashtable<::detail::VoidPtrHashKey>
-{
+template <typename T>
+class nsTHashtable<nsPtrHashKey<T>>
+    : protected nsTHashtable<::detail::VoidPtrHashKey> {
   typedef nsTHashtable<::detail::VoidPtrHashKey> Base;
   typedef nsPtrHashKey<T> EntryType;
 
@@ -555,20 +500,18 @@ class nsTHashtable<nsPtrHashKey<T>> : protected nsTHashtable<::detail::VoidPtrHa
   nsTHashtable(const nsTHashtable& aOther) = delete;
   nsTHashtable& operator=(const nsTHashtable& aOther) = delete;
 
-public:
+ public:
   nsTHashtable() = default;
-  explicit nsTHashtable(uint32_t aInitLength)
-    : Base(aInitLength)
-  {}
+  explicit nsTHashtable(uint32_t aInitLength) : Base(aInitLength) {}
 
   ~nsTHashtable() = default;
 
   nsTHashtable(nsTHashtable&&) = default;
 
-  using Base::GetGeneration;
-  using Base::Count;
-  using Base::IsEmpty;
   using Base::Clear;
+  using Base::Count;
+  using Base::GetGeneration;
+  using Base::IsEmpty;
 
   using Base::ShallowSizeOfExcludingThis;
   using Base::ShallowSizeOfIncludingThis;
@@ -578,57 +521,42 @@ public:
 #endif
 
   /* Wrapper functions */
-  EntryType* GetEntry(T* aKey) const
-  {
+  EntryType* GetEntry(T* aKey) const {
     return reinterpret_cast<EntryType*>(Base::GetEntry(aKey));
   }
 
-  bool Contains(T* aKey) const
-  {
-    return Base::Contains(aKey);
-  }
+  bool Contains(T* aKey) const { return Base::Contains(aKey); }
 
-  EntryType* PutEntry(T* aKey)
-  {
+  EntryType* PutEntry(T* aKey) {
     return reinterpret_cast<EntryType*>(Base::PutEntry(aKey));
   }
 
   MOZ_MUST_USE
-  EntryType* PutEntry(T* aKey, const mozilla::fallible_t&)
-  {
+  EntryType* PutEntry(T* aKey, const mozilla::fallible_t&) {
     return reinterpret_cast<EntryType*>(
-      Base::PutEntry(aKey, mozilla::fallible));
+        Base::PutEntry(aKey, mozilla::fallible));
   }
 
   MOZ_MUST_USE
-  bool EnsureInserted(T* aKey, EntryType** aEntry = nullptr)
-  {
-    return Base::EnsureInserted(aKey, reinterpret_cast<::detail::VoidPtrHashKey**>(aEntry));
+  bool EnsureInserted(T* aKey, EntryType** aEntry = nullptr) {
+    return Base::EnsureInserted(
+        aKey, reinterpret_cast<::detail::VoidPtrHashKey**>(aEntry));
   }
 
-  void RemoveEntry(T* aKey)
-  {
-    Base::RemoveEntry(aKey);
-  }
+  void RemoveEntry(T* aKey) { Base::RemoveEntry(aKey); }
 
-  bool EnsureRemoved(T* aKey)
-  {
-    return Base::EnsureRemoved(aKey);
-  }
+  bool EnsureRemoved(T* aKey) { return Base::EnsureRemoved(aKey); }
 
-  void RemoveEntry(EntryType* aEntry)
-  {
+  void RemoveEntry(EntryType* aEntry) {
     Base::RemoveEntry(reinterpret_cast<::detail::VoidPtrHashKey*>(aEntry));
   }
 
-  void RawRemoveEntry(EntryType* aEntry)
-  {
+  void RawRemoveEntry(EntryType* aEntry) {
     Base::RawRemoveEntry(reinterpret_cast<::detail::VoidPtrHashKey*>(aEntry));
   }
 
-  class Iterator : public Base::Iterator
-  {
-  public:
+  class Iterator : public Base::Iterator {
+   public:
     typedef nsTHashtable::Base::Iterator Base;
 
     explicit Iterator(nsTHashtable* aTable) : Base(aTable) {}
@@ -637,7 +565,7 @@ public:
 
     EntryType* Get() const { return reinterpret_cast<EntryType*>(Base::Get()); }
 
-  private:
+   private:
     Iterator() = delete;
     Iterator(const Iterator&) = delete;
     Iterator& operator=(const Iterator&) = delete;
@@ -646,15 +574,11 @@ public:
 
   Iterator Iter() { return Iterator(this); }
 
-  Iterator ConstIter() const
-  {
+  Iterator ConstIter() const {
     return Iterator(const_cast<nsTHashtable*>(this));
   }
 
-  void SwapElements(nsTHashtable& aOther)
-  {
-    Base::SwapElements(aOther);
-  }
+  void SwapElements(nsTHashtable& aOther) { Base::SwapElements(aOther); }
 };
 
-#endif // nsTHashtable_h__
+#endif  // nsTHashtable_h__

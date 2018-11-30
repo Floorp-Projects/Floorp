@@ -100,13 +100,10 @@ struct AllocatedMemoryRegion {
   size_t mSize;
   bool mExecutable;
 
-  AllocatedMemoryRegion()
-    : mBase(nullptr), mSize(0), mExecutable(false)
-  {}
+  AllocatedMemoryRegion() : mBase(nullptr), mSize(0), mExecutable(false) {}
 
   AllocatedMemoryRegion(uint8_t* aBase, size_t aSize, bool aExecutable)
-    : mBase(aBase), mSize(aSize), mExecutable(aExecutable)
-  {}
+      : mBase(aBase), mSize(aSize), mExecutable(aExecutable) {}
 
   // For sorting regions by base address.
   struct AddressSort {
@@ -114,8 +111,9 @@ struct AllocatedMemoryRegion {
     static void* getLookup(const AllocatedMemoryRegion& aRegion) {
       return aRegion.mBase;
     }
-    static ssize_t compare(void* aAddress, const AllocatedMemoryRegion& aRegion) {
-      return (uint8_t*) aAddress - aRegion.mBase;
+    static ssize_t compare(void* aAddress,
+                           const AllocatedMemoryRegion& aRegion) {
+      return (uint8_t*)aAddress - aRegion.mBase;
     }
   };
 
@@ -144,14 +142,11 @@ struct DirtyPage {
   bool mExecutable;
 
   DirtyPage(uint8_t* aBase, uint8_t* aOriginal, bool aExecutable)
-    : mBase(aBase), mOriginal(aOriginal), mExecutable(aExecutable)
-  {}
+      : mBase(aBase), mOriginal(aOriginal), mExecutable(aExecutable) {}
 
   struct AddressSort {
     typedef uint8_t* Lookup;
-    static uint8_t* getLookup(const DirtyPage& aPage) {
-      return aPage.mBase;
-    }
+    static uint8_t* getLookup(const DirtyPage& aPage) { return aPage.mBase; }
     static ssize_t compare(uint8_t* aBase, const DirtyPage& aPage) {
       return aBase - aPage.mBase;
     }
@@ -160,7 +155,8 @@ struct DirtyPage {
 
 // A set of dirty pages that can be searched quickly.
 typedef SplayTree<DirtyPage, DirtyPage::AddressSort,
-                  AllocPolicy<MemoryKind::SortedDirtyPageSet>, 4> SortedDirtyPageSet;
+                  AllocPolicy<MemoryKind::SortedDirtyPageSet>, 4>
+    SortedDirtyPageSet;
 
 // A set of dirty pages associated with some checkpoint.
 struct DirtyPageSet {
@@ -171,11 +167,11 @@ struct DirtyPageSet {
   // thread when all other threads are idle, by the dirty memory handler when
   // it is active and this is the active page set, and by the snapshot thread
   // which owns this set.
-  InfallibleVector<DirtyPage, 256, AllocPolicy<MemoryKind::DirtyPageSet>> mPages;
+  InfallibleVector<DirtyPage, 256, AllocPolicy<MemoryKind::DirtyPageSet>>
+      mPages;
 
   explicit DirtyPageSet(const CheckpointId& aCheckpoint)
-    : mCheckpoint(aCheckpoint)
-  {}
+      : mCheckpoint(aCheckpoint) {}
 };
 
 // Worklist used by each snapshot thread.
@@ -217,7 +213,7 @@ class SnapshotThreadCondition {
   Atomic<bool, SequentiallyConsistent, Behavior::DontPreserve> mActive;
   Atomic<int32_t, SequentiallyConsistent, Behavior::DontPreserve> mCount;
 
-public:
+ public:
   void ActivateBegin();
   void ActivateEnd();
   bool IsActive();
@@ -252,33 +248,33 @@ class FreeRegionSet {
     FreeRegionSet& mSet;
 
     template <typename T>
-    void free_(T* aPtr, size_t aSize) { MOZ_CRASH(); }
+    void free_(T* aPtr, size_t aSize) {
+      MOZ_CRASH();
+    }
 
     template <typename T>
     T* pod_malloc(size_t aNumElems) {
       MOZ_RELEASE_ASSERT(sizeof(T) * aNumElems <= ChunkPages * PageSize);
-      return (T*) mSet.TakeNextChunk();
+      return (T*)mSet.TakeNextChunk();
     }
 
-    explicit MyAllocPolicy(FreeRegionSet& aSet)
-      : mSet(aSet)
-    {}
+    explicit MyAllocPolicy(FreeRegionSet& aSet) : mSet(aSet) {}
   };
 
-  // All memory in gMemoryInfo->mTrackedRegions that is not in use at the current
-  // point in execution.
+  // All memory in gMemoryInfo->mTrackedRegions that is not in use at the
+  // current point in execution.
   typedef SplayTree<AllocatedMemoryRegion,
-                    AllocatedMemoryRegion::SizeReverseSort,
-                    MyAllocPolicy, ChunkPages> Tree;
+                    AllocatedMemoryRegion::SizeReverseSort, MyAllocPolicy,
+                    ChunkPages>
+      Tree;
   Tree mRegions;
 
   void InsertLockHeld(void* aAddress, size_t aSize, AutoSpinLock& aLockHeld);
   void* ExtractLockHeld(size_t aSize, AutoSpinLock& aLockHeld);
 
-public:
+ public:
   explicit FreeRegionSet(MemoryKind aKind)
-    : mKind(aKind), mRegions(MyAllocPolicy(*this))
-  {}
+      : mKind(aKind), mRegions(MyAllocPolicy(*this)) {}
 
   // Get the single region set for a given memory kind.
   static FreeRegionSet& Get(MemoryKind aKind);
@@ -301,8 +297,8 @@ struct MemoryInfo {
   // Whether new dirty pages or allocated regions are allowed.
   bool mMemoryChangesAllowed;
 
-  // Untracked memory regions allocated before the first checkpoint. This is only
-  // accessed on the main thread, and is not a vector because of reentrancy
+  // Untracked memory regions allocated before the first checkpoint. This is
+  // only accessed on the main thread, and is not a vector because of reentrancy
   // issues.
   static const size_t MaxInitialUntrackedRegions = 512;
   AllocatedMemoryRegion mInitialUntrackedRegions[MaxInitialUntrackedRegions];
@@ -312,9 +308,10 @@ struct MemoryInfo {
   // holding mTrackedRegionsLock.
   SplayTree<AllocatedMemoryRegion, AllocatedMemoryRegion::AddressSort,
             AllocPolicy<MemoryKind::TrackedRegions>, 4>
-    mTrackedRegions;
-  InfallibleVector<AllocatedMemoryRegion, 512, AllocPolicy<MemoryKind::TrackedRegions>>
-    mTrackedRegionsByAllocationOrder;
+      mTrackedRegions;
+  InfallibleVector<AllocatedMemoryRegion, 512,
+                   AllocPolicy<MemoryKind::TrackedRegions>>
+      mTrackedRegionsByAllocationOrder;
   SpinLock mTrackedRegionsLock;
 
   // Pages from |trackedRegions| modified since the last saved checkpoint.
@@ -342,11 +339,12 @@ struct MemoryInfo {
 
   // Information for timers.
   double mStartTime;
-  uint32_t mTimeHits[(size_t) TimerKind::Count];
-  double mTimeTotals[(size_t) TimerKind::Count];
+  uint32_t mTimeHits[(size_t)TimerKind::Count];
+  double mTimeTotals[(size_t)TimerKind::Count];
 
   // Information for memory allocation.
-  Atomic<ssize_t, Relaxed, Behavior::DontPreserve> mMemoryBalance[(size_t) MemoryKind::Count];
+  Atomic<ssize_t, Relaxed, Behavior::DontPreserve>
+      mMemoryBalance[(size_t)MemoryKind::Count];
 
   // Recent dirty memory faults.
   void* mDirtyMemoryFaults[50];
@@ -358,11 +356,10 @@ struct MemoryInfo {
   bool mCrashSoon;
 
   MemoryInfo()
-    : mMemoryChangesAllowed(true)
-    , mFreeUntrackedRegions(MemoryKind::FreeRegions)
-    , mStartTime(CurrentTime())
-    , mIntentionalCrashesAllowed(true)
-  {
+      : mMemoryChangesAllowed(true),
+        mFreeUntrackedRegions(MemoryKind::FreeRegions),
+        mStartTime(CurrentTime()),
+        mIntentionalCrashesAllowed(true) {
     // The singleton MemoryInfo is allocated with zeroed memory, so other
     // fields do not need explicit initialization.
   }
@@ -370,42 +367,26 @@ struct MemoryInfo {
 
 static MemoryInfo* gMemoryInfo = nullptr;
 
-void
-SetMemoryChangesAllowed(bool aAllowed)
-{
+void SetMemoryChangesAllowed(bool aAllowed) {
   MOZ_RELEASE_ASSERT(gMemoryInfo->mMemoryChangesAllowed == !aAllowed);
   gMemoryInfo->mMemoryChangesAllowed = aAllowed;
 }
 
-static void
-EnsureMemoryChangesAllowed()
-{
+static void EnsureMemoryChangesAllowed() {
   while (!gMemoryInfo->mMemoryChangesAllowed) {
     ThreadYield();
   }
 }
 
-void
-StartCountdown(size_t aCount)
-{
-  gMemoryInfo->mCountdown = aCount;
-}
+void StartCountdown(size_t aCount) { gMemoryInfo->mCountdown = aCount; }
 
-AutoCountdown::AutoCountdown(size_t aCount)
-{
-  StartCountdown(aCount);
-}
+AutoCountdown::AutoCountdown(size_t aCount) { StartCountdown(aCount); }
 
-AutoCountdown::~AutoCountdown()
-{
-  StartCountdown(0);
-}
+AutoCountdown::~AutoCountdown() { StartCountdown(0); }
 
 #ifdef WANT_COUNTDOWN_THREAD
 
-static void
-CountdownThreadMain(void*)
-{
+static void CountdownThreadMain(void*) {
   while (true) {
     if (gMemoryInfo->mCountdown && --gMemoryInfo->mCountdown == 0) {
       // When debugging hangs in the child process, we can break here in lldb
@@ -416,42 +397,37 @@ CountdownThreadMain(void*)
   }
 }
 
-#endif // WANT_COUNTDOWN_THREAD
+#endif  // WANT_COUNTDOWN_THREAD
 
 ///////////////////////////////////////////////////////////////////////////////
 // Profiling
 ///////////////////////////////////////////////////////////////////////////////
 
-AutoTimer::AutoTimer(TimerKind aKind)
-  : mKind(aKind), mStart(CurrentTime())
-{}
+AutoTimer::AutoTimer(TimerKind aKind) : mKind(aKind), mStart(CurrentTime()) {}
 
-AutoTimer::~AutoTimer()
-{
+AutoTimer::~AutoTimer() {
   if (gMemoryInfo) {
-    gMemoryInfo->mTimeHits[(size_t) mKind]++;
-    gMemoryInfo->mTimeTotals[(size_t) mKind] += CurrentTime() - mStart;
+    gMemoryInfo->mTimeHits[(size_t)mKind]++;
+    gMemoryInfo->mTimeTotals[(size_t)mKind] += CurrentTime() - mStart;
   }
 }
 
 static const char* gTimerKindNames[] = {
 #define DefineTimerKindName(aKind) #aKind,
-  ForEachTimerKind(DefineTimerKindName)
+    ForEachTimerKind(DefineTimerKindName)
 #undef DefineTimerKindName
 };
 
-void
-DumpTimers()
-{
+void DumpTimers() {
   if (!gMemoryInfo) {
     return;
   }
   Print("Times %.2fs\n", (CurrentTime() - gMemoryInfo->mStartTime) / 1000000.0);
-  for (size_t i = 0; i < (size_t) TimerKind::Count; i++) {
+  for (size_t i = 0; i < (size_t)TimerKind::Count; i++) {
     uint32_t hits = gMemoryInfo->mTimeHits[i];
     double time = gMemoryInfo->mTimeTotals[i];
-    Print("%s: %d hits, %.2fs\n",
-          gTimerKindNames[i], (int) hits, time / 1000000.0);
+    Print("%s: %d hits, %.2fs\n", gTimerKindNames[i], (int)hits,
+          time / 1000000.0);
   }
 }
 
@@ -459,48 +435,43 @@ DumpTimers()
 // Directives
 ///////////////////////////////////////////////////////////////////////////////
 
-void
-SetAllowIntentionalCrashes(bool aAllowed)
-{
+void SetAllowIntentionalCrashes(bool aAllowed) {
   gMemoryInfo->mIntentionalCrashesAllowed = aAllowed;
 }
 
 extern "C" {
 
-MOZ_EXPORT void
-RecordReplayInterface_InternalRecordReplayDirective(long aDirective)
-{
-  switch ((Directive) aDirective) {
-  case Directive::CrashSoon:
-    gMemoryInfo->mCrashSoon = true;
-    break;
-  case Directive::MaybeCrash:
-    if (gMemoryInfo->mIntentionalCrashesAllowed && gMemoryInfo->mCrashSoon) {
-      PrintSpew("Intentionally Crashing!\n");
-      MOZ_CRASH("RecordReplayDirective intentional crash");
-    }
-    gMemoryInfo->mCrashSoon = false;
-    break;
-  case Directive::AlwaysSaveTemporaryCheckpoints:
-    navigation::AlwaysSaveTemporaryCheckpoints();
-    break;
-  case Directive::AlwaysMarkMajorCheckpoints:
-    child::NotifyAlwaysMarkMajorCheckpoints();
-    break;
-  default:
-    MOZ_CRASH("Unknown directive");
+MOZ_EXPORT void RecordReplayInterface_InternalRecordReplayDirective(
+    long aDirective) {
+  switch ((Directive)aDirective) {
+    case Directive::CrashSoon:
+      gMemoryInfo->mCrashSoon = true;
+      break;
+    case Directive::MaybeCrash:
+      if (gMemoryInfo->mIntentionalCrashesAllowed && gMemoryInfo->mCrashSoon) {
+        PrintSpew("Intentionally Crashing!\n");
+        MOZ_CRASH("RecordReplayDirective intentional crash");
+      }
+      gMemoryInfo->mCrashSoon = false;
+      break;
+    case Directive::AlwaysSaveTemporaryCheckpoints:
+      navigation::AlwaysSaveTemporaryCheckpoints();
+      break;
+    case Directive::AlwaysMarkMajorCheckpoints:
+      child::NotifyAlwaysMarkMajorCheckpoints();
+      break;
+    default:
+      MOZ_CRASH("Unknown directive");
   }
 }
 
-} // extern "C"
+}  // extern "C"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Snapshot Thread Conditions
 ///////////////////////////////////////////////////////////////////////////////
 
-void
-SnapshotThreadCondition::ActivateBegin()
-{
+void SnapshotThreadCondition::ActivateBegin() {
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
   MOZ_RELEASE_ASSERT(!mActive);
   mActive = true;
@@ -512,9 +483,7 @@ SnapshotThreadCondition::ActivateBegin()
   }
 }
 
-void
-SnapshotThreadCondition::ActivateEnd()
-{
+void SnapshotThreadCondition::ActivateEnd() {
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
   MOZ_RELEASE_ASSERT(mActive);
   mActive = false;
@@ -526,16 +495,12 @@ SnapshotThreadCondition::ActivateEnd()
   }
 }
 
-bool
-SnapshotThreadCondition::IsActive()
-{
+bool SnapshotThreadCondition::IsActive() {
   MOZ_RELEASE_ASSERT(!Thread::CurrentIsMainThread());
   return mActive;
 }
 
-void
-SnapshotThreadCondition::WaitUntilNoLongerActive()
-{
+void SnapshotThreadCondition::WaitUntilNoLongerActive() {
   MOZ_RELEASE_ASSERT(!Thread::CurrentIsMainThread());
   MOZ_RELEASE_ASSERT(mActive);
   if (NumSnapshotThreads == ++mCount) {
@@ -554,16 +519,12 @@ SnapshotThreadCondition::WaitUntilNoLongerActive()
 ///////////////////////////////////////////////////////////////////////////////
 
 // Get a page in untracked memory that can be used as a copy of a tracked page.
-static uint8_t*
-AllocatePageCopy()
-{
-  return (uint8_t*) AllocateMemory(PageSize, MemoryKind::PageCopy);
+static uint8_t* AllocatePageCopy() {
+  return (uint8_t*)AllocateMemory(PageSize, MemoryKind::PageCopy);
 }
 
 // Free a page allocated by AllocatePageCopy.
-static void
-FreePageCopy(uint8_t* aPage)
-{
+static void FreePageCopy(uint8_t* aPage) {
   DeallocateMemory(aPage, PageSize, MemoryKind::PageCopy);
 }
 
@@ -571,13 +532,12 @@ FreePageCopy(uint8_t* aPage)
 // Page Fault Handling
 ///////////////////////////////////////////////////////////////////////////////
 
-void
-MemoryMove(void* aDst, const void* aSrc, size_t aSize)
-{
+void MemoryMove(void* aDst, const void* aSrc, size_t aSize) {
   MOZ_RELEASE_ASSERT((size_t)aDst % sizeof(uint32_t) == 0);
   MOZ_RELEASE_ASSERT((size_t)aSrc % sizeof(uint32_t) == 0);
   MOZ_RELEASE_ASSERT(aSize % sizeof(uint32_t) == 0);
-  MOZ_RELEASE_ASSERT((size_t)aDst <= (size_t)aSrc || (size_t)aDst >= (size_t)aSrc + aSize);
+  MOZ_RELEASE_ASSERT((size_t)aDst <= (size_t)aSrc ||
+                     (size_t)aDst >= (size_t)aSrc + aSize);
 
   uint32_t* ndst = (uint32_t*)aDst;
   const uint32_t* nsrc = (const uint32_t*)aSrc;
@@ -586,9 +546,7 @@ MemoryMove(void* aDst, const void* aSrc, size_t aSize)
   }
 }
 
-void
-MemoryZero(void* aDst, size_t aSize)
-{
+void MemoryZero(void* aDst, size_t aSize) {
   MOZ_RELEASE_ASSERT((size_t)aDst % sizeof(uint32_t) == 0);
   MOZ_RELEASE_ASSERT(aSize % sizeof(uint32_t) == 0);
 
@@ -601,13 +559,12 @@ MemoryZero(void* aDst, size_t aSize)
 
 // Return whether an address is in a tracked region. This excludes memory that
 // is in an active new region and is not write protected.
-static bool
-IsTrackedAddress(void* aAddress, bool* aExecutable)
-{
+static bool IsTrackedAddress(void* aAddress, bool* aExecutable) {
   AutoSpinLock lock(gMemoryInfo->mTrackedRegionsLock);
   Maybe<AllocatedMemoryRegion> region =
-    gMemoryInfo->mTrackedRegions.lookupClosestLessOrEqual(aAddress);
-  if (region.isSome() && MemoryContains(region.ref().mBase, region.ref().mSize, aAddress)) {
+      gMemoryInfo->mTrackedRegions.lookupClosestLessOrEqual(aAddress);
+  if (region.isSome() &&
+      MemoryContains(region.ref().mBase, region.ref().mSize, aAddress)) {
     if (aExecutable) {
       *aExecutable = region.ref().mExecutable;
     }
@@ -616,9 +573,7 @@ IsTrackedAddress(void* aAddress, bool* aExecutable)
   return false;
 }
 
-bool
-HandleDirtyMemoryFault(uint8_t* aAddress)
-{
+bool HandleDirtyMemoryFault(uint8_t* aAddress) {
   EnsureMemoryChangesAllowed();
 
   bool different = false;
@@ -630,7 +585,8 @@ HandleDirtyMemoryFault(uint8_t* aAddress)
   }
   gMemoryInfo->mDirtyMemoryFaults[0] = aAddress;
   if (!different) {
-    Print("WARNING: Repeated accesses to the same dirty address %p\n", aAddress);
+    Print("WARNING: Repeated accesses to the same dirty address %p\n",
+          aAddress);
   }
 
   // Round down to the base of the page.
@@ -657,15 +613,15 @@ HandleDirtyMemoryFault(uint8_t* aAddress)
   // it so that execution can proceed.
   uint8_t* original = AllocatePageCopy();
   MemoryMove(original, aAddress, PageSize);
-  gMemoryInfo->mActiveDirty.insert(aAddress, DirtyPage(aAddress, original, executable));
+  gMemoryInfo->mActiveDirty.insert(aAddress,
+                                   DirtyPage(aAddress, original, executable));
   DirectUnprotectMemory(aAddress, PageSize, executable);
   return true;
 }
 
-bool
-MemoryRangeIsTracked(void* aAddress, size_t aSize)
-{
-  for (uint8_t* ptr = PageBase(aAddress); ptr < (uint8_t*) aAddress + aSize; ptr += PageSize) {
+bool MemoryRangeIsTracked(void* aAddress, size_t aSize) {
+  for (uint8_t* ptr = PageBase(aAddress); ptr < (uint8_t*)aAddress + aSize;
+       ptr += PageSize) {
     if (!IsTrackedAddress(ptr, nullptr)) {
       return false;
     }
@@ -673,9 +629,7 @@ MemoryRangeIsTracked(void* aAddress, size_t aSize)
   return true;
 }
 
-void
-UnrecoverableSnapshotFailure()
-{
+void UnrecoverableSnapshotFailure() {
   if (gMemoryInfo) {
     AutoSpinLock lock(gMemoryInfo->mTrackedRegionsLock);
     DirectUnprotectMemory(PageBase(&errno), PageSize, false);
@@ -690,9 +644,7 @@ UnrecoverableSnapshotFailure()
 // Initial Memory Region Processing
 ///////////////////////////////////////////////////////////////////////////////
 
-void
-AddInitialUntrackedMemoryRegion(uint8_t* aBase, size_t aSize)
-{
+void AddInitialUntrackedMemoryRegion(uint8_t* aBase, size_t aSize) {
   MOZ_RELEASE_ASSERT(!HasSavedCheckpoint());
 
   if (gInitializationFailureMessage) {
@@ -722,9 +674,7 @@ AddInitialUntrackedMemoryRegion(uint8_t* aBase, size_t aSize)
   MOZ_CRASH();
 }
 
-static void
-RemoveInitialUntrackedRegion(uint8_t* aBase, size_t aSize)
-{
+static void RemoveInitialUntrackedRegion(uint8_t* aBase, size_t aSize) {
   MOZ_RELEASE_ASSERT(!HasSavedCheckpoint());
   AutoSpinLock lock(gMemoryInfo->mInitialUntrackedRegionsLock);
 
@@ -744,24 +694,24 @@ RemoveInitialUntrackedRegion(uint8_t* aBase, size_t aSize)
 // the start of that region, and aSize, aProtection, and aMaxProtection are
 // updated with the size and protection status of the region. Returns false if
 // there are no more mapped regions after *aAddress.
-static bool
-QueryRegion(uint8_t** aAddress, size_t* aSize,
-            int* aProtection = nullptr, int* aMaxProtection = nullptr)
-{
-  mach_vm_address_t addr = (mach_vm_address_t) *aAddress;
+static bool QueryRegion(uint8_t** aAddress, size_t* aSize,
+                        int* aProtection = nullptr,
+                        int* aMaxProtection = nullptr) {
+  mach_vm_address_t addr = (mach_vm_address_t)*aAddress;
   mach_vm_size_t nbytes;
 
   vm_region_basic_info_64 info;
   mach_msg_type_number_t info_count = sizeof(vm_region_basic_info_64);
   mach_port_t some_port;
-  kern_return_t rv = mach_vm_region(mach_task_self(), &addr, &nbytes, VM_REGION_BASIC_INFO,
-                                    (vm_region_info_t) &info, &info_count, &some_port);
+  kern_return_t rv =
+      mach_vm_region(mach_task_self(), &addr, &nbytes, VM_REGION_BASIC_INFO,
+                     (vm_region_info_t)&info, &info_count, &some_port);
   if (rv == KERN_INVALID_ADDRESS) {
     return false;
   }
   MOZ_RELEASE_ASSERT(rv == KERN_SUCCESS);
 
-  *aAddress = (uint8_t*) addr;
+  *aAddress = (uint8_t*)addr;
   *aSize = nbytes;
   if (aProtection) {
     *aProtection = info.protection;
@@ -772,9 +722,7 @@ QueryRegion(uint8_t** aAddress, size_t* aSize,
   return true;
 }
 
-static void
-MarkThreadStacksAsUntracked()
-{
+static void MarkThreadStacksAsUntracked() {
   AutoPassThroughThreadEvents pt;
 
   // Thread stacks are excluded from the tracked regions.
@@ -802,7 +750,8 @@ MarkThreadStacksAsUntracked()
 
     // Sanity check the region size. Note that we don't mark this entire region
     // as untracked, since it may contain TLS data which should be tracked.
-    MOZ_RELEASE_ASSERT(base + size >= thread->StackBase() + thread->StackSize());
+    MOZ_RELEASE_ASSERT(base + size >=
+                       thread->StackBase() + thread->StackSize());
 
     uint8_t* trailing = base + size;
     size_t trailingSize;
@@ -820,11 +769,10 @@ MarkThreadStacksAsUntracked()
 // [aExclude, aExclude + aExcludeSize], set *aSize to contain the subregion
 // starting at aAddress which which is not excluded, and *aRemaining and
 // *aRemainingSize to any additional subregion which is not excluded.
-static bool
-MaybeExtractMemoryRegion(uint8_t* aAddress, size_t* aSize,
-                         uint8_t** aRemaining, size_t* aRemainingSize,
-                         uint8_t* aExclude, size_t aExcludeSize)
-{
+static bool MaybeExtractMemoryRegion(uint8_t* aAddress, size_t* aSize,
+                                     uint8_t** aRemaining,
+                                     size_t* aRemainingSize, uint8_t* aExclude,
+                                     size_t aExcludeSize) {
   uint8_t* addrLimit = aAddress + *aSize;
 
   // Expand the excluded region out to the containing page boundaries.
@@ -850,15 +798,16 @@ MaybeExtractMemoryRegion(uint8_t* aAddress, size_t* aSize,
 // be considered tracked memory. *aRemaining and *aRemainingSize are set to any
 // remaining portion of the initial region after the first excluded portion
 // that is found.
-static void
-ExtractTrackedInitialMemoryRegion(uint8_t* aAddress, size_t* aSize,
-                                  uint8_t** aRemaining, size_t* aRemainingSize)
-{
+static void ExtractTrackedInitialMemoryRegion(uint8_t* aAddress, size_t* aSize,
+                                              uint8_t** aRemaining,
+                                              size_t* aRemainingSize) {
   // Look for the earliest untracked region which intersects the given region.
   const AllocatedMemoryRegion* earliestIntersect = nullptr;
-  for (const AllocatedMemoryRegion& region : gMemoryInfo->mInitialUntrackedRegions) {
+  for (const AllocatedMemoryRegion& region :
+       gMemoryInfo->mInitialUntrackedRegions) {
     size_t size = *aSize;
-    if (MaybeExtractMemoryRegion(aAddress, &size, nullptr, nullptr, region.mBase, region.mSize)) {
+    if (MaybeExtractMemoryRegion(aAddress, &size, nullptr, nullptr,
+                                 region.mBase, region.mSize)) {
       // There was an intersection.
       if (!earliestIntersect || region.mBase < earliestIntersect->mBase) {
         earliestIntersect = &region;
@@ -868,7 +817,8 @@ ExtractTrackedInitialMemoryRegion(uint8_t* aAddress, size_t* aSize,
 
   if (earliestIntersect) {
     if (!MaybeExtractMemoryRegion(aAddress, aSize, aRemaining, aRemainingSize,
-                                  earliestIntersect->mBase, earliestIntersect->mSize)) {
+                                  earliestIntersect->mBase,
+                                  earliestIntersect->mSize)) {
       MOZ_CRASH();
     }
   } else {
@@ -878,25 +828,25 @@ ExtractTrackedInitialMemoryRegion(uint8_t* aAddress, size_t* aSize,
   }
 }
 
-static void
-AddTrackedRegion(uint8_t* aAddress, size_t aSize, bool aExecutable)
-{
+static void AddTrackedRegion(uint8_t* aAddress, size_t aSize,
+                             bool aExecutable) {
   if (aSize) {
     AutoSpinLock lock(gMemoryInfo->mTrackedRegionsLock);
-    gMemoryInfo->mTrackedRegions.insert(aAddress,
-                                        AllocatedMemoryRegion(aAddress, aSize, aExecutable));
-    gMemoryInfo->mTrackedRegionsByAllocationOrder.emplaceBack(aAddress, aSize, aExecutable);
+    gMemoryInfo->mTrackedRegions.insert(
+        aAddress, AllocatedMemoryRegion(aAddress, aSize, aExecutable));
+    gMemoryInfo->mTrackedRegionsByAllocationOrder.emplaceBack(aAddress, aSize,
+                                                              aExecutable);
   }
 }
 
 // Add any tracked subregions of [aAddress, aAddress + aSize].
-void
-AddInitialTrackedMemoryRegions(uint8_t* aAddress, size_t aSize, bool aExecutable)
-{
+void AddInitialTrackedMemoryRegions(uint8_t* aAddress, size_t aSize,
+                                    bool aExecutable) {
   while (aSize) {
     uint8_t* remaining;
     size_t remainingSize;
-    ExtractTrackedInitialMemoryRegion(aAddress, &aSize, &remaining, &remainingSize);
+    ExtractTrackedInitialMemoryRegion(aAddress, &aSize, &remaining,
+                                      &remainingSize);
 
     AddTrackedRegion(aAddress, aSize, aExecutable);
 
@@ -909,9 +859,7 @@ static void UpdateNumTrackedRegionsForSnapshot();
 
 // Fill in the set of tracked memory regions that are currently mapped within
 // this process.
-static void
-ProcessAllInitialMemoryRegions()
-{
+static void ProcessAllInitialMemoryRegions() {
   MOZ_ASSERT(!AreThreadEventsPassedThrough());
 
   {
@@ -927,7 +875,8 @@ ProcessAllInitialMemoryRegions()
       // they aren't currently writable.
       if (maxProtection & VM_PROT_WRITE) {
         MOZ_RELEASE_ASSERT(maxProtection & VM_PROT_READ);
-        AddInitialTrackedMemoryRegions(addr, size, maxProtection & VM_PROT_EXECUTE);
+        AddInitialTrackedMemoryRegions(addr, size,
+                                       maxProtection & VM_PROT_EXECUTE);
       }
 
       addr += size;
@@ -938,7 +887,8 @@ ProcessAllInitialMemoryRegions()
 
   // Write protect all tracked memory.
   AutoDisallowMemoryChanges disallow;
-  for (const AllocatedMemoryRegion& region : gMemoryInfo->mTrackedRegionsByAllocationOrder) {
+  for (const AllocatedMemoryRegion& region :
+       gMemoryInfo->mTrackedRegionsByAllocationOrder) {
     DirectWriteProtectMemory(region.mBase, region.mSize, region.mExecutable);
   }
 }
@@ -955,57 +905,50 @@ static FreeRegionSet gFreeRegions(MemoryKind::Tracked);
 // at the point of the last saved checkpoint.
 static size_t gNumTrackedRegions;
 
-static void
-UpdateNumTrackedRegionsForSnapshot()
-{
+static void UpdateNumTrackedRegionsForSnapshot() {
   MOZ_ASSERT(Thread::CurrentIsMainThread());
   gNumTrackedRegions = gMemoryInfo->mTrackedRegionsByAllocationOrder.length();
 }
 
-void
-FixupFreeRegionsAfterRewind()
-{
+void FixupFreeRegionsAfterRewind() {
   // All memory that has been allocated since the associated checkpoint was
   // reached is now free, and may be reused for new allocations.
-  size_t newTrackedRegions = gMemoryInfo->mTrackedRegionsByAllocationOrder.length();
+  size_t newTrackedRegions =
+      gMemoryInfo->mTrackedRegionsByAllocationOrder.length();
   for (size_t i = gNumTrackedRegions; i < newTrackedRegions; i++) {
-    const AllocatedMemoryRegion& region = gMemoryInfo->mTrackedRegionsByAllocationOrder[i];
+    const AllocatedMemoryRegion& region =
+        gMemoryInfo->mTrackedRegionsByAllocationOrder[i];
     gFreeRegions.Insert(region.mBase, region.mSize);
   }
   gNumTrackedRegions = newTrackedRegions;
 }
 
-/* static */ FreeRegionSet&
-FreeRegionSet::Get(MemoryKind aKind)
-{
-  return (aKind == MemoryKind::Tracked) ? gFreeRegions : gMemoryInfo->mFreeUntrackedRegions;
+/* static */ FreeRegionSet& FreeRegionSet::Get(MemoryKind aKind) {
+  return (aKind == MemoryKind::Tracked) ? gFreeRegions
+                                        : gMemoryInfo->mFreeUntrackedRegions;
 }
 
-void*
-FreeRegionSet::TakeNextChunk()
-{
+void* FreeRegionSet::TakeNextChunk() {
   MOZ_RELEASE_ASSERT(mNextChunk);
   void* res = mNextChunk;
   mNextChunk = nullptr;
   return res;
 }
 
-void
-FreeRegionSet::InsertLockHeld(void* aAddress, size_t aSize, AutoSpinLock& aLockHeld)
-{
-  mRegions.insert(aSize, AllocatedMemoryRegion((uint8_t*) aAddress, aSize, true));
+void FreeRegionSet::InsertLockHeld(void* aAddress, size_t aSize,
+                                   AutoSpinLock& aLockHeld) {
+  mRegions.insert(aSize,
+                  AllocatedMemoryRegion((uint8_t*)aAddress, aSize, true));
 }
 
-void
-FreeRegionSet::MaybeRefillNextChunk(AutoSpinLock& aLockHeld)
-{
+void FreeRegionSet::MaybeRefillNextChunk(AutoSpinLock& aLockHeld) {
   if (mNextChunk) {
     return;
   }
 
   // Look for a free region we can take the next chunk from.
   size_t size = ChunkPages * PageSize;
-  gMemoryInfo->mMemoryBalance[(size_t) mKind] += size;
+  gMemoryInfo->mMemoryBalance[(size_t)mKind] += size;
 
   mNextChunk = ExtractLockHeld(size, aLockHeld);
 
@@ -1016,9 +959,7 @@ FreeRegionSet::MaybeRefillNextChunk(AutoSpinLock& aLockHeld)
   }
 }
 
-void
-FreeRegionSet::Insert(void* aAddress, size_t aSize)
-{
+void FreeRegionSet::Insert(void* aAddress, size_t aSize) {
   MOZ_RELEASE_ASSERT(aAddress && aAddress == PageBase(aAddress));
   MOZ_RELEASE_ASSERT(aSize && aSize == RoundupSizeToPageBoundary(aSize));
 
@@ -1028,11 +969,9 @@ FreeRegionSet::Insert(void* aAddress, size_t aSize)
   InsertLockHeld(aAddress, aSize, lock);
 }
 
-void*
-FreeRegionSet::ExtractLockHeld(size_t aSize, AutoSpinLock& aLockHeld)
-{
+void* FreeRegionSet::ExtractLockHeld(size_t aSize, AutoSpinLock& aLockHeld) {
   Maybe<AllocatedMemoryRegion> best =
-    mRegions.lookupClosestLessOrEqual(aSize, /* aRemove = */ true);
+      mRegions.lookupClosestLessOrEqual(aSize, /* aRemove = */ true);
   if (best.isSome()) {
     MOZ_RELEASE_ASSERT(best.ref().mSize >= aSize);
     uint8_t* res = best.ref().mBase;
@@ -1045,9 +984,7 @@ FreeRegionSet::ExtractLockHeld(size_t aSize, AutoSpinLock& aLockHeld)
   return nullptr;
 }
 
-void*
-FreeRegionSet::Extract(void* aAddress, size_t aSize)
-{
+void* FreeRegionSet::Extract(void* aAddress, size_t aSize) {
   MOZ_RELEASE_ASSERT(aAddress == PageBase(aAddress));
   MOZ_RELEASE_ASSERT(aSize && aSize == RoundupSizeToPageBoundary(aSize));
 
@@ -1083,9 +1020,7 @@ FreeRegionSet::Extract(void* aAddress, size_t aSize)
   return ExtractLockHeld(aSize, lock);
 }
 
-bool
-FreeRegionSet::Intersects(void* aAddress, size_t aSize)
-{
+bool FreeRegionSet::Intersects(void* aAddress, size_t aSize) {
   AutoSpinLock lock(mLock);
   for (typename Tree::Iter iter = mRegions.begin(); !iter.done(); ++iter) {
     if (MemoryIntersects(iter.ref().mBase, iter.ref().mSize, aAddress, aSize)) {
@@ -1099,9 +1034,8 @@ FreeRegionSet::Intersects(void* aAddress, size_t aSize)
 // Memory Management
 ///////////////////////////////////////////////////////////////////////////////
 
-void
-RegisterAllocatedMemory(void* aBaseAddress, size_t aSize, MemoryKind aKind)
-{
+void RegisterAllocatedMemory(void* aBaseAddress, size_t aSize,
+                             MemoryKind aKind) {
   MOZ_RELEASE_ASSERT(aBaseAddress == PageBase(aBaseAddress));
   MOZ_RELEASE_ASSERT(aSize == RoundupSizeToPageBoundary(aSize));
 
@@ -1118,9 +1052,7 @@ RegisterAllocatedMemory(void* aBaseAddress, size_t aSize, MemoryKind aKind)
   }
 }
 
-void
-CheckFixedMemory(void* aAddress, size_t aSize)
-{
+void CheckFixedMemory(void* aAddress, size_t aSize) {
   MOZ_RELEASE_ASSERT(aAddress == PageBase(aAddress));
   MOZ_RELEASE_ASSERT(aSize == RoundupSizeToPageBoundary(aSize));
 
@@ -1136,9 +1068,10 @@ CheckFixedMemory(void* aAddress, size_t aSize)
     for (size_t offset = 0; offset < aSize; offset += PageSize) {
       uint8_t* page = (uint8_t*)aAddress + offset;
       Maybe<AllocatedMemoryRegion> region =
-        gMemoryInfo->mTrackedRegions.lookupClosestLessOrEqual(page);
+          gMemoryInfo->mTrackedRegions.lookupClosestLessOrEqual(page);
       if (!region.isSome() ||
-          !MemoryContains(region.ref().mBase, region.ref().mSize, page, PageSize)) {
+          !MemoryContains(region.ref().mBase, region.ref().mSize, page,
+                          PageSize)) {
         MOZ_CRASH("Fixed memory is not tracked!");
       }
     }
@@ -1150,9 +1083,7 @@ CheckFixedMemory(void* aAddress, size_t aSize)
   }
 }
 
-void
-RestoreWritableFixedMemory(void* aAddress, size_t aSize)
-{
+void RestoreWritableFixedMemory(void* aAddress, size_t aSize) {
   MOZ_RELEASE_ASSERT(aAddress == PageBase(aAddress));
   MOZ_RELEASE_ASSERT(aSize == RoundupSizeToPageBoundary(aSize));
 
@@ -1169,14 +1100,12 @@ RestoreWritableFixedMemory(void* aAddress, size_t aSize)
   }
 }
 
-void*
-AllocateMemoryTryAddress(void* aAddress, size_t aSize, MemoryKind aKind)
-{
+void* AllocateMemoryTryAddress(void* aAddress, size_t aSize, MemoryKind aKind) {
   MOZ_RELEASE_ASSERT(aAddress == PageBase(aAddress));
   aSize = RoundupSizeToPageBoundary(aSize);
 
   if (gMemoryInfo) {
-    gMemoryInfo->mMemoryBalance[(size_t) aKind] += aSize;
+    gMemoryInfo->mMemoryBalance[(size_t)aKind] += aSize;
   }
 
   if (HasSavedCheckpoint()) {
@@ -1190,20 +1119,16 @@ AllocateMemoryTryAddress(void* aAddress, size_t aSize, MemoryKind aKind)
   return res;
 }
 
-void*
-AllocateMemory(size_t aSize, MemoryKind aKind)
-{
+void* AllocateMemory(size_t aSize, MemoryKind aKind) {
   if (!IsReplaying()) {
     return DirectAllocateMemory(nullptr, aSize);
   }
   return AllocateMemoryTryAddress(nullptr, aSize, aKind);
 }
 
-void
-DeallocateMemory(void* aAddress, size_t aSize, MemoryKind aKind)
-{
+void DeallocateMemory(void* aAddress, size_t aSize, MemoryKind aKind) {
   // Round the supplied region to the containing page boundaries.
-  aSize += (uint8_t*) aAddress - PageBase(aAddress);
+  aSize += (uint8_t*)aAddress - PageBase(aAddress);
   aAddress = PageBase(aAddress);
   aSize = RoundupSizeToPageBoundary(aSize);
 
@@ -1212,21 +1137,21 @@ DeallocateMemory(void* aAddress, size_t aSize, MemoryKind aKind)
   }
 
   if (gMemoryInfo) {
-    gMemoryInfo->mMemoryBalance[(size_t) aKind] -= aSize;
+    gMemoryInfo->mMemoryBalance[(size_t)aKind] -= aSize;
   }
 
   // Memory is returned to the system before saving the first checkpoint.
   if (!HasSavedCheckpoint()) {
     if (IsReplaying() && aKind != MemoryKind::Tracked) {
-      RemoveInitialUntrackedRegion((uint8_t*) aAddress, aSize);
+      RemoveInitialUntrackedRegion((uint8_t*)aAddress, aSize);
     }
     DirectDeallocateMemory(aAddress, aSize);
     return;
   }
 
   if (aKind == MemoryKind::Tracked) {
-    // For simplicity, all free regions must be executable, so ignore deallocated
-    // memory in regions that are not executable.
+    // For simplicity, all free regions must be executable, so ignore
+    // deallocated memory in regions that are not executable.
     bool executable;
     if (!IsTrackedAddress(aAddress, &executable) || !executable) {
       return;
@@ -1245,9 +1170,8 @@ DeallocateMemory(void* aAddress, size_t aSize, MemoryKind aKind)
 
 // While on a snapshot thread, restore the contents of all pages belonging to
 // this thread which were modified since the last recorded diff snapshot.
-static void
-SnapshotThreadRestoreLastDiffSnapshot(SnapshotThreadWorklist* aWorklist)
-{
+static void SnapshotThreadRestoreLastDiffSnapshot(
+    SnapshotThreadWorklist* aWorklist) {
   CheckpointId checkpoint = GetLastSavedCheckpoint();
 
   DirtyPageSet& set = aWorklist->mSets.back();
@@ -1271,11 +1195,10 @@ SnapshotThreadRestoreLastDiffSnapshot(SnapshotThreadWorklist* aWorklist)
 }
 
 // Start routine for a snapshot thread.
-void
-SnapshotThreadMain(void* aArgument)
-{
-  size_t threadIndex = (size_t) aArgument;
-  SnapshotThreadWorklist* worklist = &gMemoryInfo->mSnapshotWorklists[threadIndex];
+void SnapshotThreadMain(void* aArgument) {
+  size_t threadIndex = (size_t)aArgument;
+  SnapshotThreadWorklist* worklist =
+      &gMemoryInfo->mSnapshotWorklists[threadIndex];
   worklist->mThreadIndex = threadIndex;
 
   while (true) {
@@ -1297,9 +1220,7 @@ SnapshotThreadMain(void* aArgument)
 }
 
 // An alternative to memcmp that can be called from any place.
-static bool
-MemoryEquals(void* aDst, void* aSrc, size_t aSize)
-{
+static bool MemoryEquals(void* aDst, void* aSrc, size_t aSize) {
   MOZ_ASSERT((size_t)aDst % sizeof(size_t) == 0);
   MOZ_ASSERT((size_t)aSrc % sizeof(size_t) == 0);
   MOZ_ASSERT(aSize % sizeof(size_t) == 0);
@@ -1316,9 +1237,8 @@ MemoryEquals(void* aDst, void* aSrc, size_t aSize)
 
 // Add a page to the last set in some snapshot thread's worklist. This is
 // called on the main thread while the snapshot thread is idle.
-static void
-AddDirtyPageToWorklist(uint8_t* aAddress, uint8_t* aOriginal, bool aExecutable)
-{
+static void AddDirtyPageToWorklist(uint8_t* aAddress, uint8_t* aOriginal,
+                                   bool aExecutable) {
   // Distribute pages to snapshot threads using the base address of a page.
   // This guarantees that the same page will be consistently assigned to the
   // same thread as different snapshots are taken.
@@ -1327,7 +1247,8 @@ AddDirtyPageToWorklist(uint8_t* aAddress, uint8_t* aOriginal, bool aExecutable)
     FreePageCopy(aOriginal);
   } else {
     size_t pageIndex = ((size_t)aAddress / PageSize) % NumSnapshotThreads;
-    SnapshotThreadWorklist* worklist = &gMemoryInfo->mSnapshotWorklists[pageIndex];
+    SnapshotThreadWorklist* worklist =
+        &gMemoryInfo->mSnapshotWorklists[pageIndex];
     MOZ_RELEASE_ASSERT(!worklist->mSets.empty());
     DirtyPageSet& set = worklist->mSets.back();
     MOZ_RELEASE_ASSERT(set.mCheckpoint == GetLastSavedCheckpoint());
@@ -1339,28 +1260,23 @@ AddDirtyPageToWorklist(uint8_t* aAddress, uint8_t* aOriginal, bool aExecutable)
 // Snapshot Interface
 ///////////////////////////////////////////////////////////////////////////////
 
-void
-InitializeMemorySnapshots()
-{
+void InitializeMemorySnapshots() {
   MOZ_RELEASE_ASSERT(gMemoryInfo == nullptr);
   void* memory = AllocateMemory(sizeof(MemoryInfo), MemoryKind::Generic);
-  gMemoryInfo = new(memory) MemoryInfo();
+  gMemoryInfo = new (memory) MemoryInfo();
 
   // Mark gMemoryInfo as untracked. See AddInitialUntrackedMemoryRegion.
-  AddInitialUntrackedMemoryRegion(reinterpret_cast<uint8_t*>(memory), sizeof(MemoryInfo));
+  AddInitialUntrackedMemoryRegion(reinterpret_cast<uint8_t*>(memory),
+                                  sizeof(MemoryInfo));
 }
 
-void
-InitializeCountdownThread()
-{
+void InitializeCountdownThread() {
 #ifdef WANT_COUNTDOWN_THREAD
   Thread::SpawnNonRecordedThread(CountdownThreadMain, nullptr);
 #endif
 }
 
-void
-TakeFirstMemorySnapshot()
-{
+void TakeFirstMemorySnapshot() {
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
   MOZ_RELEASE_ASSERT(gMemoryInfo->mTrackedRegions.empty());
 
@@ -1369,7 +1285,8 @@ TakeFirstMemorySnapshot()
     AutoPassThroughThreadEvents pt;
 
     for (size_t i = 0; i < NumSnapshotThreads; i++) {
-      Thread* thread = Thread::SpawnNonRecordedThread(SnapshotThreadMain, (void*) i);
+      Thread* thread =
+          Thread::SpawnNonRecordedThread(SnapshotThreadMain, (void*)i);
       gMemoryInfo->mSnapshotWorklists[i].mThreadId = thread->Id();
     }
   }
@@ -1381,9 +1298,7 @@ TakeFirstMemorySnapshot()
   ProcessAllInitialMemoryRegions();
 }
 
-void
-TakeDiffMemorySnapshot()
-{
+void TakeDiffMemorySnapshot() {
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
 
   UpdateNumTrackedRegionsForSnapshot();
@@ -1400,9 +1315,12 @@ TakeDiffMemorySnapshot()
   }
 
   // Distribute remaining active dirty pages to the snapshot thread worklists.
-  for (SortedDirtyPageSet::Iter iter = gMemoryInfo->mActiveDirty.begin(); !iter.done(); ++iter) {
-    AddDirtyPageToWorklist(iter.ref().mBase, iter.ref().mOriginal, iter.ref().mExecutable);
-    DirectWriteProtectMemory(iter.ref().mBase, PageSize, iter.ref().mExecutable);
+  for (SortedDirtyPageSet::Iter iter = gMemoryInfo->mActiveDirty.begin();
+       !iter.done(); ++iter) {
+    AddDirtyPageToWorklist(iter.ref().mBase, iter.ref().mOriginal,
+                           iter.ref().mExecutable);
+    DirectWriteProtectMemory(iter.ref().mBase, PageSize,
+                             iter.ref().mExecutable);
   }
 
   gMemoryInfo->mActiveDirty.clear();
@@ -1411,25 +1329,23 @@ TakeDiffMemorySnapshot()
   gMemoryInfo->mSnapshotThreadsShouldIdle.ActivateEnd();
 }
 
-void
-RestoreMemoryToLastSavedCheckpoint()
-{
+void RestoreMemoryToLastSavedCheckpoint() {
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
   MOZ_RELEASE_ASSERT(!gMemoryInfo->mMemoryChangesAllowed);
 
   // Restore all dirty regions that have been modified since the last
   // checkpoint was saved/restored.
-  for (SortedDirtyPageSet::Iter iter = gMemoryInfo->mActiveDirty.begin(); !iter.done(); ++iter) {
+  for (SortedDirtyPageSet::Iter iter = gMemoryInfo->mActiveDirty.begin();
+       !iter.done(); ++iter) {
     MemoryMove(iter.ref().mBase, iter.ref().mOriginal, PageSize);
     FreePageCopy(iter.ref().mOriginal);
-    DirectWriteProtectMemory(iter.ref().mBase, PageSize, iter.ref().mExecutable);
+    DirectWriteProtectMemory(iter.ref().mBase, PageSize,
+                             iter.ref().mExecutable);
   }
   gMemoryInfo->mActiveDirty.clear();
 }
 
-void
-RestoreMemoryToLastSavedDiffCheckpoint()
-{
+void RestoreMemoryToLastSavedDiffCheckpoint() {
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
   MOZ_RELEASE_ASSERT(!gMemoryInfo->mMemoryChangesAllowed);
   MOZ_RELEASE_ASSERT(gMemoryInfo->mActiveDirty.empty());
@@ -1440,5 +1356,5 @@ RestoreMemoryToLastSavedDiffCheckpoint()
   gMemoryInfo->mSnapshotThreadsShouldRestore.ActivateEnd();
 }
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla

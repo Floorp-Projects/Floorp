@@ -28,38 +28,33 @@ NS_DEFINE_NAMED_CID(NS_SYSTEMALERTSSERVICE_CID);
 
 static const mozilla::Module::CIDEntry kGnomeCIDs[] = {
 #ifdef MOZ_ENABLE_GCONF
-  { &kNS_GCONFSERVICE_CID, false, nullptr, nsGConfServiceConstructor },
+    {&kNS_GCONFSERVICE_CID, false, nullptr, nsGConfServiceConstructor},
 #endif
-  { &kNS_GIOSERVICE_CID, false, nullptr, nsGIOServiceConstructor },
-  { &kNS_GSETTINGSSERVICE_CID, false, nullptr, nsGSettingsServiceConstructor },
-  { &kNS_SYSTEMALERTSSERVICE_CID, false, nullptr, nsSystemAlertsServiceConstructor },
-  { nullptr }
-};
+    {&kNS_GIOSERVICE_CID, false, nullptr, nsGIOServiceConstructor},
+    {&kNS_GSETTINGSSERVICE_CID, false, nullptr, nsGSettingsServiceConstructor},
+    {&kNS_SYSTEMALERTSSERVICE_CID, false, nullptr,
+     nsSystemAlertsServiceConstructor},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kGnomeContracts[] = {
 #ifdef MOZ_ENABLE_GCONF
-  { NS_GCONFSERVICE_CONTRACTID, &kNS_GCONFSERVICE_CID },
+    {NS_GCONFSERVICE_CONTRACTID, &kNS_GCONFSERVICE_CID},
 #endif
-  { NS_GIOSERVICE_CONTRACTID, &kNS_GIOSERVICE_CID },
-  { NS_GSETTINGSSERVICE_CONTRACTID, &kNS_GSETTINGSSERVICE_CID },
-  { NS_SYSTEMALERTSERVICE_CONTRACTID, &kNS_SYSTEMALERTSSERVICE_CID },
-  { nullptr }
-};
+    {NS_GIOSERVICE_CONTRACTID, &kNS_GIOSERVICE_CID},
+    {NS_GSETTINGSSERVICE_CONTRACTID, &kNS_GSETTINGSSERVICE_CID},
+    {NS_SYSTEMALERTSERVICE_CONTRACTID, &kNS_SYSTEMALERTSSERVICE_CID},
+    {nullptr}};
 
-static nsresult
-InitGType ()
-{
+static nsresult InitGType() {
   g_type_init();
   return NS_OK;
 }
 
-static const mozilla::Module kGnomeModule = {
-  mozilla::Module::kVersion,
-  kGnomeCIDs,
-  kGnomeContracts,
-  nullptr,
-  nullptr,
-  InitGType
-};
+static const mozilla::Module kGnomeModule = {mozilla::Module::kVersion,
+                                             kGnomeCIDs,
+                                             kGnomeContracts,
+                                             nullptr,
+                                             nullptr,
+                                             InitGType};
 
 NSMODULE_DEFN(mozgnome) = &kGnomeModule;

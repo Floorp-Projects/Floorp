@@ -14,19 +14,20 @@
  * Write(), then call Finish() to get the base64-encoded data.
  */
 class nsBase64Encoder final : public nsIOutputStream {
-  public:
-    nsBase64Encoder() = default;
+ public:
+  nsBase64Encoder() = default;
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOUTPUTSTREAM
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOUTPUTSTREAM
 
-    nsresult Finish(nsACString& _result);
-  private:
-    ~nsBase64Encoder() = default;
+  nsresult Finish(nsACString& _result);
 
-    /// The data written to this stream. nsCString can deal fine with
-    /// binary data.
-    nsCString mData;
+ private:
+  ~nsBase64Encoder() = default;
+
+  /// The data written to this stream. nsCString can deal fine with
+  /// binary data.
+  nsCString mData;
 };
 
 #endif

@@ -31,7 +31,7 @@ namespace mozilla {
 namespace dom {
 class Element;
 }
-}
+}  // namespace mozilla
 
 /**
  * Right now our identifier map entries contain information for 'name'
@@ -45,8 +45,7 @@ class Element;
  * Perhaps the document.all results should have their own hashtable
  * in nsHTMLDocument.
  */
-class nsIdentifierMapEntry : public PLDHashEntryHdr
-{
+class nsIdentifierMapEntry : public PLDHashEntryHdr {
   typedef mozilla::dom::Element Element;
   typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
 
@@ -54,24 +53,18 @@ class nsIdentifierMapEntry : public PLDHashEntryHdr
    * @see nsIDocument::IDTargetObserver, this is just here to avoid include
    * hell.
    */
-  typedef bool (* IDTargetObserver)(Element* aOldElement,
-                                    Element* aNewelement, void* aData);
-public:
-  struct AtomOrString
-  {
+  typedef bool (*IDTargetObserver)(Element* aOldElement, Element* aNewelement,
+                                   void* aData);
+
+ public:
+  struct AtomOrString {
     MOZ_IMPLICIT AtomOrString(nsAtom* aAtom) : mAtom(aAtom) {}
     MOZ_IMPLICIT AtomOrString(const nsAString& aString) : mString(aString) {}
     AtomOrString(const AtomOrString& aOther)
-      : mAtom(aOther.mAtom)
-      , mString(aOther.mString)
-    {
-    }
+        : mAtom(aOther.mAtom), mString(aOther.mString) {}
 
     AtomOrString(AtomOrString&& aOther)
-      : mAtom(aOther.mAtom.forget())
-      , mString(aOther.mString)
-    {
-    }
+        : mAtom(aOther.mAtom.forget()), mString(aOther.mString) {}
 
     RefPtr<nsAtom> mAtom;
     const nsString mString;
@@ -85,8 +78,7 @@ public:
   nsIdentifierMapEntry(nsIdentifierMapEntry&& aOther);
   ~nsIdentifierMapEntry();
 
-  nsString GetKeyAsString() const
-  {
+  nsString GetKeyAsString() const {
     if (mKey.mAtom) {
       return nsAtomString(mKey.mAtom);
     }
@@ -94,8 +86,7 @@ public:
     return mKey.mString;
   }
 
-  bool KeyEquals(const KeyTypePointer aOtherKey) const
-  {
+  bool KeyEquals(const KeyTypePointer aOtherKey) const {
     if (mKey.mAtom) {
       if (aOtherKey->mAtom) {
         return mKey.mAtom == aOtherKey->mAtom;
@@ -113,10 +104,9 @@ public:
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
 
-  static PLDHashNumber HashKey(const KeyTypePointer aKey)
-  {
-    return aKey->mAtom ?
-      aKey->mAtom->hash() : mozilla::HashString(aKey->mString);
+  static PLDHashNumber HashKey(const KeyTypePointer aKey) {
+    return aKey->mAtom ? aKey->mAtom->hash()
+                       : mozilla::HashString(aKey->mString);
   }
 
   enum { ALLOW_MEMMOVE = false };
@@ -124,9 +114,7 @@ public:
   void AddNameElement(nsINode* aDocument, Element* aElement);
   void RemoveNameElement(Element* aElement);
   bool IsEmpty();
-  nsBaseContentList* GetNameContentList() {
-    return mNameContentList;
-  }
+  nsBaseContentList* GetNameContentList() { return mNameContentList; }
   bool HasNameElement() const;
 
   /**
@@ -137,9 +125,7 @@ public:
   /**
    * Returns the list of all elements associated with this id.
    */
-  const nsTArray<Element*>& GetIdElements() const {
-    return mIdContentList;
-  }
+  const nsTArray<Element*>& GetIdElements() const { return mIdContentList; }
   /**
    * If this entry has a non-null image element set (using SetImageElement),
    * the image element will be returned, otherwise the same as GetIdElement().
@@ -161,10 +147,10 @@ public:
   bool HasIdElementExposedAsHTMLDocumentProperty();
 
   bool HasContentChangeCallback() { return mChangeCallbacks != nullptr; }
-  void AddContentChangeCallback(IDTargetObserver aCallback,
-                                void* aData, bool aForImage);
-  void RemoveContentChangeCallback(IDTargetObserver aCallback,
-                                void* aData, bool aForImage);
+  void AddContentChangeCallback(IDTargetObserver aCallback, void* aData,
+                                bool aForImage);
+  void RemoveContentChangeCallback(IDTargetObserver aCallback, void* aData,
+                                   bool aForImage);
 
   void Traverse(nsCycleCollectionTraversalCallback* aCallback);
 
@@ -178,22 +164,18 @@ public:
     typedef const ChangeCallback KeyType;
     typedef const ChangeCallback* KeyTypePointer;
 
-    explicit ChangeCallbackEntry(const ChangeCallback* aKey) :
-      mKey(*aKey) { }
-    ChangeCallbackEntry(ChangeCallbackEntry&& aOther) :
-      PLDHashEntryHdr(std::move(aOther)),
-      mKey(std::move(aOther.mKey)) { }
+    explicit ChangeCallbackEntry(const ChangeCallback* aKey) : mKey(*aKey) {}
+    ChangeCallbackEntry(ChangeCallbackEntry&& aOther)
+        : PLDHashEntryHdr(std::move(aOther)), mKey(std::move(aOther.mKey)) {}
 
     KeyType GetKey() const { return mKey; }
     bool KeyEquals(KeyTypePointer aKey) const {
-      return aKey->mCallback == mKey.mCallback &&
-             aKey->mData == mKey.mData &&
+      return aKey->mCallback == mKey.mCallback && aKey->mData == mKey.mData &&
              aKey->mForImage == mKey.mForImage;
     }
 
     static KeyTypePointer KeyToPointer(KeyType& aKey) { return &aKey; }
-    static PLDHashNumber HashKey(KeyTypePointer aKey)
-    {
+    static PLDHashNumber HashKey(KeyTypePointer aKey) {
       return mozilla::HashGeneric(aKey->mCallback, aKey->mData);
     }
     enum { ALLOW_MEMMOVE = true };
@@ -203,7 +185,7 @@ public:
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-private:
+ private:
   nsIdentifierMapEntry(const nsIdentifierMapEntry& aOther) = delete;
   nsIdentifierMapEntry& operator=(const nsIdentifierMapEntry& aOther) = delete;
 
@@ -219,4 +201,4 @@ private:
   RefPtr<Element> mImageElement;
 };
 
-#endif // #ifndef nsIdentifierMapEntry_h
+#endif  // #ifndef nsIdentifierMapEntry_h

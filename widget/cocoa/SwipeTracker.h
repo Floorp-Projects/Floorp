@@ -47,32 +47,30 @@ class PanGestureInput;
  * a bounce-back animation.)
  */
 class SwipeTracker final : public nsARefreshObserver {
-public:
+ public:
   NS_INLINE_DECL_REFCOUNTING(SwipeTracker, override)
 
-  SwipeTracker(nsChildView& aWidget,
-               const PanGestureInput& aSwipeStartEvent,
-               uint32_t aAllowedDirections,
-               uint32_t aSwipeDirection);
+  SwipeTracker(nsChildView& aWidget, const PanGestureInput& aSwipeStartEvent,
+               uint32_t aAllowedDirections, uint32_t aSwipeDirection);
 
   void Destroy();
 
   nsEventStatus ProcessEvent(const PanGestureInput& aEvent);
   void CancelSwipe(const TimeStamp& aTimeStamp);
 
-  static WidgetSimpleGestureEvent
-    CreateSwipeGestureEvent(EventMessage aMsg, nsIWidget* aWidget,
-                            const LayoutDeviceIntPoint& aPosition,
-                            const TimeStamp& aTimeStamp);
-
+  static WidgetSimpleGestureEvent CreateSwipeGestureEvent(
+      EventMessage aMsg, nsIWidget* aWidget,
+      const LayoutDeviceIntPoint& aPosition, const TimeStamp& aTimeStamp);
 
   // nsARefreshObserver
   void WillRefresh(mozilla::TimeStamp aTime) override;
 
-protected:
+ protected:
   ~SwipeTracker();
 
-  bool SwipingInAllowedDirection() const { return mAllowedDirections & mSwipeDirection; }
+  bool SwipingInAllowedDirection() const {
+    return mAllowedDirections & mSwipeDirection;
+  }
   double SwipeSuccessTargetValue() const;
   double ClampToAllowedRange(double aGestureAmount) const;
   bool ComputeSwipeSuccess() const;
@@ -97,6 +95,6 @@ protected:
   bool mRegisteredWithRefreshDriver;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // SwipeTracker_h
+#endif  // SwipeTracker_h

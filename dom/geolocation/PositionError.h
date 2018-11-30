@@ -18,11 +18,12 @@ namespace mozilla {
 namespace dom {
 class PositionErrorCallback;
 class Geolocation;
-typedef CallbackObjectHolder<PositionErrorCallback, nsIDOMGeoPositionErrorCallback> GeoPositionErrorCallback;
+typedef CallbackObjectHolder<PositionErrorCallback,
+                             nsIDOMGeoPositionErrorCallback>
+    GeoPositionErrorCallback;
 
-class PositionError final : public nsWrapperCache
-{
-public:
+class PositionError final : public nsWrapperCache {
+ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PositionError)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PositionError)
 
@@ -30,22 +31,22 @@ public:
 
   nsWrapperCache* GetParentObject() const;
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  int16_t Code() const {
-    return mCode;
-  }
+  int16_t Code() const { return mCode; }
 
   void GetMessage(nsAString& aMessage) const;
 
   void NotifyCallback(const GeoPositionErrorCallback& callback);
-private:
+
+ private:
   ~PositionError();
   int16_t mCode;
   RefPtr<Geolocation> mParent;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_PositionError_h */

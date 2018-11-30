@@ -12,30 +12,23 @@ NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Text)
 namespace mozilla {
 namespace dom {
 
-JSObject*
-SVGTextElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGTextElement::WrapNode(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto) {
   return SVGTextElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 //----------------------------------------------------------------------
 // Implementation
 
-SVGTextElement::SVGTextElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-  : SVGTextElementBase(std::move(aNodeInfo))
-{
+SVGTextElement::SVGTextElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGTextElementBase(std::move(aNodeInfo)) {}
+
+nsSVGElement::EnumAttributesInfo SVGTextElement::GetEnumInfo() {
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 
-nsSVGElement::EnumAttributesInfo
-SVGTextElement::GetEnumInfo()
-{
-  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            ArrayLength(sEnumInfo));
-}
-
-nsSVGElement::LengthAttributesInfo
-SVGTextElement::GetLengthInfo()
-{
+nsSVGElement::LengthAttributesInfo SVGTextElement::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }
@@ -43,24 +36,19 @@ SVGTextElement::GetLengthInfo()
 //----------------------------------------------------------------------
 // nsINode methods
 
-
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGTextElement)
-
 
 //----------------------------------------------------------------------
 // nsIContent methods
 
 NS_IMETHODIMP_(bool)
-SVGTextElement::IsAttributeMapped(const nsAtom* name) const
-{
-  static const MappedAttributeEntry* const map[] = {
-    sTextContentElementsMap,
-    sFontSpecificationMap
-  };
+SVGTextElement::IsAttributeMapped(const nsAtom* name) const {
+  static const MappedAttributeEntry* const map[] = {sTextContentElementsMap,
+                                                    sFontSpecificationMap};
 
   return FindAttributeDependence(name, map) ||
-    SVGTextElementBase::IsAttributeMapped(name);
+         SVGTextElementBase::IsAttributeMapped(name);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

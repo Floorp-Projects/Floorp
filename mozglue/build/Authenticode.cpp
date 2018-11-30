@@ -11,7 +11,7 @@
 // See mozmemory_wrap.h for more details. This file is part of libmozglue, so
 // it needs to use _impl suffixes.
 #define MALLOC_DECL(name, return_type, ...) \
-  extern "C" MOZ_MEMORY_API return_type name ## _impl(__VA_ARGS__);
+  extern "C" MOZ_MEMORY_API return_type name##_impl(__VA_ARGS__);
 #include "malloc_decls.h"
 #include "mozilla/mozalloc.h"
 #endif
@@ -20,11 +20,11 @@
 #if defined(_WIN32_WINNT)
 #undef _WIN32_WINNT
 #define _WIN32_WINNT _WIN32_WINNT_WIN8
-#endif // defined(_WIN32_WINNT)
+#endif  // defined(_WIN32_WINNT)
 #if defined(NTDDI_VERSION)
 #undef NTDDI_VERSION
 #define NTDDI_VERSION NTDDI_WIN8
-#endif // defined(NTDDI_VERSION)
+#endif  // defined(NTDDI_VERSION)
 
 #include "Authenticode.h"
 
@@ -44,39 +44,27 @@
 
 namespace {
 
-struct CertStoreDeleter
-{
+struct CertStoreDeleter {
   typedef HCERTSTORE pointer;
-  void operator()(pointer aStore)
-  {
-    ::CertCloseStore(aStore, 0);
-  }
+  void operator()(pointer aStore) { ::CertCloseStore(aStore, 0); }
 };
 
-struct CryptMsgDeleter
-{
+struct CryptMsgDeleter {
   typedef HCRYPTMSG pointer;
-  void operator()(pointer aMsg)
-  {
-    ::CryptMsgClose(aMsg);
-  }
+  void operator()(pointer aMsg) { ::CryptMsgClose(aMsg); }
 };
 
-struct CertContextDeleter
-{
-  void operator()(PCCERT_CONTEXT aCertContext)
-  {
+struct CertContextDeleter {
+  void operator()(PCCERT_CONTEXT aCertContext) {
     ::CertFreeCertificateContext(aCertContext);
   }
 };
 
-struct CATAdminContextDeleter
-{
+struct CATAdminContextDeleter {
   typedef HCATADMIN pointer;
-  void operator()(pointer aCtx)
-  {
-    static const mozilla::DynamicallyLinkedFunctionPtr<
-      decltype(&::CryptCATAdminReleaseContext)>
+  void operator()(pointer aCtx) {
+    static const mozilla::DynamicallyLinkedFunctionPtr<decltype(
+        &::CryptCATAdminReleaseContext)>
         pCryptCATAdminReleaseContext(L"wintrust.dll",
                                      "CryptCATAdminReleaseContext");
 
@@ -91,20 +79,18 @@ struct CATAdminContextDeleter
 
 typedef mozilla::UniquePtr<HCERTSTORE, CertStoreDeleter> CertStoreUniquePtr;
 typedef mozilla::UniquePtr<HCRYPTMSG, CryptMsgDeleter> CryptMsgUniquePtr;
-typedef mozilla::UniquePtr<const CERT_CONTEXT, CertContextDeleter> CertContextUniquePtr;
-typedef mozilla::UniquePtr<HCATADMIN, CATAdminContextDeleter> CATAdminContextUniquePtr;
+typedef mozilla::UniquePtr<const CERT_CONTEXT, CertContextDeleter>
+    CertContextUniquePtr;
+typedef mozilla::UniquePtr<HCATADMIN, CATAdminContextDeleter>
+    CATAdminContextUniquePtr;
 
 static const DWORD kEncodingTypes = X509_ASN_ENCODING | PKCS_7_ASN_ENCODING;
 
-class SignedBinary final
-{
-public:
+class SignedBinary final {
+ public:
   explicit SignedBinary(const wchar_t* aFilePath);
 
-  explicit operator bool() const
-  {
-    return mCertStore && mCryptMsg && mCertCtx;
-  }
+  explicit operator bool() const { return mCertStore && mCryptMsg && mCertCtx; }
 
   mozilla::UniquePtr<wchar_t[]> GetOrgName();
 
@@ -113,29 +99,23 @@ public:
   SignedBinary& operator=(const SignedBinary&) = delete;
   SignedBinary& operator=(SignedBinary&&) = delete;
 
-private:
+ private:
   bool VerifySignature(const wchar_t* aFilePath);
   bool QueryObject(const wchar_t* aFilePath);
   static bool VerifySignatureInternal(WINTRUST_DATA& aTrustData);
 
-private:
-  enum class TrustSource
-  {
-    eNone,
-    eEmbedded,
-    eCatalog
-  };
+ private:
+  enum class TrustSource { eNone, eEmbedded, eCatalog };
 
-private:
-  TrustSource           mTrustSource;
-  CertStoreUniquePtr    mCertStore;
-  CryptMsgUniquePtr     mCryptMsg;
-  CertContextUniquePtr  mCertCtx;
+ private:
+  TrustSource mTrustSource;
+  CertStoreUniquePtr mCertStore;
+  CryptMsgUniquePtr mCryptMsg;
+  CertContextUniquePtr mCertCtx;
 };
 
 SignedBinary::SignedBinary(const wchar_t* aFilePath)
-  : mTrustSource(TrustSource::eNone)
-{
+    : mTrustSource(TrustSource::eNone) {
   if (!VerifySignature(aFilePath)) {
     return;
   }
@@ -157,10 +137,9 @@ SignedBinary::SignedBinary(const wchar_t* aFilePath)
 
   auto certInfo = reinterpret_cast<CERT_INFO*>(certInfoBuf.get());
 
-  PCCERT_CONTEXT certCtx = CertFindCertificateInStore(mCertStore.get(),
-                                                      kEncodingTypes, 0,
-                                                      CERT_FIND_SUBJECT_CERT,
-                                                      certInfo, nullptr);
+  PCCERT_CONTEXT certCtx =
+      CertFindCertificateInStore(mCertStore.get(), kEncodingTypes, 0,
+                                 CERT_FIND_SUBJECT_CERT, certInfo, nullptr);
   if (!certCtx) {
     return;
   }
@@ -168,9 +147,7 @@ SignedBinary::SignedBinary(const wchar_t* aFilePath)
   mCertCtx.reset(certCtx);
 }
 
-bool
-SignedBinary::QueryObject(const wchar_t* aFilePath)
-{
+bool SignedBinary::QueryObject(const wchar_t* aFilePath) {
   DWORD encodingType, contentType, formatType;
   HCERTSTORE rawCertStore;
   HCRYPTMSG rawCryptMsg;
@@ -195,15 +172,14 @@ SignedBinary::QueryObject(const wchar_t* aFilePath)
  *                   |dwUnionChoice|, and appropriate union field. This function
  *                   will then populate the remaining fields as appropriate.
  */
-/* static */ bool
-SignedBinary::VerifySignatureInternal(WINTRUST_DATA& aTrustData)
-{
+/* static */ bool SignedBinary::VerifySignatureInternal(
+    WINTRUST_DATA& aTrustData) {
   aTrustData.dwUIChoice = WTD_UI_NONE;
   aTrustData.fdwRevocationChecks = WTD_REVOKE_NONE;
   aTrustData.dwStateAction = WTD_STATEACTION_VERIFY;
   aTrustData.dwProvFlags = WTD_CACHE_ONLY_URL_RETRIEVAL;
 
-  const HWND hwnd = (HWND) INVALID_HANDLE_VALUE;
+  const HWND hwnd = (HWND)INVALID_HANDLE_VALUE;
   GUID policyGUID = WINTRUST_ACTION_GENERIC_VERIFY_V2;
   LONG result = ::WinVerifyTrust(hwnd, &policyGUID, &aTrustData);
 
@@ -213,9 +189,7 @@ SignedBinary::VerifySignatureInternal(WINTRUST_DATA& aTrustData)
   return result == ERROR_SUCCESS;
 }
 
-bool
-SignedBinary::VerifySignature(const wchar_t* aFilePath)
-{
+bool SignedBinary::VerifySignature(const wchar_t* aFilePath) {
   // First, try the binary itself
   WINTRUST_FILE_INFO fileInfo = {sizeof(fileInfo)};
   fileInfo.pcwszFilePath = aFilePath;
@@ -237,23 +211,28 @@ SignedBinary::VerifySignature(const wchar_t* aFilePath)
   // Windows 7 also exports the CryptCATAdminAcquireContext2 API, but it does
   // *not* sign its binaries with SHA-256, so we use the old API in that case.
   if (mozilla::IsWin8OrLater()) {
-    static const mozilla::DynamicallyLinkedFunctionPtr<decltype(&::CryptCATAdminAcquireContext2)>
-      pCryptCATAdminAcquireContext2(L"wintrust.dll", "CryptCATAdminAcquireContext2");
+    static const mozilla::DynamicallyLinkedFunctionPtr<decltype(
+        &::CryptCATAdminAcquireContext2)>
+        pCryptCATAdminAcquireContext2(L"wintrust.dll",
+                                      "CryptCATAdminAcquireContext2");
     if (!pCryptCATAdminAcquireContext2) {
       return false;
     }
 
     CERT_STRONG_SIGN_PARA policy = {sizeof(policy)};
     policy.dwInfoChoice = CERT_STRONG_SIGN_OID_INFO_CHOICE;
-    policy.pszOID = const_cast<char*>(szOID_CERT_STRONG_SIGN_OS_CURRENT); // -Wwritable-strings
+    policy.pszOID = const_cast<char*>(
+        szOID_CERT_STRONG_SIGN_OS_CURRENT);  // -Wwritable-strings
 
     if (!pCryptCATAdminAcquireContext2(&rawCatAdmin, nullptr,
                                        BCRYPT_SHA256_ALGORITHM, &policy, 0)) {
       return false;
     }
   } else {
-    static const mozilla::DynamicallyLinkedFunctionPtr<decltype(&::CryptCATAdminAcquireContext)>
-      pCryptCATAdminAcquireContext(L"wintrust.dll", "CryptCATAdminAcquireContext");
+    static const mozilla::DynamicallyLinkedFunctionPtr<decltype(
+        &::CryptCATAdminAcquireContext)>
+        pCryptCATAdminAcquireContext(L"wintrust.dll",
+                                     "CryptCATAdminAcquireContext");
 
     if (!pCryptCATAdminAcquireContext ||
         !pCryptCATAdminAcquireContext(&rawCatAdmin, nullptr, 0)) {
@@ -265,10 +244,10 @@ SignedBinary::VerifySignature(const wchar_t* aFilePath)
 
   // Now we need to hash the file at aFilePath.
   // Since we're hashing this file, let's open it with a sequential scan hint.
-  HANDLE rawFile = ::CreateFileW(aFilePath, GENERIC_READ,
-                                 FILE_SHARE_READ | FILE_SHARE_DELETE | FILE_SHARE_WRITE,
-                                 nullptr, OPEN_EXISTING,
-                                 FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
+  HANDLE rawFile =
+      ::CreateFileW(aFilePath, GENERIC_READ,
+                    FILE_SHARE_READ | FILE_SHARE_DELETE | FILE_SHARE_WRITE,
+                    nullptr, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
   if (rawFile == INVALID_HANDLE_VALUE) {
     return false;
   }
@@ -277,8 +256,10 @@ SignedBinary::VerifySignature(const wchar_t* aFilePath)
   DWORD hashLen = 0;
   mozilla::UniquePtr<BYTE[]> hashBuf;
 
-  static const mozilla::DynamicallyLinkedFunctionPtr<decltype(&::CryptCATAdminCalcHashFromFileHandle2)>
-    pCryptCATAdminCalcHashFromFileHandle2(L"wintrust.dll", "CryptCATAdminCalcHashFromFileHandle2");
+  static const mozilla::DynamicallyLinkedFunctionPtr<decltype(
+      &::CryptCATAdminCalcHashFromFileHandle2)>
+      pCryptCATAdminCalcHashFromFileHandle2(
+          L"wintrust.dll", "CryptCATAdminCalcHashFromFileHandle2");
   if (pCryptCATAdminCalcHashFromFileHandle2) {
     if (!pCryptCATAdminCalcHashFromFileHandle2(rawCatAdmin, rawFile, &hashLen,
                                                nullptr, 0) &&
@@ -293,8 +274,10 @@ SignedBinary::VerifySignature(const wchar_t* aFilePath)
       return false;
     }
   } else {
-    static const mozilla::DynamicallyLinkedFunctionPtr<decltype(&::CryptCATAdminCalcHashFromFileHandle)>
-      pCryptCATAdminCalcHashFromFileHandle(L"wintrust.dll", "CryptCATAdminCalcHashFromFileHandle");
+    static const mozilla::DynamicallyLinkedFunctionPtr<decltype(
+        &::CryptCATAdminCalcHashFromFileHandle)>
+        pCryptCATAdminCalcHashFromFileHandle(
+            L"wintrust.dll", "CryptCATAdminCalcHashFromFileHandle");
 
     if (!pCryptCATAdminCalcHashFromFileHandle) {
       return false;
@@ -307,7 +290,8 @@ SignedBinary::VerifySignature(const wchar_t* aFilePath)
 
     hashBuf = mozilla::MakeUnique<BYTE[]>(hashLen);
 
-    if (!pCryptCATAdminCalcHashFromFileHandle(rawFile, &hashLen, hashBuf.get(), 0)) {
+    if (!pCryptCATAdminCalcHashFromFileHandle(rawFile, &hashLen, hashBuf.get(),
+                                              0)) {
       return false;
     }
   }
@@ -315,23 +299,26 @@ SignedBinary::VerifySignature(const wchar_t* aFilePath)
   // Now that we've hashed the file, query the catalog system to see if any
   // catalogs reference a binary with our hash.
 
-  static const mozilla::DynamicallyLinkedFunctionPtr<decltype(&::CryptCATAdminEnumCatalogFromHash)>
-    pCryptCATAdminEnumCatalogFromHash(L"wintrust.dll", "CryptCATAdminEnumCatalogFromHash");
+  static const mozilla::DynamicallyLinkedFunctionPtr<decltype(
+      &::CryptCATAdminEnumCatalogFromHash)>
+      pCryptCATAdminEnumCatalogFromHash(L"wintrust.dll",
+                                        "CryptCATAdminEnumCatalogFromHash");
   if (!pCryptCATAdminEnumCatalogFromHash) {
     return false;
   }
 
-  HCATINFO catInfoHdl = pCryptCATAdminEnumCatalogFromHash(rawCatAdmin,
-                                                          hashBuf.get(), hashLen,
-                                                          0, nullptr);
+  HCATINFO catInfoHdl = pCryptCATAdminEnumCatalogFromHash(
+      rawCatAdmin, hashBuf.get(), hashLen, 0, nullptr);
   if (!catInfoHdl) {
     return false;
   }
 
   // We found a catalog! Now query for the path to the catalog file.
 
-  static const mozilla::DynamicallyLinkedFunctionPtr<decltype(&::CryptCATCatalogInfoFromContext)>
-    pCryptCATCatalogInfoFromContext(L"wintrust.dll", "CryptCATCatalogInfoFromContext");
+  static const mozilla::DynamicallyLinkedFunctionPtr<decltype(
+      &::CryptCATCatalogInfoFromContext)>
+      pCryptCATCatalogInfoFromContext(L"wintrust.dll",
+                                      "CryptCATCatalogInfoFromContext");
   if (!pCryptCATCatalogInfoFromContext) {
     return false;
   }
@@ -377,12 +364,9 @@ SignedBinary::VerifySignature(const wchar_t* aFilePath)
   return false;
 }
 
-mozilla::UniquePtr<wchar_t[]>
-SignedBinary::GetOrgName()
-{
-  DWORD charCount = CertGetNameStringW(mCertCtx.get(),
-                                       CERT_NAME_SIMPLE_DISPLAY_TYPE, 0,
-                                       nullptr, nullptr, 0);
+mozilla::UniquePtr<wchar_t[]> SignedBinary::GetOrgName() {
+  DWORD charCount = CertGetNameStringW(
+      mCertCtx.get(), CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, nullptr, 0);
   if (charCount <= 1) {
     // Not found
     return nullptr;
@@ -396,19 +380,18 @@ SignedBinary::GetOrgName()
   return result;
 }
 
-} // anonymous namespace
+}  // anonymous namespace
 
 namespace mozilla {
 
-class AuthenticodeImpl : public Authenticode
-{
-public:
-  virtual UniquePtr<wchar_t[]> GetBinaryOrgName(const wchar_t* aFilePath) override;
+class AuthenticodeImpl : public Authenticode {
+ public:
+  virtual UniquePtr<wchar_t[]> GetBinaryOrgName(
+      const wchar_t* aFilePath) override;
 };
 
-UniquePtr<wchar_t[]>
-AuthenticodeImpl::GetBinaryOrgName(const wchar_t* aFilePath)
-{
+UniquePtr<wchar_t[]> AuthenticodeImpl::GetBinaryOrgName(
+    const wchar_t* aFilePath) {
   SignedBinary bin(aFilePath);
   if (!bin) {
     return nullptr;
@@ -419,11 +402,6 @@ AuthenticodeImpl::GetBinaryOrgName(const wchar_t* aFilePath)
 
 static AuthenticodeImpl sAuthenticodeImpl;
 
-Authenticode*
-GetAuthenticode()
-{
-  return &sAuthenticodeImpl;
-}
+Authenticode* GetAuthenticode() { return &sAuthenticodeImpl; }
 
-} // namespace mozilla
-
+}  // namespace mozilla

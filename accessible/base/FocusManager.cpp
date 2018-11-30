@@ -22,35 +22,26 @@
 namespace mozilla {
 namespace a11y {
 
-FocusManager::FocusManager()
-{
-}
+FocusManager::FocusManager() {}
 
-FocusManager::~FocusManager()
-{
-}
+FocusManager::~FocusManager() {}
 
-Accessible*
-FocusManager::FocusedAccessible() const
-{
-  if (mActiveItem)
-    return mActiveItem;
+Accessible* FocusManager::FocusedAccessible() const {
+  if (mActiveItem) return mActiveItem;
 
   nsINode* focusedNode = FocusedDOMNode();
   if (focusedNode) {
     DocAccessible* doc =
-      GetAccService()->GetDocAccessible(focusedNode->OwnerDoc());
-    return doc ? doc->GetAccessibleEvenIfNotInMapOrContainer(focusedNode) : nullptr;
+        GetAccService()->GetDocAccessible(focusedNode->OwnerDoc());
+    return doc ? doc->GetAccessibleEvenIfNotInMapOrContainer(focusedNode)
+               : nullptr;
   }
 
   return nullptr;
 }
 
-bool
-FocusManager::IsFocused(const Accessible* aAccessible) const
-{
-  if (mActiveItem)
-    return mActiveItem == aAccessible;
+bool FocusManager::IsFocused(const Accessible* aAccessible) const {
+  if (mActiveItem) return mActiveItem == aAccessible;
 
   nsINode* focusedNode = FocusedDOMNode();
   if (focusedNode) {
@@ -62,43 +53,37 @@ FocusManager::IsFocused(const Accessible* aAccessible) const
     // bug 638465.
     if (focusedNode->OwnerDoc() == aAccessible->GetNode()->OwnerDoc()) {
       DocAccessible* doc =
-        GetAccService()->GetDocAccessible(focusedNode->OwnerDoc());
+          GetAccService()->GetDocAccessible(focusedNode->OwnerDoc());
       return aAccessible ==
-        (doc ? doc->GetAccessibleEvenIfNotInMapOrContainer(focusedNode) : nullptr);
+             (doc ? doc->GetAccessibleEvenIfNotInMapOrContainer(focusedNode)
+                  : nullptr);
     }
   }
   return false;
 }
 
-bool
-FocusManager::IsFocusWithin(const Accessible* aContainer) const
-{
+bool FocusManager::IsFocusWithin(const Accessible* aContainer) const {
   Accessible* child = FocusedAccessible();
   while (child) {
-    if (child == aContainer)
-      return true;
+    if (child == aContainer) return true;
 
     child = child->Parent();
   }
   return false;
 }
 
-FocusManager::FocusDisposition
-FocusManager::IsInOrContainsFocus(const Accessible* aAccessible) const
-{
+FocusManager::FocusDisposition FocusManager::IsInOrContainsFocus(
+    const Accessible* aAccessible) const {
   Accessible* focus = FocusedAccessible();
-  if (!focus)
-    return eNone;
+  if (!focus) return eNone;
 
   // If focused.
-  if (focus == aAccessible)
-    return eFocused;
+  if (focus == aAccessible) return eFocused;
 
   // If contains the focus.
   Accessible* child = focus->Parent();
   while (child) {
-    if (child == aAccessible)
-      return eContainsFocus;
+    if (child == aAccessible) return eContainsFocus;
 
     child = child->Parent();
   }
@@ -106,8 +91,7 @@ FocusManager::IsInOrContainsFocus(const Accessible* aAccessible) const
   // If contained by focus.
   child = aAccessible->Parent();
   while (child) {
-    if (child == focus)
-      return eContainedByFocus;
+    if (child == focus) return eContainedByFocus;
 
     child = child->Parent();
   }
@@ -115,9 +99,7 @@ FocusManager::IsInOrContainsFocus(const Accessible* aAccessible) const
   return eNone;
 }
 
-void
-FocusManager::NotifyOfDOMFocus(nsISupports* aTarget)
-{
+void FocusManager::NotifyOfDOMFocus(nsISupports* aTarget) {
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eFocus))
     logging::FocusNotificationTarget("DOM focus", "Target", aTarget);
@@ -128,21 +110,19 @@ FocusManager::NotifyOfDOMFocus(nsISupports* aTarget)
   nsCOMPtr<nsINode> targetNode(do_QueryInterface(aTarget));
   if (targetNode) {
     DocAccessible* document =
-      GetAccService()->GetDocAccessible(targetNode->OwnerDoc());
+        GetAccService()->GetDocAccessible(targetNode->OwnerDoc());
     if (document) {
       // Set selection listener for focused element.
       if (targetNode->IsElement())
         SelectionMgr()->SetControlSelectionListener(targetNode->AsElement());
 
-      document->HandleNotification<FocusManager, nsINode>
-        (this, &FocusManager::ProcessDOMFocus, targetNode);
+      document->HandleNotification<FocusManager, nsINode>(
+          this, &FocusManager::ProcessDOMFocus, targetNode);
     }
   }
 }
 
-void
-FocusManager::NotifyOfDOMBlur(nsISupports* aTarget)
-{
+void FocusManager::NotifyOfDOMBlur(nsISupports* aTarget) {
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eFocus))
     logging::FocusNotificationTarget("DOM blur", "Target", aTarget);
@@ -155,38 +135,33 @@ FocusManager::NotifyOfDOMBlur(nsISupports* aTarget)
   nsCOMPtr<nsINode> targetNode(do_QueryInterface(aTarget));
   if (targetNode && targetNode->OwnerDoc() == FocusedDOMDocument()) {
     nsIDocument* DOMDoc = targetNode->OwnerDoc();
-    DocAccessible* document =
-      GetAccService()->GetDocAccessible(DOMDoc);
+    DocAccessible* document = GetAccService()->GetDocAccessible(DOMDoc);
     if (document) {
       // Clear selection listener for previously focused element.
       if (targetNode->IsElement())
         SelectionMgr()->ClearControlSelectionListener();
 
-      document->HandleNotification<FocusManager, nsINode>
-        (this, &FocusManager::ProcessDOMFocus, DOMDoc);
+      document->HandleNotification<FocusManager, nsINode>(
+          this, &FocusManager::ProcessDOMFocus, DOMDoc);
     }
   }
 }
 
-void
-FocusManager::ActiveItemChanged(Accessible* aItem, bool aCheckIfActive)
-{
+void FocusManager::ActiveItemChanged(Accessible* aItem, bool aCheckIfActive) {
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eFocus))
     logging::FocusNotificationTarget("active item changed", "Item", aItem);
 #endif
 
   // Nothing changed, happens for XUL trees and HTML selects.
-  if (aItem && aItem == mActiveItem)
-    return;
+  if (aItem && aItem == mActiveItem) return;
 
   mActiveItem = nullptr;
 
   if (aItem && aCheckIfActive) {
     Accessible* widget = aItem->ContainerWidget();
 #ifdef A11Y_LOG
-    if (logging::IsEnabled(logging::eFocus))
-      logging::ActiveWidget(widget);
+    if (logging::IsEnabled(logging::eFocus)) logging::ActiveWidget(widget);
 #endif
     if (!widget || !widget->IsActiveWidget() || !widget->AreItemsOperable())
       return;
@@ -221,63 +196,54 @@ FocusManager::ActiveItemChanged(Accessible* aItem, bool aCheckIfActive)
   }
 }
 
-void
-FocusManager::ForceFocusEvent()
-{
+void FocusManager::ForceFocusEvent() {
   nsINode* focusedNode = FocusedDOMNode();
   if (focusedNode) {
     DocAccessible* document =
-      GetAccService()->GetDocAccessible(focusedNode->OwnerDoc());
+        GetAccService()->GetDocAccessible(focusedNode->OwnerDoc());
     if (document) {
-      document->HandleNotification<FocusManager, nsINode>
-        (this, &FocusManager::ProcessDOMFocus, focusedNode);
+      document->HandleNotification<FocusManager, nsINode>(
+          this, &FocusManager::ProcessDOMFocus, focusedNode);
     }
   }
 }
 
-void
-FocusManager::DispatchFocusEvent(DocAccessible* aDocument,
-                                 Accessible* aTarget)
-{
+void FocusManager::DispatchFocusEvent(DocAccessible* aDocument,
+                                      Accessible* aTarget) {
   MOZ_ASSERT(aDocument, "No document for focused accessible!");
   if (aDocument) {
     RefPtr<AccEvent> event =
-      new AccEvent(nsIAccessibleEvent::EVENT_FOCUS, aTarget,
-                   eAutoDetect, AccEvent::eCoalesceOfSameType);
+        new AccEvent(nsIAccessibleEvent::EVENT_FOCUS, aTarget, eAutoDetect,
+                     AccEvent::eCoalesceOfSameType);
     aDocument->FireDelayedEvent(event);
 
 #ifdef A11Y_LOG
-    if (logging::IsEnabled(logging::eFocus))
-      logging::FocusDispatched(aTarget);
+    if (logging::IsEnabled(logging::eFocus)) logging::FocusDispatched(aTarget);
 #endif
   }
 }
 
-void
-FocusManager::ProcessDOMFocus(nsINode* aTarget)
-{
+void FocusManager::ProcessDOMFocus(nsINode* aTarget) {
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eFocus))
     logging::FocusNotificationTarget("process DOM focus", "Target", aTarget);
 #endif
 
   DocAccessible* document =
-    GetAccService()->GetDocAccessible(aTarget->OwnerDoc());
-  if (!document)
-    return;
+      GetAccService()->GetDocAccessible(aTarget->OwnerDoc());
+  if (!document) return;
 
-  Accessible* target = document->GetAccessibleEvenIfNotInMapOrContainer(aTarget);
+  Accessible* target =
+      document->GetAccessibleEvenIfNotInMapOrContainer(aTarget);
   if (target) {
     // Check if still focused. Otherwise we can end up with storing the active
     // item for control that isn't focused anymore.
     nsINode* focusedNode = FocusedDOMNode();
-    if (!focusedNode)
-      return;
+    if (!focusedNode) return;
 
     Accessible* DOMFocus =
-      document->GetAccessibleEvenIfNotInMapOrContainer(focusedNode);
-    if (target != DOMFocus)
-      return;
+        document->GetAccessibleEvenIfNotInMapOrContainer(focusedNode);
+    if (target != DOMFocus) return;
 
     Accessible* activeItem = target->CurrentItem();
     if (activeItem) {
@@ -289,9 +255,7 @@ FocusManager::ProcessDOMFocus(nsINode* aTarget)
   }
 }
 
-void
-FocusManager::ProcessFocusEvent(AccEvent* aEvent)
-{
+void FocusManager::ProcessFocusEvent(AccEvent* aEvent) {
   MOZ_ASSERT(aEvent->GetEventType() == nsIAccessibleEvent::EVENT_FOCUS,
              "Focus event is expected!");
 
@@ -299,18 +263,15 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
   // if it's still focused and then update active item and emit focus event.
   Accessible* target = aEvent->GetAccessible();
   if (target != mActiveItem) {
-
     // Check if still focused. Otherwise we can end up with storing the active
     // item for control that isn't focused anymore.
     DocAccessible* document = aEvent->Document();
     nsINode* focusedNode = FocusedDOMNode();
-    if (!focusedNode)
-      return;
+    if (!focusedNode) return;
 
     Accessible* DOMFocus =
-      document->GetAccessibleEvenIfNotInMapOrContainer(focusedNode);
-    if (target != DOMFocus)
-      return;
+        document->GetAccessibleEvenIfNotInMapOrContainer(focusedNode);
+    if (target != DOMFocus) return;
 
     Accessible* activeItem = target->CurrentItem();
     if (activeItem) {
@@ -323,7 +284,8 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
   if (target->IsARIARole(nsGkAtoms::menuitem)) {
     // The focus was moved into menu.
     Accessible* ARIAMenubar = nullptr;
-    for (Accessible* parent = target->Parent(); parent; parent = parent->Parent()) {
+    for (Accessible* parent = target->Parent(); parent;
+         parent = parent->Parent()) {
       if (parent->IsARIARole(nsGkAtoms::menubar)) {
         ARIAMenubar = parent;
         break;
@@ -340,8 +302,8 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
       // Leaving ARIA menu. Fire menu_end event on current menubar.
       if (mActiveARIAMenubar) {
         RefPtr<AccEvent> menuEndEvent =
-          new AccEvent(nsIAccessibleEvent::EVENT_MENU_END, mActiveARIAMenubar,
-                       aEvent->FromUserInput());
+            new AccEvent(nsIAccessibleEvent::EVENT_MENU_END, mActiveARIAMenubar,
+                         aEvent->FromUserInput());
         nsEventShell::FireEvent(menuEndEvent);
       }
 
@@ -350,16 +312,16 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
       // Entering ARIA menu. Fire menu_start event.
       if (mActiveARIAMenubar) {
         RefPtr<AccEvent> menuStartEvent =
-          new AccEvent(nsIAccessibleEvent::EVENT_MENU_START,
-                       mActiveARIAMenubar, aEvent->FromUserInput());
+            new AccEvent(nsIAccessibleEvent::EVENT_MENU_START,
+                         mActiveARIAMenubar, aEvent->FromUserInput());
         nsEventShell::FireEvent(menuStartEvent);
       }
     }
   } else if (mActiveARIAMenubar) {
     // Focus left a menu. Fire menu_end event.
     RefPtr<AccEvent> menuEndEvent =
-      new AccEvent(nsIAccessibleEvent::EVENT_MENU_END, mActiveARIAMenubar,
-                   aEvent->FromUserInput());
+        new AccEvent(nsIAccessibleEvent::EVENT_MENU_END, mActiveARIAMenubar,
+                     aEvent->FromUserInput());
     nsEventShell::FireEvent(menuEndEvent);
 
     mActiveARIAMenubar = nullptr;
@@ -375,8 +337,8 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
   // offset before the caret move event is handled.
   SelectionMgr()->ResetCaretOffset();
 
-  RefPtr<AccEvent> focusEvent =
-    new AccEvent(nsIAccessibleEvent::EVENT_FOCUS, target, aEvent->FromUserInput());
+  RefPtr<AccEvent> focusEvent = new AccEvent(nsIAccessibleEvent::EVENT_FOCUS,
+                                             target, aEvent->FromUserInput());
   nsEventShell::FireEvent(focusEvent);
 
   // Fire scrolling_start event when the document receives the focus if it has
@@ -395,9 +357,7 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
   }
 }
 
-nsINode*
-FocusManager::FocusedDOMNode() const
-{
+nsINode* FocusManager::FocusedDOMNode() const {
   nsFocusManager* DOMFocusManager = nsFocusManager::GetFocusManager();
   nsIContent* focusedElm = DOMFocusManager->GetFocusedElement();
 
@@ -416,12 +376,10 @@ FocusManager::FocusedDOMNode() const
   return focusedWnd ? focusedWnd->GetExtantDoc() : nullptr;
 }
 
-nsIDocument*
-FocusManager::FocusedDOMDocument() const
-{
+nsIDocument* FocusManager::FocusedDOMDocument() const {
   nsINode* focusedNode = FocusedDOMNode();
   return focusedNode ? focusedNode->OwnerDoc() : nullptr;
 }
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla

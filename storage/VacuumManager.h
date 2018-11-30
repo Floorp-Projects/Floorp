@@ -17,9 +17,8 @@
 namespace mozilla {
 namespace storage {
 
-class VacuumManager final : public nsIObserver
-{
-public:
+class VacuumManager final : public nsIObserver {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
@@ -30,7 +29,7 @@ public:
    */
   static already_AddRefed<VacuumManager> getSingleton();
 
-private:
+ private:
   ~VacuumManager();
 
   static VacuumManager *gVacuumManager;
@@ -39,7 +38,7 @@ private:
   nsCategoryCache<mozIStorageVacuumParticipant> mParticipants;
 };
 
-} // namespace storage
-} // namespace mozilla
+}  // namespace storage
+}  // namespace mozilla
 
 #endif

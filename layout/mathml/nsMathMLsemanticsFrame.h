@@ -14,17 +14,16 @@
 // <semantics> -- associate annotations with a MathML expression
 //
 
-class nsMathMLsemanticsFrame final : public nsMathMLSelectedFrame
-{
-public:
+class nsMathMLsemanticsFrame final : public nsMathMLSelectedFrame {
+ public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLsemanticsFrame)
 
   friend nsIFrame* NS_NewMathMLsemanticsFrame(nsIPresShell* aPresShell,
                                               ComputedStyle* aStyle);
 
-protected:
-  explicit nsMathMLsemanticsFrame(ComputedStyle* aStyle) :
-    nsMathMLSelectedFrame(aStyle, kClassID) {}
+ protected:
+  explicit nsMathMLsemanticsFrame(ComputedStyle* aStyle)
+      : nsMathMLSelectedFrame(aStyle, kClassID) {}
   virtual ~nsMathMLsemanticsFrame();
 
   nsIFrame* GetSelectedFrame() override;

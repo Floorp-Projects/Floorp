@@ -11,50 +11,42 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS(DNSListenerProxy,
-                  nsIDNSListener,
-                  nsIDNSListenerProxy)
+NS_IMPL_ISUPPORTS(DNSListenerProxy, nsIDNSListener, nsIDNSListenerProxy)
 
 NS_IMETHODIMP
 DNSListenerProxy::OnLookupComplete(nsICancelable* aRequest,
-                                   nsIDNSRecord* aRecord,
-                                   nsresult aStatus)
-{
+                                   nsIDNSRecord* aRecord, nsresult aStatus) {
   RefPtr<OnLookupCompleteRunnable> r =
-    new OnLookupCompleteRunnable(mListener, aRequest, aRecord, aStatus);
+      new OnLookupCompleteRunnable(mListener, aRequest, aRecord, aStatus);
   return mTargetThread->Dispatch(r, NS_DISPATCH_NORMAL);
 }
 
 NS_IMETHODIMP
 DNSListenerProxy::OnLookupByTypeComplete(nsICancelable* aRequest,
-                                         nsIDNSByTypeRecord *aRes,
-                                         nsresult aStatus)
-{
+                                         nsIDNSByTypeRecord* aRes,
+                                         nsresult aStatus) {
   RefPtr<OnLookupByTypeCompleteRunnable> r =
-    new OnLookupByTypeCompleteRunnable(mListener, aRequest, aRes, aStatus);
+      new OnLookupByTypeCompleteRunnable(mListener, aRequest, aRes, aStatus);
   return mTargetThread->Dispatch(r, NS_DISPATCH_NORMAL);
 }
 
 NS_IMETHODIMP
-DNSListenerProxy::OnLookupCompleteRunnable::Run()
-{
+DNSListenerProxy::OnLookupCompleteRunnable::Run() {
   mListener->OnLookupComplete(mRequest, mRecord, mStatus);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DNSListenerProxy::OnLookupByTypeCompleteRunnable::Run()
-{
+DNSListenerProxy::OnLookupByTypeCompleteRunnable::Run() {
   mListener->OnLookupByTypeComplete(mRequest, mResult, mStatus);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DNSListenerProxy::GetOriginalListener(nsIDNSListener **aOriginalListener)
-{
+DNSListenerProxy::GetOriginalListener(nsIDNSListener** aOriginalListener) {
   NS_IF_ADDREF(*aOriginalListener = mListener);
   return NS_OK;
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

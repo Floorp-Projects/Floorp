@@ -15,18 +15,13 @@ using namespace JS;
 
 namespace XPCNativeWrapper {
 
-static inline
-bool
-ThrowException(nsresult ex, JSContext* cx)
-{
+static inline bool ThrowException(nsresult ex, JSContext* cx) {
   XPCThrower::Throw(ex, cx);
 
   return false;
 }
 
-static bool
-UnwrapNW(JSContext* cx, unsigned argc, Value* vp)
-{
+static bool UnwrapNW(JSContext* cx, unsigned argc, Value* vp) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   if (args.length() != 1) {
     return ThrowException(NS_ERROR_XPC_NOT_ENOUGH_ARGS, cx);
@@ -45,9 +40,7 @@ UnwrapNW(JSContext* cx, unsigned argc, Value* vp)
   return true;
 }
 
-static bool
-XrayWrapperConstructor(JSContext* cx, unsigned argc, Value* vp)
-{
+static bool XrayWrapperConstructor(JSContext* cx, unsigned argc, Value* vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() == 0) {
     return ThrowException(NS_ERROR_XPC_NOT_ENOUGH_ARGS, cx);
@@ -62,16 +55,14 @@ XrayWrapperConstructor(JSContext* cx, unsigned argc, Value* vp)
   return JS_WrapValue(cx, args.rval());
 }
 // static
-bool
-AttachNewConstructorObject(JSContext* aCx, JS::HandleObject aGlobalObject)
-{
+bool AttachNewConstructorObject(JSContext* aCx,
+                                JS::HandleObject aGlobalObject) {
   // Pushing a JSContext calls ActivateDebugger which calls this function, so
   // we can't use an AutoJSContext here until JSD is gone.
   JSAutoRealm ar(aCx, aGlobalObject);
-  JSFunction* xpcnativewrapper =
-    JS_DefineFunction(aCx, aGlobalObject, "XPCNativeWrapper",
-                      XrayWrapperConstructor, 1,
-                      JSPROP_READONLY | JSPROP_PERMANENT | JSFUN_CONSTRUCTOR);
+  JSFunction* xpcnativewrapper = JS_DefineFunction(
+      aCx, aGlobalObject, "XPCNativeWrapper", XrayWrapperConstructor, 1,
+      JSPROP_READONLY | JSPROP_PERMANENT | JSFUN_CONSTRUCTOR);
   if (!xpcnativewrapper) {
     return false;
   }
@@ -80,13 +71,11 @@ AttachNewConstructorObject(JSContext* aCx, JS::HandleObject aGlobalObject)
                            JSPROP_READONLY | JSPROP_PERMANENT) != nullptr;
 }
 
-} // namespace XPCNativeWrapper
+}  // namespace XPCNativeWrapper
 
 namespace XPCWrapper {
 
-JSObject*
-UnsafeUnwrapSecurityWrapper(JSObject* obj)
-{
+JSObject* UnsafeUnwrapSecurityWrapper(JSObject* obj) {
   if (js::IsProxy(obj)) {
     return js::UncheckedUnwrap(obj);
   }
@@ -94,4 +83,4 @@ UnsafeUnwrapSecurityWrapper(JSObject* obj)
   return obj;
 }
 
-} // namespace XPCWrapper
+}  // namespace XPCWrapper

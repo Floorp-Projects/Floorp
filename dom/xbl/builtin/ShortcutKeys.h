@@ -14,26 +14,23 @@ namespace mozilla {
 
 class WidgetKeyboardEvent;
 
-typedef struct
-{
-   const char16_t* event;
-   const char16_t* keycode;
-   const char16_t* key;
-   const char16_t* modifiers;
-   const char16_t* command;
+typedef struct {
+  const char16_t* event;
+  const char16_t* keycode;
+  const char16_t* key;
+  const char16_t* modifiers;
+  const char16_t* command;
 } ShortcutKeyData;
 
-enum class HandlerType
-{
+enum class HandlerType {
   eInput,
   eTextArea,
   eBrowser,
   eEditor,
 };
 
-class ShortcutKeys : public nsIObserver
-{
-public:
+class ShortcutKeys : public nsIObserver {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
@@ -41,9 +38,10 @@ public:
   static nsXBLPrototypeHandler* GetHandlers(HandlerType aType);
 
   // Gets the event type for a widget keyboard event.
-  static nsAtom* ConvertEventToDOMEventType(const WidgetKeyboardEvent* aWidgetKeyboardEvent);
+  static nsAtom* ConvertEventToDOMEventType(
+      const WidgetKeyboardEvent* aWidgetKeyboardEvent);
 
-protected:
+ protected:
   ShortcutKeys();
   virtual ~ShortcutKeys();
 
@@ -66,6 +64,6 @@ protected:
   nsXBLPrototypeHandler* mTextAreaHandlers;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // #ifndef mozilla_dom_ShortcutKeys_h
+#endif  // #ifndef mozilla_dom_ShortcutKeys_h

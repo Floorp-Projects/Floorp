@@ -1,5 +1,4 @@
-void f1()
-{
+void f1() {
   double d;
   int x;
 

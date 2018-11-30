@@ -15,28 +15,22 @@ namespace dom {
 namespace indexedDB {
 
 // Helper to report a script error to the main thread.
-class ScriptErrorHelper
-{
-public:
-  static void Dump(const nsAString& aMessage,
-                   const nsAString& aFilename,
-                   uint32_t aLineNumber,
-                   uint32_t aColumnNumber,
+class ScriptErrorHelper {
+ public:
+  static void Dump(const nsAString& aMessage, const nsAString& aFilename,
+                   uint32_t aLineNumber, uint32_t aColumnNumber,
                    uint32_t aSeverityFlag, /* nsIScriptError::xxxFlag */
-                   bool aIsChrome,
-                   uint64_t aInnerWindowID);
+                   bool aIsChrome, uint64_t aInnerWindowID);
 
-  static void DumpLocalizedMessage(const nsACString& aMessageName,
-                                   const nsAString& aFilename,
-                                   uint32_t aLineNumber,
-                                   uint32_t aColumnNumber,
-                                   uint32_t aSeverityFlag, /* nsIScriptError::xxxFlag */
-                                   bool aIsChrome,
-                                   uint64_t aInnerWindowID);
+  static void DumpLocalizedMessage(
+      const nsACString& aMessageName, const nsAString& aFilename,
+      uint32_t aLineNumber, uint32_t aColumnNumber,
+      uint32_t aSeverityFlag, /* nsIScriptError::xxxFlag */
+      bool aIsChrome, uint64_t aInnerWindowID);
 };
 
-} // namespace indexedDB
-} // namespace dom
-} // namespace mozilla
+}  // namespace indexedDB
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_indexeddb_scripterrorhelper_h__
+#endif  // mozilla_dom_indexeddb_scripterrorhelper_h__

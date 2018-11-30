@@ -21,135 +21,125 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsBufferedStream : public nsISeekableStream
-{
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSISEEKABLESTREAM
-    NS_DECL_NSITELLABLESTREAM
+class nsBufferedStream : public nsISeekableStream {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSISEEKABLESTREAM
+  NS_DECL_NSITELLABLESTREAM
 
-    nsBufferedStream();
+  nsBufferedStream();
 
-    nsresult Close();
+  nsresult Close();
 
-protected:
-    virtual ~nsBufferedStream();
+ protected:
+  virtual ~nsBufferedStream();
 
-    nsresult Init(nsISupports* stream, uint32_t bufferSize);
-    nsresult GetData(nsISupports **aResult);
-    NS_IMETHOD Fill() = 0;
-    NS_IMETHOD Flush() = 0;
+  nsresult Init(nsISupports* stream, uint32_t bufferSize);
+  nsresult GetData(nsISupports** aResult);
+  NS_IMETHOD Fill() = 0;
+  NS_IMETHOD Flush() = 0;
 
-    uint32_t                    mBufferSize;
-    char*                       mBuffer;
+  uint32_t mBufferSize;
+  char* mBuffer;
 
-    // mBufferStartOffset is the offset relative to the start of mStream.
-    int64_t                     mBufferStartOffset;
+  // mBufferStartOffset is the offset relative to the start of mStream.
+  int64_t mBufferStartOffset;
 
-    // mCursor is the read cursor for input streams, or write cursor for
-    // output streams, and is relative to mBufferStartOffset.
-    uint32_t                    mCursor;
+  // mCursor is the read cursor for input streams, or write cursor for
+  // output streams, and is relative to mBufferStartOffset.
+  uint32_t mCursor;
 
-    // mFillPoint is the amount available in the buffer for input streams,
-    // or the high watermark of bytes written into the buffer, and therefore
-    // is relative to mBufferStartOffset.
-    uint32_t                    mFillPoint;
+  // mFillPoint is the amount available in the buffer for input streams,
+  // or the high watermark of bytes written into the buffer, and therefore
+  // is relative to mBufferStartOffset.
+  uint32_t mFillPoint;
 
-    nsISupports*                mStream;        // cast to appropriate subclass
+  nsISupports* mStream;  // cast to appropriate subclass
 
-    bool                        mBufferDisabled;
-    bool                        mEOF;  // True if mStream is at EOF
-    uint8_t                     mGetBufferCount;
+  bool mBufferDisabled;
+  bool mEOF;  // True if mStream is at EOF
+  uint8_t mGetBufferCount;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsBufferedInputStream final
-    : public nsBufferedStream,
-      public nsIBufferedInputStream,
-      public nsIStreamBufferAccess,
-      public nsIIPCSerializableInputStream,
-      public nsIAsyncInputStream,
-      public nsIInputStreamCallback,
-      public nsICloneableInputStream,
-      public nsIInputStreamLength,
-      public nsIAsyncInputStreamLength,
-      public nsIInputStreamLengthCallback
-{
-public:
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIINPUTSTREAM
-    NS_DECL_NSIBUFFEREDINPUTSTREAM
-    NS_DECL_NSISTREAMBUFFERACCESS
-    NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
-    NS_DECL_NSIASYNCINPUTSTREAM
-    NS_DECL_NSIINPUTSTREAMCALLBACK
-    NS_DECL_NSICLONEABLEINPUTSTREAM
-    NS_DECL_NSIINPUTSTREAMLENGTH
-    NS_DECL_NSIASYNCINPUTSTREAMLENGTH
-    NS_DECL_NSIINPUTSTREAMLENGTHCALLBACK
+class nsBufferedInputStream final : public nsBufferedStream,
+                                    public nsIBufferedInputStream,
+                                    public nsIStreamBufferAccess,
+                                    public nsIIPCSerializableInputStream,
+                                    public nsIAsyncInputStream,
+                                    public nsIInputStreamCallback,
+                                    public nsICloneableInputStream,
+                                    public nsIInputStreamLength,
+                                    public nsIAsyncInputStreamLength,
+                                    public nsIInputStreamLengthCallback {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIINPUTSTREAM
+  NS_DECL_NSIBUFFEREDINPUTSTREAM
+  NS_DECL_NSISTREAMBUFFERACCESS
+  NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
+  NS_DECL_NSIASYNCINPUTSTREAM
+  NS_DECL_NSIINPUTSTREAMCALLBACK
+  NS_DECL_NSICLONEABLEINPUTSTREAM
+  NS_DECL_NSIINPUTSTREAMLENGTH
+  NS_DECL_NSIASYNCINPUTSTREAMLENGTH
+  NS_DECL_NSIINPUTSTREAMLENGTHCALLBACK
 
-    nsBufferedInputStream();
+  nsBufferedInputStream();
 
-    static nsresult
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
-    nsIInputStream* Source() {
-        return (nsIInputStream*)mStream;
-    }
+  nsIInputStream* Source() { return (nsIInputStream*)mStream; }
 
-protected:
-    virtual ~nsBufferedInputStream() = default;
+ protected:
+  virtual ~nsBufferedInputStream() = default;
 
-    NS_IMETHOD Fill() override;
-    NS_IMETHOD Flush() override { return NS_OK; } // no-op for input streams
+  NS_IMETHOD Fill() override;
+  NS_IMETHOD Flush() override { return NS_OK; }  // no-op for input streams
 
-    mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex;
 
-    // This value is protected by mutex.
-    nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;
+  // This value is protected by mutex.
+  nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;
 
-    // This value is protected by mutex.
-    nsCOMPtr<nsIInputStreamLengthCallback> mAsyncInputStreamLengthCallback;
+  // This value is protected by mutex.
+  nsCOMPtr<nsIInputStreamLengthCallback> mAsyncInputStreamLengthCallback;
 
-    bool mIsIPCSerializable;
-    bool mIsAsyncInputStream;
-    bool mIsCloneableInputStream;
-    bool mIsInputStreamLength;
-    bool mIsAsyncInputStreamLength;
+  bool mIsIPCSerializable;
+  bool mIsAsyncInputStream;
+  bool mIsCloneableInputStream;
+  bool mIsInputStreamLength;
+  bool mIsAsyncInputStreamLength;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsBufferedOutputStream  : public nsBufferedStream,
-                                public nsISafeOutputStream,
-                                public nsIBufferedOutputStream,
-                                public nsIStreamBufferAccess
-{
-public:
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIOUTPUTSTREAM
-    NS_DECL_NSISAFEOUTPUTSTREAM
-    NS_DECL_NSIBUFFEREDOUTPUTSTREAM
-    NS_DECL_NSISTREAMBUFFERACCESS
+class nsBufferedOutputStream : public nsBufferedStream,
+                               public nsISafeOutputStream,
+                               public nsIBufferedOutputStream,
+                               public nsIStreamBufferAccess {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIOUTPUTSTREAM
+  NS_DECL_NSISAFEOUTPUTSTREAM
+  NS_DECL_NSIBUFFEREDOUTPUTSTREAM
+  NS_DECL_NSISTREAMBUFFERACCESS
 
-    nsBufferedOutputStream() : nsBufferedStream() {}
+  nsBufferedOutputStream() : nsBufferedStream() {}
 
-    static nsresult
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
-    nsIOutputStream* Sink() {
-        return (nsIOutputStream*)mStream;
-    }
+  nsIOutputStream* Sink() { return (nsIOutputStream*)mStream; }
 
-protected:
-    virtual ~nsBufferedOutputStream() { nsBufferedOutputStream::Close(); }
+ protected:
+  virtual ~nsBufferedOutputStream() { nsBufferedOutputStream::Close(); }
 
-    NS_IMETHOD Fill() override { return NS_OK; } // no-op for output streams
+  NS_IMETHOD Fill() override { return NS_OK; }  // no-op for output streams
 
-    nsCOMPtr<nsISafeOutputStream> mSafeStream; // QI'd from mStream
+  nsCOMPtr<nsISafeOutputStream> mSafeStream;  // QI'd from mStream
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#endif // nsBufferedStreams_h__
+#endif  // nsBufferedStreams_h__

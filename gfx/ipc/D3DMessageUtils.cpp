@@ -5,12 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "D3DMessageUtils.h"
 #if defined(XP_WIN)
-# include "gfxWindowsPlatform.h"
+#include "gfxWindowsPlatform.h"
 #endif
 
-bool
-DxgiAdapterDesc::operator ==(const DxgiAdapterDesc& aOther) const
-{
+bool DxgiAdapterDesc::operator==(const DxgiAdapterDesc& aOther) const {
   return memcmp(&aOther, this, sizeof(*this)) == 0;
 }
 
@@ -18,24 +16,19 @@ DxgiAdapterDesc::operator ==(const DxgiAdapterDesc& aOther) const
 static_assert(sizeof(DxgiAdapterDesc) == sizeof(DXGI_ADAPTER_DESC),
               "DXGI_ADAPTER_DESC doe snot match DxgiAdapterDesc");
 
-const DxgiAdapterDesc&
-DxgiAdapterDesc::From(const DXGI_ADAPTER_DESC& aDesc)
-{
+const DxgiAdapterDesc& DxgiAdapterDesc::From(const DXGI_ADAPTER_DESC& aDesc) {
   return reinterpret_cast<const DxgiAdapterDesc&>(aDesc);
 }
 
-const DXGI_ADAPTER_DESC&
-DxgiAdapterDesc::ToDesc() const
-{
+const DXGI_ADAPTER_DESC& DxgiAdapterDesc::ToDesc() const {
   return reinterpret_cast<const DXGI_ADAPTER_DESC&>(*this);
 }
 #endif
 
 namespace IPC {
 
-void
-ParamTraits<DxgiAdapterDesc>::Write(Message* aMsg, const paramType& aParam)
-{
+void ParamTraits<DxgiAdapterDesc>::Write(Message* aMsg,
+                                         const paramType& aParam) {
 #if defined(XP_WIN)
   aMsg->WriteBytes(aParam.Description, sizeof(aParam.Description));
   WriteParam(aMsg, aParam.VendorId);
@@ -50,11 +43,12 @@ ParamTraits<DxgiAdapterDesc>::Write(Message* aMsg, const paramType& aParam)
 #endif
 }
 
-bool
-ParamTraits<DxgiAdapterDesc>::Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-{
+bool ParamTraits<DxgiAdapterDesc>::Read(const Message* aMsg,
+                                        PickleIterator* aIter,
+                                        paramType* aResult) {
 #if defined(XP_WIN)
-  if (!aMsg->ReadBytesInto(aIter, aResult->Description, sizeof(aResult->Description))) {
+  if (!aMsg->ReadBytesInto(aIter, aResult->Description,
+                           sizeof(aResult->Description))) {
     return false;
   }
 
@@ -66,8 +60,7 @@ ParamTraits<DxgiAdapterDesc>::Read(const Message* aMsg, PickleIterator* aIter, p
       ReadParam(aMsg, aIter, &aResult->DedicatedSystemMemory) &&
       ReadParam(aMsg, aIter, &aResult->SharedSystemMemory) &&
       ReadParam(aMsg, aIter, &aResult->AdapterLuid.LowPart) &&
-      ReadParam(aMsg, aIter, &aResult->AdapterLuid.HighPart))
-  {
+      ReadParam(aMsg, aIter, &aResult->AdapterLuid.HighPart)) {
     return true;
   }
   return false;
@@ -76,4 +69,4 @@ ParamTraits<DxgiAdapterDesc>::Read(const Message* aMsg, PickleIterator* aIter, p
 #endif
 }
 
-} // namespace IPC
+}  // namespace IPC

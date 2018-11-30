@@ -11,25 +11,24 @@
 namespace mozilla {
 namespace widget {
 
-class HeadlessClipboardData final
-{
-public:
+class HeadlessClipboardData final {
+ public:
   explicit HeadlessClipboardData() = default;
   ~HeadlessClipboardData() = default;
 
   // For text/plain
-  void SetText(const nsAString &aText);
+  void SetText(const nsAString& aText);
   bool HasText() const;
   const nsAString& GetText() const;
 
   // For other APIs
   void Clear();
 
-private:
+ private:
   nsAutoString mPlain;
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // mozilla_widget_HeadlessClipboardData_h
+#endif  // mozilla_widget_HeadlessClipboardData_h

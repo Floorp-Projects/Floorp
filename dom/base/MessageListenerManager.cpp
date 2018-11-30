@@ -10,17 +10,13 @@
 namespace mozilla {
 namespace dom {
 
-MessageListenerManager::MessageListenerManager(ipc::MessageManagerCallback* aCallback,
-                                               MessageBroadcaster* aParentManager,
-                                               ipc::MessageManagerFlags aFlags)
-  : nsFrameMessageManager(aCallback, aFlags),
-    mParentManager(aParentManager)
-{
-}
+MessageListenerManager::MessageListenerManager(
+    ipc::MessageManagerCallback* aCallback, MessageBroadcaster* aParentManager,
+    ipc::MessageManagerFlags aFlags)
+    : nsFrameMessageManager(aCallback, aFlags),
+      mParentManager(aParentManager) {}
 
-MessageListenerManager::~MessageListenerManager()
-{
-}
+MessageListenerManager::~MessageListenerManager() {}
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MessageListenerManager)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -43,14 +39,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MessageListenerManager,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParentManager)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-void
-MessageListenerManager::ClearParentManager(bool aRemove)
-{
+void MessageListenerManager::ClearParentManager(bool aRemove) {
   if (aRemove && mParentManager) {
     mParentManager->RemoveChildManager(this);
   }
   mParentManager = nullptr;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

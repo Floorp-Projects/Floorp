@@ -23,7 +23,7 @@ namespace net {
 
 CacheObserver* CacheObserver::sSelf = nullptr;
 
-static float const kDefaultHalfLifeHours = 24.0F; // 24 hours
+static float const kDefaultHalfLifeHours = 24.0F;  // 24 hours
 float CacheObserver::sHalfLifeHours = kDefaultHalfLifeHours;
 
 static bool const kDefaultUseDiskCache = true;
@@ -32,23 +32,25 @@ bool CacheObserver::sUseDiskCache = kDefaultUseDiskCache;
 static bool const kDefaultUseMemoryCache = true;
 bool CacheObserver::sUseMemoryCache = kDefaultUseMemoryCache;
 
-static uint32_t const kDefaultMetadataMemoryLimit = 250; // 0.25 MB
+static uint32_t const kDefaultMetadataMemoryLimit = 250;  // 0.25 MB
 uint32_t CacheObserver::sMetadataMemoryLimit = kDefaultMetadataMemoryLimit;
 
-static int32_t const kDefaultMemoryCacheCapacity = -1; // autodetect
+static int32_t const kDefaultMemoryCacheCapacity = -1;  // autodetect
 int32_t CacheObserver::sMemoryCacheCapacity = kDefaultMemoryCacheCapacity;
 // Cache of the calculated memory capacity based on the system memory size
 int32_t CacheObserver::sAutoMemoryCacheCapacity = -1;
 
-static uint32_t const kDefaultDiskCacheCapacity = 250 * 1024; // 250 MB
-Atomic<uint32_t,Relaxed> CacheObserver::sDiskCacheCapacity
-                                           (kDefaultDiskCacheCapacity);
+static uint32_t const kDefaultDiskCacheCapacity = 250 * 1024;  // 250 MB
+Atomic<uint32_t, Relaxed> CacheObserver::sDiskCacheCapacity(
+    kDefaultDiskCacheCapacity);
 
-static uint32_t const kDefaultDiskFreeSpaceSoftLimit = 5 * 1024; // 5MB
-uint32_t CacheObserver::sDiskFreeSpaceSoftLimit = kDefaultDiskFreeSpaceSoftLimit;
+static uint32_t const kDefaultDiskFreeSpaceSoftLimit = 5 * 1024;  // 5MB
+uint32_t CacheObserver::sDiskFreeSpaceSoftLimit =
+    kDefaultDiskFreeSpaceSoftLimit;
 
-static uint32_t const kDefaultDiskFreeSpaceHardLimit = 1024; // 1MB
-uint32_t CacheObserver::sDiskFreeSpaceHardLimit = kDefaultDiskFreeSpaceHardLimit;
+static uint32_t const kDefaultDiskFreeSpaceHardLimit = 1024;  // 1MB
+uint32_t CacheObserver::sDiskFreeSpaceHardLimit =
+    kDefaultDiskFreeSpaceHardLimit;
 
 static bool const kDefaultSmartCacheSizeEnabled = false;
 bool CacheObserver::sSmartCacheSizeEnabled = kDefaultSmartCacheSizeEnabled;
@@ -56,17 +58,20 @@ bool CacheObserver::sSmartCacheSizeEnabled = kDefaultSmartCacheSizeEnabled;
 static uint32_t const kDefaultPreloadChunkCount = 4;
 uint32_t CacheObserver::sPreloadChunkCount = kDefaultPreloadChunkCount;
 
-static int32_t const kDefaultMaxMemoryEntrySize = 4 * 1024; // 4 MB
+static int32_t const kDefaultMaxMemoryEntrySize = 4 * 1024;  // 4 MB
 int32_t CacheObserver::sMaxMemoryEntrySize = kDefaultMaxMemoryEntrySize;
 
-static int32_t const kDefaultMaxDiskEntrySize = 50 * 1024; // 50 MB
+static int32_t const kDefaultMaxDiskEntrySize = 50 * 1024;  // 50 MB
 int32_t CacheObserver::sMaxDiskEntrySize = kDefaultMaxDiskEntrySize;
 
-static uint32_t const kDefaultMaxDiskChunksMemoryUsage = 40 * 1024; // 40MB
-uint32_t CacheObserver::sMaxDiskChunksMemoryUsage = kDefaultMaxDiskChunksMemoryUsage;
+static uint32_t const kDefaultMaxDiskChunksMemoryUsage = 40 * 1024;  // 40MB
+uint32_t CacheObserver::sMaxDiskChunksMemoryUsage =
+    kDefaultMaxDiskChunksMemoryUsage;
 
-static uint32_t const kDefaultMaxDiskPriorityChunksMemoryUsage = 40 * 1024; // 40MB
-uint32_t CacheObserver::sMaxDiskPriorityChunksMemoryUsage = kDefaultMaxDiskPriorityChunksMemoryUsage;
+static uint32_t const kDefaultMaxDiskPriorityChunksMemoryUsage =
+    40 * 1024;  // 40MB
+uint32_t CacheObserver::sMaxDiskPriorityChunksMemoryUsage =
+    kDefaultMaxDiskPriorityChunksMemoryUsage;
 
 static uint32_t const kDefaultCompressionLevel = 1;
 uint32_t CacheObserver::sCompressionLevel = kDefaultCompressionLevel;
@@ -83,19 +88,17 @@ bool CacheObserver::sCacheFSReported = kDefaultCacheFSReported;
 static bool kDefaultHashStatsReported = false;
 bool CacheObserver::sHashStatsReported = kDefaultHashStatsReported;
 
-static uint32_t const kDefaultMaxShutdownIOLag = 2; // seconds
-Atomic<uint32_t, Relaxed> CacheObserver::sMaxShutdownIOLag(kDefaultMaxShutdownIOLag);
+static uint32_t const kDefaultMaxShutdownIOLag = 2;  // seconds
+Atomic<uint32_t, Relaxed> CacheObserver::sMaxShutdownIOLag(
+    kDefaultMaxShutdownIOLag);
 
-Atomic<PRIntervalTime> CacheObserver::sShutdownDemandedTime(PR_INTERVAL_NO_TIMEOUT);
+Atomic<PRIntervalTime> CacheObserver::sShutdownDemandedTime(
+    PR_INTERVAL_NO_TIMEOUT);
 
-NS_IMPL_ISUPPORTS(CacheObserver,
-                  nsIObserver,
-                  nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(CacheObserver, nsIObserver, nsISupportsWeakReference)
 
 // static
-nsresult
-CacheObserver::Init()
-{
+nsresult CacheObserver::Init() {
   if (IsNeckoChild()) {
     return NS_OK;
   }
@@ -125,9 +128,7 @@ CacheObserver::Init()
 }
 
 // static
-nsresult
-CacheObserver::Shutdown()
-{
+nsresult CacheObserver::Shutdown() {
   if (!sSelf) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -136,93 +137,103 @@ CacheObserver::Shutdown()
   return NS_OK;
 }
 
-void
-CacheObserver::AttachToPreferences()
-{
+void CacheObserver::AttachToPreferences() {
   mozilla::Preferences::AddBoolVarCache(
-    &sUseDiskCache, "browser.cache.disk.enable", kDefaultUseDiskCache);
+      &sUseDiskCache, "browser.cache.disk.enable", kDefaultUseDiskCache);
   mozilla::Preferences::AddBoolVarCache(
-    &sUseMemoryCache, "browser.cache.memory.enable", kDefaultUseMemoryCache);
+      &sUseMemoryCache, "browser.cache.memory.enable", kDefaultUseMemoryCache);
 
   mozilla::Preferences::AddUintVarCache(
-    &sMetadataMemoryLimit, "browser.cache.disk.metadata_memory_limit", kDefaultMetadataMemoryLimit);
+      &sMetadataMemoryLimit, "browser.cache.disk.metadata_memory_limit",
+      kDefaultMetadataMemoryLimit);
 
-  mozilla::Preferences::AddAtomicUintVarCache(
-    &sDiskCacheCapacity, "browser.cache.disk.capacity", kDefaultDiskCacheCapacity);
-  mozilla::Preferences::AddBoolVarCache(
-    &sSmartCacheSizeEnabled, "browser.cache.disk.smart_size.enabled", kDefaultSmartCacheSizeEnabled);
-  mozilla::Preferences::AddIntVarCache(
-    &sMemoryCacheCapacity, "browser.cache.memory.capacity", kDefaultMemoryCacheCapacity);
-
-  mozilla::Preferences::AddUintVarCache(
-    &sDiskFreeSpaceSoftLimit, "browser.cache.disk.free_space_soft_limit", kDefaultDiskFreeSpaceSoftLimit);
-  mozilla::Preferences::AddUintVarCache(
-    &sDiskFreeSpaceHardLimit, "browser.cache.disk.free_space_hard_limit", kDefaultDiskFreeSpaceHardLimit);
-
-  mozilla::Preferences::AddUintVarCache(
-    &sPreloadChunkCount, "browser.cache.disk.preload_chunk_count", kDefaultPreloadChunkCount);
-
-  mozilla::Preferences::AddIntVarCache(
-    &sMaxDiskEntrySize, "browser.cache.disk.max_entry_size", kDefaultMaxDiskEntrySize);
-  mozilla::Preferences::AddIntVarCache(
-    &sMaxMemoryEntrySize, "browser.cache.memory.max_entry_size", kDefaultMaxMemoryEntrySize);
+  mozilla::Preferences::AddAtomicUintVarCache(&sDiskCacheCapacity,
+                                              "browser.cache.disk.capacity",
+                                              kDefaultDiskCacheCapacity);
+  mozilla::Preferences::AddBoolVarCache(&sSmartCacheSizeEnabled,
+                                        "browser.cache.disk.smart_size.enabled",
+                                        kDefaultSmartCacheSizeEnabled);
+  mozilla::Preferences::AddIntVarCache(&sMemoryCacheCapacity,
+                                       "browser.cache.memory.capacity",
+                                       kDefaultMemoryCacheCapacity);
 
   mozilla::Preferences::AddUintVarCache(
-    &sMaxDiskChunksMemoryUsage, "browser.cache.disk.max_chunks_memory_usage", kDefaultMaxDiskChunksMemoryUsage);
+      &sDiskFreeSpaceSoftLimit, "browser.cache.disk.free_space_soft_limit",
+      kDefaultDiskFreeSpaceSoftLimit);
   mozilla::Preferences::AddUintVarCache(
-    &sMaxDiskPriorityChunksMemoryUsage, "browser.cache.disk.max_priority_chunks_memory_usage", kDefaultMaxDiskPriorityChunksMemoryUsage);
+      &sDiskFreeSpaceHardLimit, "browser.cache.disk.free_space_hard_limit",
+      kDefaultDiskFreeSpaceHardLimit);
+
+  mozilla::Preferences::AddUintVarCache(
+      &sPreloadChunkCount, "browser.cache.disk.preload_chunk_count",
+      kDefaultPreloadChunkCount);
+
+  mozilla::Preferences::AddIntVarCache(&sMaxDiskEntrySize,
+                                       "browser.cache.disk.max_entry_size",
+                                       kDefaultMaxDiskEntrySize);
+  mozilla::Preferences::AddIntVarCache(&sMaxMemoryEntrySize,
+                                       "browser.cache.memory.max_entry_size",
+                                       kDefaultMaxMemoryEntrySize);
+
+  mozilla::Preferences::AddUintVarCache(
+      &sMaxDiskChunksMemoryUsage, "browser.cache.disk.max_chunks_memory_usage",
+      kDefaultMaxDiskChunksMemoryUsage);
+  mozilla::Preferences::AddUintVarCache(
+      &sMaxDiskPriorityChunksMemoryUsage,
+      "browser.cache.disk.max_priority_chunks_memory_usage",
+      kDefaultMaxDiskPriorityChunksMemoryUsage);
 
   // http://mxr.mozilla.org/mozilla-central/source/netwerk/cache/nsCacheEntryDescriptor.cpp#367
-  mozilla::Preferences::AddUintVarCache(
-    &sCompressionLevel, "browser.cache.compression_level", kDefaultCompressionLevel);
+  mozilla::Preferences::AddUintVarCache(&sCompressionLevel,
+                                        "browser.cache.compression_level",
+                                        kDefaultCompressionLevel);
 
   mozilla::Preferences::GetComplex(
-    "browser.cache.disk.parent_directory", NS_GET_IID(nsIFile),
-    getter_AddRefs(mCacheParentDirectoryOverride));
+      "browser.cache.disk.parent_directory", NS_GET_IID(nsIFile),
+      getter_AddRefs(mCacheParentDirectoryOverride));
 
-  sHalfLifeHours = std::max(0.01F, std::min(1440.0F, mozilla::Preferences::GetFloat(
-    "browser.cache.frecency_half_life_hours", kDefaultHalfLifeHours)));
+  sHalfLifeHours = std::max(
+      0.01F, std::min(1440.0F, mozilla::Preferences::GetFloat(
+                                   "browser.cache.frecency_half_life_hours",
+                                   kDefaultHalfLifeHours)));
 
-  mozilla::Preferences::AddBoolVarCache(
-    &sSanitizeOnShutdown, "privacy.sanitize.sanitizeOnShutdown", kDefaultSanitizeOnShutdown);
-  mozilla::Preferences::AddBoolVarCache(
-    &sClearCacheOnShutdown, "privacy.clearOnShutdown.cache", kDefaultClearCacheOnShutdown);
+  mozilla::Preferences::AddBoolVarCache(&sSanitizeOnShutdown,
+                                        "privacy.sanitize.sanitizeOnShutdown",
+                                        kDefaultSanitizeOnShutdown);
+  mozilla::Preferences::AddBoolVarCache(&sClearCacheOnShutdown,
+                                        "privacy.clearOnShutdown.cache",
+                                        kDefaultClearCacheOnShutdown);
 
   mozilla::Preferences::AddAtomicUintVarCache(
-    &sMaxShutdownIOLag, "browser.cache.max_shutdown_io_lag", kDefaultMaxShutdownIOLag);
+      &sMaxShutdownIOLag, "browser.cache.max_shutdown_io_lag",
+      kDefaultMaxShutdownIOLag);
 }
 
 // static
-uint32_t CacheObserver::MemoryCacheCapacity()
-{
-  if (sMemoryCacheCapacity >= 0)
-    return sMemoryCacheCapacity << 10;
+uint32_t CacheObserver::MemoryCacheCapacity() {
+  if (sMemoryCacheCapacity >= 0) return sMemoryCacheCapacity << 10;
 
-  if (sAutoMemoryCacheCapacity != -1)
-    return sAutoMemoryCacheCapacity;
+  if (sAutoMemoryCacheCapacity != -1) return sAutoMemoryCacheCapacity;
 
   static uint64_t bytes = PR_GetPhysicalMemorySize();
   // If getting the physical memory failed, arbitrarily assume
   // 32 MB of RAM. We use a low default to have a reasonable
   // size on all the devices we support.
-  if (bytes == 0)
-    bytes = 32 * 1024 * 1024;
+  if (bytes == 0) bytes = 32 * 1024 * 1024;
 
   // Conversion from unsigned int64_t to double doesn't work on all platforms.
   // We need to truncate the value at INT64_MAX to make sure we don't
   // overflow.
-  if (bytes > INT64_MAX)
-    bytes = INT64_MAX;
+  if (bytes > INT64_MAX) bytes = INT64_MAX;
 
   uint64_t kbytes = bytes >> 10;
   double kBytesD = double(kbytes);
-  double x = log(kBytesD)/log(2.0) - 14;
+  double x = log(kBytesD) / log(2.0) - 14;
 
   int32_t capacity = 0;
   if (x > 0) {
-    capacity = (int32_t)(x * x / 3.0 + x + 2.0 / 3 + 0.1); // 0.1 for rounding
-    if (capacity > 32)
-      capacity = 32;
+    capacity = (int32_t)(x * x / 3.0 + x + 2.0 / 3 + 0.1);  // 0.1 for rounding
+    if (capacity > 32) capacity = 32;
     capacity <<= 20;
   }
 
@@ -231,9 +242,7 @@ uint32_t CacheObserver::MemoryCacheCapacity()
 }
 
 // static
-void
-CacheObserver::SetDiskCacheCapacity(uint32_t aCapacity)
-{
+void CacheObserver::SetDiskCacheCapacity(uint32_t aCapacity) {
   sDiskCacheCapacity = aCapacity >> 10;
 
   if (!sSelf) {
@@ -244,24 +253,19 @@ CacheObserver::SetDiskCacheCapacity(uint32_t aCapacity)
     sSelf->StoreDiskCacheCapacity();
   } else {
     nsCOMPtr<nsIRunnable> event =
-      NewRunnableMethod("net::CacheObserver::StoreDiskCacheCapacity",
-                        sSelf,
-                        &CacheObserver::StoreDiskCacheCapacity);
+        NewRunnableMethod("net::CacheObserver::StoreDiskCacheCapacity", sSelf,
+                          &CacheObserver::StoreDiskCacheCapacity);
     NS_DispatchToMainThread(event);
   }
 }
 
-void
-CacheObserver::StoreDiskCacheCapacity()
-{
+void CacheObserver::StoreDiskCacheCapacity() {
   mozilla::Preferences::SetInt("browser.cache.disk.capacity",
                                sDiskCacheCapacity);
 }
 
 // static
-void
-CacheObserver::SetCacheFSReported()
-{
+void CacheObserver::SetCacheFSReported() {
   sCacheFSReported = true;
 
   if (!sSelf) {
@@ -272,24 +276,19 @@ CacheObserver::SetCacheFSReported()
     sSelf->StoreCacheFSReported();
   } else {
     nsCOMPtr<nsIRunnable> event =
-      NewRunnableMethod("net::CacheObserver::StoreCacheFSReported",
-                        sSelf,
-                        &CacheObserver::StoreCacheFSReported);
+        NewRunnableMethod("net::CacheObserver::StoreCacheFSReported", sSelf,
+                          &CacheObserver::StoreCacheFSReported);
     NS_DispatchToMainThread(event);
   }
 }
 
-void
-CacheObserver::StoreCacheFSReported()
-{
+void CacheObserver::StoreCacheFSReported() {
   mozilla::Preferences::SetInt("browser.cache.disk.filesystem_reported",
                                sCacheFSReported);
 }
 
 // static
-void
-CacheObserver::SetHashStatsReported()
-{
+void CacheObserver::SetHashStatsReported() {
   sHashStatsReported = true;
 
   if (!sSelf) {
@@ -300,32 +299,25 @@ CacheObserver::SetHashStatsReported()
     sSelf->StoreHashStatsReported();
   } else {
     nsCOMPtr<nsIRunnable> event =
-      NewRunnableMethod("net::CacheObserver::StoreHashStatsReported",
-                        sSelf,
-                        &CacheObserver::StoreHashStatsReported);
+        NewRunnableMethod("net::CacheObserver::StoreHashStatsReported", sSelf,
+                          &CacheObserver::StoreHashStatsReported);
     NS_DispatchToMainThread(event);
   }
 }
 
-void
-CacheObserver::StoreHashStatsReported()
-{
+void CacheObserver::StoreHashStatsReported() {
   mozilla::Preferences::SetInt("browser.cache.disk.hashstats_reported",
                                sHashStatsReported);
 }
 
 // static
-void CacheObserver::ParentDirOverride(nsIFile** aDir)
-{
-  if (NS_WARN_IF(!aDir))
-    return;
+void CacheObserver::ParentDirOverride(nsIFile** aDir) {
+  if (NS_WARN_IF(!aDir)) return;
 
   *aDir = nullptr;
 
-  if (!sSelf)
-    return;
-  if (!sSelf->mCacheParentDirectoryOverride)
-    return;
+  if (!sSelf) return;
+  if (!sSelf->mCacheParentDirectoryOverride) return;
 
   sSelf->mCacheParentDirectoryOverride->Clone(aDir);
 }
@@ -333,10 +325,8 @@ void CacheObserver::ParentDirOverride(nsIFile** aDir)
 namespace {
 namespace CacheStorageEvictHelper {
 
-nsresult ClearStorage(bool const aPrivate,
-                      bool const aAnonymous,
-                      OriginAttributes &aOa)
-{
+nsresult ClearStorage(bool const aPrivate, bool const aAnonymous,
+                      OriginAttributes& aOa) {
   nsresult rv;
 
   aOa.SyncAttributesWithPrivateBrowsing(aPrivate);
@@ -361,8 +351,7 @@ nsresult ClearStorage(bool const aPrivate,
   return NS_OK;
 }
 
-nsresult Run(OriginAttributes &aOa)
-{
+nsresult Run(OriginAttributes& aOa) {
   nsresult rv;
 
   // Clear all [private X anonymous] combinations
@@ -378,12 +367,11 @@ nsresult Run(OriginAttributes &aOa)
   return NS_OK;
 }
 
-} // CacheStorageEvictHelper
-} // anon
+}  // namespace CacheStorageEvictHelper
+}  // namespace
 
 // static
-bool CacheObserver::EntryIsTooBig(int64_t aSize, bool aUsingDisk)
-{
+bool CacheObserver::EntryIsTooBig(int64_t aSize, bool aUsingDisk) {
   // If custom limit is set, check it.
   int64_t preferredLimit = aUsingDisk ? sMaxDiskEntrySize : sMaxMemoryEntrySize;
 
@@ -392,24 +380,21 @@ bool CacheObserver::EntryIsTooBig(int64_t aSize, bool aUsingDisk)
     preferredLimit <<= 10;
   }
 
-  if (preferredLimit != -1 && aSize > preferredLimit)
-    return true;
+  if (preferredLimit != -1 && aSize > preferredLimit) return true;
 
   // Otherwise (or when in the custom limit), check limit based on the global
   // limit.  It's 1/8 (>> 3) of the respective capacity.
-  int64_t derivedLimit = aUsingDisk
-    ? (static_cast<int64_t>(DiskCacheCapacity() >> 3))
-    : (static_cast<int64_t>(MemoryCacheCapacity() >> 3));
+  int64_t derivedLimit =
+      aUsingDisk ? (static_cast<int64_t>(DiskCacheCapacity() >> 3))
+                 : (static_cast<int64_t>(MemoryCacheCapacity() >> 3));
 
-  if (aSize > derivedLimit)
-    return true;
+  if (aSize > derivedLimit) return true;
 
   return false;
 }
 
 // static
-bool CacheObserver::IsPastShutdownIOLag()
-{
+bool CacheObserver::IsPastShutdownIOLag() {
 #ifdef DEBUG
   return false;
 #endif
@@ -420,7 +405,7 @@ bool CacheObserver::IsPastShutdownIOLag()
   }
 
   static const PRIntervalTime kMaxShutdownIOLag =
-    PR_SecondsToInterval(sMaxShutdownIOLag);
+      PR_SecondsToInterval(sMaxShutdownIOLag);
 
   if ((PR_IntervalNow() - sShutdownDemandedTime) > kMaxShutdownIOLag) {
     return true;
@@ -430,10 +415,8 @@ bool CacheObserver::IsPastShutdownIOLag()
 }
 
 NS_IMETHODIMP
-CacheObserver::Observe(nsISupports* aSubject,
-                       const char* aTopic,
-                       const char16_t* aData)
-{
+CacheObserver::Observe(nsISupports* aSubject, const char* aTopic,
+                       const char16_t* aData) {
   if (!strcmp(aTopic, "prefservice:after-app-defaults")) {
     CacheFileIOManager::Init();
     return NS_OK;
@@ -479,7 +462,9 @@ CacheObserver::Observe(nsISupports* aSubject,
   if (!strcmp(aTopic, "clear-origin-attributes-data")) {
     OriginAttributes oa;
     if (!oa.Init(nsDependentString(aData))) {
-      NS_ERROR("Could not parse OriginAttributes JSON in clear-origin-attributes-data notification");
+      NS_ERROR(
+          "Could not parse OriginAttributes JSON in "
+          "clear-origin-attributes-data notification");
       return NS_OK;
     }
 
@@ -501,5 +486,5 @@ CacheObserver::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

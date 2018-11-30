@@ -7,44 +7,38 @@
 #ifndef GFX_BASICCANVASLAYER_H
 #define GFX_BASICCANVASLAYER_H
 
-#include "BasicImplData.h"              // for BasicImplData
-#include "BasicLayers.h"                // for BasicLayerManager
-#include "Layers.h"                     // for CanvasLayer, etc
-#include "nsDebug.h"                    // for NS_ASSERTION
-#include "nsRegion.h"                   // for nsIntRegion
+#include "BasicImplData.h"  // for BasicImplData
+#include "BasicLayers.h"    // for BasicLayerManager
+#include "Layers.h"         // for CanvasLayer, etc
+#include "nsDebug.h"        // for NS_ASSERTION
+#include "nsRegion.h"       // for nsIntRegion
 
 namespace mozilla {
 namespace layers {
 
-class BasicCanvasLayer : public CanvasLayer,
-                         public BasicImplData
-{
-public:
-  explicit BasicCanvasLayer(BasicLayerManager* aLayerManager) :
-    CanvasLayer(aLayerManager, static_cast<BasicImplData*>(this))
-  { }
+class BasicCanvasLayer : public CanvasLayer, public BasicImplData {
+ public:
+  explicit BasicCanvasLayer(BasicLayerManager* aLayerManager)
+      : CanvasLayer(aLayerManager, static_cast<BasicImplData*>(this)) {}
 
-  virtual void SetVisibleRegion(const LayerIntRegion& aRegion) override
-  {
+  virtual void SetVisibleRegion(const LayerIntRegion& aRegion) override {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
     CanvasLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void Paint(gfx::DrawTarget* aDT,
-                     const gfx::Point& aDeviceOffset,
+  virtual void Paint(gfx::DrawTarget* aDT, const gfx::Point& aDeviceOffset,
                      Layer* aMaskLayer) override;
 
-protected:
-  BasicLayerManager* BasicManager()
-  {
+ protected:
+  BasicLayerManager* BasicManager() {
     return static_cast<BasicLayerManager*>(mManager);
   }
 
   CanvasRenderer* CreateCanvasRendererInternal() override;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 /*
-*/
+ */
 
 /*
 Based partially on original code from nICEr and nrappkit.
@@ -81,7 +81,7 @@ nrappkit copyright:
 // Original author: bcampen@mozilla.com [:bwc]
 
 extern "C" {
-#include "stun_msg.h" // for NR_STUN_MAX_MESSAGE_SIZE
+#include "stun_msg.h"  // for NR_STUN_MAX_MESSAGE_SIZE
 #include "nr_api.h"
 #include "async_wait.h"
 #include "async_timer.h"
@@ -97,21 +97,17 @@ extern "C" {
 
 namespace mozilla {
 
-static int test_nat_socket_create(void *obj,
-                                  nr_transport_addr *addr,
+static int test_nat_socket_create(void *obj, nr_transport_addr *addr,
                                   nr_socket **sockp) {
-  RefPtr<NrSocketBase> sock = new TestNrSocket(static_cast<TestNat*>(obj));
+  RefPtr<NrSocketBase> sock = new TestNrSocket(static_cast<TestNat *>(obj));
 
   int r, _status;
 
   r = sock->create(addr);
-  if (r)
-    ABORT(r);
+  if (r) ABORT(r);
 
-  r = nr_socket_create_int(static_cast<void *>(sock),
-                           sock->vtbl(), sockp);
-  if (r)
-    ABORT(r);
+  r = nr_socket_create_int(static_cast<void *>(sock), sock->vtbl(), sockp);
+  if (r) ABORT(r);
 
   _status = 0;
 
@@ -127,20 +123,17 @@ abort:
 }
 
 static int test_nat_socket_factory_destroy(void **obj) {
-  TestNat *nat = static_cast<TestNat*>(*obj);
+  TestNat *nat = static_cast<TestNat *>(*obj);
   *obj = nullptr;
   nat->Release();
   return 0;
 }
 
 static nr_socket_factory_vtbl test_nat_socket_factory_vtbl = {
-  test_nat_socket_create,
-  test_nat_socket_factory_destroy
-};
+    test_nat_socket_create, test_nat_socket_factory_destroy};
 
 /* static */
-TestNat::NatBehavior
-TestNat::ToNatBehavior(const std::string& type) {
+TestNat::NatBehavior TestNat::ToNatBehavior(const std::string &type) {
   if (!type.compare("ENDPOINT_INDEPENDENT")) {
     return TestNat::ENDPOINT_INDEPENDENT;
   }
@@ -182,7 +175,7 @@ bool TestNat::is_an_internal_tuple(const nr_transport_addr &addr) const {
     }
 
     // TODO(bug 1170299): Remove const_cast when no longer necessary
-    if (!nr_transport_addr_cmp(const_cast<nr_transport_addr*>(&addr),
+    if (!nr_transport_addr_cmp(const_cast<nr_transport_addr *>(&addr),
                                &addr_behind_nat,
                                NR_TRANSPORT_ADDR_CMP_MODE_ALL)) {
       return true;
@@ -192,8 +185,7 @@ bool TestNat::is_an_internal_tuple(const nr_transport_addr &addr) const {
 }
 
 int TestNat::create_socket_factory(nr_socket_factory **factorypp) {
-  int r = nr_socket_factory_create_int(this,
-                                       &test_nat_socket_factory_vtbl,
+  int r = nr_socket_factory_create_int(this, &test_nat_socket_factory_vtbl,
                                        factorypp);
   if (!r) {
     AddRef();
@@ -202,15 +194,11 @@ int TestNat::create_socket_factory(nr_socket_factory **factorypp) {
 }
 
 TestNrSocket::TestNrSocket(TestNat *nat)
-  : nat_(nat),
-    tls_(false),
-    timer_handle_(nullptr) {
+    : nat_(nat), tls_(false), timer_handle_(nullptr) {
   nat_->insert_socket(this);
 }
 
-TestNrSocket::~TestNrSocket() {
-  nat_->erase_socket(this);
-}
+TestNrSocket::~TestNrSocket() { nat_->erase_socket(this); }
 
 RefPtr<NrSocketBase> TestNrSocket::create_external_socket(
     const nr_transport_addr &dest_addr) const {
@@ -223,16 +211,16 @@ RefPtr<NrSocketBase> TestNrSocket::create_external_socket(
   // Open the socket on an arbitrary port, on the same address.
   // TODO(bug 1170299): Remove const_cast when no longer necessary
   if ((r = nr_transport_addr_copy(
-             &nat_external_addr,
-             const_cast<nr_transport_addr*>(&internal_socket_->my_addr())))) {
-    r_log(LOG_GENERIC,LOG_CRIT, "%s: Failure in nr_transport_addr_copy: %d",
-                                __FUNCTION__, r);
+           &nat_external_addr,
+           const_cast<nr_transport_addr *>(&internal_socket_->my_addr())))) {
+    r_log(LOG_GENERIC, LOG_CRIT, "%s: Failure in nr_transport_addr_copy: %d",
+          __FUNCTION__, r);
     return nullptr;
   }
 
   if ((r = nr_transport_addr_set_port(&nat_external_addr, 0))) {
-    r_log(LOG_GENERIC,LOG_CRIT, "%s: Failure in nr_transport_addr_set_port: %d",
-                                __FUNCTION__, r);
+    r_log(LOG_GENERIC, LOG_CRIT,
+          "%s: Failure in nr_transport_addr_set_port: %d", __FUNCTION__, r);
     return nullptr;
   }
 
@@ -240,8 +228,8 @@ RefPtr<NrSocketBase> TestNrSocket::create_external_socket(
   r = NrSocketBase::CreateSocket(&nat_external_addr, &external_socket, nullptr);
 
   if (r) {
-    r_log(LOG_GENERIC,LOG_CRIT, "%s: Failure in NrSocket::create: %d",
-                                __FUNCTION__, r);
+    r_log(LOG_GENERIC, LOG_CRIT, "%s: Failure in NrSocket::create: %d",
+          __FUNCTION__, r);
     return nullptr;
   }
 
@@ -266,15 +254,14 @@ void TestNrSocket::close() {
     timer_handle_ = nullptr;
   }
   internal_socket_->close();
-  for (RefPtr<PortMapping>& port_mapping : port_mappings_) {
+  for (RefPtr<PortMapping> &port_mapping : port_mappings_) {
     port_mapping->external_socket_->close();
   }
 }
 
 int TestNrSocket::listen(int backlog) {
   MOZ_ASSERT(internal_socket_->my_addr().protocol == IPPROTO_TCP);
-  r_log(LOG_GENERIC, LOG_DEBUG,
-        "TestNrSocket %s listening",
+  r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %s listening",
         internal_socket_->my_addr().as_string);
 
   return internal_socket_->listen(backlog);
@@ -298,8 +285,7 @@ int TestNrSocket::accept(nr_transport_addr *addrp, nr_socket **sockp) {
 void TestNrSocket::process_delayed_cb(NR_SOCKET s, int how, void *cb_arg) {
   DeferredPacket *op = static_cast<DeferredPacket *>(cb_arg);
   op->socket_->timer_handle_ = nullptr;
-  r_log(LOG_GENERIC, LOG_DEBUG,
-        "TestNrSocket %s sending delayed STUN response",
+  r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %s sending delayed STUN response",
         op->internal_socket_->my_addr().as_string);
   op->internal_socket_->sendto(op->buffer_.data(), op->buffer_.len(),
                                op->flags_, &op->to_);
@@ -307,29 +293,27 @@ void TestNrSocket::process_delayed_cb(NR_SOCKET s, int how, void *cb_arg) {
   delete op;
 }
 
-int TestNrSocket::sendto(const void *msg, size_t len,
-                         int flags, nr_transport_addr *to) {
+int TestNrSocket::sendto(const void *msg, size_t len, int flags,
+                         nr_transport_addr *to) {
   MOZ_ASSERT(internal_socket_->my_addr().protocol != IPPROTO_TCP);
 
-  if (nat_->nat_delegate_ && nat_->nat_delegate_->on_sendto(nat_, msg, len, flags, to)) {
+  if (nat_->nat_delegate_ &&
+      nat_->nat_delegate_->on_sendto(nat_, msg, len, flags, to)) {
     return 0;
   }
 
-  UCHAR *buf = static_cast<UCHAR*>(const_cast<void*>(msg));
-  if (nat_->block_stun_ &&
-      nr_is_stun_message(buf, len)) {
+  UCHAR *buf = static_cast<UCHAR *>(const_cast<void *>(msg));
+  if (nat_->block_stun_ && nr_is_stun_message(buf, len)) {
     return 0;
   }
 
   /* TODO: improve the functionality of this in bug 1253657 */
   if (!nat_->enabled_ || nat_->is_an_internal_tuple(*to)) {
-    if (nat_->delay_stun_resp_ms_ &&
-        nr_is_stun_response_message(buf, len)) {
-      NR_ASYNC_TIMER_SET(nat_->delay_stun_resp_ms_,
-                         process_delayed_cb,
-                         new DeferredPacket(this, msg, len, flags, to,
-                                            internal_socket_),
-                         &timer_handle_);
+    if (nat_->delay_stun_resp_ms_ && nr_is_stun_response_message(buf, len)) {
+      NR_ASYNC_TIMER_SET(
+          nat_->delay_stun_resp_ms_, process_delayed_cb,
+          new DeferredPacket(this, msg, len, flags, to, internal_socket_),
+          &timer_handle_);
       return 0;
     }
     return internal_socket_->sendto(msg, len, flags, to);
@@ -343,14 +327,13 @@ int TestNrSocket::sendto(const void *msg, size_t len,
   }
 
   // Choose our port mapping based on our most selective criteria
-  PortMapping *port_mapping = get_port_mapping(*to,
-                                               std::max(nat_->filtering_type_,
-                                                        nat_->mapping_type_));
+  PortMapping *port_mapping = get_port_mapping(
+      *to, std::max(nat_->filtering_type_, nat_->mapping_type_));
 
   if (!port_mapping) {
     // See if we have already made the external socket we need to use.
     PortMapping *similar_port_mapping =
-      get_port_mapping(*to, nat_->mapping_type_);
+        get_port_mapping(*to, nat_->mapping_type_);
     RefPtr<NrSocketBase> external_socket;
 
     if (similar_port_mapping) {
@@ -369,11 +352,8 @@ int TestNrSocket::sendto(const void *msg, size_t len,
     if (poll_flags() & PR_POLL_READ) {
       // Make sure the new port mapping is ready to receive traffic if the
       // TestNrSocket is already waiting.
-      port_mapping->async_wait(NR_ASYNC_WAIT_READ,
-                              socket_readable_callback,
-                              this,
-                              (char*)__FUNCTION__,
-                              __LINE__);
+      port_mapping->async_wait(NR_ASYNC_WAIT_READ, socket_readable_callback,
+                               this, (char *)__FUNCTION__, __LINE__);
     }
   }
 
@@ -382,8 +362,7 @@ int TestNrSocket::sendto(const void *msg, size_t len,
   return port_mapping->sendto(msg, len, *to);
 }
 
-int TestNrSocket::recvfrom(void *buf, size_t maxlen,
-                           size_t *len, int flags,
+int TestNrSocket::recvfrom(void *buf, size_t maxlen, size_t *len, int flags,
                            nr_transport_addr *from) {
   MOZ_ASSERT(internal_socket_->my_addr().protocol != IPPROTO_TCP);
 
@@ -399,8 +378,7 @@ int TestNrSocket::recvfrom(void *buf, size_t maxlen,
       ingress_allowed = allow_ingress(*from, &port_mapping_used);
       if (ingress_allowed) {
         r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %s received from %s via %s",
-              internal_socket_->my_addr().as_string,
-              from->as_string,
+              internal_socket_->my_addr().as_string, from->as_string,
               port_mapping_used->external_socket_->my_addr().as_string);
         if (nat_->refresh_on_ingress_) {
           port_mapping_used->last_used_ = PR_IntervalNow();
@@ -415,17 +393,15 @@ int TestNrSocket::recvfrom(void *buf, size_t maxlen,
     if (!r) {
       // We do not use allow_ingress() here because that only handles traffic
       // landing on an external port.
-      ingress_allowed = (!nat_->enabled_ ||
-                         nat_->is_an_internal_tuple(*from));
+      ingress_allowed = (!nat_->enabled_ || nat_->is_an_internal_tuple(*from));
       if (!ingress_allowed) {
-        r_log(LOG_GENERIC, LOG_INFO, "TestNrSocket %s denying ingress from %s: "
+        r_log(LOG_GENERIC, LOG_INFO,
+              "TestNrSocket %s denying ingress from %s: "
               "Not behind the same NAT",
-              internal_socket_->my_addr().as_string,
-              from->as_string);
+              internal_socket_->my_addr().as_string, from->as_string);
       } else {
         r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %s received from %s",
-              internal_socket_->my_addr().as_string,
-              from->as_string);
+              internal_socket_->my_addr().as_string, from->as_string);
       }
     }
   }
@@ -452,26 +428,26 @@ bool TestNrSocket::allow_ingress(const nr_transport_addr &from,
 
   *port_mapping_used = get_port_mapping(from, nat_->filtering_type_);
   if (!(*port_mapping_used)) {
-    r_log(LOG_GENERIC, LOG_INFO, "TestNrSocket %s denying ingress from %s: "
-                                 "Filtered",
-                                 internal_socket_->my_addr().as_string,
-                                 from.as_string);
+    r_log(LOG_GENERIC, LOG_INFO,
+          "TestNrSocket %s denying ingress from %s: "
+          "Filtered",
+          internal_socket_->my_addr().as_string, from.as_string);
     return false;
   }
 
   if (is_port_mapping_stale(**port_mapping_used)) {
-    r_log(LOG_GENERIC, LOG_INFO, "TestNrSocket %s denying ingress from %s: "
-                                 "Stale port mapping",
-                                 internal_socket_->my_addr().as_string,
-                                 from.as_string);
+    r_log(LOG_GENERIC, LOG_INFO,
+          "TestNrSocket %s denying ingress from %s: "
+          "Stale port mapping",
+          internal_socket_->my_addr().as_string, from.as_string);
     return false;
   }
 
   if (!nat_->allow_hairpinning_ && nat_->is_my_external_tuple(from)) {
-    r_log(LOG_GENERIC, LOG_INFO, "TestNrSocket %s denying ingress from %s: "
-                                 "Hairpinning disallowed",
-                                 internal_socket_->my_addr().as_string,
-                                 from.as_string);
+    r_log(LOG_GENERIC, LOG_INFO,
+          "TestNrSocket %s denying ingress from %s: "
+          "Hairpinning disallowed",
+          internal_socket_->my_addr().as_string, from.as_string);
     return false;
   }
 
@@ -479,16 +455,15 @@ bool TestNrSocket::allow_ingress(const nr_transport_addr &from,
 }
 
 int TestNrSocket::connect(nr_transport_addr *addr) {
-
   if (connect_invoked_ || !port_mappings_.empty()) {
     MOZ_CRASH("TestNrSocket::connect() called more than once!");
     return R_INTERNAL;
   }
 
-  if (!nat_->enabled_
-      || addr->protocol==IPPROTO_UDP  // Horrible hack to allow default address
-                                      // discovery to work. Only works because
-                                      // we don't normally connect on UDP.
+  if (!nat_->enabled_ ||
+      addr->protocol == IPPROTO_UDP  // Horrible hack to allow default address
+                                     // discovery to work. Only works because
+                                     // we don't normally connect on UDP.
       || nat_->is_an_internal_tuple(*addr)) {
     // This will set connect_invoked_
     return internal_socket_->connect(addr);
@@ -510,19 +485,18 @@ int TestNrSocket::connect(nr_transport_addr *addr) {
 
   if (poll_flags() & PR_POLL_READ) {
     port_mapping->async_wait(NR_ASYNC_WAIT_READ,
-                             port_mapping_tcp_passthrough_callback,
-                             this,
-                             (char*)__FUNCTION__,
-                             __LINE__);
+                             port_mapping_tcp_passthrough_callback, this,
+                             (char *)__FUNCTION__, __LINE__);
   }
 
   return r;
 }
 
 int TestNrSocket::write(const void *msg, size_t len, size_t *written) {
-  UCHAR *buf = static_cast<UCHAR*>(const_cast<void*>(msg));
+  UCHAR *buf = static_cast<UCHAR *>(const_cast<void *>(msg));
 
-  if (nat_->nat_delegate_ && nat_->nat_delegate_->on_write(nat_, msg, len, written)) {
+  if (nat_->nat_delegate_ &&
+      nat_->nat_delegate_->on_write(nat_, msg, len, written)) {
     return R_INTERNAL;
   }
 
@@ -561,8 +535,7 @@ int TestNrSocket::write(const void *msg, size_t len, size_t *written) {
   }
   // This is TCP only
   MOZ_ASSERT(port_mappings_.size() == 1);
-  r_log(LOG_GENERIC, LOG_DEBUG,
-        "PortMapping %s -> %s writing",
+  r_log(LOG_GENERIC, LOG_DEBUG, "PortMapping %s -> %s writing",
         port_mappings_.front()->external_socket_->my_addr().as_string,
         port_mappings_.front()->remote_address_.as_string);
   port_mappings_.front()->last_used_ = PR_IntervalNow();
@@ -586,7 +559,8 @@ int TestNrSocket::read(void *buf, size_t maxlen, size_t *len) {
     return r;
   }
 
-  if (nat_->nat_delegate_ && nat_->nat_delegate_->on_read(nat_, buf, maxlen, len)) {
+  if (nat_->nat_delegate_ &&
+      nat_->nat_delegate_->on_read(nat_, buf, maxlen, len)) {
     return R_INTERNAL;
   }
 
@@ -595,7 +569,7 @@ int TestNrSocket::read(void *buf, size_t maxlen, size_t *len) {
     return R_INTERNAL;
   }
 
-  UCHAR *cbuf = static_cast<UCHAR*>(const_cast<void*>(buf));
+  UCHAR *cbuf = static_cast<UCHAR *>(const_cast<void *>(buf));
   if (nat_->block_stun_ && nr_is_stun_message(cbuf, *len)) {
     // Should cause this socket to be abandoned
     return R_INTERNAL;
@@ -607,8 +581,8 @@ int TestNrSocket::read(void *buf, size_t maxlen, size_t *len) {
 int TestNrSocket::async_wait(int how, NR_async_cb cb, void *cb_arg,
                              char *function, int line) {
   r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %s waiting for %s",
-                                internal_socket_->my_addr().as_string,
-                                how == NR_ASYNC_WAIT_READ ? "read" : "write");
+        internal_socket_->my_addr().as_string,
+        how == NR_ASYNC_WAIT_READ ? "read" : "write");
 
   int r;
 
@@ -616,26 +590,19 @@ int TestNrSocket::async_wait(int how, NR_async_cb cb, void *cb_arg,
     NrSocketBase::async_wait(how, cb, cb_arg, function, line);
 
     // Make sure we're waiting on the socket for the internal address
-    r = internal_socket_->async_wait(how,
-                                     socket_readable_callback,
-                                     this,
-                                     function,
-                                     line);
+    r = internal_socket_->async_wait(how, socket_readable_callback, this,
+                                     function, line);
   } else {
     // For write, just use the readiness of the internal socket, since we queue
     // everything for the port mappings.
-    r = internal_socket_->async_wait(how,
-                                     cb,
-                                     cb_arg,
-                                     function,
-                                     line);
+    r = internal_socket_->async_wait(how, cb, cb_arg, function, line);
   }
 
   if (r) {
-    r_log(LOG_GENERIC, LOG_ERR, "TestNrSocket %s failed to async_wait for "
-                                "internal socket: %d\n",
-                                internal_socket_->my_addr().as_string,
-                                r);
+    r_log(LOG_GENERIC, LOG_ERR,
+          "TestNrSocket %s failed to async_wait for "
+          "internal socket: %d\n",
+          internal_socket_->my_addr().as_string, r);
     return r;
   }
 
@@ -650,26 +617,19 @@ int TestNrSocket::async_wait(int how, NR_async_cb cb, void *cb_arg,
     MOZ_ASSERT(port_mappings_.size() == 1);
 
     return port_mappings_.front()->async_wait(
-        how,
-        port_mapping_tcp_passthrough_callback,
-        this,
-        function,
-        line);
+        how, port_mapping_tcp_passthrough_callback, this, function, line);
   }
   if (how == NR_ASYNC_WAIT_READ) {
     // For UDP port mappings, we decouple the writeable callbacks
     for (PortMapping *port_mapping : port_mappings_) {
       // Be ready to receive traffic on our port mappings
-      r = port_mapping->async_wait(how,
-                                   socket_readable_callback,
-                                   this,
-                                   function,
-                                   line);
+      r = port_mapping->async_wait(how, socket_readable_callback, this,
+                                   function, line);
       if (r) {
-        r_log(LOG_GENERIC, LOG_ERR, "TestNrSocket %s failed to async_wait for "
-                                    "port mapping: %d\n",
-                                    internal_socket_->my_addr().as_string,
-                                    r);
+        r_log(LOG_GENERIC, LOG_ERR,
+              "TestNrSocket %s failed to async_wait for "
+              "port mapping: %d\n",
+              internal_socket_->my_addr().as_string, r);
         return r;
       }
     }
@@ -685,7 +645,6 @@ void TestNrSocket::cancel_port_mapping_async_wait(int how) {
 }
 
 int TestNrSocket::cancel(int how) {
-
   r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %s stop waiting for %s",
         internal_socket_->my_addr().as_string,
         how == NR_ASYNC_WAIT_READ ? "read" : "write");
@@ -699,9 +658,7 @@ int TestNrSocket::cancel(int how) {
   return internal_socket_->cancel(how);
 }
 
-bool TestNrSocket::has_port_mappings() const {
-  return !port_mappings_.empty();
-}
+bool TestNrSocket::has_port_mappings() const { return !port_mappings_.empty(); }
 
 bool TestNrSocket::is_my_external_tuple(const nr_transport_addr &addr) const {
   for (PortMapping *port_mapping : port_mappings_) {
@@ -711,7 +668,7 @@ bool TestNrSocket::is_my_external_tuple(const nr_transport_addr &addr) const {
     }
 
     // TODO(bug 1170299): Remove const_cast when no longer necessary
-    if (!nr_transport_addr_cmp(const_cast<nr_transport_addr*>(&addr),
+    if (!nr_transport_addr_cmp(const_cast<nr_transport_addr *>(&addr),
                                &port_mapping_addr,
                                NR_TRANSPORT_ADDR_CMP_MODE_ALL)) {
       return true;
@@ -744,11 +701,10 @@ void TestNrSocket::destroy_stale_port_mappings() {
   }
 }
 
-void TestNrSocket::socket_readable_callback(void *real_sock_v,
-                                             int how,
-                                             void *test_sock_v) {
-  TestNrSocket *test_socket = static_cast<TestNrSocket*>(test_sock_v);
-  NrSocketBase *real_socket = static_cast<NrSocketBase*>(real_sock_v);
+void TestNrSocket::socket_readable_callback(void *real_sock_v, int how,
+                                            void *test_sock_v) {
+  TestNrSocket *test_socket = static_cast<TestNrSocket *>(test_sock_v);
+  NrSocketBase *real_socket = static_cast<NrSocketBase *>(real_sock_v);
 
   test_socket->on_socket_readable(real_socket);
 }
@@ -768,11 +724,10 @@ void TestNrSocket::fire_readable_callback() {
   fire_callback(NR_ASYNC_WAIT_READ);
 }
 
-void TestNrSocket::port_mapping_writeable_callback(void *ext_sock_v,
-                                                   int how,
+void TestNrSocket::port_mapping_writeable_callback(void *ext_sock_v, int how,
                                                    void *test_sock_v) {
-  TestNrSocket *test_socket = static_cast<TestNrSocket*>(test_sock_v);
-  NrSocketBase *external_socket = static_cast<NrSocketBase*>(ext_sock_v);
+  TestNrSocket *test_socket = static_cast<TestNrSocket *>(test_sock_v);
+  NrSocketBase *external_socket = static_cast<NrSocketBase *>(ext_sock_v);
 
   test_socket->write_to_port_mapping(external_socket);
 }
@@ -793,22 +748,18 @@ void TestNrSocket::write_to_port_mapping(NrSocketBase *external_socket) {
 
   if (r == R_WOULDBLOCK) {
     // Re-register for writeable callbacks, since we still have stuff to send
-    NR_ASYNC_WAIT(external_socket,
-                  NR_ASYNC_WAIT_WRITE,
-                  &TestNrSocket::port_mapping_writeable_callback,
-                  this);
+    NR_ASYNC_WAIT(external_socket, NR_ASYNC_WAIT_WRITE,
+                  &TestNrSocket::port_mapping_writeable_callback, this);
   }
 }
 
 void TestNrSocket::port_mapping_tcp_passthrough_callback(void *ext_sock_v,
                                                          int how,
                                                          void *test_sock_v) {
-  TestNrSocket *test_socket = static_cast<TestNrSocket*>(test_sock_v);
-  r_log(LOG_GENERIC, LOG_DEBUG,
-        "TestNrSocket %s firing %s callback",
+  TestNrSocket *test_socket = static_cast<TestNrSocket *>(test_sock_v);
+  r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %s firing %s callback",
         test_socket->internal_socket_->my_addr().as_string,
         how == NR_ASYNC_WAIT_READ ? "readable" : "writeable");
-
 
   test_socket->internal_socket_->fire_callback(how);
 }
@@ -818,7 +769,7 @@ bool TestNrSocket::is_tcp_connection_behind_nat() const {
          port_mappings_.empty();
 }
 
-TestNrSocket::PortMapping* TestNrSocket::get_port_mapping(
+TestNrSocket::PortMapping *TestNrSocket::get_port_mapping(
     const nr_transport_addr &remote_address,
     TestNat::NatBehavior filter) const {
   int compare_flags;
@@ -836,32 +787,30 @@ TestNrSocket::PortMapping* TestNrSocket::get_port_mapping(
 
   for (PortMapping *port_mapping : port_mappings_) {
     // TODO(bug 1170299): Remove const_cast when no longer necessary
-    if (!nr_transport_addr_cmp(const_cast<nr_transport_addr*>(&remote_address),
-                               &port_mapping->remote_address_,
-                               compare_flags))
+    if (!nr_transport_addr_cmp(const_cast<nr_transport_addr *>(&remote_address),
+                               &port_mapping->remote_address_, compare_flags))
       return port_mapping;
   }
   return nullptr;
 }
 
-TestNrSocket::PortMapping* TestNrSocket::create_port_mapping(
+TestNrSocket::PortMapping *TestNrSocket::create_port_mapping(
     const nr_transport_addr &remote_address,
     const RefPtr<NrSocketBase> &external_socket) const {
   r_log(LOG_GENERIC, LOG_INFO, "TestNrSocket %s creating port mapping %s -> %s",
         internal_socket_->my_addr().as_string,
-        external_socket->my_addr().as_string,
-        remote_address.as_string);
+        external_socket->my_addr().as_string, remote_address.as_string);
 
   return new PortMapping(remote_address, external_socket);
 }
 
 TestNrSocket::PortMapping::PortMapping(
     const nr_transport_addr &remote_address,
-    const RefPtr<NrSocketBase> &external_socket) :
-  external_socket_(external_socket) {
+    const RefPtr<NrSocketBase> &external_socket)
+    : external_socket_(external_socket) {
   // TODO(bug 1170299): Remove const_cast when no longer necessary
   nr_transport_addr_copy(&remote_address_,
-                         const_cast<nr_transport_addr*>(&remote_address));
+                         const_cast<nr_transport_addr *>(&remote_address));
 }
 
 int TestNrSocket::PortMapping::send_from_queue() {
@@ -872,14 +821,11 @@ int TestNrSocket::PortMapping::send_from_queue() {
     UdpPacket &packet = *send_queue_.front();
     r_log(LOG_GENERIC, LOG_DEBUG,
           "PortMapping %s -> %s sending from queue to %s",
-          external_socket_->my_addr().as_string,
-          remote_address_.as_string,
+          external_socket_->my_addr().as_string, remote_address_.as_string,
           packet.remote_address_.as_string);
 
-    r = external_socket_->sendto(packet.buffer_->data(),
-                                 packet.buffer_->len(),
-                                 0,
-                                 &packet.remote_address_);
+    r = external_socket_->sendto(packet.buffer_->data(), packet.buffer_->len(),
+                                 0, &packet.remote_address_);
 
     if (r) {
       if (r != R_WOULDBLOCK) {
@@ -898,20 +844,18 @@ int TestNrSocket::PortMapping::send_from_queue() {
   return r;
 }
 
-int TestNrSocket::PortMapping::sendto(const void *msg,
-                                      size_t len,
+int TestNrSocket::PortMapping::sendto(const void *msg, size_t len,
                                       const nr_transport_addr &to) {
   MOZ_ASSERT(remote_address_.protocol != IPPROTO_TCP);
-  r_log(LOG_GENERIC, LOG_DEBUG,
-        "PortMapping %s -> %s sending to %s",
-        external_socket_->my_addr().as_string,
-        remote_address_.as_string,
+  r_log(LOG_GENERIC, LOG_DEBUG, "PortMapping %s -> %s sending to %s",
+        external_socket_->my_addr().as_string, remote_address_.as_string,
         to.as_string);
 
   last_used_ = PR_IntervalNow();
-  int r = external_socket_->sendto(msg, len, 0,
+  int r = external_socket_->sendto(
+      msg, len, 0,
       // TODO(bug 1170299): Remove const_cast when no longer necessary
-      const_cast<nr_transport_addr*>(&to));
+      const_cast<nr_transport_addr *>(&to));
 
   if (r == R_WOULDBLOCK) {
     r_log(LOG_GENERIC, LOG_DEBUG, "Enqueueing UDP packet to %s", to.as_string);
@@ -919,7 +863,7 @@ int TestNrSocket::PortMapping::sendto(const void *msg,
     return 0;
   }
   if (r) {
-    r_log(LOG_GENERIC,LOG_ERR, "Error: %d", r);
+    r_log(LOG_GENERIC, LOG_ERR, "Error: %d", r);
   }
 
   return r;
@@ -927,24 +871,19 @@ int TestNrSocket::PortMapping::sendto(const void *msg,
 
 int TestNrSocket::PortMapping::async_wait(int how, NR_async_cb cb, void *cb_arg,
                                           char *function, int line) {
-  r_log(LOG_GENERIC, LOG_DEBUG,
-        "PortMapping %s -> %s waiting for %s",
-        external_socket_->my_addr().as_string,
-        remote_address_.as_string,
+  r_log(LOG_GENERIC, LOG_DEBUG, "PortMapping %s -> %s waiting for %s",
+        external_socket_->my_addr().as_string, remote_address_.as_string,
         how == NR_ASYNC_WAIT_READ ? "read" : "write");
 
   return external_socket_->async_wait(how, cb, cb_arg, function, line);
 }
 
 int TestNrSocket::PortMapping::cancel(int how) {
-  r_log(LOG_GENERIC, LOG_DEBUG,
-        "PortMapping %s -> %s stop waiting for %s",
-        external_socket_->my_addr().as_string,
-        remote_address_.as_string,
+  r_log(LOG_GENERIC, LOG_DEBUG, "PortMapping %s -> %s stop waiting for %s",
+        external_socket_->my_addr().as_string, remote_address_.as_string,
         how == NR_ASYNC_WAIT_READ ? "read" : "write");
 
   return external_socket_->cancel(how);
 }
 
-} // namespace mozilla
-
+}  // namespace mozilla

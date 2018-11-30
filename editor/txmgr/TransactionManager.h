@@ -21,10 +21,9 @@ class nsITransactionListener;
 
 namespace mozilla {
 
-class TransactionManager final : public nsITransactionManager
-                               , public nsSupportsWeakReference
-{
-public:
+class TransactionManager final : public nsITransactionManager,
+                                 public nsSupportsWeakReference {
+ public:
   explicit TransactionManager(int32_t aMaxTransactionCount = -1);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -39,24 +38,14 @@ public:
   nsresult Undo();
   nsresult Redo();
 
-  size_t NumberOfUndoItems() const
-  {
-    return mUndoStack.GetSize();
-  }
-  size_t NumberOfRedoItems() const
-  {
-    return mRedoStack.GetSize();
-  }
+  size_t NumberOfUndoItems() const { return mUndoStack.GetSize(); }
+  size_t NumberOfRedoItems() const { return mRedoStack.GetSize(); }
 
   int32_t NumberOfMaximumTransactions() const { return mMaxTransactionCount; }
 
   bool EnableUndoRedo(int32_t aMaxTransactionCount = -1);
-  bool DisableUndoRedo()
-  {
-    return EnableUndoRedo(0);
-  }
-  bool ClearUndoRedo()
-  {
+  bool DisableUndoRedo() { return EnableUndoRedo(0); }
+  bool ClearUndoRedo() {
     if (NS_WARN_IF(!mDoStack.IsEmpty())) {
       return false;
     }
@@ -65,13 +54,11 @@ public:
     return true;
   }
 
-  bool AddTransactionListener(nsITransactionListener& aListener)
-  {
+  bool AddTransactionListener(nsITransactionListener& aListener) {
     // XXX Shouldn't we check if aListener has already been in mListeners?
     return mListeners.AppendObject(&aListener);
   }
-  bool RemoveTransactionListener(nsITransactionListener& aListener)
-  {
+  bool RemoveTransactionListener(nsITransactionListener& aListener) {
     return mListeners.RemoveObject(&aListener);
   }
 
@@ -79,19 +66,16 @@ public:
   nsresult DidDoNotify(nsITransaction* aTransaction, nsresult aExecuteResult);
   nsresult WillUndoNotify(nsITransaction* aTransaction, bool* aInterrupt);
   nsresult DidUndoNotify(nsITransaction* aTransaction, nsresult aUndoResult);
-  nsresult WillRedoNotify(nsITransaction* aTransaction, bool *aInterrupt);
+  nsresult WillRedoNotify(nsITransaction* aTransaction, bool* aInterrupt);
   nsresult DidRedoNotify(nsITransaction* aTransaction, nsresult aRedoResult);
   nsresult WillBeginBatchNotify(bool* aInterrupt);
   nsresult DidBeginBatchNotify(nsresult aResult);
   nsresult WillEndBatchNotify(bool* aInterrupt);
   nsresult DidEndBatchNotify(nsresult aResult);
-  nsresult WillMergeNotify(nsITransaction* aTop,
-                           nsITransaction* aTransaction,
+  nsresult WillMergeNotify(nsITransaction* aTop, nsITransaction* aTransaction,
                            bool* aInterrupt);
-  nsresult DidMergeNotify(nsITransaction* aTop,
-                          nsITransaction* aTransaction,
-                          bool aDidMerge,
-                          nsresult aMergeResult);
+  nsresult DidMergeNotify(nsITransaction* aTop, nsITransaction* aTransaction,
+                          bool aDidMerge, nsresult aMergeResult);
 
   /**
    * Exposing non-virtual methods of nsITransactionManager methods.
@@ -99,26 +83,23 @@ public:
   nsresult BeginBatchInternal(nsISupports* aData);
   nsresult EndBatchInternal(bool aAllowEmpty);
 
-private:
+ private:
   virtual ~TransactionManager() = default;
 
-  nsresult BeginTransaction(nsITransaction* aTransaction,
-                            nsISupports* aData);
+  nsresult BeginTransaction(nsITransaction* aTransaction, nsISupports* aData);
   nsresult EndTransaction(bool aAllowEmpty);
 
-  int32_t                mMaxTransactionCount;
+  int32_t mMaxTransactionCount;
   TransactionStack mDoStack;
   TransactionStack mUndoStack;
   TransactionStack mRedoStack;
   nsCOMArray<nsITransactionListener> mListeners;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-mozilla::TransactionManager*
-nsITransactionManager::AsTransactionManager()
-{
+mozilla::TransactionManager* nsITransactionManager::AsTransactionManager() {
   return static_cast<mozilla::TransactionManager*>(this);
 }
 
-#endif // #ifndef mozilla_TransactionManager_h
+#endif  // #ifndef mozilla_TransactionManager_h

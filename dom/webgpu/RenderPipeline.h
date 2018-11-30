@@ -14,18 +14,16 @@ namespace webgpu {
 
 class Device;
 
-class RenderPipeline final
-    : public ChildOf<Device>
-{
-public:
-    WEBGPU_DECL_GOOP(RenderPipeline)
+class RenderPipeline final : public ChildOf<Device> {
+ public:
+  WEBGPU_DECL_GOOP(RenderPipeline)
 
-private:
-    RenderPipeline() = delete;
-    virtual ~RenderPipeline();
+ private:
+  RenderPipeline() = delete;
+  virtual ~RenderPipeline();
 };
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla
 
-#endif // WEBGPU_RenderPipeline_H_
+#endif  // WEBGPU_RenderPipeline_H_

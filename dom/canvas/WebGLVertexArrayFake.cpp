@@ -11,46 +11,43 @@
 namespace mozilla {
 
 WebGLVertexArrayFake::WebGLVertexArrayFake(WebGLContext* webgl)
-    : WebGLVertexArray(webgl, 0)
-{ }
+    : WebGLVertexArray(webgl, 0) {}
 
-void
-WebGLVertexArrayFake::BindVertexArray()
-{
-    // Go through and re-bind all buffers and setup all
-    // vertex attribute pointers
-    gl::GLContext* gl = mContext->gl;
+void WebGLVertexArrayFake::BindVertexArray() {
+  // Go through and re-bind all buffers and setup all
+  // vertex attribute pointers
+  gl::GLContext* gl = mContext->gl;
 
-    WebGLRefPtr<WebGLVertexArray> prevVertexArray = mContext->mBoundVertexArray;
+  WebGLRefPtr<WebGLVertexArray> prevVertexArray = mContext->mBoundVertexArray;
 
-    mContext->mBoundVertexArray = this;
+  mContext->mBoundVertexArray = this;
 
-    WebGLRefPtr<WebGLBuffer> prevBuffer = mContext->mBoundArrayBuffer;
-    mContext->BindBuffer(LOCAL_GL_ELEMENT_ARRAY_BUFFER, mElementArrayBuffer);
+  WebGLRefPtr<WebGLBuffer> prevBuffer = mContext->mBoundArrayBuffer;
+  mContext->BindBuffer(LOCAL_GL_ELEMENT_ARRAY_BUFFER, mElementArrayBuffer);
 
-    size_t i = 0;
-    for (const auto& vd : mAttribs) {
-        mContext->BindBuffer(LOCAL_GL_ARRAY_BUFFER, vd.mBuf);
-        vd.DoVertexAttribPointer(gl, i);
+  size_t i = 0;
+  for (const auto& vd : mAttribs) {
+    mContext->BindBuffer(LOCAL_GL_ARRAY_BUFFER, vd.mBuf);
+    vd.DoVertexAttribPointer(gl, i);
 
-        if (vd.mEnabled) {
-            gl->fEnableVertexAttribArray(i);
-        } else {
-            gl->fDisableVertexAttribArray(i);
-        }
-        ++i;
+    if (vd.mEnabled) {
+      gl->fEnableVertexAttribArray(i);
+    } else {
+      gl->fDisableVertexAttribArray(i);
     }
+    ++i;
+  }
 
-    size_t len = prevVertexArray->mAttribs.Length();
-    for (; i < len; ++i) {
-        const auto& vd = prevVertexArray->mAttribs[i];
+  size_t len = prevVertexArray->mAttribs.Length();
+  for (; i < len; ++i) {
+    const auto& vd = prevVertexArray->mAttribs[i];
 
-        if (vd.mEnabled) {
-            gl->fDisableVertexAttribArray(i);
-        }
+    if (vd.mEnabled) {
+      gl->fDisableVertexAttribArray(i);
     }
+  }
 
-    mContext->BindBuffer(LOCAL_GL_ARRAY_BUFFER, prevBuffer);
+  mContext->BindBuffer(LOCAL_GL_ARRAY_BUFFER, prevBuffer);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

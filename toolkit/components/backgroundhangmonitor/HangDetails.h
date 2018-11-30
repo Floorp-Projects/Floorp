@@ -24,22 +24,20 @@ namespace mozilla {
  * infromation which we want to expose to observers of the bhr-thread-hang
  * observer notification.
  */
-class nsHangDetails : public nsIHangDetails
-{
-public:
+class nsHangDetails : public nsIHangDetails {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIHANGDETAILS
 
   explicit nsHangDetails(HangDetails&& aDetails)
-    : mDetails(std::move(aDetails))
-  {}
+      : mDetails(std::move(aDetails)) {}
 
   // Submit these HangDetails to the main thread. This will dispatch a runnable
   // to the main thread which will fire off the bhr-thread-hang observer
   // notification with this HangDetails as the subject.
   void Submit();
 
-private:
+ private:
   virtual ~nsHangDetails() {}
 
   HangDetails mDetails;
@@ -53,20 +51,18 @@ private:
  * This object should have the only remaining reference to aHangDetails, as it
  * will access its fields without synchronization.
  */
-class ProcessHangStackRunnable final : public Runnable
-{
-public:
+class ProcessHangStackRunnable final : public Runnable {
+ public:
   explicit ProcessHangStackRunnable(HangDetails&& aHangDetails)
-    : Runnable("ProcessHangStackRunnable")
-    , mHangDetails(std::move(aHangDetails))
-  {}
+      : Runnable("ProcessHangStackRunnable"),
+        mHangDetails(std::move(aHangDetails)) {}
 
   NS_IMETHOD Run() override;
 
-private:
+ private:
   HangDetails mHangDetails;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_HangDetails_h
+#endif  // mozilla_HangDetails_h

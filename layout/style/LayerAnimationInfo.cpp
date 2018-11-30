@@ -6,22 +6,21 @@
 
 #include "LayerAnimationInfo.h"
 
-#include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
-#include "nsCSSPropertyIDSet.h" // For nsCSSPropertyIDSet::CompositorAnimatable
+#include "nsCSSProps.h"          // For nsCSSProps::PropHasFlags
+#include "nsCSSPropertyIDSet.h"  // For nsCSSPropertyIDSet::CompositorAnimatable
 
 namespace mozilla {
 
 /* static */ const Array<DisplayItemType,
                          nsCSSPropertyIDSet::CompositorAnimatableCount()>
-  LayerAnimationInfo::sDisplayItemTypes = {
-    DisplayItemType::TYPE_BACKGROUND_COLOR,
-    DisplayItemType::TYPE_OPACITY,
-    DisplayItemType::TYPE_TRANSFORM,
-  };
+    LayerAnimationInfo::sDisplayItemTypes = {
+        DisplayItemType::TYPE_BACKGROUND_COLOR,
+        DisplayItemType::TYPE_OPACITY,
+        DisplayItemType::TYPE_TRANSFORM,
+};
 
-/* static */ DisplayItemType
-LayerAnimationInfo::GetDisplayItemTypeForProperty(nsCSSPropertyID aProperty)
-{
+/* static */ DisplayItemType LayerAnimationInfo::GetDisplayItemTypeForProperty(
+    nsCSSPropertyID aProperty) {
   switch (aProperty) {
     case eCSSProperty_background_color:
       return DisplayItemType::TYPE_BACKGROUND_COLOR;
@@ -35,4 +34,4 @@ LayerAnimationInfo::GetDisplayItemTypeForProperty(nsCSSPropertyID aProperty)
   return DisplayItemType::TYPE_ZERO;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

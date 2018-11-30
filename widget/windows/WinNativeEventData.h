@@ -20,37 +20,31 @@ namespace widget {
  * since which are not available in different process.
  */
 
-class WinNativeKeyEventData final
-{
-public:
+class WinNativeKeyEventData final {
+ public:
   UINT mMessage;
   WPARAM mWParam;
   LPARAM mLParam;
   Modifiers mModifiers;
 
-private:
+ private:
   uintptr_t mKeyboardLayout;
 
-public:
-  WinNativeKeyEventData(UINT aMessage,
-                        WPARAM aWParam,
-                        LPARAM aLParam,
+ public:
+  WinNativeKeyEventData(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
                         const ModifierKeyState& aModifierKeyState)
-    : mMessage(aMessage)
-    , mWParam(aWParam)
-    , mLParam(aLParam)
-    , mModifiers(aModifierKeyState.GetModifiers())
-    , mKeyboardLayout(reinterpret_cast<uintptr_t>(::GetKeyboardLayout(0)))
-  {
-  }
+      : mMessage(aMessage),
+        mWParam(aWParam),
+        mLParam(aLParam),
+        mModifiers(aModifierKeyState.GetModifiers()),
+        mKeyboardLayout(reinterpret_cast<uintptr_t>(::GetKeyboardLayout(0))) {}
 
-  HKL GetKeyboardLayout() const
-  {
+  HKL GetKeyboardLayout() const {
     return reinterpret_cast<HKL>(mKeyboardLayout);
   }
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // #ifndef mozilla_widget_WinNativeEventData_h_
+#endif  // #ifndef mozilla_widget_WinNativeEventData_h_

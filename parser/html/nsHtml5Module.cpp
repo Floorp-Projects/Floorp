@@ -26,9 +26,7 @@ nsIThread* nsHtml5Module::sStreamParserThread = nullptr;
 nsIThread* nsHtml5Module::sMainThread = nullptr;
 
 // static
-void
-nsHtml5Module::InitializeStatics()
-{
+void nsHtml5Module::InitializeStatics() {
   nsHtml5AttributeName::initializeStatics();
   nsHtml5ElementName::initializeStatics();
   nsHtml5HtmlAttributes::initializeStatics();
@@ -44,9 +42,7 @@ nsHtml5Module::InitializeStatics()
 }
 
 // static
-void
-nsHtml5Module::ReleaseStatics()
-{
+void nsHtml5Module::ReleaseStatics() {
 #ifdef DEBUG
   sNsHtml5ModuleInitialized = false;
 #endif
@@ -64,37 +60,28 @@ nsHtml5Module::ReleaseStatics()
 }
 
 // static
-already_AddRefed<nsIParser>
-nsHtml5Module::NewHtml5Parser()
-{
+already_AddRefed<nsIParser> nsHtml5Module::NewHtml5Parser() {
   MOZ_ASSERT(sNsHtml5ModuleInitialized, "nsHtml5Module not initialized.");
   nsCOMPtr<nsIParser> rv = new nsHtml5Parser();
   return rv.forget();
 }
 
 // static
-nsresult
-nsHtml5Module::Initialize(nsIParser* aParser,
-                          nsIDocument* aDoc,
-                          nsIURI* aURI,
-                          nsISupports* aContainer,
-                          nsIChannel* aChannel)
-{
+nsresult nsHtml5Module::Initialize(nsIParser* aParser, nsIDocument* aDoc,
+                                   nsIURI* aURI, nsISupports* aContainer,
+                                   nsIChannel* aChannel) {
   MOZ_ASSERT(sNsHtml5ModuleInitialized, "nsHtml5Module not initialized.");
   nsHtml5Parser* parser = static_cast<nsHtml5Parser*>(aParser);
   return parser->Initialize(aDoc, aURI, aContainer, aChannel);
 }
 
-class nsHtml5ParserThreadTerminator final : public nsIObserver
-{
-public:
+class nsHtml5ParserThreadTerminator final : public nsIObserver {
+ public:
   NS_DECL_ISUPPORTS
   explicit nsHtml5ParserThreadTerminator(nsIThread* aThread)
-    : mThread(aThread)
-  {
-  }
-  NS_IMETHOD Observe(nsISupports*, const char* topic, const char16_t*) override
-  {
+      : mThread(aThread) {}
+  NS_IMETHOD Observe(nsISupports*, const char* topic,
+                     const char16_t*) override {
     NS_ASSERTION(!strcmp(topic, "xpcom-shutdown-threads"), "Unexpected topic");
     if (mThread) {
       mThread->Shutdown();
@@ -103,7 +90,7 @@ public:
     return NS_OK;
   }
 
-private:
+ private:
   ~nsHtml5ParserThreadTerminator() {}
 
   nsCOMPtr<nsIThread> mThread;
@@ -112,9 +99,7 @@ private:
 NS_IMPL_ISUPPORTS(nsHtml5ParserThreadTerminator, nsIObserver)
 
 // static
-nsIThread*
-nsHtml5Module::GetStreamParserThread()
-{
+nsIThread* nsHtml5Module::GetStreamParserThread() {
   if (StaticPrefs::html5_offmainthread()) {
     if (!sStreamParserThread) {
       NS_NewNamedThread("HTML5 Parser", &sStreamParserThread);
@@ -122,8 +107,7 @@ nsHtml5Module::GetStreamParserThread()
       nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
       NS_ASSERTION(os, "do_GetService failed");
       os->AddObserver(new nsHtml5ParserThreadTerminator(sStreamParserThread),
-                      "xpcom-shutdown-threads",
-                      false);
+                      "xpcom-shutdown-threads", false);
     }
     return sStreamParserThread;
   }

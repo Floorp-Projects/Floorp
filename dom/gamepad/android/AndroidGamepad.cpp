@@ -12,14 +12,11 @@ namespace mozilla {
 namespace dom {
 
 class AndroidGamepadManager final
-  : public java::AndroidGamepadManager::Natives<AndroidGamepadManager>
-{
+    : public java::AndroidGamepadManager::Natives<AndroidGamepadManager> {
   AndroidGamepadManager() = delete;
 
-public:
-  static void
-  OnGamepadChange(int32_t aID, bool aAdded)
-  {
+ public:
+  static void OnGamepadChange(int32_t aID, bool aAdded) {
     RefPtr<GamepadPlatformService> service =
         GamepadPlatformService::GetParentService();
     if (!service) {
@@ -28,9 +25,9 @@ public:
 
     if (aAdded) {
       const int svc_id = service->AddGamepad(
-          "android", GamepadMappingType::Standard,
-          GamepadHand::_empty, kStandardGamepadButtons,
-          kStandardGamepadAxes, 0); // TODO: Bug 680289, implement gamepad haptics for Android
+          "android", GamepadMappingType::Standard, GamepadHand::_empty,
+          kStandardGamepadButtons, kStandardGamepadAxes,
+          0);  // TODO: Bug 680289, implement gamepad haptics for Android
       java::AndroidGamepadManager::OnGamepadAdded(aID, svc_id);
 
     } else {
@@ -38,9 +35,8 @@ public:
     }
   }
 
-  static void
-  OnButtonChange(int32_t aID, int32_t aButton, bool aPressed, float aValue)
-  {
+  static void OnButtonChange(int32_t aID, int32_t aButton, bool aPressed,
+                             float aValue) {
     RefPtr<GamepadPlatformService> service =
         GamepadPlatformService::GetParentService();
     if (!service) {
@@ -50,10 +46,8 @@ public:
     service->NewButtonEvent(aID, aButton, aPressed, aValue);
   }
 
-  static void
-  OnAxisChange(int32_t aID, jni::BooleanArray::Param aValid,
-               jni::FloatArray::Param aValues)
-  {
+  static void OnAxisChange(int32_t aID, jni::BooleanArray::Param aValid,
+                           jni::FloatArray::Param aValues) {
     RefPtr<GamepadPlatformService> service =
         GamepadPlatformService::GetParentService();
     if (!service) {
@@ -72,18 +66,16 @@ public:
   }
 };
 
-void StartGamepadMonitoring()
-{
+void StartGamepadMonitoring() {
   AndroidGamepadManager::Init();
   java::AndroidGamepadManager::Start(
       java::GeckoAppShell::GetApplicationContext());
 }
 
-void StopGamepadMonitoring()
-{
+void StopGamepadMonitoring() {
   java::AndroidGamepadManager::Stop(
       java::GeckoAppShell::GetApplicationContext());
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

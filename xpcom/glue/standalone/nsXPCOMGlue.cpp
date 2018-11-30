@@ -36,27 +36,18 @@ typedef void (*NSFuncPtr)();
 
 typedef HINSTANCE LibHandleType;
 
-static LibHandleType
-GetLibHandle(pathstr_t aDependentLib)
-{
+static LibHandleType GetLibHandle(pathstr_t aDependentLib) {
   LibHandleType libHandle =
-    LoadLibraryExW(aDependentLib, nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
+      LoadLibraryExW(aDependentLib, nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
 
 #ifdef DEBUG
   if (!libHandle) {
     DWORD err = GetLastError();
     LPWSTR lpMsgBuf;
-    FormatMessageW(
-      FORMAT_MESSAGE_ALLOCATE_BUFFER |
-      FORMAT_MESSAGE_FROM_SYSTEM |
-      FORMAT_MESSAGE_IGNORE_INSERTS,
-      nullptr,
-      err,
-      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-      (LPWSTR)&lpMsgBuf,
-      0,
-      nullptr
-    );
+    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                       FORMAT_MESSAGE_IGNORE_INSERTS,
+                   nullptr, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                   (LPWSTR)&lpMsgBuf, 0, nullptr);
     wprintf(L"Error loading %ls: %s\n", aDependentLib, lpMsgBuf);
     LocalFree(lpMsgBuf);
   }
@@ -65,15 +56,11 @@ GetLibHandle(pathstr_t aDependentLib)
   return libHandle;
 }
 
-static NSFuncPtr
-GetSymbol(LibHandleType aLibHandle, const char* aSymbol)
-{
+static NSFuncPtr GetSymbol(LibHandleType aLibHandle, const char* aSymbol) {
   return (NSFuncPtr)GetProcAddress(aLibHandle, aSymbol);
 }
 
-static void
-CloseLibHandle(LibHandleType aLibHandle)
-{
+static void CloseLibHandle(LibHandleType aLibHandle) {
   FreeLibrary(aLibHandle);
 }
 
@@ -94,15 +81,12 @@ NS_HIDDEN __typeof(dlclose) __wrap_dlclose;
 
 typedef void* LibHandleType;
 
-static LibHandleType
-GetLibHandle(pathstr_t aDependentLib)
-{
-  LibHandleType libHandle = dlopen(aDependentLib,
-                                   RTLD_GLOBAL | RTLD_LAZY
+static LibHandleType GetLibHandle(pathstr_t aDependentLib) {
+  LibHandleType libHandle = dlopen(aDependentLib, RTLD_GLOBAL | RTLD_LAZY
 #ifdef XP_MACOSX
-                                   | RTLD_FIRST
+                                                      | RTLD_FIRST
 #endif
-                                   );
+  );
   if (!libHandle) {
     fprintf(stderr, "XPCOMGlueLoad error for file %s:\n%s\n", aDependentLib,
             dlerror());
@@ -110,32 +94,23 @@ GetLibHandle(pathstr_t aDependentLib)
   return libHandle;
 }
 
-static NSFuncPtr
-GetSymbol(LibHandleType aLibHandle, const char* aSymbol)
-{
+static NSFuncPtr GetSymbol(LibHandleType aLibHandle, const char* aSymbol) {
   return (NSFuncPtr)dlsym(aLibHandle, aSymbol);
 }
 
 #ifndef MOZ_LINKER
-static void
-CloseLibHandle(LibHandleType aLibHandle)
-{
-  dlclose(aLibHandle);
-}
+static void CloseLibHandle(LibHandleType aLibHandle) { dlclose(aLibHandle); }
 #endif
 #endif
 
-struct DependentLib
-{
+struct DependentLib {
   LibHandleType libHandle;
   DependentLib* next;
 };
 
 static DependentLib* sTop;
 
-static void
-AppendDependentLib(LibHandleType aLibHandle)
-{
+static void AppendDependentLib(LibHandleType aLibHandle) {
   auto* d = new DependentLib;
   if (!d) {
     return;
@@ -147,9 +122,7 @@ AppendDependentLib(LibHandleType aLibHandle)
   sTop = d;
 }
 
-static bool
-ReadDependentCB(pathstr_t aDependentLib)
-{
+static bool ReadDependentCB(pathstr_t aDependentLib) {
 #ifndef MOZ_LINKER
   // We do this unconditionally because of data in bug 771745
   ReadAheadLib(aDependentLib);
@@ -163,36 +136,29 @@ ReadDependentCB(pathstr_t aDependentLib)
 }
 
 #ifdef XP_WIN
-static bool
-ReadDependentCB(const char* aDependentLib)
-{
+static bool ReadDependentCB(const char* aDependentLib) {
   wchar_t wideDependentLib[MAX_PATH];
-  MultiByteToWideChar(CP_UTF8, 0, aDependentLib, -1, wideDependentLib, MAX_PATH);
+  MultiByteToWideChar(CP_UTF8, 0, aDependentLib, -1, wideDependentLib,
+                      MAX_PATH);
   return ReadDependentCB(wideDependentLib);
 }
 
-inline FILE*
-TS_tfopen(const char* path, const wchar_t* mode)
-{
+inline FILE* TS_tfopen(const char* path, const wchar_t* mode) {
   wchar_t wPath[MAX_PATH];
   MultiByteToWideChar(CP_UTF8, 0, path, -1, wPath, MAX_PATH);
   return _wfopen(wPath, mode);
 }
 #else
-inline FILE*
-TS_tfopen(const char* aPath, const char* aMode)
-{
+inline FILE* TS_tfopen(const char* aPath, const char* aMode) {
   return fopen(aPath, aMode);
 }
 #endif
 
 /* RAII wrapper for FILE descriptors */
-struct ScopedCloseFileTraits
-{
+struct ScopedCloseFileTraits {
   typedef FILE* type;
   static type empty() { return nullptr; }
-  static void release(type aFile)
-  {
+  static void release(type aFile) {
     if (aFile) {
       fclose(aFile);
     }
@@ -201,9 +167,7 @@ struct ScopedCloseFileTraits
 typedef Scoped<ScopedCloseFileTraits> ScopedCloseFile;
 
 #ifndef MOZ_LINKER
-static void
-XPCOMGlueUnload()
-{
+static void XPCOMGlueUnload() {
   while (sTop) {
     CloseLibHandle(sTop->libHandle);
 
@@ -217,9 +181,7 @@ XPCOMGlueUnload()
 
 #if defined(XP_WIN)
 // like strpbrk but finds the *last* char, not the first
-static const char*
-ns_strrpbrk(const char* string, const char* strCharSet)
-{
+static const char* ns_strrpbrk(const char* string, const char* strCharSet) {
   const char* found = nullptr;
   for (; *string; ++string) {
     for (const char* search = strCharSet; *search; ++search) {
@@ -235,9 +197,7 @@ ns_strrpbrk(const char* string, const char* strCharSet)
 }
 #endif
 
-static nsresult
-XPCOMGlueLoad(const char* aXPCOMFile)
-{
+static nsresult XPCOMGlueLoad(const char* aXPCOMFile) {
 #ifdef MOZ_LINKER
   if (!ReadDependentCB(aXPCOMFile)) {
     return NS_ERROR_FAILURE;
@@ -251,7 +211,7 @@ XPCOMGlueLoad(const char* aXPCOMFile)
   // However, the actual libraries listed in dependentlibs.list live under
   // Contents/MacOS. We want to read the list from Contents/Resources, then
   // load the libraries from Contents/MacOS.
-  const char *tempSlash = strrchr(aXPCOMFile, '/');
+  const char* tempSlash = strrchr(aXPCOMFile, '/');
   size_t tempLen = size_t(tempSlash - aXPCOMFile);
   if (tempLen > MAXPATHLEN) {
     return NS_ERROR_FAILURE;
@@ -259,9 +219,9 @@ XPCOMGlueLoad(const char* aXPCOMFile)
   char tempBuffer[MAXPATHLEN];
   memcpy(tempBuffer, aXPCOMFile, tempLen);
   tempBuffer[tempLen] = '\0';
-  const char *slash = strrchr(tempBuffer, '/');
+  const char* slash = strrchr(tempBuffer, '/');
   tempLen = size_t(slash - tempBuffer);
-  const char *lastSlash = aXPCOMFile + tempLen;
+  const char* lastSlash = aXPCOMFile + tempLen;
 #else
   const char* lastSlash = strrchr(aXPCOMFile, '/');
 #endif
@@ -271,19 +231,17 @@ XPCOMGlueLoad(const char* aXPCOMFile)
 
     if (len > MAXPATHLEN - sizeof(XPCOM_FILE_PATH_SEPARATOR
 #ifdef XP_MACOSX
-                                  "Resources"
-                                  XPCOM_FILE_PATH_SEPARATOR
+                                  "Resources" XPCOM_FILE_PATH_SEPARATOR
 #endif
-                                  XPCOM_DEPENDENT_LIBS_LIST)) {
+                                      XPCOM_DEPENDENT_LIBS_LIST)) {
       return NS_ERROR_FAILURE;
     }
     memcpy(xpcomDir, aXPCOMFile, len);
     strcpy(xpcomDir + len, XPCOM_FILE_PATH_SEPARATOR
 #ifdef XP_MACOSX
-                           "Resources"
-                           XPCOM_FILE_PATH_SEPARATOR
+           "Resources" XPCOM_FILE_PATH_SEPARATOR
 #endif
-                           XPCOM_DEPENDENT_LIBS_LIST);
+               XPCOM_DEPENDENT_LIBS_LIST);
     cursor = xpcomDir + len + 1;
   } else {
     strcpy(xpcomDir, XPCOM_DEPENDENT_LIBS_LIST);
@@ -339,7 +297,8 @@ XPCOMGlueLoad(const char* aXPCOMFile)
   return NS_OK;
 }
 
-#if defined(MOZ_WIDGET_GTK) && (defined(MOZ_MEMORY) || defined(__FreeBSD__) || defined(__NetBSD__))
+#if defined(MOZ_WIDGET_GTK) && \
+    (defined(MOZ_MEMORY) || defined(__FreeBSD__) || defined(__NetBSD__))
 #define MOZ_GSLICE_INIT
 #endif
 
@@ -347,7 +306,7 @@ XPCOMGlueLoad(const char* aXPCOMFile)
 #include <glib.h>
 
 class GSliceInit {
-public:
+ public:
   GSliceInit() {
     mHadGSlice = bool(getenv("G_SLICE"));
     if (!mHadGSlice) {
@@ -368,16 +327,14 @@ public:
     }
   }
 
-private:
+ private:
   bool mHadGSlice;
 };
 #endif
 
 namespace mozilla {
 
-Bootstrap::UniquePtr
-GetBootstrap(const char* aXPCOMFile)
-{
+Bootstrap::UniquePtr GetBootstrap(const char* aXPCOMFile) {
 #ifdef MOZ_GSLICE_INIT
   GSliceInit gSliceInit;
 #endif
@@ -386,13 +343,15 @@ GetBootstrap(const char* aXPCOMFile)
     return nullptr;
   }
 
-  char *lastSlash = strrchr(const_cast<char *>(aXPCOMFile), XPCOM_FILE_PATH_SEPARATOR[0]);
+  char* lastSlash =
+      strrchr(const_cast<char*>(aXPCOMFile), XPCOM_FILE_PATH_SEPARATOR[0]);
   if (!lastSlash) {
     return nullptr;
   }
   size_t base_len = size_t(lastSlash - aXPCOMFile) + 1;
 
-  UniqueFreePtr<char> file(reinterpret_cast<char*>(malloc(base_len + sizeof(XPCOM_DLL))));
+  UniqueFreePtr<char> file(
+      reinterpret_cast<char*>(malloc(base_len + sizeof(XPCOM_DLL))));
   memcpy(file.get(), aXPCOMFile, base_len);
   memcpy(file.get() + base_len, XPCOM_DLL, sizeof(XPCOM_DLL));
 
@@ -400,7 +359,8 @@ GetBootstrap(const char* aXPCOMFile)
     return nullptr;
   }
 
-  GetBootstrapType func = (GetBootstrapType)GetSymbol(sTop->libHandle, "XRE_GetBootstrap");
+  GetBootstrapType func =
+      (GetBootstrapType)GetSymbol(sTop->libHandle, "XRE_GetBootstrap");
   if (!func) {
     return nullptr;
   }
@@ -411,4 +371,4 @@ GetBootstrap(const char* aXPCOMFile)
   return b;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

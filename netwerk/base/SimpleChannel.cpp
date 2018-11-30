@@ -21,33 +21,31 @@
 namespace mozilla {
 namespace net {
 
-class SimpleChannel : public nsBaseChannel
-{
-public:
+class SimpleChannel : public nsBaseChannel {
+ public:
   explicit SimpleChannel(UniquePtr<SimpleChannelCallbacks>&& aCallbacks);
 
-protected:
+ protected:
   virtual ~SimpleChannel() = default;
 
-  virtual nsresult OpenContentStream(bool async, nsIInputStream **streamOut,
+  virtual nsresult OpenContentStream(bool async, nsIInputStream** streamOut,
                                      nsIChannel** channel) override;
 
   virtual nsresult BeginAsyncRead(nsIStreamListener* listener,
                                   nsIRequest** request) override;
 
-private:
+ private:
   UniquePtr<SimpleChannelCallbacks> mCallbacks;
 };
 
 SimpleChannel::SimpleChannel(UniquePtr<SimpleChannelCallbacks>&& aCallbacks)
-  : mCallbacks(std::move(aCallbacks))
-{
+    : mCallbacks(std::move(aCallbacks)) {
   EnableSynthesizedProgressEvents(true);
 }
 
-nsresult
-SimpleChannel::OpenContentStream(bool async, nsIInputStream **streamOut, nsIChannel** channel)
-{
+nsresult SimpleChannel::OpenContentStream(bool async,
+                                          nsIInputStream** streamOut,
+                                          nsIChannel** channel) {
   NS_ENSURE_TRUE(mCallbacks, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIInputStream> stream;
@@ -61,9 +59,8 @@ SimpleChannel::OpenContentStream(bool async, nsIInputStream **streamOut, nsIChan
   return NS_OK;
 }
 
-nsresult
-SimpleChannel::BeginAsyncRead(nsIStreamListener* listener, nsIRequest** request)
-{
+nsresult SimpleChannel::BeginAsyncRead(nsIStreamListener* listener,
+                                       nsIRequest** request) {
   NS_ENSURE_TRUE(mCallbacks, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIRequest> req;
@@ -75,20 +72,19 @@ SimpleChannel::BeginAsyncRead(nsIStreamListener* listener, nsIRequest** request)
   return NS_OK;
 }
 
-class SimpleChannelChild final : public SimpleChannel
-                               , public nsIChildChannel
-                               , public PSimpleChannelChild
-{
-public:
+class SimpleChannelChild final : public SimpleChannel,
+                                 public nsIChildChannel,
+                                 public PSimpleChannelChild {
+ public:
   explicit SimpleChannelChild(UniquePtr<SimpleChannelCallbacks>&& aCallbacks);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSICHILDCHANNEL
 
-protected:
+ protected:
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
-private:
+ private:
   virtual ~SimpleChannelChild() = default;
 
   void AddIPDLReference();
@@ -98,18 +94,15 @@ private:
 
 NS_IMPL_ISUPPORTS_INHERITED(SimpleChannelChild, SimpleChannel, nsIChildChannel)
 
-SimpleChannelChild::SimpleChannelChild(UniquePtr<SimpleChannelCallbacks>&& aCallbacks)
-  : SimpleChannel(std::move(aCallbacks))
-  , mIPDLRef(nullptr)
-{
-}
+SimpleChannelChild::SimpleChannelChild(
+    UniquePtr<SimpleChannelCallbacks>&& aCallbacks)
+    : SimpleChannel(std::move(aCallbacks)), mIPDLRef(nullptr) {}
 
 NS_IMETHODIMP
-SimpleChannelChild::ConnectParent(uint32_t aId)
-{
+SimpleChannelChild::ConnectParent(uint32_t aId) {
   MOZ_ASSERT(NS_IsMainThread());
   mozilla::dom::ContentChild* cc =
-    static_cast<mozilla::dom::ContentChild*>(gNeckoChild->Manager());
+      static_cast<mozilla::dom::ContentChild*>(gNeckoChild->Manager());
   if (cc->IsShuttingDown()) {
     return NS_ERROR_FAILURE;
   }
@@ -125,8 +118,7 @@ SimpleChannelChild::ConnectParent(uint32_t aId)
 
 NS_IMETHODIMP
 SimpleChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener,
-                                          nsISupports* aContext)
-{
+                                          nsISupports* aContext) {
   if (mIPDLRef) {
     MOZ_ASSERT(NS_IsMainThread());
   }
@@ -148,17 +140,14 @@ SimpleChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener,
   return NS_OK;
 }
 
-void
-SimpleChannelChild::ActorDestroy(ActorDestroyReason why)
-{
+void SimpleChannelChild::ActorDestroy(ActorDestroyReason why) {
   MOZ_ASSERT(mIPDLRef);
   mIPDLRef = nullptr;
 }
 
-
-already_AddRefed<nsIChannel>
-NS_NewSimpleChannelInternal(nsIURI* aURI, nsILoadInfo* aLoadInfo, UniquePtr<SimpleChannelCallbacks>&& aCallbacks)
-{
+already_AddRefed<nsIChannel> NS_NewSimpleChannelInternal(
+    nsIURI* aURI, nsILoadInfo* aLoadInfo,
+    UniquePtr<SimpleChannelCallbacks>&& aCallbacks) {
   RefPtr<SimpleChannel> chan;
   if (IsNeckoChild()) {
     chan = new SimpleChannelChild(std::move(aCallbacks));
@@ -173,5 +162,5 @@ NS_NewSimpleChannelInternal(nsIURI* aURI, nsILoadInfo* aLoadInfo, UniquePtr<Simp
   return chan.forget();
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

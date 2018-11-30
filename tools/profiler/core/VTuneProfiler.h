@@ -1,8 +1,8 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef VTuneProfiler_h
 #define VTuneProfiler_h
@@ -35,27 +35,23 @@
 // them to the correct DLL. Through libxul these will 'magically' resolve.
 #include "vtune/ittnotify.h"
 
-class VTuneProfiler
-{
-public:
+class VTuneProfiler {
+ public:
   static void Initialize();
   static void Shutdown();
 
-  static void Trace(const char* aName, TracingKind aKind)
-  {
+  static void Trace(const char* aName, TracingKind aKind) {
     if (mInstance) {
       mInstance->TraceInternal(aName, aKind);
     }
   }
-  static void RegisterThread(const char* aName)
-  {
-    if (mInstance)
-    {
+  static void RegisterThread(const char* aName) {
+    if (mInstance) {
       mInstance->RegisterThreadInternal(aName);
     }
   }
 
-private:
+ private:
   void TraceInternal(const char* aName, TracingKind aKind);
   void RegisterThreadInternal(const char* aName);
 

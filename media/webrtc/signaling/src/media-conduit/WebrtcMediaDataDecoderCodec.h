@@ -14,21 +14,20 @@
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 
 namespace webrtc {
-  class DecodedImageCallback;
+class DecodedImageCallback;
 }
 namespace mozilla {
 namespace layers {
-  class Image;
-  class ImageContainer;
-}
+class Image;
+class ImageContainer;
+}  // namespace layers
 
 class PDMFactory;
 class SharedThreadPool;
 class TaskQueue;
 
-class WebrtcMediaDataDecoder : public WebrtcVideoDecoder
-{
-public:
+class WebrtcMediaDataDecoder : public WebrtcVideoDecoder {
+ public:
   WebrtcMediaDataDecoder();
 
   // Implement VideoDecoder interface.
@@ -37,18 +36,17 @@ public:
   int32_t InitDecode(const webrtc::VideoCodec* codecSettings,
                      int32_t numberOfCores) override;
 
-  int32_t Decode(const webrtc::EncodedImage& inputImage,
-                 bool missingFrames,
+  int32_t Decode(const webrtc::EncodedImage& inputImage, bool missingFrames,
                  const webrtc::RTPFragmentationHeader* fragmentation,
                  const webrtc::CodecSpecificInfo* codecSpecificInfo = NULL,
                  int64_t renderTimeMs = -1) override;
 
   int32_t RegisterDecodeCompleteCallback(
-    webrtc::DecodedImageCallback* callback) override;
+      webrtc::DecodedImageCallback* callback) override;
 
   int32_t Release() override;
 
-private:
+ private:
   ~WebrtcMediaDataDecoder();
   void QueueFrame(MediaRawData* aFrame);
   AbstractThread* OwnerThread() const { return mTaskQueue; }
@@ -69,6 +67,6 @@ private:
   MediaDataDecoder::DecodedData mResults;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // WebrtcMediaDataDecoderCodec_h__
+#endif  // WebrtcMediaDataDecoderCodec_h__

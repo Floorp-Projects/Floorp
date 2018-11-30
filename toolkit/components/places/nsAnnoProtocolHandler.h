@@ -14,22 +14,26 @@
 #include "mozilla/Attributes.h"
 
 // {e8b8bdb7-c96c-4d82-9c6f-2b3c585ec7ea}
-#define NS_ANNOPROTOCOLHANDLER_CID \
-{ 0xe8b8bdb7, 0xc96c, 0x4d82, { 0x9c, 0x6f, 0x2b, 0x3c, 0x58, 0x5e, 0xc7, 0xea } }
+#define NS_ANNOPROTOCOLHANDLER_CID                   \
+  {                                                  \
+    0xe8b8bdb7, 0xc96c, 0x4d82, {                    \
+      0x9c, 0x6f, 0x2b, 0x3c, 0x58, 0x5e, 0xc7, 0xea \
+    }                                                \
+  }
 
-class nsAnnoProtocolHandler final : public nsIProtocolHandler, public nsSupportsWeakReference
-{
-public:
+class nsAnnoProtocolHandler final : public nsIProtocolHandler,
+                                    public nsSupportsWeakReference {
+ public:
   nsAnnoProtocolHandler() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROTOCOLHANDLER
 
-private:
+ private:
   ~nsAnnoProtocolHandler() {}
 
-protected:
-  nsresult ParseAnnoURI(nsIURI* aURI, nsIURI** aResultURI, nsCString& aName);
+ protected:
+  nsresult ParseAnnoURI(nsIURI *aURI, nsIURI **aResultURI, nsCString &aName);
 
   /**
    * Obtains a new channel to be used to get a favicon from the database.  This
@@ -45,10 +49,8 @@ protected:
    *        The loadinfo that requested the resource load.
    * @returns (via _channel) the channel that will obtain the favicon data.
    */
-  nsresult NewFaviconChannel(nsIURI *aURI,
-                             nsIURI *aAnnotationURI,
-                             nsILoadInfo *aLoadInfo,
-                             nsIChannel **_channel);
+  nsresult NewFaviconChannel(nsIURI *aURI, nsIURI *aAnnotationURI,
+                             nsILoadInfo *aLoadInfo, nsIChannel **_channel);
 };
 
 #endif /* nsAnnoProtocolHandler_h___ */

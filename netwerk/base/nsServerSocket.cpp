@@ -18,18 +18,16 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIFile.h"
 
-namespace mozilla { namespace net {
+namespace mozilla {
+namespace net {
 
 //-----------------------------------------------------------------------------
 
-typedef void (nsServerSocket:: *nsServerSocketFunc)(void);
+typedef void (nsServerSocket::*nsServerSocketFunc)(void);
 
-static nsresult
-PostEvent(nsServerSocket *s, nsServerSocketFunc func)
-{
+static nsresult PostEvent(nsServerSocket *s, nsServerSocketFunc func) {
   nsCOMPtr<nsIRunnable> ev = NewRunnableMethod("net::PostEvent", s, func);
-  if (!gSocketTransportService)
-    return NS_ERROR_FAILURE;
+  if (!gSocketTransportService) return NS_ERROR_FAILURE;
 
   return gSocketTransportService->Dispatch(ev, NS_DISPATCH_NORMAL);
 }
@@ -39,11 +37,10 @@ PostEvent(nsServerSocket *s, nsServerSocketFunc func)
 //-----------------------------------------------------------------------------
 
 nsServerSocket::nsServerSocket()
-  : mFD(nullptr)
-  , mLock("nsServerSocket.mLock")
-  , mAttached(false)
-  , mKeepWhenOffline(false)
-{
+    : mFD(nullptr),
+      mLock("nsServerSocket.mLock"),
+      mAttached(false),
+      mKeepWhenOffline(false) {
   this->mAddr.raw.family = 0;
   this->mAddr.inet.family = 0;
   this->mAddr.inet.port = 0;
@@ -55,8 +52,7 @@ nsServerSocket::nsServerSocket()
   this->mAddr.local.family = 0;
   // we want to be able to access the STS directly, and it may not have been
   // constructed yet.  the STS constructor sets gSocketTransportService.
-  if (!gSocketTransportService)
-  {
+  if (!gSocketTransportService) {
     // This call can fail if we're offline, for example.
     nsCOMPtr<nsISocketTransportService> sts =
         do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
@@ -65,57 +61,45 @@ nsServerSocket::nsServerSocket()
   NS_IF_ADDREF(gSocketTransportService);
 }
 
-nsServerSocket::~nsServerSocket()
-{
-  Close(); // just in case :)
+nsServerSocket::~nsServerSocket() {
+  Close();  // just in case :)
 
   // release our reference to the STS
   nsSocketTransportService *serv = gSocketTransportService;
   NS_IF_RELEASE(serv);
 }
 
-void
-nsServerSocket::OnMsgClose()
-{
+void nsServerSocket::OnMsgClose() {
   SOCKET_LOG(("nsServerSocket::OnMsgClose [this=%p]\n", this));
 
-  if (NS_FAILED(mCondition))
-    return;
+  if (NS_FAILED(mCondition)) return;
 
   // tear down socket.  this signals the STS to detach our socket handler.
   mCondition = NS_BINDING_ABORTED;
 
   // if we are attached, then we'll close the socket in our OnSocketDetached.
   // otherwise, call OnSocketDetached from here.
-  if (!mAttached)
-    OnSocketDetached(mFD);
+  if (!mAttached) OnSocketDetached(mFD);
 }
 
-void
-nsServerSocket::OnMsgAttach()
-{
+void nsServerSocket::OnMsgAttach() {
   SOCKET_LOG(("nsServerSocket::OnMsgAttach [this=%p]\n", this));
 
-  if (NS_FAILED(mCondition))
-    return;
+  if (NS_FAILED(mCondition)) return;
 
   mCondition = TryAttach();
 
   // if we hit an error while trying to attach then bail...
-  if (NS_FAILED(mCondition))
-  {
+  if (NS_FAILED(mCondition)) {
     NS_ASSERTION(!mAttached, "should not be attached already");
     OnSocketDetached(mFD);
   }
 }
 
-nsresult
-nsServerSocket::TryAttach()
-{
+nsresult nsServerSocket::TryAttach() {
   nsresult rv;
 
-  if (!gSocketTransportService)
-    return NS_ERROR_FAILURE;
+  if (!gSocketTransportService) return NS_ERROR_FAILURE;
 
   //
   // find out if it is going to be ok to attach another socket to the STS.
@@ -129,24 +113,20 @@ nsServerSocket::TryAttach()
   // FIFO ordering (which wouldn't even be that valuable IMO).  see bug
   // 194402 for more info.
   //
-  if (!gSocketTransportService->CanAttachSocket())
-  {
+  if (!gSocketTransportService->CanAttachSocket()) {
     nsCOMPtr<nsIRunnable> event = NewRunnableMethod(
-      "net::nsServerSocket::OnMsgAttach", this, &nsServerSocket::OnMsgAttach);
-    if (!event)
-      return NS_ERROR_OUT_OF_MEMORY;
+        "net::nsServerSocket::OnMsgAttach", this, &nsServerSocket::OnMsgAttach);
+    if (!event) return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv = gSocketTransportService->NotifyWhenCanAttachSocket(event);
-    if (NS_FAILED(rv))
-      return rv;
+    if (NS_FAILED(rv)) return rv;
   }
 
   //
   // ok, we can now attach our socket to the STS for polling
   //
   rv = gSocketTransportService->AttachSocket(mFD, this);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   mAttached = true;
 
@@ -157,10 +137,8 @@ nsServerSocket::TryAttach()
   return NS_OK;
 }
 
-void
-nsServerSocket::CreateClientTransport(PRFileDesc* aClientFD,
-                                      const NetAddr& aClientAddr)
-{
+void nsServerSocket::CreateClientTransport(PRFileDesc *aClientFD,
+                                           const NetAddr &aClientAddr) {
   RefPtr<nsSocketTransport> trans = new nsSocketTransport;
   if (NS_WARN_IF(!trans)) {
     mCondition = NS_ERROR_OUT_OF_MEMORY;
@@ -180,15 +158,12 @@ nsServerSocket::CreateClientTransport(PRFileDesc* aClientFD,
 // nsServerSocket::nsASocketHandler
 //-----------------------------------------------------------------------------
 
-void
-nsServerSocket::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
-{
+void nsServerSocket::OnSocketReady(PRFileDesc *fd, int16_t outFlags) {
   NS_ASSERTION(NS_SUCCEEDED(mCondition), "oops");
   NS_ASSERTION(mFD == fd, "wrong file descriptor");
   NS_ASSERTION(outFlags != -1, "unexpected timeout condition reached");
 
-  if (outFlags & (PR_POLL_ERR | PR_POLL_HUP | PR_POLL_NVAL))
-  {
+  if (outFlags & (PR_POLL_ERR | PR_POLL_HUP | PR_POLL_NVAL)) {
     NS_WARNING("error polling on listening socket");
     mCondition = NS_ERROR_UNEXPECTED;
     return;
@@ -217,22 +192,17 @@ nsServerSocket::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
   CreateClientTransport(clientFD, clientAddr);
 }
 
-void
-nsServerSocket::OnSocketDetached(PRFileDesc *fd)
-{
+void nsServerSocket::OnSocketDetached(PRFileDesc *fd) {
   // force a failure condition if none set; maybe the STS is shutting down :-/
-  if (NS_SUCCEEDED(mCondition))
-    mCondition = NS_ERROR_ABORT;
+  if (NS_SUCCEEDED(mCondition)) mCondition = NS_ERROR_ABORT;
 
-  if (mFD)
-  {
+  if (mFD) {
     NS_ASSERTION(mFD == fd, "wrong file descriptor");
     PR_Close(mFD);
     mFD = nullptr;
   }
 
-  if (mListener)
-  {
+  if (mListener) {
     mListener->OnStopListening(this, mCondition);
 
     // need to atomically clear mListener.  see our Close() method.
@@ -245,19 +215,16 @@ nsServerSocket::OnSocketDetached(PRFileDesc *fd)
     // XXX we need to proxy the release to the listener's target thread to work
     // around bug 337492.
     if (listener) {
-      NS_ProxyRelease(
-        "nsServerSocket::mListener", mListenerTarget, listener.forget());
+      NS_ProxyRelease("nsServerSocket::mListener", mListenerTarget,
+                      listener.forget());
     }
   }
 }
 
-void
-nsServerSocket::IsLocal(bool *aIsLocal)
-{
+void nsServerSocket::IsLocal(bool *aIsLocal) {
 #if defined(XP_UNIX)
   // Unix-domain sockets are always local.
-  if (mAddr.raw.family == PR_AF_LOCAL)
-  {
+  if (mAddr.raw.family == PR_AF_LOCAL) {
     *aIsLocal = true;
     return;
   }
@@ -267,9 +234,7 @@ nsServerSocket::IsLocal(bool *aIsLocal)
   *aIsLocal = PR_IsNetAddrType(&mAddr, PR_IpAddrLoopback);
 }
 
-void
-nsServerSocket::KeepWhenOffline(bool *aKeepWhenOffline)
-{
+void nsServerSocket::KeepWhenOffline(bool *aKeepWhenOffline) {
   *aKeepWhenOffline = mKeepWhenOffline;
 }
 
@@ -279,27 +244,25 @@ nsServerSocket::KeepWhenOffline(bool *aKeepWhenOffline)
 
 NS_IMPL_ISUPPORTS(nsServerSocket, nsIServerSocket)
 
-
 //-----------------------------------------------------------------------------
 // nsServerSocket::nsIServerSocket
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsServerSocket::Init(int32_t aPort, bool aLoopbackOnly, int32_t aBackLog)
-{
-  return InitSpecialConnection(aPort, aLoopbackOnly ? LoopbackOnly : 0, aBackLog);
+nsServerSocket::Init(int32_t aPort, bool aLoopbackOnly, int32_t aBackLog) {
+  return InitSpecialConnection(aPort, aLoopbackOnly ? LoopbackOnly : 0,
+                               aBackLog);
 }
 
 NS_IMETHODIMP
-nsServerSocket::InitWithFilename(nsIFile *aPath, uint32_t aPermissions, int32_t aBacklog)
-{
+nsServerSocket::InitWithFilename(nsIFile *aPath, uint32_t aPermissions,
+                                 int32_t aBacklog) {
 #if defined(XP_UNIX)
   nsresult rv;
 
   nsAutoCString path;
   rv = aPath->GetNativePath(path);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   // Create a Unix domain PRNetAddr referring to the given path.
   PRNetAddr addr;
@@ -310,8 +273,7 @@ nsServerSocket::InitWithFilename(nsIFile *aPath, uint32_t aPermissions, int32_t 
   addr.local.path[path.Length()] = '\0';
 
   rv = InitWithAddress(&addr, aBacklog);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   return aPath->SetPermissions(aPermissions);
 #else
@@ -320,9 +282,8 @@ nsServerSocket::InitWithFilename(nsIFile *aPath, uint32_t aPermissions, int32_t 
 }
 
 NS_IMETHODIMP
-nsServerSocket::InitWithAbstractAddress(const nsACString& aName,
-                                        int32_t aBacklog)
-{
+nsServerSocket::InitWithAbstractAddress(const nsACString &aName,
+                                        int32_t aBacklog) {
   // Abstract socket address is supported on Linux and Android only.
   // If not Linux, we should return error.
 #if defined(XP_LINUX)
@@ -344,13 +305,11 @@ nsServerSocket::InitWithAbstractAddress(const nsACString& aName,
 
 NS_IMETHODIMP
 nsServerSocket::InitSpecialConnection(int32_t aPort, nsServerSocketFlag aFlags,
-                                      int32_t aBackLog)
-{
+                                      int32_t aBackLog) {
   PRNetAddrValue val;
   PRNetAddr addr;
 
-  if (aPort < 0)
-    aPort = 0;
+  if (aPort < 0) aPort = 0;
   if (aFlags & nsIServerSocket::LoopbackOnly)
     val = PR_IpAddrLoopback;
   else
@@ -362,8 +321,7 @@ nsServerSocket::InitSpecialConnection(int32_t aPort, nsServerSocketFlag aFlags,
 }
 
 NS_IMETHODIMP
-nsServerSocket::InitWithAddress(const PRNetAddr *aAddr, int32_t aBackLog)
-{
+nsServerSocket::InitWithAddress(const PRNetAddr *aAddr, int32_t aBackLog) {
   NS_ENSURE_TRUE(mFD == nullptr, NS_ERROR_ALREADY_INITIALIZED);
   nsresult rv;
 
@@ -372,8 +330,7 @@ nsServerSocket::InitWithAddress(const PRNetAddr *aAddr, int32_t aBackLog)
   //
 
   mFD = PR_OpenTCPSocket(aAddr->raw.family);
-  if (!mFD)
-  {
+  if (!mFD) {
     NS_WARNING("unable to create server socket");
     return ErrorAccordingToNSPR(PR_GetError());
   }
@@ -388,25 +345,21 @@ nsServerSocket::InitWithAddress(const PRNetAddr *aAddr, int32_t aBackLog)
   opt.value.non_blocking = true;
   PR_SetSocketOption(mFD, &opt);
 
-  if (PR_Bind(mFD, aAddr) != PR_SUCCESS)
-  {
+  if (PR_Bind(mFD, aAddr) != PR_SUCCESS) {
     NS_WARNING("failed to bind socket");
     goto fail;
   }
 
-  if (aBackLog < 0)
-    aBackLog = 5; // seems like a reasonable default
+  if (aBackLog < 0) aBackLog = 5;  // seems like a reasonable default
 
-  if (PR_Listen(mFD, aBackLog) != PR_SUCCESS)
-  {
+  if (PR_Listen(mFD, aBackLog) != PR_SUCCESS) {
     NS_WARNING("cannot listen on socket");
     goto fail;
   }
 
   // get the resulting socket address, which may be different than what
   // we passed to bind.
-  if (PR_GetSockName(mFD, &mAddr) != PR_SUCCESS)
-  {
+  if (PR_GetSockName(mFD, &mAddr) != PR_SUCCESS) {
     NS_WARNING("cannot get socket name");
     goto fail;
   }
@@ -428,16 +381,13 @@ fail:
 }
 
 NS_IMETHODIMP
-nsServerSocket::Close()
-{
+nsServerSocket::Close() {
   {
     MutexAutoLock lock(mLock);
     // we want to proxy the close operation to the socket thread if a listener
     // has been set.  otherwise, we should just close the socket here...
-    if (!mListener)
-    {
-      if (mFD)
-      {
+    if (!mListener) {
+      if (mFD) {
         PR_Close(mFD);
         mFD = nullptr;
       }
@@ -449,107 +399,93 @@ nsServerSocket::Close()
 
 namespace {
 
-class ServerSocketListenerProxy final : public nsIServerSocketListener
-{
+class ServerSocketListenerProxy final : public nsIServerSocketListener {
   ~ServerSocketListenerProxy() = default;
 
-public:
-  explicit ServerSocketListenerProxy(nsIServerSocketListener* aListener)
-    : mListener(new nsMainThreadPtrHolder<nsIServerSocketListener>(
-        "ServerSocketListenerProxy::mListener", aListener))
-    , mTarget(GetCurrentThreadEventTarget())
-  { }
+ public:
+  explicit ServerSocketListenerProxy(nsIServerSocketListener *aListener)
+      : mListener(new nsMainThreadPtrHolder<nsIServerSocketListener>(
+            "ServerSocketListenerProxy::mListener", aListener)),
+        mTarget(GetCurrentThreadEventTarget()) {}
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISERVERSOCKETLISTENER
 
-  class OnSocketAcceptedRunnable : public Runnable
-  {
-  public:
+  class OnSocketAcceptedRunnable : public Runnable {
+   public:
     OnSocketAcceptedRunnable(
-      const nsMainThreadPtrHandle<nsIServerSocketListener>& aListener,
-      nsIServerSocket* aServ,
-      nsISocketTransport* aTransport)
-      : Runnable("net::ServerSocketListenerProxy::OnSocketAcceptedRunnable")
-      , mListener(aListener)
-      , mServ(aServ)
-      , mTransport(aTransport)
-    { }
+        const nsMainThreadPtrHandle<nsIServerSocketListener> &aListener,
+        nsIServerSocket *aServ, nsISocketTransport *aTransport)
+        : Runnable("net::ServerSocketListenerProxy::OnSocketAcceptedRunnable"),
+          mListener(aListener),
+          mServ(aServ),
+          mTransport(aTransport) {}
 
     NS_DECL_NSIRUNNABLE
 
-  private:
+   private:
     nsMainThreadPtrHandle<nsIServerSocketListener> mListener;
     nsCOMPtr<nsIServerSocket> mServ;
     nsCOMPtr<nsISocketTransport> mTransport;
   };
 
-  class OnStopListeningRunnable : public Runnable
-  {
-  public:
+  class OnStopListeningRunnable : public Runnable {
+   public:
     OnStopListeningRunnable(
-      const nsMainThreadPtrHandle<nsIServerSocketListener>& aListener,
-      nsIServerSocket* aServ,
-      nsresult aStatus)
-      : Runnable("net::ServerSocketListenerProxy::OnStopListeningRunnable")
-      , mListener(aListener)
-      , mServ(aServ)
-      , mStatus(aStatus)
-    { }
+        const nsMainThreadPtrHandle<nsIServerSocketListener> &aListener,
+        nsIServerSocket *aServ, nsresult aStatus)
+        : Runnable("net::ServerSocketListenerProxy::OnStopListeningRunnable"),
+          mListener(aListener),
+          mServ(aServ),
+          mStatus(aStatus) {}
 
     NS_DECL_NSIRUNNABLE
 
-  private:
+   private:
     nsMainThreadPtrHandle<nsIServerSocketListener> mListener;
     nsCOMPtr<nsIServerSocket> mServ;
     nsresult mStatus;
   };
 
-private:
+ private:
   nsMainThreadPtrHandle<nsIServerSocketListener> mListener;
   nsCOMPtr<nsIEventTarget> mTarget;
 };
 
-NS_IMPL_ISUPPORTS(ServerSocketListenerProxy,
-                  nsIServerSocketListener)
+NS_IMPL_ISUPPORTS(ServerSocketListenerProxy, nsIServerSocketListener)
 
 NS_IMETHODIMP
-ServerSocketListenerProxy::OnSocketAccepted(nsIServerSocket* aServ,
-                                            nsISocketTransport* aTransport)
-{
+ServerSocketListenerProxy::OnSocketAccepted(nsIServerSocket *aServ,
+                                            nsISocketTransport *aTransport) {
   RefPtr<OnSocketAcceptedRunnable> r =
-    new OnSocketAcceptedRunnable(mListener, aServ, aTransport);
+      new OnSocketAcceptedRunnable(mListener, aServ, aTransport);
   return mTarget->Dispatch(r, NS_DISPATCH_NORMAL);
 }
 
 NS_IMETHODIMP
-ServerSocketListenerProxy::OnStopListening(nsIServerSocket* aServ,
-                                           nsresult aStatus)
-{
+ServerSocketListenerProxy::OnStopListening(nsIServerSocket *aServ,
+                                           nsresult aStatus) {
   RefPtr<OnStopListeningRunnable> r =
-    new OnStopListeningRunnable(mListener, aServ, aStatus);
+      new OnStopListeningRunnable(mListener, aServ, aStatus);
   return mTarget->Dispatch(r, NS_DISPATCH_NORMAL);
 }
 
 NS_IMETHODIMP
-ServerSocketListenerProxy::OnSocketAcceptedRunnable::Run()
-{
+ServerSocketListenerProxy::OnSocketAcceptedRunnable::Run() {
   mListener->OnSocketAccepted(mServ, mTransport);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-ServerSocketListenerProxy::OnStopListeningRunnable::Run()
-{
+ServerSocketListenerProxy::OnStopListeningRunnable::Run() {
   mListener->OnStopListening(mServ, mStatus);
   return NS_OK;
 }
 
-} // namespace
+}  // namespace
 
 NS_IMETHODIMP
-nsServerSocket::AsyncListen(nsIServerSocketListener *aListener)
-{
+nsServerSocket::AsyncListen(nsIServerSocketListener *aListener) {
   // ensuring mFD implies ensuring mLock
   NS_ENSURE_TRUE(mFD, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_TRUE(mListener == nullptr, NS_ERROR_IN_PROGRESS);
@@ -569,8 +505,7 @@ nsServerSocket::AsyncListen(nsIServerSocketListener *aListener)
 }
 
 NS_IMETHODIMP
-nsServerSocket::GetPort(int32_t *aResult)
-{
+nsServerSocket::GetPort(int32_t *aResult) {
   // no need to enter the lock here
   uint16_t port;
   if (mAddr.raw.family == PR_AF_INET)
@@ -585,12 +520,11 @@ nsServerSocket::GetPort(int32_t *aResult)
 }
 
 NS_IMETHODIMP
-nsServerSocket::GetAddress(PRNetAddr *aResult)
-{
+nsServerSocket::GetAddress(PRNetAddr *aResult) {
   // no need to enter the lock here
   memcpy(aResult, &mAddr, sizeof(mAddr));
   return NS_OK;
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

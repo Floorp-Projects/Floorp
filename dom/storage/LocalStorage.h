@@ -17,39 +17,24 @@ class LocalStorageCache;
 class LocalStorageManager;
 class StorageEvent;
 
-class LocalStorage final : public Storage
-                         , public nsSupportsWeakReference
-{
-public:
+class LocalStorage final : public Storage, public nsSupportsWeakReference {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(LocalStorage, Storage)
 
   StorageType Type() const override { return eLocalStorage; }
 
-  LocalStorageManager* GetManager() const
-  {
-    return mManager;
-  }
+  LocalStorageManager* GetManager() const { return mManager; }
 
-  LocalStorageCache const* GetCache() const
-  {
-    return mCache;
-  }
+  LocalStorageCache const* GetCache() const { return mCache; }
 
-  const nsString&
-  DocumentURI() const
-  {
-    return mDocumentURI;
-  }
+  const nsString& DocumentURI() const { return mDocumentURI; }
 
   bool PrincipalEquals(nsIPrincipal* aPrincipal);
 
-  LocalStorage(nsPIDOMWindowInner* aWindow,
-               LocalStorageManager* aManager,
-               LocalStorageCache* aCache,
-               const nsAString& aDocumentURI,
-               nsIPrincipal* aPrincipal,
-               bool aIsPrivate);
+  LocalStorage(nsPIDOMWindowInner* aWindow, LocalStorageManager* aManager,
+               LocalStorageCache* aCache, const nsAString& aDocumentURI,
+               nsIPrincipal* aPrincipal, bool aIsPrivate);
 
   bool IsForkOf(const Storage* aOther) const override;
 
@@ -60,33 +45,27 @@ public:
   uint32_t GetLength(nsIPrincipal& aSubjectPrincipal,
                      ErrorResult& aRv) override;
 
-  void Key(uint32_t aIndex, nsAString& aResult,
-           nsIPrincipal& aSubjectPrincipal,
+  void Key(uint32_t aIndex, nsAString& aResult, nsIPrincipal& aSubjectPrincipal,
            ErrorResult& aRv) override;
 
   void GetItem(const nsAString& aKey, nsAString& aResult,
-               nsIPrincipal& aSubjectPrincipal,
-               ErrorResult& aRv) override;
+               nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) override;
 
   void GetSupportedNames(nsTArray<nsString>& aKeys) override;
 
   void SetItem(const nsAString& aKey, const nsAString& aValue,
-               nsIPrincipal& aSubjectPrincipal,
-               ErrorResult& aRv) override;
+               nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) override;
 
-  void RemoveItem(const nsAString& aKey,
-                  nsIPrincipal& aSubjectPrincipal,
+  void RemoveItem(const nsAString& aKey, nsIPrincipal& aSubjectPrincipal,
                   ErrorResult& aRv) override;
 
-  void Clear(nsIPrincipal& aSubjectPrincipal,
-             ErrorResult& aRv) override;
+  void Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) override;
 
   bool IsPrivate() const { return mIsPrivate; }
 
-  void
-  ApplyEvent(StorageEvent* aStorageEvent);
+  void ApplyEvent(StorageEvent* aStorageEvent);
 
-private:
+ private:
   ~LocalStorage();
 
   friend class LocalStorageManager;
@@ -103,12 +82,11 @@ private:
   // Whether this storage is running in private-browsing window.
   bool mIsPrivate : 1;
 
-  void OnChange(const nsAString& aKey,
-                const nsAString& aOldValue,
+  void OnChange(const nsAString& aKey, const nsAString& aOldValue,
                 const nsAString& aNewValue);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_LocalStorage_h
+#endif  // mozilla_dom_LocalStorage_h

@@ -32,17 +32,15 @@ namespace dom {
 class TabParent;
 class ChildSHistory;
 
-class ParentSHistory
-  : public nsISupports
-  , public nsWrapperCache
-{
-public:
+class ParentSHistory : public nsISupports, public nsWrapperCache {
+ public:
   friend class ChildSHistory;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ParentSHistory)
   nsISupports* GetParentObject() const;
-  JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* cx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   explicit ParentSHistory(nsFrameLoader* aFrameLoader);
 
@@ -50,7 +48,7 @@ public:
   int32_t Count() { return 0; }
   int32_t Index() { return 0; }
 
-private:
+ private:
   nsDocShell* GetDocShell();
   TabParent* GetTabParent();
 
@@ -61,7 +59,7 @@ private:
   RefPtr<nsFrameLoader> mFrameLoader;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_ParentSHistory_h */

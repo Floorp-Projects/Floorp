@@ -47,7 +47,7 @@
 #ifdef MOZ_XUL
 #include "nsXULElement.h"
 #include "mozilla/dom/BoxObject.h"
-#endif // MOZ_XUL
+#endif  // MOZ_XUL
 #include "nsContainerFrame.h"
 #include "nsNameSpaceManager.h"
 #include "nsComboboxControlFrame.h"
@@ -132,68 +132,57 @@ using namespace mozilla::dom;
 // An alias for convenience.
 static const nsIFrame::ChildListID kPrincipalList = nsIFrame::kPrincipalList;
 
-nsIFrame*
-NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewHTMLCanvasFrame(nsIPresShell* aPresShell,
+                                ComputedStyle* aStyle);
 
-nsIFrame*
-NS_NewHTMLVideoFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewHTMLVideoFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-nsContainerFrame*
-NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsContainerFrame*
-NS_NewSVGOuterSVGAnonChildFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewSVGGeometryFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewSVGGFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsContainerFrame*
-NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewSVGAFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewSVGSymbolFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewSVGTextFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewSVGContainerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewSVGUseFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewSVGViewFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-extern nsIFrame*
-NS_NewSVGLinearGradientFrame(nsIPresShell *aPresShell, ComputedStyle* aStyle);
-extern nsIFrame*
-NS_NewSVGRadialGradientFrame(nsIPresShell *aPresShell, ComputedStyle* aStyle);
-extern nsIFrame*
-NS_NewSVGStopFrame(nsIPresShell *aPresShell, ComputedStyle* aStyle);
-nsContainerFrame*
-NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsContainerFrame*
-NS_NewSVGMarkerAnonChildFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-extern nsIFrame*
-NS_NewSVGImageFrame(nsIPresShell *aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewSVGFilterFrame(nsIPresShell *aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewSVGPatternFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewSVGMaskFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewSVGFEContainerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewSVGFELeafFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewSVGFEImageFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsContainerFrame* NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell,
+                                         ComputedStyle* aStyle);
+nsContainerFrame* NS_NewSVGOuterSVGAnonChildFrame(nsIPresShell* aPresShell,
+                                                  ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell,
+                                 ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGGeometryFrame(nsIPresShell* aPresShell,
+                                 ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGGFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell,
+                                         ComputedStyle* aStyle);
+nsContainerFrame* NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell,
+                                              ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGAFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGSymbolFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGTextFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
+                                  ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGUseFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGViewFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+extern nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell,
+                                              ComputedStyle* aStyle);
+extern nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell,
+                                              ComputedStyle* aStyle);
+extern nsIFrame* NS_NewSVGStopFrame(nsIPresShell* aPresShell,
+                                    ComputedStyle* aStyle);
+nsContainerFrame* NS_NewSVGMarkerFrame(nsIPresShell* aPresShell,
+                                       ComputedStyle* aStyle);
+nsContainerFrame* NS_NewSVGMarkerAnonChildFrame(nsIPresShell* aPresShell,
+                                                ComputedStyle* aStyle);
+extern nsIFrame* NS_NewSVGImageFrame(nsIPresShell* aPresShell,
+                                     ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGClipPathFrame(nsIPresShell* aPresShell,
+                                 ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGFilterFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGPatternFrame(nsIPresShell* aPresShell,
+                                ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGMaskFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGFEContainerFrame(nsIPresShell* aPresShell,
+                                    ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGFELeafFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGFEImageFrame(nsIPresShell* aPresShell,
+                                ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell,
+                                       ComputedStyle* aStyle);
 
 #include "mozilla/dom/NodeInfo.h"
 #include "prenv.h"
@@ -214,14 +203,12 @@ struct FrameCtorDebugFlags {
 };
 
 static FrameCtorDebugFlags gFlags[] = {
-  { "content-updates",              &gNoisyContentUpdates },
-  { "really-noisy-content-updates", &gReallyNoisyContentUpdates },
-  { "noisy-inline",                 &gNoisyInlineConstruction }
-};
+    {"content-updates", &gNoisyContentUpdates},
+    {"really-noisy-content-updates", &gReallyNoisyContentUpdates},
+    {"noisy-inline", &gNoisyInlineConstruction}};
 
 #define NUM_DEBUG_FLAGS (sizeof(gFlags) / sizeof(gFlags[0]))
 #endif
-
 
 #ifdef MOZ_XUL
 #include "nsMenuFrame.h"
@@ -232,100 +219,77 @@ static FrameCtorDebugFlags gFlags[] = {
 
 //------------------------------------------------------------------
 
-nsContainerFrame*
-NS_NewRootBoxFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsContainerFrame* NS_NewRootBoxFrame(nsIPresShell* aPresShell,
+                                     ComputedStyle* aStyle);
 
-nsContainerFrame*
-NS_NewDocElementBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsContainerFrame* NS_NewDocElementBoxFrame(nsIPresShell* aPresShell,
+                                           ComputedStyle* aStyle);
 
-nsIFrame*
-NS_NewDeckFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewDeckFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame*
-NS_NewLeafBoxFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewLeafBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame*
-NS_NewStackFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewStackFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame*
-NS_NewRangeFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewRangeFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame*
-NS_NewImageBoxFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewImageBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame*
-NS_NewTextBoxFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewTextBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame*
-NS_NewGroupBoxFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewGroupBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame*
-NS_NewButtonBoxFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewButtonBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame*
-NS_NewSplitterFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSplitterFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame*
-NS_NewMenuPopupFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewMenuPopupFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame*
-NS_NewPopupSetFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewPopupSetFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame*
-NS_NewMenuFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle, uint32_t aFlags);
+nsIFrame* NS_NewMenuFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle,
+                          uint32_t aFlags);
 
-nsIFrame*
-NS_NewMenuBarFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewMenuBarFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame*
-NS_NewTreeBodyFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewTreeBodyFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
 // grid
-nsresult
-NS_NewGridLayout2 ( nsIPresShell* aPresShell, nsBoxLayout** aNewLayout );
-nsIFrame*
-NS_NewGridRowLeafFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame*
-NS_NewGridRowGroupFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsresult NS_NewGridLayout2(nsIPresShell* aPresShell, nsBoxLayout** aNewLayout);
+nsIFrame* NS_NewGridRowLeafFrame(nsIPresShell* aPresShell,
+                                 ComputedStyle* aStyle);
+nsIFrame* NS_NewGridRowGroupFrame(nsIPresShell* aPresShell,
+                                  ComputedStyle* aStyle);
 
 // end grid
 
-nsIFrame*
-NS_NewTitleBarFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewTitleBarFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame*
-NS_NewResizerFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
-
+nsIFrame* NS_NewResizerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
 #endif
 
-nsHTMLScrollFrame*
-NS_NewHTMLScrollFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle, bool aIsRoot);
+nsHTMLScrollFrame* NS_NewHTMLScrollFrame(nsIPresShell* aPresShell,
+                                         ComputedStyle* aStyle, bool aIsRoot);
 
-nsXULScrollFrame*
-NS_NewXULScrollFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle,
-                     bool aIsRoot, bool aClipAllDescendants);
+nsXULScrollFrame* NS_NewXULScrollFrame(nsIPresShell* aPresShell,
+                                       ComputedStyle* aStyle, bool aIsRoot,
+                                       bool aClipAllDescendants);
 
-nsIFrame*
-NS_NewSliderFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSliderFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame*
-NS_NewScrollbarFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewScrollbarFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame*
-NS_NewScrollbarButtonFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewScrollbarButtonFrame(nsIPresShell* aPresShell,
+                                     ComputedStyle* aStyle);
 
-nsIFrame*
-NS_NewImageFrameForContentProperty(nsIPresShell*, ComputedStyle*);
+nsIFrame* NS_NewImageFrameForContentProperty(nsIPresShell*, ComputedStyle*);
 
-nsIFrame*
-NS_NewImageFrameForGeneratedContentIndex(nsIPresShell*, ComputedStyle*);
-
+nsIFrame* NS_NewImageFrameForGeneratedContentIndex(nsIPresShell*,
+                                                   ComputedStyle*);
 
 // Returns true if aFrame is an anonymous flex/grid item.
-static inline bool
-IsAnonymousFlexOrGridItem(const nsIFrame* aFrame)
-{
+static inline bool IsAnonymousFlexOrGridItem(const nsIFrame* aFrame) {
   const nsAtom* pseudoType = aFrame->Style()->GetPseudo();
   return pseudoType == nsCSSAnonBoxes::anonymousFlexItem() ||
          pseudoType == nsCSSAnonBoxes::anonymousGridItem();
@@ -333,18 +297,14 @@ IsAnonymousFlexOrGridItem(const nsIFrame* aFrame)
 
 // Returns true IFF the given nsIFrame is a nsFlexContainerFrame and
 // represents a -webkit-{inline-}box or -moz-{inline-}box container.
-static inline bool
-IsFlexContainerForLegacyBox(const nsIFrame* aFrame)
-{
+static inline bool IsFlexContainerForLegacyBox(const nsIFrame* aFrame) {
   return aFrame->IsFlexContainerFrame() &&
          aFrame->HasAnyStateBits(NS_STATE_FLEX_IS_EMULATING_LEGACY_BOX);
 }
 
 #if DEBUG
-static void
-AssertAnonymousFlexOrGridItemParent(const nsIFrame* aChild,
-                                    const nsIFrame* aParent)
-{
+static void AssertAnonymousFlexOrGridItemParent(const nsIFrame* aChild,
+                                                const nsIFrame* aParent) {
   MOZ_ASSERT(IsAnonymousFlexOrGridItem(aChild),
              "expected an anonymous flex or grid item child frame");
   MOZ_ASSERT(aParent, "expected a parent frame");
@@ -360,26 +320,32 @@ AssertAnonymousFlexOrGridItemParent(const nsIFrame* aChild,
   }
 }
 #else
-#define AssertAnonymousFlexOrGridItemParent(x, y) do { /* nothing */ } while(0)
+#define AssertAnonymousFlexOrGridItemParent(x, y) \
+  do { /* nothing */                              \
+  } while (0)
 #endif
 
-static inline nsContainerFrame*
-GetFieldSetBlockFrame(nsIFrame* aFieldsetFrame)
-{
-  // Depends on the fieldset child frame order - see ConstructFieldSetFrame() below.
+static inline nsContainerFrame* GetFieldSetBlockFrame(
+    nsIFrame* aFieldsetFrame) {
+  // Depends on the fieldset child frame order - see ConstructFieldSetFrame()
+  // below.
   nsIFrame* firstChild = aFieldsetFrame->PrincipalChildList().FirstChild();
-  nsIFrame* inner = firstChild && firstChild->GetNextSibling() ? firstChild->GetNextSibling() : firstChild;
+  nsIFrame* inner = firstChild && firstChild->GetNextSibling()
+                        ? firstChild->GetNextSibling()
+                        : firstChild;
   return inner ? inner->GetContentInsertionFrame() : nullptr;
 }
 
-#define FCDATA_DECL(_flags, _func)                            \
-  { _flags, { (FrameCreationFunc)_func }, nullptr, nullptr }
-#define FCDATA_WITH_WRAPPING_BLOCK(_flags, _func, _anon_box)  \
-  { _flags | FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS,        \
-      { (FrameCreationFunc)_func }, nullptr, _anon_box }
+#define FCDATA_DECL(_flags, _func) \
+  { _flags, {(FrameCreationFunc)_func}, nullptr, nullptr }
+#define FCDATA_WITH_WRAPPING_BLOCK(_flags, _func, _anon_box) \
+  {                                                          \
+    _flags | FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS,       \
+        {(FrameCreationFunc)_func}, nullptr, _anon_box       \
+  }
 
-#define UNREACHABLE_FCDATA()                                  \
-  { 0, { (FrameCreationFunc)nullptr }, nullptr, nullptr }
+#define UNREACHABLE_FCDATA() \
+  { 0, {(FrameCreationFunc) nullptr}, nullptr, nullptr }
 //----------------------------------------------------------------------
 
 /**
@@ -390,24 +356,18 @@ GetFieldSetBlockFrame(nsIFrame* aFieldsetFrame)
  * it can contain first-letter and because inserting blocks in the middle of it
  * needs to terminate it).
  */
-static bool
-IsInlineFrame(const nsIFrame* aFrame)
-{
+static bool IsInlineFrame(const nsIFrame* aFrame) {
   return aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
 }
 
 /**
  * True for display: contents elements.
  */
-static inline bool
-IsDisplayContents(const Element* aElement)
-{
+static inline bool IsDisplayContents(const Element* aElement) {
   return aElement->IsDisplayContents();
 }
 
-static inline bool
-IsDisplayContents(const nsIContent* aContent)
-{
+static inline bool IsDisplayContents(const nsIContent* aContent) {
   return aContent->IsElement() && IsDisplayContents(aContent->AsElement());
 }
 
@@ -415,9 +375,7 @@ IsDisplayContents(const nsIContent* aContent)
  * True if aFrame is an instance of an SVG frame class or is an inline/block
  * frame being used for SVG text.
  */
-static bool
-IsFrameForSVG(const nsIFrame* aFrame)
-{
+static bool IsFrameForSVG(const nsIFrame* aFrame) {
   return aFrame->IsFrameOfType(nsIFrame::eSVG) ||
          nsSVGUtils::IsInSVGTextSubtree(aFrame);
 }
@@ -428,22 +386,17 @@ IsFrameForSVG(const nsIFrame* aFrame)
  * float-containing blocks -- those will manage the floating status of any
  * lower-level descendents inside them, of course).
  */
-static bool
-ShouldSuppressFloatingOfDescendants(nsIFrame* aFrame)
-{
-  return aFrame->IsFlexOrGridContainer() ||
-    aFrame->IsXULBoxFrame() ||
-    aFrame->IsFrameOfType(nsIFrame::eMathML);
+static bool ShouldSuppressFloatingOfDescendants(nsIFrame* aFrame) {
+  return aFrame->IsFlexOrGridContainer() || aFrame->IsXULBoxFrame() ||
+         aFrame->IsFrameOfType(nsIFrame::eMathML);
 }
 
 /**
  * If any children require a block parent, return the first such child.
  * Otherwise return null.
  */
-static nsIContent*
-AnyKidsNeedBlockParent(nsIFrame *aFrameList)
-{
-  for (nsIFrame *k = aFrameList; k; k = k->GetNextSibling()) {
+static nsIContent* AnyKidsNeedBlockParent(nsIFrame* aFrameList) {
+  for (nsIFrame* k = aFrameList; k; k = k->GetNextSibling()) {
     // Line participants, such as text and inline frames, can't be
     // directly inside a XUL box; they must be wrapped in an
     // intermediate block.
@@ -455,12 +408,9 @@ AnyKidsNeedBlockParent(nsIFrame *aFrameList)
 }
 
 // Reparent a frame into a wrapper frame that is a child of its old parent.
-static void
-ReparentFrame(RestyleManager* aRestyleManager,
-              nsContainerFrame* aNewParentFrame,
-              nsIFrame* aFrame,
-              bool aForceStyleReparent)
-{
+static void ReparentFrame(RestyleManager* aRestyleManager,
+                          nsContainerFrame* aNewParentFrame, nsIFrame* aFrame,
+                          bool aForceStyleReparent) {
   aFrame->SetParent(aNewParentFrame);
   // We reparent frames for two reasons: to put them inside ::first-line, and to
   // put them inside some wrapper anonymous boxes.
@@ -469,12 +419,10 @@ ReparentFrame(RestyleManager* aRestyleManager,
   }
 }
 
-static void
-ReparentFrames(nsCSSFrameConstructor* aFrameConstructor,
-               nsContainerFrame* aNewParentFrame,
-               const nsFrameList& aFrameList,
-               bool aForceStyleReparent)
-{
+static void ReparentFrames(nsCSSFrameConstructor* aFrameConstructor,
+                           nsContainerFrame* aNewParentFrame,
+                           const nsFrameList& aFrameList,
+                           bool aForceStyleReparent) {
   RestyleManager* restyleManager = aFrameConstructor->RestyleManager();
   for (nsIFrame* f : aFrameList) {
     ReparentFrame(restyleManager, aNewParentFrame, f, aForceStyleReparent);
@@ -487,40 +435,33 @@ ReparentFrames(nsCSSFrameConstructor* aFrameConstructor,
 // annotate them to help us respond to incremental content changes
 // more easily.
 
-static inline bool
-IsFramePartOfIBSplit(nsIFrame* aFrame)
-{
+static inline bool IsFramePartOfIBSplit(nsIFrame* aFrame) {
   bool result = (aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) != 0;
   MOZ_ASSERT(!result || static_cast<nsBlockFrame*>(do_QueryFrame(aFrame)) ||
-                        static_cast<nsInlineFrame*>(do_QueryFrame(aFrame)),
+                 static_cast<nsInlineFrame*>(do_QueryFrame(aFrame)),
              "only block/inline frames can have NS_FRAME_PART_OF_IBSPLIT");
   return result;
 }
 
-static nsContainerFrame* GetIBSplitSibling(nsIFrame* aFrame)
-{
+static nsContainerFrame* GetIBSplitSibling(nsIFrame* aFrame) {
   MOZ_ASSERT(IsFramePartOfIBSplit(aFrame), "Shouldn't call this");
 
   // We only store the "ib-split sibling" annotation with the first
   // frame in the continuation chain. Walk back to find that frame now.
-  return aFrame->FirstContinuation()->
-           GetProperty(nsIFrame::IBSplitSibling());
+  return aFrame->FirstContinuation()->GetProperty(nsIFrame::IBSplitSibling());
 }
 
-static nsContainerFrame* GetIBSplitPrevSibling(nsIFrame* aFrame)
-{
+static nsContainerFrame* GetIBSplitPrevSibling(nsIFrame* aFrame) {
   MOZ_ASSERT(IsFramePartOfIBSplit(aFrame), "Shouldn't call this");
 
   // We only store the ib-split sibling annotation with the first
   // frame in the continuation chain. Walk back to find that frame now.
-  return aFrame->FirstContinuation()->
-           GetProperty(nsIFrame::IBSplitPrevSibling());
+  return aFrame->FirstContinuation()->GetProperty(
+      nsIFrame::IBSplitPrevSibling());
 }
 
-static nsContainerFrame*
-GetLastIBSplitSibling(nsIFrame* aFrame)
-{
-  for (nsIFrame* frame = aFrame, *next; ; frame = next) {
+static nsContainerFrame* GetLastIBSplitSibling(nsIFrame* aFrame) {
+  for (nsIFrame *frame = aFrame, *next;; frame = next) {
     next = GetIBSplitSibling(frame);
     if (!next) {
       return static_cast<nsContainerFrame*>(frame);
@@ -530,16 +471,15 @@ GetLastIBSplitSibling(nsIFrame* aFrame)
   return nullptr;
 }
 
-static void
-SetFrameIsIBSplit(nsContainerFrame* aFrame, nsContainerFrame* aIBSplitSibling)
-{
+static void SetFrameIsIBSplit(nsContainerFrame* aFrame,
+                              nsContainerFrame* aIBSplitSibling) {
   MOZ_ASSERT(aFrame, "bad args!");
 
   // We should be the only continuation
   NS_ASSERTION(!aFrame->GetPrevContinuation(),
                "assigning ib-split sibling to other than first continuation!");
   NS_ASSERTION(!aFrame->GetNextContinuation() ||
-               IsFramePartOfIBSplit(aFrame->GetNextContinuation()),
+                   IsFramePartOfIBSplit(aFrame->GetNextContinuation()),
                "should have no non-ib-split continuations here");
 
   // Mark the frame as ib-split.
@@ -557,18 +497,17 @@ SetFrameIsIBSplit(nsContainerFrame* aFrame, nsContainerFrame* aIBSplitSibling)
   }
 }
 
-static nsIFrame*
-GetIBContainingBlockFor(nsIFrame* aFrame)
-{
-  MOZ_ASSERT(IsFramePartOfIBSplit(aFrame),
-             "GetIBContainingBlockFor() should only be called on known IB frames");
+static nsIFrame* GetIBContainingBlockFor(nsIFrame* aFrame) {
+  MOZ_ASSERT(
+      IsFramePartOfIBSplit(aFrame),
+      "GetIBContainingBlockFor() should only be called on known IB frames");
 
   // Get the first "normal" ancestor of the target frame.
   nsIFrame* parentFrame;
   do {
     parentFrame = aFrame->GetParent();
 
-    if (! parentFrame) {
+    if (!parentFrame) {
       NS_ERROR("no unsplit block frame in IB hierarchy");
       return aFrame;
     }
@@ -584,16 +523,16 @@ GetIBContainingBlockFor(nsIFrame* aFrame)
   } while (1);
 
   // post-conditions
-  NS_ASSERTION(parentFrame, "no normal ancestor found for ib-split frame "
-                            "in GetIBContainingBlockFor");
-  NS_ASSERTION(parentFrame != aFrame, "parentFrame is actually the child frame - bogus reslt");
+  NS_ASSERTION(parentFrame,
+               "no normal ancestor found for ib-split frame "
+               "in GetIBContainingBlockFor");
+  NS_ASSERTION(parentFrame != aFrame,
+               "parentFrame is actually the child frame - bogus reslt");
 
   return parentFrame;
 }
 
-static nsIFrame*
-GetMultiColumnContainingBlockFor(nsIFrame* aFrame)
-{
+static nsIFrame* GetMultiColumnContainingBlockFor(nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR),
              "Should only be called if the frame has a multi-column ancestor!");
 
@@ -608,12 +547,9 @@ GetMultiColumnContainingBlockFor(nsIFrame* aFrame)
 }
 
 // This is a bit slow, but sometimes we need it.
-static bool
-ParentIsWrapperAnonBox(nsIFrame* aParent)
-{
+static bool ParentIsWrapperAnonBox(nsIFrame* aParent) {
   nsIFrame* maybeAnonBox = aParent;
-  if (maybeAnonBox->Style()->GetPseudo() ==
-        nsCSSAnonBoxes::cellContent()) {
+  if (maybeAnonBox->Style()->GetPseudo() == nsCSSAnonBoxes::cellContent()) {
     // The thing that would maybe be a wrapper anon box is the cell.
     maybeAnonBox = maybeAnonBox->GetParent();
   }
@@ -630,9 +566,7 @@ ParentIsWrapperAnonBox(nsIFrame* aParent)
 // child then the block child is migrated upward until it lands in a block
 // parent (the inline frames containing block is where it will end up).
 
-inline void
-SetInitialSingleChild(nsContainerFrame* aParent, nsIFrame* aFrame)
-{
+inline void SetInitialSingleChild(nsContainerFrame* aParent, nsIFrame* aFrame) {
   MOZ_ASSERT(!aFrame->GetNextSibling(), "Should be using a frame list");
   nsFrameList temp(aFrame, aFrame);
   aParent->SetInitialChildList(kPrincipalList, temp);
@@ -641,28 +575,24 @@ SetInitialSingleChild(nsContainerFrame* aParent, nsIFrame* aFrame)
 // -----------------------------------------------------------
 
 // Structure used when constructing formatting object trees.
-struct nsFrameItems : public nsFrameList
-{
+struct nsFrameItems : public nsFrameList {
   // Appends the frame to the end of the list
   void AddChild(nsIFrame* aChild);
 };
 
-void
-nsFrameItems::AddChild(nsIFrame* aChild)
-{
+void nsFrameItems::AddChild(nsIFrame* aChild) {
   MOZ_ASSERT(aChild, "nsFrameItems::AddChild");
   MOZ_ASSERT(!aChild->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) ||
-             aChild->GetPlaceholderFrame(),
+                 aChild->GetPlaceholderFrame(),
              "An out-of-flow child without a placeholder frame?");
 
-  // It'd be really nice if we could just AppendFrames(kPrincipalList, aChild) here,
-  // but some of our callers put frames that have different
-  // parents (caption, I'm looking at you) on the same framelist, and
-  // nsFrameList asserts if you try to do that.
+  // It'd be really nice if we could just AppendFrames(kPrincipalList, aChild)
+  // here, but some of our callers put frames that have different parents
+  // (caption, I'm looking at you) on the same framelist, and nsFrameList
+  // asserts if you try to do that.
   if (IsEmpty()) {
     SetFrames(aChild);
-  }
-  else {
+  } else {
     NS_ASSERTION(aChild != mLastChild,
                  "Same frame being added to frame list twice?");
     mLastChild->SetNextSibling(aChild);
@@ -691,23 +621,21 @@ struct nsAbsoluteItems : nsFrameItems {
 };
 
 nsAbsoluteItems::nsAbsoluteItems(nsContainerFrame* aContainingBlock)
-  : containingBlock(aContainingBlock)
-{
-}
+    : containingBlock(aContainingBlock) {}
 
 // -----------------------------------------------------------
 
 // Structure for saving the existing state when pushing/poping containing
 // blocks. The destructor restores the state to its previous state
 class MOZ_STACK_CLASS nsFrameConstructorSaveState {
-public:
+ public:
   typedef nsIFrame::ChildListID ChildListID;
   nsFrameConstructorSaveState();
   ~nsFrameConstructorSaveState();
 
-private:
+ private:
   nsAbsoluteItems* mItems;      // pointer to struct whose data we save/restore
-  nsAbsoluteItems  mSavedItems; // copy of original data
+  nsAbsoluteItems mSavedItems;  // copy of original data
 
   // The name of the child list in which our frames would belong
   ChildListID mChildListID;
@@ -725,15 +653,10 @@ private:
 // Structure used to keep track of a list of bindings we need to call
 // AddToAttachedQueue on.  These should be in post-order depth-first
 // flattened tree traversal order.
-struct PendingBinding : public LinkedListElement<PendingBinding>
-{
+struct PendingBinding : public LinkedListElement<PendingBinding> {
 #ifdef NS_BUILD_REFCNT_LOGGING
-  PendingBinding() {
-    MOZ_COUNT_CTOR(PendingBinding);
-  }
-  ~PendingBinding() {
-    MOZ_COUNT_DTOR(PendingBinding);
-  }
+  PendingBinding() { MOZ_COUNT_CTOR(PendingBinding); }
+  ~PendingBinding() { MOZ_COUNT_DTOR(PendingBinding); }
 #endif
 
   RefPtr<nsXBLBinding> mBinding;
@@ -742,46 +665,46 @@ struct PendingBinding : public LinkedListElement<PendingBinding>
 // Structure used for maintaining state information during the
 // frame construction process
 class MOZ_STACK_CLASS nsFrameConstructorState {
-public:
+ public:
   typedef nsIFrame::ChildListID ChildListID;
 
-  nsPresContext            *mPresContext;
-  nsIPresShell             *mPresShell;
-  nsFrameManager           *mFrameManager;
+  nsPresContext* mPresContext;
+  nsIPresShell* mPresShell;
+  nsFrameManager* mFrameManager;
 
 #ifdef MOZ_XUL
   // Frames destined for the kPopupList.
-  nsAbsoluteItems           mPopupItems;
+  nsAbsoluteItems mPopupItems;
 #endif
 
   // Containing block information for out-of-flow frames.
-  nsAbsoluteItems           mFixedItems;
-  nsAbsoluteItems           mAbsoluteItems;
-  nsAbsoluteItems           mFloatedItems;
+  nsAbsoluteItems mFixedItems;
+  nsAbsoluteItems mAbsoluteItems;
+  nsAbsoluteItems mFloatedItems;
   // The containing block of a frame in the top layer is defined by the
   // spec: fixed-positioned frames are children of the viewport frame,
   // and absolutely-positioned frames are children of the initial
   // containing block. They would not be caught by any other containing
   // block, e.g. frames with transform or filter.
-  nsAbsoluteItems           mTopLayerFixedItems;
-  nsAbsoluteItems           mTopLayerAbsoluteItems;
+  nsAbsoluteItems mTopLayerFixedItems;
+  nsAbsoluteItems mTopLayerAbsoluteItems;
 
   nsCOMPtr<nsILayoutHistoryState> mFrameState;
   // These bits will be added to the state bits of any frame we construct
   // using this state.
-  nsFrameState              mAdditionalStateBits;
+  nsFrameState mAdditionalStateBits;
 
   // When working with the transform and filter properties, we want to hook
   // the abs-pos and fixed-pos lists together, since such
   // elements are fixed-pos containing blocks.  This flag determines
   // whether or not we want to wire the fixed-pos and abs-pos lists
   // together.
-  bool                      mFixedPosIsAbsPos;
+  bool mFixedPosIsAbsPos;
 
   // A boolean to indicate whether we have a "pending" popupgroup.  That is, we
   // have already created the FrameConstructionItem for the root popupgroup but
   // we have not yet created the relevant frame.
-  bool                      mHavePendingPopupgroup;
+  bool mHavePendingPopupgroup;
 
   // If false (which is the default) then call SetPrimaryFrame() as needed
   // during frame construction.  If true, don't make any SetPrimaryFrame()
@@ -790,18 +713,17 @@ public:
   // construction of random "extra" frames for elements via normal frame
   // construction APIs (e.g. replication of things across pages in paginated
   // mode).
-  bool                      mCreatingExtraFrames;
+  bool mCreatingExtraFrames;
 
-  nsCOMArray<nsIContent>    mGeneratedTextNodesWithInitializer;
+  nsCOMArray<nsIContent> mGeneratedTextNodesWithInitializer;
 
   // Constructor
   // Use the passed-in history state.
   nsFrameConstructorState(
-    nsIPresShell* aPresShell,
-    nsContainerFrame* aFixedContainingBlock,
-    nsContainerFrame* aAbsoluteContainingBlock,
-    nsContainerFrame* aFloatContainingBlock,
-    already_AddRefed<nsILayoutHistoryState> aHistoryState);
+      nsIPresShell* aPresShell, nsContainerFrame* aFixedContainingBlock,
+      nsContainerFrame* aAbsoluteContainingBlock,
+      nsContainerFrame* aFloatContainingBlock,
+      already_AddRefed<nsILayoutHistoryState> aHistoryState);
   // Get the history state from the pres context's pres shell.
   nsFrameConstructorState(nsIPresShell* aPresShell,
                           nsContainerFrame* aFixedContainingBlock,
@@ -816,12 +738,12 @@ public:
   // Also makes aNewAbsoluteContainingBlock the containing block for
   // fixed-pos elements if necessary.
   // aPositionedFrame is the frame whose style actually makes
-  // aNewAbsoluteContainingBlock a containing block. E.g. for a scrollable element
-  // aPositionedFrame is the element's primary frame and
+  // aNewAbsoluteContainingBlock a containing block. E.g. for a scrollable
+  // element aPositionedFrame is the element's primary frame and
   // aNewAbsoluteContainingBlock is the scrolled frame.
-  void PushAbsoluteContainingBlock(nsContainerFrame* aNewAbsoluteContainingBlock,
-                                   nsIFrame* aPositionedFrame,
-                                   nsFrameConstructorSaveState& aSaveState);
+  void PushAbsoluteContainingBlock(
+      nsContainerFrame* aNewAbsoluteContainingBlock, nsIFrame* aPositionedFrame,
+      nsFrameConstructorSaveState& aSaveState);
 
   // Function to push the existing float containing block state and
   // create a new scope. Code that uses this function should get matching
@@ -836,8 +758,9 @@ public:
   // Function to return the proper geometric parent for a frame with display
   // struct given by aStyleDisplay and parent's frame given by
   // aContentParentFrame.
-  nsContainerFrame* GetGeometricParent(const nsStyleDisplay& aStyleDisplay,
-                                       nsContainerFrame* aContentParentFrame) const;
+  nsContainerFrame* GetGeometricParent(
+      const nsStyleDisplay& aStyleDisplay,
+      nsContainerFrame* aContentParentFrame) const;
 
   // Collect absolute frames in mAbsoluteItems which are proper descendants
   // of aNewParent, and reparent them to aNewParent.
@@ -865,31 +788,25 @@ public:
    * @param aIsOutOfFlowPopup pass true if the frame is an out-of-flow popup
    *        (XUL-only)
    */
-  void AddChild(nsIFrame* aNewFrame,
-                nsFrameItems& aFrameItems,
-                nsIContent* aContent,
-                nsContainerFrame* aParentFrame,
-                bool aCanBePositioned = true,
-                bool aCanBeFloated = true,
-                bool aIsOutOfFlowPopup = false,
-                bool aInsertAfter = false,
+  void AddChild(nsIFrame* aNewFrame, nsFrameItems& aFrameItems,
+                nsIContent* aContent, nsContainerFrame* aParentFrame,
+                bool aCanBePositioned = true, bool aCanBeFloated = true,
+                bool aIsOutOfFlowPopup = false, bool aInsertAfter = false,
                 nsIFrame* aInsertAfterFrame = nullptr);
 
   /**
-   * Function to return the fixed-pos element list.  Normally this will just hand back the
-   * fixed-pos element list, but in case we're dealing with a transformed element that's
-   * acting as an abs-pos and fixed-pos container, we'll hand back the abs-pos list.  Callers should
-   * use this function if they want to get the list acting as the fixed-pos item parent.
+   * Function to return the fixed-pos element list.  Normally this will just
+   * hand back the fixed-pos element list, but in case we're dealing with a
+   * transformed element that's acting as an abs-pos and fixed-pos container,
+   * we'll hand back the abs-pos list.  Callers should use this function if they
+   * want to get the list acting as the fixed-pos item parent.
    */
-  nsAbsoluteItems& GetFixedItems()
-  {
+  nsAbsoluteItems& GetFixedItems() {
     return mFixedPosIsAbsPos ? mAbsoluteItems : mFixedItems;
   }
-  const nsAbsoluteItems& GetFixedItems() const
-  {
+  const nsAbsoluteItems& GetFixedItems() const {
     return mFixedPosIsAbsPos ? mAbsoluteItems : mFixedItems;
   }
-
 
   /**
    * class to automatically push and pop a pending binding in the frame
@@ -899,23 +816,21 @@ public:
   class PendingBindingAutoPusher;
   friend class PendingBindingAutoPusher;
   class MOZ_STACK_CLASS PendingBindingAutoPusher {
-  public:
+   public:
     PendingBindingAutoPusher(nsFrameConstructorState& aState,
-                             PendingBinding* aPendingBinding) :
-      mState(aState),
-      mPendingBinding(aState.mCurrentPendingBindingInsertionPoint)
-        {
-          if (aPendingBinding) {
-            aState.mCurrentPendingBindingInsertionPoint = aPendingBinding;
-          }
-        }
-
-    ~PendingBindingAutoPusher()
-      {
-        mState.mCurrentPendingBindingInsertionPoint = mPendingBinding;
+                             PendingBinding* aPendingBinding)
+        : mState(aState),
+          mPendingBinding(aState.mCurrentPendingBindingInsertionPoint) {
+      if (aPendingBinding) {
+        aState.mCurrentPendingBindingInsertionPoint = aPendingBinding;
       }
+    }
 
-  private:
+    ~PendingBindingAutoPusher() {
+      mState.mCurrentPendingBindingInsertionPoint = mPendingBinding;
+    }
+
+   private:
     nsFrameConstructorState& mState;
     PendingBinding* mPendingBinding;
   };
@@ -923,16 +838,16 @@ public:
   /**
    * Add a new pending binding to the list
    */
-  void AddPendingBinding(UniquePtr<PendingBinding> aPendingBinding)
-  {
+  void AddPendingBinding(UniquePtr<PendingBinding> aPendingBinding) {
     if (mCurrentPendingBindingInsertionPoint) {
-      mCurrentPendingBindingInsertionPoint->setPrevious(aPendingBinding.release());
+      mCurrentPendingBindingInsertionPoint->setPrevious(
+          aPendingBinding.release());
     } else {
       mPendingBindings.insertBack(aPendingBinding.release());
     }
   }
 
-protected:
+ protected:
   friend class nsFrameConstructorSaveState;
 
   /**
@@ -966,38 +881,36 @@ protected:
 };
 
 nsFrameConstructorState::nsFrameConstructorState(
-  nsIPresShell* aPresShell,
-  nsContainerFrame* aFixedContainingBlock,
-  nsContainerFrame* aAbsoluteContainingBlock,
-  nsContainerFrame* aFloatContainingBlock,
-  already_AddRefed<nsILayoutHistoryState> aHistoryState)
-  : mPresContext(aPresShell->GetPresContext()),
-    mPresShell(aPresShell),
-    mFrameManager(aPresShell->FrameConstructor()),
+    nsIPresShell* aPresShell, nsContainerFrame* aFixedContainingBlock,
+    nsContainerFrame* aAbsoluteContainingBlock,
+    nsContainerFrame* aFloatContainingBlock,
+    already_AddRefed<nsILayoutHistoryState> aHistoryState)
+    : mPresContext(aPresShell->GetPresContext()),
+      mPresShell(aPresShell),
+      mFrameManager(aPresShell->FrameConstructor()),
 #ifdef MOZ_XUL
-    mPopupItems(nullptr),
+      mPopupItems(nullptr),
 #endif
-    mFixedItems(aFixedContainingBlock),
-    mAbsoluteItems(aAbsoluteContainingBlock),
-    mFloatedItems(aFloatContainingBlock),
-    mTopLayerFixedItems(
-      static_cast<nsContainerFrame*>(mFrameManager->GetRootFrame())),
-    mTopLayerAbsoluteItems(
-      aPresShell->FrameConstructor()->GetDocElementContainingBlock()),
-    // See PushAbsoluteContaningBlock below
-    mFrameState(aHistoryState),
-    mAdditionalStateBits(nsFrameState(0)),
-    // If the fixed-pos containing block is equal to the abs-pos containing
-    // block, use the abs-pos containing block's abs-pos list for fixed-pos
-    // frames.
-    mFixedPosIsAbsPos(aFixedContainingBlock == aAbsoluteContainingBlock),
-    mHavePendingPopupgroup(false),
-    mCreatingExtraFrames(false),
-    mCurrentPendingBindingInsertionPoint(nullptr)
-{
+      mFixedItems(aFixedContainingBlock),
+      mAbsoluteItems(aAbsoluteContainingBlock),
+      mFloatedItems(aFloatContainingBlock),
+      mTopLayerFixedItems(
+          static_cast<nsContainerFrame*>(mFrameManager->GetRootFrame())),
+      mTopLayerAbsoluteItems(
+          aPresShell->FrameConstructor()->GetDocElementContainingBlock()),
+      // See PushAbsoluteContaningBlock below
+      mFrameState(aHistoryState),
+      mAdditionalStateBits(nsFrameState(0)),
+      // If the fixed-pos containing block is equal to the abs-pos containing
+      // block, use the abs-pos containing block's abs-pos list for fixed-pos
+      // frames.
+      mFixedPosIsAbsPos(aFixedContainingBlock == aAbsoluteContainingBlock),
+      mHavePendingPopupgroup(false),
+      mCreatingExtraFrames(false),
+      mCurrentPendingBindingInsertionPoint(nullptr) {
 #ifdef MOZ_XUL
   nsIPopupContainer* popupContainer =
-    nsIPopupContainer::GetPopupContainer(aPresShell);
+      nsIPopupContainer::GetPopupContainer(aPresShell);
   if (popupContainer) {
     mPopupItems.containingBlock = popupContainer->GetPopupSetFrame();
   }
@@ -1005,20 +918,16 @@ nsFrameConstructorState::nsFrameConstructorState(
   MOZ_COUNT_CTOR(nsFrameConstructorState);
 }
 
-nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
-                                                 nsContainerFrame* aFixedContainingBlock,
-                                                 nsContainerFrame* aAbsoluteContainingBlock,
-                                                 nsContainerFrame* aFloatContainingBlock)
-  : nsFrameConstructorState(aPresShell,
-                            aFixedContainingBlock,
-                            aAbsoluteContainingBlock,
-                            aFloatContainingBlock,
-                            aPresShell->GetDocument()->GetLayoutHistoryState())
-{
-}
+nsFrameConstructorState::nsFrameConstructorState(
+    nsIPresShell* aPresShell, nsContainerFrame* aFixedContainingBlock,
+    nsContainerFrame* aAbsoluteContainingBlock,
+    nsContainerFrame* aFloatContainingBlock)
+    : nsFrameConstructorState(
+          aPresShell, aFixedContainingBlock, aAbsoluteContainingBlock,
+          aFloatContainingBlock,
+          aPresShell->GetDocument()->GetLayoutHistoryState()) {}
 
-nsFrameConstructorState::~nsFrameConstructorState()
-{
+nsFrameConstructorState::~nsFrameConstructorState() {
   MOZ_COUNT_DTOR(nsFrameConstructorState);
   ProcessFrameInsertions(mTopLayerFixedItems, nsIFrame::kFixedList);
   ProcessFrameInsertions(mTopLayerAbsoluteItems, nsIFrame::kAbsoluteList);
@@ -1028,12 +937,14 @@ nsFrameConstructorState::~nsFrameConstructorState()
 #ifdef MOZ_XUL
   ProcessFrameInsertions(mPopupItems, nsIFrame::kPopupList);
 #endif
-  for (int32_t i = mGeneratedTextNodesWithInitializer.Count() - 1; i >= 0; --i) {
-    mGeneratedTextNodesWithInitializer[i]->
-      DeleteProperty(nsGkAtoms::genConInitializerProperty);
+  for (int32_t i = mGeneratedTextNodesWithInitializer.Count() - 1; i >= 0;
+       --i) {
+    mGeneratedTextNodesWithInitializer[i]->DeleteProperty(
+        nsGkAtoms::genConInitializerProperty);
   }
   if (!mPendingBindings.isEmpty()) {
-    nsBindingManager* bindingManager = mPresShell->GetDocument()->BindingManager();
+    nsBindingManager* bindingManager =
+        mPresShell->GetDocument()->BindingManager();
     do {
       UniquePtr<PendingBinding> pendingBinding(mPendingBindings.popFirst());
       bindingManager->AddToAttachedQueue(pendingBinding->mBinding);
@@ -1042,23 +953,21 @@ nsFrameConstructorState::~nsFrameConstructorState()
   }
 }
 
-static nsContainerFrame*
-AdjustAbsoluteContainingBlock(nsContainerFrame* aContainingBlockIn)
-{
+static nsContainerFrame* AdjustAbsoluteContainingBlock(
+    nsContainerFrame* aContainingBlockIn) {
   if (!aContainingBlockIn) {
     return nullptr;
   }
 
   // Always use the container's first continuation. (Inline frames can have
   // non-fluid bidi continuations...)
-  return static_cast<nsContainerFrame*>(aContainingBlockIn->FirstContinuation());
+  return static_cast<nsContainerFrame*>(
+      aContainingBlockIn->FirstContinuation());
 }
 
-void
-nsFrameConstructorState::PushAbsoluteContainingBlock(nsContainerFrame* aNewAbsoluteContainingBlock,
-                                                     nsIFrame* aPositionedFrame,
-                                                     nsFrameConstructorSaveState& aSaveState)
-{
+void nsFrameConstructorState::PushAbsoluteContainingBlock(
+    nsContainerFrame* aNewAbsoluteContainingBlock, nsIFrame* aPositionedFrame,
+    nsFrameConstructorSaveState& aSaveState) {
   aSaveState.mItems = &mAbsoluteItems;
   aSaveState.mSavedItems = mAbsoluteItems;
   aSaveState.mChildListID = nsIFrame::kAbsoluteList;
@@ -1072,31 +981,31 @@ nsFrameConstructorState::PushAbsoluteContainingBlock(nsContainerFrame* aNewAbsol
     mFixedItems = mAbsoluteItems;
   }
 
-  mAbsoluteItems =
-    nsAbsoluteItems(AdjustAbsoluteContainingBlock(aNewAbsoluteContainingBlock));
+  mAbsoluteItems = nsAbsoluteItems(
+      AdjustAbsoluteContainingBlock(aNewAbsoluteContainingBlock));
 
-  /* See if we're wiring the fixed-pos and abs-pos lists together.  This happens iff
-   * we're a transformed element.
+  /* See if we're wiring the fixed-pos and abs-pos lists together.  This happens
+   * iff we're a transformed element.
    */
-  mFixedPosIsAbsPos = aPositionedFrame &&
-      aPositionedFrame->IsFixedPosContainingBlock();
+  mFixedPosIsAbsPos =
+      aPositionedFrame && aPositionedFrame->IsFixedPosContainingBlock();
 
   if (aNewAbsoluteContainingBlock) {
     aNewAbsoluteContainingBlock->MarkAsAbsoluteContainingBlock();
   }
 }
 
-void
-nsFrameConstructorState::PushFloatContainingBlock(nsContainerFrame* aNewFloatContainingBlock,
-                                                  nsFrameConstructorSaveState& aSaveState)
-{
+void nsFrameConstructorState::PushFloatContainingBlock(
+    nsContainerFrame* aNewFloatContainingBlock,
+    nsFrameConstructorSaveState& aSaveState) {
   MOZ_ASSERT(!aNewFloatContainingBlock ||
-             aNewFloatContainingBlock->IsFloatContainingBlock(),
+                 aNewFloatContainingBlock->IsFloatContainingBlock(),
              "Please push a real float containing block!");
-  NS_ASSERTION(!aNewFloatContainingBlock ||
-               !ShouldSuppressFloatingOfDescendants(aNewFloatContainingBlock),
-               "We should not push a frame that is supposed to _suppress_ "
-               "floats as a float containing block!");
+  NS_ASSERTION(
+      !aNewFloatContainingBlock ||
+          !ShouldSuppressFloatingOfDescendants(aNewFloatContainingBlock),
+      "We should not push a frame that is supposed to _suppress_ "
+      "floats as a float containing block!");
   aSaveState.mItems = &mFloatedItems;
   aSaveState.mSavedItems = mFloatedItems;
   aSaveState.mChildListID = nsIFrame::kFloatList;
@@ -1104,10 +1013,9 @@ nsFrameConstructorState::PushFloatContainingBlock(nsContainerFrame* aNewFloatCon
   mFloatedItems = nsAbsoluteItems(aNewFloatContainingBlock);
 }
 
-nsContainerFrame*
-nsFrameConstructorState::GetGeometricParent(const nsStyleDisplay& aStyleDisplay,
-                                            nsContainerFrame* aContentParentFrame) const
-{
+nsContainerFrame* nsFrameConstructorState::GetGeometricParent(
+    const nsStyleDisplay& aStyleDisplay,
+    nsContainerFrame* aContentParentFrame) const {
   // If there is no container for a fixed, absolute, or floating root
   // frame, we will ignore the positioning.  This hack is originally
   // brought to you by the letter T: tables, since other roots don't
@@ -1162,9 +1070,8 @@ nsFrameConstructorState::GetGeometricParent(const nsStyleDisplay& aStyleDisplay,
   return aContentParentFrame;
 }
 
-void
-nsFrameConstructorState::ReparentAbsoluteItems(nsContainerFrame* aNewParent)
-{
+void nsFrameConstructorState::ReparentAbsoluteItems(
+    nsContainerFrame* aNewParent) {
   // Bug 1491727: This function might not conform to the spec. See
   // https://github.com/w3c/csswg-drafts/issues/1894.
 
@@ -1199,20 +1106,16 @@ nsFrameConstructorState::ReparentAbsoluteItems(nsContainerFrame* aNewParent)
   }
 }
 
-nsAbsoluteItems*
-nsFrameConstructorState::GetOutOfFlowFrameItems(nsIFrame* aNewFrame,
-                                                bool aCanBePositioned,
-                                                bool aCanBeFloated,
-                                                bool aIsOutOfFlowPopup,
-                                                nsFrameState* aPlaceholderType)
-{
+nsAbsoluteItems* nsFrameConstructorState::GetOutOfFlowFrameItems(
+    nsIFrame* aNewFrame, bool aCanBePositioned, bool aCanBeFloated,
+    bool aIsOutOfFlowPopup, nsFrameState* aPlaceholderType) {
 #ifdef MOZ_XUL
   if (MOZ_UNLIKELY(aIsOutOfFlowPopup)) {
     MOZ_ASSERT(mPopupItems.containingBlock, "Must have a popup set frame!");
     *aPlaceholderType = PLACEHOLDER_FOR_POPUP;
     return &mPopupItems;
   }
-#endif // MOZ_XUL
+#endif  // MOZ_XUL
   if (aCanBeFloated && aNewFrame->IsFloating()) {
     *aPlaceholderType = PLACEHOLDER_FOR_FLOAT;
     return &mFloatedItems;
@@ -1241,10 +1144,8 @@ nsFrameConstructorState::GetOutOfFlowFrameItems(nsIFrame* aNewFrame,
   return nullptr;
 }
 
-void
-nsFrameConstructorState::ConstructBackdropFrameFor(nsIContent* aContent,
-                                                   nsIFrame* aFrame)
-{
+void nsFrameConstructorState::ConstructBackdropFrameFor(nsIContent* aContent,
+                                                        nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame->StyleDisplay()->mTopLayer == NS_STYLE_TOP_LAYER_TOP);
   nsContainerFrame* frame = do_QueryFrame(aFrame);
   if (!frame) {
@@ -1252,50 +1153,41 @@ nsFrameConstructorState::ConstructBackdropFrameFor(nsIContent* aContent,
     return;
   }
 
-  RefPtr<ComputedStyle> style = mPresShell->StyleSet()->
-    ResolvePseudoElementStyle(aContent->AsElement(),
-                              CSSPseudoElementType::backdrop,
-                              /* aParentComputedStyle */ nullptr,
-                              /* aPseudoElement */ nullptr);
+  RefPtr<ComputedStyle> style =
+      mPresShell->StyleSet()->ResolvePseudoElementStyle(
+          aContent->AsElement(), CSSPseudoElementType::backdrop,
+          /* aParentComputedStyle */ nullptr,
+          /* aPseudoElement */ nullptr);
   MOZ_ASSERT(style->StyleDisplay()->mTopLayer == NS_STYLE_TOP_LAYER_TOP);
   nsContainerFrame* parentFrame =
-    GetGeometricParent(*style->StyleDisplay(), nullptr);
+      GetGeometricParent(*style->StyleDisplay(), nullptr);
 
   nsBackdropFrame* backdropFrame = new (mPresShell) nsBackdropFrame(style);
   backdropFrame->Init(aContent, parentFrame, nullptr);
 
   nsFrameState placeholderType;
-  nsAbsoluteItems* frameItems = GetOutOfFlowFrameItems(backdropFrame,
-                                                       true, true, false,
-                                                       &placeholderType);
+  nsAbsoluteItems* frameItems = GetOutOfFlowFrameItems(
+      backdropFrame, true, true, false, &placeholderType);
   MOZ_ASSERT(placeholderType & PLACEHOLDER_FOR_TOPLAYER);
 
-  nsIFrame* placeholder = nsCSSFrameConstructor::
-    CreatePlaceholderFrameFor(mPresShell, aContent, backdropFrame,
-                              frame, nullptr, placeholderType);
+  nsIFrame* placeholder = nsCSSFrameConstructor::CreatePlaceholderFrameFor(
+      mPresShell, aContent, backdropFrame, frame, nullptr, placeholderType);
   nsFrameList temp(placeholder, placeholder);
   frame->SetInitialChildList(nsIFrame::kBackdropList, temp);
 
   frameItems->AddChild(backdropFrame);
 }
 
-void
-nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
-                                  nsFrameItems& aFrameItems,
-                                  nsIContent* aContent,
-                                  nsContainerFrame* aParentFrame,
-                                  bool aCanBePositioned,
-                                  bool aCanBeFloated,
-                                  bool aIsOutOfFlowPopup,
-                                  bool aInsertAfter,
-                                  nsIFrame* aInsertAfterFrame)
-{
+void nsFrameConstructorState::AddChild(
+    nsIFrame* aNewFrame, nsFrameItems& aFrameItems, nsIContent* aContent,
+    nsContainerFrame* aParentFrame, bool aCanBePositioned, bool aCanBeFloated,
+    bool aIsOutOfFlowPopup, bool aInsertAfter, nsIFrame* aInsertAfterFrame) {
   MOZ_ASSERT(!aNewFrame->GetNextSibling(), "Shouldn't happen");
 
   nsFrameState placeholderType;
   nsAbsoluteItems* outOfFlowFrameItems =
-    GetOutOfFlowFrameItems(aNewFrame, aCanBePositioned, aCanBeFloated,
-                           aIsOutOfFlowPopup, &placeholderType);
+      GetOutOfFlowFrameItems(aNewFrame, aCanBePositioned, aCanBeFloated,
+                             aIsOutOfFlowPopup, &placeholderType);
 
   // The comments in GetGeometricParent regarding root table frames
   // all apply here, unfortunately. Thus, we need to check whether
@@ -1314,12 +1206,9 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
     NS_ASSERTION(frameItems != &aFrameItems,
                  "Putting frame in-flow _and_ want a placeholder?");
     nsIFrame* placeholderFrame =
-      nsCSSFrameConstructor::CreatePlaceholderFrameFor(mPresShell,
-                                                       aContent,
-                                                       aNewFrame,
-                                                       aParentFrame,
-                                                       nullptr,
-                                                       placeholderType);
+        nsCSSFrameConstructor::CreatePlaceholderFrameFor(
+            mPresShell, aContent, aNewFrame, aParentFrame, nullptr,
+            placeholderType);
 
     placeholderFrame->AddStateBits(mAdditionalStateBits);
     // Add the placeholder frame to the flow
@@ -1343,22 +1232,19 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
   }
 }
 
-void
-nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
-                                                ChildListID aChildListID)
-{
-#define NS_NONXUL_LIST_TEST (&aFrameItems == &mFloatedItems &&            \
-                             aChildListID == nsIFrame::kFloatList)    ||  \
-                            ((&aFrameItems == &mAbsoluteItems ||          \
-                              &aFrameItems == &mTopLayerAbsoluteItems) && \
-                             aChildListID == nsIFrame::kAbsoluteList) ||  \
-                            ((&aFrameItems == &mFixedItems ||             \
-                              &aFrameItems == &mTopLayerFixedItems) &&    \
-                             aChildListID == nsIFrame::kFixedList)
+void nsFrameConstructorState::ProcessFrameInsertions(
+    nsAbsoluteItems& aFrameItems, ChildListID aChildListID) {
+#define NS_NONXUL_LIST_TEST                                                   \
+  (&aFrameItems == &mFloatedItems && aChildListID == nsIFrame::kFloatList) || \
+      ((&aFrameItems == &mAbsoluteItems ||                                    \
+        &aFrameItems == &mTopLayerAbsoluteItems) &&                           \
+       aChildListID == nsIFrame::kAbsoluteList) ||                            \
+      ((&aFrameItems == &mFixedItems ||                                       \
+        &aFrameItems == &mTopLayerFixedItems) &&                              \
+       aChildListID == nsIFrame::kFixedList)
 #ifdef MOZ_XUL
-  MOZ_ASSERT(NS_NONXUL_LIST_TEST ||
-             (&aFrameItems == &mPopupItems &&
-              aChildListID == nsIFrame::kPopupList),
+  MOZ_ASSERT(NS_NONXUL_LIST_TEST || (&aFrameItems == &mPopupItems &&
+                                     aChildListID == nsIFrame::kPopupList),
              "Unexpected aFrameItems/aChildListID combination");
 #else
   MOZ_ASSERT(NS_NONXUL_LIST_TEST,
@@ -1371,8 +1257,7 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
 
   nsContainerFrame* containingBlock = aFrameItems.containingBlock;
 
-  NS_ASSERTION(containingBlock,
-               "Child list without containing block?");
+  NS_ASSERTION(containingBlock, "Child list without containing block?");
 
   if (aChildListID == nsIFrame::kFixedList) {
     // Put this frame on the transformed-frame's abs-pos list instead, if
@@ -1389,8 +1274,8 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
     // If we're injecting absolutely positioned frames, inject them on the
     // absolute containing block
     if (aChildListID == containingBlock->GetAbsoluteListID()) {
-      containingBlock->GetAbsoluteContainingBlock()->
-        SetInitialChildList(containingBlock, aChildListID, aFrameItems);
+      containingBlock->GetAbsoluteContainingBlock()->SetInitialChildList(
+          containingBlock, aChildListID, aFrameItems);
     } else {
       containingBlock->SetInitialChildList(aChildListID, aFrameItems);
     }
@@ -1418,17 +1303,15 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
     AutoTArray<nsIFrame*, 20> firstNewFrameAncestors;
     nsIFrame* notCommonAncestor = nullptr;
     if (lastChild) {
-      notCommonAncestor = nsLayoutUtils::FillAncestors(firstNewFrame,
-                                                       containingBlock,
-                                                       &firstNewFrameAncestors);
+      notCommonAncestor = nsLayoutUtils::FillAncestors(
+          firstNewFrame, containingBlock, &firstNewFrameAncestors);
     }
 
-    if (!lastChild ||
-        nsLayoutUtils::CompareTreePosition(lastChild, firstNewFrame,
-                                           firstNewFrameAncestors,
-                                           notCommonAncestor ?
-                                             containingBlock : nullptr) < 0) {
-      // no lastChild, or lastChild comes before the new children, so just append
+    if (!lastChild || nsLayoutUtils::CompareTreePosition(
+                          lastChild, firstNewFrame, firstNewFrameAncestors,
+                          notCommonAncestor ? containingBlock : nullptr) < 0) {
+      // no lastChild, or lastChild comes before the new children, so just
+      // append
       mFrameManager->AppendFrames(containingBlock, aChildListID, aFrameItems);
     } else {
       // Try the other children. First collect them to an array so that a
@@ -1445,9 +1328,9 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
       while (max > imin) {
         int32_t imid = imin + ((max - imin) / 2);
         nsIFrame* f = children[imid];
-        int32_t compare =
-          nsLayoutUtils::CompareTreePosition(f, firstNewFrame, firstNewFrameAncestors,
-                                             notCommonAncestor ? containingBlock : nullptr);
+        int32_t compare = nsLayoutUtils::CompareTreePosition(
+            f, firstNewFrame, firstNewFrameAncestors,
+            notCommonAncestor ? containingBlock : nullptr);
         if (compare > 0) {
           // f is after the new frame.
           max = imid;
@@ -1464,10 +1347,9 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
           insertionPoint = nullptr;
           for (uint32_t i = 0; i < children.Length(); ++i) {
             nsIFrame* f = children[i];
-            if (nsLayoutUtils::CompareTreePosition(f, firstNewFrame,
-                                                   firstNewFrameAncestors,
-                                                   notCommonAncestor ?
-                                                     containingBlock : nullptr) > 0) {
+            if (nsLayoutUtils::CompareTreePosition(
+                    f, firstNewFrame, firstNewFrameAncestors,
+                    notCommonAncestor ? containingBlock : nullptr) > 0) {
               break;
             }
             insertionPoint = f;
@@ -1475,27 +1357,23 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
           break;
         }
       }
-      mFrameManager->InsertFrames(containingBlock, aChildListID,
-                                  insertionPoint, aFrameItems);
+      mFrameManager->InsertFrames(containingBlock, aChildListID, insertionPoint,
+                                  aFrameItems);
     }
   }
 
   MOZ_ASSERT(aFrameItems.IsEmpty(), "How did that happen?");
 }
 
-
 nsFrameConstructorSaveState::nsFrameConstructorSaveState()
-  : mItems(nullptr),
-    mSavedItems(nullptr),
-    mChildListID(kPrincipalList),
-    mState(nullptr),
-    mSavedFixedItems(nullptr),
-    mSavedFixedPosIsAbsPos(false)
-{
-}
+    : mItems(nullptr),
+      mSavedItems(nullptr),
+      mChildListID(kPrincipalList),
+      mState(nullptr),
+      mSavedFixedItems(nullptr),
+      mSavedFixedPosIsAbsPos(false) {}
 
-nsFrameConstructorSaveState::~nsFrameConstructorSaveState()
-{
+nsFrameConstructorSaveState::~nsFrameConstructorSaveState() {
   // Restore the state
   if (mItems) {
     NS_ASSERTION(mState, "Can't have mItems set without having a state!");
@@ -1539,11 +1417,8 @@ nsFrameConstructorSaveState::~nsFrameConstructorSaveState()
 // over the list, of course; if we really wanted to we could factor out the
 // relevant part of ReparentFrameViewList, I suppose...  Or just get rid of
 // views, which would make most of this function go away.
-static void
-MoveChildrenTo(nsIFrame* aOldParent,
-               nsContainerFrame* aNewParent,
-               nsFrameList& aFrameList)
-{
+static void MoveChildrenTo(nsIFrame* aOldParent, nsContainerFrame* aNewParent,
+                           nsFrameList& aFrameList) {
   bool sameGrandParent = aOldParent->GetParent() == aNewParent->GetParent();
 
   if (aNewParent->HasView() || aOldParent->HasView() || !sameGrandParent) {
@@ -1563,9 +1438,8 @@ MoveChildrenTo(nsIFrame* aOldParent,
   }
 }
 
-static bool
-ShouldCreateImageFrameForContent(const Element& aElement, ComputedStyle& aStyle)
-{
+static bool ShouldCreateImageFrameForContent(const Element& aElement,
+                                             ComputedStyle& aStyle) {
   if (aElement.IsRootOfNativeAnonymousSubtree()) {
     return false;
   }
@@ -1582,21 +1456,20 @@ ShouldCreateImageFrameForContent(const Element& aElement, ComputedStyle& aStyle)
 
 nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument* aDocument,
                                              nsIPresShell* aPresShell)
-  : nsFrameManager(aPresShell)
-  , mDocument(aDocument)
-  , mRootElementFrame(nullptr)
-  , mRootElementStyleFrame(nullptr)
-  , mDocElementContainingBlock(nullptr)
-  , mPageSequenceFrame(nullptr)
-  , mFirstFreeFCItem(nullptr)
-  , mFCItemsInUse(0)
-  , mCurrentDepth(0)
-  , mQuotesDirty(false)
-  , mCountersDirty(false)
-  , mIsDestroyingFrameTree(false)
-  , mHasRootAbsPosContainingBlock(false)
-  , mAlwaysCreateFramesForIgnorableWhitespace(false)
-{
+    : nsFrameManager(aPresShell),
+      mDocument(aDocument),
+      mRootElementFrame(nullptr),
+      mRootElementStyleFrame(nullptr),
+      mDocElementContainingBlock(nullptr),
+      mPageSequenceFrame(nullptr),
+      mFirstFreeFCItem(nullptr),
+      mFCItemsInUse(0),
+      mCurrentDepth(0),
+      mQuotesDirty(false),
+      mCountersDirty(false),
+      mIsDestroyingFrameTree(false),
+      mHasRootAbsPosContainingBlock(false),
+      mAlwaysCreateFramesForIgnorableWhitespace(false) {
 #ifdef DEBUG
   static bool gFirstTime = true;
   if (gFirstTime) {
@@ -1606,8 +1479,7 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument* aDocument,
       bool error = false;
       for (;;) {
         char* comma = PL_strchr(flags, ',');
-        if (comma)
-          *comma = '\0';
+        if (comma) *comma = '\0';
 
         bool found = false;
         FrameCtorDebugFlags* flag = gFlags;
@@ -1615,18 +1487,17 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument* aDocument,
         while (flag < limit) {
           if (PL_strcasecmp(flag->name, flags) == 0) {
             *(flag->on) = true;
-            printf("nsCSSFrameConstructor: setting %s debug flag on\n", flag->name);
+            printf("nsCSSFrameConstructor: setting %s debug flag on\n",
+                   flag->name);
             found = true;
             break;
           }
           ++flag;
         }
 
-        if (! found)
-          error = true;
+        if (!found) error = true;
 
-        if (! comma)
-          break;
+        if (!comma) break;
 
         *comma = ',';
         flags = comma + 1;
@@ -1640,7 +1511,9 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument* aDocument,
           printf("  %s\n", flag->name);
           ++flag;
         }
-        printf("Note: GECKO_FRAMECTOR_DEBUG_FLAGS is a comma separated list of flag\n");
+        printf(
+            "Note: GECKO_FRAMECTOR_DEBUG_FLAGS is a comma separated list of "
+            "flag\n");
         printf("names (no whitespace)\n");
       }
     }
@@ -1648,12 +1521,9 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument* aDocument,
 #endif
 }
 
-void
-nsCSSFrameConstructor::NotifyDestroyingFrame(nsIFrame* aFrame)
-{
+void nsCSSFrameConstructor::NotifyDestroyingFrame(nsIFrame* aFrame) {
   if (aFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT) {
-    if (mQuoteList.DestroyNodesFor(aFrame))
-      QuotesDirty();
+    if (mQuoteList.DestroyNodesFor(aFrame)) QuotesDirty();
   }
 
   if (aFrame->HasAnyStateBits(NS_FRAME_HAS_CSS_COUNTER_STYLE) &&
@@ -1669,20 +1539,17 @@ nsCSSFrameConstructor::NotifyDestroyingFrame(nsIFrame* aFrame)
 
 struct nsGenConInitializer {
   nsAutoPtr<nsGenConNode> mNode;
-  nsGenConList*           mList;
+  nsGenConList* mList;
   void (nsCSSFrameConstructor::*mDirtyAll)();
 
   nsGenConInitializer(nsGenConNode* aNode, nsGenConList* aList,
                       void (nsCSSFrameConstructor::*aDirtyAll)())
-    : mNode(aNode), mList(aList), mDirtyAll(aDirtyAll) {}
+      : mNode(aNode), mList(aList), mDirtyAll(aDirtyAll) {}
 };
 
-already_AddRefed<nsIContent>
-nsCSSFrameConstructor::CreateGenConTextNode(nsFrameConstructorState& aState,
-                                            const nsString& aString,
-                                            RefPtr<nsTextNode>* aText,
-                                            nsGenConInitializer* aInitializer)
-{
+already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGenConTextNode(
+    nsFrameConstructorState& aState, const nsString& aString,
+    RefPtr<nsTextNode>* aText, nsGenConInitializer* aInitializer) {
   RefPtr<nsTextNode> content = new nsTextNode(mDocument->NodeInfoManager());
   content->SetText(aString, false);
   if (aText) {
@@ -1696,15 +1563,12 @@ nsCSSFrameConstructor::CreateGenConTextNode(nsFrameConstructorState& aState,
   return content.forget();
 }
 
-already_AddRefed<nsIContent>
-nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
-                                              const Element& aOriginatingElement,
-                                              ComputedStyle& aPseudoStyle,
-                                              uint32_t aContentIndex)
-{
+already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
+    nsFrameConstructorState& aState, const Element& aOriginatingElement,
+    ComputedStyle& aPseudoStyle, uint32_t aContentIndex) {
   // Get the content value
   const nsStyleContentData& data =
-    aPseudoStyle.StyleContent()->ContentAt(aContentIndex);
+      aPseudoStyle.StyleContent()->ContentAt(aContentIndex);
   const StyleContentType type = data.GetType();
 
   switch (type) {
@@ -1712,8 +1576,7 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
       return GeneratedImageContent::Create(*mDocument, aContentIndex);
 
     case StyleContentType::String:
-      return CreateGenConTextNode(aState,
-                                  nsDependentString(data.GetString()),
+      return CreateGenConTextNode(aState, nsDependentString(data.GetString()),
                                   nullptr, nullptr);
 
     case StyleContentType::Attr: {
@@ -1721,8 +1584,8 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
       RefPtr<nsAtom> attrName = attr->mName;
       int32_t attrNameSpace = kNameSpaceID_None;
       if (RefPtr<nsAtom> ns = attr->mNamespaceURL) {
-        nsresult rv =
-          nsContentUtils::NameSpaceManager()->RegisterNameSpace(ns.forget(), attrNameSpace);
+        nsresult rv = nsContentUtils::NameSpaceManager()->RegisterNameSpace(
+            ns.forget(), attrNameSpace);
         NS_ENSURE_SUCCESS(rv, nullptr);
       }
 
@@ -1731,10 +1594,8 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
       }
 
       nsCOMPtr<nsIContent> content;
-      NS_NewAttributeContent(mDocument->NodeInfoManager(),
-                             attrNameSpace,
-                             attrName,
-                             getter_AddRefs(content));
+      NS_NewAttributeContent(mDocument->NodeInfoManager(), attrNameSpace,
+                             attrName, getter_AddRefs(content));
       return content.forget();
     }
 
@@ -1742,15 +1603,13 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
     case StyleContentType::Counters: {
       nsStyleContentData::CounterFunction* counters = data.GetCounters();
       nsCounterList* counterList =
-        mCounterManager.CounterListFor(counters->mIdent);
+          mCounterManager.CounterListFor(counters->mIdent);
 
-      nsCounterUseNode* node =
-        new nsCounterUseNode(counters, aContentIndex,
-                             type == StyleContentType::Counters);
+      nsCounterUseNode* node = new nsCounterUseNode(
+          counters, aContentIndex, type == StyleContentType::Counters);
 
-      nsGenConInitializer* initializer =
-        new nsGenConInitializer(node, counterList,
-                                &nsCSSFrameConstructor::CountersDirty);
+      nsGenConInitializer* initializer = new nsGenConInitializer(
+          node, counterList, &nsCSSFrameConstructor::CountersDirty);
       return CreateGenConTextNode(aState, EmptyString(), &node->mText,
                                   initializer);
     }
@@ -1759,12 +1618,10 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
     case StyleContentType::CloseQuote:
     case StyleContentType::NoOpenQuote:
     case StyleContentType::NoCloseQuote: {
-      nsQuoteNode* node =
-        new nsQuoteNode(type, aContentIndex);
+      nsQuoteNode* node = new nsQuoteNode(type, aContentIndex);
 
-      nsGenConInitializer* initializer =
-        new nsGenConInitializer(node, &mQuoteList,
-                                &nsCSSFrameConstructor::QuotesDirty);
+      nsGenConInitializer* initializer = new nsGenConInitializer(
+          node, &mQuoteList, &nsCSSFrameConstructor::QuotesDirty);
       return CreateGenConTextNode(aState, EmptyString(), &node->mText,
                                   initializer);
     }
@@ -1777,10 +1634,8 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
       // detect that and do the right thing here?
       if (aOriginatingElement.HasAttr(kNameSpaceID_None, nsGkAtoms::alt)) {
         nsCOMPtr<nsIContent> content;
-        NS_NewAttributeContent(mDocument->NodeInfoManager(),
-                               kNameSpaceID_None,
-                               nsGkAtoms::alt,
-                               getter_AddRefs(content));
+        NS_NewAttributeContent(mDocument->NodeInfoManager(), kNameSpaceID_None,
+                               nsGkAtoms::alt, getter_AddRefs(content));
         return content.forget();
       }
 
@@ -1788,7 +1643,8 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
         if (aOriginatingElement.HasAttr(kNameSpaceID_None, nsGkAtoms::value)) {
           nsCOMPtr<nsIContent> content;
           NS_NewAttributeContent(mDocument->NodeInfoManager(),
-                                 kNameSpaceID_None, nsGkAtoms::value, getter_AddRefs(content));
+                                 kNameSpaceID_None, nsGkAtoms::value,
+                                 getter_AddRefs(content));
           return content.forget();
         }
 
@@ -1824,22 +1680,18 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
  * aParentFrame/aParentContent, giving the XML element the ::before or
  * ::after style.
  */
-void
-nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aState,
-                                                  nsContainerFrame* aParentFrame,
-                                                  Element& aOriginatingElement,
-                                                  ComputedStyle& aStyle,
-                                                  CSSPseudoElementType aPseudoElement,
-                                                  FrameConstructionItemList& aItems)
-{
+void nsCSSFrameConstructor::CreateGeneratedContentItem(
+    nsFrameConstructorState& aState, nsContainerFrame* aParentFrame,
+    Element& aOriginatingElement, ComputedStyle& aStyle,
+    CSSPseudoElementType aPseudoElement, FrameConstructionItemList& aItems) {
   MOZ_ASSERT(aPseudoElement == CSSPseudoElementType::before ||
-             aPseudoElement == CSSPseudoElementType::after,
+                 aPseudoElement == CSSPseudoElementType::after,
              "unexpected aPseudoElement");
 
-  if (aParentFrame &&
-      (aParentFrame->IsHTMLVideoFrame() || aParentFrame->IsDateTimeControlFrame())) {
-    // Video frames and date time control frames may not be leafs when backed by an UA widget,
-    // but we still don't want to expose generated content.
+  if (aParentFrame && (aParentFrame->IsHTMLVideoFrame() ||
+                       aParentFrame->IsDateTimeControlFrame())) {
+    // Video frames and date time control frames may not be leafs when backed by
+    // an UA widget, but we still don't want to expose generated content.
     MOZ_ASSERT(aOriginatingElement.GetShadowRoot()->IsUAWidget());
     return;
   }
@@ -1847,8 +1699,8 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   ServoStyleSet* styleSet = mPresShell->StyleSet();
 
   // Probe for the existence of the pseudo-element
-  RefPtr<ComputedStyle> pseudoStyle =
-    styleSet->ProbePseudoElementStyle(aOriginatingElement, aPseudoElement, &aStyle);
+  RefPtr<ComputedStyle> pseudoStyle = styleSet->ProbePseudoElementStyle(
+      aOriginatingElement, aPseudoElement, &aStyle);
   if (!pseudoStyle) {
     return;
   }
@@ -1857,13 +1709,10 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
 
   // |ProbePseudoStyleFor| checked the 'display' property and the
   // |ContentCount()| of the 'content' property for us.
-  nsAtom* elemName = isBefore ?
-    nsGkAtoms::mozgeneratedcontentbefore : nsGkAtoms::mozgeneratedcontentafter;
-  RefPtr<NodeInfo> nodeInfo =
-    mDocument->NodeInfoManager()->GetNodeInfo(elemName,
-                                              nullptr,
-                                              kNameSpaceID_None,
-                                              nsINode::ELEMENT_NODE);
+  nsAtom* elemName = isBefore ? nsGkAtoms::mozgeneratedcontentbefore
+                              : nsGkAtoms::mozgeneratedcontentafter;
+  RefPtr<NodeInfo> nodeInfo = mDocument->NodeInfoManager()->GetNodeInfo(
+      elemName, nullptr, kNameSpaceID_None, nsINode::ELEMENT_NODE);
   RefPtr<Element> container;
   nsresult rv = NS_NewXMLElement(getter_AddRefs(container), nodeInfo.forget());
   if (NS_FAILED(rv)) {
@@ -1872,8 +1721,8 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
 
   // Cleared when the pseudo is unbound from the tree, so no need to store a
   // strong reference, nor a destructor.
-  nsAtom* property = isBefore
-    ? nsGkAtoms::beforePseudoProperty : nsGkAtoms::afterPseudoProperty;
+  nsAtom* property = isBefore ? nsGkAtoms::beforePseudoProperty
+                              : nsGkAtoms::afterPseudoProperty;
   aOriginatingElement.SetProperty(property, container.get());
 
   container->SetIsNativeAnonymousRoot();
@@ -1883,9 +1732,8 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   // bind with a document because shadow roots and its descendants
   // are not in document.
   nsIDocument* bindDocument =
-    aOriginatingElement.HasFlag(NODE_IS_IN_SHADOW_TREE) ? nullptr : mDocument;
-  rv = container->BindToTree(bindDocument,
-                             &aOriginatingElement,
+      aOriginatingElement.HasFlag(NODE_IS_IN_SHADOW_TREE) ? nullptr : mDocument;
+  rv = container->BindToTree(bindDocument, &aOriginatingElement,
                              &aOriginatingElement);
   if (NS_FAILED(rv)) {
     container->UnbindFromTree();
@@ -1909,8 +1757,8 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
 
   uint32_t contentCount = pseudoStyle->StyleContent()->ContentCount();
   for (uint32_t contentIndex = 0; contentIndex < contentCount; contentIndex++) {
-    nsCOMPtr<nsIContent> content =
-      CreateGeneratedContent(aState, aOriginatingElement, *pseudoStyle, contentIndex);
+    nsCOMPtr<nsIContent> content = CreateGeneratedContent(
+        aState, aOriginatingElement, *pseudoStyle, contentIndex);
     if (!content) {
       continue;
     }
@@ -1927,12 +1775,8 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
     }
   }
 
-  AddFrameConstructionItemsInternal(aState,
-                                    container,
-                                    aParentFrame,
-                                    true,
-                                    pseudoStyle,
-                                    ITEM_IS_GENERATED_CONTENT,
+  AddFrameConstructionItemsInternal(aState, container, aParentFrame, true,
+                                    pseudoStyle, ITEM_IS_GENERATED_CONTENT,
                                     aItems);
 }
 
@@ -1940,8 +1784,9 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
  **  BEGIN TABLE SECTION
  ****************************************************/
 
-// The term pseudo frame is being used instead of anonymous frame, since anonymous
-// frame has been used elsewhere to refer to frames that have generated content
+// The term pseudo frame is being used instead of anonymous frame, since
+// anonymous frame has been used elsewhere to refer to frames that have
+// generated content
 
 // Return whether the given frame is a table pseudo-frame. Note that
 // cell-content and table-outer frames have pseudo-types, but are always
@@ -1950,43 +1795,36 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
 // frame. In particular, a lone table caption will have a table wrapper as its
 // parent, but will also trigger construction of an empty inner table, which
 // will be the one we can examine to see whether the wrapper was a pseudo-frame.
-static bool
-IsTablePseudo(nsIFrame* aFrame)
-{
+static bool IsTablePseudo(nsIFrame* aFrame) {
   nsAtom* pseudoType = aFrame->Style()->GetPseudo();
   return pseudoType &&
-    (pseudoType == nsCSSAnonBoxes::table() ||
-     pseudoType == nsCSSAnonBoxes::inlineTable() ||
-     pseudoType == nsCSSAnonBoxes::tableColGroup() ||
-     pseudoType == nsCSSAnonBoxes::tableRowGroup() ||
-     pseudoType == nsCSSAnonBoxes::tableRow() ||
-     pseudoType == nsCSSAnonBoxes::tableCell() ||
-     (pseudoType == nsCSSAnonBoxes::cellContent() &&
-      aFrame->GetParent()->Style()->GetPseudo() ==
-        nsCSSAnonBoxes::tableCell()) ||
-     (pseudoType == nsCSSAnonBoxes::tableWrapper() &&
-      (aFrame->PrincipalChildList().FirstChild()->Style()->GetPseudo() ==
-         nsCSSAnonBoxes::table() ||
-       aFrame->PrincipalChildList().FirstChild()->Style()->GetPseudo() ==
-         nsCSSAnonBoxes::inlineTable())));
+         (pseudoType == nsCSSAnonBoxes::table() ||
+          pseudoType == nsCSSAnonBoxes::inlineTable() ||
+          pseudoType == nsCSSAnonBoxes::tableColGroup() ||
+          pseudoType == nsCSSAnonBoxes::tableRowGroup() ||
+          pseudoType == nsCSSAnonBoxes::tableRow() ||
+          pseudoType == nsCSSAnonBoxes::tableCell() ||
+          (pseudoType == nsCSSAnonBoxes::cellContent() &&
+           aFrame->GetParent()->Style()->GetPseudo() ==
+               nsCSSAnonBoxes::tableCell()) ||
+          (pseudoType == nsCSSAnonBoxes::tableWrapper() &&
+           (aFrame->PrincipalChildList().FirstChild()->Style()->GetPseudo() ==
+                nsCSSAnonBoxes::table() ||
+            aFrame->PrincipalChildList().FirstChild()->Style()->GetPseudo() ==
+                nsCSSAnonBoxes::inlineTable())));
 }
 
-static bool
-IsRubyPseudo(nsIFrame* aFrame)
-{
+static bool IsRubyPseudo(nsIFrame* aFrame) {
   return RubyUtils::IsRubyPseudo(aFrame->Style()->GetPseudo());
 }
 
-static bool
-IsTableOrRubyPseudo(nsIFrame* aFrame)
-{
+static bool IsTableOrRubyPseudo(nsIFrame* aFrame) {
   return IsTablePseudo(aFrame) || IsRubyPseudo(aFrame);
 }
 
 /* static */
-nsCSSFrameConstructor::ParentType
-nsCSSFrameConstructor::GetParentType(LayoutFrameType aFrameType)
-{
+nsCSSFrameConstructor::ParentType nsCSSFrameConstructor::GetParentType(
+    LayoutFrameType aFrameType) {
   if (aFrameType == LayoutFrameType::Table) {
     return eTypeTable;
   }
@@ -2012,9 +1850,8 @@ nsCSSFrameConstructor::GetParentType(LayoutFrameType aFrameType)
   return eTypeBlock;
 }
 
-static nsContainerFrame*
-AdjustCaptionParentFrame(nsContainerFrame* aParentFrame)
-{
+static nsContainerFrame* AdjustCaptionParentFrame(
+    nsContainerFrame* aParentFrame) {
   if (aParentFrame->IsTableFrame()) {
     return aParentFrame->GetParent();
   }
@@ -2027,11 +1864,9 @@ AdjustCaptionParentFrame(nsContainerFrame* aParentFrame)
  * |tableFrame|'s parent frame. Returns |true| if the parent frame
  * needed to be fixed up.
  */
-static bool
-GetCaptionAdjustedParent(nsContainerFrame*  aParentFrame,
-                         const nsIFrame*    aChildFrame,
-                         nsContainerFrame** aAdjParentFrame)
-{
+static bool GetCaptionAdjustedParent(nsContainerFrame* aParentFrame,
+                                     const nsIFrame* aChildFrame,
+                                     nsContainerFrame** aAdjParentFrame) {
   *aAdjParentFrame = aParentFrame;
   bool haveCaption = false;
 
@@ -2042,26 +1877,23 @@ GetCaptionAdjustedParent(nsContainerFrame*  aParentFrame,
   return haveCaption;
 }
 
-void
-nsCSSFrameConstructor::AdjustParentFrame(nsContainerFrame**           aParentFrame,
-                                         const FrameConstructionData* aFCData,
-                                         ComputedStyle*              aComputedStyle)
-{
+void nsCSSFrameConstructor::AdjustParentFrame(
+    nsContainerFrame** aParentFrame, const FrameConstructionData* aFCData,
+    ComputedStyle* aComputedStyle) {
   MOZ_ASSERT(aComputedStyle, "Must have child's style");
   MOZ_ASSERT(aFCData, "Must have frame construction data");
 
   bool tablePart = ((aFCData->mBits & FCDATA_IS_TABLE_PART) != 0);
 
-  if (tablePart && aComputedStyle->StyleDisplay()->mDisplay ==
-      StyleDisplay::TableCaption) {
+  if (tablePart &&
+      aComputedStyle->StyleDisplay()->mDisplay == StyleDisplay::TableCaption) {
     *aParentFrame = ::AdjustCaptionParentFrame(*aParentFrame);
   }
 }
 
 // Pull all the captions present in aItems out  into aCaptions
-static void
-PullOutCaptionFrames(nsFrameItems& aItems, nsFrameItems& aCaptions)
-{
+static void PullOutCaptionFrames(nsFrameItems& aItems,
+                                 nsFrameItems& aCaptions) {
   nsIFrame* child = aItems.FirstChild();
   while (child) {
     nsIFrame* nextSibling = child->GetNextSibling();
@@ -2073,20 +1905,19 @@ PullOutCaptionFrames(nsFrameItems& aItems, nsFrameItems& aCaptions)
   }
 }
 
-
-// Construct the outer, inner table frames and the children frames for the table.
-// XXX Page break frames for pseudo table frames are not constructed to avoid the risk
-// associated with revising the pseudo frame mechanism. The long term solution
-// of having frames handle page-break-before/after will solve the problem.
-nsIFrame*
-nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
-                                      FrameConstructionItem&   aItem,
-                                      nsContainerFrame*        aParentFrame,
-                                      const nsStyleDisplay*    aDisplay,
-                                      nsFrameItems&            aFrameItems)
-{
+// Construct the outer, inner table frames and the children frames for the
+// table.
+// XXX Page break frames for pseudo table frames are not constructed to avoid
+// the risk associated with revising the pseudo frame mechanism. The long term
+// solution of having frames handle page-break-before/after will solve the
+// problem.
+nsIFrame* nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
+                                                FrameConstructionItem& aItem,
+                                                nsContainerFrame* aParentFrame,
+                                                const nsStyleDisplay* aDisplay,
+                                                nsFrameItems& aFrameItems) {
   MOZ_ASSERT(aDisplay->mDisplay == StyleDisplay::Table ||
-             aDisplay->mDisplay == StyleDisplay::InlineTable,
+                 aDisplay->mDisplay == StyleDisplay::InlineTable,
              "Unexpected call");
 
   nsIContent* const content = aItem.mContent;
@@ -2095,20 +1926,20 @@ nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
 
   // create the pseudo SC for the table wrapper as a child of the inner SC
   RefPtr<ComputedStyle> outerComputedStyle;
-  outerComputedStyle = mPresShell->StyleSet()->
-    ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::tableWrapper(),
-                                       computedStyle);
+  outerComputedStyle =
+      mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
+          nsCSSAnonBoxes::tableWrapper(), computedStyle);
 
-  // Create the table wrapper frame which holds the caption and inner table frame
+  // Create the table wrapper frame which holds the caption and inner table
+  // frame
   nsContainerFrame* newFrame;
   if (isMathMLContent)
     newFrame = NS_NewMathMLmtableOuterFrame(mPresShell, outerComputedStyle);
   else
     newFrame = NS_NewTableWrapperFrame(mPresShell, outerComputedStyle);
 
-  nsContainerFrame* geometricParent =
-    aState.GetGeometricParent(*outerComputedStyle->StyleDisplay(),
-                              aParentFrame);
+  nsContainerFrame* geometricParent = aState.GetGeometricParent(
+      *outerComputedStyle->StyleDisplay(), aParentFrame);
 
   // Init the table wrapper frame
   InitAndRestoreFrame(aState, content, geometricParent, newFrame);
@@ -2146,13 +1977,12 @@ nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
     aState.PushAbsoluteContainingBlock(newFrame, newFrame, absoluteSaveState);
   }
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
-    ConstructFramesFromItemList(aState, aItem.mChildItems,
-                                innerFrame,
-                                aItem.mFCData->mBits & FCDATA_IS_WRAPPER_ANON_BOX,
-                                childItems);
+    ConstructFramesFromItemList(
+        aState, aItem.mChildItems, innerFrame,
+        aItem.mFCData->mBits & FCDATA_IS_WRAPPER_ANON_BOX, childItems);
   } else {
-    ProcessChildren(aState, content, computedStyle, innerFrame,
-                    true, childItems, false, aItem.mPendingBinding);
+    ProcessChildren(aState, content, computedStyle, innerFrame, true,
+                    childItems, false, aItem.mPendingBinding);
   }
 
   nsFrameItems captionItems;
@@ -2169,20 +1999,17 @@ nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
   return newFrame;
 }
 
-static void
-MakeTablePartAbsoluteContainingBlockIfNeeded(nsFrameConstructorState&     aState,
-                                             const nsStyleDisplay*        aDisplay,
-                                             nsFrameConstructorSaveState& aAbsSaveState,
-                                             nsContainerFrame*            aFrame)
-{
+static void MakeTablePartAbsoluteContainingBlockIfNeeded(
+    nsFrameConstructorState& aState, const nsStyleDisplay* aDisplay,
+    nsFrameConstructorSaveState& aAbsSaveState, nsContainerFrame* aFrame) {
   // If we're positioned, then we need to become an absolute containing block
   // for any absolutely positioned children and register for post-reflow fixup.
   //
   // Note that usually if a frame type can be an absolute containing block, we
-  // always set NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN, whether it actually is or not.
-  // However, in this case flag serves the additional purpose of indicating that
-  // the frame was registered with its table frame. This allows us to avoid the
-  // overhead of unregistering the frame in most cases.
+  // always set NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN, whether it actually is or
+  // not. However, in this case flag serves the additional purpose of indicating
+  // that the frame was registered with its table frame. This allows us to avoid
+  // the overhead of unregistering the frame in most cases.
   if (aDisplay->IsAbsPosContainingBlock(aFrame)) {
     aFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
     aState.PushAbsoluteContainingBlock(aFrame, aFrame, aAbsSaveState);
@@ -2190,17 +2017,14 @@ MakeTablePartAbsoluteContainingBlockIfNeeded(nsFrameConstructorState&     aState
   }
 }
 
-nsIFrame*
-nsCSSFrameConstructor::ConstructTableRowOrRowGroup(nsFrameConstructorState& aState,
-                                                   FrameConstructionItem&   aItem,
-                                                   nsContainerFrame*        aParentFrame,
-                                                   const nsStyleDisplay*    aDisplay,
-                                                   nsFrameItems&            aFrameItems)
-{
+nsIFrame* nsCSSFrameConstructor::ConstructTableRowOrRowGroup(
+    nsFrameConstructorState& aState, FrameConstructionItem& aItem,
+    nsContainerFrame* aParentFrame, const nsStyleDisplay* aDisplay,
+    nsFrameItems& aFrameItems) {
   MOZ_ASSERT(aDisplay->mDisplay == StyleDisplay::TableRow ||
-             aDisplay->mDisplay == StyleDisplay::TableRowGroup ||
-             aDisplay->mDisplay == StyleDisplay::TableFooterGroup ||
-             aDisplay->mDisplay == StyleDisplay::TableHeaderGroup,
+                 aDisplay->mDisplay == StyleDisplay::TableRowGroup ||
+                 aDisplay->mDisplay == StyleDisplay::TableFooterGroup ||
+                 aDisplay->mDisplay == StyleDisplay::TableHeaderGroup,
              "Not a row or row group");
   MOZ_ASSERT(aItem.mComputedStyle->StyleDisplay() == aDisplay,
              "Display style doesn't match style");
@@ -2221,17 +2045,16 @@ nsCSSFrameConstructor::ConstructTableRowOrRowGroup(nsFrameConstructorState& aSta
 
   nsFrameConstructorSaveState absoluteSaveState;
   MakeTablePartAbsoluteContainingBlockIfNeeded(aState, aDisplay,
-                                               absoluteSaveState,
-                                               newFrame);
+                                               absoluteSaveState, newFrame);
 
   nsFrameItems childItems;
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
-    ConstructFramesFromItemList(aState, aItem.mChildItems, newFrame,
-                                aItem.mFCData->mBits & FCDATA_IS_WRAPPER_ANON_BOX,
-                                childItems);
+    ConstructFramesFromItemList(
+        aState, aItem.mChildItems, newFrame,
+        aItem.mFCData->mBits & FCDATA_IS_WRAPPER_ANON_BOX, childItems);
   } else {
-    ProcessChildren(aState, content, computedStyle, newFrame,
-                    true, childItems, false, aItem.mPendingBinding);
+    ProcessChildren(aState, content, computedStyle, newFrame, true, childItems,
+                    false, aItem.mPendingBinding);
   }
 
   newFrame->SetInitialChildList(kPrincipalList, childItems);
@@ -2239,13 +2062,10 @@ nsCSSFrameConstructor::ConstructTableRowOrRowGroup(nsFrameConstructorState& aSta
   return newFrame;
 }
 
-nsIFrame*
-nsCSSFrameConstructor::ConstructTableCol(nsFrameConstructorState& aState,
-                                         FrameConstructionItem&   aItem,
-                                         nsContainerFrame*        aParentFrame,
-                                         const nsStyleDisplay*    aStyleDisplay,
-                                         nsFrameItems&            aFrameItems)
-{
+nsIFrame* nsCSSFrameConstructor::ConstructTableCol(
+    nsFrameConstructorState& aState, FrameConstructionItem& aItem,
+    nsContainerFrame* aParentFrame, const nsStyleDisplay* aStyleDisplay,
+    nsFrameItems& aFrameItems) {
   nsIContent* const content = aItem.mContent;
   ComputedStyle* const computedStyle = aItem.mComputedStyle;
 
@@ -2270,30 +2090,27 @@ nsCSSFrameConstructor::ConstructTableCol(nsFrameConstructorState& aState,
   return colFrame;
 }
 
-nsIFrame*
-nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
-                                          FrameConstructionItem&   aItem,
-                                          nsContainerFrame*        aParentFrame,
-                                          const nsStyleDisplay*    aDisplay,
-                                          nsFrameItems&            aFrameItems)
-{
-  MOZ_ASSERT(aDisplay->mDisplay == StyleDisplay::TableCell,
-             "Unexpected call");
+nsIFrame* nsCSSFrameConstructor::ConstructTableCell(
+    nsFrameConstructorState& aState, FrameConstructionItem& aItem,
+    nsContainerFrame* aParentFrame, const nsStyleDisplay* aDisplay,
+    nsFrameItems& aFrameItems) {
+  MOZ_ASSERT(aDisplay->mDisplay == StyleDisplay::TableCell, "Unexpected call");
 
   nsIContent* const content = aItem.mContent;
   ComputedStyle* const computedStyle = aItem.mComputedStyle;
   const bool isMathMLContent = content->IsMathMLElement();
 
   nsTableFrame* tableFrame =
-    static_cast<nsTableRowFrame*>(aParentFrame)->GetTableFrame();
+      static_cast<nsTableRowFrame*>(aParentFrame)->GetTableFrame();
   nsContainerFrame* newFrame;
-  // <mtable> is border separate in mathml.css and the MathML code doesn't implement
-  // border collapse. For those users who style <mtable> with border collapse,
-  // give them the default non-MathML table frames that understand border collapse.
-  // This won't break us because MathML table frames are all subclasses of the default
-  // table code, and so we can freely mix <mtable> with <mtr> or <tr>, <mtd> or <td>.
-  // What will happen is just that non-MathML frames won't understand MathML attributes
-  // and will therefore miss the special handling that the MathML code does.
+  // <mtable> is border separate in mathml.css and the MathML code doesn't
+  // implement border collapse. For those users who style <mtable> with border
+  // collapse, give them the default non-MathML table frames that understand
+  // border collapse. This won't break us because MathML table frames are all
+  // subclasses of the default table code, and so we can freely mix <mtable>
+  // with <mtr> or <tr>, <mtd> or <td>. What will happen is just that non-MathML
+  // frames won't understand MathML attributes and will therefore miss the
+  // special handling that the MathML code does.
   if (isMathMLContent && !tableFrame->IsBorderCollapse()) {
     newFrame = NS_NewMathMLmtdFrame(mPresShell, computedStyle, tableFrame);
   } else {
@@ -2309,9 +2126,8 @@ nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
 
   // Resolve pseudo style and initialize the body cell frame
   RefPtr<ComputedStyle> innerPseudoStyle;
-  innerPseudoStyle = mPresShell->StyleSet()->
-    ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::cellContent(),
-                                       computedStyle);
+  innerPseudoStyle = mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
+      nsCSSAnonBoxes::cellContent(), computedStyle);
 
   // Create a block frame that will format the cell's content
   bool isBlock;
@@ -2328,8 +2144,7 @@ nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
 
   nsFrameConstructorSaveState absoluteSaveState;
   MakeTablePartAbsoluteContainingBlockIfNeeded(aState, aDisplay,
-                                               absoluteSaveState,
-                                               newFrame);
+                                               absoluteSaveState, newFrame);
 
   nsFrameItems childItems;
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
@@ -2344,13 +2159,13 @@ nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
       aState.PushFloatContainingBlock(cellInnerFrame, floatSaveState);
     }
 
-    ConstructFramesFromItemList(aState, aItem.mChildItems, cellInnerFrame,
-                                aItem.mFCData->mBits & FCDATA_IS_WRAPPER_ANON_BOX,
-                                childItems);
+    ConstructFramesFromItemList(
+        aState, aItem.mChildItems, cellInnerFrame,
+        aItem.mFCData->mBits & FCDATA_IS_WRAPPER_ANON_BOX, childItems);
   } else {
     // Process the child content
-    ProcessChildren(aState, content, computedStyle, cellInnerFrame,
-                    true, childItems, isBlock, aItem.mPendingBinding);
+    ProcessChildren(aState, content, computedStyle, cellInnerFrame, true,
+                    childItems, isBlock, aItem.mPendingBinding);
   }
 
   cellInnerFrame->SetInitialChildList(kPrincipalList, childItems);
@@ -2359,17 +2174,15 @@ nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
   return newFrame;
 }
 
-static inline bool
-NeedFrameFor(const nsFrameConstructorState& aState,
-             nsIFrame*   aParentFrame,
-             nsIContent* aChildContent)
-{
+static inline bool NeedFrameFor(const nsFrameConstructorState& aState,
+                                nsIFrame* aParentFrame,
+                                nsIContent* aChildContent) {
   // XXX the GetContent() != aChildContent check is needed due to bug 135040.
   // Remove it once that's fixed.
-  MOZ_ASSERT(!aChildContent->GetPrimaryFrame() ||
-             aState.mCreatingExtraFrames ||
-             aChildContent->GetPrimaryFrame()->GetContent() != aChildContent,
-             "Why did we get called?");
+  MOZ_ASSERT(
+      !aChildContent->GetPrimaryFrame() || aState.mCreatingExtraFrames ||
+          aChildContent->GetPrimaryFrame()->GetContent() != aChildContent,
+      "Why did we get called?");
 
   // don't create a whitespace frame if aParentFrame doesn't want it.
   // always create frames for children in generated content. counter(),
@@ -2400,10 +2213,8 @@ NeedFrameFor(const nsFrameConstructorState& aState,
  * END TABLE SECTION
  ***********************************************/
 
-nsIFrame*
-nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocElement,
-                                                nsILayoutHistoryState*   aFrameState)
-{
+nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
+    Element* aDocElement, nsILayoutHistoryState* aFrameState) {
   MOZ_ASSERT(GetRootFrame(),
              "No viewport?  Someone forgot to call ConstructRootFrame!");
   MOZ_ASSERT(!mDocElementContainingBlock,
@@ -2414,8 +2225,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   //
   // @see ComputedStyle::ApplyStyleFixups
   {
-    RefPtr<ComputedStyle> sc = mPresShell->StyleSet()->
-      ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::viewport(), nullptr);
+    RefPtr<ComputedStyle> sc =
+        mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
+            nsCSSAnonBoxes::viewport(), nullptr);
     GetRootFrame()->SetComputedStyleWithoutNotification(sc);
   }
 
@@ -2430,10 +2242,10 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   SetUpDocElementContainingBlock(aDocElement);
 
   NS_ASSERTION(mDocElementContainingBlock, "Should have parent by now");
-  nsFrameConstructorState state(mPresShell,
-                                GetAbsoluteContainingBlock(mDocElementContainingBlock, FIXED_POS),
-                                nullptr,
-                                nullptr, do_AddRef(aFrameState));
+  nsFrameConstructorState state(
+      mPresShell,
+      GetAbsoluteContainingBlock(mDocElementContainingBlock, FIXED_POS),
+      nullptr, nullptr, do_AddRef(aFrameState));
 
   // XXXbz why, exactly?
   if (!mTempFrameTreeState)
@@ -2450,7 +2262,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   }
 
   RefPtr<ComputedStyle> computedStyle =
-    mPresShell->StyleSet()->ResolveServoStyle(*aDocElement);
+      mPresShell->StyleSet()->ResolveServoStyle(*aDocElement);
 
   const nsStyleDisplay* display = computedStyle->StyleDisplay();
 
@@ -2492,8 +2304,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   // --------- IF SCROLLABLE WRAP IN SCROLLFRAME --------
 
   NS_ASSERTION(!display->IsScrollableOverflow() ||
-               state.mPresContext->IsPaginated() ||
-               propagatedScrollFrom == aDocElement,
+                   state.mPresContext->IsPaginated() ||
+                   propagatedScrollFrom == aDocElement,
                "Scrollbars should have been propagated to the viewport");
 
   if (MOZ_UNLIKELY(display->mDisplay == StyleDisplay::None)) {
@@ -2508,9 +2320,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     // Push the absolute containing block now so we can absolutely position
     // the root element
     mDocElementContainingBlock->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
-    state.PushAbsoluteContainingBlock(mDocElementContainingBlock,
-                                      mDocElementContainingBlock,
-                                      docElementContainingBlockAbsoluteSaveState);
+    state.PushAbsoluteContainingBlock(
+        mDocElementContainingBlock, mDocElementContainingBlock,
+        docElementContainingBlockAbsoluteSaveState);
   }
 
   // The rules from CSS 2.1, section 9.2.4, have already been applied
@@ -2537,10 +2349,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
                         contentFrame);
     newFrame = contentFrame;
     processChildren = true;
-  }
-  else
+  } else
 #endif
-  if (aDocElement->IsSVGElement()) {
+      if (aDocElement->IsSVGElement()) {
     if (!aDocElement->IsSVGElement(nsGkAtoms::svg)) {
       return nullptr;
     }
@@ -2553,14 +2364,13 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     // function in general.
     // Use a null PendingBinding, since our binding is not in fact pending.
     static const FrameConstructionData rootSVGData = FCDATA_DECL(0, nullptr);
-    AutoFrameConstructionItem item(this, &rootSVGData, aDocElement,
-                                   nullptr, do_AddRef(computedStyle), true);
+    AutoFrameConstructionItem item(this, &rootSVGData, aDocElement, nullptr,
+                                   do_AddRef(computedStyle), true);
 
     nsFrameItems frameItems;
     contentFrame = static_cast<nsContainerFrame*>(
-      ConstructOuterSVG(state, item, mDocElementContainingBlock,
-                        computedStyle->StyleDisplay(),
-                        frameItems));
+        ConstructOuterSVG(state, item, mDocElementContainingBlock,
+                          computedStyle->StyleDisplay(), frameItems));
     newFrame = frameItems.FirstChild();
     NS_ASSERTION(frameItems.OnlyChild(), "multiple root element frames");
   } else if (display->mDisplay == StyleDisplay::Flex ||
@@ -2601,31 +2411,29 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     // function in general.
     // Use a null PendingBinding, since our binding is not in fact pending.
     static const FrameConstructionData rootTableData = FCDATA_DECL(0, nullptr);
-    AutoFrameConstructionItem item(this, &rootTableData, aDocElement,
-                                   nullptr, do_AddRef(computedStyle), true);
+    AutoFrameConstructionItem item(this, &rootTableData, aDocElement, nullptr,
+                                   do_AddRef(computedStyle), true);
 
     nsFrameItems frameItems;
     // if the document is a table then just populate it.
     contentFrame = static_cast<nsContainerFrame*>(
-      ConstructTable(state, item, mDocElementContainingBlock,
-                     computedStyle->StyleDisplay(),
-                     frameItems));
+        ConstructTable(state, item, mDocElementContainingBlock,
+                       computedStyle->StyleDisplay(), frameItems));
     newFrame = frameItems.FirstChild();
     NS_ASSERTION(frameItems.OnlyChild(), "multiple root element frames");
   } else {
     MOZ_ASSERT(display->mDisplay == StyleDisplay::Block ||
-               display->mDisplay == StyleDisplay::FlowRoot,
+                   display->mDisplay == StyleDisplay::FlowRoot,
                "Unhandled display type for root element");
     contentFrame = NS_NewBlockFormattingContext(mPresShell, computedStyle);
     nsFrameItems frameItems;
     // Use a null PendingBinding, since our binding is not in fact pending.
-    ConstructBlock(state, aDocElement,
-                   state.GetGeometricParent(*display,
-                                            mDocElementContainingBlock),
-                   mDocElementContainingBlock, computedStyle,
-                   &contentFrame, frameItems,
-                   display->IsAbsPosContainingBlock(contentFrame) ? contentFrame : nullptr,
-                   nullptr);
+    ConstructBlock(
+        state, aDocElement,
+        state.GetGeometricParent(*display, mDocElementContainingBlock),
+        mDocElementContainingBlock, computedStyle, &contentFrame, frameItems,
+        display->IsAbsPosContainingBlock(contentFrame) ? contentFrame : nullptr,
+        nullptr);
     newFrame = frameItems.FirstChild();
     NS_ASSERTION(frameItems.OnlyChild(), "multiple root element frames");
   }
@@ -2633,9 +2441,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   MOZ_ASSERT(newFrame);
   MOZ_ASSERT(contentFrame);
 
-  NS_ASSERTION(processChildren ? !mRootElementFrame :
-                 mRootElementFrame == contentFrame,
-               "unexpected mRootElementFrame");
+  NS_ASSERTION(
+      processChildren ? !mRootElementFrame : mRootElementFrame == contentFrame,
+      "unexpected mRootElementFrame");
   mRootElementFrame = contentFrame;
 
   // Figure out which frame has the main style for the document element,
@@ -2653,7 +2461,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     nsFrameItems childItems;
 
     NS_ASSERTION(!nsLayoutUtils::GetAsBlock(contentFrame) &&
-                 !contentFrame->IsFrameOfType(nsIFrame::eSVG),
+                     !contentFrame->IsFrameOfType(nsIFrame::eSVG),
                  "Only XUL frames should reach here");
     // Use a null PendingBinding, since our binding is not in fact pending.
     ProcessChildren(state, aDocElement, computedStyle, contentFrame, true,
@@ -2677,10 +2485,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   return newFrame;
 }
 
-
-nsIFrame*
-nsCSSFrameConstructor::ConstructRootFrame()
-{
+nsIFrame* nsCSSFrameConstructor::ConstructRootFrame() {
   AUTO_PROFILER_LABEL("nsCSSFrameConstructor::ConstructRootFrame", LAYOUT);
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
 
@@ -2688,10 +2493,10 @@ nsCSSFrameConstructor::ConstructRootFrame()
 
   // --------- BUILD VIEWPORT -----------
   RefPtr<ComputedStyle> viewportPseudoStyle =
-    styleSet->ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::viewport(),
-                                                 nullptr);
+      styleSet->ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::viewport(),
+                                                   nullptr);
   ViewportFrame* viewportFrame =
-    NS_NewViewportFrame(mPresShell, viewportPseudoStyle);
+      NS_NewViewportFrame(mPresShell, viewportPseudoStyle);
 
   // XXXbz do we _have_ to pass a null content pointer to that frame?
   // Would it really kill us to pass in the root element or something?
@@ -2705,8 +2510,9 @@ nsCSSFrameConstructor::ConstructRootFrame()
   viewportFrame->SetView(rootView);
 
   viewportFrame->SyncFrameViewProperties(rootView);
-  nsContainerFrame::SyncWindowProperties(mPresShell->GetPresContext(), viewportFrame,
-                                         rootView, nullptr, nsContainerFrame::SET_ASYNC);
+  nsContainerFrame::SyncWindowProperties(mPresShell->GetPresContext(),
+                                         viewportFrame, rootView, nullptr,
+                                         nsContainerFrame::SET_ASYNC);
 
   // Make it an absolute container for fixed-pos elements
   viewportFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
@@ -2715,14 +2521,13 @@ nsCSSFrameConstructor::ConstructRootFrame()
   return viewportFrame;
 }
 
-void
-nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
-{
+void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
+    nsIContent* aDocElement) {
   MOZ_ASSERT(aDocElement, "No element?");
   MOZ_ASSERT(!aDocElement->GetParent(), "Not root content?");
   MOZ_ASSERT(aDocElement->GetUncomposedDoc(), "Not in a document?");
-  MOZ_ASSERT(aDocElement->GetUncomposedDoc()->GetRootElement() ==
-                  aDocElement, "Not the root of the document?");
+  MOZ_ASSERT(aDocElement->GetUncomposedDoc()->GetRootElement() == aDocElement,
+             "Not the root of the document?");
 
   /*
     how the root frame hierarchy should look
@@ -2772,23 +2577,25 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
     mDocElementContainingBlock is the parent of mRootElementFrame
       (i.e. nsCanvasFrame or nsRootBoxFrame)
 
-    mPageSequenceFrame is the nsSimplePageSequenceFrame, or null if there isn't one
+    mPageSequenceFrame is the nsSimplePageSequenceFrame, or null if there isn't
+  one
   */
 
   // --------- CREATE ROOT FRAME -------
-
 
   // Create the root frame. The document element's frame is a child of the
   // root frame.
   //
   // The root frame serves two purposes:
   // - reserves space for any margins needed for the document element's frame
-  // - renders the document element's background. This ensures the background covers
+  // - renders the document element's background. This ensures the background
+  // covers
   //   the entire canvas as specified by the CSS2 spec
 
   nsPresContext* presContext = mPresShell->GetPresContext();
   bool isPaginated = presContext->IsRootPaginatedDocument();
-  nsContainerFrame* viewportFrame = static_cast<nsContainerFrame*>(GetRootFrame());
+  nsContainerFrame* viewportFrame =
+      static_cast<nsContainerFrame*>(GetRootFrame());
   ComputedStyle* viewportPseudoStyle = viewportFrame->Style();
 
   nsContainerFrame* rootFrame = nullptr;
@@ -2796,8 +2603,7 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
 
   if (!isPaginated) {
 #ifdef MOZ_XUL
-    if (aDocElement->IsXULElement())
-    {
+    if (aDocElement->IsXULElement()) {
       // pass a temporary stylecontext, the correct one will be set later
       rootFrame = NS_NewRootBoxFrame(mPresShell, viewportPseudoStyle);
     } else
@@ -2818,7 +2624,6 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
     rootFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
   }
 
-
   // --------- IF SCROLLABLE WRAP IN SCROLLFRAME --------
 
   // If the device supports scrolling (e.g., in galley mode on the screen and
@@ -2834,7 +2639,8 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
   }
 
   // Never create scrollbars for XUL documents
-  bool isScrollable = isPaginated ? presContext->HasPaginatedScrolling() : !isXUL;
+  bool isScrollable =
+      isPaginated ? presContext->HasPaginatedScrolling() : !isXUL;
 
   // We no longer need to do overflow propagation here. It's taken care of
   // when we construct frames for the element whose overflow might be
@@ -2854,44 +2660,39 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
   ServoStyleSet* styleSet = mPresShell->StyleSet();
   // If paginated, make sure we don't put scrollbars in
   if (!isScrollable) {
-    rootPseudoStyle =
-      styleSet->ResolveInheritingAnonymousBoxStyle(rootPseudo,
-                                                   viewportPseudoStyle);
+    rootPseudoStyle = styleSet->ResolveInheritingAnonymousBoxStyle(
+        rootPseudo, viewportPseudoStyle);
   } else {
-      if (rootPseudo == nsCSSAnonBoxes::canvas()) {
-        rootPseudo = nsCSSAnonBoxes::scrolledCanvas();
-      } else {
-        NS_ASSERTION(rootPseudo == nsCSSAnonBoxes::pageSequence(),
-                     "Unknown root pseudo");
-        rootPseudo = nsCSSAnonBoxes::scrolledPageSequence();
-      }
+    if (rootPseudo == nsCSSAnonBoxes::canvas()) {
+      rootPseudo = nsCSSAnonBoxes::scrolledCanvas();
+    } else {
+      NS_ASSERTION(rootPseudo == nsCSSAnonBoxes::pageSequence(),
+                   "Unknown root pseudo");
+      rootPseudo = nsCSSAnonBoxes::scrolledPageSequence();
+    }
 
-      // Build the frame. We give it the content we are wrapping which is the
-      // document element, the root frame, the parent view port frame, and we
-      // should get back the new frame and the scrollable view if one was
-      // created.
+    // Build the frame. We give it the content we are wrapping which is the
+    // document element, the root frame, the parent view port frame, and we
+    // should get back the new frame and the scrollable view if one was
+    // created.
 
-      // resolve a context for the scrollframe
-      RefPtr<ComputedStyle>  computedStyle =
-        styleSet->ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::viewportScroll(),
-                                                     viewportPseudoStyle);
+    // resolve a context for the scrollframe
+    RefPtr<ComputedStyle> computedStyle =
+        styleSet->ResolveInheritingAnonymousBoxStyle(
+            nsCSSAnonBoxes::viewportScroll(), viewportPseudoStyle);
 
-      // Note that the viewport scrollframe is always built with
-      // overflow:auto style. This forces the scroll frame to create
-      // anonymous content for both scrollbars. This is necessary even
-      // if the HTML or BODY elements are overriding the viewport
-      // scroll style to 'hidden' --- dynamic style changes might put
-      // scrollbars back on the viewport and we don't want to have to
-      // reframe the viewport to create the scrollbar content.
-      newFrame = nullptr;
-      rootPseudoStyle = BeginBuildingScrollFrame( state,
-                                                  aDocElement,
-                                                  computedStyle,
-                                                  viewportFrame,
-                                                  rootPseudo,
-                                                  true,
-                                                  newFrame);
-      parentFrame = newFrame;
+    // Note that the viewport scrollframe is always built with
+    // overflow:auto style. This forces the scroll frame to create
+    // anonymous content for both scrollbars. This is necessary even
+    // if the HTML or BODY elements are overriding the viewport
+    // scroll style to 'hidden' --- dynamic style changes might put
+    // scrollbars back on the viewport and we don't want to have to
+    // reframe the viewport to create the scrollbar content.
+    newFrame = nullptr;
+    rootPseudoStyle =
+        BeginBuildingScrollFrame(state, aDocElement, computedStyle,
+                                 viewportFrame, rootPseudo, true, newFrame);
+    parentFrame = newFrame;
   }
 
   rootFrame->SetComputedStyleWithoutNotification(rootPseudoStyle);
@@ -2906,7 +2707,7 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
     // Set the initial child lists
     nsContainerFrame* canvasFrame;
     nsContainerFrame* pageFrame =
-      ConstructPageFrame(mPresShell, rootFrame, nullptr, canvasFrame);
+        ConstructPageFrame(mPresShell, rootFrame, nullptr, canvasFrame);
     pageFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
     SetInitialSingleChild(rootFrame, pageFrame);
 
@@ -2924,11 +2725,9 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
   }
 }
 
-void
-nsCSSFrameConstructor::ConstructAnonymousContentForCanvas(nsFrameConstructorState& aState,
-                                                          nsIFrame* aFrame,
-                                                          nsIContent* aDocElement)
-{
+void nsCSSFrameConstructor::ConstructAnonymousContentForCanvas(
+    nsFrameConstructorState& aState, nsIFrame* aFrame,
+    nsIContent* aDocElement) {
   NS_ASSERTION(aFrame->IsCanvasFrame(), "aFrame should be canvas frame!");
 
   AutoTArray<nsIAnonymousContentCreator::ContentInfo, 4> anonymousItems;
@@ -2939,7 +2738,8 @@ nsCSSFrameConstructor::ConstructAnonymousContentForCanvas(nsFrameConstructorStat
 
   AutoFrameConstructionItemList itemsToConstruct(this);
   nsContainerFrame* frameAsContainer = do_QueryFrame(aFrame);
-  AddFCItemsForAnonymousContent(aState, frameAsContainer, anonymousItems, itemsToConstruct);
+  AddFCItemsForAnonymousContent(aState, frameAsContainer, anonymousItems,
+                                itemsToConstruct);
 
   nsFrameItems frameItems;
   ConstructFramesFromItemList(aState, itemsToConstruct, frameAsContainer,
@@ -2948,36 +2748,31 @@ nsCSSFrameConstructor::ConstructAnonymousContentForCanvas(nsFrameConstructorStat
   frameAsContainer->AppendFrames(kPrincipalList, frameItems);
 }
 
-nsContainerFrame*
-nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*  aPresShell,
-                                          nsContainerFrame* aParentFrame,
-                                          nsIFrame*      aPrevPageFrame,
-                                          nsContainerFrame*& aCanvasFrame)
-{
+nsContainerFrame* nsCSSFrameConstructor::ConstructPageFrame(
+    nsIPresShell* aPresShell, nsContainerFrame* aParentFrame,
+    nsIFrame* aPrevPageFrame, nsContainerFrame*& aCanvasFrame) {
   ComputedStyle* parentComputedStyle = aParentFrame->Style();
   ServoStyleSet* styleSet = aPresShell->StyleSet();
 
   RefPtr<ComputedStyle> pagePseudoStyle;
-  pagePseudoStyle =
-    styleSet->ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::page(),
-                                                 parentComputedStyle);
+  pagePseudoStyle = styleSet->ResolveInheritingAnonymousBoxStyle(
+      nsCSSAnonBoxes::page(), parentComputedStyle);
 
   nsContainerFrame* pageFrame = NS_NewPageFrame(aPresShell, pagePseudoStyle);
 
-  // Initialize the page frame and force it to have a view. This makes printing of
-  // the pages easier and faster.
+  // Initialize the page frame and force it to have a view. This makes printing
+  // of the pages easier and faster.
   pageFrame->Init(nullptr, aParentFrame, aPrevPageFrame);
 
   RefPtr<ComputedStyle> pageContentPseudoStyle;
-  pageContentPseudoStyle =
-    styleSet->ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::pageContent(),
-                                                 pagePseudoStyle);
+  pageContentPseudoStyle = styleSet->ResolveInheritingAnonymousBoxStyle(
+      nsCSSAnonBoxes::pageContent(), pagePseudoStyle);
 
   nsContainerFrame* pageContentFrame =
-    NS_NewPageContentFrame(aPresShell, pageContentPseudoStyle);
+      NS_NewPageContentFrame(aPresShell, pageContentPseudoStyle);
 
-  // Initialize the page content frame and force it to have a view. Also make it the
-  // containing block for fixed elements which are repeated on every page.
+  // Initialize the page content frame and force it to have a view. Also make it
+  // the containing block for fixed elements which are repeated on every page.
   nsIFrame* prevPageContentFrame = nullptr;
   if (aPrevPageFrame) {
     prevPageContentFrame = aPrevPageFrame->PrincipalChildList().FirstChild();
@@ -2993,9 +2788,8 @@ nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*  aPresShell,
   pageContentFrame->MarkAsAbsoluteContainingBlock();
 
   RefPtr<ComputedStyle> canvasPseudoStyle;
-  canvasPseudoStyle =
-    styleSet->ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::canvas(),
-                                                 pageContentPseudoStyle);
+  canvasPseudoStyle = styleSet->ResolveInheritingAnonymousBoxStyle(
+      nsCSSAnonBoxes::canvas(), pageContentPseudoStyle);
 
   aCanvasFrame = NS_NewCanvasFrame(aPresShell, canvasPseudoStyle);
 
@@ -3010,20 +2804,16 @@ nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*  aPresShell,
 }
 
 /* static */
-nsIFrame*
-nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*     aPresShell,
-                                                 nsIContent*       aContent,
-                                                 nsIFrame*         aFrame,
-                                                 nsContainerFrame* aParentFrame,
-                                                 nsIFrame*         aPrevInFlow,
-                                                 nsFrameState      aTypeBit)
-{
-  RefPtr<ComputedStyle> placeholderStyle = aPresShell->StyleSet()->
-    ResolveStyleForPlaceholder();
+nsIFrame* nsCSSFrameConstructor::CreatePlaceholderFrameFor(
+    nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* aFrame,
+    nsContainerFrame* aParentFrame, nsIFrame* aPrevInFlow,
+    nsFrameState aTypeBit) {
+  RefPtr<ComputedStyle> placeholderStyle =
+      aPresShell->StyleSet()->ResolveStyleForPlaceholder();
 
   // The placeholder frame gets a pseudo style.
   nsPlaceholderFrame* placeholderFrame =
-    NS_NewPlaceholderFrame(aPresShell, placeholderStyle, aTypeBit);
+      NS_NewPlaceholderFrame(aPresShell, placeholderStyle, aTypeBit);
 
   placeholderFrame->Init(aContent, aParentFrame, aPrevInFlow);
 
@@ -3042,9 +2832,8 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*     aPresShell,
 // null.  We do this so that when new children are inserted under elements whose
 // frame is a leaf the new children don't cause us to try to construct frames
 // for the existing children again.
-static inline void
-ClearLazyBits(nsIContent* aStartContent, nsIContent* aEndContent)
-{
+static inline void ClearLazyBits(nsIContent* aStartContent,
+                                 nsIContent* aEndContent) {
   MOZ_ASSERT(aStartContent || !aEndContent,
              "Must have start child if we have an end child");
 
@@ -3054,13 +2843,10 @@ ClearLazyBits(nsIContent* aStartContent, nsIContent* aEndContent)
   }
 }
 
-nsIFrame*
-nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
-                                            FrameConstructionItem&   aItem,
-                                            nsContainerFrame*        aParentFrame,
-                                            const nsStyleDisplay*    aStyleDisplay,
-                                            nsFrameItems&            aFrameItems)
-{
+nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
+    nsFrameConstructorState& aState, FrameConstructionItem& aItem,
+    nsContainerFrame* aParentFrame, const nsStyleDisplay* aStyleDisplay,
+    nsFrameItems& aFrameItems) {
   nsIContent* const content = aItem.mContent;
   ComputedStyle* const computedStyle = aItem.mComputedStyle;
 
@@ -3069,17 +2855,18 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
   MOZ_ASSERT(sel);
   if (sel->IsCombobox()) {
     // Construct a frame-based combo box.
-    // The frame-based combo box is built out of three parts. A display area, a button and
-    // a dropdown list. The display area and button are created through anonymous content.
-    // The drop-down list's frame is created explicitly. The combobox frame shares its content
-    // with the drop-down list.
+    // The frame-based combo box is built out of three parts. A display area, a
+    // button and a dropdown list. The display area and button are created
+    // through anonymous content. The drop-down list's frame is created
+    // explicitly. The combobox frame shares its content with the drop-down
+    // list.
     nsFrameState flags = NS_BLOCK_FLOAT_MGR;
     nsComboboxControlFrame* comboboxFrame =
-      NS_NewComboboxControlFrame(mPresShell, computedStyle, flags);
+        NS_NewComboboxControlFrame(mPresShell, computedStyle, flags);
 
     // Save the history state so we don't restore during construction
     // since the complete tree is required before we restore.
-    nsILayoutHistoryState *historyState = aState.mFrameState;
+    nsILayoutHistoryState* historyState = aState.mFrameState;
     aState.mFrameState = nullptr;
     // Initialize the combobox frame
     InitAndRestoreFrame(aState, content,
@@ -3092,15 +2879,14 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
 
     // Resolve pseudo element style for the dropdown list
     RefPtr<ComputedStyle> listStyle;
-    listStyle = mPresShell->StyleSet()->
-      ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::dropDownList(),
-                                         computedStyle);
+    listStyle = mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
+        nsCSSAnonBoxes::dropDownList(), computedStyle);
 
     // Create a listbox
     nsContainerFrame* listFrame = NS_NewListControlFrame(mPresShell, listStyle);
 
     // Notify the listbox that it is being used as a dropdown list.
-    nsListControlFrame * listControlFrame = do_QueryFrame(listFrame);
+    nsListControlFrame* listControlFrame = do_QueryFrame(listFrame);
     if (listControlFrame) {
       listControlFrame->SetComboboxFrame(comboboxFrame);
     }
@@ -3121,11 +2907,11 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
     // Initialize the scroll frame positioned. Note that it is NOT
     // initialized as absolutely positioned.
     nsContainerFrame* scrolledFrame =
-      NS_NewSelectsAreaFrame(mPresShell, computedStyle, flags);
+        NS_NewSelectsAreaFrame(mPresShell, computedStyle, flags);
 
     InitializeSelectFrame(aState, listFrame, scrolledFrame, content,
-                          comboboxFrame, listStyle, true,
-                          aItem.mPendingBinding, childItems);
+                          comboboxFrame, listStyle, true, aItem.mPendingBinding,
+                          childItems);
 
     if (!nsLayoutUtils::IsContentSelectEnabled()) {
       // TODO(kuoe0) Remove this assertion when content-select is shipped.
@@ -3136,16 +2922,18 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
     // The anonymous content is appended to existing anonymous content for this
     // element (the scrollbars).
     //
-    // nsComboboxControlFrame needs special frame creation behavior for its first
-    // piece of anonymous content, which means that we can't take the normal
-    // ProcessChildren path.
+    // nsComboboxControlFrame needs special frame creation behavior for its
+    // first piece of anonymous content, which means that we can't take the
+    // normal ProcessChildren path.
     AutoTArray<nsIAnonymousContentCreator::ContentInfo, 2> newAnonymousItems;
-    DebugOnly<nsresult> rv = GetAnonymousContent(content, comboboxFrame, newAnonymousItems);
+    DebugOnly<nsresult> rv =
+        GetAnonymousContent(content, comboboxFrame, newAnonymousItems);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     MOZ_ASSERT(newAnonymousItems.Length() == 2);
 
     // Manually create a frame for the special NAC.
-    MOZ_ASSERT(newAnonymousItems[0].mContent == comboboxFrame->GetDisplayNode());
+    MOZ_ASSERT(newAnonymousItems[0].mContent ==
+               comboboxFrame->GetDisplayNode());
     newAnonymousItems.RemoveElementAt(0);
     nsIFrame* customFrame = comboboxFrame->CreateFrameForDisplayNode();
     MOZ_ASSERT(customFrame);
@@ -3181,17 +2969,17 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
 
   // Listbox, not combobox
   nsContainerFrame* listFrame =
-    NS_NewListControlFrame(mPresShell, computedStyle);
+      NS_NewListControlFrame(mPresShell, computedStyle);
 
-  nsContainerFrame* scrolledFrame = NS_NewSelectsAreaFrame(
-      mPresShell, computedStyle, NS_BLOCK_FLOAT_MGR);
+  nsContainerFrame* scrolledFrame =
+      NS_NewSelectsAreaFrame(mPresShell, computedStyle, NS_BLOCK_FLOAT_MGR);
 
   // ******* this code stolen from Initialze ScrollFrame ********
   // please adjust this code to use BuildScrollFrame.
 
-  InitializeSelectFrame(aState, listFrame, scrolledFrame, content,
-                        aParentFrame, computedStyle, false,
-                        aItem.mPendingBinding, aFrameItems);
+  InitializeSelectFrame(aState, listFrame, scrolledFrame, content, aParentFrame,
+                        computedStyle, false, aItem.mPendingBinding,
+                        aFrameItems);
 
   return listFrame;
 }
@@ -3201,20 +2989,15 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
  * But the select tag should really be fixed to use GFX scrollbars that can
  * be create with BuildScrollFrame.
  */
-void
-nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
-                                             nsContainerFrame*        scrollFrame,
-                                             nsContainerFrame*        scrolledFrame,
-                                             nsIContent*              aContent,
-                                             nsContainerFrame*        aParentFrame,
-                                             ComputedStyle*          aComputedStyle,
-                                             bool                     aBuildCombobox,
-                                             PendingBinding*          aPendingBinding,
-                                             nsFrameItems&            aFrameItems)
-{
+void nsCSSFrameConstructor::InitializeSelectFrame(
+    nsFrameConstructorState& aState, nsContainerFrame* scrollFrame,
+    nsContainerFrame* scrolledFrame, nsIContent* aContent,
+    nsContainerFrame* aParentFrame, ComputedStyle* aComputedStyle,
+    bool aBuildCombobox, PendingBinding* aPendingBinding,
+    nsFrameItems& aFrameItems) {
   // Initialize it
   nsContainerFrame* geometricParent =
-    aState.GetGeometricParent(*aComputedStyle->StyleDisplay(), aParentFrame);
+      aState.GetGeometricParent(*aComputedStyle->StyleDisplay(), aParentFrame);
 
   // We don't call InitAndRestoreFrame for scrollFrame because we can only
   // restore the frame state after its parts have been created (in particular,
@@ -3235,7 +3018,7 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
   }
 
   // Process children
-  nsFrameItems                childItems;
+  nsFrameItems childItems;
 
   ProcessChildren(aState, aContent, aComputedStyle, scrolledFrame, false,
                   childItems, false, aPendingBinding);
@@ -3244,18 +3027,15 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
   scrolledFrame->SetInitialChildList(kPrincipalList, childItems);
 }
 
-nsIFrame*
-nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
-                                              FrameConstructionItem&   aItem,
-                                              nsContainerFrame*        aParentFrame,
-                                              const nsStyleDisplay*    aStyleDisplay,
-                                              nsFrameItems&            aFrameItems)
-{
+nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
+    nsFrameConstructorState& aState, FrameConstructionItem& aItem,
+    nsContainerFrame* aParentFrame, const nsStyleDisplay* aStyleDisplay,
+    nsFrameItems& aFrameItems) {
   nsIContent* const content = aItem.mContent;
   ComputedStyle* const computedStyle = aItem.mComputedStyle;
 
   nsContainerFrame* fieldsetFrame =
-    NS_NewFieldSetFrame(mPresShell, computedStyle);
+      NS_NewFieldSetFrame(mPresShell, computedStyle);
 
   // Initialize it
   InitAndRestoreFrame(aState, content,
@@ -3266,18 +3046,18 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
 
   // Resolve style and initialize the frame
   RefPtr<ComputedStyle> fieldsetContentStyle;
-  fieldsetContentStyle = mPresShell->StyleSet()->
-    ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::fieldsetContent(),
-                                       computedStyle);
+  fieldsetContentStyle =
+      mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
+          nsCSSAnonBoxes::fieldsetContent(), computedStyle);
 
-  const nsStyleDisplay* fieldsetContentDisplay = fieldsetContentStyle->StyleDisplay();
+  const nsStyleDisplay* fieldsetContentDisplay =
+      fieldsetContentStyle->StyleDisplay();
   bool isScrollable = fieldsetContentDisplay->IsScrollableOverflow();
   nsContainerFrame* scrollFrame = nullptr;
   if (isScrollable) {
-    fieldsetContentStyle =
-      BeginBuildingScrollFrame(aState, content, fieldsetContentStyle,
-                               fieldsetFrame, nsCSSAnonBoxes::scrolledContent(),
-                               false, scrollFrame);
+    fieldsetContentStyle = BeginBuildingScrollFrame(
+        aState, content, fieldsetContentStyle, fieldsetFrame,
+        nsCSSAnonBoxes::scrolledContent(), false, scrollFrame);
   }
 
   nsContainerFrame* absPosContainer = nullptr;
@@ -3304,10 +3084,10 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
       MOZ_ASSERT(fieldsetContentDisplay->mDisplay == StyleDisplay::Block,
                  "bug in StyleAdjuster::adjust_for_fieldset_content?");
 
-      contentFrame = NS_NewBlockFormattingContext(mPresShell, fieldsetContentStyle);
-      contentFrameTop =
-        InitAndWrapInColumnSetFrameIfNeeded(aState, content, parent,
-                                            contentFrame, fieldsetContentStyle);
+      contentFrame =
+          NS_NewBlockFormattingContext(mPresShell, fieldsetContentStyle);
+      contentFrameTop = InitAndWrapInColumnSetFrameIfNeeded(
+          aState, content, parent, contentFrame, fieldsetContentStyle);
       if (contentFrame != contentFrameTop) {
         // contentFrame is wrapped in nsColumnSetFrame.
         if (absPosContainer) {
@@ -3323,11 +3103,12 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
 
   // Process children
   nsFrameConstructorSaveState absoluteSaveState;
-  nsFrameItems                childItems;
+  nsFrameItems childItems;
 
   contentFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
   if (absPosContainer) {
-    aState.PushAbsoluteContainingBlock(contentFrame, absPosContainer, absoluteSaveState);
+    aState.PushAbsoluteContainingBlock(contentFrame, absPosContainer,
+                                       absoluteSaveState);
   }
 
   ProcessChildren(aState, content, computedStyle, contentFrame, true,
@@ -3370,17 +3151,14 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
   return fieldsetFrame;
 }
 
-nsIFrame*
-nsCSSFrameConstructor::ConstructDetailsFrame(nsFrameConstructorState& aState,
-                                             FrameConstructionItem& aItem,
-                                             nsContainerFrame* aParentFrame,
-                                             const nsStyleDisplay* aStyleDisplay,
-                                             nsFrameItems& aFrameItems)
-{
+nsIFrame* nsCSSFrameConstructor::ConstructDetailsFrame(
+    nsFrameConstructorState& aState, FrameConstructionItem& aItem,
+    nsContainerFrame* aParentFrame, const nsStyleDisplay* aStyleDisplay,
+    nsFrameItems& aFrameItems) {
   if (!aStyleDisplay->IsScrollableOverflow()) {
-    return ConstructNonScrollableBlockWithConstructor(aState, aItem, aParentFrame,
-                                                      aStyleDisplay, aFrameItems,
-                                                      NS_NewDetailsFrame);
+    return ConstructNonScrollableBlockWithConstructor(
+        aState, aItem, aParentFrame, aStyleDisplay, aFrameItems,
+        NS_NewDetailsFrame);
   }
 
   // Build a scroll frame to wrap details frame if necessary.
@@ -3389,9 +3167,7 @@ nsCSSFrameConstructor::ConstructDetailsFrame(nsFrameConstructorState& aState,
                                                  NS_NewDetailsFrame);
 }
 
-static nsIFrame*
-FindAncestorWithGeneratedContentPseudo(nsIFrame* aFrame)
-{
+static nsIFrame* FindAncestorWithGeneratedContentPseudo(nsIFrame* aFrame) {
   for (nsIFrame* f = aFrame->GetParent(); f; f = f->GetParent()) {
     NS_ASSERTION(f->IsGeneratedContentFrame(),
                  "should not have exited generated content");
@@ -3404,17 +3180,16 @@ FindAncestorWithGeneratedContentPseudo(nsIFrame* aFrame)
 }
 
 #define SIMPLE_FCDATA(_func) FCDATA_DECL(0, _func)
-#define FULL_CTOR_FCDATA(_flags, _func)                             \
-  { _flags | FCDATA_FUNC_IS_FULL_CTOR, { nullptr }, _func, nullptr }
+#define FULL_CTOR_FCDATA(_flags, _func) \
+  { _flags | FCDATA_FUNC_IS_FULL_CTOR, {nullptr}, _func, nullptr }
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindTextData(const Text& aTextContent,
-                                    nsIFrame* aParentFrame)
-{
+                                    nsIFrame* aParentFrame) {
   if (aParentFrame && IsFrameForSVG(aParentFrame)) {
     nsIFrame* ancestorFrame =
-      nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
+        nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
     if (!ancestorFrame || !nsSVGUtils::IsInSVGTextSubtree(ancestorFrame)) {
       return nullptr;
     }
@@ -3426,28 +3201,24 @@ nsCSSFrameConstructor::FindTextData(const Text& aTextContent,
       return nullptr;
     }
 
-    static const FrameConstructionData sSVGTextData =
-      FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT | FCDATA_IS_SVG_TEXT,
-                  NS_NewTextFrame);
+    static const FrameConstructionData sSVGTextData = FCDATA_DECL(
+        FCDATA_IS_LINE_PARTICIPANT | FCDATA_IS_SVG_TEXT, NS_NewTextFrame);
     return &sSVGTextData;
   }
 
   static const FrameConstructionData sTextData =
-    FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT, NS_NewTextFrame);
+      FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT, NS_NewTextFrame);
   return &sTextData;
 }
 
-void
-nsCSSFrameConstructor::ConstructTextFrame(const FrameConstructionData* aData,
-                                          nsFrameConstructorState& aState,
-                                          nsIContent*              aContent,
-                                          nsContainerFrame*        aParentFrame,
-                                          ComputedStyle*          aComputedStyle,
-                                          nsFrameItems&            aFrameItems)
-{
+void nsCSSFrameConstructor::ConstructTextFrame(
+    const FrameConstructionData* aData, nsFrameConstructorState& aState,
+    nsIContent* aContent, nsContainerFrame* aParentFrame,
+    ComputedStyle* aComputedStyle, nsFrameItems& aFrameItems) {
   MOZ_ASSERT(aData, "Must have frame construction data");
 
-  nsIFrame* newFrame = (*aData->mFunc.mCreationFunc)(mPresShell, aComputedStyle);
+  nsIFrame* newFrame =
+      (*aData->mFunc.mCreationFunc)(mPresShell, aComputedStyle);
 
   InitAndRestoreFrame(aState, aContent, aParentFrame, newFrame);
 
@@ -3455,10 +3226,11 @@ nsCSSFrameConstructor::ConstructTextFrame(const FrameConstructionData* aData,
 
   if (newFrame->IsGeneratedContentFrame()) {
     UniquePtr<nsGenConInitializer> initializer(
-      static_cast<nsGenConInitializer*>(
-        aContent->UnsetProperty(nsGkAtoms::genConInitializerProperty)));
+        static_cast<nsGenConInitializer*>(
+            aContent->UnsetProperty(nsGkAtoms::genConInitializerProperty)));
     if (initializer) {
-      if (initializer->mNode->InitTextFrame(initializer->mList,
+      if (initializer->mNode->InitTextFrame(
+              initializer->mList,
               FindAncestorWithGeneratedContentPseudo(newFrame), newFrame)) {
         (this->*(initializer->mDirtyAll))();
       }
@@ -3469,22 +3241,18 @@ nsCSSFrameConstructor::ConstructTextFrame(const FrameConstructionData* aData,
   // Add the newly constructed frame to the flow
   aFrameItems.AddChild(newFrame);
 
-  if (!aState.mCreatingExtraFrames)
-    aContent->SetPrimaryFrame(newFrame);
+  if (!aState.mCreatingExtraFrames) aContent->SetPrimaryFrame(newFrame);
 }
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
-nsCSSFrameConstructor::FindDataByInt(int32_t aInt,
-                                     const Element& aElement,
+nsCSSFrameConstructor::FindDataByInt(int32_t aInt, const Element& aElement,
                                      ComputedStyle& aComputedStyle,
                                      const FrameConstructionDataByInt* aDataPtr,
-                                     uint32_t aDataLength)
-{
+                                     uint32_t aDataLength) {
   for (const FrameConstructionDataByInt *curData = aDataPtr,
-         *endData = aDataPtr + aDataLength;
-       curData != endData;
-       ++curData) {
+                                        *endData = aDataPtr + aDataLength;
+       curData != endData; ++curData) {
     if (curData->mInt == aInt) {
       const FrameConstructionData* data = &curData->mData;
       if (data->mBits & FCDATA_FUNC_IS_DATA_GETTER) {
@@ -3500,16 +3268,13 @@ nsCSSFrameConstructor::FindDataByInt(int32_t aInt,
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
-nsCSSFrameConstructor::FindDataByTag(nsAtom* aTag,
-                                     const Element& aElement,
+nsCSSFrameConstructor::FindDataByTag(nsAtom* aTag, const Element& aElement,
                                      ComputedStyle& aStyle,
                                      const FrameConstructionDataByTag* aDataPtr,
-                                     uint32_t aDataLength)
-{
+                                     uint32_t aDataLength) {
   for (const FrameConstructionDataByTag *curData = aDataPtr,
-         *endData = aDataPtr + aDataLength;
-       curData != endData;
-       ++curData) {
+                                        *endData = aDataPtr + aDataLength;
+       curData != endData; ++curData) {
     if (curData->mTag == aTag) {
       const FrameConstructionData* data = &curData->mData;
       if (data->mBits & FCDATA_FUNC_IS_DATA_GETTER) {
@@ -3524,22 +3289,21 @@ nsCSSFrameConstructor::FindDataByTag(nsAtom* aTag,
 }
 
 #define SUPPRESS_FCDATA() FCDATA_DECL(FCDATA_SUPPRESS_FRAME, nullptr)
-#define SIMPLE_INT_CREATE(_int, _func) { _int, SIMPLE_FCDATA(_func) }
-#define SIMPLE_INT_CHAIN(_int, _func)                       \
+#define SIMPLE_INT_CREATE(_int, _func) \
+  { _int, SIMPLE_FCDATA(_func) }
+#define SIMPLE_INT_CHAIN(_int, _func) \
   { _int, FCDATA_DECL(FCDATA_FUNC_IS_DATA_GETTER, _func) }
-#define COMPLEX_INT_CREATE(_int, _func)         \
+#define COMPLEX_INT_CREATE(_int, _func) \
   { _int, FULL_CTOR_FCDATA(0, _func) }
 
-#define SIMPLE_TAG_CREATE(_tag, _func)          \
+#define SIMPLE_TAG_CREATE(_tag, _func) \
   { nsGkAtoms::_tag, SIMPLE_FCDATA(_func) }
-#define SIMPLE_TAG_CHAIN(_tag, _func)                                   \
-  { nsGkAtoms::_tag, FCDATA_DECL(FCDATA_FUNC_IS_DATA_GETTER,  _func) }
-#define COMPLEX_TAG_CREATE(_tag, _func)             \
+#define SIMPLE_TAG_CHAIN(_tag, _func) \
+  { nsGkAtoms::_tag, FCDATA_DECL(FCDATA_FUNC_IS_DATA_GETTER, _func) }
+#define COMPLEX_TAG_CREATE(_tag, _func) \
   { nsGkAtoms::_tag, FULL_CTOR_FCDATA(0, _func) }
 
-static bool
-IsFrameForFieldSet(nsIFrame* aFrame)
-{
+static bool IsFrameForFieldSet(nsIFrame* aFrame) {
   nsAtom* pseudo = aFrame->Style()->GetPseudo();
   if (pseudo == nsCSSAnonBoxes::fieldsetContent() ||
       pseudo == nsCSSAnonBoxes::scrolledContent() ||
@@ -3553,15 +3317,14 @@ IsFrameForFieldSet(nsIFrame* aFrame)
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindHTMLData(const Element& aElement,
                                     nsIFrame* aParentFrame,
-                                    ComputedStyle& aStyle)
-{
+                                    ComputedStyle& aStyle) {
   MOZ_ASSERT(aElement.IsHTMLElement());
 
   nsAtom* tag = aElement.NodeInfo()->NameAtom();
   NS_ASSERTION(!aParentFrame ||
-               aParentFrame->Style()->GetPseudo() !=
-                 nsCSSAnonBoxes::fieldsetContent() ||
-               aParentFrame->GetParent()->IsFieldSetFrame(),
+                   aParentFrame->Style()->GetPseudo() !=
+                       nsCSSAnonBoxes::fieldsetContent() ||
+                   aParentFrame->GetParent()->IsFieldSetFrame(),
                "Unexpected parent for fieldset content anon box");
   if (tag == nsGkAtoms::legend &&
       (!aParentFrame || !IsFrameForFieldSet(aParentFrame) ||
@@ -3576,62 +3339,59 @@ nsCSSFrameConstructor::FindHTMLData(const Element& aElement,
   }
 
   static const FrameConstructionDataByTag sHTMLData[] = {
-    SIMPLE_TAG_CHAIN(img, nsCSSFrameConstructor::FindImgData),
-    SIMPLE_TAG_CHAIN(mozgeneratedcontentimage,
-                     nsCSSFrameConstructor::FindGeneratedImageData),
-    { nsGkAtoms::br,
-      FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT | FCDATA_IS_LINE_BREAK,
-                  NS_NewBRFrame) },
-    SIMPLE_TAG_CREATE(wbr, NS_NewWBRFrame),
-    SIMPLE_TAG_CHAIN(input, nsCSSFrameConstructor::FindInputData),
-    SIMPLE_TAG_CREATE(textarea, NS_NewTextControlFrame),
-    COMPLEX_TAG_CREATE(select, &nsCSSFrameConstructor::ConstructSelectFrame),
-    SIMPLE_TAG_CHAIN(object, nsCSSFrameConstructor::FindObjectData),
-    SIMPLE_TAG_CHAIN(embed, nsCSSFrameConstructor::FindObjectData),
-    COMPLEX_TAG_CREATE(fieldset,
-                       &nsCSSFrameConstructor::ConstructFieldSetFrame),
-    { nsGkAtoms::legend,
-      FCDATA_DECL(FCDATA_ALLOW_BLOCK_STYLES |
-                  FCDATA_MAY_NEED_SCROLLFRAME |
-                  FCDATA_MAY_NEED_BULLET,
-                  NS_NewLegendFrame) },
-    SIMPLE_TAG_CREATE(frameset, NS_NewHTMLFramesetFrame),
-    SIMPLE_TAG_CREATE(iframe, NS_NewSubDocumentFrame),
-    { nsGkAtoms::button,
-      FCDATA_WITH_WRAPPING_BLOCK(FCDATA_ALLOW_BLOCK_STYLES |
-                                 FCDATA_ALLOW_GRID_FLEX_COLUMNSET,
-                                 NS_NewHTMLButtonControlFrame,
-                                 nsCSSAnonBoxes::buttonContent()) },
-    SIMPLE_TAG_CHAIN(canvas, nsCSSFrameConstructor::FindCanvasData),
-    SIMPLE_TAG_CREATE(video, NS_NewHTMLVideoFrame),
-    SIMPLE_TAG_CREATE(audio, NS_NewHTMLVideoFrame),
-    SIMPLE_TAG_CREATE(progress, NS_NewProgressFrame),
-    SIMPLE_TAG_CREATE(meter, NS_NewMeterFrame),
-    COMPLEX_TAG_CREATE(details, &nsCSSFrameConstructor::ConstructDetailsFrame)
-  };
+      SIMPLE_TAG_CHAIN(img, nsCSSFrameConstructor::FindImgData),
+      SIMPLE_TAG_CHAIN(mozgeneratedcontentimage,
+                       nsCSSFrameConstructor::FindGeneratedImageData),
+      {nsGkAtoms::br,
+       FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT | FCDATA_IS_LINE_BREAK,
+                   NS_NewBRFrame)},
+      SIMPLE_TAG_CREATE(wbr, NS_NewWBRFrame),
+      SIMPLE_TAG_CHAIN(input, nsCSSFrameConstructor::FindInputData),
+      SIMPLE_TAG_CREATE(textarea, NS_NewTextControlFrame),
+      COMPLEX_TAG_CREATE(select, &nsCSSFrameConstructor::ConstructSelectFrame),
+      SIMPLE_TAG_CHAIN(object, nsCSSFrameConstructor::FindObjectData),
+      SIMPLE_TAG_CHAIN(embed, nsCSSFrameConstructor::FindObjectData),
+      COMPLEX_TAG_CREATE(fieldset,
+                         &nsCSSFrameConstructor::ConstructFieldSetFrame),
+      {nsGkAtoms::legend,
+       FCDATA_DECL(FCDATA_ALLOW_BLOCK_STYLES | FCDATA_MAY_NEED_SCROLLFRAME |
+                       FCDATA_MAY_NEED_BULLET,
+                   NS_NewLegendFrame)},
+      SIMPLE_TAG_CREATE(frameset, NS_NewHTMLFramesetFrame),
+      SIMPLE_TAG_CREATE(iframe, NS_NewSubDocumentFrame),
+      {nsGkAtoms::button,
+       FCDATA_WITH_WRAPPING_BLOCK(
+           FCDATA_ALLOW_BLOCK_STYLES | FCDATA_ALLOW_GRID_FLEX_COLUMNSET,
+           NS_NewHTMLButtonControlFrame, nsCSSAnonBoxes::buttonContent())},
+      SIMPLE_TAG_CHAIN(canvas, nsCSSFrameConstructor::FindCanvasData),
+      SIMPLE_TAG_CREATE(video, NS_NewHTMLVideoFrame),
+      SIMPLE_TAG_CREATE(audio, NS_NewHTMLVideoFrame),
+      SIMPLE_TAG_CREATE(progress, NS_NewProgressFrame),
+      SIMPLE_TAG_CREATE(meter, NS_NewMeterFrame),
+      COMPLEX_TAG_CREATE(details,
+                         &nsCSSFrameConstructor::ConstructDetailsFrame)};
 
-  return FindDataByTag(tag, aElement, aStyle, sHTMLData, ArrayLength(sHTMLData));
+  return FindDataByTag(tag, aElement, aStyle, sHTMLData,
+                       ArrayLength(sHTMLData));
 }
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindGeneratedImageData(const Element& aElement,
-                                              ComputedStyle&)
-{
+                                              ComputedStyle&) {
   if (!aElement.IsInNativeAnonymousSubtree()) {
     return nullptr;
   }
 
   static const FrameConstructionData sImgData =
-    SIMPLE_FCDATA(NS_NewImageFrameForGeneratedContentIndex);
+      SIMPLE_FCDATA(NS_NewImageFrameForGeneratedContentIndex);
   return &sImgData;
 }
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindImgData(const Element& aElement,
-                                   ComputedStyle& aStyle)
-{
+                                   ComputedStyle& aStyle) {
   if (!nsImageFrame::ShouldCreateImageFrameFor(aElement, aStyle)) {
     return nullptr;
   }
@@ -3643,61 +3403,58 @@ nsCSSFrameConstructor::FindImgData(const Element& aElement,
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindImgControlData(const Element& aElement,
-                                          ComputedStyle& aStyle)
-{
+                                          ComputedStyle& aStyle) {
   if (!nsImageFrame::ShouldCreateImageFrameFor(aElement, aStyle)) {
     return nullptr;
   }
 
   static const FrameConstructionData sImgControlData =
-    SIMPLE_FCDATA(NS_NewImageControlFrame);
+      SIMPLE_FCDATA(NS_NewImageControlFrame);
   return &sImgControlData;
 }
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindInputData(const Element& aElement,
-                                     ComputedStyle& aStyle)
-{
+                                     ComputedStyle& aStyle) {
   static const FrameConstructionDataByInt sInputData[] = {
-    SIMPLE_INT_CREATE(NS_FORM_INPUT_CHECKBOX, NS_NewCheckboxRadioFrame),
-    SIMPLE_INT_CREATE(NS_FORM_INPUT_RADIO, NS_NewCheckboxRadioFrame),
-    SIMPLE_INT_CREATE(NS_FORM_INPUT_FILE, NS_NewFileControlFrame),
-    SIMPLE_INT_CHAIN(NS_FORM_INPUT_IMAGE,
-                     nsCSSFrameConstructor::FindImgControlData),
-    SIMPLE_INT_CREATE(NS_FORM_INPUT_EMAIL, NS_NewTextControlFrame),
-    SIMPLE_INT_CREATE(NS_FORM_INPUT_SEARCH, NS_NewTextControlFrame),
-    SIMPLE_INT_CREATE(NS_FORM_INPUT_TEXT, NS_NewTextControlFrame),
-    SIMPLE_INT_CREATE(NS_FORM_INPUT_TEL, NS_NewTextControlFrame),
-    SIMPLE_INT_CREATE(NS_FORM_INPUT_URL, NS_NewTextControlFrame),
-    SIMPLE_INT_CREATE(NS_FORM_INPUT_RANGE, NS_NewRangeFrame),
-    SIMPLE_INT_CREATE(NS_FORM_INPUT_PASSWORD, NS_NewTextControlFrame),
-    { NS_FORM_INPUT_COLOR,
-      FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewColorControlFrame,
-                                 nsCSSAnonBoxes::buttonContent()) },
-    // TODO: this is temporary until a frame is written: bug 635240.
-    SIMPLE_INT_CREATE(NS_FORM_INPUT_NUMBER, NS_NewNumberControlFrame),
-    SIMPLE_INT_CREATE(NS_FORM_INPUT_TIME, NS_NewDateTimeControlFrame),
-    SIMPLE_INT_CREATE(NS_FORM_INPUT_DATE, NS_NewDateTimeControlFrame),
-    // TODO: this is temporary until a frame is written: bug 888320
-    SIMPLE_INT_CREATE(NS_FORM_INPUT_MONTH, NS_NewTextControlFrame),
-    // TODO: this is temporary until a frame is written: bug 888320
-    SIMPLE_INT_CREATE(NS_FORM_INPUT_WEEK, NS_NewTextControlFrame),
-    // TODO: this is temporary until a frame is written: bug 888320
-    SIMPLE_INT_CREATE(NS_FORM_INPUT_DATETIME_LOCAL, NS_NewTextControlFrame),
-    { NS_FORM_INPUT_SUBMIT,
-      FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewGfxButtonControlFrame,
-                                 nsCSSAnonBoxes::buttonContent()) },
-    { NS_FORM_INPUT_RESET,
-      FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewGfxButtonControlFrame,
-                                 nsCSSAnonBoxes::buttonContent()) },
-    { NS_FORM_INPUT_BUTTON,
-      FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewGfxButtonControlFrame,
-                                 nsCSSAnonBoxes::buttonContent()) }
-    // Keeping hidden inputs out of here on purpose for so they get frames by
-    // display (in practice, none).
+      SIMPLE_INT_CREATE(NS_FORM_INPUT_CHECKBOX, NS_NewCheckboxRadioFrame),
+      SIMPLE_INT_CREATE(NS_FORM_INPUT_RADIO, NS_NewCheckboxRadioFrame),
+      SIMPLE_INT_CREATE(NS_FORM_INPUT_FILE, NS_NewFileControlFrame),
+      SIMPLE_INT_CHAIN(NS_FORM_INPUT_IMAGE,
+                       nsCSSFrameConstructor::FindImgControlData),
+      SIMPLE_INT_CREATE(NS_FORM_INPUT_EMAIL, NS_NewTextControlFrame),
+      SIMPLE_INT_CREATE(NS_FORM_INPUT_SEARCH, NS_NewTextControlFrame),
+      SIMPLE_INT_CREATE(NS_FORM_INPUT_TEXT, NS_NewTextControlFrame),
+      SIMPLE_INT_CREATE(NS_FORM_INPUT_TEL, NS_NewTextControlFrame),
+      SIMPLE_INT_CREATE(NS_FORM_INPUT_URL, NS_NewTextControlFrame),
+      SIMPLE_INT_CREATE(NS_FORM_INPUT_RANGE, NS_NewRangeFrame),
+      SIMPLE_INT_CREATE(NS_FORM_INPUT_PASSWORD, NS_NewTextControlFrame),
+      {NS_FORM_INPUT_COLOR,
+       FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewColorControlFrame,
+                                  nsCSSAnonBoxes::buttonContent())},
+      // TODO: this is temporary until a frame is written: bug 635240.
+      SIMPLE_INT_CREATE(NS_FORM_INPUT_NUMBER, NS_NewNumberControlFrame),
+      SIMPLE_INT_CREATE(NS_FORM_INPUT_TIME, NS_NewDateTimeControlFrame),
+      SIMPLE_INT_CREATE(NS_FORM_INPUT_DATE, NS_NewDateTimeControlFrame),
+      // TODO: this is temporary until a frame is written: bug 888320
+      SIMPLE_INT_CREATE(NS_FORM_INPUT_MONTH, NS_NewTextControlFrame),
+      // TODO: this is temporary until a frame is written: bug 888320
+      SIMPLE_INT_CREATE(NS_FORM_INPUT_WEEK, NS_NewTextControlFrame),
+      // TODO: this is temporary until a frame is written: bug 888320
+      SIMPLE_INT_CREATE(NS_FORM_INPUT_DATETIME_LOCAL, NS_NewTextControlFrame),
+      {NS_FORM_INPUT_SUBMIT,
+       FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewGfxButtonControlFrame,
+                                  nsCSSAnonBoxes::buttonContent())},
+      {NS_FORM_INPUT_RESET,
+       FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewGfxButtonControlFrame,
+                                  nsCSSAnonBoxes::buttonContent())},
+      {NS_FORM_INPUT_BUTTON,
+       FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewGfxButtonControlFrame,
+                                  nsCSSAnonBoxes::buttonContent())}
+      // Keeping hidden inputs out of here on purpose for so they get frames by
+      // display (in practice, none).
   };
-
 
   auto controlType = HTMLInputElement::FromNode(aElement)->ControlType();
 
@@ -3710,15 +3467,14 @@ nsCSSFrameConstructor::FindInputData(const Element& aElement,
     return nullptr;
   }
 
-  return FindDataByInt(controlType, aElement, aStyle,
-                       sInputData, ArrayLength(sInputData));
+  return FindDataByInt(controlType, aElement, aStyle, sInputData,
+                       ArrayLength(sInputData));
 }
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindObjectData(const Element& aElement,
-                                      ComputedStyle& aStyle)
-{
+                                      ComputedStyle& aStyle) {
   // GetDisplayedType isn't necessarily nsIObjectLoadingContent::TYPE_NULL for
   // cases when the object is broken/suppressed/etc (e.g. a broken image), but
   // we want to treat those cases as TYPE_NULL
@@ -3729,7 +3485,7 @@ nsCSSFrameConstructor::FindObjectData(const Element& aElement,
     type = nsIObjectLoadingContent::TYPE_NULL;
   } else {
     nsCOMPtr<nsIObjectLoadingContent> objContent =
-      do_QueryInterface(const_cast<Element*>(&aElement));
+        do_QueryInterface(const_cast<Element*>(&aElement));
     NS_ASSERTION(objContent,
                  "embed and object must implement "
                  "nsIObjectLoadingContent!");
@@ -3738,29 +3494,27 @@ nsCSSFrameConstructor::FindObjectData(const Element& aElement,
   }
 
   static const FrameConstructionDataByInt sObjectData[] = {
-    SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_LOADING,
-                      NS_NewEmptyFrame),
-    SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_PLUGIN,
-                      NS_NewObjectFrame),
-    SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_IMAGE,
-                      NS_NewImageFrame),
-    SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_DOCUMENT,
-                      NS_NewSubDocumentFrame),
-    // Fake plugin handlers load as documents
-    SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_FAKE_PLUGIN,
-                      NS_NewSubDocumentFrame)
-    // Nothing for TYPE_NULL so we'll construct frames by display there
+      SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_LOADING,
+                        NS_NewEmptyFrame),
+      SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_PLUGIN,
+                        NS_NewObjectFrame),
+      SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_IMAGE, NS_NewImageFrame),
+      SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_DOCUMENT,
+                        NS_NewSubDocumentFrame),
+      // Fake plugin handlers load as documents
+      SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_FAKE_PLUGIN,
+                        NS_NewSubDocumentFrame)
+      // Nothing for TYPE_NULL so we'll construct frames by display there
   };
 
-  return FindDataByInt((int32_t)type, aElement, aStyle,
-                       sObjectData, ArrayLength(sObjectData));
+  return FindDataByInt((int32_t)type, aElement, aStyle, sObjectData,
+                       ArrayLength(sObjectData));
 }
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindCanvasData(const Element& aElement,
-                                      ComputedStyle& aStyle)
-{
+                                      ComputedStyle& aStyle) {
   // We want to check whether script is enabled on the document that
   // could be painting to the canvas.  That's the owner document of
   // the canvas, except when the owner document is a static document,
@@ -3773,18 +3527,14 @@ nsCSSFrameConstructor::FindCanvasData(const Element& aElement,
     return nullptr;
   }
 
-  static const FrameConstructionData sCanvasData =
-    FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewHTMLCanvasFrame,
-                               nsCSSAnonBoxes::htmlCanvasContent());
+  static const FrameConstructionData sCanvasData = FCDATA_WITH_WRAPPING_BLOCK(
+      0, NS_NewHTMLCanvasFrame, nsCSSAnonBoxes::htmlCanvasContent());
   return &sCanvasData;
 }
 
-void
-nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aItem,
-                                                      nsFrameConstructorState& aState,
-                                                      nsContainerFrame* aParentFrame,
-                                                      nsFrameItems& aFrameItems)
-{
+void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
+    FrameConstructionItem& aItem, nsFrameConstructorState& aState,
+    nsContainerFrame* aParentFrame, nsFrameItems& aFrameItems) {
   const FrameConstructionData* data = aItem.mFCData;
   NS_ASSERTION(data, "Must have frame construction data");
 
@@ -3794,10 +3544,11 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
                "Should have dealt with this inside the data finder");
 
   // Some sets of bits are not compatible with each other
-#define CHECK_ONLY_ONE_BIT(_bit1, _bit2)               \
-  NS_ASSERTION(!(bits & _bit1) || !(bits & _bit2),     \
+#define CHECK_ONLY_ONE_BIT(_bit1, _bit2)           \
+  NS_ASSERTION(!(bits & _bit1) || !(bits & _bit2), \
                "Only one of these bits should be set")
-  CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_FORCE_NULL_ABSPOS_CONTAINER);
+  CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR,
+                     FCDATA_FORCE_NULL_ABSPOS_CONTAINER);
   CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_WRAP_KIDS_IN_BLOCKS);
   CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_MAY_NEED_SCROLLFRAME);
   CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_IS_POPUP);
@@ -3811,18 +3562,17 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
                      FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS);
 #undef CHECK_ONLY_ONE_BIT
   NS_ASSERTION(!(bits & FCDATA_FORCED_NON_SCROLLABLE_BLOCK) ||
-               ((bits & FCDATA_FUNC_IS_FULL_CTOR) &&
-                data->mFullConstructor ==
-                  &nsCSSFrameConstructor::ConstructNonScrollableBlock),
+                   ((bits & FCDATA_FUNC_IS_FULL_CTOR) &&
+                    data->mFullConstructor ==
+                        &nsCSSFrameConstructor::ConstructNonScrollableBlock),
                "Unexpected FCDATA_FORCED_NON_SCROLLABLE_BLOCK flag");
-  MOZ_ASSERT(!(bits & FCDATA_IS_WRAPPER_ANON_BOX) ||
-             (bits & FCDATA_USE_CHILD_ITEMS),
-             "Wrapper anon boxes should always have FCDATA_USE_CHILD_ITEMS");
+  MOZ_ASSERT(
+      !(bits & FCDATA_IS_WRAPPER_ANON_BOX) || (bits & FCDATA_USE_CHILD_ITEMS),
+      "Wrapper anon boxes should always have FCDATA_USE_CHILD_ITEMS");
 
   // Don't create a subdocument frame for iframes if we're creating extra frames
   if (aState.mCreatingExtraFrames &&
-      aItem.mContent->IsHTMLElement(nsGkAtoms::iframe))
-  {
+      aItem.mContent->IsHTMLElement(nsGkAtoms::iframe)) {
     return;
   }
 
@@ -3832,26 +3582,25 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   ComputedStyle* const computedStyle = aItem.mComputedStyle;
   const nsStyleDisplay* display = computedStyle->StyleDisplay();
   if (bits & FCDATA_FUNC_IS_FULL_CTOR) {
-    newFrame =
-      (this->*(data->mFullConstructor))(aState, aItem, aParentFrame,
-                                        display, aFrameItems);
+    newFrame = (this->*(data->mFullConstructor))(aState, aItem, aParentFrame,
+                                                 display, aFrameItems);
     MOZ_ASSERT(newFrame, "Full constructor failed");
     primaryFrame = newFrame;
   } else {
-    newFrame =
-      (*data->mFunc.mCreationFunc)(mPresShell, computedStyle);
+    newFrame = (*data->mFunc.mCreationFunc)(mPresShell, computedStyle);
 
     bool allowOutOfFlow = !(bits & FCDATA_DISALLOW_OUT_OF_FLOW);
     bool isPopup = aItem.mIsPopup;
-    NS_ASSERTION(!isPopup ||
-                 (aState.mPopupItems.containingBlock &&
-                  aState.mPopupItems.containingBlock->IsPopupSetFrame()),
-                 "Should have a containing block here!");
+    NS_ASSERTION(
+        !isPopup || (aState.mPopupItems.containingBlock &&
+                     aState.mPopupItems.containingBlock->IsPopupSetFrame()),
+        "Should have a containing block here!");
 
     nsContainerFrame* geometricParent =
-      isPopup ? aState.mPopupItems.containingBlock :
-      (allowOutOfFlow ? aState.GetGeometricParent(*display, aParentFrame)
-                      : aParentFrame);
+        isPopup ? aState.mPopupItems.containingBlock
+                : (allowOutOfFlow
+                       ? aState.GetGeometricParent(*display, aParentFrame)
+                       : aParentFrame);
 
     // Must init frameToAddToList to null, since it's inout
     nsIFrame* frameToAddToList = nullptr;
@@ -3878,8 +3627,9 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
     nsIFrame* maybeAbsoluteContainingBlock = newFrame;
     nsIFrame* possiblyLeafFrame = newFrame;
     if (bits & FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS) {
-      RefPtr<ComputedStyle> outerSC = mPresShell->StyleSet()->
-        ResolveInheritingAnonymousBoxStyle(data->mAnonBoxPseudo, computedStyle);
+      RefPtr<ComputedStyle> outerSC =
+          mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
+              data->mAnonBoxPseudo, computedStyle);
 #ifdef DEBUG
       nsContainerFrame* containerFrame = do_QueryFrame(newFrame);
       MOZ_ASSERT(containerFrame);
@@ -3903,9 +3653,8 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
             break;
           default: {
             innerFrame = NS_NewBlockFormattingContext(mPresShell, outerSC);
-            outerFrame =
-              InitAndWrapInColumnSetFrameIfNeeded(aState, content, container,
-                                                  innerFrame, outerSC);
+            outerFrame = InitAndWrapInColumnSetFrameIfNeeded(
+                aState, content, container, innerFrame, outerSC);
             break;
           }
         }
@@ -3942,8 +3691,8 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
 
       if (aItem.mIsRootPopupgroup) {
         NS_ASSERTION(nsIPopupContainer::GetPopupContainer(mPresShell) &&
-                     nsIPopupContainer::GetPopupContainer(mPresShell)->
-                      GetPopupSetFrame() == newFrame,
+                         nsIPopupContainer::GetPopupContainer(mPresShell)
+                                 ->GetPopupSetFrame() == newFrame,
                      "Unexpected PopupSetFrame");
         aState.mPopupItems.containingBlock = newFrameAsContainer;
         aState.mHavePendingPopupgroup = false;
@@ -3957,10 +3706,13 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
       if (bits & FCDATA_FORCE_NULL_ABSPOS_CONTAINER) {
         aState.PushAbsoluteContainingBlock(nullptr, nullptr, absoluteSaveState);
       } else if (!(bits & FCDATA_SKIP_ABSPOS_PUSH)) {
-        maybeAbsoluteContainingBlock->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
+        maybeAbsoluteContainingBlock->AddStateBits(
+            NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
         if (maybeAbsoluteContainingBlockStyleFrame->IsAbsPosContainingBlock()) {
-          auto* cf = static_cast<nsContainerFrame*>(maybeAbsoluteContainingBlock);
-          aState.PushAbsoluteContainingBlock(cf, maybeAbsoluteContainingBlockStyleFrame, absoluteSaveState);
+          auto* cf =
+              static_cast<nsContainerFrame*>(maybeAbsoluteContainingBlock);
+          aState.PushAbsoluteContainingBlock(
+              cf, maybeAbsoluteContainingBlockStyleFrame, absoluteSaveState);
         }
       }
 
@@ -3972,15 +3724,13 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
         } else if (newFrame->IsFloatContainingBlock()) {
           aState.PushFloatContainingBlock(newFrameAsContainer, floatSaveState);
         }
-        ConstructFramesFromItemList(aState, aItem.mChildItems,
-                                    newFrameAsContainer,
-                                    bits & FCDATA_IS_WRAPPER_ANON_BOX,
-                                    childItems);
+        ConstructFramesFromItemList(
+            aState, aItem.mChildItems, newFrameAsContainer,
+            bits & FCDATA_IS_WRAPPER_ANON_BOX, childItems);
       } else {
         // Process the child frames.
         ProcessChildren(aState, content, computedStyle, newFrameAsContainer,
-                        !(bits & FCDATA_DISALLOW_GENERATED_CONTENT),
-                        childItems,
+                        !(bits & FCDATA_DISALLOW_GENERATED_CONTENT), childItems,
                         (bits & FCDATA_ALLOW_BLOCK_STYLES) != 0,
                         aItem.mPendingBinding, possiblyLeafFrame);
       }
@@ -4021,15 +3771,16 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
 
       if (bits & FCDATA_MAY_NEED_BULLET) {
         nsBlockFrame* block = nsLayoutUtils::GetAsBlock(newFrameAsContainer);
-        MOZ_ASSERT(block, "FCDATA_MAY_NEED_BULLET should not be set on "
-                          "non-block type!");
+        MOZ_ASSERT(block,
+                   "FCDATA_MAY_NEED_BULLET should not be set on "
+                   "non-block type!");
         CreateBulletFrameForListItemIfNeeded(block);
       }
     }
   }
 
   NS_ASSERTION(newFrame->IsFrameOfType(nsIFrame::eLineParticipant) ==
-               ((bits & FCDATA_IS_LINE_PARTICIPANT) != 0),
+                   ((bits & FCDATA_IS_LINE_PARTICIPANT) != 0),
                "Incorrectly set FCDATA_IS_LINE_PARTICIPANT bits");
 
   if (aItem.mIsAnonymousContentCreatorContent) {
@@ -4044,15 +3795,13 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
        (primaryFrame->HasAnyStateBits(NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT |
                                       NS_FRAME_GENERATED_CONTENT) &&
         !aItem.mContent->GetPrimaryFrame())) &&
-       !(bits & FCDATA_SKIP_FRAMESET)) {
+      !(bits & FCDATA_SKIP_FRAMESET)) {
     aItem.mContent->SetPrimaryFrame(primaryFrame);
     ActiveLayerTracker::TransferActivityToFrame(aItem.mContent, primaryFrame);
   }
 }
 
-static void
-SetFlagsOnSubtree(nsIContent *aNode, uintptr_t aFlagsToSet)
-{
+static void SetFlagsOnSubtree(nsIContent* aNode, uintptr_t aFlagsToSet) {
 #ifdef DEBUG
   // Make sure that the node passed to us doesn't have any XBL children
   {
@@ -4072,14 +3821,11 @@ SetFlagsOnSubtree(nsIContent *aNode, uintptr_t aFlagsToSet)
   }
 }
 
-nsresult
-nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
-                                           nsIFrame* aParentFrame,
-                                           nsTArray<nsIAnonymousContentCreator::ContentInfo>& aContent)
-{
+nsresult nsCSSFrameConstructor::GetAnonymousContent(
+    nsIContent* aParent, nsIFrame* aParentFrame,
+    nsTArray<nsIAnonymousContentCreator::ContentInfo>& aContent) {
   nsIAnonymousContentCreator* creator = do_QueryFrame(aParentFrame);
-  if (!creator)
-    return NS_OK;
+  if (!creator) return NS_OK;
 
   nsresult rv = creator->CreateAnonymousContent(aContent);
   if (NS_FAILED(rv)) {
@@ -4098,15 +3844,17 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
     // bind with a document because shadow roots and its descendants
     // are not in document.
     nsIDocument* bindDocument =
-      aParent->HasFlag(NODE_IS_IN_SHADOW_TREE) ? nullptr : mDocument;
+        aParent->HasFlag(NODE_IS_IN_SHADOW_TREE) ? nullptr : mDocument;
     rv = content->BindToTree(bindDocument, aParent, aParent);
     // If the anonymous content creator requested that the content should be
     // editable, honor its request.
     // We need to set the flag on the whole subtree, because existing
-    // children's flags have already been set as part of the BindToTree operation.
+    // children's flags have already been set as part of the BindToTree
+    // operation.
     if (anonContentIsEditable) {
       NS_ASSERTION(aParentFrame->IsTextInputFrame(),
-                   "We only expect this for anonymous content under a text control frame");
+                   "We only expect this for anonymous content under a text "
+                   "control frame");
       SetFlagsOnSubtree(content, NODE_IS_EDITABLE);
     }
     if (NS_FAILED(rv)) {
@@ -4126,9 +3874,7 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
   return NS_OK;
 }
 
-static
-bool IsXULDisplayType(const nsStyleDisplay* aDisplay)
-{
+static bool IsXULDisplayType(const nsStyleDisplay* aDisplay) {
   // -moz-{inline-}box is XUL, unless we're emulating it with flexbox.
   if (!StaticPrefs::layout_css_emulate_moz_box_with_flex() &&
       (aDisplay->mDisplay == StyleDisplay::MozInlineBox ||
@@ -4151,35 +3897,31 @@ bool IsXULDisplayType(const nsStyleDisplay* aDisplay)
 #endif
 }
 
-
 // XUL frames are not allowed to be out of flow.
-#define SIMPLE_XUL_FCDATA(_func)                                        \
-  FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_SKIP_ABSPOS_PUSH,    \
+#define SIMPLE_XUL_FCDATA(_func) \
+  FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_SKIP_ABSPOS_PUSH, _func)
+#define SCROLLABLE_XUL_FCDATA(_func)                                  \
+  FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_SKIP_ABSPOS_PUSH | \
+                  FCDATA_MAY_NEED_SCROLLFRAME,                        \
               _func)
-#define SCROLLABLE_XUL_FCDATA(_func)                                    \
-  FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_SKIP_ABSPOS_PUSH |   \
-              FCDATA_MAY_NEED_SCROLLFRAME, _func)
 // .. but we allow some XUL frames to be _containers_ for out-of-flow content
 // (This is the same as SCROLLABLE_XUL_FCDATA, but w/o FCDATA_SKIP_ABSPOS_PUSH)
-#define SCROLLABLE_ABSPOS_CONTAINER_XUL_FCDATA(_func)                   \
-  FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW |                             \
-              FCDATA_MAY_NEED_SCROLLFRAME, _func)
+#define SCROLLABLE_ABSPOS_CONTAINER_XUL_FCDATA(_func) \
+  FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_MAY_NEED_SCROLLFRAME, _func)
 
-#define SIMPLE_XUL_CREATE(_tag, _func)            \
+#define SIMPLE_XUL_CREATE(_tag, _func) \
   { nsGkAtoms::_tag, SIMPLE_XUL_FCDATA(_func) }
-#define SCROLLABLE_XUL_CREATE(_tag, _func)            \
+#define SCROLLABLE_XUL_CREATE(_tag, _func) \
   { nsGkAtoms::_tag, SCROLLABLE_XUL_FCDATA(_func) }
-#define SIMPLE_XUL_DISPLAY_CREATE(_display, _func)      \
+#define SIMPLE_XUL_DISPLAY_CREATE(_display, _func) \
   FCDATA_FOR_DISPLAY(_display, SIMPLE_XUL_FCDATA(_func))
-#define SCROLLABLE_XUL_DISPLAY_CREATE(_display, _func)                          \
+#define SCROLLABLE_XUL_DISPLAY_CREATE(_display, _func) \
   FCDATA_FOR_DISPLAY(_display, SCROLLABLE_XUL_FCDATA(_func))
-#define SCROLLABLE_ABSPOS_CONTAINER_XUL_DISPLAY_CREATE(_display, _func)         \
+#define SCROLLABLE_ABSPOS_CONTAINER_XUL_DISPLAY_CREATE(_display, _func) \
   FCDATA_FOR_DISPLAY(_display, SCROLLABLE_ABSPOS_CONTAINER_XUL_FCDATA(_func))
 
-static
-nsIFrame* NS_NewGridBoxFrame(nsIPresShell* aPresShell,
-                             ComputedStyle* aComputedStyle)
-{
+static nsIFrame* NS_NewGridBoxFrame(nsIPresShell* aPresShell,
+                                    ComputedStyle* aComputedStyle) {
   nsCOMPtr<nsBoxLayout> layout;
   NS_NewGridLayout2(aPresShell, getter_AddRefs(layout));
   return NS_NewBoxFrame(aPresShell, aComputedStyle, false, layout);
@@ -4187,48 +3929,46 @@ nsIFrame* NS_NewGridBoxFrame(nsIPresShell* aPresShell,
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
-nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
-                                      nsAtom* aTag,
-                                      ComputedStyle& aStyle)
-{
+nsCSSFrameConstructor::FindXULTagData(const Element& aElement, nsAtom* aTag,
+                                      ComputedStyle& aStyle) {
   MOZ_ASSERT(aElement.IsXULElement());
 
   static const FrameConstructionDataByTag sXULTagData[] = {
 #ifdef MOZ_XUL
-    SCROLLABLE_XUL_CREATE(button, NS_NewButtonBoxFrame),
-    SCROLLABLE_XUL_CREATE(thumb, NS_NewButtonBoxFrame),
-    SCROLLABLE_XUL_CREATE(checkbox, NS_NewButtonBoxFrame),
-    SCROLLABLE_XUL_CREATE(radio, NS_NewButtonBoxFrame),
-    SCROLLABLE_XUL_CREATE(titlebar, NS_NewTitleBarFrame),
-    SCROLLABLE_XUL_CREATE(resizer, NS_NewResizerFrame),
-    SCROLLABLE_XUL_CREATE(toolbarpaletteitem, NS_NewBoxFrame),
-    SIMPLE_XUL_CREATE(image, NS_NewImageBoxFrame),
-    SIMPLE_XUL_CREATE(spring, NS_NewLeafBoxFrame),
-    SIMPLE_XUL_CREATE(spacer, NS_NewLeafBoxFrame),
-    SIMPLE_XUL_CREATE(treechildren, NS_NewTreeBodyFrame),
-    SIMPLE_XUL_CREATE(treecol, NS_NewTreeColFrame),
-    SIMPLE_XUL_CREATE(text, NS_NewTextBoxFrame),
-    SIMPLE_TAG_CHAIN(label, nsCSSFrameConstructor::FindXULLabelData),
-    SIMPLE_TAG_CHAIN(description, nsCSSFrameConstructor::FindXULDescriptionData),
-    SIMPLE_XUL_CREATE(menu, NS_NewMenuFrame),
-    SIMPLE_XUL_CREATE(menubutton, NS_NewMenuFrame),
-    SIMPLE_XUL_CREATE(menulist, NS_NewMenuFrame),
-    SIMPLE_XUL_CREATE(menuitem, NS_NewMenuItemFrame),
+      SCROLLABLE_XUL_CREATE(button, NS_NewButtonBoxFrame),
+      SCROLLABLE_XUL_CREATE(thumb, NS_NewButtonBoxFrame),
+      SCROLLABLE_XUL_CREATE(checkbox, NS_NewButtonBoxFrame),
+      SCROLLABLE_XUL_CREATE(radio, NS_NewButtonBoxFrame),
+      SCROLLABLE_XUL_CREATE(titlebar, NS_NewTitleBarFrame),
+      SCROLLABLE_XUL_CREATE(resizer, NS_NewResizerFrame),
+      SCROLLABLE_XUL_CREATE(toolbarpaletteitem, NS_NewBoxFrame),
+      SIMPLE_XUL_CREATE(image, NS_NewImageBoxFrame),
+      SIMPLE_XUL_CREATE(spring, NS_NewLeafBoxFrame),
+      SIMPLE_XUL_CREATE(spacer, NS_NewLeafBoxFrame),
+      SIMPLE_XUL_CREATE(treechildren, NS_NewTreeBodyFrame),
+      SIMPLE_XUL_CREATE(treecol, NS_NewTreeColFrame),
+      SIMPLE_XUL_CREATE(text, NS_NewTextBoxFrame),
+      SIMPLE_TAG_CHAIN(label, nsCSSFrameConstructor::FindXULLabelData),
+      SIMPLE_TAG_CHAIN(description,
+                       nsCSSFrameConstructor::FindXULDescriptionData),
+      SIMPLE_XUL_CREATE(menu, NS_NewMenuFrame),
+      SIMPLE_XUL_CREATE(menubutton, NS_NewMenuFrame),
+      SIMPLE_XUL_CREATE(menulist, NS_NewMenuFrame),
+      SIMPLE_XUL_CREATE(menuitem, NS_NewMenuItemFrame),
 #ifdef XP_MACOSX
-    SIMPLE_TAG_CHAIN(menubar, nsCSSFrameConstructor::FindXULMenubarData),
+      SIMPLE_TAG_CHAIN(menubar, nsCSSFrameConstructor::FindXULMenubarData),
 #else
-    SIMPLE_XUL_CREATE(menubar, NS_NewMenuBarFrame),
+      SIMPLE_XUL_CREATE(menubar, NS_NewMenuBarFrame),
 #endif /* XP_MACOSX */
-    SIMPLE_TAG_CHAIN(popupgroup, nsCSSFrameConstructor::FindPopupGroupData),
-    SIMPLE_XUL_CREATE(iframe, NS_NewSubDocumentFrame),
-    SIMPLE_XUL_CREATE(editor, NS_NewSubDocumentFrame),
-    SIMPLE_XUL_CREATE(browser, NS_NewSubDocumentFrame),
-    SIMPLE_XUL_CREATE(splitter, NS_NewSplitterFrame),
+      SIMPLE_TAG_CHAIN(popupgroup, nsCSSFrameConstructor::FindPopupGroupData),
+      SIMPLE_XUL_CREATE(iframe, NS_NewSubDocumentFrame),
+      SIMPLE_XUL_CREATE(editor, NS_NewSubDocumentFrame),
+      SIMPLE_XUL_CREATE(browser, NS_NewSubDocumentFrame),
+      SIMPLE_XUL_CREATE(splitter, NS_NewSplitterFrame),
 #endif /* MOZ_XUL */
-    SIMPLE_XUL_CREATE(slider, NS_NewSliderFrame),
-    SIMPLE_XUL_CREATE(scrollbar, NS_NewScrollbarFrame),
-    SIMPLE_XUL_CREATE(scrollbarbutton, NS_NewScrollbarButtonFrame)
-  };
+      SIMPLE_XUL_CREATE(slider, NS_NewSliderFrame),
+      SIMPLE_XUL_CREATE(scrollbar, NS_NewScrollbarFrame),
+      SIMPLE_XUL_CREATE(scrollbarbutton, NS_NewScrollbarButtonFrame)};
 
   return FindDataByTag(aTag, aElement, aStyle, sXULTagData,
                        ArrayLength(sXULTagData));
@@ -4237,37 +3977,37 @@ nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
 #ifdef MOZ_XUL
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
-nsCSSFrameConstructor::FindPopupGroupData(const Element& aElement, ComputedStyle&)
-{
+nsCSSFrameConstructor::FindPopupGroupData(const Element& aElement,
+                                          ComputedStyle&) {
   if (!aElement.IsRootOfNativeAnonymousSubtree()) {
     return nullptr;
   }
 
   static const FrameConstructionData sPopupSetData =
-    SIMPLE_XUL_FCDATA(NS_NewPopupSetFrame);
+      SIMPLE_XUL_FCDATA(NS_NewPopupSetFrame);
   return &sPopupSetData;
 }
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData
-nsCSSFrameConstructor::sXULTextBoxData = SIMPLE_XUL_FCDATA(NS_NewTextBoxFrame);
+    nsCSSFrameConstructor::sXULTextBoxData =
+        SIMPLE_XUL_FCDATA(NS_NewTextBoxFrame);
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
-nsCSSFrameConstructor::FindXULLabelData(const Element& aElement, ComputedStyle&)
-{
+nsCSSFrameConstructor::FindXULLabelData(const Element& aElement,
+                                        ComputedStyle&) {
   if (aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::value)) {
     return &sXULTextBoxData;
   }
 
   static const FrameConstructionData sLabelData =
-    SIMPLE_XUL_FCDATA(NS_NewXULLabelFrame);
+      SIMPLE_XUL_FCDATA(NS_NewXULLabelFrame);
   return &sLabelData;
 }
 
-static nsIFrame*
-NS_NewXULDescriptionFrame(nsIPresShell* aPresShell, ComputedStyle *aContext)
-{
+static nsIFrame* NS_NewXULDescriptionFrame(nsIPresShell* aPresShell,
+                                           ComputedStyle* aContext) {
   // XXXbz do we really need to set up the block formatting context root? If the
   // parent is not a block we'll get it anyway, and if it is, do we want it?
   return NS_NewBlockFormattingContext(aPresShell, aContext);
@@ -4276,14 +4016,13 @@ NS_NewXULDescriptionFrame(nsIPresShell* aPresShell, ComputedStyle *aContext)
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindXULDescriptionData(const Element& aElement,
-                                              ComputedStyle&)
-{
+                                              ComputedStyle&) {
   if (aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::value)) {
     return &sXULTextBoxData;
   }
 
   static const FrameConstructionData sDescriptionData =
-    SIMPLE_XUL_FCDATA(NS_NewXULDescriptionFrame);
+      SIMPLE_XUL_FCDATA(NS_NewXULDescriptionFrame);
   return &sDescriptionData;
 }
 
@@ -4291,8 +4030,7 @@ nsCSSFrameConstructor::FindXULDescriptionData(const Element& aElement,
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindXULMenubarData(const Element& aElement,
-                                          ComputedStyle&)
-{
+                                          ComputedStyle&) {
   nsCOMPtr<nsIDocShell> treeItem = aElement.OwnerDoc()->GetDocShell();
   if (treeItem && nsIDocShellTreeItem::typeChrome == treeItem->ItemType()) {
     nsCOMPtr<nsIDocShellTreeItem> parent;
@@ -4306,7 +4044,7 @@ nsCSSFrameConstructor::FindXULMenubarData(const Element& aElement,
   }
 
   static const FrameConstructionData sMenubarData =
-    SIMPLE_XUL_FCDATA(NS_NewMenuBarFrame);
+      SIMPLE_XUL_FCDATA(NS_NewMenuBarFrame);
   return &sMenubarData;
 }
 #endif /* XP_MACOSX */
@@ -4316,27 +4054,31 @@ nsCSSFrameConstructor::FindXULMenubarData(const Element& aElement,
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindXULDisplayData(const nsStyleDisplay& aDisplay,
-                                          const Element& aElement)
-{
+                                          const Element& aElement) {
   static const FrameConstructionDataByDisplay sXULDisplayData[] = {
-    SCROLLABLE_ABSPOS_CONTAINER_XUL_DISPLAY_CREATE(StyleDisplay::MozBox,
-                                                   NS_NewBoxFrame),
-    SCROLLABLE_ABSPOS_CONTAINER_XUL_DISPLAY_CREATE(StyleDisplay::MozInlineBox,
-                                                   NS_NewBoxFrame),
+      SCROLLABLE_ABSPOS_CONTAINER_XUL_DISPLAY_CREATE(StyleDisplay::MozBox,
+                                                     NS_NewBoxFrame),
+      SCROLLABLE_ABSPOS_CONTAINER_XUL_DISPLAY_CREATE(StyleDisplay::MozInlineBox,
+                                                     NS_NewBoxFrame),
 #ifdef MOZ_XUL
-    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozGrid, NS_NewGridBoxFrame),
-    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozInlineGrid, NS_NewGridBoxFrame),
-    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozGridGroup,
-                                  NS_NewGridRowGroupFrame),
-    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozGridLine,
-                                  NS_NewGridRowLeafFrame),
-    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozStack, NS_NewStackFrame),
-    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozInlineStack, NS_NewStackFrame),
-    SIMPLE_XUL_DISPLAY_CREATE(StyleDisplay::MozDeck, NS_NewDeckFrame),
-    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozGroupbox, NS_NewGroupBoxFrame),
-    FCDATA_FOR_DISPLAY(StyleDisplay::MozPopup,
-      FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_IS_POPUP |
-                  FCDATA_SKIP_ABSPOS_PUSH, NS_NewMenuPopupFrame))
+      SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozGrid, NS_NewGridBoxFrame),
+      SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozInlineGrid,
+                                    NS_NewGridBoxFrame),
+      SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozGridGroup,
+                                    NS_NewGridRowGroupFrame),
+      SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozGridLine,
+                                    NS_NewGridRowLeafFrame),
+      SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozStack, NS_NewStackFrame),
+      SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozInlineStack,
+                                    NS_NewStackFrame),
+      SIMPLE_XUL_DISPLAY_CREATE(StyleDisplay::MozDeck, NS_NewDeckFrame),
+      SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozGroupbox,
+                                    NS_NewGroupBoxFrame),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::MozPopup,
+          FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_IS_POPUP |
+                          FCDATA_SKIP_ABSPOS_PUSH,
+                      NS_NewMenuPopupFrame))
 #endif /* MOZ_XUL */
   };
 
@@ -4351,7 +4093,8 @@ nsCSSFrameConstructor::FindXULDisplayData(const nsStyleDisplay& aDisplay,
       aDisplay.mDisplay == StyleDisplay::MozInlineBox) {
     if (!aElement.IsInNativeAnonymousSubtree() &&
         aElement.OwnerDoc()->IsContentDocument()) {
-      aElement.OwnerDoc()->WarnOnceAbout(nsIDocument::eMozBoxOrInlineBoxDisplay);
+      aElement.OwnerDoc()->WarnOnceAbout(
+          nsIDocument::eMozBoxOrInlineBoxDisplay);
     }
 
     // If we're emulating -moz-box with flexbox, then treat it as non-XUL and
@@ -4365,22 +4108,17 @@ nsCSSFrameConstructor::FindXULDisplayData(const nsStyleDisplay& aDisplay,
   }
 
   const FrameConstructionDataByDisplay& data =
-    sXULDisplayData[size_t(aDisplay.mDisplay) - size_t(StyleDisplay::MozBox)];
+      sXULDisplayData[size_t(aDisplay.mDisplay) - size_t(StyleDisplay::MozBox)];
   MOZ_ASSERT(aDisplay.mDisplay == data.mDisplay,
              "Did someone mess with the order?");
 
   return &data.mData;
 }
 
-already_AddRefed<ComputedStyle>
-nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
-                                                nsIContent*              aContent,
-                                                ComputedStyle*           aContentStyle,
-                                                nsContainerFrame*        aParentFrame,
-                                                nsAtom*                  aScrolledPseudo,
-                                                bool                     aIsRoot,
-                                                nsContainerFrame*&       aNewFrame)
-{
+already_AddRefed<ComputedStyle> nsCSSFrameConstructor::BeginBuildingScrollFrame(
+    nsFrameConstructorState& aState, nsIContent* aContent,
+    ComputedStyle* aContentStyle, nsContainerFrame* aParentFrame,
+    nsAtom* aScrolledPseudo, bool aIsRoot, nsContainerFrame*& aNewFrame) {
   nsContainerFrame* gfxScrollFrame = aNewFrame;
 
   nsFrameItems anonymousItems;
@@ -4394,9 +4132,10 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
     // I wonder whether we can eliminate that somehow.
     const nsStyleDisplay* displayStyle = aContentStyle->StyleDisplay();
     if (IsXULDisplayType(displayStyle)) {
-      gfxScrollFrame = NS_NewXULScrollFrame(mPresShell, contentStyle, aIsRoot,
+      gfxScrollFrame = NS_NewXULScrollFrame(
+          mPresShell, contentStyle, aIsRoot,
           displayStyle->mDisplay == StyleDisplay::MozStack ||
-          displayStyle->mDisplay == StyleDisplay::MozInlineStack);
+              displayStyle->mDisplay == StyleDisplay::MozInlineStack);
     } else {
       gfxScrollFrame = NS_NewHTMLScrollFrame(mPresShell, contentStyle, aIsRoot);
     }
@@ -4411,7 +4150,8 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
   // be parented to the scrollframe, and everything else needs to be parented
   // to the scrolledframe.
   AutoTArray<nsIAnonymousContentCreator::ContentInfo, 4> scrollNAC;
-  DebugOnly<nsresult> rv = GetAnonymousContent(aContent, gfxScrollFrame, scrollNAC);
+  DebugOnly<nsresult> rv =
+      GetAnonymousContent(aContent, gfxScrollFrame, scrollNAC);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (scrollNAC.Length() > 0) {
     AutoFrameConstructionItemList items(this);
@@ -4427,25 +4167,25 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
   // we used the style that was passed in. So resolve another one.
   ServoStyleSet* styleSet = mPresShell->StyleSet();
   RefPtr<ComputedStyle> scrolledChildStyle =
-    styleSet->ResolveInheritingAnonymousBoxStyle(aScrolledPseudo, contentStyle);
+      styleSet->ResolveInheritingAnonymousBoxStyle(aScrolledPseudo,
+                                                   contentStyle);
 
   if (gfxScrollFrame) {
-     gfxScrollFrame->SetInitialChildList(kPrincipalList, anonymousItems);
+    gfxScrollFrame->SetInitialChildList(kPrincipalList, anonymousItems);
   }
 
   return scrolledChildStyle.forget();
 }
 
-void
-nsCSSFrameConstructor::FinishBuildingScrollFrame(nsContainerFrame* aScrollFrame,
-                                                 nsIFrame* aScrolledFrame)
-{
+void nsCSSFrameConstructor::FinishBuildingScrollFrame(
+    nsContainerFrame* aScrollFrame, nsIFrame* aScrolledFrame) {
   nsFrameList scrolled(aScrolledFrame, aScrolledFrame);
   aScrollFrame->AppendFrames(kPrincipalList, scrolled);
 }
 
 /**
- * Called to wrap a gfx scrollframe around a frame. The hierarchy will look like this
+ * Called to wrap a gfx scrollframe around a frame. The hierarchy will look like
+ *this
  *
  * ------- for gfx scrollbars ------
  *
@@ -4459,35 +4199,34 @@ nsCSSFrameConstructor::FinishBuildingScrollFrame(nsContainerFrame* aScrollFrame,
  *-----------------------------------
  * LEGEND:
  *
- * ScrollFrame: This is a frame that manages gfx cross platform frame based scrollbars.
+ * ScrollFrame: This is a frame that manages gfx cross platform frame based
+ *scrollbars.
  *
  * @param aContent the content node of the child to wrap.
  * @param aScrolledFrame The frame of the content to wrap. This should not be
- *                    Initialized. This method will initialize it with a scrolled pseudo
- *                    and no nsIContent. The content will be attached to the scrollframe
- *                    returned.
+ *                    Initialized. This method will initialize it with a
+ *scrolled pseudo and no nsIContent. The content will be attached to the
+ *scrollframe returned.
  * @param aContentStyle the style that has already been resolved for the content
  *                      being passed in.
  *
  * @param aParentFrame The parent to attach the scroll frame to
  *
- * @param aNewFrame The new scrollframe or gfx scrollframe that we create. It will contain the
- *                  scrolled frame you passed in. (returned)
- *                  If this is not null, we'll just use it
- * @param aScrolledContentStyle the style that was resolved for the scrolled frame. (returned)
+ * @param aNewFrame The new scrollframe or gfx scrollframe that we create. It
+ *will contain the scrolled frame you passed in. (returned) If this is not null,
+ *we'll just use it
+ * @param aScrolledContentStyle the style that was resolved for the scrolled
+ *frame. (returned)
  */
-void
-nsCSSFrameConstructor::BuildScrollFrame(nsFrameConstructorState& aState,
-                                        nsIContent*              aContent,
-                                        ComputedStyle*           aContentStyle,
-                                        nsIFrame*                aScrolledFrame,
-                                        nsContainerFrame*        aParentFrame,
-                                        nsContainerFrame*&       aNewFrame)
-{
-  RefPtr<ComputedStyle> scrolledContentStyle =
-    BeginBuildingScrollFrame(aState, aContent, aContentStyle, aParentFrame,
-                             nsCSSAnonBoxes::scrolledContent(),
-                             false, aNewFrame);
+void nsCSSFrameConstructor::BuildScrollFrame(nsFrameConstructorState& aState,
+                                             nsIContent* aContent,
+                                             ComputedStyle* aContentStyle,
+                                             nsIFrame* aScrolledFrame,
+                                             nsContainerFrame* aParentFrame,
+                                             nsContainerFrame*& aNewFrame) {
+  RefPtr<ComputedStyle> scrolledContentStyle = BeginBuildingScrollFrame(
+      aState, aContent, aContentStyle, aParentFrame,
+      nsCSSAnonBoxes::scrolledContent(), false, aNewFrame);
 
   aScrolledFrame->SetComputedStyleWithoutNotification(scrolledContentStyle);
   InitAndRestoreFrame(aState, aContent, aNewFrame, aScrolledFrame);
@@ -4497,18 +4236,17 @@ nsCSSFrameConstructor::BuildScrollFrame(nsFrameConstructorState& aState,
 
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
-                                       const Element& aElement)
-{
+                                       const Element& aElement) {
   static_assert(eParentTypeCount < (1 << (32 - FCDATA_PARENT_TYPE_OFFSET)),
                 "Check eParentTypeCount should not overflow");
 
   // The style system ensures that floated and positioned frames are
   // block-level.
-  NS_ASSERTION(!(aDisplay.IsFloatingStyle() ||
-                 aDisplay.IsAbsolutelyPositionedStyle()) ||
-               aDisplay.IsBlockOutsideStyle() ||
-               aDisplay.mDisplay == StyleDisplay::Contents,
-               "Style system did not apply CSS2.1 section 9.7 fixups");
+  NS_ASSERTION(
+      !(aDisplay.IsFloatingStyle() || aDisplay.IsAbsolutelyPositionedStyle()) ||
+          aDisplay.IsBlockOutsideStyle() ||
+          aDisplay.mDisplay == StyleDisplay::Contents,
+      "Style system did not apply CSS2.1 section 9.7 fixups");
 
   // If this is "body", try propagating its scroll style to the viewport
   // Note that we need to do this even if the body is NOT scrollable;
@@ -4520,34 +4258,36 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
   if (aElement.IsHTMLElement(nsGkAtoms::body)) {
     if (nsPresContext* presContext = mPresShell->GetPresContext()) {
       propagatedScrollToViewport =
-        presContext->UpdateViewportScrollStylesOverride() == &aElement;
+          presContext->UpdateViewportScrollStylesOverride() == &aElement;
     }
   }
 
   NS_ASSERTION(!propagatedScrollToViewport ||
-               !mPresShell->GetPresContext()->IsPaginated(),
+                   !mPresShell->GetPresContext()->IsPaginated(),
                "Shouldn't propagate scroll in paginated contexts");
 
   if (aDisplay.IsBlockInsideStyle()) {
     // If the frame is a block-level frame and is scrollable, then wrap it in a
     // scroll frame.  Except we don't want to do that for paginated contexts for
-    // frames that are block-outside and aren't frames for native anonymous stuff.
+    // frames that are block-outside and aren't frames for native anonymous
+    // stuff.
     // XXX Ignore tables for the time being (except caption)
     const uint32_t kCaptionCtorFlags =
-      FCDATA_IS_TABLE_PART | FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable);
+        FCDATA_IS_TABLE_PART | FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable);
     bool caption = aDisplay.mDisplay == StyleDisplay::TableCaption;
     bool suppressScrollFrame = false;
-    bool needScrollFrame = aDisplay.IsScrollableOverflow() &&
-                           !propagatedScrollToViewport;
+    bool needScrollFrame =
+        aDisplay.IsScrollableOverflow() && !propagatedScrollToViewport;
     if (needScrollFrame) {
       suppressScrollFrame = mPresShell->GetPresContext()->IsPaginated() &&
                             aDisplay.IsBlockOutsideStyle() &&
                             !aElement.IsInNativeAnonymousSubtree();
       if (!suppressScrollFrame) {
-        static const FrameConstructionData sScrollableBlockData[2] =
-          { FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructScrollableBlock),
+        static const FrameConstructionData sScrollableBlockData[2] = {
+            FULL_CTOR_FCDATA(0,
+                             &nsCSSFrameConstructor::ConstructScrollableBlock),
             FULL_CTOR_FCDATA(kCaptionCtorFlags,
-                             &nsCSSFrameConstructor::ConstructScrollableBlock) };
+                             &nsCSSFrameConstructor::ConstructScrollableBlock)};
         return &sScrollableBlockData[caption];
       }
 
@@ -4555,23 +4295,23 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
       // viewport, we still want to construct a regular block rather than a
       // scrollframe so that it paginates correctly, but we don't want to set
       // the bit on the block that tells it to clip at paint time.
-      if (mPresShell->GetPresContext()->
-            ElementWouldPropagateScrollStyles(aElement)) {
+      if (mPresShell->GetPresContext()->ElementWouldPropagateScrollStyles(
+              aElement)) {
         suppressScrollFrame = false;
       }
     }
 
     // Handle various non-scrollable blocks.
     static const FrameConstructionData sNonScrollableBlockData[2][2] = {
-      { FULL_CTOR_FCDATA(0,
-                         &nsCSSFrameConstructor::ConstructNonScrollableBlock),
-        FULL_CTOR_FCDATA(kCaptionCtorFlags,
-                         &nsCSSFrameConstructor::ConstructNonScrollableBlock) },
-      { FULL_CTOR_FCDATA(FCDATA_FORCED_NON_SCROLLABLE_BLOCK,
-                         &nsCSSFrameConstructor::ConstructNonScrollableBlock),
-        FULL_CTOR_FCDATA(FCDATA_FORCED_NON_SCROLLABLE_BLOCK | kCaptionCtorFlags,
-                         &nsCSSFrameConstructor::ConstructNonScrollableBlock) }
-    };
+        {FULL_CTOR_FCDATA(0,
+                          &nsCSSFrameConstructor::ConstructNonScrollableBlock),
+         FULL_CTOR_FCDATA(kCaptionCtorFlags,
+                          &nsCSSFrameConstructor::ConstructNonScrollableBlock)},
+        {FULL_CTOR_FCDATA(FCDATA_FORCED_NON_SCROLLABLE_BLOCK,
+                          &nsCSSFrameConstructor::ConstructNonScrollableBlock),
+         FULL_CTOR_FCDATA(
+             FCDATA_FORCED_NON_SCROLLABLE_BLOCK | kCaptionCtorFlags,
+             &nsCSSFrameConstructor::ConstructNonScrollableBlock)}};
     return &sNonScrollableBlockData[suppressScrollFrame][caption];
   }
 
@@ -4584,118 +4324,147 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
         (StaticPrefs::layout_css_emulate_moz_box_with_flex() &&
          aDisplay.mDisplay == StyleDisplay::MozBox)) {
       static const FrameConstructionData sNonScrollableFlexData =
-        FCDATA_DECL(0, NS_NewFlexContainerFrame);
+          FCDATA_DECL(0, NS_NewFlexContainerFrame);
       return &sNonScrollableFlexData;
     }
     if (aDisplay.mDisplay == StyleDisplay::Grid) {
       static const FrameConstructionData sNonScrollableGridData =
-        FCDATA_DECL(0, NS_NewGridContainerFrame);
+          FCDATA_DECL(0, NS_NewGridContainerFrame);
       return &sNonScrollableGridData;
     }
   }
 
   // NOTE: Make sure to keep this up to date with the StyleDisplay definition!
   static const FrameConstructionDataByDisplay sDisplayData[] = {
-    FCDATA_FOR_DISPLAY(StyleDisplay::None, UNREACHABLE_FCDATA()),
-    FCDATA_FOR_DISPLAY(StyleDisplay::Block, UNREACHABLE_FCDATA()),
-    FCDATA_FOR_DISPLAY(StyleDisplay::FlowRoot, UNREACHABLE_FCDATA()),
-    // To keep the hash table small don't add inline frames (they're
-    // typically things like FONT and B), because we can quickly
-    // find them if we need to.
-    // XXXbz the "quickly" part is a bald-faced lie!
-    FCDATA_FOR_DISPLAY(StyleDisplay::Inline,
-      FULL_CTOR_FCDATA(FCDATA_IS_INLINE | FCDATA_IS_LINE_PARTICIPANT,
-                       &nsCSSFrameConstructor::ConstructInline)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::InlineBlock, UNREACHABLE_FCDATA()),
-    FCDATA_FOR_DISPLAY(StyleDisplay::ListItem, UNREACHABLE_FCDATA()),
-    FCDATA_FOR_DISPLAY(StyleDisplay::Table,
-      FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructTable)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::InlineTable,
-      FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructTable)),
-    // NOTE: In the unlikely event that we add another table-part here that has
-    // a desired-parent-type (& hence triggers table fixup), we'll need to also
-    // update the flexbox chunk in ComputedStyle::ApplyStyleFixups().
-    FCDATA_FOR_DISPLAY(StyleDisplay::TableRowGroup,
-      FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART |
-                       FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
-                       &nsCSSFrameConstructor::ConstructTableRowOrRowGroup)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::TableColumn,
-      FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART |
-                       FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeColGroup),
-                       &nsCSSFrameConstructor::ConstructTableCol)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::TableColumnGroup,
-      FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_DISALLOW_OUT_OF_FLOW |
-                  FCDATA_SKIP_ABSPOS_PUSH |
+      FCDATA_FOR_DISPLAY(StyleDisplay::None, UNREACHABLE_FCDATA()),
+      FCDATA_FOR_DISPLAY(StyleDisplay::Block, UNREACHABLE_FCDATA()),
+      FCDATA_FOR_DISPLAY(StyleDisplay::FlowRoot, UNREACHABLE_FCDATA()),
+      // To keep the hash table small don't add inline frames (they're
+      // typically things like FONT and B), because we can quickly
+      // find them if we need to.
+      // XXXbz the "quickly" part is a bald-faced lie!
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::Inline,
+          FULL_CTOR_FCDATA(FCDATA_IS_INLINE | FCDATA_IS_LINE_PARTICIPANT,
+                           &nsCSSFrameConstructor::ConstructInline)),
+      FCDATA_FOR_DISPLAY(StyleDisplay::InlineBlock, UNREACHABLE_FCDATA()),
+      FCDATA_FOR_DISPLAY(StyleDisplay::ListItem, UNREACHABLE_FCDATA()),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::Table,
+          FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructTable)),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::InlineTable,
+          FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructTable)),
+      // NOTE: In the unlikely event that we add another table-part here that
+      // has a desired-parent-type (& hence triggers table fixup), we'll need to
+      // also update the flexbox chunk in ComputedStyle::ApplyStyleFixups().
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::TableRowGroup,
+          FULL_CTOR_FCDATA(
+              FCDATA_IS_TABLE_PART |
                   FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
-                  NS_NewTableColGroupFrame)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::TableHeaderGroup,
-      FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART |
-                       FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
-                       &nsCSSFrameConstructor::ConstructTableRowOrRowGroup)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::TableFooterGroup,
-      FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART |
-                       FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
-                       &nsCSSFrameConstructor::ConstructTableRowOrRowGroup)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::TableRow,
-      FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART |
-                       FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRowGroup),
-                       &nsCSSFrameConstructor::ConstructTableRowOrRowGroup)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::TableCell,
-      FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART |
-                       FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRow),
-                       &nsCSSFrameConstructor::ConstructTableCell)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::TableCaption, UNREACHABLE_FCDATA()),
-    FCDATA_FOR_DISPLAY(StyleDisplay::Flex,
-      FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::InlineFlex,
-      FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::Grid,
-      FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewGridContainerFrame)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::InlineGrid,
-      FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewGridContainerFrame)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::Ruby,
-      FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT, NS_NewRubyFrame)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::RubyBase,
-      FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
-                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRubyBaseContainer),
-                  NS_NewRubyBaseFrame)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::RubyBaseContainer,
-      FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
-                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby),
-                  NS_NewRubyBaseContainerFrame)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::RubyText,
-      FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
-                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRubyTextContainer),
-                  NS_NewRubyTextFrame)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::RubyTextContainer,
-      FCDATA_DECL(FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby),
-                  NS_NewRubyTextContainerFrame)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::Contents, UNREACHABLE_FCDATA()),
-    FCDATA_FOR_DISPLAY(StyleDisplay::WebkitBox,
-      FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::WebkitInlineBox,
-      FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::MozBox,
-      FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::MozInlineBox,
-      FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame)),
+              &nsCSSFrameConstructor::ConstructTableRowOrRowGroup)),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::TableColumn,
+          FULL_CTOR_FCDATA(
+              FCDATA_IS_TABLE_PART |
+                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeColGroup),
+              &nsCSSFrameConstructor::ConstructTableCol)),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::TableColumnGroup,
+          FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_DISALLOW_OUT_OF_FLOW |
+                          FCDATA_SKIP_ABSPOS_PUSH |
+                          FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
+                      NS_NewTableColGroupFrame)),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::TableHeaderGroup,
+          FULL_CTOR_FCDATA(
+              FCDATA_IS_TABLE_PART |
+                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
+              &nsCSSFrameConstructor::ConstructTableRowOrRowGroup)),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::TableFooterGroup,
+          FULL_CTOR_FCDATA(
+              FCDATA_IS_TABLE_PART |
+                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
+              &nsCSSFrameConstructor::ConstructTableRowOrRowGroup)),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::TableRow,
+          FULL_CTOR_FCDATA(
+              FCDATA_IS_TABLE_PART |
+                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRowGroup),
+              &nsCSSFrameConstructor::ConstructTableRowOrRowGroup)),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::TableCell,
+          FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART |
+                               FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRow),
+                           &nsCSSFrameConstructor::ConstructTableCell)),
+      FCDATA_FOR_DISPLAY(StyleDisplay::TableCaption, UNREACHABLE_FCDATA()),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::Flex,
+          FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame)),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::InlineFlex,
+          FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame)),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::Grid,
+          FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewGridContainerFrame)),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::InlineGrid,
+          FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewGridContainerFrame)),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::Ruby,
+          FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT, NS_NewRubyFrame)),
+      FCDATA_FOR_DISPLAY(StyleDisplay::RubyBase,
+                         FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
+                                         FCDATA_DESIRED_PARENT_TYPE_TO_BITS(
+                                             eTypeRubyBaseContainer),
+                                     NS_NewRubyBaseFrame)),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::RubyBaseContainer,
+          FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
+                          FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby),
+                      NS_NewRubyBaseContainerFrame)),
+      FCDATA_FOR_DISPLAY(StyleDisplay::RubyText,
+                         FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
+                                         FCDATA_DESIRED_PARENT_TYPE_TO_BITS(
+                                             eTypeRubyTextContainer),
+                                     NS_NewRubyTextFrame)),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::RubyTextContainer,
+          FCDATA_DECL(FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby),
+                      NS_NewRubyTextContainerFrame)),
+      FCDATA_FOR_DISPLAY(StyleDisplay::Contents, UNREACHABLE_FCDATA()),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::WebkitBox,
+          FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame)),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::WebkitInlineBox,
+          FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame)),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::MozBox,
+          FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame)),
+      FCDATA_FOR_DISPLAY(
+          StyleDisplay::MozInlineBox,
+          FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame)),
   };
-  static_assert(ArrayLength(sDisplayData) == size_t(StyleDisplay::MozInlineBox) + 1,
-                "Be sure to update sDisplayData if you touch StyleDisplay");
+  static_assert(
+      ArrayLength(sDisplayData) == size_t(StyleDisplay::MozInlineBox) + 1,
+      "Be sure to update sDisplayData if you touch StyleDisplay");
   MOZ_ASSERT(StaticPrefs::layout_css_emulate_moz_box_with_flex() ||
-             (aDisplay.mDisplay != StyleDisplay::MozBox &&
-              aDisplay.mDisplay != StyleDisplay::MozInlineBox),
+                 (aDisplay.mDisplay != StyleDisplay::MozBox &&
+                  aDisplay.mDisplay != StyleDisplay::MozInlineBox),
              "-moz-{inline-}box as XUL should have already been handled");
   MOZ_ASSERT(size_t(aDisplay.mDisplay) < ArrayLength(sDisplayData),
              "XUL display data should have already been handled");
 
   // See the mDisplay fixup code in StyleAdjuster::adjust.
   MOZ_ASSERT(aDisplay.mDisplay != StyleDisplay::Contents ||
-             !aElement.IsRootOfNativeAnonymousSubtree(),
+                 !aElement.IsRootOfNativeAnonymousSubtree(),
              "display:contents on anonymous content is unsupported");
 
   const FrameConstructionDataByDisplay& data =
-    sDisplayData[size_t(aDisplay.mDisplay)];
+      sDisplayData[size_t(aDisplay.mDisplay)];
 
   MOZ_ASSERT(data.mDisplay == aDisplay.mDisplay,
              "Someone messed up the order in the display values");
@@ -4703,36 +4472,27 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
   return &data.mData;
 }
 
-nsIFrame*
-nsCSSFrameConstructor::ConstructScrollableBlock(nsFrameConstructorState& aState,
-                                                FrameConstructionItem&   aItem,
-                                                nsContainerFrame*        aParentFrame,
-                                                const nsStyleDisplay*    aDisplay,
-                                                nsFrameItems&            aFrameItems)
-{
+nsIFrame* nsCSSFrameConstructor::ConstructScrollableBlock(
+    nsFrameConstructorState& aState, FrameConstructionItem& aItem,
+    nsContainerFrame* aParentFrame, const nsStyleDisplay* aDisplay,
+    nsFrameItems& aFrameItems) {
   return ConstructScrollableBlockWithConstructor(aState, aItem, aParentFrame,
                                                  aDisplay, aFrameItems,
                                                  NS_NewBlockFormattingContext);
 }
 
-nsIFrame*
-nsCSSFrameConstructor::ConstructScrollableBlockWithConstructor(
-  nsFrameConstructorState& aState,
-  FrameConstructionItem& aItem,
-  nsContainerFrame* aParentFrame,
-  const nsStyleDisplay* aDisplay,
-  nsFrameItems& aFrameItems,
-  BlockFrameCreationFunc aConstructor)
-{
+nsIFrame* nsCSSFrameConstructor::ConstructScrollableBlockWithConstructor(
+    nsFrameConstructorState& aState, FrameConstructionItem& aItem,
+    nsContainerFrame* aParentFrame, const nsStyleDisplay* aDisplay,
+    nsFrameItems& aFrameItems, BlockFrameCreationFunc aConstructor) {
   nsIContent* const content = aItem.mContent;
   ComputedStyle* const computedStyle = aItem.mComputedStyle;
 
   nsContainerFrame* newFrame = nullptr;
-  RefPtr<ComputedStyle> scrolledContentStyle
-    = BeginBuildingScrollFrame(aState, content, computedStyle,
-                               aState.GetGeometricParent(*aDisplay, aParentFrame),
-                               nsCSSAnonBoxes::scrolledContent(),
-                               false, newFrame);
+  RefPtr<ComputedStyle> scrolledContentStyle = BeginBuildingScrollFrame(
+      aState, content, computedStyle,
+      aState.GetGeometricParent(*aDisplay, aParentFrame),
+      nsCSSAnonBoxes::scrolledContent(), false, newFrame);
 
   // Create our block frame
   // pass a temporary stylecontext, the correct one will be set later
@@ -4743,10 +4503,11 @@ nsCSSFrameConstructor::ConstructScrollableBlockWithConstructor(
   aState.AddChild(newFrame, aFrameItems, content, aParentFrame);
 
   nsFrameItems blockItem;
-  ConstructBlock(aState, content, newFrame, newFrame, scrolledContentStyle,
-                 &scrolledFrame, blockItem,
-                 aDisplay->IsAbsPosContainingBlock(newFrame) ? newFrame : nullptr,
-                 aItem.mPendingBinding);
+  ConstructBlock(
+      aState, content, newFrame, newFrame, scrolledContentStyle, &scrolledFrame,
+      blockItem,
+      aDisplay->IsAbsPosContainingBlock(newFrame) ? newFrame : nullptr,
+      aItem.mPendingBinding);
 
   MOZ_ASSERT(blockItem.OnlyChild() == scrolledFrame,
              "Scrollframe's frameItems should be exactly the scrolled frame!");
@@ -4755,27 +4516,18 @@ nsCSSFrameConstructor::ConstructScrollableBlockWithConstructor(
   return newFrame;
 }
 
-nsIFrame*
-nsCSSFrameConstructor::ConstructNonScrollableBlock(nsFrameConstructorState& aState,
-                                                   FrameConstructionItem&   aItem,
-                                                   nsContainerFrame*        aParentFrame,
-                                                   const nsStyleDisplay*    aDisplay,
-                                                   nsFrameItems&            aFrameItems)
-{
-  return ConstructNonScrollableBlockWithConstructor(aState, aItem, aParentFrame,
-                                                    aDisplay, aFrameItems,
-                                                    NS_NewBlockFrame);
+nsIFrame* nsCSSFrameConstructor::ConstructNonScrollableBlock(
+    nsFrameConstructorState& aState, FrameConstructionItem& aItem,
+    nsContainerFrame* aParentFrame, const nsStyleDisplay* aDisplay,
+    nsFrameItems& aFrameItems) {
+  return ConstructNonScrollableBlockWithConstructor(
+      aState, aItem, aParentFrame, aDisplay, aFrameItems, NS_NewBlockFrame);
 }
 
-nsIFrame*
-nsCSSFrameConstructor::ConstructNonScrollableBlockWithConstructor(
-  nsFrameConstructorState& aState,
-  FrameConstructionItem& aItem,
-  nsContainerFrame* aParentFrame,
-  const nsStyleDisplay* aDisplay,
-  nsFrameItems& aFrameItems,
-  BlockFrameCreationFunc aConstructor)
-{
+nsIFrame* nsCSSFrameConstructor::ConstructNonScrollableBlockWithConstructor(
+    nsFrameConstructorState& aState, FrameConstructionItem& aItem,
+    nsContainerFrame* aParentFrame, const nsStyleDisplay* aDisplay,
+    nsFrameItems& aFrameItems, BlockFrameCreationFunc aConstructor) {
   ComputedStyle* const computedStyle = aItem.mComputedStyle;
 
   // We want a block formatting context root in paginated contexts for
@@ -4783,10 +4535,9 @@ nsCSSFrameConstructor::ConstructNonScrollableBlockWithConstructor(
   // We mark our blocks with a bit here if this condition is true, so
   // we can check it later in nsFrame::ApplyPaginatedOverflowClipping.
   bool clipPaginatedOverflow =
-    (aItem.mFCData->mBits & FCDATA_FORCED_NON_SCROLLABLE_BLOCK) != 0;
+      (aItem.mFCData->mBits & FCDATA_FORCED_NON_SCROLLABLE_BLOCK) != 0;
   nsFrameState flags = nsFrameState(0);
-  if ((aDisplay->IsAbsolutelyPositionedStyle() ||
-       aDisplay->IsFloatingStyle() ||
+  if ((aDisplay->IsAbsolutelyPositionedStyle() || aDisplay->IsFloatingStyle() ||
        StyleDisplay::InlineBlock == aDisplay->mDisplay ||
        clipPaginatedOverflow) &&
       !nsSVGUtils::IsInSVGTextSubtree(aParentFrame)) {
@@ -4798,23 +4549,18 @@ nsCSSFrameConstructor::ConstructNonScrollableBlockWithConstructor(
 
   nsContainerFrame* newFrame = aConstructor(mPresShell, computedStyle);
   newFrame->AddStateBits(flags);
-  ConstructBlock(aState, aItem.mContent,
-                 aState.GetGeometricParent(*aDisplay, aParentFrame),
-                 aParentFrame, computedStyle, &newFrame,
-                 aFrameItems,
-                 aDisplay->IsAbsPosContainingBlock(newFrame) ? newFrame : nullptr,
-                 aItem.mPendingBinding);
+  ConstructBlock(
+      aState, aItem.mContent,
+      aState.GetGeometricParent(*aDisplay, aParentFrame), aParentFrame,
+      computedStyle, &newFrame, aFrameItems,
+      aDisplay->IsAbsPosContainingBlock(newFrame) ? newFrame : nullptr,
+      aItem.mPendingBinding);
   return newFrame;
 }
 
-
-void
-nsCSSFrameConstructor::InitAndRestoreFrame(const nsFrameConstructorState& aState,
-                                           nsIContent*              aContent,
-                                           nsContainerFrame*        aParentFrame,
-                                           nsIFrame*                aNewFrame,
-                                           bool                     aAllowCounters)
-{
+void nsCSSFrameConstructor::InitAndRestoreFrame(
+    const nsFrameConstructorState& aState, nsIContent* aContent,
+    nsContainerFrame* aParentFrame, nsIFrame* aNewFrame, bool aAllowCounters) {
   MOZ_ASSERT(aNewFrame, "Null frame cannot be initialized");
 
   // Initialize the frame
@@ -4832,9 +4578,8 @@ nsCSSFrameConstructor::InitAndRestoreFrame(const nsFrameConstructorState& aState
   }
 }
 
-already_AddRefed<ComputedStyle>
-nsCSSFrameConstructor::ResolveComputedStyle(nsIContent* aContent)
-{
+already_AddRefed<ComputedStyle> nsCSSFrameConstructor::ResolveComputedStyle(
+    nsIContent* aContent) {
   ServoStyleSet* styleSet = mPresShell->StyleSet();
 
   if (auto* element = Element::FromNode(aContent)) {
@@ -4859,18 +4604,15 @@ nsCSSFrameConstructor::ResolveComputedStyle(nsIContent* aContent)
   // Do NOT add new callers to this function in this file, ever, or I'll find
   // out.
   RefPtr<ComputedStyle> parentStyle =
-    Servo_Element_GetPrimaryComputedValues(parent).Consume();
+      Servo_Element_GetPrimaryComputedValues(parent).Consume();
   return styleSet->ResolveStyleForText(aContent, parentStyle);
 }
 
 // MathML Mod - RBS
-void
-nsCSSFrameConstructor::FlushAccumulatedBlock(nsFrameConstructorState& aState,
-                                             nsIContent* aContent,
-                                             nsContainerFrame* aParentFrame,
-                                             nsFrameItems& aBlockItems,
-                                             nsFrameItems& aNewItems)
-{
+void nsCSSFrameConstructor::FlushAccumulatedBlock(
+    nsFrameConstructorState& aState, nsIContent* aContent,
+    nsContainerFrame* aParentFrame, nsFrameItems& aBlockItems,
+    nsFrameItems& aNewItems) {
   if (aBlockItems.IsEmpty()) {
     // Nothing to do
     return;
@@ -4879,18 +4621,17 @@ nsCSSFrameConstructor::FlushAccumulatedBlock(nsFrameConstructorState& aState,
   nsAtom* anonPseudo = nsCSSAnonBoxes::mozMathMLAnonymousBlock();
 
   ComputedStyle* parentContext =
-    nsFrame::CorrectStyleParentFrame(aParentFrame,
-                                     anonPseudo)->Style();
+      nsFrame::CorrectStyleParentFrame(aParentFrame, anonPseudo)->Style();
   ServoStyleSet* styleSet = mPresShell->StyleSet();
   RefPtr<ComputedStyle> blockContext;
-  blockContext = styleSet->
-    ResolveInheritingAnonymousBoxStyle(anonPseudo, parentContext);
+  blockContext =
+      styleSet->ResolveInheritingAnonymousBoxStyle(anonPseudo, parentContext);
 
   // then, create a block frame that will wrap the child frames. Make it a
   // MathML frame so that Get(Absolute/Float)ContainingBlockFor know that this
   // is not a suitable block.
   nsContainerFrame* blockFrame =
-    NS_NewMathMLmathBlockFrame(mPresShell, blockContext);
+      NS_NewMathMLmathBlockFrame(mPresShell, blockContext);
 
   InitAndRestoreFrame(aState, aContent, aParentFrame, blockFrame);
   ReparentFrames(this, blockFrame, aBlockItems, false);
@@ -4908,17 +4649,18 @@ nsCSSFrameConstructor::FlushAccumulatedBlock(nsFrameConstructorState& aState,
 
 // Only <math> elements can be floated or positioned.  All other MathML
 // should be in-flow.
-#define SIMPLE_MATHML_CREATE(_tag, _func)                               \
-  { nsGkAtoms::_tag,                                                    \
-    FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW |                           \
-                FCDATA_FORCE_NULL_ABSPOS_CONTAINER |                    \
-                FCDATA_WRAP_KIDS_IN_BLOCKS, _func) }
+#define SIMPLE_MATHML_CREATE(_tag, _func)                                 \
+  {                                                                       \
+    nsGkAtoms::_tag, FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW |            \
+                                     FCDATA_FORCE_NULL_ABSPOS_CONTAINER | \
+                                     FCDATA_WRAP_KIDS_IN_BLOCKS,          \
+                                 _func)                                   \
+  }
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindMathMLData(const Element& aElement,
-                                      ComputedStyle& aStyle)
-{
+                                      ComputedStyle& aStyle) {
   MOZ_ASSERT(aElement.IsMathMLElement());
 
   nsAtom* tag = aElement.NodeInfo()->NameAtom();
@@ -4930,70 +4672,60 @@ nsCSSFrameConstructor::FindMathMLData(const Element& aElement,
     // already-block-outside things. Though the behavior here for the
     // display:table case is pretty weird...
     if (aStyle.StyleDisplay()->IsBlockOutsideStyle()) {
-      static const FrameConstructionData sBlockMathData =
-        FCDATA_DECL(FCDATA_FORCE_NULL_ABSPOS_CONTAINER |
-                    FCDATA_WRAP_KIDS_IN_BLOCKS,
-                    NS_NewMathMLmathBlockFrame);
+      static const FrameConstructionData sBlockMathData = FCDATA_DECL(
+          FCDATA_FORCE_NULL_ABSPOS_CONTAINER | FCDATA_WRAP_KIDS_IN_BLOCKS,
+          NS_NewMathMLmathBlockFrame);
       return &sBlockMathData;
     }
 
     static const FrameConstructionData sInlineMathData =
-      FCDATA_DECL(FCDATA_FORCE_NULL_ABSPOS_CONTAINER |
-                  FCDATA_IS_LINE_PARTICIPANT |
-                  FCDATA_WRAP_KIDS_IN_BLOCKS,
-                  NS_NewMathMLmathInlineFrame);
+        FCDATA_DECL(FCDATA_FORCE_NULL_ABSPOS_CONTAINER |
+                        FCDATA_IS_LINE_PARTICIPANT | FCDATA_WRAP_KIDS_IN_BLOCKS,
+                    NS_NewMathMLmathInlineFrame);
     return &sInlineMathData;
   }
 
-
   static const FrameConstructionDataByTag sMathMLData[] = {
-    SIMPLE_MATHML_CREATE(annotation_, NS_NewMathMLTokenFrame),
-    SIMPLE_MATHML_CREATE(annotation_xml_, NS_NewMathMLmrowFrame),
-    SIMPLE_MATHML_CREATE(mi_, NS_NewMathMLTokenFrame),
-    SIMPLE_MATHML_CREATE(mn_, NS_NewMathMLTokenFrame),
-    SIMPLE_MATHML_CREATE(ms_, NS_NewMathMLTokenFrame),
-    SIMPLE_MATHML_CREATE(mtext_, NS_NewMathMLTokenFrame),
-    SIMPLE_MATHML_CREATE(mo_, NS_NewMathMLmoFrame),
-    SIMPLE_MATHML_CREATE(mfrac_, NS_NewMathMLmfracFrame),
-    SIMPLE_MATHML_CREATE(msup_, NS_NewMathMLmmultiscriptsFrame),
-    SIMPLE_MATHML_CREATE(msub_, NS_NewMathMLmmultiscriptsFrame),
-    SIMPLE_MATHML_CREATE(msubsup_, NS_NewMathMLmmultiscriptsFrame),
-    SIMPLE_MATHML_CREATE(munder_, NS_NewMathMLmunderoverFrame),
-    SIMPLE_MATHML_CREATE(mover_, NS_NewMathMLmunderoverFrame),
-    SIMPLE_MATHML_CREATE(munderover_, NS_NewMathMLmunderoverFrame),
-    SIMPLE_MATHML_CREATE(mphantom_, NS_NewMathMLmrowFrame),
-    SIMPLE_MATHML_CREATE(mpadded_, NS_NewMathMLmpaddedFrame),
-    SIMPLE_MATHML_CREATE(mspace_, NS_NewMathMLmspaceFrame),
-    SIMPLE_MATHML_CREATE(none, NS_NewMathMLmspaceFrame),
-    SIMPLE_MATHML_CREATE(mprescripts_, NS_NewMathMLmspaceFrame),
-    SIMPLE_MATHML_CREATE(mfenced_, NS_NewMathMLmfencedFrame),
-    SIMPLE_MATHML_CREATE(mmultiscripts_, NS_NewMathMLmmultiscriptsFrame),
-    SIMPLE_MATHML_CREATE(mstyle_, NS_NewMathMLmrowFrame),
-    SIMPLE_MATHML_CREATE(msqrt_, NS_NewMathMLmsqrtFrame),
-    SIMPLE_MATHML_CREATE(mroot_, NS_NewMathMLmrootFrame),
-    SIMPLE_MATHML_CREATE(maction_, NS_NewMathMLmactionFrame),
-    SIMPLE_MATHML_CREATE(mrow_, NS_NewMathMLmrowFrame),
-    SIMPLE_MATHML_CREATE(merror_, NS_NewMathMLmrowFrame),
-    SIMPLE_MATHML_CREATE(menclose_, NS_NewMathMLmencloseFrame),
-    SIMPLE_MATHML_CREATE(semantics_, NS_NewMathMLsemanticsFrame)
-  };
+      SIMPLE_MATHML_CREATE(annotation_, NS_NewMathMLTokenFrame),
+      SIMPLE_MATHML_CREATE(annotation_xml_, NS_NewMathMLmrowFrame),
+      SIMPLE_MATHML_CREATE(mi_, NS_NewMathMLTokenFrame),
+      SIMPLE_MATHML_CREATE(mn_, NS_NewMathMLTokenFrame),
+      SIMPLE_MATHML_CREATE(ms_, NS_NewMathMLTokenFrame),
+      SIMPLE_MATHML_CREATE(mtext_, NS_NewMathMLTokenFrame),
+      SIMPLE_MATHML_CREATE(mo_, NS_NewMathMLmoFrame),
+      SIMPLE_MATHML_CREATE(mfrac_, NS_NewMathMLmfracFrame),
+      SIMPLE_MATHML_CREATE(msup_, NS_NewMathMLmmultiscriptsFrame),
+      SIMPLE_MATHML_CREATE(msub_, NS_NewMathMLmmultiscriptsFrame),
+      SIMPLE_MATHML_CREATE(msubsup_, NS_NewMathMLmmultiscriptsFrame),
+      SIMPLE_MATHML_CREATE(munder_, NS_NewMathMLmunderoverFrame),
+      SIMPLE_MATHML_CREATE(mover_, NS_NewMathMLmunderoverFrame),
+      SIMPLE_MATHML_CREATE(munderover_, NS_NewMathMLmunderoverFrame),
+      SIMPLE_MATHML_CREATE(mphantom_, NS_NewMathMLmrowFrame),
+      SIMPLE_MATHML_CREATE(mpadded_, NS_NewMathMLmpaddedFrame),
+      SIMPLE_MATHML_CREATE(mspace_, NS_NewMathMLmspaceFrame),
+      SIMPLE_MATHML_CREATE(none, NS_NewMathMLmspaceFrame),
+      SIMPLE_MATHML_CREATE(mprescripts_, NS_NewMathMLmspaceFrame),
+      SIMPLE_MATHML_CREATE(mfenced_, NS_NewMathMLmfencedFrame),
+      SIMPLE_MATHML_CREATE(mmultiscripts_, NS_NewMathMLmmultiscriptsFrame),
+      SIMPLE_MATHML_CREATE(mstyle_, NS_NewMathMLmrowFrame),
+      SIMPLE_MATHML_CREATE(msqrt_, NS_NewMathMLmsqrtFrame),
+      SIMPLE_MATHML_CREATE(mroot_, NS_NewMathMLmrootFrame),
+      SIMPLE_MATHML_CREATE(maction_, NS_NewMathMLmactionFrame),
+      SIMPLE_MATHML_CREATE(mrow_, NS_NewMathMLmrowFrame),
+      SIMPLE_MATHML_CREATE(merror_, NS_NewMathMLmrowFrame),
+      SIMPLE_MATHML_CREATE(menclose_, NS_NewMathMLmencloseFrame),
+      SIMPLE_MATHML_CREATE(semantics_, NS_NewMathMLsemanticsFrame)};
 
   return FindDataByTag(tag, aElement, aStyle, sMathMLData,
                        ArrayLength(sMathMLData));
 }
 
-
-nsContainerFrame*
-nsCSSFrameConstructor::ConstructFrameWithAnonymousChild(
-                                   nsFrameConstructorState& aState,
-                                   FrameConstructionItem&   aItem,
-                                   nsContainerFrame*        aParentFrame,
-                                   nsFrameItems&            aFrameItems,
-                                   ContainerFrameCreationFunc aConstructor,
-                                   ContainerFrameCreationFunc aInnerConstructor,
-                                   nsCSSAnonBoxPseudoStaticAtom* aInnerPseudo,
-                                   bool                     aCandidateRootFrame)
-{
+nsContainerFrame* nsCSSFrameConstructor::ConstructFrameWithAnonymousChild(
+    nsFrameConstructorState& aState, FrameConstructionItem& aItem,
+    nsContainerFrame* aParentFrame, nsFrameItems& aFrameItems,
+    ContainerFrameCreationFunc aConstructor,
+    ContainerFrameCreationFunc aInnerConstructor,
+    nsCSSAnonBoxPseudoStaticAtom* aInnerPseudo, bool aCandidateRootFrame) {
   nsIContent* const content = aItem.mContent;
   ComputedStyle* const computedStyle = aItem.mComputedStyle;
 
@@ -5001,17 +4733,17 @@ nsCSSFrameConstructor::ConstructFrameWithAnonymousChild(
   nsContainerFrame* newFrame = aConstructor(mPresShell, computedStyle);
 
   InitAndRestoreFrame(aState, content,
-                      aCandidateRootFrame ?
-                        aState.GetGeometricParent(*computedStyle->StyleDisplay(),
-                                                  aParentFrame) :
-                        aParentFrame,
+                      aCandidateRootFrame
+                          ? aState.GetGeometricParent(
+                                *computedStyle->StyleDisplay(), aParentFrame)
+                          : aParentFrame,
                       newFrame);
   newFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
 
   // Create the pseudo SC for the anonymous wrapper child as a child of the SC:
   RefPtr<ComputedStyle> scForAnon;
-  scForAnon = mPresShell->StyleSet()->
-    ResolveInheritingAnonymousBoxStyle(aInnerPseudo, computedStyle);
+  scForAnon = mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
+      aInnerPseudo, computedStyle);
 
   // Create the anonymous inner wrapper frame
   nsContainerFrame* innerFrame = aInnerConstructor(mPresShell, scForAnon);
@@ -5034,13 +4766,12 @@ nsCSSFrameConstructor::ConstructFrameWithAnonymousChild(
 
   // Process children
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
-    ConstructFramesFromItemList(aState, aItem.mChildItems,
-                                innerFrame,
-                                aItem.mFCData->mBits & FCDATA_IS_WRAPPER_ANON_BOX,
-                                childItems);
+    ConstructFramesFromItemList(
+        aState, aItem.mChildItems, innerFrame,
+        aItem.mFCData->mBits & FCDATA_IS_WRAPPER_ANON_BOX, childItems);
   } else {
-    ProcessChildren(aState, content, computedStyle, innerFrame,
-                    true, childItems, false, aItem.mPendingBinding);
+    ProcessChildren(aState, content, computedStyle, innerFrame, true,
+                    childItems, false, aItem.mPendingBinding);
   }
 
   // Set the inner wrapper frame's initial primary list
@@ -5049,52 +4780,40 @@ nsCSSFrameConstructor::ConstructFrameWithAnonymousChild(
   return newFrame;
 }
 
-nsIFrame*
-nsCSSFrameConstructor::ConstructOuterSVG(nsFrameConstructorState& aState,
-                                         FrameConstructionItem&   aItem,
-                                         nsContainerFrame*        aParentFrame,
-                                         const nsStyleDisplay*    aDisplay,
-                                         nsFrameItems&            aFrameItems)
-{
+nsIFrame* nsCSSFrameConstructor::ConstructOuterSVG(
+    nsFrameConstructorState& aState, FrameConstructionItem& aItem,
+    nsContainerFrame* aParentFrame, const nsStyleDisplay* aDisplay,
+    nsFrameItems& aFrameItems) {
   return ConstructFrameWithAnonymousChild(
-      aState, aItem, aParentFrame, aFrameItems,
-      NS_NewSVGOuterSVGFrame, NS_NewSVGOuterSVGAnonChildFrame,
+      aState, aItem, aParentFrame, aFrameItems, NS_NewSVGOuterSVGFrame,
+      NS_NewSVGOuterSVGAnonChildFrame,
       nsCSSAnonBoxes::mozSVGOuterSVGAnonChild(), true);
 }
 
-nsIFrame*
-nsCSSFrameConstructor::ConstructMarker(nsFrameConstructorState& aState,
-                                       FrameConstructionItem&   aItem,
-                                       nsContainerFrame*        aParentFrame,
-                                       const nsStyleDisplay*    aDisplay,
-                                       nsFrameItems&            aFrameItems)
-{
+nsIFrame* nsCSSFrameConstructor::ConstructMarker(
+    nsFrameConstructorState& aState, FrameConstructionItem& aItem,
+    nsContainerFrame* aParentFrame, const nsStyleDisplay* aDisplay,
+    nsFrameItems& aFrameItems) {
   return ConstructFrameWithAnonymousChild(
-      aState, aItem, aParentFrame, aFrameItems,
-      NS_NewSVGMarkerFrame, NS_NewSVGMarkerAnonChildFrame,
-      nsCSSAnonBoxes::mozSVGMarkerAnonChild(), false);
+      aState, aItem, aParentFrame, aFrameItems, NS_NewSVGMarkerFrame,
+      NS_NewSVGMarkerAnonChildFrame, nsCSSAnonBoxes::mozSVGMarkerAnonChild(),
+      false);
 }
 
 // Only outer <svg> elements can be floated or positioned.  All other SVG
 // should be in-flow.
-#define SIMPLE_SVG_FCDATA(_func)                                        \
-  FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW |                             \
-              FCDATA_SKIP_ABSPOS_PUSH |                                 \
-              FCDATA_DISALLOW_GENERATED_CONTENT,  _func)
-#define SIMPLE_SVG_CREATE(_tag, _func)            \
+#define SIMPLE_SVG_FCDATA(_func)                                      \
+  FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_SKIP_ABSPOS_PUSH | \
+                  FCDATA_DISALLOW_GENERATED_CONTENT,                  \
+              _func)
+#define SIMPLE_SVG_CREATE(_tag, _func) \
   { nsGkAtoms::_tag, SIMPLE_SVG_FCDATA(_func) }
 
-static bool
-IsFilterPrimitiveChildTag(const nsAtom* aTag)
-{
-  return aTag == nsGkAtoms::feDistantLight ||
-         aTag == nsGkAtoms::fePointLight ||
-         aTag == nsGkAtoms::feSpotLight ||
-         aTag == nsGkAtoms::feFuncR ||
-         aTag == nsGkAtoms::feFuncG ||
-         aTag == nsGkAtoms::feFuncB ||
-         aTag == nsGkAtoms::feFuncA ||
-         aTag == nsGkAtoms::feMergeNode;
+static bool IsFilterPrimitiveChildTag(const nsAtom* aTag) {
+  return aTag == nsGkAtoms::feDistantLight || aTag == nsGkAtoms::fePointLight ||
+         aTag == nsGkAtoms::feSpotLight || aTag == nsGkAtoms::feFuncR ||
+         aTag == nsGkAtoms::feFuncG || aTag == nsGkAtoms::feFuncB ||
+         aTag == nsGkAtoms::feFuncA || aTag == nsGkAtoms::feMergeNode;
 }
 
 /* static */
@@ -5103,17 +4822,16 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
                                    nsIFrame* aParentFrame,
                                    bool aIsWithinSVGText,
                                    bool aAllowsTextPathChild,
-                                   ComputedStyle& aStyle)
-{
+                                   ComputedStyle& aStyle) {
   MOZ_ASSERT(aElement.IsSVGElement());
 
   static const FrameConstructionData sSuppressData = SUPPRESS_FCDATA();
   static const FrameConstructionData sContainerData =
-    SIMPLE_SVG_FCDATA(NS_NewSVGContainerFrame);
+      SIMPLE_SVG_FCDATA(NS_NewSVGContainerFrame);
 
   bool parentIsSVG = aIsWithinSVGText;
   nsIContent* parentContent =
-    aParentFrame ? aParentFrame->GetContent() : nullptr;
+      aParentFrame ? aParentFrame->GetContent() : nullptr;
 
   nsAtom* tag = aElement.NodeInfo()->NameAtom();
 
@@ -5126,8 +4844,8 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
     // 23.2), but if it does, it better be svg:svg.  So given that
     // we're allowing it, treat it as a non-SVG parent.
     parentIsSVG =
-      parentContent->IsSVGElement() &&
-      parentContent->NodeInfo()->NameAtom() != nsGkAtoms::foreignObject;
+        parentContent->IsSVGElement() &&
+        parentContent->NodeInfo()->NameAtom() != nsGkAtoms::foreignObject;
   }
 
   if ((tag != nsGkAtoms::svg && !parentIsSVG) ||
@@ -5160,18 +4878,17 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
     // and do the PassesConditionalProcessingTests call in
     // nsSVGOuterSVGFrame::Init.
     static const FrameConstructionData sOuterSVGData =
-      FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructOuterSVG);
+        FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructOuterSVG);
     return &sOuterSVGData;
   }
 
   if (tag == nsGkAtoms::marker) {
     static const FrameConstructionData sMarkerSVGData =
-      FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructMarker);
+        FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructMarker);
     return &sMarkerSVGData;
   }
 
-  nsCOMPtr<SVGTests> tests =
-    do_QueryInterface(const_cast<Element*>(&aElement));
+  nsCOMPtr<SVGTests> tests = do_QueryInterface(const_cast<Element*>(&aElement));
   if (tests && !tests->PassesConditionalProcessingTests()) {
     // Elements with failing conditional processing attributes never get
     // rendered.  Note that this is not where we select which frame in a
@@ -5193,8 +4910,8 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
   // Ensure that a stop frame is a child of a gradient and that gradients
   // can only have stop children.
   bool parentIsGradient =
-    aParentFrame && (aParentFrame->IsSVGLinearGradientFrame() ||
-                     aParentFrame->IsSVGRadialGradientFrame());
+      aParentFrame && (aParentFrame->IsSVGLinearGradientFrame() ||
+                       aParentFrame->IsSVGRadialGradientFrame());
   bool stop = (tag == nsGkAtoms::stop);
   if ((parentIsGradient && !stop) || (!parentIsGradient && stop)) {
     return &sSuppressData;
@@ -5215,7 +4932,7 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
   // that will be created will be an nsInlineFrame, so it can never be a filter
   // primitive.
   bool parentIsFEContainerFrame =
-    aParentFrame && aParentFrame->IsSVGFEContainerFrame();
+      aParentFrame && aParentFrame->IsSVGFEContainerFrame();
   if ((parentIsFEContainerFrame && !IsFilterPrimitiveChildTag(tag)) ||
       (!parentIsFEContainerFrame && IsFilterPrimitiveChildTag(tag))) {
     return &sSuppressData;
@@ -5230,91 +4947,84 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
 
     // We don't use ConstructInline because we want different behavior
     // for generated content.
-    static const FrameConstructionData sTSpanData =
-      FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW |
-                  FCDATA_SKIP_ABSPOS_PUSH |
-                  FCDATA_DISALLOW_GENERATED_CONTENT |
-                  FCDATA_IS_LINE_PARTICIPANT |
-                  FCDATA_IS_INLINE |
-                  FCDATA_USE_CHILD_ITEMS,
-                  NS_NewInlineFrame);
+    static const FrameConstructionData sTSpanData = FCDATA_DECL(
+        FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_SKIP_ABSPOS_PUSH |
+            FCDATA_DISALLOW_GENERATED_CONTENT | FCDATA_IS_LINE_PARTICIPANT |
+            FCDATA_IS_INLINE | FCDATA_USE_CHILD_ITEMS,
+        NS_NewInlineFrame);
     if (tag == nsGkAtoms::textPath) {
       if (aAllowsTextPathChild) {
         return &sTSpanData;
       }
-    } else if (tag == nsGkAtoms::tspan ||
-               tag == nsGkAtoms::a) {
+    } else if (tag == nsGkAtoms::tspan || tag == nsGkAtoms::a) {
       return &sTSpanData;
     }
     return &sSuppressData;
-  } else if (tag == nsGkAtoms::tspan ||
-             tag == nsGkAtoms::textPath) {
+  } else if (tag == nsGkAtoms::tspan || tag == nsGkAtoms::textPath) {
     return &sSuppressData;
   }
 
   static const FrameConstructionDataByTag sSVGData[] = {
-    SIMPLE_SVG_CREATE(svg, NS_NewSVGInnerSVGFrame),
-    SIMPLE_SVG_CREATE(g, NS_NewSVGGFrame),
-    SIMPLE_SVG_CREATE(svgSwitch, NS_NewSVGSwitchFrame),
-    SIMPLE_SVG_CREATE(symbol, NS_NewSVGSymbolFrame),
-    SIMPLE_SVG_CREATE(polygon, NS_NewSVGGeometryFrame),
-    SIMPLE_SVG_CREATE(polyline, NS_NewSVGGeometryFrame),
-    SIMPLE_SVG_CREATE(circle, NS_NewSVGGeometryFrame),
-    SIMPLE_SVG_CREATE(ellipse, NS_NewSVGGeometryFrame),
-    SIMPLE_SVG_CREATE(line, NS_NewSVGGeometryFrame),
-    SIMPLE_SVG_CREATE(rect, NS_NewSVGGeometryFrame),
-    SIMPLE_SVG_CREATE(path, NS_NewSVGGeometryFrame),
-    SIMPLE_SVG_CREATE(defs, NS_NewSVGContainerFrame),
-    SIMPLE_SVG_CREATE(generic_, NS_NewSVGGenericContainerFrame),
-    { nsGkAtoms::text,
-      FCDATA_WITH_WRAPPING_BLOCK(FCDATA_DISALLOW_OUT_OF_FLOW |
-                                 FCDATA_ALLOW_BLOCK_STYLES,
-                                 NS_NewSVGTextFrame,
-                                 nsCSSAnonBoxes::mozSVGText()) },
-    { nsGkAtoms::foreignObject,
-      FCDATA_WITH_WRAPPING_BLOCK(FCDATA_DISALLOW_OUT_OF_FLOW,
-                                 NS_NewSVGForeignObjectFrame,
-                                 nsCSSAnonBoxes::mozSVGForeignContent()) },
-    SIMPLE_SVG_CREATE(a, NS_NewSVGAFrame),
-    SIMPLE_SVG_CREATE(linearGradient, NS_NewSVGLinearGradientFrame),
-    SIMPLE_SVG_CREATE(radialGradient, NS_NewSVGRadialGradientFrame),
-    SIMPLE_SVG_CREATE(stop, NS_NewSVGStopFrame),
-    SIMPLE_SVG_CREATE(use, NS_NewSVGUseFrame),
-    SIMPLE_SVG_CREATE(view, NS_NewSVGViewFrame),
-    SIMPLE_SVG_CREATE(image, NS_NewSVGImageFrame),
-    SIMPLE_SVG_CREATE(clipPath, NS_NewSVGClipPathFrame),
-    SIMPLE_SVG_CREATE(filter, NS_NewSVGFilterFrame),
-    SIMPLE_SVG_CREATE(pattern, NS_NewSVGPatternFrame),
-    SIMPLE_SVG_CREATE(mask, NS_NewSVGMaskFrame),
-    SIMPLE_SVG_CREATE(feDistantLight, NS_NewSVGFEUnstyledLeafFrame),
-    SIMPLE_SVG_CREATE(fePointLight, NS_NewSVGFEUnstyledLeafFrame),
-    SIMPLE_SVG_CREATE(feSpotLight, NS_NewSVGFEUnstyledLeafFrame),
-    SIMPLE_SVG_CREATE(feBlend, NS_NewSVGFELeafFrame),
-    SIMPLE_SVG_CREATE(feColorMatrix, NS_NewSVGFELeafFrame),
-    SIMPLE_SVG_CREATE(feFuncR, NS_NewSVGFEUnstyledLeafFrame),
-    SIMPLE_SVG_CREATE(feFuncG, NS_NewSVGFEUnstyledLeafFrame),
-    SIMPLE_SVG_CREATE(feFuncB, NS_NewSVGFEUnstyledLeafFrame),
-    SIMPLE_SVG_CREATE(feFuncA, NS_NewSVGFEUnstyledLeafFrame),
-    SIMPLE_SVG_CREATE(feComposite, NS_NewSVGFELeafFrame),
-    SIMPLE_SVG_CREATE(feComponentTransfer, NS_NewSVGFEContainerFrame),
-    SIMPLE_SVG_CREATE(feConvolveMatrix, NS_NewSVGFELeafFrame),
-    SIMPLE_SVG_CREATE(feDiffuseLighting, NS_NewSVGFEContainerFrame),
-    SIMPLE_SVG_CREATE(feDisplacementMap, NS_NewSVGFELeafFrame),
-    SIMPLE_SVG_CREATE(feDropShadow, NS_NewSVGFELeafFrame),
-    SIMPLE_SVG_CREATE(feFlood, NS_NewSVGFELeafFrame),
-    SIMPLE_SVG_CREATE(feGaussianBlur, NS_NewSVGFELeafFrame),
-    SIMPLE_SVG_CREATE(feImage, NS_NewSVGFEImageFrame),
-    SIMPLE_SVG_CREATE(feMerge, NS_NewSVGFEContainerFrame),
-    SIMPLE_SVG_CREATE(feMergeNode, NS_NewSVGFEUnstyledLeafFrame),
-    SIMPLE_SVG_CREATE(feMorphology, NS_NewSVGFELeafFrame),
-    SIMPLE_SVG_CREATE(feOffset, NS_NewSVGFELeafFrame),
-    SIMPLE_SVG_CREATE(feSpecularLighting, NS_NewSVGFEContainerFrame),
-    SIMPLE_SVG_CREATE(feTile, NS_NewSVGFELeafFrame),
-    SIMPLE_SVG_CREATE(feTurbulence, NS_NewSVGFELeafFrame)
-  };
+      SIMPLE_SVG_CREATE(svg, NS_NewSVGInnerSVGFrame),
+      SIMPLE_SVG_CREATE(g, NS_NewSVGGFrame),
+      SIMPLE_SVG_CREATE(svgSwitch, NS_NewSVGSwitchFrame),
+      SIMPLE_SVG_CREATE(symbol, NS_NewSVGSymbolFrame),
+      SIMPLE_SVG_CREATE(polygon, NS_NewSVGGeometryFrame),
+      SIMPLE_SVG_CREATE(polyline, NS_NewSVGGeometryFrame),
+      SIMPLE_SVG_CREATE(circle, NS_NewSVGGeometryFrame),
+      SIMPLE_SVG_CREATE(ellipse, NS_NewSVGGeometryFrame),
+      SIMPLE_SVG_CREATE(line, NS_NewSVGGeometryFrame),
+      SIMPLE_SVG_CREATE(rect, NS_NewSVGGeometryFrame),
+      SIMPLE_SVG_CREATE(path, NS_NewSVGGeometryFrame),
+      SIMPLE_SVG_CREATE(defs, NS_NewSVGContainerFrame),
+      SIMPLE_SVG_CREATE(generic_, NS_NewSVGGenericContainerFrame),
+      {nsGkAtoms::text,
+       FCDATA_WITH_WRAPPING_BLOCK(
+           FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_ALLOW_BLOCK_STYLES,
+           NS_NewSVGTextFrame, nsCSSAnonBoxes::mozSVGText())},
+      {nsGkAtoms::foreignObject,
+       FCDATA_WITH_WRAPPING_BLOCK(FCDATA_DISALLOW_OUT_OF_FLOW,
+                                  NS_NewSVGForeignObjectFrame,
+                                  nsCSSAnonBoxes::mozSVGForeignContent())},
+      SIMPLE_SVG_CREATE(a, NS_NewSVGAFrame),
+      SIMPLE_SVG_CREATE(linearGradient, NS_NewSVGLinearGradientFrame),
+      SIMPLE_SVG_CREATE(radialGradient, NS_NewSVGRadialGradientFrame),
+      SIMPLE_SVG_CREATE(stop, NS_NewSVGStopFrame),
+      SIMPLE_SVG_CREATE(use, NS_NewSVGUseFrame),
+      SIMPLE_SVG_CREATE(view, NS_NewSVGViewFrame),
+      SIMPLE_SVG_CREATE(image, NS_NewSVGImageFrame),
+      SIMPLE_SVG_CREATE(clipPath, NS_NewSVGClipPathFrame),
+      SIMPLE_SVG_CREATE(filter, NS_NewSVGFilterFrame),
+      SIMPLE_SVG_CREATE(pattern, NS_NewSVGPatternFrame),
+      SIMPLE_SVG_CREATE(mask, NS_NewSVGMaskFrame),
+      SIMPLE_SVG_CREATE(feDistantLight, NS_NewSVGFEUnstyledLeafFrame),
+      SIMPLE_SVG_CREATE(fePointLight, NS_NewSVGFEUnstyledLeafFrame),
+      SIMPLE_SVG_CREATE(feSpotLight, NS_NewSVGFEUnstyledLeafFrame),
+      SIMPLE_SVG_CREATE(feBlend, NS_NewSVGFELeafFrame),
+      SIMPLE_SVG_CREATE(feColorMatrix, NS_NewSVGFELeafFrame),
+      SIMPLE_SVG_CREATE(feFuncR, NS_NewSVGFEUnstyledLeafFrame),
+      SIMPLE_SVG_CREATE(feFuncG, NS_NewSVGFEUnstyledLeafFrame),
+      SIMPLE_SVG_CREATE(feFuncB, NS_NewSVGFEUnstyledLeafFrame),
+      SIMPLE_SVG_CREATE(feFuncA, NS_NewSVGFEUnstyledLeafFrame),
+      SIMPLE_SVG_CREATE(feComposite, NS_NewSVGFELeafFrame),
+      SIMPLE_SVG_CREATE(feComponentTransfer, NS_NewSVGFEContainerFrame),
+      SIMPLE_SVG_CREATE(feConvolveMatrix, NS_NewSVGFELeafFrame),
+      SIMPLE_SVG_CREATE(feDiffuseLighting, NS_NewSVGFEContainerFrame),
+      SIMPLE_SVG_CREATE(feDisplacementMap, NS_NewSVGFELeafFrame),
+      SIMPLE_SVG_CREATE(feDropShadow, NS_NewSVGFELeafFrame),
+      SIMPLE_SVG_CREATE(feFlood, NS_NewSVGFELeafFrame),
+      SIMPLE_SVG_CREATE(feGaussianBlur, NS_NewSVGFELeafFrame),
+      SIMPLE_SVG_CREATE(feImage, NS_NewSVGFEImageFrame),
+      SIMPLE_SVG_CREATE(feMerge, NS_NewSVGFEContainerFrame),
+      SIMPLE_SVG_CREATE(feMergeNode, NS_NewSVGFEUnstyledLeafFrame),
+      SIMPLE_SVG_CREATE(feMorphology, NS_NewSVGFELeafFrame),
+      SIMPLE_SVG_CREATE(feOffset, NS_NewSVGFELeafFrame),
+      SIMPLE_SVG_CREATE(feSpecularLighting, NS_NewSVGFEContainerFrame),
+      SIMPLE_SVG_CREATE(feTile, NS_NewSVGFELeafFrame),
+      SIMPLE_SVG_CREATE(feTurbulence, NS_NewSVGFELeafFrame)};
 
   const FrameConstructionData* data =
-    FindDataByTag(tag, aElement, aStyle, sSVGData, ArrayLength(sSVGData));
+      FindDataByTag(tag, aElement, aStyle, sSVGData, ArrayLength(sSVGData));
 
   if (!data) {
     data = &sContainerData;
@@ -5323,29 +5033,25 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
   return data;
 }
 
-void
-nsCSSFrameConstructor::AddPageBreakItem(nsIContent* aContent,
-                                        FrameConstructionItemList& aItems)
-{
+void nsCSSFrameConstructor::AddPageBreakItem(
+    nsIContent* aContent, FrameConstructionItemList& aItems) {
   RefPtr<ComputedStyle> pseudoStyle =
-    mPresShell->StyleSet()->
-      ResolveNonInheritingAnonymousBoxStyle(nsCSSAnonBoxes::pageBreak());
+      mPresShell->StyleSet()->ResolveNonInheritingAnonymousBoxStyle(
+          nsCSSAnonBoxes::pageBreak());
 
   MOZ_ASSERT(pseudoStyle->StyleDisplay()->mDisplay == StyleDisplay::Block,
              "Unexpected display");
 
   static const FrameConstructionData sPageBreakData =
-    FCDATA_DECL(FCDATA_SKIP_FRAMESET, NS_NewPageBreakFrame);
+      FCDATA_DECL(FCDATA_SKIP_FRAMESET, NS_NewPageBreakFrame);
 
   aItems.AppendItem(this, &sPageBreakData, aContent, nullptr,
                     pseudoStyle.forget(), true);
 }
 
-bool
-nsCSSFrameConstructor::ShouldCreateItemsForChild(nsFrameConstructorState& aState,
-                                                 nsIContent* aContent,
-                                                 nsContainerFrame* aParentFrame)
-{
+bool nsCSSFrameConstructor::ShouldCreateItemsForChild(
+    nsFrameConstructorState& aState, nsIContent* aContent,
+    nsContainerFrame* aParentFrame) {
   aContent->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
   // XXX the GetContent() != aContent check is needed due to bug 135040.
   // Remove it once that's fixed.
@@ -5371,14 +5077,10 @@ nsCSSFrameConstructor::ShouldCreateItemsForChild(nsFrameConstructorState& aState
   return true;
 }
 
-void
-nsCSSFrameConstructor::DoAddFrameConstructionItems(nsFrameConstructorState& aState,
-                                                   nsIContent* aContent,
-                                                   ComputedStyle* aComputedStyle,
-                                                   bool aSuppressWhiteSpaceOptimizations,
-                                                   nsContainerFrame* aParentFrame,
-                                                   FrameConstructionItemList& aItems)
-{
+void nsCSSFrameConstructor::DoAddFrameConstructionItems(
+    nsFrameConstructorState& aState, nsIContent* aContent,
+    ComputedStyle* aComputedStyle, bool aSuppressWhiteSpaceOptimizations,
+    nsContainerFrame* aParentFrame, FrameConstructionItemList& aItems) {
   uint32_t flags = ITEM_ALLOW_XBL_BASE | ITEM_ALLOW_PAGE_BREAK;
   if (aParentFrame) {
     if (nsSVGUtils::IsInSVGTextSubtree(aParentFrame)) {
@@ -5391,17 +5093,13 @@ nsCSSFrameConstructor::DoAddFrameConstructionItems(nsFrameConstructorState& aSta
   }
   AddFrameConstructionItemsInternal(aState, aContent, aParentFrame,
                                     aSuppressWhiteSpaceOptimizations,
-                                    aComputedStyle,
-                                    flags, aItems);
+                                    aComputedStyle, flags, aItems);
 }
 
-void
-nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState& aState,
-                                                 nsIContent* aContent,
-                                                 bool aSuppressWhiteSpaceOptimizations,
-                                                 const InsertionPoint& aInsertion,
-                                                 FrameConstructionItemList& aItems)
-{
+void nsCSSFrameConstructor::AddFrameConstructionItems(
+    nsFrameConstructorState& aState, nsIContent* aContent,
+    bool aSuppressWhiteSpaceOptimizations, const InsertionPoint& aInsertion,
+    FrameConstructionItemList& aItems) {
   nsContainerFrame* parentFrame = aInsertion.mParentFrame;
   if (!ShouldCreateItemsForChild(aState, aContent, parentFrame)) {
     return;
@@ -5417,10 +5115,8 @@ nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState& aState
 // Never create frames for non-option/optgroup kids of <select> and non-option
 // kids of <optgroup> inside a <select>.
 // XXXbz it's not clear how this should best work with XBL.
-static bool
-ShouldSuppressFrameInSelect(const nsIContent* aParent,
-                            const nsIContent& aChild)
-{
+static bool ShouldSuppressFrameInSelect(const nsIContent* aParent,
+                                        const nsIContent& aChild) {
   if (!aParent ||
       !aParent->IsAnyOfHTMLElements(nsGkAtoms::select, nsGkAtoms::optgroup)) {
     return false;
@@ -5453,10 +5149,8 @@ ShouldSuppressFrameInSelect(const nsIContent* aParent,
   return true;
 }
 
-static bool
-ShouldSuppressFrameInNonOpenDetails(const HTMLDetailsElement* aDetails,
-                                    const nsIContent& aChild)
-{
+static bool ShouldSuppressFrameInNonOpenDetails(
+    const HTMLDetailsElement* aDetails, const nsIContent& aChild) {
   if (!aDetails || aDetails->Open()) {
     return false;
   }
@@ -5483,32 +5177,25 @@ ShouldSuppressFrameInNonOpenDetails(const HTMLDetailsElement* aDetails,
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindDataForContent(nsIContent& aContent,
                                           ComputedStyle& aStyle,
-                                          nsIFrame* aParentFrame,
-                                          nsAtom* aTag,
-                                          uint32_t aFlags)
-{
+                                          nsIFrame* aParentFrame, nsAtom* aTag,
+                                          uint32_t aFlags) {
   MOZ_ASSERT(aStyle.StyleDisplay()->mDisplay != StyleDisplay::None &&
-             aStyle.StyleDisplay()->mDisplay != StyleDisplay::Contents,
+                 aStyle.StyleDisplay()->mDisplay != StyleDisplay::Contents,
              "These two special display values should be handled earlier");
 
   if (auto* text = Text::FromNode(aContent)) {
     return FindTextData(*text, aParentFrame);
   }
 
-  return FindElementData(*aContent.AsElement(),
-                         aStyle,
-                         aParentFrame,
-                         aTag,
+  return FindElementData(*aContent.AsElement(), aStyle, aParentFrame, aTag,
                          aFlags);
 }
 
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindElementData(const Element& aElement,
                                        ComputedStyle& aStyle,
-                                       nsIFrame* aParentFrame,
-                                       nsAtom* aTag,
-                                       uint32_t aFlags)
-{
+                                       nsIFrame* aParentFrame, nsAtom* aTag,
+                                       uint32_t aFlags) {
   // Don't create frames for non-SVG element children of SVG elements.
   if (!aElement.IsSVGElement()) {
     if (aParentFrame && IsFrameForSVG(aParentFrame) &&
@@ -5520,7 +5207,8 @@ nsCSSFrameConstructor::FindElementData(const Element& aElement,
     }
   }
 
-  if (auto* data = FindElementTagData(aElement, aStyle, aParentFrame, aTag, aFlags)) {
+  if (auto* data =
+          FindElementTagData(aElement, aStyle, aParentFrame, aTag, aFlags)) {
     return data;
   }
 
@@ -5528,7 +5216,7 @@ nsCSSFrameConstructor::FindElementData(const Element& aElement,
   // 'display' values other than 'none' or 'contents').
   if (ShouldCreateImageFrameForContent(aElement, aStyle)) {
     static const FrameConstructionData sImgData =
-      SIMPLE_FCDATA(NS_NewImageFrameForContentProperty);
+        SIMPLE_FCDATA(NS_NewImageFrameForContentProperty);
     return &sImgData;
   }
 
@@ -5543,21 +5231,17 @@ nsCSSFrameConstructor::FindElementData(const Element& aElement,
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindElementTagData(const Element& aElement,
                                           ComputedStyle& aStyle,
-                                          nsIFrame* aParentFrame,
-                                          nsAtom* aTag,
-                                          uint32_t aFlags)
-{
+                                          nsIFrame* aParentFrame, nsAtom* aTag,
+                                          uint32_t aFlags) {
   switch (aElement.GetNameSpaceID()) {
     case kNameSpaceID_XHTML:
       return FindHTMLData(aElement, aParentFrame, aStyle);
     case kNameSpaceID_MathML:
       return FindMathMLData(aElement, aStyle);
     case kNameSpaceID_SVG:
-      return FindSVGData(aElement,
-                         aParentFrame,
+      return FindSVGData(aElement, aParentFrame,
                          aFlags & ITEM_IS_WITHIN_SVG_TEXT,
-                         aFlags & ITEM_ALLOWS_TEXT_PATH_CHILD,
-                         aStyle);
+                         aFlags & ITEM_ALLOWS_TEXT_PATH_CHILD, aStyle);
     case kNameSpaceID_XUL:
       return FindXULTagData(aElement, aTag, aStyle);
     default:
@@ -5566,88 +5250,78 @@ nsCSSFrameConstructor::FindElementTagData(const Element& aElement,
 }
 
 nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo(
-  already_AddRefed<ComputedStyle>&& aStyle,
-  mozilla::UniquePtr<PendingBinding> aPendingBinding,
-  nsAtom* aTag)
-  : mStyle(std::move(aStyle))
-  , mPendingBinding(std::move(aPendingBinding))
-  , mTag(aTag)
-{
+    already_AddRefed<ComputedStyle>&& aStyle,
+    mozilla::UniquePtr<PendingBinding> aPendingBinding, nsAtom* aTag)
+    : mStyle(std::move(aStyle)),
+      mPendingBinding(std::move(aPendingBinding)),
+      mTag(aTag) {
   MOZ_ASSERT(mTag);
   MOZ_ASSERT(mStyle);
 }
 
-nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo(nsIContent& aContent,
-                                                              ComputedStyle& aStyle)
-  : mStyle(&aStyle)
-  , mPendingBinding(nullptr)
-  , mTag(aContent.NodeInfo()->NameAtom())
-{
-}
+nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo(
+    nsIContent& aContent, ComputedStyle& aStyle)
+    : mStyle(&aStyle),
+      mPendingBinding(nullptr),
+      mTag(aContent.NodeInfo()->NameAtom()) {}
 
 nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo() = default;
 
 nsCSSFrameConstructor::XBLBindingLoadInfo
 nsCSSFrameConstructor::LoadXBLBindingIfNeeded(nsIContent& aContent,
                                               ComputedStyle& aStyle,
-                                              uint32_t aFlags)
-{
+                                              uint32_t aFlags) {
   if (!(aFlags & ITEM_ALLOW_XBL_BASE)) {
-    return { aContent, aStyle };
+    return {aContent, aStyle};
   }
   css::URLValue* binding = aStyle.StyleDisplay()->mBinding;
   if (!binding) {
-    return { aContent, aStyle };
+    return {aContent, aStyle};
   }
 
   nsXBLService* xblService = nsXBLService::GetInstance();
   if (!xblService) {
-    return { };
+    return {};
   }
 
   auto newPendingBinding = MakeUnique<PendingBinding>();
 
   bool resolveStyle;
-  nsresult rv = xblService->LoadBindings(aContent.AsElement(),
-                                         binding->GetURI(),
-                                         binding->ExtraData()->Principal(),
-                                         getter_AddRefs(newPendingBinding->mBinding),
-                                         &resolveStyle);
+  nsresult rv = xblService->LoadBindings(
+      aContent.AsElement(), binding->GetURI(),
+      binding->ExtraData()->Principal(),
+      getter_AddRefs(newPendingBinding->mBinding), &resolveStyle);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_XBL_BLOCKED) {
-      return { aContent, aStyle };
+      return {aContent, aStyle};
     }
-    return { };
+    return {};
   }
 
-  RefPtr<ComputedStyle> style = resolveStyle
-    ? mPresShell->StyleSet()->ResolveServoStyle(*aContent.AsElement())
-    : do_AddRef(&aStyle);
+  RefPtr<ComputedStyle> style =
+      resolveStyle
+          ? mPresShell->StyleSet()->ResolveServoStyle(*aContent.AsElement())
+          : do_AddRef(&aStyle);
 
   nsAtom* tag = aContent.NodeInfo()->NameAtom();
   if (aContent.IsXULElement()) {
     int32_t overridenNamespace;
     nsAtom* overridenTag =
-      mDocument->BindingManager()->ResolveTag(&aContent, &overridenNamespace);
+        mDocument->BindingManager()->ResolveTag(&aContent, &overridenNamespace);
     // Only allow overriding from & to XUL.
     if (overridenNamespace == kNameSpaceID_XUL) {
       tag = overridenTag;
     }
   }
 
-  return { style.forget(), std::move(newPendingBinding), tag };
+  return {style.forget(), std::move(newPendingBinding), tag};
 }
 
-
-void
-nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState& aState,
-                                                         nsIContent* aContent,
-                                                         nsContainerFrame* aParentFrame,
-                                                         bool aSuppressWhiteSpaceOptimizations,
-                                                         ComputedStyle* aComputedStyle,
-                                                         uint32_t aFlags,
-                                                         FrameConstructionItemList& aItems)
-{
+void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
+    nsFrameConstructorState& aState, nsIContent* aContent,
+    nsContainerFrame* aParentFrame, bool aSuppressWhiteSpaceOptimizations,
+    ComputedStyle* aComputedStyle, uint32_t aFlags,
+    FrameConstructionItemList& aItems) {
   MOZ_ASSERT(aContent->IsText() || aContent->IsElement(),
              "Shouldn't get anything else here!");
   MOZ_ASSERT(aContent->IsInComposedDoc());
@@ -5659,7 +5333,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   nsAtom* tag;
   {
     XBLBindingLoadInfo xblInfo =
-      LoadXBLBindingIfNeeded(*aContent, *aComputedStyle, aFlags);
+        LoadXBLBindingIfNeeded(*aContent, *aComputedStyle, aFlags);
     if (!xblInfo.mTag) {
       return;
     }
@@ -5703,12 +5377,10 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
 
     FlattenedChildIterator iter(aContent);
     InsertionPoint insertion(aParentFrame, aContent);
-    for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
-      AddFrameConstructionItems(aState,
-                                child,
-                                aSuppressWhiteSpaceOptimizations,
-                                insertion,
-                                aItems);
+    for (nsIContent* child = iter.GetNextChild(); child;
+         child = iter.GetNextChild()) {
+      AddFrameConstructionItems(aState, child, aSuppressWhiteSpaceOptimizations,
+                                insertion, aItems);
     }
     aItems.SetParentHasNoXBLChildren(!iter.XBLInvolved());
 
@@ -5716,7 +5388,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
                                *style, CSSPseudoElementType::after, aItems);
     return;
   }
-
 
   nsIContent* parent = aParentFrame ? aParentFrame->GetContent() : nullptr;
   if (ShouldSuppressFrameInSelect(parent, *aContent)) {
@@ -5734,7 +5405,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   }
 
   const FrameConstructionData* data =
-    FindDataForContent(*aContent, *style, aParentFrame, tag, aFlags);
+      FindDataForContent(*aContent, *style, aParentFrame, tag, aFlags);
   if (!data || data->mBits & FCDATA_SUPPRESS_FRAME) {
     return;
   }
@@ -5742,11 +5413,9 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   bool isPopup = false;
 
 #ifdef MOZ_XUL
-  if ((data->mBits & FCDATA_IS_POPUP) &&
-      (!aParentFrame || // Parent is inline
-       !aParentFrame->IsMenuFrame())) {
-    if (!aState.mPopupItems.containingBlock &&
-        !aState.mHavePendingPopupgroup) {
+  if ((data->mBits & FCDATA_IS_POPUP) && (!aParentFrame ||  // Parent is inline
+                                          !aParentFrame->IsMenuFrame())) {
+    if (!aState.mPopupItems.containingBlock && !aState.mHavePendingPopupgroup) {
       return;
     }
 
@@ -5764,10 +5433,10 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   }
 
   bool canHavePageBreak =
-    (aFlags & ITEM_ALLOW_PAGE_BREAK) && aState.mPresContext->IsPaginated() &&
-    !display.IsAbsolutelyPositionedStyle() &&
-    !(aParentFrame && aParentFrame->IsGridContainerFrame()) &&
-    !(bits & FCDATA_IS_TABLE_PART) && !(bits & FCDATA_IS_SVG_TEXT);
+      (aFlags & ITEM_ALLOW_PAGE_BREAK) && aState.mPresContext->IsPaginated() &&
+      !display.IsAbsolutelyPositionedStyle() &&
+      !(aParentFrame && aParentFrame->IsGridContainerFrame()) &&
+      !(bits & FCDATA_IS_TABLE_PART) && !(bits & FCDATA_IS_SVG_TEXT);
 
   if (canHavePageBreak && display.BreakBefore()) {
     AddPageBreakItem(aContent, aItems);
@@ -5778,30 +5447,28 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     if (summary && summary->IsMainSummary()) {
       // If details is open, the main summary needs to be rendered as if it is
       // the first child, so add the item to the front of the item list.
-      item = aItems.PrependItem(this, data, aContent, pendingBinding,
-                                style.forget(),
-                                aSuppressWhiteSpaceOptimizations);
+      item =
+          aItems.PrependItem(this, data, aContent, pendingBinding,
+                             style.forget(), aSuppressWhiteSpaceOptimizations);
     }
   }
 
   if (!item) {
     item = aItems.AppendItem(this, data, aContent, pendingBinding,
-                             style.forget(),
-                             aSuppressWhiteSpaceOptimizations);
+                             style.forget(), aSuppressWhiteSpaceOptimizations);
   }
   item->mIsText = !aContent->IsElement();
   item->mIsGeneratedContent = isGeneratedContent;
   item->mIsAnonymousContentCreatorContent =
-    aFlags & ITEM_IS_ANONYMOUSCONTENTCREATOR_CONTENT;
+      aFlags & ITEM_IS_ANONYMOUSCONTENTCREATOR_CONTENT;
   if (isGeneratedContent) {
     // We need to keep this alive until the frame takes ownership.
     // This corresponds to the Release in ConstructFramesFromItem.
     item->mContent->AddRef();
   }
-  item->mIsRootPopupgroup =
-    aContent->IsRootOfNativeAnonymousSubtree() &&
-    aContent->IsXULElement() &&
-    tag == nsGkAtoms::popupgroup;
+  item->mIsRootPopupgroup = aContent->IsRootOfNativeAnonymousSubtree() &&
+                            aContent->IsXULElement() &&
+                            tag == nsGkAtoms::popupgroup;
   if (item->mIsRootPopupgroup) {
     aState.mHavePendingPopupgroup = true;
   }
@@ -5814,54 +5481,52 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   if (bits & FCDATA_IS_INLINE) {
     // To correctly set item->mIsAllInline we need to build up our child items
     // right now.
-    BuildInlineChildItems(aState, *item,
-                          aFlags & ITEM_IS_WITHIN_SVG_TEXT,
+    BuildInlineChildItems(aState, *item, aFlags & ITEM_IS_WITHIN_SVG_TEXT,
                           aFlags & ITEM_ALLOWS_TEXT_PATH_CHILD);
     item->mIsBlock = false;
   } else {
     // Compute a boolean isInline which is guaranteed to be false for blocks
     // (but may also be false for some inlines).
     bool isInline =
-      // Table-internal things are inline-outside if and only if they're kids of
-      // inlines, since they'll trigger construction of inline-table
-      // pseudos.
-      ((bits & FCDATA_IS_TABLE_PART) &&
-       (!aParentFrame || // No aParentFrame means inline
-        aParentFrame->StyleDisplay()->mDisplay == StyleDisplay::Inline)) ||
-      // Things that are inline-outside but aren't inline frames are inline
-      display.IsInlineOutsideStyle() ||
-      // Popups that are certainly out of flow.
-      isPopup;
+        // Table-internal things are inline-outside if and only if they're kids
+        // of inlines, since they'll trigger construction of inline-table
+        // pseudos.
+        ((bits & FCDATA_IS_TABLE_PART) &&
+         (!aParentFrame ||  // No aParentFrame means inline
+          aParentFrame->StyleDisplay()->mDisplay == StyleDisplay::Inline)) ||
+        // Things that are inline-outside but aren't inline frames are inline
+        display.IsInlineOutsideStyle() ||
+        // Popups that are certainly out of flow.
+        isPopup;
 
     // Set mIsAllInline conservatively.  It just might be that even an inline
     // that has mIsAllInline false doesn't need an {ib} split.  So this is just
     // an optimization to keep from doing too much work in cases when we can
     // show that mIsAllInline is true..
-    item->mIsAllInline = isInline ||
-      // Figure out whether we're guaranteed this item will be out of flow.
-      // This is not a precise test, since one of our ancestor inlines might add
-      // an absolute containing block (if it's relatively positioned) when there
-      // wasn't such a containing block before.  But it's conservative in the
-      // sense that anything that will really end up as an in-flow non-inline
-      // will test false here.  In other words, if this test is true we're
-      // guaranteed to be inline; if it's false we don't know what we'll end up
-      // as.
-      //
-      // If we make this test precise, we can remove some of the code dealing
-      // with the imprecision in ConstructInline and adjust the comments on
-      // mIsAllInline and mIsBlock in the header.
-      (!(bits & FCDATA_DISALLOW_OUT_OF_FLOW) &&
-       aState.GetGeometricParent(display, nullptr));
+    item->mIsAllInline =
+        isInline ||
+        // Figure out whether we're guaranteed this item will be out of flow.
+        // This is not a precise test, since one of our ancestor inlines might
+        // add an absolute containing block (if it's relatively positioned) when
+        // there wasn't such a containing block before.  But it's conservative
+        // in the sense that anything that will really end up as an in-flow
+        // non-inline will test false here.  In other words, if this test is
+        // true we're guaranteed to be inline; if it's false we don't know what
+        // we'll end up as.
+        //
+        // If we make this test precise, we can remove some of the code dealing
+        // with the imprecision in ConstructInline and adjust the comments on
+        // mIsAllInline and mIsBlock in the header.
+        (!(bits & FCDATA_DISALLOW_OUT_OF_FLOW) &&
+         aState.GetGeometricParent(display, nullptr));
 
     // Set mIsBlock conservatively.  It's OK to set it false for some real
     // blocks, but not OK to set it true for things that aren't blocks.  Since
     // isOutOfFlow might be false even in cases when the frame will end up
     // out-of-flow, we can't use it here.  But we _can_ say that the frame will
     // for sure end up in-flow if it's not floated or absolutely positioned.
-    item->mIsBlock = !isInline &&
-                     !display.IsAbsolutelyPositionedStyle() &&
-                     !display.IsFloatingStyle() &&
-                     !(bits & FCDATA_IS_SVG_TEXT);
+    item->mIsBlock = !isInline && !display.IsAbsolutelyPositionedStyle() &&
+                     !display.IsFloatingStyle() && !(bits & FCDATA_IS_SVG_TEXT);
   }
 
   if (item->mIsAllInline) {
@@ -5890,9 +5555,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
  * that ContentAppended/ContentInserted/ContentRemoved can easily find any
  * text nodes that were suppressed here.
  */
-bool
-nsCSSFrameConstructor::AtLineBoundary(FCItemIterator& aIter)
-{
+bool nsCSSFrameConstructor::AtLineBoundary(FCItemIterator& aIter) {
   if (aIter.item().mSuppressWhiteSpaceOptimizations) {
     return false;
   }
@@ -5926,12 +5589,9 @@ nsCSSFrameConstructor::AtLineBoundary(FCItemIterator& aIter)
   return false;
 }
 
-void
-nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
-                                               FCItemIterator& aIter,
-                                               nsContainerFrame* aParentFrame,
-                                               nsFrameItems& aFrameItems)
-{
+void nsCSSFrameConstructor::ConstructFramesFromItem(
+    nsFrameConstructorState& aState, FCItemIterator& aIter,
+    nsContainerFrame* aParentFrame, nsFrameItems& aFrameItems) {
   nsContainerFrame* adjParentFrame = aParentFrame;
   FrameConstructionItem& item = aIter.item();
   ComputedStyle* computedStyle = item.mComputedStyle;
@@ -5958,13 +5618,11 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
         !(aState.mAdditionalStateBits & NS_FRAME_GENERATED_CONTENT) &&
         (item.mFCData->mBits & FCDATA_IS_LINE_PARTICIPANT) &&
         !(item.mFCData->mBits & FCDATA_IS_SVG_TEXT) &&
-        !mAlwaysCreateFramesForIgnorableWhitespace &&
-        item.IsWhitespace(aState))
+        !mAlwaysCreateFramesForIgnorableWhitespace && item.IsWhitespace(aState))
       return;
 
-    ConstructTextFrame(item.mFCData, aState, item.mContent,
-                       adjParentFrame, computedStyle,
-                       aFrameItems);
+    ConstructTextFrame(item.mFCData, aState, item.mContent, adjParentFrame,
+                       computedStyle, aFrameItems);
     return;
   }
 
@@ -5993,16 +5651,10 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
   }
 }
 
+inline bool IsRootBoxFrame(nsIFrame* aFrame) { return (aFrame->IsRootFrame()); }
 
-inline bool
-IsRootBoxFrame(nsIFrame *aFrame)
-{
-  return (aFrame->IsRootFrame());
-}
-
-void
-nsCSSFrameConstructor::ReconstructDocElementHierarchy(InsertionKind aInsertionKind)
-{
+void nsCSSFrameConstructor::ReconstructDocElementHierarchy(
+    InsertionKind aInsertionKind) {
   Element* rootElement = mDocument->GetRootElement();
   if (!rootElement) {
     /* nothing to do */
@@ -6011,10 +5663,8 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy(InsertionKind aInsertionKi
   RecreateFramesForContent(rootElement, aInsertionKind);
 }
 
-nsContainerFrame*
-nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame,
-                                                  ContainingBlockType aType)
-{
+nsContainerFrame* nsCSSFrameConstructor::GetAbsoluteContainingBlock(
+    nsIFrame* aFrame, ContainingBlockType aType) {
   // Starting with aFrame, look for a frame that is absolutely positioned or
   // relatively positioned (and transformed, if aType is FIXED)
   for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
@@ -6042,14 +5692,14 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame,
     // If we're looking for a fixed-pos containing block and the frame is
     // not transformed, skip it.
     if (!frame->IsAbsPosContainingBlock() ||
-        (aType == FIXED_POS &&
-         !frame->IsFixedPosContainingBlock())) {
+        (aType == FIXED_POS && !frame->IsFixedPosContainingBlock())) {
       continue;
     }
     nsIFrame* absPosCBCandidate = frame;
     LayoutFrameType type = absPosCBCandidate->Type();
     if (type == LayoutFrameType::FieldSet) {
-      absPosCBCandidate = static_cast<nsFieldSetFrame*>(absPosCBCandidate)->GetInner();
+      absPosCBCandidate =
+          static_cast<nsFieldSetFrame*>(absPosCBCandidate)->GetInner();
       if (!absPosCBCandidate) {
         continue;
       }
@@ -6088,16 +5738,14 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame,
   return mHasRootAbsPosContainingBlock ? mDocElementContainingBlock : nullptr;
 }
 
-nsContainerFrame*
-nsCSSFrameConstructor::GetFloatContainingBlock(nsIFrame* aFrame)
-{
+nsContainerFrame* nsCSSFrameConstructor::GetFloatContainingBlock(
+    nsIFrame* aFrame) {
   // Starting with aFrame, look for a frame that is a float containing block.
   // IF we hit a mathml frame, bail out; we don't allow floating out of mathml
   // frames, because they don't seem to be able to deal.
   // The logic here needs to match the logic in ProcessChildren()
   for (nsIFrame* containingBlock = aFrame;
-       containingBlock &&
-         !ShouldSuppressFloatingOfDescendants(containingBlock);
+       containingBlock && !ShouldSuppressFloatingOfDescendants(containingBlock);
        containingBlock = containingBlock->GetParent()) {
     if (containingBlock->IsFloatContainingBlock()) {
       MOZ_ASSERT((nsContainerFrame*)do_QueryFrame(containingBlock),
@@ -6117,13 +5765,14 @@ nsCSSFrameConstructor::GetFloatContainingBlock(nsIFrame* aFrame)
  * It takes a parent frame (must not be null) and the next insertion sibling, if
  * the parent content is display: contents or has ::after content (may be null).
  */
-static nsIFrame*
-FindAppendPrevSibling(nsIFrame* aParentFrame, nsIFrame* aNextSibling)
-{
+static nsIFrame* FindAppendPrevSibling(nsIFrame* aParentFrame,
+                                       nsIFrame* aNextSibling) {
   aParentFrame->DrainSelfOverflowList();
 
   if (aNextSibling) {
-    MOZ_ASSERT(aNextSibling->GetParent()->GetContentInsertionFrame() == aParentFrame, "Wrong parent");
+    MOZ_ASSERT(
+        aNextSibling->GetParent()->GetContentInsertionFrame() == aParentFrame,
+        "Wrong parent");
     return aNextSibling->GetPrevSibling();
   }
 
@@ -6135,9 +5784,8 @@ FindAppendPrevSibling(nsIFrame* aParentFrame, nsIFrame* aNextSibling)
  *
  * Cannot return or receive null.
  */
-static nsContainerFrame*
-ContinuationToAppendTo(nsContainerFrame* aParentFrame)
-{
+static nsContainerFrame* ContinuationToAppendTo(
+    nsContainerFrame* aParentFrame) {
   MOZ_ASSERT(aParentFrame);
 
   if (IsFramePartOfIBSplit(aParentFrame)) {
@@ -6152,7 +5800,8 @@ ContinuationToAppendTo(nsContainerFrame* aParentFrame)
     // cases appending to the last nonempty continuation is fine and in fact not
     // doing that can confuse code that doesn't know to pull kids from
     // continuations other than its next one.
-    return static_cast<nsContainerFrame*>(GetLastIBSplitSibling(aParentFrame)->LastContinuation());
+    return static_cast<nsContainerFrame*>(
+        GetLastIBSplitSibling(aParentFrame)->LastContinuation());
   }
 
   return nsLayoutUtils::LastContinuationWithChild(aParentFrame);
@@ -6162,9 +5811,8 @@ ContinuationToAppendTo(nsContainerFrame* aParentFrame)
  * This function will get the next sibling for a frame insert operation given
  * the parent and previous sibling.  aPrevSibling may be null.
  */
-static nsIFrame*
-GetInsertNextSibling(nsIFrame* aParentFrame, nsIFrame* aPrevSibling)
-{
+static nsIFrame* GetInsertNextSibling(nsIFrame* aParentFrame,
+                                      nsIFrame* aPrevSibling) {
   if (aPrevSibling) {
     return aPrevSibling->GetNextSibling();
   }
@@ -6177,34 +5825,30 @@ GetInsertNextSibling(nsIFrame* aParentFrame, nsIFrame* aPrevSibling)
  * appending flowed frames to a parent's principal child list. It handles the
  * case where the parent is the trailing inline of an {ib} split.
  */
-void
-nsCSSFrameConstructor::AppendFramesToParent(nsFrameConstructorState&       aState,
-                                            nsContainerFrame*              aParentFrame,
-                                            nsFrameItems&                  aFrameList,
-                                            nsIFrame*                      aPrevSibling,
-                                            bool                           aIsRecursiveCall)
-{
-  MOZ_ASSERT(!IsFramePartOfIBSplit(aParentFrame) ||
-             !GetIBSplitSibling(aParentFrame) ||
-             !GetIBSplitSibling(aParentFrame)->PrincipalChildList().FirstChild(),
-             "aParentFrame has a ib-split sibling with kids?");
+void nsCSSFrameConstructor::AppendFramesToParent(
+    nsFrameConstructorState& aState, nsContainerFrame* aParentFrame,
+    nsFrameItems& aFrameList, nsIFrame* aPrevSibling, bool aIsRecursiveCall) {
+  MOZ_ASSERT(
+      !IsFramePartOfIBSplit(aParentFrame) || !GetIBSplitSibling(aParentFrame) ||
+          !GetIBSplitSibling(aParentFrame)->PrincipalChildList().FirstChild(),
+      "aParentFrame has a ib-split sibling with kids?");
   MOZ_ASSERT(!aPrevSibling || aPrevSibling->GetParent() == aParentFrame,
              "Parent and prevsibling don't match");
 
   nsIFrame* nextSibling = ::GetInsertNextSibling(aParentFrame, aPrevSibling);
 
-  NS_ASSERTION(nextSibling ||
-               !aParentFrame->GetNextContinuation() ||
-               !aParentFrame->GetNextContinuation()->PrincipalChildList().FirstChild() ||
-               aIsRecursiveCall,
+  NS_ASSERTION(nextSibling || !aParentFrame->GetNextContinuation() ||
+                   !aParentFrame->GetNextContinuation()
+                        ->PrincipalChildList()
+                        .FirstChild() ||
+                   aIsRecursiveCall,
                "aParentFrame has later continuations with kids?");
-  NS_ASSERTION(nextSibling ||
-               !IsFramePartOfIBSplit(aParentFrame) ||
-               (IsInlineFrame(aParentFrame) &&
-                !GetIBSplitSibling(aParentFrame) &&
-                !aParentFrame->GetNextContinuation()) ||
-               aIsRecursiveCall,
-               "aParentFrame is not last?");
+  NS_ASSERTION(
+      nextSibling || !IsFramePartOfIBSplit(aParentFrame) ||
+          (IsInlineFrame(aParentFrame) && !GetIBSplitSibling(aParentFrame) &&
+           !aParentFrame->GetNextContinuation()) ||
+          aIsRecursiveCall,
+      "aParentFrame is not last?");
 
   // If we're inserting a list of frames at the end of the trailing inline
   // of an {ib} split, we may need to create additional {ib} siblings to parent
@@ -6224,11 +5868,12 @@ nsCSSFrameConstructor::AppendFramesToParent(nsFrameConstructorState&       aStat
         // Our trailing inline is empty.  Collect our starting blocks from
         // aFrameList, get the right parent frame for them, and put them in.
         nsFrameList blockKids =
-          aFrameList.Split([](nsIFrame* f) { return !f->IsBlockOutside();} );
+            aFrameList.Split([](nsIFrame* f) { return !f->IsBlockOutside(); });
         NS_ASSERTION(blockKids.NotEmpty(), "No blocks?");
 
         nsContainerFrame* prevBlock = GetIBSplitPrevSibling(firstContinuation);
-        prevBlock = static_cast<nsContainerFrame*>(prevBlock->LastContinuation());
+        prevBlock =
+            static_cast<nsContainerFrame*>(prevBlock->LastContinuation());
         NS_ASSERTION(prevBlock, "Should have previous block here");
 
         MoveChildrenTo(aParentFrame, prevBlock, blockKids);
@@ -6237,7 +5882,7 @@ nsCSSFrameConstructor::AppendFramesToParent(nsFrameConstructorState&       aStat
 
     // We want to put some of the frames into this inline frame.
     nsFrameList inlineKids =
-      aFrameList.Split([](nsIFrame* f) { return f->IsBlockOutside(); });
+        aFrameList.Split([](nsIFrame* f) { return f->IsBlockOutside(); });
 
     if (!inlineKids.IsEmpty()) {
       AppendFrames(aParentFrame, kPrincipalList, inlineKids);
@@ -6252,13 +5897,13 @@ nsCSSFrameConstructor::AppendFramesToParent(nsFrameConstructorState&       aStat
       // Make sure to trigger reflow of the inline that used to be our
       // last one and now isn't anymore, since its GetSkipSides() has
       // changed.
-      mPresShell->FrameNeedsReflow(aParentFrame,
-                                   nsIPresShell::eTreeChange,
+      mPresShell->FrameNeedsReflow(aParentFrame, nsIPresShell::eTreeChange,
                                    NS_FRAME_HAS_DIRTY_CHILDREN);
 
-      // Recurse so we create new ib siblings as needed for aParentFrame's parent
+      // Recurse so we create new ib siblings as needed for aParentFrame's
+      // parent
       return AppendFramesToParent(aState, aParentFrame->GetParent(), ibSiblings,
-                                   aParentFrame, true);
+                                  aParentFrame, true);
     }
     return;
   }
@@ -6272,20 +5917,18 @@ nsCSSFrameConstructor::AppendFramesToParent(nsFrameConstructorState&       aStat
 // groups and col groups, (3) row groups and captions, (4) legends and content
 // inside fieldsets, (5) popups and other kids of the menu are siblings from a
 // content perspective, they are not considered siblings in the frame tree.
-bool
-nsCSSFrameConstructor::IsValidSibling(nsIFrame* aSibling,
-                                      nsIContent* aContent,
-                                      Maybe<StyleDisplay>& aDisplay)
-{
+bool nsCSSFrameConstructor::IsValidSibling(nsIFrame* aSibling,
+                                           nsIContent* aContent,
+                                           Maybe<StyleDisplay>& aDisplay) {
   nsIFrame* parentFrame = aSibling->GetParent();
   LayoutFrameType parentType = parentFrame->Type();
 
   StyleDisplay siblingDisplay = aSibling->GetDisplay();
   if (StyleDisplay::TableColumnGroup == siblingDisplay ||
-      StyleDisplay::TableColumn      == siblingDisplay ||
-      StyleDisplay::TableCaption     == siblingDisplay ||
+      StyleDisplay::TableColumn == siblingDisplay ||
+      StyleDisplay::TableCaption == siblingDisplay ||
       StyleDisplay::TableHeaderGroup == siblingDisplay ||
-      StyleDisplay::TableRowGroup    == siblingDisplay ||
+      StyleDisplay::TableRowGroup == siblingDisplay ||
       StyleDisplay::TableFooterGroup == siblingDisplay ||
       LayoutFrameType::Menu == parentType) {
     // if we haven't already, resolve a style to find the display type of
@@ -6304,9 +5947,8 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame* aSibling,
 
     StyleDisplay display = aDisplay.value();
     if (LayoutFrameType::Menu == parentType) {
-      return
-        (StyleDisplay::MozPopup == display) ==
-        (StyleDisplay::MozPopup == siblingDisplay);
+      return (StyleDisplay::MozPopup == display) ==
+             (StyleDisplay::MozPopup == siblingDisplay);
     }
     // To have decent performance we want to return false in cases in which
     // reordering the two siblings has no effect on display.  To ensure
@@ -6340,7 +5982,8 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame* aSibling,
   }
 
   if (IsFrameForFieldSet(parentFrame)) {
-    // Legends can be sibling of legends but not of other content in the fieldset
+    // Legends can be sibling of legends but not of other content in the
+    // fieldset
     if (nsContainerFrame* cif = aSibling->GetContentInsertionFrame()) {
       aSibling = cif;
     }
@@ -6358,34 +6001,30 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame* aSibling,
 // FIXME(emilio): If we ever kill IsValidSibling() we can simplify this quite a
 // bit (no need to pass aTargetContent or aTargetContentDisplay, and the
 // adjust() calls can be responsibility of the caller).
-template<nsCSSFrameConstructor::SiblingDirection aDirection>
-nsIFrame*
-nsCSSFrameConstructor::FindSiblingInternal(
-  FlattenedChildIterator& aIter,
-  nsIContent* aTargetContent,
-  Maybe<StyleDisplay>& aTargetContentDisplay)
-{
+template <nsCSSFrameConstructor::SiblingDirection aDirection>
+nsIFrame* nsCSSFrameConstructor::FindSiblingInternal(
+    FlattenedChildIterator& aIter, nsIContent* aTargetContent,
+    Maybe<StyleDisplay>& aTargetContentDisplay) {
   auto adjust = [&](nsIFrame* aPotentialSiblingFrame) -> nsIFrame* {
-    return AdjustSiblingFrame(
-      aPotentialSiblingFrame, aTargetContent, aTargetContentDisplay,
-      aDirection);
+    return AdjustSiblingFrame(aPotentialSiblingFrame, aTargetContent,
+                              aTargetContentDisplay, aDirection);
   };
 
   auto nextDomSibling = [](FlattenedChildIterator& aIter) -> nsIContent* {
-    return aDirection == SiblingDirection::Forward
-      ? aIter.GetNextChild() : aIter.GetPreviousChild();
+    return aDirection == SiblingDirection::Forward ? aIter.GetNextChild()
+                                                   : aIter.GetPreviousChild();
   };
 
   auto getNearPseudo = [](const nsIContent* aContent) -> nsIFrame* {
     return aDirection == SiblingDirection::Forward
-      ? nsLayoutUtils::GetBeforeFrame(aContent)
-      : nsLayoutUtils::GetAfterFrame(aContent);
+               ? nsLayoutUtils::GetBeforeFrame(aContent)
+               : nsLayoutUtils::GetAfterFrame(aContent);
   };
 
   auto getFarPseudo = [](const nsIContent* aContent) -> nsIFrame* {
     return aDirection == SiblingDirection::Forward
-      ? nsLayoutUtils::GetAfterFrame(aContent)
-      : nsLayoutUtils::GetBeforeFrame(aContent);
+               ? nsLayoutUtils::GetAfterFrame(aContent)
+               : nsLayoutUtils::GetBeforeFrame(aContent);
   };
 
   while (nsIContent* sibling = nextDomSibling(aIter)) {
@@ -6410,7 +6049,7 @@ nsCSSFrameConstructor::FindSiblingInternal(
       const bool startFromBeginning = aDirection == SiblingDirection::Forward;
       FlattenedChildIterator iter(sibling, startFromBeginning);
       nsIFrame* sibling = FindSiblingInternal<aDirection>(
-        iter, aTargetContent, aTargetContentDisplay);
+          iter, aTargetContent, aTargetContentDisplay);
       if (sibling) {
         return sibling;
       }
@@ -6420,13 +6059,9 @@ nsCSSFrameConstructor::FindSiblingInternal(
   return adjust(getFarPseudo(aIter.Parent()));
 }
 
-nsIFrame*
-nsCSSFrameConstructor::AdjustSiblingFrame(
-  nsIFrame* aSibling,
-  nsIContent* aTargetContent,
-  Maybe<StyleDisplay>& aTargetContentDisplay,
-  SiblingDirection aDirection)
-{
+nsIFrame* nsCSSFrameConstructor::AdjustSiblingFrame(
+    nsIFrame* aSibling, nsIContent* aTargetContent,
+    Maybe<StyleDisplay>& aTargetContentDisplay, SiblingDirection aDirection) {
   if (!aSibling) {
     return nullptr;
   }
@@ -6456,29 +6091,26 @@ nsCSSFrameConstructor::AdjustSiblingFrame(
   return aSibling;
 }
 
-nsIFrame*
-nsCSSFrameConstructor::FindPreviousSibling(const FlattenedChildIterator& aIter,
-                                           Maybe<StyleDisplay>& aTargetContentDisplay)
-{
+nsIFrame* nsCSSFrameConstructor::FindPreviousSibling(
+    const FlattenedChildIterator& aIter,
+    Maybe<StyleDisplay>& aTargetContentDisplay) {
   return FindSibling<SiblingDirection::Backward>(aIter, aTargetContentDisplay);
 }
 
-nsIFrame*
-nsCSSFrameConstructor::FindNextSibling(const FlattenedChildIterator& aIter,
-                                       Maybe<StyleDisplay>& aTargetContentDisplay)
-{
+nsIFrame* nsCSSFrameConstructor::FindNextSibling(
+    const FlattenedChildIterator& aIter,
+    Maybe<StyleDisplay>& aTargetContentDisplay) {
   return FindSibling<SiblingDirection::Forward>(aIter, aTargetContentDisplay);
 }
 
-template<nsCSSFrameConstructor::SiblingDirection aDirection>
-nsIFrame*
-nsCSSFrameConstructor::FindSibling(const FlattenedChildIterator& aIter,
-                                   Maybe<StyleDisplay>& aTargetContentDisplay)
-{
+template <nsCSSFrameConstructor::SiblingDirection aDirection>
+nsIFrame* nsCSSFrameConstructor::FindSibling(
+    const FlattenedChildIterator& aIter,
+    Maybe<StyleDisplay>& aTargetContentDisplay) {
   nsIContent* targetContent = aIter.Get();
   FlattenedChildIterator siblingIter = aIter;
   nsIFrame* sibling = FindSiblingInternal<aDirection>(
-    siblingIter, targetContent, aTargetContentDisplay);
+      siblingIter, targetContent, aTargetContentDisplay);
   if (sibling) {
     return sibling;
   }
@@ -6493,8 +6125,8 @@ nsCSSFrameConstructor::FindSibling(const FlattenedChildIterator& aIter,
 
     FlattenedChildIterator iter(parent);
     iter.Seek(current);
-    sibling = FindSiblingInternal<aDirection>(
-        iter, targetContent, aTargetContentDisplay);
+    sibling = FindSiblingInternal<aDirection>(iter, targetContent,
+                                              aTargetContentDisplay);
     if (sibling) {
       return sibling;
     }
@@ -6506,10 +6138,8 @@ nsCSSFrameConstructor::FindSibling(const FlattenedChildIterator& aIter,
 }
 
 // For fieldsets, returns the area frame, if the child is not a legend.
-static nsContainerFrame*
-GetAdjustedParentFrame(nsContainerFrame* aParentFrame,
-                       nsIContent* aChildContent)
-{
+static nsContainerFrame* GetAdjustedParentFrame(nsContainerFrame* aParentFrame,
+                                                nsIContent* aChildContent) {
   MOZ_ASSERT(!aParentFrame->IsTableWrapperFrame(), "Shouldn't be happening!");
 
   nsContainerFrame* newParent = nullptr;
@@ -6524,14 +6154,10 @@ GetAdjustedParentFrame(nsContainerFrame* aParentFrame,
   return newParent ? newParent : aParentFrame;
 }
 
-nsIFrame*
-nsCSSFrameConstructor::GetInsertionPrevSibling(InsertionPoint* aInsertion,
-                                               nsIContent* aChild,
-                                               bool*       aIsAppend,
-                                               bool*       aIsRangeInsertSafe,
-                                               nsIContent* aStartSkipChild,
-                                               nsIContent* aEndSkipChild)
-{
+nsIFrame* nsCSSFrameConstructor::GetInsertionPrevSibling(
+    InsertionPoint* aInsertion, nsIContent* aChild, bool* aIsAppend,
+    bool* aIsRangeInsertSafe, nsIContent* aStartSkipChild,
+    nsIContent* aEndSkipChild) {
   MOZ_ASSERT(aInsertion->mParentFrame, "Must have parent frame to start with");
 
   *aIsAppend = false;
@@ -6541,8 +6167,8 @@ nsCSSFrameConstructor::GetInsertionPrevSibling(InsertionPoint* aInsertion,
   // XBL insertion point is involved, we'll need to use _that_ to find
   // the preceding frame.
   FlattenedChildIterator iter(aInsertion->mContainer);
-  bool xblCase = iter.XBLInvolved() ||
-         aInsertion->mParentFrame->GetContent() != aInsertion->mContainer;
+  bool xblCase = iter.XBLInvolved() || aInsertion->mParentFrame->GetContent() !=
+                                           aInsertion->mContainer;
   if (xblCase || !aChild->IsRootOfAnonymousSubtree()) {
     // The check for IsRootOfAnonymousSubtree() is because editor is
     // severely broken and calls us directly for native anonymous
@@ -6569,7 +6195,8 @@ nsCSSFrameConstructor::GetInsertionPrevSibling(InsertionPoint* aInsertion,
   // continuations properly. Use the prev sibling if we have it;
   // otherwise use the next sibling.
   if (prevSibling) {
-    aInsertion->mParentFrame = prevSibling->GetParent()->GetContentInsertionFrame();
+    aInsertion->mParentFrame =
+        prevSibling->GetParent()->GetContentInsertionFrame();
   } else {
     // If there is no previous sibling, then find the frame that follows
     //
@@ -6579,17 +6206,18 @@ nsCSSFrameConstructor::GetInsertionPrevSibling(InsertionPoint* aInsertion,
       iter.GetPreviousChild();
     }
     if (nsIFrame* nextSibling = FindNextSibling(iter, childDisplay)) {
-      aInsertion->mParentFrame = nextSibling->GetParent()->GetContentInsertionFrame();
+      aInsertion->mParentFrame =
+          nextSibling->GetParent()->GetContentInsertionFrame();
     } else {
       // No previous or next sibling, so treat this like an appended frame.
       *aIsAppend = true;
 
       // Deal with fieldsets.
       aInsertion->mParentFrame =
-        ::GetAdjustedParentFrame(aInsertion->mParentFrame, aChild);
+          ::GetAdjustedParentFrame(aInsertion->mParentFrame, aChild);
 
       aInsertion->mParentFrame =
-        ::ContinuationToAppendTo(aInsertion->mParentFrame);
+          ::ContinuationToAppendTo(aInsertion->mParentFrame);
 
       prevSibling = ::FindAppendPrevSibling(aInsertion->mParentFrame, nullptr);
     }
@@ -6599,9 +6227,8 @@ nsCSSFrameConstructor::GetInsertionPrevSibling(InsertionPoint* aInsertion,
   return prevSibling;
 }
 
-nsContainerFrame*
-nsCSSFrameConstructor::GetContentInsertionFrameFor(nsIContent* aContent)
-{
+nsContainerFrame* nsCSSFrameConstructor::GetContentInsertionFrameFor(
+    nsIContent* aContent) {
   nsIFrame* frame;
   while (!(frame = aContent->GetPrimaryFrame())) {
     if (!IsDisplayContents(aContent)) {
@@ -6624,27 +6251,22 @@ nsCSSFrameConstructor::GetContentInsertionFrameFor(nsIContent* aContent)
   nsContainerFrame* insertionFrame = frame->GetContentInsertionFrame();
 
   NS_ASSERTION(!insertionFrame || insertionFrame == frame || !frame->IsLeaf(),
-    "The insertion frame is the primary frame or the primary frame isn't a leaf");
+               "The insertion frame is the primary frame or the primary frame "
+               "isn't a leaf");
 
   return insertionFrame;
 }
 
-static bool
-IsSpecialFramesetChild(nsIContent* aContent)
-{
+static bool IsSpecialFramesetChild(nsIContent* aContent) {
   // IMPORTANT: This must match the conditions in nsHTMLFramesetFrame::Init.
   return aContent->IsAnyOfHTMLElements(nsGkAtoms::frameset, nsGkAtoms::frame);
 }
 
-static void
-InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node);
+static void InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node);
 
-void
-nsCSSFrameConstructor::AddTextItemIfNeeded(nsFrameConstructorState& aState,
-                                           const InsertionPoint& aInsertion,
-                                           nsIContent* aPossibleTextContent,
-                                           FrameConstructionItemList& aItems)
-{
+void nsCSSFrameConstructor::AddTextItemIfNeeded(
+    nsFrameConstructorState& aState, const InsertionPoint& aInsertion,
+    nsIContent* aPossibleTextContent, FrameConstructionItemList& aItems) {
   MOZ_ASSERT(aPossibleTextContent, "Must have node");
   if (!aPossibleTextContent->IsText() ||
       !aPossibleTextContent->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE) ||
@@ -6656,13 +6278,11 @@ nsCSSFrameConstructor::AddTextItemIfNeeded(nsFrameConstructorState& aState,
   }
   MOZ_ASSERT(!aPossibleTextContent->GetPrimaryFrame(),
              "Text node has a frame and NS_CREATE_FRAME_IF_NON_WHITESPACE");
-  AddFrameConstructionItems(aState, aPossibleTextContent, false,
-                            aInsertion, aItems);
+  AddFrameConstructionItems(aState, aPossibleTextContent, false, aInsertion,
+                            aItems);
 }
 
-void
-nsCSSFrameConstructor::ReframeTextIfNeeded(nsIContent* aContent)
-{
+void nsCSSFrameConstructor::ReframeTextIfNeeded(nsIContent* aContent) {
   if (!aContent->IsText() ||
       !aContent->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE) ||
       aContent->HasFlag(NODE_NEEDS_FRAME)) {
@@ -6677,9 +6297,8 @@ nsCSSFrameConstructor::ReframeTextIfNeeded(nsIContent* aContent)
 }
 
 #ifdef DEBUG
-void
-nsCSSFrameConstructor::CheckBitsForLazyFrameConstruction(nsIContent* aParent)
-{
+void nsCSSFrameConstructor::CheckBitsForLazyFrameConstruction(
+    nsIContent* aParent) {
   // If we hit a node with no primary frame, or the NODE_NEEDS_FRAME bit set
   // we want to assert, but leaf frames that process their own children and may
   // ignore anonymous children (eg framesets) make this complicated. So we set
@@ -6711,10 +6330,12 @@ nsCSSFrameConstructor::CheckBitsForLazyFrameConstruction(nsIContent* aParent)
       content->GetPrimaryFrame()->IsLeaf()) {
     noPrimaryFrame = needsFrameBitSet = false;
   }
-  MOZ_ASSERT(!noPrimaryFrame, "Ancestors of nodes with frames to be "
-    "constructed lazily should have frames");
-  MOZ_ASSERT(!needsFrameBitSet, "Ancestors of nodes with frames to be "
-    "constructed lazily should not have NEEDS_FRAME bit set");
+  MOZ_ASSERT(!noPrimaryFrame,
+             "Ancestors of nodes with frames to be "
+             "constructed lazily should have frames");
+  MOZ_ASSERT(!needsFrameBitSet,
+             "Ancestors of nodes with frames to be "
+             "constructed lazily should not have NEEDS_FRAME bit set");
 }
 #endif
 
@@ -6727,17 +6348,15 @@ nsCSSFrameConstructor::CheckBitsForLazyFrameConstruction(nsIContent* aParent)
 // NOTE(emilio): The IsXULElement checks are pretty unfortunate, but there's
 // tons of browser chrome code that rely on XBL bindings getting synchronously
 // loaded as soon as the elements get inserted in the DOM.
-bool
-nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
-                                            nsIContent* aChild)
-{
+bool nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
+                                                 nsIContent* aChild) {
   MOZ_ASSERT(aChild->GetParent());
   if (aOperation == CONTENTINSERT) {
     MOZ_ASSERT(!aChild->IsRootOfAnonymousSubtree());
     if (aChild->IsXULElement()) {
       return false;
     }
-  } else { // CONTENTAPPEND
+  } else {  // CONTENTAPPEND
     MOZ_ASSERT(aOperation == CONTENTAPPEND,
                "operation should be either insert or append");
     for (nsIContent* child = aChild; child; child = child->GetNextSibling()) {
@@ -6768,17 +6387,17 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
   // Set NODE_NEEDS_FRAME on the new nodes.
   if (aOperation == CONTENTINSERT) {
     NS_ASSERTION(!aChild->GetPrimaryFrame() ||
-                 aChild->GetPrimaryFrame()->GetContent() != aChild,
-                 //XXX the aChild->GetPrimaryFrame()->GetContent() != aChild
+                     aChild->GetPrimaryFrame()->GetContent() != aChild,
+                 // XXX the aChild->GetPrimaryFrame()->GetContent() != aChild
                  // check is needed due to bug 135040. Remove it once that's
                  // fixed.
                  "setting NEEDS_FRAME on a node that already has a frame?");
     aChild->SetFlags(NODE_NEEDS_FRAME);
-  } else { // CONTENTAPPEND
+  } else {  // CONTENTAPPEND
     for (nsIContent* child = aChild; child; child = child->GetNextSibling()) {
       NS_ASSERTION(!child->GetPrimaryFrame() ||
-                   child->GetPrimaryFrame()->GetContent() != child,
-                   //XXX the child->GetPrimaryFrame()->GetContent() != child
+                       child->GetPrimaryFrame()->GetContent() != child,
+                   // XXX the child->GetPrimaryFrame()->GetContent() != child
                    // check is needed due to bug 135040. Remove it once that's
                    // fixed.
                    "setting NEEDS_FRAME on a node that already has a frame?");
@@ -6792,26 +6411,20 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
   return true;
 }
 
-
-void
-nsCSSFrameConstructor::IssueSingleInsertNofications(nsIContent* aStartChild,
-                                                    nsIContent* aEndChild,
-                                                    InsertionKind aInsertionKind)
-{
-  for (nsIContent* child = aStartChild;
-       child != aEndChild;
+void nsCSSFrameConstructor::IssueSingleInsertNofications(
+    nsIContent* aStartChild, nsIContent* aEndChild,
+    InsertionKind aInsertionKind) {
+  for (nsIContent* child = aStartChild; child != aEndChild;
        child = child->GetNextSibling()) {
     MOZ_ASSERT(!child->GetPrimaryFrame());
 
     // Call ContentRangeInserted with this node.
-    ContentRangeInserted(child, child->GetNextSibling(),
-                         mTempFrameTreeState, aInsertionKind);
+    ContentRangeInserted(child, child->GetNextSibling(), mTempFrameTreeState,
+                         aInsertionKind);
   }
 }
 
-bool
-nsCSSFrameConstructor::InsertionPoint::IsMultiple() const
-{
+bool nsCSSFrameConstructor::InsertionPoint::IsMultiple() const {
   if (!mParentFrame) {
     return false;
   }
@@ -6834,8 +6447,7 @@ nsCSSFrameConstructor::InsertionPoint::IsMultiple() const
 nsCSSFrameConstructor::InsertionPoint
 nsCSSFrameConstructor::GetRangeInsertionPoint(nsIContent* aStartChild,
                                               nsIContent* aEndChild,
-                                              InsertionKind aInsertionKind)
-{
+                                              InsertionKind aInsertionKind) {
   MOZ_ASSERT(aStartChild);
   MOZ_ASSERT(aStartChild->GetParent());
 
@@ -6846,7 +6458,7 @@ nsCSSFrameConstructor::GetRangeInsertionPoint(nsIContent* aStartChild,
   // the mess.
   if (parent->GetShadowRoot() || parent->GetXBLBinding()) {
     IssueSingleInsertNofications(aStartChild, aEndChild, aInsertionKind);
-    return { };
+    return {};
   }
 
 #ifdef DEBUG
@@ -6865,21 +6477,18 @@ nsCSSFrameConstructor::GetRangeInsertionPoint(nsIContent* aStartChild,
   InsertionPoint ip = GetInsertionPoint(aStartChild);
   if (ip.IsMultiple()) {
     IssueSingleInsertNofications(aStartChild, aEndChild, aInsertionKind);
-    return { };
+    return {};
   }
 
   return ip;
 }
 
-bool
-nsCSSFrameConstructor::MaybeRecreateForFrameset(nsIFrame* aParentFrame,
-                                                nsIContent* aStartChild,
-                                                nsIContent* aEndChild)
-{
+bool nsCSSFrameConstructor::MaybeRecreateForFrameset(nsIFrame* aParentFrame,
+                                                     nsIContent* aStartChild,
+                                                     nsIContent* aEndChild) {
   if (aParentFrame->IsFrameSetFrame()) {
     // Check whether we have any kids we care about.
-    for (nsIContent* cur = aStartChild;
-         cur != aEndChild;
+    for (nsIContent* cur = aStartChild; cur != aEndChild;
          cur = cur->GetNextSibling()) {
       if (IsSpecialFramesetChild(cur)) {
         // Just reframe the parent, since framesets are weird like that.
@@ -6892,10 +6501,8 @@ nsCSSFrameConstructor::MaybeRecreateForFrameset(nsIFrame* aParentFrame,
   return false;
 }
 
-void
-nsCSSFrameConstructor::LazilyStyleNewChildRange(nsIContent* aStartChild,
-                                                nsIContent* aEndChild)
-{
+void nsCSSFrameConstructor::LazilyStyleNewChildRange(nsIContent* aStartChild,
+                                                     nsIContent* aEndChild) {
   for (nsIContent* child = aStartChild; child != aEndChild;
        child = child->GetNextSibling()) {
     if (child->IsElement()) {
@@ -6905,12 +6512,9 @@ nsCSSFrameConstructor::LazilyStyleNewChildRange(nsIContent* aStartChild,
 }
 
 #ifdef DEBUG
-static bool
-IsFlattenedTreeChild(nsIContent* aParent, nsIContent* aChild)
-{
+static bool IsFlattenedTreeChild(nsIContent* aParent, nsIContent* aChild) {
   FlattenedChildIterator iter(aParent);
-  for (nsIContent* node = iter.GetNextChild();
-       node;
+  for (nsIContent* node = iter.GetNextChild(); node;
        node = iter.GetNextChild()) {
     if (node == aChild) {
       return true;
@@ -6920,10 +6524,8 @@ IsFlattenedTreeChild(nsIContent* aParent, nsIContent* aChild)
 }
 #endif
 
-void
-nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
-                                          nsIContent* aEndChild)
-{
+void nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
+                                               nsIContent* aEndChild) {
   ServoStyleSet* styleSet = mPresShell->StyleSet();
 
   for (nsIContent* child = aStartChild; child != aEndChild;
@@ -6946,8 +6548,9 @@ nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
       Element* parent = childElement->GetFlattenedTreeParentElement();
       MOZ_ASSERT(parent);
       MOZ_ASSERT(parent->HasServoData());
-      MOZ_ASSERT(IsFlattenedTreeChild(parent, child),
-                 "GetFlattenedTreeParent and ChildIterator don't agree, fix this!");
+      MOZ_ASSERT(
+          IsFlattenedTreeChild(parent, child),
+          "GetFlattenedTreeParent and ChildIterator don't agree, fix this!");
     }
 #endif
 
@@ -6955,13 +6558,12 @@ nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
   }
 }
 
-nsIFrame*
-nsCSSFrameConstructor::FindNextSiblingForAppend(const InsertionPoint& aInsertion)
-{
+nsIFrame* nsCSSFrameConstructor::FindNextSiblingForAppend(
+    const InsertionPoint& aInsertion) {
   auto SlowPath = [&]() -> nsIFrame* {
     FlattenedChildIterator iter(aInsertion.mContainer,
                                 /* aStartAtBeginning = */ false);
-    iter.GetPreviousChild(); // Prime the iterator.
+    iter.GetPreviousChild();  // Prime the iterator.
     Maybe<StyleDisplay> unused;
     return FindNextSibling(iter, unused);
   };
@@ -6975,10 +6577,8 @@ nsCSSFrameConstructor::FindNextSiblingForAppend(const InsertionPoint& aInsertion
   return SlowPath();
 }
 
-void
-nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
-                                       InsertionKind aInsertionKind)
-{
+void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
+                                            InsertionKind aInsertionKind) {
   MOZ_ASSERT(aInsertionKind == InsertionKind::Sync ||
              !RestyleManager()->IsInStyleRefresh());
 
@@ -6987,30 +6587,30 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
 
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
-    printf("nsCSSFrameConstructor::ContentAppended container=%p "
-           "first-child=%p lazy=%d\n",
-           aFirstNewContent->GetParent(),
-           aFirstNewContent,
-           aInsertionKind == InsertionKind::Async);
+    printf(
+        "nsCSSFrameConstructor::ContentAppended container=%p "
+        "first-child=%p lazy=%d\n",
+        aFirstNewContent->GetParent(), aFirstNewContent,
+        aInsertionKind == InsertionKind::Async);
     if (gReallyNoisyContentUpdates && aFirstNewContent->GetParent()) {
       aFirstNewContent->GetParent()->List(stdout, 0);
     }
   }
 
-  for (nsIContent* child = aFirstNewContent;
-       child;
+  for (nsIContent* child = aFirstNewContent; child;
        child = child->GetNextSibling()) {
     // XXX the GetContent() != child check is needed due to bug 135040.
     // Remove it once that's fixed.
-    MOZ_ASSERT(!child->GetPrimaryFrame() ||
-               child->GetPrimaryFrame()->GetContent() != child,
-               "asked to construct a frame for a node that already has a frame");
+    MOZ_ASSERT(
+        !child->GetPrimaryFrame() ||
+            child->GetPrimaryFrame()->GetContent() != child,
+        "asked to construct a frame for a node that already has a frame");
   }
 #endif
 
   LAYOUT_PHASE_TEMP_EXIT();
   InsertionPoint insertion =
-    GetRangeInsertionPoint(aFirstNewContent, nullptr, aInsertionKind);
+      GetRangeInsertionPoint(aFirstNewContent, nullptr, aInsertionKind);
   nsContainerFrame*& parentFrame = insertion.mParentFrame;
   LAYOUT_PHASE_TEMP_REENTER();
   if (!parentFrame) {
@@ -7034,7 +6634,6 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
     // styles are up-to-date already).
     StyleNewChildRange(aFirstNewContent, nullptr);
   }
-
 
   LAYOUT_PHASE_TEMP_EXIT();
   if (MaybeRecreateForFrameset(parentFrame, aFirstNewContent, nullptr)) {
@@ -7074,20 +6673,18 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
   if (nextSibling) {
     parentFrame = nextSibling->GetParent()->GetContentInsertionFrame();
   } else {
-    parentFrame =
-      ::ContinuationToAppendTo(parentFrame);
+    parentFrame = ::ContinuationToAppendTo(parentFrame);
   }
 
   nsContainerFrame* containingBlock = GetFloatContainingBlock(parentFrame);
 
   // See if the containing block has :first-letter style applied.
   const bool haveFirstLetterStyle =
-    containingBlock && HasFirstLetterStyle(containingBlock);
+      containingBlock && HasFirstLetterStyle(containingBlock);
 
   const bool haveFirstLineStyle =
-    containingBlock &&
-    ShouldHaveFirstLineStyle(containingBlock->GetContent(),
-                             containingBlock->Style());
+      containingBlock && ShouldHaveFirstLineStyle(containingBlock->GetContent(),
+                                                  containingBlock->Style());
 
   if (haveFirstLetterStyle) {
     AutoWeakFrame wf(nextSibling);
@@ -7108,10 +6705,9 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
   }
 
   // Create some new frames
-  nsFrameConstructorState state(mPresShell,
-                                GetAbsoluteContainingBlock(parentFrame, FIXED_POS),
-                                GetAbsoluteContainingBlock(parentFrame, ABS_POS),
-                                containingBlock);
+  nsFrameConstructorState state(
+      mPresShell, GetAbsoluteContainingBlock(parentFrame, FIXED_POS),
+      GetAbsoluteContainingBlock(parentFrame, ABS_POS), containingBlock);
 
   LayoutFrameType frameType = parentFrame->Type();
 
@@ -7120,8 +6716,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
 
   AutoFrameConstructionItemList items(this);
   if (aFirstNewContent->GetPreviousSibling() &&
-      GetParentType(frameType) == eTypeBlock &&
-      haveNoXBLChildren) {
+      GetParentType(frameType) == eTypeBlock && haveNoXBLChildren) {
     // If there's a text node in the normal content list just before the new
     // items, and it has no frame, make a frame construction item for it. If it
     // doesn't need a frame, ConstructFramesFromItemList below won't give it
@@ -7133,13 +6728,10 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
     // (text in an XBL binding is not suppressed) or generated content
     // (and bare text nodes are not generated). Native anonymous content
     // generated by frames never participates in inline layout.
-    AddTextItemIfNeeded(state,
-                        insertion,
-                        aFirstNewContent->GetPreviousSibling(),
-                        items);
+    AddTextItemIfNeeded(state, insertion,
+                        aFirstNewContent->GetPreviousSibling(), items);
   }
-  for (nsIContent* child = aFirstNewContent;
-       child;
+  for (nsIContent* child = aFirstNewContent; child;
        child = child->GetNextSibling()) {
     AddFrameConstructionItems(state, child, false, insertion, items);
   }
@@ -7151,8 +6743,8 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
   // If we're appending before :after content, then we're not really
   // appending, so let WipeContainingBlock know that.
   LAYOUT_PHASE_TEMP_EXIT();
-  if (WipeContainingBlock(state, containingBlock, parentFrame, items,
-                          true, prevSibling)) {
+  if (WipeContainingBlock(state, containingBlock, parentFrame, items, true,
+                          prevSibling)) {
     LAYOUT_PHASE_TEMP_REENTER();
     return;
   }
@@ -7170,8 +6762,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
     //
     // FIXME(emilio): A display: contents sibling could! Write a test-case and
     // fix.
-    items.SetLineBoundaryAtEnd(
-        !nextSibling || !nextSibling->IsInlineOutside());
+    items.SetLineBoundaryAtEnd(!nextSibling || !nextSibling->IsInlineOutside());
   }
   // To suppress whitespace-only text frames, we have to verify that
   // our container's DOM child list matches its flattened tree child list.
@@ -7179,11 +6770,9 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
 
   nsFrameItems frameItems;
   ConstructFramesFromItemList(state, items, parentFrame,
-                              ParentIsWrapperAnonBox(parentFrame),
-                              frameItems);
+                              ParentIsWrapperAnonBox(parentFrame), frameItems);
 
-  for (nsIContent* child = aFirstNewContent;
-       child;
+  for (nsIContent* child = aFirstNewContent; child;
        child = child->GetNextSibling()) {
     // Invalidate now instead of before the WipeContainingBlock call, just in
     // case we do wipe; in that case we don't need to do this walk at all.
@@ -7209,8 +6798,8 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
   if (haveFirstLineStyle && parentFrame == containingBlock) {
     // It's possible that some of the new frames go into a
     // first-line frame. Look at them and see...
-    AppendFirstLineFrames(state, containingBlock->GetContent(),
-                          containingBlock, frameItems);
+    AppendFirstLineFrames(state, containingBlock->GetContent(), containingBlock,
+                          frameItems);
     // That moved things into line frames as needed, reparenting their
     // styles.  Nothing else needs to be done.
   } else if (parentFrame->Style()->HasPseudoElementData()) {
@@ -7223,13 +6812,13 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
   // Notify the parent frame passing it the list of new frames
   // Append the flowed frames to the principal child list; captions
   // need special treatment
-  if (captionItems.NotEmpty()) { // append the caption to the table wrapper
+  if (captionItems.NotEmpty()) {  // append the caption to the table wrapper
     NS_ASSERTION(LayoutFrameType::Table == frameType, "how did that happen?");
     nsContainerFrame* outerTable = parentFrame->GetParent();
     AppendFrames(outerTable, nsIFrame::kCaptionList, captionItems);
   }
 
-  if (frameItems.NotEmpty()) { // append the in-flow kids
+  if (frameItems.NotEmpty()) {  // append the in-flow kids
     AppendFramesToParent(state, parentFrame, frameItems, prevSibling);
   }
 
@@ -7252,14 +6841,10 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
 #endif
 }
 
-void
-nsCSSFrameConstructor::ContentInserted(nsIContent* aChild,
-                                       nsILayoutHistoryState* aFrameState,
-                                       InsertionKind aInsertionKind)
-{
-  ContentRangeInserted(aChild,
-                       aChild->GetNextSibling(),
-                       aFrameState,
+void nsCSSFrameConstructor::ContentInserted(nsIContent* aChild,
+                                            nsILayoutHistoryState* aFrameState,
+                                            InsertionKind aInsertionKind) {
+  ContentRangeInserted(aChild, aChild->GetNextSibling(), aFrameState,
                        aInsertionKind);
 }
 
@@ -7281,12 +6866,9 @@ nsCSSFrameConstructor::ContentInserted(nsIContent* aChild,
 // in the caption list, while skipping any nodes in the range being inserted
 // (because when we treat the caption frames the other nodes have had their
 // frames constructed but not yet inserted into the frame tree).
-void
-nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
-                                            nsIContent* aEndChild,
-                                            nsILayoutHistoryState* aFrameState,
-                                            InsertionKind aInsertionKind)
-{
+void nsCSSFrameConstructor::ContentRangeInserted(
+    nsIContent* aStartChild, nsIContent* aEndChild,
+    nsILayoutHistoryState* aFrameState, InsertionKind aInsertionKind) {
   MOZ_ASSERT(aInsertionKind == InsertionKind::Sync ||
              !RestyleManager()->IsInStyleRefresh());
 
@@ -7297,36 +6879,33 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
 
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
-    printf("nsCSSFrameConstructor::ContentRangeInserted container=%p "
-           "start-child=%p end-child=%p lazy=%d\n",
-           aStartChild->GetParent(),
-           aStartChild,
-           aEndChild,
-           aInsertionKind == InsertionKind::Async);
+    printf(
+        "nsCSSFrameConstructor::ContentRangeInserted container=%p "
+        "start-child=%p end-child=%p lazy=%d\n",
+        aStartChild->GetParent(), aStartChild, aEndChild,
+        aInsertionKind == InsertionKind::Async);
     if (gReallyNoisyContentUpdates) {
       if (aStartChild->GetParent()) {
-        aStartChild->GetParent()->List(stdout,0);
+        aStartChild->GetParent()->List(stdout, 0);
       } else {
         aStartChild->List(stdout, 0);
       }
     }
   }
 
-  for (nsIContent* child = aStartChild;
-       child != aEndChild;
+  for (nsIContent* child = aStartChild; child != aEndChild;
        child = child->GetNextSibling()) {
     // XXX the GetContent() != child check is needed due to bug 135040.
     // Remove it once that's fixed.
-    NS_ASSERTION(!child->GetPrimaryFrame() ||
-                 child->GetPrimaryFrame()->GetContent() != child,
-                 "asked to construct a frame for a node that already has a frame");
+    NS_ASSERTION(
+        !child->GetPrimaryFrame() ||
+            child->GetPrimaryFrame()->GetContent() != child,
+        "asked to construct a frame for a node that already has a frame");
   }
 #endif
 
-
   bool isSingleInsert = (aStartChild->GetNextSibling() == aEndChild);
-  NS_ASSERTION(isSingleInsert ||
-               aInsertionKind == InsertionKind::Sync,
+  NS_ASSERTION(isSingleInsert || aInsertionKind == InsertionKind::Sync,
                "range insert shouldn't be lazy");
   NS_ASSERTION(isSingleInsert || aEndChild,
                "range should not include all nodes after aStartChild");
@@ -7351,8 +6930,9 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
       InvalidateCanvasIfNeeded(mPresShell, aStartChild);
 #ifdef DEBUG
       if (gReallyNoisyContentUpdates) {
-        printf("nsCSSFrameConstructor::ContentRangeInserted: resulting frame "
-               "model:\n");
+        printf(
+            "nsCSSFrameConstructor::ContentRangeInserted: resulting frame "
+            "model:\n");
         mRootElementFrame->List(stdout, 0);
       }
 #endif
@@ -7411,8 +6991,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
   }
 
   bool isAppend, isRangeInsertSafe;
-  nsIFrame* prevSibling = GetInsertionPrevSibling(&insertion, aStartChild,
-                                                  &isAppend, &isRangeInsertSafe);
+  nsIFrame* prevSibling = GetInsertionPrevSibling(
+      &insertion, aStartChild, &isAppend, &isRangeInsertSafe);
 
   // check if range insert is safe
   if (!isSingleInsert && !isRangeInsertSafe) {
@@ -7425,7 +7005,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
 
   LayoutFrameType frameType = insertion.mParentFrame->Type();
   LAYOUT_PHASE_TEMP_EXIT();
-  if (MaybeRecreateForFrameset(insertion.mParentFrame, aStartChild, aEndChild)) {
+  if (MaybeRecreateForFrameset(insertion.mParentFrame, aStartChild,
+                               aEndChild)) {
     LAYOUT_PHASE_TEMP_REENTER();
     return;
   }
@@ -7482,11 +7063,10 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
     return;
   }
 
-  nsFrameConstructorState state(mPresShell,
-                                GetAbsoluteContainingBlock(insertion.mParentFrame, FIXED_POS),
-                                GetAbsoluteContainingBlock(insertion.mParentFrame, ABS_POS),
-                                GetFloatContainingBlock(insertion.mParentFrame),
-                                do_AddRef(aFrameState));
+  nsFrameConstructorState state(
+      mPresShell, GetAbsoluteContainingBlock(insertion.mParentFrame, FIXED_POS),
+      GetAbsoluteContainingBlock(insertion.mParentFrame, ABS_POS),
+      GetFloatContainingBlock(insertion.mParentFrame), do_AddRef(aFrameState));
 
   // Recover state for the containing block - we need to know if
   // it has :first-letter or :first-line style applied to it. The
@@ -7513,20 +7093,19 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
     // Recover the special style flags for the containing block
     if (containingBlock) {
       haveFirstLetterStyle = HasFirstLetterStyle(containingBlock);
-      haveFirstLineStyle =
-        ShouldHaveFirstLineStyle(containingBlock->GetContent(),
-                                 containingBlock->Style());
+      haveFirstLineStyle = ShouldHaveFirstLineStyle(
+          containingBlock->GetContent(), containingBlock->Style());
     }
 
     if (haveFirstLetterStyle) {
-      // If our current insertion.mParentFrame is a Letter frame, use its parent as our
-      // new parent hint
+      // If our current insertion.mParentFrame is a Letter frame, use its parent
+      // as our new parent hint
       if (insertion.mParentFrame->IsLetterFrame()) {
-        // If insertion.mParentFrame is out of flow, then we actually want the parent of
-        // the placeholder frame.
+        // If insertion.mParentFrame is out of flow, then we actually want the
+        // parent of the placeholder frame.
         if (insertion.mParentFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
           nsPlaceholderFrame* placeholderFrame =
-            insertion.mParentFrame->GetPlaceholderFrame();
+              insertion.mParentFrame->GetPlaceholderFrame();
           NS_ASSERTION(placeholderFrame, "No placeholder for out-of-flow?");
           insertion.mParentFrame = placeholderFrame->GetParent();
         } else {
@@ -7548,9 +7127,11 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
         // Need to recover the letter frames first.
         RecoverLetterFrames(state.mFloatedItems.containingBlock);
 
-        // must fall back to a single ContertInserted for each child in the range
+        // must fall back to a single ContertInserted for each child in the
+        // range
         LAYOUT_PHASE_TEMP_EXIT();
-        IssueSingleInsertNofications(aStartChild, aEndChild, InsertionKind::Sync);
+        IssueSingleInsertNofications(aStartChild, aEndChild,
+                                     InsertionKind::Sync);
         LAYOUT_PHASE_TEMP_REENTER();
         return;
       }
@@ -7563,8 +7144,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
   ParentType parentType = GetParentType(frameType);
   FlattenedChildIterator iter(insertion.mContainer);
   bool haveNoXBLChildren = !iter.XBLInvolved() || !iter.GetNextChild();
-  if (aStartChild->GetPreviousSibling() &&
-      parentType == eTypeBlock && haveNoXBLChildren) {
+  if (aStartChild->GetPreviousSibling() && parentType == eTypeBlock &&
+      haveNoXBLChildren) {
     // If there's a text node in the normal content list just before the
     // new nodes, and it has no frame, make a frame construction item for
     // it, because it might need a frame now.  No need to do this if our
@@ -7579,9 +7160,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
                               aStartChild->IsRootOfAnonymousSubtree(),
                               insertion, items);
   } else {
-    for (nsIContent* child = aStartChild;
-         child != aEndChild;
-         child = child->GetNextSibling()){
+    for (nsIContent* child = aStartChild; child != aEndChild;
+         child = child->GetNextSibling()) {
       AddFrameConstructionItems(state, child, false, insertion, items);
     }
   }
@@ -7617,9 +7197,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
                               frameItems);
 
   if (frameItems.NotEmpty()) {
-    for (nsIContent* child = aStartChild;
-         child != aEndChild;
-         child = child->GetNextSibling()){
+    for (nsIContent* child = aStartChild; child != aEndChild;
+         child = child->GetNextSibling()) {
       InvalidateCanvasIfNeeded(mPresShell, child);
     }
 
@@ -7629,11 +7208,12 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
     }
   }
 
-  if (haveFirstLineStyle && insertion.mParentFrame == containingBlock && isAppend) {
+  if (haveFirstLineStyle && insertion.mParentFrame == containingBlock &&
+      isAppend) {
     // It's possible that the new frame goes into a first-line
     // frame. Look at it and see...
-    AppendFirstLineFrames(state, containingBlock->GetContent(),
-                          containingBlock, frameItems);
+    AppendFirstLineFrames(state, containingBlock->GetContent(), containingBlock,
+                          frameItems);
   } else if (insertion.mParentFrame->Style()->HasPseudoElementData()) {
     CheckForFirstLineInsertion(insertion.mParentFrame, frameItems);
     CheckForFirstLineInsertion(insertion.mParentFrame, captionItems);
@@ -7643,7 +7223,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
   // table wrapper frame.
   if (captionItems.NotEmpty()) {
     NS_ASSERTION(LayoutFrameType::Table == frameType ||
-                 LayoutFrameType::TableWrapper == frameType,
+                     LayoutFrameType::TableWrapper == frameType,
                  "parent for caption is not table?");
     // We need to determine where to put the caption items; start with the
     // the parent frame that has already been determined and get the insertion
@@ -7653,26 +7233,24 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
 
     // aIsRangeInsertSafe is ignored on purpose because it is irrelevant here.
     bool ignored;
-    InsertionPoint captionInsertion(insertion.mParentFrame, insertion.mContainer);
+    InsertionPoint captionInsertion(insertion.mParentFrame,
+                                    insertion.mContainer);
     if (isSingleInsert) {
-      captionPrevSibling =
-        GetInsertionPrevSibling(&captionInsertion, aStartChild,
-                                &captionIsAppend, &ignored);
+      captionPrevSibling = GetInsertionPrevSibling(
+          &captionInsertion, aStartChild, &captionIsAppend, &ignored);
     } else {
       nsIContent* firstCaption = captionItems.FirstChild()->GetContent();
       // It is very important here that we skip the children in
       // [aStartChild,aEndChild) when looking for a
       // prevsibling.
-      captionPrevSibling =
-        GetInsertionPrevSibling(&captionInsertion, firstCaption,
-                                &captionIsAppend, &ignored,
-                                aStartChild, aEndChild);
+      captionPrevSibling = GetInsertionPrevSibling(
+          &captionInsertion, firstCaption, &captionIsAppend, &ignored,
+          aStartChild, aEndChild);
     }
 
     nsContainerFrame* outerTable = nullptr;
     if (GetCaptionAdjustedParent(captionInsertion.mParentFrame,
-                                 captionItems.FirstChild(),
-                                 &outerTable)) {
+                                 captionItems.FirstChild(), &outerTable)) {
       // If the parent is not a table wrapper frame we will try to add frames
       // to a named child list that the parent does not honor and the frames
       // will get lost.
@@ -7683,15 +7261,14 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
       // If the parent of our current prevSibling is different from the frame
       // we'll actually use as the parent, then the calculated insertion
       // point is now invalid (bug 341382).
-      if (captionPrevSibling &&
-          captionPrevSibling->GetParent() != outerTable) {
-          captionPrevSibling = nullptr;
+      if (captionPrevSibling && captionPrevSibling->GetParent() != outerTable) {
+        captionPrevSibling = nullptr;
       }
       if (captionIsAppend) {
         AppendFrames(outerTable, nsIFrame::kCaptionList, captionItems);
       } else {
-        InsertFrames(outerTable, nsIFrame::kCaptionList,
-                     captionPrevSibling, captionItems);
+        InsertFrames(outerTable, nsIFrame::kCaptionList, captionPrevSibling,
+                     captionItems);
       }
     }
   }
@@ -7699,9 +7276,11 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
   if (frameItems.NotEmpty()) {
     // Notify the parent frame
     if (isAppend) {
-      AppendFramesToParent(state, insertion.mParentFrame, frameItems, prevSibling);
+      AppendFramesToParent(state, insertion.mParentFrame, frameItems,
+                           prevSibling);
     } else {
-      InsertFrames(insertion.mParentFrame, kPrincipalList, prevSibling, frameItems);
+      InsertFrames(insertion.mParentFrame, kPrincipalList, prevSibling,
+                   frameItems);
     }
   }
 
@@ -7713,7 +7292,9 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
 
 #ifdef DEBUG
   if (gReallyNoisyContentUpdates && insertion.mParentFrame) {
-    printf("nsCSSFrameConstructor::ContentRangeInserted: resulting frame model:\n");
+    printf(
+        "nsCSSFrameConstructor::ContentRangeInserted: resulting frame "
+        "model:\n");
     insertion.mParentFrame->List(stdout, 0);
   }
 #endif
@@ -7725,11 +7306,9 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
 #endif
 }
 
-bool
-nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
-                                      nsIContent* aOldNextSibling,
-                                      RemoveFlags aFlags)
-{
+bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
+                                           nsIContent* aOldNextSibling,
+                                           RemoveFlags aFlags) {
   MOZ_ASSERT(aChild);
   MOZ_ASSERT(!aChild->IsRootOfAnonymousSubtree() || !aOldNextSibling,
              "Anonymous roots don't have siblings");
@@ -7757,7 +7336,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
     // We don't handle the fullscreen case here, because it doesn't change the
     // scrollbar styles override element stored on the prescontext.)
     Element* newOverrideElement =
-      presContext->UpdateViewportScrollStylesOverride();
+        presContext->UpdateViewportScrollStylesOverride();
 
     // If aChild is the root, then we don't need to do any reframing of
     // newOverrideElement, because we're about to tear down the whole frame tree
@@ -7782,11 +7361,10 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
 
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
-    printf("nsCSSFrameConstructor::ContentRemoved container=%p child=%p "
-           "old-next-sibling=%p\n",
-           aChild->GetParent(),
-           aChild,
-           aOldNextSibling);
+    printf(
+        "nsCSSFrameConstructor::ContentRemoved container=%p child=%p "
+        "old-next-sibling=%p\n",
+        aChild->GetParent(), aChild, aOldNextSibling);
     if (gReallyNoisyContentUpdates) {
       aChild->GetParent()->List(stdout, 0);
     }
@@ -7851,7 +7429,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
       if (c->GetPrimaryFrame() || CouldHaveBeenDisplayContents(aChild)) {
         LAYOUT_PHASE_TEMP_EXIT();
         bool didReconstruct =
-          ContentRemoved(c, nullptr, REMOVE_FOR_RECONSTRUCTION);
+            ContentRemoved(c, nullptr, REMOVE_FOR_RECONSTRUCTION);
         LAYOUT_PHASE_TEMP_REENTER();
         if (didReconstruct) {
           return true;
@@ -7860,7 +7438,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
     }
     return false;
   }
-
 
   if (childFrame) {
     InvalidateCanvasIfNeeded(mPresShell, aChild);
@@ -7890,8 +7467,8 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
     // If we're non-MathML, then we would be wrapped in a block so we need to
     // check our grandparent in that case.
     nsIFrame* possibleMathMLAncestor = parentType == LayoutFrameType::Block
-                                         ? parentFrame->GetParent()
-                                         : parentFrame;
+                                           ? parentFrame->GetParent()
+                                           : parentFrame;
     if (possibleMathMLAncestor->IsFrameOfType(nsIFrame::eMathML)) {
       LAYOUT_PHASE_TEMP_EXIT();
       RecreateFramesForContent(parentFrame->GetContent(), InsertionKind::Async);
@@ -7906,7 +7483,8 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
     if (grandparentFrame && grandparentFrame->IsXULBoxFrame() &&
         (grandparentFrame->GetStateBits() & NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK) &&
         // check if this frame is the only one needing wrapping
-        aChild == AnyKidsNeedBlockParent(parentFrame->PrincipalChildList().FirstChild()) &&
+        aChild == AnyKidsNeedBlockParent(
+                      parentFrame->PrincipalChildList().FirstChild()) &&
         !AnyKidsNeedBlockParent(childFrame->GetNextSibling())) {
       LAYOUT_PHASE_TEMP_EXIT();
       RecreateFramesForContent(grandparentFrame->GetContent(),
@@ -7929,7 +7507,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
       NS_ASSERTION(inflowChild, "No placeholder for out-of-flow?");
     }
     nsContainerFrame* containingBlock =
-      GetFloatContainingBlock(inflowChild->GetParent());
+        GetFloatContainingBlock(inflowChild->GetParent());
     bool haveFLS = containingBlock && HasFirstLetterStyle(containingBlock);
     if (haveFLS) {
       // Trap out to special routine that handles adjusting a blocks
@@ -8060,9 +7638,8 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
  * @param aFrame a frame for a content node about to be removed or a frame that
  *               was just created for a content node that was inserted.
  */
-static void
-InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node)
-{
+static void InvalidateCanvasIfNeeded(nsIPresShell* presShell,
+                                     nsIContent* node) {
   MOZ_ASSERT(presShell->GetRootFrame(), "What happened here?");
   MOZ_ASSERT(presShell->GetPresContext(), "Say what?");
 
@@ -8093,10 +7670,8 @@ InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node)
   rootFrame->InvalidateFrameSubtree();
 }
 
-bool
-nsCSSFrameConstructor::EnsureFrameForTextNodeIsCreatedAfterFlush(
-  CharacterData* aContent)
-{
+bool nsCSSFrameConstructor::EnsureFrameForTextNodeIsCreatedAfterFlush(
+    CharacterData* aContent) {
   if (!aContent->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE)) {
     return false;
   }
@@ -8115,15 +7690,13 @@ nsCSSFrameConstructor::EnsureFrameForTextNodeIsCreatedAfterFlush(
     return false;
   }
 
-  RestyleManager()->PostRestyleEvent(
-    root, nsRestyleHint(0), nsChangeHint_ReconstructFrame);
+  RestyleManager()->PostRestyleEvent(root, nsRestyleHint(0),
+                                     nsChangeHint_ReconstructFrame);
   return true;
 }
 
-void
-nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
-                                            const CharacterDataChangeInfo& aInfo)
-{
+void nsCSSFrameConstructor::CharacterDataChanged(
+    nsIContent* aContent, const CharacterDataChangeInfo& aInfo) {
   AUTO_PROFILER_LABEL("nsCSSFrameConstructor::CharacterDataChanged", LAYOUT);
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
 
@@ -8141,7 +7714,6 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
     LAYOUT_PHASE_TEMP_REENTER();
     return;
   }
-
 
   // It's possible the frame whose content changed isn't inserted into the
   // frame hierarchy yet, or that there is no frame that maps the content
@@ -8186,9 +7758,7 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
   }
 }
 
-void
-nsCSSFrameConstructor::RecalcQuotesAndCounters()
-{
+void nsCSSFrameConstructor::RecalcQuotesAndCounters() {
   nsAutoScriptBlocker scriptBlocker;
 
   if (mQuotesDirty) {
@@ -8205,16 +7775,12 @@ nsCSSFrameConstructor::RecalcQuotesAndCounters()
   NS_ASSERTION(!mCountersDirty, "Counter updates will be lost");
 }
 
-void
-nsCSSFrameConstructor::NotifyCounterStylesAreDirty()
-{
+void nsCSSFrameConstructor::NotifyCounterStylesAreDirty() {
   mCounterManager.SetAllDirty();
   CountersDirty();
 }
 
-void
-nsCSSFrameConstructor::WillDestroyFrameTree()
-{
+void nsCSSFrameConstructor::WillDestroyFrameTree() {
 #if defined(DEBUG_dbaron_off)
   mCounterManager.Dump();
 #endif
@@ -8227,15 +7793,12 @@ nsCSSFrameConstructor::WillDestroyFrameTree()
   nsFrameManager::Destroy();
 }
 
-//STATIC
+// STATIC
 
 // XXXbz I'd really like this method to go away. Once we have inline-block and
 // I can just use that for sized broken images, that can happen, maybe.
-void
-nsCSSFrameConstructor::GetAlternateTextFor(Element* aElement,
-                                           nsAtom* aTag,
-                                           nsAString& aAltText)
-{
+void nsCSSFrameConstructor::GetAlternateTextFor(Element* aElement, nsAtom* aTag,
+                                                nsAString& aAltText) {
   // The "alt" attribute specifies alternate text that is rendered
   // when the image can not be displayed.
   if (aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aAltText)) {
@@ -8256,29 +7819,27 @@ nsCSSFrameConstructor::GetAlternateTextFor(Element* aElement,
   }
 }
 
-nsIFrame*
-nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresShell*     aPresShell,
-                                                       nsPresContext*    aPresContext,
-                                                       nsIFrame*         aFrame,
-                                                       nsContainerFrame* aParentFrame,
-                                                       nsIContent*       aContent,
-                                                       ComputedStyle*   aComputedStyle)
-{
-  nsTableWrapperFrame* newFrame = NS_NewTableWrapperFrame(aPresShell, aComputedStyle);
+nsIFrame* nsCSSFrameConstructor::CreateContinuingOuterTableFrame(
+    nsIPresShell* aPresShell, nsPresContext* aPresContext, nsIFrame* aFrame,
+    nsContainerFrame* aParentFrame, nsIContent* aContent,
+    ComputedStyle* aComputedStyle) {
+  nsTableWrapperFrame* newFrame =
+      NS_NewTableWrapperFrame(aPresShell, aComputedStyle);
 
   newFrame->Init(aContent, aParentFrame, aFrame);
 
   // Create a continuing inner table frame, and if there's a caption then
   // replicate the caption
-  nsFrameItems  newChildFrames;
+  nsFrameItems newChildFrames;
 
   nsIFrame* childFrame = aFrame->PrincipalChildList().FirstChild();
   if (childFrame) {
     nsIFrame* continuingTableFrame =
-      CreateContinuingFrame(aPresContext, childFrame, newFrame);
+        CreateContinuingFrame(aPresContext, childFrame, newFrame);
     newChildFrames.AddChild(continuingTableFrame);
 
-    NS_ASSERTION(!childFrame->GetNextSibling(),"there can be only one inner table frame");
+    NS_ASSERTION(!childFrame->GetNextSibling(),
+                 "there can be only one inner table frame");
   }
 
   // Set the table wrapper's initial child list
@@ -8287,55 +7848,47 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresShell*     aPresSh
   return newFrame;
 }
 
-nsIFrame*
-nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell*     aPresShell,
-                                                  nsIFrame*         aFrame,
-                                                  nsContainerFrame* aParentFrame,
-                                                  nsIContent*       aContent,
-                                                  ComputedStyle*   aComputedStyle)
-{
+nsIFrame* nsCSSFrameConstructor::CreateContinuingTableFrame(
+    nsIPresShell* aPresShell, nsIFrame* aFrame, nsContainerFrame* aParentFrame,
+    nsIContent* aContent, ComputedStyle* aComputedStyle) {
   nsTableFrame* newFrame = NS_NewTableFrame(aPresShell, aComputedStyle);
 
   newFrame->Init(aContent, aParentFrame, aFrame);
 
   // Replicate any header/footer frames
-  nsFrameItems  childFrames;
+  nsFrameItems childFrames;
   for (nsIFrame* childFrame : aFrame->PrincipalChildList()) {
     // See if it's a header/footer, possibly wrapped in a scroll frame.
     nsTableRowGroupFrame* rowGroupFrame =
-      static_cast<nsTableRowGroupFrame*>(childFrame);
+        static_cast<nsTableRowGroupFrame*>(childFrame);
     // If the row group was continued, then don't replicate it.
     nsIFrame* rgNextInFlow = rowGroupFrame->GetNextInFlow();
     if (rgNextInFlow) {
       rowGroupFrame->SetRepeatable(false);
-    }
-    else if (rowGroupFrame->IsRepeatable()) {
+    } else if (rowGroupFrame->IsRepeatable()) {
       // Replicate the header/footer frame.
-      nsTableRowGroupFrame*   headerFooterFrame;
-      nsFrameItems            childItems;
+      nsTableRowGroupFrame* headerFooterFrame;
+      nsFrameItems childItems;
 
-      nsFrameConstructorState state(mPresShell,
-                                    GetAbsoluteContainingBlock(newFrame, FIXED_POS),
-                                    GetAbsoluteContainingBlock(newFrame, ABS_POS),
-                                    nullptr);
+      nsFrameConstructorState state(
+          mPresShell, GetAbsoluteContainingBlock(newFrame, FIXED_POS),
+          GetAbsoluteContainingBlock(newFrame, ABS_POS), nullptr);
       state.mCreatingExtraFrames = true;
 
       ComputedStyle* const headerFooterComputedStyle = rowGroupFrame->Style();
-      headerFooterFrame = static_cast<nsTableRowGroupFrame*>
-                                     (NS_NewTableRowGroupFrame(aPresShell, headerFooterComputedStyle));
+      headerFooterFrame = static_cast<nsTableRowGroupFrame*>(
+          NS_NewTableRowGroupFrame(aPresShell, headerFooterComputedStyle));
 
       nsIContent* headerFooter = rowGroupFrame->GetContent();
       headerFooterFrame->Init(headerFooter, newFrame, nullptr);
 
       nsFrameConstructorSaveState absoluteSaveState;
-      MakeTablePartAbsoluteContainingBlockIfNeeded(state,
-                                                   headerFooterComputedStyle->StyleDisplay(),
-                                                   absoluteSaveState,
-                                                   headerFooterFrame);
+      MakeTablePartAbsoluteContainingBlockIfNeeded(
+          state, headerFooterComputedStyle->StyleDisplay(), absoluteSaveState,
+          headerFooterFrame);
 
       ProcessChildren(state, headerFooter, rowGroupFrame->Style(),
-                      headerFooterFrame, true, childItems, false,
-                      nullptr);
+                      headerFooterFrame, true, childItems, false, nullptr);
       NS_ASSERTION(state.mFloatedItems.IsEmpty(), "unexpected floated element");
       headerFooterFrame->SetInitialChildList(kPrincipalList, childItems);
       headerFooterFrame->SetRepeatable(true);
@@ -8354,17 +7907,14 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell*     aPresShell,
   return newFrame;
 }
 
-nsIFrame*
-nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
-                                             nsIFrame*         aFrame,
-                                             nsContainerFrame* aParentFrame,
-                                             bool              aIsFluid)
-{
-  nsIPresShell*              shell = aPresContext->PresShell();
-  ComputedStyle*             computedStyle = aFrame->Style();
-  nsIFrame*                  newFrame = nullptr;
-  nsIFrame*                  nextContinuation = aFrame->GetNextContinuation();
-  nsIFrame*                  nextInFlow = aFrame->GetNextInFlow();
+nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
+    nsPresContext* aPresContext, nsIFrame* aFrame,
+    nsContainerFrame* aParentFrame, bool aIsFluid) {
+  nsIPresShell* shell = aPresContext->PresShell();
+  ComputedStyle* computedStyle = aFrame->Style();
+  nsIFrame* newFrame = nullptr;
+  nsIFrame* nextContinuation = aFrame->GetNextContinuation();
+  nsIFrame* nextInFlow = aFrame->GetNextInFlow();
 
   // Use the frame type to determine what type of frame to create
   LayoutFrameType frameType = aFrame->Type();
@@ -8387,7 +7937,8 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
     newFrame->Init(content, aParentFrame, aFrame);
 #endif
   } else if (LayoutFrameType::ColumnSetWrapper == frameType) {
-    newFrame = NS_NewColumnSetWrapperFrame(shell, computedStyle, nsFrameState(0));
+    newFrame =
+        NS_NewColumnSetWrapperFrame(shell, computedStyle, nsFrameState(0));
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::ColumnSet == frameType) {
     MOZ_ASSERT(!aFrame->IsTableCaption(),
@@ -8398,14 +7949,12 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
     nsContainerFrame* canvasFrame;
     newFrame = ConstructPageFrame(shell, aParentFrame, aFrame, canvasFrame);
   } else if (LayoutFrameType::TableWrapper == frameType) {
-    newFrame =
-      CreateContinuingOuterTableFrame(shell, aPresContext, aFrame, aParentFrame,
-                                      content, computedStyle);
+    newFrame = CreateContinuingOuterTableFrame(
+        shell, aPresContext, aFrame, aParentFrame, content, computedStyle);
 
   } else if (LayoutFrameType::Table == frameType) {
-    newFrame =
-      CreateContinuingTableFrame(shell, aFrame, aParentFrame,
-                                 content, computedStyle);
+    newFrame = CreateContinuingTableFrame(shell, aFrame, aParentFrame, content,
+                                          computedStyle);
 
   } else if (LayoutFrameType::TableRowGroup == frameType) {
     newFrame = NS_NewTableRowGroupFrame(shell, computedStyle);
@@ -8422,13 +7971,13 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
     }
 
     // Create a continuing frame for each table cell frame
-    nsFrameItems  newChildList;
+    nsFrameItems newChildList;
     nsIFrame* cellFrame = aFrame->PrincipalChildList().FirstChild();
     while (cellFrame) {
       // See if it's a table cell frame
       if (IsTableCell(cellFrame->Type())) {
         nsIFrame* continuingCellFrame =
-          CreateContinuingFrame(aPresContext, cellFrame, rowFrame);
+            CreateContinuingFrame(aPresContext, cellFrame, rowFrame);
         newChildList.AddChild(continuingCellFrame);
       }
       cellFrame = cellFrame->GetNextSibling();
@@ -8442,9 +7991,9 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
     // frames, make sure Bug 368554 doesn't regress!
     // See IsInAutoWidthTableCellForQuirk() in nsImageFrame.cpp.
     nsTableFrame* tableFrame =
-      static_cast<nsTableRowFrame*>(aParentFrame)->GetTableFrame();
+        static_cast<nsTableRowFrame*>(aParentFrame)->GetTableFrame();
     nsTableCellFrame* cellFrame =
-      NS_NewTableCellFrame(shell, computedStyle, tableFrame);
+        NS_NewTableCellFrame(shell, computedStyle, tableFrame);
 
     cellFrame->Init(content, aParentFrame, aFrame);
     if (cellFrame->GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN) {
@@ -8453,9 +8002,8 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
 
     // Create a continuing area frame
     nsIFrame* blockFrame = aFrame->PrincipalChildList().FirstChild();
-    nsIFrame* continuingBlockFrame =
-      CreateContinuingFrame(aPresContext, blockFrame,
-                            static_cast<nsContainerFrame*>(cellFrame));
+    nsIFrame* continuingBlockFrame = CreateContinuingFrame(
+        aPresContext, blockFrame, static_cast<nsContainerFrame*>(cellFrame));
 
     SetInitialSingleChild(cellFrame, continuingBlockFrame);
     newFrame = cellFrame;
@@ -8482,7 +8030,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
     nsContainerFrame* blockFrame = GetFieldSetBlockFrame(aFrame);
     if (blockFrame) {
       nsIFrame* continuingBlockFrame =
-        CreateContinuingFrame(aPresContext, blockFrame, fieldset);
+          CreateContinuingFrame(aPresContext, blockFrame, fieldset);
       // Set the fieldset's initial child list
       SetInitialSingleChild(fieldset, continuingBlockFrame);
     } else {
@@ -8556,9 +8104,8 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
   return newFrame;
 }
 
-nsresult
-nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
-{
+nsresult nsCSSFrameConstructor::ReplicateFixedFrames(
+    nsPageContentFrame* aParentFrame) {
   // Now deal with fixed-pos things....  They should appear on all pages,
   // so we want to move over the placeholders when processing the child
   // of the pageContentFrame.
@@ -8568,15 +8115,17 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
     return NS_OK;
   }
   nsContainerFrame* canvasFrame =
-    do_QueryFrame(aParentFrame->PrincipalChildList().FirstChild());
-  nsIFrame* prevCanvasFrame = prevPageContentFrame->PrincipalChildList().FirstChild();
+      do_QueryFrame(aParentFrame->PrincipalChildList().FirstChild());
+  nsIFrame* prevCanvasFrame =
+      prevPageContentFrame->PrincipalChildList().FirstChild();
   if (!canvasFrame || !prevCanvasFrame) {
     // document's root element frame missing
     return NS_ERROR_UNEXPECTED;
   }
 
   nsFrameItems fixedPlaceholders;
-  nsIFrame* firstFixed = prevPageContentFrame->GetChildList(nsIFrame::kFixedList).FirstChild();
+  nsIFrame* firstFixed =
+      prevPageContentFrame->GetChildList(nsIFrame::kFixedList).FirstChild();
   if (!firstFixed) {
     return NS_OK;
   }
@@ -8585,9 +8134,7 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
   // This should not normally be possible (because fixed-pos elements should
   // be absolute containers) but fixed-pos tables currently aren't abs-pos
   // containers.
-  nsFrameConstructorState state(mPresShell,
-                                aParentFrame,
-                                nullptr,
+  nsFrameConstructorState state(mPresShell, aParentFrame, nullptr,
                                 mRootElementFrame);
   state.mCreatingExtraFrames = true;
 
@@ -8602,20 +8149,17 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
   // page - bug 389619)
   for (nsIFrame* fixed = firstFixed; fixed; fixed = fixed->GetNextSibling()) {
     nsIFrame* prevPlaceholder = fixed->GetPlaceholderFrame();
-    if (prevPlaceholder &&
-        nsLayoutUtils::IsProperAncestorFrame(prevCanvasFrame, prevPlaceholder)) {
+    if (prevPlaceholder && nsLayoutUtils::IsProperAncestorFrame(
+                               prevCanvasFrame, prevPlaceholder)) {
       // We want to use the same style as the primary style frame for
       // our content
       nsIContent* content = fixed->GetContent();
       ComputedStyle* computedStyle =
-        nsLayoutUtils::GetStyleFrame(content)->Style();
+          nsLayoutUtils::GetStyleFrame(content)->Style();
       AutoFrameConstructionItemList items(this);
-      AddFrameConstructionItemsInternal(state, content, canvasFrame,
-                                        true,
-                                        computedStyle,
-                                        ITEM_ALLOW_XBL_BASE |
-                                          ITEM_ALLOW_PAGE_BREAK,
-                                        items);
+      AddFrameConstructionItemsInternal(
+          state, content, canvasFrame, true, computedStyle,
+          ITEM_ALLOW_XBL_BASE | ITEM_ALLOW_PAGE_BREAK, items);
       ConstructFramesFromItemList(state, items, canvasFrame,
                                   /* aParentIsWrapperAnonBox = */ false,
                                   fixedPlaceholders);
@@ -8631,52 +8175,44 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
   return NS_OK;
 }
 
-nsCSSFrameConstructor::InsertionPoint
-nsCSSFrameConstructor::GetInsertionPoint(nsIContent* aChild)
-{
+nsCSSFrameConstructor::InsertionPoint nsCSSFrameConstructor::GetInsertionPoint(
+    nsIContent* aChild) {
   MOZ_ASSERT(aChild);
   nsIContent* insertionElement = aChild->GetFlattenedTreeParent();
   if (!insertionElement) {
     // The element doesn't belong in the flattened tree, and thus we don't want
     // to render it.
-    return { };
+    return {};
   }
 
-  return { GetContentInsertionFrameFor(insertionElement), insertionElement };
+  return {GetContentInsertionFrameFor(insertionElement), insertionElement};
 }
 
 // Capture state for the frame tree rooted at the frame associated with the
 // content object, aContent
-void
-nsCSSFrameConstructor::CaptureStateForFramesOf(nsIContent* aContent,
-                                               nsILayoutHistoryState* aHistoryState)
-{
+void nsCSSFrameConstructor::CaptureStateForFramesOf(
+    nsIContent* aContent, nsILayoutHistoryState* aHistoryState) {
   if (!aHistoryState) {
     return;
   }
   nsIFrame* frame = aContent->GetPrimaryFrame();
   if (frame == mRootElementFrame) {
-    frame = mRootElementFrame ?
-      GetAbsoluteContainingBlock(mRootElementFrame, FIXED_POS) :
-      GetRootFrame();
+    frame = mRootElementFrame
+                ? GetAbsoluteContainingBlock(mRootElementFrame, FIXED_POS)
+                : GetRootFrame();
   }
-  for ( ; frame;
-        frame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(frame)) {
+  for (; frame;
+       frame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(frame)) {
     CaptureFrameState(frame, aHistoryState);
   }
 }
 
-
-static bool
-IsWhitespaceFrame(nsIFrame* aFrame)
-{
+static bool IsWhitespaceFrame(nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame, "invalid argument");
   return aFrame->IsTextFrame() && aFrame->GetContent()->TextIsOnlyWhitespace();
 }
 
-static nsIFrame*
-FindFirstNonWhitespaceChild(nsIFrame* aParentFrame)
-{
+static nsIFrame* FindFirstNonWhitespaceChild(nsIFrame* aParentFrame) {
   nsIFrame* f = aParentFrame->PrincipalChildList().FirstChild();
   while (f && IsWhitespaceFrame(f)) {
     f = f->GetNextSibling();
@@ -8684,9 +8220,7 @@ FindFirstNonWhitespaceChild(nsIFrame* aParentFrame)
   return f;
 }
 
-static nsIFrame*
-FindNextNonWhitespaceSibling(nsIFrame* aFrame)
-{
+static nsIFrame* FindNextNonWhitespaceSibling(nsIFrame* aFrame) {
   nsIFrame* f = aFrame;
   do {
     f = f->GetNextSibling();
@@ -8694,9 +8228,7 @@ FindNextNonWhitespaceSibling(nsIFrame* aFrame)
   return f;
 }
 
-static nsIFrame*
-FindPreviousNonWhitespaceSibling(nsIFrame* aFrame)
-{
+static nsIFrame* FindPreviousNonWhitespaceSibling(nsIFrame* aFrame) {
   nsIFrame* f = aFrame;
   do {
     f = f->GetPrevSibling();
@@ -8704,19 +8236,19 @@ FindPreviousNonWhitespaceSibling(nsIFrame* aFrame)
   return f;
 }
 
-bool
-nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
-{
-#define TRACE(reason) \
-  PROFILER_TRACING("Layout", "MaybeRecreateContainerForFrameRemoval: " reason, TRACING_EVENT)
+bool nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(
+    nsIFrame* aFrame) {
+#define TRACE(reason)                                                          \
+  PROFILER_TRACING("Layout", "MaybeRecreateContainerForFrameRemoval: " reason, \
+                   TRACING_EVENT)
   MOZ_ASSERT(aFrame, "Must have a frame");
   MOZ_ASSERT(aFrame->GetParent(), "Frame shouldn't be root");
   MOZ_ASSERT(aFrame == aFrame->FirstContinuation(),
              "aFrame not the result of GetPrimaryFrame()?");
 
-  nsIFrame* inFlowFrame =
-    (aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) ?
-      aFrame->GetPlaceholderFrame() : aFrame;
+  nsIFrame* inFlowFrame = (aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
+                              ? aFrame->GetPlaceholderFrame()
+                              : aFrame;
   MOZ_ASSERT(inFlowFrame, "How did that happen?");
   MOZ_ASSERT(inFlowFrame == inFlowFrame->FirstContinuation(),
              "placeholder for primary frame has previous continuations?");
@@ -8727,30 +8259,30 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
     MOZ_ASSERT(grandparent);
 
     bool needsReframe =
-      // 1. Removing a column-span may lead to an empty
-      // ::-moz-column-span-wrapper.
-      inFlowFrame->IsColumnSpan() ||
-      // 2. Removing a frame which has any column-span siblings may also
-      // lead to an empty ::-moz-column-span-wrapper subtree. The
-      // column-span siblings were the frame's children, but later become
-      // the frame's siblings after CreateColumnSpanSiblings().
-      inFlowFrame->GetProperty(nsIFrame::HasColumnSpanSiblings()) ||
-      // 3. Removing the only child of a ::-moz-column-content, whose
-      // ColumnSet grandparent has a previous column-span sibling, requires
-      // reframing since we might connect the ColumnSet's next column-span
-      // sibling (if there's one). Note that this isn't actually needed if
-      // the ColumnSet is at the end of ColumnSetWrapper since we create
-      // empty ones at the end anyway, but we're not worried about
-      // optimizing that case.
-      (parent->Style()->GetPseudo() == nsCSSAnonBoxes::columnContent() &&
-       // The only child in ::-moz-column-content (might be tall enough to
-       // split across columns)
-       !inFlowFrame->GetPrevSibling() && !inFlowFrame->GetNextSibling() &&
-       // That ::-moz-column-content is the first column.
-       !parent->GetPrevInFlow() &&
-       // The ColumnSet grandparent has a previous sibling that is a
-       // column-span.
-       grandparent->GetPrevSibling());
+        // 1. Removing a column-span may lead to an empty
+        // ::-moz-column-span-wrapper.
+        inFlowFrame->IsColumnSpan() ||
+        // 2. Removing a frame which has any column-span siblings may also
+        // lead to an empty ::-moz-column-span-wrapper subtree. The
+        // column-span siblings were the frame's children, but later become
+        // the frame's siblings after CreateColumnSpanSiblings().
+        inFlowFrame->GetProperty(nsIFrame::HasColumnSpanSiblings()) ||
+        // 3. Removing the only child of a ::-moz-column-content, whose
+        // ColumnSet grandparent has a previous column-span sibling, requires
+        // reframing since we might connect the ColumnSet's next column-span
+        // sibling (if there's one). Note that this isn't actually needed if
+        // the ColumnSet is at the end of ColumnSetWrapper since we create
+        // empty ones at the end anyway, but we're not worried about
+        // optimizing that case.
+        (parent->Style()->GetPseudo() == nsCSSAnonBoxes::columnContent() &&
+         // The only child in ::-moz-column-content (might be tall enough to
+         // split across columns)
+         !inFlowFrame->GetPrevSibling() && !inFlowFrame->GetNextSibling() &&
+         // That ::-moz-column-content is the first column.
+         !parent->GetPrevInFlow() &&
+         // The ColumnSet grandparent has a previous sibling that is a
+         // column-span.
+         grandparent->GetPrevSibling());
 
     if (needsReframe) {
       nsIFrame* containingBlock = GetMultiColumnContainingBlockFor(inFlowFrame);
@@ -8759,8 +8291,8 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
       if (IsFramePartOfIBSplit(inFlowFrame)) {
         nsIFrame* ibContainingBlock = GetIBContainingBlockFor(inFlowFrame);
         MOZ_ASSERT(containingBlock == ibContainingBlock ||
-                   nsLayoutUtils::IsProperAncestorFrame(containingBlock,
-                                                        ibContainingBlock),
+                       nsLayoutUtils::IsProperAncestorFrame(containingBlock,
+                                                            ibContainingBlock),
                    "Multi-column containing block should be equal to or be the "
                    "ancestor of the IB containing block!");
       }
@@ -8792,7 +8324,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
 
   if (parent && parent->IsDetailsFrame()) {
     HTMLSummaryElement* summary =
-      HTMLSummaryElement::FromNode(aFrame->GetContent());
+        HTMLSummaryElement::FromNode(aFrame->GetContent());
     DetailsFrame* detailsFrame = static_cast<DetailsFrame*>(parent);
 
     // Unlike adding summary element cases, we need to check children of the
@@ -8822,10 +8354,12 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
         // If we're a table-column-group, then the OnlyChild check above is
         // not going to catch cases when we're the first child.
         (inFlowFrame->IsTableColGroupFrame() &&
-         parent->GetChildList(nsIFrame::kColGroupList).FirstChild() == inFlowFrame) ||
+         parent->GetChildList(nsIFrame::kColGroupList).FirstChild() ==
+             inFlowFrame) ||
         // Similar if we're a table-caption.
         (inFlowFrame->IsTableCaption() &&
-         parent->GetChildList(nsIFrame::kCaptionList).FirstChild() == inFlowFrame)) {
+         parent->GetChildList(nsIFrame::kCaptionList).FirstChild() ==
+             inFlowFrame)) {
       TRACE("Table or ruby pseudo parent");
       RecreateFramesForContent(parent->GetContent(), InsertionKind::Async);
       return true;
@@ -8837,7 +8371,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
   // needs to get merged with the frame's prevSibling if that's also a table
   // or ruby pseudo.
   nsIFrame* nextSibling =
-    FindNextNonWhitespaceSibling(inFlowFrame->LastContinuation());
+      FindNextNonWhitespaceSibling(inFlowFrame->LastContinuation());
   NS_ASSERTION(!IsTableOrRubyPseudo(inFlowFrame), "Shouldn't happen here");
   // Effectively, for the ruby pseudo sibling case, only pseudo <ruby> frame
   // need to be checked here, since all other types of such frames will have
@@ -8900,7 +8434,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
 #ifdef MOZ_XUL
   if (aFrame->IsPopupSetFrame()) {
     nsIPopupContainer* popupContainer =
-      nsIPopupContainer::GetPopupContainer(mPresShell);
+        nsIPopupContainer::GetPopupContainer(mPresShell);
     if (popupContainer && popupContainer->GetPopupSetFrame() == aFrame) {
       TRACE("PopupSet");
       ReconstructDocElementHierarchy(InsertionKind::Async);
@@ -8911,8 +8445,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
 
   // Reconstruct if inflowFrame is parent's only child, and parent is, or has,
   // a non-fluid continuation, i.e. it was split by bidi resolution
-  if (!inFlowFrame->GetPrevSibling() &&
-      !inFlowFrame->GetNextSibling() &&
+  if (!inFlowFrame->GetPrevSibling() && !inFlowFrame->GetNextSibling() &&
       ((parent->GetPrevContinuation() && !parent->GetPrevInFlow()) ||
        (parent->GetNextContinuation() && !parent->GetNextInFlow()))) {
     TRACE("Removing last child of non-fluid split parent");
@@ -8949,9 +8482,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
 #undef TRACE
 }
 
-void
-nsCSSFrameConstructor::UpdateTableCellSpans(nsIContent* aContent)
-{
+void nsCSSFrameConstructor::UpdateTableCellSpans(nsIContent* aContent) {
   nsTableCellFrame* cellFrame = do_QueryFrame(aContent->GetPrimaryFrame());
 
   // It's possible that this warning could fire if some other style change
@@ -8964,16 +8495,14 @@ nsCSSFrameConstructor::UpdateTableCellSpans(nsIContent* aContent)
   }
 }
 
-static nsIContent*
-GetTopmostMathMLElement(nsIContent* aMathMLContent)
-{
+static nsIContent* GetTopmostMathMLElement(nsIContent* aMathMLContent) {
   MOZ_ASSERT(aMathMLContent->IsMathMLElement());
   MOZ_ASSERT(aMathMLContent->GetPrimaryFrame());
-  MOZ_ASSERT(aMathMLContent->GetPrimaryFrame()->IsFrameOfType(nsIFrame::eMathML));
+  MOZ_ASSERT(
+      aMathMLContent->GetPrimaryFrame()->IsFrameOfType(nsIFrame::eMathML));
   nsIContent* root = aMathMLContent;
 
-  for (nsIContent* parent = aMathMLContent->GetFlattenedTreeParent();
-       parent;
+  for (nsIContent* parent = aMathMLContent->GetFlattenedTreeParent(); parent;
        parent = parent->GetFlattenedTreeParent()) {
     nsIFrame* frame = parent->GetPrimaryFrame();
     if (!frame || !frame->IsFrameOfType(nsIFrame::eMathML)) {
@@ -8985,10 +8514,8 @@ GetTopmostMathMLElement(nsIContent* aMathMLContent)
   return root;
 }
 
-void
-nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
-                                                InsertionKind aInsertionKind)
-{
+void nsCSSFrameConstructor::RecreateFramesForContent(
+    nsIContent* aContent, InsertionKind aInsertionKind) {
   MOZ_ASSERT(aContent);
 
   // If there is no document, we don't want to recreate frames for it.  (You
@@ -9016,7 +8543,8 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
   }
 
   if (frame) {
-    nsIFrame* nonGeneratedAncestor = nsLayoutUtils::GetNonGeneratedAncestor(frame);
+    nsIFrame* nonGeneratedAncestor =
+        nsLayoutUtils::GetNonGeneratedAncestor(frame);
     if (nonGeneratedAncestor->GetContent() != aContent) {
       return RecreateFramesForContent(nonGeneratedAncestor->GetContent(),
                                       InsertionKind::Async);
@@ -9036,8 +8564,9 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
       while (!(acc = do_QueryFrame(ancestor))) {
         ancestor = nsLayoutUtils::GetParentOrPlaceholderFor(ancestor);
       }
-      NS_ASSERTION(acc, "Where is the nsIAnonymousContentCreator? We may fail "
-                        "to recreate its content correctly");
+      NS_ASSERTION(acc,
+                   "Where is the nsIAnonymousContentCreator? We may fail "
+                   "to recreate its content correctly");
       NS_ASSERTION(aContent->IsInNativeAnonymousSubtree(),
                    "Why is NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT set?");
       return RecreateFramesForContent(ancestor->GetContent(),
@@ -9066,10 +8595,11 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
   CaptureStateForFramesOf(aContent, mTempFrameTreeState);
 
   // Remove the frames associated with the content object.
-  nsIContent* nextSibling = aContent->IsRootOfAnonymousSubtree() ?
-    nullptr : aContent->GetNextSibling();
+  nsIContent* nextSibling = aContent->IsRootOfAnonymousSubtree()
+                                ? nullptr
+                                : aContent->GetNextSibling();
   bool didReconstruct =
-    ContentRemoved(aContent, nextSibling, REMOVE_FOR_RECONSTRUCTION);
+      ContentRemoved(aContent, nextSibling, REMOVE_FOR_RECONSTRUCTION);
 
   if (!didReconstruct) {
     if (aInsertionKind == InsertionKind::Async && aContent->IsElement()) {
@@ -9087,198 +8617,155 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
       // Now, recreate the frames associated with this content object. If
       // ContentRemoved triggered reconstruction, then we don't need to do this
       // because the frames will already have been built.
-      ContentRangeInserted(aContent,
-                           aContent->GetNextSibling(),
-                           mTempFrameTreeState,
-                           aInsertionKind);
+      ContentRangeInserted(aContent, aContent->GetNextSibling(),
+                           mTempFrameTreeState, aInsertionKind);
     }
   }
 }
 
-bool
-nsCSSFrameConstructor::DestroyFramesFor(Element* aElement)
-{
+bool nsCSSFrameConstructor::DestroyFramesFor(Element* aElement) {
   MOZ_ASSERT(aElement && aElement->GetParentNode());
 
-  nsIContent* nextSibling =
-    aElement->IsRootOfAnonymousSubtree() ? nullptr : aElement->GetNextSibling();
+  nsIContent* nextSibling = aElement->IsRootOfAnonymousSubtree()
+                                ? nullptr
+                                : aElement->GetNextSibling();
 
   CaptureStateForFramesOf(aElement, mTempFrameTreeState);
-  return ContentRemoved(aElement,
-                        nextSibling,
-                        REMOVE_FOR_RECONSTRUCTION);
+  return ContentRemoved(aElement, nextSibling, REMOVE_FOR_RECONSTRUCTION);
 }
 
 //////////////////////////////////////////////////////////////////////
 
 // Block frame construction code
 
-already_AddRefed<ComputedStyle>
-nsCSSFrameConstructor::GetFirstLetterStyle(nsIContent* aContent,
-                                           ComputedStyle* aComputedStyle)
-{
+already_AddRefed<ComputedStyle> nsCSSFrameConstructor::GetFirstLetterStyle(
+    nsIContent* aContent, ComputedStyle* aComputedStyle) {
   if (aContent) {
-    return mPresShell->StyleSet()->
-      ResolvePseudoElementStyle(aContent->AsElement(),
-                                CSSPseudoElementType::firstLetter,
-                                aComputedStyle,
-                                nullptr);
+    return mPresShell->StyleSet()->ResolvePseudoElementStyle(
+        aContent->AsElement(), CSSPseudoElementType::firstLetter,
+        aComputedStyle, nullptr);
   }
   return nullptr;
 }
 
-already_AddRefed<ComputedStyle>
-nsCSSFrameConstructor::GetFirstLineStyle(nsIContent* aContent,
-                                         ComputedStyle* aComputedStyle)
-{
+already_AddRefed<ComputedStyle> nsCSSFrameConstructor::GetFirstLineStyle(
+    nsIContent* aContent, ComputedStyle* aComputedStyle) {
   if (aContent) {
-    return mPresShell->StyleSet()->
-      ResolvePseudoElementStyle(aContent->AsElement(),
-                                CSSPseudoElementType::firstLine,
-                                aComputedStyle,
-                                nullptr);
+    return mPresShell->StyleSet()->ResolvePseudoElementStyle(
+        aContent->AsElement(), CSSPseudoElementType::firstLine, aComputedStyle,
+        nullptr);
   }
   return nullptr;
 }
 
 // Predicate to see if a given content (block element) has
 // first-letter style applied to it.
-bool
-nsCSSFrameConstructor::ShouldHaveFirstLetterStyle(nsIContent* aContent,
-                                                  ComputedStyle* aComputedStyle)
-{
+bool nsCSSFrameConstructor::ShouldHaveFirstLetterStyle(
+    nsIContent* aContent, ComputedStyle* aComputedStyle) {
   return nsLayoutUtils::HasPseudoStyle(aContent, aComputedStyle,
                                        CSSPseudoElementType::firstLetter,
                                        mPresShell->GetPresContext());
 }
 
-bool
-nsCSSFrameConstructor::HasFirstLetterStyle(nsIFrame* aBlockFrame)
-{
+bool nsCSSFrameConstructor::HasFirstLetterStyle(nsIFrame* aBlockFrame) {
   MOZ_ASSERT(aBlockFrame, "Need a frame");
-  NS_ASSERTION(nsLayoutUtils::GetAsBlock(aBlockFrame),
-               "Not a block frame?");
+  NS_ASSERTION(nsLayoutUtils::GetAsBlock(aBlockFrame), "Not a block frame?");
 
   return (aBlockFrame->GetStateBits() & NS_BLOCK_HAS_FIRST_LETTER_STYLE) != 0;
 }
 
-bool
-nsCSSFrameConstructor::ShouldHaveFirstLineStyle(nsIContent* aContent,
-                                                ComputedStyle* aComputedStyle)
-{
-  bool hasFirstLine =
-    nsLayoutUtils::HasPseudoStyle(aContent, aComputedStyle,
-                                  CSSPseudoElementType::firstLine,
-                                  mPresShell->GetPresContext());
+bool nsCSSFrameConstructor::ShouldHaveFirstLineStyle(
+    nsIContent* aContent, ComputedStyle* aComputedStyle) {
+  bool hasFirstLine = nsLayoutUtils::HasPseudoStyle(
+      aContent, aComputedStyle, CSSPseudoElementType::firstLine,
+      mPresShell->GetPresContext());
   return hasFirstLine && !aContent->IsHTMLElement(nsGkAtoms::fieldset);
 }
 
-void
-nsCSSFrameConstructor::ShouldHaveSpecialBlockStyle(nsIContent* aContent,
-                                                   ComputedStyle* aComputedStyle,
-                                                   bool* aHaveFirstLetterStyle,
-                                                   bool* aHaveFirstLineStyle)
-{
-  *aHaveFirstLetterStyle =
-    ShouldHaveFirstLetterStyle(aContent, aComputedStyle);
-  *aHaveFirstLineStyle =
-    ShouldHaveFirstLineStyle(aContent, aComputedStyle);
+void nsCSSFrameConstructor::ShouldHaveSpecialBlockStyle(
+    nsIContent* aContent, ComputedStyle* aComputedStyle,
+    bool* aHaveFirstLetterStyle, bool* aHaveFirstLineStyle) {
+  *aHaveFirstLetterStyle = ShouldHaveFirstLetterStyle(aContent, aComputedStyle);
+  *aHaveFirstLineStyle = ShouldHaveFirstLineStyle(aContent, aComputedStyle);
 }
 
 /* static */
 const nsCSSFrameConstructor::PseudoParentData
-nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
-  { // Cell
-    FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
-                     FCDATA_USE_CHILD_ITEMS |
-                     FCDATA_IS_WRAPPER_ANON_BOX |
-                     FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRow),
-                     &nsCSSFrameConstructor::ConstructTableCell),
-    nsCSSAnonBoxes::tableCell()
-  },
-  { // Row
-    FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
-                     FCDATA_USE_CHILD_ITEMS |
-                     FCDATA_IS_WRAPPER_ANON_BOX |
-                     FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRowGroup),
-                     &nsCSSFrameConstructor::ConstructTableRowOrRowGroup),
-    nsCSSAnonBoxes::tableRow()
-  },
-  { // Row group
-    FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
-                     FCDATA_USE_CHILD_ITEMS |
-                     FCDATA_IS_WRAPPER_ANON_BOX |
-                     FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
-                     &nsCSSFrameConstructor::ConstructTableRowOrRowGroup),
-    nsCSSAnonBoxes::tableRowGroup()
-  },
-  { // Column group
-    FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
-                FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_USE_CHILD_ITEMS |
-                FCDATA_SKIP_ABSPOS_PUSH |
-                // Not FCDATA_IS_WRAPPER_ANON_BOX, because we don't need to
-                // restyle these: they have non-inheriting styles.
-                FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
-                NS_NewTableColGroupFrame),
-    nsCSSAnonBoxes::tableColGroup()
-  },
-  { // Table
-    FULL_CTOR_FCDATA(FCDATA_SKIP_FRAMESET | FCDATA_USE_CHILD_ITEMS |
-                     FCDATA_IS_WRAPPER_ANON_BOX,
-                     &nsCSSFrameConstructor::ConstructTable),
-    nsCSSAnonBoxes::table()
-  },
-  { // Ruby
-    FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
-                FCDATA_USE_CHILD_ITEMS |
-                FCDATA_IS_WRAPPER_ANON_BOX |
-                FCDATA_SKIP_FRAMESET,
-                NS_NewRubyFrame),
-    nsCSSAnonBoxes::ruby()
-  },
-  { // Ruby Base
-    FCDATA_DECL(FCDATA_USE_CHILD_ITEMS |
-                FCDATA_IS_LINE_PARTICIPANT |
-                FCDATA_IS_WRAPPER_ANON_BOX |
-                FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRubyBaseContainer) |
-                FCDATA_SKIP_FRAMESET,
-                NS_NewRubyBaseFrame),
-    nsCSSAnonBoxes::rubyBase()
-  },
-  { // Ruby Base Container
-    FCDATA_DECL(FCDATA_USE_CHILD_ITEMS |
-                FCDATA_IS_LINE_PARTICIPANT |
-                FCDATA_IS_WRAPPER_ANON_BOX |
-                FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby) |
-                FCDATA_SKIP_FRAMESET,
-                NS_NewRubyBaseContainerFrame),
-    nsCSSAnonBoxes::rubyBaseContainer()
-  },
-  { // Ruby Text
-    FCDATA_DECL(FCDATA_USE_CHILD_ITEMS |
-                FCDATA_IS_LINE_PARTICIPANT |
-                FCDATA_IS_WRAPPER_ANON_BOX |
-                FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRubyTextContainer) |
-                FCDATA_SKIP_FRAMESET,
-                NS_NewRubyTextFrame),
-    nsCSSAnonBoxes::rubyText()
-  },
-  { // Ruby Text Container
-    FCDATA_DECL(FCDATA_USE_CHILD_ITEMS |
-                FCDATA_IS_WRAPPER_ANON_BOX |
-                FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby) |
-                FCDATA_SKIP_FRAMESET,
-                NS_NewRubyTextContainerFrame),
-    nsCSSAnonBoxes::rubyTextContainer()
-  }
-};
+    nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
+        {// Cell
+         FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
+                              FCDATA_USE_CHILD_ITEMS |
+                              FCDATA_IS_WRAPPER_ANON_BOX |
+                              FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRow),
+                          &nsCSSFrameConstructor::ConstructTableCell),
+         nsCSSAnonBoxes::tableCell()},
+        {// Row
+         FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
+                              FCDATA_USE_CHILD_ITEMS |
+                              FCDATA_IS_WRAPPER_ANON_BOX |
+                              FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRowGroup),
+                          &nsCSSFrameConstructor::ConstructTableRowOrRowGroup),
+         nsCSSAnonBoxes::tableRow()},
+        {// Row group
+         FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
+                              FCDATA_USE_CHILD_ITEMS |
+                              FCDATA_IS_WRAPPER_ANON_BOX |
+                              FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
+                          &nsCSSFrameConstructor::ConstructTableRowOrRowGroup),
+         nsCSSAnonBoxes::tableRowGroup()},
+        {// Column group
+         FCDATA_DECL(
+             FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
+                 FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_USE_CHILD_ITEMS |
+                 FCDATA_SKIP_ABSPOS_PUSH |
+                 // Not FCDATA_IS_WRAPPER_ANON_BOX, because we don't need to
+                 // restyle these: they have non-inheriting styles.
+                 FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
+             NS_NewTableColGroupFrame),
+         nsCSSAnonBoxes::tableColGroup()},
+        {// Table
+         FULL_CTOR_FCDATA(FCDATA_SKIP_FRAMESET | FCDATA_USE_CHILD_ITEMS |
+                              FCDATA_IS_WRAPPER_ANON_BOX,
+                          &nsCSSFrameConstructor::ConstructTable),
+         nsCSSAnonBoxes::table()},
+        {// Ruby
+         FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT | FCDATA_USE_CHILD_ITEMS |
+                         FCDATA_IS_WRAPPER_ANON_BOX | FCDATA_SKIP_FRAMESET,
+                     NS_NewRubyFrame),
+         nsCSSAnonBoxes::ruby()},
+        {// Ruby Base
+         FCDATA_DECL(
+             FCDATA_USE_CHILD_ITEMS | FCDATA_IS_LINE_PARTICIPANT |
+                 FCDATA_IS_WRAPPER_ANON_BOX |
+                 FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRubyBaseContainer) |
+                 FCDATA_SKIP_FRAMESET,
+             NS_NewRubyBaseFrame),
+         nsCSSAnonBoxes::rubyBase()},
+        {// Ruby Base Container
+         FCDATA_DECL(FCDATA_USE_CHILD_ITEMS | FCDATA_IS_LINE_PARTICIPANT |
+                         FCDATA_IS_WRAPPER_ANON_BOX |
+                         FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby) |
+                         FCDATA_SKIP_FRAMESET,
+                     NS_NewRubyBaseContainerFrame),
+         nsCSSAnonBoxes::rubyBaseContainer()},
+        {// Ruby Text
+         FCDATA_DECL(
+             FCDATA_USE_CHILD_ITEMS | FCDATA_IS_LINE_PARTICIPANT |
+                 FCDATA_IS_WRAPPER_ANON_BOX |
+                 FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRubyTextContainer) |
+                 FCDATA_SKIP_FRAMESET,
+             NS_NewRubyTextFrame),
+         nsCSSAnonBoxes::rubyText()},
+        {// Ruby Text Container
+         FCDATA_DECL(FCDATA_USE_CHILD_ITEMS | FCDATA_IS_WRAPPER_ANON_BOX |
+                         FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby) |
+                         FCDATA_SKIP_FRAMESET,
+                     NS_NewRubyTextContainerFrame),
+         nsCSSAnonBoxes::rubyTextContainer()}};
 
-void
-nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
-  nsFrameConstructorState& aState,
-  FrameConstructionItemList& aItems,
-  nsIFrame* aParentFrame)
-{
+void nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
+    nsFrameConstructorState& aState, FrameConstructionItemList& aItems,
+    nsIFrame* aParentFrame) {
   if (aItems.IsEmpty() || !aParentFrame->IsFlexOrGridContainer()) {
     return;
   }
@@ -9309,8 +8796,8 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
       FCItemIterator afterWhitespaceIter(iter);
       bool hitEnd = afterWhitespaceIter.SkipWhitespace(aState);
       bool nextChildNeedsAnonItem =
-        !hitEnd &&
-        afterWhitespaceIter.item().NeedsAnonFlexOrGridItem(aState, isLegacyBox);
+          !hitEnd && afterWhitespaceIter.item().NeedsAnonFlexOrGridItem(
+                         aState, isLegacyBox);
 
       if (!nextChildNeedsAnonItem) {
         // There's nothing after the whitespace that we need to wrap, so we
@@ -9323,8 +8810,8 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
         // else, we have a next child and it does not want to be wrapped.  So,
         // we jump back to the beginning of the loop to skip over that child
         // (and anything else non-wrappable after it)
-        MOZ_ASSERT(!iter.IsDone() &&
-                   !iter.item().NeedsAnonFlexOrGridItem(aState, isLegacyBox),
+        MOZ_ASSERT(!iter.IsDone() && !iter.item().NeedsAnonFlexOrGridItem(
+                                         aState, isLegacyBox),
                    "hitEnd and/or nextChildNeedsAnonItem lied");
         continue;
       }
@@ -9333,7 +8820,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
     // Now |iter| points to the first child that needs to be wrapped in an
     // anonymous flex/grid item. Now we see how many children after it also want
     // to be wrapped in an anonymous flex/grid item.
-    FCItemIterator endIter(iter); // iterator to find the end of the group
+    FCItemIterator endIter(iter);  // iterator to find the end of the group
     endIter.SkipItemsThatNeedAnonFlexOrGridItem(aState, isLegacyBox);
 
     NS_ASSERTION(iter != endIter,
@@ -9342,31 +8829,28 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
     // Now, we create the anonymous flex or grid item to contain the children
     // between |iter| and |endIter|.
     nsAtom* pseudoType = (aParentFrame->IsFlexContainerFrame())
-                            ? nsCSSAnonBoxes::anonymousFlexItem()
-                            : nsCSSAnonBoxes::anonymousGridItem();
+                             ? nsCSSAnonBoxes::anonymousFlexItem()
+                             : nsCSSAnonBoxes::anonymousGridItem();
     ComputedStyle* parentStyle = aParentFrame->Style();
     nsIContent* parentContent = aParentFrame->GetContent();
     RefPtr<ComputedStyle> wrapperStyle =
-      mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(pseudoType,
-                                                                 parentStyle);
+        mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(pseudoType,
+                                                                   parentStyle);
 
     static const FrameConstructionData sBlockFormattingContextFCData =
-      FCDATA_DECL(FCDATA_SKIP_FRAMESET |
-                  FCDATA_USE_CHILD_ITEMS |
-                  FCDATA_IS_WRAPPER_ANON_BOX,
-                  NS_NewBlockFormattingContext);
+        FCDATA_DECL(FCDATA_SKIP_FRAMESET | FCDATA_USE_CHILD_ITEMS |
+                        FCDATA_IS_WRAPPER_ANON_BOX,
+                    NS_NewBlockFormattingContext);
 
     FrameConstructionItem* newItem =
-      new (this) FrameConstructionItem(&sBlockFormattingContextFCData,
-                                // Use the content of our parent frame
-                                parentContent,
-                                // no pending binding
-                                nullptr,
-                                wrapperStyle.forget(),
-                                true);
+        new (this) FrameConstructionItem(&sBlockFormattingContextFCData,
+                                         // Use the content of our parent frame
+                                         parentContent,
+                                         // no pending binding
+                                         nullptr, wrapperStyle.forget(), true);
 
     newItem->mIsAllInline =
-      newItem->mComputedStyle->StyleDisplay()->IsInlineOutsideStyle();
+        newItem->mComputedStyle->StyleDisplay()->IsInlineOutsideStyle();
     newItem->mIsBlock = !newItem->mIsAllInline;
 
     MOZ_ASSERT(!newItem->mIsAllInline && newItem->mIsBlock,
@@ -9381,7 +8865,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
     // The parent of the items in aItems is also the parent of the items
     // in mChildItems
     newItem->mChildItems.SetParentHasNoXBLChildren(
-      aItems.ParentHasNoXBLChildren());
+        aItems.ParentHasNoXBLChildren());
 
     // Eat up all items between |iter| and |endIter| and put them in our
     // wrapper. This advances |iter| to point to |endIter|.
@@ -9393,8 +8877,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
 
 /* static */ nsCSSFrameConstructor::RubyWhitespaceType
 nsCSSFrameConstructor::ComputeRubyWhitespaceType(StyleDisplay aPrevDisplay,
-                                                 StyleDisplay aNextDisplay)
-{
+                                                 StyleDisplay aNextDisplay) {
   MOZ_ASSERT(nsStyleDisplay::IsRubyDisplayType(aPrevDisplay) &&
              nsStyleDisplay::IsRubyDisplayType(aNextDisplay));
   if (aPrevDisplay == aNextDisplay &&
@@ -9418,8 +8901,7 @@ nsCSSFrameConstructor::ComputeRubyWhitespaceType(StyleDisplay aPrevDisplay,
 /* static */ nsCSSFrameConstructor::RubyWhitespaceType
 nsCSSFrameConstructor::InterpretRubyWhitespace(nsFrameConstructorState& aState,
                                                const FCItemIterator& aStartIter,
-                                               const FCItemIterator& aEndIter)
-{
+                                               const FCItemIterator& aEndIter) {
   if (!aStartIter.item().IsWhitespace(aState)) {
     return eRubyNotWhitespace;
   }
@@ -9441,17 +8923,14 @@ nsCSSFrameConstructor::InterpretRubyWhitespace(nsFrameConstructorState& aState,
       aEndIter.item().mComputedStyle->StyleDisplay()->mDisplay);
 }
 
-
 /**
  * This function eats up consecutive items which do not want the current
  * parent into either a ruby base box or a ruby text box.  When it
  * returns, |aIter| points to the first item it doesn't wrap.
  */
-void
-nsCSSFrameConstructor::WrapItemsInPseudoRubyLeafBox(
-  FCItemIterator& aIter,
-  ComputedStyle* aParentStyle, nsIContent* aParentContent)
-{
+void nsCSSFrameConstructor::WrapItemsInPseudoRubyLeafBox(
+    FCItemIterator& aIter, ComputedStyle* aParentStyle,
+    nsIContent* aParentContent) {
   StyleDisplay parentDisplay = aParentStyle->StyleDisplay()->mDisplay;
   ParentType parentType, wrapperType;
   if (parentDisplay == StyleDisplay::RubyTextContainer) {
@@ -9469,8 +8948,8 @@ nsCSSFrameConstructor::WrapItemsInPseudoRubyLeafBox(
   FCItemIterator endIter(aIter);
   endIter.SkipItemsNotWantingParentType(parentType);
 
-  WrapItemsInPseudoParent(aParentContent, aParentStyle,
-                          wrapperType, aIter, endIter);
+  WrapItemsInPseudoParent(aParentContent, aParentStyle, wrapperType, aIter,
+                          endIter);
 }
 
 /**
@@ -9478,11 +8957,9 @@ nsCSSFrameConstructor::WrapItemsInPseudoRubyLeafBox(
  * It may create zero or one level container. When it returns, |aIter|
  * points to the first item it doesn't wrap.
  */
-void
-nsCSSFrameConstructor::WrapItemsInPseudoRubyLevelContainer(
-  nsFrameConstructorState& aState, FCItemIterator& aIter,
-  ComputedStyle* aParentStyle, nsIContent* aParentContent)
-{
+void nsCSSFrameConstructor::WrapItemsInPseudoRubyLevelContainer(
+    nsFrameConstructorState& aState, FCItemIterator& aIter,
+    ComputedStyle* aParentStyle, nsIContent* aParentContent) {
   MOZ_ASSERT(aIter.item().DesiredParentType() != eTypeRuby,
              "Pointing to a level container?");
 
@@ -9514,7 +8991,7 @@ nsCSSFrameConstructor::WrapItemsInPseudoRubyLevelContainer(
     // this point. With this precondition, it is safe not to check
     // whether contentEndIter has been done.
     RubyWhitespaceType whitespaceType =
-      InterpretRubyWhitespace(aState, endIter, contentEndIter);
+        InterpretRubyWhitespace(aState, endIter, contentEndIter);
     if (whitespaceType == eRubyInterLevelWhitespace) {
       // Remove inter-level whitespace.
       bool atStart = (aIter == endIter);
@@ -9548,8 +9025,8 @@ nsCSSFrameConstructor::WrapItemsInPseudoRubyLevelContainer(
   // an inter-segment whitespace, which will be wrapped later.
   // In those cases, don't create anything.
   if (aIter != endIter) {
-    WrapItemsInPseudoParent(aParentContent, aParentStyle,
-                            wrapperType, aIter, endIter);
+    WrapItemsInPseudoParent(aParentContent, aParentStyle, wrapperType, aIter,
+                            endIter);
   }
 }
 
@@ -9557,14 +9034,10 @@ nsCSSFrameConstructor::WrapItemsInPseudoRubyLevelContainer(
  * This function trims leading and trailing whitespaces
  * in the given item list.
  */
-void
-nsCSSFrameConstructor::TrimLeadingAndTrailingWhitespaces(
-    nsFrameConstructorState& aState,
-    FrameConstructionItemList& aItems)
-{
+void nsCSSFrameConstructor::TrimLeadingAndTrailingWhitespaces(
+    nsFrameConstructorState& aState, FrameConstructionItemList& aItems) {
   FCItemIterator iter(aItems);
-  if (!iter.IsDone() &&
-      iter.item().IsWhitespace(aState)) {
+  if (!iter.IsDone() && iter.item().IsWhitespace(aState)) {
     FCItemIterator spaceEndIter(iter);
     spaceEndIter.SkipWhitespace(aState);
     iter.DeleteItemsTo(this, spaceEndIter);
@@ -9592,12 +9065,9 @@ nsCSSFrameConstructor::TrimLeadingAndTrailingWhitespaces(
  * This function walks through the child list (aItems) and creates
  * needed pseudo ruby boxes to wrap misparented children.
  */
-void
-nsCSSFrameConstructor::CreateNeededPseudoInternalRubyBoxes(
-  nsFrameConstructorState& aState,
-  FrameConstructionItemList& aItems,
-  nsIFrame* aParentFrame)
-{
+void nsCSSFrameConstructor::CreateNeededPseudoInternalRubyBoxes(
+    nsFrameConstructorState& aState, FrameConstructionItemList& aItems,
+    nsIFrame* aParentFrame) {
   const ParentType ourParentType = GetParentType(aParentFrame);
   if (!IsRubyParentType(ourParentType) ||
       aItems.AllWantParentType(ourParentType)) {
@@ -9644,12 +9114,9 @@ nsCSSFrameConstructor::CreateNeededPseudoInternalRubyBoxes(
  * around everything else.  At the end of this method, aItems is guaranteed to
  * contain only items for frames that can be direct kids of aParentFrame.
  */
-void
-nsCSSFrameConstructor::CreateNeededPseudoContainers(
-    nsFrameConstructorState& aState,
-    FrameConstructionItemList& aItems,
-    nsIFrame* aParentFrame)
-{
+void nsCSSFrameConstructor::CreateNeededPseudoContainers(
+    nsFrameConstructorState& aState, FrameConstructionItemList& aItems,
+    nsIFrame* aParentFrame) {
   ParentType ourParentType = GetParentType(aParentFrame);
   if (IsRubyParentType(ourParentType) ||
       aItems.AllWantParentType(ourParentType)) {
@@ -9745,8 +9212,7 @@ nsCSSFrameConstructor::CreateNeededPseudoContainers(
         // the current ruby container.
         prevParentType = endIter.item().DesiredParentType();
         if (prevParentType == ourParentType &&
-            (endIter == spaceEndIter ||
-             spaceEndIter.IsDone() ||
+            (endIter == spaceEndIter || spaceEndIter.IsDone() ||
              !IsRubyParentType(groupingParentType) ||
              !IsRubyParentType(spaceEndIter.item().DesiredParentType()))) {
           // End the group at endIter.
@@ -9755,9 +9221,9 @@ nsCSSFrameConstructor::CreateNeededPseudoContainers(
 
         if (ourParentType == eTypeTable &&
             (prevParentType == eTypeColGroup) !=
-            (groupingParentType == eTypeColGroup)) {
-          // Either we started with columns and now found something else, or vice
-          // versa.  In any case, end the grouping.
+                (groupingParentType == eTypeColGroup)) {
+          // Either we started with columns and now found something else, or
+          // vice versa.  In any case, end the grouping.
           break;
         }
 
@@ -9765,11 +9231,10 @@ nsCSSFrameConstructor::CreateNeededPseudoContainers(
         // an item after the whitespace that is already properly parented, then
         // make sure to include the spaces in our group but stop the group after
         // that.
-        if (spaceEndIter != endIter &&
-            !spaceEndIter.IsDone() &&
+        if (spaceEndIter != endIter && !spaceEndIter.IsDone() &&
             ourParentType == spaceEndIter.item().DesiredParentType()) {
-            endIter = spaceEndIter;
-            break;
+          endIter = spaceEndIter;
+          break;
         }
 
         // Include the whitespace we didn't drop (if any) in the group.
@@ -9799,8 +9264,8 @@ nsCSSFrameConstructor::CreateNeededPseudoContainers(
         break;
       case eTypeTable:
         // Either colgroup or rowgroup, depending on what we're grouping.
-        wrapperType = groupingParentType == eTypeColGroup ?
-          eTypeColGroup : eTypeRowGroup;
+        wrapperType =
+            groupingParentType == eTypeColGroup ? eTypeColGroup : eTypeRowGroup;
         break;
       case eTypeColGroup:
         MOZ_CRASH("Colgroups should be suppresing non-col child items");
@@ -9830,13 +9295,10 @@ nsCSSFrameConstructor::CreateNeededPseudoContainers(
  * |aEndIter|. After it returns, aIter points to the first item
  * after the wrapper.
  */
-void
-nsCSSFrameConstructor::WrapItemsInPseudoParent(nsIContent* aParentContent,
-                                               ComputedStyle* aParentStyle,
-                                               ParentType aWrapperType,
-                                               FCItemIterator& aIter,
-                                               const FCItemIterator& aEndIter)
-{
+void nsCSSFrameConstructor::WrapItemsInPseudoParent(
+    nsIContent* aParentContent, ComputedStyle* aParentStyle,
+    ParentType aWrapperType, FCItemIterator& aIter,
+    const FCItemIterator& aEndIter) {
   const PseudoParentData& pseudoData = sPseudoParentData[aWrapperType];
   nsCSSAnonBoxPseudoStaticAtom* pseudoType = pseudoData.mPseudoType;
   StyleDisplay parentDisplay = aParentStyle->StyleDisplay()->mDisplay;
@@ -9850,22 +9312,20 @@ nsCSSFrameConstructor::WrapItemsInPseudoParent(nsIContent* aParentContent,
 
   RefPtr<ComputedStyle> wrapperStyle;
   if (pseudoData.mFCData.mBits & FCDATA_IS_WRAPPER_ANON_BOX) {
-    wrapperStyle =
-      mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(pseudoType,
-                                                                 aParentStyle);
+    wrapperStyle = mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
+        pseudoType, aParentStyle);
   } else {
     wrapperStyle =
-      mPresShell->StyleSet()->ResolveNonInheritingAnonymousBoxStyle(pseudoType);
+        mPresShell->StyleSet()->ResolveNonInheritingAnonymousBoxStyle(
+            pseudoType);
   }
 
   FrameConstructionItem* newItem =
-    new (this) FrameConstructionItem(&pseudoData.mFCData,
-                              // Use the content of our parent frame
-                              aParentContent,
-                              // no pending binding
-                              nullptr,
-                              wrapperStyle.forget(),
-                              true);
+      new (this) FrameConstructionItem(&pseudoData.mFCData,
+                                       // Use the content of our parent frame
+                                       aParentContent,
+                                       // no pending binding
+                                       nullptr, wrapperStyle.forget(), true);
 
   const nsStyleDisplay* disp = newItem->mComputedStyle->StyleDisplay();
   // Here we're cheating a tad... technically, table-internal items should be
@@ -9898,19 +9358,16 @@ nsCSSFrameConstructor::WrapItemsInPseudoParent(nsIContent* aParentContent,
   aIter.InsertItem(newItem);
 }
 
-void
-nsCSSFrameConstructor::CreateNeededPseudoSiblings(
-    nsFrameConstructorState& aState,
-    FrameConstructionItemList& aItems,
-    nsIFrame* aParentFrame)
-{
-  if (aItems.IsEmpty() ||
-      GetParentType(aParentFrame) != eTypeRuby) {
+void nsCSSFrameConstructor::CreateNeededPseudoSiblings(
+    nsFrameConstructorState& aState, FrameConstructionItemList& aItems,
+    nsIFrame* aParentFrame) {
+  if (aItems.IsEmpty() || GetParentType(aParentFrame) != eTypeRuby) {
     return;
   }
 
   FCItemIterator iter(aItems);
-  StyleDisplay firstDisplay = iter.item().mComputedStyle->StyleDisplay()->mDisplay;
+  StyleDisplay firstDisplay =
+      iter.item().mComputedStyle->StyleDisplay()->mDisplay;
   if (firstDisplay == StyleDisplay::RubyBaseContainer) {
     return;
   }
@@ -9918,18 +9375,16 @@ nsCSSFrameConstructor::CreateNeededPseudoSiblings(
                "Child of ruby frame should either a rbc or a rtc");
 
   const PseudoParentData& pseudoData =
-    sPseudoParentData[eTypeRubyBaseContainer];
-  RefPtr<ComputedStyle> pseudoStyle = mPresShell->StyleSet()->
-    ResolveInheritingAnonymousBoxStyle(pseudoData.mPseudoType,
-                                       aParentFrame->Style());
+      sPseudoParentData[eTypeRubyBaseContainer];
+  RefPtr<ComputedStyle> pseudoStyle =
+      mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
+          pseudoData.mPseudoType, aParentFrame->Style());
   FrameConstructionItem* newItem =
-    new (this) FrameConstructionItem(&pseudoData.mFCData,
-                                     // Use the content of the parent frame
-                                     aParentFrame->GetContent(),
-                                     // no pending binding
-                                     nullptr,
-                                     pseudoStyle.forget(),
-                                     true);
+      new (this) FrameConstructionItem(&pseudoData.mFCData,
+                                       // Use the content of the parent frame
+                                       aParentFrame->GetContent(),
+                                       // no pending binding
+                                       nullptr, pseudoStyle.forget(), true);
   newItem->mIsAllInline = true;
   newItem->mChildItems.SetParentHasNoXBLChildren(true);
   iter.InsertItem(newItem);
@@ -9945,10 +9400,8 @@ nsCSSFrameConstructor::CreateNeededPseudoSiblings(
  * NOTE: See also NeedsAnonFlexOrGridItem(), for the non-debug version of this
  * logic (which operates a bit earlier, on FCData instead of frames).
  */
-static bool
-FrameWantsToBeInAnonymousItem(const nsIFrame* aContainerFrame,
-                              const nsIFrame* aFrame)
-{
+static bool FrameWantsToBeInAnonymousItem(const nsIFrame* aContainerFrame,
+                                          const nsIFrame* aFrame) {
   MOZ_ASSERT(aContainerFrame->IsFlexOrGridContainer());
 
   // Any line-participant frames (e.g. text) definitely want to be wrapped in
@@ -9968,10 +9421,8 @@ FrameWantsToBeInAnonymousItem(const nsIFrame* aContainerFrame,
 }
 #endif
 
-static void
-VerifyGridFlexContainerChildren(nsIFrame* aParentFrame,
-                                const nsFrameList& aChildren)
-{
+static void VerifyGridFlexContainerChildren(nsIFrame* aParentFrame,
+                                            const nsFrameList& aChildren) {
 #ifdef DEBUG
   if (!aParentFrame->IsFlexOrGridContainer()) {
     return;
@@ -9994,13 +9445,10 @@ VerifyGridFlexContainerChildren(nsIFrame* aParentFrame,
 #endif
 }
 
-inline void
-nsCSSFrameConstructor::ConstructFramesFromItemList(nsFrameConstructorState& aState,
-                                                   FrameConstructionItemList& aItems,
-                                                   nsContainerFrame* aParentFrame,
-                                                   bool aParentIsWrapperAnonBox,
-                                                   nsFrameItems& aFrameItems)
-{
+inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
+    nsFrameConstructorState& aState, FrameConstructionItemList& aItems,
+    nsContainerFrame* aParentFrame, bool aParentIsWrapperAnonBox,
+    nsFrameItems& aFrameItems) {
   // Ensure aParentIsWrapperAnonBox is correct.  We _could_ compute it directly,
   // but it would be a bit slow, which is why we pass it from callers, who have
   // that information offhand in many cases.
@@ -10028,14 +9476,10 @@ nsCSSFrameConstructor::ConstructFramesFromItemList(nsFrameConstructorState& aSta
   }
 }
 
-void
-nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
-            nsFrameConstructorState& aState,
-            nsContainerFrame* aFrame,
-            const nsTArray<nsIAnonymousContentCreator::ContentInfo>& aAnonymousItems,
-            FrameConstructionItemList& aItemsToConstruct,
-            uint32_t aExtraFlags)
-{
+void nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
+    nsFrameConstructorState& aState, nsContainerFrame* aFrame,
+    const nsTArray<nsIAnonymousContentCreator::ContentInfo>& aAnonymousItems,
+    FrameConstructionItemList& aItemsToConstruct, uint32_t aExtraFlags) {
   for (const auto& info : aAnonymousItems) {
     nsIContent* content = info.mContent;
     // Gecko-styled nodes should have no pending restyle flags.
@@ -10043,8 +9487,7 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
     MOZ_ASSERT(!(content->GetFlags() &
                  (NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME)),
                "Should not be marked as needing frames");
-    MOZ_ASSERT(!content->GetPrimaryFrame(),
-               "Should have no existing frame");
+    MOZ_ASSERT(!content->GetPrimaryFrame(), "Should have no existing frame");
     MOZ_ASSERT(!content->IsComment() && !content->IsProcessingInstruction(),
                "Why is someone creating garbage anonymous content");
 
@@ -10057,23 +9500,17 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
     uint32_t flags = ITEM_ALLOW_XBL_BASE | ITEM_ALLOW_PAGE_BREAK |
                      ITEM_IS_ANONYMOUSCONTENTCREATOR_CONTENT | aExtraFlags;
 
-    AddFrameConstructionItemsInternal(aState, content, aFrame,
-                                      true, computedStyle, flags,
-                                      aItemsToConstruct);
+    AddFrameConstructionItemsInternal(aState, content, aFrame, true,
+                                      computedStyle, flags, aItemsToConstruct);
   }
 }
 
-void
-nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
-                                       nsIContent*              aContent,
-                                       ComputedStyle*          aComputedStyle,
-                                       nsContainerFrame*        aFrame,
-                                       const bool               aCanHaveGeneratedContent,
-                                       nsFrameItems&            aFrameItems,
-                                       const bool               aAllowBlockStyles,
-                                       PendingBinding*          aPendingBinding,
-                                       nsIFrame*                aPossiblyLeafFrame)
-{
+void nsCSSFrameConstructor::ProcessChildren(
+    nsFrameConstructorState& aState, nsIContent* aContent,
+    ComputedStyle* aComputedStyle, nsContainerFrame* aFrame,
+    const bool aCanHaveGeneratedContent, nsFrameItems& aFrameItems,
+    const bool aAllowBlockStyles, PendingBinding* aPendingBinding,
+    nsIFrame* aPossiblyLeafFrame) {
   MOZ_ASSERT(aFrame, "Must have parent frame here");
   MOZ_ASSERT(aFrame->GetContentInsertionFrame() == aFrame,
              "Parent frame in ProcessChildren should be its own "
@@ -10095,8 +9532,8 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
 
   // Check that our parent frame is a block before allowing ::first-letter/line.
   // E.g. <button style="display:grid"> should not allow it.
-  const bool allowFirstPseudos = aAllowBlockStyles &&
-                                 nsLayoutUtils::GetAsBlock(aFrame);
+  const bool allowFirstPseudos =
+      aAllowBlockStyles && nsLayoutUtils::GetAsBlock(aFrame);
   bool haveFirstLetterStyle = false, haveFirstLineStyle = false;
   if (allowFirstPseudos) {
     ShouldHaveSpecialBlockStyle(aContent, aComputedStyle, &haveFirstLetterStyle,
@@ -10147,7 +9584,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
 
     if (aCanHaveGeneratedContent) {
       computedStyle =
-        nsFrame::CorrectStyleParentFrame(aFrame, nullptr)->Style();
+          nsFrame::CorrectStyleParentFrame(aFrame, nullptr)->Style();
       // Probe for generated content before
       CreateGeneratedContentItem(aState, aFrame, *aContent->AsElement(),
                                  *computedStyle, CSSPseudoElementType::before,
@@ -10161,7 +9598,8 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
 
     FlattenedChildIterator iter(aContent);
     const InsertionPoint insertion(aFrame, aContent);
-    for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
+    for (nsIContent* child = iter.GetNextChild(); child;
+         child = iter.GetNextChild()) {
       MOZ_ASSERT(insertion.mContainer == GetInsertionPoint(child).mContainer,
                  "GetInsertionPoint should agree with us");
       if (addChildItems) {
@@ -10194,8 +9632,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
     WrapFramesInFirstLetterFrame(aFrame, aFrameItems);
   }
   if (haveFirstLineStyle) {
-    WrapFramesInFirstLineFrame(aState, aContent, aFrame, nullptr,
-                               aFrameItems);
+    WrapFramesInFirstLineFrame(aState, aContent, aFrame, nullptr, aFrameItems);
   }
 
   // We might end up with first-line frames that change
@@ -10203,38 +9640,38 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
   // should never happen for cases whan aFrame->IsXULBoxFrame().
   NS_ASSERTION(!haveFirstLineStyle || !aFrame->IsXULBoxFrame(),
                "Shouldn't have first-line style if we're a box");
-  NS_ASSERTION(!aFrame->IsXULBoxFrame() ||
-               itemsToConstruct.AnyItemsNeedBlockParent() ==
-                 (AnyKidsNeedBlockParent(aFrameItems.FirstChild()) != nullptr),
-               "Something went awry in our block parent calculations");
+  NS_ASSERTION(
+      !aFrame->IsXULBoxFrame() ||
+          itemsToConstruct.AnyItemsNeedBlockParent() ==
+              (AnyKidsNeedBlockParent(aFrameItems.FirstChild()) != nullptr),
+      "Something went awry in our block parent calculations");
 
   if (aFrame->IsXULBoxFrame() && itemsToConstruct.AnyItemsNeedBlockParent()) {
     // XXXbz we could do this on the FrameConstructionItemList level,
     // no?  And if we cared we could look through the item list
     // instead of groveling through the framelist here..
-    ComputedStyle *frameComputedStyle = aFrame->Style();
+    ComputedStyle* frameComputedStyle = aFrame->Style();
     // Report a warning for non-GC frames, for chrome:
     if (!aFrame->IsGeneratedContentFrame() &&
         mPresShell->GetPresContext()->IsChrome()) {
-      nsIContent *badKid = AnyKidsNeedBlockParent(aFrameItems.FirstChild());
+      nsIContent* badKid = AnyKidsNeedBlockParent(aFrameItems.FirstChild());
       nsDependentAtomString parentTag(aContent->NodeInfo()->NameAtom()),
-                            kidTag(badKid->NodeInfo()->NameAtom());
-      const char16_t* params[] = { parentTag.get(), kidTag.get() };
-      const nsStyleDisplay *display = frameComputedStyle->StyleDisplay();
-      const char *message =
-        (display->mDisplay == StyleDisplay::MozInlineBox)
-          ? "NeededToWrapXULInlineBox" : "NeededToWrapXUL";
-      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      NS_LITERAL_CSTRING("Layout: FrameConstructor"),
-                                      mDocument,
-                                      nsContentUtils::eXUL_PROPERTIES,
-                                      message,
-                                      params, ArrayLength(params));
+          kidTag(badKid->NodeInfo()->NameAtom());
+      const char16_t* params[] = {parentTag.get(), kidTag.get()};
+      const nsStyleDisplay* display = frameComputedStyle->StyleDisplay();
+      const char* message = (display->mDisplay == StyleDisplay::MozInlineBox)
+                                ? "NeededToWrapXULInlineBox"
+                                : "NeededToWrapXUL";
+      nsContentUtils::ReportToConsole(
+          nsIScriptError::warningFlag,
+          NS_LITERAL_CSTRING("Layout: FrameConstructor"), mDocument,
+          nsContentUtils::eXUL_PROPERTIES, message, params,
+          ArrayLength(params));
     }
 
-    RefPtr<ComputedStyle> blockSC = mPresShell->StyleSet()->
-      ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::mozXULAnonymousBlock(),
-                                         frameComputedStyle);
+    RefPtr<ComputedStyle> blockSC =
+        mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
+            nsCSSAnonBoxes::mozXULAnonymousBlock(), frameComputedStyle);
     nsBlockFrame* blockFrame = NS_NewBlockFrame(mPresShell, blockSC);
     // We might, in theory, want to set NS_BLOCK_FLOAT_MGR and
     // NS_BLOCK_MARGIN_ROOT, but I think it's a bad idea given that
@@ -10251,8 +9688,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
     aFrameItems.AddChild(blockFrame);
 
     aFrame->AddStateBits(NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK);
-    MOZ_ASSERT(!aFrame->IsLeaf(),
-               "Why do we have an nsLeafBoxFrame here?");
+    MOZ_ASSERT(!aFrame->IsLeaf(), "Why do we have an nsLeafBoxFrame here?");
     aFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
   }
 }
@@ -10271,18 +9707,14 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
 // non-first-in-flow continuation of the block to which the first-line
 // belongs. So this function needs to be careful about how it uses
 // aState.
-void
-nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
-  nsFrameConstructorState& aState,
-  nsIContent*              aBlockContent,
-  nsContainerFrame*        aBlockFrame,
-  nsFirstLineFrame*        aLineFrame,
-  nsFrameItems&            aFrameItems)
-{
+void nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
+    nsFrameConstructorState& aState, nsIContent* aBlockContent,
+    nsContainerFrame* aBlockFrame, nsFirstLineFrame* aLineFrame,
+    nsFrameItems& aFrameItems) {
   // Extract any initial inline frames from aFrameItems so we can put them
   // in the first-line.
   nsFrameList firstLineChildren =
-    aFrameItems.Split([](nsIFrame* f) { return !f->IsInlineOutside(); });
+      aFrameItems.Split([](nsIFrame* f) { return !f->IsInlineOutside(); });
 
   if (firstLineChildren.IsEmpty()) {
     // Nothing is supposed to go into the first-line; nothing to do
@@ -10292,11 +9724,11 @@ nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
   if (!aLineFrame) {
     // Create line frame
     ComputedStyle* parentStyle =
-      nsFrame::CorrectStyleParentFrame(aBlockFrame,
-                                       nsCSSPseudoElements::firstLine())->
-        Style();
-    RefPtr<ComputedStyle> firstLineStyle = GetFirstLineStyle(aBlockContent,
-                                                                parentStyle);
+        nsFrame::CorrectStyleParentFrame(aBlockFrame,
+                                         nsCSSPseudoElements::firstLine())
+            ->Style();
+    RefPtr<ComputedStyle> firstLineStyle =
+        GetFirstLineStyle(aBlockContent, parentStyle);
 
     aLineFrame = NS_NewFirstLineFrame(mPresShell, firstLineStyle);
 
@@ -10325,19 +9757,15 @@ nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
 // Special routine to handle appending a new frame to a block frame's
 // child list. Takes care of placing the new frame into the right
 // place when first-line style is present.
-void
-nsCSSFrameConstructor::AppendFirstLineFrames(
-  nsFrameConstructorState& aState,
-  nsIContent*              aBlockContent,
-  nsContainerFrame*        aBlockFrame,
-  nsFrameItems&            aFrameItems)
-{
+void nsCSSFrameConstructor::AppendFirstLineFrames(
+    nsFrameConstructorState& aState, nsIContent* aBlockContent,
+    nsContainerFrame* aBlockFrame, nsFrameItems& aFrameItems) {
   // It's possible that aBlockFrame needs to have a first-line frame
   // created because it doesn't currently have any children.
   const nsFrameList& blockKids = aBlockFrame->PrincipalChildList();
   if (blockKids.IsEmpty()) {
-    WrapFramesInFirstLineFrame(aState, aBlockContent,
-                               aBlockFrame, nullptr, aFrameItems);
+    WrapFramesInFirstLineFrame(aState, aBlockContent, aBlockFrame, nullptr,
+                               aFrameItems);
     return;
   }
 
@@ -10353,14 +9781,12 @@ nsCSSFrameConstructor::AppendFirstLineFrames(
   }
 
   nsFirstLineFrame* lineFrame = static_cast<nsFirstLineFrame*>(lastBlockKid);
-  WrapFramesInFirstLineFrame(aState, aBlockContent, aBlockFrame,
-                             lineFrame, aFrameItems);
+  WrapFramesInFirstLineFrame(aState, aBlockContent, aBlockFrame, lineFrame,
+                             aFrameItems);
 }
 
-void
-nsCSSFrameConstructor::CheckForFirstLineInsertion(nsIFrame* aParentFrame,
-                                                  nsFrameItems& aFrameItems)
-{
+void nsCSSFrameConstructor::CheckForFirstLineInsertion(
+    nsIFrame* aParentFrame, nsFrameItems& aFrameItems) {
   MOZ_ASSERT(aParentFrame->Style()->HasPseudoElementData(),
              "Why were we called?");
 
@@ -10408,9 +9834,7 @@ nsCSSFrameConstructor::CheckForFirstLineInsertion(nsIFrame* aParentFrame,
 
 // Determine how many characters in the text fragment apply to the
 // first letter
-static int32_t
-FirstLetterCount(const nsTextFragment* aFragment)
-{
+static int32_t FirstLetterCount(const nsTextFragment* aFragment) {
   int32_t count = 0;
   int32_t firstLetterLength = 0;
 
@@ -10432,8 +9856,7 @@ FirstLetterCount(const nsTextFragment* aFragment)
       }
       // keep looping
       firstLetterLength = 1;
-    }
-    else {
+    } else {
       count++;
       break;
     }
@@ -10442,9 +9865,7 @@ FirstLetterCount(const nsTextFragment* aFragment)
   return count;
 }
 
-static bool
-NeedFirstLetterContinuation(nsIContent* aContent)
-{
+static bool NeedFirstLetterContinuation(nsIContent* aContent) {
   MOZ_ASSERT(aContent, "null ptr");
 
   bool result = false;
@@ -10461,34 +9882,27 @@ NeedFirstLetterContinuation(nsIContent* aContent)
   return result;
 }
 
-static bool IsFirstLetterContent(nsIContent* aContent)
-{
-  return aContent->TextLength() &&
-         !aContent->TextIsOnlyWhitespace();
+static bool IsFirstLetterContent(nsIContent* aContent) {
+  return aContent->TextLength() && !aContent->TextIsOnlyWhitespace();
 }
 
 /**
  * Create a letter frame, only make it a floating frame.
  */
-nsFirstLetterFrame*
-nsCSSFrameConstructor::CreateFloatingLetterFrame(
-  nsFrameConstructorState& aState,
-  nsIContent* aTextContent,
-  nsIFrame* aTextFrame,
-  nsContainerFrame* aParentFrame,
-  ComputedStyle* aParentComputedStyle,
-  ComputedStyle* aComputedStyle,
-  nsFrameItems& aResult)
-{
+nsFirstLetterFrame* nsCSSFrameConstructor::CreateFloatingLetterFrame(
+    nsFrameConstructorState& aState, nsIContent* aTextContent,
+    nsIFrame* aTextFrame, nsContainerFrame* aParentFrame,
+    ComputedStyle* aParentComputedStyle, ComputedStyle* aComputedStyle,
+    nsFrameItems& aResult) {
   MOZ_ASSERT(aParentComputedStyle);
 
   nsFirstLetterFrame* letterFrame =
-    NS_NewFirstLetterFrame(mPresShell, aComputedStyle);
+      NS_NewFirstLetterFrame(mPresShell, aComputedStyle);
   // We don't want to use a text content for a non-text frame (because we want
   // its primary frame to be a text frame).
   nsIContent* letterContent = aParentFrame->GetContent();
-  nsContainerFrame* containingBlock = aState.GetGeometricParent(
-    *aComputedStyle->StyleDisplay(), aParentFrame);
+  nsContainerFrame* containingBlock =
+      aState.GetGeometricParent(*aComputedStyle->StyleDisplay(), aParentFrame);
   InitAndRestoreFrame(aState, letterContent, containingBlock, letterFrame);
 
   // Init the text frame to refer to the letter frame.
@@ -10497,8 +9911,8 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
   // frame and will have the float property set on it; the text frame shouldn't
   // have that set).
   ServoStyleSet* styleSet = mPresShell->StyleSet();
-  RefPtr<ComputedStyle> textSC = styleSet->
-    ResolveStyleForText(aTextContent, aComputedStyle);
+  RefPtr<ComputedStyle> textSC =
+      styleSet->ResolveStyleForText(aTextContent, aComputedStyle);
   aTextFrame->SetComputedStyleWithoutNotification(textSC);
   InitAndRestoreFrame(aState, aTextContent, letterFrame, aTextFrame);
 
@@ -10512,9 +9926,9 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
   if (NeedFirstLetterContinuation(aTextContent)) {
     // Create continuation
     nextTextFrame =
-      CreateContinuingFrame(aState.mPresContext, aTextFrame, aParentFrame);
-    RefPtr<ComputedStyle> newSC = styleSet->
-      ResolveStyleForText(aTextContent, aParentComputedStyle);
+        CreateContinuingFrame(aState.mPresContext, aTextFrame, aParentFrame);
+    RefPtr<ComputedStyle> newSC =
+        styleSet->ResolveStyleForText(aTextContent, aParentComputedStyle);
     nextTextFrame->SetComputedStyle(newSC);
   }
 
@@ -10527,8 +9941,8 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
     link.Next();
   }
 
-  aState.AddChild(letterFrame, aResult, letterContent, aParentFrame,
-                  false, true, false, true, link.PrevFrame());
+  aState.AddChild(letterFrame, aResult, letterContent, aParentFrame, false,
+                  true, false, true, link.PrevFrame());
 
   if (nextTextFrame) {
     aResult.AddChild(nextTextFrame);
@@ -10541,23 +9955,18 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
  * Create a new letter frame for aTextFrame. The letter frame will be
  * a child of aParentFrame.
  */
-void
-nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
-                                         nsContainerFrame* aBlockContinuation,
-                                         nsIContent* aTextContent,
-                                         nsContainerFrame* aParentFrame,
-                                         nsFrameItems& aResult)
-{
+void nsCSSFrameConstructor::CreateLetterFrame(
+    nsContainerFrame* aBlockFrame, nsContainerFrame* aBlockContinuation,
+    nsIContent* aTextContent, nsContainerFrame* aParentFrame,
+    nsFrameItems& aResult) {
   MOZ_ASSERT(aTextContent->IsText(), "aTextContent isn't text");
-  NS_ASSERTION(nsLayoutUtils::GetAsBlock(aBlockFrame),
-                 "Not a block frame?");
+  NS_ASSERTION(nsLayoutUtils::GetAsBlock(aBlockFrame), "Not a block frame?");
 
   // Get a ComputedStyle for the first-letter-frame.
   //
   // Keep this in sync with nsBlockFrame::UpdatePseudoElementStyles.
-  nsIFrame* parentFrame =
-    nsFrame::CorrectStyleParentFrame(aParentFrame,
-                                     nsCSSPseudoElements::firstLetter());
+  nsIFrame* parentFrame = nsFrame::CorrectStyleParentFrame(
+      aParentFrame, nsCSSPseudoElements::firstLetter());
 
   ComputedStyle* parentComputedStyle = parentFrame->Style();
 
@@ -10567,25 +9976,20 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
 
   // Create first-letter style rule
   RefPtr<ComputedStyle> sc =
-    GetFirstLetterStyle(blockContent, parentComputedStyle);
+      GetFirstLetterStyle(blockContent, parentComputedStyle);
 
   if (sc) {
     if (parentFrame->IsLineFrame()) {
-      nsIFrame* parentIgnoringFirstLine =
-        nsFrame::CorrectStyleParentFrame(aBlockFrame,
-                                         nsCSSPseudoElements::firstLetter());
+      nsIFrame* parentIgnoringFirstLine = nsFrame::CorrectStyleParentFrame(
+          aBlockFrame, nsCSSPseudoElements::firstLetter());
 
-      sc =
-        mPresShell->StyleSet()->ReparentComputedStyle(
-          sc,
-          parentComputedStyle,
-          parentIgnoringFirstLine->Style(),
-          parentComputedStyle,
-          blockContent->AsElement());
+      sc = mPresShell->StyleSet()->ReparentComputedStyle(
+          sc, parentComputedStyle, parentIgnoringFirstLine->Style(),
+          parentComputedStyle, blockContent->AsElement());
     }
 
-    RefPtr<ComputedStyle> textSC = mPresShell->StyleSet()->
-      ResolveStyleForText(aTextContent, sc);
+    RefPtr<ComputedStyle> textSC =
+        mPresShell->StyleSet()->ResolveStyleForText(aTextContent, sc);
 
     // Create a new text frame (the original one will be discarded)
     // pass a temporary stylecontext, the correct one will be set
@@ -10599,10 +10003,9 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
 
     NS_ASSERTION(aBlockContinuation == GetFloatContainingBlock(aParentFrame),
                  "Containing block is confused");
-    nsFrameConstructorState state(mPresShell,
-                                  GetAbsoluteContainingBlock(aParentFrame, FIXED_POS),
-                                  GetAbsoluteContainingBlock(aParentFrame, ABS_POS),
-                                  aBlockContinuation);
+    nsFrameConstructorState state(
+        mPresShell, GetAbsoluteContainingBlock(aParentFrame, FIXED_POS),
+        GetAbsoluteContainingBlock(aParentFrame, ABS_POS), aBlockContinuation);
 
     // Create the right type of first-letter frame
     const nsStyleDisplay* display = sc->StyleDisplay();
@@ -10613,8 +10016,7 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
       letterFrame = CreateFloatingLetterFrame(state, aTextContent, textFrame,
                                               aParentFrame, parentComputedStyle,
                                               sc, aResult);
-    }
-    else {
+    } else {
       // Make an inflow first-letter frame
       letterFrame = NS_NewFirstLetterFrame(mPresShell, sc);
 
@@ -10633,11 +10035,14 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
                    "should have the first continuation here");
       aBlockFrame->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_CHILD);
     }
-    MOZ_ASSERT(!aBlockFrame->GetPrevContinuation(),
-               "Setting up a first-letter frame on a non-first block continuation?");
-    auto parent = static_cast<nsContainerFrame*>(aParentFrame->FirstContinuation());
+    MOZ_ASSERT(
+        !aBlockFrame->GetPrevContinuation(),
+        "Setting up a first-letter frame on a non-first block continuation?");
+    auto parent =
+        static_cast<nsContainerFrame*>(aParentFrame->FirstContinuation());
     if (MOZ_UNLIKELY(parent->IsLineFrame())) {
-      parent = static_cast<nsContainerFrame*>(parent->GetParent()->FirstContinuation());
+      parent = static_cast<nsContainerFrame*>(
+          parent->GetParent()->FirstContinuation());
     }
     parent->SetHasFirstLetterChild();
     aBlockFrame->SetProperty(nsContainerFrame::FirstLetterProperty(),
@@ -10646,11 +10051,8 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
   }
 }
 
-void
-nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
-  nsContainerFrame*        aBlockFrame,
-  nsFrameItems&            aBlockFrames)
-{
+void nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
+    nsContainerFrame* aBlockFrame, nsFrameItems& aBlockFrames) {
   aBlockFrame->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_STYLE);
 
   nsContainerFrame* parentFrame = nullptr;
@@ -10658,18 +10060,16 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
   nsIFrame* prevFrame = nullptr;
   nsFrameItems letterFrames;
   bool stopLooking = false;
-  WrapFramesInFirstLetterFrame(aBlockFrame, aBlockFrame, aBlockFrame,
-                               aBlockFrames.FirstChild(),
-                               &parentFrame, &textFrame, &prevFrame,
-                               letterFrames, &stopLooking);
+  WrapFramesInFirstLetterFrame(
+      aBlockFrame, aBlockFrame, aBlockFrame, aBlockFrames.FirstChild(),
+      &parentFrame, &textFrame, &prevFrame, letterFrames, &stopLooking);
   if (parentFrame) {
     if (parentFrame == aBlockFrame) {
       // Take textFrame out of the block's frame list and substitute the
       // letter frame(s) instead.
       aBlockFrames.DestroyFrame(textFrame);
       aBlockFrames.InsertFrames(nullptr, prevFrame, letterFrames);
-    }
-    else {
+    } else {
       // Take the old textFrame out of the inline parent's child list
       RemoveFrame(kPrincipalList, textFrame);
 
@@ -10679,18 +10079,11 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
   }
 }
 
-void
-nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
-  nsContainerFrame*        aBlockFrame,
-  nsContainerFrame*        aBlockContinuation,
-  nsContainerFrame*        aParentFrame,
-  nsIFrame*                aParentFrameList,
-  nsContainerFrame**       aModifiedParent,
-  nsIFrame**               aTextFrame,
-  nsIFrame**               aPrevFrame,
-  nsFrameItems&            aLetterFrames,
-  bool*                    aStopLooking)
-{
+void nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
+    nsContainerFrame* aBlockFrame, nsContainerFrame* aBlockContinuation,
+    nsContainerFrame* aParentFrame, nsIFrame* aParentFrameList,
+    nsContainerFrame** aModifiedParent, nsIFrame** aTextFrame,
+    nsIFrame** aPrevFrame, nsFrameItems& aLetterFrames, bool* aStopLooking) {
   nsIFrame* prevFrame = nullptr;
   nsIFrame* frame = aParentFrameList;
 
@@ -10716,14 +10109,13 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
     } else if (IsInlineFrame(frame) && frameType != LayoutFrameType::Br) {
       nsIFrame* kids = frame->PrincipalChildList().FirstChild();
       WrapFramesInFirstLetterFrame(aBlockFrame, aBlockContinuation,
-                                   static_cast<nsContainerFrame*>(frame),
-                                   kids, aModifiedParent, aTextFrame,
-                                   aPrevFrame, aLetterFrames, aStopLooking);
+                                   static_cast<nsContainerFrame*>(frame), kids,
+                                   aModifiedParent, aTextFrame, aPrevFrame,
+                                   aLetterFrames, aStopLooking);
       if (*aStopLooking) {
         return;
       }
-    }
-    else {
+    } else {
       // This will stop us looking to create more letter frames. For
       // example, maybe the frame-type is "letterFrame" or
       // "placeholderFrame". This keeps us from creating extra letter
@@ -10739,9 +10131,8 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
   }
 }
 
-static nsIFrame*
-FindFirstLetterFrame(nsIFrame* aFrame, nsIFrame::ChildListID aListID)
-{
+static nsIFrame* FindFirstLetterFrame(nsIFrame* aFrame,
+                                      nsIFrame::ChildListID aListID) {
   nsFrameList list = aFrame->GetChildList(aListID);
   for (nsFrameList::Enumerator e(list); !e.AtEnd(); e.Next()) {
     if (e.get()->IsLetterFrame()) {
@@ -10751,30 +10142,27 @@ FindFirstLetterFrame(nsIFrame* aFrame, nsIFrame::ChildListID aListID)
   return nullptr;
 }
 
-static void ClearHasFirstLetterChildFrom(nsContainerFrame* aParentFrame)
-{
+static void ClearHasFirstLetterChildFrom(nsContainerFrame* aParentFrame) {
   MOZ_ASSERT(aParentFrame);
   auto* parent =
-    static_cast<nsContainerFrame*>(aParentFrame->FirstContinuation());
+      static_cast<nsContainerFrame*>(aParentFrame->FirstContinuation());
   if (MOZ_UNLIKELY(parent->IsLineFrame())) {
     MOZ_ASSERT(!parent->HasFirstLetterChild());
-    parent = static_cast<nsContainerFrame*>(parent->GetParent()->FirstContinuation());
+    parent = static_cast<nsContainerFrame*>(
+        parent->GetParent()->FirstContinuation());
   }
   MOZ_ASSERT(parent->HasFirstLetterChild());
   parent->ClearHasFirstLetterChild();
 }
 
-void
-nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
-  nsIPresShell* aPresShell,
-  nsIFrame* aBlockFrame)
-{
+void nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
+    nsIPresShell* aPresShell, nsIFrame* aBlockFrame) {
   // Look for the first letter frame on the kFloatList, then kPushedFloatsList.
   nsIFrame* floatFrame =
-    ::FindFirstLetterFrame(aBlockFrame, nsIFrame::kFloatList);
+      ::FindFirstLetterFrame(aBlockFrame, nsIFrame::kFloatList);
   if (!floatFrame) {
     floatFrame =
-      ::FindFirstLetterFrame(aBlockFrame, nsIFrame::kPushedFloatsList);
+        ::FindFirstLetterFrame(aBlockFrame, nsIFrame::kPushedFloatsList);
     if (!floatFrame) {
       return;
     }
@@ -10809,8 +10197,8 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   if (!textContent) {
     return;
   }
-  RefPtr<ComputedStyle> newSC = aPresShell->StyleSet()->
-    ResolveStyleForText(textContent, parentSC);
+  RefPtr<ComputedStyle> newSC =
+      aPresShell->StyleSet()->ResolveStyleForText(textContent, parentSC);
   nsIFrame* newTextFrame = NS_NewTextFrame(aPresShell, newSC);
   newTextFrame->Init(textContent, parentFrame, nullptr);
 
@@ -10827,8 +10215,10 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
 
   // Now that everything is set...
 #ifdef NOISY_FIRST_LETTER
-  printf("RemoveFloatingFirstLetterFrames: textContent=%p oldTextFrame=%p newTextFrame=%p\n",
-         textContent.get(), textFrame, newTextFrame);
+  printf(
+      "RemoveFloatingFirstLetterFrames: textContent=%p oldTextFrame=%p "
+      "newTextFrame=%p\n",
+      textContent.get(), textFrame, newTextFrame);
 #endif
 
   // Remove placeholder frame and the float
@@ -10853,12 +10243,9 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   }
 }
 
-void
-nsCSSFrameConstructor::RemoveFirstLetterFrames(nsIPresShell* aPresShell,
-                                               nsContainerFrame* aFrame,
-                                               nsContainerFrame* aBlockFrame,
-                                               bool* aStopLooking)
-{
+void nsCSSFrameConstructor::RemoveFirstLetterFrames(
+    nsIPresShell* aPresShell, nsContainerFrame* aFrame,
+    nsContainerFrame* aBlockFrame, bool* aStopLooking) {
   nsIFrame* prevSibling = nullptr;
   nsIFrame* kid = aFrame->PrincipalChildList().FirstChild();
 
@@ -10879,8 +10266,8 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsIPresShell* aPresShell,
       if (!textContent) {
         break;
       }
-      RefPtr<ComputedStyle> newSC = aPresShell->StyleSet()->
-        ResolveStyleForText(textContent, parentSC);
+      RefPtr<ComputedStyle> newSC =
+          aPresShell->StyleSet()->ResolveStyleForText(textContent, parentSC);
       textFrame = NS_NewTextFrame(aPresShell, newSC);
       textFrame->Init(textContent, aFrame, nullptr);
 
@@ -10910,13 +10297,12 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsIPresShell* aPresShell,
                    "should have the first continuation here");
       aBlockFrame->RemoveStateBits(NS_BLOCK_HAS_FIRST_LETTER_CHILD);
       break;
-    }
-    else if (IsInlineFrame(kid)) {
+    } else if (IsInlineFrame(kid)) {
       nsContainerFrame* kidAsContainerFrame = do_QueryFrame(kid);
       if (kidAsContainerFrame) {
         // Look inside child inline frame for the letter frame.
-        RemoveFirstLetterFrames(aPresShell, kidAsContainerFrame,
-                                aBlockFrame, aStopLooking);
+        RemoveFirstLetterFrames(aPresShell, kidAsContainerFrame, aBlockFrame,
+                                aStopLooking);
         if (*aStopLooking) {
           break;
         }
@@ -10927,12 +10313,10 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsIPresShell* aPresShell,
   }
 }
 
-void
-nsCSSFrameConstructor::RemoveLetterFrames(nsIPresShell* aPresShell,
-                                          nsContainerFrame* aBlockFrame)
-{
+void nsCSSFrameConstructor::RemoveLetterFrames(nsIPresShell* aPresShell,
+                                               nsContainerFrame* aBlockFrame) {
   aBlockFrame =
-    static_cast<nsContainerFrame*>(aBlockFrame->FirstContinuation());
+      static_cast<nsContainerFrame*>(aBlockFrame->FirstContinuation());
   aBlockFrame->RemoveProperty(nsContainerFrame::FirstLetterProperty());
   nsContainerFrame* continuation = aBlockFrame;
 
@@ -10945,16 +10329,14 @@ nsCSSFrameConstructor::RemoveLetterFrames(nsIPresShell* aPresShell,
       break;
     }
     continuation =
-      static_cast<nsContainerFrame*>(continuation->GetNextContinuation());
-  }  while (continuation);
+        static_cast<nsContainerFrame*>(continuation->GetNextContinuation());
+  } while (continuation);
 }
 
 // Fixup the letter frame situation for the given block
-void
-nsCSSFrameConstructor::RecoverLetterFrames(nsContainerFrame* aBlockFrame)
-{
+void nsCSSFrameConstructor::RecoverLetterFrames(nsContainerFrame* aBlockFrame) {
   aBlockFrame =
-    static_cast<nsContainerFrame*>(aBlockFrame->FirstContinuation());
+      static_cast<nsContainerFrame*>(aBlockFrame->FirstContinuation());
   nsContainerFrame* continuation = aBlockFrame;
 
   nsContainerFrame* parentFrame = nullptr;
@@ -10965,15 +10347,15 @@ nsCSSFrameConstructor::RecoverLetterFrames(nsContainerFrame* aBlockFrame)
   do {
     // XXX shouldn't this bit be set already (bug 408493), assert instead?
     continuation->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_STYLE);
-    WrapFramesInFirstLetterFrame(aBlockFrame, continuation, continuation,
-                                 continuation->PrincipalChildList().FirstChild(),
-                                 &parentFrame, &textFrame, &prevFrame,
-                                 letterFrames, &stopLooking);
+    WrapFramesInFirstLetterFrame(
+        aBlockFrame, continuation, continuation,
+        continuation->PrincipalChildList().FirstChild(), &parentFrame,
+        &textFrame, &prevFrame, letterFrames, &stopLooking);
     if (stopLooking) {
       break;
     }
     continuation =
-      static_cast<nsContainerFrame*>(continuation->GetNextContinuation());
+        static_cast<nsContainerFrame*>(continuation->GetNextContinuation());
   } while (continuation);
 
   if (parentFrame) {
@@ -10987,14 +10369,10 @@ nsCSSFrameConstructor::RecoverLetterFrames(nsContainerFrame* aBlockFrame)
 
 //----------------------------------------------------------------------
 
-nsContainerFrame*
-nsCSSFrameConstructor::InitAndWrapInColumnSetFrameIfNeeded(
-  nsFrameConstructorState& aState,
-  nsIContent* aContent,
-  nsContainerFrame* aParentFrame,
-  nsContainerFrame* aBlockFrame,
-  ComputedStyle* aComputedStyle)
-{
+nsContainerFrame* nsCSSFrameConstructor::InitAndWrapInColumnSetFrameIfNeeded(
+    nsFrameConstructorState& aState, nsIContent* aContent,
+    nsContainerFrame* aParentFrame, nsContainerFrame* aBlockFrame,
+    ComputedStyle* aComputedStyle) {
   MOZ_ASSERT((aBlockFrame->IsBlockFrame() || aBlockFrame->IsDetailsFrame()),
              "aBlockFrame should either be a block frame or a details frame.");
 
@@ -11005,32 +10383,26 @@ nsCSSFrameConstructor::InitAndWrapInColumnSetFrameIfNeeded(
   }
 
   // Wrap the block frame in a ColumnSetFrame.
-  nsContainerFrame* columnSetFrame =
-    NS_NewColumnSetFrame(mPresShell, aComputedStyle,
-                         nsFrameState(NS_FRAME_OWNS_ANON_BOXES));
+  nsContainerFrame* columnSetFrame = NS_NewColumnSetFrame(
+      mPresShell, aComputedStyle, nsFrameState(NS_FRAME_OWNS_ANON_BOXES));
   InitAndRestoreFrame(aState, aContent, aParentFrame, columnSetFrame);
   SetInitialSingleChild(columnSetFrame, aBlockFrame);
 
-  RefPtr<ComputedStyle> anonBlockStyle = mPresShell->StyleSet()->
-    ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::columnContent(),
-                                       aComputedStyle);
+  RefPtr<ComputedStyle> anonBlockStyle =
+      mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
+          nsCSSAnonBoxes::columnContent(), aComputedStyle);
   aBlockFrame->SetComputedStyleWithoutNotification(anonBlockStyle);
   InitAndRestoreFrame(aState, aContent, columnSetFrame, aBlockFrame);
 
   return columnSetFrame;
 }
 
-void
-nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
-                                      nsIContent*              aContent,
-                                      nsContainerFrame*        aParentFrame,
-                                      nsContainerFrame*        aContentParentFrame,
-                                      ComputedStyle*          aComputedStyle,
-                                      nsContainerFrame**       aNewFrame,
-                                      nsFrameItems&            aFrameItems,
-                                      nsIFrame*                aPositionedFrameForAbsPosContainer,
-                                      PendingBinding*          aPendingBinding)
-{
+void nsCSSFrameConstructor::ConstructBlock(
+    nsFrameConstructorState& aState, nsIContent* aContent,
+    nsContainerFrame* aParentFrame, nsContainerFrame* aContentParentFrame,
+    ComputedStyle* aComputedStyle, nsContainerFrame** aNewFrame,
+    nsFrameItems& aFrameItems, nsIFrame* aPositionedFrameForAbsPosContainer,
+    PendingBinding* aPendingBinding) {
   // If a block frame is in a multi-column subtree, its children may need to
   // be chopped into runs of blocks containing column-spans and runs of
   // blocks containing no column-spans. Each run containing column-spans
@@ -11074,27 +10446,17 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   //  yields the following frame tree.
   //
   // A) ColumnSetWrapper (original style)
-  // B)   ColumnSet (-moz-column-set)   <-- always created by BeginBuildingColumns
-  // C)     Block (-moz-column-content)
-  // D)   Block (-moz-column-span-wrapper, created by x)
-  // E)     Block (div)
-  // F)       Text ("a")
-  // G)   ColumnSet (-moz-column-set)
-  // H)     Block (-moz-column-content, created by x)
-  // I)       Block (div, y)
-  // J)         Text ("b")
-  // K)   Block (-moz-column-span-wrapper, created by x)
-  // L)     Block (-moz-column-span-wrapper, created by y)
-  // M)       Block (div, new BFC)
-  // N)         Text ("c")
-  // O)       Block (div, new BFC)
-  // P)         Text ("d")
-  // Q)   ColumnSet (-moz-column-set)
-  // R)     Block (-moz-column-content, created by x)
-  // S)       Block (div, y)
-  // T)         Text ("e")
-  // U) Block (div, new BFC)   <-- not in multi-column hierarchy
-  // V)   Text ("f")
+  // B)   ColumnSet (-moz-column-set)   <-- always created by
+  // BeginBuildingColumns C)     Block (-moz-column-content) D)   Block
+  // (-moz-column-span-wrapper, created by x) E)     Block (div) F)       Text
+  // ("a") G)   ColumnSet (-moz-column-set) H)     Block (-moz-column-content,
+  // created by x) I)       Block (div, y) J)         Text ("b") K)   Block
+  // (-moz-column-span-wrapper, created by x) L)     Block
+  // (-moz-column-span-wrapper, created by y) M)       Block (div, new BFC) N)
+  // Text ("c") O)       Block (div, new BFC) P)         Text ("d") Q) ColumnSet
+  // (-moz-column-set) R)     Block (-moz-column-content, created by x) S) Block
+  // (div, y) T)         Text ("e") U) Block (div, new BFC)   <-- not in
+  // multi-column hierarchy V)   Text ("f")
   //
   // ColumnSet linkage described in 3): B -> G -> Q
   //
@@ -11107,10 +10469,10 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
 
   // Create column hierarchy if necessary.
   const bool needsColumn =
-    aComputedStyle->StyleColumn()->IsColumnContainerStyle();
+      aComputedStyle->StyleColumn()->IsColumnContainerStyle();
   if (needsColumn) {
-    *aNewFrame =
-      BeginBuildingColumns(aState, aContent, aParentFrame, blockFrame, aComputedStyle);
+    *aNewFrame = BeginBuildingColumns(aState, aContent, aParentFrame,
+                                      blockFrame, aComputedStyle);
 
     if (aPositionedFrameForAbsPosContainer == blockFrame) {
       aPositionedFrameForAbsPosContainer = *aNewFrame;
@@ -11130,8 +10492,7 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   }
 
   aState.AddChild(*aNewFrame, aFrameItems, aContent,
-                  aContentParentFrame ? aContentParentFrame :
-                                        aParentFrame);
+                  aContentParentFrame ? aContentParentFrame : aParentFrame);
   if (!mRootElementFrame) {
     // The frame we're constructing will be the root element frame.
     // Set mRootElementFrame before processing children.
@@ -11149,7 +10510,8 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   (*aNewFrame)->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
   if (aPositionedFrameForAbsPosContainer) {
     //    NS_ASSERTION(aRelPos, "should have made area frame for this");
-    aState.PushAbsoluteContainingBlock(*aNewFrame, aPositionedFrameForAbsPosContainer, absoluteSaveState);
+    aState.PushAbsoluteContainingBlock(
+        *aNewFrame, aPositionedFrameForAbsPosContainer, absoluteSaveState);
   }
 
   // Ensure all the children in the multi-column subtree are tagged with
@@ -11163,7 +10525,8 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
     // for the elements having style like "columns:3; column-span:all;".
     if (needsColumn) {
       aState.mAdditionalStateBits |= NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR;
-    } else if (blockFrame->HasAllStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS)) {
+    } else if (blockFrame->HasAllStateBits(
+                   NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS)) {
       aState.mAdditionalStateBits &= ~NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR;
     }
   }
@@ -11190,12 +10553,12 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   // Extract any initial non-column-span kids, and put them in block frame's
   // child list.
   nsFrameList initialNonColumnSpanKids =
-    childItems.Split([](nsIFrame* f) { return f->IsColumnSpan(); });
+      childItems.Split([](nsIFrame* f) { return f->IsColumnSpan(); });
   blockFrame->SetInitialChildList(kPrincipalList, initialNonColumnSpanKids);
 
   nsBlockFrame* blockFrameToCreateBullet = blockFrame;
   if (needsColumn && (*aNewFrame)->StyleList()->mListStylePosition ==
-                       NS_STYLE_LIST_STYLE_POSITION_OUTSIDE) {
+                         NS_STYLE_LIST_STYLE_POSITION_OUTSIDE) {
     // Create the outside bullet on ColumnSetWrapper so that the position of
     // the bullet is correct.
     blockFrameToCreateBullet = static_cast<nsBlockFrame*>(*aNewFrame);
@@ -11208,9 +10571,8 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
     return;
   }
 
-  nsFrameList columnSpanSiblings =
-    CreateColumnSpanSiblings(aState, blockFrame, childItems,
-                             aPositionedFrameForAbsPosContainer);
+  nsFrameList columnSpanSiblings = CreateColumnSpanSiblings(
+      aState, blockFrame, childItems, aPositionedFrameForAbsPosContainer);
 
   if (needsColumn) {
     // We're constructing a column container; need to finish building it.
@@ -11232,10 +10594,8 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
              "The column-span siblings should be moved to the proper place!");
 }
 
-void
-nsCSSFrameConstructor::CreateBulletFrameForListItemIfNeeded(
-  nsBlockFrame* aBlockFrame)
-{
+void nsCSSFrameConstructor::CreateBulletFrameForListItemIfNeeded(
+    nsBlockFrame* aBlockFrame) {
   // Create a list bullet if this is a list-item. Note that this is
   // done here so that RenumberList will work (it needs the bullets
   // to store the bullet numbers).  Also note that due to various
@@ -11261,31 +10621,27 @@ nsCSSFrameConstructor::CreateBulletFrameForListItemIfNeeded(
   }
 }
 
-nsContainerFrame*
-nsCSSFrameConstructor::BeginBuildingColumns(
-  nsFrameConstructorState& aState,
-  nsIContent* aContent,
-  nsContainerFrame* aParentFrame,
-  nsContainerFrame* aColumnContent,
-  ComputedStyle* aComputedStyle)
-{
-  MOZ_ASSERT(aColumnContent->IsBlockFrame() || aColumnContent->IsDetailsFrame(),
-             "aColumnContent should either be a block frame or a details frame.");
+nsContainerFrame* nsCSSFrameConstructor::BeginBuildingColumns(
+    nsFrameConstructorState& aState, nsIContent* aContent,
+    nsContainerFrame* aParentFrame, nsContainerFrame* aColumnContent,
+    ComputedStyle* aComputedStyle) {
+  MOZ_ASSERT(
+      aColumnContent->IsBlockFrame() || aColumnContent->IsDetailsFrame(),
+      "aColumnContent should either be a block frame or a details frame.");
   MOZ_ASSERT(aComputedStyle->StyleColumn()->IsColumnContainerStyle(),
              "No need to build a column hierarchy!");
 
   if (!StaticPrefs::layout_css_column_span_enabled()) {
     // Preserve the old behavior which supports no column-span.
     // Wrap the block frame in a ColumnSetFrame.
-    nsContainerFrame* columnSetFrame =
-      NS_NewColumnSetFrame(mPresShell, aComputedStyle,
-                           nsFrameState(NS_FRAME_OWNS_ANON_BOXES));
+    nsContainerFrame* columnSetFrame = NS_NewColumnSetFrame(
+        mPresShell, aComputedStyle, nsFrameState(NS_FRAME_OWNS_ANON_BOXES));
     InitAndRestoreFrame(aState, aContent, aParentFrame, columnSetFrame);
     SetInitialSingleChild(columnSetFrame, aColumnContent);
 
-    RefPtr<ComputedStyle> anonBlockStyle = mPresShell->StyleSet()->
-      ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::columnContent(),
-                                         aComputedStyle);
+    RefPtr<ComputedStyle> anonBlockStyle =
+        mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
+            nsCSSAnonBoxes::columnContent(), aComputedStyle);
     aColumnContent->SetComputedStyleWithoutNotification(anonBlockStyle);
     InitAndRestoreFrame(aState, aContent, columnSetFrame, aColumnContent);
 
@@ -11298,23 +10654,21 @@ nsCSSFrameConstructor::BeginBuildingColumns(
   //   ColumnSet (-moz-column-set)
   //     Block (-moz-column-content)
   //
-  nsBlockFrame* columnSetWrapper =
-    NS_NewColumnSetWrapperFrame(mPresShell, aComputedStyle,
-                                nsFrameState(NS_FRAME_OWNS_ANON_BOXES));
+  nsBlockFrame* columnSetWrapper = NS_NewColumnSetWrapperFrame(
+      mPresShell, aComputedStyle, nsFrameState(NS_FRAME_OWNS_ANON_BOXES));
   InitAndRestoreFrame(aState, aContent, aParentFrame, columnSetWrapper);
 
-  RefPtr<ComputedStyle> columnSetStyle = mPresShell->StyleSet()->
-    ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::columnSet(),
-                                       aComputedStyle);
-  nsContainerFrame* columnSet =
-    NS_NewColumnSetFrame(mPresShell, columnSetStyle,
-                         nsFrameState(NS_FRAME_OWNS_ANON_BOXES));
+  RefPtr<ComputedStyle> columnSetStyle =
+      mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
+          nsCSSAnonBoxes::columnSet(), aComputedStyle);
+  nsContainerFrame* columnSet = NS_NewColumnSetFrame(
+      mPresShell, columnSetStyle, nsFrameState(NS_FRAME_OWNS_ANON_BOXES));
   InitAndRestoreFrame(aState, aContent, columnSetWrapper, columnSet);
   columnSet->AddStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR);
 
-  RefPtr<ComputedStyle> blockStyle = mPresShell->StyleSet()->
-    ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::columnContent(),
-                                       columnSetStyle);
+  RefPtr<ComputedStyle> blockStyle =
+      mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
+          nsCSSAnonBoxes::columnContent(), columnSetStyle);
   aColumnContent->SetComputedStyleWithoutNotification(blockStyle);
   InitAndRestoreFrame(aState, aContent, columnSet, aColumnContent);
   aColumnContent->AddStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR);
@@ -11326,20 +10680,16 @@ nsCSSFrameConstructor::BeginBuildingColumns(
   return columnSetWrapper;
 }
 
-void
-nsCSSFrameConstructor::FinishBuildingColumns(
-  nsFrameConstructorState& aState,
-  nsContainerFrame* aColumnSetWrapper,
-  nsContainerFrame* aColumnContent,
-  nsFrameList& aColumnContentSiblings)
-{
+void nsCSSFrameConstructor::FinishBuildingColumns(
+    nsFrameConstructorState& aState, nsContainerFrame* aColumnSetWrapper,
+    nsContainerFrame* aColumnContent, nsFrameList& aColumnContentSiblings) {
   MOZ_ASSERT(StaticPrefs::layout_css_column_span_enabled(),
              "Call this only when layout.css.column-span.enabled is true!");
 
   nsContainerFrame* prevColumnSet = aColumnContent->GetParent();
 
   MOZ_ASSERT(prevColumnSet->IsColumnSetFrame() &&
-             prevColumnSet->GetParent() == aColumnSetWrapper,
+                 prevColumnSet->GetParent() == aColumnSetWrapper,
              "Should have established column hierarchy!");
 
   nsFrameItems finalItems;
@@ -11351,10 +10701,8 @@ nsCSSFrameConstructor::FinishBuildingColumns(
       finalItems.AddChild(f);
     } else {
       auto* continuingColumnSet = static_cast<nsContainerFrame*>(
-        CreateContinuingFrame(mPresShell->GetPresContext(),
-                              prevColumnSet,
-                              aColumnSetWrapper,
-                              false));
+          CreateContinuingFrame(mPresShell->GetPresContext(), prevColumnSet,
+                                aColumnSetWrapper, false));
       f->SetParent(continuingColumnSet);
       SetInitialSingleChild(continuingColumnSet, f);
       finalItems.AddChild(continuingColumnSet);
@@ -11366,11 +10714,8 @@ nsCSSFrameConstructor::FinishBuildingColumns(
   aColumnSetWrapper->AppendFrames(kPrincipalList, finalItems);
 }
 
-bool
-nsCSSFrameConstructor::MayNeedToCreateColumnSpanSiblings(
-  nsContainerFrame* aBlockFrame,
-  const nsFrameList& aChildList)
-{
+bool nsCSSFrameConstructor::MayNeedToCreateColumnSpanSiblings(
+    nsContainerFrame* aBlockFrame, const nsFrameList& aChildList) {
   MOZ_ASSERT(StaticPrefs::layout_css_column_span_enabled(),
              "Call this only when layout.css.column-span.enabled is true!");
 
@@ -11413,12 +10758,9 @@ nsCSSFrameConstructor::MayNeedToCreateColumnSpanSiblings(
   return true;
 }
 
-nsFrameItems
-nsCSSFrameConstructor::CreateColumnSpanSiblings(nsFrameConstructorState& aState,
-                                                nsContainerFrame* aInitialBlock,
-                                                nsFrameList& aChildList,
-                                                nsIFrame* aPositionedFrame)
-{
+nsFrameItems nsCSSFrameConstructor::CreateColumnSpanSiblings(
+    nsFrameConstructorState& aState, nsContainerFrame* aInitialBlock,
+    nsFrameList& aChildList, nsIFrame* aPositionedFrame) {
   MOZ_ASSERT(!aPositionedFrame || aPositionedFrame->IsAbsPosContainingBlock());
 
   nsIContent* const content = aInitialBlock->GetContent();
@@ -11436,15 +10778,16 @@ nsCSSFrameConstructor::CreateColumnSpanSiblings(nsFrameConstructorState& aState,
 
     // Grab the consecutive column-span kids, and reparent them into a
     // block frame.
-    RefPtr<ComputedStyle> columnSpanWrapperStyle = mPresShell->StyleSet()->
-      ResolveNonInheritingAnonymousBoxStyle(nsCSSAnonBoxes::columnSpanWrapper());
+    RefPtr<ComputedStyle> columnSpanWrapperStyle =
+        mPresShell->StyleSet()->ResolveNonInheritingAnonymousBoxStyle(
+            nsCSSAnonBoxes::columnSpanWrapper());
     nsBlockFrame* columnSpanWrapper =
-      NS_NewBlockFrame(mPresShell, columnSpanWrapperStyle);
+        NS_NewBlockFrame(mPresShell, columnSpanWrapperStyle);
     InitAndRestoreFrame(aState, content, parentFrame, columnSpanWrapper, false);
     columnSpanWrapper->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
 
     nsFrameList columnSpanKids =
-      aChildList.Split([](nsIFrame* f) { return !f->IsColumnSpan(); });
+        aChildList.Split([](nsIFrame* f) { return !f->IsColumnSpan(); });
     columnSpanKids.ApplySetParent(columnSpanWrapper);
     columnSpanWrapper->SetInitialChildList(kPrincipalList, columnSpanKids);
     if (aPositionedFrame) {
@@ -11456,16 +10799,18 @@ nsCSSFrameConstructor::CreateColumnSpanSiblings(nsFrameConstructorState& aState,
     // Grab the consecutive non-column-span kids, and reparent them into a
     // block frame.
     nsBlockFrame* nonColumnSpanWrapper =
-      NS_NewBlockFrame(mPresShell, initialBlockStyle);
-    InitAndRestoreFrame(aState, content, parentFrame, nonColumnSpanWrapper, false);
+        NS_NewBlockFrame(mPresShell, initialBlockStyle);
+    InitAndRestoreFrame(aState, content, parentFrame, nonColumnSpanWrapper,
+                        false);
     nonColumnSpanWrapper->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
 
     if (aChildList.NotEmpty()) {
       nsFrameList nonColumnSpanKids =
-        aChildList.Split([](nsIFrame* f) { return f->IsColumnSpan(); });
+          aChildList.Split([](nsIFrame* f) { return f->IsColumnSpan(); });
 
       nonColumnSpanKids.ApplySetParent(nonColumnSpanWrapper);
-      nonColumnSpanWrapper->SetInitialChildList(kPrincipalList, nonColumnSpanKids);
+      nonColumnSpanWrapper->SetInitialChildList(kPrincipalList,
+                                                nonColumnSpanKids);
       if (aPositionedFrame) {
         aState.ReparentAbsoluteItems(nonColumnSpanWrapper);
       }
@@ -11481,13 +10826,10 @@ nsCSSFrameConstructor::CreateColumnSpanSiblings(nsFrameConstructorState& aState,
   return siblings;
 }
 
-nsIFrame*
-nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
-                                       FrameConstructionItem&   aItem,
-                                       nsContainerFrame*        aParentFrame,
-                                       const nsStyleDisplay*    aDisplay,
-                                       nsFrameItems&            aFrameItems)
-{
+nsIFrame* nsCSSFrameConstructor::ConstructInline(
+    nsFrameConstructorState& aState, FrameConstructionItem& aItem,
+    nsContainerFrame* aParentFrame, const nsStyleDisplay* aDisplay,
+    nsFrameItems& aFrameItems) {
   // If an inline frame has non-inline kids, then we chop up the child list
   // into runs of blocks and runs of inlines, create anonymous block frames to
   // contain the runs of blocks, inline frames with our style for the runs of
@@ -11568,9 +10910,10 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   // Initialize the frame
   InitAndRestoreFrame(aState, content, aParentFrame, newFrame);
 
-  nsFrameConstructorSaveState absoluteSaveState;  // definition cannot be inside next block
-                                                  // because the object's destructor is significant
-                                                  // this is part of the fix for bug 42372
+  nsFrameConstructorSaveState
+      absoluteSaveState;  // definition cannot be inside next block
+                          // because the object's destructor is significant
+                          // this is part of the fix for bug 42372
 
   bool isAbsPosCB = newFrame->IsAbsPosContainingBlock();
   newFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
@@ -11589,7 +10932,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   nsFrameList::FrameLinkEnumerator firstBlockEnumerator(childItems);
   if (!aItem.mIsAllInline) {
     firstBlockEnumerator.Find(
-      [](nsIFrame* aFrame) { return aFrame->IsBlockOutside(); });
+        [](nsIFrame* aFrame) { return aFrame->IsBlockOutside(); });
   }
 
   if (aItem.mIsAllInline || firstBlockEnumerator.AtEnd()) {
@@ -11619,13 +10962,11 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   return newFrame;
 }
 
-void
-nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
-                                        nsContainerFrame* aInitialInline,
-                                        bool aIsAbsPosCB,
-                                        nsFrameItems& aChildItems,
-                                        nsFrameItems& aSiblings)
-{
+void nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
+                                             nsContainerFrame* aInitialInline,
+                                             bool aIsAbsPosCB,
+                                             nsFrameItems& aChildItems,
+                                             nsFrameItems& aSiblings) {
   MOZ_ASSERT(aIsAbsPosCB == aInitialInline->IsAbsPosContainingBlock());
 
   nsIContent* content = aInitialInline->GetContent();
@@ -11640,12 +10981,12 @@ nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
   //   When such an inline box is affected by relative positioning, any
   //   resulting translation also affects the block-level box contained
   //   in the inline box.
-  RefPtr<ComputedStyle> blockSC = mPresShell->StyleSet()->
-    ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::mozBlockInsideInlineWrapper(),
-                                       computedStyle);
+  RefPtr<ComputedStyle> blockSC =
+      mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
+          nsCSSAnonBoxes::mozBlockInsideInlineWrapper(), computedStyle);
 
   nsContainerFrame* lastNewInline =
-    static_cast<nsContainerFrame*>(aInitialInline->FirstContinuation());
+      static_cast<nsContainerFrame*>(aInitialInline->FirstContinuation());
   do {
     // On entry to this loop aChildItems is not empty and the first frame in it
     // is block-level.
@@ -11662,7 +11003,7 @@ nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
     // Find the first non-block child which defines the end of our block kids
     // and the start of our next inline's kids
     nsFrameList blockKids =
-      aChildItems.Split([](nsIFrame* f) { return !f->IsBlockOutside(); });
+        aChildItems.Split([](nsIFrame* f) { return !f->IsBlockOutside(); });
 
     if (!StaticPrefs::layout_css_column_span_enabled() ||
         !aInitialInline->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
@@ -11674,7 +11015,7 @@ nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
       // Extract any initial non-column-span frames, and put them in
       // blockFrame's child list.
       nsFrameList initialNonColumnSpanKids =
-        blockKids.Split([](nsIFrame* f) { return f->IsColumnSpan(); });
+          blockKids.Split([](nsIFrame* f) { return f->IsColumnSpan(); });
       MoveChildrenTo(aInitialInline, blockFrame, initialNonColumnSpanKids);
 
       SetFrameIsIBSplit(lastNewInline, blockFrame);
@@ -11687,8 +11028,8 @@ nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
         aState.mAdditionalStateBits |= NS_FRAME_PART_OF_IBSPLIT;
 
         nsFrameItems columnSpanSiblings =
-          CreateColumnSpanSiblings(aState, blockFrame, blockKids,
-                                   aIsAbsPosCB ? aInitialInline : nullptr);
+            CreateColumnSpanSiblings(aState, blockFrame, blockKids,
+                                     aIsAbsPosCB ? aInitialInline : nullptr);
         aSiblings.AppendFrames(nullptr, columnSpanSiblings);
       }
     }
@@ -11704,7 +11045,7 @@ nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
 
     if (aChildItems.NotEmpty()) {
       nsFrameList inlineKids =
-        aChildItems.Split([](nsIFrame* f) { return f->IsBlockOutside(); });
+          aChildItems.Split([](nsIFrame* f) { return f->IsBlockOutside(); });
       MoveChildrenTo(aInitialInline, inlineFrame, inlineKids);
     }
 
@@ -11716,25 +11057,22 @@ nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
   SetFrameIsIBSplit(lastNewInline, nullptr);
 }
 
-void
-nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
-                                             FrameConstructionItem& aParentItem,
-                                             bool aItemIsWithinSVGText,
-                                             bool aItemAllowsTextPathChild)
-{
+void nsCSSFrameConstructor::BuildInlineChildItems(
+    nsFrameConstructorState& aState, FrameConstructionItem& aParentItem,
+    bool aItemIsWithinSVGText, bool aItemAllowsTextPathChild) {
   // XXXbz should we preallocate aParentItem.mChildItems to some sane
   // length?  Maybe even to parentContent->GetChildCount()?
-  nsFrameConstructorState::PendingBindingAutoPusher
-    pusher(aState, aParentItem.mPendingBinding);
+  nsFrameConstructorState::PendingBindingAutoPusher pusher(
+      aState, aParentItem.mPendingBinding);
 
   ComputedStyle* const parentComputedStyle = aParentItem.mComputedStyle;
   nsIContent* const parentContent = aParentItem.mContent;
 
   if (!aItemIsWithinSVGText) {
     // Probe for generated content before
-    CreateGeneratedContentItem(aState, nullptr, *parentContent->AsElement(),
-                               *parentComputedStyle, CSSPseudoElementType::before,
-                               aParentItem.mChildItems);
+    CreateGeneratedContentItem(
+        aState, nullptr, *parentContent->AsElement(), *parentComputedStyle,
+        CSSPseudoElementType::before, aParentItem.mChildItems);
   }
 
   uint32_t flags = ITEM_ALLOW_XBL_BASE | ITEM_ALLOW_PAGE_BREAK;
@@ -11747,7 +11085,8 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
   }
 
   FlattenedChildIterator iter(parentContent);
-  for (nsIContent* content = iter.GetNextChild(); content; content = iter.GetNextChild()) {
+  for (nsIContent* content = iter.GetNextChild(); content;
+       content = iter.GetNextChild()) {
     // Manually check for comments/PIs, since we don't have a frame to pass to
     // AddFrameConstructionItems.  We know our parent is a non-replaced inline,
     // so there is no need to do the NeedFrameFor check.
@@ -11758,17 +11097,15 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
 
     RefPtr<ComputedStyle> childContext = ResolveComputedStyle(content);
     AddFrameConstructionItemsInternal(aState, content, nullptr,
-                                      iter.XBLInvolved(), childContext,
-                                      flags,
+                                      iter.XBLInvolved(), childContext, flags,
                                       aParentItem.mChildItems);
   }
 
   if (!aItemIsWithinSVGText) {
     // Probe for generated content after
-    CreateGeneratedContentItem(aState, nullptr, *parentContent->AsElement(),
-                               *parentComputedStyle,
-                               CSSPseudoElementType::after,
-                               aParentItem.mChildItems);
+    CreateGeneratedContentItem(
+        aState, nullptr, *parentContent->AsElement(), *parentComputedStyle,
+        CSSPseudoElementType::after, aParentItem.mChildItems);
   }
 
   aParentItem.mIsAllInline = aParentItem.mChildItems.AreAllItemsInline();
@@ -11777,9 +11114,8 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
 // return whether it's ok to append (in the AppendFrames sense) to
 // aParentFrame if our nextSibling is aNextSibling.  aParentFrame must
 // be an ib-split inline.
-static bool
-IsSafeToAppendToIBSplitInline(nsIFrame* aParentFrame, nsIFrame* aNextSibling)
-{
+static bool IsSafeToAppendToIBSplitInline(nsIFrame* aParentFrame,
+                                          nsIFrame* aNextSibling) {
   MOZ_ASSERT(IsInlineFrame(aParentFrame), "Must have an inline parent here");
 
   do {
@@ -11797,14 +11133,10 @@ IsSafeToAppendToIBSplitInline(nsIFrame* aParentFrame, nsIFrame* aNextSibling)
   return true;
 }
 
-bool
-nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
-                                           nsIFrame* aContainingBlock,
-                                           nsIFrame* aFrame,
-                                           FrameConstructionItemList& aItems,
-                                           bool aIsAppend,
-                                           nsIFrame* aPrevSibling)
-{
+bool nsCSSFrameConstructor::WipeContainingBlock(
+    nsFrameConstructorState& aState, nsIFrame* aContainingBlock,
+    nsIFrame* aFrame, FrameConstructionItemList& aItems, bool aIsAppend,
+    nsIFrame* aPrevSibling) {
 #define TRACE(reason) \
   PROFILER_TRACING("Layout", "WipeContainingBlock: " reason, TRACING_EVENT)
 
@@ -11882,7 +11214,8 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
       // We hit something that _doesn't_ need an anonymous flex item!
       // Rebuild the flex container to bust it out.
       TRACE("Inserting non-inlines inside anon flex or grid item");
-      RecreateFramesForContent(containerFrame->GetContent(), InsertionKind::Async);
+      RecreateFramesForContent(containerFrame->GetContent(),
+                               InsertionKind::Async);
       return true;
     }
 
@@ -11990,7 +11323,8 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
             // Try to find one after all
             nsIFrame* parentPrevCont = aFrame->GetPrevContinuation();
             while (parentPrevCont) {
-              prevSibling = parentPrevCont->GetChildList(kPrincipalList).LastChild();
+              prevSibling =
+                  parentPrevCont->GetChildList(kPrincipalList).LastChild();
               if (prevSibling) {
                 break;
               }
@@ -12097,21 +11431,21 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     }
 
     bool needsReframe =
-      // 1. Insert / append any column-span children.
-      anyColumnSpanItems ||
-      // 2. GetInsertionPrevSibling() modifies insertion parent. If the prev
-      // sibling is a column-span, aFrame ends up being the
-      // column-span-wrapper.
-      aFrame->Style()->GetPseudo() == nsCSSAnonBoxes::columnSpanWrapper() ||
-      // 3. Append into {ib} split container. There might be room for
-      // optimization, but let's reframe for correctness...
-      IsFramePartOfIBSplit(aFrame);
+        // 1. Insert / append any column-span children.
+        anyColumnSpanItems ||
+        // 2. GetInsertionPrevSibling() modifies insertion parent. If the prev
+        // sibling is a column-span, aFrame ends up being the
+        // column-span-wrapper.
+        aFrame->Style()->GetPseudo() == nsCSSAnonBoxes::columnSpanWrapper() ||
+        // 3. Append into {ib} split container. There might be room for
+        // optimization, but let's reframe for correctness...
+        IsFramePartOfIBSplit(aFrame);
 
     if (needsReframe) {
       TRACE("Multi-column");
       RecreateFramesForContent(
-        GetMultiColumnContainingBlockFor(aFrame)->GetContent(),
-        InsertionKind::Async);
+          GetMultiColumnContainingBlockFor(aFrame)->GetContent(),
+          InsertionKind::Async);
       return true;
     }
 
@@ -12201,16 +11535,15 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
 #undef TRACE
 }
 
-void
-nsCSSFrameConstructor::ReframeContainingBlock(nsIFrame* aFrame)
-{
-
+void nsCSSFrameConstructor::ReframeContainingBlock(nsIFrame* aFrame) {
   // XXXbz how exactly would we get here while isReflowing anyway?  Should this
   // whole test be ifdef DEBUG?
   if (mPresShell->IsReflowLocked()) {
     // don't ReframeContainingBlock, this will result in a crash
     // if we remove a tree that's in reflow - see bug 121368 for testcase
-    NS_ERROR("Atemptted to nsCSSFrameConstructor::ReframeContainingBlock during a Reflow!!!");
+    NS_ERROR(
+        "Atemptted to nsCSSFrameConstructor::ReframeContainingBlock during a "
+        "Reflow!!!");
     return;
   }
 
@@ -12222,9 +11555,10 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIFrame* aFrame)
     // wraps some of its content in an anonymous block; see
     // ConstructInline)
 
-    // NOTE: We used to get the FloatContainingBlock here, but it was often wrong.
-    // GetIBContainingBlock works much better and provides the correct container in all cases
-    // so GetFloatContainingBlock(aFrame) has been removed
+    // NOTE: We used to get the FloatContainingBlock here, but it was often
+    // wrong. GetIBContainingBlock works much better and provides the correct
+    // container in all cases so GetFloatContainingBlock(aFrame) has been
+    // removed
 
     // And get the containingBlock's content
     if (nsIContent* blockContent = containingBlock->GetContent()) {
@@ -12243,9 +11577,7 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIFrame* aFrame)
                            InsertionKind::Async);
 }
 
-void
-nsCSSFrameConstructor::GenerateChildFrames(nsContainerFrame* aFrame)
-{
+void nsCSSFrameConstructor::GenerateChildFrames(nsContainerFrame* aFrame) {
   {
     nsAutoScriptBlocker scriptBlocker;
     nsFrameItems childItems;
@@ -12253,9 +11585,8 @@ nsCSSFrameConstructor::GenerateChildFrames(nsContainerFrame* aFrame)
     // We don't have a parent frame with a pending binding constructor here,
     // so no need to worry about ordering of the kids' constructors with it.
     // Pass null for the PendingBinding.
-    ProcessChildren(state, aFrame->GetContent(), aFrame->Style(),
-                    aFrame, false, childItems, false,
-                    nullptr);
+    ProcessChildren(state, aFrame->GetContent(), aFrame->Style(), aFrame, false,
+                    childItems, false, nullptr);
 
     aFrame->SetInitialChildList(kPrincipalList, childItems);
   }
@@ -12275,12 +11606,10 @@ nsCSSFrameConstructor::GenerateChildFrames(nsContainerFrame* aFrame)
 //////////////////////////////////////////////////////////
 // nsCSSFrameConstructor::FrameConstructionItem methods //
 //////////////////////////////////////////////////////////
-bool
-nsCSSFrameConstructor::
-FrameConstructionItem::IsWhitespace(nsFrameConstructorState& aState) const
-{
-  MOZ_ASSERT(aState.mCreatingExtraFrames ||
-             !mContent->GetPrimaryFrame(), "How did that happen?");
+bool nsCSSFrameConstructor::FrameConstructionItem::IsWhitespace(
+    nsFrameConstructorState& aState) const {
+  MOZ_ASSERT(aState.mCreatingExtraFrames || !mContent->GetPrimaryFrame(),
+             "How did that happen?");
   if (!mIsText) {
     return false;
   }
@@ -12292,10 +11621,8 @@ FrameConstructionItem::IsWhitespace(nsFrameConstructorState& aState) const
 //////////////////////////////////////////////////////////////
 // nsCSSFrameConstructor::FrameConstructionItemList methods //
 //////////////////////////////////////////////////////////////
-void
-nsCSSFrameConstructor::FrameConstructionItemList::
-AdjustCountsForItem(FrameConstructionItem* aItem, int32_t aDelta)
-{
+void nsCSSFrameConstructor::FrameConstructionItemList::AdjustCountsForItem(
+    FrameConstructionItem* aItem, int32_t aDelta) {
   MOZ_ASSERT(aDelta == 1 || aDelta == -1, "Unexpected delta");
   mItemCount += aDelta;
   if (aItem->mIsAllInline) {
@@ -12313,10 +11640,8 @@ AdjustCountsForItem(FrameConstructionItem* aItem, int32_t aDelta)
 ////////////////////////////////////////////////////////////////////////
 // nsCSSFrameConstructor::FrameConstructionItemList::Iterator methods //
 ////////////////////////////////////////////////////////////////////////
-inline bool
-nsCSSFrameConstructor::FrameConstructionItemList::
-Iterator::SkipItemsWantingParentType(ParentType aParentType)
-{
+inline bool nsCSSFrameConstructor::FrameConstructionItemList::Iterator::
+    SkipItemsWantingParentType(ParentType aParentType) {
   MOZ_ASSERT(!IsDone(), "Shouldn't be done yet");
   while (item().DesiredParentType() == aParentType) {
     Next();
@@ -12327,10 +11652,8 @@ Iterator::SkipItemsWantingParentType(ParentType aParentType)
   return false;
 }
 
-inline bool
-nsCSSFrameConstructor::FrameConstructionItemList::
-Iterator::SkipItemsNotWantingParentType(ParentType aParentType)
-{
+inline bool nsCSSFrameConstructor::FrameConstructionItemList::Iterator::
+    SkipItemsNotWantingParentType(ParentType aParentType) {
   MOZ_ASSERT(!IsDone(), "Shouldn't be done yet");
   while (item().DesiredParentType() != aParentType) {
     Next();
@@ -12344,11 +11667,8 @@ Iterator::SkipItemsNotWantingParentType(ParentType aParentType)
 // Note: we implement -webkit-{inline-}box (and optionally -moz-{inline-}box)
 // using nsFlexContainerFrame, but we use different rules for what gets wrapped
 // in an anonymous flex item.
-bool
-nsCSSFrameConstructor::FrameConstructionItem::
-  NeedsAnonFlexOrGridItem(const nsFrameConstructorState& aState,
-                          bool aIsLegacyBox)
-{
+bool nsCSSFrameConstructor::FrameConstructionItem::NeedsAnonFlexOrGridItem(
+    const nsFrameConstructorState& aState, bool aIsLegacyBox) {
   if (mFCData->mBits & FCDATA_IS_LINE_PARTICIPANT) {
     // This will be an inline non-replaced box.
     return true;
@@ -12376,12 +11696,9 @@ nsCSSFrameConstructor::FrameConstructionItem::
   return false;
 }
 
-inline bool
-nsCSSFrameConstructor::FrameConstructionItemList::
-Iterator::SkipItemsThatNeedAnonFlexOrGridItem(
-  const nsFrameConstructorState& aState,
-  bool aIsLegacyBox)
-{
+inline bool nsCSSFrameConstructor::FrameConstructionItemList::Iterator::
+    SkipItemsThatNeedAnonFlexOrGridItem(const nsFrameConstructorState& aState,
+                                        bool aIsLegacyBox) {
   MOZ_ASSERT(!IsDone(), "Shouldn't be done yet");
   while (item().NeedsAnonFlexOrGridItem(aState, aIsLegacyBox)) {
     Next();
@@ -12392,12 +11709,9 @@ Iterator::SkipItemsThatNeedAnonFlexOrGridItem(
   return false;
 }
 
-inline bool
-nsCSSFrameConstructor::FrameConstructionItemList::
-Iterator::SkipItemsThatDontNeedAnonFlexOrGridItem(
-  const nsFrameConstructorState& aState,
-  bool aIsLegacyBox)
-{
+inline bool nsCSSFrameConstructor::FrameConstructionItemList::Iterator::
+    SkipItemsThatDontNeedAnonFlexOrGridItem(
+        const nsFrameConstructorState& aState, bool aIsLegacyBox) {
   MOZ_ASSERT(!IsDone(), "Shouldn't be done yet");
   while (!(item().NeedsAnonFlexOrGridItem(aState, aIsLegacyBox))) {
     Next();
@@ -12408,10 +11722,8 @@ Iterator::SkipItemsThatDontNeedAnonFlexOrGridItem(
   return false;
 }
 
-inline bool
-nsCSSFrameConstructor::FrameConstructionItemList::
-Iterator::SkipItemsNotWantingRubyParent()
-{
+inline bool nsCSSFrameConstructor::FrameConstructionItemList::Iterator::
+    SkipItemsNotWantingRubyParent() {
   MOZ_ASSERT(!IsDone(), "Shouldn't be done yet");
   while (!IsRubyParentType(item().DesiredParentType())) {
     Next();
@@ -12423,9 +11735,8 @@ Iterator::SkipItemsNotWantingRubyParent()
 }
 
 inline bool
-nsCSSFrameConstructor::FrameConstructionItemList::
-Iterator::SkipWhitespace(nsFrameConstructorState& aState)
-{
+nsCSSFrameConstructor::FrameConstructionItemList::Iterator::SkipWhitespace(
+    nsFrameConstructorState& aState) {
   MOZ_ASSERT(!IsDone(), "Shouldn't be done yet");
   MOZ_ASSERT(item().IsWhitespace(aState), "Not pointing to whitespace?");
   do {
@@ -12438,10 +11749,8 @@ Iterator::SkipWhitespace(nsFrameConstructorState& aState)
   return false;
 }
 
-void
-nsCSSFrameConstructor::FrameConstructionItemList::
-Iterator::AppendItemToList(FrameConstructionItemList& aTargetList)
-{
+void nsCSSFrameConstructor::FrameConstructionItemList::Iterator::
+    AppendItemToList(FrameConstructionItemList& aTargetList) {
   NS_ASSERTION(&aTargetList != &mList, "Unexpected call");
   MOZ_ASSERT(!IsDone(), "should not be done");
 
@@ -12454,11 +11763,9 @@ Iterator::AppendItemToList(FrameConstructionItemList& aTargetList)
   aTargetList.AdjustCountsForItem(item, 1);
 }
 
-void
-nsCSSFrameConstructor::FrameConstructionItemList::
-Iterator::AppendItemsToList(nsCSSFrameConstructor* aFCtor, const Iterator& aEnd,
-                            FrameConstructionItemList& aTargetList)
-{
+void nsCSSFrameConstructor::FrameConstructionItemList::Iterator::
+    AppendItemsToList(nsCSSFrameConstructor* aFCtor, const Iterator& aEnd,
+                      FrameConstructionItemList& aTargetList) {
   NS_ASSERTION(&aTargetList != &mList, "Unexpected call");
   MOZ_ASSERT(&mList == &aEnd.mList, "End iterator for some other list?");
 
@@ -12490,10 +11797,8 @@ Iterator::AppendItemsToList(nsCSSFrameConstructor* aFCtor, const Iterator& aEnd,
   MOZ_ASSERT(*this == aEnd, "How did that happen?");
 }
 
-void
-nsCSSFrameConstructor::FrameConstructionItemList::
-Iterator::InsertItem(FrameConstructionItem* aItem)
-{
+void nsCSSFrameConstructor::FrameConstructionItemList::Iterator::InsertItem(
+    FrameConstructionItem* aItem) {
   if (IsDone()) {
     mList.mItems.insertBack(aItem);
   } else {
@@ -12505,10 +11810,8 @@ Iterator::InsertItem(FrameConstructionItem* aItem)
   MOZ_ASSERT(aItem->getNext() == mCurrent, "How did that happen?");
 }
 
-void
-nsCSSFrameConstructor::FrameConstructionItemList::
-Iterator::DeleteItemsTo(nsCSSFrameConstructor* aFCtor, const Iterator& aEnd)
-{
+void nsCSSFrameConstructor::FrameConstructionItemList::Iterator::DeleteItemsTo(
+    nsCSSFrameConstructor* aFCtor, const Iterator& aEnd) {
   MOZ_ASSERT(&mList == &aEnd.mList, "End iterator for some other list?");
   MOZ_ASSERT(*this != aEnd, "Shouldn't be at aEnd yet");
 
@@ -12522,23 +11825,17 @@ Iterator::DeleteItemsTo(nsCSSFrameConstructor* aFCtor, const Iterator& aEnd)
   } while (*this != aEnd);
 }
 
-void
-nsCSSFrameConstructor::QuotesDirty()
-{
+void nsCSSFrameConstructor::QuotesDirty() {
   mQuotesDirty = true;
   mPresShell->SetNeedLayoutFlush();
 }
 
-void
-nsCSSFrameConstructor::CountersDirty()
-{
+void nsCSSFrameConstructor::CountersDirty() {
   mCountersDirty = true;
   mPresShell->SetNeedLayoutFlush();
 }
 
-void*
-nsCSSFrameConstructor::AllocateFCItem()
-{
+void* nsCSSFrameConstructor::AllocateFCItem() {
   void* item;
   if (mFirstFreeFCItem) {
     item = mFirstFreeFCItem;
@@ -12550,9 +11847,7 @@ nsCSSFrameConstructor::AllocateFCItem()
   return item;
 }
 
-void
-nsCSSFrameConstructor::FreeFCItem(FrameConstructionItem* aItem)
-{
+void nsCSSFrameConstructor::FreeFCItem(FrameConstructionItem* aItem) {
   MOZ_ASSERT(mFCItemsInUse != 0);
   if (--mFCItemsInUse == 0) {
     // The arena is now unused - clear it but retain one chunk.
@@ -12566,9 +11861,8 @@ nsCSSFrameConstructor::FreeFCItem(FrameConstructionItem* aItem)
   }
 }
 
-void
-nsCSSFrameConstructor::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const
-{
+void nsCSSFrameConstructor::AddSizeOfIncludingThis(
+    nsWindowSizes& aSizes) const {
   if (nsIFrame* rootFrame = GetRootFrame()) {
     rootFrame->AddSizeOfExcludingThisForTree(aSizes);
   }

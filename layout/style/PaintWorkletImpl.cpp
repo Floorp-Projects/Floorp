@@ -12,9 +12,8 @@
 
 namespace mozilla {
 
-/* static */ already_AddRefed<dom::Worklet>
-PaintWorkletImpl::CreateWorklet(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
-{
+/* static */ already_AddRefed<dom::Worklet> PaintWorkletImpl::CreateWorklet(
+    nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<PaintWorkletImpl> impl = new PaintWorkletImpl(aWindow, aPrincipal);
@@ -23,18 +22,15 @@ PaintWorkletImpl::CreateWorklet(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrin
 
 PaintWorkletImpl::PaintWorkletImpl(nsPIDOMWindowInner* aWindow,
                                    nsIPrincipal* aPrincipal)
-  : WorkletImpl(aWindow, aPrincipal)
-{
-}
+    : WorkletImpl(aWindow, aPrincipal) {}
 
 PaintWorkletImpl::~PaintWorkletImpl() = default;
 
 already_AddRefed<dom::WorkletGlobalScope>
-PaintWorkletImpl::ConstructGlobalScope()
-{
+PaintWorkletImpl::ConstructGlobalScope() {
   dom::WorkletThread::AssertIsOnWorkletThread();
 
   return MakeAndAddRef<dom::PaintWorkletGlobalScope>(this);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

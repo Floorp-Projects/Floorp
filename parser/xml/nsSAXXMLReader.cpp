@@ -25,12 +25,8 @@ using mozilla::NotNull;
 
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
-NS_IMPL_CYCLE_COLLECTION(nsSAXXMLReader,
-                         mContentHandler,
-                         mErrorHandler,
-                         mBaseURI,
-                         mListener,
-                         mParserObserver)
+NS_IMPL_CYCLE_COLLECTION(nsSAXXMLReader, mContentHandler, mErrorHandler,
+                         mBaseURI, mListener, mParserObserver)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSAXXMLReader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSAXXMLReader)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSAXXMLReader)
@@ -42,52 +38,38 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSAXXMLReader)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISAXXMLReader)
 NS_INTERFACE_MAP_END
 
-nsSAXXMLReader::nsSAXXMLReader()
-  : mIsAsyncParse(false)
-{
-}
+nsSAXXMLReader::nsSAXXMLReader() : mIsAsyncParse(false) {}
 
 // nsIContentSink
 
 NS_IMETHODIMP
-nsSAXXMLReader::WillBuildModel(nsDTDMode)
-{
-  if (mContentHandler)
-    return mContentHandler->StartDocument();
+nsSAXXMLReader::WillBuildModel(nsDTDMode) {
+  if (mContentHandler) return mContentHandler->StartDocument();
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::DidBuildModel(bool aTerminated)
-{
-  if (mContentHandler)
-    return mContentHandler->EndDocument();
+nsSAXXMLReader::DidBuildModel(bool aTerminated) {
+  if (mContentHandler) return mContentHandler->EndDocument();
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::SetParser(nsParserBase *aParser)
-{
-  return NS_OK;
-}
+nsSAXXMLReader::SetParser(nsParserBase *aParser) { return NS_OK; }
 
 // nsIExpatSink
 
 NS_IMETHODIMP
 nsSAXXMLReader::HandleStartElement(const char16_t *aName,
-                                   const char16_t **aAtts,
-                                   uint32_t aAttsCount,
+                                   const char16_t **aAtts, uint32_t aAttsCount,
                                    uint32_t aLineNumber,
-                                   uint32_t aColumnNumber)
-{
-  if (!mContentHandler)
-    return NS_OK;
+                                   uint32_t aColumnNumber) {
+  if (!mContentHandler) return NS_OK;
 
   RefPtr<nsSAXAttributes> atts = new nsSAXAttributes();
-  if (!atts)
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (!atts) return NS_ERROR_OUT_OF_MEMORY;
   nsAutoString uri, localName, qName;
   for (; *aAtts; aAtts += 2) {
     SplitExpatName(aAtts[0], uri, localName, qName);
@@ -107,8 +89,7 @@ nsSAXXMLReader::HandleStartElement(const char16_t *aName,
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::HandleEndElement(const char16_t *aName)
-{
+nsSAXXMLReader::HandleEndElement(const char16_t *aName) {
   if (mContentHandler) {
     nsAutoString uri, localName, qName;
     SplitExpatName(aName, uri, localName, qName);
@@ -118,47 +99,41 @@ nsSAXXMLReader::HandleEndElement(const char16_t *aName)
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::HandleComment(const char16_t *aName)
-{
+nsSAXXMLReader::HandleComment(const char16_t *aName) {
   NS_ASSERTION(aName, "null passed to handler");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::HandleCDataSection(const char16_t *aData,
-                                   uint32_t aLength)
-{
+nsSAXXMLReader::HandleCDataSection(const char16_t *aData, uint32_t aLength) {
   if (mContentHandler) {
-    nsresult rv = mContentHandler->Characters(Substring(aData, aData+aLength));
+    nsresult rv =
+        mContentHandler->Characters(Substring(aData, aData + aLength));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::HandleDoctypeDecl(const nsAString & aSubset,
-                                  const nsAString & aName,
-                                  const nsAString & aSystemId,
-                                  const nsAString & aPublicId,
-                                  nsISupports* aCatalogData)
-{
+nsSAXXMLReader::HandleDoctypeDecl(const nsAString &aSubset,
+                                  const nsAString &aName,
+                                  const nsAString &aSystemId,
+                                  const nsAString &aPublicId,
+                                  nsISupports *aCatalogData) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::HandleCharacterData(const char16_t *aData,
-                                    uint32_t aLength)
-{
+nsSAXXMLReader::HandleCharacterData(const char16_t *aData, uint32_t aLength) {
   if (mContentHandler)
-    return mContentHandler->Characters(Substring(aData, aData+aLength));
+    return mContentHandler->Characters(Substring(aData, aData + aLength));
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSAXXMLReader::HandleProcessingInstruction(const char16_t *aTarget,
-                                            const char16_t *aData)
-{
+                                            const char16_t *aData) {
   NS_ASSERTION(aTarget && aData, "null passed to handler");
   if (mContentHandler) {
     return mContentHandler->ProcessingInstruction(nsDependentString(aTarget),
@@ -171,18 +146,15 @@ nsSAXXMLReader::HandleProcessingInstruction(const char16_t *aTarget,
 NS_IMETHODIMP
 nsSAXXMLReader::HandleXMLDeclaration(const char16_t *aVersion,
                                      const char16_t *aEncoding,
-                                     int32_t aStandalone)
-{
+                                     int32_t aStandalone) {
   NS_ASSERTION(aVersion, "null passed to handler");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::ReportError(const char16_t* aErrorText,
-                            const char16_t* aSourceText,
-                            nsIScriptError *aError,
-                            bool *_retval)
-{
+nsSAXXMLReader::ReportError(const char16_t *aErrorText,
+                            const char16_t *aSourceText, nsIScriptError *aError,
+                            bool *_retval) {
   MOZ_ASSERT(aError && aSourceText && aErrorText, "Check arguments!!!");
   // Normally, the expat driver should report the error.
   *_retval = true;
@@ -201,50 +173,43 @@ nsSAXXMLReader::ReportError(const char16_t* aErrorText,
 // nsISAXXMLReader
 
 NS_IMETHODIMP
-nsSAXXMLReader::GetBaseURI(nsIURI **aBaseURI)
-{
+nsSAXXMLReader::GetBaseURI(nsIURI **aBaseURI) {
   NS_IF_ADDREF(*aBaseURI = mBaseURI);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::SetBaseURI(nsIURI *aBaseURI)
-{
+nsSAXXMLReader::SetBaseURI(nsIURI *aBaseURI) {
   mBaseURI = aBaseURI;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::GetContentHandler(nsISAXContentHandler **aContentHandler)
-{
+nsSAXXMLReader::GetContentHandler(nsISAXContentHandler **aContentHandler) {
   NS_IF_ADDREF(*aContentHandler = mContentHandler);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::SetContentHandler(nsISAXContentHandler *aContentHandler)
-{
+nsSAXXMLReader::SetContentHandler(nsISAXContentHandler *aContentHandler) {
   mContentHandler = aContentHandler;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::GetErrorHandler(nsISAXErrorHandler **aErrorHandler)
-{
+nsSAXXMLReader::GetErrorHandler(nsISAXErrorHandler **aErrorHandler) {
   NS_IF_ADDREF(*aErrorHandler = mErrorHandler);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::SetErrorHandler(nsISAXErrorHandler *aErrorHandler)
-{
+nsSAXXMLReader::SetErrorHandler(nsISAXErrorHandler *aErrorHandler) {
   mErrorHandler = aErrorHandler;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::ParseAsync(nsIRequestObserver *aObserver)
-{
+nsSAXXMLReader::ParseAsync(nsIRequestObserver *aObserver) {
   mParserObserver = aObserver;
   mIsAsyncParse = true;
   return NS_OK;
@@ -253,8 +218,7 @@ nsSAXXMLReader::ParseAsync(nsIRequestObserver *aObserver)
 // nsIRequestObserver
 
 NS_IMETHODIMP
-nsSAXXMLReader::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
-{
+nsSAXXMLReader::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
   NS_ENSURE_TRUE(mIsAsyncParse, NS_ERROR_FAILURE);
   nsresult rv;
   rv = EnsureBaseURI();
@@ -269,8 +233,7 @@ nsSAXXMLReader::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 
 NS_IMETHODIMP
 nsSAXXMLReader::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
-                              nsresult status)
-{
+                              nsresult status) {
   NS_ENSURE_TRUE(mIsAsyncParse, NS_ERROR_FAILURE);
   NS_ENSURE_STATE(mListener);
   nsresult rv = mListener->OnStopRequest(aRequest, aContext, status);
@@ -284,17 +247,15 @@ nsSAXXMLReader::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
 NS_IMETHODIMP
 nsSAXXMLReader::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
                                 nsIInputStream *aInputStream, uint64_t offset,
-                                uint32_t count)
-{
+                                uint32_t count) {
   NS_ENSURE_TRUE(mIsAsyncParse, NS_ERROR_FAILURE);
   NS_ENSURE_STATE(mListener);
   return mListener->OnDataAvailable(aRequest, aContext, aInputStream, offset,
                                     count);
 }
 
-nsresult
-nsSAXXMLReader::InitParser(nsIRequestObserver *aObserver, nsIChannel *aChannel)
-{
+nsresult nsSAXXMLReader::InitParser(nsIRequestObserver *aObserver,
+                                    nsIChannel *aChannel) {
   nsresult rv;
 
   // setup the parser
@@ -317,21 +278,17 @@ nsSAXXMLReader::InitParser(nsIRequestObserver *aObserver, nsIChannel *aChannel)
 }
 
 // from nsDocument.cpp
-bool
-nsSAXXMLReader::TryChannelCharset(nsIChannel *aChannel,
-                                  int32_t& aCharsetSource,
-                                  NotNull<const Encoding*>& aEncoding)
-{
-  if (aCharsetSource >= kCharsetFromChannel)
-    return true;
-  
+bool nsSAXXMLReader::TryChannelCharset(nsIChannel *aChannel,
+                                       int32_t &aCharsetSource,
+                                       NotNull<const Encoding *> &aEncoding) {
+  if (aCharsetSource >= kCharsetFromChannel) return true;
+
   if (aChannel) {
     nsAutoCString charsetVal;
     nsresult rv = aChannel->GetContentCharset(charsetVal);
     if (NS_SUCCEEDED(rv)) {
-      const Encoding* preferred = Encoding::ForLabel(charsetVal);
-      if (!preferred)
-        return false;
+      const Encoding *preferred = Encoding::ForLabel(charsetVal);
+      if (!preferred) return false;
 
       aEncoding = WrapNotNull(preferred);
       aCharsetSource = kCharsetFromChannel;
@@ -342,21 +299,15 @@ nsSAXXMLReader::TryChannelCharset(nsIChannel *aChannel,
   return false;
 }
 
-nsresult
-nsSAXXMLReader::EnsureBaseURI()
-{
-  if (mBaseURI) 
-    return NS_OK;
+nsresult nsSAXXMLReader::EnsureBaseURI() {
+  if (mBaseURI) return NS_OK;
 
   return NS_NewURI(getter_AddRefs(mBaseURI), "about:blank");
 }
 
-nsresult
-nsSAXXMLReader::SplitExpatName(const char16_t *aExpatName,
-                               nsString &aURI,
-                               nsString &aLocalName,
-                               nsString &aQName)
-{
+nsresult nsSAXXMLReader::SplitExpatName(const char16_t *aExpatName,
+                                        nsString &aURI, nsString &aLocalName,
+                                        nsString &aQName) {
   /**
    * Adapted from RDFContentSinkImpl
    *
@@ -375,19 +326,19 @@ nsSAXXMLReader::SplitExpatName(const char16_t *aExpatName,
   break1 = expatStr.FindChar(char16_t(0xFFFF));
 
   if (break1 == kNotFound) {
-    aLocalName = expatStr; // no namespace
+    aLocalName = expatStr;  // no namespace
     aURI.Truncate();
     aQName = expatStr;
   } else {
     aURI = StringHead(expatStr, break1);
     break2 = expatStr.FindChar(char16_t(0xFFFF), break1 + 1);
-    if (break2 == kNotFound) { // namespace, but no prefix
+    if (break2 == kNotFound) {  // namespace, but no prefix
       aLocalName = Substring(expatStr, break1 + 1);
       aQName = aLocalName;
-    } else { // namespace with prefix
+    } else {  // namespace with prefix
       aLocalName = Substring(expatStr, break1 + 1, break2 - break1 - 1);
-      aQName = Substring(expatStr, break2 + 1) +
-        NS_LITERAL_STRING(":") + aLocalName;
+      aQName =
+          Substring(expatStr, break2 + 1) + NS_LITERAL_STRING(":") + aLocalName;
     }
   }
 

@@ -79,9 +79,9 @@ namespace layers {
  * layers C1...Cn, where C1 has FrameMetrics FM1 and Cn has FrameMetrics Fn.
  * Although in this example C (in the first layer tree) and C0 (in the second
  * layer tree) are both ContainerLayers (because they have children), they
- * do not have to be. They may just be PaintedLayers or ColorLayers, for example,
- * which do not have any children. However, the type of C will always be the
- * same as the type of C0.
+ * do not have to be. They may just be PaintedLayers or ColorLayers, for
+ * example, which do not have any children. However, the type of C will always
+ * be the same as the type of C0.
  *
  * The LayerMetricsWrapper class allows client code to treat the first layer
  * tree as though it were the second. That is, instead of client code having
@@ -121,22 +121,16 @@ namespace layers {
  * to cast to uint32_t all over the place.
  */
 class MOZ_STACK_CLASS LayerMetricsWrapper {
-public:
+ public:
   enum StartAt {
     TOP,
     BOTTOM,
   };
 
-  LayerMetricsWrapper()
-    : mLayer(nullptr)
-    , mIndex(0)
-  {
-  }
+  LayerMetricsWrapper() : mLayer(nullptr), mIndex(0) {}
 
   explicit LayerMetricsWrapper(Layer* aRoot, StartAt aStart = StartAt::TOP)
-    : mLayer(aRoot)
-    , mIndex(0)
-  {
+      : mLayer(aRoot), mIndex(0) {
     if (!mLayer) {
       return;
     }
@@ -158,25 +152,16 @@ public:
   }
 
   explicit LayerMetricsWrapper(Layer* aLayer, uint32_t aMetricsIndex)
-    : mLayer(aLayer)
-    , mIndex(aMetricsIndex)
-  {
+      : mLayer(aLayer), mIndex(aMetricsIndex) {
     MOZ_ASSERT(mLayer);
     MOZ_ASSERT(mIndex == 0 || mIndex < mLayer->GetScrollMetadataCount());
   }
 
-  bool IsValid() const
-  {
-    return mLayer != nullptr;
-  }
+  bool IsValid() const { return mLayer != nullptr; }
 
-  explicit operator bool() const
-  {
-    return IsValid();
-  }
+  explicit operator bool() const { return IsValid(); }
 
-  LayerMetricsWrapper GetParent() const
-  {
+  LayerMetricsWrapper GetParent() const {
     MOZ_ASSERT(IsValid());
 
     if (!AtTopLayer()) {
@@ -188,8 +173,7 @@ public:
     return LayerMetricsWrapper(nullptr);
   }
 
-  LayerMetricsWrapper GetFirstChild() const
-  {
+  LayerMetricsWrapper GetFirstChild() const {
     MOZ_ASSERT(IsValid());
 
     if (!AtBottomLayer()) {
@@ -198,8 +182,7 @@ public:
     return LayerMetricsWrapper(mLayer->GetFirstChild());
   }
 
-  LayerMetricsWrapper GetLastChild() const
-  {
+  LayerMetricsWrapper GetLastChild() const {
     MOZ_ASSERT(IsValid());
 
     if (!AtBottomLayer()) {
@@ -208,8 +191,7 @@ public:
     return LayerMetricsWrapper(mLayer->GetLastChild());
   }
 
-  LayerMetricsWrapper GetPrevSibling() const
-  {
+  LayerMetricsWrapper GetPrevSibling() const {
     MOZ_ASSERT(IsValid());
 
     if (AtTopLayer()) {
@@ -218,8 +200,7 @@ public:
     return LayerMetricsWrapper(nullptr);
   }
 
-  LayerMetricsWrapper GetNextSibling() const
-  {
+  LayerMetricsWrapper GetNextSibling() const {
     MOZ_ASSERT(IsValid());
 
     if (AtTopLayer()) {
@@ -228,8 +209,7 @@ public:
     return LayerMetricsWrapper(nullptr);
   }
 
-  const ScrollMetadata& Metadata() const
-  {
+  const ScrollMetadata& Metadata() const {
     MOZ_ASSERT(IsValid());
 
     if (mIndex >= mLayer->GetScrollMetadataCount()) {
@@ -238,13 +218,9 @@ public:
     return mLayer->GetScrollMetadata(mIndex);
   }
 
-  const FrameMetrics& Metrics() const
-  {
-    return Metadata().GetMetrics();
-  }
+  const FrameMetrics& Metrics() const { return Metadata().GetMetrics(); }
 
-  AsyncPanZoomController* GetApzc() const
-  {
+  AsyncPanZoomController* GetApzc() const {
     MOZ_ASSERT(IsValid());
 
     if (mIndex >= mLayer->GetScrollMetadataCount()) {
@@ -253,8 +229,7 @@ public:
     return mLayer->GetAsyncPanZoomController(mIndex);
   }
 
-  void SetApzc(AsyncPanZoomController* aApzc) const
-  {
+  void SetApzc(AsyncPanZoomController* aApzc) const {
     MOZ_ASSERT(IsValid());
 
     if (mLayer->GetScrollMetadataCount() == 0) {
@@ -266,8 +241,7 @@ public:
     mLayer->SetAsyncPanZoomController(mIndex, aApzc);
   }
 
-  const char* Name() const
-  {
+  const char* Name() const {
     MOZ_ASSERT(IsValid());
 
     if (AtBottomLayer()) {
@@ -276,15 +250,13 @@ public:
     return "DummyContainerLayer";
   }
 
-  LayerManager* Manager() const
-  {
+  LayerManager* Manager() const {
     MOZ_ASSERT(IsValid());
 
     return mLayer->Manager();
   }
 
-  gfx::Matrix4x4 GetTransform() const
-  {
+  gfx::Matrix4x4 GetTransform() const {
     MOZ_ASSERT(IsValid());
 
     if (AtBottomLayer()) {
@@ -293,13 +265,11 @@ public:
     return gfx::Matrix4x4();
   }
 
-  CSSTransformMatrix GetTransformTyped() const
-  {
+  CSSTransformMatrix GetTransformTyped() const {
     return ViewAs<CSSTransformMatrix>(GetTransform());
   }
 
-  bool TransformIsPerspective() const
-  {
+  bool TransformIsPerspective() const {
     MOZ_ASSERT(IsValid());
 
     // mLayer->GetTransformIsPerspective() tells us whether
@@ -312,8 +282,7 @@ public:
     return false;
   }
 
-  EventRegions GetEventRegions() const
-  {
+  EventRegions GetEventRegions() const {
     MOZ_ASSERT(IsValid());
 
     if (AtBottomLayer()) {
@@ -322,8 +291,7 @@ public:
     return EventRegions();
   }
 
-  LayerIntRegion GetVisibleRegion() const
-  {
+  LayerIntRegion GetVisibleRegion() const {
     MOZ_ASSERT(IsValid());
 
     if (AtBottomLayer()) {
@@ -335,8 +303,7 @@ public:
         PixelCastJustification::MovingDownToChildren);
   }
 
-  bool HasTransformAnimation() const
-  {
+  bool HasTransformAnimation() const {
     MOZ_ASSERT(IsValid());
 
     if (AtBottomLayer()) {
@@ -345,8 +312,7 @@ public:
     return false;
   }
 
-  RefLayer* AsRefLayer() const
-  {
+  RefLayer* AsRefLayer() const {
     MOZ_ASSERT(IsValid());
 
     if (AtBottomLayer()) {
@@ -355,20 +321,17 @@ public:
     return nullptr;
   }
 
-  Maybe<LayersId> GetReferentId() const
-  {
+  Maybe<LayersId> GetReferentId() const {
     MOZ_ASSERT(IsValid());
 
     if (AtBottomLayer()) {
-      return mLayer->AsRefLayer()
-           ? Some(mLayer->AsRefLayer()->GetReferentId())
-           : Nothing();
+      return mLayer->AsRefLayer() ? Some(mLayer->AsRefLayer()->GetReferentId())
+                                  : Nothing();
     }
     return Nothing();
   }
 
-  Maybe<ParentLayerIntRect> GetClipRect() const
-  {
+  Maybe<ParentLayerIntRect> GetClipRect() const {
     MOZ_ASSERT(IsValid());
 
     Maybe<ParentLayerIntRect> result;
@@ -389,8 +352,7 @@ public:
     return result;
   }
 
-  float GetPresShellResolution() const
-  {
+  float GetPresShellResolution() const {
     MOZ_ASSERT(IsValid());
 
     if (AtTopLayer() && mLayer->AsContainerLayer()) {
@@ -400,8 +362,7 @@ public:
     return 1.0f;
   }
 
-  EventRegionsOverride GetEventRegionsOverride() const
-  {
+  EventRegionsOverride GetEventRegionsOverride() const {
     MOZ_ASSERT(IsValid());
 
     if (mLayer->AsRefLayer()) {
@@ -410,15 +371,13 @@ public:
     return EventRegionsOverride::NoOverride;
   }
 
-  const ScrollbarData& GetScrollbarData() const
-  {
+  const ScrollbarData& GetScrollbarData() const {
     MOZ_ASSERT(IsValid());
 
     return mLayer->GetScrollbarData();
   }
 
-  uint64_t GetScrollbarAnimationId() const
-  {
+  uint64_t GetScrollbarAnimationId() const {
     MOZ_ASSERT(IsValid());
     // This function is only really needed for template-compatibility with
     // WebRenderScrollDataWrapper. Although it will be called, the return
@@ -426,15 +385,13 @@ public:
     return 0;
   }
 
-  ScrollableLayerGuid::ViewID GetFixedPositionScrollContainerId() const
-  {
+  ScrollableLayerGuid::ViewID GetFixedPositionScrollContainerId() const {
     MOZ_ASSERT(IsValid());
 
     return mLayer->GetFixedPositionScrollContainerId();
   }
 
-  Maybe<uint64_t> GetZoomAnimationId() const
-  {
+  Maybe<uint64_t> GetZoomAnimationId() const {
     MOZ_ASSERT(IsValid());
     // This function is only really needed for template-compatibility with
     // WebRenderScrollDataWrapper. Although it will be called, the return
@@ -442,8 +399,7 @@ public:
     return Nothing();
   }
 
-  bool IsBackfaceHidden() const
-  {
+  bool IsBackfaceHidden() const {
     MOZ_ASSERT(IsValid());
 
     return mLayer->IsBackfaceHidden();
@@ -452,41 +408,34 @@ public:
   // Expose an opaque pointer to the layer. Mostly used for printf
   // purposes. This is not intended to be a general-purpose accessor
   // for the underlying layer.
-  const void* GetLayer() const
-  {
+  const void* GetLayer() const {
     MOZ_ASSERT(IsValid());
 
     return (void*)mLayer;
   }
 
-  bool operator==(const LayerMetricsWrapper& aOther) const
-  {
-    return mLayer == aOther.mLayer
-        && mIndex == aOther.mIndex;
+  bool operator==(const LayerMetricsWrapper& aOther) const {
+    return mLayer == aOther.mLayer && mIndex == aOther.mIndex;
   }
 
-  bool operator!=(const LayerMetricsWrapper& aOther) const
-  {
+  bool operator!=(const LayerMetricsWrapper& aOther) const {
     return !(*this == aOther);
   }
 
-private:
-  bool AtBottomLayer() const
-  {
-    return mIndex == 0;
+ private:
+  bool AtBottomLayer() const { return mIndex == 0; }
+
+  bool AtTopLayer() const {
+    return mLayer->GetScrollMetadataCount() == 0 ||
+           mIndex == mLayer->GetScrollMetadataCount() - 1;
   }
 
-  bool AtTopLayer() const
-  {
-    return mLayer->GetScrollMetadataCount() == 0 || mIndex == mLayer->GetScrollMetadataCount() - 1;
-  }
-
-private:
+ private:
   Layer* mLayer;
   uint32_t mIndex;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif /* GFX_LAYERMETRICSWRAPPER_H */

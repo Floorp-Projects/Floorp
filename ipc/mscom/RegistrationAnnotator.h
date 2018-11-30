@@ -13,7 +13,7 @@ namespace mscom {
 void AnnotateInterfaceRegistration(REFIID aIid);
 void AnnotateClassRegistration(REFCLSID aClsid);
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla
 
-#endif // mozilla_mscom_RegistrationAnnotator_h
+#endif  // mozilla_mscom_RegistrationAnnotator_h

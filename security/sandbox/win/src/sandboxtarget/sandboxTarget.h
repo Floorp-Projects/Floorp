@@ -17,9 +17,8 @@ class TargetServices;
 
 namespace mozilla {
 
-class SandboxTarget
-{
-public:
+class SandboxTarget {
+ public:
   /**
    * Obtains a pointer to the singleton instance
    */
@@ -32,8 +31,7 @@ public:
    *
    * @param aTargetServices The target services that will be used
    */
-  void SetTargetServices(sandbox::TargetServices* aTargetServices)
-  {
+  void SetTargetServices(sandbox::TargetServices* aTargetServices) {
     MOZ_ASSERT(aTargetServices);
     MOZ_ASSERT(!mTargetServices,
                "Sandbox TargetServices must only be set once.");
@@ -55,16 +53,12 @@ public:
                              HANDLE* aTargetHandle, DWORD aDesiredAccess,
                              DWORD aOptions);
 
-protected:
-  SandboxTarget() :
-    mTargetServices(nullptr)
-  {
-  }
+ protected:
+  SandboxTarget() : mTargetServices(nullptr) {}
 
   sandbox::TargetServices* mTargetServices;
 };
 
-
-} // mozilla
+}  // namespace mozilla
 
 #endif

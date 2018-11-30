@@ -59,7 +59,8 @@ bool MaybeDivergeFromRecording();
 void PositionHit(const js::BreakpointPosition& aPosition);
 
 // Get an execution point for hitting the specified position right now.
-js::ExecutionPoint CurrentExecutionPoint(const Maybe<js::BreakpointPosition>& aPosition);
+js::ExecutionPoint CurrentExecutionPoint(
+    const Maybe<js::BreakpointPosition>& aPosition);
 
 // Convert an identifier from NewTimeWarpTarget() which we have seen while
 // executing into an ExecutionPoint.
@@ -80,7 +81,7 @@ void AfterCheckpoint(const CheckpointId& aCheckpoint);
 // Get the ID of the last normal checkpoint.
 size_t LastNormalCheckpoint();
 
-} // namespace navigation
+}  // namespace navigation
 
 namespace child {
 
@@ -91,16 +92,17 @@ void HitBreakpoint(bool aRecordingEndpoint);
 
 // Optional information about a crash that occurred. If not provided to
 // ReportFatalError, the current thread will be treated as crashed.
-struct MinidumpInfo
-{
+struct MinidumpInfo {
   int mExceptionType;
   int mCode;
   int mSubcode;
   mach_port_t mThread;
 
   MinidumpInfo(int aExceptionType, int aCode, int aSubcode, mach_port_t aThread)
-    : mExceptionType(aExceptionType), mCode(aCode), mSubcode(aSubcode), mThread(aThread)
-  {}
+      : mExceptionType(aExceptionType),
+        mCode(aCode),
+        mSubcode(aSubcode),
+        mThread(aThread) {}
 };
 
 // Generate a minidump and report a fatal error to the middleman process.
@@ -132,9 +134,9 @@ void SendResetMiddlemanCalls();
 // unhandled recording divergence per preferences.
 bool CurrentRepaintCannotFail();
 
-} // namespace child
+}  // namespace child
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla
 
-#endif // mozilla_recordreplay_ChildInternal_h
+#endif  // mozilla_recordreplay_ChildInternal_h

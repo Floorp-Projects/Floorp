@@ -16,8 +16,7 @@ typedef class HTMLTableAccessible HTMLTableAccessibleWrap;
 typedef class HTMLTableCellAccessible HTMLTableCellAccessibleWrap;
 typedef class HTMLTableHeaderCellAccessible HTMLTableHeaderCellAccessibleWrap;
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif
-

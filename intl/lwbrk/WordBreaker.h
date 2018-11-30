@@ -29,9 +29,8 @@ enum WordBreakClass : uint8_t {
   kWbClassThaiLetter
 };
 
-class WordBreaker
-{
-public:
+class WordBreaker {
+ public:
   NS_INLINE_DECL_REFCOUNTING(WordBreaker)
 
   static already_AddRefed<WordBreaker> Create();
@@ -44,11 +43,11 @@ public:
 
   static WordBreakClass GetClass(char16_t aChar);
 
-private:
-  ~WordBreaker() { }
+ private:
+  ~WordBreaker() {}
 };
 
-} // namespace intl
-} // namespace mozilla
+}  // namespace intl
+}  // namespace mozilla
 
-#endif  /* mozilla_intl_WordBreaker_h__ */
+#endif /* mozilla_intl_WordBreaker_h__ */

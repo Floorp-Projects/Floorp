@@ -24,7 +24,7 @@ typedef nsTArray<NrIceStunAddr> NrIceStunAddrArray;
 typedef nsTArray<int> NrIceStunAddrArray;
 #endif
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // PStunAddrsParams_h
+#endif  // PStunAddrsParams_h

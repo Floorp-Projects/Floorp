@@ -9,24 +9,18 @@
 
 using namespace mozilla;
 
-void
-SynchronizedEventQueue::AddObserver(nsIThreadObserver* aObserver)
-{
+void SynchronizedEventQueue::AddObserver(nsIThreadObserver* aObserver) {
   MOZ_ASSERT(aObserver);
   MOZ_ASSERT(!mEventObservers.Contains(aObserver));
   mEventObservers.AppendElement(aObserver);
 }
 
-void
-SynchronizedEventQueue::RemoveObserver(nsIThreadObserver* aObserver)
-{
+void SynchronizedEventQueue::RemoveObserver(nsIThreadObserver* aObserver) {
   MOZ_ASSERT(aObserver);
   MOZ_ALWAYS_TRUE(mEventObservers.RemoveElement(aObserver));
 }
 
 const nsTObserverArray<nsCOMPtr<nsIThreadObserver>>&
-SynchronizedEventQueue::EventObservers()
-{
+SynchronizedEventQueue::EventObservers() {
   return mEventObservers;
 }
-

@@ -10,10 +10,9 @@ namespace mozilla {
 namespace dom {
 namespace StorageUtils {
 
-nsresult
-GenerateOriginKey(nsIPrincipal* aPrincipal, nsACString& aOriginAttrSuffix,
-                  nsACString& aOriginKey)
-{
+nsresult GenerateOriginKey(nsIPrincipal* aPrincipal,
+                           nsACString& aOriginAttrSuffix,
+                           nsACString& aOriginKey) {
   if (NS_WARN_IF(!aPrincipal)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -68,10 +67,8 @@ GenerateOriginKey(nsIPrincipal* aPrincipal, nsACString& aOriginAttrSuffix,
   return NS_OK;
 }
 
-bool
-PrincipalsEqual(nsIPrincipal* aObjectPrincipal,
-                nsIPrincipal* aSubjectPrincipal)
-{
+bool PrincipalsEqual(nsIPrincipal* aObjectPrincipal,
+                     nsIPrincipal* aSubjectPrincipal) {
   if (!aSubjectPrincipal) {
     return true;
   }
@@ -83,9 +80,7 @@ PrincipalsEqual(nsIPrincipal* aObjectPrincipal,
   return aSubjectPrincipal->Equals(aObjectPrincipal);
 }
 
-void
-ReverseString(const nsACString& aSource, nsACString& aResult)
-{
+void ReverseString(const nsACString& aSource, nsACString& aResult) {
   nsACString::const_iterator sourceBegin, sourceEnd;
   aSource.BeginReading(sourceBegin);
   aSource.EndReading(sourceEnd);
@@ -99,10 +94,8 @@ ReverseString(const nsACString& aSource, nsACString& aResult)
   }
 }
 
-nsresult
-CreateReversedDomain(const nsACString& aAsciiDomain,
-                     nsACString& aKey)
-{
+nsresult CreateReversedDomain(const nsACString& aAsciiDomain,
+                              nsACString& aKey) {
   if (aAsciiDomain.IsEmpty()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -115,10 +108,8 @@ CreateReversedDomain(const nsACString& aAsciiDomain,
 
 // This is only a compatibility code for schema version 0.  Returns the 'scope'
 // key in the schema version 0 format for the scope column.
-nsCString
-Scheme0Scope(const nsACString& aOriginSuffix,
-             const nsACString& aOriginNoSuffix)
-{
+nsCString Scheme0Scope(const nsACString& aOriginSuffix,
+                       const nsACString& aOriginNoSuffix) {
   nsCString result;
 
   OriginAttributes oa;
@@ -169,6 +160,6 @@ Scheme0Scope(const nsACString& aOriginSuffix,
   return result;
 }
 
-} // StorageUtils namespace
-} // dom namespace
-} // mozilla namespace
+}  // namespace StorageUtils
+}  // namespace dom
+}  // namespace mozilla

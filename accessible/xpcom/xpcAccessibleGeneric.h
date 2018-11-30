@@ -24,22 +24,17 @@ namespace a11y {
 class xpcAccessibleGeneric : public xpcAccessible,
                              public xpcAccessibleHyperLink,
                              public xpcAccessibleSelectable,
-                             public xpcAccessibleValue
-{
-public:
-  explicit xpcAccessibleGeneric(Accessible* aInternal) :
-    mIntl(aInternal), mSupportedIfaces(0)
-  {
-    if (aInternal->IsSelect())
-      mSupportedIfaces |= eSelectable;
-    if (aInternal->HasNumericValue())
-      mSupportedIfaces |= eValue;
-    if (aInternal->IsLink())
-      mSupportedIfaces |= eHyperLink;
+                             public xpcAccessibleValue {
+ public:
+  explicit xpcAccessibleGeneric(Accessible* aInternal)
+      : mIntl(aInternal), mSupportedIfaces(0) {
+    if (aInternal->IsSelect()) mSupportedIfaces |= eSelectable;
+    if (aInternal->HasNumericValue()) mSupportedIfaces |= eValue;
+    if (aInternal->IsLink()) mSupportedIfaces |= eHyperLink;
   }
 
-  xpcAccessibleGeneric(ProxyAccessible* aProxy, uint8_t aInterfaces) :
-    mIntl(aProxy), mSupportedIfaces(aInterfaces) {}
+  xpcAccessibleGeneric(ProxyAccessible* aProxy, uint8_t aInterfaces)
+      : mIntl(aProxy), mSupportedIfaces(aInterfaces) {}
 
   NS_DECL_ISUPPORTS
 
@@ -49,7 +44,7 @@ public:
   // xpcAccessibleGeneric
   virtual void Shutdown();
 
-protected:
+ protected:
   virtual ~xpcAccessibleGeneric();
 
   AccessibleOrProxy mIntl;
@@ -62,7 +57,7 @@ protected:
   };
   uint8_t mSupportedIfaces;
 
-private:
+ private:
   friend class Accessible;
   friend class xpcAccessible;
   friend class xpcAccessibleHyperLink;
@@ -70,40 +65,30 @@ private:
   friend class xpcAccessibleValue;
 
   xpcAccessibleGeneric(const xpcAccessibleGeneric&) = delete;
-  xpcAccessibleGeneric& operator =(const xpcAccessibleGeneric&) = delete;
+  xpcAccessibleGeneric& operator=(const xpcAccessibleGeneric&) = delete;
 };
 
-inline Accessible*
-xpcAccessible::Intl()
-{
+inline Accessible* xpcAccessible::Intl() {
   return static_cast<xpcAccessibleGeneric*>(this)->mIntl.AsAccessible();
 }
 
-inline AccessibleOrProxy
-xpcAccessible::IntlGeneric()
-{
+inline AccessibleOrProxy xpcAccessible::IntlGeneric() {
   return static_cast<xpcAccessibleGeneric*>(this)->mIntl;
 }
 
-inline AccessibleOrProxy
-xpcAccessibleHyperLink::Intl()
-{
+inline AccessibleOrProxy xpcAccessibleHyperLink::Intl() {
   return static_cast<xpcAccessibleGeneric*>(this)->mIntl;
 }
 
-inline Accessible*
-xpcAccessibleSelectable::Intl()
-{
+inline Accessible* xpcAccessibleSelectable::Intl() {
   return static_cast<xpcAccessibleGeneric*>(this)->mIntl.AsAccessible();
 }
 
-inline AccessibleOrProxy
-xpcAccessibleValue::Intl()
-{
+inline AccessibleOrProxy xpcAccessibleValue::Intl() {
   return static_cast<xpcAccessibleGeneric*>(this)->mIntl;
 }
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

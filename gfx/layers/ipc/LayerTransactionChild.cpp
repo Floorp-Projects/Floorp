@@ -7,16 +7,14 @@
 #include "LayerTransactionChild.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/ShadowLayers.h"  // for ShadowLayerForwarder
-#include "mozilla/mozalloc.h"           // for operator delete, etc
-#include "nsTArray.h"                   // for nsTArray
+#include "mozilla/mozalloc.h"             // for operator delete, etc
+#include "nsTArray.h"                     // for nsTArray
 #include "mozilla/layers/TextureClient.h"
 
 namespace mozilla {
 namespace layers {
 
-void
-LayerTransactionChild::Destroy()
-{
+void LayerTransactionChild::Destroy() {
   if (!IPCOpen()) {
     return;
   }
@@ -31,11 +29,9 @@ LayerTransactionChild::Destroy()
   SendShutdown();
 }
 
-void
-LayerTransactionChild::ActorDestroy(ActorDestroyReason why)
-{
+void LayerTransactionChild::ActorDestroy(ActorDestroyReason why) {
   mDestroyed = true;
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

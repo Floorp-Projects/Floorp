@@ -26,49 +26,50 @@ using RequestOrReason = Result<nsCOMPtr<nsIRequest>, nsresult>;
 
 namespace net {
 
-class SimpleChannelCallbacks
-{
-public:
-  virtual InputStreamOrReason OpenContentStream(bool async, nsIChannel* channel) = 0;
+class SimpleChannelCallbacks {
+ public:
+  virtual InputStreamOrReason OpenContentStream(bool async,
+                                                nsIChannel* channel) = 0;
 
-  virtual RequestOrReason StartAsyncRead(nsIStreamListener* stream, nsIChannel* channel) = 0;
+  virtual RequestOrReason StartAsyncRead(nsIStreamListener* stream,
+                                         nsIChannel* channel) = 0;
 
   virtual ~SimpleChannelCallbacks() = default;
 };
 
 template <typename F1, typename F2, typename T>
-class SimpleChannelCallbacksImpl final : public SimpleChannelCallbacks
-{
-public:
-  SimpleChannelCallbacksImpl(F1&& aStartAsyncRead, F2&& aOpenContentStream, T* context)
-    : mStartAsyncRead(aStartAsyncRead)
-    , mOpenContentStream(aOpenContentStream)
-    , mContext(context)
-  {}
+class SimpleChannelCallbacksImpl final : public SimpleChannelCallbacks {
+ public:
+  SimpleChannelCallbacksImpl(F1&& aStartAsyncRead, F2&& aOpenContentStream,
+                             T* context)
+      : mStartAsyncRead(aStartAsyncRead),
+        mOpenContentStream(aOpenContentStream),
+        mContext(context) {}
 
   virtual ~SimpleChannelCallbacksImpl() = default;
 
-  virtual InputStreamOrReason OpenContentStream(bool async, nsIChannel* channel) override
-  {
+  virtual InputStreamOrReason OpenContentStream(bool async,
+                                                nsIChannel* channel) override {
     return mOpenContentStream(async, channel, mContext);
   }
 
-  virtual RequestOrReason StartAsyncRead(nsIStreamListener* listener, nsIChannel* channel) override
-  {
+  virtual RequestOrReason StartAsyncRead(nsIStreamListener* listener,
+                                         nsIChannel* channel) override {
     return mStartAsyncRead(listener, channel, mContext);
   }
 
-private:
+ private:
   F1 mStartAsyncRead;
   F2 mOpenContentStream;
   RefPtr<T> mContext;
 };
 
-already_AddRefed<nsIChannel>
-NS_NewSimpleChannelInternal(nsIURI* aURI, nsILoadInfo* aLoadInfo, UniquePtr<SimpleChannelCallbacks>&& aCallbacks);
+already_AddRefed<nsIChannel> NS_NewSimpleChannelInternal(
+    nsIURI* aURI, nsILoadInfo* aLoadInfo,
+    UniquePtr<SimpleChannelCallbacks>&& aCallbacks);
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 /**
  * Creates a simple channel which wraps an input stream created by the given
@@ -82,29 +83,32 @@ NS_NewSimpleChannelInternal(nsIURI* aURI, nsILoadInfo* aLoadInfo, UniquePtr<Simp
  * callback successfully completes.
  */
 template <typename T, typename F1, typename F2>
-inline already_AddRefed<nsIChannel>
-NS_NewSimpleChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo, T* context, F1&& aStartAsyncRead, F2&& aOpenContentStream)
-{
+inline already_AddRefed<nsIChannel> NS_NewSimpleChannel(
+    nsIURI* aURI, nsILoadInfo* aLoadInfo, T* context, F1&& aStartAsyncRead,
+    F2&& aOpenContentStream) {
   using namespace mozilla;
 
   auto callbacks = MakeUnique<net::SimpleChannelCallbacksImpl<F1, F2, T>>(
       std::move(aStartAsyncRead), std::move(aOpenContentStream), context);
 
-  return net::NS_NewSimpleChannelInternal(aURI, aLoadInfo, std::move(callbacks));
+  return net::NS_NewSimpleChannelInternal(aURI, aLoadInfo,
+                                          std::move(callbacks));
 }
 
 template <typename T, typename F1>
-inline already_AddRefed<nsIChannel>
-NS_NewSimpleChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo, T* context, F1&& aStartAsyncRead)
-{
+inline already_AddRefed<nsIChannel> NS_NewSimpleChannel(nsIURI* aURI,
+                                                        nsILoadInfo* aLoadInfo,
+                                                        T* context,
+                                                        F1&& aStartAsyncRead) {
   using namespace mozilla;
 
-  auto openContentStream = [] (bool async, nsIChannel* channel, T* context) {
+  auto openContentStream = [](bool async, nsIChannel* channel, T* context) {
     return Err(NS_ERROR_NOT_IMPLEMENTED);
   };
 
-  return NS_NewSimpleChannel(
-      aURI, aLoadInfo, context, std::move(aStartAsyncRead), std::move(openContentStream));
+  return NS_NewSimpleChannel(aURI, aLoadInfo, context,
+                             std::move(aStartAsyncRead),
+                             std::move(openContentStream));
 }
 
-#endif // SimpleChannel_h
+#endif  // SimpleChannel_h

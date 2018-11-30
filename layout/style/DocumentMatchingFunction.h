@@ -22,7 +22,7 @@ enum class DocumentMatchingFunction {
   MediaDocument,
 };
 
-} // namespace css
-} // namespace mozilla
+}  // namespace css
+}  // namespace mozilla
 
-#endif // mozilla_css_DocumentMatchingFunction_h
+#endif  // mozilla_css_DocumentMatchingFunction_h

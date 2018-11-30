@@ -8,9 +8,8 @@
 
 /* Simple subclasses for things like checkboxes, buttons, etc. */
 
-@interface mozButtonAccessible : mozAccessible
- {
- }
+@interface mozButtonAccessible : mozAccessible {
+}
 - (BOOL)hasPopup;
 - (void)click;
 - (BOOL)isTab;
@@ -22,11 +21,10 @@
 @end
 
 /* Class for tabs - not individual tabs */
-@interface mozTabsAccessible : mozAccessible
-{
+@interface mozTabsAccessible : mozAccessible {
   NSMutableArray* mTabs;
 }
--(id)tabs;
+- (id)tabs;
 @end
 
 /**

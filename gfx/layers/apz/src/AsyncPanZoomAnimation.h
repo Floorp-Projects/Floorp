@@ -26,7 +26,7 @@ class SmoothScrollAnimation;
 class AsyncPanZoomAnimation {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AsyncPanZoomAnimation)
 
-public:
+ public:
   explicit AsyncPanZoomAnimation() = default;
 
   virtual bool DoSample(FrameMetrics& aFrameMetrics,
@@ -46,13 +46,11 @@ public:
    * Returns whether the animation could handle the scroll update. If the
    * return value is false, the animation will be cancelled.
    */
-  virtual bool HandleScrollOffsetUpdate(const Maybe<CSSPoint>& aRelativeDelta)
-  {
+  virtual bool HandleScrollOffsetUpdate(const Maybe<CSSPoint>& aRelativeDelta) {
     return false;
   }
 
-  bool Sample(FrameMetrics& aFrameMetrics,
-              const TimeDuration& aDelta) {
+  bool Sample(FrameMetrics& aFrameMetrics, const TimeDuration& aDelta) {
     // In some situations, particularly when handoff is involved, it's possible
     // for |aDelta| to be negative on the first call to sample. Ignore such a
     // sample here, to avoid each derived class having to deal with this case.
@@ -74,20 +72,14 @@ public:
   virtual KeyboardScrollAnimation* AsKeyboardScrollAnimation() {
     return nullptr;
   }
-  virtual WheelScrollAnimation* AsWheelScrollAnimation() {
-    return nullptr;
-  }
-  virtual SmoothScrollAnimation* AsSmoothScrollAnimation() {
-    return nullptr;
-  }
+  virtual WheelScrollAnimation* AsWheelScrollAnimation() { return nullptr; }
+  virtual SmoothScrollAnimation* AsSmoothScrollAnimation() { return nullptr; }
 
-  virtual bool WantsRepaints() {
-    return true;
-  }
+  virtual bool WantsRepaints() { return true; }
 
   virtual void Cancel(CancelAnimationFlags aFlags) {}
 
-protected:
+ protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~AsyncPanZoomAnimation() = default;
 
@@ -99,7 +91,7 @@ protected:
   nsTArray<RefPtr<Runnable>> mDeferredTasks;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_AsyncPanZoomAnimation_h_
+#endif  // mozilla_layers_AsyncPanZoomAnimation_h_

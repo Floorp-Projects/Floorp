@@ -122,10 +122,10 @@ class FastBernoulliTrial {
    *                      P                             1-P
    *
    * But the "1 or more" section of the line is subdivided the same way: *within
-   * that section*, in portion P the second call to |trial()| returns true, and in
-   * portion 1-P it returns false a second time; the skip count is two or more.
-   * So we return true on the second call in proportion 0.7 * 0.3, and skip at
-   * least the first two in proportion 0.7 * 0.7.
+   * that section*, in portion P the second call to |trial()| returns true, and
+   * in portion 1-P it returns false a second time; the skip count is two or
+   * more. So we return true on the second call in proportion 0.7 * 0.3, and
+   * skip at least the first two in proportion 0.7 * 0.7.
    *
    * skip:                0                1              2 or more
    *             |------------------^------------^----------------------------|
@@ -160,8 +160,8 @@ class FastBernoulliTrial {
    * it? This is exactly std::floor(std::log(X) / std::log(1-P)).
    *
    * Our algorithm is then, simply: When constructed, compute an initial skip
-   * count. Return false from |trial| that many times, and then compute a new skip
-   * count.
+   * count. Return false from |trial| that many times, and then compute a new
+   * skip count.
    *
    * For a call to |trial(n)|, if the skip count is greater than n, return false
    * and subtract n from the skip count. If the skip count is less than n,
@@ -177,11 +177,10 @@ class FastBernoulliTrial {
    * random number generator; both may not be zero.
    */
   FastBernoulliTrial(double aProbability, uint64_t aState0, uint64_t aState1)
-   : mProbability(0)
-   , mInvLogNotProbability(0)
-   , mGenerator(aState0, aState1)
-   , mSkipCount(0)
-  {
+      : mProbability(0),
+        mInvLogNotProbability(0),
+        mGenerator(aState0, aState1),
+        mSkipCount(0) {
     setProbability(aProbability);
   }
 
@@ -306,7 +305,8 @@ class FastBernoulliTrial {
   /* Our random number generator. */
   non_crypto::XorShift128PlusRNG mGenerator;
 
-  /* The number of times |trial| should return false before next returning true. */
+  /* The number of times |trial| should return false before next returning true.
+   */
   size_t mSkipCount;
 
   /*
@@ -363,8 +363,8 @@ class FastBernoulliTrial {
      * (On 32-bit machines, all size_t values can be represented exactly in
      * double, so all is well.)
      */
-    double skipCount = std::floor(std::log(mGenerator.nextDouble())
-                                  * mInvLogNotProbability);
+    double skipCount =
+        std::floor(std::log(mGenerator.nextDouble()) * mInvLogNotProbability);
     if (skipCount < SIZE_MAX)
       mSkipCount = skipCount;
     else
@@ -374,6 +374,6 @@ class FastBernoulliTrial {
   }
 };
 
-}  /* namespace mozilla */
+} /* namespace mozilla */
 
 #endif /* mozilla_FastBernoulliTrial_h */

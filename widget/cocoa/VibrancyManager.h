@@ -45,7 +45,7 @@ enum class VibrancyType {
  * the window is declared as opaque.
  */
 class VibrancyManager {
-public:
+ public:
   /**
    * Create a new VibrancyManager instance and provide it with an NSView
    * to attach NSVisualEffectViews to.
@@ -56,13 +56,9 @@ public:
    * @param aContainerView  The view that's going to be the superview of the
    *   NSVisualEffectViews which will be created for vibrant regions.
    */
-  VibrancyManager(const nsChildView& aCoordinateConverter,
-                  NSView* aContainerView)
-    : mCoordinateConverter(aCoordinateConverter)
-    , mContainerView(aContainerView)
-  {
-    MOZ_ASSERT(SystemSupportsVibrancy(),
-               "Don't instantiate this if !SystemSupportsVibrancy()");
+  VibrancyManager(const nsChildView& aCoordinateConverter, NSView* aContainerView)
+      : mCoordinateConverter(aCoordinateConverter), mContainerView(aContainerView) {
+    MOZ_ASSERT(SystemSupportsVibrancy(), "Don't instantiate this if !SystemSupportsVibrancy()");
   }
 
   /**
@@ -72,8 +68,7 @@ public:
    * @param aType   The vibrancy type to use in the region.
    * @param aRegion The vibrant area, in device pixels.
    */
-  void UpdateVibrantRegion(VibrancyType aType,
-                           const LayoutDeviceIntRegion& aRegion);
+  void UpdateVibrantRegion(VibrancyType aType, const LayoutDeviceIntRegion& aRegion);
 
   bool HasVibrantRegions() { return !mVibrantRegions.IsEmpty(); }
 
@@ -112,7 +107,7 @@ public:
    */
   static NSView* CreateEffectView(VibrancyType aType, BOOL aIsContainer = NO);
 
-protected:
+ protected:
   void ClearVibrantRegion(const LayoutDeviceIntRegion& aVibrantRegion) const;
 
   const nsChildView& mCoordinateConverter;
@@ -120,6 +115,6 @@ protected:
   nsClassHashtable<nsUint32HashKey, ViewRegion> mVibrantRegions;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // VibrancyManager_h
+#endif  // VibrancyManager_h

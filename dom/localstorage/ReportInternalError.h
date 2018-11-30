@@ -9,24 +9,22 @@
 
 #include "nsDebug.h"
 
-#define LS_WARNING(...)                                                        \
-  do {                                                                         \
-    nsPrintfCString s(__VA_ARGS__);                                            \
-    mozilla::dom::localstorage::ReportInternalError(__FILE__,                  \
-                                                    __LINE__,                  \
-                                                    s.get());                  \
-    NS_WARNING(s.get());                                                       \
+#define LS_WARNING(...)                                                 \
+  do {                                                                  \
+    nsPrintfCString s(__VA_ARGS__);                                     \
+    mozilla::dom::localstorage::ReportInternalError(__FILE__, __LINE__, \
+                                                    s.get());           \
+    NS_WARNING(s.get());                                                \
   } while (0)
 
 namespace mozilla {
 namespace dom {
 namespace localstorage {
 
-void
-ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr);
+void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr);
 
-} // namespace localstorage
-} // namespace dom
-} // namespace mozilla
+}  // namespace localstorage
+}  // namespace dom
+}  // namespace mozilla
 
 #endif  // mozilla_dom_localstorage_ReportInternalError_h

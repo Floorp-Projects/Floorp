@@ -30,15 +30,14 @@ class WasmFrameIter;
 // C++ function. This will be true for all normal calls from normal wasm
 // function code. Only calls to C++ from other exits/thunks do not need a thunk.
 
-bool
-NeedsBuiltinThunk(SymbolicAddress sym);
+bool NeedsBuiltinThunk(SymbolicAddress sym);
 
 // This function queries whether pc is in one of the process's builtin thunks
 // and, if so, returns the CodeRange and pointer to the code segment that the
 // CodeRange is relative to.
 
-bool
-LookupBuiltinThunk(void* pc, const CodeRange** codeRange, uint8_t** codeBase);
+bool LookupBuiltinThunk(void* pc, const CodeRange** codeRange,
+                        uint8_t** codeBase);
 
 // EnsureBuiltinThunksInitialized() must be called, and must succeed, before
 // SymbolicAddressTarget() or MaybeGetBuiltinThunk(). This function creates all
@@ -46,22 +45,17 @@ LookupBuiltinThunk(void* pc, const CodeRange** codeRange, uint8_t** codeBase);
 // ReleaseProcessExecutableMemory() so that the latter can assert that all
 // executable code has been released.
 
-bool
-EnsureBuiltinThunksInitialized();
+bool EnsureBuiltinThunksInitialized();
 
-void*
-HandleThrow(JSContext* cx, WasmFrameIter& iter);
+void* HandleThrow(JSContext* cx, WasmFrameIter& iter);
 
-void*
-SymbolicAddressTarget(SymbolicAddress sym);
+void* SymbolicAddressTarget(SymbolicAddress sym);
 
-void*
-MaybeGetBuiltinThunk(HandleFunction f, const FuncType& funcType);
+void* MaybeGetBuiltinThunk(HandleFunction f, const FuncType& funcType);
 
-void
-ReleaseBuiltinThunks();
+void ReleaseBuiltinThunks();
 
-} // namespace wasm
-} // namespace js
+}  // namespace wasm
+}  // namespace js
 
-#endif // wasm_builtins_h
+#endif  // wasm_builtins_h

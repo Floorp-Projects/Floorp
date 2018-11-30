@@ -9,15 +9,14 @@
 
 #include "nsIProtocolHandler.h"
 
-class nsWyciwygProtocolHandler : public nsIProtocolHandler
-{
-    virtual ~nsWyciwygProtocolHandler();
+class nsWyciwygProtocolHandler : public nsIProtocolHandler {
+  virtual ~nsWyciwygProtocolHandler();
 
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIPROTOCOLHANDLER
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPROTOCOLHANDLER
 
-    nsWyciwygProtocolHandler();
+  nsWyciwygProtocolHandler();
 };
 
 #endif /* nsWyciwygProtocolHandler_h___ */

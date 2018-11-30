@@ -12,26 +12,24 @@
 namespace mozilla {
 namespace dom {
 
-class ClientSourceOpParent final : public PClientSourceOpParent
-{
+class ClientSourceOpParent final : public PClientSourceOpParent {
   const ClientOpConstructorArgs mArgs;
   RefPtr<ClientOpPromise::Private> mPromise;
 
   // PClientSourceOpParent interface
-  void
-  ActorDestroy(ActorDestroyReason aReason) override;
+  void ActorDestroy(ActorDestroyReason aReason) override;
 
-  mozilla::ipc::IPCResult
-  Recv__delete__(const ClientOpResult& aResult) override;
+  mozilla::ipc::IPCResult Recv__delete__(
+      const ClientOpResult& aResult) override;
 
-public:
+ public:
   ClientSourceOpParent(const ClientOpConstructorArgs& aArgs,
                        ClientOpPromise::Private* aPromise);
 
   ~ClientSourceOpParent();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // _mozilla_dom_ClientSourceOpParent_h
+#endif  // _mozilla_dom_ClientSourceOpParent_h

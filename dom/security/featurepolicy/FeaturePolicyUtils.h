@@ -15,11 +15,9 @@ class nsIDocument;
 namespace mozilla {
 namespace dom {
 
-class FeaturePolicyUtils final
-{
-public:
-  enum FeaturePolicyValue
-  {
+class FeaturePolicyUtils final {
+ public:
+  enum FeaturePolicyValue {
     // Feature always allowed.
     eAll,
 
@@ -32,30 +30,26 @@ public:
 
   // This method returns true if aFeatureName is allowed for aDocument.
   // Use this method everywhere you need to check feature-policy directives.
-  static bool
-  IsFeatureAllowed(nsIDocument* aDocument,
-                   const nsAString& aFeatureName);
+  static bool IsFeatureAllowed(nsIDocument* aDocument,
+                               const nsAString& aFeatureName);
 
   // Returns true if aFeatureName is a known feature policy name.
-  static bool
-  IsSupportedFeature(const nsAString& aFeatureName);
+  static bool IsSupportedFeature(const nsAString& aFeatureName);
 
   // Runs aCallback for each known feature policy, with the feature name as
   // argument.
-  static void
-  ForEachFeature(const std::function<void(const char*)>& aCallback);
+  static void ForEachFeature(const std::function<void(const char*)>& aCallback);
 
   // Returns the default policy value for aFeatureName.
-  static FeaturePolicyValue
-  DefaultAllowListFeature(const nsAString& aFeatureName);
+  static FeaturePolicyValue DefaultAllowListFeature(
+      const nsAString& aFeatureName);
 
-private:
-  static void
-  ReportViolation(nsIDocument* aDocument,
-                  const nsAString& aFeatureName);
+ private:
+  static void ReportViolation(nsIDocument* aDocument,
+                              const nsAString& aFeatureName);
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_FeaturePolicyUtils_h
+#endif  // mozilla_dom_FeaturePolicyUtils_h

@@ -7,23 +7,18 @@
 #ifndef mozilla_FontRange_h_
 #define mozilla_FontRange_h_
 
-#include "gfxTypes.h" // for gfxFloat
+#include "gfxTypes.h"  // for gfxFloat
 
 namespace mozilla {
 
-struct FontRange
-{
-  FontRange()
-    : mStartOffset(0)
-    , mFontSize(0)
-  {
-  }
+struct FontRange {
+  FontRange() : mStartOffset(0), mFontSize(0) {}
 
   int32_t mStartOffset;
   nsString mFontName;
-  gfxFloat mFontSize; // in device pixels
+  gfxFloat mFontSize;  // in device pixels
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_FontRange_h_
+#endif  // mozilla_FontRange_h_

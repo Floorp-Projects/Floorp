@@ -66,7 +66,7 @@ class LinearHistogram;
 class Histogram {
  public:
   typedef int Sample;  // Used for samples (and ranges of samples).
-  typedef int Count;  // Used to count samples in a bucket.
+  typedef int Count;   // Used to count samples in a bucket.
   static const Sample kSampleType_MAX = INT_MAX;
   // Initialize maximum number of buckets in histograms as 16,384.
   static const size_t kBucketCount_MAX;
@@ -86,11 +86,7 @@ class Histogram {
     NOT_VALID_IN_RENDERER
   };
 
-  enum BucketLayout {
-    EXPONENTIAL,
-    LINEAR,
-    CUSTOM
-  };
+  enum BucketLayout { EXPONENTIAL, LINEAR, CUSTOM };
 
   enum Flags {
     kNoFlags = 0,
@@ -142,19 +138,11 @@ class Histogram {
 
     size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
-    Count counts(size_t i) const {
-       return counts_[i];
-    }
+    Count counts(size_t i) const { return counts_[i]; }
     Count TotalCount() const;
-    int64_t sum() const {
-       return sum_;
-    }
-    int64_t redundant_count() const {
-       return redundant_count_;
-    }
-    size_t size() const {
-       return counts_.Length();
-    }
+    int64_t sum() const { return sum_; }
+    int64_t redundant_count() const { return redundant_count_; }
+    size_t size() const { return counts_.Length(); }
 
    protected:
     // Actual histogram data is stored in buckets, showing the count of values
@@ -163,7 +151,7 @@ class Histogram {
 
     // Save simple stats locally.  Note that this MIGHT get done in base class
     // without shared memory at some point.
-    int64_t sum_;         // sum of samples.
+    int64_t sum_;  // sum of samples.
 
     // To help identify memory corruption, we reduntantly save the number of
     // samples we've accumulated into all of our buckets.  We can compare this
@@ -178,10 +166,8 @@ class Histogram {
   //----------------------------------------------------------------------------
   // minimum should start from 1. 0 is invalid as a minimum. 0 is an implicit
   // default underflow bucket.
-  static Histogram* FactoryGet(Sample minimum,
-                               Sample maximum,
-                               size_t bucket_count,
-                               Flags flags,
+  static Histogram* FactoryGet(Sample minimum, Sample maximum,
+                               size_t bucket_count, Flags flags,
                                const int* buckets);
 
   virtual ~Histogram();
@@ -193,9 +179,7 @@ class Histogram {
   virtual void AddBoolean(bool value);
 
   // Accept a TimeDelta to increment.
-  void AddTime(TimeDelta time) {
-    Add(static_cast<int>(time.InMilliseconds()));
-  }
+  void AddTime(TimeDelta time) { Add(static_cast<int>(time.InMilliseconds())); }
 
   virtual void AddSampleSet(const SampleSet& sample);
 
@@ -207,7 +191,7 @@ class Histogram {
   // Support generic flagging of Histograms.
   // 0x1 Currently used to mark this histogram to be recorded by UMA..
   // 0x8000 means print ranges in hex.
-  void SetFlags(Flags flags) { flags_ = static_cast<Flags> (flags_ | flags); }
+  void SetFlags(Flags flags) { flags_ = static_cast<Flags>(flags_ | flags); }
   void ClearFlags(Flags flags) { flags_ = static_cast<Flags>(flags_ & ~flags); }
   int flags() const { return flags_; }
 
@@ -334,10 +318,8 @@ class LinearHistogram : public Histogram {
 
   /* minimum should start from 1. 0 is as minimum is invalid. 0 is an implicit
      default underflow bucket. */
-  static Histogram* FactoryGet(Sample minimum,
-                               Sample maximum,
-                               size_t bucket_count,
-                               Flags flags,
+  static Histogram* FactoryGet(Sample minimum, Sample maximum,
+                               size_t bucket_count, Flags flags,
                                const int* buckets);
 
   // Overridden from Histogram:
@@ -347,7 +329,8 @@ class LinearHistogram : public Histogram {
 
   // Store a list of number/text values for use in rendering the histogram.
   // The last element in the array has a null in its "description" slot.
-  virtual void SetRangeDescriptions(const DescriptionPair descriptions[]) override;
+  virtual void SetRangeDescriptions(
+      const DescriptionPair descriptions[]) override;
 
  protected:
   LinearHistogram(Sample minimum, Sample maximum, size_t bucket_count);
@@ -379,8 +362,7 @@ class LinearHistogram : public Histogram {
 // BooleanHistogram is a histogram for booleans.
 class BooleanHistogram : public LinearHistogram {
  public:
-  static Histogram* FactoryGet(Flags flags,
-                               const int* buckets);
+  static Histogram* FactoryGet(Flags flags, const int* buckets);
 
   virtual ClassType histogram_type() const override;
 
@@ -396,12 +378,11 @@ class BooleanHistogram : public LinearHistogram {
 
 //------------------------------------------------------------------------------
 
-// FlagHistogram is like boolean histogram, but only allows a single off/on value.
-class FlagHistogram : public BooleanHistogram
-{
-public:
-  static Histogram *FactoryGet(Flags flags,
-                               const int* buckets);
+// FlagHistogram is like boolean histogram, but only allows a single off/on
+// value.
+class FlagHistogram : public BooleanHistogram {
+ public:
+  static Histogram* FactoryGet(Flags flags, const int* buckets);
 
   virtual ClassType histogram_type() const override;
 
@@ -411,7 +392,7 @@ public:
 
   virtual void Clear() override;
 
-private:
+ private:
   explicit FlagHistogram();
   bool mSwitched;
 
@@ -419,11 +400,9 @@ private:
 };
 
 // CountHistogram only allows a single monotic counter value.
-class CountHistogram : public LinearHistogram
-{
-public:
-  static Histogram *FactoryGet(Flags flags,
-                               const int* buckets);
+class CountHistogram : public LinearHistogram {
+ public:
+  static Histogram* FactoryGet(Flags flags, const int* buckets);
 
   virtual ClassType histogram_type() const override;
 
@@ -431,7 +410,7 @@ public:
 
   virtual void AddSampleSet(const SampleSet& sample) override;
 
-private:
+ private:
   explicit CountHistogram();
 
   DISALLOW_COPY_AND_ASSIGN(CountHistogram);

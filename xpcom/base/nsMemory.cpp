@@ -15,9 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // nsMemory static helper routines
 
-nsresult
-nsMemory::HeapMinimize(bool aImmediate)
-{
+nsresult nsMemory::HeapMinimize(bool aImmediate) {
   nsCOMPtr<nsIMemory> mem;
   nsresult rv = NS_GetMemoryManager(getter_AddRefs(mem));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -27,9 +25,7 @@ nsMemory::HeapMinimize(bool aImmediate)
   return mem->HeapMinimize(aImmediate);
 }
 
-nsIMemory*
-nsMemory::GetGlobalMemoryService()
-{
+nsIMemory* nsMemory::GetGlobalMemoryService() {
   nsIMemory* mem;
   nsresult rv = NS_GetMemoryManager(&mem);
   if (NS_FAILED(rv)) {
@@ -40,4 +36,3 @@ nsMemory::GetGlobalMemoryService()
 }
 
 //----------------------------------------------------------------------
-

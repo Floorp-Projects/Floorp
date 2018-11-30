@@ -13,6 +13,6 @@ namespace switches {
 
 // The value of this switch tells the child process which
 // IPC channel the browser expects to use to communicate with it.
-const wchar_t kProcessChannelID[]              = L"channel";
+const wchar_t kProcessChannelID[] = L"channel";
 
 }  // namespace switches

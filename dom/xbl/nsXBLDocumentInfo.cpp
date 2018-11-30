@@ -42,44 +42,41 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLDocumentInfo)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLDocumentInfo)
   if (tmp->mBindingTable) {
-    for (auto iter = tmp->mBindingTable->ConstIter();
-         !iter.Done(); iter.Next()) {
+    for (auto iter = tmp->mBindingTable->ConstIter(); !iter.Done();
+         iter.Next()) {
       iter.UserData()->Unlink();
     }
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXBLDocumentInfo)
-  if (tmp->mDocument &&
-      nsCCUncollectableMarker::InGeneration(cb, tmp->mDocument->GetMarkedCCGeneration())) {
+  if (tmp->mDocument && nsCCUncollectableMarker::InGeneration(
+                            cb, tmp->mDocument->GetMarkedCCGeneration())) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
   if (tmp->mBindingTable) {
-    for (auto iter = tmp->mBindingTable->ConstIter();
-         !iter.Done(); iter.Next()) {
+    for (auto iter = tmp->mBindingTable->ConstIter(); !iter.Done();
+         iter.Next()) {
       iter.UserData()->Traverse(cb);
     }
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsXBLDocumentInfo)
   if (tmp->mBindingTable) {
-    for (auto iter = tmp->mBindingTable->ConstIter();
-         !iter.Done(); iter.Next()) {
+    for (auto iter = tmp->mBindingTable->ConstIter(); !iter.Done();
+         iter.Next()) {
       iter.UserData()->Trace(aCallbacks, aClosure);
     }
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-static void
-UnmarkXBLJSObject(JS::GCCellPtr aPtr, const char* aName, void* aClosure)
-{
+static void UnmarkXBLJSObject(JS::GCCellPtr aPtr, const char* aName,
+                              void* aClosure) {
   JS::ExposeObjectToActiveJS(&aPtr.as<JSObject>());
 }
 
-void
-nsXBLDocumentInfo::MarkInCCGeneration(uint32_t aGeneration)
-{
+void nsXBLDocumentInfo::MarkInCCGeneration(uint32_t aGeneration) {
   if (mDocument) {
     mDocument->MarkUncollectableForCCGeneration(aGeneration);
   }
@@ -100,16 +97,15 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXBLDocumentInfo)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXBLDocumentInfo)
 
 nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
-  : mDocument(aDocument),
-    mScriptAccess(true),
-    mIsChrome(false),
-    mFirstBinding(nullptr)
-{
+    : mDocument(aDocument),
+      mScriptAccess(true),
+      mIsChrome(false),
+      mFirstBinding(nullptr) {
   nsIURI* uri = aDocument->GetDocumentURI();
   if (IsChromeURI(uri)) {
     // Cache whether or not this chrome XBL can execute scripts.
     nsCOMPtr<nsIXULChromeRegistry> reg =
-      mozilla::services::GetXULChromeRegistryService();
+        mozilla::services::GetXULChromeRegistryService();
     if (reg) {
       bool allow = true;
       reg->AllowScriptsForPackage(uri, &allow);
@@ -137,16 +133,11 @@ nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
   }
 }
 
-nsXBLDocumentInfo::~nsXBLDocumentInfo()
-{
-  mozilla::DropJSObjects(this);
-}
+nsXBLDocumentInfo::~nsXBLDocumentInfo() { mozilla::DropJSObjects(this); }
 
-nsXBLPrototypeBinding*
-nsXBLDocumentInfo::GetPrototypeBinding(const nsACString& aRef)
-{
-  if (!mBindingTable)
-    return nullptr;
+nsXBLPrototypeBinding* nsXBLDocumentInfo::GetPrototypeBinding(
+    const nsACString& aRef) {
+  if (!mBindingTable) return nullptr;
 
   if (aRef.IsEmpty()) {
     // Return our first binding
@@ -156,11 +147,11 @@ nsXBLDocumentInfo::GetPrototypeBinding(const nsACString& aRef)
   return mBindingTable->Get(aRef);
 }
 
-nsresult
-nsXBLDocumentInfo::SetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding* aBinding)
-{
+nsresult nsXBLDocumentInfo::SetPrototypeBinding(
+    const nsACString& aRef, nsXBLPrototypeBinding* aBinding) {
   if (!mBindingTable) {
-    mBindingTable = new nsClassHashtable<nsCStringHashKey, nsXBLPrototypeBinding>();
+    mBindingTable =
+        new nsClassHashtable<nsCStringHashKey, nsXBLPrototypeBinding>();
     mozilla::HoldJSObjects(this);
   }
 
@@ -170,9 +161,7 @@ nsXBLDocumentInfo::SetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBin
   return NS_OK;
 }
 
-void
-nsXBLDocumentInfo::RemovePrototypeBinding(const nsACString& aRef)
-{
+void nsXBLDocumentInfo::RemovePrototypeBinding(const nsACString& aRef) {
   if (mBindingTable) {
     nsAutoPtr<nsXBLPrototypeBinding> bindingToRemove;
     mBindingTable->Remove(aRef, &bindingToRemove);
@@ -183,10 +172,9 @@ nsXBLDocumentInfo::RemovePrototypeBinding(const nsACString& aRef)
 }
 
 // static
-nsresult
-nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocInfo,
-                                         nsIDocument* aBoundDocument)
-{
+nsresult nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI,
+                                                  nsXBLDocumentInfo** aDocInfo,
+                                                  nsIDocument* aBoundDocument) {
   *aDocInfo = nullptr;
 
   nsAutoCString spec(kXBLCachePrefix);
@@ -202,11 +190,11 @@ nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocI
   uint32_t len;
   rv = startupCache->GetBuffer(spec.get(), &buf, &len);
   // GetBuffer will fail if the binding is not in the cache.
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIObjectInputStream> stream;
-  rv = NewObjectInputStreamFromBuffer(std::move(buf), len, getter_AddRefs(stream));
+  rv = NewObjectInputStreamFromBuffer(std::move(buf), len,
+                                      getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // The file compatibility.ini stores the build id. This is checked in
@@ -223,8 +211,8 @@ nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocI
   }
 
   nsCOMPtr<nsIPrincipal> principal;
-  nsContentUtils::GetSecurityManager()->
-    GetSystemPrincipal(getter_AddRefs(principal));
+  nsContentUtils::GetSecurityManager()->GetSystemPrincipal(
+      getter_AddRefs(principal));
 
   nsCOMPtr<nsIDocument> doc;
   rv = NS_NewXBLDocument(getter_AddRefs(doc), aURI, nullptr, principal);
@@ -236,8 +224,7 @@ nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocI
     uint8_t flags;
     nsresult rv = stream->Read8(&flags);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (flags == XBLBinding_Serialize_NoMoreBindings)
-      break;
+    if (flags == XBLBinding_Serialize_NoMoreBindings) break;
 
     rv = nsXBLPrototypeBinding::ReadNewBinding(stream, docInfo, doc, flags);
     if (NS_FAILED(rv)) {
@@ -249,9 +236,7 @@ nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocI
   return NS_OK;
 }
 
-nsresult
-nsXBLDocumentInfo::WritePrototypeBindings()
-{
+nsresult nsXBLDocumentInfo::WritePrototypeBindings() {
   // Only write out bindings with the system principal
   if (!nsContentUtils::IsSystemPrincipal(mDocument->NodePrincipal()))
     return NS_OK;
@@ -268,8 +253,7 @@ nsXBLDocumentInfo::WritePrototypeBindings()
   nsCOMPtr<nsIObjectOutputStream> stream;
   nsCOMPtr<nsIStorageStream> storageStream;
   rv = NewObjectOutputWrappedStorageStream(getter_AddRefs(stream),
-                                           getter_AddRefs(storageStream),
-                                           true);
+                                           getter_AddRefs(storageStream), true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stream->Write32(XBLBinding_Serialize_Version);
@@ -296,15 +280,12 @@ nsXBLDocumentInfo::WritePrototypeBindings()
   return startupCache->PutBuffer(spec.get(), std::move(buf), len);
 }
 
-void
-nsXBLDocumentInfo::SetFirstPrototypeBinding(nsXBLPrototypeBinding* aBinding)
-{
+void nsXBLDocumentInfo::SetFirstPrototypeBinding(
+    nsXBLPrototypeBinding* aBinding) {
   mFirstBinding = aBinding;
 }
 
-void
-nsXBLDocumentInfo::FlushSkinStylesheets()
-{
+void nsXBLDocumentInfo::FlushSkinStylesheets() {
   if (mBindingTable) {
     for (auto iter = mBindingTable->Iter(); !iter.Done(); iter.Next()) {
       iter.UserData()->FlushSkinSheets();
@@ -313,17 +294,14 @@ nsXBLDocumentInfo::FlushSkinStylesheets()
 }
 
 #ifdef DEBUG
-void
-AssertInCompilationScope()
-{
+void AssertInCompilationScope() {
   AutoJSContext cx;
   MOZ_ASSERT(xpc::CompilationScope() == JS::CurrentGlobalOrNull(cx));
 }
 #endif
 
-size_t
-nsXBLDocumentInfo::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t nsXBLDocumentInfo::SizeOfIncludingThis(
+    MallocSizeOf aMallocSizeOf) const {
   size_t n = aMallocSizeOf(this);
   if (mDocument) {
     SizeOfState state(aMallocSizeOf);

@@ -14,7 +14,8 @@ namespace mozilla {
 namespace layers {
 
 template <typename PointOrRect>
-CoordOf<PointOrRect> GetAxisStart(ScrollDirection aDir, const PointOrRect& aValue) {
+CoordOf<PointOrRect> GetAxisStart(ScrollDirection aDir,
+                                  const PointOrRect& aValue) {
   if (aDir == ScrollDirection::eHorizontal) {
     return aValue.X();
   } else {
@@ -41,7 +42,8 @@ CoordOf<Rect> GetAxisLength(ScrollDirection aDir, const Rect& aValue) {
 }
 
 template <typename FromUnits, typename ToUnits>
-float GetAxisScale(ScrollDirection aDir, const gfx::ScaleFactors2D<FromUnits, ToUnits>& aValue) {
+float GetAxisScale(ScrollDirection aDir,
+                   const gfx::ScaleFactors2D<FromUnits, ToUnits>& aValue) {
   if (aDir == ScrollDirection::eHorizontal) {
     return aValue.xScale;
   } else {
@@ -50,12 +52,11 @@ float GetAxisScale(ScrollDirection aDir, const gfx::ScaleFactors2D<FromUnits, To
 }
 
 inline ScrollDirection GetPerpendicularDirection(ScrollDirection aDir) {
-  return aDir == ScrollDirection::eHorizontal
-       ? ScrollDirection::eVertical
-       : ScrollDirection::eHorizontal;
+  return aDir == ScrollDirection::eHorizontal ? ScrollDirection::eVertical
+                                              : ScrollDirection::eHorizontal;
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif /* GFX_DIRECTIONUTILS_H */

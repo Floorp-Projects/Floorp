@@ -18,17 +18,14 @@ class nsISerializable;
 /**
  * Serialize an object to an ASCII string.
  */
-nsresult NS_SerializeToString(nsISerializable* obj,
-                              nsACString& str);
+nsresult NS_SerializeToString(nsISerializable* obj, nsACString& str);
 
 /**
  * Deserialize an object.
  */
-nsresult NS_DeserializeObject(const nsACString& str,
-                              nsISupports** obj);
+nsresult NS_DeserializeObject(const nsACString& str, nsISupports** obj);
 
-class nsSerializationHelper final : public nsISerializationHelper
-{
+class nsSerializationHelper final : public nsISerializationHelper {
   ~nsSerializationHelper() = default;
 
   NS_DECL_ISUPPORTS

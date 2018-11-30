@@ -31,8 +31,7 @@
 #include "nsTextFormatter.h"
 #include "nsMemory.h"
 
-struct nsTextFormatter::SprintfStateStr
-{
+struct nsTextFormatter::SprintfStateStr {
   int (*stuff)(SprintfStateStr* aState, const char16_t* aStr, uint32_t aLen);
 
   char16_t* base;
@@ -42,22 +41,20 @@ struct nsTextFormatter::SprintfStateStr
   void* stuffclosure;
 };
 
-#define _LEFT		0x1
-#define _SIGNED		0x2
-#define _SPACED		0x4
-#define _ZEROS		0x8
-#define _NEG		0x10
-#define _UNSIGNED       0x20
+#define _LEFT 0x1
+#define _SIGNED 0x2
+#define _SPACED 0x4
+#define _ZEROS 0x8
+#define _NEG 0x10
+#define _UNSIGNED 0x20
 
 #define ELEMENTS_OF(array_) (sizeof(array_) / sizeof(array_[0]))
 
 /*
 ** Fill into the buffer using the data in src
 */
-int
-nsTextFormatter::fill2(SprintfStateStr* aState, const char16_t* aSrc, int aSrcLen, int aWidth,
-                       int aFlags)
-{
+int nsTextFormatter::fill2(SprintfStateStr* aState, const char16_t* aSrc,
+                           int aSrcLen, int aWidth, int aFlags) {
   char16_t space = ' ';
   int rv;
 
@@ -96,14 +93,13 @@ nsTextFormatter::fill2(SprintfStateStr* aState, const char16_t* aSrc, int aSrcLe
 /*
 ** Fill a number. The order is: optional-sign zero-filling conversion-digits
 */
-int
-nsTextFormatter::fill_n(nsTextFormatter::SprintfStateStr* aState, const char16_t* aSrc,
-                        int aSrcLen, int aWidth, int aPrec, int aFlags)
-{
-  int zerowidth   = 0;
-  int precwidth   = 0;
-  int signwidth   = 0;
-  int leftspaces  = 0;
+int nsTextFormatter::fill_n(nsTextFormatter::SprintfStateStr* aState,
+                            const char16_t* aSrc, int aSrcLen, int aWidth,
+                            int aPrec, int aFlags) {
+  int zerowidth = 0;
+  int precwidth = 0;
+  int signwidth = 0;
+  int leftspaces = 0;
   int rightspaces = 0;
   int cvtwidth;
   int rv;
@@ -165,13 +161,13 @@ nsTextFormatter::fill_n(nsTextFormatter::SprintfStateStr* aState, const char16_t
     }
   }
   while (--precwidth >= 0) {
-    rv = (*aState->stuff)(aState,  &space, 1);
+    rv = (*aState->stuff)(aState, &space, 1);
     if (rv < 0) {
       return rv;
     }
   }
   while (--zerowidth >= 0) {
-    rv = (*aState->stuff)(aState,  &zero, 1);
+    rv = (*aState->stuff)(aState, &zero, 1);
     if (rv < 0) {
       return rv;
     }
@@ -181,7 +177,7 @@ nsTextFormatter::fill_n(nsTextFormatter::SprintfStateStr* aState, const char16_t
     return rv;
   }
   while (--rightspaces >= 0) {
-    rv = (*aState->stuff)(aState,  &space, 1);
+    rv = (*aState->stuff)(aState, &space, 1);
     if (rv < 0) {
       return rv;
     }
@@ -192,10 +188,9 @@ nsTextFormatter::fill_n(nsTextFormatter::SprintfStateStr* aState, const char16_t
 /*
 ** Convert a 64-bit integer into its printable form
 */
-int
-nsTextFormatter::cvt_ll(SprintfStateStr* aState, uint64_t aNum, int aWidth, int aPrec, int aRadix,
-                        int aFlags, const char16_t* aHexStr)
-{
+int nsTextFormatter::cvt_ll(SprintfStateStr* aState, uint64_t aNum, int aWidth,
+                            int aPrec, int aRadix, int aFlags,
+                            const char16_t* aHexStr) {
   char16_t cvtbuf[100];
   char16_t* cvt;
   int digits;
@@ -235,21 +230,19 @@ nsTextFormatter::cvt_ll(SprintfStateStr* aState, uint64_t aNum, int aWidth, int 
 ** Convert a double precision floating point number into its printable
 ** form.
 */
-int
-nsTextFormatter::cvt_f(SprintfStateStr* aState, double aDouble, int aWidth, int aPrec,
-                       const char16_t aType, int aFlags)
-{
-  int    mode = 2;
-  int    decpt;
-  int    sign;
-  char   buf[256];
-  char*  bufp = buf;
-  int    bufsz = 256;
-  char   num[256];
-  char*  nump;
-  char*  endnum;
-  int    numdigits = 0;
-  char   exp = 'e';
+int nsTextFormatter::cvt_f(SprintfStateStr* aState, double aDouble, int aWidth,
+                           int aPrec, const char16_t aType, int aFlags) {
+  int mode = 2;
+  int decpt;
+  int sign;
+  char buf[256];
+  char* bufp = buf;
+  int bufsz = 256;
+  char num[256];
+  char* nump;
+  char* endnum;
+  int numdigits = 0;
+  char exp = 'e';
 
   if (aPrec == -1) {
     aPrec = 6;
@@ -285,8 +278,8 @@ nsTextFormatter::cvt_f(SprintfStateStr* aState, double aDouble, int aWidth, int 
       NS_ERROR("invalid aType passed to cvt_f");
   }
 
-  if (PR_dtoa(aDouble, mode, numdigits, &decpt, &sign,
-              &endnum, num, bufsz) == PR_FAILURE) {
+  if (PR_dtoa(aDouble, mode, numdigits, &decpt, &sign, &endnum, num, bufsz) ==
+      PR_FAILURE) {
     buf[0] = '\0';
     return -1;
   }
@@ -303,9 +296,7 @@ nsTextFormatter::cvt_f(SprintfStateStr* aState, double aDouble, int aWidth, int 
     while ((*bufp++ = *nump++)) {
     }
   } else {
-
     switch (aType) {
-
       case 'E':
       case 'e':
 
@@ -423,10 +414,8 @@ nsTextFormatter::cvt_f(SprintfStateStr* aState, double aDouble, int aWidth, int 
 ** width. |aPrec| is the maximum number of characters of |aStr| to output,
 ** where -1 means until NUL.
 */
-int
-nsTextFormatter::cvt_S(SprintfStateStr* aState, const char16_t* aStr, int aWidth, int aPrec,
-                       int aFlags)
-{
+int nsTextFormatter::cvt_S(SprintfStateStr* aState, const char16_t* aStr,
+                           int aWidth, int aPrec, int aFlags) {
   int slen;
 
   if (aPrec == 0) {
@@ -450,10 +439,9 @@ nsTextFormatter::cvt_S(SprintfStateStr* aState, const char16_t* aStr, int aWidth
 ** width. |aPrec| is the maximum number of characters of |aStr| to output,
 ** where -1 means until NUL.
 */
-int
-nsTextFormatter::cvt_s(nsTextFormatter::SprintfStateStr* aState, const char* aStr, int aWidth,
-                       int aPrec, int aFlags)
-{
+int nsTextFormatter::cvt_s(nsTextFormatter::SprintfStateStr* aState,
+                           const char* aStr, int aWidth, int aPrec,
+                           int aFlags) {
   // Be sure to handle null the same way as %S.
   if (aStr == nullptr) {
     return cvt_S(aState, nullptr, aWidth, aPrec, aFlags);
@@ -465,10 +453,8 @@ nsTextFormatter::cvt_s(nsTextFormatter::SprintfStateStr* aState, const char* aSt
 /*
 ** The workhorse sprintf code.
 */
-int
-nsTextFormatter::dosprintf(SprintfStateStr* aState, const char16_t* aFmt,
-                           mozilla::Span<BoxedValue> aValues)
-{
+int nsTextFormatter::dosprintf(SprintfStateStr* aState, const char16_t* aFmt,
+                               mozilla::Span<BoxedValue> aValues) {
   static const char16_t space = ' ';
   static const char16_t hex[] = u"0123456789abcdef";
   static const char16_t HEX[] = u"0123456789ABCDEF";
@@ -586,7 +572,8 @@ nsTextFormatter::dosprintf(SprintfStateStr* aState, const char16_t* aFmt,
           return -1;
         }
 
-        if (nextNaturalArg >= aValues.Length() || !aValues[nextNaturalArg].IntCompatible()) {
+        if (nextNaturalArg >= aValues.Length() ||
+            !aValues[nextNaturalArg].IntCompatible()) {
           // A correctness issue but not a safety issue.
           MOZ_ASSERT(false);
           width = 0;
@@ -613,7 +600,8 @@ nsTextFormatter::dosprintf(SprintfStateStr* aState, const char16_t* aFmt,
           return -1;
         }
 
-        if (nextNaturalArg >= aValues.Length() || !aValues[nextNaturalArg].IntCompatible()) {
+        if (nextNaturalArg >= aValues.Length() ||
+            !aValues[nextNaturalArg].IntCompatible()) {
           // A correctness issue but not a safety issue.
           MOZ_ASSERT(false);
         } else {
@@ -677,29 +665,29 @@ nsTextFormatter::dosprintf(SprintfStateStr* aState, const char16_t* aFmt,
     // argument based on the known type of the argument.
     switch (c) {
       case 'd':
-      case 'i':                               /* decimal/integer */
+      case 'i': /* decimal/integer */
         MOZ_ASSERT(thisArg->IntCompatible());
         break;
 
-      case 'o':                               /* octal */
+      case 'o': /* octal */
         MOZ_ASSERT(thisArg->IntCompatible());
         radix = 8;
         flags |= _UNSIGNED;
         break;
 
-      case 'u':                               /* unsigned decimal */
+      case 'u': /* unsigned decimal */
         MOZ_ASSERT(thisArg->IntCompatible());
         radix = 10;
         flags |= _UNSIGNED;
         break;
 
-      case 'x':                               /* unsigned hex */
+      case 'x': /* unsigned hex */
         MOZ_ASSERT(thisArg->IntCompatible());
         radix = 16;
         flags |= _UNSIGNED;
         break;
 
-      case 'X':                               /* unsigned HEX */
+      case 'X': /* unsigned HEX */
         MOZ_ASSERT(thisArg->IntCompatible());
         radix = 16;
         hexp = HEX;
@@ -726,44 +714,45 @@ nsTextFormatter::dosprintf(SprintfStateStr* aState, const char16_t* aFmt,
         break;
 
       case 'c': {
-          if (!thisArg->IntCompatible()) {
-            MOZ_ASSERT(false);
-            // Type-based printing below.
-            break;
-          }
+        if (!thisArg->IntCompatible()) {
+          MOZ_ASSERT(false);
+          // Type-based printing below.
+          break;
+        }
 
-          if ((flags & _LEFT) == 0) {
-            while (width-- > 1) {
-              rv = (*aState->stuff)(aState, &space, 1);
-              if (rv < 0) {
-                return rv;
-              }
-            }
-          }
-          char16_t ch = thisArg->mValue.mInt;
-          rv = (*aState->stuff)(aState, &ch, 1);
-          if (rv < 0) {
-            return rv;
-          }
-          if (flags & _LEFT) {
-            while (width-- > 1) {
-              rv = (*aState->stuff)(aState, &space, 1);
-              if (rv < 0) {
-                return rv;
-              }
+        if ((flags & _LEFT) == 0) {
+          while (width-- > 1) {
+            rv = (*aState->stuff)(aState, &space, 1);
+            if (rv < 0) {
+              return rv;
             }
           }
         }
+        char16_t ch = thisArg->mValue.mInt;
+        rv = (*aState->stuff)(aState, &ch, 1);
+        if (rv < 0) {
+          return rv;
+        }
+        if (flags & _LEFT) {
+          while (width-- > 1) {
+            rv = (*aState->stuff)(aState, &space, 1);
+            if (rv < 0) {
+              return rv;
+            }
+          }
+        }
+      }
         continue;
 
       case 'p':
         if (!thisArg->PointerCompatible()) {
-            MOZ_ASSERT(false);
-            break;
+          MOZ_ASSERT(false);
+          break;
         }
-        static_assert(sizeof(uint64_t) >= sizeof(void*), "pointers are larger than 64 bits");
-        rv = cvt_ll(aState, uintptr_t(thisArg->mValue.mPtr), width, prec, 16, flags | _UNSIGNED,
-                    hexp);
+        static_assert(sizeof(uint64_t) >= sizeof(void*),
+                      "pointers are larger than 64 bits");
+        rv = cvt_ll(aState, uintptr_t(thisArg->mValue.mPtr), width, prec, 16,
+                    flags | _UNSIGNED, hexp);
         if (rv < 0) {
           return rv;
         }
@@ -793,20 +782,21 @@ nsTextFormatter::dosprintf(SprintfStateStr* aState, const char16_t* aFmt,
     switch (thisArg->mKind) {
       case INT:
       case UINT: {
-          int64_t val = thisArg->mValue.mInt;
-          if ((flags & _UNSIGNED) == 0 && val < 0) {
-            val = -val;
-            flags |= _NEG;
-          }
-          rv = cvt_ll(aState, uint64_t(val) & mask, width, prec, radix, flags, hexp);
+        int64_t val = thisArg->mValue.mInt;
+        if ((flags & _UNSIGNED) == 0 && val < 0) {
+          val = -val;
+          flags |= _NEG;
         }
-        break;
+        rv = cvt_ll(aState, uint64_t(val) & mask, width, prec, radix, flags,
+                    hexp);
+      } break;
       case INTPOINTER:
       case POINTER:
         // Always treat these as unsigned hex, no matter the format.
-        static_assert(sizeof(uint64_t) >= sizeof(void*), "pointers are larger than 64 bits");
-        rv = cvt_ll(aState, uintptr_t(thisArg->mValue.mPtr), width, prec, 16, flags | _UNSIGNED,
-                    hexp);
+        static_assert(sizeof(uint64_t) >= sizeof(void*),
+                      "pointers are larger than 64 bits");
+        rv = cvt_ll(aState, uintptr_t(thisArg->mValue.mPtr), width, prec, 16,
+                    flags | _UNSIGNED, hexp);
         break;
       case DOUBLE:
         if (c != 'f' && c != 'E' && c != 'e' && c != 'G' && c != 'g') {
@@ -836,10 +826,8 @@ nsTextFormatter::dosprintf(SprintfStateStr* aState, const char16_t* aFmt,
 
 /************************************************************************/
 
-int
-nsTextFormatter::StringStuff(nsTextFormatter::SprintfStateStr* aState, const char16_t* aStr,
-                             uint32_t aLen)
-{
+int nsTextFormatter::StringStuff(nsTextFormatter::SprintfStateStr* aState,
+                                 const char16_t* aStr, uint32_t aLen) {
   ptrdiff_t off = aState->cur - aState->base;
 
   nsAString* str = static_cast<nsAString*>(aState->stuffclosure);
@@ -851,10 +839,8 @@ nsTextFormatter::StringStuff(nsTextFormatter::SprintfStateStr* aState, const cha
   return 0;
 }
 
-void
-nsTextFormatter::vssprintf(nsAString& aOut, const char16_t* aFmt,
-                           mozilla::Span<BoxedValue> aValues)
-{
+void nsTextFormatter::vssprintf(nsAString& aOut, const char16_t* aFmt,
+                                mozilla::Span<BoxedValue> aValues) {
   SprintfStateStr ss;
   ss.stuff = StringStuff;
   ss.base = 0;
@@ -869,9 +855,8 @@ nsTextFormatter::vssprintf(nsAString& aOut, const char16_t* aFmt,
 /*
 ** Stuff routine that discards overflow data
 */
-int
-nsTextFormatter::LimitStuff(SprintfStateStr* aState, const char16_t* aStr, uint32_t aLen)
-{
+int nsTextFormatter::LimitStuff(SprintfStateStr* aState, const char16_t* aStr,
+                                uint32_t aLen) {
   uint32_t limit = aState->maxlen - (aState->cur - aState->base);
 
   if (aLen > limit) {
@@ -884,10 +869,9 @@ nsTextFormatter::LimitStuff(SprintfStateStr* aState, const char16_t* aStr, uint3
   return 0;
 }
 
-uint32_t
-nsTextFormatter::vsnprintf(char16_t* aOut, uint32_t aOutLen,
-                           const char16_t* aFmt, mozilla::Span<BoxedValue> aValues)
-{
+uint32_t nsTextFormatter::vsnprintf(char16_t* aOut, uint32_t aOutLen,
+                                    const char16_t* aFmt,
+                                    mozilla::Span<BoxedValue> aValues) {
   SprintfStateStr ss;
 
   MOZ_ASSERT((int32_t)aOutLen > 0);

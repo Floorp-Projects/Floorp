@@ -13,62 +13,53 @@ namespace dom {
 
 class ClientManagerService;
 
-class ClientManagerParent final : public PClientManagerParent
-{
+class ClientManagerParent final : public PClientManagerParent {
   RefPtr<ClientManagerService> mService;
 
   // PClientManagerParent interface
-  mozilla::ipc::IPCResult
-  RecvTeardown() override;
+  mozilla::ipc::IPCResult RecvTeardown() override;
 
-  void
-  ActorDestroy(ActorDestroyReason aReason) override;
+  void ActorDestroy(ActorDestroyReason aReason) override;
 
-  PClientHandleParent*
-  AllocPClientHandleParent(const IPCClientInfo& aClientInfo) override;
+  PClientHandleParent* AllocPClientHandleParent(
+      const IPCClientInfo& aClientInfo) override;
 
-  bool
-  DeallocPClientHandleParent(PClientHandleParent* aActor) override;
+  bool DeallocPClientHandleParent(PClientHandleParent* aActor) override;
 
-  mozilla::ipc::IPCResult
-  RecvPClientHandleConstructor(PClientHandleParent* aActor,
-                               const IPCClientInfo& aClientInfo) override;
+  mozilla::ipc::IPCResult RecvPClientHandleConstructor(
+      PClientHandleParent* aActor, const IPCClientInfo& aClientInfo) override;
 
-  PClientManagerOpParent*
-  AllocPClientManagerOpParent(const ClientOpConstructorArgs& aArgs) override;
+  PClientManagerOpParent* AllocPClientManagerOpParent(
+      const ClientOpConstructorArgs& aArgs) override;
 
-  bool
-  DeallocPClientManagerOpParent(PClientManagerOpParent* aActor) override;
+  bool DeallocPClientManagerOpParent(PClientManagerOpParent* aActor) override;
 
-  mozilla::ipc::IPCResult
-  RecvPClientManagerOpConstructor(PClientManagerOpParent* aActor,
-                                 const ClientOpConstructorArgs& aArgs) override;
+  mozilla::ipc::IPCResult RecvPClientManagerOpConstructor(
+      PClientManagerOpParent* aActor,
+      const ClientOpConstructorArgs& aArgs) override;
 
-  PClientNavigateOpParent*
-  AllocPClientNavigateOpParent(const ClientNavigateOpConstructorArgs& aArgs) override;
+  PClientNavigateOpParent* AllocPClientNavigateOpParent(
+      const ClientNavigateOpConstructorArgs& aArgs) override;
 
-  bool
-  DeallocPClientNavigateOpParent(PClientNavigateOpParent* aActor) override;
+  bool DeallocPClientNavigateOpParent(PClientNavigateOpParent* aActor) override;
 
-  PClientSourceParent*
-  AllocPClientSourceParent(const ClientSourceConstructorArgs& aArgs) override;
+  PClientSourceParent* AllocPClientSourceParent(
+      const ClientSourceConstructorArgs& aArgs) override;
 
-  bool
-  DeallocPClientSourceParent(PClientSourceParent* aActor) override;
+  bool DeallocPClientSourceParent(PClientSourceParent* aActor) override;
 
-  mozilla::ipc::IPCResult
-  RecvPClientSourceConstructor(PClientSourceParent* aActor,
-                               const ClientSourceConstructorArgs& aArgs) override;
+  mozilla::ipc::IPCResult RecvPClientSourceConstructor(
+      PClientSourceParent* aActor,
+      const ClientSourceConstructorArgs& aArgs) override;
 
-public:
+ public:
   ClientManagerParent();
   ~ClientManagerParent();
 
-  void
-  Init();
+  void Init();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // _mozilla_dom_ClientManagerParent_h
+#endif  // _mozilla_dom_ClientManagerParent_h

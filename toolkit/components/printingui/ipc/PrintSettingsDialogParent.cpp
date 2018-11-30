@@ -8,21 +8,15 @@
 namespace mozilla {
 namespace embedding {
 
-PrintSettingsDialogParent::PrintSettingsDialogParent()
-{
+PrintSettingsDialogParent::PrintSettingsDialogParent() {
   MOZ_COUNT_CTOR(PrintSettingsDialogParent);
 }
 
-PrintSettingsDialogParent::~PrintSettingsDialogParent()
-{
+PrintSettingsDialogParent::~PrintSettingsDialogParent() {
   MOZ_COUNT_DTOR(PrintSettingsDialogParent);
 }
 
-void
-PrintSettingsDialogParent::ActorDestroy(ActorDestroyReason aWhy)
-{
-}
+void PrintSettingsDialogParent::ActorDestroy(ActorDestroyReason aWhy) {}
 
-} // namespace embedding
-} // namespace mozilla
-
+}  // namespace embedding
+}  // namespace mozilla

@@ -17,14 +17,12 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-class SVGFEImageFrame final : public nsFrame
-{
-  friend nsIFrame*
-  NS_NewSVGFEImageFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-protected:
-  explicit SVGFEImageFrame(ComputedStyle* aStyle)
-    : nsFrame(aStyle, kClassID)
-  {
+class SVGFEImageFrame final : public nsFrame {
+  friend nsIFrame* NS_NewSVGFEImageFrame(nsIPresShell* aPresShell,
+                                         ComputedStyle* aStyle);
+
+ protected:
+  explicit SVGFEImageFrame(ComputedStyle* aStyle) : nsFrame(aStyle, kClassID) {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
 
     // This frame isn't actually displayed, but it contains an image and we want
@@ -34,16 +32,15 @@ protected:
     EnableVisibilityTracking();
   }
 
-public:
+ public:
   NS_DECL_FRAMEARENA_HELPERS(SVGFEImageFrame)
 
-  virtual void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) override;
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
+                    nsIFrame* aPrevInFlow) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot,
+                           PostDestroyData& aPostDestroyData) override;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override
-  {
+  virtual bool IsFrameOfType(uint32_t aFlags) const override {
     if (aFlags & eSupportsContainLayoutAndPaint) {
       return false;
     }
@@ -52,18 +49,17 @@ public:
   }
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override
-  {
+  virtual nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(NS_LITERAL_STRING("SVGFEImage"), aResult);
   }
 #endif
 
-  virtual nsresult AttributeChanged(int32_t  aNameSpaceID,
-                                    nsAtom* aAttribute,
-                                    int32_t  aModType) override;
+  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                    int32_t aModType) override;
 
-  void OnVisibilityChange(Visibility aNewVisibility,
-                          const Maybe<OnNonvisible>& aNonvisibleAction = Nothing()) override;
+  void OnVisibilityChange(
+      Visibility aNewVisibility,
+      const Maybe<OnNonvisible>& aNonvisibleAction = Nothing()) override;
 
   virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override {
     // We don't maintain a visual overflow rect
@@ -71,21 +67,19 @@ public:
   }
 };
 
-nsIFrame*
-NS_NewSVGFEImageFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
-{
+nsIFrame* NS_NewSVGFEImageFrame(nsIPresShell* aPresShell,
+                                ComputedStyle* aStyle) {
   return new (aPresShell) SVGFEImageFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGFEImageFrame)
 
-/* virtual */ void
-SVGFEImageFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
-{
+/* virtual */ void SVGFEImageFrame::DestroyFrom(
+    nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) {
   DecApproximateVisibleCount();
 
   nsCOMPtr<nsIImageLoadingContent> imageLoader =
-    do_QueryInterface(nsFrame::mContent);
+      do_QueryInterface(nsFrame::mContent);
   if (imageLoader) {
     imageLoader->FrameDestroyed(this);
   }
@@ -93,11 +87,8 @@ SVGFEImageFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDest
   nsFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
-void
-SVGFEImageFrame::Init(nsIContent*       aContent,
-                      nsContainerFrame* aParent,
-                      nsIFrame*         aPrevInFlow)
-{
+void SVGFEImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                           nsIFrame* aPrevInFlow) {
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::feImage),
                "Trying to construct an SVGFEImageFrame for a "
                "content element that doesn't support the right interfaces");
@@ -114,21 +105,20 @@ SVGFEImageFrame::Init(nsIContent*       aContent,
   IncApproximateVisibleCount();
 
   nsCOMPtr<nsIImageLoadingContent> imageLoader =
-    do_QueryInterface(nsFrame::mContent);
+      do_QueryInterface(nsFrame::mContent);
   if (imageLoader) {
     imageLoader->FrameCreated(this);
   }
 }
 
-nsresult
-SVGFEImageFrame::AttributeChanged(int32_t  aNameSpaceID,
-                                  nsAtom* aAttribute,
-                                  int32_t  aModType)
-{
+nsresult SVGFEImageFrame::AttributeChanged(int32_t aNameSpaceID,
+                                           nsAtom* aAttribute,
+                                           int32_t aModType) {
   SVGFEImageElement* element = static_cast<SVGFEImageElement*>(GetContent());
   if (element->AttributeAffectsRendering(aNameSpaceID, aAttribute)) {
-    MOZ_ASSERT(GetParent()->IsSVGFilterFrame(),
-               "Observers observe the filter, so that's what we must invalidate");
+    MOZ_ASSERT(
+        GetParent()->IsSVGFilterFrame(),
+        "Observers observe the filter, so that's what we must invalidate");
     SVGObserverUtils::InvalidateDirectRenderingObservers(GetParent());
   }
 
@@ -140,9 +130,9 @@ SVGFEImageFrame::AttributeChanged(int32_t  aNameSpaceID,
       (aNameSpaceID == kNameSpaceID_XLink ||
        aNameSpaceID == kNameSpaceID_None)) {
     bool hrefIsSet =
-      element->mStringAttributes[SVGFEImageElement::HREF].IsExplicitlySet() ||
-      element->mStringAttributes[SVGFEImageElement::XLINK_HREF]
-        .IsExplicitlySet();
+        element->mStringAttributes[SVGFEImageElement::HREF].IsExplicitlySet() ||
+        element->mStringAttributes[SVGFEImageElement::XLINK_HREF]
+            .IsExplicitlySet();
     if (hrefIsSet) {
       element->LoadSVGImage(true, true);
     } else {
@@ -153,12 +143,10 @@ SVGFEImageFrame::AttributeChanged(int32_t  aNameSpaceID,
   return nsFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
-void
-SVGFEImageFrame::OnVisibilityChange(Visibility aNewVisibility,
-                                    const Maybe<OnNonvisible>& aNonvisibleAction)
-{
+void SVGFEImageFrame::OnVisibilityChange(
+    Visibility aNewVisibility, const Maybe<OnNonvisible>& aNonvisibleAction) {
   nsCOMPtr<nsIImageLoadingContent> imageLoader =
-    do_QueryInterface(nsFrame::mContent);
+      do_QueryInterface(nsFrame::mContent);
   if (!imageLoader) {
     MOZ_ASSERT_UNREACHABLE("Should have an nsIImageLoadingContent");
     nsFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);

@@ -27,10 +27,7 @@
 using namespace wmf;
 using namespace cdm;
 
-VideoDecoder::VideoDecoder(Host_9 *aHost)
-  : mHost(aHost)
-  , mHasShutdown(false)
-{
+VideoDecoder::VideoDecoder(Host_9* aHost) : mHost(aHost), mHasShutdown(false) {
   CK_LOGD("VideoDecoder created");
 
   // We drop the ref in DecodingComplete().
@@ -43,14 +40,9 @@ VideoDecoder::VideoDecoder(Host_9 *aHost)
   HRESULT hr = mDecoder->Init(cores);
 }
 
-VideoDecoder::~VideoDecoder()
-{
-  CK_LOGD("VideoDecoder destroyed");
-}
+VideoDecoder::~VideoDecoder() { CK_LOGD("VideoDecoder destroyed"); }
 
-Status
-VideoDecoder::InitDecode(const VideoDecoderConfig_1& aConfig)
-{
+Status VideoDecoder::InitDecode(const VideoDecoderConfig_1& aConfig) {
   CK_LOGD("VideoDecoder::InitDecode");
 
   if (!mDecoder) {
@@ -62,9 +54,8 @@ VideoDecoder::InitDecode(const VideoDecoderConfig_1& aConfig)
   return Status::kSuccess;
 }
 
-Status
-VideoDecoder::Decode(const InputBuffer_1& aInputBuffer, VideoFrame* aVideoFrame)
-{
+Status VideoDecoder::Decode(const InputBuffer_1& aInputBuffer,
+                            VideoFrame* aVideoFrame) {
   CK_LOGD("VideoDecoder::Decode");
   // If the input buffer we have been passed has a null buffer, it means we
   // should drain.
@@ -92,29 +83,24 @@ VideoDecoder::Decode(const InputBuffer_1& aInputBuffer, VideoFrame* aVideoFrame)
 
   if (data->mCrypto.IsValid()) {
     Status rv =
-      ClearKeyDecryptionManager::Get()->Decrypt(buffer, data->mCrypto);
+        ClearKeyDecryptionManager::Get()->Decrypt(buffer, data->mCrypto);
 
     if (STATUS_FAILED(rv)) {
-      CK_LOGARRAY("Failed to decrypt video using key ",
-                  aInputBuffer.key_id,
+      CK_LOGARRAY("Failed to decrypt video using key ", aInputBuffer.key_id,
                   aInputBuffer.key_id_size);
       return rv;
     }
   }
 
-  hr = mDecoder->Input(buffer.data(),
-                       buffer.size(),
-                       data->mTimestamp);
+  hr = mDecoder->Input(buffer.data(), buffer.size(), data->mTimestamp);
 
   CK_LOGD("VideoDecoder::Decode() Input ret hr=0x%x", hr);
-
 
   if (FAILED(hr)) {
     assert(hr != MF_E_TRANSFORM_NEED_MORE_INPUT);
 
-    CK_LOGE("VideoDecoder::Decode() decode failed ret=0x%x%s",
-      hr,
-      ((hr == MF_E_NOTACCEPTING) ? " (MF_E_NOTACCEPTING)" : ""));
+    CK_LOGE("VideoDecoder::Decode() decode failed ret=0x%x%s", hr,
+            ((hr == MF_E_NOTACCEPTING) ? " (MF_E_NOTACCEPTING)" : ""));
     CK_LOGD("Decode failed. The decoder is not accepting input");
     return Status::kDecodeError;
   }
@@ -169,11 +155,8 @@ Status VideoDecoder::OutputFrame(VideoFrame* aVideoFrame) {
   }
 
   const IntRect& picture = mDecoder->GetPictureRegion();
-  hr = SampleToVideoFrame(result,
-                          picture.width,
-                          picture.height,
-                          mDecoder->GetStride(),
-                          mDecoder->GetFrameHeight(),
+  hr = SampleToVideoFrame(result, picture.width, picture.height,
+                          mDecoder->GetStride(), mDecoder->GetFrameHeight(),
                           aVideoFrame);
   if (FAILED(hr)) {
     CK_LOGD("VideoDecoder::OutputFrame Failed!");
@@ -185,13 +168,10 @@ Status VideoDecoder::OutputFrame(VideoFrame* aVideoFrame) {
 }
 
 HRESULT
-VideoDecoder::SampleToVideoFrame(IMFSample* aSample,
-                                 int32_t aPictureWidth,
-                                 int32_t aPictureHeight,
-                                 int32_t aStride,
+VideoDecoder::SampleToVideoFrame(IMFSample* aSample, int32_t aPictureWidth,
+                                 int32_t aPictureHeight, int32_t aStride,
                                  int32_t aFrameHeight,
-                                 VideoFrame* aVideoFrame)
-{
+                                 VideoFrame* aVideoFrame) {
   CK_LOGD("[%p] VideoDecoder::SampleToVideoFrame()", this);
 
   ENSURE(aSample != nullptr, E_POINTER);
@@ -239,7 +219,7 @@ VideoDecoder::SampleToVideoFrame(IMFSample* aSample,
   aVideoFrame->SetStride(VideoFrame::kUPlane, halfStride);
   aVideoFrame->SetStride(VideoFrame::kVPlane, halfStride);
 
-  aVideoFrame->SetSize(Size{ aPictureWidth, aPictureHeight });
+  aVideoFrame->SetSize(Size{aPictureWidth, aPictureHeight});
 
   // Note: We allocate the minimal sized buffer required to send the
   // frame back over to the parent process. This is so that we request the
@@ -282,10 +262,9 @@ VideoDecoder::SampleToVideoFrame(IMFSample* aSample,
 
   // Copy the pixel data, excluding WMF's padding.
   memcpy(outBuffer, data, stride * aPictureHeight);
-  memcpy(
-    outBuffer + dstUOffset, data + srcYSize, (stride * aPictureHeight) / 4);
-  memcpy(outBuffer + dstVOffset,
-         data + srcYSize + srcUVSize,
+  memcpy(outBuffer + dstUOffset, data + srcYSize,
+         (stride * aPictureHeight) / 4);
+  memcpy(outBuffer + dstVOffset, data + srcYSize + srcUVSize,
          (stride * aPictureHeight) / 4);
 
   if (twoDBuffer) {
@@ -303,9 +282,7 @@ VideoDecoder::SampleToVideoFrame(IMFSample* aSample,
   return S_OK;
 }
 
-void
-VideoDecoder::Reset()
-{
+void VideoDecoder::Reset() {
   CK_LOGD("VideoDecoder::Reset");
 
   if (mDecoder) {
@@ -318,9 +295,7 @@ VideoDecoder::Reset()
   }
 }
 
-Status
-VideoDecoder::Drain(VideoFrame* aVideoFrame)
-{
+Status VideoDecoder::Drain(VideoFrame* aVideoFrame) {
   CK_LOGD("VideoDecoder::Drain()");
 
   if (!mDecoder) {
@@ -334,9 +309,7 @@ VideoDecoder::Drain(VideoFrame* aVideoFrame)
   return OutputFrame(aVideoFrame);
 }
 
-void
-VideoDecoder::DecodingComplete()
-{
+void VideoDecoder::DecodingComplete() {
   CK_LOGD("VideoDecoder::DecodingComplete()");
 
   mHasShutdown = true;

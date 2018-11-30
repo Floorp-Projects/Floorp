@@ -11,17 +11,14 @@
 namespace mozilla {
 namespace dom {
 
-size_t
-CSSFontFeatureValuesRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t CSSFontFeatureValuesRule::SizeOfIncludingThis(
+    MallocSizeOf aMallocSizeOf) const {
   // TODO Implement this!
   return aMallocSizeOf(this);
 }
 
 #ifdef DEBUG
-void
-CSSFontFeatureValuesRule::List(FILE* out, int32_t aIndent) const
-{
+void CSSFontFeatureValuesRule::List(FILE* out, int32_t aIndent) const {
   nsAutoCString str;
   for (int32_t i = 0; i < aIndent; i++) {
     str.AppendLiteral("  ");
@@ -33,55 +30,39 @@ CSSFontFeatureValuesRule::List(FILE* out, int32_t aIndent) const
 
 /* CSSRule implementation */
 
-void
-CSSFontFeatureValuesRule::GetCssText(nsAString& aCssText) const
-{
+void CSSFontFeatureValuesRule::GetCssText(nsAString& aCssText) const {
   Servo_FontFeatureValuesRule_GetCssText(mRawRule, &aCssText);
 }
 
 /* CSSFontFeatureValuesRule implementation */
 
-void
-CSSFontFeatureValuesRule::GetFontFamily(nsAString& aFamilyListStr)
-{
+void CSSFontFeatureValuesRule::GetFontFamily(nsAString& aFamilyListStr) {
   Servo_FontFeatureValuesRule_GetFontFamily(mRawRule, &aFamilyListStr);
 }
 
-void
-CSSFontFeatureValuesRule::GetValueText(nsAString& aValueText)
-{
+void CSSFontFeatureValuesRule::GetValueText(nsAString& aValueText) {
   Servo_FontFeatureValuesRule_GetValueText(mRawRule, &aValueText);
 }
 
-void
-CSSFontFeatureValuesRule::SetFontFamily(const nsAString& aFontFamily,
-                                        ErrorResult& aRv)
-{
+void CSSFontFeatureValuesRule::SetFontFamily(const nsAString& aFontFamily,
+                                             ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
-void
-CSSFontFeatureValuesRule::SetValueText(const nsAString& aValueText,
-                                       ErrorResult& aRv)
-{
+void CSSFontFeatureValuesRule::SetValueText(const nsAString& aValueText,
+                                            ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 // If this ever gets its own cycle-collection bits, reevaluate our IsCCLeaf
 // implementation.
 
-bool
-CSSFontFeatureValuesRule::IsCCLeaf() const
-{
-  return Rule::IsCCLeaf();
-}
+bool CSSFontFeatureValuesRule::IsCCLeaf() const { return Rule::IsCCLeaf(); }
 
-/* virtual */ JSObject*
-CSSFontFeatureValuesRule::WrapObject(JSContext* aCx,
-                                     JS::Handle<JSObject*> aGivenProto)
-{
+/* virtual */ JSObject* CSSFontFeatureValuesRule::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return CSSFontFeatureValuesRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

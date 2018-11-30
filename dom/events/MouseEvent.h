@@ -15,28 +15,22 @@
 namespace mozilla {
 namespace dom {
 
-class MouseEvent : public UIEvent
-{
-public:
-  MouseEvent(EventTarget* aOwner,
-             nsPresContext* aPresContext,
+class MouseEvent : public UIEvent {
+ public:
+  MouseEvent(EventTarget* aOwner, nsPresContext* aPresContext,
              WidgetMouseEventBase* aEvent);
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(MouseEvent, UIEvent)
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  virtual JSObject* WrapObjectInternal(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override {
     return MouseEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-  virtual MouseEvent* AsMouseEvent() override
-  {
-    return this;
-  }
+  virtual MouseEvent* AsMouseEvent() override { return this; }
 
   // Web IDL binding methods
-  virtual uint32_t Which(CallerType aCallerType) override
-  {
+  virtual uint32_t Which(CallerType aCallerType) override {
     return Button() + 1;
   }
 
@@ -55,66 +49,50 @@ public:
   already_AddRefed<EventTarget> GetRelatedTarget();
   void GetRegion(nsAString& aRegion);
   void InitMouseEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
-                      nsGlobalWindowInner* aView, int32_t aDetail, int32_t aScreenX,
-                      int32_t aScreenY, int32_t aClientX, int32_t aClientY,
-                      bool aCtrlKey, bool aAltKey, bool aShiftKey,
-                      bool aMetaKey, uint16_t aButton,
+                      nsGlobalWindowInner* aView, int32_t aDetail,
+                      int32_t aScreenX, int32_t aScreenY, int32_t aClientX,
+                      int32_t aClientY, bool aCtrlKey, bool aAltKey,
+                      bool aShiftKey, bool aMetaKey, uint16_t aButton,
                       EventTarget* aRelatedTarget);
 
   void InitializeExtraMouseEventDictionaryMembers(const MouseEventInit& aParam);
 
-  bool GetModifierState(const nsAString& aKeyArg)
-  {
+  bool GetModifierState(const nsAString& aKeyArg) {
     return GetModifierStateInternal(aKeyArg);
   }
   static already_AddRefed<MouseEvent> Constructor(const GlobalObject& aGlobal,
                                                   const nsAString& aType,
                                                   const MouseEventInit& aParam,
                                                   ErrorResult& aRv);
-  int32_t MovementX()
-  {
-    return GetMovementPoint().x;
-  }
-  int32_t MovementY()
-  {
-    return GetMovementPoint().y;
-  }
+  int32_t MovementX() { return GetMovementPoint().x; }
+  int32_t MovementY() { return GetMovementPoint().y; }
   float MozPressure() const;
   bool HitCluster() const;
   uint16_t MozInputSource() const;
-  void InitNSMouseEvent(const nsAString& aType,
-                        bool aCanBubble, bool aCancelable,
-                        nsGlobalWindowInner* aView, int32_t aDetail,
-                        int32_t aScreenX, int32_t aScreenY,
-                        int32_t aClientX, int32_t aClientY,
-                        bool aCtrlKey, bool aAltKey, bool aShiftKey,
-                        bool aMetaKey, uint16_t aButton,
-                        EventTarget* aRelatedTarget,
+  void InitNSMouseEvent(const nsAString& aType, bool aCanBubble,
+                        bool aCancelable, nsGlobalWindowInner* aView,
+                        int32_t aDetail, int32_t aScreenX, int32_t aScreenY,
+                        int32_t aClientX, int32_t aClientY, bool aCtrlKey,
+                        bool aAltKey, bool aShiftKey, bool aMetaKey,
+                        uint16_t aButton, EventTarget* aRelatedTarget,
                         float aPressure, uint16_t aInputSource);
 
-protected:
+ protected:
   ~MouseEvent() {}
 
-  void InitMouseEvent(const nsAString& aType,
-                      bool aCanBubble,
-                      bool aCancelable,
-                      nsGlobalWindowInner* aView,
-                      int32_t aDetail,
-                      int32_t aScreenX,
-                      int32_t aScreenY,
-                      int32_t aClientX,
-                      int32_t aClientY,
-                      int16_t aButton,
+  void InitMouseEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
+                      nsGlobalWindowInner* aView, int32_t aDetail,
+                      int32_t aScreenX, int32_t aScreenY, int32_t aClientX,
+                      int32_t aClientY, int16_t aButton,
                       EventTarget* aRelatedTarget,
                       const nsAString& aModifiersList);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-already_AddRefed<mozilla::dom::MouseEvent>
-NS_NewDOMMouseEvent(mozilla::dom::EventTarget* aOwner,
-                    nsPresContext* aPresContext,
-                    mozilla::WidgetMouseEvent* aEvent);
+already_AddRefed<mozilla::dom::MouseEvent> NS_NewDOMMouseEvent(
+    mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,
+    mozilla::WidgetMouseEvent* aEvent);
 
-#endif // mozilla_dom_MouseEvent_h_
+#endif  // mozilla_dom_MouseEvent_h_

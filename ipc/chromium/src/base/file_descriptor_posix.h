@@ -18,16 +18,12 @@ namespace base {
 // above the template specialisation for this structure.
 // -----------------------------------------------------------------------------
 struct FileDescriptor {
-  FileDescriptor()
-      : fd(-1),
-        auto_close(false) { }
+  FileDescriptor() : fd(-1), auto_close(false) {}
 
   FileDescriptor(int ifd, bool iauto_close)
-      : fd(ifd),
-        auto_close(iauto_close) { }
+      : fd(ifd), auto_close(iauto_close) {}
 
-  bool operator==(const FileDescriptor& aOther) const
-  {
+  bool operator==(const FileDescriptor& aOther) const {
     return fd == aOther.fd && auto_close == aOther.auto_close;
   }
 

@@ -13,7 +13,8 @@
 #include "mozpkix/pkixder.h"
 #include "mozpkix/pkixtypes.h"
 
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 // Given an encoded subject public key info, a digest algorithm, a public key
 // algorithm, and an encoded signed tree head (SignedTreeHeadV2 as defined in
@@ -21,22 +22,25 @@ namespace mozilla { namespace ct {
 // supported. SHA-256 and SHA-512 are supported, but according to the
 // specification only SHA-256 should be supported at this time.
 pkix::Result DecodeAndVerifySignedTreeHead(
-  pkix::Input signerSubjectPublicKeyInfo, pkix::DigestAlgorithm digestAlgorithm,
-  pkix::der::PublicKeyAlgorithm publicKeyAlg, pkix::Input signedTreeHeadInput,
-  SignedTreeHeadDataV2& signedTreeHead);
+    pkix::Input signerSubjectPublicKeyInfo,
+    pkix::DigestAlgorithm digestAlgorithm,
+    pkix::der::PublicKeyAlgorithm publicKeyAlg, pkix::Input signedTreeHeadInput,
+    SignedTreeHeadDataV2& signedTreeHead);
 
 // Decodes an Inclusion Proof (InclusionProofDataV2 as defined in RFC
 // 6962-bis). This consumes the entirety of the input.
 pkix::Result DecodeInclusionProof(pkix::Input input,
-  InclusionProofDataV2& output);
+                                  InclusionProofDataV2& output);
 // Given a decoded Inclusion Proof (InclusionProofDataV2 as per RFC 6962-bis),
 // the corresponding leaf data entry, and the expected root hash, returns
 // Success if the proof verifies correctly.
 // (https://tools.ietf.org/html/draft-ietf-trans-rfc6962-bis-28#section-2.1.3.2)
 pkix::Result VerifyInclusionProof(const InclusionProofDataV2& proof,
-  pkix::Input leafEntry, pkix::Input expectedRootHash,
-  pkix::DigestAlgorithm digestAlgorithm);
+                                  pkix::Input leafEntry,
+                                  pkix::Input expectedRootHash,
+                                  pkix::DigestAlgorithm digestAlgorithm);
 
-} } // namespace mozilla::ct
+}  // namespace ct
+}  // namespace mozilla
 
-#endif // BTVerifier_h
+#endif  // BTVerifier_h

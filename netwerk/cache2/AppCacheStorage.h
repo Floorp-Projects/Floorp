@@ -16,22 +16,20 @@ class nsIApplicationCache;
 namespace mozilla {
 namespace net {
 
-class AppCacheStorage : public CacheStorage
-{
+class AppCacheStorage : public CacheStorage {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(AppCacheStorage, CacheStorage)
   NS_DECL_NSICACHESTORAGE
 
-public:
-  AppCacheStorage(nsILoadContextInfo* aInfo,
-                  nsIApplicationCache* aAppCache);
+ public:
+  AppCacheStorage(nsILoadContextInfo* aInfo, nsIApplicationCache* aAppCache);
 
-private:
+ private:
   virtual ~AppCacheStorage();
 
   nsCOMPtr<nsIApplicationCache> mAppCache;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

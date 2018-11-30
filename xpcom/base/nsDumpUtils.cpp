@@ -14,7 +14,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Unused.h"
 
-#ifdef XP_UNIX // {
+#ifdef XP_UNIX  // {
 #include "mozilla/Preferences.h"
 #include <fcntl.h>
 #include <unistd.h>
@@ -49,12 +49,9 @@ using namespace mozilla;
 // specific signal occurs.
 static Atomic<int> sDumpPipeWriteFd(-1);
 
-const char FifoWatcher::kPrefName[] =
-  "memory_info_dumper.watch_fifo.enabled";
+const char FifoWatcher::kPrefName[] = "memory_info_dumper.watch_fifo.enabled";
 
-static void
-DumpSignalHandler(int aSignum)
-{
+static void DumpSignalHandler(int aSignum) {
   // This is a signal handler, so everything in here needs to be
   // async-signal-safe.  Be careful!
 
@@ -66,24 +63,20 @@ DumpSignalHandler(int aSignum)
 
 NS_IMPL_ISUPPORTS(FdWatcher, nsIObserver);
 
-void
-FdWatcher::Init()
-{
+void FdWatcher::Init() {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   os->AddObserver(this, "xpcom-shutdown", /* ownsWeak = */ false);
 
   XRE_GetIOMessageLoop()->PostTask(NewRunnableMethod(
-    "FdWatcher::StartWatching", this, &FdWatcher::StartWatching));
+      "FdWatcher::StartWatching", this, &FdWatcher::StartWatching));
 }
 
 // Implementations may call this function multiple times if they ensure that
 // it's safe to call OpenFd() multiple times and they call StopWatching()
 // first.
-void
-FdWatcher::StartWatching()
-{
+void FdWatcher::StartWatching() {
   MOZ_ASSERT(XRE_GetIOMessageLoop() == MessageLoopForIO::current());
   MOZ_ASSERT(mFd == -1);
 
@@ -93,17 +86,14 @@ FdWatcher::StartWatching()
     return;
   }
 
-  MessageLoopForIO::current()->WatchFileDescriptor(
-    mFd, /* persistent = */ true,
-    MessageLoopForIO::WATCH_READ,
-    &mReadWatcher, this);
+  MessageLoopForIO::current()->WatchFileDescriptor(mFd, /* persistent = */ true,
+                                                   MessageLoopForIO::WATCH_READ,
+                                                   &mReadWatcher, this);
 }
 
 // Since implementations can call StartWatching() multiple times, they can of
 // course call StopWatching() multiple times.
-void
-FdWatcher::StopWatching()
-{
+void FdWatcher::StopWatching() {
   MOZ_ASSERT(XRE_GetIOMessageLoop() == MessageLoopForIO::current());
 
   mReadWatcher.StopWatchingFileDescriptor();
@@ -115,9 +105,7 @@ FdWatcher::StopWatching()
 
 StaticRefPtr<SignalPipeWatcher> SignalPipeWatcher::sSingleton;
 
-/* static */ SignalPipeWatcher*
-SignalPipeWatcher::GetSingleton()
-{
+/* static */ SignalPipeWatcher* SignalPipeWatcher::GetSingleton() {
   if (!sSingleton) {
     sSingleton = new SignalPipeWatcher();
     sSingleton->Init();
@@ -126,10 +114,8 @@ SignalPipeWatcher::GetSingleton()
   return sSingleton;
 }
 
-void
-SignalPipeWatcher::RegisterCallback(uint8_t aSignal,
-                                    PipeCallback aCallback)
-{
+void SignalPipeWatcher::RegisterCallback(uint8_t aSignal,
+                                         PipeCallback aCallback) {
   MutexAutoLock lock(mSignalInfoLock);
 
   for (SignalInfoArray::index_type i = 0; i < mSignalInfo.Length(); ++i) {
@@ -138,14 +124,12 @@ SignalPipeWatcher::RegisterCallback(uint8_t aSignal,
       return;
     }
   }
-  SignalInfo signalInfo = { aSignal, aCallback };
+  SignalInfo signalInfo = {aSignal, aCallback};
   mSignalInfo.AppendElement(signalInfo);
   RegisterSignalHandler(signalInfo.mSignal);
 }
 
-void
-SignalPipeWatcher::RegisterSignalHandler(uint8_t aSignal)
-{
+void SignalPipeWatcher::RegisterSignalHandler(uint8_t aSignal) {
   struct sigaction action;
   memset(&action, 0, sizeof(action));
   sigemptyset(&action.sa_mask);
@@ -160,22 +144,20 @@ SignalPipeWatcher::RegisterSignalHandler(uint8_t aSignal)
     for (SignalInfoArray::index_type i = 0; i < mSignalInfo.Length(); i++) {
       if (sigaction(mSignalInfo[i].mSignal, &action, nullptr)) {
         LOG("SignalPipeWatcher failed to register signal(%d) "
-            "dump signal handler.", mSignalInfo[i].mSignal);
+            "dump signal handler.",
+            mSignalInfo[i].mSignal);
       }
     }
   }
 }
 
-SignalPipeWatcher::~SignalPipeWatcher()
-{
+SignalPipeWatcher::~SignalPipeWatcher() {
   if (sDumpPipeWriteFd != -1) {
     StopWatching();
   }
 }
 
-int
-SignalPipeWatcher::OpenFd()
-{
+int SignalPipeWatcher::OpenFd() {
   MOZ_ASSERT(XRE_GetIOMessageLoop() == MessageLoopForIO::current());
 
   // Create a pipe.  When we receive a signal in our signal handler, we'll
@@ -197,9 +179,7 @@ SignalPipeWatcher::OpenFd()
   return readFd;
 }
 
-void
-SignalPipeWatcher::StopWatching()
-{
+void SignalPipeWatcher::StopWatching() {
   MOZ_ASSERT(XRE_GetIOMessageLoop() == MessageLoopForIO::current());
 
   // Close sDumpPipeWriteFd /after/ setting the fd to -1.
@@ -215,9 +195,7 @@ SignalPipeWatcher::StopWatching()
   FdWatcher::StopWatching();
 }
 
-void
-SignalPipeWatcher::OnFileCanReadWithoutBlocking(int aFd)
-{
+void SignalPipeWatcher::OnFileCanReadWithoutBlocking(int aFd) {
   MOZ_ASSERT(XRE_GetIOMessageLoop() == MessageLoopForIO::current());
 
   uint8_t signum;
@@ -242,9 +220,7 @@ SignalPipeWatcher::OnFileCanReadWithoutBlocking(int aFd)
 
 StaticRefPtr<FifoWatcher> FifoWatcher::sSingleton;
 
-/* static */ FifoWatcher*
-FifoWatcher::GetSingleton()
-{
+/* static */ FifoWatcher* FifoWatcher::GetSingleton() {
   if (!sSingleton) {
     nsAutoCString dirPath;
     Preferences::GetCString("memory_info_dumper.watch_fifo.directory", dirPath);
@@ -255,9 +231,7 @@ FifoWatcher::GetSingleton()
   return sSingleton;
 }
 
-/* static */ bool
-FifoWatcher::MaybeCreate()
-{
+/* static */ bool FifoWatcher::MaybeCreate() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!XRE_IsParentProcess()) {
@@ -278,9 +252,8 @@ FifoWatcher::MaybeCreate()
   return true;
 }
 
-void
-FifoWatcher::RegisterCallback(const nsCString& aCommand, FifoCallback aCallback)
-{
+void FifoWatcher::RegisterCallback(const nsCString& aCommand,
+                                   FifoCallback aCallback) {
   MutexAutoLock lock(mFifoInfoLock);
 
   for (FifoInfoArray::index_type i = 0; i < mFifoInfo.Length(); ++i) {
@@ -289,17 +262,13 @@ FifoWatcher::RegisterCallback(const nsCString& aCommand, FifoCallback aCallback)
       return;
     }
   }
-  FifoInfo aFifoInfo = { aCommand, aCallback };
+  FifoInfo aFifoInfo = {aCommand, aCallback};
   mFifoInfo.AppendElement(aFifoInfo);
 }
 
-FifoWatcher::~FifoWatcher()
-{
-}
+FifoWatcher::~FifoWatcher() {}
 
-int
-FifoWatcher::OpenFd()
-{
+int FifoWatcher::OpenFd() {
   // If the memory_info_dumper.directory pref is specified, put the fifo
   // there.  Otherwise, put it into the system's tmp directory.
 
@@ -335,7 +304,8 @@ FifoWatcher::OpenFd()
   // try to mkfifo or open the file.
   if (unlink(path.get())) {
     LOG("FifoWatcher::OpenFifo unlink failed; errno=%d.  "
-        "Continuing despite error.", errno);
+        "Continuing despite error.",
+        errno);
   }
 
   if (mkfifo(path.get(), 0766)) {
@@ -372,9 +342,7 @@ FifoWatcher::OpenFd()
   return fd;
 }
 
-void
-FifoWatcher::OnFileCanReadWithoutBlocking(int aFd)
-{
+void FifoWatcher::OnFileCanReadWithoutBlocking(int aFd) {
   MOZ_ASSERT(XRE_GetIOMessageLoop() == MessageLoopForIO::current());
 
   char buf[1024];
@@ -426,15 +394,15 @@ FifoWatcher::OnFileCanReadWithoutBlocking(int aFd)
   LOG("Got unexpected value from fifo; ignoring it.");
 }
 
-#endif // XP_UNIX }
+#endif  // XP_UNIX }
 
 // In Android case, this function will open a file named aFilename under
 // /data/local/tmp/"aFoldername".
 // Otherwise, it will open a file named aFilename under "NS_OS_TEMP_DIR".
-/* static */ nsresult
-nsDumpUtils::OpenTempFile(const nsACString& aFilename, nsIFile** aFile,
-                          const nsACString& aFoldername, Mode aMode)
-{
+/* static */ nsresult nsDumpUtils::OpenTempFile(const nsACString& aFilename,
+                                                nsIFile** aFile,
+                                                const nsACString& aFoldername,
+                                                Mode aMode) {
 #ifdef ANDROID
   // For Android, first try the downloads directory which is world-readable
   // rather than the temp directory which is not.

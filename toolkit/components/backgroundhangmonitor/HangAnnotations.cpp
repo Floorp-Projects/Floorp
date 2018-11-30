@@ -15,38 +15,33 @@
 
 namespace mozilla {
 
-void
-BackgroundHangAnnotations::AddAnnotation(const nsString& aName, const int32_t aData)
-{
+void BackgroundHangAnnotations::AddAnnotation(const nsString& aName,
+                                              const int32_t aData) {
   nsAutoString dataString;
   dataString.AppendInt(aData);
   AppendElement(HangAnnotation(aName, dataString));
 }
 
-void
-BackgroundHangAnnotations::AddAnnotation(const nsString& aName, const double aData)
-{
+void BackgroundHangAnnotations::AddAnnotation(const nsString& aName,
+                                              const double aData) {
   nsAutoString dataString;
   dataString.AppendFloat(aData);
   AppendElement(HangAnnotation(aName, dataString));
 }
 
-void
-BackgroundHangAnnotations::AddAnnotation(const nsString& aName, const nsString& aData)
-{
+void BackgroundHangAnnotations::AddAnnotation(const nsString& aName,
+                                              const nsString& aData) {
   AppendElement(HangAnnotation(aName, aData));
 }
 
-void
-BackgroundHangAnnotations::AddAnnotation(const nsString& aName, const nsCString& aData)
-{
+void BackgroundHangAnnotations::AddAnnotation(const nsString& aName,
+                                              const nsCString& aData) {
   NS_ConvertUTF8toUTF16 dataString(aData);
   AppendElement(HangAnnotation(aName, dataString));
 }
 
-void
-BackgroundHangAnnotations::AddAnnotation(const nsString& aName, const bool aData)
-{
+void BackgroundHangAnnotations::AddAnnotation(const nsString& aName,
+                                              const bool aData) {
   if (aData) {
     AppendElement(HangAnnotation(aName, NS_LITERAL_STRING("true")));
   } else {
@@ -55,28 +50,22 @@ BackgroundHangAnnotations::AddAnnotation(const nsString& aName, const bool aData
 }
 
 BackgroundHangAnnotators::BackgroundHangAnnotators()
-  : mMutex("BackgroundHangAnnotators::mMutex")
-{
+    : mMutex("BackgroundHangAnnotators::mMutex") {
   MOZ_COUNT_CTOR(BackgroundHangAnnotators);
 }
 
-BackgroundHangAnnotators::~BackgroundHangAnnotators()
-{
+BackgroundHangAnnotators::~BackgroundHangAnnotators() {
   MOZ_ASSERT(mAnnotators.empty());
   MOZ_COUNT_DTOR(BackgroundHangAnnotators);
 }
 
-bool
-BackgroundHangAnnotators::Register(BackgroundHangAnnotator& aAnnotator)
-{
+bool BackgroundHangAnnotators::Register(BackgroundHangAnnotator& aAnnotator) {
   MutexAutoLock lock(mMutex);
   auto result = mAnnotators.insert(&aAnnotator);
   return result.second;
 }
 
-bool
-BackgroundHangAnnotators::Unregister(BackgroundHangAnnotator& aAnnotator)
-{
+bool BackgroundHangAnnotators::Unregister(BackgroundHangAnnotator& aAnnotator) {
   MutexAutoLock lock(mMutex);
   DebugOnly<std::set<BackgroundHangAnnotator*>::size_type> numErased;
   numErased = mAnnotators.erase(&aAnnotator);
@@ -84,14 +73,12 @@ BackgroundHangAnnotators::Unregister(BackgroundHangAnnotator& aAnnotator)
   return mAnnotators.empty();
 }
 
-BackgroundHangAnnotations
-BackgroundHangAnnotators::GatherAnnotations()
-{
+BackgroundHangAnnotations BackgroundHangAnnotators::GatherAnnotations() {
   BackgroundHangAnnotations annotations;
-  { // Scope for lock
+  {  // Scope for lock
     MutexAutoLock lock(mMutex);
     for (std::set<BackgroundHangAnnotator*>::iterator i = mAnnotators.begin(),
-         e = mAnnotators.end();
+                                                      e = mAnnotators.end();
          i != e; ++i) {
       (*i)->AnnotateHang(annotations);
     }
@@ -99,4 +86,4 @@ BackgroundHangAnnotators::GatherAnnotations()
   return annotations;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

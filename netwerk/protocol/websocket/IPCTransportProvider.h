@@ -48,20 +48,19 @@ class nsIAsyncOutputStream;
 namespace mozilla {
 namespace net {
 
-class TransportProviderParent final : public PTransportProviderParent
-                                    , public nsITransportProvider
-                                    , public nsIHttpUpgradeListener
-{
-public:
+class TransportProviderParent final : public PTransportProviderParent,
+                                      public nsITransportProvider,
+                                      public nsIHttpUpgradeListener {
+ public:
   TransportProviderParent() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITRANSPORTPROVIDER
   NS_DECL_NSIHTTPUPGRADELISTENER
 
-  void ActorDestroy(ActorDestroyReason aWhy) override {};
+  void ActorDestroy(ActorDestroyReason aWhy) override{};
 
-private:
+ private:
   ~TransportProviderParent() = default;
 
   void MaybeNotify();
@@ -72,20 +71,19 @@ private:
   nsCOMPtr<nsIAsyncOutputStream> mSocketOut;
 };
 
-class TransportProviderChild final : public PTransportProviderChild
-                                   , public nsITransportProvider
-{
-public:
+class TransportProviderChild final : public PTransportProviderChild,
+                                     public nsITransportProvider {
+ public:
   TransportProviderChild() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITRANSPORTPROVIDER
 
-private:
+ private:
   ~TransportProviderChild();
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

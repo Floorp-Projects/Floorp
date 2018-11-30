@@ -23,9 +23,8 @@ namespace layers {
 // or TabChild) into deeper code that is run during complicated operations
 // like event dispatch. The other type is information that is propagated
 // "upwards", from the deeper code back to the entry point.
-class MOZ_STACK_CLASS InputAPZContext
-{
-private:
+class MOZ_STACK_CLASS InputAPZContext {
+ private:
   // State that is propagated downwards from InputAPZContext creation into
   // "deeper" code.
   static ScrollableLayerGuid sGuid;
@@ -36,7 +35,7 @@ private:
   // State that is set in deeper code and propagated upwards.
   static bool sRoutedToChildProcess;
 
-public:
+ public:
   // Functions to access downwards-propagated data
   static ScrollableLayerGuid GetTargetLayerGuid();
   static uint64_t GetInputBlockId();
@@ -47,8 +46,7 @@ public:
   static bool WasRoutedToChildProcess();
 
   // Constructor sets the data to be propagated downwards
-  InputAPZContext(const ScrollableLayerGuid& aGuid,
-                  const uint64_t& aBlockId,
+  InputAPZContext(const ScrollableLayerGuid& aGuid, const uint64_t& aBlockId,
                   const nsEventStatus& aApzResponse,
                   bool aPendingLayerization = false);
   ~InputAPZContext();
@@ -56,7 +54,7 @@ public:
   // Functions to set data to be propagated upwards
   static void SetRoutedToChildProcess();
 
-private:
+ private:
   ScrollableLayerGuid mOldGuid;
   uint64_t mOldBlockId;
   nsEventStatus mOldApzResponse;
@@ -65,7 +63,7 @@ private:
   bool mOldRoutedToChildProcess;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif /* mozilla_layers_InputAPZContext_h */

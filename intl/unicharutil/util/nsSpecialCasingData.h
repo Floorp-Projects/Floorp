@@ -22,5 +22,5 @@ const MultiCharMapping* SpecialUpper(uint32_t aCh);
 const MultiCharMapping* SpecialLower(uint32_t aCh);
 const MultiCharMapping* SpecialTitle(uint32_t aCh);
 
-} // namespace unicode
-} // namespace mozilla
+}  // namespace unicode
+}  // namespace mozilla

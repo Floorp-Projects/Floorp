@@ -20,11 +20,11 @@
  * borders and backgrounds.
  */
 class nsLeafFrame : public nsFrame {
-public:
+ public:
   NS_DECL_ABSTRACT_FRAME(nsLeafFrame)
 
   // nsIFrame replacements
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override {
     DO_GLOBAL_REFLOW_COUNT_DSP("nsLeafFrame");
     DisplayBorderBackgroundOutline(aBuilder, aLists);
@@ -34,41 +34,33 @@ public:
    * Both GetMinISize and GetPrefISize will return whatever GetIntrinsicISize
    * returns.
    */
-  virtual nscoord GetMinISize(gfxContext *aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext *aRenderingContext) override;
+  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
   /**
    * Our auto size is just intrinsic width and intrinsic height.
    */
-  virtual mozilla::LogicalSize
-  ComputeAutoSize(gfxContext*                 aRenderingContext,
-                  mozilla::WritingMode        aWM,
-                  const mozilla::LogicalSize& aCBSize,
-                  nscoord                     aAvailableISize,
-                  const mozilla::LogicalSize& aMargin,
-                  const mozilla::LogicalSize& aBorder,
-                  const mozilla::LogicalSize& aPadding,
-                  ComputeSizeFlags            aFlags) override;
+  virtual mozilla::LogicalSize ComputeAutoSize(
+      gfxContext* aRenderingContext, mozilla::WritingMode aWM,
+      const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
+      const mozilla::LogicalSize& aMargin, const mozilla::LogicalSize& aBorder,
+      const mozilla::LogicalSize& aPadding, ComputeSizeFlags aFlags) override;
 
   /**
    * Each of our subclasses should provide its own Reflow impl:
    */
-  virtual void Reflow(nsPresContext*      aPresContext,
-                      ReflowOutput&       aDesiredSize,
-                      const ReflowInput&  aReflowInput,
-                      nsReflowStatus&     aStatus) override = 0;
+  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+                      const ReflowInput& aReflowInput,
+                      nsReflowStatus& aStatus) override = 0;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override
-  {
+  virtual bool IsFrameOfType(uint32_t aFlags) const override {
     // We don't actually contain a block, but we do always want a
     // computed width, so tell a little white lie here.
     return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eReplacedContainsBlock));
   }
 
-protected:
-  nsLeafFrame(ComputedStyle* aStyle, ClassID aID)
-    : nsFrame(aStyle, aID)
-  {}
+ protected:
+  nsLeafFrame(ComputedStyle* aStyle, ClassID aID) : nsFrame(aStyle, aID) {}
 
   virtual ~nsLeafFrame();
 

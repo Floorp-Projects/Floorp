@@ -6,23 +6,22 @@
 
 #include "SignedCertificateTimestamp.h"
 
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
-void
-LogEntry::Reset()
-{
+void LogEntry::Reset() {
   type = LogEntry::Type::X509;
   leafCertificate.clear();
   issuerKeyHash.clear();
   tbsCertificate.clear();
 }
 
-bool
-DigitallySigned::SignatureParametersMatch(HashAlgorithm aHashAlgorithm,
-  SignatureAlgorithm aSignatureAlgorithm) const
-{
+bool DigitallySigned::SignatureParametersMatch(
+    HashAlgorithm aHashAlgorithm,
+    SignatureAlgorithm aSignatureAlgorithm) const {
   return (hashAlgorithm == aHashAlgorithm) &&
          (signatureAlgorithm == aSignatureAlgorithm);
 }
 
-} } // namespace mozilla::ct
+}  // namespace ct
+}  // namespace mozilla

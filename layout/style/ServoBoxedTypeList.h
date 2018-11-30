@@ -32,4 +32,3 @@ SERVO_BOXED_TYPE(SelectorList, RawServoSelectorList)
 SERVO_BOXED_TYPE(SourceSizeList, RawServoSourceSizeList)
 SERVO_BOXED_TYPE(UseCounters, StyleUseCounters)
 // clang-format on
-

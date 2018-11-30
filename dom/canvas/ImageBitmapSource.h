@@ -11,10 +11,12 @@ namespace mozilla {
 namespace dom {
 
 // So we don't have to forward declare this elsewhere.
-class HTMLImageElementOrSVGImageElementOrHTMLCanvasElementOrHTMLVideoElementOrImageBitmapOrBlobOrCanvasRenderingContext2DOrImageData;
-typedef HTMLImageElementOrSVGImageElementOrHTMLCanvasElementOrHTMLVideoElementOrImageBitmapOrBlobOrCanvasRenderingContext2DOrImageData ImageBitmapSource;
+class
+    HTMLImageElementOrSVGImageElementOrHTMLCanvasElementOrHTMLVideoElementOrImageBitmapOrBlobOrCanvasRenderingContext2DOrImageData;
+typedef HTMLImageElementOrSVGImageElementOrHTMLCanvasElementOrHTMLVideoElementOrImageBitmapOrBlobOrCanvasRenderingContext2DOrImageData
+    ImageBitmapSource;
 
-}
-}
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

@@ -17,110 +17,113 @@ namespace mozilla {
 
 namespace detail {
 
-template<typename IntTypeT>
-class IntegerIterator
-{
-public:
-  template<typename IntType>
-  explicit IntegerIterator(IntType aCurrent)
-    : mCurrent(aCurrent) { }
+template <typename IntTypeT>
+class IntegerIterator {
+ public:
+  template <typename IntType>
+  explicit IntegerIterator(IntType aCurrent) : mCurrent(aCurrent) {}
 
-  template<typename IntType>
+  template <typename IntType>
   explicit IntegerIterator(const IntegerIterator<IntType>& aOther)
-    : mCurrent(aOther.mCurrent) { }
+      : mCurrent(aOther.mCurrent) {}
 
   IntTypeT operator*() const { return mCurrent; }
 
   /* Increment and decrement operators */
 
-  IntegerIterator& operator++() { ++mCurrent; return *this; }
-  IntegerIterator& operator--() { --mCurrent; return *this; }
-  IntegerIterator operator++(int) { auto ret = *this; ++mCurrent; return ret; }
-  IntegerIterator operator--(int) { auto ret = *this; --mCurrent; return ret; }
+  IntegerIterator& operator++() {
+    ++mCurrent;
+    return *this;
+  }
+  IntegerIterator& operator--() {
+    --mCurrent;
+    return *this;
+  }
+  IntegerIterator operator++(int) {
+    auto ret = *this;
+    ++mCurrent;
+    return ret;
+  }
+  IntegerIterator operator--(int) {
+    auto ret = *this;
+    --mCurrent;
+    return ret;
+  }
 
   /* Comparison operators */
 
-  template<typename IntType1, typename IntType2>
+  template <typename IntType1, typename IntType2>
   friend bool operator==(const IntegerIterator<IntType1>& aIter1,
                          const IntegerIterator<IntType2>& aIter2);
-  template<typename IntType1, typename IntType2>
+  template <typename IntType1, typename IntType2>
   friend bool operator!=(const IntegerIterator<IntType1>& aIter1,
                          const IntegerIterator<IntType2>& aIter2);
-  template<typename IntType1, typename IntType2>
+  template <typename IntType1, typename IntType2>
   friend bool operator<(const IntegerIterator<IntType1>& aIter1,
                         const IntegerIterator<IntType2>& aIter2);
-  template<typename IntType1, typename IntType2>
+  template <typename IntType1, typename IntType2>
   friend bool operator<=(const IntegerIterator<IntType1>& aIter1,
                          const IntegerIterator<IntType2>& aIter2);
-  template<typename IntType1, typename IntType2>
+  template <typename IntType1, typename IntType2>
   friend bool operator>(const IntegerIterator<IntType1>& aIter1,
                         const IntegerIterator<IntType2>& aIter2);
-  template<typename IntType1, typename IntType2>
+  template <typename IntType1, typename IntType2>
   friend bool operator>=(const IntegerIterator<IntType1>& aIter1,
                          const IntegerIterator<IntType2>& aIter2);
 
-private:
+ private:
   IntTypeT mCurrent;
 };
 
-template<typename IntType1, typename IntType2>
+template <typename IntType1, typename IntType2>
 bool operator==(const IntegerIterator<IntType1>& aIter1,
-                const IntegerIterator<IntType2>& aIter2)
-{
+                const IntegerIterator<IntType2>& aIter2) {
   return aIter1.mCurrent == aIter2.mCurrent;
 }
 
-template<typename IntType1, typename IntType2>
+template <typename IntType1, typename IntType2>
 bool operator!=(const IntegerIterator<IntType1>& aIter1,
-                const IntegerIterator<IntType2>& aIter2)
-{
+                const IntegerIterator<IntType2>& aIter2) {
   return aIter1.mCurrent != aIter2.mCurrent;
 }
 
-template<typename IntType1, typename IntType2>
+template <typename IntType1, typename IntType2>
 bool operator<(const IntegerIterator<IntType1>& aIter1,
-               const IntegerIterator<IntType2>& aIter2)
-{
+               const IntegerIterator<IntType2>& aIter2) {
   return aIter1.mCurrent < aIter2.mCurrent;
 }
 
-template<typename IntType1, typename IntType2>
+template <typename IntType1, typename IntType2>
 bool operator<=(const IntegerIterator<IntType1>& aIter1,
-                const IntegerIterator<IntType2>& aIter2)
-{
+                const IntegerIterator<IntType2>& aIter2) {
   return aIter1.mCurrent <= aIter2.mCurrent;
 }
 
-template<typename IntType1, typename IntType2>
+template <typename IntType1, typename IntType2>
 bool operator>(const IntegerIterator<IntType1>& aIter1,
-               const IntegerIterator<IntType2>& aIter2)
-{
+               const IntegerIterator<IntType2>& aIter2) {
   return aIter1.mCurrent > aIter2.mCurrent;
 }
 
-template<typename IntType1, typename IntType2>
+template <typename IntType1, typename IntType2>
 bool operator>=(const IntegerIterator<IntType1>& aIter1,
-                const IntegerIterator<IntType2>& aIter2)
-{
+                const IntegerIterator<IntType2>& aIter2) {
   return aIter1.mCurrent >= aIter2.mCurrent;
 }
 
-template<typename IntTypeT>
-class IntegerRange
-{
-public:
+template <typename IntTypeT>
+class IntegerRange {
+ public:
   typedef IntegerIterator<IntTypeT> iterator;
   typedef IntegerIterator<IntTypeT> const_iterator;
   typedef ReverseIterator<IntegerIterator<IntTypeT>> reverse_iterator;
   typedef ReverseIterator<IntegerIterator<IntTypeT>> const_reverse_iterator;
 
-  template<typename IntType>
-  explicit IntegerRange(IntType aEnd)
-    : mBegin(0), mEnd(aEnd) { }
+  template <typename IntType>
+  explicit IntegerRange(IntType aEnd) : mBegin(0), mEnd(aEnd) {}
 
-  template<typename IntType1, typename IntType2>
-  IntegerRange(IntType1 aBegin, IntType2 aEnd)
-    : mBegin(aBegin), mEnd(aEnd) { }
+  template <typename IntType1, typename IntType2>
+  IntegerRange(IntType1 aBegin, IntType2 aEnd) : mBegin(aBegin), mEnd(aEnd) {}
 
   iterator begin() const { return iterator(mBegin); }
   const_iterator cbegin() const { return begin(); }
@@ -131,43 +134,33 @@ public:
   reverse_iterator rend() const { return reverse_iterator(mBegin); }
   const_reverse_iterator crend() const { return rend(); }
 
-private:
+ private:
   IntTypeT mBegin;
   IntTypeT mEnd;
 };
 
-template<typename T, bool = IsUnsigned<T>::value>
-struct GeqZero
-{
-  static bool check(T t) {
-    return t >= 0;
-  }
+template <typename T, bool = IsUnsigned<T>::value>
+struct GeqZero {
+  static bool check(T t) { return t >= 0; }
 };
 
-template<typename T>
-struct GeqZero<T, true>
-{
-  static bool check(T t) {
-    return true;
-  }
+template <typename T>
+struct GeqZero<T, true> {
+  static bool check(T t) { return true; }
 };
 
-} // namespace detail
+}  // namespace detail
 
-template<typename IntType>
-detail::IntegerRange<IntType>
-IntegerRange(IntType aEnd)
-{
+template <typename IntType>
+detail::IntegerRange<IntType> IntegerRange(IntType aEnd) {
   static_assert(IsIntegral<IntType>::value, "value must be integral");
   MOZ_ASSERT(detail::GeqZero<IntType>::check(aEnd),
              "Should never have negative value here");
   return detail::IntegerRange<IntType>(aEnd);
 }
 
-template<typename IntType1, typename IntType2>
-detail::IntegerRange<IntType2>
-IntegerRange(IntType1 aBegin, IntType2 aEnd)
-{
+template <typename IntType1, typename IntType2>
+detail::IntegerRange<IntType2> IntegerRange(IntType1 aBegin, IntType2 aEnd) {
   static_assert(IsIntegral<IntType1>::value && IsIntegral<IntType2>::value,
                 "values must both be integral");
   static_assert(IsSigned<IntType1>::value == IsSigned<IntType2>::value,
@@ -176,6 +169,6 @@ IntegerRange(IntType1 aBegin, IntType2 aEnd)
   return detail::IntegerRange<IntType2>(aBegin, aEnd);
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_IntegerRange_h
+#endif  // mozilla_IntegerRange_h

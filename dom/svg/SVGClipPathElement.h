@@ -12,25 +12,27 @@
 
 class nsSVGClipPathFrame;
 
-nsresult NS_NewSVGClipPathElement(nsIContent **aResult,
-                                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+nsresult NS_NewSVGClipPathElement(
+    nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
 
 typedef SVGTransformableElement SVGClipPathElementBase;
 
-class SVGClipPathElement final : public SVGClipPathElementBase
-{
+class SVGClipPathElement final : public SVGClipPathElementBase {
   friend class ::nsSVGClipPathFrame;
 
-protected:
-  friend nsresult (::NS_NewSVGClipPathElement(nsIContent **aResult,
-                                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  explicit SVGClipPathElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
+ protected:
+  friend nsresult(::NS_NewSVGClipPathElement(
+      nsIContent** aResult,
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  explicit SVGClipPathElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+  virtual JSObject* WrapNode(JSContext* cx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
-public:
+ public:
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
@@ -40,8 +42,7 @@ public:
   // the answer may be out of date if there's a pending style flush.
   bool IsUnitsObjectBoundingBox() const;
 
-protected:
-
+ protected:
   enum { CLIPPATHUNITS };
   nsSVGEnum mEnumAttributes[1];
   static EnumInfo sEnumInfo[1];
@@ -49,7 +50,7 @@ protected:
   virtual EnumAttributesInfo GetEnumInfo() override;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGClipPathElement_h
+#endif  // mozilla_dom_SVGClipPathElement_h

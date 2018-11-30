@@ -16,31 +16,29 @@ class gfxContext;
 class nsPresContext;
 
 class nsHTMLButtonControlFrame : public nsContainerFrame,
-                                 public nsIFormControlFrame
-{
-public:
+                                 public nsIFormControlFrame {
+ public:
   explicit nsHTMLButtonControlFrame(ComputedStyle* aStyle)
-    : nsHTMLButtonControlFrame(aStyle, kClassID)
-  {}
+      : nsHTMLButtonControlFrame(aStyle, kClassID) {}
 
   ~nsHTMLButtonControlFrame();
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot,
+                           PostDestroyData& aPostDestroyData) override;
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsHTMLButtonControlFrame)
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
-  virtual nscoord GetMinISize(gfxContext *aRenderingContext) override;
+  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
 
-  virtual nscoord GetPrefISize(gfxContext *aRenderingContext) override;
+  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
-  virtual void Reflow(nsPresContext*           aPresContext,
-                      ReflowOutput&     aDesiredSize,
+  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
-                      nsReflowStatus&          aStatus) override;
+                      nsReflowStatus& aStatus) override;
 
   bool GetVerticalAlignBaseline(mozilla::WritingMode aWM,
                                 nscoord* aBaseline) const override;
@@ -53,22 +51,19 @@ public:
                                mozilla::WidgetGUIEvent* aEvent,
                                nsEventStatus* aEventStatus) override;
 
-  virtual void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) override;
+  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
+                    nsIFrame* aPrevInFlow) override;
 
   ComputedStyle* GetAdditionalComputedStyle(int32_t aIndex) const override;
   void SetAdditionalComputedStyle(int32_t aIndex,
                                   ComputedStyle* aComputedStyle) override;
 
 #ifdef DEBUG
-  virtual void AppendFrames(ChildListID     aListID,
-                            nsFrameList&    aFrameList) override;
-  virtual void InsertFrames(ChildListID     aListID,
-                            nsIFrame*       aPrevFrame,
-                            nsFrameList&    aFrameList) override;
-  virtual void RemoveFrame(ChildListID     aListID,
-                           nsIFrame*       aOldFrame) override;
+  virtual void AppendFrames(ChildListID aListID,
+                            nsFrameList& aFrameList) override;
+  virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                            nsFrameList& aFrameList) override;
+  virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
 #endif
 
 #ifdef ACCESSIBILITY
@@ -85,23 +80,23 @@ public:
 
   // nsIFormControlFrame
   void SetFocus(bool aOn, bool aRepaint) override;
-  virtual nsresult SetFormProperty(nsAtom* aName, const nsAString& aValue) override;
+  virtual nsresult SetFormProperty(nsAtom* aName,
+                                   const nsAString& aValue) override;
 
   // Inserted child content gets its frames parented by our child block
   virtual nsContainerFrame* GetContentInsertionFrame() override {
     return PrincipalChildList().FirstChild()->GetContentInsertionFrame();
   }
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override
-  {
-    return nsContainerFrame::IsFrameOfType(aFlags &
-      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
+  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+    return nsContainerFrame::IsFrameOfType(
+        aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
 
   // Return the ::-moz-button-content anonymous box.
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
 
-protected:
+ protected:
   nsHTMLButtonControlFrame(ComputedStyle* aStyle, nsIFrame::ClassID aID);
 
   virtual bool IsInput() { return false; }
@@ -122,7 +117,3 @@ protected:
 };
 
 #endif
-
-
-
-

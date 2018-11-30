@@ -16,8 +16,8 @@
 #include "nsSVGString.h"
 #include "SVGAnimatedNumberList.h"
 
-nsresult NS_NewSVGFEConvolveMatrixElement(nsIContent **aResult,
-                                          already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+nsresult NS_NewSVGFEConvolveMatrixElement(
+    nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 class DOMSVGAnimatedNumberList;
@@ -27,27 +27,30 @@ class SVGAnimatedBoolean;
 
 typedef nsSVGFE SVGFEConvolveMatrixElementBase;
 
-class SVGFEConvolveMatrixElement : public SVGFEConvolveMatrixElementBase
-{
-  friend nsresult (::NS_NewSVGFEConvolveMatrixElement(nsIContent **aResult,
-                                                      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-protected:
-  explicit SVGFEConvolveMatrixElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : SVGFEConvolveMatrixElementBase(std::move(aNodeInfo))
-  {
-  }
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+class SVGFEConvolveMatrixElement : public SVGFEConvolveMatrixElementBase {
+  friend nsresult(::NS_NewSVGFEConvolveMatrixElement(
+      nsIContent** aResult,
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
-public:
-  virtual FilterPrimitiveDescription
-    GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
-                            const IntRect& aFilterSubregion,
-                            const nsTArray<bool>& aInputsAreTainted,
-                            nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
-  virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsAtom* aAttribute) const override;
-  virtual nsSVGString& GetResultImageName() override { return mStringAttributes[RESULT]; }
-  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources) override;
+ protected:
+  explicit SVGFEConvolveMatrixElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+      : SVGFEConvolveMatrixElementBase(std::move(aNodeInfo)) {}
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
+
+ public:
+  virtual FilterPrimitiveDescription GetPrimitiveDescription(
+      nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
+      const nsTArray<bool>& aInputsAreTainted,
+      nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
+  virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
+                                         nsAtom* aAttribute) const override;
+  virtual nsSVGString& GetResultImageName() override {
+    return mStringAttributes[RESULT];
+  }
+  virtual void GetSourceImageNames(
+      nsTArray<nsSVGStringInfo>& aSources) override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
@@ -65,7 +68,7 @@ public:
   already_AddRefed<SVGAnimatedNumber> KernelUnitLengthX();
   already_AddRefed<SVGAnimatedNumber> KernelUnitLengthY();
 
-protected:
+ protected:
   virtual NumberAttributesInfo GetNumberInfo() override;
   virtual NumberPairAttributesInfo GetNumberPairInfo() override;
   virtual IntegerAttributesInfo GetIntegerInfo() override;
@@ -109,7 +112,7 @@ protected:
   static NumberListInfo sNumberListInfo[1];
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGFEConvolveMatrixElement_h
+#endif  // mozilla_dom_SVGFEConvolveMatrixElement_h

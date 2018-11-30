@@ -14,13 +14,12 @@ namespace webgpu {
 
 Texture::~Texture() = default;
 
-already_AddRefed<TextureView>
-Texture::CreateTextureView(const dom::WebGPUTextureViewDescriptor& desc) const
-{
-    MOZ_CRASH("todo");
+already_AddRefed<TextureView> Texture::CreateTextureView(
+    const dom::WebGPUTextureViewDescriptor& desc) const {
+  MOZ_CRASH("todo");
 }
 
 WEBGPU_IMPL_GOOP_0(Texture)
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla

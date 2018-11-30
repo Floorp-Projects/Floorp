@@ -18,51 +18,45 @@
 namespace mozilla {
 namespace dom {
 
-class PublicKeyCredential final : public Credential
-{
-public:
+class PublicKeyCredential final : public Credential {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(PublicKeyCredential,
                                                          Credential)
 
   explicit PublicKeyCredential(nsPIDOMWindowInner* aParent);
 
-protected:
+ protected:
   ~PublicKeyCredential() override;
 
-public:
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+ public:
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  void
-  GetRawId(JSContext* cx, JS::MutableHandle<JSObject*> aRetVal);
+  void GetRawId(JSContext* cx, JS::MutableHandle<JSObject*> aRetVal);
 
-  already_AddRefed<AuthenticatorResponse>
-  Response() const;
+  already_AddRefed<AuthenticatorResponse> Response() const;
 
-  nsresult
-  SetRawId(CryptoBuffer& aBuffer);
+  nsresult SetRawId(CryptoBuffer& aBuffer);
 
-  void
-  SetResponse(RefPtr<AuthenticatorResponse>);
+  void SetResponse(RefPtr<AuthenticatorResponse>);
 
   static already_AddRefed<Promise>
   IsUserVerifyingPlatformAuthenticatorAvailable(GlobalObject& aGlobal);
 
-  void
-  GetClientExtensionResults(AuthenticationExtensionsClientOutputs& aResult);
+  void GetClientExtensionResults(
+      AuthenticationExtensionsClientOutputs& aResult);
 
-  void
-  SetClientExtensionResultAppId(bool aResult);
+  void SetClientExtensionResultAppId(bool aResult);
 
-private:
+ private:
   CryptoBuffer mRawId;
   JS::Heap<JSObject*> mRawIdCachedObj;
   RefPtr<AuthenticatorResponse> mResponse;
   AuthenticationExtensionsClientOutputs mClientExtensionOutputs;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PublicKeyCredential_h
+#endif  // mozilla_dom_PublicKeyCredential_h

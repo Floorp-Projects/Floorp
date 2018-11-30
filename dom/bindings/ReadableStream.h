@@ -12,17 +12,15 @@
 namespace mozilla {
 namespace dom {
 
-struct ReadableStream : public SpiderMonkeyInterfaceObjectStorage
-{
-  inline bool Init(JSObject* obj)
-  {
+struct ReadableStream : public SpiderMonkeyInterfaceObjectStorage {
+  inline bool Init(JSObject* obj) {
     MOZ_ASSERT(!inited());
     mImplObj = mWrappedObj = js::UnwrapReadableStream(obj);
     return inited();
   }
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_ReadableStream_h */

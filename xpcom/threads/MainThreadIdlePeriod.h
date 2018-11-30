@@ -12,24 +12,20 @@
 
 namespace mozilla {
 
-class MainThreadIdlePeriod final : public IdlePeriod
-{
-public:
+class MainThreadIdlePeriod final : public IdlePeriod {
+ public:
   NS_DECL_NSIIDLEPERIOD
 
-  MainThreadIdlePeriod()
-    : mLastIdleDeadline(TimeStamp::Now())
-  {
-  }
+  MainThreadIdlePeriod() : mLastIdleDeadline(TimeStamp::Now()) {}
 
   static float GetLongIdlePeriod();
 
-private:
+ private:
   virtual ~MainThreadIdlePeriod() {}
 
   TimeStamp mLastIdleDeadline;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_dom_mainthreadidleperiod_h
+#endif  // mozilla_dom_mainthreadidleperiod_h

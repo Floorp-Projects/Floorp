@@ -20,14 +20,13 @@ namespace dom {
 /* static */ already_AddRefed<RemoteWorkerController>
 RemoteWorkerController::Create(const RemoteWorkerData& aData,
                                RemoteWorkerObserver* aObserver,
-                               base::ProcessId aProcessId)
-{
+                               base::ProcessId aProcessId) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aObserver);
 
   RefPtr<RemoteWorkerController> controller =
-    new RemoteWorkerController(aObserver);
+      new RemoteWorkerController(aObserver);
 
   RefPtr<RemoteWorkerManager> manager = RemoteWorkerManager::GetOrCreate();
   MOZ_ASSERT(manager);
@@ -38,22 +37,17 @@ RemoteWorkerController::Create(const RemoteWorkerData& aData,
 }
 
 RemoteWorkerController::RemoteWorkerController(RemoteWorkerObserver* aObserver)
-  : mObserver(aObserver)
-  , mState(ePending)
-{
+    : mObserver(aObserver), mState(ePending) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 }
 
-RemoteWorkerController::~RemoteWorkerController()
-{
+RemoteWorkerController::~RemoteWorkerController() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 }
 
-void
-RemoteWorkerController::SetWorkerActor(RemoteWorkerParent* aActor)
-{
+void RemoteWorkerController::SetWorkerActor(RemoteWorkerParent* aActor) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!mActor);
@@ -62,9 +56,7 @@ RemoteWorkerController::SetWorkerActor(RemoteWorkerParent* aActor)
   mActor = aActor;
 }
 
-void
-RemoteWorkerController::CreationFailed()
-{
+void RemoteWorkerController::CreationFailed() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(mState == ePending || mState == eTerminated);
@@ -80,9 +72,7 @@ RemoteWorkerController::CreationFailed()
   mObserver->CreationFailed();
 }
 
-void
-RemoteWorkerController::CreationSucceeded()
-{
+void RemoteWorkerController::CreationSucceeded() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(mState == ePending || mState == eTerminated);
@@ -143,18 +133,14 @@ RemoteWorkerController::CreationSucceeded()
   mPendingOps.Clear();
 }
 
-void
-RemoteWorkerController::ErrorPropagation(const ErrorValue& aValue)
-{
+void RemoteWorkerController::ErrorPropagation(const ErrorValue& aValue) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
   mObserver->ErrorReceived(aValue);
 }
 
-void
-RemoteWorkerController::WorkerTerminated()
-{
+void RemoteWorkerController::WorkerTerminated() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(mState == eReady);
@@ -163,9 +149,7 @@ RemoteWorkerController::WorkerTerminated()
   Shutdown();
 }
 
-void
-RemoteWorkerController::Shutdown()
-{
+void RemoteWorkerController::Shutdown() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(mState == ePending || mState == eReady);
@@ -181,9 +165,7 @@ RemoteWorkerController::Shutdown()
   }
 }
 
-void
-RemoteWorkerController::AddWindowID(uint64_t aWindowID)
-{
+void RemoteWorkerController::AddWindowID(uint64_t aWindowID) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aWindowID);
@@ -201,9 +183,7 @@ RemoteWorkerController::AddWindowID(uint64_t aWindowID)
   Unused << mActor->SendExecOp(RemoteWorkerAddWindowIDOp(aWindowID));
 }
 
-void
-RemoteWorkerController::RemoveWindowID(uint64_t aWindowID)
-{
+void RemoteWorkerController::RemoveWindowID(uint64_t aWindowID) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aWindowID);
@@ -221,9 +201,8 @@ RemoteWorkerController::RemoveWindowID(uint64_t aWindowID)
   Unused << mActor->SendExecOp(RemoteWorkerRemoveWindowIDOp(aWindowID));
 }
 
-void
-RemoteWorkerController::AddPortIdentifier(const MessagePortIdentifier& aPortIdentifier)
-{
+void RemoteWorkerController::AddPortIdentifier(
+    const MessagePortIdentifier& aPortIdentifier) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -240,9 +219,7 @@ RemoteWorkerController::AddPortIdentifier(const MessagePortIdentifier& aPortIden
   Unused << mActor->SendExecOp(RemoteWorkerPortIdentifierOp(aPortIdentifier));
 }
 
-void
-RemoteWorkerController::Terminate()
-{
+void RemoteWorkerController::Terminate() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -253,9 +230,7 @@ RemoteWorkerController::Terminate()
   Shutdown();
 }
 
-void
-RemoteWorkerController::Suspend()
-{
+void RemoteWorkerController::Suspend() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -272,9 +247,7 @@ RemoteWorkerController::Suspend()
   Unused << mActor->SendExecOp(RemoteWorkerSuspendOp());
 }
 
-void
-RemoteWorkerController::Resume()
-{
+void RemoteWorkerController::Resume() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -291,9 +264,7 @@ RemoteWorkerController::Resume()
   Unused << mActor->SendExecOp(RemoteWorkerResumeOp());
 }
 
-void
-RemoteWorkerController::Freeze()
-{
+void RemoteWorkerController::Freeze() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -310,9 +281,7 @@ RemoteWorkerController::Freeze()
   Unused << mActor->SendExecOp(RemoteWorkerFreezeOp());
 }
 
-void
-RemoteWorkerController::Thaw()
-{
+void RemoteWorkerController::Thaw() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -329,8 +298,7 @@ RemoteWorkerController::Thaw()
   Unused << mActor->SendExecOp(RemoteWorkerThawOp());
 }
 
-RemoteWorkerController::Op::~Op()
-{
+RemoteWorkerController::Op::~Op() {
   MOZ_COUNT_DTOR(Op);
 
   // We don't want to leak the port if the operation has not been processed.
@@ -341,5 +309,5 @@ RemoteWorkerController::Op::~Op()
   }
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

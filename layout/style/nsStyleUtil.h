@@ -29,19 +29,18 @@ class FontSlantStyle;
 namespace dom {
 class Element;
 }
-}
+}  // namespace mozilla
 
 // Style utility functions
 class nsStyleUtil {
-public:
+ public:
+  static bool DashMatchCompare(const nsAString& aAttributeValue,
+                               const nsAString& aSelectorValue,
+                               const nsStringComparator& aComparator);
 
- static bool DashMatchCompare(const nsAString& aAttributeValue,
-                                const nsAString& aSelectorValue,
-                                const nsStringComparator& aComparator);
-
- static bool ValueIncludes(const nsAString& aValueList,
-                           const nsAString& aValue,
-                           const nsStringComparator& aComparator);
+  static bool ValueIncludes(const nsAString& aValueList,
+                            const nsAString& aValue,
+                            const nsStringComparator& aComparator);
 
   // Append a quoted (with 'quoteChar') and escaped version of aString
   // to aResult.  'quoteChar' must be ' or ".
@@ -56,23 +55,20 @@ public:
   static void AppendEscapedCSSIdent(const nsAString& aIdent,
                                     nsAString& aResult);
 
-  static void
-  AppendFontSlantStyle(const mozilla::FontSlantStyle&, nsAString& aResult);
+  static void AppendFontSlantStyle(const mozilla::FontSlantStyle&,
+                                   nsAString& aResult);
 
-public:
+ public:
   // Append a bitmask-valued property's value(s) (space-separated) to aResult.
   static void AppendBitmaskCSSValue(const nsCSSKTableEntry aTable[],
-                                    int32_t aMaskedValue,
-                                    int32_t aFirstMask,
-                                    int32_t aLastMask,
-                                    nsAString& aResult);
+                                    int32_t aMaskedValue, int32_t aFirstMask,
+                                    int32_t aLastMask, nsAString& aResult);
 
   static void AppendAngleValue(const nsStyleCoord& aValue, nsAString& aResult);
 
   static void AppendPaintOrderValue(uint8_t aValue, nsAString& aResult);
 
-  static void AppendCSSNumber(float aNumber, nsAString& aResult)
-  {
+  static void AppendCSSNumber(float aNumber, nsAString& aResult) {
     aResult.AppendFloat(aNumber);
   }
 
@@ -80,8 +76,7 @@ public:
    * Convert an author-provided floating point number to an integer (0
    * ... 255) appropriate for use in the alpha component of a color.
    */
-  static uint8_t FloatToColorComponent(float aAlpha)
-  {
+  static uint8_t FloatToColorComponent(float aAlpha) {
     NS_ASSERTION(0.0 <= aAlpha && aAlpha <= 1.0, "out of range");
     return NSToIntRound(aAlpha * 255);
   }
@@ -158,36 +153,30 @@ public:
   static bool CSPAllowsInlineStyle(mozilla::dom::Element* aContent,
                                    nsIPrincipal* aPrincipal,
                                    nsIPrincipal* aTriggeringPrincipal,
-                                   nsIURI* aSourceURI,
-                                   uint32_t aLineNumber,
+                                   nsIURI* aSourceURI, uint32_t aLineNumber,
                                    uint32_t aColumnNumber,
-                                   const nsAString& aStyleText,
-                                   nsresult* aRv);
+                                   const nsAString& aStyleText, nsresult* aRv);
 
-  template<size_t N>
+  template <size_t N>
   static bool MatchesLanguagePrefix(const char16_t* aLang, size_t aLen,
-                                    const char16_t (&aPrefix)[N])
-  {
+                                    const char16_t (&aPrefix)[N]) {
     return !NS_strncmp(aLang, aPrefix, N - 1) &&
            (aLen == N - 1 || aLang[N - 1] == '-');
   }
 
-  template<size_t N>
+  template <size_t N>
   static bool MatchesLanguagePrefix(const nsAtom* aLang,
-                                    const char16_t (&aPrefix)[N])
-  {
+                                    const char16_t (&aPrefix)[N]) {
     MOZ_ASSERT(aLang);
-    return MatchesLanguagePrefix(aLang->GetUTF16String(),
-                                 aLang->GetLength(), aPrefix);
+    return MatchesLanguagePrefix(aLang->GetUTF16String(), aLang->GetLength(),
+                                 aPrefix);
   }
 
-  template<size_t N>
+  template <size_t N>
   static bool MatchesLanguagePrefix(const nsAString& aLang,
-                                    const char16_t (&aPrefix)[N])
-  {
+                                    const char16_t (&aPrefix)[N]) {
     return MatchesLanguagePrefix(aLang.Data(), aLang.Length(), aPrefix);
   }
 };
-
 
 #endif /* nsStyleUtil_h___ */

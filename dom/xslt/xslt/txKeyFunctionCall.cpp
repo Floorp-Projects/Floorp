@@ -25,9 +25,7 @@ using namespace mozilla;
  * Creates a new key function call
  */
 txKeyFunctionCall::txKeyFunctionCall(txNamespaceMap* aMappings)
-    : mMappings(aMappings)
-{
-}
+    : mMappings(aMappings) {}
 
 /*
  * Evaluates a key() xslt-function call. First argument is name of key
@@ -37,83 +35,73 @@ txKeyFunctionCall::txKeyFunctionCall(txNamespaceMap* aMappings)
  *                 for evaluation
  * @return the result of the evaluation
  */
-nsresult
-txKeyFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
-{
-    if (!aContext || !requireParams(2, 2, aContext))
-        return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
+nsresult txKeyFunctionCall::evaluate(txIEvalContext* aContext,
+                                     txAExprResult** aResult) {
+  if (!aContext || !requireParams(2, 2, aContext))
+    return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
-    txExecutionState* es =
-        static_cast<txExecutionState*>(aContext->getPrivateContext());
+  txExecutionState* es =
+      static_cast<txExecutionState*>(aContext->getPrivateContext());
 
-    nsAutoString keyQName;
-    nsresult rv = mParams[0]->evaluateToString(aContext, keyQName);
+  nsAutoString keyQName;
+  nsresult rv = mParams[0]->evaluateToString(aContext, keyQName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  txExpandedName keyName;
+  rv = keyName.init(keyQName, mMappings, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  RefPtr<txAExprResult> exprResult;
+  rv = mParams[1]->evaluate(aContext, getter_AddRefs(exprResult));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  txXPathTreeWalker walker(aContext->getContextNode());
+  walker.moveToRoot();
+
+  RefPtr<txNodeSet> res;
+  txNodeSet* nodeSet;
+  if (exprResult->getResultType() == txAExprResult::NODESET &&
+      (nodeSet =
+           static_cast<txNodeSet*>(static_cast<txAExprResult*>(exprResult)))
+              ->size() > 1) {
+    rv = aContext->recycler()->getNodeSet(getter_AddRefs(res));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    txExpandedName keyName;
-    rv = keyName.init(keyQName, mMappings, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+    int32_t i;
+    for (i = 0; i < nodeSet->size(); ++i) {
+      nsAutoString val;
+      txXPathNodeUtils::appendNodeValue(nodeSet->get(i), val);
 
-    RefPtr<txAExprResult> exprResult;
-    rv = mParams[1]->evaluate(aContext, getter_AddRefs(exprResult));
-    NS_ENSURE_SUCCESS(rv, rv);
+      RefPtr<txNodeSet> nodes;
+      rv = es->getKeyNodes(keyName, walker.getCurrentPosition(), val, i == 0,
+                           getter_AddRefs(nodes));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    txXPathTreeWalker walker(aContext->getContextNode());
-    walker.moveToRoot();
-
-    RefPtr<txNodeSet> res;
-    txNodeSet* nodeSet;
-    if (exprResult->getResultType() == txAExprResult::NODESET &&
-        (nodeSet = static_cast<txNodeSet*>
-                              (static_cast<txAExprResult*>
-                                          (exprResult)))->size() > 1) {
-        rv = aContext->recycler()->getNodeSet(getter_AddRefs(res));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        int32_t i;
-        for (i = 0; i < nodeSet->size(); ++i) {
-            nsAutoString val;
-            txXPathNodeUtils::appendNodeValue(nodeSet->get(i), val);
-
-            RefPtr<txNodeSet> nodes;
-            rv = es->getKeyNodes(keyName, walker.getCurrentPosition(), val,
-                                 i == 0, getter_AddRefs(nodes));
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            res->add(*nodes);
-        }
+      res->add(*nodes);
     }
-    else {
-        nsAutoString val;
-        exprResult->stringValue(val);
-        rv = es->getKeyNodes(keyName, walker.getCurrentPosition(), val,
-                             true, getter_AddRefs(res));
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
+  } else {
+    nsAutoString val;
+    exprResult->stringValue(val);
+    rv = es->getKeyNodes(keyName, walker.getCurrentPosition(), val, true,
+                         getter_AddRefs(res));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-    *aResult = res;
-    NS_ADDREF(*aResult);
+  *aResult = res;
+  NS_ADDREF(*aResult);
 
-    return NS_OK;
+  return NS_OK;
 }
 
-Expr::ResultType
-txKeyFunctionCall::getReturnType()
-{
-    return NODESET_RESULT;
-}
+Expr::ResultType txKeyFunctionCall::getReturnType() { return NODESET_RESULT; }
 
-bool
-txKeyFunctionCall::isSensitiveTo(ContextSensitivity aContext)
-{
-    return (aContext & NODE_CONTEXT) || argsSensitiveTo(aContext);
+bool txKeyFunctionCall::isSensitiveTo(ContextSensitivity aContext) {
+  return (aContext & NODE_CONTEXT) || argsSensitiveTo(aContext);
 }
 
 #ifdef TX_TO_STRING
-void
-txKeyFunctionCall::appendName(nsAString& aDest)
-{
-    aDest.Append(nsGkAtoms::key->GetUTF16String());
+void txKeyFunctionCall::appendName(nsAString& aDest) {
+  aDest.Append(nsGkAtoms::key->GetUTF16String());
 }
 #endif
 
@@ -121,128 +109,109 @@ txKeyFunctionCall::appendName(nsAString& aDest)
  * Hash functions
  */
 
-bool
-txKeyValueHashEntry::KeyEquals(KeyTypePointer aKey) const
-{
-    return mKey.mKeyName == aKey->mKeyName &&
-           mKey.mRootIdentifier == aKey->mRootIdentifier &&
-           mKey.mKeyValue.Equals(aKey->mKeyValue);
+bool txKeyValueHashEntry::KeyEquals(KeyTypePointer aKey) const {
+  return mKey.mKeyName == aKey->mKeyName &&
+         mKey.mRootIdentifier == aKey->mRootIdentifier &&
+         mKey.mKeyValue.Equals(aKey->mKeyValue);
 }
 
-PLDHashNumber
-txKeyValueHashEntry::HashKey(KeyTypePointer aKey)
-{
-    const txKeyValueHashKey* key =
-        static_cast<const txKeyValueHashKey*>(aKey);
+PLDHashNumber txKeyValueHashEntry::HashKey(KeyTypePointer aKey) {
+  const txKeyValueHashKey* key = static_cast<const txKeyValueHashKey*>(aKey);
 
-    return AddToHash(HashString(key->mKeyValue),
-                     key->mKeyName.mNamespaceID,
-                     key->mRootIdentifier,
+  return AddToHash(HashString(key->mKeyValue), key->mKeyName.mNamespaceID,
+                   key->mRootIdentifier, key->mKeyName.mLocalName.get());
+}
+
+bool txIndexedKeyHashEntry::KeyEquals(KeyTypePointer aKey) const {
+  return mKey.mKeyName == aKey->mKeyName &&
+         mKey.mRootIdentifier == aKey->mRootIdentifier;
+}
+
+PLDHashNumber txIndexedKeyHashEntry::HashKey(KeyTypePointer aKey) {
+  const txIndexedKeyHashKey* key =
+      static_cast<const txIndexedKeyHashKey*>(aKey);
+  return HashGeneric(key->mKeyName.mNamespaceID, key->mRootIdentifier,
                      key->mKeyName.mLocalName.get());
-}
-
-bool
-txIndexedKeyHashEntry::KeyEquals(KeyTypePointer aKey) const
-{
-    return mKey.mKeyName == aKey->mKeyName &&
-           mKey.mRootIdentifier == aKey->mRootIdentifier;
-}
-
-PLDHashNumber
-txIndexedKeyHashEntry::HashKey(KeyTypePointer aKey)
-{
-    const txIndexedKeyHashKey* key =
-        static_cast<const txIndexedKeyHashKey*>(aKey);
-    return HashGeneric(key->mKeyName.mNamespaceID,
-                       key->mRootIdentifier,
-                       key->mKeyName.mLocalName.get());
 }
 
 /*
  * Class managing XSLT-keys
  */
 
-nsresult
-txKeyHash::getKeyNodes(const txExpandedName& aKeyName,
-                       const txXPathNode& aRoot,
-                       const nsAString& aKeyValue,
-                       bool aIndexIfNotFound,
-                       txExecutionState& aEs,
-                       txNodeSet** aResult)
-{
-    *aResult = nullptr;
+nsresult txKeyHash::getKeyNodes(const txExpandedName& aKeyName,
+                                const txXPathNode& aRoot,
+                                const nsAString& aKeyValue,
+                                bool aIndexIfNotFound, txExecutionState& aEs,
+                                txNodeSet** aResult) {
+  *aResult = nullptr;
 
-    int32_t identifier = txXPathNodeUtils::getUniqueIdentifier(aRoot);
+  int32_t identifier = txXPathNodeUtils::getUniqueIdentifier(aRoot);
 
-    txKeyValueHashKey valueKey(aKeyName, identifier, aKeyValue);
-    txKeyValueHashEntry* valueEntry = mKeyValues.GetEntry(valueKey);
-    if (valueEntry) {
-        *aResult = valueEntry->mNodeSet;
-        NS_ADDREF(*aResult);
-
-        return NS_OK;
-    }
-
-    // We didn't find a value. This could either mean that that key has no
-    // nodes with that value or that the key hasn't been indexed using this
-    // document.
-
-    if (!aIndexIfNotFound) {
-        // If aIndexIfNotFound is set then the caller knows this key is
-        // indexed, so don't bother investigating.
-        *aResult = mEmptyNodeSet;
-        NS_ADDREF(*aResult);
-
-        return NS_OK;
-    }
-
-    txIndexedKeyHashKey indexKey(aKeyName, identifier);
-    txIndexedKeyHashEntry* indexEntry = mIndexedKeys.PutEntry(indexKey);
-    NS_ENSURE_TRUE(indexEntry, NS_ERROR_OUT_OF_MEMORY);
-
-    if (indexEntry->mIndexed) {
-        // The key was indexed and apparently didn't contain this value so
-        // return the empty nodeset.
-        *aResult = mEmptyNodeSet;
-        NS_ADDREF(*aResult);
-
-        return NS_OK;
-    }
-
-    // The key needs to be indexed.
-    txXSLKey* xslKey = mKeys.get(aKeyName);
-    if (!xslKey) {
-        // The key didn't exist, so bail.
-        return NS_ERROR_INVALID_ARG;
-    }
-
-    nsresult rv = xslKey->indexSubtreeRoot(aRoot, mKeyValues, aEs);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    indexEntry->mIndexed = true;
-
-    // Now that the key is indexed we can get its value.
-    valueEntry = mKeyValues.GetEntry(valueKey);
-    if (valueEntry) {
-        *aResult = valueEntry->mNodeSet;
-        NS_ADDREF(*aResult);
-    }
-    else {
-        *aResult = mEmptyNodeSet;
-        NS_ADDREF(*aResult);
-    }
+  txKeyValueHashKey valueKey(aKeyName, identifier, aKeyValue);
+  txKeyValueHashEntry* valueEntry = mKeyValues.GetEntry(valueKey);
+  if (valueEntry) {
+    *aResult = valueEntry->mNodeSet;
+    NS_ADDREF(*aResult);
 
     return NS_OK;
-}
+  }
 
-nsresult
-txKeyHash::init()
-{
-    mEmptyNodeSet = new txNodeSet(nullptr);
+  // We didn't find a value. This could either mean that that key has no
+  // nodes with that value or that the key hasn't been indexed using this
+  // document.
+
+  if (!aIndexIfNotFound) {
+    // If aIndexIfNotFound is set then the caller knows this key is
+    // indexed, so don't bother investigating.
+    *aResult = mEmptyNodeSet;
+    NS_ADDREF(*aResult);
 
     return NS_OK;
+  }
+
+  txIndexedKeyHashKey indexKey(aKeyName, identifier);
+  txIndexedKeyHashEntry* indexEntry = mIndexedKeys.PutEntry(indexKey);
+  NS_ENSURE_TRUE(indexEntry, NS_ERROR_OUT_OF_MEMORY);
+
+  if (indexEntry->mIndexed) {
+    // The key was indexed and apparently didn't contain this value so
+    // return the empty nodeset.
+    *aResult = mEmptyNodeSet;
+    NS_ADDREF(*aResult);
+
+    return NS_OK;
+  }
+
+  // The key needs to be indexed.
+  txXSLKey* xslKey = mKeys.get(aKeyName);
+  if (!xslKey) {
+    // The key didn't exist, so bail.
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsresult rv = xslKey->indexSubtreeRoot(aRoot, mKeyValues, aEs);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  indexEntry->mIndexed = true;
+
+  // Now that the key is indexed we can get its value.
+  valueEntry = mKeyValues.GetEntry(valueKey);
+  if (valueEntry) {
+    *aResult = valueEntry->mNodeSet;
+    NS_ADDREF(*aResult);
+  } else {
+    *aResult = mEmptyNodeSet;
+    NS_ADDREF(*aResult);
+  }
+
+  return NS_OK;
 }
 
+nsresult txKeyHash::init() {
+  mEmptyNodeSet = new txNodeSet(nullptr);
+
+  return NS_OK;
+}
 
 /**
  * Adds a match/use pair.
@@ -250,19 +219,16 @@ txKeyHash::init()
  * @param aUse    use-expression
  * @return false if an error occurred, true otherwise
  */
-bool txXSLKey::addKey(nsAutoPtr<txPattern>&& aMatch, nsAutoPtr<Expr>&& aUse)
-{
-    if (!aMatch || !aUse)
-        return false;
+bool txXSLKey::addKey(nsAutoPtr<txPattern>&& aMatch, nsAutoPtr<Expr>&& aUse) {
+  if (!aMatch || !aUse) return false;
 
-    Key* key = mKeys.AppendElement();
-    if (!key)
-        return false;
+  Key* key = mKeys.AppendElement();
+  if (!key) return false;
 
-    key->matchPattern = std::move(aMatch);
-    key->useExpr = std::move(aUse);
+  key->matchPattern = std::move(aMatch);
+  key->useExpr = std::move(aUse);
 
-    return true;
+  return true;
 }
 
 /**
@@ -273,12 +239,10 @@ bool txXSLKey::addKey(nsAutoPtr<txPattern>&& aMatch, nsAutoPtr<Expr>&& aUse)
  */
 nsresult txXSLKey::indexSubtreeRoot(const txXPathNode& aRoot,
                                     txKeyValueHash& aKeyValueHash,
-                                    txExecutionState& aEs)
-{
-    txKeyValueHashKey key(mName,
-                          txXPathNodeUtils::getUniqueIdentifier(aRoot),
-                          EmptyString());
-    return indexTree(aRoot, key, aKeyValueHash, aEs);
+                                    txExecutionState& aEs) {
+  txKeyValueHashKey key(mName, txXPathNodeUtils::getUniqueIdentifier(aRoot),
+                        EmptyString());
+  return indexTree(aRoot, key, aKeyValueHash, aEs);
 }
 
 /**
@@ -289,35 +253,31 @@ nsresult txXSLKey::indexSubtreeRoot(const txXPathNode& aRoot,
  * @param aKeyValueHash Hash to add values to
  * @param aEs           txExecutionState to use for XPath evaluation
  */
-nsresult txXSLKey::indexTree(const txXPathNode& aNode,
-                             txKeyValueHashKey& aKey,
+nsresult txXSLKey::indexTree(const txXPathNode& aNode, txKeyValueHashKey& aKey,
                              txKeyValueHash& aKeyValueHash,
-                             txExecutionState& aEs)
-{
-    nsresult rv = testNode(aNode, aKey, aKeyValueHash, aEs);
-    NS_ENSURE_SUCCESS(rv, rv);
+                             txExecutionState& aEs) {
+  nsresult rv = testNode(aNode, aKey, aKeyValueHash, aEs);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // check if the node's attributes match
-    txXPathTreeWalker walker(aNode);
-    if (walker.moveToFirstAttribute()) {
-        do {
-            rv = testNode(walker.getCurrentPosition(), aKey, aKeyValueHash,
-                          aEs);
-            NS_ENSURE_SUCCESS(rv, rv);
-        } while (walker.moveToNextAttribute());
-        walker.moveToParent();
-    }
+  // check if the node's attributes match
+  txXPathTreeWalker walker(aNode);
+  if (walker.moveToFirstAttribute()) {
+    do {
+      rv = testNode(walker.getCurrentPosition(), aKey, aKeyValueHash, aEs);
+      NS_ENSURE_SUCCESS(rv, rv);
+    } while (walker.moveToNextAttribute());
+    walker.moveToParent();
+  }
 
-    // check if the node's descendants match
-    if (walker.moveToFirstChild()) {
-        do {
-            rv = indexTree(walker.getCurrentPosition(), aKey, aKeyValueHash,
-                           aEs);
-            NS_ENSURE_SUCCESS(rv, rv);
-        } while (walker.moveToNextSibling());
-    }
+  // check if the node's descendants match
+  if (walker.moveToFirstChild()) {
+    do {
+      rv = indexTree(walker.getCurrentPosition(), aKey, aKeyValueHash, aEs);
+      NS_ENSURE_SUCCESS(rv, rv);
+    } while (walker.moveToNextSibling());
+  }
 
-    return NS_OK;
+  return NS_OK;
 }
 
 /**
@@ -328,70 +288,61 @@ nsresult txXSLKey::indexTree(const txXPathNode& aNode,
  * @param aKeyValueHash Hash to add values to
  * @param aEs           txExecutionState to use for XPath evaluation
  */
-nsresult txXSLKey::testNode(const txXPathNode& aNode,
-                            txKeyValueHashKey& aKey,
+nsresult txXSLKey::testNode(const txXPathNode& aNode, txKeyValueHashKey& aKey,
                             txKeyValueHash& aKeyValueHash,
-                            txExecutionState& aEs)
-{
-    nsAutoString val;
-    uint32_t currKey, numKeys = mKeys.Length();
-    for (currKey = 0; currKey < numKeys; ++currKey) {
-        bool matched;
-        nsresult rv = mKeys[currKey].matchPattern->matches(aNode, &aEs, matched);
-        NS_ENSURE_SUCCESS(rv, rv);
+                            txExecutionState& aEs) {
+  nsAutoString val;
+  uint32_t currKey, numKeys = mKeys.Length();
+  for (currKey = 0; currKey < numKeys; ++currKey) {
+    bool matched;
+    nsresult rv = mKeys[currKey].matchPattern->matches(aNode, &aEs, matched);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-        if (matched) {
-            txSingleNodeContext *evalContext =
-                new txSingleNodeContext(aNode, &aEs);
-            NS_ENSURE_TRUE(evalContext, NS_ERROR_OUT_OF_MEMORY);
+    if (matched) {
+      txSingleNodeContext* evalContext = new txSingleNodeContext(aNode, &aEs);
+      NS_ENSURE_TRUE(evalContext, NS_ERROR_OUT_OF_MEMORY);
 
-            nsresult rv = aEs.pushEvalContext(evalContext);
-            NS_ENSURE_SUCCESS(rv, rv);
+      nsresult rv = aEs.pushEvalContext(evalContext);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-            RefPtr<txAExprResult> exprResult;
-            rv = mKeys[currKey].useExpr->evaluate(evalContext,
-                                                  getter_AddRefs(exprResult));
+      RefPtr<txAExprResult> exprResult;
+      rv = mKeys[currKey].useExpr->evaluate(evalContext,
+                                            getter_AddRefs(exprResult));
 
-            delete aEs.popEvalContext();
-            NS_ENSURE_SUCCESS(rv, rv);
+      delete aEs.popEvalContext();
+      NS_ENSURE_SUCCESS(rv, rv);
 
-            if (exprResult->getResultType() == txAExprResult::NODESET) {
-                txNodeSet* res = static_cast<txNodeSet*>
-                                            (static_cast<txAExprResult*>
-                                                        (exprResult));
-                int32_t i;
-                for (i = 0; i < res->size(); ++i) {
-                    val.Truncate();
-                    txXPathNodeUtils::appendNodeValue(res->get(i), val);
+      if (exprResult->getResultType() == txAExprResult::NODESET) {
+        txNodeSet* res =
+            static_cast<txNodeSet*>(static_cast<txAExprResult*>(exprResult));
+        int32_t i;
+        for (i = 0; i < res->size(); ++i) {
+          val.Truncate();
+          txXPathNodeUtils::appendNodeValue(res->get(i), val);
 
-                    aKey.mKeyValue.Assign(val);
-                    txKeyValueHashEntry* entry = aKeyValueHash.PutEntry(aKey);
-                    NS_ENSURE_TRUE(entry && entry->mNodeSet,
-                                   NS_ERROR_OUT_OF_MEMORY);
+          aKey.mKeyValue.Assign(val);
+          txKeyValueHashEntry* entry = aKeyValueHash.PutEntry(aKey);
+          NS_ENSURE_TRUE(entry && entry->mNodeSet, NS_ERROR_OUT_OF_MEMORY);
 
-                    if (entry->mNodeSet->isEmpty() ||
-                        entry->mNodeSet->get(entry->mNodeSet->size() - 1) !=
-                        aNode) {
-                        entry->mNodeSet->append(aNode);
-                    }
-                }
-            }
-            else {
-                exprResult->stringValue(val);
-
-                aKey.mKeyValue.Assign(val);
-                txKeyValueHashEntry* entry = aKeyValueHash.PutEntry(aKey);
-                NS_ENSURE_TRUE(entry && entry->mNodeSet,
-                               NS_ERROR_OUT_OF_MEMORY);
-
-                if (entry->mNodeSet->isEmpty() ||
-                    entry->mNodeSet->get(entry->mNodeSet->size() - 1) !=
-                    aNode) {
-                    entry->mNodeSet->append(aNode);
-                }
-            }
+          if (entry->mNodeSet->isEmpty() ||
+              entry->mNodeSet->get(entry->mNodeSet->size() - 1) != aNode) {
+            entry->mNodeSet->append(aNode);
+          }
         }
-    }
+      } else {
+        exprResult->stringValue(val);
 
-    return NS_OK;
+        aKey.mKeyValue.Assign(val);
+        txKeyValueHashEntry* entry = aKeyValueHash.PutEntry(aKey);
+        NS_ENSURE_TRUE(entry && entry->mNodeSet, NS_ERROR_OUT_OF_MEMORY);
+
+        if (entry->mNodeSet->isEmpty() ||
+            entry->mNodeSet->get(entry->mNodeSet->size() - 1) != aNode) {
+          entry->mNodeSet->append(aNode);
+        }
+      }
+    }
+  }
+
+  return NS_OK;
 }

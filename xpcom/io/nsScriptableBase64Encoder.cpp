@@ -14,15 +14,13 @@ NS_IMPL_ISUPPORTS(nsScriptableBase64Encoder, nsIScriptableBase64Encoder)
 NS_IMETHODIMP
 nsScriptableBase64Encoder::EncodeToCString(nsIInputStream* aStream,
                                            uint32_t aLength,
-                                           nsACString& aResult)
-{
+                                           nsACString& aResult) {
   return Base64EncodeInputStream(aStream, aResult, aLength);
 }
 
 NS_IMETHODIMP
 nsScriptableBase64Encoder::EncodeToString(nsIInputStream* aStream,
                                           uint32_t aLength,
-                                          nsAString& aResult)
-{
+                                          nsAString& aResult) {
   return Base64EncodeInputStream(aStream, aResult, aLength);
 }

@@ -14,7 +14,7 @@
 extern "C" {
 #endif
 
-#define STAMP_TIMECARD(card,event)                                       \
+#define STAMP_TIMECARD(card, event)                                      \
   do {                                                                   \
     if (card) {                                                          \
       stamp_timecard((card), (event), __FILE__, __LINE__, __FUNCTION__); \
@@ -46,33 +46,26 @@ typedef struct Timecard {
 /**
  * Creates a new Timecard structure for tracking events.
  */
-Timecard *
-create_timecard();
+Timecard *create_timecard();
 
 /**
  * Frees the memory associated with a timecard. After returning, the
  * timecard pointed to by tc is no longer valid.
  */
-void
-destroy_timecard(Timecard *tc);
+void destroy_timecard(Timecard *tc);
 
 /**
  * Records a new event in the indicated timecard. This should not be
  * called directly; code should instead use the STAMP_TIMECARD macro,
  * above.
  */
-void
-stamp_timecard(Timecard *tc,
-               const char *event,
-               const char *file,
-               unsigned int line,
-               const char *function);
+void stamp_timecard(Timecard *tc, const char *event, const char *file,
+                    unsigned int line, const char *function);
 
 /**
  * Formats and outputs the contents of a timecard onto stdout.
  */
-void
-print_timecard(Timecard *tc);
+void print_timecard(Timecard *tc);
 
 #ifdef __cplusplus
 }

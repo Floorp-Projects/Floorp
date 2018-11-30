@@ -11,24 +11,20 @@ namespace mozilla {
 namespace dom {
 namespace presentation {
 
-class TCPDeviceInfo final : public nsITCPDeviceInfo
-{
-public:
+class TCPDeviceInfo final : public nsITCPDeviceInfo {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITCPDEVICEINFO
 
-  explicit TCPDeviceInfo(const nsACString& aId,
-                         const nsACString& aAddress,
+  explicit TCPDeviceInfo(const nsACString& aId, const nsACString& aAddress,
                          const uint16_t aPort,
                          const nsACString& aCertFingerprint)
-    : mId(aId)
-    , mAddress(aAddress)
-    , mPort(aPort)
-    , mCertFingerprint(aCertFingerprint)
-  {
-  }
+      : mId(aId),
+        mAddress(aAddress),
+        mPort(aPort),
+        mCertFingerprint(aCertFingerprint) {}
 
-private:
+ private:
   virtual ~TCPDeviceInfo() {}
 
   nsCString mId;
@@ -37,41 +33,35 @@ private:
   nsCString mCertFingerprint;
 };
 
-NS_IMPL_ISUPPORTS(TCPDeviceInfo,
-                  nsITCPDeviceInfo)
+NS_IMPL_ISUPPORTS(TCPDeviceInfo, nsITCPDeviceInfo)
 
 // nsITCPDeviceInfo
 NS_IMETHODIMP
-TCPDeviceInfo::GetId(nsACString& aId)
-{
+TCPDeviceInfo::GetId(nsACString& aId) {
   aId = mId;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TCPDeviceInfo::GetAddress(nsACString& aAddress)
-{
+TCPDeviceInfo::GetAddress(nsACString& aAddress) {
   aAddress = mAddress;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TCPDeviceInfo::GetPort(uint16_t* aPort)
-{
+TCPDeviceInfo::GetPort(uint16_t* aPort) {
   *aPort = mPort;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TCPDeviceInfo::GetCertFingerprint(nsACString& aCertFingerprint)
-{
+TCPDeviceInfo::GetCertFingerprint(nsACString& aCertFingerprint) {
   aCertFingerprint = mCertFingerprint;
   return NS_OK;
 }
 
-} // namespace presentation
-} // namespace dom
-} // namespace mozilla
+}  // namespace presentation
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* !__TCPDeviceInfo_h__ */
-

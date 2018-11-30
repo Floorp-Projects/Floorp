@@ -13,30 +13,24 @@
 namespace mozilla {
 namespace dom {
 
-class ChildProcessMessageManager final : public SyncMessageSender
-{
-public:
+class ChildProcessMessageManager final : public SyncMessageSender {
+ public:
   explicit ChildProcessMessageManager(ipc::MessageManagerCallback* aCallback)
-    : SyncMessageSender(aCallback,
-                        MessageManagerFlags::MM_PROCESSMANAGER |
-                        MessageManagerFlags::MM_OWNSCALLBACK)
-  {
+      : SyncMessageSender(aCallback, MessageManagerFlags::MM_PROCESSMANAGER |
+                                         MessageManagerFlags::MM_OWNSCALLBACK) {
     mozilla::HoldJSObjects(this);
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override {
     return ChildProcessMessageManager_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-protected:
-  virtual ~ChildProcessMessageManager()
-  {
-    mozilla::DropJSObjects(this);
-  }
+ protected:
+  virtual ~ChildProcessMessageManager() { mozilla::DropJSObjects(this); }
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ChildProcessMessageManager_h
+#endif  // mozilla_dom_ChildProcessMessageManager_h

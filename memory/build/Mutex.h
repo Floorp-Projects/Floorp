@@ -20,8 +20,7 @@
 // places, because they require malloc()ed memory, which causes bootstrapping
 // issues in some cases.  We also can't use constructors, because for statics,
 // they would fire after the first use of malloc, resetting the locks.
-struct Mutex
-{
+struct Mutex {
 #if defined(XP_WIN)
   CRITICAL_SECTION mMutex;
 #elif defined(XP_DARWIN)
@@ -31,8 +30,7 @@ struct Mutex
 #endif
 
   // Initializes a mutex. Returns whether initialization succeeded.
-  inline bool Init()
-  {
+  inline bool Init() {
 #if defined(XP_WIN)
     if (!InitializeCriticalSectionAndSpinCount(&mMutex, 5000)) {
       return false;
@@ -58,8 +56,7 @@ struct Mutex
     return true;
   }
 
-  inline void Lock()
-  {
+  inline void Lock() {
 #if defined(XP_WIN)
     EnterCriticalSection(&mMutex);
 #elif defined(XP_DARWIN)
@@ -69,8 +66,7 @@ struct Mutex
 #endif
   }
 
-  inline void Unlock()
-  {
+  inline void Unlock() {
 #if defined(XP_WIN)
     LeaveCriticalSection(&mMutex);
 #elif defined(XP_DARWIN)
@@ -89,8 +85,7 @@ struct Mutex
 // Ideally, we'd use the same type of locks everywhere, but SRWLocks
 // everywhere incur a performance penalty. See bug 1418389.
 #if defined(XP_WIN)
-struct StaticMutex
-{
+struct StaticMutex {
   SRWLOCK mMutex;
 
   inline void Lock() { AcquireSRWLockExclusive(&mMutex); }
@@ -115,19 +110,17 @@ typedef Mutex StaticMutex;
 
 #endif
 
-template<typename T>
-struct MOZ_RAII AutoLock
-{
+template <typename T>
+struct MOZ_RAII AutoLock {
   explicit AutoLock(T& aMutex MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mMutex(aMutex)
-  {
+      : mMutex(aMutex) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     mMutex.Lock();
   }
 
   ~AutoLock() { mMutex.Unlock(); }
 
-private:
+ private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
   T& mMutex;
 };

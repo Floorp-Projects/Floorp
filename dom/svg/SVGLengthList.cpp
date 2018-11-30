@@ -15,18 +15,14 @@
 
 namespace mozilla {
 
-nsresult
-SVGLengthList::CopyFrom(const SVGLengthList& rhs)
-{
+nsresult SVGLengthList::CopyFrom(const SVGLengthList& rhs) {
   if (!mLengths.Assign(rhs.mLengths, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
 }
 
-void
-SVGLengthList::GetValueAsString(nsAString& aValue) const
-{
+void SVGLengthList::GetValueAsString(nsAString& aValue) const {
   aValue.Truncate();
   uint32_t last = mLengths.Length() - 1;
   for (uint32_t i = 0; i < mLengths.Length(); ++i) {
@@ -40,13 +36,11 @@ SVGLengthList::GetValueAsString(nsAString& aValue) const
   }
 }
 
-nsresult
-SVGLengthList::SetValueFromString(const nsAString& aValue)
-{
+nsresult SVGLengthList::SetValueFromString(const nsAString& aValue) {
   SVGLengthList temp;
 
-  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
-    tokenizer(aValue, ',', nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
+  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tokenizer(
+      aValue, ',', nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
 
   while (tokenizer.hasMoreTokens()) {
     SVGLength length;
@@ -58,14 +52,12 @@ SVGLengthList::SetValueFromString(const nsAString& aValue)
     }
   }
   if (tokenizer.separatorAfterCurrentToken()) {
-    return NS_ERROR_DOM_SYNTAX_ERR; // trailing comma
+    return NS_ERROR_DOM_SYNTAX_ERR;  // trailing comma
   }
   return CopyFrom(temp);
 }
 
-bool
-SVGLengthList::operator==(const SVGLengthList& rhs) const
-{
+bool SVGLengthList::operator==(const SVGLengthList& rhs) const {
   if (Length() != rhs.Length()) {
     return false;
   }
@@ -77,4 +69,4 @@ SVGLengthList::operator==(const SVGLengthList& rhs) const
   return true;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

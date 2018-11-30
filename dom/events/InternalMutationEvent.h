@@ -14,20 +14,16 @@
 
 namespace mozilla {
 
-class InternalMutationEvent : public WidgetEvent
-{
-public:
+class InternalMutationEvent : public WidgetEvent {
+ public:
   virtual InternalMutationEvent* AsMutationEvent() override { return this; }
 
   InternalMutationEvent(bool aIsTrusted, EventMessage aMessage)
-    : WidgetEvent(aIsTrusted, aMessage, eMutationEventClass)
-    , mAttrChange(0)
-  {
+      : WidgetEvent(aIsTrusted, aMessage, eMutationEventClass), mAttrChange(0) {
     mFlags.mCancelable = false;
   }
 
-  virtual WidgetEvent* Duplicate() const override
-  {
+  virtual WidgetEvent* Duplicate() const override {
     MOZ_ASSERT(mClass == eMutationEventClass,
                "Duplicate() must be overridden by sub class");
     InternalMutationEvent* result = new InternalMutationEvent(false, mMessage);
@@ -37,14 +33,13 @@ public:
   }
 
   nsCOMPtr<nsINode> mRelatedNode;
-  RefPtr<nsAtom>    mAttrName;
-  RefPtr<nsAtom>    mPrevAttrValue;
-  RefPtr<nsAtom>    mNewAttrValue;
-  unsigned short       mAttrChange;
+  RefPtr<nsAtom> mAttrName;
+  RefPtr<nsAtom> mPrevAttrValue;
+  RefPtr<nsAtom> mNewAttrValue;
+  unsigned short mAttrChange;
 
   void AssignMutationEventData(const InternalMutationEvent& aEvent,
-                               bool aCopyTargets)
-  {
+                               bool aCopyTargets) {
     AssignEventData(aEvent, aCopyTargets);
 
     mRelatedNode = aEvent.mRelatedNode;
@@ -58,14 +53,14 @@ public:
 // Bits are actually checked to optimize mutation event firing.
 // That's why I don't number from 0x00.  The first event should
 // always be 0x01.
-#define NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED                0x01
-#define NS_EVENT_BITS_MUTATION_NODEINSERTED                   0x02
-#define NS_EVENT_BITS_MUTATION_NODEREMOVED                    0x04
-#define NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT        0x08
-#define NS_EVENT_BITS_MUTATION_NODEINSERTEDINTODOCUMENT       0x10
-#define NS_EVENT_BITS_MUTATION_ATTRMODIFIED                   0x20
-#define NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED          0x40
+#define NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED 0x01
+#define NS_EVENT_BITS_MUTATION_NODEINSERTED 0x02
+#define NS_EVENT_BITS_MUTATION_NODEREMOVED 0x04
+#define NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT 0x08
+#define NS_EVENT_BITS_MUTATION_NODEINSERTEDINTODOCUMENT 0x10
+#define NS_EVENT_BITS_MUTATION_ATTRMODIFIED 0x20
+#define NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED 0x40
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_MutationEvent_h__
+#endif  // mozilla_MutationEvent_h__

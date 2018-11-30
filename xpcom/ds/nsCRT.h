@@ -13,48 +13,43 @@
 #include "nsCRTGlue.h"
 
 #if defined(XP_WIN)
-#  define NS_LINEBREAK           "\015\012"
-#  define NS_LINEBREAK_LEN       2
+#define NS_LINEBREAK "\015\012"
+#define NS_LINEBREAK_LEN 2
 #else
-#  ifdef XP_UNIX
-#    define NS_LINEBREAK         "\012"
-#    define NS_LINEBREAK_LEN     1
-#  endif /* XP_UNIX */
+#ifdef XP_UNIX
+#define NS_LINEBREAK "\012"
+#define NS_LINEBREAK_LEN 1
+#endif /* XP_UNIX */
 #endif /* XP_WIN */
 
 extern const char16_t kIsoLatin1ToUCS2[256];
 
 /// This is a wrapper class around all the C runtime functions.
 
-class nsCRT
-{
-public:
-  enum
-  {
-    LF = '\n'   /* Line Feed */,
+class nsCRT {
+ public:
+  enum {
+    LF = '\n' /* Line Feed */,
     VTAB = '\v' /* Vertical Tab */,
-    CR = '\r'   /* Carriage Return */
+    CR = '\r' /* Carriage Return */
   };
 
   /// String comparison.
-  static int32_t strcmp(const char* aStr1, const char* aStr2)
-  {
+  static int32_t strcmp(const char* aStr1, const char* aStr2) {
     return int32_t(PL_strcmp(aStr1, aStr2));
   }
 
   /// Case-insensitive string comparison.
-  static int32_t strcasecmp(const char* aStr1, const char* aStr2)
-  {
+  static int32_t strcasecmp(const char* aStr1, const char* aStr2) {
     return int32_t(PL_strcasecmp(aStr1, aStr2));
   }
 
   /// Case-insensitive string comparison with length
   static int32_t strncasecmp(const char* aStr1, const char* aStr2,
-                             uint32_t aMaxLen)
-  {
+                             uint32_t aMaxLen) {
     int32_t result = int32_t(PL_strncasecmp(aStr1, aStr2, aMaxLen));
-    //Egads. PL_strncasecmp is returning *very* negative numbers.
-    //Some folks expect -1,0,1, so let's temper its enthusiasm.
+    // Egads. PL_strncasecmp is returning *very* negative numbers.
+    // Some folks expect -1,0,1, so let's temper its enthusiasm.
     if (result < 0) {
       result = -1;
     }
@@ -96,28 +91,26 @@ public:
 
   static bool IsAscii(char16_t aChar) { return NS_IsAscii(aChar); }
   static bool IsAscii(const char16_t* aString) { return NS_IsAscii(aString); }
-  static bool IsAsciiSpace(char16_t aChar) { return NS_IsAsciiWhitespace(aChar); }
+  static bool IsAsciiSpace(char16_t aChar) {
+    return NS_IsAsciiWhitespace(aChar);
+  }
   static bool IsAscii(const char* aString) { return NS_IsAscii(aString); }
-  static bool IsAscii(const char* aString, uint32_t aLength)
-  {
+  static bool IsAscii(const char* aString, uint32_t aLength) {
     return NS_IsAscii(aString, aLength);
   }
 };
 
-
-inline bool
-NS_IS_SPACE(char16_t aChar)
-{
+inline bool NS_IS_SPACE(char16_t aChar) {
   return ((int(aChar) & 0x7f) == int(aChar)) && isspace(int(aChar));
 }
 
-#define NS_IS_CNTRL(i)   ((((unsigned int) (i)) > 0x7f) ? (int) 0 : iscntrl(i))
-#define NS_IS_DIGIT(i)   ((((unsigned int) (i)) > 0x7f) ? (int) 0 : isdigit(i))
+#define NS_IS_CNTRL(i) ((((unsigned int)(i)) > 0x7f) ? (int)0 : iscntrl(i))
+#define NS_IS_DIGIT(i) ((((unsigned int)(i)) > 0x7f) ? (int)0 : isdigit(i))
 #if defined(XP_WIN)
 #define NS_IS_ALPHA(VAL) (isascii((int)(VAL)) && isalpha((int)(VAL)))
 #else
-#define NS_IS_ALPHA(VAL) ((((unsigned int) (VAL)) > 0x7f) ? (int) 0 : isalpha((int)(VAL)))
+#define NS_IS_ALPHA(VAL) \
+  ((((unsigned int)(VAL)) > 0x7f) ? (int)0 : isalpha((int)(VAL)))
 #endif
-
 
 #endif /* nsCRT_h___ */

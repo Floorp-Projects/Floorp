@@ -7,7 +7,7 @@
 #define HTMLEditRules_h
 
 #include "TypeInState.h"
-#include "mozilla/EditorDOMPoint.h" // for EditorDOMPoint
+#include "mozilla/EditorDOMPoint.h"  // for EditorDOMPoint
 #include "mozilla/SelectionState.h"
 #include "mozilla/TextEditRules.h"
 #include "nsCOMPtr.h"
@@ -33,40 +33,24 @@ enum class EditSubAction : int32_t;
 namespace dom {
 class Element;
 class Selection;
-} // namespace dom
+}  // namespace dom
 
-struct StyleCache final : public PropItem
-{
+struct StyleCache final : public PropItem {
   bool mPresent;
 
-  StyleCache()
-    : PropItem()
-    , mPresent(false)
-  {
+  StyleCache() : PropItem(), mPresent(false) { MOZ_COUNT_CTOR(StyleCache); }
+
+  StyleCache(nsAtom* aTag, nsAtom* aAttr, const nsAString& aValue)
+      : PropItem(aTag, aAttr, aValue), mPresent(false) {
     MOZ_COUNT_CTOR(StyleCache);
   }
 
-  StyleCache(nsAtom* aTag,
-             nsAtom* aAttr,
-             const nsAString& aValue)
-    : PropItem(aTag, aAttr, aValue)
-    , mPresent(false)
-  {
+  StyleCache(nsAtom* aTag, nsAtom* aAttr)
+      : PropItem(aTag, aAttr, EmptyString()), mPresent(false) {
     MOZ_COUNT_CTOR(StyleCache);
   }
 
-  StyleCache(nsAtom* aTag,
-             nsAtom* aAttr)
-    : PropItem(aTag, aAttr, EmptyString())
-    , mPresent(false)
-  {
-    MOZ_COUNT_CTOR(StyleCache);
-  }
-
-  ~StyleCache()
-  {
-    MOZ_COUNT_DTOR(StyleCache);
-  }
+  ~StyleCache() { MOZ_COUNT_DTOR(StyleCache); }
 };
 
 /**
@@ -85,9 +69,8 @@ struct StyleCache final : public PropItem
 
 #define SIZE_STYLE_TABLE 19
 
-class HTMLEditRules : public TextEditRules
-{
-public:
+class HTMLEditRules : public TextEditRules {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLEditRules, TextEditRules)
 
@@ -101,8 +84,7 @@ public:
   virtual nsresult AfterEdit(EditSubAction aEditSubAction,
                              nsIEditor::EDirection aDirection) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual nsresult WillDoAction(EditSubActionInfo& aInfo,
-                                bool* aCancel,
+  virtual nsresult WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
                                 bool* aHandled) override;
   virtual nsresult DidDoAction(EditSubActionInfo& aInfo,
                                nsresult aResult) override;
@@ -132,8 +114,7 @@ public:
   void DidCreateNode(Element& aNewElement);
   void DidInsertNode(nsIContent& aNode);
   void WillDeleteNode(nsINode& aChild);
-  void DidSplitNode(nsINode& aExistingRightNode,
-                    nsINode& aNewLeftNode);
+  void DidSplitNode(nsINode& aExistingRightNode, nsINode& aNewLeftNode);
   void WillJoinNodes(nsINode& aLeftNode, nsINode& aRightNode);
   void DidJoinNodes(nsINode& aLeftNode, nsINode& aRightNode);
   void DidInsertText(nsINode& aTextNode, int32_t aOffset,
@@ -151,29 +132,20 @@ public:
    */
   MOZ_CAN_RUN_SCRIPT void OnModifyDocument();
 
-protected:
+ protected:
   virtual ~HTMLEditRules();
 
-  HTMLEditor& HTMLEditorRef() const
-  {
+  HTMLEditor& HTMLEditorRef() const {
     MOZ_ASSERT(mData);
     return mData->HTMLEditorRef();
   }
 
-  static bool IsBlockNode(const nsINode& aNode)
-  {
+  static bool IsBlockNode(const nsINode& aNode) {
     return HTMLEditor::NodeIsBlockStatic(&aNode);
   }
-  static bool IsInlineNode(const nsINode& aNode)
-  {
-    return !IsBlockNode(aNode);
-  }
+  static bool IsInlineNode(const nsINode& aNode) { return !IsBlockNode(aNode); }
 
-  enum RulesEndpoint
-  {
-    kStart,
-    kEnd
-  };
+  enum RulesEndpoint { kStart, kEnd };
 
   void InitFields();
 
@@ -201,10 +173,11 @@ protected:
    * @param aMaxLength          The maximum string length which the editor
    *                            allows to set.
    */
-  MOZ_MUST_USE nsresult
-  WillInsertText(EditSubAction aEditSubAction, bool* aCancel, bool* aHandled,
-                 const nsAString* inString, nsAString* outString,
-                 int32_t aMaxLength);
+  MOZ_MUST_USE nsresult WillInsertText(EditSubAction aEditSubAction,
+                                       bool* aCancel, bool* aHandled,
+                                       const nsAString* inString,
+                                       nsAString* outString,
+                                       int32_t aMaxLength);
 
   /**
    * WillLoadHTML() is called before loading enter document from source.
@@ -256,10 +229,9 @@ protected:
    * @param aCancel             Returns true if the operation is canceled.
    * @param aHandled            Returns true if the edit action is handled.
    */
-  MOZ_MUST_USE nsresult
-  WillDeleteSelection(nsIEditor::EDirection aAction,
-                      nsIEditor::EStripWrappers aStripWrappers,
-                      bool* aCancel, bool* aHandled);
+  MOZ_MUST_USE nsresult WillDeleteSelection(
+      nsIEditor::EDirection aAction, nsIEditor::EStripWrappers aStripWrappers,
+      bool* aCancel, bool* aHandled);
 
   /**
    * Called after deleting selected content.
@@ -285,8 +257,7 @@ protected:
    * Insert normal <br> element into aNode when aNode is a block and it has
    * no children.
    */
-  MOZ_MUST_USE nsresult InsertBRIfNeeded(nsINode& aNode)
-  {
+  MOZ_MUST_USE nsresult InsertBRIfNeeded(nsINode& aNode) {
     return InsertBRIfNeededInternal(aNode, false);
   }
 
@@ -294,8 +265,7 @@ protected:
    * Insert moz-<br> element (<br type="_moz">) into aNode when aNode is a
    * block and it has no children.
    */
-  MOZ_MUST_USE nsresult InsertMozBRIfNeeded(nsINode& aNode)
-  {
+  MOZ_MUST_USE nsresult InsertMozBRIfNeeded(nsINode& aNode) {
     return InsertBRIfNeededInternal(aNode, true);
   }
 
@@ -309,8 +279,8 @@ protected:
    *                        Otherwise, i.e., this should insert a normal <br>
    *                        element, false.
    */
-  MOZ_MUST_USE nsresult
-  InsertBRIfNeededInternal(nsINode& aNode, bool aInsertMozBR);
+  MOZ_MUST_USE nsresult InsertBRIfNeededInternal(nsINode& aNode,
+                                                 bool aInsertMozBR);
 
   /**
    * GetGoodSelPointForNode() finds where at a node you would want to set the
@@ -344,8 +314,7 @@ protected:
    *                    unexpected case, this returns true with this.
    */
   MOZ_MUST_USE EditActionResult
-  TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
-                                 nsIContent& aRightNode);
+  TryToJoinBlocksWithTransaction(nsIContent& aLeftNode, nsIContent& aRightNode);
 
   /**
    * MoveBlock() moves the content from aRightBlock starting from aRightOffset
@@ -356,9 +325,10 @@ protected:
    * @return            Sets handled to true if this actually joins the nodes.
    *                    canceled is always false.
    */
-  MOZ_MUST_USE EditActionResult
-  MoveBlock(Element& aLeftBlock, Element& aRightBlock,
-            int32_t aLeftOffset, int32_t aRightOffset);
+  MOZ_MUST_USE EditActionResult MoveBlock(Element& aLeftBlock,
+                                          Element& aRightBlock,
+                                          int32_t aLeftOffset,
+                                          int32_t aRightOffset);
 
   /**
    * MoveNodeSmart() moves aNode to (aDestElement, aInOutDestOffset).
@@ -369,9 +339,9 @@ protected:
    *                                the nodes.
    *                                canceled is always false.
    */
-  MOZ_MUST_USE EditActionResult
-  MoveNodeSmart(nsIContent& aNode, Element& aDestElement,
-                int32_t* aInOutDestOffset);
+  MOZ_MUST_USE EditActionResult MoveNodeSmart(nsIContent& aNode,
+                                              Element& aDestElement,
+                                              int32_t* aInOutDestOffset);
 
   /**
    * MoveContents() moves the contents of aElement to (aDestElement,
@@ -382,9 +352,9 @@ protected:
    *                                the nodes.
    *                                canceled is always false.
    */
-  MOZ_MUST_USE EditActionResult
-  MoveContents(Element& aElement, Element& aDestElement,
-               int32_t* aInOutDestOffset);
+  MOZ_MUST_USE EditActionResult MoveContents(Element& aElement,
+                                             Element& aDestElement,
+                                             int32_t* aInOutDestOffset);
 
   /**
    * DeleteElementsExceptTableRelatedElements() removes elements except
@@ -403,11 +373,11 @@ protected:
   /**
    * XXX Should document what this does.
    */
-  MOZ_MUST_USE nsresult
-  WillMakeList(const nsAString* aListType, bool aEntireList,
-               const nsAString* aBulletType,
-               bool* aCancel, bool* aHandled,
-               const nsAString* aItemType = nullptr);
+  MOZ_MUST_USE nsresult WillMakeList(const nsAString* aListType,
+                                     bool aEntireList,
+                                     const nsAString* aBulletType,
+                                     bool* aCancel, bool* aHandled,
+                                     const nsAString* aItemType = nullptr);
 
   /**
    * Called before removing a list element.  This method actually removes
@@ -464,8 +434,8 @@ protected:
    * @param aCancel             Returns true if the operation is canceled.
    * @param aHandled            Returns true if the edit action is handled.
    */
-  nsresult WillAlign(const nsAString& aAlignType,
-                     bool* aCancel, bool* aHandled);
+  nsresult WillAlign(const nsAString& aAlignType, bool* aCancel,
+                     bool* aHandled);
 
   /**
    * Called before changing absolute positioned element to static positioned.
@@ -476,8 +446,8 @@ protected:
    * @param aCancel             Returns true if the operation is canceled.
    * @param aHandled            Returns true if the edit action is handled.
    */
-  MOZ_MUST_USE nsresult
-  WillRemoveAbsolutePosition(bool* aCancel, bool* aHandled);
+  MOZ_MUST_USE nsresult WillRemoveAbsolutePosition(bool* aCancel,
+                                                   bool* aHandled);
 
   /**
    * Called before changing z-index.
@@ -489,8 +459,8 @@ protected:
    * @param aCancel             Returns true if the operation is canceled.
    * @param aHandled            Returns true if the edit action is handled.
    */
-  MOZ_MUST_USE nsresult
-  WillRelativeChangeZIndex(int32_t aChange, bool* aCancel, bool* aHandled);
+  MOZ_MUST_USE nsresult WillRelativeChangeZIndex(int32_t aChange, bool* aCancel,
+                                                 bool* aHandled);
 
   /**
    * Called before creating aDefinitionListItemTag around Selection.  This
@@ -502,9 +472,9 @@ protected:
    * @param aCancel                 Returns true if the operation is canceled.
    * @param aHandled                Returns true if the edit action is handled.
    */
-  MOZ_MUST_USE nsresult
-  WillMakeDefListItem(const nsAString* aBlockType, bool aEntireList,
-                      bool* aCancel, bool* aHandled);
+  MOZ_MUST_USE nsresult WillMakeDefListItem(const nsAString* aBlockType,
+                                            bool aEntireList, bool* aCancel,
+                                            bool* aHandled);
 
   /**
    * WillMakeBasicBlock() called before changing block style around Selection.
@@ -561,9 +531,8 @@ protected:
    * @param aTargetElement      Returns target element which should be
    *                            changed to absolute positioned.
    */
-  MOZ_MUST_USE nsresult
-  PrepareToMakeElementAbsolutePosition(bool* aHandled,
-                                       RefPtr<Element>* aTargetElement);
+  MOZ_MUST_USE nsresult PrepareToMakeElementAbsolutePosition(
+      bool* aHandled, RefPtr<Element>* aTargetElement);
 
   /**
    * Called if nobody handles the edit action to make an element absolute
@@ -582,8 +551,8 @@ protected:
    *                            to aAlignType.
    * @param aAlignType          New value of align attribute of <div>.
    */
-  MOZ_MUST_USE nsresult
-  AlignInnerBlocks(nsINode& aNode, const nsAString& aAlignType);
+  MOZ_MUST_USE nsresult AlignInnerBlocks(nsINode& aNode,
+                                         const nsAString& aAlignType);
 
   /**
    * AlignBlockContents() sets align attribute of <div> element which is
@@ -596,8 +565,8 @@ protected:
    * @param aAlignType          New value of align attribute of <div> which
    *                            is only child of aNode.
    */
-  MOZ_MUST_USE nsresult
-  AlignBlockContents(nsINode& aNode, const nsAString& aAlignType);
+  MOZ_MUST_USE nsresult AlignBlockContents(nsINode& aNode,
+                                           const nsAString& aAlignType);
 
   /**
    * AlignContentsAtSelection() aligns contents around Selection to aAlignType.
@@ -610,12 +579,11 @@ protected:
    * @param aAlignType          New align attribute value where the contents
    *                            should be aligned to.
    */
-  MOZ_MUST_USE nsresult
-  AlignContentsAtSelection(const nsAString& aAlignType);
+  MOZ_MUST_USE nsresult AlignContentsAtSelection(const nsAString& aAlignType);
 
   nsresult AppendInnerFormatNodes(nsTArray<OwningNonNull<nsINode>>& aArray,
                                   nsINode* aNode);
-  nsresult GetFormatString(nsINode* aNode, nsAString &outFormat);
+  nsresult GetFormatString(nsINode* aNode, nsAString& outFormat);
 
   /**
    * aLists and aTables allow the caller to specify what kind of content to
@@ -653,8 +621,8 @@ protected:
    * @param aOffset             Typically, Selection start offset in the
    *                            start container, where to be split.
    */
-  MOZ_MUST_USE nsresult
-  ReturnInHeader(Element& aHeader, nsINode& aNode, int32_t aOffset);
+  MOZ_MUST_USE nsresult ReturnInHeader(Element& aHeader, nsINode& aNode,
+                                       int32_t aOffset);
 
   /**
    * ReturnInParagraph() does the right thing for Enter key press or
@@ -681,11 +649,10 @@ protected:
    *                            If this is not nullptr, the <br> node may be
    *                            removed.
    */
-  template<typename PT, typename CT>
-  MOZ_MUST_USE nsresult
-  SplitParagraph(Element& aParentDivOrP,
-                 const EditorDOMPointBase<PT, CT>& aStartOfRightNode,
-                 nsIContent* aBRNode);
+  template <typename PT, typename CT>
+  MOZ_MUST_USE nsresult SplitParagraph(
+      Element& aParentDivOrP,
+      const EditorDOMPointBase<PT, CT>& aStartOfRightNode, nsIContent* aBRNode);
 
   /**
    * ReturnInListItem() handles insertParagraph command (i.e., handling
@@ -697,16 +664,15 @@ protected:
    * @param aOffset             Typically, Selection start offset in the
    *                            start container, where to insert a break.
    */
-  MOZ_MUST_USE nsresult
-  ReturnInListItem(Element& aListItem, nsINode& aNode, int32_t aOffset);
+  MOZ_MUST_USE nsresult ReturnInListItem(Element& aListItem, nsINode& aNode,
+                                         int32_t aOffset);
 
   /**
    * Called after handling edit action.  This may adjust Selection, remove
    * unnecessary empty nodes, create <br> elements if needed, etc.
    */
-  MOZ_MUST_USE nsresult
-  AfterEditInner(EditSubAction aEditSubAction,
-                 nsIEditor::EDirection aDirection);
+  MOZ_MUST_USE nsresult AfterEditInner(EditSubAction aEditSubAction,
+                                       nsIEditor::EDirection aDirection);
 
   /**
    * IndentAroundSelectionWithCSS() indents around Selection with CSS.
@@ -770,10 +736,9 @@ protected:
    * @param aStartOfMiddleElement   Start node of middle block element.
    * @param aEndOfMiddleElement     End node of middle block element.
    */
-  MOZ_MUST_USE SplitRangeOffFromNodeResult
-  SplitRangeOffFromBlock(Element& aBlockElement,
-                         nsIContent& aStartOfMiddleElement,
-                         nsIContent& aEndOfMiddleElement);
+  MOZ_MUST_USE SplitRangeOffFromNodeResult SplitRangeOffFromBlock(
+      Element& aBlockElement, nsIContent& aStartOfMiddleElement,
+      nsIContent& aEndOfMiddleElement);
 
   /**
    * OutdentPartOfBlock() outdents the nodes between aStartOfOutdent and
@@ -799,9 +764,8 @@ protected:
    *                                Otherwise, nullptr.
    */
   MOZ_MUST_USE SplitRangeOffFromNodeResult
-  OutdentPartOfBlock(Element& aBlockElement,
-                     nsIContent& aStartOfOutdent, nsIContent& aEndOutdent,
-                     bool aIsBlockIndentedWithCSS);
+  OutdentPartOfBlock(Element& aBlockElement, nsIContent& aStartOfOutdent,
+                     nsIContent& aEndOutdent, bool aIsBlockIndentedWithCSS);
 
   /**
    * XXX Should document what this does.
@@ -809,9 +773,9 @@ protected:
    * need to check if the editor is still available even if this returns
    * NS_OK.
    */
-  MOZ_MUST_USE nsresult
-  MakeList(nsAtom& aListType, bool aEntireList, const nsAString* aBulletType,
-           bool* aCancel, nsAtom& aItemType);
+  MOZ_MUST_USE nsresult MakeList(nsAtom& aListType, bool aEntireList,
+                                 const nsAString* aBulletType, bool* aCancel,
+                                 nsAtom& aItemType);
 
   /**
    * ConvertListType() replaces child list items of aListElement with
@@ -827,8 +791,9 @@ protected:
    *                            New list element may be aListElement if its
    *                            tag name is same as aNewListTag.
    */
-  MOZ_MUST_USE CreateElementResult
-  ConvertListType(Element& aListElement, nsAtom& aListType, nsAtom& aItemType);
+  MOZ_MUST_USE CreateElementResult ConvertListType(Element& aListElement,
+                                                   nsAtom& aListType,
+                                                   nsAtom& aItemType);
 
   /**
    * CreateStyleForInsertText() sets CSS properties which are stored in
@@ -842,13 +807,8 @@ protected:
    * IsEmptyBlockElement() returns true if aElement is a block level element
    * and it doesn't have any visible content.
    */
-  enum class IgnoreSingleBR
-  {
-    eYes,
-    eNo
-  };
-  bool IsEmptyBlockElement(Element& aElement,
-                           IgnoreSingleBR aIgnoreSingleBR);
+  enum class IgnoreSingleBR { eYes, eNo };
+  bool IsEmptyBlockElement(Element& aElement, IgnoreSingleBR aIgnoreSingleBR);
 
   /**
    * MaybeDeleteTopMostEmptyAncestor() looks for top most empty block ancestor
@@ -873,11 +833,9 @@ protected:
    * @param aHandled            Returns true if this method removes an empty
    *                            block ancestor of aStartNode.
    */
-  MOZ_MUST_USE nsresult
-  MaybeDeleteTopMostEmptyAncestor(nsINode& aStartNode,
-                                  Element& aEditingHostElement,
-                                  nsIEditor::EDirection aAction,
-                                  bool* aHandled);
+  MOZ_MUST_USE nsresult MaybeDeleteTopMostEmptyAncestor(
+      nsINode& aStartNode, Element& aEditingHostElement,
+      nsIEditor::EDirection aAction, bool* aHandled);
 
   enum class BRLocation { beforeBlock, blockEnd };
   Element* CheckForInvisibleBR(Element& aBlock, BRLocation aWhere,
@@ -903,9 +861,9 @@ protected:
    * GetPromotedPoint() figures out where a start or end point for a block
    * operation really is.
    */
-  EditorDOMPoint
-  GetPromotedPoint(RulesEndpoint aWhere, nsINode& aNode, int32_t aOffset,
-                   EditSubAction aEditSubAction);
+  EditorDOMPoint GetPromotedPoint(RulesEndpoint aWhere, nsINode& aNode,
+                                  int32_t aOffset,
+                                  EditSubAction aEditSubAction);
 
   /**
    * GetPromotedRanges() runs all the selection range endpoint through
@@ -928,15 +886,13 @@ protected:
    *     transaction.  We should rename this to making clearer what this does.
    */
   enum class TouchContent { no, yes };
-  MOZ_MUST_USE nsresult
-  GetNodesForOperation(nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
-                       nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
-                       EditSubAction aEditSubAction,
-                       TouchContent aTouchContent);
+  MOZ_MUST_USE nsresult GetNodesForOperation(
+      nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
+      nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
+      EditSubAction aEditSubAction, TouchContent aTouchContent);
 
   void GetChildNodesForOperation(
-         nsINode& aNode,
-         nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
+      nsINode& aNode, nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
 
   /**
    * GetNodesFromPoint() constructs a list of nodes from a point that will be
@@ -961,8 +917,8 @@ protected:
   GetListActionNodes(nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
                      EntireList aEntireList, TouchContent aTouchContent);
   void GetDefinitionListItemTypes(Element* aElement, bool* aDT, bool* aDD);
-  nsresult
-  GetParagraphFormatNodes(nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
+  nsresult GetParagraphFormatNodes(
+      nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
   void LookInsideDivBQandList(nsTArray<OwningNonNull<nsINode>>& aNodeArray);
 
   /**
@@ -988,9 +944,8 @@ protected:
    *                            be set if <br> is at start edge of aNode) and
    *                            aNode itself.
    */
-  MOZ_MUST_USE nsresult
-  BustUpInlinesAtBRs(nsIContent& aNode,
-                     nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes);
+  MOZ_MUST_USE nsresult BustUpInlinesAtBRs(
+      nsIContent& aNode, nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes);
 
   /**
    * GetHiestInlineParent() returns the highest inline node parent between
@@ -1033,9 +988,8 @@ protected:
    * @param aNodeArray      Must be descendants of a node.
    * @param aBlockTag       The element name of new block elements.
    */
-  MOZ_MUST_USE nsresult
-  ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
-                  nsAtom& aBlockTag);
+  MOZ_MUST_USE nsresult ApplyBlockStyle(
+      nsTArray<OwningNonNull<nsINode>>& aNodeArray, nsAtom& aBlockTag);
 
   /**
    * MakeBlockquote() inserts at least one <blockquote> element and moves
@@ -1066,10 +1020,9 @@ protected:
    * @return                            When succeeded, SplitPoint() returns
    *                                    the point to insert the element.
    */
-  template<typename PT, typename CT>
-  MOZ_MUST_USE SplitNodeResult
-  MaybeSplitAncestorsForInsertWithTransaction(
-    nsAtom& aTag, const EditorDOMPointBase<PT, CT>& aStartOfDeepestRightNode);
+  template <typename PT, typename CT>
+  MOZ_MUST_USE SplitNodeResult MaybeSplitAncestorsForInsertWithTransaction(
+      nsAtom& aTag, const EditorDOMPointBase<PT, CT>& aStartOfDeepestRightNode);
 
   /**
    * JoinNearestEditableNodesWithTransaction() joins two editable nodes which
@@ -1092,10 +1045,9 @@ protected:
    * @param aNewFirstChildOfRightNode
    *                    The point at the first child of aRightNode.
    */
-  MOZ_MUST_USE nsresult
-  JoinNearestEditableNodesWithTransaction(
-    nsIContent& aLeftNode, nsIContent& aRightNode,
-    EditorDOMPoint* aNewFirstChildOfRightNode);
+  MOZ_MUST_USE nsresult JoinNearestEditableNodesWithTransaction(
+      nsIContent& aLeftNode, nsIContent& aRightNode,
+      EditorDOMPoint* aNewFirstChildOfRightNode);
 
   Element* GetTopEnclosingMailCite(nsINode& aNode);
 
@@ -1114,8 +1066,8 @@ protected:
    *                            removed (i.e., unwrapped contents of
    *                            aListItem).  Otherwise, false.
    */
-  MOZ_MUST_USE nsresult
-  PopListItem(nsIContent& aListItem, bool* aOutOfList = nullptr);
+  MOZ_MUST_USE nsresult PopListItem(nsIContent& aListItem,
+                                    bool* aOutOfList = nullptr);
 
   /**
    * RemoveListStructure() destroys the list structure of aListElement.
@@ -1190,7 +1142,7 @@ protected:
    *                    And also if aDirection is not nsIEditor::ePrevious,
    *                    the result may be the node pointed by aPoint.
    */
-  template<typename PT, typename CT>
+  template <typename PT, typename CT>
   nsIContent* FindNearEditableNode(const EditorDOMPointBase<PT, CT>& aPoint,
                                    nsIEditor::EDirection aDirection);
   /**
@@ -1249,9 +1201,9 @@ protected:
    * @param aDescendantsOnly    true if align information of aNode itself
    *                            shouldn't be removed.  Otherwise, false.
    */
-  MOZ_MUST_USE nsresult
-  RemoveAlignment(nsINode& aNode, const nsAString& aAlignType,
-                  bool aDescendantsOnly);
+  MOZ_MUST_USE nsresult RemoveAlignment(nsINode& aNode,
+                                        const nsAString& aAlignType,
+                                        bool aDescendantsOnly);
 
   /**
    * MakeSureElemStartsOrEndsOnCR() inserts <br> element at start (end) of
@@ -1264,8 +1216,8 @@ protected:
    * @param aStarts             true for trying to insert <br> to the start.
    *                            false for trying to insert <br> to the end.
    */
-  MOZ_MUST_USE nsresult
-  MakeSureElemStartsOrEndsOnCR(nsINode& aNode, bool aStarts);
+  MOZ_MUST_USE nsresult MakeSureElemStartsOrEndsOnCR(nsINode& aNode,
+                                                     bool aStarts);
 
   /**
    * AlignBlock() resets align attribute, text-align property, etc first.
@@ -1278,9 +1230,9 @@ protected:
    *                            descendants or only descendants.
    */
   enum class ResetAlignOf { ElementAndDescendants, OnlyDescendants };
-  MOZ_MUST_USE nsresult
-  AlignBlock(Element& aElement, const nsAString& aAlignType,
-             ResetAlignOf aResetAlignOf);
+  MOZ_MUST_USE nsresult AlignBlock(Element& aElement,
+                                   const nsAString& aAlignType,
+                                   ResetAlignOf aResetAlignOf);
 
   /**
    * IncreaseMarginToIndent() increases the margin of aElement.  See the
@@ -1289,8 +1241,7 @@ protected:
    *
    * @param aElement            The element to be indented.
    */
-  MOZ_MUST_USE nsresult IncreaseMarginToIndent(Element& aElement)
-  {
+  MOZ_MUST_USE nsresult IncreaseMarginToIndent(Element& aElement) {
     return ChangeMarginStart(aElement, true);
   }
 
@@ -1301,8 +1252,7 @@ protected:
    *
    * @param aElement            The element to be outdented.
    */
-  MOZ_MUST_USE nsresult DecreaseMarginToOutdent(Element& aElement)
-  {
+  MOZ_MUST_USE nsresult DecreaseMarginToOutdent(Element& aElement) {
     return ChangeMarginStart(aElement, false);
   }
 
@@ -1338,7 +1288,7 @@ protected:
   MOZ_MUST_USE nsresult
   GetInlineStyles(nsINode* aNode, StyleCache aStyleCache[SIZE_STYLE_TABLE]);
 
-protected:
+ protected:
   HTMLEditor* mHTMLEditor;
   RefPtr<nsRange> mDocChangeRange;
   bool mListenerEnabled;
@@ -1359,7 +1309,6 @@ protected:
   StyleCache mCachedStyles[SIZE_STYLE_TABLE];
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // #ifndef HTMLEditRules_h
-
+#endif  // #ifndef HTMLEditRules_h

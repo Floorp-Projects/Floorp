@@ -41,14 +41,13 @@ static const char kACEPrefix[] = "xn--";
 
 #define NS_NET_PREF_EXTRAALLOWED "network.IDN.extra_allowed_chars"
 #define NS_NET_PREF_EXTRABLOCKED "network.IDN.extra_blocked_chars"
-#define NS_NET_PREF_SHOWPUNYCODE    "network.IDN_show_punycode"
-#define NS_NET_PREF_IDNWHITELIST    "network.IDN.whitelist."
+#define NS_NET_PREF_SHOWPUNYCODE "network.IDN_show_punycode"
+#define NS_NET_PREF_IDNWHITELIST "network.IDN.whitelist."
 #define NS_NET_PREF_IDNUSEWHITELIST "network.IDN.use_whitelist"
-#define NS_NET_PREF_IDNRESTRICTION  "network.IDN.restriction_profile"
+#define NS_NET_PREF_IDNRESTRICTION "network.IDN.restriction_profile"
 
-static inline bool
-isOnlySafeChars(const nsString& in, const nsTArray<BlocklistRange>& aBlocklist)
-{
+static inline bool isOnlySafeChars(const nsString& in,
+                                   const nsTArray<BlocklistRange>& aBlocklist) {
   if (aBlocklist.IsEmpty()) {
     return true;
   }
@@ -68,27 +67,22 @@ isOnlySafeChars(const nsString& in, const nsTArray<BlocklistRange>& aBlocklist)
 //-----------------------------------------------------------------------------
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS(nsIDNService,
-                  nsIIDNService,
-                  nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsIDNService, nsIIDNService, nsISupportsWeakReference)
 
 static const char* gCallbackPrefs[] = {
-  NS_NET_PREF_EXTRAALLOWED,
-  NS_NET_PREF_EXTRABLOCKED,
-  NS_NET_PREF_SHOWPUNYCODE,
-  NS_NET_PREF_IDNRESTRICTION,
-  NS_NET_PREF_IDNUSEWHITELIST,
-  nullptr,
+    NS_NET_PREF_EXTRAALLOWED,    NS_NET_PREF_EXTRABLOCKED,
+    NS_NET_PREF_SHOWPUNYCODE,    NS_NET_PREF_IDNRESTRICTION,
+    NS_NET_PREF_IDNUSEWHITELIST, nullptr,
 };
 
-nsresult nsIDNService::Init()
-{
+nsresult nsIDNService::Init() {
   MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(mLock);
 
   nsCOMPtr<nsIPrefService> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefs)
-    prefs->GetBranch(NS_NET_PREF_IDNWHITELIST, getter_AddRefs(mIDNWhitelistPrefBranch));
+    prefs->GetBranch(NS_NET_PREF_IDNWHITELIST,
+                     getter_AddRefs(mIDNWhitelistPrefBranch));
 
   Preferences::RegisterPrefixCallbacks(PrefChanged, gCallbackPrefs, this);
   prefsChanged(nullptr);
@@ -97,8 +91,7 @@ nsresult nsIDNService::Init()
   return NS_OK;
 }
 
-void nsIDNService::prefsChanged(const char *pref)
-{
+void nsIDNService::prefsChanged(const char* pref) {
   MOZ_ASSERT(NS_IsMainThread());
   mLock.AssertCurrentThreadOwns();
 
@@ -115,14 +108,13 @@ void nsIDNService::prefsChanged(const char *pref)
   }
   if (!pref || NS_LITERAL_CSTRING(NS_NET_PREF_IDNUSEWHITELIST).Equals(pref)) {
     bool val;
-    if (NS_SUCCEEDED(Preferences::GetBool(NS_NET_PREF_IDNUSEWHITELIST,
-                                             &val)))
+    if (NS_SUCCEEDED(Preferences::GetBool(NS_NET_PREF_IDNUSEWHITELIST, &val)))
       mIDNUseWhitelist = val;
   }
   if (!pref || NS_LITERAL_CSTRING(NS_NET_PREF_IDNRESTRICTION).Equals(pref)) {
     nsAutoCString profile;
-    if (NS_FAILED(Preferences::GetCString(NS_NET_PREF_IDNRESTRICTION,
-                                          profile))) {
+    if (NS_FAILED(
+            Preferences::GetCString(NS_NET_PREF_IDNRESTRICTION, profile))) {
       profile.Truncate();
     }
     if (profile.EqualsLiteral("moderate")) {
@@ -136,11 +128,10 @@ void nsIDNService::prefsChanged(const char *pref)
 }
 
 nsIDNService::nsIDNService()
-  : mLock("DNService pref value lock")
-  , mShowPunycode(false)
-  , mRestrictionProfile(static_cast<restrictionProfile>(0))
-  , mIDNUseWhitelist(false)
-{
+    : mLock("DNService pref value lock"),
+      mShowPunycode(false),
+      mRestrictionProfile(static_cast<restrictionProfile>(0)),
+      mIDNUseWhitelist(false) {
   MOZ_ASSERT(NS_IsMainThread());
 
   uint32_t IDNAOptions = UIDNA_CHECK_BIDI | UIDNA_CHECK_CONTEXTJ;
@@ -151,8 +142,7 @@ nsIDNService::nsIDNService()
   mIDNA = uidna_openUTS46(IDNAOptions, &errorCode);
 }
 
-nsIDNService::~nsIDNService()
-{
+nsIDNService::~nsIDNService() {
   MOZ_ASSERT(NS_IsMainThread());
 
   Preferences::UnregisterPrefixCallbacks(PrefChanged, gCallbackPrefs, this);
@@ -160,9 +150,8 @@ nsIDNService::~nsIDNService()
   uidna_close(mIDNA);
 }
 
-nsresult
-nsIDNService::IDNA2008ToUnicode(const nsACString& input, nsAString& output)
-{
+nsresult nsIDNService::IDNA2008ToUnicode(const nsACString& input,
+                                         nsAString& output) {
   NS_ConvertUTF8toUTF16 inputStr(input);
   UIDNAInfo info = UIDNA_INFO_INITIALIZER;
   UErrorCode errorCode = U_ZERO_ERROR;
@@ -170,9 +159,9 @@ nsIDNService::IDNA2008ToUnicode(const nsACString& input, nsAString& output)
   int32_t outMaxLen = kMaxDNSNodeLen + 1;
   UChar outputBuffer[kMaxDNSNodeLen + 1];
 
-  int32_t outLen = uidna_labelToUnicode(mIDNA, (const UChar*)inputStr.get(),
-                                        inLen, outputBuffer, outMaxLen,
-                                        &info, &errorCode);
+  int32_t outLen =
+      uidna_labelToUnicode(mIDNA, (const UChar*)inputStr.get(), inLen,
+                           outputBuffer, outMaxLen, &info, &errorCode);
   if (info.errors != 0) {
     return NS_ERROR_MALFORMED_URI;
   }
@@ -188,11 +177,9 @@ nsIDNService::IDNA2008ToUnicode(const nsACString& input, nsAString& output)
   return rv;
 }
 
-nsresult
-nsIDNService::IDNA2008StringPrep(const nsAString& input,
-                                 nsAString& output,
-                                 stringPrepFlag flag)
-{
+nsresult nsIDNService::IDNA2008StringPrep(const nsAString& input,
+                                          nsAString& output,
+                                          stringPrepFlag flag) {
   UIDNAInfo info = UIDNA_INFO_INITIALIZER;
   UErrorCode errorCode = U_ZERO_ERROR;
   int32_t inLen = input.Length();
@@ -200,8 +187,8 @@ nsIDNService::IDNA2008StringPrep(const nsAString& input,
   UChar outputBuffer[kMaxDNSNodeLen + 1];
 
   int32_t outLen =
-    uidna_labelToUnicode(mIDNA, (const UChar*)PromiseFlatString(input).get(),
-                         inLen, outputBuffer, outMaxLen, &info, &errorCode);
+      uidna_labelToUnicode(mIDNA, (const UChar*)PromiseFlatString(input).get(),
+                           inLen, outputBuffer, outMaxLen, &info, &errorCode);
   nsresult rv = ICUUtils::UErrorToNsResult(errorCode);
   if (rv == NS_ERROR_FAILURE) {
     rv = NS_ERROR_MALFORMED_URI;
@@ -213,8 +200,8 @@ nsIDNService::IDNA2008StringPrep(const nsAString& input,
   // appears to get an appended U+FFFD REPLACEMENT CHARACTER, which will
   // confuse our subsequent processing, so we drop that.
   // (https://bugzilla.mozilla.org/show_bug.cgi?id=1399540#c9)
-  if ((info.errors & UIDNA_ERROR_PUNYCODE) &&
-      outLen > 0 && outputBuffer[outLen - 1] == 0xfffd) {
+  if ((info.errors & UIDNA_ERROR_PUNYCODE) && outLen > 0 &&
+      outputBuffer[outLen - 1] == 0xfffd) {
     --outLen;
   }
   ICUUtils::AssignUCharArrayToString(outputBuffer, outLen, output);
@@ -233,14 +220,13 @@ nsIDNService::IDNA2008StringPrep(const nsAString& input,
   return rv;
 }
 
-NS_IMETHODIMP nsIDNService::ConvertUTF8toACE(const nsACString & input, nsACString & ace)
-{
+NS_IMETHODIMP nsIDNService::ConvertUTF8toACE(const nsACString& input,
+                                             nsACString& ace) {
   return UTF8toACE(input, ace, eStringPrepForDNS);
 }
 
-nsresult nsIDNService::UTF8toACE(const nsACString & input, nsACString & ace,
-                                 stringPrepFlag flag)
-{
+nsresult nsIDNService::UTF8toACE(const nsACString& input, nsACString& ace,
+                                 stringPrepFlag flag) {
   nsresult rv;
   NS_ConvertUTF8toUTF16 ustr(input);
 
@@ -282,14 +268,13 @@ nsresult nsIDNService::UTF8toACE(const nsACString & input, nsACString & ace,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIDNService::ConvertACEtoUTF8(const nsACString & input, nsACString & _retval)
-{
+NS_IMETHODIMP nsIDNService::ConvertACEtoUTF8(const nsACString& input,
+                                             nsACString& _retval) {
   return ACEtoUTF8(input, _retval, eStringPrepForDNS);
 }
 
-nsresult nsIDNService::ACEtoUTF8(const nsACString & input, nsACString & _retval,
-                                 stringPrepFlag flag)
-{
+nsresult nsIDNService::ACEtoUTF8(const nsACString& input, nsACString& _retval,
+                                 stringPrepFlag flag) {
   // RFC 3490 - 4.2 ToUnicode
   // ToUnicode never fails.  If any step fails, then the original input
   // sequence is returned immediately in that step.
@@ -337,24 +322,22 @@ nsresult nsIDNService::ACEtoUTF8(const nsACString & input, nsACString & _retval,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIDNService::IsACE(const nsACString & input, bool *_retval)
-{
-  const char *data = input.BeginReading();
+NS_IMETHODIMP nsIDNService::IsACE(const nsACString& input, bool* _retval) {
+  const char* data = input.BeginReading();
   uint32_t dataLen = input.Length();
 
   // look for the ACE prefix in the input string.  it may occur
   // at the beginning of any segment in the domain name.  for
   // example: "www.xn--ENCODED.com"
 
-  const char *p = PL_strncasestr(data, kACEPrefix, dataLen);
+  const char* p = PL_strncasestr(data, kACEPrefix, dataLen);
 
   *_retval = p && (p == data || *(p - 1) == '.');
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIDNService::Normalize(const nsACString & input,
-                                      nsACString & output)
-{
+NS_IMETHODIMP nsIDNService::Normalize(const nsACString& input,
+                                      nsACString& output) {
   // protect against bogus input
   NS_ENSURE_TRUE(IsUTF8(input), NS_ERROR_UNEXPECTED);
 
@@ -397,34 +380,30 @@ NS_IMETHODIMP nsIDNService::Normalize(const nsACString & input,
 
 namespace {
 
-class MOZ_STACK_CLASS MutexSettableAutoUnlock final
-{
+class MOZ_STACK_CLASS MutexSettableAutoUnlock final {
   Mutex* mMutex;
-public:
-  MutexSettableAutoUnlock()
-    : mMutex(nullptr)
-  { }
 
-  void
-  Acquire(mozilla::Mutex& aMutex)
-  {
+ public:
+  MutexSettableAutoUnlock() : mMutex(nullptr) {}
+
+  void Acquire(mozilla::Mutex& aMutex) {
     MOZ_ASSERT(!mMutex);
     mMutex = &aMutex;
     mMutex->Lock();
   }
 
-  ~MutexSettableAutoUnlock()
-  {
+  ~MutexSettableAutoUnlock() {
     if (mMutex) {
       mMutex->Unlock();
     }
   }
 };
 
-} // anonymous namespace
+}  // anonymous namespace
 
-NS_IMETHODIMP nsIDNService::ConvertToDisplayIDN(const nsACString & input, bool * _isASCII, nsACString & _retval)
-{
+NS_IMETHODIMP nsIDNService::ConvertToDisplayIDN(const nsACString& input,
+                                                bool* _isASCII,
+                                                nsACString& _retval) {
   MutexSettableAutoUnlock lock;
   if (!NS_IsMainThread()) {
     lock.Acquire(mLock);
@@ -451,8 +430,9 @@ NS_IMETHODIMP nsIDNService::ConvertToDisplayIDN(const nsACString & input, bool *
       // If the domain is in the whitelist, return the host in UTF-8.
       // Otherwise convert from ACE to UTF8 only those labels which are
       // considered safe for display
-      ACEtoUTF8(temp, _retval, isInWhitelist(temp) ?
-                                 eStringPrepIgnoreErrors : eStringPrepForUI);
+      ACEtoUTF8(
+          temp, _retval,
+          isInWhitelist(temp) ? eStringPrepIgnoreErrors : eStringPrepForUI);
       *_isASCII = IsASCII(_retval);
     } else {
       *_isASCII = true;
@@ -473,15 +453,16 @@ NS_IMETHODIMP nsIDNService::ConvertToDisplayIDN(const nsACString & input, bool *
     }
     if (NS_FAILED(rv)) return rv;
 
-    if (mShowPunycode && NS_SUCCEEDED(UTF8toACE(_retval, _retval,
-                                                eStringPrepIgnoreErrors))) {
+    if (mShowPunycode &&
+        NS_SUCCEEDED(UTF8toACE(_retval, _retval, eStringPrepIgnoreErrors))) {
       *_isASCII = true;
       return NS_OK;
     }
 
     // normalization could result in an ASCII-only hostname. alternatively, if
     // the host is converted to ACE by the normalizer, then the host may contain
-    // unsafe characters, so leave it ACE encoded. see bug 283016, bug 301694, and bug 309311.
+    // unsafe characters, so leave it ACE encoded. see bug 283016, bug 301694,
+    // and bug 309311.
     *_isASCII = IsASCII(_retval);
     if (!*_isASCII && !isInWhitelist(_retval)) {
       // UTF8toACE with eStringPrepForUI may return a domain name where
@@ -498,11 +479,8 @@ NS_IMETHODIMP nsIDNService::ConvertToDisplayIDN(const nsACString & input, bool *
 
 //-----------------------------------------------------------------------------
 
-static nsresult utf16ToUcs4(const nsAString& in,
-                            uint32_t *out,
-                            uint32_t outBufLen,
-                            uint32_t *outLen)
-{
+static nsresult utf16ToUcs4(const nsAString& in, uint32_t* out,
+                            uint32_t outBufLen, uint32_t* outLen) {
   uint32_t i = 0;
   nsAString::const_iterator start, end;
   in.BeginReading(start);
@@ -511,28 +489,24 @@ static nsresult utf16ToUcs4(const nsAString& in,
   while (start != end) {
     char16_t curChar;
 
-    curChar= *start++;
+    curChar = *start++;
 
-    if (start != end &&
-        NS_IS_HIGH_SURROGATE(curChar) &&
+    if (start != end && NS_IS_HIGH_SURROGATE(curChar) &&
         NS_IS_LOW_SURROGATE(*start)) {
       out[i] = SURROGATE_TO_UCS4(curChar, *start);
       ++start;
-    }
-    else
+    } else
       out[i] = curChar;
 
     i++;
-    if (i >= outBufLen)
-      return NS_ERROR_MALFORMED_URI;
+    if (i >= outBufLen) return NS_ERROR_MALFORMED_URI;
   }
   out[i] = (uint32_t)'\0';
   *outLen = i;
   return NS_OK;
 }
 
-static nsresult punycode(const nsAString& in, nsACString& out)
-{
+static nsresult punycode(const nsAString& in, nsACString& out) {
   uint32_t ucs4Buf[kMaxDNSNodeLen + 1];
   uint32_t ucs4Len = 0u;
   nsresult rv = utf16ToUcs4(in, ucs4Buf, kMaxDNSNodeLen, &ucs4Len);
@@ -544,14 +518,10 @@ static nsresult punycode(const nsAString& in, nsACString& out)
   char encodedBuf[kEncodedBufSize];
   punycode_uint encodedLength = kEncodedBufSize;
 
-  enum punycode_status status = punycode_encode(ucs4Len,
-                                                ucs4Buf,
-                                                nullptr,
-                                                &encodedLength,
-                                                encodedBuf);
+  enum punycode_status status =
+      punycode_encode(ucs4Len, ucs4Buf, nullptr, &encodedLength, encodedBuf);
 
-  if (punycode_success != status ||
-      encodedLength >= kEncodedBufSize)
+  if (punycode_success != status || encodedLength >= kEncodedBufSize)
     return NS_ERROR_MALFORMED_URI;
 
   encodedBuf[encodedLength] = '\0';
@@ -582,14 +552,12 @@ static nsresult punycode(const nsAString& in, nsACString& out)
 // This is described in section 7.
 //
 nsresult nsIDNService::stringPrep(const nsAString& in, nsAString& out,
-                                  stringPrepFlag flag)
-{
+                                  stringPrepFlag flag) {
   return IDNA2008StringPrep(in, out, flag);
 }
 
 nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out,
-                                        stringPrepFlag flag)
-{
+                                        stringPrepFlag flag) {
   nsresult rv = NS_OK;
 
   out.Truncate();
@@ -642,8 +610,7 @@ nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out,
 //    stop), U+FF0E (fullwidth full stop), U+FF61 (halfwidth ideographic full
 //    stop).
 
-void nsIDNService::normalizeFullStops(nsAString& s)
-{
+void nsIDNService::normalizeFullStops(nsAString& s) {
   nsAString::const_iterator start, end;
   s.BeginReading(start);
   s.EndReading(end);
@@ -665,8 +632,7 @@ void nsIDNService::normalizeFullStops(nsAString& s)
 }
 
 nsresult nsIDNService::decodeACE(const nsACString& in, nsACString& out,
-                                 stringPrepFlag flag)
-{
+                                 stringPrepFlag flag) {
   bool isAce;
   IsACE(in, &isAce);
   if (!isAce) {
@@ -698,8 +664,7 @@ nsresult nsIDNService::decodeACE(const nsACString& in, nsACString& out,
   return NS_OK;
 }
 
-bool nsIDNService::isInWhitelist(const nsACString &host)
-{
+bool nsIDNService::isInWhitelist(const nsACString& host) {
   if (!NS_IsMainThread()) {
     mLock.AssertCurrentThreadOwns();
   }
@@ -715,8 +680,7 @@ bool nsIDNService::isInWhitelist(const nsACString &host)
     // truncate trailing dots first
     tld.Trim(".");
     int32_t pos = tld.RFind(".");
-    if (pos == kNotFound)
-      return false;
+    if (pos == kNotFound) return false;
 
     tld.Cut(0, pos + 1);
 
@@ -728,8 +692,7 @@ bool nsIDNService::isInWhitelist(const nsACString &host)
   return false;
 }
 
-bool nsIDNService::isLabelSafe(const nsAString &label)
-{
+bool nsIDNService::isLabelSafe(const nsAString& label) {
   if (!NS_IsMainThread()) {
     mLock.AssertCurrentThreadOwns();
   }
@@ -750,7 +713,7 @@ bool nsIDNService::isLabelSafe(const nsAString &label)
 
   Script lastScript = Script::INVALID;
   uint32_t previousChar = 0;
-  uint32_t baseChar = 0; // last non-diacritic seen (base char for marks)
+  uint32_t baseChar = 0;  // last non-diacritic seen (base char for marks)
   uint32_t savedNumberingSystem = 0;
 // Simplified/Traditional Chinese check temporarily disabled -- bug 857481
 #if 0
@@ -775,8 +738,7 @@ bool nsIDNService::isLabelSafe(const nsAString &label)
 
     // Check for mixed script
     Script script = GetScriptCode(ch);
-    if (script != Script::COMMON &&
-        script != Script::INHERITED &&
+    if (script != Script::COMMON && script != Script::INHERITED &&
         script != lastScript) {
       if (illegalScriptCombo(script, savedScript)) {
         return false;
@@ -803,12 +765,12 @@ bool nsIDNService::isLabelSafe(const nsAString &label)
       }
       // Check for marks whose expected script doesn't match the base script.
       if (lastScript != Script::INVALID) {
-        const size_t kMaxScripts = 32; // more than ample for current values
-                                       // of ScriptExtensions property
+        const size_t kMaxScripts = 32;  // more than ample for current values
+                                        // of ScriptExtensions property
         UScriptCode scripts[kMaxScripts];
         UErrorCode errorCode = U_ZERO_ERROR;
-        int nScripts = uscript_getScriptExtensions(ch, scripts, kMaxScripts,
-                                                   &errorCode);
+        int nScripts =
+            uscript_getScriptExtensions(ch, scripts, kMaxScripts, &errorCode);
         MOZ_ASSERT(U_SUCCESS(errorCode), "uscript_getScriptExtensions failed");
         if (U_FAILURE(errorCode)) {
           return false;
@@ -818,9 +780,8 @@ bool nsIDNService::isLabelSafe(const nsAString &label)
         // If the mark just has script=COMMON or INHERITED, we can't check any
         // more carefully, but if it has specific scriptExtension codes, then
         // assume those are the only valid scripts to use it with.
-        if (nScripts > 1 ||
-            (Script(scripts[0]) != Script::COMMON &&
-             Script(scripts[0]) != Script::INHERITED)) {
+        if (nScripts > 1 || (Script(scripts[0]) != Script::COMMON &&
+                             Script(scripts[0]) != Script::INHERITED)) {
           while (--nScripts >= 0) {
             if (Script(scripts[nScripts]) == lastScript) {
               break;
@@ -866,9 +827,8 @@ bool nsIDNService::isLabelSafe(const nsAString &label)
 
 // Scripts that we care about in illegalScriptCombo
 static const Script scriptTable[] = {
-  Script::BOPOMOFO, Script::CYRILLIC, Script::GREEK,
-  Script::HANGUL,   Script::HAN,      Script::HIRAGANA,
-  Script::KATAKANA, Script::LATIN };
+    Script::BOPOMOFO, Script::CYRILLIC, Script::GREEK,    Script::HANGUL,
+    Script::HAN,      Script::HIRAGANA, Script::KATAKANA, Script::LATIN};
 
 #define BOPO 0
 #define CYRL 1
@@ -879,14 +839,13 @@ static const Script scriptTable[] = {
 #define KATA 6
 #define LATN 7
 #define OTHR 8
-#define JPAN 9    // Latin + Han + Hiragana + Katakana
-#define CHNA 10   // Latin + Han + Bopomofo
-#define KORE 11   // Latin + Han + Hangul
-#define HNLT 12   // Latin + Han (could be any of the above combinations)
+#define JPAN 9   // Latin + Han + Hiragana + Katakana
+#define CHNA 10  // Latin + Han + Bopomofo
+#define KORE 11  // Latin + Han + Hangul
+#define HNLT 12  // Latin + Han (could be any of the above combinations)
 #define FAIL 13
 
-static inline int32_t findScriptIndex(Script aScript)
-{
+static inline int32_t findScriptIndex(Script aScript) {
   int32_t tableLength = mozilla::ArrayLength(scriptTable);
   for (int32_t index = 0; index < tableLength; ++index) {
     if (aScript == scriptTable[index]) {
@@ -897,25 +856,23 @@ static inline int32_t findScriptIndex(Script aScript)
 }
 
 static const int32_t scriptComboTable[13][9] = {
-/* thisScript: BOPO  CYRL  GREK  HANG  HANI  HIRA  KATA  LATN  OTHR
- * savedScript */
- /* BOPO */  { BOPO, FAIL, FAIL, FAIL, CHNA, FAIL, FAIL, CHNA, FAIL },
- /* CYRL */  { FAIL, CYRL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL },
- /* GREK */  { FAIL, FAIL, GREK, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL },
- /* HANG */  { FAIL, FAIL, FAIL, HANG, KORE, FAIL, FAIL, KORE, FAIL },
- /* HANI */  { CHNA, FAIL, FAIL, KORE, HANI, JPAN, JPAN, HNLT, FAIL },
- /* HIRA */  { FAIL, FAIL, FAIL, FAIL, JPAN, HIRA, JPAN, JPAN, FAIL },
- /* KATA */  { FAIL, FAIL, FAIL, FAIL, JPAN, JPAN, KATA, JPAN, FAIL },
- /* LATN */  { CHNA, FAIL, FAIL, KORE, HNLT, JPAN, JPAN, LATN, OTHR },
- /* OTHR */  { FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, OTHR, FAIL },
- /* JPAN */  { FAIL, FAIL, FAIL, FAIL, JPAN, JPAN, JPAN, JPAN, FAIL },
- /* CHNA */  { CHNA, FAIL, FAIL, FAIL, CHNA, FAIL, FAIL, CHNA, FAIL },
- /* KORE */  { FAIL, FAIL, FAIL, KORE, KORE, FAIL, FAIL, KORE, FAIL },
- /* HNLT */  { CHNA, FAIL, FAIL, KORE, HNLT, JPAN, JPAN, HNLT, FAIL }
-};
+    /* thisScript: BOPO  CYRL  GREK  HANG  HANI  HIRA  KATA  LATN  OTHR
+     * savedScript */
+    /* BOPO */ {BOPO, FAIL, FAIL, FAIL, CHNA, FAIL, FAIL, CHNA, FAIL},
+    /* CYRL */ {FAIL, CYRL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL},
+    /* GREK */ {FAIL, FAIL, GREK, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL},
+    /* HANG */ {FAIL, FAIL, FAIL, HANG, KORE, FAIL, FAIL, KORE, FAIL},
+    /* HANI */ {CHNA, FAIL, FAIL, KORE, HANI, JPAN, JPAN, HNLT, FAIL},
+    /* HIRA */ {FAIL, FAIL, FAIL, FAIL, JPAN, HIRA, JPAN, JPAN, FAIL},
+    /* KATA */ {FAIL, FAIL, FAIL, FAIL, JPAN, JPAN, KATA, JPAN, FAIL},
+    /* LATN */ {CHNA, FAIL, FAIL, KORE, HNLT, JPAN, JPAN, LATN, OTHR},
+    /* OTHR */ {FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, OTHR, FAIL},
+    /* JPAN */ {FAIL, FAIL, FAIL, FAIL, JPAN, JPAN, JPAN, JPAN, FAIL},
+    /* CHNA */ {CHNA, FAIL, FAIL, FAIL, CHNA, FAIL, FAIL, CHNA, FAIL},
+    /* KORE */ {FAIL, FAIL, FAIL, KORE, KORE, FAIL, FAIL, KORE, FAIL},
+    /* HNLT */ {CHNA, FAIL, FAIL, KORE, HNLT, JPAN, JPAN, HNLT, FAIL}};
 
-bool nsIDNService::illegalScriptCombo(Script script, int32_t& savedScript)
-{
+bool nsIDNService::illegalScriptCombo(Script script, int32_t& savedScript) {
   if (!NS_IsMainThread()) {
     mLock.AssertCurrentThreadOwns();
   }
@@ -925,7 +882,7 @@ bool nsIDNService::illegalScriptCombo(Script script, int32_t& savedScript)
     return false;
   }
 
-  savedScript = scriptComboTable[savedScript] [findScriptIndex(script)];
+  savedScript = scriptComboTable[savedScript][findScriptIndex(script)];
   /*
    * Special case combinations that depend on which profile is in use
    * In the Highly Restrictive profile Latin is not allowed with any

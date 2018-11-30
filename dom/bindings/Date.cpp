@@ -6,19 +6,17 @@
 
 #include "mozilla/dom/Date.h"
 
-#include "jsapi.h" // for JS_ObjectIsDate
-#include "jsfriendapi.h" // for DateGetMsecSinceEpoch
-#include "js/Date.h" // for JS::NewDateObject, JS::ClippedTime, JS::TimeClip
-#include "js/RootingAPI.h" // for Rooted, MutableHandle
-#include "js/Value.h" // for Value
-#include "mozilla/FloatingPoint.h" // for IsNaN, UnspecifiedNaN
+#include "jsapi.h"        // for JS_ObjectIsDate
+#include "jsfriendapi.h"  // for DateGetMsecSinceEpoch
+#include "js/Date.h"  // for JS::NewDateObject, JS::ClippedTime, JS::TimeClip
+#include "js/RootingAPI.h"          // for Rooted, MutableHandle
+#include "js/Value.h"               // for Value
+#include "mozilla/FloatingPoint.h"  // for IsNaN, UnspecifiedNaN
 
 namespace mozilla {
 namespace dom {
 
-bool
-Date::SetTimeStamp(JSContext* aCx, JSObject* aObject)
-{
+bool Date::SetTimeStamp(JSContext* aCx, JSObject* aObject) {
   JS::Rooted<JSObject*> obj(aCx, aObject);
 
   double msecs;
@@ -33,9 +31,8 @@ Date::SetTimeStamp(JSContext* aCx, JSObject* aObject)
   return true;
 }
 
-bool
-Date::ToDateObject(JSContext* aCx, JS::MutableHandle<JS::Value> aRval) const
-{
+bool Date::ToDateObject(JSContext* aCx,
+                        JS::MutableHandle<JS::Value> aRval) const {
   JSObject* obj = JS::NewDateObject(aCx, mMsecSinceEpoch);
   if (!obj) {
     return false;
@@ -45,5 +42,5 @@ Date::ToDateObject(JSContext* aCx, JS::MutableHandle<JS::Value> aRval) const
   return true;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

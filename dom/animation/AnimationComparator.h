@@ -15,20 +15,18 @@ namespace mozilla {
 // implement AnimationComparator (to compare const Animation& parameters)
 // since it's not actually needed (yet).
 
-template<typename AnimationPtrType>
+template <typename AnimationPtrType>
 class AnimationPtrComparator {
-public:
-  bool Equals(const AnimationPtrType& a, const AnimationPtrType& b) const
-  {
+ public:
+  bool Equals(const AnimationPtrType& a, const AnimationPtrType& b) const {
     return a == b;
   }
 
-  bool LessThan(const AnimationPtrType& a, const AnimationPtrType& b) const
-  {
+  bool LessThan(const AnimationPtrType& a, const AnimationPtrType& b) const {
     return a->HasLowerCompositeOrderThan(*b);
   }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_AnimationComparator_h
+#endif  // mozilla_AnimationComparator_h

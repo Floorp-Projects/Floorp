@@ -18,16 +18,12 @@ class nsIContent;
 namespace mozilla {
 namespace dom {
 
-class SVGIRect : public nsISupports,
-                 public nsWrapperCache
-{
-public:
-  virtual ~SVGIRect()
-  {
-  }
+class SVGIRect : public nsISupports, public nsWrapperCache {
+ public:
+  virtual ~SVGIRect() {}
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override {
     return SVGRect_Binding::Wrap(aCx, this, aGivenProto);
   }
 
@@ -50,8 +46,7 @@ public:
   virtual void SetHeight(float aHeight, ErrorResult& aRv) = 0;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif //mozilla_dom_SVGIRect_h
-
+#endif  // mozilla_dom_SVGIRect_h

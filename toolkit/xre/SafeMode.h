@@ -15,15 +15,14 @@
 #if defined(XP_WIN)
 #include "mozilla/PolicyChecks.h"
 #include <windows.h>
-#endif // defined(XP_WIN)
+#endif  // defined(XP_WIN)
 
 // Undo X11/X.h's definition of None
 #undef None
 
 namespace mozilla {
 
-enum class SafeModeFlag : uint32_t
-{
+enum class SafeModeFlag : uint32_t {
   None = 0,
   Unset = (1 << 0),
   NoKeyPressCheck = (1 << 1),
@@ -32,19 +31,17 @@ enum class SafeModeFlag : uint32_t
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(SafeModeFlag)
 
 template <typename CharT>
-inline Maybe<bool>
-IsSafeModeRequested(int& aArgc, CharT* aArgv[],
-                    const SafeModeFlag aFlags = SafeModeFlag::Unset)
-{
+inline Maybe<bool> IsSafeModeRequested(
+    int& aArgc, CharT* aArgv[],
+    const SafeModeFlag aFlags = SafeModeFlag::Unset) {
   CheckArgFlag checkArgFlags = CheckArgFlag::CheckOSInt;
   if (aFlags & SafeModeFlag::Unset) {
     checkArgFlags |= CheckArgFlag::RemoveArg;
   }
 
-  ArgResult ar = CheckArg(aArgc, aArgv,
-                          GetLiteral<CharT, FlagLiteral::safemode>(),
-                          static_cast<const CharT**>(nullptr),
-                          checkArgFlags);
+  ArgResult ar =
+      CheckArg(aArgc, aArgv, GetLiteral<CharT, FlagLiteral::safemode>(),
+               static_cast<const CharT**>(nullptr), checkArgFlags);
   if (ar == ARG_BAD) {
     return Nothing();
   }
@@ -53,13 +50,12 @@ IsSafeModeRequested(int& aArgc, CharT* aArgv[],
 
 #if defined(XP_WIN)
   // If the shift key is pressed and the ctrl and / or alt keys are not pressed
-  // during startup, start in safe mode. GetKeyState returns a short and the high
-  // order bit will be 1 if the key is pressed. By masking the returned short
-  // with 0x8000 the result will be 0 if the key is not pressed and non-zero
-  // otherwise.
+  // during startup, start in safe mode. GetKeyState returns a short and the
+  // high order bit will be 1 if the key is pressed. By masking the returned
+  // short with 0x8000 the result will be 0 if the key is not pressed and
+  // non-zero otherwise.
   if (!(aFlags & SafeModeFlag::NoKeyPressCheck) &&
-      (GetKeyState(VK_SHIFT) & 0x8000) &&
-      !(GetKeyState(VK_CONTROL) & 0x8000) &&
+      (GetKeyState(VK_SHIFT) & 0x8000) && !(GetKeyState(VK_CONTROL) & 0x8000) &&
       !(GetKeyState(VK_MENU) & 0x8000) &&
       !EnvHasValue("MOZ_DISABLE_SAFE_MODE_KEY")) {
     result = true;
@@ -68,7 +64,7 @@ IsSafeModeRequested(int& aArgc, CharT* aArgv[],
   if (result && PolicyCheckBoolean(L"DisableSafeMode")) {
     result = false;
   }
-#endif // defined(XP_WIN)
+#endif  // defined(XP_WIN)
 
 #if defined(XP_MACOSX)
   if (!(aFlags & SafeModeFlag::NoKeyPressCheck) &&
@@ -76,7 +72,7 @@ IsSafeModeRequested(int& aArgc, CharT* aArgv[],
       !EnvHasValue("MOZ_DISABLE_SAFE_MODE_KEY")) {
     result = true;
   }
-#endif // defined(XP_MACOSX)
+#endif  // defined(XP_MACOSX)
 
   // The Safe Mode Policy should not be enforced for the env var case
   // (used by updater and crash-recovery).
@@ -91,6 +87,6 @@ IsSafeModeRequested(int& aArgc, CharT* aArgv[],
   return Some(result);
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_SafeMode_h
+#endif  // mozilla_SafeMode_h

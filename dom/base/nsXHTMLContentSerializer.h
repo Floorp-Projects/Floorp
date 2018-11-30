@@ -30,27 +30,20 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
   nsXHTMLContentSerializer();
   virtual ~nsXHTMLContentSerializer();
 
-  NS_IMETHOD Init(uint32_t flags,
-                  uint32_t aWrapColumn,
-                  const mozilla::Encoding* aEncoding,
-                  bool aIsCopying,
+  NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
+                  const mozilla::Encoding* aEncoding, bool aIsCopying,
                   bool aRewriteEncodingDeclaration,
                   bool* aNeedsPreformatScanning) override;
 
-  NS_IMETHOD AppendText(nsIContent* aText,
-                        int32_t aStartOffset,
-                        int32_t aEndOffset,
-                        nsAString& aStr) override;
+  NS_IMETHOD AppendText(nsIContent* aText, int32_t aStartOffset,
+                        int32_t aEndOffset, nsAString& aStr) override;
 
-  NS_IMETHOD AppendDocumentStart(nsIDocument *aDocument,
+  NS_IMETHOD AppendDocumentStart(nsIDocument* aDocument,
                                  nsAString& aStr) override;
 
  protected:
-
-
   virtual bool CheckElementStart(mozilla::dom::Element* aElement,
-                                 bool& aForceFormat,
-                                 nsAString& aStr,
+                                 bool& aForceFormat, nsAString& aStr,
                                  nsresult& aResult) override;
 
   MOZ_MUST_USE
@@ -59,16 +52,17 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
                                  nsAString& aStr) override;
 
   virtual bool CheckElementEnd(mozilla::dom::Element* aContent,
-                               bool& aForceFormat,
-                               nsAString& aStr) override;
+                               bool& aForceFormat, nsAString& aStr) override;
 
-  virtual void AfterElementEnd(nsIContent * aContent,
-                               nsAString& aStr) override;
+  virtual void AfterElementEnd(nsIContent* aContent, nsAString& aStr) override;
 
-  virtual bool LineBreakBeforeOpen(int32_t aNamespaceID, nsAtom* aName) override;
+  virtual bool LineBreakBeforeOpen(int32_t aNamespaceID,
+                                   nsAtom* aName) override;
   virtual bool LineBreakAfterOpen(int32_t aNamespaceID, nsAtom* aName) override;
-  virtual bool LineBreakBeforeClose(int32_t aNamespaceID, nsAtom* aName) override;
-  virtual bool LineBreakAfterClose(int32_t aNamespaceID, nsAtom* aName) override;
+  virtual bool LineBreakBeforeClose(int32_t aNamespaceID,
+                                    nsAtom* aName) override;
+  virtual bool LineBreakAfterClose(int32_t aNamespaceID,
+                                   nsAtom* aName) override;
 
   bool HasLongLines(const nsString& text, int32_t& aLastNewlineOffset);
 
@@ -81,35 +75,31 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
                                    mozilla::dom::Element* aOriginalElement,
                                    nsAString& aTagPrefix,
                                    const nsAString& aTagNamespaceURI,
-                                   nsAtom* aTagName,
-                                   nsAString& aStr,
+                                   nsAtom* aTagName, nsAString& aStr,
                                    uint32_t aSkipAttr,
                                    bool aAddNSAttr) override;
 
   bool IsFirstChildOfOL(nsIContent* aElement);
 
   MOZ_MUST_USE
-  bool SerializeLIValueAttribute(nsIContent* aElement,
-                                 nsAString& aStr);
-  bool IsShorthandAttr(const nsAtom* aAttrName,
-                         const nsAtom* aElementName);
+  bool SerializeLIValueAttribute(nsIContent* aElement, nsAString& aStr);
+  bool IsShorthandAttr(const nsAtom* aAttrName, const nsAtom* aElementName);
 
   MOZ_MUST_USE
   virtual bool AppendAndTranslateEntities(const nsAString& aStr,
                                           nsAString& aOutputStr) override;
 
-private:
+ private:
   bool IsElementPreformatted(nsIContent* aNode);
 
-protected:
-
+ protected:
   /*
    * isHTMLParser should be set to true by the HTML parser which inherits from
    * this class. It avoids to redefine methods just for few changes.
    */
-  bool          mIsHTMLSerializer;
+  bool mIsHTMLSerializer;
 
-  bool          mIsCopying; // Set to true only while copying
+  bool mIsCopying;  // Set to true only while copying
 
   /*
    * mDisableEntityEncoding is higher than 0 while the serializer is serializing
@@ -124,21 +114,17 @@ protected:
 
   // This is to ensure that we only do meta tag fixups when dealing with
   // whole documents.
-  bool          mRewriteEncodingDeclaration;
+  bool mRewriteEncodingDeclaration;
 
   // To keep track of First LI child of OL in selected range
-  bool          mIsFirstChildOfOL;
+  bool mIsFirstChildOfOL;
 
   // To keep track of startvalue of OL and first list item for nested lists
   struct olState {
     olState(int32_t aStart, bool aIsFirst)
-      : startVal(aStart),
-        isFirstListItem(aIsFirst)
-    {
-    }
+        : startVal(aStart), isFirstListItem(aIsFirst) {}
 
-    olState(const olState & aOlState)
-    {
+    olState(const olState& aOlState) {
       startVal = aOlState.startVal;
       isFirstListItem = aOlState.isFirstListItem;
     }
@@ -157,7 +143,6 @@ protected:
   bool HasNoChildren(nsIContent* aContent);
 };
 
-nsresult
-NS_NewXHTMLContentSerializer(nsIContentSerializer** aSerializer);
+nsresult NS_NewXHTMLContentSerializer(nsIContentSerializer** aSerializer);
 
 #endif

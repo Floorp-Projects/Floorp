@@ -193,55 +193,34 @@ extern const char16_t* kLocalStorageType;
  * passes them onto LSSnapshot for final updating/population.  LSObject then
  * generates an event, if appropriate.
  */
-class MOZ_STACK_CLASS LSNotifyInfo
-{
+class MOZ_STACK_CLASS LSNotifyInfo {
   bool mChanged;
   nsString mOldValue;
 
-public:
-  LSNotifyInfo()
-    : mChanged(false)
-  { }
+ public:
+  LSNotifyInfo() : mChanged(false) {}
 
-  bool
-  changed() const
-  {
-    return mChanged;
-  }
+  bool changed() const { return mChanged; }
 
-  bool&
-  changed()
-  {
-    return mChanged;
-  }
+  bool& changed() { return mChanged; }
 
-  const nsString&
-  oldValue() const
-  {
-    return mOldValue;
-  }
+  const nsString& oldValue() const { return mOldValue; }
 
-  nsString&
-  oldValue()
-  {
-    return mOldValue;
-  }
+  nsString& oldValue() { return mOldValue; }
 };
 
 /**
  * Main-thread-only check of LSNG being enabled, the value is latched once
  * initialized so changing the preference during runtime has no effect.
  */
-bool
-NextGenLocalStorageEnabled();
+bool NextGenLocalStorageEnabled();
 
 /**
  * Cached any-thread version of NextGenLocalStorageEnabled().
  */
-bool
-CachedNextGenLocalStorageEnabled();
+bool CachedNextGenLocalStorageEnabled();
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_localstorage_LocalStorageCommon_h
+#endif  // mozilla_dom_localstorage_LocalStorageCommon_h

@@ -7,9 +7,8 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 
-nsresult
-nsGetInterface::operator()(const nsIID& aIID, void** aInstancePtr) const
-{
+nsresult nsGetInterface::operator()(const nsIID& aIID,
+                                    void** aInstancePtr) const {
   nsresult status;
 
   if (mSource) {

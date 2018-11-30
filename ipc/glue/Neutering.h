@@ -23,9 +23,8 @@ namespace ipc {
  * current thread will be neutered. It is safe to nest multiple instances of
  * this class.
  */
-class MOZ_RAII NeuteredWindowRegion
-{
-public:
+class MOZ_RAII NeuteredWindowRegion {
+ public:
   explicit NeuteredWindowRegion(bool aDoNeuter MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
   ~NeuteredWindowRegion();
 
@@ -35,7 +34,7 @@ public:
    */
   void PumpOnce();
 
-private:
+ private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   bool mNeuteredByThis;
 };
@@ -46,34 +45,31 @@ private:
  * disabling neutering for the remainder of its enclosing block.
  * @see NeuteredWindowRegion
  */
-class MOZ_RAII DeneuteredWindowRegion
-{
-public:
+class MOZ_RAII DeneuteredWindowRegion {
+ public:
   explicit DeneuteredWindowRegion(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
   ~DeneuteredWindowRegion();
 
-private:
+ private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   bool mReneuter;
 };
 
-class MOZ_RAII SuppressedNeuteringRegion
-{
-public:
+class MOZ_RAII SuppressedNeuteringRegion {
+ public:
   explicit SuppressedNeuteringRegion(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
   ~SuppressedNeuteringRegion();
 
   static inline bool IsNeuteringSuppressed() { return sSuppressNeutering; }
 
-private:
+ private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   bool mReenable;
 
   static bool sSuppressNeutering;
 };
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
-#endif // mozilla_ipc_Neutering_h
-
+#endif  // mozilla_ipc_Neutering_h

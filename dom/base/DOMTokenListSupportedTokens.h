@@ -25,7 +25,7 @@ typedef const char* const DOMTokenListSupportedToken;
 // or at least outlive the DOMTokenList whose constructor it's passed to.
 typedef DOMTokenListSupportedToken* DOMTokenListSupportedTokenArray;
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_DOMTokenListSupportedTokens_h
+#endif  // mozilla_dom_DOMTokenListSupportedTokens_h

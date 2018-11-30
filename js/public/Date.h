@@ -50,8 +50,7 @@ namespace JS {
  * operations requiring instantaneous correctness, to guarantee correct
  * behavior.
  */
-extern JS_PUBLIC_API void
-ResetTimeZone();
+extern JS_PUBLIC_API void ResetTimeZone();
 
 class ClippedTime;
 inline ClippedTime TimeClip(double time);
@@ -74,87 +73,77 @@ inline ClippedTime TimeClip(double time);
  * JavaScript dates.  This also forces users to perform any desired clipping,
  * as only the user knows what behavior is desired when clipping occurs.
  */
-class ClippedTime
-{
-    double t;
+class ClippedTime {
+  double t;
 
-    explicit ClippedTime(double time) : t(time) {}
-    friend ClippedTime TimeClip(double time);
+  explicit ClippedTime(double time) : t(time) {}
+  friend ClippedTime TimeClip(double time);
 
-  public:
-    // Create an invalid date.
-    ClippedTime() : t(mozilla::UnspecifiedNaN<double>()) {}
+ public:
+  // Create an invalid date.
+  ClippedTime() : t(mozilla::UnspecifiedNaN<double>()) {}
 
-    // Create an invalid date/time, more explicitly; prefer this to the default
-    // constructor.
-    static ClippedTime invalid() { return ClippedTime(); }
+  // Create an invalid date/time, more explicitly; prefer this to the default
+  // constructor.
+  static ClippedTime invalid() { return ClippedTime(); }
 
-    double toDouble() const { return t; }
+  double toDouble() const { return t; }
 
-    bool isValid() const { return !mozilla::IsNaN(t); }
+  bool isValid() const { return !mozilla::IsNaN(t); }
 };
 
 // ES6 20.3.1.15.
 //
 // Clip a double to JavaScript's date range (or to an invalid date) using the
 // ECMAScript TimeClip algorithm.
-inline ClippedTime
-TimeClip(double time)
-{
-    // Steps 1-2.
-    const double MaxTimeMagnitude = 8.64e15;
-    if (!mozilla::IsFinite(time) || mozilla::Abs(time) > MaxTimeMagnitude) {
-        return ClippedTime(mozilla::UnspecifiedNaN<double>());
-    }
+inline ClippedTime TimeClip(double time) {
+  // Steps 1-2.
+  const double MaxTimeMagnitude = 8.64e15;
+  if (!mozilla::IsFinite(time) || mozilla::Abs(time) > MaxTimeMagnitude) {
+    return ClippedTime(mozilla::UnspecifiedNaN<double>());
+  }
 
-    // Step 3.
-    return ClippedTime(ToInteger(time) + (+0.0));
+  // Step 3.
+  return ClippedTime(ToInteger(time) + (+0.0));
 }
 
 // Produce a double Value from the given time.  Because times may be NaN,
 // prefer using this to manual canonicalization.
-inline Value
-TimeValue(ClippedTime time)
-{
-    return DoubleValue(JS::CanonicalizeNaN(time.toDouble()));
+inline Value TimeValue(ClippedTime time) {
+  return DoubleValue(JS::CanonicalizeNaN(time.toDouble()));
 }
 
 // Create a new Date object whose [[DateValue]] internal slot contains the
 // clipped |time|.  (Users who must represent times outside that range must use
 // another representation.)
-extern JS_PUBLIC_API JSObject*
-NewDateObject(JSContext* cx, ClippedTime time);
+extern JS_PUBLIC_API JSObject* NewDateObject(JSContext* cx, ClippedTime time);
 
 // Year is a year, month is 0-11, day is 1-based.  The return value is a number
 // of milliseconds since the epoch.
 //
 // Consistent with the MakeDate algorithm defined in ECMAScript, this value is
 // *not* clipped!  Use JS::TimeClip if you need a clipped date.
-JS_PUBLIC_API double
-MakeDate(double year, unsigned month, unsigned day);
+JS_PUBLIC_API double MakeDate(double year, unsigned month, unsigned day);
 
 // Year is a year, month is 0-11, day is 1-based, and time is in milliseconds.
 // The return value is a number of milliseconds since the epoch.
 //
 // Consistent with the MakeDate algorithm defined in ECMAScript, this value is
 // *not* clipped!  Use JS::TimeClip if you need a clipped date.
-JS_PUBLIC_API double
-MakeDate(double year, unsigned month, unsigned day, double time);
+JS_PUBLIC_API double MakeDate(double year, unsigned month, unsigned day,
+                              double time);
 
 // Takes an integer number of milliseconds since the epoch and returns the
 // year.  Can return NaN, and will do so if NaN is passed in.
-JS_PUBLIC_API double
-YearFromTime(double time);
+JS_PUBLIC_API double YearFromTime(double time);
 
 // Takes an integer number of milliseconds since the epoch and returns the
 // month (0-11).  Can return NaN, and will do so if NaN is passed in.
-JS_PUBLIC_API double
-MonthFromTime(double time);
+JS_PUBLIC_API double MonthFromTime(double time);
 
 // Takes an integer number of milliseconds since the epoch and returns the
 // day (1-based).  Can return NaN, and will do so if NaN is passed in.
-JS_PUBLIC_API double
-DayFromTime(double time);
+JS_PUBLIC_API double DayFromTime(double time);
 
 // Takes an integer year and returns the number of days from epoch to the given
 // year.
@@ -162,32 +151,30 @@ DayFromTime(double time);
 // the ECMAScript specification.  Nonfinite years, years containing fractional
 // components, and years outside ECMAScript's date range are not handled with
 // any particular intelligence.  Garbage in, garbage out.
-JS_PUBLIC_API double
-DayFromYear(double year);
+JS_PUBLIC_API double DayFromYear(double year);
 
 // Takes an integer number of milliseconds since the epoch and an integer year,
 // returns the number of days in that year. If |time| is nonfinite, returns NaN.
 // Otherwise |time| *must* correspond to a time within the valid year |year|.
-// This should usually be ensured by computing |year| as |JS::DayFromYear(time)|.
-JS_PUBLIC_API double
-DayWithinYear(double time, double year);
+// This should usually be ensured by computing |year| as
+// |JS::DayFromYear(time)|.
+JS_PUBLIC_API double DayWithinYear(double time, double year);
 
-// The callback will be a wrapper function that accepts a single double (the time
-// to clamp and jitter.) Inside the JS Engine, other parameters that may be needed
-// are all constant, so they are handled inside the wrapper function
-using ReduceMicrosecondTimePrecisionCallback = double(*)(double);
+// The callback will be a wrapper function that accepts a single double (the
+// time to clamp and jitter.) Inside the JS Engine, other parameters that may be
+// needed are all constant, so they are handled inside the wrapper function
+using ReduceMicrosecondTimePrecisionCallback = double (*)(double);
 
 // Set a callback into the toolkit/components/resistfingerprinting function that
 // will centralize time resolution and jitter into one place.
-JS_PUBLIC_API void
-SetReduceMicrosecondTimePrecisionCallback(ReduceMicrosecondTimePrecisionCallback callback);
+JS_PUBLIC_API void SetReduceMicrosecondTimePrecisionCallback(
+    ReduceMicrosecondTimePrecisionCallback callback);
 
 // Sets the time resolution for fingerprinting protection, and whether jitter
 // should occur. If resolution is set to zero, then no rounding or jitter will
 // occur. This is used if the callback above is not specified.
-JS_PUBLIC_API void
-SetTimeResolutionUsec(uint32_t resolution, bool jitter);
+JS_PUBLIC_API void SetTimeResolutionUsec(uint32_t resolution, bool jitter);
 
-} // namespace JS
+}  // namespace JS
 
 #endif /* js_Date_h */

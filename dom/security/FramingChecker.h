@@ -15,29 +15,21 @@ class nsIURI;
 class nsIPrincipal;
 
 class FramingChecker {
-
-public:
+ public:
   // Determine if X-Frame-Options allows content to be framed
   // as a subdocument
-  static bool CheckFrameOptions(nsIChannel* aChannel,
-                                nsIDocShell* aDocShell,
+  static bool CheckFrameOptions(nsIChannel* aChannel, nsIDocShell* aDocShell,
                                 nsIPrincipal* aPrincipal);
 
-protected:
-  enum XFOHeader
-  {
-    eDENY,
-    eSAMEORIGIN,
-    eALLOWFROM
-  };
+ protected:
+  enum XFOHeader { eDENY, eSAMEORIGIN, eALLOWFROM };
 
   static bool CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
                                          const nsAString& aPolicy,
                                          nsIDocShell* aDocShell);
 
   static void ReportXFOViolation(nsIDocShellTreeItem* aTopDocShellItem,
-                                 nsIURI* aThisURI,
-                                 XFOHeader aHeader);
+                                 nsIURI* aThisURI, XFOHeader aHeader);
 };
 
 #endif /* mozilla_dom_FramingChecker_h */

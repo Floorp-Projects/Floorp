@@ -23,36 +23,26 @@ namespace quota {
 // is pre-allocated so wasteful reallocations can be avoided.  However,
 // nsCString currently may over-allocate and this can be problematic on 32-bit
 // windows until we're rid of that build configuration.
-class MemoryOutputStream final
-  : public nsIOutputStream
-{
+class MemoryOutputStream final : public nsIOutputStream {
   nsCString mData;
   uint64_t mOffset;
 
-public:
-  static already_AddRefed<MemoryOutputStream>
-  Create(uint64_t aSize);
+ public:
+  static already_AddRefed<MemoryOutputStream> Create(uint64_t aSize);
 
-  const nsCString&
-  Data() const
-  {
-    return mData;
-  }
+  const nsCString& Data() const { return mData; }
 
-private:
-  MemoryOutputStream()
-  : mOffset(0)
-  { }
+ private:
+  MemoryOutputStream() : mOffset(0) {}
 
-  virtual ~MemoryOutputStream()
-  { }
+  virtual ~MemoryOutputStream() {}
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOUTPUTSTREAM
 };
 
-} // namespace quota
-} // namespace dom
-} // namespace mozilla
+}  // namespace quota
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_quota_MemoryOutputStream_h */

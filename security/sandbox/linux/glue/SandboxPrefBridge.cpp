@@ -9,13 +9,12 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/SandboxSettings.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ContentParent.h" // for FILE_REMOTE_TYPE
+#include "mozilla/dom/ContentParent.h"  // for FILE_REMOTE_TYPE
 
 namespace mozilla {
 
 /* static */ ContentProcessSandboxParams
-ContentProcessSandboxParams::ForThisProcess(const dom::MaybeFileDesc& aBroker)
-{
+ContentProcessSandboxParams::ForThisProcess(const dom::MaybeFileDesc& aBroker) {
   ContentProcessSandboxParams params;
   params.mLevel = GetEffectiveContentSandboxLevel();
 
@@ -33,9 +32,8 @@ ContentProcessSandboxParams::ForThisProcess(const dom::MaybeFileDesc& aBroker)
   params.mFileProcess = cc->GetRemoteType().EqualsLiteral(FILE_REMOTE_TYPE);
 
   nsAutoCString extraSyscalls;
-  nsresult rv =
-    Preferences::GetCString("security.sandbox.content.syscall_whitelist",
-                            extraSyscalls);
+  nsresult rv = Preferences::GetCString(
+      "security.sandbox.content.syscall_whitelist", extraSyscalls);
   if (NS_SUCCEEDED(rv)) {
     for (const nsACString& callNrString : extraSyscalls.Split(',')) {
       int callNr = PromiseFlatCString(callNrString).ToInteger(&rv);
@@ -48,4 +46,4 @@ ContentProcessSandboxParams::ForThisProcess(const dom::MaybeFileDesc& aBroker)
   return params;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

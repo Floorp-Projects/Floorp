@@ -11,54 +11,40 @@
 namespace mozilla {
 namespace widget {
 
-CompositorWidgetParent::CompositorWidgetParent(const CompositorWidgetInitData& aInitData,
-                                               const layers::CompositorOptions& aOptions)
- : WinCompositorWidget(aInitData.get_WinCompositorWidgetInitData(), aOptions)
-{
+CompositorWidgetParent::CompositorWidgetParent(
+    const CompositorWidgetInitData& aInitData,
+    const layers::CompositorOptions& aOptions)
+    : WinCompositorWidget(aInitData.get_WinCompositorWidgetInitData(),
+                          aOptions) {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
 }
 
-CompositorWidgetParent::~CompositorWidgetParent()
-{
-}
+CompositorWidgetParent::~CompositorWidgetParent() {}
 
-mozilla::ipc::IPCResult
-CompositorWidgetParent::RecvEnterPresentLock()
-{
+mozilla::ipc::IPCResult CompositorWidgetParent::RecvEnterPresentLock() {
   EnterPresentLock();
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-CompositorWidgetParent::RecvLeavePresentLock()
-{
+mozilla::ipc::IPCResult CompositorWidgetParent::RecvLeavePresentLock() {
   LeavePresentLock();
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-CompositorWidgetParent::RecvUpdateTransparency(const nsTransparencyMode& aMode)
-{
+mozilla::ipc::IPCResult CompositorWidgetParent::RecvUpdateTransparency(
+    const nsTransparencyMode& aMode) {
   UpdateTransparency(aMode);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-CompositorWidgetParent::RecvClearTransparentWindow()
-{
+mozilla::ipc::IPCResult CompositorWidgetParent::RecvClearTransparentWindow() {
   ClearTransparentWindow();
   return IPC_OK();
 }
 
-nsIWidget*
-CompositorWidgetParent::RealWidget()
-{
-  return nullptr;
-}
+nsIWidget* CompositorWidgetParent::RealWidget() { return nullptr; }
 
-void
-CompositorWidgetParent::ObserveVsync(VsyncObserver* aObserver)
-{
+void CompositorWidgetParent::ObserveVsync(VsyncObserver* aObserver) {
   if (aObserver) {
     Unused << SendObserveVsync();
   } else {
@@ -67,17 +53,12 @@ CompositorWidgetParent::ObserveVsync(VsyncObserver* aObserver)
   mVsyncObserver = aObserver;
 }
 
-RefPtr<VsyncObserver>
-CompositorWidgetParent::GetVsyncObserver() const
-{
+RefPtr<VsyncObserver> CompositorWidgetParent::GetVsyncObserver() const {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
   return mVsyncObserver;
 }
 
-void
-CompositorWidgetParent::ActorDestroy(ActorDestroyReason aWhy)
-{
-}
+void CompositorWidgetParent::ActorDestroy(ActorDestroyReason aWhy) {}
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

@@ -19,9 +19,8 @@ namespace image {
 struct ImageMemoryCounter;
 struct SurfaceMemoryCounter;
 
-class ImageMemoryReporter final
-{
-public:
+class ImageMemoryReporter final {
+ public:
   /**
    * Initializes image related memory reporting in the compositor process when
    * using WebRender.
@@ -42,28 +41,29 @@ public:
    * conjunction with AppendSharedSurfacePrefix and/or TrimSharedSurfaces to
    * produce the expected result.
    */
-  static void ReportSharedSurfaces(nsIHandleReportCallback* aHandleReport,
-                                   nsISupports* aData,
-                                   const layers::SharedSurfacesMemoryReport& aSharedSurfaces);
+  static void ReportSharedSurfaces(
+      nsIHandleReportCallback* aHandleReport, nsISupports* aData,
+      const layers::SharedSurfacesMemoryReport& aSharedSurfaces);
 
   /**
    * Adjust the path prefix for a surface to include any additional metadata for
    * the shared surface, if any. It will also remove any corresponding entries
    * in the given memory report.
    */
-  static void AppendSharedSurfacePrefix(nsACString& aPathPrefix,
-                                        const SurfaceMemoryCounter& aCounter,
-                                        layers::SharedSurfacesMemoryReport& aSharedSurfaces);
+  static void AppendSharedSurfacePrefix(
+      nsACString& aPathPrefix, const SurfaceMemoryCounter& aCounter,
+      layers::SharedSurfacesMemoryReport& aSharedSurfaces);
 
   /**
    * Remove all entries in the memory report for the given set of surfaces for
    * an image. This is useful when we aren't reporting on a particular image
    * because it isn't notable.
    */
-  static void TrimSharedSurfaces(const ImageMemoryCounter& aCounter,
-                                 layers::SharedSurfacesMemoryReport& aSharedSurfaces);
+  static void TrimSharedSurfaces(
+      const ImageMemoryCounter& aCounter,
+      layers::SharedSurfacesMemoryReport& aSharedSurfaces);
 
-private:
+ private:
   /**
    * Report all remaining entries in the shared surface's memory report.
    *
@@ -75,22 +75,21 @@ private:
    * local surface cache -- thus any remaining entries are those that are
    * candidates for leaks.
    */
-  static void ReportSharedSurfaces(nsIHandleReportCallback* aHandleReport,
-                                   nsISupports* aData,
-                                   bool aIsForCompositor,
-                                   const layers::SharedSurfacesMemoryReport& aSharedSurfaces);
+  static void ReportSharedSurfaces(
+      nsIHandleReportCallback* aHandleReport, nsISupports* aData,
+      bool aIsForCompositor,
+      const layers::SharedSurfacesMemoryReport& aSharedSurfaces);
 
-  static void ReportSharedSurface(nsIHandleReportCallback* aHandleReport,
-                                  nsISupports* aData,
-                                  bool aIsForCompositor,
-                                  uint64_t aExternalId,
-                                  const layers::SharedSurfacesMemoryReport::SurfaceEntry& aEntry);
+  static void ReportSharedSurface(
+      nsIHandleReportCallback* aHandleReport, nsISupports* aData,
+      bool aIsForCompositor, uint64_t aExternalId,
+      const layers::SharedSurfacesMemoryReport::SurfaceEntry& aEntry);
 
   class WebRenderReporter;
   static WebRenderReporter* sWrReporter;
 };
 
-} // image
-} // mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_ImageMemoryReporter_h
+#endif  // mozilla_image_ImageMemoryReporter_h

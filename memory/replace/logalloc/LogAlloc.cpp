@@ -27,27 +27,13 @@ static bool sStdoutOrStderr = false;
 
 static Mutex sMutex;
 
-static void
-prefork()
-{
-  sMutex.Lock();
-}
+static void prefork() { sMutex.Lock(); }
 
-static void
-postfork()
-{
-  sMutex.Unlock();
-}
+static void postfork() { sMutex.Unlock(); }
 
-static size_t
-GetPid()
-{
-  return size_t(getpid());
-}
+static size_t GetPid() { return size_t(getpid()); }
 
-static size_t
-GetTid()
-{
+static size_t GetTid() {
 #if defined(_WIN32)
   return size_t(GetCurrentThreadId());
 #else
@@ -57,14 +43,12 @@ GetTid()
 
 #ifdef ANDROID
 /* Android doesn't have pthread_atfork defined in pthread.h */
-extern "C" MOZ_EXPORT int
-pthread_atfork(void (*)(void), void (*)(void), void (*)(void));
+extern "C" MOZ_EXPORT int pthread_atfork(void (*)(void), void (*)(void),
+                                         void (*)(void));
 #endif
 
-class LogAllocBridge : public ReplaceMallocBridge
-{
-  virtual void InitDebugFd(mozilla::DebugFdRegistry& aRegistry) override
-  {
+class LogAllocBridge : public ReplaceMallocBridge {
+  virtual void InitDebugFd(mozilla::DebugFdRegistry& aRegistry) override {
     if (!sStdoutOrStderr) {
       aRegistry.RegisterHandle(sFd);
     }
@@ -76,113 +60,74 @@ class LogAllocBridge : public ReplaceMallocBridge
  * before any other allocation/free happens.
  */
 
-static void*
-replace_malloc(size_t aSize)
-{
+static void* replace_malloc(size_t aSize) {
   MutexAutoLock lock(sMutex);
   void* ptr = sFuncs.malloc(aSize);
   FdPrintf(sFd, "%zu %zu malloc(%zu)=%p\n", GetPid(), GetTid(), aSize, ptr);
   return ptr;
 }
 
-static int
-replace_posix_memalign(void** aPtr, size_t aAlignment, size_t aSize)
-{
+static int replace_posix_memalign(void** aPtr, size_t aAlignment,
+                                  size_t aSize) {
   MutexAutoLock lock(sMutex);
   int ret = sFuncs.posix_memalign(aPtr, aAlignment, aSize);
-  FdPrintf(sFd,
-           "%zu %zu posix_memalign(%zu,%zu)=%p\n",
-           GetPid(),
-           GetTid(),
-           aAlignment,
-           aSize,
-           (ret == 0) ? *aPtr : nullptr);
+  FdPrintf(sFd, "%zu %zu posix_memalign(%zu,%zu)=%p\n", GetPid(), GetTid(),
+           aAlignment, aSize, (ret == 0) ? *aPtr : nullptr);
   return ret;
 }
 
-static void*
-replace_aligned_alloc(size_t aAlignment, size_t aSize)
-{
+static void* replace_aligned_alloc(size_t aAlignment, size_t aSize) {
   MutexAutoLock lock(sMutex);
   void* ptr = sFuncs.aligned_alloc(aAlignment, aSize);
-  FdPrintf(sFd,
-           "%zu %zu aligned_alloc(%zu,%zu)=%p\n",
-           GetPid(),
-           GetTid(),
-           aAlignment,
-           aSize,
+  FdPrintf(sFd, "%zu %zu aligned_alloc(%zu,%zu)=%p\n", GetPid(), GetTid(),
+           aAlignment, aSize, ptr);
+  return ptr;
+}
+
+static void* replace_calloc(size_t aNum, size_t aSize) {
+  MutexAutoLock lock(sMutex);
+  void* ptr = sFuncs.calloc(aNum, aSize);
+  FdPrintf(sFd, "%zu %zu calloc(%zu,%zu)=%p\n", GetPid(), GetTid(), aNum, aSize,
            ptr);
   return ptr;
 }
 
-static void*
-replace_calloc(size_t aNum, size_t aSize)
-{
-  MutexAutoLock lock(sMutex);
-  void* ptr = sFuncs.calloc(aNum, aSize);
-  FdPrintf(
-    sFd, "%zu %zu calloc(%zu,%zu)=%p\n", GetPid(), GetTid(), aNum, aSize, ptr);
-  return ptr;
-}
-
-static void*
-replace_realloc(void* aPtr, size_t aSize)
-{
+static void* replace_realloc(void* aPtr, size_t aSize) {
   MutexAutoLock lock(sMutex);
   void* new_ptr = sFuncs.realloc(aPtr, aSize);
-  FdPrintf(sFd,
-           "%zu %zu realloc(%p,%zu)=%p\n",
-           GetPid(),
-           GetTid(),
-           aPtr,
-           aSize,
+  FdPrintf(sFd, "%zu %zu realloc(%p,%zu)=%p\n", GetPid(), GetTid(), aPtr, aSize,
            new_ptr);
   return new_ptr;
 }
 
-static void
-replace_free(void* aPtr)
-{
+static void replace_free(void* aPtr) {
   MutexAutoLock lock(sMutex);
   FdPrintf(sFd, "%zu %zu free(%p)\n", GetPid(), GetTid(), aPtr);
   sFuncs.free(aPtr);
 }
 
-static void*
-replace_memalign(size_t aAlignment, size_t aSize)
-{
+static void* replace_memalign(size_t aAlignment, size_t aSize) {
   MutexAutoLock lock(sMutex);
   void* ptr = sFuncs.memalign(aAlignment, aSize);
-  FdPrintf(sFd,
-           "%zu %zu memalign(%zu,%zu)=%p\n",
-           GetPid(),
-           GetTid(),
-           aAlignment,
-           aSize,
-           ptr);
+  FdPrintf(sFd, "%zu %zu memalign(%zu,%zu)=%p\n", GetPid(), GetTid(),
+           aAlignment, aSize, ptr);
   return ptr;
 }
 
-static void*
-replace_valloc(size_t aSize)
-{
+static void* replace_valloc(size_t aSize) {
   MutexAutoLock lock(sMutex);
   void* ptr = sFuncs.valloc(aSize);
   FdPrintf(sFd, "%zu %zu valloc(%zu)=%p\n", GetPid(), GetTid(), aSize, ptr);
   return ptr;
 }
 
-static void
-replace_jemalloc_stats(jemalloc_stats_t* aStats)
-{
+static void replace_jemalloc_stats(jemalloc_stats_t* aStats) {
   MutexAutoLock lock(sMutex);
   sFuncs.jemalloc_stats(aStats);
   FdPrintf(sFd, "%zu %zu jemalloc_stats()\n", GetPid(), GetTid());
 }
 
-void
-replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge)
-{
+void replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge) {
   /* Initialize output file descriptor from the MALLOC_LOG environment
    * variable. Numbers up to 9999 are considered as a preopened file
    * descriptor number. Other values are considered as a file name. */
@@ -213,13 +158,9 @@ replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge)
     if (fd > 0) {
       handle = reinterpret_cast<HANDLE>(_get_osfhandle(fd));
     } else {
-      handle = CreateFileA(log,
-                           FILE_APPEND_DATA,
-                           FILE_SHARE_READ | FILE_SHARE_WRITE,
-                           nullptr,
-                           OPEN_ALWAYS,
-                           FILE_ATTRIBUTE_NORMAL,
-                           nullptr);
+      handle =
+          CreateFileA(log, FILE_APPEND_DATA, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                      nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     }
     if (handle != INVALID_HANDLE_VALUE) {
       sFd = reinterpret_cast<intptr_t>(handle);

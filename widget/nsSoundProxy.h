@@ -8,15 +8,14 @@
 
 #include "nsISound.h"
 
-class nsSoundProxy final : public nsISound
-{
-public:
+class nsSoundProxy final : public nsISound {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISOUND
 
   nsSoundProxy() = default;
 
-private:
+ private:
   ~nsSoundProxy() = default;
 };
 

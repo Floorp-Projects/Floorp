@@ -15,16 +15,17 @@
  *   contributors may be used to endorse or promote products derived from this
  *   software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
- * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  *
  * Contributor(s):
  *   Josh Aas <josh@mozilla.com>
@@ -43,10 +44,7 @@
 #include <string>
 #include <sstream>
 
-typedef enum  {
-  DM_DEFAULT,
-  DM_SOLID_COLOR
-} DrawMode;
+typedef enum { DM_DEFAULT, DM_SOLID_COLOR } DrawMode;
 
 typedef enum {
   FUNCTION_NONE,
@@ -61,11 +59,7 @@ typedef enum {
   FUNCTION_NPP_WRITE_RPC
 } TestFunction;
 
-typedef enum {
-  AD_NONE,
-  AD_BITMAP,
-  AD_DXGI
-} AsyncDrawing;
+typedef enum { AD_NONE, AD_BITMAP, AD_DXGI } AsyncDrawing;
 
 typedef enum {
   ACTIVATION_STATE_UNKNOWN,
@@ -78,15 +72,12 @@ typedef struct FunctionTable {
   const char* funcName;
 } FunctionTable;
 
-typedef enum {
-  POSTMODE_FRAME,
-  POSTMODE_STREAM
-} PostMode;
+typedef enum { POSTMODE_FRAME, POSTMODE_STREAM } PostMode;
 
 typedef struct TestNPObject : NPObject {
   NPP npp;
   DrawMode drawMode;
-  uint32_t drawColor; // 0xAARRGGBB
+  uint32_t drawColor;  // 0xAARRGGBB
 } TestNPObject;
 
 typedef struct _PlatformData PlatformData;
@@ -142,8 +133,8 @@ typedef struct InstanceData {
   int32_t mouseUpEventCount;
   int32_t bugMode;
   AsyncDrawing asyncDrawing;
-  NPAsyncSurface *frontBuffer;
-  NPAsyncSurface *backBuffer;
+  NPAsyncSurface* frontBuffer;
+  NPAsyncSurface* backBuffer;
   std::string lastComposition;
   void* placeholderWnd;
   double cssZoomFactor;
@@ -156,4 +147,4 @@ bool setupDxgiSurfaces(NPP npp, InstanceData* instanceData);
 void drawDxgiBitmapColor(InstanceData* instanceData);
 #endif
 
-#endif // nptest_h_
+#endif  // nptest_h_

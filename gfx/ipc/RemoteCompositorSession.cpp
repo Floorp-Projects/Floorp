@@ -12,7 +12,7 @@
 #include "nsBaseWidget.h"
 #if defined(MOZ_WIDGET_ANDROID)
 #include "mozilla/layers/UiCompositorControllerChild.h"
-#endif // defined(MOZ_WIDGET_ANDROID)
+#endif  // defined(MOZ_WIDGET_ANDROID)
 
 namespace mozilla {
 namespace layers {
@@ -20,15 +20,13 @@ namespace layers {
 using namespace gfx;
 using namespace widget;
 
-RemoteCompositorSession::RemoteCompositorSession(nsBaseWidget* aWidget,
-                                                 CompositorBridgeChild* aChild,
-                                                 CompositorWidgetDelegate* aWidgetDelegate,
-                                                 APZCTreeManagerChild* aAPZ,
-                                                 const LayersId& aRootLayerTreeId)
- : CompositorSession(aWidgetDelegate, aChild, aRootLayerTreeId),
-   mWidget(aWidget),
-   mAPZ(aAPZ)
-{
+RemoteCompositorSession::RemoteCompositorSession(
+    nsBaseWidget* aWidget, CompositorBridgeChild* aChild,
+    CompositorWidgetDelegate* aWidgetDelegate, APZCTreeManagerChild* aAPZ,
+    const LayersId& aRootLayerTreeId)
+    : CompositorSession(aWidgetDelegate, aChild, aRootLayerTreeId),
+      mWidget(aWidget),
+      mAPZ(aAPZ) {
   MOZ_ASSERT(!gfxPlatform::IsHeadless());
   GPUProcessManager::Get()->RegisterRemoteProcessSession(this);
   if (mAPZ) {
@@ -36,58 +34,43 @@ RemoteCompositorSession::RemoteCompositorSession(nsBaseWidget* aWidget,
   }
 }
 
-RemoteCompositorSession::~RemoteCompositorSession()
-{
+RemoteCompositorSession::~RemoteCompositorSession() {
   // This should have been shutdown first.
   MOZ_ASSERT(!mCompositorBridgeChild);
 #if defined(MOZ_WIDGET_ANDROID)
   MOZ_ASSERT(!mUiCompositorControllerChild);
-#endif //defined(MOZ_WIDGET_ANDROID)
+#endif  // defined(MOZ_WIDGET_ANDROID)
 }
 
-void
-RemoteCompositorSession::NotifySessionLost()
-{
+void RemoteCompositorSession::NotifySessionLost() {
   // Re-entrancy should be impossible: when we are being notified of a lost
   // session, we have by definition not shut down yet. We will shutdown, but
   // then will be removed from the notification list.
   mWidget->NotifyCompositorSessionLost(this);
 }
 
-CompositorBridgeParent*
-RemoteCompositorSession::GetInProcessBridge() const
-{
+CompositorBridgeParent* RemoteCompositorSession::GetInProcessBridge() const {
   return nullptr;
 }
 
-void
-RemoteCompositorSession::SetContentController(GeckoContentController* aController)
-{
+void RemoteCompositorSession::SetContentController(
+    GeckoContentController* aController) {
   mContentController = aController;
-  mCompositorBridgeChild->SendPAPZConstructor(new APZChild(aController), LayersId{0});
+  mCompositorBridgeChild->SendPAPZConstructor(new APZChild(aController),
+                                              LayersId{0});
 }
 
-GeckoContentController*
-RemoteCompositorSession::GetContentController()
-{
+GeckoContentController* RemoteCompositorSession::GetContentController() {
   return mContentController.get();
 }
 
-nsIWidget*
-RemoteCompositorSession::GetWidget() const
-{
-  return mWidget;
-}
+nsIWidget* RemoteCompositorSession::GetWidget() const { return mWidget; }
 
-RefPtr<IAPZCTreeManager>
-RemoteCompositorSession::GetAPZCTreeManager() const
-{
+RefPtr<IAPZCTreeManager> RemoteCompositorSession::GetAPZCTreeManager() const {
   return mAPZ;
 }
 
-void
-RemoteCompositorSession::Shutdown()
-{
+void RemoteCompositorSession::Shutdown() {
   mContentController = nullptr;
   if (mAPZ) {
     mAPZ->SetCompositorSession(nullptr);
@@ -102,9 +85,9 @@ RemoteCompositorSession::Shutdown()
     mUiCompositorControllerChild->Destroy();
     mUiCompositorControllerChild = nullptr;
   }
-#endif //defined(MOZ_WIDGET_ANDROID)
+#endif  // defined(MOZ_WIDGET_ANDROID)
   GPUProcessManager::Get()->UnregisterRemoteProcessSession(this);
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

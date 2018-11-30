@@ -17,11 +17,11 @@ namespace mozilla {
 
 namespace gl {
 class GLContext;
-} // namespace gl
+}  // namespace gl
 
 namespace layers {
 class GLManager;
-} // namespace layers
+}  // namespace layers
 
 namespace widget {
 
@@ -32,22 +32,19 @@ namespace widget {
 // RectTextureImages are used both for accelerated GL layers drawing and for
 // OMTC BasicLayers drawing.
 class RectTextureImage {
-public:
+ public:
   RectTextureImage();
 
   virtual ~RectTextureImage();
 
-  already_AddRefed<gfx::DrawTarget>
-    BeginUpdate(const LayoutDeviceIntSize& aNewSize,
-                const LayoutDeviceIntRegion& aDirtyRegion =
-                  LayoutDeviceIntRegion());
+  already_AddRefed<gfx::DrawTarget> BeginUpdate(
+      const LayoutDeviceIntSize& aNewSize,
+      const LayoutDeviceIntRegion& aDirtyRegion = LayoutDeviceIntRegion());
   void EndUpdate();
 
   void UpdateIfNeeded(const LayoutDeviceIntSize& aNewSize,
                       const LayoutDeviceIntRegion& aDirtyRegion,
-                      void (^aCallback)(gfx::DrawTarget*,
-                                        const LayoutDeviceIntRegion&))
-  {
+                      void (^aCallback)(gfx::DrawTarget*, const LayoutDeviceIntRegion&)) {
     RefPtr<gfx::DrawTarget> drawTarget = BeginUpdate(aNewSize, aDirtyRegion);
     if (drawTarget) {
       aCallback(drawTarget, GetUpdateRegion());
@@ -56,20 +53,17 @@ public:
   }
 
   void UpdateFromCGContext(const LayoutDeviceIntSize& aNewSize,
-                           const LayoutDeviceIntRegion& aDirtyRegion,
-                           CGContextRef aCGContext);
+                           const LayoutDeviceIntRegion& aDirtyRegion, CGContextRef aCGContext);
 
   LayoutDeviceIntRegion GetUpdateRegion() {
     MOZ_ASSERT(mInUpdate, "update region only valid during update");
     return mUpdateRegion;
   }
 
-  void Draw(mozilla::layers::GLManager* aManager,
-            const LayoutDeviceIntPoint& aLocation,
+  void Draw(mozilla::layers::GLManager* aManager, const LayoutDeviceIntPoint& aLocation,
             const gfx::Matrix4x4& aTransform = gfx::Matrix4x4());
 
-
-protected:
+ protected:
   void DeleteTexture();
   bool BindIOSurfaceToTexture(gl::GLContext* aGL);
 
@@ -81,7 +75,7 @@ protected:
   bool mInUpdate;
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // RectTextureImage_h_
+#endif  // RectTextureImage_h_

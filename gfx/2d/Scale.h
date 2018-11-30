@@ -28,11 +28,12 @@ namespace gfx {
  * example, could simply set a status bit on a copy of the image, and use
  * Direct2D's high-quality scaler at draw time.
  */
-GFX2D_API bool Scale(uint8_t* srcData, int32_t srcWidth, int32_t srcHeight, int32_t srcStride,
-                     uint8_t* dstData, int32_t dstWidth, int32_t dstHeight, int32_t dstStride,
+GFX2D_API bool Scale(uint8_t* srcData, int32_t srcWidth, int32_t srcHeight,
+                     int32_t srcStride, uint8_t* dstData, int32_t dstWidth,
+                     int32_t dstHeight, int32_t dstStride,
                      SurfaceFormat format);
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_BLUR_H_ */

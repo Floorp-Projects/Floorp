@@ -13,10 +13,10 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLPictureElement final : public nsGenericHTMLElement
-{
-public:
-  explicit HTMLPictureElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+class HTMLPictureElement final : public nsGenericHTMLElement {
+ public:
+  explicit HTMLPictureElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   // nsISupports
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLPictureElement, nsGenericHTMLElement)
@@ -26,13 +26,14 @@ public:
   virtual nsresult InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
                                      bool aNotify) override;
 
-protected:
+ protected:
   virtual ~HTMLPictureElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_HTMLPictureElement_h
+#endif  // mozilla_dom_HTMLPictureElement_h

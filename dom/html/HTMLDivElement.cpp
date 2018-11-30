@@ -15,25 +15,19 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Div)
 namespace mozilla {
 namespace dom {
 
-HTMLDivElement::~HTMLDivElement()
-{
-}
+HTMLDivElement::~HTMLDivElement() {}
 
 NS_IMPL_ELEMENT_CLONE(HTMLDivElement)
 
-JSObject*
-HTMLDivElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* HTMLDivElement::WrapNode(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto) {
   return dom::HTMLDivElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-bool
-HTMLDivElement::ParseAttribute(int32_t aNamespaceID,
-                               nsAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsIPrincipal* aMaybeScriptedPrincipal,
-                               nsAttrValue& aResult)
-{
+bool HTMLDivElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                                    const nsAString& aValue,
+                                    nsIPrincipal* aMaybeScriptedPrincipal,
+                                    nsAttrValue& aResult) {
   if (aNamespaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::align) {
     return ParseDivAlignValue(aValue, aResult);
   }
@@ -42,29 +36,22 @@ HTMLDivElement::ParseAttribute(int32_t aNamespaceID,
                                               aMaybeScriptedPrincipal, aResult);
 }
 
-void
-HTMLDivElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                      MappedDeclarations& aDecls)
-{
+void HTMLDivElement::MapAttributesIntoRule(
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
   nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aDecls);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)
-HTMLDivElement::IsAttributeMapped(const nsAtom* aAttribute) const
-{
-  static const MappedAttributeEntry* const map[] = {
-    sDivAlignAttributeMap,
-    sCommonAttributeMap
-  };
+HTMLDivElement::IsAttributeMapped(const nsAtom* aAttribute) const {
+  static const MappedAttributeEntry* const map[] = {sDivAlignAttributeMap,
+                                                    sCommonAttributeMap};
   return FindAttributeDependence(aAttribute, map);
 }
 
-nsMapRuleToAttributesFunc
-HTMLDivElement::GetAttributeMappingFunction() const
-{
+nsMapRuleToAttributesFunc HTMLDivElement::GetAttributeMappingFunction() const {
   return &MapAttributesIntoRule;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

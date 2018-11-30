@@ -9,5 +9,5 @@
 namespace mozilla {
 namespace net {
 LazyLogModule webrtcProxyLog("webrtcProxy");
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

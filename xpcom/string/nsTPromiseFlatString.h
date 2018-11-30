@@ -69,10 +69,8 @@
  */
 
 template <typename T>
-class nsTPromiseFlatString : public nsTString<T>
-{
-public:
-
+class nsTPromiseFlatString : public nsTString<T> {
+ public:
   typedef nsTPromiseFlatString<T> self_type;
   typedef nsTString<T> base_string_type;
   typedef typename base_string_type::substring_type substring_type;
@@ -85,8 +83,7 @@ public:
   typedef typename base_string_type::DataFlags DataFlags;
   typedef typename base_string_type::ClassFlags ClassFlags;
 
-private:
-
+ private:
   void Init(const substring_type&);
 
   // NOT TO BE IMPLEMENTED
@@ -98,19 +95,13 @@ private:
   // NOT TO BE IMPLEMENTED
   nsTPromiseFlatString(const string_type& aStr) = delete;
 
-public:
-
-  explicit
-  nsTPromiseFlatString(const substring_type& aStr)
-    : string_type()
-  {
+ public:
+  explicit nsTPromiseFlatString(const substring_type& aStr) : string_type() {
     Init(aStr);
   }
 
-  explicit
-  nsTPromiseFlatString(const substring_tuple_type& aTuple)
-    : string_type()
-  {
+  explicit nsTPromiseFlatString(const substring_tuple_type& aTuple)
+      : string_type() {
     // nothing else to do here except assign the value of the tuple
     // into ourselves.
     this->Assign(aTuple);
@@ -122,17 +113,15 @@ extern template class nsTPromiseFlatString<char16_t>;
 
 // We template this so that the constructor is chosen based on the type of the
 // parameter. This allows us to reject attempts to promise a flat flat string.
-template<class T>
-const nsTPromiseFlatString<T>
-TPromiseFlatString(const typename nsTPromiseFlatString<T>::substring_type& aString)
-{
+template <class T>
+const nsTPromiseFlatString<T> TPromiseFlatString(
+    const typename nsTPromiseFlatString<T>::substring_type& aString) {
   return nsTPromiseFlatString<T>(aString);
 }
 
-template<class T>
-const nsTPromiseFlatString<T>
-TPromiseFlatString(const typename nsTPromiseFlatString<T>::substring_tuple_type& aString)
-{
+template <class T>
+const nsTPromiseFlatString<T> TPromiseFlatString(
+    const typename nsTPromiseFlatString<T>::substring_tuple_type& aString) {
   return nsTPromiseFlatString<T>(aString);
 }
 

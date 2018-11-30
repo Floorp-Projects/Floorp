@@ -12,10 +12,8 @@ using namespace gfx;
 
 namespace layers {
 
-void
-WebRenderDrawEventRecorder::StoreSourceSurfaceRecording(SourceSurface* aSurface,
-                                                        const char* aReason)
-{
+void WebRenderDrawEventRecorder::StoreSourceSurfaceRecording(
+    SourceSurface* aSurface, const char* aReason) {
   wr::ExternalImageId extId;
   nsresult rv = layers::SharedSurfacesChild::Share(aSurface, extId);
   if (NS_FAILED(rv)) {
@@ -26,11 +24,10 @@ WebRenderDrawEventRecorder::StoreSourceSurfaceRecording(SourceSurface* aSurface,
   StoreExternalSurfaceRecording(aSurface, wr::AsUint64(extId));
 }
 
-already_AddRefed<SourceSurface>
-WebRenderTranslator::LookupExternalSurface(uint64_t aKey)
-{
+already_AddRefed<SourceSurface> WebRenderTranslator::LookupExternalSurface(
+    uint64_t aKey) {
   return SharedSurfacesParent::Get(wr::ToExternalImageId(aKey));
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

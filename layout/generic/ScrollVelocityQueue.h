@@ -47,9 +47,9 @@ namespace layout {
  */
 
 class ScrollVelocityQueue final {
-public:
-  explicit ScrollVelocityQueue(nsPresContext *aPresContext)
-    : mPresContext(aPresContext) {}
+ public:
+  explicit ScrollVelocityQueue(nsPresContext* aPresContext)
+      : mPresContext(aPresContext) {}
 
   // Sample() is to be called periodically when scroll movement occurs, to
   // record samples of scroll position used later by GetVelocity().
@@ -61,7 +61,8 @@ public:
 
   // Get scroll velocity averaged from recent movement, in appunits / second
   nsPoint GetVelocity();
-private:
+
+ private:
   // A queue of (duration, velocity) pairs; these are the historical average
   // velocities over the given durations.  Durations are in milliseconds,
   // velocities are in app units per second.
@@ -86,7 +87,7 @@ private:
   void TrimQueue();
 };
 
-} // namespace layout
-} // namespace mozilla
+}  // namespace layout
+}  // namespace mozilla
 
-#endif  /* !defined(ScrollVelocityQueue_h_) */
+#endif /* !defined(ScrollVelocityQueue_h_) */

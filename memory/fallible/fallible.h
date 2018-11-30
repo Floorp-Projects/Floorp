@@ -57,8 +57,8 @@ using fallible_t = std::nothrow_t;
 
 static const fallible_t& fallible = std::nothrow;
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif
 
-#endif // mozilla_fallible_h
+#endif  // mozilla_fallible_h

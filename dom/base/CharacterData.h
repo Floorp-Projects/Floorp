@@ -28,42 +28,43 @@ class nsIDocument;
 namespace mozilla {
 namespace dom {
 class HTMLSlotElement;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#define CHARACTER_DATA_FLAG_BIT(n_) NODE_FLAG_BIT(NODE_TYPE_SPECIFIC_BITS_OFFSET + (n_))
+#define CHARACTER_DATA_FLAG_BIT(n_) \
+  NODE_FLAG_BIT(NODE_TYPE_SPECIFIC_BITS_OFFSET + (n_))
 
 // Data node specific flags
 enum {
   // This bit is set to indicate that if the text node changes to
   // non-whitespace, we may need to create a frame for it. This bit must
   // not be set on nodes that already have a frame.
-  NS_CREATE_FRAME_IF_NON_WHITESPACE =     CHARACTER_DATA_FLAG_BIT(0),
+  NS_CREATE_FRAME_IF_NON_WHITESPACE = CHARACTER_DATA_FLAG_BIT(0),
 
   // This bit is set to indicate that if the text node changes to
   // whitespace, we may need to reframe it (or its ancestors).
-  NS_REFRAME_IF_WHITESPACE =              CHARACTER_DATA_FLAG_BIT(1),
+  NS_REFRAME_IF_WHITESPACE = CHARACTER_DATA_FLAG_BIT(1),
 
   // This bit is set to indicate that we have a cached
   // TextIsOnlyWhitespace value
-  NS_CACHED_TEXT_IS_ONLY_WHITESPACE =     CHARACTER_DATA_FLAG_BIT(2),
+  NS_CACHED_TEXT_IS_ONLY_WHITESPACE = CHARACTER_DATA_FLAG_BIT(2),
 
   // This bit is only meaningful if the NS_CACHED_TEXT_IS_ONLY_WHITESPACE
   // bit is set, and if so it indicates whether we're only whitespace or
   // not.
-  NS_TEXT_IS_ONLY_WHITESPACE =            CHARACTER_DATA_FLAG_BIT(3),
+  NS_TEXT_IS_ONLY_WHITESPACE = CHARACTER_DATA_FLAG_BIT(3),
 
   // This bit is set if there is a NewlineProperty attached to the node
   // (used by nsTextFrame).
-  NS_HAS_NEWLINE_PROPERTY =               CHARACTER_DATA_FLAG_BIT(4),
+  NS_HAS_NEWLINE_PROPERTY = CHARACTER_DATA_FLAG_BIT(4),
 
   // This bit is set if there is a FlowLengthProperty attached to the node
   // (used by nsTextFrame).
-  NS_HAS_FLOWLENGTH_PROPERTY =            CHARACTER_DATA_FLAG_BIT(5),
+  NS_HAS_FLOWLENGTH_PROPERTY = CHARACTER_DATA_FLAG_BIT(5),
 
   // This bit is set if the node may be modified frequently.  This is typically
   // specified if the instance is in <input> or <textarea>.
-  NS_MAYBE_MODIFIED_FREQUENTLY =          CHARACTER_DATA_FLAG_BIT(6),
+  NS_MAYBE_MODIFIED_FREQUENTLY = CHARACTER_DATA_FLAG_BIT(6),
 };
 
 // Make sure we have enough space for those bits
@@ -74,9 +75,8 @@ ASSERT_NODE_FLAGS_SPACE(NODE_TYPE_SPECIFIC_BITS_OFFSET + 7);
 namespace mozilla {
 namespace dom {
 
-class CharacterData : public nsIContent
-{
-public:
+class CharacterData : public nsIContent {
+ public:
   // We want to avoid the overhead of extra function calls for
   // refcounting when we're not doing refcount logging, so we can't
   // NS_DECL_ISUPPORTS_INHERITED.
@@ -87,8 +87,7 @@ public:
 
   explicit CharacterData(already_AddRefed<dom::NodeInfo>&& aNodeInfo);
 
-  void MarkAsMaybeModifiedFrequently()
-  {
+  void MarkAsMaybeModifiedFrequently() {
     SetFlags(NS_MAYBE_MODIFIED_FREQUENTLY);
   }
 
@@ -98,60 +97,44 @@ public:
   virtual void SetNodeValueInternal(const nsAString& aNodeValue,
                                     ErrorResult& aError) override;
 
-  void GetTextContentInternal(nsAString& aTextContent, OOMReporter&) final
-  {
+  void GetTextContentInternal(nsAString& aTextContent, OOMReporter&) final {
     GetNodeValue(aTextContent);
   }
 
   void SetTextContentInternal(const nsAString& aTextContent,
                               nsIPrincipal* aSubjectPrincipal,
-                              ErrorResult& aError) final
-  {
+                              ErrorResult& aError) final {
     // Batch possible DOMSubtreeModified events.
     mozAutoSubtreeModified subtree(OwnerDoc(), nullptr);
     return SetNodeValue(aTextContent, aError);
   }
 
   // Implementation for nsIContent
-  nsresult BindToTree(nsIDocument* aDocument,
-                      nsIContent* aParent,
+  nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                       nsIContent* aBindingParent) override;
 
   void UnbindFromTree(bool aDeep = true, bool aNullParent = true) override;
 
-  already_AddRefed<nsINodeList> GetChildren(uint32_t aFilter) final
-  {
+  already_AddRefed<nsINodeList> GetChildren(uint32_t aFilter) final {
     return nullptr;
   }
 
-  const nsTextFragment* GetText() override
-  {
-    return &mText;
-  }
+  const nsTextFragment* GetText() override { return &mText; }
 
-  const nsTextFragment& TextFragment() const
-  {
-    return mText;
-  }
+  const nsTextFragment& TextFragment() const { return mText; }
 
-  uint32_t TextLength() const final
-  {
-    return TextDataLength();
-  }
+  uint32_t TextLength() const final { return TextDataLength(); }
 
   /**
    * Set the text to the given value. If aNotify is true then
    * the document is notified of the content change.
    */
-  nsresult SetText(const char16_t* aBuffer,
-                   uint32_t aLength,
-                   bool aNotify);
+  nsresult SetText(const char16_t* aBuffer, uint32_t aLength, bool aNotify);
   /**
    * Append the given value to the current text. If aNotify is true then
    * the document is notified of the content change.
    */
-  nsresult SetText(const nsAString& aStr, bool aNotify)
-  {
+  nsresult SetText(const nsAString& aStr, bool aNotify) {
     return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
   }
 
@@ -159,9 +142,7 @@ public:
    * Append the given value to the current text. If aNotify is true then
    * the document is notified of the content change.
    */
-  nsresult AppendText(const char16_t* aBuffer,
-                      uint32_t aLength,
-                      bool aNotify);
+  nsresult AppendText(const char16_t* aBuffer, uint32_t aLength, bool aNotify);
 
   bool TextIsOnlyWhitespace() final;
   bool ThreadSafeTextIsOnlyWhitespace() const final;
@@ -169,52 +150,34 @@ public:
   /**
    * Append the text content to aResult.
    */
-  void AppendTextTo(nsAString& aResult) const
-  {
-    mText.AppendTo(aResult);
-  }
+  void AppendTextTo(nsAString& aResult) const { mText.AppendTo(aResult); }
 
   /**
    * Append the text content to aResult.
    */
   MOZ_MUST_USE
-  bool AppendTextTo(nsAString& aResult, const fallible_t& aFallible) const
-  {
+  bool AppendTextTo(nsAString& aResult, const fallible_t& aFallible) const {
     return mText.AppendTo(aResult, aFallible);
   }
 
-  void SaveSubtreeState() final
-  {
-  }
+  void SaveSubtreeState() final {}
 
 #ifdef DEBUG
-  void List(FILE* out, int32_t aIndent) const override
-  {
-  }
+  void List(FILE* out, int32_t aIndent) const override {}
 
-  void DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const override
-  {
-  }
+  void DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const override {}
 #endif
 
-  nsXBLBinding* DoGetXBLBinding() const final
-  {
-    return nullptr;
-  }
+  nsXBLBinding* DoGetXBLBinding() const final { return nullptr; }
 
-  bool IsNodeOfType(uint32_t aFlags) const override
-  {
-    return false;
-  }
+  bool IsNodeOfType(uint32_t aFlags) const override { return false; }
 
-  bool IsLink(nsIURI** aURI) const final
-  {
+  bool IsLink(nsIURI** aURI) const final {
     *aURI = nullptr;
     return false;
   }
 
-  nsresult Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const override
-  {
+  nsresult Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const override {
     RefPtr<CharacterData> result = CloneDataNode(aNodeInfo, true);
     result.forget(aResult);
 
@@ -237,10 +200,7 @@ public:
   void ReplaceData(uint32_t aOffset, uint32_t aCount, const nsAString& aData,
                    ErrorResult& rv);
 
-  uint32_t TextDataLength() const
-  {
-    return mText.GetLength();
-  }
+  uint32_t TextDataLength() const { return mText.GetLength(); }
 
   //----------------------------------------
 
@@ -248,21 +208,20 @@ public:
   void ToCString(nsAString& aBuf, int32_t aOffset, int32_t aLen) const;
 #endif
 
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(CharacterData,
-                                                                   nsIContent)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(
+      CharacterData, nsIContent)
 
-protected:
+ protected:
   virtual ~CharacterData();
 
-  Element* GetNameSpaceElement() final
-  {
+  Element* GetNameSpaceElement() final {
     return Element::FromNodeOrNull(GetParentNode());
   }
 
-  nsresult SetTextInternal(uint32_t aOffset, uint32_t aCount,
-                           const char16_t* aBuffer, uint32_t aLength,
-                           bool aNotify,
-                           CharacterDataChangeInfo::Details* aDetails = nullptr);
+  nsresult SetTextInternal(
+      uint32_t aOffset, uint32_t aCount, const char16_t* aBuffer,
+      uint32_t aLength, bool aNotify,
+      CharacterDataChangeInfo::Details* aDetails = nullptr);
 
   /**
    * Method to clone this node. This needs to be overriden by all derived
@@ -272,16 +231,16 @@ protected:
    * @param aCloneText if true the text content will be cloned too
    * @return the clone
    */
-  virtual already_AddRefed<CharacterData>
-    CloneDataNode(dom::NodeInfo* aNodeInfo, bool aCloneText) const = 0;
+  virtual already_AddRefed<CharacterData> CloneDataNode(
+      dom::NodeInfo* aNodeInfo, bool aCloneText) const = 0;
 
   nsTextFragment mText;
 
-private:
+ private:
   already_AddRefed<nsAtom> GetCurrentValueAtom();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_CharacterData_h */

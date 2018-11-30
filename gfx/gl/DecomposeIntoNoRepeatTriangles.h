@@ -15,63 +15,58 @@ namespace mozilla {
 namespace gl {
 
 /** Helper for DecomposeIntoNoRepeatTriangles
-  */
+ */
 class RectTriangles {
-public:
-    typedef struct { GLfloat x,y; } coord;
+ public:
+  typedef struct {
+    GLfloat x, y;
+  } coord;
 
-    // Always pass texture coordinates upright. If you want to flip the
-    // texture coordinates emitted to the tex_coords array, set flip_y to
-    // true.
-    void addRect(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1,
-                 GLfloat tx0, GLfloat ty0, GLfloat tx1, GLfloat ty1,
-                 bool flip_y = false);
+  // Always pass texture coordinates upright. If you want to flip the
+  // texture coordinates emitted to the tex_coords array, set flip_y to
+  // true.
+  void addRect(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1, GLfloat tx0,
+               GLfloat ty0, GLfloat tx1, GLfloat ty1, bool flip_y = false);
 
-    /**
-      * these return a float pointer to the start of each array respectively.
-      * Use it for glVertexAttribPointer calls.
-      * We can return nullptr if we choose to use Vertex Buffer Objects here.
-      */
-    InfallibleTArray<coord>& vertCoords() {
-        return mVertexCoords;
-    }
+  /**
+   * these return a float pointer to the start of each array respectively.
+   * Use it for glVertexAttribPointer calls.
+   * We can return nullptr if we choose to use Vertex Buffer Objects here.
+   */
+  InfallibleTArray<coord>& vertCoords() { return mVertexCoords; }
 
-    InfallibleTArray<coord>& texCoords() {
-        return mTexCoords;
-    }
+  InfallibleTArray<coord>& texCoords() { return mTexCoords; }
 
-    unsigned int elements() {
-        return mVertexCoords.Length();
-    }
-private:
-    // Reserve inline storage for one quad (2 triangles, 3 coords).
-    AutoTArray<coord, 6> mVertexCoords;
-    AutoTArray<coord, 6> mTexCoords;
+  unsigned int elements() { return mVertexCoords.Length(); }
 
-    static void
-    AppendRectToCoordArray(InfallibleTArray<coord>& array, GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1);
+ private:
+  // Reserve inline storage for one quad (2 triangles, 3 coords).
+  AutoTArray<coord, 6> mVertexCoords;
+  AutoTArray<coord, 6> mTexCoords;
+
+  static void AppendRectToCoordArray(InfallibleTArray<coord>& array, GLfloat x0,
+                                     GLfloat y0, GLfloat x1, GLfloat y1);
 };
 
 /**
-  * Decompose drawing the possibly-wrapped aTexCoordRect rectangle
-  * of a texture of aTexSize into one or more rectangles (represented
-  * as 2 triangles) and associated tex coordinates, such that
-  * we don't have to use the REPEAT wrap mode. If aFlipY is true, the
-  * texture coordinates will be specified vertically flipped.
-  *
-  * The resulting triangle vertex coordinates will be in the space of
-  * (0.0, 0.0) to (1.0, 1.0) -- transform the coordinates appropriately
-  * if you need a different space.
-  *
-  * The resulting vertex coordinates should be drawn using GL_TRIANGLES,
-  * and rects.numRects * 3 * 6
-  */
+ * Decompose drawing the possibly-wrapped aTexCoordRect rectangle
+ * of a texture of aTexSize into one or more rectangles (represented
+ * as 2 triangles) and associated tex coordinates, such that
+ * we don't have to use the REPEAT wrap mode. If aFlipY is true, the
+ * texture coordinates will be specified vertically flipped.
+ *
+ * The resulting triangle vertex coordinates will be in the space of
+ * (0.0, 0.0) to (1.0, 1.0) -- transform the coordinates appropriately
+ * if you need a different space.
+ *
+ * The resulting vertex coordinates should be drawn using GL_TRIANGLES,
+ * and rects.numRects * 3 * 6
+ */
 void DecomposeIntoNoRepeatTriangles(const gfx::IntRect& aTexCoordRect,
                                     const gfx::IntSize& aTexSize,
-                                    RectTriangles& aRects,
-                                    bool aFlipY = false);
+                                    RectTriangles& aRects, bool aFlipY = false);
 
-} // namespace gl
-} // namespace mozilla
+}  // namespace gl
+}  // namespace mozilla
 
-#endif // DecomposeIntoNoRepeatTriangles_h_
+#endif  // DecomposeIntoNoRepeatTriangles_h_

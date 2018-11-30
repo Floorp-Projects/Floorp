@@ -19,24 +19,21 @@
 // For an overview of how this class is related to other SMIL time classes see
 // the documentation in nsSMILTimeValue.h
 
-class nsSMILInterval
-{
-public:
+class nsSMILInterval {
+ public:
   nsSMILInterval();
   nsSMILInterval(const nsSMILInterval& aOther);
   ~nsSMILInterval();
   void Unlink(bool aFiltered = false);
 
-  const nsSMILInstanceTime* Begin() const
-  {
+  const nsSMILInstanceTime* Begin() const {
     MOZ_ASSERT(mBegin && mEnd,
                "Requesting Begin() on un-initialized instance time");
     return mBegin;
   }
   nsSMILInstanceTime* Begin();
 
-  const nsSMILInstanceTime* End() const
-  {
+  const nsSMILInstanceTime* End() const {
     MOZ_ASSERT(mBegin && mEnd,
                "Requesting End() on un-initialized instance time");
     return mEnd;
@@ -45,8 +42,7 @@ public:
 
   void SetBegin(nsSMILInstanceTime& aBegin);
   void SetEnd(nsSMILInstanceTime& aEnd);
-  void Set(nsSMILInstanceTime& aBegin, nsSMILInstanceTime& aEnd)
-  {
+  void Set(nsSMILInstanceTime& aBegin, nsSMILInstanceTime& aEnd) {
     SetBegin(aBegin);
     SetEnd(aEnd);
   }
@@ -63,7 +59,7 @@ public:
   // Cue for assessing if this interval can be filtered
   bool IsDependencyChainLink() const;
 
-private:
+ private:
   RefPtr<nsSMILInstanceTime> mBegin;
   RefPtr<nsSMILInstanceTime> mEnd;
 
@@ -83,4 +79,4 @@ private:
   bool mEndFixed;
 };
 
-#endif // NS_SMILINTERVAL_H_
+#endif  // NS_SMILINTERVAL_H_

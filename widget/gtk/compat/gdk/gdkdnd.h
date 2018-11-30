@@ -13,21 +13,17 @@
 #undef gdk_drag_context_list_targets
 #undef gdk_drag_context_get_dest_window
 
-static inline GdkDragAction
-gdk_drag_context_get_actions(GdkDragContext *context)
-{
+static inline GdkDragAction gdk_drag_context_get_actions(
+    GdkDragContext *context) {
   return context->actions;
 }
 
-static inline GList *
-gdk_drag_context_list_targets(GdkDragContext *context)
-{
+static inline GList *gdk_drag_context_list_targets(GdkDragContext *context) {
   return context->targets;
 }
 
-static inline GdkWindow *
-gdk_drag_context_get_dest_window(GdkDragContext *context)
-{
+static inline GdkWindow *gdk_drag_context_get_dest_window(
+    GdkDragContext *context) {
   return context->dest_window;
 }
 #endif /* GDKDND_WRAPPER_H */

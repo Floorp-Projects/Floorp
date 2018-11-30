@@ -15,16 +15,10 @@ namespace storage {
 //// BindingParamsArray
 
 BindingParamsArray::BindingParamsArray(
-  StorageBaseStatementInternal *aOwningStatement
-)
-: mOwningStatement(aOwningStatement)
-, mLocked(false)
-{
-}
+    StorageBaseStatementInternal *aOwningStatement)
+    : mOwningStatement(aOwningStatement), mLocked(false) {}
 
-void
-BindingParamsArray::lock()
-{
+void BindingParamsArray::lock() {
   NS_ASSERTION(mLocked == false, "Array has already been locked!");
   mLocked = true;
 
@@ -33,27 +27,21 @@ BindingParamsArray::lock()
   mOwningStatement = nullptr;
 }
 
-const StorageBaseStatementInternal *
-BindingParamsArray::getOwner() const
-{
+const StorageBaseStatementInternal *BindingParamsArray::getOwner() const {
   return mOwningStatement;
 }
 
-NS_IMPL_ISUPPORTS(
-  BindingParamsArray,
-  mozIStorageBindingParamsArray
-)
+NS_IMPL_ISUPPORTS(BindingParamsArray, mozIStorageBindingParamsArray)
 
 ///////////////////////////////////////////////////////////////////////////////
 //// mozIStorageBindingParamsArray
 
 NS_IMETHODIMP
-BindingParamsArray::NewBindingParams(mozIStorageBindingParams **_params)
-{
+BindingParamsArray::NewBindingParams(mozIStorageBindingParams **_params) {
   NS_ENSURE_FALSE(mLocked, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<mozIStorageBindingParams> params(
-    mOwningStatement->newBindingParams(this));
+      mOwningStatement->newBindingParams(this));
   NS_ENSURE_TRUE(params, NS_ERROR_UNEXPECTED);
 
   params.forget(_params);
@@ -61,15 +49,13 @@ BindingParamsArray::NewBindingParams(mozIStorageBindingParams **_params)
 }
 
 NS_IMETHODIMP
-BindingParamsArray::AddParams(mozIStorageBindingParams *aParameters)
-{
+BindingParamsArray::AddParams(mozIStorageBindingParams *aParameters) {
   NS_ENSURE_FALSE(mLocked, NS_ERROR_UNEXPECTED);
 
   BindingParams *params = static_cast<BindingParams *>(aParameters);
 
   // Check to make sure that this set of parameters was created with us.
-  if (params->getOwner() != this)
-    return NS_ERROR_UNEXPECTED;
+  if (params->getOwner() != this) return NS_ERROR_UNEXPECTED;
 
   NS_ENSURE_TRUE(mArray.AppendElement(params), NS_ERROR_OUT_OF_MEMORY);
 
@@ -80,11 +66,10 @@ BindingParamsArray::AddParams(mozIStorageBindingParams *aParameters)
 }
 
 NS_IMETHODIMP
-BindingParamsArray::GetLength(uint32_t *_length)
-{
+BindingParamsArray::GetLength(uint32_t *_length) {
   *_length = length();
   return NS_OK;
 }
 
-} // namespace storage
-} // namespace mozilla
+}  // namespace storage
+}  // namespace mozilla

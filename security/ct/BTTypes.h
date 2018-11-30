@@ -11,7 +11,8 @@
 
 #include "Buffer.h"
 
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 // Represents a Merkle inclusion proof for purposes of serialization,
 // deserialization, and verification of the proof.  The format for inclusion
@@ -27,8 +28,7 @@ namespace mozilla { namespace ct {
 //         NodeHash inclusion_path<1..2^16-1>;
 //     } InclusionProofDataV2;
 
-struct InclusionProofDataV2
-{
+struct InclusionProofDataV2 {
   Buffer logId;
   uint64_t treeSize;
   uint64_t leafIndex;
@@ -51,14 +51,14 @@ struct InclusionProofDataV2
 //         Extension sth_extensions<0..2^16-1>;
 //     } TreeHeadDataV2;
 
-struct SignedTreeHeadDataV2
-{
+struct SignedTreeHeadDataV2 {
   Buffer logId;
   uint64_t timestamp;
   uint64_t treeSize;
   Buffer rootHash;
 };
 
-} } // namespace mozilla:ct
+}  // namespace ct
+}  // namespace mozilla
 
-#endif // BTTypes_h
+#endif  // BTTypes_h

@@ -16,22 +16,17 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace dom {
 
-JSObject*
-SVGFEGaussianBlurElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGFEGaussianBlurElement::WrapNode(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return SVGFEGaussianBlurElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::NumberPairInfo SVGFEGaussianBlurElement::sNumberPairInfo[1] =
-{
-  { nsGkAtoms::stdDeviation, 0, 0 }
-};
+nsSVGElement::NumberPairInfo SVGFEGaussianBlurElement::sNumberPairInfo[1] = {
+    {nsGkAtoms::stdDeviation, 0, 0}};
 
-nsSVGElement::StringInfo SVGFEGaussianBlurElement::sStringInfo[2] =
-{
-  { nsGkAtoms::result, kNameSpaceID_None, true },
-  { nsGkAtoms::in, kNameSpaceID_None, true }
-};
+nsSVGElement::StringInfo SVGFEGaussianBlurElement::sStringInfo[2] = {
+    {nsGkAtoms::result, kNameSpaceID_None, true},
+    {nsGkAtoms::in, kNameSpaceID_None, true}};
 
 //----------------------------------------------------------------------
 // nsINode methods
@@ -40,36 +35,30 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEGaussianBlurElement)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<SVGAnimatedString>
-SVGFEGaussianBlurElement::In1()
-{
+already_AddRefed<SVGAnimatedString> SVGFEGaussianBlurElement::In1() {
   return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
-already_AddRefed<SVGAnimatedNumber>
-SVGFEGaussianBlurElement::StdDeviationX()
-{
-  return mNumberPairAttributes[STD_DEV].ToDOMAnimatedNumber(nsSVGNumberPair::eFirst, this);
+already_AddRefed<SVGAnimatedNumber> SVGFEGaussianBlurElement::StdDeviationX() {
+  return mNumberPairAttributes[STD_DEV].ToDOMAnimatedNumber(
+      nsSVGNumberPair::eFirst, this);
 }
 
-already_AddRefed<SVGAnimatedNumber>
-SVGFEGaussianBlurElement::StdDeviationY()
-{
-  return mNumberPairAttributes[STD_DEV].ToDOMAnimatedNumber(nsSVGNumberPair::eSecond, this);
+already_AddRefed<SVGAnimatedNumber> SVGFEGaussianBlurElement::StdDeviationY() {
+  return mNumberPairAttributes[STD_DEV].ToDOMAnimatedNumber(
+      nsSVGNumberPair::eSecond, this);
 }
 
-void
-SVGFEGaussianBlurElement::SetStdDeviation(float stdDeviationX, float stdDeviationY)
-{
-  mNumberPairAttributes[STD_DEV].SetBaseValues(stdDeviationX, stdDeviationY, this);
+void SVGFEGaussianBlurElement::SetStdDeviation(float stdDeviationX,
+                                               float stdDeviationY) {
+  mNumberPairAttributes[STD_DEV].SetBaseValues(stdDeviationX, stdDeviationY,
+                                               this);
 }
 
-FilterPrimitiveDescription
-SVGFEGaussianBlurElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
-                                                  const IntRect& aFilterSubregion,
-                                                  const nsTArray<bool>& aInputsAreTainted,
-                                                  nsTArray<RefPtr<SourceSurface>>& aInputImages)
-{
+FilterPrimitiveDescription SVGFEGaussianBlurElement::GetPrimitiveDescription(
+    nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
+    const nsTArray<bool>& aInputsAreTainted,
+    nsTArray<RefPtr<SourceSurface>>& aInputImages) {
   float stdX = aInstance->GetPrimitiveNumber(SVGContentUtils::X,
                                              &mNumberPairAttributes[STD_DEV],
                                              nsSVGNumberPair::eFirst);
@@ -85,19 +74,17 @@ SVGFEGaussianBlurElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance
   return FilterPrimitiveDescription(AsVariant(std::move(atts)));
 }
 
-bool
-SVGFEGaussianBlurElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                    nsAtom* aAttribute) const
-{
-  return SVGFEGaussianBlurElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
+bool SVGFEGaussianBlurElement::AttributeAffectsRendering(
+    int32_t aNameSpaceID, nsAtom* aAttribute) const {
+  return SVGFEGaussianBlurElementBase::AttributeAffectsRendering(aNameSpaceID,
+                                                                 aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&
           (aAttribute == nsGkAtoms::in ||
            aAttribute == nsGkAtoms::stdDeviation));
 }
 
-void
-SVGFEGaussianBlurElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
-{
+void SVGFEGaussianBlurElement::GetSourceImageNames(
+    nsTArray<nsSVGStringInfo>& aSources) {
   aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
 
@@ -105,18 +92,15 @@ SVGFEGaussianBlurElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSource
 // nsSVGElement methods
 
 nsSVGElement::NumberPairAttributesInfo
-SVGFEGaussianBlurElement::GetNumberPairInfo()
-{
+SVGFEGaussianBlurElement::GetNumberPairInfo() {
   return NumberPairAttributesInfo(mNumberPairAttributes, sNumberPairInfo,
                                   ArrayLength(sNumberPairInfo));
 }
 
-nsSVGElement::StringAttributesInfo
-SVGFEGaussianBlurElement::GetStringInfo()
-{
+nsSVGElement::StringAttributesInfo SVGFEGaussianBlurElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

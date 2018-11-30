@@ -14,7 +14,7 @@ namespace mozilla {
 namespace ipc {
 class PBackgroundParent;
 class PrincipalInfo;
-} // namespace ipc
+}  // namespace ipc
 
 namespace dom {
 namespace cache {
@@ -29,37 +29,28 @@ class PCacheStorageParent;
 // Factory methods for use in ipc/glue methods.  Implemented in individual actor
 // cpp files.
 
-PCacheChild*
-AllocPCacheChild();
+PCacheChild* AllocPCacheChild();
 
-void
-DeallocPCacheChild(PCacheChild* aActor);
+void DeallocPCacheChild(PCacheChild* aActor);
 
-void
-DeallocPCacheParent(PCacheParent* aActor);
+void DeallocPCacheParent(PCacheParent* aActor);
 
-PCacheStreamControlChild*
-AllocPCacheStreamControlChild();
+PCacheStreamControlChild* AllocPCacheStreamControlChild();
 
-void
-DeallocPCacheStreamControlChild(PCacheStreamControlChild* aActor);
+void DeallocPCacheStreamControlChild(PCacheStreamControlChild* aActor);
 
-void
-DeallocPCacheStreamControlParent(PCacheStreamControlParent* aActor);
+void DeallocPCacheStreamControlParent(PCacheStreamControlParent* aActor);
 
-PCacheStorageParent*
-AllocPCacheStorageParent(mozilla::ipc::PBackgroundParent* aManagingActor,
-                         Namespace aNamespace,
-                         const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
+PCacheStorageParent* AllocPCacheStorageParent(
+    mozilla::ipc::PBackgroundParent* aManagingActor, Namespace aNamespace,
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
-void
-DeallocPCacheStorageChild(PCacheStorageChild* aActor);
+void DeallocPCacheStorageChild(PCacheStorageChild* aActor);
 
-void
-DeallocPCacheStorageParent(PCacheStorageParent* aActor);
+void DeallocPCacheStorageParent(PCacheStorageParent* aActor);
 
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_cache_ActorUtils_h
+#endif  // mozilla_dom_cache_ActorUtils_h

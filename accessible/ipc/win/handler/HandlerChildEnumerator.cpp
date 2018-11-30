@@ -6,7 +6,7 @@
 
 #if defined(MOZILLA_INTERNAL_API)
 #error This code is NOT for internal Gecko use!
-#endif // defined(MOZILLA_INTERNAL_API)
+#endif  // defined(MOZILLA_INTERNAL_API)
 
 #include "HandlerChildEnumerator.h"
 #include "HandlerTextLeaf.h"
@@ -15,24 +15,22 @@
 namespace mozilla {
 namespace a11y {
 
-HandlerChildEnumerator::HandlerChildEnumerator(AccessibleHandler* aHandler,
-    IGeckoBackChannel* aGeckoBackChannel)
-  : mHandler(aHandler)
-  , mGeckoBackChannel(aGeckoBackChannel)
-  , mChildCount(0)
-  , mNextChild(0)
-{
+HandlerChildEnumerator::HandlerChildEnumerator(
+    AccessibleHandler* aHandler, IGeckoBackChannel* aGeckoBackChannel)
+    : mHandler(aHandler),
+      mGeckoBackChannel(aGeckoBackChannel),
+      mChildCount(0),
+      mNextChild(0) {
   MOZ_ASSERT(aHandler);
   MOZ_ASSERT(aGeckoBackChannel);
 }
 
 HandlerChildEnumerator::HandlerChildEnumerator(
     const HandlerChildEnumerator& aEnumerator)
-  : mHandler(aEnumerator.mHandler)
-  , mGeckoBackChannel(aEnumerator.mGeckoBackChannel)
-  , mChildCount(aEnumerator.mChildCount)
-  , mNextChild(aEnumerator.mNextChild)
-{
+    : mHandler(aEnumerator.mHandler),
+      mGeckoBackChannel(aEnumerator.mGeckoBackChannel),
+      mChildCount(aEnumerator.mChildCount),
+      mNextChild(aEnumerator.mNextChild) {
   if (mChildCount == 0) {
     return;
   }
@@ -44,14 +42,9 @@ HandlerChildEnumerator::HandlerChildEnumerator(
   }
 }
 
-HandlerChildEnumerator::~HandlerChildEnumerator()
-{
-  ClearCache();
-}
+HandlerChildEnumerator::~HandlerChildEnumerator() { ClearCache(); }
 
-void
-HandlerChildEnumerator::ClearCache()
-{
+void HandlerChildEnumerator::ClearCache() {
   if (!mChildren) {
     return;
   }
@@ -65,8 +58,7 @@ HandlerChildEnumerator::ClearCache()
 }
 
 HRESULT
-HandlerChildEnumerator::MaybeCacheChildren()
-{
+HandlerChildEnumerator::MaybeCacheChildren() {
   if (mChildren) {
     // Already cached.
     return S_OK;
@@ -94,8 +86,8 @@ HandlerChildEnumerator::MaybeCacheChildren()
     VARIANT& child = mChildren[index];
     if (data.mAccessible) {
       RefPtr<IDispatch> disp;
-      hr = data.mAccessible->QueryInterface(IID_IDispatch,
-                                            getter_AddRefs(disp));
+      hr =
+          data.mAccessible->QueryInterface(IID_IDispatch, getter_AddRefs(disp));
       data.mAccessible->Release();
       MOZ_ASSERT(SUCCEEDED(hr));
       if (FAILED(hr)) {
@@ -106,8 +98,7 @@ HandlerChildEnumerator::MaybeCacheChildren()
       disp.forget(&child.pdispVal);
     } else {
       // Text leaf.
-      RefPtr<IDispatch> leaf(
-        new HandlerTextLeaf(parent, index, hwnd, data));
+      RefPtr<IDispatch> leaf(new HandlerTextLeaf(parent, index, hwnd, data));
       child.vt = VT_DISPATCH;
       leaf.forget(&child.pdispVal);
     }
@@ -124,8 +115,7 @@ IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mHandler)
 /*** IEnumVARIANT ***/
 
 HRESULT
-HandlerChildEnumerator::Clone(IEnumVARIANT** aPpEnum)
-{
+HandlerChildEnumerator::Clone(IEnumVARIANT** aPpEnum) {
   RefPtr<HandlerChildEnumerator> newEnum(new HandlerChildEnumerator(*this));
   newEnum.forget(aPpEnum);
   return S_OK;
@@ -133,8 +123,7 @@ HandlerChildEnumerator::Clone(IEnumVARIANT** aPpEnum)
 
 HRESULT
 HandlerChildEnumerator::Next(ULONG aCelt, VARIANT* aRgVar,
-                             ULONG* aPCeltFetched)
-{
+                             ULONG* aPCeltFetched) {
   if (!aRgVar || aCelt == 0) {
     return E_INVALIDARG;
   }
@@ -161,16 +150,14 @@ HandlerChildEnumerator::Next(ULONG aCelt, VARIANT* aRgVar,
 }
 
 HRESULT
-HandlerChildEnumerator::Reset()
-{
+HandlerChildEnumerator::Reset() {
   mNextChild = 0;
   ClearCache();
   return S_OK;
 }
 
 HRESULT
-HandlerChildEnumerator::Skip(ULONG aCelt)
-{
+HandlerChildEnumerator::Skip(ULONG aCelt) {
   mNextChild += aCelt;
   if (mNextChild > mChildCount) {
     // Less elements remaining than the client requested to skip.
@@ -179,5 +166,5 @@ HandlerChildEnumerator::Skip(ULONG aCelt)
   return S_OK;
 }
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla

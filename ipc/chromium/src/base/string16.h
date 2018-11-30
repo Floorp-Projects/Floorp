@@ -66,24 +66,16 @@ struct string16_char_traits {
   typedef mbstate_t state_type;
   typedef std::fpos<state_type> pos_type;
 
-  static void assign(char_type& c1, const char_type& c2) {
-    c1 = c2;
-  }
+  static void assign(char_type& c1, const char_type& c2) { c1 = c2; }
 
-  static bool eq(const char_type& c1, const char_type& c2) {
-    return c1 == c2;
-  }
-  static bool lt(const char_type& c1, const char_type& c2) {
-    return c1 < c2;
-  }
+  static bool eq(const char_type& c1, const char_type& c2) { return c1 == c2; }
+  static bool lt(const char_type& c1, const char_type& c2) { return c1 < c2; }
 
   static int compare(const char_type* s1, const char_type* s2, size_t n) {
     return c16memcmp(s1, s2, n);
   }
 
-  static size_t length(const char_type* s) {
-    return c16len(s);
-  }
+  static size_t length(const char_type* s) { return c16len(s); }
 
   static const char_type* find(const char_type* s, size_t n,
                                const char_type& a) {
@@ -106,21 +98,15 @@ struct string16_char_traits {
     return eq_int_type(c, eof()) ? 0 : c;
   }
 
-  static char_type to_char_type(const int_type& c) {
-    return char_type(c);
-  }
+  static char_type to_char_type(const int_type& c) { return char_type(c); }
 
-  static int_type to_int_type(const char_type& c) {
-    return int_type(c);
-  }
+  static int_type to_int_type(const char_type& c) { return int_type(c); }
 
   static bool eq_int_type(const int_type& c1, const int_type& c2) {
     return c1 == c2;
   }
 
-  static int_type eof() {
-    return static_cast<int_type>(EOF);
-  }
+  static int_type eof() { return static_cast<int_type>(EOF); }
 };
 
 }  // namespace base

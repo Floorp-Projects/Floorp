@@ -15,144 +15,87 @@ namespace dom {
 using mozilla::ipc::PrincipalInfo;
 using mozilla::ipc::PrincipalInfoToPrincipal;
 
-ClientInfo::ClientInfo(const nsID& aId,
-                       ClientType aType,
+ClientInfo::ClientInfo(const nsID& aId, ClientType aType,
                        const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                        const TimeStamp& aCreationTime)
-  : mData(MakeUnique<IPCClientInfo>(aId, aType, aPrincipalInfo, aCreationTime,
-                                    EmptyCString(),
-                                    mozilla::dom::FrameType::None))
-{
-}
+    : mData(MakeUnique<IPCClientInfo>(aId, aType, aPrincipalInfo, aCreationTime,
+                                      EmptyCString(),
+                                      mozilla::dom::FrameType::None)) {}
 
 ClientInfo::ClientInfo(const IPCClientInfo& aData)
-  : mData(MakeUnique<IPCClientInfo>(aData))
-{
-}
+    : mData(MakeUnique<IPCClientInfo>(aData)) {}
 
-ClientInfo::ClientInfo(const ClientInfo& aRight)
-{
-  operator=(aRight);
-}
+ClientInfo::ClientInfo(const ClientInfo& aRight) { operator=(aRight); }
 
-ClientInfo&
-ClientInfo::operator=(const ClientInfo& aRight)
-{
+ClientInfo& ClientInfo::operator=(const ClientInfo& aRight) {
   mData.reset();
   mData = MakeUnique<IPCClientInfo>(*aRight.mData);
   return *this;
 }
 
-ClientInfo::ClientInfo(ClientInfo&& aRight)
-  : mData(std::move(aRight.mData))
-{
-}
+ClientInfo::ClientInfo(ClientInfo&& aRight) : mData(std::move(aRight.mData)) {}
 
-ClientInfo&
-ClientInfo::operator=(ClientInfo&& aRight)
-{
+ClientInfo& ClientInfo::operator=(ClientInfo&& aRight) {
   mData.reset();
   mData = std::move(aRight.mData);
   return *this;
 }
 
-ClientInfo::~ClientInfo()
-{
-}
+ClientInfo::~ClientInfo() {}
 
-bool
-ClientInfo::operator==(const ClientInfo& aRight) const
-{
+bool ClientInfo::operator==(const ClientInfo& aRight) const {
   return *mData == *aRight.mData;
 }
 
-const nsID&
-ClientInfo::Id() const
-{
-  return mData->id();
-}
+const nsID& ClientInfo::Id() const { return mData->id(); }
 
-ClientType
-ClientInfo::Type() const
-{
-  return mData->type();
-}
+ClientType ClientInfo::Type() const { return mData->type(); }
 
-const mozilla::ipc::PrincipalInfo&
-ClientInfo::PrincipalInfo() const
-{
+const mozilla::ipc::PrincipalInfo& ClientInfo::PrincipalInfo() const {
   return mData->principalInfo();
 }
 
-const TimeStamp&
-ClientInfo::CreationTime() const
-{
+const TimeStamp& ClientInfo::CreationTime() const {
   return mData->creationTime();
 }
 
-const nsCString&
-ClientInfo::URL() const
-{
-  return mData->url();
-}
+const nsCString& ClientInfo::URL() const { return mData->url(); }
 
-void
-ClientInfo::SetURL(const nsACString& aURL)
-{
-  mData->url() = aURL;
-}
+void ClientInfo::SetURL(const nsACString& aURL) { mData->url() = aURL; }
 
-FrameType
-ClientInfo::FrameType() const
-{
-  return mData->frameType();
-}
+FrameType ClientInfo::FrameType() const { return mData->frameType(); }
 
-void
-ClientInfo::SetFrameType(mozilla::dom::FrameType aFrameType)
-{
+void ClientInfo::SetFrameType(mozilla::dom::FrameType aFrameType) {
   mData->frameType() = aFrameType;
 }
 
-const IPCClientInfo&
-ClientInfo::ToIPC() const
-{
-  return *mData;
-}
+const IPCClientInfo& ClientInfo::ToIPC() const { return *mData; }
 
-bool
-ClientInfo::IsPrivateBrowsing() const
-{
-  switch(PrincipalInfo().type()) {
-    case PrincipalInfo::TContentPrincipalInfo:
-    {
+bool ClientInfo::IsPrivateBrowsing() const {
+  switch (PrincipalInfo().type()) {
+    case PrincipalInfo::TContentPrincipalInfo: {
       auto& p = PrincipalInfo().get_ContentPrincipalInfo();
       return p.attrs().mPrivateBrowsingId != 0;
     }
-    case PrincipalInfo::TSystemPrincipalInfo:
-    {
+    case PrincipalInfo::TSystemPrincipalInfo: {
       return false;
     }
-    case PrincipalInfo::TNullPrincipalInfo:
-    {
+    case PrincipalInfo::TNullPrincipalInfo: {
       auto& p = PrincipalInfo().get_NullPrincipalInfo();
       return p.attrs().mPrivateBrowsingId != 0;
     }
-    default:
-    {
+    default: {
       // clients should never be expanded principals
       MOZ_CRASH("unexpected principal type!");
     }
   }
 }
 
-nsCOMPtr<nsIPrincipal>
-ClientInfo::GetPrincipal() const
-{
+nsCOMPtr<nsIPrincipal> ClientInfo::GetPrincipal() const {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIPrincipal> ref = PrincipalInfoToPrincipal(PrincipalInfo());
   return ref;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

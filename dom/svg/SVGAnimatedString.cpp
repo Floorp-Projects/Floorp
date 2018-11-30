@@ -10,11 +10,10 @@
 namespace mozilla {
 namespace dom {
 
-JSObject*
-SVGAnimatedString::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGAnimatedString::WrapObject(JSContext* aCx,
+                                        JS::Handle<JSObject*> aGivenProto) {
   return SVGAnimatedString_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

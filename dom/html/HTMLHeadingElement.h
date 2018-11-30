@@ -13,16 +13,13 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLHeadingElement final : public nsGenericHTMLElement
-{
-public:
-  explicit HTMLHeadingElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsGenericHTMLElement(std::move(aNodeInfo))
-  {
-  }
+class HTMLHeadingElement final : public nsGenericHTMLElement {
+ public:
+  explicit HTMLHeadingElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+      : nsGenericHTMLElement(std::move(aNodeInfo)) {}
 
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                              nsAtom* aAttribute,
+  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                               const nsAString& aValue,
                               nsIPrincipal* aMaybeScriptedPrincipal,
                               nsAttrValue& aResult) override;
@@ -30,26 +27,25 @@ public:
   nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  void SetAlign(const nsAString& aAlign, ErrorResult& aError)
-  {
+  void SetAlign(const nsAString& aAlign, ErrorResult& aError) {
     return SetHTMLAttr(nsGkAtoms::align, aAlign, aError);
   }
-  void GetAlign(DOMString& aAlign) const
-  {
+  void GetAlign(DOMString& aAlign) const {
     return GetHTMLAttr(nsGkAtoms::align, aAlign);
   }
 
-protected:
+ protected:
   virtual ~HTMLHeadingElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
-private:
+ private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     MappedDeclarations&);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_HTMLHeadingElement_h
+#endif  // mozilla_dom_HTMLHeadingElement_h

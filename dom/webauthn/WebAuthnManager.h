@@ -44,13 +44,10 @@
 namespace mozilla {
 namespace dom {
 
-class WebAuthnTransaction
-{
-public:
+class WebAuthnTransaction {
+ public:
   explicit WebAuthnTransaction(const RefPtr<Promise>& aPromise)
-    : mPromise(aPromise)
-    , mId(NextId())
-  {
+      : mPromise(aPromise), mId(NextId()) {
     MOZ_ASSERT(mId > 0);
   }
 
@@ -60,7 +57,7 @@ public:
   // Unique transaction id.
   uint64_t mId;
 
-private:
+ private:
   // Generates a unique id for new transactions. This doesn't have to be unique
   // forever, it's sufficient to differentiate between temporally close
   // transactions, where messages can intersect. Can overflow.
@@ -70,51 +67,45 @@ private:
   }
 };
 
-class WebAuthnManager final : public WebAuthnManagerBase
-                            , public AbortFollower
-{
-public:
+class WebAuthnManager final : public WebAuthnManagerBase, public AbortFollower {
+ public:
   NS_DECL_ISUPPORTS
 
   explicit WebAuthnManager(nsPIDOMWindowInner* aParent)
-    : WebAuthnManagerBase(aParent)
-  { }
+      : WebAuthnManagerBase(aParent) {}
 
-  already_AddRefed<Promise>
-  MakeCredential(const PublicKeyCredentialCreationOptions& aOptions,
-                 const Optional<OwningNonNull<AbortSignal>>& aSignal);
+  already_AddRefed<Promise> MakeCredential(
+      const PublicKeyCredentialCreationOptions& aOptions,
+      const Optional<OwningNonNull<AbortSignal>>& aSignal);
 
-  already_AddRefed<Promise>
-  GetAssertion(const PublicKeyCredentialRequestOptions& aOptions,
-               const Optional<OwningNonNull<AbortSignal>>& aSignal);
+  already_AddRefed<Promise> GetAssertion(
+      const PublicKeyCredentialRequestOptions& aOptions,
+      const Optional<OwningNonNull<AbortSignal>>& aSignal);
 
-  already_AddRefed<Promise>
-  Store(const Credential& aCredential);
+  already_AddRefed<Promise> Store(const Credential& aCredential);
 
   // WebAuthnManagerBase
 
-  void
-  FinishMakeCredential(const uint64_t& aTransactionId,
-                       const WebAuthnMakeCredentialResult& aResult) override;
+  void FinishMakeCredential(
+      const uint64_t& aTransactionId,
+      const WebAuthnMakeCredentialResult& aResult) override;
 
-  void
-  FinishGetAssertion(const uint64_t& aTransactionId,
-                     const WebAuthnGetAssertionResult& aResult) override;
+  void FinishGetAssertion(const uint64_t& aTransactionId,
+                          const WebAuthnGetAssertionResult& aResult) override;
 
-  void
-  RequestAborted(const uint64_t& aTransactionId,
-                 const nsresult& aError) override;
+  void RequestAborted(const uint64_t& aTransactionId,
+                      const nsresult& aError) override;
 
   // AbortFollower
 
   void Abort() override;
 
-protected:
+ protected:
   // Cancels the current transaction (by sending a Cancel message to the
   // parent) and rejects it by calling RejectTransaction().
   void CancelTransaction(const nsresult& aError) override;
 
-private:
+ private:
   virtual ~WebAuthnManager();
 
   // Clears all information we have about the current transaction.
@@ -126,7 +117,7 @@ private:
   Maybe<WebAuthnTransaction> mTransaction;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_WebAuthnManager_h
+#endif  // mozilla_dom_WebAuthnManager_h

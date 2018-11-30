@@ -25,12 +25,10 @@
 
 #include "nsGTKToolkit.h"
 
-NS_IMPL_ISUPPORTS(nsGTKRemoteService,
-                  nsIRemoteService)
+NS_IMPL_ISUPPORTS(nsGTKRemoteService, nsIRemoteService)
 
 NS_IMETHODIMP
-nsGTKRemoteService::Startup(const char* aAppName, const char* aProfileName)
-{
+nsGTKRemoteService::Startup(const char* aAppName, const char* aProfileName) {
   NS_ASSERTION(aAppName, "Don't pass a null appname!");
 
   if (mServerWindow) return NS_ERROR_ALREADY_INITIALIZED;
@@ -48,11 +46,9 @@ nsGTKRemoteService::Startup(const char* aAppName, const char* aProfileName)
   return NS_OK;
 }
 
-static nsIWidget* GetMainWidget(nsPIDOMWindowInner* aWindow)
-{
+static nsIWidget* GetMainWidget(nsPIDOMWindowInner* aWindow) {
   // get the native window for this instance
-  nsCOMPtr<nsIBaseWindow> baseWindow
-    (do_QueryInterface(aWindow->GetDocShell()));
+  nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(aWindow->GetDocShell()));
   NS_ENSURE_TRUE(baseWindow, nullptr);
 
   nsCOMPtr<nsIWidget> mainWidget;
@@ -61,13 +57,12 @@ static nsIWidget* GetMainWidget(nsPIDOMWindowInner* aWindow)
 }
 
 NS_IMETHODIMP
-nsGTKRemoteService::RegisterWindow(mozIDOMWindow* aWindow)
-{
+nsGTKRemoteService::RegisterWindow(mozIDOMWindow* aWindow) {
   nsIWidget* mainWidget = GetMainWidget(nsPIDOMWindowInner::From(aWindow));
   NS_ENSURE_TRUE(mainWidget, NS_ERROR_FAILURE);
 
   GtkWidget* widget =
-    (GtkWidget*) mainWidget->GetNativeData(NS_NATIVE_SHELLWIDGET);
+      (GtkWidget*)mainWidget->GetNativeData(NS_NATIVE_SHELLWIDGET);
   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
   nsWeakPtr weak = do_GetWeakReference(aWindow);
@@ -84,10 +79,8 @@ nsGTKRemoteService::RegisterWindow(mozIDOMWindow* aWindow)
 }
 
 NS_IMETHODIMP
-nsGTKRemoteService::Shutdown()
-{
-  if (!mServerWindow)
-    return NS_ERROR_NOT_INITIALIZED;
+nsGTKRemoteService::Shutdown() {
+  if (!mServerWindow) return NS_ERROR_NOT_INITIALIZED;
 
   gtk_widget_destroy(mServerWindow);
   mServerWindow = nullptr;
@@ -95,10 +88,8 @@ nsGTKRemoteService::Shutdown()
   return NS_OK;
 }
 
-void
-nsGTKRemoteService::HandleCommandsFor(GtkWidget* widget,
-                                      nsIWeakReference* aWindow)
-{
+void nsGTKRemoteService::HandleCommandsFor(GtkWidget* widget,
+                                           nsIWeakReference* aWindow) {
   g_signal_connect(G_OBJECT(widget), "property_notify_event",
                    G_CALLBACK(HandlePropertyChange), aWindow);
 
@@ -108,11 +99,9 @@ nsGTKRemoteService::HandleCommandsFor(GtkWidget* widget,
   nsXRemoteService::HandleCommandsFor(window);
 }
 
-gboolean
-nsGTKRemoteService::HandlePropertyChange(GtkWidget *aWidget,
-                                         GdkEventProperty *pevent,
-                                         nsIWeakReference *aThis)
-{
+gboolean nsGTKRemoteService::HandlePropertyChange(GtkWidget* aWidget,
+                                                  GdkEventProperty* pevent,
+                                                  nsIWeakReference* aThis) {
   if (pevent->state == GDK_PROPERTY_NEW_VALUE) {
     Atom changedAtom = gdk_x11_atom_to_xatom(pevent->atom);
 
@@ -123,4 +112,3 @@ nsGTKRemoteService::HandlePropertyChange(GtkWidget *aWidget,
   }
   return FALSE;
 }
-

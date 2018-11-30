@@ -58,7 +58,7 @@ class AtExitManager {
  private:
   struct CallbackAndParam {
     CallbackAndParam(AtExitCallbackType func, void* param)
-        : func_(func), param_(param) { }
+        : func_(func), param_(param) {}
     AtExitCallbackType func_;
     void* param_;
   };

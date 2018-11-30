@@ -21,12 +21,9 @@ namespace mozilla {
 NS_IMPL_ISUPPORTS(AlertNotification, nsIAlertNotification)
 
 AlertNotification::AlertNotification()
-  : mTextClickable(false)
-  , mInPrivateBrowsing(false)
-{}
+    : mTextClickable(false), mInPrivateBrowsing(false) {}
 
-AlertNotification::~AlertNotification()
-{}
+AlertNotification::~AlertNotification() {}
 
 NS_IMETHODIMP
 AlertNotification::Init(const nsAString& aName, const nsAString& aImageURL,
@@ -34,8 +31,7 @@ AlertNotification::Init(const nsAString& aName, const nsAString& aImageURL,
                         bool aTextClickable, const nsAString& aCookie,
                         const nsAString& aDir, const nsAString& aLang,
                         const nsAString& aData, nsIPrincipal* aPrincipal,
-                        bool aInPrivateBrowsing, bool aRequireInteraction)
-{
+                        bool aInPrivateBrowsing, bool aRequireInteraction) {
   mName = aName;
   mImageURL = aImageURL;
   mTitle = aTitle;
@@ -52,85 +48,73 @@ AlertNotification::Init(const nsAString& aName, const nsAString& aImageURL,
 }
 
 NS_IMETHODIMP
-AlertNotification::GetName(nsAString& aName)
-{
+AlertNotification::GetName(nsAString& aName) {
   aName = mName;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AlertNotification::GetImageURL(nsAString& aImageURL)
-{
+AlertNotification::GetImageURL(nsAString& aImageURL) {
   aImageURL = mImageURL;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AlertNotification::GetTitle(nsAString& aTitle)
-{
+AlertNotification::GetTitle(nsAString& aTitle) {
   aTitle = mTitle;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AlertNotification::GetText(nsAString& aText)
-{
+AlertNotification::GetText(nsAString& aText) {
   aText = mText;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AlertNotification::GetTextClickable(bool* aTextClickable)
-{
+AlertNotification::GetTextClickable(bool* aTextClickable) {
   *aTextClickable = mTextClickable;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AlertNotification::GetCookie(nsAString& aCookie)
-{
+AlertNotification::GetCookie(nsAString& aCookie) {
   aCookie = mCookie;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AlertNotification::GetDir(nsAString& aDir)
-{
+AlertNotification::GetDir(nsAString& aDir) {
   aDir = mDir;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AlertNotification::GetLang(nsAString& aLang)
-{
+AlertNotification::GetLang(nsAString& aLang) {
   aLang = mLang;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AlertNotification::GetRequireInteraction(bool* aRequireInteraction)
-{
+AlertNotification::GetRequireInteraction(bool* aRequireInteraction) {
   *aRequireInteraction = mRequireInteraction;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AlertNotification::GetData(nsAString& aData)
-{
+AlertNotification::GetData(nsAString& aData) {
   aData = mData;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AlertNotification::GetPrincipal(nsIPrincipal** aPrincipal)
-{
+AlertNotification::GetPrincipal(nsIPrincipal** aPrincipal) {
   NS_IF_ADDREF(*aPrincipal = mPrincipal);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AlertNotification::GetURI(nsIURI** aURI)
-{
+AlertNotification::GetURI(nsIURI** aURI) {
   if (!nsAlertsUtils::IsActionablePrincipal(mPrincipal)) {
     *aURI = nullptr;
     return NS_OK;
@@ -139,22 +123,19 @@ AlertNotification::GetURI(nsIURI** aURI)
 }
 
 NS_IMETHODIMP
-AlertNotification::GetInPrivateBrowsing(bool* aInPrivateBrowsing)
-{
+AlertNotification::GetInPrivateBrowsing(bool* aInPrivateBrowsing) {
   *aInPrivateBrowsing = mInPrivateBrowsing;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AlertNotification::GetActionable(bool* aActionable)
-{
+AlertNotification::GetActionable(bool* aActionable) {
   *aActionable = nsAlertsUtils::IsActionablePrincipal(mPrincipal);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AlertNotification::GetSource(nsAString& aSource)
-{
+AlertNotification::GetSource(nsAString& aSource) {
   nsAlertsUtils::GetSourceHostPort(mPrincipal, aSource);
   return NS_OK;
 }
@@ -162,9 +143,7 @@ AlertNotification::GetSource(nsAString& aSource)
 NS_IMETHODIMP
 AlertNotification::LoadImage(uint32_t aTimeout,
                              nsIAlertNotificationImageListener* aListener,
-                             nsISupports* aUserData,
-                             nsICancelable** aRequest)
-{
+                             nsISupports* aUserData, nsICancelable** aRequest) {
   NS_ENSURE_ARG(aListener);
   NS_ENSURE_ARG_POINTER(aRequest);
   *aRequest = nullptr;
@@ -179,10 +158,8 @@ AlertNotification::LoadImage(uint32_t aTimeout,
     return aListener->OnImageMissing(aUserData);
   }
 
-  RefPtr<AlertImageRequest> request = new AlertImageRequest(imageURI, mPrincipal,
-                                                            mInPrivateBrowsing,
-                                                            aTimeout, aListener,
-                                                            aUserData);
+  RefPtr<AlertImageRequest> request = new AlertImageRequest(
+      imageURI, mPrincipal, mInPrivateBrowsing, aTimeout, aListener, aUserData);
   nsresult rv = request->Start();
   request.forget(aRequest);
   return rv;
@@ -202,20 +179,18 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(AlertImageRequest)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(AlertImageRequest)
 
-AlertImageRequest::AlertImageRequest(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                                     bool aInPrivateBrowsing, uint32_t aTimeout,
-                                     nsIAlertNotificationImageListener* aListener,
-                                     nsISupports* aUserData)
-  : mURI(aURI)
-  , mPrincipal(aPrincipal)
-  , mInPrivateBrowsing(aInPrivateBrowsing)
-  , mTimeout(aTimeout)
-  , mListener(aListener)
-  , mUserData(aUserData)
-{}
+AlertImageRequest::AlertImageRequest(
+    nsIURI* aURI, nsIPrincipal* aPrincipal, bool aInPrivateBrowsing,
+    uint32_t aTimeout, nsIAlertNotificationImageListener* aListener,
+    nsISupports* aUserData)
+    : mURI(aURI),
+      mPrincipal(aPrincipal),
+      mInPrivateBrowsing(aInPrivateBrowsing),
+      mTimeout(aTimeout),
+      mListener(aListener),
+      mUserData(aUserData) {}
 
-AlertImageRequest::~AlertImageRequest()
-{
+AlertImageRequest::~AlertImageRequest() {
   if (mRequest) {
     mRequest->CancelAndForgetObserver(NS_BINDING_ABORTED);
   }
@@ -223,14 +198,12 @@ AlertImageRequest::~AlertImageRequest()
 
 NS_IMETHODIMP
 AlertImageRequest::Notify(imgIRequest* aRequest, int32_t aType,
-                          const nsIntRect* aData)
-{
+                          const nsIntRect* aData) {
   MOZ_ASSERT(aRequest == mRequest);
 
   uint32_t imgStatus = imgIRequest::STATUS_ERROR;
   nsresult rv = aRequest->GetImageStatus(&imgStatus);
-  if (NS_WARN_IF(NS_FAILED(rv)) ||
-      (imgStatus & imgIRequest::STATUS_ERROR)) {
+  if (NS_WARN_IF(NS_FAILED(rv)) || (imgStatus & imgIRequest::STATUS_ERROR)) {
     return NotifyMissing();
   }
 
@@ -265,22 +238,19 @@ AlertImageRequest::Notify(imgIRequest* aRequest, int32_t aType,
 }
 
 NS_IMETHODIMP
-AlertImageRequest::Notify(nsITimer* aTimer)
-{
+AlertImageRequest::Notify(nsITimer* aTimer) {
   MOZ_ASSERT(aTimer == mTimer);
   return NotifyMissing();
 }
 
 NS_IMETHODIMP
-AlertImageRequest::GetName(nsACString& aName)
-{
+AlertImageRequest::GetName(nsACString& aName) {
   aName.AssignLiteral("AlertImageRequest");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AlertImageRequest::Cancel(nsresult aReason)
-{
+AlertImageRequest::Cancel(nsresult aReason) {
   if (mRequest) {
     mRequest->Cancel(aReason);
   }
@@ -291,16 +261,13 @@ AlertImageRequest::Cancel(nsresult aReason)
   return NotifyMissing();
 }
 
-nsresult
-AlertImageRequest::Start()
-{
+nsresult AlertImageRequest::Start() {
   // Keep the request alive until we notify the image listener.
   NS_ADDREF_THIS();
 
   nsresult rv;
   if (mTimeout > 0) {
-    rv = NS_NewTimerWithCallback(getter_AddRefs(mTimer),
-                                 this, mTimeout,
+    rv = NS_NewTimerWithCallback(getter_AddRefs(mTimer), this, mTimeout,
                                  nsITimer::TYPE_ONE_SHOT);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return NotifyMissing();
@@ -319,13 +286,12 @@ AlertImageRequest::Start()
   // Unfortunately, the PB loader checks the load group, and asserts if its
   // load context's PB flag isn't set. The fix is to pass the load group to
   // `nsIAlertNotification::loadImage`.
-  int32_t loadFlags = mInPrivateBrowsing ? nsIRequest::LOAD_ANONYMOUS :
-                      nsIRequest::LOAD_NORMAL;
+  int32_t loadFlags =
+      mInPrivateBrowsing ? nsIRequest::LOAD_ANONYMOUS : nsIRequest::LOAD_NORMAL;
 
-  rv = il->LoadImageXPCOM(mURI, nullptr, nullptr,
-                          NS_LITERAL_STRING("default"), mPrincipal, nullptr,
-                          this, nullptr, loadFlags, nullptr,
-                          nsIContentPolicy::TYPE_INTERNAL_IMAGE,
+  rv = il->LoadImageXPCOM(mURI, nullptr, nullptr, NS_LITERAL_STRING("default"),
+                          mPrincipal, nullptr, this, nullptr, loadFlags,
+                          nullptr, nsIContentPolicy::TYPE_INTERNAL_IMAGE,
                           getter_AddRefs(mRequest));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NotifyMissing();
@@ -334,14 +300,13 @@ AlertImageRequest::Start()
   return NS_OK;
 }
 
-nsresult
-AlertImageRequest::NotifyMissing()
-{
+nsresult AlertImageRequest::NotifyMissing() {
   if (mTimer) {
     mTimer->Cancel();
     mTimer = nullptr;
   }
-  if (nsCOMPtr<nsIAlertNotificationImageListener> listener = mListener.forget()) {
+  if (nsCOMPtr<nsIAlertNotificationImageListener> listener =
+          mListener.forget()) {
     nsresult rv = listener->OnImageMissing(mUserData);
     NS_RELEASE_THIS();
     return rv;
@@ -349,14 +314,13 @@ AlertImageRequest::NotifyMissing()
   return NS_OK;
 }
 
-nsresult
-AlertImageRequest::NotifyComplete()
-{
+nsresult AlertImageRequest::NotifyComplete() {
   if (mTimer) {
     mTimer->Cancel();
     mTimer = nullptr;
   }
-  if (nsCOMPtr<nsIAlertNotificationImageListener> listener = mListener.forget()) {
+  if (nsCOMPtr<nsIAlertNotificationImageListener> listener =
+          mListener.forget()) {
     nsresult rv = listener->OnImageReady(mUserData, mRequest);
     NS_RELEASE_THIS();
     return rv;
@@ -364,4 +328,4 @@ AlertImageRequest::NotifyComplete()
   return NS_OK;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -1,7 +1,7 @@
 /* -*- Mode: c++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 4; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef SKIA_GL_GLUE_H_
 #define SKIA_GL_GLUE_H_
@@ -19,28 +19,27 @@ namespace gl {
 
 class GLContext;
 
-class SkiaGLGlue : public GenericAtomicRefCounted
-{
-public:
+class SkiaGLGlue : public GenericAtomicRefCounted {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SkiaGLGlue, override)
 
   explicit SkiaGLGlue(GLContext* context);
   GLContext* GetGLContext() const { return mGLContext.get(); }
   GrContext* GetGrContext() const { return mGrContext.get(); }
 
-protected:
+ protected:
   virtual ~SkiaGLGlue();
 
-private:
+ private:
   RefPtr<GLContext> mGLContext;
   sk_sp<GrGLInterface> mGrGLInterface;
   sk_sp<GrContext> mGrContext;
 };
 
-} // namespace gl
-} // namespace mozilla
+}  // namespace gl
+}  // namespace mozilla
 
-#else // USE_SKIA_GPU
+#else  // USE_SKIA_GPU
 
 class GrContext;
 
@@ -49,17 +48,16 @@ namespace gl {
 
 class GLContext;
 
-class SkiaGLGlue : public GenericAtomicRefCounted
-{
-public:
+class SkiaGLGlue : public GenericAtomicRefCounted {
+ public:
   SkiaGLGlue(GLContext* context);
   GLContext* GetGLContext() const { return nullptr; }
   GrContext* GetGrContext() const { return nullptr; }
 };
 
-} // namespace gl
-} // namespace mozilla
+}  // namespace gl
+}  // namespace mozilla
 
-#endif // USE_SKIA_GPU
+#endif  // USE_SKIA_GPU
 
-#endif // SKIA_GL_GLUE_H_
+#endif  // SKIA_GL_GLUE_H_

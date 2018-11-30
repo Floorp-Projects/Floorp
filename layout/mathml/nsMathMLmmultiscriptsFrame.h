@@ -17,40 +17,33 @@
 // <msup> -- attach a superscript to a base
 //
 
-class nsMathMLmmultiscriptsFrame final : public nsMathMLContainerFrame
-{
-public:
+class nsMathMLmmultiscriptsFrame final : public nsMathMLContainerFrame {
+ public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmmultiscriptsFrame)
 
-  friend nsIFrame* NS_NewMathMLmmultiscriptsFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewMathMLmmultiscriptsFrame(nsIPresShell* aPresShell,
+                                                  ComputedStyle* aStyle);
 
   NS_IMETHOD
   TransmitAutomaticData() override;
 
-  virtual nsresult
-  Place(DrawTarget*          aDrawTarget,
-        bool                 aPlaceOrigin,
-        ReflowOutput& aDesiredSize) override;
+  virtual nsresult Place(DrawTarget* aDrawTarget, bool aPlaceOrigin,
+                         ReflowOutput& aDesiredSize) override;
 
-  static nsresult
-  PlaceMultiScript(nsPresContext*          aPresContext,
-                   DrawTarget*             aDrawTarget,
-                   bool                    aPlaceOrigin,
-                   ReflowOutput&    aDesiredSize,
-                   nsMathMLContainerFrame* aForFrame,
-                   nscoord                 aUserSubScriptShift,
-                   nscoord                 aUserSupScriptShift,
-                   float                   aFontSizeInflation);
+  static nsresult PlaceMultiScript(nsPresContext* aPresContext,
+                                   DrawTarget* aDrawTarget, bool aPlaceOrigin,
+                                   ReflowOutput& aDesiredSize,
+                                   nsMathMLContainerFrame* aForFrame,
+                                   nscoord aUserSubScriptShift,
+                                   nscoord aUserSupScriptShift,
+                                   float aFontSizeInflation);
 
-  uint8_t
-  ScriptIncrement(nsIFrame* aFrame) override;
+  uint8_t ScriptIncrement(nsIFrame* aFrame) override;
 
-protected:
+ protected:
   explicit nsMathMLmmultiscriptsFrame(ComputedStyle* aStyle)
-    : nsMathMLContainerFrame(aStyle, kClassID) {}
+      : nsMathMLContainerFrame(aStyle, kClassID) {}
   virtual ~nsMathMLmmultiscriptsFrame();
-
-
 };
 
 #endif /* nsMathMLmmultiscriptsFrame_h___ */

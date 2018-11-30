@@ -19,8 +19,7 @@
 /**
  * Return status for event processors.
  */
-enum nsEventStatus
-{
+enum nsEventStatus {
   // The event is ignored, do default processing
   nsEventStatus_eIgnore,
   // The event is consumed, don't do default processing
@@ -33,36 +32,15 @@ enum nsEventStatus
 
 namespace mozilla {
 
-enum class CanBubble
-{
-  eYes,
-  eNo
-};
+enum class CanBubble { eYes, eNo };
 
-enum class Cancelable
-{
-  eYes,
-  eNo
-};
+enum class Cancelable { eYes, eNo };
 
-enum class ChromeOnlyDispatch
-{
-  eYes,
-  eNo
-};
+enum class ChromeOnlyDispatch { eYes, eNo };
 
-enum class Trusted
-{
-  eYes,
-  eNo
-};
+enum class Trusted { eYes, eNo };
 
-enum class Composed
-{
-  eYes,
-  eNo,
-  eDefault
-};
+enum class Composed { eYes, eNo, eDefault };
 
 /**
  * Event messages
@@ -70,8 +48,7 @@ enum class Composed
 
 typedef uint16_t EventMessageType;
 
-enum EventMessage : EventMessageType
-{
+enum EventMessage : EventMessageType {
 
 #define NS_EVENT_MESSAGE(aMessage) aMessage,
 #define NS_EVENT_MESSAGE_FIRST_LAST(aMessage, aFirst, aLast) \
@@ -94,13 +71,12 @@ const char* ToChar(EventMessage aEventMessage);
 
 typedef uint8_t EventClassIDType;
 
-enum EventClassID : EventClassIDType
-{
-  // The event class name will be:
-  //   eBasicEventClass for WidgetEvent
-  //   eFooEventClass for WidgetFooEvent or InternalFooEvent
-#define NS_ROOT_EVENT_CLASS(aPrefix, aName)   eBasic##aName##Class
-#define NS_EVENT_CLASS(aPrefix, aName)      , e##aName##Class
+enum EventClassID : EventClassIDType {
+// The event class name will be:
+//   eBasicEventClass for WidgetEvent
+//   eFooEventClass for WidgetFooEvent or InternalFooEvent
+#define NS_ROOT_EVENT_CLASS(aPrefix, aName) eBasic##aName##Class
+#define NS_EVENT_CLASS(aPrefix, aName) , e##aName##Class
 
 #include "mozilla/EventClassList.h"
 
@@ -112,12 +88,10 @@ const char* ToChar(EventClassID aEventClassID);
 
 typedef uint16_t Modifiers;
 
-#define NS_DEFINE_KEYNAME(aCPPName, aDOMKeyName) \
-  KEY_NAME_INDEX_##aCPPName,
+#define NS_DEFINE_KEYNAME(aCPPName, aDOMKeyName) KEY_NAME_INDEX_##aCPPName,
 
 typedef uint16_t KeyNameIndexType;
-enum KeyNameIndex : KeyNameIndexType
-{
+enum KeyNameIndex : KeyNameIndexType {
 #include "mozilla/KeyNameList.h"
   // If a DOM keyboard event is synthesized by script, this is used.  Then,
   // specified key name should be stored and use it as .key value.
@@ -132,8 +106,7 @@ const nsCString ToString(KeyNameIndex aKeyNameIndex);
   CODE_NAME_INDEX_##aCPPName,
 
 typedef uint8_t CodeNameIndexType;
-enum CodeNameIndex : CodeNameIndexType
-{
+enum CodeNameIndex : CodeNameIndexType {
 #include "mozilla/PhysicalKeyCodeNameList.h"
   // If a DOM keyboard event is synthesized by script, this is used.  Then,
   // specified code name should be stored and use it as .code value.
@@ -148,8 +121,7 @@ const nsCString ToString(CodeNameIndex aCodeNameIndex);
 #define NS_DEFINE_COMMAND_NO_EXEC_COMMAND(aName) , Command##aName
 
 typedef int8_t CommandInt;
-enum Command : CommandInt
-{
+enum Command : CommandInt {
   CommandDoNothing
 
 #include "mozilla/CommandList.h"
@@ -159,7 +131,7 @@ enum Command : CommandInt
 
 const char* ToChar(Command aCommand);
 
-} // namespace mozilla
+}  // namespace mozilla
 
 /**
  * All header files should include this header instead of *Events.h.
@@ -205,6 +177,6 @@ class TextRangeArray;
 // FontRange.h
 struct FontRange;
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_EventForwards_h__
+#endif  // mozilla_EventForwards_h__

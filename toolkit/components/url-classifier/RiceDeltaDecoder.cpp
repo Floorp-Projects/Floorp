@@ -61,11 +61,9 @@ class BitBuffer {
   size_t bit_offset_;
 };
 
-} // end of unnamed namespace
+}  // end of unnamed namespace
 
-static void
-ReverseByte(uint8_t& b)
-{
+static void ReverseByte(uint8_t& b) {
   b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
   b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
   b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
@@ -76,17 +74,10 @@ namespace safebrowsing {
 
 RiceDeltaDecoder::RiceDeltaDecoder(uint8_t* aEncodedData,
                                    size_t aEncodedDataSize)
-  : mEncodedData(aEncodedData)
-  , mEncodedDataSize(aEncodedDataSize)
-{
-}
+    : mEncodedData(aEncodedData), mEncodedDataSize(aEncodedDataSize) {}
 
-bool
-RiceDeltaDecoder::Decode(uint32_t aRiceParameter,
-                         uint32_t aFirstValue,
-                         uint32_t aNumEntries,
-                         uint32_t* aDecodedData)
-{
+bool RiceDeltaDecoder::Decode(uint32_t aRiceParameter, uint32_t aFirstValue,
+                              uint32_t aNumEntries, uint32_t* aDecodedData) {
   // Reverse each byte before reading bits from the byte buffer.
   for (size_t i = 0; i < mEncodedDataSize; i++) {
     ReverseByte(mEncodedData[i]);
@@ -129,8 +120,8 @@ RiceDeltaDecoder::Decode(uint32_t aRiceParameter,
   return true;
 }
 
-} // end of namespace mozilla
-} // end of namespace safebrowsing
+}  // namespace safebrowsing
+}  // namespace mozilla
 
 namespace {
 //////////////////////////////////////////////////////////////////////////
@@ -220,10 +211,10 @@ bool BitBuffer::ReadExponentialGolomb(uint32_t* val) {
     ConsumeBits(1);
   }
   if (!ConsumeBits(1)) {
-    return false; // The stream is incorrectly terminated at '1'.
+    return false;  // The stream is incorrectly terminated at '1'.
   }
 
   *val = one_bit_count;
   return true;
 }
-}
+}  // namespace

@@ -18,113 +18,86 @@ namespace dom {
 
 using mozilla::ipc::IPCResult;
 
-IPCResult
-ClientManagerParent::RecvTeardown()
-{
+IPCResult ClientManagerParent::RecvTeardown() {
   Unused << Send__delete__(this);
   return IPC_OK();
 }
 
-void
-ClientManagerParent::ActorDestroy(ActorDestroyReason aReason)
-{
-}
+void ClientManagerParent::ActorDestroy(ActorDestroyReason aReason) {}
 
-PClientHandleParent*
-ClientManagerParent::AllocPClientHandleParent(const IPCClientInfo& aClientInfo)
-{
+PClientHandleParent* ClientManagerParent::AllocPClientHandleParent(
+    const IPCClientInfo& aClientInfo) {
   return new ClientHandleParent();
 }
 
-bool
-ClientManagerParent::DeallocPClientHandleParent(PClientHandleParent* aActor)
-{
+bool ClientManagerParent::DeallocPClientHandleParent(
+    PClientHandleParent* aActor) {
   delete aActor;
   return true;
 }
 
-IPCResult
-ClientManagerParent::RecvPClientHandleConstructor(PClientHandleParent* aActor,
-                                                  const IPCClientInfo& aClientInfo)
-{
+IPCResult ClientManagerParent::RecvPClientHandleConstructor(
+    PClientHandleParent* aActor, const IPCClientInfo& aClientInfo) {
   ClientHandleParent* actor = static_cast<ClientHandleParent*>(aActor);
   actor->Init(aClientInfo);
   return IPC_OK();
 }
 
-PClientManagerOpParent*
-ClientManagerParent::AllocPClientManagerOpParent(const ClientOpConstructorArgs& aArgs)
-{
+PClientManagerOpParent* ClientManagerParent::AllocPClientManagerOpParent(
+    const ClientOpConstructorArgs& aArgs) {
   return new ClientManagerOpParent(mService);
 }
 
-bool
-ClientManagerParent::DeallocPClientManagerOpParent(PClientManagerOpParent* aActor)
-{
+bool ClientManagerParent::DeallocPClientManagerOpParent(
+    PClientManagerOpParent* aActor) {
   delete aActor;
   return true;
 }
 
-IPCResult
-ClientManagerParent::RecvPClientManagerOpConstructor(PClientManagerOpParent* aActor,
-                                                     const ClientOpConstructorArgs& aArgs)
-{
+IPCResult ClientManagerParent::RecvPClientManagerOpConstructor(
+    PClientManagerOpParent* aActor, const ClientOpConstructorArgs& aArgs) {
   ClientManagerOpParent* actor = static_cast<ClientManagerOpParent*>(aActor);
   actor->Init(aArgs);
   return IPC_OK();
 }
 
-PClientNavigateOpParent*
-ClientManagerParent::AllocPClientNavigateOpParent(const ClientNavigateOpConstructorArgs& aArgs)
-{
-  MOZ_ASSERT_UNREACHABLE("ClientNavigateOpParent should be explicitly constructed.");
+PClientNavigateOpParent* ClientManagerParent::AllocPClientNavigateOpParent(
+    const ClientNavigateOpConstructorArgs& aArgs) {
+  MOZ_ASSERT_UNREACHABLE(
+      "ClientNavigateOpParent should be explicitly constructed.");
   return nullptr;
 }
 
-bool
-ClientManagerParent::DeallocPClientNavigateOpParent(PClientNavigateOpParent* aActor)
-{
+bool ClientManagerParent::DeallocPClientNavigateOpParent(
+    PClientNavigateOpParent* aActor) {
   delete aActor;
   return true;
 }
 
-PClientSourceParent*
-ClientManagerParent::AllocPClientSourceParent(const ClientSourceConstructorArgs& aArgs)
-{
+PClientSourceParent* ClientManagerParent::AllocPClientSourceParent(
+    const ClientSourceConstructorArgs& aArgs) {
   return new ClientSourceParent(aArgs);
 }
 
-bool
-ClientManagerParent::DeallocPClientSourceParent(PClientSourceParent* aActor)
-{
+bool ClientManagerParent::DeallocPClientSourceParent(
+    PClientSourceParent* aActor) {
   delete aActor;
   return true;
 }
 
-IPCResult
-ClientManagerParent::RecvPClientSourceConstructor(PClientSourceParent* aActor,
-                                                  const ClientSourceConstructorArgs& aArgs)
-{
+IPCResult ClientManagerParent::RecvPClientSourceConstructor(
+    PClientSourceParent* aActor, const ClientSourceConstructorArgs& aArgs) {
   ClientSourceParent* actor = static_cast<ClientSourceParent*>(aActor);
   actor->Init();
   return IPC_OK();
 }
 
 ClientManagerParent::ClientManagerParent()
-  : mService(ClientManagerService::GetOrCreateInstance())
-{
-}
+    : mService(ClientManagerService::GetOrCreateInstance()) {}
 
-ClientManagerParent::~ClientManagerParent()
-{
-  mService->RemoveManager(this);
-}
+ClientManagerParent::~ClientManagerParent() { mService->RemoveManager(this); }
 
-void
-ClientManagerParent::Init()
-{
-  mService->AddManager(this);
-}
+void ClientManagerParent::Init() { mService->AddManager(this); }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

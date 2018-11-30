@@ -9,36 +9,29 @@
 
 #include "mozilla/ServoStyleConsts.h"
 
-struct nsTimingFunction
-{
+struct nsTimingFunction {
   mozilla::StyleComputedTimingFunction mTiming;
 
-  explicit nsTimingFunction(mozilla::StyleTimingKeyword aKeyword =
-                              mozilla::StyleTimingKeyword::Ease)
-    : mTiming(mozilla::StyleComputedTimingFunction::Keyword(aKeyword))
-  {
-  }
+  explicit nsTimingFunction(
+      mozilla::StyleTimingKeyword aKeyword = mozilla::StyleTimingKeyword::Ease)
+      : mTiming(mozilla::StyleComputedTimingFunction::Keyword(aKeyword)) {}
 
   nsTimingFunction(float x1, float y1, float x2, float y2)
-    : mTiming(mozilla::StyleComputedTimingFunction::CubicBezier(x1, y1, x2, y2))
-  {
-  }
+      : mTiming(mozilla::StyleComputedTimingFunction::CubicBezier(x1, y1, x2,
+                                                                  y2)) {}
 
-  bool IsLinear() const
-  {
+  bool IsLinear() const {
     return mTiming.IsKeyword() &&
            mTiming.keyword._0 == mozilla::StyleTimingKeyword::Linear;
   }
 
-  bool operator==(const nsTimingFunction& aOther) const
-  {
+  bool operator==(const nsTimingFunction& aOther) const {
     return mTiming == aOther.mTiming;
   }
 
-  bool operator!=(const nsTimingFunction& aOther) const
-  {
+  bool operator!=(const nsTimingFunction& aOther) const {
     return !(*this == aOther);
   }
 };
 
-#endif // nsTimingFunction_h
+#endif  // nsTimingFunction_h

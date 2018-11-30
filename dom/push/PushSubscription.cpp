@@ -25,20 +25,16 @@ namespace dom {
 
 namespace {
 
-class UnsubscribeResultCallback final : public nsIUnsubscribeResultCallback
-{
-public:
+class UnsubscribeResultCallback final : public nsIUnsubscribeResultCallback {
+ public:
   NS_DECL_ISUPPORTS
 
-  explicit UnsubscribeResultCallback(Promise* aPromise)
-    : mPromise(aPromise)
-  {
+  explicit UnsubscribeResultCallback(Promise* aPromise) : mPromise(aPromise) {
     AssertIsOnMainThread();
   }
 
   NS_IMETHOD
-  OnUnsubscribe(nsresult aStatus, bool aSuccess) override
-  {
+  OnUnsubscribe(nsresult aStatus, bool aSuccess) override {
     if (NS_SUCCEEDED(aStatus)) {
       mPromise->MaybeResolve(aSuccess);
     } else {
@@ -48,33 +44,27 @@ public:
     return NS_OK;
   }
 
-private:
-  ~UnsubscribeResultCallback()
-  {}
+ private:
+  ~UnsubscribeResultCallback() {}
 
   RefPtr<Promise> mPromise;
 };
 
 NS_IMPL_ISUPPORTS(UnsubscribeResultCallback, nsIUnsubscribeResultCallback)
 
-class UnsubscribeResultRunnable final : public WorkerRunnable
-{
-public:
+class UnsubscribeResultRunnable final : public WorkerRunnable {
+ public:
   UnsubscribeResultRunnable(WorkerPrivate* aWorkerPrivate,
                             already_AddRefed<PromiseWorkerProxy>&& aProxy,
-                            nsresult aStatus,
-                            bool aSuccess)
-    : WorkerRunnable(aWorkerPrivate)
-    , mProxy(std::move(aProxy))
-    , mStatus(aStatus)
-    , mSuccess(aSuccess)
-  {
+                            nsresult aStatus, bool aSuccess)
+      : WorkerRunnable(aWorkerPrivate),
+        mProxy(std::move(aProxy)),
+        mStatus(aStatus),
+        mSuccess(aSuccess) {
     AssertIsOnMainThread();
   }
 
-  bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
+  bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -89,29 +79,27 @@ public:
 
     return true;
   }
-private:
-  ~UnsubscribeResultRunnable()
-  {}
+
+ private:
+  ~UnsubscribeResultRunnable() {}
 
   RefPtr<PromiseWorkerProxy> mProxy;
   nsresult mStatus;
   bool mSuccess;
 };
 
-class WorkerUnsubscribeResultCallback final : public nsIUnsubscribeResultCallback
-{
-public:
+class WorkerUnsubscribeResultCallback final
+    : public nsIUnsubscribeResultCallback {
+ public:
   NS_DECL_ISUPPORTS
 
   explicit WorkerUnsubscribeResultCallback(PromiseWorkerProxy* aProxy)
-    : mProxy(aProxy)
-  {
+      : mProxy(aProxy) {
     AssertIsOnMainThread();
   }
 
   NS_IMETHOD
-  OnUnsubscribe(nsresult aStatus, bool aSuccess) override
-  {
+  OnUnsubscribe(nsresult aStatus, bool aSuccess) override {
     AssertIsOnMainThread();
     MOZ_ASSERT(mProxy, "OnUnsubscribe() called twice?");
 
@@ -121,38 +109,31 @@ public:
     }
 
     WorkerPrivate* worker = mProxy->GetWorkerPrivate();
-    RefPtr<UnsubscribeResultRunnable> r =
-      new UnsubscribeResultRunnable(worker, mProxy.forget(), aStatus, aSuccess);
+    RefPtr<UnsubscribeResultRunnable> r = new UnsubscribeResultRunnable(
+        worker, mProxy.forget(), aStatus, aSuccess);
     MOZ_ALWAYS_TRUE(r->Dispatch());
 
     return NS_OK;
   }
 
-private:
-  ~WorkerUnsubscribeResultCallback()
-  {
-  }
+ private:
+  ~WorkerUnsubscribeResultCallback() {}
 
   RefPtr<PromiseWorkerProxy> mProxy;
 };
 
 NS_IMPL_ISUPPORTS(WorkerUnsubscribeResultCallback, nsIUnsubscribeResultCallback)
 
-class UnsubscribeRunnable final : public Runnable
-{
-public:
+class UnsubscribeRunnable final : public Runnable {
+ public:
   UnsubscribeRunnable(PromiseWorkerProxy* aProxy, const nsAString& aScope)
-    : Runnable("dom::UnsubscribeRunnable")
-    , mProxy(aProxy)
-    , mScope(aScope)
-  {
+      : Runnable("dom::UnsubscribeRunnable"), mProxy(aProxy), mScope(aScope) {
     MOZ_ASSERT(aProxy);
     MOZ_ASSERT(!aScope.IsEmpty());
   }
 
   NS_IMETHOD
-  Run() override
-  {
+  Run() override {
     AssertIsOnMainThread();
 
     nsCOMPtr<nsIPrincipal> principal;
@@ -168,16 +149,17 @@ public:
     MOZ_ASSERT(principal);
 
     RefPtr<WorkerUnsubscribeResultCallback> callback =
-      new WorkerUnsubscribeResultCallback(mProxy);
+        new WorkerUnsubscribeResultCallback(mProxy);
 
     nsCOMPtr<nsIPushService> service =
-      do_GetService("@mozilla.org/push/Service;1");
+        do_GetService("@mozilla.org/push/Service;1");
     if (NS_WARN_IF(!service)) {
       callback->OnUnsubscribe(NS_ERROR_FAILURE, false);
       return NS_OK;
     }
 
-    if (NS_WARN_IF(NS_FAILED(service->Unsubscribe(mScope, principal, callback)))) {
+    if (NS_WARN_IF(
+            NS_FAILED(service->Unsubscribe(mScope, principal, callback)))) {
       callback->OnUnsubscribe(NS_ERROR_FAILURE, false);
       return NS_OK;
     }
@@ -185,15 +167,14 @@ public:
     return NS_OK;
   }
 
-private:
-  ~UnsubscribeRunnable()
-  {}
+ private:
+  ~UnsubscribeRunnable() {}
 
   RefPtr<PromiseWorkerProxy> mProxy;
   nsString mScope;
 };
 
-} // anonymous namespace
+}  // anonymous namespace
 
 PushSubscription::PushSubscription(nsIGlobalObject* aGlobal,
                                    const nsAString& aEndpoint,
@@ -201,11 +182,10 @@ PushSubscription::PushSubscription(nsIGlobalObject* aGlobal,
                                    nsTArray<uint8_t>&& aRawP256dhKey,
                                    nsTArray<uint8_t>&& aAuthSecret,
                                    nsTArray<uint8_t>&& aAppServerKey)
-  : mEndpoint(aEndpoint)
-  , mScope(aScope)
-  , mRawP256dhKey(std::move(aRawP256dhKey))
-  , mAuthSecret(std::move(aAuthSecret))
-{
+    : mEndpoint(aEndpoint),
+      mScope(aScope),
+      mRawP256dhKey(std::move(aRawP256dhKey)),
+      mAuthSecret(std::move(aAuthSecret)) {
   if (NS_IsMainThread()) {
     mGlobal = aGlobal;
   } else {
@@ -220,8 +200,7 @@ PushSubscription::PushSubscription(nsIGlobalObject* aGlobal,
   mOptions = new PushSubscriptionOptions(mGlobal, std::move(aAppServerKey));
 }
 
-PushSubscription::~PushSubscription()
-{}
+PushSubscription::~PushSubscription() {}
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PushSubscription, mGlobal, mOptions)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PushSubscription)
@@ -231,18 +210,15 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PushSubscription)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-JSObject*
-PushSubscription::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* PushSubscription::WrapObject(JSContext* aCx,
+                                       JS::Handle<JSObject*> aGivenProto) {
   return PushSubscription_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 // static
-already_AddRefed<PushSubscription>
-PushSubscription::Constructor(GlobalObject& aGlobal,
-                              const PushSubscriptionInit& aInitDict,
-                              ErrorResult& aRv)
-{
+already_AddRefed<PushSubscription> PushSubscription::Constructor(
+    GlobalObject& aGlobal, const PushSubscriptionInit& aInitDict,
+    ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
 
   nsTArray<uint8_t> rawKey;
@@ -267,26 +243,21 @@ PushSubscription::Constructor(GlobalObject& aGlobal,
   if (aInitDict.mAppServerKey.WasPassed() &&
       !aInitDict.mAppServerKey.Value().IsNull()) {
     const OwningArrayBufferViewOrArrayBuffer& bufferSource =
-      aInitDict.mAppServerKey.Value().Value();
+        aInitDict.mAppServerKey.Value().Value();
     if (!PushUtil::CopyBufferSourceToArray(bufferSource, appServerKey)) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return nullptr;
     }
   }
 
-  RefPtr<PushSubscription> sub = new PushSubscription(global,
-                                                      aInitDict.mEndpoint,
-                                                      aInitDict.mScope,
-                                                      std::move(rawKey),
-                                                      std::move(authSecret),
-                                                      std::move(appServerKey));
+  RefPtr<PushSubscription> sub = new PushSubscription(
+      global, aInitDict.mEndpoint, aInitDict.mScope, std::move(rawKey),
+      std::move(authSecret), std::move(appServerKey));
 
   return sub.forget();
 }
 
-already_AddRefed<Promise>
-PushSubscription::Unsubscribe(ErrorResult& aRv)
-{
+already_AddRefed<Promise> PushSubscription::Unsubscribe(ErrorResult& aRv) {
   if (!NS_IsMainThread()) {
     RefPtr<Promise> p = UnsubscribeFromWorker(aRv);
     return p.forget();
@@ -295,7 +266,7 @@ PushSubscription::Unsubscribe(ErrorResult& aRv)
   MOZ_ASSERT(mGlobal);
 
   nsCOMPtr<nsIPushService> service =
-    do_GetService("@mozilla.org/push/Service;1");
+      do_GetService("@mozilla.org/push/Service;1");
   if (NS_WARN_IF(!service)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -312,20 +283,16 @@ PushSubscription::Unsubscribe(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<UnsubscribeResultCallback> callback =
-    new UnsubscribeResultCallback(p);
-  Unused << NS_WARN_IF(NS_FAILED(
-    service->Unsubscribe(mScope, sop->GetPrincipal(), callback)));
+  RefPtr<UnsubscribeResultCallback> callback = new UnsubscribeResultCallback(p);
+  Unused << NS_WARN_IF(
+      NS_FAILED(service->Unsubscribe(mScope, sop->GetPrincipal(), callback)));
 
   return p.forget();
 }
 
-void
-PushSubscription::GetKey(JSContext* aCx,
-                         PushEncryptionKeyName aType,
-                         JS::MutableHandle<JSObject*> aKey,
-                         ErrorResult& aRv)
-{
+void PushSubscription::GetKey(JSContext* aCx, PushEncryptionKeyName aType,
+                              JS::MutableHandle<JSObject*> aKey,
+                              ErrorResult& aRv) {
   if (aType == PushEncryptionKeyName::P256dh) {
     PushUtil::CopyArrayToArrayBuffer(aCx, mRawP256dhKey, aKey, aRv);
   } else if (aType == PushEncryptionKeyName::Auth) {
@@ -335,17 +302,14 @@ PushSubscription::GetKey(JSContext* aCx,
   }
 }
 
-void
-PushSubscription::ToJSON(PushSubscriptionJSON& aJSON, ErrorResult& aRv)
-{
+void PushSubscription::ToJSON(PushSubscriptionJSON& aJSON, ErrorResult& aRv) {
   aJSON.mEndpoint.Construct();
   aJSON.mEndpoint.Value() = mEndpoint;
 
   aJSON.mKeys.mP256dh.Construct();
-  nsresult rv = Base64URLEncode(mRawP256dhKey.Length(),
-                                mRawP256dhKey.Elements(),
-                                Base64URLEncodePaddingPolicy::Omit,
-                                aJSON.mKeys.mP256dh.Value());
+  nsresult rv = Base64URLEncode(
+      mRawP256dhKey.Length(), mRawP256dhKey.Elements(),
+      Base64URLEncodePaddingPolicy::Omit, aJSON.mKeys.mP256dh.Value());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
     return;
@@ -361,16 +325,13 @@ PushSubscription::ToJSON(PushSubscriptionJSON& aJSON, ErrorResult& aRv)
   }
 }
 
-already_AddRefed<PushSubscriptionOptions>
-PushSubscription::Options()
-{
+already_AddRefed<PushSubscriptionOptions> PushSubscription::Options() {
   RefPtr<PushSubscriptionOptions> options = mOptions;
   return options.forget();
 }
 
-already_AddRefed<Promise>
-PushSubscription::UnsubscribeFromWorker(ErrorResult& aRv)
-{
+already_AddRefed<Promise> PushSubscription::UnsubscribeFromWorker(
+    ErrorResult& aRv) {
   WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(worker);
   worker->AssertIsOnWorkerThread();
@@ -387,12 +348,11 @@ PushSubscription::UnsubscribeFromWorker(ErrorResult& aRv)
     return p.forget();
   }
 
-  RefPtr<UnsubscribeRunnable> r =
-    new UnsubscribeRunnable(proxy, mScope);
+  RefPtr<UnsubscribeRunnable> r = new UnsubscribeRunnable(proxy, mScope);
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
 
   return p.forget();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

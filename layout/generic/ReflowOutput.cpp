@@ -9,9 +9,7 @@
 #include "mozilla/ReflowOutput.h"
 #include "mozilla/ReflowInput.h"
 
-void
-nsOverflowAreas::UnionWith(const nsOverflowAreas& aOther)
-{
+void nsOverflowAreas::UnionWith(const nsOverflowAreas& aOther) {
   // FIXME: We should probably change scrollable overflow to use
   // UnionRectIncludeEmpty (but leave visual overflow using UnionRect).
   NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
@@ -19,9 +17,7 @@ nsOverflowAreas::UnionWith(const nsOverflowAreas& aOther)
   }
 }
 
-void
-nsOverflowAreas::UnionAllWith(const nsRect& aRect)
-{
+void nsOverflowAreas::UnionAllWith(const nsRect& aRect) {
   // FIXME: We should probably change scrollable overflow to use
   // UnionRectIncludeEmpty (but leave visual overflow using UnionRect).
   NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
@@ -29,32 +25,22 @@ nsOverflowAreas::UnionAllWith(const nsRect& aRect)
   }
 }
 
-void
-nsOverflowAreas::SetAllTo(const nsRect& aRect)
-{
-  NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
-    mRects[otype] = aRect;
-  }
+void nsOverflowAreas::SetAllTo(const nsRect& aRect) {
+  NS_FOR_FRAME_OVERFLOW_TYPES(otype) { mRects[otype] = aRect; }
 }
 
 namespace mozilla {
 
 ReflowOutput::ReflowOutput(const ReflowInput& aReflowInput)
-  : ReflowOutput(aReflowInput.GetWritingMode())
-{
-}
+    : ReflowOutput(aReflowInput.GetWritingMode()) {}
 
-void
-ReflowOutput::SetOverflowAreasToDesiredBounds()
-{
+void ReflowOutput::SetOverflowAreasToDesiredBounds() {
   NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
     mOverflowAreas.Overflow(otype).SetRect(0, 0, Width(), Height());
   }
 }
 
-void
-ReflowOutput::UnionOverflowAreasWithDesiredBounds()
-{
+void ReflowOutput::UnionOverflowAreasWithDesiredBounds() {
   // FIXME: We should probably change scrollable overflow to use
   // UnionRectIncludeEmpty (but leave visual overflow using UnionRect).
   nsRect rect(0, 0, Width(), Height());
@@ -64,4 +50,4 @@ ReflowOutput::UnionOverflowAreasWithDesiredBounds()
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

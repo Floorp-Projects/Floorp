@@ -25,10 +25,7 @@ extern MFBT_DATA uintptr_t gMozillaPoisonValue;
 /**
  * @return the poison value.
  */
-inline uintptr_t mozPoisonValue()
-{
-  return gMozillaPoisonValue;
-}
+inline uintptr_t mozPoisonValue() { return gMozillaPoisonValue; }
 
 /**
  * Overwrite the memory block of aSize bytes at aPtr with the poison value.
@@ -36,8 +33,7 @@ inline uintptr_t mozPoisonValue()
  * Only an even number of sizeof(uintptr_t) bytes are overwritten, the last
  * few bytes (if any) is not overwritten.
  */
-inline void mozWritePoison(void* aPtr, size_t aSize)
-{
+inline void mozWritePoison(void* aPtr, size_t aSize) {
   const uintptr_t POISON = mozPoisonValue();
   char* p = (char*)aPtr;
   char* limit = p + (aSize & ~(sizeof(uintptr_t) - 1));
@@ -68,11 +64,8 @@ namespace mozilla {
  * are statically allocated.
  */
 class CorruptionCanaryForStatics {
-public:
-  constexpr CorruptionCanaryForStatics()
-    : mValue(kCanarySet)
-  {
-  }
+ public:
+  constexpr CorruptionCanaryForStatics() : mValue(kCanarySet) {}
 
   // This is required to avoid static constructor bloat.
   ~CorruptionCanaryForStatics() = default;
@@ -83,13 +76,12 @@ public:
     }
   }
 
-protected:
+ protected:
   uintptr_t mValue;
 
-private:
+ private:
   static const uintptr_t kCanarySet = 0x0f0b0f0b;
 };
-
 
 /**
  * This class is designed to cause crashes when various kinds of memory
@@ -108,7 +100,7 @@ private:
  * various uses of the corrupted memory.
  */
 class CorruptionCanary : public CorruptionCanaryForStatics {
-public:
+ public:
   constexpr CorruptionCanary() = default;
 
   ~CorruptionCanary() {
@@ -117,7 +109,7 @@ public:
   }
 };
 
-} // mozilla
+}  // namespace mozilla
 
 #endif
 

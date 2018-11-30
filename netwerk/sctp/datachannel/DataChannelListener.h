@@ -16,16 +16,16 @@ namespace mozilla {
 // Can't nest it in DataChannelConnection because C++ doesn't allow forward
 // refs to embedded classes
 class DataChannelListener {
-public:
+ public:
   virtual ~DataChannelListener() = default;
 
   // Called when a DOMString message is received.
   virtual nsresult OnMessageAvailable(nsISupports *aContext,
-                                      const nsACString& message) = 0;
+                                      const nsACString &message) = 0;
 
   // Called when a binary message is received.
   virtual nsresult OnBinaryMessageAvailable(nsISupports *aContext,
-                                            const nsACString& message) = 0;
+                                            const nsACString &message) = 0;
 
   // Called when the channel is connected
   virtual nsresult OnChannelConnected(nsISupports *aContext) = 0;
@@ -40,6 +40,6 @@ public:
   virtual nsresult NotBuffered(nsISupports *aContext) = 0;
 };
 
-}
+}  // namespace mozilla
 
 #endif

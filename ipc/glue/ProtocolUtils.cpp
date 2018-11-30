@@ -47,48 +47,40 @@ namespace mozilla {
 
 #if defined(XP_WIN)
 // Generate RAII classes for LPTSTR and PSECURITY_DESCRIPTOR.
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedLPTStr, \
-                                          RemovePointer<LPTSTR>::Type, \
+MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedLPTStr,
+                                          RemovePointer<LPTSTR>::Type,
                                           ::LocalFree)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPSecurityDescriptor, \
-                                          RemovePointer<PSECURITY_DESCRIPTOR>::Type, \
-                                          ::LocalFree)
+MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(
+    ScopedPSecurityDescriptor, RemovePointer<PSECURITY_DESCRIPTOR>::Type,
+    ::LocalFree)
 #endif
 
 namespace ipc {
 
-IPCResult
-IPCResult::Fail(NotNull<IProtocol*> actor, const char* where, const char* why)
-{
+IPCResult IPCResult::Fail(NotNull<IProtocol*> actor, const char* where,
+                          const char* why) {
   // Calls top-level protocol to handle the error.
   nsPrintfCString errorMsg("%s %s\n", where, why);
   actor->GetIPCChannel()->Listener()->ProcessingError(
-    HasResultCodes::MsgProcessingError, errorMsg.get());
+      HasResultCodes::MsgProcessingError, errorMsg.get());
   return IPCResult(false);
 }
 
-class ChannelOpened : public IPC::Message
-{
-public:
-  ChannelOpened(TransportDescriptor aDescriptor,
-                ProcessId aOtherProcess,
+class ChannelOpened : public IPC::Message {
+ public:
+  ChannelOpened(TransportDescriptor aDescriptor, ProcessId aOtherProcess,
                 ProtocolId aProtocol,
                 NestedLevel aNestedLevel = NOT_NESTED)
-    : IPC::Message(MSG_ROUTING_CONTROL, // these only go to top-level actors
-                   CHANNEL_OPENED_MESSAGE_TYPE,
-                   0,
-                   HeaderFlags(aNestedLevel))
-  {
+      : IPC::Message(MSG_ROUTING_CONTROL,  // these only go to top-level actors
+                     CHANNEL_OPENED_MESSAGE_TYPE, 0,
+                     HeaderFlags(aNestedLevel)) {
     IPC::WriteParam(this, aDescriptor);
     IPC::WriteParam(this, aOtherProcess);
     IPC::WriteParam(this, static_cast<uint32_t>(aProtocol));
   }
 
-  static bool Read(const IPC::Message& aMsg,
-                   TransportDescriptor* aDescriptor,
-                   ProcessId* aOtherProcess,
-                   ProtocolId* aProtocol)
-  {
+  static bool Read(const IPC::Message& aMsg, TransportDescriptor* aDescriptor,
+                   ProcessId* aOtherProcess, ProtocolId* aProtocol) {
     PickleIterator iter(aMsg);
     if (!IPC::ReadParam(&aMsg, &iter, aDescriptor) ||
         !IPC::ReadParam(&aMsg, &iter, aOtherProcess) ||
@@ -100,12 +92,10 @@ public:
   }
 };
 
-nsresult
-Bridge(const PrivateIPDLInterface&,
-       MessageChannel* aParentChannel, ProcessId aParentPid,
-       MessageChannel* aChildChannel, ProcessId aChildPid,
-       ProtocolId aProtocol, ProtocolId aChildProtocol)
-{
+nsresult Bridge(const PrivateIPDLInterface&, MessageChannel* aParentChannel,
+                ProcessId aParentPid, MessageChannel* aChildChannel,
+                ProcessId aChildPid, ProtocolId aProtocol,
+                ProtocolId aChildProtocol) {
   if (!aParentPid || !aChildPid) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -116,19 +106,17 @@ Bridge(const PrivateIPDLInterface&,
     return rv;
   }
 
-  if (!aParentChannel->Send(new ChannelOpened(parentSide,
-                                              aChildPid,
-                                              aProtocol,
-                                              IPC::Message::NESTED_INSIDE_CPOW))) {
+  if (!aParentChannel->Send(
+          new ChannelOpened(parentSide, aChildPid, aProtocol,
+                            IPC::Message::NESTED_INSIDE_CPOW))) {
     CloseDescriptor(parentSide);
     CloseDescriptor(childSide);
     return NS_ERROR_BRIDGE_OPEN_PARENT;
   }
 
-  if (!aChildChannel->Send(new ChannelOpened(childSide,
-                                            aParentPid,
-                                            aChildProtocol,
-                                            IPC::Message::NESTED_INSIDE_CPOW))) {
+  if (!aChildChannel->Send(
+          new ChannelOpened(childSide, aParentPid, aChildProtocol,
+                            IPC::Message::NESTED_INSIDE_CPOW))) {
     CloseDescriptor(parentSide);
     CloseDescriptor(childSide);
     return NS_ERROR_BRIDGE_OPEN_CHILD;
@@ -137,12 +125,9 @@ Bridge(const PrivateIPDLInterface&,
   return NS_OK;
 }
 
-bool
-Open(const PrivateIPDLInterface&,
-     MessageChannel* aOpenerChannel, ProcessId aOtherProcessId,
-     Transport::Mode aOpenerMode,
-     ProtocolId aProtocol, ProtocolId aChildProtocol)
-{
+bool Open(const PrivateIPDLInterface&, MessageChannel* aOpenerChannel,
+          ProcessId aOtherProcessId, Transport::Mode aOpenerMode,
+          ProtocolId aProtocol, ProtocolId aChildProtocol) {
   bool isParent = (Transport::MODE_SERVER == aOpenerMode);
   ProcessId thisPid = GetCurrentProcId();
   ProcessId parentId = isParent ? thisPid : aOtherProcessId;
@@ -169,61 +154,49 @@ Open(const PrivateIPDLInterface&,
   return true;
 }
 
-bool
-UnpackChannelOpened(const PrivateIPDLInterface&,
-                    const Message& aMsg,
-                    TransportDescriptor* aTransport,
-                    ProcessId* aOtherProcess,
-                    ProtocolId* aProtocol)
-{
+bool UnpackChannelOpened(const PrivateIPDLInterface&, const Message& aMsg,
+                         TransportDescriptor* aTransport,
+                         ProcessId* aOtherProcess, ProtocolId* aProtocol) {
   return ChannelOpened::Read(aMsg, aTransport, aOtherProcess, aProtocol);
 }
 
 #if defined(XP_WIN)
-bool DuplicateHandle(HANDLE aSourceHandle,
-                     DWORD aTargetProcessId,
-                     HANDLE* aTargetHandle,
-                     DWORD aDesiredAccess,
+bool DuplicateHandle(HANDLE aSourceHandle, DWORD aTargetProcessId,
+                     HANDLE* aTargetHandle, DWORD aDesiredAccess,
                      DWORD aOptions) {
   // If our process is the target just duplicate the handle.
   if (aTargetProcessId == base::GetCurrentProcId()) {
     return !!::DuplicateHandle(::GetCurrentProcess(), aSourceHandle,
                                ::GetCurrentProcess(), aTargetHandle,
                                aDesiredAccess, false, aOptions);
-
   }
 
 #if defined(MOZ_SANDBOX)
   // Try the broker next (will fail if not sandboxed).
-  if (SandboxTarget::Instance()->BrokerDuplicateHandle(aSourceHandle,
-                                                       aTargetProcessId,
-                                                       aTargetHandle,
-                                                       aDesiredAccess,
-                                                       aOptions)) {
+  if (SandboxTarget::Instance()->BrokerDuplicateHandle(
+          aSourceHandle, aTargetProcessId, aTargetHandle, aDesiredAccess,
+          aOptions)) {
     return true;
   }
 #endif
 
   // Finally, see if we already have access to the process.
-  ScopedProcessHandle targetProcess(OpenProcess(PROCESS_DUP_HANDLE,
-                                                FALSE,
-                                                aTargetProcessId));
+  ScopedProcessHandle targetProcess(
+      OpenProcess(PROCESS_DUP_HANDLE, FALSE, aTargetProcessId));
   if (!targetProcess) {
     CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::IPCTransportFailureReason,
-      NS_LITERAL_CSTRING("Failed to open target process."));
+        CrashReporter::Annotation::IPCTransportFailureReason,
+        NS_LITERAL_CSTRING("Failed to open target process."));
     return false;
   }
 
   return !!::DuplicateHandle(::GetCurrentProcess(), aSourceHandle,
-                              targetProcess, aTargetHandle,
-                              aDesiredAccess, FALSE, aOptions);
+                             targetProcess, aTargetHandle, aDesiredAccess,
+                             FALSE, aOptions);
 }
 #endif
 
-void
-AnnotateSystemError()
-{
+void AnnotateSystemError() {
   int64_t error = 0;
 #if defined(XP_WIN)
   error = ::GetLastError();
@@ -232,49 +205,41 @@ AnnotateSystemError()
 #endif
   if (error) {
     CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::IPCSystemError,
-      nsPrintfCString("%" PRId64, error));
+        CrashReporter::Annotation::IPCSystemError,
+        nsPrintfCString("%" PRId64, error));
   }
 }
 
 #if defined(XP_MACOSX)
-void
-AnnotateCrashReportWithErrno(CrashReporter::Annotation tag, int error)
-{
+void AnnotateCrashReportWithErrno(CrashReporter::Annotation tag, int error) {
   CrashReporter::AnnotateCrashReport(tag, error);
 }
-#endif // defined(XP_MACOSX)
+#endif  // defined(XP_MACOSX)
 
-void
-LogMessageForProtocol(const char* aTopLevelProtocol, base::ProcessId aOtherPid,
-                      const char* aContextDescription,
-                      uint32_t aMessageId,
-                      MessageDirection aDirection)
-{
-  nsPrintfCString logMessage("[time: %" PRId64 "][%d%s%d] [%s] %s %s\n",
-                             PR_Now(), base::GetCurrentProcId(),
-                             aDirection == MessageDirection::eReceiving ? "<-" : "->",
-                             aOtherPid, aTopLevelProtocol,
-                             aContextDescription,
-                             StringFromIPCMessageType(aMessageId));
+void LogMessageForProtocol(const char* aTopLevelProtocol,
+                           base::ProcessId aOtherPid,
+                           const char* aContextDescription, uint32_t aMessageId,
+                           MessageDirection aDirection) {
+  nsPrintfCString logMessage(
+      "[time: %" PRId64 "][%d%s%d] [%s] %s %s\n", PR_Now(),
+      base::GetCurrentProcId(),
+      aDirection == MessageDirection::eReceiving ? "<-" : "->", aOtherPid,
+      aTopLevelProtocol, aContextDescription,
+      StringFromIPCMessageType(aMessageId));
 #ifdef ANDROID
   __android_log_write(ANDROID_LOG_INFO, "GeckoIPC", logMessage.get());
 #endif
   fputs(logMessage.get(), stderr);
 }
 
-void
-ProtocolErrorBreakpoint(const char* aMsg)
-{
-    // Bugs that generate these error messages can be tough to
-    // reproduce.  Log always in the hope that someone finds the error
-    // message.
-    printf_stderr("IPDL protocol error: %s\n", aMsg);
+void ProtocolErrorBreakpoint(const char* aMsg) {
+  // Bugs that generate these error messages can be tough to
+  // reproduce.  Log always in the hope that someone finds the error
+  // message.
+  printf_stderr("IPDL protocol error: %s\n", aMsg);
 }
 
-void
-FatalError(const char* aMsg, bool aIsParent)
-{
+void FatalError(const char* aMsg, bool aIsParent) {
 #ifndef FUZZING
   ProtocolErrorBreakpoint(aMsg);
 #endif
@@ -288,8 +253,7 @@ FatalError(const char* aMsg, bool aIsParent)
     formattedMessage.AppendLiteral("\". Intentionally crashing.");
     NS_ERROR(formattedMessage.get());
     CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::IPCFatalErrorMsg,
-      nsDependentCString(aMsg));
+        CrashReporter::Annotation::IPCFatalErrorMsg, nsDependentCString(aMsg));
     AnnotateSystemError();
 #ifndef FUZZING
     MOZ_CRASH("IPC FatalError in the parent process!");
@@ -302,63 +266,43 @@ FatalError(const char* aMsg, bool aIsParent)
   }
 }
 
-void
-LogicError(const char* aMsg)
-{
-  MOZ_CRASH_UNSAFE_OOL(aMsg);
-}
+void LogicError(const char* aMsg) { MOZ_CRASH_UNSAFE_OOL(aMsg); }
 
-void
-ActorIdReadError(const char* aActorDescription)
-{
+void ActorIdReadError(const char* aActorDescription) {
 #ifndef FUZZING
   MOZ_CRASH_UNSAFE_PRINTF("Error deserializing id for %s", aActorDescription);
 #endif
 }
 
-void
-BadActorIdError(const char* aActorDescription)
-{
+void BadActorIdError(const char* aActorDescription) {
   nsPrintfCString message("bad id for %s", aActorDescription);
   ProtocolErrorBreakpoint(message.get());
 }
 
-void
-ActorLookupError(const char* aActorDescription)
-{
+void ActorLookupError(const char* aActorDescription) {
   nsPrintfCString message("could not lookup id for %s", aActorDescription);
   ProtocolErrorBreakpoint(message.get());
 }
 
-void
-MismatchedActorTypeError(const char* aActorDescription)
-{
+void MismatchedActorTypeError(const char* aActorDescription) {
   nsPrintfCString message("actor that should be of type %s has different type",
                           aActorDescription);
   ProtocolErrorBreakpoint(message.get());
 }
 
-void
-UnionTypeReadError(const char* aUnionName)
-{
+void UnionTypeReadError(const char* aUnionName) {
   MOZ_CRASH_UNSAFE_PRINTF("error deserializing type of union %s", aUnionName);
 }
 
-void
-ArrayLengthReadError(const char* aElementName)
-{
+void ArrayLengthReadError(const char* aElementName) {
   MOZ_CRASH_UNSAFE_PRINTF("error deserializing length of %s[]", aElementName);
 }
 
-void
-SentinelReadError(const char* aClassName)
-{
+void SentinelReadError(const char* aClassName) {
   MOZ_CRASH_UNSAFE_PRINTF("incorrect sentinel when reading %s", aClassName);
 }
 
-bool
-StateTransition(bool aIsDelete, LivenessState* aNext)
-{
+bool StateTransition(bool aIsDelete, LivenessState* aNext) {
   switch (*aNext) {
     case LivenessState::Null:
       if (aIsDelete) {
@@ -373,11 +317,8 @@ StateTransition(bool aIsDelete, LivenessState* aNext)
   return true;
 }
 
-bool
-ReEntrantDeleteStateTransition(bool aIsDelete,
-                               bool aIsDeleteReply,
-                               ReEntrantDeleteLivenessState* aNext)
-{
+bool ReEntrantDeleteStateTransition(bool aIsDelete, bool aIsDeleteReply,
+                                    ReEntrantDeleteLivenessState* aNext) {
   switch (*aNext) {
     case ReEntrantDeleteLivenessState::Null:
       if (aIsDelete) {
@@ -397,10 +338,8 @@ ReEntrantDeleteStateTransition(bool aIsDelete,
   return true;
 }
 
-void
-TableToArray(const nsTHashtable<nsPtrHashKey<void>>& aTable,
-             nsTArray<void*>& aArray)
-{
+void TableToArray(const nsTHashtable<nsPtrHashKey<void>>& aTable,
+                  nsTArray<void*>& aArray) {
   uint32_t i = 0;
   void** elements = aArray.AppendElements(aTable.Count());
   for (auto iter = aTable.ConstIter(); !iter.Done(); iter.Next()) {
@@ -409,120 +348,90 @@ TableToArray(const nsTHashtable<nsPtrHashKey<void>>& aTable,
   }
 }
 
-Maybe<IProtocol*>
-IProtocol::ReadActor(const IPC::Message* aMessage, PickleIterator* aIter, bool aNullable,
-                     const char* aActorDescription, int32_t aProtocolTypeId)
-{
-    int32_t id;
-    if (!IPC::ReadParam(aMessage, aIter, &id)) {
-        ActorIdReadError(aActorDescription);
-        return Nothing();
-    }
+Maybe<IProtocol*> IProtocol::ReadActor(const IPC::Message* aMessage,
+                                       PickleIterator* aIter, bool aNullable,
+                                       const char* aActorDescription,
+                                       int32_t aProtocolTypeId) {
+  int32_t id;
+  if (!IPC::ReadParam(aMessage, aIter, &id)) {
+    ActorIdReadError(aActorDescription);
+    return Nothing();
+  }
 
-    if (id == 1 || (id == 0 && !aNullable)) {
-        BadActorIdError(aActorDescription);
-        return Nothing();
-    }
+  if (id == 1 || (id == 0 && !aNullable)) {
+    BadActorIdError(aActorDescription);
+    return Nothing();
+  }
 
-    if (id == 0) {
-        return Some(static_cast<IProtocol*>(nullptr));
-    }
+  if (id == 0) {
+    return Some(static_cast<IProtocol*>(nullptr));
+  }
 
-    IProtocol* listener = this->Lookup(id);
-    if (!listener) {
-        ActorLookupError(aActorDescription);
-        return Nothing();
-    }
+  IProtocol* listener = this->Lookup(id);
+  if (!listener) {
+    ActorLookupError(aActorDescription);
+    return Nothing();
+  }
 
-    if (listener->GetProtocolTypeId() != aProtocolTypeId) {
-        MismatchedActorTypeError(aActorDescription);
-        return Nothing();
-    }
+  if (listener->GetProtocolTypeId() != aProtocolTypeId) {
+    MismatchedActorTypeError(aActorDescription);
+    return Nothing();
+  }
 
-    return Some(listener);
+  return Some(listener);
 }
 
-int32_t
-IProtocol::ManagedState::Register(IProtocol* aRouted)
-{
+int32_t IProtocol::ManagedState::Register(IProtocol* aRouted) {
   return mProtocol->Manager()->Register(aRouted);
 }
 
-int32_t
-IProtocol::ManagedState::RegisterID(IProtocol* aRouted, int32_t aId)
-{
+int32_t IProtocol::ManagedState::RegisterID(IProtocol* aRouted, int32_t aId) {
   return mProtocol->Manager()->RegisterID(aRouted, aId);
 }
 
-IProtocol*
-IProtocol::ManagedState::Lookup(int32_t aId)
-{
+IProtocol* IProtocol::ManagedState::Lookup(int32_t aId) {
   return mProtocol->Manager()->Lookup(aId);
 }
 
-void
-IProtocol::ManagedState::Unregister(int32_t aId)
-{
+void IProtocol::ManagedState::Unregister(int32_t aId) {
   if (mProtocol->mId == aId) {
     mProtocol->mId = kFreedActorId;
   }
   mProtocol->Manager()->Unregister(aId);
 }
 
-Shmem::SharedMemory*
-IProtocol::ManagedState::CreateSharedMemory(size_t aSize,
-                                            SharedMemory::SharedMemoryType aType,
-                                            bool aUnsafe,
-                                            int32_t* aId)
-{
+Shmem::SharedMemory* IProtocol::ManagedState::CreateSharedMemory(
+    size_t aSize, SharedMemory::SharedMemoryType aType, bool aUnsafe,
+    int32_t* aId) {
   return mProtocol->Manager()->CreateSharedMemory(aSize, aType, aUnsafe, aId);
 }
 
-Shmem::SharedMemory*
-IProtocol::ManagedState::LookupSharedMemory(int32_t aId)
-{
+Shmem::SharedMemory* IProtocol::ManagedState::LookupSharedMemory(int32_t aId) {
   return mProtocol->Manager()->LookupSharedMemory(aId);
 }
 
-bool
-IProtocol::ManagedState::IsTrackingSharedMemory(Shmem::SharedMemory* aSegment)
-{
+bool IProtocol::ManagedState::IsTrackingSharedMemory(
+    Shmem::SharedMemory* aSegment) {
   return mProtocol->Manager()->IsTrackingSharedMemory(aSegment);
 }
 
-bool
-IProtocol::ManagedState::DestroySharedMemory(Shmem& aShmem)
-{
+bool IProtocol::ManagedState::DestroySharedMemory(Shmem& aShmem) {
   return mProtocol->Manager()->DestroySharedMemory(aShmem);
 }
 
-const MessageChannel*
-IProtocol::ManagedState::GetIPCChannel() const
-{
+const MessageChannel* IProtocol::ManagedState::GetIPCChannel() const {
   return mChannel;
 }
 
-MessageChannel*
-IProtocol::ManagedState::GetIPCChannel()
-{
-  return mChannel;
-}
+MessageChannel* IProtocol::ManagedState::GetIPCChannel() { return mChannel; }
 
-ProcessId
-IProtocol::OtherPid() const
-{
-  return Manager()->OtherPid();
-}
+ProcessId IProtocol::OtherPid() const { return Manager()->OtherPid(); }
 
-void
-IProtocol::FatalError(const char* const aErrorMsg) const
-{
+void IProtocol::FatalError(const char* const aErrorMsg) const {
   HandleFatalError(aErrorMsg);
 }
 
-void
-IProtocol::HandleFatalError(const char* aErrorMsg) const
-{
+void IProtocol::HandleFatalError(const char* aErrorMsg) const {
   if (IProtocol* manager = Manager()) {
     manager->HandleFatalError(aErrorMsg);
     return;
@@ -531,11 +440,9 @@ IProtocol::HandleFatalError(const char* aErrorMsg) const
   mozilla::ipc::FatalError(aErrorMsg, mSide == ParentSide);
 }
 
-bool
-IProtocol::AllocShmem(size_t aSize,
-                      Shmem::SharedMemory::SharedMemoryType aType,
-                      Shmem* aOutMem)
-{
+bool IProtocol::AllocShmem(size_t aSize,
+                           Shmem::SharedMemory::SharedMemoryType aType,
+                           Shmem* aOutMem) {
   Shmem::id_t id;
   Shmem::SharedMemory* rawmem(CreateSharedMemory(aSize, aType, false, &id));
   if (!rawmem) {
@@ -546,11 +453,9 @@ IProtocol::AllocShmem(size_t aSize,
   return true;
 }
 
-bool
-IProtocol::AllocUnsafeShmem(size_t aSize,
-                            Shmem::SharedMemory::SharedMemoryType aType,
-                            Shmem* aOutMem)
-{
+bool IProtocol::AllocUnsafeShmem(size_t aSize,
+                                 Shmem::SharedMemory::SharedMemoryType aType,
+                                 Shmem* aOutMem) {
   Shmem::id_t id;
   Shmem::SharedMemory* rawmem(CreateSharedMemory(aSize, aType, true, &id));
   if (!rawmem) {
@@ -561,9 +466,7 @@ IProtocol::AllocUnsafeShmem(size_t aSize,
   return true;
 }
 
-bool
-IProtocol::DeallocShmem(Shmem& aMem)
-{
+bool IProtocol::DeallocShmem(Shmem& aMem) {
   bool ok = DestroySharedMemory(aMem);
 #ifdef DEBUG
   if (!ok) {
@@ -574,21 +477,17 @@ IProtocol::DeallocShmem(Shmem& aMem)
     }
     return false;
   }
-#endif // DEBUG
+#endif  // DEBUG
   aMem.forget(Shmem::PrivateIPDLCaller());
   return ok;
 }
 
-void
-IProtocol::SetManager(IProtocol* aManager)
-{
+void IProtocol::SetManager(IProtocol* aManager) {
   MOZ_RELEASE_ASSERT(!mManager || mManager == aManager);
   mManager = aManager;
 }
 
-void
-IProtocol::SetManagerAndRegister(IProtocol* aManager)
-{
+void IProtocol::SetManagerAndRegister(IProtocol* aManager) {
   // Set the manager prior to registering so registering properly inherits
   // the manager's event target.
   SetManager(aManager);
@@ -598,9 +497,7 @@ IProtocol::SetManagerAndRegister(IProtocol* aManager)
   mState->SetIPCChannel(aManager->GetIPCChannel());
 }
 
-void
-IProtocol::SetManagerAndRegister(IProtocol* aManager, int32_t aId)
-{
+void IProtocol::SetManagerAndRegister(IProtocol* aManager, int32_t aId) {
   // Set the manager prior to registering so registering properly inherits
   // the manager's event target.
   SetManager(aManager);
@@ -610,103 +507,82 @@ IProtocol::SetManagerAndRegister(IProtocol* aManager, int32_t aId)
   mState->SetIPCChannel(aManager->GetIPCChannel());
 }
 
-void
-IProtocol::SetEventTargetForActor(IProtocol* aActor, nsIEventTarget* aEventTarget)
-{
+void IProtocol::SetEventTargetForActor(IProtocol* aActor,
+                                       nsIEventTarget* aEventTarget) {
   // Make sure we have a manager for the internal method to access.
   aActor->SetManager(this);
   mState->SetEventTargetForActor(aActor, aEventTarget);
 }
 
-void
-IProtocol::ReplaceEventTargetForActor(IProtocol* aActor,
-                                      nsIEventTarget* aEventTarget)
-{
+void IProtocol::ReplaceEventTargetForActor(IProtocol* aActor,
+                                           nsIEventTarget* aEventTarget) {
   // Ensure the actor has been registered.
   MOZ_ASSERT(aActor->Manager());
   mState->ReplaceEventTargetForActor(aActor, aEventTarget);
 }
 
-nsIEventTarget*
-IProtocol::GetActorEventTarget()
-{
+nsIEventTarget* IProtocol::GetActorEventTarget() {
   return mState->GetActorEventTarget();
 }
 
-already_AddRefed<nsIEventTarget>
-IProtocol::GetActorEventTarget(IProtocol* aActor)
-{
+already_AddRefed<nsIEventTarget> IProtocol::GetActorEventTarget(
+    IProtocol* aActor) {
   return mState->GetActorEventTarget(aActor);
 }
 
-nsIEventTarget*
-IProtocol::ManagedState::GetActorEventTarget()
-{
+nsIEventTarget* IProtocol::ManagedState::GetActorEventTarget() {
   // We should only call this function when this actor has been registered and
   // is not unregistered yet.
-  MOZ_RELEASE_ASSERT(mProtocol->mId != kNullActorId && mProtocol->mId != kFreedActorId);
+  MOZ_RELEASE_ASSERT(mProtocol->mId != kNullActorId &&
+                     mProtocol->mId != kFreedActorId);
   RefPtr<nsIEventTarget> target = GetActorEventTarget(mProtocol);
   return target;
 }
 
-void
-IProtocol::ManagedState::SetEventTargetForActor(IProtocol* aActor,
-                                                        nsIEventTarget* aEventTarget)
-{
+void IProtocol::ManagedState::SetEventTargetForActor(
+    IProtocol* aActor, nsIEventTarget* aEventTarget) {
   // Go directly through the state so we don't try to redundantly (and
   // wrongly) call SetManager() on aActor.
   mProtocol->Manager()->mState->SetEventTargetForActor(aActor, aEventTarget);
 }
 
-void
-IProtocol::ManagedState::ReplaceEventTargetForActor(IProtocol* aActor,
-                                                            nsIEventTarget* aEventTarget)
-{
+void IProtocol::ManagedState::ReplaceEventTargetForActor(
+    IProtocol* aActor, nsIEventTarget* aEventTarget) {
   mProtocol->Manager()->ReplaceEventTargetForActor(aActor, aEventTarget);
 }
 
-already_AddRefed<nsIEventTarget>
-IProtocol::ManagedState::GetActorEventTarget(IProtocol* aActor)
-{
+already_AddRefed<nsIEventTarget> IProtocol::ManagedState::GetActorEventTarget(
+    IProtocol* aActor) {
   return mProtocol->Manager()->GetActorEventTarget(aActor);
 }
 
-IToplevelProtocol::IToplevelProtocol(const char* aName,
-                                     ProtocolId aProtoId,
+IToplevelProtocol::IToplevelProtocol(const char* aName, ProtocolId aProtoId,
                                      Side aSide)
-  : IProtocol(aSide, MakeUnique<ToplevelState>(aName, this, aSide))
-  , mProtocolId(aProtoId)
-  , mOtherPid(mozilla::ipc::kInvalidProcessId)
-  , mIsMainThreadProtocol(false)
-{
-}
+    : IProtocol(aSide, MakeUnique<ToplevelState>(aName, this, aSide)),
+      mProtocolId(aProtoId),
+      mOtherPid(mozilla::ipc::kInvalidProcessId),
+      mIsMainThreadProtocol(false) {}
 
-IToplevelProtocol::~IToplevelProtocol()
-{
+IToplevelProtocol::~IToplevelProtocol() {
   mState = nullptr;
   if (mTrans) {
-    RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(mTrans.release());
+    RefPtr<DeleteTask<Transport>> task =
+        new DeleteTask<Transport>(mTrans.release());
     XRE_GetIOMessageLoop()->PostTask(task.forget());
   }
 }
 
-base::ProcessId
-IToplevelProtocol::OtherPid() const
-{
+base::ProcessId IToplevelProtocol::OtherPid() const {
   base::ProcessId pid = OtherPidMaybeInvalid();
   MOZ_RELEASE_ASSERT(pid != kInvalidProcessId);
   return pid;
 }
 
-base::ProcessId
-IToplevelProtocol::OtherPidMaybeInvalid() const
-{
+base::ProcessId IToplevelProtocol::OtherPidMaybeInvalid() const {
   return mOtherPid;
 }
 
-void
-IToplevelProtocol::SetOtherProcessId(base::ProcessId aOtherPid)
-{
+void IToplevelProtocol::SetOtherProcessId(base::ProcessId aOtherPid) {
   // When recording an execution, all communication we do is forwarded from
   // the middleman to the parent process, so use its pid instead of the
   // middleman's pid.
@@ -718,82 +594,64 @@ IToplevelProtocol::SetOtherProcessId(base::ProcessId aOtherPid)
   }
 }
 
-bool
-IToplevelProtocol::TakeMinidump(nsIFile** aDump, uint32_t* aSequence)
-{
+bool IToplevelProtocol::TakeMinidump(nsIFile** aDump, uint32_t* aSequence) {
   MOZ_RELEASE_ASSERT(GetSide() == ParentSide);
   return XRE_TakeMinidumpForChild(OtherPid(), aDump, aSequence);
 }
 
-bool
-IToplevelProtocol::Open(mozilla::ipc::Transport* aTransport,
-                        base::ProcessId aOtherPid,
-                        MessageLoop* aThread,
-                        mozilla::ipc::Side aSide)
-{
+bool IToplevelProtocol::Open(mozilla::ipc::Transport* aTransport,
+                             base::ProcessId aOtherPid, MessageLoop* aThread,
+                             mozilla::ipc::Side aSide) {
   SetOtherProcessId(aOtherPid);
   return GetIPCChannel()->Open(aTransport, aThread, aSide);
 }
 
-bool
-IToplevelProtocol::Open(MessageChannel* aChannel,
-                        MessageLoop* aMessageLoop,
-                        mozilla::ipc::Side aSide)
-{
+bool IToplevelProtocol::Open(MessageChannel* aChannel,
+                             MessageLoop* aMessageLoop,
+                             mozilla::ipc::Side aSide) {
   SetOtherProcessId(base::GetCurrentProcId());
-  return GetIPCChannel()->Open(aChannel, aMessageLoop->SerialEventTarget(), aSide);
+  return GetIPCChannel()->Open(aChannel, aMessageLoop->SerialEventTarget(),
+                               aSide);
 }
 
-bool
-IToplevelProtocol::Open(MessageChannel* aChannel,
-                        nsIEventTarget* aEventTarget,
-                        mozilla::ipc::Side aSide)
-{
+bool IToplevelProtocol::Open(MessageChannel* aChannel,
+                             nsIEventTarget* aEventTarget,
+                             mozilla::ipc::Side aSide) {
   SetOtherProcessId(base::GetCurrentProcId());
   return GetIPCChannel()->Open(aChannel, aEventTarget, aSide);
 }
 
-bool
-IToplevelProtocol::OpenWithAsyncPid(mozilla::ipc::Transport* aTransport,
-                                    MessageLoop* aThread,
-                                    mozilla::ipc::Side aSide)
-{
+bool IToplevelProtocol::OpenWithAsyncPid(mozilla::ipc::Transport* aTransport,
+                                         MessageLoop* aThread,
+                                         mozilla::ipc::Side aSide) {
   return GetIPCChannel()->Open(aTransport, aThread, aSide);
 }
 
-void
-IToplevelProtocol::Close()
-{
-  GetIPCChannel()->Close();
-}
+void IToplevelProtocol::Close() { GetIPCChannel()->Close(); }
 
-void
-IToplevelProtocol::SetReplyTimeoutMs(int32_t aTimeoutMs)
-{
+void IToplevelProtocol::SetReplyTimeoutMs(int32_t aTimeoutMs) {
   GetIPCChannel()->SetReplyTimeoutMs(aTimeoutMs);
 }
 
-bool
-IToplevelProtocol::IsOnCxxStack() const
-{
+bool IToplevelProtocol::IsOnCxxStack() const {
   return GetIPCChannel()->IsOnCxxStack();
 }
 
-int32_t
-IToplevelProtocol::ToplevelState::Register(IProtocol* aRouted)
-{
+int32_t IToplevelProtocol::ToplevelState::Register(IProtocol* aRouted) {
   if (aRouted->Id() != kNullActorId && aRouted->Id() != kFreedActorId) {
     // If there's already an ID, just return that.
     return aRouted->Id();
   }
-  int32_t id = mProtocol->GetSide() == ParentSide ? ++mLastRouteId : --mLastRouteId;
+  int32_t id =
+      mProtocol->GetSide() == ParentSide ? ++mLastRouteId : --mLastRouteId;
   mActorMap.AddWithID(aRouted, id);
   aRouted->SetId(id);
 
   // Inherit our event target from our manager.
   if (IProtocol* manager = aRouted->Manager()) {
     MutexAutoLock lock(mEventTargetMutex);
-    if (nsCOMPtr<nsIEventTarget> target = mEventTargetMap.Lookup(manager->Id())) {
+    if (nsCOMPtr<nsIEventTarget> target =
+            mEventTargetMap.Lookup(manager->Id())) {
       mEventTargetMap.AddWithID(target, id);
     }
   }
@@ -801,24 +659,18 @@ IToplevelProtocol::ToplevelState::Register(IProtocol* aRouted)
   return id;
 }
 
-int32_t
-IToplevelProtocol::ToplevelState::RegisterID(IProtocol* aRouted,
-                                     int32_t aId)
-{
+int32_t IToplevelProtocol::ToplevelState::RegisterID(IProtocol* aRouted,
+                                                     int32_t aId) {
   mActorMap.AddWithID(aRouted, aId);
   aRouted->SetId(aId);
   return aId;
 }
 
-IProtocol*
-IToplevelProtocol::ToplevelState::Lookup(int32_t aId)
-{
+IProtocol* IToplevelProtocol::ToplevelState::Lookup(int32_t aId) {
   return mActorMap.Lookup(aId);
 }
 
-void
-IToplevelProtocol::ToplevelState::Unregister(int32_t aId)
-{
+void IToplevelProtocol::ToplevelState::Unregister(int32_t aId) {
   mActorMap.Remove(aId);
 
   MutexAutoLock lock(mEventTargetMutex);
@@ -828,45 +680,38 @@ IToplevelProtocol::ToplevelState::Unregister(int32_t aId)
 IToplevelProtocol::ToplevelState::ToplevelState(const char* aName,
                                                 IToplevelProtocol* aProtocol,
                                                 Side aSide)
-  : ProtocolState()
-  , mProtocol(aProtocol)
-  , mLastRouteId(aSide == ParentSide ? kFreedActorId : kNullActorId)
-  , mLastShmemId(aSide == ParentSide ? kFreedActorId : kNullActorId)
-  , mEventTargetMutex("ProtocolEventTargetMutex")
-  , mChannel(aName, aProtocol)
-{
-}
+    : ProtocolState(),
+      mProtocol(aProtocol),
+      mLastRouteId(aSide == ParentSide ? kFreedActorId : kNullActorId),
+      mLastShmemId(aSide == ParentSide ? kFreedActorId : kNullActorId),
+      mEventTargetMutex("ProtocolEventTargetMutex"),
+      mChannel(aName, aProtocol) {}
 
-Shmem::SharedMemory*
-IToplevelProtocol::ToplevelState::CreateSharedMemory(size_t aSize,
-                                                     Shmem::SharedMemory::SharedMemoryType aType,
-                                                     bool aUnsafe,
-                                                     Shmem::id_t* aId)
-{
+Shmem::SharedMemory* IToplevelProtocol::ToplevelState::CreateSharedMemory(
+    size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, bool aUnsafe,
+    Shmem::id_t* aId) {
   // XXX the mProtocol uses here should go away!
   RefPtr<Shmem::SharedMemory> segment(
-    Shmem::Alloc(Shmem::PrivateIPDLCaller(), aSize, aType, aUnsafe));
+      Shmem::Alloc(Shmem::PrivateIPDLCaller(), aSize, aType, aUnsafe));
   if (!segment) {
     return nullptr;
   }
-  int32_t id = mProtocol->GetSide() == ParentSide ? ++mLastShmemId : --mLastShmemId;
-  Shmem shmem(
-    Shmem::PrivateIPDLCaller(),
-    segment.get(),
-    id);
+  int32_t id =
+      mProtocol->GetSide() == ParentSide ? ++mLastShmemId : --mLastShmemId;
+  Shmem shmem(Shmem::PrivateIPDLCaller(), segment.get(), id);
 
   base::ProcessId pid =
 #ifdef ANDROID
-    // We use OtherPidMaybeInvalid() because on Android this method is actually
-    // called on an unconnected protocol, but Android's shared memory
-    // implementation doesn't actually use the PID.
-    mProtocol->OtherPidMaybeInvalid();
+      // We use OtherPidMaybeInvalid() because on Android this method is
+      // actually called on an unconnected protocol, but Android's shared memory
+      // implementation doesn't actually use the PID.
+      mProtocol->OtherPidMaybeInvalid();
 #else
-    mProtocol->OtherPid();
+      mProtocol->OtherPid();
 #endif
 
-  Message* descriptor = shmem.ShareTo(
-    Shmem::PrivateIPDLCaller(), pid, MSG_ROUTING_CONTROL);
+  Message* descriptor =
+      shmem.ShareTo(Shmem::PrivateIPDLCaller(), pid, MSG_ROUTING_CONTROL);
   if (!descriptor) {
     return nullptr;
   }
@@ -878,29 +723,25 @@ IToplevelProtocol::ToplevelState::CreateSharedMemory(size_t aSize,
   return rawSegment;
 }
 
-Shmem::SharedMemory*
-IToplevelProtocol::ToplevelState::LookupSharedMemory(Shmem::id_t aId)
-{
+Shmem::SharedMemory* IToplevelProtocol::ToplevelState::LookupSharedMemory(
+    Shmem::id_t aId) {
   return mShmemMap.Lookup(aId);
 }
 
-bool
-IToplevelProtocol::ToplevelState::IsTrackingSharedMemory(Shmem::SharedMemory* segment)
-{
+bool IToplevelProtocol::ToplevelState::IsTrackingSharedMemory(
+    Shmem::SharedMemory* segment) {
   return mShmemMap.HasData(segment);
 }
 
-bool
-IToplevelProtocol::ToplevelState::DestroySharedMemory(Shmem& shmem)
-{
+bool IToplevelProtocol::ToplevelState::DestroySharedMemory(Shmem& shmem) {
   Shmem::id_t aId = shmem.Id(Shmem::PrivateIPDLCaller());
   Shmem::SharedMemory* segment = LookupSharedMemory(aId);
   if (!segment) {
     return false;
   }
 
-  Message* descriptor = shmem.UnshareFrom(
-    Shmem::PrivateIPDLCaller(), MSG_ROUTING_CONTROL);
+  Message* descriptor =
+      shmem.UnshareFrom(Shmem::PrivateIPDLCaller(), MSG_ROUTING_CONTROL);
 
   mShmemMap.Remove(aId);
   Shmem::Dealloc(Shmem::PrivateIPDLCaller(), segment);
@@ -914,20 +755,18 @@ IToplevelProtocol::ToplevelState::DestroySharedMemory(Shmem& shmem)
   return descriptor && channel->Send(descriptor);
 }
 
-void
-IToplevelProtocol::ToplevelState::DeallocShmems()
-{
-  for (IDMap<SharedMemory*>::const_iterator cit = mShmemMap.begin(); cit != mShmemMap.end(); ++cit) {
+void IToplevelProtocol::ToplevelState::DeallocShmems() {
+  for (IDMap<SharedMemory*>::const_iterator cit = mShmemMap.begin();
+       cit != mShmemMap.end(); ++cit) {
     Shmem::Dealloc(Shmem::PrivateIPDLCaller(), cit->second);
   }
   mShmemMap.Clear();
 }
 
-bool
-IToplevelProtocol::ToplevelState::ShmemCreated(const Message& aMsg)
-{
+bool IToplevelProtocol::ToplevelState::ShmemCreated(const Message& aMsg) {
   Shmem::id_t id;
-  RefPtr<Shmem::SharedMemory> rawmem(Shmem::OpenExisting(Shmem::PrivateIPDLCaller(), aMsg, &id, true));
+  RefPtr<Shmem::SharedMemory> rawmem(
+      Shmem::OpenExisting(Shmem::PrivateIPDLCaller(), aMsg, &id, true));
   if (!rawmem) {
     return false;
   }
@@ -935,9 +774,7 @@ IToplevelProtocol::ToplevelState::ShmemCreated(const Message& aMsg)
   return true;
 }
 
-bool
-IToplevelProtocol::ToplevelState::ShmemDestroyed(const Message& aMsg)
-{
+bool IToplevelProtocol::ToplevelState::ShmemDestroyed(const Message& aMsg) {
   Shmem::id_t id;
   PickleIterator iter = PickleIterator(aMsg);
   if (!IPC::ReadParam(&aMsg, &iter, &id)) {
@@ -954,8 +791,7 @@ IToplevelProtocol::ToplevelState::ShmemDestroyed(const Message& aMsg)
 }
 
 already_AddRefed<nsIEventTarget>
-IToplevelProtocol::ToplevelState::GetMessageEventTarget(const Message& aMsg)
-{
+IToplevelProtocol::ToplevelState::GetMessageEventTarget(const Message& aMsg) {
   int32_t route = aMsg.routing_id();
 
   Maybe<MutexAutoLock> lock;
@@ -990,33 +826,30 @@ IToplevelProtocol::ToplevelState::GetMessageEventTarget(const Message& aMsg)
 }
 
 already_AddRefed<nsIEventTarget>
-IToplevelProtocol::ToplevelState::GetActorEventTarget(IProtocol* aActor)
-{
-  MOZ_RELEASE_ASSERT(aActor->Id() != kNullActorId && aActor->Id() != kFreedActorId);
+IToplevelProtocol::ToplevelState::GetActorEventTarget(IProtocol* aActor) {
+  MOZ_RELEASE_ASSERT(aActor->Id() != kNullActorId &&
+                     aActor->Id() != kFreedActorId);
 
   MutexAutoLock lock(mEventTargetMutex);
   nsCOMPtr<nsIEventTarget> target = mEventTargetMap.Lookup(aActor->Id());
   return target.forget();
 }
 
-nsIEventTarget*
-IToplevelProtocol::ToplevelState::GetActorEventTarget()
-{
+nsIEventTarget* IToplevelProtocol::ToplevelState::GetActorEventTarget() {
   // The EventTarget of a ToplevelProtocol shall never be set.
   return nullptr;
 }
 
-void
-IToplevelProtocol::ToplevelState::SetEventTargetForActor(IProtocol* aActor,
-                                                 nsIEventTarget* aEventTarget)
-{
+void IToplevelProtocol::ToplevelState::SetEventTargetForActor(
+    IProtocol* aActor, nsIEventTarget* aEventTarget) {
   // The EventTarget of a ToplevelProtocol shall never be set.
   MOZ_RELEASE_ASSERT(aActor != mProtocol);
 
   // We should only call this function on actors that haven't been used for IPC
   // code yet. Otherwise we'll be posting stuff to the wrong event target before
   // we're called.
-  MOZ_RELEASE_ASSERT(aActor->Id() == kNullActorId || aActor->Id() == kFreedActorId);
+  MOZ_RELEASE_ASSERT(aActor->Id() == kNullActorId ||
+                     aActor->Id() == kFreedActorId);
 
   // Register the actor early. When it's registered again, it will keep the same
   // ID.
@@ -1037,33 +870,26 @@ IToplevelProtocol::ToplevelState::SetEventTargetForActor(IProtocol* aActor,
   }
 }
 
-void
-IToplevelProtocol::ToplevelState::ReplaceEventTargetForActor(
-  IProtocol* aActor,
-  nsIEventTarget* aEventTarget)
-{
+void IToplevelProtocol::ToplevelState::ReplaceEventTargetForActor(
+    IProtocol* aActor, nsIEventTarget* aEventTarget) {
   // The EventTarget of a ToplevelProtocol shall never be set.
   MOZ_RELEASE_ASSERT(aActor != mProtocol);
 
   int32_t id = aActor->Id();
   // The ID of the actor should have existed.
-  MOZ_RELEASE_ASSERT(id!= kNullActorId && id!= kFreedActorId);
+  MOZ_RELEASE_ASSERT(id != kNullActorId && id != kFreedActorId);
 
   MutexAutoLock lock(mEventTargetMutex);
   mEventTargetMap.ReplaceWithID(aEventTarget, id);
 }
 
-const MessageChannel*
-IToplevelProtocol::ToplevelState::GetIPCChannel() const
-{
+const MessageChannel* IToplevelProtocol::ToplevelState::GetIPCChannel() const {
   return ProtocolState::mChannel ? ProtocolState::mChannel : &mChannel;
 }
 
-MessageChannel*
-IToplevelProtocol::ToplevelState::GetIPCChannel()
-{
+MessageChannel* IToplevelProtocol::ToplevelState::GetIPCChannel() {
   return ProtocolState::mChannel ? ProtocolState::mChannel : &mChannel;
 }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla

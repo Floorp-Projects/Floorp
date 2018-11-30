@@ -9,30 +9,21 @@
 #include "timecard.h"
 #include "mozilla/mozalloc.h"
 
-Timecard *
-create_timecard()
-{
-  Timecard *tc = moz_xcalloc(1,sizeof(Timecard));
+Timecard *create_timecard() {
+  Timecard *tc = moz_xcalloc(1, sizeof(Timecard));
   tc->entries_allocated = TIMECARD_INITIAL_TABLE_SIZE;
   tc->entries = moz_xcalloc(tc->entries_allocated, sizeof(TimecardEntry));
   tc->start_time = PR_Now();
   return tc;
 }
 
-void
-destroy_timecard(Timecard *tc)
-{
+void destroy_timecard(Timecard *tc) {
   free(tc->entries);
   free(tc);
 }
 
-void
-stamp_timecard(Timecard *tc,
-               const char *event,
-               const char *file,
-               unsigned int line,
-               const char *function)
-{
+void stamp_timecard(Timecard *tc, const char *event, const char *file,
+                    unsigned int line, const char *function) {
   TimecardEntry *entry = NULL;
 
   /* Trim the path component from the filename */
@@ -65,9 +56,7 @@ stamp_timecard(Timecard *tc,
   tc->curr_entry++;
 }
 
-void
-print_timecard(Timecard *tc)
-{
+void print_timecard(Timecard *tc) {
   size_t i;
   TimecardEntry *entry;
   size_t event_width = 5;
@@ -90,17 +79,15 @@ print_timecard(Timecard *tc)
   }
 
   printf("\nTimecard created %4ld.%6.6ld\n\n",
-          (long)(tc->start_time / PR_USEC_PER_SEC),
-          (long)(tc->start_time % PR_USEC_PER_SEC));
+         (long)(tc->start_time / PR_USEC_PER_SEC),
+         (long)(tc->start_time % PR_USEC_PER_SEC));
 
-  line_width = 1 + 11 + 11 + event_width + file_width + 6 +
-                   function_width + (4 * 3);
+  line_width =
+      1 + 11 + 11 + event_width + file_width + 6 + function_width + (4 * 3);
 
-  printf(" %-11s | %-11s | %-*s | %-*s | %-*s\n",
-          "Timestamp", "Delta",
-          (int)event_width, "Event",
-          (int)file_width + 6, "File",
-          (int)function_width, "Function");
+  printf(" %-11s | %-11s | %-*s | %-*s | %-*s\n", "Timestamp", "Delta",
+         (int)event_width, "Event", (int)file_width + 6, "File",
+         (int)function_width, "Function");
 
   for (i = 0; i <= line_width; i++) {
     printf("=");
@@ -111,16 +98,15 @@ print_timecard(Timecard *tc)
     entry = &tc->entries[i];
     offset = entry->timestamp - tc->start_time;
     if (i > 0) {
-      delta = entry->timestamp - tc->entries[i-1].timestamp;
+      delta = entry->timestamp - tc->entries[i - 1].timestamp;
     } else {
       delta = entry->timestamp - tc->start_time;
     }
     printf(" %4ld.%6.6ld | %4ld.%6.6ld | %-*s | %*s:%-5d | %-*s\n",
            (long)(offset / PR_USEC_PER_SEC), (long)(offset % PR_USEC_PER_SEC),
            (long)(delta / PR_USEC_PER_SEC), (long)(delta % PR_USEC_PER_SEC),
-           (int)event_width, entry->event,
-           (int)file_width, entry->file, entry->line,
-           (int)function_width, entry->function);
+           (int)event_width, entry->event, (int)file_width, entry->file,
+           entry->line, (int)function_width, entry->function);
   }
   printf("\n");
 }

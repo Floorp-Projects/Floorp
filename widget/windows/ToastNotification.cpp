@@ -15,21 +15,17 @@
 #include "ToastNotificationHandler.h"
 #include "WinTaskbar.h"
 
-
 namespace mozilla {
 namespace widget {
 
-NS_IMPL_ISUPPORTS(ToastNotification, nsIAlertsService, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(ToastNotification, nsIAlertsService, nsIObserver,
+                  nsISupportsWeakReference)
 
-ToastNotification::ToastNotification()
-= default;
+ToastNotification::ToastNotification() = default;
 
-ToastNotification::~ToastNotification()
-= default;
+ToastNotification::~ToastNotification() = default;
 
-nsresult
-ToastNotification::Init()
-{
+nsresult ToastNotification::Init() {
   if (!IsWin8OrLater()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -40,7 +36,8 @@ ToastNotification::Init()
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  nsresult rv = NS_NewNamedThread("ToastBgThread", getter_AddRefs(mBackgroundThread));
+  nsresult rv =
+      NS_NewNamedThread("ToastBgThread", getter_AddRefs(mBackgroundThread));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -54,47 +51,37 @@ ToastNotification::Init()
   return NS_OK;
 }
 
-nsresult
-ToastNotification::BackgroundDispatch(nsIRunnable* runnable)
-{
+nsresult ToastNotification::BackgroundDispatch(nsIRunnable* runnable) {
   return mBackgroundThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
 }
 
 NS_IMETHODIMP
-ToastNotification::Observe(nsISupports *aSubject, const char *aTopic,
-                           const char16_t *aData)
-{
+ToastNotification::Observe(nsISupports* aSubject, const char* aTopic,
+                           const char16_t* aData) {
   // Got quit-application
-  // The handlers destructors will do the right thing (de-register with Windows).
+  // The handlers destructors will do the right thing (de-register with
+  // Windows).
   mActiveHandlers.Clear();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-ToastNotification::ShowAlertNotification(const nsAString & aImageUrl,
-                                         const nsAString & aAlertTitle,
-                                         const nsAString & aAlertText,
-                                         bool aAlertTextClickable,
-                                         const nsAString & aAlertCookie,
-                                         nsIObserver * aAlertListener,
-                                         const nsAString & aAlertName,
-                                         const nsAString & aBidi,
-                                         const nsAString & aLang,
-                                         const nsAString & aData,
-                                         nsIPrincipal * aPrincipal,
-                                         bool aInPrivateBrowsing,
-                                         bool aRequireInteraction)
-{
+ToastNotification::ShowAlertNotification(
+    const nsAString& aImageUrl, const nsAString& aAlertTitle,
+    const nsAString& aAlertText, bool aAlertTextClickable,
+    const nsAString& aAlertCookie, nsIObserver* aAlertListener,
+    const nsAString& aAlertName, const nsAString& aBidi, const nsAString& aLang,
+    const nsAString& aData, nsIPrincipal* aPrincipal, bool aInPrivateBrowsing,
+    bool aRequireInteraction) {
   nsCOMPtr<nsIAlertNotification> alert =
-    do_CreateInstance(ALERT_NOTIFICATION_CONTRACTID);
+      do_CreateInstance(ALERT_NOTIFICATION_CONTRACTID);
   if (NS_WARN_IF(!alert)) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = alert->Init(aAlertName, aImageUrl, aAlertTitle,
-                            aAlertText, aAlertTextClickable,
-                            aAlertCookie, aBidi, aLang, aData,
-                            aPrincipal, aInPrivateBrowsing,
-                            aRequireInteraction);
+  nsresult rv =
+      alert->Init(aAlertName, aImageUrl, aAlertTitle, aAlertText,
+                  aAlertTextClickable, aAlertCookie, aBidi, aLang, aData,
+                  aPrincipal, aInPrivateBrowsing, aRequireInteraction);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -104,15 +91,13 @@ ToastNotification::ShowAlertNotification(const nsAString & aImageUrl,
 NS_IMETHODIMP
 ToastNotification::ShowPersistentNotification(const nsAString& aPersistentData,
                                               nsIAlertNotification* aAlert,
-                                              nsIObserver* aAlertListener)
-{
+                                              nsIObserver* aAlertListener) {
   return ShowAlert(aAlert, aAlertListener);
 }
 
 NS_IMETHODIMP
 ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
-                             nsIObserver* aAlertListener)
-{
+                             nsIObserver* aAlertListener) {
   if (NS_WARN_IF(!aAlert)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -153,9 +138,8 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
     return rv;
   }
 
-  RefPtr<ToastNotificationHandler> handler =
-    new ToastNotificationHandler(this, aAlertListener, name, cookie, title,
-                                 text, hostPort, textClickable);
+  RefPtr<ToastNotificationHandler> handler = new ToastNotificationHandler(
+      this, aAlertListener, name, cookie, title, text, hostPort, textClickable);
   mActiveHandlers.Put(name, handler);
 
   rv = handler->InitAlertAsync(aAlert);
@@ -164,14 +148,12 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
     return rv;
   }
 
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
 ToastNotification::CloseAlert(const nsAString& aAlertName,
-                              nsIPrincipal* aPrincipal)
-{
+                              nsIPrincipal* aPrincipal) {
   RefPtr<ToastNotificationHandler> handler;
   if (NS_WARN_IF(!mActiveHandlers.Get(aAlertName, getter_AddRefs(handler)))) {
     return NS_OK;
@@ -180,10 +162,8 @@ ToastNotification::CloseAlert(const nsAString& aAlertName,
   return NS_OK;
 }
 
-bool
-ToastNotification::IsActiveHandler(const nsAString& aAlertName,
-                                   ToastNotificationHandler* aHandler)
-{
+bool ToastNotification::IsActiveHandler(const nsAString& aAlertName,
+                                        ToastNotificationHandler* aHandler) {
   RefPtr<ToastNotificationHandler> handler;
   if (NS_WARN_IF(!mActiveHandlers.Get(aAlertName, getter_AddRefs(handler)))) {
     return false;
@@ -191,10 +171,8 @@ ToastNotification::IsActiveHandler(const nsAString& aAlertName,
   return handler == aHandler;
 }
 
-void
-ToastNotification::RemoveHandler(const nsAString& aAlertName,
-                                 ToastNotificationHandler* aHandler)
-{
+void ToastNotification::RemoveHandler(const nsAString& aAlertName,
+                                      ToastNotificationHandler* aHandler) {
   // The alert may have been replaced; only remove it from the active
   // handlers map if it's the same.
   if (IsActiveHandler(aAlertName, aHandler)) {
@@ -205,5 +183,5 @@ ToastNotification::RemoveHandler(const nsAString& aAlertName,
   }
 }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

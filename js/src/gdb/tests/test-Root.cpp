@@ -13,8 +13,8 @@ FRAGMENT(Root, null) {
   use(null);
 }
 
-void callee(JS::Handle<JSObject*> obj, JS::MutableHandle<JSObject*> mutableObj)
-{
+void callee(JS::Handle<JSObject*> obj,
+            JS::MutableHandle<JSObject*> mutableObj) {
   // Prevent the linker from unifying this function with others that are
   // equivalent in machine code but not type.
   fprintf(stderr, "Called " __FILE__ ":callee\n");
@@ -28,8 +28,10 @@ FRAGMENT(Root, handle) {
 }
 
 FRAGMENT(Root, HeapSlot) {
-  JS::Rooted<JS::Value> plinth(cx, JS::StringValue(JS_NewStringCopyZ(cx, "plinth")));
-  JS::Rooted<JSObject*> array(cx, JS_NewArrayObject(cx, JS::HandleValueArray(plinth)));
+  JS::Rooted<JS::Value> plinth(
+      cx, JS::StringValue(JS_NewStringCopyZ(cx, "plinth")));
+  JS::Rooted<JSObject*> array(
+      cx, JS_NewArrayObject(cx, JS::HandleValueArray(plinth)));
 
   breakpoint();
 
@@ -58,4 +60,3 @@ FRAGMENT(Root, barriers) {
   use(heapValue);
   use(relocatableValue);
 }
-

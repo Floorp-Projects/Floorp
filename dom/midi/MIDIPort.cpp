@@ -13,20 +13,17 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/MIDITypes.h"
 #include "mozilla/Unused.h"
-#include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
+#include "nsISupportsImpl.h"  // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 
 using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(MIDIPort,
-                                   DOMEventTargetHelper,
-                                   mOpeningPromise,
-                                   mClosingPromise)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(MIDIPort, DOMEventTargetHelper,
+                                   mOpeningPromise, mClosingPromise)
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(MIDIPort,
-                                               DOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(MIDIPort, DOMEventTargetHelper)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MIDIPort)
@@ -36,16 +33,13 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(MIDIPort, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MIDIPort, DOMEventTargetHelper)
 
-MIDIPort::MIDIPort(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent) :
-  DOMEventTargetHelper(aWindow),
-  mMIDIAccessParent(aMIDIAccessParent)
-{
+MIDIPort::MIDIPort(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent)
+    : DOMEventTargetHelper(aWindow), mMIDIAccessParent(aMIDIAccessParent) {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aMIDIAccessParent);
 }
 
-MIDIPort::~MIDIPort()
-{
+MIDIPort::~MIDIPort() {
   if (mMIDIAccessParent) {
     mMIDIAccessParent->RemovePortListener(this);
     mMIDIAccessParent = nullptr;
@@ -60,12 +54,13 @@ MIDIPort::~MIDIPort()
   }
 }
 
-bool
-MIDIPort::Initialize(const MIDIPortInfo& aPortInfo, bool aSysexEnabled)
-{
-  RefPtr<MIDIPortChild> port = new MIDIPortChild(aPortInfo, aSysexEnabled, this);
+bool MIDIPort::Initialize(const MIDIPortInfo& aPortInfo, bool aSysexEnabled) {
+  RefPtr<MIDIPortChild> port =
+      new MIDIPortChild(aPortInfo, aSysexEnabled, this);
   PBackgroundChild* b = BackgroundChild::GetForCurrentThread();
-  MOZ_ASSERT(b, "Should always have a valid BackgroundChild when creating a port object!");
+  MOZ_ASSERT(b,
+             "Should always have a valid BackgroundChild when creating a port "
+             "object!");
   if (!b->SendPMIDIPortConstructor(port, aPortInfo, aSysexEnabled)) {
     return false;
   }
@@ -76,77 +71,54 @@ MIDIPort::Initialize(const MIDIPortInfo& aPortInfo, bool aSysexEnabled)
   return true;
 }
 
-void
-MIDIPort::UnsetIPCPort()
-{
-  mPort = nullptr;
-}
+void MIDIPort::UnsetIPCPort() { mPort = nullptr; }
 
-JSObject*
-MIDIPort::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* MIDIPort::WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) {
   return MIDIPort_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-MIDIPort::GetId(nsString& aRetVal) const
-{
+void MIDIPort::GetId(nsString& aRetVal) const {
   MOZ_ASSERT(mPort);
   aRetVal = mPort->MIDIPortInterface::Id();
 }
 
-void
-MIDIPort::GetManufacturer(nsString& aRetVal) const
-{
+void MIDIPort::GetManufacturer(nsString& aRetVal) const {
   MOZ_ASSERT(mPort);
   aRetVal = mPort->Manufacturer();
 }
 
-void
-MIDIPort::GetName(nsString& aRetVal) const
-{
+void MIDIPort::GetName(nsString& aRetVal) const {
   MOZ_ASSERT(mPort);
   aRetVal = mPort->Name();
 }
 
-void
-MIDIPort::GetVersion(nsString& aRetVal) const
-{
+void MIDIPort::GetVersion(nsString& aRetVal) const {
   MOZ_ASSERT(mPort);
   aRetVal = mPort->Version();
 }
 
-MIDIPortType
-MIDIPort::Type() const
-{
+MIDIPortType MIDIPort::Type() const {
   MOZ_ASSERT(mPort);
   return mPort->Type();
 }
 
-MIDIPortConnectionState
-MIDIPort::Connection() const
-{
+MIDIPortConnectionState MIDIPort::Connection() const {
   MOZ_ASSERT(mPort);
   return mPort->ConnectionState();
 }
 
-MIDIPortDeviceState
-MIDIPort::State() const
-{
+MIDIPortDeviceState MIDIPort::State() const {
   MOZ_ASSERT(mPort);
   return mPort->DeviceState();
 }
 
-bool
-MIDIPort::SysexEnabled() const
-{
+bool MIDIPort::SysexEnabled() const {
   MOZ_ASSERT(mPort);
   return mPort->SysexEnabled();
 }
 
-already_AddRefed<Promise>
-MIDIPort::Open()
-{
+already_AddRefed<Promise> MIDIPort::Open() {
   MOZ_ASSERT(mPort);
   RefPtr<Promise> p;
   if (mOpeningPromise) {
@@ -164,9 +136,7 @@ MIDIPort::Open()
   return p.forget();
 }
 
-already_AddRefed<Promise>
-MIDIPort::Close()
-{
+already_AddRefed<Promise> MIDIPort::Close() {
   MOZ_ASSERT(mPort);
   RefPtr<Promise> p;
   if (mClosingPromise) {
@@ -184,16 +154,13 @@ MIDIPort::Close()
   return p.forget();
 }
 
-void
-MIDIPort::Notify(const void_t& aVoid)
-{
-  // If we're getting notified, it means the MIDIAccess parent object is dead. Nullify our copy.
+void MIDIPort::Notify(const void_t& aVoid) {
+  // If we're getting notified, it means the MIDIAccess parent object is dead.
+  // Nullify our copy.
   mMIDIAccessParent = nullptr;
 }
 
-void
-MIDIPort::FireStateChangeEvent()
-{
+void MIDIPort::FireStateChangeEvent() {
   MOZ_ASSERT(mPort);
   if (mPort->ConnectionState() == MIDIPortConnectionState::Open ||
       mPort->ConnectionState() == MIDIPortConnectionState::Pending) {
@@ -215,23 +182,22 @@ MIDIPort::FireStateChangeEvent()
       mPort->ConnectionState() == MIDIPortConnectionState::Pending) {
     mPort->SendOpen();
   }
-  // Fire MIDIAccess events first so that the port is no longer in the port maps.
+  // Fire MIDIAccess events first so that the port is no longer in the port
+  // maps.
   if (mMIDIAccessParent) {
     mMIDIAccessParent->FireConnectionEvent(this);
   }
 
   MIDIConnectionEventInit init;
   init.mPort = this;
-  RefPtr<MIDIConnectionEvent> event(
-    MIDIConnectionEvent::Constructor(this, NS_LITERAL_STRING("statechange"), init));
+  RefPtr<MIDIConnectionEvent> event(MIDIConnectionEvent::Constructor(
+      this, NS_LITERAL_STRING("statechange"), init));
   DispatchTrustedEvent(event);
 }
 
-void
-MIDIPort::Receive(const nsTArray<MIDIMessage>& aMsg)
-{
+void MIDIPort::Receive(const nsTArray<MIDIMessage>& aMsg) {
   MOZ_CRASH("We should never get here!");
 }
 
-}
-}
+}  // namespace dom
+}  // namespace mozilla

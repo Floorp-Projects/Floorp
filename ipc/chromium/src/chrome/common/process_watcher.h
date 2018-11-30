@@ -25,9 +25,8 @@ class ProcessWatcher {
   // NOTE: The process handle must have been opened with the PROCESS_TERMINATE
   // and SYNCHRONIZE permissions.
   //
-  static void EnsureProcessTerminated(base::ProcessHandle process_handle
-                                      , bool force=true
-  );
+  static void EnsureProcessTerminated(base::ProcessHandle process_handle,
+                                      bool force = true);
 
  private:
   // Do not instantiate this class.

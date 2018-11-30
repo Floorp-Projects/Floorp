@@ -24,9 +24,8 @@ namespace mozilla {
  *
  * See `make_dafsa.py` for more details.
  */
-class Dafsa
-{
-public:
+class Dafsa {
+ public:
   using Graph = Span<const uint8_t>;
 
   /**
@@ -46,10 +45,10 @@ public:
 
   static const int kKeyNotFound;
 
-private:
+ private:
   const Graph mData;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_Dafsa_h
+#endif  // mozilla_Dafsa_h

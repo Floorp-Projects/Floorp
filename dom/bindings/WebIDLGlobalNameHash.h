@@ -19,11 +19,10 @@ namespace dom {
 namespace constructors {
 namespace id {
 enum ID : uint16_t;
-} // namespace id
-} // namespace constructors
+}  // namespace id
+}  // namespace constructors
 
-struct WebIDLNameTableEntry
-{
+struct WebIDLNameTableEntry {
   // Check whether a constructor should be enabled for the given object.
   // Note that the object should NOT be an Xray, since Xrays will end up
   // defining constructors on the underlying object.
@@ -37,9 +36,8 @@ struct WebIDLNameTableEntry
   ConstructorEnabled mEnabled;
 };
 
-class WebIDLGlobalNameHash
-{
-public:
+class WebIDLGlobalNameHash {
+ public:
   typedef WebIDLNameTableEntry::ConstructorEnabled ConstructorEnabled;
 
   // Returns false if something failed. aFound is set to true if the name is in
@@ -61,8 +59,7 @@ public:
   };
   // Returns false if an exception has been thrown on aCx.
   static bool GetNames(JSContext* aCx, JS::Handle<JSObject*> aObj,
-                       NameType aNameType,
-                       JS::AutoIdVector& aNames);
+                       NameType aNameType, JS::AutoIdVector& aNames);
 
   // Helpers for resolving & enumerating names on the system global.
   // NOTE: These are distinct as it currently lacks a ProtoAndIfaceCache, and is
@@ -75,7 +72,7 @@ public:
                                        JS::AutoIdVector& aProperties,
                                        bool aEnumerableOnly);
 
-private:
+ private:
   friend struct WebIDLNameTableEntry;
 
   // Look up an entry by key name. `nullptr` if the entry was not found.
@@ -96,7 +93,7 @@ private:
   static const char sNames[];
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_WebIDLGlobalNameHash_h__
+#endif  // mozilla_dom_WebIDLGlobalNameHash_h__

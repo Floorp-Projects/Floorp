@@ -14,18 +14,16 @@ namespace webgpu {
 
 class Device;
 
-class TextureView final
-    : public ChildOf<Device>
-{
-public:
-    WEBGPU_DECL_GOOP(TextureView)
+class TextureView final : public ChildOf<Device> {
+ public:
+  WEBGPU_DECL_GOOP(TextureView)
 
-private:
-    TextureView() = delete;
-    virtual ~TextureView();
+ private:
+  TextureView() = delete;
+  virtual ~TextureView();
 };
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla
 
-#endif // WEBGPU_TEXTURE_VIEW_H_
+#endif  // WEBGPU_TEXTURE_VIEW_H_

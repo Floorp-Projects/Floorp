@@ -33,9 +33,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AnimationTimeline)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-void
-AnimationTimeline::NotifyAnimationUpdated(Animation& aAnimation)
-{
+void AnimationTimeline::NotifyAnimationUpdated(Animation& aAnimation) {
   if (mAnimations.EnsureInserted(&aAnimation)) {
     if (aAnimation.GetTimeline() && aAnimation.GetTimeline() != this) {
       aAnimation.GetTimeline()->RemoveAnimation(&aAnimation);
@@ -44,9 +42,7 @@ AnimationTimeline::NotifyAnimationUpdated(Animation& aAnimation)
   }
 }
 
-void
-AnimationTimeline::RemoveAnimation(Animation* aAnimation)
-{
+void AnimationTimeline::RemoveAnimation(Animation* aAnimation) {
   MOZ_ASSERT(!aAnimation->GetTimeline() || aAnimation->GetTimeline() == this);
   if (static_cast<LinkedListElement<Animation>*>(aAnimation)->isInList()) {
     static_cast<LinkedListElement<Animation>*>(aAnimation)->remove();
@@ -54,5 +50,5 @@ AnimationTimeline::RemoveAnimation(Animation* aAnimation)
   mAnimations.RemoveEntry(aAnimation);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

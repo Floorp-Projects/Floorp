@@ -15,12 +15,13 @@
 #include "mozilla/layers/ScrollableLayerGuid.h"     // for ScrollableLayerGuid
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
-#include "nsISupportsImpl.h"  // for NS_INLINE_DECL_REFCOUNTING
+#include "nsISupportsImpl.h"        // for NS_INLINE_DECL_REFCOUNTING
 #include "nsIWeakReferenceUtils.h"  // for nsWeakPtr
 
 #include <functional>
 
-template <class> class nsCOMPtr;
+template <class>
+class nsCOMPtr;
 class nsIContent;
 class nsIDocument;
 class nsIPresShell;
@@ -34,7 +35,7 @@ class ActiveElementManager;
 typedef std::function<void(const ScrollableLayerGuid&,
                            uint64_t /* input block id */,
                            bool /* prevent default */)>
-        ContentReceivedInputBlockCallback;
+    ContentReceivedInputBlockCallback;
 
 /**
  * A content-side component that keeps track of state for handling APZ
@@ -43,7 +44,8 @@ typedef std::function<void(const ScrollableLayerGuid&,
 class APZEventState {
   typedef GeckoContentController::APZStateChange APZStateChange;
   typedef ScrollableLayerGuid::ViewID ViewID;
-public:
+
+ public:
   APZEventState(nsIWidget* aWidget,
                 ContentReceivedInputBlockCallback&& aCallback);
 
@@ -51,15 +53,13 @@ public:
 
   void ProcessSingleTap(const CSSPoint& aPoint,
                         const CSSToLayoutDeviceScale& aScale,
-                        Modifiers aModifiers,
-                        const ScrollableLayerGuid& aGuid,
+                        Modifiers aModifiers, const ScrollableLayerGuid& aGuid,
                         int32_t aClickCount);
   MOZ_CAN_RUN_SCRIPT
   void ProcessLongTap(const nsCOMPtr<nsIPresShell>& aUtils,
                       const CSSPoint& aPoint,
                       const CSSToLayoutDeviceScale& aScale,
-                      Modifiers aModifiers,
-                      const ScrollableLayerGuid& aGuid,
+                      Modifiers aModifiers, const ScrollableLayerGuid& aGuid,
                       uint64_t aInputBlockId);
   MOZ_CAN_RUN_SCRIPT
   void ProcessLongTapUp(const nsCOMPtr<nsIPresShell>& aPresShell,
@@ -68,8 +68,7 @@ public:
                         Modifiers aModifiers);
   void ProcessTouchEvent(const WidgetTouchEvent& aEvent,
                          const ScrollableLayerGuid& aGuid,
-                         uint64_t aInputBlockId,
-                         nsEventStatus aApzResponse,
+                         uint64_t aInputBlockId, nsEventStatus aApzResponse,
                          nsEventStatus aContentResponse);
   void ProcessWheelEvent(const WidgetWheelEvent& aEvent,
                          const ScrollableLayerGuid& aGuid,
@@ -77,11 +76,10 @@ public:
   void ProcessMouseEvent(const WidgetMouseEvent& aEvent,
                          const ScrollableLayerGuid& aGuid,
                          uint64_t aInputBlockId);
-  void ProcessAPZStateChange(ViewID aViewId,
-                             APZStateChange aChange,
-                             int aArg);
+  void ProcessAPZStateChange(ViewID aViewId, APZStateChange aChange, int aArg);
   void ProcessClusterHit();
-private:
+
+ private:
   ~APZEventState();
   bool SendPendingTouchPreventedResponse(bool aPreventDefault);
   MOZ_CAN_RUN_SCRIPT
@@ -92,7 +90,8 @@ private:
                              const nsCOMPtr<nsIWidget>& aWidget);
   already_AddRefed<nsIWidget> GetWidget() const;
   already_AddRefed<nsIContent> GetTouchRollup() const;
-private:
+
+ private:
   nsWeakPtr mWidget;
   RefPtr<ActiveElementManager> mActiveElementManager;
   ContentReceivedInputBlockCallback mContentReceivedInputBlockCallback;
@@ -120,7 +119,7 @@ private:
   nsWeakPtr mTouchRollup;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif /* mozilla_layers_APZEventState_h */

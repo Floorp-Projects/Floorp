@@ -15,22 +15,20 @@ namespace mozilla {
 namespace gfx {
 
 class gfxGradientCache {
-public:
-    static gfx::GradientStops*
-    GetGradientStops(const gfx::DrawTarget *aDT,
-                     nsTArray<gfx::GradientStop>& aStops,
-                     gfx::ExtendMode aExtend);
+ public:
+  static gfx::GradientStops* GetGradientStops(
+      const gfx::DrawTarget* aDT, nsTArray<gfx::GradientStop>& aStops,
+      gfx::ExtendMode aExtend);
 
-    static already_AddRefed<gfx::GradientStops>
-    GetOrCreateGradientStops(const gfx::DrawTarget *aDT,
-                             nsTArray<gfx::GradientStop>& aStops,
-                             gfx::ExtendMode aExtend);
+  static already_AddRefed<gfx::GradientStops> GetOrCreateGradientStops(
+      const gfx::DrawTarget* aDT, nsTArray<gfx::GradientStop>& aStops,
+      gfx::ExtendMode aExtend);
 
-    static void PurgeAllCaches();
-    static void Shutdown();
+  static void PurgeAllCaches();
+  static void Shutdown();
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif

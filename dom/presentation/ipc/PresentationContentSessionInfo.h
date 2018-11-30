@@ -18,19 +18,15 @@ namespace dom {
  * delegates the callbacks to PresentationIPCService. Only lives in content
  * process.
  */
-class PresentationContentSessionInfo final : public nsIPresentationSessionTransportCallback
-{
-public:
+class PresentationContentSessionInfo final
+    : public nsIPresentationSessionTransportCallback {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRESENTATIONSESSIONTRANSPORTCALLBACK
 
-  PresentationContentSessionInfo(const nsAString& aSessionId,
-                                 uint8_t aRole,
+  PresentationContentSessionInfo(const nsAString& aSessionId, uint8_t aRole,
                                  nsIPresentationSessionTransport* aTransport)
-    : mSessionId(aSessionId)
-    , mRole(aRole)
-    , mTransport(aTransport)
-  {
+      : mSessionId(aSessionId), mRole(aRole), mTransport(aTransport) {
     MOZ_ASSERT(XRE_IsContentProcess());
     MOZ_ASSERT(!aSessionId.IsEmpty());
     MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
@@ -48,7 +44,7 @@ public:
 
   nsresult Close(nsresult aReason);
 
-private:
+ private:
   virtual ~PresentationContentSessionInfo() {}
 
   nsString mSessionId;
@@ -56,7 +52,7 @@ private:
   nsCOMPtr<nsIPresentationSessionTransport> mTransport;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PresentationContentSessionInfo_h
+#endif  // mozilla_dom_PresentationContentSessionInfo_h

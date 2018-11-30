@@ -9,14 +9,13 @@
 
 #include "nsISimpleEnumerator.h"
 
-class nsSimpleEnumerator : public nsISimpleEnumerator
-{
+class nsSimpleEnumerator : public nsISimpleEnumerator {
   NS_DECL_ISUPPORTS
   NS_DECL_NSISIMPLEENUMERATORBASE
 
   virtual const nsID& DefaultInterface() { return NS_GET_IID(nsISupports); }
 
-protected:
+ protected:
   virtual ~nsSimpleEnumerator() = default;
 };
 

@@ -18,18 +18,13 @@ namespace dom {
 
 class CSSKeyframeDeclaration;
 
-class CSSKeyframeRule final : public css::Rule
-{
-public:
-  CSSKeyframeRule(already_AddRefed<RawServoKeyframe> aRaw,
-                  StyleSheet* aSheet,
-                  css::Rule* aParentRule,
-                  uint32_t aLine,
-                  uint32_t aColumn);
+class CSSKeyframeRule final : public css::Rule {
+ public:
+  CSSKeyframeRule(already_AddRefed<RawServoKeyframe> aRaw, StyleSheet* aSheet,
+                  css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CSSKeyframeRule,
-                                           css::Rule)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CSSKeyframeRule, css::Rule)
   bool IsCCLeaf() const final;
 
 #ifdef DEBUG
@@ -49,12 +44,12 @@ public:
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
-private:
+ private:
   virtual ~CSSKeyframeRule();
 
   friend class CSSKeyframeDeclaration;
 
-  template<typename Func>
+  template <typename Func>
   void UpdateRule(Func aCallback);
 
   RefPtr<RawServoKeyframe> mRaw;
@@ -62,7 +57,7 @@ private:
   RefPtr<CSSKeyframeDeclaration> mDeclaration;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_CSSKeyframeRule_h
+#endif  // mozilla_dom_CSSKeyframeRule_h

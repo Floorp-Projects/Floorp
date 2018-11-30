@@ -17,21 +17,20 @@
 struct RawServoFontFaceRule;
 
 namespace mozilla {
-  struct LangGroupFontPrefs;
+struct LangGroupFontPrefs;
 }
 
 // used for associating sheet type with specific @font-face rules
-struct nsFontFaceRuleContainer
-{
+struct nsFontFaceRuleContainer {
   RefPtr<RawServoFontFaceRule> mRule;
   mozilla::SheetType mSheetType;
 };
 
 namespace mozilla {
 
-// Indicates whether the Servo style system should expect the style on an element
-// to have already been resolved (i.e. via a parallel traversal), or whether it
-// may be lazily computed.
+// Indicates whether the Servo style system should expect the style on an
+// element to have already been resolved (i.e. via a parallel traversal), or
+// whether it may be lazily computed.
 enum class LazyComputeBehavior {
   Allow,
   Assert,
@@ -49,9 +48,9 @@ enum class ServoTraversalFlags : uint32_t {
   // pre-traversal. A forgetful traversal is usually the right thing if you
   // aren't going to do a post-traversal.
   Forgetful = 1 << 3,
-  // Clears all the dirty bits (dirty descendants, animation-only dirty-descendants,
-  // needs frame, descendants need frames) on the elements traversed.
-  // in the subtree.
+  // Clears all the dirty bits (dirty descendants, animation-only
+  // dirty-descendants, needs frame, descendants need frames) on the elements
+  // traversed. in the subtree.
   ClearDirtyBits = 1 << 5,
   // Clears only the animation-only dirty descendants bit in the subtree.
   ClearAnimationOnlyDirtyDescendants = 1 << 6,
@@ -77,10 +76,10 @@ enum class StyleRuleInclusion {
 
 // Represents which tasks are performed in a SequentialTask of UpdateAnimations.
 enum class UpdateAnimationsTasks : uint8_t {
-  CSSAnimations          = 1 << 0,
-  CSSTransitions         = 1 << 1,
-  EffectProperties       = 1 << 2,
-  CascadeResults         = 1 << 3,
+  CSSAnimations = 1 << 0,
+  CSSTransitions = 1 << 1,
+  EffectProperties = 1 << 2,
+  CascadeResults = 1 << 3,
   DisplayChangedFromNone = 1 << 4,
 };
 
@@ -127,44 +126,39 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(PointerCapabilities)
 
 // These measurements are obtained for both the UA cache and the Stylist, but
 // not all the fields are used in both cases.
-class ServoStyleSetSizes
-{
-public:
-  size_t mRuleTree;                // Stylist-only
-  size_t mPrecomputedPseudos;      // UA cache-only
-  size_t mElementAndPseudosMaps;   // Used for both
-  size_t mInvalidationMap;         // Used for both
-  size_t mRevalidationSelectors;   // Used for both
-  size_t mOther;                   // Used for both
+class ServoStyleSetSizes {
+ public:
+  size_t mRuleTree;               // Stylist-only
+  size_t mPrecomputedPseudos;     // UA cache-only
+  size_t mElementAndPseudosMaps;  // Used for both
+  size_t mInvalidationMap;        // Used for both
+  size_t mRevalidationSelectors;  // Used for both
+  size_t mOther;                  // Used for both
 
   ServoStyleSetSizes()
-    : mRuleTree(0)
-    , mPrecomputedPseudos(0)
-    , mElementAndPseudosMaps(0)
-    , mInvalidationMap(0)
-    , mRevalidationSelectors(0)
-    , mOther(0)
-  {}
+      : mRuleTree(0),
+        mPrecomputedPseudos(0),
+        mElementAndPseudosMaps(0),
+        mInvalidationMap(0),
+        mRevalidationSelectors(0),
+        mOther(0) {}
 };
 
 // A callback that can be sent via FFI which will be invoked _right before_
 // being mutated, and at most once.
-struct DeclarationBlockMutationClosure
-{
+struct DeclarationBlockMutationClosure {
   // The callback function. The argument is `data`.
   void (*function)(void*) = nullptr;
   void* data = nullptr;
 };
 
-struct MediumFeaturesChangedResult
-{
+struct MediumFeaturesChangedResult {
   bool mAffectsDocumentRules;
   bool mAffectsNonDocumentRules;
   bool mUsesViewportUnits;
 };
 
-struct FontSizePrefs
-{
+struct FontSizePrefs {
   void CopyFrom(const mozilla::LangGroupFontPrefs&);
   nscoord mDefaultVariableSize;
   nscoord mDefaultFixedSize;
@@ -175,6 +169,6 @@ struct FontSizePrefs
   nscoord mDefaultFantasySize;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ServoTypes_h
+#endif  // mozilla_ServoTypes_h

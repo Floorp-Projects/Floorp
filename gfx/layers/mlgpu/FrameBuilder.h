@@ -34,9 +34,8 @@ class MLGSwapChain;
 class RenderViewMLGPU;
 struct ItemInfo;
 
-class FrameBuilder final
-{
-public:
+class FrameBuilder final {
+ public:
   FrameBuilder(LayerManagerMLGPU* aManager, MLGSwapChain* aSwapChain);
   ~FrameBuilder();
 
@@ -45,12 +44,8 @@ public:
 
   bool AddLayerToConstantBuffer(ItemInfo& aItem);
 
-  LayerManagerMLGPU* GetManager() const {
-    return mManager;
-  }
-  MLGDevice* GetDevice() const {
-    return mDevice;
-  }
+  LayerManagerMLGPU* GetManager() const { return mManager; }
+  MLGDevice* GetDevice() const { return mDevice; }
   const ConstantBufferSection& GetDefaultMaskInfo() const {
     return mDefaultMaskInfo;
   }
@@ -71,14 +66,12 @@ public:
   // Hold a layer alive until the frame ends.
   void RetainTemporaryLayer(LayerMLGPU* aLayer);
 
-private:
-  void AssignLayer(Layer* aLayer,
-                   RenderViewMLGPU* aView,
+ private:
+  void AssignLayer(Layer* aLayer, RenderViewMLGPU* aView,
                    const RenderTargetIntRect& aClipRect,
                    Maybe<gfx::Polygon>&& aGeometry);
 
-  void ProcessChildList(ContainerLayer* aContainer,
-                        RenderViewMLGPU* aView,
+  void ProcessChildList(ContainerLayer* aContainer, RenderViewMLGPU* aView,
                         const RenderTargetIntRect& aParentClipRect,
                         const Maybe<gfx::Polygon>& aParentGeometry);
 
@@ -89,12 +82,11 @@ private:
 
   // Returns true to continue, false to stop - false does not indicate
   // failure.
-  bool ProcessContainerLayer(ContainerLayer* aLayer,
-                             RenderViewMLGPU* aView,
+  bool ProcessContainerLayer(ContainerLayer* aLayer, RenderViewMLGPU* aView,
                              const RenderTargetIntRect& aClipRect,
                              Maybe<gfx::Polygon>& aGeometry);
 
-private:
+ private:
   RefPtr<LayerManagerMLGPU> mManager;
   RefPtr<MLGDevice> mDevice;
   RefPtr<MLGSwapChain> mSwapChain;
@@ -118,14 +110,15 @@ private:
   ConstantBufferSection mDefaultMaskInfo;
 
   // Cache for MaskOperations.
-  nsRefPtrHashtable<nsRefPtrHashKey<TextureSource>, MaskOperation> mSingleTextureMasks;
+  nsRefPtrHashtable<nsRefPtrHashKey<TextureSource>, MaskOperation>
+      mSingleTextureMasks;
   std::map<MaskTextureList, RefPtr<MaskCombineOperation>> mCombinedTextureMasks;
 
   // This list of temporary layers is wiped out when the frame is completed.
   std::vector<RefPtr<Layer>> mTemporaryLayers;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_gfx_layers_mlgpu_FrameBuilder_h
+#endif  // mozilla_gfx_layers_mlgpu_FrameBuilder_h

@@ -14,19 +14,16 @@ namespace safebrowsing {
 // Forward declaration.
 class TableUpdateV4;
 
-class LookupCacheV4 final : public LookupCache
-{
-public:
+class LookupCacheV4 final : public LookupCache {
+ public:
   explicit LookupCacheV4(const nsACString& aTableName,
                          const nsACString& aProvider,
                          nsCOMPtr<nsIFile>& aStoreFile)
-    : LookupCache(aTableName, aProvider, aStoreFile) {}
+      : LookupCache(aTableName, aProvider, aStoreFile) {}
 
   virtual nsresult Init() override;
-  virtual nsresult Has(const Completion& aCompletion,
-                       bool* aHas,
-                       uint32_t* aMatchLength,
-                       bool* aConfirmed) override;
+  virtual nsresult Has(const Completion& aCompletion, bool* aHas,
+                       uint32_t* aMatchLength, bool* aConfirmed) override;
 
   virtual bool IsEmpty() const override;
 
@@ -35,10 +32,10 @@ public:
   nsresult GetPrefixes(PrefixStringMap& aPrefixMap);
   nsresult GetFixedLengthPrefixes(FallibleTArray<uint32_t>& aPrefixes);
 
-  // ApplyUpdate will merge data stored in aTableUpdate with prefixes in aInputMap.
+  // ApplyUpdate will merge data stored in aTableUpdate with prefixes in
+  // aInputMap.
   nsresult ApplyUpdate(RefPtr<TableUpdateV4> aTableUpdate,
-                       PrefixStringMap& aInputMap,
-                       PrefixStringMap& aOutputMap);
+                       PrefixStringMap& aInputMap, PrefixStringMap& aOutputMap);
 
   nsresult AddFullHashResponseToCache(const FullHashResponseMap& aResponseMap);
 
@@ -48,13 +45,13 @@ public:
   static const int VER;
   static const uint32_t MAX_METADATA_VALUE_LENGTH;
 
-protected:
+ protected:
   virtual nsresult ClearPrefixes() override;
   virtual nsresult StoreToFile(nsCOMPtr<nsIFile>& aFile) override;
   virtual nsresult LoadFromFile(nsCOMPtr<nsIFile>& aFile) override;
   virtual size_t SizeOfPrefixSet() const override;
 
-private:
+ private:
   ~LookupCacheV4() {}
 
   virtual int Ver() const override { return VER; }
@@ -64,7 +61,7 @@ private:
   RefPtr<VariableLengthPrefixSet> mVLPrefixSet;
 };
 
-} // namespace safebrowsing
-} // namespace mozilla
+}  // namespace safebrowsing
+}  // namespace mozilla
 
 #endif

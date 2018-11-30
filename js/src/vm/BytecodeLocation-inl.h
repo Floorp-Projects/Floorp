@@ -13,18 +13,16 @@
 
 namespace js {
 
-inline bool
-BytecodeLocation::isValid(const JSScript* script) const {
-    // Note: Don't create a new BytecodeLocation during the implementation of this, as it
-    // is used in the constructor, and will recurse forever.
-    return script->contains(*this) ||toRawBytecode() == script->codeEnd();
+inline bool BytecodeLocation::isValid(const JSScript* script) const {
+  // Note: Don't create a new BytecodeLocation during the implementation of
+  // this, as it is used in the constructor, and will recurse forever.
+  return script->contains(*this) || toRawBytecode() == script->codeEnd();
 }
 
-inline bool
-BytecodeLocation::isInBounds(const JSScript* script) const {
-    return script->contains(*this);
+inline bool BytecodeLocation::isInBounds(const JSScript* script) const {
+  return script->contains(*this);
 }
 
-}
+}  // namespace js
 
 #endif

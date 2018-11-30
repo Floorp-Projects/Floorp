@@ -22,31 +22,28 @@ namespace dom {
 class Selection;
 }
 
-class SelectionChangeEventDispatcher final
-{
-public:
+class SelectionChangeEventDispatcher final {
+ public:
   // SelectionChangeEventDispatcher has to participate in cycle collection
   // because it holds strong references to nsINodes in its mOldRanges array.
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(
-    SelectionChangeEventDispatcher)
+      SelectionChangeEventDispatcher)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(SelectionChangeEventDispatcher)
 
   MOZ_CAN_RUN_SCRIPT
-  void OnSelectionChange(nsIDocument* aDocument,
-                         dom::Selection* aSelection,
+  void OnSelectionChange(nsIDocument* aDocument, dom::Selection* aSelection,
                          int16_t aReason);
 
   // This field is used to keep track of the ranges which were present in the
   // selection when the selectionchange event was previously fired. This allows
   // for the selectionchange event to only be fired when a selection is actually
   // changed.
-  struct RawRangeData
-  {
-    // These properties are not void*s to avoid the potential situation where the
-    // nsINode is freed, and a new nsINode is allocated with the same address, which
-    // could potentially break the comparison logic. In reality, this is extremely
-    // unlikely to occur (potentially impossible), but these nsCOMPtrs are safer.
-    // They are never dereferenced.
+  struct RawRangeData {
+    // These properties are not void*s to avoid the potential situation where
+    // the nsINode is freed, and a new nsINode is allocated with the same
+    // address, which could potentially break the comparison logic. In reality,
+    // this is extremely unlikely to occur (potentially impossible), but these
+    // nsCOMPtrs are safer. They are never dereferenced.
     nsCOMPtr<nsINode> mStartContainer;
     nsCOMPtr<nsINode> mEndContainer;
 
@@ -59,12 +56,12 @@ public:
     bool Equals(const nsRange* aRange);
   };
 
-private:
+ private:
   nsTArray<RawRangeData> mOldRanges;
 
   ~SelectionChangeEventDispatcher() {}
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_SelectionChangeEventDispatcher_h
+#endif  // mozilla_SelectionChangeEventDispatcher_h

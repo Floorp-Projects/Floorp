@@ -30,12 +30,9 @@ namespace recordreplay {
 //
 // This is a helper class that is used in various places to help record/replay
 // pointers to heap data.
-class ValueIndex
-{
-public:
-  ValueIndex()
-    : mIndexCount(0)
-  {}
+class ValueIndex {
+ public:
+  ValueIndex() : mIndexCount(0) {}
 
   typedef std::unordered_map<const void*, size_t> ValueToIndexMap;
 
@@ -64,7 +61,7 @@ public:
   // Raw read-only access to the map contents.
   const ValueToIndexMap& GetValueToIndexMap();
 
-private:
+ private:
   typedef std::unordered_map<size_t, const void*> IndexToValueMap;
 
   // Map from pointer values to indexes.
@@ -77,7 +74,7 @@ private:
   size_t mIndexCount;
 };
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla
 
-#endif // mozilla_recordreplay_ValueIndex_h
+#endif  // mozilla_recordreplay_ValueIndex_h

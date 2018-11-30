@@ -24,57 +24,44 @@ namespace extensions {
 using namespace JS;
 using namespace mozilla::dom;
 
-class StreamFilterDataEvent : public Event
-{
+class StreamFilterDataEvent : public Event {
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(StreamFilterDataEvent, Event)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(StreamFilterDataEvent,
+                                                         Event)
 
   explicit StreamFilterDataEvent(EventTarget* aEventTarget)
-    : Event(aEventTarget, nullptr, nullptr)
-  {
+      : Event(aEventTarget, nullptr, nullptr) {
     mozilla::HoldJSObjects(this);
   }
 
-  static already_AddRefed<StreamFilterDataEvent>
-  Constructor(EventTarget* aEventTarget,
-              const nsAString& aType,
-              const StreamFilterDataEventInit& aParam);
+  static already_AddRefed<StreamFilterDataEvent> Constructor(
+      EventTarget* aEventTarget, const nsAString& aType,
+      const StreamFilterDataEventInit& aParam);
 
-  static already_AddRefed<StreamFilterDataEvent>
-  Constructor(GlobalObject& aGlobal,
-              const nsAString& aType,
-              const StreamFilterDataEventInit& aParam,
-              ErrorResult& aRv)
-  {
+  static already_AddRefed<StreamFilterDataEvent> Constructor(
+      GlobalObject& aGlobal, const nsAString& aType,
+      const StreamFilterDataEventInit& aParam, ErrorResult& aRv) {
     nsCOMPtr<EventTarget> target = do_QueryInterface(aGlobal.GetAsSupports());
     return Constructor(target, aType, aParam);
   }
 
-  void GetData(JSContext* aCx, JS::MutableHandleObject aResult)
-  {
+  void GetData(JSContext* aCx, JS::MutableHandleObject aResult) {
     aResult.set(mData);
   }
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx,
-                                       JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObjectInternal(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-protected:
-  virtual ~StreamFilterDataEvent()
-  {
-    mozilla::DropJSObjects(this);
-  }
+ protected:
+  virtual ~StreamFilterDataEvent() { mozilla::DropJSObjects(this); }
 
-private:
+ private:
   JS::Heap<JSObject*> mData;
 
-  void
-  SetData(const ArrayBuffer& aData)
-  {
-    mData = aData.Obj();
-  }
+  void SetData(const ArrayBuffer& aData) { mData = aData.Obj(); }
 };
 
-} // namespace extensions
-} // namespace mozilla
+}  // namespace extensions
+}  // namespace mozilla
 
-#endif // mozilla_extensions_StreamFilterEvents_h
+#endif  // mozilla_extensions_StreamFilterEvents_h

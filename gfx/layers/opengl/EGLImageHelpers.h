@@ -13,15 +13,16 @@ typedef void* EGLImage;
 
 namespace mozilla {
 namespace gl {
-    class GLContext;
+class GLContext;
 }
 
 namespace layers {
 
-EGLImage EGLImageCreateFromNativeBuffer(gl::GLContext* aGL, void* aBuffer, const gfx::IntSize& aCropSize);
+EGLImage EGLImageCreateFromNativeBuffer(gl::GLContext* aGL, void* aBuffer,
+                                        const gfx::IntSize& aCropSize);
 void EGLImageDestroy(gl::GLContext* aGL, EGLImage aImage);
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // EGLIMAGEHELPERS_H_
+#endif  // EGLIMAGEHELPERS_H_

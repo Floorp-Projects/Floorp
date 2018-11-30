@@ -23,14 +23,9 @@ namespace mozilla {
 namespace net {
 
 WyciwygChannelParent::WyciwygChannelParent()
- : mIPCClosed(false)
- , mReceivedAppData(false)
-{
-}
+    : mIPCClosed(false), mReceivedAppData(false) {}
 
-void
-WyciwygChannelParent::ActorDestroy(ActorDestroyReason why)
-{
+void WyciwygChannelParent::ActorDestroy(ActorDestroyReason why) {
   // We may still have refcount>0 if the channel hasn't called OnStopRequest
   // yet, but we must not send any more msgs to child.
   mIPCClosed = true;
@@ -45,31 +40,25 @@ WyciwygChannelParent::ActorDestroy(ActorDestroyReason why)
 // WyciwygChannelParent::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS(WyciwygChannelParent,
-                  nsIStreamListener,
-                  nsIInterfaceRequestor,
-                  nsIRequestObserver)
+NS_IMPL_ISUPPORTS(WyciwygChannelParent, nsIStreamListener,
+                  nsIInterfaceRequestor, nsIRequestObserver)
 
 //-----------------------------------------------------------------------------
 // WyciwygChannelParent::PWyciwygChannelParent
 //-----------------------------------------------------------------------------
 
-mozilla::ipc::IPCResult
-WyciwygChannelParent::RecvInit(const URIParams&          aURI,
-                               const ipc::PrincipalInfo& aRequestingPrincipalInfo,
-                               const ipc::PrincipalInfo& aTriggeringPrincipalInfo,
-                               const ipc::PrincipalInfo& aPrincipalToInheritInfo,
-                               const uint32_t&           aSecurityFlags,
-                               const uint32_t&           aContentPolicyType)
-{
+mozilla::ipc::IPCResult WyciwygChannelParent::RecvInit(
+    const URIParams& aURI, const ipc::PrincipalInfo& aRequestingPrincipalInfo,
+    const ipc::PrincipalInfo& aTriggeringPrincipalInfo,
+    const ipc::PrincipalInfo& aPrincipalToInheritInfo,
+    const uint32_t& aSecurityFlags, const uint32_t& aContentPolicyType) {
   nsresult rv;
 
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
-  if (!uri)
-    return IPC_FAIL_NO_REASON(this);
+  if (!uri) return IPC_FAIL_NO_REASON(this);
 
-  LOG(("WyciwygChannelParent RecvInit [this=%p uri=%s]\n",
-       this, uri->GetSpecOrDefault().get()));
+  LOG(("WyciwygChannelParent RecvInit [this=%p uri=%s]\n", this,
+       uri->GetSpecOrDefault().get()));
 
   nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
   if (NS_FAILED(rv)) {
@@ -80,7 +69,7 @@ WyciwygChannelParent::RecvInit(const URIParams&          aURI,
   }
 
   nsCOMPtr<nsIPrincipal> requestingPrincipal =
-    mozilla::ipc::PrincipalInfoToPrincipal(aRequestingPrincipalInfo, &rv);
+      mozilla::ipc::PrincipalInfoToPrincipal(aRequestingPrincipalInfo, &rv);
   if (NS_FAILED(rv)) {
     if (!SendCancelEarly(rv)) {
       return IPC_FAIL_NO_REASON(this);
@@ -89,7 +78,7 @@ WyciwygChannelParent::RecvInit(const URIParams&          aURI,
   }
 
   nsCOMPtr<nsIPrincipal> triggeringPrincipal =
-    mozilla::ipc::PrincipalInfoToPrincipal(aTriggeringPrincipalInfo, &rv);
+      mozilla::ipc::PrincipalInfoToPrincipal(aTriggeringPrincipalInfo, &rv);
   if (NS_FAILED(rv)) {
     if (!SendCancelEarly(rv)) {
       return IPC_FAIL_NO_REASON(this);
@@ -98,7 +87,7 @@ WyciwygChannelParent::RecvInit(const URIParams&          aURI,
   }
 
   nsCOMPtr<nsIPrincipal> principalToInherit =
-    mozilla::ipc::PrincipalInfoToPrincipal(aPrincipalToInheritInfo, &rv);
+      mozilla::ipc::PrincipalInfoToPrincipal(aPrincipalToInheritInfo, &rv);
   if (NS_FAILED(rv)) {
     if (!SendCancelEarly(rv)) {
       return IPC_FAIL_NO_REASON(this);
@@ -107,17 +96,13 @@ WyciwygChannelParent::RecvInit(const URIParams&          aURI,
   }
 
   nsCOMPtr<nsIChannel> chan;
-  rv = NS_NewChannelWithTriggeringPrincipal(getter_AddRefs(chan),
-                                           uri,
-                                           requestingPrincipal,
-                                           triggeringPrincipal,
-                                           aSecurityFlags,
-                                           aContentPolicyType,
-                                           nullptr,   // PerformanceStorage
-                                           nullptr,   // loadGroup
-                                           nullptr,   // aCallbacks
-                                           nsIRequest::LOAD_NORMAL,
-                                           ios);
+  rv = NS_NewChannelWithTriggeringPrincipal(
+      getter_AddRefs(chan), uri, requestingPrincipal, triggeringPrincipal,
+      aSecurityFlags, aContentPolicyType,
+      nullptr,  // PerformanceStorage
+      nullptr,  // loadGroup
+      nullptr,  // aCallbacks
+      nsIRequest::LOAD_NORMAL, ios);
 
   if (NS_FAILED(rv)) {
     if (!SendCancelEarly(rv)) {
@@ -148,14 +133,11 @@ WyciwygChannelParent::RecvInit(const URIParams&          aURI,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-WyciwygChannelParent::RecvAppData(const IPC::SerializedLoadContext& loadContext,
-                                  const PBrowserOrId &parent)
-{
+mozilla::ipc::IPCResult WyciwygChannelParent::RecvAppData(
+    const IPC::SerializedLoadContext& loadContext, const PBrowserOrId& parent) {
   LOG(("WyciwygChannelParent RecvAppData [this=%p]\n", this));
 
-  if (!SetupAppData(loadContext, parent))
-    return IPC_FAIL_NO_REASON(this);
+  if (!SetupAppData(loadContext, parent)) return IPC_FAIL_NO_REASON(this);
 
   if (!mChannel) {
     return IPC_FAIL(this, "Should have a channel");
@@ -165,18 +147,13 @@ WyciwygChannelParent::RecvAppData(const IPC::SerializedLoadContext& loadContext,
   return IPC_OK();
 }
 
-bool
-WyciwygChannelParent::SetupAppData(const IPC::SerializedLoadContext& loadContext,
-                                   const PBrowserOrId &aParent)
-{
-  if (!mChannel)
-    return true;
+bool WyciwygChannelParent::SetupAppData(
+    const IPC::SerializedLoadContext& loadContext,
+    const PBrowserOrId& aParent) {
+  if (!mChannel) return true;
 
-  const char* error = NeckoParent::CreateChannelLoadContext(aParent,
-                                                            Manager()->Manager(),
-                                                            loadContext,
-                                                            nullptr,
-                                                            mLoadContext);
+  const char* error = NeckoParent::CreateChannelLoadContext(
+      aParent, Manager()->Manager(), loadContext, nullptr, mLoadContext);
   if (error) {
     printf_stderr("WyciwygChannelParent::SetupAppData: FATAL ERROR: %s\n",
                   error);
@@ -186,27 +163,24 @@ WyciwygChannelParent::SetupAppData(const IPC::SerializedLoadContext& loadContext
   if (!mLoadContext && loadContext.IsPrivateBitValid()) {
     nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(mChannel);
     if (pbChannel)
-      pbChannel->SetPrivate(loadContext.mOriginAttributes.mPrivateBrowsingId > 0);
+      pbChannel->SetPrivate(loadContext.mOriginAttributes.mPrivateBrowsingId >
+                            0);
   }
 
   mReceivedAppData = true;
   return true;
 }
 
-mozilla::ipc::IPCResult
-WyciwygChannelParent::RecvAsyncOpen(const URIParams& aOriginal,
-                                    const uint32_t& aLoadFlags,
-                                    const IPC::SerializedLoadContext& loadContext,
-                                    const PBrowserOrId &aParent)
-{
+mozilla::ipc::IPCResult WyciwygChannelParent::RecvAsyncOpen(
+    const URIParams& aOriginal, const uint32_t& aLoadFlags,
+    const IPC::SerializedLoadContext& loadContext,
+    const PBrowserOrId& aParent) {
   nsCOMPtr<nsIURI> original = DeserializeURI(aOriginal);
-  if (!original)
-    return IPC_FAIL_NO_REASON(this);
+  if (!original) return IPC_FAIL_NO_REASON(this);
 
   LOG(("WyciwygChannelParent RecvAsyncOpen [this=%p]\n", this));
 
-  if (!mChannel)
-    return IPC_OK();
+  if (!mChannel) return IPC_OK();
 
   nsresult rv;
 
@@ -241,8 +215,7 @@ WyciwygChannelParent::RecvAsyncOpen(const URIParams& aOriginal,
   nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
   if (loadInfo && loadInfo->GetEnforceSecurity()) {
     rv = mChannel->AsyncOpen2(this);
-  }
-  else {
+  } else {
     rv = mChannel->AsyncOpen(this, nullptr);
   }
 
@@ -256,23 +229,22 @@ WyciwygChannelParent::RecvAsyncOpen(const URIParams& aOriginal,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-WyciwygChannelParent::RecvWriteToCacheEntry(const nsDependentSubstring& data)
-{
+mozilla::ipc::IPCResult WyciwygChannelParent::RecvWriteToCacheEntry(
+    const nsDependentSubstring& data) {
   if (!mReceivedAppData) {
-    printf_stderr("WyciwygChannelParent::RecvWriteToCacheEntry: FATAL ERROR: didn't receive app data\n");
+    printf_stderr(
+        "WyciwygChannelParent::RecvWriteToCacheEntry: FATAL ERROR: didn't "
+        "receive app data\n");
     return IPC_FAIL_NO_REASON(this);
   }
 
-  if (mChannel)
-    mChannel->WriteToCacheEntry(data);
+  if (mChannel) mChannel->WriteToCacheEntry(data);
 
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-WyciwygChannelParent::RecvCloseCacheEntry(const nsresult& reason)
-{
+mozilla::ipc::IPCResult WyciwygChannelParent::RecvCloseCacheEntry(
+    const nsresult& reason) {
   if (mChannel) {
     mChannel->CloseCacheEntry(reason);
   }
@@ -280,19 +252,15 @@ WyciwygChannelParent::RecvCloseCacheEntry(const nsresult& reason)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-WyciwygChannelParent::RecvSetCharsetAndSource(const int32_t& aCharsetSource,
-                                              const nsCString& aCharset)
-{
-  if (mChannel)
-    mChannel->SetCharsetAndSource(aCharsetSource, aCharset);
+mozilla::ipc::IPCResult WyciwygChannelParent::RecvSetCharsetAndSource(
+    const int32_t& aCharsetSource, const nsCString& aCharset) {
+  if (mChannel) mChannel->SetCharsetAndSource(aCharsetSource, aCharset);
 
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-WyciwygChannelParent::RecvSetSecurityInfo(const nsCString& aSecurityInfo)
-{
+mozilla::ipc::IPCResult WyciwygChannelParent::RecvSetSecurityInfo(
+    const nsCString& aSecurityInfo) {
   if (mChannel) {
     nsCOMPtr<nsISupports> securityInfo;
     NS_DeserializeObject(aSecurityInfo, getter_AddRefs(securityInfo));
@@ -302,11 +270,9 @@ WyciwygChannelParent::RecvSetSecurityInfo(const nsCString& aSecurityInfo)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-WyciwygChannelParent::RecvCancel(const nsresult& aStatusCode)
-{
-  if (mChannel)
-    mChannel->Cancel(aStatusCode);
+mozilla::ipc::IPCResult WyciwygChannelParent::RecvCancel(
+    const nsresult& aStatusCode) {
+  if (mChannel) mChannel->Cancel(aStatusCode);
   return IPC_OK();
 }
 
@@ -315,8 +281,8 @@ WyciwygChannelParent::RecvCancel(const nsresult& aStatusCode)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-WyciwygChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
-{
+WyciwygChannelParent::OnStartRequest(nsIRequest* aRequest,
+                                     nsISupports* aContext) {
   LOG(("WyciwygChannelParent::OnStartRequest [this=%p]\n", this));
 
   nsresult rv;
@@ -329,7 +295,8 @@ WyciwygChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext
   if (!mIPCClosed) {
     PContentParent* pcp = Manager()->Manager();
     MOZ_ASSERT(pcp, "We should have a manager if our IPC isn't closed");
-    rv = static_cast<ContentParent*>(pcp)->AboutToLoadHttpFtpWyciwygDocumentForChild(chan);
+    rv = static_cast<ContentParent*>(pcp)
+             ->AboutToLoadHttpFtpWyciwygDocumentForChild(chan);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
@@ -356,8 +323,8 @@ WyciwygChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext
     }
   }
 
-  if (mIPCClosed ||
-      !SendOnStartRequest(status, contentLength, charsetSource, charset, secInfoStr)) {
+  if (mIPCClosed || !SendOnStartRequest(status, contentLength, charsetSource,
+                                        charset, secInfoStr)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -365,10 +332,8 @@ WyciwygChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext
 }
 
 NS_IMETHODIMP
-WyciwygChannelParent::OnStopRequest(nsIRequest *aRequest,
-                                    nsISupports *aContext,
-                                    nsresult aStatusCode)
-{
+WyciwygChannelParent::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+                                    nsresult aStatusCode) {
   LOG(("WyciwygChannelParent::OnStopRequest: [this=%p status=%" PRIu32 "]\n",
        this, static_cast<uint32_t>(aStatusCode)));
 
@@ -384,18 +349,15 @@ WyciwygChannelParent::OnStopRequest(nsIRequest *aRequest,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-WyciwygChannelParent::OnDataAvailable(nsIRequest *aRequest,
-                                      nsISupports *aContext,
-                                      nsIInputStream *aInputStream,
-                                      uint64_t aOffset,
-                                      uint32_t aCount)
-{
+WyciwygChannelParent::OnDataAvailable(nsIRequest* aRequest,
+                                      nsISupports* aContext,
+                                      nsIInputStream* aInputStream,
+                                      uint64_t aOffset, uint32_t aCount) {
   LOG(("WyciwygChannelParent::OnDataAvailable [this=%p]\n", this));
 
   nsCString data;
   nsresult rv = NS_ReadInputStreamToString(aInputStream, data, aCount);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   if (mIPCClosed || !SendOnDataAvailable(data, aOffset)) {
     return NS_ERROR_UNEXPECTED;
@@ -409,8 +371,7 @@ WyciwygChannelParent::OnDataAvailable(nsIRequest *aRequest,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-WyciwygChannelParent::GetInterface(const nsIID& uuid, void** result)
-{
+WyciwygChannelParent::GetInterface(const nsIID& uuid, void** result) {
   // Only support nsILoadContext if child channel's callbacks did too
   if (uuid.Equals(NS_GET_IID(nsILoadContext)) && mLoadContext) {
     nsCOMPtr<nsILoadContext> copy = mLoadContext;
@@ -421,6 +382,5 @@ WyciwygChannelParent::GetInterface(const nsIID& uuid, void** result)
   return QueryInterface(uuid, result);
 }
 
-
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

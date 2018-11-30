@@ -14,9 +14,7 @@ namespace mozilla {
 
 using namespace dom;
 
-void
-PostTraversalTask::Run()
-{
+void PostTraversalTask::Run() {
   switch (mType) {
     case Type::ResolveFontFaceLoadedPromise:
       static_cast<FontFace*>(mTarget)->DoResolve();
@@ -27,13 +25,13 @@ PostTraversalTask::Run()
       break;
 
     case Type::DispatchLoadingEventAndReplaceReadyPromise:
-      static_cast<FontFaceSet*>(mTarget)->
-        DispatchLoadingEventAndReplaceReadyPromise();
+      static_cast<FontFaceSet*>(mTarget)
+          ->DispatchLoadingEventAndReplaceReadyPromise();
       break;
 
     case Type::DispatchFontFaceSetCheckLoadingFinishedAfterDelay:
-      static_cast<FontFaceSet*>(mTarget)->
-        DispatchCheckLoadingFinishedAfterDelay();
+      static_cast<FontFaceSet*>(mTarget)
+          ->DispatchCheckLoadingFinishedAfterDelay();
       break;
 
     case Type::LoadFontEntry:
@@ -42,4 +40,4 @@ PostTraversalTask::Run()
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

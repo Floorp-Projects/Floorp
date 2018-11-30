@@ -15,9 +15,8 @@ namespace mozilla {
 namespace dom {
 
 class HTMLScriptElement final : public nsGenericHTMLElement,
-                                public ScriptElement
-{
-public:
+                                public ScriptElement {
+ public:
   using Element::GetText;
 
   HTMLScriptElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
@@ -42,8 +41,7 @@ public:
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                              nsAtom* aAttribute,
+  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                               const nsAString& aValue,
                               nsIPrincipal* aMaybeScriptedPrincipal,
                               nsAttrValue& aResult) override;
@@ -62,124 +60,91 @@ public:
 
   void SetText(const nsAString& aValue, ErrorResult& aRv);
 
-  void GetCharset(nsAString& aCharset)
-  {
+  void GetCharset(nsAString& aCharset) {
     GetHTMLAttr(nsGkAtoms::charset, aCharset);
   }
-  void SetCharset(const nsAString& aCharset, ErrorResult& aRv)
-  {
+  void SetCharset(const nsAString& aCharset, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::charset, aCharset, aRv);
   }
 
-  bool Defer()
-  {
-    return GetBoolAttr(nsGkAtoms::defer);
-  }
-  void SetDefer(bool aDefer, ErrorResult& aRv)
-  {
+  bool Defer() { return GetBoolAttr(nsGkAtoms::defer); }
+  void SetDefer(bool aDefer, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::defer, aDefer, aRv);
   }
 
-  void GetSrc(nsAString& aSrc)
-  {
-    GetURIAttr(nsGkAtoms::src, nullptr, aSrc);
-  }
-  void SetSrc(const nsAString& aSrc, nsIPrincipal* aTriggeringPrincipal, ErrorResult& aRv)
-  {
+  void GetSrc(nsAString& aSrc) { GetURIAttr(nsGkAtoms::src, nullptr, aSrc); }
+  void SetSrc(const nsAString& aSrc, nsIPrincipal* aTriggeringPrincipal,
+              ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::src, aSrc, aTriggeringPrincipal, aRv);
   }
 
-  void GetType(nsAString& aType)
-  {
-    GetHTMLAttr(nsGkAtoms::type, aType);
-  }
-  void SetType(const nsAString& aType, ErrorResult& aRv)
-  {
+  void GetType(nsAString& aType) { GetHTMLAttr(nsGkAtoms::type, aType); }
+  void SetType(const nsAString& aType, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::type, aType, aRv);
   }
 
-  void GetHtmlFor(nsAString& aHtmlFor)
-  {
+  void GetHtmlFor(nsAString& aHtmlFor) {
     GetHTMLAttr(nsGkAtoms::_for, aHtmlFor);
   }
-  void SetHtmlFor(const nsAString& aHtmlFor, ErrorResult& aRv)
-  {
+  void SetHtmlFor(const nsAString& aHtmlFor, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::_for, aHtmlFor, aRv);
   }
 
-  void GetEvent(nsAString& aEvent)
-  {
-    GetHTMLAttr(nsGkAtoms::event, aEvent);
-  }
-  void SetEvent(const nsAString& aEvent, ErrorResult& aRv)
-  {
+  void GetEvent(nsAString& aEvent) { GetHTMLAttr(nsGkAtoms::event, aEvent); }
+  void SetEvent(const nsAString& aEvent, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::event, aEvent, aRv);
   }
 
-  bool Async()
-  {
-    return mForceAsync || GetBoolAttr(nsGkAtoms::async);
-  }
+  bool Async() { return mForceAsync || GetBoolAttr(nsGkAtoms::async); }
 
-  void SetAsync(bool aValue, ErrorResult& aRv)
-  {
+  void SetAsync(bool aValue, ErrorResult& aRv) {
     mForceAsync = false;
     SetHTMLBoolAttr(nsGkAtoms::async, aValue, aRv);
   }
 
-  bool NoModule()
-  {
-    return GetBoolAttr(nsGkAtoms::nomodule);
-  }
+  bool NoModule() { return GetBoolAttr(nsGkAtoms::nomodule); }
 
-  void SetNoModule(bool aValue, ErrorResult& aRv)
-  {
+  void SetNoModule(bool aValue, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::nomodule, aValue, aRv);
   }
 
-  void GetCrossOrigin(nsAString& aResult)
-  {
+  void GetCrossOrigin(nsAString& aResult) {
     // Null for both missing and invalid defaults is ok, since we
     // always parse to an enum value, so we don't need an invalid
     // default, and we _want_ the missing default to be null.
     GetEnumAttr(nsGkAtoms::crossorigin, nullptr, aResult);
   }
-  void SetCrossOrigin(const nsAString& aCrossOrigin, ErrorResult& aError)
-  {
+  void SetCrossOrigin(const nsAString& aCrossOrigin, ErrorResult& aError) {
     SetOrRemoveNullableStringAttr(nsGkAtoms::crossorigin, aCrossOrigin, aError);
   }
-  void GetIntegrity(nsAString& aIntegrity)
-  {
+  void GetIntegrity(nsAString& aIntegrity) {
     GetHTMLAttr(nsGkAtoms::integrity, aIntegrity);
   }
-  void SetIntegrity(const nsAString& aIntegrity, ErrorResult& aRv)
-  {
+  void SetIntegrity(const nsAString& aIntegrity, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::integrity, aIntegrity, aRv);
   }
-  void SetReferrerPolicy(const nsAString& aReferrerPolicy, ErrorResult& aError)
-  {
+  void SetReferrerPolicy(const nsAString& aReferrerPolicy,
+                         ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::referrerpolicy, aReferrerPolicy, aError);
   }
-  void GetReferrerPolicy(nsAString& aReferrerPolicy)
-  {
-    GetEnumAttr(nsGkAtoms::referrerpolicy, EmptyCString().get(), aReferrerPolicy);
+  void GetReferrerPolicy(nsAString& aReferrerPolicy) {
+    GetEnumAttr(nsGkAtoms::referrerpolicy, EmptyCString().get(),
+                aReferrerPolicy);
   }
 
-protected:
+ protected:
   virtual ~HTMLScriptElement();
 
-  virtual bool GetAsyncState() override
-  {
-    return Async();
-  }
+  virtual bool GetAsyncState() override { return Async(); }
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
   // ScriptElement
   virtual bool HasScriptContent() override;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_HTMLScriptElement_h
+#endif  // mozilla_dom_HTMLScriptElement_h

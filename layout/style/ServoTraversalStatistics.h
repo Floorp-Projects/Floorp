@@ -15,8 +15,7 @@ namespace mozilla {
 //
 // See style::context::PerThreadTraversalStatistics for
 // meaning of these fields.
-struct ServoTraversalStatistics
-{
+struct ServoTraversalStatistics {
   uint32_t mElementsTraversed = 0;
   uint32_t mElementsStyled = 0;
   uint32_t mElementsMatched = 0;
@@ -27,6 +26,6 @@ struct ServoTraversalStatistics
   static ServoTraversalStatistics sSingleton;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ServoTraversalStatistics_h
+#endif  // mozilla_ServoTraversalStatistics_h

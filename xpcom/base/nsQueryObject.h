@@ -14,38 +14,30 @@
 
 /*****************************************************************************/
 
-template<class T>
-class MOZ_STACK_CLASS nsQueryObject final : public nsCOMPtr_helper
-{
-public:
-  explicit nsQueryObject(T* aRawPtr)
-    : mRawPtr(aRawPtr)
-  {
-  }
+template <class T>
+class MOZ_STACK_CLASS nsQueryObject final : public nsCOMPtr_helper {
+ public:
+  explicit nsQueryObject(T* aRawPtr) : mRawPtr(aRawPtr) {}
 
   virtual nsresult NS_FASTCALL operator()(const nsIID& aIID,
-                                          void** aResult) const override
-  {
+                                          void** aResult) const override {
     nsresult status = mRawPtr ? mRawPtr->QueryInterface(aIID, aResult)
                               : NS_ERROR_NULL_POINTER;
     return status;
   }
-private:
+
+ private:
   T* MOZ_NON_OWNING_REF mRawPtr;
 };
 
-template<class T>
-class MOZ_STACK_CLASS nsQueryObjectWithError final : public nsCOMPtr_helper
-{
-public:
+template <class T>
+class MOZ_STACK_CLASS nsQueryObjectWithError final : public nsCOMPtr_helper {
+ public:
   nsQueryObjectWithError(T* aRawPtr, nsresult* aErrorPtr)
-    : mRawPtr(aRawPtr), mErrorPtr(aErrorPtr)
-  {
-  }
+      : mRawPtr(aRawPtr), mErrorPtr(aErrorPtr) {}
 
   virtual nsresult NS_FASTCALL operator()(const nsIID& aIID,
-                                          void** aResult) const override
-  {
+                                          void** aResult) const override {
     nsresult status = mRawPtr ? mRawPtr->QueryInterface(aIID, aResult)
                               : NS_ERROR_NULL_POINTER;
     if (mErrorPtr) {
@@ -53,7 +45,8 @@ public:
     }
     return status;
   }
-private:
+
+ private:
   T* MOZ_NON_OWNING_REF mRawPtr;
   nsresult* mErrorPtr;
 };
@@ -62,48 +55,39 @@ private:
 
 /*****************************************************************************/
 
-template<class T>
-inline nsQueryObject<T>
-do_QueryObject(T* aRawPtr)
-{
+template <class T>
+inline nsQueryObject<T> do_QueryObject(T* aRawPtr) {
   return nsQueryObject<T>(aRawPtr);
 }
 
-template<class T>
-inline nsQueryObject<T>
-do_QueryObject(nsCOMPtr<T>& aRawPtr)
-{
+template <class T>
+inline nsQueryObject<T> do_QueryObject(nsCOMPtr<T>& aRawPtr) {
   return nsQueryObject<T>(aRawPtr);
 }
 
-template<class T>
-inline nsQueryObject<T>
-do_QueryObject(RefPtr<T>& aRawPtr)
-{
+template <class T>
+inline nsQueryObject<T> do_QueryObject(RefPtr<T>& aRawPtr) {
   return nsQueryObject<T>(aRawPtr);
 }
 
-template<class T>
-inline nsQueryObjectWithError<T>
-do_QueryObject(T* aRawPtr, nsresult* aErrorPtr)
-{
+template <class T>
+inline nsQueryObjectWithError<T> do_QueryObject(T* aRawPtr,
+                                                nsresult* aErrorPtr) {
   return nsQueryObjectWithError<T>(aRawPtr, aErrorPtr);
 }
 
-template<class T>
-inline nsQueryObjectWithError<T>
-do_QueryObject(nsCOMPtr<T>& aRawPtr, nsresult* aErrorPtr)
-{
+template <class T>
+inline nsQueryObjectWithError<T> do_QueryObject(nsCOMPtr<T>& aRawPtr,
+                                                nsresult* aErrorPtr) {
   return nsQueryObjectWithError<T>(aRawPtr, aErrorPtr);
 }
 
-template<class T>
-inline nsQueryObjectWithError<T>
-do_QueryObject(RefPtr<T>& aRawPtr, nsresult* aErrorPtr)
-{
+template <class T>
+inline nsQueryObjectWithError<T> do_QueryObject(RefPtr<T>& aRawPtr,
+                                                nsresult* aErrorPtr) {
   return nsQueryObjectWithError<T>(aRawPtr, aErrorPtr);
 }
 
 /*****************************************************************************/
 
-#endif // !defined(nsQueryObject_h)
+#endif  // !defined(nsQueryObject_h)

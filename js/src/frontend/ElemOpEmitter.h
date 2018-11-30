@@ -116,160 +116,145 @@ struct BytecodeEmitter;
 //     emit_add_op_here();
 //     eoe.emitAssignment();
 //
-class MOZ_STACK_CLASS ElemOpEmitter
-{
-  public:
-    enum class Kind {
-        Get,
-        Call,
-        Set,
-        Delete,
-        PostIncrement,
-        PreIncrement,
-        PostDecrement,
-        PreDecrement,
-        SimpleAssignment,
-        CompoundAssignment
-    };
-    enum class ObjKind {
-        Super,
-        Other
-    };
+class MOZ_STACK_CLASS ElemOpEmitter {
+ public:
+  enum class Kind {
+    Get,
+    Call,
+    Set,
+    Delete,
+    PostIncrement,
+    PreIncrement,
+    PostDecrement,
+    PreDecrement,
+    SimpleAssignment,
+    CompoundAssignment
+  };
+  enum class ObjKind { Super, Other };
 
-  private:
-    BytecodeEmitter* bce_;
+ private:
+  BytecodeEmitter* bce_;
 
-    Kind kind_;
-    ObjKind objKind_;
+  Kind kind_;
+  ObjKind objKind_;
 
 #ifdef DEBUG
-    // The state of this emitter.
-    //
-    //             skipObjAndKeyAndRhs
-    //           +------------------------------------------------+
-    //           |                                                |
-    // +-------+ | prepareForObj +-----+ prepareForKey +-----+    |
-    // | Start |-+-------------->| Obj |-------------->| Key |-+  |
-    // +-------+                 +-----+               +-----+ |  |
-    //                                                         |  |
-    // +-------------------------------------------------------+  |
-    // |                                                          |
-    // |                                                          |
-    // |                                                          |
-    // | [Get]                                                    |
-    // | [Call]                                                   |
-    // |   emitGet +-----+                                        |
-    // +---------->| Get |                                        |
-    // |           +-----+                                        |
-    // |                                                          |
-    // | [Delete]                                                 |
-    // |   emitDelete +--------+                                  |
-    // +------------->| Delete |                                  |
-    // |              +--------+                                  |
-    // |                                                          |
-    // | [PostIncrement]                                          |
-    // | [PreIncrement]                                           |
-    // | [PostDecrement]                                          |
-    // | [PreDecrement]                                           |
-    // |   emitIncDec +--------+                                  |
-    // +------------->| IncDec |                                  |
-    // |              +--------+                                  |
-    // |                                      +-------------------+
-    // | [SimpleAssignment]                   |
-    // |                        prepareForRhs v  +-----+
-    // +--------------------->+-------------->+->| Rhs |-+
-    // |                      ^                  +-----+ |
-    // |                      |                          |
-    // |                      |            +-------------+
-    // | [CompoundAssignment] |            |
-    // |   emitGet +-----+    |            | emitAssignment +------------+
-    // +---------->| Get |----+            +--------------->| Assignment |
-    //             +-----+                                  +------------+
-    enum class State {
-        // The initial state.
-        Start,
+  // The state of this emitter.
+  //
+  //             skipObjAndKeyAndRhs
+  //           +------------------------------------------------+
+  //           |                                                |
+  // +-------+ | prepareForObj +-----+ prepareForKey +-----+    |
+  // | Start |-+-------------->| Obj |-------------->| Key |-+  |
+  // +-------+                 +-----+               +-----+ |  |
+  //                                                         |  |
+  // +-------------------------------------------------------+  |
+  // |                                                          |
+  // |                                                          |
+  // |                                                          |
+  // | [Get]                                                    |
+  // | [Call]                                                   |
+  // |   emitGet +-----+                                        |
+  // +---------->| Get |                                        |
+  // |           +-----+                                        |
+  // |                                                          |
+  // | [Delete]                                                 |
+  // |   emitDelete +--------+                                  |
+  // +------------->| Delete |                                  |
+  // |              +--------+                                  |
+  // |                                                          |
+  // | [PostIncrement]                                          |
+  // | [PreIncrement]                                           |
+  // | [PostDecrement]                                          |
+  // | [PreDecrement]                                           |
+  // |   emitIncDec +--------+                                  |
+  // +------------->| IncDec |                                  |
+  // |              +--------+                                  |
+  // |                                      +-------------------+
+  // | [SimpleAssignment]                   |
+  // |                        prepareForRhs v  +-----+
+  // +--------------------->+-------------->+->| Rhs |-+
+  // |                      ^                  +-----+ |
+  // |                      |                          |
+  // |                      |            +-------------+
+  // | [CompoundAssignment] |            |
+  // |   emitGet +-----+    |            | emitAssignment +------------+
+  // +---------->| Get |----+            +--------------->| Assignment |
+  //             +-----+                                  +------------+
+  enum class State {
+    // The initial state.
+    Start,
 
-        // After calling prepareForObj.
-        Obj,
+    // After calling prepareForObj.
+    Obj,
 
-        // After calling emitKey.
-        Key,
+    // After calling emitKey.
+    Key,
 
-        // After calling emitGet.
-        Get,
+    // After calling emitGet.
+    Get,
 
-        // After calling emitDelete.
-        Delete,
+    // After calling emitDelete.
+    Delete,
 
-        // After calling emitIncDec.
-        IncDec,
+    // After calling emitIncDec.
+    IncDec,
 
-        // After calling prepareForRhs or skipObjAndKeyAndRhs.
-        Rhs,
+    // After calling prepareForRhs or skipObjAndKeyAndRhs.
+    Rhs,
 
-        // After calling emitAssignment.
-        Assignment,
-    };
-    State state_ = State::Start;
+    // After calling emitAssignment.
+    Assignment,
+  };
+  State state_ = State::Start;
 #endif
 
-  public:
-    ElemOpEmitter(BytecodeEmitter* bce, Kind kind, ObjKind objKind);
+ public:
+  ElemOpEmitter(BytecodeEmitter* bce, Kind kind, ObjKind objKind);
 
-  private:
-    MOZ_MUST_USE bool isCall() const {
-        return kind_ == Kind::Call;
-    }
+ private:
+  MOZ_MUST_USE bool isCall() const { return kind_ == Kind::Call; }
 
-    MOZ_MUST_USE bool isSimpleAssignment() const {
-        return kind_ == Kind::SimpleAssignment;
-    }
+  MOZ_MUST_USE bool isSimpleAssignment() const {
+    return kind_ == Kind::SimpleAssignment;
+  }
 
-    MOZ_MUST_USE bool isDelete() const {
-        return kind_ == Kind::Delete;
-    }
+  MOZ_MUST_USE bool isDelete() const { return kind_ == Kind::Delete; }
 
-    MOZ_MUST_USE bool isCompoundAssignment() const {
-        return kind_ == Kind::CompoundAssignment;
-    }
+  MOZ_MUST_USE bool isCompoundAssignment() const {
+    return kind_ == Kind::CompoundAssignment;
+  }
 
-    MOZ_MUST_USE bool isIncDec() const {
-        return isPostIncDec() || isPreIncDec();
-    }
+  MOZ_MUST_USE bool isIncDec() const { return isPostIncDec() || isPreIncDec(); }
 
-    MOZ_MUST_USE bool isPostIncDec() const {
-        return kind_ == Kind::PostIncrement ||
-               kind_ == Kind::PostDecrement;
-    }
+  MOZ_MUST_USE bool isPostIncDec() const {
+    return kind_ == Kind::PostIncrement || kind_ == Kind::PostDecrement;
+  }
 
-    MOZ_MUST_USE bool isPreIncDec() const {
-        return kind_ == Kind::PreIncrement ||
-               kind_ == Kind::PreDecrement;
-    }
+  MOZ_MUST_USE bool isPreIncDec() const {
+    return kind_ == Kind::PreIncrement || kind_ == Kind::PreDecrement;
+  }
 
-    MOZ_MUST_USE bool isInc() const {
-        return kind_ == Kind::PostIncrement ||
-               kind_ == Kind::PreIncrement;
-    }
+  MOZ_MUST_USE bool isInc() const {
+    return kind_ == Kind::PostIncrement || kind_ == Kind::PreIncrement;
+  }
 
-    MOZ_MUST_USE bool isSuper() const {
-        return objKind_ == ObjKind::Super;
-    }
+  MOZ_MUST_USE bool isSuper() const { return objKind_ == ObjKind::Super; }
 
-  public:
-    MOZ_MUST_USE bool prepareForObj();
-    MOZ_MUST_USE bool prepareForKey();
+ public:
+  MOZ_MUST_USE bool prepareForObj();
+  MOZ_MUST_USE bool prepareForKey();
 
-    MOZ_MUST_USE bool emitGet();
+  MOZ_MUST_USE bool emitGet();
 
-    MOZ_MUST_USE bool prepareForRhs();
-    MOZ_MUST_USE bool skipObjAndKeyAndRhs();
+  MOZ_MUST_USE bool prepareForRhs();
+  MOZ_MUST_USE bool skipObjAndKeyAndRhs();
 
-    MOZ_MUST_USE bool emitDelete();
+  MOZ_MUST_USE bool emitDelete();
 
-    MOZ_MUST_USE bool emitAssignment();
+  MOZ_MUST_USE bool emitAssignment();
 
-    MOZ_MUST_USE bool emitIncDec();
+  MOZ_MUST_USE bool emitIncDec();
 };
 
 } /* namespace frontend */

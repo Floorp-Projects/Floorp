@@ -7,7 +7,7 @@
 #ifndef mozilla_layers_APZUtils_h
 #define mozilla_layers_APZUtils_h
 
-#include <stdint.h>                     // for uint32_t
+#include <stdint.h>  // for uint32_t
 #include "FrameMetrics.h"
 #include "LayersTypes.h"
 #include "UnitTransforms.h"
@@ -31,11 +31,10 @@ enum CancelAnimationFlags : uint32_t {
                                 response to an input event */
 };
 
-inline CancelAnimationFlags
-operator|(CancelAnimationFlags a, CancelAnimationFlags b)
-{
-  return static_cast<CancelAnimationFlags>(static_cast<int>(a)
-                                         | static_cast<int>(b));
+inline CancelAnimationFlags operator|(CancelAnimationFlags a,
+                                      CancelAnimationFlags b) {
+  return static_cast<CancelAnimationFlags>(static_cast<int>(a) |
+                                           static_cast<int>(b));
 }
 
 typedef EnumSet<ScrollDirection> ScrollDirections;
@@ -70,33 +69,33 @@ MOZ_DEFINE_ENUM_CLASS_WITH_BASE(APZWheelAction, uint8_t, (
 const float COORDINATE_EPSILON = 0.01f;
 
 template <typename Units>
-static bool IsZero(const gfx::PointTyped<Units>& aPoint)
-{
-  return FuzzyEqualsAdditive(aPoint.x, 0.0f, COORDINATE_EPSILON)
-      && FuzzyEqualsAdditive(aPoint.y, 0.0f, COORDINATE_EPSILON);
+static bool IsZero(const gfx::PointTyped<Units>& aPoint) {
+  return FuzzyEqualsAdditive(aPoint.x, 0.0f, COORDINATE_EPSILON) &&
+         FuzzyEqualsAdditive(aPoint.y, 0.0f, COORDINATE_EPSILON);
 }
 
 // Deem an AsyncTransformComponentMatrix (obtained by multiplying together
 // one or more AsyncTransformComponentMatrix objects) as constituting a
 // complete async transform.
-inline AsyncTransformMatrix
-CompleteAsyncTransform(const AsyncTransformComponentMatrix& aMatrix)
-{
-  return ViewAs<AsyncTransformMatrix>(aMatrix,
-      PixelCastJustification::MultipleAsyncTransforms);
+inline AsyncTransformMatrix CompleteAsyncTransform(
+    const AsyncTransformComponentMatrix& aMatrix) {
+  return ViewAs<AsyncTransformMatrix>(
+      aMatrix, PixelCastJustification::MultipleAsyncTransforms);
 }
 
 struct TargetConfirmationFlags {
   explicit TargetConfirmationFlags(bool aTargetConfirmed)
-    : mTargetConfirmed(aTargetConfirmed)
-    , mRequiresTargetConfirmation(false)
-  {}
+      : mTargetConfirmed(aTargetConfirmed),
+        mRequiresTargetConfirmation(false) {}
 
-  explicit TargetConfirmationFlags(const gfx::CompositorHitTestInfo& aHitTestInfo)
-    : mTargetConfirmed((aHitTestInfo != gfx::CompositorHitTestInvisibleToHit) &&
-                       !aHitTestInfo.contains(gfx::CompositorHitTestFlags::eDispatchToContent))
-    , mRequiresTargetConfirmation(aHitTestInfo.contains(gfx::CompositorHitTestFlags::eRequiresTargetConfirmation))
-  {}
+  explicit TargetConfirmationFlags(
+      const gfx::CompositorHitTestInfo& aHitTestInfo)
+      : mTargetConfirmed(
+            (aHitTestInfo != gfx::CompositorHitTestInvisibleToHit) &&
+            !aHitTestInfo.contains(
+                gfx::CompositorHitTestFlags::eDispatchToContent)),
+        mRequiresTargetConfirmation(aHitTestInfo.contains(
+            gfx::CompositorHitTestFlags::eRequiresTargetConfirmation)) {}
 
   bool mTargetConfirmed : 1;
   bool mRequiresTargetConfirmation : 1;
@@ -107,10 +106,11 @@ struct TargetConfirmationFlags {
  * AsyncPanZoomController.
  */
 class MOZ_RAII AutoApplyAsyncTestAttributes {
-public:
+ public:
   explicit AutoApplyAsyncTestAttributes(AsyncPanZoomController*);
   ~AutoApplyAsyncTestAttributes();
-private:
+
+ private:
   AsyncPanZoomController* mApzc;
   FrameMetrics mPrevFrameMetrics;
 };
@@ -130,8 +130,8 @@ void InitializeGlobalState();
  * function simply delegates to that one, so that non-layers code
  * never needs to include AsyncPanZoomController.h
  */
-const ScreenMargin CalculatePendingDisplayPort(const FrameMetrics& aFrameMetrics,
-                                               const ParentLayerPoint& aVelocity);
+const ScreenMargin CalculatePendingDisplayPort(
+    const FrameMetrics& aFrameMetrics, const ParentLayerPoint& aVelocity);
 
 /**
  * Is aAngle within the given threshold of the horizontal axis?
@@ -143,9 +143,9 @@ bool IsCloseToHorizontal(float aAngle, float aThreshold);
 // As above, but for the vertical axis.
 bool IsCloseToVertical(float aAngle, float aThreshold);
 
-} // namespace apz
+}  // namespace apz
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_APZUtils_h
+#endif  // mozilla_layers_APZUtils_h

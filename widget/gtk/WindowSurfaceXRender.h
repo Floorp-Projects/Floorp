@@ -16,15 +16,16 @@ namespace mozilla {
 namespace widget {
 
 class WindowSurfaceXRender : public WindowSurfaceX11 {
-public:
+ public:
   WindowSurfaceXRender(Display* aDisplay, Window aWindow, Visual* aVisual,
                        unsigned int aDepth);
   ~WindowSurfaceXRender();
 
-  already_AddRefed<gfx::DrawTarget> Lock(const LayoutDeviceIntRegion& aRegion) override;
+  already_AddRefed<gfx::DrawTarget> Lock(
+      const LayoutDeviceIntRegion& aRegion) override;
   void Commit(const LayoutDeviceIntRegion& aInvalidRegion) override;
 
-private:
+ private:
   RefPtr<gfxXlibSurface> mXlibSurface;
   GC mGC;
 };
@@ -32,5 +33,5 @@ private:
 }  // namespace widget
 }  // namespace mozilla
 
-#endif // MOZ_X11
-#endif // _MOZILLA_WIDGET_GTK_WINDOW_SURFACE_XRENDER_H
+#endif  // MOZ_X11
+#endif  // _MOZILLA_WIDGET_GTK_WINDOW_SURFACE_XRENDER_H

@@ -14,9 +14,8 @@ namespace dom {
 namespace cache {
 
 // static
-already_AddRefed<CacheWorkerHolder>
-CacheWorkerHolder::Create(WorkerPrivate* aWorkerPrivate, Behavior aBehavior)
-{
+already_AddRefed<CacheWorkerHolder> CacheWorkerHolder::Create(
+    WorkerPrivate* aWorkerPrivate, Behavior aBehavior) {
   MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate);
 
   RefPtr<CacheWorkerHolder> workerHolder = new CacheWorkerHolder(aBehavior);
@@ -28,10 +27,8 @@ CacheWorkerHolder::Create(WorkerPrivate* aWorkerPrivate, Behavior aBehavior)
 }
 
 // static
-already_AddRefed<CacheWorkerHolder>
-CacheWorkerHolder::PreferBehavior(CacheWorkerHolder* aCurrentHolder,
-                                  Behavior aBehavior)
-{
+already_AddRefed<CacheWorkerHolder> CacheWorkerHolder::PreferBehavior(
+    CacheWorkerHolder* aCurrentHolder, Behavior aBehavior) {
   if (!aCurrentHolder) {
     return nullptr;
   }
@@ -49,9 +46,7 @@ CacheWorkerHolder::PreferBehavior(CacheWorkerHolder* aCurrentHolder,
   return replace.forget();
 }
 
-void
-CacheWorkerHolder::AddActor(ActorChild* aActor)
-{
+void CacheWorkerHolder::AddActor(ActorChild* aActor) {
   NS_ASSERT_OWNINGTHREAD(CacheWorkerHolder);
   MOZ_DIAGNOSTIC_ASSERT(aActor);
   MOZ_ASSERT(!mActorList.Contains(aActor));
@@ -67,9 +62,7 @@ CacheWorkerHolder::AddActor(ActorChild* aActor)
   }
 }
 
-void
-CacheWorkerHolder::RemoveActor(ActorChild* aActor)
-{
+void CacheWorkerHolder::RemoveActor(ActorChild* aActor) {
   NS_ASSERT_OWNINGTHREAD(CacheWorkerHolder);
   MOZ_DIAGNOSTIC_ASSERT(aActor);
 
@@ -82,15 +75,9 @@ CacheWorkerHolder::RemoveActor(ActorChild* aActor)
   MOZ_ASSERT(!mActorList.Contains(aActor));
 }
 
-bool
-CacheWorkerHolder::Notified() const
-{
-  return mNotified;
-}
+bool CacheWorkerHolder::Notified() const { return mNotified; }
 
-bool
-CacheWorkerHolder::Notify(WorkerStatus aStatus)
-{
+bool CacheWorkerHolder::Notify(WorkerStatus aStatus) {
   NS_ASSERT_OWNINGTHREAD(CacheWorkerHolder);
 
   // When the service worker thread is stopped we will get Canceling,
@@ -112,17 +99,13 @@ CacheWorkerHolder::Notify(WorkerStatus aStatus)
 }
 
 CacheWorkerHolder::CacheWorkerHolder(Behavior aBehavior)
-  : WorkerHolder("CacheWorkerHolder", aBehavior)
-  , mNotified(false)
-{
-}
+    : WorkerHolder("CacheWorkerHolder", aBehavior), mNotified(false) {}
 
-CacheWorkerHolder::~CacheWorkerHolder()
-{
+CacheWorkerHolder::~CacheWorkerHolder() {
   NS_ASSERT_OWNINGTHREAD(CacheWorkerHolder);
   MOZ_DIAGNOSTIC_ASSERT(mActorList.IsEmpty());
 }
 
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

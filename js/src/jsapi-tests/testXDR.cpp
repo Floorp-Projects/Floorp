@@ -14,166 +14,161 @@
 
 #include "vm/JSScript-inl.h"
 
-static bool
-GetBuildId(JS::BuildIdCharVector* buildId)
-{
-    const char buildid[] = "testXDR";
-    return buildId->append(buildid, sizeof(buildid));
+static bool GetBuildId(JS::BuildIdCharVector* buildId) {
+  const char buildid[] = "testXDR";
+  return buildId->append(buildid, sizeof(buildid));
 }
 
-static JSScript*
-FreezeThaw(JSContext* cx, JS::HandleScript script)
-{
-    JS::SetProcessBuildIdOp(::GetBuildId);
+static JSScript* FreezeThaw(JSContext* cx, JS::HandleScript script) {
+  JS::SetProcessBuildIdOp(::GetBuildId);
 
-    // freeze
-    JS::TranscodeBuffer buffer;
-    JS::TranscodeResult rs = JS::EncodeScript(cx, buffer, script);
-    if (rs != JS::TranscodeResult_Ok) {
-        return nullptr;
-    }
+  // freeze
+  JS::TranscodeBuffer buffer;
+  JS::TranscodeResult rs = JS::EncodeScript(cx, buffer, script);
+  if (rs != JS::TranscodeResult_Ok) {
+    return nullptr;
+  }
 
-    // thaw
-    JS::RootedScript script2(cx);
-    rs = JS::DecodeScript(cx, buffer, &script2);
-    if (rs != JS::TranscodeResult_Ok) {
-        return nullptr;
-    }
-    return script2;
+  // thaw
+  JS::RootedScript script2(cx);
+  rs = JS::DecodeScript(cx, buffer, &script2);
+  if (rs != JS::TranscodeResult_Ok) {
+    return nullptr;
+  }
+  return script2;
 }
 
 enum TestCase {
-    TEST_FIRST,
-    TEST_SCRIPT = TEST_FIRST,
-    TEST_FUNCTION,
-    TEST_SERIALIZED_FUNCTION,
-    TEST_END
+  TEST_FIRST,
+  TEST_SCRIPT = TEST_FIRST,
+  TEST_FUNCTION,
+  TEST_SERIALIZED_FUNCTION,
+  TEST_END
 };
 
-BEGIN_TEST(testXDR_bug506491)
-{
-    const char* s =
-        "function makeClosure(s, name, value) {\n"
-        "    eval(s);\n"
-        "    Math.sin(value);\n"
-        "    let n = name, v = value;\n"
-        "    return function () { return String(v); };\n"
-        "}\n"
-        "var f = makeClosure('0;', 'status', 'ok');\n";
+BEGIN_TEST(testXDR_bug506491) {
+  const char* s =
+      "function makeClosure(s, name, value) {\n"
+      "    eval(s);\n"
+      "    Math.sin(value);\n"
+      "    let n = name, v = value;\n"
+      "    return function () { return String(v); };\n"
+      "}\n"
+      "var f = makeClosure('0;', 'status', 'ok');\n";
 
-    // compile
-    JS::CompileOptions options(cx);
-    options.setFileAndLine(__FILE__, __LINE__);
+  // compile
+  JS::CompileOptions options(cx);
+  options.setFileAndLine(__FILE__, __LINE__);
 
-    JS::RootedScript script(cx);
-    CHECK(JS::CompileUtf8(cx, options, s, strlen(s), &script));
-    CHECK(script);
+  JS::RootedScript script(cx);
+  CHECK(JS::CompileUtf8(cx, options, s, strlen(s), &script));
+  CHECK(script);
 
-    script = FreezeThaw(cx, script);
-    CHECK(script);
+  script = FreezeThaw(cx, script);
+  CHECK(script);
 
-    // execute
-    JS::RootedValue v2(cx);
-    CHECK(JS_ExecuteScript(cx, script, &v2));
+  // execute
+  JS::RootedValue v2(cx);
+  CHECK(JS_ExecuteScript(cx, script, &v2));
 
-    // try to break the Block object that is the parent of f
-    JS_GC(cx);
+  // try to break the Block object that is the parent of f
+  JS_GC(cx);
 
-    // confirm
-    EVAL("f() === 'ok';\n", &v2);
-    JS::RootedValue trueval(cx, JS::TrueValue());
-    CHECK_SAME(v2, trueval);
-    return true;
+  // confirm
+  EVAL("f() === 'ok';\n", &v2);
+  JS::RootedValue trueval(cx, JS::TrueValue());
+  CHECK_SAME(v2, trueval);
+  return true;
 }
 END_TEST(testXDR_bug506491)
 
-BEGIN_TEST(testXDR_bug516827)
-{
-    // compile an empty script
+BEGIN_TEST(testXDR_bug516827) {
+  // compile an empty script
+  JS::CompileOptions options(cx);
+  options.setFileAndLine(__FILE__, __LINE__);
+
+  JS::RootedScript script(cx);
+  CHECK(JS::CompileUtf8(cx, options, "", 0, &script));
+  CHECK(script);
+
+  script = FreezeThaw(cx, script);
+  CHECK(script);
+
+  // execute with null result meaning no result wanted
+  CHECK(JS_ExecuteScript(cx, script));
+  return true;
+}
+END_TEST(testXDR_bug516827)
+
+BEGIN_TEST(testXDR_source) {
+  const char* samples[] = {
+      // This can't possibly fail to compress well, can it?
+      "function f(x) { return x + x + x + x + x + x + x + x + x + x + x + x + "
+      "x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + "
+      "x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + "
+      "x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + "
+      "x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + "
+      "x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + "
+      "x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + "
+      "x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + "
+      "x + x + x + x + x + x + x + x + x + x + x + x }",
+      "short", nullptr};
+  for (const char** s = samples; *s; s++) {
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
 
     JS::RootedScript script(cx);
-    CHECK(JS::CompileUtf8(cx, options, "", 0, &script));
+    CHECK(JS::CompileUtf8(cx, options, *s, strlen(*s), &script));
     CHECK(script);
 
     script = FreezeThaw(cx, script);
     CHECK(script);
 
-    // execute with null result meaning no result wanted
-    CHECK(JS_ExecuteScript(cx, script));
-    return true;
-}
-END_TEST(testXDR_bug516827)
+    JSString* out = JS_DecompileScript(cx, script);
+    CHECK(out);
 
-BEGIN_TEST(testXDR_source)
-{
-    const char* samples[] = {
-        // This can't possibly fail to compress well, can it?
-        "function f(x) { return x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x }",
-        "short",
-        nullptr
-    };
-    for (const char** s = samples; *s; s++) {
-        JS::CompileOptions options(cx);
-        options.setFileAndLine(__FILE__, __LINE__);
-
-        JS::RootedScript script(cx);
-        CHECK(JS::CompileUtf8(cx, options, *s, strlen(*s), &script));
-        CHECK(script);
-
-        script = FreezeThaw(cx, script);
-        CHECK(script);
-
-        JSString* out = JS_DecompileScript(cx, script);
-        CHECK(out);
-
-        bool equal;
-        CHECK(JS_StringEqualsAscii(cx, out, *s, &equal));
-        CHECK(equal);
-    }
-    return true;
+    bool equal;
+    CHECK(JS_StringEqualsAscii(cx, out, *s, &equal));
+    CHECK(equal);
+  }
+  return true;
 }
 END_TEST(testXDR_source)
 
-BEGIN_TEST(testXDR_sourceMap)
-{
-    const char* sourceMaps[] = {
-        "http://example.com/source-map.json",
-        "file:///var/source-map.json",
-        nullptr
-    };
-    JS::RootedScript script(cx);
-    for (const char** sm = sourceMaps; *sm; sm++) {
-        JS::CompileOptions options(cx);
-        options.setFileAndLine(__FILE__, __LINE__);
+BEGIN_TEST(testXDR_sourceMap) {
+  const char* sourceMaps[] = {"http://example.com/source-map.json",
+                              "file:///var/source-map.json", nullptr};
+  JS::RootedScript script(cx);
+  for (const char** sm = sourceMaps; *sm; sm++) {
+    JS::CompileOptions options(cx);
+    options.setFileAndLine(__FILE__, __LINE__);
 
-        CHECK(JS::CompileUtf8(cx, options, "", 0, &script));
-        CHECK(script);
+    CHECK(JS::CompileUtf8(cx, options, "", 0, &script));
+    CHECK(script);
 
-        size_t len = strlen(*sm);
-        JS::UniqueTwoByteChars expected_wrapper(js::InflateString(cx, *sm, len));
-        char16_t* expected = expected_wrapper.get();
-        CHECK(expected);
+    size_t len = strlen(*sm);
+    JS::UniqueTwoByteChars expected_wrapper(js::InflateString(cx, *sm, len));
+    char16_t* expected = expected_wrapper.get();
+    CHECK(expected);
 
-        // The script source takes responsibility of free'ing |expected|.
-        CHECK(script->scriptSource()->setSourceMapURL(cx, expected));
-        script = FreezeThaw(cx, script);
-        CHECK(script);
-        CHECK(script->scriptSource());
-        CHECK(script->scriptSource()->hasSourceMapURL());
+    // The script source takes responsibility of free'ing |expected|.
+    CHECK(script->scriptSource()->setSourceMapURL(cx, expected));
+    script = FreezeThaw(cx, script);
+    CHECK(script);
+    CHECK(script->scriptSource());
+    CHECK(script->scriptSource()->hasSourceMapURL());
 
-        const char16_t* actual = script->scriptSource()->sourceMapURL();
-        CHECK(actual);
+    const char16_t* actual = script->scriptSource()->sourceMapURL();
+    CHECK(actual);
 
-        while (*expected) {
-            CHECK(*actual);
-            CHECK(*expected == *actual);
-            expected++;
-            actual++;
-        }
-        CHECK(!*actual);
+    while (*expected) {
+      CHECK(*actual);
+      CHECK(*expected == *actual);
+      expected++;
+      actual++;
     }
-    return true;
+    CHECK(!*actual);
+  }
+  return true;
 }
 END_TEST(testXDR_sourceMap)

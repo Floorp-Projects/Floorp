@@ -24,26 +24,25 @@
  * Wrapper around the thread running the message pump.
  * The toolkit abstraction is necessary because the message pump must
  * execute within the same thread that created the widget under Win32.
- */ 
+ */
 
-class nsToolkit
-{
-public:
-    nsToolkit();
+class nsToolkit {
+ public:
+  nsToolkit();
 
-private:
-    ~nsToolkit();
+ private:
+  ~nsToolkit();
 
-public:
-    static nsToolkit* GetToolkit();
+ public:
+  static nsToolkit* GetToolkit();
 
-    static HINSTANCE mDllInstance;
+  static HINSTANCE mDllInstance;
 
-    static void Startup(HMODULE hModule);
-    static void Shutdown();
+  static void Startup(HMODULE hModule);
+  static void Shutdown();
 
-protected:
-    static nsToolkit* gToolkit;
+ protected:
+  static nsToolkit* gToolkit;
 };
 
 #endif  // TOOLKIT_H

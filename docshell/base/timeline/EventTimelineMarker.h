@@ -12,19 +12,16 @@
 
 namespace mozilla {
 
-class EventTimelineMarker : public TimelineMarker
-{
-public:
-  EventTimelineMarker(const nsAString& aType,
-                      uint16_t aPhase,
+class EventTimelineMarker : public TimelineMarker {
+ public:
+  EventTimelineMarker(const nsAString& aType, uint16_t aPhase,
                       MarkerTracingType aTracingType)
-    : TimelineMarker("DOMEvent", aTracingType)
-    , mType(aType)
-    , mPhase(aPhase)
-  {}
+      : TimelineMarker("DOMEvent", aTracingType),
+        mType(aType),
+        mPhase(aPhase) {}
 
-  virtual void AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker) override
-  {
+  virtual void AddDetails(JSContext* aCx,
+                          dom::ProfileTimelineMarker& aMarker) override {
     TimelineMarker::AddDetails(aCx, aMarker);
 
     if (GetTracingType() == MarkerTracingType::START) {
@@ -33,11 +30,11 @@ public:
     }
   }
 
-private:
+ private:
   nsString mType;
   uint16_t mPhase;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_EventTimelineMarker_h_
+#endif  // mozilla_EventTimelineMarker_h_

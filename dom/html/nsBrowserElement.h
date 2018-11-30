@@ -18,26 +18,21 @@ namespace mozilla {
 
 namespace dom {
 class Promise;
-} // namespace dom
+}  // namespace dom
 
 class ErrorResult;
 
 /**
  * A helper class for browser-element frames
  */
-class nsBrowserElement
-{
-public:
+class nsBrowserElement {
+ public:
   nsBrowserElement() {}
   virtual ~nsBrowserElement() {}
 
-  void SendMouseEvent(const nsAString& aType,
-                      uint32_t aX,
-                      uint32_t aY,
-                      uint32_t aButton,
-                      uint32_t aClickCount,
-                      uint32_t aModifiers,
-                      ErrorResult& aRv);
+  void SendMouseEvent(const nsAString& aType, uint32_t aX, uint32_t aY,
+                      uint32_t aButton, uint32_t aClickCount,
+                      uint32_t aModifiers, ErrorResult& aRv);
   void GoBack(ErrorResult& aRv);
   void GoForward(ErrorResult& aRv);
   void Reload(bool aHardReload, ErrorResult& aRv);
@@ -46,17 +41,17 @@ public:
   already_AddRefed<dom::Promise> GetCanGoBack(ErrorResult& aRv);
   already_AddRefed<dom::Promise> GetCanGoForward(ErrorResult& aRv);
 
-protected:
+ protected:
   NS_IMETHOD_(already_AddRefed<nsFrameLoader>) GetFrameLoader() = 0;
 
   void InitBrowserElementAPI();
   void DestroyBrowserElementFrameScripts();
   nsCOMPtr<nsIBrowserElementAPI> mBrowserElementAPI;
 
-private:
+ private:
   bool IsBrowserElementOrThrow(ErrorResult& aRv);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // nsBrowserElement_h
+#endif  // nsBrowserElement_h

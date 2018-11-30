@@ -16,67 +16,56 @@
 #include "mozilla/intl/WordBreaker.h"
 
 static char teng1[] =
-//          1         2         3         4         5         6         7
-//01234567890123456789012345678901234567890123456789012345678901234567890123456789
- "This is a test to test(reasonable) line    break. This 0.01123 = 45 x 48.";
+    //          1         2         3         4         5         6         7
+    // 01234567890123456789012345678901234567890123456789012345678901234567890123456789
+    "This is a test to test(reasonable) line    break. This 0.01123 = 45 x 48.";
 
-static uint32_t lexp1[] = {
-  4,7,9,14,17,34,39,40,41,42,49,54,62,64,67,69,73
-};
+static uint32_t lexp1[] = {4,  7,  9,  14, 17, 34, 39, 40, 41,
+                           42, 49, 54, 62, 64, 67, 69, 73};
 
-static uint32_t wexp1[] = {
-  4,5,7,8,9,10,14,15,17,18,22,23,33,34,35,39,43,48,49,50,54,55,56,57,62,63,
-  64,65,67,68,69,70,72
-};
+static uint32_t wexp1[] = {4,  5,  7,  8,  9,  10, 14, 15, 17, 18, 22,
+                           23, 33, 34, 35, 39, 43, 48, 49, 50, 54, 55,
+                           56, 57, 62, 63, 64, 65, 67, 68, 69, 70, 72};
 
 static char teng2[] =
-//          1         2         3         4         5         6         7
-//01234567890123456789012345678901234567890123456789012345678901234567890123456789
- "()((reasonab(l)e) line  break. .01123=45x48.";
+    //          1         2         3         4         5         6         7
+    // 01234567890123456789012345678901234567890123456789012345678901234567890123456789
+    "()((reasonab(l)e) line  break. .01123=45x48.";
 
-static uint32_t lexp2[] = {
-  17,22,23,30,44
-};
+static uint32_t lexp2[] = {17, 22, 23, 30, 44};
 
-static uint32_t wexp2[] = {
-  4,12,13,14,15,16,17,18,22,24,29,30,31,32,37,38,43
-};
+static uint32_t wexp2[] = {4,  12, 13, 14, 15, 16, 17, 18, 22,
+                           24, 29, 30, 31, 32, 37, 38, 43};
 
 static char teng3[] =
-//          1         2         3         4         5         6         7
-//01234567890123456789012345678901234567890123456789012345678901234567890123456789
- "It's a test to test(ronae ) line break....";
+    //          1         2         3         4         5         6         7
+    // 01234567890123456789012345678901234567890123456789012345678901234567890123456789
+    "It's a test to test(ronae ) line break....";
 
-static uint32_t lexp3[] = {
-  4,6,11,14,25,27,32,42
-};
+static uint32_t lexp3[] = {4, 6, 11, 14, 25, 27, 32, 42};
 
-static uint32_t wexp3[] = {
-  2,3,4,5,6,7,11,12,14,15,19,20,25,26,27,28,32,33,38
-};
+static uint32_t wexp3[] = {2,  3,  4,  5,  6,  7,  11, 12, 14, 15,
+                           19, 20, 25, 26, 27, 28, 32, 33, 38};
 
 static char ruler1[] =
-"          1         2         3         4         5         6         7  ";
+    "          1         2         3         4         5         6         7  ";
 static char ruler2[] =
-"0123456789012345678901234567890123456789012345678901234567890123456789012";
+    "0123456789012345678901234567890123456789012345678901234567890123456789012";
 
-bool
-Check(const char* in, const uint32_t* out, uint32_t outlen, uint32_t i,
-      uint32_t res[256])
-{
+bool Check(const char* in, const uint32_t* out, uint32_t outlen, uint32_t i,
+           uint32_t res[256]) {
   bool ok = true;
 
   if (i != outlen) {
     ok = false;
-    printf("WARNING!!! return size wrong, expect %d but got %d \n",
-           outlen, i);
+    printf("WARNING!!! return size wrong, expect %d but got %d \n", outlen, i);
   }
 
   for (uint32_t j = 0; j < i; j++) {
     if (j < outlen) {
       if (res[j] != out[j]) {
-         ok = false;
-         printf("[%d] expect %d but got %d\n", j, out[j], res[j]);
+        ok = false;
+        printf("[%d] expect %d but got %d\n", j, out[j], res[j]);
       }
     } else {
       ok = false;
@@ -104,19 +93,14 @@ Check(const char* in, const uint32_t* out, uint32_t outlen, uint32_t i,
   return ok;
 }
 
-bool
-TestASCIILB(mozilla::intl::LineBreaker *lb,
-            const char* in,
-            const uint32_t* out, uint32_t outlen)
-{
+bool TestASCIILB(mozilla::intl::LineBreaker* lb, const char* in,
+                 const uint32_t* out, uint32_t outlen) {
   NS_ConvertASCIItoUTF16 eng1(in);
   uint32_t i;
   uint32_t res[256];
   int32_t curr;
 
-  for (i = 0, curr = 0;
-       curr != NS_LINEBREAKER_NEED_MORE_TEXT && i < 256;
-       i++) {
+  for (i = 0, curr = 0; curr != NS_LINEBREAKER_NEED_MORE_TEXT && i < 256; i++) {
     curr = lb->Next(eng1.get(), eng1.Length(), curr);
     res[i] = curr != NS_LINEBREAKER_NEED_MORE_TEXT ? curr : eng1.Length();
   }
@@ -124,11 +108,8 @@ TestASCIILB(mozilla::intl::LineBreaker *lb,
   return Check(in, out, outlen, i, res);
 }
 
-bool
-TestASCIIWB(mozilla::intl::WordBreaker *lb,
-            const char* in,
-            const uint32_t* out, uint32_t outlen)
-{
+bool TestASCIIWB(mozilla::intl::WordBreaker* lb, const char* in,
+                 const uint32_t* out, uint32_t outlen) {
   NS_ConvertASCIItoUTF16 eng1(in);
 
   uint32_t i;
@@ -138,14 +119,13 @@ TestASCIIWB(mozilla::intl::WordBreaker *lb,
   for (i = 0, curr = lb->NextWord(eng1.get(), eng1.Length(), curr);
        curr != NS_WORDBREAKER_NEED_MORE_TEXT && i < 256;
        curr = lb->NextWord(eng1.get(), eng1.Length(), curr), i++) {
-    res [i] = curr != NS_WORDBREAKER_NEED_MORE_TEXT ? curr : eng1.Length();
+    res[i] = curr != NS_WORDBREAKER_NEED_MORE_TEXT ? curr : eng1.Length();
   }
 
   return Check(in, out, outlen, i, res);
 }
 
-TEST(LineBreak, LineBreaker)
-{
+TEST(LineBreak, LineBreaker) {
   RefPtr<mozilla::intl::LineBreaker> t = mozilla::intl::LineBreaker::Create();
 
   ASSERT_TRUE(t);
@@ -155,8 +135,7 @@ TEST(LineBreak, LineBreaker)
   ASSERT_TRUE(TestASCIILB(t, teng3, lexp3, sizeof(lexp3) / sizeof(uint32_t)));
 }
 
-TEST(LineBreak, WordBreaker)
-{
+TEST(LineBreak, WordBreaker) {
   RefPtr<mozilla::intl::WordBreaker> t = mozilla::intl::WordBreaker::Create();
   ASSERT_TRUE(t);
 
@@ -172,11 +151,9 @@ static const char wb2[] = "is   is a int";
 static const char wb3[] = "ernationali";
 static const char wb4[] = "zation work.";
 
-static const char* wb[] = { wb0, wb1, wb2, wb3, wb4 };
+static const char* wb[] = {wb0, wb1, wb2, wb3, wb4};
 
-void
-TestPrintWordWithBreak()
-{
+void TestPrintWordWithBreak() {
   uint32_t numOfFragment = sizeof(wb) / sizeof(char*);
   RefPtr<mozilla::intl::WordBreaker> wbk = mozilla::intl::WordBreaker::Create();
 
@@ -198,13 +175,11 @@ TestPrintWordWithBreak()
     result.Append(Substring(fragText, fragText.Length() - start));
 
     if (i != numOfFragment - 1) {
-      NS_ConvertASCIItoUTF16 nextFragText(wb[i+1]);
+      NS_ConvertASCIItoUTF16 nextFragText(wb[i + 1]);
 
       bool canBreak = true;
-      canBreak = wbk->BreakInBetween(fragText.get(),
-                                     fragText.Length(),
-                                     nextFragText.get(),
-                                     nextFragText.Length());
+      canBreak = wbk->BreakInBetween(fragText.get(), fragText.Length(),
+                                     nextFragText.get(), nextFragText.Length());
       if (canBreak) {
         result.Append('^');
       }
@@ -215,35 +190,31 @@ TestPrintWordWithBreak()
                NS_ConvertUTF16toUTF8(result).get());
 }
 
-void
-TestFindWordBreakFromPosition(uint32_t fragN, uint32_t offset,
-                              const char* expected)
-{
+void TestFindWordBreakFromPosition(uint32_t fragN, uint32_t offset,
+                                   const char* expected) {
   uint32_t numOfFragment = sizeof(wb) / sizeof(char*);
   RefPtr<mozilla::intl::WordBreaker> wbk = mozilla::intl::WordBreaker::Create();
 
   NS_ConvertASCIItoUTF16 fragText(wb[fragN]);
 
-  mozilla::intl::WordRange res = wbk->FindWord(fragText.get(), fragText.Length(), offset);
+  mozilla::intl::WordRange res =
+      wbk->FindWord(fragText.get(), fragText.Length(), offset);
 
   bool canBreak;
-  nsAutoString result(Substring(fragText, res.mBegin, res.mEnd-res.mBegin));
+  nsAutoString result(Substring(fragText, res.mBegin, res.mEnd - res.mBegin));
 
   if ((uint32_t)fragText.Length() == res.mEnd) {
     // if we hit the end of the fragment
     nsAutoString curFragText = fragText;
-    for(uint32_t  p = fragN +1; p < numOfFragment ;p++)
-    {
+    for (uint32_t p = fragN + 1; p < numOfFragment; p++) {
       NS_ConvertASCIItoUTF16 nextFragText(wb[p]);
-      canBreak = wbk->BreakInBetween(curFragText.get(),
-                                     curFragText.Length(),
-                                     nextFragText.get(),
-                                     nextFragText.Length());
+      canBreak = wbk->BreakInBetween(curFragText.get(), curFragText.Length(),
+                                     nextFragText.get(), nextFragText.Length());
       if (canBreak) {
         break;
       }
-      mozilla::intl::WordRange r = wbk->FindWord(nextFragText.get(), nextFragText.Length(),
-                                    0);
+      mozilla::intl::WordRange r =
+          wbk->FindWord(nextFragText.get(), nextFragText.Length(), 0);
 
       result.Append(Substring(nextFragText, r.mBegin, r.mEnd - r.mBegin));
 
@@ -258,16 +229,14 @@ TestFindWordBreakFromPosition(uint32_t fragN, uint32_t offset,
     // if we hit the beginning of the fragment
     nsAutoString curFragText = fragText;
     for (uint32_t p = fragN; p > 0; p--) {
-      NS_ConvertASCIItoUTF16 prevFragText(wb[p-1]);
-      canBreak = wbk->BreakInBetween(prevFragText.get(),
-                                     prevFragText.Length(),
-                                     curFragText.get(),
-                                     curFragText.Length());
+      NS_ConvertASCIItoUTF16 prevFragText(wb[p - 1]);
+      canBreak = wbk->BreakInBetween(prevFragText.get(), prevFragText.Length(),
+                                     curFragText.get(), curFragText.Length());
       if (canBreak) {
         break;
       }
-      mozilla::intl::WordRange r = wbk->FindWord(prevFragText.get(), prevFragText.Length(),
-                                    prevFragText.Length());
+      mozilla::intl::WordRange r = wbk->FindWord(
+          prevFragText.get(), prevFragText.Length(), prevFragText.Length());
 
       result.Insert(Substring(prevFragText, r.mBegin, r.mEnd - r.mBegin), 0);
 
@@ -279,11 +248,10 @@ TestFindWordBreakFromPosition(uint32_t fragN, uint32_t offset,
   }
 
   ASSERT_STREQ(expected, NS_ConvertUTF16toUTF8(result).get())
-    << "FindWordBreakFromPosition(" << fragN << ", " << offset << ")";
+      << "FindWordBreakFromPosition(" << fragN << ", " << offset << ")";
 }
 
-TEST(LineBreak, WordBreakUsage)
-{
+TEST(LineBreak, WordBreakUsage) {
   TestPrintWordWithBreak();
   TestFindWordBreakFromPosition(0, 0, "This");
   TestFindWordBreakFromPosition(1, 0, "his");
@@ -296,4 +264,3 @@ TEST(LineBreak, WordBreakUsage)
   TestFindWordBreakFromPosition(4, 6, " ");
   TestFindWordBreakFromPosition(4, 7, "work");
 }
-

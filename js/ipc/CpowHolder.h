@@ -13,13 +13,12 @@
 namespace mozilla {
 namespace jsipc {
 
-class CpowHolder
-{
-  public:
-    virtual bool ToObject(JSContext* cx, JS::MutableHandle<JSObject*> objp) = 0;
+class CpowHolder {
+ public:
+  virtual bool ToObject(JSContext* cx, JS::MutableHandle<JSObject*> objp) = 0;
 };
 
-} // namespace jsipc
-} // namespace mozilla
+}  // namespace jsipc
+}  // namespace mozilla
 
-#endif // mozilla_jsipc_CpowHolder_h__
+#endif  // mozilla_jsipc_CpowHolder_h__

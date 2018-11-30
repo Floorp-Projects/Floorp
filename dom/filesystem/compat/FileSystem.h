@@ -22,44 +22,26 @@ class FileSystemDirectoryEntry;
 class FileSystemEntry;
 class OwningFileOrDirectory;
 
-class FileSystem final
-  : public nsISupports
-  , public nsWrapperCache
-{
-public:
+class FileSystem final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FileSystem)
 
-  static already_AddRefed<FileSystem>
-  Create(nsIGlobalObject* aGlobalObject);
+  static already_AddRefed<FileSystem> Create(nsIGlobalObject* aGlobalObject);
 
-  nsIGlobalObject*
-  GetParentObject() const
-  {
-    return mParent;
-  }
+  nsIGlobalObject* GetParentObject() const { return mParent; }
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  void
-  GetName(nsAString& aName) const
-  {
-    aName = mName;
-  }
+  void GetName(nsAString& aName) const { aName = mName; }
 
-  FileSystemDirectoryEntry*
-  Root() const
-  {
-    return mRoot;
-  }
+  FileSystemDirectoryEntry* Root() const { return mRoot; }
 
-  void
-  CreateRoot(const Sequence<RefPtr<FileSystemEntry>>& aEntries);
+  void CreateRoot(const Sequence<RefPtr<FileSystemEntry>>& aEntries);
 
-private:
-  explicit FileSystem(nsIGlobalObject* aGlobalObject,
-                      const nsAString& aName);
+ private:
+  explicit FileSystem(nsIGlobalObject* aGlobalObject, const nsAString& aName);
   ~FileSystem();
 
   nsCOMPtr<nsIGlobalObject> mParent;
@@ -67,7 +49,7 @@ private:
   nsString mName;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_FileSystem_h
+#endif  // mozilla_dom_FileSystem_h

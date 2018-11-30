@@ -14,18 +14,16 @@ namespace webgpu {
 
 class Device;
 
-class DepthStencilState final
-    : public ChildOf<Device>
-{
-public:
-    WEBGPU_DECL_GOOP(DepthStencilState)
+class DepthStencilState final : public ChildOf<Device> {
+ public:
+  WEBGPU_DECL_GOOP(DepthStencilState)
 
-private:
-    DepthStencilState() = delete;
-    virtual ~DepthStencilState();
+ private:
+  DepthStencilState() = delete;
+  virtual ~DepthStencilState();
 };
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla
 
-#endif // WEBGPU_DepthStencilState_H_
+#endif  // WEBGPU_DepthStencilState_H_

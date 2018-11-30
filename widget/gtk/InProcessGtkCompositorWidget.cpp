@@ -13,34 +13,32 @@
 namespace mozilla {
 namespace widget {
 
-/* static */ RefPtr<CompositorWidget>
-CompositorWidget::CreateLocal(const CompositorWidgetInitData& aInitData,
-                              const layers::CompositorOptions& aOptions,
-                              nsIWidget* aWidget)
-{
-  if (aInitData.type() == CompositorWidgetInitData::THeadlessCompositorWidgetInitData) {
-    return new HeadlessCompositorWidget(aInitData.get_HeadlessCompositorWidgetInitData(),
-                                        aOptions, static_cast<HeadlessWidget*>(aWidget));
+/* static */ RefPtr<CompositorWidget> CompositorWidget::CreateLocal(
+    const CompositorWidgetInitData& aInitData,
+    const layers::CompositorOptions& aOptions, nsIWidget* aWidget) {
+  if (aInitData.type() ==
+      CompositorWidgetInitData::THeadlessCompositorWidgetInitData) {
+    return new HeadlessCompositorWidget(
+        aInitData.get_HeadlessCompositorWidgetInitData(), aOptions,
+        static_cast<HeadlessWidget*>(aWidget));
   } else {
-    return new InProcessGtkCompositorWidget(aInitData.get_GtkCompositorWidgetInitData(),
-                                            aOptions, static_cast<nsWindow*>(aWidget));
+    return new InProcessGtkCompositorWidget(
+        aInitData.get_GtkCompositorWidgetInitData(), aOptions,
+        static_cast<nsWindow*>(aWidget));
   }
 }
 
-InProcessGtkCompositorWidget::InProcessGtkCompositorWidget(const GtkCompositorWidgetInitData& aInitData,
-                                                           const layers::CompositorOptions& aOptions,
-                                                           nsWindow* aWindow)
-  : GtkCompositorWidget(aInitData, aOptions, aWindow)
-{
-}
+InProcessGtkCompositorWidget::InProcessGtkCompositorWidget(
+    const GtkCompositorWidgetInitData& aInitData,
+    const layers::CompositorOptions& aOptions, nsWindow* aWindow)
+    : GtkCompositorWidget(aInitData, aOptions, aWindow) {}
 
-void
-InProcessGtkCompositorWidget::ObserveVsync(VsyncObserver* aObserver)
-{
-  if (RefPtr<CompositorVsyncDispatcher> cvd = mWidget->GetCompositorVsyncDispatcher()) {
+void InProcessGtkCompositorWidget::ObserveVsync(VsyncObserver* aObserver) {
+  if (RefPtr<CompositorVsyncDispatcher> cvd =
+          mWidget->GetCompositorVsyncDispatcher()) {
     cvd->SetCompositorVsyncObserver(aObserver);
   }
 }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

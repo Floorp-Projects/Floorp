@@ -19,26 +19,22 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Output)
 namespace mozilla {
 namespace dom {
 
-HTMLOutputElement::HTMLOutputElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-                                     FromParser aFromParser)
-  : nsGenericHTMLFormElement(std::move(aNodeInfo), NS_FORM_OUTPUT)
-  , mValueModeFlag(eModeDefault)
-  , mIsDoneAddingChildren(!aFromParser)
-{
+HTMLOutputElement::HTMLOutputElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+    FromParser aFromParser)
+    : nsGenericHTMLFormElement(std::move(aNodeInfo), NS_FORM_OUTPUT),
+      mValueModeFlag(eModeDefault),
+      mIsDoneAddingChildren(!aFromParser) {
   AddMutationObserver(this);
 
   // We start out valid and ui-valid (since we have no form).
   AddStatesSilently(NS_EVENT_STATE_VALID | NS_EVENT_STATE_MOZ_UI_VALID);
 }
 
-HTMLOutputElement::~HTMLOutputElement()
-{
-}
+HTMLOutputElement::~HTMLOutputElement() {}
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLOutputElement,
-                                   nsGenericHTMLFormElement,
-                                   mValidity,
-                                   mTokenList)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLOutputElement, nsGenericHTMLFormElement,
+                                   mValidity, mTokenList)
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLOutputElement,
                                              nsGenericHTMLFormElement,
@@ -47,35 +43,28 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLOutputElement,
 
 NS_IMPL_ELEMENT_CLONE(HTMLOutputElement)
 
-void
-HTMLOutputElement::SetCustomValidity(const nsAString& aError)
-{
+void HTMLOutputElement::SetCustomValidity(const nsAString& aError) {
   nsIConstraintValidation::SetCustomValidity(aError);
 
   UpdateState(true);
 }
 
 NS_IMETHODIMP
-HTMLOutputElement::Reset()
-{
+HTMLOutputElement::Reset() {
   mValueModeFlag = eModeDefault;
   return nsContentUtils::SetNodeTextContent(this, mDefaultValue, true);
 }
 
 NS_IMETHODIMP
-HTMLOutputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission)
-{
+HTMLOutputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
   // The output element is not submittable.
   return NS_OK;
 }
 
-bool
-HTMLOutputElement::ParseAttribute(int32_t aNamespaceID,
-                                  nsAtom* aAttribute,
-                                  const nsAString& aValue,
-                                  nsIPrincipal* aMaybeScriptedPrincipal,
-                                  nsAttrValue& aResult)
-{
+bool HTMLOutputElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                                       const nsAString& aValue,
+                                       nsIPrincipal* aMaybeScriptedPrincipal,
+                                       nsAttrValue& aResult) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::_for) {
       aResult.ParseAtomArray(aValue);
@@ -83,21 +72,15 @@ HTMLOutputElement::ParseAttribute(int32_t aNamespaceID,
     }
   }
 
-  return nsGenericHTMLFormElement::ParseAttribute(aNamespaceID, aAttribute,
-                                                  aValue,
-                                                  aMaybeScriptedPrincipal,
-                                                  aResult);
+  return nsGenericHTMLFormElement::ParseAttribute(
+      aNamespaceID, aAttribute, aValue, aMaybeScriptedPrincipal, aResult);
 }
 
-void
-HTMLOutputElement::DoneAddingChildren(bool aHaveNotified)
-{
+void HTMLOutputElement::DoneAddingChildren(bool aHaveNotified) {
   mIsDoneAddingChildren = true;
 }
 
-EventStates
-HTMLOutputElement::IntrinsicState() const
-{
+EventStates HTMLOutputElement::IntrinsicState() const {
   EventStates states = nsGenericHTMLFormElement::IntrinsicState();
 
   // We don't have to call IsCandidateForConstraintValidation()
@@ -117,12 +100,11 @@ HTMLOutputElement::IntrinsicState() const
   return states;
 }
 
-nsresult
-HTMLOutputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent)
-{
-  nsresult rv = nsGenericHTMLFormElement::BindToTree(aDocument, aParent,
-                                                     aBindingParent);
+nsresult HTMLOutputElement::BindToTree(nsIDocument* aDocument,
+                                       nsIContent* aParent,
+                                       nsIContent* aBindingParent) {
+  nsresult rv =
+      nsGenericHTMLFormElement::BindToTree(aDocument, aParent, aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Unfortunately, we can actually end up having to change our state
@@ -135,22 +117,17 @@ HTMLOutputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   return rv;
 }
 
-void
-HTMLOutputElement::GetValue(nsAString& aValue)
-{
+void HTMLOutputElement::GetValue(nsAString& aValue) {
   nsContentUtils::GetNodeTextContent(this, true, aValue);
 }
 
-void
-HTMLOutputElement::SetValue(const nsAString& aValue, ErrorResult& aRv)
-{
+void HTMLOutputElement::SetValue(const nsAString& aValue, ErrorResult& aRv) {
   mValueModeFlag = eModeValue;
   aRv = nsContentUtils::SetNodeTextContent(this, aValue, true);
 }
 
-void
-HTMLOutputElement::SetDefaultValue(const nsAString& aDefaultValue, ErrorResult& aRv)
-{
+void HTMLOutputElement::SetDefaultValue(const nsAString& aDefaultValue,
+                                        ErrorResult& aRv) {
   mDefaultValue = aDefaultValue;
   if (mValueModeFlag == eModeDefault) {
     // We can't pass mDefaultValue, because it'll be truncated when
@@ -159,17 +136,14 @@ HTMLOutputElement::SetDefaultValue(const nsAString& aDefaultValue, ErrorResult& 
   }
 }
 
-nsDOMTokenList*
-HTMLOutputElement::HtmlFor()
-{
+nsDOMTokenList* HTMLOutputElement::HtmlFor() {
   if (!mTokenList) {
     mTokenList = new nsDOMTokenList(this, nsGkAtoms::_for);
   }
   return mTokenList;
 }
 
-void HTMLOutputElement::DescendantsChanged()
-{
+void HTMLOutputElement::DescendantsChanged() {
   if (mIsDoneAddingChildren && mValueModeFlag == eModeDefault) {
     nsContentUtils::GetNodeTextContent(this, true, mDefaultValue);
   }
@@ -178,32 +152,27 @@ void HTMLOutputElement::DescendantsChanged()
 // nsIMutationObserver
 
 void HTMLOutputElement::CharacterDataChanged(nsIContent* aContent,
-                                             const CharacterDataChangeInfo&)
-{
+                                             const CharacterDataChangeInfo&) {
   DescendantsChanged();
 }
 
-void HTMLOutputElement::ContentAppended(nsIContent* aFirstNewContent)
-{
+void HTMLOutputElement::ContentAppended(nsIContent* aFirstNewContent) {
   DescendantsChanged();
 }
 
-void HTMLOutputElement::ContentInserted(nsIContent* aChild)
-{
+void HTMLOutputElement::ContentInserted(nsIContent* aChild) {
   DescendantsChanged();
 }
 
 void HTMLOutputElement::ContentRemoved(nsIContent* aChild,
-                                       nsIContent* aPreviousSibling)
-{
+                                       nsIContent* aPreviousSibling) {
   DescendantsChanged();
 }
 
-JSObject*
-HTMLOutputElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* HTMLOutputElement::WrapNode(JSContext* aCx,
+                                      JS::Handle<JSObject*> aGivenProto) {
   return HTMLOutputElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -8,9 +8,9 @@
 #include "gfxPrefs.h"
 #include "gfxVR.h"
 #include "ipc/VRLayerParent.h"
-#include "mozilla/layers/CompositorThread.h" // for CompositorThreadHolder
+#include "mozilla/layers/CompositorThread.h"  // for CompositorThreadHolder
 #include "mozilla/layers/TextureHost.h"
-#include "mozilla/dom/GamepadBinding.h" // For GamepadMappingType
+#include "mozilla/dom/GamepadBinding.h"  // For GamepadMappingType
 #include "VRThread.h"
 
 #if defined(XP_WIN)
@@ -30,19 +30,18 @@
 #if defined(MOZ_WIDGET_ANDROID)
 #include "mozilla/layers/CompositorThread.h"
 // Max frame duration on Android before the watchdog submits a new one.
-// Probably we can get rid of this when we enforce that SubmitFrame can only be called in a VRDisplay loop.
+// Probably we can get rid of this when we enforce that SubmitFrame can only be
+// called in a VRDisplay loop.
 #define ANDROID_MAX_FRAME_DURATION 4000
-#endif // defined(MOZ_WIDGET_ANDROID)
-
+#endif  // defined(MOZ_WIDGET_ANDROID)
 
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-VRDisplayHost::AutoRestoreRenderState::AutoRestoreRenderState(VRDisplayHost* aDisplay)
-  : mDisplay(aDisplay)
-  , mSuccess(true)
-{
+VRDisplayHost::AutoRestoreRenderState::AutoRestoreRenderState(
+    VRDisplayHost* aDisplay)
+    : mDisplay(aDisplay), mSuccess(true) {
 #if defined(XP_WIN)
   ID3D11DeviceContext1* context = mDisplay->GetD3DDeviceContext();
   ID3DDeviceContextState* state = mDisplay->GetD3DDeviceContextState();
@@ -50,12 +49,12 @@ VRDisplayHost::AutoRestoreRenderState::AutoRestoreRenderState(VRDisplayHost* aDi
     mSuccess = false;
     return;
   }
-  context->SwapDeviceContextState(state, getter_AddRefs(mPrevDeviceContextState));
+  context->SwapDeviceContextState(state,
+                                  getter_AddRefs(mPrevDeviceContextState));
 #endif
 }
 
-VRDisplayHost::AutoRestoreRenderState::~AutoRestoreRenderState()
-{
+VRDisplayHost::AutoRestoreRenderState::~AutoRestoreRenderState() {
 #if defined(XP_WIN)
   ID3D11DeviceContext1* context = mDisplay->GetD3DDeviceContext();
   if (context && mSuccess) {
@@ -64,17 +63,10 @@ VRDisplayHost::AutoRestoreRenderState::~AutoRestoreRenderState()
 #endif
 }
 
-bool
-VRDisplayHost::AutoRestoreRenderState::IsSuccess()
-{
-  return mSuccess;
-}
+bool VRDisplayHost::AutoRestoreRenderState::IsSuccess() { return mSuccess; }
 
 VRDisplayHost::VRDisplayHost(VRDeviceType aType)
- : mDisplayInfo{}
- , mLastUpdateDisplayInfo{}
- , mFrameStarted(false)
-{
+    : mDisplayInfo{}, mLastUpdateDisplayInfo{}, mFrameStarted(false) {
   MOZ_COUNT_CTOR(VRDisplayHost);
   mDisplayInfo.mType = aType;
   mDisplayInfo.mDisplayID = VRSystemManager::AllocateDisplayID();
@@ -87,11 +79,10 @@ VRDisplayHost::VRDisplayHost(VRDeviceType aType)
 #if defined(MOZ_WIDGET_ANDROID)
   mLastSubmittedFrameId = 0;
   mLastStartedFrame = 0;
-#endif // defined(MOZ_WIDGET_ANDROID)
+#endif  // defined(MOZ_WIDGET_ANDROID)
 }
 
-VRDisplayHost::~VRDisplayHost()
-{
+VRDisplayHost::~VRDisplayHost() {
   if (mSubmitThread) {
     mSubmitThread->Shutdown();
     mSubmitThread = nullptr;
@@ -100,82 +91,63 @@ VRDisplayHost::~VRDisplayHost()
 }
 
 #if defined(XP_WIN)
-bool
-VRDisplayHost::CreateD3DObjects()
-{
+bool VRDisplayHost::CreateD3DObjects() {
   if (!mDevice) {
     RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetVRDevice();
     if (!device) {
       NS_WARNING("VRDisplayHost::CreateD3DObjects failed to get a D3D11Device");
       return false;
     }
-    if (FAILED(device->QueryInterface(__uuidof(ID3D11Device1), getter_AddRefs(mDevice)))) {
-      NS_WARNING("VRDisplayHost::CreateD3DObjects failed to get a D3D11Device1");
+    if (FAILED(device->QueryInterface(__uuidof(ID3D11Device1),
+                                      getter_AddRefs(mDevice)))) {
+      NS_WARNING(
+          "VRDisplayHost::CreateD3DObjects failed to get a D3D11Device1");
       return false;
     }
   }
   if (!mContext) {
     mDevice->GetImmediateContext1(getter_AddRefs(mContext));
     if (!mContext) {
-      NS_WARNING("VRDisplayHost::CreateD3DObjects failed to get an immediate context");
+      NS_WARNING(
+          "VRDisplayHost::CreateD3DObjects failed to get an immediate context");
       return false;
     }
   }
   if (!mDeviceContextState) {
-    D3D_FEATURE_LEVEL featureLevels[] {
-      D3D_FEATURE_LEVEL_11_1,
-      D3D_FEATURE_LEVEL_11_0
-    };
-    mDevice->CreateDeviceContextState(0,
-                                      featureLevels,
-                                      2,
-                                      D3D11_SDK_VERSION,
-                                      __uuidof(ID3D11Device1),
-                                      nullptr,
+    D3D_FEATURE_LEVEL featureLevels[]{D3D_FEATURE_LEVEL_11_1,
+                                      D3D_FEATURE_LEVEL_11_0};
+    mDevice->CreateDeviceContextState(0, featureLevels, 2, D3D11_SDK_VERSION,
+                                      __uuidof(ID3D11Device1), nullptr,
                                       getter_AddRefs(mDeviceContextState));
   }
   if (!mDeviceContextState) {
-    NS_WARNING("VRDisplayHost::CreateD3DObjects failed to get a D3D11DeviceContextState");
+    NS_WARNING(
+        "VRDisplayHost::CreateD3DObjects failed to get a "
+        "D3D11DeviceContextState");
     return false;
   }
   return true;
 }
 
-ID3D11Device1*
-VRDisplayHost::GetD3DDevice()
-{
-  return mDevice;
-}
+ID3D11Device1* VRDisplayHost::GetD3DDevice() { return mDevice; }
 
-ID3D11DeviceContext1*
-VRDisplayHost::GetD3DDeviceContext()
-{
-  return mContext;
-}
+ID3D11DeviceContext1* VRDisplayHost::GetD3DDeviceContext() { return mContext; }
 
-ID3DDeviceContextState*
-VRDisplayHost::GetD3DDeviceContextState()
-{
+ID3DDeviceContextState* VRDisplayHost::GetD3DDeviceContextState() {
   return mDeviceContextState;
 }
 
-#endif // defined(XP_WIN)
+#endif  // defined(XP_WIN)
 
-void
-VRDisplayHost::SetGroupMask(uint32_t aGroupMask)
-{
+void VRDisplayHost::SetGroupMask(uint32_t aGroupMask) {
   mDisplayInfo.mGroupMask = aGroupMask;
 }
 
-bool
-VRDisplayHost::GetIsConnected()
-{
+bool VRDisplayHost::GetIsConnected() {
   return mDisplayInfo.mDisplayState.mIsConnected;
 }
 
-void
-VRDisplayHost::AddLayer(VRLayerParent *aLayer)
-{
+void VRDisplayHost::AddLayer(VRLayerParent* aLayer) {
   mLayers.AppendElement(aLayer);
   mDisplayInfo.mPresentingGroups |= aLayer->GetGroup();
   if (mLayers.Length() == 1) {
@@ -187,9 +159,7 @@ VRDisplayHost::AddLayer(VRLayerParent *aLayer)
   vm->RefreshVRDisplays();
 }
 
-void
-VRDisplayHost::RemoveLayer(VRLayerParent *aLayer)
-{
+void VRDisplayHost::RemoveLayer(VRLayerParent* aLayer) {
   mLayers.RemoveElement(aLayer);
   if (mLayers.Length() == 0) {
     StopPresentation();
@@ -204,23 +174,26 @@ VRDisplayHost::RemoveLayer(VRLayerParent *aLayer)
   vm->RefreshVRDisplays();
 }
 
-void
-VRDisplayHost::StartFrame()
-{
+void VRDisplayHost::StartFrame() {
   AUTO_PROFILER_TRACING("VR", "GetSensorState");
 
   TimeStamp now = TimeStamp::Now();
 #if defined(MOZ_WIDGET_ANDROID)
-  const TimeStamp lastFrameStart = mDisplayInfo.mLastFrameStart[mDisplayInfo.mFrameId % kVRMaxLatencyFrames];
+  const TimeStamp lastFrameStart =
+      mDisplayInfo.mLastFrameStart[mDisplayInfo.mFrameId % kVRMaxLatencyFrames];
   const bool isPresenting = mLastUpdateDisplayInfo.GetPresentingGroups() != 0;
-  double duration = lastFrameStart.IsNull() ? 0.0 : (now - lastFrameStart).ToMilliseconds();
+  double duration =
+      lastFrameStart.IsNull() ? 0.0 : (now - lastFrameStart).ToMilliseconds();
   /**
-   * Do not start more VR frames until the last submitted frame is already processed.
+   * Do not start more VR frames until the last submitted frame is already
+   * processed.
    */
-  if (isPresenting && mLastStartedFrame > 0 && mDisplayInfo.mDisplayState.mLastSubmittedFrameId < mLastStartedFrame && duration < (double)ANDROID_MAX_FRAME_DURATION) {
+  if (isPresenting && mLastStartedFrame > 0 &&
+      mDisplayInfo.mDisplayState.mLastSubmittedFrameId < mLastStartedFrame &&
+      duration < (double)ANDROID_MAX_FRAME_DURATION) {
     return;
   }
-#endif // !defined(MOZ_WIDGET_ANDROID)
+#endif  // !defined(MOZ_WIDGET_ANDROID)
 
   ++mDisplayInfo.mFrameId;
   size_t bufferIndex = mDisplayInfo.mFrameId % kVRMaxLatencyFrames;
@@ -229,26 +202,22 @@ VRDisplayHost::StartFrame()
   mFrameStarted = true;
 #if defined(MOZ_WIDGET_ANDROID)
   mLastStartedFrame = mDisplayInfo.mFrameId;
-#endif // !defined(MOZ_WIDGET_ANDROID)  
+#endif  // !defined(MOZ_WIDGET_ANDROID)
 }
 
-void
-VRDisplayHost::NotifyVSync()
-{
+void VRDisplayHost::NotifyVSync() {
   /**
    * If this display isn't presenting, refresh the sensors and trigger
    * VRDisplay.requestAnimationFrame at the normal 2d display refresh rate.
    */
   if (mDisplayInfo.mPresentingGroups == 0) {
-    VRManager *vm = VRManager::Get();
+    VRManager* vm = VRManager::Get();
     MOZ_ASSERT(vm);
     vm->NotifyVRVsync(mDisplayInfo.mDisplayID);
   }
 }
 
-void
-VRDisplayHost::CheckWatchDog()
-{
+void VRDisplayHost::CheckWatchDog() {
   /**
    * We will trigger a new frame immediately after a successful frame texture
    * submission.  If content fails to call VRDisplay.submitFrame after
@@ -280,7 +249,8 @@ VRDisplayHost::CheckWatchDog()
 
   // If content fails to call VRDisplay.submitFrame, we must eventually
   // time-out and trigger a new frame.
-  TimeStamp lastFrameStart = mDisplayInfo.mLastFrameStart[mDisplayInfo.mFrameId % kVRMaxLatencyFrames];
+  TimeStamp lastFrameStart =
+      mDisplayInfo.mLastFrameStart[mDisplayInfo.mFrameId % kVRMaxLatencyFrames];
   if (lastFrameStart.IsNull()) {
     bShouldStartFrame = true;
   } else {
@@ -291,39 +261,28 @@ VRDisplayHost::CheckWatchDog()
   }
 
   if (bShouldStartFrame) {
-    VRManager *vm = VRManager::Get();
+    VRManager* vm = VRManager::Get();
     MOZ_ASSERT(vm);
     vm->NotifyVRVsync(mDisplayInfo.mDisplayID);
   }
 }
 
-void
-VRDisplayHost::Run1msTasks(double aDeltaTime)
-{
- // To override in children
+void VRDisplayHost::Run1msTasks(double aDeltaTime) {
+  // To override in children
 }
 
-void
-VRDisplayHost::Run10msTasks()
-{
-  CheckWatchDog();
-}
+void VRDisplayHost::Run10msTasks() { CheckWatchDog(); }
 
-void
-VRDisplayHost::Run100msTasks()
-{
+void VRDisplayHost::Run100msTasks() {
   // to override in children
 }
 
-void
-VRDisplayHost::SubmitFrameInternal(const layers::SurfaceDescriptor &aTexture,
-                                   uint64_t aFrameId,
-                                   const gfx::Rect& aLeftEyeRect,
-                                   const gfx::Rect& aRightEyeRect)
-{
+void VRDisplayHost::SubmitFrameInternal(
+    const layers::SurfaceDescriptor& aTexture, uint64_t aFrameId,
+    const gfx::Rect& aLeftEyeRect, const gfx::Rect& aRightEyeRect) {
 #if !defined(MOZ_WIDGET_ANDROID)
   MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
-#endif // !defined(MOZ_WIDGET_ANDROID)
+#endif  // !defined(MOZ_WIDGET_ANDROID)
   AUTO_PROFILER_TRACING("VR", "SubmitFrameAtVRDisplayHost");
 
   if (!SubmitFrame(aTexture, aFrameId, aLeftEyeRect, aRightEyeRect)) {
@@ -346,19 +305,16 @@ VRDisplayHost::SubmitFrameInternal(const layers::SurfaceDescriptor &aTexture,
   MessageLoop* loop = CompositorThreadHolder::Loop();
 
   loop->PostTask(NewRunnableMethod<const uint32_t>(
-    "gfx::VRManager::NotifyVRVsync",
-    vm, &VRManager::NotifyVRVsync, mDisplayInfo.mDisplayID
-  ));
+      "gfx::VRManager::NotifyVRVsync", vm, &VRManager::NotifyVRVsync,
+      mDisplayInfo.mDisplayID));
 #endif
 }
 
-void
-VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
-                           const layers::SurfaceDescriptor &aTexture,
-                           uint64_t aFrameId,
-                           const gfx::Rect& aLeftEyeRect,
-                           const gfx::Rect& aRightEyeRect)
-{
+void VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
+                                const layers::SurfaceDescriptor& aTexture,
+                                uint64_t aFrameId,
+                                const gfx::Rect& aLeftEyeRect,
+                                const gfx::Rect& aRightEyeRect) {
   if ((mDisplayInfo.mGroupMask & aLayer->GetGroup()) == 0) {
     // Suppress layers hidden by the group mask
     return;
@@ -371,24 +327,28 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
 
 #if defined(MOZ_WIDGET_ANDROID)
   /**
-   * Do not queue more submit frames until the last submitted frame is already processed 
-   * and the new WebGL texture is ready.
+   * Do not queue more submit frames until the last submitted frame is already
+   * processed and the new WebGL texture is ready.
    */
-  if (mLastSubmittedFrameId > 0 && mLastSubmittedFrameId != mDisplayInfo.mDisplayState.mLastSubmittedFrameId) {
+  if (mLastSubmittedFrameId > 0 &&
+      mLastSubmittedFrameId !=
+          mDisplayInfo.mDisplayState.mLastSubmittedFrameId) {
     mLastStartedFrame = 0;
     return;
   }
 
   mLastSubmittedFrameId = aFrameId;
-#endif // !defined(MOZ_WIDGET_ANDROID)
+#endif  // !defined(MOZ_WIDGET_ANDROID)
 
   mFrameStarted = false;
 
   RefPtr<Runnable> submit =
-    NewRunnableMethod<StoreCopyPassByConstLRef<layers::SurfaceDescriptor>, uint64_t,
-      StoreCopyPassByConstLRef<gfx::Rect>, StoreCopyPassByConstLRef<gfx::Rect>>(
-      "gfx::VRDisplayHost::SubmitFrameInternal", this, &VRDisplayHost::SubmitFrameInternal,
-      aTexture, aFrameId, aLeftEyeRect, aRightEyeRect);
+      NewRunnableMethod<StoreCopyPassByConstLRef<layers::SurfaceDescriptor>,
+                        uint64_t, StoreCopyPassByConstLRef<gfx::Rect>,
+                        StoreCopyPassByConstLRef<gfx::Rect>>(
+          "gfx::VRDisplayHost::SubmitFrameInternal", this,
+          &VRDisplayHost::SubmitFrameInternal, aTexture, aFrameId, aLeftEyeRect,
+          aRightEyeRect);
 
 #if !defined(MOZ_WIDGET_ANDROID)
   if (!mSubmitThread) {
@@ -398,12 +358,10 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
   mSubmitThread->PostTask(submit.forget());
 #else
   CompositorThreadHolder::Loop()->PostTask(submit.forget());
-#endif // defined(MOZ_WIDGET_ANDROID)
+#endif  // defined(MOZ_WIDGET_ANDROID)
 }
 
-bool
-VRDisplayHost::CheckClearDisplayInfoDirty()
-{
+bool VRDisplayHost::CheckClearDisplayInfoDirty() {
   if (mDisplayInfo == mLastUpdateDisplayInfo) {
     return false;
   }
@@ -411,23 +369,13 @@ VRDisplayHost::CheckClearDisplayInfoDirty()
   return true;
 }
 
-void
-VRDisplayHost::StartVRNavigation()
-{
-  
-}
+void VRDisplayHost::StartVRNavigation() {}
 
-void
-VRDisplayHost::StopVRNavigation(const TimeDuration& aTimeout)
-{
-  
-}
+void VRDisplayHost::StopVRNavigation(const TimeDuration& aTimeout) {}
 
 VRControllerHost::VRControllerHost(VRDeviceType aType, dom::GamepadHand aHand,
                                    uint32_t aDisplayID)
- : mControllerInfo{}
- , mVibrateIndex(0)
-{
+    : mControllerInfo{}, mVibrateIndex(0) {
   MOZ_COUNT_CTOR(VRControllerHost);
   mControllerInfo.mType = aType;
   mControllerInfo.mControllerState.hand = aHand;
@@ -436,68 +384,40 @@ VRControllerHost::VRControllerHost(VRDeviceType aType, dom::GamepadHand aHand,
   mControllerInfo.mControllerID = VRSystemManager::AllocateControllerID();
 }
 
-VRControllerHost::~VRControllerHost()
-{
-  MOZ_COUNT_DTOR(VRControllerHost);
-}
+VRControllerHost::~VRControllerHost() { MOZ_COUNT_DTOR(VRControllerHost); }
 
-const VRControllerInfo&
-VRControllerHost::GetControllerInfo() const
-{
+const VRControllerInfo& VRControllerHost::GetControllerInfo() const {
   return mControllerInfo;
 }
 
-void
-VRControllerHost::SetButtonPressed(uint64_t aBit)
-{
+void VRControllerHost::SetButtonPressed(uint64_t aBit) {
   mControllerInfo.mControllerState.buttonPressed = aBit;
 }
 
-uint64_t
-VRControllerHost::GetButtonPressed()
-{
+uint64_t VRControllerHost::GetButtonPressed() {
   return mControllerInfo.mControllerState.buttonPressed;
 }
 
-void
-VRControllerHost::SetButtonTouched(uint64_t aBit)
-{
+void VRControllerHost::SetButtonTouched(uint64_t aBit) {
   mControllerInfo.mControllerState.buttonTouched = aBit;
 }
 
-uint64_t
-VRControllerHost::GetButtonTouched()
-{
+uint64_t VRControllerHost::GetButtonTouched() {
   return mControllerInfo.mControllerState.buttonTouched;
 }
 
-void
-VRControllerHost::SetPose(const dom::GamepadPoseState& aPose)
-{
+void VRControllerHost::SetPose(const dom::GamepadPoseState& aPose) {
   mPose = aPose;
 }
 
-const dom::GamepadPoseState&
-VRControllerHost::GetPose()
-{
-  return mPose;
-}
+const dom::GamepadPoseState& VRControllerHost::GetPose() { return mPose; }
 
-dom::GamepadHand
-VRControllerHost::GetHand()
-{
+dom::GamepadHand VRControllerHost::GetHand() {
   return mControllerInfo.mControllerState.hand;
 }
 
-void
-VRControllerHost::SetVibrateIndex(uint64_t aIndex)
-{
+void VRControllerHost::SetVibrateIndex(uint64_t aIndex) {
   mVibrateIndex = aIndex;
 }
 
-uint64_t
-VRControllerHost::GetVibrateIndex()
-{
-  return mVibrateIndex;
-}
-
+uint64_t VRControllerHost::GetVibrateIndex() { return mVibrateIndex; }

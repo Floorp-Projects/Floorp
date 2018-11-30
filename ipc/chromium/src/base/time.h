@@ -46,8 +46,7 @@ class PageLoadTrackerUnitTest;
 
 class TimeDelta {
  public:
-  TimeDelta() : delta_(0) {
-  }
+  TimeDelta() : delta_(0) {}
 
   // Converts units of time to TimeDeltas.
   static TimeDelta FromDays(int64_t days);
@@ -60,9 +59,7 @@ class TimeDelta {
   // Returns the internal numeric value of the TimeDelta object. Please don't
   // use this and do arithmetic on it, as it is more error prone than using the
   // provided operators.
-  int64_t ToInternalValue() const {
-    return delta_;
-  }
+  int64_t ToInternalValue() const { return delta_; }
 
   // Returns the time delta in some unit. The F versions return a floating
   // point value, the "regular" versions return a rounded-down value.
@@ -96,18 +93,12 @@ class TimeDelta {
     delta_ -= other.delta_;
     return *this;
   }
-  TimeDelta operator-() const {
-    return TimeDelta(-delta_);
-  }
+  TimeDelta operator-() const { return TimeDelta(-delta_); }
 
   // Computations with ints, note that we only allow multiplicative operations
   // with ints, and additive operations with other deltas.
-  TimeDelta operator*(int64_t a) const {
-    return TimeDelta(delta_ * a);
-  }
-  TimeDelta operator/(int64_t a) const {
-    return TimeDelta(delta_ / a);
-  }
+  TimeDelta operator*(int64_t a) const { return TimeDelta(delta_ * a); }
+  TimeDelta operator/(int64_t a) const { return TimeDelta(delta_ / a); }
   TimeDelta& operator*=(int64_t a) {
     delta_ *= a;
     return *this;
@@ -116,33 +107,19 @@ class TimeDelta {
     delta_ /= a;
     return *this;
   }
-  int64_t operator/(TimeDelta a) const {
-    return delta_ / a.delta_;
-  }
+  int64_t operator/(TimeDelta a) const { return delta_ / a.delta_; }
 
   // Defined below because it depends on the definition of the other classes.
   Time operator+(Time t) const;
   TimeTicks operator+(TimeTicks t) const;
 
   // Comparison operators.
-  bool operator==(TimeDelta other) const {
-    return delta_ == other.delta_;
-  }
-  bool operator!=(TimeDelta other) const {
-    return delta_ != other.delta_;
-  }
-  bool operator<(TimeDelta other) const {
-    return delta_ < other.delta_;
-  }
-  bool operator<=(TimeDelta other) const {
-    return delta_ <= other.delta_;
-  }
-  bool operator>(TimeDelta other) const {
-    return delta_ > other.delta_;
-  }
-  bool operator>=(TimeDelta other) const {
-    return delta_ >= other.delta_;
-  }
+  bool operator==(TimeDelta other) const { return delta_ == other.delta_; }
+  bool operator!=(TimeDelta other) const { return delta_ != other.delta_; }
+  bool operator<(TimeDelta other) const { return delta_ < other.delta_; }
+  bool operator<=(TimeDelta other) const { return delta_ <= other.delta_; }
+  bool operator>(TimeDelta other) const { return delta_ > other.delta_; }
+  bool operator>=(TimeDelta other) const { return delta_ >= other.delta_; }
 
  private:
   friend class Time;
@@ -152,8 +129,7 @@ class TimeDelta {
   // Constructs a delta given the duration in microseconds. This is private
   // to avoid confusion by callers with an integer constructor. Use
   // FromSeconds, FromMilliseconds, etc. instead.
-  explicit TimeDelta(int64_t delta_us) : delta_(delta_us) {
-  }
+  explicit TimeDelta(int64_t delta_us) : delta_(delta_us) {}
 
   // Delta in microseconds.
   int64_t delta_;
@@ -170,39 +146,36 @@ class Time {
  public:
   static const int64_t kMillisecondsPerSecond = 1000;
   static const int64_t kMicrosecondsPerMillisecond = 1000;
-  static const int64_t kMicrosecondsPerSecond = kMicrosecondsPerMillisecond *
-                                              kMillisecondsPerSecond;
+  static const int64_t kMicrosecondsPerSecond =
+      kMicrosecondsPerMillisecond * kMillisecondsPerSecond;
   static const int64_t kMicrosecondsPerMinute = kMicrosecondsPerSecond * 60;
   static const int64_t kMicrosecondsPerHour = kMicrosecondsPerMinute * 60;
   static const int64_t kMicrosecondsPerDay = kMicrosecondsPerHour * 24;
   static const int64_t kMicrosecondsPerWeek = kMicrosecondsPerDay * 7;
   static const int64_t kNanosecondsPerMicrosecond = 1000;
-  static const int64_t kNanosecondsPerSecond = kNanosecondsPerMicrosecond *
-                                             kMicrosecondsPerSecond;
+  static const int64_t kNanosecondsPerSecond =
+      kNanosecondsPerMicrosecond * kMicrosecondsPerSecond;
 
   // Represents an exploded time that can be formatted nicely. This is kind of
   // like the Win32 SYSTEMTIME structure or the Unix "struct tm" with a few
   // additions and changes to prevent errors.
   struct Exploded {
-    int year;                 // Four digit year "2007"
-    signed char month;        // 1-based month (values 1 = January, etc.)
-    signed char day_of_week;  // 0-based day of week (0 = Sunday, etc.)
-    signed char day_of_month; // 1-based day of month (1-31)
-    signed char hour;         // Hour within the current day (0-23)
-    signed char minute;       // Minute within the current hour (0-59)
-    signed char second;       // Second within the current minute (0-59 plus
-                              // leap seconds which may take it up to 60).
-    int millisecond;          // Milliseconds within the current second (0-999)
+    int year;                  // Four digit year "2007"
+    signed char month;         // 1-based month (values 1 = January, etc.)
+    signed char day_of_week;   // 0-based day of week (0 = Sunday, etc.)
+    signed char day_of_month;  // 1-based day of month (1-31)
+    signed char hour;          // Hour within the current day (0-23)
+    signed char minute;        // Minute within the current hour (0-59)
+    signed char second;        // Second within the current minute (0-59 plus
+                               // leap seconds which may take it up to 60).
+    int millisecond;           // Milliseconds within the current second (0-999)
   };
 
   // Contains the NULL time. Use Time::Now() to get the current time.
-  explicit Time() : us_(0) {
-  }
+  explicit Time() : us_(0) {}
 
   // Returns true if the time object has not been initialized.
-  bool is_null() const {
-    return us_ == 0;
-  }
+  bool is_null() const { return us_ == 0; }
 
   // Returns the current time. Watch out, the system might adjust its clock
   // in which case time will actually go backwards. We don't guarantee that
@@ -226,7 +199,6 @@ class Time {
   static Time FromDoubleT(double dt);
   double ToDoubleT() const;
 
-
 #if defined(OS_WIN)
   static Time FromFileTime(FILETIME ft);
   FILETIME ToFileTime() const;
@@ -245,9 +217,7 @@ class Time {
   // when deserializing a |Time| structure, using a value known to be
   // compatible. It is not provided as a constructor because the integer type
   // may be unclear from the perspective of a caller.
-  static Time FromInternalValue(int64_t us) {
-    return Time(us);
-  }
+  static Time FromInternalValue(int64_t us) { return Time(us); }
 
   // Converts a string representation of time to a Time object.
   // An example of a time string which is converted is as below:-
@@ -260,15 +230,11 @@ class Time {
   // For serializing, use FromInternalValue to reconstitute. Please don't use
   // this and do arithmetic on it, as it is more error prone than using the
   // provided operators.
-  int64_t ToInternalValue() const {
-    return us_;
-  }
+  int64_t ToInternalValue() const { return us_; }
 
   // Fills the given exploded structure with either the local time or UTC from
   // this time structure (containing UTC).
-  void UTCExplode(Exploded* exploded) const {
-    return Explode(false, exploded);
-  }
+  void UTCExplode(Exploded* exploded) const { return Explode(false, exploded); }
   void LocalExplode(Exploded* exploded) const {
     return Explode(true, exploded);
   }
@@ -283,9 +249,7 @@ class Time {
   }
 
   // Compute the difference between two times.
-  TimeDelta operator-(Time other) const {
-    return TimeDelta(us_ - other.us_);
-  }
+  TimeDelta operator-(Time other) const { return TimeDelta(us_ - other.us_); }
 
   // Modify by some time delta.
   Time& operator+=(TimeDelta delta) {
@@ -298,32 +262,16 @@ class Time {
   }
 
   // Return a new time modified by some delta.
-  Time operator+(TimeDelta delta) const {
-    return Time(us_ + delta.delta_);
-  }
-  Time operator-(TimeDelta delta) const {
-    return Time(us_ - delta.delta_);
-  }
+  Time operator+(TimeDelta delta) const { return Time(us_ + delta.delta_); }
+  Time operator-(TimeDelta delta) const { return Time(us_ - delta.delta_); }
 
   // Comparison operators
-  bool operator==(Time other) const {
-    return us_ == other.us_;
-  }
-  bool operator!=(Time other) const {
-    return us_ != other.us_;
-  }
-  bool operator<(Time other) const {
-    return us_ < other.us_;
-  }
-  bool operator<=(Time other) const {
-    return us_ <= other.us_;
-  }
-  bool operator>(Time other) const {
-    return us_ > other.us_;
-  }
-  bool operator>=(Time other) const {
-    return us_ >= other.us_;
-  }
+  bool operator==(Time other) const { return us_ == other.us_; }
+  bool operator!=(Time other) const { return us_ != other.us_; }
+  bool operator<(Time other) const { return us_ < other.us_; }
+  bool operator<=(Time other) const { return us_ <= other.us_; }
+  bool operator>(Time other) const { return us_ > other.us_; }
+  bool operator>=(Time other) const { return us_ >= other.us_; }
 
  private:
   friend class TimeDelta;
@@ -336,8 +284,7 @@ class Time {
   // |is_local = true| or UTC |is_local = false|.
   static Time FromExploded(bool is_local, const Exploded& exploded);
 
-  explicit Time(int64_t us) : us_(us) {
-  }
+  explicit Time(int64_t us) : us_(us) {}
 
   // The representation of Jan 1, 1970 UTC in microseconds since the
   // platform-dependent epoch.
@@ -347,9 +294,7 @@ class Time {
   int64_t us_;
 };
 
-inline Time TimeDelta::operator+(Time t) const {
-  return Time(t.us_ + delta_);
-}
+inline Time TimeDelta::operator+(Time t) const { return Time(t.us_ + delta_); }
 
 // Inline the TimeDelta factory methods, for fast TimeDelta construction.
 
@@ -387,8 +332,7 @@ inline TimeDelta TimeDelta::FromMicroseconds(int64_t us) {
 
 class TimeTicks {
  public:
-  TimeTicks() : ticks_(0) {
-  }
+  TimeTicks() : ticks_(0) {}
 
   // Platform-dependent tick count representing "right now."
   // The resolution of this clock is ~1-15ms.  Resolution varies depending
@@ -396,14 +340,10 @@ class TimeTicks {
   static TimeTicks Now();
 
   // Returns true if this object has not been initialized.
-  bool is_null() const {
-    return ticks_ == 0;
-  }
+  bool is_null() const { return ticks_ == 0; }
 
   // Returns the internal numeric value of the TimeTicks object.
-  int64_t ToInternalValue() const {
-    return ticks_;
-  }
+  int64_t ToInternalValue() const { return ticks_; }
 
   TimeTicks& operator=(TimeTicks other) {
     ticks_ = other.ticks_;
@@ -434,24 +374,12 @@ class TimeTicks {
   }
 
   // Comparison operators
-  bool operator==(TimeTicks other) const {
-    return ticks_ == other.ticks_;
-  }
-  bool operator!=(TimeTicks other) const {
-    return ticks_ != other.ticks_;
-  }
-  bool operator<(TimeTicks other) const {
-    return ticks_ < other.ticks_;
-  }
-  bool operator<=(TimeTicks other) const {
-    return ticks_ <= other.ticks_;
-  }
-  bool operator>(TimeTicks other) const {
-    return ticks_ > other.ticks_;
-  }
-  bool operator>=(TimeTicks other) const {
-    return ticks_ >= other.ticks_;
-  }
+  bool operator==(TimeTicks other) const { return ticks_ == other.ticks_; }
+  bool operator!=(TimeTicks other) const { return ticks_ != other.ticks_; }
+  bool operator<(TimeTicks other) const { return ticks_ < other.ticks_; }
+  bool operator<=(TimeTicks other) const { return ticks_ <= other.ticks_; }
+  bool operator>(TimeTicks other) const { return ticks_ > other.ticks_; }
+  bool operator>=(TimeTicks other) const { return ticks_ >= other.ticks_; }
 
  protected:
   friend class TimeDelta;
@@ -459,8 +387,7 @@ class TimeTicks {
 
   // Please use Now() to create a new object. This is for internal use
   // and testing. Ticks is in microseconds.
-  explicit TimeTicks(int64_t ticks) : ticks_(ticks) {
-  }
+  explicit TimeTicks(int64_t ticks) : ticks_(ticks) {}
 
   // Tick count in microseconds.
   int64_t ticks_;

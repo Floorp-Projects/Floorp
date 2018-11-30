@@ -2,6 +2,5 @@
 
 void foo() {
   std::string a;
-  if (a.size())
-    return;
+  if (a.size()) return;
 }

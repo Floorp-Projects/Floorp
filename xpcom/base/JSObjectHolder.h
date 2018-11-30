@@ -18,26 +18,25 @@ namespace mozilla {
 // This object should only be AddRefed and Released on the same thread as
 // mJSObject.
 //
-// Note that this keeps alive the JS object until it goes away, so be sure not to
-// create cycles that keep alive the holder.
+// Note that this keeps alive the JS object until it goes away, so be sure not
+// to create cycles that keep alive the holder.
 //
 // JSObjectHolder is ISupports to make it usable with
 // NS_ReleaseOnMainThreadSystemGroup.
-class JSObjectHolder final : public nsISupports
-{
-public:
+class JSObjectHolder final : public nsISupports {
+ public:
   JSObjectHolder(JSContext* aCx, JSObject* aObject) : mJSObject(aCx, aObject) {}
 
   NS_DECL_ISUPPORTS
 
   JSObject* GetJSObject() { return mJSObject; }
 
-private:
+ private:
   ~JSObjectHolder() {}
 
   JS::PersistentRooted<JSObject*> mJSObject;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_JSObjectHolder_h
+#endif  // mozilla_JSObjectHolder_h

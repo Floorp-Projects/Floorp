@@ -19,15 +19,14 @@
 namespace mozilla {
 namespace dom {
 
-void
-MessageManagerGlobal::Dump(const nsAString& aStr)
-{
+void MessageManagerGlobal::Dump(const nsAString& aStr) {
   if (!DOMPrefs::DumpEnabled()) {
     return;
   }
 
 #ifdef ANDROID
-  __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", NS_ConvertUTF16toUTF8(aStr).get());
+  __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s",
+                      NS_ConvertUTF16toUTF8(aStr).get());
 #endif
 #ifdef XP_WIN
   if (IsDebuggerPresent()) {
@@ -38,9 +37,7 @@ MessageManagerGlobal::Dump(const nsAString& aStr)
   fflush(stdout);
 }
 
-void
-MessageManagerGlobal::PrivateNoteIntentionalCrash(ErrorResult& aError)
-{
+void MessageManagerGlobal::PrivateNoteIntentionalCrash(ErrorResult& aError) {
   if (XRE_IsContentProcess()) {
     NoteIntentionalCrash("tab");
     return;
@@ -48,19 +45,15 @@ MessageManagerGlobal::PrivateNoteIntentionalCrash(ErrorResult& aError)
   aError.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
-void
-MessageManagerGlobal::Atob(const nsAString& aAsciiString, nsAString& aBase64Data,
-                           ErrorResult& aError)
-{
+void MessageManagerGlobal::Atob(const nsAString& aAsciiString,
+                                nsAString& aBase64Data, ErrorResult& aError) {
   aError = nsContentUtils::Atob(aAsciiString, aBase64Data);
 }
 
-void
-MessageManagerGlobal::Btoa(const nsAString& aBase64Data, nsAString& aAsciiString,
-                           ErrorResult& aError)
-{
+void MessageManagerGlobal::Btoa(const nsAString& aBase64Data,
+                                nsAString& aAsciiString, ErrorResult& aError) {
   aError = nsContentUtils::Btoa(aBase64Data, aAsciiString);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

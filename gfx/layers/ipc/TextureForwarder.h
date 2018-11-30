@@ -7,11 +7,11 @@
 #ifndef MOZILLA_LAYERS_TEXTUREFORWARDER
 #define MOZILLA_LAYERS_TEXTUREFORWARDER
 
-#include <stdint.h>                     // for int32_t, uint64_t
+#include <stdint.h>  // for int32_t, uint64_t
 #include "gfxTypes.h"
 #include "mozilla/layers/LayersMessages.h"  // for Edit, etc
-#include "mozilla/layers/LayersTypes.h"  // for LayersBackend
-#include "mozilla/layers/TextureClient.h"  // for TextureClient
+#include "mozilla/layers/LayersTypes.h"     // for LayersBackend
+#include "mozilla/layers/TextureClient.h"   // for TextureClient
 #include "mozilla/layers/KnowsCompositor.h"
 
 namespace mozilla {
@@ -25,7 +25,7 @@ namespace layers {
  * IPDL actor class. Lets us check if they are still valid for IPC.
  */
 class LayersIPCActor {
-public:
+ public:
   virtual bool IPCOpen() const { return true; }
 };
 
@@ -35,9 +35,9 @@ public:
  * Has their own MessageLoop for message dispatch, and can allocate
  * shmem.
  */
-class LayersIPCChannel : public LayersIPCActor
-                       , public mozilla::ipc::IShmemAllocator {
-public:
+class LayersIPCChannel : public LayersIPCActor,
+                         public mozilla::ipc::IShmemAllocator {
+ public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   virtual bool IsSameProcess() const = 0;
@@ -48,13 +48,17 @@ public:
 
   virtual MessageLoop* GetMessageLoop() const = 0;
 
-  virtual FixedSizeSmallShmemSectionAllocator* GetTileLockAllocator() { return nullptr; }
+  virtual FixedSizeSmallShmemSectionAllocator* GetTileLockAllocator() {
+    return nullptr;
+  }
 
   virtual void CancelWaitForRecycle(uint64_t aTextureId) = 0;
 
-  virtual wr::MaybeExternalImageId GetNextExternalImageId() { return Nothing(); }
+  virtual wr::MaybeExternalImageId GetNextExternalImageId() {
+    return Nothing();
+  }
 
-protected:
+ protected:
   virtual ~LayersIPCChannel() {}
 };
 
@@ -64,21 +68,19 @@ protected:
  * since all our implementations use both, but could be independant if needed.
  */
 class TextureForwarder : public LayersIPCChannel {
-public:
+ public:
   /**
-   * Create a TextureChild/Parent pair as as well as the TextureHost on the parent side.
+   * Create a TextureChild/Parent pair as as well as the TextureHost on the
+   * parent side.
    */
   virtual PTextureChild* CreateTexture(
-    const SurfaceDescriptor& aSharedData,
-    const ReadLockDescriptor& aReadLock,
-    LayersBackend aLayersBackend,
-    TextureFlags aFlags,
-    uint64_t aSerial,
-    wr::MaybeExternalImageId& aExternalImageId,
-    nsIEventTarget* aTarget = nullptr) = 0;
+      const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
+      LayersBackend aLayersBackend, TextureFlags aFlags, uint64_t aSerial,
+      wr::MaybeExternalImageId& aExternalImageId,
+      nsIEventTarget* aTarget = nullptr) = 0;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

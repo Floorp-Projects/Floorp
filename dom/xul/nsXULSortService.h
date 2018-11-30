@@ -17,7 +17,7 @@ namespace mozilla {
 
 namespace dom {
 class Element;
-} // namespace dom
+}  // namespace dom
 
 /**
  * Sort the contents of the widget containing <code>aNode</code>
@@ -34,10 +34,9 @@ class Element;
  *   integer: treat values as integers, non-integers are compared as strings
  *   twostate: don't allow the natural (unordered state)
  */
-nsresult XULWidgetSort(dom::Element* aNode,
-                       const nsAString& aSortKey,
+nsresult XULWidgetSort(dom::Element* aNode, const nsAString& aSortKey,
                        const nsAString& aSortHints);
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // nsXULSortService_h
+#endif  // nsXULSortService_h

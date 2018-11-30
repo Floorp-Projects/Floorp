@@ -19,15 +19,16 @@ namespace dom {
 
 class Promise;
 
-class ScreenOrientation final : public DOMEventTargetHelper,
-                                public mozilla::hal::ScreenConfigurationObserver
-{
+class ScreenOrientation final
+    : public DOMEventTargetHelper,
+      public mozilla::hal::ScreenConfigurationObserver {
   // nsScreen has deprecated API that shares implementation.
   friend class ::nsScreen;
 
-public:
+ public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ScreenOrientation, mozilla::DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ScreenOrientation,
+                                           mozilla::DOMEventTargetHelper)
 
   IMPL_EVENT_HANDLER(change)
 
@@ -47,13 +48,14 @@ public:
   OrientationType GetType(CallerType aCallerType, ErrorResult& aRv) const;
   uint16_t GetAngle(CallerType aCallerType, ErrorResult& aRv) const;
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   void Notify(const mozilla::hal::ScreenConfiguration& aConfiguration) override;
 
   static void UpdateActiveOrientationLock(hal::ScreenOrientation aOrientation);
 
-private:
+ private:
   virtual ~ScreenOrientation();
 
   // Listener to unlock orientation if we leave fullscreen.
@@ -66,11 +68,7 @@ private:
   // Task to run step to lock orientation as defined in specification.
   class LockOrientationTask;
 
-  enum LockPermission {
-    LOCK_DENIED,
-    FULLSCREEN_LOCK_ALLOWED,
-    LOCK_ALLOWED
-  };
+  enum LockPermission { LOCK_DENIED, FULLSCREEN_LOCK_ALLOWED, LOCK_ALLOWED };
 
   // This method calls into the HAL to lock the device and sets
   // up listeners for full screen change.
@@ -104,7 +102,7 @@ private:
   uint16_t mAngle;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ScreenOrientation_h
+#endif  // mozilla_dom_ScreenOrientation_h

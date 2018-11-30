@@ -28,29 +28,28 @@ namespace mozilla {
 // type, this iterator implements the full standard random access iterator spec,
 // and can be treated in many ways as though it is a pointer. Otherwise, it is
 // just enough to be used in range-based for loop.
-template<class Element, class ArrayType>
-class ArrayIterator
-{
-public:
-  typedef ArrayType                               array_type;
-  typedef ArrayIterator<Element, ArrayType>       iterator_type;
-  typedef typename array_type::index_type         index_type;
+template <class Element, class ArrayType>
+class ArrayIterator {
+ public:
+  typedef ArrayType array_type;
+  typedef ArrayIterator<Element, ArrayType> iterator_type;
+  typedef typename array_type::index_type index_type;
   typedef typename RemoveReference<Element>::Type value_type;
-  typedef ptrdiff_t                               difference_type;
-  typedef value_type*                             pointer;
-  typedef value_type&                             reference;
-  typedef std::random_access_iterator_tag         iterator_category;
+  typedef ptrdiff_t difference_type;
+  typedef value_type* pointer;
+  typedef value_type& reference;
+  typedef std::random_access_iterator_tag iterator_category;
 
-private:
+ private:
   const array_type* mArray;
   index_type mIndex;
 
-public:
+ public:
   ArrayIterator() : mArray(nullptr), mIndex(0) {}
   ArrayIterator(const iterator_type& aOther)
-    : mArray(aOther.mArray), mIndex(aOther.mIndex) {}
+      : mArray(aOther.mArray), mIndex(aOther.mIndex) {}
   ArrayIterator(const array_type& aArray, index_type aIndex)
-    : mArray(&aArray), mIndex(aIndex) {}
+      : mArray(&aArray), mIndex(aIndex) {}
 
   iterator_type& operator=(const iterator_type& aOther) {
     mArray = aOther.mArray;
@@ -61,9 +60,7 @@ public:
   bool operator==(const iterator_type& aRhs) const {
     return mIndex == aRhs.mIndex;
   }
-  bool operator!=(const iterator_type& aRhs) const {
-    return !(*this == aRhs);
-  }
+  bool operator!=(const iterator_type& aRhs) const { return !(*this == aRhs); }
   bool operator<(const iterator_type& aRhs) const {
     return mIndex < aRhs.mIndex;
   }
@@ -127,7 +124,7 @@ public:
 
   difference_type operator-(const iterator_type& aOther) const {
     return static_cast<difference_type>(mIndex) -
-      static_cast<difference_type>(aOther.mIndex);
+           static_cast<difference_type>(aOther.mIndex);
   }
 
   Element operator[](difference_type aIndex) const {
@@ -135,6 +132,6 @@ public:
   }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ArrayIterator_h
+#endif  // mozilla_ArrayIterator_h

@@ -12,19 +12,15 @@
 
 namespace mozilla {
 namespace layers {
-  class Image;
+class Image;
 }
 
-class ImageBuffer : public webrtc::VideoFrameBuffer
-{
-public:
+class ImageBuffer : public webrtc::VideoFrameBuffer {
+ public:
   explicit ImageBuffer(RefPtr<layers::Image>&& aImage)
-    : mImage(std::move(aImage))
-  {
-  }
+      : mImage(std::move(aImage)) {}
 
-  rtc::scoped_refptr<webrtc::I420BufferInterface> ToI420() override
-  {
+  rtc::scoped_refptr<webrtc::I420BufferInterface> ToI420() override {
     RefPtr<layers::PlanarYCbCrImage> image = mImage->AsPlanarYCbCrImage();
     MOZ_ASSERT(image);
     if (!image) {
@@ -33,43 +29,26 @@ public:
     }
     const layers::PlanarYCbCrData* data = image->GetData();
     rtc::scoped_refptr<webrtc::I420BufferInterface> buf(
-      new rtc::RefCountedObject<webrtc::WrappedI420Buffer>(
-        data->mPicSize.width,
-        data->mPicSize.height,
-        data->mYChannel,
-        data->mYStride,
-        data->mCbChannel,
-        data->mCbCrStride,
-        data->mCrChannel,
-        data->mCbCrStride,
-        rtc::KeepRefUntilDone(image.get())));
+        new rtc::RefCountedObject<webrtc::WrappedI420Buffer>(
+            data->mPicSize.width, data->mPicSize.height, data->mYChannel,
+            data->mYStride, data->mCbChannel, data->mCbCrStride,
+            data->mCrChannel, data->mCbCrStride,
+            rtc::KeepRefUntilDone(image.get())));
     return buf;
   }
 
-  Type type() const override
-  {
-    return Type::kNative;
-  }
+  Type type() const override { return Type::kNative; }
 
-  int width() const override
-  {
-    return mImage->GetSize().width;
-  }
+  int width() const override { return mImage->GetSize().width; }
 
-  int height() const override
-  {
-    return mImage->GetSize().height;
-  }
+  int height() const override { return mImage->GetSize().height; }
 
-  RefPtr<layers::Image> GetNativeImage() const
-  {
-    return mImage;
-  }
+  RefPtr<layers::Image> GetNativeImage() const { return mImage; }
 
-private:
+ private:
   const RefPtr<layers::Image> mImage;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // WebrtcImageBuffer_h__
+#endif  // WebrtcImageBuffer_h__

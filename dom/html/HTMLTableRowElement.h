@@ -16,12 +16,11 @@ namespace dom {
 
 class HTMLTableSectionElement;
 
-class HTMLTableRowElement final : public nsGenericHTMLElement
-{
-public:
-  explicit HTMLTableRowElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsGenericHTMLElement(std::move(aNodeInfo))
-  {
+class HTMLTableRowElement final : public nsGenericHTMLElement {
+ public:
+  explicit HTMLTableRowElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+      : nsGenericHTMLElement(std::move(aNodeInfo)) {
     SetHasWeirdParserInsertionMode();
   }
 
@@ -33,57 +32,41 @@ public:
   int32_t RowIndex() const;
   int32_t SectionRowIndex() const;
   nsIHTMLCollection* Cells();
-  already_AddRefed<nsGenericHTMLElement>
-    InsertCell(int32_t aIndex, ErrorResult& aError);
+  already_AddRefed<nsGenericHTMLElement> InsertCell(int32_t aIndex,
+                                                    ErrorResult& aError);
   void DeleteCell(int32_t aValue, ErrorResult& aError);
 
-  void GetAlign(DOMString& aAlign)
-  {
-    GetHTMLAttr(nsGkAtoms::align, aAlign);
-  }
-  void SetAlign(const nsAString& aAlign, ErrorResult& aError)
-  {
+  void GetAlign(DOMString& aAlign) { GetHTMLAttr(nsGkAtoms::align, aAlign); }
+  void SetAlign(const nsAString& aAlign, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::align, aAlign, aError);
   }
-  void GetCh(DOMString& aCh)
-  {
-    GetHTMLAttr(nsGkAtoms::_char, aCh);
-  }
-  void SetCh(const nsAString& aCh, ErrorResult& aError)
-  {
+  void GetCh(DOMString& aCh) { GetHTMLAttr(nsGkAtoms::_char, aCh); }
+  void SetCh(const nsAString& aCh, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::_char, aCh, aError);
   }
-  void GetChOff(DOMString& aChOff)
-  {
-    GetHTMLAttr(nsGkAtoms::charoff, aChOff);
-  }
-  void SetChOff(const nsAString& aChOff, ErrorResult& aError)
-  {
+  void GetChOff(DOMString& aChOff) { GetHTMLAttr(nsGkAtoms::charoff, aChOff); }
+  void SetChOff(const nsAString& aChOff, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::charoff, aChOff, aError);
   }
-  void GetVAlign(DOMString& aVAlign)
-  {
+  void GetVAlign(DOMString& aVAlign) {
     GetHTMLAttr(nsGkAtoms::valign, aVAlign);
   }
-  void SetVAlign(const nsAString& aVAlign, ErrorResult& aError)
-  {
+  void SetVAlign(const nsAString& aVAlign, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::valign, aVAlign, aError);
   }
-  void GetBgColor(DOMString& aBgColor)
-  {
+  void GetBgColor(DOMString& aBgColor) {
     GetHTMLAttr(nsGkAtoms::bgcolor, aBgColor);
   }
-  void SetBgColor(const nsAString& aBgColor, ErrorResult& aError)
-  {
+  void SetBgColor(const nsAString& aBgColor, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::bgcolor, aBgColor, aError);
   }
 
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsIPrincipal* aMaybeScriptedPrincipal,
-                                nsAttrValue& aResult) override;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
+  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                              const nsAString& aValue,
+                              nsIPrincipal* aMaybeScriptedPrincipal,
+                              nsAttrValue& aResult) override;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
+      const override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
@@ -91,21 +74,22 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(HTMLTableRowElement,
                                                      nsGenericHTMLElement)
 
-protected:
+ protected:
   virtual ~HTMLTableRowElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
   HTMLTableSectionElement* GetSection() const;
   HTMLTableElement* GetTable() const;
   RefPtr<nsContentList> mCells;
 
-private:
+ private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     MappedDeclarations&);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_HTMLTableRowElement_h */

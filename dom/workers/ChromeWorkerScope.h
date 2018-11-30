@@ -12,10 +12,9 @@
 namespace mozilla {
 namespace dom {
 
-bool
-DefineChromeWorkerFunctions(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
+bool DefineChromeWorkerFunctions(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_workers_chromeworkerscope_h__
+#endif  // mozilla_dom_workers_chromeworkerscope_h__

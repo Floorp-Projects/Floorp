@@ -18,27 +18,42 @@ using namespace js::jit;
 void JitRuntime::generateEnterJIT(JSContext*, MacroAssembler&) { MOZ_CRASH(); }
 void JitRuntime::generateInvalidator(MacroAssembler&, Label*) { MOZ_CRASH(); }
 void JitRuntime::generateArgumentsRectifier(MacroAssembler&) { MOZ_CRASH(); }
-JitRuntime::BailoutTable JitRuntime::generateBailoutTable(MacroAssembler&, Label*, uint32_t) { MOZ_CRASH(); }
-void JitRuntime::generateBailoutHandler(MacroAssembler&, Label*) { MOZ_CRASH(); }
-uint32_t JitRuntime::generatePreBarrier(JSContext*, MacroAssembler&, MIRType) { MOZ_CRASH(); }
+JitRuntime::BailoutTable JitRuntime::generateBailoutTable(MacroAssembler&,
+                                                          Label*, uint32_t) {
+  MOZ_CRASH();
+}
+void JitRuntime::generateBailoutHandler(MacroAssembler&, Label*) {
+  MOZ_CRASH();
+}
+uint32_t JitRuntime::generatePreBarrier(JSContext*, MacroAssembler&, MIRType) {
+  MOZ_CRASH();
+}
 JitCode* JitRuntime::generateDebugTrapHandler(JSContext*) { MOZ_CRASH(); }
-void JitRuntime::generateExceptionTailStub(MacroAssembler&, void*, Label*) { MOZ_CRASH(); }
-void JitRuntime::generateBailoutTailStub(MacroAssembler&, Label*) { MOZ_CRASH(); }
-void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler&, Label*) { MOZ_CRASH(); }
+void JitRuntime::generateExceptionTailStub(MacroAssembler&, void*, Label*) {
+  MOZ_CRASH();
+}
+void JitRuntime::generateBailoutTailStub(MacroAssembler&, Label*) {
+  MOZ_CRASH();
+}
+void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler&, Label*) {
+  MOZ_CRASH();
+}
 
-bool JitRuntime::generateVMWrapper(JSContext*, MacroAssembler&, const VMFunction&) { MOZ_CRASH(); }
+bool JitRuntime::generateVMWrapper(JSContext*, MacroAssembler&,
+                                   const VMFunction&) {
+  MOZ_CRASH();
+}
 
 FrameSizeClass FrameSizeClass::FromDepth(uint32_t) { MOZ_CRASH(); }
 FrameSizeClass FrameSizeClass::ClassLimit() { MOZ_CRASH(); }
 uint32_t FrameSizeClass::frameSize() const { MOZ_CRASH(); }
 
-BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& iter, BailoutStack* bailout)
-{
-    MOZ_CRASH();
+BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& iter,
+                                   BailoutStack* bailout) {
+  MOZ_CRASH();
 }
 
-BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& iter, InvalidationBailoutStack* bailout)
-{
-    MOZ_CRASH();
+BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& iter,
+                                   InvalidationBailoutStack* bailout) {
+  MOZ_CRASH();
 }
-

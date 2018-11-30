@@ -15,7 +15,7 @@ namespace mozilla {
 namespace ipc {
 class PBackgroundChild;
 class PrincipalInfo;
-} // namespace ipc
+}  // namespace ipc
 namespace dom {
 
 class ClientClaimArgs;
@@ -36,8 +36,7 @@ class WorkerPrivate;
 // objects.  It allows other parts of the system to attach to this globals
 // by creating ClientHandle objects.  The ClientManager also provides
 // methods for querying the list of clients active in the system.
-class ClientManager final : public ClientThing<ClientManagerChild>
-{
+class ClientManager final : public ClientThing<ClientManagerChild> {
   friend class ClientManagerChild;
   friend class ClientSource;
 
@@ -47,76 +46,69 @@ class ClientManager final : public ClientThing<ClientManagerChild>
   // Utility method to trigger a shutdown of the ClientManager.  This
   // is called in various error conditions or when the last reference
   // is dropped.
-  void
-  Shutdown();
+  void Shutdown();
 
-  UniquePtr<ClientSource>
-  CreateSourceInternal(ClientType aType,
-                       nsISerialEventTarget* aEventTarget,
-                       const mozilla::ipc::PrincipalInfo& aPrincipal);
+  UniquePtr<ClientSource> CreateSourceInternal(
+      ClientType aType, nsISerialEventTarget* aEventTarget,
+      const mozilla::ipc::PrincipalInfo& aPrincipal);
 
-  already_AddRefed<ClientHandle>
-  CreateHandleInternal(const ClientInfo& aClientInfo,
-                       nsISerialEventTarget* aSerialEventTarget);
+  already_AddRefed<ClientHandle> CreateHandleInternal(
+      const ClientInfo& aClientInfo, nsISerialEventTarget* aSerialEventTarget);
 
   // Utility method to perform an IPC operation.  This will create a
   // PClientManagerOp actor tied to a MozPromise.  The promise will
   // resolve or reject with the result of the remote operation.
-  already_AddRefed<ClientOpPromise>
-  StartOp(const ClientOpConstructorArgs& aArgs,
-          nsISerialEventTarget* aSerialEventTarget);
+  already_AddRefed<ClientOpPromise> StartOp(
+      const ClientOpConstructorArgs& aArgs,
+      nsISerialEventTarget* aSerialEventTarget);
 
   // Get or create the TLS singleton.  Currently this is only used
   // internally and external code indirectly calls it by invoking
   // static methods.
-  static already_AddRefed<ClientManager>
-  GetOrCreateForCurrentThread();
+  static already_AddRefed<ClientManager> GetOrCreateForCurrentThread();
 
   // Private methods called by ClientSource
-  mozilla::dom::WorkerPrivate*
-  GetWorkerPrivate() const;
+  mozilla::dom::WorkerPrivate* GetWorkerPrivate() const;
 
-public:
+ public:
   // Initialize the ClientManager at process start.  This
   // does book-keeping like creating a TLS identifier, etc.
   // This should only be called by process startup code.
-  static void
-  Startup();
+  static void Startup();
 
-  static UniquePtr<ClientSource>
-  CreateSource(ClientType aType, nsISerialEventTarget* aEventTarget,
-               nsIPrincipal* aPrincipal);
+  static UniquePtr<ClientSource> CreateSource(
+      ClientType aType, nsISerialEventTarget* aEventTarget,
+      nsIPrincipal* aPrincipal);
 
-  static UniquePtr<ClientSource>
-  CreateSource(ClientType aType, nsISerialEventTarget* aEventTarget,
-               const mozilla::ipc::PrincipalInfo& aPrincipal);
+  static UniquePtr<ClientSource> CreateSource(
+      ClientType aType, nsISerialEventTarget* aEventTarget,
+      const mozilla::ipc::PrincipalInfo& aPrincipal);
 
-  static already_AddRefed<ClientHandle>
-  CreateHandle(const ClientInfo& aClientInfo,
-               nsISerialEventTarget* aSerialEventTarget);
+  static already_AddRefed<ClientHandle> CreateHandle(
+      const ClientInfo& aClientInfo, nsISerialEventTarget* aSerialEventTarget);
 
-  static RefPtr<ClientOpPromise>
-  MatchAll(const ClientMatchAllArgs& aArgs, nsISerialEventTarget* aTarget);
+  static RefPtr<ClientOpPromise> MatchAll(const ClientMatchAllArgs& aArgs,
+                                          nsISerialEventTarget* aTarget);
 
-  static RefPtr<ClientOpPromise>
-  Claim(const ClientClaimArgs& aArgs, nsISerialEventTarget* aSerialEventTarget);
+  static RefPtr<ClientOpPromise> Claim(
+      const ClientClaimArgs& aArgs, nsISerialEventTarget* aSerialEventTarget);
 
-  static RefPtr<ClientOpPromise>
-  GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs,
-                  nsISerialEventTarget* aSerialEventTarget);
+  static RefPtr<ClientOpPromise> GetInfoAndState(
+      const ClientGetInfoAndStateArgs& aArgs,
+      nsISerialEventTarget* aSerialEventTarget);
 
-  static RefPtr<ClientOpPromise>
-  Navigate(const ClientNavigateArgs& aArgs,
-           nsISerialEventTarget* aSerialEventTarget);
+  static RefPtr<ClientOpPromise> Navigate(
+      const ClientNavigateArgs& aArgs,
+      nsISerialEventTarget* aSerialEventTarget);
 
-  static RefPtr<ClientOpPromise>
-  OpenWindow(const ClientOpenWindowArgs& aArgs,
-             nsISerialEventTarget* aSerialEventTarget);
+  static RefPtr<ClientOpPromise> OpenWindow(
+      const ClientOpenWindowArgs& aArgs,
+      nsISerialEventTarget* aSerialEventTarget);
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::ClientManager)
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // _mozilla_dom_ClientManager_h
+#endif  // _mozilla_dom_ClientManager_h

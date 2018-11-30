@@ -18,17 +18,17 @@ namespace layers {
 /**
  * A texture source interface that can be used by the software Compositor.
  */
-class TextureSourceBasic
-{
-public:
+class TextureSourceBasic {
+ public:
   TextureSourceBasic() : mFromYCBCR(false) {}
   virtual ~TextureSourceBasic() {}
   virtual gfx::SourceSurface* GetSurface(gfx::DrawTarget* aTarget) = 0;
   virtual void SetBufferTextureHost(BufferTextureHost* aTexture) {}
-  bool mFromYCBCR; // we to track sources from YCBCR so we can use a less accurate fast path for video
+  bool mFromYCBCR;  // we to track sources from YCBCR so we can use a less
+                    // accurate fast path for video
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // MOZILLA_GFX_TEXTUREHOSTBASIC_H_
+#endif  // MOZILLA_GFX_TEXTUREHOSTBASIC_H_

@@ -10,19 +10,19 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/GPUChild.h"
 #include "mozilla/ipc/ProtocolTypes.h"
-#include "mozilla/ipc/ProtocolUtils.h"       // for IToplevelProtocol
-#include "mozilla/TimeStamp.h"               // for TimeStamp
+#include "mozilla/ipc/ProtocolUtils.h"  // for IToplevelProtocol
+#include "mozilla/TimeStamp.h"          // for TimeStamp
 #include "mozilla/Unused.h"
 #include "VRChild.h"
 #include "VRManager.h"
 #include "VRThread.h"
 #include "gfxVRPuppet.h"
 
-#include "nsAppRunner.h"                  // for IToplevelProtocol
+#include "nsAppRunner.h"  // for IToplevelProtocol
 #include "mozilla/ipc/ProtocolUtils.h"
 
-using std::vector;
 using std::string;
+using std::vector;
 
 using namespace mozilla::ipc;
 
@@ -30,15 +30,13 @@ namespace mozilla {
 namespace gfx {
 
 VRProcessParent::VRProcessParent()
-  : GeckoChildProcessHost(GeckoProcessType_VR),
-    mTaskFactory(this),
-    mChannelClosed(false)
-{
+    : GeckoChildProcessHost(GeckoProcessType_VR),
+      mTaskFactory(this),
+      mChannelClosed(false) {
   MOZ_COUNT_CTOR(VRProcessParent);
 }
 
-VRProcessParent::~VRProcessParent()
-{
+VRProcessParent::~VRProcessParent() {
   // Cancel all tasks. We don't want anything triggering after our caller
   // expects this to go away.
   {
@@ -48,9 +46,7 @@ VRProcessParent::~VRProcessParent()
   MOZ_COUNT_DTOR(VRProcessParent);
 }
 
-bool
-VRProcessParent::Launch()
-{
+bool VRProcessParent::Launch() {
   mLaunchThread = NS_GetCurrentThread();
 
   std::vector<std::string> extraArgs;
@@ -64,9 +60,7 @@ VRProcessParent::Launch()
   return true;
 }
 
-void
-VRProcessParent::Shutdown()
-{
+void VRProcessParent::Shutdown() {
   if (mVRChild) {
     // The channel might already be closed if we got here unexpectedly.
     if (!mChannelClosed) {
@@ -91,28 +85,22 @@ VRProcessParent::Shutdown()
   DestroyProcess();
 }
 
-static void
-DelayedDeleteSubprocess(GeckoChildProcessHost* aSubprocess)
-{
-  XRE_GetIOMessageLoop()->
-    PostTask(mozilla::MakeAndAddRef<DeleteTask<GeckoChildProcessHost>>(aSubprocess));
+static void DelayedDeleteSubprocess(GeckoChildProcessHost* aSubprocess) {
+  XRE_GetIOMessageLoop()->PostTask(
+      mozilla::MakeAndAddRef<DeleteTask<GeckoChildProcessHost>>(aSubprocess));
 }
 
-
-void
-VRProcessParent::DestroyProcess()
-{
-  mLaunchThread->Dispatch(NewRunnableFunction("DestroyProcessRunnable", DelayedDeleteSubprocess, this));
+void VRProcessParent::DestroyProcess() {
+  mLaunchThread->Dispatch(NewRunnableFunction("DestroyProcessRunnable",
+                                              DelayedDeleteSubprocess, this));
 }
 
-void
-VRProcessParent::InitAfterConnect(bool aSucceeded)
-{
+void VRProcessParent::InitAfterConnect(bool aSucceeded) {
   if (aSucceeded) {
     mVRChild = MakeUnique<VRChild>(this);
 
     DebugOnly<bool> rv =
-      mVRChild->Open(GetChannel(), base::GetProcId(GetChildProcessHandle()));
+        mVRChild->Open(GetChannel(), base::GetProcId(GetChildProcessHandle()));
     MOZ_ASSERT(rv);
 
     mVRChild->Init();
@@ -123,16 +111,15 @@ VRProcessParent::InitAfterConnect(bool aSucceeded)
 
     Endpoint<PVRGPUChild> vrGPUBridge;
     VRProcessManager* vpm = VRProcessManager::Get();
-    DebugOnly<bool> opened = vpm->CreateGPUBridges(gpuChild->OtherPid(), &vrGPUBridge);
+    DebugOnly<bool> opened =
+        vpm->CreateGPUBridges(gpuChild->OtherPid(), &vrGPUBridge);
     MOZ_ASSERT(opened);
 
     Unused << gpuChild->SendInitVR(std::move(vrGPUBridge));
   }
 }
 
-void
-VRProcessParent::KillHard(const char* aReason)
-{
+void VRProcessParent::KillHard(const char* aReason) {
   ProcessHandle handle = GetChildProcessHandle();
   if (!base::KillProcess(handle, base::PROCESS_END_KILLED_BY_USER, false)) {
     NS_WARNING("failed to kill subprocess!");
@@ -141,15 +128,11 @@ VRProcessParent::KillHard(const char* aReason)
   SetAlreadyDead();
 }
 
-void
-VRProcessParent::OnChannelError()
-{
+void VRProcessParent::OnChannelError() {
   MOZ_ASSERT(false, "VR process channel error.");
 }
 
-void
-VRProcessParent::OnChannelConnected(int32_t peer_pid)
-{
+void VRProcessParent::OnChannelConnected(int32_t peer_pid) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   GeckoChildProcessHost::OnChannelConnected(peer_pid);
@@ -159,26 +142,19 @@ VRProcessParent::OnChannelConnected(int32_t peer_pid)
   RefPtr<Runnable> runnable;
   {
     MonitorAutoLock lock(mMonitor);
-    runnable = mTaskFactory.NewRunnableMethod(&VRProcessParent::OnChannelConnectedTask);
+    runnable = mTaskFactory.NewRunnableMethod(
+        &VRProcessParent::OnChannelConnectedTask);
   }
   NS_DispatchToMainThread(runnable);
 }
 
-void
-VRProcessParent::OnChannelConnectedTask()
-{
-  InitAfterConnect(true);
-}
+void VRProcessParent::OnChannelConnectedTask() { InitAfterConnect(true); }
 
-void
-VRProcessParent::OnChannelErrorTask()
-{
+void VRProcessParent::OnChannelErrorTask() {
   MOZ_ASSERT(false, "VR process channel error.");
 }
 
-void
-VRProcessParent::OnChannelClosed()
-{
+void VRProcessParent::OnChannelClosed() {
   mChannelClosed = true;
   DestroyProcess();
 
@@ -187,11 +163,7 @@ VRProcessParent::OnChannelClosed()
   MOZ_ASSERT(!mVRChild);
 }
 
-base::ProcessId
-VRProcessParent::OtherPid()
-{
-  return mVRChild->OtherPid();
-}
+base::ProcessId VRProcessParent::OtherPid() { return mVRChild->OtherPid(); }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

@@ -10,17 +10,11 @@
 
 namespace mozilla {
 
-bool
-operator==(const ct::Buffer& a, const ct::Buffer& b)
-{
+bool operator==(const ct::Buffer& a, const ct::Buffer& b) {
   return (a.empty() && b.empty()) ||
-    (a.size() == b.size() && memcmp(a.data(), b.data(), a.size()) == 0);
+         (a.size() == b.size() && memcmp(a.data(), b.data(), a.size()) == 0);
 }
 
-bool
-operator!=(const ct::Buffer& a, const ct::Buffer& b)
-{
-  return !(a == b);
-}
+bool operator!=(const ct::Buffer& a, const ct::Buffer& b) { return !(a == b); }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -16,47 +16,43 @@ class nsIDocument;
 namespace mozilla {
 
 class WebBrowserPersistDocumentChild final
-    : public PWebBrowserPersistDocumentChild
-{
-public:
-    WebBrowserPersistDocumentChild();
-    ~WebBrowserPersistDocumentChild();
+    : public PWebBrowserPersistDocumentChild {
+ public:
+  WebBrowserPersistDocumentChild();
+  ~WebBrowserPersistDocumentChild();
 
-    // This sends either Attributes or InitFailure and thereby causes
-    // the actor to leave the START state.
-    void Start(nsIWebBrowserPersistDocument* aDocument);
-    void Start(nsIDocument* aDocument);
+  // This sends either Attributes or InitFailure and thereby causes
+  // the actor to leave the START state.
+  void Start(nsIWebBrowserPersistDocument* aDocument);
+  void Start(nsIDocument* aDocument);
 
-    virtual mozilla::ipc::IPCResult
-    RecvSetPersistFlags(const uint32_t& aNewFlags) override;
+  virtual mozilla::ipc::IPCResult RecvSetPersistFlags(
+      const uint32_t& aNewFlags) override;
 
-    virtual PWebBrowserPersistResourcesChild*
-    AllocPWebBrowserPersistResourcesChild() override;
-    virtual mozilla::ipc::IPCResult
-    RecvPWebBrowserPersistResourcesConstructor(PWebBrowserPersistResourcesChild* aActor) override;
-    virtual bool
-    DeallocPWebBrowserPersistResourcesChild(PWebBrowserPersistResourcesChild* aActor) override;
+  virtual PWebBrowserPersistResourcesChild*
+  AllocPWebBrowserPersistResourcesChild() override;
+  virtual mozilla::ipc::IPCResult RecvPWebBrowserPersistResourcesConstructor(
+      PWebBrowserPersistResourcesChild* aActor) override;
+  virtual bool DeallocPWebBrowserPersistResourcesChild(
+      PWebBrowserPersistResourcesChild* aActor) override;
 
-    virtual PWebBrowserPersistSerializeChild*
-    AllocPWebBrowserPersistSerializeChild(
-            const WebBrowserPersistURIMap& aMap,
-            const nsCString& aRequestedContentType,
-            const uint32_t& aEncoderFlags,
-            const uint32_t& aWrapColumn) override;
-    virtual mozilla::ipc::IPCResult
-    RecvPWebBrowserPersistSerializeConstructor(
-            PWebBrowserPersistSerializeChild* aActor,
-            const WebBrowserPersistURIMap& aMap,
-            const nsCString& aRequestedContentType,
-            const uint32_t& aEncoderFlags,
-            const uint32_t& aWrapColumn) override;
-    virtual bool
-    DeallocPWebBrowserPersistSerializeChild(PWebBrowserPersistSerializeChild* aActor) override;
+  virtual PWebBrowserPersistSerializeChild*
+  AllocPWebBrowserPersistSerializeChild(const WebBrowserPersistURIMap& aMap,
+                                        const nsCString& aRequestedContentType,
+                                        const uint32_t& aEncoderFlags,
+                                        const uint32_t& aWrapColumn) override;
+  virtual mozilla::ipc::IPCResult RecvPWebBrowserPersistSerializeConstructor(
+      PWebBrowserPersistSerializeChild* aActor,
+      const WebBrowserPersistURIMap& aMap,
+      const nsCString& aRequestedContentType, const uint32_t& aEncoderFlags,
+      const uint32_t& aWrapColumn) override;
+  virtual bool DeallocPWebBrowserPersistSerializeChild(
+      PWebBrowserPersistSerializeChild* aActor) override;
 
-private:
-    nsCOMPtr<nsIWebBrowserPersistDocument> mDocument;
+ private:
+  nsCOMPtr<nsIWebBrowserPersistDocument> mDocument;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // WebBrowserPersistDocumentChild_h__
+#endif  // WebBrowserPersistDocumentChild_h__

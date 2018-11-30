@@ -17,15 +17,13 @@
 namespace mozilla {
 namespace net {
 
-class CaptivePortalService
-  : public nsICaptivePortalService
-  , public nsIObserver
-  , public nsSupportsWeakReference
-  , public nsITimerCallback
-  , public nsICaptivePortalCallback
-  , public nsINamed
-{
-public:
+class CaptivePortalService : public nsICaptivePortalService,
+                             public nsIObserver,
+                             public nsSupportsWeakReference,
+                             public nsITimerCallback,
+                             public nsICaptivePortalCallback,
+                             public nsINamed {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICAPTIVEPORTALSERVICE
   NS_DECL_NSIOBSERVER
@@ -42,35 +40,36 @@ public:
   // This method is only called in the content process, in order to mirror
   // the captive portal state in the parent process.
   void SetStateInChild(int32_t aState);
-private:
+
+ private:
   CaptivePortalService();
   virtual ~CaptivePortalService();
   nsresult PerformCheck();
   nsresult RearmTimer();
   void NotifyConnectivityAvailable(bool aCaptive);
 
-  nsCOMPtr<nsICaptivePortalDetector>    mCaptivePortalDetector;
-  int32_t                               mState;
+  nsCOMPtr<nsICaptivePortalDetector> mCaptivePortalDetector;
+  int32_t mState;
 
-  nsCOMPtr<nsITimer>                    mTimer;
-  bool                                  mStarted;
-  bool                                  mInitialized;
-  bool                                  mRequestInProgress;
-  bool                                  mEverBeenCaptive;
+  nsCOMPtr<nsITimer> mTimer;
+  bool mStarted;
+  bool mInitialized;
+  bool mRequestInProgress;
+  bool mEverBeenCaptive;
 
-  uint32_t                              mDelay;
-  int32_t                               mSlackCount;
+  uint32_t mDelay;
+  int32_t mSlackCount;
 
-  uint32_t                              mMinInterval;
-  uint32_t                              mMaxInterval;
-  float                                 mBackoffFactor;
+  uint32_t mMinInterval;
+  uint32_t mMaxInterval;
+  float mBackoffFactor;
 
   // This holds a timestamp when the last time when the captive portal check
   // has changed state.
-  mozilla::TimeStamp                    mLastChecked;
+  mozilla::TimeStamp mLastChecked;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // CaptivePortalService_h_
+#endif  // CaptivePortalService_h_

@@ -23,16 +23,15 @@ class nsMenuObjectX;
 
 #import <Cocoa/Cocoa.h>
 
-class nsMenuItemIconX : public imgINotificationObserver
-{
-public:
-  nsMenuItemIconX(nsMenuObjectX* aMenuItem,
-                  nsIContent*    aContent,
-                  NSMenuItem*    aNativeMenuItem);
-private:
+class nsMenuItemIconX : public imgINotificationObserver {
+ public:
+  nsMenuItemIconX(nsMenuObjectX* aMenuItem, nsIContent* aContent,
+                  NSMenuItem* aNativeMenuItem);
+
+ private:
   virtual ~nsMenuItemIconX();
 
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGINOTIFICATIONOBSERVER
 
@@ -53,18 +52,18 @@ public:
   // this from happening.  See bug 499600.
   void Destroy();
 
-protected:
+ protected:
   nsresult OnFrameComplete(imgIRequest* aRequest);
 
-  nsCOMPtr<nsIContent>      mContent;
-  nsCOMPtr<nsIPrincipal>    mTriggeringPrincipal;
-  nsContentPolicyType       mContentType;
+  nsCOMPtr<nsIContent> mContent;
+  nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
+  nsContentPolicyType mContentType;
   RefPtr<imgRequestProxy> mIconRequest;
-  nsMenuObjectX*            mMenuObject; // [weak]
-  nsIntRect                 mImageRegionRect;
-  bool                      mLoadedIcon;
-  bool                      mSetIcon;
-  NSMenuItem*               mNativeMenuItem; // [weak]
+  nsMenuObjectX* mMenuObject;  // [weak]
+  nsIntRect mImageRegionRect;
+  bool mLoadedIcon;
+  bool mSetIcon;
+  NSMenuItem* mNativeMenuItem;  // [weak]
 };
 
-#endif // nsMenuItemIconX_h_
+#endif  // nsMenuItemIconX_h_

@@ -232,8 +232,7 @@ class has_slots_interface {
   const disconnect_all_t m_disconnect_all;
 
  protected:
-  has_slots_interface(signal_connect_t conn,
-                      signal_disconnect_t disc,
+  has_slots_interface(signal_connect_t conn, signal_disconnect_t disc,
                       disconnect_all_t disc_all)
       : m_signal_connect(conn),
         m_signal_disconnect(disc),
@@ -393,8 +392,7 @@ class _signal_base : public _signal_base_interface, public mt_policy {
     connections_list::const_iterator it = m_connected_slots.begin();
     connections_list::const_iterator itEnd = m_connected_slots.end();
     while (it != itEnd) {
-      if (it->getdest() == pclass)
-        return true;
+      if (it->getdest() == pclass) return true;
       ++it;
     }
     return false;
@@ -584,60 +582,34 @@ using signal0 = signal_with_thread_policy<mt_policy>;
 template <typename A1, typename mt_policy = SIGSLOT_DEFAULT_MT_POLICY>
 using signal1 = signal_with_thread_policy<mt_policy, A1>;
 
-template <typename A1,
-          typename A2,
+template <typename A1, typename A2,
           typename mt_policy = SIGSLOT_DEFAULT_MT_POLICY>
 using signal2 = signal_with_thread_policy<mt_policy, A1, A2>;
 
-template <typename A1,
-          typename A2,
-          typename A3,
+template <typename A1, typename A2, typename A3,
           typename mt_policy = SIGSLOT_DEFAULT_MT_POLICY>
 using signal3 = signal_with_thread_policy<mt_policy, A1, A2, A3>;
 
-template <typename A1,
-          typename A2,
-          typename A3,
-          typename A4,
+template <typename A1, typename A2, typename A3, typename A4,
           typename mt_policy = SIGSLOT_DEFAULT_MT_POLICY>
 using signal4 = signal_with_thread_policy<mt_policy, A1, A2, A3, A4>;
 
-template <typename A1,
-          typename A2,
-          typename A3,
-          typename A4,
-          typename A5,
+template <typename A1, typename A2, typename A3, typename A4, typename A5,
           typename mt_policy = SIGSLOT_DEFAULT_MT_POLICY>
 using signal5 = signal_with_thread_policy<mt_policy, A1, A2, A3, A4, A5>;
 
-template <typename A1,
-          typename A2,
-          typename A3,
-          typename A4,
-          typename A5,
-          typename A6,
-          typename mt_policy = SIGSLOT_DEFAULT_MT_POLICY>
+template <typename A1, typename A2, typename A3, typename A4, typename A5,
+          typename A6, typename mt_policy = SIGSLOT_DEFAULT_MT_POLICY>
 using signal6 = signal_with_thread_policy<mt_policy, A1, A2, A3, A4, A5, A6>;
 
-template <typename A1,
-          typename A2,
-          typename A3,
-          typename A4,
-          typename A5,
-          typename A6,
-          typename A7,
+template <typename A1, typename A2, typename A3, typename A4, typename A5,
+          typename A6, typename A7,
           typename mt_policy = SIGSLOT_DEFAULT_MT_POLICY>
 using signal7 =
     signal_with_thread_policy<mt_policy, A1, A2, A3, A4, A5, A6, A7>;
 
-template <typename A1,
-          typename A2,
-          typename A3,
-          typename A4,
-          typename A5,
-          typename A6,
-          typename A7,
-          typename A8,
+template <typename A1, typename A2, typename A3, typename A4, typename A5,
+          typename A6, typename A7, typename A8,
           typename mt_policy = SIGSLOT_DEFAULT_MT_POLICY>
 using signal8 =
     signal_with_thread_policy<mt_policy, A1, A2, A3, A4, A5, A6, A7, A8>;

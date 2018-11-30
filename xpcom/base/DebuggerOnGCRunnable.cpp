@@ -14,26 +14,25 @@
 
 namespace mozilla {
 
-/* static */ nsresult
-DebuggerOnGCRunnable::Enqueue(JSContext* aCx, const JS::GCDescription& aDesc)
-{
+/* static */ nsresult DebuggerOnGCRunnable::Enqueue(
+    JSContext* aCx, const JS::GCDescription& aDesc) {
   auto gcEvent = aDesc.toGCEvent(aCx);
   if (!gcEvent) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   RefPtr<DebuggerOnGCRunnable> runOnGC =
-    new DebuggerOnGCRunnable(std::move(gcEvent));
+      new DebuggerOnGCRunnable(std::move(gcEvent));
   if (NS_IsMainThread()) {
-    return SystemGroup::Dispatch(TaskCategory::GarbageCollection, runOnGC.forget());
+    return SystemGroup::Dispatch(TaskCategory::GarbageCollection,
+                                 runOnGC.forget());
   } else {
     return NS_DispatchToCurrentThread(runOnGC);
   }
 }
 
 NS_IMETHODIMP
-DebuggerOnGCRunnable::Run()
-{
+DebuggerOnGCRunnable::Run() {
   AutoJSAPI jsapi;
   jsapi.Init();
   if (!JS::dbg::FireOnGarbageCollectionHook(jsapi.cx(), std::move(mGCData))) {
@@ -42,11 +41,9 @@ DebuggerOnGCRunnable::Run()
   return NS_OK;
 }
 
-nsresult
-DebuggerOnGCRunnable::Cancel()
-{
+nsresult DebuggerOnGCRunnable::Cancel() {
   mGCData = nullptr;
   return NS_OK;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

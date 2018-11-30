@@ -18,7 +18,7 @@
 #include "imgICache.h"
 #include "imgIContainer.h"
 #include "imgIEncoder.h"
-#include "nsNetUtil.h" // for NS_NewBufferedInputStream
+#include "nsNetUtil.h"  // for NS_NewBufferedInputStream
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 #include "nsContentUtils.h"
@@ -37,10 +37,9 @@ namespace image {
 
 namespace {
 
-class ImageDecoderHelper final : public Runnable
-                               , public nsIInputStreamCallback
-{
-public:
+class ImageDecoderHelper final : public Runnable,
+                                 public nsIInputStreamCallback {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   ImageDecoderHelper(already_AddRefed<image::Image> aImage,
@@ -48,20 +47,18 @@ public:
                      nsIEventTarget* aEventTarget,
                      imgIContainerCallback* aCallback,
                      nsIEventTarget* aCallbackEventTarget)
-    : Runnable("ImageDecoderHelper")
-    , mImage(std::move(aImage))
-    , mInputStream(std::move(aInputStream))
-    , mEventTarget(aEventTarget)
-    , mCallback(aCallback)
-    , mCallbackEventTarget(aCallbackEventTarget)
-    , mStatus(NS_OK)
-  {
+      : Runnable("ImageDecoderHelper"),
+        mImage(std::move(aImage)),
+        mInputStream(std::move(aInputStream)),
+        mEventTarget(aEventTarget),
+        mCallback(aCallback),
+        mCallbackEventTarget(aCallbackEventTarget),
+        mStatus(NS_OK) {
     MOZ_ASSERT(NS_IsMainThread());
   }
 
   NS_IMETHOD
-  Run() override
-  {
+  Run() override {
     // This runnable is dispatched on the Image thread when reading data, but
     // at the end, it goes back to the main-thread in order to complete the
     // operation.
@@ -94,7 +91,7 @@ public:
     // Nothing else to read, but maybe we just need to wait.
     if (length == 0) {
       nsCOMPtr<nsIAsyncInputStream> asyncInputStream =
-        do_QueryInterface(mInputStream);
+          do_QueryInterface(mInputStream);
       if (asyncInputStream) {
         rv = asyncInputStream->AsyncWait(this, 0, 0, mEventTarget);
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -125,15 +122,12 @@ public:
   }
 
   NS_IMETHOD
-  OnInputStreamReady(nsIAsyncInputStream* aAsyncInputStream) override
-  {
+  OnInputStreamReady(nsIAsyncInputStream* aAsyncInputStream) override {
     MOZ_ASSERT(!NS_IsMainThread());
     return Run();
   }
 
-  nsresult
-  OperationCompleted(nsresult aStatus)
-  {
+  nsresult OperationCompleted(nsresult aStatus) {
     MOZ_ASSERT(!NS_IsMainThread());
 
     mStatus = aStatus;
@@ -141,9 +135,8 @@ public:
     return NS_OK;
   }
 
-private:
-  ~ImageDecoderHelper()
-  {
+ private:
+  ~ImageDecoderHelper() {
     NS_ReleaseOnMainThreadSystemGroup("ImageDecoderHelper::mImage",
                                       mImage.forget());
     NS_ReleaseOnMainThreadSystemGroup("ImageDecoderHelper::mCallback",
@@ -163,30 +156,23 @@ private:
 NS_IMPL_ISUPPORTS_INHERITED(ImageDecoderHelper, Runnable,
                             nsIInputStreamCallback)
 
-} // anonymous
+}  // namespace
 
 /* ========== imgITools implementation ========== */
 
-
-
 NS_IMPL_ISUPPORTS(imgTools, imgITools)
 
-imgTools::imgTools()
-{
-  /* member initializers and constructor code */
+imgTools::imgTools() { /* member initializers and constructor code */
 }
 
-imgTools::~imgTools()
-{
-  /* destructor code */
+imgTools::~imgTools() { /* destructor code */
 }
 
 NS_IMETHODIMP
 imgTools::DecodeImageFromArrayBuffer(JS::HandleValue aArrayBuffer,
                                      const nsACString& aMimeType,
                                      JSContext* aCx,
-                                     imgIContainer** aContainer)
-{
+                                     imgIContainer** aContainer) {
   if (!aArrayBuffer.isObject()) {
     return NS_ERROR_FAILURE;
   }
@@ -210,8 +196,7 @@ imgTools::DecodeImageFromArrayBuffer(JS::HandleValue aArrayBuffer,
 NS_IMETHODIMP
 imgTools::DecodeImageFromBuffer(const char* aBuffer, uint32_t aSize,
                                 const nsACString& aMimeType,
-                                imgIContainer** aContainer)
-{
+                                imgIContainer** aContainer) {
   MOZ_ASSERT(NS_IsMainThread());
 
   NS_ENSURE_ARG_POINTER(aBuffer);
@@ -219,7 +204,7 @@ imgTools::DecodeImageFromBuffer(const char* aBuffer, uint32_t aSize,
   // Create a new image container to hold the decoded data.
   nsAutoCString mimeType(aMimeType);
   RefPtr<image::Image> image =
-    ImageFactory::CreateAnonymousImage(mimeType, aSize);
+      ImageFactory::CreateAnonymousImage(mimeType, aSize);
   RefPtr<ProgressTracker> tracker = image->GetProgressTracker();
 
   if (image->HasError()) {
@@ -228,15 +213,13 @@ imgTools::DecodeImageFromBuffer(const char* aBuffer, uint32_t aSize,
 
   // Let's create a temporary inputStream.
   nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream),
-                                      aBuffer, aSize,
+  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream), aBuffer, aSize,
                                       NS_ASSIGNMENT_DEPEND);
   NS_ENSURE_SUCCESS(rv, rv);
   MOZ_ASSERT(stream);
   MOZ_ASSERT(NS_InputStreamIsBuffered(stream));
 
-  rv = image->OnImageDataAvailable(nullptr, nullptr, stream, 0,
-                                   aSize);
+  rv = image->OnImageDataAvailable(nullptr, nullptr, stream, 0, aSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Let the Image know we've sent all the data.
@@ -250,11 +233,9 @@ imgTools::DecodeImageFromBuffer(const char* aBuffer, uint32_t aSize,
 }
 
 NS_IMETHODIMP
-imgTools::DecodeImageAsync(nsIInputStream* aInStr,
-                           const nsACString& aMimeType,
+imgTools::DecodeImageAsync(nsIInputStream* aInStr, const nsACString& aMimeType,
                            imgIContainerCallback* aCallback,
-                           nsIEventTarget* aEventTarget)
-{
+                           nsIEventTarget* aEventTarget) {
   MOZ_ASSERT(NS_IsMainThread());
 
   NS_ENSURE_ARG_POINTER(aInStr);
@@ -274,8 +255,8 @@ imgTools::DecodeImageAsync(nsIInputStream* aInStr,
   nsCOMPtr<nsIInputStream> stream = aInStr;
   if (!NS_InputStreamIsBuffered(aInStr)) {
     nsCOMPtr<nsIInputStream> bufStream;
-    rv = NS_NewBufferedInputStream(getter_AddRefs(bufStream),
-                                   stream.forget(), 1024);
+    rv = NS_NewBufferedInputStream(getter_AddRefs(bufStream), stream.forget(),
+                                   1024);
     NS_ENSURE_SUCCESS(rv, rv);
     stream = bufStream.forget();
   }
@@ -289,9 +270,8 @@ imgTools::DecodeImageAsync(nsIInputStream* aInStr,
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<ImageDecoderHelper> helper =
-    new ImageDecoderHelper(image.forget(), stream.forget(), target, aCallback,
-                           aEventTarget);
+  RefPtr<ImageDecoderHelper> helper = new ImageDecoderHelper(
+      image.forget(), stream.forget(), target, aCallback, aEventTarget);
   rv = target->Dispatch(helper.forget(), NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -304,20 +284,18 @@ imgTools::DecodeImageAsync(nsIInputStream* aInStr,
  * GetDataSurface on such surfaces since that may incure a conversion to
  * SurfaceType::DATA which we don't need.
  */
-static nsresult
-EncodeImageData(DataSourceSurface* aDataSurface,
-                DataSourceSurface::ScopedMap& aMap,
-                const nsACString& aMimeType,
-                const nsAString& aOutputOptions,
-                nsIInputStream** aStream)
-{
+static nsresult EncodeImageData(DataSourceSurface* aDataSurface,
+                                DataSourceSurface::ScopedMap& aMap,
+                                const nsACString& aMimeType,
+                                const nsAString& aOutputOptions,
+                                nsIInputStream** aStream) {
   MOZ_ASSERT(aDataSurface->GetFormat() == SurfaceFormat::B8G8R8A8 ||
-             aDataSurface->GetFormat() == SurfaceFormat::B8G8R8X8,
+                 aDataSurface->GetFormat() == SurfaceFormat::B8G8R8X8,
              "We're assuming B8G8R8A8/X8");
 
   // Get an image encoder for the media type
   nsAutoCString encoderCID(
-    NS_LITERAL_CSTRING("@mozilla.org/image/encoder;2?type=") + aMimeType);
+      NS_LITERAL_CSTRING("@mozilla.org/image/encoder;2?type=") + aMimeType);
 
   nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(encoderCID.get());
   if (!encoder) {
@@ -328,25 +306,19 @@ EncodeImageData(DataSourceSurface* aDataSurface,
   uint32_t dataLength = aMap.GetStride() * size.height;
 
   // Encode the bitmap
-  nsresult rv = encoder->InitFromData(aMap.GetData(),
-                                      dataLength,
-                                      size.width,
-                                      size.height,
-                                      aMap.GetStride(),
-                                      imgIEncoder::INPUT_FORMAT_HOSTARGB,
-                                      aOutputOptions);
+  nsresult rv = encoder->InitFromData(
+      aMap.GetData(), dataLength, size.width, size.height, aMap.GetStride(),
+      imgIEncoder::INPUT_FORMAT_HOSTARGB, aOutputOptions);
   NS_ENSURE_SUCCESS(rv, rv);
 
   encoder.forget(aStream);
   return NS_OK;
 }
 
-static nsresult
-EncodeImageData(DataSourceSurface* aDataSurface,
-                const nsACString& aMimeType,
-                const nsAString& aOutputOptions,
-                nsIInputStream** aStream)
-{
+static nsresult EncodeImageData(DataSourceSurface* aDataSurface,
+                                const nsACString& aMimeType,
+                                const nsAString& aOutputOptions,
+                                nsIInputStream** aStream) {
   DataSourceSurface::ScopedMap map(aDataSurface, DataSourceSurface::READ);
   if (!map.IsMapped()) {
     return NS_ERROR_FAILURE;
@@ -356,15 +328,12 @@ EncodeImageData(DataSourceSurface* aDataSurface,
 }
 
 NS_IMETHODIMP
-imgTools::EncodeImage(imgIContainer* aContainer,
-                      const nsACString& aMimeType,
+imgTools::EncodeImage(imgIContainer* aContainer, const nsACString& aMimeType,
                       const nsAString& aOutputOptions,
-                      nsIInputStream** aStream)
-{
+                      nsIInputStream** aStream) {
   // Use frame 0 from the image container.
-  RefPtr<SourceSurface> frame =
-    aContainer->GetFrame(imgIContainer::FRAME_FIRST,
-                         imgIContainer::FLAG_SYNC_DECODE);
+  RefPtr<SourceSurface> frame = aContainer->GetFrame(
+      imgIContainer::FRAME_FIRST, imgIContainer::FLAG_SYNC_DECODE);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   RefPtr<DataSourceSurface> dataSurface;
@@ -374,9 +343,8 @@ imgTools::EncodeImage(imgIContainer* aContainer,
     dataSurface = frame->GetDataSurface();
   } else {
     // Convert format to SurfaceFormat::B8G8R8A8
-    dataSurface = gfxUtils::
-      CopySurfaceToDataSourceSurfaceWithFormat(frame,
-                                               SurfaceFormat::B8G8R8A8);
+    dataSurface = gfxUtils::CopySurfaceToDataSourceSurfaceWithFormat(
+        frame, SurfaceFormat::B8G8R8A8);
   }
 
   NS_ENSURE_TRUE(dataSurface, NS_ERROR_FAILURE);
@@ -386,12 +354,10 @@ imgTools::EncodeImage(imgIContainer* aContainer,
 
 NS_IMETHODIMP
 imgTools::EncodeScaledImage(imgIContainer* aContainer,
-                            const nsACString& aMimeType,
-                            int32_t aScaledWidth,
+                            const nsACString& aMimeType, int32_t aScaledWidth,
                             int32_t aScaledHeight,
                             const nsAString& aOutputOptions,
-                            nsIInputStream** aStream)
-{
+                            nsIInputStream** aStream) {
   NS_ENSURE_ARG(aScaledWidth >= 0 && aScaledHeight >= 0);
 
   // If no scaled size is specified, we'll just encode the image at its
@@ -413,10 +379,9 @@ imgTools::EncodeScaledImage(imgIContainer* aContainer,
 
   // Use frame 0 from the image container.
   RefPtr<SourceSurface> frame =
-    aContainer->GetFrameAtSize(scaledSize,
-                               imgIContainer::FRAME_FIRST,
-                               imgIContainer::FLAG_HIGH_QUALITY_SCALING |
-                               imgIContainer::FLAG_SYNC_DECODE);
+      aContainer->GetFrameAtSize(scaledSize, imgIContainer::FRAME_FIRST,
+                                 imgIContainer::FLAG_HIGH_QUALITY_SCALING |
+                                     imgIContainer::FLAG_SYNC_DECODE);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   // If the given surface is the right size/format, we can encode it directly.
@@ -431,7 +396,7 @@ imgTools::EncodeScaledImage(imgIContainer* aContainer,
 
   // Otherwise we need to scale it using a draw target.
   RefPtr<DataSourceSurface> dataSurface =
-    Factory::CreateDataSourceSurface(scaledSize, SurfaceFormat::B8G8R8A8);
+      Factory::CreateDataSourceSurface(scaledSize, SurfaceFormat::B8G8R8A8);
   if (NS_WARN_IF(!dataSurface)) {
     return NS_ERROR_FAILURE;
   }
@@ -441,20 +406,16 @@ imgTools::EncodeScaledImage(imgIContainer* aContainer,
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<DrawTarget> dt =
-    Factory::CreateDrawTargetForData(BackendType::SKIA,
-                                     map.GetData(),
-                                     dataSurface->GetSize(),
-                                     map.GetStride(),
-                                     SurfaceFormat::B8G8R8A8);
+  RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(
+      BackendType::SKIA, map.GetData(), dataSurface->GetSize(), map.GetStride(),
+      SurfaceFormat::B8G8R8A8);
   if (!dt) {
     gfxWarning() << "imgTools::EncodeImage failed in CreateDrawTargetForData";
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   IntSize frameSize = frame->GetSize();
-  dt->DrawSurface(frame,
-                  Rect(0, 0, scaledSize.width, scaledSize.height),
+  dt->DrawSurface(frame, Rect(0, 0, scaledSize.width, scaledSize.height),
                   Rect(0, 0, frameSize.width, frameSize.height),
                   DrawSurfaceOptions(),
                   DrawOptions(1.0f, CompositionOp::OP_SOURCE));
@@ -464,14 +425,10 @@ imgTools::EncodeScaledImage(imgIContainer* aContainer,
 
 NS_IMETHODIMP
 imgTools::EncodeCroppedImage(imgIContainer* aContainer,
-                             const nsACString& aMimeType,
-                             int32_t aOffsetX,
-                             int32_t aOffsetY,
-                             int32_t aWidth,
-                             int32_t aHeight,
+                             const nsACString& aMimeType, int32_t aOffsetX,
+                             int32_t aOffsetY, int32_t aWidth, int32_t aHeight,
                              const nsAString& aOutputOptions,
-                             nsIInputStream** aStream)
-{
+                             nsIInputStream** aStream) {
   NS_ENSURE_ARG(aOffsetX >= 0 && aOffsetY >= 0 && aWidth >= 0 && aHeight >= 0);
 
   // Offsets must be zero when no width and height are given or else we're out
@@ -485,9 +442,8 @@ imgTools::EncodeCroppedImage(imgIContainer* aContainer,
   }
 
   // Use frame 0 from the image container.
-  RefPtr<SourceSurface> frame =
-    aContainer->GetFrame(imgIContainer::FRAME_FIRST,
-                         imgIContainer::FLAG_SYNC_DECODE);
+  RefPtr<SourceSurface> frame = aContainer->GetFrame(
+      imgIContainer::FRAME_FIRST, imgIContainer::FLAG_SYNC_DECODE);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   int32_t frameWidth = frame->GetSize().width;
@@ -505,10 +461,9 @@ imgTools::EncodeCroppedImage(imgIContainer* aContainer,
   NS_ENSURE_ARG(frameWidth >= aOffsetX + aWidth &&
                 frameHeight >= aOffsetY + aHeight);
 
-  RefPtr<DataSourceSurface> dataSurface =
-    Factory::CreateDataSourceSurface(IntSize(aWidth, aHeight),
-                                     SurfaceFormat::B8G8R8A8,
-                                     /* aZero = */ true);
+  RefPtr<DataSourceSurface> dataSurface = Factory::CreateDataSourceSurface(
+      IntSize(aWidth, aHeight), SurfaceFormat::B8G8R8A8,
+      /* aZero = */ true);
   if (NS_WARN_IF(!dataSurface)) {
     return NS_ERROR_FAILURE;
   }
@@ -518,19 +473,15 @@ imgTools::EncodeCroppedImage(imgIContainer* aContainer,
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<DrawTarget> dt =
-    Factory::CreateDrawTargetForData(BackendType::SKIA,
-                                     map.GetData(),
-                                     dataSurface->GetSize(),
-                                     map.GetStride(),
-                                     SurfaceFormat::B8G8R8A8);
+  RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(
+      BackendType::SKIA, map.GetData(), dataSurface->GetSize(), map.GetStride(),
+      SurfaceFormat::B8G8R8A8);
   if (!dt) {
-    gfxWarning() <<
-      "imgTools::EncodeCroppedImage failed in CreateDrawTargetForData";
+    gfxWarning()
+        << "imgTools::EncodeCroppedImage failed in CreateDrawTargetForData";
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  dt->CopySurface(frame,
-                  IntRect(aOffsetX, aOffsetY, aWidth, aHeight),
+  dt->CopySurface(frame, IntRect(aOffsetX, aOffsetY, aWidth, aHeight),
                   IntPoint(0, 0));
 
   return EncodeImageData(dataSurface, map, aMimeType, aOutputOptions, aStream);
@@ -538,27 +489,24 @@ imgTools::EncodeCroppedImage(imgIContainer* aContainer,
 
 NS_IMETHODIMP
 imgTools::CreateScriptedObserver(imgIScriptedNotificationObserver* aInner,
-                                 imgINotificationObserver** aObserver)
-{
+                                 imgINotificationObserver** aObserver) {
   NS_ADDREF(*aObserver = new ScriptedNotificationObserver(aInner));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-imgTools::GetImgLoaderForDocument(nsIDocument* aDoc, imgILoader** aLoader)
-{
+imgTools::GetImgLoaderForDocument(nsIDocument* aDoc, imgILoader** aLoader) {
   NS_IF_ADDREF(*aLoader = nsContentUtils::GetImgLoaderForDocument(aDoc));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-imgTools::GetImgCacheForDocument(nsIDocument* aDoc, imgICache** aCache)
-{
+imgTools::GetImgCacheForDocument(nsIDocument* aDoc, imgICache** aCache) {
   nsCOMPtr<imgILoader> loader;
   nsresult rv = GetImgLoaderForDocument(aDoc, getter_AddRefs(loader));
   NS_ENSURE_SUCCESS(rv, rv);
   return CallQueryInterface(loader, aCache);
 }
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla

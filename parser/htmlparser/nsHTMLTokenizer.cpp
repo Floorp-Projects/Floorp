@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 /**
  * @file nsHTMLTokenizer.cpp
  * This is an implementation of the nsITokenizer interface.
@@ -29,31 +28,25 @@ NS_IMPL_ISUPPORTS(nsHTMLTokenizer, nsITokenizer)
 /**
  * Default constructor
  */
-nsHTMLTokenizer::nsHTMLTokenizer()
-{
+nsHTMLTokenizer::nsHTMLTokenizer() {
   // TODO Assert about:blank-ness.
 }
 
-nsresult
-nsHTMLTokenizer::WillTokenize(bool aIsFinalChunk)
-{
-  return NS_OK;
-}
+nsresult nsHTMLTokenizer::WillTokenize(bool aIsFinalChunk) { return NS_OK; }
 
 /**
- * This method is repeatedly called by the tokenizer. 
- * Each time, we determine the kind of token we're about to 
+ * This method is repeatedly called by the tokenizer.
+ * Each time, we determine the kind of token we're about to
  * read, and then we call the appropriate method to handle
  * that token type.
- *  
+ *
  * @param  aScanner The source of our input.
  * @param  aFlushTokens An OUT parameter to tell the caller whether it should
  *                      process our queued tokens up to now (e.g., when we
  *                      reach a <script>).
  * @return Success or error
  */
-nsresult
-nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens)
-{
+nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner,
+                                       bool& aFlushTokens) {
   return NS_ERROR_HTMLPARSER_EOF;
 }

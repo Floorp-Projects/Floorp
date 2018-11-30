@@ -43,13 +43,19 @@ void f() {
 
   int exp = (int)true;
 
-  if (x == b) {}
-  if (x != b) {}
+  if (x == b) {
+  }
+  if (x != b) {
+  }
 
-  if (b == exp) {}
-  if (exp == b) {}
+  if (b == exp) {
+  }
+  if (exp == b) {
+  }
 
   char* ptr;
-  // Shouldn't trigger a checker warning since we are using AllowPointerConditions
-  if (ptr) {}
+  // Shouldn't trigger a checker warning since we are using
+  // AllowPointerConditions
+  if (ptr) {
+  }
 }

@@ -6,20 +6,15 @@
 
 #include "PotentialCheckerboardDurationTracker.h"
 
-#include "mozilla/Telemetry.h"          // for Telemetry
+#include "mozilla/Telemetry.h"  // for Telemetry
 
 namespace mozilla {
 namespace layers {
 
 PotentialCheckerboardDurationTracker::PotentialCheckerboardDurationTracker()
-  : mInCheckerboard(false)
-  , mInTransform(false)
-{
-}
+    : mInCheckerboard(false), mInTransform(false) {}
 
-void
-PotentialCheckerboardDurationTracker::CheckerboardSeen()
-{
+void PotentialCheckerboardDurationTracker::CheckerboardSeen() {
   // This might get called while mInCheckerboard is already true
   if (!Tracking()) {
     mCurrentPeriodStart = TimeStamp::Now();
@@ -27,9 +22,7 @@ PotentialCheckerboardDurationTracker::CheckerboardSeen()
   mInCheckerboard = true;
 }
 
-void
-PotentialCheckerboardDurationTracker::CheckerboardDone()
-{
+void PotentialCheckerboardDurationTracker::CheckerboardDone() {
   MOZ_ASSERT(Tracking());
   mInCheckerboard = false;
   if (!Tracking()) {
@@ -39,9 +32,7 @@ PotentialCheckerboardDurationTracker::CheckerboardDone()
   }
 }
 
-void
-PotentialCheckerboardDurationTracker::InTransform(bool aInTransform)
-{
+void PotentialCheckerboardDurationTracker::InTransform(bool aInTransform) {
   if (aInTransform == mInTransform) {
     // no-op
     return;
@@ -69,11 +60,9 @@ PotentialCheckerboardDurationTracker::InTransform(bool aInTransform)
   }
 }
 
-bool
-PotentialCheckerboardDurationTracker::Tracking() const
-{
+bool PotentialCheckerboardDurationTracker::Tracking() const {
   return mInTransform || mInCheckerboard;
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

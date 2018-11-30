@@ -6,30 +6,23 @@
 
 #include "mozilla/dom/PositionError.h"
 #include "mozilla/dom/PositionErrorBinding.h"
-#include "mozilla/CycleCollectedJSContext.h" // for nsAutoMicroTask
+#include "mozilla/CycleCollectedJSContext.h"  // for nsAutoMicroTask
 #include "nsGeolocation.h"
 
 namespace mozilla {
 namespace dom {
-
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PositionError, mParent)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PositionError, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PositionError, Release)
 
 PositionError::PositionError(Geolocation* aParent, int16_t aCode)
-  : mCode(aCode)
-  , mParent(aParent)
-{
-}
+    : mCode(aCode), mParent(aParent) {}
 
 PositionError::~PositionError() = default;
 
-void
-PositionError::GetMessage(nsAString& aMessage) const
-{
-  switch (mCode)
-  {
+void PositionError::GetMessage(nsAString& aMessage) const {
+  switch (mCode) {
     case PositionError_Binding::PERMISSION_DENIED:
       aMessage = NS_LITERAL_STRING("User denied geolocation prompt");
       break;
@@ -44,21 +37,14 @@ PositionError::GetMessage(nsAString& aMessage) const
   }
 }
 
-nsWrapperCache*
-PositionError::GetParentObject() const
-{
-  return mParent;
-}
+nsWrapperCache* PositionError::GetParentObject() const { return mParent; }
 
-JSObject*
-PositionError::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* PositionError::WrapObject(JSContext* aCx,
+                                    JS::Handle<JSObject*> aGivenProto) {
   return PositionError_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-PositionError::NotifyCallback(const GeoPositionErrorCallback& aCallback)
-{
+void PositionError::NotifyCallback(const GeoPositionErrorCallback& aCallback) {
   nsAutoMicroTask mt;
   if (aCallback.HasWebIDLCallback()) {
     PositionErrorCallback* callback = aCallback.GetWebIDLCallback();
@@ -74,6 +60,5 @@ PositionError::NotifyCallback(const GeoPositionErrorCallback& aCallback)
   }
 }
 
-} // namespace mozilla
-} // namespace dom
-
+}  // namespace dom
+}  // namespace mozilla

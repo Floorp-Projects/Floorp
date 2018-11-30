@@ -14,9 +14,8 @@ namespace gfx {
 
 class DrawTargetCairo;
 
-class SourceSurfaceCairo : public SourceSurface
-{
-public:
+class SourceSurfaceCairo : public SourceSurface {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceCairo, override)
 
   // Create a SourceSurfaceCairo. The surface will not be copied, but simply
@@ -36,38 +35,39 @@ public:
 
   cairo_surface_t* GetSurface() const;
 
-private: // methods
+ private:  // methods
   friend class DrawTargetCairo;
   void DrawTargetWillChange();
 
-private: // data
+ private:  // data
   IntSize mSize;
   SurfaceFormat mFormat;
   cairo_surface_t* mSurface;
   DrawTargetCairo* mDrawTarget;
 };
 
-class DataSourceSurfaceCairo : public DataSourceSurface
-{
-public:
+class DataSourceSurfaceCairo : public DataSourceSurface {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceCairo, override)
 
   explicit DataSourceSurfaceCairo(cairo_surface_t* imageSurf);
   virtual ~DataSourceSurfaceCairo();
-  virtual unsigned char *GetData() override;
+  virtual unsigned char* GetData() override;
   virtual int32_t Stride() override;
 
-  virtual SurfaceType GetType() const override { return SurfaceType::CAIRO_IMAGE; }
+  virtual SurfaceType GetType() const override {
+    return SurfaceType::CAIRO_IMAGE;
+  }
   virtual IntSize GetSize() const override;
   virtual SurfaceFormat GetFormat() const override;
 
   cairo_surface_t* GetSurface() const;
 
-private:
+ private:
   cairo_surface_t* mImageSurface;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // _MOZILLA_GFX_OP_SOURCESURFACE_CAIRO_H
+#endif  // _MOZILLA_GFX_OP_SOURCESURFACE_CAIRO_H

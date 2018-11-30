@@ -21,7 +21,7 @@ namespace mozilla {
 namespace gfx {
 class DrawTarget;
 class DrawTargetCapture;
-};
+};  // namespace gfx
 
 namespace layers {
 
@@ -34,7 +34,7 @@ namespace layers {
 // 3. A list of dependent texture clients that must be kept alive for the
 //    task's duration, and then destroyed on the main thread
 class PaintTask {
-public:
+ public:
   PaintTask() {}
   ~PaintTask() {}
 
@@ -47,11 +47,10 @@ public:
 
 class CompositorBridgeChild;
 
-class PaintThread final
-{
+class PaintThread final {
   friend void DestroyPaintThread(UniquePtr<PaintThread>&& aPaintThread);
 
-public:
+ public:
   static void Start();
   static void Shutdown();
   static PaintThread* Get();
@@ -89,7 +88,7 @@ public:
 
   static int32_t CalculatePaintWorkerCount();
 
-private:
+ private:
   PaintThread();
 
   bool Init();
@@ -97,8 +96,7 @@ private:
   void InitOnPaintThread();
   void InitPaintWorkers();
 
-  void AsyncPaintTask(CompositorBridgeChild* aBridge,
-                      PaintTask* aTask);
+  void AsyncPaintTask(CompositorBridgeChild* aBridge, PaintTask* aTask);
   void AsyncEndLayerTransaction(CompositorBridgeChild* aBridge);
 
   static StaticAutoPtr<PaintThread> sSingleton;
@@ -108,7 +106,7 @@ private:
   RefPtr<nsIThreadPool> mPaintWorkers;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

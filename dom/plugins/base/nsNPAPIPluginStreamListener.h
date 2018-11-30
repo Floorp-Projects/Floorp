@@ -25,30 +25,31 @@ class nsNPAPIPluginStreamListener;
 class nsNPAPIPluginInstance;
 class nsIChannel;
 
-class nsNPAPIStreamWrapper
-{
-public:
-  nsNPAPIStreamWrapper(nsIOutputStream *outputStream,
-                       nsNPAPIPluginStreamListener *streamListener);
+class nsNPAPIStreamWrapper {
+ public:
+  nsNPAPIStreamWrapper(nsIOutputStream* outputStream,
+                       nsNPAPIPluginStreamListener* streamListener);
   ~nsNPAPIStreamWrapper();
 
   nsIOutputStream* GetOutputStream() { return mOutputStream.get(); }
   nsNPAPIPluginStreamListener* GetStreamListener() { return mStreamListener; }
 
-  NPStream                              mNPStream;
-protected:
-  nsCOMPtr<nsIOutputStream>             mOutputStream; // only valid if not browser initiated
-  nsNPAPIPluginStreamListener*          mStreamListener; // only valid if browser initiated
+  NPStream mNPStream;
+
+ protected:
+  nsCOMPtr<nsIOutputStream>
+      mOutputStream;  // only valid if not browser initiated
+  nsNPAPIPluginStreamListener*
+      mStreamListener;  // only valid if browser initiated
 };
 
 class nsNPAPIPluginStreamListener : public nsITimerCallback,
                                     public nsIHTTPHeaderListener,
-                                    public nsINamed
-{
-private:
+                                    public nsINamed {
+ private:
   typedef mozilla::PluginLibrary PluginLibrary;
 
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIHTTPHEADERLISTENER
@@ -59,8 +60,7 @@ public:
 
   nsresult OnStartBinding(nsPluginStreamListenerPeer* streamPeer);
   nsresult OnDataAvailable(nsPluginStreamListenerPeer* streamPeer,
-                           nsIInputStream* input,
-                           uint32_t length);
+                           nsIInputStream* input, uint32_t length);
   nsresult OnFileAvailable(nsPluginStreamListenerPeer* streamPeer,
                            const char* fileName);
   nsresult OnStopBinding(nsPluginStreamListenerPeer* streamPeer,
@@ -77,29 +77,27 @@ public:
   bool PluginInitJSLoadInProgress();
 
   void* GetNotifyData();
-  nsPluginStreamListenerPeer* GetStreamListenerPeer() { return mStreamListenerPeer; }
-  void SetStreamListenerPeer(nsPluginStreamListenerPeer* aPeer) { mStreamListenerPeer = aPeer; }
+  nsPluginStreamListenerPeer* GetStreamListenerPeer() {
+    return mStreamListenerPeer;
+  }
+  void SetStreamListenerPeer(nsPluginStreamListenerPeer* aPeer) {
+    mStreamListenerPeer = aPeer;
+  }
 
   // Returns true if the redirect will be handled by NPAPI, false otherwise.
-  bool HandleRedirectNotification(nsIChannel *oldChannel, nsIChannel *newChannel,
+  bool HandleRedirectNotification(nsIChannel* oldChannel,
+                                  nsIChannel* newChannel,
                                   nsIAsyncVerifyRedirectCallback* callback);
   void URLRedirectResponse(NPBool allow);
 
-protected:
-
-  enum StreamState
-  {
-    eStreamStopped = 0, // The stream is stopped
-    eNewStreamCalled,   // NPP_NewStream was called but has not completed yet
-    eStreamTypeSet      // The stream is fully initialized
+ protected:
+  enum StreamState {
+    eStreamStopped = 0,  // The stream is stopped
+    eNewStreamCalled,    // NPP_NewStream was called but has not completed yet
+    eStreamTypeSet       // The stream is fully initialized
   };
 
-  enum StreamStopMode
-  {
-    eNormalStop = 0,
-    eDoDeferredStop,
-    eStopPending
-  };
+  enum StreamStopMode { eNormalStop = 0, eDoDeferredStop, eStopPending };
 
   virtual ~nsNPAPIPluginStreamListener();
   bool MaybeRunStopBinding();
@@ -107,7 +105,7 @@ protected:
   char* mStreamBuffer;
   char* mNotifyURL;
   RefPtr<nsNPAPIPluginInstance> mInst;
-  nsNPAPIStreamWrapper *mNPStreamWrapper;
+  nsNPAPIStreamWrapper* mNPStreamWrapper;
   uint32_t mStreamBufferSize;
   int32_t mStreamBufferByteCount;
   StreamState mStreamState;
@@ -123,8 +121,8 @@ protected:
   StreamStopMode mStreamStopMode;
   nsresult mPendingStopBindingStatus;
 
-public:
+ public:
   RefPtr<nsPluginStreamListenerPeer> mStreamListenerPeer;
 };
 
-#endif // nsNPAPIPluginStreamListener_h_
+#endif  // nsNPAPIPluginStreamListener_h_

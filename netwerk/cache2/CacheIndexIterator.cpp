@@ -8,28 +8,21 @@
 #include "nsString.h"
 #include "mozilla/DebugOnly.h"
 
-
 namespace mozilla {
 namespace net {
 
 CacheIndexIterator::CacheIndexIterator(CacheIndex *aIndex, bool aAddNew)
-  : mStatus(NS_OK)
-  , mIndex(aIndex)
-  , mAddNew(aAddNew)
-{
+    : mStatus(NS_OK), mIndex(aIndex), mAddNew(aAddNew) {
   LOG(("CacheIndexIterator::CacheIndexIterator() [this=%p]", this));
 }
 
-CacheIndexIterator::~CacheIndexIterator()
-{
+CacheIndexIterator::~CacheIndexIterator() {
   LOG(("CacheIndexIterator::~CacheIndexIterator() [this=%p]", this));
 
   Close();
 }
 
-nsresult
-CacheIndexIterator::GetNextHash(SHA1Sum::Hash *aHash)
-{
+nsresult CacheIndexIterator::GetNextHash(SHA1Sum::Hash *aHash) {
   LOG(("CacheIndexIterator::GetNextHash() [this=%p]", this));
 
   StaticMutexAutoLock lock(CacheIndex::sLock);
@@ -49,9 +42,7 @@ CacheIndexIterator::GetNextHash(SHA1Sum::Hash *aHash)
   return NS_OK;
 }
 
-nsresult
-CacheIndexIterator::Close()
-{
+nsresult CacheIndexIterator::Close() {
   LOG(("CacheIndexIterator::Close() [this=%p]", this));
 
   StaticMutexAutoLock lock(CacheIndex::sLock);
@@ -59,11 +50,9 @@ CacheIndexIterator::Close()
   return CloseInternal(NS_ERROR_NOT_AVAILABLE);
 }
 
-nsresult
-CacheIndexIterator::CloseInternal(nsresult aStatus)
-{
-  LOG(("CacheIndexIterator::CloseInternal() [this=%p, status=0x%08" PRIx32 "]", this,
-       static_cast<uint32_t>(aStatus)));
+nsresult CacheIndexIterator::CloseInternal(nsresult aStatus) {
+  LOG(("CacheIndexIterator::CloseInternal() [this=%p, status=0x%08" PRIx32 "]",
+       this, static_cast<uint32_t>(aStatus)));
 
   // Make sure status will be a failure
   MOZ_ASSERT(NS_FAILED(aStatus));
@@ -82,29 +71,25 @@ CacheIndexIterator::CloseInternal(nsresult aStatus)
   return NS_OK;
 }
 
-void
-CacheIndexIterator::AddRecord(CacheIndexRecord *aRecord)
-{
+void CacheIndexIterator::AddRecord(CacheIndexRecord *aRecord) {
   LOG(("CacheIndexIterator::AddRecord() [this=%p, record=%p]", this, aRecord));
 
   mRecords.AppendElement(aRecord);
 }
 
-bool
-CacheIndexIterator::RemoveRecord(CacheIndexRecord *aRecord)
-{
+bool CacheIndexIterator::RemoveRecord(CacheIndexRecord *aRecord) {
   LOG(("CacheIndexIterator::RemoveRecord() [this=%p, record=%p]", this,
        aRecord));
 
   return mRecords.RemoveElement(aRecord);
 }
 
-bool
-CacheIndexIterator::ReplaceRecord(CacheIndexRecord *aOldRecord,
-                                  CacheIndexRecord *aNewRecord)
-{
-  LOG(("CacheIndexIterator::ReplaceRecord() [this=%p, oldRecord=%p, "
-       "newRecord=%p]", this, aOldRecord, aNewRecord));
+bool CacheIndexIterator::ReplaceRecord(CacheIndexRecord *aOldRecord,
+                                       CacheIndexRecord *aNewRecord) {
+  LOG(
+      ("CacheIndexIterator::ReplaceRecord() [this=%p, oldRecord=%p, "
+       "newRecord=%p]",
+       this, aOldRecord, aNewRecord));
 
   if (RemoveRecord(aOldRecord)) {
     AddRecord(aNewRecord);
@@ -114,5 +99,5 @@ CacheIndexIterator::ReplaceRecord(CacheIndexRecord *aOldRecord,
   return false;
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

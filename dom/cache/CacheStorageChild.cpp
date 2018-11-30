@@ -16,51 +16,38 @@ namespace dom {
 namespace cache {
 
 // declared in ActorUtils.h
-void
-DeallocPCacheStorageChild(PCacheStorageChild* aActor)
-{
-  delete aActor;
-}
+void DeallocPCacheStorageChild(PCacheStorageChild* aActor) { delete aActor; }
 
 CacheStorageChild::CacheStorageChild(CacheStorage* aListener,
                                      CacheWorkerHolder* aWorkerHolder)
-  : mListener(aListener)
-  , mNumChildActors(0)
-  , mDelayedDestroy(false)
-{
+    : mListener(aListener), mNumChildActors(0), mDelayedDestroy(false) {
   MOZ_COUNT_CTOR(cache::CacheStorageChild);
   MOZ_DIAGNOSTIC_ASSERT(mListener);
 
   SetWorkerHolder(aWorkerHolder);
 }
 
-CacheStorageChild::~CacheStorageChild()
-{
+CacheStorageChild::~CacheStorageChild() {
   MOZ_COUNT_DTOR(cache::CacheStorageChild);
   NS_ASSERT_OWNINGTHREAD(CacheStorageChild);
   MOZ_DIAGNOSTIC_ASSERT(!mListener);
 }
 
-void
-CacheStorageChild::ClearListener()
-{
+void CacheStorageChild::ClearListener() {
   NS_ASSERT_OWNINGTHREAD(CacheStorageChild);
   MOZ_DIAGNOSTIC_ASSERT(mListener);
   mListener = nullptr;
 }
 
-void
-CacheStorageChild::ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
-                             nsISupports* aParent, const CacheOpArgs& aArgs)
-{
+void CacheStorageChild::ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
+                                  nsISupports* aParent,
+                                  const CacheOpArgs& aArgs) {
   mNumChildActors += 1;
   Unused << SendPCacheOpConstructor(
-    new CacheOpChild(GetWorkerHolder(), aGlobal, aParent, aPromise), aArgs);
+      new CacheOpChild(GetWorkerHolder(), aGlobal, aParent, aPromise), aArgs);
 }
 
-void
-CacheStorageChild::StartDestroyFromListener()
-{
+void CacheStorageChild::StartDestroyFromListener() {
   NS_ASSERT_OWNINGTHREAD(CacheStorageChild);
 
   // The listener should be held alive by any async operations, so if it
@@ -71,9 +58,7 @@ CacheStorageChild::StartDestroyFromListener()
   StartDestroy();
 }
 
-void
-CacheStorageChild::StartDestroy()
-{
+void CacheStorageChild::StartDestroy() {
   NS_ASSERT_OWNINGTHREAD(CacheStorageChild);
 
   // If we have outstanding child actors, then don't destroy ourself yet.
@@ -104,9 +89,7 @@ CacheStorageChild::StartDestroy()
   Unused << SendTeardown();
 }
 
-void
-CacheStorageChild::ActorDestroy(ActorDestroyReason aReason)
-{
+void CacheStorageChild::ActorDestroy(ActorDestroyReason aReason) {
   NS_ASSERT_OWNINGTHREAD(CacheStorageChild);
   RefPtr<CacheStorage> listener = mListener;
   if (listener) {
@@ -118,24 +101,19 @@ CacheStorageChild::ActorDestroy(ActorDestroyReason aReason)
   RemoveWorkerHolder();
 }
 
-PCacheOpChild*
-CacheStorageChild::AllocPCacheOpChild(const CacheOpArgs& aOpArgs)
-{
+PCacheOpChild* CacheStorageChild::AllocPCacheOpChild(
+    const CacheOpArgs& aOpArgs) {
   MOZ_CRASH("CacheOpChild should be manually constructed.");
   return nullptr;
 }
 
-bool
-CacheStorageChild::DeallocPCacheOpChild(PCacheOpChild* aActor)
-{
+bool CacheStorageChild::DeallocPCacheOpChild(PCacheOpChild* aActor) {
   delete aActor;
   NoteDeletedActor();
   return true;
 }
 
-void
-CacheStorageChild::NoteDeletedActor()
-{
+void CacheStorageChild::NoteDeletedActor() {
   MOZ_DIAGNOSTIC_ASSERT(mNumChildActors);
   mNumChildActors -= 1;
   if (!mNumChildActors && mDelayedDestroy) {
@@ -143,6 +121,6 @@ CacheStorageChild::NoteDeletedActor()
   }
 }
 
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

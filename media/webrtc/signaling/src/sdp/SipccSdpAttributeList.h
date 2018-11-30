@@ -13,40 +13,37 @@ extern "C" {
 #include "signaling/src/sdp/sipcc/sdp.h"
 }
 
-namespace mozilla
-{
+namespace mozilla {
 
 class SipccSdp;
 class SipccSdpMediaSection;
 class SdpErrorHolder;
 
-class SipccSdpAttributeList : public SdpAttributeList
-{
+class SipccSdpAttributeList : public SdpAttributeList {
   friend class SipccSdpMediaSection;
   friend class SipccSdp;
 
-public:
+ public:
   // Make sure we don't hide the default arg thunks
-  using SdpAttributeList::HasAttribute;
   using SdpAttributeList::GetAttribute;
+  using SdpAttributeList::HasAttribute;
 
   virtual bool HasAttribute(AttributeType type,
                             bool sessionFallback) const override;
-  virtual const SdpAttribute* GetAttribute(
-      AttributeType type, bool sessionFallback) const override;
+  virtual const SdpAttribute* GetAttribute(AttributeType type,
+                                           bool sessionFallback) const override;
   virtual void SetAttribute(SdpAttribute* attr) override;
   virtual void RemoveAttribute(AttributeType type) override;
   virtual void Clear() override;
   virtual uint32_t Count() const override;
 
   virtual const SdpConnectionAttribute& GetConnection() const override;
-  virtual const SdpFingerprintAttributeList& GetFingerprint() const
-      override;
+  virtual const SdpFingerprintAttributeList& GetFingerprint() const override;
   virtual const SdpGroupAttributeList& GetGroup() const override;
   virtual const SdpOptionsAttribute& GetIceOptions() const override;
   virtual const SdpRtcpAttribute& GetRtcp() const override;
-  virtual const SdpRemoteCandidatesAttribute& GetRemoteCandidates() const
-      override;
+  virtual const SdpRemoteCandidatesAttribute& GetRemoteCandidates()
+      const override;
   virtual const SdpSetupAttribute& GetSetup() const override;
   virtual const SdpSsrcAttributeList& GetSsrc() const override;
   virtual const SdpDtlsMessageAttribute& GetDtlsMessage() const override;
@@ -59,8 +56,7 @@ public:
   virtual const SdpImageattrAttributeList& GetImageattr() const override;
   const SdpSimulcastAttribute& GetSimulcast() const override;
   virtual const SdpMsidAttributeList& GetMsid() const override;
-  virtual const SdpMsidSemanticAttributeList& GetMsidSemantic()
-    const override;
+  virtual const SdpMsidSemanticAttributeList& GetMsidSemantic() const override;
   const SdpRidAttributeList& GetRid() const override;
   virtual const SdpRtcpFbAttributeList& GetRtcpFb() const override;
   virtual const SdpRtpmapAttributeList& GetRtpmap() const override;
@@ -84,7 +80,7 @@ public:
 
   virtual ~SipccSdpAttributeList();
 
-private:
+ private:
   static const std::string kEmptyString;
   static const size_t kNumAttributeTypes = SdpAttribute::kLastAttribute + 1;
 
@@ -113,8 +109,7 @@ private:
   bool LoadImageattr(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
   bool LoadSimulcast(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
   bool LoadGroups(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
-  bool LoadMsidSemantics(sdp_t* sdp,
-                         uint16_t level,
+  bool LoadMsidSemantics(sdp_t* sdp, uint16_t level,
                          SdpErrorHolder& errorHolder);
   void LoadIdentity(sdp_t* sdp, uint16_t level);
   void LoadDtlsMessage(sdp_t* sdp, uint16_t level);
@@ -126,11 +121,7 @@ private:
   void LoadRtcp(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
   static SdpRtpmapAttributeList::CodecType GetCodecType(rtp_ptype type);
 
-  bool
-  AtSessionLevel() const
-  {
-    return !mSessionLevel;
-  }
+  bool AtSessionLevel() const { return !mSessionLevel; }
   bool IsAllowedHere(SdpAttribute::AttributeType type) const;
   void WarnAboutMisplacedAttribute(SdpAttribute::AttributeType type,
                                    uint32_t lineNumber,
@@ -144,6 +135,6 @@ private:
   SipccSdpAttributeList& operator=(const SipccSdpAttributeList& rhs) = delete;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

@@ -21,15 +21,13 @@ class nsHtml5TreeBuilder;
  * Holding or passing this type is as unsafe as holding or passing
  * `nsStringBuffer*`/`nsAtom*`.
  */
-class nsHtml5String final
-{
-private:
+class nsHtml5String final {
+ private:
   static const uintptr_t kKindMask = uintptr_t(3);
 
   static const uintptr_t kPtrMask = ~kKindMask;
 
-  enum Kind : uintptr_t
-  {
+  enum Kind : uintptr_t {
     eNull = 0,
     eEmpty = 1,
     eStringBuffer = 2,
@@ -38,20 +36,17 @@ private:
 
   inline Kind GetKind() const { return (Kind)(mBits & kKindMask); }
 
-  inline nsStringBuffer* AsStringBuffer() const
-  {
+  inline nsStringBuffer* AsStringBuffer() const {
     MOZ_ASSERT(GetKind() == eStringBuffer);
     return reinterpret_cast<nsStringBuffer*>(mBits & kPtrMask);
   }
 
-  inline nsAtom* AsAtom() const
-  {
+  inline nsAtom* AsAtom() const {
     MOZ_ASSERT(GetKind() == eAtom);
     return reinterpret_cast<nsAtom*>(mBits & kPtrMask);
   }
 
-  inline const char16_t* AsPtr() const
-  {
+  inline const char16_t* AsPtr() const {
     switch (GetKind()) {
       case eStringBuffer:
         return reinterpret_cast<char16_t*>(AsStringBuffer()->Data());
@@ -62,25 +57,18 @@ private:
     }
   }
 
-public:
+ public:
   /**
    * Default constructor.
    */
-  inline nsHtml5String()
-    : nsHtml5String(nullptr)
-  {
-  }
+  inline nsHtml5String() : nsHtml5String(nullptr) {}
 
   /**
    * Constructor from nullptr.
    */
-  inline MOZ_IMPLICIT nsHtml5String(decltype(nullptr))
-    : mBits(eNull)
-  {
-  }
+  inline MOZ_IMPLICIT nsHtml5String(decltype(nullptr)) : mBits(eNull) {}
 
-  inline uint32_t Length() const
-  {
+  inline uint32_t Length() const {
     switch (GetKind()) {
       case eStringBuffer:
         return (AsStringBuffer()->StorageSize() / sizeof(char16_t) - 1);
@@ -100,8 +88,7 @@ public:
    * Get the underlying nsAtom* or nullptr if this nsHtml5String
    * does not hold an atom.
    */
-  inline nsAtom* MaybeAsAtom()
-  {
+  inline nsAtom* MaybeAsAtom() {
     if (GetKind() == eAtom) {
       return AsAtom();
     }
@@ -124,8 +111,7 @@ public:
 
   void Release();
 
-  static nsHtml5String FromBuffer(char16_t* aBuffer,
-                                  int32_t aLength,
+  static nsHtml5String FromBuffer(char16_t* aBuffer, int32_t aLength,
                                   nsHtml5TreeBuilder* aTreeBuilder);
 
   static nsHtml5String FromLiteral(const char* aLiteral);
@@ -136,12 +122,11 @@ public:
 
   static nsHtml5String EmptyString();
 
-private:
+ private:
   /**
    * Constructor from raw bits.
    */
-  explicit nsHtml5String(uintptr_t aBits)
-    : mBits(aBits){};
+  explicit nsHtml5String(uintptr_t aBits) : mBits(aBits){};
 
   /**
    * Zero if null, one if empty, otherwise tagged pointer
@@ -151,4 +136,4 @@ private:
   uintptr_t mBits;
 };
 
-#endif // nsHtml5String_h
+#endif  // nsHtml5String_h

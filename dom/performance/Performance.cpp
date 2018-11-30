@@ -40,33 +40,25 @@ namespace dom {
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Performance)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(Performance,
-                                   DOMEventTargetHelper,
-                                   mUserEntries,
-                                   mResourceEntries);
+NS_IMPL_CYCLE_COLLECTION_INHERITED(Performance, DOMEventTargetHelper,
+                                   mUserEntries, mResourceEntries);
 
 NS_IMPL_ADDREF_INHERITED(Performance, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(Performance, DOMEventTargetHelper)
 
-/* static */ already_AddRefed<Performance>
-Performance::CreateForMainThread(nsPIDOMWindowInner* aWindow,
-                                 nsIPrincipal* aPrincipal,
-                                 nsDOMNavigationTiming* aDOMTiming,
-                                 nsITimedChannel* aChannel)
-{
+/* static */ already_AddRefed<Performance> Performance::CreateForMainThread(
+    nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
+    nsDOMNavigationTiming* aDOMTiming, nsITimedChannel* aChannel) {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<Performance> performance =
-    new PerformanceMainThread(aWindow,
-                              aDOMTiming,
-                              aChannel,
-                              nsContentUtils::IsSystemPrincipal(aPrincipal));
+      new PerformanceMainThread(aWindow, aDOMTiming, aChannel,
+                                nsContentUtils::IsSystemPrincipal(aPrincipal));
   return performance.forget();
 }
 
-/* static */ already_AddRefed<Performance>
-Performance::CreateForWorker(WorkerPrivate* aWorkerPrivate)
-{
+/* static */ already_AddRefed<Performance> Performance::CreateForWorker(
+    WorkerPrivate* aWorkerPrivate) {
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -75,54 +67,48 @@ Performance::CreateForWorker(WorkerPrivate* aWorkerPrivate)
 }
 
 Performance::Performance(bool aSystemPrincipal)
-  : mResourceTimingBufferSize(kDefaultResourceTimingBufferSize)
-  , mPendingNotificationObserversTask(false)
-  , mSystemPrincipal(aSystemPrincipal)
-{
+    : mResourceTimingBufferSize(kDefaultResourceTimingBufferSize),
+      mPendingNotificationObserversTask(false),
+      mSystemPrincipal(aSystemPrincipal) {
   MOZ_ASSERT(!NS_IsMainThread());
 }
 
 Performance::Performance(nsPIDOMWindowInner* aWindow, bool aSystemPrincipal)
-  : DOMEventTargetHelper(aWindow)
-  , mResourceTimingBufferSize(kDefaultResourceTimingBufferSize)
-  , mPendingNotificationObserversTask(false)
-  , mSystemPrincipal(aSystemPrincipal)
-{
+    : DOMEventTargetHelper(aWindow),
+      mResourceTimingBufferSize(kDefaultResourceTimingBufferSize),
+      mPendingNotificationObserversTask(false),
+      mSystemPrincipal(aSystemPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-Performance::~Performance()
-{}
+Performance::~Performance() {}
 
-DOMHighResTimeStamp
-Performance::Now()
-{
+DOMHighResTimeStamp Performance::Now() {
   DOMHighResTimeStamp rawTime = NowUnclamped();
   if (mSystemPrincipal) {
     return rawTime;
   }
 
   const double maxResolutionMs = 0.020;
-  DOMHighResTimeStamp minimallyClamped = floor(rawTime / maxResolutionMs) * maxResolutionMs;
-  return nsRFPService::ReduceTimePrecisionAsMSecs(minimallyClamped, GetRandomTimelineSeed());
+  DOMHighResTimeStamp minimallyClamped =
+      floor(rawTime / maxResolutionMs) * maxResolutionMs;
+  return nsRFPService::ReduceTimePrecisionAsMSecs(minimallyClamped,
+                                                  GetRandomTimelineSeed());
 }
 
-DOMHighResTimeStamp
-Performance::NowUnclamped() const
-{
+DOMHighResTimeStamp Performance::NowUnclamped() const {
   TimeDuration duration = TimeStamp::NowUnfuzzed() - CreationTimeStamp();
   return duration.ToMilliseconds();
 }
 
-DOMHighResTimeStamp
-Performance::TimeOrigin()
-{
+DOMHighResTimeStamp Performance::TimeOrigin() {
   if (!mPerformanceService) {
     mPerformanceService = PerformanceService::GetOrCreate();
   }
 
   MOZ_ASSERT(mPerformanceService);
-  DOMHighResTimeStamp rawTimeOrigin = mPerformanceService->TimeOrigin(CreationTimeStamp());
+  DOMHighResTimeStamp rawTimeOrigin =
+      mPerformanceService->TimeOrigin(CreationTimeStamp());
   if (mSystemPrincipal) {
     return rawTimeOrigin;
   }
@@ -131,15 +117,12 @@ Performance::TimeOrigin()
   return nsRFPService::ReduceTimePrecisionAsMSecs(rawTimeOrigin, 0);
 }
 
-JSObject*
-Performance::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* Performance::WrapObject(JSContext* aCx,
+                                  JS::Handle<JSObject*> aGivenProto) {
   return Performance_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-Performance::GetEntries(nsTArray<RefPtr<PerformanceEntry>>& aRetval)
-{
+void Performance::GetEntries(nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
   // We return an empty list when 'privacy.resistFingerprinting' is on.
   if (nsContentUtils::ShouldResistFingerprinting()) {
     aRetval.Clear();
@@ -151,10 +134,8 @@ Performance::GetEntries(nsTArray<RefPtr<PerformanceEntry>>& aRetval)
   aRetval.Sort(PerformanceEntryComparator());
 }
 
-void
-Performance::GetEntriesByType(const nsAString& aEntryType,
-                              nsTArray<RefPtr<PerformanceEntry>>& aRetval)
-{
+void Performance::GetEntriesByType(
+    const nsAString& aEntryType, nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
   // We return an empty list when 'privacy.resistFingerprinting' is on.
   if (nsContentUtils::ShouldResistFingerprinting()) {
     aRetval.Clear();
@@ -168,8 +149,7 @@ Performance::GetEntriesByType(const nsAString& aEntryType,
 
   aRetval.Clear();
 
-  if (aEntryType.EqualsLiteral("mark") ||
-      aEntryType.EqualsLiteral("measure")) {
+  if (aEntryType.EqualsLiteral("mark") || aEntryType.EqualsLiteral("measure")) {
     for (PerformanceEntry* entry : mUserEntries) {
       if (entry->GetEntryType().Equals(aEntryType)) {
         aRetval.AppendElement(entry);
@@ -178,11 +158,9 @@ Performance::GetEntriesByType(const nsAString& aEntryType,
   }
 }
 
-void
-Performance::GetEntriesByName(const nsAString& aName,
-                              const Optional<nsAString>& aEntryType,
-                              nsTArray<RefPtr<PerformanceEntry>>& aRetval)
-{
+void Performance::GetEntriesByName(
+    const nsAString& aName, const Optional<nsAString>& aEntryType,
+    nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
   aRetval.Clear();
 
   // We return an empty list when 'privacy.resistFingerprinting' is on.
@@ -209,10 +187,8 @@ Performance::GetEntriesByName(const nsAString& aName,
   aRetval.Sort(PerformanceEntryComparator());
 }
 
-void
-Performance::ClearUserEntries(const Optional<nsAString>& aEntryName,
-                              const nsAString& aEntryType)
-{
+void Performance::ClearUserEntries(const Optional<nsAString>& aEntryName,
+                                   const nsAString& aEntryType) {
   for (uint32_t i = 0; i < mUserEntries.Length();) {
     if ((!aEntryName.WasPassed() ||
          mUserEntries[i]->GetName().Equals(aEntryName.Value())) &&
@@ -225,15 +201,9 @@ Performance::ClearUserEntries(const Optional<nsAString>& aEntryName,
   }
 }
 
-void
-Performance::ClearResourceTimings()
-{
-  mResourceEntries.Clear();
-}
+void Performance::ClearResourceTimings() { mResourceEntries.Clear(); }
 
-void
-Performance::Mark(const nsAString& aName, ErrorResult& aRv)
-{
+void Performance::Mark(const nsAString& aName, ErrorResult& aRv) {
   // We add nothing when 'privacy.resistFingerprinting' is on.
   if (nsContentUtils::ShouldResistFingerprinting()) {
     return;
@@ -245,33 +215,28 @@ Performance::Mark(const nsAString& aName, ErrorResult& aRv)
   }
 
   RefPtr<PerformanceMark> performanceMark =
-    new PerformanceMark(GetParentObject(), aName, Now());
+      new PerformanceMark(GetParentObject(), aName, Now());
   InsertUserEntry(performanceMark);
 
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_is_active()) {
     nsCOMPtr<EventTarget> et = do_QueryInterface(GetOwner());
     nsCOMPtr<nsIDocShell> docShell =
-      nsContentUtils::GetDocShellForEventTarget(et);
+        nsContentUtils::GetDocShellForEventTarget(et);
     DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);
-    profiler_add_marker(
-      "UserTiming",
-      MakeUnique<UserTimingMarkerPayload>(
-        aName, TimeStamp::Now(), docShellId, docShellHistoryId));
+    profiler_add_marker("UserTiming", MakeUnique<UserTimingMarkerPayload>(
+                                          aName, TimeStamp::Now(), docShellId,
+                                          docShellHistoryId));
   }
 #endif
 }
 
-void
-Performance::ClearMarks(const Optional<nsAString>& aName)
-{
+void Performance::ClearMarks(const Optional<nsAString>& aName) {
   ClearUserEntries(aName, NS_LITERAL_STRING("mark"));
 }
 
-DOMHighResTimeStamp
-Performance::ResolveTimestampFromName(const nsAString& aName,
-                                      ErrorResult& aRv)
-{
+DOMHighResTimeStamp Performance::ResolveTimestampFromName(
+    const nsAString& aName, ErrorResult& aRv) {
   AutoTArray<RefPtr<PerformanceEntry>, 1> arr;
   Optional<nsAString> typeParam;
   nsAutoString str;
@@ -296,12 +261,10 @@ Performance::ResolveTimestampFromName(const nsAString& aName,
   return ts - CreationTime();
 }
 
-void
-Performance::Measure(const nsAString& aName,
-                     const Optional<nsAString>& aStartMark,
-                     const Optional<nsAString>& aEndMark,
-                     ErrorResult& aRv)
-{
+void Performance::Measure(const nsAString& aName,
+                          const Optional<nsAString>& aStartMark,
+                          const Optional<nsAString>& aEndMark,
+                          ErrorResult& aRv) {
   // We add nothing when 'privacy.resistFingerprinting' is on.
   if (nsContentUtils::ShouldResistFingerprinting()) {
     return;
@@ -332,15 +295,15 @@ Performance::Measure(const nsAString& aName,
   }
 
   RefPtr<PerformanceMeasure> performanceMeasure =
-    new PerformanceMeasure(GetParentObject(), aName, startTime, endTime);
+      new PerformanceMeasure(GetParentObject(), aName, startTime, endTime);
   InsertUserEntry(performanceMeasure);
 
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_is_active()) {
-    TimeStamp startTimeStamp = CreationTimeStamp() +
-                               TimeDuration::FromMilliseconds(startTime);
-    TimeStamp endTimeStamp = CreationTimeStamp() +
-                             TimeDuration::FromMilliseconds(endTime);
+    TimeStamp startTimeStamp =
+        CreationTimeStamp() + TimeDuration::FromMilliseconds(startTime);
+    TimeStamp endTimeStamp =
+        CreationTimeStamp() + TimeDuration::FromMilliseconds(endTime);
 
     // Convert to Maybe values so that Optional types do not need to be used in
     // the profiler.
@@ -355,42 +318,32 @@ Performance::Measure(const nsAString& aName,
 
     nsCOMPtr<EventTarget> et = do_QueryInterface(GetOwner());
     nsCOMPtr<nsIDocShell> docShell =
-      nsContentUtils::GetDocShellForEventTarget(et);
+        nsContentUtils::GetDocShellForEventTarget(et);
     DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);
     profiler_add_marker("UserTiming",
-                        MakeUnique<UserTimingMarkerPayload>(aName,
-                                                            startMark,
-                                                            endMark,
-                                                            startTimeStamp,
-                                                            endTimeStamp,
-                                                            docShellId,
-                                                            docShellHistoryId));
+                        MakeUnique<UserTimingMarkerPayload>(
+                            aName, startMark, endMark, startTimeStamp,
+                            endTimeStamp, docShellId, docShellHistoryId));
   }
 #endif
 }
 
-void
-Performance::ClearMeasures(const Optional<nsAString>& aName)
-{
+void Performance::ClearMeasures(const Optional<nsAString>& aName) {
   ClearUserEntries(aName, NS_LITERAL_STRING("measure"));
 }
 
-void
-Performance::LogEntry(PerformanceEntry* aEntry, const nsACString& aOwner) const
-{
-  PERFLOG("Performance Entry: %s|%s|%s|%f|%f|%" PRIu64 "\n",
-          aOwner.BeginReading(),
-          NS_ConvertUTF16toUTF8(aEntry->GetEntryType()).get(),
-          NS_ConvertUTF16toUTF8(aEntry->GetName()).get(),
-          aEntry->StartTime(),
-          aEntry->Duration(),
-          static_cast<uint64_t>(PR_Now() / PR_USEC_PER_MSEC));
+void Performance::LogEntry(PerformanceEntry* aEntry,
+                           const nsACString& aOwner) const {
+  PERFLOG(
+      "Performance Entry: %s|%s|%s|%f|%f|%" PRIu64 "\n", aOwner.BeginReading(),
+      NS_ConvertUTF16toUTF8(aEntry->GetEntryType()).get(),
+      NS_ConvertUTF16toUTF8(aEntry->GetName()).get(), aEntry->StartTime(),
+      aEntry->Duration(), static_cast<uint64_t>(PR_Now() / PR_USEC_PER_MSEC));
 }
 
-void
-Performance::TimingNotification(PerformanceEntry* aEntry,
-                                const nsACString& aOwner, uint64_t aEpoch)
-{
+void Performance::TimingNotification(PerformanceEntry* aEntry,
+                                     const nsACString& aOwner,
+                                     uint64_t aEpoch) {
   PerformanceEntryEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
@@ -402,7 +355,8 @@ Performance::TimingNotification(PerformanceEntry* aEntry,
   init.mOrigin = NS_ConvertUTF8toUTF16(aOwner.BeginReading());
 
   RefPtr<PerformanceEntryEvent> perfEntryEvent =
-    PerformanceEntryEvent::Constructor(this, NS_LITERAL_STRING("performanceentry"), init);
+      PerformanceEntryEvent::Constructor(
+          this, NS_LITERAL_STRING("performanceentry"), init);
 
   nsCOMPtr<EventTarget> et = do_QueryInterface(GetOwner());
   if (et) {
@@ -410,24 +364,17 @@ Performance::TimingNotification(PerformanceEntry* aEntry,
   }
 }
 
-void
-Performance::InsertUserEntry(PerformanceEntry* aEntry)
-{
-  mUserEntries.InsertElementSorted(aEntry,
-                                   PerformanceEntryComparator());
+void Performance::InsertUserEntry(PerformanceEntry* aEntry) {
+  mUserEntries.InsertElementSorted(aEntry, PerformanceEntryComparator());
 
   QueueEntry(aEntry);
 }
 
-void
-Performance::SetResourceTimingBufferSize(uint64_t aMaxSize)
-{
+void Performance::SetResourceTimingBufferSize(uint64_t aMaxSize) {
   mResourceTimingBufferSize = aMaxSize;
 }
 
-void
-Performance::InsertResourceEntry(PerformanceEntry* aEntry)
-{
+void Performance::InsertResourceEntry(PerformanceEntry* aEntry) {
   MOZ_ASSERT(aEntry);
 
   // We won't add an entry when 'privacy.resistFingerprint' is true.
@@ -440,8 +387,7 @@ Performance::InsertResourceEntry(PerformanceEntry* aEntry)
     return;
   }
 
-  mResourceEntries.InsertElementSorted(aEntry,
-                                       PerformanceEntryComparator());
+  mResourceEntries.InsertElementSorted(aEntry, PerformanceEntryComparator());
   if (mResourceEntries.Length() == mResourceTimingBufferSize) {
     // call onresourcetimingbufferfull
     DispatchBufferFullEvent();
@@ -449,68 +395,51 @@ Performance::InsertResourceEntry(PerformanceEntry* aEntry)
   QueueEntry(aEntry);
 }
 
-void
-Performance::AddObserver(PerformanceObserver* aObserver)
-{
+void Performance::AddObserver(PerformanceObserver* aObserver) {
   mObservers.AppendElementUnlessExists(aObserver);
 }
 
-void
-Performance::RemoveObserver(PerformanceObserver* aObserver)
-{
+void Performance::RemoveObserver(PerformanceObserver* aObserver) {
   mObservers.RemoveElement(aObserver);
 }
 
-void
-Performance::NotifyObservers()
-{
+void Performance::NotifyObservers() {
   mPendingNotificationObserversTask = false;
-  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers,
-                                           PerformanceObserver,
+  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers, PerformanceObserver,
                                            Notify, ());
 }
 
-void
-Performance::CancelNotificationObservers()
-{
+void Performance::CancelNotificationObservers() {
   mPendingNotificationObserversTask = false;
 }
 
-class NotifyObserversTask final : public CancelableRunnable
-{
-public:
+class NotifyObserversTask final : public CancelableRunnable {
+ public:
   explicit NotifyObserversTask(Performance* aPerformance)
-    : CancelableRunnable("dom::NotifyObserversTask")
-    , mPerformance(aPerformance)
-  {
+      : CancelableRunnable("dom::NotifyObserversTask"),
+        mPerformance(aPerformance) {
     MOZ_ASSERT(mPerformance);
   }
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     MOZ_ASSERT(mPerformance);
     mPerformance->NotifyObservers();
     return NS_OK;
   }
 
-  nsresult Cancel() override
-  {
+  nsresult Cancel() override {
     mPerformance->CancelNotificationObservers();
     mPerformance = nullptr;
     return NS_OK;
   }
 
-private:
-  ~NotifyObserversTask()
-  {
-  }
+ private:
+  ~NotifyObserversTask() {}
 
   RefPtr<Performance> mPerformance;
 };
 
-void
-Performance::RunNotificationObserversTask()
-{
+void Performance::RunNotificationObserversTask() {
   mPendingNotificationObserversTask = true;
   nsCOMPtr<nsIRunnable> task = new NotifyObserversTask(this);
   nsresult rv;
@@ -524,14 +453,11 @@ Performance::RunNotificationObserversTask()
   }
 }
 
-void
-Performance::QueueEntry(PerformanceEntry* aEntry)
-{
+void Performance::QueueEntry(PerformanceEntry* aEntry) {
   if (mObservers.IsEmpty()) {
     return;
   }
-  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers,
-                                           PerformanceObserver,
+  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers, PerformanceObserver,
                                            QueueEntry, (aEntry));
 
   if (!mPendingNotificationObserversTask) {
@@ -539,15 +465,10 @@ Performance::QueueEntry(PerformanceEntry* aEntry)
   }
 }
 
-void
-Performance::MemoryPressure()
-{
-  mUserEntries.Clear();
-}
+void Performance::MemoryPressure() { mUserEntries.Clear(); }
 
-size_t
-Performance::SizeOfUserEntries(mozilla::MallocSizeOf aMallocSizeOf) const
-{
+size_t Performance::SizeOfUserEntries(
+    mozilla::MallocSizeOf aMallocSizeOf) const {
   size_t userEntries = 0;
   for (const PerformanceEntry* entry : mUserEntries) {
     userEntries += entry->SizeOfIncludingThis(aMallocSizeOf);
@@ -555,9 +476,8 @@ Performance::SizeOfUserEntries(mozilla::MallocSizeOf aMallocSizeOf) const
   return userEntries;
 }
 
-size_t
-Performance::SizeOfResourceEntries(mozilla::MallocSizeOf aMallocSizeOf) const
-{
+size_t Performance::SizeOfResourceEntries(
+    mozilla::MallocSizeOf aMallocSizeOf) const {
   size_t resourceEntries = 0;
   for (const PerformanceEntry* entry : mResourceEntries) {
     resourceEntries += entry->SizeOfIncludingThis(aMallocSizeOf);
@@ -565,5 +485,5 @@ Performance::SizeOfResourceEntries(mozilla::MallocSizeOf aMallocSizeOf) const
   return resourceEntries;
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

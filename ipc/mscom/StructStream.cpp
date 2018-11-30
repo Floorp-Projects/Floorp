@@ -13,17 +13,11 @@
  */
 extern "C" {
 
-void __RPC_FAR* __RPC_USER
-midl_user_allocate(size_t aNumBytes)
-{
+void __RPC_FAR* __RPC_USER midl_user_allocate(size_t aNumBytes) {
   const unsigned long kRpcReqdBufAlignment = 8;
   return _aligned_malloc(aNumBytes, kRpcReqdBufAlignment);
 }
 
-void __RPC_USER
-midl_user_free(void* aBuffer)
-{
-  _aligned_free(aBuffer);
-}
+void __RPC_USER midl_user_free(void* aBuffer) { _aligned_free(aBuffer); }
 
-} // extern "C"
+}  // extern "C"

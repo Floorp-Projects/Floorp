@@ -20,38 +20,28 @@ class FrameBuilder;
 class ContainerLayerMLGPU;
 class MLGRenderTarget;
 
-class RenderViewMLGPU
-{
-public:
+class RenderViewMLGPU {
+ public:
   NS_INLINE_DECL_REFCOUNTING(RenderViewMLGPU)
 
   // Constructor for the widget render target.
-  RenderViewMLGPU(FrameBuilder* aBuilder,
-                  MLGRenderTarget* aTarget,
+  RenderViewMLGPU(FrameBuilder* aBuilder, MLGRenderTarget* aTarget,
                   const nsIntRegion& aInvalidRegion);
 
   // Constructor for intermediate surfaces.
-  RenderViewMLGPU(FrameBuilder* aBuilder,
-                  ContainerLayerMLGPU* aContainer,
+  RenderViewMLGPU(FrameBuilder* aBuilder, ContainerLayerMLGPU* aContainer,
                   RenderViewMLGPU* aParent);
 
   void Prepare();
   void Render();
   void AddChild(RenderViewMLGPU* aParent);
-  void AddItem(LayerMLGPU* aItem,
-               const gfx::IntRect& aBounds,
+  void AddItem(LayerMLGPU* aItem, const gfx::IntRect& aBounds,
                Maybe<gfx::Polygon>&& aGeometry);
   void FinishBuilding();
 
-  const gfx::IntPoint& GetTargetOffset() const {
-    return mTargetOffset;
-  }
-  RenderViewMLGPU* GetParent() const {
-    return mParent;
-  }
-  bool HasDepthBuffer() const {
-    return mUseDepthBuffer;
-  }
+  const gfx::IntPoint& GetTargetOffset() const { return mTargetOffset; }
+  RenderViewMLGPU* GetParent() const { return mParent; }
+  bool HasDepthBuffer() const { return mUseDepthBuffer; }
 
   // Render after having previously delayed rendering due to the view
   // requiring a backdrop copy.
@@ -64,11 +54,9 @@ public:
   MLGRenderTarget* GetRenderTarget() const;
   gfx::IntSize GetSize() const;
 
-  gfx::IntRect GetInvalidRect() const {
-    return mInvalidBounds;
-  }
+  gfx::IntRect GetInvalidRect() const { return mInvalidBounds; }
 
-private:
+ private:
   RenderViewMLGPU(FrameBuilder* aBuilder, RenderViewMLGPU* aParent);
   ~RenderViewMLGPU();
 
@@ -86,7 +74,7 @@ private:
   // Return the sorting index offset to use.
   int32_t PrepareDepthBuffer();
 
-private:
+ private:
   std::deque<RefPtr<RenderPassMLGPU>> mFrontToBack;
   std::deque<RefPtr<RenderPassMLGPU>> mBackToFront;
 
@@ -109,15 +97,16 @@ private:
   // Either an MLGSwapChain-derived render target, or an intermediate surface.
   RefPtr<MLGRenderTarget> mTarget;
 
-  // For intermediate render targets only, this is the layer owning the render target.
+  // For intermediate render targets only, this is the layer owning the render
+  // target.
   ContainerLayerMLGPU* mContainer;
 
   // The offset adjustment from container layer space to render target space.
   // This is 0,0 for the root view.
   gfx::IntPoint mTargetOffset;
 
-  // The invalid bounds as computed by LayerTreeInvalidation. This is the initial
-  // render bounds size, if invalidation is disabled.
+  // The invalid bounds as computed by LayerTreeInvalidation. This is the
+  // initial render bounds size, if invalidation is disabled.
   gfx::IntRect mInvalidBounds;
 
   // The occluded region, which is updated every time we process an opaque,
@@ -141,7 +130,7 @@ private:
   bool mDepthBufferNeedsClear;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_gfx_layers_mlgpu_RenderViewMLGPU_h
+#endif  // mozilla_gfx_layers_mlgpu_RenderViewMLGPU_h

@@ -20,6 +20,8 @@
 namespace {
 
 using mozilla::Atomic;
+using mozilla::MutexAutoLock;
+using mozilla::Unused;
 using mozilla::dom::ContentParentId;
 using mozilla::dom::cache::DirPaddingFile;
 using mozilla::dom::cache::Manager;
@@ -30,35 +32,39 @@ using mozilla::dom::quota::PersistenceType;
 using mozilla::dom::quota::QuotaManager;
 using mozilla::dom::quota::UsageInfo;
 using mozilla::ipc::AssertIsOnBackgroundThread;
-using mozilla::MutexAutoLock;
-using mozilla::Unused;
 
-static nsresult
-GetBodyUsage(nsIFile* aDir, const Atomic<bool>& aCanceled,
-             UsageInfo* aUsageInfo)
-{
+static nsresult GetBodyUsage(nsIFile* aDir, const Atomic<bool>& aCanceled,
+                             UsageInfo* aUsageInfo) {
   AssertIsOnIOThread();
 
   nsCOMPtr<nsIDirectoryEnumerator> entries;
   nsresult rv = aDir->GetDirectoryEntries(getter_AddRefs(entries));
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   nsCOMPtr<nsIFile> file;
   while (NS_SUCCEEDED(rv = entries->GetNextFile(getter_AddRefs(file))) &&
          file && !aCanceled) {
     bool isDir;
     rv = file->IsDirectory(&isDir);
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     if (isDir) {
       rv = GetBodyUsage(file, aCanceled, aUsageInfo);
-      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
       continue;
     }
 
     int64_t fileSize;
     rv = file->GetFileSize(&fileSize);
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
     MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
 
     aUsageInfo->AppendToFileUsage(fileSize);
@@ -67,10 +73,10 @@ GetBodyUsage(nsIFile* aDir, const Atomic<bool>& aCanceled,
   return NS_OK;
 }
 
-static nsresult
-LockedGetPaddingSizeFromDB(nsIFile* aDir, const nsACString& aGroup,
-                           const nsACString& aOrigin, int64_t* aPaddingSizeOut)
-{
+static nsresult LockedGetPaddingSizeFromDB(nsIFile* aDir,
+                                           const nsACString& aGroup,
+                                           const nsACString& aOrigin,
+                                           int64_t* aPaddingSizeOut) {
   MOZ_DIAGNOSTIC_ASSERT(aDir);
   MOZ_DIAGNOSTIC_ASSERT(aPaddingSizeOut);
 
@@ -80,15 +86,17 @@ LockedGetPaddingSizeFromDB(nsIFile* aDir, const nsACString& aGroup,
   QuotaInfo quotaInfo;
   quotaInfo.mGroup = aGroup;
   quotaInfo.mOrigin = aOrigin;
-  nsresult rv = mozilla::dom::cache::
-                OpenDBConnection(quotaInfo, aDir, getter_AddRefs(conn));
+  nsresult rv = mozilla::dom::cache::OpenDBConnection(quotaInfo, aDir,
+                                                      getter_AddRefs(conn));
   if (rv == NS_ERROR_FILE_NOT_FOUND ||
       rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
     // Return NS_OK with size = 0 if both the db and padding file don't exist.
     // There is no other way to get the overall padding size of an origin.
     return NS_OK;
   }
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // Make sure that the database has the latest schema before we try to read
   // from it. We have to do this because LockedGetPaddingSizeFromDB is called
@@ -96,50 +104,45 @@ LockedGetPaddingSizeFromDB(nsIFile* aDir, const nsACString& aGroup,
   // guarantee that SetupAction::RunSyncWithDBOnTarget already checked the
   // schema for the given origin).
   rv = mozilla::dom::cache::db::CreateOrMigrateSchema(conn);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   int64_t paddingSize = 0;
-  rv = mozilla::dom::cache::
-       LockedDirectoryPaddingRestore(aDir, conn, /* aMustRestore */ false,
-                                     &paddingSize);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+  rv = mozilla::dom::cache::LockedDirectoryPaddingRestore(
+      aDir, conn, /* aMustRestore */ false, &paddingSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   *aPaddingSizeOut = paddingSize;
 
   return rv;
 }
 
-class CacheQuotaClient final : public Client
-{
+class CacheQuotaClient final : public Client {
   static CacheQuotaClient* sInstance;
 
-public:
+ public:
   CacheQuotaClient()
-  : mDirPaddingFileMutex("DOMCacheQuotaClient.mDirPaddingFileMutex")
-  {
+      : mDirPaddingFileMutex("DOMCacheQuotaClient.mDirPaddingFileMutex") {
     AssertIsOnBackgroundThread();
     MOZ_DIAGNOSTIC_ASSERT(!sInstance);
     sInstance = this;
   }
 
-  static CacheQuotaClient*
-  Get()
-  {
+  static CacheQuotaClient* Get() {
     MOZ_DIAGNOSTIC_ASSERT(sInstance);
     return sInstance;
   }
 
-  virtual Type
-  GetType() override
-  {
-    return DOMCACHE;
-  }
+  virtual Type GetType() override { return DOMCACHE; }
 
-  virtual nsresult
-  InitOrigin(PersistenceType aPersistenceType, const nsACString& aGroup,
-             const nsACString& aOrigin, const AtomicBool& aCanceled,
-             UsageInfo* aUsageInfo) override
-  {
+  virtual nsresult InitOrigin(PersistenceType aPersistenceType,
+                              const nsACString& aGroup,
+                              const nsACString& aOrigin,
+                              const AtomicBool& aCanceled,
+                              UsageInfo* aUsageInfo) override {
     AssertIsOnIOThread();
 
     // The QuotaManager passes a nullptr UsageInfo if there is no quota being
@@ -152,11 +155,11 @@ public:
                              aUsageInfo);
   }
 
-  virtual nsresult
-  GetUsageForOrigin(PersistenceType aPersistenceType, const nsACString& aGroup,
-                    const nsACString& aOrigin, const AtomicBool& aCanceled,
-                    UsageInfo* aUsageInfo) override
-  {
+  virtual nsresult GetUsageForOrigin(PersistenceType aPersistenceType,
+                                     const nsACString& aGroup,
+                                     const nsACString& aOrigin,
+                                     const AtomicBool& aCanceled,
+                                     UsageInfo* aUsageInfo) override {
     AssertIsOnIOThread();
     MOZ_DIAGNOSTIC_ASSERT(aUsageInfo);
 
@@ -166,10 +169,14 @@ public:
     nsCOMPtr<nsIFile> dir;
     nsresult rv = qm->GetDirectoryForOrigin(aPersistenceType, aOrigin,
                                             getter_AddRefs(dir));
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     rv = dir->Append(NS_LITERAL_STRING(DOMCACHE_DIRECTORY_NAME));
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     int64_t paddingSize = 0;
     {
@@ -177,13 +184,14 @@ public:
       // action fails, so restore the padding file.
       MutexAutoLock lock(mDirPaddingFileMutex);
 
-      if (mozilla::dom::cache::
-          DirectoryPaddingFileExists(dir, DirPaddingFile::TMP_FILE) ||
-          NS_WARN_IF(NS_FAILED(mozilla::dom::cache::
-                               LockedDirectoryPaddingGet(dir,
-                                                         &paddingSize)))) {
+      if (mozilla::dom::cache::DirectoryPaddingFileExists(
+              dir, DirPaddingFile::TMP_FILE) ||
+          NS_WARN_IF(NS_FAILED(mozilla::dom::cache::LockedDirectoryPaddingGet(
+              dir, &paddingSize)))) {
         rv = LockedGetPaddingSizeFromDB(dir, aGroup, aOrigin, &paddingSize);
-        if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
     }
 
@@ -191,23 +199,31 @@ public:
 
     nsCOMPtr<nsIDirectoryEnumerator> entries;
     rv = dir->GetDirectoryEntries(getter_AddRefs(entries));
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     nsCOMPtr<nsIFile> file;
     while (NS_SUCCEEDED(rv = entries->GetNextFile(getter_AddRefs(file))) &&
            file && !aCanceled) {
       nsAutoString leafName;
       rv = file->GetLeafName(leafName);
-      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
       bool isDir;
       rv = file->IsDirectory(&isDir);
-      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
       if (isDir) {
         if (leafName.EqualsLiteral("morgue")) {
           rv = GetBodyUsage(file, aCanceled, aUsageInfo);
-          if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
         } else {
           NS_WARNING("Unknown Cache directory found!");
         }
@@ -218,7 +234,8 @@ public:
       // Ignore transient sqlite files and marker files
       if (leafName.EqualsLiteral("caches.sqlite-journal") ||
           leafName.EqualsLiteral("caches.sqlite-shm") ||
-          leafName.Find(NS_LITERAL_CSTRING("caches.sqlite-mj"), false, 0, 0) == 0 ||
+          leafName.Find(NS_LITERAL_CSTRING("caches.sqlite-mj"), false, 0, 0) ==
+              0 ||
           leafName.EqualsLiteral("context_open.marker")) {
         continue;
       }
@@ -227,7 +244,9 @@ public:
           leafName.EqualsLiteral("caches.sqlite-wal")) {
         int64_t fileSize;
         rv = file->GetFileSize(&fileSize);
-        if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
         MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
 
         aUsageInfo->AppendToDatabaseUsage(fileSize);
@@ -246,31 +265,24 @@ public:
     return NS_OK;
   }
 
-  virtual void
-  OnOriginClearCompleted(PersistenceType aPersistenceType,
-                         const nsACString& aOrigin) override
-  {
+  virtual void OnOriginClearCompleted(PersistenceType aPersistenceType,
+                                      const nsACString& aOrigin) override {
     // Nothing to do here.
   }
 
-  virtual void
-  ReleaseIOThreadObjects() override
-  {
+  virtual void ReleaseIOThreadObjects() override {
     // Nothing to do here as the Context handles cleaning everything up
     // automatically.
   }
 
-  virtual void
-  AbortOperations(const nsACString& aOrigin) override
-  {
+  virtual void AbortOperations(const nsACString& aOrigin) override {
     AssertIsOnBackgroundThread();
 
     Manager::Abort(aOrigin);
   }
 
-  virtual void
-  AbortOperationsForProcess(ContentParentId aContentParentId) override
-  {
+  virtual void AbortOperationsForProcess(
+      ContentParentId aContentParentId) override {
     // The Cache and Context can be shared by multiple client processes.  They
     // are not exclusively owned by a single process.
     //
@@ -282,46 +294,38 @@ public:
     // Therefore, do nothing here.
   }
 
-  virtual void
-  StartIdleMaintenance() override
-  { }
+  virtual void StartIdleMaintenance() override {}
 
-  virtual void
-  StopIdleMaintenance() override
-  { }
+  virtual void StopIdleMaintenance() override {}
 
-  virtual void
-  ShutdownWorkThreads() override
-  {
+  virtual void ShutdownWorkThreads() override {
     AssertIsOnBackgroundThread();
 
     // spins the event loop and synchronously shuts down all Managers
     Manager::ShutdownAll();
   }
 
-  nsresult
-  UpgradeStorageFrom2_0To2_1(nsIFile* aDirectory) override
-  {
+  nsresult UpgradeStorageFrom2_0To2_1(nsIFile* aDirectory) override {
     AssertIsOnIOThread();
     MOZ_DIAGNOSTIC_ASSERT(aDirectory);
 
     MutexAutoLock lock(mDirPaddingFileMutex);
 
     nsresult rv = mozilla::dom::cache::LockedDirectoryPaddingInit(aDirectory);
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     return rv;
   }
 
   // static
-  template<typename Callable>
-  nsresult
-  MaybeUpdatePaddingFileInternal(nsIFile* aBaseDir,
-                                 mozIStorageConnection* aConn,
-                                 const int64_t aIncreaseSize,
-                                 const int64_t aDecreaseSize,
-                                 Callable aCommitHook)
-  {
+  template <typename Callable>
+  nsresult MaybeUpdatePaddingFileInternal(nsIFile* aBaseDir,
+                                          mozIStorageConnection* aConn,
+                                          const int64_t aIncreaseSize,
+                                          const int64_t aDecreaseSize,
+                                          Callable aCommitHook) {
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
     MOZ_DIAGNOSTIC_ASSERT(aConn);
@@ -333,8 +337,8 @@ public:
     // Temporary should be removed at the end of each action. If not, it means
     // the failure happened.
     bool temporaryPaddingFileExist =
-      mozilla::dom::cache::DirectoryPaddingFileExists(aBaseDir,
-                                                      DirPaddingFile::TMP_FILE);
+        mozilla::dom::cache::DirectoryPaddingFileExists(
+            aBaseDir, DirPaddingFile::TMP_FILE);
 
     if (aIncreaseSize == aDecreaseSize && !temporaryPaddingFileExist) {
       // Early return here, since most cache actions won't modify padding size.
@@ -345,11 +349,9 @@ public:
 
     {
       MutexAutoLock lock(mDirPaddingFileMutex);
-      rv =
-        mozilla::dom::cache::
-        LockedUpdateDirectoryPaddingFile(aBaseDir, aConn, aIncreaseSize,
-                                         aDecreaseSize,
-                                         temporaryPaddingFileExist);
+      rv = mozilla::dom::cache::LockedUpdateDirectoryPaddingFile(
+          aBaseDir, aConn, aIncreaseSize, aDecreaseSize,
+          temporaryPaddingFileExist);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         // Don't delete the temporary padding file here to force the next action
         // recalculate the padding size.
@@ -366,14 +368,12 @@ public:
       rv = mozilla::dom::cache::LockedDirectoryPaddingFinalizeWrite(aBaseDir);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         // Force restore file next time.
-        Unused << mozilla::dom::cache::
-                  LockedDirectoryPaddingDeleteFile(aBaseDir,
-                                                   DirPaddingFile::FILE);
+        Unused << mozilla::dom::cache::LockedDirectoryPaddingDeleteFile(
+            aBaseDir, DirPaddingFile::FILE);
 
         // Ensure that we are able to force the padding file to be restored.
-        MOZ_ASSERT(
-          mozilla::dom::cache::
-          DirectoryPaddingFileExists(aBaseDir, DirPaddingFile::TMP_FILE));
+        MOZ_ASSERT(mozilla::dom::cache::DirectoryPaddingFileExists(
+            aBaseDir, DirPaddingFile::TMP_FILE));
 
         // Since both the body file and header have been stored in the
         // file-system, just make the action be resolve and let the padding file
@@ -386,9 +386,8 @@ public:
   }
 
   // static
-  nsresult
-  RestorePaddingFileInternal(nsIFile* aBaseDir, mozIStorageConnection* aConn)
-  {
+  nsresult RestorePaddingFileInternal(nsIFile* aBaseDir,
+                                      mozIStorageConnection* aConn) {
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
     MOZ_DIAGNOSTIC_ASSERT(aConn);
@@ -397,36 +396,32 @@ public:
 
     MutexAutoLock lock(mDirPaddingFileMutex);
 
-    nsresult rv =
-      mozilla::dom::cache::
-      LockedDirectoryPaddingRestore(aBaseDir, aConn, /* aMustRestore */ true,
-                                    &dummyPaddingSize);
+    nsresult rv = mozilla::dom::cache::LockedDirectoryPaddingRestore(
+        aBaseDir, aConn, /* aMustRestore */ true, &dummyPaddingSize);
     Unused << NS_WARN_IF(NS_FAILED(rv));
 
     return rv;
   }
 
   // static
-  nsresult
-  WipePaddingFileInternal(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir)
-  {
+  nsresult WipePaddingFileInternal(const QuotaInfo& aQuotaInfo,
+                                   nsIFile* aBaseDir) {
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
 
     MutexAutoLock lock(mDirPaddingFileMutex);
 
-    MOZ_ASSERT(mozilla::dom::cache::
-               DirectoryPaddingFileExists(aBaseDir, DirPaddingFile::FILE));
+    MOZ_ASSERT(mozilla::dom::cache::DirectoryPaddingFileExists(
+        aBaseDir, DirPaddingFile::FILE));
 
     int64_t paddingSize = 0;
     bool temporaryPaddingFileExist =
-      mozilla::dom::cache::
-      DirectoryPaddingFileExists(aBaseDir, DirPaddingFile::TMP_FILE);
+        mozilla::dom::cache::DirectoryPaddingFileExists(
+            aBaseDir, DirPaddingFile::TMP_FILE);
 
     if (temporaryPaddingFileExist ||
-        NS_WARN_IF(NS_FAILED(
-          mozilla::dom::cache::
-          LockedDirectoryPaddingGet(aBaseDir, &paddingSize)))) {
+        NS_WARN_IF(NS_FAILED(mozilla::dom::cache::LockedDirectoryPaddingGet(
+            aBaseDir, &paddingSize)))) {
       // XXXtt: Maybe have a method in the QuotaManager to clean the usage under
       // the quota client and the origin.
       // There is nothing we can do to recover the file.
@@ -438,15 +433,18 @@ public:
       mozilla::dom::cache::DecreaseUsageForQuotaInfo(aQuotaInfo, paddingSize);
     }
 
-    nsresult rv =
-      mozilla::dom::cache::
-      LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::FILE);
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    nsresult rv = mozilla::dom::cache::LockedDirectoryPaddingDeleteFile(
+        aBaseDir, DirPaddingFile::FILE);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     // Remove temporary file if we have one.
-    rv = mozilla::dom::cache::
-         LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::TMP_FILE);
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    rv = mozilla::dom::cache::LockedDirectoryPaddingDeleteFile(
+        aBaseDir, DirPaddingFile::TMP_FILE);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     rv = mozilla::dom::cache::LockedDirectoryPaddingInit(aBaseDir);
     Unused << NS_WARN_IF(NS_FAILED(rv));
@@ -454,9 +452,8 @@ public:
     return rv;
   }
 
-private:
-  ~CacheQuotaClient()
-  {
+ private:
+  ~CacheQuotaClient() {
     AssertIsOnBackgroundThread();
     MOZ_DIAGNOSTIC_ASSERT(sInstance == this);
 
@@ -473,15 +470,14 @@ private:
 // static
 CacheQuotaClient* CacheQuotaClient::sInstance = nullptr;
 
-} // namespace
+}  // namespace
 
 namespace mozilla {
 namespace dom {
 namespace cache {
 
 // static
-already_AddRefed<quota::Client> CreateQuotaClient()
-{
+already_AddRefed<quota::Client> CreateQuotaClient() {
   AssertIsOnBackgroundThread();
 
   RefPtr<CacheQuotaClient> ref = new CacheQuotaClient();
@@ -489,14 +485,11 @@ already_AddRefed<quota::Client> CreateQuotaClient()
 }
 
 // static
-template<typename Callable>
-nsresult
-MaybeUpdatePaddingFile(nsIFile* aBaseDir,
-                       mozIStorageConnection* aConn,
-                       const int64_t aIncreaseSize,
-                       const int64_t aDecreaseSize,
-                       Callable aCommitHook)
-{
+template <typename Callable>
+nsresult MaybeUpdatePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn,
+                                const int64_t aIncreaseSize,
+                                const int64_t aDecreaseSize,
+                                Callable aCommitHook) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
   MOZ_DIAGNOSTIC_ASSERT(aConn);
@@ -506,20 +499,15 @@ MaybeUpdatePaddingFile(nsIFile* aBaseDir,
   RefPtr<CacheQuotaClient> cacheQuotaClient = CacheQuotaClient::Get();
   MOZ_DIAGNOSTIC_ASSERT(cacheQuotaClient);
 
-  nsresult rv =
-    cacheQuotaClient->MaybeUpdatePaddingFileInternal(aBaseDir, aConn,
-                                                     aIncreaseSize,
-                                                     aDecreaseSize,
-                                                     aCommitHook);
+  nsresult rv = cacheQuotaClient->MaybeUpdatePaddingFileInternal(
+      aBaseDir, aConn, aIncreaseSize, aDecreaseSize, aCommitHook);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 
   return rv;
 }
 
 // static
-nsresult
-RestorePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn)
-{
+nsresult RestorePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
   MOZ_DIAGNOSTIC_ASSERT(aConn);
@@ -527,29 +515,25 @@ RestorePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn)
   RefPtr<CacheQuotaClient> cacheQuotaClient = CacheQuotaClient::Get();
   MOZ_DIAGNOSTIC_ASSERT(cacheQuotaClient);
 
-  nsresult rv =
-    cacheQuotaClient->RestorePaddingFileInternal(aBaseDir, aConn);
+  nsresult rv = cacheQuotaClient->RestorePaddingFileInternal(aBaseDir, aConn);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 
   return rv;
 }
 
 // static
-nsresult
-WipePaddingFile(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir)
-{
+nsresult WipePaddingFile(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
 
   RefPtr<CacheQuotaClient> cacheQuotaClient = CacheQuotaClient::Get();
   MOZ_DIAGNOSTIC_ASSERT(cacheQuotaClient);
 
-  nsresult rv =
-    cacheQuotaClient->WipePaddingFileInternal(aQuotaInfo, aBaseDir);
+  nsresult rv = cacheQuotaClient->WipePaddingFileInternal(aQuotaInfo, aBaseDir);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 
   return rv;
 }
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

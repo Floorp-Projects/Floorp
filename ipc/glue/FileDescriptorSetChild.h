@@ -18,34 +18,31 @@ namespace dom {
 
 class nsIContentChild;
 
-} // namespace dom
+}  // namespace dom
 
 namespace ipc {
 
 class BackgroundChildImpl;
 class FileDescriptor;
 
-class FileDescriptorSetChild final
-  : public PFileDescriptorSetChild
-{
+class FileDescriptorSetChild final : public PFileDescriptorSetChild {
   friend class BackgroundChildImpl;
   friend class mozilla::dom::nsIContentChild;
 
   nsTArray<FileDescriptor> mFileDescriptors;
 
-public:
-  void
-  ForgetFileDescriptors(nsTArray<FileDescriptor>& aFileDescriptors);
+ public:
+  void ForgetFileDescriptors(nsTArray<FileDescriptor>& aFileDescriptors);
 
-private:
+ private:
   explicit FileDescriptorSetChild(const FileDescriptor& aFileDescriptor);
   ~FileDescriptorSetChild();
 
-  virtual mozilla::ipc::IPCResult
-  RecvAddFileDescriptor(const FileDescriptor& aFileDescriptor) override;
+  virtual mozilla::ipc::IPCResult RecvAddFileDescriptor(
+      const FileDescriptor& aFileDescriptor) override;
 };
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
-#endif // mozilla_ipc_FileDescriptorSetChild_h__
+#endif  // mozilla_ipc_FileDescriptorSetChild_h__

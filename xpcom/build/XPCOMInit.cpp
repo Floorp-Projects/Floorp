@@ -226,11 +226,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsIOUtil)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecurityConsoleMessage)
 
-static nsresult
-nsThreadManagerGetSingleton(nsISupports* aOuter,
-                            const nsIID& aIID,
-                            void** aInstancePtr)
-{
+static nsresult nsThreadManagerGetSingleton(nsISupports* aOuter,
+                                            const nsIID& aIID,
+                                            void** aInstancePtr) {
   NS_ASSERTION(aInstancePtr, "null outptr");
   if (NS_WARN_IF(aOuter)) {
     return NS_ERROR_NO_AGGREGATION;
@@ -260,108 +258,102 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsChromeRegistry,
                                          nsChromeRegistry::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChromeProtocolHandler)
 
-static already_AddRefed<nsIFactory>
-CreateINIParserFactory(const mozilla::Module& aModule,
-                       const mozilla::Module::CIDEntry& aEntry)
-{
+static already_AddRefed<nsIFactory> CreateINIParserFactory(
+    const mozilla::Module& aModule, const mozilla::Module::CIDEntry& aEntry) {
   nsCOMPtr<nsIFactory> f = new nsINIParserFactory();
   return f.forget();
 }
 
-#define COMPONENT(NAME, Ctor) static NS_DEFINE_CID(kNS_##NAME##_CID, NS_##NAME##_CID);
-#define COMPONENT_M(NAME, Ctor, Selector) static NS_DEFINE_CID(kNS_##NAME##_CID, NS_##NAME##_CID);
+#define COMPONENT(NAME, Ctor) \
+  static NS_DEFINE_CID(kNS_##NAME##_CID, NS_##NAME##_CID);
+#define COMPONENT_M(NAME, Ctor, Selector) \
+  static NS_DEFINE_CID(kNS_##NAME##_CID, NS_##NAME##_CID);
 #include "XPCOMModule.inc"
 #undef COMPONENT
 #undef COMPONENT_M
 
-#define COMPONENT(NAME, Ctor) { &kNS_##NAME##_CID, false, nullptr, Ctor },
-#define COMPONENT_M(NAME, Ctor, Selector) { &kNS_##NAME##_CID, false, nullptr, Ctor, Selector },
+#define COMPONENT(NAME, Ctor) {&kNS_##NAME##_CID, false, nullptr, Ctor},
+#define COMPONENT_M(NAME, Ctor, Selector) \
+  {&kNS_##NAME##_CID, false, nullptr, Ctor, Selector},
 const mozilla::Module::CIDEntry kXPCOMCIDEntries[] = {
-  { &kComponentManagerCID, true, nullptr, nsComponentManagerImpl::Create, Module::ALLOW_IN_GPU_AND_VR_PROCESS },
-  { &kINIParserFactoryCID, false, CreateINIParserFactory },
+    {&kComponentManagerCID, true, nullptr, nsComponentManagerImpl::Create,
+     Module::ALLOW_IN_GPU_AND_VR_PROCESS},
+    {&kINIParserFactoryCID, false, CreateINIParserFactory},
 #include "XPCOMModule.inc"
-  { &kNS_CHROMEREGISTRY_CID, false, nullptr, nsChromeRegistryConstructor },
-  { &kNS_CHROMEPROTOCOLHANDLER_CID, false, nullptr, nsChromeProtocolHandlerConstructor },
-  { &kNS_SECURITY_CONSOLE_MESSAGE_CID, false, nullptr, nsSecurityConsoleMessageConstructor },
+    {&kNS_CHROMEREGISTRY_CID, false, nullptr, nsChromeRegistryConstructor},
+    {&kNS_CHROMEPROTOCOLHANDLER_CID, false, nullptr,
+     nsChromeProtocolHandlerConstructor},
+    {&kNS_SECURITY_CONSOLE_MESSAGE_CID, false, nullptr,
+     nsSecurityConsoleMessageConstructor},
 #ifdef MOZ_WIDGET_COCOA
-  { &kNS_MACPREFERENCESREADER_CID, false, nullptr, nsMacPreferencesReaderConstructor },
+    {&kNS_MACPREFERENCESREADER_CID, false, nullptr,
+     nsMacPreferencesReaderConstructor},
 #endif
-  { nullptr }
-};
+    {nullptr}};
 #undef COMPONENT
 #undef COMPONENT_M
 
-#define COMPONENT(NAME, Ctor) { NS_##NAME##_CONTRACTID, &kNS_##NAME##_CID },
-#define COMPONENT_M(NAME, Ctor, Selector) { NS_##NAME##_CONTRACTID, &kNS_##NAME##_CID, Selector },
+#define COMPONENT(NAME, Ctor) {NS_##NAME##_CONTRACTID, &kNS_##NAME##_CID},
+#define COMPONENT_M(NAME, Ctor, Selector) \
+  {NS_##NAME##_CONTRACTID, &kNS_##NAME##_CID, Selector},
 const mozilla::Module::ContractIDEntry kXPCOMContracts[] = {
 #include "XPCOMModule.inc"
-  { NS_CHROMEREGISTRY_CONTRACTID, &kNS_CHROMEREGISTRY_CID },
-  { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "chrome", &kNS_CHROMEPROTOCOLHANDLER_CID },
-  { NS_INIPARSERFACTORY_CONTRACTID, &kINIParserFactoryCID },
-  { NS_SECURITY_CONSOLE_MESSAGE_CONTRACTID, &kNS_SECURITY_CONSOLE_MESSAGE_CID },
+    {NS_CHROMEREGISTRY_CONTRACTID, &kNS_CHROMEREGISTRY_CID},
+    {NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "chrome",
+     &kNS_CHROMEPROTOCOLHANDLER_CID},
+    {NS_INIPARSERFACTORY_CONTRACTID, &kINIParserFactoryCID},
+    {NS_SECURITY_CONSOLE_MESSAGE_CONTRACTID, &kNS_SECURITY_CONSOLE_MESSAGE_CID},
 #ifdef MOZ_WIDGET_COCOA
-  { NS_MACPREFERENCESREADER_CONTRACTID, &kNS_MACPREFERENCESREADER_CID },
+    {NS_MACPREFERENCESREADER_CONTRACTID, &kNS_MACPREFERENCESREADER_CID},
 #endif
-  { nullptr }
-};
+    {nullptr}};
 #undef COMPONENT
 #undef COMPONENT_M
 
-const mozilla::Module kXPCOMModule = {
-  mozilla::Module::kVersion, kXPCOMCIDEntries, kXPCOMContracts,
-  nullptr,
-  nullptr,
-  nullptr,
-  nullptr,
-  Module::ALLOW_IN_GPU_AND_VR_PROCESS
-};
+const mozilla::Module kXPCOMModule = {mozilla::Module::kVersion,
+                                      kXPCOMCIDEntries,
+                                      kXPCOMContracts,
+                                      nullptr,
+                                      nullptr,
+                                      nullptr,
+                                      nullptr,
+                                      Module::ALLOW_IN_GPU_AND_VR_PROCESS};
 
 // gDebug will be freed during shutdown.
 static nsIDebug2* gDebug = nullptr;
 
 EXPORT_XPCOM_API(nsresult)
-NS_GetDebug(nsIDebug2** aResult)
-{
-  return nsDebugImpl::Create(nullptr,  NS_GET_IID(nsIDebug2), (void**)aResult);
+NS_GetDebug(nsIDebug2** aResult) {
+  return nsDebugImpl::Create(nullptr, NS_GET_IID(nsIDebug2), (void**)aResult);
 }
 
 EXPORT_XPCOM_API(nsresult)
-NS_InitXPCOM(nsIServiceManager** aResult,
-             nsIFile* aBinDirectory)
-{
+NS_InitXPCOM(nsIServiceManager** aResult, nsIFile* aBinDirectory) {
   return NS_InitXPCOM2(aResult, aBinDirectory, nullptr);
 }
 
-class ICUReporter final
-  : public nsIMemoryReporter
-  , public CountingAllocatorBase<ICUReporter>
-{
-public:
+class ICUReporter final : public nsIMemoryReporter,
+                          public CountingAllocatorBase<ICUReporter> {
+ public:
   NS_DECL_ISUPPORTS
 
-  static void* Alloc(const void*, size_t aSize)
-  {
+  static void* Alloc(const void*, size_t aSize) {
     return CountingMalloc(aSize);
   }
 
-  static void* Realloc(const void*, void* aPtr, size_t aSize)
-  {
+  static void* Realloc(const void*, void* aPtr, size_t aSize) {
     return CountingRealloc(aPtr, aSize);
   }
 
-  static void Free(const void*, void* aPtr)
-  {
-    return CountingFree(aPtr);
-  }
+  static void Free(const void*, void* aPtr) { return CountingFree(aPtr); }
 
-private:
+ private:
   NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                 bool aAnonymize) override
-  {
+                 bool aAnonymize) override {
     MOZ_COLLECT_REPORT(
-      "explicit/icu", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
-      "Memory used by ICU, a Unicode and globalization support library.");
+        "explicit/icu", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
+        "Memory used by ICU, a Unicode and globalization support library.");
 
     return NS_OK;
   }
@@ -371,25 +363,23 @@ private:
 
 NS_IMPL_ISUPPORTS(ICUReporter, nsIMemoryReporter)
 
-/* static */ template<> CountingAllocatorBase<ICUReporter>::AmountType
-CountingAllocatorBase<ICUReporter>::sAmount(0);
+/* static */ template <>
+CountingAllocatorBase<ICUReporter>::AmountType
+    CountingAllocatorBase<ICUReporter>::sAmount(0);
 
-class OggReporter final
-  : public nsIMemoryReporter
-  , public CountingAllocatorBase<OggReporter>
-{
-public:
+class OggReporter final : public nsIMemoryReporter,
+                          public CountingAllocatorBase<OggReporter> {
+ public:
   NS_DECL_ISUPPORTS
 
-private:
+ private:
   NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                 bool aAnonymize) override
-  {
+                 bool aAnonymize) override {
     MOZ_COLLECT_REPORT(
-      "explicit/media/libogg", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
-      "Memory allocated through libogg for Ogg, Theora, and related media "
-      "files.");
+        "explicit/media/libogg", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
+        "Memory allocated through libogg for Ogg, Theora, and related media "
+        "files.");
 
     return NS_OK;
   }
@@ -399,25 +389,23 @@ private:
 
 NS_IMPL_ISUPPORTS(OggReporter, nsIMemoryReporter)
 
-/* static */ template<> CountingAllocatorBase<OggReporter>::AmountType
-CountingAllocatorBase<OggReporter>::sAmount(0);
+/* static */ template <>
+CountingAllocatorBase<OggReporter>::AmountType
+    CountingAllocatorBase<OggReporter>::sAmount(0);
 
 #ifdef MOZ_VPX
-class VPXReporter final
-  : public nsIMemoryReporter
-  , public CountingAllocatorBase<VPXReporter>
-{
-public:
+class VPXReporter final : public nsIMemoryReporter,
+                          public CountingAllocatorBase<VPXReporter> {
+ public:
   NS_DECL_ISUPPORTS
 
-private:
+ private:
   NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                 bool aAnonymize) override
-  {
-    MOZ_COLLECT_REPORT(
-      "explicit/media/libvpx", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
-      "Memory allocated through libvpx for WebM media files.");
+                 bool aAnonymize) override {
+    MOZ_COLLECT_REPORT("explicit/media/libvpx", KIND_HEAP, UNITS_BYTES,
+                       MemoryAllocated(),
+                       "Memory allocated through libvpx for WebM media files.");
 
     return NS_OK;
   }
@@ -427,41 +415,31 @@ private:
 
 NS_IMPL_ISUPPORTS(VPXReporter, nsIMemoryReporter)
 
-/* static */ template<> Atomic<size_t>
-CountingAllocatorBase<VPXReporter>::sAmount(0);
+/* static */ template <>
+Atomic<size_t> CountingAllocatorBase<VPXReporter>::sAmount(0);
 #endif /* MOZ_VPX */
 
 #ifdef ENABLE_BIGINT
-class GMPReporter final
-  : public nsIMemoryReporter
-  , public CountingAllocatorBase<GMPReporter>
-{
-public:
+class GMPReporter final : public nsIMemoryReporter,
+                          public CountingAllocatorBase<GMPReporter> {
+ public:
   NS_DECL_ISUPPORTS
 
-  static void* Alloc(size_t size)
-  {
-    return CountingMalloc(size);
-  }
+  static void* Alloc(size_t size) { return CountingMalloc(size); }
 
-  static void* Realloc(void* ptr, size_t oldSize, size_t newSize)
-  {
+  static void* Realloc(void* ptr, size_t oldSize, size_t newSize) {
     return CountingRealloc(ptr, newSize);
   }
 
-  static void Free(void* ptr, size_t size)
-  {
-    return CountingFree(ptr);
-  }
+  static void Free(void* ptr, size_t size) { return CountingFree(ptr); }
 
-private:
+ private:
   NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                 bool aAnonymize) override
-  {
+                 bool aAnonymize) override {
     MOZ_COLLECT_REPORT(
-      "explicit/gmp", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
-      "Memory allocated through libgmp for BigInt arithmetic.");
+        "explicit/gmp", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
+        "Memory allocated through libgmp for BigInt arithmetic.");
 
     return NS_OK;
   }
@@ -471,18 +449,16 @@ private:
 
 NS_IMPL_ISUPPORTS(GMPReporter, nsIMemoryReporter)
 
-/* static */ template<> Atomic<size_t>
-CountingAllocatorBase<GMPReporter>::sAmount(0);
-#endif // ENABLE_BIGINT
+/* static */ template <>
+Atomic<size_t> CountingAllocatorBase<GMPReporter>::sAmount(0);
+#endif  // ENABLE_BIGINT
 
 static bool sInitializedJS = false;
 
 // Note that on OSX, aBinDirectory will point to .app/Contents/Resources/browser
 EXPORT_XPCOM_API(nsresult)
-NS_InitXPCOM2(nsIServiceManager** aResult,
-              nsIFile* aBinDirectory,
-              nsIDirectoryServiceProvider* aAppFileLocationProvider)
-{
+NS_InitXPCOM2(nsIServiceManager** aResult, nsIFile* aBinDirectory,
+              nsIDirectoryServiceProvider* aAppFileLocationProvider) {
   static bool sInitialized = false;
   if (sInitialized) {
     return NS_ERROR_FAILURE;
@@ -540,7 +516,8 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
 
   if (XRE_IsParentProcess() &&
       !BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO)) {
-    UniquePtr<BrowserProcessSubThread> ioThread = MakeUnique<BrowserProcessSubThread>(BrowserProcessSubThread::IO);
+    UniquePtr<BrowserProcessSubThread> ioThread =
+        MakeUnique<BrowserProcessSubThread>(BrowserProcessSubThread::IO);
 
     base::Thread::Options options;
     options.message_loop_type = MessageLoop::TYPE_IO;
@@ -588,15 +565,15 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
   }
 
   if (aAppFileLocationProvider) {
-    rv = nsDirectoryService::gService->RegisterProvider(aAppFileLocationProvider);
+    rv = nsDirectoryService::gService->RegisterProvider(
+        aAppFileLocationProvider);
     if (NS_FAILED(rv)) {
       return rv;
     }
   }
 
   nsCOMPtr<nsIFile> xpcomLib;
-  nsDirectoryService::gService->Get(NS_GRE_BIN_DIR,
-                                    NS_GET_IID(nsIFile),
+  nsDirectoryService::gService->Get(NS_GRE_BIN_DIR, NS_GET_IID(nsIFile),
                                     getter_AddRefs(xpcomLib));
   MOZ_ASSERT(xpcomLib);
 
@@ -635,7 +612,7 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
       return rv;
     }
 
-    static char const* const argv = { strdup(binaryPath.get()) };
+    static char const* const argv = {strdup(binaryPath.get())};
     CommandLine::Init(1, &argv);
 #endif
   }
@@ -664,20 +641,16 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
   mozilla::SetICUMemoryFunctions();
 
   // Do the same for libogg.
-  ogg_set_mem_functions(OggReporter::CountingMalloc,
-                        OggReporter::CountingCalloc,
-                        OggReporter::CountingRealloc,
-                        OggReporter::CountingFree);
+  ogg_set_mem_functions(
+      OggReporter::CountingMalloc, OggReporter::CountingCalloc,
+      OggReporter::CountingRealloc, OggReporter::CountingFree);
 
 #if defined(MOZ_VPX) && !defined(MOZ_VPX_NO_MEM_REPORTING)
   // And for VPX.
   vpx_mem_set_functions(VPXReporter::CountingMalloc,
                         VPXReporter::CountingCalloc,
-                        VPXReporter::CountingRealloc,
-                        VPXReporter::CountingFree,
-                        memcpy,
-                        memset,
-                        memmove);
+                        VPXReporter::CountingRealloc, VPXReporter::CountingFree,
+                        memcpy, memset, memmove);
 #endif
 
 #ifdef ENABLE_BIGINT
@@ -715,8 +688,7 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
   mozilla::AvailableMemoryTracker::Init();
 
   // Notify observers of xpcom autoregistration start
-  NS_CreateServicesFromCategory(NS_XPCOM_STARTUP_CATEGORY,
-                                nullptr,
+  NS_CreateServicesFromCategory(NS_XPCOM_STARTUP_CATEGORY, nullptr,
                                 NS_XPCOM_STARTUP_OBSERVER_ID);
 #ifdef XP_WIN
   CreateAnonTempFileRemover();
@@ -735,16 +707,14 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
 
   const MessageLoop* const loop = MessageLoop::current();
   sMainHangMonitor = new mozilla::BackgroundHangMonitor(
-    loop->thread_name().c_str(),
-    loop->transient_hang_timeout(),
-    loop->permanent_hang_timeout());
+      loop->thread_name().c_str(), loop->transient_hang_timeout(),
+      loop->permanent_hang_timeout());
 
   return NS_OK;
 }
 
 EXPORT_XPCOM_API(nsresult)
-NS_InitMinimalXPCOM()
-{
+NS_InitMinimalXPCOM() {
   mozPoisonValueInit();
   NS_SetMainThread();
   mozilla::TimeStamp::Startup();
@@ -816,16 +786,13 @@ NS_InitMinimalXPCOM()
 //   - Finally, release the component manager itself
 //
 EXPORT_XPCOM_API(nsresult)
-NS_ShutdownXPCOM(nsIServiceManager* aServMgr)
-{
+NS_ShutdownXPCOM(nsIServiceManager* aServMgr) {
   return mozilla::ShutdownXPCOM(aServMgr);
 }
 
 namespace mozilla {
 
-void
-SetICUMemoryFunctions()
-{
+void SetICUMemoryFunctions() {
   static bool sICUReporterInitialized = false;
   if (!sICUReporterInitialized) {
     if (!JS_SetICUMemoryFunctions(ICUReporter::Alloc, ICUReporter::Realloc,
@@ -837,22 +804,17 @@ SetICUMemoryFunctions()
 }
 
 #ifdef ENABLE_BIGINT
-void
-SetGMPMemoryFunctions()
-{
+void SetGMPMemoryFunctions() {
   static bool sGMPReporterInitialized = false;
   if (!sGMPReporterInitialized) {
-    JS::SetGMPMemoryFunctions(GMPReporter::Alloc,
-                              GMPReporter::Realloc,
+    JS::SetGMPMemoryFunctions(GMPReporter::Alloc, GMPReporter::Realloc,
                               GMPReporter::Free);
     sGMPReporterInitialized = true;
   }
 }
 #endif
 
-nsresult
-ShutdownXPCOM(nsIServiceManager* aServMgr)
-{
+nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
   // Make sure the hang monitor is enabled for shutdown.
   BackgroundHangMonitor().NotifyActivity();
 
@@ -879,9 +841,8 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
 
     if (observerService) {
       mozilla::KillClearOnShutdown(ShutdownPhase::WillShutdown);
-      observerService->NotifyObservers(nullptr,
-                                       NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID,
-                                       nullptr);
+      observerService->NotifyObservers(
+          nullptr, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID, nullptr);
 
       nsCOMPtr<nsIServiceManager> mgr;
       rv = NS_GetServiceManager(getter_AddRefs(mgr));
@@ -904,12 +865,10 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
     mozilla::RemoteDecoderManagerChild::Shutdown();
 
     mozilla::scache::StartupCache::DeleteSingleton();
-    if (observerService)
-    {
+    if (observerService) {
       mozilla::KillClearOnShutdown(ShutdownPhase::ShutdownThreads);
-      observerService->NotifyObservers(nullptr,
-                                       NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID,
-                                       nullptr);
+      observerService->NotifyObservers(
+          nullptr, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, nullptr);
     }
 
     gXPCOMThreadsShutDown = true;
@@ -1092,4 +1051,4 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
   return NS_OK;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -8,8 +8,8 @@
 // forward declare NrIceStunAddr for --disable-webrtc builds where
 // the header will not be available.
 namespace mozilla {
-  class NrIceStunAddr;
-} // namespace mozilla
+class NrIceStunAddr;
+}  // namespace mozilla
 
 #include "ipc/IPCMessageUtils.h"
 #ifdef MOZ_WEBRTC
@@ -18,11 +18,9 @@ namespace mozilla {
 
 namespace IPC {
 
-template<>
-struct ParamTraits<mozilla::NrIceStunAddr>
-{
-  static void Write(Message* aMsg, const mozilla::NrIceStunAddr &aParam)
-  {
+template <>
+struct ParamTraits<mozilla::NrIceStunAddr> {
+  static void Write(Message* aMsg, const mozilla::NrIceStunAddr& aParam) {
 #ifdef MOZ_WEBRTC
     const size_t bufSize = aParam.SerializationBufferSize();
     char* buffer = new char[bufSize];
@@ -32,19 +30,15 @@ struct ParamTraits<mozilla::NrIceStunAddr>
 #endif
   }
 
-  static bool Read(const Message* aMsg,
-                   PickleIterator* aIter,
-                   mozilla::NrIceStunAddr* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   mozilla::NrIceStunAddr* aResult) {
 #ifdef MOZ_WEBRTC
     const size_t bufSize = aResult->SerializationBufferSize();
     char* buffer = new char[bufSize];
-    bool result =
-      aMsg->ReadBytesInto(aIter, (void*)buffer, bufSize);
+    bool result = aMsg->ReadBytesInto(aIter, (void*)buffer, bufSize);
 
     if (result) {
-      result = result &&
-               (NS_OK == aResult->Deserialize(buffer, bufSize));
+      result = result && (NS_OK == aResult->Deserialize(buffer, bufSize));
     }
     delete[] buffer;
 
@@ -55,6 +49,6 @@ struct ParamTraits<mozilla::NrIceStunAddr>
   }
 };
 
-} // namespace IPC
+}  // namespace IPC
 
-#endif // mozilla_net_NrIceStunAddrMessageUtils_h
+#endif  // mozilla_net_NrIceStunAddrMessageUtils_h

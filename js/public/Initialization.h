@@ -13,12 +13,7 @@
 namespace JS {
 namespace detail {
 
-enum class InitState {
-    Uninitialized = 0,
-    Initializing,
-    Running,
-    ShutDown
-};
+enum class InitState { Uninitialized = 0, Initializing, Running, ShutDown };
 
 /**
  * SpiderMonkey's initialization status is tracked here, and it controls things
@@ -27,14 +22,12 @@ enum class InitState {
  * manner, so this (internal -- embedders, don't use!) variable doesn't need to
  * be atomic.
  */
-extern JS_PUBLIC_DATA InitState
-libraryInitState;
+extern JS_PUBLIC_DATA InitState libraryInitState;
 
-extern JS_PUBLIC_API const char*
-InitWithFailureDiagnostic(bool isDebugBuild);
+extern JS_PUBLIC_API const char* InitWithFailureDiagnostic(bool isDebugBuild);
 
-} // namespace detail
-} // namespace JS
+}  // namespace detail
+}  // namespace JS
 
 // These are equivalent to ICU's |UMemAllocFn|, |UMemReallocFn|, and
 // |UMemFreeFn| types.  The first argument (called |context| in the ICU docs)
@@ -48,10 +41,9 @@ typedef void (*JS_ICUFreeFn)(const void*, void* p);
  * *must* be called before JS_Init.  Don't use it unless you know what you're
  * doing!
  */
-extern JS_PUBLIC_API bool
-JS_SetICUMemoryFunctions(JS_ICUAllocFn allocFn,
-                         JS_ICUReallocFn reallocFn,
-                         JS_ICUFreeFn freeFn);
+extern JS_PUBLIC_API bool JS_SetICUMemoryFunctions(JS_ICUAllocFn allocFn,
+                                                   JS_ICUReallocFn reallocFn,
+                                                   JS_ICUFreeFn freeFn);
 
 #ifdef ENABLE_BIGINT
 namespace JS {
@@ -65,12 +57,11 @@ using GMPFreeFn = void (*)(void* p, size_t size);
 // This function can be used to track memory used by GMP. If it is
 // called, it *must* be called before JS_Init so that same functions are
 // used for all allocations.
-extern JS_PUBLIC_API void
-SetGMPMemoryFunctions(GMPAllocFn allocFn,
-                      GMPReallocFn reallocFn,
-                      GMPFreeFn freeFn);
+extern JS_PUBLIC_API void SetGMPMemoryFunctions(GMPAllocFn allocFn,
+                                                GMPReallocFn reallocFn,
+                                                GMPFreeFn freeFn);
 
-}; // namespace JS
+};  // namespace JS
 #endif
 
 /**
@@ -86,13 +77,11 @@ SetGMPMemoryFunctions(GMPAllocFn allocFn,
  * is, calling JS_Init/JSAPI methods/JS_ShutDown in that order, then doing so
  * again).  This restriction may eventually be lifted.
  */
-inline bool
-JS_Init(void)
-{
+inline bool JS_Init(void) {
 #ifdef DEBUG
-    return !JS::detail::InitWithFailureDiagnostic(true);
+  return !JS::detail::InitWithFailureDiagnostic(true);
 #else
-    return !JS::detail::InitWithFailureDiagnostic(false);
+  return !JS::detail::InitWithFailureDiagnostic(false);
 #endif
 }
 
@@ -101,19 +90,17 @@ JS_Init(void)
  * pointer to a string literal that describes how initialization failed, which
  * can be useful for debugging purposes.
  */
-inline const char*
-JS_InitWithFailureDiagnostic(void)
-{
+inline const char* JS_InitWithFailureDiagnostic(void) {
 #ifdef DEBUG
-    return JS::detail::InitWithFailureDiagnostic(true);
+  return JS::detail::InitWithFailureDiagnostic(true);
 #else
-    return JS::detail::InitWithFailureDiagnostic(false);
+  return JS::detail::InitWithFailureDiagnostic(false);
 #endif
 }
 
 /*
- * Returns true if SpiderMonkey has been initialized successfully, even if it has
- * possibly been shut down.
+ * Returns true if SpiderMonkey has been initialized successfully, even if it
+ * has possibly been shut down.
  *
  * Note that it is the responsibility of the embedder to call JS_Init() and
  * JS_ShutDown() at the correct times, and therefore this API should ideally not
@@ -121,9 +108,7 @@ JS_InitWithFailureDiagnostic(void)
  * embedder isn't in full control of deciding whether to initialize SpiderMonkey
  * or hand off the task to another consumer.
  */
-inline bool
-JS_IsInitialized(void)
-{
+inline bool JS_IsInitialized(void) {
   return JS::detail::libraryInitState >= JS::detail::InitState::Running;
 }
 
@@ -144,7 +129,6 @@ JS_IsInitialized(void)
  * is, calling JS_Init/JSAPI methods/JS_ShutDown in that order, then doing so
  * again).  This restriction may eventually be lifted.
  */
-extern JS_PUBLIC_API void
-JS_ShutDown(void);
+extern JS_PUBLIC_API void JS_ShutDown(void);
 
 #endif /* js_Initialization_h */

@@ -11,41 +11,42 @@
 
 namespace mozilla {
 
-WebGLExtensionEXTColorBufferFloat::WebGLExtensionEXTColorBufferFloat(WebGLContext* webgl)
-    : WebGLExtensionBase(webgl)
-{
-    MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
+WebGLExtensionEXTColorBufferFloat::WebGLExtensionEXTColorBufferFloat(
+    WebGLContext* webgl)
+    : WebGLExtensionBase(webgl) {
+  MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
 
-    auto& fua = webgl->mFormatUsage;
+  auto& fua = webgl->mFormatUsage;
 
-    auto fnUpdateUsage = [&fua](GLenum sizedFormat, webgl::EffectiveFormat effFormat) {
-        auto usage = fua->EditUsage(effFormat);
-        usage->SetRenderable();
-        fua->AllowRBFormat(sizedFormat, usage);
-    };
+  auto fnUpdateUsage = [&fua](GLenum sizedFormat,
+                              webgl::EffectiveFormat effFormat) {
+    auto usage = fua->EditUsage(effFormat);
+    usage->SetRenderable();
+    fua->AllowRBFormat(sizedFormat, usage);
+  };
 
-#define FOO(x) fnUpdateUsage(LOCAL_GL_ ## x, webgl::EffectiveFormat::x)
+#define FOO(x) fnUpdateUsage(LOCAL_GL_##x, webgl::EffectiveFormat::x)
 
-    FOO(R16F);
-    FOO(RG16F);
-    FOO(RGBA16F);
+  FOO(R16F);
+  FOO(RG16F);
+  FOO(RGBA16F);
 
-    FOO(R32F);
-    FOO(RG32F);
-    FOO(RGBA32F);
+  FOO(R32F);
+  FOO(RG32F);
+  FOO(RGBA32F);
 
-    FOO(R11F_G11F_B10F);
+  FOO(R11F_G11F_B10F);
 
 #undef FOO
 }
 
-/*static*/ bool
-WebGLExtensionEXTColorBufferFloat::IsSupported(const WebGLContext* webgl)
-{
-    const gl::GLContext* gl = webgl->GL();
-    return gl->IsSupported(gl::GLFeature::EXT_color_buffer_float);
+/*static*/ bool WebGLExtensionEXTColorBufferFloat::IsSupported(
+    const WebGLContext* webgl) {
+  const gl::GLContext* gl = webgl->GL();
+  return gl->IsSupported(gl::GLFeature::EXT_color_buffer_float);
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionEXTColorBufferFloat, EXT_color_buffer_float)
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionEXTColorBufferFloat,
+                          EXT_color_buffer_float)
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -16,30 +16,28 @@
 #include <process.h>
 #define getpid _getpid
 #else
-#include <unistd.h> // for getpid()
+#include <unistd.h>  // for getpid()
 #endif
 
 ProfiledThreadData::ProfiledThreadData(ThreadInfo* aThreadInfo,
                                        nsIEventTarget* aEventTarget,
                                        bool aIncludeResponsiveness)
-  : mThreadInfo(aThreadInfo)
-{
+    : mThreadInfo(aThreadInfo) {
   MOZ_COUNT_CTOR(ProfiledThreadData);
   if (aIncludeResponsiveness) {
     mResponsiveness.emplace(aEventTarget, aThreadInfo->IsMainThread());
   }
 }
 
-ProfiledThreadData::~ProfiledThreadData()
-{
+ProfiledThreadData::~ProfiledThreadData() {
   MOZ_COUNT_DTOR(ProfiledThreadData);
 }
 
-void
-ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer, JSContext* aCx,
-                               SpliceableJSONWriter& aWriter,
-                               const TimeStamp& aProcessStartTime, double aSinceTime)
-{
+void ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer,
+                                    JSContext* aCx,
+                                    SpliceableJSONWriter& aWriter,
+                                    const TimeStamp& aProcessStartTime,
+                                    double aSinceTime) {
   if (mJITFrameInfoForPreviousJSContexts &&
       mJITFrameInfoForPreviousJSContexts->HasExpired(aBuffer.mRangeStart)) {
     mJITFrameInfoForPreviousJSContexts = nullptr;
@@ -47,12 +45,14 @@ ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer, JSContext* aCx,
 
   // If we have an existing JITFrameInfo in mJITFrameInfoForPreviousJSContexts,
   // copy the data from it.
-  JITFrameInfo jitFrameInfo = mJITFrameInfoForPreviousJSContexts
-    ? JITFrameInfo(*mJITFrameInfoForPreviousJSContexts) : JITFrameInfo();
+  JITFrameInfo jitFrameInfo =
+      mJITFrameInfoForPreviousJSContexts
+          ? JITFrameInfo(*mJITFrameInfoForPreviousJSContexts)
+          : JITFrameInfo();
 
   if (aCx && mBufferPositionWhenReceivedJSContext) {
     aBuffer.AddJITInfoForRange(*mBufferPositionWhenReceivedJSContext,
-      mThreadInfo->ThreadId(), aCx, jitFrameInfo);
+                               mThreadInfo->ThreadId(), aCx, jitFrameInfo);
   }
 
   UniqueStacks uniqueStacks(std::move(jitFrameInfo));
@@ -60,8 +60,7 @@ ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer, JSContext* aCx,
   aWriter.Start();
   {
     StreamSamplesAndMarkers(mThreadInfo->Name(), mThreadInfo->ThreadId(),
-                            aBuffer, aWriter,
-                            aProcessStartTime,
+                            aBuffer, aWriter, aProcessStartTime,
                             mThreadInfo->RegisterTime(), mUnregisterTime,
                             aSinceTime, uniqueStacks);
 
@@ -74,9 +73,7 @@ ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer, JSContext* aCx,
       }
 
       aWriter.StartArrayProperty("data");
-      {
-        uniqueStacks.SpliceStackTableElements(aWriter);
-      }
+      { uniqueStacks.SpliceStackTableElements(aWriter); }
       aWriter.EndArray();
     }
     aWriter.EndObject();
@@ -95,34 +92,26 @@ ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer, JSContext* aCx,
       }
 
       aWriter.StartArrayProperty("data");
-      {
-        uniqueStacks.SpliceFrameTableElements(aWriter);
-      }
+      { uniqueStacks.SpliceFrameTableElements(aWriter); }
       aWriter.EndArray();
     }
     aWriter.EndObject();
 
     aWriter.StartArrayProperty("stringTable");
-    {
-      uniqueStacks.mUniqueStrings->SpliceStringTableElements(aWriter);
-    }
+    { uniqueStacks.mUniqueStrings->SpliceStringTableElements(aWriter); }
     aWriter.EndArray();
   }
 
   aWriter.End();
 }
 
-void
-StreamSamplesAndMarkers(const char* aName,
-                        int aThreadId,
-                        const ProfileBuffer& aBuffer,
-                        SpliceableJSONWriter& aWriter,
-                        const TimeStamp& aProcessStartTime,
-                        const TimeStamp& aRegisterTime,
-                        const TimeStamp& aUnregisterTime,
-                        double aSinceTime,
-                        UniqueStacks& aUniqueStacks)
-{
+void StreamSamplesAndMarkers(const char* aName, int aThreadId,
+                             const ProfileBuffer& aBuffer,
+                             SpliceableJSONWriter& aWriter,
+                             const TimeStamp& aProcessStartTime,
+                             const TimeStamp& aRegisterTime,
+                             const TimeStamp& aUnregisterTime,
+                             double aSinceTime, UniqueStacks& aUniqueStacks) {
   aWriter.StringProperty("processType",
                          XRE_ChildProcessTypeToString(XRE_GetProcessType()));
 
@@ -143,15 +132,16 @@ StreamSamplesAndMarkers(const char* aName,
   aWriter.IntProperty("pid", static_cast<int64_t>(getpid()));
 
   if (aRegisterTime) {
-    aWriter.DoubleProperty("registerTime",
-      (aRegisterTime - aProcessStartTime).ToMilliseconds());
+    aWriter.DoubleProperty(
+        "registerTime", (aRegisterTime - aProcessStartTime).ToMilliseconds());
   } else {
     aWriter.NullProperty("registerTime");
   }
 
   if (aUnregisterTime) {
-    aWriter.DoubleProperty("unregisterTime",
-      (aUnregisterTime - aProcessStartTime).ToMilliseconds());
+    aWriter.DoubleProperty(
+        "unregisterTime",
+        (aUnregisterTime - aProcessStartTime).ToMilliseconds());
   } else {
     aWriter.NullProperty("unregisterTime");
   }
@@ -195,11 +185,9 @@ StreamSamplesAndMarkers(const char* aName,
   aWriter.EndObject();
 }
 
-void
-ProfiledThreadData::NotifyAboutToLoseJSContext(JSContext* aContext,
-                                               const TimeStamp& aProcessStartTime,
-                                               ProfileBuffer& aBuffer)
-{
+void ProfiledThreadData::NotifyAboutToLoseJSContext(
+    JSContext* aContext, const TimeStamp& aProcessStartTime,
+    ProfileBuffer& aBuffer) {
   if (!mBufferPositionWhenReceivedJSContext) {
     return;
   }
@@ -211,11 +199,13 @@ ProfiledThreadData::NotifyAboutToLoseJSContext(JSContext* aContext,
     mJITFrameInfoForPreviousJSContexts = nullptr;
   }
 
-  UniquePtr<JITFrameInfo> jitFrameInfo = mJITFrameInfoForPreviousJSContexts
-    ? std::move(mJITFrameInfoForPreviousJSContexts) : MakeUnique<JITFrameInfo>();
+  UniquePtr<JITFrameInfo> jitFrameInfo =
+      mJITFrameInfoForPreviousJSContexts
+          ? std::move(mJITFrameInfoForPreviousJSContexts)
+          : MakeUnique<JITFrameInfo>();
 
   aBuffer.AddJITInfoForRange(*mBufferPositionWhenReceivedJSContext,
-     mThreadInfo->ThreadId(), aContext, *jitFrameInfo);
+                             mThreadInfo->ThreadId(), aContext, *jitFrameInfo);
 
   mJITFrameInfoForPreviousJSContexts = std::move(jitFrameInfo);
   mBufferPositionWhenReceivedJSContext = Nothing();

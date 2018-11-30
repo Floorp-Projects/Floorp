@@ -12,9 +12,7 @@
 
 #ifdef XP_WIN
 
-void
-mozilla::PrintToDebugger(const char* aStr)
-{
+void mozilla::PrintToDebugger(const char* aStr) {
   if (::IsDebuggerPresent()) {
     ::OutputDebugStringA(aStr);
   }

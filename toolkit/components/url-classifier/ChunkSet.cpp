@@ -10,9 +10,7 @@ namespace safebrowsing {
 
 const size_t ChunkSet::IO_BUFFER_SIZE;
 
-nsresult
-ChunkSet::Serialize(nsACString& aChunkStr)
-{
+nsresult ChunkSet::Serialize(nsACString& aChunkStr) {
   aChunkStr.Truncate();
   for (const Range& range : mRanges) {
     if (&range != &mRanges[0]) {
@@ -29,9 +27,7 @@ ChunkSet::Serialize(nsACString& aChunkStr)
   return NS_OK;
 }
 
-nsresult
-ChunkSet::Set(uint32_t aChunk)
-{
+nsresult ChunkSet::Set(uint32_t aChunk) {
   if (!Has(aChunk)) {
     Range chunkRange(aChunk, aChunk);
 
@@ -59,20 +55,16 @@ ChunkSet::Set(uint32_t aChunk)
   return NS_OK;
 }
 
-bool
-ChunkSet::Has(uint32_t aChunk) const
-{
+bool ChunkSet::Has(uint32_t aChunk) const {
   size_t idx;
   return BinarySearchIf(mRanges, 0, mRanges.Length(),
                         Range::IntersectionComparator(Range(aChunk, aChunk)),
                         &idx);
-                        // IntersectionComparator works because we create a
-                        // single-chunk range.
+  // IntersectionComparator works because we create a
+  // single-chunk range.
 }
 
-nsresult
-ChunkSet::Merge(const ChunkSet& aOther)
-{
+nsresult ChunkSet::Merge(const ChunkSet& aOther) {
   size_t oldLen = mRanges.Length();
 
   for (const Range& mergeRange : aOther.mRanges) {
@@ -98,9 +90,7 @@ ChunkSet::Merge(const ChunkSet& aOther)
   return NS_OK;
 }
 
-uint32_t
-ChunkSet::Length() const
-{
+uint32_t ChunkSet::Length() const {
   uint32_t len = 0;
   for (const Range& range : mRanges) {
     len += range.Length();
@@ -109,11 +99,8 @@ ChunkSet::Length() const
   return len;
 }
 
-nsresult
-ChunkSet::Remove(const ChunkSet& aOther)
-{
+nsresult ChunkSet::Remove(const ChunkSet& aOther) {
   for (const Range& removalRange : aOther.mRanges) {
-
     if (mRanges.Length() == 0) {
       return NS_OK;
     }
@@ -125,8 +112,8 @@ ChunkSet::Remove(const ChunkSet& aOther)
 
     size_t intersectionIdx;
     while (BinarySearchIf(mRanges, 0, mRanges.Length(),
-           Range::IntersectionComparator(removalRange), &intersectionIdx)) {
-
+                          Range::IntersectionComparator(removalRange),
+                          &intersectionIdx)) {
       ChunkSet remains;
       nsresult rv = mRanges[intersectionIdx].Remove(removalRange, remains);
 
@@ -145,15 +132,9 @@ ChunkSet::Remove(const ChunkSet& aOther)
   return NS_OK;
 }
 
-void
-ChunkSet::Clear()
-{
-  mRanges.Clear();
-}
+void ChunkSet::Clear() { mRanges.Clear(); }
 
-nsresult
-ChunkSet::Write(nsIOutputStream* aOut) const
-{
+nsresult ChunkSet::Write(nsIOutputStream* aOut) const {
   nsTArray<uint32_t> chunks(IO_BUFFER_SIZE);
 
   for (const Range& range : mRanges) {
@@ -181,15 +162,14 @@ ChunkSet::Write(nsIOutputStream* aOut) const
   return NS_OK;
 }
 
-nsresult
-ChunkSet::Read(nsIInputStream* aIn, uint32_t aNumElements)
-{
+nsresult ChunkSet::Read(nsIInputStream* aIn, uint32_t aNumElements) {
   nsTArray<uint32_t> chunks(IO_BUFFER_SIZE);
 
   while (aNumElements != 0) {
     chunks.Clear();
 
-    uint32_t numToRead = aNumElements > IO_BUFFER_SIZE ? IO_BUFFER_SIZE : aNumElements;
+    uint32_t numToRead =
+        aNumElements > IO_BUFFER_SIZE ? IO_BUFFER_SIZE : aNumElements;
 
     nsresult rv = ReadTArray(aIn, &chunks, numToRead);
 
@@ -211,9 +191,7 @@ ChunkSet::Read(nsIInputStream* aIn, uint32_t aNumElements)
   return NS_OK;
 }
 
-bool
-ChunkSet::HasSubrange(const Range& aSubrange) const
-{
+bool ChunkSet::HasSubrange(const Range& aSubrange) const {
   for (const Range& range : mRanges) {
     if (range.Contains(aSubrange)) {
       return true;
@@ -230,15 +208,10 @@ ChunkSet::HasSubrange(const Range& aSubrange) const
   return false;
 }
 
-uint32_t
-ChunkSet::Range::Length() const
-{
-  return mEnd - mBegin + 1;
-}
+uint32_t ChunkSet::Range::Length() const { return mEnd - mBegin + 1; }
 
-nsresult
-ChunkSet::Range::Remove(const Range& aRange, ChunkSet& aRemainderSet) const
-{
+nsresult ChunkSet::Range::Remove(const Range& aRange,
+                                 ChunkSet& aRemainderSet) const {
   if (mBegin < aRange.mBegin && aRange.mBegin <= mEnd) {
     // aRange overlaps & follows this range
     Range range(mBegin, aRange.mBegin - 1);
@@ -258,9 +231,7 @@ ChunkSet::Range::Remove(const Range& aRange, ChunkSet& aRemainderSet) const
   return NS_OK;
 }
 
-bool
-ChunkSet::Range::FoldLeft(const Range& aRange)
-{
+bool ChunkSet::Range::FoldLeft(const Range& aRange) {
   if (Contains(aRange)) {
     return true;
   } else if (Precedes(aRange) ||
@@ -272,5 +243,5 @@ ChunkSet::Range::FoldLeft(const Range& aRange)
   return false;
 }
 
-} // namespace safebrowsing
-} // namespace mozilla
+}  // namespace safebrowsing
+}  // namespace mozilla

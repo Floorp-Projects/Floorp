@@ -22,29 +22,25 @@ class nsHttpChannel;
  * delay them here, in an instance of this class, until we observe
  * the topic notificaion that we can send them outbound.
  */
-class DelayHttpChannelQueue final : public nsIObserver
-{
-public:
-  static bool
-  AttemptQueueChannel(nsHttpChannel* aChannel);
+class DelayHttpChannelQueue final : public nsIObserver {
+ public:
+  static bool AttemptQueueChannel(nsHttpChannel* aChannel);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-private:
+ private:
   DelayHttpChannelQueue();
   ~DelayHttpChannelQueue();
 
-  bool
-  Initialize();
+  bool Initialize();
 
-  void
-  FireQueue();
+  void FireQueue();
 
   FallibleTArray<RefPtr<nsHttpChannel>> mQueue;
 };
 
-} // net namespace
-} // mozilla namespace
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozilla_net_DelayHttpChannelQueue_h
+#endif  // mozilla_net_DelayHttpChannelQueue_h

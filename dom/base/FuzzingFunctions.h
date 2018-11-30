@@ -21,25 +21,20 @@ namespace dom {
 class GlobalObject;
 struct KeyboardEventInit;
 
-class FuzzingFunctions final
-{
-public:
-  static void
-  GarbageCollect(const GlobalObject&);
+class FuzzingFunctions final {
+ public:
+  static void GarbageCollect(const GlobalObject&);
 
-  static void
-  CycleCollect(const GlobalObject&);
+  static void CycleCollect(const GlobalObject&);
 
-  static void
-  EnableAccessibility(const GlobalObject&, ErrorResult& aRv);
+  static void EnableAccessibility(const GlobalObject&, ErrorResult& aRv);
 
-  static void
-  SynthesizeKeyboardEvents(const GlobalObject& aGlobalObject,
-                           const nsAString& aKeyValue,
-                           const KeyboardEventInit& aKeyboardEvent,
-                           ErrorResult& aRv);
+  static void SynthesizeKeyboardEvents(const GlobalObject& aGlobalObject,
+                                       const nsAString& aKeyValue,
+                                       const KeyboardEventInit& aKeyboardEvent,
+                                       ErrorResult& aRv);
 
-private:
+ private:
   /**
    * ActivateModifiers() activates aModifiers in the TextInputProcessor.
    *
@@ -51,9 +46,9 @@ private:
    *                            dispatch a modifier key event.
    * @return                    Modifiers which are activated by the call.
    */
-  static Modifiers
-  ActivateModifiers(TextInputProcessor* aTextInputProcessor,
-                    Modifiers aModifiers, nsIWidget* aWidget, ErrorResult& aRv);
+  static Modifiers ActivateModifiers(TextInputProcessor* aTextInputProcessor,
+                                     Modifiers aModifiers, nsIWidget* aWidget,
+                                     ErrorResult& aRv);
 
   /**
    * InactivateModifiers() inactivates aModifiers in the TextInputProcessor.
@@ -66,13 +61,12 @@ private:
    *                            dispatch a modifier key event.
    * @return                    Modifiers which are inactivated by the call.
    */
-  static Modifiers
-  InactivateModifiers(TextInputProcessor* aTextInputProcessor,
-                      Modifiers aModifiers, nsIWidget* aWidget,
-                      ErrorResult& aRv);
+  static Modifiers InactivateModifiers(TextInputProcessor* aTextInputProcessor,
+                                       Modifiers aModifiers, nsIWidget* aWidget,
+                                       ErrorResult& aRv);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_FuzzingFunctions
+#endif  // mozilla_dom_FuzzingFunctions

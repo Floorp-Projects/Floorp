@@ -18,7 +18,7 @@ void MaybeStopGamepadMonitoring();
 void StartGamepadMonitoring();
 void StopGamepadMonitoring();
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

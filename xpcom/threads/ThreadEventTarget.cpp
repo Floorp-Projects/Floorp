@@ -14,7 +14,7 @@
 #include "nsThreadManager.h"
 #include "nsThreadSyncDispatch.h"
 #include "nsThreadUtils.h"
-#include "nsXPCOMPrivate.h" // for gXPCOMThreadsShutDown
+#include "nsXPCOMPrivate.h"  // for gXPCOMThreadsShutDown
 #include "ThreadDelay.h"
 
 #ifdef MOZ_TASK_TRACER
@@ -27,37 +27,29 @@ using namespace mozilla;
 
 namespace {
 
-class DelayedRunnable : public Runnable,
-                        public nsITimerCallback
-{
-public:
+class DelayedRunnable : public Runnable, public nsITimerCallback {
+ public:
   DelayedRunnable(already_AddRefed<nsIEventTarget> aTarget,
-                  already_AddRefed<nsIRunnable> aRunnable,
-                  uint32_t aDelay)
-    : mozilla::Runnable("DelayedRunnable")
-    , mTarget(aTarget)
-    , mWrappedRunnable(aRunnable)
-    , mDelayedFrom(TimeStamp::NowLoRes())
-    , mDelay(aDelay)
-  { }
+                  already_AddRefed<nsIRunnable> aRunnable, uint32_t aDelay)
+      : mozilla::Runnable("DelayedRunnable"),
+        mTarget(aTarget),
+        mWrappedRunnable(aRunnable),
+        mDelayedFrom(TimeStamp::NowLoRes()),
+        mDelay(aDelay) {}
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  nsresult Init()
-  {
-    return NS_NewTimerWithCallback(getter_AddRefs(mTimer),
-                                   this, mDelay, nsITimer::TYPE_ONE_SHOT,
-                                   mTarget);
+  nsresult Init() {
+    return NS_NewTimerWithCallback(getter_AddRefs(mTimer), this, mDelay,
+                                   nsITimer::TYPE_ONE_SHOT, mTarget);
   }
 
-  nsresult DoRun()
-  {
+  nsresult DoRun() {
     nsCOMPtr<nsIRunnable> r = mWrappedRunnable.forget();
     return r->Run();
   }
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     // Already ran?
     if (!mWrappedRunnable) {
       return NS_OK;
@@ -65,15 +57,14 @@ public:
 
     // Are we too early?
     if ((TimeStamp::NowLoRes() - mDelayedFrom).ToMilliseconds() < mDelay) {
-      return NS_OK; // Let the nsITimer run us.
+      return NS_OK;  // Let the nsITimer run us.
     }
 
     mTimer->Cancel();
     return DoRun();
   }
 
-  NS_IMETHOD Notify(nsITimer* aTimer) override
-  {
+  NS_IMETHOD Notify(nsITimer* aTimer) override {
     // If we already ran, the timer should have been canceled.
     MOZ_ASSERT(mWrappedRunnable);
     MOZ_ASSERT(aTimer == mTimer);
@@ -81,7 +72,7 @@ public:
     return DoRun();
   }
 
-private:
+ private:
   ~DelayedRunnable() {}
 
   nsCOMPtr<nsIEventTarget> mTarget;
@@ -93,35 +84,28 @@ private:
 
 NS_IMPL_ISUPPORTS_INHERITED(DelayedRunnable, Runnable, nsITimerCallback)
 
-} // anonymous namespace
+}  // anonymous namespace
 
 ThreadEventTarget::ThreadEventTarget(ThreadTargetSink* aSink,
                                      bool aIsMainThread)
-  : mSink(aSink)
-  , mIsMainThread(aIsMainThread)
-{
+    : mSink(aSink), mIsMainThread(aIsMainThread) {
   mVirtualThread = GetCurrentVirtualThread();
 }
 
-void
-ThreadEventTarget::SetCurrentThread()
-{
+void ThreadEventTarget::SetCurrentThread() {
   mVirtualThread = GetCurrentVirtualThread();
 }
 
-NS_IMPL_ISUPPORTS(ThreadEventTarget,
-                  nsIEventTarget,
-                  nsISerialEventTarget)
+NS_IMPL_ISUPPORTS(ThreadEventTarget, nsIEventTarget, nsISerialEventTarget)
 
 NS_IMETHODIMP
-ThreadEventTarget::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags)
-{
+ThreadEventTarget::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags) {
   return Dispatch(do_AddRef(aRunnable), aFlags);
 }
 
 NS_IMETHODIMP
-ThreadEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
-{
+ThreadEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent,
+                            uint32_t aFlags) {
   // We want to leak the reference when we fail to dispatch it, so that
   // we won't release the event in a wrong thread.
   LeakRefPtr<nsIRunnable> event(std::move(aEvent));
@@ -152,8 +136,9 @@ ThreadEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlag
     //     that to tell us when the event has been processed.
 
     RefPtr<nsThreadSyncDispatch> wrapper =
-      new nsThreadSyncDispatch(current.forget(), event.take());
-    bool success = mSink->PutEvent(do_AddRef(wrapper), EventPriority::Normal); // hold a ref
+        new nsThreadSyncDispatch(current.forget(), event.take());
+    bool success = mSink->PutEvent(do_AddRef(wrapper),
+                                   EventPriority::Normal);  // hold a ref
     if (!success) {
       // PutEvent leaked the wrapper runnable object on failure, so we
       // explicitly release this object once for that. Note that this
@@ -163,15 +148,14 @@ ThreadEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlag
     }
 
     // Allows waiting; ensure no locks are held that would deadlock us!
-    SpinEventLoopUntil([&, wrapper]() -> bool {
-        return !wrapper->IsPending();
-      });
+    SpinEventLoopUntil(
+        [&, wrapper]() -> bool { return !wrapper->IsPending(); });
 
     return NS_OK;
   }
 
-  NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL ||
-               aFlags == NS_DISPATCH_AT_END, "unexpected dispatch flags");
+  NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL || aFlags == NS_DISPATCH_AT_END,
+               "unexpected dispatch flags");
   if (!mSink->PutEvent(event.take(), EventPriority::Normal)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -181,13 +165,12 @@ ThreadEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlag
 }
 
 NS_IMETHODIMP
-ThreadEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aDelayMs)
-{
+ThreadEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
+                                   uint32_t aDelayMs) {
   NS_ENSURE_TRUE(!!aDelayMs, NS_ERROR_UNEXPECTED);
 
-  RefPtr<DelayedRunnable> r = new DelayedRunnable(do_AddRef(this),
-                                                  std::move(aEvent),
-                                                  aDelayMs);
+  RefPtr<DelayedRunnable> r =
+      new DelayedRunnable(do_AddRef(this), std::move(aEvent), aDelayMs);
   nsresult rv = r->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -195,15 +178,13 @@ ThreadEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent, uint32_
 }
 
 NS_IMETHODIMP
-ThreadEventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread)
-{
+ThreadEventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread) {
   *aIsOnCurrentThread = IsOnCurrentThread();
   return NS_OK;
 }
 
 NS_IMETHODIMP_(bool)
-ThreadEventTarget::IsOnCurrentThreadInfallible()
-{
+ThreadEventTarget::IsOnCurrentThreadInfallible() {
   // Rely on mVirtualThread being correct.
   MOZ_CRASH("IsOnCurrentThreadInfallible should never be called on nsIThread");
 }

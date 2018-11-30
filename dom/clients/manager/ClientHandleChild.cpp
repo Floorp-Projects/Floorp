@@ -14,18 +14,15 @@ namespace dom {
 
 using mozilla::ipc::IPCResult;
 
-IPCResult
-ClientHandleChild::RecvExecutionReady(const IPCClientInfo& aClientInfo)
-{
+IPCResult ClientHandleChild::RecvExecutionReady(
+    const IPCClientInfo& aClientInfo) {
   if (mHandle) {
     mHandle->ExecutionReady(ClientInfo(aClientInfo));
   }
   return IPC_OK();
 }
 
-void
-ClientHandleChild::ActorDestroy(ActorDestroyReason aReason)
-{
+void ClientHandleChild::ActorDestroy(ActorDestroyReason aReason) {
   if (mHandle) {
     mHandle->RevokeActor(this);
 
@@ -35,45 +32,34 @@ ClientHandleChild::ActorDestroy(ActorDestroyReason aReason)
   }
 }
 
-PClientHandleOpChild*
-ClientHandleChild::AllocPClientHandleOpChild(const ClientOpConstructorArgs& aArgs)
-{
+PClientHandleOpChild* ClientHandleChild::AllocPClientHandleOpChild(
+    const ClientOpConstructorArgs& aArgs) {
   MOZ_ASSERT_UNREACHABLE("ClientHandleOpChild must be explicitly constructed.");
   return nullptr;
 }
 
-bool
-ClientHandleChild::DeallocPClientHandleOpChild(PClientHandleOpChild* aActor)
-{
+bool ClientHandleChild::DeallocPClientHandleOpChild(
+    PClientHandleOpChild* aActor) {
   delete aActor;
   return true;
 }
 
 ClientHandleChild::ClientHandleChild()
-  : mHandle(nullptr)
-  , mTeardownStarted(false)
-{
-}
+    : mHandle(nullptr), mTeardownStarted(false) {}
 
-void
-ClientHandleChild::SetOwner(ClientThing<ClientHandleChild>* aThing)
-{
+void ClientHandleChild::SetOwner(ClientThing<ClientHandleChild>* aThing) {
   MOZ_DIAGNOSTIC_ASSERT(!mHandle);
   mHandle = static_cast<ClientHandle*>(aThing);
   MOZ_DIAGNOSTIC_ASSERT(mHandle);
 }
 
-void
-ClientHandleChild::RevokeOwner(ClientThing<ClientHandleChild>* aThing)
-{
+void ClientHandleChild::RevokeOwner(ClientThing<ClientHandleChild>* aThing) {
   MOZ_DIAGNOSTIC_ASSERT(mHandle);
   MOZ_DIAGNOSTIC_ASSERT(mHandle == static_cast<ClientHandle*>(aThing));
   mHandle = nullptr;
 }
 
-void
-ClientHandleChild::MaybeStartTeardown()
-{
+void ClientHandleChild::MaybeStartTeardown() {
   if (mTeardownStarted) {
     return;
   }
@@ -81,5 +67,5 @@ ClientHandleChild::MaybeStartTeardown()
   Unused << SendTeardown();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -11,7 +11,7 @@
 #include "nsBaseHashtable.h"
 
 namespace JS {
-template<class T>
+template <class T>
 class Heap;
 } /* namespace JS */
 
@@ -24,17 +24,17 @@ class Heap;
  * It is necessary for hash tables containing JS::Heap<T> values as these must
  * be copied rather than memmoved.
  */
-template<class T>
-class nsHashKeyDisallowMemmove : public T
-{
-public:
-  explicit nsHashKeyDisallowMemmove(const typename T::KeyTypePointer aKey) : T(aKey) {}
+template <class T>
+class nsHashKeyDisallowMemmove : public T {
+ public:
+  explicit nsHashKeyDisallowMemmove(const typename T::KeyTypePointer aKey)
+      : T(aKey) {}
   enum { ALLOW_MEMMOVE = false };
 };
 
-
 /**
- * Templated hashtable class for use on the heap where the values are JS GC things.
+ * Templated hashtable class for use on the heap where the values are JS GC
+ * things.
  *
  * Storing JS GC thing pointers on the heap requires wrapping them in a
  * JS::Heap<T>, and this class takes care of that while presenting an interface
@@ -51,11 +51,9 @@ public:
  * @param DataType the datatype being wrapped, must be a JS GC thing.
  * @see nsInterfaceHashtable, nsClassHashtable
  */
-template<class KeyClass, class DataType>
+template <class KeyClass, class DataType>
 class nsJSThingHashtable
-  : public nsBaseHashtable<nsHashKeyDisallowMemmove<KeyClass>,
-                           JS::Heap<DataType>, DataType>
-{
-};
+    : public nsBaseHashtable<nsHashKeyDisallowMemmove<KeyClass>,
+                             JS::Heap<DataType>, DataType> {};
 
-#endif // nsJSThingHashtable_h__
+#endif  // nsJSThingHashtable_h__

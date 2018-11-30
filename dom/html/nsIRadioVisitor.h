@@ -11,17 +11,19 @@
 class nsIFormControl;
 
 // IID for the nsIRadioControl interface
-#define NS_IRADIOVISITOR_IID \
-{ 0xc6bed232, 0x1181, 0x4ab2, \
-  { 0xa1, 0xda, 0x55, 0xc2, 0x13, 0x6d, 0xea, 0x3d } }
+#define NS_IRADIOVISITOR_IID                         \
+  {                                                  \
+    0xc6bed232, 0x1181, 0x4ab2, {                    \
+      0xa1, 0xda, 0x55, 0xc2, 0x13, 0x6d, 0xea, 0x3d \
+    }                                                \
+  }
 
 /**
  * This interface is used for the text control frame to store its value away
  * into the content.
  */
 class nsIRadioVisitor : public nsISupports {
-public:
-
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IRADIOVISITOR_IID)
 
   /**
@@ -40,4 +42,4 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIRadioVisitor, NS_IRADIOVISITOR_IID)
 
-#endif // nsIRadioVisitor_h___
+#endif  // nsIRadioVisitor_h___

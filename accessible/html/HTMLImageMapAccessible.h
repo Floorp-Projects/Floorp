@@ -15,9 +15,8 @@ namespace a11y {
 /**
  * Used for HTML image maps.
  */
-class HTMLImageMapAccessible final : public ImageAccessibleWrap
-{
-public:
+class HTMLImageMapAccessible final : public ImageAccessibleWrap {
+ public:
   HTMLImageMapAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports and cycle collector
@@ -30,7 +29,8 @@ public:
   // HyperLinkAccessible
   virtual uint32_t AnchorCount() override;
   virtual Accessible* AnchorAt(uint32_t aAnchorIndex) override;
-  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) const override;
+  virtual already_AddRefed<nsIURI> AnchorURIAt(
+      uint32_t aAnchorIndex) const override;
 
   /**
    * Update area children of the image map.
@@ -42,17 +42,15 @@ public:
    */
   Accessible* GetChildAccessibleFor(const nsINode* aNode) const;
 
-protected:
-  virtual ~HTMLImageMapAccessible() { }
+ protected:
+  virtual ~HTMLImageMapAccessible() {}
 };
 
 /**
  * Accessible for image map areas - must be child of image.
  */
-class HTMLAreaAccessible final : public HTMLLinkAccessible
-{
-public:
-
+class HTMLAreaAccessible final : public HTMLLinkAccessible {
+ public:
   HTMLAreaAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
@@ -65,25 +63,23 @@ public:
   virtual uint32_t StartOffset() override;
   virtual uint32_t EndOffset() override;
 
-  virtual bool IsAcceptableChild(nsIContent* aEl) const override
-    { return false; }
+  virtual bool IsAcceptableChild(nsIContent* aEl) const override {
+    return false;
+  }
 
-protected:
+ protected:
   // Accessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 };
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible downcasting method
 
-inline HTMLImageMapAccessible*
-Accessible::AsImageMap()
-{
+inline HTMLImageMapAccessible* Accessible::AsImageMap() {
   return IsImageMap() ? static_cast<HTMLImageMapAccessible*>(this) : nullptr;
 }
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

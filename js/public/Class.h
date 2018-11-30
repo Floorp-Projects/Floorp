@@ -38,7 +38,7 @@ class Shape;
 // to #include jsfun.h.
 extern JS_FRIEND_DATA const js::Class* const FunctionClassPtr;
 
-} // namespace js
+}  // namespace js
 
 namespace JS {
 
@@ -46,12 +46,7 @@ namespace JS {
  * The answer to a successful query as to whether an object is an Array per
  * ES6's internal |IsArray| operation (as exposed by |Array.isArray|).
  */
-enum class IsArrayAnswer
-{
-    Array,
-    NotArray,
-    RevokedProxy
-};
+enum class IsArrayAnswer { Array, NotArray, RevokedProxy };
 
 /**
  * ES6 7.2.2.
@@ -65,8 +60,8 @@ enum class IsArrayAnswer
  * revoked, or if |obj| is a proxy whose target (at any number of hops) is a
  * revoked proxy, this method throws a TypeError and returns false.
  */
-extern JS_PUBLIC_API bool
-IsArray(JSContext* cx, HandleObject obj, bool* isArray);
+extern JS_PUBLIC_API bool IsArray(JSContext* cx, HandleObject obj,
+                                  bool* isArray);
 
 /**
  * Identical to IsArray above, but the nature of the object (if successfully
@@ -76,8 +71,8 @@ IsArray(JSContext* cx, HandleObject obj, bool* isArray);
  *
  * Most users will want the overload above, not this one.
  */
-extern JS_PUBLIC_API bool
-IsArray(JSContext* cx, HandleObject obj, IsArrayAnswer* answer);
+extern JS_PUBLIC_API bool IsArray(JSContext* cx, HandleObject obj,
+                                  IsArrayAnswer* answer);
 
 /**
  * Per ES6, the [[DefineOwnProperty]] internal method has three different
@@ -114,284 +109,261 @@ IsArray(JSContext* cx, HandleObject obj, IsArrayAnswer* answer);
  *     argv.rval().setBoolean(result.reallyOk());
  *     return true;
  */
-class ObjectOpResult
-{
-  private:
-    /**
-     * code_ is either one of the special codes OkCode or Uninitialized, or
-     * an error code. For now the error codes are private to the JS engine;
-     * they're defined in js/src/js.msg.
-     *
-     * code_ is uintptr_t (rather than uint32_t) for the convenience of the
-     * JITs, which would otherwise have to deal with either padding or stack
-     * alignment on 64-bit platforms.
-     */
-    uintptr_t code_;
+class ObjectOpResult {
+ private:
+  /**
+   * code_ is either one of the special codes OkCode or Uninitialized, or
+   * an error code. For now the error codes are private to the JS engine;
+   * they're defined in js/src/js.msg.
+   *
+   * code_ is uintptr_t (rather than uint32_t) for the convenience of the
+   * JITs, which would otherwise have to deal with either padding or stack
+   * alignment on 64-bit platforms.
+   */
+  uintptr_t code_;
 
-  public:
-    enum SpecialCodes : uintptr_t {
-        OkCode = 0,
-        Uninitialized = uintptr_t(-1)
-    };
+ public:
+  enum SpecialCodes : uintptr_t { OkCode = 0, Uninitialized = uintptr_t(-1) };
 
-    static const uintptr_t SoftFailBit = uintptr_t(1) << (sizeof(uintptr_t) * 8 - 1);
+  static const uintptr_t SoftFailBit = uintptr_t(1)
+                                       << (sizeof(uintptr_t) * 8 - 1);
 
-    ObjectOpResult() : code_(Uninitialized) {}
+  ObjectOpResult() : code_(Uninitialized) {}
 
-    /* Return true if succeed() or failSoft() was called. */
-    bool ok() const {
-        MOZ_ASSERT(code_ != Uninitialized);
-        return code_ == OkCode || (code_ & SoftFailBit);
+  /* Return true if succeed() or failSoft() was called. */
+  bool ok() const {
+    MOZ_ASSERT(code_ != Uninitialized);
+    return code_ == OkCode || (code_ & SoftFailBit);
+  }
+
+  explicit operator bool() const { return ok(); }
+
+  /* Return true if succeed() was called. */
+  bool reallyOk() const {
+    MOZ_ASSERT(code_ != Uninitialized);
+    return code_ == OkCode;
+  }
+
+  /* Set this ObjectOpResult to true and return true. */
+  bool succeed() {
+    code_ = OkCode;
+    return true;
+  }
+
+  /*
+   * Set this ObjectOpResult to false with an error code.
+   *
+   * Always returns true, as a convenience. Typical usage will be:
+   *
+   *     if (funny condition) {
+   *         return result.fail(JSMSG_CANT_DO_THE_THINGS);
+   *     }
+   *
+   * The true return value indicates that no exception is pending, and it
+   * would be OK to ignore the failure and continue.
+   */
+  bool fail(uint32_t msg) {
+    MOZ_ASSERT(msg != OkCode);
+    MOZ_ASSERT((msg & SoftFailBit) == 0);
+    code_ = msg;
+    return true;
+  }
+
+  /*
+   * DEPRECATED: This is a non-standard compatibility hack.
+   *
+   * Set this ObjectOpResult to true, but remembers an error code.
+   * This is used for situations where we really want to fail,
+   * but can't for legacy reasons.
+   *
+   * Always returns true, as a convenience.
+   */
+  bool failSoft(uint32_t msg) {
+    // The msg code is currently never extracted again.
+    code_ = msg | SoftFailBit;
+    return true;
+  }
+
+  JS_PUBLIC_API bool failCantRedefineProp();
+  JS_PUBLIC_API bool failReadOnly();
+  JS_PUBLIC_API bool failGetterOnly();
+  JS_PUBLIC_API bool failCantDelete();
+
+  JS_PUBLIC_API bool failCantSetInterposed();
+  JS_PUBLIC_API bool failCantDefineWindowElement();
+  JS_PUBLIC_API bool failCantDeleteWindowElement();
+  JS_PUBLIC_API bool failCantDeleteWindowNamedProperty();
+  JS_PUBLIC_API bool failCantPreventExtensions();
+  JS_PUBLIC_API bool failCantSetProto();
+  JS_PUBLIC_API bool failNoNamedSetter();
+  JS_PUBLIC_API bool failNoIndexedSetter();
+  JS_PUBLIC_API bool failNotDataDescriptor();
+
+  // Careful: This case has special handling in Object.defineProperty.
+  JS_PUBLIC_API bool failCantDefineWindowNonConfigurable();
+
+  uint32_t failureCode() const {
+    MOZ_ASSERT(!ok());
+    return uint32_t(code_);
+  }
+
+  /*
+   * Report an error or warning if necessary; return true to proceed and
+   * false if an error was reported. Call this when failure should cause
+   * a warning if extraWarnings are enabled.
+   *
+   * The precise rules are like this:
+   *
+   * -   If ok(), then we succeeded. Do nothing and return true.
+   * -   Otherwise, if |strict| is true, or if cx has both extraWarnings and
+   *     werrorOption enabled, throw a TypeError and return false.
+   * -   Otherwise, if cx has extraWarnings enabled, emit a warning and
+   *     return true.
+   * -   Otherwise, do nothing and return true.
+   */
+  bool checkStrictErrorOrWarning(JSContext* cx, HandleObject obj, HandleId id,
+                                 bool strict) {
+    if (ok()) {
+      return true;
     }
+    return reportStrictErrorOrWarning(cx, obj, id, strict);
+  }
 
-    explicit operator bool() const { return ok(); }
+  /*
+   * The same as checkStrictErrorOrWarning(cx, id, strict), except the
+   * operation is not associated with a particular property id. This is
+   * used for [[PreventExtensions]] and [[SetPrototypeOf]]. failureCode()
+   * must not be an error that has "{0}" in the error message.
+   */
+  bool checkStrictErrorOrWarning(JSContext* cx, HandleObject obj, bool strict) {
+    return ok() || reportStrictErrorOrWarning(cx, obj, strict);
+  }
 
-    /* Return true if succeed() was called. */
-    bool reallyOk() const {
-        MOZ_ASSERT(code_ != Uninitialized);
-        return code_ == OkCode;
-    }
+  /* Throw a TypeError. Call this only if !ok(). */
+  bool reportError(JSContext* cx, HandleObject obj, HandleId id) {
+    return reportStrictErrorOrWarning(cx, obj, id, true);
+  }
 
-    /* Set this ObjectOpResult to true and return true. */
-    bool succeed() {
-        code_ = OkCode;
-        return true;
-    }
+  /*
+   * The same as reportError(cx, obj, id), except the operation is not
+   * associated with a particular property id.
+   */
+  bool reportError(JSContext* cx, HandleObject obj) {
+    return reportStrictErrorOrWarning(cx, obj, true);
+  }
 
-    /*
-     * Set this ObjectOpResult to false with an error code.
-     *
-     * Always returns true, as a convenience. Typical usage will be:
-     *
-     *     if (funny condition) {
-     *         return result.fail(JSMSG_CANT_DO_THE_THINGS);
-     *     }
-     *
-     * The true return value indicates that no exception is pending, and it
-     * would be OK to ignore the failure and continue.
-     */
-    bool fail(uint32_t msg) {
-        MOZ_ASSERT(msg != OkCode);
-        MOZ_ASSERT((msg & SoftFailBit) == 0);
-        code_ = msg;
-        return true;
-    }
+  /* Helper function for checkStrictErrorOrWarning's slow path. */
+  JS_PUBLIC_API bool reportStrictErrorOrWarning(JSContext* cx, HandleObject obj,
+                                                HandleId id, bool strict);
+  JS_PUBLIC_API bool reportStrictErrorOrWarning(JSContext* cx, HandleObject obj,
+                                                bool strict);
 
-    /*
-     * DEPRECATED: This is a non-standard compatibility hack.
-     *
-     * Set this ObjectOpResult to true, but remembers an error code.
-     * This is used for situations where we really want to fail,
-     * but can't for legacy reasons.
-     *
-     * Always returns true, as a convenience.
-     */
-    bool failSoft(uint32_t msg) {
-        // The msg code is currently never extracted again.
-        code_ = msg | SoftFailBit;
-        return true;
-    }
+  /*
+   * Convenience method. Return true if ok() or if strict is false; otherwise
+   * throw a TypeError and return false.
+   */
+  bool checkStrict(JSContext* cx, HandleObject obj, HandleId id) {
+    return checkStrictErrorOrWarning(cx, obj, id, true);
+  }
 
-    JS_PUBLIC_API bool failCantRedefineProp();
-    JS_PUBLIC_API bool failReadOnly();
-    JS_PUBLIC_API bool failGetterOnly();
-    JS_PUBLIC_API bool failCantDelete();
-
-    JS_PUBLIC_API bool failCantSetInterposed();
-    JS_PUBLIC_API bool failCantDefineWindowElement();
-    JS_PUBLIC_API bool failCantDeleteWindowElement();
-    JS_PUBLIC_API bool failCantDeleteWindowNamedProperty();
-    JS_PUBLIC_API bool failCantPreventExtensions();
-    JS_PUBLIC_API bool failCantSetProto();
-    JS_PUBLIC_API bool failNoNamedSetter();
-    JS_PUBLIC_API bool failNoIndexedSetter();
-    JS_PUBLIC_API bool failNotDataDescriptor();
-
-    // Careful: This case has special handling in Object.defineProperty.
-    JS_PUBLIC_API bool failCantDefineWindowNonConfigurable();
-
-    uint32_t failureCode() const {
-        MOZ_ASSERT(!ok());
-        return uint32_t(code_);
-    }
-
-    /*
-     * Report an error or warning if necessary; return true to proceed and
-     * false if an error was reported. Call this when failure should cause
-     * a warning if extraWarnings are enabled.
-     *
-     * The precise rules are like this:
-     *
-     * -   If ok(), then we succeeded. Do nothing and return true.
-     * -   Otherwise, if |strict| is true, or if cx has both extraWarnings and
-     *     werrorOption enabled, throw a TypeError and return false.
-     * -   Otherwise, if cx has extraWarnings enabled, emit a warning and
-     *     return true.
-     * -   Otherwise, do nothing and return true.
-     */
-    bool checkStrictErrorOrWarning(JSContext* cx, HandleObject obj, HandleId id, bool strict) {
-        if (ok()) {
-            return true;
-        }
-        return reportStrictErrorOrWarning(cx, obj, id, strict);
-    }
-
-    /*
-     * The same as checkStrictErrorOrWarning(cx, id, strict), except the
-     * operation is not associated with a particular property id. This is
-     * used for [[PreventExtensions]] and [[SetPrototypeOf]]. failureCode()
-     * must not be an error that has "{0}" in the error message.
-     */
-    bool checkStrictErrorOrWarning(JSContext* cx, HandleObject obj, bool strict) {
-        return ok() || reportStrictErrorOrWarning(cx, obj, strict);
-    }
-
-    /* Throw a TypeError. Call this only if !ok(). */
-    bool reportError(JSContext* cx, HandleObject obj, HandleId id) {
-        return reportStrictErrorOrWarning(cx, obj, id, true);
-    }
-
-    /*
-     * The same as reportError(cx, obj, id), except the operation is not
-     * associated with a particular property id.
-     */
-    bool reportError(JSContext* cx, HandleObject obj) {
-        return reportStrictErrorOrWarning(cx, obj, true);
-    }
-
-    /* Helper function for checkStrictErrorOrWarning's slow path. */
-    JS_PUBLIC_API bool reportStrictErrorOrWarning(JSContext* cx, HandleObject obj, HandleId id, bool strict);
-    JS_PUBLIC_API bool reportStrictErrorOrWarning(JSContext* cx, HandleObject obj, bool strict);
-
-    /*
-     * Convenience method. Return true if ok() or if strict is false; otherwise
-     * throw a TypeError and return false.
-     */
-    bool checkStrict(JSContext* cx, HandleObject obj, HandleId id) {
-        return checkStrictErrorOrWarning(cx, obj, id, true);
-    }
-
-    /*
-     * Convenience method. The same as checkStrict(cx, id), except the
-     * operation is not associated with a particular property id.
-     */
-    bool checkStrict(JSContext* cx, HandleObject obj) {
-        return checkStrictErrorOrWarning(cx, obj, true);
-    }
+  /*
+   * Convenience method. The same as checkStrict(cx, id), except the
+   * operation is not associated with a particular property id.
+   */
+  bool checkStrict(JSContext* cx, HandleObject obj) {
+    return checkStrictErrorOrWarning(cx, obj, true);
+  }
 };
 
-class PropertyResult
-{
-    union {
-        js::Shape* shape_;
-        uintptr_t bits_;
-    };
+class PropertyResult {
+  union {
+    js::Shape* shape_;
+    uintptr_t bits_;
+  };
 
-    static const uintptr_t NotFound = 0;
-    static const uintptr_t NonNativeProperty = 1;
-    static const uintptr_t DenseOrTypedArrayElement = 1;
+  static const uintptr_t NotFound = 0;
+  static const uintptr_t NonNativeProperty = 1;
+  static const uintptr_t DenseOrTypedArrayElement = 1;
 
-  public:
-    PropertyResult() : bits_(NotFound) {}
+ public:
+  PropertyResult() : bits_(NotFound) {}
 
-    explicit PropertyResult(js::Shape* propertyShape)
-      : shape_(propertyShape)
-    {
-        MOZ_ASSERT(!isFound() || isNativeProperty());
-    }
+  explicit PropertyResult(js::Shape* propertyShape) : shape_(propertyShape) {
+    MOZ_ASSERT(!isFound() || isNativeProperty());
+  }
 
-    explicit operator bool() const {
-        return isFound();
-    }
+  explicit operator bool() const { return isFound(); }
 
-    bool isFound() const {
-        return bits_ != NotFound;
-    }
+  bool isFound() const { return bits_ != NotFound; }
 
-    bool isNonNativeProperty() const {
-        return bits_ == NonNativeProperty;
-    }
+  bool isNonNativeProperty() const { return bits_ == NonNativeProperty; }
 
-    bool isDenseOrTypedArrayElement() const {
-        return bits_ == DenseOrTypedArrayElement;
-    }
+  bool isDenseOrTypedArrayElement() const {
+    return bits_ == DenseOrTypedArrayElement;
+  }
 
-    bool isNativeProperty() const {
-        return isFound() && !isNonNativeProperty();
-    }
+  bool isNativeProperty() const { return isFound() && !isNonNativeProperty(); }
 
-    js::Shape* maybeShape() const {
-        MOZ_ASSERT(!isNonNativeProperty());
-        return isFound() ? shape_ : nullptr;
-    }
+  js::Shape* maybeShape() const {
+    MOZ_ASSERT(!isNonNativeProperty());
+    return isFound() ? shape_ : nullptr;
+  }
 
-    js::Shape* shape() const {
-        MOZ_ASSERT(isNativeProperty());
-        return shape_;
-    }
+  js::Shape* shape() const {
+    MOZ_ASSERT(isNativeProperty());
+    return shape_;
+  }
 
-    void setNotFound() {
-        bits_ = NotFound;
-    }
+  void setNotFound() { bits_ = NotFound; }
 
-    void setNativeProperty(js::Shape* propertyShape) {
-        shape_ = propertyShape;
-        MOZ_ASSERT(isNativeProperty());
-    }
+  void setNativeProperty(js::Shape* propertyShape) {
+    shape_ = propertyShape;
+    MOZ_ASSERT(isNativeProperty());
+  }
 
-    void setNonNativeProperty() {
-        bits_ = NonNativeProperty;
-    }
+  void setNonNativeProperty() { bits_ = NonNativeProperty; }
 
-    void setDenseOrTypedArrayElement() {
-        bits_ = DenseOrTypedArrayElement;
-    }
+  void setDenseOrTypedArrayElement() { bits_ = DenseOrTypedArrayElement; }
 
-    void trace(JSTracer* trc);
+  void trace(JSTracer* trc);
 };
 
-} // namespace JS
+}  // namespace JS
 
 namespace js {
 
 template <class Wrapper>
-class WrappedPtrOperations<JS::PropertyResult, Wrapper>
-{
-    const JS::PropertyResult& value() const { return static_cast<const Wrapper*>(this)->get(); }
+class WrappedPtrOperations<JS::PropertyResult, Wrapper> {
+  const JS::PropertyResult& value() const {
+    return static_cast<const Wrapper*>(this)->get();
+  }
 
-  public:
-    bool isFound() const { return value().isFound(); }
-    explicit operator bool() const { return bool(value()); }
-    js::Shape* maybeShape() const { return value().maybeShape(); }
-    js::Shape* shape() const { return value().shape(); }
-    bool isNativeProperty() const { return value().isNativeProperty(); }
-    bool isNonNativeProperty() const { return value().isNonNativeProperty(); }
-    bool isDenseOrTypedArrayElement() const { return value().isDenseOrTypedArrayElement(); }
-    js::Shape* asTaggedShape() const { return value().asTaggedShape(); }
+ public:
+  bool isFound() const { return value().isFound(); }
+  explicit operator bool() const { return bool(value()); }
+  js::Shape* maybeShape() const { return value().maybeShape(); }
+  js::Shape* shape() const { return value().shape(); }
+  bool isNativeProperty() const { return value().isNativeProperty(); }
+  bool isNonNativeProperty() const { return value().isNonNativeProperty(); }
+  bool isDenseOrTypedArrayElement() const {
+    return value().isDenseOrTypedArrayElement();
+  }
+  js::Shape* asTaggedShape() const { return value().asTaggedShape(); }
 };
 
 template <class Wrapper>
 class MutableWrappedPtrOperations<JS::PropertyResult, Wrapper>
-  : public WrappedPtrOperations<JS::PropertyResult, Wrapper>
-{
-    JS::PropertyResult& value() { return static_cast<Wrapper*>(this)->get(); }
+    : public WrappedPtrOperations<JS::PropertyResult, Wrapper> {
+  JS::PropertyResult& value() { return static_cast<Wrapper*>(this)->get(); }
 
-  public:
-    void setNotFound() {
-        value().setNotFound();
-    }
-    void setNativeProperty(js::Shape* shape) {
-        value().setNativeProperty(shape);
-    }
-    void setNonNativeProperty() {
-        value().setNonNativeProperty();
-    }
-    void setDenseOrTypedArrayElement() {
-        value().setDenseOrTypedArrayElement();
-    }
+ public:
+  void setNotFound() { value().setNotFound(); }
+  void setNativeProperty(js::Shape* shape) { value().setNativeProperty(shape); }
+  void setNonNativeProperty() { value().setNonNativeProperty(); }
+  void setDenseOrTypedArrayElement() { value().setDenseOrTypedArrayElement(); }
 };
 
-} // namespace js
+}  // namespace js
 
 // JSClass operation signatures.
 
@@ -400,22 +372,20 @@ class MutableWrappedPtrOperations<JS::PropertyResult, Wrapper>
  * be a string (Unicode property identifier) or an int (element index).  The
  * *vp out parameter, on success, is the new property value after the action.
  */
-typedef bool
-(* JSGetterOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-               JS::MutableHandleValue vp);
+typedef bool (*JSGetterOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
+                           JS::MutableHandleValue vp);
 
 /** Add a property named by id to obj. */
-typedef bool
-(* JSAddPropertyOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue v);
+typedef bool (*JSAddPropertyOp)(JSContext* cx, JS::HandleObject obj,
+                                JS::HandleId id, JS::HandleValue v);
 
 /**
  * Set a property named by id in obj, treating the assignment as strict
  * mode code if strict is true. Note the jsid id type -- id may be a string
  * (Unicode property identifier) or an int (element index).
  */
-typedef bool
-(* JSSetterOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-               JS::HandleValue v, JS::ObjectOpResult& result);
+typedef bool (*JSSetterOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
+                           JS::HandleValue v, JS::ObjectOpResult& result);
 
 /**
  * Delete a property named by id in obj.
@@ -432,9 +402,8 @@ typedef bool
  * property, or an inherited property, is allowed -- it's just pointless),
  * call result.succeed() and return true.
  */
-typedef bool
-(* JSDeletePropertyOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-                       JS::ObjectOpResult& result);
+typedef bool (*JSDeletePropertyOp)(JSContext* cx, JS::HandleObject obj,
+                                   JS::HandleId id, JS::ObjectOpResult& result);
 
 /**
  * The type of ObjectOps::enumerate. This callback overrides a portion of
@@ -449,24 +418,23 @@ typedef bool
  * object's property keys. If `enumerableOnly` is true, the callback should only
  * add enumerable properties.
  */
-typedef bool
-(* JSNewEnumerateOp)(JSContext* cx, JS::HandleObject obj, JS::AutoIdVector& properties,
-                     bool enumerableOnly);
+typedef bool (*JSNewEnumerateOp)(JSContext* cx, JS::HandleObject obj,
+                                 JS::AutoIdVector& properties,
+                                 bool enumerableOnly);
 
 /**
  * The old-style JSClass.enumerate op should define all lazy properties not
  * yet reflected in obj.
  */
-typedef bool
-(* JSEnumerateOp)(JSContext* cx, JS::HandleObject obj);
+typedef bool (*JSEnumerateOp)(JSContext* cx, JS::HandleObject obj);
 
 /**
  * The type of ObjectOps::funToString.  This callback allows an object to
  * provide a custom string to use when Function.prototype.toString is invoked on
  * that object.  A null return value means OOM.
  */
-typedef JSString*
-(* JSFunToStringOp)(JSContext* cx, JS::HandleObject obj, bool isToSource);
+typedef JSString* (*JSFunToStringOp)(JSContext* cx, JS::HandleObject obj,
+                                     bool isToSource);
 
 /**
  * Resolve a lazy property named by id in obj by defining it directly in obj.
@@ -477,9 +445,8 @@ typedef JSString*
  * the given id. *resolvedp should be set to true iff the property was defined
  * on |obj|.
  */
-typedef bool
-(* JSResolveOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-                bool* resolvedp);
+typedef bool (*JSResolveOp)(JSContext* cx, JS::HandleObject obj,
+                            JS::HandleId id, bool* resolvedp);
 
 /**
  * A class with a resolve hook can optionally have a mayResolve hook. This hook
@@ -492,25 +459,23 @@ typedef bool
  * can be nullptr: during JIT compilation we sometimes know the Class but not
  * the object.
  */
-typedef bool
-(* JSMayResolveOp)(const JSAtomState& names, jsid id, JSObject* maybeObj);
+typedef bool (*JSMayResolveOp)(const JSAtomState& names, jsid id,
+                               JSObject* maybeObj);
 
 /**
  * Finalize obj, which the garbage collector has determined to be unreachable
  * from other live objects or from GC roots.  Obviously, finalizers must never
  * store a reference to obj.
  */
-typedef void
-(* JSFinalizeOp)(JSFreeOp* fop, JSObject* obj);
+typedef void (*JSFinalizeOp)(JSFreeOp* fop, JSObject* obj);
 
 /**
  * Check whether v is an instance of obj.  Return false on error or exception,
  * true on success with true in *bp if v is an instance of obj, false in
  * *bp otherwise.
  */
-typedef bool
-(* JSHasInstanceOp)(JSContext* cx, JS::HandleObject obj, JS::MutableHandleValue vp,
-                    bool* bp);
+typedef bool (*JSHasInstanceOp)(JSContext* cx, JS::HandleObject obj,
+                                JS::MutableHandleValue vp, bool* bp);
 
 /**
  * Function type for trace operation of the class called to enumerate all
@@ -526,139 +491,151 @@ typedef bool
  * JS_IsGCMarkingTracer and apply a special code like emptying caches or
  * marking its native structures.
  */
-typedef void
-(* JSTraceOp)(JSTracer* trc, JSObject* obj);
+typedef void (*JSTraceOp)(JSTracer* trc, JSObject* obj);
 
-typedef JSObject*
-(* JSWeakmapKeyDelegateOp)(JSObject* obj);
+typedef JSObject* (*JSWeakmapKeyDelegateOp)(JSObject* obj);
 
-typedef size_t
-(* JSObjectMovedOp)(JSObject* obj, JSObject* old);
+typedef size_t (*JSObjectMovedOp)(JSObject* obj, JSObject* old);
 
 /* js::Class operation signatures. */
 
 namespace js {
 
-typedef bool
-(* LookupPropertyOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-                     JS::MutableHandleObject objp, JS::MutableHandle<JS::PropertyResult> propp);
-typedef bool
-(* DefinePropertyOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-                     JS::Handle<JS::PropertyDescriptor> desc,
-                     JS::ObjectOpResult& result);
-typedef bool
-(* HasPropertyOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* foundp);
-typedef bool
-(* GetPropertyOp)(JSContext* cx, JS::HandleObject obj, JS::HandleValue receiver, JS::HandleId id,
-                  JS::MutableHandleValue vp);
-typedef bool
-(* SetPropertyOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue v,
-                  JS::HandleValue receiver, JS::ObjectOpResult& result);
-typedef bool
-(* GetOwnPropertyOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-                     JS::MutableHandle<JS::PropertyDescriptor> desc);
-typedef bool
-(* DeletePropertyOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-                     JS::ObjectOpResult& result);
+typedef bool (*LookupPropertyOp)(JSContext* cx, JS::HandleObject obj,
+                                 JS::HandleId id, JS::MutableHandleObject objp,
+                                 JS::MutableHandle<JS::PropertyResult> propp);
+typedef bool (*DefinePropertyOp)(JSContext* cx, JS::HandleObject obj,
+                                 JS::HandleId id,
+                                 JS::Handle<JS::PropertyDescriptor> desc,
+                                 JS::ObjectOpResult& result);
+typedef bool (*HasPropertyOp)(JSContext* cx, JS::HandleObject obj,
+                              JS::HandleId id, bool* foundp);
+typedef bool (*GetPropertyOp)(JSContext* cx, JS::HandleObject obj,
+                              JS::HandleValue receiver, JS::HandleId id,
+                              JS::MutableHandleValue vp);
+typedef bool (*SetPropertyOp)(JSContext* cx, JS::HandleObject obj,
+                              JS::HandleId id, JS::HandleValue v,
+                              JS::HandleValue receiver,
+                              JS::ObjectOpResult& result);
+typedef bool (*GetOwnPropertyOp)(
+    JSContext* cx, JS::HandleObject obj, JS::HandleId id,
+    JS::MutableHandle<JS::PropertyDescriptor> desc);
+typedef bool (*DeletePropertyOp)(JSContext* cx, JS::HandleObject obj,
+                                 JS::HandleId id, JS::ObjectOpResult& result);
 
-class JS_FRIEND_API ElementAdder
-{
-  public:
-    enum GetBehavior {
-        // Check if the element exists before performing the Get and preserve
-        // holes.
-        CheckHasElemPreserveHoles,
+class JS_FRIEND_API ElementAdder {
+ public:
+  enum GetBehavior {
+    // Check if the element exists before performing the Get and preserve
+    // holes.
+    CheckHasElemPreserveHoles,
 
-        // Perform a Get operation, like obj[index] in JS.
-        GetElement
-    };
+    // Perform a Get operation, like obj[index] in JS.
+    GetElement
+  };
 
-  private:
-    // Only one of these is used.
-    JS::RootedObject resObj_;
-    JS::Value* vp_;
+ private:
+  // Only one of these is used.
+  JS::RootedObject resObj_;
+  JS::Value* vp_;
 
-    uint32_t index_;
+  uint32_t index_;
 #ifdef DEBUG
-    uint32_t length_;
+  uint32_t length_;
 #endif
-    GetBehavior getBehavior_;
+  GetBehavior getBehavior_;
 
-  public:
-    ElementAdder(JSContext* cx, JSObject* obj, uint32_t length, GetBehavior behavior)
-      : resObj_(cx, obj), vp_(nullptr), index_(0),
-#ifdef DEBUG
-        length_(length),
-#endif
-        getBehavior_(behavior)
-    {}
-    ElementAdder(JSContext* cx, JS::Value* vp, uint32_t length, GetBehavior behavior)
-      : resObj_(cx), vp_(vp), index_(0),
+ public:
+  ElementAdder(JSContext* cx, JSObject* obj, uint32_t length,
+               GetBehavior behavior)
+      : resObj_(cx, obj),
+        vp_(nullptr),
+        index_(0),
 #ifdef DEBUG
         length_(length),
 #endif
-        getBehavior_(behavior)
-    {}
+        getBehavior_(behavior) {
+  }
+  ElementAdder(JSContext* cx, JS::Value* vp, uint32_t length,
+               GetBehavior behavior)
+      : resObj_(cx),
+        vp_(vp),
+        index_(0),
+#ifdef DEBUG
+        length_(length),
+#endif
+        getBehavior_(behavior) {
+  }
 
-    GetBehavior getBehavior() const { return getBehavior_; }
+  GetBehavior getBehavior() const { return getBehavior_; }
 
-    bool append(JSContext* cx, JS::HandleValue v);
-    void appendHole();
+  bool append(JSContext* cx, JS::HandleValue v);
+  void appendHole();
 };
 
-typedef bool
-(* GetElementsOp)(JSContext* cx, JS::HandleObject obj, uint32_t begin, uint32_t end,
-                  ElementAdder* adder);
+typedef bool (*GetElementsOp)(JSContext* cx, JS::HandleObject obj,
+                              uint32_t begin, uint32_t end,
+                              ElementAdder* adder);
 
-typedef void
-(* FinalizeOp)(FreeOp* fop, JSObject* obj);
+typedef void (*FinalizeOp)(FreeOp* fop, JSObject* obj);
 
 // The special treatment of |finalize| and |trace| is necessary because if we
 // assign either of those hooks to a local variable and then call it -- as is
 // done with the other hooks -- the GC hazard analysis gets confused.
-#define JS_CLASS_MEMBERS(ClassOpsType, FreeOpType) \
-    const char* name; \
-    uint32_t flags; \
-    const ClassOpsType* cOps; \
-    \
-    JSAddPropertyOp    getAddProperty() const { return cOps ? cOps->addProperty : nullptr; } \
-    JSDeletePropertyOp getDelProperty() const { return cOps ? cOps->delProperty : nullptr; } \
-    JSEnumerateOp      getEnumerate()   const { return cOps ? cOps->enumerate   : nullptr; } \
-    JSNewEnumerateOp   getNewEnumerate()const { return cOps ? cOps->newEnumerate: nullptr; } \
-    JSResolveOp        getResolve()     const { return cOps ? cOps->resolve     : nullptr; } \
-    JSMayResolveOp     getMayResolve()  const { return cOps ? cOps->mayResolve  : nullptr; } \
-    JSNative           getCall()        const { return cOps ? cOps->call        : nullptr; } \
-    JSHasInstanceOp    getHasInstance() const { return cOps ? cOps->hasInstance : nullptr; } \
-    JSNative           getConstruct()   const { return cOps ? cOps->construct   : nullptr; } \
-    \
-    bool hasFinalize() const { return cOps && cOps->finalize; } \
-    bool hasTrace()    const { return cOps && cOps->trace;    } \
-    \
-    bool isTrace(JSTraceOp trace) const { return cOps && cOps->trace == trace; } \
-    \
-    void doFinalize(FreeOpType* fop, JSObject* obj) const { \
-        MOZ_ASSERT(cOps && cOps->finalize); \
-        cOps->finalize(fop, obj); \
-    } \
-    void doTrace(JSTracer* trc, JSObject* obj) const { \
-        MOZ_ASSERT(cOps && cOps->trace); \
-        cOps->trace(trc, obj); \
-    }
+#define JS_CLASS_MEMBERS(ClassOpsType, FreeOpType)                             \
+  const char* name;                                                            \
+  uint32_t flags;                                                              \
+  const ClassOpsType* cOps;                                                    \
+                                                                               \
+  JSAddPropertyOp getAddProperty() const {                                     \
+    return cOps ? cOps->addProperty : nullptr;                                 \
+  }                                                                            \
+  JSDeletePropertyOp getDelProperty() const {                                  \
+    return cOps ? cOps->delProperty : nullptr;                                 \
+  }                                                                            \
+  JSEnumerateOp getEnumerate() const {                                         \
+    return cOps ? cOps->enumerate : nullptr;                                   \
+  }                                                                            \
+  JSNewEnumerateOp getNewEnumerate() const {                                   \
+    return cOps ? cOps->newEnumerate : nullptr;                                \
+  }                                                                            \
+  JSResolveOp getResolve() const { return cOps ? cOps->resolve : nullptr; }    \
+  JSMayResolveOp getMayResolve() const {                                       \
+    return cOps ? cOps->mayResolve : nullptr;                                  \
+  }                                                                            \
+  JSNative getCall() const { return cOps ? cOps->call : nullptr; }             \
+  JSHasInstanceOp getHasInstance() const {                                     \
+    return cOps ? cOps->hasInstance : nullptr;                                 \
+  }                                                                            \
+  JSNative getConstruct() const { return cOps ? cOps->construct : nullptr; }   \
+                                                                               \
+  bool hasFinalize() const { return cOps && cOps->finalize; }                  \
+  bool hasTrace() const { return cOps && cOps->trace; }                        \
+                                                                               \
+  bool isTrace(JSTraceOp trace) const { return cOps && cOps->trace == trace; } \
+                                                                               \
+  void doFinalize(FreeOpType* fop, JSObject* obj) const {                      \
+    MOZ_ASSERT(cOps && cOps->finalize);                                        \
+    cOps->finalize(fop, obj);                                                  \
+  }                                                                            \
+  void doTrace(JSTracer* trc, JSObject* obj) const {                           \
+    MOZ_ASSERT(cOps && cOps->trace);                                           \
+    cOps->trace(trc, obj);                                                     \
+  }
 
-struct MOZ_STATIC_CLASS ClassOps
-{
-    /* Function pointer members (may be null). */
-    JSAddPropertyOp     addProperty;
-    JSDeletePropertyOp  delProperty;
-    JSEnumerateOp       enumerate;
-    JSNewEnumerateOp    newEnumerate;
-    JSResolveOp         resolve;
-    JSMayResolveOp      mayResolve;
-    FinalizeOp          finalize;
-    JSNative            call;
-    JSHasInstanceOp     hasInstance;
-    JSNative            construct;
-    JSTraceOp           trace;
+struct MOZ_STATIC_CLASS ClassOps {
+  /* Function pointer members (may be null). */
+  JSAddPropertyOp addProperty;
+  JSDeletePropertyOp delProperty;
+  JSEnumerateOp enumerate;
+  JSNewEnumerateOp newEnumerate;
+  JSResolveOp resolve;
+  JSMayResolveOp mayResolve;
+  FinalizeOp finalize;
+  JSNative call;
+  JSHasInstanceOp hasInstance;
+  JSNative construct;
+  JSTraceOp trace;
 };
 
 /** Callback for the creation of constructor and prototype objects. */
@@ -673,125 +650,121 @@ typedef bool (*FinishClassInitOp)(JSContext* cx, JS::HandleObject ctor,
 
 const size_t JSCLASS_CACHED_PROTO_WIDTH = 6;
 
-struct MOZ_STATIC_CLASS ClassSpec
-{
-    ClassObjectCreationOp createConstructor;
-    ClassObjectCreationOp createPrototype;
-    const JSFunctionSpec* constructorFunctions;
-    const JSPropertySpec* constructorProperties;
-    const JSFunctionSpec* prototypeFunctions;
-    const JSPropertySpec* prototypeProperties;
-    FinishClassInitOp finishInit;
-    uintptr_t flags;
+struct MOZ_STATIC_CLASS ClassSpec {
+  ClassObjectCreationOp createConstructor;
+  ClassObjectCreationOp createPrototype;
+  const JSFunctionSpec* constructorFunctions;
+  const JSPropertySpec* constructorProperties;
+  const JSFunctionSpec* prototypeFunctions;
+  const JSPropertySpec* prototypeProperties;
+  FinishClassInitOp finishInit;
+  uintptr_t flags;
 
-    static const size_t ProtoKeyWidth = JSCLASS_CACHED_PROTO_WIDTH;
+  static const size_t ProtoKeyWidth = JSCLASS_CACHED_PROTO_WIDTH;
 
-    static const uintptr_t ProtoKeyMask = (1 << ProtoKeyWidth) - 1;
-    static const uintptr_t DontDefineConstructor = 1 << ProtoKeyWidth;
+  static const uintptr_t ProtoKeyMask = (1 << ProtoKeyWidth) - 1;
+  static const uintptr_t DontDefineConstructor = 1 << ProtoKeyWidth;
 
-    bool defined() const { return !!createConstructor; }
+  bool defined() const { return !!createConstructor; }
 
-    // The ProtoKey this class inherits from.
-    JSProtoKey inheritanceProtoKey() const {
-        MOZ_ASSERT(defined());
-        static_assert(JSProto_Null == 0, "zeroed key must be null");
+  // The ProtoKey this class inherits from.
+  JSProtoKey inheritanceProtoKey() const {
+    MOZ_ASSERT(defined());
+    static_assert(JSProto_Null == 0, "zeroed key must be null");
 
-        // Default: Inherit from Object.
-        if (!(flags & ProtoKeyMask)) {
-            return JSProto_Object;
-        }
-
-        return JSProtoKey(flags & ProtoKeyMask);
+    // Default: Inherit from Object.
+    if (!(flags & ProtoKeyMask)) {
+      return JSProto_Object;
     }
 
-    bool shouldDefineConstructor() const {
-        MOZ_ASSERT(defined());
-        return !(flags & DontDefineConstructor);
-    }
+    return JSProtoKey(flags & ProtoKeyMask);
+  }
+
+  bool shouldDefineConstructor() const {
+    MOZ_ASSERT(defined());
+    return !(flags & DontDefineConstructor);
+  }
 };
 
-struct MOZ_STATIC_CLASS ClassExtension
-{
-    /**
-     * If an object is used as a key in a weakmap, it may be desirable for the
-     * garbage collector to keep that object around longer than it otherwise
-     * would. A common case is when the key is a wrapper around an object in
-     * another compartment, and we want to avoid collecting the wrapper (and
-     * removing the weakmap entry) as long as the wrapped object is alive. In
-     * that case, the wrapped object is returned by the wrapper's
-     * weakmapKeyDelegateOp hook. As long as the wrapper is used as a weakmap
-     * key, it will not be collected (and remain in the weakmap) until the
-     * wrapped object is collected.
-     */
-    JSWeakmapKeyDelegateOp weakmapKeyDelegateOp;
+struct MOZ_STATIC_CLASS ClassExtension {
+  /**
+   * If an object is used as a key in a weakmap, it may be desirable for the
+   * garbage collector to keep that object around longer than it otherwise
+   * would. A common case is when the key is a wrapper around an object in
+   * another compartment, and we want to avoid collecting the wrapper (and
+   * removing the weakmap entry) as long as the wrapped object is alive. In
+   * that case, the wrapped object is returned by the wrapper's
+   * weakmapKeyDelegateOp hook. As long as the wrapper is used as a weakmap
+   * key, it will not be collected (and remain in the weakmap) until the
+   * wrapped object is collected.
+   */
+  JSWeakmapKeyDelegateOp weakmapKeyDelegateOp;
 
-    /**
-     * Optional hook called when an object is moved by generational or
-     * compacting GC.
-     *
-     * There may exist weak pointers to an object that are not traced through
-     * when the normal trace APIs are used, for example objects in the wrapper
-     * cache. This hook allows these pointers to be updated.
-     *
-     * Note that this hook can be called before JS_NewObject() returns if a GC
-     * is triggered during construction of the object. This can happen for
-     * global objects for example.
-     *
-     * The function should return the difference between nursery bytes used and
-     * tenured bytes used, which may be nonzero e.g. if some nursery-allocated
-     * data beyond the actual GC thing is moved into malloced memory.
-     *
-     * This is used to compute the nursery promotion rate.
-     */
-    JSObjectMovedOp objectMovedOp;
+  /**
+   * Optional hook called when an object is moved by generational or
+   * compacting GC.
+   *
+   * There may exist weak pointers to an object that are not traced through
+   * when the normal trace APIs are used, for example objects in the wrapper
+   * cache. This hook allows these pointers to be updated.
+   *
+   * Note that this hook can be called before JS_NewObject() returns if a GC
+   * is triggered during construction of the object. This can happen for
+   * global objects for example.
+   *
+   * The function should return the difference between nursery bytes used and
+   * tenured bytes used, which may be nonzero e.g. if some nursery-allocated
+   * data beyond the actual GC thing is moved into malloced memory.
+   *
+   * This is used to compute the nursery promotion rate.
+   */
+  JSObjectMovedOp objectMovedOp;
 };
 
-#define JS_NULL_CLASS_SPEC  nullptr
-#define JS_NULL_CLASS_EXT   nullptr
+#define JS_NULL_CLASS_SPEC nullptr
+#define JS_NULL_CLASS_EXT nullptr
 
-struct MOZ_STATIC_CLASS ObjectOps
-{
-    LookupPropertyOp lookupProperty;
-    DefinePropertyOp defineProperty;
-    HasPropertyOp    hasProperty;
-    GetPropertyOp    getProperty;
-    SetPropertyOp    setProperty;
-    GetOwnPropertyOp getOwnPropertyDescriptor;
-    DeletePropertyOp deleteProperty;
-    GetElementsOp    getElements;
-    JSFunToStringOp  funToString;
+struct MOZ_STATIC_CLASS ObjectOps {
+  LookupPropertyOp lookupProperty;
+  DefinePropertyOp defineProperty;
+  HasPropertyOp hasProperty;
+  GetPropertyOp getProperty;
+  SetPropertyOp setProperty;
+  GetOwnPropertyOp getOwnPropertyDescriptor;
+  DeletePropertyOp deleteProperty;
+  GetElementsOp getElements;
+  JSFunToStringOp funToString;
 };
 
 #define JS_NULL_OBJECT_OPS nullptr
 
-} // namespace js
+}  // namespace js
 
 // Classes, objects, and properties.
 
 typedef void (*JSClassInternal)();
 
-struct MOZ_STATIC_CLASS JSClassOps
-{
-    /* Function pointer members (may be null). */
-    JSAddPropertyOp     addProperty;
-    JSDeletePropertyOp  delProperty;
-    JSEnumerateOp       enumerate;
-    JSNewEnumerateOp    newEnumerate;
-    JSResolveOp         resolve;
-    JSMayResolveOp      mayResolve;
-    JSFinalizeOp        finalize;
-    JSNative            call;
-    JSHasInstanceOp     hasInstance;
-    JSNative            construct;
-    JSTraceOp           trace;
+struct MOZ_STATIC_CLASS JSClassOps {
+  /* Function pointer members (may be null). */
+  JSAddPropertyOp addProperty;
+  JSDeletePropertyOp delProperty;
+  JSEnumerateOp enumerate;
+  JSNewEnumerateOp newEnumerate;
+  JSResolveOp resolve;
+  JSMayResolveOp mayResolve;
+  JSFinalizeOp finalize;
+  JSNative call;
+  JSHasInstanceOp hasInstance;
+  JSNative construct;
+  JSTraceOp trace;
 };
 
 #define JS_NULL_CLASS_OPS nullptr
 
 struct JSClass {
-    JS_CLASS_MEMBERS(JSClassOps, JSFreeOp);
+  JS_CLASS_MEMBERS(JSClassOps, JSFreeOp);
 
-    void* reserved[3];
+  void* reserved[3];
 };
 
 // Objects have private slot.
@@ -831,30 +804,37 @@ static const uintptr_t JSCLASS_RESERVED_SLOTS_SHIFT = 8;
 // ... and 16 above this field.
 static const uint32_t JSCLASS_RESERVED_SLOTS_WIDTH = 8;
 
-static const uint32_t JSCLASS_RESERVED_SLOTS_MASK = JS_BITMASK(JSCLASS_RESERVED_SLOTS_WIDTH);
+static const uint32_t JSCLASS_RESERVED_SLOTS_MASK =
+    JS_BITMASK(JSCLASS_RESERVED_SLOTS_WIDTH);
 
-#define JSCLASS_HAS_RESERVED_SLOTS(n)   (((n) & JSCLASS_RESERVED_SLOTS_MASK)  \
-                                         << JSCLASS_RESERVED_SLOTS_SHIFT)
-#define JSCLASS_RESERVED_SLOTS(clasp)   (((clasp)->flags                      \
-                                          >> JSCLASS_RESERVED_SLOTS_SHIFT)    \
-                                         & JSCLASS_RESERVED_SLOTS_MASK)
+#define JSCLASS_HAS_RESERVED_SLOTS(n) \
+  (((n)&JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT)
+#define JSCLASS_RESERVED_SLOTS(clasp)                 \
+  (((clasp)->flags >> JSCLASS_RESERVED_SLOTS_SHIFT) & \
+   JSCLASS_RESERVED_SLOTS_MASK)
 
-#define JSCLASS_HIGH_FLAGS_SHIFT        (JSCLASS_RESERVED_SLOTS_SHIFT +       \
-                                         JSCLASS_RESERVED_SLOTS_WIDTH)
+#define JSCLASS_HIGH_FLAGS_SHIFT \
+  (JSCLASS_RESERVED_SLOTS_SHIFT + JSCLASS_RESERVED_SLOTS_WIDTH)
 
-static const uint32_t JSCLASS_IS_ANONYMOUS =            1 << (JSCLASS_HIGH_FLAGS_SHIFT + 0);
-static const uint32_t JSCLASS_IS_GLOBAL =               1 << (JSCLASS_HIGH_FLAGS_SHIFT + 1);
-static const uint32_t JSCLASS_INTERNAL_FLAG2 =          1 << (JSCLASS_HIGH_FLAGS_SHIFT + 2);
-static const uint32_t JSCLASS_INTERNAL_FLAG3 =          1 << (JSCLASS_HIGH_FLAGS_SHIFT + 3);
-static const uint32_t JSCLASS_IS_PROXY =                1 << (JSCLASS_HIGH_FLAGS_SHIFT + 4);
-static const uint32_t JSCLASS_SKIP_NURSERY_FINALIZE =   1 << (JSCLASS_HIGH_FLAGS_SHIFT + 5);
+static const uint32_t JSCLASS_IS_ANONYMOUS = 1
+                                             << (JSCLASS_HIGH_FLAGS_SHIFT + 0);
+static const uint32_t JSCLASS_IS_GLOBAL = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 1);
+static const uint32_t JSCLASS_INTERNAL_FLAG2 =
+    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 2);
+static const uint32_t JSCLASS_INTERNAL_FLAG3 =
+    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 3);
+static const uint32_t JSCLASS_IS_PROXY = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 4);
+static const uint32_t JSCLASS_SKIP_NURSERY_FINALIZE =
+    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 5);
 
 // Reserved for embeddings.
-static const uint32_t JSCLASS_USERBIT2 =                1 << (JSCLASS_HIGH_FLAGS_SHIFT + 6);
-static const uint32_t JSCLASS_USERBIT3 =                1 << (JSCLASS_HIGH_FLAGS_SHIFT + 7);
+static const uint32_t JSCLASS_USERBIT2 = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 6);
+static const uint32_t JSCLASS_USERBIT3 = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 7);
 
-static const uint32_t JSCLASS_BACKGROUND_FINALIZE =     1 << (JSCLASS_HIGH_FLAGS_SHIFT + 8);
-static const uint32_t JSCLASS_FOREGROUND_FINALIZE =     1 << (JSCLASS_HIGH_FLAGS_SHIFT + 9);
+static const uint32_t JSCLASS_BACKGROUND_FINALIZE =
+    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 8);
+static const uint32_t JSCLASS_FOREGROUND_FINALIZE =
+    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 9);
 
 // Bits 26 through 31 are reserved for the CACHED_PROTO_KEY mechanism, see
 // below.
@@ -876,134 +856,153 @@ static const uint32_t JSCLASS_GLOBAL_APPLICATION_SLOTS = 5;
 static const uint32_t JSCLASS_GLOBAL_SLOT_COUNT =
     JSCLASS_GLOBAL_APPLICATION_SLOTS + JSProto_LIMIT * 2 + 37;
 
-#define JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(n)                              \
-    (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT + (n)))
-#define JSCLASS_GLOBAL_FLAGS                                                  \
-    JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(0)
-#define JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(clasp)                              \
-  (((clasp)->flags & JSCLASS_IS_GLOBAL)                                       \
-   && JSCLASS_RESERVED_SLOTS(clasp) >= JSCLASS_GLOBAL_SLOT_COUNT)
+#define JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(n) \
+  (JSCLASS_IS_GLOBAL |                     \
+   JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT + (n)))
+#define JSCLASS_GLOBAL_FLAGS JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(0)
+#define JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(clasp) \
+  (((clasp)->flags & JSCLASS_IS_GLOBAL) &&       \
+   JSCLASS_RESERVED_SLOTS(clasp) >= JSCLASS_GLOBAL_SLOT_COUNT)
 
 // Fast access to the original value of each standard class's prototype.
-static const uint32_t JSCLASS_CACHED_PROTO_SHIFT = JSCLASS_HIGH_FLAGS_SHIFT + 10;
-static const uint32_t JSCLASS_CACHED_PROTO_MASK = JS_BITMASK(js::JSCLASS_CACHED_PROTO_WIDTH);
+static const uint32_t JSCLASS_CACHED_PROTO_SHIFT =
+    JSCLASS_HIGH_FLAGS_SHIFT + 10;
+static const uint32_t JSCLASS_CACHED_PROTO_MASK =
+    JS_BITMASK(js::JSCLASS_CACHED_PROTO_WIDTH);
 
-#define JSCLASS_HAS_CACHED_PROTO(key)   (uint32_t(key) << JSCLASS_CACHED_PROTO_SHIFT)
-#define JSCLASS_CACHED_PROTO_KEY(clasp) ((JSProtoKey)                         \
-                                         (((clasp)->flags                     \
-                                           >> JSCLASS_CACHED_PROTO_SHIFT)     \
-                                          & JSCLASS_CACHED_PROTO_MASK))
+#define JSCLASS_HAS_CACHED_PROTO(key) \
+  (uint32_t(key) << JSCLASS_CACHED_PROTO_SHIFT)
+#define JSCLASS_CACHED_PROTO_KEY(clasp)                          \
+  ((JSProtoKey)(((clasp)->flags >> JSCLASS_CACHED_PROTO_SHIFT) & \
+                JSCLASS_CACHED_PROTO_MASK))
 
 // Initializer for unused members of statically initialized JSClass structs.
-#define JSCLASS_NO_INTERNAL_MEMBERS     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
-#define JSCLASS_NO_OPTIONAL_MEMBERS     0,0,0,0,0,JSCLASS_NO_INTERNAL_MEMBERS
+#define JSCLASS_NO_INTERNAL_MEMBERS \
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+#define JSCLASS_NO_OPTIONAL_MEMBERS 0, 0, 0, 0, 0, JSCLASS_NO_INTERNAL_MEMBERS
 
 namespace js {
 
-struct MOZ_STATIC_CLASS Class
-{
-    JS_CLASS_MEMBERS(js::ClassOps, FreeOp);
-    const ClassSpec* spec;
-    const ClassExtension* ext;
-    const ObjectOps* oOps;
+struct MOZ_STATIC_CLASS Class {
+  JS_CLASS_MEMBERS(js::ClassOps, FreeOp);
+  const ClassSpec* spec;
+  const ClassExtension* ext;
+  const ObjectOps* oOps;
 
-    /*
-     * Objects of this class aren't native objects. They don't have Shapes that
-     * describe their properties and layout. Classes using this flag must
-     * provide their own property behavior, either by being proxy classes (do
-     * this) or by overriding all the ObjectOps except getElements
-     * (don't do this).
-     */
-    static const uint32_t NON_NATIVE = JSCLASS_INTERNAL_FLAG2;
+  /*
+   * Objects of this class aren't native objects. They don't have Shapes that
+   * describe their properties and layout. Classes using this flag must
+   * provide their own property behavior, either by being proxy classes (do
+   * this) or by overriding all the ObjectOps except getElements
+   * (don't do this).
+   */
+  static const uint32_t NON_NATIVE = JSCLASS_INTERNAL_FLAG2;
 
-    bool isNative() const {
-        return !(flags & NON_NATIVE);
-    }
+  bool isNative() const { return !(flags & NON_NATIVE); }
 
-    bool hasPrivate() const {
-        return !!(flags & JSCLASS_HAS_PRIVATE);
-    }
+  bool hasPrivate() const { return !!(flags & JSCLASS_HAS_PRIVATE); }
 
-    bool emulatesUndefined() const {
-        return flags & JSCLASS_EMULATES_UNDEFINED;
-    }
+  bool emulatesUndefined() const { return flags & JSCLASS_EMULATES_UNDEFINED; }
 
-    bool isJSFunction() const {
-        return this == js::FunctionClassPtr;
-    }
+  bool isJSFunction() const { return this == js::FunctionClassPtr; }
 
-    bool nonProxyCallable() const {
-        MOZ_ASSERT(!isProxy());
-        return isJSFunction() || getCall();
-    }
+  bool nonProxyCallable() const {
+    MOZ_ASSERT(!isProxy());
+    return isJSFunction() || getCall();
+  }
 
-    bool isProxy() const {
-        return flags & JSCLASS_IS_PROXY;
-    }
+  bool isProxy() const { return flags & JSCLASS_IS_PROXY; }
 
-    bool isDOMClass() const {
-        return flags & JSCLASS_IS_DOMJSCLASS;
-    }
+  bool isDOMClass() const { return flags & JSCLASS_IS_DOMJSCLASS; }
 
-    bool shouldDelayMetadataBuilder() const {
-        return flags & JSCLASS_DELAY_METADATA_BUILDER;
-    }
+  bool shouldDelayMetadataBuilder() const {
+    return flags & JSCLASS_DELAY_METADATA_BUILDER;
+  }
 
-    bool isWrappedNative() const {
-        return flags & JSCLASS_IS_WRAPPED_NATIVE;
-    }
+  bool isWrappedNative() const { return flags & JSCLASS_IS_WRAPPED_NATIVE; }
 
-    static size_t offsetOfFlags() { return offsetof(Class, flags); }
+  static size_t offsetOfFlags() { return offsetof(Class, flags); }
 
-    bool specDefined()         const { return spec ? spec->defined()   : false; }
-    JSProtoKey specInheritanceProtoKey()
-                               const { return spec ? spec->inheritanceProtoKey() : JSProto_Null; }
-    bool specShouldDefineConstructor()
-                               const { return spec ? spec->shouldDefineConstructor() : true; }
-    ClassObjectCreationOp specCreateConstructorHook()
-                               const { return spec ? spec->createConstructor        : nullptr; }
-    ClassObjectCreationOp specCreatePrototypeHook()
-                               const { return spec ? spec->createPrototype          : nullptr; }
-    const JSFunctionSpec* specConstructorFunctions()
-                               const { return spec ? spec->constructorFunctions     : nullptr; }
-    const JSPropertySpec* specConstructorProperties()
-                               const { return spec ? spec->constructorProperties    : nullptr; }
-    const JSFunctionSpec* specPrototypeFunctions()
-                               const { return spec ? spec->prototypeFunctions       : nullptr; }
-    const JSPropertySpec* specPrototypeProperties()
-                               const { return spec ? spec->prototypeProperties      : nullptr; }
-    FinishClassInitOp specFinishInitHook()
-                               const { return spec ? spec->finishInit               : nullptr; }
+  bool specDefined() const { return spec ? spec->defined() : false; }
+  JSProtoKey specInheritanceProtoKey() const {
+    return spec ? spec->inheritanceProtoKey() : JSProto_Null;
+  }
+  bool specShouldDefineConstructor() const {
+    return spec ? spec->shouldDefineConstructor() : true;
+  }
+  ClassObjectCreationOp specCreateConstructorHook() const {
+    return spec ? spec->createConstructor : nullptr;
+  }
+  ClassObjectCreationOp specCreatePrototypeHook() const {
+    return spec ? spec->createPrototype : nullptr;
+  }
+  const JSFunctionSpec* specConstructorFunctions() const {
+    return spec ? spec->constructorFunctions : nullptr;
+  }
+  const JSPropertySpec* specConstructorProperties() const {
+    return spec ? spec->constructorProperties : nullptr;
+  }
+  const JSFunctionSpec* specPrototypeFunctions() const {
+    return spec ? spec->prototypeFunctions : nullptr;
+  }
+  const JSPropertySpec* specPrototypeProperties() const {
+    return spec ? spec->prototypeProperties : nullptr;
+  }
+  FinishClassInitOp specFinishInitHook() const {
+    return spec ? spec->finishInit : nullptr;
+  }
 
-    JSWeakmapKeyDelegateOp extWeakmapKeyDelegateOp()
-                               const { return ext ? ext->weakmapKeyDelegateOp        : nullptr; }
-    JSObjectMovedOp extObjectMovedOp()
-                               const { return ext ? ext->objectMovedOp               : nullptr; }
+  JSWeakmapKeyDelegateOp extWeakmapKeyDelegateOp() const {
+    return ext ? ext->weakmapKeyDelegateOp : nullptr;
+  }
+  JSObjectMovedOp extObjectMovedOp() const {
+    return ext ? ext->objectMovedOp : nullptr;
+  }
 
-    LookupPropertyOp getOpsLookupProperty() const { return oOps ? oOps->lookupProperty : nullptr; }
-    DefinePropertyOp getOpsDefineProperty() const { return oOps ? oOps->defineProperty : nullptr; }
-    HasPropertyOp    getOpsHasProperty()    const { return oOps ? oOps->hasProperty    : nullptr; }
-    GetPropertyOp    getOpsGetProperty()    const { return oOps ? oOps->getProperty    : nullptr; }
-    SetPropertyOp    getOpsSetProperty()    const { return oOps ? oOps->setProperty    : nullptr; }
-    GetOwnPropertyOp getOpsGetOwnPropertyDescriptor()
-                                            const { return oOps ? oOps->getOwnPropertyDescriptor
-                                                                                     : nullptr; }
-    DeletePropertyOp getOpsDeleteProperty() const { return oOps ? oOps->deleteProperty : nullptr; }
-    GetElementsOp    getOpsGetElements()    const { return oOps ? oOps->getElements    : nullptr; }
-    JSFunToStringOp  getOpsFunToString()    const { return oOps ? oOps->funToString    : nullptr; }
+  LookupPropertyOp getOpsLookupProperty() const {
+    return oOps ? oOps->lookupProperty : nullptr;
+  }
+  DefinePropertyOp getOpsDefineProperty() const {
+    return oOps ? oOps->defineProperty : nullptr;
+  }
+  HasPropertyOp getOpsHasProperty() const {
+    return oOps ? oOps->hasProperty : nullptr;
+  }
+  GetPropertyOp getOpsGetProperty() const {
+    return oOps ? oOps->getProperty : nullptr;
+  }
+  SetPropertyOp getOpsSetProperty() const {
+    return oOps ? oOps->setProperty : nullptr;
+  }
+  GetOwnPropertyOp getOpsGetOwnPropertyDescriptor() const {
+    return oOps ? oOps->getOwnPropertyDescriptor : nullptr;
+  }
+  DeletePropertyOp getOpsDeleteProperty() const {
+    return oOps ? oOps->deleteProperty : nullptr;
+  }
+  GetElementsOp getOpsGetElements() const {
+    return oOps ? oOps->getElements : nullptr;
+  }
+  JSFunToStringOp getOpsFunToString() const {
+    return oOps ? oOps->funToString : nullptr;
+  }
 };
 
-static_assert(offsetof(JSClassOps, addProperty) == offsetof(ClassOps, addProperty),
+static_assert(offsetof(JSClassOps, addProperty) ==
+                  offsetof(ClassOps, addProperty),
               "ClassOps and JSClassOps must be consistent");
-static_assert(offsetof(JSClassOps, delProperty) == offsetof(ClassOps, delProperty),
+static_assert(offsetof(JSClassOps, delProperty) ==
+                  offsetof(ClassOps, delProperty),
               "ClassOps and JSClassOps must be consistent");
 static_assert(offsetof(JSClassOps, enumerate) == offsetof(ClassOps, enumerate),
               "ClassOps and JSClassOps must be consistent");
-static_assert(offsetof(JSClassOps, newEnumerate) == offsetof(ClassOps, newEnumerate),
+static_assert(offsetof(JSClassOps, newEnumerate) ==
+                  offsetof(ClassOps, newEnumerate),
               "ClassOps and JSClassOps must be consistent");
 static_assert(offsetof(JSClassOps, resolve) == offsetof(ClassOps, resolve),
               "ClassOps and JSClassOps must be consistent");
-static_assert(offsetof(JSClassOps, mayResolve) == offsetof(ClassOps, mayResolve),
+static_assert(offsetof(JSClassOps, mayResolve) ==
+                  offsetof(ClassOps, mayResolve),
               "ClassOps and JSClassOps must be consistent");
 static_assert(offsetof(JSClassOps, finalize) == offsetof(ClassOps, finalize),
               "ClassOps and JSClassOps must be consistent");
@@ -1011,7 +1010,8 @@ static_assert(offsetof(JSClassOps, call) == offsetof(ClassOps, call),
               "ClassOps and JSClassOps must be consistent");
 static_assert(offsetof(JSClassOps, construct) == offsetof(ClassOps, construct),
               "ClassOps and JSClassOps must be consistent");
-static_assert(offsetof(JSClassOps, hasInstance) == offsetof(ClassOps, hasInstance),
+static_assert(offsetof(JSClassOps, hasInstance) ==
+                  offsetof(ClassOps, hasInstance),
               "ClassOps and JSClassOps must be consistent");
 static_assert(offsetof(JSClassOps, trace) == offsetof(ClassOps, trace),
               "ClassOps and JSClassOps must be consistent");
@@ -1027,16 +1027,12 @@ static_assert(offsetof(JSClass, cOps) == offsetof(Class, cOps),
 static_assert(sizeof(JSClass) == sizeof(Class),
               "Class and JSClass must be consistent");
 
-static MOZ_ALWAYS_INLINE const JSClass*
-Jsvalify(const Class* c)
-{
-    return (const JSClass*)c;
+static MOZ_ALWAYS_INLINE const JSClass* Jsvalify(const Class* c) {
+  return (const JSClass*)c;
 }
 
-static MOZ_ALWAYS_INLINE const Class*
-Valueify(const JSClass* c)
-{
-    return (const Class*)c;
+static MOZ_ALWAYS_INLINE const Class* Valueify(const JSClass* c) {
+  return (const Class*)c;
 }
 
 /**
@@ -1044,39 +1040,37 @@ Valueify(const JSClass* c)
  * value of objects.
  */
 enum class ESClass {
-    Object,
-    Array,
-    Number,
-    String,
-    Boolean,
-    RegExp,
-    ArrayBuffer,
-    SharedArrayBuffer,
-    Date,
-    Set,
-    Map,
-    Promise,
-    MapIterator,
-    SetIterator,
-    Arguments,
-    Error,
+  Object,
+  Array,
+  Number,
+  String,
+  Boolean,
+  RegExp,
+  ArrayBuffer,
+  SharedArrayBuffer,
+  Date,
+  Set,
+  Map,
+  Promise,
+  MapIterator,
+  SetIterator,
+  Arguments,
+  Error,
 #ifdef ENABLE_BIGINT
-    BigInt,
+  BigInt,
 #endif
 
-    /** None of the above. */
-    Other
+  /** None of the above. */
+  Other
 };
 
 /* Fills |vp| with the unboxed value for boxed types, or undefined otherwise. */
-bool
-Unbox(JSContext* cx, JS::HandleObject obj, JS::MutableHandleValue vp);
+bool Unbox(JSContext* cx, JS::HandleObject obj, JS::MutableHandleValue vp);
 
 #ifdef DEBUG
-JS_FRIEND_API bool
-HasObjectMovedOp(JSObject* obj);
+JS_FRIEND_API bool HasObjectMovedOp(JSObject* obj);
 #endif
 
-}  /* namespace js */
+} /* namespace js */
 
-#endif  /* js_Class_h */
+#endif /* js_Class_h */

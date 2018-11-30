@@ -47,15 +47,11 @@ namespace mozilla {
 // like `clang++ -fsanitize=vptr`, and should prevent false positives while
 // pointers are manipulated within NonDereferenceable objects.
 //
-template<typename T>
-class NonDereferenceable
-{
-public:
+template <typename T>
+class NonDereferenceable {
+ public:
   // Default construction with a null value.
-  NonDereferenceable()
-    : mPtr(nullptr)
-  {
-  }
+  NonDereferenceable() : mPtr(nullptr) {}
 
   // Default copy construction and assignment.
   NO_POINTEE_CHECKS
@@ -72,49 +68,39 @@ public:
   // points at an object still being constructed or already partially
   // destructed, which some very sensitive sanitizers could complain about.
   NO_POINTEE_CHECKS
-  explicit NonDereferenceable(T* aPtr)
-    : mPtr(aPtr)
-  {
-  }
+  explicit NonDereferenceable(T* aPtr) : mPtr(aPtr) {}
   NO_POINTEE_CHECKS
-  NonDereferenceable& operator=(T* aPtr)
-  {
+  NonDereferenceable& operator=(T* aPtr) {
     mPtr = aPtr;
     return *this;
   }
 
   // Construct/assign from a compatible pointer type.
-  template<typename U>
+  template <typename U>
   NO_POINTEE_CHECKS explicit NonDereferenceable(U* aOther)
-    : mPtr(static_cast<T*>(aOther))
-  {
-  }
-  template<typename U>
-  NO_POINTEE_CHECKS NonDereferenceable& operator=(U* aOther)
-  {
+      : mPtr(static_cast<T*>(aOther)) {}
+  template <typename U>
+  NO_POINTEE_CHECKS NonDereferenceable& operator=(U* aOther) {
     mPtr = static_cast<T*>(aOther);
     return *this;
   }
 
   // Construct/assign from a NonDereferenceable with a compatible pointer type.
-  template<typename U>
+  template <typename U>
   NO_POINTEE_CHECKS MOZ_IMPLICIT
   NonDereferenceable(const NonDereferenceable<U>& aOther)
-    : mPtr(static_cast<T*>(aOther.mPtr))
-  {
-  }
-  template<typename U>
+      : mPtr(static_cast<T*>(aOther.mPtr)) {}
+  template <typename U>
   NO_POINTEE_CHECKS NonDereferenceable& operator=(
-    const NonDereferenceable<U>& aOther)
-  {
+      const NonDereferenceable<U>& aOther) {
     mPtr = static_cast<T*>(aOther.mPtr);
     return *this;
   }
 
   // Explicitly disallow dereference operators, so that compiler errors point
   // at these lines:
-  T& operator*() = delete;  // Cannot dereference NonDereferenceable!
-  T* operator->() = delete; // Cannot dereference NonDereferenceable!
+  T& operator*() = delete;   // Cannot dereference NonDereferenceable!
+  T* operator->() = delete;  // Cannot dereference NonDereferenceable!
 
   // Null check.
   NO_POINTEE_CHECKS
@@ -124,15 +110,16 @@ public:
   NO_POINTEE_CHECKS
   uintptr_t value() const { return reinterpret_cast<uintptr_t>(mPtr); }
 
-private:
+ private:
   // Let other NonDereferenceable templates access mPtr, to permit construction/
   // assignment from compatible pointer types.
-  template<typename> friend class NonDereferenceable;
+  template <typename>
+  friend class NonDereferenceable;
 
   T* MOZ_NON_OWNING_REF mPtr;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #undef NO_POINTEE_CHECKS
 

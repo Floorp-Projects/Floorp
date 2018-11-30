@@ -16,41 +16,33 @@ namespace mozilla {
 
 namespace detail {
 
-template<typename Char>
-class MakeUnsignedChar
-  : public MakeUnsigned<Char>
-{};
+template <typename Char>
+class MakeUnsignedChar : public MakeUnsigned<Char> {};
 
-template<>
-class MakeUnsignedChar<char16_t>
-{
-public:
+template <>
+class MakeUnsignedChar<char16_t> {
+ public:
   using Type = char16_t;
 };
 
-template<>
-class MakeUnsignedChar<char32_t>
-{
-public:
+template <>
+class MakeUnsignedChar<char32_t> {
+ public:
   using Type = char32_t;
 };
 
-} // namespace detail
+}  // namespace detail
 
 /** Returns true iff |aChar| is ASCII, i.e. in the range [0, 0x80). */
-template<typename Char>
-constexpr bool
-IsAscii(Char aChar)
-{
+template <typename Char>
+constexpr bool IsAscii(Char aChar) {
   using UnsignedChar = typename detail::MakeUnsignedChar<Char>::Type;
   auto uc = static_cast<UnsignedChar>(aChar);
   return uc < 0x80;
 }
 
-template<typename Char>
-constexpr bool
-IsNonAsciiLatin1(Char aChar)
-{
+template <typename Char>
+constexpr bool IsNonAsciiLatin1(Char aChar) {
   using UnsignedChar = typename detail::MakeUnsignedChar<Char>::Type;
   auto uc = static_cast<UnsignedChar>(aChar);
   return uc >= 0x80 && uc <= 0xFF;
@@ -62,10 +54,8 @@ IsNonAsciiLatin1(Char aChar)
  * This function is intended to match the Infra standard
  * (https://infra.spec.whatwg.org/#ascii-whitespace)
  */
-template<typename Char>
-constexpr bool
-IsAsciiWhitespace(Char aChar)
-{
+template <typename Char>
+constexpr bool IsAsciiWhitespace(Char aChar) {
   using UnsignedChar = typename detail::MakeUnsignedChar<Char>::Type;
   auto uc = static_cast<UnsignedChar>(aChar);
   return uc == 0x9 || uc == 0xA || uc == 0xC || uc == 0xD || uc == 0x20;
@@ -77,10 +67,8 @@ IsAsciiWhitespace(Char aChar)
  * This function is basically what you thought islower was, except its behavior
  * doesn't depend on the user's current locale.
  */
-template<typename Char>
-constexpr bool
-IsAsciiLowercaseAlpha(Char aChar)
-{
+template <typename Char>
+constexpr bool IsAsciiLowercaseAlpha(Char aChar) {
   using UnsignedChar = typename detail::MakeUnsignedChar<Char>::Type;
   auto uc = static_cast<UnsignedChar>(aChar);
   return 'a' <= uc && uc <= 'z';
@@ -92,10 +80,8 @@ IsAsciiLowercaseAlpha(Char aChar)
  * This function is basically what you thought isupper was, except its behavior
  * doesn't depend on the user's current locale.
  */
-template<typename Char>
-constexpr bool
-IsAsciiUppercaseAlpha(Char aChar)
-{
+template <typename Char>
+constexpr bool IsAsciiUppercaseAlpha(Char aChar) {
   using UnsignedChar = typename detail::MakeUnsignedChar<Char>::Type;
   auto uc = static_cast<UnsignedChar>(aChar);
   return 'A' <= uc && uc <= 'Z';
@@ -107,10 +93,8 @@ IsAsciiUppercaseAlpha(Char aChar)
  * This function is basically what you thought isalpha was, except its behavior
  * doesn't depend on the user's current locale.
  */
-template<typename Char>
-constexpr bool
-IsAsciiAlpha(Char aChar)
-{
+template <typename Char>
+constexpr bool IsAsciiAlpha(Char aChar) {
   return IsAsciiLowercaseAlpha(aChar) || IsAsciiUppercaseAlpha(aChar);
 }
 
@@ -120,10 +104,8 @@ IsAsciiAlpha(Char aChar)
  * This function is basically what you thought isdigit was, except its behavior
  * doesn't depend on the user's current locale.
  */
-template<typename Char>
-constexpr bool
-IsAsciiDigit(Char aChar)
-{
+template <typename Char>
+constexpr bool IsAsciiDigit(Char aChar) {
   using UnsignedChar = typename detail::MakeUnsignedChar<Char>::Type;
   auto uc = static_cast<UnsignedChar>(aChar);
   return '0' <= uc && uc <= '9';
@@ -134,14 +116,11 @@ IsAsciiDigit(Char aChar)
  *
  * This function is basically isxdigit, but guaranteed to be only for ASCII.
  */
-template<typename Char>
-constexpr bool
-IsAsciiHexDigit(Char aChar)
-{
+template <typename Char>
+constexpr bool IsAsciiHexDigit(Char aChar) {
   using UnsignedChar = typename detail::MakeUnsignedChar<Char>::Type;
   auto uc = static_cast<UnsignedChar>(aChar);
-  return ('0' <= uc && uc <= '9') ||
-         ('a' <= uc && uc <= 'f') ||
+  return ('0' <= uc && uc <= '9') || ('a' <= uc && uc <= 'f') ||
          ('A' <= uc && uc <= 'F');
 }
 
@@ -151,10 +130,8 @@ IsAsciiHexDigit(Char aChar)
  * This function is basically what you thought isalnum was, except its behavior
  * doesn't depend on the user's current locale.
  */
-template<typename Char>
-constexpr bool
-IsAsciiAlphanumeric(Char aChar)
-{
+template <typename Char>
+constexpr bool IsAsciiAlphanumeric(Char aChar) {
   return IsAsciiDigit(aChar) || IsAsciiAlpha(aChar);
 }
 
@@ -162,10 +139,8 @@ IsAsciiAlphanumeric(Char aChar)
  * Converts an ASCII alphanumeric digit [0-9a-zA-Z] to number as if in base-36.
  * (This function therefore works for decimal, hexadecimal, etc.).
  */
-template<typename Char>
-uint8_t
-AsciiAlphanumericToNumber(Char aChar)
-{
+template <typename Char>
+uint8_t AsciiAlphanumericToNumber(Char aChar) {
   using UnsignedChar = typename detail::MakeUnsignedChar<Char>::Type;
   auto uc = static_cast<UnsignedChar>(aChar);
 
@@ -186,6 +161,6 @@ AsciiAlphanumericToNumber(Char aChar)
   return uc - 'a' + 10;
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_TextUtils_h */

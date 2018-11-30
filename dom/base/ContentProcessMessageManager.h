@@ -24,7 +24,7 @@ namespace mozilla {
 namespace dom {
 
 namespace ipc {
-  class SharedMap;
+class SharedMap;
 }
 
 /**
@@ -34,15 +34,13 @@ namespace ipc {
  * corresponding ParentProcessMessageManager on the parent side.
  */
 
-class ContentProcessMessageManager :
-  public nsIMessageSender,
-  public nsMessageManagerScriptExecutor,
-  public nsSupportsWeakReference,
-  public ipc::MessageManagerCallback,
-  public MessageManagerGlobal,
-  public nsWrapperCache
-{
-public:
+class ContentProcessMessageManager : public nsIMessageSender,
+                                     public nsMessageManagerScriptExecutor,
+                                     public nsSupportsWeakReference,
+                                     public ipc::MessageManagerCallback,
+                                     public MessageManagerGlobal,
+                                     public nsWrapperCache {
+ public:
   explicit ContentProcessMessageManager(nsFrameMessageManager* aMessageManager);
 
   using ipc::MessageManagerCallback::GetProcessMessageManager;
@@ -54,7 +52,8 @@ public:
   static bool WasCreated();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(ContentProcessMessageManager, nsIMessageSender)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(
+      ContentProcessMessageManager, nsIMessageSender)
 
   void MarkForCC();
 
@@ -64,15 +63,14 @@ public:
   JSObject* GetOrCreateWrapper();
 
   using MessageManagerGlobal::AddMessageListener;
-  using MessageManagerGlobal::RemoveMessageListener;
   using MessageManagerGlobal::AddWeakMessageListener;
+  using MessageManagerGlobal::RemoveMessageListener;
   using MessageManagerGlobal::RemoveWeakMessageListener;
 
   // ContentProcessMessageManager
   void GetInitialProcessData(JSContext* aCx,
                              JS::MutableHandle<JS::Value> aInitialProcessData,
-                             ErrorResult& aError)
-  {
+                             ErrorResult& aError) {
     if (!mMessageManager) {
       aError.Throw(NS_ERROR_NULL_POINTER);
       return;
@@ -84,27 +82,26 @@ public:
 
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
 
-  nsIGlobalObject* GetParentObject() const { return xpc::NativeGlobal(xpc::PrivilegedJunkScope()); }
+  nsIGlobalObject* GetParentObject() const {
+    return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
+  }
 
   virtual void LoadScript(const nsAString& aURL);
 
-  bool IsProcessScoped() const override
-  {
-    return true;
-  }
+  bool IsProcessScoped() const override { return true; }
 
   void SetInitialProcessData(JS::HandleValue aInitialData);
 
-protected:
+ protected:
   virtual ~ContentProcessMessageManager();
 
-private:
+ private:
   bool mInitialized;
 
   static bool sWasCreated;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ContentProcessMessageManager_h
+#endif  // mozilla_dom_ContentProcessMessageManager_h

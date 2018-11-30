@@ -25,41 +25,20 @@ namespace image {
 namespace detail {
 
 template <typename T>
-class CopyOnWriteValue final
-{
-public:
+class CopyOnWriteValue final {
+ public:
   NS_INLINE_DECL_REFCOUNTING(CopyOnWriteValue)
 
   explicit CopyOnWriteValue(T* aValue)
-    : mValue(aValue)
-    , mReaders(0)
-    , mWriter(false)
-  {
-  }
+      : mValue(aValue), mReaders(0), mWriter(false) {}
   explicit CopyOnWriteValue(already_AddRefed<T>& aValue)
-    : mValue(aValue)
-    , mReaders(0)
-    , mWriter(false)
-  {
-  }
+      : mValue(aValue), mReaders(0), mWriter(false) {}
   explicit CopyOnWriteValue(already_AddRefed<T>&& aValue)
-    : mValue(aValue)
-    , mReaders(0)
-    , mWriter(false)
-  {
-  }
+      : mValue(aValue), mReaders(0), mWriter(false) {}
   explicit CopyOnWriteValue(const RefPtr<T>& aValue)
-    : mValue(aValue)
-    , mReaders(0)
-    , mWriter(false)
-  {
-  }
+      : mValue(aValue), mReaders(0), mWriter(false) {}
   explicit CopyOnWriteValue(RefPtr<T>&& aValue)
-    : mValue(aValue)
-    , mReaders(0)
-    , mWriter(false)
-  {
-  }
+      : mValue(aValue), mReaders(0), mWriter(false) {}
 
   T* get() { return mValue.get(); }
   const T* get() const { return mValue.get(); }
@@ -68,47 +47,52 @@ public:
   bool HasWriter() const { return mWriter; }
   bool HasUsers() const { return HasReaders() || HasWriter(); }
 
-  void LockForReading() { MOZ_ASSERT(!HasWriter()); mReaders++; }
-  void UnlockForReading() { MOZ_ASSERT(HasReaders()); mReaders--; }
+  void LockForReading() {
+    MOZ_ASSERT(!HasWriter());
+    mReaders++;
+  }
+  void UnlockForReading() {
+    MOZ_ASSERT(HasReaders());
+    mReaders--;
+  }
 
-  struct MOZ_STACK_CLASS AutoReadLock
-  {
-    explicit AutoReadLock(CopyOnWriteValue* aValue)
-      : mValue(aValue)
-    {
+  struct MOZ_STACK_CLASS AutoReadLock {
+    explicit AutoReadLock(CopyOnWriteValue* aValue) : mValue(aValue) {
       mValue->LockForReading();
     }
     ~AutoReadLock() { mValue->UnlockForReading(); }
     CopyOnWriteValue<T>* mValue;
   };
 
-  void LockForWriting() { MOZ_ASSERT(!HasUsers()); mWriter = true; }
-  void UnlockForWriting() { MOZ_ASSERT(HasWriter()); mWriter = false; }
+  void LockForWriting() {
+    MOZ_ASSERT(!HasUsers());
+    mWriter = true;
+  }
+  void UnlockForWriting() {
+    MOZ_ASSERT(HasWriter());
+    mWriter = false;
+  }
 
-  struct MOZ_STACK_CLASS AutoWriteLock
-  {
-    explicit AutoWriteLock(CopyOnWriteValue* aValue)
-      : mValue(aValue)
-    {
+  struct MOZ_STACK_CLASS AutoWriteLock {
+    explicit AutoWriteLock(CopyOnWriteValue* aValue) : mValue(aValue) {
       mValue->LockForWriting();
     }
     ~AutoWriteLock() { mValue->UnlockForWriting(); }
     CopyOnWriteValue<T>* mValue;
   };
 
-private:
+ private:
   CopyOnWriteValue(const CopyOnWriteValue&) = delete;
   CopyOnWriteValue(CopyOnWriteValue&&) = delete;
 
-  ~CopyOnWriteValue() { }
+  ~CopyOnWriteValue() {}
 
   RefPtr<T> mValue;
   uint64_t mReaders = 0;
   bool mWriter = false;
 };
 
-} // namespace detail
-
+}  // namespace detail
 
 ///////////////////////////////////////////////////////////////////////////////
 // Public API
@@ -130,30 +114,23 @@ private:
  * support copy construction.
  */
 template <typename T>
-class CopyOnWrite final
-{
+class CopyOnWrite final {
   typedef detail::CopyOnWriteValue<T> CopyOnWriteValue;
 
-public:
-  explicit CopyOnWrite(T* aValue)
-  : mValue(new CopyOnWriteValue(aValue))
-  { }
+ public:
+  explicit CopyOnWrite(T* aValue) : mValue(new CopyOnWriteValue(aValue)) {}
 
   explicit CopyOnWrite(already_AddRefed<T>& aValue)
-    : mValue(new CopyOnWriteValue(aValue))
-  { }
+      : mValue(new CopyOnWriteValue(aValue)) {}
 
   explicit CopyOnWrite(already_AddRefed<T>&& aValue)
-    : mValue(new CopyOnWriteValue(aValue))
-  { }
+      : mValue(new CopyOnWriteValue(aValue)) {}
 
   explicit CopyOnWrite(const RefPtr<T>& aValue)
-    : mValue(new CopyOnWriteValue(aValue))
-  { }
+      : mValue(new CopyOnWriteValue(aValue)) {}
 
   explicit CopyOnWrite(RefPtr<T>&& aValue)
-    : mValue(new CopyOnWriteValue(aValue))
-  { }
+      : mValue(new CopyOnWriteValue(aValue)) {}
 
   /// @return true if it's safe to read at this time.
   bool CanRead() const { return !mValue->HasWriter(); }
@@ -168,8 +145,7 @@ public:
    */
   template <typename ReadFunc>
   auto Read(ReadFunc aReader) const
-    -> decltype(aReader(static_cast<const T*>(nullptr)))
-  {
+      -> decltype(aReader(static_cast<const T*>(nullptr))) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(CanRead());
 
@@ -190,8 +166,7 @@ public:
    */
   template <typename ReadFunc, typename ErrorFunc>
   auto Read(ReadFunc aReader, ErrorFunc aOnError) const
-    -> decltype(aReader(static_cast<const T*>(nullptr)))
-  {
+      -> decltype(aReader(static_cast<const T*>(nullptr))) {
     MOZ_ASSERT(NS_IsMainThread());
 
     if (!CanRead()) {
@@ -218,9 +193,7 @@ public:
    *         function.
    */
   template <typename WriteFunc>
-  auto Write(WriteFunc aWriter)
-    -> decltype(aWriter(static_cast<T*>(nullptr)))
-  {
+  auto Write(WriteFunc aWriter) -> decltype(aWriter(static_cast<T*>(nullptr))) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(CanWrite());
 
@@ -251,8 +224,7 @@ public:
    */
   template <typename WriteFunc, typename ErrorFunc>
   auto Write(WriteFunc aWriter, ErrorFunc aOnError)
-    -> decltype(aWriter(static_cast<T*>(nullptr)))
-  {
+      -> decltype(aWriter(static_cast<T*>(nullptr))) {
     MOZ_ASSERT(NS_IsMainThread());
 
     if (!CanWrite()) {
@@ -262,14 +234,14 @@ public:
     return Write(aWriter);
   }
 
-private:
+ private:
   CopyOnWrite(const CopyOnWrite&) = delete;
   CopyOnWrite(CopyOnWrite&&) = delete;
 
   RefPtr<CopyOnWriteValue> mValue;
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_CopyOnWrite_h
+#endif  // mozilla_image_CopyOnWrite_h

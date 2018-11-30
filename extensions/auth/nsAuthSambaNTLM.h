@@ -23,30 +23,29 @@
  * NOTE: at time of writing, this requires patches to be added to the stock
  * Samba winbindd and ntlm_auth!
  */
-class nsAuthSambaNTLM final : public nsIAuthModule
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIAUTHMODULE
+class nsAuthSambaNTLM final : public nsIAuthModule {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIAUTHMODULE
 
-    nsAuthSambaNTLM();
+  nsAuthSambaNTLM();
 
-    // We spawn the ntlm_auth helper from the module constructor, because
-    // that lets us fail to instantiate the module if ntlm_auth isn't
-    // available, triggering fallback to the built-in NTLM support (which
-    // doesn't support single signon, of course)
-    nsresult SpawnNTLMAuthHelper();
+  // We spawn the ntlm_auth helper from the module constructor, because
+  // that lets us fail to instantiate the module if ntlm_auth isn't
+  // available, triggering fallback to the built-in NTLM support (which
+  // doesn't support single signon, of course)
+  nsresult SpawnNTLMAuthHelper();
 
-private:
-    ~nsAuthSambaNTLM();
+ private:
+  ~nsAuthSambaNTLM();
 
-    void Shutdown();
+  void Shutdown();
 
-    uint8_t*    mInitialMessage; /* free with free() */
-    uint32_t    mInitialMessageLen;
-    PRProcess*  mChildPID;
-    PRFileDesc* mFromChildFD;
-    PRFileDesc* mToChildFD;
+  uint8_t* mInitialMessage; /* free with free() */
+  uint32_t mInitialMessageLen;
+  PRProcess* mChildPID;
+  PRFileDesc* mFromChildFD;
+  PRFileDesc* mToChildFD;
 };
 
 #endif /* nsAuthSambaNTLM_h__ */

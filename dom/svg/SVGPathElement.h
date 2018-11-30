@@ -13,8 +13,8 @@
 #include "SVGGeometryElement.h"
 #include "DOMSVGPathSeg.h"
 
-nsresult NS_NewSVGPathElement(nsIContent **aResult,
-                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+nsresult NS_NewSVGPathElement(
+    nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 
@@ -24,17 +24,18 @@ namespace dom {
 
 typedef SVGGeometryElement SVGPathElementBase;
 
-class SVGPathElement final : public SVGPathElementBase
-{
+class SVGPathElement final : public SVGPathElementBase {
   typedef mozilla::gfx::Path Path;
 
-protected:
-  friend nsresult (::NS_NewSVGPathElement(nsIContent **aResult,
-                                          already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
+ protected:
+  friend nsresult(::NS_NewSVGPathElement(
+      nsIContent** aResult,
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  virtual JSObject* WrapNode(JSContext* cx,
+                             JS::Handle<JSObject*> aGivenProto) override;
   explicit SVGPathElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-public:
+ public:
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 
   // nsIContent interface
@@ -44,9 +45,9 @@ public:
   virtual bool HasValidDimensions() const override;
 
   // SVGGeometryElement methods:
-  virtual bool AttributeDefinesGeometry(const nsAtom *aName) override;
+  virtual bool AttributeDefinesGeometry(const nsAtom* aName) override;
   virtual bool IsMarkable() override;
-  virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks) override;
+  virtual void GetMarkPoints(nsTArray<nsSVGMark>* aMarks) override;
   virtual already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) override;
 
   /**
@@ -59,9 +60,7 @@ public:
   // nsIContent interface
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  virtual SVGAnimatedPathSegList* GetAnimPathSegList() override {
-    return &mD;
-  }
+  virtual SVGAnimatedPathSegList* GetAnimPathSegList() override { return &mD; }
 
   virtual nsStaticAtom* GetPathDataAttrName() const override {
     return nsGkAtoms::d;
@@ -70,43 +69,54 @@ public:
   // WebIDL
   uint32_t GetPathSegAtLength(float distance);
   already_AddRefed<DOMSVGPathSegClosePath> CreateSVGPathSegClosePath();
-  already_AddRefed<DOMSVGPathSegMovetoAbs> CreateSVGPathSegMovetoAbs(float x, float y);
-  already_AddRefed<DOMSVGPathSegMovetoRel> CreateSVGPathSegMovetoRel(float x, float y);
-  already_AddRefed<DOMSVGPathSegLinetoAbs> CreateSVGPathSegLinetoAbs(float x, float y);
-  already_AddRefed<DOMSVGPathSegLinetoRel> CreateSVGPathSegLinetoRel(float x, float y);
+  already_AddRefed<DOMSVGPathSegMovetoAbs> CreateSVGPathSegMovetoAbs(float x,
+                                                                     float y);
+  already_AddRefed<DOMSVGPathSegMovetoRel> CreateSVGPathSegMovetoRel(float x,
+                                                                     float y);
+  already_AddRefed<DOMSVGPathSegLinetoAbs> CreateSVGPathSegLinetoAbs(float x,
+                                                                     float y);
+  already_AddRefed<DOMSVGPathSegLinetoRel> CreateSVGPathSegLinetoRel(float x,
+                                                                     float y);
   already_AddRefed<DOMSVGPathSegCurvetoCubicAbs>
-    CreateSVGPathSegCurvetoCubicAbs(float x, float y, float x1, float y1, float x2, float y2);
+  CreateSVGPathSegCurvetoCubicAbs(float x, float y, float x1, float y1,
+                                  float x2, float y2);
   already_AddRefed<DOMSVGPathSegCurvetoCubicRel>
-    CreateSVGPathSegCurvetoCubicRel(float x, float y, float x1, float y1, float x2, float y2);
+  CreateSVGPathSegCurvetoCubicRel(float x, float y, float x1, float y1,
+                                  float x2, float y2);
   already_AddRefed<DOMSVGPathSegCurvetoQuadraticAbs>
-    CreateSVGPathSegCurvetoQuadraticAbs(float x, float y, float x1, float y1);
+  CreateSVGPathSegCurvetoQuadraticAbs(float x, float y, float x1, float y1);
   already_AddRefed<DOMSVGPathSegCurvetoQuadraticRel>
-    CreateSVGPathSegCurvetoQuadraticRel(float x, float y, float x1, float y1);
-  already_AddRefed<DOMSVGPathSegArcAbs>
-    CreateSVGPathSegArcAbs(float x, float y, float r1, float r2, float angle, bool largeArcFlag, bool sweepFlag);
-  already_AddRefed<DOMSVGPathSegArcRel>
-    CreateSVGPathSegArcRel(float x, float y, float r1, float r2, float angle, bool largeArcFlag, bool sweepFlag);
-  already_AddRefed<DOMSVGPathSegLinetoHorizontalAbs> CreateSVGPathSegLinetoHorizontalAbs(float x);
-  already_AddRefed<DOMSVGPathSegLinetoHorizontalRel> CreateSVGPathSegLinetoHorizontalRel(float x);
-  already_AddRefed<DOMSVGPathSegLinetoVerticalAbs> CreateSVGPathSegLinetoVerticalAbs(float y);
-  already_AddRefed<DOMSVGPathSegLinetoVerticalRel> CreateSVGPathSegLinetoVerticalRel(float y);
+  CreateSVGPathSegCurvetoQuadraticRel(float x, float y, float x1, float y1);
+  already_AddRefed<DOMSVGPathSegArcAbs> CreateSVGPathSegArcAbs(
+      float x, float y, float r1, float r2, float angle, bool largeArcFlag,
+      bool sweepFlag);
+  already_AddRefed<DOMSVGPathSegArcRel> CreateSVGPathSegArcRel(
+      float x, float y, float r1, float r2, float angle, bool largeArcFlag,
+      bool sweepFlag);
+  already_AddRefed<DOMSVGPathSegLinetoHorizontalAbs>
+  CreateSVGPathSegLinetoHorizontalAbs(float x);
+  already_AddRefed<DOMSVGPathSegLinetoHorizontalRel>
+  CreateSVGPathSegLinetoHorizontalRel(float x);
+  already_AddRefed<DOMSVGPathSegLinetoVerticalAbs>
+  CreateSVGPathSegLinetoVerticalAbs(float y);
+  already_AddRefed<DOMSVGPathSegLinetoVerticalRel>
+  CreateSVGPathSegLinetoVerticalRel(float y);
   already_AddRefed<DOMSVGPathSegCurvetoCubicSmoothAbs>
-    CreateSVGPathSegCurvetoCubicSmoothAbs(float x, float y, float x2, float y2);
+  CreateSVGPathSegCurvetoCubicSmoothAbs(float x, float y, float x2, float y2);
   already_AddRefed<DOMSVGPathSegCurvetoCubicSmoothRel>
-    CreateSVGPathSegCurvetoCubicSmoothRel(float x, float y, float x2, float y2);
+  CreateSVGPathSegCurvetoCubicSmoothRel(float x, float y, float x2, float y2);
   already_AddRefed<DOMSVGPathSegCurvetoQuadraticSmoothAbs>
-    CreateSVGPathSegCurvetoQuadraticSmoothAbs(float x, float y);
+  CreateSVGPathSegCurvetoQuadraticSmoothAbs(float x, float y);
   already_AddRefed<DOMSVGPathSegCurvetoQuadraticSmoothRel>
-    CreateSVGPathSegCurvetoQuadraticSmoothRel(float x, float y);
+  CreateSVGPathSegCurvetoQuadraticSmoothRel(float x, float y);
   already_AddRefed<DOMSVGPathSegList> PathSegList();
   already_AddRefed<DOMSVGPathSegList> AnimatedPathSegList();
 
-protected:
-
+ protected:
   SVGAnimatedPathSegList mD;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGPathElement_h
+#endif  // mozilla_dom_SVGPathElement_h

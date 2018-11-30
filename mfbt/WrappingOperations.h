@@ -33,29 +33,28 @@ namespace mozilla {
 
 namespace detail {
 
-template<typename UnsignedType>
-struct WrapToSignedHelper
-{
+template <typename UnsignedType>
+struct WrapToSignedHelper {
   static_assert(mozilla::IsUnsigned<UnsignedType>::value,
                 "WrapToSigned must be passed an unsigned type");
 
   using SignedType = typename mozilla::MakeSigned<UnsignedType>::Type;
 
   static constexpr SignedType MaxValue =
-    (UnsignedType(1) << (CHAR_BIT * sizeof(SignedType) - 1)) - 1;
+      (UnsignedType(1) << (CHAR_BIT * sizeof(SignedType) - 1)) - 1;
   static constexpr SignedType MinValue = -MaxValue - 1;
 
   static constexpr UnsignedType MinValueUnsigned =
-    static_cast<UnsignedType>(MinValue);
+      static_cast<UnsignedType>(MinValue);
   static constexpr UnsignedType MaxValueUnsigned =
-    static_cast<UnsignedType>(MaxValue);
+      static_cast<UnsignedType>(MaxValue);
 
   // Overflow-correctness was proven in bug 1432646 and is explained in the
   // comment below.  This function is very hot, both at compile time and
   // runtime, so disable all overflow checking in it.
-  MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW MOZ_NO_SANITIZE_SIGNED_OVERFLOW
-  static constexpr SignedType compute(UnsignedType aValue)
-  {
+  MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
+  MOZ_NO_SANITIZE_SIGNED_OVERFLOW static constexpr SignedType compute(
+      UnsignedType aValue) {
     // This algorithm was originally provided here:
     // https://stackoverflow.com/questions/13150449/efficient-unsigned-to-signed-cast-avoiding-implementation-defined-behavior
     //
@@ -79,12 +78,12 @@ struct WrapToSignedHelper
     // and this computation produces values spanning [MinValue, 0): exactly the
     // desired range of all negative signed integers.
     return (aValue <= MaxValueUnsigned)
-           ? static_cast<SignedType>(aValue)
-           : static_cast<SignedType>(aValue - MinValueUnsigned) + MinValue;
+               ? static_cast<SignedType>(aValue)
+               : static_cast<SignedType>(aValue - MinValueUnsigned) + MinValue;
   }
 };
 
-} // namespace detail
+}  // namespace detail
 
 /**
  * Convert an unsigned value to signed, if necessary wrapping around.
@@ -93,39 +92,34 @@ struct WrapToSignedHelper
  * these days -- but this function makes explicit that such conversion is
  * happening.
  */
-template<typename UnsignedType>
+template <typename UnsignedType>
 constexpr typename detail::WrapToSignedHelper<UnsignedType>::SignedType
-WrapToSigned(UnsignedType aValue)
-{
+WrapToSigned(UnsignedType aValue) {
   return detail::WrapToSignedHelper<UnsignedType>::compute(aValue);
 }
 
 namespace detail {
 
-template<typename T>
-constexpr T
-ToResult(typename MakeUnsigned<T>::Type aUnsigned)
-{
+template <typename T>
+constexpr T ToResult(typename MakeUnsigned<T>::Type aUnsigned) {
   // We could *always* return WrapToSigned and rely on unsigned conversion to
   // undo the wrapping when |T| is unsigned, but this seems clearer.
   return IsSigned<T>::value ? WrapToSigned(aUnsigned) : aUnsigned;
 }
 
-template<typename T>
-struct WrappingAddHelper
-{
-private:
+template <typename T>
+struct WrappingAddHelper {
+ private:
   using UnsignedT = typename MakeUnsigned<T>::Type;
 
-public:
+ public:
   MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
-  static constexpr T compute(T aX, T aY)
-  {
+  static constexpr T compute(T aX, T aY) {
     return ToResult<T>(static_cast<UnsignedT>(aX) + static_cast<UnsignedT>(aY));
   }
 };
 
-} // namespace detail
+}  // namespace detail
 
 /**
  * Add two integers of the same type and return the result converted to that
@@ -154,30 +148,26 @@ public:
  * behave with most compilers, unless an optimization or similar -- quite
  * permissibly -- triggers different behavior.
  */
-template<typename T>
-constexpr T
-WrappingAdd(T aX, T aY)
-{
+template <typename T>
+constexpr T WrappingAdd(T aX, T aY) {
   return detail::WrappingAddHelper<T>::compute(aX, aY);
 }
 
 namespace detail {
 
-template<typename T>
-struct WrappingSubtractHelper
-{
-private:
+template <typename T>
+struct WrappingSubtractHelper {
+ private:
   using UnsignedT = typename MakeUnsigned<T>::Type;
 
-public:
+ public:
   MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
-  static constexpr T compute(T aX, T aY)
-  {
+  static constexpr T compute(T aX, T aY) {
     return ToResult<T>(static_cast<UnsignedT>(aX) - static_cast<UnsignedT>(aY));
   }
 };
 
-} // namespace detail
+}  // namespace detail
 
 /**
  * Subtract two integers of the same type and return the result converted to
@@ -195,8 +185,8 @@ public:
  * numbers wrapped to unsigned, then wrapping the difference mod 2**N to the
  * signed range:
  *
- *   WrappingSubtract(int16_t(32767), int16_t(-5)) is -32764 ((32772 mod 2**16) - 2**16);
- *   WrappingSubtract(int8_t(-128), int8_t(127)) is 1 (-255 mod 2**8);
+ *   WrappingSubtract(int16_t(32767), int16_t(-5)) is -32764 ((32772 mod 2**16)
+ * - 2**16); WrappingSubtract(int8_t(-128), int8_t(127)) is 1 (-255 mod 2**8);
  *   WrappingSubtract(int32_t(-17), int32_t(-42)) is 25 (25 mod 2**32).
  *
  * There's no equivalent to this operation in C++, as C++ signed subtraction
@@ -204,34 +194,29 @@ public:
  * to behave with most compilers, unless an optimization or similar -- quite
  * permissibly -- triggers different behavior.
  */
-template<typename T>
-constexpr T
-WrappingSubtract(T aX, T aY)
-{
+template <typename T>
+constexpr T WrappingSubtract(T aX, T aY) {
   return detail::WrappingSubtractHelper<T>::compute(aX, aY);
 }
 
 namespace detail {
 
-template<typename T>
-struct WrappingMultiplyHelper
-{
-private:
+template <typename T>
+struct WrappingMultiplyHelper {
+ private:
   using UnsignedT = typename MakeUnsigned<T>::Type;
 
-public:
+ public:
   MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
-  static constexpr T compute(T aX, T aY)
-  {
+  static constexpr T compute(T aX, T aY) {
     // Begin with |1U| to ensure the overall operation chain is never promoted
     // to signed integer operations that might have *signed* integer overflow.
-    return ToResult<T>(static_cast<UnsignedT>(1U *
-                                              static_cast<UnsignedT>(aX) *
+    return ToResult<T>(static_cast<UnsignedT>(1U * static_cast<UnsignedT>(aX) *
                                               static_cast<UnsignedT>(aY)));
   }
 };
 
-} // namespace detail
+}  // namespace detail
 
 /**
  * Multiply two integers of the same type and return the result converted to
@@ -267,10 +252,8 @@ public:
  * multiplication *tends* to behave with most compilers, unless an optimization
  * or similar -- quite permissibly -- triggers different behavior.
  */
-template<typename T>
-constexpr T
-WrappingMultiply(T aX, T aY)
-{
+template <typename T>
+constexpr T WrappingMultiply(T aX, T aY) {
   return detail::WrappingMultiplyHelper<T>::compute(aX, aY);
 }
 
@@ -279,7 +262,8 @@ WrappingMultiply(T aX, T aY)
 // constexpr math.
 //
 //   https://msdn.microsoft.com/en-us/library/4kze989h.aspx (C4307)
-//   https://developercommunity.visualstudio.com/content/problem/211134/unsigned-integer-overflows-in-constexpr-functionsa.html (bug report)
+//   https://developercommunity.visualstudio.com/content/problem/211134/unsigned-integer-overflows-in-constexpr-functionsa.html
+//   (bug report)
 //
 // So we need a way to suppress these warnings. Unfortunately, the warnings are
 // issued at the very top of the `constexpr` chain, which is often some
@@ -289,8 +273,7 @@ WrappingMultiply(T aX, T aY)
 // If/when MSVC fix this bug, we should remove these macros.
 #ifdef _MSC_VER
 #define MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING \
-  __pragma(warning(push)) \
-  __pragma(warning(disable:4307))
+  __pragma(warning(push)) __pragma(warning(disable : 4307))
 #define MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING \
   __pragma(warning(pop))
 #else

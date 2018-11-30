@@ -7,7 +7,8 @@
 #ifndef mozilla_dom_simpledb_ActorsParent_h
 #define mozilla_dom_simpledb_ActorsParent_h
 
-template <class> struct already_AddRefed;
+template <class>
+struct already_AddRefed;
 
 namespace mozilla {
 
@@ -15,7 +16,7 @@ namespace ipc {
 
 class PrincipalInfo;
 
-} // namespace ipc
+}  // namespace ipc
 
 namespace dom {
 
@@ -25,28 +26,25 @@ namespace quota {
 
 class Client;
 
-} // namespace quota
+}  // namespace quota
 
-PBackgroundSDBConnectionParent*
-AllocPBackgroundSDBConnectionParent(
-                             const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
+PBackgroundSDBConnectionParent* AllocPBackgroundSDBConnectionParent(
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
-bool
-RecvPBackgroundSDBConnectionConstructor(
-                             PBackgroundSDBConnectionParent* aActor,
-                             const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
+bool RecvPBackgroundSDBConnectionConstructor(
+    PBackgroundSDBConnectionParent* aActor,
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
-bool
-DeallocPBackgroundSDBConnectionParent(PBackgroundSDBConnectionParent* aActor);
+bool DeallocPBackgroundSDBConnectionParent(
+    PBackgroundSDBConnectionParent* aActor);
 
 namespace simpledb {
 
-already_AddRefed<mozilla::dom::quota::Client>
-CreateQuotaClient();
+already_AddRefed<mozilla::dom::quota::Client> CreateQuotaClient();
 
-} // namespace simpledb
+}  // namespace simpledb
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_simpledb_ActorsParent_h
+#endif  // mozilla_dom_simpledb_ActorsParent_h

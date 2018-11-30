@@ -12,16 +12,23 @@
 namespace js {
 namespace jit {
 
-inline void EmitBaselineTailCallVM(TrampolinePtr, MacroAssembler&, uint32_t) { MOZ_CRASH(); }
-inline void EmitBaselineCreateStubFrameDescriptor(MacroAssembler&, Register, uint32_t) { MOZ_CRASH(); }
+inline void EmitBaselineTailCallVM(TrampolinePtr, MacroAssembler&, uint32_t) {
+  MOZ_CRASH();
+}
+inline void EmitBaselineCreateStubFrameDescriptor(MacroAssembler&, Register,
+                                                  uint32_t) {
+  MOZ_CRASH();
+}
 inline void EmitBaselineCallVM(TrampolinePtr, MacroAssembler&) { MOZ_CRASH(); }
 
 static const uint32_t STUB_FRAME_SIZE = 0;
 static const uint32_t STUB_FRAME_SAVED_STUB_OFFSET = 0;
 
-inline void EmitBaselineEnterStubFrame(MacroAssembler&, Register) { MOZ_CRASH(); }
+inline void EmitBaselineEnterStubFrame(MacroAssembler&, Register) {
+  MOZ_CRASH();
+}
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_none_SharedICHelpers_none_inl_h */

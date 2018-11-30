@@ -10,9 +10,8 @@
 #include "OSKeyStore.h"
 #include "nsString.h"
 
-class CredentialManagerSecret final : public AbstractOSKeyStore
-{
-public:
+class CredentialManagerSecret final : public AbstractOSKeyStore {
+ public:
   CredentialManagerSecret();
 
   virtual nsresult RetrieveSecret(const nsACString& label,
@@ -26,4 +25,4 @@ public:
   virtual ~CredentialManagerSecret();
 };
 
-#endif // CredentialManagerSecret_h
+#endif  // CredentialManagerSecret_h

@@ -31,20 +31,17 @@ class nsDynamicAtom;
 //   whether you use RefPtr<nsAtom> or RefPtr<nsDynamicAtom>. This is an
 //   extremely rare case.
 //
-class nsAtom
-{
-public:
+class nsAtom {
+ public:
   void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                               mozilla::AtomsSizes& aSizes) const;
 
-  bool Equals(char16ptr_t aString, uint32_t aLength) const
-  {
+  bool Equals(char16ptr_t aString, uint32_t aLength) const {
     return mLength == aLength &&
            memcmp(GetUTF16String(), aString, mLength * sizeof(char16_t)) == 0;
   }
 
-  bool Equals(const nsAString& aString) const
-  {
+  bool Equals(const nsAString& aString) const {
     return Equals(aString.BeginReading(), aString.Length());
   }
 
@@ -59,9 +56,9 @@ public:
 
   uint32_t GetLength() const { return mLength; }
 
-  operator mozilla::Span<const char16_t>() const
-  {
-    return mozilla::MakeSpan(static_cast<const char16_t*>(GetUTF16String()), GetLength());
+  operator mozilla::Span<const char16_t>() const {
+    return mozilla::MakeSpan(static_cast<const char16_t*>(GetUTF16String()),
+                             GetLength());
   }
 
   void ToString(nsAString& aString) const;
@@ -76,10 +73,7 @@ public:
 
   // This function returns true if ToLowercaseASCII would return the string
   // unchanged.
-  bool IsAsciiLowercase() const
-  {
-    return mIsAsciiLowercase;
-  }
+  bool IsAsciiLowercase() const { return mIsAsciiLowercase; }
 
   // We can't use NS_INLINE_DECL_THREADSAFE_REFCOUNTING because the refcounting
   // of this type is special.
@@ -88,40 +82,34 @@ public:
 
   typedef mozilla::TrueType HasThreadSafeRefCnt;
 
-protected:
+ protected:
   // Used by nsStaticAtom.
   constexpr nsAtom(uint32_t aLength, uint32_t aHash, bool aIsAsciiLowercase)
-    : mLength(aLength)
-    , mIsStatic(true)
-    , mIsAsciiLowercase(aIsAsciiLowercase)
-    , mHash(aHash)
-  {}
+      : mLength(aLength),
+        mIsStatic(true),
+        mIsAsciiLowercase(aIsAsciiLowercase),
+        mHash(aHash) {}
 
   // Used by nsDynamicAtom.
-  nsAtom(const nsAString& aString,
-         uint32_t aHash,
-         bool aIsAsciiLowercase)
-    : mLength(aString.Length())
-    , mIsStatic(false)
-    , mIsAsciiLowercase(aIsAsciiLowercase)
-    , mHash(aHash)
-  {
-  }
+  nsAtom(const nsAString& aString, uint32_t aHash, bool aIsAsciiLowercase)
+      : mLength(aString.Length()),
+        mIsStatic(false),
+        mIsAsciiLowercase(aIsAsciiLowercase),
+        mHash(aHash) {}
 
   ~nsAtom() = default;
 
-  const uint32_t mLength:30;
-  const uint32_t mIsStatic:1;
-  const uint32_t mIsAsciiLowercase:1;
+  const uint32_t mLength : 30;
+  const uint32_t mIsStatic : 1;
+  const uint32_t mIsAsciiLowercase : 1;
   const uint32_t mHash;
 };
 
 // This class would be |final| if it wasn't for nsCSSAnonBoxPseudoStaticAtom
 // and nsCSSPseudoElementStaticAtom, which are trivial subclasses used to
 // ensure only certain static atoms are passed to certain functions.
-class nsStaticAtom : public nsAtom
-{
-public:
+class nsStaticAtom : public nsAtom {
+ public:
   // These are deleted so it's impossible to RefPtr<nsStaticAtom>. Raw
   // nsStaticAtom pointers should be used instead.
   MozExternalRefCountType AddRef() = delete;
@@ -134,12 +122,10 @@ public:
   // hashes match.
   constexpr nsStaticAtom(uint32_t aLength, uint32_t aHash,
                          uint32_t aStringOffset, bool aIsAsciiLowercase)
-    : nsAtom(aLength, aHash, aIsAsciiLowercase)
-    , mStringOffset(aStringOffset)
-  {}
+      : nsAtom(aLength, aHash, aIsAsciiLowercase),
+        mStringOffset(aStringOffset) {}
 
-  const char16_t* String() const
-  {
+  const char16_t* String() const {
     return reinterpret_cast<const char16_t*>(uintptr_t(this) - mStringOffset);
   }
 
@@ -147,19 +133,17 @@ public:
     return already_AddRefed<nsAtom>(static_cast<nsAtom*>(this));
   }
 
-private:
+ private:
   // This is an offset to the string chars, which must be at a lower address in
   // memory.
   uint32_t mStringOffset;
 };
 
-class nsDynamicAtom : public nsAtom
-{
-public:
+class nsDynamicAtom : public nsAtom {
+ public:
   // We can't use NS_INLINE_DECL_THREADSAFE_REFCOUNTING because the refcounting
   // of this type is special.
-  MozExternalRefCountType AddRef()
-  {
+  MozExternalRefCountType AddRef() {
     MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");
     nsrefcnt count = ++mRefCnt;
     if (count == 1) {
@@ -168,15 +152,14 @@ public:
     return count;
   }
 
-  MozExternalRefCountType Release()
-  {
-    #ifdef DEBUG
+  MozExternalRefCountType Release() {
+#ifdef DEBUG
     // We set a lower GC threshold for atoms in debug builds so that we exercise
     // the GC machinery more often.
     static const int32_t kAtomGCThreshold = 20;
-    #else
+#else
     static const int32_t kAtomGCThreshold = 10000;
-    #endif
+#endif
 
     MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
     nsrefcnt count = --mRefCnt;
@@ -189,29 +172,28 @@ public:
     return count;
   }
 
-  const char16_t* String() const
-  {
+  const char16_t* String() const {
     return reinterpret_cast<const char16_t*>(this + 1);
   }
 
-  static nsDynamicAtom* FromChars(char16_t* chars)
-  {
+  static nsDynamicAtom* FromChars(char16_t* chars) {
     return reinterpret_cast<nsDynamicAtom*>(chars) - 1;
   }
 
-private:
+ private:
   friend class nsAtomTable;
   friend class nsAtomSubTable;
   friend int32_t NS_GetUnusedAtomCount();
 
-  static mozilla::Atomic<int32_t,
-                         mozilla::ReleaseAcquire,
-                         mozilla::recordreplay::Behavior::DontPreserve> gUnusedAtomCount;
+  static mozilla::Atomic<int32_t, mozilla::ReleaseAcquire,
+                         mozilla::recordreplay::Behavior::DontPreserve>
+      gUnusedAtomCount;
   static void GCAtomTable();
 
   // These shouldn't be used directly, even by friend classes. The
   // Create()/Destroy() methods use them.
-  nsDynamicAtom(const nsAString& aString, uint32_t aHash, bool aIsAsciiLowercase);
+  nsDynamicAtom(const nsAString& aString, uint32_t aHash,
+                bool aIsAsciiLowercase);
   ~nsDynamicAtom() {}
 
   static nsDynamicAtom* Create(const nsAString& aString, uint32_t aHash);
@@ -222,36 +204,26 @@ private:
   // The atom's chars are stored at the end of the struct.
 };
 
-const nsStaticAtom*
-nsAtom::AsStatic() const
-{
+const nsStaticAtom* nsAtom::AsStatic() const {
   MOZ_ASSERT(IsStatic());
   return static_cast<const nsStaticAtom*>(this);
 }
 
-const nsDynamicAtom*
-nsAtom::AsDynamic() const
-{
+const nsDynamicAtom* nsAtom::AsDynamic() const {
   MOZ_ASSERT(IsDynamic());
   return static_cast<const nsDynamicAtom*>(this);
 }
 
-nsDynamicAtom*
-nsAtom::AsDynamic()
-{
+nsDynamicAtom* nsAtom::AsDynamic() {
   MOZ_ASSERT(IsDynamic());
   return static_cast<nsDynamicAtom*>(this);
 }
 
-MozExternalRefCountType
-nsAtom::AddRef()
-{
+MozExternalRefCountType nsAtom::AddRef() {
   return IsStatic() ? 2 : AsDynamic()->AddRef();
 }
 
-MozExternalRefCountType
-nsAtom::Release()
-{
+MozExternalRefCountType nsAtom::Release() {
   return IsStatic() ? 1 : AsDynamic()->Release();
 }
 
@@ -290,24 +262,20 @@ nsrefcnt NS_GetNumberOfAtoms();
 // static atom for this string.
 nsStaticAtom* NS_GetStaticAtom(const nsAString& aUTF16String);
 
-class nsAtomString : public nsString
-{
-public:
+class nsAtomString : public nsString {
+ public:
   explicit nsAtomString(const nsAtom* aAtom) { aAtom->ToString(*this); }
 };
 
-class nsAtomCString : public nsCString
-{
-public:
+class nsAtomCString : public nsCString {
+ public:
   explicit nsAtomCString(nsAtom* aAtom) { aAtom->ToUTF8String(*this); }
 };
 
-class nsDependentAtomString : public nsDependentString
-{
-public:
+class nsDependentAtomString : public nsDependentString {
+ public:
   explicit nsDependentAtomString(const nsAtom* aAtom)
-    : nsDependentString(aAtom->GetUTF16String(), aAtom->GetLength())
-  {}
+      : nsDependentString(aAtom->GetUTF16String(), aAtom->GetLength()) {}
 };
 
 // Checks if the ascii chars in a given atom are already lowercase.

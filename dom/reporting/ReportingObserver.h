@@ -24,56 +24,42 @@ class Report;
 class ReportingObserverCallback;
 struct ReportingObserverOptions;
 
-class ReportingObserver final : public nsIObserver
-                              , public nsWrapperCache
-                              , public nsSupportsWeakReference
-{
-public:
+class ReportingObserver final : public nsIObserver,
+                                public nsWrapperCache,
+                                public nsSupportsWeakReference {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(ReportingObserver,
                                                          nsIObserver)
   NS_DECL_NSIOBSERVER
 
-  static already_AddRefed<ReportingObserver>
-  Constructor(const GlobalObject& aGlobal,
-              ReportingObserverCallback& aCallback,
-              const ReportingObserverOptions& aOptions,
-              ErrorResult& aRv);
+  static already_AddRefed<ReportingObserver> Constructor(
+      const GlobalObject& aGlobal, ReportingObserverCallback& aCallback,
+      const ReportingObserverOptions& aOptions, ErrorResult& aRv);
 
   ReportingObserver(nsPIDOMWindowInner* aWindow,
                     ReportingObserverCallback& aCallback,
-                    const nsTArray<nsString>& aTypes,
-                    bool aBuffered);
+                    const nsTArray<nsString>& aTypes, bool aBuffered);
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  nsPIDOMWindowInner*
-  GetParentObject() const
-  {
-    return mWindow;
-  }
+  nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
 
-  void
-  Observe();
+  void Observe();
 
-  void
-  Disconnect();
+  void Disconnect();
 
-  void
-  TakeRecords(nsTArray<RefPtr<Report>>& aRecords);
+  void TakeRecords(nsTArray<RefPtr<Report>>& aRecords);
 
-  void
-  MaybeReport(Report* aReport);
+  void MaybeReport(Report* aReport);
 
-  void
-  MaybeNotify();
+  void MaybeNotify();
 
-private:
+ private:
   ~ReportingObserver();
 
-  void
-  Shutdown();
+  void Shutdown();
 
   nsTArray<RefPtr<Report>> mReports;
 
@@ -83,7 +69,7 @@ private:
   bool mBuffered;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ReportingObserver_h
+#endif  // mozilla_dom_ReportingObserver_h

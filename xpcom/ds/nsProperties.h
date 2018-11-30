@@ -13,14 +13,11 @@
 #include "nsAgg.h"
 #include "mozilla/Attributes.h"
 
-typedef nsInterfaceHashtable<nsCharPtrHashKey,
-                             nsISupports> nsProperties_HashBase;
+typedef nsInterfaceHashtable<nsCharPtrHashKey, nsISupports>
+    nsProperties_HashBase;
 
-class nsProperties final
-  : public nsIProperties
-  , public nsProperties_HashBase
-{
-public:
+class nsProperties final : public nsIProperties, public nsProperties_HashBase {
+ public:
   NS_DECL_AGGREGATED
   NS_DECL_NSIPROPERTIES
 

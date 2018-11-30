@@ -21,13 +21,12 @@
 
 namespace IPC {
 
-//Defined in TCPSocketChild.cpp
-extern bool
-DeserializeArrayBuffer(JSContext* aCx,
-                       const InfallibleTArray<uint8_t>& aBuffer,
-                       JS::MutableHandle<JS::Value> aVal);
+// Defined in TCPSocketChild.cpp
+extern bool DeserializeArrayBuffer(JSContext* aCx,
+                                   const InfallibleTArray<uint8_t>& aBuffer,
+                                   JS::MutableHandle<JS::Value> aVal);
 
-} // namespace IPC
+}  // namespace IPC
 
 namespace mozilla {
 
@@ -36,21 +35,21 @@ namespace net {
 // set MOZ_LOG=TCPSocket:5
 //
 extern LazyLogModule gTCPSocketLog;
-#define TCPSOCKET_LOG(args)     MOZ_LOG(gTCPSocketLog, LogLevel::Debug, args)
+#define TCPSOCKET_LOG(args) MOZ_LOG(gTCPSocketLog, LogLevel::Debug, args)
 #define TCPSOCKET_LOG_ENABLED() MOZ_LOG_TEST(gTCPSocketLog, LogLevel::Debug)
-} // namespace net
+}  // namespace net
 
 using namespace net;
 
 namespace dom {
 
-static void
-FireInteralError(mozilla::net::PTCPSocketParent* aActor, uint32_t aLineNo)
-{
-  mozilla::Unused <<
-      aActor->SendCallback(NS_LITERAL_STRING("onerror"),
-                           TCPError(NS_LITERAL_STRING("InvalidStateError"), NS_LITERAL_STRING("Internal error")),
-                           static_cast<uint32_t>(TCPReadyState::Connecting));
+static void FireInteralError(mozilla::net::PTCPSocketParent* aActor,
+                             uint32_t aLineNo) {
+  mozilla::Unused << aActor->SendCallback(
+      NS_LITERAL_STRING("onerror"),
+      TCPError(NS_LITERAL_STRING("InvalidStateError"),
+               NS_LITERAL_STRING("Internal error")),
+      static_cast<uint32_t>(TCPReadyState::Connecting));
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TCPSocketParentBase)
@@ -61,33 +60,23 @@ NS_IMPL_CYCLE_COLLECTION(TCPSocketParentBase, mSocket)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TCPSocketParentBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TCPSocketParentBase)
 
-TCPSocketParentBase::TCPSocketParentBase()
-: mIPCOpen(false)
-{
-}
+TCPSocketParentBase::TCPSocketParentBase() : mIPCOpen(false) {}
 
-TCPSocketParentBase::~TCPSocketParentBase()
-{
-}
+TCPSocketParentBase::~TCPSocketParentBase() {}
 
-void
-TCPSocketParentBase::ReleaseIPDLReference()
-{
+void TCPSocketParentBase::ReleaseIPDLReference() {
   MOZ_ASSERT(mIPCOpen);
   mIPCOpen = false;
   this->Release();
 }
 
-void
-TCPSocketParentBase::AddIPDLReference()
-{
+void TCPSocketParentBase::AddIPDLReference() {
   MOZ_ASSERT(!mIPCOpen);
   mIPCOpen = true;
   this->AddRef();
 }
 
-NS_IMETHODIMP_(MozExternalRefCountType) TCPSocketParent::Release(void)
-{
+NS_IMETHODIMP_(MozExternalRefCountType) TCPSocketParent::Release(void) {
   nsrefcnt refcnt = TCPSocketParentBase::Release();
   if (refcnt == 1 && mIPCOpen) {
     mozilla::Unused << PTCPSocketParent::SendRequestDelete();
@@ -96,29 +85,23 @@ NS_IMETHODIMP_(MozExternalRefCountType) TCPSocketParent::Release(void)
   return refcnt;
 }
 
-mozilla::ipc::IPCResult
-TCPSocketParent::RecvOpen(const nsString& aHost, const uint16_t& aPort, const bool& aUseSSL,
-                          const bool& aUseArrayBuffers)
-{
+mozilla::ipc::IPCResult TCPSocketParent::RecvOpen(
+    const nsString& aHost, const uint16_t& aPort, const bool& aUseSSL,
+    const bool& aUseArrayBuffers) {
   mSocket = new TCPSocket(nullptr, aHost, aPort, aUseSSL, aUseArrayBuffers);
   mSocket->SetSocketBridgeParent(this);
   NS_ENSURE_SUCCESS(mSocket->Init(), IPC_OK());
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TCPSocketParent::RecvOpenBind(const nsCString& aRemoteHost,
-                              const uint16_t& aRemotePort,
-                              const nsCString& aLocalAddr,
-                              const uint16_t& aLocalPort,
-                              const bool&     aUseSSL,
-                              const bool&     aReuseAddrPort,
-                              const bool&     aUseArrayBuffers,
-                              const nsCString& aFilter)
-{
+mozilla::ipc::IPCResult TCPSocketParent::RecvOpenBind(
+    const nsCString& aRemoteHost, const uint16_t& aRemotePort,
+    const nsCString& aLocalAddr, const uint16_t& aLocalPort,
+    const bool& aUseSSL, const bool& aReuseAddrPort,
+    const bool& aUseArrayBuffers, const nsCString& aFilter) {
   nsresult rv;
   nsCOMPtr<nsISocketTransportService> sts =
-    do_GetService("@mozilla.org/network/socket-transport-service;1", &rv);
+      do_GetService("@mozilla.org/network/socket-transport-service;1", &rv);
   if (NS_FAILED(rv)) {
     FireInteralError(this, __LINE__);
     return IPC_OK();
@@ -128,13 +111,11 @@ TCPSocketParent::RecvOpenBind(const nsCString& aRemoteHost,
   if (aUseSSL) {
     const char* socketTypes[1];
     socketTypes[0] = "ssl";
-    rv = sts->CreateTransport(socketTypes, 1,
-                              aRemoteHost, aRemotePort,
-                              nullptr, getter_AddRefs(socketTransport));
+    rv = sts->CreateTransport(socketTypes, 1, aRemoteHost, aRemotePort, nullptr,
+                              getter_AddRefs(socketTransport));
   } else {
-    rv = sts->CreateTransport(nullptr, 0,
-                              aRemoteHost, aRemotePort,
-                              nullptr, getter_AddRefs(socketTransport));
+    rv = sts->CreateTransport(nullptr, 0, aRemoteHost, aRemotePort, nullptr,
+                              getter_AddRefs(socketTransport));
   }
 
   if (NS_FAILED(rv)) {
@@ -168,7 +149,7 @@ TCPSocketParent::RecvOpenBind(const nsCString& aRemoteHost,
     nsAutoCString contractId(NS_NETWORK_TCP_SOCKET_FILTER_HANDLER_PREFIX);
     contractId.Append(aFilter);
     nsCOMPtr<nsISocketFilterHandler> filterHandler =
-      do_GetService(contractId.get());
+        do_GetService(contractId.get());
     if (!filterHandler) {
       NS_ERROR("Content doesn't have a valid filter");
       FireInteralError(this, __LINE__);
@@ -182,16 +163,15 @@ TCPSocketParent::RecvOpenBind(const nsCString& aRemoteHost,
     }
   }
 
-  mSocket = new TCPSocket(nullptr, NS_ConvertUTF8toUTF16(aRemoteHost), aRemotePort, aUseSSL, aUseArrayBuffers);
+  mSocket = new TCPSocket(nullptr, NS_ConvertUTF8toUTF16(aRemoteHost),
+                          aRemotePort, aUseSSL, aUseArrayBuffers);
   mSocket->SetSocketBridgeParent(this);
   rv = mSocket->InitWithUnconnectedTransport(socketTransport);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TCPSocketParent::RecvStartTLS()
-{
+mozilla::ipc::IPCResult TCPSocketParent::RecvStartTLS() {
   NS_ENSURE_TRUE(mSocket, IPC_OK());
   ErrorResult rv;
   mSocket->UpgradeToSecure(rv);
@@ -202,17 +182,13 @@ TCPSocketParent::RecvStartTLS()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TCPSocketParent::RecvSuspend()
-{
+mozilla::ipc::IPCResult TCPSocketParent::RecvSuspend() {
   NS_ENSURE_TRUE(mSocket, IPC_OK());
   mSocket->Suspend();
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TCPSocketParent::RecvResume()
-{
+mozilla::ipc::IPCResult TCPSocketParent::RecvResume() {
   NS_ENSURE_TRUE(mSocket, IPC_OK());
   ErrorResult rv;
   mSocket->Resume(rv);
@@ -223,22 +199,19 @@ TCPSocketParent::RecvResume()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TCPSocketParent::RecvData(const SendableData& aData,
-                          const uint32_t& aTrackingNumber)
-{
+mozilla::ipc::IPCResult TCPSocketParent::RecvData(
+    const SendableData& aData, const uint32_t& aTrackingNumber) {
   ErrorResult rv;
 
   if (mFilter) {
-    mozilla::net::NetAddr addr; // dummy value
+    mozilla::net::NetAddr addr;  // dummy value
     bool allowed;
     MOZ_ASSERT(aData.type() == SendableData::TArrayOfuint8_t,
                "Unsupported data type for filtering");
     const InfallibleTArray<uint8_t>& data(aData.get_ArrayOfuint8_t());
-    nsresult nsrv = mFilter->FilterPacket(&addr, data.Elements(),
-                                          data.Length(),
-                                          nsISocketFilter::SF_OUTGOING,
-                                          &allowed);
+    nsresult nsrv =
+        mFilter->FilterPacket(&addr, data.Elements(), data.Length(),
+                              nsISocketFilter::SF_OUTGOING, &allowed);
 
     // Reject sending of unallowed data
     if (NS_WARN_IF(NS_FAILED(nsrv)) || !allowed) {
@@ -257,7 +230,8 @@ TCPSocketParent::RecvData(const SendableData& aData,
       RootedSpiderMonkeyInterface<ArrayBuffer> data(autoCx);
       data.Init(&val.toObject());
       Optional<uint32_t> byteLength(buffer.Length());
-      mSocket->SendWithTrackingNumber(autoCx, data, 0, byteLength, aTrackingNumber, rv);
+      mSocket->SendWithTrackingNumber(autoCx, data, 0, byteLength,
+                                      aTrackingNumber, rv);
       break;
     }
 
@@ -274,38 +248,35 @@ TCPSocketParent::RecvData(const SendableData& aData,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TCPSocketParent::RecvClose()
-{
+mozilla::ipc::IPCResult TCPSocketParent::RecvClose() {
   NS_ENSURE_TRUE(mSocket, IPC_OK());
   mSocket->Close();
   return IPC_OK();
 }
 
-void
-TCPSocketParent::FireErrorEvent(const nsAString& aName, const nsAString& aType, TCPReadyState aReadyState)
-{
-  SendEvent(NS_LITERAL_STRING("error"), TCPError(nsString(aName), nsString(aType)), aReadyState);
+void TCPSocketParent::FireErrorEvent(const nsAString& aName,
+                                     const nsAString& aType,
+                                     TCPReadyState aReadyState) {
+  SendEvent(NS_LITERAL_STRING("error"),
+            TCPError(nsString(aName), nsString(aType)), aReadyState);
 }
 
-void
-TCPSocketParent::FireEvent(const nsAString& aType, TCPReadyState aReadyState)
-{
+void TCPSocketParent::FireEvent(const nsAString& aType,
+                                TCPReadyState aReadyState) {
   return SendEvent(aType, mozilla::void_t(), aReadyState);
 }
 
-void
-TCPSocketParent::FireArrayBufferDataEvent(nsTArray<uint8_t>& aBuffer, TCPReadyState aReadyState)
-{
+void TCPSocketParent::FireArrayBufferDataEvent(nsTArray<uint8_t>& aBuffer,
+                                               TCPReadyState aReadyState) {
   InfallibleTArray<uint8_t> arr;
   arr.SwapElements(aBuffer);
 
   if (mFilter) {
     bool allowed;
     mozilla::net::NetAddr addr;
-    nsresult nsrv = mFilter->FilterPacket(&addr, arr.Elements(), arr.Length(),
-                                          nsISocketFilter::SF_INCOMING,
-                                          &allowed);
+    nsresult nsrv =
+        mFilter->FilterPacket(&addr, arr.Elements(), arr.Length(),
+                              nsISocketFilter::SF_INCOMING, &allowed);
     // receiving unallowed data, drop it.
     if (NS_WARN_IF(NS_FAILED(nsrv)) || !allowed) {
       TCPSOCKET_LOG(("%s: Dropping incoming TCP packet", __FUNCTION__));
@@ -317,9 +288,8 @@ TCPSocketParent::FireArrayBufferDataEvent(nsTArray<uint8_t>& aBuffer, TCPReadySt
   SendEvent(NS_LITERAL_STRING("data"), data, aReadyState);
 }
 
-void
-TCPSocketParent::FireStringDataEvent(const nsACString& aData, TCPReadyState aReadyState)
-{
+void TCPSocketParent::FireStringDataEvent(const nsACString& aData,
+                                          TCPReadyState aReadyState) {
   SendableData data((nsCString(aData)));
 
   MOZ_ASSERT(!mFilter, "Socket filtering doesn't support nsCString");
@@ -327,25 +297,17 @@ TCPSocketParent::FireStringDataEvent(const nsACString& aData, TCPReadyState aRea
   SendEvent(NS_LITERAL_STRING("data"), data, aReadyState);
 }
 
-void
-TCPSocketParent::SendEvent(const nsAString& aType, CallbackData aData, TCPReadyState aReadyState)
-{
+void TCPSocketParent::SendEvent(const nsAString& aType, CallbackData aData,
+                                TCPReadyState aReadyState) {
   if (mIPCOpen) {
-    mozilla::Unused << PTCPSocketParent::SendCallback(nsString(aType),
-                                                      aData,
-                                                      static_cast<uint32_t>(aReadyState));
+    mozilla::Unused << PTCPSocketParent::SendCallback(
+        nsString(aType), aData, static_cast<uint32_t>(aReadyState));
   }
 }
 
-void
-TCPSocketParent::SetSocket(TCPSocket *socket)
-{
-  mSocket = socket;
-}
+void TCPSocketParent::SetSocket(TCPSocket* socket) { mSocket = socket; }
 
-nsresult
-TCPSocketParent::GetHost(nsAString& aHost)
-{
+nsresult TCPSocketParent::GetHost(nsAString& aHost) {
   if (!mSocket) {
     NS_ERROR("No internal socket instance mSocket!");
     return NS_ERROR_FAILURE;
@@ -354,9 +316,7 @@ TCPSocketParent::GetHost(nsAString& aHost)
   return NS_OK;
 }
 
-nsresult
-TCPSocketParent::GetPort(uint16_t* aPort)
-{
+nsresult TCPSocketParent::GetPort(uint16_t* aPort) {
   if (!mSocket) {
     NS_ERROR("No internal socket instance mSocket!");
     return NS_ERROR_FAILURE;
@@ -365,21 +325,17 @@ TCPSocketParent::GetPort(uint16_t* aPort)
   return NS_OK;
 }
 
-void
-TCPSocketParent::ActorDestroy(ActorDestroyReason why)
-{
+void TCPSocketParent::ActorDestroy(ActorDestroyReason why) {
   if (mSocket) {
     mSocket->Close();
   }
   mSocket = nullptr;
 }
 
-mozilla::ipc::IPCResult
-TCPSocketParent::RecvRequestDelete()
-{
+mozilla::ipc::IPCResult TCPSocketParent::RecvRequestDelete() {
   mozilla::Unused << Send__delete__(this);
   return IPC_OK();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

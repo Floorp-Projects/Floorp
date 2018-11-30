@@ -8,9 +8,7 @@
 namespace mozilla {
 namespace gfx {
 
-const char*
-FeatureStatusToString(FeatureStatus aStatus)
-{
+const char* FeatureStatusToString(FeatureStatus aStatus) {
   switch (aStatus) {
     case FeatureStatus::Unused:
       return "unused";
@@ -42,20 +40,16 @@ FeatureStatusToString(FeatureStatus aStatus)
   }
 }
 
-bool
-IsFeatureStatusFailure(FeatureStatus aStatus)
-{
+bool IsFeatureStatusFailure(FeatureStatus aStatus) {
   return !(aStatus == FeatureStatus::Unused ||
            aStatus == FeatureStatus::Available ||
            aStatus == FeatureStatus::ForceEnabled);
 }
 
-bool
-IsFeatureStatusSuccess(FeatureStatus aStatus)
-{
+bool IsFeatureStatusSuccess(FeatureStatus aStatus) {
   return aStatus == FeatureStatus::Available ||
          aStatus == FeatureStatus::ForceEnabled;
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

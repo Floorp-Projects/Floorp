@@ -21,12 +21,10 @@ typedef nsDataHashtable<nsCStringHashKey, LSObserver*> LSObserverHashtable;
 
 StaticAutoPtr<LSObserverHashtable> gLSObservers;
 
-} // namespace
+}  // namespace
 
 LSObserver::LSObserver(const nsACString& aOrigin)
-  : mActor(nullptr)
-  , mOrigin(aOrigin)
-{
+    : mActor(nullptr), mOrigin(aOrigin) {
   AssertIsOnOwningThread();
 
   if (!gLSObservers) {
@@ -37,8 +35,7 @@ LSObserver::LSObserver(const nsACString& aOrigin)
   gLSObservers->Put(mOrigin, this);
 }
 
-LSObserver::~LSObserver()
-{
+LSObserver::~LSObserver() {
   AssertIsOnOwningThread();
 
   if (mActor) {
@@ -56,15 +53,11 @@ LSObserver::~LSObserver()
 }
 
 // static
-LSObserver*
-LSObserver::Get(const nsACString& aOrigin)
-{
+LSObserver* LSObserver::Get(const nsACString& aOrigin) {
   return gLSObservers ? gLSObservers->Get(aOrigin) : nullptr;
 }
 
-void
-LSObserver::SetActor(LSObserverChild* aActor)
-{
+void LSObserver::SetActor(LSObserverChild* aActor) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(!mActor);
@@ -72,5 +65,5 @@ LSObserver::SetActor(LSObserverChild* aActor)
   mActor = aActor;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

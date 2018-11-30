@@ -14,36 +14,34 @@
 namespace mozilla {
 namespace dom {
 
-class DummyPresentationTransportBuilderConstructor :
-  public nsIPresentationTransportBuilderConstructor
-{
-public:
+class DummyPresentationTransportBuilderConstructor
+    : public nsIPresentationTransportBuilderConstructor {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRESENTATIONTRANSPORTBUILDERCONSTRUCTOR
 
   DummyPresentationTransportBuilderConstructor() = default;
 
-protected:
+ protected:
   virtual ~DummyPresentationTransportBuilderConstructor() = default;
 };
 
-class PresentationTransportBuilderConstructor final :
-  public DummyPresentationTransportBuilderConstructor
-{
-public:
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(PresentationTransportBuilderConstructor,
-                                       DummyPresentationTransportBuilderConstructor)
+class PresentationTransportBuilderConstructor final
+    : public DummyPresentationTransportBuilderConstructor {
+ public:
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(
+      PresentationTransportBuilderConstructor,
+      DummyPresentationTransportBuilderConstructor)
   NS_DECL_NSIPRESENTATIONTRANSPORTBUILDERCONSTRUCTOR
 
-  static already_AddRefed<nsIPresentationTransportBuilderConstructor>
-  Create();
+  static already_AddRefed<nsIPresentationTransportBuilderConstructor> Create();
 
-private:
+ private:
   PresentationTransportBuilderConstructor() = default;
   virtual ~PresentationTransportBuilderConstructor() = default;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PresentationTransportBuilderConstructor_h
+#endif  // mozilla_dom_PresentationTransportBuilderConstructor_h

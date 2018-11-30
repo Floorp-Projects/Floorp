@@ -45,7 +45,7 @@ void Description(nsString& aDesc) const;
 /**
  * Get the set of attributes on the proxied accessible.
  */
-void Attributes(nsTArray<Attribute> *aAttrs) const;
+void Attributes(nsTArray<Attribute>* aAttrs) const;
 
 /**
  * Return set of targets of given relation type.
@@ -56,7 +56,7 @@ nsTArray<ProxyAccessible*> RelationByType(RelationType aType) const;
  * Get all relations for this accessible.
  */
 void Relations(nsTArray<RelationType>* aTypes,
-    nsTArray<nsTArray<ProxyAccessible*>>* aTargetSets) const;
+               nsTArray<nsTArray<ProxyAccessible*>>* aTargetSets) const;
 
 bool IsSearchbox() const;
 
@@ -79,57 +79,51 @@ int32_t SelectionCount();
  * Get the text between the given offsets.
  */
 bool TextSubstring(int32_t aStartOffset, int32_t aEndOfset,
-    nsString& aText) const;
+                   nsString& aText) const;
 
 void GetTextAfterOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
-    nsString& aText, int32_t* aStartOffset,
-    int32_t* aEndOffset);
+                        nsString& aText, int32_t* aStartOffset,
+                        int32_t* aEndOffset);
 
 void GetTextAtOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
-    nsString& aText, int32_t* aStartOffset,
-    int32_t* aEndOffset);
+                     nsString& aText, int32_t* aStartOffset,
+                     int32_t* aEndOffset);
 
 void GetTextBeforeOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
-    nsString& aText, int32_t* aStartOffset,
-    int32_t* aEndOffset);
+                         nsString& aText, int32_t* aStartOffset,
+                         int32_t* aEndOffset);
 
 char16_t CharAt(int32_t aOffset);
 
-void TextAttributes(bool aIncludeDefAttrs,
-    const int32_t aOffset,
-    nsTArray<Attribute>* aAttributes,
-    int32_t* aStartOffset,
-    int32_t* aEndOffset);
+void TextAttributes(bool aIncludeDefAttrs, const int32_t aOffset,
+                    nsTArray<Attribute>* aAttributes, int32_t* aStartOffset,
+                    int32_t* aEndOffset);
 void DefaultTextAttributes(nsTArray<Attribute>* aAttrs);
 
-nsIntRect TextBounds(int32_t aStartOffset, int32_t aEndOffset,
-    uint32_t aCoordType = nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE);
+nsIntRect TextBounds(
+    int32_t aStartOffset, int32_t aEndOffset,
+    uint32_t aCoordType =
+        nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE);
 
 nsIntRect CharBounds(int32_t aOffset, uint32_t aCoordType);
 
 int32_t OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType);
 
-bool SelectionBoundsAt(int32_t aSelectionNum,
-    nsString& aData,
-    int32_t* aStartOffset,
-    int32_t* aEndOffset);
+bool SelectionBoundsAt(int32_t aSelectionNum, nsString& aData,
+                       int32_t* aStartOffset, int32_t* aEndOffset);
 
-bool SetSelectionBoundsAt(int32_t aSelectionNum,
-    int32_t aStartOffset,
-    int32_t aEndOffset);
+bool SetSelectionBoundsAt(int32_t aSelectionNum, int32_t aStartOffset,
+                          int32_t aEndOffset);
 
-bool AddToSelection(int32_t aStartOffset,
-    int32_t aEndOffset);
+bool AddToSelection(int32_t aStartOffset, int32_t aEndOffset);
 
 bool RemoveFromSelection(int32_t aSelectionNum);
 
 void ScrollSubstringTo(int32_t aStartOffset, int32_t aEndOffset,
-    uint32_t aScrollType);
+                       uint32_t aScrollType);
 
-void ScrollSubstringToPoint(int32_t aStartOffset,
-    int32_t aEndOffset,
-    uint32_t aCoordinateType,
-    int32_t aX, int32_t aY);
+void ScrollSubstringToPoint(int32_t aStartOffset, int32_t aEndOffset,
+                            uint32_t aCoordinateType, int32_t aX, int32_t aY);
 
 void Text(nsString* aText);
 
@@ -198,8 +192,8 @@ ProxyAccessible* TableCellAt(uint32_t aRow, uint32_t aCol);
 int32_t TableCellIndexAt(uint32_t aRow, uint32_t aCol);
 int32_t TableColumnIndexAt(uint32_t aCellIndex);
 int32_t TableRowIndexAt(uint32_t aCellIndex);
-void TableRowAndColumnIndicesAt(uint32_t aCellIndex,
-    int32_t* aRow, int32_t* aCol);
+void TableRowAndColumnIndicesAt(uint32_t aCellIndex, int32_t* aRow,
+                                int32_t* aCol);
 uint32_t TableColumnExtentAt(uint32_t aRow, uint32_t aCol);
 uint32_t TableRowExtentAt(uint32_t aRow, uint32_t aCol);
 void TableColumnDescription(uint32_t aCol, nsString& aDescription);
@@ -251,7 +245,7 @@ double Step();
 void TakeFocus();
 ProxyAccessible* FocusedChild();
 ProxyAccessible* ChildAtPoint(int32_t aX, int32_t aY,
-    Accessible::EWhichChildAtPoint aWhichChild);
+                              Accessible::EWhichChildAtPoint aWhichChild);
 nsIntRect Bounds();
 nsIntRect BoundsInCSSPixels();
 
@@ -261,13 +255,13 @@ void Title(nsString& aTitle);
 void URL(nsString& aURL);
 void MimeType(nsString aMime);
 void URLDocTypeMimeType(nsString& aURL, nsString& aDocType,
-    nsString& aMimeType);
+                        nsString& aMimeType);
 
 ProxyAccessible* AccessibleAtPoint(int32_t aX, int32_t aY,
-    bool aNeedsScreenCoords);
+                                   bool aNeedsScreenCoords);
 
-void Extents(bool aNeedsScreenCoords, int32_t* aX, int32_t* aY,
-    int32_t* aWidth, int32_t* aHeight);
+void Extents(bool aNeedsScreenCoords, int32_t* aX, int32_t* aY, int32_t* aWidth,
+             int32_t* aHeight);
 
 /**
  * Return the id of the dom node this accessible represents.  Note this

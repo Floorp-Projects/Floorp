@@ -37,7 +37,10 @@ struct SimpleClass {
 typedef View<Iterator<SimpleClass>> SimpleView;
 
 void ImplicitSimpleClassIterator() {
-  for (const ImplicitWrapper<SimpleClass>& foo : SimpleView()) {}
-  for (const ImplicitWrapper<SimpleClass> foo : SimpleView()) {}
-  for (ImplicitWrapper<SimpleClass> foo : SimpleView()) {}
+  for (const ImplicitWrapper<SimpleClass>& foo : SimpleView()) {
+  }
+  for (const ImplicitWrapper<SimpleClass> foo : SimpleView()) {
+  }
+  for (ImplicitWrapper<SimpleClass> foo : SimpleView()) {
+  }
 }

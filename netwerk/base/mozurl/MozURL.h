@@ -33,64 +33,36 @@ namespace net {
 //
 // Implementor Note: This type is only a holder for methods in C++, and does not
 // reflect the actual layout of the type.
-class MozURL final
-{
-public:
+class MozURL final {
+ public:
   static nsresult Init(MozURL** aURL, const nsACString& aSpec,
-                       const MozURL* aBaseURL = nullptr)
-  {
+                       const MozURL* aBaseURL = nullptr) {
     return mozurl_new(aURL, &aSpec, aBaseURL);
   }
 
-  nsDependentCSubstring Spec() const {
-    return mozurl_spec(this);
-  }
-  nsDependentCSubstring Scheme() const {
-    return mozurl_scheme(this);
-  }
-  nsDependentCSubstring Username() const {
-    return mozurl_username(this);
-  }
-  nsDependentCSubstring Password() const {
-    return mozurl_password(this);
-  }
+  nsDependentCSubstring Spec() const { return mozurl_spec(this); }
+  nsDependentCSubstring Scheme() const { return mozurl_scheme(this); }
+  nsDependentCSubstring Username() const { return mozurl_username(this); }
+  nsDependentCSubstring Password() const { return mozurl_password(this); }
   // Will return the hostname of URL. If the hostname is an IPv6 address,
   // it will be enclosed in square brackets, such as `[::1]`
-  nsDependentCSubstring Host() const {
-    return mozurl_host(this);
-  }
+  nsDependentCSubstring Host() const { return mozurl_host(this); }
   // Will return the port number, if specified, or -1
-  int32_t Port() const {
-    return mozurl_port(this);
-  }
+  int32_t Port() const { return mozurl_port(this); }
   // If the URL's port number is equal to the default port, will only return the
   // hostname, otherwise it will return a string of the form `{host}:{port}`
   // See: https://url.spec.whatwg.org/#default-port
-  nsDependentCSubstring HostPort() const {
-    return mozurl_host_port(this);
-  }
-  nsDependentCSubstring FilePath() const {
-    return mozurl_filepath(this);
-  }
-  nsDependentCSubstring Path() const {
-    return mozurl_path(this);
-  }
-  nsDependentCSubstring Query() const {
-    return mozurl_query(this);
-  }
-  nsDependentCSubstring Ref() const {
-    return mozurl_fragment(this);
-  }
-  bool HasFragment() const {
-    return mozurl_has_fragment(this);
-  }
+  nsDependentCSubstring HostPort() const { return mozurl_host_port(this); }
+  nsDependentCSubstring FilePath() const { return mozurl_filepath(this); }
+  nsDependentCSubstring Path() const { return mozurl_path(this); }
+  nsDependentCSubstring Query() const { return mozurl_query(this); }
+  nsDependentCSubstring Ref() const { return mozurl_fragment(this); }
+  bool HasFragment() const { return mozurl_has_fragment(this); }
 
   // WARNING: This does not match the definition of origins in nsIPrincipal for
   // all URIs.
   // XXX: Consider bringing these implementations in sync with one-another?
-  void Origin(nsACString& aOrigin) const {
-    mozurl_origin(this, &aOrigin);
-  }
+  void Origin(nsACString& aOrigin) const { mozurl_origin(this, &aOrigin); }
 
   nsresult GetCommonBase(const MozURL* aOther, MozURL** aCommon) const {
     return mozurl_common_base(this, aOther, aCommon);
@@ -99,9 +71,8 @@ public:
     return mozurl_relative(this, aOther, aRelative);
   }
 
-  class MOZ_STACK_CLASS Mutator
-  {
-  public:
+  class MOZ_STACK_CLASS Mutator {
+   public:
     // Calling this method will result in the creation of a new MozURL that
     // adopts the mutator's mURL.
     // If any of the setters failed with an error code, that error code will be
@@ -194,10 +165,9 @@ public:
     //   rv = mut.SetHostname(host).Finalize(getter_AddRefs(url2));
     // }
     // if (NS_SUCCEEDED(rv)) { /* use url2 */ }
-    nsresult GetStatus() {
-      return mURL ? mStatus : NS_ERROR_NOT_AVAILABLE;
-    }
-  private:
+    nsresult GetStatus() { return mURL ? mStatus : NS_ERROR_NOT_AVAILABLE; }
+
+   private:
     explicit Mutator(MozURL* aUrl) : mStatus(NS_OK) {
       mozurl_clone(aUrl, getter_AddRefs(mURL));
     }
@@ -209,23 +179,19 @@ public:
   Mutator Mutate() { return Mutator(this); }
 
   // AddRef and Release are non-virtual on this type, and always call into rust.
-  nsrefcnt AddRef() {
-    return mozurl_addref(this);
-  }
-  nsrefcnt Release() {
-    return mozurl_release(this);
-  }
+  nsrefcnt AddRef() { return mozurl_addref(this); }
+  nsrefcnt Release() { return mozurl_release(this); }
 
-private:
+ private:
   // Make it a compile time error for C++ code to ever create, destruct, or copy
   // MozURL objects. All of these operations will be performed by rust.
-  MozURL(); /* never defined */
+  MozURL();  /* never defined */
   ~MozURL(); /* never defined */
   MozURL(const MozURL&) = delete;
   MozURL& operator=(const MozURL&) = delete;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozURL_h__
+#endif  // mozURL_h__

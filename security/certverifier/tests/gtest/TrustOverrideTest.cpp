@@ -17,23 +17,24 @@
 // extension:basicConstraints:cA,
 // extension:keyUsage:cRLSign,keyCertSign
 // serialNumber:1
-const char* kOverrideCaPem = "-----BEGIN CERTIFICATE-----\n" \
-"MIICsjCCAZygAwIBAgIBATALBgkqhkiG9w0BAQswDTELMAkGA1UEAwwCY2EwIhgP\n" \
-"MjAxNTExMjgwMDAwMDBaGA8yMDE4MDIwNTAwMDAwMFowDTELMAkGA1UEAwwCY2Ew\n" \
-"ggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC6iFGoRI4W1kH9braIBjYQ\n" \
-"PTwT2erkNUq07PVoV2wke8HHJajg2B+9sZwGm24ahvJr4q9adWtqZHEIeqVap0WH\n" \
-"9xzVJJwCfs1D/B5p0DggKZOrIMNJ5Nu5TMJrbA7tFYIP8X6taRqx0wI6iypB7qdw\n" \
-"4A8Njf1mCyuwJJKkfbmIYXmQsVeQPdI7xeC4SB+oN9OIQ+8nFthVt2Zaqn4CkC86\n" \
-"exCABiTMHGyXrZZhW7filhLAdTGjDJHdtMr3/K0dJdMJ77kXDqdo4bN7LyJvaeO0\n" \
-"ipVhHe4m1iWdq5EITjbLHCQELL8Wiy/l8Y+ZFzG4s/5JI/pyUcQx1QOs2hgKNe2N\n" \
-"AgMBAAGjHTAbMAwGA1UdEwQFMAMBAf8wCwYDVR0PBAQDAgEGMAsGCSqGSIb3DQEB\n" \
-"CwOCAQEAchHf1yV+blE6fvS53L3DGmvxEpn9+t+xwOvWczBmLFEzUPdncakdaWlQ\n" \
-"v7q81BPyjBqkYbQi15Ws81hY3dnXn8LT1QktCL9guvc3z4fMdQbRjpjcIReCYt3E\n" \
-"PB22Jl2FCm6ii4XL0qDFD26WK3zMe2Uks6t55f8VeDTBGNoPp2JMsWY1Pi4vR6wK\n" \
-"AY96WoXS/qrYkmMEOgFu907pApeAeE8VJzXjqMLF6/W1VN7ISnGzWQ8zKQnlp3YA\n" \
-"mvWZQcD6INK8mvpZxIeu6NtHaKEXGw7tlGekmkVhapPtQZYnWcsXybRrZf5g3hOh\n" \
-"JFPl8kW42VoxXL11PP5NX2ylTsJ//g==\n" \
-"-----END CERTIFICATE-----";
+const char* kOverrideCaPem =
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIICsjCCAZygAwIBAgIBATALBgkqhkiG9w0BAQswDTELMAkGA1UEAwwCY2EwIhgP\n"
+    "MjAxNTExMjgwMDAwMDBaGA8yMDE4MDIwNTAwMDAwMFowDTELMAkGA1UEAwwCY2Ew\n"
+    "ggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC6iFGoRI4W1kH9braIBjYQ\n"
+    "PTwT2erkNUq07PVoV2wke8HHJajg2B+9sZwGm24ahvJr4q9adWtqZHEIeqVap0WH\n"
+    "9xzVJJwCfs1D/B5p0DggKZOrIMNJ5Nu5TMJrbA7tFYIP8X6taRqx0wI6iypB7qdw\n"
+    "4A8Njf1mCyuwJJKkfbmIYXmQsVeQPdI7xeC4SB+oN9OIQ+8nFthVt2Zaqn4CkC86\n"
+    "exCABiTMHGyXrZZhW7filhLAdTGjDJHdtMr3/K0dJdMJ77kXDqdo4bN7LyJvaeO0\n"
+    "ipVhHe4m1iWdq5EITjbLHCQELL8Wiy/l8Y+ZFzG4s/5JI/pyUcQx1QOs2hgKNe2N\n"
+    "AgMBAAGjHTAbMAwGA1UdEwQFMAMBAf8wCwYDVR0PBAQDAgEGMAsGCSqGSIb3DQEB\n"
+    "CwOCAQEAchHf1yV+blE6fvS53L3DGmvxEpn9+t+xwOvWczBmLFEzUPdncakdaWlQ\n"
+    "v7q81BPyjBqkYbQi15Ws81hY3dnXn8LT1QktCL9guvc3z4fMdQbRjpjcIReCYt3E\n"
+    "PB22Jl2FCm6ii4XL0qDFD26WK3zMe2Uks6t55f8VeDTBGNoPp2JMsWY1Pi4vR6wK\n"
+    "AY96WoXS/qrYkmMEOgFu907pApeAeE8VJzXjqMLF6/W1VN7ISnGzWQ8zKQnlp3YA\n"
+    "mvWZQcD6INK8mvpZxIeu6NtHaKEXGw7tlGekmkVhapPtQZYnWcsXybRrZf5g3hOh\n"
+    "JFPl8kW42VoxXL11PP5NX2ylTsJ//g==\n"
+    "-----END CERTIFICATE-----";
 
 // certspec (for pycert.py)
 //
@@ -43,20 +44,21 @@ const char* kOverrideCaPem = "-----BEGIN CERTIFICATE-----\n" \
 // extension:keyUsage:cRLSign,keyCertSign
 // subjectKey:secp384r1
 // serialNumber:2
-const char* kOverrideCaIntermediatePem = "-----BEGIN CERTIFICATE-----\n" \
-"MIICFDCB/aADAgECAgECMA0GCSqGSIb3DQEBCwUAMA0xCzAJBgNVBAMMAmNhMCIY\n" \
-"DzIwMTYxMTI3MDAwMDAwWhgPMjAxOTAyMDUwMDAwMDBaMBoxGDAWBgNVBAMMD2Nh\n" \
-"LWludGVybWVkaWF0ZTB2MBAGByqGSM49AgEGBSuBBAAiA2IABKFockM2K1x7GInz\n" \
-"eRVGFaHHP7SN7oY+AikV22COJS3ktxMtqM6Y6DFTTmqcDAsJyNY5regyBuW6gTRz\n" \
-"oR+jMOBdqMluQ4P+J4c9qXEDviiIz/AC8Fr3Gh/dzIN0qm6pzqMdMBswDAYDVR0T\n" \
-"BAUwAwEB/zALBgNVHQ8EBAMCAQYwDQYJKoZIhvcNAQELBQADggEBAAvDaCiJdFvr\n" \
-"wlLCqTM7qB9sS9vjz3lL8zbSssUlx5fXtIQACg0zJTKUyLJf/nTlit/txhPO0Q7T\n" \
-"PjKpKjE4ohYMEBW+EHs9U0/yYoxVwhjcVGVzEVsVQXzgll34t1W5rVtxof6DrH/l\n" \
-"Mc9Y7vhXFWnT8jsiqXtdIXh3fi8AjCzYSAjsfQfwpHRnM8uY2GaAb8SovYiGIk2t\n" \
-"CSdCBkA6V7hTeQSyLCj4JsCzX1JzMx33ebw3Z10Mq2AgRk3Uw5/L+b+PKScZXw42\n" \
-"lJNniSZbH7lHr08bWhWFXVK8aD2VGUeT/FswTlx3XGYVFrbXQ8WDEe0VkA+4aN33\n" \
-"+mbXPBnW8ao=\n" \
-"-----END CERTIFICATE-----";
+const char* kOverrideCaIntermediatePem =
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIICFDCB/aADAgECAgECMA0GCSqGSIb3DQEBCwUAMA0xCzAJBgNVBAMMAmNhMCIY\n"
+    "DzIwMTYxMTI3MDAwMDAwWhgPMjAxOTAyMDUwMDAwMDBaMBoxGDAWBgNVBAMMD2Nh\n"
+    "LWludGVybWVkaWF0ZTB2MBAGByqGSM49AgEGBSuBBAAiA2IABKFockM2K1x7GInz\n"
+    "eRVGFaHHP7SN7oY+AikV22COJS3ktxMtqM6Y6DFTTmqcDAsJyNY5regyBuW6gTRz\n"
+    "oR+jMOBdqMluQ4P+J4c9qXEDviiIz/AC8Fr3Gh/dzIN0qm6pzqMdMBswDAYDVR0T\n"
+    "BAUwAwEB/zALBgNVHQ8EBAMCAQYwDQYJKoZIhvcNAQELBQADggEBAAvDaCiJdFvr\n"
+    "wlLCqTM7qB9sS9vjz3lL8zbSssUlx5fXtIQACg0zJTKUyLJf/nTlit/txhPO0Q7T\n"
+    "PjKpKjE4ohYMEBW+EHs9U0/yYoxVwhjcVGVzEVsVQXzgll34t1W5rVtxof6DrH/l\n"
+    "Mc9Y7vhXFWnT8jsiqXtdIXh3fi8AjCzYSAjsfQfwpHRnM8uY2GaAb8SovYiGIk2t\n"
+    "CSdCBkA6V7hTeQSyLCj4JsCzX1JzMx33ebw3Z10Mq2AgRk3Uw5/L+b+PKScZXw42\n"
+    "lJNniSZbH7lHr08bWhWFXVK8aD2VGUeT/FswTlx3XGYVFrbXQ8WDEe0VkA+4aN33\n"
+    "+mbXPBnW8ao=\n"
+    "-----END CERTIFICATE-----";
 
 // /CN=ca
 // SHA256 Fingerprint: A3:05:0C:44:CD:6D:1E:BE:A2:18:80:09:93:69:90:7F
@@ -70,9 +72,8 @@ static const uint8_t CAcaDN[15] = {
 };
 // clang-format on
 
-static const DataAndLength OverrideCaDNs[]= {
-  { CAcaDN,
-    sizeof(CAcaDN) },
+static const DataAndLength OverrideCaDNs[] = {
+    {CAcaDN, sizeof(CAcaDN)},
 };
 
 // clang-format off
@@ -104,15 +105,13 @@ static const uint8_t CAcaSPKI[294] = {
 };
 // clang-format on
 
-static const DataAndLength OverrideCaSPKIs[]= {
-  { CAcaSPKI, sizeof(CAcaSPKI) },
+static const DataAndLength OverrideCaSPKIs[] = {
+    {CAcaSPKI, sizeof(CAcaSPKI)},
 };
 
-static mozilla::UniqueCERTCertificate
-CertFromString(const char* aPem)
-{
-  nsCOMPtr<nsIX509Cert> cert = nsNSSCertificate::ConstructFromDER(
-                                 const_cast<char*>(aPem), strlen(aPem));
+static mozilla::UniqueCERTCertificate CertFromString(const char* aPem) {
+  nsCOMPtr<nsIX509Cert> cert =
+      nsNSSCertificate::ConstructFromDER(const_cast<char*>(aPem), strlen(aPem));
   if (!cert) {
     return nullptr;
   }
@@ -121,11 +120,9 @@ CertFromString(const char* aPem)
   return nssCert;
 }
 
-class psm_TrustOverrideTest : public ::testing::Test
-{
+class psm_TrustOverrideTest : public ::testing::Test {
  protected:
-  void SetUp() override
-  {
+  void SetUp() override {
     nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
     ASSERT_TRUE(prefs != nullptr) << "couldn't get nsIPrefBranch";
 
@@ -136,31 +133,31 @@ class psm_TrustOverrideTest : public ::testing::Test
 
     nsCOMPtr<nsIX509CertDB> certdb(do_GetService(NS_X509CERTDB_CONTRACTID));
     ASSERT_TRUE(certdb != nullptr) << "couldn't get certdb";
- }
+  }
 };
 
-TEST_F(psm_TrustOverrideTest, CheckCertDNIsInList)
-{
+TEST_F(psm_TrustOverrideTest, CheckCertDNIsInList) {
   mozilla::UniqueCERTCertificate caObj = CertFromString(kOverrideCaPem);
   ASSERT_TRUE(caObj != nullptr) << "Should have parsed";
-  mozilla::UniqueCERTCertificate intObj = CertFromString(kOverrideCaIntermediatePem);
+  mozilla::UniqueCERTCertificate intObj =
+      CertFromString(kOverrideCaIntermediatePem);
   ASSERT_TRUE(intObj != nullptr) << "Should have parsed";
 
   EXPECT_TRUE(CertDNIsInList(caObj.get(), OverrideCaDNs))
-    << "CA should be in the DN list";
+      << "CA should be in the DN list";
   EXPECT_FALSE(CertDNIsInList(intObj.get(), OverrideCaDNs))
-    << "Int should not be in the DN list";
+      << "Int should not be in the DN list";
 }
 
-TEST_F(psm_TrustOverrideTest, CheckCertSPKIIsInList)
-{
+TEST_F(psm_TrustOverrideTest, CheckCertSPKIIsInList) {
   mozilla::UniqueCERTCertificate caObj = CertFromString(kOverrideCaPem);
   ASSERT_TRUE(caObj != nullptr) << "Should have parsed";
-  mozilla::UniqueCERTCertificate intObj = CertFromString(kOverrideCaIntermediatePem);
+  mozilla::UniqueCERTCertificate intObj =
+      CertFromString(kOverrideCaIntermediatePem);
   ASSERT_TRUE(intObj != nullptr) << "Should have parsed";
 
   EXPECT_TRUE(CertSPKIIsInList(caObj.get(), OverrideCaSPKIs))
-    << "CA should be in the SPKI list";
+      << "CA should be in the SPKI list";
   EXPECT_FALSE(CertSPKIIsInList(intObj.get(), OverrideCaSPKIs))
-    << "Int should not be in the SPKI list";
+      << "Int should not be in the SPKI list";
 }

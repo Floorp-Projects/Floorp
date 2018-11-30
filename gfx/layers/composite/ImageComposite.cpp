@@ -15,41 +15,33 @@ namespace layers {
 /* static */ const float ImageComposite::BIAS_TIME_MS = 1.0f;
 
 ImageComposite::ImageComposite()
-  : mLastFrameID(-1)
-  , mLastProducerID(-1)
-  , mBias(BIAS_NONE)
-  , mDroppedFrames(0)
-  , mLastChosenImageIndex(0)
-{
-}
+    : mLastFrameID(-1),
+      mLastProducerID(-1),
+      mBias(BIAS_NONE),
+      mDroppedFrames(0),
+      mLastChosenImageIndex(0) {}
 
-ImageComposite::~ImageComposite()
-{
-}
+ImageComposite::~ImageComposite() {}
 
-TimeStamp
-ImageComposite::GetBiasedTime(const TimeStamp& aInput) const
-{
+TimeStamp ImageComposite::GetBiasedTime(const TimeStamp& aInput) const {
   switch (mBias) {
-  case ImageComposite::BIAS_NEGATIVE:
-    return aInput - TimeDuration::FromMilliseconds(BIAS_TIME_MS);
-  case ImageComposite::BIAS_POSITIVE:
-    return aInput + TimeDuration::FromMilliseconds(BIAS_TIME_MS);
-  default:
-    return aInput;
+    case ImageComposite::BIAS_NEGATIVE:
+      return aInput - TimeDuration::FromMilliseconds(BIAS_TIME_MS);
+    case ImageComposite::BIAS_POSITIVE:
+      return aInput + TimeDuration::FromMilliseconds(BIAS_TIME_MS);
+    default:
+      return aInput;
   }
 }
 
-void
-ImageComposite::UpdateBias(size_t aImageIndex)
-{
+void ImageComposite::UpdateBias(size_t aImageIndex) {
   MOZ_ASSERT(aImageIndex < ImagesCount());
 
   TimeStamp compositionTime = GetCompositionTime();
   TimeStamp compositedImageTime = mImages[aImageIndex].mTimeStamp;
   TimeStamp nextImageTime = aImageIndex + 1 < ImagesCount()
-                              ? mImages[aImageIndex + 1].mTimeStamp
-                              : TimeStamp();
+                                ? mImages[aImageIndex + 1].mTimeStamp
+                                : TimeStamp();
 
   if (compositedImageTime.IsNull()) {
     mBias = ImageComposite::BIAS_NONE;
@@ -71,8 +63,7 @@ ImageComposite::UpdateBias(size_t aImageIndex)
     mBias = ImageComposite::BIAS_NEGATIVE;
     return;
   }
-  if (!nextImageTime.IsNull() &&
-      nextImageTime - compositionTime < threshold &&
+  if (!nextImageTime.IsNull() && nextImageTime - compositionTime < threshold &&
       nextImageTime - compositionTime > -threshold) {
     // The next frame's time is very close to our composition time (probably
     // just after the current composition time, but due to previously set
@@ -89,9 +80,7 @@ ImageComposite::UpdateBias(size_t aImageIndex)
   mBias = ImageComposite::BIAS_NONE;
 }
 
-int
-ImageComposite::ChooseImageIndex()
-{
+int ImageComposite::ChooseImageIndex() {
   // ChooseImageIndex is called for all images in the layer when it is visible.
   // Change to this behaviour would break dropped frames counting calculation:
   // We rely on this assumption to determine if during successive runs an
@@ -128,15 +117,12 @@ ImageComposite::ChooseImageIndex()
   return result;
 }
 
-const ImageComposite::TimedImage* ImageComposite::ChooseImage()
-{
+const ImageComposite::TimedImage* ImageComposite::ChooseImage() {
   int index = ChooseImageIndex();
   return index >= 0 ? &mImages[index] : nullptr;
 }
 
-void
-ImageComposite::RemoveImagesWithTextureHost(TextureHost* aTexture)
-{
+void ImageComposite::RemoveImagesWithTextureHost(TextureHost* aTexture) {
   for (int32_t i = mImages.Length() - 1; i >= 0; --i) {
     if (mImages[i].mTextureHost == aTexture) {
       aTexture->UnbindTextureSource();
@@ -145,16 +131,13 @@ ImageComposite::RemoveImagesWithTextureHost(TextureHost* aTexture)
   }
 }
 
-void
-ImageComposite::ClearImages()
-{
+void ImageComposite::ClearImages() {
   mImages.Clear();
   mLastChosenImageIndex = 0;
 }
 
-uint32_t
-ImageComposite::ScanForLastFrameIndex(const nsTArray<TimedImage>& aNewImages)
-{
+uint32_t ImageComposite::ScanForLastFrameIndex(
+    const nsTArray<TimedImage>& aNewImages) {
   if (mImages.IsEmpty()) {
     return 0;
   }
@@ -208,21 +191,18 @@ ImageComposite::ScanForLastFrameIndex(const nsTArray<TimedImage>& aNewImages)
   return newIndex;
 }
 
-void
-ImageComposite::SetImages(nsTArray<TimedImage>&& aNewImages)
-{
+void ImageComposite::SetImages(nsTArray<TimedImage>&& aNewImages) {
   mLastChosenImageIndex = ScanForLastFrameIndex(aNewImages);
   mImages = std::move(aNewImages);
 }
 
-const ImageComposite::TimedImage*
-ImageComposite::GetImage(size_t aIndex) const
-{
+const ImageComposite::TimedImage* ImageComposite::GetImage(
+    size_t aIndex) const {
   if (aIndex >= mImages.Length()) {
     return nullptr;
   }
   return &mImages[aIndex];
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

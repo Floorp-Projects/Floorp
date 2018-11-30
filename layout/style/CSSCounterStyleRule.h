@@ -15,24 +15,19 @@ struct RawServoCounterStyleRule;
 namespace mozilla {
 namespace dom {
 
-class CSSCounterStyleRule final : public css::Rule
-{
-public:
+class CSSCounterStyleRule final : public css::Rule {
+ public:
   CSSCounterStyleRule(already_AddRefed<RawServoCounterStyleRule> aRawRule,
-                      StyleSheet* aSheet,
-                      css::Rule* aParentRule,
-                      uint32_t aLine,
-                      uint32_t aColumn)
-    : css::Rule(aSheet, aParentRule, aLine, aColumn)
-    , mRawRule(std::move(aRawRule))
-  {
-  }
+                      StyleSheet* aSheet, css::Rule* aParentRule,
+                      uint32_t aLine, uint32_t aColumn)
+      : css::Rule(aSheet, aParentRule, aLine, aColumn),
+        mRawRule(std::move(aRawRule)) {}
 
-private:
+ private:
   CSSCounterStyleRule(const CSSCounterStyleRule& aCopy) = delete;
   ~CSSCounterStyleRule() = default;
 
-public:
+ public:
   bool IsCCLeaf() const final;
 
 #ifdef DEBUG
@@ -45,7 +40,7 @@ public:
   void GetName(nsAString& aName);
   void SetName(const nsAString& aName);
 #define CSS_COUNTER_DESC(name_, method_) \
-  void Get##method_(nsAString& aValue); \
+  void Get##method_(nsAString& aValue);  \
   void Set##method_(const nsAString& aValue);
 #include "nsCSSCounterDescList.h"
 #undef CSS_COUNTER_DESC
@@ -54,11 +49,11 @@ public:
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
-private:
+ private:
   RefPtr<RawServoCounterStyleRule> mRawRule;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_CSSCounterStyleRule_h
+#endif  // mozilla_CSSCounterStyleRule_h

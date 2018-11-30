@@ -13,17 +13,19 @@
  * these.
  */
 enum nsWindowType {
-  eWindowType_toplevel,           // default top level window
-  eWindowType_dialog,             // top level window but usually handled differently
-                                  // by the OS
-  eWindowType_sheet,              // MacOSX sheet (special dialog class)
-  eWindowType_popup,              // used for combo boxes, etc
-  eWindowType_child,              // child windows (contained inside a window on the
-                                  // desktop (has no border))
-  eWindowType_invisible,          // windows that are invisible or offscreen
-  eWindowType_plugin,             // plugin window
-  eWindowType_plugin_ipc_chrome,  // chrome side native widget for plugins (e10s)
-  eWindowType_plugin_ipc_content, // content side puppet widget for plugins (e10s)
+  eWindowType_toplevel,   // default top level window
+  eWindowType_dialog,     // top level window but usually handled differently
+                          // by the OS
+  eWindowType_sheet,      // MacOSX sheet (special dialog class)
+  eWindowType_popup,      // used for combo boxes, etc
+  eWindowType_child,      // child windows (contained inside a window on the
+                          // desktop (has no border))
+  eWindowType_invisible,  // windows that are invisible or offscreen
+  eWindowType_plugin,     // plugin window
+  eWindowType_plugin_ipc_chrome,   // chrome side native widget for plugins
+                                   // (e10s)
+  eWindowType_plugin_ipc_content,  // content side puppet widget for plugins
+                                   // (e10s)
 };
 
 /**
@@ -35,8 +37,8 @@ enum nsPopupType {
   ePopupTypePanel,
   ePopupTypeMenu,
   ePopupTypeTooltip,
-  ePopupTypeAny      = 0xF000 // used only to pass to
-                              // nsXULPopupManager::GetTopPopup
+  ePopupTypeAny = 0xF000  // used only to pass to
+                          // nsXULPopupManager::GetTopPopup
 };
 
 /**
@@ -49,9 +51,11 @@ enum nsPopupLevel {
   // the popup is a floating popup used for tool palettes. A parent window
   // must be specified, but a platform implementation need not use this.
   // On Windows, floating is generally equivalent to parent. On Mac, floating
-  // puts the popup at toplevel, but it will hide when the application is deactivated
+  // puts the popup at toplevel, but it will hide when the application is
+  // deactivated
   ePopupLevelFloating,
-  // the popup appears on top of other windows, including those of other applications
+  // the popup appears on top of other windows, including those of other
+  // applications
   ePopupLevelTop
 };
 
@@ -59,28 +63,28 @@ enum nsPopupLevel {
  * Border styles
  */
 enum nsBorderStyle {
-  eBorderStyle_none     = 0,      // no border, titlebar, etc.. opposite of
-                                  // all
-  eBorderStyle_all      = 1 << 0, // all window decorations
-  eBorderStyle_border   = 1 << 1, // enables the border on the window. these
-                                  // are only for decoration and are not
-                                  // resize handles
-  eBorderStyle_resizeh  = 1 << 2, // enables the resize handles for the
-                                  // window. if this is set, border is
-                                  // implied to also be set
-  eBorderStyle_title    = 1 << 3, // enables the titlebar for the window
-  eBorderStyle_menu     = 1 << 4, // enables the window menu button on the
-                                  // title bar. this being on should force
-                                  // the title bar to display
-  eBorderStyle_minimize = 1 << 5, // enables the minimize button so the user
-                                  // can minimize the window. turned off for
-                                  // tranient windows since they can not be
-                                  // minimized separate from their parent
-  eBorderStyle_maximize = 1 << 6, // enables the maxmize button so the user
-                                  // can maximize the window
-  eBorderStyle_close    = 1 << 7, // show the close button
-  eBorderStyle_default  = -1      // whatever the OS wants... i.e. don't do
-                                  // anything
+  eBorderStyle_none = 0,           // no border, titlebar, etc.. opposite of
+                                   // all
+  eBorderStyle_all = 1 << 0,       // all window decorations
+  eBorderStyle_border = 1 << 1,    // enables the border on the window. these
+                                   // are only for decoration and are not
+                                   // resize handles
+  eBorderStyle_resizeh = 1 << 2,   // enables the resize handles for the
+                                   // window. if this is set, border is
+                                   // implied to also be set
+  eBorderStyle_title = 1 << 3,     // enables the titlebar for the window
+  eBorderStyle_menu = 1 << 4,      // enables the window menu button on the
+                                   // title bar. this being on should force
+                                   // the title bar to display
+  eBorderStyle_minimize = 1 << 5,  // enables the minimize button so the user
+                                   // can minimize the window. turned off for
+                                   // tranient windows since they can not be
+                                   // minimized separate from their parent
+  eBorderStyle_maximize = 1 << 6,  // enables the maxmize button so the user
+                                   // can maximize the window
+  eBorderStyle_close = 1 << 7,     // show the close button
+  eBorderStyle_default = -1        // whatever the OS wants... i.e. don't do
+                                   // anything
 };
 
 /**
@@ -89,50 +93,48 @@ enum nsBorderStyle {
  */
 
 struct nsWidgetInitData {
-  nsWidgetInitData() :
-      mWindowType(eWindowType_child),
-      mBorderStyle(eBorderStyle_default),
-      mPopupHint(ePopupTypePanel),
-      mPopupLevel(ePopupLevelTop),
-      mScreenId(0),
-      clipChildren(false),
-      clipSiblings(false),
-      mDropShadow(false),
-      mListenForResizes(false),
-      mUnicode(true),
-      mRTL(false),
-      mNoAutoHide(false),
-      mIsDragPopup(false),
-      mIsAnimationSuppressed(false),
-      mSupportTranslucency(false),
-      mMouseTransparent(false),
-      mHasRemoteContent(false)
-  {
-  }
+  nsWidgetInitData()
+      : mWindowType(eWindowType_child),
+        mBorderStyle(eBorderStyle_default),
+        mPopupHint(ePopupTypePanel),
+        mPopupLevel(ePopupLevelTop),
+        mScreenId(0),
+        clipChildren(false),
+        clipSiblings(false),
+        mDropShadow(false),
+        mListenForResizes(false),
+        mUnicode(true),
+        mRTL(false),
+        mNoAutoHide(false),
+        mIsDragPopup(false),
+        mIsAnimationSuppressed(false),
+        mSupportTranslucency(false),
+        mMouseTransparent(false),
+        mHasRemoteContent(false) {}
 
-  nsWindowType  mWindowType;
+  nsWindowType mWindowType;
   nsBorderStyle mBorderStyle;
-  nsPopupType   mPopupHint;
-  nsPopupLevel  mPopupLevel;
+  nsPopupType mPopupHint;
+  nsPopupLevel mPopupLevel;
   // B2G multi-screen support. Screen ID is for differentiating screens of
   // windows, and due to the hardware limitation, it is platform-specific for
   // now, which align with the value of display type defined in HWC.
-  uint32_t      mScreenId;
+  uint32_t mScreenId;
   // when painting exclude area occupied by child windows and sibling windows
-  bool          clipChildren, clipSiblings, mDropShadow;
-  bool          mListenForResizes;
-  bool          mUnicode;
-  bool          mRTL;
-  bool          mNoAutoHide; // true for noautohide panels
-  bool          mIsDragPopup;  // true for drag feedback panels
+  bool clipChildren, clipSiblings, mDropShadow;
+  bool mListenForResizes;
+  bool mUnicode;
+  bool mRTL;
+  bool mNoAutoHide;   // true for noautohide panels
+  bool mIsDragPopup;  // true for drag feedback panels
   // true if window creation animation is suppressed, e.g. for session restore
-  bool          mIsAnimationSuppressed;
+  bool mIsAnimationSuppressed;
   // true if the window should support an alpha channel, if available.
-  bool          mSupportTranslucency;
+  bool mSupportTranslucency;
   // true if the window should be transparent to mouse events. Currently this is
   // only valid for eWindowType_popup widgets
-  bool          mMouseTransparent;
-  bool          mHasRemoteContent;
+  bool mMouseTransparent;
+  bool mHasRemoteContent;
 };
 
-#endif // nsWidgetInitData_h__
+#endif  // nsWidgetInitData_h__

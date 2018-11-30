@@ -15,58 +15,56 @@
 namespace mozilla {
 namespace webgl {
 class AvailabilityRunnable;
-} // namespace webgl
+}  // namespace webgl
 
-class WebGLQuery final
-    : public nsWrapperCache
-    , public WebGLRefCountedObject<WebGLQuery>
-    , public LinkedListElement<WebGLQuery>
-{
-    friend class webgl::AvailabilityRunnable;
-    friend class WebGLRefCountedObject<WebGLQuery>;
+class WebGLQuery final : public nsWrapperCache,
+                         public WebGLRefCountedObject<WebGLQuery>,
+                         public LinkedListElement<WebGLQuery> {
+  friend class webgl::AvailabilityRunnable;
+  friend class WebGLRefCountedObject<WebGLQuery>;
 
-public:
-    const GLuint mGLName;
-private:
-    GLenum mTarget;
-    WebGLRefPtr<WebGLQuery>* mActiveSlot;
+ public:
+  const GLuint mGLName;
 
-    bool mCanBeAvailable = false; // Track whether the event loop has spun
+ private:
+  GLenum mTarget;
+  WebGLRefPtr<WebGLQuery>* mActiveSlot;
 
-    ////
-public:
-    GLenum Target() const { return mTarget; }
-    bool IsActive() const { return bool(mActiveSlot); }
+  bool mCanBeAvailable = false;  // Track whether the event loop has spun
 
-    ////
+  ////
+ public:
+  GLenum Target() const { return mTarget; }
+  bool IsActive() const { return bool(mActiveSlot); }
 
-    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLQuery)
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLQuery)
+  ////
 
-    explicit WebGLQuery(WebGLContext* webgl);
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLQuery)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLQuery)
 
-private:
-    ~WebGLQuery() {
-        DeleteOnce();
-    };
+  explicit WebGLQuery(WebGLContext* webgl);
 
-    // WebGLRefCountedObject
-    void Delete();
+ private:
+  ~WebGLQuery() { DeleteOnce(); };
 
-public:
-    WebGLContext* GetParentObject() const { return mContext; }
-    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
+  // WebGLRefCountedObject
+  void Delete();
 
-    ////
+ public:
+  WebGLContext* GetParentObject() const { return mContext; }
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> givenProto) override;
 
-    void BeginQuery(GLenum target, WebGLRefPtr<WebGLQuery>& slot);
-    void DeleteQuery();
-    void EndQuery();
-    void GetQueryParameter(GLenum pname, JS::MutableHandleValue retval) const;
-    bool IsQuery() const;
-    void QueryCounter(GLenum target);
+  ////
+
+  void BeginQuery(GLenum target, WebGLRefPtr<WebGLQuery>& slot);
+  void DeleteQuery();
+  void EndQuery();
+  void GetQueryParameter(GLenum pname, JS::MutableHandleValue retval) const;
+  bool IsQuery() const;
+  void QueryCounter(GLenum target);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // WEBGL_QUERY_H_
+#endif  // WEBGL_QUERY_H_

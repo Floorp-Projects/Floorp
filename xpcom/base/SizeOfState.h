@@ -23,13 +23,11 @@ namespace mozilla {
 // A table of seen pointers. Useful when measuring structures that contain
 // nodes that may be pointed to from multiple places, e.g. via RefPtr (in C++
 // code) or Arc (in Rust code).
-class SeenPtrs : public nsTHashtable<nsPtrHashKey<const void>>
-{
-public:
+class SeenPtrs : public nsTHashtable<nsPtrHashKey<const void>> {
+ public:
   // Returns true if we have seen this pointer before, false otherwise. Also
   // remembers this pointer for later queries.
-  bool HaveSeenPtr(const void* aPtr)
-  {
+  bool HaveSeenPtr(const void* aPtr) {
     uint32_t oldCount = Count();
 
     mozilla::Unused << PutEntry(aPtr, fallible);
@@ -54,12 +52,10 @@ public:
 // (SizeOfIncludingThis(), etc.) just need a MallocSizeOf parameter, but some
 // also need a record of pointers that have been seen and should not be
 // re-measured. This class encapsulates both of those things.
-class SizeOfState
-{
-public:
+class SizeOfState {
+ public:
   explicit SizeOfState(MallocSizeOf aMallocSizeOf)
-    : mMallocSizeOf(aMallocSizeOf)
-  {}
+      : mMallocSizeOf(aMallocSizeOf) {}
 
   bool HaveSeenPtr(const void* aPtr) { return mSeenPtrs.HaveSeenPtr(aPtr); }
 
@@ -67,7 +63,6 @@ public:
   SeenPtrs mSeenPtrs;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // SizeOfState_h
-
+#endif  // SizeOfState_h

@@ -18,15 +18,12 @@ class HTMLDetailsElement;
 // or legend of the <details> tag. Please see the spec for more information.
 // https://html.spec.whatwg.org/multipage/forms.html#the-details-element
 //
-class HTMLSummaryElement final : public nsGenericHTMLElement
-{
-public:
+class HTMLSummaryElement final : public nsGenericHTMLElement {
+ public:
   using NodeInfo = mozilla::dom::NodeInfo;
 
   explicit HTMLSummaryElement(already_AddRefed<NodeInfo>&& aNodeInfo)
-    : nsGenericHTMLElement(std::move(aNodeInfo))
-  {
-  }
+      : nsGenericHTMLElement(std::move(aNodeInfo)) {}
 
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLSummaryElement, summary)
 
@@ -47,14 +44,14 @@ public:
   // nullptr if there is no such details element.
   HTMLDetailsElement* GetDetails() const;
 
-protected:
+ protected:
   virtual ~HTMLSummaryElement();
 
   JSObject* WrapNode(JSContext* aCx,
                      JS::Handle<JSObject*> aGivenProto) override;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_HTMLSummaryElement_h */

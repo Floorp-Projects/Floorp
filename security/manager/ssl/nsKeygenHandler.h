@@ -17,8 +17,7 @@
 #include "nsTArray.h"
 #include "secmodt.h"
 
-nsresult GetSlotWithMechanism(uint32_t mechanism,
-                              nsIInterfaceRequestor* ctx,
+nsresult GetSlotWithMechanism(uint32_t mechanism, nsIInterfaceRequestor* ctx,
                               PK11SlotInfo** retSlot);
 
 #define DEFAULT_RSA_KEYGEN_PE 65537L
@@ -26,9 +25,8 @@ nsresult GetSlotWithMechanism(uint32_t mechanism,
 
 mozilla::UniqueSECItem DecodeECParams(const char* curve);
 
-class nsKeygenFormProcessor : public nsIFormProcessor
-{
-public:
+class nsKeygenFormProcessor : public nsIFormProcessor {
+ public:
   nsKeygenFormProcessor();
   nsresult Init();
 
@@ -47,26 +45,27 @@ public:
                                   nsAString& aAttribute) override;
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  static nsresult Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
+  static nsresult Create(nsISupports* aOuter, const nsIID& aIID,
+                         void** aResult);
 
   static void ExtractParams(mozilla::dom::Element* aElement,
-                            nsAString& challengeValue,
-                            nsAString& keyTypeValue,
+                            nsAString& challengeValue, nsAString& keyTypeValue,
                             nsAString& keyParamsValue);
 
-protected:
+ protected:
   virtual ~nsKeygenFormProcessor() {}
 
   nsresult GetPublicKey(const nsAString& aValue, const nsAString& aChallenge,
                         const nsString& akeyType, nsAString& aOutPublicKey,
                         const nsAString& aPqg);
   nsresult GetSlot(uint32_t aMechanism, PK11SlotInfo** aSlot);
-private:
+
+ private:
   nsCOMPtr<nsIInterfaceRequestor> m_ctx;
 
   typedef struct SECKeySizeChoiceInfoStr {
-      nsString name;
-      int size;
+    nsString name;
+    int size;
   } SECKeySizeChoiceInfo;
 
   enum { number_of_key_size_choices = 2 };
@@ -74,4 +73,4 @@ private:
   SECKeySizeChoiceInfo mSECKeySizeChoiceList[number_of_key_size_choices];
 };
 
-#endif // nsKeygenHandler_h
+#endif  // nsKeygenHandler_h

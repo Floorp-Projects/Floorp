@@ -59,18 +59,15 @@
  * multiple instances of B, such that it is not possible for A and B to simply
  * have pointers to one another.
  */
-template<class Type>
-class nsTWeakRef
-{
-public:
-  ~nsTWeakRef()
-  {}
+template <class Type>
+class nsTWeakRef {
+ public:
+  ~nsTWeakRef() {}
 
   /**
    * Construct from an object pointer (may be null).
    */
-  explicit nsTWeakRef(Type* aObj = nullptr)
-  {
+  explicit nsTWeakRef(Type* aObj = nullptr) {
     if (aObj) {
       mRef = new Inner(aObj);
     } else {
@@ -81,14 +78,12 @@ public:
   /**
    * Construct from another weak reference object.
    */
-  explicit nsTWeakRef(const nsTWeakRef<Type>& aOther) : mRef(aOther.mRef)
-  {}
+  explicit nsTWeakRef(const nsTWeakRef<Type>& aOther) : mRef(aOther.mRef) {}
 
   /**
    * Assign from an object pointer.
    */
-  nsTWeakRef<Type>& operator=(Type* aObj)
-  {
+  nsTWeakRef<Type>& operator=(Type* aObj) {
     if (aObj) {
       mRef = new Inner(aObj);
     } else {
@@ -100,8 +95,7 @@ public:
   /**
    * Assign from another weak reference object.
    */
-  nsTWeakRef<Type>& operator=(const nsTWeakRef<Type>& aOther)
-  {
+  nsTWeakRef<Type>& operator=(const nsTWeakRef<Type>& aOther) {
     mRef = aOther.mRef;
     return *this;
   }
@@ -117,8 +111,7 @@ public:
    * by this weak reference calls this method when it is being destroyed.
    * @returns The former referenced object.
    */
-  Type* forget()
-  {
+  Type* forget() {
     Type* obj;
     if (mRef) {
       obj = mRef->mObj;
@@ -139,31 +132,21 @@ public:
    * Allow |*this| to be treated as a |Type*| for convenience.  Use with
    * caution since this method will crash if the referenced object is null.
    */
-  Type* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN
-  {
-    NS_ASSERTION(mRef && mRef->mObj,
-                 "You can't dereference a null weak reference with operator->().");
+  Type* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN {
+    NS_ASSERTION(
+        mRef && mRef->mObj,
+        "You can't dereference a null weak reference with operator->().");
     return get();
   }
 
-private:
+ private:
+  struct Inner {
+    int mCnt;
+    Type* mObj;
 
-  struct Inner
-  {
-    int     mCnt;
-    Type*   mObj;
-
-    explicit Inner(Type* aObj)
-      : mCnt(1)
-      , mObj(aObj)
-    {
-    }
-    void AddRef()
-    {
-      ++mCnt;
-    }
-    void Release()
-    {
+    explicit Inner(Type* aObj) : mCnt(1), mObj(aObj) {}
+    void AddRef() { ++mCnt; }
+    void Release() {
       if (--mCnt == 0) {
         delete this;
       }

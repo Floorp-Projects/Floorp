@@ -18,26 +18,22 @@
 // To enable logging define to your favorite logging API
 #define LOG(x)
 
-class AutoCriticalSection
-{
-public:
+class AutoCriticalSection {
+ public:
   explicit AutoCriticalSection(LPCRITICAL_SECTION aSection)
-    : mSection(aSection)
-  {
+      : mSection(aSection) {
     ::EnterCriticalSection(mSection);
   }
-  ~AutoCriticalSection()
-  {
-    ::LeaveCriticalSection(mSection);
-  }
-private:
+  ~AutoCriticalSection() { ::LeaveCriticalSection(mSection); }
+
+ private:
   LPCRITICAL_SECTION mSection;
 };
 
 // Estimate of the smallest duration of time we can measure.
 static volatile ULONGLONG sResolution;
 static volatile ULONGLONG sResolutionSigDigs;
-static const double   kNsPerSecd  = 1000000000.0;
+static const double kNsPerSecd = 1000000000.0;
 static const LONGLONG kNsPerMillisec = 1000000;
 
 // ----------------------------------------------------------------------------
@@ -70,13 +66,11 @@ static uint64_t sFrequencyPerSec = 1;
 
 namespace mozilla {
 
-MFBT_API uint64_t
-GetQueryPerformanceFrequencyPerSec()
-{
+MFBT_API uint64_t GetQueryPerformanceFrequencyPerSec() {
   return sFrequencyPerSec;
 }
 
-}
+}  // namespace mozilla
 
 // How much we are tolerant to GTC occasional loose of resoltion.
 // This number says how many multiples of the minimal GTC resolution
@@ -87,11 +81,12 @@ static const LONGLONG kGTCTickLeapTolerance = 4;
 // dynamically, and kept in sGTCResolutionThreshold.
 //
 // Schematically, QPC worked "100%" correctly if ((GTC_now - GTC_epoch) -
-// (QPC_now - QPC_epoch)) was in  [-sGTCResolutionThreshold, sGTCResolutionThreshold]
-// interval every time we'd compared two time stamps.
+// (QPC_now - QPC_epoch)) was in  [-sGTCResolutionThreshold,
+// sGTCResolutionThreshold] interval every time we'd compared two time stamps.
 // If not, then we check the overflow behind this basic threshold
-// is in kFailureThreshold.  If not, we condider it as a QPC failure.  If too many
-// failures in short time are detected, QPC is considered faulty and disabled.
+// is in kFailureThreshold.  If not, we condider it as a QPC failure.  If too
+// many failures in short time are detected, QPC is considered faulty and
+// disabled.
 //
 // Kept in [mt]
 static LONGLONG sGTCResolutionThreshold;
@@ -156,9 +151,7 @@ static ULONGLONG sFaultIntoleranceCheckpoint = 0;
 namespace mozilla {
 
 // Result is in [mt]
-static inline ULONGLONG
-PerformanceCounter()
-{
+static inline ULONGLONG PerformanceCounter() {
   LARGE_INTEGER pc;
   ::QueryPerformanceCounter(&pc);
 
@@ -174,13 +167,10 @@ PerformanceCounter()
   return pc.QuadPart * 1000ULL;
 }
 
-static void
-InitThresholds()
-{
+static void InitThresholds() {
   DWORD timeAdjustment = 0, timeIncrement = 0;
   BOOL timeAdjustmentDisabled;
-  GetSystemTimeAdjustment(&timeAdjustment,
-                          &timeIncrement,
+  GetSystemTimeAdjustment(&timeAdjustment, &timeIncrement,
                           &timeAdjustmentDisabled);
 
   LOG(("TimeStamp: timeIncrement=%d [100ns]", timeIncrement));
@@ -203,20 +193,18 @@ InitThresholds()
 
   // How many milli-ticks has the interval rounded up
   LONGLONG ticksPerGetTickCountResolutionCeiling =
-    (int64_t(timeIncrementCeil) * sFrequencyPerSec) / 10000LL;
+      (int64_t(timeIncrementCeil) * sFrequencyPerSec) / 10000LL;
 
   // GTC may jump by 32 (2*16) ms in two steps, therefor use the ceiling value.
   sGTCResolutionThreshold =
-    LONGLONG(kGTCTickLeapTolerance * ticksPerGetTickCountResolutionCeiling);
+      LONGLONG(kGTCTickLeapTolerance * ticksPerGetTickCountResolutionCeiling);
 
   sHardFailureLimit = ms2mt(kHardFailureLimit);
   sFailureFreeInterval = ms2mt(kFailureFreeInterval);
   sFailureThreshold = ms2mt(kFailureThreshold);
 }
 
-static void
-InitResolution()
-{
+static void InitResolution() {
   // 10 total trials is arbitrary: what we're trying to avoid by
   // looping is getting unlucky and being interrupted by a context
   // switch or signal, or being bitten by paging/cache effects
@@ -254,9 +242,9 @@ InitResolution()
   // find the number of significant digits in mResolution, for the
   // sake of ToSecondsSigDigits()
   ULONGLONG sigDigs;
-  for (sigDigs = 1;
-       !(sigDigs == result || 10 * sigDigs > result);
-       sigDigs *= 10);
+  for (sigDigs = 1; !(sigDigs == result || 10 * sigDigs > result);
+       sigDigs *= 10)
+    ;
 
   sResolutionSigDigs = sigDigs;
 }
@@ -265,26 +253,22 @@ InitResolution()
 // TimeStampValue implementation
 // ----------------------------------------------------------------------------
 MFBT_API
-TimeStampValue::TimeStampValue(ULONGLONG aGTC, ULONGLONG aQPC, bool aHasQPC, bool aUsedCanonicalNow)
-  : mGTC(aGTC)
-  , mQPC(aQPC)
-  , mUsedCanonicalNow(aUsedCanonicalNow)
-  , mHasQPC(aHasQPC)
-{
+TimeStampValue::TimeStampValue(ULONGLONG aGTC, ULONGLONG aQPC, bool aHasQPC,
+                               bool aUsedCanonicalNow)
+    : mGTC(aGTC),
+      mQPC(aQPC),
+      mUsedCanonicalNow(aUsedCanonicalNow),
+      mHasQPC(aHasQPC) {
   mIsNull = aGTC == 0 && aQPC == 0;
 }
 
-MFBT_API TimeStampValue&
-TimeStampValue::operator+=(const int64_t aOther)
-{
+MFBT_API TimeStampValue& TimeStampValue::operator+=(const int64_t aOther) {
   mGTC += aOther;
   mQPC += aOther;
   return *this;
 }
 
-MFBT_API TimeStampValue&
-TimeStampValue::operator-=(const int64_t aOther)
-{
+MFBT_API TimeStampValue& TimeStampValue::operator-=(const int64_t aOther) {
   mGTC -= aOther;
   mQPC -= aOther;
   return *this;
@@ -292,18 +276,16 @@ TimeStampValue::operator-=(const int64_t aOther)
 
 // If the duration is less then two seconds, perform check of QPC stability
 // by comparing both GTC and QPC calculated durations of this and aOther.
-MFBT_API uint64_t
-TimeStampValue::CheckQPC(const TimeStampValue& aOther) const
-{
+MFBT_API uint64_t TimeStampValue::CheckQPC(const TimeStampValue& aOther) const {
   uint64_t deltaGTC = mGTC - aOther.mGTC;
 
-  if (!mHasQPC || !aOther.mHasQPC) { // Both not holding QPC
+  if (!mHasQPC || !aOther.mHasQPC) {  // Both not holding QPC
     return deltaGTC;
   }
 
   uint64_t deltaQPC = mQPC - aOther.mQPC;
 
-  if (sHasStableTSC) { // For stable TSC there is no need to check
+  if (sHasStableTSC) {  // For stable TSC there is no need to check
     return deltaQPC;
   }
 
@@ -326,7 +308,8 @@ TimeStampValue::CheckQPC(const TimeStampValue& aOther) const
 
   // QPC deviates, don't use it, since now this method may only return deltaGTC.
 
-  if (!sUseQPC) { // QPC already disabled, no need to run the fault tolerance algorithm.
+  if (!sUseQPC) {  // QPC already disabled, no need to run the fault tolerance
+                   // algorithm.
     return deltaGTC;
   }
 
@@ -344,8 +327,8 @@ TimeStampValue::CheckQPC(const TimeStampValue& aOther) const
       // Time since now to the checkpoint actually holds information on how many
       // failures there were in the failure free interval we have defined.
       uint64_t failureCount =
-        (sFaultIntoleranceCheckpoint - now + sFailureFreeInterval - 1) /
-        sFailureFreeInterval;
+          (sFaultIntoleranceCheckpoint - now + sFailureFreeInterval - 1) /
+          sFailureFreeInterval;
       if (failureCount > kMaxFailuresPerInterval) {
         sUseQPC = false;
         LOG(("TimeStamp: QPC disabled"));
@@ -357,7 +340,8 @@ TimeStampValue::CheckQPC(const TimeStampValue& aOther) const
         LOG(("TimeStamp: recording %dth QPC failure", failureCount));
       }
     } else {
-      // Setup fault intolerance checkpoint in the future for first detected error.
+      // Setup fault intolerance checkpoint in the future for first detected
+      // error.
       sFaultIntoleranceCheckpoint = now + sFailureFreeInterval;
       LOG(("TimeStamp: recording 1st QPC failure"));
     }
@@ -367,8 +351,7 @@ TimeStampValue::CheckQPC(const TimeStampValue& aOther) const
 }
 
 MFBT_API uint64_t
-TimeStampValue::operator-(const TimeStampValue& aOther) const
-{
+TimeStampValue::operator-(const TimeStampValue& aOther) const {
   if (IsNull() && aOther.IsNull()) {
     return uint64_t(0);
   }
@@ -380,16 +363,13 @@ TimeStampValue::operator-(const TimeStampValue& aOther) const
 // TimeDuration and TimeStamp implementation
 // ----------------------------------------------------------------------------
 
-MFBT_API double
-BaseTimeDurationPlatformUtils::ToSeconds(int64_t aTicks)
-{
+MFBT_API double BaseTimeDurationPlatformUtils::ToSeconds(int64_t aTicks) {
   // Converting before arithmetic avoids blocked store forward
   return double(aTicks) / (double(sFrequencyPerSec) * 1000.0);
 }
 
-MFBT_API double
-BaseTimeDurationPlatformUtils::ToSecondsSigDigits(int64_t aTicks)
-{
+MFBT_API double BaseTimeDurationPlatformUtils::ToSecondsSigDigits(
+    int64_t aTicks) {
   // don't report a value < mResolution ...
   LONGLONG resolution = sResolution;
   LONGLONG resolutionSigDigs = sResolutionSigDigs;
@@ -400,8 +380,7 @@ BaseTimeDurationPlatformUtils::ToSecondsSigDigits(int64_t aTicks)
 }
 
 MFBT_API int64_t
-BaseTimeDurationPlatformUtils::TicksFromMilliseconds(double aMilliseconds)
-{
+BaseTimeDurationPlatformUtils::TicksFromMilliseconds(double aMilliseconds) {
   double result = ms2mt(aMilliseconds);
   if (result > INT64_MAX) {
     return INT64_MAX;
@@ -412,26 +391,20 @@ BaseTimeDurationPlatformUtils::TicksFromMilliseconds(double aMilliseconds)
   return result;
 }
 
-MFBT_API int64_t
-BaseTimeDurationPlatformUtils::ResolutionInTicks()
-{
+MFBT_API int64_t BaseTimeDurationPlatformUtils::ResolutionInTicks() {
   return static_cast<int64_t>(sResolution);
 }
 
-static bool
-HasStableTSC()
-{
+static bool HasStableTSC() {
 #if defined(_M_ARM64)
   // AArch64 defines that its system counter run at a constant rate
   // regardless of the current clock frequency of the system.  See "The
   // Generic Timer", section D7, in the ARMARM for ARMv8.
   return true;
 #else
-  union
-  {
+  union {
     int regs[4];
-    struct
-    {
+    struct {
       int nIds;
       char cpuString[12];
     };
@@ -441,10 +414,8 @@ HasStableTSC()
   // Only allow Intel or AMD CPUs for now.
   // The order of the registers is reg[1], reg[3], reg[2].  We just adjust the
   // string so that we can compare in one go.
-  if (_strnicmp(cpuInfo.cpuString, "GenuntelineI",
-                sizeof(cpuInfo.cpuString)) &&
-      _strnicmp(cpuInfo.cpuString, "AuthcAMDenti",
-                sizeof(cpuInfo.cpuString))) {
+  if (_strnicmp(cpuInfo.cpuString, "GenuntelineI", sizeof(cpuInfo.cpuString)) &&
+      _strnicmp(cpuInfo.cpuString, "AuthcAMDenti", sizeof(cpuInfo.cpuString))) {
     return false;
   }
 
@@ -467,9 +438,7 @@ HasStableTSC()
 
 static bool gInitialized = false;
 
-MFBT_API void
-TimeStamp::Startup()
-{
+MFBT_API void TimeStamp::Startup() {
   if (gInitialized) {
     return;
   }
@@ -514,16 +483,9 @@ TimeStamp::Startup()
   return;
 }
 
-MFBT_API void
-TimeStamp::Shutdown()
-{
-  DeleteCriticalSection(&sTimeStampLock);
-}
+MFBT_API void TimeStamp::Shutdown() { DeleteCriticalSection(&sTimeStampLock); }
 
-
-TimeStampValue
-NowInternal(bool aHighResolution)
-{
+TimeStampValue NowInternal(bool aHighResolution) {
   // sUseQPC is volatile
   bool useQPC = (aHighResolution && sUseQPC);
 
@@ -533,24 +495,18 @@ NowInternal(bool aHighResolution)
   return TimeStampValue(GTC, QPC, useQPC, false);
 }
 
-MFBT_API TimeStamp
-TimeStamp::Now(bool aHighResolution)
-{
+MFBT_API TimeStamp TimeStamp::Now(bool aHighResolution) {
   return TimeStamp::NowFuzzy(NowInternal(aHighResolution));
 }
 
-MFBT_API TimeStamp
-TimeStamp::NowUnfuzzed(bool aHighResolution)
-{
+MFBT_API TimeStamp TimeStamp::NowUnfuzzed(bool aHighResolution) {
   return TimeStamp(NowInternal(aHighResolution));
 }
 
 // Computes and returns the process uptime in microseconds.
 // Returns 0 if an error was encountered.
 
-MFBT_API uint64_t
-TimeStamp::ComputeProcessUptime()
-{
+MFBT_API uint64_t TimeStamp::ComputeProcessUptime() {
   SYSTEMTIME nowSys;
   GetSystemTime(&nowSys);
 
@@ -568,16 +524,10 @@ TimeStamp::ComputeProcessUptime()
     return 0;
   }
 
-  ULARGE_INTEGER startUsec = {{
-     start.dwLowDateTime,
-     start.dwHighDateTime
-  }};
-  ULARGE_INTEGER nowUsec = {{
-    now.dwLowDateTime,
-    now.dwHighDateTime
-  }};
+  ULARGE_INTEGER startUsec = {{start.dwLowDateTime, start.dwHighDateTime}};
+  ULARGE_INTEGER nowUsec = {{now.dwLowDateTime, now.dwHighDateTime}};
 
   return (nowUsec.QuadPart - startUsec.QuadPart) / 10ULL;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

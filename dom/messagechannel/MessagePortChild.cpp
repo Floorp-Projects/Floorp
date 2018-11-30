@@ -12,46 +12,37 @@
 namespace mozilla {
 namespace dom {
 
-MessagePortChild::MessagePortChild()
-  : mPort(nullptr)
-{
-}
+MessagePortChild::MessagePortChild() : mPort(nullptr) {}
 
-mozilla::ipc::IPCResult
-MessagePortChild::RecvStopSendingDataConfirmed()
-{
+mozilla::ipc::IPCResult MessagePortChild::RecvStopSendingDataConfirmed() {
   MOZ_ASSERT(mPort);
   mPort->StopSendingDataConfirmed();
   MOZ_ASSERT(!mPort);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-MessagePortChild::RecvEntangled(nsTArray<ClonedMessageData>&& aMessages)
-{
+mozilla::ipc::IPCResult MessagePortChild::RecvEntangled(
+    nsTArray<ClonedMessageData>&& aMessages) {
   if (mPort) {
     mPort->Entangled(aMessages);
   }
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-MessagePortChild::RecvReceiveData(nsTArray<ClonedMessageData>&& aMessages)
-{
+mozilla::ipc::IPCResult MessagePortChild::RecvReceiveData(
+    nsTArray<ClonedMessageData>&& aMessages) {
   if (mPort) {
     mPort->MessagesReceived(aMessages);
   }
   return IPC_OK();
 }
 
-void
-MessagePortChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void MessagePortChild::ActorDestroy(ActorDestroyReason aWhy) {
   if (mPort) {
     mPort->Closed();
     MOZ_ASSERT(!mPort);
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -17,75 +17,68 @@ using namespace mozilla;
 NS_IMPL_ISUPPORTS(nsConverterInputStream, nsIConverterInputStream,
                   nsIUnicharInputStream, nsIUnicharLineInputStream)
 
-
 NS_IMETHODIMP
-nsConverterInputStream::Init(nsIInputStream* aStream,
-                             const char *aCharset,
-                             int32_t aBufferSize,
-                             char16_t aReplacementChar)
-{
-    nsAutoCString label;
-    if (!aCharset) {
-        label.AssignLiteral("UTF-8");
-    } else {
-        label = aCharset;
-    }
+nsConverterInputStream::Init(nsIInputStream* aStream, const char* aCharset,
+                             int32_t aBufferSize, char16_t aReplacementChar) {
+  nsAutoCString label;
+  if (!aCharset) {
+    label.AssignLiteral("UTF-8");
+  } else {
+    label = aCharset;
+  }
 
-    auto encoding = Encoding::ForLabelNoReplacement(label);
-    if (!encoding) {
-      return NS_ERROR_UCONV_NOCONV;
-    }
-    // Previously, the implementation auto-switched only
-    // between the two UTF-16 variants and only when
-    // initialized with an endianness-unspecific label.
-    mConverter = encoding->NewDecoder();
+  auto encoding = Encoding::ForLabelNoReplacement(label);
+  if (!encoding) {
+    return NS_ERROR_UCONV_NOCONV;
+  }
+  // Previously, the implementation auto-switched only
+  // between the two UTF-16 variants and only when
+  // initialized with an endianness-unspecific label.
+  mConverter = encoding->NewDecoder();
 
-    size_t outputBufferSize;
-    if (aBufferSize <= 0) {
-      aBufferSize = CONVERTER_BUFFER_SIZE;
-      outputBufferSize = CONVERTER_BUFFER_SIZE;
-    } else {
-      // NetUtil.jsm assumes that if buffer size equals
-      // the input size, the whole stream will be processed
-      // as one readString. This is not true with encoding_rs,
-      // because encoding_rs might want to see space for a
-      // surrogate pair, so let's compute a larger output
-      // buffer length.
-      CheckedInt<size_t> needed = mConverter->MaxUTF16BufferLength(aBufferSize);
-      if (!needed.isValid()) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      outputBufferSize = needed.value();
-    }
-
-    // set up our buffers.
-    if (!mByteData.SetCapacity(aBufferSize, mozilla::fallible) ||
-        !mUnicharData.SetLength(outputBufferSize, mozilla::fallible)) {
+  size_t outputBufferSize;
+  if (aBufferSize <= 0) {
+    aBufferSize = CONVERTER_BUFFER_SIZE;
+    outputBufferSize = CONVERTER_BUFFER_SIZE;
+  } else {
+    // NetUtil.jsm assumes that if buffer size equals
+    // the input size, the whole stream will be processed
+    // as one readString. This is not true with encoding_rs,
+    // because encoding_rs might want to see space for a
+    // surrogate pair, so let's compute a larger output
+    // buffer length.
+    CheckedInt<size_t> needed = mConverter->MaxUTF16BufferLength(aBufferSize);
+    if (!needed.isValid()) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+    outputBufferSize = needed.value();
+  }
 
-    mInput = aStream;
-    mErrorsAreFatal = !aReplacementChar;
-    return NS_OK;
+  // set up our buffers.
+  if (!mByteData.SetCapacity(aBufferSize, mozilla::fallible) ||
+      !mUnicharData.SetLength(outputBufferSize, mozilla::fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  mInput = aStream;
+  mErrorsAreFatal = !aReplacementChar;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsConverterInputStream::Close()
-{
-    nsresult rv = mInput ? mInput->Close() : NS_OK;
-    mLineBuffer = nullptr;
-    mInput = nullptr;
-    mConverter = nullptr;
-    mByteData.Clear();
-    mUnicharData.Clear();
-    return rv;
+nsConverterInputStream::Close() {
+  nsresult rv = mInput ? mInput->Close() : NS_OK;
+  mLineBuffer = nullptr;
+  mInput = nullptr;
+  mConverter = nullptr;
+  mByteData.Clear();
+  mUnicharData.Clear();
+  return rv;
 }
 
 NS_IMETHODIMP
-nsConverterInputStream::Read(char16_t* aBuf,
-                             uint32_t aCount,
-                             uint32_t *aReadCount)
-{
+nsConverterInputStream::Read(char16_t* aBuf, uint32_t aCount,
+                             uint32_t* aReadCount) {
   NS_ASSERTION(mUnicharDataLength >= mUnicharDataOffset, "unsigned madness");
   uint32_t readCount = mUnicharDataLength - mUnicharDataOffset;
   if (0 == readCount) {
@@ -108,9 +101,8 @@ nsConverterInputStream::Read(char16_t* aBuf,
 
 NS_IMETHODIMP
 nsConverterInputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
-                                     void* aClosure,
-                                     uint32_t aCount, uint32_t *aReadCount)
-{
+                                     void* aClosure, uint32_t aCount,
+                                     uint32_t* aReadCount) {
   NS_ASSERTION(mUnicharDataLength >= mUnicharDataOffset, "unsigned madness");
   uint32_t bytesToWrite = mUnicharDataLength - mUnicharDataOffset;
   nsresult rv;
@@ -126,15 +118,13 @@ nsConverterInputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
     }
   }
 
-  if (bytesToWrite > aCount)
-    bytesToWrite = aCount;
+  if (bytesToWrite > aCount) bytesToWrite = aCount;
 
   uint32_t bytesWritten;
   uint32_t totalBytesWritten = 0;
 
   while (bytesToWrite) {
-    rv = aWriter(this, aClosure,
-                 mUnicharData.Elements() + mUnicharDataOffset,
+    rv = aWriter(this, aClosure, mUnicharData.Elements() + mUnicharDataOffset,
                  totalBytesWritten, bytesToWrite, &bytesWritten);
     if (NS_FAILED(rv)) {
       // don't propagate errors to the caller
@@ -153,8 +143,7 @@ nsConverterInputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
 
 NS_IMETHODIMP
 nsConverterInputStream::ReadString(uint32_t aCount, nsAString& aString,
-                                   uint32_t* aReadCount)
-{
+                                   uint32_t* aReadCount) {
   NS_ASSERTION(mUnicharDataLength >= mUnicharDataOffset, "unsigned madness");
   uint32_t readCount = mUnicharDataLength - mUnicharDataOffset;
   if (0 == readCount) {
@@ -175,9 +164,7 @@ nsConverterInputStream::ReadString(uint32_t aCount, nsAString& aString,
   return NS_OK;
 }
 
-uint32_t
-nsConverterInputStream::Fill(nsresult * aErrorCode)
-{
+uint32_t nsConverterInputStream::Fill(nsresult* aErrorCode) {
   if (nullptr == mInput) {
     // We already closed the stream!
     *aErrorCode = NS_BASE_STREAM_CLOSED;
@@ -227,10 +214,10 @@ nsConverterInputStream::Fill(nsresult * aErrorCode)
   // Decode* calls below.
   if (mErrorsAreFatal) {
     Tie(result, read, written) =
-      mConverter->DecodeToUTF16WithoutReplacement(src, dst, false);
+        mConverter->DecodeToUTF16WithoutReplacement(src, dst, false);
   } else {
     Tie(result, read, written, hadErrors) =
-      mConverter->DecodeToUTF16(src, dst, false);
+        mConverter->DecodeToUTF16(src, dst, false);
   }
   Unused << hadErrors;
   mLeftOverBytes = mByteData.Length() - read;
@@ -245,8 +232,7 @@ nsConverterInputStream::Fill(nsresult * aErrorCode)
 }
 
 NS_IMETHODIMP
-nsConverterInputStream::ReadLine(nsAString& aLine, bool* aResult)
-{
+nsConverterInputStream::ReadLine(nsAString& aLine, bool* aResult) {
   if (!mLineBuffer) {
     mLineBuffer = new nsLineBuffer<char16_t>;
   }

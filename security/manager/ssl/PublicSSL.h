@@ -18,8 +18,7 @@ void StopSSLServerCertVerificationThreads();
 void DisableMD5();
 nsresult InitializeCipherSuite();
 
-} //namespace psm
-} // namespace mozilla
+}  // namespace psm
+}  // namespace mozilla
 
 #endif
-

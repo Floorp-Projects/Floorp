@@ -21,103 +21,88 @@ class SdpMediaSection;
 class Sdp;
 
 class SdpHelper {
-  public:
-    enum MsectionBundleType {
-      kNoBundle,
-      kSlaveBundle,
-      kMasterBundle
-    };
+ public:
+  enum MsectionBundleType { kNoBundle, kSlaveBundle, kMasterBundle };
 
-    // Takes a std::string* into which error strings will be written for the
-    // lifetime of the SdpHelper.
-    explicit SdpHelper(std::string* errorDest) : mLastError(*errorDest) {}
-    ~SdpHelper() {}
+  // Takes a std::string* into which error strings will be written for the
+  // lifetime of the SdpHelper.
+  explicit SdpHelper(std::string* errorDest) : mLastError(*errorDest) {}
+  ~SdpHelper() {}
 
-    nsresult GetComponent(const std::string& candidate, size_t* component);
-    nsresult CopyTransportParams(size_t numComponents,
-                                 const SdpMediaSection& source,
-                                 SdpMediaSection* dest);
-    bool AreOldTransportParamsValid(const Sdp& oldAnswer,
-                                    const Sdp& offerersPreviousSdp,
-                                    const Sdp& newOffer,
-                                    size_t level);
-    bool IceCredentialsDiffer(const SdpMediaSection& msection1,
-                              const SdpMediaSection& msection2);
+  nsresult GetComponent(const std::string& candidate, size_t* component);
+  nsresult CopyTransportParams(size_t numComponents,
+                               const SdpMediaSection& source,
+                               SdpMediaSection* dest);
+  bool AreOldTransportParamsValid(const Sdp& oldAnswer,
+                                  const Sdp& offerersPreviousSdp,
+                                  const Sdp& newOffer, size_t level);
+  bool IceCredentialsDiffer(const SdpMediaSection& msection1,
+                            const SdpMediaSection& msection2);
 
-    bool MsectionIsDisabled(const SdpMediaSection& msection) const;
-    static void DisableMsection(Sdp* sdp, SdpMediaSection* msection);
+  bool MsectionIsDisabled(const SdpMediaSection& msection) const;
+  static void DisableMsection(Sdp* sdp, SdpMediaSection* msection);
 
-    // Maps each mid to the m-section that is the master of its bundle.
-    // Mids that do not appear in an a=group:BUNDLE do not appear here.
-    typedef std::map<std::string, const SdpMediaSection*> BundledMids;
+  // Maps each mid to the m-section that is the master of its bundle.
+  // Mids that do not appear in an a=group:BUNDLE do not appear here.
+  typedef std::map<std::string, const SdpMediaSection*> BundledMids;
 
-    nsresult GetBundledMids(const Sdp& sdp, BundledMids* bundledMids);
+  nsresult GetBundledMids(const Sdp& sdp, BundledMids* bundledMids);
 
-    bool IsBundleSlave(const Sdp& localSdp, uint16_t level);
-    void GetBundleGroups(
-        const Sdp& sdp,
-        std::vector<SdpGroupAttributeList::Group>* groups) const;
+  bool IsBundleSlave(const Sdp& localSdp, uint16_t level);
+  void GetBundleGroups(const Sdp& sdp,
+                       std::vector<SdpGroupAttributeList::Group>* groups) const;
 
-    nsresult GetMidFromLevel(const Sdp& sdp,
-                             uint16_t level,
-                             std::string* mid);
-    nsresult GetIdsFromMsid(const Sdp& sdp,
-                            const SdpMediaSection& msection,
-                            std::vector<std::string>* streamId,
-                            std::string* trackId);
-    nsresult GetMsids(const SdpMediaSection& msection,
-                      std::vector<SdpMsidAttributeList::Msid>* msids);
-    nsresult ParseMsid(const std::string& msidAttribute,
-                       std::string* streamId,
-                       std::string* trackId);
-    nsresult AddCandidateToSdp(Sdp* sdp,
-                               const std::string& candidate,
-                               uint16_t level);
-    void SetIceGatheringComplete(Sdp* sdp, uint16_t level);
-    void SetDefaultAddresses(const std::string& defaultCandidateAddr,
-                             uint16_t defaultCandidatePort,
-                             const std::string& defaultRtcpCandidateAddr,
-                             uint16_t defaultRtcpCandidatePort,
-                             SdpMediaSection* msection);
-    void SetupMsidSemantic(const std::vector<std::string>& msids,
-                           Sdp* sdp) const;
-    MsectionBundleType GetMsectionBundleType(const Sdp& sdp,
-                                             uint16_t level,
-                                             BundledMids& bundledMids,
-                                             std::string* masterMid) const;
+  nsresult GetMidFromLevel(const Sdp& sdp, uint16_t level, std::string* mid);
+  nsresult GetIdsFromMsid(const Sdp& sdp, const SdpMediaSection& msection,
+                          std::vector<std::string>* streamId,
+                          std::string* trackId);
+  nsresult GetMsids(const SdpMediaSection& msection,
+                    std::vector<SdpMsidAttributeList::Msid>* msids);
+  nsresult ParseMsid(const std::string& msidAttribute, std::string* streamId,
+                     std::string* trackId);
+  nsresult AddCandidateToSdp(Sdp* sdp, const std::string& candidate,
+                             uint16_t level);
+  void SetIceGatheringComplete(Sdp* sdp, uint16_t level);
+  void SetDefaultAddresses(const std::string& defaultCandidateAddr,
+                           uint16_t defaultCandidatePort,
+                           const std::string& defaultRtcpCandidateAddr,
+                           uint16_t defaultRtcpCandidatePort,
+                           SdpMediaSection* msection);
+  void SetupMsidSemantic(const std::vector<std::string>& msids, Sdp* sdp) const;
+  MsectionBundleType GetMsectionBundleType(const Sdp& sdp, uint16_t level,
+                                           BundledMids& bundledMids,
+                                           std::string* masterMid) const;
 
-    std::string GetCNAME(const SdpMediaSection& msection) const;
+  std::string GetCNAME(const SdpMediaSection& msection) const;
 
-    SdpMediaSection* FindMsectionByMid(Sdp& sdp,
-                                       const std::string& mid) const;
+  SdpMediaSection* FindMsectionByMid(Sdp& sdp, const std::string& mid) const;
 
-    const SdpMediaSection* FindMsectionByMid(const Sdp& sdp,
-                                             const std::string& mid) const;
+  const SdpMediaSection* FindMsectionByMid(const Sdp& sdp,
+                                           const std::string& mid) const;
 
-    nsresult CopyStickyParams(const SdpMediaSection& source,
-                              SdpMediaSection* dest);
-    bool HasRtcp(SdpMediaSection::Protocol proto) const;
-    static SdpMediaSection::Protocol GetProtocolForMediaType(
-        SdpMediaSection::MediaType type);
-    void appendSdpParseErrors(
-          const std::vector<std::pair<size_t, std::string> >& aErrors,
-          std::string* aErrorString);
+  nsresult CopyStickyParams(const SdpMediaSection& source,
+                            SdpMediaSection* dest);
+  bool HasRtcp(SdpMediaSection::Protocol proto) const;
+  static SdpMediaSection::Protocol GetProtocolForMediaType(
+      SdpMediaSection::MediaType type);
+  void appendSdpParseErrors(
+      const std::vector<std::pair<size_t, std::string> >& aErrors,
+      std::string* aErrorString);
 
-    static bool GetPtAsInt(const std::string& ptString, uint16_t* ptOutparam);
+  static bool GetPtAsInt(const std::string& ptString, uint16_t* ptOutparam);
 
-    void AddCommonExtmaps(
-        const SdpMediaSection& remoteMsection,
-        const std::vector<SdpExtmapAttributeList::Extmap>& localExtensions,
-        SdpMediaSection* localMsection);
+  void AddCommonExtmaps(
+      const SdpMediaSection& remoteMsection,
+      const std::vector<SdpExtmapAttributeList::Extmap>& localExtensions,
+      SdpMediaSection* localMsection);
 
-    bool SdpMatch(const Sdp& sdp1, const Sdp& sdp2);
+  bool SdpMatch(const Sdp& sdp1, const Sdp& sdp2);
 
-  private:
-    std::string& mLastError;
+ private:
+  std::string& mLastError;
 
-    DISALLOW_COPY_ASSIGN(SdpHelper);
+  DISALLOW_COPY_ASSIGN(SdpHelper);
 };
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // _SDPHELPER_H_
-
+#endif  // _SDPHELPER_H_

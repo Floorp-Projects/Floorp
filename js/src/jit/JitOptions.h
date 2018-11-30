@@ -22,104 +22,102 @@ static const uint32_t MAX_MAIN_THREAD_LOCALS_AND_ARGS = 256;
 
 // Possible register allocators which may be used.
 enum IonRegisterAllocator {
-    RegisterAllocator_Backtracking,
-    RegisterAllocator_Testbed,
-    RegisterAllocator_Stupid
+  RegisterAllocator_Backtracking,
+  RegisterAllocator_Testbed,
+  RegisterAllocator_Stupid
 };
 
-static inline mozilla::Maybe<IonRegisterAllocator>
-LookupRegisterAllocator(const char* name)
-{
-    if (!strcmp(name, "backtracking")) {
-        return mozilla::Some(RegisterAllocator_Backtracking);
-    }
-    if (!strcmp(name, "testbed")) {
-        return mozilla::Some(RegisterAllocator_Testbed);
-    }
-    if (!strcmp(name, "stupid")) {
-        return mozilla::Some(RegisterAllocator_Stupid);
-    }
-    return mozilla::Nothing();
+static inline mozilla::Maybe<IonRegisterAllocator> LookupRegisterAllocator(
+    const char* name) {
+  if (!strcmp(name, "backtracking")) {
+    return mozilla::Some(RegisterAllocator_Backtracking);
+  }
+  if (!strcmp(name, "testbed")) {
+    return mozilla::Some(RegisterAllocator_Testbed);
+  }
+  if (!strcmp(name, "stupid")) {
+    return mozilla::Some(RegisterAllocator_Stupid);
+  }
+  return mozilla::Nothing();
 }
 
-struct DefaultJitOptions
-{
-    bool checkGraphConsistency;
+struct DefaultJitOptions {
+  bool checkGraphConsistency;
 #ifdef CHECK_OSIPOINT_REGISTERS
-    bool checkOsiPointRegisters;
+  bool checkOsiPointRegisters;
 #endif
-    bool checkRangeAnalysis;
-    bool runExtraChecks;
-    bool disableInlineBacktracking;
-    bool disableAma;
-    bool disableEaa;
-    bool disableEdgeCaseAnalysis;
-    bool disableGvn;
-    bool disableInlining;
-    bool disableLicm;
-    bool disableLoopUnrolling;
-    bool disableOptimizationTracking;
-    bool disablePgo;
-    bool disableInstructionReordering;
-    bool disableRangeAnalysis;
-    bool disableRecoverIns;
-    bool disableScalarReplacement;
-    bool disableCacheIR;
-    bool disableCacheIRBinaryArith;
-    bool disableSincos;
-    bool disableSink;
-    bool eagerCompilation;
-    bool forceInlineCaches;
-    bool fullDebugChecks;
-    bool limitScriptSize;
-    bool osr;
-    bool wasmFoldOffsets;
-    bool wasmDelayTier2;
+  bool checkRangeAnalysis;
+  bool runExtraChecks;
+  bool disableInlineBacktracking;
+  bool disableAma;
+  bool disableEaa;
+  bool disableEdgeCaseAnalysis;
+  bool disableGvn;
+  bool disableInlining;
+  bool disableLicm;
+  bool disableLoopUnrolling;
+  bool disableOptimizationTracking;
+  bool disablePgo;
+  bool disableInstructionReordering;
+  bool disableRangeAnalysis;
+  bool disableRecoverIns;
+  bool disableScalarReplacement;
+  bool disableCacheIR;
+  bool disableCacheIRBinaryArith;
+  bool disableSincos;
+  bool disableSink;
+  bool eagerCompilation;
+  bool forceInlineCaches;
+  bool fullDebugChecks;
+  bool limitScriptSize;
+  bool osr;
+  bool wasmFoldOffsets;
+  bool wasmDelayTier2;
 #ifdef JS_TRACE_LOGGING
-    bool enableTraceLogger;
+  bool enableTraceLogger;
 #endif
-    uint32_t baselineWarmUpThreshold;
-    uint32_t exceptionBailoutThreshold;
-    uint32_t frequentBailoutThreshold;
-    uint32_t maxStackArgs;
-    uint32_t osrPcMismatchesBeforeRecompile;
-    uint32_t smallFunctionMaxBytecodeLength_;
-    uint32_t jumpThreshold;
-    uint32_t branchPruningHitCountFactor;
-    uint32_t branchPruningInstFactor;
-    uint32_t branchPruningBlockSpanFactor;
-    uint32_t branchPruningEffectfulInstFactor;
-    uint32_t branchPruningThreshold;
-    uint32_t wasmBatchIonThreshold;
-    uint32_t wasmBatchBaselineThreshold;
-    mozilla::Maybe<uint32_t> forcedDefaultIonWarmUpThreshold;
-    mozilla::Maybe<uint32_t> forcedDefaultIonSmallFunctionWarmUpThreshold;
-    mozilla::Maybe<IonRegisterAllocator> forcedRegisterAllocator;
+  uint32_t baselineWarmUpThreshold;
+  uint32_t exceptionBailoutThreshold;
+  uint32_t frequentBailoutThreshold;
+  uint32_t maxStackArgs;
+  uint32_t osrPcMismatchesBeforeRecompile;
+  uint32_t smallFunctionMaxBytecodeLength_;
+  uint32_t jumpThreshold;
+  uint32_t branchPruningHitCountFactor;
+  uint32_t branchPruningInstFactor;
+  uint32_t branchPruningBlockSpanFactor;
+  uint32_t branchPruningEffectfulInstFactor;
+  uint32_t branchPruningThreshold;
+  uint32_t wasmBatchIonThreshold;
+  uint32_t wasmBatchBaselineThreshold;
+  mozilla::Maybe<uint32_t> forcedDefaultIonWarmUpThreshold;
+  mozilla::Maybe<uint32_t> forcedDefaultIonSmallFunctionWarmUpThreshold;
+  mozilla::Maybe<IonRegisterAllocator> forcedRegisterAllocator;
 
-    // Spectre mitigation flags. Each mitigation has its own flag in order to
-    // measure the effectiveness of each mitigation with various proof of
-    // concept.
-    bool spectreIndexMasking;
-    bool spectreObjectMitigationsBarriers;
-    bool spectreObjectMitigationsMisc;
-    bool spectreStringMitigations;
-    bool spectreValueMasking;
-    bool spectreJitToCxxCalls;
+  // Spectre mitigation flags. Each mitigation has its own flag in order to
+  // measure the effectiveness of each mitigation with various proof of
+  // concept.
+  bool spectreIndexMasking;
+  bool spectreObjectMitigationsBarriers;
+  bool spectreObjectMitigationsMisc;
+  bool spectreStringMitigations;
+  bool spectreValueMasking;
+  bool spectreJitToCxxCalls;
 
-    // The options below affect the rest of the VM, and not just the JIT.
-    bool disableUnboxedObjects;
+  // The options below affect the rest of the VM, and not just the JIT.
+  bool disableUnboxedObjects;
 
-    DefaultJitOptions();
-    bool isSmallFunction(JSScript* script) const;
-    void setEagerCompilation();
-    void setCompilerWarmUpThreshold(uint32_t warmUpThreshold);
-    void resetCompilerWarmUpThreshold();
-    void enableGvn(bool val);
+  DefaultJitOptions();
+  bool isSmallFunction(JSScript* script) const;
+  void setEagerCompilation();
+  void setCompilerWarmUpThreshold(uint32_t warmUpThreshold);
+  void resetCompilerWarmUpThreshold();
+  void enableGvn(bool val);
 };
 
 extern DefaultJitOptions JitOptions;
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_JitOptions_h */

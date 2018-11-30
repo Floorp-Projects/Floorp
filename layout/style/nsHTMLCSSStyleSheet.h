@@ -23,12 +23,11 @@ namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
 namespace dom {
 class Element;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-class nsHTMLCSSStyleSheet final
-{
-public:
+class nsHTMLCSSStyleSheet final {
+ public:
   nsHTMLCSSStyleSheet();
 
   NS_INLINE_DECL_REFCOUNTING(nsHTMLCSSStyleSheet)
@@ -37,13 +36,13 @@ public:
   void EvictStyleAttr(const nsAString& aSerialized, MiscContainer* aValue);
   MiscContainer* LookupStyleAttr(const nsAString& aSerialized);
 
-private:
+ private:
   ~nsHTMLCSSStyleSheet();
 
   nsHTMLCSSStyleSheet(const nsHTMLCSSStyleSheet& aCopy) = delete;
   nsHTMLCSSStyleSheet& operator=(const nsHTMLCSSStyleSheet& aCopy) = delete;
 
-protected:
+ protected:
   nsDataHashtable<nsStringHashKey, MiscContainer*> mCachedStyleAttrs;
 };
 

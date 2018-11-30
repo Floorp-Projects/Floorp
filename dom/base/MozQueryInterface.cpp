@@ -19,21 +19,18 @@ namespace dom {
 
 constexpr size_t IID_SIZE = sizeof(nsIID);
 
-static_assert(IID_SIZE == 16,
-              "Size of nsID struct changed. Please ensure this code is still valid.");
+static_assert(
+    IID_SIZE == 16,
+    "Size of nsID struct changed. Please ensure this code is still valid.");
 
-static int
-CompareIIDs(const nsIID& aA, const nsIID &aB)
-{
+static int CompareIIDs(const nsIID& aA, const nsIID& aB) {
   return memcmp((void*)&aA.m0, (void*)&aB.m0, IID_SIZE);
 }
 
 /* static */
-MozQueryInterface*
-ChromeUtils::GenerateQI(const GlobalObject& aGlobal,
-                        const Sequence<JS::Value>& aInterfaces,
-                        ErrorResult& aRv)
-{
+MozQueryInterface* ChromeUtils::GenerateQI(
+    const GlobalObject& aGlobal, const Sequence<JS::Value>& aInterfaces,
+    ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
 
   nsTArray<nsIID> ifaces;
@@ -71,18 +68,14 @@ ChromeUtils::GenerateQI(const GlobalObject& aGlobal,
   return new MozQueryInterface(std::move(ifaces));
 }
 
-bool
-MozQueryInterface::QueriesTo(const nsIID& aIID) const
-{
+bool MozQueryInterface::QueriesTo(const nsIID& aIID) const {
   return mInterfaces.ContainsSorted(aIID, CompareIIDs);
 }
 
-void
-MozQueryInterface::LegacyCall(JSContext* cx, JS::Handle<JS::Value> thisv,
-                              JS::Handle<JS::Value> aIID,
-                              JS::MutableHandle<JS::Value> aResult,
-                              ErrorResult& aRv) const
-{
+void MozQueryInterface::LegacyCall(JSContext* cx, JS::Handle<JS::Value> thisv,
+                                   JS::Handle<JS::Value> aIID,
+                                   JS::MutableHandle<JS::Value> aResult,
+                                   ErrorResult& aRv) const {
   Maybe<nsID> id = xpc::JSValue2ID(cx, aIID);
   if (id && QueriesTo(*id)) {
     aResult.set(thisv);
@@ -91,12 +84,11 @@ MozQueryInterface::LegacyCall(JSContext* cx, JS::Handle<JS::Value> thisv,
   }
 }
 
-bool
-MozQueryInterface::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector)
-{
+bool MozQueryInterface::WrapObject(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto,
+                                   JS::MutableHandle<JSObject*> aReflector) {
   return MozQueryInterface_Binding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
-} // namespace dom
-} // namespace mozilla
-
+}  // namespace dom
+}  // namespace mozilla

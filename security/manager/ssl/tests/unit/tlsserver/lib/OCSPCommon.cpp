@@ -17,9 +17,8 @@ using namespace mozilla::pkix;
 using namespace mozilla::pkix::test;
 using namespace mozilla::test;
 
-static TestKeyPair*
-CreateTestKeyPairFromCert(const UniqueCERTCertificate& cert)
-{
+static TestKeyPair* CreateTestKeyPairFromCert(
+    const UniqueCERTCertificate& cert) {
   ScopedSECKEYPrivateKey privateKey(PK11_FindKeyByAnyCert(cert.get(), nullptr));
   if (!privateKey) {
     return nullptr;
@@ -31,11 +30,11 @@ CreateTestKeyPairFromCert(const UniqueCERTCertificate& cert)
   return CreateTestKeyPair(RSA_PKCS1(), publicKey, privateKey);
 }
 
-SECItemArray*
-GetOCSPResponseForType(OCSPResponseType aORT, const UniqueCERTCertificate& aCert,
-                       const UniquePLArenaPool& aArena,
-                       const char* aAdditionalCertName, time_t aThisUpdateSkew)
-{
+SECItemArray* GetOCSPResponseForType(OCSPResponseType aORT,
+                                     const UniqueCERTCertificate& aCert,
+                                     const UniquePLArenaPool& aArena,
+                                     const char* aAdditionalCertName,
+                                     time_t aThisUpdateSkew) {
   MOZ_ASSERT(aArena);
   MOZ_ASSERT(aCert);
   // Note: |aAdditionalCertName| may or may not need to be non-null depending
@@ -43,8 +42,9 @@ GetOCSPResponseForType(OCSPResponseType aORT, const UniqueCERTCertificate& aCert
 
   if (aORT == ORTNone) {
     if (gDebugLevel >= DEBUG_WARNINGS) {
-      fprintf(stderr, "GetOCSPResponseForType called with type ORTNone, "
-                      "which makes no sense.\n");
+      fprintf(stderr,
+              "GetOCSPResponseForType called with type ORTNone, "
+              "which makes no sense.\n");
     }
     return nullptr;
   }
@@ -69,8 +69,8 @@ GetOCSPResponseForType(OCSPResponseType aORT, const UniqueCERTCertificate& aCert
     }
   }
   // XXX CERT_FindCertIssuer uses the old, deprecated path-building logic
-  mozilla::UniqueCERTCertificate
-    issuerCert(CERT_FindCertIssuer(aCert.get(), PR_Now(), certUsageSSLCA));
+  mozilla::UniqueCERTCertificate issuerCert(
+      CERT_FindCertIssuer(aCert.get(), PR_Now(), certUsageSSLCA));
   if (!issuerCert) {
     PrintPRError("CERT_FindCertIssuer failed");
     return nullptr;
@@ -85,8 +85,8 @@ GetOCSPResponseForType(OCSPResponseType aORT, const UniqueCERTCertificate& aCert
     return nullptr;
   }
   Input serialNumber;
-  if (serialNumber.Init(cert->serialNumber.data,
-                        cert->serialNumber.len) != Success) {
+  if (serialNumber.Init(cert->serialNumber.data, cert->serialNumber.len) !=
+      Success) {
     return nullptr;
   }
   CertID certID(issuer, issuerPublicKey, serialNumber);
@@ -165,16 +165,16 @@ GetOCSPResponseForType(OCSPResponseType aORT, const UniqueCERTCertificate& aCert
   }
   OCSPResponseExtension extension;
   if (aORT == ORTCriticalExtension || aORT == ORTNoncriticalExtension) {
-    // python DottedOIDToCode.py --tlv some-Mozilla-OID 1.3.6.1.4.1.13769.666.666.666.1.500.9.2
+    // python DottedOIDToCode.py --tlv
+    // some-Mozilla-OID 1.3.6.1.4.1.13769.666.666.666.1.500.9.2
     static const uint8_t tlv_some_Mozilla_OID[] = {
-      0x06, 0x12, 0x2b, 0x06, 0x01, 0x04, 0x01, 0xeb, 0x49, 0x85, 0x1a, 0x85,
-      0x1a, 0x85, 0x1a, 0x01, 0x83, 0x74, 0x09, 0x02
-    };
+        0x06, 0x12, 0x2b, 0x06, 0x01, 0x04, 0x01, 0xeb, 0x49, 0x85,
+        0x1a, 0x85, 0x1a, 0x85, 0x1a, 0x01, 0x83, 0x74, 0x09, 0x02};
 
     extension.id.assign(tlv_some_Mozilla_OID, sizeof(tlv_some_Mozilla_OID));
     extension.critical = (aORT == ORTCriticalExtension);
-    extension.value.push_back(0x05); // tag: NULL
-    extension.value.push_back(0x00); // length: 0
+    extension.value.push_back(0x05);  // tag: NULL
+    extension.value.push_back(0x00);  // length: 0
     extension.next = nullptr;
     context.responseExtensions = &extension;
   }
@@ -197,11 +197,8 @@ GetOCSPResponseForType(OCSPResponseType aORT, const UniqueCERTCertificate& aCert
     return nullptr;
   }
 
-  SECItem item = {
-    siBuffer,
-    const_cast<uint8_t*>(response.data()),
-    static_cast<unsigned int>(response.length())
-  };
-  SECItemArray arr = { &item, 1 };
+  SECItem item = {siBuffer, const_cast<uint8_t*>(response.data()),
+                  static_cast<unsigned int>(response.length())};
+  SECItemArray arr = {&item, 1};
   return SECITEM_DupArray(aArena.get(), &arr);
 }

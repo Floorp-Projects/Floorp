@@ -16,32 +16,32 @@
 class nsAtom;
 
 class nsStreamConverterService : public nsIStreamConverterService {
-public:
-    /////////////////////////////////////////////////////
-    // nsISupports methods
-    NS_DECL_ISUPPORTS
+ public:
+  /////////////////////////////////////////////////////
+  // nsISupports methods
+  NS_DECL_ISUPPORTS
 
+  /////////////////////////////////////////////////////
+  // nsIStreamConverterService methods
+  NS_DECL_NSISTREAMCONVERTERSERVICE
 
-    /////////////////////////////////////////////////////
-    // nsIStreamConverterService methods
-    NS_DECL_NSISTREAMCONVERTERSERVICE
+  /////////////////////////////////////////////////////
+  // nsStreamConverterService methods
+  nsStreamConverterService() = default;
 
-    /////////////////////////////////////////////////////
-    // nsStreamConverterService methods
-    nsStreamConverterService() = default;
+ private:
+  virtual ~nsStreamConverterService() = default;
 
-private:
-    virtual ~nsStreamConverterService() = default;
+  // Responsible for finding a converter for the given MIME-type.
+  nsresult FindConverter(const char *aContractID,
+                         nsTArray<nsCString> **aEdgeList);
+  nsresult BuildGraph(void);
+  nsresult AddAdjacency(const char *aContractID);
+  nsresult ParseFromTo(const char *aContractID, nsCString &aFromRes,
+                       nsCString &aToRes);
 
-    // Responsible for finding a converter for the given MIME-type.
-    nsresult FindConverter(const char *aContractID, nsTArray<nsCString> **aEdgeList);
-    nsresult BuildGraph(void);
-    nsresult AddAdjacency(const char *aContractID);
-    nsresult ParseFromTo(const char *aContractID, nsCString &aFromRes, nsCString &aToRes);
-
-    // member variables
-    nsClassHashtable<nsCStringHashKey, nsTArray<RefPtr<nsAtom>>>
-        mAdjacencyList;
+  // member variables
+  nsClassHashtable<nsCStringHashKey, nsTArray<RefPtr<nsAtom>>> mAdjacencyList;
 };
 
-#endif // __nsstreamconverterservice__h___
+#endif  // __nsstreamconverterservice__h___

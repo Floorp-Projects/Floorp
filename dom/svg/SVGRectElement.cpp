@@ -23,29 +23,31 @@ namespace dom {
 
 class SVGAnimatedLength;
 
-JSObject*
-SVGRectElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGRectElement::WrapNode(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto) {
   return SVGRectElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::LengthInfo SVGRectElement::sLengthInfo[6] =
-{
-  { nsGkAtoms::x, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
-  { nsGkAtoms::y, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
-  { nsGkAtoms::width, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
-  { nsGkAtoms::height, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
-  { nsGkAtoms::rx, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
-  { nsGkAtoms::ry, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y }
-};
+nsSVGElement::LengthInfo SVGRectElement::sLengthInfo[6] = {
+    {nsGkAtoms::x, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
+     SVGContentUtils::X},
+    {nsGkAtoms::y, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
+     SVGContentUtils::Y},
+    {nsGkAtoms::width, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
+     SVGContentUtils::X},
+    {nsGkAtoms::height, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
+     SVGContentUtils::Y},
+    {nsGkAtoms::rx, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
+     SVGContentUtils::X},
+    {nsGkAtoms::ry, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
+     SVGContentUtils::Y}};
 
 //----------------------------------------------------------------------
 // Implementation
 
-SVGRectElement::SVGRectElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-  : SVGRectElementBase(std::move(aNodeInfo))
-{
-}
+SVGRectElement::SVGRectElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGRectElementBase(std::move(aNodeInfo)) {}
 
 //----------------------------------------------------------------------
 // nsINode methods
@@ -54,57 +56,41 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGRectElement)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<SVGAnimatedLength>
-SVGRectElement::X()
-{
+already_AddRefed<SVGAnimatedLength> SVGRectElement::X() {
   return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength>
-SVGRectElement::Y()
-{
+already_AddRefed<SVGAnimatedLength> SVGRectElement::Y() {
   return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength>
-SVGRectElement::Width()
-{
+already_AddRefed<SVGAnimatedLength> SVGRectElement::Width() {
   return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength>
-SVGRectElement::Height()
-{
+already_AddRefed<SVGAnimatedLength> SVGRectElement::Height() {
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength>
-SVGRectElement::Rx()
-{
+already_AddRefed<SVGAnimatedLength> SVGRectElement::Rx() {
   return mLengthAttributes[ATTR_RX].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength>
-SVGRectElement::Ry()
-{
+already_AddRefed<SVGAnimatedLength> SVGRectElement::Ry() {
   return mLengthAttributes[ATTR_RY].ToDOMAnimatedLength(this);
 }
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-/* virtual */ bool
-SVGRectElement::HasValidDimensions() const
-{
+/* virtual */ bool SVGRectElement::HasValidDimensions() const {
   return mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() &&
          mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0 &&
          mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet() &&
          mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0;
 }
 
-nsSVGElement::LengthAttributesInfo
-SVGRectElement::GetLengthInfo()
-{
+nsSVGElement::LengthAttributesInfo SVGRectElement::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }
@@ -112,20 +98,18 @@ SVGRectElement::GetLengthInfo()
 //----------------------------------------------------------------------
 // SVGGeometryElement methods
 
-bool
-SVGRectElement::GetGeometryBounds(Rect* aBounds,
-                                  const StrokeOptions& aStrokeOptions,
-                                  const Matrix& aToBoundsSpace,
-                                  const Matrix* aToNonScalingStrokeSpace)
-{
+bool SVGRectElement::GetGeometryBounds(Rect* aBounds,
+                                       const StrokeOptions& aStrokeOptions,
+                                       const Matrix& aToBoundsSpace,
+                                       const Matrix* aToNonScalingStrokeSpace) {
   Rect rect;
   Float rx, ry;
-  GetAnimatedLengthValues(&rect.x, &rect.y, &rect.width,
-                          &rect.height, &rx, &ry, nullptr);
+  GetAnimatedLengthValues(&rect.x, &rect.y, &rect.width, &rect.height, &rx, &ry,
+                          nullptr);
 
   if (rect.IsEmpty()) {
     // Rendering of the element disabled
-    rect.SetEmpty(); // Make sure width/height are zero and not negative
+    rect.SetEmpty();  // Make sure width/height are zero and not negative
     // We still want the x/y position from 'rect'
     *aBounds = aToBoundsSpace.TransformBounds(rect);
     return true;
@@ -154,7 +138,7 @@ SVGRectElement::GetGeometryBounds(Rect* aBounds,
         // not worth handling though.
         rect.Inflate(aStrokeOptions.mLineWidth / 2.f);
         Matrix nonScalingToBounds =
-          aToNonScalingStrokeSpace->Inverse() * aToBoundsSpace;
+            aToNonScalingStrokeSpace->Inverse() * aToBoundsSpace;
         *aBounds = nonScalingToBounds.TransformBounds(rect);
         return true;
       }
@@ -168,9 +152,7 @@ SVGRectElement::GetGeometryBounds(Rect* aBounds,
   return true;
 }
 
-void
-SVGRectElement::GetAsSimplePath(SimplePath* aSimplePath)
-{
+void SVGRectElement::GetAsSimplePath(SimplePath* aSimplePath) {
   float x, y, width, height, rx, ry;
   GetAnimatedLengthValues(&x, &y, &width, &height, &rx, &ry, nullptr);
 
@@ -190,9 +172,7 @@ SVGRectElement::GetAsSimplePath(SimplePath* aSimplePath)
   aSimplePath->SetRect(x, y, width, height);
 }
 
-already_AddRefed<Path>
-SVGRectElement::BuildPath(PathBuilder* aBuilder)
-{
+already_AddRefed<Path> SVGRectElement::BuildPath(PathBuilder* aBuilder) {
   float x, y, width, height, rx, ry;
   GetAnimatedLengthValues(&x, &y, &width, &height, &rx, &ry, nullptr);
 
@@ -235,5 +215,5 @@ SVGRectElement::BuildPath(PathBuilder* aBuilder)
   return aBuilder->Finish();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

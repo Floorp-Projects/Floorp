@@ -20,140 +20,130 @@ class JitRuntime;
 // to be restricted. The classes below give the compiler an interface to access
 // all necessary information in a threadsafe fashion.
 
-class CompileRuntime
-{
-    JSRuntime* runtime();
+class CompileRuntime {
+  JSRuntime* runtime();
 
-  public:
-    static CompileRuntime* get(JSRuntime* rt);
+ public:
+  static CompileRuntime* get(JSRuntime* rt);
 
 #ifdef JS_GC_ZEAL
-    const uint32_t* addressOfGCZealModeBits();
+  const uint32_t* addressOfGCZealModeBits();
 #endif
 
-    const JitRuntime* jitRuntime();
+  const JitRuntime* jitRuntime();
 
-    // Compilation does not occur off thread when the Gecko Profiler is enabled.
-    GeckoProfilerRuntime& geckoProfiler();
+  // Compilation does not occur off thread when the Gecko Profiler is enabled.
+  GeckoProfilerRuntime& geckoProfiler();
 
-    bool jitSupportsFloatingPoint();
-    bool hadOutOfMemory();
-    bool profilingScripts();
+  bool jitSupportsFloatingPoint();
+  bool hadOutOfMemory();
+  bool profilingScripts();
 
-    const JSAtomState& names();
-    const PropertyName* emptyString();
-    const StaticStrings& staticStrings();
-    const Value& NaNValue();
-    const Value& positiveInfinityValue();
-    const WellKnownSymbols& wellKnownSymbols();
+  const JSAtomState& names();
+  const PropertyName* emptyString();
+  const StaticStrings& staticStrings();
+  const Value& NaNValue();
+  const Value& positiveInfinityValue();
+  const WellKnownSymbols& wellKnownSymbols();
 
-    const void* mainContextPtr();
-    uint32_t* addressOfTenuredAllocCount();
-    const void* addressOfJitStackLimit();
-    const void* addressOfInterruptBits();
+  const void* mainContextPtr();
+  uint32_t* addressOfTenuredAllocCount();
+  const void* addressOfJitStackLimit();
+  const void* addressOfInterruptBits();
 
 #ifdef DEBUG
-    bool isInsideNursery(gc::Cell* cell);
+  bool isInsideNursery(gc::Cell* cell);
 #endif
 
-    // DOM callbacks must be threadsafe (and will hopefully be removed soon).
-    const DOMCallbacks* DOMcallbacks();
+  // DOM callbacks must be threadsafe (and will hopefully be removed soon).
+  const DOMCallbacks* DOMcallbacks();
 
-    bool runtimeMatches(JSRuntime* rt);
+  bool runtimeMatches(JSRuntime* rt);
 };
 
-class CompileZone
-{
-    Zone* zone();
+class CompileZone {
+  Zone* zone();
 
-  public:
-    static CompileZone* get(Zone* zone);
+ public:
+  static CompileZone* get(Zone* zone);
 
-    CompileRuntime* runtime();
-    bool isAtomsZone();
+  CompileRuntime* runtime();
+  bool isAtomsZone();
 
 #ifdef DEBUG
-    const void* addressOfIonBailAfter();
+  const void* addressOfIonBailAfter();
 #endif
 
-    const uint32_t* addressOfNeedsIncrementalBarrier();
-    gc::FreeSpan** addressOfFreeList(gc::AllocKind allocKind);
-    void* addressOfNurseryPosition();
-    void* addressOfStringNurseryPosition();
-    const void* addressOfNurseryCurrentEnd();
-    const void* addressOfStringNurseryCurrentEnd();
+  const uint32_t* addressOfNeedsIncrementalBarrier();
+  gc::FreeSpan** addressOfFreeList(gc::AllocKind allocKind);
+  void* addressOfNurseryPosition();
+  void* addressOfStringNurseryPosition();
+  const void* addressOfNurseryCurrentEnd();
+  const void* addressOfStringNurseryCurrentEnd();
 
-    uint32_t* addressOfNurseryAllocCount();
+  uint32_t* addressOfNurseryAllocCount();
 
-    bool nurseryExists();
-    bool canNurseryAllocateStrings();
-    void setMinorGCShouldCancelIonCompilations();
+  bool nurseryExists();
+  bool canNurseryAllocateStrings();
+  void setMinorGCShouldCancelIonCompilations();
 };
 
 class JitRealm;
 
-class CompileRealm
-{
-    JS::Realm* realm();
+class CompileRealm {
+  JS::Realm* realm();
 
-  public:
-    static CompileRealm* get(JS::Realm* realm);
+ public:
+  static CompileRealm* get(JS::Realm* realm);
 
-    CompileZone* zone();
-    CompileRuntime* runtime();
+  CompileZone* zone();
+  CompileRuntime* runtime();
 
-    const void* realmPtr() {
-        return realm();
-    }
+  const void* realmPtr() { return realm(); }
 
-    const mozilla::non_crypto::XorShift128PlusRNG*
-    addressOfRandomNumberGenerator();
+  const mozilla::non_crypto::XorShift128PlusRNG*
+  addressOfRandomNumberGenerator();
 
-    const JitRealm* jitRealm();
+  const JitRealm* jitRealm();
 
-    const GlobalObject* maybeGlobal();
-    const uint32_t* addressOfGlobalWriteBarriered();
+  const GlobalObject* maybeGlobal();
+  const uint32_t* addressOfGlobalWriteBarriered();
 
-    bool hasAllocationMetadataBuilder();
+  bool hasAllocationMetadataBuilder();
 
-    // Mirror RealmOptions.
-    void setSingletonsAsValues();
+  // Mirror RealmOptions.
+  void setSingletonsAsValues();
 };
 
-class JitCompileOptions
-{
-  public:
-    JitCompileOptions();
-    explicit JitCompileOptions(JSContext* cx);
+class JitCompileOptions {
+ public:
+  JitCompileOptions();
+  explicit JitCompileOptions(JSContext* cx);
 
-    bool cloneSingletons() const {
-        return cloneSingletons_;
-    }
+  bool cloneSingletons() const { return cloneSingletons_; }
 
-    bool profilerSlowAssertionsEnabled() const {
-        return profilerSlowAssertionsEnabled_;
-    }
+  bool profilerSlowAssertionsEnabled() const {
+    return profilerSlowAssertionsEnabled_;
+  }
 
-    bool offThreadCompilationAvailable() const {
-        return offThreadCompilationAvailable_;
-    }
+  bool offThreadCompilationAvailable() const {
+    return offThreadCompilationAvailable_;
+  }
 
 #ifdef ENABLE_WASM_GC
-    bool wasmGcEnabled() const {
-        return wasmGcEnabled_;
-    }
+  bool wasmGcEnabled() const { return wasmGcEnabled_; }
 #endif
 
-  private:
-    bool cloneSingletons_;
-    bool profilerSlowAssertionsEnabled_;
-    bool offThreadCompilationAvailable_;
+ private:
+  bool cloneSingletons_;
+  bool profilerSlowAssertionsEnabled_;
+  bool offThreadCompilationAvailable_;
 #ifdef ENABLE_WASM_GC
-    bool wasmGcEnabled_;
+  bool wasmGcEnabled_;
 #endif
 };
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
-#endif // jit_CompileWrappers_h
+#endif  // jit_CompileWrappers_h

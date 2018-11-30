@@ -15,121 +15,103 @@
 class txPattern;
 class Expr;
 
-class txToplevelItem
-{
-public:
-    txToplevelItem()
-    {
-        MOZ_COUNT_CTOR(txToplevelItem);
-    }
-    virtual ~txToplevelItem()
-    {
-        MOZ_COUNT_DTOR(txToplevelItem);
-    }
+class txToplevelItem {
+ public:
+  txToplevelItem() { MOZ_COUNT_CTOR(txToplevelItem); }
+  virtual ~txToplevelItem() { MOZ_COUNT_DTOR(txToplevelItem); }
 
-    enum type {
-        attributeSet,
-        dummy,
-        import,
-        //namespaceAlias,
-        output,
-        stripSpace, //also used for preserve-space
-        templ,
-        variable
-    };
+  enum type {
+    attributeSet,
+    dummy,
+    import,
+    // namespaceAlias,
+    output,
+    stripSpace,  // also used for preserve-space
+    templ,
+    variable
+  };
 
-    virtual type getType() = 0;
+  virtual type getType() = 0;
 };
 
 #define TX_DECL_TOPLEVELITEM virtual type getType() override;
 #define TX_IMPL_GETTYPE(_class, _type) \
-txToplevelItem::type \
-_class::getType() { return _type;}
+  txToplevelItem::type _class::getType() { return _type; }
 
-class txInstructionContainer : public txToplevelItem
-{
-public:
-    nsAutoPtr<txInstruction> mFirstInstruction;
+class txInstructionContainer : public txToplevelItem {
+ public:
+  nsAutoPtr<txInstruction> mFirstInstruction;
 };
 
 // xsl:attribute-set
-class txAttributeSetItem : public txInstructionContainer
-{
-public:
-    explicit txAttributeSetItem(const txExpandedName aName) : mName(aName)
-    {
-    }
+class txAttributeSetItem : public txInstructionContainer {
+ public:
+  explicit txAttributeSetItem(const txExpandedName aName) : mName(aName) {}
 
-    TX_DECL_TOPLEVELITEM
+  TX_DECL_TOPLEVELITEM
 
-    txExpandedName mName;
+  txExpandedName mName;
 };
 
 // xsl:import
-class txImportItem : public txToplevelItem
-{
-public:
-    TX_DECL_TOPLEVELITEM
+class txImportItem : public txToplevelItem {
+ public:
+  TX_DECL_TOPLEVELITEM
 
-    nsAutoPtr<txStylesheet::ImportFrame> mFrame;
+  nsAutoPtr<txStylesheet::ImportFrame> mFrame;
 };
 
 // xsl:output
-class txOutputItem : public txToplevelItem
-{
-public:
-    TX_DECL_TOPLEVELITEM
+class txOutputItem : public txToplevelItem {
+ public:
+  TX_DECL_TOPLEVELITEM
 
-    txOutputFormat mFormat;
+  txOutputFormat mFormat;
 };
 
 // insertionpoint for xsl:include
-class txDummyItem : public txToplevelItem
-{
-public:
-    TX_DECL_TOPLEVELITEM
+class txDummyItem : public txToplevelItem {
+ public:
+  TX_DECL_TOPLEVELITEM
 };
 
 // xsl:strip-space and xsl:preserve-space
-class txStripSpaceItem : public txToplevelItem
-{
-public:
-    ~txStripSpaceItem();
+class txStripSpaceItem : public txToplevelItem {
+ public:
+  ~txStripSpaceItem();
 
-    TX_DECL_TOPLEVELITEM
+  TX_DECL_TOPLEVELITEM
 
-    nsresult addStripSpaceTest(txStripSpaceTest* aStripSpaceTest);
+  nsresult addStripSpaceTest(txStripSpaceTest* aStripSpaceTest);
 
-    nsTArray<txStripSpaceTest*> mStripSpaceTests;
+  nsTArray<txStripSpaceTest*> mStripSpaceTests;
 };
 
 // xsl:template
-class txTemplateItem : public txInstructionContainer
-{
-public:
-    txTemplateItem(nsAutoPtr<txPattern>&& aMatch, const txExpandedName& aName,
-                   const txExpandedName& aMode, double aPrio);
+class txTemplateItem : public txInstructionContainer {
+ public:
+  txTemplateItem(nsAutoPtr<txPattern>&& aMatch, const txExpandedName& aName,
+                 const txExpandedName& aMode, double aPrio);
 
-    TX_DECL_TOPLEVELITEM
+  TX_DECL_TOPLEVELITEM
 
-    nsAutoPtr<txPattern> mMatch;
-    txExpandedName mName;
-    txExpandedName mMode;
-    double mPrio;
+  nsAutoPtr<txPattern> mMatch;
+  txExpandedName mName;
+  txExpandedName mMode;
+  double mPrio;
 };
 
 // xsl:variable at top level
-class txVariableItem : public txInstructionContainer
-{
-public:
-    txVariableItem(const txExpandedName& aName, nsAutoPtr<Expr>&& aValue,
-                   bool aIsParam);
+class txVariableItem : public txInstructionContainer {
+ public:
+  txVariableItem(const txExpandedName& aName, nsAutoPtr<Expr>&& aValue,
+                 bool aIsParam);
 
-    TX_DECL_TOPLEVELITEM
+  TX_DECL_TOPLEVELITEM
 
-    txExpandedName mName;
-    nsAutoPtr<Expr> mValue;
-    bool mIsParam;
+  txExpandedName mName;
+  nsAutoPtr<Expr> mValue;
+  bool mIsParam;
 };
 
-#endif //TRANSFRMX_TXTOPLEVELITEMS_H
+#endif  // TRANSFRMX_TXTOPLEVELITEMS_H

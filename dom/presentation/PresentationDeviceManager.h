@@ -17,12 +17,11 @@
 namespace mozilla {
 namespace dom {
 
-class PresentationDeviceManager final : public nsIPresentationDeviceManager
-                                      , public nsIPresentationDeviceListener
-                                      , public nsIObserver
-                                      , public nsSupportsWeakReference
-{
-public:
+class PresentationDeviceManager final : public nsIPresentationDeviceManager,
+                                        public nsIPresentationDeviceListener,
+                                        public nsIObserver,
+                                        public nsSupportsWeakReference {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRESENTATIONDEVICEMANAGER
   NS_DECL_NSIPRESENTATIONDEVICELISTENER
@@ -30,7 +29,7 @@ public:
 
   PresentationDeviceManager();
 
-private:
+ private:
   virtual ~PresentationDeviceManager();
 
   void Init();
@@ -48,7 +47,7 @@ private:
   nsCOMArray<nsIPresentationDevice> mDevices;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_PresentationDeviceManager_h__ */

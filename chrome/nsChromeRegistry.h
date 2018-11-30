@@ -28,31 +28,30 @@ class nsIURL;
 
 // for component registration
 // {47049e42-1d87-482a-984d-56ae185e367a}
-#define NS_CHROMEREGISTRY_CID \
-{ 0x47049e42, 0x1d87, 0x482a, { 0x98, 0x4d, 0x56, 0xae, 0x18, 0x5e, 0x36, 0x7a } }
+#define NS_CHROMEREGISTRY_CID                        \
+  {                                                  \
+    0x47049e42, 0x1d87, 0x482a, {                    \
+      0x98, 0x4d, 0x56, 0xae, 0x18, 0x5e, 0x36, 0x7a \
+    }                                                \
+  }
 
 class nsChromeRegistry : public nsIToolkitChromeRegistry,
                          public nsIObserver,
-                         public nsSupportsWeakReference
-{
-public:
+                         public nsSupportsWeakReference {
+ public:
   NS_DECL_ISUPPORTS
 
   // nsIXULChromeRegistry methods:
   NS_IMETHOD RefreshSkins() override;
-  NS_IMETHOD AllowScriptsForPackage(nsIURI* url,
-                                    bool* _retval) override;
-  NS_IMETHOD AllowContentToAccess(nsIURI* url,
-                                  bool* _retval) override;
-  NS_IMETHOD CanLoadURLRemotely(nsIURI* url,
-                                bool* _retval) override;
-  NS_IMETHOD MustLoadURLRemotely(nsIURI* url,
-                                 bool* _retval) override;
+  NS_IMETHOD AllowScriptsForPackage(nsIURI* url, bool* _retval) override;
+  NS_IMETHOD AllowContentToAccess(nsIURI* url, bool* _retval) override;
+  NS_IMETHOD CanLoadURLRemotely(nsIURI* url, bool* _retval) override;
+  NS_IMETHOD MustLoadURLRemotely(nsIURI* url, bool* _retval) override;
 
-  NS_IMETHOD ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult) override;
+  NS_IMETHOD ConvertChromeURL(nsIURI* aChromeURI, nsIURI** aResult) override;
 
   // nsChromeRegistry methods:
-  nsChromeRegistry() : mInitialized(false) { }
+  nsChromeRegistry() : mInitialized(false) {}
 
   virtual nsresult Init();
 
@@ -65,17 +64,16 @@ public:
   // unless you know what you are doing.
   static nsresult Canonify(nsCOMPtr<nsIURI>& aChromeURL);
 
-protected:
+ protected:
   virtual ~nsChromeRegistry();
 
   void FlushSkinCaches();
   void FlushAllCaches();
 
-  static void LogMessage(const char* aMsg, ...)
-    MOZ_FORMAT_PRINTF(1, 2);
-  static void LogMessageWithContext(nsIURI* aURL, uint32_t aLineNumber, uint32_t flags,
-                                    const char* aMsg, ...)
-    MOZ_FORMAT_PRINTF(4, 5);
+  static void LogMessage(const char* aMsg, ...) MOZ_FORMAT_PRINTF(1, 2);
+  static void LogMessageWithContext(nsIURI* aURL, uint32_t aLineNumber,
+                                    uint32_t flags, const char* aMsg, ...)
+      MOZ_FORMAT_PRINTF(4, 5);
 
   virtual nsIURI* GetBaseURIFromPackage(const nsCString& aPackage,
                                         const nsCString& aProvider,
@@ -84,25 +82,22 @@ protected:
                                        uint32_t* aFlags) = 0;
 
   static nsresult RefreshWindow(nsPIDOMWindowOuter* aWindow);
-  static nsresult GetProviderAndPath(nsIURI* aChromeURL,
-                                     nsACString& aProvider, nsACString& aPath);
+  static nsresult GetProviderAndPath(nsIURI* aChromeURL, nsACString& aProvider,
+                                     nsACString& aPath);
 
   bool GetDirectionForLocale(const nsACString& aLocale);
 
   void SanitizeForBCP47(nsACString& aLocale);
 
-public:
+ public:
   static already_AddRefed<nsChromeRegistry> GetSingleton();
 
-  struct ManifestProcessingContext
-  {
-    ManifestProcessingContext(NSLocationType aType, mozilla::FileLocation &aFile)
-      : mType(aType)
-      , mFile(aFile)
-    { }
+  struct ManifestProcessingContext {
+    ManifestProcessingContext(NSLocationType aType,
+                              mozilla::FileLocation& aFile)
+        : mType(aType), mFile(aFile) {}
 
-    ~ManifestProcessingContext()
-    { }
+    ~ManifestProcessingContext() {}
 
     nsIURI* GetManifestURI();
     already_AddRefed<nsIURI> ResolveURI(const char* uri);
@@ -113,15 +108,15 @@ public:
   };
 
   virtual void ManifestContent(ManifestProcessingContext& cx, int lineno,
-                               char *const * argv, int flags) = 0;
+                               char* const* argv, int flags) = 0;
   virtual void ManifestLocale(ManifestProcessingContext& cx, int lineno,
-                              char *const * argv, int flags) = 0;
+                              char* const* argv, int flags) = 0;
   virtual void ManifestSkin(ManifestProcessingContext& cx, int lineno,
-                            char *const * argv, int flags) = 0;
+                            char* const* argv, int flags) = 0;
   virtual void ManifestOverride(ManifestProcessingContext& cx, int lineno,
-                                char *const * argv, int flags) = 0;
+                                char* const* argv, int flags) = 0;
   virtual void ManifestResource(ManifestProcessingContext& cx, int lineno,
-                                char *const * argv, int flags) = 0;
+                                char* const* argv, int flags) = 0;
 
   // Available flags
   enum {
@@ -146,4 +141,4 @@ public:
   nsInterfaceHashtable<nsURIHashKey, nsIURI> mOverrideTable;
 };
 
-#endif // nsChromeRegistry_h
+#endif  // nsChromeRegistry_h

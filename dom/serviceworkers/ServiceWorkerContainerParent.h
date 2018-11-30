@@ -15,45 +15,40 @@ namespace dom {
 class IPCServiceWorkerDescriptor;
 class ServiceWorkerContainerProxy;
 
-class ServiceWorkerContainerParent final : public PServiceWorkerContainerParent
-{
+class ServiceWorkerContainerParent final
+    : public PServiceWorkerContainerParent {
   RefPtr<ServiceWorkerContainerProxy> mProxy;
 
   // PServiceWorkerContainerParent
-  void
-  ActorDestroy(ActorDestroyReason aReason) override;
+  void ActorDestroy(ActorDestroyReason aReason) override;
 
-  mozilla::ipc::IPCResult
-  RecvTeardown() override;
+  mozilla::ipc::IPCResult RecvTeardown() override;
 
-  mozilla::ipc::IPCResult
-  RecvRegister(const IPCClientInfo& aClientInfo, const nsCString& aScopeURL,
-               const nsCString& aScriptURL,
-               const ServiceWorkerUpdateViaCache& aUpdateViaCache,
-               RegisterResolver&& aResolver) override;
+  mozilla::ipc::IPCResult RecvRegister(
+      const IPCClientInfo& aClientInfo, const nsCString& aScopeURL,
+      const nsCString& aScriptURL,
+      const ServiceWorkerUpdateViaCache& aUpdateViaCache,
+      RegisterResolver&& aResolver) override;
 
-  mozilla::ipc::IPCResult
-  RecvGetRegistration(const IPCClientInfo& aClientInfo,
-                      const nsCString& aURL,
-                      GetRegistrationResolver&& aResolver) override;
+  mozilla::ipc::IPCResult RecvGetRegistration(
+      const IPCClientInfo& aClientInfo, const nsCString& aURL,
+      GetRegistrationResolver&& aResolver) override;
 
-  mozilla::ipc::IPCResult
-  RecvGetRegistrations(const IPCClientInfo& aClientInfo,
-                       GetRegistrationsResolver&& aResolver) override;
+  mozilla::ipc::IPCResult RecvGetRegistrations(
+      const IPCClientInfo& aClientInfo,
+      GetRegistrationsResolver&& aResolver) override;
 
-  mozilla::ipc::IPCResult
-  RecvGetReady(const IPCClientInfo& aClientInfo,
-               GetReadyResolver&& aResolver) override;
+  mozilla::ipc::IPCResult RecvGetReady(const IPCClientInfo& aClientInfo,
+                                       GetReadyResolver&& aResolver) override;
 
-public:
+ public:
   ServiceWorkerContainerParent();
   ~ServiceWorkerContainerParent();
 
-  void
-  Init();
+  void Init();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_serviceworkercontainerparent_h__
+#endif  // mozilla_dom_serviceworkercontainerparent_h__

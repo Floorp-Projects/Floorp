@@ -14,19 +14,18 @@ namespace dom {
 class PerformanceInfo;
 class PerformanceMemoryInfo;
 struct PerformanceInfoDictionary;
-}
+}  // namespace dom
 
 /**
  * Promises definitions
  */
-typedef MozPromise<dom::PerformanceInfo, nsresult, true>
-  PerformanceInfoPromise;
+typedef MozPromise<dom::PerformanceInfo, nsresult, true> PerformanceInfoPromise;
 typedef MozPromise<nsTArray<dom::PerformanceInfoDictionary>, nsresult, true>
-  RequestMetricsPromise;
+    RequestMetricsPromise;
 typedef MozPromise<nsTArray<dom::PerformanceInfo>, nsresult, true>
-  PerformanceInfoArrayPromise;
+    PerformanceInfoArrayPromise;
 typedef MozPromise<mozilla::dom::PerformanceMemoryInfo, nsresult, true>
-  MemoryPromise;
+    MemoryPromise;
 
-} // namespace mozilla
-#endif // PerformanceTypes_h
+}  // namespace mozilla
+#endif  // PerformanceTypes_h

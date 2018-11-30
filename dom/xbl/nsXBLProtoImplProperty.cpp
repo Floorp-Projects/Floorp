@@ -23,17 +23,19 @@ nsXBLProtoImplProperty::nsXBLProtoImplProperty(const char16_t* aName,
                                                const char16_t* aGetter,
                                                const char16_t* aSetter,
                                                const char16_t* aReadOnly,
-                                               uint32_t aLineNumber) :
-  nsXBLProtoImplMember(aName),
-  mJSAttributes(JSPROP_ENUMERATE)
+                                               uint32_t aLineNumber)
+    : nsXBLProtoImplMember(aName),
+      mJSAttributes(JSPROP_ENUMERATE)
 #ifdef DEBUG
-  , mIsCompiled(false)
+      ,
+      mIsCompiled(false)
 #endif
 {
   MOZ_COUNT_CTOR(nsXBLProtoImplProperty);
 
   if (aReadOnly) {
-    nsAutoString readOnly; readOnly.Assign(*aReadOnly);
+    nsAutoString readOnly;
+    readOnly.Assign(*aReadOnly);
     if (readOnly.LowerCaseEqualsLiteral("true"))
       mJSAttributes |= JSPROP_READONLY;
   }
@@ -50,20 +52,19 @@ nsXBLProtoImplProperty::nsXBLProtoImplProperty(const char16_t* aName,
 
 nsXBLProtoImplProperty::nsXBLProtoImplProperty(const char16_t* aName,
                                                const bool aIsReadOnly)
-  : nsXBLProtoImplMember(aName),
-    mJSAttributes(JSPROP_ENUMERATE)
+    : nsXBLProtoImplMember(aName),
+      mJSAttributes(JSPROP_ENUMERATE)
 #ifdef DEBUG
-  , mIsCompiled(false)
+      ,
+      mIsCompiled(false)
 #endif
 {
   MOZ_COUNT_CTOR(nsXBLProtoImplProperty);
 
-  if (aIsReadOnly)
-    mJSAttributes |= JSPROP_READONLY;
+  if (aIsReadOnly) mJSAttributes |= JSPROP_READONLY;
 }
 
-nsXBLProtoImplProperty::~nsXBLProtoImplProperty()
-{
+nsXBLProtoImplProperty::~nsXBLProtoImplProperty() {
   MOZ_COUNT_DTOR(nsXBLProtoImplProperty);
 
   if (!mGetter.IsCompiled()) {
@@ -75,59 +76,49 @@ nsXBLProtoImplProperty::~nsXBLProtoImplProperty()
   }
 }
 
-void nsXBLProtoImplProperty::EnsureUncompiledText(PropertyOp& aPropertyOp)
-{
+void nsXBLProtoImplProperty::EnsureUncompiledText(PropertyOp& aPropertyOp) {
   if (!aPropertyOp.GetUncompiled()) {
     nsXBLTextWithLineNumber* text = new nsXBLTextWithLineNumber();
     aPropertyOp.SetUncompiled(text);
   }
 }
 
-void
-nsXBLProtoImplProperty::AppendGetterText(const nsAString& aText)
-{
+void nsXBLProtoImplProperty::AppendGetterText(const nsAString& aText) {
   MOZ_ASSERT(!mIsCompiled, "Must not be compiled when accessing getter text");
   EnsureUncompiledText(mGetter);
   mGetter.GetUncompiled()->AppendText(aText);
 }
 
-void
-nsXBLProtoImplProperty::AppendSetterText(const nsAString& aText)
-{
+void nsXBLProtoImplProperty::AppendSetterText(const nsAString& aText) {
   MOZ_ASSERT(!mIsCompiled, "Must not be compiled when accessing setter text");
   EnsureUncompiledText(mSetter);
   mSetter.GetUncompiled()->AppendText(aText);
 }
 
-void
-nsXBLProtoImplProperty::SetGetterLineNumber(uint32_t aLineNumber)
-{
+void nsXBLProtoImplProperty::SetGetterLineNumber(uint32_t aLineNumber) {
   MOZ_ASSERT(!mIsCompiled, "Must not be compiled when accessing getter text");
   EnsureUncompiledText(mGetter);
   mGetter.GetUncompiled()->SetLineNumber(aLineNumber);
 }
 
-void
-nsXBLProtoImplProperty::SetSetterLineNumber(uint32_t aLineNumber)
-{
+void nsXBLProtoImplProperty::SetSetterLineNumber(uint32_t aLineNumber) {
   MOZ_ASSERT(!mIsCompiled, "Must not be compiled when accessing setter text");
   EnsureUncompiledText(mSetter);
   mSetter.GetUncompiled()->SetLineNumber(aLineNumber);
 }
 
-const char* gPropertyArgs[] = { "val" };
+const char* gPropertyArgs[] = {"val"};
 
-nsresult
-nsXBLProtoImplProperty::InstallMember(JSContext *aCx,
-                                      JS::Handle<JSObject*> aTargetClassObject)
-{
+nsresult nsXBLProtoImplProperty::InstallMember(
+    JSContext* aCx, JS::Handle<JSObject*> aTargetClassObject) {
   MOZ_ASSERT(mIsCompiled, "Should not be installing an uncompiled property");
   MOZ_ASSERT(mGetter.IsCompiled() && mSetter.IsCompiled());
   MOZ_ASSERT(js::IsObjectInContextCompartment(aTargetClassObject, aCx));
 
 #ifdef DEBUG
   {
-    JS::Rooted<JSObject*> globalObject(aCx, JS::GetNonCCWObjectGlobal(aTargetClassObject));
+    JS::Rooted<JSObject*> globalObject(
+        aCx, JS::GetNonCCWObjectGlobal(aTargetClassObject));
     MOZ_ASSERT(xpc::IsInContentXBLScope(globalObject) ||
                globalObject == xpc::GetXBLScope(aCx, globalObject));
     MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx) == globalObject);
@@ -150,26 +141,24 @@ nsXBLProtoImplProperty::InstallMember(JSContext *aCx,
     nsDependentString name(mName);
     if (!::JS_DefineUCProperty(aCx, aTargetClassObject,
                                static_cast<const char16_t*>(mName),
-                               name.Length(),
-                               getter, setter,
-                               mJSAttributes))
+                               name.Length(), getter, setter, mJSAttributes))
       return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
 }
 
-nsresult
-nsXBLProtoImplProperty::CompileMember(AutoJSAPI& jsapi, const nsString& aClassStr,
-                                      JS::Handle<JSObject*> aClassObject)
-{
+nsresult nsXBLProtoImplProperty::CompileMember(
+    AutoJSAPI& jsapi, const nsString& aClassStr,
+    JS::Handle<JSObject*> aClassObject) {
   AssertInCompilationScope();
   MOZ_ASSERT(!mIsCompiled, "Trying to compile an already-compiled property");
   MOZ_ASSERT(aClassObject, "Must have class object to compile");
   MOZ_ASSERT(!mGetter.IsCompiled() && !mSetter.IsCompiled());
-  JSContext *cx = jsapi.cx();
+  JSContext* cx = jsapi.cx();
 
   if (!mName)
-    return NS_ERROR_FAILURE; // Without a valid name, we can't install the member.
+    return NS_ERROR_FAILURE;  // Without a valid name, we can't install the
+                              // member.
 
   // We have a property.
   nsresult rv = NS_OK;
@@ -184,14 +173,15 @@ nsXBLProtoImplProperty::CompileMember(AutoJSAPI& jsapi, const nsString& aClassSt
   }
 
   bool deletedGetter = false;
-  nsXBLTextWithLineNumber *getterText = mGetter.GetUncompiled();
+  nsXBLTextWithLineNumber* getterText = mGetter.GetUncompiled();
   if (getterText && getterText->GetText()) {
     nsDependentString getter(getterText->GetText());
     if (!getter.IsEmpty()) {
       JSAutoRealm ar(cx, aClassObject);
       JS::CompileOptions options(cx);
       options.setFileAndLine(functionUri.get(), getterText->GetLineNumber());
-      nsCString name = NS_LITERAL_CSTRING("get_") + NS_ConvertUTF16toUTF8(mName);
+      nsCString name =
+          NS_LITERAL_CSTRING("get_") + NS_ConvertUTF16toUTF8(mName);
       JS::Rooted<JSObject*> getterObject(cx);
       JS::AutoObjectVector emptyVector(cx);
       rv = nsJSUtils::CompileFunction(jsapi, emptyVector, options, name, 0,
@@ -211,7 +201,7 @@ nsXBLProtoImplProperty::CompileMember(AutoJSAPI& jsapi, const nsString& aClassSt
         /*chaining to return failure*/
       }
     }
-  } // if getter is not empty
+  }  // if getter is not empty
 
   if (!deletedGetter) {  // Empty getter
     delete getterText;
@@ -229,14 +219,15 @@ nsXBLProtoImplProperty::CompileMember(AutoJSAPI& jsapi, const nsString& aClassSt
   }
 
   bool deletedSetter = false;
-  nsXBLTextWithLineNumber *setterText = mSetter.GetUncompiled();
+  nsXBLTextWithLineNumber* setterText = mSetter.GetUncompiled();
   if (setterText && setterText->GetText()) {
     nsDependentString setter(setterText->GetText());
     if (!setter.IsEmpty()) {
       JSAutoRealm ar(cx, aClassObject);
       JS::CompileOptions options(cx);
       options.setFileAndLine(functionUri.get(), setterText->GetLineNumber());
-      nsCString name = NS_LITERAL_CSTRING("set_") + NS_ConvertUTF16toUTF8(mName);
+      nsCString name =
+          NS_LITERAL_CSTRING("set_") + NS_ConvertUTF16toUTF8(mName);
       JS::Rooted<JSObject*> setterObject(cx);
       JS::AutoObjectVector emptyVector(cx);
       rv = nsJSUtils::CompileFunction(jsapi, emptyVector, options, name, 1,
@@ -256,7 +247,7 @@ nsXBLProtoImplProperty::CompileMember(AutoJSAPI& jsapi, const nsString& aClassSt
         /*chaining to return failure*/
       }
     }
-  } // if setter wasn't empty....
+  }  // if setter wasn't empty....
 
   if (!deletedSetter) {  // Empty setter
     delete setterText;
@@ -270,9 +261,8 @@ nsXBLProtoImplProperty::CompileMember(AutoJSAPI& jsapi, const nsString& aClassSt
   return rv;
 }
 
-void
-nsXBLProtoImplProperty::Trace(const TraceCallbacks& aCallbacks, void *aClosure)
-{
+void nsXBLProtoImplProperty::Trace(const TraceCallbacks& aCallbacks,
+                                   void* aClosure) {
   if (mJSAttributes & JSPROP_GETTER) {
     aCallbacks.Trace(&mGetter.AsHeapObject(), "mGetter", aClosure);
   }
@@ -282,10 +272,8 @@ nsXBLProtoImplProperty::Trace(const TraceCallbacks& aCallbacks, void *aClosure)
   }
 }
 
-nsresult
-nsXBLProtoImplProperty::Read(nsIObjectInputStream* aStream,
-                             XBLBindingSerializeDetails aType)
-{
+nsresult nsXBLProtoImplProperty::Read(nsIObjectInputStream* aStream,
+                                      XBLBindingSerializeDetails aType) {
   AssertInCompilationScope();
   MOZ_ASSERT(!mIsCompiled);
   MOZ_ASSERT(!mGetter.GetUncompiled() && !mSetter.GetUncompiled());
@@ -318,18 +306,15 @@ nsXBLProtoImplProperty::Read(nsIObjectInputStream* aStream,
   return NS_OK;
 }
 
-nsresult
-nsXBLProtoImplProperty::Write(nsIObjectOutputStream* aStream)
-{
+nsresult nsXBLProtoImplProperty::Write(nsIObjectOutputStream* aStream) {
   AssertInCompilationScope();
   XBLBindingSerializeDetails type;
 
   if (mJSAttributes & JSPROP_GETTER) {
-    type = mJSAttributes & JSPROP_SETTER ?
-           XBLBinding_Serialize_GetterSetterProperty :
-           XBLBinding_Serialize_GetterProperty;
-  }
-  else {
+    type = mJSAttributes & JSPROP_SETTER
+               ? XBLBinding_Serialize_GetterSetterProperty
+               : XBLBinding_Serialize_GetterProperty;
+  } else {
     type = XBLBinding_Serialize_SetterProperty;
   }
 

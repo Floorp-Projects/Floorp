@@ -23,13 +23,10 @@ namespace dom {
 
 namespace {
 
-nsresult
-FileSystemErrorFromNsError(const nsresult& aErrorValue)
-{
+nsresult FileSystemErrorFromNsError(const nsresult& aErrorValue) {
   uint16_t module = NS_ERROR_GET_MODULE(aErrorValue);
   if (module == NS_ERROR_MODULE_DOM_FILESYSTEM ||
-      module == NS_ERROR_MODULE_DOM_FILE ||
-      module == NS_ERROR_MODULE_DOM) {
+      module == NS_ERROR_MODULE_DOM_FILE || module == NS_ERROR_MODULE_DOM) {
     return aErrorValue;
   }
 
@@ -64,13 +61,11 @@ FileSystemErrorFromNsError(const nsresult& aErrorValue)
   }
 }
 
-nsresult
-DispatchToIOThread(nsIRunnable* aRunnable)
-{
+nsresult DispatchToIOThread(nsIRunnable* aRunnable) {
   MOZ_ASSERT(aRunnable);
 
-  nsCOMPtr<nsIEventTarget> target
-    = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+  nsCOMPtr<nsIEventTarget> target =
+      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
   MOZ_ASSERT(target);
 
   return target->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
@@ -79,19 +74,15 @@ DispatchToIOThread(nsIRunnable* aRunnable)
 // This runnable is used when an error value is set before doing any real
 // operation on the I/O thread. In this case we skip all and we directly
 // communicate the error.
-class ErrorRunnable final : public CancelableRunnable
-{
-public:
+class ErrorRunnable final : public CancelableRunnable {
+ public:
   explicit ErrorRunnable(FileSystemTaskChildBase* aTask)
-    : CancelableRunnable("ErrorRunnable")
-    , mTask(aTask)
-  {
+      : CancelableRunnable("ErrorRunnable"), mTask(aTask) {
     MOZ_ASSERT(aTask);
   }
 
   NS_IMETHOD
-  Run() override
-  {
+  Run() override {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mTask->HasError());
 
@@ -99,11 +90,11 @@ public:
     return NS_OK;
   }
 
-private:
+ private:
   RefPtr<FileSystemTaskChildBase> mTask;
 };
 
-} // anonymous namespace
+}  // anonymous namespace
 
 /**
  * FileSystemTaskBase class
@@ -111,34 +102,28 @@ private:
 
 FileSystemTaskChildBase::FileSystemTaskChildBase(nsIGlobalObject* aGlobalObject,
                                                  FileSystemBase* aFileSystem)
-  : mErrorValue(NS_OK)
-  , mFileSystem(aFileSystem)
-  , mGlobalObject(aGlobalObject)
-{
+    : mErrorValue(NS_OK),
+      mFileSystem(aFileSystem),
+      mGlobalObject(aGlobalObject) {
   MOZ_ASSERT(aFileSystem, "aFileSystem should not be null.");
   aFileSystem->AssertIsOnOwningThread();
   MOZ_ASSERT(aGlobalObject);
 }
 
-FileSystemTaskChildBase::~FileSystemTaskChildBase()
-{
+FileSystemTaskChildBase::~FileSystemTaskChildBase() {
   mFileSystem->AssertIsOnOwningThread();
 }
 
-FileSystemBase*
-FileSystemTaskChildBase::GetFileSystem() const
-{
+FileSystemBase* FileSystemTaskChildBase::GetFileSystem() const {
   mFileSystem->AssertIsOnOwningThread();
   return mFileSystem.get();
 }
 
-void
-FileSystemTaskChildBase::Start()
-{
+void FileSystemTaskChildBase::Start() {
   mFileSystem->AssertIsOnOwningThread();
 
   mozilla::ipc::PBackgroundChild* actor =
-    mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
+      mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!actor)) {
     // We are probably shutting down.
     return;
@@ -169,9 +154,8 @@ FileSystemTaskChildBase::Start()
   actor->SendPFileSystemRequestConstructor(this, params);
 }
 
-void
-FileSystemTaskChildBase::SetRequestResult(const FileSystemResponseValue& aValue)
-{
+void FileSystemTaskChildBase::SetRequestResult(
+    const FileSystemResponseValue& aValue) {
   mFileSystem->AssertIsOnOwningThread();
 
   if (aValue.type() == FileSystemResponseValue::TFileSystemErrorResponse) {
@@ -184,9 +168,8 @@ FileSystemTaskChildBase::SetRequestResult(const FileSystemResponseValue& aValue)
   }
 }
 
-mozilla::ipc::IPCResult
-FileSystemTaskChildBase::Recv__delete__(const FileSystemResponseValue& aValue)
-{
+mozilla::ipc::IPCResult FileSystemTaskChildBase::Recv__delete__(
+    const FileSystemResponseValue& aValue) {
   mFileSystem->AssertIsOnOwningThread();
 
   SetRequestResult(aValue);
@@ -194,9 +177,7 @@ FileSystemTaskChildBase::Recv__delete__(const FileSystemResponseValue& aValue)
   return IPC_OK();
 }
 
-void
-FileSystemTaskChildBase::SetError(const nsresult& aErrorValue)
-{
+void FileSystemTaskChildBase::SetError(const nsresult& aErrorValue) {
   mErrorValue = FileSystemErrorFromNsError(aErrorValue);
 }
 
@@ -205,38 +186,30 @@ FileSystemTaskChildBase::SetError(const nsresult& aErrorValue)
  */
 
 FileSystemTaskParentBase::FileSystemTaskParentBase(
-  FileSystemBase* aFileSystem,
-  const FileSystemParams& aParam,
-  FileSystemRequestParent* aParent)
-  : Runnable("dom::FileSystemTaskParentBase")
-  , mErrorValue(NS_OK)
-  , mFileSystem(aFileSystem)
-  , mRequestParent(aParent)
-  , mBackgroundEventTarget(GetCurrentThreadEventTarget())
-{
-  MOZ_ASSERT(XRE_IsParentProcess(),
-             "Only call from parent process!");
+    FileSystemBase* aFileSystem, const FileSystemParams& aParam,
+    FileSystemRequestParent* aParent)
+    : Runnable("dom::FileSystemTaskParentBase"),
+      mErrorValue(NS_OK),
+      mFileSystem(aFileSystem),
+      mRequestParent(aParent),
+      mBackgroundEventTarget(GetCurrentThreadEventTarget()) {
+  MOZ_ASSERT(XRE_IsParentProcess(), "Only call from parent process!");
   MOZ_ASSERT(aFileSystem, "aFileSystem should not be null.");
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(mBackgroundEventTarget);
   AssertIsOnBackgroundThread();
 }
 
-FileSystemTaskParentBase::~FileSystemTaskParentBase()
-{
+FileSystemTaskParentBase::~FileSystemTaskParentBase() {
   // This task can be released on different threads because we dispatch it (as
   // runnable) to main-thread, I/O and then back to the PBackground thread.
-  NS_ProxyRelease(
-    "FileSystemTaskParentBase::mFileSystem",
-    mBackgroundEventTarget, mFileSystem.forget());
-  NS_ProxyRelease(
-    "FileSystemTaskParentBase::mRequestParent",
-    mBackgroundEventTarget, mRequestParent.forget());
+  NS_ProxyRelease("FileSystemTaskParentBase::mFileSystem",
+                  mBackgroundEventTarget, mFileSystem.forget());
+  NS_ProxyRelease("FileSystemTaskParentBase::mRequestParent",
+                  mBackgroundEventTarget, mRequestParent.forget());
 }
 
-void
-FileSystemTaskParentBase::Start()
-{
+void FileSystemTaskParentBase::Start() {
   AssertIsOnBackgroundThread();
   mFileSystem->AssertIsOnOwningThread();
 
@@ -244,9 +217,7 @@ FileSystemTaskParentBase::Start()
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "DispatchToIOThread failed");
 }
 
-void
-FileSystemTaskParentBase::HandleResult()
-{
+void FileSystemTaskParentBase::HandleResult() {
   AssertIsOnBackgroundThread();
   mFileSystem->AssertIsOnOwningThread();
 
@@ -258,9 +229,7 @@ FileSystemTaskParentBase::HandleResult()
   Unused << mRequestParent->Send__delete__(mRequestParent, GetRequestResult());
 }
 
-FileSystemResponseValue
-FileSystemTaskParentBase::GetRequestResult() const
-{
+FileSystemResponseValue FileSystemTaskParentBase::GetRequestResult() const {
   AssertIsOnBackgroundThread();
   mFileSystem->AssertIsOnOwningThread();
 
@@ -277,15 +246,12 @@ FileSystemTaskParentBase::GetRequestResult() const
   return value;
 }
 
-void
-FileSystemTaskParentBase::SetError(const nsresult& aErrorValue)
-{
+void FileSystemTaskParentBase::SetError(const nsresult& aErrorValue) {
   mErrorValue = FileSystemErrorFromNsError(aErrorValue);
 }
 
 NS_IMETHODIMP
-FileSystemTaskParentBase::Run()
-{
+FileSystemTaskParentBase::Run() {
   // This method can run in 2 different threads. Here why:
   // 1. We are are on the I/O thread and we call IOWork().
   // 2. After step 1, it returns back to the PBackground thread.
@@ -313,5 +279,5 @@ FileSystemTaskParentBase::Run()
   return NS_OK;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

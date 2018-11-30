@@ -38,14 +38,15 @@ namespace image {
 // DownscalingFilter
 //////////////////////////////////////////////////////////////////////////////
 
-template <typename Next> class DownscalingFilter;
+template <typename Next>
+class DownscalingFilter;
 
 /**
  * A configuration struct for DownscalingConfig.
  */
-struct DownscalingConfig
-{
-  template <typename Next> using Filter = DownscalingFilter<Next>;
+struct DownscalingConfig {
+  template <typename Next>
+  using Filter = DownscalingFilter<Next>;
   gfx::IntSize mInputSize;     /// The size of the input image. We'll downscale
                                /// from this size to the input size of the next
                                /// SurfaceFilter in the chain.
@@ -64,50 +65,48 @@ struct DownscalingConfig
  * non-Skia builds.
  */
 template <typename Next>
-class DownscalingFilter final : public SurfaceFilter
-{
-public:
+class DownscalingFilter final : public SurfaceFilter {
+ public:
   Maybe<SurfaceInvalidRect> TakeInvalidRect() override { return Nothing(); }
 
   template <typename... Rest>
-  nsresult Configure(const DownscalingConfig& aConfig, const Rest&... aRest)
-  {
+  nsresult Configure(const DownscalingConfig& aConfig, const Rest&... aRest) {
     return NS_ERROR_FAILURE;
   }
 
-protected:
-  uint8_t* DoResetToFirstRow() override { MOZ_CRASH(); return nullptr; }
-  uint8_t* DoAdvanceRow() override { MOZ_CRASH(); return nullptr; }
+ protected:
+  uint8_t* DoResetToFirstRow() override {
+    MOZ_CRASH();
+    return nullptr;
+  }
+  uint8_t* DoAdvanceRow() override {
+    MOZ_CRASH();
+    return nullptr;
+  }
 };
 
 #else
 
 /**
- * DownscalingFilter performs Lanczos downscaling, taking image input data at one size
- * and outputting it rescaled to a different size.
+ * DownscalingFilter performs Lanczos downscaling, taking image input data at
+ * one size and outputting it rescaled to a different size.
  *
  * The 'Next' template parameter specifies the next filter in the chain.
  */
 template <typename Next>
-class DownscalingFilter final : public SurfaceFilter
-{
-public:
+class DownscalingFilter final : public SurfaceFilter {
+ public:
   DownscalingFilter()
-    : mWindowCapacity(0)
-    , mRowsInWindow(0)
-    , mInputRow(0)
-    , mOutputRow(0)
-    , mHasAlpha(true)
-  { }
+      : mWindowCapacity(0),
+        mRowsInWindow(0),
+        mInputRow(0),
+        mOutputRow(0),
+        mHasAlpha(true) {}
 
-  ~DownscalingFilter()
-  {
-    ReleaseWindow();
-  }
+  ~DownscalingFilter() { ReleaseWindow(); }
 
   template <typename... Rest>
-  nsresult Configure(const DownscalingConfig& aConfig, const Rest&... aRest)
-  {
+  nsresult Configure(const DownscalingConfig& aConfig, const Rest&... aRest) {
     nsresult rv = mNext.Configure(aRest...);
     if (NS_FAILED(rv)) {
       return rv;
@@ -143,15 +142,17 @@ public:
     ReleaseWindow();
 
     auto resizeMethod = gfx::ConvolutionFilter::ResizeMethod::LANCZOS3;
-    if (!mXFilter.ComputeResizeFilter(resizeMethod, mInputSize.width, outputSize.width) ||
-        !mYFilter.ComputeResizeFilter(resizeMethod, mInputSize.height, outputSize.height)) {
+    if (!mXFilter.ComputeResizeFilter(resizeMethod, mInputSize.width,
+                                      outputSize.width) ||
+        !mYFilter.ComputeResizeFilter(resizeMethod, mInputSize.height,
+                                      outputSize.height)) {
       NS_WARNING("Failed to compute filters for image downscaling");
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
     // Allocate the buffer, which contains scanlines of the input image.
     mRowBuffer.reset(new (fallible)
-                       uint8_t[PaddedWidthInBytes(mInputSize.width)]);
+                         uint8_t[PaddedWidthInBytes(mInputSize.width)]);
     if (MOZ_UNLIKELY(!mRowBuffer)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -159,9 +160,9 @@ public:
     // Clear the buffer to avoid writing uninitialized memory to the output.
     memset(mRowBuffer.get(), 0, PaddedWidthInBytes(mInputSize.width));
 
-    // Allocate the window, which contains horizontally downscaled scanlines. (We
-    // can store scanlines which are already downscaled because our downscaling
-    // filter is separable.)
+    // Allocate the window, which contains horizontally downscaled scanlines.
+    // (We can store scanlines which are already downscaled because our
+    // downscaling filter is separable.)
     mWindowCapacity = mYFilter.MaxFilter();
     mWindow.reset(new (fallible) uint8_t*[mWindowCapacity]);
     if (MOZ_UNLIKELY(!mWindow)) {
@@ -188,8 +189,7 @@ public:
     return NS_OK;
   }
 
-  Maybe<SurfaceInvalidRect> TakeInvalidRect() override
-  {
+  Maybe<SurfaceInvalidRect> TakeInvalidRect() override {
     Maybe<SurfaceInvalidRect> invalidRect = mNext.TakeInvalidRect();
 
     if (invalidRect) {
@@ -200,9 +200,8 @@ public:
     return invalidRect;
   }
 
-protected:
-  uint8_t* DoResetToFirstRow() override
-  {
+ protected:
+  uint8_t* DoResetToFirstRow() override {
     mNext.ResetToFirstRow();
 
     mInputRow = 0;
@@ -212,8 +211,7 @@ protected:
     return GetRowPointer();
   }
 
-  uint8_t* DoAdvanceRow() override
-  {
+  uint8_t* DoAdvanceRow() override {
     if (mInputRow >= mInputSize.height) {
       NS_WARNING("Advancing DownscalingFilter past the end of the input");
       return nullptr;
@@ -226,14 +224,15 @@ protected:
 
     int32_t filterOffset = 0;
     int32_t filterLength = 0;
-    mYFilter.GetFilterOffsetAndLength(mOutputRow,
-                                      &filterOffset, &filterLength);
+    mYFilter.GetFilterOffsetAndLength(mOutputRow, &filterOffset, &filterLength);
 
     int32_t inputRowToRead = filterOffset + mRowsInWindow;
     MOZ_ASSERT(mInputRow <= inputRowToRead, "Reading past end of input");
     if (mInputRow == inputRowToRead) {
-      MOZ_RELEASE_ASSERT(mRowsInWindow < mWindowCapacity, "Need more rows than capacity!");
-      mXFilter.ConvolveHorizontally(mRowBuffer.get(), mWindow[mRowsInWindow++], mHasAlpha);
+      MOZ_RELEASE_ASSERT(mRowsInWindow < mWindowCapacity,
+                         "Need more rows than capacity!");
+      mXFilter.ConvolveHorizontally(mRowBuffer.get(), mWindow[mRowsInWindow++],
+                                    mHasAlpha);
     }
 
     MOZ_ASSERT(mOutputRow < mNext.InputSize().height,
@@ -246,40 +245,38 @@ protected:
         break;  // We're done.
       }
 
-      mYFilter.GetFilterOffsetAndLength(mOutputRow,
-                                        &filterOffset, &filterLength);
+      mYFilter.GetFilterOffsetAndLength(mOutputRow, &filterOffset,
+                                        &filterLength);
     }
 
     mInputRow++;
 
-    return mInputRow < mInputSize.height ? GetRowPointer()
-                                         : nullptr;
+    return mInputRow < mInputSize.height ? GetRowPointer() : nullptr;
   }
 
-private:
+ private:
   uint8_t* GetRowPointer() const { return mRowBuffer.get(); }
 
-  static size_t PaddedWidthInBytes(size_t aLogicalWidth)
-  {
+  static size_t PaddedWidthInBytes(size_t aLogicalWidth) {
     // Convert from width in BGRA/BGRX pixels to width in bytes, padding
     // to handle overreads by the SIMD code inside Skia.
-    return gfx::ConvolutionFilter::PadBytesForSIMD(aLogicalWidth * sizeof(uint32_t));
+    return gfx::ConvolutionFilter::PadBytesForSIMD(aLogicalWidth *
+                                                   sizeof(uint32_t));
   }
 
-  void DownscaleInputRow()
-  {
+  void DownscaleInputRow() {
     MOZ_ASSERT(mOutputRow < mNext.InputSize().height,
                "Writing past end of output");
 
     int32_t filterOffset = 0;
     int32_t filterLength = 0;
-    mYFilter.GetFilterOffsetAndLength(mOutputRow,
-                                      &filterOffset, &filterLength);
+    mYFilter.GetFilterOffsetAndLength(mOutputRow, &filterOffset, &filterLength);
 
     mNext.template WriteUnsafeComputedRow<uint32_t>([&](uint32_t* aRow,
                                                         uint32_t aLength) {
-      mYFilter.ConvolveVertically(mWindow.get(), reinterpret_cast<uint8_t*>(aRow),
-                                  mOutputRow, mXFilter.NumValues(), mHasAlpha);
+      mYFilter.ConvolveVertically(mWindow.get(),
+                                  reinterpret_cast<uint8_t*>(aRow), mOutputRow,
+                                  mXFilter.NumValues(), mHasAlpha);
     });
 
     mOutputRow++;
@@ -290,8 +287,8 @@ private:
 
     int32_t newFilterOffset = 0;
     int32_t newFilterLength = 0;
-    mYFilter.GetFilterOffsetAndLength(mOutputRow,
-                                      &newFilterOffset, &newFilterLength);
+    mYFilter.GetFilterOffsetAndLength(mOutputRow, &newFilterOffset,
+                                      &newFilterLength);
 
     int diff = newFilterOffset - filterOffset;
     MOZ_ASSERT(diff >= 0, "Moving backwards in the filter?");
@@ -309,8 +306,7 @@ private:
     }
   }
 
-  void ReleaseWindow()
-  {
+  void ReleaseWindow() {
     if (!mWindow) {
       return;
     }
@@ -323,12 +319,12 @@ private:
     mWindowCapacity = 0;
   }
 
-  Next mNext;                       /// The next SurfaceFilter in the chain.
+  Next mNext;  /// The next SurfaceFilter in the chain.
 
-  gfx::IntSize mInputSize;          /// The size of the input image.
-  gfxSize mScale;                   /// The scale factors in each dimension.
-                                    /// Computed from @mInputSize and
-                                    /// the next filter's input size.
+  gfx::IntSize mInputSize;  /// The size of the input image.
+  gfxSize mScale;           /// The scale factors in each dimension.
+                            /// Computed from @mInputSize and
+                            /// the next filter's input size.
 
   UniquePtr<uint8_t[]> mRowBuffer;  /// The buffer into which input is written.
   UniquePtr<uint8_t*[]> mWindow;    /// The last few rows which were written.
@@ -338,16 +334,16 @@ private:
 
   int32_t mWindowCapacity;  /// How many rows the window contains.
 
-  int32_t mRowsInWindow;    /// How many rows we've buffered in the window.
-  int32_t mInputRow;        /// The current row we're reading. (0-indexed)
-  int32_t mOutputRow;       /// The current row we're writing. (0-indexed)
+  int32_t mRowsInWindow;  /// How many rows we've buffered in the window.
+  int32_t mInputRow;      /// The current row we're reading. (0-indexed)
+  int32_t mOutputRow;     /// The current row we're writing. (0-indexed)
 
-  bool mHasAlpha;           /// If true, the image has transparency.
+  bool mHasAlpha;  /// If true, the image has transparency.
 };
 
 #endif
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_DownscalingFilter_h
+#endif  // mozilla_image_DownscalingFilter_h

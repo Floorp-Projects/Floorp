@@ -21,13 +21,12 @@ using namespace dom;
 
 AsyncEventDispatcher::AsyncEventDispatcher(EventTarget* aTarget,
                                            WidgetEvent& aEvent)
-  : CancelableRunnable("AsyncEventDispatcher")
-  , mTarget(aTarget)
-  , mEventMessage(eUnidentifiedEvent)
-{
+    : CancelableRunnable("AsyncEventDispatcher"),
+      mTarget(aTarget),
+      mEventMessage(eUnidentifiedEvent) {
   MOZ_ASSERT(mTarget);
   RefPtr<Event> event =
-    EventDispatcher::CreateEvent(aTarget, nullptr, &aEvent, EmptyString());
+      EventDispatcher::CreateEvent(aTarget, nullptr, &aEvent, EmptyString());
   mEvent = event.forget();
   mEventType.SetIsVoid(true);
   NS_ASSERTION(mEvent, "Should never fail to create an event");
@@ -36,8 +35,7 @@ AsyncEventDispatcher::AsyncEventDispatcher(EventTarget* aTarget,
 }
 
 NS_IMETHODIMP
-AsyncEventDispatcher::Run()
-{
+AsyncEventDispatcher::Run() {
   if (mCanceled) {
     return NS_OK;
   }
@@ -51,9 +49,9 @@ AsyncEventDispatcher::Run()
   mTarget->AsyncEventRunning(this);
   if (mEventMessage != eUnidentifiedEvent) {
     MOZ_ASSERT(mComposed == Composed::eDefault);
-    return nsContentUtils::DispatchTrustedEvent<WidgetEvent>
-      (node->OwnerDoc(), mTarget, mEventMessage, mCanBubble,
-       Cancelable::eNo, nullptr /* aDefaultAction */, mOnlyChromeDispatch);
+    return nsContentUtils::DispatchTrustedEvent<WidgetEvent>(
+        node->OwnerDoc(), mTarget, mEventMessage, mCanBubble, Cancelable::eNo,
+        nullptr /* aDefaultAction */, mOnlyChromeDispatch);
   }
   RefPtr<Event> event = mEvent;
   if (!event) {
@@ -62,8 +60,7 @@ AsyncEventDispatcher::Run()
     event->SetTrusted(true);
   }
   if (mComposed != Composed::eDefault) {
-    event->WidgetEventPtr()->mFlags.mComposed =
-      mComposed == Composed::eYes;
+    event->WidgetEventPtr()->mFlags.mComposed = mComposed == Composed::eYes;
   }
   if (mOnlyChromeDispatch == ChromeOnlyDispatch::eYes) {
     MOZ_ASSERT(event->IsTrusted());
@@ -73,42 +70,36 @@ AsyncEventDispatcher::Run()
   return NS_OK;
 }
 
-nsresult
-AsyncEventDispatcher::Cancel()
-{
+nsresult AsyncEventDispatcher::Cancel() {
   mCanceled = true;
   return NS_OK;
 }
 
-nsresult
-AsyncEventDispatcher::PostDOMEvent()
-{
+nsresult AsyncEventDispatcher::PostDOMEvent() {
   RefPtr<AsyncEventDispatcher> ensureDeletionWhenFailing = this;
   if (NS_IsMainThread()) {
     if (nsCOMPtr<nsIGlobalObject> global = mTarget->GetOwnerGlobal()) {
-      return global->Dispatch(TaskCategory::Other, ensureDeletionWhenFailing.forget());
+      return global->Dispatch(TaskCategory::Other,
+                              ensureDeletionWhenFailing.forget());
     }
 
     // Sometimes GetOwnerGlobal returns null because it uses
     // GetScriptHandlingObject rather than GetScopeObject.
     if (nsCOMPtr<nsINode> node = do_QueryInterface(mTarget)) {
       nsCOMPtr<nsIDocument> doc = node->OwnerDoc();
-      return doc->Dispatch(TaskCategory::Other, ensureDeletionWhenFailing.forget());
+      return doc->Dispatch(TaskCategory::Other,
+                           ensureDeletionWhenFailing.forget());
     }
   }
   return NS_DispatchToCurrentThread(this);
 }
 
-void
-AsyncEventDispatcher::RunDOMEventWhenSafe()
-{
+void AsyncEventDispatcher::RunDOMEventWhenSafe() {
   RefPtr<AsyncEventDispatcher> ensureDeletionWhenFailing = this;
   nsContentUtils::AddScriptRunner(this);
 }
 
-void
-AsyncEventDispatcher::RequireNodeInDocument()
-{
+void AsyncEventDispatcher::RequireNodeInDocument() {
 #ifdef DEBUG
   nsCOMPtr<nsINode> node = do_QueryInterface(mTarget);
   MOZ_ASSERT(node);
@@ -121,11 +112,10 @@ AsyncEventDispatcher::RequireNodeInDocument()
  * mozilla::LoadBlockingAsyncEventDispatcher
  ******************************************************************************/
 
-LoadBlockingAsyncEventDispatcher::~LoadBlockingAsyncEventDispatcher()
-{
+LoadBlockingAsyncEventDispatcher::~LoadBlockingAsyncEventDispatcher() {
   if (mBlockedDoc) {
     mBlockedDoc->UnblockOnload(true);
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

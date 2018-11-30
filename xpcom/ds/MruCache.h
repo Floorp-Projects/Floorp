@@ -23,18 +23,16 @@ namespace detail {
 // `IsNotEmpty` will return true if `Value` is not a pointer type or if the
 // pointer value is not null.
 template <typename Value, bool IsPtr = std::is_pointer<Value>::value>
-struct EmptyChecker
-{
+struct EmptyChecker {
   static bool IsNotEmpty(const Value&) { return true; }
 };
 // Template specialization for the `IsPtr == true` case.
 template <typename Value>
-struct EmptyChecker<Value, true>
-{
+struct EmptyChecker<Value, true> {
   static bool IsNotEmpty(const Value& aVal) { return aVal != nullptr; }
 };
 
-} // namespace detail
+}  // namespace detail
 
 // Provides a most recently used cache that can be used as a layer on top of
 // a larger container where lookups can be expensive. The default size is 31,
@@ -63,9 +61,8 @@ struct EmptyChecker<Value, true>
 //        return aVal->mPtr == aKey;
 //      }
 //    };
-template <class Key, class Value, class Cache, size_t Size=31>
-class MruCache
-{
+template <class Key, class Value, class Cache, size_t Size = 31>
+class MruCache {
   // Best distribution is achieved with a prime number. Ideally the closest
   // to a power of two will be the most efficient use of memory. This
   // assertion is pretty weak, but should catch the common inclination to
@@ -74,11 +71,11 @@ class MruCache
 
   // This is a stronger assertion but significantly limits the values to just
   // those close to a power-of-two value.
-  //static_assert(Size == 7 || Size == 13 || Size == 31 || Size == 61 ||
+  // static_assert(Size == 7 || Size == 13 || Size == 31 || Size == 61 ||
   //              Size == 127 || Size == 251 || Size == 509 || Size == 1021,
   //              "Use a prime number less than 1024");
 
-public:
+ public:
   using KeyType = Key;
   using ValueType = Value;
 
@@ -89,20 +86,15 @@ public:
   // Inserts the given value into the cache. Potentially overwrites an
   // existing entry.
   template <typename U>
-  void Put(const KeyType& aKey, U&& aVal)
-  {
+  void Put(const KeyType& aKey, U&& aVal) {
     *RawEntry(aKey) = std::forward<U>(aVal);
   }
 
   // Removes the given entry if it is in the cache.
-  void Remove(const KeyType& aKey)
-  {
-    Lookup(aKey).Remove();
-  }
+  void Remove(const KeyType& aKey) { Lookup(aKey).Remove(); }
 
   // Clears all cached entries and resets them to a default value.
-  void Clear()
-  {
+  void Clear() {
     for (ValueType& val : mCache) {
       val = ValueType{};
     }
@@ -119,49 +111,41 @@ public:
   //    mTable.Insert(aKey, foo);
   //    p.Set(foo);
   //    return foo;
-  class Entry
-  {
-  public:
-    Entry(ValueType* aEntry, bool aMatch)
-        : mEntry(aEntry)
-        , mMatch(aMatch)
-    {
+  class Entry {
+   public:
+    Entry(ValueType* aEntry, bool aMatch) : mEntry(aEntry), mMatch(aMatch) {
       MOZ_ASSERT(mEntry);
     }
 
     explicit operator bool() const { return mMatch; }
 
-    ValueType& Data() const
-    {
+    ValueType& Data() const {
       MOZ_ASSERT(mMatch);
       return *mEntry;
     }
 
-    template<typename U>
-    void Set(U&& aValue)
-    {
+    template <typename U>
+    void Set(U&& aValue) {
       mMatch = true;
       Data() = std::forward<U>(aValue);
     }
 
-    void Remove()
-    {
+    void Remove() {
       if (mMatch) {
         Data() = ValueType{};
         mMatch = false;
       }
     }
 
-  private:
-    ValueType* mEntry; // Location of the entry in the cache.
-    bool mMatch;       // Whether the value matched.
+   private:
+    ValueType* mEntry;  // Location of the entry in the cache.
+    bool mMatch;        // Whether the value matched.
   };
 
   // Retrieves an entry from the cache. Can be used to test if an entry is
   // present, update the entry to a new value, or remove the entry if one was
   // matched.
-  Entry Lookup(const KeyType& aKey)
-  {
+  Entry Lookup(const KeyType& aKey) {
     using EmptyChecker = detail::EmptyChecker<ValueType>;
 
     auto entry = RawEntry(aKey);
@@ -169,15 +153,14 @@ public:
     return Entry(entry, match);
   }
 
-private:
-    MOZ_ALWAYS_INLINE ValueType* RawEntry(const KeyType& aKey)
-    {
-      return &mCache[Cache::Hash(aKey) % Size];
-    }
+ private:
+  MOZ_ALWAYS_INLINE ValueType* RawEntry(const KeyType& aKey) {
+    return &mCache[Cache::Hash(aKey) % Size];
+  }
 
-    ValueType mCache[Size] = {};
+  ValueType mCache[Size] = {};
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_mrucache_h
+#endif  // mozilla_mrucache_h

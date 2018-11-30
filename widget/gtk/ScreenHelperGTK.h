@@ -18,9 +18,8 @@
 namespace mozilla {
 namespace widget {
 
-class ScreenHelperGTK final : public ScreenManager::Helper
-{
-public:
+class ScreenHelperGTK final : public ScreenManager::Helper {
+ public:
   ScreenHelperGTK();
   ~ScreenHelperGTK() override;
 
@@ -33,14 +32,14 @@ public:
   // For internal use from signal callback functions
   void RefreshScreens();
 
-private:
+ private:
   GdkWindow* mRootWindow;
 #ifdef MOZ_X11
   Atom mNetWorkareaAtom;
 #endif
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // mozilla_widget_gtk_ScreenHelperGTK_h
+#endif  // mozilla_widget_gtk_ScreenHelperGTK_h

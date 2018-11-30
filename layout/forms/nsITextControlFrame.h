@@ -14,26 +14,20 @@ class nsFrameSelection;
 
 namespace mozilla {
 class TextEditor;
-} // namespace mozilla
+}  // namespace mozilla
 
-class nsITextControlFrame : public nsIFormControlFrame
-{
-public:
+class nsITextControlFrame : public nsIFormControlFrame {
+ public:
   NS_DECL_QUERYFRAME_TARGET(nsITextControlFrame)
 
-  enum SelectionDirection {
-    eNone,
-    eForward,
-    eBackward
-  };
+  enum SelectionDirection { eNone, eForward, eBackward };
 
   NS_IMETHOD_(already_AddRefed<mozilla::TextEditor>) GetTextEditor() = 0;
 
-  NS_IMETHOD    SetSelectionRange(uint32_t aSelectionStart,
-                                  uint32_t aSelectionEnd,
-                                  SelectionDirection aDirection = eNone) = 0;
+  NS_IMETHOD SetSelectionRange(uint32_t aSelectionStart, uint32_t aSelectionEnd,
+                               SelectionDirection aDirection = eNone) = 0;
 
-  NS_IMETHOD    GetOwnedSelectionController(nsISelectionController** aSelCon) = 0;
+  NS_IMETHOD GetOwnedSelectionController(nsISelectionController** aSelCon) = 0;
   virtual nsFrameSelection* GetOwnedFrameSelection() = 0;
 
   /**

@@ -21,12 +21,11 @@ static mozilla::LazyLogModule sLayoutLog("layout");
  * the environmental variable MOZ_LOG includes "layout:2" (or higher).
  */
 #ifdef DEBUG
-#define LAYOUT_WARN_IF_FALSE(_cond, _msg)                                  \
-  PR_BEGIN_MACRO                                                           \
-    if (MOZ_LOG_TEST(sLayoutLog, mozilla::LogLevel::Warning) &&        \
-        !(_cond)) {                                                        \
-      mozilla::detail::LayoutLogWarning(_msg, #_cond, __FILE__, __LINE__); \
-    }                                                                      \
+#define LAYOUT_WARN_IF_FALSE(_cond, _msg)                                 \
+  PR_BEGIN_MACRO                                                          \
+  if (MOZ_LOG_TEST(sLayoutLog, mozilla::LogLevel::Warning) && !(_cond)) { \
+    mozilla::detail::LayoutLogWarning(_msg, #_cond, __FILE__, __LINE__);  \
+  }                                                                       \
   PR_END_MACRO
 #else
 #define LAYOUT_WARN_IF_FALSE(_cond, _msg) \
@@ -41,11 +40,11 @@ static mozilla::LazyLogModule sLayoutLog("layout");
  * the environmental variable MOZ_LOG includes "layout:2" (or higher).
  */
 #ifdef DEBUG
-#define LAYOUT_WARNING(_msg)                                                \
-  PR_BEGIN_MACRO                                                            \
-    if (MOZ_LOG_TEST(sLayoutLog, mozilla::LogLevel::Warning)) {         \
-      mozilla::detail::LayoutLogWarning(_msg, nullptr, __FILE__, __LINE__); \
-    }                                                                       \
+#define LAYOUT_WARNING(_msg)                                              \
+  PR_BEGIN_MACRO                                                          \
+  if (MOZ_LOG_TEST(sLayoutLog, mozilla::LogLevel::Warning)) {             \
+    mozilla::detail::LayoutLogWarning(_msg, nullptr, __FILE__, __LINE__); \
+  }                                                                       \
   PR_END_MACRO
 #else
 #define LAYOUT_WARNING(_msg) \
@@ -56,10 +55,10 @@ static mozilla::LazyLogModule sLayoutLog("layout");
 namespace mozilla {
 namespace detail {
 
-void LayoutLogWarning(const char* aStr, const char* aExpr,
-                      const char* aFile, int32_t aLine);
+void LayoutLogWarning(const char* aStr, const char* aExpr, const char* aFile,
+                      int32_t aLine);
 
-} // namespace detail
-} // namespace mozilla
+}  // namespace detail
+}  // namespace mozilla
 
-#endif // LayoutLogging_h
+#endif  // LayoutLogging_h

@@ -16,20 +16,17 @@
 class nsXBLPrototypeBinding;
 class nsXBLProtoImplAnonymousMethod;
 
-class nsXBLProtoImpl final
-{
-public:
+class nsXBLProtoImpl final {
+ public:
   nsXBLProtoImpl()
-    : mPrecompiledMemberHolder(nullptr),
-      mMembers(nullptr),
-      mFields(nullptr),
-      mConstructor(nullptr),
-      mDestructor(nullptr)
-  {
+      : mPrecompiledMemberHolder(nullptr),
+        mMembers(nullptr),
+        mFields(nullptr),
+        mConstructor(nullptr),
+        mDestructor(nullptr) {
     MOZ_COUNT_CTOR(nsXBLProtoImpl);
   }
-  ~nsXBLProtoImpl()
-  {
+  ~nsXBLProtoImpl() {
     MOZ_COUNT_DTOR(nsXBLProtoImpl);
     // Note: the constructor and destructor are in mMembers, so we'll
     // clean them up automatically.
@@ -37,61 +34,55 @@ public:
     delete mFields;
   }
 
+  nsresult InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
+                                 nsXBLBinding* aBinding);
 
-  nsresult InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding, nsXBLBinding* aBinding);
-
-private:
+ private:
   nsresult InitTargetObjects(nsXBLPrototypeBinding* aBinding,
                              nsIContent* aBoundElement,
                              JS::MutableHandle<JSObject*> aTargetClassObject,
                              bool* aTargetIsNew);
 
-public:
+ public:
   nsresult CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding);
 
   bool LookupMember(JSContext* aCx, nsString& aName, JS::Handle<jsid> aNameAsId,
                     JS::MutableHandle<JS::PropertyDescriptor> aDesc,
                     JS::Handle<JSObject*> aClassObject);
 
-  void SetMemberList(nsXBLProtoImplMember* aMemberList)
-  {
+  void SetMemberList(nsXBLProtoImplMember* aMemberList) {
     delete mMembers;
     mMembers = aMemberList;
   }
 
-  void SetFieldList(nsXBLProtoImplField* aFieldList)
-  {
+  void SetFieldList(nsXBLProtoImplField* aFieldList) {
     delete mFields;
     mFields = aFieldList;
   }
 
-  void Trace(const TraceCallbacks& aCallbacks, void *aClosure);
+  void Trace(const TraceCallbacks& aCallbacks, void* aClosure);
   void UnlinkJSObjects();
 
   nsXBLProtoImplField* FindField(const nsString& aFieldName) const;
 
   // Resolve all the fields for this implementation on the object |obj| False
   // return means a JS exception was set.
-  bool ResolveAllFields(JSContext *cx, JS::Handle<JSObject*> obj) const;
+  bool ResolveAllFields(JSContext* cx, JS::Handle<JSObject*> obj) const;
 
   // Undefine all our fields from object |obj| (which should be a
   // JSObject for a bound element).
   void UndefineFields(JSContext* cx, JS::Handle<JSObject*> obj) const;
 
-  bool CompiledMembers() const {
-    return mPrecompiledMemberHolder != nullptr;
-  }
+  bool CompiledMembers() const { return mPrecompiledMemberHolder != nullptr; }
 
-  nsresult Read(nsIObjectInputStream* aStream,
-                nsXBLPrototypeBinding* aBinding);
+  nsresult Read(nsIObjectInputStream* aStream, nsXBLPrototypeBinding* aBinding);
   nsresult Write(nsIObjectOutputStream* aStream,
                  nsXBLPrototypeBinding* aBinding);
 
-protected:
+ protected:
   // used by Read to add each member
   nsXBLProtoImplMember* AddMember(nsXBLProtoImplMember* aMember,
-                                  nsXBLProtoImplMember* aPreviousMember)
-  {
+                                  nsXBLProtoImplMember* aPreviousMember) {
     if (aPreviousMember)
       aPreviousMember->SetNext(aMember);
     else
@@ -101,25 +92,26 @@ protected:
 
   void DestroyMembers();
 
-public:
-  nsString mClassName; // The name of the class.
+ public:
+  nsString mClassName;  // The name of the class.
 
-protected:
-  JSObject* mPrecompiledMemberHolder; // The class object for the binding. We'll use this to pre-compile properties
-                          // and methods for the binding.
+ protected:
+  JSObject*
+      mPrecompiledMemberHolder;  // The class object for the binding. We'll use
+                                 // this to pre-compile properties and methods
+                                 // for the binding.
 
-  nsXBLProtoImplMember* mMembers; // The members of an implementation are chained in this singly-linked list.
+  nsXBLProtoImplMember* mMembers;  // The members of an implementation are
+                                   // chained in this singly-linked list.
 
-  nsXBLProtoImplField* mFields; // Our fields
+  nsXBLProtoImplField* mFields;  // Our fields
 
-public:
-  nsXBLProtoImplAnonymousMethod* mConstructor; // Our class constructor.
-  nsXBLProtoImplAnonymousMethod* mDestructor;  // Our class destructor.
+ public:
+  nsXBLProtoImplAnonymousMethod* mConstructor;  // Our class constructor.
+  nsXBLProtoImplAnonymousMethod* mDestructor;   // Our class destructor.
 };
 
-void
-NS_NewXBLProtoImpl(nsXBLPrototypeBinding* aBinding,
-                   const char16_t* aClassName,
-                   nsXBLProtoImpl** aResult);
+void NS_NewXBLProtoImpl(nsXBLPrototypeBinding* aBinding,
+                        const char16_t* aClassName, nsXBLProtoImpl** aResult);
 
-#endif // nsXBLProtoImpl_h__
+#endif  // nsXBLProtoImpl_h__

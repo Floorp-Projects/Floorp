@@ -33,22 +33,21 @@ namespace mozilla {
 // be slow.
 template <typename Time>
 class SystemTimeConverter {
-public:
+ public:
   SystemTimeConverter()
-    : mReferenceTime(Time(0))
-    , mReferenceTimeStamp() // Initializes to the null timestamp
-    , mLastBackwardsSkewCheck(Time(0))
-    , kTimeRange(std::numeric_limits<Time>::max())
-    , kTimeHalfRange(kTimeRange / 2)
-    , kBackwardsSkewCheckInterval(Time(2000))
-  {
+      : mReferenceTime(Time(0)),
+        mReferenceTimeStamp()  // Initializes to the null timestamp
+        ,
+        mLastBackwardsSkewCheck(Time(0)),
+        kTimeRange(std::numeric_limits<Time>::max()),
+        kTimeHalfRange(kTimeRange / 2),
+        kBackwardsSkewCheckInterval(Time(2000)) {
     static_assert(!IsSigned<Time>::value, "Expected Time to be unsigned");
   }
 
   template <typename CurrentTimeGetter>
-  mozilla::TimeStamp
-  GetTimeStampFromSystemTime(Time aTime,
-                             CurrentTimeGetter& aCurrentTimeGetter) {
+  mozilla::TimeStamp GetTimeStampFromSystemTime(
+      Time aTime, CurrentTimeGetter& aCurrentTimeGetter) {
     TimeStamp roughlyNow = TimeStamp::Now();
 
     // If the reference time is not set, use the current time value to fill
@@ -56,8 +55,7 @@ public:
     if (mReferenceTimeStamp.IsNull()) {
       // This sometimes happens when ::GetMessageTime returns 0 for the first
       // message on Windows.
-      if (!aTime)
-        return roughlyNow;
+      if (!aTime) return roughlyNow;
       UpdateReferenceTime(aTime, aCurrentTimeGetter);
     }
 
@@ -128,9 +126,8 @@ public:
     return roughlyNow - TimeDuration::FromMilliseconds(deltaFromNow);
   }
 
-  void
-  CompensateForBackwardsSkew(Time aReferenceTime,
-                             const TimeStamp &aLowerBound) {
+  void CompensateForBackwardsSkew(Time aReferenceTime,
+                                  const TimeStamp& aLowerBound) {
     // Check if we actually have backwards skew. Backwards skew looks like
     // the following:
     //
@@ -180,29 +177,26 @@ public:
     UpdateReferenceTime(aReferenceTime, aLowerBound);
   }
 
-private:
+ private:
   template <typename CurrentTimeGetter>
-  void
-  UpdateReferenceTime(Time aReferenceTime,
-                      const CurrentTimeGetter& aCurrentTimeGetter) {
+  void UpdateReferenceTime(Time aReferenceTime,
+                           const CurrentTimeGetter& aCurrentTimeGetter) {
     Time currentTime = aCurrentTimeGetter.GetCurrentTime();
     TimeStamp currentTimeStamp = TimeStamp::Now();
     Time timeSinceReference = currentTime - aReferenceTime;
     TimeStamp referenceTimeStamp =
-      currentTimeStamp - TimeDuration::FromMilliseconds(timeSinceReference);
+        currentTimeStamp - TimeDuration::FromMilliseconds(timeSinceReference);
     UpdateReferenceTime(aReferenceTime, referenceTimeStamp);
   }
 
-  void
-  UpdateReferenceTime(Time aReferenceTime,
-                      const TimeStamp& aReferenceTimeStamp) {
+  void UpdateReferenceTime(Time aReferenceTime,
+                           const TimeStamp& aReferenceTimeStamp) {
     mReferenceTime = aReferenceTime;
     mReferenceTimeStamp = aReferenceTimeStamp;
   }
 
-  bool
-  IsTimeNewerThanTimestamp(Time aTime, TimeStamp aTimeStamp, Time* aDelta)
-  {
+  bool IsTimeNewerThanTimestamp(Time aTime, TimeStamp aTimeStamp,
+                                Time* aDelta) {
     Time timeDelta = aTime - mReferenceTime;
 
     // Cast the result to signed 64-bit integer first since that should be
@@ -211,8 +205,8 @@ private:
     // is outside the integer range is undefined.
     // Then we do an implicit cast to Time (typically an unsigned 32-bit
     // integer) which wraps times outside that range.
-    Time timeStampDelta =
-      static_cast<int64_t>((aTimeStamp - mReferenceTimeStamp).ToMilliseconds());
+    Time timeStampDelta = static_cast<int64_t>(
+        (aTimeStamp - mReferenceTimeStamp).ToMilliseconds());
 
     Time timeToTimeStamp = timeStampDelta - timeDelta;
     bool isNewer = false;
@@ -237,6 +231,6 @@ private:
   const Time kBackwardsSkewCheckInterval;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* SystemTimeConverter_h */

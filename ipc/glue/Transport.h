@@ -11,9 +11,9 @@
 #include "chrome/common/ipc_channel.h"
 
 #ifdef OS_POSIX
-# include "mozilla/ipc/Transport_posix.h"
+#include "mozilla/ipc/Transport_posix.h"
 #elif OS_WIN
-# include "mozilla/ipc/Transport_win.h"
+#include "mozilla/ipc/Transport_win.h"
 #endif
 #include "mozilla/UniquePtr.h"
 
@@ -24,8 +24,7 @@ class FileDescriptor;
 
 typedef IPC::Channel Transport;
 
-nsresult CreateTransport(base::ProcessId aProcIdOne,
-                         TransportDescriptor* aOne,
+nsresult CreateTransport(base::ProcessId aProcIdOne, TransportDescriptor* aOne,
                          TransportDescriptor* aTwo);
 
 UniquePtr<Transport> OpenDescriptor(const TransportDescriptor& aTd,
@@ -34,12 +33,11 @@ UniquePtr<Transport> OpenDescriptor(const TransportDescriptor& aTd,
 UniquePtr<Transport> OpenDescriptor(const FileDescriptor& aFd,
                                     Transport::Mode aMode);
 
-TransportDescriptor
-DuplicateDescriptor(const TransportDescriptor& aTd);
+TransportDescriptor DuplicateDescriptor(const TransportDescriptor& aTd);
 
 void CloseDescriptor(const TransportDescriptor& aTd);
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
 #endif  // mozilla_ipc_Transport_h

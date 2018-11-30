@@ -15,13 +15,12 @@
 static const char kOpenDialogParam[] = "centerscreen,chrome,modal,titlebar";
 static const char kOpenWindowParam[] = "centerscreen,chrome,titlebar";
 
-nsresult
-nsNSSDialogHelper::openDialog(mozIDOMWindowProxy* window, const char* url,
-                              nsISupports* params, bool modal)
-{
+nsresult nsNSSDialogHelper::openDialog(mozIDOMWindowProxy* window,
+                                       const char* url, nsISupports* params,
+                                       bool modal) {
   nsresult rv;
   nsCOMPtr<nsIWindowWatcher> windowWatcher =
-           do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+      do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<mozIDOMWindowProxy> parent = window;
@@ -38,13 +37,8 @@ nsNSSDialogHelper::openDialog(mozIDOMWindowProxy* window, const char* url,
   mozilla::dom::AutoNoJSAPI nojsapi;
 
   nsCOMPtr<mozIDOMWindowProxy> newWindow;
-  rv = windowWatcher->OpenWindow(parent,
-                                 url,
-                                 "_blank",
-                                 modal
-                                 ? kOpenDialogParam
-                                 : kOpenWindowParam,
-                                 params,
-                                 getter_AddRefs(newWindow));
+  rv = windowWatcher->OpenWindow(parent, url, "_blank",
+                                 modal ? kOpenDialogParam : kOpenWindowParam,
+                                 params, getter_AddRefs(newWindow));
   return rv;
 }

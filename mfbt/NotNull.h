@@ -100,10 +100,10 @@ namespace mozilla {
 // https://github.com/Microsoft/GSL/issues/89 for some discussion.
 //
 template <typename T>
-class NotNull
-{
-  template <typename U> friend constexpr NotNull<U> WrapNotNull(U aBasePtr);
-  template<typename U, typename... Args>
+class NotNull {
+  template <typename U>
+  friend constexpr NotNull<U> WrapNotNull(U aBasePtr);
+  template <typename U, typename... Args>
   friend constexpr NotNull<U> MakeNotNull(Args&&... aArgs);
 
   T mBasePtr;
@@ -112,15 +112,14 @@ class NotNull
   template <typename U>
   constexpr explicit NotNull(U aBasePtr) : mBasePtr(aBasePtr) {}
 
-public:
+ public:
   // Disallow default construction.
   NotNull() = delete;
 
   // Construct/assign from another NotNull with a compatible base pointer type.
   template <typename U>
   constexpr MOZ_IMPLICIT NotNull(const NotNull<U>& aOther)
-    : mBasePtr(aOther.get())
-  {
+      : mBasePtr(aOther.get()) {
     static_assert(sizeof(T) == sizeof(NotNull<T>),
                   "NotNull must have zero space overhead.");
     static_assert(offsetof(NotNull<T>, mBasePtr) == 0,
@@ -149,9 +148,7 @@ public:
 };
 
 template <typename T>
-constexpr NotNull<T>
-WrapNotNull(const T aBasePtr)
-{
+constexpr NotNull<T> WrapNotNull(const T aBasePtr) {
   NotNull<T> notNull(aBasePtr);
   MOZ_RELEASE_ASSERT(aBasePtr);
   return notNull;
@@ -162,9 +159,8 @@ namespace detail {
 // Extract the pointed-to type from a pointer type (be it raw or smart).
 // The default implementation uses the dereferencing operator of the pointer
 // type to find what it's pointing to.
-template<typename Pointer>
-struct PointedTo
-{
+template <typename Pointer>
+struct PointedTo {
   // Remove the reference that dereferencing operators may return.
   using Type = typename RemoveReference<decltype(*DeclVal<Pointer>())>::Type;
   using NonConstType = typename RemoveConst<Type>::Type;
@@ -174,29 +170,25 @@ struct PointedTo
 // This is especially required because VS 2017 15.6 (March 2018) started
 // rejecting the above `decltype(*DeclVal<Pointer>())` trick for raw pointers.
 // See bug 1443367.
-template<typename T>
-struct PointedTo<T*>
-{
+template <typename T>
+struct PointedTo<T*> {
   using Type = T;
   using NonConstType = T;
 };
 
-template<typename T>
-struct PointedTo<const T*>
-{
+template <typename T>
+struct PointedTo<const T*> {
   using Type = const T;
   using NonConstType = T;
 };
 
-} // namespace detail
+}  // namespace detail
 
 // Allocate an object with infallible new, and wrap its pointer in NotNull.
 // |MakeNotNull<Ptr<Ob>>(args...)| will run |new Ob(args...)|
 // and return NotNull<Ptr<Ob>>.
-template<typename T, typename... Args>
-constexpr NotNull<T>
-MakeNotNull(Args&&... aArgs)
-{
+template <typename T, typename... Args>
+constexpr NotNull<T> MakeNotNull(Args&&... aArgs) {
   using Pointee = typename detail::PointedTo<T>::NonConstType;
   static_assert(!IsArray<Pointee>::value,
                 "MakeNotNull cannot construct an array");
@@ -205,62 +197,46 @@ MakeNotNull(Args&&... aArgs)
 
 // Compare two NotNulls.
 template <typename T, typename U>
-constexpr bool
-operator==(const NotNull<T>& aLhs, const NotNull<U>& aRhs)
-{
+constexpr bool operator==(const NotNull<T>& aLhs, const NotNull<U>& aRhs) {
   return aLhs.get() == aRhs.get();
 }
 template <typename T, typename U>
-constexpr bool
-operator!=(const NotNull<T>& aLhs, const NotNull<U>& aRhs)
-{
+constexpr bool operator!=(const NotNull<T>& aLhs, const NotNull<U>& aRhs) {
   return aLhs.get() != aRhs.get();
 }
 
 // Compare a NotNull to a base pointer.
 template <typename T, typename U>
-constexpr bool
-operator==(const NotNull<T>& aLhs, const U& aRhs)
-{
+constexpr bool operator==(const NotNull<T>& aLhs, const U& aRhs) {
   return aLhs.get() == aRhs;
 }
 template <typename T, typename U>
-constexpr bool
-operator!=(const NotNull<T>& aLhs, const U& aRhs)
-{
+constexpr bool operator!=(const NotNull<T>& aLhs, const U& aRhs) {
   return aLhs.get() != aRhs;
 }
 
 // Compare a base pointer to a NotNull.
 template <typename T, typename U>
-constexpr bool
-operator==(const T& aLhs, const NotNull<U>& aRhs)
-{
+constexpr bool operator==(const T& aLhs, const NotNull<U>& aRhs) {
   return aLhs == aRhs.get();
 }
 template <typename T, typename U>
-constexpr bool
-operator!=(const T& aLhs, const NotNull<U>& aRhs)
-{
+constexpr bool operator!=(const T& aLhs, const NotNull<U>& aRhs) {
   return aLhs != aRhs.get();
 }
 
 // Disallow comparing a NotNull to a nullptr.
 template <typename T>
-bool
-operator==(const NotNull<T>&, decltype(nullptr)) = delete;
+bool operator==(const NotNull<T>&, decltype(nullptr)) = delete;
 template <typename T>
-bool
-operator!=(const NotNull<T>&, decltype(nullptr)) = delete;
+bool operator!=(const NotNull<T>&, decltype(nullptr)) = delete;
 
 // Disallow comparing a nullptr to a NotNull.
 template <typename T>
-bool
-operator==(decltype(nullptr), const NotNull<T>&) = delete;
+bool operator==(decltype(nullptr), const NotNull<T>&) = delete;
 template <typename T>
-bool
-operator!=(decltype(nullptr), const NotNull<T>&) = delete;
+bool operator!=(decltype(nullptr), const NotNull<T>&) = delete;
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_NotNull_h */

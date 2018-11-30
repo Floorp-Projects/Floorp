@@ -27,16 +27,15 @@
 
 // Support profiling stack and native stack on these platforms.
 #if defined(XP_LINUX) || defined(XP_WIN) || defined(XP_MACOSX)
-#  define MOZ_THREADSTACKHELPER_PROFILING_STACK
-#  define MOZ_THREADSTACKHELPER_NATIVE_STACK
+#define MOZ_THREADSTACKHELPER_PROFILING_STACK
+#define MOZ_THREADSTACKHELPER_NATIVE_STACK
 #endif
-
 
 // Android x86 builds consistently crash in the Background Hang Reporter. bug
 // 1368520.
 #if defined(__ANDROID__)
-#  undef MOZ_THREADSTACKHELPER_PROFILING_STACK
-#  undef MOZ_THREADSTACKHELPER_NATIVE_STACK
+#undef MOZ_THREADSTACKHELPER_PROFILING_STACK
+#undef MOZ_THREADSTACKHELPER_NATIVE_STACK
 #endif
 
 namespace mozilla {
@@ -51,9 +50,8 @@ namespace mozilla {
  * Only non-copying labels are included in the stack, which means labels
  * with custom text and markers are not included.
  */
-class ThreadStackHelper : public ProfilerStackCollector
-{
-private:
+class ThreadStackHelper : public ProfilerStackCollector {
+ private:
   HangStack* mStackToFill;
   Array<char, nsThread::kRunnableNameBufSize>* mRunnableNameBuffer;
   size_t mMaxStackSize;
@@ -63,14 +61,15 @@ private:
 
   bool PrepareStackBuffer(HangStack& aStack);
 
-public:
+ public:
   /**
    * Create a ThreadStackHelper instance targeting the current thread.
    */
   ThreadStackHelper();
 
   /**
-   * Retrieve the current interleaved stack of the thread associated with this ThreadStackHelper.
+   * Retrieve the current interleaved stack of the thread associated with this
+   * ThreadStackHelper.
    *
    * @param aStack        HangStack instance to be filled.
    * @param aRunnableName The name of the current runnable on the target thread.
@@ -84,7 +83,7 @@ public:
    */
   int GetThreadId() const { return mThreadId; }
 
-protected:
+ protected:
   /**
    * ProfilerStackCollector
    */
@@ -92,17 +91,18 @@ protected:
   virtual void CollectNativeLeafAddr(void* aAddr) override;
   virtual void CollectJitReturnAddr(void* aAddr) override;
   virtual void CollectWasmFrame(const char* aLabel) override;
-  virtual void CollectProfilingStackFrame(const js::ProfilingStackFrame& aEntry) override;
+  virtual void CollectProfilingStackFrame(
+      const js::ProfilingStackFrame& aEntry) override;
 
-private:
+ private:
   void TryAppendFrame(mozilla::HangEntry aFrame);
 
   // The profiler's unique thread identifier for the target thread.
   int mThreadId;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MOZ_GECKO_PROFILER
+#endif  // MOZ_GECKO_PROFILER
 
-#endif // mozilla_ThreadStackHelper_h
+#endif  // mozilla_ThreadStackHelper_h

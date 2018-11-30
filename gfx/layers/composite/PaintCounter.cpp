@@ -9,8 +9,8 @@
 #include "mozilla/gfx/Types.h"          // for Color, SurfaceFormat
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/CompositorTypes.h"
-#include "mozilla/layers/Effects.h"     // for Effect, EffectChain, etc
-#include "mozilla/TimeStamp.h"          // for TimeStamp, TimeDuration
+#include "mozilla/layers/Effects.h"  // for Effect, EffectChain, etc
+#include "mozilla/TimeStamp.h"       // for TimeStamp, TimeDuration
 #include "mozilla/Sprintf.h"
 
 #include "mozilla/gfx/HelpersSkia.h"
@@ -24,31 +24,27 @@ using namespace mozilla::gfx;
 // Positioned below the chrome UI
 IntRect PaintCounter::mRect = IntRect(0, 175, 300, 60);
 
-PaintCounter::PaintCounter()
-{
+PaintCounter::PaintCounter() {
   mFormat = SurfaceFormat::B8G8R8A8;
   mSurface = Factory::CreateDataSourceSurface(mRect.Size(), mFormat);
   mMap.emplace(mSurface, DataSourceSurface::READ_WRITE);
   mStride = mMap->GetStride();
 
-  mCanvas =
-    SkCanvas::MakeRasterDirect(MakeSkiaImageInfo(mRect.Size(), mFormat),
-                              mMap->GetData(), mStride);
+  mCanvas = SkCanvas::MakeRasterDirect(MakeSkiaImageInfo(mRect.Size(), mFormat),
+                                       mMap->GetData(), mStride);
   mCanvas->clear(SK_ColorWHITE);
 }
 
-PaintCounter::~PaintCounter()
-{
+PaintCounter::~PaintCounter() {
   mSurface = nullptr;
   mTextureSource = nullptr;
   mTexturedEffect = nullptr;
 }
 
-void
-PaintCounter::Draw(Compositor* aCompositor, TimeDuration aPaintTime, TimeDuration aCompositeTime) {
+void PaintCounter::Draw(Compositor* aCompositor, TimeDuration aPaintTime,
+                        TimeDuration aCompositeTime) {
   char buffer[48];
-  SprintfLiteral(buffer, "P: %.2f  C: %.2f",
-                 aPaintTime.ToMilliseconds(),
+  SprintfLiteral(buffer, "P: %.2f  C: %.2f", aPaintTime.ToMilliseconds(),
                  aCompositeTime.ToMilliseconds());
 
   SkPaint paint;
@@ -77,5 +73,5 @@ PaintCounter::Draw(Compositor* aCompositor, TimeDuration aPaintTime, TimeDuratio
   aCompositor->DrawQuad(rect, mRect, effectChain, 1.0, identity);
 }
 
-} // end namespace layers
-} // end namespace mozilla
+}  // end namespace layers
+}  // end namespace mozilla

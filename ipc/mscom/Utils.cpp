@@ -32,18 +32,14 @@ extern "C" IMAGE_DOS_HEADER __ImageBase;
 namespace mozilla {
 namespace mscom {
 
-bool
-IsCOMInitializedOnCurrentThread()
-{
+bool IsCOMInitializedOnCurrentThread() {
   APTTYPE aptType;
   APTTYPEQUALIFIER aptTypeQualifier;
   HRESULT hr = CoGetApartmentType(&aptType, &aptTypeQualifier);
   return hr != CO_E_NOTINITIALIZED;
 }
 
-bool
-IsCurrentThreadMTA()
-{
+bool IsCurrentThreadMTA() {
   APTTYPE aptType;
   APTTYPEQUALIFIER aptTypeQualifier;
   HRESULT hr = CoGetApartmentType(&aptType, &aptTypeQualifier);
@@ -54,9 +50,7 @@ IsCurrentThreadMTA()
   return aptType == APTTYPE_MTA;
 }
 
-bool
-IsProxy(IUnknown* aUnknown)
-{
+bool IsProxy(IUnknown* aUnknown) {
   if (!aUnknown) {
     return false;
   }
@@ -72,9 +66,7 @@ IsProxy(IUnknown* aUnknown)
   return false;
 }
 
-bool
-IsValidGUID(REFGUID aCheckGuid)
-{
+bool IsValidGUID(REFGUID aCheckGuid) {
   // This function determines whether or not aCheckGuid conforms to RFC4122
   // as it applies to Microsoft COM.
 
@@ -97,15 +89,13 @@ IsValidGUID(REFGUID aCheckGuid)
   return version == 1 || version == 4;
 }
 
-uintptr_t
-GetContainingModuleHandle()
-{
+uintptr_t GetContainingModuleHandle() {
   HMODULE thisModule = nullptr;
 #if defined(_MSC_VER)
   thisModule = reinterpret_cast<HMODULE>(&__ImageBase);
 #else
   if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                         GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                             GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
                          reinterpret_cast<LPCTSTR>(&GetContainingModuleHandle),
                          &thisModule)) {
     return 0;
@@ -114,10 +104,8 @@ GetContainingModuleHandle()
   return reinterpret_cast<uintptr_t>(thisModule);
 }
 
-uint32_t
-CreateStream(const uint8_t* aInitBuf, const uint32_t aInitBufSize,
-             IStream** aOutStream)
-{
+uint32_t CreateStream(const uint8_t* aInitBuf, const uint32_t aInitBufSize,
+                      IStream** aOutStream) {
   if (!aInitBufSize || !aOutStream) {
     return E_INVALIDARG;
   }
@@ -196,9 +184,7 @@ CreateStream(const uint8_t* aInitBuf, const uint32_t aInitBufSize,
   return S_OK;
 }
 
-uint32_t
-CopySerializedProxy(IStream* aInStream, IStream** aOutStream)
-{
+uint32_t CopySerializedProxy(IStream* aInStream, IStream** aOutStream) {
   if (!aInStream || !aOutStream) {
     return E_INVALIDARG;
   }
@@ -236,14 +222,13 @@ CopySerializedProxy(IStream* aInStream, IStream** aOutStream)
 
 #if defined(MOZILLA_INTERNAL_API)
 
-void
-GUIDToString(REFGUID aGuid, nsAString& aOutString)
-{
+void GUIDToString(REFGUID aGuid, nsAString& aOutString) {
   // This buffer length is long enough to hold a GUID string that is formatted
   // to include curly braces and dashes.
   const int kBufLenWithNul = 39;
   aOutString.SetLength(kBufLenWithNul);
-  int result = StringFromGUID2(aGuid, char16ptr_t(aOutString.BeginWriting()), kBufLenWithNul);
+  int result = StringFromGUID2(aGuid, char16ptr_t(aOutString.BeginWriting()),
+                               kBufLenWithNul);
   MOZ_ASSERT(result);
   if (result) {
     // Truncate the terminator
@@ -251,14 +236,12 @@ GUIDToString(REFGUID aGuid, nsAString& aOutString)
   }
 }
 
-#endif // defined(MOZILLA_INTERNAL_API)
+#endif  // defined(MOZILLA_INTERNAL_API)
 
 #if defined(ACCESSIBILITY)
 
-static bool
-IsVtableIndexFromParentInterface(TYPEATTR* aTypeAttr,
-                                 unsigned long aVtableIndex)
-{
+static bool IsVtableIndexFromParentInterface(TYPEATTR* aTypeAttr,
+                                             unsigned long aVtableIndex) {
   MOZ_ASSERT(aTypeAttr);
 
   // This is the number of functions declared in this interface (excluding
@@ -279,9 +262,8 @@ IsVtableIndexFromParentInterface(TYPEATTR* aTypeAttr,
   return aVtableIndex < firstVtblIndex;
 }
 
-bool
-IsVtableIndexFromParentInterface(REFIID aInterface, unsigned long aVtableIndex)
-{
+bool IsVtableIndexFromParentInterface(REFIID aInterface,
+                                      unsigned long aVtableIndex) {
   RefPtr<ITypeInfo> typeInfo;
   if (!RegisteredProxy::Find(aInterface, getter_AddRefs(typeInfo))) {
     return false;
@@ -301,9 +283,7 @@ IsVtableIndexFromParentInterface(REFIID aInterface, unsigned long aVtableIndex)
 
 #if defined(MOZILLA_INTERNAL_API)
 
-bool
-IsCallerExternalProcess()
-{
+bool IsCallerExternalProcess() {
   MOZ_ASSERT(XRE_IsContentProcess());
 
   /**
@@ -322,14 +302,12 @@ IsCallerExternalProcess()
 
   // Now check whether the caller is our parent process main thread.
   const DWORD parentMainTid =
-    dom::ContentChild::GetSingleton()->GetChromeMainThreadId();
+      dom::ContentChild::GetSingleton()->GetChromeMainThreadId();
   return callerTid != parentMainTid;
 }
 
-bool
-IsInterfaceEqualToOrInheritedFrom(REFIID aInterface, REFIID aFrom,
-                                  unsigned long aVtableIndexHint)
-{
+bool IsInterfaceEqualToOrInheritedFrom(REFIID aInterface, REFIID aFrom,
+                                       unsigned long aVtableIndexHint) {
   if (aInterface == aFrom) {
     return true;
   }
@@ -357,8 +335,8 @@ IsInterfaceEqualToOrInheritedFrom(REFIID aInterface, REFIID aFrom,
       break;
     }
 
-    bool isFromParentVtable = IsVtableIndexFromParentInterface(typeAttr,
-                                                               aVtableIndexHint);
+    bool isFromParentVtable =
+        IsVtableIndexFromParentInterface(typeAttr, aVtableIndexHint);
     WORD numParentInterfaces = typeAttr->cImplTypes;
 
     curTypeInfo->ReleaseTypeAttr(typeAttr);
@@ -382,8 +360,7 @@ IsInterfaceEqualToOrInheritedFrom(REFIID aInterface, REFIID aFrom,
       }
 
       RefPtr<ITypeInfo> nextTypeInfo;
-      hr = curTypeInfo->GetRefTypeInfo(refCookie,
-                                       getter_AddRefs(nextTypeInfo));
+      hr = curTypeInfo->GetRefTypeInfo(refCookie, getter_AddRefs(nextTypeInfo));
       if (FAILED(hr)) {
         continue;
       }
@@ -409,9 +386,9 @@ IsInterfaceEqualToOrInheritedFrom(REFIID aInterface, REFIID aFrom,
   return false;
 }
 
-#endif // defined(MOZILLA_INTERNAL_API)
+#endif  // defined(MOZILLA_INTERNAL_API)
 
-#endif // defined(ACCESSIBILITY)
+#endif  // defined(ACCESSIBILITY)
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla

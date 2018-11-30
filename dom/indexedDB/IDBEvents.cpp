@@ -28,16 +28,13 @@ const char16_t* kUpgradeNeededEventType = u"upgradeneeded";
 const char16_t* kVersionChangeEventType = u"versionchange";
 const char16_t* kCloseEventType = u"close";
 
-already_AddRefed<Event>
-CreateGenericEvent(EventTarget* aOwner,
-                   const nsDependentString& aType,
-                   Bubbles aBubbles,
-                   Cancelable aCancelable)
-{
+already_AddRefed<Event> CreateGenericEvent(EventTarget* aOwner,
+                                           const nsDependentString& aType,
+                                           Bubbles aBubbles,
+                                           Cancelable aCancelable) {
   RefPtr<Event> event = new Event(aOwner, nullptr, nullptr);
 
-  event->InitEvent(aType,
-                   aBubbles == eDoesBubble ? true : false,
+  event->InitEvent(aType, aBubbles == eDoesBubble ? true : false,
                    aCancelable == eCancelable ? true : false);
 
   event->SetTrusted(true);
@@ -45,17 +42,14 @@ CreateGenericEvent(EventTarget* aOwner,
   return event.forget();
 }
 
-} // namespace indexedDB
+}  // namespace indexedDB
 
 // static
-already_AddRefed<IDBVersionChangeEvent>
-IDBVersionChangeEvent::CreateInternal(EventTarget* aOwner,
-                                      const nsAString& aType,
-                                      uint64_t aOldVersion,
-                                      const Nullable<uint64_t>& aNewVersion)
-{
+already_AddRefed<IDBVersionChangeEvent> IDBVersionChangeEvent::CreateInternal(
+    EventTarget* aOwner, const nsAString& aType, uint64_t aOldVersion,
+    const Nullable<uint64_t>& aNewVersion) {
   RefPtr<IDBVersionChangeEvent> event =
-    new IDBVersionChangeEvent(aOwner, aOldVersion);
+      new IDBVersionChangeEvent(aOwner, aOldVersion);
   if (!aNewVersion.IsNull()) {
     event->mNewVersion.SetValue(aNewVersion.Value());
   }
@@ -67,17 +61,12 @@ IDBVersionChangeEvent::CreateInternal(EventTarget* aOwner,
   return event.forget();
 }
 
-already_AddRefed<IDBVersionChangeEvent>
-IDBVersionChangeEvent::Constructor(const GlobalObject& aGlobal,
-                                   const nsAString& aType,
-                                   const IDBVersionChangeEventInit& aOptions,
-                                   ErrorResult& aRv)
-{
+already_AddRefed<IDBVersionChangeEvent> IDBVersionChangeEvent::Constructor(
+    const GlobalObject& aGlobal, const nsAString& aType,
+    const IDBVersionChangeEventInit& aOptions, ErrorResult& aRv) {
   nsCOMPtr<EventTarget> target = do_QueryInterface(aGlobal.GetAsSupports());
 
-  return CreateInternal(target,
-                        aType,
-                        aOptions.mOldVersion,
+  return CreateInternal(target, aType, aOptions.mOldVersion,
                         aOptions.mNewVersion);
 }
 
@@ -88,11 +77,10 @@ NS_INTERFACE_MAP_BEGIN(IDBVersionChangeEvent)
   NS_INTERFACE_MAP_ENTRY(IDBVersionChangeEvent)
 NS_INTERFACE_MAP_END_INHERITING(Event)
 
-JSObject*
-IDBVersionChangeEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* IDBVersionChangeEvent::WrapObjectInternal(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return IDBVersionChangeEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

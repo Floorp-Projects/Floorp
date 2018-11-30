@@ -6,7 +6,6 @@
 #ifndef nsIStyleSheetLinkingElement_h__
 #define nsIStyleSheetLinkingElement_h__
 
-
 #include "nsISupports.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/Result.h"
@@ -16,75 +15,57 @@ class nsICSSLoaderObserver;
 class nsIPrincipal;
 class nsIURI;
 
-#define NS_ISTYLESHEETLINKINGELEMENT_IID          \
-{ 0xa8b79f3b, 0x9d18, 0x4f9c, \
-  { 0xb1, 0xaa, 0x8c, 0x9b, 0x1b, 0xaa, 0xac, 0xad } }
+#define NS_ISTYLESHEETLINKINGELEMENT_IID             \
+  {                                                  \
+    0xa8b79f3b, 0x9d18, 0x4f9c, {                    \
+      0xb1, 0xaa, 0x8c, 0x9b, 0x1b, 0xaa, 0xac, 0xad \
+    }                                                \
+  }
 
 class nsIStyleSheetLinkingElement : public nsISupports {
-public:
-  enum class ForceUpdate
-  {
+ public:
+  enum class ForceUpdate {
     Yes,
     No,
   };
 
-  enum class Completed
-  {
+  enum class Completed {
     Yes,
     No,
   };
 
-  enum class HasAlternateRel
-  {
-    Yes,
-    No
-  };
+  enum class HasAlternateRel { Yes, No };
 
-  enum class IsAlternate
-  {
+  enum class IsAlternate {
     Yes,
     No,
   };
 
-  enum class IsInline
-  {
-    Yes,
-    No
-  };
+  enum class IsInline { Yes, No };
 
-  enum class MediaMatched
-  {
+  enum class MediaMatched {
     Yes,
     No,
   };
 
-  struct Update
-  {
-  private:
+  struct Update {
+   private:
     bool mWillNotify;
     bool mIsAlternate;
     bool mMediaMatched;
 
-  public:
-    Update()
-      : mWillNotify(false)
-      , mIsAlternate(false)
-      , mMediaMatched(false)
-    { }
+   public:
+    Update() : mWillNotify(false), mIsAlternate(false), mMediaMatched(false) {}
 
-    Update(Completed aCompleted, IsAlternate aIsAlternate, MediaMatched aMediaMatched)
-      : mWillNotify(aCompleted == Completed::No)
-      , mIsAlternate(aIsAlternate == IsAlternate::Yes)
-      , mMediaMatched(aMediaMatched == MediaMatched::Yes)
-    { }
+    Update(Completed aCompleted, IsAlternate aIsAlternate,
+           MediaMatched aMediaMatched)
+        : mWillNotify(aCompleted == Completed::No),
+          mIsAlternate(aIsAlternate == IsAlternate::Yes),
+          mMediaMatched(aMediaMatched == MediaMatched::Yes) {}
 
-    bool WillNotify() const
-    {
-      return mWillNotify;
-    }
+    bool WillNotify() const { return mWillNotify; }
 
-    bool ShouldBlock() const
-    {
+    bool ShouldBlock() const {
       if (!mWillNotify) {
         return false;
       }
@@ -93,8 +74,7 @@ public:
     }
   };
 
-  struct MOZ_STACK_CLASS SheetInfo
-  {
+  struct MOZ_STACK_CLASS SheetInfo {
     nsIContent* mContent;
     // FIXME(emilio): do these really need to be strong refs?
     nsCOMPtr<nsIURI> mURI;
@@ -111,20 +91,15 @@ public:
     bool mHasAlternateRel;
     bool mIsInline;
 
-    SheetInfo(const nsIDocument&,
-              nsIContent*,
-              already_AddRefed<nsIURI> aURI,
+    SheetInfo(const nsIDocument&, nsIContent*, already_AddRefed<nsIURI> aURI,
               already_AddRefed<nsIPrincipal> aTriggeringPrincipal,
               mozilla::net::ReferrerPolicy aReferrerPolicy,
-              mozilla::CORSMode aCORSMode,
-              const nsAString& aTitle,
-              const nsAString& aMedia,
-              HasAlternateRel aHasAlternateRel,
+              mozilla::CORSMode aCORSMode, const nsAString& aTitle,
+              const nsAString& aMedia, HasAlternateRel aHasAlternateRel,
               IsInline aIsInline);
 
     ~SheetInfo();
   };
-
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISTYLESHEETLINKINGELEMENT_IID)
 
@@ -158,8 +133,8 @@ public:
    * @param aObserver    observer to notify once the stylesheet is loaded.
    *                     This will be passed to the CSSLoader
    */
-  virtual mozilla::Result<Update, nsresult>
-    UpdateStyleSheet(nsICSSLoaderObserver* aObserver) = 0;
+  virtual mozilla::Result<Update, nsresult> UpdateStyleSheet(
+      nsICSSLoaderObserver* aObserver) = 0;
 
   /**
    * Tells this element whether to update the stylesheet when the
@@ -217,4 +192,4 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIStyleSheetLinkingElement,
                               NS_ISTYLESHEETLINKINGELEMENT_IID)
 
-#endif // nsILinkingElement_h__
+#endif  // nsILinkingElement_h__

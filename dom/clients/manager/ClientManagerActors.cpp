@@ -10,39 +10,30 @@
 namespace mozilla {
 namespace dom {
 
-PClientManagerChild*
-AllocClientManagerChild()
-{
-  MOZ_ASSERT_UNREACHABLE("Default ClientManagerChild allocator should not be invoked");
+PClientManagerChild* AllocClientManagerChild() {
+  MOZ_ASSERT_UNREACHABLE(
+      "Default ClientManagerChild allocator should not be invoked");
   return nullptr;
 }
 
-bool
-DeallocClientManagerChild(PClientManagerChild* aActor)
-{
+bool DeallocClientManagerChild(PClientManagerChild* aActor) {
   delete aActor;
   return true;
 }
 
-PClientManagerParent*
-AllocClientManagerParent()
-{
+PClientManagerParent* AllocClientManagerParent() {
   return new ClientManagerParent();
 }
 
-bool
-DeallocClientManagerParent(PClientManagerParent* aActor)
-{
+bool DeallocClientManagerParent(PClientManagerParent* aActor) {
   delete aActor;
   return true;
 }
 
-void
-InitClientManagerParent(PClientManagerParent* aActor)
-{
+void InitClientManagerParent(PClientManagerParent* aActor) {
   auto actor = static_cast<ClientManagerParent*>(aActor);
   actor->Init();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

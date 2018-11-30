@@ -19,15 +19,13 @@ namespace mozilla {
 namespace layers {
 
 class DesktopFlingPhysics {
-public:
-  void Init(const ParentLayerPoint& aStartingVelocity, float aPLPPI /* unused */)
-  {
+ public:
+  void Init(const ParentLayerPoint& aStartingVelocity,
+            float aPLPPI /* unused */) {
     mVelocity = aStartingVelocity;
   }
-  void Sample(const TimeDuration& aDelta,
-              ParentLayerPoint* aOutVelocity,
-              ParentLayerPoint* aOutOffset)
-  {
+  void Sample(const TimeDuration& aDelta, ParentLayerPoint* aOutVelocity,
+              ParentLayerPoint* aOutOffset) {
     float friction = gfxPrefs::APZFlingFriction();
     float threshold = gfxPrefs::APZFlingStoppedThreshold();
 
@@ -38,7 +36,8 @@ public:
     *aOutVelocity = mVelocity;
     *aOutOffset = mVelocity * aDelta.ToMilliseconds();
   }
-private:
+
+ private:
   /**
    * Applies friction to the given velocity and returns the result, or
    * returns zero if the velocity is too low.
@@ -48,9 +47,9 @@ private:
    * |aFriction| is the amount of friction to apply.
    * |aThreshold| is the velocity below which the fling is cancelled.
    */
-  static float ApplyFrictionOrCancel(float aVelocity, const TimeDuration& aDelta,
-                                     float aFriction, float aThreshold)
-  {
+  static float ApplyFrictionOrCancel(float aVelocity,
+                                     const TimeDuration& aDelta,
+                                     float aFriction, float aThreshold) {
     if (fabsf(aVelocity) <= aThreshold) {
       // If the velocity is very low, just set it to 0 and stop the fling,
       // otherwise we'll just asymptotically approach 0 and the user won't
@@ -65,7 +64,7 @@ private:
   ParentLayerPoint mVelocity;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_DesktopFlingPhysics_h_
+#endif  // mozilla_layers_DesktopFlingPhysics_h_

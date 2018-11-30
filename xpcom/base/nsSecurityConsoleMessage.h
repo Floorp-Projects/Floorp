@@ -9,22 +9,25 @@
 #include "nsISecurityConsoleMessage.h"
 #include "nsString.h"
 
-class nsSecurityConsoleMessage final : public nsISecurityConsoleMessage
-{
-public:
+class nsSecurityConsoleMessage final : public nsISecurityConsoleMessage {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISECURITYCONSOLEMESSAGE
 
   nsSecurityConsoleMessage();
 
-private:
+ private:
   ~nsSecurityConsoleMessage();
 
-protected:
+ protected:
   nsString mTag;
   nsString mCategory;
 };
 
-#define NS_SECURITY_CONSOLE_MESSAGE_CID \
-  {0x43ebf210, 0x8a7b, 0x4ddb, {0xa8, 0x3d, 0xb8, 0x7c, 0x51, 0xa0, 0x58, 0xdb}}
-#endif //nsSecurityConsoleMessage_h__
+#define NS_SECURITY_CONSOLE_MESSAGE_CID              \
+  {                                                  \
+    0x43ebf210, 0x8a7b, 0x4ddb, {                    \
+      0xa8, 0x3d, 0xb8, 0x7c, 0x51, 0xa0, 0x58, 0xdb \
+    }                                                \
+  }
+#endif  // nsSecurityConsoleMessage_h__

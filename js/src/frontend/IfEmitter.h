@@ -21,75 +21,70 @@ namespace frontend {
 
 struct BytecodeEmitter;
 
-class MOZ_STACK_CLASS BranchEmitterBase
-{
-  protected:
-    BytecodeEmitter* bce_;
+class MOZ_STACK_CLASS BranchEmitterBase {
+ protected:
+  BytecodeEmitter* bce_;
 
-    // Jump around the then clause, to the beginning of the else clause.
-    JumpList jumpAroundThen_;
+  // Jump around the then clause, to the beginning of the else clause.
+  JumpList jumpAroundThen_;
 
-    // Jump around the else clause, to the end of the entire branch.
-    JumpList jumpsAroundElse_;
+  // Jump around the else clause, to the end of the entire branch.
+  JumpList jumpsAroundElse_;
 
-    // The stack depth before emitting the then block.
-    // Used for restoring stack depth before emitting the else block.
-    // Also used for assertion to make sure then and else blocks pushed the
-    // same number of values.
-    int32_t thenDepth_ = 0;
+  // The stack depth before emitting the then block.
+  // Used for restoring stack depth before emitting the else block.
+  // Also used for assertion to make sure then and else blocks pushed the
+  // same number of values.
+  int32_t thenDepth_ = 0;
 
-    // Whether the then-clause, the else-clause, or else-if condition may
-    // contain declaration or access to lexical variables, which means they
-    // should have their own TDZCheckCache.  Basically TDZCheckCache should be
-    // created for each basic block, which then-clause, else-clause, and
-    // else-if condition are, but for internally used branches which are
-    // known not to touch lexical variables we can skip creating TDZCheckCache
-    // for them.
-    //
-    // See the comment for TDZCheckCache class for more details.
-    enum class Kind {
-        // For syntactic branches (if, if-else, and conditional expression),
-        // which basically may contain declaration or accesses to lexical
-        // variables inside then-clause, else-clause, and else-if condition.
-        MayContainLexicalAccessInBranch,
+  // Whether the then-clause, the else-clause, or else-if condition may
+  // contain declaration or access to lexical variables, which means they
+  // should have their own TDZCheckCache.  Basically TDZCheckCache should be
+  // created for each basic block, which then-clause, else-clause, and
+  // else-if condition are, but for internally used branches which are
+  // known not to touch lexical variables we can skip creating TDZCheckCache
+  // for them.
+  //
+  // See the comment for TDZCheckCache class for more details.
+  enum class Kind {
+    // For syntactic branches (if, if-else, and conditional expression),
+    // which basically may contain declaration or accesses to lexical
+    // variables inside then-clause, else-clause, and else-if condition.
+    MayContainLexicalAccessInBranch,
 
-        // For internally used branches which don't touch lexical variables
-        // inside then-clause, else-clause, nor else-if condition.
-        NoLexicalAccessInBranch
-    };
-    Kind kind_;
+    // For internally used branches which don't touch lexical variables
+    // inside then-clause, else-clause, nor else-if condition.
+    NoLexicalAccessInBranch
+  };
+  Kind kind_;
 
-    mozilla::Maybe<TDZCheckCache> tdzCache_;
+  mozilla::Maybe<TDZCheckCache> tdzCache_;
 
 #ifdef DEBUG
-    // The number of values pushed in the then and else blocks.
-    int32_t pushed_ = 0;
-    bool calculatedPushed_ = false;
+  // The number of values pushed in the then and else blocks.
+  int32_t pushed_ = 0;
+  bool calculatedPushed_ = false;
 #endif
 
-  protected:
-    BranchEmitterBase(BytecodeEmitter* bce, Kind kind);
+ protected:
+  BranchEmitterBase(BytecodeEmitter* bce, Kind kind);
 
-    MOZ_MUST_USE bool emitThenInternal(SrcNoteType type);
-    void calculateOrCheckPushed();
-    MOZ_MUST_USE bool emitElseInternal();
-    MOZ_MUST_USE bool emitEndInternal();
+  MOZ_MUST_USE bool emitThenInternal(SrcNoteType type);
+  void calculateOrCheckPushed();
+  MOZ_MUST_USE bool emitElseInternal();
+  MOZ_MUST_USE bool emitEndInternal();
 
-  public:
+ public:
 #ifdef DEBUG
-    // Returns the number of values pushed onto the value stack inside
-    // `then_block` and `else_block`.
-    // Can be used in assertion after emitting if-then-else.
-    int32_t pushed() const {
-        return pushed_;
-    }
+  // Returns the number of values pushed onto the value stack inside
+  // `then_block` and `else_block`.
+  // Can be used in assertion after emitting if-then-else.
+  int32_t pushed() const { return pushed_; }
 
-    // Returns the number of values popped onto the value stack inside
-    // `then_block` and `else_block`.
-    // Can be used in assertion after emitting if-then-else.
-    int32_t popped() const {
-        return -pushed_;
-    }
+  // Returns the number of values popped onto the value stack inside
+  // `then_block` and `else_block`.
+  // Can be used in assertion after emitting if-then-else.
+  int32_t popped() const { return -pushed_; }
 #endif
 };
 
@@ -136,84 +131,83 @@ class MOZ_STACK_CLASS BranchEmitterBase
 //     emit(b4);
 //     ifThenElse.emitEnd();
 //
-class MOZ_STACK_CLASS IfEmitter : public BranchEmitterBase
-{
-  protected:
+class MOZ_STACK_CLASS IfEmitter : public BranchEmitterBase {
+ protected:
 #ifdef DEBUG
-    // The state of this emitter.
-    //
-    // +-------+ emitIf +----+
-    // | Start |------->| If |-+
-    // +-------+        +----+ |
-    //                         |
-    //    +--------------------+
-    //    |
-    //    v emitThen +------+                               emitEnd +-----+
-    // +->+--------->| Then |---------------------------->+-------->| End |
-    // ^  |          +------+                             ^         +-----+
-    // |  |                                               |
-    // |  |                                               |
-    // |  |                                               |
-    // |  | emitThenElse +----------+   emitElse +------+ |
-    // |  +------------->| ThenElse |-+--------->| Else |-+
-    // |                 +----------+ |          +------+
-    // |                              |
-    // |                              | emitElseIf +--------+
-    // |                              +----------->| ElseIf |-+
-    // |                                           +--------+ |
-    // |                                                      |
-    // +------------------------------------------------------+
-    enum class State {
-        // The initial state.
-        Start,
+  // The state of this emitter.
+  //
+  // +-------+ emitIf +----+
+  // | Start |------->| If |-+
+  // +-------+        +----+ |
+  //                         |
+  //    +--------------------+
+  //    |
+  //    v emitThen +------+                               emitEnd +-----+
+  // +->+--------->| Then |---------------------------->+-------->| End |
+  // ^  |          +------+                             ^         +-----+
+  // |  |                                               |
+  // |  |                                               |
+  // |  |                                               |
+  // |  | emitThenElse +----------+   emitElse +------+ |
+  // |  +------------->| ThenElse |-+--------->| Else |-+
+  // |                 +----------+ |          +------+
+  // |                              |
+  // |                              | emitElseIf +--------+
+  // |                              +----------->| ElseIf |-+
+  // |                                           +--------+ |
+  // |                                                      |
+  // +------------------------------------------------------+
+  enum class State {
+    // The initial state.
+    Start,
 
-        // After calling emitIf.
-        If,
+    // After calling emitIf.
+    If,
 
-        // After calling emitThen.
-        Then,
+    // After calling emitThen.
+    Then,
 
-        // After calling emitThenElse.
-        ThenElse,
+    // After calling emitThenElse.
+    ThenElse,
 
-        // After calling emitElse.
-        Else,
+    // After calling emitElse.
+    Else,
 
-        // After calling emitElseIf.
-        ElseIf,
+    // After calling emitElseIf.
+    ElseIf,
 
-        // After calling emitEnd.
-        End
-    };
-    State state_ = State::Start;
+    // After calling emitEnd.
+    End
+  };
+  State state_ = State::Start;
 #endif
 
-  protected:
-    // For InternalIfEmitter.
-    IfEmitter(BytecodeEmitter* bce, Kind kind);
+ protected:
+  // For InternalIfEmitter.
+  IfEmitter(BytecodeEmitter* bce, Kind kind);
 
-  public:
-    explicit IfEmitter(BytecodeEmitter* bce);
+ public:
+  explicit IfEmitter(BytecodeEmitter* bce);
 
-    // `ifPos` is the offset in the source code for the character below:
-    //
-    //   if ( cond ) { ... } else if ( cond2 ) { ... }
-    //   ^                        ^
-    //   |                        |
-    //   |                        ifPos for emitElseIf
-    //   |
-    //   ifPos for emitIf
-    //
-    // Can be Nothing() if not available.
-    MOZ_MUST_USE bool emitIf(const mozilla::Maybe<uint32_t>& ifPos);
+  // `ifPos` is the offset in the source code for the character below:
+  //
+  //   if ( cond ) { ... } else if ( cond2 ) { ... }
+  //   ^                        ^
+  //   |                        |
+  //   |                        ifPos for emitElseIf
+  //   |
+  //   ifPos for emitIf
+  //
+  // Can be Nothing() if not available.
+  MOZ_MUST_USE bool emitIf(const mozilla::Maybe<uint32_t>& ifPos);
 
-    MOZ_MUST_USE bool emitThen();
-    MOZ_MUST_USE bool emitThenElse();
+  MOZ_MUST_USE bool emitThen();
+  MOZ_MUST_USE bool emitThenElse();
 
-    MOZ_MUST_USE bool emitElseIf(const mozilla::Maybe<uint32_t>& ifPos);
-    MOZ_MUST_USE bool emitElse();
+  MOZ_MUST_USE bool emitElseIf(const mozilla::Maybe<uint32_t>& ifPos);
+  MOZ_MUST_USE bool emitElse();
 
-    MOZ_MUST_USE bool emitEnd();
+  MOZ_MUST_USE bool emitEnd();
 };
 
 // Class for emitting bytecode for blocks like if-then-else which doesn't touch
@@ -236,10 +230,9 @@ class MOZ_STACK_CLASS IfEmitter : public BranchEmitterBase
 //     emit(else_block);
 //     ifThenElse.emitEnd();
 //
-class MOZ_STACK_CLASS InternalIfEmitter : public IfEmitter
-{
-  public:
-    explicit InternalIfEmitter(BytecodeEmitter* bce);
+class MOZ_STACK_CLASS InternalIfEmitter : public IfEmitter {
+ public:
+  explicit InternalIfEmitter(BytecodeEmitter* bce);
 };
 
 // Class for emitting bytecode for conditional expression.
@@ -256,46 +249,45 @@ class MOZ_STACK_CLASS InternalIfEmitter : public IfEmitter
 //     emit(else_expr);
 //     condElse.emitEnd();
 //
-class MOZ_STACK_CLASS CondEmitter : public BranchEmitterBase
-{
+class MOZ_STACK_CLASS CondEmitter : public BranchEmitterBase {
 #ifdef DEBUG
-    // The state of this emitter.
-    //
-    // +-------+ emitCond +------+ emitThenElse +----------+
-    // | Start |--------->| Cond |------------->| ThenElse |-+
-    // +-------+          +------+              +----------+ |
-    //                                                       |
-    //                                     +-----------------+
-    //                                     |
-    //                                     | emitElse +------+ emitEnd +-----+
-    //                                     +--------->| Else |-------->| End |
-    //                                                +------+         +-----+
-    enum class State {
-        // The initial state.
-        Start,
+  // The state of this emitter.
+  //
+  // +-------+ emitCond +------+ emitThenElse +----------+
+  // | Start |--------->| Cond |------------->| ThenElse |-+
+  // +-------+          +------+              +----------+ |
+  //                                                       |
+  //                                     +-----------------+
+  //                                     |
+  //                                     | emitElse +------+ emitEnd +-----+
+  //                                     +--------->| Else |-------->| End |
+  //                                                +------+         +-----+
+  enum class State {
+    // The initial state.
+    Start,
 
-        // After calling emitCond.
-        Cond,
+    // After calling emitCond.
+    Cond,
 
-        // After calling emitThenElse.
-        ThenElse,
+    // After calling emitThenElse.
+    ThenElse,
 
-        // After calling emitElse.
-        Else,
+    // After calling emitElse.
+    Else,
 
-        // After calling emitEnd.
-        End
-    };
-    State state_ = State::Start;
+    // After calling emitEnd.
+    End
+  };
+  State state_ = State::Start;
 #endif
 
-  public:
-    explicit CondEmitter(BytecodeEmitter* bce);
+ public:
+  explicit CondEmitter(BytecodeEmitter* bce);
 
-    MOZ_MUST_USE bool emitCond();
-    MOZ_MUST_USE bool emitThenElse();
-    MOZ_MUST_USE bool emitElse();
-    MOZ_MUST_USE bool emitEnd();
+  MOZ_MUST_USE bool emitCond();
+  MOZ_MUST_USE bool emitThenElse();
+  MOZ_MUST_USE bool emitElse();
+  MOZ_MUST_USE bool emitEnd();
 };
 
 } /* namespace frontend */

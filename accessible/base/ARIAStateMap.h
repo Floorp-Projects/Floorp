@@ -21,8 +21,7 @@ namespace aria {
 /**
  * List of the ARIA state mapping rules.
  */
-enum EStateRule
-{
+enum EStateRule {
   eARIANone,
   eARIAAutoComplete,
   eARIABusy,
@@ -61,8 +60,8 @@ enum EStateRule
  */
 bool MapToState(EStateRule aRule, dom::Element* aElement, uint64_t* aState);
 
-} // namespace aria
-} // namespace a11y
-} // namespace mozilla
+}  // namespace aria
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

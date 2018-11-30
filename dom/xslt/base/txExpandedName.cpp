@@ -10,32 +10,28 @@
 #include "txNamespaceMap.h"
 #include "txXMLUtils.h"
 
-nsresult
-txExpandedName::init(const nsAString& aQName, txNamespaceMap* aResolver,
-                     bool aUseDefault)
-{
-    const nsString& qName = PromiseFlatString(aQName);
-    const char16_t* colon;
-    bool valid = XMLUtils::isValidQName(qName, &colon);
-    if (!valid) {
-        return NS_ERROR_FAILURE;
-    }
+nsresult txExpandedName::init(const nsAString& aQName,
+                              txNamespaceMap* aResolver, bool aUseDefault) {
+  const nsString& qName = PromiseFlatString(aQName);
+  const char16_t* colon;
+  bool valid = XMLUtils::isValidQName(qName, &colon);
+  if (!valid) {
+    return NS_ERROR_FAILURE;
+  }
 
-    if (colon) {
-        RefPtr<nsAtom> prefix = NS_Atomize(Substring(qName.get(), colon));
-        int32_t namespaceID = aResolver->lookupNamespace(prefix);
-        if (namespaceID == kNameSpaceID_Unknown)
-            return NS_ERROR_FAILURE;
-        mNamespaceID = namespaceID;
+  if (colon) {
+    RefPtr<nsAtom> prefix = NS_Atomize(Substring(qName.get(), colon));
+    int32_t namespaceID = aResolver->lookupNamespace(prefix);
+    if (namespaceID == kNameSpaceID_Unknown) return NS_ERROR_FAILURE;
+    mNamespaceID = namespaceID;
 
-        const char16_t *end;
-        qName.EndReading(end);
-        mLocalName = NS_Atomize(Substring(colon + 1, end));
-    }
-    else {
-        mNamespaceID = aUseDefault ? aResolver->lookupNamespace(nullptr) :
-                                     kNameSpaceID_None;
-        mLocalName = NS_Atomize(aQName);
-    }
-    return NS_OK;
+    const char16_t* end;
+    qName.EndReading(end);
+    mLocalName = NS_Atomize(Substring(colon + 1, end));
+  } else {
+    mNamespaceID =
+        aUseDefault ? aResolver->lookupNamespace(nullptr) : kNameSpaceID_None;
+    mLocalName = NS_Atomize(aQName);
+  }
+  return NS_OK;
 }

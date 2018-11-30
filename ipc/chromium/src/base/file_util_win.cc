@@ -23,27 +23,24 @@ namespace file_util {
 
 bool AbsolutePath(FilePath* path) {
   wchar_t file_path_buf[MAX_PATH];
-  if (!_wfullpath(file_path_buf, path->value().c_str(), MAX_PATH))
-    return false;
+  if (!_wfullpath(file_path_buf, path->value().c_str(), MAX_PATH)) return false;
   *path = FilePath(file_path_buf);
   return true;
 }
 
 bool Delete(const FilePath& path) {
-  if (path.value().length() >= MAX_PATH)
-    return false;
+  if (path.value().length() >= MAX_PATH) return false;
 
   // Use DeleteFile; it should be faster. DeleteFile
   // fails if passed a directory though, which is why we fall through on
   // failure to the SHFileOperation.
-  if (DeleteFile(path.value().c_str()) != 0)
-    return true;
+  if (DeleteFile(path.value().c_str()) != 0) return true;
 
   // SHFILEOPSTRUCT wants the path to be terminated with two NULLs,
   // so we have to use wcscpy because wcscpy_s writes non-NULLs
   // into the rest of the buffer.
   wchar_t double_terminated_path[MAX_PATH + 1] = {0};
-#pragma warning(suppress:4996)  // don't complain about wcscpy deprecation
+#pragma warning(suppress : 4996)  // don't complain about wcscpy deprecation
   wcscpy(double_terminated_path, path.value().c_str());
 
   SHFILEOPSTRUCT file_operation = {0};
@@ -82,19 +79,18 @@ bool ShellCopy(const FilePath& from_path, const FilePath& to_path,
   // into the rest of the buffer.
   wchar_t double_terminated_path_from[MAX_PATH + 1] = {0};
   wchar_t double_terminated_path_to[MAX_PATH + 1] = {0};
-#pragma warning(suppress:4996)  // don't complain about wcscpy deprecation
+#pragma warning(suppress : 4996)  // don't complain about wcscpy deprecation
   wcscpy(double_terminated_path_from, from_path.value().c_str());
-#pragma warning(suppress:4996)  // don't complain about wcscpy deprecation
+#pragma warning(suppress : 4996)  // don't complain about wcscpy deprecation
   wcscpy(double_terminated_path_to, to_path.value().c_str());
 
   SHFILEOPSTRUCT file_operation = {0};
   file_operation.wFunc = FO_COPY;
   file_operation.pFrom = double_terminated_path_from;
   file_operation.pTo = double_terminated_path_to;
-  file_operation.fFlags = FOF_NOERRORUI | FOF_SILENT | FOF_NOCONFIRMATION |
-                          FOF_NOCONFIRMMKDIR;
-  if (!recursive)
-    file_operation.fFlags |= FOF_NORECURSION | FOF_FILESONLY;
+  file_operation.fFlags =
+      FOF_NOERRORUI | FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOCONFIRMMKDIR;
+  if (!recursive) file_operation.fFlags |= FOF_NORECURSION | FOF_FILESONLY;
 
   return (SHFileOperation(&file_operation) == 0);
 }
@@ -106,11 +102,10 @@ bool PathExists(const FilePath& path) {
 bool PathIsWritable(const FilePath& path) {
   HANDLE dir =
       CreateFile(path.value().c_str(), FILE_ADD_FILE,
-                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                 NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
+                 OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
-  if (dir == INVALID_HANDLE_VALUE)
-    return false;
+  if (dir == INVALID_HANDLE_VALUE) return false;
 
   CloseHandle(dir);
   return true;
@@ -126,8 +121,7 @@ bool DirectoryExists(const FilePath& path) {
 bool GetTempDir(FilePath* path) {
   wchar_t temp_path[MAX_PATH + 1];
   DWORD path_len = ::GetTempPath(MAX_PATH, temp_path);
-  if (path_len >= MAX_PATH || path_len <= 0)
-    return false;
+  if (path_len >= MAX_PATH || path_len <= 0) return false;
   // TODO(evanm): the old behavior of this function was to always strip the
   // trailing slash.  We duplicate this here, but it shouldn't be necessary
   // when everyone is using the appropriate FilePath APIs.
@@ -137,15 +131,12 @@ bool GetTempDir(FilePath* path) {
   return true;
 }
 
-bool GetShmemTempDir(FilePath* path) {
-  return GetTempDir(path);
-}
+bool GetShmemTempDir(FilePath* path) { return GetTempDir(path); }
 
 bool CreateTemporaryFileName(FilePath* path) {
   std::wstring temp_path, temp_file;
 
-  if (!GetTempDir(&temp_path))
-    return false;
+  if (!GetTempDir(&temp_path)) return false;
 
   if (CreateTemporaryFileNameInDir(temp_path, &temp_file)) {
     *path = FilePath(temp_file);
@@ -179,12 +170,10 @@ bool CreateTemporaryFileNameInDir(const std::wstring& dir,
                                   std::wstring* temp_file) {
   wchar_t temp_name[MAX_PATH + 1];
 
-  if (!GetTempFileName(dir.c_str(), L"", 0, temp_name))
-    return false;  // fail!
+  if (!GetTempFileName(dir.c_str(), L"", 0, temp_name)) return false;  // fail!
 
   DWORD path_len = GetLongPathName(temp_name, temp_name, MAX_PATH);
-  if (path_len > MAX_PATH + 1 || path_len == 0)
-    return false;  // fail!
+  if (path_len > MAX_PATH + 1 || path_len == 0) return false;  // fail!
 
   temp_file->assign(temp_name, path_len);
   return true;
@@ -193,8 +182,7 @@ bool CreateTemporaryFileNameInDir(const std::wstring& dir,
 bool CreateNewTempDirectory(const FilePath::StringType& prefix,
                             FilePath* new_temp_path) {
   FilePath system_temp_dir;
-  if (!GetTempDir(&system_temp_dir))
-    return false;
+  if (!GetTempDir(&system_temp_dir)) return false;
 
   FilePath path_to_create;
   srand(static_cast<uint32_t>(time(NULL)));
@@ -209,8 +197,7 @@ bool CreateNewTempDirectory(const FilePath::StringType& prefix,
     new_dir_name.append(IntToWString(rand() % kint16max));
     path_to_create = path_to_create.Append(new_dir_name);
 
-    if (::CreateDirectory(path_to_create.value().c_str(), NULL))
-      break;
+    if (::CreateDirectory(path_to_create.value().c_str(), NULL)) break;
     count++;
   }
 
@@ -223,8 +210,7 @@ bool CreateNewTempDirectory(const FilePath::StringType& prefix,
 }
 
 bool CreateDirectory(const FilePath& full_path) {
-  if (DirectoryExists(full_path))
-    return true;
+  if (DirectoryExists(full_path)) return true;
   int err = SHCreateDirectoryEx(NULL, full_path.value().c_str(), NULL);
   return err == ERROR_SUCCESS;
 }
@@ -264,15 +250,10 @@ FILE* OpenFile(const std::string& filename, const char* mode) {
 }
 
 int ReadFile(const FilePath& filename, char* data, int size) {
-  ScopedHandle file(CreateFile(filename.value().c_str(),
-                               GENERIC_READ,
-                               FILE_SHARE_READ | FILE_SHARE_WRITE,
-                               NULL,
-                               OPEN_EXISTING,
-                               FILE_FLAG_SEQUENTIAL_SCAN,
-                               NULL));
-  if (file == INVALID_HANDLE_VALUE)
-    return -1;
+  ScopedHandle file(CreateFile(filename.value().c_str(), GENERIC_READ,
+                               FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+                               OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL));
+  if (file == INVALID_HANDLE_VALUE) return -1;
 
   int ret_value;
   DWORD read;
@@ -286,34 +267,29 @@ int ReadFile(const FilePath& filename, char* data, int size) {
 }
 
 int WriteFile(const FilePath& filename, const char* data, int size) {
-  ScopedHandle file(CreateFile(filename.value().c_str(),
-                               GENERIC_WRITE,
-                               0,
-                               NULL,
-                               CREATE_ALWAYS,
-                               0,
-                               NULL));
+  ScopedHandle file(CreateFile(filename.value().c_str(), GENERIC_WRITE, 0, NULL,
+                               CREATE_ALWAYS, 0, NULL));
   if (file == INVALID_HANDLE_VALUE) {
-    CHROMIUM_LOG(WARNING) << "CreateFile failed for path " << filename.value() <<
-        " error code=" << GetLastError() <<
-        " error text=" << win_util::FormatLastWin32Error();
+    CHROMIUM_LOG(WARNING) << "CreateFile failed for path " << filename.value()
+                          << " error code=" << GetLastError()
+                          << " error text=" << win_util::FormatLastWin32Error();
     return -1;
   }
 
   DWORD written;
   BOOL result = ::WriteFile(file, data, size, &written, NULL);
-  if (result && written == size)
-    return static_cast<int>(written);
+  if (result && written == size) return static_cast<int>(written);
 
   if (!result) {
     // WriteFile failed.
-    CHROMIUM_LOG(WARNING) << "writing file " << filename.value() <<
-        " failed, error code=" << GetLastError() <<
-        " description=" << win_util::FormatLastWin32Error();
+    CHROMIUM_LOG(WARNING) << "writing file " << filename.value()
+                          << " failed, error code=" << GetLastError()
+                          << " description="
+                          << win_util::FormatLastWin32Error();
   } else {
     // Didn't write all the bytes.
-    CHROMIUM_LOG(WARNING) << "wrote" << written << " bytes to " <<
-        filename.value() << " expected " << size;
+    CHROMIUM_LOG(WARNING) << "wrote" << written << " bytes to "
+                          << filename.value() << " expected " << size;
   }
   return -1;
 }
@@ -323,8 +299,7 @@ bool GetCurrentDirectory(FilePath* dir) {
   wchar_t system_buffer[MAX_PATH];
   system_buffer[0] = 0;
   DWORD len = ::GetCurrentDirectory(MAX_PATH, system_buffer);
-  if (len == 0 || len > MAX_PATH)
-    return false;
+  if (len == 0 || len > MAX_PATH) return false;
   // TODO(evanm): the old behavior of this function was to always strip the
   // trailing slash.  We duplicate this here, but it shouldn't be necessary
   // when everyone is using the appropriate FilePath APIs.
@@ -342,8 +317,7 @@ bool SetCurrentDirectory(const FilePath& directory) {
 
 // Deprecated functions ----------------------------------------------------
 
-void InsertBeforeExtension(std::wstring* path_str,
-                           const std::wstring& suffix) {
+void InsertBeforeExtension(std::wstring* path_str, const std::wstring& suffix) {
   FilePath path(*path_str);
   InsertBeforeExtension(&path, suffix);
   path_str->assign(path.value());

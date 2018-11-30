@@ -18,10 +18,8 @@ class nsITransferable;
 + (NSString*)stringFromPboardType:(NSString*)aType;
 @end
 
-class nsClipboard : public nsIClipboard
-{
-
-public:
+class nsClipboard : public nsIClipboard {
+ public:
   nsClipboard();
 
   NS_DECL_ISUPPORTS
@@ -33,28 +31,27 @@ public:
   static mozilla::StaticRefPtr<nsITransferable> sSelectionCache;
 
   // Helper methods, used also by nsDragService
-  static NSDictionary* PasteboardDictFromTransferable(nsITransferable *aTransferable);
+  static NSDictionary* PasteboardDictFromTransferable(nsITransferable* aTransferable);
   // aPasteboardType is being retained and needs to be released by the caller.
   static bool IsStringType(const nsCString& aMIMEType, NSString** aPasteboardType);
   static NSString* WrapHtmlForSystemPasteboard(NSString* aString);
-  static nsresult TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteboard *pboard);
+  static nsresult TransferableFromPasteboard(nsITransferable* aTransferable, NSPasteboard* pboard);
 
-protected:
-
+ protected:
   // impelement the native clipboard behavior
   NS_IMETHOD SetNativeClipboardData(int32_t aWhichClipboard);
-  NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable, int32_t aWhichClipboard);
+  NS_IMETHOD GetNativeClipboardData(nsITransferable* aTransferable, int32_t aWhichClipboard);
   void ClearSelectionCache();
   void SetSelectionCache(nsITransferable* aTransferable);
-  
-private:
+
+ private:
   virtual ~nsClipboard();
   int32_t mCachedClipboard;
-  int32_t mChangeCount; // Set to the native change count after any modification of the clipboard.
+  int32_t mChangeCount;  // Set to the native change count after any modification of the clipboard.
 
-  bool                        mIgnoreEmptyNotification;
+  bool mIgnoreEmptyNotification;
   nsCOMPtr<nsIClipboardOwner> mClipboardOwner;
-  nsCOMPtr<nsITransferable>   mTransferable;
+  nsCOMPtr<nsITransferable> mTransferable;
 };
 
-#endif // nsClipboard_h_
+#endif  // nsClipboard_h_

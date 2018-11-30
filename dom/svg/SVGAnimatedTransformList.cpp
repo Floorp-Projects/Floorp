@@ -13,25 +13,23 @@
 namespace mozilla {
 namespace dom {
 
-static
-  nsSVGAttrTearoffTable<nsSVGAnimatedTransformList, SVGAnimatedTransformList>
-  sSVGAnimatedTransformListTearoffTable;
+static nsSVGAttrTearoffTable<nsSVGAnimatedTransformList,
+                             SVGAnimatedTransformList>
+    sSVGAnimatedTransformListTearoffTable;
 
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAnimatedTransformList, mElement)
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAnimatedTransformList,
+                                               mElement)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGAnimatedTransformList, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGAnimatedTransformList, Release)
 
-JSObject*
-SVGAnimatedTransformList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGAnimatedTransformList::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return SVGAnimatedTransformList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 //----------------------------------------------------------------------
-already_AddRefed<DOMSVGTransformList>
-SVGAnimatedTransformList::BaseVal()
-{
+already_AddRefed<DOMSVGTransformList> SVGAnimatedTransformList::BaseVal() {
   if (!mBaseVal) {
     mBaseVal = new DOMSVGTransformList(this, InternalAList().GetBaseValue());
   }
@@ -39,9 +37,7 @@ SVGAnimatedTransformList::BaseVal()
   return baseVal.forget();
 }
 
-already_AddRefed<DOMSVGTransformList>
-SVGAnimatedTransformList::AnimVal()
-{
+already_AddRefed<DOMSVGTransformList> SVGAnimatedTransformList::AnimVal() {
   if (!mAnimVal) {
     mAnimVal = new DOMSVGTransformList(this, InternalAList().GetAnimValue());
   }
@@ -50,11 +46,10 @@ SVGAnimatedTransformList::AnimVal()
 }
 
 /* static */ already_AddRefed<SVGAnimatedTransformList>
-SVGAnimatedTransformList::GetDOMWrapper(nsSVGAnimatedTransformList *aList,
-                                        nsSVGElement *aElement)
-{
+SVGAnimatedTransformList::GetDOMWrapper(nsSVGAnimatedTransformList* aList,
+                                        nsSVGElement* aElement) {
   RefPtr<SVGAnimatedTransformList> wrapper =
-    sSVGAnimatedTransformListTearoffTable.GetTearoff(aList);
+      sSVGAnimatedTransformListTearoffTable.GetTearoff(aList);
   if (!wrapper) {
     wrapper = new SVGAnimatedTransformList(aElement);
     sSVGAnimatedTransformListTearoffTable.AddTearoff(aList, wrapper);
@@ -64,22 +59,18 @@ SVGAnimatedTransformList::GetDOMWrapper(nsSVGAnimatedTransformList *aList,
 
 /* static */ SVGAnimatedTransformList*
 SVGAnimatedTransformList::GetDOMWrapperIfExists(
-  nsSVGAnimatedTransformList *aList)
-{
+    nsSVGAnimatedTransformList* aList) {
   return sSVGAnimatedTransformListTearoffTable.GetTearoff(aList);
 }
 
-SVGAnimatedTransformList::~SVGAnimatedTransformList()
-{
+SVGAnimatedTransformList::~SVGAnimatedTransformList() {
   // Script no longer has any references to us, to our base/animVal objects, or
   // to any of their list items.
   sSVGAnimatedTransformListTearoffTable.RemoveTearoff(&InternalAList());
 }
 
-void
-SVGAnimatedTransformList::InternalBaseValListWillChangeLengthTo(
-  uint32_t aNewLength)
-{
+void SVGAnimatedTransformList::InternalBaseValListWillChangeLengthTo(
+    uint32_t aNewLength) {
   // When the number of items in our internal counterpart's baseVal changes,
   // we MUST keep our baseVal in sync. If we don't, script will either see a
   // list that is too short and be unable to access indexes that should be
@@ -107,32 +98,25 @@ SVGAnimatedTransformList::InternalBaseValListWillChangeLengthTo(
   }
 }
 
-void
-SVGAnimatedTransformList::InternalAnimValListWillChangeLengthTo(
-  uint32_t aNewLength)
-{
+void SVGAnimatedTransformList::InternalAnimValListWillChangeLengthTo(
+    uint32_t aNewLength) {
   if (mAnimVal) {
     mAnimVal->InternalListLengthWillChange(aNewLength);
   }
 }
 
-bool
-SVGAnimatedTransformList::IsAnimating() const
-{
+bool SVGAnimatedTransformList::IsAnimating() const {
   return InternalAList().IsAnimating();
 }
 
-nsSVGAnimatedTransformList&
-SVGAnimatedTransformList::InternalAList()
-{
+nsSVGAnimatedTransformList& SVGAnimatedTransformList::InternalAList() {
   return *mElement->GetAnimatedTransformList();
 }
 
-const nsSVGAnimatedTransformList&
-SVGAnimatedTransformList::InternalAList() const
-{
+const nsSVGAnimatedTransformList& SVGAnimatedTransformList::InternalAList()
+    const {
   return *mElement->GetAnimatedTransformList();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

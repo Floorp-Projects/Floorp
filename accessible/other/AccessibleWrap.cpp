@@ -10,16 +10,10 @@ using namespace mozilla::a11y;
 //-----------------------------------------------------
 // construction
 //-----------------------------------------------------
-AccessibleWrap::
-  AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
-  Accessible(aContent, aDoc)
-{
-}
+AccessibleWrap::AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
+    : Accessible(aContent, aDoc) {}
 
 //-----------------------------------------------------
 // destruction
 //-----------------------------------------------------
-AccessibleWrap::~AccessibleWrap()
-{
-}
-
+AccessibleWrap::~AccessibleWrap() {}

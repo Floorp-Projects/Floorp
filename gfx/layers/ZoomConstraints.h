@@ -7,9 +7,9 @@
 #ifndef GFX_ZOOMCONSTRAINTS_H
 #define GFX_ZOOMCONSTRAINTS_H
 
-#include "Units.h"                      // for CSSRect, CSSPixel, etc
+#include "Units.h"  // for CSSRect, CSSPixel, etc
 #include "mozilla/Maybe.h"
-#include "mozilla/layers/ScrollableLayerGuid.h" // for ScrollableLayerGuid
+#include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid
 
 namespace mozilla {
 namespace layers {
@@ -20,57 +20,44 @@ struct ZoomConstraints {
   CSSToParentLayerScale mMinZoom;
   CSSToParentLayerScale mMaxZoom;
 
-  ZoomConstraints()
-    : mAllowZoom(true)
-    , mAllowDoubleTapZoom(true)
-  {
+  ZoomConstraints() : mAllowZoom(true), mAllowDoubleTapZoom(true) {
     MOZ_COUNT_CTOR(ZoomConstraints);
   }
 
-  ZoomConstraints(bool aAllowZoom,
-                  bool aAllowDoubleTapZoom,
+  ZoomConstraints(bool aAllowZoom, bool aAllowDoubleTapZoom,
                   const CSSToParentLayerScale& aMinZoom,
                   const CSSToParentLayerScale& aMaxZoom)
-    : mAllowZoom(aAllowZoom)
-    , mAllowDoubleTapZoom(aAllowDoubleTapZoom)
-    , mMinZoom(aMinZoom)
-    , mMaxZoom(aMaxZoom)
-  {
+      : mAllowZoom(aAllowZoom),
+        mAllowDoubleTapZoom(aAllowDoubleTapZoom),
+        mMinZoom(aMinZoom),
+        mMaxZoom(aMaxZoom) {
     MOZ_COUNT_CTOR(ZoomConstraints);
   }
 
   ZoomConstraints(const ZoomConstraints& other)
-    : mAllowZoom(other.mAllowZoom)
-    , mAllowDoubleTapZoom(other.mAllowDoubleTapZoom)
-    , mMinZoom(other.mMinZoom)
-    , mMaxZoom(other.mMaxZoom)
-  {
+      : mAllowZoom(other.mAllowZoom),
+        mAllowDoubleTapZoom(other.mAllowDoubleTapZoom),
+        mMinZoom(other.mMinZoom),
+        mMaxZoom(other.mMaxZoom) {
     MOZ_COUNT_CTOR(ZoomConstraints);
   }
 
-  ~ZoomConstraints()
-  {
-    MOZ_COUNT_DTOR(ZoomConstraints);
+  ~ZoomConstraints() { MOZ_COUNT_DTOR(ZoomConstraints); }
+
+  bool operator==(const ZoomConstraints& other) const {
+    return mAllowZoom == other.mAllowZoom &&
+           mAllowDoubleTapZoom == other.mAllowDoubleTapZoom &&
+           mMinZoom == other.mMinZoom && mMaxZoom == other.mMaxZoom;
   }
 
-  bool operator==(const ZoomConstraints& other) const
-  {
-    return mAllowZoom == other.mAllowZoom
-        && mAllowDoubleTapZoom == other.mAllowDoubleTapZoom
-        && mMinZoom == other.mMinZoom
-        && mMaxZoom == other.mMaxZoom;
-  }
-
-  bool operator!=(const ZoomConstraints& other) const
-  {
+  bool operator!=(const ZoomConstraints& other) const {
     return !(*this == other);
   }
 };
 
-
 typedef Maybe<ZoomConstraints> MaybeZoomConstraints;
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif /* GFX_ZOOMCONSTRAINTS_H */

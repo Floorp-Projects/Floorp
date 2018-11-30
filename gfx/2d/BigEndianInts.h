@@ -13,68 +13,54 @@ namespace mozilla {
 
 #pragma pack(push, 1)
 
-struct BigEndianUint16
-{
+struct BigEndianUint16 {
 #ifdef __SUNPRO_CC
-  BigEndianUint16& operator=(const uint16_t aValue)
-  {
+  BigEndianUint16& operator=(const uint16_t aValue) {
     value = NativeEndian::swapToBigEndian(aValue);
     return *this;
   }
 #else
-  MOZ_IMPLICIT BigEndianUint16(const uint16_t aValue)
-  {
+  MOZ_IMPLICIT BigEndianUint16(const uint16_t aValue) {
     value = NativeEndian::swapToBigEndian(aValue);
   }
 #endif
 
-  operator uint16_t() const
-  {
-    return NativeEndian::swapFromBigEndian(value);
-  }
+  operator uint16_t() const { return NativeEndian::swapFromBigEndian(value); }
 
-  friend inline bool
-  operator==(const BigEndianUint16& lhs, const BigEndianUint16& rhs)
-  {
+  friend inline bool operator==(const BigEndianUint16& lhs,
+                                const BigEndianUint16& rhs) {
     return lhs.value == rhs.value;
   }
 
-  friend inline bool
-  operator!=(const BigEndianUint16& lhs, const BigEndianUint16& rhs)
-  {
+  friend inline bool operator!=(const BigEndianUint16& lhs,
+                                const BigEndianUint16& rhs) {
     return !(lhs == rhs);
   }
 
-private:
+ private:
   uint16_t value;
 };
 
-struct BigEndianUint32
-{
+struct BigEndianUint32 {
 #ifdef __SUNPRO_CC
-  BigEndianUint32& operator=(const uint32_t aValue)
-  {
+  BigEndianUint32& operator=(const uint32_t aValue) {
     value = NativeEndian::swapToBigEndian(aValue);
     return *this;
   }
 #else
-  MOZ_IMPLICIT BigEndianUint32(const uint32_t aValue)
-  {
+  MOZ_IMPLICIT BigEndianUint32(const uint32_t aValue) {
     value = NativeEndian::swapToBigEndian(aValue);
   }
 #endif
 
-  operator uint32_t() const
-  {
-    return NativeEndian::swapFromBigEndian(value);
-  }
+  operator uint32_t() const { return NativeEndian::swapFromBigEndian(value); }
 
-private:
-  uint32_t  value;
+ private:
+  uint32_t value;
 };
 
 #pragma pack(pop)
 
-} // mozilla
+}  // namespace mozilla
 
-#endif // mozilla_BigEndianInts_h
+#endif  // mozilla_BigEndianInts_h

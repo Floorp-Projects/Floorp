@@ -13,7 +13,7 @@ namespace base {
 //-----------------------------------------------------------------------------
 
 class ObjectWatcher::Watch : public mozilla::Runnable {
-public:
+ public:
   ObjectWatcher* watcher;    // The associated ObjectWatcher instance
   HANDLE object;             // The object being watched
   HANDLE wait_object;        // Returned by RegisterWaitForSingleObject
@@ -26,8 +26,7 @@ public:
   NS_IMETHOD Run() override {
     // The watcher may have already been torn down, in which case we need to
     // just get out of dodge.
-    if (!watcher)
-      return NS_OK;
+    if (!watcher) return NS_OK;
 
     DCHECK(did_signal);
     watcher->StopWatching();
@@ -40,12 +39,9 @@ public:
 
 //-----------------------------------------------------------------------------
 
-ObjectWatcher::ObjectWatcher() : watch_(nullptr) {
-}
+ObjectWatcher::ObjectWatcher() : watch_(nullptr) {}
 
-ObjectWatcher::~ObjectWatcher() {
-  StopWatching();
-}
+ObjectWatcher::~ObjectWatcher() { StopWatching(); }
 
 bool ObjectWatcher::StartWatching(HANDLE object, Delegate* delegate) {
   if (watch_) {
@@ -79,8 +75,7 @@ bool ObjectWatcher::StartWatching(HANDLE object, Delegate* delegate) {
 }
 
 bool ObjectWatcher::StopWatching() {
-  if (!watch_)
-    return false;
+  if (!watch_) return false;
 
   // Make sure ObjectWatcher is used in a single-threaded fashion.
   DCHECK(watch_->origin_loop == MessageLoop::current());
@@ -108,8 +103,7 @@ bool ObjectWatcher::StopWatching() {
 }
 
 HANDLE ObjectWatcher::GetWatchedObject() {
-  if (!watch_)
-    return NULL;
+  if (!watch_) return NULL;
 
   return watch_->object;
 }

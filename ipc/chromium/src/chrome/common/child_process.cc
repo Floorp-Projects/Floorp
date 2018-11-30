@@ -23,8 +23,7 @@ ChildProcess::ChildProcess(ChildThread* child_thread)
 ChildProcess::~ChildProcess() {
   DCHECK(child_process_ == this);
 
-  if (child_thread_.get())
-    child_thread_->Stop();
+  if (child_thread_.get()) child_thread_->Stop();
 
   child_process_ = NULL;
 }

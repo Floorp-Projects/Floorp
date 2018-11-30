@@ -18,24 +18,22 @@ namespace net {
 // In order to support HTTP redirects to data:, we need to implement the HTTP
 // redirection API, which requires a class that implements nsIParentChannel
 // and which calls NS_LinkRedirectChannels.
-class DataChannelParent : public nsIParentChannel
-                        , public PDataChannelParent
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIPARENTCHANNEL
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSISTREAMLISTENER
+class DataChannelParent : public nsIParentChannel, public PDataChannelParent {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPARENTCHANNEL
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
 
-    MOZ_MUST_USE bool Init(const uint32_t& aArgs);
+  MOZ_MUST_USE bool Init(const uint32_t& aArgs);
 
-private:
-    ~DataChannelParent() = default;
+ private:
+  ~DataChannelParent() = default;
 
-    virtual void ActorDestroy(ActorDestroyReason why) override;
+  virtual void ActorDestroy(ActorDestroyReason why) override;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif /* NS_DATACHANNELPARENT_H */

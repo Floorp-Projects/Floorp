@@ -14,28 +14,29 @@ namespace layers {
 
 class AsyncPanZoomController;
 
-class AutoscrollAnimation : public AsyncPanZoomAnimation
-{
-public:
+class AutoscrollAnimation : public AsyncPanZoomAnimation {
+ public:
   AutoscrollAnimation(AsyncPanZoomController& aApzc,
                       const ScreenPoint& aAnchorLocation);
 
-  bool DoSample(FrameMetrics& aFrameMetrics, const TimeDuration& aDelta) override;
+  bool DoSample(FrameMetrics& aFrameMetrics,
+                const TimeDuration& aDelta) override;
 
-  bool HandleScrollOffsetUpdate(const Maybe<CSSPoint>& aRelativeDelta) override
-  {
+  bool HandleScrollOffsetUpdate(
+      const Maybe<CSSPoint>& aRelativeDelta) override {
     // Autoscroll works using screen space coordinates, so there's no work we
     // need to do to handle either a relative or an absolute scroll update.
     return true;
   }
 
   void Cancel(CancelAnimationFlags aFlags) override;
-private:
+
+ private:
   AsyncPanZoomController& mApzc;
   ScreenPoint mAnchorLocation;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_AutoscrollAnimation_h_
+#endif  // mozilla_layers_AutoscrollAnimation_h_

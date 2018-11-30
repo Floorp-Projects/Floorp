@@ -18,22 +18,24 @@ namespace mozilla {
 
 namespace dom {
 class TabParent;
-} // namespace dom
+}  // namespace dom
 
 namespace plugins {
 
-class PluginWidgetParent : public PPluginWidgetParent
-{
-public:
+class PluginWidgetParent : public PPluginWidgetParent {
+ public:
   PluginWidgetParent();
   virtual ~PluginWidgetParent();
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
-  virtual mozilla::ipc::IPCResult RecvCreate(nsresult* aResult, uint64_t* aScrollCaptureId,
-                                          uintptr_t* aPluginInstanceId) override;
+  virtual mozilla::ipc::IPCResult RecvCreate(
+      nsresult* aResult, uint64_t* aScrollCaptureId,
+      uintptr_t* aPluginInstanceId) override;
   virtual mozilla::ipc::IPCResult RecvSetFocus(const bool& aRaise) override;
-  virtual mozilla::ipc::IPCResult RecvGetNativePluginPort(uintptr_t* value) override;
-  mozilla::ipc::IPCResult RecvSetNativeChildWindow(const uintptr_t& aChildWindow) override;
+  virtual mozilla::ipc::IPCResult RecvGetNativePluginPort(
+      uintptr_t* value) override;
+  mozilla::ipc::IPCResult RecvSetNativeChildWindow(
+      const uintptr_t& aChildWindow) override;
 
   // Helper for compositor checks on the channel
   bool ActorDestroyed() { return !mWidget; }
@@ -44,19 +46,18 @@ public:
   // Sets mWidget's parent
   void SetParent(nsIWidget* aParent);
 
-private:
+ private:
   // The tab our connection is associated with.
   mozilla::dom::TabParent* GetTabParent();
 
-private:
+ private:
   void KillWidget();
 
   // The chrome side native widget.
   nsCOMPtr<nsIWidget> mWidget;
 };
 
-} // namespace plugins
-} // namespace mozilla
+}  // namespace plugins
+}  // namespace mozilla
 
-#endif // mozilla_plugins_PluginWidgetParent_h
-
+#endif  // mozilla_plugins_PluginWidgetParent_h

@@ -20,14 +20,15 @@ using namespace mozilla::gfx;
 #undef B
 #endif
 
-// to avoid having symbols that collide easily like A and B in the global namespace
+// to avoid having symbols that collide easily like A and B in the global
+// namespace
 namespace test_arena {
 
 class A;
 class B;
 
 class Base {
-public:
+ public:
   virtual ~Base() {}
   virtual A* AsA() { return nullptr; }
   virtual B* AsB() { return nullptr; }
@@ -37,7 +38,7 @@ static int sDtorItemA = 0;
 static int sDtorItemB = 0;
 
 class A : public Base {
-public:
+ public:
   virtual A* AsA() override { return this; }
 
   explicit A(uint64_t val) : mVal(val) {}
@@ -47,7 +48,7 @@ public:
 };
 
 class B : public Base {
-public:
+ public:
   virtual B* AsB() override { return this; }
 
   explicit B(const string& str) : mVal(str) {}
@@ -63,8 +64,7 @@ struct BigStruct {
   explicit BigStruct(uint64_t val) : mVal(val) {}
 };
 
-void TestArenaAlloc(IterableArena::ArenaType aType)
-{
+void TestArenaAlloc(IterableArena::ArenaType aType) {
   sDtorItemA = 0;
   sDtorItemB = 0;
   IterableArena arena(aType, 256);
@@ -72,9 +72,7 @@ void TestArenaAlloc(IterableArena::ArenaType aType)
   // An empty arena has no items to iterate over.
   {
     int iterations = 0;
-    arena.ForEach([&](void* item){
-      iterations++;
-    });
+    arena.ForEach([&](void* item) { iterations++; });
     ASSERT_EQ(iterations, 0);
   }
 
@@ -107,23 +105,22 @@ void TestArenaAlloc(IterableArena::ArenaType aType)
   ASSERT_EQ(((Base*)arena.GetStorage(a1))->AsA()->mVal, (uint64_t)42);
   ASSERT_EQ(((Base*)arena.GetStorage(a2))->AsA()->mVal, (uint64_t)1337);
 
-  ASSERT_EQ(((Base*)arena.GetStorage(b1))->AsB()->mVal, std::string("Obladi oblada"));
-  ASSERT_EQ(((Base*)arena.GetStorage(b2))->AsB()->mVal, std::string("Yellow submarine"));
-  ASSERT_EQ(((Base*)arena.GetStorage(b3))->AsB()->mVal, std::string("She's got a ticket to ride"));
+  ASSERT_EQ(((Base*)arena.GetStorage(b1))->AsB()->mVal,
+            std::string("Obladi oblada"));
+  ASSERT_EQ(((Base*)arena.GetStorage(b2))->AsB()->mVal,
+            std::string("Yellow submarine"));
+  ASSERT_EQ(((Base*)arena.GetStorage(b3))->AsB()->mVal,
+            std::string("She's got a ticket to ride"));
 
   {
     int iterations = 0;
-    arena.ForEach([&](void* item){
-      iterations++;
-    });
+    arena.ForEach([&](void* item) { iterations++; });
     ASSERT_EQ(iterations, 5);
   }
 
-  // Typically, running the destructors of the elements in the arena will is done
-  // manually like this:
-  arena.ForEach([](void* item){
-    ((Base*)item)->~Base();
-  });
+  // Typically, running the destructors of the elements in the arena will is
+  // done manually like this:
+  arena.ForEach([](void* item) { ((Base*)item)->~Base(); });
   arena.Clear();
   ASSERT_EQ(sDtorItemA, 2);
   ASSERT_EQ(sDtorItemB, 3);
@@ -131,16 +128,12 @@ void TestArenaAlloc(IterableArena::ArenaType aType)
   // An empty arena has no items to iterate over (we just cleared it).
   {
     int iterations = 0;
-    arena.ForEach([&](void* item){
-      iterations++;
-    });
+    arena.ForEach([&](void* item) { iterations++; });
     ASSERT_EQ(iterations, 0);
   }
-
 }
 
-void TestArenaLimit(IterableArena::ArenaType aType, bool aShouldReachLimit)
-{
+void TestArenaLimit(IterableArena::ArenaType aType, bool aShouldReachLimit) {
   IterableArena arena(aType, 128);
 
   // A non-growable arena should return a negative offset when running out
@@ -158,7 +151,7 @@ void TestArenaLimit(IterableArena::ArenaType aType, bool aShouldReachLimit)
   ASSERT_EQ(reachedLimit, aShouldReachLimit);
 }
 
-} // namespace test_arena
+}  // namespace test_arena
 
 using namespace test_arena;
 
@@ -173,13 +166,14 @@ TEST(Moz2D, GrowableArena) {
 
   IterableArena arena(IterableArena::GROWABLE, 16);
   // sizeof(BigStruct) is more than twice the initial capacity, make sure that
-  // this doesn't blow everything up, since the arena doubles its storage size each
-  // time it grows (until it finds a size that fits).
+  // this doesn't blow everything up, since the arena doubles its storage size
+  // each time it grows (until it finds a size that fits).
   auto a = arena.Alloc<BigStruct>(1);
   auto b = arena.Alloc<BigStruct>(2);
   auto c = arena.Alloc<BigStruct>(3);
 
-  // Offsets should also still point to the appropriate values after reallocation.
+  // Offsets should also still point to the appropriate values after
+  // reallocation.
   ASSERT_EQ(((BigStruct*)arena.GetStorage(a))->mVal, (uint64_t)1);
   ASSERT_EQ(((BigStruct*)arena.GetStorage(b))->mVal, (uint64_t)2);
   ASSERT_EQ(((BigStruct*)arena.GetStorage(c))->mVal, (uint64_t)3);

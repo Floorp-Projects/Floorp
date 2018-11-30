@@ -20,24 +20,19 @@
 namespace mozilla {
 namespace plugins {
 
-PluginWidgetChild::PluginWidgetChild() :
-  mWidget(nullptr)
-{
+PluginWidgetChild::PluginWidgetChild() : mWidget(nullptr) {
   PWLOG("PluginWidgetChild::PluginWidgetChild()\n");
   MOZ_COUNT_CTOR(PluginWidgetChild);
 }
 
-PluginWidgetChild::~PluginWidgetChild()
-{
+PluginWidgetChild::~PluginWidgetChild() {
   PWLOG("PluginWidgetChild::~PluginWidgetChild()\n");
   MOZ_COUNT_DTOR(PluginWidgetChild);
 }
 
 // Called by the proxy widget when it is destroyed by layout. Only gets
 // called once.
-void
-PluginWidgetChild::ProxyShutdown()
-{
+void PluginWidgetChild::ProxyShutdown() {
   PWLOG("PluginWidgetChild::ProxyShutdown()\n");
   if (mWidget) {
     mWidget = nullptr;
@@ -48,9 +43,7 @@ PluginWidgetChild::ProxyShutdown()
   }
 }
 
-void
-PluginWidgetChild::KillWidget()
-{
+void PluginWidgetChild::KillWidget() {
   PWLOG("PluginWidgetChild::KillWidget()\n");
   if (mWidget) {
     mWidget->ChannelDestroyed();
@@ -58,12 +51,10 @@ PluginWidgetChild::KillWidget()
   mWidget = nullptr;
 }
 
-void
-PluginWidgetChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void PluginWidgetChild::ActorDestroy(ActorDestroyReason aWhy) {
   PWLOG("PluginWidgetChild::ActorDestroy(%d)\n", aWhy);
   KillWidget();
 }
 
-} // namespace plugins
-} // namespace mozilla
+}  // namespace plugins
+}  // namespace mozilla

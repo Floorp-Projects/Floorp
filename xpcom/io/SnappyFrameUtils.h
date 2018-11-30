@@ -23,11 +23,9 @@ namespace detail {
 // NOTE: Currently only the StreamIdentifier and CompressedData chunks are
 //       supported.
 //
-class SnappyFrameUtils
-{
-public:
-  enum ChunkType
-  {
+class SnappyFrameUtils {
+ public:
+  enum ChunkType {
     Unknown,
     StreamIdentifier,
     CompressedData,
@@ -43,43 +41,38 @@ public:
   static const size_t kStreamIdentifierDataLength = 6;
   static const size_t kCRCLength = 4;
 
-  static nsresult
-  WriteStreamIdentifier(char* aDest, size_t aDestLength,
-                        size_t* aBytesWrittenOut);
+  static nsresult WriteStreamIdentifier(char* aDest, size_t aDestLength,
+                                        size_t* aBytesWrittenOut);
 
-  static nsresult
-  WriteCompressedData(char* aDest, size_t aDestLength,
-                      const char* aData, size_t aDataLength,
-                      size_t* aBytesWrittenOut);
+  static nsresult WriteCompressedData(char* aDest, size_t aDestLength,
+                                      const char* aData, size_t aDataLength,
+                                      size_t* aBytesWrittenOut);
 
-  static nsresult
-  ParseHeader(const char* aSource, size_t aSourceLength, ChunkType* aTypeOut,
-              size_t* aDataLengthOut);
+  static nsresult ParseHeader(const char* aSource, size_t aSourceLength,
+                              ChunkType* aTypeOut, size_t* aDataLengthOut);
 
-  static nsresult
-  ParseData(char* aDest, size_t aDestLength,
-            ChunkType aType, const char* aData, size_t aDataLength,
-            size_t* aBytesWrittenOut, size_t* aBytesReadOut);
+  static nsresult ParseData(char* aDest, size_t aDestLength, ChunkType aType,
+                            const char* aData, size_t aDataLength,
+                            size_t* aBytesWrittenOut, size_t* aBytesReadOut);
 
-  static nsresult
-  ParseStreamIdentifier(char* aDest, size_t aDestLength,
-                        const char* aData, size_t aDataLength,
-                        size_t* aBytesWrittenOut, size_t* aBytesReadOut);
+  static nsresult ParseStreamIdentifier(char* aDest, size_t aDestLength,
+                                        const char* aData, size_t aDataLength,
+                                        size_t* aBytesWrittenOut,
+                                        size_t* aBytesReadOut);
 
-  static nsresult
-  ParseCompressedData(char* aDest, size_t aDestLength,
-                      const char* aData, size_t aDataLength,
-                      size_t* aBytesWrittenOut, size_t* aBytesReadOut);
+  static nsresult ParseCompressedData(char* aDest, size_t aDestLength,
+                                      const char* aData, size_t aDataLength,
+                                      size_t* aBytesWrittenOut,
+                                      size_t* aBytesReadOut);
 
-  static size_t
-  MaxCompressedBufferLength(size_t aSourceLength);
+  static size_t MaxCompressedBufferLength(size_t aSourceLength);
 
-protected:
-  SnappyFrameUtils() { }
-  virtual ~SnappyFrameUtils() { }
+ protected:
+  SnappyFrameUtils() {}
+  virtual ~SnappyFrameUtils() {}
 };
 
-} // namespace detail
-} // namespace mozilla
+}  // namespace detail
+}  // namespace mozilla
 
-#endif // mozilla_SnappyFrameUtils_h__
+#endif  // mozilla_SnappyFrameUtils_h__

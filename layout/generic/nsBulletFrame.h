@@ -21,20 +21,19 @@ class imgRequestProxy;
 class nsBulletFrame;
 class BulletRenderer;
 
-class nsBulletListener final : public imgINotificationObserver
-{
-public:
+class nsBulletListener final : public imgINotificationObserver {
+ public:
   nsBulletListener();
 
   NS_DECL_ISUPPORTS
   NS_DECL_IMGINOTIFICATIONOBSERVER
 
-  void SetFrame(nsBulletFrame *frame) { mFrame = frame; }
+  void SetFrame(nsBulletFrame* frame) { mFrame = frame; }
 
-private:
+ private:
   virtual ~nsBulletListener();
 
-  nsBulletFrame *mFrame;
+  nsBulletFrame* mFrame;
 };
 
 /**
@@ -44,46 +43,45 @@ private:
 class nsBulletFrame final : public nsFrame {
   typedef mozilla::image::ImgDrawResult ImgDrawResult;
 
-public:
+ public:
   NS_DECL_FRAMEARENA_HELPERS(nsBulletFrame)
 #ifdef DEBUG
   NS_DECL_QUERYFRAME
 #endif
 
   explicit nsBulletFrame(ComputedStyle* aStyle)
-    : nsFrame(aStyle, kClassID)
-    , mPadding(GetWritingMode())
-    , mIntrinsicSize(GetWritingMode())
-    , mOrdinal(0)
-    , mRequestRegistered(false)
-  {}
+      : nsFrame(aStyle, kClassID),
+        mPadding(GetWritingMode()),
+        mIntrinsicSize(GetWritingMode()),
+        mOrdinal(0),
+        mRequestRegistered(false) {}
 
   virtual ~nsBulletFrame();
 
-  NS_IMETHOD Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aData);
+  NS_IMETHOD Notify(imgIRequest* aRequest, int32_t aType,
+                    const nsIntRect* aData);
 
   // nsIFrame
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+  virtual void DestroyFrom(nsIFrame* aDestructRoot,
+                           PostDestroyData& aPostDestroyData) override;
+  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
   virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  virtual void Reflow(nsPresContext* aPresContext,
-                      ReflowOutput& aMetrics,
+  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
-  virtual nscoord GetMinISize(gfxContext *aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext *aRenderingContext) override;
+  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
   void AddInlineMinISize(gfxContext* aRenderingContext,
                          nsIFrame::InlineMinISizeData* aData) override;
   void AddInlinePrefISize(gfxContext* aRenderingContext,
                           nsIFrame::InlinePrefISizeData* aData) override;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override
-  {
+  virtual bool IsFrameOfType(uint32_t aFlags) const override {
     if (aFlags & (eSupportsCSSTransforms | eSupportsContainLayoutAndPaint)) {
       return false;
     }
@@ -99,15 +97,16 @@ public:
 
   void GetSpokenText(nsAString& aText);
 
-  Maybe<BulletRenderer>
-  CreateBulletRenderer(gfxContext& aRenderingContext, nsPoint aPt);
+  Maybe<BulletRenderer> CreateBulletRenderer(gfxContext& aRenderingContext,
+                                             nsPoint aPt);
   ImgDrawResult PaintBullet(gfxContext& aRenderingContext, nsPoint aPt,
-                         const nsRect& aDirtyRect, uint32_t aFlags,
-                         bool aDisableSubpixelAA);
+                            const nsRect& aDirtyRect, uint32_t aFlags,
+                            bool aDisableSubpixelAA);
 
   virtual bool IsEmpty() override;
   virtual bool IsSelfEmpty() override;
-  virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
+  virtual nscoord GetLogicalBaseline(
+      mozilla::WritingMode aWritingMode) const override;
 
   float GetFontSizeInflation() const;
   bool HasFontSizeInflation() const {
@@ -119,18 +118,17 @@ public:
 
   already_AddRefed<imgIContainer> GetImage() const;
 
-protected:
+ protected:
   nsresult OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
 
   void AppendSpacingToPadding(nsFontMetrics* aFontMetrics,
                               mozilla::LogicalMargin* aPadding);
   void GetDesiredSize(nsPresContext* aPresContext,
-                      gfxContext *aRenderingContext,
-                      ReflowOutput& aMetrics,
+                      gfxContext* aRenderingContext, ReflowOutput& aMetrics,
                       float aFontSizeInflation,
                       mozilla::LogicalMargin* aPadding);
 
-  void GetLoadGroup(nsPresContext *aPresContext, nsILoadGroup **aLoadGroup);
+  void GetLoadGroup(nsPresContext* aPresContext, nsILoadGroup** aLoadGroup);
   nsIDocument* GetOurCurrentDoc() const;
 
   mozilla::LogicalMargin mPadding;
@@ -140,7 +138,7 @@ protected:
   mozilla::LogicalSize mIntrinsicSize;
   int32_t mOrdinal;
 
-private:
+ private:
   void RegisterImageRequest(bool aKnownToBeAnimated);
   void DeregisterAndCancelImageRequest();
 

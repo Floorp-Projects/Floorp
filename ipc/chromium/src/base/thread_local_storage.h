@@ -17,7 +17,6 @@
 // an API for portability.
 class ThreadLocalStorage {
  public:
-
   // Prototype for the TLS destructor function, which can be optionally used to
   // cleanup thread local storage on thread exit.  'value' is the data that is
   // stored in thread local storage.
@@ -73,7 +72,7 @@ class ThreadLocalStorage {
 
  private:
   // Function to lazily initialize our thread local storage.
-  static void **Initialize();
+  static void** Initialize();
 
  private:
   // The maximum number of 'slots' in our thread local storage stack.

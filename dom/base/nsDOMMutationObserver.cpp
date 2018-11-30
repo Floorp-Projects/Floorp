@@ -28,26 +28,22 @@ using mozilla::dom::DocGroup;
 using mozilla::dom::HTMLSlotElement;
 
 AutoTArray<RefPtr<nsDOMMutationObserver>, 4>*
-  nsDOMMutationObserver::sScheduledMutationObservers = nullptr;
+    nsDOMMutationObserver::sScheduledMutationObservers = nullptr;
 
 uint32_t nsDOMMutationObserver::sMutationLevel = 0;
 uint64_t nsDOMMutationObserver::sCount = 0;
 
 AutoTArray<AutoTArray<RefPtr<nsDOMMutationObserver>, 4>, 4>*
-nsDOMMutationObserver::sCurrentlyHandlingObservers = nullptr;
+    nsDOMMutationObserver::sCurrentlyHandlingObservers = nullptr;
 
-nsINodeList*
-nsDOMMutationRecord::AddedNodes()
-{
+nsINodeList* nsDOMMutationRecord::AddedNodes() {
   if (!mAddedNodes) {
     mAddedNodes = new nsSimpleContentList(mTarget);
   }
   return mAddedNodes;
 }
 
-nsINodeList*
-nsDOMMutationRecord::RemovedNodes()
-{
+nsINodeList* nsDOMMutationRecord::RemovedNodes() {
   if (!mRemovedNodes) {
     mRemovedNodes = new nsSimpleContentList(mTarget);
   }
@@ -62,21 +58,17 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMMutationRecord)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMMutationRecord)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMMutationRecord,
-                                      mTarget,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMMutationRecord, mTarget,
                                       mPreviousSibling, mNextSibling,
                                       mAddedNodes, mRemovedNodes,
                                       mAddedAnimations, mRemovedAnimations,
-                                      mChangedAnimations,
-                                      mNext, mOwner)
+                                      mChangedAnimations, mNext, mOwner)
 
 // Observer
 
-bool
-nsMutationReceiverBase::IsObservable(nsIContent* aContent)
-{
+bool nsMutationReceiverBase::IsObservable(nsIContent* aContent) {
   return !aContent->ChromeOnlyAccess() &&
-    (Observer()->IsChrome() || !aContent->IsInAnonymousSubtree());
+         (Observer()->IsChrome() || !aContent->IsInAnonymousSubtree());
 }
 
 NS_IMPL_ADDREF(nsMutationReceiver)
@@ -89,14 +81,11 @@ NS_INTERFACE_MAP_END
 
 nsMutationReceiver::nsMutationReceiver(nsINode* aTarget,
                                        nsDOMMutationObserver* aObserver)
-: nsMutationReceiverBase(aTarget, aObserver)
-{
+    : nsMutationReceiverBase(aTarget, aObserver) {
   mTarget->BindObject(aObserver);
 }
 
-void
-nsMutationReceiver::Disconnect(bool aRemoveFromObserver)
-{
+void nsMutationReceiver::Disconnect(bool aRemoveFromObserver) {
   if (mRegisterTarget) {
     mRegisterTarget->RemoveMutationObserver(this);
     mRegisterTarget = nullptr;
@@ -118,22 +107,20 @@ nsMutationReceiver::Disconnect(bool aRemoveFromObserver)
   }
 }
 
-void
-nsMutationReceiver::NativeAnonymousChildListChange(nsIContent* aContent,
-                                                   bool aIsRemove) {
+void nsMutationReceiver::NativeAnonymousChildListChange(nsIContent* aContent,
+                                                        bool aIsRemove) {
   if (!NativeAnonymousChildList()) {
     return;
   }
 
   nsINode* parent = aContent->GetParentNode();
-  if (!parent ||
-      (!Subtree() && Target() != parent) ||
+  if (!parent || (!Subtree() && Target() != parent) ||
       (Subtree() && RegisterTarget()->SubtreeRoot() != parent->SubtreeRoot())) {
     return;
   }
 
   nsDOMMutationRecord* m =
-    Observer()->CurrentRecord(nsGkAtoms::nativeAnonymousChildList);
+      Observer()->CurrentRecord(nsGkAtoms::nativeAnonymousChildList);
 
   if (m->mTarget) {
     return;
@@ -149,25 +136,20 @@ nsMutationReceiver::NativeAnonymousChildListChange(nsIContent* aContent,
   }
 }
 
-void
-nsMutationReceiver::AttributeWillChange(mozilla::dom::Element* aElement,
-                                        int32_t aNameSpaceID,
-                                        nsAtom* aAttribute,
-                                        int32_t aModType,
-                                        const nsAttrValue* aNewValue)
-{
+void nsMutationReceiver::AttributeWillChange(mozilla::dom::Element* aElement,
+                                             int32_t aNameSpaceID,
+                                             nsAtom* aAttribute,
+                                             int32_t aModType,
+                                             const nsAttrValue* aNewValue) {
   if (nsAutoMutationBatch::IsBatching() ||
       !ObservesAttr(RegisterTarget(), aElement, aNameSpaceID, aAttribute)) {
     return;
   }
 
-  nsDOMMutationRecord* m =
-    Observer()->CurrentRecord(nsGkAtoms::attributes);
+  nsDOMMutationRecord* m = Observer()->CurrentRecord(nsGkAtoms::attributes);
 
-  NS_ASSERTION(!m->mTarget || m->mTarget == aElement,
-               "Wrong target!");
-  NS_ASSERTION(!m->mAttrName || m->mAttrName == aAttribute,
-               "Wrong attribute!");
+  NS_ASSERTION(!m->mTarget || m->mTarget == aElement, "Wrong target!");
+  NS_ASSERTION(!m->mAttrName || m->mAttrName == aAttribute, "Wrong attribute!");
   if (!m->mTarget) {
     m->mTarget = aElement;
     m->mAttrName = aAttribute;
@@ -186,23 +168,19 @@ nsMutationReceiver::AttributeWillChange(mozilla::dom::Element* aElement,
   }
 }
 
-void
-nsMutationReceiver::CharacterDataWillChange(nsIContent* aContent,
-                                            const CharacterDataChangeInfo&)
-{
-  if (nsAutoMutationBatch::IsBatching() ||
-      !CharacterData() ||
+void nsMutationReceiver::CharacterDataWillChange(
+    nsIContent* aContent, const CharacterDataChangeInfo&) {
+  if (nsAutoMutationBatch::IsBatching() || !CharacterData() ||
       (!Subtree() && aContent != Target()) ||
-      (Subtree() && RegisterTarget()->SubtreeRoot() != aContent->SubtreeRoot()) ||
+      (Subtree() &&
+       RegisterTarget()->SubtreeRoot() != aContent->SubtreeRoot()) ||
       !IsObservable(aContent)) {
     return;
   }
 
-  nsDOMMutationRecord* m =
-    Observer()->CurrentRecord(nsGkAtoms::characterData);
+  nsDOMMutationRecord* m = Observer()->CurrentRecord(nsGkAtoms::characterData);
 
-  NS_ASSERTION(!m->mTarget || m->mTarget == aContent,
-               "Wrong target!");
+  NS_ASSERTION(!m->mTarget || m->mTarget == aContent, "Wrong target!");
 
   if (!m->mTarget) {
     m->mTarget = aContent;
@@ -212,14 +190,12 @@ nsMutationReceiver::CharacterDataWillChange(nsIContent* aContent,
   }
 }
 
-void
-nsMutationReceiver::ContentAppended(nsIContent* aFirstNewContent)
-{
+void nsMutationReceiver::ContentAppended(nsIContent* aFirstNewContent) {
   nsINode* parent = aFirstNewContent->GetParentNode();
   bool wantsChildList =
-    ChildList() &&
-    ((Subtree() && RegisterTarget()->SubtreeRoot() == parent->SubtreeRoot()) ||
-     parent == Target());
+      ChildList() && ((Subtree() && RegisterTarget()->SubtreeRoot() ==
+                                        parent->SubtreeRoot()) ||
+                      parent == Target());
   if (!wantsChildList || !IsObservable(aFirstNewContent)) {
     return;
   }
@@ -231,10 +207,8 @@ nsMutationReceiver::ContentAppended(nsIContent* aFirstNewContent)
     return;
   }
 
-  nsDOMMutationRecord* m =
-    Observer()->CurrentRecord(nsGkAtoms::childList);
-  NS_ASSERTION(!m->mTarget || m->mTarget == parent,
-               "Wrong target!");
+  nsDOMMutationRecord* m = Observer()->CurrentRecord(nsGkAtoms::childList);
+  NS_ASSERTION(!m->mTarget || m->mTarget == parent, "Wrong target!");
   if (m->mTarget) {
     // Already handled case.
     return;
@@ -250,14 +224,12 @@ nsMutationReceiver::ContentAppended(nsIContent* aFirstNewContent)
   m->mPreviousSibling = aFirstNewContent->GetPreviousSibling();
 }
 
-void
-nsMutationReceiver::ContentInserted(nsIContent* aChild)
-{
+void nsMutationReceiver::ContentInserted(nsIContent* aChild) {
   nsINode* parent = aChild->GetParentNode();
   bool wantsChildList =
-    ChildList() &&
-    ((Subtree() && RegisterTarget()->SubtreeRoot() == parent->SubtreeRoot()) ||
-     parent == Target());
+      ChildList() && ((Subtree() && RegisterTarget()->SubtreeRoot() ==
+                                        parent->SubtreeRoot()) ||
+                      parent == Target());
   if (!wantsChildList || !IsObservable(aChild)) {
     return;
   }
@@ -269,8 +241,7 @@ nsMutationReceiver::ContentInserted(nsIContent* aChild)
     return;
   }
 
-  nsDOMMutationRecord* m =
-    Observer()->CurrentRecord(nsGkAtoms::childList);
+  nsDOMMutationRecord* m = Observer()->CurrentRecord(nsGkAtoms::childList);
   if (m->mTarget) {
     // Already handled case.
     return;
@@ -282,10 +253,8 @@ nsMutationReceiver::ContentInserted(nsIContent* aChild)
   m->mNextSibling = aChild->GetNextSibling();
 }
 
-void
-nsMutationReceiver::ContentRemoved(nsIContent* aChild,
-                                   nsIContent* aPreviousSibling)
-{
+void nsMutationReceiver::ContentRemoved(nsIContent* aChild,
+                                        nsIContent* aPreviousSibling) {
   if (!IsObservable(aChild)) {
     return;
   }
@@ -321,11 +290,11 @@ nsMutationReceiver::ContentRemoved(nsIContent* aChild,
       bool transientExists = false;
       bool isNewEntry = false;
       nsCOMArray<nsMutationReceiver>* transientReceivers =
-        Observer()->mTransientReceivers.LookupForAdd(aChild).OrInsert(
-          [&isNewEntry] () {
-            isNewEntry = true;
-            return new nsCOMArray<nsMutationReceiver>();
-          });
+          Observer()->mTransientReceivers.LookupForAdd(aChild).OrInsert(
+              [&isNewEntry]() {
+                isNewEntry = true;
+                return new nsCOMArray<nsMutationReceiver>();
+              });
       if (!isNewEntry) {
         for (int32_t i = 0; i < transientReceivers->Count(); ++i) {
           nsMutationReceiver* r = transientReceivers->ObjectAt(i);
@@ -349,8 +318,7 @@ nsMutationReceiver::ContentRemoved(nsIContent* aChild,
   }
 
   if (ChildList() && (Subtree() || parent == Target())) {
-    nsDOMMutationRecord* m =
-      Observer()->CurrentRecord(nsGkAtoms::childList);
+    nsDOMMutationRecord* m = Observer()->CurrentRecord(nsGkAtoms::childList);
     if (m->mTarget) {
       // Already handled case.
       return;
@@ -361,24 +329,21 @@ nsMutationReceiver::ContentRemoved(nsIContent* aChild,
     m->mRemovedNodes = new nsSimpleContentList(parent);
     m->mRemovedNodes->AppendElement(aChild);
     m->mPreviousSibling = aPreviousSibling;
-    m->mNextSibling = aPreviousSibling ?
-      aPreviousSibling->GetNextSibling() : parent->GetFirstChild();
+    m->mNextSibling = aPreviousSibling ? aPreviousSibling->GetNextSibling()
+                                       : parent->GetFirstChild();
   }
   // We need to schedule always, so that after microtask mTransientReceivers
   // can be cleared correctly.
   Observer()->ScheduleForRun();
 }
 
-void nsMutationReceiver::NodeWillBeDestroyed(const nsINode *aNode)
-{
+void nsMutationReceiver::NodeWillBeDestroyed(const nsINode* aNode) {
   NS_ASSERTION(!mParent, "Shouldn't have mParent here!");
   Disconnect(true);
 }
 
-void
-nsAnimationReceiver::RecordAnimationMutation(Animation* aAnimation,
-                                             AnimationMutation aMutationType)
-{
+void nsAnimationReceiver::RecordAnimationMutation(
+    Animation* aAnimation, AnimationMutation aMutationType) {
   mozilla::dom::AnimationEffect* effect = aAnimation->GetEffect();
   if (!effect) {
     return;
@@ -401,7 +366,8 @@ nsAnimationReceiver::RecordAnimationMutation(Animation* aAnimation,
   }
 
   // Record animations targeting to a pseudo element only when subtree is true.
-  if (animationTarget->mPseudoType != mozilla::CSSPseudoElementType::NotPseudo &&
+  if (animationTarget->mPseudoType !=
+          mozilla::CSSPseudoElementType::NotPseudo &&
       !Subtree()) {
     return;
   }
@@ -423,8 +389,7 @@ nsAnimationReceiver::RecordAnimationMutation(Animation* aAnimation,
     return;
   }
 
-  nsDOMMutationRecord* m =
-    Observer()->CurrentRecord(nsGkAtoms::animations);
+  nsDOMMutationRecord* m = Observer()->CurrentRecord(nsGkAtoms::animations);
 
   NS_ASSERTION(!m->mTarget, "Wrong target!");
 
@@ -443,21 +408,15 @@ nsAnimationReceiver::RecordAnimationMutation(Animation* aAnimation,
   }
 }
 
-void
-nsAnimationReceiver::AnimationAdded(Animation* aAnimation)
-{
+void nsAnimationReceiver::AnimationAdded(Animation* aAnimation) {
   RecordAnimationMutation(aAnimation, eAnimationMutation_Added);
 }
 
-void
-nsAnimationReceiver::AnimationChanged(Animation* aAnimation)
-{
+void nsAnimationReceiver::AnimationChanged(Animation* aAnimation) {
   RecordAnimationMutation(aAnimation, eAnimationMutation_Changed);
 }
 
-void
-nsAnimationReceiver::AnimationRemoved(Animation* aAnimation)
-{
+void nsAnimationReceiver::AnimationRemoved(Animation* aAnimation) {
   RecordAnimationMutation(aAnimation, eAnimationMutation_Removed);
 }
 
@@ -490,8 +449,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMMutationObserver)
   tmp->mReceivers.Clear();
   tmp->ClearPendingRecords();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
-  // No need to handle mTransientReceivers
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+// No need to handle mTransientReceivers
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMMutationObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
@@ -501,10 +460,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMMutationObserver)
   // No need to handle mTransientReceivers
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-nsMutationReceiver*
-nsDOMMutationObserver::GetReceiverFor(nsINode* aNode, bool aMayCreate,
-                                      bool aWantsAnimations)
-{
+nsMutationReceiver* nsDOMMutationObserver::GetReceiverFor(
+    nsINode* aNode, bool aMayCreate, bool aWantsAnimations) {
   MOZ_ASSERT(aMayCreate || !aWantsAnimations,
              "the value of aWantsAnimations doesn't matter when aMayCreate is "
              "false, so just pass in false for it");
@@ -532,17 +489,12 @@ nsDOMMutationObserver::GetReceiverFor(nsINode* aNode, bool aMayCreate,
   return r;
 }
 
-void
-nsDOMMutationObserver::RemoveReceiver(nsMutationReceiver* aReceiver)
-{
+void nsDOMMutationObserver::RemoveReceiver(nsMutationReceiver* aReceiver) {
   mReceivers.RemoveObject(aReceiver);
 }
 
-void
-nsDOMMutationObserver::GetAllSubtreeObserversFor(nsINode* aNode,
-                                                 nsTArray<nsMutationReceiver*>&
-                                                   aReceivers)
-{
+void nsDOMMutationObserver::GetAllSubtreeObserversFor(
+    nsINode* aNode, nsTArray<nsMutationReceiver*>& aReceivers) {
   nsINode* n = aNode;
   while (n) {
     if (n->MayHaveDOMMutationObserver()) {
@@ -556,7 +508,8 @@ nsDOMMutationObserver::GetAllSubtreeObserversFor(nsINode* aNode,
         }
       }
       nsCOMArray<nsMutationReceiver>* transientReceivers = nullptr;
-      if (mTransientReceivers.Get(n, &transientReceivers) && transientReceivers) {
+      if (mTransientReceivers.Get(n, &transientReceivers) &&
+          transientReceivers) {
         for (int32_t i = 0; i < transientReceivers->Count(); ++i) {
           nsMutationReceiver* r = transientReceivers->ObjectAt(i);
           nsMutationReceiver* parent = r->GetParent();
@@ -573,9 +526,7 @@ nsDOMMutationObserver::GetAllSubtreeObserversFor(nsINode* aNode,
   }
 }
 
-void
-nsDOMMutationObserver::ScheduleForRun()
-{
+void nsDOMMutationObserver::ScheduleForRun() {
   nsDOMMutationObserver::AddCurrentlyHandlingObserver(this, sMutationLevel);
 
   if (mWaitingForRun) {
@@ -585,61 +536,51 @@ nsDOMMutationObserver::ScheduleForRun()
   RescheduleForRun();
 }
 
-class MutationObserverMicroTask final : public MicroTaskRunnable
-{
-public:
-  virtual void Run(AutoSlowOperation& aAso) override
-  {
+class MutationObserverMicroTask final : public MicroTaskRunnable {
+ public:
+  virtual void Run(AutoSlowOperation& aAso) override {
     nsDOMMutationObserver::HandleMutations(aAso);
   }
 
-  virtual bool Suppressed() override
-  {
+  virtual bool Suppressed() override {
     return nsDOMMutationObserver::AllScheduledMutationObserversAreSuppressed();
   }
 };
 
-/* static */ void
-nsDOMMutationObserver::QueueMutationObserverMicroTask()
-{
+/* static */ void nsDOMMutationObserver::QueueMutationObserverMicroTask() {
   CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
   if (!ccjs) {
     return;
   }
 
-  RefPtr<MutationObserverMicroTask> momt =
-    new MutationObserverMicroTask();
+  RefPtr<MutationObserverMicroTask> momt = new MutationObserverMicroTask();
   ccjs->DispatchToMicroTask(momt.forget());
 }
 
-void
-nsDOMMutationObserver::HandleMutations(mozilla::AutoSlowOperation& aAso)
-{
+void nsDOMMutationObserver::HandleMutations(mozilla::AutoSlowOperation& aAso) {
   if (sScheduledMutationObservers ||
       mozilla::dom::DocGroup::sPendingDocGroups) {
     HandleMutationsInternal(aAso);
   }
 }
 
-void
-nsDOMMutationObserver::RescheduleForRun()
-{
+void nsDOMMutationObserver::RescheduleForRun() {
   if (!sScheduledMutationObservers) {
     CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
     if (!ccjs) {
       return;
     }
 
-    RefPtr<MutationObserverMicroTask> momt =
-      new MutationObserverMicroTask();
+    RefPtr<MutationObserverMicroTask> momt = new MutationObserverMicroTask();
     ccjs->DispatchToMicroTask(momt.forget());
-    sScheduledMutationObservers = new AutoTArray<RefPtr<nsDOMMutationObserver>, 4>;
+    sScheduledMutationObservers =
+        new AutoTArray<RefPtr<nsDOMMutationObserver>, 4>;
   }
 
   bool didInsert = false;
   for (uint32_t i = 0; i < sScheduledMutationObservers->Length(); ++i) {
     if (static_cast<nsDOMMutationObserver*>((*sScheduledMutationObservers)[i])
-          ->mId > mId) {
+            ->mId > mId) {
       sScheduledMutationObservers->InsertElementAt(i, this);
       didInsert = true;
       break;
@@ -650,27 +591,20 @@ nsDOMMutationObserver::RescheduleForRun()
   }
 }
 
-void
-nsDOMMutationObserver::Observe(nsINode& aTarget,
-                               const mozilla::dom::MutationObserverInit& aOptions,
-                               mozilla::ErrorResult& aRv)
-{
-
+void nsDOMMutationObserver::Observe(
+    nsINode& aTarget, const mozilla::dom::MutationObserverInit& aOptions,
+    mozilla::ErrorResult& aRv) {
   bool childList = aOptions.mChildList;
   bool attributes =
-    aOptions.mAttributes.WasPassed() &&
-    aOptions.mAttributes.Value();
+      aOptions.mAttributes.WasPassed() && aOptions.mAttributes.Value();
   bool characterData =
-    aOptions.mCharacterData.WasPassed() &&
-    aOptions.mCharacterData.Value();
+      aOptions.mCharacterData.WasPassed() && aOptions.mCharacterData.Value();
   bool subtree = aOptions.mSubtree;
-  bool attributeOldValue =
-    aOptions.mAttributeOldValue.WasPassed() &&
-    aOptions.mAttributeOldValue.Value();
+  bool attributeOldValue = aOptions.mAttributeOldValue.WasPassed() &&
+                           aOptions.mAttributeOldValue.Value();
   bool nativeAnonymousChildList = aOptions.mNativeAnonymousChildList;
-  bool characterDataOldValue =
-    aOptions.mCharacterDataOldValue.WasPassed() &&
-    aOptions.mCharacterDataOldValue.Value();
+  bool characterDataOldValue = aOptions.mCharacterDataOldValue.WasPassed() &&
+                               aOptions.mCharacterDataOldValue.Value();
   bool animations = aOptions.mAnimations;
 
   if (!aOptions.mAttributes.WasPassed() &&
@@ -691,24 +625,21 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
   }
 
   if (aOptions.mAttributeOldValue.WasPassed() &&
-      aOptions.mAttributeOldValue.Value() &&
-      aOptions.mAttributes.WasPassed() &&
+      aOptions.mAttributeOldValue.Value() && aOptions.mAttributes.WasPassed() &&
       !aOptions.mAttributes.Value()) {
     aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return;
   }
 
   if (aOptions.mAttributeFilter.WasPassed() &&
-      aOptions.mAttributes.WasPassed() &&
-      !aOptions.mAttributes.Value()) {
+      aOptions.mAttributes.WasPassed() && !aOptions.mAttributes.Value()) {
     aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return;
   }
 
   if (aOptions.mCharacterDataOldValue.WasPassed() &&
       aOptions.mCharacterDataOldValue.Value() &&
-      aOptions.mCharacterData.WasPassed() &&
-      !aOptions.mCharacterData.Value()) {
+      aOptions.mCharacterData.WasPassed() && !aOptions.mCharacterData.Value()) {
     aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return;
   }
@@ -718,7 +649,7 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
   if (aOptions.mAttributeFilter.WasPassed()) {
     allAttrs = false;
     const mozilla::dom::Sequence<nsString>& filtersAsString =
-      aOptions.mAttributeFilter.Value();
+        aOptions.mAttributeFilter.Value();
     uint32_t len = filtersAsString.Length();
     filters.SetCapacity(len);
 
@@ -748,9 +679,7 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
 #endif
 }
 
-void
-nsDOMMutationObserver::Disconnect()
-{
+void nsDOMMutationObserver::Disconnect() {
   for (int32_t i = 0; i < mReceivers.Count(); ++i) {
     mReceivers[i]->Disconnect(false);
   }
@@ -759,10 +688,8 @@ nsDOMMutationObserver::Disconnect()
   ClearPendingRecords();
 }
 
-void
-nsDOMMutationObserver::TakeRecords(
-                         nsTArray<RefPtr<nsDOMMutationRecord> >& aRetVal)
-{
+void nsDOMMutationObserver::TakeRecords(
+    nsTArray<RefPtr<nsDOMMutationRecord>>& aRetVal) {
   aRetVal.Clear();
   aRetVal.SetCapacity(mPendingMutationCount);
   RefPtr<nsDOMMutationRecord> current;
@@ -771,8 +698,7 @@ nsDOMMutationObserver::TakeRecords(
     RefPtr<nsDOMMutationRecord> next;
     current->mNext.swap(next);
     if (!mMergeAttributeRecords ||
-        !MergeableAttributeRecord(aRetVal.SafeLastElement(nullptr),
-                                  current)) {
+        !MergeableAttributeRecord(aRetVal.SafeLastElement(nullptr), current)) {
       *aRetVal.AppendElement() = current.forget();
     }
     current.swap(next);
@@ -780,11 +706,9 @@ nsDOMMutationObserver::TakeRecords(
   ClearPendingRecords();
 }
 
-void
-nsDOMMutationObserver::GetObservingInfo(
-                         nsTArray<Nullable<MutationObservingInfo>>& aResult,
-                         mozilla::ErrorResult& aRv)
-{
+void nsDOMMutationObserver::GetObservingInfo(
+    nsTArray<Nullable<MutationObservingInfo>>& aResult,
+    mozilla::ErrorResult& aRv) {
   aResult.SetCapacity(mReceivers.Count());
   for (int32_t i = 0; i < mReceivers.Count(); ++i) {
     MutationObservingInfo& info = aResult.AppendElement()->SetValue();
@@ -801,9 +725,9 @@ nsDOMMutationObserver::GetObservingInfo(
     if (filters.Length()) {
       info.mAttributeFilter.Construct();
       mozilla::dom::Sequence<nsString>& filtersAsStrings =
-        info.mAttributeFilter.Value();
-      nsString* strings = filtersAsStrings.AppendElements(filters.Length(),
-                                                          mozilla::fallible);
+          info.mAttributeFilter.Value();
+      nsString* strings =
+          filtersAsStrings.AppendElements(filters.Length(), mozilla::fallible);
       if (!strings) {
         aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
         return;
@@ -817,40 +741,32 @@ nsDOMMutationObserver::GetObservingInfo(
 }
 
 // static
-already_AddRefed<nsDOMMutationObserver>
-nsDOMMutationObserver::Constructor(const mozilla::dom::GlobalObject& aGlobal,
-                                   mozilla::dom::MutationCallback& aCb,
-                                   mozilla::ErrorResult& aRv)
-{
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
+already_AddRefed<nsDOMMutationObserver> nsDOMMutationObserver::Constructor(
+    const mozilla::dom::GlobalObject& aGlobal,
+    mozilla::dom::MutationCallback& aCb, mozilla::ErrorResult& aRv) {
+  nsCOMPtr<nsPIDOMWindowInner> window =
+      do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
   bool isChrome = nsContentUtils::IsChromeDoc(window->GetExtantDoc());
   RefPtr<nsDOMMutationObserver> observer =
-    new nsDOMMutationObserver(window.forget(), aCb, isChrome);
+      new nsDOMMutationObserver(window.forget(), aCb, isChrome);
   return observer.forget();
 }
 
-
-bool
-nsDOMMutationObserver::MergeableAttributeRecord(nsDOMMutationRecord* aOldRecord,
-                                                nsDOMMutationRecord* aRecord)
-{
+bool nsDOMMutationObserver::MergeableAttributeRecord(
+    nsDOMMutationRecord* aOldRecord, nsDOMMutationRecord* aRecord) {
   MOZ_ASSERT(mMergeAttributeRecords);
-  return
-    aOldRecord &&
-    aOldRecord->mType == nsGkAtoms::attributes &&
-    aOldRecord->mType == aRecord->mType &&
-    aOldRecord->mTarget == aRecord->mTarget &&
-    aOldRecord->mAttrName == aRecord->mAttrName &&
-    aOldRecord->mAttrNamespace.Equals(aRecord->mAttrNamespace);
+  return aOldRecord && aOldRecord->mType == nsGkAtoms::attributes &&
+         aOldRecord->mType == aRecord->mType &&
+         aOldRecord->mTarget == aRecord->mTarget &&
+         aOldRecord->mAttrName == aRecord->mAttrName &&
+         aOldRecord->mAttrNamespace.Equals(aRecord->mAttrNamespace);
 }
 
-void
-nsDOMMutationObserver::HandleMutation()
-{
+void nsDOMMutationObserver::HandleMutation() {
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(), "Whaat!");
   NS_ASSERTION(mCurrentMutations.IsEmpty(),
                "Still generating MutationRecords?");
@@ -869,8 +785,7 @@ nsDOMMutationObserver::HandleMutation()
     return;
   }
 
-  mozilla::dom::Sequence<mozilla::OwningNonNull<nsDOMMutationRecord> >
-    mutations;
+  mozilla::dom::Sequence<mozilla::OwningNonNull<nsDOMMutationRecord>> mutations;
   if (mutations.SetCapacity(mPendingMutationCount, mozilla::fallible)) {
     // We can't use TakeRecords easily here, because it deals with a
     // different type of array, and we want to optimize out any extra copying.
@@ -880,9 +795,9 @@ nsDOMMutationObserver::HandleMutation()
       RefPtr<nsDOMMutationRecord> next;
       current->mNext.swap(next);
       if (!mMergeAttributeRecords ||
-          !MergeableAttributeRecord(mutations.Length() ?
-                                      mutations.LastElement().get() : nullptr,
-                                    current)) {
+          !MergeableAttributeRecord(
+              mutations.Length() ? mutations.LastElement().get() : nullptr,
+              current)) {
         *mutations.AppendElement(mozilla::fallible) = current;
       }
       current.swap(next);
@@ -893,10 +808,8 @@ nsDOMMutationObserver::HandleMutation()
   mCallback->Call(this, mutations, *this);
 }
 
-void
-nsDOMMutationObserver::HandleMutationsInternal(AutoSlowOperation& aAso)
-{
-  nsTArray<RefPtr<nsDOMMutationObserver> >* suppressedObservers = nullptr;
+void nsDOMMutationObserver::HandleMutationsInternal(AutoSlowOperation& aAso) {
+  nsTArray<RefPtr<nsDOMMutationObserver>>* suppressedObservers = nullptr;
 
   // This loop implements:
   //  * Let signalList be a copy of unit of related similar-origin browsing
@@ -914,16 +827,16 @@ nsDOMMutationObserver::HandleMutationsInternal(AutoSlowOperation& aAso)
 
   if (sScheduledMutationObservers) {
     AutoTArray<RefPtr<nsDOMMutationObserver>, 4>* observers =
-      sScheduledMutationObservers;
+        sScheduledMutationObservers;
     sScheduledMutationObservers = nullptr;
     for (uint32_t i = 0; i < observers->Length(); ++i) {
       RefPtr<nsDOMMutationObserver> currentObserver =
-        static_cast<nsDOMMutationObserver*>((*observers)[i]);
+          static_cast<nsDOMMutationObserver*>((*observers)[i]);
       if (!currentObserver->Suppressed()) {
         currentObserver->HandleMutation();
       } else {
         if (!suppressedObservers) {
-          suppressedObservers = new nsTArray<RefPtr<nsDOMMutationObserver> >;
+          suppressedObservers = new nsTArray<RefPtr<nsDOMMutationObserver>>;
         }
         if (!suppressedObservers->Contains(currentObserver)) {
           suppressedObservers->AppendElement(currentObserver);
@@ -936,8 +849,8 @@ nsDOMMutationObserver::HandleMutationsInternal(AutoSlowOperation& aAso)
 
   if (suppressedObservers) {
     for (uint32_t i = 0; i < suppressedObservers->Length(); ++i) {
-      static_cast<nsDOMMutationObserver*>(suppressedObservers->ElementAt(i))->
-        RescheduleForRun();
+      static_cast<nsDOMMutationObserver*>(suppressedObservers->ElementAt(i))
+          ->RescheduleForRun();
     }
     delete suppressedObservers;
     suppressedObservers = nullptr;
@@ -949,9 +862,7 @@ nsDOMMutationObserver::HandleMutationsInternal(AutoSlowOperation& aAso)
   }
 }
 
-nsDOMMutationRecord*
-nsDOMMutationObserver::CurrentRecord(nsAtom* aType)
-{
+nsDOMMutationRecord* nsDOMMutationObserver::CurrentRecord(nsAtom* aType) {
   NS_ASSERTION(sMutationLevel > 0, "Unexpected mutation level!");
 
   while (mCurrentMutations.Length() < sMutationLevel) {
@@ -960,7 +871,8 @@ nsDOMMutationObserver::CurrentRecord(nsAtom* aType)
 
   uint32_t last = sMutationLevel - 1;
   if (!mCurrentMutations[last]) {
-    RefPtr<nsDOMMutationRecord> r = new nsDOMMutationRecord(aType, GetParentObject());
+    RefPtr<nsDOMMutationRecord> r =
+        new nsDOMMutationRecord(aType, GetParentObject());
     mCurrentMutations[last] = r;
     AppendMutationRecord(r.forget());
     ScheduleForRun();
@@ -981,33 +893,25 @@ nsDOMMutationObserver::CurrentRecord(nsAtom* aType)
   return mCurrentMutations[last];
 }
 
-nsDOMMutationObserver::~nsDOMMutationObserver()
-{
+nsDOMMutationObserver::~nsDOMMutationObserver() {
   for (int32_t i = 0; i < mReceivers.Count(); ++i) {
     mReceivers[i]->RemoveClones();
   }
 }
 
-void
-nsDOMMutationObserver::EnterMutationHandling()
-{
-  ++sMutationLevel;
-}
+void nsDOMMutationObserver::EnterMutationHandling() { ++sMutationLevel; }
 
 // Leave the current mutation level (there can be several levels if in case
 // of nested calls to the nsIMutationObserver methods).
 // The most recent mutation record is removed from mCurrentMutations, so
 // that is doesn't get modified anymore by receivers.
-void
-nsDOMMutationObserver::LeaveMutationHandling()
-{
+void nsDOMMutationObserver::LeaveMutationHandling() {
   if (sCurrentlyHandlingObservers &&
       sCurrentlyHandlingObservers->Length() == sMutationLevel) {
-    nsTArray<RefPtr<nsDOMMutationObserver> >& obs =
-      sCurrentlyHandlingObservers->ElementAt(sMutationLevel - 1);
+    nsTArray<RefPtr<nsDOMMutationObserver>>& obs =
+        sCurrentlyHandlingObservers->ElementAt(sMutationLevel - 1);
     for (uint32_t i = 0; i < obs.Length(); ++i) {
-      nsDOMMutationObserver* o =
-        static_cast<nsDOMMutationObserver*>(obs[i]);
+      nsDOMMutationObserver* o = static_cast<nsDOMMutationObserver*>(obs[i]);
       if (o->mCurrentMutations.Length() == sMutationLevel) {
         // It is already in pending mutations.
         o->mCurrentMutations.RemoveElementAt(sMutationLevel - 1);
@@ -1018,10 +922,8 @@ nsDOMMutationObserver::LeaveMutationHandling()
   --sMutationLevel;
 }
 
-void
-nsDOMMutationObserver::AddCurrentlyHandlingObserver(nsDOMMutationObserver* aObserver,
-                                                    uint32_t aMutationLevel)
-{
+void nsDOMMutationObserver::AddCurrentlyHandlingObserver(
+    nsDOMMutationObserver* aObserver, uint32_t aMutationLevel) {
   NS_ASSERTION(aMutationLevel > 0, "Unexpected mutation level!");
 
   if (aMutationLevel > 1) {
@@ -1032,12 +934,12 @@ nsDOMMutationObserver::AddCurrentlyHandlingObserver(nsDOMMutationObserver* aObse
 
   if (!sCurrentlyHandlingObservers) {
     sCurrentlyHandlingObservers =
-      new AutoTArray<AutoTArray<RefPtr<nsDOMMutationObserver>, 4>, 4>;
+        new AutoTArray<AutoTArray<RefPtr<nsDOMMutationObserver>, 4>, 4>;
   }
 
   while (sCurrentlyHandlingObservers->Length() < aMutationLevel) {
     sCurrentlyHandlingObservers->InsertElementAt(
-      sCurrentlyHandlingObservers->Length());
+        sCurrentlyHandlingObservers->Length());
   }
 
   uint32_t index = aMutationLevel - 1;
@@ -1046,21 +948,16 @@ nsDOMMutationObserver::AddCurrentlyHandlingObserver(nsDOMMutationObserver* aObse
   }
 }
 
-void
-nsDOMMutationObserver::Shutdown()
-{
+void nsDOMMutationObserver::Shutdown() {
   delete sCurrentlyHandlingObservers;
   sCurrentlyHandlingObservers = nullptr;
   delete sScheduledMutationObservers;
   sScheduledMutationObservers = nullptr;
 }
 
-nsAutoMutationBatch*
-nsAutoMutationBatch::sCurrentBatch = nullptr;
+nsAutoMutationBatch* nsAutoMutationBatch::sCurrentBatch = nullptr;
 
-void
-nsAutoMutationBatch::Done()
-{
+void nsAutoMutationBatch::Done() {
   if (sCurrentBatch != this) {
     return;
   }
@@ -1095,8 +992,8 @@ nsAutoMutationBatch::Done()
 
       if (allObservers.Length()) {
         nsCOMArray<nsMutationReceiver>* transientReceivers =
-          ob->mTransientReceivers.LookupForAdd(removed).OrInsert(
-            [] () { return new nsCOMArray<nsMutationReceiver>(); });
+            ob->mTransientReceivers.LookupForAdd(removed).OrInsert(
+                []() { return new nsCOMArray<nsMutationReceiver>(); });
         for (uint32_t k = 0; k < allObservers.Length(); ++k) {
           nsMutationReceiver* r = allObservers[k];
           nsMutationReceiver* orig = r->GetParent() ? r->GetParent() : r;
@@ -1116,13 +1013,12 @@ nsAutoMutationBatch::Done()
     }
     if (wantsChildList && (mRemovedNodes.Length() || mAddedNodes.Length())) {
       RefPtr<nsSimpleContentList> addedList =
-        new nsSimpleContentList(mBatchTarget);
+          new nsSimpleContentList(mBatchTarget);
       for (uint32_t i = 0; i < mAddedNodes.Length(); ++i) {
         addedList->AppendElement(mAddedNodes[i]);
       }
       RefPtr<nsDOMMutationRecord> m =
-        new nsDOMMutationRecord(nsGkAtoms::childList,
-                                ob->GetParentObject());
+          new nsDOMMutationRecord(nsGkAtoms::childList, ob->GetParentObject());
       m->mTarget = mBatchTarget;
       m->mRemovedNodes = removedList;
       m->mAddedNodes = addedList;
@@ -1137,12 +1033,10 @@ nsAutoMutationBatch::Done()
   nsDOMMutationObserver::LeaveMutationHandling();
 }
 
-nsAutoAnimationMutationBatch*
-nsAutoAnimationMutationBatch::sCurrentBatch = nullptr;
+nsAutoAnimationMutationBatch* nsAutoAnimationMutationBatch::sCurrentBatch =
+    nullptr;
 
-void
-nsAutoAnimationMutationBatch::Done()
-{
+void nsAutoAnimationMutationBatch::Done() {
   if (sCurrentBatch != this) {
     return;
   }
@@ -1162,10 +1056,10 @@ nsAutoAnimationMutationBatch::Done()
     for (nsINode* target : mBatchTargets) {
       EntryArray* entries = mEntryTable.Get(target);
       MOZ_ASSERT(entries,
-        "Targets in entry table and targets list should match");
+                 "Targets in entry table and targets list should match");
 
       RefPtr<nsDOMMutationRecord> m =
-        new nsDOMMutationRecord(nsGkAtoms::animations, ob->GetParentObject());
+          new nsDOMMutationRecord(nsGkAtoms::animations, ob->GetParentObject());
       m->mTarget = target;
 
       for (const Entry& e : *entries) {
@@ -1178,8 +1072,7 @@ nsAutoAnimationMutationBatch::Done()
         }
       }
 
-      if (!m->mAddedAnimations.IsEmpty() ||
-          !m->mChangedAnimations.IsEmpty() ||
+      if (!m->mAddedAnimations.IsEmpty() || !m->mChangedAnimations.IsEmpty() ||
           !m->mRemovedAnimations.IsEmpty()) {
         ob->AppendMutationRecord(m.forget());
         didAddRecords = true;

@@ -12,9 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-void
-ClientManagerOpChild::ActorDestroy(ActorDestroyReason aReason)
-{
+void ClientManagerOpChild::ActorDestroy(ActorDestroyReason aReason) {
   mClientManager = nullptr;
   if (mPromise) {
     mPromise->Reject(NS_ERROR_ABORT, __func__);
@@ -22,9 +20,8 @@ ClientManagerOpChild::ActorDestroy(ActorDestroyReason aReason)
   }
 }
 
-mozilla::ipc::IPCResult
-ClientManagerOpChild::Recv__delete__(const ClientOpResult& aResult)
-{
+mozilla::ipc::IPCResult ClientManagerOpChild::Recv__delete__(
+    const ClientOpResult& aResult) {
   mClientManager = nullptr;
   if (aResult.type() == ClientOpResult::Tnsresult &&
       NS_FAILED(aResult.get_nsresult())) {
@@ -40,17 +37,14 @@ ClientManagerOpChild::Recv__delete__(const ClientOpResult& aResult)
 ClientManagerOpChild::ClientManagerOpChild(ClientManager* aClientManager,
                                            const ClientOpConstructorArgs& aArgs,
                                            ClientOpPromise::Private* aPromise)
-  : mClientManager(aClientManager)
-  , mPromise(aPromise)
-{
+    : mClientManager(aClientManager), mPromise(aPromise) {
   MOZ_DIAGNOSTIC_ASSERT(mClientManager);
   MOZ_DIAGNOSTIC_ASSERT(mPromise);
 }
 
-ClientManagerOpChild::~ClientManagerOpChild()
-{
+ClientManagerOpChild::~ClientManagerOpChild() {
   MOZ_DIAGNOSTIC_ASSERT(!mPromise);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

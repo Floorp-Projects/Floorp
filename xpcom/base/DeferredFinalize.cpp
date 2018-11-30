@@ -9,9 +9,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 
-void
-mozilla::DeferredFinalize(nsISupports* aSupports)
-{
+void mozilla::DeferredFinalize(nsISupports* aSupports) {
   CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
   MOZ_ASSERT(rt, "Should have a CycleCollectedJSRuntime by now");
   if (mozilla::recordreplay::IsRecordingOrReplaying()) {
@@ -24,11 +22,8 @@ mozilla::DeferredFinalize(nsISupports* aSupports)
   }
 }
 
-void
-mozilla::DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
-                          DeferredFinalizeFunction aFunc,
-                          void* aThing)
-{
+void mozilla::DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
+                               DeferredFinalizeFunction aFunc, void* aThing) {
   CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
   MOZ_ASSERT(rt, "Should have a CycleCollectedJSRuntime by now");
   if (mozilla::recordreplay::IsRecordingOrReplaying()) {
@@ -40,11 +35,9 @@ mozilla::DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
   }
 }
 
-static void
-RecordReplayDeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
-                             DeferredFinalizeFunction aFunc,
-                             void* aThing)
-{
+static void RecordReplayDeferredFinalize(
+    DeferredFinalizeAppendFunction aAppendFunc, DeferredFinalizeFunction aFunc,
+    void* aThing) {
   mozilla::recordreplay::UnregisterTrigger(aThing);
 
   CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
@@ -55,16 +48,12 @@ RecordReplayDeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
   }
 }
 
-void
-mozilla::RecordReplayRegisterDeferredFinalizeThing(DeferredFinalizeAppendFunction aAppendFunc,
-                                                   DeferredFinalizeFunction aFunc,
-                                                   void* aThing)
-{
+void mozilla::RecordReplayRegisterDeferredFinalizeThing(
+    DeferredFinalizeAppendFunction aAppendFunc, DeferredFinalizeFunction aFunc,
+    void* aThing) {
   if (mozilla::recordreplay::IsRecordingOrReplaying()) {
-    mozilla::recordreplay::RegisterTrigger(aThing,
-                                           [=]() {
-                                             RecordReplayDeferredFinalize(aAppendFunc,
-                                                                          aFunc, aThing);
-                                           });
+    mozilla::recordreplay::RegisterTrigger(aThing, [=]() {
+      RecordReplayDeferredFinalize(aAppendFunc, aFunc, aThing);
+    });
   }
 }

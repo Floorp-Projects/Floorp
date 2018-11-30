@@ -21,21 +21,17 @@ namespace mozilla {
  * std::cell::Cell<T>, so values of this type can't be passed over FFI
  * functions.
  */
-template<typename T>
-class RustCell
-{
-public:
-  RustCell()
-    : mValue()
-  {
-  }
+template <typename T>
+class RustCell {
+ public:
+  RustCell() : mValue() {}
 
   T Get() const { return mValue; }
 
-private:
+ private:
   T mValue;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_RustCell_h
+#endif  // mozilla_RustCell_h

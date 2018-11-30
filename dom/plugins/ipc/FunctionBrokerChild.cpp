@@ -12,23 +12,18 @@ namespace plugins {
 
 FunctionBrokerChild* FunctionBrokerChild::sInstance = nullptr;
 
-bool
-FunctionBrokerChild::IsDispatchThread()
-{
-  return mThread->IsOnThread();
-}
+bool FunctionBrokerChild::IsDispatchThread() { return mThread->IsOnThread(); }
 
-void
-FunctionBrokerChild::PostToDispatchThread(already_AddRefed<nsIRunnable>&& runnable)
-{
+void FunctionBrokerChild::PostToDispatchThread(
+    already_AddRefed<nsIRunnable>&& runnable) {
   mThread->Dispatch(std::move(runnable));
 }
 
-/* static */ bool
-FunctionBrokerChild::Initialize(Endpoint<PFunctionBrokerChild>&& aBrokerEndpoint)
-{
-  MOZ_RELEASE_ASSERT(XRE_IsPluginProcess(),
-                     "FunctionBrokerChild can only be used in plugin processes");
+/* static */ bool FunctionBrokerChild::Initialize(
+    Endpoint<PFunctionBrokerChild>&& aBrokerEndpoint) {
+  MOZ_RELEASE_ASSERT(
+      XRE_IsPluginProcess(),
+      "FunctionBrokerChild can only be used in plugin processes");
 
   MOZ_ASSERT(!sInstance);
   FunctionBrokerThread* thread = FunctionBrokerThread::Create();
@@ -39,39 +34,34 @@ FunctionBrokerChild::Initialize(Endpoint<PFunctionBrokerChild>&& aBrokerEndpoint
   return true;
 }
 
-/* static */ FunctionBrokerChild*
-FunctionBrokerChild::GetInstance()
-{
-  MOZ_RELEASE_ASSERT(XRE_IsPluginProcess(),
-                     "FunctionBrokerChild can only be used in plugin processes");
+/* static */ FunctionBrokerChild* FunctionBrokerChild::GetInstance() {
+  MOZ_RELEASE_ASSERT(
+      XRE_IsPluginProcess(),
+      "FunctionBrokerChild can only be used in plugin processes");
 
   MOZ_ASSERT(sInstance, "Must initialize FunctionBrokerChild before using it");
   return sInstance;
 }
 
-FunctionBrokerChild::FunctionBrokerChild(FunctionBrokerThread* aThread,
-                                         Endpoint<PFunctionBrokerChild>&& aEndpoint) :
-    mThread(aThread)
-  , mShutdownDone(false)
-  , mMonitor("FunctionBrokerChild Lock")
-{
+FunctionBrokerChild::FunctionBrokerChild(
+    FunctionBrokerThread* aThread, Endpoint<PFunctionBrokerChild>&& aEndpoint)
+    : mThread(aThread),
+      mShutdownDone(false),
+      mMonitor("FunctionBrokerChild Lock") {
   MOZ_ASSERT(aThread);
-  PostToDispatchThread(NewNonOwningRunnableMethod<Endpoint<PFunctionBrokerChild>&&>(
-                       "FunctionBrokerChild::Bind", this, &FunctionBrokerChild::Bind,
-                       std::move(aEndpoint)));
+  PostToDispatchThread(
+      NewNonOwningRunnableMethod<Endpoint<PFunctionBrokerChild>&&>(
+          "FunctionBrokerChild::Bind", this, &FunctionBrokerChild::Bind,
+          std::move(aEndpoint)));
 }
 
-void
-FunctionBrokerChild::Bind(Endpoint<PFunctionBrokerChild>&& aEndpoint)
-{
+void FunctionBrokerChild::Bind(Endpoint<PFunctionBrokerChild>&& aEndpoint) {
   MOZ_RELEASE_ASSERT(mThread->IsOnThread());
   DebugOnly<bool> ok = aEndpoint.Bind(this);
   MOZ_ASSERT(ok);
 }
 
-void
-FunctionBrokerChild::ShutdownOnDispatchThread()
-{
+void FunctionBrokerChild::ShutdownOnDispatchThread() {
   MOZ_ASSERT(mThread->IsOnThread());
 
   // Set mShutdownDone and notify waiting thread (if any) that we are done.
@@ -80,9 +70,7 @@ FunctionBrokerChild::ShutdownOnDispatchThread()
   mMonitor.Notify();
 }
 
-void
-FunctionBrokerChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void FunctionBrokerChild::ActorDestroy(ActorDestroyReason aWhy) {
   MOZ_ASSERT(mThread->IsOnThread());
 
   // Queue up a task on the PD thread.  When that task is executed then
@@ -90,13 +78,11 @@ FunctionBrokerChild::ActorDestroy(ActorDestroyReason aWhy)
   // At that point, we can set mShutdownDone and alert any waiting
   // threads that it is safe to destroy us.
   sInstance->PostToDispatchThread(NewNonOwningRunnableMethod(
-                                  "FunctionBrokerChild::ShutdownOnDispatchThread", sInstance,
-                                  &FunctionBrokerChild::ShutdownOnDispatchThread));
+      "FunctionBrokerChild::ShutdownOnDispatchThread", sInstance,
+      &FunctionBrokerChild::ShutdownOnDispatchThread));
 }
 
-void
-FunctionBrokerChild::Destroy()
-{
+void FunctionBrokerChild::Destroy() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!sInstance) {
@@ -119,5 +105,5 @@ FunctionBrokerChild::Destroy()
   sInstance = nullptr;
 }
 
-} // namespace plugins
-} // namespace mozilla
+}  // namespace plugins
+}  // namespace mozilla

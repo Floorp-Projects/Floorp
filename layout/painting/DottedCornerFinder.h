@@ -42,26 +42,19 @@ namespace mozilla {
 // +----+----+
 //     C_n
 
-class DottedCornerFinder
-{
+class DottedCornerFinder {
   typedef mozilla::gfx::Bezier Bezier;
   typedef mozilla::gfx::Float Float;
   typedef mozilla::gfx::Point Point;
   typedef mozilla::gfx::Size Size;
 
-public:
-  struct Result
-  {
+ public:
+  struct Result {
     // Center point of dot and its radius.
     Point C;
     Float r;
 
-    Result(const Point& aC, Float aR)
-      : C(aC)
-      , r(aR)
-    {
-      MOZ_ASSERT(aR >= 0);
-    }
+    Result(const Point& aC, Float aR) : C(aC), r(aR) { MOZ_ASSERT(aR >= 0); }
   };
 
   //                        aBorderRadiusX
@@ -117,21 +110,15 @@ public:
   //                                      |         |
   //                                      |<------->|
   //                                          aRn
-  DottedCornerFinder(const Bezier& aOuterBezier,
-                     const Bezier& aInnerBezier,
-                     mozilla::Corner aCorner,
-                     Float aBorderRadiusX,
-                     Float aBorderRadiusY,
-                     const Point& aC0,
-                     Float aR0,
-                     const Point& aCn,
-                     Float aRn,
-                     const Size& aCornerDim);
+  DottedCornerFinder(const Bezier& aOuterBezier, const Bezier& aInnerBezier,
+                     mozilla::Corner aCorner, Float aBorderRadiusX,
+                     Float aBorderRadiusY, const Point& aC0, Float aR0,
+                     const Point& aCn, Float aRn, const Size& aCornerDim);
 
   bool HasMore(void) const;
   Result Next(void);
 
-private:
+ private:
   static const size_t MAX_LOOP = 32;
 
   // Bezier control points for the outer curve, the inner curve, and a curve
@@ -266,8 +253,7 @@ private:
   // The maximum number of filled/unfilled circles.
   size_t mMaxCount;
 
-  enum
-  {
+  enum {
     //                      radius.width
     //                 |<----------------->|
     //                 |                   |
@@ -425,27 +411,22 @@ private:
 
   // Find radius for the given tangent point on the inner curve such that the
   // circle is also tangent to the outer curve.
-  void FindPointAndRadius(Point& C,
-                          Float& r,
-                          const Point& innerTangent,
-                          const Point& normal,
-                          Float t);
+  void FindPointAndRadius(Point& C, Float& r, const Point& innerTangent,
+                          const Point& normal, Float t);
 
   // Find next dot.
   Float FindNext(Float overlap);
 
   // Find mBestOverlap for parameters.
-  void FindBestOverlap(Float aMinR,
-                       Float aMinBorderRadius,
+  void FindBestOverlap(Float aMinR, Float aMinBorderRadius,
                        Float aMaxBorderRadius);
 
   // Fill corner with dots with given overlap, and return the number of dots
   // and last two dots's overlap.
-  bool GetCountAndLastOverlap(Float aOverlap,
-                              size_t* aCount,
+  bool GetCountAndLastOverlap(Float aOverlap, size_t* aCount,
                               Float* aActualOverlap);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_DottedCornerFinder_h_ */

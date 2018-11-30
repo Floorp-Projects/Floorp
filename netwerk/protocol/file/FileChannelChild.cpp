@@ -16,16 +16,12 @@ namespace net {
 NS_IMPL_ISUPPORTS_INHERITED(FileChannelChild, nsFileChannel, nsIChildChannel)
 
 FileChannelChild::FileChannelChild(nsIURI *uri)
-  : nsFileChannel(uri)
-  , mIPCOpen(false)
-{
-}
+    : nsFileChannel(uri), mIPCOpen(false) {}
 
 NS_IMETHODIMP
-FileChannelChild::ConnectParent(uint32_t id)
-{
-  mozilla::dom::ContentChild* cc =
-    static_cast<mozilla::dom::ContentChild*>(gNeckoChild->Manager());
+FileChannelChild::ConnectParent(uint32_t id) {
+  mozilla::dom::ContentChild *cc =
+      static_cast<mozilla::dom::ContentChild *>(gNeckoChild->Manager());
   if (cc->IsShuttingDown()) {
     return NS_ERROR_FAILURE;
   }
@@ -40,8 +36,7 @@ FileChannelChild::ConnectParent(uint32_t id)
 
 NS_IMETHODIMP
 FileChannelChild::CompleteRedirectSetup(nsIStreamListener *listener,
-                                        nsISupports *ctx)
-{
+                                        nsISupports *ctx) {
   nsresult rv;
 
   if (mLoadInfo && mLoadInfo->GetEnforceSecurity()) {
@@ -62,20 +57,16 @@ FileChannelChild::CompleteRedirectSetup(nsIStreamListener *listener,
   return NS_OK;
 }
 
-void
-FileChannelChild::AddIPDLReference()
-{
+void FileChannelChild::AddIPDLReference() {
   AddRef();
   mIPCOpen = true;
 }
 
-void
-FileChannelChild::ActorDestroy(ActorDestroyReason why)
-{
+void FileChannelChild::ActorDestroy(ActorDestroyReason why) {
   MOZ_ASSERT(mIPCOpen);
   mIPCOpen = false;
   Release();
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

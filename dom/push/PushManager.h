@@ -49,10 +49,8 @@ class PushManagerImpl;
 struct PushSubscriptionOptionsInit;
 class WorkerPrivate;
 
-class PushManager final : public nsISupports
-                        , public nsWrapperCache
-{
-public:
+class PushManager final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PushManager)
 
@@ -67,44 +65,36 @@ public:
   // The worker thread constructor.
   explicit PushManager(const nsAString& aScope);
 
-  nsIGlobalObject*
-  GetParentObject() const
-  {
-    return mGlobal;
-  }
+  nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  static already_AddRefed<PushManager>
-  Constructor(GlobalObject& aGlobal, const nsAString& aScope,
-              ErrorResult& aRv);
+  static already_AddRefed<PushManager> Constructor(GlobalObject& aGlobal,
+                                                   const nsAString& aScope,
+                                                   ErrorResult& aRv);
 
-  already_AddRefed<Promise>
-  PerformSubscriptionActionFromWorker(SubscriptionAction aAction,
-                                      ErrorResult& aRv);
+  already_AddRefed<Promise> PerformSubscriptionActionFromWorker(
+      SubscriptionAction aAction, ErrorResult& aRv);
 
-  already_AddRefed<Promise>
-  PerformSubscriptionActionFromWorker(SubscriptionAction aAction,
-                                      const PushSubscriptionOptionsInit& aOptions,
-                                      ErrorResult& aRv);
+  already_AddRefed<Promise> PerformSubscriptionActionFromWorker(
+      SubscriptionAction aAction, const PushSubscriptionOptionsInit& aOptions,
+      ErrorResult& aRv);
 
-  already_AddRefed<Promise>
-  Subscribe(const PushSubscriptionOptionsInit& aOptions, ErrorResult& aRv);
+  already_AddRefed<Promise> Subscribe(
+      const PushSubscriptionOptionsInit& aOptions, ErrorResult& aRv);
 
-  already_AddRefed<Promise>
-  GetSubscription(ErrorResult& aRv);
+  already_AddRefed<Promise> GetSubscription(ErrorResult& aRv);
 
-  already_AddRefed<Promise>
-  PermissionState(const PushSubscriptionOptionsInit& aOptions,
-                  ErrorResult& aRv);
+  already_AddRefed<Promise> PermissionState(
+      const PushSubscriptionOptionsInit& aOptions, ErrorResult& aRv);
 
-private:
+ private:
   ~PushManager();
 
-  nsresult
-  NormalizeAppServerKey(const OwningArrayBufferViewOrArrayBufferOrString& aSource,
-                        nsTArray<uint8_t>& aAppServerKey);
+  nsresult NormalizeAppServerKey(
+      const OwningArrayBufferViewOrArrayBufferOrString& aSource,
+      nsTArray<uint8_t>& aAppServerKey);
 
   // The following are only set and accessed on the main thread.
   nsCOMPtr<nsIGlobalObject> mGlobal;
@@ -113,7 +103,7 @@ private:
   // Only used on the worker thread.
   nsString mScope;
 };
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PushManager_h
+#endif  // mozilla_dom_PushManager_h

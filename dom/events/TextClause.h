@@ -17,10 +17,8 @@
 namespace mozilla {
 namespace dom {
 
-class TextClause final : public nsISupports
-                       , public nsWrapperCache
-{
-public:
+class TextClause final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TextClause)
 
@@ -40,7 +38,7 @@ public:
 
   inline bool IsTargetClause() const { return mIsTargetClause; }
 
-private:
+ private:
   ~TextClause();
   nsCOMPtr<nsPIDOMWindowInner> mOwner;
 
@@ -51,7 +49,7 @@ private:
   bool mIsTargetClause;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_TextClause_h
+#endif  // mozilla_dom_TextClause_h

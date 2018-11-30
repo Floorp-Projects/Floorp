@@ -22,12 +22,11 @@ class ClientLayerManager;
  * Whether a single paint buffer is used is controlled by
  * gfxPrefs::PerTileDrawing().
  */
-class ClientSingleTiledLayerBuffer
-  : public ClientTiledLayerBuffer
-  , public TextureClientAllocator
-{
+class ClientSingleTiledLayerBuffer : public ClientTiledLayerBuffer,
+                                     public TextureClientAllocator {
   virtual ~ClientSingleTiledLayerBuffer() {}
-public:
+
+ public:
   ClientSingleTiledLayerBuffer(ClientTiledPaintedLayer& aPaintedLayer,
                                CompositableClient& aCompositableClient,
                                ClientLayerManager* aManager);
@@ -52,8 +51,7 @@ public:
                          nsIntRegion& aOutDrawnRegion,
                          BasicTiledLayerPaintData* aPaintData,
                          LayerManager::DrawPaintedLayerCallback aCallback,
-                         void* aCallbackData) override
-  {
+                         void* aCallbackData) override {
     MOZ_ASSERT(false, "ProgressiveUpdate not supported!");
     return false;
   }
@@ -63,13 +61,9 @@ public:
     mTile.DiscardBuffers();
   }
 
-  const nsIntRegion& GetValidRegion() override {
-    return mValidRegion;
-  }
+  const nsIntRegion& GetValidRegion() override { return mValidRegion; }
 
-  bool IsLowPrecision() const override {
-    return false;
-  }
+  bool IsLowPrecision() const override { return false; }
 
   void ReleaseTiles();
 
@@ -77,7 +71,7 @@ public:
 
   SurfaceDescriptorTiles GetSurfaceDescriptorTiles();
 
-private:
+ private:
   TileClient mTile;
 
   RefPtr<ClientLayerManager> mManager;
@@ -99,35 +93,38 @@ private:
   gfxImageFormat mFormat;
 };
 
-class SingleTiledContentClient : public TiledContentClient
-{
-public:
+class SingleTiledContentClient : public TiledContentClient {
+ public:
   SingleTiledContentClient(ClientTiledPaintedLayer& aPaintedLayer,
                            ClientLayerManager* aManager);
 
-protected:
-  ~SingleTiledContentClient()
-  {
+ protected:
+  ~SingleTiledContentClient() {
     MOZ_COUNT_DTOR(SingleTiledContentClient);
 
     mTiledBuffer->ReleaseTiles();
   }
 
-public:
-  static bool ClientSupportsLayerSize(const gfx::IntSize& aSize, ClientLayerManager* aManager);
+ public:
+  static bool ClientSupportsLayerSize(const gfx::IntSize& aSize,
+                                      ClientLayerManager* aManager);
 
   virtual void ClearCachedResources() override;
 
   virtual void UpdatedBuffer(TiledBufferType aType) override;
 
-  virtual ClientTiledLayerBuffer* GetTiledBuffer() override { return mTiledBuffer; }
-  virtual ClientTiledLayerBuffer* GetLowPrecisionTiledBuffer() override { return nullptr; }
+  virtual ClientTiledLayerBuffer* GetTiledBuffer() override {
+    return mTiledBuffer;
+  }
+  virtual ClientTiledLayerBuffer* GetLowPrecisionTiledBuffer() override {
+    return nullptr;
+  }
 
-private:
+ private:
   RefPtr<ClientSingleTiledLayerBuffer> mTiledBuffer;
 };
 
-}
-}
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

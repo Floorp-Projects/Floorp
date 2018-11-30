@@ -8,37 +8,29 @@
 
 #include "mozilla/dom/PBrowserOrId.h"
 
-namespace mozilla
-{
+namespace mozilla {
 
 class NrSocketProxyConfig::Private {
-public:
+ public:
   dom::PBrowserOrId mBrowser;
   nsCString mAlpn;
 };
 
 NrSocketProxyConfig::NrSocketProxyConfig(const dom::PBrowserOrId& aBrowser,
                                          const nsCString& aAlpn)
-    : mPrivate(new Private({aBrowser, aAlpn}))
-{}
+    : mPrivate(new Private({aBrowser, aAlpn})) {}
 
 NrSocketProxyConfig::NrSocketProxyConfig(NrSocketProxyConfig&& aOrig)
-    : mPrivate(std::move(aOrig.mPrivate))
-{}
+    : mPrivate(std::move(aOrig.mPrivate)) {}
 
-NrSocketProxyConfig::~NrSocketProxyConfig()
-{}
+NrSocketProxyConfig::~NrSocketProxyConfig() {}
 
-const dom::PBrowserOrId&
-NrSocketProxyConfig::GetBrowser() const
-{
+const dom::PBrowserOrId& NrSocketProxyConfig::GetBrowser() const {
   return mPrivate->mBrowser;
 }
 
-const nsCString&
-NrSocketProxyConfig::GetAlpn() const
-{
+const nsCString& NrSocketProxyConfig::GetAlpn() const {
   return mPrivate->mAlpn;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

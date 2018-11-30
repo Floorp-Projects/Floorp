@@ -15,5 +15,5 @@ CommandBuffer::~CommandBuffer() = default;
 
 WEBGPU_IMPL_GOOP_0(CommandBuffer)
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla

@@ -15,21 +15,18 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-NS_IMPL_ISUPPORTS_INHERITED0(HyperTextAccessibleWrap,
-                             HyperTextAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(HyperTextAccessibleWrap, HyperTextAccessible)
 
 STDMETHODIMP
-HyperTextAccessibleWrap::QueryInterface(REFIID aIID, void** aInstancePtr)
-{
-  if (!aInstancePtr)
-    return E_FAIL;
+HyperTextAccessibleWrap::QueryInterface(REFIID aIID, void** aInstancePtr) {
+  if (!aInstancePtr) return E_FAIL;
 
   *aInstancePtr = nullptr;
 
   if (IsTextRole()) {
     if (aIID == IID_IAccessibleText)
       *aInstancePtr =
-        static_cast<IAccessibleText*>(static_cast<ia2AccessibleText*>(this));
+          static_cast<IAccessibleText*>(static_cast<ia2AccessibleText*>(this));
     else if (aIID == IID_IAccessibleHypertext)
       *aInstancePtr = static_cast<IAccessibleHypertext*>(this);
     else if (aIID == IID_IAccessibleHypertext2)
@@ -46,9 +43,7 @@ HyperTextAccessibleWrap::QueryInterface(REFIID aIID, void** aInstancePtr)
   return AccessibleWrap::QueryInterface(aIID, aInstancePtr);
 }
 
-nsresult
-HyperTextAccessibleWrap::HandleAccEvent(AccEvent* aEvent)
-{
+nsresult HyperTextAccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
   uint32_t eventType = aEvent->GetEventType();
 
   if (eventType == nsIAccessibleEvent::EVENT_TEXT_REMOVED ||
@@ -56,12 +51,11 @@ HyperTextAccessibleWrap::HandleAccEvent(AccEvent* aEvent)
     Accessible* accessible = aEvent->GetAccessible();
     if (accessible && accessible->IsHyperText()) {
       AccTextChangeEvent* event = downcast_accEvent(aEvent);
-        HyperTextAccessibleWrap* text =
+      HyperTextAccessibleWrap* text =
           static_cast<HyperTextAccessibleWrap*>(accessible->AsHyperText());
-      ia2AccessibleText::UpdateTextChangeData(text, event->IsTextInserted(),
-                                              event->ModifiedText(),
-                                              event->GetStartOffset(),
-                                              event->GetLength());
+      ia2AccessibleText::UpdateTextChangeData(
+          text, event->IsTextInserted(), event->ModifiedText(),
+          event->GetStartOffset(), event->GetLength());
     }
   }
 

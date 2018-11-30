@@ -54,9 +54,8 @@ class nsHtml5MetaScanner;
 class nsHtml5UTF16Buffer;
 class nsHtml5Portability;
 
-class nsHtml5StateSnapshot : public nsAHtml5TreeBuilderState
-{
-private:
+class nsHtml5StateSnapshot : public nsAHtml5TreeBuilderState {
+ private:
   autoJArray<nsHtml5StackNode*, int32_t> stack;
   autoJArray<nsHtml5StackNode*, int32_t> listOfActiveFormattingElements;
   autoJArray<int32_t, int32_t> templateModeStack;
@@ -68,23 +67,19 @@ private:
   bool framesetOk;
   bool needToDropLF;
   bool quirks;
-public:
+
+ public:
   nsHtml5StateSnapshot(
-    jArray<nsHtml5StackNode*, int32_t> stack,
-    jArray<nsHtml5StackNode*, int32_t> listOfActiveFormattingElements,
-    jArray<int32_t, int32_t> templateModeStack,
-    nsIContentHandle* formPointer,
-    nsIContentHandle* headPointer,
-    nsIContentHandle* deepTreeSurrogateParent,
-    int32_t mode,
-    int32_t originalMode,
-    bool framesetOk,
-    bool needToDropLF,
-    bool quirks);
+      jArray<nsHtml5StackNode*, int32_t> stack,
+      jArray<nsHtml5StackNode*, int32_t> listOfActiveFormattingElements,
+      jArray<int32_t, int32_t> templateModeStack, nsIContentHandle* formPointer,
+      nsIContentHandle* headPointer, nsIContentHandle* deepTreeSurrogateParent,
+      int32_t mode, int32_t originalMode, bool framesetOk, bool needToDropLF,
+      bool quirks);
   jArray<nsHtml5StackNode*, int32_t> getStack() override;
   jArray<int32_t, int32_t> getTemplateModeStack() override;
   jArray<nsHtml5StackNode*, int32_t> getListOfActiveFormattingElements()
-    override;
+      override;
   nsIContentHandle* getFormPointer() override;
   nsIContentHandle* getHeadPointer() override;
   nsIContentHandle* getDeepTreeSurrogateParent() override;

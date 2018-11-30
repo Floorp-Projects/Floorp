@@ -16,54 +16,38 @@ using namespace mozilla::gfx;
 
 static VideoBridgeParent* sVideoBridgeSingleton;
 
-VideoBridgeParent::VideoBridgeParent()
-  : mClosed(false)
-{
+VideoBridgeParent::VideoBridgeParent() : mClosed(false) {
   mSelfRef = this;
   sVideoBridgeSingleton = this;
   mCompositorThreadRef = CompositorThreadHolder::GetSingleton();
 }
 
-VideoBridgeParent::~VideoBridgeParent()
-{
-  sVideoBridgeSingleton = nullptr;
-}
+VideoBridgeParent::~VideoBridgeParent() { sVideoBridgeSingleton = nullptr; }
 
-/* static */ VideoBridgeParent*
-VideoBridgeParent::GetSingleton()
-{
+/* static */ VideoBridgeParent* VideoBridgeParent::GetSingleton() {
   return sVideoBridgeSingleton;
 }
 
-TextureHost*
-VideoBridgeParent::LookupTexture(uint64_t aSerial)
-{
+TextureHost* VideoBridgeParent::LookupTexture(uint64_t aSerial) {
   return TextureHost::AsTextureHost(mTextureMap[aSerial]);
 }
 
-void
-VideoBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void VideoBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
   // Can't alloc/dealloc shmems from now on.
   mClosed = true;
 }
 
-void
-VideoBridgeParent::DeallocPVideoBridgeParent()
-{
+void VideoBridgeParent::DeallocPVideoBridgeParent() {
   mCompositorThreadRef = nullptr;
   mSelfRef = nullptr;
 }
 
-PTextureParent*
-VideoBridgeParent::AllocPTextureParent(const SurfaceDescriptor& aSharedData,
-                                       const ReadLockDescriptor& aReadLock,
-                                       const LayersBackend& aLayersBackend,
-                                       const TextureFlags& aFlags,
-                                       const uint64_t& aSerial)
-{
-  PTextureParent* parent =
-    TextureHost::CreateIPDLActor(this, aSharedData, aReadLock, aLayersBackend, aFlags, aSerial, Nothing());
+PTextureParent* VideoBridgeParent::AllocPTextureParent(
+    const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
+    const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
+    const uint64_t& aSerial) {
+  PTextureParent* parent = TextureHost::CreateIPDLActor(
+      this, aSharedData, aReadLock, aLayersBackend, aFlags, aSerial, Nothing());
 
   if (!parent) {
     return nullptr;
@@ -73,60 +57,47 @@ VideoBridgeParent::AllocPTextureParent(const SurfaceDescriptor& aSharedData,
   return parent;
 }
 
-bool
-VideoBridgeParent::DeallocPTextureParent(PTextureParent* actor)
-{
+bool VideoBridgeParent::DeallocPTextureParent(PTextureParent* actor) {
   mTextureMap.erase(TextureHost::GetTextureSerial(actor));
   return TextureHost::DestroyIPDLActor(actor);
 }
 
-void
-VideoBridgeParent::SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage)
-{
+void VideoBridgeParent::SendAsyncMessage(
+    const InfallibleTArray<AsyncParentMessageData>& aMessage) {
   MOZ_ASSERT(false, "AsyncMessages not supported");
 }
 
-bool
-VideoBridgeParent::AllocShmem(size_t aSize,
-                              ipc::SharedMemory::SharedMemoryType aType,
-                              ipc::Shmem* aShmem)
-{
+bool VideoBridgeParent::AllocShmem(size_t aSize,
+                                   ipc::SharedMemory::SharedMemoryType aType,
+                                   ipc::Shmem* aShmem) {
   if (mClosed) {
     return false;
   }
   return PVideoBridgeParent::AllocShmem(aSize, aType, aShmem);
 }
 
-bool
-VideoBridgeParent::AllocUnsafeShmem(size_t aSize,
-                                    ipc::SharedMemory::SharedMemoryType aType,
-                                    ipc::Shmem* aShmem)
-{
+bool VideoBridgeParent::AllocUnsafeShmem(
+    size_t aSize, ipc::SharedMemory::SharedMemoryType aType,
+    ipc::Shmem* aShmem) {
   if (mClosed) {
     return false;
   }
   return PVideoBridgeParent::AllocUnsafeShmem(aSize, aType, aShmem);
 }
 
-void
-VideoBridgeParent::DeallocShmem(ipc::Shmem& aShmem)
-{
+void VideoBridgeParent::DeallocShmem(ipc::Shmem& aShmem) {
   if (mClosed) {
     return;
   }
   PVideoBridgeParent::DeallocShmem(aShmem);
 }
 
-bool
-VideoBridgeParent::IsSameProcess() const
-{
+bool VideoBridgeParent::IsSameProcess() const {
   return OtherPid() == base::GetCurrentProcId();
 }
 
-void
-VideoBridgeParent::NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId)
-{
-}
+void VideoBridgeParent::NotifyNotUsed(PTextureParent* aTexture,
+                                      uint64_t aTransactionId) {}
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

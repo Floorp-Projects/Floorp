@@ -20,9 +20,7 @@
 using namespace mozilla::a11y;
 
 extern "C" {
-static AtkObject*
-refAtCB(AtkTable* aTable, gint aRowIdx, gint aColIdx)
-{
+static AtkObject* refAtCB(AtkTable* aTable, gint aRowIdx, gint aColIdx) {
   if (aRowIdx < 0 || aColIdx < 0) {
     return nullptr;
   }
@@ -52,9 +50,7 @@ refAtCB(AtkTable* aTable, gint aRowIdx, gint aColIdx)
   return cellAtkObj;
 }
 
-static gint
-getIndexAtCB(AtkTable* aTable, gint aRowIdx, gint aColIdx)
-{
+static gint getIndexAtCB(AtkTable* aTable, gint aRowIdx, gint aColIdx) {
   if (aRowIdx < 0 || aColIdx < 0) {
     return -1;
   }
@@ -71,9 +67,7 @@ getIndexAtCB(AtkTable* aTable, gint aRowIdx, gint aColIdx)
   return -1;
 }
 
-static gint
-getColumnAtIndexCB(AtkTable *aTable, gint aIdx)
-{
+static gint getColumnAtIndexCB(AtkTable* aTable, gint aIdx) {
   if (aIdx < 0) {
     return -1;
   }
@@ -90,9 +84,7 @@ getColumnAtIndexCB(AtkTable *aTable, gint aIdx)
   return -1;
 }
 
-static gint
-getRowAtIndexCB(AtkTable *aTable, gint aIdx)
-{
+static gint getRowAtIndexCB(AtkTable* aTable, gint aIdx) {
   if (aIdx < 0) {
     return -1;
   }
@@ -109,9 +101,7 @@ getRowAtIndexCB(AtkTable *aTable, gint aIdx)
   return -1;
 }
 
-static gint
-getColumnCountCB(AtkTable *aTable)
-{
+static gint getColumnCountCB(AtkTable* aTable) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (accWrap) {
     return static_cast<gint>(accWrap->AsTable()->ColCount());
@@ -124,9 +114,7 @@ getColumnCountCB(AtkTable *aTable)
   return -1;
 }
 
-static gint
-getRowCountCB(AtkTable *aTable)
-{
+static gint getRowCountCB(AtkTable* aTable) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (accWrap) {
     return static_cast<gint>(accWrap->AsTable()->RowCount());
@@ -139,9 +127,7 @@ getRowCountCB(AtkTable *aTable)
   return -1;
 }
 
-static gint
-getColumnExtentAtCB(AtkTable *aTable, gint aRowIdx, gint aColIdx)
-{
+static gint getColumnExtentAtCB(AtkTable* aTable, gint aRowIdx, gint aColIdx) {
   if (aRowIdx < 0 || aColIdx < 0) {
     return -1;
   }
@@ -158,9 +144,7 @@ getColumnExtentAtCB(AtkTable *aTable, gint aRowIdx, gint aColIdx)
   return -1;
 }
 
-static gint
-getRowExtentAtCB(AtkTable *aTable, gint aRowIdx, gint aColIdx)
-{
+static gint getRowExtentAtCB(AtkTable* aTable, gint aRowIdx, gint aColIdx) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (accWrap) {
     return static_cast<gint>(accWrap->AsTable()->RowExtentAt(aRowIdx, aColIdx));
@@ -173,9 +157,7 @@ getRowExtentAtCB(AtkTable *aTable, gint aRowIdx, gint aColIdx)
   return -1;
 }
 
-static AtkObject*
-getCaptionCB(AtkTable* aTable)
-{
+static AtkObject* getCaptionCB(AtkTable* aTable) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (accWrap) {
     Accessible* caption = accWrap->AsTable()->Caption();
@@ -190,9 +172,7 @@ getCaptionCB(AtkTable* aTable)
   return nullptr;
 }
 
-static const gchar*
-getColumnDescriptionCB(AtkTable *aTable, gint aColumn)
-{
+static const gchar* getColumnDescriptionCB(AtkTable* aTable, gint aColumn) {
   nsAutoString autoStr;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (accWrap) {
@@ -206,13 +186,11 @@ getColumnDescriptionCB(AtkTable *aTable, gint aColumn)
   return AccessibleWrap::ReturnString(autoStr);
 }
 
-static AtkObject*
-getColumnHeaderCB(AtkTable *aTable, gint aColIdx)
-{
+static AtkObject* getColumnHeaderCB(AtkTable* aTable, gint aColIdx) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (accWrap) {
     Accessible* header =
-      AccessibleWrap::GetColumnHeader(accWrap->AsTable(), aColIdx);
+        AccessibleWrap::GetColumnHeader(accWrap->AsTable(), aColIdx);
     return header ? AccessibleWrap::GetAtkObject(header) : nullptr;
   }
 
@@ -224,9 +202,7 @@ getColumnHeaderCB(AtkTable *aTable, gint aColIdx)
   return nullptr;
 }
 
-static const gchar*
-getRowDescriptionCB(AtkTable *aTable, gint aRow)
-{
+static const gchar* getRowDescriptionCB(AtkTable* aTable, gint aRow) {
   nsAutoString autoStr;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (accWrap) {
@@ -240,13 +216,11 @@ getRowDescriptionCB(AtkTable *aTable, gint aRow)
   return AccessibleWrap::ReturnString(autoStr);
 }
 
-static AtkObject*
-getRowHeaderCB(AtkTable *aTable, gint aRowIdx)
-{
+static AtkObject* getRowHeaderCB(AtkTable* aTable, gint aRowIdx) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (accWrap) {
     Accessible* header =
-      AccessibleWrap::GetRowHeader(accWrap->AsTable(), aRowIdx);
+        AccessibleWrap::GetRowHeader(accWrap->AsTable(), aRowIdx);
     return header ? AccessibleWrap::GetAtkObject(header) : nullptr;
   }
 
@@ -258,9 +232,7 @@ getRowHeaderCB(AtkTable *aTable, gint aRowIdx)
   return nullptr;
 }
 
-static AtkObject*
-getSummaryCB(AtkTable *aTable)
-{
+static AtkObject* getSummaryCB(AtkTable* aTable) {
   // Neither html:table nor xul:tree nor ARIA grid/tree have an ability to
   // link an accessible object to specify a summary. There is closes method
   // in TableAccessible::summary to get a summary as a string which is not
@@ -268,23 +240,20 @@ getSummaryCB(AtkTable *aTable)
   return nullptr;
 }
 
-static gint
-getSelectedColumnsCB(AtkTable *aTable, gint** aSelected)
-{
+static gint getSelectedColumnsCB(AtkTable* aTable, gint** aSelected) {
   *aSelected = nullptr;
 
   AutoTArray<uint32_t, 10> cols;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (accWrap) {
     accWrap->AsTable()->SelectedColIndices(&cols);
-   } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
     proxy->TableSelectedColumnIndices(&cols);
   } else {
     return 0;
   }
 
-  if (cols.IsEmpty())
-    return 0;
+  if (cols.IsEmpty()) return 0;
 
   gint* atkColumns = g_new(gint, cols.Length());
   if (!atkColumns) {
@@ -297,9 +266,7 @@ getSelectedColumnsCB(AtkTable *aTable, gint** aSelected)
   return cols.Length();
 }
 
-static gint
-getSelectedRowsCB(AtkTable *aTable, gint **aSelected)
-{
+static gint getSelectedRowsCB(AtkTable* aTable, gint** aSelected) {
   AutoTArray<uint32_t, 10> rows;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (accWrap) {
@@ -321,9 +288,7 @@ getSelectedRowsCB(AtkTable *aTable, gint **aSelected)
   return rows.Length();
 }
 
-static gboolean
-isColumnSelectedCB(AtkTable *aTable, gint aColIdx)
-{
+static gboolean isColumnSelectedCB(AtkTable* aTable, gint aColIdx) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (accWrap) {
     return static_cast<gboolean>(accWrap->AsTable()->IsColSelected(aColIdx));
@@ -335,9 +300,7 @@ isColumnSelectedCB(AtkTable *aTable, gint aColIdx)
   return FALSE;
 }
 
-static gboolean
-isRowSelectedCB(AtkTable *aTable, gint aRowIdx)
-{
+static gboolean isRowSelectedCB(AtkTable* aTable, gint aRowIdx) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (accWrap) {
     return static_cast<gboolean>(accWrap->AsTable()->IsRowSelected(aRowIdx));
@@ -349,13 +312,11 @@ isRowSelectedCB(AtkTable *aTable, gint aRowIdx)
   return FALSE;
 }
 
-static gboolean
-isCellSelectedCB(AtkTable *aTable, gint aRowIdx, gint aColIdx)
-{
+static gboolean isCellSelectedCB(AtkTable* aTable, gint aRowIdx, gint aColIdx) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (accWrap) {
-    return static_cast<gboolean>(accWrap->AsTable()->
-      IsCellSelected(aRowIdx, aColIdx));
+    return static_cast<gboolean>(
+        accWrap->AsTable()->IsCellSelected(aRowIdx, aColIdx));
   }
   if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
     return static_cast<gboolean>(proxy->TableCellSelected(aRowIdx, aColIdx));
@@ -365,12 +326,9 @@ isCellSelectedCB(AtkTable *aTable, gint aRowIdx, gint aColIdx)
 }
 }
 
-void
-tableInterfaceInitCB(AtkTableIface* aIface)
-{
+void tableInterfaceInitCB(AtkTableIface* aIface) {
   NS_ASSERTION(aIface, "no interface!");
-  if (MOZ_UNLIKELY(!aIface))
-    return;
+  if (MOZ_UNLIKELY(!aIface)) return;
 
   aIface->ref_at = refAtCB;
   aIface->get_index_at = getIndexAtCB;

@@ -17,45 +17,44 @@ class nsPIDOMWindowOuter;
 namespace mozilla {
 namespace extensions {
 
-class DocumentObserver final : public nsISupports
-                             , public nsWrapperCache
-{
+class DocumentObserver final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DocumentObserver)
 
-  static already_AddRefed<DocumentObserver>
-  Constructor(dom::GlobalObject& aGlobal,
-              dom::MozDocumentCallback& aCallbacks,
-              ErrorResult& aRv);
+  static already_AddRefed<DocumentObserver> Constructor(
+      dom::GlobalObject& aGlobal, dom::MozDocumentCallback& aCallbacks,
+      ErrorResult& aRv);
 
-  void Observe(const dom::Sequence<OwningNonNull<MozDocumentMatcher>>& matchers, ErrorResult& aRv);
+  void Observe(const dom::Sequence<OwningNonNull<MozDocumentMatcher>>& matchers,
+               ErrorResult& aRv);
 
   void Disconnect();
 
-  const nsTArray<RefPtr<MozDocumentMatcher>>& Matchers() const { return mMatchers; }
+  const nsTArray<RefPtr<MozDocumentMatcher>>& Matchers() const {
+    return mMatchers;
+  }
 
   void NotifyMatch(MozDocumentMatcher& aMatcher, nsPIDOMWindowOuter* aWindow);
   void NotifyMatch(MozDocumentMatcher& aMatcher, nsILoadInfo* aLoadInfo);
 
   nsISupports* GetParentObject() const { return mParent; }
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-protected:
+ protected:
   virtual ~DocumentObserver() = default;
 
-private:
-  explicit DocumentObserver(nsISupports* aParent, dom::MozDocumentCallback& aCallbacks)
-    : mParent(aParent)
-    , mCallbacks(&aCallbacks)
-  {}
+ private:
+  explicit DocumentObserver(nsISupports* aParent,
+                            dom::MozDocumentCallback& aCallbacks)
+      : mParent(aParent), mCallbacks(&aCallbacks) {}
 
   nsCOMPtr<nsISupports> mParent;
   RefPtr<dom::MozDocumentCallback> mCallbacks;
   nsTArray<RefPtr<MozDocumentMatcher>> mMatchers;
 };
 
-} // namespace extensions
-} // namespace mozilla
+}  // namespace extensions
+}  // namespace mozilla
 
-#endif // mozilla_extensions_DocumentObserver_h
-
+#endif  // mozilla_extensions_DocumentObserver_h

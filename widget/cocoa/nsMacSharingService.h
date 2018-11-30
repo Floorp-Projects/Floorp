@@ -8,16 +8,15 @@
 
 #include "nsIMacSharingService.h"
 
-class nsMacSharingService : public nsIMacSharingService
-{
-public:
+class nsMacSharingService : public nsIMacSharingService {
+ public:
   nsMacSharingService() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMACSHARINGSERVICE
 
-protected:
+ protected:
   virtual ~nsMacSharingService() {}
 };
 
-#endif // nsMacSharingService_h_
+#endif  // nsMacSharingService_h_

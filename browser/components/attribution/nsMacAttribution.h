@@ -8,16 +8,15 @@
 
 #include "nsIMacAttribution.h"
 
-class nsMacAttributionService : public nsIMacAttributionService
-{
-public:
-  nsMacAttributionService() {};
+class nsMacAttributionService : public nsIMacAttributionService {
+ public:
+  nsMacAttributionService(){};
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMACATTRIBUTIONSERVICE
 
-protected:
-  virtual ~nsMacAttributionService() {};
+ protected:
+  virtual ~nsMacAttributionService(){};
 };
 
-#endif // nsmacattribution_h____
+#endif  // nsmacattribution_h____

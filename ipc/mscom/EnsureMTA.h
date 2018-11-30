@@ -36,17 +36,15 @@ struct MTAReleaseInChildProcess;
 
 struct PreservedStreamDeleter;
 
-}
+}  // namespace detail
 
 // This class is OK to use as a temporary on the stack.
-class MOZ_STACK_CLASS EnsureMTA final
-{
-public:
+class MOZ_STACK_CLASS EnsureMTA final {
+ public:
   /**
    * This constructor just ensures that the MTA thread is up and running.
    */
-  EnsureMTA()
-  {
+  EnsureMTA() {
     MOZ_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIThread> thread = GetMTAThread();
     MOZ_ASSERT(thread);
@@ -54,8 +52,7 @@ public:
   }
 
   template <typename FuncT>
-  explicit EnsureMTA(const FuncT& aClosure)
-  {
+  explicit EnsureMTA(const FuncT& aClosure) {
     if (IsCurrentThreadMTA()) {
       // We're already on the MTA, we can run aClosure directly
       aClosure();
@@ -87,8 +84,8 @@ public:
       ::SetEvent(eventHandle);
     };
 
-    nsresult rv =
-      thread->Dispatch(NS_NewRunnableFunction("EnsureMTA", eventSetter), NS_DISPATCH_NORMAL);
+    nsresult rv = thread->Dispatch(
+        NS_NewRunnableFunction("EnsureMTA", eventSetter), NS_DISPATCH_NORMAL);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     if (NS_FAILED(rv)) {
       return;
@@ -101,7 +98,7 @@ public:
     MOZ_ASSERT(waitResult == WAIT_OBJECT_0);
   }
 
-private:
+ private:
   static nsCOMPtr<nsIThread> GetMTAThread();
 
   // The following function is private in order to force any consumers to be
@@ -109,8 +106,7 @@ private:
   // AsyncOperation from becoming some kind of free-for-all mechanism for
   // asynchronously executing work on a background thread.
   template <typename FuncT>
-  static void AsyncOperation(const FuncT& aClosure)
-  {
+  static void AsyncOperation(const FuncT& aClosure) {
     if (IsCurrentThreadMTA()) {
       aClosure();
       return;
@@ -123,8 +119,8 @@ private:
     }
 
     DebugOnly<nsresult> rv = thread->Dispatch(
-      NS_NewRunnableFunction("mscom::EnsureMTA::AsyncOperation",
-                             aClosure), NS_DISPATCH_NORMAL);
+        NS_NewRunnableFunction("mscom::EnsureMTA::AsyncOperation", aClosure),
+        NS_DISPATCH_NORMAL);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
@@ -140,8 +136,7 @@ private:
   friend struct mozilla::mscom::detail::PreservedStreamDeleter;
 };
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla
 
-#endif // mozilla_mscom_EnsureMTA_h
-
+#endif  // mozilla_mscom_EnsureMTA_h

@@ -26,7 +26,7 @@
 
 #if defined(MOZ_TELEMETRY_REPORTING)
 #include "mozilla/Telemetry.h"
-#endif // defined(MOZ_TELEMETRY_REPORTING)
+#endif  // defined(MOZ_TELEMETRY_REPORTING)
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -38,31 +38,24 @@ static StaticAutoPtr<RegisteredProxy> gRegAccTlb;
 static StaticAutoPtr<RegisteredProxy> gRegMiscTlb;
 static StaticRefPtr<nsIFile> gInstantiator;
 
-void
-a11y::PlatformInit()
-{
+void a11y::PlatformInit() {
   nsWinUtils::MaybeStartWindowEmulation();
   ia2AccessibleText::InitTextChangeData();
 
   mscom::InterceptorLog::Init();
-  UniquePtr<RegisteredProxy> regCustomProxy(
-      mscom::RegisterProxy());
+  UniquePtr<RegisteredProxy> regCustomProxy(mscom::RegisterProxy());
   gRegCustomProxy = regCustomProxy.release();
-  UniquePtr<RegisteredProxy> regProxy(
-      mscom::RegisterProxy(L"ia2marshal.dll"));
+  UniquePtr<RegisteredProxy> regProxy(mscom::RegisterProxy(L"ia2marshal.dll"));
   gRegProxy = regProxy.release();
-  UniquePtr<RegisteredProxy> regAccTlb(
-      mscom::RegisterTypelib(L"oleacc.dll",
-                             RegistrationFlags::eUseSystemDirectory));
+  UniquePtr<RegisteredProxy> regAccTlb(mscom::RegisterTypelib(
+      L"oleacc.dll", RegistrationFlags::eUseSystemDirectory));
   gRegAccTlb = regAccTlb.release();
   UniquePtr<RegisteredProxy> regMiscTlb(
       mscom::RegisterTypelib(L"Accessible.tlb"));
   gRegMiscTlb = regMiscTlb.release();
 }
 
-void
-a11y::PlatformShutdown()
-{
+void a11y::PlatformShutdown() {
   ::DestroyCaret();
 
   nsWinUtils::ShutdownWindowEmulation();
@@ -76,9 +69,7 @@ a11y::PlatformShutdown()
   }
 }
 
-void
-a11y::ProxyCreated(ProxyAccessible* aProxy, uint32_t aInterfaces)
-{
+void a11y::ProxyCreated(ProxyAccessible* aProxy, uint32_t aInterfaces) {
   AccessibleWrap* wrapper = nullptr;
   if (aInterfaces & Interfaces::DOCUMENT) {
     wrapper = new DocProxyAccessibleWrap(aProxy);
@@ -93,17 +84,14 @@ a11y::ProxyCreated(ProxyAccessible* aProxy, uint32_t aInterfaces)
   aProxy->SetWrapper(reinterpret_cast<uintptr_t>(wrapper));
 }
 
-void
-a11y::ProxyDestroyed(ProxyAccessible* aProxy)
-{
+void a11y::ProxyDestroyed(ProxyAccessible* aProxy) {
   AccessibleWrap* wrapper =
-    reinterpret_cast<AccessibleWrap*>(aProxy->GetWrapper());
+      reinterpret_cast<AccessibleWrap*>(aProxy->GetWrapper());
 
   // If aProxy is a document that was created, but
   // RecvPDocAccessibleConstructor failed then aProxy->GetWrapper() will be
   // null.
-  if (!wrapper)
-    return;
+  if (!wrapper) return;
 
   if (aProxy->IsDoc() && nsWinUtils::IsWindowEmulationStarted()) {
     aProxy->AsDoc()->SetEmulatedWindowHandle(nullptr);
@@ -114,23 +102,17 @@ a11y::ProxyDestroyed(ProxyAccessible* aProxy)
   wrapper->Release();
 }
 
-void
-a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType)
-{
+void a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType) {
   AccessibleWrap::FireWinEvent(WrapperFor(aTarget), aEventType);
 }
 
-void
-a11y::ProxyStateChangeEvent(ProxyAccessible* aTarget, uint64_t, bool)
-{
+void a11y::ProxyStateChangeEvent(ProxyAccessible* aTarget, uint64_t, bool) {
   AccessibleWrap::FireWinEvent(WrapperFor(aTarget),
                                nsIAccessibleEvent::EVENT_STATE_CHANGE);
 }
 
-void
-a11y::ProxyFocusEvent(ProxyAccessible* aTarget,
-                      const LayoutDeviceIntRect& aCaretRect)
-{
+void a11y::ProxyFocusEvent(ProxyAccessible* aTarget,
+                           const LayoutDeviceIntRect& aCaretRect) {
   FocusManager* focusMgr = FocusMgr();
   if (focusMgr && focusMgr->FocusedAccessible()) {
     // This is a focus event from a remote document, but focus has moved out
@@ -148,19 +130,16 @@ a11y::ProxyFocusEvent(ProxyAccessible* aTarget,
                                nsIAccessibleEvent::EVENT_FOCUS);
 }
 
-void
-a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget,
-                          const LayoutDeviceIntRect& aCaretRect)
-{
+void a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget,
+                               const LayoutDeviceIntRect& aCaretRect) {
   AccessibleWrap::UpdateSystemCaretFor(aTarget, aCaretRect);
   AccessibleWrap::FireWinEvent(WrapperFor(aTarget),
                                nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED);
 }
 
-void
-a11y::ProxyTextChangeEvent(ProxyAccessible* aText, const nsString& aStr,
-                           int32_t aStart, uint32_t aLen, bool aInsert, bool)
-{
+void a11y::ProxyTextChangeEvent(ProxyAccessible* aText, const nsString& aStr,
+                                int32_t aStart, uint32_t aLen, bool aInsert,
+                                bool) {
   AccessibleWrap* wrapper = WrapperFor(aText);
   MOZ_ASSERT(wrapper);
   if (!wrapper) {
@@ -168,8 +147,8 @@ a11y::ProxyTextChangeEvent(ProxyAccessible* aText, const nsString& aStr,
   }
 
   static const bool useHandler =
-    Preferences::GetBool("accessibility.handler.enabled", false) &&
-    IsHandlerRegistered();
+      Preferences::GetBool("accessibility.handler.enabled", false) &&
+      IsHandlerRegistered();
 
   if (useHandler) {
     wrapper->DispatchTextChangeToHandler(aInsert, aStr, aStart, aLen);
@@ -181,33 +160,29 @@ a11y::ProxyTextChangeEvent(ProxyAccessible* aText, const nsString& aStr,
     ia2AccessibleText::UpdateTextChangeData(text, aInsert, aStr, aStart, aLen);
   }
 
-  uint32_t eventType = aInsert ? nsIAccessibleEvent::EVENT_TEXT_INSERTED :
-    nsIAccessibleEvent::EVENT_TEXT_REMOVED;
+  uint32_t eventType = aInsert ? nsIAccessibleEvent::EVENT_TEXT_INSERTED
+                               : nsIAccessibleEvent::EVENT_TEXT_REMOVED;
   AccessibleWrap::FireWinEvent(wrapper, eventType);
 }
 
-void
-a11y::ProxyShowHideEvent(ProxyAccessible* aTarget, ProxyAccessible*, bool aInsert, bool)
-{
-  uint32_t event = aInsert ? nsIAccessibleEvent::EVENT_SHOW :
-    nsIAccessibleEvent::EVENT_HIDE;
+void a11y::ProxyShowHideEvent(ProxyAccessible* aTarget, ProxyAccessible*,
+                              bool aInsert, bool) {
+  uint32_t event =
+      aInsert ? nsIAccessibleEvent::EVENT_SHOW : nsIAccessibleEvent::EVENT_HIDE;
   AccessibleWrap* wrapper = WrapperFor(aTarget);
   AccessibleWrap::FireWinEvent(wrapper, event);
 }
 
-void
-a11y::ProxySelectionEvent(ProxyAccessible* aTarget, ProxyAccessible*, uint32_t aType)
-{
+void a11y::ProxySelectionEvent(ProxyAccessible* aTarget, ProxyAccessible*,
+                               uint32_t aType) {
   AccessibleWrap* wrapper = WrapperFor(aTarget);
   AccessibleWrap::FireWinEvent(wrapper, aType);
 }
 
-bool
-a11y::IsHandlerRegistered()
-{
+bool a11y::IsHandlerRegistered() {
   nsresult rv;
   nsCOMPtr<nsIWindowsRegKey> regKey =
-    do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
+      do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
   if (NS_FAILED(rv)) {
     return false;
   }
@@ -254,11 +229,10 @@ a11y::IsHandlerRegistered()
   return NS_SUCCEEDED(rv) && equal;
 }
 
-static bool
-GetInstantiatorExecutable(const DWORD aPid, nsIFile** aOutClientExe)
-{
-  nsAutoHandle callingProcess(::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,
-                                            FALSE, aPid));
+static bool GetInstantiatorExecutable(const DWORD aPid,
+                                      nsIFile** aOutClientExe) {
+  nsAutoHandle callingProcess(
+      ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, aPid));
   if (!callingProcess) {
     return false;
   }
@@ -298,9 +272,7 @@ GetInstantiatorExecutable(const DWORD aPid, nsIFile** aOutClientExe)
  * Appends version information in the format "|a.b.c.d".
  * If there is no version information, we append nothing.
  */
-static void
-AppendVersionInfo(nsIFile* aClientExe, nsAString& aStrToAppend)
-{
+static void AppendVersionInfo(nsIFile* aClientExe, nsAString& aStrToAppend) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   nsAutoString fullPath;
@@ -323,7 +295,7 @@ AppendVersionInfo(nsIFile* aClientExe, nsAString& aStrToAppend)
   VS_FIXEDFILEINFO* fixedInfo = nullptr;
   UINT fixedInfoLen = 0;
 
-  if (!::VerQueryValue(verInfoBuf.get(), L"\\", (LPVOID*) &fixedInfo,
+  if (!::VerQueryValue(verInfoBuf.get(), L"\\", (LPVOID*)&fixedInfo,
                        &fixedInfoLen)) {
     return;
   }
@@ -346,27 +318,22 @@ AppendVersionInfo(nsIFile* aClientExe, nsAString& aStrToAppend)
   aStrToAppend.AppendInt(build);
 }
 
-static void
-AccumulateInstantiatorTelemetry(const nsAString& aValue)
-{
+static void AccumulateInstantiatorTelemetry(const nsAString& aValue) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!aValue.IsEmpty()) {
 #if defined(MOZ_TELEMETRY_REPORTING)
-    Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_INSTANTIATORS,
-                         aValue);
-#endif // defined(MOZ_TELEMETRY_REPORTING)
+    Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_INSTANTIATORS, aValue);
+#endif  // defined(MOZ_TELEMETRY_REPORTING)
 #if defined(MOZ_CRASHREPORTER)
-    CrashReporter::
-      AnnotateCrashReport(CrashReporter::Annotation::AccessibilityClient,
-                          NS_ConvertUTF16toUTF8(aValue));
-#endif // defined(MOZ_CRASHREPORTER)
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::AccessibilityClient,
+        NS_ConvertUTF16toUTF8(aValue));
+#endif  // defined(MOZ_CRASHREPORTER)
   }
 }
 
-static void
-GatherInstantiatorTelemetry(nsIFile* aClientExe)
-{
+static void GatherInstantiatorTelemetry(nsIFile* aClientExe) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   nsString value;
@@ -375,27 +342,24 @@ GatherInstantiatorTelemetry(nsIFile* aClientExe)
     AppendVersionInfo(aClientExe, value);
   }
 
-  nsCOMPtr<nsIRunnable> runnable(
-    NS_NewRunnableFunction("a11y::AccumulateInstantiatorTelemetry",
-                           [value]() -> void {
-                             AccumulateInstantiatorTelemetry(value);
-                           }));
+  nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
+      "a11y::AccumulateInstantiatorTelemetry",
+      [value]() -> void { AccumulateInstantiatorTelemetry(value); }));
 
   // Now that we've (possibly) obtained version info, send the resulting
   // string back to the main thread to accumulate in telemetry.
   NS_DispatchToMainThread(runnable);
 }
 
-#endif // defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
+#endif  // defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
 
-void
-a11y::SetInstantiator(const uint32_t aPid)
-{
+void a11y::SetInstantiator(const uint32_t aPid) {
   nsCOMPtr<nsIFile> clientExe;
   if (!GetInstantiatorExecutable(aPid, getter_AddRefs(clientExe))) {
 #if defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
-    AccumulateInstantiatorTelemetry(NS_LITERAL_STRING("(Failed to retrieve client image name)"));
-#endif // defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
+    AccumulateInstantiatorTelemetry(
+        NS_LITERAL_STRING("(Failed to retrieve client image name)"));
+#endif  // defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
     return;
   }
 
@@ -414,20 +378,17 @@ a11y::SetInstantiator(const uint32_t aPid)
   gInstantiator = clientExe;
 
 #if defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
-  nsCOMPtr<nsIRunnable> runnable(
-    NS_NewRunnableFunction("a11y::GatherInstantiatorTelemetry",
-                           [clientExe]() -> void {
-                             GatherInstantiatorTelemetry(clientExe);
-                           }));
+  nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
+      "a11y::GatherInstantiatorTelemetry",
+      [clientExe]() -> void { GatherInstantiatorTelemetry(clientExe); }));
 
   nsCOMPtr<nsIThread> telemetryThread;
-  NS_NewNamedThread("a11y telemetry", getter_AddRefs(telemetryThread), runnable);
-#endif // defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
+  NS_NewNamedThread("a11y telemetry", getter_AddRefs(telemetryThread),
+                    runnable);
+#endif  // defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
 }
 
-bool
-a11y::GetInstantiator(nsIFile** aOutInstantiator)
-{
+bool a11y::GetInstantiator(nsIFile** aOutInstantiator) {
   if (!gInstantiator) {
     return false;
   }

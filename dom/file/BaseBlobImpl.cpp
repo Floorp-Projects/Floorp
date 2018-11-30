@@ -11,40 +11,31 @@
 namespace mozilla {
 namespace dom {
 
-void
-BaseBlobImpl::GetName(nsAString& aName) const
-{
+void BaseBlobImpl::GetName(nsAString& aName) const {
   MOZ_ASSERT(mIsFile, "Should only be called on files");
   aName = mName;
 }
 
-void
-BaseBlobImpl::GetDOMPath(nsAString& aPath) const
-{
+void BaseBlobImpl::GetDOMPath(nsAString& aPath) const {
   MOZ_ASSERT(mIsFile, "Should only be called on files");
   aPath = mPath;
 }
 
-void
-BaseBlobImpl::SetDOMPath(const nsAString& aPath)
-{
+void BaseBlobImpl::SetDOMPath(const nsAString& aPath) {
   MOZ_ASSERT(mIsFile, "Should only be called on files");
   mPath = aPath;
 }
 
-void
-BaseBlobImpl::GetMozFullPath(nsAString& aFileName,
-                             SystemCallerGuarantee /* unused */,
-                             ErrorResult& aRv) const
-{
+void BaseBlobImpl::GetMozFullPath(nsAString& aFileName,
+                                  SystemCallerGuarantee /* unused */,
+                                  ErrorResult& aRv) const {
   MOZ_ASSERT(mIsFile, "Should only be called on files");
 
   GetMozFullPathInternal(aFileName, aRv);
 }
 
-void
-BaseBlobImpl::GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv) const
-{
+void BaseBlobImpl::GetMozFullPathInternal(nsAString& aFileName,
+                                          ErrorResult& aRv) const {
   if (!mIsFile) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -53,40 +44,30 @@ BaseBlobImpl::GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv) con
   aFileName.Truncate();
 }
 
-void
-BaseBlobImpl::GetType(nsAString& aType)
-{
-  aType = mContentType;
-}
+void BaseBlobImpl::GetType(nsAString& aType) { aType = mContentType; }
 
-int64_t
-BaseBlobImpl::GetLastModified(ErrorResult& aRv)
-{
+int64_t BaseBlobImpl::GetLastModified(ErrorResult& aRv) {
   MOZ_ASSERT(mIsFile, "Should only be called on files");
   if (IsDateUnknown()) {
-    mLastModificationDate = nsRFPService::ReduceTimePrecisionAsUSecs(PR_Now(), 0);
-    // mLastModificationDate is an absolute timestamp so we supply a zero context mix-in
+    mLastModificationDate =
+        nsRFPService::ReduceTimePrecisionAsUSecs(PR_Now(), 0);
+    // mLastModificationDate is an absolute timestamp so we supply a zero
+    // context mix-in
   }
 
   return mLastModificationDate / PR_USEC_PER_MSEC;
 }
 
-void
-BaseBlobImpl::SetLastModified(int64_t aLastModified)
-{
+void BaseBlobImpl::SetLastModified(int64_t aLastModified) {
   mLastModificationDate = aLastModified * PR_USEC_PER_MSEC;
 }
 
-int64_t
-BaseBlobImpl::GetFileId()
-{
-  return -1;
-}
+int64_t BaseBlobImpl::GetFileId() { return -1; }
 
-nsresult
-BaseBlobImpl::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
-                          nsACString& aContentType, nsACString& aCharset)
-{
+nsresult BaseBlobImpl::GetSendInfo(nsIInputStream** aBody,
+                                   uint64_t* aContentLength,
+                                   nsACString& aContentType,
+                                   nsACString& aCharset) {
   MOZ_ASSERT(aContentLength);
 
   ErrorResult rv;
@@ -117,16 +98,12 @@ BaseBlobImpl::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
   return NS_OK;
 }
 
-nsresult
-BaseBlobImpl::GetMutable(bool* aMutable) const
-{
+nsresult BaseBlobImpl::GetMutable(bool* aMutable) const {
   *aMutable = !mImmutable;
   return NS_OK;
 }
 
-nsresult
-BaseBlobImpl::SetMutable(bool aMutable)
-{
+nsresult BaseBlobImpl::SetMutable(bool aMutable) {
   nsresult rv = NS_OK;
 
   NS_ENSURE_ARG(!mImmutable || !aMutable);
@@ -147,12 +124,10 @@ BaseBlobImpl::SetMutable(bool aMutable)
   return rv;
 }
 
-/* static */ uint64_t
-BaseBlobImpl::NextSerialNumber()
-{
+/* static */ uint64_t BaseBlobImpl::NextSerialNumber() {
   static Atomic<uint64_t> nextSerialNumber;
   return nextSerialNumber++;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

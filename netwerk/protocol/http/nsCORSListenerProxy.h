@@ -30,27 +30,18 @@ namespace mozilla {
 namespace net {
 class HttpChannelParent;
 class nsHttpChannel;
-}
-}
+}  // namespace net
+}  // namespace mozilla
 
-enum class DataURIHandling
-{
-  Allow,
-  Disallow
-};
+enum class DataURIHandling { Allow, Disallow };
 
-enum class UpdateType
-{
-  Default,
-  InternalOrHSTSRedirect
-};
+enum class UpdateType { Default, InternalOrHSTSRedirect };
 
 class nsCORSListenerProxy final : public nsIStreamListener,
                                   public nsIInterfaceRequestor,
                                   public nsIChannelEventSink,
-                                  public nsIThreadRetargetableStreamListener
-{
-public:
+                                  public nsIThreadRetargetableStreamListener {
+ public:
   nsCORSListenerProxy(nsIStreamListener* aOuter,
                       nsIPrincipal* aRequestingPrincipal,
                       bool aWithCredentials);
@@ -70,7 +61,8 @@ public:
   MOZ_MUST_USE nsresult Init(nsIChannel* aChannel,
                              DataURIHandling aAllowDataURI);
 
-  void SetInterceptController(nsINetworkInterceptController* aInterceptController);
+  void SetInterceptController(
+      nsINetworkInterceptController* aInterceptController);
 
   // When CORS blocks a request, log the message to the web console, or the
   // browser console if no valid inner window ID is found.
@@ -78,7 +70,8 @@ public:
                                     bool aPrivateBrowsing,
                                     const nsAString& aMessage,
                                     const nsACString& aCategory);
-private:
+
+ private:
   // Only HttpChannelParent can call RemoveFromCorsPreflightCache
   friend class mozilla::net::HttpChannelParent;
   // Only nsHttpChannel can invoke CORS preflights
@@ -86,11 +79,9 @@ private:
 
   static void RemoveFromCorsPreflightCache(nsIURI* aURI,
                                            nsIPrincipal* aRequestingPrincipal);
-  static MOZ_MUST_USE nsresult
-  StartCORSPreflight(nsIChannel* aRequestChannel,
-                     nsICorsPreflightCallback* aCallback,
-                     nsTArray<nsCString>& aACUnsafeHeaders,
-                     nsIChannel** aPreflightChannel);
+  static MOZ_MUST_USE nsresult StartCORSPreflight(
+      nsIChannel* aRequestChannel, nsICorsPreflightCallback* aCallback,
+      nsTArray<nsCString>& aACUnsafeHeaders, nsIChannel** aPreflightChannel);
 
   ~nsCORSListenerProxy() = default;
 

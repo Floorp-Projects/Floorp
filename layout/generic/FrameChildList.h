@@ -22,7 +22,8 @@ extern const char* ChildListName(FrameChildListID aListID);
 #endif
 
 class FrameChildListIDs {
-friend class FrameChildListIterator;
+  friend class FrameChildListIterator;
+
  public:
   FrameChildListIDs() : mIDs(0) {}
   FrameChildListIDs(const FrameChildListIDs& aOther) : mIDs(aOther.mIDs) {}
@@ -53,7 +54,7 @@ friend class FrameChildListIterator;
 class FrameChildList {
  public:
   FrameChildList(const nsFrameList& aList, FrameChildListID aID)
-    : mList(aList), mID(aID) {}
+      : mList(aList), mID(aID) {}
   nsFrameList mList;
   FrameChildListID mID;
 };
@@ -64,7 +65,7 @@ class FrameChildList {
 class MOZ_STACK_CLASS FrameChildListArrayIterator {
  public:
   explicit FrameChildListArrayIterator(const nsTArray<FrameChildList>& aLists)
-    : mLists(aLists), mCurrentIndex(0) {}
+      : mLists(aLists), mCurrentIndex(0) {}
   bool IsDone() const { return mCurrentIndex >= mLists.Length(); }
   FrameChildListID CurrentID() const {
     NS_ASSERTION(!IsDone(), "CurrentID(): iterator at end");
@@ -79,7 +80,7 @@ class MOZ_STACK_CLASS FrameChildListArrayIterator {
     ++mCurrentIndex;
   }
 
-protected:
+ protected:
   const nsTArray<FrameChildList>& mLists;
   uint32_t mCurrentIndex;
 };
@@ -88,36 +89,33 @@ protected:
  * A class for retrieving a frame's child lists and iterate them.
  */
 class MOZ_STACK_CLASS FrameChildListIterator
-  : public FrameChildListArrayIterator {
+    : public FrameChildListArrayIterator {
  public:
   explicit FrameChildListIterator(const nsIFrame* aFrame);
 
-protected:
-  AutoTArray<FrameChildList,4> mLists;
+ protected:
+  AutoTArray<FrameChildList, 4> mLists;
 };
 
-inline mozilla::layout::FrameChildListIDs
-operator|(mozilla::layout::FrameChildListID aLeftOp,
-          mozilla::layout::FrameChildListID aRightOp)
-{
+inline mozilla::layout::FrameChildListIDs operator|(
+    mozilla::layout::FrameChildListID aLeftOp,
+    mozilla::layout::FrameChildListID aRightOp) {
   return mozilla::layout::FrameChildListIDs(aLeftOp) |
          mozilla::layout::FrameChildListIDs(aRightOp);
 }
 
-inline mozilla::layout::FrameChildListIDs
-operator|(mozilla::layout::FrameChildListID aLeftOp,
-          const mozilla::layout::FrameChildListIDs& aRightOp)
-{
+inline mozilla::layout::FrameChildListIDs operator|(
+    mozilla::layout::FrameChildListID aLeftOp,
+    const mozilla::layout::FrameChildListIDs& aRightOp) {
   return mozilla::layout::FrameChildListIDs(aLeftOp) | aRightOp;
 }
 
-} // namespace layout
-} // namespace mozilla
+}  // namespace layout
+}  // namespace mozilla
 
 inline void nsFrameList::AppendIfNonempty(
-         nsTArray<mozilla::layout::FrameChildList>* aLists,
-         mozilla::layout::FrameChildListID aListID) const
-{
+    nsTArray<mozilla::layout::FrameChildList>* aLists,
+    mozilla::layout::FrameChildListID aListID) const {
   if (NotEmpty()) {
     aLists->AppendElement(mozilla::layout::FrameChildList(*this, aListID));
   }

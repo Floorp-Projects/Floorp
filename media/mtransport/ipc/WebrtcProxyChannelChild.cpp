@@ -21,9 +21,8 @@ using mozilla::dom::PBrowserOrId;
 namespace mozilla {
 namespace net {
 
-mozilla::ipc::IPCResult
-WebrtcProxyChannelChild::RecvOnClose(const nsresult& aReason)
-{
+mozilla::ipc::IPCResult WebrtcProxyChannelChild::RecvOnClose(
+    const nsresult& aReason) {
   LOG(("WebrtcProxyChannelChild::RecvOnClose %p\n", this));
 
   MOZ_ASSERT(mProxyCallbacks, "webrtc proxy callbacks should be non-null");
@@ -33,9 +32,7 @@ WebrtcProxyChannelChild::RecvOnClose(const nsresult& aReason)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-WebrtcProxyChannelChild::RecvOnConnected()
-{
+mozilla::ipc::IPCResult WebrtcProxyChannelChild::RecvOnConnected() {
   LOG(("WebrtcProxyChannelChild::RecvOnConnected %p\n", this));
 
   MOZ_ASSERT(mProxyCallbacks, "webrtc proxy callbacks should be non-null");
@@ -44,9 +41,8 @@ WebrtcProxyChannelChild::RecvOnConnected()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-WebrtcProxyChannelChild::RecvOnRead(nsTArray<uint8_t>&& aReadData)
-{
+mozilla::ipc::IPCResult WebrtcProxyChannelChild::RecvOnRead(
+    nsTArray<uint8_t>&& aReadData) {
   LOG(("WebrtcProxyChannelChild::RecvOnRead %p\n", this));
 
   MOZ_ASSERT(mProxyCallbacks, "webrtc proxy callbacks should be non-null");
@@ -56,31 +52,25 @@ WebrtcProxyChannelChild::RecvOnRead(nsTArray<uint8_t>&& aReadData)
 }
 
 WebrtcProxyChannelChild::WebrtcProxyChannelChild(
-  WebrtcProxyChannelCallback* aProxyCallbacks)
-  : mProxyCallbacks(aProxyCallbacks)
-{
+    WebrtcProxyChannelCallback* aProxyCallbacks)
+    : mProxyCallbacks(aProxyCallbacks) {
   MOZ_COUNT_CTOR(WebrtcProxyChannelChild);
 
   LOG(("WebrtcProxyChannelChild::WebrtcProxyChannelChild %p\n", this));
 }
 
-WebrtcProxyChannelChild::~WebrtcProxyChannelChild()
-{
+WebrtcProxyChannelChild::~WebrtcProxyChannelChild() {
   MOZ_COUNT_DTOR(WebrtcProxyChannelChild);
 
   LOG(("WebrtcProxyChannelChild::~WebrtcProxyChannelChild %p\n", this));
 }
 
-void
-WebrtcProxyChannelChild::AsyncOpen(const nsCString& aHost,
-                                   const int& aPort,
-                                   const PBrowserOrId& aBrowser,
-                                   nsIPrincipal* aLoadingPrincipal,
-                                   const nsCString& aAlpn)
-{
-  LOG(("WebrtcProxyChannelChild::AsyncOpen %p %s:%d\n",
-       this,
-       aHost.get(),
+void WebrtcProxyChannelChild::AsyncOpen(const nsCString& aHost,
+                                        const int& aPort,
+                                        const PBrowserOrId& aBrowser,
+                                        nsIPrincipal* aLoadingPrincipal,
+                                        const nsCString& aAlpn) {
+  LOG(("WebrtcProxyChannelChild::AsyncOpen %p %s:%d\n", this, aHost.get(),
        aPort));
 
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
@@ -90,11 +80,8 @@ WebrtcProxyChannelChild::AsyncOpen(const nsCString& aHost,
   gNeckoChild->SetEventTargetForActor(this, GetMainThreadEventTarget());
   gNeckoChild->SendPWebrtcProxyChannelConstructor(this, aBrowser);
 
-  nsCOMPtr<nsILoadInfo> loadInfo = new LoadInfo(aLoadingPrincipal,
-                                                nullptr,
-                                                nullptr,
-                                                0,
-                                                0);
+  nsCOMPtr<nsILoadInfo> loadInfo =
+      new LoadInfo(aLoadingPrincipal, nullptr, nullptr, 0, 0);
 
   OptionalLoadInfoArgs loadInfoArgs;
   MOZ_ALWAYS_SUCCEEDS(LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
@@ -102,5 +89,5 @@ WebrtcProxyChannelChild::AsyncOpen(const nsCString& aHost,
   SendAsyncOpen(aHost, aPort, loadInfoArgs, aAlpn);
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

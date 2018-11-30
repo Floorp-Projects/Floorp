@@ -17,58 +17,51 @@ class txIMatchContext;
 class txXPathTreeWalker;
 
 class txXSLTNumber {
-public:
-    enum LevelType {
-        eLevelSingle,
-        eLevelMultiple,
-        eLevelAny
-    };
+ public:
+  enum LevelType { eLevelSingle, eLevelMultiple, eLevelAny };
 
-    static nsresult createNumber(Expr* aValueExpr, txPattern* aCountPattern,
-                                 txPattern* aFromPattern, LevelType aLevel,
-                                 Expr* aGroupSize, Expr* aGroupSeparator,
-                                 Expr* aFormat, txIEvalContext* aContext,
-                                 nsAString& aResult);
+  static nsresult createNumber(Expr* aValueExpr, txPattern* aCountPattern,
+                               txPattern* aFromPattern, LevelType aLevel,
+                               Expr* aGroupSize, Expr* aGroupSeparator,
+                               Expr* aFormat, txIEvalContext* aContext,
+                               nsAString& aResult);
 
-private:
-    static nsresult getValueList(Expr* aValueExpr, txPattern* aCountPattern,
-                                 txPattern* aFromPattern, LevelType aLevel,
-                                 txIEvalContext* aContext, txList& aValues,
-                                 nsAString& aValueString);
+ private:
+  static nsresult getValueList(Expr* aValueExpr, txPattern* aCountPattern,
+                               txPattern* aFromPattern, LevelType aLevel,
+                               txIEvalContext* aContext, txList& aValues,
+                               nsAString& aValueString);
 
-    static nsresult getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
-                                Expr* aFormat, txIEvalContext* aContext,
-                                txList& aCounters, nsAString& aHead,
-                                nsAString& aTail);
+  static nsresult getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
+                              Expr* aFormat, txIEvalContext* aContext,
+                              txList& aCounters, nsAString& aHead,
+                              nsAString& aTail);
 
-    /**
-     * getSiblingCount uses aWalker to walk the siblings of aWalker's current
-     * position.
-     *
-     */
-    static nsresult getSiblingCount(txXPathTreeWalker& aWalker,
-                                    txPattern* aCountPattern,
-                                    txIMatchContext* aContext,
-                                    int32_t* aCount);
+  /**
+   * getSiblingCount uses aWalker to walk the siblings of aWalker's current
+   * position.
+   *
+   */
+  static nsresult getSiblingCount(txXPathTreeWalker& aWalker,
+                                  txPattern* aCountPattern,
+                                  txIMatchContext* aContext, int32_t* aCount);
 
-    static bool getPrevInDocumentOrder(txXPathTreeWalker& aWalker);
+  static bool getPrevInDocumentOrder(txXPathTreeWalker& aWalker);
 
-    static bool isAlphaNumeric(char16_t ch);
+  static bool isAlphaNumeric(char16_t ch);
 };
 
 class txFormattedCounter {
-public:
-    virtual ~txFormattedCounter()
-    {
-    }
+ public:
+  virtual ~txFormattedCounter() {}
 
-    virtual void appendNumber(int32_t aNumber, nsAString& aDest) = 0;
+  virtual void appendNumber(int32_t aNumber, nsAString& aDest) = 0;
 
-    static nsresult getCounterFor(const nsString& aToken, int aGroupSize,
-                                  const nsAString& aGroupSeparator,
-                                  txFormattedCounter*& aCounter);
+  static nsresult getCounterFor(const nsString& aToken, int aGroupSize,
+                                const nsAString& aGroupSeparator,
+                                txFormattedCounter*& aCounter);
 
-    nsString mSeparator;
+  nsString mSeparator;
 };
 
-#endif //TRANSFRMX_TXXSLTNUMBER_H
+#endif  // TRANSFRMX_TXXSLTNUMBER_H

@@ -16,16 +16,15 @@
 
 namespace mozilla {
 
-class SnappyUncompressInputStream final : public nsIInputStream
-                                        , protected detail::SnappyFrameUtils
-{
-public:
+class SnappyUncompressInputStream final : public nsIInputStream,
+                                          protected detail::SnappyFrameUtils {
+ public:
   // Construct a new blocking stream to uncompress the given base stream.  The
   // base stream must also be blocking.  The base stream does not have to be
   // buffered.
   explicit SnappyUncompressInputStream(nsIInputStream* aBaseStream);
 
-private:
+ private:
   virtual ~SnappyUncompressInputStream();
 
   // Parse the next chunk of data.  This may populate mBuffer and set
@@ -80,11 +79,11 @@ private:
   // expecting it?
   bool mNeedFirstStreamIdentifier;
 
-public:
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_SnappyUncompressInputStream_h__
+#endif  // mozilla_SnappyUncompressInputStream_h__

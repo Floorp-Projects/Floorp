@@ -10,29 +10,25 @@
 #include "nsAutoConfig.h"
 #include "nsIObserver.h"
 
+class nsReadConfig final : public nsIObserver {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIOBSERVER
 
-class nsReadConfig final : public nsIObserver
-{
+  nsReadConfig();
 
-    public:
+  nsresult Init();
 
-        NS_DECL_THREADSAFE_ISUPPORTS
-        NS_DECL_NSIOBSERVER
+ protected:
+  virtual ~nsReadConfig();
 
-        nsReadConfig();
+  nsresult readConfigFile();
+  nsresult openAndEvaluateJSFile(const char *aFileName, int32_t obscureValue,
+                                 bool isEncoded, bool isBinDir);
+  bool mRead;
 
-        nsresult Init();
-
-    protected:
-
-        virtual ~nsReadConfig();
-
-        nsresult readConfigFile();
-        nsresult openAndEvaluateJSFile(const char *aFileName, int32_t obscureValue,
-                                        bool isEncoded, bool isBinDir);
-        bool mRead;
-private:
-        RefPtr<nsAutoConfig> mAutoConfig;
+ private:
+  RefPtr<nsAutoConfig> mAutoConfig;
 };
 
 #endif

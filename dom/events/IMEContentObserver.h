@@ -12,7 +12,7 @@
 #include "mozilla/dom/Selection.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDocShell.h" // XXX Why does only this need to be included here?
+#include "nsIDocShell.h"  // XXX Why does only this need to be included here?
 #include "nsIReflowObserver.h"
 #include "nsIScrollObserver.h"
 #include "nsIWidget.h"
@@ -32,16 +32,15 @@ class TextComposition;
 
 namespace dom {
 class Selection;
-} // namespace dom
+}  // namespace dom
 
 // IMEContentObserver notifies widget of any text and selection changes
 // in the currently focused editor
-class IMEContentObserver final : public nsStubMutationObserver
-                               , public nsIReflowObserver
-                               , public nsIScrollObserver
-                               , public nsSupportsWeakReference
-{
-public:
+class IMEContentObserver final : public nsStubMutationObserver,
+                                 public nsIReflowObserver,
+                                 public nsIScrollObserver,
+                                 public nsSupportsWeakReference {
+ public:
   typedef widget::IMENotification::SelectionChangeData SelectionChangeData;
   typedef widget::IMENotification::TextChangeData TextChangeData;
   typedef widget::IMENotification::TextChangeDataBase TextChangeDataBase;
@@ -127,21 +126,17 @@ public:
    * @return            Returns true if the instance is managing the content.
    *                    Otherwise, false.
    */
-  bool MaybeReinitialize(nsIWidget* aWidget,
-                         nsPresContext* aPresContext,
-                         nsIContent* aContent,
-                         EditorBase* aEditorBase);
+  bool MaybeReinitialize(nsIWidget* aWidget, nsPresContext* aPresContext,
+                         nsIContent* aContent, EditorBase* aEditorBase);
 
   bool IsManaging(nsPresContext* aPresContext, nsIContent* aContent) const;
   bool IsManaging(const TextComposition* aTextComposition) const;
   bool WasInitializedWithPlugin() const;
-  bool WasInitializedWith(const EditorBase& aEditorBase) const
-  {
+  bool WasInitializedWith(const EditorBase& aEditorBase) const {
     return mEditorBase == &aEditorBase;
   }
   bool IsEditorHandlingEventForComposition() const;
-  bool KeepAliveDuringDeactive() const
-  {
+  bool KeepAliveDuringDeactive() const {
     return mIMENotificationRequests &&
            mIMENotificationRequests->WantDuringDeactive();
   }
@@ -176,7 +171,7 @@ public:
   void BeforeEditAction();
   void CancelEditAction();
 
-private:
+ private:
   ~IMEContentObserver() {}
 
   enum State {
@@ -219,8 +214,7 @@ private:
    * insertAdjacentHTML().  This returns false when user types something in
    * the focused editor editor.
    */
-  bool IsInDocumentChange() const
-  {
+  bool IsInDocumentChange() const {
     return mDocumentObserver && mDocumentObserver->IsUpdating();
   }
 
@@ -235,8 +229,7 @@ private:
    * have not been sent to IME.  Note that this should always return false when
    * IsInDocumentChange() returns false.
    */
-  bool HasAddedNodesDuringDocumentChange() const
-  {
+  bool HasAddedNodesDuringDocumentChange() const {
     return mFirstAddedContainer && mLastAddedContainer;
   }
 
@@ -260,8 +253,7 @@ private:
   void CancelNotifyingIMEOfPositionChange();
   void PostCompositionEventHandledNotification();
 
-  void NotifyContentAdded(nsINode* aContainer,
-                          nsIContent* aFirstContent,
+  void NotifyContentAdded(nsINode* aContainer, nsIContent* aFirstContent,
                           nsIContent* aLastContent);
   void ObserveEditableNode();
   /**
@@ -273,18 +265,15 @@ private:
    */
   void UnregisterObservers();
   void FlushMergeableNotifications();
-  bool NeedsTextChangeNotification() const
-  {
+  bool NeedsTextChangeNotification() const {
     return mIMENotificationRequests &&
            mIMENotificationRequests->WantTextChange();
   }
-  bool NeedsPositionChangeNotification() const
-  {
+  bool NeedsPositionChangeNotification() const {
     return mIMENotificationRequests &&
            mIMENotificationRequests->WantPositionChanged();
   }
-  void ClearPendingNotifications()
-  {
+  void ClearPendingNotifications() {
     mNeedsToNotifyIMEOfFocusSet = false;
     mNeedsToNotifyIMEOfTextChange = false;
     mNeedsToNotifyIMEOfSelectionChange = false;
@@ -292,10 +281,8 @@ private:
     mNeedsToNotifyIMEOfCompositionEventHandled = false;
     mTextChangeData.Clear();
   }
-  bool NeedsToNotifyIMEOfSomething() const
-  {
-    return mNeedsToNotifyIMEOfFocusSet ||
-           mNeedsToNotifyIMEOfTextChange ||
+  bool NeedsToNotifyIMEOfSomething() const {
+    return mNeedsToNotifyIMEOfFocusSet || mNeedsToNotifyIMEOfTextChange ||
            mNeedsToNotifyIMEOfSelectionChange ||
            mNeedsToNotifyIMEOfPositionChange ||
            mNeedsToNotifyIMEOfCompositionEventHandled;
@@ -324,11 +311,9 @@ private:
    * Helper classes to notify IME.
    */
 
-  class AChangeEvent: public Runnable
-  {
-  protected:
-    enum ChangeEventType
-    {
+  class AChangeEvent : public Runnable {
+   protected:
+    enum ChangeEventType {
       eChangeEventType_Focus,
       eChangeEventType_Selection,
       eChangeEventType_Text,
@@ -338,18 +323,15 @@ private:
 
     explicit AChangeEvent(const char* aName,
                           IMEContentObserver* aIMEContentObserver)
-      : Runnable(aName)
-      , mIMEContentObserver(
-          do_GetWeakReference(
-            static_cast<nsIReflowObserver*>(aIMEContentObserver)))
-    {
+        : Runnable(aName),
+          mIMEContentObserver(do_GetWeakReference(
+              static_cast<nsIReflowObserver*>(aIMEContentObserver))) {
       MOZ_ASSERT(aIMEContentObserver);
     }
 
-    already_AddRefed<IMEContentObserver> GetObserver() const
-    {
+    already_AddRefed<IMEContentObserver> GetObserver() const {
       nsCOMPtr<nsIReflowObserver> observer =
-        do_QueryReferent(mIMEContentObserver);
+          do_QueryReferent(mIMEContentObserver);
       return observer.forget().downcast<IMEContentObserver>();
     }
 
@@ -366,18 +348,16 @@ private:
     bool IsSafeToNotifyIME(ChangeEventType aChangeEventType) const;
   };
 
-  class IMENotificationSender: public AChangeEvent
-  {
-  public:
+  class IMENotificationSender : public AChangeEvent {
+   public:
     explicit IMENotificationSender(IMEContentObserver* aIMEContentObserver)
-      : AChangeEvent("IMENotificationSender", aIMEContentObserver)
-      , mIsRunning(false)
-    {
-    }
+        : AChangeEvent("IMENotificationSender", aIMEContentObserver),
+          mIsRunning(false) {}
     NS_IMETHOD Run() override;
 
     void Dispatch(nsIDocShell* aDocShell);
-  private:
+
+   private:
     void SendFocusSet();
     void SendSelectionChange();
     void SendTextChange();
@@ -399,14 +379,10 @@ private:
    * methods need to check if the changing node is in mRootContent but it's
    * too expensive.
    */
-  class DocumentObserver final : public nsStubDocumentObserver
-  {
-  public:
+  class DocumentObserver final : public nsStubDocumentObserver {
+   public:
     explicit DocumentObserver(IMEContentObserver& aIMEContentObserver)
-      : mIMEContentObserver(&aIMEContentObserver)
-      , mDocumentUpdating(0)
-    {
-    }
+        : mIMEContentObserver(&aIMEContentObserver), mDocumentUpdating(0) {}
 
     NS_DECL_CYCLE_COLLECTION_CLASS(DocumentObserver)
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -421,7 +397,7 @@ private:
     bool IsObserving() const { return mDocument != nullptr; }
     bool IsUpdating() const { return mDocumentUpdating != 0; }
 
-  private:
+   private:
     DocumentObserver() = delete;
     virtual ~DocumentObserver() { Destroy(); }
 
@@ -435,8 +411,7 @@ private:
    * FlatTextCache stores flat text length from start of the content to
    * mNodeOffset of mContainerNode.
    */
-  struct FlatTextCache
-  {
+  struct FlatTextCache {
     // mContainerNode and mNode represent a point in DOM tree.  E.g.,
     // if mContainerNode is a div element, mNode is a child.
     nsCOMPtr<nsINode> mContainerNode;
@@ -448,21 +423,15 @@ private:
     // and a child node whose index is mNodeOffset of mContainerNode.
     uint32_t mFlatTextLength;
 
-    FlatTextCache()
-      : mFlatTextLength(0)
-    {
-    }
+    FlatTextCache() : mFlatTextLength(0) {}
 
-    void Clear()
-    {
+    void Clear() {
       mContainerNode = nullptr;
       mNode = nullptr;
       mFlatTextLength = 0;
     }
 
-    void Cache(nsINode* aContainer, nsINode* aNode,
-               uint32_t aFlatTextLength)
-    {
+    void Cache(nsINode* aContainer, nsINode* aNode, uint32_t aFlatTextLength) {
       MOZ_ASSERT(aContainer, "aContainer must not be null");
       MOZ_ASSERT(!aNode || aNode->GetParentNode() == aContainer,
                  "aNode must be either null or a child of aContainer");
@@ -471,8 +440,7 @@ private:
       mFlatTextLength = aFlatTextLength;
     }
 
-    bool Match(nsINode* aContainer, nsINode* aNode) const
-    {
+    bool Match(nsINode* aContainer, nsINode* aNode) const {
       return aContainer == mContainerNode && aNode == mNode;
     }
   };
@@ -537,6 +505,6 @@ private:
   bool mIsHandlingQueryContentEvent;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_IMEContentObserver_h
+#endif  // mozilla_IMEContentObserver_h

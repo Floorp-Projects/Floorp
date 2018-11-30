@@ -22,13 +22,12 @@ class ClientInfo;
 // properly handle creating a new ClientSource on cross-origin redirect
 // and propagate the current reserved/initial client on same-origin
 // redirect.
-nsresult
-AddClientChannelHelper(nsIChannel* aChannel,
-                       Maybe<ClientInfo>&& aReservedClientInfo,
-                       Maybe<ClientInfo>&& aInitialClientInfo,
-                       nsISerialEventTarget* aEventTarget);
+nsresult AddClientChannelHelper(nsIChannel* aChannel,
+                                Maybe<ClientInfo>&& aReservedClientInfo,
+                                Maybe<ClientInfo>&& aInitialClientInfo,
+                                nsISerialEventTarget* aEventTarget);
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // _mozilla_dom_ClientChannelHelper_h
+#endif  // _mozilla_dom_ClientChannelHelper_h

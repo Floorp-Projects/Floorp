@@ -11,24 +11,22 @@
 #include "nsAutoPtr.h"
 #include "CacheFileChunk.h"
 
-
 namespace mozilla {
 namespace net {
 
 class CacheFile;
 class CacheOutputCloseListener;
 
-class CacheFileOutputStream : public nsIAsyncOutputStream
-                            , public nsISeekableStream
-                            , public CacheFileChunkListener
-{
+class CacheFileOutputStream : public nsIAsyncOutputStream,
+                              public nsISeekableStream,
+                              public CacheFileChunkListener {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOUTPUTSTREAM
   NS_DECL_NSIASYNCOUTPUTSTREAM
   NS_DECL_NSISEEKABLESTREAM
   NS_DECL_NSITELLABLESTREAM
 
-public:
+ public:
   CacheFileOutputStream(CacheFile *aFile,
                         CacheOutputCloseListener *aCloseListener,
                         bool aAlternativeData);
@@ -45,7 +43,7 @@ public:
   // Memory reporting
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-private:
+ private:
   virtual ~CacheFileOutputStream();
 
   nsresult CloseWithStatusLocked(nsresult aStatus);
@@ -54,21 +52,20 @@ private:
   void FillHole();
   void NotifyListener();
 
-  RefPtr<CacheFile>        mFile;
+  RefPtr<CacheFile> mFile;
   RefPtr<CacheFileChunk> mChunk;
   RefPtr<CacheOutputCloseListener> mCloseListener;
-  int64_t                  mPos;
-  bool                     mClosed : 1;
-  bool const               mAlternativeData : 1;
-  nsresult                 mStatus;
+  int64_t mPos;
+  bool mClosed : 1;
+  bool const mAlternativeData : 1;
+  nsresult mStatus;
 
   nsCOMPtr<nsIOutputStreamCallback> mCallback;
-  uint32_t                          mCallbackFlags;
-  nsCOMPtr<nsIEventTarget>          mCallbackTarget;
+  uint32_t mCallbackFlags;
+  nsCOMPtr<nsIEventTarget> mCallbackTarget;
 };
 
-
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

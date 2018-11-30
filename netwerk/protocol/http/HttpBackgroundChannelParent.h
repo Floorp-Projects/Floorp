@@ -21,9 +21,8 @@ namespace net {
 
 class HttpChannelParent;
 
-class HttpBackgroundChannelParent final : public PHttpBackgroundChannelParent
-{
-public:
+class HttpBackgroundChannelParent final : public PHttpBackgroundChannelParent {
+ public:
   explicit HttpBackgroundChannelParent();
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(HttpBackgroundChannelParent)
@@ -46,8 +45,7 @@ public:
   // To send OnTransportAndData message over background channel.
   bool OnTransportAndData(const nsresult& aChannelStatus,
                           const nsresult& aTransportStatus,
-                          const uint64_t& aOffset,
-                          const uint32_t& aCount,
+                          const uint64_t& aOffset, const uint32_t& aCount,
                           const nsCString& aData);
 
   // To send OnStopRequest message over background channel.
@@ -56,8 +54,7 @@ public:
                      const nsHttpHeaderArray& aResponseTrailers);
 
   // To send OnProgress message over background channel.
-  bool OnProgress(const int64_t& aProgress,
-                  const int64_t& aProgressMax);
+  bool OnProgress(const int64_t& aProgress, const int64_t& aProgressMax);
 
   // To send OnStatus message over background channel.
   bool OnStatus(const nsresult& aStatus);
@@ -83,10 +80,10 @@ public:
                                   const nsACString& aProvider,
                                   const nsACString& aFullHash);
 
-protected:
+ protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-private:
+ private:
   virtual ~HttpBackgroundChannelParent();
 
   Atomic<bool> mIPCOpened;
@@ -100,7 +97,7 @@ private:
   RefPtr<HttpChannelParent> mChannelParent;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozilla_net_HttpBackgroundChannelParent_h
+#endif  // mozilla_net_HttpBackgroundChannelParent_h

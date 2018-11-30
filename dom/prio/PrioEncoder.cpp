@@ -22,8 +22,7 @@ namespace dom {
 /* static */ PublicKey PrioEncoder::sPublicKeyB = nullptr;
 
 PrioEncoder::PrioEncoder() = default;
-PrioEncoder::~PrioEncoder()
-{
+PrioEncoder::~PrioEncoder() {
   if (sPublicKeyA) {
     PublicKey_clear(sPublicKeyA);
     sPublicKeyA = nullptr;
@@ -37,13 +36,11 @@ PrioEncoder::~PrioEncoder()
   Prio_clear();
 }
 
-/* static */ void
-PrioEncoder::Encode(GlobalObject& aGlobal,
-                    const nsCString& aBatchID,
-                    const PrioParams& aPrioParams,
-                    RootedDictionary<PrioEncodedData>& aData,
-                    ErrorResult& aRv)
-{
+/* static */ void PrioEncoder::Encode(GlobalObject& aGlobal,
+                                      const nsCString& aBatchID,
+                                      const PrioParams& aPrioParams,
+                                      RootedDictionary<PrioEncodedData>& aData,
+                                      ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   if (!global) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -71,8 +68,8 @@ PrioEncoder::Encode(GlobalObject& aGlobal,
 
     // Check that both public keys are of the right length
     // and contain only hex digits 0-9a-fA-f
-    if (!PrioEncoder::IsValidHexPublicKey(prioKeyA)
-        || !PrioEncoder::IsValidHexPublicKey(prioKeyB))  {
+    if (!PrioEncoder::IsValidHexPublicKey(prioKeyA) ||
+        !PrioEncoder::IsValidHexPublicKey(prioKeyB)) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return;
     }
@@ -84,17 +81,19 @@ PrioEncoder::Encode(GlobalObject& aGlobal,
       return;
     }
 
-    prio_rv = PublicKey_import_hex(&sPublicKeyA,
-                                   reinterpret_cast<const unsigned char*>(prioKeyA.BeginReading()),
-                                   CURVE25519_KEY_LEN_HEX);
+    prio_rv = PublicKey_import_hex(
+        &sPublicKeyA,
+        reinterpret_cast<const unsigned char*>(prioKeyA.BeginReading()),
+        CURVE25519_KEY_LEN_HEX);
     if (prio_rv != SECSuccess) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return;
     }
 
-    prio_rv = PublicKey_import_hex(&sPublicKeyB,
-              reinterpret_cast<const unsigned char*>(prioKeyB.BeginReading()),
-              CURVE25519_KEY_LEN_HEX);
+    prio_rv = PublicKey_import_hex(
+        &sPublicKeyB,
+        reinterpret_cast<const unsigned char*>(prioKeyB.BeginReading()),
+        CURVE25519_KEY_LEN_HEX);
     if (prio_rv != SECSuccess) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return;
@@ -107,43 +106,35 @@ PrioEncoder::Encode(GlobalObject& aGlobal,
   nsTArray<bool> dataItems = aPrioParams.mBooleans;
   if (dataItems.Length() > gNumBooleans) {
     aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(
-      NS_LITERAL_STRING("Maximum boolean value exceeded"));
+        NS_LITERAL_STRING("Maximum boolean value exceeded"));
     return;
   }
 
-  PrioConfig prioConfig = PrioConfig_new(dataItems.Length(),
-                                         sPublicKeyA,
-                                         sPublicKeyB,
-                                         reinterpret_cast<const unsigned char*>(aBatchID.BeginReading()),
-                                         aBatchID.Length());
+  PrioConfig prioConfig = PrioConfig_new(
+      dataItems.Length(), sPublicKeyA, sPublicKeyB,
+      reinterpret_cast<const unsigned char*>(aBatchID.BeginReading()),
+      aBatchID.Length());
 
   if (!prioConfig) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
-  auto configGuard = MakeScopeExit([&] {
-    PrioConfig_clear(prioConfig);
-  });
+  auto configGuard = MakeScopeExit([&] { PrioConfig_clear(prioConfig); });
 
   unsigned char* forServerA = nullptr;
   unsigned int lenA = 0;
   unsigned char* forServerB = nullptr;
   unsigned int lenB = 0;
 
-  prio_rv = PrioClient_encode(prioConfig,
-                              dataItems.Elements(),
-                              &forServerA,
-                              &lenA,
-                              &forServerB,
-                              &lenB);
+  prio_rv = PrioClient_encode(prioConfig, dataItems.Elements(), &forServerA,
+                              &lenA, &forServerB, &lenB);
 
   nsTArray<uint8_t> arrayForServerA;
   nsTArray<uint8_t> arrayForServerB;
 
   if (!arrayForServerA.AppendElements(reinterpret_cast<uint8_t*>(forServerA),
-                                      lenA,
-                                      fallible)) {
+                                      lenA, fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
@@ -151,10 +142,9 @@ PrioEncoder::Encode(GlobalObject& aGlobal,
   free(forServerA);
 
   if (!arrayForServerB.AppendElements(reinterpret_cast<uint8_t*>(forServerB),
-                                      lenB,
-                                      fallible)) {
+                                      lenB, fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return ;
+    return;
   }
 
   free(forServerB);
@@ -165,7 +155,8 @@ PrioEncoder::Encode(GlobalObject& aGlobal,
   }
 
   JS::Rooted<JS::Value> valueA(aGlobal.Context());
-  if (!ToJSValue(aGlobal.Context(), TypedArrayCreator<Uint8Array>(arrayForServerA), &valueA)) {
+  if (!ToJSValue(aGlobal.Context(),
+                 TypedArrayCreator<Uint8Array>(arrayForServerA), &valueA)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
@@ -173,7 +164,8 @@ PrioEncoder::Encode(GlobalObject& aGlobal,
   aData.mA.Construct().Init(&valueA.toObject());
 
   JS::Rooted<JS::Value> valueB(aGlobal.Context());
-  if (!ToJSValue(aGlobal.Context(), TypedArrayCreator<Uint8Array>(arrayForServerB), &valueB)) {
+  if (!ToJSValue(aGlobal.Context(),
+                 TypedArrayCreator<Uint8Array>(arrayForServerB), &valueB)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
@@ -181,9 +173,7 @@ PrioEncoder::Encode(GlobalObject& aGlobal,
   aData.mB.Construct().Init(&valueB.toObject());
 }
 
-bool
-PrioEncoder::IsValidHexPublicKey(mozilla::Span<const char> aStr)
-{
+bool PrioEncoder::IsValidHexPublicKey(mozilla::Span<const char> aStr) {
   if (aStr.Length() != CURVE25519_KEY_LEN_HEX) {
     return false;
   }
@@ -197,5 +187,5 @@ PrioEncoder::IsValidHexPublicKey(mozilla::Span<const char> aStr)
   return true;
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

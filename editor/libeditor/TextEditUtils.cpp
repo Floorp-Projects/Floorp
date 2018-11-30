@@ -27,9 +27,7 @@ namespace mozilla {
 /**
  * IsBody() returns true if aNode is an html body node.
  */
-bool
-TextEditUtils::IsBody(nsINode* aNode)
-{
+bool TextEditUtils::IsBody(nsINode* aNode) {
   MOZ_ASSERT(aNode);
   return aNode->IsHTMLElement(nsGkAtoms::body);
 }
@@ -37,20 +35,15 @@ TextEditUtils::IsBody(nsINode* aNode)
 /**
  * IsBreak() returns true if aNode is an html break node.
  */
-bool
-TextEditUtils::IsBreak(nsINode* aNode)
-{
+bool TextEditUtils::IsBreak(nsINode* aNode) {
   MOZ_ASSERT(aNode);
   return aNode->IsHTMLElement(nsGkAtoms::br);
 }
 
-
 /**
  * IsMozBR() returns true if aNode is an html br node with |type = _moz|.
  */
-bool
-TextEditUtils::IsMozBR(nsINode* aNode)
-{
+bool TextEditUtils::IsMozBR(nsINode* aNode) {
   MOZ_ASSERT(aNode);
   return aNode->IsHTMLElement(nsGkAtoms::br) &&
          aNode->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
@@ -62,15 +55,11 @@ TextEditUtils::IsMozBR(nsINode* aNode)
  * HasMozAttr() returns true if aNode has type attribute and its value is
  * |_moz|. (Used to indicate div's and br's we use in mail compose rules)
  */
-bool
-TextEditUtils::HasMozAttr(nsINode* aNode)
-{
+bool TextEditUtils::HasMozAttr(nsINode* aNode) {
   MOZ_ASSERT(aNode);
-  return aNode->IsElement() &&
-         aNode->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                         nsGkAtoms::type,
-                                         NS_LITERAL_STRING("_moz"),
-                                         eIgnoreCase);
+  return aNode->IsElement() && aNode->AsElement()->AttrValueIs(
+                                   kNameSpaceID_None, nsGkAtoms::type,
+                                   NS_LITERAL_STRING("_moz"), eIgnoreCase);
 }
 
 /******************************************************************************
@@ -79,19 +68,16 @@ TextEditUtils::HasMozAttr(nsINode* aNode)
 
 AutoEditInitRulesTrigger::AutoEditInitRulesTrigger(TextEditor* aTextEditor,
                                                    nsresult& aResult)
-  : mTextEditor(aTextEditor)
-  , mResult(aResult)
-{
+    : mTextEditor(aTextEditor), mResult(aResult) {
   if (mTextEditor) {
     mTextEditor->BeginEditorInit();
   }
 }
 
-AutoEditInitRulesTrigger::~AutoEditInitRulesTrigger()
-{
+AutoEditInitRulesTrigger::~AutoEditInitRulesTrigger() {
   if (mTextEditor) {
     mResult = mTextEditor->EndEditorInit();
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

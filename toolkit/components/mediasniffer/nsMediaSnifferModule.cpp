@@ -12,26 +12,21 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMediaSniffer)
 NS_DEFINE_NAMED_CID(NS_MEDIA_SNIFFER_CID);
 
 static const mozilla::Module::CIDEntry kMediaSnifferCIDs[] = {
-    { &kNS_MEDIA_SNIFFER_CID, false, nullptr, nsMediaSnifferConstructor },
-    { nullptr }
-};
+    {&kNS_MEDIA_SNIFFER_CID, false, nullptr, nsMediaSnifferConstructor},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kMediaSnifferContracts[] = {
-    { NS_MEDIA_SNIFFER_CONTRACTID, &kNS_MEDIA_SNIFFER_CID },
-    { nullptr }
-};
+    {NS_MEDIA_SNIFFER_CONTRACTID, &kNS_MEDIA_SNIFFER_CID}, {nullptr}};
 
 static const mozilla::Module::CategoryEntry kMediaSnifferCategories[] = {
-    { "content-sniffing-services", NS_MEDIA_SNIFFER_CONTRACTID, NS_MEDIA_SNIFFER_CONTRACTID},
-    { "net-content-sniffers", NS_MEDIA_SNIFFER_CONTRACTID, NS_MEDIA_SNIFFER_CONTRACTID},
-    { nullptr }
-};
+    {"content-sniffing-services", NS_MEDIA_SNIFFER_CONTRACTID,
+     NS_MEDIA_SNIFFER_CONTRACTID},
+    {"net-content-sniffers", NS_MEDIA_SNIFFER_CONTRACTID,
+     NS_MEDIA_SNIFFER_CONTRACTID},
+    {nullptr}};
 
 static const mozilla::Module kMediaSnifferModule = {
-    mozilla::Module::kVersion,
-    kMediaSnifferCIDs,
-    kMediaSnifferContracts,
-    kMediaSnifferCategories
-};
+    mozilla::Module::kVersion, kMediaSnifferCIDs, kMediaSnifferContracts,
+    kMediaSnifferCategories};
 
 NSMODULE_DEFN(nsMediaSnifferModule) = &kMediaSnifferModule;

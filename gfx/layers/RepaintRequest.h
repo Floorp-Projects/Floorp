@@ -7,27 +7,28 @@
 #ifndef GFX_REPAINTREQUEST_H
 #define GFX_REPAINTREQUEST_H
 
-#include <stdint.h>                     // for uint8_t, uint32_t, uint64_t
+#include <stdint.h>  // for uint8_t, uint32_t, uint64_t
 
-#include "FrameMetrics.h"               // for FrameMetrics
-#include "mozilla/DefineEnum.h"         // for MOZ_DEFINE_ENUM
-#include "mozilla/gfx/BasePoint.h"      // for BasePoint
-#include "mozilla/gfx/Rect.h"           // for RoundedIn
-#include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
-#include "mozilla/TimeStamp.h"          // for TimeStamp
-#include "Units.h"                      // for CSSRect, CSSPixel, etc
+#include "FrameMetrics.h"             // for FrameMetrics
+#include "mozilla/DefineEnum.h"       // for MOZ_DEFINE_ENUM
+#include "mozilla/gfx/BasePoint.h"    // for BasePoint
+#include "mozilla/gfx/Rect.h"         // for RoundedIn
+#include "mozilla/gfx/ScaleFactor.h"  // for ScaleFactor
+#include "mozilla/TimeStamp.h"        // for TimeStamp
+#include "Units.h"                    // for CSSRect, CSSPixel, etc
 
 namespace IPC {
-template <typename T> struct ParamTraits;
-} // namespace IPC
+template <typename T>
+struct ParamTraits;
+}  // namespace IPC
 
 namespace mozilla {
 namespace layers {
 
 struct RepaintRequest {
   friend struct IPC::ParamTraits<mozilla::layers::RepaintRequest>;
-public:
 
+ public:
   // clang-format off
   MOZ_DEFINE_ENUM_WITH_BASE_AT_CLASS_SCOPE(
     ScrollOffsetUpdateType, uint8_t, (
@@ -37,51 +38,47 @@ public:
   // clang-format on
 
   RepaintRequest()
-    : mScrollId(ScrollableLayerGuid::NULL_SCROLL_ID)
-    , mPresShellResolution(1)
-    , mCompositionBounds(0, 0, 0, 0)
-    , mCumulativeResolution()
-    , mDevPixelsPerCSSPixel(1)
-    , mScrollOffset(0, 0)
-    , mZoom()
-    , mScrollGeneration(0)
-    , mDisplayPortMargins(0, 0, 0, 0)
-    , mPresShellId(-1)
-    , mViewport(0, 0, 0, 0)
-    , mExtraResolution()
-    , mPaintRequestTime()
-    , mScrollUpdateType(eNone)
-    , mIsRootContent(false)
-    , mUseDisplayPortMargins(false)
-    , mIsScrollInfoLayer(false)
-  {
-  }
+      : mScrollId(ScrollableLayerGuid::NULL_SCROLL_ID),
+        mPresShellResolution(1),
+        mCompositionBounds(0, 0, 0, 0),
+        mCumulativeResolution(),
+        mDevPixelsPerCSSPixel(1),
+        mScrollOffset(0, 0),
+        mZoom(),
+        mScrollGeneration(0),
+        mDisplayPortMargins(0, 0, 0, 0),
+        mPresShellId(-1),
+        mViewport(0, 0, 0, 0),
+        mExtraResolution(),
+        mPaintRequestTime(),
+        mScrollUpdateType(eNone),
+        mIsRootContent(false),
+        mUseDisplayPortMargins(false),
+        mIsScrollInfoLayer(false) {}
 
-  RepaintRequest(const FrameMetrics& aOther, const ScrollOffsetUpdateType aScrollUpdateType)
-    : mScrollId(aOther.GetScrollId())
-    , mPresShellResolution(aOther.GetPresShellResolution())
-    , mCompositionBounds(aOther.GetCompositionBounds())
-    , mCumulativeResolution(aOther.GetCumulativeResolution())
-    , mDevPixelsPerCSSPixel(aOther.GetDevPixelsPerCSSPixel())
-    , mScrollOffset(aOther.GetScrollOffset())
-    , mZoom(aOther.GetZoom())
-    , mScrollGeneration(aOther.GetScrollGeneration())
-    , mDisplayPortMargins(aOther.GetDisplayPortMargins())
-    , mPresShellId(aOther.GetPresShellId())
-    , mViewport(aOther.GetViewport())
-    , mExtraResolution(aOther.GetExtraResolution())
-    , mPaintRequestTime(aOther.GetPaintRequestTime())
-    , mScrollUpdateType(aScrollUpdateType)
-    , mIsRootContent(aOther.IsRootContent())
-    , mUseDisplayPortMargins(aOther.GetUseDisplayPortMargins())
-    , mIsScrollInfoLayer(aOther.IsScrollInfoLayer())
-  {
-  }
+  RepaintRequest(const FrameMetrics& aOther,
+                 const ScrollOffsetUpdateType aScrollUpdateType)
+      : mScrollId(aOther.GetScrollId()),
+        mPresShellResolution(aOther.GetPresShellResolution()),
+        mCompositionBounds(aOther.GetCompositionBounds()),
+        mCumulativeResolution(aOther.GetCumulativeResolution()),
+        mDevPixelsPerCSSPixel(aOther.GetDevPixelsPerCSSPixel()),
+        mScrollOffset(aOther.GetScrollOffset()),
+        mZoom(aOther.GetZoom()),
+        mScrollGeneration(aOther.GetScrollGeneration()),
+        mDisplayPortMargins(aOther.GetDisplayPortMargins()),
+        mPresShellId(aOther.GetPresShellId()),
+        mViewport(aOther.GetViewport()),
+        mExtraResolution(aOther.GetExtraResolution()),
+        mPaintRequestTime(aOther.GetPaintRequestTime()),
+        mScrollUpdateType(aScrollUpdateType),
+        mIsRootContent(aOther.IsRootContent()),
+        mUseDisplayPortMargins(aOther.GetUseDisplayPortMargins()),
+        mIsScrollInfoLayer(aOther.IsScrollInfoLayer()) {}
 
   // Default copy ctor and operator= are fine
 
-  bool operator==(const RepaintRequest& aOther) const
-  {
+  bool operator==(const RepaintRequest& aOther) const {
     // Put mScrollId at the top since it's the most likely one to fail.
     return mScrollId == aOther.mScrollId &&
            mPresShellResolution == aOther.mPresShellResolution &&
@@ -102,149 +99,101 @@ public:
            mIsScrollInfoLayer == aOther.mIsScrollInfoLayer;
   }
 
-  bool operator!=(const RepaintRequest& aOther) const
-  {
+  bool operator!=(const RepaintRequest& aOther) const {
     return !operator==(aOther);
   }
 
-  CSSToScreenScale2D DisplayportPixelsPerCSSPixel() const
-  {
-    // Note: use 'mZoom * ParentLayerToLayerScale(1.0f)' as the CSS-to-Layer scale
-    // instead of LayersPixelsPerCSSPixel(), because displayport calculations
-    // are done in the context of a repaint request, where we ask Layout to
-    // repaint at a new resolution that includes any async zoom. Until this
-    // repaint request is processed, LayersPixelsPerCSSPixel() does not yet
+  CSSToScreenScale2D DisplayportPixelsPerCSSPixel() const {
+    // Note: use 'mZoom * ParentLayerToLayerScale(1.0f)' as the CSS-to-Layer
+    // scale instead of LayersPixelsPerCSSPixel(), because displayport
+    // calculations are done in the context of a repaint request, where we ask
+    // Layout to repaint at a new resolution that includes any async zoom. Until
+    // this repaint request is processed, LayersPixelsPerCSSPixel() does not yet
     // include the async zoom, but it will when the displayport is interpreted
     // for the repaint.
     return mZoom * ParentLayerToLayerScale(1.0f) / mExtraResolution;
   }
 
-  CSSToLayerScale2D LayersPixelsPerCSSPixel() const
-  {
+  CSSToLayerScale2D LayersPixelsPerCSSPixel() const {
     return mDevPixelsPerCSSPixel * mCumulativeResolution;
   }
 
   // Get the amount by which this frame has been zoomed since the last repaint.
-  LayerToParentLayerScale GetAsyncZoom() const
-  {
+  LayerToParentLayerScale GetAsyncZoom() const {
     // The async portion of the zoom should be the same along the x and y
     // axes.
     return (mZoom / LayersPixelsPerCSSPixel()).ToScaleFactor();
   }
 
-  CSSSize CalculateCompositedSizeInCssPixels() const
-  {
+  CSSSize CalculateCompositedSizeInCssPixels() const {
     if (GetZoom() == CSSToParentLayerScale2D(0, 0)) {
       return CSSSize();  // avoid division by zero
     }
     return mCompositionBounds.Size() / GetZoom();
   }
 
-  float GetPresShellResolution() const
-  {
-    return mPresShellResolution;
-  }
+  float GetPresShellResolution() const { return mPresShellResolution; }
 
-  const ParentLayerRect& GetCompositionBounds() const
-  {
+  const ParentLayerRect& GetCompositionBounds() const {
     return mCompositionBounds;
   }
 
-  const LayoutDeviceToLayerScale2D& GetCumulativeResolution() const
-  {
+  const LayoutDeviceToLayerScale2D& GetCumulativeResolution() const {
     return mCumulativeResolution;
   }
 
-  const CSSToLayoutDeviceScale& GetDevPixelsPerCSSPixel() const
-  {
+  const CSSToLayoutDeviceScale& GetDevPixelsPerCSSPixel() const {
     return mDevPixelsPerCSSPixel;
   }
 
-  bool IsRootContent() const
-  {
-    return mIsRootContent;
-  }
+  bool IsRootContent() const { return mIsRootContent; }
 
-  const CSSPoint& GetScrollOffset() const
-  {
-    return mScrollOffset;
-  }
+  const CSSPoint& GetScrollOffset() const { return mScrollOffset; }
 
-  const CSSToParentLayerScale2D& GetZoom() const
-  {
-    return mZoom;
-  }
+  const CSSToParentLayerScale2D& GetZoom() const { return mZoom; }
 
-  ScrollOffsetUpdateType GetScrollUpdateType() const
-  {
+  ScrollOffsetUpdateType GetScrollUpdateType() const {
     return mScrollUpdateType;
   }
 
-  bool GetScrollOffsetUpdated() const
-  {
-    return mScrollUpdateType != eNone;
-  }
+  bool GetScrollOffsetUpdated() const { return mScrollUpdateType != eNone; }
 
-  uint32_t GetScrollGeneration() const
-  {
-    return mScrollGeneration;
-  }
+  uint32_t GetScrollGeneration() const { return mScrollGeneration; }
 
-  ScrollableLayerGuid::ViewID GetScrollId() const
-  {
-    return mScrollId;
-  }
+  ScrollableLayerGuid::ViewID GetScrollId() const { return mScrollId; }
 
-  const ScreenMargin& GetDisplayPortMargins() const
-  {
+  const ScreenMargin& GetDisplayPortMargins() const {
     return mDisplayPortMargins;
   }
 
-  bool GetUseDisplayPortMargins() const
-  {
-    return mUseDisplayPortMargins;
-  }
+  bool GetUseDisplayPortMargins() const { return mUseDisplayPortMargins; }
 
-  uint32_t GetPresShellId() const
-  {
-    return mPresShellId;
-  }
+  uint32_t GetPresShellId() const { return mPresShellId; }
 
-  const CSSRect& GetViewport() const
-  {
-    return mViewport;
-  }
+  const CSSRect& GetViewport() const { return mViewport; }
 
-  const ScreenToLayerScale2D& GetExtraResolution() const
-  {
+  const ScreenToLayerScale2D& GetExtraResolution() const {
     return mExtraResolution;
   }
 
-  const TimeStamp& GetPaintRequestTime() const {
-    return mPaintRequestTime;
-  }
+  const TimeStamp& GetPaintRequestTime() const { return mPaintRequestTime; }
 
-  bool IsScrollInfoLayer() const {
-    return mIsScrollInfoLayer;
-  }
+  bool IsScrollInfoLayer() const { return mIsScrollInfoLayer; }
 
-protected:
-  void SetIsRootContent(bool aIsRootContent)
-  {
+ protected:
+  void SetIsRootContent(bool aIsRootContent) {
     mIsRootContent = aIsRootContent;
   }
 
-  void SetUseDisplayPortMargins(bool aValue)
-  {
+  void SetUseDisplayPortMargins(bool aValue) {
     mUseDisplayPortMargins = aValue;
   }
 
-  void SetIsScrollInfoLayer(bool aIsScrollInfoLayer)
-  {
+  void SetIsScrollInfoLayer(bool aIsScrollInfoLayer) {
     mIsScrollInfoLayer = aIsScrollInfoLayer;
   }
 
-private:
+ private:
   // A unique ID assigned to each scrollable frame.
   ScrollableLayerGuid::ViewID mScrollId;
 
@@ -306,10 +255,11 @@ private:
   // not any parents, regardless of parent transforms.
   CSSPoint mScrollOffset;
 
-  // The "user zoom". Content is painted by gecko at mResolution * mDevPixelsPerCSSPixel,
-  // but will be drawn to the screen at mZoom. In the steady state, the
-  // two will be the same, but during an async zoom action the two may
-  // diverge. This information is initialized in Gecko but updated in the APZC.
+  // The "user zoom". Content is painted by gecko at mResolution *
+  // mDevPixelsPerCSSPixel, but will be drawn to the screen at mZoom. In the
+  // steady state, the two will be the same, but during an async zoom action the
+  // two may diverge. This information is initialized in Gecko but updated in
+  // the APZC.
   CSSToParentLayerScale2D mZoom;
 
   // The scroll generation counter used to acknowledge the scroll offset update.
@@ -343,17 +293,17 @@ private:
   ScrollOffsetUpdateType mScrollUpdateType;
 
   // Whether or not this is the root scroll frame for the root content document.
-  bool mIsRootContent:1;
+  bool mIsRootContent : 1;
 
   // If this is true then we use the display port margins on this metrics,
   // otherwise use the display port rect.
-  bool mUseDisplayPortMargins:1;
+  bool mUseDisplayPortMargins : 1;
 
   // Whether or not this frame has a "scroll info layer" to capture events.
-  bool mIsScrollInfoLayer:1;
+  bool mIsScrollInfoLayer : 1;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif /* GFX_REPAINTREQUEST_H */

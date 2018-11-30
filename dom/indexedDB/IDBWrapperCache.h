@@ -17,39 +17,34 @@ class nsPIDOMWindowInnter;
 namespace mozilla {
 namespace dom {
 
-class IDBWrapperCache : public DOMEventTargetHelper
-{
+class IDBWrapperCache : public DOMEventTargetHelper {
   JS::Heap<JSObject*> mScriptOwner;
 
-public:
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(IDBWrapperCache,
                                                          DOMEventTargetHelper)
 
-  JSObject*
-  GetScriptOwner() const
-  {
-    return mScriptOwner;
-  }
+  JSObject* GetScriptOwner() const { return mScriptOwner; }
 
-  void
-  SetScriptOwner(JSObject* aScriptOwner);
+  void SetScriptOwner(JSObject* aScriptOwner);
 
   void AssertIsRooted() const
 #ifdef DEBUG
-  ;
+      ;
 #else
-  { }
+  {
+  }
 #endif
 
-protected:
+ protected:
   explicit IDBWrapperCache(DOMEventTargetHelper* aOwner);
   explicit IDBWrapperCache(nsPIDOMWindowInner* aOwner);
 
   virtual ~IDBWrapperCache();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_idbwrappercache_h__
+#endif  // mozilla_dom_idbwrappercache_h__

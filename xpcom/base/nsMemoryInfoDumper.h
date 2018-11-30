@@ -17,11 +17,10 @@
  * dumps memory info upon receiving a signal.  You can activate these listeners
  * by calling Initialize().
  */
-class nsMemoryInfoDumper : public nsIMemoryInfoDumper
-{
+class nsMemoryInfoDumper : public nsIMemoryInfoDumper {
   virtual ~nsMemoryInfoDumper();
 
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMEMORYINFODUMPER
 
@@ -39,8 +38,11 @@ public:
 #endif
 };
 
-#define NS_MEMORY_INFO_DUMPER_CID \
-{ 0x00bd71fb, 0x7f09, 0x4ec3, \
-{ 0x96, 0xaf, 0xa0, 0xb5, 0x22, 0xb7, 0x79, 0x69 } }
+#define NS_MEMORY_INFO_DUMPER_CID                    \
+  {                                                  \
+    0x00bd71fb, 0x7f09, 0x4ec3, {                    \
+      0x96, 0xaf, 0xa0, 0xb5, 0x22, 0xb7, 0x79, 0x69 \
+    }                                                \
+  }
 
 #endif

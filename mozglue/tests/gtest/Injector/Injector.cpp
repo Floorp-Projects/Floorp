@@ -6,9 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int
-main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
   if (argc < 4) {
     fprintf(stderr,
             "Not enough command line arguments.\n"
@@ -25,12 +23,13 @@ main(int argc, char** argv)
   void* startAddr = (void*)strtoul(argv[2], 0, 0);
   void* threadParam = (void*)strtoul(argv[3], 0, 0);
 #endif
-  HANDLE targetProc = OpenProcess(PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION |
-                                  PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ,
-                                  FALSE,
-                                  pid);
+  HANDLE targetProc =
+      OpenProcess(PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION |
+                      PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ,
+                  FALSE, pid);
   if (targetProc == nullptr) {
-    fprintf(stderr, "Error %lu opening target process, PID %lu \n", GetLastError(), pid);
+    fprintf(stderr, "Error %lu opening target process, PID %lu \n",
+            GetLastError(), pid);
     return 1;
   }
 

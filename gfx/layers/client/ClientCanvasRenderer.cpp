@@ -11,15 +11,11 @@
 namespace mozilla {
 namespace layers {
 
-CompositableForwarder*
-ClientCanvasRenderer::GetForwarder()
-{
+CompositableForwarder* ClientCanvasRenderer::GetForwarder() {
   return mLayer->Manager()->AsShadowForwarder();
 }
 
-bool
-ClientCanvasRenderer::CreateCompositable()
-{
+bool ClientCanvasRenderer::CreateCompositable() {
   if (!mCanvasClient) {
     TextureFlags flags = TextureFlags::DEFAULT;
     if (mOriginPos == gl::OriginPos::BottomLeft) {
@@ -31,8 +27,7 @@ ClientCanvasRenderer::CreateCompositable()
     }
 
     mCanvasClient = CanvasClient::CreateCanvasClient(GetCanvasClientType(),
-                                                     GetForwarder(),
-                                                     flags);
+                                                     GetForwarder(), flags);
     if (!mCanvasClient) {
       return false;
     }
@@ -50,5 +45,5 @@ ClientCanvasRenderer::CreateCompositable()
   return true;
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

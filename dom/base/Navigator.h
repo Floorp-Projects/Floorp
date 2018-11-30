@@ -39,8 +39,8 @@ class ServiceWorkerContainer;
 class DOMRequest;
 class CredentialsContainer;
 class Clipboard;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 //*****************************************************************************
 // Navigator: Script "navigator" object
@@ -53,7 +53,7 @@ class Permissions;
 
 namespace battery {
 class BatteryManager;
-} // namespace battery
+}  // namespace battery
 
 class Promise;
 
@@ -68,7 +68,7 @@ struct MIDIOptions;
 
 namespace network {
 class Connection;
-} // namespace network
+}  // namespace network
 
 class Presentation;
 class LegacyMozTCPSocket;
@@ -77,10 +77,8 @@ class VRServiceTest;
 class StorageManager;
 class MediaCapabilities;
 
-class Navigator final : public nsISupports
-                      , public nsWrapperCache
-{
-public:
+class Navigator final : public nsISupports, public nsWrapperCache {
+ public:
   explicit Navigator(nsPIDOMWindowInner* aInnerWindow);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -89,10 +87,7 @@ public:
   static void Init();
 
   void Invalidate();
-  nsPIDOMWindowInner *GetWindow() const
-  {
-    return mWindow;
-  }
+  nsPIDOMWindowInner* GetWindow() const { return mWindow; }
 
   void RefreshMIMEArray();
 
@@ -101,7 +96,7 @@ public:
   /**
    * For use during document.write where our inner window changes.
    */
-  void SetWindow(nsPIDOMWindowInner *aInnerWindow);
+  void SetWindow(nsPIDOMWindowInner* aInnerWindow);
 
   /**
    * Called when the inner window navigates to a new page.
@@ -138,8 +133,7 @@ public:
                                 bool aUsePrefOverriddenValue);
 
   static nsresult GetUserAgent(nsPIDOMWindowInner* aWindow,
-                               bool aIsCallerChrome,
-                               nsAString& aUserAgent);
+                               bool aIsCallerChrome, nsAString& aUserAgent);
 
   // Clears the user agent cache by calling:
   // Navigator_Binding::ClearCachedUserAgentValue(this);
@@ -158,15 +152,9 @@ public:
   bool CookieEnabled();
   void GetBuildID(nsAString& aBuildID, CallerType aCallerType,
                   ErrorResult& aRv) const;
-  bool JavaEnabled()
-  {
-    return false;
-  }
+  bool JavaEnabled() { return false; }
   uint64_t HardwareConcurrency();
-  bool TaintEnabled()
-  {
-    return false;
-  }
+  bool TaintEnabled() { return false; }
   void AddIdleObserver(MozIdleObserver& aObserver, ErrorResult& aRv);
   void RemoveIdleObserver(MozIdleObserver& aObserver, ErrorResult& aRv);
 
@@ -174,7 +162,7 @@ public:
   network::Connection* GetConnection(ErrorResult& aRv);
   MediaDevices* GetMediaDevices(ErrorResult& aRv);
 
-  void GetGamepads(nsTArray<RefPtr<Gamepad> >& aGamepads, ErrorResult& aRv);
+  void GetGamepads(nsTArray<RefPtr<Gamepad>>& aGamepads, ErrorResult& aRv);
   GamepadServiceTest* RequestGamepadServiceTest();
   already_AddRefed<Promise> GetVRDisplays(ErrorResult& aRv);
   void GetActiveVRDisplays(nsTArray<RefPtr<VRDisplay>>& aDisplays) const;
@@ -182,24 +170,22 @@ public:
   bool IsWebVRContentDetected() const;
   bool IsWebVRContentPresenting() const;
   void RequestVRPresentation(VRDisplay& aDisplay);
-  already_AddRefed<Promise> RequestMIDIAccess(const MIDIOptions& aOptions, ErrorResult& aRv);
+  already_AddRefed<Promise> RequestMIDIAccess(const MIDIOptions& aOptions,
+                                              ErrorResult& aRv);
 
   Presentation* GetPresentation(ErrorResult& aRv);
 
-  bool SendBeacon(const nsAString& aUrl,
-                  const Nullable<fetch::BodyInit>& aData,
+  bool SendBeacon(const nsAString& aUrl, const Nullable<fetch::BodyInit>& aData,
                   ErrorResult& aRv);
 
   void MozGetUserMedia(const MediaStreamConstraints& aConstraints,
                        NavigatorUserMediaSuccessCallback& aOnSuccess,
                        NavigatorUserMediaErrorCallback& aOnError,
-                       CallerType aCallerType,
-                       ErrorResult& aRv);
+                       CallerType aCallerType, ErrorResult& aRv);
   void MozGetUserMediaDevices(const MediaStreamConstraints& aConstraints,
                               MozGetUserMediaDevicesSuccessCallback& aOnSuccess,
                               NavigatorUserMediaErrorCallback& aOnError,
-                              uint64_t aInnerWindowID,
-                              const nsAString& aCallID,
+                              uint64_t aInnerWindowID, const nsAString& aCallID,
                               ErrorResult& aRv);
 
   already_AddRefed<ServiceWorkerContainer> ServiceWorker();
@@ -221,43 +207,36 @@ public:
   static bool HasUserMediaSupport(JSContext* /* unused */,
                                   JSObject* /* unused */);
 
-  nsPIDOMWindowInner* GetParentObject() const
-  {
-    return GetWindow();
-  }
+  nsPIDOMWindowInner* GetParentObject() const { return GetWindow(); }
 
-  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   // GetWindowFromGlobal returns the inner window for this global, if
   // any, else null.
-  static already_AddRefed<nsPIDOMWindowInner> GetWindowFromGlobal(JSObject* aGlobal);
+  static already_AddRefed<nsPIDOMWindowInner> GetWindowFromGlobal(
+      JSObject* aGlobal);
 
-  already_AddRefed<Promise>
-  RequestMediaKeySystemAccess(const nsAString& aKeySystem,
-                              const Sequence<MediaKeySystemConfiguration>& aConfig,
-                              ErrorResult& aRv);
-private:
+  already_AddRefed<Promise> RequestMediaKeySystemAccess(
+      const nsAString& aKeySystem,
+      const Sequence<MediaKeySystemConfiguration>& aConfig, ErrorResult& aRv);
+
+ private:
   RefPtr<MediaKeySystemAccessManager> mMediaKeySystemAccessManager;
 
-public:
+ public:
   void NotifyVRDisplaysUpdated();
   void NotifyActiveVRDisplaysChanged();
 
-private:
+ private:
   virtual ~Navigator();
 
   // This enum helps SendBeaconInternal to apply different behaviors to body
   // types.
-  enum BeaconType {
-    eBeaconTypeBlob,
-    eBeaconTypeArrayBuffer,
-    eBeaconTypeOther
-  };
+  enum BeaconType { eBeaconTypeBlob, eBeaconTypeArrayBuffer, eBeaconTypeOther };
 
-  bool SendBeaconInternal(const nsAString& aUrl,
-                          BodyExtractorBase* aBody,
-                          BeaconType aType,
-                          ErrorResult& aRv);
+  bool SendBeaconInternal(const nsAString& aUrl, BodyExtractorBase* aBody,
+                          BeaconType aType, ErrorResult& aRv);
 
   RefPtr<nsMimeTypeArray> mMimeTypes;
   RefPtr<nsPluginArray> mPlugins;
@@ -273,14 +252,14 @@ private:
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<Presentation> mPresentation;
   RefPtr<GamepadServiceTest> mGamepadServiceTest;
-  nsTArray<RefPtr<Promise> > mVRGetDisplaysPromises;
+  nsTArray<RefPtr<Promise>> mVRGetDisplaysPromises;
   RefPtr<VRServiceTest> mVRServiceTest;
   nsTArray<uint32_t> mRequestedVibrationPattern;
   RefPtr<StorageManager> mStorageManager;
   RefPtr<dom::MediaCapabilities> mMediaCapabilities;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_Navigator_h
+#endif  // mozilla_dom_Navigator_h

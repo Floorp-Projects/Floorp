@@ -14,27 +14,21 @@ namespace mozilla {
 namespace dom {
 
 const double HTMLProgressElement::kIndeterminatePosition = -1.0;
-const double HTMLProgressElement::kDefaultValue          =  0.0;
-const double HTMLProgressElement::kDefaultMax            =  1.0;
+const double HTMLProgressElement::kDefaultValue = 0.0;
+const double HTMLProgressElement::kDefaultMax = 1.0;
 
-
-HTMLProgressElement::HTMLProgressElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-  : nsGenericHTMLElement(std::move(aNodeInfo))
-{
+HTMLProgressElement::HTMLProgressElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsGenericHTMLElement(std::move(aNodeInfo)) {
   // We start out indeterminate
   AddStatesSilently(NS_EVENT_STATE_INDETERMINATE);
 }
 
-HTMLProgressElement::~HTMLProgressElement()
-{
-}
+HTMLProgressElement::~HTMLProgressElement() {}
 
 NS_IMPL_ELEMENT_CLONE(HTMLProgressElement)
 
-
-EventStates
-HTMLProgressElement::IntrinsicState() const
-{
+EventStates HTMLProgressElement::IntrinsicState() const {
   EventStates state = nsGenericHTMLElement::IntrinsicState();
 
   if (IsIndeterminate()) {
@@ -44,28 +38,22 @@ HTMLProgressElement::IntrinsicState() const
   return state;
 }
 
-bool
-HTMLProgressElement::ParseAttribute(int32_t aNamespaceID,
-                                    nsAtom* aAttribute,
-                                    const nsAString& aValue,
-                                    nsIPrincipal* aMaybeScriptedPrincipal,
-                                    nsAttrValue& aResult)
-{
+bool HTMLProgressElement::ParseAttribute(int32_t aNamespaceID,
+                                         nsAtom* aAttribute,
+                                         const nsAString& aValue,
+                                         nsIPrincipal* aMaybeScriptedPrincipal,
+                                         nsAttrValue& aResult) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::value || aAttribute == nsGkAtoms::max) {
       return aResult.ParseDoubleValue(aValue);
     }
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute,
-                                              aValue,
-                                              aMaybeScriptedPrincipal,
-                                              aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aMaybeScriptedPrincipal, aResult);
 }
 
-double
-HTMLProgressElement::Value() const
-{
+double HTMLProgressElement::Value() const {
   const nsAttrValue* attrValue = mAttrs.GetAttr(nsGkAtoms::value);
   if (!attrValue || attrValue->Type() != nsAttrValue::eDoubleValue ||
       attrValue->GetDoubleValue() < 0.0) {
@@ -75,9 +63,7 @@ HTMLProgressElement::Value() const
   return std::min(attrValue->GetDoubleValue(), Max());
 }
 
-double
-HTMLProgressElement::Max() const
-{
+double HTMLProgressElement::Max() const {
   const nsAttrValue* attrMax = mAttrs.GetAttr(nsGkAtoms::max);
   if (!attrMax || attrMax->Type() != nsAttrValue::eDoubleValue ||
       attrMax->GetDoubleValue() <= 0.0) {
@@ -87,9 +73,7 @@ HTMLProgressElement::Max() const
   return attrMax->GetDoubleValue();
 }
 
-double
-HTMLProgressElement::Position() const
-{
+double HTMLProgressElement::Position() const {
   if (IsIndeterminate()) {
     return kIndeterminatePosition;
   }
@@ -97,18 +81,15 @@ HTMLProgressElement::Position() const
   return Value() / Max();
 }
 
-bool
-HTMLProgressElement::IsIndeterminate() const
-{
+bool HTMLProgressElement::IsIndeterminate() const {
   const nsAttrValue* attrValue = mAttrs.GetAttr(nsGkAtoms::value);
   return !attrValue || attrValue->Type() != nsAttrValue::eDoubleValue;
 }
 
-JSObject*
-HTMLProgressElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* HTMLProgressElement::WrapNode(JSContext* aCx,
+                                        JS::Handle<JSObject*> aGivenProto) {
   return HTMLProgressElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

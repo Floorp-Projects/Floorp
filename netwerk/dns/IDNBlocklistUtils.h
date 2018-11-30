@@ -17,18 +17,15 @@ namespace net {
 typedef mozilla::Pair<char16_t, char16_t> BlocklistRange;
 
 // Used to perform a binary search of the needle in the sorted array of pairs
-class BlocklistPairToCharComparator
-{
-public:
-  bool Equals(const BlocklistRange& pair, char16_t needle) const
-  {
+class BlocklistPairToCharComparator {
+ public:
+  bool Equals(const BlocklistRange& pair, char16_t needle) const {
     // If the needle is between pair.first() and pair.second() it
     // is part of the range.
     return pair.first() <= needle && needle <= pair.second();
   }
 
-  bool LessThan(const BlocklistRange& pair, char16_t needle) const
-  {
+  bool LessThan(const BlocklistRange& pair, char16_t needle) const {
     // The needle has to be larger than the second value,
     // otherwise it may be equal.
     return pair.second() < needle;
@@ -36,24 +33,20 @@ public:
 };
 
 // Used to sort the array of pairs
-class BlocklistEntryComparator
-{
-public:
-  bool Equals(const BlocklistRange& a, const BlocklistRange& b) const
-  {
+class BlocklistEntryComparator {
+ public:
+  bool Equals(const BlocklistRange& a, const BlocklistRange& b) const {
     return a.first() == b.first() && a.second() == b.second();
   }
 
-  bool LessThan(const BlocklistRange& a, const BlocklistRange& b) const
-  {
+  bool LessThan(const BlocklistRange& a, const BlocklistRange& b) const {
     return a.first() < b.first();
   }
 };
 
 // Returns true if the char can be found in the blocklist
-inline bool
-CharInBlocklist(char16_t aChar, const nsTArray<BlocklistRange>& aBlocklist)
-{
+inline bool CharInBlocklist(char16_t aChar,
+                            const nsTArray<BlocklistRange>& aBlocklist) {
   return aBlocklist.ContainsSorted(aChar, BlocklistPairToCharComparator());
 }
 
@@ -61,13 +54,12 @@ CharInBlocklist(char16_t aChar, const nsTArray<BlocklistRange>& aBlocklist)
 // values of the following preferences:
 //     - network.IDN.extra_allowed_chars
 //     - network.IDN.extra_blocked_chars
-void
-InitializeBlocklist(nsTArray<BlocklistRange>& aBlocklist);
+void InitializeBlocklist(nsTArray<BlocklistRange>& aBlocklist);
 
-void
-RemoveCharFromBlocklist(char16_t aChar, nsTArray<BlocklistRange>& aBlocklist);
+void RemoveCharFromBlocklist(char16_t aChar,
+                             nsTArray<BlocklistRange>& aBlocklist);
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // IDNBlocklistUtils_h__
+#endif  // IDNBlocklistUtils_h__

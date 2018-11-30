@@ -15,16 +15,12 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 
-nsresult
-NS_CopyNativeToUnicode(const nsACString& aInput, nsAString& aOutput)
-{
+nsresult NS_CopyNativeToUnicode(const nsACString& aInput, nsAString& aOutput) {
   CopyUTF8toUTF16(aInput, aOutput);
   return NS_OK;
 }
 
-nsresult
-NS_CopyUnicodeToNative(const nsAString&  aInput, nsACString& aOutput)
-{
+nsresult NS_CopyUnicodeToNative(const nsAString& aInput, nsACString& aOutput) {
   CopyUTF16toUTF8(aInput, aOutput);
   return NS_OK;
 }
@@ -41,9 +37,7 @@ NS_CopyUnicodeToNative(const nsAString&  aInput, nsACString& aOutput)
 
 using namespace mozilla;
 
-nsresult
-NS_CopyNativeToUnicode(const nsACString& aInput, nsAString& aOutput)
-{
+nsresult NS_CopyNativeToUnicode(const nsACString& aInput, nsAString& aOutput) {
   uint32_t inputLen = aInput.Length();
 
   nsACString::const_iterator iter;
@@ -69,9 +63,7 @@ NS_CopyNativeToUnicode(const nsACString& aInput, nsAString& aOutput)
   return NS_OK;
 }
 
-nsresult
-NS_CopyUnicodeToNative(const nsAString&  aInput, nsACString& aOutput)
-{
+nsresult NS_CopyUnicodeToNative(const nsAString& aInput, nsACString& aOutput) {
   uint32_t inputLen = aInput.Length();
 
   nsAString::const_iterator iter;
@@ -82,8 +74,8 @@ NS_CopyUnicodeToNative(const nsAString&  aInput, nsACString& aOutput)
   // determine length of result
   uint32_t resultLen = 0;
 
-  int n = ::WideCharToMultiByte(CP_ACP, 0, buf, inputLen, nullptr, 0,
-                                nullptr, nullptr);
+  int n = ::WideCharToMultiByte(CP_ACP, 0, buf, inputLen, nullptr, 0, nullptr,
+                                nullptr);
   if (n > 0) {
     resultLen += n;
   }

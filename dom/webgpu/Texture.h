@@ -12,28 +12,27 @@
 namespace mozilla {
 namespace dom {
 struct WebGPUTextureViewDescriptor;
-} // namespace dom
+}  // namespace dom
 
 namespace webgpu {
 
 class Device;
 class TextureView;
 
-class Texture final
-    : public ChildOf<Device>
-{
-public:
-    WEBGPU_DECL_GOOP(Texture)
+class Texture final : public ChildOf<Device> {
+ public:
+  WEBGPU_DECL_GOOP(Texture)
 
-private:
-    Texture() = delete;
-    virtual ~Texture();
+ private:
+  Texture() = delete;
+  virtual ~Texture();
 
-public:
-    already_AddRefed<TextureView> CreateTextureView(const dom::WebGPUTextureViewDescriptor&) const;
+ public:
+  already_AddRefed<TextureView> CreateTextureView(
+      const dom::WebGPUTextureViewDescriptor&) const;
 };
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla
 
-#endif // WEBGPU_Texture_H_
+#endif  // WEBGPU_Texture_H_

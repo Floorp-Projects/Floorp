@@ -37,16 +37,12 @@ static const uint32_t kStartupDelay = 0;
 
 const char kTestingPref[] = "dom.storage.testing";
 
-NS_IMPL_ISUPPORTS(StorageObserver,
-                  nsIObserver,
-                  nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(StorageObserver, nsIObserver, nsISupportsWeakReference)
 
 StorageObserver* StorageObserver::sSelf = nullptr;
 
 // static
-nsresult
-StorageObserver::Init()
-{
+nsresult StorageObserver::Init() {
   if (sSelf) {
     return NS_OK;
   }
@@ -83,9 +79,7 @@ StorageObserver::Init()
 }
 
 // static
-nsresult
-StorageObserver::Shutdown()
-{
+nsresult StorageObserver::Shutdown() {
   if (!sSelf) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -95,9 +89,8 @@ StorageObserver::Shutdown()
 }
 
 // static
-void
-StorageObserver::TestingPrefChanged(const char* aPrefName, void* aClosure)
-{
+void StorageObserver::TestingPrefChanged(const char* aPrefName,
+                                         void* aClosure) {
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (!obs) {
     return;
@@ -120,23 +113,17 @@ StorageObserver::TestingPrefChanged(const char* aPrefName, void* aClosure)
   }
 }
 
-void
-StorageObserver::AddSink(StorageObserverSink* aObs)
-{
+void StorageObserver::AddSink(StorageObserverSink* aObs) {
   mSinks.AppendElement(aObs);
 }
 
-void
-StorageObserver::RemoveSink(StorageObserverSink* aObs)
-{
+void StorageObserver::RemoveSink(StorageObserverSink* aObs) {
   mSinks.RemoveElement(aObs);
 }
 
-void
-StorageObserver::Notify(const char* aTopic,
-                        const nsAString& aOriginAttributesPattern,
-                        const nsACString& aOriginScope)
-{
+void StorageObserver::Notify(const char* aTopic,
+                             const nsAString& aOriginAttributesPattern,
+                             const nsACString& aOriginScope) {
   nsTObserverArray<StorageObserverSink*>::ForwardIterator iter(mSinks);
   while (iter.HasMore()) {
     StorageObserverSink* sink = iter.GetNext();
@@ -144,16 +131,12 @@ StorageObserver::Notify(const char* aTopic,
   }
 }
 
-void
-StorageObserver::NoteBackgroundThread(nsIEventTarget* aBackgroundThread)
-{
+void StorageObserver::NoteBackgroundThread(nsIEventTarget* aBackgroundThread) {
   mBackgroundThread = aBackgroundThread;
 }
 
-nsresult
-StorageObserver::ClearMatchingOrigin(const char16_t* aData,
-                                     nsACString& aOriginScope)
-{
+nsresult StorageObserver::ClearMatchingOrigin(const char16_t* aData,
+                                              nsACString& aOriginScope) {
   nsresult rv;
 
   NS_ConvertUTF16toUTF8 domain(aData);
@@ -166,10 +149,8 @@ StorageObserver::ClearMatchingOrigin(const char16_t* aData,
   } else {
     // In case the IDN service is not available, this is the best we can come
     // up with!
-    rv = NS_EscapeURL(domain,
-                      esc_OnlyNonASCII | esc_AlwaysCopy,
-                      convertedDomain,
-                      fallible);
+    rv = NS_EscapeURL(domain, esc_OnlyNonASCII | esc_AlwaysCopy,
+                      convertedDomain, fallible);
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -197,10 +178,8 @@ StorageObserver::ClearMatchingOrigin(const char16_t* aData,
 }
 
 NS_IMETHODIMP
-StorageObserver::Observe(nsISupports* aSubject,
-                         const char* aTopic,
-                         const char16_t* aData)
-{
+StorageObserver::Observe(nsISupports* aSubject, const char* aTopic,
+                         const char16_t* aData) {
   nsresult rv;
 
   // Start the thread that opens the database.
@@ -215,7 +194,8 @@ StorageObserver::Observe(nsISupports* aSubject,
     obs->RemoveObserver(this, kStartupTopic);
 
     return NS_NewTimerWithObserver(getter_AddRefs(mDBThreadStartDelayTimer),
-                                   this, nsITimer::TYPE_ONE_SHOT, kStartupDelay);
+                                   this, nsITimer::TYPE_ONE_SHOT,
+                                   kStartupDelay);
   }
 
   // Timer callback used to start the database a short timer after startup
@@ -295,7 +275,8 @@ StorageObserver::Observe(nsISupports* aSubject,
     }
 
     nsAutoCString originSuffix;
-    BasePrincipal::Cast(principal)->OriginAttributesRef().CreateSuffix(originSuffix);
+    BasePrincipal::Cast(principal)->OriginAttributesRef().CreateSuffix(
+        originSuffix);
 
     nsCOMPtr<nsIURI> origin;
     principal->GetURI(getter_AddRefs(origin));
@@ -420,9 +401,9 @@ StorageObserver::Observe(nsISupports* aSubject,
       bool done = false;
 
       RefPtr<StorageDBThread::ShutdownRunnable> shutdownRunnable =
-        new StorageDBThread::ShutdownRunnable(done);
+          new StorageDBThread::ShutdownRunnable(done);
       MOZ_ALWAYS_SUCCEEDS(
-        mBackgroundThread->Dispatch(shutdownRunnable, NS_DISPATCH_NORMAL));
+          mBackgroundThread->Dispatch(shutdownRunnable, NS_DISPATCH_NORMAL));
 
       MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return done; }));
 
@@ -474,5 +455,5 @@ StorageObserver::Observe(nsISupports* aSubject,
   return NS_ERROR_UNEXPECTED;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

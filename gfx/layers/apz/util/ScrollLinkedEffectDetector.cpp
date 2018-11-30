@@ -15,9 +15,7 @@ namespace layers {
 uint32_t ScrollLinkedEffectDetector::sDepth = 0;
 bool ScrollLinkedEffectDetector::sFoundScrollLinkedEffect = false;
 
-/* static */ void
-ScrollLinkedEffectDetector::PositioningPropertyMutated()
-{
+/* static */ void ScrollLinkedEffectDetector::PositioningPropertyMutated() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (sDepth > 0) {
@@ -27,14 +25,12 @@ ScrollLinkedEffectDetector::PositioningPropertyMutated()
 }
 
 ScrollLinkedEffectDetector::ScrollLinkedEffectDetector(nsIDocument* aDoc)
-  : mDocument(aDoc)
-{
+    : mDocument(aDoc) {
   MOZ_ASSERT(NS_IsMainThread());
   sDepth++;
 }
 
-ScrollLinkedEffectDetector::~ScrollLinkedEffectDetector()
-{
+ScrollLinkedEffectDetector::~ScrollLinkedEffectDetector() {
   sDepth--;
   if (sDepth == 0) {
     // We have exited all (possibly-nested) scroll event dispatches,
@@ -46,5 +42,5 @@ ScrollLinkedEffectDetector::~ScrollLinkedEffectDetector()
   }
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

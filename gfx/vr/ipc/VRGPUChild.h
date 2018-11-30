@@ -12,9 +12,8 @@
 namespace mozilla {
 namespace gfx {
 
-class VRGPUChild final : public PVRGPUChild
-{
-public:
+class VRGPUChild final : public PVRGPUChild {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRGPUChild);
 
   static VRGPUChild* Get();
@@ -22,15 +21,15 @@ public:
   static bool IsCreated();
   static void ShutDown();
 
-protected:
+ protected:
   explicit VRGPUChild() {}
   ~VRGPUChild() {}
 
-private:
+ private:
   DISALLOW_COPY_AND_ASSIGN(VRGPUChild);
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // GFX_VR_GPU_CHILD_H
+#endif  // GFX_VR_GPU_CHILD_H

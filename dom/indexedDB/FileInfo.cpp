@@ -24,75 +24,55 @@ using namespace mozilla::dom::quota;
 namespace {
 
 template <typename IdType>
-class FileInfoImpl final
-  : public FileInfo
-{
+class FileInfoImpl final : public FileInfo {
   IdType mFileId;
 
-public:
+ public:
   FileInfoImpl(FileManager* aFileManager, IdType aFileId)
-    : FileInfo(aFileManager)
-    , mFileId(aFileId)
-  {
+      : FileInfo(aFileManager), mFileId(aFileId) {
     MOZ_ASSERT(aFileManager);
     MOZ_ASSERT(aFileId > 0);
   }
 
-private:
-  ~FileInfoImpl()
-  { }
+ private:
+  ~FileInfoImpl() {}
 
-  virtual int64_t
-  Id() const override
-  {
-    return int64_t(mFileId);
-  }
+  virtual int64_t Id() const override { return int64_t(mFileId); }
 };
 
-class CleanupFileRunnable final
-  : public Runnable
-{
+class CleanupFileRunnable final : public Runnable {
   RefPtr<FileManager> mFileManager;
   int64_t mFileId;
 
-public:
-  static void
-  DoCleanup(FileManager* aFileManager, int64_t aFileId);
+ public:
+  static void DoCleanup(FileManager* aFileManager, int64_t aFileId);
 
   CleanupFileRunnable(FileManager* aFileManager, int64_t aFileId)
-    : Runnable("dom::indexedDB::CleanupFileRunnable")
-    , mFileManager(aFileManager)
-    , mFileId(aFileId)
-  {
+      : Runnable("dom::indexedDB::CleanupFileRunnable"),
+        mFileManager(aFileManager),
+        mFileId(aFileId) {
     MOZ_ASSERT(aFileManager);
     MOZ_ASSERT(aFileId > 0);
   }
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(CleanupFileRunnable, Runnable);
 
-private:
-  ~CleanupFileRunnable()
-  { }
+ private:
+  ~CleanupFileRunnable() {}
 
   NS_DECL_NSIRUNNABLE
 };
 
-} // namespace
+}  // namespace
 
-FileInfo::FileInfo(FileManager* aFileManager)
-  : mFileManager(aFileManager)
-{
+FileInfo::FileInfo(FileManager* aFileManager) : mFileManager(aFileManager) {
   MOZ_ASSERT(aFileManager);
 }
 
-FileInfo::~FileInfo()
-{
-}
+FileInfo::~FileInfo() {}
 
 // static
-FileInfo*
-FileInfo::Create(FileManager* aFileManager, int64_t aId)
-{
+FileInfo* FileInfo::Create(FileManager* aFileManager, int64_t aId) {
   MOZ_ASSERT(aFileManager);
   MOZ_ASSERT(aId > 0);
 
@@ -107,11 +87,8 @@ FileInfo::Create(FileManager* aFileManager, int64_t aId)
   return new FileInfoImpl<int64_t>(aFileManager, aId);
 }
 
-void
-FileInfo::GetReferences(int32_t* aRefCnt,
-                        int32_t* aDBRefCnt,
-                        int32_t* aSliceRefCnt)
-{
+void FileInfo::GetReferences(int32_t* aRefCnt, int32_t* aDBRefCnt,
+                             int32_t* aSliceRefCnt) {
   MOZ_ASSERT(!IndexedDatabaseManager::IsClosed());
 
   MutexAutoLock lock(IndexedDatabaseManager::FileMutex());
@@ -129,11 +106,8 @@ FileInfo::GetReferences(int32_t* aRefCnt,
   }
 }
 
-void
-FileInfo::UpdateReferences(ThreadSafeAutoRefCnt& aRefCount,
-                           int32_t aDelta,
-                           CustomCleanupCallback* aCustomCleanupCallback)
-{
+void FileInfo::UpdateReferences(ThreadSafeAutoRefCnt& aRefCount, int32_t aDelta,
+                                CustomCleanupCallback* aCustomCleanupCallback) {
   // XXX This can go away once DOM objects no longer hold FileInfo objects...
   //     Looking at you, BlobImplBase...
   //     BlobImplBase is being addressed in bug 1068975.
@@ -184,9 +158,7 @@ FileInfo::UpdateReferences(ThreadSafeAutoRefCnt& aRefCount,
   delete this;
 }
 
-bool
-FileInfo::LockedClearDBRefs()
-{
+bool FileInfo::LockedClearDBRefs() {
   MOZ_ASSERT(!IndexedDatabaseManager::IsClosed());
 
   IndexedDatabaseManager::FileMutex().AssertCurrentThreadOwns();
@@ -207,15 +179,13 @@ FileInfo::LockedClearDBRefs()
   return false;
 }
 
-void
-FileInfo::Cleanup()
-{
+void FileInfo::Cleanup() {
   int64_t id = Id();
 
   // IndexedDatabaseManager is main-thread only.
   if (!NS_IsMainThread()) {
     RefPtr<CleanupFileRunnable> cleaner =
-      new CleanupFileRunnable(mFileManager, id);
+        new CleanupFileRunnable(mFileManager, id);
 
     MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(cleaner));
     return;
@@ -225,9 +195,8 @@ FileInfo::Cleanup()
 }
 
 // static
-void
-CleanupFileRunnable::DoCleanup(FileManager* aFileManager, int64_t aFileId)
-{
+void CleanupFileRunnable::DoCleanup(FileManager* aFileManager,
+                                    int64_t aFileId) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aFileManager);
   MOZ_ASSERT(aFileId > 0);
@@ -245,8 +214,7 @@ CleanupFileRunnable::DoCleanup(FileManager* aFileManager, int64_t aFileId)
 }
 
 NS_IMETHODIMP
-CleanupFileRunnable::Run()
-{
+CleanupFileRunnable::Run() {
   MOZ_ASSERT(NS_IsMainThread());
 
   DoCleanup(mFileManager, mFileId);
@@ -254,17 +222,16 @@ CleanupFileRunnable::Run()
   return NS_OK;
 }
 
-/* static */ already_AddRefed<nsIFile>
-FileInfo::GetFileForFileInfo(FileInfo* aFileInfo)
-{
+/* static */ already_AddRefed<nsIFile> FileInfo::GetFileForFileInfo(
+    FileInfo* aFileInfo) {
   FileManager* fileManager = aFileInfo->Manager();
   nsCOMPtr<nsIFile> directory = fileManager->GetDirectory();
   if (NS_WARN_IF(!directory)) {
     return nullptr;
   }
 
-  nsCOMPtr<nsIFile> file = FileManager::GetFileForId(directory,
-                                                     aFileInfo->Id());
+  nsCOMPtr<nsIFile> file =
+      FileManager::GetFileForId(directory, aFileInfo->Id());
   if (NS_WARN_IF(!file)) {
     return nullptr;
   }
@@ -272,6 +239,6 @@ FileInfo::GetFileForFileInfo(FileInfo* aFileInfo)
   return file.forget();
 }
 
-} // namespace indexedDB
-} // namespace dom
-} // namespace mozilla
+}  // namespace indexedDB
+}  // namespace dom
+}  // namespace mozilla

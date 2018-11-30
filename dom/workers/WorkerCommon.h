@@ -20,54 +20,40 @@ class WorkerPrivate;
 
 // All of these are implemented in RuntimeService.cpp
 
-WorkerPrivate*
-GetWorkerPrivateFromContext(JSContext* aCx);
+WorkerPrivate* GetWorkerPrivateFromContext(JSContext* aCx);
 
-WorkerPrivate*
-GetCurrentThreadWorkerPrivate();
+WorkerPrivate* GetCurrentThreadWorkerPrivate();
 
-bool
-IsCurrentThreadRunningWorker();
+bool IsCurrentThreadRunningWorker();
 
-bool
-IsCurrentThreadRunningChromeWorker();
+bool IsCurrentThreadRunningChromeWorker();
 
-JSContext*
-GetCurrentWorkerThreadJSContext();
+JSContext* GetCurrentWorkerThreadJSContext();
 
-JSObject*
-GetCurrentThreadWorkerGlobal();
+JSObject* GetCurrentThreadWorkerGlobal();
 
-void
-CancelWorkersForWindow(nsPIDOMWindowInner* aWindow);
+void CancelWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
-void
-FreezeWorkersForWindow(nsPIDOMWindowInner* aWindow);
+void FreezeWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
-void
-ThawWorkersForWindow(nsPIDOMWindowInner* aWindow);
+void ThawWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
-void
-SuspendWorkersForWindow(nsPIDOMWindowInner* aWindow);
+void SuspendWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
-void
-ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow);
+void ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
-void
-PropagateFirstPartyStorageAccessGrantedToWorkers(nsPIDOMWindowInner* aWindow);
+void PropagateFirstPartyStorageAccessGrantedToWorkers(
+    nsPIDOMWindowInner* aWindow);
 
 // All of these are implemented in WorkerScope.cpp
 
-bool
-IsWorkerGlobal(JSObject* global);
+bool IsWorkerGlobal(JSObject* global);
 
-bool
-IsWorkerDebuggerGlobal(JSObject* global);
+bool IsWorkerDebuggerGlobal(JSObject* global);
 
-bool
-IsWorkerDebuggerSandbox(JSObject* object);
+bool IsWorkerDebuggerSandbox(JSObject* object);
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_workers_WorkerCommon_h
+#endif  // mozilla_dom_workers_WorkerCommon_h

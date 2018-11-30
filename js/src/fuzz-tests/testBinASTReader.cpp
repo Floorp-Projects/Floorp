@@ -5,7 +5,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #include "mozilla/ScopeExit.h"
 
 #include "jsapi.h"
@@ -29,64 +28,60 @@ using JS::CompileOptions;
 extern JS::PersistentRootedObject gGlobal;
 extern JSContext* gCx;
 
-static int
-testBinASTReaderInit(int *argc, char ***argv) {
-  return 0;
-}
+static int testBinASTReaderInit(int* argc, char*** argv) { return 0; }
 
-static int
-testBinASTReaderFuzz(const uint8_t* buf, size_t size) {
-    using namespace js::frontend;
+static int testBinASTReaderFuzz(const uint8_t* buf, size_t size) {
+  using namespace js::frontend;
 
-    auto gcGuard = mozilla::MakeScopeExit([&] {
-        JS::PrepareForFullGC(gCx);
-        JS::NonIncrementalGC(gCx, GC_NORMAL, JS::gcreason::API);
-    });
+  auto gcGuard = mozilla::MakeScopeExit([&] {
+    JS::PrepareForFullGC(gCx);
+    JS::NonIncrementalGC(gCx, GC_NORMAL, JS::gcreason::API);
+  });
 
-    if (!size) return 0;
+  if (!size) return 0;
 
-    CompileOptions options(gCx);
-    options.setIntroductionType("fuzzing parse")
-       .setFileAndLine("<string>", 1);
+  CompileOptions options(gCx);
+  options.setIntroductionType("fuzzing parse").setFileAndLine("<string>", 1);
 
-    js::Vector<uint8_t> binSource(gCx);
-    if (!binSource.append(buf, size)) {
-        ReportOutOfMemory(gCx);
-        return 0;
-    }
-
-    UsedNameTracker binUsedNames(gCx);
-
-    Directives directives(false);
-    GlobalSharedContext globalsc(gCx, ScopeKind::Global, directives, false);
-
-    RootedScriptSourceObject sourceObj(gCx, frontend::CreateScriptSourceObject(gCx, options,
-                                               mozilla::Nothing()));
-    if (!sourceObj) {
-        ReportOutOfMemory(gCx);
-        return 0;
-    }
-    BinASTParser<js::frontend::BinTokenReaderMultipart> reader(gCx, gCx->tempLifoAlloc(),
-                                                               binUsedNames, options, sourceObj);
-
-    // Will be deallocated once `reader` goes out of scope.
-    auto binParsed = reader.parse(&globalsc, binSource);
-    RootedValue binExn(gCx);
-    if (binParsed.isErr()) {
-        js::GetAndClearException(gCx, &binExn);
-        return 0;
-    }
-
-#if defined(DEBUG) // Dumping an AST is only defined in DEBUG builds
-    Sprinter binPrinter(gCx);
-    if (!binPrinter.init()) {
-        ReportOutOfMemory(gCx);
-        return 0;
-    }
-    DumpParseTree(binParsed.unwrap(), binPrinter);
-#endif // defined(DEBUG)
-
+  js::Vector<uint8_t> binSource(gCx);
+  if (!binSource.append(buf, size)) {
+    ReportOutOfMemory(gCx);
     return 0;
+  }
+
+  UsedNameTracker binUsedNames(gCx);
+
+  Directives directives(false);
+  GlobalSharedContext globalsc(gCx, ScopeKind::Global, directives, false);
+
+  RootedScriptSourceObject sourceObj(
+      gCx,
+      frontend::CreateScriptSourceObject(gCx, options, mozilla::Nothing()));
+  if (!sourceObj) {
+    ReportOutOfMemory(gCx);
+    return 0;
+  }
+  BinASTParser<js::frontend::BinTokenReaderMultipart> reader(
+      gCx, gCx->tempLifoAlloc(), binUsedNames, options, sourceObj);
+
+  // Will be deallocated once `reader` goes out of scope.
+  auto binParsed = reader.parse(&globalsc, binSource);
+  RootedValue binExn(gCx);
+  if (binParsed.isErr()) {
+    js::GetAndClearException(gCx, &binExn);
+    return 0;
+  }
+
+#if defined(DEBUG)  // Dumping an AST is only defined in DEBUG builds
+  Sprinter binPrinter(gCx);
+  if (!binPrinter.init()) {
+    ReportOutOfMemory(gCx);
+    return 0;
+  }
+  DumpParseTree(binParsed.unwrap(), binPrinter);
+#endif  // defined(DEBUG)
+
+  return 0;
 }
 
 MOZ_FUZZING_INTERFACE_RAW(testBinASTReaderInit, testBinASTReaderFuzz, BinAST);

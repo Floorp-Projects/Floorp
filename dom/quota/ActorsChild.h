@@ -16,7 +16,7 @@ namespace ipc {
 
 class BackgroundChildImpl;
 
-} // namespace ipc
+}  // namespace ipc
 
 namespace dom {
 namespace quota {
@@ -25,9 +25,7 @@ class QuotaManagerService;
 class Request;
 class UsageRequest;
 
-class QuotaChild final
-  : public PQuotaChild
-{
+class QuotaChild final : public PQuotaChild {
   friend class mozilla::ipc::BackgroundChildImpl;
   friend class QuotaManagerService;
 
@@ -37,16 +35,16 @@ class QuotaChild final
   nsCOMPtr<nsIEventTarget> mOwningThread;
 #endif
 
-public:
-  void
-  AssertIsOnOwningThread() const
+ public:
+  void AssertIsOnOwningThread() const
 #ifdef DEBUG
-  ;
+      ;
 #else
-  { }
+  {
+  }
 #endif
 
-private:
+ private:
   // Only created by QuotaManagerService.
   explicit QuotaChild(QuotaManagerService* aService);
 
@@ -54,106 +52,92 @@ private:
   ~QuotaChild();
 
   // IPDL methods are only called by IPDL.
-  virtual void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual PQuotaUsageRequestChild*
-  AllocPQuotaUsageRequestChild(const UsageRequestParams& aParams) override;
+  virtual PQuotaUsageRequestChild* AllocPQuotaUsageRequestChild(
+      const UsageRequestParams& aParams) override;
 
-  virtual bool
-  DeallocPQuotaUsageRequestChild(PQuotaUsageRequestChild* aActor) override;
+  virtual bool DeallocPQuotaUsageRequestChild(
+      PQuotaUsageRequestChild* aActor) override;
 
-  virtual PQuotaRequestChild*
-  AllocPQuotaRequestChild(const RequestParams& aParams) override;
+  virtual PQuotaRequestChild* AllocPQuotaRequestChild(
+      const RequestParams& aParams) override;
 
-  virtual bool
-  DeallocPQuotaRequestChild(PQuotaRequestChild* aActor) override;
+  virtual bool DeallocPQuotaRequestChild(PQuotaRequestChild* aActor) override;
 };
 
-class QuotaUsageRequestChild final
-  : public PQuotaUsageRequestChild
-{
+class QuotaUsageRequestChild final : public PQuotaUsageRequestChild {
   friend class QuotaChild;
   friend class QuotaManagerService;
 
   RefPtr<UsageRequest> mRequest;
 
-public:
-  void
-  AssertIsOnOwningThread() const
+ public:
+  void AssertIsOnOwningThread() const
 #ifdef DEBUG
-  ;
+      ;
 #else
-  { }
+  {
+  }
 #endif
 
-private:
+ private:
   // Only created by QuotaManagerService.
   explicit QuotaUsageRequestChild(UsageRequest* aRequest);
 
   // Only destroyed by QuotaChild.
   ~QuotaUsageRequestChild();
 
-  void
-  HandleResponse(nsresult aResponse);
+  void HandleResponse(nsresult aResponse);
 
-  void
-  HandleResponse(const nsTArray<OriginUsage>& aResponse);
+  void HandleResponse(const nsTArray<OriginUsage>& aResponse);
 
-  void
-  HandleResponse(const OriginUsageResponse& aResponse);
+  void HandleResponse(const OriginUsageResponse& aResponse);
 
   // IPDL methods are only called by IPDL.
-  virtual void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult
-  Recv__delete__(const UsageRequestResponse& aResponse) override;
+  virtual mozilla::ipc::IPCResult Recv__delete__(
+      const UsageRequestResponse& aResponse) override;
 };
 
-class QuotaRequestChild final
-  : public PQuotaRequestChild
-{
+class QuotaRequestChild final : public PQuotaRequestChild {
   friend class QuotaChild;
   friend class QuotaManagerService;
 
   RefPtr<Request> mRequest;
 
-public:
-  void
-  AssertIsOnOwningThread() const
+ public:
+  void AssertIsOnOwningThread() const
 #ifdef DEBUG
-  ;
+      ;
 #else
-  { }
+  {
+  }
 #endif
 
-private:
+ private:
   // Only created by QuotaManagerService.
   explicit QuotaRequestChild(Request* aRequest);
 
   // Only destroyed by QuotaChild.
   ~QuotaRequestChild();
 
-  void
-  HandleResponse(nsresult aResponse);
+  void HandleResponse(nsresult aResponse);
 
-  void
-  HandleResponse();
+  void HandleResponse();
 
-  void
-  HandleResponse(bool aResponse);
+  void HandleResponse(bool aResponse);
 
   // IPDL methods are only called by IPDL.
-  virtual void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult
-  Recv__delete__(const RequestResponse& aResponse) override;
+  virtual mozilla::ipc::IPCResult Recv__delete__(
+      const RequestResponse& aResponse) override;
 };
 
-} // namespace quota
-} // namespace dom
-} // namespace mozilla
+}  // namespace quota
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_quota_ActorsChild_h
+#endif  // mozilla_dom_quota_ActorsChild_h

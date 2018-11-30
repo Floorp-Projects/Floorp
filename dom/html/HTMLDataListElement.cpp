@@ -12,18 +12,14 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(DataList)
 namespace mozilla {
 namespace dom {
 
-HTMLDataListElement::~HTMLDataListElement()
-{
-}
+HTMLDataListElement::~HTMLDataListElement() {}
 
-JSObject*
-HTMLDataListElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* HTMLDataListElement::WrapNode(JSContext* aCx,
+                                        JS::Handle<JSObject*> aGivenProto) {
   return HTMLDataListElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLDataListElement,
-                                   nsGenericHTMLElement,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLDataListElement, nsGenericHTMLElement,
                                    mOptions)
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLDataListElement,
@@ -31,13 +27,11 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLDataListElement,
 
 NS_IMPL_ELEMENT_CLONE(HTMLDataListElement)
 
-bool
-HTMLDataListElement::MatchOptions(Element* aElement, int32_t aNamespaceID,
-                                  nsAtom* aAtom, void* aData)
-{
+bool HTMLDataListElement::MatchOptions(Element* aElement, int32_t aNamespaceID,
+                                       nsAtom* aAtom, void* aData) {
   return aElement->NodeInfo()->Equals(nsGkAtoms::option, kNameSpaceID_XHTML) &&
          !aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

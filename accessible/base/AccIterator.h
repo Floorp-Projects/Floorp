@@ -20,13 +20,12 @@ namespace a11y {
 /**
  * AccIterable is a basic interface for iterators over accessibles.
  */
-class AccIterable
-{
-public:
-  virtual ~AccIterable() { }
+class AccIterable {
+ public:
+  virtual ~AccIterable() {}
   virtual Accessible* Next() = 0;
 
-private:
+ private:
   friend class Relation;
   std::unique_ptr<AccIterable> mNextIter;
 };
@@ -35,9 +34,8 @@ private:
  * Allows to iterate through accessible children or subtree complying with
  * filter function.
  */
-class AccIterator : public AccIterable
-{
-public:
+class AccIterator : public AccIterable {
+ public:
   AccIterator(const Accessible* aRoot, filters::FilterFuncPtr aFilterFunc);
   virtual ~AccIterator();
 
@@ -47,14 +45,14 @@ public:
    */
   virtual Accessible* Next() override;
 
-private:
+ private:
   AccIterator();
   AccIterator(const AccIterator&);
-  AccIterator& operator =(const AccIterator&);
+  AccIterator& operator=(const AccIterator&);
 
-  struct IteratorState
-  {
-    explicit IteratorState(const Accessible* aParent, IteratorState* mParentState = nullptr);
+  struct IteratorState {
+    explicit IteratorState(const Accessible* aParent,
+                           IteratorState* mParentState = nullptr);
 
     const Accessible* mParent;
     int32_t mIndex;
@@ -65,14 +63,12 @@ private:
   IteratorState* mState;
 };
 
-
 /**
  * Allows to traverse through related accessibles that are pointing to the given
  * dependent accessible by relation attribute.
  */
-class RelatedAccIterator : public AccIterable
-{
-public:
+class RelatedAccIterator : public AccIterable {
+ public:
   /**
    * Constructor.
    *
@@ -86,17 +82,17 @@ public:
   RelatedAccIterator(DocAccessible* aDocument, nsIContent* aDependentContent,
                      nsAtom* aRelAttr);
 
-  virtual ~RelatedAccIterator() { }
+  virtual ~RelatedAccIterator() {}
 
   /**
    * Return next related accessible for the given dependent accessible.
    */
   virtual Accessible* Next() override;
 
-private:
+ private:
   RelatedAccIterator();
   RelatedAccIterator(const RelatedAccIterator&);
-  RelatedAccIterator& operator = (const RelatedAccIterator&);
+  RelatedAccIterator& operator=(const RelatedAccIterator&);
 
   DocAccessible* mDocument;
   nsAtom* mRelAttr;
@@ -105,32 +101,27 @@ private:
   uint32_t mIndex;
 };
 
-
 /**
  * Used to iterate through HTML labels associated with the given accessible.
  */
-class HTMLLabelIterator : public AccIterable
-{
-public:
-  enum LabelFilter {
-    eAllLabels,
-    eSkipAncestorLabel
-  };
+class HTMLLabelIterator : public AccIterable {
+ public:
+  enum LabelFilter { eAllLabels, eSkipAncestorLabel };
 
   HTMLLabelIterator(DocAccessible* aDocument, const Accessible* aAccessible,
                     LabelFilter aFilter = eAllLabels);
 
-  virtual ~HTMLLabelIterator() { }
+  virtual ~HTMLLabelIterator() {}
 
   /**
    * Return next label accessible associated with the given element.
    */
   virtual Accessible* Next() override;
 
-private:
+ private:
   HTMLLabelIterator();
   HTMLLabelIterator(const HTMLLabelIterator&);
-  HTMLLabelIterator& operator = (const HTMLLabelIterator&);
+  HTMLLabelIterator& operator=(const HTMLLabelIterator&);
 
   bool IsLabel(Accessible* aLabel);
 
@@ -141,71 +132,65 @@ private:
   LabelFilter mLabelFilter;
 };
 
-
 /**
  * Used to iterate through HTML outputs associated with the given element.
  */
-class HTMLOutputIterator : public AccIterable
-{
-public:
+class HTMLOutputIterator : public AccIterable {
+ public:
   HTMLOutputIterator(DocAccessible* aDocument, nsIContent* aElement);
-  virtual ~HTMLOutputIterator() { }
+  virtual ~HTMLOutputIterator() {}
 
   /**
    * Return next output accessible associated with the given element.
    */
   virtual Accessible* Next() override;
 
-private:
+ private:
   HTMLOutputIterator();
   HTMLOutputIterator(const HTMLOutputIterator&);
-  HTMLOutputIterator& operator = (const HTMLOutputIterator&);
+  HTMLOutputIterator& operator=(const HTMLOutputIterator&);
 
   RelatedAccIterator mRelIter;
 };
 
-
 /**
  * Used to iterate through XUL labels associated with the given element.
  */
-class XULLabelIterator : public AccIterable
-{
-public:
+class XULLabelIterator : public AccIterable {
+ public:
   XULLabelIterator(DocAccessible* aDocument, nsIContent* aElement);
-  virtual ~XULLabelIterator() { }
+  virtual ~XULLabelIterator() {}
 
   /**
    * Return next label accessible associated with the given element.
    */
   virtual Accessible* Next() override;
 
-private:
+ private:
   XULLabelIterator();
   XULLabelIterator(const XULLabelIterator&);
-  XULLabelIterator& operator = (const XULLabelIterator&);
+  XULLabelIterator& operator=(const XULLabelIterator&);
 
   RelatedAccIterator mRelIter;
 };
 
-
 /**
  * Used to iterate through XUL descriptions associated with the given element.
  */
-class XULDescriptionIterator : public AccIterable
-{
-public:
+class XULDescriptionIterator : public AccIterable {
+ public:
   XULDescriptionIterator(DocAccessible* aDocument, nsIContent* aElement);
-  virtual ~XULDescriptionIterator() { }
+  virtual ~XULDescriptionIterator() {}
 
   /**
    * Return next description accessible associated with the given element.
    */
   virtual Accessible* Next() override;
 
-private:
+ private:
   XULDescriptionIterator();
   XULDescriptionIterator(const XULDescriptionIterator&);
-  XULDescriptionIterator& operator = (const XULDescriptionIterator&);
+  XULDescriptionIterator& operator=(const XULDescriptionIterator&);
 
   RelatedAccIterator mRelIter;
 };
@@ -215,12 +200,11 @@ private:
  * attribute. Note, any method used to iterate through IDs, elements, or
  * accessibles moves iterator to next position.
  */
-class IDRefsIterator : public AccIterable
-{
-public:
+class IDRefsIterator : public AccIterable {
+ public:
   IDRefsIterator(DocAccessible* aDoc, nsIContent* aContent,
                  nsAtom* aIDRefsAttr);
-  virtual ~IDRefsIterator() { }
+  virtual ~IDRefsIterator() {}
 
   /**
    * Return next ID.
@@ -240,10 +224,10 @@ public:
   // AccIterable
   virtual Accessible* Next() override;
 
-private:
+ private:
   IDRefsIterator();
   IDRefsIterator(const IDRefsIterator&);
-  IDRefsIterator operator = (const IDRefsIterator&);
+  IDRefsIterator operator=(const IDRefsIterator&);
 
   nsString mIDs;
   nsIContent* mContent;
@@ -251,66 +235,60 @@ private:
   nsAString::index_type mCurrIdx;
 };
 
-
 /**
  * Iterator that points to a single accessible returning it on the first call
  * to Next().
  */
-class SingleAccIterator : public AccIterable
-{
-public:
-  explicit SingleAccIterator(Accessible* aTarget): mAcc(aTarget) { }
-  virtual ~SingleAccIterator() { }
+class SingleAccIterator : public AccIterable {
+ public:
+  explicit SingleAccIterator(Accessible* aTarget) : mAcc(aTarget) {}
+  virtual ~SingleAccIterator() {}
 
   virtual Accessible* Next() override;
 
-private:
+ private:
   SingleAccIterator();
   SingleAccIterator(const SingleAccIterator&);
-  SingleAccIterator& operator = (const SingleAccIterator&);
+  SingleAccIterator& operator=(const SingleAccIterator&);
 
   RefPtr<Accessible> mAcc;
 };
 
-
 /**
  * Used to iterate items of the given item container.
  */
-class ItemIterator : public AccIterable
-{
-public:
-  explicit ItemIterator(const Accessible* aItemContainer) :
-    mContainer(aItemContainer), mAnchor(nullptr) { }
-  virtual ~ItemIterator() { }
+class ItemIterator : public AccIterable {
+ public:
+  explicit ItemIterator(const Accessible* aItemContainer)
+      : mContainer(aItemContainer), mAnchor(nullptr) {}
+  virtual ~ItemIterator() {}
 
   virtual Accessible* Next() override;
 
-private:
+ private:
   ItemIterator() = delete;
   ItemIterator(const ItemIterator&) = delete;
-  ItemIterator& operator = (const ItemIterator&) = delete;
+  ItemIterator& operator=(const ItemIterator&) = delete;
 
   const Accessible* mContainer;
   Accessible* mAnchor;
 };
 
-
 /**
  * Used to iterate through XUL tree items of the same level.
  */
-class XULTreeItemIterator : public AccIterable
-{
-public:
+class XULTreeItemIterator : public AccIterable {
+ public:
   XULTreeItemIterator(const XULTreeAccessible* aXULTree, nsITreeView* aTreeView,
                       int32_t aRowIdx);
-  virtual ~XULTreeItemIterator() { }
+  virtual ~XULTreeItemIterator() {}
 
   virtual Accessible* Next() override;
 
-private:
+ private:
   XULTreeItemIterator() = delete;
   XULTreeItemIterator(const XULTreeItemIterator&) = delete;
-  XULTreeItemIterator& operator = (const XULTreeItemIterator&) = delete;
+  XULTreeItemIterator& operator=(const XULTreeItemIterator&) = delete;
 
   const XULTreeAccessible* mXULTree;
   nsITreeView* mTreeView;
@@ -319,7 +297,7 @@ private:
   int32_t mCurrRowIdx;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

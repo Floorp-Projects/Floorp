@@ -18,42 +18,41 @@
 #include "mozilla/widget/WinModifierKeyState.h"
 #include <windows.h>
 
-#define NS_NUM_OF_KEYS          70
+#define NS_NUM_OF_KEYS 70
 
-#define VK_OEM_1                0xBA   // ';:' for US
-#define VK_OEM_PLUS             0xBB   // '+' any country
-#define VK_OEM_COMMA            0xBC
-#define VK_OEM_MINUS            0xBD   // '-' any country
-#define VK_OEM_PERIOD           0xBE
-#define VK_OEM_2                0xBF
-#define VK_OEM_3                0xC0
+#define VK_OEM_1 0xBA     // ';:' for US
+#define VK_OEM_PLUS 0xBB  // '+' any country
+#define VK_OEM_COMMA 0xBC
+#define VK_OEM_MINUS 0xBD  // '-' any country
+#define VK_OEM_PERIOD 0xBE
+#define VK_OEM_2 0xBF
+#define VK_OEM_3 0xC0
 // '/?' for Brazilian (ABNT)
-#define VK_ABNT_C1              0xC1
+#define VK_ABNT_C1 0xC1
 // Separator in Numpad for Brazilian (ABNT) or JIS keyboard for Mac.
-#define VK_ABNT_C2              0xC2
-#define VK_OEM_4                0xDB
-#define VK_OEM_5                0xDC
-#define VK_OEM_6                0xDD
-#define VK_OEM_7                0xDE
-#define VK_OEM_8                0xDF
-#define VK_OEM_102              0xE2
-#define VK_OEM_CLEAR            0xFE
+#define VK_ABNT_C2 0xC2
+#define VK_OEM_4 0xDB
+#define VK_OEM_5 0xDC
+#define VK_OEM_6 0xDD
+#define VK_OEM_7 0xDE
+#define VK_OEM_8 0xDF
+#define VK_OEM_102 0xE2
+#define VK_OEM_CLEAR 0xFE
 
 class nsIIdleServiceInternal;
 
 namespace mozilla {
 namespace widget {
 
-enum ScanCode : uint16_t
-{
-  eCapsLock =                   0x003A,
-  eNumLock =                    0xE045,
-  eShiftLeft =                  0x002A,
-  eShiftRight =                 0x0036,
-  eControlLeft =                0x001D,
-  eControlRight =               0xE01D,
-  eAltLeft =                    0x0038,
-  eAltRight =                   0xE038,
+enum ScanCode : uint16_t {
+  eCapsLock = 0x003A,
+  eNumLock = 0xE045,
+  eShiftLeft = 0x002A,
+  eShiftRight = 0x0036,
+  eControlLeft = 0x001D,
+  eControlRight = 0xE01D,
+  eAltLeft = 0x0038,
+  eAltRight = 0xE038,
 };
 
 // 0: nsIWidget's native modifier flag
@@ -61,21 +60,19 @@ enum ScanCode : uint16_t
 // 2: Virtual keycode which distinguishes whether left or right location.
 // 3: Scan code.
 static const uint32_t sModifierKeyMap[][4] = {
-  { nsIWidget::CAPS_LOCK, VK_CAPITAL, 0,           ScanCode::eCapsLock },
-  { nsIWidget::NUM_LOCK,  VK_NUMLOCK, 0,           ScanCode::eNumLock },
-  { nsIWidget::SHIFT_L,   VK_SHIFT,   VK_LSHIFT,   ScanCode::eShiftLeft },
-  { nsIWidget::SHIFT_R,   VK_SHIFT,   VK_RSHIFT,   ScanCode::eShiftRight },
-  { nsIWidget::CTRL_L,    VK_CONTROL, VK_LCONTROL, ScanCode::eControlLeft },
-  { nsIWidget::CTRL_R,    VK_CONTROL, VK_RCONTROL, ScanCode::eControlRight },
-  { nsIWidget::ALT_L,     VK_MENU,    VK_LMENU,    ScanCode::eAltLeft },
-  { nsIWidget::ALT_R,     VK_MENU,    VK_RMENU,    ScanCode::eAltRight }
-};
+    {nsIWidget::CAPS_LOCK, VK_CAPITAL, 0, ScanCode::eCapsLock},
+    {nsIWidget::NUM_LOCK, VK_NUMLOCK, 0, ScanCode::eNumLock},
+    {nsIWidget::SHIFT_L, VK_SHIFT, VK_LSHIFT, ScanCode::eShiftLeft},
+    {nsIWidget::SHIFT_R, VK_SHIFT, VK_RSHIFT, ScanCode::eShiftRight},
+    {nsIWidget::CTRL_L, VK_CONTROL, VK_LCONTROL, ScanCode::eControlLeft},
+    {nsIWidget::CTRL_R, VK_CONTROL, VK_RCONTROL, ScanCode::eControlRight},
+    {nsIWidget::ALT_L, VK_MENU, VK_LMENU, ScanCode::eAltLeft},
+    {nsIWidget::ALT_R, VK_MENU, VK_RMENU, ScanCode::eAltRight}};
 
 class KeyboardLayout;
 
-class MOZ_STACK_CLASS UniCharsAndModifiers final
-{
-public:
+class MOZ_STACK_CLASS UniCharsAndModifiers final {
+ public:
   UniCharsAndModifiers() {}
   UniCharsAndModifiers operator+(const UniCharsAndModifiers& aOther) const;
   UniCharsAndModifiers& operator+=(const UniCharsAndModifiers& aOther);
@@ -84,35 +81,29 @@ public:
    * Append a pair of unicode character and the final modifier.
    */
   void Append(char16_t aUniChar, Modifiers aModifiers);
-  void Clear()
-  {
+  void Clear() {
     mChars.Truncate();
     mModifiers.Clear();
   }
-  bool IsEmpty() const
-  {
+  bool IsEmpty() const {
     MOZ_ASSERT(mChars.Length() == mModifiers.Length());
     return mChars.IsEmpty();
   }
 
-  char16_t CharAt(size_t aIndex) const
-  {
+  char16_t CharAt(size_t aIndex) const {
     MOZ_ASSERT(aIndex < Length());
     return mChars[aIndex];
   }
-  Modifiers ModifiersAt(size_t aIndex) const
-  {
+  Modifiers ModifiersAt(size_t aIndex) const {
     MOZ_ASSERT(aIndex < Length());
     return mModifiers[aIndex];
   }
-  size_t Length() const
-  {
+  size_t Length() const {
     MOZ_ASSERT(mChars.Length() == mModifiers.Length());
     return mChars.Length();
   }
 
-  bool IsProducingCharsWithAltGr() const
-  {
+  bool IsProducingCharsWithAltGr() const {
     return !IsEmpty() && (ModifiersAt(0) & MODIFIER_ALTGRAPH) != 0;
   }
 
@@ -129,22 +120,19 @@ public:
 
   const nsString& ToString() const { return mChars; }
 
-private:
+ private:
   nsAutoString mChars;
   // 5 is enough number for normal keyboard layout handling.  On Windows,
   // a dead key sequence may cause inputting up to 5 characters per key press.
   AutoTArray<Modifiers, 5> mModifiers;
 };
 
-struct DeadKeyEntry
-{
+struct DeadKeyEntry {
   char16_t BaseChar;
   char16_t CompositeChar;
 };
 
-
-class DeadKeyTable
-{
+class DeadKeyTable {
   friend class KeyboardLayout;
 
   uint16_t mEntries;
@@ -152,38 +140,29 @@ class DeadKeyTable
   // required.  It is the only way to create new DeadKeyTable instances.
   DeadKeyEntry mTable[1];
 
-  void Init(const DeadKeyEntry* aDeadKeyArray, uint32_t aEntries)
-  {
+  void Init(const DeadKeyEntry* aDeadKeyArray, uint32_t aEntries) {
     mEntries = aEntries;
     memcpy(mTable, aDeadKeyArray, aEntries * sizeof(DeadKeyEntry));
   }
 
-  static uint32_t SizeInBytes(uint32_t aEntries)
-  {
+  static uint32_t SizeInBytes(uint32_t aEntries) {
     return offsetof(DeadKeyTable, mTable) + aEntries * sizeof(DeadKeyEntry);
   }
 
-public:
-  uint32_t Entries() const
-  {
-    return mEntries;
-  }
+ public:
+  uint32_t Entries() const { return mEntries; }
 
-  bool IsEqual(const DeadKeyEntry* aDeadKeyArray, uint32_t aEntries) const
-  {
+  bool IsEqual(const DeadKeyEntry* aDeadKeyArray, uint32_t aEntries) const {
     return (mEntries == aEntries &&
-            !memcmp(mTable, aDeadKeyArray,
-                    aEntries * sizeof(DeadKeyEntry)));
+            !memcmp(mTable, aDeadKeyArray, aEntries * sizeof(DeadKeyEntry)));
   }
 
   char16_t GetCompositeChar(char16_t aBaseChar) const;
 };
 
-class VirtualKey
-{
-public:
-  enum ShiftStateIndex : uint8_t
-  {
+class VirtualKey {
+ public:
+  enum ShiftStateIndex : uint8_t {
     //  0 - Normal
     eNormal = 0,
     //  1 - Shift
@@ -218,11 +197,10 @@ public:
     eAltGrShiftWithCapsLock,
   };
 
-  enum ShiftStateFlag
-  {
-    STATE_SHIFT    = 0x01,
-    STATE_CONTROL  = 0x02,
-    STATE_ALT      = 0x04,
+  enum ShiftStateFlag {
+    STATE_SHIFT = 0x01,
+    STATE_CONTROL = 0x02,
+    STATE_ALT = 0x04,
     STATE_CAPSLOCK = 0x08,
     // ShiftState needs to have AltGr state separately since this is necessary
     // for lossless conversion with Modifiers.
@@ -235,25 +213,20 @@ public:
 
   static ShiftState ModifiersToShiftState(Modifiers aModifiers);
   static ShiftState ModifierKeyStateToShiftState(
-                      const ModifierKeyState& aModKeyState)
-  {
+      const ModifierKeyState& aModKeyState) {
     return ModifiersToShiftState(aModKeyState.GetModifiers());
   }
   static Modifiers ShiftStateToModifiers(ShiftState aShiftState);
-  static bool IsAltGrIndex(uint8_t aIndex)
-  {
+  static bool IsAltGrIndex(uint8_t aIndex) {
     return (aIndex & STATE_CONTROL_ALT) == STATE_CONTROL_ALT;
   }
 
-private:
-  union KeyShiftState
-  {
-    struct
-    {
+ private:
+  union KeyShiftState {
+    struct {
       char16_t Chars[4];
     } Normal;
-    struct
-    {
+    struct {
       const DeadKeyTable* Table;
       char16_t DeadChar;
     } DeadKey;
@@ -262,8 +235,7 @@ private:
   KeyShiftState mShiftStates[16];
   uint16_t mIsDeadKey;
 
-  static uint8_t ToShiftStateIndex(ShiftState aShiftState)
-  {
+  static uint8_t ToShiftStateIndex(ShiftState aShiftState) {
     if (!(aShiftState & STATE_ALTGRAPH)) {
       MOZ_ASSERT(aShiftState <= eAltGrShiftWithCapsLock);
       return static_cast<uint8_t>(aShiftState);
@@ -274,8 +246,7 @@ private:
     return index;
   }
 
-  void SetDeadKey(ShiftState aShiftState, bool aIsDeadKey)
-  {
+  void SetDeadKey(ShiftState aShiftState, bool aIsDeadKey) {
     if (aIsDeadKey) {
       mIsDeadKey |= 1 << ToShiftStateIndex(aShiftState);
     } else {
@@ -283,11 +254,10 @@ private:
     }
   }
 
-public:
+ public:
   static void FillKbdState(PBYTE aKbdState, const ShiftState aShiftState);
 
-  bool IsDeadKey(ShiftState aShiftState) const
-  {
+  bool IsDeadKey(ShiftState aShiftState) const {
     return (mIsDeadKey & (1 << ToShiftStateIndex(aShiftState))) != 0;
   }
 
@@ -299,24 +269,23 @@ public:
    * okay to fails in some edge cases when we check all keys which produce
    * character(s) in a layout.
    */
-  bool IsChangedByAltGr(ShiftState aShiftState) const
-  {
+  bool IsChangedByAltGr(ShiftState aShiftState) const {
     MOZ_ASSERT(aShiftState == ToShiftStateIndex(aShiftState));
     MOZ_ASSERT(IsAltGrIndex(aShiftState));
     MOZ_ASSERT(IsDeadKey(aShiftState) ||
                mShiftStates[aShiftState].Normal.Chars[0]);
     const ShiftState kShiftStateWithoutAltGr =
-      aShiftState - ShiftStateIndex::eAltGr;
+        aShiftState - ShiftStateIndex::eAltGr;
     if (IsDeadKey(aShiftState) != IsDeadKey(kShiftStateWithoutAltGr)) {
       return false;
     }
     if (IsDeadKey(aShiftState)) {
       return mShiftStates[aShiftState].DeadKey.DeadChar !=
-               mShiftStates[kShiftStateWithoutAltGr].DeadKey.DeadChar;
+             mShiftStates[kShiftStateWithoutAltGr].DeadKey.DeadChar;
     }
-    for(size_t i = 0; i < 4; i++) {
+    for (size_t i = 0; i < 4; i++) {
       if (mShiftStates[aShiftState].Normal.Chars[i] !=
-            mShiftStates[kShiftStateWithoutAltGr].Normal.Chars[i]) {
+          mShiftStates[kShiftStateWithoutAltGr].Normal.Chars[i]) {
         return true;
       }
       if (!mShiftStates[aShiftState].Normal.Chars[i] &&
@@ -328,8 +297,7 @@ public:
   }
 
   void AttachDeadKeyTable(ShiftState aShiftState,
-                          const DeadKeyTable* aDeadKeyTable)
-  {
+                          const DeadKeyTable* aDeadKeyTable) {
     MOZ_ASSERT(aShiftState == ToShiftStateIndex(aShiftState));
     mShiftStates[aShiftState].DeadKey.Table = aDeadKeyTable;
   }
@@ -340,15 +308,13 @@ public:
   const DeadKeyTable* MatchingDeadKeyTable(const DeadKeyEntry* aDeadKeyArray,
                                            uint32_t aEntries) const;
   inline char16_t GetCompositeChar(ShiftState aShiftState,
-                                    char16_t aBaseChar) const
-  {
-    return mShiftStates[ToShiftStateIndex(aShiftState)].
-             DeadKey.Table->GetCompositeChar(aBaseChar);
+                                   char16_t aBaseChar) const {
+    return mShiftStates[ToShiftStateIndex(aShiftState)]
+        .DeadKey.Table->GetCompositeChar(aBaseChar);
   }
 
   char16_t GetCompositeChar(const ModifierKeyState& aModKeyState,
-                            char16_t aBaseChar) const
-  {
+                            char16_t aBaseChar) const {
     return GetCompositeChar(ModifierKeyStateToShiftState(aModKeyState),
                             aBaseChar);
   }
@@ -360,8 +326,7 @@ public:
    */
   UniCharsAndModifiers GetNativeUniChars(ShiftState aShiftState) const;
   UniCharsAndModifiers GetNativeUniChars(
-                         const ModifierKeyState& aModKeyState) const
-  {
+      const ModifierKeyState& aModKeyState) const {
     return GetNativeUniChars(ModifierKeyStateToShiftState(aModKeyState));
   }
 
@@ -391,19 +356,16 @@ public:
    *                            this key produces no character with AltGr.
    */
   UniCharsAndModifiers GetUniChars(ShiftState aShiftState) const;
-  UniCharsAndModifiers GetUniChars(const ModifierKeyState& aModKeyState) const
-  {
+  UniCharsAndModifiers GetUniChars(const ModifierKeyState& aModKeyState) const {
     return GetUniChars(ModifierKeyStateToShiftState(aModKeyState));
   }
 };
 
-class MOZ_STACK_CLASS NativeKey final
-{
+class MOZ_STACK_CLASS NativeKey final {
   friend class KeyboardLayout;
 
-public:
-  struct FakeCharMsg
-  {
+ public:
+  struct FakeCharMsg {
     UINT mCharCode;
     UINT mScanCode;
     bool mIsSysKey;
@@ -411,22 +373,19 @@ public:
     bool mConsumed;
 
     FakeCharMsg()
-      : mCharCode(0)
-      , mScanCode(0)
-      , mIsSysKey(false)
-      , mIsDeadKey(false)
-      , mConsumed(false)
-    {
-    }
+        : mCharCode(0),
+          mScanCode(0),
+          mIsSysKey(false),
+          mIsDeadKey(false),
+          mConsumed(false) {}
 
-    MSG GetCharMsg(HWND aWnd) const
-    {
+    MSG GetCharMsg(HWND aWnd) const {
       MSG msg;
       msg.hwnd = aWnd;
-      msg.message = mIsDeadKey && mIsSysKey ? WM_SYSDEADCHAR :
-                                 mIsDeadKey ? WM_DEADCHAR :
-                                  mIsSysKey ? WM_SYSCHAR :
-                                              WM_CHAR;
+      msg.message =
+          mIsDeadKey && mIsSysKey
+              ? WM_SYSDEADCHAR
+              : mIsDeadKey ? WM_DEADCHAR : mIsSysKey ? WM_SYSCHAR : WM_CHAR;
       msg.wParam = static_cast<WPARAM>(mCharCode);
       msg.lParam = static_cast<LPARAM>(mScanCode << 16);
       msg.time = 0;
@@ -435,8 +394,7 @@ public:
     }
   };
 
-  NativeKey(nsWindowBase* aWidget,
-            const MSG& aMessage,
+  NativeKey(nsWindowBase* aWidget, const MSG& aMessage,
             const ModifierKeyState& aModKeyState,
             HKL aOverrideKeyboardLayout = 0,
             nsTArray<FakeCharMsg>* aFakeCharMsgs = nullptr);
@@ -487,12 +445,8 @@ public:
   bool IsAlt() const { return mModKeyState.IsAlt(); }
   bool MaybeEmulatingAltGraph() const;
   Modifiers GetModifiers() const { return mModKeyState.GetModifiers(); }
-  const ModifierKeyState& ModifierKeyStateRef() const
-  {
-    return mModKeyState;
-  }
-  VirtualKey::ShiftState GetShiftState() const
-  {
+  const ModifierKeyState& ModifierKeyStateRef() const { return mModKeyState; }
+  VirtualKey::ShiftState GetShiftState() const {
     return VirtualKey::ModifierKeyStateToShiftState(mModKeyState);
   }
 
@@ -511,7 +465,7 @@ public:
    */
   uint8_t SpecificVirtualKeyCode() const { return mVirtualKeyCode; }
 
-private:
+ private:
   NativeKey* mLastInstance;
   // mRemovingMsg is set at removing a char message from
   // GetFollowingCharMessage().
@@ -610,8 +564,7 @@ private:
   // At that time, we should not dispatch key events for them.
   static uint8_t sDispatchedKeyOfAppCommand;
 
-  NativeKey()
-  {
+  NativeKey() {
     MOZ_CRASH("The default constructor of NativeKey isn't available");
   }
 
@@ -651,48 +604,36 @@ private:
    */
   bool IsIMEDoingKakuteiUndo() const;
 
-  bool IsKeyDownMessage() const
-  {
-    return (mMsg.message == WM_KEYDOWN ||
-            mMsg.message == WM_SYSKEYDOWN ||
+  bool IsKeyDownMessage() const {
+    return (mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN ||
             mMsg.message == MOZ_WM_KEYDOWN);
   }
-  bool IsKeyUpMessage() const
-  {
-    return (mMsg.message == WM_KEYUP ||
-            mMsg.message == WM_SYSKEYUP ||
+  bool IsKeyUpMessage() const {
+    return (mMsg.message == WM_KEYUP || mMsg.message == WM_SYSKEYUP ||
             mMsg.message == MOZ_WM_KEYUP);
   }
-  bool IsCharOrSysCharMessage(const MSG& aMSG) const
-  {
+  bool IsCharOrSysCharMessage(const MSG& aMSG) const {
     return IsCharOrSysCharMessage(aMSG.message);
   }
-  bool IsCharOrSysCharMessage(UINT aMessage) const
-  {
+  bool IsCharOrSysCharMessage(UINT aMessage) const {
     return (aMessage == WM_CHAR || aMessage == WM_SYSCHAR);
   }
-  bool IsCharMessage(const MSG& aMSG) const
-  {
+  bool IsCharMessage(const MSG& aMSG) const {
     return IsCharMessage(aMSG.message);
   }
-  bool IsCharMessage(UINT aMessage) const
-  {
+  bool IsCharMessage(UINT aMessage) const {
     return (IsCharOrSysCharMessage(aMessage) || IsDeadCharMessage(aMessage));
   }
-  bool IsDeadCharMessage(const MSG& aMSG) const
-  {
+  bool IsDeadCharMessage(const MSG& aMSG) const {
     return IsDeadCharMessage(aMSG.message);
   }
-  bool IsDeadCharMessage(UINT aMessage) const
-  {
+  bool IsDeadCharMessage(UINT aMessage) const {
     return (aMessage == WM_DEADCHAR || aMessage == WM_SYSDEADCHAR);
   }
-  bool IsSysCharMessage(const MSG& aMSG) const
-  {
+  bool IsSysCharMessage(const MSG& aMSG) const {
     return IsSysCharMessage(aMSG.message);
   }
-  bool IsSysCharMessage(UINT aMessage) const
-  {
+  bool IsSysCharMessage(UINT aMessage) const {
     return (aMessage == WM_SYSCHAR || aMessage == WM_SYSDEADCHAR);
   }
   bool MayBeSameCharMessage(const MSG& aCharMsg1, const MSG& aCharMsg2) const;
@@ -701,27 +642,21 @@ private:
   bool IsFollowedByPrintableCharMessage() const;
   bool IsFollowedByPrintableCharOrSysCharMessage() const;
   bool IsFollowedByDeadCharMessage() const;
-  bool IsKeyMessageOnPlugin() const
-  {
-    return (mMsg.message == MOZ_WM_KEYDOWN ||
-            mMsg.message == MOZ_WM_KEYUP);
+  bool IsKeyMessageOnPlugin() const {
+    return (mMsg.message == MOZ_WM_KEYDOWN || mMsg.message == MOZ_WM_KEYUP);
   }
-  bool IsPrintableCharMessage(const MSG& aMSG) const
-  {
+  bool IsPrintableCharMessage(const MSG& aMSG) const {
     return aMSG.message == WM_CHAR &&
            !IsControlChar(static_cast<char16_t>(aMSG.wParam));
   }
-  bool IsEnterKeyPressCharMessage(const MSG& aMSG) const
-  {
+  bool IsEnterKeyPressCharMessage(const MSG& aMSG) const {
     return aMSG.message == WM_CHAR && aMSG.wParam == '\r';
   }
-  bool IsPrintableCharOrSysCharMessage(const MSG& aMSG) const
-  {
+  bool IsPrintableCharOrSysCharMessage(const MSG& aMSG) const {
     return IsCharOrSysCharMessage(aMSG) &&
            !IsControlChar(static_cast<char16_t>(aMSG.wParam));
   }
-  bool IsControlCharMessage(const MSG& aMSG) const
-  {
+  bool IsControlCharMessage(const MSG& aMSG) const {
     return IsCharMessage(aMSG.message) &&
            IsControlChar(static_cast<char16_t>(aMSG.wParam));
   }
@@ -826,8 +761,7 @@ private:
    * IsFocusedWindowChanged() returns true if focused window is changed
    * after the instance is created.
    */
-  bool IsFocusedWindowChanged() const
-  {
+  bool IsFocusedWindowChanged() const {
     return mFocusedWndBeforeDispatch != ::GetFocus();
   }
 
@@ -855,17 +789,15 @@ private:
 
   static MSG sLastKeyMSG;
 
-  static bool IsEmptyMSG(const MSG& aMSG)
-  {
+  static bool IsEmptyMSG(const MSG& aMSG) {
     return !memcmp(&aMSG, &sEmptyMSG, sizeof(MSG));
   }
 
-  bool IsAnotherInstanceRemovingCharMessage() const
-  {
+  bool IsAnotherInstanceRemovingCharMessage() const {
     return mLastInstance && !IsEmptyMSG(mLastInstance->mRemovingMsg);
   }
 
-public:
+ public:
   /**
    * Returns last key or char MSG.  If no MSG has been received yet, the result
    * is empty MSG (i.e., .message is WM_NULL).
@@ -873,9 +805,8 @@ public:
   static const MSG& LastKeyOrCharMSG() { return sLastKeyOrCharMSG; }
 };
 
-class KeyboardLayout
-{
-public:
+class KeyboardLayout {
+ public:
   static KeyboardLayout* GetInstance();
   static void Shutdown();
   static HKL GetActiveLayout();
@@ -896,8 +827,7 @@ public:
    */
   bool IsDeadKey(uint8_t aVirtualKey,
                  const ModifierKeyState& aModKeyState) const;
-  bool IsDeadKey(const NativeKey& aNativeKey) const
-  {
+  bool IsDeadKey(const NativeKey& aNativeKey) const {
     return IsDeadKey(aNativeKey.GenericVirtualKeyCode(),
                      aNativeKey.ModifierKeyStateRef());
   }
@@ -915,8 +845,7 @@ public:
    */
   bool IsSysKey(uint8_t aVirtualKey,
                 const ModifierKeyState& aModKeyState) const;
-  bool IsSysKey(const NativeKey& aNativeKey) const
-  {
+  bool IsSysKey(const NativeKey& aNativeKey) const {
     return IsSysKey(aNativeKey.GenericVirtualKeyCode(),
                     aNativeKey.ModifierKeyStateRef());
   }
@@ -927,17 +856,14 @@ public:
    * Note that if the combination causes text input, the result's Ctrl and
    * Alt key state are never active.
    */
-  UniCharsAndModifiers
-  GetUniCharsAndModifiers(uint8_t aVirtualKey,
-                          const ModifierKeyState& aModKeyState) const
-  {
+  UniCharsAndModifiers GetUniCharsAndModifiers(
+      uint8_t aVirtualKey, const ModifierKeyState& aModKeyState) const {
     VirtualKey::ShiftState shiftState =
-      VirtualKey::ModifierKeyStateToShiftState(aModKeyState);
+        VirtualKey::ModifierKeyStateToShiftState(aModKeyState);
     return GetUniCharsAndModifiers(aVirtualKey, shiftState);
   }
-  UniCharsAndModifiers
-  GetUniCharsAndModifiers(const NativeKey& aNativeKey) const
-  {
+  UniCharsAndModifiers GetUniCharsAndModifiers(
+      const NativeKey& aNativeKey) const {
     return GetUniCharsAndModifiers(aNativeKey.GenericVirtualKeyCode(),
                                    aNativeKey.GetShiftState());
   }
@@ -948,8 +874,7 @@ public:
    * dead key state.  Therefore, we need to load the layout before the first
    * keydown message.
    */
-  void OnLayoutChange(HKL aKeyboardLayout)
-  {
+  void OnLayoutChange(HKL aKeyboardLayout) {
     MOZ_ASSERT(!mIsOverridden);
     LoadLayout(aKeyboardLayout);
   }
@@ -957,8 +882,7 @@ public:
   /**
    * OverrideLayout() loads the specified keyboard layout.
    */
-  void OverrideLayout(HKL aLayout)
-  {
+  void OverrideLayout(HKL aLayout) {
     mIsOverridden = true;
     LoadLayout(aLayout);
   }
@@ -966,8 +890,7 @@ public:
   /**
    * RestoreLayout() loads the current keyboard layout of the thread.
    */
-  void RestoreLayout()
-  {
+  void RestoreLayout() {
     mIsOverridden = false;
     mIsPendingToRestoreKeyboardLayout = true;
   }
@@ -987,10 +910,9 @@ public:
    */
   static CodeNameIndex ConvertScanCodeToCodeNameIndex(UINT aScanCode);
 
-  HKL GetLayout() const
-  {
-    return mIsPendingToRestoreKeyboardLayout ? ::GetKeyboardLayout(0) :
-                                               mKeyboardLayout;
+  HKL GetLayout() const {
+    return mIsPendingToRestoreKeyboardLayout ? ::GetKeyboardLayout(0)
+                                             : mKeyboardLayout;
   }
 
   /**
@@ -1008,15 +930,14 @@ public:
                                     const nsAString& aCharacters,
                                     const nsAString& aUnmodifiedCharacters);
 
-private:
+ private:
   KeyboardLayout();
   ~KeyboardLayout();
 
   static KeyboardLayout* sInstance;
   static nsIIdleServiceInternal* sIdleService;
 
-  struct DeadKeyTableListEntry
-  {
+  struct DeadKeyTableListEntry {
     DeadKeyTableListEntry* next;
     uint8_t data[1];
   };
@@ -1101,9 +1022,8 @@ private:
   /**
    * See the comment of GetUniCharsAndModifiers() below.
    */
-  UniCharsAndModifiers
-  GetUniCharsAndModifiers(uint8_t aVirtualKey,
-                          VirtualKey::ShiftState aShiftState) const;
+  UniCharsAndModifiers GetUniCharsAndModifiers(
+      uint8_t aVirtualKey, VirtualKey::ShiftState aShiftState) const;
 
   /**
    * GetDeadUniCharsAndModifiers() returns dead chars which are stored in
@@ -1126,9 +1046,8 @@ private:
   friend class NativeKey;
 };
 
-class RedirectedKeyDownMessageManager
-{
-public:
+class RedirectedKeyDownMessageManager {
+ public:
   /*
    * If a window receives WM_KEYDOWN message or WM_SYSKEYDOWM message which is
    * a redirected message, NativeKey::DispatchKeyDownAndKeyPressEvent()
@@ -1139,17 +1058,14 @@ public:
    * message for the redirected keydown message.  AutoFlusher class is a helper
    * class for doing it.  This must be created in the stack.
    */
-  class MOZ_STACK_CLASS AutoFlusher final
-  {
-  public:
-    AutoFlusher(nsWindowBase* aWidget, const MSG &aMsg) :
-      mCancel(!RedirectedKeyDownMessageManager::IsRedirectedMessage(aMsg)),
-      mWidget(aWidget), mMsg(aMsg)
-    {
-    }
+  class MOZ_STACK_CLASS AutoFlusher final {
+   public:
+    AutoFlusher(nsWindowBase* aWidget, const MSG& aMsg)
+        : mCancel(!RedirectedKeyDownMessageManager::IsRedirectedMessage(aMsg)),
+          mWidget(aWidget),
+          mMsg(aMsg) {}
 
-    ~AutoFlusher()
-    {
+    ~AutoFlusher() {
       if (mCancel) {
         return;
       }
@@ -1163,22 +1079,18 @@ public:
 
     void Cancel() { mCancel = true; }
 
-  private:
+   private:
     bool mCancel;
     RefPtr<nsWindowBase> mWidget;
-    const MSG &mMsg;
+    const MSG& mMsg;
   };
 
-  static void WillRedirect(const MSG& aMsg, bool aDefualtPrevented)
-  {
+  static void WillRedirect(const MSG& aMsg, bool aDefualtPrevented) {
     sRedirectedKeyDownMsg = aMsg;
     sDefaultPreventedOfRedirectedMsg = aDefualtPrevented;
   }
 
-  static void Forget()
-  {
-    sRedirectedKeyDownMsg.message = WM_NULL;
-  }
+  static void Forget() { sRedirectedKeyDownMsg.message = WM_NULL; }
 
   static void PreventDefault() { sDefaultPreventedOfRedirectedMsg = true; }
   static bool DefaultPrevented() { return sDefaultPreventedOfRedirectedMsg; }
@@ -1196,7 +1108,7 @@ public:
    */
   static void RemoveNextCharMessage(HWND aWnd);
 
-private:
+ private:
   // sRedirectedKeyDownMsg is WM_KEYDOWN message or WM_SYSKEYDOWN message which
   // is reirected with SendInput() API by
   // widget::NativeKey::DispatchKeyDownAndKeyPressEvent()
@@ -1204,7 +1116,7 @@ private:
   static bool sDefaultPreventedOfRedirectedMsg;
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
 #endif

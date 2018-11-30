@@ -9,36 +9,32 @@
 
 namespace mozilla {
 
-class
-YuvStamper {
-public:
+class YuvStamper {
+ public:
   bool WriteDigits(uint32_t value);
 
-  template<typename T>
+  template <typename T>
   static bool Write(uint32_t width, uint32_t height, uint32_t stride,
-                    unsigned char *pYData, const T& value,
-                    uint32_t x=0, uint32_t y=0)
-  {
-    YuvStamper stamper(pYData, width, height, stride,
-		       x, y,
-		       (sDigitWidth + sInterDigit) * sPixelSize,
-		       (sDigitHeight + sInterLine) * sPixelSize);
+                    unsigned char* pYData, const T& value, uint32_t x = 0,
+                    uint32_t y = 0) {
+    YuvStamper stamper(pYData, width, height, stride, x, y,
+                       (sDigitWidth + sInterDigit) * sPixelSize,
+                       (sDigitHeight + sInterLine) * sPixelSize);
     return stamper.WriteDigits(value);
   }
 
   static bool Encode(uint32_t width, uint32_t height, uint32_t stride,
-		     unsigned char* pYData, unsigned char* pMsg, size_t msg_len,
-		     uint32_t x = 0, uint32_t y = 0);
+                     unsigned char* pYData, unsigned char* pMsg, size_t msg_len,
+                     uint32_t x = 0, uint32_t y = 0);
 
   static bool Decode(uint32_t width, uint32_t height, uint32_t stride,
-		     unsigned char* pYData, unsigned char* pMsg, size_t msg_len,
-		     uint32_t x = 0, uint32_t y = 0);
+                     unsigned char* pYData, unsigned char* pMsg, size_t msg_len,
+                     uint32_t x = 0, uint32_t y = 0);
 
  private:
-  YuvStamper(unsigned char* pYData,
-	     uint32_t width, uint32_t height, uint32_t stride,
-	     uint32_t x, uint32_t y,
-	     unsigned char symbol_width, unsigned char symbol_height);
+  YuvStamper(unsigned char* pYData, uint32_t width, uint32_t height,
+             uint32_t stride, uint32_t x, uint32_t y,
+             unsigned char symbol_width, unsigned char symbol_height);
 
   bool WriteDigit(unsigned char digit);
   void WritePixel(unsigned char* data, uint32_t x, uint32_t y);
@@ -46,8 +42,8 @@ public:
   bool AdvanceCursor();
   bool WriteBit(bool one);
   bool Write8(unsigned char value);
-  bool ReadBit(unsigned char &value);
-  bool Read8(unsigned char &bit);
+  bool ReadBit(unsigned char& value);
+  bool Read8(unsigned char& bit);
 
   const static unsigned char sPixelSize = 3;
   const static unsigned char sDigitWidth = 6;
@@ -70,14 +66,12 @@ public:
   unsigned char mSymbolHeight;
 
   struct Cursor {
-    Cursor(uint32_t x, uint32_t y):
-      x(x), y(y) {}
+    Cursor(uint32_t x, uint32_t y) : x(x), y(y) {}
     uint32_t x;
     uint32_t y;
   } mCursor;
 };
 
-}
+}  // namespace mozilla
 
 #endif
-

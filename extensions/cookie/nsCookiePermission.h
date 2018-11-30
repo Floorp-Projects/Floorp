@@ -13,10 +13,9 @@
 
 class nsIPrefBranch;
 
-class nsCookiePermission final : public nsICookiePermission
-                               , public nsIObserver
-{
-public:
+class nsCookiePermission final : public nsICookiePermission,
+                                 public nsIObserver {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICOOKIEPERMISSION
   NS_DECL_NSIOBSERVER
@@ -28,18 +27,20 @@ public:
   bool Init();
   void PrefChanged(nsIPrefBranch *, const char *);
 
-private:
+ private:
   nsCookiePermission()
-    : mCookiesLifetimePolicy(0) // ACCEPT_NORMALLY
-    {}
+      : mCookiesLifetimePolicy(0)  // ACCEPT_NORMALLY
+  {}
   virtual ~nsCookiePermission() {}
 
-  bool EnsureInitialized() { return (mPermMgr != nullptr && mThirdPartyUtil != nullptr) || Init(); };
+  bool EnsureInitialized() {
+    return (mPermMgr != nullptr && mThirdPartyUtil != nullptr) || Init();
+  };
 
   nsCOMPtr<nsIPermissionManager> mPermMgr;
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
 
-  uint8_t      mCookiesLifetimePolicy;         // pref for how long cookies are stored
+  uint8_t mCookiesLifetimePolicy;  // pref for how long cookies are stored
 };
 
 #endif

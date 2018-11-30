@@ -12,14 +12,10 @@
 #include "OSKeyStore.h"
 #include "nsString.h"
 
-template<typename T>
-class ScopedCFType
-{
-public:
-  explicit ScopedCFType(T value)
-  : mValue(value)
-  {
-  }
+template <typename T>
+class ScopedCFType {
+ public:
+  explicit ScopedCFType(T value) : mValue(value) {}
 
   ~ScopedCFType() { CFRelease((CFTypeRef)mValue); }
 
@@ -27,17 +23,16 @@ public:
 
   explicit operator bool() const { return mValue != nullptr; }
 
-private:
+ private:
   T mValue;
 };
 
-class KeychainSecret final : public AbstractOSKeyStore
-{
-public:
+class KeychainSecret final : public AbstractOSKeyStore {
+ public:
   KeychainSecret();
 
   virtual nsresult RetrieveSecret(const nsACString& label,
-                        /* out */ nsACString& secret) override;
+                                  /* out */ nsACString& secret) override;
   virtual nsresult StoreSecret(const nsACString& secret,
                                const nsACString& label) override;
   virtual nsresult DeleteSecret(const nsACString& label) override;
@@ -47,4 +42,4 @@ public:
   virtual ~KeychainSecret();
 };
 
-#endif // KeychainSecret_h
+#endif  // KeychainSecret_h

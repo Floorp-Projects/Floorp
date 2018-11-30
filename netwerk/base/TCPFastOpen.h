@@ -7,25 +7,23 @@
 #define TCPFASTOPEN_H__
 
 /**
-  * This is an abstract class for TCP Fast Open - TFO (RFC7413).
-  * It is not always safe to use Fast Open. It can be use for requests that
-  * are replayable.
-  * Middle boxes can block or reset connections that use TFO, therefore a
-  * backup connection will be prepared with a delay.
-  * In case of blocking such a connection tcp socket will terminate only after
-  * a timeout, therefore a backup connection is needed. If connection is refuse
-  * the same socketTransport will retry.
-  *
-  * This is implemented by nsHalfopenSocket.
-  **/
+ * This is an abstract class for TCP Fast Open - TFO (RFC7413).
+ * It is not always safe to use Fast Open. It can be use for requests that
+ * are replayable.
+ * Middle boxes can block or reset connections that use TFO, therefore a
+ * backup connection will be prepared with a delay.
+ * In case of blocking such a connection tcp socket will terminate only after
+ * a timeout, therefore a backup connection is needed. If connection is refuse
+ * the same socketTransport will retry.
+ *
+ * This is implemented by nsHalfopenSocket.
+ **/
 
 namespace mozilla {
 namespace net {
 
-class TCPFastOpen
-{
-public:
-
+class TCPFastOpen {
+ public:
   // Check if we have a transaction that is safe to be used with TFO.
   // Connections over TLS are always safe and some http requests (e.g. GET).
   virtual bool FastOpenEnabled() = 0;
@@ -41,7 +39,7 @@ public:
   virtual void SetFastOpenStatus(uint8_t tfoStatus) = 0;
 };
 
-}
-}
+}  // namespace net
+}  // namespace mozilla
 
-#endif //TCPFASTOPEN_H__
+#endif  // TCPFASTOPEN_H__

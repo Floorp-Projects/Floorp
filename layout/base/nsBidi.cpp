@@ -6,9 +6,7 @@
 
 #include "nsBidi.h"
 
-nsresult
-nsBidi::CountRuns(int32_t* aRunCount)
-{
+nsresult nsBidi::CountRuns(int32_t* aRunCount) {
   UErrorCode errorCode = U_ZERO_ERROR;
   *aRunCount = ubidi_countRuns(mBiDi, &errorCode);
   if (U_SUCCESS(errorCode)) {
@@ -18,10 +16,8 @@ nsBidi::CountRuns(int32_t* aRunCount)
   return ICUUtils::UErrorToNsResult(errorCode);
 }
 
-void
-nsBidi::GetLogicalRun(int32_t aLogicalStart,
-                      int32_t* aLogicalLimit, nsBidiLevel* aLevel)
-{
+void nsBidi::GetLogicalRun(int32_t aLogicalStart, int32_t* aLogicalLimit,
+                           nsBidiLevel* aLevel) {
   MOZ_ASSERT(mLevels, "CountRuns hasn't been run?");
   MOZ_RELEASE_ASSERT(aLogicalStart < mLength, "Out of bound");
   // This function implements an alternative approach to get logical

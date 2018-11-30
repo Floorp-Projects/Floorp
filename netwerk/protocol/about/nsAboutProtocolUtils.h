@@ -12,34 +12,31 @@
 #include "nsServiceManagerUtils.h"
 #include "prtime.h"
 
-inline MOZ_MUST_USE nsresult
-NS_GetAboutModuleName(nsIURI *aAboutURI, nsCString& aModule)
-{
+inline MOZ_MUST_USE nsresult NS_GetAboutModuleName(nsIURI *aAboutURI,
+                                                   nsCString &aModule) {
 #ifdef DEBUG
-    {
-        bool isAbout;
-        NS_ASSERTION(NS_SUCCEEDED(aAboutURI->SchemeIs("about", &isAbout)) &&
-                     isAbout,
-                     "should be used only on about: URIs");
-    }
+  {
+    bool isAbout;
+    NS_ASSERTION(
+        NS_SUCCEEDED(aAboutURI->SchemeIs("about", &isAbout)) && isAbout,
+        "should be used only on about: URIs");
+  }
 #endif
 
-    nsresult rv = aAboutURI->GetPathQueryRef(aModule);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = aAboutURI->GetPathQueryRef(aModule);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    int32_t f = aModule.FindCharInSet(NS_LITERAL_CSTRING("#?"));
-    if (f != kNotFound) {
-        aModule.Truncate(f);
-    }
+  int32_t f = aModule.FindCharInSet(NS_LITERAL_CSTRING("#?"));
+  if (f != kNotFound) {
+    aModule.Truncate(f);
+  }
 
-    // convert to lowercase, as all about: modules are lowercase
-    ToLowerCase(aModule);
-    return NS_OK;
+  // convert to lowercase, as all about: modules are lowercase
+  ToLowerCase(aModule);
+  return NS_OK;
 }
 
-inline nsresult
-NS_GetAboutModule(nsIURI *aAboutURI, nsIAboutModule** aModule)
-{
+inline nsresult NS_GetAboutModule(nsIURI *aAboutURI, nsIAboutModule **aModule) {
   MOZ_ASSERT(aAboutURI, "Must have URI");
 
   nsAutoCString contractID;
@@ -52,19 +49,17 @@ NS_GetAboutModule(nsIURI *aAboutURI, nsIAboutModule** aModule)
   return CallGetService(contractID.get(), aModule);
 }
 
-inline PRTime SecondsToPRTime(uint32_t t_sec)
-{
-    PRTime t_usec, usec_per_sec;
-    t_usec = t_sec;
-    usec_per_sec = PR_USEC_PER_SEC;
-    return t_usec *= usec_per_sec;
+inline PRTime SecondsToPRTime(uint32_t t_sec) {
+  PRTime t_usec, usec_per_sec;
+  t_usec = t_sec;
+  usec_per_sec = PR_USEC_PER_SEC;
+  return t_usec *= usec_per_sec;
 }
-inline void PrintTimeString(char *buf, uint32_t bufsize, uint32_t t_sec)
-{
-    PRExplodedTime et;
-    PRTime t_usec = SecondsToPRTime(t_sec);
-    PR_ExplodeTime(t_usec, PR_LocalTimeParameters, &et);
-    PR_FormatTime(buf, bufsize, "%Y-%m-%d %H:%M:%S", &et);
+inline void PrintTimeString(char *buf, uint32_t bufsize, uint32_t t_sec) {
+  PRExplodedTime et;
+  PRTime t_usec = SecondsToPRTime(t_sec);
+  PR_ExplodeTime(t_usec, PR_LocalTimeParameters, &et);
+  PR_FormatTime(buf, bufsize, "%Y-%m-%d %H:%M:%S", &et);
 }
 
 #endif

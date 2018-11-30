@@ -22,18 +22,17 @@ class nsITraceableChannel;
 
 namespace mozilla {
 namespace dom {
-  class TabParent;
-  class nsIContentParent;
-}
+class TabParent;
+class nsIContentParent;
+}  // namespace dom
 
 namespace extensions {
 
-class WebRequestChannelEntry final
-{
-public:
+class WebRequestChannelEntry final {
+ public:
   ~WebRequestChannelEntry();
 
-private:
+ private:
   friend class WebRequestService;
 
   explicit WebRequestChannelEntry(ChannelWrapper* aChannel);
@@ -42,15 +41,13 @@ private:
   WeakPtr<ChannelWrapper> mChannel;
 };
 
-class WebRequestService final
-{
-public:
+class WebRequestService final {
+ public:
   NS_INLINE_DECL_REFCOUNTING(WebRequestService)
 
   WebRequestService() = default;
 
-  static already_AddRefed<WebRequestService> GetInstance()
-  {
+  static already_AddRefed<WebRequestService> GetInstance() {
     return do_AddRef(&GetSingleton());
   }
 
@@ -62,11 +59,11 @@ public:
 
   void UnregisterTraceableChannel(uint64_t aChannelId);
 
-  already_AddRefed<nsITraceableChannel>
-  GetTraceableChannel(uint64_t aChannelId, nsAtom* aAddonId,
-                      dom::nsIContentParent* aContentParent);
+  already_AddRefed<nsITraceableChannel> GetTraceableChannel(
+      uint64_t aChannelId, nsAtom* aAddonId,
+      dom::nsIContentParent* aContentParent);
 
-private:
+ private:
   ~WebRequestService();
 
   friend ChannelEntry;
@@ -74,7 +71,7 @@ private:
   nsDataHashtable<nsUint64HashKey, ChannelEntry*> mChannelEntries;
 };
 
-}
-}
+}  // namespace extensions
+}  // namespace mozilla
 
-#endif // mozilla_WebRequestService_h
+#endif  // mozilla_WebRequestService_h

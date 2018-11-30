@@ -5,26 +5,22 @@
 
 #include "txExpr.h"
 
-nsresult
-Expr::evaluateToBool(txIEvalContext* aContext, bool& aResult)
-{
-    RefPtr<txAExprResult> exprRes;
-    nsresult rv = evaluate(aContext, getter_AddRefs(exprRes));
-    NS_ENSURE_SUCCESS(rv, rv);
+nsresult Expr::evaluateToBool(txIEvalContext* aContext, bool& aResult) {
+  RefPtr<txAExprResult> exprRes;
+  nsresult rv = evaluate(aContext, getter_AddRefs(exprRes));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    aResult = exprRes->booleanValue();
+  aResult = exprRes->booleanValue();
 
-    return NS_OK;
+  return NS_OK;
 }
 
-nsresult
-Expr::evaluateToString(txIEvalContext* aContext, nsString& aResult)
-{
-    RefPtr<txAExprResult> exprRes;
-    nsresult rv = evaluate(aContext, getter_AddRefs(exprRes));
-    NS_ENSURE_SUCCESS(rv, rv);
+nsresult Expr::evaluateToString(txIEvalContext* aContext, nsString& aResult) {
+  RefPtr<txAExprResult> exprRes;
+  nsresult rv = evaluate(aContext, getter_AddRefs(exprRes));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    exprRes->stringValue(aResult);
+  exprRes->stringValue(aResult);
 
-    return NS_OK;
+  return NS_OK;
 }

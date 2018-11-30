@@ -11,15 +11,13 @@
 
 namespace mozilla {
 
-WebGLExtensionElementIndexUint::WebGLExtensionElementIndexUint(WebGLContext* webgl)
-    : WebGLExtensionBase(webgl)
-{
-}
+WebGLExtensionElementIndexUint::WebGLExtensionElementIndexUint(
+    WebGLContext* webgl)
+    : WebGLExtensionBase(webgl) {}
 
-WebGLExtensionElementIndexUint::~WebGLExtensionElementIndexUint()
-{
-}
+WebGLExtensionElementIndexUint::~WebGLExtensionElementIndexUint() {}
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionElementIndexUint, OES_element_index_uint)
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionElementIndexUint,
+                          OES_element_index_uint)
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -16,24 +16,13 @@
 // A simple data type for storing the result of parsing a single begin or end
 // value (e.g. the '5s' in begin="5s; indefinite; a.begin+2s").
 
-class nsSMILTimeValueSpecParams
-{
-public:
+class nsSMILTimeValueSpecParams {
+ public:
   nsSMILTimeValueSpecParams()
-    : mType(INDEFINITE)
-    , mSyncBegin(false)
-    , mRepeatIteration(0)
-  { }
+      : mType(INDEFINITE), mSyncBegin(false), mRepeatIteration(0) {}
 
   // The type of value this specification describes
-  enum {
-    OFFSET,
-    SYNCBASE,
-    EVENT,
-    REPEAT,
-    WALLCLOCK,
-    INDEFINITE
-  } mType;
+  enum { OFFSET, SYNCBASE, EVENT, REPEAT, WALLCLOCK, INDEFINITE } mType;
 
   // A clock value that is added to:
   // - type OFFSET: the document begin
@@ -41,7 +30,7 @@ public:
   // - type EVENT: the event time
   // - type REPEAT: the repeat time
   // It is not used for WALLCLOCK or INDEFINITE times
-  nsSMILTimeValue   mOffset;
+  nsSMILTimeValue mOffset;
 
   // The base element that this specification refers to.
   // For SYNCBASE types, this is the timebase
@@ -55,11 +44,11 @@ public:
   // Indicates if this specification refers to the begin or end of the dependent
   // element.
   // Only used for SYNCBASE types.
-  bool              mSyncBegin;
+  bool mSyncBegin;
 
   // The repeat iteration to respond to.
   // Only used for mType=REPEAT.
   uint32_t mRepeatIteration;
 };
 
-#endif // NS_SMILTIMEVALUESPECPARAMS_H_
+#endif  // NS_SMILTIMEVALUESPECPARAMS_H_

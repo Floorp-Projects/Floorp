@@ -21,54 +21,30 @@ namespace mozilla {
 namespace dom {
 
 TabContext::TabContext()
-  : mInitialized(false)
-  , mIsMozBrowserElement(false)
-  , mChromeOuterWindowID(0)
-  , mJSPluginID(-1)
-  , mShowAccelerators(UIStateChangeType_NoChange)
-  , mShowFocusRings(UIStateChangeType_NoChange)
-{
-}
+    : mInitialized(false),
+      mIsMozBrowserElement(false),
+      mChromeOuterWindowID(0),
+      mJSPluginID(-1),
+      mShowAccelerators(UIStateChangeType_NoChange),
+      mShowFocusRings(UIStateChangeType_NoChange) {}
 
-bool
-TabContext::IsMozBrowserElement() const
-{
-  return mIsMozBrowserElement;
-}
+bool TabContext::IsMozBrowserElement() const { return mIsMozBrowserElement; }
 
-bool
-TabContext::IsIsolatedMozBrowserElement() const
-{
+bool TabContext::IsIsolatedMozBrowserElement() const {
   return mOriginAttributes.mInIsolatedMozBrowser;
 }
 
-bool
-TabContext::IsMozBrowser() const
-{
-  return IsMozBrowserElement();
-}
+bool TabContext::IsMozBrowser() const { return IsMozBrowserElement(); }
 
-bool
-TabContext::IsJSPlugin() const
-{
-  return mJSPluginID >= 0;
-}
+bool TabContext::IsJSPlugin() const { return mJSPluginID >= 0; }
 
-int32_t
-TabContext::JSPluginId() const
-{
-  return mJSPluginID;
-}
+int32_t TabContext::JSPluginId() const { return mJSPluginID; }
 
-uint64_t
-TabContext::ChromeOuterWindowID() const
-{
+uint64_t TabContext::ChromeOuterWindowID() const {
   return mChromeOuterWindowID;
 }
 
-bool
-TabContext::SetTabContext(const TabContext& aContext)
-{
+bool TabContext::SetTabContext(const TabContext& aContext) {
   NS_ENSURE_FALSE(mInitialized, false);
 
   *this = aContext;
@@ -77,15 +53,11 @@ TabContext::SetTabContext(const TabContext& aContext)
   return true;
 }
 
-void
-TabContext::SetPrivateBrowsingAttributes(bool aIsPrivateBrowsing)
-{
+void TabContext::SetPrivateBrowsingAttributes(bool aIsPrivateBrowsing) {
   mOriginAttributes.SyncAttributesWithPrivateBrowsing(aIsPrivateBrowsing);
 }
 
-bool
-TabContext::UpdateTabContextAfterSwap(const TabContext& aContext)
-{
+bool TabContext::UpdateTabContextAfterSwap(const TabContext& aContext) {
   // This is only used after already initialized.
   MOZ_ASSERT(mInitialized);
 
@@ -101,38 +73,26 @@ TabContext::UpdateTabContextAfterSwap(const TabContext& aContext)
   return true;
 }
 
-const OriginAttributes&
-TabContext::OriginAttributesRef() const
-{
+const OriginAttributes& TabContext::OriginAttributesRef() const {
   return mOriginAttributes;
 }
 
-const nsAString&
-TabContext::PresentationURL() const
-{
+const nsAString& TabContext::PresentationURL() const {
   return mPresentationURL;
 }
 
-UIStateChangeType
-TabContext::ShowAccelerators() const
-{
+UIStateChangeType TabContext::ShowAccelerators() const {
   return mShowAccelerators;
 }
 
-UIStateChangeType
-TabContext::ShowFocusRings() const
-{
-  return mShowFocusRings;
-}
+UIStateChangeType TabContext::ShowFocusRings() const { return mShowFocusRings; }
 
-bool
-TabContext::SetTabContext(bool aIsMozBrowserElement,
-                          uint64_t aChromeOuterWindowID,
-                          UIStateChangeType aShowAccelerators,
-                          UIStateChangeType aShowFocusRings,
-                          const OriginAttributes& aOriginAttributes,
-                          const nsAString& aPresentationURL)
-{
+bool TabContext::SetTabContext(bool aIsMozBrowserElement,
+                               uint64_t aChromeOuterWindowID,
+                               UIStateChangeType aShowAccelerators,
+                               UIStateChangeType aShowFocusRings,
+                               const OriginAttributes& aOriginAttributes,
+                               const nsAString& aPresentationURL) {
   NS_ENSURE_FALSE(mInitialized, false);
 
   // Veryify that app id matches mAppId passed in originAttributes
@@ -148,9 +108,7 @@ TabContext::SetTabContext(bool aIsMozBrowserElement,
   return true;
 }
 
-bool
-TabContext::SetTabContextForJSPluginFrame(int32_t aJSPluginID)
-{
+bool TabContext::SetTabContextForJSPluginFrame(int32_t aJSPluginID) {
   NS_ENSURE_FALSE(mInitialized, false);
 
   mInitialized = true;
@@ -158,24 +116,18 @@ TabContext::SetTabContextForJSPluginFrame(int32_t aJSPluginID)
   return true;
 }
 
-IPCTabContext
-TabContext::AsIPCTabContext() const
-{
+IPCTabContext TabContext::AsIPCTabContext() const {
   if (IsJSPlugin()) {
     return IPCTabContext(JSPluginFrameIPCTabContext(mJSPluginID));
   }
 
-  return IPCTabContext(FrameIPCTabContext(mOriginAttributes,
-                                          mIsMozBrowserElement,
-                                          mChromeOuterWindowID,
-                                          mPresentationURL,
-                                          mShowAccelerators,
-                                          mShowFocusRings));
+  return IPCTabContext(FrameIPCTabContext(
+      mOriginAttributes, mIsMozBrowserElement, mChromeOuterWindowID,
+      mPresentationURL, mShowAccelerators, mShowFocusRings));
 }
 
 MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
-  : mInvalidReason(nullptr)
-{
+    : mInvalidReason(nullptr) {
   bool isMozBrowserElement = false;
   uint64_t chromeOuterWindowID = 0;
   int32_t jsPluginId = -1;
@@ -184,16 +136,17 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
   UIStateChangeType showAccelerators = UIStateChangeType_NoChange;
   UIStateChangeType showFocusRings = UIStateChangeType_NoChange;
 
-  switch(aParams.type()) {
+  switch (aParams.type()) {
     case IPCTabContext::TPopupIPCTabContext: {
-      const PopupIPCTabContext &ipcContext = aParams.get_PopupIPCTabContext();
+      const PopupIPCTabContext& ipcContext = aParams.get_PopupIPCTabContext();
 
-      TabContext *context;
+      TabContext* context;
       if (ipcContext.opener().type() == PBrowserOrId::TPBrowserParent) {
         context = TabParent::GetFrom(ipcContext.opener().get_PBrowserParent());
         if (!context) {
-          mInvalidReason = "Child is-browser process tried to "
-                           "open a null tab.";
+          mInvalidReason =
+              "Child is-browser process tried to "
+              "open a null tab.";
           return;
         }
         if (context->IsMozBrowserElement() &&
@@ -202,20 +155,24 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
           // open other browser elements, for security reasons.  We should have
           // checked this before calling the TabContext constructor, so this is
           // a fatal error.
-          mInvalidReason = "Child is-browser process tried to "
-                           "open a non-browser tab.";
+          mInvalidReason =
+              "Child is-browser process tried to "
+              "open a non-browser tab.";
           return;
         }
       } else if (ipcContext.opener().type() == PBrowserOrId::TPBrowserChild) {
-        context = static_cast<TabChild*>(ipcContext.opener().get_PBrowserChild());
+        context =
+            static_cast<TabChild*>(ipcContext.opener().get_PBrowserChild());
       } else if (ipcContext.opener().type() == PBrowserOrId::TTabId) {
         // We should never get here because this PopupIPCTabContext is only
         // used for allocating a new tab id, not for allocating a PBrowser.
-        mInvalidReason = "Child process tried to open an tab without the opener information.";
+        mInvalidReason =
+            "Child process tried to open an tab without the opener "
+            "information.";
         return;
       } else {
-        // This should be unreachable because PopupIPCTabContext::opener is not a
-        // nullable field.
+        // This should be unreachable because PopupIPCTabContext::opener is not
+        // a nullable field.
         mInvalidReason = "PopupIPCTabContext::opener was null (?!).";
         return;
       }
@@ -233,15 +190,14 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
       break;
     }
     case IPCTabContext::TJSPluginFrameIPCTabContext: {
-      const JSPluginFrameIPCTabContext &ipcContext =
-        aParams.get_JSPluginFrameIPCTabContext();
+      const JSPluginFrameIPCTabContext& ipcContext =
+          aParams.get_JSPluginFrameIPCTabContext();
 
       jsPluginId = ipcContext.jsPluginId();
       break;
     }
     case IPCTabContext::TFrameIPCTabContext: {
-      const FrameIPCTabContext &ipcContext =
-        aParams.get_FrameIPCTabContext();
+      const FrameIPCTabContext& ipcContext = aParams.get_FrameIPCTabContext();
 
       isMozBrowserElement = ipcContext.isMozBrowserElement();
       chromeOuterWindowID = ipcContext.chromeOuterWindowID();
@@ -263,42 +219,29 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
 
       break;
     }
-    default: {
-      MOZ_CRASH();
-    }
+    default: { MOZ_CRASH(); }
   }
 
   bool rv;
   if (jsPluginId >= 0) {
     rv = mTabContext.SetTabContextForJSPluginFrame(jsPluginId);
   } else {
-    rv = mTabContext.SetTabContext(isMozBrowserElement,
-                                   chromeOuterWindowID,
-                                   showAccelerators,
-                                   showFocusRings,
-                                   originAttributes,
-                                   presentationURL);
+    rv = mTabContext.SetTabContext(isMozBrowserElement, chromeOuterWindowID,
+                                   showAccelerators, showFocusRings,
+                                   originAttributes, presentationURL);
   }
   if (!rv) {
     mInvalidReason = "Couldn't initialize TabContext.";
   }
 }
 
-bool
-MaybeInvalidTabContext::IsValid()
-{
-  return mInvalidReason == nullptr;
-}
+bool MaybeInvalidTabContext::IsValid() { return mInvalidReason == nullptr; }
 
-const char*
-MaybeInvalidTabContext::GetInvalidReason()
-{
+const char* MaybeInvalidTabContext::GetInvalidReason() {
   return mInvalidReason;
 }
 
-const TabContext&
-MaybeInvalidTabContext::GetTabContext()
-{
+const TabContext& MaybeInvalidTabContext::GetTabContext() {
   if (!IsValid()) {
     MOZ_CRASH("Can't GetTabContext() if !IsValid().");
   }
@@ -306,5 +249,5 @@ MaybeInvalidTabContext::GetTabContext()
   return mTabContext;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

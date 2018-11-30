@@ -15,13 +15,13 @@
  * model.
  *
  * After the tokenizer completes, the parser iterates over
- * the known token list. As the parser identifies valid 
+ * the known token list. As the parser identifies valid
  * elements, it calls the contentsink interface to notify
  * the content model that a new node or child node is being
  * created and added to the content model.
  *
  * The HTMLContentSink interface assumes 4 underlying
- * containers: HTML, HEAD, BODY and FRAMESET. Before 
+ * containers: HTML, HEAD, BODY and FRAMESET. Before
  * accessing any these, the parser will call the appropriate
  * OpennsIHTMLContentSink method: OpenHTML,OpenHead,OpenBody,OpenFrameSet;
  * likewise, the ClosensIHTMLContentSink version will be called when the
@@ -38,8 +38,8 @@
  *
  * Containers within the body are Opened and Closed
  * using the OpenContainer(...) and CloseContainer(...) calls.
- * It is assumed that the document or contentSink is 
- * maintaining its state to manage where new content should 
+ * It is assumed that the document or contentSink is
+ * maintaining its state to manage where new content should
  * be added to the underlying document.
  *
  * NOTE: OpenHTML() and OpenBody() may get called multiple times
@@ -52,26 +52,28 @@
 #include "nsIContentSink.h"
 #include "nsHTMLTags.h"
 
-#define NS_IHTML_CONTENT_SINK_IID \
-  {0xefc5af86, 0x5cfd, 0x4918, {0x9d, 0xd3, 0x5f, 0x7a, 0xb2, 0x88, 0xb2, 0x68}}
+#define NS_IHTML_CONTENT_SINK_IID                    \
+  {                                                  \
+    0xefc5af86, 0x5cfd, 0x4918, {                    \
+      0x9d, 0xd3, 0x5f, 0x7a, 0xb2, 0x88, 0xb2, 0x68 \
+    }                                                \
+  }
 
 /**
  * This interface is OBSOLETE and in the process of being REMOVED.
  * Do NOT implement!
  */
-class nsIHTMLContentSink : public nsIContentSink 
-{
-public:
-
+class nsIHTMLContentSink : public nsIContentSink {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHTML_CONTENT_SINK_IID)
 
   enum ElementType { eHTML, eBody };
 
-    /**
+  /**
    * This method is used to open a generic container in the sink.
    *
    * @update 4/1/98 gess
-   */     
+   */
   NS_IMETHOD OpenContainer(ElementType aNodeType) = 0;
 
   /**
@@ -79,11 +81,10 @@ public:
    *  container tag has been consumed and needs to be closed.
    *
    * @param  aTag - The tag to be closed.
-   */     
+   */
   NS_IMETHOD CloseContainer(ElementType aTag) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLContentSink, NS_IHTML_CONTENT_SINK_IID)
 
 #endif /* nsIHTMLContentSink_h___ */
-

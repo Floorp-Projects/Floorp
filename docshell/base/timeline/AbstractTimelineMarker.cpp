@@ -14,11 +14,10 @@ namespace mozilla {
 
 AbstractTimelineMarker::AbstractTimelineMarker(const char* aName,
                                                MarkerTracingType aTracingType)
-  : mName(aName)
-  , mTracingType(aTracingType)
-  , mProcessType(XRE_GetProcessType())
-  , mIsOffMainThread(!NS_IsMainThread())
-{
+    : mName(aName),
+      mTracingType(aTracingType),
+      mProcessType(XRE_GetProcessType()),
+      mIsOffMainThread(!NS_IsMainThread()) {
   MOZ_COUNT_CTOR(AbstractTimelineMarker);
   SetCurrentTime();
 }
@@ -26,64 +25,48 @@ AbstractTimelineMarker::AbstractTimelineMarker(const char* aName,
 AbstractTimelineMarker::AbstractTimelineMarker(const char* aName,
                                                const TimeStamp& aTime,
                                                MarkerTracingType aTracingType)
-  : mName(aName)
-  , mTracingType(aTracingType)
-  , mProcessType(XRE_GetProcessType())
-  , mIsOffMainThread(!NS_IsMainThread())
-{
+    : mName(aName),
+      mTracingType(aTracingType),
+      mProcessType(XRE_GetProcessType()),
+      mIsOffMainThread(!NS_IsMainThread()) {
   MOZ_COUNT_CTOR(AbstractTimelineMarker);
   SetCustomTime(aTime);
 }
 
-UniquePtr<AbstractTimelineMarker>
-AbstractTimelineMarker::Clone()
-{
+UniquePtr<AbstractTimelineMarker> AbstractTimelineMarker::Clone() {
   MOZ_ASSERT(false, "Clone method not yet implemented on this marker type.");
   return nullptr;
 }
 
-bool
-AbstractTimelineMarker::Equals(const AbstractTimelineMarker& aOther)
-{
+bool AbstractTimelineMarker::Equals(const AbstractTimelineMarker& aOther) {
   // Check whether two markers should be considered the same, for the purpose
   // of pairing start and end markers. Normally this definition suffices.
   return strcmp(mName, aOther.mName) == 0;
 }
 
-AbstractTimelineMarker::~AbstractTimelineMarker()
-{
+AbstractTimelineMarker::~AbstractTimelineMarker() {
   MOZ_COUNT_DTOR(AbstractTimelineMarker);
 }
 
-void
-AbstractTimelineMarker::SetCurrentTime()
-{
+void AbstractTimelineMarker::SetCurrentTime() {
   TimeStamp now = TimeStamp::Now();
   SetCustomTime(now);
 }
 
-void
-AbstractTimelineMarker::SetCustomTime(const TimeStamp& aTime)
-{
+void AbstractTimelineMarker::SetCustomTime(const TimeStamp& aTime) {
   mTime = (aTime - TimeStamp::ProcessCreation()).ToMilliseconds();
 }
 
-void
-AbstractTimelineMarker::SetCustomTime(DOMHighResTimeStamp aTime)
-{
+void AbstractTimelineMarker::SetCustomTime(DOMHighResTimeStamp aTime) {
   mTime = aTime;
 }
 
-void
-AbstractTimelineMarker::SetProcessType(GeckoProcessType aProcessType)
-{
+void AbstractTimelineMarker::SetProcessType(GeckoProcessType aProcessType) {
   mProcessType = aProcessType;
 }
 
-void
-AbstractTimelineMarker::SetOffMainThread(bool aIsOffMainThread)
-{
+void AbstractTimelineMarker::SetOffMainThread(bool aIsOffMainThread) {
   mIsOffMainThread = aIsOffMainThread;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

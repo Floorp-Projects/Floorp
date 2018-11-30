@@ -10,18 +10,17 @@ namespace mozilla {
 
 namespace ipc {
 class PrincipalInfo;
-} // namespace ipc
+}  // namespace ipc
 
 namespace dom {
 
-bool
-ClientIsValidPrincipalInfo(const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
+bool ClientIsValidPrincipalInfo(
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
-bool
-ClientIsValidCreationURL(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-                         const nsACString& aURL);
+bool ClientIsValidCreationURL(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+                              const nsACString& aURL);
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // _mozilla_dom_ClientValidation_h
+#endif  // _mozilla_dom_ClientValidation_h

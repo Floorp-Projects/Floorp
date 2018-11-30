@@ -8,9 +8,7 @@
 #include "nsHtml5String.h"
 
 // static
-nsHtml5HtmlAttributes*
-nsHtml5ViewSourceUtils::NewBodyAttributes()
-{
+nsHtml5HtmlAttributes* nsHtml5ViewSourceUtils::NewBodyAttributes() {
   nsHtml5HtmlAttributes* bodyAttrs = new nsHtml5HtmlAttributes(0);
   nsHtml5String id = nsHtml5Portability::newStringFromLiteral("viewsource");
   bodyAttrs->addAttribute(nsHtml5AttributeName::ATTR_ID, id, -1);
@@ -23,8 +21,8 @@ nsHtml5ViewSourceUtils::NewBodyAttributes()
     klass.AppendLiteral(u"highlight");
   }
   if (!klass.IsEmpty()) {
-    bodyAttrs->addAttribute(
-      nsHtml5AttributeName::ATTR_CLASS, nsHtml5String::FromString(klass), -1);
+    bodyAttrs->addAttribute(nsHtml5AttributeName::ATTR_CLASS,
+                            nsHtml5String::FromString(klass), -1);
   }
 
   int32_t tabSize = mozilla::Preferences::GetInt("view_source.tab_size", 4);
@@ -32,37 +30,33 @@ nsHtml5ViewSourceUtils::NewBodyAttributes()
     nsString style;
     style.AssignLiteral("-moz-tab-size: ");
     style.AppendInt(tabSize);
-    bodyAttrs->addAttribute(
-      nsHtml5AttributeName::ATTR_STYLE, nsHtml5String::FromString(style), -1);
+    bodyAttrs->addAttribute(nsHtml5AttributeName::ATTR_STYLE,
+                            nsHtml5String::FromString(style), -1);
   }
 
   return bodyAttrs;
 }
 
 // static
-nsHtml5HtmlAttributes*
-nsHtml5ViewSourceUtils::NewLinkAttributes()
-{
+nsHtml5HtmlAttributes* nsHtml5ViewSourceUtils::NewLinkAttributes() {
   nsHtml5HtmlAttributes* linkAttrs = new nsHtml5HtmlAttributes(0);
   nsHtml5String rel = nsHtml5Portability::newStringFromLiteral("stylesheet");
   linkAttrs->addAttribute(nsHtml5AttributeName::ATTR_REL, rel, -1);
   nsHtml5String type = nsHtml5Portability::newStringFromLiteral("text/css");
   linkAttrs->addAttribute(nsHtml5AttributeName::ATTR_TYPE, type, -1);
   nsHtml5String href = nsHtml5Portability::newStringFromLiteral(
-    "resource://content-accessible/viewsource.css");
+      "resource://content-accessible/viewsource.css");
   linkAttrs->addAttribute(nsHtml5AttributeName::ATTR_HREF, href, -1);
   return linkAttrs;
 }
 
 // static
-nsHtml5HtmlAttributes*
-nsHtml5ViewSourceUtils::NewMetaViewportAttributes()
-{
+nsHtml5HtmlAttributes* nsHtml5ViewSourceUtils::NewMetaViewportAttributes() {
   nsHtml5HtmlAttributes* metaVpAttrs = new nsHtml5HtmlAttributes(0);
   nsHtml5String name = nsHtml5Portability::newStringFromLiteral("viewport");
   metaVpAttrs->addAttribute(nsHtml5AttributeName::ATTR_NAME, name, -1);
   nsHtml5String content =
-    nsHtml5Portability::newStringFromLiteral("width=device-width");
+      nsHtml5Portability::newStringFromLiteral("width=device-width");
   metaVpAttrs->addAttribute(nsHtml5AttributeName::ATTR_CONTENT, content, -1);
   return metaVpAttrs;
 }

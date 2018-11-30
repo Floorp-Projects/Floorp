@@ -19,11 +19,9 @@ class nsINode;
 namespace mozilla {
 namespace dom {
 
-class UIEvent : public Event
-{
-public:
-  UIEvent(EventTarget* aOwner,
-          nsPresContext* aPresContext,
+class UIEvent : public Event {
+ public:
+  UIEvent(EventTarget* aOwner, nsPresContext* aPresContext,
           WidgetGUIEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -38,49 +36,29 @@ public:
                                                const UIEventInit& aParam,
                                                ErrorResult& aRv);
 
-  virtual JSObject*
-    WrapObjectInternal(JSContext* aCx,
-                       JS::Handle<JSObject*> aGivenProto) override
-  {
+  virtual JSObject* WrapObjectInternal(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override {
     return UIEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-  UIEvent* AsUIEvent() override
-  {
-    return this;
-  }
+  UIEvent* AsUIEvent() override { return this; }
 
-  void InitUIEvent(const nsAString& typeArg,
-                   bool canBubbleArg,
-                   bool cancelableArg,
-                   nsGlobalWindowInner* viewArg,
+  void InitUIEvent(const nsAString& typeArg, bool canBubbleArg,
+                   bool cancelableArg, nsGlobalWindowInner* viewArg,
                    int32_t detailArg);
 
-  nsPIDOMWindowOuter* GetView() const
-  {
-    return mView;
-  }
+  nsPIDOMWindowOuter* GetView() const { return mView; }
 
-  int32_t Detail() const
-  {
-    return mDetail;
-  }
+  int32_t Detail() const { return mDetail; }
 
-  int32_t LayerX() const
-  {
-    return GetLayerPoint().x;
-  }
+  int32_t LayerX() const { return GetLayerPoint().x; }
 
-  int32_t LayerY() const
-  {
-    return GetLayerPoint().y;
-  }
+  int32_t LayerY() const { return GetLayerPoint().y; }
 
   int32_t PageX() const;
   int32_t PageY() const;
 
-  virtual uint32_t Which(CallerType aCallerType = CallerType::System)
-  {
+  virtual uint32_t Which(CallerType aCallerType = CallerType::System) {
     MOZ_ASSERT(mEvent->mClass != eKeyboardEventClass,
                "Key events should override Which()");
     MOZ_ASSERT(mEvent->mClass != eMouseEventClass,
@@ -94,7 +72,7 @@ public:
   MOZ_CAN_RUN_SCRIPT
   int32_t RangeOffset() const;
 
-protected:
+ protected:
   ~UIEvent() {}
 
   // Internal helper functions
@@ -116,12 +94,11 @@ protected:
   void InitModifiers(const EventModifierInit& aParam);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-already_AddRefed<mozilla::dom::UIEvent>
-NS_NewDOMUIEvent(mozilla::dom::EventTarget* aOwner,
-                 nsPresContext* aPresContext,
-                 mozilla::WidgetGUIEvent* aEvent);
+already_AddRefed<mozilla::dom::UIEvent> NS_NewDOMUIEvent(
+    mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,
+    mozilla::WidgetGUIEvent* aEvent);
 
-#endif // mozilla_dom_UIEvent_h_
+#endif  // mozilla_dom_UIEvent_h_

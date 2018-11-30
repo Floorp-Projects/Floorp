@@ -10,57 +10,46 @@
 namespace mozilla {
 namespace dom {
 
-FeaturePolicyViolationReportBody::FeaturePolicyViolationReportBody(nsPIDOMWindowInner* aWindow,
-                                                                   const nsAString& aFeatureId,
-                                                                   const nsAString& aSourceFile,
-                                                                   const Nullable<int32_t>& aLineNumber,
-                                                                   const Nullable<int32_t>& aColumnNumber,
-                                                                   const nsAString& aDisposition)
-  : ReportBody(aWindow)
-  , mFeatureId(aFeatureId)
-  , mSourceFile(aSourceFile)
-  , mLineNumber(aLineNumber)
-  , mColumnNumber(aColumnNumber)
-  , mDisposition(aDisposition)
-{}
+FeaturePolicyViolationReportBody::FeaturePolicyViolationReportBody(
+    nsPIDOMWindowInner* aWindow, const nsAString& aFeatureId,
+    const nsAString& aSourceFile, const Nullable<int32_t>& aLineNumber,
+    const Nullable<int32_t>& aColumnNumber, const nsAString& aDisposition)
+    : ReportBody(aWindow),
+      mFeatureId(aFeatureId),
+      mSourceFile(aSourceFile),
+      mLineNumber(aLineNumber),
+      mColumnNumber(aColumnNumber),
+      mDisposition(aDisposition) {}
 
 FeaturePolicyViolationReportBody::~FeaturePolicyViolationReportBody() = default;
 
-JSObject*
-FeaturePolicyViolationReportBody::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* FeaturePolicyViolationReportBody::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return FeaturePolicyViolationReportBody_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-FeaturePolicyViolationReportBody::GetFeatureId(nsAString& aFeatureId) const
-{
+void FeaturePolicyViolationReportBody::GetFeatureId(
+    nsAString& aFeatureId) const {
   aFeatureId = mFeatureId;
 }
 
-void
-FeaturePolicyViolationReportBody::GetSourceFile(nsAString& aSourceFile) const
-{
+void FeaturePolicyViolationReportBody::GetSourceFile(
+    nsAString& aSourceFile) const {
   aSourceFile = mSourceFile;
 }
 
-Nullable<int32_t>
-FeaturePolicyViolationReportBody::GetLineNumber() const
-{
+Nullable<int32_t> FeaturePolicyViolationReportBody::GetLineNumber() const {
   return mLineNumber;
 }
 
-Nullable<int32_t>
-FeaturePolicyViolationReportBody::GetColumnNumber() const
-{
+Nullable<int32_t> FeaturePolicyViolationReportBody::GetColumnNumber() const {
   return mColumnNumber;
 }
 
-void
-FeaturePolicyViolationReportBody::GetDisposition(nsAString& aDisposition) const
-{
+void FeaturePolicyViolationReportBody::GetDisposition(
+    nsAString& aDisposition) const {
   aDisposition = mDisposition;
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

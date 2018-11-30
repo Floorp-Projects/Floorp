@@ -14,24 +14,23 @@ NS_DEFINE_NAMED_CID(DEFLATECONVERTER_CID);
 NS_DEFINE_NAMED_CID(ZIPWRITER_CID);
 
 static const mozilla::Module::CIDEntry kZipWriterCIDs[] = {
-  { &kDEFLATECONVERTER_CID, false, nullptr, nsDeflateConverterConstructor },
-  { &kZIPWRITER_CID, false, nullptr, nsZipWriterConstructor },
-  { nullptr }
-};
+    {&kDEFLATECONVERTER_CID, false, nullptr, nsDeflateConverterConstructor},
+    {&kZIPWRITER_CID, false, nullptr, nsZipWriterConstructor},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kZipWriterContracts[] = {
-  { "@mozilla.org/streamconv;1?from=uncompressed&to=deflate", &kDEFLATECONVERTER_CID },
-  { "@mozilla.org/streamconv;1?from=uncompressed&to=gzip", &kDEFLATECONVERTER_CID },
-  { "@mozilla.org/streamconv;1?from=uncompressed&to=x-gzip", &kDEFLATECONVERTER_CID },
-  { "@mozilla.org/streamconv;1?from=uncompressed&to=rawdeflate", &kDEFLATECONVERTER_CID },
-  { ZIPWRITER_CONTRACTID, &kZIPWRITER_CID },
-  { nullptr }
-};
+    {"@mozilla.org/streamconv;1?from=uncompressed&to=deflate",
+     &kDEFLATECONVERTER_CID},
+    {"@mozilla.org/streamconv;1?from=uncompressed&to=gzip",
+     &kDEFLATECONVERTER_CID},
+    {"@mozilla.org/streamconv;1?from=uncompressed&to=x-gzip",
+     &kDEFLATECONVERTER_CID},
+    {"@mozilla.org/streamconv;1?from=uncompressed&to=rawdeflate",
+     &kDEFLATECONVERTER_CID},
+    {ZIPWRITER_CONTRACTID, &kZIPWRITER_CID},
+    {nullptr}};
 
 static const mozilla::Module kZipWriterModule = {
-  mozilla::Module::kVersion,
-  kZipWriterCIDs,
-  kZipWriterContracts
-};
+    mozilla::Module::kVersion, kZipWriterCIDs, kZipWriterContracts};
 
 NSMODULE_DEFN(ZipWriterModule) = &kZipWriterModule;

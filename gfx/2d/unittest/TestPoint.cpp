@@ -10,15 +10,12 @@
 
 using namespace mozilla::gfx;
 
-TestPoint::TestPoint()
-{
+TestPoint::TestPoint() {
   REGISTER_TEST(TestPoint, Addition);
   REGISTER_TEST(TestPoint, Subtraction);
 }
 
-void
-TestPoint::Addition()
-{
+void TestPoint::Addition() {
   Point a, b;
   a.x = 2;
   a.y = 2;
@@ -31,9 +28,7 @@ TestPoint::Addition()
   VERIFY(a.y == -3.f);
 }
 
-void
-TestPoint::Subtraction()
-{
+void TestPoint::Subtraction() {
   Point a, b;
   a.x = 2;
   a.y = 2;

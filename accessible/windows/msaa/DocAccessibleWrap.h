@@ -12,9 +12,8 @@
 namespace mozilla {
 namespace a11y {
 
-class DocAccessibleWrap : public DocAccessible
-{
-public:
+class DocAccessibleWrap : public DocAccessible {
+ public:
   DocAccessibleWrap(nsIDocument* aDocument, nsIPresShell* aPresShell);
   virtual ~DocAccessibleWrap();
 
@@ -24,12 +23,13 @@ public:
 
   // Override get_accParent for e10s
   virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accParent(
-      /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispParent) override;
+      /* [retval][out] */ IDispatch __RPC_FAR* __RPC_FAR* ppdispParent)
+      override;
 
   // Override get_accValue to provide URL when no other value is available
   virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accValue(
       /* [optional][in] */ VARIANT varChild,
-      /* [retval][out] */ BSTR __RPC_FAR *pszValue) override;
+      /* [retval][out] */ BSTR __RPC_FAR* pszValue) override;
 
   // Accessible
   virtual void Shutdown();
@@ -40,17 +40,19 @@ public:
   /**
    * Manage the mapping from id to Accessible.
    */
-  void AddID(uint32_t aID, AccessibleWrap* aAcc)
-    { mIDToAccessibleMap.Put(aID, aAcc); }
+  void AddID(uint32_t aID, AccessibleWrap* aAcc) {
+    mIDToAccessibleMap.Put(aID, aAcc);
+  }
   void RemoveID(uint32_t aID) { mIDToAccessibleMap.Remove(aID); }
-  AccessibleWrap* GetAccessibleByID(uint32_t aID) const
-    { return mIDToAccessibleMap.Get(aID); }
+  AccessibleWrap* GetAccessibleByID(uint32_t aID) const {
+    return mIDToAccessibleMap.Get(aID);
+  }
 
-protected:
+ protected:
   // DocAccessible
   virtual void DoInitialUpdate();
 
-protected:
+ protected:
   void* mHWND;
 
   /*
@@ -59,7 +61,7 @@ protected:
   nsDataHashtable<nsUint32HashKey, AccessibleWrap*> mIDToAccessibleMap;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

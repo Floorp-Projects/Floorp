@@ -25,130 +25,129 @@ namespace gfx {
 using namespace mozilla::widget;
 using mozilla::layers::AutoTextureLock;
 
-/* static */ bool
-D3D11Checks::DoesRenderTargetViewNeedRecreating(ID3D11Device *aDevice)
-{
-    bool result = false;
-    // CreateTexture2D is known to crash on lower feature levels, see bugs
-    // 1170211 and 1089413.
-    if (aDevice->GetFeatureLevel() < D3D_FEATURE_LEVEL_10_0) {
-        return true;
-    }
+/* static */ bool D3D11Checks::DoesRenderTargetViewNeedRecreating(
+    ID3D11Device* aDevice) {
+  bool result = false;
+  // CreateTexture2D is known to crash on lower feature levels, see bugs
+  // 1170211 and 1089413.
+  if (aDevice->GetFeatureLevel() < D3D_FEATURE_LEVEL_10_0) {
+    return true;
+  }
 
-    RefPtr<ID3D11DeviceContext> deviceContext;
-    aDevice->GetImmediateContext(getter_AddRefs(deviceContext));
-    int backbufferWidth = 32; int backbufferHeight = 32;
-    RefPtr<ID3D11Texture2D> offscreenTexture;
-    RefPtr<IDXGIKeyedMutex> keyedMutex;
+  RefPtr<ID3D11DeviceContext> deviceContext;
+  aDevice->GetImmediateContext(getter_AddRefs(deviceContext));
+  int backbufferWidth = 32;
+  int backbufferHeight = 32;
+  RefPtr<ID3D11Texture2D> offscreenTexture;
+  RefPtr<IDXGIKeyedMutex> keyedMutex;
 
-    D3D11_TEXTURE2D_DESC offscreenTextureDesc = { 0 };
-    offscreenTextureDesc.Width = backbufferWidth;
-    offscreenTextureDesc.Height = backbufferHeight;
-    offscreenTextureDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-    offscreenTextureDesc.MipLevels = 0;
-    offscreenTextureDesc.ArraySize = 1;
-    offscreenTextureDesc.SampleDesc.Count = 1;
-    offscreenTextureDesc.SampleDesc.Quality = 0;
-    offscreenTextureDesc.Usage = D3D11_USAGE_DEFAULT;
-    offscreenTextureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-    offscreenTextureDesc.CPUAccessFlags = 0;
-    offscreenTextureDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+  D3D11_TEXTURE2D_DESC offscreenTextureDesc = {0};
+  offscreenTextureDesc.Width = backbufferWidth;
+  offscreenTextureDesc.Height = backbufferHeight;
+  offscreenTextureDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+  offscreenTextureDesc.MipLevels = 0;
+  offscreenTextureDesc.ArraySize = 1;
+  offscreenTextureDesc.SampleDesc.Count = 1;
+  offscreenTextureDesc.SampleDesc.Quality = 0;
+  offscreenTextureDesc.Usage = D3D11_USAGE_DEFAULT;
+  offscreenTextureDesc.BindFlags =
+      D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+  offscreenTextureDesc.CPUAccessFlags = 0;
+  offscreenTextureDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
-    HRESULT hr = aDevice->CreateTexture2D(&offscreenTextureDesc, NULL, getter_AddRefs(offscreenTexture));
+  HRESULT hr = aDevice->CreateTexture2D(&offscreenTextureDesc, NULL,
+                                        getter_AddRefs(offscreenTexture));
+  if (FAILED(hr)) {
+    gfxCriticalNote << "DoesRecreatingCreateTexture2DFail";
+    return false;
+  }
+
+  hr = offscreenTexture->QueryInterface(__uuidof(IDXGIKeyedMutex),
+                                        (void**)getter_AddRefs(keyedMutex));
+  if (FAILED(hr)) {
+    gfxCriticalNote << "DoesRecreatingKeyedMutexFailed";
+    return false;
+  }
+  D3D11_RENDER_TARGET_VIEW_DESC offscreenRTVDesc;
+  offscreenRTVDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+  offscreenRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+  offscreenRTVDesc.Texture2D.MipSlice = 0;
+
+  RefPtr<ID3D11RenderTargetView> offscreenRTView;
+  hr = aDevice->CreateRenderTargetView(offscreenTexture, &offscreenRTVDesc,
+                                       getter_AddRefs(offscreenRTView));
+  if (FAILED(hr)) {
+    gfxCriticalNote << "DoesRecreatingCreateRenderTargetViewFailed";
+    return false;
+  }
+
+  {
+    // Acquire and clear
+    HRESULT hr;
+    AutoTextureLock lock(keyedMutex, hr, INFINITE);
+    FLOAT color1[4] = {1, 1, 0.5, 1};
+    deviceContext->ClearRenderTargetView(offscreenRTView, color1);
+  }
+
+  {
+    HRESULT hr;
+    AutoTextureLock lock(keyedMutex, hr, INFINITE);
+    FLOAT color2[4] = {1, 1, 0, 1};
+
+    deviceContext->ClearRenderTargetView(offscreenRTView, color2);
+    D3D11_TEXTURE2D_DESC desc;
+
+    offscreenTexture->GetDesc(&desc);
+    desc.Usage = D3D11_USAGE_STAGING;
+    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    desc.MiscFlags = 0;
+    desc.BindFlags = 0;
+    RefPtr<ID3D11Texture2D> cpuTexture;
+    hr = aDevice->CreateTexture2D(&desc, NULL, getter_AddRefs(cpuTexture));
     if (FAILED(hr)) {
-        gfxCriticalNote << "DoesRecreatingCreateTexture2DFail";
-        return false;
+      gfxCriticalNote << "DoesRecreatingCreateCPUTextureFailed";
+      return false;
     }
 
-    hr = offscreenTexture->QueryInterface(__uuidof(IDXGIKeyedMutex), (void**)getter_AddRefs(keyedMutex));
+    deviceContext->CopyResource(cpuTexture, offscreenTexture);
+
+    D3D11_MAPPED_SUBRESOURCE mapped;
+    hr = deviceContext->Map(cpuTexture, 0, D3D11_MAP_READ, 0, &mapped);
     if (FAILED(hr)) {
-        gfxCriticalNote << "DoesRecreatingKeyedMutexFailed";
-        return false;
+      gfxCriticalNote << "DoesRecreatingMapFailed " << hexa(hr);
+      return false;
     }
-    D3D11_RENDER_TARGET_VIEW_DESC offscreenRTVDesc;
-    offscreenRTVDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-    offscreenRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-    offscreenRTVDesc.Texture2D.MipSlice = 0;
+    int resultColor = *(int*)mapped.pData;
+    deviceContext->Unmap(cpuTexture, 0);
+    cpuTexture = nullptr;
 
-    RefPtr<ID3D11RenderTargetView> offscreenRTView;
-    hr = aDevice->CreateRenderTargetView(offscreenTexture, &offscreenRTVDesc, getter_AddRefs(offscreenRTView));
-    if (FAILED(hr)) {
-        gfxCriticalNote << "DoesRecreatingCreateRenderTargetViewFailed";
-        return false;
+    // XXX on some drivers resultColor will not have changed to
+    // match the clear
+    if (resultColor != 0xffffff00) {
+      gfxCriticalNote << "RenderTargetViewNeedsRecreating";
+      result = true;
     }
-
-    {
-        // Acquire and clear
-        HRESULT hr;
-        AutoTextureLock lock(keyedMutex, hr, INFINITE);
-        FLOAT color1[4] = { 1, 1, 0.5, 1 };
-        deviceContext->ClearRenderTargetView(offscreenRTView, color1);
-    }
-
-    {
-        HRESULT hr;
-        AutoTextureLock lock(keyedMutex, hr, INFINITE);
-        FLOAT color2[4] = { 1, 1, 0, 1 };
-
-        deviceContext->ClearRenderTargetView(offscreenRTView, color2);
-        D3D11_TEXTURE2D_DESC desc;
-
-        offscreenTexture->GetDesc(&desc);
-        desc.Usage = D3D11_USAGE_STAGING;
-        desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-        desc.MiscFlags = 0;
-        desc.BindFlags = 0;
-        RefPtr<ID3D11Texture2D> cpuTexture;
-        hr = aDevice->CreateTexture2D(&desc, NULL, getter_AddRefs(cpuTexture));
-        if (FAILED(hr)) {
-            gfxCriticalNote << "DoesRecreatingCreateCPUTextureFailed";
-            return false;
-        }
-
-        deviceContext->CopyResource(cpuTexture, offscreenTexture);
-
-        D3D11_MAPPED_SUBRESOURCE mapped;
-        hr = deviceContext->Map(cpuTexture, 0, D3D11_MAP_READ, 0, &mapped);
-        if (FAILED(hr)) {
-            gfxCriticalNote << "DoesRecreatingMapFailed " << hexa(hr);
-            return false;
-        }
-        int resultColor = *(int*)mapped.pData;
-        deviceContext->Unmap(cpuTexture, 0);
-        cpuTexture = nullptr;
-
-        // XXX on some drivers resultColor will not have changed to
-        // match the clear
-        if (resultColor != 0xffffff00) {
-            gfxCriticalNote << "RenderTargetViewNeedsRecreating";
-            result = true;
-        }
-    }
-    return result;
+  }
+  return result;
 }
 
-/* static */ bool
-D3D11Checks::DoesDeviceWork()
-{
+/* static */ bool D3D11Checks::DoesDeviceWork() {
   static bool checked = false;
   static bool result = false;
 
-  if (checked)
-      return result;
+  if (checked) return result;
   checked = true;
 
   if (gfxPrefs::Direct2DForceEnabled() ||
-      gfxConfig::IsForcedOnByUser(Feature::HW_COMPOSITING))
-  {
+      gfxConfig::IsForcedOnByUser(Feature::HW_COMPOSITING)) {
     result = true;
     return true;
   }
 
   if (GetModuleHandleW(L"igd10umd32.dll")) {
-    const wchar_t* checkModules[] = {L"dlumd32.dll",
-                                     L"dlumd11.dll",
+    const wchar_t* checkModules[] = {L"dlumd32.dll", L"dlumd11.dll",
                                      L"dlumd10.dll"};
-    for (int i=0; i<PR_ARRAY_SIZE(checkModules); i+=1) {
+    for (int i = 0; i < PR_ARRAY_SIZE(checkModules); i += 1) {
       if (GetModuleHandleW(checkModules[i])) {
         nsString displayLinkModuleVersionString;
         gfxWindowsPlatform::GetDLLVersion(checkModules[i],
@@ -156,13 +155,14 @@ D3D11Checks::DoesDeviceWork()
         uint64_t displayLinkModuleVersion;
         if (!ParseDriverVersion(displayLinkModuleVersionString,
                                 &displayLinkModuleVersion)) {
-          gfxCriticalError() << "DisplayLink: could not parse version "
-                             << checkModules[i];
+          gfxCriticalError()
+              << "DisplayLink: could not parse version " << checkModules[i];
           return false;
         }
-        if (displayLinkModuleVersion <= V(8,6,1,36484)) {
+        if (displayLinkModuleVersion <= V(8, 6, 1, 36484)) {
           NS_ConvertUTF16toUTF8 version(displayLinkModuleVersionString);
-          gfxCriticalError(CriticalLog::DefaultOptions(false)) << "DisplayLink: too old version " << version.get();
+          gfxCriticalError(CriticalLog::DefaultOptions(false))
+              << "DisplayLink: too old version " << version.get();
           return false;
         }
       }
@@ -172,28 +172,27 @@ D3D11Checks::DoesDeviceWork()
   return true;
 }
 
-static bool
-TryCreateTexture2D(ID3D11Device *device,
-                   D3D11_TEXTURE2D_DESC* desc,
-                   D3D11_SUBRESOURCE_DATA* data,
-                   RefPtr<ID3D11Texture2D>& texture)
-{
+static bool TryCreateTexture2D(ID3D11Device* device, D3D11_TEXTURE2D_DESC* desc,
+                               D3D11_SUBRESOURCE_DATA* data,
+                               RefPtr<ID3D11Texture2D>& texture) {
   // Older Intel driver version (see bug 1221348 for version #s) crash when
   // creating a texture with shared keyed mutex and data.
   MOZ_SEH_TRY {
-    return !FAILED(device->CreateTexture2D(desc, data, getter_AddRefs(texture)));
-  } MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+    return !FAILED(
+        device->CreateTexture2D(desc, data, getter_AddRefs(texture)));
+  }
+  MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
     // For now we want to aggregrate all the crash signature to a known crash.
-    gfxDevCrash(LogReason::TextureCreation) << "Crash creating texture. See bug 1221348.";
+    gfxDevCrash(LogReason::TextureCreation)
+        << "Crash creating texture. See bug 1221348.";
     return false;
   }
 }
 
 // See bug 1083071. On some drivers, Direct3D 11 CreateShaderResourceView fails
 // with E_OUTOFMEMORY.
-static bool
-DoesTextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT format, UINT bindflags)
-{
+static bool DoesTextureSharingWorkInternal(ID3D11Device* device,
+                                           DXGI_FORMAT format, UINT bindflags) {
   // CreateTexture2D is known to crash on lower feature levels, see bugs
   // 1170211 and 1089413.
   if (device->GetFeatureLevel() < D3D_FEATURE_LEVEL_10_0) {
@@ -201,8 +200,7 @@ DoesTextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT format, UINT bi
   }
 
   if (gfxPrefs::Direct2DForceEnabled() ||
-      gfxConfig::IsForcedOnByUser(Feature::HW_COMPOSITING))
-  {
+      gfxConfig::IsForcedOnByUser(Feature::HW_COMPOSITING)) {
     return true;
   }
 
@@ -216,7 +214,8 @@ DoesTextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT format, UINT bi
         if (!gfxPrefs::LayersAMDSwitchableGfxEnabled()) {
           return false;
         }
-        gfxCriticalError(CriticalLog::DefaultOptions(false)) << "PossiblyBrokenSurfaceSharing_UnexpectedAMDGPU";
+        gfxCriticalError(CriticalLog::DefaultOptions(false))
+            << "PossiblyBrokenSurfaceSharing_UnexpectedAMDGPU";
       }
     }
   }
@@ -237,7 +236,7 @@ DoesTextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT format, UINT bi
   desc.BindFlags = bindflags;
 
   uint32_t color[texture_size * texture_size];
-  for (size_t i = 0; i < sizeof(color)/sizeof(color[0]); i++) {
+  for (size_t i = 0; i < sizeof(color) / sizeof(color[0]); i++) {
     color[i] = 0xff00ffff;
   }
   // XXX If we pass the data directly at texture creation time we
@@ -249,8 +248,9 @@ DoesTextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT format, UINT bi
   }
 
   RefPtr<IDXGIKeyedMutex> sourceSharedMutex;
-  texture->QueryInterface(__uuidof(IDXGIKeyedMutex), (void**)getter_AddRefs(sourceSharedMutex));
-  if (FAILED(sourceSharedMutex->AcquireSync(0, 30*1000))) {
+  texture->QueryInterface(__uuidof(IDXGIKeyedMutex),
+                          (void**)getter_AddRefs(sourceSharedMutex));
+  if (FAILED(sourceSharedMutex->AcquireSync(0, 30 * 1000))) {
     gfxCriticalError() << "DoesD3D11TextureSharingWork_SourceMutexTimeout";
     // only wait for 30 seconds
     return false;
@@ -260,18 +260,19 @@ DoesTextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT format, UINT bi
   device->GetImmediateContext(getter_AddRefs(deviceContext));
 
   int stride = texture_size * 4;
-  deviceContext->UpdateSubresource(texture, 0, nullptr, color, stride, stride * texture_size);
+  deviceContext->UpdateSubresource(texture, 0, nullptr, color, stride,
+                                   stride * texture_size);
 
   if (FAILED(sourceSharedMutex->ReleaseSync(0))) {
-    gfxCriticalError() << "DoesD3D11TextureSharingWork_SourceReleaseSyncTimeout";
+    gfxCriticalError()
+        << "DoesD3D11TextureSharingWork_SourceReleaseSyncTimeout";
     return false;
   }
 
   HANDLE shareHandle;
   RefPtr<IDXGIResource> otherResource;
   if (FAILED(texture->QueryInterface(__uuidof(IDXGIResource),
-                                     getter_AddRefs(otherResource))))
-  {
+                                     getter_AddRefs(otherResource)))) {
     gfxCriticalError() << "DoesD3D11TextureSharingWork_GetResourceFailure";
     return false;
   }
@@ -284,15 +285,14 @@ DoesTextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT format, UINT bi
   RefPtr<ID3D11Resource> sharedResource;
   RefPtr<ID3D11Texture2D> sharedTexture;
   if (FAILED(device->OpenSharedResource(shareHandle, __uuidof(ID3D11Resource),
-                                        getter_AddRefs(sharedResource))))
-  {
-    gfxCriticalError(CriticalLog::DefaultOptions(false)) << "OpenSharedResource failed for format " << format;
+                                        getter_AddRefs(sharedResource)))) {
+    gfxCriticalError(CriticalLog::DefaultOptions(false))
+        << "OpenSharedResource failed for format " << format;
     return false;
   }
 
   if (FAILED(sharedResource->QueryInterface(__uuidof(ID3D11Texture2D),
-                                            getter_AddRefs(sharedTexture))))
-  {
+                                            getter_AddRefs(sharedTexture)))) {
     gfxCriticalError() << "DoesD3D11TextureSharingWork_GetSharedTextureFailure";
     return false;
   }
@@ -303,16 +303,18 @@ DoesTextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT format, UINT bi
   desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
   desc.MiscFlags = 0;
   desc.BindFlags = 0;
-  if (FAILED(device->CreateTexture2D(&desc, nullptr, getter_AddRefs(cpuTexture)))) {
+  if (FAILED(device->CreateTexture2D(&desc, nullptr,
+                                     getter_AddRefs(cpuTexture)))) {
     gfxCriticalError() << "DoesD3D11TextureSharingWork_CreateTextureFailure";
     return false;
   }
 
   RefPtr<IDXGIKeyedMutex> sharedMutex;
-  sharedResource->QueryInterface(__uuidof(IDXGIKeyedMutex), (void**)getter_AddRefs(sharedMutex));
+  sharedResource->QueryInterface(__uuidof(IDXGIKeyedMutex),
+                                 (void**)getter_AddRefs(sharedMutex));
   {
     HRESULT hr;
-    AutoTextureLock lock(sharedMutex, hr, 30*1000);
+    AutoTextureLock lock(sharedMutex, hr, 30 * 1000);
     if (FAILED(hr)) {
       gfxCriticalError() << "DoesD3D11TextureSharingWork_AcquireSyncTimeout";
       // only wait for 30 seconds
@@ -328,7 +330,8 @@ DoesTextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT format, UINT bi
 
   D3D11_MAPPED_SUBRESOURCE mapped;
   uint32_t resultColor = 0;
-  if (SUCCEEDED(deviceContext->Map(cpuTexture, 0, D3D11_MAP_READ, 0, &mapped))) {
+  if (SUCCEEDED(
+          deviceContext->Map(cpuTexture, 0, D3D11_MAP_READ, 0, &mapped))) {
     // read the texture
     resultColor = *(uint32_t*)mapped.pData;
     deviceContext->Unmap(cpuTexture, 0);
@@ -347,8 +350,10 @@ DoesTextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT format, UINT bi
 
   RefPtr<ID3D11ShaderResourceView> sharedView;
 
-  // This if(FAILED()) is the one that actually fails on systems affected by bug 1083071.
-  if (FAILED(device->CreateShaderResourceView(sharedTexture, NULL, getter_AddRefs(sharedView)))) {
+  // This if(FAILED()) is the one that actually fails on systems affected by bug
+  // 1083071.
+  if (FAILED(device->CreateShaderResourceView(sharedTexture, NULL,
+                                              getter_AddRefs(sharedView)))) {
     gfxCriticalNote << "CreateShaderResourceView failed for format" << format;
     return false;
   }
@@ -356,23 +361,23 @@ DoesTextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT format, UINT bi
   return true;
 }
 
-/* static */ bool
-D3D11Checks::DoesTextureSharingWork(ID3D11Device *device)
-{
-  return DoesTextureSharingWorkInternal(device, DXGI_FORMAT_B8G8R8A8_UNORM, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
+/* static */ bool D3D11Checks::DoesTextureSharingWork(ID3D11Device* device) {
+  return DoesTextureSharingWorkInternal(
+      device, DXGI_FORMAT_B8G8R8A8_UNORM,
+      D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
 }
 
-/* static */ bool
-D3D11Checks::DoesAlphaTextureSharingWork(ID3D11Device *device)
-{
-  return DoesTextureSharingWorkInternal(device, DXGI_FORMAT_R8_UNORM, D3D11_BIND_SHADER_RESOURCE);
+/* static */ bool D3D11Checks::DoesAlphaTextureSharingWork(
+    ID3D11Device* device) {
+  return DoesTextureSharingWorkInternal(device, DXGI_FORMAT_R8_UNORM,
+                                        D3D11_BIND_SHADER_RESOURCE);
 }
 
-/* static */ bool
-D3D11Checks::GetDxgiDesc(ID3D11Device* device, DXGI_ADAPTER_DESC* out)
-{
+/* static */ bool D3D11Checks::GetDxgiDesc(ID3D11Device* device,
+                                           DXGI_ADAPTER_DESC* out) {
   RefPtr<IDXGIDevice> dxgiDevice;
-  HRESULT hr = device->QueryInterface(__uuidof(IDXGIDevice), getter_AddRefs(dxgiDevice));
+  HRESULT hr =
+      device->QueryInterface(__uuidof(IDXGIDevice), getter_AddRefs(dxgiDevice));
   if (FAILED(hr)) {
     return false;
   }
@@ -385,9 +390,7 @@ D3D11Checks::GetDxgiDesc(ID3D11Device* device, DXGI_ADAPTER_DESC* out)
   return SUCCEEDED(dxgiAdapter->GetDesc(out));
 }
 
-/* static */ void
-D3D11Checks::WarnOnAdapterMismatch(ID3D11Device *device)
-{
+/* static */ void D3D11Checks::WarnOnAdapterMismatch(ID3D11Device* device) {
   DXGI_ADAPTER_DESC desc;
   PodZero(&desc);
   GetDxgiDesc(device, &desc);
@@ -398,22 +401,22 @@ D3D11Checks::WarnOnAdapterMismatch(ID3D11Device *device)
   nsresult ec;
   int32_t vendor = vendorID.ToInteger(&ec, 16);
   if (vendor != desc.VendorId) {
-    gfxCriticalNote << "VendorIDMismatch V " << hexa(vendor) << " " << hexa(desc.VendorId);
+    gfxCriticalNote << "VendorIDMismatch V " << hexa(vendor) << " "
+                    << hexa(desc.VendorId);
   }
 }
 
-/* static */ bool
-D3D11Checks::DoesRemotePresentWork(IDXGIAdapter* adapter)
-{
-  // Remote presentation was added in DXGI 1.2, for Windows 8 and the Platform Update to Windows 7.
+/* static */ bool D3D11Checks::DoesRemotePresentWork(IDXGIAdapter* adapter) {
+  // Remote presentation was added in DXGI 1.2, for Windows 8 and the Platform
+  // Update to Windows 7.
   RefPtr<IDXGIAdapter2> check;
-  HRESULT hr = adapter->QueryInterface(__uuidof(IDXGIAdapter2), getter_AddRefs(check));
+  HRESULT hr =
+      adapter->QueryInterface(__uuidof(IDXGIAdapter2), getter_AddRefs(check));
   return SUCCEEDED(hr) && check;
 }
 
-/* static */ D3D11Checks::VideoFormatOptionSet
-D3D11Checks::FormatOptions(ID3D11Device* device)
-{
+/* static */ D3D11Checks::VideoFormatOptionSet D3D11Checks::FormatOptions(
+    ID3D11Device* device) {
   auto doesNV12Work = [&]() {
     if (gfxVars::DXNV12Blocked()) {
       return false;
@@ -474,5 +477,5 @@ D3D11Checks::FormatOptions(ID3D11Device* device)
   return options;
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

@@ -14,161 +14,138 @@ namespace js {
 
 typedef uint32_t RawBytecodeLocationOffset;
 
+class BytecodeLocationOffset {
+  RawBytecodeLocationOffset rawOffset_;
 
-class BytecodeLocationOffset
-{
-    RawBytecodeLocationOffset rawOffset_;
+ public:
+  explicit BytecodeLocationOffset(RawBytecodeLocationOffset offset)
+      : rawOffset_(offset) {}
 
-  public:
-    explicit BytecodeLocationOffset(RawBytecodeLocationOffset offset)
-      : rawOffset_(offset)
-    {}
-
-    RawBytecodeLocationOffset rawOffset() const {
-        return rawOffset_;
-    }
-
+  RawBytecodeLocationOffset rawOffset() const { return rawOffset_; }
 };
-
 
 typedef jsbytecode* RawBytecode;
 
 // A immutable representation of a program location
 //
-class BytecodeLocation
-{
-    RawBytecode rawBytecode_;
+class BytecodeLocation {
+  RawBytecode rawBytecode_;
 #ifdef DEBUG
-    const JSScript* debugOnlyScript_;
+  const JSScript* debugOnlyScript_;
 #endif
 
-    // Construct a new BytecodeLocation, while borrowing scriptIdentity
-    // from some other BytecodeLocation.
-    BytecodeLocation(const BytecodeLocation& loc, RawBytecode pc)
+  // Construct a new BytecodeLocation, while borrowing scriptIdentity
+  // from some other BytecodeLocation.
+  BytecodeLocation(const BytecodeLocation& loc, RawBytecode pc)
       : rawBytecode_(pc)
 #ifdef DEBUG
-      , debugOnlyScript_(loc.debugOnlyScript_)
+        ,
+        debugOnlyScript_(loc.debugOnlyScript_)
 #endif
-    {
-        MOZ_ASSERT(isValid());
-    }
+  {
+    MOZ_ASSERT(isValid());
+  }
 
-  public:
-    BytecodeLocation(const JSScript* script, RawBytecode pc)
+ public:
+  BytecodeLocation(const JSScript* script, RawBytecode pc)
       : rawBytecode_(pc)
 #ifdef DEBUG
-      , debugOnlyScript_(script)
+        ,
+        debugOnlyScript_(script)
 #endif
-    {
-        MOZ_ASSERT(isValid());
-    }
+  {
+    MOZ_ASSERT(isValid());
+  }
 
-    RawBytecode toRawBytecode() const {
-        return rawBytecode_;
-    }
+  RawBytecode toRawBytecode() const { return rawBytecode_; }
 
-    // Return true if this bytecode location is valid for the given script.
-    // This includes the location 1-past the end of the bytecode.
-    bool isValid(const JSScript* script) const;
+  // Return true if this bytecode location is valid for the given script.
+  // This includes the location 1-past the end of the bytecode.
+  bool isValid(const JSScript* script) const;
 
-    // Return true if this bytecode location is within the bounds of the
-    // bytecode for a given script.
-    bool isInBounds(const JSScript* script) const;
+  // Return true if this bytecode location is within the bounds of the
+  // bytecode for a given script.
+  bool isInBounds(const JSScript* script) const;
 
-    bool operator==(const BytecodeLocation& other) const {
-        MOZ_ASSERT(this->debugOnlyScript_ == other.debugOnlyScript_);
-        return rawBytecode_ == other.rawBytecode_;
-    }
+  bool operator==(const BytecodeLocation& other) const {
+    MOZ_ASSERT(this->debugOnlyScript_ == other.debugOnlyScript_);
+    return rawBytecode_ == other.rawBytecode_;
+  }
 
-    bool operator!=(const BytecodeLocation& other) const {
-        return !(other == *this);
-    }
+  bool operator!=(const BytecodeLocation& other) const {
+    return !(other == *this);
+  }
 
-    bool operator<(const BytecodeLocation& other) const {
-        MOZ_ASSERT(this->debugOnlyScript_ == other.debugOnlyScript_);
-        return rawBytecode_ < other.rawBytecode_;
-    }
+  bool operator<(const BytecodeLocation& other) const {
+    MOZ_ASSERT(this->debugOnlyScript_ == other.debugOnlyScript_);
+    return rawBytecode_ < other.rawBytecode_;
+  }
 
-    // It is traditional to represent the rest of the relational operators
-    // using operator<, so we don't need to assert for these.
-    bool operator>(const BytecodeLocation& other) const {
-        return other < *this;
-    }
+  // It is traditional to represent the rest of the relational operators
+  // using operator<, so we don't need to assert for these.
+  bool operator>(const BytecodeLocation& other) const { return other < *this; }
 
-    bool operator<=(const BytecodeLocation& other) const {
-        return !(other < *this);
-    }
+  bool operator<=(const BytecodeLocation& other) const {
+    return !(other < *this);
+  }
 
-    bool operator>=(const BytecodeLocation& other) const {
-        return !(*this < other);
-    }
+  bool operator>=(const BytecodeLocation& other) const {
+    return !(*this < other);
+  }
 
-    // Return the next bytecode
-    BytecodeLocation next() const {
-        return BytecodeLocation(*this, rawBytecode_ + GetBytecodeLength(rawBytecode_));
-    }
+  // Return the next bytecode
+  BytecodeLocation next() const {
+    return BytecodeLocation(*this,
+                            rawBytecode_ + GetBytecodeLength(rawBytecode_));
+  }
 
-    // Add an offset.
-    BytecodeLocation operator+(const BytecodeLocationOffset& offset) {
-        return BytecodeLocation(*this, rawBytecode_ + offset.rawOffset());
-    }
+  // Add an offset.
+  BytecodeLocation operator+(const BytecodeLocationOffset& offset) {
+    return BytecodeLocation(*this, rawBytecode_ + offset.rawOffset());
+  }
 
-    // Identity Checks
-    bool is(JSOp op) const {
-        MOZ_ASSERT(isInBounds());
-        return getOp() == op;
-    }
+  // Identity Checks
+  bool is(JSOp op) const {
+    MOZ_ASSERT(isInBounds());
+    return getOp() == op;
+  }
 
-    bool isJumpTarget() const {
-        return BytecodeIsJumpTarget(getOp());
-    }
+  bool isJumpTarget() const { return BytecodeIsJumpTarget(getOp()); }
 
-    bool isJump() const {
-        return IsJumpOpcode(getOp());
-    }
+  bool isJump() const { return IsJumpOpcode(getOp()); }
 
-    bool fallsThrough() const {
-        return BytecodeFallsThrough(getOp());
-    }
+  bool fallsThrough() const { return BytecodeFallsThrough(getOp()); }
 
-    // Accessors:
-    JSOp getOp() const {
-        return JSOp(*rawBytecode_);
-    }
+  // Accessors:
+  JSOp getOp() const { return JSOp(*rawBytecode_); }
 
-    BytecodeLocation getJumpTarget() const {
-        // The default target of a JSOP_TABLESWITCH also follows this format.
-        MOZ_ASSERT(isJump() || is(JSOP_TABLESWITCH));
-        return BytecodeLocation(*this, rawBytecode_ + GET_JUMP_OFFSET(rawBytecode_));
-    }
+  BytecodeLocation getJumpTarget() const {
+    // The default target of a JSOP_TABLESWITCH also follows this format.
+    MOZ_ASSERT(isJump() || is(JSOP_TABLESWITCH));
+    return BytecodeLocation(*this,
+                            rawBytecode_ + GET_JUMP_OFFSET(rawBytecode_));
+  }
 
-    // Return the 'low' parameter to the tableswitch opcode
-    int32_t getTableSwitchLow() const {
-        MOZ_ASSERT(is(JSOP_TABLESWITCH));
-        return GET_JUMP_OFFSET(rawBytecode_ + JUMP_OFFSET_LEN);
-    }
+  // Return the 'low' parameter to the tableswitch opcode
+  int32_t getTableSwitchLow() const {
+    MOZ_ASSERT(is(JSOP_TABLESWITCH));
+    return GET_JUMP_OFFSET(rawBytecode_ + JUMP_OFFSET_LEN);
+  }
 
-    // Return the 'high' parameter to the tableswitch opcode
-    int32_t getTableSwitchHigh() const {
-        MOZ_ASSERT(is(JSOP_TABLESWITCH));
-        return GET_JUMP_OFFSET(rawBytecode_ + (2 * JUMP_OFFSET_LEN));
-    }
+  // Return the 'high' parameter to the tableswitch opcode
+  int32_t getTableSwitchHigh() const {
+    MOZ_ASSERT(is(JSOP_TABLESWITCH));
+    return GET_JUMP_OFFSET(rawBytecode_ + (2 * JUMP_OFFSET_LEN));
+  }
 
 #ifdef DEBUG
-    // To ease writing assertions
-    bool isValid() const {
-        return isValid(debugOnlyScript_);
-    }
+  // To ease writing assertions
+  bool isValid() const { return isValid(debugOnlyScript_); }
 
-    bool isInBounds() const {
-        return isInBounds(debugOnlyScript_);
-    }
+  bool isInBounds() const { return isInBounds(debugOnlyScript_); }
 #endif
-
 };
 
-
-}
-
+}  // namespace js
 
 #endif

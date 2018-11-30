@@ -58,42 +58,33 @@ NS_IMPL_ISUPPORTS_INHERITED(RootAccessible, DocAccessible, nsIDOMEventListener)
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor/destructor
 
-RootAccessible::
-  RootAccessible(nsIDocument* aDocument, nsIPresShell* aPresShell) :
-  DocAccessibleWrap(aDocument, aPresShell)
-{
+RootAccessible::RootAccessible(nsIDocument* aDocument, nsIPresShell* aPresShell)
+    : DocAccessibleWrap(aDocument, aPresShell) {
   mType = eRootType;
 }
 
-RootAccessible::~RootAccessible()
-{
-}
+RootAccessible::~RootAccessible() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible
 
-ENameValueFlag
-RootAccessible::Name(nsString& aName) const
-{
+ENameValueFlag RootAccessible::Name(nsString& aName) const {
   aName.Truncate();
 
   if (ARIARoleMap()) {
     Accessible::Name(aName);
-    if (!aName.IsEmpty())
-      return eNameOK;
+    if (!aName.IsEmpty()) return eNameOK;
   }
 
   mDocumentNode->GetTitle(aName);
   return eNameOK;
 }
 
-role
-RootAccessible::NativeRole() const
-{
+role RootAccessible::NativeRole() const {
   // If it's a <dialog> or <wizard>, use roles::DIALOG instead
   dom::Element* rootElm = mDocumentNode->GetRootElement();
-  if (rootElm && rootElm->IsAnyOfXULElements(nsGkAtoms::dialog,
-                                             nsGkAtoms::wizard))
+  if (rootElm &&
+      rootElm->IsAnyOfXULElements(nsGkAtoms::dialog, nsGkAtoms::wizard))
     return roles::DIALOG;
 
   return DocAccessibleWrap::NativeRole();
@@ -101,9 +92,7 @@ RootAccessible::NativeRole() const
 
 // RootAccessible protected member
 #ifdef MOZ_XUL
-uint32_t
-RootAccessible::GetChromeFlags() const
-{
+uint32_t RootAccessible::GetChromeFlags() const {
   // Return the flag set for the top level window as defined
   // by nsIWebBrowserChrome::CHROME_WINDOW_[FLAGNAME]
   // Not simple: nsIXULWindow is not just a QI from nsIDOMWindow
@@ -122,24 +111,20 @@ RootAccessible::GetChromeFlags() const
 }
 #endif
 
-uint64_t
-RootAccessible::NativeState() const
-{
+uint64_t RootAccessible::NativeState() const {
   uint64_t state = DocAccessibleWrap::NativeState();
-  if (state & states::DEFUNCT)
-    return state;
+  if (state & states::DEFUNCT) return state;
 
 #ifdef MOZ_XUL
   uint32_t chromeFlags = GetChromeFlags();
   if (chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE)
     state |= states::SIZEABLE;
-    // If it has a titlebar it's movable
-    // XXX unless it's minimized or maximized, but not sure
-    //     how to detect that
+  // If it has a titlebar it's movable
+  // XXX unless it's minimized or maximized, but not sure
+  //     how to detect that
   if (chromeFlags & nsIWebBrowserChrome::CHROME_TITLEBAR)
     state |= states::MOVEABLE;
-  if (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL)
-    state |= states::MODAL;
+  if (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL) state |= states::MODAL;
 #endif
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -151,35 +136,27 @@ RootAccessible::NativeState() const
 
 const char* const kEventTypes[] = {
 #ifdef DEBUG_DRAGDROPSTART
-  // Capture mouse over events and fire fake DRAGDROPSTART event to simplify
-  // debugging a11y objects with event viewers.
-  "mouseover",
+    // Capture mouse over events and fire fake DRAGDROPSTART event to simplify
+    // debugging a11y objects with event viewers.
+    "mouseover",
 #endif
-  // Fired when list or tree selection changes.
-  "select",
-  // Fired when value changes immediately, wether or not focused changed.
-  "ValueChange",
-  "AlertActive",
-  "TreeRowCountChanged",
-  "TreeInvalidated",
-  // add ourself as a OpenStateChange listener (custom event fired in tree.xml)
-  "OpenStateChange",
-  // add ourself as a CheckboxStateChange listener (custom event fired in HTMLInputElement.cpp)
-  "CheckboxStateChange",
-  // add ourself as a RadioStateChange Listener ( custom event fired in in HTMLInputElement.cpp  & radio.xml)
-  "RadioStateChange",
-  "popupshown",
-  "popuphiding",
-  "DOMMenuInactive",
-  "DOMMenuItemActive",
-  "DOMMenuItemInactive",
-  "DOMMenuBarActive",
-  "DOMMenuBarInactive"
-};
+    // Fired when list or tree selection changes.
+    "select",
+    // Fired when value changes immediately, wether or not focused changed.
+    "ValueChange", "AlertActive", "TreeRowCountChanged", "TreeInvalidated",
+    // add ourself as a OpenStateChange listener (custom event fired in
+    // tree.xml)
+    "OpenStateChange",
+    // add ourself as a CheckboxStateChange listener (custom event fired in
+    // HTMLInputElement.cpp)
+    "CheckboxStateChange",
+    // add ourself as a RadioStateChange Listener ( custom event fired in in
+    // HTMLInputElement.cpp  & radio.xml)
+    "RadioStateChange", "popupshown", "popuphiding", "DOMMenuInactive",
+    "DOMMenuItemActive", "DOMMenuItemInactive", "DOMMenuBarActive",
+    "DOMMenuBarInactive"};
 
-nsresult
-RootAccessible::AddEventListeners()
-{
+nsresult RootAccessible::AddEventListeners() {
   // EventTarget interface allows to register event listeners to
   // receive untrusted events (synthetic events generated by untrusted code).
   // For example, XBL bindings implementations for elements that are hosted in
@@ -187,11 +164,11 @@ RootAccessible::AddEventListeners()
   nsCOMPtr<EventTarget> nstarget = mDocumentNode;
 
   if (nstarget) {
-    for (const char* const* e = kEventTypes,
-                   * const* e_end = ArrayEnd(kEventTypes);
+    for (const char *const *e = kEventTypes, *const *e_end =
+                                                 ArrayEnd(kEventTypes);
          e < e_end; ++e) {
-      nsresult rv = nstarget->AddEventListener(NS_ConvertASCIItoUTF16(*e),
-                                               this, true, true);
+      nsresult rv = nstarget->AddEventListener(NS_ConvertASCIItoUTF16(*e), this,
+                                               true, true);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -199,13 +176,11 @@ RootAccessible::AddEventListeners()
   return DocAccessible::AddEventListeners();
 }
 
-nsresult
-RootAccessible::RemoveEventListeners()
-{
+nsresult RootAccessible::RemoveEventListeners() {
   nsCOMPtr<EventTarget> target = mDocumentNode;
   if (target) {
-    for (const char* const* e = kEventTypes,
-                   * const* e_end = ArrayEnd(kEventTypes);
+    for (const char *const *e = kEventTypes, *const *e_end =
+                                                 ArrayEnd(kEventTypes);
          e < e_end; ++e) {
       target->RemoveEventListener(NS_ConvertASCIItoUTF16(*e), this, true);
     }
@@ -220,21 +195,17 @@ RootAccessible::RemoveEventListeners()
 ////////////////////////////////////////////////////////////////////////////////
 // public
 
-void
-RootAccessible::DocumentActivated(DocAccessible* aDocument)
-{
-}
+void RootAccessible::DocumentActivated(DocAccessible* aDocument) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIDOMEventListener
 
 NS_IMETHODIMP
-RootAccessible::HandleEvent(Event* aDOMEvent)
-{
+RootAccessible::HandleEvent(Event* aDOMEvent) {
   MOZ_ASSERT(aDOMEvent);
-  nsCOMPtr<nsINode> origTargetNode = do_QueryInterface(aDOMEvent->GetOriginalTarget());
-  if (!origTargetNode)
-    return NS_OK;
+  nsCOMPtr<nsINode> origTargetNode =
+      do_QueryInterface(aDOMEvent->GetOriginalTarget());
+  if (!origTargetNode) return NS_OK;
 
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eDOMEvents)) {
@@ -245,26 +216,24 @@ RootAccessible::HandleEvent(Event* aDOMEvent)
 #endif
 
   DocAccessible* document =
-    GetAccService()->GetDocAccessible(origTargetNode->OwnerDoc());
+      GetAccService()->GetDocAccessible(origTargetNode->OwnerDoc());
 
   if (document) {
     // Root accessible exists longer than any of its descendant documents so
     // that we are guaranteed notification is processed before root accessible
     // is destroyed.
-    document->HandleNotification<RootAccessible, Event>
-      (this, &RootAccessible::ProcessDOMEvent, aDOMEvent);
+    document->HandleNotification<RootAccessible, Event>(
+        this, &RootAccessible::ProcessDOMEvent, aDOMEvent);
   }
 
   return NS_OK;
 }
 
 // RootAccessible protected
-void
-RootAccessible::ProcessDOMEvent(Event* aDOMEvent)
-{
+void RootAccessible::ProcessDOMEvent(Event* aDOMEvent) {
   MOZ_ASSERT(aDOMEvent);
   nsCOMPtr<nsINode> origTargetNode =
-    do_QueryInterface(aDOMEvent->GetOriginalTarget());
+      do_QueryInterface(aDOMEvent->GetOriginalTarget());
 
   nsAutoString eventType;
   aDOMEvent->GetType(eventType);
@@ -284,17 +253,16 @@ RootAccessible::ProcessDOMEvent(Event* aDOMEvent)
     return;
   }
 
-  DocAccessible* targetDocument = GetAccService()->
-    GetDocAccessible(origTargetNode->OwnerDoc());
+  DocAccessible* targetDocument =
+      GetAccService()->GetDocAccessible(origTargetNode->OwnerDoc());
   if (!targetDocument) {
     // Document has ceased to exist.
     return;
   }
 
   Accessible* accessible =
-    targetDocument->GetAccessibleOrContainer(origTargetNode);
-  if (!accessible)
-    return;
+      targetDocument->GetAccessibleOrContainer(origTargetNode);
+  if (!accessible) return;
 
 #ifdef MOZ_XUL
   XULTreeAccessible* treeAcc = accessible->AsXULTree();
@@ -317,7 +285,7 @@ RootAccessible::ProcessDOMEvent(Event* aDOMEvent)
 
     if (accessible->NeedsDOMUIEvent()) {
       RefPtr<AccEvent> accEvent =
-        new AccStateChangeEvent(accessible, states::CHECKED, isEnabled);
+          new AccStateChangeEvent(accessible, states::CHECKED, isEnabled);
       nsEventShell::FireEvent(accEvent);
     }
 
@@ -338,7 +306,7 @@ RootAccessible::ProcessDOMEvent(Event* aDOMEvent)
       bool isEnabled = !!(state & states::CHECKED);
 
       RefPtr<AccEvent> accEvent =
-        new AccStateChangeEvent(accessible, states::CHECKED, isEnabled);
+          new AccStateChangeEvent(accessible, states::CHECKED, isEnabled);
       nsEventShell::FireEvent(accEvent);
     }
     return;
@@ -349,8 +317,7 @@ RootAccessible::ProcessDOMEvent(Event* aDOMEvent)
   // If it's a tree element, need the currently selected item.
   if (treeAcc) {
     treeItemAcc = accessible->CurrentItem();
-    if (treeItemAcc)
-      accessible = treeItemAcc;
+    if (treeItemAcc) accessible = treeItemAcc;
   }
 
   if (treeItemAcc && eventType.EqualsLiteral("OpenStateChange")) {
@@ -358,7 +325,7 @@ RootAccessible::ProcessDOMEvent(Event* aDOMEvent)
     bool isEnabled = (state & states::EXPANDED) != 0;
 
     RefPtr<AccEvent> accEvent =
-      new AccStateChangeEvent(accessible, states::EXPANDED, isEnabled);
+        new AccStateChangeEvent(accessible, states::EXPANDED, isEnabled);
     nsEventShell::FireEvent(accEvent);
     return;
   }
@@ -370,7 +337,7 @@ RootAccessible::ProcessDOMEvent(Event* aDOMEvent)
     // If multiselect tree, we should fire selectionadd or selection removed
     if (FocusMgr()->HasDOMFocus(targetNode)) {
       nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSel =
-        do_QueryInterface(targetNode);
+          do_QueryInterface(targetNode);
       nsAutoString selType;
       multiSel->GetSelType(selType);
       if (selType.IsEmpty() || !selType.EqualsLiteral("single")) {
@@ -383,41 +350,35 @@ RootAccessible::ProcessDOMEvent(Event* aDOMEvent)
         return;
       }
 
-      RefPtr<AccSelChangeEvent> selChangeEvent =
-        new AccSelChangeEvent(treeAcc, treeItemAcc,
-                              AccSelChangeEvent::eSelectionAdd);
+      RefPtr<AccSelChangeEvent> selChangeEvent = new AccSelChangeEvent(
+          treeAcc, treeItemAcc, AccSelChangeEvent::eSelectionAdd);
       nsEventShell::FireEvent(selChangeEvent);
       return;
     }
-  }
-  else
+  } else
 #endif
-  if (eventType.EqualsLiteral("AlertActive")) {
+      if (eventType.EqualsLiteral("AlertActive")) {
     nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_ALERT, accessible);
-  }
-  else if (eventType.EqualsLiteral("popupshown")) {
+  } else if (eventType.EqualsLiteral("popupshown")) {
     HandlePopupShownEvent(accessible);
-  }
-  else if (eventType.EqualsLiteral("DOMMenuInactive")) {
+  } else if (eventType.EqualsLiteral("DOMMenuInactive")) {
     if (accessible->Role() == roles::MENUPOPUP) {
       nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_END,
                               accessible);
     }
-  }
-  else if (eventType.EqualsLiteral("DOMMenuItemActive")) {
+  } else if (eventType.EqualsLiteral("DOMMenuItemActive")) {
     FocusMgr()->ActiveItemChanged(accessible);
 #ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eFocus))
       logging::ActiveItemChangeCausedBy("DOMMenuItemActive", accessible);
 #endif
-  }
-  else if (eventType.EqualsLiteral("DOMMenuItemInactive")) {
+  } else if (eventType.EqualsLiteral("DOMMenuItemInactive")) {
     // Process DOMMenuItemInactive event for autocomplete only because this is
     // unique widget that may acquire focus from autocomplete popup while popup
     // stays open and has no active item. In case of XUL tree autocomplete
     // popup this event is fired for tree accessible.
     Accessible* widget =
-      accessible->IsWidget() ? accessible : accessible->ContainerWidget();
+        accessible->IsWidget() ? accessible : accessible->ContainerWidget();
     if (widget && widget->IsAutoCompletePopup()) {
       FocusMgr()->ActiveItemChanged(nullptr);
 #ifdef A11Y_LOG
@@ -425,10 +386,10 @@ RootAccessible::ProcessDOMEvent(Event* aDOMEvent)
         logging::ActiveItemChangeCausedBy("DOMMenuItemInactive", accessible);
 #endif
     }
-  }
-  else if (eventType.EqualsLiteral("DOMMenuBarActive")) {  // Always from user input
-    nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_MENU_START,
-                            accessible, eFromUserInput);
+  } else if (eventType.EqualsLiteral(
+                 "DOMMenuBarActive")) {  // Always from user input
+    nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_MENU_START, accessible,
+                            eFromUserInput);
 
     // Notify of active item change when menubar gets active and if it has
     // current item. This is a case of mouseover (set current menuitem) and
@@ -444,23 +405,22 @@ RootAccessible::ProcessDOMEvent(Event* aDOMEvent)
         logging::ActiveItemChangeCausedBy("DOMMenuBarActive", accessible);
 #endif
     }
-  }
-  else if (eventType.EqualsLiteral("DOMMenuBarInactive")) {  // Always from user input
-    nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_MENU_END,
-                            accessible, eFromUserInput);
+  } else if (eventType.EqualsLiteral(
+                 "DOMMenuBarInactive")) {  // Always from user input
+    nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_MENU_END, accessible,
+                            eFromUserInput);
 
     FocusMgr()->ActiveItemChanged(nullptr);
 #ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eFocus))
       logging::ActiveItemChangeCausedBy("DOMMenuBarInactive", accessible);
 #endif
-  }
-  else if (accessible->NeedsDOMUIEvent() &&
-           eventType.EqualsLiteral("ValueChange")) {
+  } else if (accessible->NeedsDOMUIEvent() &&
+             eventType.EqualsLiteral("ValueChange")) {
     uint32_t event = accessible->HasNumericValue()
-      ? nsIAccessibleEvent::EVENT_VALUE_CHANGE
-      : nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE;
-     targetDocument->FireDelayedEvent(event, accessible);
+                         ? nsIAccessibleEvent::EVENT_VALUE_CHANGE
+                         : nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE;
+    targetDocument->FireDelayedEvent(event, accessible);
   }
 #ifdef DEBUG_DRAGDROPSTART
   else if (eventType.EqualsLiteral("mouseover")) {
@@ -470,36 +430,29 @@ RootAccessible::ProcessDOMEvent(Event* aDOMEvent)
 #endif
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible
 
-void
-RootAccessible::Shutdown()
-{
+void RootAccessible::Shutdown() {
   // Called manually or by Accessible::LastRelease()
-  if (!PresShell())
-    return;  // Already shutdown
+  if (!PresShell()) return;  // Already shutdown
 
   DocAccessibleWrap::Shutdown();
 }
 
-Relation
-RootAccessible::RelationByType(RelationType aType) const
-{
+Relation RootAccessible::RelationByType(RelationType aType) const {
   if (!mDocumentNode || aType != RelationType::EMBEDS)
     return DocAccessibleWrap::RelationByType(aType);
 
   if (nsPIDOMWindowOuter* rootWindow = mDocumentNode->GetWindow()) {
     nsCOMPtr<nsPIDOMWindowOuter> contentWindow =
-      nsGlobalWindowOuter::Cast(rootWindow)->GetContent();
+        nsGlobalWindowOuter::Cast(rootWindow)->GetContent();
     if (contentWindow) {
       nsCOMPtr<nsIDocument> contentDocumentNode = contentWindow->GetDoc();
       if (contentDocumentNode) {
         DocAccessible* contentDocument =
-          GetAccService()->GetDocAccessible(contentDocumentNode);
-        if (contentDocument)
-          return Relation(contentDocument);
+            GetAccService()->GetDocAccessible(contentDocumentNode);
+        if (contentDocument) return Relation(contentDocument);
       }
     }
   }
@@ -510,9 +463,7 @@ RootAccessible::RelationByType(RelationType aType) const
 ////////////////////////////////////////////////////////////////////////////////
 // Protected members
 
-void
-RootAccessible::HandlePopupShownEvent(Accessible* aAccessible)
-{
+void RootAccessible::HandlePopupShownEvent(Accessible* aAccessible) {
   roles::Role role = aAccessible->Role();
 
   if (role == roles::MENUPOPUP) {
@@ -534,33 +485,27 @@ RootAccessible::HandlePopupShownEvent(Accessible* aAccessible)
   if (role == roles::COMBOBOX_LIST) {
     // Fire expanded state change event for comboboxes and autocompeletes.
     Accessible* combobox = aAccessible->Parent();
-    if (!combobox)
-      return;
+    if (!combobox) return;
 
     if (combobox->IsCombobox() || combobox->IsAutoComplete()) {
       RefPtr<AccEvent> event =
-        new AccStateChangeEvent(combobox, states::EXPANDED, true);
-      if (event)
-        nsEventShell::FireEvent(event);
+          new AccStateChangeEvent(combobox, states::EXPANDED, true);
+      if (event) nsEventShell::FireEvent(event);
     }
   }
 }
 
-void
-RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode)
-{
+void RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode) {
   // Get popup accessible. There are cases when popup element isn't accessible
   // but an underlying widget is and behaves like popup, an example is
   // autocomplete popups.
   DocAccessible* document = nsAccUtils::GetDocAccessibleFor(aPopupNode);
-  if (!document)
-    return;
+  if (!document) return;
 
   Accessible* popup = document->GetAccessible(aPopupNode);
   if (!popup) {
     Accessible* popupContainer = document->GetContainerAccessible(aPopupNode);
-    if (!popupContainer)
-      return;
+    if (!popupContainer) return;
 
     uint32_t childCount = popupContainer->ChildCount();
     for (uint32_t idx = 0; idx < childCount; idx++) {
@@ -573,15 +518,15 @@ RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode)
 
     // No popup no events. Focus is managed by DOM. This is a case for
     // menupopups of menus on Linux since there are no accessible for popups.
-    if (!popup)
-      return;
+    if (!popup) return;
   }
 
   // In case of autocompletes and comboboxes fire state change event for
   // expanded state. Note, HTML form autocomplete isn't a subject of state
   // change event because they aren't autocompletes strictly speaking.
   // When popup closes (except nested popups and menus) then fire focus event to
-  // where it was. The focus event is expected even if popup didn't take a focus.
+  // where it was. The focus event is expected even if popup didn't take a
+  // focus.
 
   static const uint32_t kNotifyOfFocus = 1;
   static const uint32_t kNotifyOfState = 2;
@@ -596,8 +541,7 @@ RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode)
   } else {
     widget = popup->ContainerWidget();
     if (!widget) {
-      if (!popup->IsMenuPopup())
-        return;
+      if (!popup->IsMenuPopup()) return;
 
       widget = popup;
     }
@@ -606,14 +550,12 @@ RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode)
   if (popup->IsAutoCompletePopup()) {
     // No focus event for autocomplete because it's managed by
     // DOMMenuItemInactive events.
-    if (widget->IsAutoComplete())
-      notifyOf = kNotifyOfState;
+    if (widget->IsAutoComplete()) notifyOf = kNotifyOfState;
 
   } else if (widget->IsCombobox()) {
     // Fire focus for active combobox, otherwise the focus is managed by DOM
     // focus notifications. Always fire state change event.
-    if (widget->IsActiveWidget())
-      notifyOf = kNotifyOfFocus;
+    if (widget->IsActiveWidget()) notifyOf = kNotifyOfFocus;
     notifyOf |= kNotifyOfState;
 
   } else if (widget->IsMenuButton()) {
@@ -648,90 +590,71 @@ RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode)
   // Fire expanded state change event.
   if (notifyOf & kNotifyOfState) {
     RefPtr<AccEvent> event =
-      new AccStateChangeEvent(widget, states::EXPANDED, false);
+        new AccStateChangeEvent(widget, states::EXPANDED, false);
     document->FireDelayedEvent(event);
   }
 }
 
 #ifdef MOZ_XUL
-static void
-GetPropertyBagFromEvent(Event* aEvent, nsIPropertyBag2** aPropertyBag)
-{
+static void GetPropertyBagFromEvent(Event* aEvent,
+                                    nsIPropertyBag2** aPropertyBag) {
   *aPropertyBag = nullptr;
 
   CustomEvent* customEvent = aEvent->AsCustomEvent();
-  if (!customEvent)
-    return;
+  if (!customEvent) return;
 
   AutoJSAPI jsapi;
-  if (!jsapi.Init(customEvent->GetParentObject()))
-    return;
+  if (!jsapi.Init(customEvent->GetParentObject())) return;
 
   JSContext* cx = jsapi.cx();
   JS::Rooted<JS::Value> detail(cx);
   customEvent->GetDetail(cx, &detail);
-  if (!detail.isObject())
-    return;
+  if (!detail.isObject()) return;
 
   JS::Rooted<JSObject*> detailObj(cx, &detail.toObject());
 
   nsresult rv;
   nsCOMPtr<nsIPropertyBag2> propBag;
   rv = UnwrapArg<nsIPropertyBag2>(cx, detailObj, getter_AddRefs(propBag));
-  if (NS_FAILED(rv))
-    return;
+  if (NS_FAILED(rv)) return;
 
   propBag.forget(aPropertyBag);
 }
 
-void
-RootAccessible::HandleTreeRowCountChangedEvent(Event* aEvent,
-                                               XULTreeAccessible* aAccessible)
-{
+void RootAccessible::HandleTreeRowCountChangedEvent(
+    Event* aEvent, XULTreeAccessible* aAccessible) {
   nsCOMPtr<nsIPropertyBag2> propBag;
   GetPropertyBagFromEvent(aEvent, getter_AddRefs(propBag));
-  if (!propBag)
-    return;
+  if (!propBag) return;
 
   nsresult rv;
   int32_t index, count;
   rv = propBag->GetPropertyAsInt32(NS_LITERAL_STRING("index"), &index);
-  if (NS_FAILED(rv))
-    return;
+  if (NS_FAILED(rv)) return;
 
   rv = propBag->GetPropertyAsInt32(NS_LITERAL_STRING("count"), &count);
-  if (NS_FAILED(rv))
-    return;
+  if (NS_FAILED(rv)) return;
 
   aAccessible->InvalidateCache(index, count);
 }
 
-void
-RootAccessible::HandleTreeInvalidatedEvent(Event* aEvent,
-                                           XULTreeAccessible* aAccessible)
-{
+void RootAccessible::HandleTreeInvalidatedEvent(
+    Event* aEvent, XULTreeAccessible* aAccessible) {
   nsCOMPtr<nsIPropertyBag2> propBag;
   GetPropertyBagFromEvent(aEvent, getter_AddRefs(propBag));
-  if (!propBag)
-    return;
+  if (!propBag) return;
 
   int32_t startRow = 0, endRow = -1, startCol = 0, endCol = -1;
-  propBag->GetPropertyAsInt32(NS_LITERAL_STRING("startrow"),
-                              &startRow);
-  propBag->GetPropertyAsInt32(NS_LITERAL_STRING("endrow"),
-                              &endRow);
-  propBag->GetPropertyAsInt32(NS_LITERAL_STRING("startcolumn"),
-                              &startCol);
-  propBag->GetPropertyAsInt32(NS_LITERAL_STRING("endcolumn"),
-                              &endCol);
+  propBag->GetPropertyAsInt32(NS_LITERAL_STRING("startrow"), &startRow);
+  propBag->GetPropertyAsInt32(NS_LITERAL_STRING("endrow"), &endRow);
+  propBag->GetPropertyAsInt32(NS_LITERAL_STRING("startcolumn"), &startCol);
+  propBag->GetPropertyAsInt32(NS_LITERAL_STRING("endcolumn"), &endCol);
 
   aAccessible->TreeViewInvalidated(startRow, endRow, startCol, endCol);
 }
 #endif
 
-ProxyAccessible*
-RootAccessible::GetPrimaryRemoteTopLevelContentDoc() const
-{
+ProxyAccessible* RootAccessible::GetPrimaryRemoteTopLevelContentDoc() const {
   nsCOMPtr<nsIDocShellTreeOwner> owner;
   mDocumentNode->GetDocShell()->GetTreeOwner(getter_AddRefs(owner));
   NS_ENSURE_TRUE(owner, nullptr);

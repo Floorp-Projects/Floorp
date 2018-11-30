@@ -11,24 +11,19 @@ using mozilla::gfx::SharedDIBSurface;
 namespace mozilla {
 namespace plugins {
 
-PluginSurfaceParent::PluginSurfaceParent(const WindowsSharedMemoryHandle& handle,
-                                         const gfx::IntSize& size,
-                                         bool transparent)
-{
+PluginSurfaceParent::PluginSurfaceParent(
+    const WindowsSharedMemoryHandle& handle, const gfx::IntSize& size,
+    bool transparent) {
   SharedDIBSurface* dibsurf = new SharedDIBSurface();
   if (dibsurf->Attach(handle, size.width, size.height, transparent))
     mSurface = dibsurf;
 }
 
-PluginSurfaceParent::~PluginSurfaceParent()
-{
-}
+PluginSurfaceParent::~PluginSurfaceParent() {}
 
-void
-PluginSurfaceParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void PluginSurfaceParent::ActorDestroy(ActorDestroyReason aWhy) {
   // Implement me! Bug 1005167
 }
 
-}
-}
+}  // namespace plugins
+}  // namespace mozilla

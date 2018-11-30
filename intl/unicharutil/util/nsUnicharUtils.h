@@ -10,15 +10,13 @@
 
 /* (0x3131u <= (u) && (u) <= 0x318eu) => Hangul Compatibility Jamo */
 /* (0xac00u <= (u) && (u) <= 0xd7a3u) => Hangul Syllables          */
-#define IS_CJ_CHAR(u) \
-  ((0x2e80u <= (u) && (u) <= 0x312fu) || \
-   (0x3190u <= (u) && (u) <= 0xabffu) || \
-   (0xf900u <= (u) && (u) <= 0xfaffu) || \
-   (0xff00u <= (u) && (u) <= 0xffefu) )
+#define IS_CJ_CHAR(u)                                                          \
+  ((0x2e80u <= (u) && (u) <= 0x312fu) || (0x3190u <= (u) && (u) <= 0xabffu) || \
+   (0xf900u <= (u) && (u) <= 0xfaffu) || (0xff00u <= (u) && (u) <= 0xffefu))
 
 #define IS_ZERO_WIDTH_SPACE(u) ((u) == 0x200B)
 
-#define IS_ASCII(u)       ((u) < 0x80)
+#define IS_ASCII(u) ((u) < 0x80)
 #define IS_ASCII_UPPER(u) (('A' <= (u)) && ((u) <= 'Z'))
 #define IS_ASCII_LOWER(u) (('a' <= (u)) && ((u) <= 'z'))
 #define IS_ASCII_ALPHA(u) (IS_ASCII_UPPER(u) || IS_ASCII_LOWER(u))
@@ -36,9 +34,9 @@ uint32_t ToLowerCase(uint32_t aChar);
 uint32_t ToUpperCase(uint32_t aChar);
 uint32_t ToTitleCase(uint32_t aChar);
 
-void ToLowerCase(const char16_t *aIn, char16_t *aOut, uint32_t aLen);
-void ToLowerCaseASCII(const char16_t *aIn, char16_t *aOut, uint32_t aLen);
-void ToUpperCase(const char16_t *aIn, char16_t *aOut, uint32_t aLen);
+void ToLowerCase(const char16_t* aIn, char16_t* aOut, uint32_t aLen);
+void ToLowerCaseASCII(const char16_t* aIn, char16_t* aOut, uint32_t aLen);
+void ToUpperCase(const char16_t* aIn, char16_t* aOut, uint32_t aLen);
 
 char ToLowerCaseASCII(const char aChar);
 char16_t ToLowerCaseASCII(const char16_t aChar);
@@ -48,82 +46,63 @@ char ToUpperCaseASCII(const char aChar);
 char16_t ToUpperCaseASCII(const char16_t aChar);
 char32_t ToUpperCaseASCII(const char32_t aChar);
 
-inline bool IsUpperCase(uint32_t c) {
-  return ToLowerCase(c) != c;
-}
+inline bool IsUpperCase(uint32_t c) { return ToLowerCase(c) != c; }
 
-inline bool IsLowerCase(uint32_t c) {
-  return ToUpperCase(c) != c;
-}
+inline bool IsLowerCase(uint32_t c) { return ToUpperCase(c) != c; }
 
 #ifdef MOZILLA_INTERNAL_API
 
-class nsCaseInsensitiveStringComparator : public nsStringComparator
-{
-public:
+class nsCaseInsensitiveStringComparator : public nsStringComparator {
+ public:
   nsCaseInsensitiveStringComparator() = default;
 
-  virtual int32_t operator() (const char16_t*,
-                              const char16_t*,
-                              uint32_t,
-                              uint32_t) const override;
+  virtual int32_t operator()(const char16_t*, const char16_t*, uint32_t,
+                             uint32_t) const override;
 };
 
-class nsCaseInsensitiveUTF8StringComparator : public nsCStringComparator
-{
-public:
-  virtual int32_t operator() (const char*,
-                              const char*,
-                              uint32_t,
-                              uint32_t) const override;
+class nsCaseInsensitiveUTF8StringComparator : public nsCStringComparator {
+ public:
+  virtual int32_t operator()(const char*, const char*, uint32_t,
+                             uint32_t) const override;
 };
 
-class nsCaseInsensitiveStringArrayComparator
-{
-public:
-  template<class A, class B>
+class nsCaseInsensitiveStringArrayComparator {
+ public:
+  template <class A, class B>
   bool Equals(const A& a, const B& b) const {
     return a.Equals(b, nsCaseInsensitiveStringComparator());
   }
 };
 
-class nsASCIICaseInsensitiveStringComparator : public nsStringComparator
-{
-public:
+class nsASCIICaseInsensitiveStringComparator : public nsStringComparator {
+ public:
   nsASCIICaseInsensitiveStringComparator() {}
-  virtual int operator() (const char16_t*,
-                          const char16_t*,
-                          uint32_t,
-                          uint32_t) const override;
+  virtual int operator()(const char16_t*, const char16_t*, uint32_t,
+                         uint32_t) const override;
 };
 
-inline bool
-CaseInsensitiveFindInReadable(const nsAString& aPattern,
-                              nsAString::const_iterator& aSearchStart,
-                              nsAString::const_iterator& aSearchEnd)
-{
+inline bool CaseInsensitiveFindInReadable(
+    const nsAString& aPattern, nsAString::const_iterator& aSearchStart,
+    nsAString::const_iterator& aSearchEnd) {
   return FindInReadable(aPattern, aSearchStart, aSearchEnd,
                         nsCaseInsensitiveStringComparator());
 }
 
-inline bool
-CaseInsensitiveFindInReadable(const nsAString& aPattern,
-                              const nsAString& aHay)
-{
+inline bool CaseInsensitiveFindInReadable(const nsAString& aPattern,
+                                          const nsAString& aHay) {
   nsAString::const_iterator searchBegin, searchEnd;
   return FindInReadable(aPattern, aHay.BeginReading(searchBegin),
                         aHay.EndReading(searchEnd),
                         nsCaseInsensitiveStringComparator());
 }
 
-#endif // MOZILLA_INTERNAL_API
+#endif  // MOZILLA_INTERNAL_API
 
-int32_t
-CaseInsensitiveCompare(const char16_t *a, const char16_t *b, uint32_t len);
+int32_t CaseInsensitiveCompare(const char16_t* a, const char16_t* b,
+                               uint32_t len);
 
-int32_t
-CaseInsensitiveCompare(const char* aLeft, const char* aRight,
-                       uint32_t aLeftBytes, uint32_t aRightBytes);
+int32_t CaseInsensitiveCompare(const char* aLeft, const char* aRight,
+                               uint32_t aLeftBytes, uint32_t aRightBytes);
 
 /**
  * Calculates the lower-case of the codepoint of the UTF8 sequence starting at
@@ -134,8 +113,8 @@ CaseInsensitiveCompare(const char* aLeft, const char* aRight,
  * aNext.  Note that this function doesn't check that aStr < aEnd -- it assumes
  * you've done that already.
  */
-uint32_t
-GetLowerUTF8Codepoint(const char* aStr, const char* aEnd, const char **aNext);
+uint32_t GetLowerUTF8Codepoint(const char* aStr, const char* aEnd,
+                               const char** aNext);
 
 /**
  * This function determines whether the UTF-8 sequence pointed to by aLeft is
@@ -157,11 +136,10 @@ GetLowerUTF8Codepoint(const char* aStr, const char* aEnd, const char **aNext);
  * function returns true, aErr is guaranteed to be false and both aLeftNext and
  * aRightNext are guaranteed to be initialized.
  */
-bool
-CaseInsensitiveUTF8CharsEqual(const char* aLeft, const char* aRight,
-                              const char* aLeftEnd, const char* aRightEnd,
-                              const char** aLeftNext, const char** aRightNext,
-                              bool* aErr);
+bool CaseInsensitiveUTF8CharsEqual(const char* aLeft, const char* aRight,
+                                   const char* aLeftEnd, const char* aRightEnd,
+                                   const char** aLeftNext,
+                                   const char** aRightNext, bool* aErr);
 
 namespace mozilla {
 
@@ -173,12 +151,10 @@ namespace mozilla {
  *
  * The given |length| is in bytes.
  */
-uint32_t
-HashUTF8AsUTF16(const char* aUTF8, uint32_t aLength, bool* aErr);
+uint32_t HashUTF8AsUTF16(const char* aUTF8, uint32_t aLength, bool* aErr);
 
-bool
-IsSegmentBreakSkipChar(uint32_t u);
+bool IsSegmentBreakSkipChar(uint32_t u);
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif  /* nsUnicharUtils_h__ */
+#endif /* nsUnicharUtils_h__ */

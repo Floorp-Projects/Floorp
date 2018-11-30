@@ -15,9 +15,8 @@ namespace dom {
 
 class WorkerPrivate;
 
-class WorkerEventTarget final : public nsISerialEventTarget
-{
-public:
+class WorkerEventTarget final : public nsISerialEventTarget {
+ public:
   // The WorkerEventTarget supports different dispatch behaviors:
   //
   // * Hybrid targets will attempt to dispatch as a normal runnable,
@@ -27,30 +26,26 @@ public:
   //   with a holder in place.)
   //
   // * ControlOnly targets will simply dispatch a control runnable.
-  enum class Behavior : uint8_t {
-    Hybrid,
-    ControlOnly
-  };
+  enum class Behavior : uint8_t { Hybrid, ControlOnly };
 
-private:
+ private:
   mozilla::Mutex mMutex;
   WorkerPrivate* mWorkerPrivate;
   const Behavior mBehavior;
 
   ~WorkerEventTarget() = default;
 
-public:
+ public:
   WorkerEventTarget(WorkerPrivate* aWorkerPrivate, Behavior aBehavior);
 
-  void
-  ForgetWorkerPrivate(WorkerPrivate* aWorkerPrivate);
+  void ForgetWorkerPrivate(WorkerPrivate* aWorkerPrivate);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET
   NS_DECL_NSISERIALEVENTTARGET
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_WorkerEventTarget_h
+#endif  // mozilla_dom_WorkerEventTarget_h

@@ -12,16 +12,13 @@
 
 class nsIPrincipal;
 
-namespace mozilla
-{
-namespace dom
-{
+namespace mozilla {
+namespace dom {
 class PBrowserOrId;
 }
 
-class NrSocketProxyConfig
-{
-public:
+class NrSocketProxyConfig {
+ public:
   NrSocketProxyConfig(const dom::PBrowserOrId& aBrowser,
                       const nsCString& aAlpn);
   // We need to actually write the default impl ourselves, because the compiler
@@ -34,7 +31,7 @@ public:
   const dom::PBrowserOrId& GetBrowser() const;
   const nsCString& GetAlpn() const;
 
-private:
+ private:
   // PBrowserOrId includes stuff that conflicts with nICEr includes.
   // Make it possible to include this header file without tripping over this
   // problem.
@@ -42,6 +39,6 @@ private:
   std::unique_ptr<Private> mPrivate;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // nr_socket_proxy_config__
+#endif  // nr_socket_proxy_config__

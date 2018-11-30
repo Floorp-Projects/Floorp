@@ -22,12 +22,11 @@
 
 namespace mozilla {
 
-class NonBlockingAsyncInputStream final : public nsIAsyncInputStream
-                                        , public nsICloneableInputStream
-                                        , public nsIIPCSerializableInputStream
-                                        , public nsISeekableStream
-{
-public:
+class NonBlockingAsyncInputStream final : public nsIAsyncInputStream,
+                                          public nsICloneableInputStream,
+                                          public nsIIPCSerializableInputStream,
+                                          public nsISeekableStream {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSIASYNCINPUTSTREAM
@@ -37,32 +36,31 @@ public:
   NS_DECL_NSITELLABLESTREAM
 
   // |aInputStream| must be a non-blocking, non-async inputSteam.
-  static nsresult
-  Create(already_AddRefed<nsIInputStream> aInputStream,
-         nsIAsyncInputStream** aAsyncInputStream);
+  static nsresult Create(already_AddRefed<nsIInputStream> aInputStream,
+                         nsIAsyncInputStream** aAsyncInputStream);
 
-private:
-  explicit NonBlockingAsyncInputStream(already_AddRefed<nsIInputStream> aInputStream);
+ private:
+  explicit NonBlockingAsyncInputStream(
+      already_AddRefed<nsIInputStream> aInputStream);
   ~NonBlockingAsyncInputStream();
 
   class AsyncWaitRunnable;
 
-  void
-  RunAsyncWaitCallback(AsyncWaitRunnable* aRunnable,
-                       already_AddRefed<nsIInputStreamCallback> aCallback);
+  void RunAsyncWaitCallback(AsyncWaitRunnable* aRunnable,
+                            already_AddRefed<nsIInputStreamCallback> aCallback);
 
   nsCOMPtr<nsIInputStream> mInputStream;
 
   // Raw pointers because these are just QI of mInputStream.
   nsICloneableInputStream* MOZ_NON_OWNING_REF mWeakCloneableInputStream;
-  nsIIPCSerializableInputStream* MOZ_NON_OWNING_REF mWeakIPCSerializableInputStream;
+  nsIIPCSerializableInputStream* MOZ_NON_OWNING_REF
+      mWeakIPCSerializableInputStream;
   nsISeekableStream* MOZ_NON_OWNING_REF mWeakSeekableInputStream;
   nsITellableStream* MOZ_NON_OWNING_REF mWeakTellableInputStream;
 
   Mutex mLock;
 
-  struct WaitClosureOnly
-  {
+  struct WaitClosureOnly {
     WaitClosureOnly(AsyncWaitRunnable* aRunnable, nsIEventTarget* aEventTarget);
 
     RefPtr<AsyncWaitRunnable> mRunnable;
@@ -81,6 +79,6 @@ private:
   bool mClosed;
 };
 
-} // mozilla namespace
+}  // namespace mozilla
 
-#endif // NonBlockingAsyncInputStream_h
+#endif  // NonBlockingAsyncInputStream_h

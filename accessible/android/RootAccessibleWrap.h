@@ -13,9 +13,8 @@ namespace a11y {
 
 class DocProxyAccessibleWrap;
 
-class RootAccessibleWrap : public RootAccessible
-{
-public:
+class RootAccessibleWrap : public RootAccessible {
+ public:
   RootAccessibleWrap(nsIDocument* aDocument, nsIPresShell* aPresShell);
   virtual ~RootAccessibleWrap();
 
@@ -31,7 +30,7 @@ public:
                                      int32_t aID);
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

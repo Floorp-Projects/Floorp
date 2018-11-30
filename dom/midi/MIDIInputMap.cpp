@@ -16,20 +16,16 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(MIDIInputMap)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(MIDIInputMap)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MIDIInputMap)
-NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-MIDIInputMap::MIDIInputMap(nsPIDOMWindowInner* aParent) :
-  mParent(aParent)
-{
-}
+MIDIInputMap::MIDIInputMap(nsPIDOMWindowInner* aParent) : mParent(aParent) {}
 
-JSObject*
-MIDIInputMap::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* MIDIInputMap::WrapObject(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto) {
   return MIDIInputMap_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

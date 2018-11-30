@@ -23,44 +23,41 @@ namespace dom {
 class Element;
 class EventTarget;
 class KeyboardEvent;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-class nsXBLWindowKeyHandler : public nsIDOMEventListener
-{
+class nsXBLWindowKeyHandler : public nsIDOMEventListener {
   typedef mozilla::EventListenerManager EventListenerManager;
   typedef mozilla::IgnoreModifierState IgnoreModifierState;
   typedef mozilla::layers::KeyboardMap KeyboardMap;
   typedef mozilla::dom::KeyboardEvent KeyboardEvent;
 
-public:
+ public:
   nsXBLWindowKeyHandler(mozilla::dom::Element* aElement,
                         mozilla::dom::EventTarget* aTarget);
 
   void InstallKeyboardEventListenersTo(
-         EventListenerManager* aEventListenerManager);
+      EventListenerManager* aEventListenerManager);
   void RemoveKeyboardEventListenersFrom(
-         EventListenerManager* aEventListenerManager);
+      EventListenerManager* aEventListenerManager);
 
   static KeyboardMap CollectKeyboardShortcuts();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
-protected:
+ protected:
   virtual ~nsXBLWindowKeyHandler();
 
   nsresult WalkHandlers(KeyboardEvent* aKeyEvent);
 
   // walk the handlers, looking for one to handle the event
-  bool WalkHandlersInternal(KeyboardEvent* aKeyEvent,
-                            bool aExecute,
+  bool WalkHandlersInternal(KeyboardEvent* aKeyEvent, bool aExecute,
                             bool* aOutReservedForChrome = nullptr);
 
   // walk the handlers for aEvent, aCharCode and aIgnoreModifierState. Execute
   // it if aExecute = true.
-  bool WalkHandlersAndExecute(KeyboardEvent* aKeyEvent,
-                              uint32_t aCharCode,
+  bool WalkHandlersAndExecute(KeyboardEvent* aKeyEvent, uint32_t aCharCode,
                               const IgnoreModifierState& aIgnoreModifierState,
                               bool aExecute,
                               bool* aOutReservedForChrome = nullptr);
@@ -92,7 +89,8 @@ protected:
   // unless the element has been removed from the document. Optionally returns
   // whether the disabled attribute is set on the element (assuming the element
   // is non-null).
-  already_AddRefed<mozilla::dom::Element> GetElement(bool* aIsDisabled = nullptr);
+  already_AddRefed<mozilla::dom::Element> GetElement(
+      bool* aIsDisabled = nullptr);
 
   /**
    * GetElementForHandler() retrieves an element for the handler.  The element
@@ -113,14 +111,13 @@ protected:
   bool IsExecutableElement(mozilla::dom::Element* aElement) const;
 
   // Using weak pointer to the DOM Element.
-  nsWeakPtr              mWeakPtrForElement;
-  mozilla::dom::EventTarget* mTarget; // weak ref
+  nsWeakPtr mWeakPtrForElement;
+  mozilla::dom::EventTarget* mTarget;  // weak ref
 
-  nsXBLPrototypeHandler* mHandler;     // platform bindings
+  nsXBLPrototypeHandler* mHandler;  // platform bindings
 };
 
-already_AddRefed<nsXBLWindowKeyHandler>
-NS_NewXBLWindowKeyHandler(mozilla::dom::Element* aElement,
-                          mozilla::dom::EventTarget* aTarget);
+already_AddRefed<nsXBLWindowKeyHandler> NS_NewXBLWindowKeyHandler(
+    mozilla::dom::Element* aElement, mozilla::dom::EventTarget* aTarget);
 
 #endif

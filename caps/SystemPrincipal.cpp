@@ -23,58 +23,42 @@ using namespace mozilla;
 NS_IMPL_CLASSINFO(SystemPrincipal, nullptr,
                   nsIClassInfo::SINGLETON | nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_SYSTEMPRINCIPAL_CID)
-NS_IMPL_QUERY_INTERFACE_CI(SystemPrincipal,
-                           nsIPrincipal,
-                           nsISerializable)
-NS_IMPL_CI_INTERFACE_GETTER(SystemPrincipal,
-                            nsIPrincipal,
-                            nsISerializable)
+NS_IMPL_QUERY_INTERFACE_CI(SystemPrincipal, nsIPrincipal, nsISerializable)
+NS_IMPL_CI_INTERFACE_GETTER(SystemPrincipal, nsIPrincipal, nsISerializable)
 
 #define SYSTEM_PRINCIPAL_SPEC "[System Principal]"
 
-already_AddRefed<SystemPrincipal>
-SystemPrincipal::Create()
-{
+already_AddRefed<SystemPrincipal> SystemPrincipal::Create() {
   RefPtr<SystemPrincipal> sp = new SystemPrincipal();
-  sp->FinishInit(NS_LITERAL_CSTRING(SYSTEM_PRINCIPAL_SPEC),
-                 OriginAttributes());
+  sp->FinishInit(NS_LITERAL_CSTRING(SYSTEM_PRINCIPAL_SPEC), OriginAttributes());
   return sp.forget();
 }
 
-nsresult
-SystemPrincipal::GetScriptLocation(nsACString &aStr)
-{
-    aStr.AssignLiteral(SYSTEM_PRINCIPAL_SPEC);
-    return NS_OK;
+nsresult SystemPrincipal::GetScriptLocation(nsACString& aStr) {
+  aStr.AssignLiteral(SYSTEM_PRINCIPAL_SPEC);
+  return NS_OK;
 }
 
 ///////////////////////////////////////
 // Methods implementing nsIPrincipal //
 ///////////////////////////////////////
 
-uint32_t
-SystemPrincipal::GetHashValue()
-{
-    return NS_PTR_TO_INT32(this);
+uint32_t SystemPrincipal::GetHashValue() { return NS_PTR_TO_INT32(this); }
+
+NS_IMETHODIMP
+SystemPrincipal::GetURI(nsIURI** aURI) {
+  *aURI = nullptr;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-SystemPrincipal::GetURI(nsIURI** aURI)
-{
-    *aURI = nullptr;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-SystemPrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
-{
+SystemPrincipal::GetCsp(nsIContentSecurityPolicy** aCsp) {
   *aCsp = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SystemPrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
-{
+SystemPrincipal::SetCsp(nsIContentSecurityPolicy* aCsp) {
   // Never destroy an existing CSP on the principal.
   // This method should only be called in rare cases.
 
@@ -83,50 +67,41 @@ SystemPrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
 
 NS_IMETHODIMP
 SystemPrincipal::EnsureCSP(nsIDocument* aDocument,
-                           nsIContentSecurityPolicy** aCSP)
-{
+                           nsIContentSecurityPolicy** aCSP) {
   // CSP on a system principal makes no sense
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-SystemPrincipal::GetPreloadCsp(nsIContentSecurityPolicy** aPreloadCSP)
-{
+SystemPrincipal::GetPreloadCsp(nsIContentSecurityPolicy** aPreloadCSP) {
   *aPreloadCSP = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 SystemPrincipal::EnsurePreloadCSP(nsIDocument* aDocument,
-                                  nsIContentSecurityPolicy** aPreloadCSP)
-{
+                                  nsIContentSecurityPolicy** aPreloadCSP) {
   // CSP on a system principal makes no sense
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-SystemPrincipal::GetDomain(nsIURI** aDomain)
-{
-    *aDomain = nullptr;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-SystemPrincipal::SetDomain(nsIURI* aDomain)
-{
+SystemPrincipal::GetDomain(nsIURI** aDomain) {
+  *aDomain = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SystemPrincipal::GetBaseDomain(nsACString& aBaseDomain)
-{
+SystemPrincipal::SetDomain(nsIURI* aDomain) { return NS_OK; }
+
+NS_IMETHODIMP
+SystemPrincipal::GetBaseDomain(nsACString& aBaseDomain) {
   // No base domain for chrome.
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SystemPrincipal::GetAddonId(nsAString& aAddonId)
-{
+SystemPrincipal::GetAddonId(nsAString& aAddonId) {
   aAddonId.Truncate();
   return NS_OK;
 };
@@ -136,15 +111,13 @@ SystemPrincipal::GetAddonId(nsAString& aAddonId)
 //////////////////////////////////////////
 
 NS_IMETHODIMP
-SystemPrincipal::Read(nsIObjectInputStream* aStream)
-{
-    // no-op: CID is sufficient to identify the mSystemPrincipal singleton
-    return NS_OK;
+SystemPrincipal::Read(nsIObjectInputStream* aStream) {
+  // no-op: CID is sufficient to identify the mSystemPrincipal singleton
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-SystemPrincipal::Write(nsIObjectOutputStream* aStream)
-{
-    // no-op: CID is sufficient to identify the mSystemPrincipal singleton
-    return NS_OK;
+SystemPrincipal::Write(nsIObjectOutputStream* aStream) {
+  // no-op: CID is sufficient to identify the mSystemPrincipal singleton
+  return NS_OK;
 }

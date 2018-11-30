@@ -14,15 +14,12 @@ namespace a11y {
 /**
  * Checkbox accessible.
  */
-class CheckboxAccessible : public LeafAccessible
-{
-
-public:
+class CheckboxAccessible : public LeafAccessible {
+ public:
   enum { eAction_Click = 0 };
 
-  CheckboxAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-    LeafAccessible(aContent, aDoc)
-  {
+  CheckboxAccessible(nsIContent* aContent, DocAccessible* aDoc)
+      : LeafAccessible(aContent, aDoc) {
     // Ignore "CheckboxStateChange" DOM event in lieu of document observer
     // state change notification.
     if (aContent->IsHTMLElement()) {
@@ -44,12 +41,10 @@ public:
 };
 
 /**
-  * Generic class used for radio buttons.
-  */
-class RadioButtonAccessible : public LeafAccessible
-{
-
-public:
+ * Generic class used for radio buttons.
+ */
+class RadioButtonAccessible : public LeafAccessible {
+ public:
   RadioButtonAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
@@ -66,8 +61,7 @@ public:
   virtual bool IsWidget() const override;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif
-

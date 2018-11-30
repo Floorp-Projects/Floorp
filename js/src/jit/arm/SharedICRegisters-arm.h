@@ -30,10 +30,10 @@ static constexpr ValueOperand R2(r1, r0);
 // ICTailCallReg and ICStubReg
 // These use registers that are not preserved across calls.
 static constexpr Register ICTailCallReg = r14;
-static constexpr Register ICStubReg     = r9;
+static constexpr Register ICStubReg = r9;
 
-static constexpr Register ExtractTemp0        = InvalidReg;
-static constexpr Register ExtractTemp1        = InvalidReg;
+static constexpr Register ExtractTemp0 = InvalidReg;
+static constexpr Register ExtractTemp1 = InvalidReg;
 
 // Register used internally by MacroAssemblerARM.
 static constexpr Register BaselineSecondScratchReg = r6;
@@ -45,10 +45,10 @@ static constexpr Register BaselineSecondScratchReg = r6;
 // address for calls there.
 
 // FloatReg0 must be equal to ReturnFloatReg.
-static constexpr FloatRegister FloatReg0      = d0;
-static constexpr FloatRegister FloatReg1      = d1;
+static constexpr FloatRegister FloatReg0 = d0;
+static constexpr FloatRegister FloatReg1 = d1;
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_arm_SharedICRegisters_arm_h */

@@ -14,10 +14,8 @@ using namespace ipc;
 namespace dom {
 
 /* static */
-PendingIPCBlobParent*
-PendingIPCBlobParent::Create(PBackgroundParent* aManager,
-                             BlobImpl* aBlobImpl)
-{
+PendingIPCBlobParent* PendingIPCBlobParent::Create(PBackgroundParent* aManager,
+                                                   BlobImpl* aBlobImpl) {
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aBlobImpl);
 
@@ -37,17 +35,14 @@ PendingIPCBlobParent::Create(PBackgroundParent* aManager,
 }
 
 PendingIPCBlobParent::PendingIPCBlobParent(BlobImpl* aBlobImpl)
-  : mBlobImpl(aBlobImpl)
-{}
+    : mBlobImpl(aBlobImpl) {}
 
-IPCResult
-PendingIPCBlobParent::Recv__delete__(const PendingIPCBlobData& aData)
-{
+IPCResult PendingIPCBlobParent::Recv__delete__(
+    const PendingIPCBlobData& aData) {
   if (aData.file().type() == PendingIPCFileUnion::Tvoid_t) {
     mBlobImpl->SetLazyData(VoidString(), aData.type(), aData.size(), INT64_MAX);
   } else {
-    const PendingIPCFileData& fileData =
-      aData.file().get_PendingIPCFileData();
+    const PendingIPCFileData& fileData = aData.file().get_PendingIPCFileData();
     mBlobImpl->SetLazyData(fileData.name(), aData.type(), aData.size(),
                            fileData.lastModified());
   }
@@ -55,5 +50,5 @@ PendingIPCBlobParent::Recv__delete__(const PendingIPCBlobData& aData)
   return IPC_OK();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -25,7 +25,7 @@ class PeerIdentity;
 namespace dom {
 class MediaStreamTrack;
 }
-}
+}  // namespace mozilla
 
 #include "nriceresolver.h"
 #include "nricemediastream.h"
@@ -46,7 +46,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   ~PeerConnectionMedia();
 
  public:
-  explicit PeerConnectionMedia(PeerConnectionImpl *parent);
+  explicit PeerConnectionMedia(PeerConnectionImpl* parent);
 
   nsresult Init(const dom::RTCConfiguration& aConfiguration);
   // WARNING: This destroys the object!
@@ -78,19 +78,17 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   nsresult UpdateMediaPipelines();
 
   // TODO: Let's move the TransceiverImpl stuff to PeerConnectionImpl.
-  nsresult AddTransceiver(
-      JsepTransceiver* aJsepTransceiver,
-      dom::MediaStreamTrack& aReceiveTrack,
-      dom::MediaStreamTrack* aSendTrack,
-      RefPtr<TransceiverImpl>* aTransceiverImpl);
+  nsresult AddTransceiver(JsepTransceiver* aJsepTransceiver,
+                          dom::MediaStreamTrack& aReceiveTrack,
+                          dom::MediaStreamTrack* aSendTrack,
+                          RefPtr<TransceiverImpl>* aTransceiverImpl);
 
   void GetTransmitPipelinesMatching(
       const dom::MediaStreamTrack* aTrack,
       nsTArray<RefPtr<MediaPipeline>>* aPipelines);
 
-  void GetReceivePipelinesMatching(
-      const dom::MediaStreamTrack* aTrack,
-      nsTArray<RefPtr<MediaPipeline>>* aPipelines);
+  void GetReceivePipelinesMatching(const dom::MediaStreamTrack* aTrack,
+                                   nsTArray<RefPtr<MediaPipeline>>* aPipelines);
 
   std::string GetTransportIdMatching(const dom::MediaStreamTrack& aTrack) const;
 
@@ -110,8 +108,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
                             const PeerIdentity* aSinkIdentity);
   // this determines if any track is peerIdentity constrained
   bool AnyLocalTrackHasPeerIdentity() const;
-  // When we finally learn who is on the other end, we need to change the ownership
-  // on streams
+  // When we finally learn who is on the other end, we need to change the
+  // ownership on streams
   void UpdateRemoteStreamPrincipals_m(nsIPrincipal* aPrincipal);
 
   bool AnyCodecHasPluginID(uint64_t aPluginID);
@@ -121,8 +119,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   // Used by PCImpl in a couple of places. Might be good to move that code in
   // here.
-  std::vector<RefPtr<TransceiverImpl>>& GetTransceivers()
-  {
+  std::vector<RefPtr<TransceiverImpl>>& GetTransceivers() {
     return mTransceivers;
   }
 
@@ -141,8 +138,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // end-of-candidates is signaled with the empty string
   sigslot::signal2<const std::string&, const std::string&> SignalCandidate;
   // This passes address, port, transport id of the default candidate.
-  sigslot::signal5<const std::string&, uint16_t,
-                   const std::string&, uint16_t, const std::string&>
+  sigslot::signal5<const std::string&, uint16_t, const std::string&, uint16_t,
+                   const std::string&>
       SignalUpdateDefaultCandidate;
 
   // TODO: Move to PeerConnectionImpl
@@ -152,16 +149,14 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   RefPtr<MediaTransportHandler> mTransportHandler;
 
  private:
-  void InitLocalAddrs(); // for stun local address IPC request
+  void InitLocalAddrs();  // for stun local address IPC request
   nsresult InitProxy();
   class ProtocolProxyQueryHandler : public nsIProtocolProxyCallback {
    public:
-    explicit ProtocolProxyQueryHandler(PeerConnectionMedia *pcm) :
-      pcm_(pcm) {}
+    explicit ProtocolProxyQueryHandler(PeerConnectionMedia* pcm) : pcm_(pcm) {}
 
-    NS_IMETHOD OnProxyAvailable(nsICancelable *request,
-                                nsIChannel *aChannel,
-                                nsIProxyInfo *proxyinfo,
+    NS_IMETHOD OnProxyAvailable(nsICancelable* request, nsIChannel* aChannel,
+                                nsIProxyInfo* proxyinfo,
                                 nsresult result) override;
     NS_DECL_ISUPPORTS
 
@@ -173,10 +168,10 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   class StunAddrsHandler : public net::StunAddrsListener {
    public:
-    explicit StunAddrsHandler(PeerConnectionMedia *pcm) :
-      pcm_(pcm) {}
+    explicit StunAddrsHandler(PeerConnectionMedia* pcm) : pcm_(pcm) {}
     void OnStunAddrsAvailable(
         const mozilla::net::NrIceStunAddrArray& addrs) override;
+
    private:
     RefPtr<PeerConnectionMedia> pcm_;
     virtual ~StunAddrsHandler() {}
@@ -190,16 +185,13 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   void SelfDestruct_m();
 
   // Manage ICE transports.
-  void UpdateTransport(const JsepTransceiver& aTransceiver,
-                       bool aForceIceTcp);
+  void UpdateTransport(const JsepTransceiver& aTransceiver, bool aForceIceTcp);
 
   void GatherIfReady();
   void FlushIceCtxOperationQueueIfReady();
   void PerformOrEnqueueIceCtxOperation(nsIRunnable* runnable);
   void EnsureIceGathering_s(bool aDefaultRouteOnly);
-  void StartIceChecks_s(bool aIsControlling,
-                        bool aIsOfferer,
-                        bool aIsIceLite,
+  void StartIceChecks_s(bool aIsControlling, bool aIsOfferer, bool aIsIceLite,
                         const std::vector<std::string>& aIceOptionsList);
 
   bool GetPrefDefaultAddressOnly() const;
@@ -224,7 +216,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   }
 
   // The parent PC
-  PeerConnectionImpl *mParent;
+  PeerConnectionImpl* mParent;
   // and a loose handle on it for event driven stuff
   std::string mParentHandle;
   std::string mParentName;
@@ -264,6 +256,6 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PeerConnectionMedia)
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

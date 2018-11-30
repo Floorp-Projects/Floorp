@@ -24,13 +24,11 @@ class GlobalObject;
 
 class FormData final : public nsISupports,
                        public HTMLFormSubmission,
-                       public nsWrapperCache
-{
-private:
+                       public nsWrapperCache {
+ private:
   ~FormData() {}
 
-  struct FormDataTuple
-  {
+  struct FormDataTuple {
     nsString name;
     bool wasNullBlob;
     OwningBlobOrDirectoryOrUSVString value;
@@ -38,80 +36,72 @@ private:
 
   // Returns the FormDataTuple to modify. This may be null, in which case
   // no element with aName was found.
-  FormDataTuple*
-  RemoveAllOthersAndGetFirstFormDataTuple(const nsAString& aName);
+  FormDataTuple* RemoveAllOthersAndGetFirstFormDataTuple(
+      const nsAString& aName);
 
-  void SetNameValuePair(FormDataTuple* aData,
-                        const nsAString& aName,
-                        const nsAString& aValue,
-                        bool aWasNullBlob = false);
+  void SetNameValuePair(FormDataTuple* aData, const nsAString& aName,
+                        const nsAString& aValue, bool aWasNullBlob = false);
 
-  void SetNameFilePair(FormDataTuple* aData,
-                       const nsAString& aName,
+  void SetNameFilePair(FormDataTuple* aData, const nsAString& aName,
                        File* aFile);
 
-  void SetNameDirectoryPair(FormDataTuple* aData,
-                            const nsAString& aName,
+  void SetNameDirectoryPair(FormDataTuple* aData, const nsAString& aName,
                             Directory* aDirectory);
 
-public:
+ public:
   explicit FormData(nsISupports* aOwner = nullptr);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FormData)
 
   // nsWrapperCache
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
-  nsISupports*
-  GetParentObject() const
-  {
-    return mOwner;
-  }
+  nsISupports* GetParentObject() const { return mOwner; }
 
-  static already_AddRefed<FormData>
-  Constructor(const GlobalObject& aGlobal,
-              const Optional<NonNull<HTMLFormElement> >& aFormElement,
-              ErrorResult& aRv);
+  static already_AddRefed<FormData> Constructor(
+      const GlobalObject& aGlobal,
+      const Optional<NonNull<HTMLFormElement> >& aFormElement,
+      ErrorResult& aRv);
 
   void Append(const nsAString& aName, const nsAString& aValue,
               ErrorResult& aRv);
 
   void Append(const nsAString& aName, Blob& aBlob,
-              const Optional<nsAString>& aFilename,
-              ErrorResult& aRv);
+              const Optional<nsAString>& aFilename, ErrorResult& aRv);
 
   void Append(const nsAString& aName, Directory* aDirectory);
 
   void Delete(const nsAString& aName);
 
-  void Get(const nsAString& aName, Nullable<OwningBlobOrDirectoryOrUSVString>& aOutValue);
+  void Get(const nsAString& aName,
+           Nullable<OwningBlobOrDirectoryOrUSVString>& aOutValue);
 
-  void GetAll(const nsAString& aName, nsTArray<OwningBlobOrDirectoryOrUSVString>& aValues);
+  void GetAll(const nsAString& aName,
+              nsTArray<OwningBlobOrDirectoryOrUSVString>& aValues);
 
   bool Has(const nsAString& aName);
 
   void Set(const nsAString& aName, Blob& aBlob,
-           const Optional<nsAString>& aFilename,
-           ErrorResult& aRv);
-  void Set(const nsAString& aName, const nsAString& aValue,
-           ErrorResult& aRv);
+           const Optional<nsAString>& aFilename, ErrorResult& aRv);
+  void Set(const nsAString& aName, const nsAString& aValue, ErrorResult& aRv);
 
   uint32_t GetIterableLength() const;
 
   const nsAString& GetKeyAtIndex(uint32_t aIndex) const;
 
-  const OwningBlobOrDirectoryOrUSVString& GetValueAtIndex(uint32_t aIndex) const;
+  const OwningBlobOrDirectoryOrUSVString& GetValueAtIndex(
+      uint32_t aIndex) const;
 
   // HTMLFormSubmission
-  virtual nsresult
-  GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream,
-                       nsCOMPtr<nsIURI>& aOutURI) override;
+  virtual nsresult GetEncodedSubmission(nsIURI* aURI,
+                                        nsIInputStream** aPostDataStream,
+                                        nsCOMPtr<nsIURI>& aOutURI) override;
 
   virtual nsresult AddNameValuePair(const nsAString& aName,
-                                    const nsAString& aValue) override
-  {
+                                    const nsAString& aValue) override {
     FormDataTuple* data = mFormData.AppendElement();
     SetNameValuePair(data, aName, aValue);
     return NS_OK;
@@ -123,21 +113,15 @@ public:
   virtual nsresult AddNameDirectoryPair(const nsAString& aName,
                                         Directory* aDirectory) override;
 
-  typedef bool (*FormDataEntryCallback)(const nsString& aName,
-                                        const OwningBlobOrDirectoryOrUSVString& aValue,
-                                        void* aClosure);
+  typedef bool (*FormDataEntryCallback)(
+      const nsString& aName, const OwningBlobOrDirectoryOrUSVString& aValue,
+      void* aClosure);
 
-  uint32_t
-  Length() const
-  {
-    return mFormData.Length();
-  }
+  uint32_t Length() const { return mFormData.Length(); }
 
   // Stops iteration and returns false if any invocation of callback returns
   // false. Returns true otherwise.
-  bool
-  ForEach(FormDataEntryCallback aFunc, void* aClosure)
-  {
+  bool ForEach(FormDataEntryCallback aFunc, void* aClosure) {
     for (uint32_t i = 0; i < mFormData.Length(); ++i) {
       FormDataTuple& tuple = mFormData[i];
       if (!aFunc(tuple.name, tuple.value, aClosure)) {
@@ -148,17 +132,17 @@ public:
     return true;
   }
 
-  nsresult
-  GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
-              nsACString& aContentTypeWithCharset, nsACString& aCharset) const;
+  nsresult GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
+                       nsACString& aContentTypeWithCharset,
+                       nsACString& aCharset) const;
 
-private:
+ private:
   nsCOMPtr<nsISupports> mOwner;
 
   nsTArray<FormDataTuple> mFormData;
 };
 
-} // dom namespace
-} // mozilla namepsace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_FormData_h
+#endif  // mozilla_dom_FormData_h

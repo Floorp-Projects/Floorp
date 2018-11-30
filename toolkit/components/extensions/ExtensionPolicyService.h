@@ -30,24 +30,23 @@ class nsIPIDOMWindowOuter;
 
 namespace mozilla {
 namespace dom {
-  class ContentFrameMessageManager;
-  class Promise;
-}
+class ContentFrameMessageManager;
+class Promise;
+}  // namespace dom
 namespace extensions {
-  class DocInfo;
-  class DocumentObserver;
-  class WebExtensionContentScript;
-}
+class DocInfo;
+class DocumentObserver;
+class WebExtensionContentScript;
+}  // namespace extensions
 
 using extensions::DocInfo;
 using extensions::WebExtensionPolicy;
 
-class ExtensionPolicyService final : public nsIAddonPolicyService
-                                   , public nsIObserver
-                                   , public nsIDOMEventListener
-                                   , public nsIMemoryReporter
-{
-public:
+class ExtensionPolicyService final : public nsIAddonPolicyService,
+                                     public nsIObserver,
+                                     public nsIDOMEventListener,
+                                     public nsIMemoryReporter {
+ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ExtensionPolicyService,
                                            nsIAddonPolicyService)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -58,27 +57,22 @@ public:
 
   static ExtensionPolicyService& GetSingleton();
 
-  static already_AddRefed<ExtensionPolicyService> GetInstance()
-  {
+  static already_AddRefed<ExtensionPolicyService> GetInstance() {
     return do_AddRef(&GetSingleton());
   }
 
-  WebExtensionPolicy*
-  GetByID(const nsAtom* aAddonId)
-  {
+  WebExtensionPolicy* GetByID(const nsAtom* aAddonId) {
     return mExtensions.GetWeak(aAddonId);
   }
 
-  WebExtensionPolicy* GetByID(const nsAString& aAddonId)
-  {
+  WebExtensionPolicy* GetByID(const nsAString& aAddonId) {
     RefPtr<nsAtom> atom = NS_AtomizeMainThread(aAddonId);
     return GetByID(atom);
   }
 
   WebExtensionPolicy* GetByURL(const extensions::URLInfo& aURL);
 
-  WebExtensionPolicy* GetByHost(const nsACString& aHost) const
-  {
+  WebExtensionPolicy* GetByHost(const nsACString& aHost) const {
     return mExtensionHosts.GetWeak(aHost);
   }
 
@@ -98,10 +92,10 @@ public:
 
   nsresult InjectContentScripts(WebExtensionPolicy* aExtension);
 
-protected:
+ protected:
   virtual ~ExtensionPolicyService();
 
-private:
+ private:
   ExtensionPolicyService();
 
   void RegisterObservers();
@@ -113,27 +107,29 @@ private:
 
   void CheckContentScripts(const DocInfo& aDocInfo, bool aIsPreload);
 
-  already_AddRefed<dom::Promise>
-  ExecuteContentScript(nsPIDOMWindowInner* aWindow,
-                       extensions::WebExtensionContentScript& aScript);
+  already_AddRefed<dom::Promise> ExecuteContentScript(
+      nsPIDOMWindowInner* aWindow,
+      extensions::WebExtensionContentScript& aScript);
 
-  RefPtr<dom::Promise>
-  ExecuteContentScripts(JSContext* aCx, nsPIDOMWindowInner* aWindow,
-                        const nsTArray<RefPtr<extensions::WebExtensionContentScript>>& aScripts);
+  RefPtr<dom::Promise> ExecuteContentScripts(
+      JSContext* aCx, nsPIDOMWindowInner* aWindow,
+      const nsTArray<RefPtr<extensions::WebExtensionContentScript>>& aScripts);
 
   nsRefPtrHashtable<nsPtrHashKey<const nsAtom>, WebExtensionPolicy> mExtensions;
   nsRefPtrHashtable<nsCStringHashKey, WebExtensionPolicy> mExtensionHosts;
 
-  nsTHashtable<nsRefPtrHashKey<dom::ContentFrameMessageManager>> mMessageManagers;
+  nsTHashtable<nsRefPtrHashKey<dom::ContentFrameMessageManager>>
+      mMessageManagers;
 
   nsRefPtrHashtable<nsPtrHashKey<const extensions::DocumentObserver>,
-                    extensions::DocumentObserver> mObservers;
+                    extensions::DocumentObserver>
+      mObservers;
 
   nsCOMPtr<nsIObserverService> mObs;
 
   static bool sRemoteExtensions;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ExtensionPolicyService_h
+#endif  // mozilla_ExtensionPolicyService_h

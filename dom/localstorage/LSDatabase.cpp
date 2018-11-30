@@ -15,15 +15,14 @@ typedef nsDataHashtable<nsCStringHashKey, LSDatabase*> LSDatabaseHashtable;
 
 StaticAutoPtr<LSDatabaseHashtable> gLSDatabases;
 
-} // namespace
+}  // namespace
 
 LSDatabase::LSDatabase(const nsACString& aOrigin)
-  : mActor(nullptr)
-  , mSnapshot(nullptr)
-  , mOrigin(aOrigin)
-  , mAllowedToClose(false)
-  , mRequestedAllowToClose(false)
-{
+    : mActor(nullptr),
+      mSnapshot(nullptr),
+      mOrigin(aOrigin),
+      mAllowedToClose(false),
+      mRequestedAllowToClose(false) {
   AssertIsOnOwningThread();
 
   if (!gLSDatabases) {
@@ -34,8 +33,7 @@ LSDatabase::LSDatabase(const nsACString& aOrigin)
   gLSDatabases->Put(mOrigin, this);
 }
 
-LSDatabase::~LSDatabase()
-{
+LSDatabase::~LSDatabase() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mSnapshot);
 
@@ -50,15 +48,11 @@ LSDatabase::~LSDatabase()
 }
 
 // static
-LSDatabase*
-LSDatabase::Get(const nsACString& aOrigin)
-{
+LSDatabase* LSDatabase::Get(const nsACString& aOrigin) {
   return gLSDatabases ? gLSDatabases->Get(aOrigin) : nullptr;
 }
 
-void
-LSDatabase::SetActor(LSDatabaseChild* aActor)
-{
+void LSDatabase::SetActor(LSDatabaseChild* aActor) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(!mActor);
@@ -66,9 +60,7 @@ LSDatabase::SetActor(LSDatabaseChild* aActor)
   mActor = aActor;
 }
 
-void
-LSDatabase::RequestAllowToClose()
-{
+void LSDatabase::RequestAllowToClose() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mRequestedAllowToClose);
 
@@ -81,9 +73,7 @@ LSDatabase::RequestAllowToClose()
   }
 }
 
-void
-LSDatabase::NoteFinishedSnapshot(LSSnapshot* aSnapshot)
-{
+void LSDatabase::NoteFinishedSnapshot(LSSnapshot* aSnapshot) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aSnapshot == mSnapshot);
 
@@ -94,10 +84,7 @@ LSDatabase::NoteFinishedSnapshot(LSSnapshot* aSnapshot)
   }
 }
 
-nsresult
-LSDatabase::GetLength(LSObject* aObject,
-                      uint32_t* aResult)
-{
+nsresult LSDatabase::GetLength(LSObject* aObject, uint32_t* aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aObject);
   MOZ_ASSERT(mActor);
@@ -116,11 +103,8 @@ LSDatabase::GetLength(LSObject* aObject,
   return NS_OK;
 }
 
-nsresult
-LSDatabase::GetKey(LSObject* aObject,
-                   uint32_t aIndex,
-                   nsAString& aResult)
-{
+nsresult LSDatabase::GetKey(LSObject* aObject, uint32_t aIndex,
+                            nsAString& aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aObject);
   MOZ_ASSERT(mActor);
@@ -139,11 +123,8 @@ LSDatabase::GetKey(LSObject* aObject,
   return NS_OK;
 }
 
-nsresult
-LSDatabase::GetItem(LSObject* aObject,
-                    const nsAString& aKey,
-                    nsAString& aResult)
-{
+nsresult LSDatabase::GetItem(LSObject* aObject, const nsAString& aKey,
+                             nsAString& aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aObject);
   MOZ_ASSERT(mActor);
@@ -162,10 +143,7 @@ LSDatabase::GetItem(LSObject* aObject,
   return NS_OK;
 }
 
-nsresult
-LSDatabase::GetKeys(LSObject* aObject,
-                    nsTArray<nsString>& aKeys)
-{
+nsresult LSDatabase::GetKeys(LSObject* aObject, nsTArray<nsString>& aKeys) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aObject);
   MOZ_ASSERT(mActor);
@@ -184,12 +162,9 @@ LSDatabase::GetKeys(LSObject* aObject,
   return NS_OK;
 }
 
-nsresult
-LSDatabase::SetItem(LSObject* aObject,
-                    const nsAString& aKey,
-                    const nsAString& aValue,
-                    LSNotifyInfo& aNotifyInfo)
-{
+nsresult LSDatabase::SetItem(LSObject* aObject, const nsAString& aKey,
+                             const nsAString& aValue,
+                             LSNotifyInfo& aNotifyInfo) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aObject);
   MOZ_ASSERT(mActor);
@@ -208,11 +183,8 @@ LSDatabase::SetItem(LSObject* aObject,
   return NS_OK;
 }
 
-nsresult
-LSDatabase::RemoveItem(LSObject* aObject,
-                       const nsAString& aKey,
-                       LSNotifyInfo& aNotifyInfo)
-{
+nsresult LSDatabase::RemoveItem(LSObject* aObject, const nsAString& aKey,
+                                LSNotifyInfo& aNotifyInfo) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aObject);
   MOZ_ASSERT(mActor);
@@ -231,10 +203,7 @@ LSDatabase::RemoveItem(LSObject* aObject,
   return NS_OK;
 }
 
-nsresult
-LSDatabase::Clear(LSObject* aObject,
-                  LSNotifyInfo& aNotifyInfo)
-{
+nsresult LSDatabase::Clear(LSObject* aObject, LSNotifyInfo& aNotifyInfo) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aObject);
   MOZ_ASSERT(mActor);
@@ -253,9 +222,7 @@ LSDatabase::Clear(LSObject* aObject,
   return NS_OK;
 }
 
-nsresult
-LSDatabase::BeginExplicitSnapshot(LSObject* aObject)
-{
+nsresult LSDatabase::BeginExplicitSnapshot(LSObject* aObject) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aObject);
   MOZ_ASSERT(mActor);
@@ -273,9 +240,7 @@ LSDatabase::BeginExplicitSnapshot(LSObject* aObject)
   return NS_OK;
 }
 
-nsresult
-LSDatabase::EndExplicitSnapshot(LSObject* aObject)
-{
+nsresult LSDatabase::EndExplicitSnapshot(LSObject* aObject) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aObject);
   MOZ_ASSERT(mActor);
@@ -295,10 +260,7 @@ LSDatabase::EndExplicitSnapshot(LSObject* aObject)
   return NS_OK;
 }
 
-nsresult
-LSDatabase::EnsureSnapshot(LSObject* aObject,
-                           bool aExplicit)
-{
+nsresult LSDatabase::EnsureSnapshot(LSObject* aObject, bool aExplicit) {
   MOZ_ASSERT(aObject);
   MOZ_ASSERT(mActor);
   MOZ_ASSERT_IF(mSnapshot, !aExplicit);
@@ -313,13 +275,11 @@ LSDatabase::EnsureSnapshot(LSObject* aObject,
   LSSnapshotChild* actor = new LSSnapshotChild(snapshot);
 
   LSSnapshotInitInfo initInfo;
-  bool ok =
-    mActor->SendPBackgroundLSSnapshotConstructor(actor,
-                                                 aObject->DocumentURI(),
-                                                 /* increasePeakUsage */ true,
-                                                 /* requestedSize */ 131072,
-                                                 /* minSize */ 4096,
-                                                 &initInfo);
+  bool ok = mActor->SendPBackgroundLSSnapshotConstructor(
+      actor, aObject->DocumentURI(),
+      /* increasePeakUsage */ true,
+      /* requestedSize */ 131072,
+      /* minSize */ 4096, &initInfo);
   if (NS_WARN_IF(!ok)) {
     return NS_ERROR_FAILURE;
   }
@@ -338,9 +298,7 @@ LSDatabase::EnsureSnapshot(LSObject* aObject,
   return NS_OK;
 }
 
-void
-LSDatabase::AllowToClose()
-{
+void LSDatabase::AllowToClose() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mAllowedToClose);
   MOZ_ASSERT(!mSnapshot);
@@ -360,5 +318,5 @@ LSDatabase::AllowToClose()
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

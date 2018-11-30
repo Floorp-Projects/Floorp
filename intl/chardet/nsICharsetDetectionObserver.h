@@ -10,14 +10,18 @@
 #include "nsDetectionConfident.h"
 
 // {12BB8F12-2389-11d3-B3BF-00805F8A6670}
-#define NS_ICHARSETDETECTIONOBSERVER_IID \
-{ 0x12bb8f12, 0x2389, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
+#define NS_ICHARSETDETECTIONOBSERVER_IID            \
+  {                                                 \
+    0x12bb8f12, 0x2389, 0x11d3, {                   \
+      0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 \
+    }                                               \
+  }
 
 /*
   Used to inform answer by nsICharsetDetector
  */
 class nsICharsetDetectionObserver : public nsISupports {
-public:
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICHARSETDETECTIONOBSERVER_IID)
   NS_IMETHOD Notify(const char* aCharset, nsDetectionConfident aConf) = 0;
 };

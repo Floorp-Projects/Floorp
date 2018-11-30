@@ -29,24 +29,20 @@ const uint32_t kWorkletStackSize = 256 * sizeof(size_t) * 1024;
 
 // Helper functions
 
-bool
-PreserveWrapper(JSContext* aCx, JS::HandleObject aObj)
-{
+bool PreserveWrapper(JSContext* aCx, JS::HandleObject aObj) {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aObj);
   MOZ_ASSERT(mozilla::dom::IsDOMObject(aObj));
   return mozilla::dom::TryPreserveWrapper(aObj);
 }
 
-void
-DestroyWorkletPrincipals(JSPrincipals* aPrincipals)
-{
-  MOZ_ASSERT_UNREACHABLE("Worklet principals refcount should never fall below one");
+void DestroyWorkletPrincipals(JSPrincipals* aPrincipals) {
+  MOZ_ASSERT_UNREACHABLE(
+      "Worklet principals refcount should never fall below one");
 }
 
-JSObject*
-Wrap(JSContext* aCx, JS::HandleObject aExisting, JS::HandleObject aObj)
-{
+JSObject* Wrap(JSContext* aCx, JS::HandleObject aExisting,
+               JS::HandleObject aObj) {
   if (aExisting) {
     js::Wrapper::Renew(aExisting, aObj,
                        &js::OpaqueCrossCompartmentWrapper::singleton);
@@ -56,51 +52,35 @@ Wrap(JSContext* aCx, JS::HandleObject aExisting, JS::HandleObject aObj)
                           &js::OpaqueCrossCompartmentWrapper::singleton);
 }
 
-const JSWrapObjectCallbacks WrapObjectCallbacks =
-{
-  Wrap,
-  nullptr,
+const JSWrapObjectCallbacks WrapObjectCallbacks = {
+    Wrap,
+    nullptr,
 };
 
-} // namespace
+}  // namespace
 
 // This classes control CC in the worklet thread.
 
-class WorkletJSRuntime final : public mozilla::CycleCollectedJSRuntime
-{
-public:
-  explicit WorkletJSRuntime(JSContext* aCx)
-    : CycleCollectedJSRuntime(aCx)
-  {
-  }
+class WorkletJSRuntime final : public mozilla::CycleCollectedJSRuntime {
+ public:
+  explicit WorkletJSRuntime(JSContext* aCx) : CycleCollectedJSRuntime(aCx) {}
 
   ~WorkletJSRuntime() override = default;
 
-  virtual void
-  PrepareForForgetSkippable() override
-  {
-  }
+  virtual void PrepareForForgetSkippable() override {}
 
-  virtual void
-  BeginCycleCollectionCallback() override
-  {
-  }
+  virtual void BeginCycleCollectionCallback() override {}
 
-  virtual void
-  EndCycleCollectionCallback(CycleCollectorResults& aResults) override
-  {
-  }
+  virtual void EndCycleCollectionCallback(
+      CycleCollectorResults& aResults) override {}
 
-  virtual void
-  DispatchDeferredDeletion(bool aContinuation, bool aPurge) override
-  {
+  virtual void DispatchDeferredDeletion(bool aContinuation,
+                                        bool aPurge) override {
     MOZ_ASSERT(!aContinuation);
     nsCycleCollector_doDeferredDeletion();
   }
 
-  virtual void
-  CustomGCCallback(JSGCStatus aStatus) override
-  {
+  virtual void CustomGCCallback(JSGCStatus aStatus) override {
     // nsCycleCollector_collect() requires a cycle collector but
     // ~WorkletJSContext calls nsCycleCollector_shutdown() and the base class
     // destructor will trigger a final GC.  The nsCycleCollector_collect()
@@ -112,23 +92,20 @@ public:
   }
 };
 
-class WorkletJSContext final : public CycleCollectedJSContext
-{
-public:
-  WorkletJSContext()
-  {
+class WorkletJSContext final : public CycleCollectedJSContext {
+ public:
+  WorkletJSContext() {
     MOZ_ASSERT(!NS_IsMainThread());
 
     nsCycleCollector_startup();
   }
 
-  ~WorkletJSContext() override
-  {
+  ~WorkletJSContext() override {
     MOZ_ASSERT(!NS_IsMainThread());
 
     JSContext* cx = MaybeContext();
     if (!cx) {
-      return;   // Initialize() must have failed
+      return;  // Initialize() must have failed
     }
 
     nsCycleCollector_shutdown();
@@ -136,23 +113,19 @@ public:
 
   WorkletJSContext* GetAsWorkletJSContext() override { return this; }
 
-  CycleCollectedJSRuntime* CreateRuntime(JSContext* aCx) override
-  {
+  CycleCollectedJSRuntime* CreateRuntime(JSContext* aCx) override {
     return new WorkletJSRuntime(aCx);
   }
 
-  nsresult
-  Initialize(JSRuntime* aParentRuntime)
-  {
+  nsresult Initialize(JSRuntime* aParentRuntime) {
     MOZ_ASSERT(!NS_IsMainThread());
 
-    nsresult rv =
-      CycleCollectedJSContext::Initialize(aParentRuntime,
-                                          WORKLET_DEFAULT_RUNTIME_HEAPSIZE,
-                                          WORKLET_DEFAULT_NURSERY_SIZE);
-     if (NS_WARN_IF(NS_FAILED(rv))) {
-       return rv;
-     }
+    nsresult rv = CycleCollectedJSContext::Initialize(
+        aParentRuntime, WORKLET_DEFAULT_RUNTIME_HEAPSIZE,
+        WORKLET_DEFAULT_NURSERY_SIZE);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     JSContext* cx = Context();
 
@@ -164,9 +137,8 @@ public:
     return NS_OK;
   }
 
-  void
-  DispatchToMicroTask(already_AddRefed<MicroTaskRunnable> aRunnable) override
-  {
+  void DispatchToMicroTask(
+      already_AddRefed<MicroTaskRunnable> aRunnable) override {
     RefPtr<MicroTaskRunnable> runnable(aRunnable);
 
     MOZ_ASSERT(!NS_IsMainThread());
@@ -184,8 +156,7 @@ public:
     GetMicroTaskQueue().push(runnable.forget());
   }
 
-  bool IsSystemCaller() const override
-  {
+  bool IsSystemCaller() const override {
     // Currently no support for special system worklet privileges.
     return false;
   }
@@ -196,77 +167,67 @@ public:
 // approach is that, when the Worklet is terminated, it must not have any JS in
 // stack, but, because we have CC, nsIThread creates an AutoNoJSAPI object by
 // default. Using this runnable, CC exists only into it.
-class WorkletThread::PrimaryRunnable final : public Runnable
-{
-public:
+class WorkletThread::PrimaryRunnable final : public Runnable {
+ public:
   explicit PrimaryRunnable(WorkletThread* aWorkletThread)
-    : Runnable("WorkletThread::PrimaryRunnable")
-    , mWorkletThread(aWorkletThread)
-  {
+      : Runnable("WorkletThread::PrimaryRunnable"),
+        mWorkletThread(aWorkletThread) {
     MOZ_ASSERT(aWorkletThread);
     MOZ_ASSERT(NS_IsMainThread());
 
     mParentRuntime =
-      JS_GetParentRuntime(CycleCollectedJSContext::Get()->Context());
+        JS_GetParentRuntime(CycleCollectedJSContext::Get()->Context());
     MOZ_ASSERT(mParentRuntime);
   }
 
   NS_IMETHOD
-  Run() override
-  {
+  Run() override {
     mWorkletThread->RunEventLoop(mParentRuntime);
     return NS_OK;
   }
 
-private:
+ private:
   RefPtr<WorkletThread> mWorkletThread;
   JSRuntime* mParentRuntime;
 };
 
 // This is the last runnable to be dispatched. It calls the TerminateInternal()
-class WorkletThread::TerminateRunnable final : public Runnable
-{
-public:
+class WorkletThread::TerminateRunnable final : public Runnable {
+ public:
   explicit TerminateRunnable(WorkletThread* aWorkletThread)
-    : Runnable("WorkletThread::TerminateRunnable")
-    , mWorkletThread(aWorkletThread)
-  {
+      : Runnable("WorkletThread::TerminateRunnable"),
+        mWorkletThread(aWorkletThread) {
     MOZ_ASSERT(aWorkletThread);
     MOZ_ASSERT(NS_IsMainThread());
   }
 
   NS_IMETHOD
-  Run() override
-  {
+  Run() override {
     mWorkletThread->TerminateInternal();
     return NS_OK;
   }
 
-private:
+ private:
   RefPtr<WorkletThread> mWorkletThread;
 };
 
 WorkletThread::WorkletThread()
-  : nsThread(MakeNotNull<ThreadEventQueue<mozilla::EventQueue>*>(
-               MakeUnique<mozilla::EventQueue>()),
-             nsThread::NOT_MAIN_THREAD, kWorkletStackSize)
-  , mExitLoop(false)
-  , mIsTerminating(false)
-{
+    : nsThread(MakeNotNull<ThreadEventQueue<mozilla::EventQueue>*>(
+                   MakeUnique<mozilla::EventQueue>()),
+               nsThread::NOT_MAIN_THREAD, kWorkletStackSize),
+      mExitLoop(false),
+      mIsTerminating(false) {
   MOZ_ASSERT(NS_IsMainThread());
   nsContentUtils::RegisterShutdownObserver(this);
 }
 
-WorkletThread::~WorkletThread()
-{
+WorkletThread::~WorkletThread() {
   // This should be set during the termination step.
   MOZ_ASSERT(mExitLoop);
 }
 
 // static
-already_AddRefed<WorkletThread>
-WorkletThread::Create()
-{
+already_AddRefed<WorkletThread> WorkletThread::Create() {
   RefPtr<WorkletThread> thread = new WorkletThread();
   if (NS_WARN_IF(NS_FAILED(thread->Init()))) {
     return nullptr;
@@ -280,24 +241,21 @@ WorkletThread::Create()
   return thread.forget();
 }
 
-nsresult
-WorkletThread::DispatchRunnable(already_AddRefed<nsIRunnable> aRunnable)
-{
+nsresult WorkletThread::DispatchRunnable(
+    already_AddRefed<nsIRunnable> aRunnable) {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
   return nsThread::Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
 }
 
 NS_IMETHODIMP
-WorkletThread::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags)
-{
+WorkletThread::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags) {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
   return Dispatch(runnable.forget(), aFlags);
 }
 
 NS_IMETHODIMP
 WorkletThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                        uint32_t aFlags)
-{
+                        uint32_t aFlags) {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
 
   // Worklet only supports asynchronous dispatch.
@@ -309,14 +267,11 @@ WorkletThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
 }
 
 NS_IMETHODIMP
-WorkletThread::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t aFlags)
-{
+WorkletThread::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t aFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void
-WorkletThread::RunEventLoop(JSRuntime* aParentRuntime)
-{
+void WorkletThread::RunEventLoop(JSRuntime* aParentRuntime) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   PR_SetCurrentThreadName("worklet");
@@ -348,9 +303,7 @@ WorkletThread::RunEventLoop(JSRuntime* aParentRuntime)
   }
 }
 
-void
-WorkletThread::Terminate()
-{
+void WorkletThread::Terminate() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mIsTerminating) {
@@ -367,37 +320,29 @@ WorkletThread::Terminate()
   DispatchRunnable(runnable.forget());
 }
 
-void
-WorkletThread::TerminateInternal()
-{
+void WorkletThread::TerminateInternal() {
   AssertIsOnWorkletThread();
 
   mExitLoop = true;
 
-  nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod("WorkletThread::Shutdown", this,
-                      &WorkletThread::Shutdown);
+  nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod(
+      "WorkletThread::Shutdown", this, &WorkletThread::Shutdown);
   NS_DispatchToMainThread(runnable);
 }
 
-/* static */ bool
-WorkletThread::IsOnWorkletThread()
-{
+/* static */ bool WorkletThread::IsOnWorkletThread() {
   CycleCollectedJSContext* ccjscx = CycleCollectedJSContext::Get();
   return ccjscx && ccjscx->GetAsWorkletJSContext();
 }
 
-/* static */ void
-WorkletThread::AssertIsOnWorkletThread()
-{
+/* static */ void WorkletThread::AssertIsOnWorkletThread() {
   MOZ_ASSERT(IsOnWorkletThread());
 }
 
 // nsIObserver
 NS_IMETHODIMP
 WorkletThread::Observe(nsISupports* aSubject, const char* aTopic,
-                       const char16_t*)
-{
+                       const char16_t*) {
   MOZ_ASSERT(strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0);
 
   Terminate();
@@ -406,5 +351,5 @@ WorkletThread::Observe(nsISupports* aSubject, const char* aTopic,
 
 NS_IMPL_ISUPPORTS_INHERITED(WorkletThread, nsThread, nsIObserver)
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

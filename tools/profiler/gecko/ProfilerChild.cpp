@@ -11,40 +11,30 @@
 namespace mozilla {
 
 ProfilerChild::ProfilerChild()
-  : mThread(NS_GetCurrentThread())
-  , mDestroyed(false)
-{
+    : mThread(NS_GetCurrentThread()), mDestroyed(false) {
   MOZ_COUNT_CTOR(ProfilerChild);
 }
 
-ProfilerChild::~ProfilerChild()
-{
-  MOZ_COUNT_DTOR(ProfilerChild);
-}
+ProfilerChild::~ProfilerChild() { MOZ_COUNT_DTOR(ProfilerChild); }
 
-mozilla::ipc::IPCResult
-ProfilerChild::RecvStart(const ProfilerInitParams& params)
-{
+mozilla::ipc::IPCResult ProfilerChild::RecvStart(
+    const ProfilerInitParams& params) {
   nsTArray<const char*> filterArray;
   for (size_t i = 0; i < params.filters().Length(); ++i) {
     filterArray.AppendElement(params.filters()[i].get());
   }
 
-  profiler_start(params.entries(),
-                 params.interval(),
-                 params.features(),
-                 filterArray.Elements(),
-                 filterArray.Length(),
+  profiler_start(params.entries(), params.interval(), params.features(),
+                 filterArray.Elements(), filterArray.Length(),
                  params.duration().type() == MaybeDuration::Tnull_t
-                   ? mozilla::Nothing()
-                   : mozilla::Some(params.duration().get_double()));
+                     ? mozilla::Nothing()
+                     : mozilla::Some(params.duration().get_double()));
 
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-ProfilerChild::RecvEnsureStarted(const ProfilerInitParams& params)
-{
+mozilla::ipc::IPCResult ProfilerChild::RecvEnsureStarted(
+    const ProfilerInitParams& params) {
   nsTArray<const char*> filterArray;
   for (size_t i = 0; i < params.filters().Length(); ++i) {
     filterArray.AppendElement(params.filters()[i].get());
@@ -54,39 +44,31 @@ ProfilerChild::RecvEnsureStarted(const ProfilerInitParams& params)
                           params.features(), filterArray.Elements(),
                           filterArray.Length(),
                           params.duration().type() == MaybeDuration::Tnull_t
-                            ? mozilla::Nothing()
-                            : mozilla::Some(params.duration().get_double()));
+                              ? mozilla::Nothing()
+                              : mozilla::Some(params.duration().get_double()));
 
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-ProfilerChild::RecvStop()
-{
+mozilla::ipc::IPCResult ProfilerChild::RecvStop() {
   profiler_stop();
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-ProfilerChild::RecvPause()
-{
+mozilla::ipc::IPCResult ProfilerChild::RecvPause() {
   profiler_pause();
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-ProfilerChild::RecvResume()
-{
+mozilla::ipc::IPCResult ProfilerChild::RecvResume() {
   profiler_resume();
   return IPC_OK();
 }
 
-static nsCString
-CollectProfileOrEmptyString(bool aIsShuttingDown)
-{
+static nsCString CollectProfileOrEmptyString(bool aIsShuttingDown) {
   nsCString profileCString;
   UniquePtr<char[]> profile =
-    profiler_get_profile(/* aSinceTime */ 0, aIsShuttingDown);
+      profiler_get_profile(/* aSinceTime */ 0, aIsShuttingDown);
   if (profile) {
     profileCString = nsCString(profile.get(), strlen(profile.get()));
   } else {
@@ -95,43 +77,35 @@ CollectProfileOrEmptyString(bool aIsShuttingDown)
   return profileCString;
 }
 
-mozilla::ipc::IPCResult
-ProfilerChild::RecvGatherProfile(GatherProfileResolver&& aResolve)
-{
+mozilla::ipc::IPCResult ProfilerChild::RecvGatherProfile(
+    GatherProfileResolver&& aResolve) {
   mozilla::ipc::Shmem shmem;
   profiler_get_profile_json_into_lazily_allocated_buffer(
-    [&](size_t allocationSize) -> char* {
-      if (AllocShmem(allocationSize,
-                     mozilla::ipc::Shmem::SharedMemory::TYPE_BASIC,
-                     &shmem)) {
-        return shmem.get<char>();
-      }
-      return nullptr;
-    },
-    /* aSinceTime */ 0,
-    /* aIsShuttingDown */ false);
+      [&](size_t allocationSize) -> char* {
+        if (AllocShmem(allocationSize,
+                       mozilla::ipc::Shmem::SharedMemory::TYPE_BASIC, &shmem)) {
+          return shmem.get<char>();
+        }
+        return nullptr;
+      },
+      /* aSinceTime */ 0,
+      /* aIsShuttingDown */ false);
   aResolve(std::move(shmem));
   return IPC_OK();
 }
 
-void
-ProfilerChild::ActorDestroy(ActorDestroyReason aActorDestroyReason)
-{
+void ProfilerChild::ActorDestroy(ActorDestroyReason aActorDestroyReason) {
   mDestroyed = true;
 }
 
-void
-ProfilerChild::Destroy()
-{
+void ProfilerChild::Destroy() {
   if (!mDestroyed) {
     Close();
   }
 }
 
-nsCString
-ProfilerChild::GrabShutdownProfile()
-{
+nsCString ProfilerChild::GrabShutdownProfile() {
   return CollectProfileOrEmptyString(/* aIsShuttingDown */ true);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -16,8 +16,7 @@
 
 namespace mozilla {
 
-enum class CSSEnabledState
-{
+enum class CSSEnabledState {
   // The default CSSEnabledState: only enable what's enabled for all
   // content, given the current values of preferences.
   eForAllContent = 0,
@@ -34,6 +33,6 @@ enum class CSSEnabledState
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CSSEnabledState)
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_CSSEnabledState_h
+#endif  // mozilla_CSSEnabledState_h

@@ -45,19 +45,15 @@ static bool sVideoStatsEnabled;
 NS_IMPL_ELEMENT_CLONE(HTMLVideoElement)
 
 HTMLVideoElement::HTMLVideoElement(already_AddRefed<NodeInfo>&& aNodeInfo)
-  : HTMLMediaElement(std::move(aNodeInfo))
-  , mIsOrientationLocked(false)
-{
+    : HTMLMediaElement(std::move(aNodeInfo)), mIsOrientationLocked(false) {
   DecoderDoctorLogger::LogConstruction(this);
 }
 
-HTMLVideoElement::~HTMLVideoElement()
-{
+HTMLVideoElement::~HTMLVideoElement() {
   DecoderDoctorLogger::LogDestruction(this);
 }
 
-nsresult HTMLVideoElement::GetVideoSize(nsIntSize* size)
-{
+nsresult HTMLVideoElement::GetVideoSize(nsIntSize* size) {
   if (!mMediaInfo.HasVideo()) {
     return NS_ERROR_FAILURE;
   }
@@ -84,54 +80,41 @@ nsresult HTMLVideoElement::GetVideoSize(nsIntSize* size)
   return NS_OK;
 }
 
-bool
-HTMLVideoElement::ParseAttribute(int32_t aNamespaceID,
-                                 nsAtom* aAttribute,
-                                 const nsAString& aValue,
-                                 nsIPrincipal* aMaybeScriptedPrincipal,
-                                 nsAttrValue& aResult)
-{
-   if (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height) {
-     return aResult.ParseSpecialIntValue(aValue);
-   }
+bool HTMLVideoElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                                      const nsAString& aValue,
+                                      nsIPrincipal* aMaybeScriptedPrincipal,
+                                      nsAttrValue& aResult) {
+  if (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height) {
+    return aResult.ParseSpecialIntValue(aValue);
+  }
 
-   return HTMLMediaElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
-                                           aMaybeScriptedPrincipal, aResult);
+  return HTMLMediaElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                          aMaybeScriptedPrincipal, aResult);
 }
 
-void
-HTMLVideoElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                        MappedDeclarations& aDecls)
-{
+void HTMLVideoElement::MapAttributesIntoRule(
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
   nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aDecls);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)
-HTMLVideoElement::IsAttributeMapped(const nsAtom* aAttribute) const
-{
+HTMLVideoElement::IsAttributeMapped(const nsAtom* aAttribute) const {
   static const MappedAttributeEntry attributes[] = {
-    { nsGkAtoms::width },
-    { nsGkAtoms::height },
-    { nullptr }
-  };
+      {nsGkAtoms::width}, {nsGkAtoms::height}, {nullptr}};
 
-  static const MappedAttributeEntry* const map[] = {
-    attributes,
-    sCommonAttributeMap
-  };
+  static const MappedAttributeEntry* const map[] = {attributes,
+                                                    sCommonAttributeMap};
 
   return FindAttributeDependence(aAttribute, map);
 }
 
-nsMapRuleToAttributesFunc
-HTMLVideoElement::GetAttributeMappingFunction() const
-{
+nsMapRuleToAttributesFunc HTMLVideoElement::GetAttributeMappingFunction()
+    const {
   return &MapAttributesIntoRule;
 }
 
-nsresult HTMLVideoElement::SetAcceptHeader(nsIHttpChannel* aChannel)
-{
+nsresult HTMLVideoElement::SetAcceptHeader(nsIHttpChannel* aChannel) {
   nsAutoCString value(
       "video/webm,"
       "video/ogg,"
@@ -139,20 +122,15 @@ nsresult HTMLVideoElement::SetAcceptHeader(nsIHttpChannel* aChannel)
       "application/ogg;q=0.7,"
       "audio/*;q=0.6,*/*;q=0.5");
 
-  return aChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                    value,
-                                    false);
+  return aChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"), value, false);
 }
 
-bool
-HTMLVideoElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
-{
+bool HTMLVideoElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const {
   return HasAttr(kNameSpaceID_None, nsGkAtoms::controls) ||
          HTMLMediaElement::IsInteractiveHTMLContent(aIgnoreTabindex);
 }
 
-uint32_t HTMLVideoElement::MozParsedFrames() const
-{
+uint32_t HTMLVideoElement::MozParsedFrames() const {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
   if (!IsVideoStatsEnabled()) {
     return 0;
@@ -165,8 +143,7 @@ uint32_t HTMLVideoElement::MozParsedFrames() const
   return mDecoder ? mDecoder->GetFrameStatistics().GetParsedFrames() : 0;
 }
 
-uint32_t HTMLVideoElement::MozDecodedFrames() const
-{
+uint32_t HTMLVideoElement::MozDecodedFrames() const {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
   if (!IsVideoStatsEnabled()) {
     return 0;
@@ -179,37 +156,36 @@ uint32_t HTMLVideoElement::MozDecodedFrames() const
   return mDecoder ? mDecoder->GetFrameStatistics().GetDecodedFrames() : 0;
 }
 
-uint32_t HTMLVideoElement::MozPresentedFrames() const
-{
+uint32_t HTMLVideoElement::MozPresentedFrames() const {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
   if (!IsVideoStatsEnabled()) {
     return 0;
   }
 
   if (nsContentUtils::ShouldResistFingerprinting(OwnerDoc())) {
-    return nsRFPService::GetSpoofedPresentedFrames(TotalPlayTime(), VideoWidth(), VideoHeight());
+    return nsRFPService::GetSpoofedPresentedFrames(TotalPlayTime(),
+                                                   VideoWidth(), VideoHeight());
   }
 
   return mDecoder ? mDecoder->GetFrameStatistics().GetPresentedFrames() : 0;
 }
 
-uint32_t HTMLVideoElement::MozPaintedFrames()
-{
+uint32_t HTMLVideoElement::MozPaintedFrames() {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
   if (!IsVideoStatsEnabled()) {
     return 0;
   }
 
   if (nsContentUtils::ShouldResistFingerprinting(OwnerDoc())) {
-    return nsRFPService::GetSpoofedPresentedFrames(TotalPlayTime(), VideoWidth(), VideoHeight());
+    return nsRFPService::GetSpoofedPresentedFrames(TotalPlayTime(),
+                                                   VideoWidth(), VideoHeight());
   }
 
   layers::ImageContainer* container = GetImageContainer();
   return container ? container->GetPaintCount() : 0;
 }
 
-double HTMLVideoElement::MozFrameDelay()
-{
+double HTMLVideoElement::MozFrameDelay() {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
 
   if (!IsVideoStatsEnabled() ||
@@ -225,27 +201,22 @@ double HTMLVideoElement::MozFrameDelay()
   return container ? std::max(0.0, container->GetFrameDelay()) : 0.0;
 }
 
-bool HTMLVideoElement::MozHasAudio() const
-{
+bool HTMLVideoElement::MozHasAudio() const {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
   return HasAudio();
 }
 
-JSObject*
-HTMLVideoElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* HTMLVideoElement::WrapNode(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto) {
   return HTMLVideoElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-FrameStatistics*
-HTMLVideoElement::GetFrameStatistics()
-{
+FrameStatistics* HTMLVideoElement::GetFrameStatistics() {
   return mDecoder ? &(mDecoder->GetFrameStatistics()) : nullptr;
 }
 
 already_AddRefed<VideoPlaybackQuality>
-HTMLVideoElement::GetVideoPlaybackQuality()
-{
+HTMLVideoElement::GetVideoPlaybackQuality() {
   DOMHighResTimeStamp creationTime = 0;
   uint32_t totalFrames = 0;
   uint32_t droppedFrames = 0;
@@ -262,13 +233,12 @@ HTMLVideoElement::GetVideoPlaybackQuality()
     if (mDecoder) {
       if (nsContentUtils::ShouldResistFingerprinting(OwnerDoc())) {
         totalFrames = nsRFPService::GetSpoofedTotalFrames(TotalPlayTime());
-        droppedFrames = nsRFPService::GetSpoofedDroppedFrames(TotalPlayTime(),
-                                                              VideoWidth(),
-                                                              VideoHeight());
+        droppedFrames = nsRFPService::GetSpoofedDroppedFrames(
+            TotalPlayTime(), VideoWidth(), VideoHeight());
         corruptedFrames = 0;
       } else {
         FrameStatisticsData stats =
-          mDecoder->GetFrameStatistics().GetFrameStatisticsData();
+            mDecoder->GetFrameStatistics().GetFrameStatisticsData();
         if (sizeof(totalFrames) >= sizeof(stats.mParsedFrames)) {
           totalFrames = stats.mPresentedFrames + stats.mDroppedFrames;
           droppedFrames = stats.mDroppedFrames;
@@ -281,7 +251,7 @@ HTMLVideoElement::GetVideoPlaybackQuality()
           } else {
             // Too big number(s) -> Resize everything to fit in 32 bits.
             double ratio = double(maxNumber) / double(total);
-            totalFrames = maxNumber; // === total * ratio
+            totalFrames = maxNumber;  // === total * ratio
             droppedFrames = uint32_t(double(stats.mDroppedFrames) * ratio);
           }
         }
@@ -290,23 +260,17 @@ HTMLVideoElement::GetVideoPlaybackQuality()
     }
   }
 
-  RefPtr<VideoPlaybackQuality> playbackQuality =
-    new VideoPlaybackQuality(this, creationTime, totalFrames, droppedFrames,
-                             corruptedFrames);
+  RefPtr<VideoPlaybackQuality> playbackQuality = new VideoPlaybackQuality(
+      this, creationTime, totalFrames, droppedFrames, corruptedFrames);
   return playbackQuality.forget();
 }
 
-
-void
-HTMLVideoElement::WakeLockRelease()
-{
+void HTMLVideoElement::WakeLockRelease() {
   HTMLMediaElement::WakeLockRelease();
   ReleaseVideoWakeLockIfExists();
 }
 
-void
-HTMLVideoElement::UpdateWakeLock()
-{
+void HTMLVideoElement::UpdateWakeLock() {
   HTMLMediaElement::UpdateWakeLock();
   if (!mPaused) {
     CreateVideoWakeLockIfNeeded();
@@ -315,33 +279,26 @@ HTMLVideoElement::UpdateWakeLock()
   }
 }
 
-bool
-HTMLVideoElement::ShouldCreateVideoWakeLock() const
-{
+bool HTMLVideoElement::ShouldCreateVideoWakeLock() const {
   // Make sure we only request wake lock for video with audio track, because
   // video without audio track is often used as background image which seems no
   // need to hold a wakelock.
   return HasVideo() && HasAudio();
 }
 
-void
-HTMLVideoElement::CreateVideoWakeLockIfNeeded()
-{
+void HTMLVideoElement::CreateVideoWakeLockIfNeeded() {
   if (!mScreenWakeLock && ShouldCreateVideoWakeLock()) {
     RefPtr<power::PowerManagerService> pmService =
-      power::PowerManagerService::GetInstance();
+        power::PowerManagerService::GetInstance();
     NS_ENSURE_TRUE_VOID(pmService);
 
     ErrorResult rv;
     mScreenWakeLock = pmService->NewWakeLock(NS_LITERAL_STRING("video-playing"),
-                                             OwnerDoc()->GetInnerWindow(),
-                                             rv);
+                                             OwnerDoc()->GetInnerWindow(), rv);
   }
 }
 
-void
-HTMLVideoElement::ReleaseVideoWakeLockIfExists()
-{
+void HTMLVideoElement::ReleaseVideoWakeLockIfExists() {
   if (mScreenWakeLock) {
     ErrorResult rv;
     mScreenWakeLock->Unlock(rv);
@@ -351,22 +308,15 @@ HTMLVideoElement::ReleaseVideoWakeLockIfExists()
   }
 }
 
-void
-HTMLVideoElement::Init()
-{
-  Preferences::AddBoolVarCache(&sVideoStatsEnabled, "media.video_stats.enabled");
+void HTMLVideoElement::Init() {
+  Preferences::AddBoolVarCache(&sVideoStatsEnabled,
+                               "media.video_stats.enabled");
 }
 
 /* static */
-bool
-HTMLVideoElement::IsVideoStatsEnabled()
-{
-  return sVideoStatsEnabled;
-}
+bool HTMLVideoElement::IsVideoStatsEnabled() { return sVideoStatsEnabled; }
 
-double
-HTMLVideoElement::TotalPlayTime() const
-{
+double HTMLVideoElement::TotalPlayTime() const {
   double total = 0.0;
 
   if (mPlayed) {
@@ -389,5 +339,5 @@ HTMLVideoElement::TotalPlayTime() const
   return total;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

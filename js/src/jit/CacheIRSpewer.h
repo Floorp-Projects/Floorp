@@ -20,87 +20,84 @@
 namespace js {
 namespace jit {
 
-class CacheIRSpewer
-{
-    Mutex outputLock;
-    Fprinter output;
-    mozilla::Maybe<JSONPrinter> json;
-    static CacheIRSpewer cacheIRspewer;
+class CacheIRSpewer {
+  Mutex outputLock;
+  Fprinter output;
+  mozilla::Maybe<JSONPrinter> json;
+  static CacheIRSpewer cacheIRspewer;
 
-    // Counter to record how many times Guard class is called. This is used to
-    // determine when to flush outputs based on the given interval value.
-    // For example, if |spewInterval_ = 2|, outputs will be flushed on
-    // guardCount_ values 0,2,4,6,...
-    uint32_t guardCount_;
+  // Counter to record how many times Guard class is called. This is used to
+  // determine when to flush outputs based on the given interval value.
+  // For example, if |spewInterval_ = 2|, outputs will be flushed on
+  // guardCount_ values 0,2,4,6,...
+  uint32_t guardCount_;
 
-    // Interval at which to flush output files. This value can be set with the
-    // environment variable |CACHEIR_LOG_FLUSH|.
-    uint32_t spewInterval_;
+  // Interval at which to flush output files. This value can be set with the
+  // environment variable |CACHEIR_LOG_FLUSH|.
+  uint32_t spewInterval_;
 
-    CacheIRSpewer();
-    ~CacheIRSpewer();
+  CacheIRSpewer();
+  ~CacheIRSpewer();
 
-    bool enabled() { return json.isSome(); }
+  bool enabled() { return json.isSome(); }
 
-    // These methods can only be called when enabled() is true.
-    Mutex& lock() { MOZ_ASSERT(enabled()); return outputLock; }
+  // These methods can only be called when enabled() is true.
+  Mutex& lock() {
+    MOZ_ASSERT(enabled());
+    return outputLock;
+  }
 
-    void beginCache(const IRGenerator& generator);
-    void valueProperty(const char* name, const Value& v);
-    void opcodeProperty(const char* name, const JSOp op);
-    void attached(const char* name);
-    void endCache();
+  void beginCache(const IRGenerator& generator);
+  void valueProperty(const char* name, const Value& v);
+  void opcodeProperty(const char* name, const JSOp op);
+  void attached(const char* name);
+  void endCache();
 
-  public:
-    static CacheIRSpewer& singleton() { return cacheIRspewer; }
-    bool init(const char* name);
+ public:
+  static CacheIRSpewer& singleton() { return cacheIRspewer; }
+  bool init(const char* name);
 
-    class MOZ_RAII Guard {
-        CacheIRSpewer& sp_;
-        const IRGenerator& gen_;
-        const char* name_;
+  class MOZ_RAII Guard {
+    CacheIRSpewer& sp_;
+    const IRGenerator& gen_;
+    const char* name_;
 
-      public:
-        Guard(const IRGenerator& gen, const char* name)
-          : sp_(CacheIRSpewer::singleton()),
-            gen_(gen),
-            name_(name)
-        {
-          if (sp_.enabled()) {
-            sp_.lock().lock();
-            sp_.beginCache(gen_);
-          }
+   public:
+    Guard(const IRGenerator& gen, const char* name)
+        : sp_(CacheIRSpewer::singleton()), gen_(gen), name_(name) {
+      if (sp_.enabled()) {
+        sp_.lock().lock();
+        sp_.beginCache(gen_);
+      }
+    }
+
+    ~Guard() {
+      if (sp_.enabled()) {
+        if (name_ != nullptr) {
+          sp_.attached(name_);
         }
-
-        ~Guard() {
-          if (sp_.enabled()) {
-            if (name_ != nullptr) {
-              sp_.attached(name_);
-            }
-            sp_.endCache();
-            if (sp_.guardCount_++ % sp_.spewInterval_ == 0) {
-              sp_.output.flush();
-            }
-            sp_.lock().unlock();
-          }
+        sp_.endCache();
+        if (sp_.guardCount_++ % sp_.spewInterval_ == 0) {
+          sp_.output.flush();
         }
+        sp_.lock().unlock();
+      }
+    }
 
-        void valueProperty(const char* name, const Value& v) const {
-          sp_.valueProperty(name, v);
-        }
+    void valueProperty(const char* name, const Value& v) const {
+      sp_.valueProperty(name, v);
+    }
 
-        void opcodeProperty(const char* name, const JSOp op) const {
-          sp_.opcodeProperty(name, op);
-        }
+    void opcodeProperty(const char* name, const JSOp op) const {
+      sp_.opcodeProperty(name, op);
+    }
 
-        explicit operator bool() const {
-          return sp_.enabled();
-        }
-    };
+    explicit operator bool() const { return sp_.enabled(); }
+  };
 };
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* JS_CACHEIR_SPEW */
 

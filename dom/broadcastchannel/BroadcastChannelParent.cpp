@@ -19,22 +19,20 @@ using namespace ipc;
 
 namespace dom {
 
-BroadcastChannelParent::BroadcastChannelParent(const nsAString& aOriginChannelKey)
-  : mService(BroadcastChannelService::GetOrCreate())
-  , mOriginChannelKey(aOriginChannelKey)
-{
+BroadcastChannelParent::BroadcastChannelParent(
+    const nsAString& aOriginChannelKey)
+    : mService(BroadcastChannelService::GetOrCreate()),
+      mOriginChannelKey(aOriginChannelKey) {
   AssertIsOnBackgroundThread();
   mService->RegisterActor(this, mOriginChannelKey);
 }
 
-BroadcastChannelParent::~BroadcastChannelParent()
-{
+BroadcastChannelParent::~BroadcastChannelParent() {
   AssertIsOnBackgroundThread();
 }
 
-mozilla::ipc::IPCResult
-BroadcastChannelParent::RecvPostMessage(const ClonedMessageData& aData)
-{
+mozilla::ipc::IPCResult BroadcastChannelParent::RecvPostMessage(
+    const ClonedMessageData& aData) {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!mService)) {
@@ -45,9 +43,7 @@ BroadcastChannelParent::RecvPostMessage(const ClonedMessageData& aData)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-BroadcastChannelParent::RecvClose()
-{
+mozilla::ipc::IPCResult BroadcastChannelParent::RecvClose() {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!mService)) {
@@ -62,9 +58,7 @@ BroadcastChannelParent::RecvClose()
   return IPC_OK();
 }
 
-void
-BroadcastChannelParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void BroadcastChannelParent::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnBackgroundThread();
 
   if (mService) {
@@ -74,5 +68,5 @@ BroadcastChannelParent::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

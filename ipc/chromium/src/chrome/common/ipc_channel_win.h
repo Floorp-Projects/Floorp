@@ -24,8 +24,8 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
  public:
   // Mirror methods of Channel, see ipc_channel.h for description.
   ChannelImpl(const std::wstring& channel_id, Mode mode, Listener* listener);
-  ChannelImpl(const std::wstring& channel_id, HANDLE server_pipe,
-              Mode mode, Listener* listener);
+  ChannelImpl(const std::wstring& channel_id, HANDLE server_pipe, Mode mode,
+              Listener* listener);
   ~ChannelImpl() {
     if (pipe_ != INVALID_HANDLE_VALUE) {
       Close();
@@ -66,6 +66,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   // MessageLoop::IOHandler implementation.
   virtual void OnIOCompleted(MessageLoopForIO::IOContext* context,
                              DWORD bytes_transfered, DWORD error);
+
  private:
   struct State {
     explicit State(ChannelImpl* channel);

@@ -15,9 +15,7 @@ static mozilla::LazyLogModule sScreenLog("WidgetScreen");
 namespace mozilla {
 namespace widget {
 
-BOOL CALLBACK
-CollectMonitors(HMONITOR aMon, HDC, LPRECT, LPARAM ioParam)
-{
+BOOL CALLBACK CollectMonitors(HMONITOR aMon, HDC, LPRECT, LPARAM ioParam) {
   auto screens = reinterpret_cast<nsTArray<RefPtr<Screen>>*>(ioParam);
   BOOL success = FALSE;
   MONITORINFOEX info;
@@ -25,7 +23,7 @@ CollectMonitors(HMONITOR aMon, HDC, LPRECT, LPARAM ioParam)
   success = ::GetMonitorInfoW(aMon, &info);
   if (!success) {
     MOZ_LOG(sScreenLog, LogLevel::Error, ("GetMonitorInfoW failed"));
-    return TRUE; // continue the enumeration
+    return TRUE;  // continue the enumeration
   }
 
   double scale = WinUtils::LogToPhysFactor(aMon);
@@ -59,15 +57,12 @@ CollectMonitors(HMONITOR aMon, HDC, LPRECT, LPARAM ioParam)
 
   float dpi = WinUtils::MonitorDPI(aMon);
   MOZ_LOG(sScreenLog, LogLevel::Debug,
-           ("New screen [%d %d %d %d (%d %d %d %d) %d %f %f %f]",
-            rect.X(), rect.Y(), rect.Width(), rect.Height(),
-            availRect.X(), availRect.Y(), availRect.Width(), availRect.Height(),
-            pixelDepth, contentsScaleFactor.scale, defaultCssScaleFactor.scale,
-            dpi));
-  auto screen = new Screen(rect, availRect,
-                           pixelDepth, pixelDepth,
-                           contentsScaleFactor, defaultCssScaleFactor,
-                           dpi);
+          ("New screen [%d %d %d %d (%d %d %d %d) %d %f %f %f]", rect.X(),
+           rect.Y(), rect.Width(), rect.Height(), availRect.X(), availRect.Y(),
+           availRect.Width(), availRect.Height(), pixelDepth,
+           contentsScaleFactor.scale, defaultCssScaleFactor.scale, dpi));
+  auto screen = new Screen(rect, availRect, pixelDepth, pixelDepth,
+                           contentsScaleFactor, defaultCssScaleFactor, dpi);
   if (info.dwFlags & MONITORINFOF_PRIMARY) {
     // The primary monitor must be the first element of the screen list.
     screens->InsertElementAt(0, std::move(screen));
@@ -77,15 +72,12 @@ CollectMonitors(HMONITOR aMon, HDC, LPRECT, LPARAM ioParam)
   return TRUE;
 }
 
-void
-ScreenHelperWin::RefreshScreens()
-{
+void ScreenHelperWin::RefreshScreens() {
   MOZ_LOG(sScreenLog, LogLevel::Debug, ("Refreshing screens"));
 
   AutoTArray<RefPtr<Screen>, 4> screens;
-  BOOL result = ::EnumDisplayMonitors(nullptr, nullptr,
-                                      (MONITORENUMPROC)CollectMonitors,
-                                      (LPARAM)&screens);
+  BOOL result = ::EnumDisplayMonitors(
+      nullptr, nullptr, (MONITORENUMPROC)CollectMonitors, (LPARAM)&screens);
   if (!result) {
     NS_WARNING("Unable to EnumDisplayMonitors");
   }
@@ -93,5 +85,5 @@ ScreenHelperWin::RefreshScreens()
   screenManager.Refresh(std::move(screens));
 }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

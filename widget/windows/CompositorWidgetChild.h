@@ -15,11 +15,9 @@ class CompositorVsyncDispatcher;
 
 namespace widget {
 
-class CompositorWidgetChild final
- : public PCompositorWidgetChild,
-   public PlatformCompositorWidgetDelegate
-{
-public:
+class CompositorWidgetChild final : public PCompositorWidgetChild,
+                                    public PlatformCompositorWidgetDelegate {
+ public:
   CompositorWidgetChild(RefPtr<CompositorVsyncDispatcher> aVsyncDispatcher,
                         RefPtr<CompositorWidgetVsyncObserver> aVsyncObserver);
   ~CompositorWidgetChild() override;
@@ -34,12 +32,12 @@ public:
   mozilla::ipc::IPCResult RecvObserveVsync() override;
   mozilla::ipc::IPCResult RecvUnobserveVsync() override;
 
-private:
+ private:
   RefPtr<CompositorVsyncDispatcher> mVsyncDispatcher;
   RefPtr<CompositorWidgetVsyncObserver> mVsyncObserver;
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // widget_windows_CompositorWidgetChild_h
+#endif  // widget_windows_CompositorWidgetChild_h

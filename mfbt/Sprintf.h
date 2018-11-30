@@ -19,18 +19,16 @@
 
 template <size_t N>
 MOZ_FORMAT_PRINTF(2, 0)
-int VsprintfLiteral(char (&buffer)[N], const char* format, va_list args)
-{
-    MOZ_ASSERT(format != buffer);
-    int result = vsnprintf(buffer, N, format, args);
-    buffer[N - 1] = '\0';
-    return result;
+int VsprintfLiteral(char (&buffer)[N], const char* format, va_list args) {
+  MOZ_ASSERT(format != buffer);
+  int result = vsnprintf(buffer, N, format, args);
+  buffer[N - 1] = '\0';
+  return result;
 }
 
 template <size_t N>
 MOZ_FORMAT_PRINTF(2, 3)
-int SprintfLiteral(char (&buffer)[N], const char* format, ...)
-{
+int SprintfLiteral(char (&buffer)[N], const char* format, ...) {
   va_list args;
   va_start(args, format);
   int result = VsprintfLiteral(buffer, format, args);
@@ -39,4 +37,4 @@ int SprintfLiteral(char (&buffer)[N], const char* format, ...)
 }
 
 #endif
-#endif  /* mozilla_Sprintf_h_ */
+#endif /* mozilla_Sprintf_h_ */

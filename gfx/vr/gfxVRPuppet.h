@@ -25,48 +25,45 @@ namespace mozilla {
 namespace layers {
 struct VertexShaderConstants;
 struct PixelShaderConstants;
-}
+}  // namespace layers
 namespace gfx {
 namespace impl {
 
-class VRDisplayPuppet : public VRDisplayLocal
-{
-public:
+class VRDisplayPuppet : public VRDisplayLocal {
+ public:
   void SetDisplayInfo(const VRDisplayInfo& aDisplayInfo);
   void SetSensorState(const VRHMDSensorState& aSensorState);
   void ZeroSensor() override;
 
-protected:
+ protected:
   virtual VRHMDSensorState GetSensorState() override;
   virtual void StartPresentation() override;
   virtual void StopPresentation() override;
 #if defined(XP_WIN)
-  virtual bool SubmitFrame(ID3D11Texture2D* aSource,
-                           const IntSize& aSize,
+  virtual bool SubmitFrame(ID3D11Texture2D* aSource, const IntSize& aSize,
                            const gfx::Rect& aLeftEyeRect,
                            const gfx::Rect& aRightEyeRect) override;
 #elif defined(XP_MACOSX)
-  virtual bool SubmitFrame(MacIOSurface* aMacIOSurface,
-                           const IntSize& aSize,
+  virtual bool SubmitFrame(MacIOSurface* aMacIOSurface, const IntSize& aSize,
                            const gfx::Rect& aLeftEyeRect,
                            const gfx::Rect& aRightEyeRect) override;
 #elif defined(MOZ_WIDGET_ANDROID)
-  virtual bool SubmitFrame(const mozilla::layers::SurfaceTextureDescriptor& aDescriptor,
-                           const gfx::Rect& aLeftEyeRect,
-                           const gfx::Rect& aRightEyeRect) override;
+  virtual bool SubmitFrame(
+      const mozilla::layers::SurfaceTextureDescriptor& aDescriptor,
+      const gfx::Rect& aLeftEyeRect, const gfx::Rect& aRightEyeRect) override;
 #endif
 
-public:
+ public:
   explicit VRDisplayPuppet();
   void Refresh();
 
-protected:
+ protected:
   virtual ~VRDisplayPuppet();
   void Destroy();
 
   bool mIsPresenting;
 
-private:
+ private:
 #if defined(XP_WIN)
   bool UpdateConstantBuffers();
 
@@ -84,9 +81,8 @@ private:
   VRHMDSensorState mSensorState;
 };
 
-class VRControllerPuppet : public VRControllerHost
-{
-public:
+class VRControllerPuppet : public VRControllerHost {
+ public:
   explicit VRControllerPuppet(dom::GamepadHand aHand, uint32_t aDisplayID);
   void SetButtonPressState(uint32_t aButton, bool aPressed);
   uint64_t GetButtonPressState();
@@ -99,21 +95,20 @@ public:
   float GetAxisMove(uint32_t aAxis);
   void SetAxisMove(uint32_t aAxis, float aValue);
 
-protected:
+ protected:
   virtual ~VRControllerPuppet();
 
-private:
+ private:
   uint64_t mButtonPressState;
   uint64_t mButtonTouchState;
   float mAxisMoveState[3];
   dom::GamepadPoseState mPoseState;
 };
 
-} // namespace impl
+}  // namespace impl
 
-class VRSystemManagerPuppet : public VRSystemManager
-{
-public:
+class VRSystemManagerPuppet : public VRSystemManager {
+ public:
   static already_AddRefed<VRSystemManagerPuppet> Create();
   uint32_t CreateTestDisplay();
   void ClearTestDisplays();
@@ -128,30 +123,25 @@ public:
   virtual void GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) override;
   virtual bool GetIsPresenting() override;
   virtual void HandleInput() override;
-  virtual void GetControllers(nsTArray<RefPtr<VRControllerHost>>&
-                              aControllerResult) override;
+  virtual void GetControllers(
+      nsTArray<RefPtr<VRControllerHost>>& aControllerResult) override;
   virtual void ScanForControllers() override;
   virtual void RemoveControllers() override;
-  virtual void VibrateHaptic(uint32_t aControllerIdx,
-                             uint32_t aHapticIndex,
-                             double aIntensity,
-                             double aDuration,
+  virtual void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
+                             double aIntensity, double aDuration,
                              const VRManagerPromise& aPromise) override;
   virtual void StopVibrateHaptic(uint32_t aControllerIdx) override;
   virtual void NotifyVSync() override;
   virtual void Run10msTasks() override;
 
-protected:
+ protected:
   VRSystemManagerPuppet();
 
-private:
-  void HandleButtonPress(uint32_t aControllerIdx,
-                         uint32_t aButton,
-                         uint64_t aButtonMask,
-                         uint64_t aButtonPressed,
+ private:
+  void HandleButtonPress(uint32_t aControllerIdx, uint32_t aButton,
+                         uint64_t aButtonMask, uint64_t aButtonPressed,
                          uint64_t aButtonTouched);
-  void HandleAxisMove(uint32_t aControllerIndex, uint32_t aAxis,
-                      float aValue);
+  void HandleAxisMove(uint32_t aControllerIndex, uint32_t aAxis, float aValue);
   void HandlePoseTracking(uint32_t aControllerIndex,
                           const dom::GamepadPoseState& aPose,
                           VRControllerHost* aController);
@@ -167,7 +157,7 @@ private:
   VRHMDSensorState mPuppetDisplaySensorState[kMaxPuppetDisplays];
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif  /* GFX_VR_PUPPET_H*/
+#endif /* GFX_VR_PUPPET_H*/

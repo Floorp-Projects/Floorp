@@ -14,7 +14,7 @@ namespace mozilla {
 namespace a11y {
 
 typedef ApplicationAccessible ApplicationAccessibleWrap;
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

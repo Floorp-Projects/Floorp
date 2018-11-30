@@ -16,9 +16,7 @@ using mozilla::ipc::ContentPrincipalInfo;
 using mozilla::ipc::PrincipalInfo;
 using mozilla::net::MozURL;
 
-bool
-ClientIsValidPrincipalInfo(const PrincipalInfo& aPrincipalInfo)
-{
+bool ClientIsValidPrincipalInfo(const PrincipalInfo& aPrincipalInfo) {
   // Ideally we would verify that the source process has permission to
   // create a window or worker with the given principal, but we don't
   // currently have any such restriction in place.  Instead, at least
@@ -27,16 +25,14 @@ ClientIsValidPrincipalInfo(const PrincipalInfo& aPrincipalInfo)
   switch (aPrincipalInfo.type()) {
     // Any system and null principal is acceptable.
     case PrincipalInfo::TSystemPrincipalInfo:
-    case PrincipalInfo::TNullPrincipalInfo:
-    {
+    case PrincipalInfo::TNullPrincipalInfo: {
       return true;
     }
 
     // Validate content principals to ensure that the origin and spec are sane.
-    case PrincipalInfo::TContentPrincipalInfo:
-    {
+    case PrincipalInfo::TContentPrincipalInfo: {
       const ContentPrincipalInfo& content =
-       aPrincipalInfo.get_ContentPrincipalInfo();
+          aPrincipalInfo.get_ContentPrincipalInfo();
 
       // Verify the principal spec parses.
       RefPtr<MozURL> specURL;
@@ -62,27 +58,21 @@ ClientIsValidPrincipalInfo(const PrincipalInfo& aPrincipalInfo)
       // cases in the future.
       return specOrigin == originOrigin;
     }
-    default:
-    {
-      break;
-    }
+    default: { break; }
   }
 
   // Windows and workers should not have expanded URLs, etc.
   return false;
 }
 
-bool
-ClientIsValidCreationURL(const PrincipalInfo& aPrincipalInfo,
-                         const nsACString& aURL)
-{
+bool ClientIsValidCreationURL(const PrincipalInfo& aPrincipalInfo,
+                              const nsACString& aURL) {
   RefPtr<MozURL> url;
   nsresult rv = MozURL::Init(getter_AddRefs(url), aURL);
   NS_ENSURE_SUCCESS(rv, false);
 
   switch (aPrincipalInfo.type()) {
-    case PrincipalInfo::TContentPrincipalInfo:
-    {
+    case PrincipalInfo::TContentPrincipalInfo: {
       // Any origin can create an about:blank or about:srcdoc Client.
       if (aURL.LowerCaseEqualsLiteral("about:blank") ||
           aURL.LowerCaseEqualsLiteral("about:srcdoc")) {
@@ -90,7 +80,7 @@ ClientIsValidCreationURL(const PrincipalInfo& aPrincipalInfo,
       }
 
       const ContentPrincipalInfo& content =
-        aPrincipalInfo.get_ContentPrincipalInfo();
+          aPrincipalInfo.get_ContentPrincipalInfo();
 
       // Parse the principal origin URL as well.  This ensures any MozURL
       // parser issues effect both URLs equally.
@@ -130,8 +120,7 @@ ClientIsValidCreationURL(const PrincipalInfo& aPrincipalInfo,
       // expanded to handle more cases as necessary.
       return false;
     }
-    case PrincipalInfo::TSystemPrincipalInfo:
-    {
+    case PrincipalInfo::TSystemPrincipalInfo: {
       nsDependentCSubstring scheme = url->Scheme();
 
       // While many types of documents can be created with a system principal,
@@ -147,8 +136,7 @@ ClientIsValidCreationURL(const PrincipalInfo& aPrincipalInfo,
              (!ClientPrefsGetDataURLUniqueOpaqueOrigin() &&
               scheme.LowerCaseEqualsLiteral("data"));
     }
-    case PrincipalInfo::TNullPrincipalInfo:
-    {
+    case PrincipalInfo::TNullPrincipalInfo: {
       // A wide variety of clients can have a null principal.  For example,
       // sandboxed iframes can have a normal content URL.  For now allow
       // any parsable URL for null principals.  This is relatively safe since
@@ -156,15 +144,12 @@ ClientIsValidCreationURL(const PrincipalInfo& aPrincipalInfo,
       // queries anyway.
       return true;
     }
-    default:
-    {
-      break;
-    }
+    default: { break; }
   }
 
   // Clients (windows/workers) should never have an expanded principal type.
   return false;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

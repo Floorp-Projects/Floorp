@@ -21,7 +21,7 @@ namespace ipc {
 
 class PBackgroundChild;
 
-} // namespace ipc
+}  // namespace ipc
 
 namespace hal {
 class BatteryInformation;
@@ -33,11 +33,9 @@ namespace quota {
 class QuotaChild;
 class QuotaManager;
 
-class QuotaManagerService final
-  : public nsIQuotaManagerService
-  , public nsIObserver
-  , public hal::BatteryObserver
-{
+class QuotaManagerService final : public nsIQuotaManagerService,
+                                  public nsIObserver,
+                                  public hal::BatteryObserver {
   typedef mozilla::ipc::PBackgroundChild PBackgroundChild;
 
   class BackgroundCreateCallback;
@@ -53,69 +51,54 @@ class QuotaManagerService final
   bool mBackgroundActorFailed;
   bool mIdleObserverRegistered;
 
-public:
+ public:
   // Returns a non-owning reference.
-  static QuotaManagerService*
-  GetOrCreate();
+  static QuotaManagerService* GetOrCreate();
 
   // Returns a non-owning reference.
-  static QuotaManagerService*
-  Get();
+  static QuotaManagerService* Get();
 
   // No one should call this but the factory.
-  static already_AddRefed<QuotaManagerService>
-  FactoryCreate();
+  static already_AddRefed<QuotaManagerService> FactoryCreate();
 
-  void
-  ClearBackgroundActor();
+  void ClearBackgroundActor();
 
-  void
-  NoteLiveManager(QuotaManager* aManager);
+  void NoteLiveManager(QuotaManager* aManager);
 
-  void
-  NoteShuttingDownManager();
+  void NoteShuttingDownManager();
 
   // Called when a process is being shot down. Aborts any running operations
   // for the given process.
-  void
-  AbortOperationsForProcess(ContentParentId aContentParentId);
+  void AbortOperationsForProcess(ContentParentId aContentParentId);
 
-private:
+ private:
   QuotaManagerService();
   ~QuotaManagerService();
 
-  nsresult
-  Init();
+  nsresult Init();
 
-  void
-  Destroy();
+  void Destroy();
 
-  nsresult
-  InitiateRequest(nsAutoPtr<PendingRequestInfo>& aInfo);
+  nsresult InitiateRequest(nsAutoPtr<PendingRequestInfo>& aInfo);
 
-  nsresult
-  BackgroundActorCreated(PBackgroundChild* aBackgroundActor);
+  nsresult BackgroundActorCreated(PBackgroundChild* aBackgroundActor);
 
-  void
-  BackgroundActorFailed();
+  void BackgroundActorFailed();
 
-  void
-  PerformIdleMaintenance();
+  void PerformIdleMaintenance();
 
-  void
-  RemoveIdleObserver();
+  void RemoveIdleObserver();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIQUOTAMANAGERSERVICE
   NS_DECL_NSIOBSERVER
 
   // BatteryObserver override
-  void
-  Notify(const hal::BatteryInformation& aBatteryInfo) override;
+  void Notify(const hal::BatteryInformation& aBatteryInfo) override;
 };
 
-} // namespace quota
-} // namespace dom
-} // namespace mozilla
+}  // namespace quota
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_quota_QuotaManagerService_h */

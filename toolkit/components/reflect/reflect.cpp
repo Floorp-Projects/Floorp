@@ -11,11 +11,14 @@
 #include "nsNativeCharsetUtils.h"
 #include "xpc_make_class.h"
 
-#define JSREFLECT_CONTRACTID \
-  "@mozilla.org/jsreflect;1"
+#define JSREFLECT_CONTRACTID "@mozilla.org/jsreflect;1"
 
-#define JSREFLECT_CID \
-{ 0x1a817186, 0x357a, 0x47cd, { 0x8a, 0xea, 0x28, 0x50, 0xd6, 0x0e, 0x95, 0x9e } }
+#define JSREFLECT_CID                                \
+  {                                                  \
+    0x1a817186, 0x357a, 0x47cd, {                    \
+      0x8a, 0xea, 0x28, 0x50, 0xd6, 0x0e, 0x95, 0x9e \
+    }                                                \
+  }
 
 namespace mozilla {
 namespace reflect {
@@ -34,39 +37,28 @@ Module::~Module() = default;
 #include "xpc_map_end.h"
 
 NS_IMETHODIMP
-Module::Call(nsIXPConnectWrappedNative* wrapper,
-             JSContext* cx,
-             JSObject* obj,
-             const JS::CallArgs& args,
-             bool* _retval)
-{
+Module::Call(nsIXPConnectWrappedNative* wrapper, JSContext* cx, JSObject* obj,
+             const JS::CallArgs& args, bool* _retval) {
   JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
-  if (!global)
-    return NS_ERROR_NOT_AVAILABLE;
+  if (!global) return NS_ERROR_NOT_AVAILABLE;
 
   *_retval = JS_InitReflectParse(cx, global);
   return NS_OK;
 }
 
-} // namespace reflect
-} // namespace mozilla
+}  // namespace reflect
+}  // namespace mozilla
 
 NS_DEFINE_NAMED_CID(JSREFLECT_CID);
 
 static const mozilla::Module::CIDEntry kReflectCIDs[] = {
-  { &kJSREFLECT_CID, false, nullptr, mozilla::reflect::ModuleConstructor },
-  { nullptr }
-};
+    {&kJSREFLECT_CID, false, nullptr, mozilla::reflect::ModuleConstructor},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kReflectContracts[] = {
-  { JSREFLECT_CONTRACTID, &kJSREFLECT_CID },
-  { nullptr }
-};
+    {JSREFLECT_CONTRACTID, &kJSREFLECT_CID}, {nullptr}};
 
-static const mozilla::Module kReflectModule = {
-  mozilla::Module::kVersion,
-  kReflectCIDs,
-  kReflectContracts
-};
+static const mozilla::Module kReflectModule = {mozilla::Module::kVersion,
+                                               kReflectCIDs, kReflectContracts};
 
 NSMODULE_DEFN(jsreflect) = &kReflectModule;

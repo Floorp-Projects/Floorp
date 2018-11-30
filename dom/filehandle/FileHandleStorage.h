@@ -10,15 +10,14 @@
 namespace mozilla {
 namespace dom {
 
-enum FileHandleStorage
-{
+enum FileHandleStorage {
   FILE_HANDLE_STORAGE_IDB = 0,
   // A placeholder for bug 997471
-  //FILE_HANDLE_STORAGE_FS
+  // FILE_HANDLE_STORAGE_FS
   FILE_HANDLE_STORAGE_MAX
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_FileHandleStorage_h
+#endif  // mozilla_dom_FileHandleStorage_h

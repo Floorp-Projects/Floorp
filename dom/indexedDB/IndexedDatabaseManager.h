@@ -31,7 +31,7 @@ namespace quota {
 
 class QuotaManager;
 
-} // namespace quota
+}  // namespace quota
 
 namespace indexedDB {
 
@@ -39,20 +39,16 @@ class BackgroundUtilsChild;
 class FileManager;
 class FileManagerInfo;
 
-} // namespace indexedDB
+}  // namespace indexedDB
 
-class IndexedDatabaseManager final
-  : public nsITimerCallback
-  , public nsINamed
-{
+class IndexedDatabaseManager final : public nsITimerCallback, public nsINamed {
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
   typedef mozilla::dom::quota::QuotaManager QuotaManager;
   typedef mozilla::dom::indexedDB::FileManager FileManager;
   typedef mozilla::dom::indexedDB::FileManagerInfo FileManagerInfo;
 
-public:
-  enum LoggingMode
-  {
+ public:
+  enum LoggingMode {
     Logging_Disabled = 0,
     Logging_Concise,
     Logging_Detailed,
@@ -65,149 +61,115 @@ public:
   NS_DECL_NSINAMED
 
   // Returns a non-owning reference.
-  static IndexedDatabaseManager*
-  GetOrCreate();
+  static IndexedDatabaseManager* GetOrCreate();
 
   // Returns a non-owning reference.
-  static IndexedDatabaseManager*
-  Get();
+  static IndexedDatabaseManager* Get();
 
-  static bool
-  IsClosed();
+  static bool IsClosed();
 
-  static bool
-  IsMainProcess()
+  static bool IsMainProcess()
 #ifdef DEBUG
-  ;
+      ;
 #else
   {
     return sIsMainProcess;
   }
 #endif
 
-  static bool
-  InTestingMode();
+  static bool InTestingMode();
 
-  static bool
-  FullSynchronous();
+  static bool FullSynchronous();
 
-  static LoggingMode
-  GetLoggingMode()
+  static LoggingMode GetLoggingMode()
 #ifdef DEBUG
-  ;
+      ;
 #else
   {
     return sLoggingMode;
   }
 #endif
 
-  static mozilla::LogModule*
-  GetLoggingModule()
+  static mozilla::LogModule* GetLoggingModule()
 #ifdef DEBUG
-  ;
+      ;
 #else
   {
     return sLoggingModule;
   }
 #endif
 
-  static bool
-  ExperimentalFeaturesEnabled();
+  static bool ExperimentalFeaturesEnabled();
 
-  static bool
-  ExperimentalFeaturesEnabled(JSContext* aCx, JSObject* aGlobal);
+  static bool ExperimentalFeaturesEnabled(JSContext* aCx, JSObject* aGlobal);
 
-  static bool
-  IsFileHandleEnabled();
+  static bool IsFileHandleEnabled();
 
-  static uint32_t
-  DataThreshold();
+  static uint32_t DataThreshold();
 
-  static uint32_t
-  MaxSerializedMsgSize();
+  static uint32_t MaxSerializedMsgSize();
 
-  void
-  ClearBackgroundActor();
+  void ClearBackgroundActor();
 
-  void
-  NoteLiveQuotaManager(QuotaManager* aQuotaManager);
+  void NoteLiveQuotaManager(QuotaManager* aQuotaManager);
 
-  void
-  NoteShuttingDownQuotaManager();
+  void NoteShuttingDownQuotaManager();
 
-  already_AddRefed<FileManager>
-  GetFileManager(PersistenceType aPersistenceType,
-                 const nsACString& aOrigin,
-                 const nsAString& aDatabaseName);
+  already_AddRefed<FileManager> GetFileManager(PersistenceType aPersistenceType,
+                                               const nsACString& aOrigin,
+                                               const nsAString& aDatabaseName);
 
-  void
-  AddFileManager(FileManager* aFileManager);
+  void AddFileManager(FileManager* aFileManager);
 
-  void
-  InvalidateAllFileManagers();
+  void InvalidateAllFileManagers();
 
-  void
-  InvalidateFileManagers(PersistenceType aPersistenceType,
-                         const nsACString& aOrigin);
+  void InvalidateFileManagers(PersistenceType aPersistenceType,
+                              const nsACString& aOrigin);
 
-  void
-  InvalidateFileManager(PersistenceType aPersistenceType,
-                        const nsACString& aOrigin,
-                        const nsAString& aDatabaseName);
+  void InvalidateFileManager(PersistenceType aPersistenceType,
+                             const nsACString& aOrigin,
+                             const nsAString& aDatabaseName);
 
-  nsresult
-  AsyncDeleteFile(FileManager* aFileManager,
-                  int64_t aFileId);
+  nsresult AsyncDeleteFile(FileManager* aFileManager, int64_t aFileId);
 
   // Don't call this method in real code, it blocks the main thread!
   // It is intended to be used by mochitests to test correctness of the special
   // reference counting of stored blobs/files.
-  nsresult
-  BlockAndGetFileReferences(PersistenceType aPersistenceType,
-                            const nsACString& aOrigin,
-                            const nsAString& aDatabaseName,
-                            int64_t aFileId,
-                            int32_t* aRefCnt,
-                            int32_t* aDBRefCnt,
-                            int32_t* aSliceRefCnt,
-                            bool* aResult);
+  nsresult BlockAndGetFileReferences(PersistenceType aPersistenceType,
+                                     const nsACString& aOrigin,
+                                     const nsAString& aDatabaseName,
+                                     int64_t aFileId, int32_t* aRefCnt,
+                                     int32_t* aDBRefCnt, int32_t* aSliceRefCnt,
+                                     bool* aResult);
 
-  nsresult
-  FlushPendingFileDeletions();
+  nsresult FlushPendingFileDeletions();
 
-  static const nsCString&
-  GetLocale();
+  static const nsCString& GetLocale();
 
-  static mozilla::Mutex&
-  FileMutex()
-  {
+  static mozilla::Mutex& FileMutex() {
     IndexedDatabaseManager* mgr = Get();
     NS_ASSERTION(mgr, "Must have a manager here!");
 
     return mgr->mFileMutex;
   }
 
-  static nsresult
-  CommonPostHandleEvent(EventChainPostVisitor& aVisitor, IDBFactory* aFactory);
+  static nsresult CommonPostHandleEvent(EventChainPostVisitor& aVisitor,
+                                        IDBFactory* aFactory);
 
-  static bool
-  ResolveSandboxBinding(JSContext* aCx);
+  static bool ResolveSandboxBinding(JSContext* aCx);
 
-  static bool
-  DefineIndexedDB(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
+  static bool DefineIndexedDB(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
 
-private:
+ private:
   IndexedDatabaseManager();
   ~IndexedDatabaseManager();
 
-  nsresult
-  Init();
+  nsresult Init();
 
-  void
-  Destroy();
+  void Destroy();
 
-  static void
-  LoggingModePrefChangedCallback(const char* aPrefName, void* aClosure);
+  static void LoggingModePrefChangedCallback(const char* aPrefName,
+                                             void* aClosure);
 
   nsCOMPtr<nsIEventTarget> mBackgroundThread;
 
@@ -217,8 +179,8 @@ private:
   // protected by any mutex but it is only ever touched on the IO thread.
   nsClassHashtable<nsCStringHashKey, FileManagerInfo> mFileManagerInfos;
 
-  nsClassHashtable<nsRefPtrHashKey<FileManager>,
-                   nsTArray<int64_t>> mPendingDeleteInfos;
+  nsClassHashtable<nsRefPtrHashKey<FileManager>, nsTArray<int64_t>>
+      mPendingDeleteInfos;
 
   // Lock protecting FileManager.mFileInfos.
   // It's s also used to atomically update FileInfo.mRefCnt, FileInfo.mDBRefCnt
@@ -235,7 +197,7 @@ private:
   static Atomic<LoggingMode> sLoggingMode;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_indexeddatabasemanager_h__
+#endif  // mozilla_dom_indexeddatabasemanager_h__

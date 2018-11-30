@@ -6,7 +6,7 @@
 
 #if defined(MOZILLA_INTERNAL_API)
 #error This code is NOT for internal Gecko use!
-#endif // defined(MOZILLA_INTERNAL_API)
+#endif  // defined(MOZILLA_INTERNAL_API)
 
 #include "AccessibleHandlerControl.h"
 
@@ -24,36 +24,21 @@ mscom::SingletonFactory<AccessibleHandlerControl> gControlFactory;
 
 namespace detail {
 
-TextChange::TextChange()
-  : mIA2UniqueId(0)
-  , mIsInsert(false)
-  , mText()
-{
-}
+TextChange::TextChange() : mIA2UniqueId(0), mIsInsert(false), mText() {}
 
 TextChange::TextChange(long aIA2UniqueId, bool aIsInsert,
                        NotNull<IA2TextSegment*> aText)
-  : mIA2UniqueId(aIA2UniqueId)
-  , mIsInsert(aIsInsert)
-  , mText{BSTRCopy(aText->text), aText->start, aText->end}
-{
-}
+    : mIA2UniqueId(aIA2UniqueId),
+      mIsInsert(aIsInsert),
+      mText{BSTRCopy(aText->text), aText->start, aText->end} {}
 
-TextChange::TextChange(TextChange&& aOther)
-  : mText()
-{
+TextChange::TextChange(TextChange&& aOther) : mText() {
   *this = std::move(aOther);
 }
 
-TextChange::TextChange(const TextChange& aOther)
-  : mText()
-{
-  *this = aOther;
-}
+TextChange::TextChange(const TextChange& aOther) : mText() { *this = aOther; }
 
-TextChange&
-TextChange::operator=(TextChange&& aOther)
-{
+TextChange& TextChange::operator=(TextChange&& aOther) {
   mIA2UniqueId = aOther.mIA2UniqueId;
   mIsInsert = aOther.mIsInsert;
   aOther.mIA2UniqueId = 0;
@@ -63,9 +48,7 @@ TextChange::operator=(TextChange&& aOther)
   return *this;
 }
 
-TextChange&
-TextChange::operator=(const TextChange& aOther)
-{
+TextChange& TextChange::operator=(const TextChange& aOther) {
   mIA2UniqueId = aOther.mIA2UniqueId;
   mIsInsert = aOther.mIsInsert;
   ::SysFreeString(mText.text);
@@ -73,14 +56,10 @@ TextChange::operator=(const TextChange& aOther)
   return *this;
 }
 
-TextChange::~TextChange()
-{
-  ::SysFreeString(mText.text);
-}
+TextChange::~TextChange() { ::SysFreeString(mText.text); }
 
 HRESULT
-TextChange::GetOld(long aIA2UniqueId, NotNull<IA2TextSegment*> aOutOldSegment)
-{
+TextChange::GetOld(long aIA2UniqueId, NotNull<IA2TextSegment*> aOutOldSegment) {
   if (mIsInsert || aIA2UniqueId != mIA2UniqueId) {
     return S_OK;
   }
@@ -89,8 +68,7 @@ TextChange::GetOld(long aIA2UniqueId, NotNull<IA2TextSegment*> aOutOldSegment)
 }
 
 HRESULT
-TextChange::GetNew(long aIA2UniqueId, NotNull<IA2TextSegment*> aOutNewSegment)
-{
+TextChange::GetNew(long aIA2UniqueId, NotNull<IA2TextSegment*> aOutNewSegment) {
   if (!mIsInsert || aIA2UniqueId != mIA2UniqueId) {
     return S_OK;
   }
@@ -98,15 +76,12 @@ TextChange::GetNew(long aIA2UniqueId, NotNull<IA2TextSegment*> aOutNewSegment)
   return SegCopy(*aOutNewSegment, mText);
 }
 
-/* static */ BSTR
-TextChange::BSTRCopy(const BSTR& aIn)
-{
+/* static */ BSTR TextChange::BSTRCopy(const BSTR& aIn) {
   return ::SysAllocStringLen(aIn, ::SysStringLen(aIn));
 }
 
-/* static */ HRESULT
-TextChange::SegCopy(IA2TextSegment& aDest, const IA2TextSegment& aSrc)
-{
+/* static */ HRESULT TextChange::SegCopy(IA2TextSegment& aDest,
+                                         const IA2TextSegment& aSrc) {
   aDest = {BSTRCopy(aSrc.text), aSrc.start, aSrc.end};
   if (aSrc.text && !aDest.text) {
     return E_OUTOFMEMORY;
@@ -117,11 +92,10 @@ TextChange::SegCopy(IA2TextSegment& aDest, const IA2TextSegment& aSrc)
   return S_OK;
 }
 
-} // namespace detail
+}  // namespace detail
 
 HRESULT
-AccessibleHandlerControl::Create(AccessibleHandlerControl** aOutObject)
-{
+AccessibleHandlerControl::Create(AccessibleHandlerControl** aOutObject) {
   if (!aOutObject) {
     return E_INVALIDARG;
   }
@@ -132,19 +106,17 @@ AccessibleHandlerControl::Create(AccessibleHandlerControl** aOutObject)
 }
 
 AccessibleHandlerControl::AccessibleHandlerControl()
-  : mIsRegistered(false)
-  , mCacheGen(0)
-  , mIA2Proxy(mscom::RegisterProxy(L"ia2marshal.dll"))
-  , mHandlerProxy(mscom::RegisterProxy())
-{
+    : mIsRegistered(false),
+      mCacheGen(0),
+      mIA2Proxy(mscom::RegisterProxy(L"ia2marshal.dll")),
+      mHandlerProxy(mscom::RegisterProxy()) {
   MOZ_ASSERT(mIA2Proxy);
 }
 
 IMPL_IUNKNOWN1(AccessibleHandlerControl, IHandlerControl)
 
 HRESULT
-AccessibleHandlerControl::Invalidate()
-{
+AccessibleHandlerControl::Invalidate() {
   ++mCacheGen;
   return S_OK;
 }
@@ -152,8 +124,7 @@ AccessibleHandlerControl::Invalidate()
 HRESULT
 AccessibleHandlerControl::OnTextChange(long aHwnd, long aIA2UniqueId,
                                        VARIANT_BOOL aIsInsert,
-                                       IA2TextSegment* aText)
-{
+                                       IA2TextSegment* aText) {
   if (!aText) {
     return E_INVALIDARG;
   }
@@ -167,21 +138,18 @@ AccessibleHandlerControl::OnTextChange(long aHwnd, long aIA2UniqueId,
 
 HRESULT
 AccessibleHandlerControl::GetNewText(long aIA2UniqueId,
-                                     NotNull<IA2TextSegment*> aOutNewText)
-{
+                                     NotNull<IA2TextSegment*> aOutNewText) {
   return mTextChange.GetNew(aIA2UniqueId, aOutNewText);
 }
 
 HRESULT
 AccessibleHandlerControl::GetOldText(long aIA2UniqueId,
-                                     NotNull<IA2TextSegment*> aOutOldText)
-{
+                                     NotNull<IA2TextSegment*> aOutOldText) {
   return mTextChange.GetOld(aIA2UniqueId, aOutOldText);
 }
 
 HRESULT
-AccessibleHandlerControl::GetHandlerTypeInfo(ITypeInfo** aOutTypeInfo)
-{
+AccessibleHandlerControl::GetHandlerTypeInfo(ITypeInfo** aOutTypeInfo) {
   if (!mHandlerProxy) {
     return E_UNEXPECTED;
   }
@@ -191,8 +159,7 @@ AccessibleHandlerControl::GetHandlerTypeInfo(ITypeInfo** aOutTypeInfo)
 }
 
 HRESULT
-AccessibleHandlerControl::Register(NotNull<IGeckoBackChannel*> aGecko)
-{
+AccessibleHandlerControl::Register(NotNull<IGeckoBackChannel*> aGecko) {
   if (mIsRegistered) {
     return S_OK;
   }
@@ -204,5 +171,5 @@ AccessibleHandlerControl::Register(NotNull<IGeckoBackChannel*> aGecko)
   return hr;
 }
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla

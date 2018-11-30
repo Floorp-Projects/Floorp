@@ -20,91 +20,73 @@ struct IgnoreModifierState;
 namespace dom {
 class Event;
 class KeyboardEvent;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-class nsXBLEventHandler : public nsIDOMEventListener
-{
-public:
+class nsXBLEventHandler : public nsIDOMEventListener {
+ public:
   explicit nsXBLEventHandler(nsXBLPrototypeHandler* aHandler);
 
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIDOMEVENTLISTENER
 
-protected:
+ protected:
   virtual ~nsXBLEventHandler();
   nsXBLPrototypeHandler* mProtoHandler;
 
-private:
+ private:
   nsXBLEventHandler();
-  virtual bool EventMatched(mozilla::dom::Event* aEvent)
-  {
-    return true;
-  }
+  virtual bool EventMatched(mozilla::dom::Event* aEvent) { return true; }
 };
 
-class nsXBLMouseEventHandler : public nsXBLEventHandler
-{
-public:
+class nsXBLMouseEventHandler : public nsXBLEventHandler {
+ public:
   explicit nsXBLMouseEventHandler(nsXBLPrototypeHandler* aHandler);
   virtual ~nsXBLMouseEventHandler();
 
-private:
+ private:
   bool EventMatched(mozilla::dom::Event* aEvent) override;
 };
 
-class nsXBLKeyEventHandler : public nsIDOMEventListener
-{
+class nsXBLKeyEventHandler : public nsIDOMEventListener {
   typedef mozilla::IgnoreModifierState IgnoreModifierState;
 
-public:
+ public:
   nsXBLKeyEventHandler(nsAtom* aEventType, uint8_t aPhase, uint8_t aType);
 
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIDOMEVENTLISTENER
 
-  void AddProtoHandler(nsXBLPrototypeHandler* aProtoHandler)
-  {
+  void AddProtoHandler(nsXBLPrototypeHandler* aProtoHandler) {
     mProtoHandlers.AppendElement(aProtoHandler);
   }
 
-  bool Matches(nsAtom* aEventType, uint8_t aPhase, uint8_t aType) const
-  {
+  bool Matches(nsAtom* aEventType, uint8_t aPhase, uint8_t aType) const {
     return (mEventType == aEventType && mPhase == aPhase && mType == aType);
   }
 
-  void GetEventName(nsAString& aString) const
-  {
-    mEventType->ToString(aString);
-  }
+  void GetEventName(nsAString& aString) const { mEventType->ToString(aString); }
 
-  uint8_t GetPhase() const
-  {
-    return mPhase;
-  }
+  uint8_t GetPhase() const { return mPhase; }
 
-  uint8_t GetType() const
-  {
-    return mType;
-  }
+  uint8_t GetType() const { return mType; }
 
-  void SetIsBoundToChrome(bool aIsBoundToChrome)
-  {
+  void SetIsBoundToChrome(bool aIsBoundToChrome) {
     mIsBoundToChrome = aIsBoundToChrome;
   }
 
-  void SetUsingContentXBLScope(bool aUsingContentXBLScope)
-  {
+  void SetUsingContentXBLScope(bool aUsingContentXBLScope) {
     mUsingContentXBLScope = aUsingContentXBLScope;
   }
 
-private:
+ private:
   nsXBLKeyEventHandler();
   virtual ~nsXBLKeyEventHandler();
 
-  bool ExecuteMatchedHandlers(mozilla::dom::KeyboardEvent* aEvent, uint32_t aCharCode,
+  bool ExecuteMatchedHandlers(mozilla::dom::KeyboardEvent* aEvent,
+                              uint32_t aCharCode,
                               const IgnoreModifierState& aIgnoreModifierState);
 
   nsTArray<nsXBLPrototypeHandler*> mProtoHandlers;
@@ -115,8 +97,7 @@ private:
   bool mUsingContentXBLScope;
 };
 
-already_AddRefed<nsXBLEventHandler>
-NS_NewXBLEventHandler(nsXBLPrototypeHandler* aHandler,
-                      nsAtom* aEventType);
+already_AddRefed<nsXBLEventHandler> NS_NewXBLEventHandler(
+    nsXBLPrototypeHandler* aHandler, nsAtom* aEventType);
 
 #endif

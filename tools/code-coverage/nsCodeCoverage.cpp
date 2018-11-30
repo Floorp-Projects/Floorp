@@ -13,34 +13,31 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
-NS_IMPL_ISUPPORTS(nsCodeCoverage,
-                  nsICodeCoverage)
+NS_IMPL_ISUPPORTS(nsCodeCoverage, nsICodeCoverage)
 
-nsCodeCoverage::nsCodeCoverage()
-{
-}
+nsCodeCoverage::nsCodeCoverage() {}
 
-nsCodeCoverage::~nsCodeCoverage()
-{
-}
+nsCodeCoverage::~nsCodeCoverage() {}
 
 enum RequestType { Flush };
 
 class ProcessCount final {
   NS_INLINE_DECL_REFCOUNTING(ProcessCount);
 
-public:
+ public:
   explicit ProcessCount(uint32_t c) : mCount(c) {}
   operator uint32_t() const { return mCount; }
-  ProcessCount& operator--() { mCount--; return *this; }
+  ProcessCount& operator--() {
+    mCount--;
+    return *this;
+  }
 
-private:
+ private:
   ~ProcessCount() {}
   uint32_t mCount;
 };
 
-nsresult Request(JSContext* cx, Promise** aPromise, RequestType requestType)
-{
+nsresult Request(JSContext* cx, Promise** aPromise, RequestType requestType) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -91,7 +88,6 @@ nsresult Request(JSContext* cx, Promise** aPromise, RequestType requestType)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCodeCoverage::FlushCounters(JSContext *cx, Promise** aPromise)
-{
+NS_IMETHODIMP nsCodeCoverage::FlushCounters(JSContext* cx, Promise** aPromise) {
   return Request(cx, aPromise, RequestType::Flush);
 }

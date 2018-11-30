@@ -43,20 +43,16 @@ class SVGStringList;
  * them so it can return the same objects each time. It simply returns a new
  * string each time any given item is requested.
  */
-class DOMSVGStringList final : public nsISupports
-                             , public nsWrapperCache
-{
+class DOMSVGStringList final : public nsISupports, public nsWrapperCache {
   friend class AutoChangeStringListNotifier;
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGStringList)
 
-  nsSVGElement* GetParentObject() const
-  {
-    return mElement;
-  }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  nsSVGElement* GetParentObject() const { return mElement; }
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   uint32_t NumberOfItems() const;
   uint32_t Length() const;
@@ -83,37 +79,33 @@ public:
    * call requesting the DOM wrapper for the SVGStringList will naturally
    * result in a new DOMSVGStringList being returned.
    */
-  static already_AddRefed<DOMSVGStringList>
-    GetDOMWrapper(SVGStringList *aList,
-                  nsSVGElement *aElement,
-                  bool aIsConditionalProcessingAttribute,
-                  uint8_t aAttrEnum);
+  static already_AddRefed<DOMSVGStringList> GetDOMWrapper(
+      SVGStringList* aList, nsSVGElement* aElement,
+      bool aIsConditionalProcessingAttribute, uint8_t aAttrEnum);
 
-private:
+ private:
   /**
    * Only our static GetDOMWrapper() factory method may create objects of our
    * type.
    */
-  DOMSVGStringList(nsSVGElement *aElement,
+  DOMSVGStringList(nsSVGElement* aElement,
                    bool aIsConditionalProcessingAttribute, uint8_t aAttrEnum)
-    : mElement(aElement)
-    , mAttrEnum(aAttrEnum)
-    , mIsConditionalProcessingAttribute(aIsConditionalProcessingAttribute)
-  {
-  }
+      : mElement(aElement),
+        mAttrEnum(aAttrEnum),
+        mIsConditionalProcessingAttribute(aIsConditionalProcessingAttribute) {}
 
   ~DOMSVGStringList();
 
-  SVGStringList &InternalList() const;
+  SVGStringList& InternalList() const;
 
   // Strong ref to our element to keep it alive.
   RefPtr<nsSVGElement> mElement;
 
   uint8_t mAttrEnum;
 
-  bool    mIsConditionalProcessingAttribute;
+  bool mIsConditionalProcessingAttribute;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MOZILLA_DOMSVGSTRINGLIST_H__
+#endif  // MOZILLA_DOMSVGSTRINGLIST_H__

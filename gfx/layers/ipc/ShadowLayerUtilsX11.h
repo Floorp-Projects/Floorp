@@ -9,7 +9,7 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/layers/LayersMessageUtils.h"
-#include "nsCOMPtr.h"                   // for already_AddRefed
+#include "nsCOMPtr.h"  // for already_AddRefed
 
 #define MOZ_HAVE_SURFACEDESCRIPTORX11
 #define MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS
@@ -27,10 +27,10 @@ namespace mozilla {
 namespace layers {
 
 struct SurfaceDescriptorX11 {
-  SurfaceDescriptorX11()
-  { }
+  SurfaceDescriptorX11() {}
 
-  explicit SurfaceDescriptorX11(gfxXlibSurface* aSurf, bool aForwardGLX = false);
+  explicit SurfaceDescriptorX11(gfxXlibSurface* aSurf,
+                                bool aForwardGLX = false);
 
   SurfaceDescriptorX11(Drawable aDrawable, XID aFormatID,
                        const gfx::IntSize& aSize);
@@ -49,13 +49,15 @@ struct SurfaceDescriptorX11 {
   already_AddRefed<gfxXlibSurface> OpenForeign() const;
 
   MOZ_INIT_OUTSIDE_CTOR Drawable mId;
-  MOZ_INIT_OUTSIDE_CTOR XID mFormat; // either a PictFormat or VisualID
+  MOZ_INIT_OUTSIDE_CTOR XID mFormat;  // either a PictFormat or VisualID
   MOZ_INIT_OUTSIDE_CTOR gfx::IntSize mSize;
-  MOZ_INIT_OUTSIDE_CTOR Drawable mGLXPixmap; // used to prevent multiple bindings to the same GLXPixmap in-process
+  MOZ_INIT_OUTSIDE_CTOR Drawable
+      mGLXPixmap;  // used to prevent multiple bindings to the same GLXPixmap
+                   // in-process
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 namespace IPC {
 
@@ -70,15 +72,15 @@ struct ParamTraits<mozilla::layers::SurfaceDescriptorX11> {
     WriteParam(aMsg, aParam.mGLXPixmap);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     return (ReadParam(aMsg, aIter, &aResult->mId) &&
             ReadParam(aMsg, aIter, &aResult->mSize) &&
             ReadParam(aMsg, aIter, &aResult->mFormat) &&
-            ReadParam(aMsg, aIter, &aResult->mGLXPixmap)
-            );
+            ReadParam(aMsg, aIter, &aResult->mGLXPixmap));
   }
 };
 
-} // namespace IPC
+}  // namespace IPC
 
 #endif  // mozilla_layers_ShadowLayerUtilsX11_h

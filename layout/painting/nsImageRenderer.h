@@ -18,36 +18,31 @@ namespace layers {
 class StackingContextHelper;
 class WebRenderParentCommand;
 class WebRenderLayerManager;
-} // namespace layers
+}  // namespace layers
 
 namespace wr {
 class DisplayListBuilder;
 class IpcResourceUpdateQueue;
-} // namespace wr
+}  // namespace wr
 
 // A CSSSizeOrRatio represents a (possibly partially specified) size for use
 // in computing image sizes. Either or both of the width and height might be
 // given. A ratio of width to height may also be given. If we at least two
 // of these then we can compute a concrete size, that is a width and height.
-struct CSSSizeOrRatio
-{
+struct CSSSizeOrRatio {
   CSSSizeOrRatio()
-    : mRatio(0, 0)
-    , mWidth(0)
-    , mHeight(0)
-    , mHasWidth(false)
-    , mHasHeight(false)
-  {
-  }
+      : mRatio(0, 0),
+        mWidth(0),
+        mHeight(0),
+        mHasWidth(false),
+        mHasHeight(false) {}
 
-  bool CanComputeConcreteSize() const
-  {
+  bool CanComputeConcreteSize() const {
     return mHasWidth + mHasHeight + HasRatio() >= 2;
   }
   bool IsConcrete() const { return mHasWidth && mHasHeight; }
   bool HasRatio() const { return mRatio.width > 0 && mRatio.height > 0; }
-  bool IsEmpty() const
-  {
+  bool IsEmpty() const {
     return (mHasWidth && mWidth <= 0) || (mHasHeight && mHeight <= 0) ||
            mRatio.width <= 0 || mRatio.height <= 0;
   }
@@ -56,35 +51,31 @@ struct CSSSizeOrRatio
   // called.
   nsSize ComputeConcreteSize() const;
 
-  void SetWidth(nscoord aWidth)
-  {
+  void SetWidth(nscoord aWidth) {
     mWidth = aWidth;
     mHasWidth = true;
     if (mHasHeight) {
       mRatio = nsSize(mWidth, mHeight);
     }
   }
-  void SetHeight(nscoord aHeight)
-  {
+  void SetHeight(nscoord aHeight) {
     mHeight = aHeight;
     mHasHeight = true;
     if (mHasWidth) {
       mRatio = nsSize(mWidth, mHeight);
     }
   }
-  void SetSize(const nsSize& aSize)
-  {
+  void SetSize(const nsSize& aSize) {
     mWidth = aSize.width;
     mHeight = aSize.height;
     mHasWidth = true;
     mHasHeight = true;
     mRatio = aSize;
   }
-  void SetRatio(const nsSize& aRatio)
-  {
+  void SetRatio(const nsSize& aRatio) {
     MOZ_ASSERT(
-      !mHasWidth || !mHasHeight,
-      "Probably shouldn't be setting a ratio if we have a concrete size");
+        !mHasWidth || !mHasHeight,
+        "Probably shouldn't be setting a ratio if we have a concrete size");
     mRatio = aRatio;
   }
 
@@ -103,26 +94,16 @@ struct CSSSizeOrRatio
  * @note Always call the member functions in the order of PrepareImage(),
  * SetSize(), and Draw*().
  */
-class nsImageRenderer
-{
-public:
+class nsImageRenderer {
+ public:
   typedef mozilla::image::ImgDrawResult ImgDrawResult;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::ImageContainer ImageContainer;
 
-  enum
-  {
-    FLAG_SYNC_DECODE_IMAGES = 0x01,
-    FLAG_PAINTING_TO_WINDOW = 0x02
-  };
-  enum FitType
-  {
-    CONTAIN,
-    COVER
-  };
+  enum { FLAG_SYNC_DECODE_IMAGES = 0x01, FLAG_PAINTING_TO_WINDOW = 0x02 };
+  enum FitType { CONTAIN, COVER };
 
-  nsImageRenderer(nsIFrame* aForFrame,
-                  const nsStyleImage* aImage,
+  nsImageRenderer(nsIFrame* aForFrame, const nsStyleImage* aImage,
                   uint32_t aFlags);
   ~nsImageRenderer() = default;
   /**
@@ -187,9 +168,9 @@ public:
    * Values spec.
    */
   static nsSize ComputeConcreteSize(
-    const mozilla::CSSSizeOrRatio& aSpecifiedSize,
-    const mozilla::CSSSizeOrRatio& aIntrinsicSize,
-    const nsSize& aDefaultSize);
+      const mozilla::CSSSizeOrRatio& aSpecifiedSize,
+      const mozilla::CSSSizeOrRatio& aIntrinsicSize,
+      const nsSize& aDefaultSize);
 
   /**
    * Set this image's preferred size. This will be its intrinsic size where
@@ -205,12 +186,9 @@ public:
    * @see nsLayoutUtils::DrawImage() for parameters.
    */
   ImgDrawResult DrawLayer(nsPresContext* aPresContext,
-                          gfxContext& aRenderingContext,
-                          const nsRect& aDest,
-                          const nsRect& aFill,
-                          const nsPoint& aAnchor,
-                          const nsRect& aDirty,
-                          const nsSize& aRepeatSize,
+                          gfxContext& aRenderingContext, const nsRect& aDest,
+                          const nsRect& aFill, const nsPoint& aAnchor,
+                          const nsRect& aDirty, const nsSize& aRepeatSize,
                           float aOpacity);
 
   /**
@@ -219,18 +197,12 @@ public:
    * @see nsLayoutUtils::DrawImage() for parameters.
    */
   ImgDrawResult BuildWebRenderDisplayItemsForLayer(
-    nsPresContext* aPresContext,
-    mozilla::wr::DisplayListBuilder& aBuilder,
-    mozilla::wr::IpcResourceUpdateQueue& aResource,
-    const mozilla::layers::StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
-    nsDisplayItem* aItem,
-    const nsRect& aDest,
-    const nsRect& aFill,
-    const nsPoint& aAnchor,
-    const nsRect& aDirty,
-    const nsSize& aRepeatSize,
-    float aOpacity);
+      nsPresContext* aPresContext, mozilla::wr::DisplayListBuilder& aBuilder,
+      mozilla::wr::IpcResourceUpdateQueue& aResource,
+      const mozilla::layers::StackingContextHelper& aSc,
+      mozilla::layers::WebRenderLayerManager* aManager, nsDisplayItem* aItem,
+      const nsRect& aDest, const nsRect& aFill, const nsPoint& aAnchor,
+      const nsRect& aDirty, const nsSize& aRepeatSize, float aOpacity);
 
   /**
    * Draw the image to a single component of a border-image style rendering.
@@ -252,17 +224,12 @@ public:
    * intrinsic ratio.
    */
   ImgDrawResult DrawBorderImageComponent(
-    nsPresContext* aPresContext,
-    gfxContext& aRenderingContext,
-    const nsRect& aDirtyRect,
-    const nsRect& aFill,
-    const mozilla::CSSIntRect& aSrc,
-    mozilla::StyleBorderImageRepeat aHFill,
-    mozilla::StyleBorderImageRepeat aVFill,
-    const nsSize& aUnitSize,
-    uint8_t aIndex,
-    const mozilla::Maybe<nsSize>& aSVGViewportSize,
-    const bool aHasIntrinsicRatio);
+      nsPresContext* aPresContext, gfxContext& aRenderingContext,
+      const nsRect& aDirtyRect, const nsRect& aFill,
+      const mozilla::CSSIntRect& aSrc, mozilla::StyleBorderImageRepeat aHFill,
+      mozilla::StyleBorderImageRepeat aVFill, const nsSize& aUnitSize,
+      uint8_t aIndex, const mozilla::Maybe<nsSize>& aSVGViewportSize,
+      const bool aHasIntrinsicRatio);
 
   /**
    * Draw the image to aRenderingContext which can be used to define the
@@ -284,12 +251,11 @@ public:
   void SetExtendMode(mozilla::gfx::ExtendMode aMode) { mExtendMode = aMode; }
   void SetMaskOp(uint8_t aMaskOp) { mMaskOp = aMaskOp; }
   void PurgeCacheForViewportChange(
-    const mozilla::Maybe<nsSize>& aSVGViewportSize,
-    const bool aHasRatio);
+      const mozilla::Maybe<nsSize>& aSVGViewportSize, const bool aHasRatio);
   nsStyleImageType GetType() const { return mType; }
   already_AddRefed<nsStyleGradient> GetGradientData();
 
-private:
+ private:
   /**
    * Draws the image to the target rendering context.
    * aSrc is a rect on the source image which will be mapped to aDest; it's
@@ -297,14 +263,10 @@ private:
    *
    * @see nsLayoutUtils::DrawImage() for other parameters.
    */
-  ImgDrawResult Draw(nsPresContext* aPresContext,
-                     gfxContext& aRenderingContext,
-                     const nsRect& aDirtyRect,
-                     const nsRect& aDest,
-                     const nsRect& aFill,
-                     const nsPoint& aAnchor,
-                     const nsSize& aRepeatSize,
-                     const mozilla::CSSIntRect& aSrc,
+  ImgDrawResult Draw(nsPresContext* aPresContext, gfxContext& aRenderingContext,
+                     const nsRect& aDirtyRect, const nsRect& aDest,
+                     const nsRect& aFill, const nsPoint& aAnchor,
+                     const nsSize& aRepeatSize, const mozilla::CSSIntRect& aSrc,
                      float aOpacity = 1.0);
 
   /**
@@ -315,19 +277,13 @@ private:
    * @see nsLayoutUtils::DrawImage() for other parameters.
    */
   ImgDrawResult BuildWebRenderDisplayItems(
-    nsPresContext* aPresContext,
-    mozilla::wr::DisplayListBuilder& aBuilder,
-    mozilla::wr::IpcResourceUpdateQueue& aResources,
-    const mozilla::layers::StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
-    nsDisplayItem* aItem,
-    const nsRect& aDirtyRect,
-    const nsRect& aDest,
-    const nsRect& aFill,
-    const nsPoint& aAnchor,
-    const nsSize& aRepeatSize,
-    const mozilla::CSSIntRect& aSrc,
-    float aOpacity = 1.0);
+      nsPresContext* aPresContext, mozilla::wr::DisplayListBuilder& aBuilder,
+      mozilla::wr::IpcResourceUpdateQueue& aResources,
+      const mozilla::layers::StackingContextHelper& aSc,
+      mozilla::layers::WebRenderLayerManager* aManager, nsDisplayItem* aItem,
+      const nsRect& aDirtyRect, const nsRect& aDest, const nsRect& aFill,
+      const nsPoint& aAnchor, const nsSize& aRepeatSize,
+      const mozilla::CSSIntRect& aSrc, float aOpacity = 1.0);
 
   /**
    * Helper method for creating a gfxDrawable from mPaintServerFrame or
@@ -346,12 +302,12 @@ private:
   nsIFrame* mPaintServerFrame;
   nsLayoutUtils::SurfaceFromElementResult mImageElementSurface;
   ImgDrawResult mPrepareResult;
-  nsSize mSize; // unscaled size of the image, in app units
+  nsSize mSize;  // unscaled size of the image, in app units
   uint32_t mFlags;
   mozilla::gfx::ExtendMode mExtendMode;
   uint8_t mMaskOp;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* nsImageRenderer_h__ */

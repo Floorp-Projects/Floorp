@@ -36,15 +36,14 @@ enum class StyleStructID : uint32_t {
 #undef STYLE_STRUCT_RESET
 };
 
-struct StyleStructConstants
-{
+struct StyleStructConstants {
   static const uint32_t kStyleStructCount =
 #define STYLE_STRUCT_RESET(name) 1 +
 #define STYLE_STRUCT_INHERITED(name) 1 +
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT_INHERITED
 #undef STYLE_STRUCT_RESET
-    0;
+      0;
 
   static const uint32_t kInheritedStyleStructCount =
 #define STYLE_STRUCT_RESET(name)
@@ -52,7 +51,7 @@ struct StyleStructConstants
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT_INHERITED
 #undef STYLE_STRUCT_RESET
-    0;
+      0;
 
   static const uint32_t kResetStyleStructCount =
 #define STYLE_STRUCT_RESET(name) 1 +
@@ -60,20 +59,21 @@ struct StyleStructConstants
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT_INHERITED
 #undef STYLE_STRUCT_RESET
-    0;
+      0;
 
   static_assert(kStyleStructCount <= 32, "Bitmasks must be bigger!");
 
   static const uint32_t kAllStructsMask = (1 << kStyleStructCount) - 1;
-  static const uint32_t kInheritedStructsMask = (1 << kInheritedStyleStructCount) - 1;
-  static const uint32_t kResetStructsMask = kAllStructsMask & (~kInheritedStructsMask);
+  static const uint32_t kInheritedStructsMask =
+      (1 << kInheritedStyleStructCount) - 1;
+  static const uint32_t kResetStructsMask =
+      kAllStructsMask & (~kInheritedStructsMask);
 
-  static uint32_t BitFor(StyleStructID aID)
-  {
+  static uint32_t BitFor(StyleStructID aID) {
     return 1 << static_cast<uint32_t>(aID);
   }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* nsStyleStructFwd_h_ */

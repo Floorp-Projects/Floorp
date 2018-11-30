@@ -37,8 +37,7 @@ namespace mozilla {
  * gaps is in structure JustificationAssignment.
  */
 
-struct JustificationInfo
-{
+struct JustificationInfo {
   // Number of expansion opportunities inside a span. It doesn't include
   // any opportunities between this span and the one before or after.
   int32_t mInnerOpportunities;
@@ -47,16 +46,13 @@ struct JustificationInfo
   bool mIsEndJustifiable;
 
   constexpr JustificationInfo()
-    : mInnerOpportunities(0)
-    , mIsStartJustifiable(false)
-    , mIsEndJustifiable(false)
-  {
-  }
+      : mInnerOpportunities(0),
+        mIsStartJustifiable(false),
+        mIsEndJustifiable(false) {}
 
   // Claim that the last opportunity should be cancelled
   // because the trailing space just gets trimmed.
-  void CancelOpportunityForTrimmedSpace()
-  {
+  void CancelOpportunityForTrimmedSpace() {
     if (mInnerOpportunities > 0) {
       mInnerOpportunities--;
     } else {
@@ -70,54 +66,43 @@ struct JustificationInfo
   }
 };
 
-struct JustificationAssignment
-{
+struct JustificationAssignment {
   // There are at most 2 gaps per end, so it is enough to use 2 bits.
   uint8_t mGapsAtStart : 2;
   uint8_t mGapsAtEnd : 2;
 
-  constexpr JustificationAssignment()
-    : mGapsAtStart(0)
-    , mGapsAtEnd(0)
-  {
-  }
+  constexpr JustificationAssignment() : mGapsAtStart(0), mGapsAtEnd(0) {}
 
   int32_t TotalGaps() const { return mGapsAtStart + mGapsAtEnd; }
 };
 
-struct JustificationApplicationState
-{
-  struct
-  {
+struct JustificationApplicationState {
+  struct {
     // The total number of justification gaps to be processed.
     int32_t mCount;
     // The number of justification gaps which have been handled.
     int32_t mHandled;
   } mGaps;
 
-  struct
-  {
+  struct {
     // The total spacing left in a line before justification.
     nscoord mAvailable;
     // The spacing has been consumed by handled justification gaps.
     nscoord mConsumed;
   } mWidth;
 
-  JustificationApplicationState(int32_t aGaps, nscoord aWidth)
-  {
+  JustificationApplicationState(int32_t aGaps, nscoord aWidth) {
     mGaps.mCount = aGaps;
     mGaps.mHandled = 0;
     mWidth.mAvailable = aWidth;
     mWidth.mConsumed = 0;
   }
 
-  bool IsJustifiable() const
-  {
+  bool IsJustifiable() const {
     return mGaps.mCount > 0 && mWidth.mAvailable > 0;
   }
 
-  nscoord Consume(int32_t aGaps)
-  {
+  nscoord Consume(int32_t aGaps) {
     mGaps.mHandled += aGaps;
     nscoord newAllocate = (mWidth.mAvailable * mGaps.mHandled) / mGaps.mCount;
     nscoord deltaWidth = newAllocate - mWidth.mConsumed;
@@ -126,19 +111,17 @@ struct JustificationApplicationState
   }
 };
 
-class JustificationUtils
-{
-public:
+class JustificationUtils {
+ public:
   // Compute justification gaps should be applied on a unit.
   static int32_t CountGaps(const JustificationInfo& aInfo,
-                           const JustificationAssignment& aAssign)
-  {
+                           const JustificationAssignment& aAssign) {
     // Justification gaps include two gaps for each inner opportunities
     // and the gaps given assigned to the ends.
     return aInfo.mInnerOpportunities * 2 + aAssign.TotalGaps();
   }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* !defined(mozilla_JustificationUtils_h_) */

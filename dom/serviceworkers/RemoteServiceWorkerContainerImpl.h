@@ -14,58 +14,50 @@ namespace dom {
 
 class ServiceWorkerContainerChild;
 
-class RemoteServiceWorkerContainerImpl final : public ServiceWorkerContainer::Inner
-{
+class RemoteServiceWorkerContainerImpl final
+    : public ServiceWorkerContainer::Inner {
   ServiceWorkerContainerChild* mActor;
   ServiceWorkerContainer* mOuter;
   bool mShutdown;
 
   ~RemoteServiceWorkerContainerImpl();
 
-  void
-  Shutdown();
+  void Shutdown();
 
   // ServiceWorkerContainer::Inner implementation
-  void
-  AddContainer(ServiceWorkerContainer* aOuter) override;
+  void AddContainer(ServiceWorkerContainer* aOuter) override;
 
-  void
-  RemoveContainer(ServiceWorkerContainer* aOuter) override;
+  void RemoveContainer(ServiceWorkerContainer* aOuter) override;
 
-  void
-  Register(const ClientInfo& aClientInfo,
-           const nsACString& aScopeURL,
-           const nsACString& aScriptURL,
-           ServiceWorkerUpdateViaCache aUpdateViaCache,
-           ServiceWorkerRegistrationCallback&& aSuccessCB,
-           ServiceWorkerFailureCallback&& aFailureCB) const override;
+  void Register(const ClientInfo& aClientInfo, const nsACString& aScopeURL,
+                const nsACString& aScriptURL,
+                ServiceWorkerUpdateViaCache aUpdateViaCache,
+                ServiceWorkerRegistrationCallback&& aSuccessCB,
+                ServiceWorkerFailureCallback&& aFailureCB) const override;
 
-  void
-  GetRegistration(const ClientInfo& aClientInfo,
-                  const nsACString& aURL,
-                  ServiceWorkerRegistrationCallback&& aSuccessCB,
-                  ServiceWorkerFailureCallback&& aFailureCB) const override;
+  void GetRegistration(
+      const ClientInfo& aClientInfo, const nsACString& aURL,
+      ServiceWorkerRegistrationCallback&& aSuccessCB,
+      ServiceWorkerFailureCallback&& aFailureCB) const override;
 
-  void
-  GetRegistrations(const ClientInfo& aClientInfo,
-                   ServiceWorkerRegistrationListCallback&& aSuccessCB,
-                   ServiceWorkerFailureCallback&& aFailureCB) const override;
+  void GetRegistrations(
+      const ClientInfo& aClientInfo,
+      ServiceWorkerRegistrationListCallback&& aSuccessCB,
+      ServiceWorkerFailureCallback&& aFailureCB) const override;
 
-  void
-  GetReady(const ClientInfo& aClientInfo,
-           ServiceWorkerRegistrationCallback&& aSuccessCB,
-           ServiceWorkerFailureCallback&& aFailureCB) const override;
+  void GetReady(const ClientInfo& aClientInfo,
+                ServiceWorkerRegistrationCallback&& aSuccessCB,
+                ServiceWorkerFailureCallback&& aFailureCB) const override;
 
-public:
+ public:
   RemoteServiceWorkerContainerImpl();
 
-  void
-  RevokeActor(ServiceWorkerContainerChild* aActor);
+  void RevokeActor(ServiceWorkerContainerChild* aActor);
 
   NS_INLINE_DECL_REFCOUNTING(RemoteServiceWorkerContainerImpl, override)
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_remoteserviceworkercontainerimpl_h__
+#endif  // mozilla_dom_remoteserviceworkercontainerimpl_h__

@@ -17,18 +17,14 @@ namespace dom {
 class SessionStorageCache;
 class SessionStorageManager;
 
-class SessionStorage final : public Storage
-{
-public:
+class SessionStorage final : public Storage {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SessionStorage, Storage)
 
-  SessionStorage(nsPIDOMWindowInner* aWindow,
-                 nsIPrincipal* aPrincipal,
-                 SessionStorageCache* aCache,
-                 SessionStorageManager* aManager,
-                 const nsAString& aDocumentURI,
-                 bool aIsPrivate);
+  SessionStorage(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
+                 SessionStorageCache* aCache, SessionStorageManager* aManager,
+                 const nsAString& aDocumentURI, bool aIsPrivate);
 
   StorageType Type() const override { return eSessionStorage; }
 
@@ -36,8 +32,7 @@ public:
 
   SessionStorageCache* Cache() const { return mCache; }
 
-  already_AddRefed<SessionStorage>
-  Clone() const;
+  already_AddRefed<SessionStorage> Clone() const;
 
   int64_t GetOriginQuotaUsage() const override;
 
@@ -47,34 +42,28 @@ public:
   uint32_t GetLength(nsIPrincipal& aSubjectPrincipal,
                      ErrorResult& aRv) override;
 
-  void Key(uint32_t aIndex, nsAString& aResult,
-           nsIPrincipal& aSubjectPrincipal,
+  void Key(uint32_t aIndex, nsAString& aResult, nsIPrincipal& aSubjectPrincipal,
            ErrorResult& aRv) override;
 
   void GetItem(const nsAString& aKey, nsAString& aResult,
-               nsIPrincipal& aSubjectPrincipal,
-               ErrorResult& aRv) override;
+               nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) override;
 
   void GetSupportedNames(nsTArray<nsString>& aKeys) override;
 
   void SetItem(const nsAString& aKey, const nsAString& aValue,
-               nsIPrincipal& aSubjectPrincipal,
-               ErrorResult& aRv) override;
+               nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) override;
 
-  void RemoveItem(const nsAString& aKey,
-                  nsIPrincipal& aSubjectPrincipal,
+  void RemoveItem(const nsAString& aKey, nsIPrincipal& aSubjectPrincipal,
                   ErrorResult& aRv) override;
 
-  void Clear(nsIPrincipal& aSubjectPrincipal,
-             ErrorResult& aRv) override;
+  void Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) override;
 
-private:
+ private:
   ~SessionStorage();
 
-  void
-  BroadcastChangeNotification(const nsAString& aKey,
-                              const nsAString& aOldValue,
-                              const nsAString& aNewValue);
+  void BroadcastChangeNotification(const nsAString& aKey,
+                                   const nsAString& aOldValue,
+                                   const nsAString& aNewValue);
 
   RefPtr<SessionStorageCache> mCache;
   RefPtr<SessionStorageManager> mManager;
@@ -83,7 +72,7 @@ private:
   bool mIsPrivate;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif //mozilla_dom_SessionStorage_h
+#endif  // mozilla_dom_SessionStorage_h

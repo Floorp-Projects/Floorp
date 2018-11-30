@@ -11,11 +11,15 @@
 class nsICharsetDetectionObserver;
 
 // {12BB8F14-2389-11d3-B3BF-00805F8A6670}
-#define NS_ICHARSETDETECTOR_IID \
-{ 0x12bb8f14, 0x2389, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
+#define NS_ICHARSETDETECTOR_IID                     \
+  {                                                 \
+    0x12bb8f14, 0x2389, 0x11d3, {                   \
+      0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 \
+    }                                               \
+  }
 
 class nsICharsetDetector : public nsISupports {
-public:
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICHARSETDETECTOR_IID)
 
   /*
@@ -33,16 +37,15 @@ public:
                           false it need more bytes.
                    This is used to enhance performance
    */
-  NS_IMETHOD DoIt(const char* aBytesArray, uint32_t aLen, bool* oDontFeedMe) = 0;
+  NS_IMETHOD DoIt(const char* aBytesArray, uint32_t aLen,
+                  bool* oDontFeedMe) = 0;
 
   /*
      It also tell the detector the last chance the make a decision
    */
   NS_IMETHOD Done() = 0;
-
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsICharsetDetector,
-                              NS_ICHARSETDETECTOR_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICharsetDetector, NS_ICHARSETDETECTOR_IID)
 
 #endif /* nsICharsetDetector_h__ */

@@ -16,31 +16,28 @@
 
 using namespace mozilla;
 
-static bool
-ComputedStyleContainsFont(ComputedStyle* aComputedStyle,
-                          nsPresContext* aPresContext,
-                          const gfxUserFontSet* aUserFontSet,
-                          const gfxUserFontEntry* aFont)
-{
+static bool ComputedStyleContainsFont(ComputedStyle* aComputedStyle,
+                                      nsPresContext* aPresContext,
+                                      const gfxUserFontSet* aUserFontSet,
+                                      const gfxUserFontEntry* aFont) {
   // if the font is null, simply check to see whether fontlist includes
   // downloadable fonts
   if (!aFont) {
     const mozilla::FontFamilyList& fontlist =
-      aComputedStyle->StyleFont()->mFont.fontlist;
+        aComputedStyle->StyleFont()->mFont.fontlist;
     return aUserFontSet->ContainsUserFontSetFonts(fontlist);
   }
 
   // first, check if the family name is in the fontlist
-  if (!aComputedStyle->StyleFont()->mFont.fontlist.Contains(aFont->FamilyName())) {
+  if (!aComputedStyle->StyleFont()->mFont.fontlist.Contains(
+          aFont->FamilyName())) {
     return false;
   }
 
   // family name is in the fontlist, check to see if the font group
   // associated with the frame includes the specific userfont
-  RefPtr<nsFontMetrics> fm =
-    nsLayoutUtils::GetFontMetricsForComputedStyle(aComputedStyle,
-                                                  aPresContext,
-                                                  1.0f);
+  RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetFontMetricsForComputedStyle(
+      aComputedStyle, aPresContext, 1.0f);
 
   if (fm->GetThebesFontGroup()->ContainsUserFont(aFont)) {
     return true;
@@ -49,9 +46,7 @@ ComputedStyleContainsFont(ComputedStyle* aComputedStyle,
   return false;
 }
 
-static bool
-FrameUsesFont(nsIFrame* aFrame, const gfxUserFontEntry* aFont)
-{
+static bool FrameUsesFont(nsIFrame* aFrame, const gfxUserFontEntry* aFont) {
   // check the style of the frame
   nsPresContext* pc = aFrame->PresContext();
   gfxUserFontSet* ufs = pc->GetUserFontSet();
@@ -72,9 +67,7 @@ FrameUsesFont(nsIFrame* aFrame, const gfxUserFontEntry* aFont)
   return false;
 }
 
-static void
-ScheduleReflow(nsIPresShell* aShell, nsIFrame* aFrame)
-{
+static void ScheduleReflow(nsIPresShell* aShell, nsIFrame* aFrame) {
   nsIFrame* f = aFrame;
   if (f->IsFrameOfType(nsIFrame::eSVG) || nsSVGUtils::IsInSVGTextSubtree(f)) {
     // SVG frames (and the non-SVG descendants of an SVGTextFrame) need special
@@ -108,10 +101,8 @@ ScheduleReflow(nsIPresShell* aShell, nsIFrame* aFrame)
   aShell->FrameNeedsReflow(f, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
 }
 
-/* static */ void
-nsFontFaceUtils::MarkDirtyForFontChange(nsIFrame* aSubtreeRoot,
-                                        const gfxUserFontEntry* aFont)
-{
+/* static */ void nsFontFaceUtils::MarkDirtyForFontChange(
+    nsIFrame* aSubtreeRoot, const gfxUserFontEntry* aFont) {
   AutoTArray<nsIFrame*, 4> subtrees;
   subtrees.AppendElement(aSubtreeRoot);
 

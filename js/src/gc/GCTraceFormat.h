@@ -17,27 +17,27 @@
  */
 
 enum GCTraceEvent {
-    // Events
-    TraceEventInit,
-    TraceEventThingSize,
-    TraceEventNurseryAlloc,
-    TraceEventTenuredAlloc,
-    TraceEventClassInfo,
-    TraceEventGroupInfo,
-    TraceEventTypeNewScript,
-    TraceEventCreateObject,
-    TraceEventMinorGCStart,
-    TraceEventPromoteToTenured,
-    TraceEventMinorGCEnd,
-    TraceEventMajorGCStart,
-    TraceEventTenuredFinalize,
-    TraceEventMajorGCEnd,
+  // Events
+  TraceEventInit,
+  TraceEventThingSize,
+  TraceEventNurseryAlloc,
+  TraceEventTenuredAlloc,
+  TraceEventClassInfo,
+  TraceEventGroupInfo,
+  TraceEventTypeNewScript,
+  TraceEventCreateObject,
+  TraceEventMinorGCStart,
+  TraceEventPromoteToTenured,
+  TraceEventMinorGCEnd,
+  TraceEventMajorGCStart,
+  TraceEventTenuredFinalize,
+  TraceEventMajorGCEnd,
 
-    TraceDataAddress,  // following TraceEventPromote
-    TraceDataInt,      // following TraceEventClassInfo
-    TraceDataString,   // following TraceEventClassInfo
+  TraceDataAddress,  // following TraceEventPromote
+  TraceDataInt,      // following TraceEventClassInfo
+  TraceDataString,   // following TraceEventClassInfo
 
-    GCTraceEventCount
+  GCTraceEventCount
 };
 
 const unsigned TraceFormatVersion = 1;

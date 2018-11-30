@@ -18,25 +18,21 @@ namespace dom {
 
 class FlexLineValues;
 
-class FlexItemValues : public nsISupports
-                     , public nsWrapperCache
-{
-public:
+class FlexItemValues : public nsISupports, public nsWrapperCache {
+ public:
   explicit FlexItemValues(FlexLineValues* aParent,
                           const ComputedFlexItemInfo* aItem);
 
-protected:
+ protected:
   virtual ~FlexItemValues() = default;
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FlexItemValues)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-  FlexLineValues* GetParentObject()
-  {
-    return mParent;
-  }
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
+  FlexLineValues* GetParentObject() { return mParent; }
 
   nsINode* GetNode() const;
   DOMRectReadOnly* FrameRect() const;
@@ -48,7 +44,7 @@ public:
   double CrossMaxSize() const;
   FlexItemClampState ClampState() const;
 
-protected:
+ protected:
   RefPtr<FlexLineValues> mParent;
   RefPtr<nsINode> mNode;
   RefPtr<DOMRectReadOnly> mFrameRect;
@@ -63,7 +59,7 @@ protected:
   FlexItemClampState mClampState;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_FlexItemValues_h */

@@ -10,8 +10,7 @@
 
 using namespace mozilla::gfx;
 
-TestScaling::TestScaling()
-{
+TestScaling::TestScaling() {
   REGISTER_TEST(TestScaling, BasicHalfScale);
   REGISTER_TEST(TestScaling, DoubleHalfScale);
   REGISTER_TEST(TestScaling, UnevenHalfScale);
@@ -21,13 +20,11 @@ TestScaling::TestScaling()
   REGISTER_TEST(TestScaling, MixedHalfScale);
 }
 
-void
-TestScaling::BasicHalfScale()
-{
+void TestScaling::BasicHalfScale() {
   std::vector<uint8_t> data;
   data.resize(500 * 500 * 4);
 
-  uint32_t *pixels = reinterpret_cast<uint32_t*>(&data.front());
+  uint32_t *pixels = reinterpret_cast<uint32_t *>(&data.front());
   for (int y = 0; y < 500; y += 2) {
     for (int x = 0; x < 500; x += 2) {
       pixels[y * 500 + x] = 0xff00ff00;
@@ -43,7 +40,7 @@ TestScaling::BasicHalfScale()
   VERIFY(scaler.GetSize().width == 250);
   VERIFY(scaler.GetSize().height == 250);
 
-  pixels = (uint32_t*)scaler.GetScaledData();
+  pixels = (uint32_t *)scaler.GetScaledData();
 
   for (int y = 0; y < 250; y++) {
     for (int x = 0; x < 250; x++) {
@@ -52,13 +49,11 @@ TestScaling::BasicHalfScale()
   }
 }
 
-void
-TestScaling::DoubleHalfScale()
-{
+void TestScaling::DoubleHalfScale() {
   std::vector<uint8_t> data;
   data.resize(500 * 500 * 4);
 
-  uint32_t *pixels = reinterpret_cast<uint32_t*>(&data.front());
+  uint32_t *pixels = reinterpret_cast<uint32_t *>(&data.front());
   for (int y = 0; y < 500; y += 2) {
     for (int x = 0; x < 500; x += 2) {
       pixels[y * 500 + x] = 0xff00ff00;
@@ -73,7 +68,7 @@ TestScaling::DoubleHalfScale()
   VERIFY(scaler.GetSize().width == 125);
   VERIFY(scaler.GetSize().height == 125);
 
-  pixels = (uint32_t*)scaler.GetScaledData();
+  pixels = (uint32_t *)scaler.GetScaledData();
 
   for (int y = 0; y < 125; y++) {
     for (int x = 0; x < 125; x++) {
@@ -82,15 +77,13 @@ TestScaling::DoubleHalfScale()
   }
 }
 
-void
-TestScaling::UnevenHalfScale()
-{
+void TestScaling::UnevenHalfScale() {
   std::vector<uint8_t> data;
   // Use a 16-byte aligned stride still, we test none-aligned strides
   // separately.
   data.resize(499 * 500 * 4);
 
-  uint32_t *pixels = reinterpret_cast<uint32_t*>(&data.front());
+  uint32_t *pixels = reinterpret_cast<uint32_t *>(&data.front());
   for (int y = 0; y < 500; y += 2) {
     for (int x = 0; x < 500; x += 2) {
       pixels[y * 500 + x] = 0xff00ff00;
@@ -111,7 +104,7 @@ TestScaling::UnevenHalfScale()
   VERIFY(scaler.GetSize().width == 249);
   VERIFY(scaler.GetSize().height == 249);
 
-  pixels = (uint32_t*)scaler.GetScaledData();
+  pixels = (uint32_t *)scaler.GetScaledData();
 
   for (int y = 0; y < 249; y++) {
     for (int x = 0; x < 249; x++) {
@@ -120,14 +113,12 @@ TestScaling::UnevenHalfScale()
   }
 }
 
-void
-TestScaling::OddStrideHalfScale()
-{
+void TestScaling::OddStrideHalfScale() {
   std::vector<uint8_t> data;
   // Use a 4-byte aligned stride to test if that doesn't cause any issues.
   data.resize(499 * 499 * 4);
 
-  uint32_t *pixels = reinterpret_cast<uint32_t*>(&data.front());
+  uint32_t *pixels = reinterpret_cast<uint32_t *>(&data.front());
   for (int y = 0; y < 500; y += 2) {
     for (int x = 0; x < 500; x += 2) {
       pixels[y * 499 + x] = 0xff00ff00;
@@ -148,7 +139,7 @@ TestScaling::OddStrideHalfScale()
   VERIFY(scaler.GetSize().width == 249);
   VERIFY(scaler.GetSize().height == 249);
 
-  pixels = (uint32_t*)scaler.GetScaledData();
+  pixels = (uint32_t *)scaler.GetScaledData();
 
   for (int y = 0; y < 249; y++) {
     for (int x = 0; x < 249; x++) {
@@ -156,13 +147,11 @@ TestScaling::OddStrideHalfScale()
     }
   }
 }
-void
-TestScaling::VerticalHalfScale()
-{
+void TestScaling::VerticalHalfScale() {
   std::vector<uint8_t> data;
   data.resize(500 * 500 * 4);
 
-  uint32_t *pixels = reinterpret_cast<uint32_t*>(&data.front());
+  uint32_t *pixels = reinterpret_cast<uint32_t *>(&data.front());
   for (int y = 0; y < 500; y += 2) {
     for (int x = 0; x < 500; x += 2) {
       pixels[y * 500 + x] = 0xff00ff00;
@@ -177,7 +166,7 @@ TestScaling::VerticalHalfScale()
   VERIFY(scaler.GetSize().width == 500);
   VERIFY(scaler.GetSize().height == 250);
 
-  pixels = (uint32_t*)scaler.GetScaledData();
+  pixels = (uint32_t *)scaler.GetScaledData();
 
   for (int y = 0; y < 250; y++) {
     for (int x = 0; x < 500; x += 2) {
@@ -187,14 +176,12 @@ TestScaling::VerticalHalfScale()
   }
 }
 
-void
-TestScaling::HorizontalHalfScale()
-{
+void TestScaling::HorizontalHalfScale() {
   std::vector<uint8_t> data;
   data.resize(520 * 500 * 4);
 
-  uint32_t *pixels = reinterpret_cast<uint32_t*>(&data.front());
-  for (int y = 0; y < 500; y ++) {
+  uint32_t *pixels = reinterpret_cast<uint32_t *>(&data.front());
+  for (int y = 0; y < 500; y++) {
     for (int x = 0; x < 520; x += 8) {
       pixels[y * 520 + x] = 0xff00ff00;
       pixels[y * 520 + x + 1] = 0xff00ffff;
@@ -212,7 +199,7 @@ TestScaling::HorizontalHalfScale()
   VERIFY(scaler.GetSize().width == 260);
   VERIFY(scaler.GetSize().height == 500);
 
-  pixels = (uint32_t*)scaler.GetScaledData();
+  pixels = (uint32_t *)scaler.GetScaledData();
 
   for (int y = 0; y < 500; y++) {
     for (int x = 0; x < 260; x += 4) {
@@ -224,13 +211,11 @@ TestScaling::HorizontalHalfScale()
   }
 }
 
-void
-TestScaling::MixedHalfScale()
-{
+void TestScaling::MixedHalfScale() {
   std::vector<uint8_t> data;
   data.resize(500 * 500 * 4);
 
-  uint32_t *pixels = reinterpret_cast<uint32_t*>(&data.front());
+  uint32_t *pixels = reinterpret_cast<uint32_t *>(&data.front());
   for (int y = 0; y < 500; y += 2) {
     for (int x = 0; x < 500; x += 2) {
       pixels[y * 500 + x] = 0xff00ff00;

@@ -17,7 +17,7 @@ PRFileDesc* CreateNamedPipeLayer();
 
 extern PRDescIdentity nsNamedPipeLayerIdentity;
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozilla_netwerk_socket_nsNamedPipeIOLayer_h
+#endif  // mozilla_netwerk_socket_nsNamedPipeIOLayer_h

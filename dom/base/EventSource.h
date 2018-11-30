@@ -36,17 +36,16 @@ struct EventSourceInit;
 
 class EventSourceImpl;
 
-class EventSource final : public DOMEventTargetHelper
-{
+class EventSource final : public DOMEventTargetHelper {
   friend class EventSourceImpl;
-public:
+
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(EventSource, DOMEventTargetHelper)
   virtual bool IsCertainlyAliveForCC() const override;
 
   // EventTarget
-  void DisconnectFromOwner() override
-  {
+  void DisconnectFromOwner() override {
     DOMEventTargetHelper::DisconnectFromOwner();
     Close();
   }
@@ -55,24 +54,21 @@ public:
                        JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
-  static already_AddRefed<EventSource>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
-              const EventSourceInit& aEventSourceInitDict, ErrorResult& aRv);
+  static already_AddRefed<EventSource> Constructor(
+      const GlobalObject& aGlobal, const nsAString& aURL,
+      const EventSourceInit& aEventSourceInitDict, ErrorResult& aRv);
 
-  void GetUrl(nsAString& aURL) const
-  {
+  void GetUrl(nsAString& aURL) const {
     AssertIsOnTargetThread();
     aURL = mOriginalURL;
   }
 
-  bool WithCredentials() const
-  {
+  bool WithCredentials() const {
     AssertIsOnTargetThread();
     return mWithCredentials;
   }
 
-  uint16_t ReadyState() const
-  {
+  uint16_t ReadyState() const {
     AssertIsOnTargetThread();
     return mReadyState;
   }
@@ -83,15 +79,14 @@ public:
 
   void Close();
 
-private:
+ private:
   EventSource(nsPIDOMWindowInner* aOwnerWindow, bool aWithCredentials);
   virtual ~EventSource();
   // prevent bad usage
   EventSource(const EventSource& x) = delete;
   EventSource& operator=(const EventSource& x) = delete;
 
-  void AssertIsOnTargetThread() const
-  {
+  void AssertIsOnTargetThread() const {
     MOZ_ASSERT(NS_IsMainThread() == mIsMainThread);
   }
 
@@ -111,7 +106,7 @@ private:
   void UpdateDontKeepAlive();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_EventSource_h
+#endif  // mozilla_dom_EventSource_h

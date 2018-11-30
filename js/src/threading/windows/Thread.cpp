@@ -11,8 +11,7 @@
 #include "threading/Thread.h"
 #include "util/Windows.h"
 
-class js::Thread::Id::PlatformData
-{
+class js::Thread::Id::PlatformData {
   friend class js::Thread;
   friend js::Thread::Id js::ThisThread::GetId();
 
@@ -20,58 +19,45 @@ class js::Thread::Id::PlatformData
   unsigned id;
 };
 
-/* static */ js::HashNumber
-js::Thread::Hasher::hash(const Lookup& l)
-{
+/* static */ js::HashNumber js::Thread::Hasher::hash(const Lookup& l) {
   return mozilla::HashBytes(l.platformData_, sizeof(l.platformData_));
 }
 
-inline js::Thread::Id::PlatformData*
-js::Thread::Id::platformData()
-{
+inline js::Thread::Id::PlatformData* js::Thread::Id::platformData() {
   static_assert(sizeof platformData_ >= sizeof(PlatformData),
                 "platformData_ is too small");
   return reinterpret_cast<PlatformData*>(platformData_);
 }
 
-inline const js::Thread::Id::PlatformData*
-js::Thread::Id::platformData() const
-{
+inline const js::Thread::Id::PlatformData* js::Thread::Id::platformData()
+    const {
   static_assert(sizeof platformData_ >= sizeof(PlatformData),
                 "platformData_ is too small");
   return reinterpret_cast<const PlatformData*>(platformData_);
 }
 
-js::Thread::Id::Id()
-{
+js::Thread::Id::Id() {
   platformData()->handle = nullptr;
   platformData()->id = 0;
 }
 
-bool
-js::Thread::Id::operator==(const Id& aOther) const
-{
+bool js::Thread::Id::operator==(const Id& aOther) const {
   return platformData()->id == aOther.platformData()->id;
 }
 
-js::Thread::~Thread()
-{
+js::Thread::~Thread() {
   LockGuard<Mutex> lock(idMutex_);
   MOZ_RELEASE_ASSERT(!joinable(lock));
 }
 
-js::Thread::Thread(Thread&& aOther)
-  : idMutex_(mutexid::ThreadId)
-{
+js::Thread::Thread(Thread&& aOther) : idMutex_(mutexid::ThreadId) {
   LockGuard<Mutex> lock(aOther.idMutex_);
   id_ = aOther.id_;
   aOther.id_ = Id();
   options_ = aOther.options_;
 }
 
-js::Thread&
-js::Thread::operator=(Thread&& aOther)
-{
+js::Thread& js::Thread::operator=(Thread&& aOther) {
   LockGuard<Mutex> lock(idMutex_);
   MOZ_RELEASE_ASSERT(!joinable(lock));
   id_ = aOther.id_;
@@ -80,16 +66,13 @@ js::Thread::operator=(Thread&& aOther)
   return *this;
 }
 
-bool
-js::Thread::create(unsigned int (__stdcall* aMain)(void*), void* aArg)
-{
+bool js::Thread::create(unsigned int(__stdcall* aMain)(void*), void* aArg) {
   LockGuard<Mutex> lock(idMutex_);
 
   // Use _beginthreadex and not CreateThread, because threads that are
   // created with the latter leak a small amount of memory when they use
   // certain msvcrt functions and then exit.
-  uintptr_t handle = _beginthreadex(nullptr, options_.stackSize(),
-                                    aMain, aArg,
+  uintptr_t handle = _beginthreadex(nullptr, options_.stackSize(), aMain, aArg,
                                     STACK_SIZE_PARAM_IS_A_RESERVATION,
                                     &id_.platformData()->id);
   if (!handle) {
@@ -102,9 +85,7 @@ js::Thread::create(unsigned int (__stdcall* aMain)(void*), void* aArg)
   return true;
 }
 
-void
-js::Thread::join()
-{
+void js::Thread::join() {
   LockGuard<Mutex> lock(idMutex_);
   MOZ_RELEASE_ASSERT(joinable(lock));
   DWORD r = WaitForSingleObject(id_.platformData()->handle, INFINITE);
@@ -114,29 +95,19 @@ js::Thread::join()
   id_ = Id();
 }
 
-js::Thread::Id
-js::Thread::get_id()
-{
+js::Thread::Id js::Thread::get_id() {
   LockGuard<Mutex> lock(idMutex_);
   return id_;
 }
 
-bool
-js::Thread::joinable(LockGuard<Mutex>& lock)
-{
-  return id_ != Id();
-}
+bool js::Thread::joinable(LockGuard<Mutex>& lock) { return id_ != Id(); }
 
-bool
-js::Thread::joinable()
-{
+bool js::Thread::joinable() {
   LockGuard<Mutex> lock(idMutex_);
   return joinable(lock);
 }
 
-void
-js::Thread::detach()
-{
+void js::Thread::detach() {
   LockGuard<Mutex> lock(idMutex_);
   MOZ_RELEASE_ASSERT(joinable(lock));
   BOOL success = CloseHandle(id_.platformData()->handle);
@@ -144,9 +115,7 @@ js::Thread::detach()
   id_ = Id();
 }
 
-js::Thread::Id
-js::ThisThread::GetId()
-{
+js::Thread::Id js::ThisThread::GetId() {
   js::Thread::Id id;
   id.platformData()->handle = GetCurrentThread();
   id.platformData()->id = GetCurrentThreadId();
@@ -154,9 +123,7 @@ js::ThisThread::GetId()
   return id;
 }
 
-void
-js::ThisThread::SetName(const char* name)
-{
+void js::ThisThread::SetName(const char* name) {
   MOZ_RELEASE_ASSERT(name);
 
 #ifdef _MSC_VER
@@ -166,8 +133,7 @@ js::ThisThread::SetName(const char* name)
   static const DWORD THREAD_NAME_INFO_TYPE = 0x1000;
 
 #pragma pack(push, 8)
-  struct THREADNAME_INFO
-  {
+  struct THREADNAME_INFO {
     DWORD dwType;
     LPCSTR szName;
     DWORD dwThreadID;
@@ -190,9 +156,7 @@ js::ThisThread::SetName(const char* name)
 #endif
 }
 
-void
-js::ThisThread::GetName(char* nameBuffer, size_t len)
-{
+void js::ThisThread::GetName(char* nameBuffer, size_t len) {
   MOZ_RELEASE_ASSERT(len > 0);
   *nameBuffer = '\0';
 }

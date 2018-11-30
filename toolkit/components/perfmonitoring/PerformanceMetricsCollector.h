@@ -10,27 +10,26 @@
 #include "nsITimer.h"
 #include "nsID.h"
 #include "mozilla/dom/ChromeUtilsBinding.h"  // defines PerformanceInfoDictionary
-#include "mozilla/dom/DOMTypes.h"   // defines PerformanceInfo
+#include "mozilla/dom/DOMTypes.h"            // defines PerformanceInfo
 #include "mozilla/PerformanceTypes.h"
 
 namespace mozilla {
 
 namespace dom {
-  class Promise;
+class Promise;
 }
 
 class PerformanceMetricsCollector;
 class AggregatedResults;
 
-class IPCTimeout final: public nsIObserver
-{
-public:
+class IPCTimeout final : public nsIObserver {
+ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_ISUPPORTS
   static IPCTimeout* CreateInstance(AggregatedResults* aResults);
   void Cancel();
 
-private:
+ private:
   IPCTimeout(AggregatedResults* aResults, uint32_t aDelay);
   ~IPCTimeout();
 
@@ -48,9 +47,8 @@ private:
 // with all the collected data.
 //
 // See ChromeUtils::RequestPerformanceMetrics.
-class AggregatedResults final
-{
-public:
+class AggregatedResults final {
+ public:
   AggregatedResults(nsID aUUID, PerformanceMetricsCollector* aCollector);
   ~AggregatedResults() = default;
   void AppendResult(const nsTArray<dom::PerformanceInfo>& aMetrics);
@@ -59,7 +57,7 @@ public:
   void ResolveNow();
   RefPtr<RequestMetricsPromise> GetPromise();
 
-private:
+ private:
   RefPtr<IPCTimeout> mIPCTimeout;
   MozPromiseHolder<RequestMetricsPromise> mHolder;
   uint32_t mPendingResults;
@@ -86,16 +84,15 @@ private:
 // right AggregatedResults instance and eventually let it resolve the
 // linked promise.
 //
-class PerformanceMetricsCollector final
-{
-public:
+class PerformanceMetricsCollector final {
+ public:
   NS_INLINE_DECL_REFCOUNTING(PerformanceMetricsCollector)
   static RefPtr<RequestMetricsPromise> RequestMetrics();
   static nsresult DataReceived(const nsID& aUUID,
                                const nsTArray<dom::PerformanceInfo>& aMetrics);
   void ForgetAggregatedResults(const nsID& aUUID);
 
-private:
+ private:
   ~PerformanceMetricsCollector();
   RefPtr<RequestMetricsPromise> RequestMetricsInternal();
   nsresult DataReceivedInternal(const nsID& aUUID,
@@ -103,5 +100,5 @@ private:
   nsDataHashtable<nsIDHashKey, UniquePtr<AggregatedResults>> mAggregatedResults;
 };
 
-} // namespace mozilla
-#endif   // PerformanceMetricsCollector_h
+}  // namespace mozilla
+#endif  // PerformanceMetricsCollector_h

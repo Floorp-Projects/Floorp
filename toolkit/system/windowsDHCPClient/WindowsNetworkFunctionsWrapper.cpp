@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- #include "WindowsNetworkFunctionsWrapper.h"
+#include "WindowsNetworkFunctionsWrapper.h"
 
 #ifndef __MINGW32__
 #pragma comment(lib, "IPHLPAPI.lib")
-#pragma comment(lib, "dhcpcsvc.lib" )
+#pragma comment(lib, "dhcpcsvc.lib")
 #endif
 
 namespace mozilla {
@@ -19,29 +19,23 @@ namespace windowsDHCPClient {
 NS_IMPL_ISUPPORTS(WindowsNetworkFunctionsWrapper, nsISupports)
 
 ULONG WindowsNetworkFunctionsWrapper::GetAdaptersAddressesWrapped(
-      _In_    ULONG                 aFamily,
-      _In_    ULONG                 aFlags,
-      _In_    PVOID                 aReserved,
-      _Inout_ PIP_ADAPTER_ADDRESSES aAdapterAddresses,
-      _Inout_ PULONG                aSizePointer)
-{
-  return GetAdaptersAddresses(aFamily, aFlags, aReserved, aAdapterAddresses, aSizePointer);
+    _In_ ULONG aFamily, _In_ ULONG aFlags, _In_ PVOID aReserved,
+    _Inout_ PIP_ADAPTER_ADDRESSES aAdapterAddresses,
+    _Inout_ PULONG aSizePointer) {
+  return GetAdaptersAddresses(aFamily, aFlags, aReserved, aAdapterAddresses,
+                              aSizePointer);
 }
 
 DWORD WindowsNetworkFunctionsWrapper::DhcpRequestParamsWrapped(
-    _In_    DWORD                 aFlags,
-    _In_    LPVOID                aReserved,
-    _In_    LPWSTR                aAdapterName,
-    _In_    LPDHCPCAPI_CLASSID    aClassId,
-    _In_    DHCPCAPI_PARAMS_ARRAY aSendParams,
-    _Inout_ DHCPCAPI_PARAMS_ARRAY aRecdParams,
-    _In_    LPBYTE                aBuffer,
-    _Inout_ LPDWORD               apSize,
-    _In_    LPWSTR                aRequestIdStr)
-{
-  return DhcpRequestParams(aFlags, aReserved, aAdapterName, aClassId, aSendParams, aRecdParams, aBuffer, apSize, aRequestIdStr);
+    _In_ DWORD aFlags, _In_ LPVOID aReserved, _In_ LPWSTR aAdapterName,
+    _In_ LPDHCPCAPI_CLASSID aClassId, _In_ DHCPCAPI_PARAMS_ARRAY aSendParams,
+    _Inout_ DHCPCAPI_PARAMS_ARRAY aRecdParams, _In_ LPBYTE aBuffer,
+    _Inout_ LPDWORD apSize, _In_ LPWSTR aRequestIdStr) {
+  return DhcpRequestParams(aFlags, aReserved, aAdapterName, aClassId,
+                           aSendParams, aRecdParams, aBuffer, apSize,
+                           aRequestIdStr);
 }
-} // namespace windowsDHCPClient
-} // namespace system
-} // namespace toolkit
-} // namespace mozilla
+}  // namespace windowsDHCPClient
+}  // namespace system
+}  // namespace toolkit
+}  // namespace mozilla

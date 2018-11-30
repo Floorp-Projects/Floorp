@@ -12,21 +12,20 @@
 #include "nsCOMPtr.h"
 
 class nsMacShellService : public nsIMacShellService,
-                          public nsIWebProgressListener
-{
-public:
-  nsMacShellService() {};
+                          public nsIWebProgressListener {
+ public:
+  nsMacShellService(){};
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHELLSERVICE
   NS_DECL_NSIMACSHELLSERVICE
   NS_DECL_NSIWEBPROGRESSLISTENER
 
-protected:
-  virtual ~nsMacShellService() {};
+ protected:
+  virtual ~nsMacShellService(){};
 
-private:
+ private:
   nsCOMPtr<nsIFile> mBackgroundFile;
 };
 
-#endif // nsmacshellservice_h____
+#endif  // nsmacshellservice_h____

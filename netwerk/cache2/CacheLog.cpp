@@ -18,5 +18,5 @@ namespace net {
 // the file network.log.
 LazyLogModule gCache2Log("cache2");
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

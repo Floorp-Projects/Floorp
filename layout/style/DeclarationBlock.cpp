@@ -12,12 +12,9 @@
 
 namespace mozilla {
 
-/* static */ already_AddRefed<DeclarationBlock>
-DeclarationBlock::FromCssText(const nsAString& aCssText,
-                              URLExtraData* aExtraData,
-                              nsCompatibility aMode,
-                              css::Loader* aLoader)
-{
+/* static */ already_AddRefed<DeclarationBlock> DeclarationBlock::FromCssText(
+    const nsAString& aCssText, URLExtraData* aExtraData, nsCompatibility aMode,
+    css::Loader* aLoader) {
   NS_ConvertUTF16toUTF8 value(aCssText);
   RefPtr<RawServoDeclarationBlock> raw =
       Servo_ParseStyleAttribute(&value, aExtraData, aMode, aLoader).Consume();
@@ -25,4 +22,4 @@ DeclarationBlock::FromCssText(const nsAString& aCssText,
   return decl.forget();
 }
 
-} // namespace mozilla
+}  // namespace mozilla

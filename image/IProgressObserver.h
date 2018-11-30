@@ -27,9 +27,8 @@ namespace image {
  * possible.  In the long term, it would be ideal to get to a place where we can
  * just use the imgINotificationObserver interface internally as well.
  */
-class IProgressObserver : public SupportsWeakPtr<IProgressObserver>
-{
-public:
+class IProgressObserver : public SupportsWeakPtr<IProgressObserver> {
+ public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(IProgressObserver)
 
   // Subclasses may or may not be XPCOM classes, so we just require that they
@@ -46,16 +45,15 @@ public:
   virtual void MarkPendingNotify() = 0;
   virtual void ClearPendingNotify() = 0;
 
-  virtual already_AddRefed<nsIEventTarget> GetEventTarget() const
-  {
+  virtual already_AddRefed<nsIEventTarget> GetEventTarget() const {
     return nullptr;
   }
 
-protected:
-  virtual ~IProgressObserver() { }
+ protected:
+  virtual ~IProgressObserver() {}
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_IProgressObserver_h
+#endif  // mozilla_image_IProgressObserver_h

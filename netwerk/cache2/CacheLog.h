@@ -11,10 +11,10 @@ namespace mozilla {
 namespace net {
 
 extern LazyLogModule gCache2Log;
-#define LOG(x)  MOZ_LOG(gCache2Log, mozilla::LogLevel::Debug, x)
+#define LOG(x) MOZ_LOG(gCache2Log, mozilla::LogLevel::Debug, x)
 #define LOG_ENABLED() MOZ_LOG_TEST(gCache2Log, mozilla::LogLevel::Debug)
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

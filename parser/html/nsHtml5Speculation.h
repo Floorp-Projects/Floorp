@@ -13,11 +13,9 @@
 #include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
 
-class nsHtml5Speculation final : public nsAHtml5TreeOpSink
-{
-public:
-  nsHtml5Speculation(nsHtml5OwningUTF16Buffer* aBuffer,
-                     int32_t aStart,
+class nsHtml5Speculation final : public nsAHtml5TreeOpSink {
+ public:
+  nsHtml5Speculation(nsHtml5OwningUTF16Buffer* aBuffer, int32_t aStart,
                      int32_t aStartLineNumber,
                      nsAHtml5TreeBuilderState* aSnapshot);
 
@@ -39,7 +37,7 @@ public:
 
   void FlushToSink(nsAHtml5TreeOpSink* aSink);
 
-private:
+ private:
   /**
    * The first buffer in the pending UTF-16 buffer queue
    */
@@ -60,4 +58,4 @@ private:
   nsTArray<nsHtml5TreeOperation> mOpQueue;
 };
 
-#endif // nsHtml5Speculation_h
+#endif  // nsHtml5Speculation_h

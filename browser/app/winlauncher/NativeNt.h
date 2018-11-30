@@ -8,8 +8,9 @@
 #define mozilla_NativeNt_h
 
 #if defined(MOZILLA_INTERNAL_API)
-#error "This header is for initial process initialization. You don't want to be including this here."
-#endif // defined(MOZILLA_INTERNAL_API)
+#error \
+    "This header is for initial process initialization. You don't want to be including this here."
+#endif  // defined(MOZILLA_INTERNAL_API)
 
 #include <stdint.h>
 #include <windows.h>
@@ -25,80 +26,65 @@ extern "C" {
 
 #if !defined(STATUS_ACCESS_DENIED)
 #define STATUS_ACCESS_DENIED ((NTSTATUS)0xC0000022L)
-#endif // !defined(STATUS_ACCESS_DENIED)
+#endif  // !defined(STATUS_ACCESS_DENIED)
 
 #if !defined(STATUS_DLL_NOT_FOUND)
 #define STATUS_DLL_NOT_FOUND ((NTSTATUS)0xC0000135L)
-#endif // !defined(STATUS_DLL_NOT_FOUND)
+#endif  // !defined(STATUS_DLL_NOT_FOUND)
 
-enum SECTION_INHERIT
-{
-  ViewShare = 1,
-  ViewUnmap = 2
-};
+enum SECTION_INHERIT { ViewShare = 1, ViewUnmap = 2 };
 
-NTSTATUS NTAPI
-NtMapViewOfSection(HANDLE aSection, HANDLE aProcess, PVOID* aBaseAddress,
-                   ULONG_PTR aZeroBits, SIZE_T aCommitSize,
-                   PLARGE_INTEGER aSectionOffset, PSIZE_T aViewSize,
-                   SECTION_INHERIT aInheritDisposition, ULONG aAllocationType,
-                   ULONG aProtectionFlags);
+NTSTATUS NTAPI NtMapViewOfSection(
+    HANDLE aSection, HANDLE aProcess, PVOID* aBaseAddress, ULONG_PTR aZeroBits,
+    SIZE_T aCommitSize, PLARGE_INTEGER aSectionOffset, PSIZE_T aViewSize,
+    SECTION_INHERIT aInheritDisposition, ULONG aAllocationType,
+    ULONG aProtectionFlags);
 
-NTSTATUS NTAPI
-NtUnmapViewOfSection(HANDLE aProcess, PVOID aBaseAddress);
+NTSTATUS NTAPI NtUnmapViewOfSection(HANDLE aProcess, PVOID aBaseAddress);
 
-enum MEMORY_INFORMATION_CLASS
-{
+enum MEMORY_INFORMATION_CLASS {
   MemoryBasicInformation = 0,
   MemorySectionName = 2
 };
 
 // NB: When allocating, space for the buffer must also be included
-typedef struct _MEMORY_SECTION_NAME
-{
+typedef struct _MEMORY_SECTION_NAME {
   UNICODE_STRING mSectionFileName;
 } MEMORY_SECTION_NAME, *PMEMORY_SECTION_NAME;
 
-NTSTATUS NTAPI
-NtQueryVirtualMemory(HANDLE aProcess, PVOID aBaseAddress,
-                     MEMORY_INFORMATION_CLASS aMemInfoClass, PVOID aMemInfo,
-                     SIZE_T aMemInfoLen, PSIZE_T aReturnLen);
+NTSTATUS NTAPI NtQueryVirtualMemory(HANDLE aProcess, PVOID aBaseAddress,
+                                    MEMORY_INFORMATION_CLASS aMemInfoClass,
+                                    PVOID aMemInfo, SIZE_T aMemInfoLen,
+                                    PSIZE_T aReturnLen);
 
-LONG NTAPI
-RtlCompareUnicodeString(PCUNICODE_STRING aStr1, PCUNICODE_STRING aStr2,
-                        BOOLEAN aCaseInsensitive);
+LONG NTAPI RtlCompareUnicodeString(PCUNICODE_STRING aStr1,
+                                   PCUNICODE_STRING aStr2,
+                                   BOOLEAN aCaseInsensitive);
 
-BOOLEAN NTAPI
-RtlEqualUnicodeString(PCUNICODE_STRING aStr1, PCUNICODE_STRING aStr2,
-                      BOOLEAN aCaseInsensitive);
+BOOLEAN NTAPI RtlEqualUnicodeString(PCUNICODE_STRING aStr1,
+                                    PCUNICODE_STRING aStr2,
+                                    BOOLEAN aCaseInsensitive);
 
-NTSTATUS NTAPI
-RtlGetVersion(PRTL_OSVERSIONINFOW aOutVersionInformation);
+NTSTATUS NTAPI RtlGetVersion(PRTL_OSVERSIONINFOW aOutVersionInformation);
 
-PVOID NTAPI
-RtlAllocateHeap(PVOID aHeapHandle, ULONG aFlags, SIZE_T aSize);
+PVOID NTAPI RtlAllocateHeap(PVOID aHeapHandle, ULONG aFlags, SIZE_T aSize);
 
-PVOID NTAPI
-RtlReAllocateHeap(PVOID aHeapHandle, ULONG aFlags, LPVOID aMem, SIZE_T aNewSize);
+PVOID NTAPI RtlReAllocateHeap(PVOID aHeapHandle, ULONG aFlags, LPVOID aMem,
+                              SIZE_T aNewSize);
 
-BOOLEAN NTAPI
-RtlFreeHeap(PVOID aHeapHandle, ULONG aFlags, PVOID aHeapBase);
+BOOLEAN NTAPI RtlFreeHeap(PVOID aHeapHandle, ULONG aFlags, PVOID aHeapBase);
 
-VOID NTAPI
-RtlAcquireSRWLockExclusive(PSRWLOCK aLock);
+VOID NTAPI RtlAcquireSRWLockExclusive(PSRWLOCK aLock);
 
-VOID NTAPI
-RtlReleaseSRWLockExclusive(PSRWLOCK aLock);
+VOID NTAPI RtlReleaseSRWLockExclusive(PSRWLOCK aLock);
 
-} // extern "C"
+}  // extern "C"
 
 namespace mozilla {
 namespace nt {
 
-struct MemorySectionNameBuf : public _MEMORY_SECTION_NAME
-{
-  MemorySectionNameBuf()
-  {
+struct MemorySectionNameBuf : public _MEMORY_SECTION_NAME {
+  MemorySectionNameBuf() {
     mSectionFileName.Length = 0;
     mSectionFileName.MaximumLength = sizeof(mBuf);
     mSectionFileName.Buffer = mBuf;
@@ -107,10 +93,8 @@ struct MemorySectionNameBuf : public _MEMORY_SECTION_NAME
   WCHAR mBuf[MAX_PATH];
 };
 
-inline bool
-FindCharInUnicodeString(const UNICODE_STRING& aStr, WCHAR aChar, uint16_t& aPos,
-                        uint16_t aStartIndex = 0)
-{
+inline bool FindCharInUnicodeString(const UNICODE_STRING& aStr, WCHAR aChar,
+                                    uint16_t& aPos, uint16_t aStartIndex = 0) {
   const uint16_t aMaxIndex = aStr.Length / sizeof(WCHAR);
 
   for (uint16_t curIndex = aStartIndex; curIndex < aMaxIndex; ++curIndex) {
@@ -123,17 +107,13 @@ FindCharInUnicodeString(const UNICODE_STRING& aStr, WCHAR aChar, uint16_t& aPos,
   return false;
 }
 
-inline bool
-IsHexDigit(WCHAR aChar)
-{
-  return (aChar >= L'0' && aChar <= L'9') ||
-         (aChar >= L'A' && aChar <= L'F') ||
+inline bool IsHexDigit(WCHAR aChar) {
+  return (aChar >= L'0' && aChar <= L'9') || (aChar >= L'A' && aChar <= L'F') ||
          (aChar >= L'a' && aChar <= L'f');
 }
 
-inline bool
-MatchUnicodeString(const UNICODE_STRING& aStr, bool (*aPredicate)(WCHAR))
-{
+inline bool MatchUnicodeString(const UNICODE_STRING& aStr,
+                               bool (*aPredicate)(WCHAR)) {
   WCHAR* cur = aStr.Buffer;
   WCHAR* end = &aStr.Buffer[aStr.Length / sizeof(WCHAR)];
   while (cur < end) {
@@ -147,9 +127,7 @@ MatchUnicodeString(const UNICODE_STRING& aStr, bool (*aPredicate)(WCHAR))
   return true;
 }
 
-inline bool
-Contains12DigitHexString(const UNICODE_STRING& aLeafName)
-{
+inline bool Contains12DigitHexString(const UNICODE_STRING& aLeafName) {
   // Quick check: If the string is too short, don't bother
   // (We need at least 12 hex digits, one char for '.', and 3 for extension)
   const USHORT kMinLen = (12 + 1 + 3) * sizeof(wchar_t);
@@ -179,9 +157,7 @@ Contains12DigitHexString(const UNICODE_STRING& aLeafName)
   return MatchUnicodeString(test, &IsHexDigit);
 }
 
-inline bool
-IsFileNameAtLeast16HexDigits(const UNICODE_STRING& aLeafName)
-{
+inline bool IsFileNameAtLeast16HexDigits(const UNICODE_STRING& aLeafName) {
   // Quick check: If the string is too short, don't bother
   // (We need 16 hex digits, one char for '.', and 3 for extension)
   const USHORT kMinLen = (16 + 1 + 3) * sizeof(wchar_t);
@@ -206,9 +182,8 @@ IsFileNameAtLeast16HexDigits(const UNICODE_STRING& aLeafName)
   return MatchUnicodeString(test, &IsHexDigit);
 }
 
-inline void
-GetLeafName(PUNICODE_STRING aDestString, PCUNICODE_STRING aSrcString)
-{
+inline void GetLeafName(PUNICODE_STRING aDestString,
+                        PCUNICODE_STRING aSrcString) {
   WCHAR* buf = aSrcString->Buffer;
   WCHAR* end = &aSrcString->Buffer[(aSrcString->Length / sizeof(WCHAR)) - 1];
   WCHAR* cur = end;
@@ -227,9 +202,7 @@ GetLeafName(PUNICODE_STRING aDestString, PCUNICODE_STRING aSrcString)
   aDestString->MaximumLength = aDestString->Length;
 }
 
-inline char
-EnsureLowerCaseASCII(char aChar)
-{
+inline char EnsureLowerCaseASCII(char aChar) {
   if (aChar >= 'A' && aChar <= 'Z') {
     aChar -= 'A' - 'a';
   }
@@ -237,63 +210,51 @@ EnsureLowerCaseASCII(char aChar)
   return aChar;
 }
 
-inline int
-StricmpASCII(const char* aLeft, const char* aRight)
-{
+inline int StricmpASCII(const char* aLeft, const char* aRight) {
   char curLeft, curRight;
 
   do {
     curLeft = EnsureLowerCaseASCII(*(aLeft++));
     curRight = EnsureLowerCaseASCII(*(aRight++));
-  } while(curLeft && curLeft == curRight);
+  } while (curLeft && curLeft == curRight);
 
   return curLeft - curRight;
 }
 
-class MOZ_RAII PEHeaders final
-{
+class MOZ_RAII PEHeaders final {
   /**
    * This structure is documented on MSDN as VS_VERSIONINFO, but is not present
    * in SDK headers because it cannot be specified as a C struct. The following
    * structure contains the fixed-length fields at the beginning of
    * VS_VERSIONINFO.
    */
-  struct VS_VERSIONINFO_HEADER
-  {
-    WORD             wLength;
-    WORD             wValueLength;
-    WORD             wType;
-    WCHAR            szKey[16]; // ArrayLength(L"VS_VERSION_INFO")
+  struct VS_VERSIONINFO_HEADER {
+    WORD wLength;
+    WORD wValueLength;
+    WORD wType;
+    WCHAR szKey[16];  // ArrayLength(L"VS_VERSION_INFO")
     // Additional data goes here, aligned on a 4-byte boundary
   };
 
-public:
+ public:
   explicit PEHeaders(void* aBaseAddress)
-    : PEHeaders(reinterpret_cast<PIMAGE_DOS_HEADER>(aBaseAddress))
-  {
-  }
+      : PEHeaders(reinterpret_cast<PIMAGE_DOS_HEADER>(aBaseAddress)) {}
 
   // The lowest two bits of an HMODULE are used as flags. Stripping those bits
   // from the HMODULE yields the base address of the binary's memory mapping.
   // (See LoadLibraryEx docs on MSDN)
   explicit PEHeaders(HMODULE aModule)
-    : PEHeaders(reinterpret_cast<PIMAGE_DOS_HEADER>(
-                  reinterpret_cast<uintptr_t>(aModule) & ~uintptr_t(3)))
-  {
-  }
+      : PEHeaders(reinterpret_cast<PIMAGE_DOS_HEADER>(
+            reinterpret_cast<uintptr_t>(aModule) & ~uintptr_t(3))) {}
 
-  explicit operator bool() const
-  {
-    return !!mImageLimit;
-  }
+  explicit operator bool() const { return !!mImageLimit; }
 
   /**
    * This overload computes absolute virtual addresses relative to the base
    * address of the binary.
    */
   template <typename T, typename R>
-  T RVAToPtr(R aRva)
-  {
+  T RVAToPtr(R aRva) {
     return RVAToPtr<T>(mMzHeader, aRva);
   }
 
@@ -303,8 +264,7 @@ public:
    * mapping.
    */
   template <typename T, typename R>
-  T RVAToPtr(void* aBase, R aRva)
-  {
+  T RVAToPtr(void* aBase, R aRva) {
     if (!mImageLimit) {
       return nullptr;
     }
@@ -318,21 +278,17 @@ public:
     return reinterpret_cast<T>(absAddress);
   }
 
-  PIMAGE_IMPORT_DESCRIPTOR GetImportDirectory()
-  {
+  PIMAGE_IMPORT_DESCRIPTOR GetImportDirectory() {
     return GetImageDirectoryEntry<PIMAGE_IMPORT_DESCRIPTOR>(
-      IMAGE_DIRECTORY_ENTRY_IMPORT);
+        IMAGE_DIRECTORY_ENTRY_IMPORT);
   }
 
-  PIMAGE_RESOURCE_DIRECTORY GetResourceTable()
-  {
+  PIMAGE_RESOURCE_DIRECTORY GetResourceTable() {
     return GetImageDirectoryEntry<PIMAGE_RESOURCE_DIRECTORY>(
-      IMAGE_DIRECTORY_ENTRY_RESOURCE);
+        IMAGE_DIRECTORY_ENTRY_RESOURCE);
   }
 
-  bool
-  GetVersionInfo(uint64_t& aOutVersion)
-  {
+  bool GetVersionInfo(uint64_t& aOutVersion) {
     // RT_VERSION == 16
     // Version resources require an id of 1
     auto root = FindResourceLeaf<VS_VERSIONINFO_HEADER*>(16, 1);
@@ -350,9 +306,7 @@ public:
     return true;
   }
 
-  bool
-  GetTimeStamp(DWORD& aResult)
-  {
+  bool GetTimeStamp(DWORD& aResult) {
     if (!(*this)) {
       return false;
     }
@@ -362,8 +316,7 @@ public:
   }
 
   PIMAGE_IMPORT_DESCRIPTOR
-  GetIATForModule(const char* aModuleNameASCII)
-  {
+  GetIATForModule(const char* aModuleNameASCII) {
     for (PIMAGE_IMPORT_DESCRIPTOR curImpDesc = GetImportDirectory();
          IsValid(curImpDesc); ++curImpDesc) {
       auto curName = RVAToPtr<const char*>(curImpDesc->Name);
@@ -387,29 +340,28 @@ public:
    * you must supply a resource type, the resource id, and then the language id.
    * If aLangId == 0, we just resolve the first entry regardless of language.
    */
-  template <typename T> T
-  FindResourceLeaf(WORD aType, WORD aResId, WORD aLangId = 0)
-  {
+  template <typename T>
+  T FindResourceLeaf(WORD aType, WORD aResId, WORD aLangId = 0) {
     PIMAGE_RESOURCE_DIRECTORY topLevel = GetResourceTable();
     if (!topLevel) {
       return nullptr;
     }
 
-    PIMAGE_RESOURCE_DIRECTORY_ENTRY typeEntry = FindResourceEntry(topLevel,
-                                                                  aType);
+    PIMAGE_RESOURCE_DIRECTORY_ENTRY typeEntry =
+        FindResourceEntry(topLevel, aType);
     if (!typeEntry || !typeEntry->DataIsDirectory) {
       return nullptr;
     }
 
-    auto idDir = RVAToPtr<PIMAGE_RESOURCE_DIRECTORY>(topLevel,
-                                                     typeEntry->OffsetToDirectory);
+    auto idDir = RVAToPtr<PIMAGE_RESOURCE_DIRECTORY>(
+        topLevel, typeEntry->OffsetToDirectory);
     PIMAGE_RESOURCE_DIRECTORY_ENTRY idEntry = FindResourceEntry(idDir, aResId);
     if (!idEntry || !idEntry->DataIsDirectory) {
       return nullptr;
     }
 
-    auto langDir = RVAToPtr<PIMAGE_RESOURCE_DIRECTORY>(topLevel,
-                                                       idEntry->OffsetToDirectory);
+    auto langDir = RVAToPtr<PIMAGE_RESOURCE_DIRECTORY>(
+        topLevel, idEntry->OffsetToDirectory);
     PIMAGE_RESOURCE_DIRECTORY_ENTRY langEntry;
     if (aLangId) {
       langEntry = FindResourceEntry(langDir, aLangId);
@@ -421,27 +373,22 @@ public:
       return nullptr;
     }
 
-    auto dataEntry = RVAToPtr<PIMAGE_RESOURCE_DATA_ENTRY>(topLevel,
-                                                          langEntry->OffsetToData);
+    auto dataEntry =
+        RVAToPtr<PIMAGE_RESOURCE_DATA_ENTRY>(topLevel, langEntry->OffsetToData);
     return RVAToPtr<T>(dataEntry->OffsetToData);
   }
 
-  static bool IsValid(PIMAGE_IMPORT_DESCRIPTOR aImpDesc)
-  {
+  static bool IsValid(PIMAGE_IMPORT_DESCRIPTOR aImpDesc) {
     return aImpDesc && aImpDesc->OriginalFirstThunk != 0;
   }
 
-  static bool IsValid(PIMAGE_THUNK_DATA aImgThunk)
-  {
+  static bool IsValid(PIMAGE_THUNK_DATA aImgThunk) {
     return aImgThunk && aImgThunk->u1.Ordinal != 0;
   }
 
-private:
+ private:
   explicit PEHeaders(PIMAGE_DOS_HEADER aMzHeader)
-    : mMzHeader(aMzHeader)
-    , mPeHeader(nullptr)
-    , mImageLimit(nullptr)
-  {
+      : mMzHeader(aMzHeader), mPeHeader(nullptr), mImageLimit(nullptr) {
     if (!mMzHeader || mMzHeader->e_magic != IMAGE_DOS_SIGNATURE) {
       return;
     }
@@ -453,44 +400,41 @@ private:
 
     DWORD imageSize = mPeHeader->OptionalHeader.SizeOfImage;
     // This is a coarse-grained check to ensure that the image size is
-    // reasonable. It we aren't big enough to contain headers, we have a problem!
+    // reasonable. It we aren't big enough to contain headers, we have a
+    // problem!
     if (imageSize < sizeof(IMAGE_DOS_HEADER) + sizeof(IMAGE_NT_HEADERS)) {
       return;
     }
 
-    mImageLimit =
-      RVAToPtrUnchecked<void*>(imageSize - 1UL);
+    mImageLimit = RVAToPtrUnchecked<void*>(imageSize - 1UL);
   }
 
   template <typename T>
-  T GetImageDirectoryEntry(unsigned int aDirectoryIndex)
-  {
+  T GetImageDirectoryEntry(unsigned int aDirectoryIndex) {
     if (aDirectoryIndex >= IMAGE_NUMBEROF_DIRECTORY_ENTRIES) {
       return nullptr;
     }
 
     IMAGE_DATA_DIRECTORY& dirEntry =
-      mPeHeader->OptionalHeader.DataDirectory[aDirectoryIndex];
+        mPeHeader->OptionalHeader.DataDirectory[aDirectoryIndex];
     return RVAToPtr<T>(dirEntry.VirtualAddress);
   }
 
   // This private overload does not have bounds checks, because we need to be
   // able to resolve the bounds themselves.
   template <typename T, typename R>
-  T RVAToPtrUnchecked(R aRva)
-  {
+  T RVAToPtrUnchecked(R aRva) {
     return reinterpret_cast<T>(reinterpret_cast<char*>(mMzHeader) + aRva);
   }
 
   PIMAGE_RESOURCE_DIRECTORY_ENTRY
-  FindResourceEntry(PIMAGE_RESOURCE_DIRECTORY aCurLevel, WORD aId)
-  {
+  FindResourceEntry(PIMAGE_RESOURCE_DIRECTORY aCurLevel, WORD aId) {
     // Immediately after the IMAGE_RESOURCE_DIRECTORY structure is an array
     // of IMAGE_RESOURCE_DIRECTORY_ENTRY structures. Since this function
     // searches by ID, we need to skip past any named entries before iterating.
     auto dirEnt =
-      reinterpret_cast<PIMAGE_RESOURCE_DIRECTORY_ENTRY>(aCurLevel + 1) +
-      aCurLevel->NumberOfNamedEntries;
+        reinterpret_cast<PIMAGE_RESOURCE_DIRECTORY_ENTRY>(aCurLevel + 1) +
+        aCurLevel->NumberOfNamedEntries;
     for (WORD i = 0; i < aCurLevel->NumberOfIdEntries; ++i) {
       if (dirEnt[i].Id == aId) {
         return &dirEnt[i];
@@ -501,14 +445,14 @@ private:
   }
 
   PIMAGE_RESOURCE_DIRECTORY_ENTRY
-  FindFirstResourceEntry(PIMAGE_RESOURCE_DIRECTORY aCurLevel)
-  {
+  FindFirstResourceEntry(PIMAGE_RESOURCE_DIRECTORY aCurLevel) {
     // Immediately after the IMAGE_RESOURCE_DIRECTORY structure is an array
     // of IMAGE_RESOURCE_DIRECTORY_ENTRY structures. We just return the first
     // entry, regardless of whether it is indexed by name or by id.
-    auto dirEnt = reinterpret_cast<PIMAGE_RESOURCE_DIRECTORY_ENTRY>(aCurLevel + 1);
-    WORD numEntries = aCurLevel->NumberOfNamedEntries +
-                      aCurLevel->NumberOfIdEntries;
+    auto dirEnt =
+        reinterpret_cast<PIMAGE_RESOURCE_DIRECTORY_ENTRY>(aCurLevel + 1);
+    WORD numEntries =
+        aCurLevel->NumberOfNamedEntries + aCurLevel->NumberOfIdEntries;
     if (!numEntries) {
       return nullptr;
     }
@@ -516,9 +460,7 @@ private:
     return dirEnt;
   }
 
-  VS_FIXEDFILEINFO*
-  GetFixedFileInfo(VS_VERSIONINFO_HEADER* aVerInfo)
-  {
+  VS_FIXEDFILEINFO* GetFixedFileInfo(VS_VERSIONINFO_HEADER* aVerInfo) {
     WORD length = aVerInfo->wLength;
     if (length < sizeof(VS_VERSIONINFO_HEADER)) {
       return nullptr;
@@ -540,7 +482,7 @@ private:
 
     uintptr_t base = reinterpret_cast<uintptr_t>(aVerInfo);
     // Align up to 4-byte boundary
-#pragma warning(suppress: 4146)
+#pragma warning(suppress : 4146)
     offset += (-(base + offset) & 3);
 
     if (offset >= length) {
@@ -555,25 +497,20 @@ private:
     return result;
   }
 
-private:
+ private:
   PIMAGE_DOS_HEADER mMzHeader;
   PIMAGE_NT_HEADERS mPeHeader;
-  void*             mImageLimit;
+  void* mImageLimit;
 };
 
-inline HANDLE
-RtlGetProcessHeap()
-{
+inline HANDLE RtlGetProcessHeap() {
   PTEB teb = ::NtCurrentTeb();
   PPEB peb = teb->ProcessEnvironmentBlock;
   return peb->Reserved4[1];
 }
 
-inline LauncherResult<DWORD>
-GetParentProcessId()
-{
-  struct PROCESS_BASIC_INFORMATION
-  {
+inline LauncherResult<DWORD> GetParentProcessId() {
+  struct PROCESS_BASIC_INFORMATION {
     NTSTATUS ExitStatus;
     PPEB PebBaseAddress;
     ULONG_PTR AffinityMask;
@@ -585,10 +522,9 @@ GetParentProcessId()
   const HANDLE kCurrentProcess = reinterpret_cast<HANDLE>(-1);
   ULONG returnLength;
   PROCESS_BASIC_INFORMATION pbi = {};
-  NTSTATUS status = ::NtQueryInformationProcess(kCurrentProcess,
-                                                ProcessBasicInformation,
-                                                &pbi, sizeof(pbi),
-                                                &returnLength);
+  NTSTATUS status =
+      ::NtQueryInformationProcess(kCurrentProcess, ProcessBasicInformation,
+                                  &pbi, sizeof(pbi), &returnLength);
   if (!NT_SUCCESS(status)) {
     return LAUNCHER_ERROR_FROM_NTSTATUS(status);
   }
@@ -596,7 +532,7 @@ GetParentProcessId()
   return static_cast<DWORD>(pbi.InheritedFromUniqueProcessId & 0xFFFFFFFF);
 }
 
-} // namespace nt
-} // namespace mozilla
+}  // namespace nt
+}  // namespace mozilla
 
-#endif // mozilla_NativeNt_h
+#endif  // mozilla_NativeNt_h

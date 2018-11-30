@@ -16,15 +16,10 @@
 namespace {
 
 // Scoped type used by HandleToFilename
-struct ScopedMappedViewTraits
-{
+struct ScopedMappedViewTraits {
   typedef void* type;
-  static void* empty()
-  {
-    return nullptr;
-  }
-  static void release(void* aPtr)
-  {
+  static void* empty() { return nullptr; }
+  static void release(void* aPtr) {
     if (aPtr) {
       mozilla::Unused << UnmapViewOfFile(aPtr);
     }
@@ -32,21 +27,19 @@ struct ScopedMappedViewTraits
 };
 typedef mozilla::Scoped<ScopedMappedViewTraits> ScopedMappedView;
 
-} // namespace
+}  // namespace
 
 namespace mozilla {
 
-bool
-HandleToFilename(HANDLE aHandle, const LARGE_INTEGER& aOffset,
-                 nsAString& aFilename)
-{
+bool HandleToFilename(HANDLE aHandle, const LARGE_INTEGER& aOffset,
+                      nsAString& aFilename) {
   AUTO_PROFILER_LABEL("HandletoFilename", OTHER);
 
   aFilename.Truncate();
   // This implementation is nice because it uses fully documented APIs that
   // are available on all Windows versions that we support.
-  nsAutoHandle fileMapping(CreateFileMapping(aHandle, nullptr, PAGE_READONLY,
-                                             0, 1, nullptr));
+  nsAutoHandle fileMapping(
+      CreateFileMapping(aHandle, nullptr, PAGE_READONLY, 0, 1, nullptr));
   if (!fileMapping) {
     return false;
   }
@@ -60,8 +53,7 @@ HandleToFilename(HANDLE aHandle, const LARGE_INTEGER& aOffset,
   SetLastError(ERROR_SUCCESS);
   do {
     mappedFilename.SetLength(mappedFilename.Length() + MAX_PATH);
-    len = GetMappedFileNameW(GetCurrentProcess(), view,
-                             mappedFilename.get(),
+    len = GetMappedFileNameW(GetCurrentProcess(), view, mappedFilename.get(),
                              mappedFilename.Length());
   } while (!len && GetLastError() == ERROR_INSUFFICIENT_BUFFER);
   if (!len) {
@@ -71,5 +63,4 @@ HandleToFilename(HANDLE aHandle, const LARGE_INTEGER& aOffset,
   return NtPathToDosPath(mappedFilename, aFilename);
 }
 
-} // namespace mozilla
-
+}  // namespace mozilla

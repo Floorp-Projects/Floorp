@@ -12,10 +12,9 @@
 #include <math.h>
 #include <float.h>  // for FLT_EPSILON
 
-#include "mozilla/FloatingPoint.h" // for UnspecifiedNaN
+#include "mozilla/FloatingPoint.h"  // for UnspecifiedNaN
 
 using namespace std;
-
 
 namespace mozilla {
 namespace gfx {
@@ -23,9 +22,7 @@ namespace gfx {
 /* Force small values to zero.  We do this to avoid having sin(360deg)
  * evaluate to a tiny but nonzero value.
  */
-double
-FlushToZero(double aVal)
-{
+double FlushToZero(double aVal) {
   // XXX Is double precision really necessary here
   if (-FLT_EPSILON < aVal && aVal < FLT_EPSILON) {
     return 0.0f;
@@ -38,9 +35,7 @@ FlushToZero(double aVal)
  * undefined or very large, SafeTangent returns a manageably large value
  * of the correct sign.
  */
-double
-SafeTangent(double aTheta)
-{
+double SafeTangent(double aTheta) {
   // XXX Is double precision really necessary here
   const double kEpsilon = 0.0001;
 
@@ -60,9 +55,8 @@ SafeTangent(double aTheta)
   return FlushToZero(sinTheta / cosTheta);
 }
 
-template<> Matrix
-Matrix::Rotation(Float aAngle)
-{
+template <>
+Matrix Matrix::Rotation(Float aAngle) {
   Matrix newMatrix;
 
   Float s = sinf(aAngle);
@@ -76,9 +70,8 @@ Matrix::Rotation(Float aAngle)
   return newMatrix;
 }
 
-template<> MatrixDouble
-MatrixDouble::Rotation(Double aAngle)
-{
+template <>
+MatrixDouble MatrixDouble::Rotation(Double aAngle) {
   MatrixDouble newMatrix;
 
   Double s = sin(aAngle);
@@ -92,9 +85,8 @@ MatrixDouble::Rotation(Double aAngle)
   return newMatrix;
 }
 
-template<> Matrix4x4
-MatrixDouble::operator*(const Matrix4x4& aMatrix) const
-{
+template <>
+Matrix4x4 MatrixDouble::operator*(const Matrix4x4& aMatrix) const {
   Matrix4x4 resultMatrix;
 
   resultMatrix._11 = this->_11 * aMatrix._11 + this->_12 * aMatrix._21;
@@ -112,13 +104,17 @@ MatrixDouble::operator*(const Matrix4x4& aMatrix) const
   resultMatrix._33 = aMatrix._33;
   resultMatrix._34 = aMatrix._34;
 
-  resultMatrix._41 = this->_31 * aMatrix._11 + this->_32 * aMatrix._21 + aMatrix._41;
-  resultMatrix._42 = this->_31 * aMatrix._12 + this->_32 * aMatrix._22 + aMatrix._42;
-  resultMatrix._43 = this->_31 * aMatrix._13 + this->_32 * aMatrix._23 + aMatrix._43;
-  resultMatrix._44 = this->_31 * aMatrix._14 + this->_32 * aMatrix._24 + aMatrix._44;
+  resultMatrix._41 =
+      this->_31 * aMatrix._11 + this->_32 * aMatrix._21 + aMatrix._41;
+  resultMatrix._42 =
+      this->_31 * aMatrix._12 + this->_32 * aMatrix._22 + aMatrix._42;
+  resultMatrix._43 =
+      this->_31 * aMatrix._13 + this->_32 * aMatrix._23 + aMatrix._43;
+  resultMatrix._44 =
+      this->_31 * aMatrix._14 + this->_32 * aMatrix._24 + aMatrix._44;
 
   return resultMatrix;
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

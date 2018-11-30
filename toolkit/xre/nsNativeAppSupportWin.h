@@ -16,10 +16,10 @@
 #ifdef MOZ_PHOENIX
 
 // Splash screen dialog ID.
-#define IDD_SPLASH  100
+#define IDD_SPLASH 100
 
 // Splash screen bitmap ID.
-#define IDB_SPLASH  101
+#define IDB_SPLASH 101
 
 // DDE application name
 #define ID_DDE_APPLICATION_NAME 102

@@ -9,38 +9,33 @@
 #include "mozilla/ArrayUtils.h"
 
 #define SURE_YES 0.99f
-#define SURE_NO  0.01f
+#define SURE_NO 0.01f
 
-//return confidence base on received data
-float CharDistributionAnalysis::GetConfidence(void)
-{
-  //if we didn't receive any character in our consideration range, or the
+// return confidence base on received data
+float CharDistributionAnalysis::GetConfidence(void) {
+  // if we didn't receive any character in our consideration range, or the
   // number of frequent characters is below the minimum threshold, return
   // negative answer
-  if (mTotalChars <= 0 || mFreqChars <= mDataThreshold)
-    return SURE_NO;
+  if (mTotalChars <= 0 || mFreqChars <= mDataThreshold) return SURE_NO;
 
   if (mTotalChars != mFreqChars) {
-    float r = mFreqChars / ((mTotalChars - mFreqChars) * mTypicalDistributionRatio);
+    float r =
+        mFreqChars / ((mTotalChars - mFreqChars) * mTypicalDistributionRatio);
 
-    if (r < SURE_YES)
-      return r;
+    if (r < SURE_YES) return r;
   }
-  //normalize confidence, (we don't want to be 100% sure)
+  // normalize confidence, (we don't want to be 100% sure)
   return SURE_YES;
 }
 
-SJISDistributionAnalysis::SJISDistributionAnalysis()
-{
+SJISDistributionAnalysis::SJISDistributionAnalysis() {
   mCharToFreqOrder = JISCharToFreqOrder;
   mTableSize = mozilla::ArrayLength(JISCharToFreqOrder);
   mTypicalDistributionRatio = JIS_TYPICAL_DISTRIBUTION_RATIO;
 }
 
-EUCJPDistributionAnalysis::EUCJPDistributionAnalysis()
-{
+EUCJPDistributionAnalysis::EUCJPDistributionAnalysis() {
   mCharToFreqOrder = JISCharToFreqOrder;
   mTableSize = mozilla::ArrayLength(JISCharToFreqOrder);
   mTypicalDistributionRatio = JIS_TYPICAL_DISTRIBUTION_RATIO;
 }
-

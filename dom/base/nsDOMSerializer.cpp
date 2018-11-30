@@ -17,14 +17,12 @@
 
 using namespace mozilla;
 
-nsDOMSerializer::nsDOMSerializer()
-{
-}
+nsDOMSerializer::nsDOMSerializer() {}
 
-static already_AddRefed<nsIDocumentEncoder>
-SetUpEncoder(nsINode& aRoot, const nsAString& aCharset, ErrorResult& aRv)
-{
-  nsCOMPtr<nsIDocumentEncoder> encoder = do_createDocumentEncoder("application/xhtml+xml");
+static already_AddRefed<nsIDocumentEncoder> SetUpEncoder(
+    nsINode& aRoot, const nsAString& aCharset, ErrorResult& aRv) {
+  nsCOMPtr<nsIDocumentEncoder> encoder =
+      do_createDocumentEncoder("application/xhtml+xml");
   if (!encoder) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -34,10 +32,10 @@ SetUpEncoder(nsINode& aRoot, const nsAString& aCharset, ErrorResult& aRv)
   bool entireDocument = (doc == &aRoot);
 
   // This method will fail if no document
-  nsresult rv = encoder->
-    NativeInit(doc, NS_LITERAL_STRING("application/xhtml+xml"),
-               nsIDocumentEncoder::OutputRaw |
-               nsIDocumentEncoder::OutputDontRewriteEncodingDeclaration);
+  nsresult rv = encoder->NativeInit(
+      doc, NS_LITERAL_STRING("application/xhtml+xml"),
+      nsIDocumentEncoder::OutputRaw |
+          nsIDocumentEncoder::OutputDontRewriteEncodingDeclaration);
 
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
@@ -68,10 +66,8 @@ SetUpEncoder(nsINode& aRoot, const nsAString& aCharset, ErrorResult& aRv)
   return encoder.forget();
 }
 
-void
-nsDOMSerializer::SerializeToString(nsINode& aRoot, nsAString& aStr,
-                                   ErrorResult& aRv)
-{
+void nsDOMSerializer::SerializeToString(nsINode& aRoot, nsAString& aStr,
+                                        ErrorResult& aRv) {
   aStr.Truncate();
 
   if (!nsContentUtils::CanCallerAccess(&aRoot)) {
@@ -80,7 +76,7 @@ nsDOMSerializer::SerializeToString(nsINode& aRoot, nsAString& aStr,
   }
 
   nsCOMPtr<nsIDocumentEncoder> encoder =
-    SetUpEncoder(aRoot, EmptyString(), aRv);
+      SetUpEncoder(aRoot, EmptyString(), aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -91,11 +87,10 @@ nsDOMSerializer::SerializeToString(nsINode& aRoot, nsAString& aStr,
   }
 }
 
-void
-nsDOMSerializer::SerializeToStream(nsINode& aRoot, nsIOutputStream* aStream,
-                                   const nsAString& aCharset,
-                                   ErrorResult& aRv)
-{
+void nsDOMSerializer::SerializeToStream(nsINode& aRoot,
+                                        nsIOutputStream* aStream,
+                                        const nsAString& aCharset,
+                                        ErrorResult& aRv) {
   if (NS_WARN_IF(!aStream)) {
     aRv.Throw(NS_ERROR_INVALID_ARG);
     return;
@@ -106,8 +101,7 @@ nsDOMSerializer::SerializeToStream(nsINode& aRoot, nsIOutputStream* aStream,
 
   // No point doing a CanCallerAccess check, because we can only be
   // called by system JS or C++.
-  nsCOMPtr<nsIDocumentEncoder> encoder =
-    SetUpEncoder(aRoot, aCharset, aRv);
+  nsCOMPtr<nsIDocumentEncoder> encoder = SetUpEncoder(aRoot, aCharset, aRv);
   if (aRv.Failed()) {
     return;
   }

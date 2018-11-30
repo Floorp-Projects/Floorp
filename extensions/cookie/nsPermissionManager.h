@@ -36,32 +36,29 @@ class mozIStorageAsyncStatement;
 
 class nsPermissionManager final : public nsIPermissionManager,
                                   public nsIObserver,
-                                  public nsSupportsWeakReference
-{
-public:
-  class PermissionEntry
-  {
-  public:
+                                  public nsSupportsWeakReference {
+ public:
+  class PermissionEntry {
+   public:
     PermissionEntry(int64_t aID, uint32_t aType, uint32_t aPermission,
                     uint32_t aExpireType, int64_t aExpireTime,
                     int64_t aModificationTime)
-     : mID(aID)
-     , mType(aType)
-     , mPermission(aPermission)
-     , mExpireType(aExpireType)
-     , mExpireTime(aExpireTime)
-     , mModificationTime(aModificationTime)
-     , mNonSessionPermission(aPermission)
-     , mNonSessionExpireType(aExpireType)
-     , mNonSessionExpireTime(aExpireTime)
-    {}
+        : mID(aID),
+          mType(aType),
+          mPermission(aPermission),
+          mExpireType(aExpireType),
+          mExpireTime(aExpireTime),
+          mModificationTime(aModificationTime),
+          mNonSessionPermission(aPermission),
+          mNonSessionExpireType(aExpireType),
+          mNonSessionExpireTime(aExpireTime) {}
 
-    int64_t  mID;
+    int64_t mID;
     uint32_t mType;
     uint32_t mPermission;
     uint32_t mExpireType;
-    int64_t  mExpireTime;
-    int64_t  mModificationTime;
+    int64_t mExpireTime;
+    int64_t mModificationTime;
     uint32_t mNonSessionPermission;
     uint32_t mNonSessionExpireType;
     uint32_t mNonSessionExpireTime;
@@ -73,58 +70,46 @@ public:
    * NOTE: It could be implementing nsIHashable but there is no reason to worry
    * with XPCOM interfaces while we don't need to.
    */
-  class PermissionKey
-  {
-  public:
+  class PermissionKey {
+   public:
     static PermissionKey* CreateFromPrincipal(nsIPrincipal* aPrincipal,
                                               nsresult& aResult);
-    static PermissionKey* CreateFromURI(nsIURI* aURI,
-                                        nsresult& aResult);
+    static PermissionKey* CreateFromURI(nsIURI* aURI, nsresult& aResult);
 
-    explicit PermissionKey(const nsACString& aOrigin)
-      : mOrigin(aOrigin)
-    {
-    }
+    explicit PermissionKey(const nsACString& aOrigin) : mOrigin(aOrigin) {}
 
     bool operator==(const PermissionKey& aKey) const {
       return mOrigin.Equals(aKey.mOrigin);
     }
 
-    PLDHashNumber GetHashCode() const {
-      return mozilla::HashString(mOrigin);
-    }
+    PLDHashNumber GetHashCode() const { return mozilla::HashString(mOrigin); }
 
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PermissionKey)
 
     nsCString mOrigin;
 
-  private:
+   private:
     // Default ctor shouldn't be used.
     PermissionKey() = delete;
 
     // Dtor shouldn't be used outside of the class.
-    ~PermissionKey() {};
+    ~PermissionKey(){};
   };
 
-  class PermissionHashKey : public nsRefPtrHashKey<PermissionKey>
-  {
-  public:
+  class PermissionHashKey : public nsRefPtrHashKey<PermissionKey> {
+   public:
     explicit PermissionHashKey(const PermissionKey* aPermissionKey)
-      : nsRefPtrHashKey<PermissionKey>(aPermissionKey)
-    {}
+        : nsRefPtrHashKey<PermissionKey>(aPermissionKey) {}
 
     PermissionHashKey(PermissionHashKey&& toCopy)
-      : nsRefPtrHashKey<PermissionKey>(std::move(toCopy))
-      , mPermissions(std::move(toCopy.mPermissions))
-    {}
+        : nsRefPtrHashKey<PermissionKey>(std::move(toCopy)),
+          mPermissions(std::move(toCopy.mPermissions)) {}
 
-    bool KeyEquals(const PermissionKey* aKey) const
-    {
+    bool KeyEquals(const PermissionKey* aKey) const {
       return *aKey == *GetKey();
     }
 
-    static PLDHashNumber HashKey(const PermissionKey* aKey)
-    {
+    static PLDHashNumber HashKey(const PermissionKey* aKey) {
       return aKey->GetHashCode();
     }
 
@@ -132,32 +117,25 @@ public:
     // around, otherwise the Auto part of our AutoTArray won't be happy!
     enum { ALLOW_MEMMOVE = false };
 
-    inline nsTArray<PermissionEntry> & GetPermissions()
-    {
-      return mPermissions;
-    }
+    inline nsTArray<PermissionEntry>& GetPermissions() { return mPermissions; }
 
-    inline int32_t GetPermissionIndex(uint32_t aType) const
-    {
+    inline int32_t GetPermissionIndex(uint32_t aType) const {
       for (uint32_t i = 0; i < mPermissions.Length(); ++i)
-        if (mPermissions[i].mType == aType)
-          return i;
+        if (mPermissions[i].mType == aType) return i;
 
       return -1;
     }
 
-    inline PermissionEntry GetPermission(uint32_t aType) const
-    {
+    inline PermissionEntry GetPermission(uint32_t aType) const {
       for (uint32_t i = 0; i < mPermissions.Length(); ++i)
-        if (mPermissions[i].mType == aType)
-          return mPermissions[i];
+        if (mPermissions[i].mType == aType) return mPermissions[i];
 
       // unknown permission... return relevant data
       return PermissionEntry(-1, aType, nsIPermissionManager::UNKNOWN_ACTION,
                              nsIPermissionManager::EXPIRE_NEVER, 0, 0);
     }
 
-  private:
+   private:
     AutoTArray<PermissionEntry, 1> mPermissions;
   };
 
@@ -179,28 +157,18 @@ public:
     eOperationReplacingDefault
   };
 
-  enum DBOperationType {
-    eNoDBOperation,
-    eWriteToDB
-  };
+  enum DBOperationType { eNoDBOperation, eWriteToDB };
 
-  enum NotifyOperationType {
-    eDontNotify,
-    eNotify
-  };
+  enum NotifyOperationType { eDontNotify, eNotify };
 
   // A special value for a permission ID that indicates the ID was loaded as
   // a default value.  These will never be written to the database, but may
   // be overridden with an explicit permission (including UNKNOWN_ACTION)
   static const int64_t cIDPermissionIsDefault = -1;
 
-  nsresult AddInternal(nsIPrincipal* aPrincipal,
-                       const nsCString& aType,
-                       uint32_t aPermission,
-                       int64_t aID,
-                       uint32_t aExpireType,
-                       int64_t  aExpireTime,
-                       int64_t aModificationTime,
+  nsresult AddInternal(nsIPrincipal* aPrincipal, const nsCString& aType,
+                       uint32_t aPermission, int64_t aID, uint32_t aExpireType,
+                       int64_t aExpireTime, int64_t aModificationTime,
                        NotifyOperationType aNotifyOperation,
                        DBOperationType aDBOperation,
                        const bool aIgnoreSessionPermissions = false);
@@ -213,8 +181,8 @@ public:
    */
   static void ClearOriginDataObserverInit();
 
-  nsresult
-  RemovePermissionsWithAttributes(mozilla::OriginAttributesPattern& aAttrs);
+  nsresult RemovePermissionsWithAttributes(
+      mozilla::OriginAttributesPattern& aAttrs);
 
   /**
    * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
@@ -226,9 +194,11 @@ public:
    * https://, or ftp:// schemes are given the default "" Permission Key.
    *
    * @param aPrincipal  The Principal which the key is to be extracted from.
-   * @param aPermissionKey  A string which will be filled with the permission key.
+   * @param aPermissionKey  A string which will be filled with the permission
+   * key.
    */
-  static void GetKeyForPrincipal(nsIPrincipal* aPrincipal, nsACString& aPermissionKey);
+  static void GetKeyForPrincipal(nsIPrincipal* aPrincipal,
+                                 nsACString& aPermissionKey);
 
   /**
    * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
@@ -242,9 +212,11 @@ public:
    * nonsensical permission key result.
    *
    * @param aOrigin  The origin which the key is to be extracted from.
-   * @param aPermissionKey  A string which will be filled with the permission key.
+   * @param aPermissionKey  A string which will be filled with the permission
+   * key.
    */
-  static void GetKeyForOrigin(const nsACString& aOrigin, nsACString& aPermissionKey);
+  static void GetKeyForOrigin(const nsACString& aOrigin,
+                              nsACString& aPermissionKey);
 
   /**
    * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
@@ -261,10 +233,10 @@ public:
    *
    * @param aPrincipal  The Principal which the key is to be extracted from.
    * @param aType  The type of the permission to get the key for.
-   * @param aPermissionKey  A string which will be filled with the permission key.
+   * @param aPermissionKey  A string which will be filled with the permission
+   * key.
    */
-  static void GetKeyForPermission(nsIPrincipal* aPrincipal,
-                                  const char* aType,
+  static void GetKeyForPermission(nsIPrincipal* aPrincipal, const char* aType,
                                   nsACString& aPermissionKey);
 
   /**
@@ -287,86 +259,68 @@ public:
   // From ContentChild.
   nsresult RemoveAllFromIPC();
 
-private:
+ private:
   virtual ~nsPermissionManager();
 
-  int32_t GetTypeIndex(const char *aTypeString,
-                       bool        aAdd);
+  int32_t GetTypeIndex(const char* aTypeString, bool aAdd);
 
   PermissionHashKey* GetPermissionHashKey(nsIPrincipal* aPrincipal,
-                                          uint32_t      aType,
-                                          bool          aExactHostMatch);
-  PermissionHashKey* GetPermissionHashKey(nsIURI*       aURI,
-                                          uint32_t      aType,
-                                          bool          aExactHostMatch);
+                                          uint32_t aType, bool aExactHostMatch);
+  PermissionHashKey* GetPermissionHashKey(nsIURI* aURI, uint32_t aType,
+                                          bool aExactHostMatch);
 
-  nsresult CommonTestPermission(nsIPrincipal* aPrincipal,
-                                const char  * aType,
-                                uint32_t    * aPermission,
-                                bool          aExactHostMatch,
-                                bool          aIncludingSession)
-  {
-    return CommonTestPermissionInternal(aPrincipal, nullptr, aType,
-                                        aPermission, aExactHostMatch,
-                                        aIncludingSession);
+  nsresult CommonTestPermission(nsIPrincipal* aPrincipal, const char* aType,
+                                uint32_t* aPermission, bool aExactHostMatch,
+                                bool aIncludingSession) {
+    return CommonTestPermissionInternal(aPrincipal, nullptr, aType, aPermission,
+                                        aExactHostMatch, aIncludingSession);
   }
-  nsresult CommonTestPermission(nsIURI    * aURI,
-                                const char* aType,
-                                uint32_t  * aPermission,
-                                bool        aExactHostMatch,
-                                bool        aIncludingSession)
-  {
+  nsresult CommonTestPermission(nsIURI* aURI, const char* aType,
+                                uint32_t* aPermission, bool aExactHostMatch,
+                                bool aIncludingSession) {
     return CommonTestPermissionInternal(nullptr, aURI, aType, aPermission,
                                         aExactHostMatch, aIncludingSession);
   }
   // Only one of aPrincipal or aURI is allowed to be passed in.
-  nsresult CommonTestPermissionInternal(nsIPrincipal* aPrincipal,
-                                        nsIURI      * aURI,
-                                        const char  * aType,
-                                        uint32_t    * aPermission,
-                                        bool          aExactHostMatch,
-                                        bool          aIncludingSession);
+  nsresult CommonTestPermissionInternal(nsIPrincipal* aPrincipal, nsIURI* aURI,
+                                        const char* aType,
+                                        uint32_t* aPermission,
+                                        bool aExactHostMatch,
+                                        bool aIncludingSession);
 
   nsresult OpenDatabase(nsIFile* permissionsFile);
   nsresult InitDB(bool aRemoveFile);
   nsresult CreateTable();
   nsresult Import();
   nsresult ImportDefaults();
-  nsresult _DoImport(nsIInputStream *inputStream, mozIStorageConnection *aConn);
+  nsresult _DoImport(nsIInputStream* inputStream, mozIStorageConnection* aConn);
   nsresult Read();
-  void     NotifyObserversWithPermission(nsIPrincipal*     aPrincipal,
-                                         const nsCString  &aType,
-                                         uint32_t          aPermission,
-                                         uint32_t          aExpireType,
-                                         int64_t           aExpireTime,
-                                         const char16_t  *aData);
-  void     NotifyObservers(nsIPermission *aPermission, const char16_t *aData);
+  void NotifyObserversWithPermission(nsIPrincipal* aPrincipal,
+                                     const nsCString& aType,
+                                     uint32_t aPermission, uint32_t aExpireType,
+                                     int64_t aExpireTime,
+                                     const char16_t* aData);
+  void NotifyObservers(nsIPermission* aPermission, const char16_t* aData);
 
   // Finalize all statements, close the DB and null it.
   // if aRebuildOnSuccess, reinitialize database
-  void     CloseDB(bool aRebuildOnSuccess = false);
+  void CloseDB(bool aRebuildOnSuccess = false);
 
   nsresult RemoveAllInternal(bool aNotifyObservers);
   nsresult RemoveAllFromMemory();
-  static void UpdateDB(OperationType aOp,
-                       mozIStorageAsyncStatement* aStmt,
-                       int64_t aID,
-                       const nsACString& aOrigin,
-                       const nsACString& aType,
-                       uint32_t aPermission,
-                       uint32_t aExpireType,
-                       int64_t aExpireTime,
+  static void UpdateDB(OperationType aOp, mozIStorageAsyncStatement* aStmt,
+                       int64_t aID, const nsACString& aOrigin,
+                       const nsACString& aType, uint32_t aPermission,
+                       uint32_t aExpireType, int64_t aExpireTime,
                        int64_t aModificationTime);
 
   /**
    * This method removes all permissions modified after the specified time.
    */
-  nsresult
-  RemoveAllModifiedSince(int64_t aModificationTime);
+  nsresult RemoveAllModifiedSince(int64_t aModificationTime);
 
-  template<class T>
-  nsresult
-  RemovePermissionEntries(T aCondition);
+  template <class T>
+  nsresult RemovePermissionEntries(T aCondition);
 
   /**
    * Returns false if this permission manager wouldn't have the permission
@@ -377,7 +331,8 @@ private:
    */
   bool PermissionAvailable(nsIPrincipal* aPrincipal, const char* aType);
 
-  nsRefPtrHashtable<nsCStringHashKey, mozilla::GenericPromise::Private> mPermissionKeyPromiseMap;
+  nsRefPtrHashtable<nsCStringHashKey, mozilla::GenericPromise::Private>
+      mPermissionKeyPromiseMap;
 
   nsCOMPtr<mozIStorageConnection> mDBConn;
   nsCOMPtr<mozIStorageAsyncStatement> mStmtInsert;
@@ -388,10 +343,10 @@ private:
 
   nsTHashtable<PermissionHashKey> mPermissionTable;
   // a unique, monotonically increasing id used to identify each database entry
-  int64_t                      mLargestID;
+  int64_t mLargestID;
 
   // An array to store the strings identifying the different types.
-  nsTArray<nsCString>          mTypeArray;
+  nsTArray<nsCString> mTypeArray;
 
   // Initially, |false|. Set to |true| once shutdown has started, to avoid
   // reopening the database.
@@ -404,7 +359,11 @@ private:
 };
 
 // {4F6B5E00-0C36-11d5-A535-0010A401EB10}
-#define NS_PERMISSIONMANAGER_CID \
-{ 0x4f6b5e00, 0xc36, 0x11d5, { 0xa5, 0x35, 0x0, 0x10, 0xa4, 0x1, 0xeb, 0x10 } }
+#define NS_PERMISSIONMANAGER_CID                   \
+  {                                                \
+    0x4f6b5e00, 0xc36, 0x11d5, {                   \
+      0xa5, 0x35, 0x0, 0x10, 0xa4, 0x1, 0xeb, 0x10 \
+    }                                              \
+  }
 
 #endif /* nsPermissionManager_h__ */

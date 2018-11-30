@@ -16,45 +16,45 @@ namespace a11y {
 /**
  * Used to fetch accessible children.
  */
-class ChildrenEnumVariant final : public IEnumVARIANT
-{
-public:
-  explicit ChildrenEnumVariant(AccessibleWrap* aAnchor) : mAnchorAcc(aAnchor),
-    mCurAcc(mAnchorAcc->GetChildAt(0)), mCurIndex(0) { }
+class ChildrenEnumVariant final : public IEnumVARIANT {
+ public:
+  explicit ChildrenEnumVariant(AccessibleWrap* aAnchor)
+      : mAnchorAcc(aAnchor), mCurAcc(mAnchorAcc->GetChildAt(0)), mCurIndex(0) {}
 
   // IUnknown
   DECL_IUNKNOWN
 
   // IEnumVariant
   virtual /* [local] */ HRESULT STDMETHODCALLTYPE Next(
-    /* [in] */ ULONG aCount,
-    /* [length_is][size_is][out] */ VARIANT* aItems,
-    /* [out] */ ULONG* aCountFetched);
+      /* [in] */ ULONG aCount,
+      /* [length_is][size_is][out] */ VARIANT* aItems,
+      /* [out] */ ULONG* aCountFetched);
 
   virtual HRESULT STDMETHODCALLTYPE Skip(
-    /* [in] */ ULONG aCount);
+      /* [in] */ ULONG aCount);
 
   virtual HRESULT STDMETHODCALLTYPE Reset();
 
   virtual HRESULT STDMETHODCALLTYPE Clone(
-    /* [out] */ IEnumVARIANT** aEnumVaraint);
+      /* [out] */ IEnumVARIANT** aEnumVaraint);
 
-private:
+ private:
   ChildrenEnumVariant() = delete;
-  ChildrenEnumVariant& operator =(const ChildrenEnumVariant&) = delete;
+  ChildrenEnumVariant& operator=(const ChildrenEnumVariant&) = delete;
 
-  ChildrenEnumVariant(const ChildrenEnumVariant& aEnumVariant) :
-    mAnchorAcc(aEnumVariant.mAnchorAcc), mCurAcc(aEnumVariant.mCurAcc),
-    mCurIndex(aEnumVariant.mCurIndex) { }
-  virtual ~ChildrenEnumVariant() { }
+  ChildrenEnumVariant(const ChildrenEnumVariant& aEnumVariant)
+      : mAnchorAcc(aEnumVariant.mAnchorAcc),
+        mCurAcc(aEnumVariant.mCurAcc),
+        mCurIndex(aEnumVariant.mCurIndex) {}
+  virtual ~ChildrenEnumVariant() {}
 
-protected:
+ protected:
   RefPtr<AccessibleWrap> mAnchorAcc;
   Accessible* mCurAcc;
   uint32_t mCurIndex;
 };
 
-} // a11y namespace
-} // mozilla namespace
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

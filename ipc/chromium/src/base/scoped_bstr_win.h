@@ -18,8 +18,7 @@
 // The class interface is based on scoped_ptr.
 class ScopedBstr {
  public:
-  ScopedBstr() : bstr_(NULL) {
-  }
+  ScopedBstr() : bstr_(NULL) {}
 
   // Constructor to create a new BSTR.
   // NOTE: Do not pass a BSTR to this constructor expecting ownership to
@@ -71,9 +70,7 @@ class ScopedBstr {
   // Returns the number of bytes allocated for the BSTR.
   uint32_t ByteLength() const;
 
-  operator BSTR() const {
-    return bstr_;
-  }
+  operator BSTR() const { return bstr_; }
 
  protected:
   BSTR bstr_;
@@ -105,15 +102,13 @@ class StackBstrT {
     // You shouldn't pass string pointers to this constructor since
     // there's no way for the compiler to calculate the length of the
     // string (string_bytes will be equal to pointer size in those cases).
-    DCHECK(lstrlenW(str) == (string_bytes / sizeof(bstr_.str_[0])) - 1) <<
-        "not expecting a string pointer";
+    DCHECK(lstrlenW(str) == (string_bytes / sizeof(bstr_.str_[0])) - 1)
+        << "not expecting a string pointer";
     memcpy(bstr_.str_, str, string_bytes);
     bstr_.len_ = string_bytes - sizeof(wchar_t);
   }
 
-  operator BSTR() {
-    return bstr_.str_;
-  }
+  operator BSTR() { return bstr_.str_; }
 
  protected:
   struct BstrInternal {
@@ -129,8 +124,7 @@ class StackBstrT {
 //  DoBstrStuff(StackBstr(L"This is my BSTR"));
 // Where DoBstrStuff is:
 //  HRESULT DoBstrStuff(BSTR bstr) { ... }
-#define StackBstr(str) \
-  static_cast<BSTR>(StackBstrT<sizeof(str)>(str))
+#define StackBstr(str) static_cast<BSTR>(StackBstrT<sizeof(str)>(str))
 
 // If you need a named BSTR variable that's based on a fixed string
 // (e.g. if the BSTR is used inside a loop or more than one place),
@@ -139,7 +133,6 @@ class StackBstrT {
 //   StackBstrVar(L"my_property", myprop);
 //   for (int i = 0; i < objects.length(); ++i)
 //     ProcessValue(objects[i].GetProp(myprop));  // GetProp accepts BSTR
-#define StackBstrVar(str, var) \
-  StackBstrT<sizeof(str)> var(str)
+#define StackBstrVar(str, var) StackBstrT<sizeof(str)> var(str)
 
 #endif  // BASE_SCOPED_BSTR_WIN_H_

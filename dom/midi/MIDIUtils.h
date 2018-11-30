@@ -24,6 +24,6 @@ uint32_t ParseMessages(const nsTArray<uint8_t>& aByteBuffer,
                        nsTArray<MIDIMessage>& aMsgArray);
 // Returns true if a message is a sysex message.
 bool IsSysexMessage(const MIDIMessage& a);
-}
-} // namespace dom
-} // namespace mozilla
+}  // namespace MIDIUtils
+}  // namespace dom
+}  // namespace mozilla

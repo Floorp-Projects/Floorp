@@ -21,29 +21,25 @@ using namespace mozilla::dom;
 bool XPCThrower::sVerbose = true;
 
 // static
-void
-XPCThrower::Throw(nsresult rv, JSContext* cx)
-{
-    const char* format;
-    if (JS_IsExceptionPending(cx)) {
-        return;
-    }
-    if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format)) {
-        format = "";
-    }
-    dom::Throw(cx, rv, nsDependentCString(format));
+void XPCThrower::Throw(nsresult rv, JSContext* cx) {
+  const char* format;
+  if (JS_IsExceptionPending(cx)) {
+    return;
+  }
+  if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format)) {
+    format = "";
+  }
+  dom::Throw(cx, rv, nsDependentCString(format));
 }
 
 namespace xpc {
 
-bool
-Throw(JSContext* cx, nsresult rv)
-{
-    XPCThrower::Throw(rv, cx);
-    return false;
+bool Throw(JSContext* cx, nsresult rv) {
+  XPCThrower::Throw(rv, cx);
+  return false;
 }
 
-} // namespace xpc
+}  // namespace xpc
 
 /*
  * If there has already been an exception thrown, see if we're throwing the
@@ -51,150 +47,142 @@ Throw(JSContext* cx, nsresult rv)
  * should be the current call context.
  */
 // static
-bool
-XPCThrower::CheckForPendingException(nsresult result, JSContext* cx)
-{
-    RefPtr<Exception> e = XPCJSContext::Get()->GetPendingException();
-    if (!e) {
-        return false;
-    }
-    XPCJSContext::Get()->SetPendingException(nullptr);
+bool XPCThrower::CheckForPendingException(nsresult result, JSContext* cx) {
+  RefPtr<Exception> e = XPCJSContext::Get()->GetPendingException();
+  if (!e) {
+    return false;
+  }
+  XPCJSContext::Get()->SetPendingException(nullptr);
 
-    if (e->GetResult() != result) {
-        return false;
-    }
+  if (e->GetResult() != result) {
+    return false;
+  }
 
-    ThrowExceptionObject(cx, e);
-    return true;
+  ThrowExceptionObject(cx, e);
+  return true;
 }
 
 // static
-void
-XPCThrower::Throw(nsresult rv, XPCCallContext& ccx)
-{
-    char* sz;
-    const char* format;
+void XPCThrower::Throw(nsresult rv, XPCCallContext& ccx) {
+  char* sz;
+  const char* format;
 
-    if (CheckForPendingException(rv, ccx)) {
-        return;
-    }
+  if (CheckForPendingException(rv, ccx)) {
+    return;
+  }
 
-    if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format)) {
-        format = "";
-    }
+  if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format)) {
+    format = "";
+  }
 
-    sz = (char*) format;
-    NS_ENSURE_TRUE_VOID(sz);
+  sz = (char*)format;
+  NS_ENSURE_TRUE_VOID(sz);
 
-    if (sz && sVerbose) {
-        Verbosify(ccx, &sz, false);
-    }
+  if (sz && sVerbose) {
+    Verbosify(ccx, &sz, false);
+  }
 
-    dom::Throw(ccx, rv, nsDependentCString(sz));
+  dom::Throw(ccx, rv, nsDependentCString(sz));
 
-    if (sz && sz != format) {
-        js_free(sz);
-    }
+  if (sz && sz != format) {
+    js_free(sz);
+  }
 }
 
+// static
+void XPCThrower::ThrowBadResult(nsresult rv, nsresult result,
+                                XPCCallContext& ccx) {
+  char* sz;
+  const char* format;
+  const char* name;
+
+  /*
+   *  If there is a pending exception when the native call returns and
+   *  it has the same error result as returned by the native call, then
+   *  the native call may be passing through an error from a previous JS
+   *  call. So we'll just throw that exception into our JS.  Note that
+   *  we don't need to worry about NS_ERROR_UNCATCHABLE_EXCEPTION,
+   *  because presumably there would be no pending exception for that
+   *  nsresult!
+   */
+
+  if (CheckForPendingException(result, ccx)) {
+    return;
+  }
+
+  // else...
+
+  if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format) ||
+      !format) {
+    format = "";
+  }
+
+  if (nsXPCException::NameAndFormatForNSResult(result, &name, nullptr) &&
+      name) {
+    sz = JS_smprintf("%s 0x%x (%s)", format, (unsigned)result, name).release();
+  } else {
+    sz = JS_smprintf("%s 0x%x", format, (unsigned)result).release();
+  }
+  NS_ENSURE_TRUE_VOID(sz);
+
+  if (sz && sVerbose) {
+    Verbosify(ccx, &sz, true);
+  }
+
+  dom::Throw(ccx, result, nsDependentCString(sz));
+
+  if (sz) {
+    js_free(sz);
+  }
+}
 
 // static
-void
-XPCThrower::ThrowBadResult(nsresult rv, nsresult result, XPCCallContext& ccx)
-{
-    char* sz;
-    const char* format;
+void XPCThrower::ThrowBadParam(nsresult rv, unsigned paramNum,
+                               XPCCallContext& ccx) {
+  char* sz;
+  const char* format;
+
+  if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format)) {
+    format = "";
+  }
+
+  sz = JS_smprintf("%s arg %d", format, paramNum).release();
+  NS_ENSURE_TRUE_VOID(sz);
+
+  if (sz && sVerbose) {
+    Verbosify(ccx, &sz, true);
+  }
+
+  dom::Throw(ccx, rv, nsDependentCString(sz));
+
+  if (sz) {
+    js_free(sz);
+  }
+}
+
+// static
+void XPCThrower::Verbosify(XPCCallContext& ccx, char** psz, bool own) {
+  char* sz = nullptr;
+
+  if (ccx.HasInterfaceAndMember()) {
+    XPCNativeInterface* iface = ccx.GetInterface();
+    jsid id = ccx.GetMember()->GetName();
     const char* name;
-
-    /*
-    *  If there is a pending exception when the native call returns and
-    *  it has the same error result as returned by the native call, then
-    *  the native call may be passing through an error from a previous JS
-    *  call. So we'll just throw that exception into our JS.  Note that
-    *  we don't need to worry about NS_ERROR_UNCATCHABLE_EXCEPTION,
-    *  because presumably there would be no pending exception for that
-    *  nsresult!
-    */
-
-    if (CheckForPendingException(result, ccx)) {
-        return;
-    }
-
-    // else...
-
-    if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format) || !format) {
-        format = "";
-    }
-
-    if (nsXPCException::NameAndFormatForNSResult(result, &name, nullptr) && name) {
-        sz = JS_smprintf("%s 0x%x (%s)", format, (unsigned) result, name).release();
+    JS::UniqueChars bytes;
+    if (!JSID_IS_VOID(id)) {
+      bytes = JS_EncodeStringToLatin1(ccx, JSID_TO_STRING(id));
+      name = bytes ? bytes.get() : "";
     } else {
-        sz = JS_smprintf("%s 0x%x", format, (unsigned) result).release();
+      name = "Unknown";
     }
-    NS_ENSURE_TRUE_VOID(sz);
+    sz =
+        JS_smprintf("%s [%s.%s]", *psz, iface->GetNameString(), name).release();
+  }
 
-    if (sz && sVerbose) {
-        Verbosify(ccx, &sz, true);
+  if (sz) {
+    if (own) {
+      js_free(*psz);
     }
-
-    dom::Throw(ccx, result, nsDependentCString(sz));
-
-    if (sz) {
-        js_free(sz);
-    }
-}
-
-// static
-void
-XPCThrower::ThrowBadParam(nsresult rv, unsigned paramNum, XPCCallContext& ccx)
-{
-    char* sz;
-    const char* format;
-
-    if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format)) {
-        format = "";
-    }
-
-    sz = JS_smprintf("%s arg %d", format, paramNum).release();
-    NS_ENSURE_TRUE_VOID(sz);
-
-    if (sz && sVerbose) {
-        Verbosify(ccx, &sz, true);
-    }
-
-    dom::Throw(ccx, rv, nsDependentCString(sz));
-
-    if (sz) {
-        js_free(sz);
-    }
-}
-
-
-// static
-void
-XPCThrower::Verbosify(XPCCallContext& ccx,
-                      char** psz, bool own)
-{
-    char* sz = nullptr;
-
-    if (ccx.HasInterfaceAndMember()) {
-        XPCNativeInterface* iface = ccx.GetInterface();
-        jsid id = ccx.GetMember()->GetName();
-        const char* name;
-        JS::UniqueChars bytes;
-        if (!JSID_IS_VOID(id)) {
-            bytes = JS_EncodeStringToLatin1(ccx, JSID_TO_STRING(id));
-            name = bytes ? bytes.get() : "";
-        } else {
-            name = "Unknown";
-        }
-        sz = JS_smprintf("%s [%s.%s]", *psz, iface->GetNameString(), name).release();
-    }
-
-    if (sz) {
-        if (own) {
-            js_free(*psz);
-        }
-        *psz = sz;
-    }
+    *psz = sz;
+  }
 }

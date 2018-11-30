@@ -11,14 +11,12 @@ namespace layers {
 
 using namespace gfx;
 
-gfx::IntRect
-ComputeBackdropCopyRect(const gfx::Rect& aRect,
-                        const gfx::IntRect& aClipRect,
-                        const gfx::Matrix4x4& aTransform,
-                        const gfx::IntRect& aRenderTargetRect,
-                        gfx::Matrix4x4* aOutTransform,
-                        gfx::Rect* aOutLayerQuad)
-{
+gfx::IntRect ComputeBackdropCopyRect(const gfx::Rect& aRect,
+                                     const gfx::IntRect& aClipRect,
+                                     const gfx::Matrix4x4& aTransform,
+                                     const gfx::IntRect& aRenderTargetRect,
+                                     gfx::Matrix4x4* aOutTransform,
+                                     gfx::Rect* aOutLayerQuad) {
   // Compute the clip.
   IntPoint rtOffset = aRenderTargetRect.TopLeft();
   IntSize rtSize = aRenderTargetRect.Size();
@@ -29,8 +27,9 @@ ComputeBackdropCopyRect(const gfx::Rect& aRect,
 
   // Apply the layer transform.
   RectDouble dest = aTransform.TransformAndClipBounds(
-    RectDouble(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height()),
-    RectDouble(renderBounds.X(), renderBounds.Y(), renderBounds.Width(), renderBounds.Height()));
+      RectDouble(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height()),
+      RectDouble(renderBounds.X(), renderBounds.Y(), renderBounds.Width(),
+                 renderBounds.Height()));
   dest -= rtOffset;
 
   // Ensure we don't round out to -1, which trips up Direct3D.
@@ -51,10 +50,11 @@ ComputeBackdropCopyRect(const gfx::Rect& aRect,
   Matrix4x4 transform;
   transform.PostScale(rtSize.width, rtSize.height, 1.0);
   transform.PostTranslate(-result.X(), -result.Y(), 0.0);
-  transform.PostScale(1 / float(result.Width()), 1 / float(result.Height()), 1.0);
+  transform.PostScale(1 / float(result.Width()), 1 / float(result.Height()),
+                      1.0);
   *aOutTransform = transform;
   return result;
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

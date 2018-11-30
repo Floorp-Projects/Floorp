@@ -21,456 +21,432 @@ nsresult txXSLTNumber::createNumber(Expr* aValueExpr, txPattern* aCountPattern,
                                     txPattern* aFromPattern, LevelType aLevel,
                                     Expr* aGroupSize, Expr* aGroupSeparator,
                                     Expr* aFormat, txIEvalContext* aContext,
-                                    nsAString& aResult)
-{
-    aResult.Truncate();
-    nsresult rv = NS_OK;
+                                    nsAString& aResult) {
+  aResult.Truncate();
+  nsresult rv = NS_OK;
 
-    // Parse format
-    txList counters;
-    nsAutoString head, tail;
-    rv = getCounters(aGroupSize, aGroupSeparator, aFormat, aContext, counters,
-                     head, tail);
+  // Parse format
+  txList counters;
+  nsAutoString head, tail;
+  rv = getCounters(aGroupSize, aGroupSeparator, aFormat, aContext, counters,
+                   head, tail);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Create list of values to format
+  txList values;
+  nsAutoString valueString;
+  rv = getValueList(aValueExpr, aCountPattern, aFromPattern, aLevel, aContext,
+                    values, valueString);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!valueString.IsEmpty()) {
+    aResult = valueString;
+
+    return NS_OK;
+  }
+
+  // Create resulting string
+  aResult = head;
+  bool first = true;
+  txListIterator valueIter(&values);
+  txListIterator counterIter(&counters);
+  valueIter.resetToEnd();
+  int32_t value;
+  txFormattedCounter* counter = 0;
+  while ((value = NS_PTR_TO_INT32(valueIter.previous()))) {
+    if (counterIter.hasNext()) {
+      counter = (txFormattedCounter*)counterIter.next();
+    }
+
+    if (!first) {
+      aResult.Append(counter->mSeparator);
+    }
+
+    counter->appendNumber(value, aResult);
+    first = false;
+  }
+
+  aResult.Append(tail);
+
+  txListIterator iter(&counters);
+  while (iter.hasNext()) {
+    delete (txFormattedCounter*)iter.next();
+  }
+
+  return NS_OK;
+}
+
+nsresult txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
+                                    txPattern* aFromPattern, LevelType aLevel,
+                                    txIEvalContext* aContext, txList& aValues,
+                                    nsAString& aValueString) {
+  aValueString.Truncate();
+  nsresult rv = NS_OK;
+
+  // If the value attribute exists then use that
+  if (aValueExpr) {
+    RefPtr<txAExprResult> result;
+    rv = aValueExpr->evaluate(aContext, getter_AddRefs(result));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Create list of values to format
-    txList values;
-    nsAutoString valueString;
-    rv = getValueList(aValueExpr, aCountPattern, aFromPattern, aLevel,
-                      aContext, values, valueString);
-    NS_ENSURE_SUCCESS(rv, rv);
+    double value = result->numberValue();
 
-    if (!valueString.IsEmpty()) {
-        aResult = valueString;
-
-        return NS_OK;
+    if (mozilla::IsInfinite(value) || mozilla::IsNaN(value) || value < 0.5) {
+      txDouble::toString(value, aValueString);
+      return NS_OK;
     }
 
-    // Create resulting string
-    aResult = head;
-    bool first = true;
-    txListIterator valueIter(&values);
-    txListIterator counterIter(&counters);
-    valueIter.resetToEnd();
-    int32_t value;
-    txFormattedCounter* counter = 0;
-    while ((value = NS_PTR_TO_INT32(valueIter.previous()))) {
-        if (counterIter.hasNext()) {
-            counter = (txFormattedCounter*)counterIter.next();
-        }
-
-        if (!first) {
-            aResult.Append(counter->mSeparator);
-        }
-
-        counter->appendNumber(value, aResult);
-        first = false;
-    }
-
-    aResult.Append(tail);
-
-    txListIterator iter(&counters);
-    while (iter.hasNext()) {
-        delete (txFormattedCounter*)iter.next();
-    }
-
+    aValues.add(NS_INT32_TO_PTR((int32_t)floor(value + 0.5)));
     return NS_OK;
-}
+  }
 
-nsresult
-txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
-                           txPattern* aFromPattern, LevelType aLevel,
-                           txIEvalContext* aContext, txList& aValues,
-                           nsAString& aValueString)
-{
-    aValueString.Truncate();
-    nsresult rv = NS_OK;
+  // Otherwise use count/from/level
 
-    // If the value attribute exists then use that
-    if (aValueExpr) {
-        RefPtr<txAExprResult> result;
-        rv = aValueExpr->evaluate(aContext, getter_AddRefs(result));
-        NS_ENSURE_SUCCESS(rv, rv);
+  txPattern* countPattern = aCountPattern;
+  nsAutoPtr<txPattern> newCountPattern;
+  const txXPathNode& currNode = aContext->getContextNode();
 
-        double value = result->numberValue();
+  // Parse count- and from-attributes
 
-        if (mozilla::IsInfinite(value) || mozilla::IsNaN(value) ||
-            value < 0.5) {
-            txDouble::toString(value, aValueString);
-            return NS_OK;
-        }
-
-        aValues.add(NS_INT32_TO_PTR((int32_t)floor(value + 0.5)));
-        return NS_OK;
+  if (!aCountPattern) {
+    txNodeTest* nodeTest;
+    uint16_t nodeType = txXPathNodeUtils::getNodeType(currNode);
+    switch (nodeType) {
+      case txXPathNodeType::ELEMENT_NODE: {
+        RefPtr<nsAtom> localName = txXPathNodeUtils::getLocalName(currNode);
+        int32_t namespaceID = txXPathNodeUtils::getNamespaceID(currNode);
+        nodeTest = new txNameTest(0, localName, namespaceID,
+                                  txXPathNodeType::ELEMENT_NODE);
+        break;
+      }
+      case txXPathNodeType::TEXT_NODE:
+      case txXPathNodeType::CDATA_SECTION_NODE: {
+        nodeTest = new txNodeTypeTest(txNodeTypeTest::TEXT_TYPE);
+        break;
+      }
+      case txXPathNodeType::PROCESSING_INSTRUCTION_NODE: {
+        txNodeTypeTest* typeTest;
+        typeTest = new txNodeTypeTest(txNodeTypeTest::PI_TYPE);
+        nsAutoString nodeName;
+        txXPathNodeUtils::getNodeName(currNode, nodeName);
+        typeTest->setNodeName(nodeName);
+        nodeTest = typeTest;
+        break;
+      }
+      case txXPathNodeType::COMMENT_NODE: {
+        nodeTest = new txNodeTypeTest(txNodeTypeTest::COMMENT_TYPE);
+        break;
+      }
+      case txXPathNodeType::DOCUMENT_NODE:
+      case txXPathNodeType::ATTRIBUTE_NODE:
+      default: {
+        // this won't match anything as we walk up the tree
+        // but it's what the spec says to do
+        nodeTest = new txNameTest(0, nsGkAtoms::_asterisk, 0, nodeType);
+        break;
+      }
     }
+    MOZ_ASSERT(nodeTest);
+    countPattern = newCountPattern = new txStepPattern(nodeTest, false);
+  }
 
+  // Generate list of values depending on the value of the level-attribute
 
-    // Otherwise use count/from/level
-
-    txPattern* countPattern = aCountPattern;
-    nsAutoPtr<txPattern> newCountPattern;
-    const txXPathNode& currNode = aContext->getContextNode();
-
-    // Parse count- and from-attributes
-
-    if (!aCountPattern) {
-        txNodeTest* nodeTest;
-        uint16_t nodeType = txXPathNodeUtils::getNodeType(currNode);
-        switch (nodeType) {
-            case txXPathNodeType::ELEMENT_NODE:
-            {
-                RefPtr<nsAtom> localName =
-                    txXPathNodeUtils::getLocalName(currNode);
-                int32_t namespaceID = txXPathNodeUtils::getNamespaceID(currNode);
-                nodeTest = new txNameTest(0, localName, namespaceID,
-                                          txXPathNodeType::ELEMENT_NODE);
-                break;
-            }
-            case txXPathNodeType::TEXT_NODE:
-            case txXPathNodeType::CDATA_SECTION_NODE:
-            {
-                nodeTest = new txNodeTypeTest(txNodeTypeTest::TEXT_TYPE);
-                break;
-            }
-            case txXPathNodeType::PROCESSING_INSTRUCTION_NODE:
-            {
-                txNodeTypeTest* typeTest;
-                typeTest = new txNodeTypeTest(txNodeTypeTest::PI_TYPE);
-                nsAutoString nodeName;
-                txXPathNodeUtils::getNodeName(currNode, nodeName);
-                typeTest->setNodeName(nodeName);
-                nodeTest = typeTest;
-                break;
-            }
-            case txXPathNodeType::COMMENT_NODE:
-            {
-                nodeTest = new txNodeTypeTest(txNodeTypeTest::COMMENT_TYPE);
-                break;
-            }
-            case txXPathNodeType::DOCUMENT_NODE:
-            case txXPathNodeType::ATTRIBUTE_NODE:
-            default:
-            {
-                // this won't match anything as we walk up the tree
-                // but it's what the spec says to do
-                nodeTest = new txNameTest(0, nsGkAtoms::_asterisk, 0,
-                                          nodeType);
-                break;
-            }
-        }
-        MOZ_ASSERT(nodeTest);
-        countPattern = newCountPattern = new txStepPattern(nodeTest, false);
-    }
-
-
-    // Generate list of values depending on the value of the level-attribute
-
-    // level = "single"
-    if (aLevel == eLevelSingle) {
-        txXPathTreeWalker walker(currNode);
-        do {
-            if (aFromPattern && !walker.isOnNode(currNode)) {
-                bool matched;
-                rv = aFromPattern->matches(walker.getCurrentPosition(),
-                                           aContext, matched);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                if (matched) {
-                    break;
-                }
-            }
-
-            bool matched;
-            rv = countPattern->matches(walker.getCurrentPosition(), aContext,
-                                       matched);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            if (matched) {
-                int32_t count;
-                rv = getSiblingCount(walker, countPattern, aContext, &count);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                aValues.add(NS_INT32_TO_PTR(count));
-                break;
-            }
-
-        } while (walker.moveToParent());
-
-        // Spec says to only match ancestors that are decendants of the
-        // ancestor that matches the from-pattern, so keep going to make
-        // sure that there is an ancestor that does.
-        if (aFromPattern && aValues.getLength()) {
-            bool hasParent;
-            while ((hasParent = walker.moveToParent())) {
-                bool matched;
-                rv = aFromPattern->matches(walker.getCurrentPosition(),
-                                           aContext, matched);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                if (matched) {
-                    break;
-                }
-            }
-
-            if (!hasParent) {
-                aValues.clear();
-            }
-        }
-    }
-    // level = "multiple"
-    else if (aLevel == eLevelMultiple) {
-        // find all ancestor-or-selfs that matches count until...
-        txXPathTreeWalker walker(currNode);
-        bool matchedFrom = false;
-        do {
-            if (aFromPattern && !walker.isOnNode(currNode)) {
-                rv = aFromPattern->matches(walker.getCurrentPosition(),
-                                           aContext, matchedFrom);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                if (matchedFrom) {
-                    //... we find one that matches from
-                    break;
-                }
-            }
-
-            bool matched;
-            rv = countPattern->matches(walker.getCurrentPosition(), aContext,
-                                       matched);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            if (matched) {
-                int32_t count;
-                rv = getSiblingCount(walker, countPattern, aContext, &count);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                aValues.add(NS_INT32_TO_PTR(count));
-            }
-        } while (walker.moveToParent());
-
-        // Spec says to only match ancestors that are decendants of the
-        // ancestor that matches the from-pattern, so if none did then
-        // we shouldn't search anything
-        if (aFromPattern && !matchedFrom) {
-            aValues.clear();
-        }
-    }
-    // level = "any"
-    else if (aLevel == eLevelAny) {
-        int32_t value = 0;
-        bool matchedFrom = false;
-
-        txXPathTreeWalker walker(currNode);
-        do {
-            if (aFromPattern && !walker.isOnNode(currNode)) {
-                rv = aFromPattern->matches(walker.getCurrentPosition(),
-                                           aContext, matchedFrom);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                if (matchedFrom) {
-                    break;
-                }
-            }
-
-            bool matched;
-            rv = countPattern->matches(walker.getCurrentPosition(), aContext,
-                                       matched);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            if (matched) {
-                ++value;
-            }
-
-        } while (getPrevInDocumentOrder(walker));
-
-        // Spec says to only count nodes that follows the first node that
-        // matches the from pattern. So so if none did then we shouldn't
-        // count any
-        if (aFromPattern && !matchedFrom) {
-            value = 0;
-        }
-
-        if (value) {
-            aValues.add(NS_INT32_TO_PTR(value));
-        }
-    }
-
-    return NS_OK;
-}
-
-
-nsresult
-txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
-                          Expr* aFormat, txIEvalContext* aContext,
-                          txList& aCounters, nsAString& aHead,
-                          nsAString& aTail)
-{
-    aHead.Truncate();
-    aTail.Truncate();
-
-    nsresult rv = NS_OK;
-
-    nsAutoString groupSeparator;
-    int32_t groupSize = 0;
-    if (aGroupSize && aGroupSeparator) {
-        nsAutoString sizeStr;
-        rv = aGroupSize->evaluateToString(aContext, sizeStr);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        double size = txDouble::toDouble(sizeStr);
-        groupSize = (int32_t)size;
-        if ((double)groupSize != size) {
-            groupSize = 0;
-        }
-
-        rv = aGroupSeparator->evaluateToString(aContext, groupSeparator);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    nsAutoString format;
-    if (aFormat) {
-        rv = aFormat->evaluateToString(aContext, format);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    uint32_t formatLen = format.Length();
-    uint32_t formatPos = 0;
-    char16_t ch = 0;
-
-    // start with header
-    while (formatPos < formatLen &&
-           !isAlphaNumeric(ch = format.CharAt(formatPos))) {
-        aHead.Append(ch);
-        ++formatPos;
-    }
-
-    // If there are no formatting tokens we need to create a default one.
-    if (formatPos == formatLen) {
-        txFormattedCounter* defaultCounter;
-        rv = txFormattedCounter::getCounterFor(NS_LITERAL_STRING("1"), groupSize,
-                                               groupSeparator, defaultCounter);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        defaultCounter->mSeparator.Assign('.');
-        rv = aCounters.add(defaultCounter);
-        if (NS_FAILED(rv)) {
-            // XXX ErrorReport: out of memory
-            delete defaultCounter;
-            return rv;
-        }
-
-        return NS_OK;
-    }
-
-    while (formatPos < formatLen) {
-        nsAutoString sepToken;
-        // parse separator token
-        if (!aCounters.getLength()) {
-            // Set the first counters separator to default value so that if
-            // there is only one formatting token and we're formatting a
-            // value-list longer then one we use the default separator. This
-            // won't be used when formatting the first value anyway.
-            sepToken.Assign('.');
-        }
-        else {
-            while (formatPos < formatLen &&
-                   !isAlphaNumeric(ch = format.CharAt(formatPos))) {
-                sepToken.Append(ch);
-                ++formatPos;
-            }
-        }
-
-        // if we're at the end of the string then the previous token was the tail
-        if (formatPos == formatLen) {
-            aTail = sepToken;
-            return NS_OK;
-        }
-
-        // parse formatting token
-        nsAutoString numToken;
-        while (formatPos < formatLen &&
-               isAlphaNumeric(ch = format.CharAt(formatPos))) {
-            numToken.Append(ch);
-            ++formatPos;
-        }
-
-        txFormattedCounter* counter = 0;
-        rv = txFormattedCounter::getCounterFor(numToken, groupSize,
-                                               groupSeparator, counter);
-        if (NS_FAILED(rv)) {
-            txListIterator iter(&aCounters);
-            while (iter.hasNext()) {
-                delete (txFormattedCounter*)iter.next();
-            }
-            aCounters.clear();
-            return rv;
-        }
-
-        // Add to list of counters
-        counter->mSeparator = sepToken;
-        rv = aCounters.add(counter);
-        if (NS_FAILED(rv)) {
-            // XXX ErrorReport: out of memory
-            txListIterator iter(&aCounters);
-            while (iter.hasNext()) {
-                delete (txFormattedCounter*)iter.next();
-            }
-            aCounters.clear();
-            return rv;
-        }
-    }
-
-    return NS_OK;
-}
-
-nsresult
-txXSLTNumber::getSiblingCount(txXPathTreeWalker& aWalker,
-                              txPattern* aCountPattern,
-                              txIMatchContext* aContext,
-                              int32_t* aCount)
-{
-    int32_t value = 1;
-    while (aWalker.moveToPreviousSibling()) {
+  // level = "single"
+  if (aLevel == eLevelSingle) {
+    txXPathTreeWalker walker(currNode);
+    do {
+      if (aFromPattern && !walker.isOnNode(currNode)) {
         bool matched;
-        nsresult rv = aCountPattern->matches(aWalker.getCurrentPosition(),
-                                             aContext, matched);
+        rv = aFromPattern->matches(walker.getCurrentPosition(), aContext,
+                                   matched);
         NS_ENSURE_SUCCESS(rv, rv);
 
         if (matched) {
-            ++value;
+          break;
         }
+      }
+
+      bool matched;
+      rv =
+          countPattern->matches(walker.getCurrentPosition(), aContext, matched);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (matched) {
+        int32_t count;
+        rv = getSiblingCount(walker, countPattern, aContext, &count);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        aValues.add(NS_INT32_TO_PTR(count));
+        break;
+      }
+
+    } while (walker.moveToParent());
+
+    // Spec says to only match ancestors that are decendants of the
+    // ancestor that matches the from-pattern, so keep going to make
+    // sure that there is an ancestor that does.
+    if (aFromPattern && aValues.getLength()) {
+      bool hasParent;
+      while ((hasParent = walker.moveToParent())) {
+        bool matched;
+        rv = aFromPattern->matches(walker.getCurrentPosition(), aContext,
+                                   matched);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (matched) {
+          break;
+        }
+      }
+
+      if (!hasParent) {
+        aValues.clear();
+      }
+    }
+  }
+  // level = "multiple"
+  else if (aLevel == eLevelMultiple) {
+    // find all ancestor-or-selfs that matches count until...
+    txXPathTreeWalker walker(currNode);
+    bool matchedFrom = false;
+    do {
+      if (aFromPattern && !walker.isOnNode(currNode)) {
+        rv = aFromPattern->matches(walker.getCurrentPosition(), aContext,
+                                   matchedFrom);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (matchedFrom) {
+          //... we find one that matches from
+          break;
+        }
+      }
+
+      bool matched;
+      rv =
+          countPattern->matches(walker.getCurrentPosition(), aContext, matched);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (matched) {
+        int32_t count;
+        rv = getSiblingCount(walker, countPattern, aContext, &count);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        aValues.add(NS_INT32_TO_PTR(count));
+      }
+    } while (walker.moveToParent());
+
+    // Spec says to only match ancestors that are decendants of the
+    // ancestor that matches the from-pattern, so if none did then
+    // we shouldn't search anything
+    if (aFromPattern && !matchedFrom) {
+      aValues.clear();
+    }
+  }
+  // level = "any"
+  else if (aLevel == eLevelAny) {
+    int32_t value = 0;
+    bool matchedFrom = false;
+
+    txXPathTreeWalker walker(currNode);
+    do {
+      if (aFromPattern && !walker.isOnNode(currNode)) {
+        rv = aFromPattern->matches(walker.getCurrentPosition(), aContext,
+                                   matchedFrom);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (matchedFrom) {
+          break;
+        }
+      }
+
+      bool matched;
+      rv =
+          countPattern->matches(walker.getCurrentPosition(), aContext, matched);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (matched) {
+        ++value;
+      }
+
+    } while (getPrevInDocumentOrder(walker));
+
+    // Spec says to only count nodes that follows the first node that
+    // matches the from pattern. So so if none did then we shouldn't
+    // count any
+    if (aFromPattern && !matchedFrom) {
+      value = 0;
     }
 
-    *aCount = value;
+    if (value) {
+      aValues.add(NS_INT32_TO_PTR(value));
+    }
+  }
 
-    return NS_OK;
+  return NS_OK;
 }
 
-bool
-txXSLTNumber::getPrevInDocumentOrder(txXPathTreeWalker& aWalker)
-{
-    if (aWalker.moveToPreviousSibling()) {
-        while (aWalker.moveToLastChild()) {
-            // do nothing
-        }
-        return true;
+nsresult txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
+                                   Expr* aFormat, txIEvalContext* aContext,
+                                   txList& aCounters, nsAString& aHead,
+                                   nsAString& aTail) {
+  aHead.Truncate();
+  aTail.Truncate();
+
+  nsresult rv = NS_OK;
+
+  nsAutoString groupSeparator;
+  int32_t groupSize = 0;
+  if (aGroupSize && aGroupSeparator) {
+    nsAutoString sizeStr;
+    rv = aGroupSize->evaluateToString(aContext, sizeStr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    double size = txDouble::toDouble(sizeStr);
+    groupSize = (int32_t)size;
+    if ((double)groupSize != size) {
+      groupSize = 0;
     }
-    return aWalker.moveToParent();
+
+    rv = aGroupSeparator->evaluateToString(aContext, groupSeparator);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsAutoString format;
+  if (aFormat) {
+    rv = aFormat->evaluateToString(aContext, format);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  uint32_t formatLen = format.Length();
+  uint32_t formatPos = 0;
+  char16_t ch = 0;
+
+  // start with header
+  while (formatPos < formatLen &&
+         !isAlphaNumeric(ch = format.CharAt(formatPos))) {
+    aHead.Append(ch);
+    ++formatPos;
+  }
+
+  // If there are no formatting tokens we need to create a default one.
+  if (formatPos == formatLen) {
+    txFormattedCounter* defaultCounter;
+    rv = txFormattedCounter::getCounterFor(NS_LITERAL_STRING("1"), groupSize,
+                                           groupSeparator, defaultCounter);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    defaultCounter->mSeparator.Assign('.');
+    rv = aCounters.add(defaultCounter);
+    if (NS_FAILED(rv)) {
+      // XXX ErrorReport: out of memory
+      delete defaultCounter;
+      return rv;
+    }
+
+    return NS_OK;
+  }
+
+  while (formatPos < formatLen) {
+    nsAutoString sepToken;
+    // parse separator token
+    if (!aCounters.getLength()) {
+      // Set the first counters separator to default value so that if
+      // there is only one formatting token and we're formatting a
+      // value-list longer then one we use the default separator. This
+      // won't be used when formatting the first value anyway.
+      sepToken.Assign('.');
+    } else {
+      while (formatPos < formatLen &&
+             !isAlphaNumeric(ch = format.CharAt(formatPos))) {
+        sepToken.Append(ch);
+        ++formatPos;
+      }
+    }
+
+    // if we're at the end of the string then the previous token was the tail
+    if (formatPos == formatLen) {
+      aTail = sepToken;
+      return NS_OK;
+    }
+
+    // parse formatting token
+    nsAutoString numToken;
+    while (formatPos < formatLen &&
+           isAlphaNumeric(ch = format.CharAt(formatPos))) {
+      numToken.Append(ch);
+      ++formatPos;
+    }
+
+    txFormattedCounter* counter = 0;
+    rv = txFormattedCounter::getCounterFor(numToken, groupSize, groupSeparator,
+                                           counter);
+    if (NS_FAILED(rv)) {
+      txListIterator iter(&aCounters);
+      while (iter.hasNext()) {
+        delete (txFormattedCounter*)iter.next();
+      }
+      aCounters.clear();
+      return rv;
+    }
+
+    // Add to list of counters
+    counter->mSeparator = sepToken;
+    rv = aCounters.add(counter);
+    if (NS_FAILED(rv)) {
+      // XXX ErrorReport: out of memory
+      txListIterator iter(&aCounters);
+      while (iter.hasNext()) {
+        delete (txFormattedCounter*)iter.next();
+      }
+      aCounters.clear();
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult txXSLTNumber::getSiblingCount(txXPathTreeWalker& aWalker,
+                                       txPattern* aCountPattern,
+                                       txIMatchContext* aContext,
+                                       int32_t* aCount) {
+  int32_t value = 1;
+  while (aWalker.moveToPreviousSibling()) {
+    bool matched;
+    nsresult rv =
+        aCountPattern->matches(aWalker.getCurrentPosition(), aContext, matched);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (matched) {
+      ++value;
+    }
+  }
+
+  *aCount = value;
+
+  return NS_OK;
+}
+
+bool txXSLTNumber::getPrevInDocumentOrder(txXPathTreeWalker& aWalker) {
+  if (aWalker.moveToPreviousSibling()) {
+    while (aWalker.moveToLastChild()) {
+      // do nothing
+    }
+    return true;
+  }
+  return aWalker.moveToParent();
 }
 
 struct CharRange {
-    char16_t lower;             // inclusive
-    char16_t upper;             // inclusive
+  char16_t lower;  // inclusive
+  char16_t upper;  // inclusive
 
-    bool operator<(const CharRange& other) const {
-        return upper < other.lower;
-    }
+  bool operator<(const CharRange& other) const { return upper < other.lower; }
 };
 
-bool txXSLTNumber::isAlphaNumeric(char16_t ch)
-{
-    static const CharRange alphanumericRanges[] = {
-        // clang-format off
+bool txXSLTNumber::isAlphaNumeric(char16_t ch) {
+  static const CharRange alphanumericRanges[] = {
+      // clang-format off
         { 0x0030, 0x0039 },
         { 0x0041, 0x005A },
         { 0x0061, 0x007A },
@@ -761,14 +737,15 @@ bool txXSLTNumber::isAlphaNumeric(char16_t ch)
         { 0xFFC2, 0xFFC7 },
         { 0xFFCA, 0xFFCF },
         { 0xFFD2, 0xFFD7 }
-        // clang-format on
-    };
+      // clang-format on
+  };
 
-    CharRange search = { ch, ch };
-    const CharRange* end = mozilla::ArrayEnd(alphanumericRanges);
-    const CharRange* element = std::lower_bound(&alphanumericRanges[0], end, search);
-    if (element == end) {
-        return false;
-    }
-    return element->lower <= ch && ch <= element->upper;
+  CharRange search = {ch, ch};
+  const CharRange* end = mozilla::ArrayEnd(alphanumericRanges);
+  const CharRange* element =
+      std::lower_bound(&alphanumericRanges[0], end, search);
+  if (element == end) {
+    return false;
+  }
+  return element->lower <= ch && ch <= element->upper;
 }

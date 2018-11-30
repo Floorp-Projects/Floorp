@@ -17,26 +17,25 @@ namespace mscom {
 
 struct IInterceptor;
 
-struct HandlerProvider
-{
+struct HandlerProvider {
   virtual STDMETHODIMP GetHandler(NotNull<CLSID*> aHandlerClsid) = 0;
-  virtual STDMETHODIMP GetHandlerPayloadSize(NotNull<IInterceptor*> aInterceptor, NotNull<DWORD*> aOutPayloadSize) = 0;
-  virtual STDMETHODIMP WriteHandlerPayload(NotNull<IInterceptor*> aInterceptor, NotNull<IStream*> aStream) = 0;
+  virtual STDMETHODIMP GetHandlerPayloadSize(
+      NotNull<IInterceptor*> aInterceptor, NotNull<DWORD*> aOutPayloadSize) = 0;
+  virtual STDMETHODIMP WriteHandlerPayload(NotNull<IInterceptor*> aInterceptor,
+                                           NotNull<IStream*> aStream) = 0;
   virtual STDMETHODIMP_(REFIID) MarshalAs(REFIID aIid) = 0;
   virtual STDMETHODIMP DisconnectHandlerRemotes() = 0;
 };
 
-struct IHandlerProvider : public IUnknown
-                        , public HandlerProvider
-{
-  virtual STDMETHODIMP_(REFIID) GetEffectiveOutParamIid(REFIID aCallIid,
-                                                        ULONG aCallMethod) = 0;
-  virtual STDMETHODIMP NewInstance(REFIID aIid,
-                                   InterceptorTargetPtr<IUnknown> aTarget,
-                                   NotNull<IHandlerProvider**> aOutNewPayload) = 0;
+struct IHandlerProvider : public IUnknown, public HandlerProvider {
+  virtual STDMETHODIMP_(REFIID)
+      GetEffectiveOutParamIid(REFIID aCallIid, ULONG aCallMethod) = 0;
+  virtual STDMETHODIMP NewInstance(
+      REFIID aIid, InterceptorTargetPtr<IUnknown> aTarget,
+      NotNull<IHandlerProvider**> aOutNewPayload) = 0;
 };
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla
 
-#endif // mozilla_mscom_IHandlerProvider_h
+#endif  // mozilla_mscom_IHandlerProvider_h

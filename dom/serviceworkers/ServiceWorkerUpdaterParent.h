@@ -15,20 +15,17 @@ namespace dom {
 
 class ServiceWorkerManagerService;
 
-class ServiceWorkerUpdaterParent final : public PServiceWorkerUpdaterParent
-{
-public:
-  void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+class ServiceWorkerUpdaterParent final : public PServiceWorkerUpdaterParent {
+ public:
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  bool
-  Proceed(ServiceWorkerManagerService* aService);
+  bool Proceed(ServiceWorkerManagerService* aService);
 
-private:
+ private:
   RefPtr<ServiceWorkerManagerService> mService;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ServiceWorkerUpdaterParent_h
+#endif  // mozilla_dom_ServiceWorkerUpdaterParent_h

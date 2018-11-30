@@ -19,14 +19,9 @@ namespace plugins {
 class PluginInstanceParent;
 class PluginScriptableObjectParent;
 
-struct ParentNPObject : NPObject
-{
+struct ParentNPObject : NPObject {
   ParentNPObject()
-    : NPObject()
-    , parent(nullptr)
-    , invalidated(false)
-    , asyncWrapperCount(0)
-  {}
+      : NPObject(), parent(nullptr), invalidated(false), asyncWrapperCount(0) {}
 
   // |parent| is always valid as long as the actor is alive. Once the actor is
   // destroyed this will be set to null.
@@ -35,90 +30,63 @@ struct ParentNPObject : NPObject
   int32_t asyncWrapperCount;
 };
 
-class PluginScriptableObjectParent : public PPluginScriptableObjectParent
-{
+class PluginScriptableObjectParent : public PPluginScriptableObjectParent {
   friend class PluginInstanceParent;
 
-public:
+ public:
   explicit PluginScriptableObjectParent(ScriptableObjectType aType);
   virtual ~PluginScriptableObjectParent();
 
-  void
-  InitializeProxy();
+  void InitializeProxy();
 
-  void
-  InitializeLocal(NPObject* aObject);
+  void InitializeLocal(NPObject* aObject);
 
-  virtual void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerHasMethod(const PluginIdentifier& aId,
-                  bool* aHasMethod) override;
+  virtual mozilla::ipc::IPCResult AnswerHasMethod(const PluginIdentifier& aId,
+                                                  bool* aHasMethod) override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerInvoke(const PluginIdentifier& aId,
-               InfallibleTArray<Variant>&& aArgs,
-               Variant* aResult,
-               bool* aSuccess) override;
+  virtual mozilla::ipc::IPCResult AnswerInvoke(
+      const PluginIdentifier& aId, InfallibleTArray<Variant>&& aArgs,
+      Variant* aResult, bool* aSuccess) override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerInvokeDefault(InfallibleTArray<Variant>&& aArgs,
-                      Variant* aResult,
-                      bool* aSuccess) override;
+  virtual mozilla::ipc::IPCResult AnswerInvokeDefault(
+      InfallibleTArray<Variant>&& aArgs, Variant* aResult,
+      bool* aSuccess) override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerHasProperty(const PluginIdentifier& aId,
-                    bool* aHasProperty) override;
+  virtual mozilla::ipc::IPCResult AnswerHasProperty(
+      const PluginIdentifier& aId, bool* aHasProperty) override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerGetParentProperty(const PluginIdentifier& aId,
-                          Variant* aResult,
-                          bool* aSuccess) override;
+  virtual mozilla::ipc::IPCResult AnswerGetParentProperty(
+      const PluginIdentifier& aId, Variant* aResult, bool* aSuccess) override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerSetProperty(const PluginIdentifier& aId,
-                    const Variant& aValue,
-                    bool* aSuccess) override;
+  virtual mozilla::ipc::IPCResult AnswerSetProperty(const PluginIdentifier& aId,
+                                                    const Variant& aValue,
+                                                    bool* aSuccess) override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerRemoveProperty(const PluginIdentifier& aId,
-                       bool* aSuccess) override;
+  virtual mozilla::ipc::IPCResult AnswerRemoveProperty(
+      const PluginIdentifier& aId, bool* aSuccess) override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerEnumerate(InfallibleTArray<PluginIdentifier>* aProperties,
-                  bool* aSuccess) override;
+  virtual mozilla::ipc::IPCResult AnswerEnumerate(
+      InfallibleTArray<PluginIdentifier>* aProperties, bool* aSuccess) override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerConstruct(InfallibleTArray<Variant>&& aArgs,
-                  Variant* aResult,
-                  bool* aSuccess) override;
+  virtual mozilla::ipc::IPCResult AnswerConstruct(
+      InfallibleTArray<Variant>&& aArgs, Variant* aResult,
+      bool* aSuccess) override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerNPN_Evaluate(const nsCString& aScript,
-                     Variant* aResult,
-                     bool* aSuccess) override;
+  virtual mozilla::ipc::IPCResult AnswerNPN_Evaluate(const nsCString& aScript,
+                                                     Variant* aResult,
+                                                     bool* aSuccess) override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvProtect() override;
+  virtual mozilla::ipc::IPCResult RecvProtect() override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvUnprotect() override;
+  virtual mozilla::ipc::IPCResult RecvUnprotect() override;
 
-  static const NPClass*
-  GetClass()
-  {
-    return &sNPClass;
-  }
+  static const NPClass* GetClass() { return &sNPClass; }
 
-  PluginInstanceParent*
-  GetInstance() const
-  {
-    return mInstance;
-  }
+  PluginInstanceParent* GetInstance() const { return mInstance; }
 
-  NPObject*
-  GetObject(bool aCanResurrect);
+  NPObject* GetObject(bool aCanResurrect);
 
   // Protect only affects LocalObject actors. It is called by the
   // ProtectedVariant/Actor helper classes before the actor is used as an
@@ -139,82 +107,52 @@ public:
   // ResurrectProxyObject).
   void DropNPObject();
 
-  ScriptableObjectType
-  Type() const {
-    return mType;
-  }
+  ScriptableObjectType Type() const { return mType; }
 
-  bool GetPropertyHelper(NPIdentifier aName,
-                         bool* aHasProperty,
-                         bool* aHasMethod,
-                         NPVariant* aResult);
+  bool GetPropertyHelper(NPIdentifier aName, bool* aHasProperty,
+                         bool* aHasMethod, NPVariant* aResult);
 
-private:
-  static NPObject*
-  ScriptableAllocate(NPP aInstance,
-                     NPClass* aClass);
+ private:
+  static NPObject* ScriptableAllocate(NPP aInstance, NPClass* aClass);
 
-  static void
-  ScriptableInvalidate(NPObject* aObject);
+  static void ScriptableInvalidate(NPObject* aObject);
 
-  static void
-  ScriptableDeallocate(NPObject* aObject);
+  static void ScriptableDeallocate(NPObject* aObject);
 
-  static bool
-  ScriptableHasMethod(NPObject* aObject,
-                      NPIdentifier aName);
+  static bool ScriptableHasMethod(NPObject* aObject, NPIdentifier aName);
 
-  static bool
-  ScriptableInvoke(NPObject* aObject,
-                   NPIdentifier aName,
-                   const NPVariant* aArgs,
-                   uint32_t aArgCount,
-                   NPVariant* aResult);
+  static bool ScriptableInvoke(NPObject* aObject, NPIdentifier aName,
+                               const NPVariant* aArgs, uint32_t aArgCount,
+                               NPVariant* aResult);
 
-  static bool
-  ScriptableInvokeDefault(NPObject* aObject,
-                          const NPVariant* aArgs,
-                          uint32_t aArgCount,
-                          NPVariant* aResult);
+  static bool ScriptableInvokeDefault(NPObject* aObject, const NPVariant* aArgs,
+                                      uint32_t aArgCount, NPVariant* aResult);
 
-  static bool
-  ScriptableHasProperty(NPObject* aObject,
-                        NPIdentifier aName);
+  static bool ScriptableHasProperty(NPObject* aObject, NPIdentifier aName);
 
-  static bool
-  ScriptableGetProperty(NPObject* aObject,
-                        NPIdentifier aName,
-                        NPVariant* aResult);
+  static bool ScriptableGetProperty(NPObject* aObject, NPIdentifier aName,
+                                    NPVariant* aResult);
 
-  static bool
-  ScriptableSetProperty(NPObject* aObject,
-                        NPIdentifier aName,
-                        const NPVariant* aValue);
+  static bool ScriptableSetProperty(NPObject* aObject, NPIdentifier aName,
+                                    const NPVariant* aValue);
 
-  static bool
-  ScriptableRemoveProperty(NPObject* aObject,
-                           NPIdentifier aName);
+  static bool ScriptableRemoveProperty(NPObject* aObject, NPIdentifier aName);
 
-  static bool
-  ScriptableEnumerate(NPObject* aObject,
-                      NPIdentifier** aIdentifiers,
-                      uint32_t* aCount);
+  static bool ScriptableEnumerate(NPObject* aObject,
+                                  NPIdentifier** aIdentifiers,
+                                  uint32_t* aCount);
 
-  static bool
-  ScriptableConstruct(NPObject* aObject,
-                      const NPVariant* aArgs,
-                      uint32_t aArgCount,
-                      NPVariant* aResult);
+  static bool ScriptableConstruct(NPObject* aObject, const NPVariant* aArgs,
+                                  uint32_t aArgCount, NPVariant* aResult);
 
-  NPObject*
-  CreateProxyObject();
+  NPObject* CreateProxyObject();
 
   // ResurrectProxyObject is only used with Proxy actors. It is called when the
   // child process uses an actor whose NPObject was deleted by the parent
   // process.
   bool ResurrectProxyObject();
 
-private:
+ private:
   PluginInstanceParent* mInstance;
 
   // This may be a ParentNPObject or some other kind depending on who created

@@ -32,16 +32,15 @@ class UsageInfo;
 // An abstract interface for quota manager clients.
 // Each storage API must provide an implementation of this interface in order
 // to participate in centralized quota and storage handling.
-class Client
-{
-public:
+class Client {
+ public:
   typedef mozilla::Atomic<bool> AtomicBool;
 
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   enum Type {
     IDB = 0,
-    //APPCACHE,
+    // APPCACHE,
     ASMJS,
     DOMCACHE,
     SDB,
@@ -49,21 +48,16 @@ public:
     TYPE_MAX
   };
 
-  static Type
-  TypeMax()
-  {
+  static Type TypeMax() {
     if (CachedNextGenLocalStorageEnabled()) {
       return TYPE_MAX;
     }
     return LS;
   }
 
-  virtual Type
-  GetType() = 0;
+  virtual Type GetType() = 0;
 
-  static nsresult
-  TypeToText(Type aType, nsAString& aText)
-  {
+  static nsresult TypeToText(Type aType, nsAString& aText) {
     switch (aType) {
       case IDB:
         aText.AssignLiteral(IDB_DIRECTORY_NAME);
@@ -97,35 +91,27 @@ public:
     return NS_OK;
   }
 
-  static nsresult
-  TypeFromText(const nsAString& aText, Type& aType)
-  {
+  static nsresult TypeFromText(const nsAString& aText, Type& aType) {
     if (aText.EqualsLiteral(IDB_DIRECTORY_NAME)) {
       aType = IDB;
-    }
-    else if (aText.EqualsLiteral(ASMJSCACHE_DIRECTORY_NAME)) {
+    } else if (aText.EqualsLiteral(ASMJSCACHE_DIRECTORY_NAME)) {
       aType = ASMJS;
-    }
-    else if (aText.EqualsLiteral(DOMCACHE_DIRECTORY_NAME)) {
+    } else if (aText.EqualsLiteral(DOMCACHE_DIRECTORY_NAME)) {
       aType = DOMCACHE;
-    }
-    else if (aText.EqualsLiteral(SDB_DIRECTORY_NAME)) {
+    } else if (aText.EqualsLiteral(SDB_DIRECTORY_NAME)) {
       aType = SDB;
-    }
-    else if (CachedNextGenLocalStorageEnabled() &&
-             aText.EqualsLiteral(LS_DIRECTORY_NAME)) {
+    } else if (CachedNextGenLocalStorageEnabled() &&
+               aText.EqualsLiteral(LS_DIRECTORY_NAME)) {
       aType = LS;
-    }
-    else {
+    } else {
       return NS_ERROR_FAILURE;
     }
 
     return NS_OK;
   }
 
-  static nsresult
-  NullableTypeFromText(const nsAString& aText, Nullable<Type>* aType)
-  {
+  static nsresult NullableTypeFromText(const nsAString& aText,
+                                       Nullable<Type>* aType) {
     if (aText.IsVoid()) {
       *aType = Nullable<Type>();
       return NS_OK;
@@ -142,78 +128,59 @@ public:
   }
 
   // Methods which are called on the IO thread.
-  virtual nsresult
-  UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory)
-  {
+  virtual nsresult UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory) {
     return NS_OK;
   }
 
-  virtual nsresult
-  UpgradeStorageFrom2_0To2_1(nsIFile* aDirectory)
-  {
+  virtual nsresult UpgradeStorageFrom2_0To2_1(nsIFile* aDirectory) {
     return NS_OK;
   }
 
-  virtual nsresult
-  InitOrigin(PersistenceType aPersistenceType,
-             const nsACString& aGroup,
-             const nsACString& aOrigin,
-             const AtomicBool& aCanceled,
-             UsageInfo* aUsageInfo) = 0;
+  virtual nsresult InitOrigin(PersistenceType aPersistenceType,
+                              const nsACString& aGroup,
+                              const nsACString& aOrigin,
+                              const AtomicBool& aCanceled,
+                              UsageInfo* aUsageInfo) = 0;
 
-  virtual nsresult
-  GetUsageForOrigin(PersistenceType aPersistenceType,
-                    const nsACString& aGroup,
-                    const nsACString& aOrigin,
-                    const AtomicBool& aCanceled,
-                    UsageInfo* aUsageInfo) = 0;
+  virtual nsresult GetUsageForOrigin(PersistenceType aPersistenceType,
+                                     const nsACString& aGroup,
+                                     const nsACString& aOrigin,
+                                     const AtomicBool& aCanceled,
+                                     UsageInfo* aUsageInfo) = 0;
 
   // This method is called when origins are about to be cleared
   // (except the case when clearing is triggered by the origin eviction).
-  virtual nsresult
-  AboutToClearOrigins(const Nullable<PersistenceType>& aPersistenceType,
-                      const OriginScope& aOriginScope)
-  {
+  virtual nsresult AboutToClearOrigins(
+      const Nullable<PersistenceType>& aPersistenceType,
+      const OriginScope& aOriginScope) {
     return NS_OK;
   }
 
-  virtual void
-  OnOriginClearCompleted(PersistenceType aPersistenceType,
-                         const nsACString& aOrigin) = 0;
+  virtual void OnOriginClearCompleted(PersistenceType aPersistenceType,
+                                      const nsACString& aOrigin) = 0;
 
-  virtual void
-  ReleaseIOThreadObjects() = 0;
+  virtual void ReleaseIOThreadObjects() = 0;
 
   // Methods which are called on the background thread.
-  virtual void
-  AbortOperations(const nsACString& aOrigin) = 0;
+  virtual void AbortOperations(const nsACString& aOrigin) = 0;
 
-  virtual void
-  AbortOperationsForProcess(ContentParentId aContentParentId) = 0;
+  virtual void AbortOperationsForProcess(ContentParentId aContentParentId) = 0;
 
-  virtual void
-  StartIdleMaintenance() = 0;
+  virtual void StartIdleMaintenance() = 0;
 
-  virtual void
-  StopIdleMaintenance() = 0;
+  virtual void StopIdleMaintenance() = 0;
 
-  virtual void
-  ShutdownWorkThreads() = 0;
+  virtual void ShutdownWorkThreads() = 0;
 
   // Methods which are called on the main thread.
-  virtual void
-  DidInitialize(QuotaManager* aQuotaManager)
-  { }
+  virtual void DidInitialize(QuotaManager* aQuotaManager) {}
 
-  virtual void
-  WillShutdown()
-  { }
+  virtual void WillShutdown() {}
 
-protected:
-  virtual ~Client()
-  { }
+ protected:
+  virtual ~Client() {}
 };
 
 END_QUOTA_NAMESPACE
 
-#endif // mozilla_dom_quota_client_h__
+#endif  // mozilla_dom_quota_client_h__

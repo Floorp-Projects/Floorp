@@ -5,14 +5,15 @@
 #include <string>
 #include <vector>
 
-void testServerTimingHeader(const char* headerValue,
-                            std::vector<std::vector<std::string>> expectedResults)
-{
+void testServerTimingHeader(
+    const char* headerValue,
+    std::vector<std::vector<std::string>> expectedResults) {
   nsAutoCString header(headerValue);
   ServerTimingParser parser(header);
   parser.Parse();
 
-  nsTArray<nsCOMPtr<nsIServerTiming>> results = parser.TakeServerTimingHeaders();
+  nsTArray<nsCOMPtr<nsIServerTiming>> results =
+      parser.TakeServerTimingHeaders();
 
   ASSERT_EQ(results.Length(), expectedResults.size());
 
@@ -178,8 +179,7 @@ TEST(TestServerTimingHeader, HeaderParsing) {
 
   // unspecified param values
   testServerTimingHeader("metric;dur;dur=123.4", {{"metric", "0", ""}});
-  testServerTimingHeader("metric;desc;desc=description",
-                         {{"metric", "0", ""}});
+  testServerTimingHeader("metric;desc;desc=description", {{"metric", "0", ""}});
 
   // param name case
   testServerTimingHeader("metric;DuR=123.4;DeSc=description",
@@ -217,16 +217,19 @@ TEST(TestServerTimingHeader, HeaderParsing) {
                          {{"met", "0", "de"}, {"metric2", "0", ""}});
 
   // test cases from https://w3c.github.io/server-timing/#examples
-  testServerTimingHeader(" miss, ,db;dur=53, app;dur=47.2 ",
-                         {{"miss", "0", ""}, {"db", "53", ""}, {"app", "47.2", ""}});
+  testServerTimingHeader(
+      " miss, ,db;dur=53, app;dur=47.2 ",
+      {{"miss", "0", ""}, {"db", "53", ""}, {"app", "47.2", ""}});
   testServerTimingHeader(" customView, dc;desc=atl ",
                          {{"customView", "0", ""}, {"dc", "0", "atl"}});
-  testServerTimingHeader(" total;dur=123.4 ",
-                         {{"total", "123.4", ""}});
+  testServerTimingHeader(" total;dur=123.4 ", {{"total", "123.4", ""}});
 
   // test cases for comma in quoted string
-  testServerTimingHeader("     metric ; desc=\"descr\\\"\\\";,=iption\";dur=123.4",
-                         {{"metric", "123.4", "descr\"\";,=iption"}});
-  testServerTimingHeader(" metric2;dur=\"123.4\";;desc=\",;\\\",;,\";;,  metric  ;  desc = \" \\\", ;\\\" \"; dur=123.4,",
-                         {{"metric2", "123.4", ",;\",;,"}, {"metric", "123.4", " \", ;\" "}});
+  testServerTimingHeader(
+      "     metric ; desc=\"descr\\\"\\\";,=iption\";dur=123.4",
+      {{"metric", "123.4", "descr\"\";,=iption"}});
+  testServerTimingHeader(
+      " metric2;dur=\"123.4\";;desc=\",;\\\",;,\";;,  metric  ;  desc = \" "
+      "\\\", ;\\\" \"; dur=123.4,",
+      {{"metric2", "123.4", ",;\",;,"}, {"metric", "123.4", " \", ;\" "}});
 }

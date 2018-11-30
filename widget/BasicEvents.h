@@ -20,19 +20,18 @@
 
 #ifdef DEBUG
 #include "nsXULAppAPI.h"
-#endif // #ifdef DEBUG
+#endif  // #ifdef DEBUG
 
 namespace IPC {
-template<typename T>
+template <typename T>
 struct ParamTraits;
-} // namespace IPC
+}  // namespace IPC
 
 namespace mozilla {
 
 class EventTargetChainItem;
 
-enum class CrossProcessForwarding
-{
+enum class CrossProcessForwarding {
   // eStop prevents the event to be sent to remote process.
   eStop,
   // eAllow keeps current state of the event whether it's sent to remote
@@ -51,65 +50,64 @@ enum class CrossProcessForwarding
  * This is necessary for VC which is NOT C++0x compiler.
  ******************************************************************************/
 
-struct BaseEventFlags
-{
-public:
+struct BaseEventFlags {
+ public:
   // If mIsTrusted is true, the event is a trusted event.  Otherwise, it's
   // an untrusted event.
-  bool    mIsTrusted : 1;
+  bool mIsTrusted : 1;
   // If mInBubblingPhase is true, the event is in bubbling phase or target
   // phase.
-  bool    mInBubblingPhase : 1;
+  bool mInBubblingPhase : 1;
   // If mInCapturePhase is true, the event is in capture phase or target phase.
-  bool    mInCapturePhase : 1;
+  bool mInCapturePhase : 1;
   // If mInSystemGroup is true, the event is being dispatched in system group.
-  bool    mInSystemGroup: 1;
+  bool mInSystemGroup : 1;
   // If mCancelable is true, the event can be consumed.  I.e., calling
   // dom::Event::PreventDefault() can prevent the default action.
-  bool    mCancelable : 1;
+  bool mCancelable : 1;
   // If mBubbles is true, the event can bubble.  Otherwise, cannot be handled
   // in bubbling phase.
-  bool    mBubbles : 1;
+  bool mBubbles : 1;
   // If mPropagationStopped is true, dom::Event::StopPropagation() or
   // dom::Event::StopImmediatePropagation() has been called.
-  bool    mPropagationStopped : 1;
+  bool mPropagationStopped : 1;
   // If mImmediatePropagationStopped is true,
   // dom::Event::StopImmediatePropagation() has been called.
   // Note that mPropagationStopped must be true when this is true.
-  bool    mImmediatePropagationStopped : 1;
+  bool mImmediatePropagationStopped : 1;
   // If mDefaultPrevented is true, the event has been consumed.
   // E.g., dom::Event::PreventDefault() has been called or
   // the default action has been performed.
-  bool    mDefaultPrevented : 1;
+  bool mDefaultPrevented : 1;
   // If mDefaultPreventedByContent is true, the event has been
   // consumed by content.
   // Note that mDefaultPrevented must be true when this is true.
-  bool    mDefaultPreventedByContent : 1;
+  bool mDefaultPreventedByContent : 1;
   // If mDefaultPreventedByChrome is true, the event has been
   // consumed by chrome.
   // Note that mDefaultPrevented must be true when this is true.
-  bool    mDefaultPreventedByChrome : 1;
+  bool mDefaultPreventedByChrome : 1;
   // mMultipleActionsPrevented may be used when default handling don't want to
   // be prevented, but only one of the event targets should handle the event.
   // For example, when a <label> element is in another <label> element and
   // the first <label> element is clicked, that one may set this true.
   // Then, the second <label> element won't handle the event.
-  bool    mMultipleActionsPrevented : 1;
+  bool mMultipleActionsPrevented : 1;
   // If mIsBeingDispatched is true, the DOM event created from the event is
   // dispatching into the DOM tree and not completed.
-  bool    mIsBeingDispatched : 1;
+  bool mIsBeingDispatched : 1;
   // If mDispatchedAtLeastOnce is true, the event has been dispatched
   // as a DOM event and the dispatch has been completed.
-  bool    mDispatchedAtLeastOnce : 1;
+  bool mDispatchedAtLeastOnce : 1;
   // If mIsSynthesizedForTests is true, the event has been synthesized for
   // automated tests or something hacky approach of an add-on.
-  bool    mIsSynthesizedForTests : 1;
+  bool mIsSynthesizedForTests : 1;
   // If mExceptionWasRaised is true, one of the event handlers has raised an
   // exception.
-  bool    mExceptionWasRaised : 1;
+  bool mExceptionWasRaised : 1;
   // If mRetargetToNonNativeAnonymous is true and the target is in a non-native
   // native anonymous subtree, the event target is set to mOriginalTarget.
-  bool    mRetargetToNonNativeAnonymous : 1;
+  bool mRetargetToNonNativeAnonymous : 1;
   // If mNoContentDispatch is true, the event is never dispatched to the
   // event handlers which are added to the contents, onfoo attributes and
   // properties.  Note that this flag is ignored when
@@ -119,9 +117,9 @@ public:
   // document.
   // XXX This is an ancient and broken feature, don't use this for new bug
   //     as far as possible.
-  bool    mNoContentDispatch : 1;
+  bool mNoContentDispatch : 1;
   // If mOnlyChromeDispatch is true, the event is dispatched to only chrome.
-  bool    mOnlyChromeDispatch : 1;
+  bool mOnlyChromeDispatch : 1;
   // Indicates if the key combination is reserved by chrome.  This is set by
   // MarkAsReservedByChrome().
   bool mIsReservedByChrome : 1;
@@ -130,13 +128,13 @@ public:
   // Be aware, if this is true, EventDispatcher needs to check if each event
   // listener is added to chrome node, so, don't set this to true for the
   // events which are fired a lot of times like eMouseMove.
-  bool    mOnlySystemGroupDispatchInContent : 1;
+  bool mOnlySystemGroupDispatchInContent : 1;
   // The event's action will be handled by APZ. The main thread should not
   // perform its associated action.
   bool mHandledByAPZ : 1;
   // True if the event is currently being handled by an event listener that
   // was registered as a passive listener.
-  bool mInPassiveListener: 1;
+  bool mInPassiveListener : 1;
   // If mComposed is true, the event fired by nodes in shadow DOM can cross the
   // boundary of shadow DOM and light DOM.
   bool mComposed : 1;
@@ -172,25 +170,19 @@ public:
   bool mPostedToRemoteProcess : 1;
 
   // If the event is being handled in target phase, returns true.
-  inline bool InTargetPhase() const
-  {
+  inline bool InTargetPhase() const {
     return (mInBubblingPhase && mInCapturePhase);
   }
 
   /**
    * Helper methods for methods of DOM Event.
    */
-  inline void StopPropagation()
-  {
-    mPropagationStopped = true;
-  }
-  inline void StopImmediatePropagation()
-  {
+  inline void StopPropagation() { mPropagationStopped = true; }
+  inline void StopImmediatePropagation() {
     StopPropagation();
     mImmediatePropagationStopped = true;
   }
-  inline void PreventDefault(bool aCalledByDefaultHandler = true)
-  {
+  inline void PreventDefault(bool aCalledByDefaultHandler = true) {
     if (!mCancelable) {
       return;
     }
@@ -207,9 +199,8 @@ public:
     }
   }
   // This should be used only before dispatching events into the DOM tree.
-  inline void
-  PreventDefaultBeforeDispatch(CrossProcessForwarding aCrossProcessForwarding)
-  {
+  inline void PreventDefaultBeforeDispatch(
+      CrossProcessForwarding aCrossProcessForwarding) {
     if (!mCancelable) {
       return;
     }
@@ -218,23 +209,13 @@ public:
       StopCrossProcessForwarding();
     }
   }
-  inline bool DefaultPrevented() const
-  {
-    return mDefaultPrevented;
-  }
-  inline bool DefaultPreventedByContent() const
-  {
+  inline bool DefaultPrevented() const { return mDefaultPrevented; }
+  inline bool DefaultPreventedByContent() const {
     MOZ_ASSERT(!mDefaultPreventedByContent || DefaultPrevented());
     return mDefaultPreventedByContent;
   }
-  inline bool IsTrusted() const
-  {
-    return mIsTrusted;
-  }
-  inline bool PropagationStopped() const
-  {
-    return mPropagationStopped;
-  }
+  inline bool IsTrusted() const { return mIsTrusted; }
+  inline bool PropagationStopped() const { return mPropagationStopped; }
 
   // Helper methods to access flags managing state of propagation between
   // processes.
@@ -242,8 +223,7 @@ public:
   /**
    * Prevent to be dispatched to remote process.
    */
-  inline void StopCrossProcessForwarding()
-  {
+  inline void StopCrossProcessForwarding() {
     MOZ_ASSERT(!mPostedToRemoteProcess);
     mNoRemoteProcessDispatch = true;
     mWantReplyFromContentProcess = false;
@@ -251,8 +231,7 @@ public:
   /**
    * Return true if the event shouldn't be dispatched to remote process.
    */
-  inline bool IsCrossProcessForwardingStopped() const
-  {
+  inline bool IsCrossProcessForwardingStopped() const {
     return mNoRemoteProcessDispatch;
   }
   /**
@@ -265,8 +244,7 @@ public:
    * tree in chrome for checking if it's reserved before being sent to any
    * remote processes.
    */
-  inline void MarkAsWaitingReplyFromRemoteProcess()
-  {
+  inline void MarkAsWaitingReplyFromRemoteProcess() {
     MOZ_ASSERT(!mPostedToRemoteProcess);
     mNoRemoteProcessDispatch = false;
     mWantReplyFromContentProcess = true;
@@ -275,8 +253,7 @@ public:
    * Reset "waiting reply from remote process" state.  This is useful when
    * you dispatch a copy of an event coming from different process.
    */
-  inline void ResetWaitingReplyFromRemoteProcessState()
-  {
+  inline void ResetWaitingReplyFromRemoteProcessState() {
     if (IsWaitingReplyFromRemoteProcess()) {
       // FYI: mWantReplyFromContentProcess is also used for indicating
       //      "handled in remote process" state.  Therefore, only when
@@ -289,16 +266,14 @@ public:
    * Return true if the event handler should wait reply event.  I.e., if this
    * returns true, any event handler should do nothing with the event.
    */
-  inline bool IsWaitingReplyFromRemoteProcess() const
-  {
+  inline bool IsWaitingReplyFromRemoteProcess() const {
     return !mNoRemoteProcessDispatch && mWantReplyFromContentProcess;
   }
   /**
    * Mark the event as already handled in the remote process.  This should be
    * called when initializing reply events.
    */
-  inline void MarkAsHandledInRemoteProcess()
-  {
+  inline void MarkAsHandledInRemoteProcess() {
     mNoRemoteProcessDispatch = true;
     mWantReplyFromContentProcess = true;
     mPostedToRemoteProcess = false;
@@ -306,23 +281,20 @@ public:
   /**
    * Return true if the event has already been handled in the remote process.
    */
-  inline bool IsHandledInRemoteProcess() const
-  {
+  inline bool IsHandledInRemoteProcess() const {
     return mNoRemoteProcessDispatch && mWantReplyFromContentProcess;
   }
   /**
    * Return true if the event should be sent back to its parent process.
    */
-  inline bool WantReplyFromContentProcess() const
-  {
+  inline bool WantReplyFromContentProcess() const {
     MOZ_ASSERT(!XRE_IsParentProcess());
     return IsWaitingReplyFromRemoteProcess();
   }
   /**
    * Mark the event has already posted to a remote process.
    */
-  inline void MarkAsPostedToRemoteProcess()
-  {
+  inline void MarkAsPostedToRemoteProcess() {
     MOZ_ASSERT(!IsCrossProcessForwardingStopped());
     mPostedToRemoteProcess = true;
   }
@@ -330,8 +302,7 @@ public:
    * Reset the cross process dispatching state.  This should be used when a
    * process receives the event because the state is in the sender.
    */
-  inline void ResetCrossProcessDispatchingState()
-  {
+  inline void ResetCrossProcessDispatchingState() {
     MOZ_ASSERT(!IsCrossProcessForwardingStopped());
     mPostedToRemoteProcess = false;
     // Ignore propagation state in the different process if it's marked as
@@ -349,16 +320,14 @@ public:
    * really rare.  If that'd be problem for you, you should unmark this in
    * TabParent or somewhere.
    */
-  inline bool HasBeenPostedToRemoteProcess() const
-  {
+  inline bool HasBeenPostedToRemoteProcess() const {
     return mPostedToRemoteProcess;
   }
   /**
    * Mark the event is reserved by chrome.  I.e., shouldn't be dispatched to
    * content because it shouldn't be cancelable.
    */
-  inline void MarkAsReservedByChrome()
-  {
+  inline void MarkAsReservedByChrome() {
     MOZ_ASSERT(!mPostedToRemoteProcess);
     mIsReservedByChrome = true;
     // For reserved commands (such as Open New Tab), we don't need to wait for
@@ -374,38 +343,30 @@ public:
   /**
    * Return true if the event is reserved by chrome.
    */
-  inline bool IsReservedByChrome() const
-  {
-    MOZ_ASSERT(!mIsReservedByChrome ||
-               (IsCrossProcessForwardingStopped() &&
-                mOnlySystemGroupDispatchInContent));
+  inline bool IsReservedByChrome() const {
+    MOZ_ASSERT(!mIsReservedByChrome || (IsCrossProcessForwardingStopped() &&
+                                        mOnlySystemGroupDispatchInContent));
     return mIsReservedByChrome;
   }
 
-  inline void Clear()
-  {
-    SetRawFlags(0);
-  }
+  inline void Clear() { SetRawFlags(0); }
   // Get if either the instance's bit or the aOther's bit is true, the
   // instance's bit becomes true.  In other words, this works like:
   // eventFlags |= aOther;
-  inline void Union(const BaseEventFlags& aOther)
-  {
+  inline void Union(const BaseEventFlags& aOther) {
     RawFlags rawFlags = GetRawFlags() | aOther.GetRawFlags();
     SetRawFlags(rawFlags);
   }
 
-private:
+ private:
   typedef uint32_t RawFlags;
 
-  inline void SetRawFlags(RawFlags aRawFlags)
-  {
+  inline void SetRawFlags(RawFlags aRawFlags) {
     static_assert(sizeof(BaseEventFlags) <= sizeof(RawFlags),
-      "mozilla::EventFlags must not be bigger than the RawFlags");
+                  "mozilla::EventFlags must not be bigger than the RawFlags");
     memcpy(this, &aRawFlags, sizeof(BaseEventFlags));
   }
-  inline RawFlags GetRawFlags() const
-  {
+  inline RawFlags GetRawFlags() const {
     RawFlags result = 0;
     memcpy(&result, this, sizeof(BaseEventFlags));
     return result;
@@ -416,21 +377,16 @@ private:
  * mozilla::EventFlags
  ******************************************************************************/
 
-struct EventFlags : public BaseEventFlags
-{
-  EventFlags()
-  {
-    Clear();
-  }
+struct EventFlags : public BaseEventFlags {
+  EventFlags() { Clear(); }
 };
 
 /******************************************************************************
  * mozilla::WidgetEventTime
  ******************************************************************************/
 
-class WidgetEventTime
-{
-public:
+class WidgetEventTime {
+ public:
   // Elapsed time, in milliseconds, from a platform-specific zero time
   // to the time the message was created
   uint64_t mTime;
@@ -438,21 +394,12 @@ public:
   // determine if it is safe to drop 'time' (see bug 77992).
   TimeStamp mTimeStamp;
 
-  WidgetEventTime()
-    : mTime(0)
-    , mTimeStamp(TimeStamp::Now())
-  {
-  }
+  WidgetEventTime() : mTime(0), mTimeStamp(TimeStamp::Now()) {}
 
-  WidgetEventTime(uint64_t aTime,
-                  TimeStamp aTimeStamp)
-    : mTime(aTime)
-    , mTimeStamp(aTimeStamp)
-  {
-  }
+  WidgetEventTime(uint64_t aTime, TimeStamp aTimeStamp)
+      : mTime(aTime), mTimeStamp(aTimeStamp) {}
 
-  void AssignEventTime(const WidgetEventTime& aOther)
-  {
+  void AssignEventTime(const WidgetEventTime& aOther) {
     mTime = aOther.mTime;
     mTimeStamp = aOther.mTimeStamp;
   }
@@ -462,34 +409,29 @@ public:
  * mozilla::WidgetEvent
  ******************************************************************************/
 
-class WidgetEvent : public WidgetEventTime
-{
-private:
-  void SetDefaultCancelableAndBubbles()
-  {
+class WidgetEvent : public WidgetEventTime {
+ private:
+  void SetDefaultCancelableAndBubbles() {
     switch (mClass) {
       case eEditorInputEventClass:
         mFlags.mCancelable = false;
         mFlags.mBubbles = mFlags.mIsTrusted;
         break;
       case eMouseEventClass:
-        mFlags.mCancelable = (mMessage != eMouseEnter &&
-                              mMessage != eMouseLeave);
-        mFlags.mBubbles = (mMessage != eMouseEnter &&
-                           mMessage != eMouseLeave);
+        mFlags.mCancelable =
+            (mMessage != eMouseEnter && mMessage != eMouseLeave);
+        mFlags.mBubbles = (mMessage != eMouseEnter && mMessage != eMouseLeave);
         break;
       case ePointerEventClass:
-        mFlags.mCancelable = (mMessage != ePointerEnter &&
-                              mMessage != ePointerLeave &&
-                              mMessage != ePointerCancel &&
-                              mMessage != ePointerGotCapture &&
-                              mMessage != ePointerLostCapture);
-        mFlags.mBubbles = (mMessage != ePointerEnter &&
-                           mMessage != ePointerLeave);
+        mFlags.mCancelable =
+            (mMessage != ePointerEnter && mMessage != ePointerLeave &&
+             mMessage != ePointerCancel && mMessage != ePointerGotCapture &&
+             mMessage != ePointerLostCapture);
+        mFlags.mBubbles =
+            (mMessage != ePointerEnter && mMessage != ePointerLeave);
         break;
       case eDragEventClass:
-        mFlags.mCancelable = (mMessage != eDragExit &&
-                              mMessage != eDragLeave &&
+        mFlags.mCancelable = (mMessage != eDragExit && mMessage != eDragLeave &&
                               mMessage != eDragEnd);
         mFlags.mBubbles = true;
         break;
@@ -510,8 +452,7 @@ private:
         mFlags.mBubbles = true;
         break;
       default:
-        if (mMessage == eResize ||
-            mMessage == eEditorInput) {
+        if (mMessage == eResize || mMessage == eEditorInput) {
           mFlags.mCancelable = false;
         } else {
           mFlags.mCancelable = true;
@@ -521,19 +462,17 @@ private:
     }
   }
 
-protected:
-  WidgetEvent(bool aIsTrusted,
-              EventMessage aMessage,
+ protected:
+  WidgetEvent(bool aIsTrusted, EventMessage aMessage,
               EventClassID aEventClassID)
-    : WidgetEventTime()
-    , mClass(aEventClassID)
-    , mMessage(aMessage)
-    , mRefPoint(0, 0)
-    , mLastRefPoint(0, 0)
-    , mFocusSequenceNumber(0)
-    , mSpecifiedEventType(nullptr)
-    , mPath(nullptr)
-  {
+      : WidgetEventTime(),
+        mClass(aEventClassID),
+        mMessage(aMessage),
+        mRefPoint(0, 0),
+        mLastRefPoint(0, 0),
+        mFocusSequenceNumber(0),
+        mSpecifiedEventType(nullptr),
+        mPath(nullptr) {
     MOZ_COUNT_CTOR(WidgetEvent);
     mFlags.Clear();
     mFlags.mIsTrusted = aIsTrusted;
@@ -542,55 +481,43 @@ protected:
     SetDefaultComposedInNativeAnonymousContent();
   }
 
-  WidgetEvent()
-    : WidgetEventTime()
-    , mPath(nullptr)
-  {
+  WidgetEvent() : WidgetEventTime(), mPath(nullptr) {
     MOZ_COUNT_CTOR(WidgetEvent);
   }
 
-public:
+ public:
   WidgetEvent(bool aIsTrusted, EventMessage aMessage)
-    : WidgetEvent(aIsTrusted, aMessage, eBasicEventClass)
-  {
-  }
+      : WidgetEvent(aIsTrusted, aMessage, eBasicEventClass) {}
 
-  virtual ~WidgetEvent()
-  {
-    MOZ_COUNT_DTOR(WidgetEvent);
-  }
+  virtual ~WidgetEvent() { MOZ_COUNT_DTOR(WidgetEvent); }
 
-  WidgetEvent(const WidgetEvent& aOther)
-    : WidgetEventTime()
-  {
+  WidgetEvent(const WidgetEvent& aOther) : WidgetEventTime() {
     MOZ_COUNT_CTOR(WidgetEvent);
     *this = aOther;
   }
   WidgetEvent& operator=(const WidgetEvent& aOther) = default;
 
   WidgetEvent(WidgetEvent&& aOther)
-    : WidgetEventTime(std::move(aOther))
-    , mClass(aOther.mClass)
-    , mMessage(aOther.mMessage)
-    , mRefPoint(std::move(aOther.mRefPoint))
-    , mLastRefPoint(std::move(aOther.mLastRefPoint))
-    , mFocusSequenceNumber(aOther.mFocusSequenceNumber)
-    , mFlags(std::move(aOther.mFlags))
-    , mSpecifiedEventType(std::move(aOther.mSpecifiedEventType))
-    , mSpecifiedEventTypeString(std::move(aOther.mSpecifiedEventTypeString))
-    , mTarget(std::move(aOther.mTarget))
-    , mCurrentTarget(std::move(aOther.mCurrentTarget))
-    , mOriginalTarget(std::move(aOther.mOriginalTarget))
-    , mRelatedTarget(std::move(aOther.mRelatedTarget))
-    , mOriginalRelatedTarget(std::move(aOther.mOriginalRelatedTarget))
-    , mPath(std::move(aOther.mPath))
-  {
+      : WidgetEventTime(std::move(aOther)),
+        mClass(aOther.mClass),
+        mMessage(aOther.mMessage),
+        mRefPoint(std::move(aOther.mRefPoint)),
+        mLastRefPoint(std::move(aOther.mLastRefPoint)),
+        mFocusSequenceNumber(aOther.mFocusSequenceNumber),
+        mFlags(std::move(aOther.mFlags)),
+        mSpecifiedEventType(std::move(aOther.mSpecifiedEventType)),
+        mSpecifiedEventTypeString(std::move(aOther.mSpecifiedEventTypeString)),
+        mTarget(std::move(aOther.mTarget)),
+        mCurrentTarget(std::move(aOther.mCurrentTarget)),
+        mOriginalTarget(std::move(aOther.mOriginalTarget)),
+        mRelatedTarget(std::move(aOther.mRelatedTarget)),
+        mOriginalRelatedTarget(std::move(aOther.mOriginalRelatedTarget)),
+        mPath(std::move(aOther.mPath)) {
     MOZ_COUNT_CTOR(WidgetEvent);
   }
   WidgetEvent& operator=(WidgetEvent&& aOther) = default;
 
-  virtual WidgetEvent* Duplicate() const
-  {
+  virtual WidgetEvent* Duplicate() const {
     MOZ_ASSERT(mClass == eBasicEventClass,
                "Duplicate() must be overridden by sub class");
     WidgetEvent* result = new WidgetEvent(false, mMessage);
@@ -607,8 +534,8 @@ public:
   // The previous mRefPoint, if known, used to calculate mouse movement deltas.
   LayoutDeviceIntPoint mLastRefPoint;
   // The sequence number of the last potentially focus changing event handled
-  // by APZ. This is used to track when that event has been processed by content,
-  // and focus can be reconfirmed for async keyboard scrolling.
+  // by APZ. This is used to track when that event has been processed by
+  // content, and focus can be reconfirmed for async keyboard scrolling.
   uint64_t mFocusSequenceNumber;
   // See BaseEventFlags definition for the detail.
   BaseEventFlags mFlags;
@@ -641,8 +568,7 @@ public:
   dom::EventTarget* GetCurrentDOMEventTarget() const;
   dom::EventTarget* GetOriginalDOMEventTarget() const;
 
-  void AssignEventData(const WidgetEvent& aEvent, bool aCopyTargets)
-  {
+  void AssignEventData(const WidgetEvent& aEvent, bool aCopyTargets) {
     // mClass should be initialized with the constructor.
     // mMessage should be initialized with the constructor.
     mRefPoint = aEvent.mRefPoint;
@@ -657,7 +583,7 @@ public:
     mOriginalTarget = aCopyTargets ? aEvent.mOriginalTarget : nullptr;
     mRelatedTarget = aCopyTargets ? aEvent.mRelatedTarget : nullptr;
     mOriginalRelatedTarget =
-      aCopyTargets ? aEvent.mOriginalRelatedTarget : nullptr;
+        aCopyTargets ? aEvent.mOriginalRelatedTarget : nullptr;
   }
 
   /**
@@ -668,14 +594,12 @@ public:
   void PreventDefault(bool aCalledByDefaultHandler = true,
                       nsIPrincipal* aPrincipal = nullptr);
 
-  void
-  PreventDefaultBeforeDispatch(CrossProcessForwarding aCrossProcessForwarding)
-  {
+  void PreventDefaultBeforeDispatch(
+      CrossProcessForwarding aCrossProcessForwarding) {
     mFlags.PreventDefaultBeforeDispatch(aCrossProcessForwarding);
   }
   bool DefaultPrevented() const { return mFlags.DefaultPrevented(); }
-  bool DefaultPreventedByContent() const
-  {
+  bool DefaultPreventedByContent() const {
     return mFlags.DefaultPreventedByContent();
   }
   bool IsTrusted() const { return mFlags.IsTrusted(); }
@@ -684,102 +608,85 @@ public:
   /**
    * Prevent to be dispatched to remote process.
    */
-  inline void StopCrossProcessForwarding()
-  {
+  inline void StopCrossProcessForwarding() {
     mFlags.StopCrossProcessForwarding();
   }
   /**
    * Return true if the event shouldn't be dispatched to remote process.
    */
-  inline bool IsCrossProcessForwardingStopped() const
-  {
+  inline bool IsCrossProcessForwardingStopped() const {
     return mFlags.IsCrossProcessForwardingStopped();
   }
   /**
    * Mark the event as waiting reply from remote process.
    * Note that this also stops immediate propagation in current process.
    */
-  inline void MarkAsWaitingReplyFromRemoteProcess()
-  {
+  inline void MarkAsWaitingReplyFromRemoteProcess() {
     mFlags.MarkAsWaitingReplyFromRemoteProcess();
   }
   /**
    * Reset "waiting reply from remote process" state.  This is useful when
    * you dispatch a copy of an event coming from different process.
    */
-  inline void ResetWaitingReplyFromRemoteProcessState()
-  {
+  inline void ResetWaitingReplyFromRemoteProcessState() {
     mFlags.ResetWaitingReplyFromRemoteProcessState();
   }
   /**
    * Return true if the event handler should wait reply event.  I.e., if this
    * returns true, any event handler should do nothing with the event.
    */
-  inline bool IsWaitingReplyFromRemoteProcess() const
-  {
+  inline bool IsWaitingReplyFromRemoteProcess() const {
     return mFlags.IsWaitingReplyFromRemoteProcess();
   }
   /**
    * Mark the event as already handled in the remote process.  This should be
    * called when initializing reply events.
    */
-  inline void MarkAsHandledInRemoteProcess()
-  {
+  inline void MarkAsHandledInRemoteProcess() {
     mFlags.MarkAsHandledInRemoteProcess();
   }
   /**
    * Return true if the event has already been handled in the remote process.
    * I.e., if this returns true, the event is a reply event.
    */
-  inline bool IsHandledInRemoteProcess() const
-  {
+  inline bool IsHandledInRemoteProcess() const {
     return mFlags.IsHandledInRemoteProcess();
   }
   /**
    * Return true if the event should be sent back to its parent process.
    * So, usual event handlers shouldn't call this.
    */
-  inline bool WantReplyFromContentProcess() const
-  {
+  inline bool WantReplyFromContentProcess() const {
     return mFlags.WantReplyFromContentProcess();
   }
   /**
    * Mark the event has already posted to a remote process.
    */
-  inline void MarkAsPostedToRemoteProcess()
-  {
+  inline void MarkAsPostedToRemoteProcess() {
     mFlags.MarkAsPostedToRemoteProcess();
   }
   /**
    * Reset the cross process dispatching state.  This should be used when a
    * process receives the event because the state is in the sender.
    */
-  inline void ResetCrossProcessDispatchingState()
-  {
+  inline void ResetCrossProcessDispatchingState() {
     mFlags.ResetCrossProcessDispatchingState();
   }
   /**
    * Return true if the event has been posted to a remote process.
    */
-  inline bool HasBeenPostedToRemoteProcess() const
-  {
+  inline bool HasBeenPostedToRemoteProcess() const {
     return mFlags.HasBeenPostedToRemoteProcess();
   }
   /**
    * Mark the event is reserved by chrome.  I.e., shouldn't be dispatched to
    * content because it shouldn't be cancelable.
    */
-  inline void MarkAsReservedByChrome()
-  {
-    mFlags.MarkAsReservedByChrome();
-  }
+  inline void MarkAsReservedByChrome() { mFlags.MarkAsReservedByChrome(); }
   /**
    * Return true if the event is reserved by chrome.
    */
-  inline bool IsReservedByChrome() const
-  {
-    return mFlags.IsReservedByChrome();
-  }
+  inline bool IsReservedByChrome() const { return mFlags.IsReservedByChrome(); }
 
   /**
    * Utils for checking event types
@@ -828,10 +735,7 @@ public:
    * Returns true if aMessage or mMessage is one of key events.
    */
   static bool IsKeyEventMessage(EventMessage aMessage);
-  bool HasKeyEventMessage() const
-  {
-    return IsKeyEventMessage(mMessage);
-  }
+  bool HasKeyEventMessage() const { return IsKeyEventMessage(mMessage); }
   /**
    * Returns true if the event mMessage is one of composition events or text
    * event.
@@ -914,8 +818,7 @@ public:
   /**
    * Initialize mComposed
    */
-  void SetDefaultComposed()
-  {
+  void SetDefaultComposed() {
     switch (mClass) {
       case eCompositionEventClass:
         mFlags.mComposed = mMessage == eCompositionStart ||
@@ -937,8 +840,8 @@ public:
                            mMessage == eFocusOut || mMessage == eFocusIn;
         break;
       case eKeyboardEventClass:
-        mFlags.mComposed = mMessage == eKeyDown || mMessage == eKeyUp ||
-                           mMessage == eKeyPress;
+        mFlags.mComposed =
+            mMessage == eKeyDown || mMessage == eKeyUp || mMessage == eKeyPress;
         break;
       case eMouseEventClass:
         mFlags.mComposed = mMessage == eMouseClick ||
@@ -950,13 +853,11 @@ public:
         break;
       case ePointerEventClass:
         // All pointer events are composed
-        mFlags.mComposed = mMessage == ePointerDown ||
-                           mMessage == ePointerMove || mMessage == ePointerUp ||
-                           mMessage == ePointerCancel ||
-                           mMessage == ePointerOver ||
-                           mMessage == ePointerOut ||
-                           mMessage == ePointerGotCapture ||
-                           mMessage == ePointerLostCapture;
+        mFlags.mComposed =
+            mMessage == ePointerDown || mMessage == ePointerMove ||
+            mMessage == ePointerUp || mMessage == ePointerCancel ||
+            mMessage == ePointerOver || mMessage == ePointerOut ||
+            mMessage == ePointerGotCapture || mMessage == ePointerLostCapture;
         break;
       case eTouchEventClass:
         // All touch events are composed
@@ -978,85 +879,79 @@ public:
     }
   }
 
-  void SetComposed(const nsAString& aEventTypeArg)
-  {
-    mFlags.mComposed = // composition events
-                       aEventTypeArg.EqualsLiteral("compositionstart") ||
-                       aEventTypeArg.EqualsLiteral("compositionupdate") ||
-                       aEventTypeArg.EqualsLiteral("compositionend") ||
-                       // drag and drop events
-                       aEventTypeArg.EqualsLiteral("dragstart") ||
-                       aEventTypeArg.EqualsLiteral("drag") ||
-                       aEventTypeArg.EqualsLiteral("dragenter") ||
-                       aEventTypeArg.EqualsLiteral("dragexit") ||
-                       aEventTypeArg.EqualsLiteral("dragleave") ||
-                       aEventTypeArg.EqualsLiteral("dragover") ||
-                       aEventTypeArg.EqualsLiteral("drop") ||
-                       aEventTypeArg.EqualsLiteral("dropend") ||
-                       // editor input events
-                       aEventTypeArg.EqualsLiteral("input") ||
-                       aEventTypeArg.EqualsLiteral("beforeinput") ||
-                       // focus events
-                       aEventTypeArg.EqualsLiteral("blur") ||
-                       aEventTypeArg.EqualsLiteral("focus") ||
-                       aEventTypeArg.EqualsLiteral("focusin") ||
-                       aEventTypeArg.EqualsLiteral("focusout") ||
-                       // keyboard events
-                       aEventTypeArg.EqualsLiteral("keydown") ||
-                       aEventTypeArg.EqualsLiteral("keyup") ||
-                       aEventTypeArg.EqualsLiteral("keypress") ||
-                       // mouse events
-                       aEventTypeArg.EqualsLiteral("click") ||
-                       aEventTypeArg.EqualsLiteral("dblclick") ||
-                       aEventTypeArg.EqualsLiteral("mousedown") ||
-                       aEventTypeArg.EqualsLiteral("mouseup") ||
-                       aEventTypeArg.EqualsLiteral("mouseenter") ||
-                       aEventTypeArg.EqualsLiteral("mouseleave") ||
-                       aEventTypeArg.EqualsLiteral("mouseover") ||
-                       aEventTypeArg.EqualsLiteral("mouseout") ||
-                       aEventTypeArg.EqualsLiteral("mousemove") ||
-                       aEventTypeArg.EqualsLiteral("contextmenu") ||
-                       // pointer events
-                       aEventTypeArg.EqualsLiteral("pointerdown") ||
-                       aEventTypeArg.EqualsLiteral("pointermove") ||
-                       aEventTypeArg.EqualsLiteral("pointerup") ||
-                       aEventTypeArg.EqualsLiteral("pointercancel") ||
-                       aEventTypeArg.EqualsLiteral("pointerover") ||
-                       aEventTypeArg.EqualsLiteral("pointerout") ||
-                       aEventTypeArg.EqualsLiteral("pointerenter") ||
-                       aEventTypeArg.EqualsLiteral("pointerleave") ||
-                       aEventTypeArg.EqualsLiteral("gotpointercapture") ||
-                       aEventTypeArg.EqualsLiteral("lostpointercapture") ||
-                       // touch events
-                       aEventTypeArg.EqualsLiteral("touchstart") ||
-                       aEventTypeArg.EqualsLiteral("touchend") ||
-                       aEventTypeArg.EqualsLiteral("touchmove") ||
-                       aEventTypeArg.EqualsLiteral("touchcancel") ||
-                       // UI legacy events
-                       aEventTypeArg.EqualsLiteral("DOMFocusIn") ||
-                       aEventTypeArg.EqualsLiteral("DOMFocusOut") ||
-                       aEventTypeArg.EqualsLiteral("DOMActivate") ||
-                       // wheel events
-                       aEventTypeArg.EqualsLiteral("wheel");
+  void SetComposed(const nsAString& aEventTypeArg) {
+    mFlags.mComposed =  // composition events
+        aEventTypeArg.EqualsLiteral("compositionstart") ||
+        aEventTypeArg.EqualsLiteral("compositionupdate") ||
+        aEventTypeArg.EqualsLiteral("compositionend") ||
+        // drag and drop events
+        aEventTypeArg.EqualsLiteral("dragstart") ||
+        aEventTypeArg.EqualsLiteral("drag") ||
+        aEventTypeArg.EqualsLiteral("dragenter") ||
+        aEventTypeArg.EqualsLiteral("dragexit") ||
+        aEventTypeArg.EqualsLiteral("dragleave") ||
+        aEventTypeArg.EqualsLiteral("dragover") ||
+        aEventTypeArg.EqualsLiteral("drop") ||
+        aEventTypeArg.EqualsLiteral("dropend") ||
+        // editor input events
+        aEventTypeArg.EqualsLiteral("input") ||
+        aEventTypeArg.EqualsLiteral("beforeinput") ||
+        // focus events
+        aEventTypeArg.EqualsLiteral("blur") ||
+        aEventTypeArg.EqualsLiteral("focus") ||
+        aEventTypeArg.EqualsLiteral("focusin") ||
+        aEventTypeArg.EqualsLiteral("focusout") ||
+        // keyboard events
+        aEventTypeArg.EqualsLiteral("keydown") ||
+        aEventTypeArg.EqualsLiteral("keyup") ||
+        aEventTypeArg.EqualsLiteral("keypress") ||
+        // mouse events
+        aEventTypeArg.EqualsLiteral("click") ||
+        aEventTypeArg.EqualsLiteral("dblclick") ||
+        aEventTypeArg.EqualsLiteral("mousedown") ||
+        aEventTypeArg.EqualsLiteral("mouseup") ||
+        aEventTypeArg.EqualsLiteral("mouseenter") ||
+        aEventTypeArg.EqualsLiteral("mouseleave") ||
+        aEventTypeArg.EqualsLiteral("mouseover") ||
+        aEventTypeArg.EqualsLiteral("mouseout") ||
+        aEventTypeArg.EqualsLiteral("mousemove") ||
+        aEventTypeArg.EqualsLiteral("contextmenu") ||
+        // pointer events
+        aEventTypeArg.EqualsLiteral("pointerdown") ||
+        aEventTypeArg.EqualsLiteral("pointermove") ||
+        aEventTypeArg.EqualsLiteral("pointerup") ||
+        aEventTypeArg.EqualsLiteral("pointercancel") ||
+        aEventTypeArg.EqualsLiteral("pointerover") ||
+        aEventTypeArg.EqualsLiteral("pointerout") ||
+        aEventTypeArg.EqualsLiteral("pointerenter") ||
+        aEventTypeArg.EqualsLiteral("pointerleave") ||
+        aEventTypeArg.EqualsLiteral("gotpointercapture") ||
+        aEventTypeArg.EqualsLiteral("lostpointercapture") ||
+        // touch events
+        aEventTypeArg.EqualsLiteral("touchstart") ||
+        aEventTypeArg.EqualsLiteral("touchend") ||
+        aEventTypeArg.EqualsLiteral("touchmove") ||
+        aEventTypeArg.EqualsLiteral("touchcancel") ||
+        // UI legacy events
+        aEventTypeArg.EqualsLiteral("DOMFocusIn") ||
+        aEventTypeArg.EqualsLiteral("DOMFocusOut") ||
+        aEventTypeArg.EqualsLiteral("DOMActivate") ||
+        // wheel events
+        aEventTypeArg.EqualsLiteral("wheel");
   }
 
-  void SetComposed(bool aComposed)
-  {
-    mFlags.mComposed = aComposed;
-  }
+  void SetComposed(bool aComposed) { mFlags.mComposed = aComposed; }
 
-  void SetDefaultComposedInNativeAnonymousContent()
-  {
+  void SetDefaultComposedInNativeAnonymousContent() {
     // For compatibility concerns, we set mComposedInNativeAnonymousContent to
     // false for those events we want to stop propagation.
     //
     // nsVideoFrame may create anonymous image element which fires eLoad,
     // eLoadStart, eLoadEnd, eLoadError. We don't want these events cross
     // the boundary of NAC
-    mFlags.mComposedInNativeAnonymousContent = mMessage != eLoad &&
-                                               mMessage != eLoadStart &&
-                                               mMessage != eLoadEnd &&
-                                               mMessage != eLoadError;
+    mFlags.mComposedInNativeAnonymousContent =
+        mMessage != eLoad && mMessage != eLoadStart && mMessage != eLoadEnd &&
+        mMessage != eLoadError;
   }
 
   bool IsUserAction() const;
@@ -1082,70 +977,49 @@ public:
  * the old void* field.
  ******************************************************************************/
 
-class NativeEventData final
-{
+class NativeEventData final {
   nsTArray<uint8_t> mBuffer;
 
   friend struct IPC::ParamTraits<mozilla::NativeEventData>;
 
-public:
+ public:
+  explicit operator bool() const { return !mBuffer.IsEmpty(); }
 
-  explicit operator bool() const
-  {
-    return !mBuffer.IsEmpty();
-  }
-
-  template<typename T>
-  explicit operator const T*() const
-  {
-    return mBuffer.IsEmpty()
-           ? nullptr
-           : reinterpret_cast<const T*>(mBuffer.Elements());
+  template <typename T>
+  explicit operator const T*() const {
+    return mBuffer.IsEmpty() ? nullptr
+                             : reinterpret_cast<const T*>(mBuffer.Elements());
   }
 
   template <typename T>
-  void Copy(const T& other)
-  {
+  void Copy(const T& other) {
     static_assert(!mozilla::IsPointer<T>::value, "Don't want a pointer!");
     mBuffer.SetLength(sizeof(T));
     memcpy(mBuffer.Elements(), &other, mBuffer.Length());
   }
 
-  void Clear()
-  {
-    mBuffer.Clear();
-  }
+  void Clear() { mBuffer.Clear(); }
 };
 
 /******************************************************************************
  * mozilla::WidgetGUIEvent
  ******************************************************************************/
 
-class WidgetGUIEvent : public WidgetEvent
-{
-protected:
+class WidgetGUIEvent : public WidgetEvent {
+ protected:
   WidgetGUIEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
                  EventClassID aEventClassID)
-    : WidgetEvent(aIsTrusted, aMessage, aEventClassID)
-    , mWidget(aWidget)
-  {
-  }
+      : WidgetEvent(aIsTrusted, aMessage, aEventClassID), mWidget(aWidget) {}
 
-  WidgetGUIEvent()
-  {
-  }
+  WidgetGUIEvent() {}
 
-public:
+ public:
   virtual WidgetGUIEvent* AsGUIEvent() override { return this; }
 
   WidgetGUIEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget)
-    : WidgetEvent(aIsTrusted, aMessage, eGUIEventClass)
-    , mWidget(aWidget)
-  {
-  }
+      : WidgetEvent(aIsTrusted, aMessage, eGUIEventClass), mWidget(aWidget) {}
 
-  virtual WidgetEvent* Duplicate() const override
-  {
+  virtual WidgetEvent* Duplicate() const override {
     MOZ_ASSERT(mClass == eGUIEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
@@ -1171,8 +1045,7 @@ public:
   // Event for NPAPI plugin
   PluginEvent mPluginEvent;
 
-  void AssignGUIEventData(const WidgetGUIEvent& aEvent, bool aCopyTargets)
-  {
+  void AssignGUIEventData(const WidgetGUIEvent& aEvent, bool aCopyTargets) {
     AssignEventData(aEvent, aCopyTargets);
 
     // widget should be initialized with the constructor.
@@ -1188,41 +1061,40 @@ public:
  * modifier states for DOM Level 3 or later.
  ******************************************************************************/
 
-enum Modifier
-{
-  MODIFIER_NONE       = 0x0000,
-  MODIFIER_ALT        = 0x0001,
-  MODIFIER_ALTGRAPH   = 0x0002,
-  MODIFIER_CAPSLOCK   = 0x0004,
-  MODIFIER_CONTROL    = 0x0008,
-  MODIFIER_FN         = 0x0010,
-  MODIFIER_FNLOCK     = 0x0020,
-  MODIFIER_META       = 0x0040,
-  MODIFIER_NUMLOCK    = 0x0080,
+enum Modifier {
+  MODIFIER_NONE = 0x0000,
+  MODIFIER_ALT = 0x0001,
+  MODIFIER_ALTGRAPH = 0x0002,
+  MODIFIER_CAPSLOCK = 0x0004,
+  MODIFIER_CONTROL = 0x0008,
+  MODIFIER_FN = 0x0010,
+  MODIFIER_FNLOCK = 0x0020,
+  MODIFIER_META = 0x0040,
+  MODIFIER_NUMLOCK = 0x0080,
   MODIFIER_SCROLLLOCK = 0x0100,
-  MODIFIER_SHIFT      = 0x0200,
-  MODIFIER_SYMBOL     = 0x0400,
+  MODIFIER_SHIFT = 0x0200,
+  MODIFIER_SYMBOL = 0x0400,
   MODIFIER_SYMBOLLOCK = 0x0800,
-  MODIFIER_OS         = 0x1000
+  MODIFIER_OS = 0x1000
 };
 
 /******************************************************************************
  * Modifier key names.
  ******************************************************************************/
 
-#define NS_DOM_KEYNAME_ALT        "Alt"
-#define NS_DOM_KEYNAME_ALTGRAPH   "AltGraph"
-#define NS_DOM_KEYNAME_CAPSLOCK   "CapsLock"
-#define NS_DOM_KEYNAME_CONTROL    "Control"
-#define NS_DOM_KEYNAME_FN         "Fn"
-#define NS_DOM_KEYNAME_FNLOCK     "FnLock"
-#define NS_DOM_KEYNAME_META       "Meta"
-#define NS_DOM_KEYNAME_NUMLOCK    "NumLock"
+#define NS_DOM_KEYNAME_ALT "Alt"
+#define NS_DOM_KEYNAME_ALTGRAPH "AltGraph"
+#define NS_DOM_KEYNAME_CAPSLOCK "CapsLock"
+#define NS_DOM_KEYNAME_CONTROL "Control"
+#define NS_DOM_KEYNAME_FN "Fn"
+#define NS_DOM_KEYNAME_FNLOCK "FnLock"
+#define NS_DOM_KEYNAME_META "Meta"
+#define NS_DOM_KEYNAME_NUMLOCK "NumLock"
 #define NS_DOM_KEYNAME_SCROLLLOCK "ScrollLock"
-#define NS_DOM_KEYNAME_SHIFT      "Shift"
-#define NS_DOM_KEYNAME_SYMBOL     "Symbol"
+#define NS_DOM_KEYNAME_SHIFT "Shift"
+#define NS_DOM_KEYNAME_SYMBOL "Symbol"
 #define NS_DOM_KEYNAME_SYMBOLLOCK "SymbolLock"
-#define NS_DOM_KEYNAME_OS         "OS"
+#define NS_DOM_KEYNAME_OS "OS"
 
 /******************************************************************************
  * mozilla::Modifiers
@@ -1230,11 +1102,9 @@ enum Modifier
 
 typedef uint16_t Modifiers;
 
-class MOZ_STACK_CLASS GetModifiersName final : public nsAutoCString
-{
-public:
-  explicit GetModifiersName(Modifiers aModifiers)
-  {
+class MOZ_STACK_CLASS GetModifiersName final : public nsAutoCString {
+ public:
+  explicit GetModifiersName(Modifiers aModifiers) {
     if (aModifiers & MODIFIER_ALT) {
       AssignLiteral(NS_DOM_KEYNAME_ALT);
     }
@@ -1291,9 +1161,8 @@ public:
     }
   }
 
-private:
-  void MaybeAppendSeparator()
-  {
+ private:
+  void MaybeAppendSeparator() {
     if (!IsEmpty()) {
       AppendLiteral(" | ");
     }
@@ -1304,32 +1173,23 @@ private:
  * mozilla::WidgetInputEvent
  ******************************************************************************/
 
-class WidgetInputEvent : public WidgetGUIEvent
-{
-protected:
+class WidgetInputEvent : public WidgetGUIEvent {
+ protected:
   WidgetInputEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
                    EventClassID aEventClassID)
-    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, aEventClassID)
-    , mModifiers(0)
-  {
-  }
+      : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, aEventClassID),
+        mModifiers(0) {}
 
-  WidgetInputEvent()
-    : mModifiers(0)
-  {
-  }
+  WidgetInputEvent() : mModifiers(0) {}
 
-public:
+ public:
   virtual WidgetInputEvent* AsInputEvent() override { return this; }
 
   WidgetInputEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget)
-    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eInputEventClass)
-    , mModifiers(0)
-  {
-  }
+      : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eInputEventClass),
+        mModifiers(0) {}
 
-  virtual WidgetEvent* Duplicate() const override
-  {
+  virtual WidgetEvent* Duplicate() const override {
     MOZ_ASSERT(mClass == eInputEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
@@ -1338,7 +1198,6 @@ public:
     result->mFlags = mFlags;
     return result;
   }
-
 
   /**
    * Returns a modifier of "Accel" virtual modifier which is used for shortcut
@@ -1352,90 +1211,49 @@ public:
   static Modifier GetModifier(const nsAString& aDOMKeyName);
 
   // true indicates the accel key on the environment is down
-  bool IsAccel() const
-  {
-    return ((mModifiers & AccelModifier()) != 0);
-  }
+  bool IsAccel() const { return ((mModifiers & AccelModifier()) != 0); }
 
   // true indicates the shift key is down
-  bool IsShift() const
-  {
-    return ((mModifiers & MODIFIER_SHIFT) != 0);
-  }
+  bool IsShift() const { return ((mModifiers & MODIFIER_SHIFT) != 0); }
   // true indicates the control key is down
-  bool IsControl() const
-  {
-    return ((mModifiers & MODIFIER_CONTROL) != 0);
-  }
+  bool IsControl() const { return ((mModifiers & MODIFIER_CONTROL) != 0); }
   // true indicates the alt key is down
-  bool IsAlt() const
-  {
-    return ((mModifiers & MODIFIER_ALT) != 0);
-  }
+  bool IsAlt() const { return ((mModifiers & MODIFIER_ALT) != 0); }
   // true indicates the meta key is down (or, on Mac, the Command key)
-  bool IsMeta() const
-  {
-    return ((mModifiers & MODIFIER_META) != 0);
-  }
+  bool IsMeta() const { return ((mModifiers & MODIFIER_META) != 0); }
   // true indicates the win key is down on Windows. Or the Super or Hyper key
   // is down on Linux.
-  bool IsOS() const
-  {
-    return ((mModifiers & MODIFIER_OS) != 0);
-  }
+  bool IsOS() const { return ((mModifiers & MODIFIER_OS) != 0); }
   // true indicates the alt graph key is down
   // NOTE: on Mac, the option key press causes both IsAlt() and IsAltGrpah()
   //       return true.
-  bool IsAltGraph() const
-  {
-    return ((mModifiers & MODIFIER_ALTGRAPH) != 0);
-  }
+  bool IsAltGraph() const { return ((mModifiers & MODIFIER_ALTGRAPH) != 0); }
   // true indicates the CapLock LED is turn on.
-  bool IsCapsLocked() const
-  {
-    return ((mModifiers & MODIFIER_CAPSLOCK) != 0);
-  }
+  bool IsCapsLocked() const { return ((mModifiers & MODIFIER_CAPSLOCK) != 0); }
   // true indicates the NumLock LED is turn on.
-  bool IsNumLocked() const
-  {
-    return ((mModifiers & MODIFIER_NUMLOCK) != 0);
-  }
+  bool IsNumLocked() const { return ((mModifiers & MODIFIER_NUMLOCK) != 0); }
   // true indicates the ScrollLock LED is turn on.
-  bool IsScrollLocked() const
-  {
+  bool IsScrollLocked() const {
     return ((mModifiers & MODIFIER_SCROLLLOCK) != 0);
   }
 
   // true indicates the Fn key is down, but this is not supported by native
   // key event on any platform.
-  bool IsFn() const
-  {
-    return ((mModifiers & MODIFIER_FN) != 0);
-  }
+  bool IsFn() const { return ((mModifiers & MODIFIER_FN) != 0); }
   // true indicates the FnLock LED is turn on, but we don't know such
   // keyboards nor platforms.
-  bool IsFnLocked() const
-  {
-    return ((mModifiers & MODIFIER_FNLOCK) != 0);
-  }
+  bool IsFnLocked() const { return ((mModifiers & MODIFIER_FNLOCK) != 0); }
   // true indicates the Symbol is down, but this is not supported by native
   // key event on any platforms.
-  bool IsSymbol() const
-  {
-    return ((mModifiers & MODIFIER_SYMBOL) != 0);
-  }
+  bool IsSymbol() const { return ((mModifiers & MODIFIER_SYMBOL) != 0); }
   // true indicates the SymbolLock LED is turn on, but we don't know such
   // keyboards nor platforms.
-  bool IsSymbolLocked() const
-  {
+  bool IsSymbolLocked() const {
     return ((mModifiers & MODIFIER_SYMBOLLOCK) != 0);
   }
 
-  void InitBasicModifiers(bool aCtrlKey,
-                          bool aAltKey,
-                          bool aShiftKey,
-                          bool aMetaKey)
-  {
+  void InitBasicModifiers(bool aCtrlKey, bool aAltKey, bool aShiftKey,
+                          bool aMetaKey) {
     mModifiers = 0;
     if (aCtrlKey) {
       mModifiers |= MODIFIER_CONTROL;
@@ -1453,8 +1271,7 @@ public:
 
   Modifiers mModifiers;
 
-  void AssignInputEventData(const WidgetInputEvent& aEvent, bool aCopyTargets)
-  {
+  void AssignInputEventData(const WidgetInputEvent& aEvent, bool aCopyTargets) {
     AssignGUIEventData(aEvent, aCopyTargets);
 
     mModifiers = aEvent.mModifiers;
@@ -1467,32 +1284,23 @@ public:
  * XXX Why this inherits WidgetGUIEvent rather than WidgetEvent?
  ******************************************************************************/
 
-class InternalUIEvent : public WidgetGUIEvent
-{
-protected:
-  InternalUIEvent()
-    : mDetail(0)
-    , mCausedByUntrustedEvent(false)
-  {
-  }
+class InternalUIEvent : public WidgetGUIEvent {
+ protected:
+  InternalUIEvent() : mDetail(0), mCausedByUntrustedEvent(false) {}
 
   InternalUIEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
                   EventClassID aEventClassID)
-    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, aEventClassID)
-    , mDetail(0)
-    , mCausedByUntrustedEvent(false)
-  {
-  }
+      : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, aEventClassID),
+        mDetail(0),
+        mCausedByUntrustedEvent(false) {}
 
   InternalUIEvent(bool aIsTrusted, EventMessage aMessage,
                   EventClassID aEventClassID)
-    : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, aEventClassID)
-    , mDetail(0)
-    , mCausedByUntrustedEvent(false)
-  {
-  }
+      : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, aEventClassID),
+        mDetail(0),
+        mCausedByUntrustedEvent(false) {}
 
-public:
+ public:
   virtual InternalUIEvent* AsUIEvent() override { return this; }
 
   /**
@@ -1502,15 +1310,12 @@ public:
    */
   InternalUIEvent(bool aIsTrusted, EventMessage aMessage,
                   const WidgetEvent* aEventCausesThisEvent)
-    : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, eUIEventClass)
-    , mDetail(0)
-    , mCausedByUntrustedEvent(
-        aEventCausesThisEvent && !aEventCausesThisEvent->IsTrusted())
-  {
-  }
+      : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, eUIEventClass),
+        mDetail(0),
+        mCausedByUntrustedEvent(aEventCausesThisEvent &&
+                                !aEventCausesThisEvent->IsTrusted()) {}
 
-  virtual WidgetEvent* Duplicate() const override
-  {
+  virtual WidgetEvent* Duplicate() const override {
     MOZ_ASSERT(mClass == eUIEventClass,
                "Duplicate() must be overridden by sub class");
     InternalUIEvent* result = new InternalUIEvent(false, mMessage, nullptr);
@@ -1525,13 +1330,9 @@ public:
 
   // If you check the event is a trusted event and NOT caused by an untrusted
   // event, IsTrustable() returns what you expected.
-  bool IsTrustable() const
-  {
-    return IsTrusted() && !mCausedByUntrustedEvent;
-  }
+  bool IsTrustable() const { return IsTrusted() && !mCausedByUntrustedEvent; }
 
-  void AssignUIEventData(const InternalUIEvent& aEvent, bool aCopyTargets)
-  {
+  void AssignUIEventData(const InternalUIEvent& aEvent, bool aCopyTargets) {
     AssignGUIEventData(aEvent, aCopyTargets);
 
     mDetail = aEvent.mDetail;
@@ -1539,6 +1340,6 @@ public:
   }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_BasicEvents_h__
+#endif  // mozilla_BasicEvents_h__

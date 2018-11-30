@@ -12,9 +12,8 @@
 
 namespace mozilla {
 
-void
-MappedDeclarations::SetIdentAtomValue(nsCSSPropertyID aId, nsAtom* aValue)
-{
+void MappedDeclarations::SetIdentAtomValue(nsCSSPropertyID aId,
+                                           nsAtom* aValue) {
   Servo_DeclarationBlock_SetIdentStringValue(mDecl, aId, aValue);
   if (aId == eCSSProperty__x_lang) {
     // This forces the lang prefs result to be cached so that we can access them
@@ -29,9 +28,7 @@ MappedDeclarations::SetIdentAtomValue(nsCSSPropertyID aId, nsAtom* aValue)
   }
 }
 
-void
-MappedDeclarations::SetBackgroundImage(const nsAttrValue& aValue)
-{
+void MappedDeclarations::SetBackgroundImage(const nsAttrValue& aValue) {
   if (aValue.Type() != nsAttrValue::eURL) {
     return;
   }
@@ -39,7 +36,7 @@ MappedDeclarations::SetBackgroundImage(const nsAttrValue& aValue)
   nsAutoString str;
   aValue.ToString(str);
   Servo_DeclarationBlock_SetBackgroundImage(
-    mDecl, str, mDocument->DefaultStyleAttrURLData());
+      mDecl, str, mDocument->DefaultStyleAttrURLData());
 }
 
-} // namespace mozilla
+}  // namespace mozilla

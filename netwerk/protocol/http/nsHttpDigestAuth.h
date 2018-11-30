@@ -15,7 +15,8 @@
 
 class nsICryptoHash;
 
-namespace mozilla { namespace net {
+namespace mozilla {
+namespace net {
 
 #define ALGO_SPECIFIED 0x01
 #define ALGO_MD5 0x02
@@ -31,70 +32,61 @@ namespace mozilla { namespace net {
 // nsHttpDigestAuth
 //-----------------------------------------------------------------------------
 
-class nsHttpDigestAuth final : public nsIHttpAuthenticator
-{
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIHTTPAUTHENTICATOR
+class nsHttpDigestAuth final : public nsIHttpAuthenticator {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIHTTPAUTHENTICATOR
 
-    nsHttpDigestAuth() = default;
+  nsHttpDigestAuth() = default;
 
-    static already_AddRefed<nsIHttpAuthenticator> GetOrCreate();
+  static already_AddRefed<nsIHttpAuthenticator> GetOrCreate();
 
-  protected:
-    ~nsHttpDigestAuth() = default;
+ protected:
+  ~nsHttpDigestAuth() = default;
 
-    MOZ_MUST_USE nsresult ExpandToHex(const char * digest, char * result);
+  MOZ_MUST_USE nsresult ExpandToHex(const char* digest, char* result);
 
-    MOZ_MUST_USE nsresult CalculateResponse(const char * ha1_digest,
-                                            const char * ha2_digest,
-                                            const nsCString&  nonce,
-                                            uint16_t qop,
-                                            const char * nonce_count,
-                                            const nsCString&  cnonce,
-                                            char * result);
+  MOZ_MUST_USE nsresult CalculateResponse(const char* ha1_digest,
+                                          const char* ha2_digest,
+                                          const nsCString& nonce, uint16_t qop,
+                                          const char* nonce_count,
+                                          const nsCString& cnonce,
+                                          char* result);
 
-    MOZ_MUST_USE nsresult CalculateHA1(const nsCString& username,
-                                       const nsCString& password,
-                                       const nsCString& realm,
-                                       uint16_t algorithm,
-                                       const nsCString& nonce,
-                                       const nsCString& cnonce,
-                                       char * result);
+  MOZ_MUST_USE nsresult CalculateHA1(const nsCString& username,
+                                     const nsCString& password,
+                                     const nsCString& realm, uint16_t algorithm,
+                                     const nsCString& nonce,
+                                     const nsCString& cnonce, char* result);
 
-    MOZ_MUST_USE nsresult CalculateHA2(const nsCString& http_method,
-                                       const nsCString& http_uri_path,
-                                       uint16_t qop,
-                                       const char * body_digest,
-                                       char * result);
+  MOZ_MUST_USE nsresult CalculateHA2(const nsCString& http_method,
+                                     const nsCString& http_uri_path,
+                                     uint16_t qop, const char* body_digest,
+                                     char* result);
 
-    MOZ_MUST_USE nsresult ParseChallenge(const char * challenge,
-                                         nsACString & realm,
-                                         nsACString & domain,
-                                         nsACString & nonce,
-                                         nsACString & opaque,
-                                         bool * stale,
-                                         uint16_t * algorithm,
-                                         uint16_t * qop);
+  MOZ_MUST_USE nsresult ParseChallenge(const char* challenge, nsACString& realm,
+                                       nsACString& domain, nsACString& nonce,
+                                       nsACString& opaque, bool* stale,
+                                       uint16_t* algorithm, uint16_t* qop);
 
-    // result is in mHashBuf
-    MOZ_MUST_USE nsresult MD5Hash(const char *buf, uint32_t len);
+  // result is in mHashBuf
+  MOZ_MUST_USE nsresult MD5Hash(const char* buf, uint32_t len);
 
-    MOZ_MUST_USE nsresult GetMethodAndPath(nsIHttpAuthenticableChannel *,
-                                           bool, nsCString &, nsCString &);
+  MOZ_MUST_USE nsresult GetMethodAndPath(nsIHttpAuthenticableChannel*, bool,
+                                         nsCString&, nsCString&);
 
-    // append the quoted version of value to aHeaderLine
-    MOZ_MUST_USE nsresult AppendQuotedString(const nsACString & value,
-                                             nsACString & aHeaderLine);
+  // append the quoted version of value to aHeaderLine
+  MOZ_MUST_USE nsresult AppendQuotedString(const nsACString& value,
+                                           nsACString& aHeaderLine);
 
-  protected:
-    nsCOMPtr<nsICryptoHash>        mVerifier;
-    char                           mHashBuf[DIGEST_LENGTH];
+ protected:
+  nsCOMPtr<nsICryptoHash> mVerifier;
+  char mHashBuf[DIGEST_LENGTH];
 
-    static StaticRefPtr<nsHttpDigestAuth> gSingleton;
+  static StaticRefPtr<nsHttpDigestAuth> gSingleton;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // nsHttpDigestAuth_h__
+#endif  // nsHttpDigestAuth_h__

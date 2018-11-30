@@ -15,7 +15,6 @@ namespace base {
 // This class implements a MessagePump needed for TYPE_UI MessageLoops on
 // Android
 class MessagePumpForUI : public MessagePump {
-
  public:
   MessagePumpForUI();
   ~MessagePumpForUI();

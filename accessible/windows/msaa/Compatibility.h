@@ -18,9 +18,8 @@ namespace a11y {
  * Used to get compatibility modes. Note, modes are computed at accessibility
  * start up time and aren't changed during lifetime.
  */
-class Compatibility
-{
-public:
+class Compatibility {
+ public:
   /**
    * Return true if JAWS mode is enabled.
    */
@@ -51,7 +50,7 @@ public:
    * Return a string describing sConsumers suitable for about:support.
    * Exposed through nsIXULRuntime.accessibilityInstantiator.
    */
-  static void GetHumanReadableConsumersStr(nsAString &aResult);
+  static void GetHumanReadableConsumersStr(nsAString& aResult);
 
   /**
    * Initialize compatibility mode information.
@@ -77,15 +76,16 @@ public:
   static bool IsModuleVersionLessThan(HMODULE aModuleHandle,
                                       unsigned long long aVersion);
 
-private:
+ private:
   Compatibility();
   Compatibility(const Compatibility&);
-  Compatibility& operator = (const Compatibility&);
+  Compatibility& operator=(const Compatibility&);
 
   static void InitConsumers();
 
   /**
-   * List of detected consumers of a11y (used for statistics/telemetry and compat)
+   * List of detected consumers of a11y (used for statistics/telemetry and
+   * compat)
    */
   enum {
     NVDA = 1 << 0,
@@ -101,20 +101,20 @@ private:
     UNKNOWN = 1 << 10,
     UIAUTOMATION = 1 << 11
   };
-  #define CONSUMERS_ENUM_LEN 12
+#define CONSUMERS_ENUM_LEN 12
 
-private:
+ private:
   static uint32_t sConsumers;
   static Maybe<DWORD> sUiaRemotePid;
 };
 
-} // a11y namespace
-} // mozilla namespace
+}  // namespace a11y
+}  // namespace mozilla
 
 // Convert the 4 (decimal) components of a DLL version number into a
 // single unsigned long long, as needed by
 // mozilla::a11y::Compatibility::IsModuleVersionLessThan.
-#define MAKE_FILE_VERSION(a,b,c,d)\
+#define MAKE_FILE_VERSION(a, b, c, d) \
   ((a##ULL << 48) + (b##ULL << 32) + (c##ULL << 16) + d##ULL)
 
 #endif

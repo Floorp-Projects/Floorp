@@ -16,7 +16,7 @@
 #include "ProtocolUtils.h"
 #define INVALID_HANDLE INVALID_HANDLE_VALUE
 
-#else // XP_WIN
+#else  // XP_WIN
 
 #include <unistd.h>
 
@@ -27,37 +27,30 @@
 #include "base/eintr_wrapper.h"
 #define INVALID_HANDLE -1
 
-#endif // XP_WIN
+#endif  // XP_WIN
 
 namespace mozilla {
 namespace ipc {
 
-FileDescriptor::FileDescriptor()
-  : mHandle(INVALID_HANDLE)
-{
-}
+FileDescriptor::FileDescriptor() : mHandle(INVALID_HANDLE) {}
 
 FileDescriptor::FileDescriptor(const FileDescriptor& aOther)
-  : mHandle(INVALID_HANDLE)
-{
+    : mHandle(INVALID_HANDLE) {
   Assign(aOther);
 }
 
 FileDescriptor::FileDescriptor(FileDescriptor&& aOther)
-  : mHandle(INVALID_HANDLE)
-{
+    : mHandle(INVALID_HANDLE) {
   *this = std::move(aOther);
 }
 
 FileDescriptor::FileDescriptor(PlatformHandleType aHandle)
-  : mHandle(INVALID_HANDLE)
-{
+    : mHandle(INVALID_HANDLE) {
   mHandle = Clone(aHandle);
 }
 
 FileDescriptor::FileDescriptor(const IPDLPrivate&, const PickleType& aPickle)
-  : mHandle(INVALID_HANDLE)
-{
+    : mHandle(INVALID_HANDLE) {
 #ifdef XP_WIN
   mHandle = aPickle;
 #else
@@ -65,23 +58,16 @@ FileDescriptor::FileDescriptor(const IPDLPrivate&, const PickleType& aPickle)
 #endif
 }
 
-FileDescriptor::~FileDescriptor()
-{
-  Close();
-}
+FileDescriptor::~FileDescriptor() { Close(); }
 
-FileDescriptor&
-FileDescriptor::operator=(const FileDescriptor& aOther)
-{
+FileDescriptor& FileDescriptor::operator=(const FileDescriptor& aOther) {
   if (this != &aOther) {
     Assign(aOther);
   }
   return *this;
 }
 
-FileDescriptor&
-FileDescriptor::operator=(FileDescriptor&& aOther)
-{
+FileDescriptor& FileDescriptor::operator=(FileDescriptor&& aOther) {
   if (this != &aOther) {
     Close();
     mHandle = aOther.mHandle;
@@ -90,30 +76,21 @@ FileDescriptor::operator=(FileDescriptor&& aOther)
   return *this;
 }
 
-bool
-FileDescriptor::IsValid() const
-{
-  return IsValid(mHandle);
-}
+bool FileDescriptor::IsValid() const { return IsValid(mHandle); }
 
-void
-FileDescriptor::Assign(const FileDescriptor& aOther)
-{
+void FileDescriptor::Assign(const FileDescriptor& aOther) {
   Close();
   mHandle = Clone(aOther.mHandle);
 }
 
-void
-FileDescriptor::Close()
-{
+void FileDescriptor::Close() {
   Close(mHandle);
   mHandle = INVALID_HANDLE;
 }
 
-FileDescriptor::PickleType
-FileDescriptor::ShareTo(const FileDescriptor::IPDLPrivate&,
-                        FileDescriptor::ProcessId aTargetPid) const
-{
+FileDescriptor::PickleType FileDescriptor::ShareTo(
+    const FileDescriptor::IPDLPrivate&,
+    FileDescriptor::ProcessId aTargetPid) const {
   PlatformHandleType newHandle;
 #ifdef XP_WIN
   if (IsValid()) {
@@ -124,7 +101,7 @@ FileDescriptor::ShareTo(const FileDescriptor::IPDLPrivate&,
     NS_WARNING("Failed to duplicate file handle for other process!");
   }
   return INVALID_HANDLE;
-#else // XP_WIN
+#else  // XP_WIN
   if (IsValid()) {
     newHandle = dup(mHandle);
     if (IsValid(newHandle)) {
@@ -138,29 +115,23 @@ FileDescriptor::ShareTo(const FileDescriptor::IPDLPrivate&,
   MOZ_CRASH("Must not get here!");
 }
 
-FileDescriptor::UniquePlatformHandle
-FileDescriptor::ClonePlatformHandle() const
-{
+FileDescriptor::UniquePlatformHandle FileDescriptor::ClonePlatformHandle()
+    const {
   return UniquePlatformHandle(Clone(mHandle));
 }
 
-bool
-FileDescriptor::operator==(const FileDescriptor& aOther) const
-{
+bool FileDescriptor::operator==(const FileDescriptor& aOther) const {
   return mHandle == aOther.mHandle;
 }
 
 // static
-bool
-FileDescriptor::IsValid(PlatformHandleType aHandle)
-{
+bool FileDescriptor::IsValid(PlatformHandleType aHandle) {
   return aHandle != INVALID_HANDLE;
 }
 
 // static
-FileDescriptor::PlatformHandleType
-FileDescriptor::Clone(PlatformHandleType aHandle)
-{
+FileDescriptor::PlatformHandleType FileDescriptor::Clone(
+    PlatformHandleType aHandle) {
   if (!IsValid(aHandle)) {
     return INVALID_HANDLE;
   }
@@ -168,80 +139,67 @@ FileDescriptor::Clone(PlatformHandleType aHandle)
 #ifdef XP_WIN
   if (::DuplicateHandle(GetCurrentProcess(), aHandle, GetCurrentProcess(),
                         &newHandle, 0, FALSE, DUPLICATE_SAME_ACCESS)) {
-#else // XP_WIN
+#else  // XP_WIN
   if ((newHandle = dup(aHandle)) != INVALID_HANDLE) {
 #endif
-        return newHandle;
+    return newHandle;
   }
   NS_WARNING("Failed to duplicate file handle for current process!");
   return INVALID_HANDLE;
 }
 
 // static
-void
-FileDescriptor::Close(PlatformHandleType aHandle)
-{
+void FileDescriptor::Close(PlatformHandleType aHandle) {
   if (IsValid(aHandle)) {
 #ifdef XP_WIN
     if (!CloseHandle(aHandle)) {
       NS_WARNING("Failed to close file handle for current process!");
     }
-#else // XP_WIN
+#else  // XP_WIN
     IGNORE_EINTR(close(aHandle));
 #endif
   }
 }
 
-FileDescriptor::PlatformHandleHelper::PlatformHandleHelper(FileDescriptor::PlatformHandleType aHandle)
-  :mHandle(aHandle)
-{
-}
+FileDescriptor::PlatformHandleHelper::PlatformHandleHelper(
+    FileDescriptor::PlatformHandleType aHandle)
+    : mHandle(aHandle) {}
 
 FileDescriptor::PlatformHandleHelper::PlatformHandleHelper(std::nullptr_t)
-  :mHandle(INVALID_HANDLE)
-{
-}
+    : mHandle(INVALID_HANDLE) {}
 
-bool
-FileDescriptor::PlatformHandleHelper::operator!=(std::nullptr_t) const
-{
+bool FileDescriptor::PlatformHandleHelper::operator!=(std::nullptr_t) const {
   return mHandle != INVALID_HANDLE;
 }
 
-FileDescriptor::PlatformHandleHelper::operator FileDescriptor::PlatformHandleType () const
-{
+FileDescriptor::PlatformHandleHelper::
+operator FileDescriptor::PlatformHandleType() const {
   return mHandle;
 }
 
 #ifdef XP_WIN
-FileDescriptor::PlatformHandleHelper::operator std::intptr_t () const
-{
+FileDescriptor::PlatformHandleHelper::operator std::intptr_t() const {
   return reinterpret_cast<std::intptr_t>(mHandle);
 }
 #endif
 
-void
-FileDescriptor::PlatformHandleDeleter::operator()(FileDescriptor::PlatformHandleHelper aHelper)
-{
+void FileDescriptor::PlatformHandleDeleter::operator()(
+    FileDescriptor::PlatformHandleHelper aHelper) {
   FileDescriptor::Close(aHelper);
 }
 
-void
-IPDLParamTraits<FileDescriptor>::Write(IPC::Message* aMsg,
-                                       IProtocol* aActor,
-                                       const FileDescriptor& aParam)
-{
+void IPDLParamTraits<FileDescriptor>::Write(IPC::Message* aMsg,
+                                            IProtocol* aActor,
+                                            const FileDescriptor& aParam) {
   FileDescriptor::PickleType pfd =
-    aParam.ShareTo(FileDescriptor::IPDLPrivate(), aActor->OtherPid());
+      aParam.ShareTo(FileDescriptor::IPDLPrivate(), aActor->OtherPid());
   WriteIPDLParam(aMsg, aActor, pfd);
 }
 
-bool
-IPDLParamTraits<FileDescriptor>::Read(const IPC::Message* aMsg,
-                                      PickleIterator* aIter,
-                                      IProtocol* aActor,
-                                      FileDescriptor* aResult)
-{
+bool IPDLParamTraits<FileDescriptor>::Read(const IPC::Message* aMsg,
+                                           PickleIterator* aIter,
+                                           IProtocol* aActor,
+                                           FileDescriptor* aResult) {
   FileDescriptor::PickleType pfd;
   if (!ReadIPDLParam(aMsg, aIter, aActor, &pfd)) {
     return false;
@@ -254,5 +212,5 @@ IPDLParamTraits<FileDescriptor>::Read(const IPC::Message* aMsg,
   return true;
 }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla

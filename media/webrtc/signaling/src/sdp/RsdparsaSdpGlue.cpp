@@ -7,11 +7,9 @@
 
 #include "signaling/src/sdp/RsdparsaSdpInc.h"
 #include "signaling/src/sdp/RsdparsaSdpGlue.h"
-namespace mozilla
-{
+namespace mozilla {
 
-std::string convertStringView(StringView str)
-{
+std::string convertStringView(StringView str) {
   if (nullptr == str.buf) {
     return std::string();
   } else {
@@ -19,8 +17,7 @@ std::string convertStringView(StringView str)
   }
 }
 
-std::vector<std::string> convertStringVec(StringVec* vec)
-{
+std::vector<std::string> convertStringVec(StringVec* vec) {
   std::vector<std::string> ret;
   size_t len = string_vec_len(vec);
   for (size_t i = 0; i < len; i++) {
@@ -31,9 +28,8 @@ std::vector<std::string> convertStringVec(StringVec* vec)
   return ret;
 }
 
-sdp::AddrType convertAddressType(RustSdpAddrType addrType)
-{
-  switch(addrType) {
+sdp::AddrType convertAddressType(RustSdpAddrType addrType) {
+  switch (addrType) {
     case RustSdpAddrType::kRustAddrNone:
       return sdp::kAddrTypeNone;
     case RustSdpAddrType::kRustAddrIp4:
@@ -45,8 +41,7 @@ sdp::AddrType convertAddressType(RustSdpAddrType addrType)
   MOZ_CRASH("unknown address type");
 }
 
-std::vector<uint8_t> convertU8Vec(U8Vec* vec)
-{
+std::vector<uint8_t> convertU8Vec(U8Vec* vec) {
   std::vector<std::uint8_t> ret;
 
   size_t len = u8_vec_len(vec);
@@ -59,8 +54,7 @@ std::vector<uint8_t> convertU8Vec(U8Vec* vec)
   return ret;
 }
 
-std::vector<uint16_t> convertU16Vec(U16Vec* vec)
-{
+std::vector<uint16_t> convertU16Vec(U16Vec* vec) {
   std::vector<std::uint16_t> ret;
 
   size_t len = u16_vec_len(vec);
@@ -73,8 +67,7 @@ std::vector<uint16_t> convertU16Vec(U16Vec* vec)
   return ret;
 }
 
-std::vector<uint32_t> convertU32Vec(U32Vec* vec)
-{
+std::vector<uint32_t> convertU32Vec(U32Vec* vec) {
   std::vector<std::uint32_t> ret;
 
   size_t len = u32_vec_len(vec);
@@ -87,8 +80,7 @@ std::vector<uint32_t> convertU32Vec(U32Vec* vec)
   return ret;
 }
 
-std::vector<float> convertF32Vec(F32Vec* vec)
-{
+std::vector<float> convertF32Vec(F32Vec* vec) {
   std::vector<float> ret;
 
   size_t len = f32_vec_len(vec);
@@ -101,4 +93,4 @@ std::vector<float> convertF32Vec(F32Vec* vec)
   return ret;
 }
 
-}
+}  // namespace mozilla

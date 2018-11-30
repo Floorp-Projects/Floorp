@@ -14,18 +14,16 @@ namespace webgpu {
 
 class Device;
 
-class ShaderModule final
-    : public ChildOf<Device>
-{
-public:
-    WEBGPU_DECL_GOOP(ShaderModule)
+class ShaderModule final : public ChildOf<Device> {
+ public:
+  WEBGPU_DECL_GOOP(ShaderModule)
 
-private:
-    ShaderModule() = delete;
-    virtual ~ShaderModule();
+ private:
+  ShaderModule() = delete;
+  virtual ~ShaderModule();
 };
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla
 
-#endif // WEBGPU_ShaderModule_H_
+#endif  // WEBGPU_ShaderModule_H_

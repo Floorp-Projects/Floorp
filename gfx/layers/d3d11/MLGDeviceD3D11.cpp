@@ -35,23 +35,18 @@ bool CanUsePartialPresents(ID3D11Device* aDevice);
 
 static D3D11_BOX RectToBox(const gfx::IntRect& aRect);
 
-MLGRenderTargetD3D11::MLGRenderTargetD3D11(const gfx::IntSize& aSize, MLGRenderTargetFlags aFlags)
- : MLGRenderTarget(aFlags),
-   mSize(aSize)
-{
-}
+MLGRenderTargetD3D11::MLGRenderTargetD3D11(const gfx::IntSize& aSize,
+                                           MLGRenderTargetFlags aFlags)
+    : MLGRenderTarget(aFlags), mSize(aSize) {}
 
-MLGRenderTargetD3D11::~MLGRenderTargetD3D11()
-{
+MLGRenderTargetD3D11::~MLGRenderTargetD3D11() {
   if (mDepthBuffer) {
     sRenderTargetUsage -= mSize.width * mSize.height * 1;
   }
   ForgetTexture();
 }
 
-bool
-MLGRenderTargetD3D11::Initialize(ID3D11Device* aDevice)
-{
+bool MLGRenderTargetD3D11::Initialize(ID3D11Device* aDevice) {
   D3D11_TEXTURE2D_DESC desc;
   ::ZeroMemory(&desc, sizeof(desc));
   desc.Width = mSize.width;
@@ -64,7 +59,8 @@ MLGRenderTargetD3D11::Initialize(ID3D11Device* aDevice)
   desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 
   RefPtr<ID3D11Texture2D> texture;
-  HRESULT hr = aDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
+  HRESULT hr =
+      aDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
   if (FAILED(hr) || !texture) {
     gfxCriticalNote << "Failed to create render target texture: " << hexa(hr);
     return false;
@@ -73,9 +69,8 @@ MLGRenderTargetD3D11::Initialize(ID3D11Device* aDevice)
   return Initialize(aDevice, texture);
 }
 
-bool
-MLGRenderTargetD3D11::Initialize(ID3D11Device* aDevice, ID3D11Texture2D* aTexture)
-{
+bool MLGRenderTargetD3D11::Initialize(ID3D11Device* aDevice,
+                                      ID3D11Texture2D* aTexture) {
   if (!UpdateTexture(aTexture)) {
     return false;
   }
@@ -85,9 +80,7 @@ MLGRenderTargetD3D11::Initialize(ID3D11Device* aDevice, ID3D11Texture2D* aTextur
   return true;
 }
 
-bool
-MLGRenderTargetD3D11::UpdateTexture(ID3D11Texture2D* aTexture)
-{
+bool MLGRenderTargetD3D11::UpdateTexture(ID3D11Texture2D* aTexture) {
   // Save the view first, in case we can re-use it.
   RefPtr<ID3D11RenderTargetView> view = mRTView.forget();
 
@@ -117,7 +110,8 @@ MLGRenderTargetD3D11::UpdateTexture(ID3D11Texture2D* aTexture)
 
   // If we couldn't re-use a view from before, make one now.
   if (!view) {
-    HRESULT hr = device->CreateRenderTargetView(aTexture, nullptr, getter_AddRefs(view));
+    HRESULT hr =
+        device->CreateRenderTargetView(aTexture, nullptr, getter_AddRefs(view));
     if (FAILED(hr) || !view) {
       gfxCriticalNote << "Failed to create render target view: " << hexa(hr);
       return false;
@@ -130,9 +124,7 @@ MLGRenderTargetD3D11::UpdateTexture(ID3D11Texture2D* aTexture)
   return true;
 }
 
-void
-MLGRenderTargetD3D11::ForgetTexture()
-{
+void MLGRenderTargetD3D11::ForgetTexture() {
   if (mTexture) {
     sRenderTargetUsage -= mSize.width * mSize.height * 4;
     mTexture = nullptr;
@@ -141,9 +133,7 @@ MLGRenderTargetD3D11::ForgetTexture()
   mTextureSource = nullptr;
 }
 
-bool
-MLGRenderTargetD3D11::CreateDepthBuffer(ID3D11Device* aDevice)
-{
+bool MLGRenderTargetD3D11::CreateDepthBuffer(ID3D11Device* aDevice) {
   D3D11_TEXTURE2D_DESC desc;
   ::ZeroMemory(&desc, sizeof(desc));
   desc.Width = mSize.width;
@@ -181,48 +171,33 @@ MLGRenderTargetD3D11::CreateDepthBuffer(ID3D11Device* aDevice)
   return true;
 }
 
-ID3D11DepthStencilView*
-MLGRenderTargetD3D11::GetDSV()
-{
+ID3D11DepthStencilView* MLGRenderTargetD3D11::GetDSV() {
   return mDepthStencilView;
 }
 
-ID3D11RenderTargetView*
-MLGRenderTargetD3D11::GetRenderTargetView()
-{
+ID3D11RenderTargetView* MLGRenderTargetD3D11::GetRenderTargetView() {
   return mRTView;
 }
 
-IntSize
-MLGRenderTargetD3D11::GetSize() const
-{
-  return mSize;
-}
+IntSize MLGRenderTargetD3D11::GetSize() const { return mSize; }
 
-MLGTexture*
-MLGRenderTargetD3D11::GetTexture()
-{
+MLGTexture* MLGRenderTargetD3D11::GetTexture() {
   if (!mTextureSource) {
     mTextureSource = new MLGTextureD3D11(mTexture);
   }
   return mTextureSource;
 }
 
-MLGSwapChainD3D11::MLGSwapChainD3D11(MLGDeviceD3D11* aParent, ID3D11Device* aDevice)
- : mParent(aParent),
-   mDevice(aDevice),
-   mWidget(nullptr),
-   mCanUsePartialPresents(CanUsePartialPresents(aDevice))
-{
-}
+MLGSwapChainD3D11::MLGSwapChainD3D11(MLGDeviceD3D11* aParent,
+                                     ID3D11Device* aDevice)
+    : mParent(aParent),
+      mDevice(aDevice),
+      mWidget(nullptr),
+      mCanUsePartialPresents(CanUsePartialPresents(aDevice)) {}
 
-MLGSwapChainD3D11::~MLGSwapChainD3D11()
-{
-}
+MLGSwapChainD3D11::~MLGSwapChainD3D11() {}
 
-void
-MLGSwapChainD3D11::Destroy()
-{
+void MLGSwapChainD3D11::Destroy() {
   if (mRT == mParent->GetRenderTarget()) {
     mParent->SetRenderTarget(nullptr);
   }
@@ -232,9 +207,9 @@ MLGSwapChainD3D11::Destroy()
   mSwapChain1 = nullptr;
 }
 
-RefPtr<MLGSwapChainD3D11>
-MLGSwapChainD3D11::Create(MLGDeviceD3D11* aParent, ID3D11Device* aDevice, CompositorWidget* aWidget)
-{
+RefPtr<MLGSwapChainD3D11> MLGSwapChainD3D11::Create(MLGDeviceD3D11* aParent,
+                                                    ID3D11Device* aDevice,
+                                                    CompositorWidget* aWidget) {
   RefPtr<MLGSwapChainD3D11> swapChain = new MLGSwapChainD3D11(aParent, aDevice);
   if (!swapChain->Initialize(aWidget)) {
     return nullptr;
@@ -242,9 +217,7 @@ MLGSwapChainD3D11::Create(MLGDeviceD3D11* aParent, ID3D11Device* aDevice, Compos
   return swapChain.forget();
 }
 
-bool
-MLGSwapChainD3D11::Initialize(CompositorWidget* aWidget)
-{
+bool MLGSwapChainD3D11::Initialize(CompositorWidget* aWidget) {
   HWND hwnd = aWidget->AsWindows()->GetHwnd();
 
   RefPtr<IDXGIDevice> dxgiDevice;
@@ -261,9 +234,7 @@ MLGSwapChainD3D11::Initialize(CompositorWidget* aWidget)
   RefPtr<IDXGIFactory2> dxgiFactory2;
   if (gfxPrefs::Direct3D11UseDoubleBuffering() &&
       SUCCEEDED(dxgiFactory->QueryInterface(dxgiFactory2.StartAssignment())) &&
-      dxgiFactory2 &&
-      IsWin10OrLater())
-  {
+      dxgiFactory2 && IsWin10OrLater()) {
     // DXGI_SCALING_NONE is not available on Windows 7 with the Platform Update:
     // This looks awful for things like the awesome bar and browser window
     // resizing, so we don't use a flip buffer chain here. (Note when using
@@ -286,14 +257,9 @@ MLGSwapChainD3D11::Initialize(CompositorWidget* aWidget)
     desc.Flags = 0;
 
     HRESULT hr = dxgiFactory2->CreateSwapChainForHwnd(
-      mDevice,
-      hwnd,
-      &desc,
-      nullptr,
-      nullptr,
-      getter_AddRefs(mSwapChain1));
+        mDevice, hwnd, &desc, nullptr, nullptr, getter_AddRefs(mSwapChain1));
     if (SUCCEEDED(hr) && mSwapChain1) {
-      DXGI_RGBA color = { 1.0f, 1.0f, 1.0f, 1.0f };
+      DXGI_RGBA color = {1.0f, 1.0f, 1.0f, 1.0f};
       mSwapChain1->SetBackgroundColor(&color);
       mSwapChain = mSwapChain1;
       mIsDoubleBuffered = true;
@@ -317,7 +283,8 @@ MLGSwapChainD3D11::Initialize(CompositorWidget* aWidget)
     swapDesc.Flags = 0;
     swapDesc.SwapEffect = DXGI_SWAP_EFFECT_SEQUENTIAL;
 
-    HRESULT hr = dxgiFactory->CreateSwapChain(dxgiDevice, &swapDesc, getter_AddRefs(mSwapChain));
+    HRESULT hr = dxgiFactory->CreateSwapChain(dxgiDevice, &swapDesc,
+                                              getter_AddRefs(mSwapChain));
     if (FAILED(hr)) {
       gfxCriticalNote << "Could not create swap chain: " << hexa(hr);
       return false;
@@ -333,18 +300,19 @@ MLGSwapChainD3D11::Initialize(CompositorWidget* aWidget)
   return true;
 }
 
-RefPtr<MLGRenderTarget>
-MLGSwapChainD3D11::AcquireBackBuffer()
-{
+RefPtr<MLGRenderTarget> MLGSwapChainD3D11::AcquireBackBuffer() {
   RefPtr<ID3D11Texture2D> texture;
-  HRESULT hr = mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), getter_AddRefs(texture));
-  if (hr == DXGI_ERROR_INVALID_CALL && mDevice->GetDeviceRemovedReason() != S_OK) {
+  HRESULT hr = mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D),
+                                     getter_AddRefs(texture));
+  if (hr == DXGI_ERROR_INVALID_CALL &&
+      mDevice->GetDeviceRemovedReason() != S_OK) {
     // This can happen on some drivers when there's a TDR.
     mParent->HandleDeviceReset("SwapChain::GetBuffer");
     return nullptr;
   }
   if (FAILED(hr)) {
-    gfxCriticalNote << "Failed to acquire swap chain's backbuffer: " << hexa(hr);
+    gfxCriticalNote << "Failed to acquire swap chain's backbuffer: "
+                    << hexa(hr);
     return nullptr;
   }
 
@@ -370,9 +338,7 @@ MLGSwapChainD3D11::AcquireBackBuffer()
   return mRT;
 }
 
-void
-MLGSwapChainD3D11::UpdateBackBufferContents(ID3D11Texture2D* aBack)
-{
+void MLGSwapChainD3D11::UpdateBackBufferContents(ID3D11Texture2D* aBack) {
   MOZ_ASSERT(mIsDoubleBuffered);
 
   // The front region contains the newly invalid region for this frame. The
@@ -387,7 +353,8 @@ MLGSwapChainD3D11::UpdateBackBufferContents(ID3D11Texture2D* aBack)
   }
 
   RefPtr<ID3D11Texture2D> front;
-  HRESULT hr = mSwapChain->GetBuffer(1, __uuidof(ID3D11Texture2D), getter_AddRefs(front));
+  HRESULT hr = mSwapChain->GetBuffer(1, __uuidof(ID3D11Texture2D),
+                                     getter_AddRefs(front));
   if (FAILED(hr) || !front) {
     return;
   }
@@ -398,7 +365,8 @@ MLGSwapChainD3D11::UpdateBackBufferContents(ID3D11Texture2D* aBack)
   for (auto iter = frontValid.RectIter(); !iter.Done(); iter.Next()) {
     const IntRect& rect = iter.Get();
     D3D11_BOX box = RectToBox(rect);
-    context->CopySubresourceRegion(aBack, 0, rect.X(), rect.Y(), 0, front, 0, &box);
+    context->CopySubresourceRegion(aBack, 0, rect.X(), rect.Y(), 0, front, 0,
+                                   &box);
   }
 
   // The back and front buffers are now in sync.
@@ -406,9 +374,7 @@ MLGSwapChainD3D11::UpdateBackBufferContents(ID3D11Texture2D* aBack)
   MOZ_ASSERT(!mBackBufferInvalid.IsEmpty());
 }
 
-bool
-MLGSwapChainD3D11::ResizeBuffers(const IntSize& aSize)
-{
+bool MLGSwapChainD3D11::ResizeBuffers(const IntSize& aSize) {
   // We have to clear all references to the old backbuffer before resizing.
   mRT = nullptr;
 
@@ -417,7 +383,8 @@ MLGSwapChainD3D11::ResizeBuffers(const IntSize& aSize)
   // resizing.
   mSize = IntSize(0, 0);
 
-  HRESULT hr = mSwapChain->ResizeBuffers(0, aSize.width, aSize.height, DXGI_FORMAT_B8G8R8A8_UNORM, 0);
+  HRESULT hr = mSwapChain->ResizeBuffers(0, aSize.width, aSize.height,
+                                         DXGI_FORMAT_B8G8R8A8_UNORM, 0);
   if (hr == DXGI_ERROR_DEVICE_REMOVED) {
     mParent->HandleDeviceReset("ResizeBuffers");
     return false;
@@ -433,15 +400,9 @@ MLGSwapChainD3D11::ResizeBuffers(const IntSize& aSize)
   return true;
 }
 
-IntSize
-MLGSwapChainD3D11::GetSize() const
-{
-  return mSize;
-}
+IntSize MLGSwapChainD3D11::GetSize() const { return mSize; }
 
-void
-MLGSwapChainD3D11::Present()
-{
+void MLGSwapChainD3D11::Present() {
   MOZ_ASSERT(!mBackBufferInvalid.IsEmpty());
   MOZ_ASSERT(mBackBufferInvalid.GetNumRects() > 0);
 
@@ -483,7 +444,8 @@ MLGSwapChainD3D11::Present()
     // presented buffer (the front buffer) is clean, so we clear its invalid
     // region. The back buffer that will be used next frame however is now
     // dirty.
-    MOZ_ASSERT(mFrontBufferInvalid.GetBounds() == mBackBufferInvalid.GetBounds());
+    MOZ_ASSERT(mFrontBufferInvalid.GetBounds() ==
+               mBackBufferInvalid.GetBounds());
     mFrontBufferInvalid.SetEmpty();
   } else {
     mBackBufferInvalid.SetEmpty();
@@ -506,15 +468,14 @@ MLGSwapChainD3D11::Present()
   mParent->WaitForPreviousPresentQuery();
 }
 
-void
-MLGSwapChainD3D11::ForcePresent()
-{
+void MLGSwapChainD3D11::ForcePresent() {
   DXGI_SWAP_CHAIN_DESC desc;
   mSwapChain->GetDesc(&desc);
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
 
-  if (desc.BufferDesc.Width != size.width || desc.BufferDesc.Height != size.height) {
+  if (desc.BufferDesc.Width != size.width ||
+      desc.BufferDesc.Height != size.height) {
     return;
   }
 
@@ -529,14 +490,14 @@ MLGSwapChainD3D11::ForcePresent()
   mLastPresentSize = mSize;
 }
 
-void
-MLGSwapChainD3D11::CopyBackbuffer(gfx::DrawTarget* aTarget, const gfx::IntRect& aBounds)
-{
+void MLGSwapChainD3D11::CopyBackbuffer(gfx::DrawTarget* aTarget,
+                                       const gfx::IntRect& aBounds) {
   RefPtr<ID3D11DeviceContext> context;
   mDevice->GetImmediateContext(getter_AddRefs(context));
 
   RefPtr<ID3D11Texture2D> backbuffer;
-  HRESULT hr = mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backbuffer.StartAssignment());
+  HRESULT hr = mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D),
+                                     (void**)backbuffer.StartAssignment());
   if (FAILED(hr)) {
     gfxWarning() << "Failed to acquire swapchain backbuffer: " << hexa(hr);
     return;
@@ -554,7 +515,8 @@ MLGSwapChainD3D11::CopyBackbuffer(gfx::DrawTarget* aTarget, const gfx::IntRect& 
   RefPtr<ID3D11Texture2D> temp;
   hr = mDevice->CreateTexture2D(&tempDesc, nullptr, getter_AddRefs(temp));
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to create a temporary texture for PresentAndCopy: " << hexa(hr);
+    gfxWarning() << "Failed to create a temporary texture for PresentAndCopy: "
+                 << hexa(hr);
     return;
   }
 
@@ -563,32 +525,26 @@ MLGSwapChainD3D11::CopyBackbuffer(gfx::DrawTarget* aTarget, const gfx::IntRect& 
   D3D11_MAPPED_SUBRESOURCE map;
   hr = context->Map(temp, 0, D3D11_MAP_READ, 0, &map);
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to map temporary texture for PresentAndCopy: " << hexa(hr);
+    gfxWarning() << "Failed to map temporary texture for PresentAndCopy: "
+                 << hexa(hr);
     return;
   }
 
   RefPtr<DataSourceSurface> source = Factory::CreateWrappingDataSourceSurface(
-    (uint8_t*)map.pData,
-    map.RowPitch,
-    IntSize(bbDesc.Width, bbDesc.Height),
-    SurfaceFormat::B8G8R8A8);
+      (uint8_t*)map.pData, map.RowPitch, IntSize(bbDesc.Width, bbDesc.Height),
+      SurfaceFormat::B8G8R8A8);
 
-  aTarget->CopySurface(
-    source,
-    IntRect(0, 0, bbDesc.Width, bbDesc.Height),
-    IntPoint(-aBounds.X(), -aBounds.Y()));
+  aTarget->CopySurface(source, IntRect(0, 0, bbDesc.Width, bbDesc.Height),
+                       IntPoint(-aBounds.X(), -aBounds.Y()));
   aTarget->Flush();
 
   context->Unmap(temp, 0);
 }
 
-RefPtr<MLGBufferD3D11>
-MLGBufferD3D11::Create(ID3D11Device* aDevice,
-                       MLGBufferType aType,
-                       uint32_t aSize,
-                       MLGUsage aUsage,
-                       const void* aInitialData)
-{
+RefPtr<MLGBufferD3D11> MLGBufferD3D11::Create(ID3D11Device* aDevice,
+                                              MLGBufferType aType,
+                                              uint32_t aSize, MLGUsage aUsage,
+                                              const void* aInitialData) {
   D3D11_BUFFER_DESC desc;
   desc.ByteWidth = aSize;
   desc.MiscFlags = 0;
@@ -626,7 +582,8 @@ MLGBufferD3D11::Create(ID3D11Device* aDevice,
   data.SysMemSlicePitch = 0;
 
   RefPtr<ID3D11Buffer> buffer;
-  HRESULT hr = aDevice->CreateBuffer(&desc, aInitialData ? &data : nullptr, getter_AddRefs(buffer));
+  HRESULT hr = aDevice->CreateBuffer(&desc, aInitialData ? &data : nullptr,
+                                     getter_AddRefs(buffer));
   if (FAILED(hr) || !buffer) {
     gfxCriticalError() << "Failed to create ID3D11Buffer.";
     return nullptr;
@@ -635,36 +592,32 @@ MLGBufferD3D11::Create(ID3D11Device* aDevice,
   return new MLGBufferD3D11(buffer, aType, aSize);
 }
 
-MLGBufferD3D11::MLGBufferD3D11(ID3D11Buffer* aBuffer, MLGBufferType aType, size_t aSize)
- : mBuffer(aBuffer),
-   mType(aType),
-   mSize(aSize)
-{
+MLGBufferD3D11::MLGBufferD3D11(ID3D11Buffer* aBuffer, MLGBufferType aType,
+                               size_t aSize)
+    : mBuffer(aBuffer), mType(aType), mSize(aSize) {
   switch (mType) {
-  case MLGBufferType::Vertex:
-    mlg::sVertexBufferUsage += mSize;
-    break;
-  case MLGBufferType::Constant:
-    mlg::sConstantBufferUsage += mSize;
-    break;
+    case MLGBufferType::Vertex:
+      mlg::sVertexBufferUsage += mSize;
+      break;
+    case MLGBufferType::Constant:
+      mlg::sConstantBufferUsage += mSize;
+      break;
   }
 }
 
-MLGBufferD3D11::~MLGBufferD3D11()
-{
+MLGBufferD3D11::~MLGBufferD3D11() {
   switch (mType) {
-  case MLGBufferType::Vertex:
-    mlg::sVertexBufferUsage -= mSize;
-    break;
-  case MLGBufferType::Constant:
-    mlg::sConstantBufferUsage -= mSize;
-    break;
+    case MLGBufferType::Vertex:
+      mlg::sVertexBufferUsage -= mSize;
+      break;
+    case MLGBufferType::Constant:
+      mlg::sConstantBufferUsage -= mSize;
+      break;
   }
 }
 
 MLGTextureD3D11::MLGTextureD3D11(ID3D11Texture2D* aTexture)
- : mTexture(aTexture)
-{
+    : mTexture(aTexture) {
   D3D11_TEXTURE2D_DESC desc;
   aTexture->GetDesc(&desc);
 
@@ -672,13 +625,9 @@ MLGTextureD3D11::MLGTextureD3D11(ID3D11Texture2D* aTexture)
   mSize.height = desc.Height;
 }
 
-/* static */ RefPtr<MLGTextureD3D11>
-MLGTextureD3D11::Create(ID3D11Device* aDevice,
-                        const gfx::IntSize& aSize,
-                        gfx::SurfaceFormat aFormat,
-                        MLGUsage aUsage,
-                        MLGTextureFlags aFlags)
-{
+/* static */ RefPtr<MLGTextureD3D11> MLGTextureD3D11::Create(
+    ID3D11Device* aDevice, const gfx::IntSize& aSize,
+    gfx::SurfaceFormat aFormat, MLGUsage aUsage, MLGTextureFlags aFlags) {
   D3D11_TEXTURE2D_DESC desc;
   ::ZeroMemory(&desc, sizeof(desc));
   desc.Width = aSize.width;
@@ -688,32 +637,32 @@ MLGTextureD3D11::Create(ID3D11Device* aDevice,
   desc.SampleDesc.Count = 1;
 
   switch (aFormat) {
-  case SurfaceFormat::B8G8R8A8:
-    desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-    break;
-  default:
-    MOZ_ASSERT_UNREACHABLE("Unsupported surface format");
-    return nullptr;
+    case SurfaceFormat::B8G8R8A8:
+      desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported surface format");
+      return nullptr;
   }
 
   switch (aUsage) {
-  case MLGUsage::Immutable:
-    desc.Usage = D3D11_USAGE_IMMUTABLE;
-    break;
-  case MLGUsage::Default:
-    desc.Usage = D3D11_USAGE_DEFAULT;
-    break;
-  case MLGUsage::Dynamic:
-    desc.Usage = D3D11_USAGE_DYNAMIC;
-    desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    break;
-  case MLGUsage::Staging:
-    desc.Usage = D3D11_USAGE_STAGING;
-    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-    break;
-  default:
-    MOZ_ASSERT_UNREACHABLE("Unsupported usage type");
-    break;
+    case MLGUsage::Immutable:
+      desc.Usage = D3D11_USAGE_IMMUTABLE;
+      break;
+    case MLGUsage::Default:
+      desc.Usage = D3D11_USAGE_DEFAULT;
+      break;
+    case MLGUsage::Dynamic:
+      desc.Usage = D3D11_USAGE_DYNAMIC;
+      desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+      break;
+    case MLGUsage::Staging:
+      desc.Usage = D3D11_USAGE_STAGING;
+      desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported usage type");
+      break;
   }
 
   if (aFlags & MLGTextureFlags::ShaderResource) {
@@ -724,7 +673,8 @@ MLGTextureD3D11::Create(ID3D11Device* aDevice,
   }
 
   RefPtr<ID3D11Texture2D> texture;
-  HRESULT hr = aDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
+  HRESULT hr =
+      aDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
   if (FAILED(hr) || !texture) {
     gfxCriticalNote << "Failed to create 2D texture: " << hexa(hr);
     return nullptr;
@@ -735,14 +685,13 @@ MLGTextureD3D11::Create(ID3D11Device* aDevice,
   return new MLGTextureD3D11(texture);
 }
 
-ID3D11ShaderResourceView*
-MLGTextureD3D11::GetShaderResourceView()
-{
+ID3D11ShaderResourceView* MLGTextureD3D11::GetShaderResourceView() {
   if (!mView) {
     RefPtr<ID3D11Device> device;
     mTexture->GetDevice(getter_AddRefs(device));
 
-    HRESULT hr = device->CreateShaderResourceView(mTexture, nullptr, getter_AddRefs(mView));
+    HRESULT hr = device->CreateShaderResourceView(mTexture, nullptr,
+                                                  getter_AddRefs(mView));
     if (FAILED(hr) || !mView) {
       gfxWarning() << "Could not create shader resource view: " << hexa(hr);
       return nullptr;
@@ -752,21 +701,15 @@ MLGTextureD3D11::GetShaderResourceView()
 }
 
 MLGDeviceD3D11::MLGDeviceD3D11(ID3D11Device* aDevice)
- : mDevice(aDevice),
-   mScissored(false)
-{
-}
+    : mDevice(aDevice), mScissored(false) {}
 
-MLGDeviceD3D11::~MLGDeviceD3D11()
-{
+MLGDeviceD3D11::~MLGDeviceD3D11() {
   // Caller should have unlocked all textures after presenting.
   MOZ_ASSERT(mLockedTextures.IsEmpty());
   MOZ_ASSERT(mLockAttemptedTextures.IsEmpty());
 }
 
-bool
-MLGDeviceD3D11::Initialize()
-{
+bool MLGDeviceD3D11::Initialize() {
   if (!mDevice) {
     return Fail("FEATURE_FAILURE_NO_DEVICE");
   }
@@ -791,69 +734,70 @@ MLGDeviceD3D11::Initialize()
     //
     // https://docs.microsoft.com/en-us/windows-hardware/drivers/display/directx-feature-improvements-in-windows-8#buffers
     D3D11_FEATURE_DATA_D3D11_OPTIONS options;
-    HRESULT hr = mDevice->CheckFeatureSupport(
-      D3D11_FEATURE_D3D11_OPTIONS,
-      &options,
-      sizeof(options));
+    HRESULT hr = mDevice->CheckFeatureSupport(D3D11_FEATURE_D3D11_OPTIONS,
+                                              &options, sizeof(options));
     if (SUCCEEDED(hr)) {
       if (IsWin8OrLater()) {
-        mCanUseConstantBufferOffsetBinding = (options.ConstantBufferOffsetting != FALSE);
+        mCanUseConstantBufferOffsetBinding =
+            (options.ConstantBufferOffsetting != FALSE);
       } else {
         gfxConfig::EnableFallback(Fallback::NO_CONSTANT_BUFFER_OFFSETTING,
                                   "Unsupported by driver");
       }
       mCanUseClearView = (options.ClearView != FALSE);
     } else {
-      gfxCriticalNote << "Failed to query D3D11.1 feature support: " << hexa(hr);
+      gfxCriticalNote << "Failed to query D3D11.1 feature support: "
+                      << hexa(hr);
     }
   }
 
   // Get capabilities.
   switch (mDevice->GetFeatureLevel()) {
-  case D3D_FEATURE_LEVEL_11_1:
-  case D3D_FEATURE_LEVEL_11_0:
-    mMaxConstantBufferBindSize = D3D11_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
-    break;
-  case D3D_FEATURE_LEVEL_10_1:
-  case D3D_FEATURE_LEVEL_10_0:
-    mMaxConstantBufferBindSize = D3D10_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
-    break;
-  default:
-    MOZ_ASSERT_UNREACHABLE("Unknown feature level");
+    case D3D_FEATURE_LEVEL_11_1:
+    case D3D_FEATURE_LEVEL_11_0:
+      mMaxConstantBufferBindSize = D3D11_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
+      break;
+    case D3D_FEATURE_LEVEL_10_1:
+    case D3D_FEATURE_LEVEL_10_0:
+      mMaxConstantBufferBindSize = D3D10_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown feature level");
   }
 
   mDiagnostics = MakeUnique<DiagnosticsD3D11>(mDevice, mCtx);
 
   {
-    struct Vertex2D { float x; float y; };
-    Vertex2D vertices[] = { { 0, 0 }, { 1.0f, 0 }, { 0, 1.0f }, { 1.0f, 1.0f } };
-    mUnitQuadVB = CreateBuffer(
-      MLGBufferType::Vertex,
-      sizeof(Vertex2D) * 4,
-      MLGUsage::Immutable,
-      &vertices);
+    struct Vertex2D {
+      float x;
+      float y;
+    };
+    Vertex2D vertices[] = {{0, 0}, {1.0f, 0}, {0, 1.0f}, {1.0f, 1.0f}};
+    mUnitQuadVB = CreateBuffer(MLGBufferType::Vertex, sizeof(Vertex2D) * 4,
+                               MLGUsage::Immutable, &vertices);
     if (!mUnitQuadVB) {
       return Fail("FEATURE_FAILURE_UNIT_QUAD_BUFFER");
     }
   }
 
   {
-    struct Vertex3D { float x; float y; float z; };
-    Vertex3D vertices[3] = {
-      { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }
+    struct Vertex3D {
+      float x;
+      float y;
+      float z;
     };
-    mUnitTriangleVB = CreateBuffer(
-      MLGBufferType::Vertex,
-      sizeof(Vertex3D) * 3,
-      MLGUsage::Immutable,
-      &vertices);
+    Vertex3D vertices[3] = {
+        {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}};
+    mUnitTriangleVB = CreateBuffer(MLGBufferType::Vertex, sizeof(Vertex3D) * 3,
+                                   MLGUsage::Immutable, &vertices);
     if (!mUnitTriangleVB) {
       return Fail("FEATURE_FAILURE_UNIT_TRIANGLE_BUFFER");
     }
   }
 
   // Define pixel shaders.
-#define LAZY_PS(cxxName, enumName) mLazyPixelShaders[PixelShaderID::enumName] = &s##cxxName;
+#define LAZY_PS(cxxName, enumName) \
+  mLazyPixelShaders[PixelShaderID::enumName] = &s##cxxName;
   LAZY_PS(TexturedVertexRGB, TexturedVertexRGB);
   LAZY_PS(TexturedVertexRGBA, TexturedVertexRGBA);
   LAZY_PS(TexturedQuadRGB, TexturedQuadRGB);
@@ -887,7 +831,8 @@ MLGDeviceD3D11::Initialize()
 #undef LAZY_PS
 
   // Define vertex shaders.
-#define LAZY_VS(cxxName, enumName) mLazyVertexShaders[VertexShaderID::enumName] = &s##cxxName;
+#define LAZY_VS(cxxName, enumName) \
+  mLazyVertexShaders[VertexShaderID::enumName] = &s##cxxName;
   LAZY_VS(TexturedQuadVS, TexturedQuad);
   LAZY_VS(TexturedVertexVS, TexturedVertex);
   LAZY_VS(BlendVertexVS, BlendVertex);
@@ -906,120 +851,172 @@ MLGDeviceD3D11::Initialize()
       !InitPixelShader(PixelShaderID::Clear) ||
       !InitVertexShader(VertexShaderID::TexturedQuad) ||
       !InitVertexShader(VertexShaderID::ColoredQuad) ||
-      !InitVertexShader(VertexShaderID::Clear))
-  {
+      !InitVertexShader(VertexShaderID::Clear)) {
     return Fail("FEATURE_FAILURE_CRITICAL_SHADER_FAILURE");
   }
 
   // Common unit quad layout: vPos, vRect, vLayerIndex, vDepth
-# define BASE_UNIT_QUAD_LAYOUT \
-      { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }, \
-      { "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 }, \
-      { "TEXCOORD", 1, DXGI_FORMAT_R32_UINT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }, \
-      { "TEXCOORD", 2, DXGI_FORMAT_R32_SINT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
+#define BASE_UNIT_QUAD_LAYOUT                                                  \
+  {"POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, \
+   0},                                                                         \
+      {"TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT,                          \
+       1,          0, D3D11_INPUT_PER_INSTANCE_DATA,                           \
+       1},                                                                     \
+      {"TEXCOORD",                                                             \
+       1,                                                                      \
+       DXGI_FORMAT_R32_UINT,                                                   \
+       1,                                                                      \
+       D3D11_APPEND_ALIGNED_ELEMENT,                                           \
+       D3D11_INPUT_PER_INSTANCE_DATA,                                          \
+       1},                                                                     \
+  {                                                                            \
+    "TEXCOORD", 2, DXGI_FORMAT_R32_SINT, 1, D3D11_APPEND_ALIGNED_ELEMENT,      \
+        D3D11_INPUT_PER_INSTANCE_DATA, 1                                       \
+  }
 
   // Common unit triangle layout: vUnitPos, vPos1-3, vLayerIndex, vDepth
-# define BASE_UNIT_TRIANGLE_LAYOUT \
-      { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }, \
-      { "POSITION", 1, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 }, \
-      { "POSITION", 2, DXGI_FORMAT_R32G32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }, \
-      { "POSITION", 3, DXGI_FORMAT_R32G32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }, \
-      { "TEXCOORD", 0, DXGI_FORMAT_R32_UINT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }, \
-      { "TEXCOORD", 1, DXGI_FORMAT_R32_SINT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
+#define BASE_UNIT_TRIANGLE_LAYOUT                    \
+  {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,       \
+   0,          0, D3D11_INPUT_PER_VERTEX_DATA,       \
+   0},                                               \
+      {"POSITION", 1, DXGI_FORMAT_R32G32_FLOAT,      \
+       1,          0, D3D11_INPUT_PER_INSTANCE_DATA, \
+       1},                                           \
+      {"POSITION",                                   \
+       2,                                            \
+       DXGI_FORMAT_R32G32_FLOAT,                     \
+       1,                                            \
+       D3D11_APPEND_ALIGNED_ELEMENT,                 \
+       D3D11_INPUT_PER_INSTANCE_DATA,                \
+       1},                                           \
+      {"POSITION",                                   \
+       3,                                            \
+       DXGI_FORMAT_R32G32_FLOAT,                     \
+       1,                                            \
+       D3D11_APPEND_ALIGNED_ELEMENT,                 \
+       D3D11_INPUT_PER_INSTANCE_DATA,                \
+       1},                                           \
+      {"TEXCOORD",                                   \
+       0,                                            \
+       DXGI_FORMAT_R32_UINT,                         \
+       1,                                            \
+       D3D11_APPEND_ALIGNED_ELEMENT,                 \
+       D3D11_INPUT_PER_INSTANCE_DATA,                \
+       1},                                           \
+      {"TEXCOORD",                                   \
+       1,                                            \
+       DXGI_FORMAT_R32_SINT,                         \
+       1,                                            \
+       D3D11_APPEND_ALIGNED_ELEMENT,                 \
+       D3D11_INPUT_PER_INSTANCE_DATA,                \
+       1}
 
   // Initialize input layouts.
   {
     D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
-      BASE_UNIT_QUAD_LAYOUT,
-      // vTexRect
-      { "TEXCOORD", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
-    };
-    if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc), sTexturedQuadVS, VertexShaderID::TexturedQuad)) {
+        BASE_UNIT_QUAD_LAYOUT,
+        // vTexRect
+        {"TEXCOORD", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+         D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}};
+    if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc),
+                         sTexturedQuadVS, VertexShaderID::TexturedQuad)) {
       return Fail("FEATURE_FAILURE_UNIT_QUAD_TEXTURED_LAYOUT");
     }
   }
   {
     D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
-      BASE_UNIT_QUAD_LAYOUT,
-      // vColor
-      { "TEXCOORD", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
-    };
-    if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc), sColoredQuadVS, VertexShaderID::ColoredQuad)) {
+        BASE_UNIT_QUAD_LAYOUT,
+        // vColor
+        {"TEXCOORD", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+         D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}};
+    if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc), sColoredQuadVS,
+                         VertexShaderID::ColoredQuad)) {
       return Fail("FEATURE_FAILURE_UNIT_QUAD_COLORED_LAYOUT");
     }
   }
   {
     D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
-      BASE_UNIT_TRIANGLE_LAYOUT,
-      // vTexCoord1, vTexCoord2, vTexCoord3
-      { "TEXCOORD", 2, DXGI_FORMAT_R32G32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-      { "TEXCOORD", 3, DXGI_FORMAT_R32G32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-      { "TEXCOORD", 4, DXGI_FORMAT_R32G32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
-    };
-    if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc), sTexturedVertexVS, VertexShaderID::TexturedVertex)) {
+        BASE_UNIT_TRIANGLE_LAYOUT,
+        // vTexCoord1, vTexCoord2, vTexCoord3
+        {"TEXCOORD", 2, DXGI_FORMAT_R32G32_FLOAT, 1,
+         D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+        {"TEXCOORD", 3, DXGI_FORMAT_R32G32_FLOAT, 1,
+         D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+        {"TEXCOORD", 4, DXGI_FORMAT_R32G32_FLOAT, 1,
+         D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}};
+    if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc),
+                         sTexturedVertexVS, VertexShaderID::TexturedVertex)) {
       return Fail("FEATURE_FAILURE_TEXTURED_INPUT_LAYOUT");
     }
     // Propagate the input layout to other vertex shaders that use the same.
-    mInputLayouts[VertexShaderID::BlendVertex] = mInputLayouts[VertexShaderID::TexturedVertex];
+    mInputLayouts[VertexShaderID::BlendVertex] =
+        mInputLayouts[VertexShaderID::TexturedVertex];
   }
   {
     D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
-      BASE_UNIT_TRIANGLE_LAYOUT,
-      { "TEXCOORD", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
-    };
-    if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc), sColoredVertexVS, VertexShaderID::ColoredVertex)) {
+        BASE_UNIT_TRIANGLE_LAYOUT,
+        {"TEXCOORD", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+         D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}};
+    if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc),
+                         sColoredVertexVS, VertexShaderID::ColoredVertex)) {
       return Fail("FEATURE_FAILURE_COLORED_INPUT_LAYOUT");
     }
   }
 
-# undef BASE_UNIT_QUAD_LAYOUT
-# undef BASE_UNIT_TRIANGLE_LAYOUT
+#undef BASE_UNIT_QUAD_LAYOUT
+#undef BASE_UNIT_TRIANGLE_LAYOUT
 
   // Ancillary shaders that are not used for batching.
   {
     D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
-      // vPos
-      { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-      // vRect
-      { "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_SINT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-      // vDepth
-      { "TEXCOORD", 1, DXGI_FORMAT_R32_SINT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+        // vPos
+        {"POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0,
+         D3D11_INPUT_PER_VERTEX_DATA, 0},
+        // vRect
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_SINT, 1, 0,
+         D3D11_INPUT_PER_INSTANCE_DATA, 1},
+        // vDepth
+        {"TEXCOORD", 1, DXGI_FORMAT_R32_SINT, 1, D3D11_APPEND_ALIGNED_ELEMENT,
+         D3D11_INPUT_PER_INSTANCE_DATA, 1},
     };
-    if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc), sClearVS, VertexShaderID::Clear)) {
+    if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc), sClearVS,
+                         VertexShaderID::Clear)) {
       return Fail("FEATURE_FAILURE_CLEAR_INPUT_LAYOUT");
     }
   }
   {
     D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
-      // vPos
-      { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-      // vTexCoords
-      { "POSITION", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
-    };
-    if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc), sMaskCombinerVS, VertexShaderID::MaskCombiner)) {
+        // vPos
+        {"POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0,
+         D3D11_INPUT_PER_VERTEX_DATA, 0},
+        // vTexCoords
+        {"POSITION", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+         D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}};
+    if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc),
+                         sMaskCombinerVS, VertexShaderID::MaskCombiner)) {
       return Fail("FEATURE_FAILURE_MASK_COMBINER_INPUT_LAYOUT");
     }
   }
   {
     D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
-      // vPos
-      { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-      // vRect
-      { "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-      // vTexCoords
-      { "TEXCOORD", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+        // vPos
+        {"POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0,
+         D3D11_INPUT_PER_VERTEX_DATA, 0},
+        // vRect
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0,
+         D3D11_INPUT_PER_INSTANCE_DATA, 1},
+        // vTexCoords
+        {"TEXCOORD", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+         D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
     };
-    if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc), sDiagnosticTextVS, VertexShaderID::DiagnosticText)) {
+    if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc),
+                         sDiagnosticTextVS, VertexShaderID::DiagnosticText)) {
       return Fail("FEATURE_FAILURE_DIAGNOSTIC_INPUT_LAYOUT");
     }
   }
 
-  if (!InitRasterizerStates() ||
-      !InitDepthStencilState() ||
-      !InitBlendStates() ||
-      !InitSamplerStates() ||
-      !InitSyncObject())
-  {
+  if (!InitRasterizerStates() || !InitDepthStencilState() ||
+      !InitBlendStates() || !InitSamplerStates() || !InitSyncObject()) {
     return false;
   }
 
@@ -1028,31 +1025,27 @@ MLGDeviceD3D11::Initialize()
   return MLGDevice::Initialize();
 }
 
-bool
-MLGDeviceD3D11::InitPixelShader(PixelShaderID aShaderID)
-{
+bool MLGDeviceD3D11::InitPixelShader(PixelShaderID aShaderID) {
   const ShaderBytes* code = mLazyPixelShaders[aShaderID];
-  HRESULT hr = mDevice->CreatePixelShader(
-    code->mData,
-    code->mLength,
-    nullptr,
-    getter_AddRefs(mPixelShaders[aShaderID]));
+  HRESULT hr =
+      mDevice->CreatePixelShader(code->mData, code->mLength, nullptr,
+                                 getter_AddRefs(mPixelShaders[aShaderID]));
   if (FAILED(hr)) {
-    gfxCriticalNote << "Could not create pixel shader " << hexa(unsigned(aShaderID)) << ": " << hexa(hr);
+    gfxCriticalNote << "Could not create pixel shader "
+                    << hexa(unsigned(aShaderID)) << ": " << hexa(hr);
     return false;
   }
   return true;
 }
 
-bool
-MLGDeviceD3D11::InitRasterizerStates()
-{
+bool MLGDeviceD3D11::InitRasterizerStates() {
   {
     CD3D11_RASTERIZER_DESC desc = CD3D11_RASTERIZER_DESC(CD3D11_DEFAULT());
     desc.CullMode = D3D11_CULL_NONE;
     desc.FillMode = D3D11_FILL_SOLID;
     desc.ScissorEnable = TRUE;
-    HRESULT hr = mDevice->CreateRasterizerState(&desc, getter_AddRefs(mRasterizerStateScissor));
+    HRESULT hr = mDevice->CreateRasterizerState(
+        &desc, getter_AddRefs(mRasterizerStateScissor));
     if (FAILED(hr)) {
       return Fail("FEATURE_FAILURE_SCISSOR_RASTERIZER",
                   "Could not create scissor rasterizer (%x)", hr);
@@ -1062,7 +1055,8 @@ MLGDeviceD3D11::InitRasterizerStates()
     CD3D11_RASTERIZER_DESC desc = CD3D11_RASTERIZER_DESC(CD3D11_DEFAULT());
     desc.CullMode = D3D11_CULL_NONE;
     desc.FillMode = D3D11_FILL_SOLID;
-    HRESULT hr = mDevice->CreateRasterizerState(&desc, getter_AddRefs(mRasterizerStateNoScissor));
+    HRESULT hr = mDevice->CreateRasterizerState(
+        &desc, getter_AddRefs(mRasterizerStateNoScissor));
     if (FAILED(hr)) {
       return Fail("FEATURE_FAILURE_DEFAULT_RASTERIZER",
                   "Could not create default rasterizer (%x)", hr);
@@ -1071,12 +1065,11 @@ MLGDeviceD3D11::InitRasterizerStates()
   return true;
 }
 
-bool
-MLGDeviceD3D11::InitSamplerStates()
-{
+bool MLGDeviceD3D11::InitSamplerStates() {
   {
     CD3D11_SAMPLER_DESC desc = CD3D11_SAMPLER_DESC(CD3D11_DEFAULT());
-    HRESULT hr = mDevice->CreateSamplerState(&desc, getter_AddRefs(mSamplerStates[SamplerMode::LinearClamp]));
+    HRESULT hr = mDevice->CreateSamplerState(
+        &desc, getter_AddRefs(mSamplerStates[SamplerMode::LinearClamp]));
     if (FAILED(hr)) {
       return Fail("FEATURE_FAILURE_LINEAR_CLAMP_SAMPLER",
                   "Could not create linear clamp sampler (%x)", hr);
@@ -1088,7 +1081,8 @@ MLGDeviceD3D11::InitSamplerStates()
     desc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
     desc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
     memset(desc.BorderColor, 0, sizeof(desc.BorderColor));
-    HRESULT hr = mDevice->CreateSamplerState(&desc, getter_AddRefs(mSamplerStates[SamplerMode::LinearClampToZero]));
+    HRESULT hr = mDevice->CreateSamplerState(
+        &desc, getter_AddRefs(mSamplerStates[SamplerMode::LinearClampToZero]));
     if (FAILED(hr)) {
       return Fail("FEATURE_FAILURE_LINEAR_CLAMP_ZERO_SAMPLER",
                   "Could not create linear clamp to zero sampler (%x)", hr);
@@ -1099,7 +1093,8 @@ MLGDeviceD3D11::InitSamplerStates()
     desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
     desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
     desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    HRESULT hr = mDevice->CreateSamplerState(&desc, getter_AddRefs(mSamplerStates[SamplerMode::LinearRepeat]));
+    HRESULT hr = mDevice->CreateSamplerState(
+        &desc, getter_AddRefs(mSamplerStates[SamplerMode::LinearRepeat]));
     if (FAILED(hr)) {
       return Fail("FEATURE_FAILURE_LINEAR_CLAMP_ZERO_SAMPLER",
                   "Could not create linear clamp to zero sampler (%x)", hr);
@@ -1109,7 +1104,8 @@ MLGDeviceD3D11::InitSamplerStates()
   {
     CD3D11_SAMPLER_DESC desc = CD3D11_SAMPLER_DESC(CD3D11_DEFAULT());
     desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
-    HRESULT hr = mDevice->CreateSamplerState(&desc, getter_AddRefs(mSamplerStates[SamplerMode::Point]));
+    HRESULT hr = mDevice->CreateSamplerState(
+        &desc, getter_AddRefs(mSamplerStates[SamplerMode::Point]));
     if (FAILED(hr)) {
       return Fail("FEATURE_FAILURE_POINT_SAMPLER",
                   "Could not create point sampler (%x)", hr);
@@ -1118,12 +1114,11 @@ MLGDeviceD3D11::InitSamplerStates()
   return true;
 }
 
-bool
-MLGDeviceD3D11::InitBlendStates()
-{
+bool MLGDeviceD3D11::InitBlendStates() {
   {
     CD3D11_BLEND_DESC desc = CD3D11_BLEND_DESC(CD3D11_DEFAULT());
-    HRESULT hr = mDevice->CreateBlendState(&desc, getter_AddRefs(mBlendStates[MLGBlendState::Copy]));
+    HRESULT hr = mDevice->CreateBlendState(
+        &desc, getter_AddRefs(mBlendStates[MLGBlendState::Copy]));
     if (FAILED(hr)) {
       return Fail("FEATURE_FAILURE_COPY_BLEND_STATE",
                   "Could not create copy blend state (%x)", hr);
@@ -1139,7 +1134,8 @@ MLGDeviceD3D11::InitBlendStates()
     desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
     desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
     desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-    HRESULT hr = mDevice->CreateBlendState(&desc, getter_AddRefs(mBlendStates[MLGBlendState::Over]));
+    HRESULT hr = mDevice->CreateBlendState(
+        &desc, getter_AddRefs(mBlendStates[MLGBlendState::Over]));
     if (FAILED(hr)) {
       return Fail("FEATURE_FAILURE_OVER_BLEND_STATE",
                   "Could not create over blend state (%x)", hr);
@@ -1155,7 +1151,8 @@ MLGDeviceD3D11::InitBlendStates()
     desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
     desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
     desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-    HRESULT hr = mDevice->CreateBlendState(&desc, getter_AddRefs(mBlendStates[MLGBlendState::OverAndPremultiply]));
+    HRESULT hr = mDevice->CreateBlendState(
+        &desc, getter_AddRefs(mBlendStates[MLGBlendState::OverAndPremultiply]));
     if (FAILED(hr)) {
       return Fail("FEATURE_FAILURE_OVER_BLEND_STATE",
                   "Could not create over blend state (%x)", hr);
@@ -1171,7 +1168,8 @@ MLGDeviceD3D11::InitBlendStates()
     desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
     desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
     desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_MIN;
-    HRESULT hr = mDevice->CreateBlendState(&desc, getter_AddRefs(mBlendStates[MLGBlendState::Min]));
+    HRESULT hr = mDevice->CreateBlendState(
+        &desc, getter_AddRefs(mBlendStates[MLGBlendState::Min]));
     if (FAILED(hr)) {
       return Fail("FEATURE_FAILURE_MIN_BLEND_STATE",
                   "Could not create min blend state (%x)", hr);
@@ -1187,7 +1185,8 @@ MLGDeviceD3D11::InitBlendStates()
     desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
     desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
     desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-    HRESULT hr = mDevice->CreateBlendState(&desc, getter_AddRefs(mBlendStates[MLGBlendState::ComponentAlpha]));
+    HRESULT hr = mDevice->CreateBlendState(
+        &desc, getter_AddRefs(mBlendStates[MLGBlendState::ComponentAlpha]));
     if (FAILED(hr)) {
       return Fail("FEATURE_FAILURE_COMPONENT_ALPHA_BLEND_STATE",
                   "Could not create component alpha blend state (%x)", hr);
@@ -1196,13 +1195,11 @@ MLGDeviceD3D11::InitBlendStates()
   return true;
 }
 
-bool
-MLGDeviceD3D11::InitDepthStencilState()
-{
+bool MLGDeviceD3D11::InitDepthStencilState() {
   D3D11_DEPTH_STENCIL_DESC desc = CD3D11_DEPTH_STENCIL_DESC(D3D11_DEFAULT);
 
   HRESULT hr = mDevice->CreateDepthStencilState(
-    &desc, getter_AddRefs(mDepthStencilStates[MLGDepthTestMode::Write]));
+      &desc, getter_AddRefs(mDepthStencilStates[MLGDepthTestMode::Write]));
   if (FAILED(hr)) {
     return Fail("FEATURE_FAILURE_WRITE_DEPTH_STATE",
                 "Could not create write depth stencil state (%x)", hr);
@@ -1210,7 +1207,7 @@ MLGDeviceD3D11::InitDepthStencilState()
 
   desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
   hr = mDevice->CreateDepthStencilState(
-    &desc, getter_AddRefs(mDepthStencilStates[MLGDepthTestMode::ReadOnly]));
+      &desc, getter_AddRefs(mDepthStencilStates[MLGDepthTestMode::ReadOnly]));
   if (FAILED(hr)) {
     return Fail("FEATURE_FAILURE_READ_DEPTH_STATE",
                 "Could not create read depth stencil state (%x)", hr);
@@ -1218,7 +1215,7 @@ MLGDeviceD3D11::InitDepthStencilState()
 
   desc.DepthEnable = FALSE;
   hr = mDevice->CreateDepthStencilState(
-    &desc, getter_AddRefs(mDepthStencilStates[MLGDepthTestMode::Disabled]));
+      &desc, getter_AddRefs(mDepthStencilStates[MLGDepthTestMode::Disabled]));
   if (FAILED(hr)) {
     return Fail("FEATURE_FAILURE_DISABLED_DEPTH_STATE",
                 "Could not create disabled depth stencil state (%x)", hr);
@@ -1227,7 +1224,8 @@ MLGDeviceD3D11::InitDepthStencilState()
   desc = CD3D11_DEPTH_STENCIL_DESC(D3D11_DEFAULT);
   desc.DepthFunc = D3D11_COMPARISON_ALWAYS;
   hr = mDevice->CreateDepthStencilState(
-    &desc, getter_AddRefs(mDepthStencilStates[MLGDepthTestMode::AlwaysWrite]));
+      &desc,
+      getter_AddRefs(mDepthStencilStates[MLGDepthTestMode::AlwaysWrite]));
   if (FAILED(hr)) {
     return Fail("FEATURE_FAILURE_WRITE_DEPTH_STATE",
                 "Could not create always-write depth stencil state (%x)", hr);
@@ -1236,50 +1234,37 @@ MLGDeviceD3D11::InitDepthStencilState()
   return true;
 }
 
-bool
-MLGDeviceD3D11::InitVertexShader(VertexShaderID aShaderID)
-{
+bool MLGDeviceD3D11::InitVertexShader(VertexShaderID aShaderID) {
   const ShaderBytes* code = mLazyVertexShaders[aShaderID];
-  HRESULT hr = mDevice->CreateVertexShader(
-    code->mData,
-    code->mLength,
-    nullptr,
-    getter_AddRefs(mVertexShaders[aShaderID]));
+  HRESULT hr =
+      mDevice->CreateVertexShader(code->mData, code->mLength, nullptr,
+                                  getter_AddRefs(mVertexShaders[aShaderID]));
   if (FAILED(hr)) {
-    gfxCriticalNote << "Could not create vertex shader " << hexa(unsigned(aShaderID)) << ": " << hexa(hr);
+    gfxCriticalNote << "Could not create vertex shader "
+                    << hexa(unsigned(aShaderID)) << ": " << hexa(hr);
     return false;
   }
   return true;
 }
 
-bool
-MLGDeviceD3D11::InitInputLayout(D3D11_INPUT_ELEMENT_DESC* aDesc,
-                                size_t aNumElements,
-                                const ShaderBytes& aCode,
-                                VertexShaderID aShaderID)
-{
+bool MLGDeviceD3D11::InitInputLayout(D3D11_INPUT_ELEMENT_DESC* aDesc,
+                                     size_t aNumElements,
+                                     const ShaderBytes& aCode,
+                                     VertexShaderID aShaderID) {
   HRESULT hr = mDevice->CreateInputLayout(
-    aDesc,
-    aNumElements,
-    aCode.mData,
-    aCode.mLength,
-    getter_AddRefs(mInputLayouts[aShaderID]));
+      aDesc, aNumElements, aCode.mData, aCode.mLength,
+      getter_AddRefs(mInputLayouts[aShaderID]));
   if (FAILED(hr)) {
     gfxCriticalNote << "Could not create input layout for shader "
-      << hexa(unsigned(aShaderID))
-      << ": " << hexa(hr);
+                    << hexa(unsigned(aShaderID)) << ": " << hexa(hr);
     return false;
   }
   return true;
 }
 
-TextureFactoryIdentifier
-MLGDeviceD3D11::GetTextureFactoryIdentifier() const
-{
-  TextureFactoryIdentifier ident(
-    GetLayersBackend(),
-    XRE_GetProcessType(),
-    GetMaxTextureSize());
+TextureFactoryIdentifier MLGDeviceD3D11::GetTextureFactoryIdentifier() const {
+  TextureFactoryIdentifier ident(GetLayersBackend(), XRE_GetProcessType(),
+                                 GetMaxTextureSize());
 
   if (mSyncObject) {
     ident.mSyncHandle = mSyncObject->GetSyncHandle();
@@ -1288,70 +1273,62 @@ MLGDeviceD3D11::GetTextureFactoryIdentifier() const
   return ident;
 }
 
-inline uint32_t GetMaxTextureSizeForFeatureLevel1(D3D_FEATURE_LEVEL aFeatureLevel)
-{
+inline uint32_t GetMaxTextureSizeForFeatureLevel1(
+    D3D_FEATURE_LEVEL aFeatureLevel) {
   int32_t maxTextureSize;
   switch (aFeatureLevel) {
-  case D3D_FEATURE_LEVEL_11_1:
-  case D3D_FEATURE_LEVEL_11_0:
-    maxTextureSize = D3D11_REQ_TEXTURE2D_U_OR_V_DIMENSION;
-    break;
-  case D3D_FEATURE_LEVEL_10_1:
-  case D3D_FEATURE_LEVEL_10_0:
-    maxTextureSize = D3D10_REQ_TEXTURE2D_U_OR_V_DIMENSION;
-    break;
-  case D3D_FEATURE_LEVEL_9_3:
-    maxTextureSize = D3D_FL9_3_REQ_TEXTURE2D_U_OR_V_DIMENSION;
-    break;
-  default:
-    maxTextureSize = D3D_FL9_1_REQ_TEXTURE2D_U_OR_V_DIMENSION;
+    case D3D_FEATURE_LEVEL_11_1:
+    case D3D_FEATURE_LEVEL_11_0:
+      maxTextureSize = D3D11_REQ_TEXTURE2D_U_OR_V_DIMENSION;
+      break;
+    case D3D_FEATURE_LEVEL_10_1:
+    case D3D_FEATURE_LEVEL_10_0:
+      maxTextureSize = D3D10_REQ_TEXTURE2D_U_OR_V_DIMENSION;
+      break;
+    case D3D_FEATURE_LEVEL_9_3:
+      maxTextureSize = D3D_FL9_3_REQ_TEXTURE2D_U_OR_V_DIMENSION;
+      break;
+    default:
+      maxTextureSize = D3D_FL9_1_REQ_TEXTURE2D_U_OR_V_DIMENSION;
   }
   return maxTextureSize;
 }
 
-LayersBackend
-MLGDeviceD3D11::GetLayersBackend() const
-{
+LayersBackend MLGDeviceD3D11::GetLayersBackend() const {
   return LayersBackend::LAYERS_D3D11;
 }
 
-int32_t
-MLGDeviceD3D11::GetMaxTextureSize() const
-{
+int32_t MLGDeviceD3D11::GetMaxTextureSize() const {
   return GetMaxTextureSizeForFeatureLevel1(mDevice->GetFeatureLevel());
 }
 
-RefPtr<MLGSwapChain>
-MLGDeviceD3D11::CreateSwapChainForWidget(widget::CompositorWidget* aWidget)
-{
+RefPtr<MLGSwapChain> MLGDeviceD3D11::CreateSwapChainForWidget(
+    widget::CompositorWidget* aWidget) {
   return MLGSwapChainD3D11::Create(this, mDevice, aWidget);
 }
 
-RefPtr<DataTextureSource>
-MLGDeviceD3D11::CreateDataTextureSource(TextureFlags aFlags)
-{
-  return new DataTextureSourceD3D11(mDevice, gfx::SurfaceFormat::UNKNOWN, aFlags);
+RefPtr<DataTextureSource> MLGDeviceD3D11::CreateDataTextureSource(
+    TextureFlags aFlags) {
+  return new DataTextureSourceD3D11(mDevice, gfx::SurfaceFormat::UNKNOWN,
+                                    aFlags);
 }
 
-static inline D3D11_MAP
-ToD3D11Map(MLGMapType aType)
-{
+static inline D3D11_MAP ToD3D11Map(MLGMapType aType) {
   switch (aType) {
-  case MLGMapType::READ:
-    return D3D11_MAP_READ;
-  case MLGMapType::READ_WRITE:
-    return D3D11_MAP_READ_WRITE;
-  case MLGMapType::WRITE:
-    return D3D11_MAP_WRITE;
-  case MLGMapType::WRITE_DISCARD:
-    return D3D11_MAP_WRITE_DISCARD;
+    case MLGMapType::READ:
+      return D3D11_MAP_READ;
+    case MLGMapType::READ_WRITE:
+      return D3D11_MAP_READ_WRITE;
+    case MLGMapType::WRITE:
+      return D3D11_MAP_WRITE;
+    case MLGMapType::WRITE_DISCARD:
+      return D3D11_MAP_WRITE_DISCARD;
   }
   return D3D11_MAP_WRITE;
 }
 
-bool
-MLGDeviceD3D11::Map(MLGResource* aResource, MLGMapType aType, MLGMappedResource* aMap)
-{
+bool MLGDeviceD3D11::Map(MLGResource* aResource, MLGMapType aType,
+                         MLGMappedResource* aMap) {
   ID3D11Resource* resource = aResource->AsResourceD3D11()->GetResource();
   MOZ_ASSERT(resource);
 
@@ -1368,30 +1345,25 @@ MLGDeviceD3D11::Map(MLGResource* aResource, MLGMapType aType, MLGMappedResource*
   return true;
 }
 
-void
-MLGDeviceD3D11::Unmap(MLGResource* aResource)
-{
+void MLGDeviceD3D11::Unmap(MLGResource* aResource) {
   ID3D11Resource* resource = aResource->AsResourceD3D11()->GetResource();
   mCtx->Unmap(resource, 0);
 }
 
-void
-MLGDeviceD3D11::UpdatePartialResource(MLGResource* aResource,
-                                      const gfx::IntRect* aRect,
-                                      void* aData, uint32_t aStride)
-{
+void MLGDeviceD3D11::UpdatePartialResource(MLGResource* aResource,
+                                           const gfx::IntRect* aRect,
+                                           void* aData, uint32_t aStride) {
   D3D11_BOX box;
   if (aRect) {
     box = RectToBox(*aRect);
   }
 
   ID3D11Resource* resource = aResource->AsResourceD3D11()->GetResource();
-  mCtx->UpdateSubresource(resource, 0, aRect ? &box : nullptr, aData, aStride, 0);
+  mCtx->UpdateSubresource(resource, 0, aRect ? &box : nullptr, aData, aStride,
+                          0);
 }
 
-void
-MLGDeviceD3D11::SetRenderTarget(MLGRenderTarget* aRT)
-{
+void MLGDeviceD3D11::SetRenderTarget(MLGRenderTarget* aRT) {
   ID3D11RenderTargetView* rtv = nullptr;
   ID3D11DepthStencilView* dsv = nullptr;
 
@@ -1405,15 +1377,9 @@ MLGDeviceD3D11::SetRenderTarget(MLGRenderTarget* aRT)
   mCurrentRT = aRT;
 }
 
-MLGRenderTarget*
-MLGDeviceD3D11::GetRenderTarget()
-{
-  return mCurrentRT;
-}
+MLGRenderTarget* MLGDeviceD3D11::GetRenderTarget() { return mCurrentRT; }
 
-void
-MLGDeviceD3D11::SetViewport(const gfx::IntRect& aViewport)
-{
+void MLGDeviceD3D11::SetViewport(const gfx::IntRect& aViewport) {
   D3D11_VIEWPORT vp;
   vp.MaxDepth = 1.0f;
   vp.MinDepth = 0.0f;
@@ -1424,9 +1390,7 @@ MLGDeviceD3D11::SetViewport(const gfx::IntRect& aViewport)
   mCtx->RSSetViewports(1, &vp);
 }
 
-static inline D3D11_RECT
-ToD3D11Rect(const gfx::IntRect& aRect)
-{
+static inline D3D11_RECT ToD3D11Rect(const gfx::IntRect& aRect) {
   D3D11_RECT rect;
   rect.left = aRect.X();
   rect.top = aRect.Y();
@@ -1435,9 +1399,7 @@ ToD3D11Rect(const gfx::IntRect& aRect)
   return rect;
 }
 
-void
-MLGDeviceD3D11::SetScissorRect(const Maybe<gfx::IntRect>& aScissorRect)
-{
+void MLGDeviceD3D11::SetScissorRect(const Maybe<gfx::IntRect>& aScissorRect) {
   if (!aScissorRect) {
     if (mScissored) {
       mCtx->RSSetState(mRasterizerStateNoScissor);
@@ -1453,9 +1415,7 @@ MLGDeviceD3D11::SetScissorRect(const Maybe<gfx::IntRect>& aScissorRect)
   }
 }
 
-void
-MLGDeviceD3D11::SetVertexShader(VertexShaderID aShader)
-{
+void MLGDeviceD3D11::SetVertexShader(VertexShaderID aShader) {
   if (!mVertexShaders[aShader]) {
     InitVertexShader(aShader);
     MOZ_ASSERT(mInputLayouts[aShader]);
@@ -1464,9 +1424,7 @@ MLGDeviceD3D11::SetVertexShader(VertexShaderID aShader)
   SetInputLayout(mInputLayouts[aShader]);
 }
 
-void
-MLGDeviceD3D11::SetInputLayout(ID3D11InputLayout* aLayout)
-{
+void MLGDeviceD3D11::SetInputLayout(ID3D11InputLayout* aLayout) {
   if (mCurrentInputLayout == aLayout) {
     return;
   }
@@ -1474,9 +1432,7 @@ MLGDeviceD3D11::SetInputLayout(ID3D11InputLayout* aLayout)
   mCurrentInputLayout = aLayout;
 }
 
-void
-MLGDeviceD3D11::SetVertexShader(ID3D11VertexShader* aShader)
-{
+void MLGDeviceD3D11::SetVertexShader(ID3D11VertexShader* aShader) {
   if (mCurrentVertexShader == aShader) {
     return;
   }
@@ -1484,9 +1440,7 @@ MLGDeviceD3D11::SetVertexShader(ID3D11VertexShader* aShader)
   mCurrentVertexShader = aShader;
 }
 
-void
-MLGDeviceD3D11::SetPixelShader(PixelShaderID aShader)
-{
+void MLGDeviceD3D11::SetPixelShader(PixelShaderID aShader) {
   if (!mPixelShaders[aShader]) {
     InitPixelShader(aShader);
   }
@@ -1496,112 +1450,99 @@ MLGDeviceD3D11::SetPixelShader(PixelShaderID aShader)
   }
 }
 
-void
-MLGDeviceD3D11::SetSamplerMode(uint32_t aIndex, SamplerMode aMode)
-{
+void MLGDeviceD3D11::SetSamplerMode(uint32_t aIndex, SamplerMode aMode) {
   ID3D11SamplerState* sampler = mSamplerStates[aMode];
   mCtx->PSSetSamplers(aIndex, 1, &sampler);
 }
 
-void
-MLGDeviceD3D11::SetBlendState(MLGBlendState aState)
-{
+void MLGDeviceD3D11::SetBlendState(MLGBlendState aState) {
   if (mCurrentBlendState != mBlendStates[aState]) {
-    FLOAT blendFactor[4] = { 0, 0, 0, 0 };
+    FLOAT blendFactor[4] = {0, 0, 0, 0};
     mCtx->OMSetBlendState(mBlendStates[aState], blendFactor, 0xFFFFFFFF);
     mCurrentBlendState = mBlendStates[aState];
   }
 }
 
-void
-MLGDeviceD3D11::SetVertexBuffer(uint32_t aSlot, MLGBuffer* aBuffer, uint32_t aStride, uint32_t aOffset)
-{
+void MLGDeviceD3D11::SetVertexBuffer(uint32_t aSlot, MLGBuffer* aBuffer,
+                                     uint32_t aStride, uint32_t aOffset) {
   ID3D11Buffer* buffer = aBuffer ? aBuffer->AsD3D11()->GetBuffer() : nullptr;
   mCtx->IASetVertexBuffers(aSlot, 1, &buffer, &aStride, &aOffset);
 }
 
-void
-MLGDeviceD3D11::SetVSConstantBuffer(uint32_t aSlot, MLGBuffer* aBuffer)
-{
+void MLGDeviceD3D11::SetVSConstantBuffer(uint32_t aSlot, MLGBuffer* aBuffer) {
   MOZ_ASSERT(aSlot < kMaxVertexShaderConstantBuffers);
 
   ID3D11Buffer* buffer = aBuffer ? aBuffer->AsD3D11()->GetBuffer() : nullptr;
   mCtx->VSSetConstantBuffers(aSlot, 1, &buffer);
 }
 
-void
-MLGDeviceD3D11::SetPSConstantBuffer(uint32_t aSlot, MLGBuffer* aBuffer)
-{
+void MLGDeviceD3D11::SetPSConstantBuffer(uint32_t aSlot, MLGBuffer* aBuffer) {
   MOZ_ASSERT(aSlot < kMaxPixelShaderConstantBuffers);
 
   ID3D11Buffer* buffer = aBuffer ? aBuffer->AsD3D11()->GetBuffer() : nullptr;
   mCtx->PSSetConstantBuffers(aSlot, 1, &buffer);
 }
 
-void
-MLGDeviceD3D11::SetVSConstantBuffer(uint32_t aSlot, MLGBuffer* aBuffer, uint32_t aFirstConstant, uint32_t aNumConstants)
-{
+void MLGDeviceD3D11::SetVSConstantBuffer(uint32_t aSlot, MLGBuffer* aBuffer,
+                                         uint32_t aFirstConstant,
+                                         uint32_t aNumConstants) {
   MOZ_ASSERT(aSlot < kMaxVertexShaderConstantBuffers);
   MOZ_ASSERT(mCanUseConstantBufferOffsetBinding);
   MOZ_ASSERT(mCtx1);
   MOZ_ASSERT(aFirstConstant % 16 == 0);
 
   ID3D11Buffer* buffer = aBuffer ? aBuffer->AsD3D11()->GetBuffer() : nullptr;
-  mCtx1->VSSetConstantBuffers1(aSlot, 1, &buffer, &aFirstConstant, &aNumConstants);
+  mCtx1->VSSetConstantBuffers1(aSlot, 1, &buffer, &aFirstConstant,
+                               &aNumConstants);
 }
 
-void
-MLGDeviceD3D11::SetPSConstantBuffer(uint32_t aSlot, MLGBuffer* aBuffer, uint32_t aFirstConstant, uint32_t aNumConstants)
-{
+void MLGDeviceD3D11::SetPSConstantBuffer(uint32_t aSlot, MLGBuffer* aBuffer,
+                                         uint32_t aFirstConstant,
+                                         uint32_t aNumConstants) {
   MOZ_ASSERT(aSlot < kMaxPixelShaderConstantBuffers);
   MOZ_ASSERT(mCanUseConstantBufferOffsetBinding);
   MOZ_ASSERT(mCtx1);
   MOZ_ASSERT(aFirstConstant % 16 == 0);
 
   ID3D11Buffer* buffer = aBuffer ? aBuffer->AsD3D11()->GetBuffer() : nullptr;
-  mCtx1->PSSetConstantBuffers1(aSlot, 1, &buffer, &aFirstConstant, &aNumConstants);
+  mCtx1->PSSetConstantBuffers1(aSlot, 1, &buffer, &aFirstConstant,
+                               &aNumConstants);
 }
 
-void
-MLGDeviceD3D11::SetPrimitiveTopology(MLGPrimitiveTopology aTopology)
-{
+void MLGDeviceD3D11::SetPrimitiveTopology(MLGPrimitiveTopology aTopology) {
   D3D11_PRIMITIVE_TOPOLOGY topology;
   switch (aTopology) {
-  case MLGPrimitiveTopology::TriangleStrip:
-    topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
-    break;
-  case MLGPrimitiveTopology::TriangleList:
-    topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-    break;
-  case MLGPrimitiveTopology::UnitQuad:
-    SetVertexBuffer(0, mUnitQuadVB, sizeof(float) * 2, 0);
-    topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
-    break;
-  case MLGPrimitiveTopology::UnitTriangle:
-    SetVertexBuffer(0, mUnitTriangleVB, sizeof(float) * 3, 0);
-    topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-    break;
-  default:
-    MOZ_ASSERT_UNREACHABLE("Unknown topology");
-    topology = D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
-    break;
+    case MLGPrimitiveTopology::TriangleStrip:
+      topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+      break;
+    case MLGPrimitiveTopology::TriangleList:
+      topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+      break;
+    case MLGPrimitiveTopology::UnitQuad:
+      SetVertexBuffer(0, mUnitQuadVB, sizeof(float) * 2, 0);
+      topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+      break;
+    case MLGPrimitiveTopology::UnitTriangle:
+      SetVertexBuffer(0, mUnitTriangleVB, sizeof(float) * 3, 0);
+      topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown topology");
+      topology = D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
+      break;
   }
 
   mCtx->IASetPrimitiveTopology(topology);
 }
 
-RefPtr<MLGBuffer>
-MLGDeviceD3D11::CreateBuffer(MLGBufferType aType,
-                             uint32_t aSize,
-                             MLGUsage aUsage,
-                             const void* aInitialData)
-{
+RefPtr<MLGBuffer> MLGDeviceD3D11::CreateBuffer(MLGBufferType aType,
+                                               uint32_t aSize, MLGUsage aUsage,
+                                               const void* aInitialData) {
   return MLGBufferD3D11::Create(mDevice, aType, aSize, aUsage, aInitialData);
 }
 
-RefPtr<MLGRenderTarget>
-MLGDeviceD3D11::CreateRenderTarget(const gfx::IntSize& aSize, MLGRenderTargetFlags aFlags)
-{
+RefPtr<MLGRenderTarget> MLGDeviceD3D11::CreateRenderTarget(
+    const gfx::IntSize& aSize, MLGRenderTargetFlags aFlags) {
   RefPtr<MLGRenderTargetD3D11> rt = new MLGRenderTargetD3D11(aSize, aFlags);
   if (!rt->Initialize(mDevice)) {
     return nullptr;
@@ -1609,37 +1550,29 @@ MLGDeviceD3D11::CreateRenderTarget(const gfx::IntSize& aSize, MLGRenderTargetFla
   return rt;
 }
 
-void
-MLGDeviceD3D11::Clear(MLGRenderTarget* aRT, const gfx::Color& aColor)
-{
+void MLGDeviceD3D11::Clear(MLGRenderTarget* aRT, const gfx::Color& aColor) {
   MLGRenderTargetD3D11* rt = aRT->AsD3D11();
-  FLOAT rgba[4] = { aColor.r, aColor.g, aColor.b, aColor.a };
+  FLOAT rgba[4] = {aColor.r, aColor.g, aColor.b, aColor.a};
   mCtx->ClearRenderTargetView(rt->GetRenderTargetView(), rgba);
   if (ID3D11DepthStencilView* dsv = rt->GetDSV()) {
     mCtx->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH, 1.0, 0);
   }
 }
 
-void
-MLGDeviceD3D11::ClearDepthBuffer(MLGRenderTarget* aRT)
-{
+void MLGDeviceD3D11::ClearDepthBuffer(MLGRenderTarget* aRT) {
   MLGRenderTargetD3D11* rt = aRT->AsD3D11();
   if (ID3D11DepthStencilView* dsv = rt->GetDSV()) {
     mCtx->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH, 1.0, 0);
   }
 }
 
-void
-MLGDeviceD3D11::ClearView(MLGRenderTarget* aRT,
-                          const Color& aColor,
-                          const IntRect* aRects,
-                          size_t aNumRects)
-{
+void MLGDeviceD3D11::ClearView(MLGRenderTarget* aRT, const Color& aColor,
+                               const IntRect* aRects, size_t aNumRects) {
   MOZ_ASSERT(mCanUseClearView);
   MOZ_ASSERT(mCtx1);
 
   MLGRenderTargetD3D11* rt = aRT->AsD3D11();
-  FLOAT rgba[4] = { aColor.r, aColor.g, aColor.b, aColor.a };
+  FLOAT rgba[4] = {aColor.r, aColor.g, aColor.b, aColor.a};
 
   StackArray<D3D11_RECT, 8> rects(aNumRects);
   for (size_t i = 0; i < aNumRects; i++) {
@@ -1651,29 +1584,28 @@ MLGDeviceD3D11::ClearView(MLGRenderTarget* aRT,
   size_t cursor = 0;
   while (remaining > 0) {
     size_t amount = std::min(remaining, kMaxClearViewRects);
-    mCtx1->ClearView(rt->GetRenderTargetView(), rgba, rects.data() + cursor, amount);
+    mCtx1->ClearView(rt->GetRenderTargetView(), rgba, rects.data() + cursor,
+                     amount);
 
     remaining -= amount;
     cursor += amount;
   }
 }
 
-void
-MLGDeviceD3D11::Draw(uint32_t aVertexCount, uint32_t aOffset)
-{
+void MLGDeviceD3D11::Draw(uint32_t aVertexCount, uint32_t aOffset) {
   mCtx->Draw(aVertexCount, aOffset);
 }
 
-void
-MLGDeviceD3D11::DrawInstanced(uint32_t aVertexCountPerInstance, uint32_t aInstanceCount,
-                              uint32_t aVertexOffset, uint32_t aInstanceOffset)
-{
-  mCtx->DrawInstanced(aVertexCountPerInstance, aInstanceCount, aVertexOffset, aInstanceOffset);
+void MLGDeviceD3D11::DrawInstanced(uint32_t aVertexCountPerInstance,
+                                   uint32_t aInstanceCount,
+                                   uint32_t aVertexOffset,
+                                   uint32_t aInstanceOffset) {
+  mCtx->DrawInstanced(aVertexCountPerInstance, aInstanceCount, aVertexOffset,
+                      aInstanceOffset);
 }
 
-void
-MLGDeviceD3D11::SetPSTextures(uint32_t aSlot, uint32_t aNumTextures, TextureSource* const* aTextures)
-{
+void MLGDeviceD3D11::SetPSTextures(uint32_t aSlot, uint32_t aNumTextures,
+                                   TextureSource* const* aTextures) {
   // TextureSource guarantees that the ID3D11ShaderResourceView will be cached,
   // so we don't hold a RefPtr here.
   StackArray<ID3D11ShaderResourceView*, 3> views(aNumTextures);
@@ -1685,9 +1617,8 @@ MLGDeviceD3D11::SetPSTextures(uint32_t aSlot, uint32_t aNumTextures, TextureSour
   mCtx->PSSetShaderResources(aSlot, aNumTextures, views.data());
 }
 
-ID3D11ShaderResourceView*
-MLGDeviceD3D11::ResolveTextureSourceForShader(TextureSource* aTexture)
-{
+ID3D11ShaderResourceView* MLGDeviceD3D11::ResolveTextureSourceForShader(
+    TextureSource* aTexture) {
   if (!aTexture) {
     return nullptr;
   }
@@ -1707,9 +1638,7 @@ MLGDeviceD3D11::ResolveTextureSourceForShader(TextureSource* aTexture)
   return nullptr;
 }
 
-void
-MLGDeviceD3D11::SetPSTexture(uint32_t aSlot, MLGTexture* aTexture)
-{
+void MLGDeviceD3D11::SetPSTexture(uint32_t aSlot, MLGTexture* aTexture) {
   RefPtr<ID3D11ShaderResourceView> view;
   if (aTexture) {
     MLGTextureD3D11* texture = aTexture->AsD3D11();
@@ -1720,11 +1649,10 @@ MLGDeviceD3D11::SetPSTexture(uint32_t aSlot, MLGTexture* aTexture)
   mCtx->PSSetShaderResources(aSlot, 1, &viewPtr);
 }
 
-void
-MLGDeviceD3D11::MaybeLockTexture(ID3D11Texture2D* aTexture)
-{
+void MLGDeviceD3D11::MaybeLockTexture(ID3D11Texture2D* aTexture) {
   RefPtr<IDXGIKeyedMutex> mutex;
-  HRESULT hr = aTexture->QueryInterface(__uuidof(IDXGIKeyedMutex), (void**)getter_AddRefs(mutex));
+  HRESULT hr = aTexture->QueryInterface(__uuidof(IDXGIKeyedMutex),
+                                        (void**)getter_AddRefs(mutex));
   if (FAILED(hr) || !mutex) {
     return;
   }
@@ -1745,9 +1673,8 @@ MLGDeviceD3D11::MaybeLockTexture(ID3D11Texture2D* aTexture)
   }
 }
 
-void
-MLGDeviceD3D11::SetPSTexturesNV12(uint32_t aSlot, TextureSource* aTexture)
-{
+void MLGDeviceD3D11::SetPSTexturesNV12(uint32_t aSlot,
+                                       TextureSource* aTexture) {
   MOZ_ASSERT(aTexture->GetFormat() == SurfaceFormat::NV12 ||
              aTexture->GetFormat() == SurfaceFormat::P010 ||
              aTexture->GetFormat() == SurfaceFormat::P016);
@@ -1770,11 +1697,11 @@ MLGDeviceD3D11::SetPSTexturesNV12(uint32_t aSlot, TextureSource* aTexture)
 
   RefPtr<ID3D11ShaderResourceView> views[2];
   D3D11_SHADER_RESOURCE_VIEW_DESC desc = CD3D11_SHADER_RESOURCE_VIEW_DESC(
-    D3D11_SRV_DIMENSION_TEXTURE2D,
-    isNV12 ? DXGI_FORMAT_R8_UNORM : DXGI_FORMAT_R16_UNORM);
+      D3D11_SRV_DIMENSION_TEXTURE2D,
+      isNV12 ? DXGI_FORMAT_R8_UNORM : DXGI_FORMAT_R16_UNORM);
 
-  HRESULT hr =
-    mDevice->CreateShaderResourceView(texture, &desc, getter_AddRefs(views[0]));
+  HRESULT hr = mDevice->CreateShaderResourceView(texture, &desc,
+                                                 getter_AddRefs(views[0]));
   if (FAILED(hr) || !views[0]) {
     gfxWarning() << "Could not bind an SRV for Y plane of NV12 texture: "
                  << hexa(hr);
@@ -1782,23 +1709,19 @@ MLGDeviceD3D11::SetPSTexturesNV12(uint32_t aSlot, TextureSource* aTexture)
   }
 
   desc.Format = isNV12 ? DXGI_FORMAT_R8G8_UNORM : DXGI_FORMAT_R16G16_UNORM;
-  hr =
-    mDevice->CreateShaderResourceView(texture, &desc, getter_AddRefs(views[1]));
+  hr = mDevice->CreateShaderResourceView(texture, &desc,
+                                         getter_AddRefs(views[1]));
   if (FAILED(hr) || !views[1]) {
-    gfxWarning() << "Could not bind an SRV for CbCr plane of NV12 texture: " << hexa(hr);
+    gfxWarning() << "Could not bind an SRV for CbCr plane of NV12 texture: "
+                 << hexa(hr);
     return;
   }
 
-  ID3D11ShaderResourceView* bind[2] = {
-    views[0],
-    views[1]
-  };
+  ID3D11ShaderResourceView* bind[2] = {views[0], views[1]};
   mCtx->PSSetShaderResources(aSlot, 2, bind);
 }
 
-bool
-MLGDeviceD3D11::InitSyncObject()
-{
+bool MLGDeviceD3D11::InitSyncObject() {
   MOZ_ASSERT(!mSyncObject);
   MOZ_ASSERT(mDevice);
 
@@ -1808,27 +1731,17 @@ MLGDeviceD3D11::InitSyncObject()
   return mSyncObject->Init();
 }
 
-void
-MLGDeviceD3D11::StartDiagnostics(uint32_t aInvalidPixels)
-{
+void MLGDeviceD3D11::StartDiagnostics(uint32_t aInvalidPixels) {
   mDiagnostics->Start(aInvalidPixels);
 }
 
-void
-MLGDeviceD3D11::EndDiagnostics()
-{
-  mDiagnostics->End();
-}
+void MLGDeviceD3D11::EndDiagnostics() { mDiagnostics->End(); }
 
-void
-MLGDeviceD3D11::GetDiagnostics(GPUStats* aStats)
-{
+void MLGDeviceD3D11::GetDiagnostics(GPUStats* aStats) {
   mDiagnostics->Query(aStats);
 }
 
-bool
-MLGDeviceD3D11::Synchronize()
-{
+bool MLGDeviceD3D11::Synchronize() {
   MOZ_ASSERT(mSyncObject);
 
   if (mSyncObject) {
@@ -1842,9 +1755,7 @@ MLGDeviceD3D11::Synchronize()
   return true;
 }
 
-void
-MLGDeviceD3D11::UnlockAllTextures()
-{
+void MLGDeviceD3D11::UnlockAllTextures() {
   for (auto iter = mLockedTextures.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<IDXGIKeyedMutex> mutex = iter.Get()->GetKey();
     mutex->ReleaseSync(0);
@@ -1853,17 +1764,14 @@ MLGDeviceD3D11::UnlockAllTextures()
   mLockAttemptedTextures.Clear();
 }
 
-void
-MLGDeviceD3D11::SetDepthTestMode(MLGDepthTestMode aMode)
-{
+void MLGDeviceD3D11::SetDepthTestMode(MLGDepthTestMode aMode) {
   mCtx->OMSetDepthStencilState(mDepthStencilStates[aMode], 0xffffffff);
 }
 
-void
-MLGDeviceD3D11::InsertPresentWaitQuery()
-{
+void MLGDeviceD3D11::InsertPresentWaitQuery() {
   CD3D11_QUERY_DESC desc(D3D11_QUERY_EVENT);
-  HRESULT hr = mDevice->CreateQuery(&desc, getter_AddRefs(mNextWaitForPresentQuery));
+  HRESULT hr =
+      mDevice->CreateQuery(&desc, getter_AddRefs(mNextWaitForPresentQuery));
   if (FAILED(hr) || !mNextWaitForPresentQuery) {
     gfxWarning() << "Could not create D3D11_QUERY_EVENT: " << hexa(hr);
     return;
@@ -1872,9 +1780,7 @@ MLGDeviceD3D11::InsertPresentWaitQuery()
   mCtx->End(mNextWaitForPresentQuery);
 }
 
-void
-MLGDeviceD3D11::WaitForPreviousPresentQuery()
-{
+void MLGDeviceD3D11::WaitForPreviousPresentQuery() {
   if (mWaitForPresentQuery) {
     BOOL result;
     WaitForGPUQuery(mDevice, mCtx, mWaitForPresentQuery, &result);
@@ -1882,15 +1788,9 @@ MLGDeviceD3D11::WaitForPreviousPresentQuery()
   mWaitForPresentQuery = mNextWaitForPresentQuery.forget();
 }
 
-void
-MLGDeviceD3D11::Flush()
-{
-  mCtx->Flush();
-}
+void MLGDeviceD3D11::Flush() { mCtx->Flush(); }
 
-void
-MLGDeviceD3D11::EndFrame()
-{
+void MLGDeviceD3D11::EndFrame() {
   // On our Windows 8 x64 machines, we have observed a driver bug related to
   // XXSetConstantBuffers1. It appears binding the same buffer to multiple
   // slots, and potentially leaving slots bound for many frames (as can
@@ -1903,7 +1803,7 @@ MLGDeviceD3D11::EndFrame()
   //
   // To alleviate this we unbind all buffers at the end of the frame.
   static ID3D11Buffer* nullBuffers[6] = {
-    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+      nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
   };
   MOZ_ASSERT(MOZ_ARRAY_LENGTH(nullBuffers) >= kMaxVertexShaderConstantBuffers);
   MOZ_ASSERT(MOZ_ARRAY_LENGTH(nullBuffers) >= kMaxPixelShaderConstantBuffers);
@@ -1914,9 +1814,7 @@ MLGDeviceD3D11::EndFrame()
   MLGDevice::EndFrame();
 }
 
-void
-MLGDeviceD3D11::HandleDeviceReset(const char* aWhere)
-{
+void MLGDeviceD3D11::HandleDeviceReset(const char* aWhere) {
   if (!IsValid()) {
     return;
   }
@@ -1932,18 +1830,14 @@ MLGDeviceD3D11::HandleDeviceReset(const char* aWhere)
   mIsValid = false;
 }
 
-RefPtr<MLGTexture>
-MLGDeviceD3D11::CreateTexture(const gfx::IntSize& aSize,
-                              gfx::SurfaceFormat aFormat,
-                              MLGUsage aUsage,
-                              MLGTextureFlags aFlags)
-{
+RefPtr<MLGTexture> MLGDeviceD3D11::CreateTexture(const gfx::IntSize& aSize,
+                                                 gfx::SurfaceFormat aFormat,
+                                                 MLGUsage aUsage,
+                                                 MLGTextureFlags aFlags) {
   return MLGTextureD3D11::Create(mDevice, aSize, aFormat, aUsage, aFlags);
 }
 
-RefPtr<MLGTexture>
-MLGDeviceD3D11::CreateTexture(TextureSource* aSource)
-{
+RefPtr<MLGTexture> MLGDeviceD3D11::CreateTexture(TextureSource* aSource) {
   TextureSourceD3D11* source = aSource->AsSourceD3D11();
   if (!source) {
     gfxWarning() << "Attempted to wrap a non-D3D11 texture";
@@ -1955,12 +1849,10 @@ MLGDeviceD3D11::CreateTexture(TextureSource* aSource)
   return new MLGTextureD3D11(source->GetD3D11Texture());
 }
 
-void
-MLGDeviceD3D11::CopyTexture(MLGTexture* aDest,
-                            const gfx::IntPoint& aTarget,
-                            MLGTexture* aSource,
-                            const gfx::IntRect& aRect)
-{
+void MLGDeviceD3D11::CopyTexture(MLGTexture* aDest,
+                                 const gfx::IntPoint& aTarget,
+                                 MLGTexture* aSource,
+                                 const gfx::IntRect& aRect) {
   MLGTextureD3D11* dest = aDest->AsD3D11();
   MLGTextureD3D11* source = aSource->AsD3D11();
 
@@ -1969,61 +1861,52 @@ MLGDeviceD3D11::CopyTexture(MLGTexture* aDest,
   // the operation is out-of-bounds. And it's not lying.
   IntRect sourceBounds(IntPoint(0, 0), aSource->GetSize());
   if (!sourceBounds.Contains(aRect)) {
-    gfxWarning() << "Attempt to read out-of-bounds in CopySubresourceRegion: " <<
-      Stringify(sourceBounds) <<
-      ", " <<
-      Stringify(aRect);
+    gfxWarning() << "Attempt to read out-of-bounds in CopySubresourceRegion: "
+                 << Stringify(sourceBounds) << ", " << Stringify(aRect);
     return;
   }
 
   IntRect destBounds(IntPoint(0, 0), aDest->GetSize());
   if (!destBounds.Contains(IntRect(aTarget, aRect.Size()))) {
-    gfxWarning() << "Attempt to write out-of-bounds in CopySubresourceRegion: " <<
-      Stringify(destBounds) <<
-      ", " <<
-      Stringify(aTarget) << ", " << Stringify(aRect.Size());
+    gfxWarning() << "Attempt to write out-of-bounds in CopySubresourceRegion: "
+                 << Stringify(destBounds) << ", " << Stringify(aTarget) << ", "
+                 << Stringify(aRect.Size());
     return;
   }
 
   D3D11_BOX box = RectToBox(aRect);
-  mCtx->CopySubresourceRegion(
-    dest->GetTexture(), 0,
-    aTarget.x, aTarget.y, 0,
-    source->GetTexture(), 0,
-    &box);
+  mCtx->CopySubresourceRegion(dest->GetTexture(), 0, aTarget.x, aTarget.y, 0,
+                              source->GetTexture(), 0, &box);
 }
 
-bool
-MLGDeviceD3D11::VerifyConstantBufferOffsetting()
-{
+bool MLGDeviceD3D11::VerifyConstantBufferOffsetting() {
   RefPtr<ID3D11VertexShader> vs;
-  HRESULT hr = mDevice->CreateVertexShader(
-    sTestConstantBuffersVS.mData,
-    sTestConstantBuffersVS.mLength,
-    nullptr,
-    getter_AddRefs(vs));
+  HRESULT hr = mDevice->CreateVertexShader(sTestConstantBuffersVS.mData,
+                                           sTestConstantBuffersVS.mLength,
+                                           nullptr, getter_AddRefs(vs));
   if (FAILED(hr)) {
-    gfxCriticalNote << "Failed creating vertex shader for buffer test: " << hexa(hr);
+    gfxCriticalNote << "Failed creating vertex shader for buffer test: "
+                    << hexa(hr);
     return false;
   }
 
-  D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
-    { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
-  };
+  D3D11_INPUT_ELEMENT_DESC inputDesc[] = {{"POSITION", 0,
+                                           DXGI_FORMAT_R32G32_FLOAT, 0, 0,
+                                           D3D11_INPUT_PER_VERTEX_DATA, 0}};
 
   RefPtr<ID3D11InputLayout> layout;
   hr = mDevice->CreateInputLayout(
-    inputDesc,
-    sizeof(inputDesc) / sizeof(inputDesc[0]),
-    sTestConstantBuffersVS.mData,
-    sTestConstantBuffersVS.mLength,
-    getter_AddRefs(layout));
+      inputDesc, sizeof(inputDesc) / sizeof(inputDesc[0]),
+      sTestConstantBuffersVS.mData, sTestConstantBuffersVS.mLength,
+      getter_AddRefs(layout));
   if (FAILED(hr)) {
-    gfxCriticalNote << "Failed creating input layout for buffer test: " << hexa(hr);
+    gfxCriticalNote << "Failed creating input layout for buffer test: "
+                    << hexa(hr);
     return false;
   }
 
-  RefPtr<MLGRenderTarget> rt = CreateRenderTarget(IntSize(2, 2), MLGRenderTargetFlags::Default);
+  RefPtr<MLGRenderTarget> rt =
+      CreateRenderTarget(IntSize(2, 2), MLGRenderTargetFlags::Default);
   if (!rt) {
     return false;
   }
@@ -2033,10 +1916,8 @@ MLGDeviceD3D11::VerifyConstantBufferOffsetting()
   static const size_t kNumBindings = 3;
 
   RefPtr<MLGBuffer> buffer = CreateBuffer(
-    MLGBufferType::Constant,
-    kConstantSize * kMinConstants * kNumBindings,
-    MLGUsage::Dynamic,
-    nullptr);
+      MLGBufferType::Constant, kConstantSize * kMinConstants * kNumBindings,
+      MLGUsage::Dynamic, nullptr);
   if (!buffer) {
     return false;
   }
@@ -2049,12 +1930,11 @@ MLGDeviceD3D11::VerifyConstantBufferOffsetting()
       return false;
     }
 
-    *reinterpret_cast<Color*>(map.mData) =
-      Color(1.0f, 0.2f, 0.3f, 1.0f);
+    *reinterpret_cast<Color*>(map.mData) = Color(1.0f, 0.2f, 0.3f, 1.0f);
     *reinterpret_cast<Color*>(map.mData + kConstantSize * kMinConstants) =
-      Color(0.4f, 0.0f, 0.5f, 1.0f);
+        Color(0.4f, 0.0f, 0.5f, 1.0f);
     *reinterpret_cast<Color*>(map.mData + (kConstantSize * kMinConstants) * 2) =
-      Color(0.6f, 0.7f, 1.0f, 1.0f);
+        Color(0.6f, 0.7f, 1.0f, 1.0f);
 
     Unmap(buffer);
   }
@@ -2070,13 +1950,11 @@ MLGDeviceD3D11::VerifyConstantBufferOffsetting()
   SetVertexShader(vs);
   SetPixelShader(PixelShaderID::ColoredQuad);
 
-  ID3D11Buffer* buffers[3] = {
-    buffer->AsD3D11()->GetBuffer(),
-    buffer->AsD3D11()->GetBuffer(),
-    buffer->AsD3D11()->GetBuffer()
-  };
-  UINT offsets[3] = { 0 * kMinConstants, 1 * kMinConstants, 2 * kMinConstants };
-  UINT counts[3] = { kMinConstants, kMinConstants, kMinConstants };
+  ID3D11Buffer* buffers[3] = {buffer->AsD3D11()->GetBuffer(),
+                              buffer->AsD3D11()->GetBuffer(),
+                              buffer->AsD3D11()->GetBuffer()};
+  UINT offsets[3] = {0 * kMinConstants, 1 * kMinConstants, 2 * kMinConstants};
+  UINT counts[3] = {kMinConstants, kMinConstants, kMinConstants};
 
   mCtx1->VSSetConstantBuffers1(0, 3, buffers, offsets, counts);
   mCtx->Draw(4, 0);
@@ -2084,14 +1962,12 @@ MLGDeviceD3D11::VerifyConstantBufferOffsetting()
   // Kill bindings to resources.
   SetRenderTarget(nullptr);
 
-  ID3D11Buffer* nulls[3] = { nullptr, nullptr, nullptr };
+  ID3D11Buffer* nulls[3] = {nullptr, nullptr, nullptr};
   mCtx->VSSetConstantBuffers(0, 3, nulls);
 
-  RefPtr<MLGTexture> copy = CreateTexture(
-    IntSize(2, 2),
-    SurfaceFormat::B8G8R8A8,
-    MLGUsage::Staging,
-    MLGTextureFlags::None);
+  RefPtr<MLGTexture> copy =
+      CreateTexture(IntSize(2, 2), SurfaceFormat::B8G8R8A8, MLGUsage::Staging,
+                    MLGTextureFlags::None);
   if (!copy) {
     return false;
   }
@@ -2111,15 +1987,10 @@ MLGDeviceD3D11::VerifyConstantBufferOffsetting()
     Unmap(copy);
   }
 
-  return r == 255 &&
-         g == 0 &&
-         b == 255 &&
-         a == 255;
+  return r == 255 && g == 0 && b == 255 && a == 255;
 }
 
-static D3D11_BOX
-RectToBox(const gfx::IntRect& aRect)
-{
+static D3D11_BOX RectToBox(const gfx::IntRect& aRect) {
   D3D11_BOX box;
   box.front = 0;
   box.back = 1;
@@ -2130,5 +2001,5 @@ RectToBox(const gfx::IntRect& aRect)
   return box;
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

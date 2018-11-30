@@ -9,12 +9,13 @@
 namespace mozilla {
 namespace gfx {
 
-struct Setter
-{
+struct Setter {
   Setter(FilterNode* aNode, DrawTarget* aDT, bool aInputsChanged)
-    : mNode{aNode}, mIndex{0}, mDT{aDT}, mInputsChanged{aInputsChanged} {}
-  template<typename T>
-  void match(T& aValue) { mNode->SetAttribute(mIndex, aValue); }
+      : mNode{aNode}, mIndex{0}, mDT{aDT}, mInputsChanged{aInputsChanged} {}
+  template <typename T>
+  void match(T& aValue) {
+    mNode->SetAttribute(mIndex, aValue);
+  }
 
   FilterNode* mNode;
   uint32_t mIndex;
@@ -22,30 +23,25 @@ struct Setter
   bool mInputsChanged;
 };
 
-template<>
-void
-Setter::match<std::vector<Float>>(std::vector<Float>& aValue)
-{
+template <>
+void Setter::match<std::vector<Float>>(std::vector<Float>& aValue) {
   mNode->SetAttribute(mIndex, aValue.data(), aValue.size());
 }
 
-template<>
-void
-Setter::match<RefPtr<SourceSurface>>(RefPtr<SourceSurface>& aSurface)
-{
+template <>
+void Setter::match<RefPtr<SourceSurface>>(RefPtr<SourceSurface>& aSurface) {
   if (!mInputsChanged) {
     return;
   }
   mNode->SetInput(mIndex, aSurface);
 }
 
-template<>
-void
-Setter::match<RefPtr<FilterNode>>(RefPtr<FilterNode>& aNode)
-{
+template <>
+void Setter::match<RefPtr<FilterNode>>(RefPtr<FilterNode>& aNode) {
   RefPtr<FilterNode> node = aNode;
   if (node->GetBackendType() == FilterBackend::FILTER_BACKEND_CAPTURE) {
-    FilterNodeCapture* captureNode = static_cast<FilterNodeCapture*>(node.get());
+    FilterNodeCapture* captureNode =
+        static_cast<FilterNodeCapture*>(node.get());
     node = captureNode->Validate(mDT);
   }
   if (!mInputsChanged) {
@@ -55,9 +51,7 @@ Setter::match<RefPtr<FilterNode>>(RefPtr<FilterNode>& aNode)
   mNode->SetInput(mIndex, node);
 }
 
-RefPtr<FilterNode>
-FilterNodeCapture::Validate(DrawTarget* aDT)
-{
+RefPtr<FilterNode> FilterNodeCapture::Validate(DrawTarget* aDT) {
   if (!mFilterNodeInternal) {
     mFilterNodeInternal = aDT->CreateFilter(mType);
   }
@@ -68,8 +62,7 @@ FilterNodeCapture::Validate(DrawTarget* aDT)
 
   Setter setter(mFilterNodeInternal, aDT, mInputsChanged);
 
-  for (auto attribute : mAttributes)
-  {
+  for (auto attribute : mAttributes) {
     setter.mIndex = attribute.first;
     // Variant's matching doesn't seem to compile to terribly efficient code,
     // this is probably fine since this happens on the paint thread, if ever
@@ -87,17 +80,16 @@ FilterNodeCapture::Validate(DrawTarget* aDT)
   return mFilterNodeInternal.get();
 }
 
-void
-FilterNodeCapture::SetAttribute(uint32_t aIndex, const Float *aValues, uint32_t aSize)
-{
+void FilterNodeCapture::SetAttribute(uint32_t aIndex, const Float* aValues,
+                                     uint32_t aSize) {
   std::vector<Float> vec(aSize);
   memcpy(vec.data(), aValues, sizeof(Float) * aSize);
   AttributeValue att(std::move(vec));
-  auto result = mAttributes.insert({ aIndex, att });
+  auto result = mAttributes.insert({aIndex, att});
   if (!result.second) {
     result.first->second = att;
   }
 }
 
-}
-}
+}  // namespace gfx
+}  // namespace mozilla

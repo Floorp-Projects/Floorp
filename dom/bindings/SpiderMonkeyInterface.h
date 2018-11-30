@@ -18,127 +18,108 @@ namespace dom {
  * Class that just handles the JSObject storage and tracing for spidermonkey
  * interfaces
  */
-struct SpiderMonkeyInterfaceObjectStorage
-{
-protected:
+struct SpiderMonkeyInterfaceObjectStorage {
+ protected:
   JSObject* mImplObj;
   JSObject* mWrappedObj;
 
   SpiderMonkeyInterfaceObjectStorage()
-    : mImplObj(nullptr),
-      mWrappedObj(nullptr)
-  {
-  }
+      : mImplObj(nullptr), mWrappedObj(nullptr) {}
 
-  SpiderMonkeyInterfaceObjectStorage(SpiderMonkeyInterfaceObjectStorage&& aOther)
-    : mImplObj(aOther.mImplObj),
-      mWrappedObj(aOther.mWrappedObj)
-  {
+  SpiderMonkeyInterfaceObjectStorage(
+      SpiderMonkeyInterfaceObjectStorage&& aOther)
+      : mImplObj(aOther.mImplObj), mWrappedObj(aOther.mWrappedObj) {
     aOther.mImplObj = nullptr;
     aOther.mWrappedObj = nullptr;
   }
 
-public:
-  inline void TraceSelf(JSTracer* trc)
-  {
-    JS::UnsafeTraceRoot(trc, &mImplObj, "SpiderMonkeyInterfaceObjectStorage.mImplObj");
-    JS::UnsafeTraceRoot(trc, &mWrappedObj, "SpiderMonkeyInterfaceObjectStorage.mWrappedObj");
+ public:
+  inline void TraceSelf(JSTracer* trc) {
+    JS::UnsafeTraceRoot(trc, &mImplObj,
+                        "SpiderMonkeyInterfaceObjectStorage.mImplObj");
+    JS::UnsafeTraceRoot(trc, &mWrappedObj,
+                        "SpiderMonkeyInterfaceObjectStorage.mWrappedObj");
   }
 
-  inline bool inited() const
-  {
-    return !!mImplObj;
+  inline bool inited() const { return !!mImplObj; }
+
+  inline bool WrapIntoNewCompartment(JSContext* cx) {
+    return JS_WrapObject(
+        cx, JS::MutableHandle<JSObject*>::fromMarkedLocation(&mWrappedObj));
   }
 
-  inline bool WrapIntoNewCompartment(JSContext* cx)
-  {
-    return JS_WrapObject(cx,
-      JS::MutableHandle<JSObject*>::fromMarkedLocation(&mWrappedObj));
-  }
-
-  inline JSObject *Obj() const
-  {
+  inline JSObject* Obj() const {
     MOZ_ASSERT(inited());
     return mWrappedObj;
   }
 
-private:
-  SpiderMonkeyInterfaceObjectStorage(const SpiderMonkeyInterfaceObjectStorage&) = delete;
+ private:
+  SpiderMonkeyInterfaceObjectStorage(
+      const SpiderMonkeyInterfaceObjectStorage&) = delete;
 };
 
 // A class for rooting an existing SpiderMonkey Interface struct
-template<typename InterfaceType>
-class MOZ_RAII SpiderMonkeyInterfaceRooter : private JS::CustomAutoRooter
-{
-public:
+template <typename InterfaceType>
+class MOZ_RAII SpiderMonkeyInterfaceRooter : private JS::CustomAutoRooter {
+ public:
   template <typename CX>
-  SpiderMonkeyInterfaceRooter(const CX& cx,
-                              InterfaceType* aInterface MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
-      mInterface(aInterface)
-  {
-  }
+  SpiderMonkeyInterfaceRooter(
+      const CX& cx, InterfaceType* aInterface MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
+        mInterface(aInterface) {}
 
-  virtual void trace(JSTracer* trc) override
-  {
-    mInterface->TraceSelf(trc);
-  }
+  virtual void trace(JSTracer* trc) override { mInterface->TraceSelf(trc); }
 
-private:
+ private:
   SpiderMonkeyInterfaceObjectStorage* const mInterface;
 };
 
 // And a specialization for dealing with nullable SpiderMonkey interfaces
-template<typename Inner> struct Nullable;
-template<typename InterfaceType>
-class MOZ_RAII SpiderMonkeyInterfaceRooter<Nullable<InterfaceType>> :
-    private JS::CustomAutoRooter
-{
-public:
+template <typename Inner>
+struct Nullable;
+template <typename InterfaceType>
+class MOZ_RAII SpiderMonkeyInterfaceRooter<Nullable<InterfaceType>>
+    : private JS::CustomAutoRooter {
+ public:
   template <typename CX>
-  SpiderMonkeyInterfaceRooter(const CX& cx,
-                              Nullable<InterfaceType>* aInterface MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
-      mInterface(aInterface)
-  {
-  }
+  SpiderMonkeyInterfaceRooter(const CX& cx, Nullable<InterfaceType>* aInterface
+                                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
+        mInterface(aInterface) {}
 
-  virtual void trace(JSTracer* trc) override
-  {
+  virtual void trace(JSTracer* trc) override {
     if (!mInterface->IsNull()) {
       mInterface->Value().TraceSelf(trc);
     }
   }
 
-private:
+ private:
   Nullable<InterfaceType>* const mInterface;
 };
 
 // Class for easily setting up a rooted SpiderMonkey interface object on the
 // stack
-template<typename InterfaceType>
-class MOZ_RAII RootedSpiderMonkeyInterface final : public InterfaceType,
-                                                   private SpiderMonkeyInterfaceRooter<InterfaceType>
-{
-public:
+template <typename InterfaceType>
+class MOZ_RAII RootedSpiderMonkeyInterface final
+    : public InterfaceType,
+      private SpiderMonkeyInterfaceRooter<InterfaceType> {
+ public:
   template <typename CX>
-  explicit RootedSpiderMonkeyInterface(const CX& cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : InterfaceType(),
-      SpiderMonkeyInterfaceRooter<InterfaceType>(cx, this
-                                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
-  {
-  }
+  explicit RootedSpiderMonkeyInterface(
+      const CX& cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : InterfaceType(),
+        SpiderMonkeyInterfaceRooter<InterfaceType>(
+            cx, this MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT) {}
 
   template <typename CX>
-  RootedSpiderMonkeyInterface(const CX& cx, JSObject* obj MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : InterfaceType(obj),
-      SpiderMonkeyInterfaceRooter<InterfaceType>(cx, this
-                                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
-  {
-  }
+  RootedSpiderMonkeyInterface(const CX& cx,
+                              JSObject* obj MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : InterfaceType(obj),
+        SpiderMonkeyInterfaceRooter<InterfaceType>(
+            cx, this MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT) {}
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_SpiderMonkeyInterface_h */

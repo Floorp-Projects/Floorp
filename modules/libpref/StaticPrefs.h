@@ -25,40 +25,33 @@ typedef Atomic<bool, SequentiallyConsistent> SequentiallyConsistentAtomicBool;
 typedef Atomic<int32_t, Relaxed> RelaxedAtomicInt32;
 typedef Atomic<int32_t, ReleaseAcquire> ReleaseAcquireAtomicInt32;
 typedef Atomic<int32_t, SequentiallyConsistent>
-  SequentiallyConsistentAtomicInt32;
+    SequentiallyConsistentAtomicInt32;
 
 typedef Atomic<uint32_t, Relaxed> RelaxedAtomicUint32;
 typedef Atomic<uint32_t, ReleaseAcquire> ReleaseAcquireAtomicUint32;
 typedef Atomic<uint32_t, SequentiallyConsistent>
-  SequentiallyConsistentAtomicUint32;
+    SequentiallyConsistentAtomicUint32;
 
-template<typename T>
-struct StripAtomicImpl
-{
+template <typename T>
+struct StripAtomicImpl {
   typedef T Type;
 };
 
-template<typename T, MemoryOrdering Order>
-struct StripAtomicImpl<Atomic<T, Order>>
-{
+template <typename T, MemoryOrdering Order>
+struct StripAtomicImpl<Atomic<T, Order>> {
   typedef T Type;
 };
 
-template<typename T>
+template <typename T>
 using StripAtomic = typename StripAtomicImpl<T>::Type;
 
-template<typename T>
-struct IsAtomic : FalseType
-{
-};
+template <typename T>
+struct IsAtomic : FalseType {};
 
-template<typename T, MemoryOrdering Order>
-struct IsAtomic<Atomic<T, Order>> : TrueType
-{
-};
+template <typename T, MemoryOrdering Order>
+struct IsAtomic<Atomic<T, Order>> : TrueType {};
 
-class StaticPrefs
-{
+class StaticPrefs {
 // For a VarCache pref like this:
 //
 //   VARCACHE_PREF("my.varcache", my_varcache, int32_t, 99)
@@ -71,26 +64,25 @@ class StaticPrefs
 //     static int32_t my_varcache() { return sVarCache_my_varcache; }
 //
 #define PREF(str, cpp_type, default_value)
-#define VARCACHE_PREF(str, id, cpp_type, default_value)                        \
-private:                                                                       \
-  static cpp_type sVarCache_##id;                                              \
-                                                                               \
-public:                                                                        \
-  static StripAtomic<cpp_type> id()                                            \
-  {                                                                            \
-    MOZ_ASSERT(IsAtomic<cpp_type>::value || NS_IsMainThread(),                 \
-               "Non-atomic static pref '" str                                  \
-               "' being accessed on background thread");                       \
-    return sVarCache_##id;                                                     \
+#define VARCACHE_PREF(str, id, cpp_type, default_value)        \
+ private:                                                      \
+  static cpp_type sVarCache_##id;                              \
+                                                               \
+ public:                                                       \
+  static StripAtomic<cpp_type> id() {                          \
+    MOZ_ASSERT(IsAtomic<cpp_type>::value || NS_IsMainThread(), \
+               "Non-atomic static pref '" str                  \
+               "' being accessed on background thread");       \
+    return sVarCache_##id;                                     \
   }
 #include "mozilla/StaticPrefList.h"
 #undef PREF
 #undef VARCACHE_PREF
 
-public:
+ public:
   static void InitAll(bool aIsStartup);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_StaticPrefs_h
+#endif  // mozilla_StaticPrefs_h

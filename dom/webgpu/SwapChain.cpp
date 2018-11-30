@@ -13,25 +13,17 @@ namespace webgpu {
 
 SwapChain::~SwapChain() = default;
 
-void
-SwapChain::Configure(const dom::WebGPUSwapChainDescriptor& desc) const
-{
-    MOZ_CRASH("todo");
+void SwapChain::Configure(const dom::WebGPUSwapChainDescriptor& desc) const {
+  MOZ_CRASH("todo");
 }
 
-already_AddRefed<Texture>
-SwapChain::GetNextTexture() const
-{
-    MOZ_CRASH("todo");
+already_AddRefed<Texture> SwapChain::GetNextTexture() const {
+  MOZ_CRASH("todo");
 }
 
-void
-SwapChain::Present() const
-{
-    MOZ_CRASH("todo");
-}
+void SwapChain::Present() const { MOZ_CRASH("todo"); }
 
 WEBGPU_IMPL_GOOP_0(SwapChain)
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla

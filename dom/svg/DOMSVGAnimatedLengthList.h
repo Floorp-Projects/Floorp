@@ -103,11 +103,10 @@ class DOMSVGLengthList;
  * One drawback of this design is that objects must look up their parent
  * chain to find their element, but that overhead is relatively small.
  */
-class DOMSVGAnimatedLengthList final : public nsWrapperCache
-{
+class DOMSVGAnimatedLengthList final : public nsWrapperCache {
   friend class DOMSVGLengthList;
 
-public:
+ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGAnimatedLengthList)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMSVGAnimatedLengthList)
 
@@ -122,19 +121,17 @@ public:
    * for the SVGAnimatedLengthList will naturally result in a new
    * DOMSVGAnimatedLengthList being returned.
    */
-  static already_AddRefed<DOMSVGAnimatedLengthList>
-    GetDOMWrapper(SVGAnimatedLengthList *aList,
-                  nsSVGElement *aElement,
-                  uint8_t aAttrEnum,
-                  uint8_t aAxis);
+  static already_AddRefed<DOMSVGAnimatedLengthList> GetDOMWrapper(
+      SVGAnimatedLengthList* aList, nsSVGElement* aElement, uint8_t aAttrEnum,
+      uint8_t aAxis);
 
   /**
    * This method returns the DOMSVGAnimatedLengthList wrapper for an internal
    * SVGAnimatedLengthList object if it currently has a wrapper. If it does
    * not, then nullptr is returned.
    */
-  static DOMSVGAnimatedLengthList*
-    GetDOMWrapperIfExists(SVGAnimatedLengthList *aList);
+  static DOMSVGAnimatedLengthList* GetDOMWrapperIfExists(
+      SVGAnimatedLengthList* aList);
 
   /**
    * Called by internal code to notify us when we need to sync the length of
@@ -159,25 +156,24 @@ public:
 
   // WebIDL
   nsSVGElement* GetParentObject() const { return mElement; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
   // These aren't weak refs because mBaseVal and mAnimVal are weak
   already_AddRefed<DOMSVGLengthList> BaseVal();
   already_AddRefed<DOMSVGLengthList> AnimVal();
 
-private:
-
+ private:
   /**
    * Only our static GetDOMWrapper() factory method may create objects of our
    * type.
    */
-  DOMSVGAnimatedLengthList(nsSVGElement *aElement, uint8_t aAttrEnum, uint8_t aAxis)
-    : mBaseVal(nullptr)
-    , mAnimVal(nullptr)
-    , mElement(aElement)
-    , mAttrEnum(aAttrEnum)
-    , mAxis(aAxis)
-  {
-  }
+  DOMSVGAnimatedLengthList(nsSVGElement* aElement, uint8_t aAttrEnum,
+                           uint8_t aAxis)
+      : mBaseVal(nullptr),
+        mAnimVal(nullptr),
+        mElement(aElement),
+        mAttrEnum(aAttrEnum),
+        mAxis(aAxis) {}
 
   ~DOMSVGAnimatedLengthList();
 
@@ -188,8 +184,8 @@ private:
   // Weak refs to our DOMSVGLengthList baseVal/animVal objects. These objects
   // are friends and take care of clearing these pointers when they die, making
   // these true weak references.
-  DOMSVGLengthList *mBaseVal;
-  DOMSVGLengthList *mAnimVal;
+  DOMSVGLengthList* mBaseVal;
+  DOMSVGLengthList* mAnimVal;
 
   // Strong ref to our element to keep it alive. We hold this not only for
   // ourself, but also for our base/animVal and all of their items.
@@ -199,6 +195,6 @@ private:
   uint8_t mAxis;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MOZILLA_DOMSVGANIMATEDLENGTHLIST_H__
+#endif  // MOZILLA_DOMSVGANIMATEDLENGTHLIST_H__

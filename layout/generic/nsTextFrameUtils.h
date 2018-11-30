@@ -16,41 +16,41 @@ struct nsStyleText;
 
 #define BIG_TEXT_NODE_SIZE 4096
 
-#define CH_NBSP   160
-#define CH_SHY    173
-#define CH_CJKSP  12288 // U+3000 IDEOGRAPHIC SPACE (CJK Full-Width Space)
+#define CH_NBSP 160
+#define CH_SHY 173
+#define CH_CJKSP 12288  // U+3000 IDEOGRAPHIC SPACE (CJK Full-Width Space)
 
 class nsTextFrameUtils {
-public:
+ public:
   // These constants are used as textrun flags for textframe textruns.
   enum class Flags : uint16_t {
     // The following flags are set by TransformText
 
     // the text has at least one untransformed tab character
-    TEXT_HAS_TAB             = 0x01,
+    TEXT_HAS_TAB = 0x01,
     // the original text has at least one soft hyphen character
-    TEXT_HAS_SHY             = 0x02,
-    TEXT_UNUSED_FLAGS        = 0x0C,
+    TEXT_HAS_SHY = 0x02,
+    TEXT_UNUSED_FLAGS = 0x0C,
 
     // The following flags are set by nsTextFrame
 
-    TEXT_IS_SIMPLE_FLOW      = 0x10,
+    TEXT_IS_SIMPLE_FLOW = 0x10,
     TEXT_INCOMING_WHITESPACE = 0x20,
     TEXT_TRAILING_WHITESPACE = 0x40,
     TEXT_COMPRESSED_LEADING_WHITESPACE = 0x80,
-    TEXT_NO_BREAKS           = 0x100,
-    TEXT_IS_TRANSFORMED      = 0x200,
+    TEXT_NO_BREAKS = 0x100,
+    TEXT_IS_TRANSFORMED = 0x200,
     // This gets set if there's a break opportunity at the end of the textrun.
     // We normally don't use this break opportunity because the following text
     // will have a break opportunity at the start, but it's useful for line
     // layout to know about it in case the following content is not text
-    TEXT_HAS_TRAILING_BREAK  = 0x400,
+    TEXT_HAS_TRAILING_BREAK = 0x400,
 
     // This is set if the textrun was created for a textframe whose
     // NS_FRAME_IS_IN_SINGLE_CHAR_MI flag is set.  This occurs if the textframe
     // belongs to a MathML <mi> element whose embedded text consists of a
     // single character.
-    TEXT_IS_SINGLE_CHAR_MI   = 0x800,
+    TEXT_IS_SINGLE_CHAR_MI = 0x800,
 
     // This is set if the text run might be observing for glyph changes.
     TEXT_MIGHT_HAVE_GLYPH_CHANGES = 0x1000,
@@ -60,7 +60,7 @@ public:
     // Because the reporter may visit each textrun multiple times while
     // walking the frame trees and textrun cache, it needs to mark
     // textruns that have been seen so as to avoid multiple-accounting.
-    TEXT_RUN_SIZE_ACCOUNTED      = 0x2000,
+    TEXT_RUN_SIZE_ACCOUNTED = 0x2000,
 
     // The following are defined by gfxTextRunFactory rather than here,
     // so that it also has access to the _INCOMING and MATH_SCRIPT flags
@@ -74,11 +74,7 @@ public:
 
   // These constants are used in TransformText to represent context information
   // from previous textruns.
-  enum {
-    INCOMING_NONE       = 0,
-    INCOMING_WHITESPACE = 1,
-    INCOMING_ARABICCHAR = 2
-  };
+  enum { INCOMING_NONE = 0, INCOMING_WHITESPACE = 1, INCOMING_ARABICCHAR = 2 };
 
   /**
    * Returns true if aChars/aLength are something that make a space
@@ -86,17 +82,15 @@ public:
    * (combining mark or join control, ignoring intervening direction
    * controls).
    */
-  static bool
-  IsSpaceCombiningSequenceTail(const char16_t* aChars, int32_t aLength) {
+  static bool IsSpaceCombiningSequenceTail(const char16_t* aChars,
+                                           int32_t aLength) {
     return aLength > 0 &&
-      (mozilla::unicode::IsClusterExtender(aChars[0]) ||
-       (IsBidiControl(aChars[0]) &&
-        IsSpaceCombiningSequenceTail(aChars + 1, aLength - 1)
-       )
-      );
+           (mozilla::unicode::IsClusterExtender(aChars[0]) ||
+            (IsBidiControl(aChars[0]) &&
+             IsSpaceCombiningSequenceTail(aChars + 1, aLength - 1)));
   }
-  static bool
-  IsSpaceCombiningSequenceTail(const uint8_t* aChars, int32_t aLength) {
+  static bool IsSpaceCombiningSequenceTail(const uint8_t* aChars,
+                                           int32_t aLength) {
     return false;
   }
 
@@ -121,12 +115,10 @@ public:
    * or an Arabic character preceding this text. We set it to indicate if
    * there's an Arabic character or whitespace preceding the end of this text.
    */
-  template<class CharT>
+  template <class CharT>
   static CharT* TransformText(const CharT* aText, uint32_t aLength,
-                              CharT* aOutput,
-                              CompressionMode aCompression,
-                              uint8_t* aIncomingFlags,
-                              gfxSkipChars* aSkipChars,
+                              CharT* aOutput, CompressionMode aCompression,
+                              uint8_t* aIncomingFlags, gfxSkipChars* aSkipChars,
                               nsTextFrameUtils::Flags* aAnalysisFlags);
 
   /**
@@ -136,37 +128,36 @@ public:
    * so that we have the results of TransformText, is required, or whether we
    * can use a fast path instead.
    */
-  template<class CharT>
+  template <class CharT>
   static bool IsSkippableCharacterForTransformText(CharT aChar);
 
-  static void
-  AppendLineBreakOffset(nsTArray<uint32_t>* aArray, uint32_t aOffset)
-  {
+  static void AppendLineBreakOffset(nsTArray<uint32_t>* aArray,
+                                    uint32_t aOffset) {
     if (aArray->Length() > 0 && (*aArray)[aArray->Length() - 1] == aOffset)
       return;
     aArray->AppendElement(aOffset);
   }
 
-  static uint32_t
-  ComputeApproximateLengthWithWhitespaceCompression(nsIContent *aContent,
-                                                    const nsStyleText*
-                                                      aStyleText);
+  static uint32_t ComputeApproximateLengthWithWhitespaceCompression(
+      nsIContent* aContent, const nsStyleText* aStyleText);
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsTextFrameUtils::Flags)
 
 class nsSkipCharsRunIterator {
-public:
+ public:
   enum LengthMode {
-    LENGTH_UNSKIPPED_ONLY   = false,
+    LENGTH_UNSKIPPED_ONLY = false,
     LENGTH_INCLUDES_SKIPPED = true
   };
   nsSkipCharsRunIterator(const gfxSkipCharsIterator& aStart,
-      LengthMode aLengthIncludesSkipped, uint32_t aLength)
-    : mIterator(aStart), mRemainingLength(aLength), mRunLength(0),
-      mSkipped(false), mVisitSkipped(false),
-      mLengthIncludesSkipped(aLengthIncludesSkipped) {
-  }
+                         LengthMode aLengthIncludesSkipped, uint32_t aLength)
+      : mIterator(aStart),
+        mRemainingLength(aLength),
+        mRunLength(0),
+        mSkipped(false),
+        mVisitSkipped(false),
+        mLengthIncludesSkipped(aLengthIncludesSkipped) {}
   void SetVisitSkipped() { mVisitSkipped = true; }
   void SetOriginalOffset(int32_t aOffset) {
     mIterator.SetOriginalOffset(aOffset);
@@ -184,13 +175,13 @@ public:
   int32_t GetOriginalOffset() const { return mIterator.GetOriginalOffset(); }
   uint32_t GetSkippedOffset() const { return mIterator.GetSkippedOffset(); }
 
-private:
+ private:
   gfxSkipCharsIterator mIterator;
-  int32_t              mRemainingLength;
-  int32_t              mRunLength;
-  bool                 mSkipped;
-  bool                 mVisitSkipped;
-  bool                 mLengthIncludesSkipped;
+  int32_t mRemainingLength;
+  int32_t mRunLength;
+  bool mSkipped;
+  bool mVisitSkipped;
+  bool mLengthIncludesSkipped;
 };
 
 #endif /*NSTEXTFRAMEUTILS_H_*/

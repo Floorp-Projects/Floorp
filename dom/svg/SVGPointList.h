@@ -30,17 +30,15 @@ class nsISVGPoint;
  *
  * The DOM wrapper class for this class is DOMSVGPointList.
  */
-class SVGPointList
-{
+class SVGPointList {
   friend class mozilla::nsISVGPoint;
   friend class SVGAnimatedPointList;
   friend class DOMSVGPointList;
   friend class DOMSVGPoint;
 
-public:
-
-  SVGPointList(){}
-  ~SVGPointList(){}
+ public:
+  SVGPointList() {}
+  ~SVGPointList() {}
 
   // Only methods that don't make/permit modification to this list are public.
   // Only our friend classes can access methods that may change us.
@@ -48,17 +46,11 @@ public:
   /// This may return an incomplete string on OOM, but that's acceptable.
   void GetValueAsString(nsAString& aValue) const;
 
-  bool IsEmpty() const {
-    return mItems.IsEmpty();
-  }
+  bool IsEmpty() const { return mItems.IsEmpty(); }
 
-  uint32_t Length() const {
-    return mItems.Length();
-  }
+  uint32_t Length() const { return mItems.Length(); }
 
-  const SVGPoint& operator[](uint32_t aIndex) const {
-    return mItems[aIndex];
-  }
+  const SVGPoint& operator[](uint32_t aIndex) const { return mItems[aIndex]; }
 
   bool operator==(const SVGPointList& rhs) const {
     // memcmp can be faster than |mItems == rhs.mItems|
@@ -71,9 +63,7 @@ public:
     return mItems.SetCapacity(aSize, fallible);
   }
 
-  void Compact() {
-    mItems.Compact();
-  }
+  void Compact() { mItems.Compact(); }
 
   // Access to methods that can modify objects of this type is deliberately
   // limited. This is to reduce the chances of someone modifying objects of
@@ -82,17 +72,14 @@ public:
   // SVGAnimatedPointList and having that class act as an intermediary so it
   // can take care of keeping DOM wrappers in sync.
 
-protected:
-
+ protected:
   /**
    * This may fail on OOM if the internal capacity needs to be increased, in
    * which case the list will be left unmodified.
    */
   nsresult CopyFrom(const SVGPointList& rhs);
 
-  SVGPoint& operator[](uint32_t aIndex) {
-    return mItems[aIndex];
-  }
+  SVGPoint& operator[](uint32_t aIndex) { return mItems[aIndex]; }
 
   /**
    * This may fail (return false) on OOM if the internal capacity is being
@@ -102,26 +89,23 @@ protected:
     return mItems.SetLength(aNumberOfItems, fallible);
   }
 
-private:
-
+ private:
   // Marking the following private only serves to show which methods are only
   // used by our friend classes (as opposed to our subclasses) - it doesn't
   // really provide additional safety.
 
   nsresult SetValueFromString(const nsAString& aValue);
 
-  void Clear() {
-    mItems.Clear();
-  }
+  void Clear() { mItems.Clear(); }
 
-  bool InsertItem(uint32_t aIndex, const SVGPoint &aPoint) {
+  bool InsertItem(uint32_t aIndex, const SVGPoint& aPoint) {
     if (aIndex >= mItems.Length()) {
       aIndex = mItems.Length();
     }
     return !!mItems.InsertElementAt(aIndex, aPoint, fallible);
   }
 
-  void ReplaceItem(uint32_t aIndex, const SVGPoint &aPoint) {
+  void ReplaceItem(uint32_t aIndex, const SVGPoint& aPoint) {
     MOZ_ASSERT(aIndex < mItems.Length(),
                "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mItems[aIndex] = aPoint;
@@ -137,14 +121,12 @@ private:
     return !!mItems.AppendElement(aPoint, fallible);
   }
 
-protected:
-
-  /* See SVGLengthList for the rationale for using FallibleTArray<SVGPoint> instead
-   * of FallibleTArray<SVGPoint, 1>.
+ protected:
+  /* See SVGLengthList for the rationale for using FallibleTArray<SVGPoint>
+   * instead of FallibleTArray<SVGPoint, 1>.
    */
   FallibleTArray<SVGPoint> mItems;
 };
-
 
 /**
  * This SVGPointList subclass is for SVGPointListSMILType which needs a
@@ -158,15 +140,12 @@ protected:
  * Holding a strong reference to the element here prevents the element from
  * disappearing out from under the SMIL code unexpectedly.
  */
-class SVGPointListAndInfo : public SVGPointList
-{
-public:
+class SVGPointListAndInfo : public SVGPointList {
+ public:
+  explicit SVGPointListAndInfo(nsSVGElement* aElement = nullptr)
+      : mElement(do_GetWeakReference(static_cast<nsINode*>(aElement))) {}
 
-  explicit SVGPointListAndInfo(nsSVGElement *aElement = nullptr)
-    : mElement(do_GetWeakReference(static_cast<nsINode*>(aElement)))
-  {}
-
-  void SetInfo(nsSVGElement *aElement) {
+  void SetInfo(nsSVGElement* aElement) {
     mElement = do_GetWeakReference(static_cast<nsINode*>(aElement));
   }
 
@@ -211,7 +190,7 @@ public:
     return SVGPointList::SetLength(aNumberOfItems);
   }
 
-private:
+ private:
   // We must keep a weak reference to our element because we may belong to a
   // cached baseVal nsSMILValue. See the comments starting at:
   // https://bugzilla.mozilla.org/show_bug.cgi?id=515116#c15
@@ -219,6 +198,6 @@ private:
   nsWeakPtr mElement;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MOZILLA_SVGPOINTLIST_H__
+#endif  // MOZILLA_SVGPOINTLIST_H__

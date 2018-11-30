@@ -15,40 +15,43 @@
 namespace mozilla {
 namespace gl {
 
-class MozFramebuffer final
-{
-    const WeakPtr<GLContext> mWeakGL;
-public:
-    const gfx::IntSize mSize;
-    const uint32_t mSamples;
-    const GLuint mFB;
-    const GLenum mColorTarget;
-private:
-    const GLuint mColorName;
-    const GLuint mDepthRB;
-    const GLuint mStencilRB;
+class MozFramebuffer final {
+  const WeakPtr<GLContext> mWeakGL;
 
-public:
-    static UniquePtr<MozFramebuffer> Create(GLContext* gl, const gfx::IntSize& size,
-                                            uint32_t samples, bool depthStencil);
+ public:
+  const gfx::IntSize mSize;
+  const uint32_t mSamples;
+  const GLuint mFB;
+  const GLenum mColorTarget;
 
-    static UniquePtr<MozFramebuffer> CreateWith(GLContext* gl, const gfx::IntSize& size,
-                                                uint32_t samples, bool depthStencil,
-                                                GLenum colorTarget, GLuint colorName);
-private:
-    MozFramebuffer(GLContext* gl, const gfx::IntSize& size, uint32_t samples,
-                   bool depthStencil, GLenum colorTarget, GLuint colorName);
-public:
-    ~MozFramebuffer();
+ private:
+  const GLuint mColorName;
+  const GLuint mDepthRB;
+  const GLuint mStencilRB;
 
-    GLuint ColorTex() const {
-        if (mColorTarget == LOCAL_GL_RENDERBUFFER)
-            return 0;
-        return mColorName;
-    }
+ public:
+  static UniquePtr<MozFramebuffer> Create(GLContext* gl,
+                                          const gfx::IntSize& size,
+                                          uint32_t samples, bool depthStencil);
+
+  static UniquePtr<MozFramebuffer> CreateWith(
+      GLContext* gl, const gfx::IntSize& size, uint32_t samples,
+      bool depthStencil, GLenum colorTarget, GLuint colorName);
+
+ private:
+  MozFramebuffer(GLContext* gl, const gfx::IntSize& size, uint32_t samples,
+                 bool depthStencil, GLenum colorTarget, GLuint colorName);
+
+ public:
+  ~MozFramebuffer();
+
+  GLuint ColorTex() const {
+    if (mColorTarget == LOCAL_GL_RENDERBUFFER) return 0;
+    return mColorName;
+  }
 };
 
-} // namespace gl
-} // namespace mozilla
+}  // namespace gl
+}  // namespace mozilla
 
 #endif  // MOZ_FRAMEBUFFER_H_

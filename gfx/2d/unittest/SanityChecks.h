@@ -8,9 +8,8 @@
 
 #include "TestBase.h"
 
-class SanityChecks : public TestBase
-{
-public:
+class SanityChecks : public TestBase {
+ public:
   SanityChecks();
 
   void AlwaysPasses();

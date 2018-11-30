@@ -37,9 +37,8 @@ struct URLValue;
  * NOTE: All methods must be called from the main thread unless otherwise
  * specified.
  */
-class ImageLoader final : public imgINotificationObserver
-{
-public:
+class ImageLoader final : public imgINotificationObserver {
+ public:
   static void Init();
   static void Shutdown();
 
@@ -47,14 +46,12 @@ public:
   // These are used for special handling of events for requests.
   typedef uint32_t FrameFlags;
   enum {
-    REQUEST_REQUIRES_REFLOW      = 1u << 0,
-    REQUEST_HAS_BLOCKED_ONLOAD   = 1u << 1,
+    REQUEST_REQUIRES_REFLOW = 1u << 0,
+    REQUEST_HAS_BLOCKED_ONLOAD = 1u << 1,
   };
 
   explicit ImageLoader(nsIDocument* aDocument)
-  : mDocument(aDocument),
-    mInClone(false)
-  {
+      : mDocument(aDocument), mInClone(false) {
     MOZ_ASSERT(mDocument);
   }
 
@@ -65,12 +62,10 @@ public:
 
   imgRequestProxy* RegisterCSSImage(URLValue* aImage);
 
-  void AssociateRequestToFrame(imgIRequest* aRequest,
-                               nsIFrame* aFrame,
+  void AssociateRequestToFrame(imgIRequest* aRequest, nsIFrame* aFrame,
                                FrameFlags aFlags);
 
-  void DisassociateRequestFromFrame(imgIRequest* aRequest,
-                                    nsIFrame* aFrame);
+  void DisassociateRequestFromFrame(imgIRequest* aRequest, nsIFrame* aFrame);
 
   void DropRequestsForFrame(nsIFrame* aFrame);
 
@@ -91,22 +86,17 @@ public:
 
   void FlushUseCounters();
 
-private:
+ private:
   // This callback is used to unblock document onload after a reflow
   // triggered from an image load.
-  struct ImageReflowCallback final : public nsIReflowCallback
-  {
+  struct ImageReflowCallback final : public nsIReflowCallback {
     RefPtr<ImageLoader> mLoader;
     WeakFrame mFrame;
     nsCOMPtr<imgIRequest> const mRequest;
 
-    ImageReflowCallback(ImageLoader* aLoader,
-                        nsIFrame* aFrame,
+    ImageReflowCallback(ImageLoader* aLoader, nsIFrame* aFrame,
                         imgIRequest* aRequest)
-    : mLoader(aLoader)
-    , mFrame(aFrame)
-    , mRequest(aRequest)
-    {}
+        : mLoader(aLoader), mFrame(aFrame), mRequest(aRequest) {}
 
     bool ReflowFinished() override;
     void ReflowCallbackCanceled() override;
@@ -120,10 +110,7 @@ private:
   // should always be in sync.
 
   struct FrameWithFlags {
-    explicit FrameWithFlags(nsIFrame* aFrame)
-    : mFrame(aFrame),
-      mFlags(0)
-    {
+    explicit FrameWithFlags(nsIFrame* aFrame) : mFrame(aFrame), mFlags(0) {
       MOZ_ASSERT(mFrame);
     }
     nsIFrame* const mFrame;
@@ -133,22 +120,23 @@ private:
   // A helper class to compare FrameWithFlags by comparing mFrame and
   // ignoring mFlags.
   class FrameOnlyComparator {
-    public:
-      bool Equals(const FrameWithFlags& aElem1,
-                  const FrameWithFlags& aElem2) const
-      { return aElem1.mFrame == aElem2.mFrame; }
+   public:
+    bool Equals(const FrameWithFlags& aElem1,
+                const FrameWithFlags& aElem2) const {
+      return aElem1.mFrame == aElem2.mFrame;
+    }
 
-      bool LessThan(const FrameWithFlags& aElem1,
-                    const FrameWithFlags& aElem2) const
-      { return aElem1.mFrame < aElem2.mFrame; }
+    bool LessThan(const FrameWithFlags& aElem1,
+                  const FrameWithFlags& aElem2) const {
+      return aElem1.mFrame < aElem2.mFrame;
+    }
   };
 
   typedef nsTArray<FrameWithFlags> FrameSet;
-  typedef nsTArray<nsCOMPtr<imgIRequest> > RequestSet;
-  typedef nsClassHashtable<nsISupportsHashKey,
-                           FrameSet> RequestToFrameMap;
-  typedef nsClassHashtable<nsPtrHashKey<nsIFrame>,
-                           RequestSet> FrameToRequestMap;
+  typedef nsTArray<nsCOMPtr<imgIRequest>> RequestSet;
+  typedef nsClassHashtable<nsISupportsHashKey, FrameSet> RequestToFrameMap;
+  typedef nsClassHashtable<nsPtrHashKey<nsIFrame>, RequestSet>
+      FrameToRequestMap;
 
   nsPresContext* GetPresContext();
 
@@ -192,8 +180,7 @@ private:
 
   // Data associated with every css::URLValue object that has had a load
   // started.
-  struct ImageTableEntry
-  {
+  struct ImageTableEntry {
     // Set of all ImageLoaders that have registered this css::URLValue.
     nsTHashtable<nsPtrHashKey<ImageLoader>> mImageLoaders;
 
@@ -216,7 +203,7 @@ private:
   static nsClassHashtable<nsUint64HashKey, ImageTableEntry>* sImages;
 };
 
-} // namespace css
-} // namespace mozilla
+}  // namespace css
+}  // namespace mozilla
 
 #endif /* mozilla_css_ImageLoader_h___ */

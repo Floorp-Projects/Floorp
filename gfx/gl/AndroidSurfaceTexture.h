@@ -17,14 +17,14 @@ namespace mozilla {
 namespace gl {
 
 class AndroidSurfaceTexture {
-public:
-  static void GetTransformMatrix(java::sdk::SurfaceTexture::Param surfaceTexture,
-                                 mozilla::gfx::Matrix4x4* outMatrix);
-
+ public:
+  static void GetTransformMatrix(
+      java::sdk::SurfaceTexture::Param surfaceTexture,
+      mozilla::gfx::Matrix4x4* outMatrix);
 };
 
-} // gl
-} // mozilla
+}  // namespace gl
+}  // namespace mozilla
 
-#endif // MOZ_WIDGET_ANDROID
-#endif // AndroidSurfaceTexture_h__
+#endif  // MOZ_WIDGET_ANDROID
+#endif  // AndroidSurfaceTexture_h__

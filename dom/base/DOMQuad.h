@@ -24,11 +24,10 @@ class DOMPoint;
 struct DOMQuadJSON;
 struct DOMPointInit;
 
-class DOMQuad final : public nsWrapperCache
-{
+class DOMQuad final : public nsWrapperCache {
   ~DOMQuad();
 
-public:
+ public:
   DOMQuad(nsISupports* aParent, CSSPoint aPoints[4]);
   explicit DOMQuad(nsISupports* aParent);
 
@@ -36,18 +35,18 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMQuad)
 
   nsISupports* GetParentObject() const { return mParent; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  static already_AddRefed<DOMQuad>
-  Constructor(const GlobalObject& aGlobal,
-              const DOMPointInit& aP1,
-              const DOMPointInit& aP2,
-              const DOMPointInit& aP3,
-              const DOMPointInit& aP4,
-              ErrorResult& aRV);
-  static already_AddRefed<DOMQuad>
-  Constructor(const GlobalObject& aGlobal, const DOMRectReadOnly& aRect,
-              ErrorResult& aRV);
+  static already_AddRefed<DOMQuad> Constructor(const GlobalObject& aGlobal,
+                                               const DOMPointInit& aP1,
+                                               const DOMPointInit& aP2,
+                                               const DOMPointInit& aP3,
+                                               const DOMPointInit& aP4,
+                                               ErrorResult& aRV);
+  static already_AddRefed<DOMQuad> Constructor(const GlobalObject& aGlobal,
+                                               const DOMRectReadOnly& aRect,
+                                               ErrorResult& aRV);
 
   DOMRectReadOnly* Bounds();
   already_AddRefed<DOMRectReadOnly> GetBounds() const;
@@ -60,7 +59,7 @@ public:
 
   void ToJSON(DOMQuadJSON& aInit);
 
-protected:
+ protected:
   void GetHorizontalMinMax(double* aX1, double* aX2) const;
   void GetVerticalMinMax(double* aY1, double* aY2) const;
 
@@ -69,7 +68,7 @@ protected:
   RefPtr<DOMRectReadOnly> mBounds;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /*MOZILLA_DOMRECT_H_*/

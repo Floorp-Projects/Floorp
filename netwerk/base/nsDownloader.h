@@ -11,30 +11,26 @@
 class nsIFile;
 class nsIOutputStream;
 
-class nsDownloader : public nsIDownloader
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIDOWNLOADER
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSISTREAMLISTENER
+class nsDownloader : public nsIDownloader {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOWNLOADER
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
 
-    nsDownloader() : mLocationIsTemp(false) {}
+  nsDownloader() : mLocationIsTemp(false) {}
 
-protected:
-    virtual ~nsDownloader();
+ protected:
+  virtual ~nsDownloader();
 
-    static nsresult ConsumeData(nsIInputStream *in,
-                                void           *closure,
-                                const char     *fromRawSegment,
-                                uint32_t        toOffset,
-                                uint32_t        count,
-                                uint32_t       *writeCount);
+  static nsresult ConsumeData(nsIInputStream *in, void *closure,
+                              const char *fromRawSegment, uint32_t toOffset,
+                              uint32_t count, uint32_t *writeCount);
 
-    nsCOMPtr<nsIDownloadObserver> mObserver;
-    nsCOMPtr<nsIFile>             mLocation;
-    nsCOMPtr<nsIOutputStream>     mSink;
-    bool                          mLocationIsTemp;
+  nsCOMPtr<nsIDownloadObserver> mObserver;
+  nsCOMPtr<nsIFile> mLocation;
+  nsCOMPtr<nsIOutputStream> mSink;
+  bool mLocationIsTemp;
 };
 
-#endif // nsDownloader_h__
+#endif  // nsDownloader_h__

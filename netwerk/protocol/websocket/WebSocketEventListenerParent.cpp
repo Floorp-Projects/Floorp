@@ -19,22 +19,19 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(WebSocketEventListenerParent)
 NS_IMPL_RELEASE(WebSocketEventListenerParent)
 
-WebSocketEventListenerParent::WebSocketEventListenerParent(uint64_t aInnerWindowID)
-  : mService(WebSocketEventService::GetOrCreate())
-  , mInnerWindowID(aInnerWindowID)
-{
+WebSocketEventListenerParent::WebSocketEventListenerParent(
+    uint64_t aInnerWindowID)
+    : mService(WebSocketEventService::GetOrCreate()),
+      mInnerWindowID(aInnerWindowID) {
   DebugOnly<nsresult> rv = mService->AddListener(mInnerWindowID, this);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
-WebSocketEventListenerParent::~WebSocketEventListenerParent()
-{
+WebSocketEventListenerParent::~WebSocketEventListenerParent() {
   MOZ_ASSERT(!mService);
 }
 
-mozilla::ipc::IPCResult
-WebSocketEventListenerParent::RecvClose()
-{
+mozilla::ipc::IPCResult WebSocketEventListenerParent::RecvClose() {
   if (mService) {
     UnregisterListener();
     Unused << Send__delete__(this);
@@ -43,15 +40,11 @@ WebSocketEventListenerParent::RecvClose()
   return IPC_OK();
 }
 
-void
-WebSocketEventListenerParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void WebSocketEventListenerParent::ActorDestroy(ActorDestroyReason aWhy) {
   UnregisterListener();
 }
 
-void
-WebSocketEventListenerParent::UnregisterListener()
-{
+void WebSocketEventListenerParent::UnregisterListener() {
   if (mService) {
     DebugOnly<nsresult> rv = mService->RemoveListener(mInnerWindowID, this);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -62,8 +55,7 @@ WebSocketEventListenerParent::UnregisterListener()
 NS_IMETHODIMP
 WebSocketEventListenerParent::WebSocketCreated(uint32_t aWebSocketSerialID,
                                                const nsAString& aURI,
-                                               const nsACString& aProtocols)
-{
+                                               const nsACString& aProtocols) {
   Unused << SendWebSocketCreated(aWebSocketSerialID, nsString(aURI),
                                  nsCString(aProtocols));
   return NS_OK;
@@ -73,8 +65,7 @@ NS_IMETHODIMP
 WebSocketEventListenerParent::WebSocketOpened(uint32_t aWebSocketSerialID,
                                               const nsAString& aEffectiveURI,
                                               const nsACString& aProtocols,
-                                              const nsACString& aExtensions)
-{
+                                              const nsACString& aExtensions) {
   Unused << SendWebSocketOpened(aWebSocketSerialID, nsString(aEffectiveURI),
                                 nsCString(aProtocols), nsCString(aExtensions));
   return NS_OK;
@@ -82,20 +73,17 @@ WebSocketEventListenerParent::WebSocketOpened(uint32_t aWebSocketSerialID,
 
 NS_IMETHODIMP
 WebSocketEventListenerParent::WebSocketClosed(uint32_t aWebSocketSerialID,
-                                              bool aWasClean,
-                                              uint16_t aCode,
-                                              const nsAString& aReason)
-{
+                                              bool aWasClean, uint16_t aCode,
+                                              const nsAString& aReason) {
   Unused << SendWebSocketClosed(aWebSocketSerialID, aWasClean, aCode,
                                 nsString(aReason));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-WebSocketEventListenerParent::WebSocketMessageAvailable(uint32_t aWebSocketSerialID,
-                                                        const nsACString& aData,
-                                                        uint16_t aMessageType)
-{
+WebSocketEventListenerParent::WebSocketMessageAvailable(
+    uint32_t aWebSocketSerialID, const nsACString& aData,
+    uint16_t aMessageType) {
   Unused << SendWebSocketMessageAvailable(aWebSocketSerialID, nsCString(aData),
                                           aMessageType);
   return NS_OK;
@@ -103,8 +91,7 @@ WebSocketEventListenerParent::WebSocketMessageAvailable(uint32_t aWebSocketSeria
 
 NS_IMETHODIMP
 WebSocketEventListenerParent::FrameReceived(uint32_t aWebSocketSerialID,
-                                            nsIWebSocketFrame* aFrame)
-{
+                                            nsIWebSocketFrame* aFrame) {
   if (!aFrame) {
     return NS_ERROR_FAILURE;
   }
@@ -116,8 +103,7 @@ WebSocketEventListenerParent::FrameReceived(uint32_t aWebSocketSerialID,
 
 NS_IMETHODIMP
 WebSocketEventListenerParent::FrameSent(uint32_t aWebSocketSerialID,
-                                        nsIWebSocketFrame* aFrame)
-{
+                                        nsIWebSocketFrame* aFrame) {
   if (!aFrame) {
     return NS_ERROR_FAILURE;
   }
@@ -127,5 +113,5 @@ WebSocketEventListenerParent::FrameSent(uint32_t aWebSocketSerialID,
   return NS_OK;
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

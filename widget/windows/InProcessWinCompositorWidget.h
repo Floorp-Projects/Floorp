@@ -17,9 +17,8 @@ namespace widget {
 // the most part it only requires an HWND, however it maintains extra state
 // for transparent windows, as well as for synchronizing WM_SETTEXT messages
 // with the compositor.
-class InProcessWinCompositorWidget final : public WinCompositorWidget
-{
-public:
+class InProcessWinCompositorWidget final : public WinCompositorWidget {
+ public:
   InProcessWinCompositorWidget(const WinCompositorWidgetInitData& aInitData,
                                const layers::CompositorOptions& aOptions,
                                nsWindow* aWindow);
@@ -31,11 +30,11 @@ public:
   void ObserveVsync(VsyncObserver* aObserver) override;
   nsIWidget* RealWidget() override;
 
-private:
+ private:
   nsWindow* mWindow;
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // widget_windows_InProcessWinCompositorWidget_h
+#endif  // widget_windows_InProcessWinCompositorWidget_h

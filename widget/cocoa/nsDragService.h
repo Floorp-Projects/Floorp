@@ -18,9 +18,8 @@ extern NSString* const kMozWildcardPboardType;
 extern NSString* const kMozCustomTypesPboardType;
 extern NSString* const kMozFileUrlsPboardType;
 
-class nsDragService : public nsBaseDragService
-{
-public:
+class nsDragService : public nsBaseDragService {
+ public:
   nsDragService();
 
   // nsBaseDragService
@@ -32,17 +31,16 @@ public:
   NS_IMETHOD UpdateDragImage(nsINode* aImage, int32_t aImageX, int32_t aImageY) override;
 
   // nsIDragSession
-  NS_IMETHOD GetData(nsITransferable * aTransferable, uint32_t aItemIndex) override;
-  NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, bool *_retval) override;
-  NS_IMETHOD GetNumDropItems(uint32_t * aNumItems) override;
+  NS_IMETHOD GetData(nsITransferable* aTransferable, uint32_t aItemIndex) override;
+  NS_IMETHOD IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) override;
+  NS_IMETHOD GetNumDropItems(uint32_t* aNumItems) override;
 
   void DragMovedWithView(NSDraggingSession* aSession, NSPoint aPoint);
 
-protected:
+ protected:
   virtual ~nsDragService();
 
-private:
-
+ private:
   // Creates and returns the drag image for a drag. aImagePoint will be set to
   // the origin of the drag relative to mNativeDragView.
   NSImage* ConstructDragImage(nsINode* aDOMNode,
@@ -54,8 +52,7 @@ private:
   // aDragRect will be set the area of the drag relative to this.
   NSImage* ConstructDragImage(nsINode* aDOMNode,
                               const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
-                              mozilla::CSSIntPoint aPoint,
-                              mozilla::LayoutDeviceIntRect* aDragRect);
+                              mozilla::CSSIntPoint aPoint, mozilla::LayoutDeviceIntRect* aDragRect);
 
   bool IsValidType(NSString* availableType, bool allowFileURL);
   NSString* GetStringForType(NSPasteboardItem* item, const NSString* type,
@@ -63,11 +60,11 @@ private:
   NSString* GetTitleForURL(NSPasteboardItem* item);
   NSString* GetFilePath(NSPasteboardItem* item);
 
-  nsCOMPtr<nsIArray> mDataItems; // only valid for a drag started within gecko
+  nsCOMPtr<nsIArray> mDataItems;  // only valid for a drag started within gecko
   ChildView* mNativeDragView;
   NSEvent* mNativeDragEvent;
 
   bool mDragImageChanged;
 };
 
-#endif // nsDragService_h_
+#endif  // nsDragService_h_

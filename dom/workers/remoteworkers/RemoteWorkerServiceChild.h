@@ -16,18 +16,17 @@ namespace dom {
 class RemoteWorkerController;
 class RemoteWorkerData;
 
-class RemoteWorkerServiceChild final : public PRemoteWorkerServiceChild
-{
-public:
+class RemoteWorkerServiceChild final : public PRemoteWorkerServiceChild {
+ public:
   NS_INLINE_DECL_REFCOUNTING(RemoteWorkerServiceChild)
 
   RemoteWorkerServiceChild();
 
-private:
+ private:
   ~RemoteWorkerServiceChild();
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_RemoteWorkerServiceChild_h
+#endif  // mozilla_dom_RemoteWorkerServiceChild_h

@@ -17,15 +17,14 @@
 
 class nsPIDOMWindowOuter;
 
-class nsAutoWindowStateHelper
-{
-public:
+class nsAutoWindowStateHelper {
+ public:
   explicit nsAutoWindowStateHelper(nsPIDOMWindowOuter* aWindow);
   ~nsAutoWindowStateHelper();
 
   bool DefaultEnabled() { return mDefaultEnabled; }
 
-protected:
+ protected:
   bool DispatchEventToChrome(const char* aEventName);
 
   nsCOMPtr<nsPIDOMWindowOuter> mWindow;

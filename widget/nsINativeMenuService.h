@@ -14,22 +14,26 @@ namespace mozilla {
 namespace dom {
 class Element;
 }
-}
+}  // namespace mozilla
 
 // {90DF88F9-F084-4EF3-829A-49496E636DED}
-#define NS_INATIVEMENUSERVICE_IID \
-{ 0x90DF88F9, 0xF084, 0x4EF3, \
-{ 0x82, 0x9A, 0x49, 0x49, 0x6E, 0x63, 0x6D, 0xED} }
+#define NS_INATIVEMENUSERVICE_IID                    \
+  {                                                  \
+    0x90DF88F9, 0xF084, 0x4EF3, {                    \
+      0x82, 0x9A, 0x49, 0x49, 0x6E, 0x63, 0x6D, 0xED \
+    }                                                \
+  }
 
 class nsINativeMenuService : public nsISupports {
-public:
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INATIVEMENUSERVICE_IID)
   // Given a top-level window widget and a menu bar DOM node, sets up native
   // menus. Once created, native menus are controlled via the DOM, including
   // destruction.
-  NS_IMETHOD CreateNativeMenuBar(nsIWidget* aParent, mozilla::dom::Element* aMenuBarNode)=0;
+  NS_IMETHOD CreateNativeMenuBar(nsIWidget* aParent,
+                                 mozilla::dom::Element* aMenuBarNode) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINativeMenuService, NS_INATIVEMENUSERVICE_IID)
 
-#endif // nsINativeMenuService_h_
+#endif  // nsINativeMenuService_h_

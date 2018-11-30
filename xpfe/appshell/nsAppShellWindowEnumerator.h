@@ -18,25 +18,24 @@ class nsWindowMediator;
 // nsWindowInfo
 //
 
-struct nsWindowInfo
-{
-  nsWindowInfo(nsIXULWindow* inWindow, int32_t inTimeStamp);
+struct nsWindowInfo {
+  nsWindowInfo(nsIXULWindow *inWindow, int32_t inTimeStamp);
   ~nsWindowInfo();
 
-  nsCOMPtr<nsIXULWindow>    mWindow;
-  int32_t                   mTimeStamp;
-  uint32_t                  mZLevel;
+  nsCOMPtr<nsIXULWindow> mWindow;
+  int32_t mTimeStamp;
+  uint32_t mZLevel;
 
   // each struct is in two, independent, circular, doubly-linked lists
-  nsWindowInfo              *mYounger, // next younger in sequence
-                            *mOlder;
-  nsWindowInfo              *mLower,   // next lower in z-order
-                            *mHigher;
+  nsWindowInfo *mYounger,  // next younger in sequence
+      *mOlder;
+  nsWindowInfo *mLower,  // next lower in z-order
+      *mHigher;
 
   bool TypeEquals(const nsAString &aType);
-  void   InsertAfter(nsWindowInfo *inOlder, nsWindowInfo *inHigher);
-  void   Unlink(bool inAge, bool inZ);
-  void   ReferenceSelf(bool inAge, bool inZ);
+  void InsertAfter(nsWindowInfo *inOlder, nsWindowInfo *inHigher);
+  void Unlink(bool inAge, bool inZ);
+  void ReferenceSelf(bool inAge, bool inZ);
 };
 
 //
@@ -44,17 +43,15 @@ struct nsWindowInfo
 //
 
 class nsAppShellWindowEnumerator : public nsSimpleEnumerator {
+  friend class nsWindowMediator;
 
-friend class nsWindowMediator;
-
-public:
-  nsAppShellWindowEnumerator(const char16_t* aTypeString,
-                             nsWindowMediator& inMediator);
+ public:
+  nsAppShellWindowEnumerator(const char16_t *aTypeString,
+                             nsWindowMediator &inMediator);
   NS_IMETHOD GetNext(nsISupports **retval) override = 0;
   NS_IMETHOD HasMoreElements(bool *retval) override;
 
-protected:
-
+ protected:
   ~nsAppShellWindowEnumerator() override;
 
   void AdjustInitialPosition();
@@ -63,28 +60,26 @@ protected:
   void WindowRemoved(nsWindowInfo *inInfo);
 
   nsWindowMediator *mWindowMediator;
-  nsString          mType;
-  nsWindowInfo     *mCurrentPosition;
+  nsString mType;
+  nsWindowInfo *mCurrentPosition;
 };
 
 class nsASDOMWindowEnumerator : public nsAppShellWindowEnumerator {
-
-public:
-  nsASDOMWindowEnumerator(const char16_t* aTypeString,
-                          nsWindowMediator& inMediator);
+ public:
+  nsASDOMWindowEnumerator(const char16_t *aTypeString,
+                          nsWindowMediator &inMediator);
   virtual ~nsASDOMWindowEnumerator();
   NS_IMETHOD GetNext(nsISupports **retval) override;
 };
 
 class nsASXULWindowEnumerator : public nsAppShellWindowEnumerator {
-
-public:
-  nsASXULWindowEnumerator(const char16_t* aTypeString,
-                          nsWindowMediator& inMediator);
+ public:
+  nsASXULWindowEnumerator(const char16_t *aTypeString,
+                          nsWindowMediator &inMediator);
   virtual ~nsASXULWindowEnumerator();
   NS_IMETHOD GetNext(nsISupports **retval) override;
 
-  const nsID& DefaultInterface() override { return NS_GET_IID(nsIXULWindow); }
+  const nsID &DefaultInterface() override { return NS_GET_IID(nsIXULWindow); }
 };
 
 //
@@ -92,50 +87,46 @@ public:
 //
 
 class nsASDOMWindowEarlyToLateEnumerator : public nsASDOMWindowEnumerator {
-
-public:
-  nsASDOMWindowEarlyToLateEnumerator(const char16_t* aTypeString,
-                                     nsWindowMediator& inMediator);
+ public:
+  nsASDOMWindowEarlyToLateEnumerator(const char16_t *aTypeString,
+                                     nsWindowMediator &inMediator);
 
   virtual ~nsASDOMWindowEarlyToLateEnumerator();
 
-protected:
+ protected:
   virtual nsWindowInfo *FindNext() override;
 };
 
 class nsASXULWindowEarlyToLateEnumerator : public nsASXULWindowEnumerator {
-
-public:
-  nsASXULWindowEarlyToLateEnumerator(const char16_t* aTypeString,
-                                     nsWindowMediator& inMediator);
+ public:
+  nsASXULWindowEarlyToLateEnumerator(const char16_t *aTypeString,
+                                     nsWindowMediator &inMediator);
 
   virtual ~nsASXULWindowEarlyToLateEnumerator();
 
-protected:
+ protected:
   virtual nsWindowInfo *FindNext() override;
 };
 
 class nsASXULWindowFrontToBackEnumerator : public nsASXULWindowEnumerator {
-
-public:
-  nsASXULWindowFrontToBackEnumerator(const char16_t* aTypeString,
-                                     nsWindowMediator& inMediator);
+ public:
+  nsASXULWindowFrontToBackEnumerator(const char16_t *aTypeString,
+                                     nsWindowMediator &inMediator);
 
   virtual ~nsASXULWindowFrontToBackEnumerator();
 
-protected:
+ protected:
   virtual nsWindowInfo *FindNext() override;
 };
 
 class nsASXULWindowBackToFrontEnumerator : public nsASXULWindowEnumerator {
-
-public:
-  nsASXULWindowBackToFrontEnumerator(const char16_t* aTypeString,
-                                     nsWindowMediator& inMediator);
+ public:
+  nsASXULWindowBackToFrontEnumerator(const char16_t *aTypeString,
+                                     nsWindowMediator &inMediator);
 
   virtual ~nsASXULWindowBackToFrontEnumerator();
 
-protected:
+ protected:
   virtual nsWindowInfo *FindNext() override;
 };
 

@@ -20,12 +20,11 @@ struct NameHeader;
 struct NameRecord;
 enum ENameDecoder : int;
 
-typedef Vector<std::function<ENameDecoder(const NameRecord*)>> NameRecordMatchers;
+typedef Vector<std::function<ENameDecoder(const NameRecord *)>>
+    NameRecordMatchers;
 
-class SFNTNameTable final
-{
-public:
-
+class SFNTNameTable final {
+ public:
   /**
    * Creates a SFNTNameTable if the header data is valid. Note that the data is
    * NOT copied, so must exist for the lifetime of the table.
@@ -45,21 +44,21 @@ public:
    * @param aU16FullName string to be populated with the full name.
    * @return true if the full name is successfully read.
    */
-  bool GetU16FullName(mozilla::u16string& aU16FullName);
+  bool GetU16FullName(mozilla::u16string &aU16FullName);
 
-private:
-
+ private:
   SFNTNameTable(const NameHeader *aNameHeader, const uint8_t *aNameData,
                 uint32_t aDataLength);
 
-  bool ReadU16Name(const NameRecordMatchers& aMatchers, mozilla::u16string& aU16Name);
+  bool ReadU16Name(const NameRecordMatchers &aMatchers,
+                   mozilla::u16string &aU16Name);
 
   bool ReadU16NameFromU16Record(const NameRecord *aNameRecord,
-                                mozilla::u16string& aU16Name);
+                                mozilla::u16string &aU16Name);
 
 #if defined(XP_MACOSX)
   bool ReadU16NameFromMacRomanRecord(const NameRecord *aNameRecord,
-                                     mozilla::u16string& aU16Name);
+                                     mozilla::u16string &aU16Name);
 #endif
 
   const NameRecord *mFirstRecord;
@@ -68,7 +67,7 @@ private:
   const uint32_t mStringDataLength;
 };
 
-} // gfx
-} // mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // mozilla_gfx_SFNTNameTable_h
+#endif  // mozilla_gfx_SFNTNameTable_h

@@ -27,24 +27,20 @@ namespace network {
 NS_IMPL_ISUPPORTS_INHERITED0(dom::network::Connection, DOMEventTargetHelper)
 
 Connection::Connection(nsPIDOMWindowInner* aWindow)
-  : DOMEventTargetHelper(aWindow)
-  , mType(static_cast<ConnectionType>(kDefaultType))
-  , mIsWifi(kDefaultIsWifi)
-  , mDHCPGateway(kDefaultDHCPGateway)
-  , mBeenShutDown(false)
-{
+    : DOMEventTargetHelper(aWindow),
+      mType(static_cast<ConnectionType>(kDefaultType)),
+      mIsWifi(kDefaultIsWifi),
+      mDHCPGateway(kDefaultDHCPGateway),
+      mBeenShutDown(false) {
   Telemetry::Accumulate(Telemetry::NETWORK_CONNECTION_COUNT, 1);
 }
 
-Connection::~Connection()
-{
+Connection::~Connection() {
   NS_ASSERT_OWNINGTHREAD(Connection);
   MOZ_ASSERT(mBeenShutDown);
 }
 
-void
-Connection::Shutdown()
-{
+void Connection::Shutdown() {
   NS_ASSERT_OWNINGTHREAD(Connection);
 
   if (mBeenShutDown) {
@@ -55,16 +51,13 @@ Connection::Shutdown()
   ShutdownInternal();
 }
 
-JSObject*
-Connection::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* Connection::WrapObject(JSContext* aCx,
+                                 JS::Handle<JSObject*> aGivenProto) {
   return NetworkInformation_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-Connection::Update(ConnectionType aType, bool aIsWifi, uint32_t aDHCPGateway,
-                   bool aNotify)
-{
+void Connection::Update(ConnectionType aType, bool aIsWifi,
+                        uint32_t aDHCPGateway, bool aNotify) {
   NS_ASSERT_OWNINGTHREAD(Connection);
 
   ConnectionType previousType = mType;
@@ -79,22 +72,19 @@ Connection::Update(ConnectionType aType, bool aIsWifi, uint32_t aDHCPGateway,
   }
 }
 
-/* static */ Connection*
-Connection::CreateForWindow(nsPIDOMWindowInner* aWindow)
-{
+/* static */ Connection* Connection::CreateForWindow(
+    nsPIDOMWindowInner* aWindow) {
   MOZ_ASSERT(aWindow);
   return new ConnectionMainThread(aWindow);
 }
 
-/* static */ already_AddRefed<Connection>
-Connection::CreateForWorker(WorkerPrivate* aWorkerPrivate,
-                            ErrorResult& aRv)
-{
+/* static */ already_AddRefed<Connection> Connection::CreateForWorker(
+    WorkerPrivate* aWorkerPrivate, ErrorResult& aRv) {
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
   return ConnectionWorker::Create(aWorkerPrivate, aRv);
 }
 
-} // namespace network
-} // namespace dom
-} // namespace mozilla
+}  // namespace network
+}  // namespace dom
+}  // namespace mozilla

@@ -15,30 +15,30 @@ namespace {
 
 const uint32_t kSnapshotTimeoutMs = 20000;
 
-} // namespace
+}  // namespace
 
 LSSnapshot::LSSnapshot(LSDatabase* aDatabase)
-  : mDatabase(aDatabase)
-  , mActor(nullptr)
-  , mInitLength(0)
-  , mLength(0)
-  , mExactUsage(0)
-  , mPeakUsage(0)
-  , mLoadState(LoadState::Initial)
-  , mExplicit(false)
-  , mHasPendingStableStateCallback(false)
-  , mHasPendingTimerCallback(false)
-  , mDirty(false)
+    : mDatabase(aDatabase),
+      mActor(nullptr),
+      mInitLength(0),
+      mLength(0),
+      mExactUsage(0),
+      mPeakUsage(0),
+      mLoadState(LoadState::Initial),
+      mExplicit(false),
+      mHasPendingStableStateCallback(false),
+      mHasPendingTimerCallback(false),
+      mDirty(false)
 #ifdef DEBUG
-  , mInitialized(false)
-  , mSentFinish(false)
+      ,
+      mInitialized(false),
+      mSentFinish(false)
 #endif
 {
   AssertIsOnOwningThread();
 }
 
-LSSnapshot::~LSSnapshot()
-{
+LSSnapshot::~LSSnapshot() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mDatabase);
   MOZ_ASSERT(!mHasPendingStableStateCallback);
@@ -51,9 +51,7 @@ LSSnapshot::~LSSnapshot()
   }
 }
 
-void
-LSSnapshot::SetActor(LSSnapshotChild* aActor)
-{
+void LSSnapshot::SetActor(LSSnapshotChild* aActor) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(!mActor);
@@ -61,10 +59,7 @@ LSSnapshot::SetActor(LSSnapshotChild* aActor)
   mActor = aActor;
 }
 
-nsresult
-LSSnapshot::Init(const LSSnapshotInitInfo& aInitInfo,
-                 bool aExplicit)
-{
+nsresult LSSnapshot::Init(const LSSnapshotInitInfo& aInitInfo, bool aExplicit) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mSelfRef);
   MOZ_ASSERT(mActor);
@@ -119,9 +114,7 @@ LSSnapshot::Init(const LSSnapshotInitInfo& aInitInfo,
   return NS_OK;
 }
 
-nsresult
-LSSnapshot::GetLength(uint32_t* aResult)
-{
+nsresult LSSnapshot::GetLength(uint32_t* aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mInitialized);
@@ -138,10 +131,7 @@ LSSnapshot::GetLength(uint32_t* aResult)
   return NS_OK;
 }
 
-nsresult
-LSSnapshot::GetKey(uint32_t aIndex,
-                   nsAString& aResult)
-{
+nsresult LSSnapshot::GetKey(uint32_t aIndex, nsAString& aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mInitialized);
@@ -166,10 +156,7 @@ LSSnapshot::GetKey(uint32_t aIndex,
   return NS_OK;
 }
 
-nsresult
-LSSnapshot::GetItem(const nsAString& aKey,
-                    nsAString& aResult)
-{
+nsresult LSSnapshot::GetItem(const nsAString& aKey, nsAString& aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mInitialized);
@@ -187,9 +174,7 @@ LSSnapshot::GetItem(const nsAString& aKey,
   return NS_OK;
 }
 
-nsresult
-LSSnapshot::GetKeys(nsTArray<nsString>& aKeys)
-{
+nsresult LSSnapshot::GetKeys(nsTArray<nsString>& aKeys) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mInitialized);
@@ -209,11 +194,8 @@ LSSnapshot::GetKeys(nsTArray<nsString>& aKeys)
   return NS_OK;
 }
 
-nsresult
-LSSnapshot::SetItem(const nsAString& aKey,
-                    const nsAString& aValue,
-                    LSNotifyInfo& aNotifyInfo)
-{
+nsresult LSSnapshot::SetItem(const nsAString& aKey, const nsAString& aValue,
+                             LSNotifyInfo& aNotifyInfo) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mInitialized);
@@ -223,7 +205,7 @@ LSSnapshot::SetItem(const nsAString& aKey,
 
   nsString oldValue;
   nsresult rv =
-    GetItemInternal(aKey, Optional<nsString>(nsString(aValue)), oldValue);
+      GetItemInternal(aKey, Optional<nsString>(nsString(aValue)), oldValue);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -269,10 +251,8 @@ LSSnapshot::SetItem(const nsAString& aKey,
   return NS_OK;
 }
 
-nsresult
-LSSnapshot::RemoveItem(const nsAString& aKey,
-                       LSNotifyInfo& aNotifyInfo)
-{
+nsresult LSSnapshot::RemoveItem(const nsAString& aKey,
+                                LSNotifyInfo& aNotifyInfo) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mInitialized);
@@ -282,7 +262,7 @@ LSSnapshot::RemoveItem(const nsAString& aKey,
 
   nsString oldValue;
   nsresult rv =
-    GetItemInternal(aKey, Optional<nsString>(VoidString()), oldValue);
+      GetItemInternal(aKey, Optional<nsString>(VoidString()), oldValue);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -316,9 +296,7 @@ LSSnapshot::RemoveItem(const nsAString& aKey,
   return NS_OK;
 }
 
-nsresult
-LSSnapshot::Clear(LSNotifyInfo& aNotifyInfo)
-{
+nsresult LSSnapshot::Clear(LSNotifyInfo& aNotifyInfo) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mInitialized);
@@ -362,9 +340,7 @@ LSSnapshot::Clear(LSNotifyInfo& aNotifyInfo)
   return NS_OK;
 }
 
-void
-LSSnapshot::MarkDirty()
-{
+void LSSnapshot::MarkDirty() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mInitialized);
@@ -387,9 +363,7 @@ LSSnapshot::MarkDirty()
   }
 }
 
-nsresult
-LSSnapshot::End()
-{
+nsresult LSSnapshot::End() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mExplicit);
@@ -417,9 +391,7 @@ LSSnapshot::End()
   return NS_OK;
 }
 
-void
-LSSnapshot::ScheduleStableStateCallback()
-{
+void LSSnapshot::ScheduleStableStateCallback() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mTimer);
   MOZ_ASSERT(!mExplicit);
@@ -433,9 +405,7 @@ LSSnapshot::ScheduleStableStateCallback()
   mHasPendingStableStateCallback = true;
 }
 
-void
-LSSnapshot::MaybeScheduleStableStateCallback()
-{
+void LSSnapshot::MaybeScheduleStableStateCallback() {
   AssertIsOnOwningThread();
 
   if (!mExplicit && !mHasPendingStableStateCallback) {
@@ -445,11 +415,9 @@ LSSnapshot::MaybeScheduleStableStateCallback()
   }
 }
 
-nsresult
-LSSnapshot::GetItemInternal(const nsAString& aKey,
-                            const Optional<nsString>& aValue,
-                            nsAString& aResult)
-{
+nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
+                                     const Optional<nsString>& aValue,
+                                     nsAString& aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mInitialized);
@@ -570,9 +538,7 @@ LSSnapshot::GetItemInternal(const nsAString& aKey,
   return NS_OK;
 }
 
-nsresult
-LSSnapshot::EnsureAllKeys()
-{
+nsresult LSSnapshot::EnsureAllKeys() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mInitialized);
@@ -644,9 +610,7 @@ LSSnapshot::EnsureAllKeys()
   return NS_OK;
 }
 
-nsresult
-LSSnapshot::UpdateUsage(int64_t aDelta)
-{
+nsresult LSSnapshot::UpdateUsage(int64_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mDatabase);
   MOZ_ASSERT(mActor);
@@ -659,9 +623,8 @@ LSSnapshot::UpdateUsage(int64_t aDelta)
     int64_t minSize = newExactUsage - mPeakUsage;
     int64_t requestedSize = minSize + 4096;
     int64_t size;
-    if (NS_WARN_IF(!mActor->SendIncreasePeakUsage(requestedSize,
-                                                  minSize,
-                                                  &size))) {
+    if (NS_WARN_IF(
+            !mActor->SendIncreasePeakUsage(requestedSize, minSize, &size))) {
       return NS_ERROR_FAILURE;
     }
 
@@ -678,9 +641,7 @@ LSSnapshot::UpdateUsage(int64_t aDelta)
   return NS_OK;
 }
 
-nsresult
-LSSnapshot::Checkpoint()
-{
+nsresult LSSnapshot::Checkpoint() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mInitialized);
@@ -695,9 +656,7 @@ LSSnapshot::Checkpoint()
   return NS_OK;
 }
 
-nsresult
-LSSnapshot::Finish()
-{
+nsresult LSSnapshot::Finish() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mDatabase);
   MOZ_ASSERT(mActor);
@@ -719,9 +678,7 @@ LSSnapshot::Finish()
   return NS_OK;
 }
 
-void
-LSSnapshot::CancelTimer()
-{
+void LSSnapshot::CancelTimer() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mTimer);
 
@@ -732,9 +689,7 @@ LSSnapshot::CancelTimer()
 }
 
 // static
-void
-LSSnapshot::TimerCallback(nsITimer* aTimer, void* aClosure)
-{
+void LSSnapshot::TimerCallback(nsITimer* aTimer, void* aClosure) {
   MOZ_ASSERT(aTimer);
 
   auto* self = static_cast<LSSnapshot*>(aClosure);
@@ -752,8 +707,7 @@ LSSnapshot::TimerCallback(nsITimer* aTimer, void* aClosure)
 NS_IMPL_ISUPPORTS(LSSnapshot, nsIRunnable)
 
 NS_IMETHODIMP
-LSSnapshot::Run()
-{
+LSSnapshot::Run() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mExplicit);
   MOZ_ASSERT(mHasPendingStableStateCallback);
@@ -768,12 +722,9 @@ LSSnapshot::Run()
   } else if (!mExplicit) {
     MOZ_ASSERT(mTimer);
 
-    MOZ_ALWAYS_SUCCEEDS(
-      mTimer->InitWithNamedFuncCallback(TimerCallback,
-                                        this,
-                                        kSnapshotTimeoutMs,
-                                        nsITimer::TYPE_ONE_SHOT,
-                                        "LSSnapshot::TimerCallback"));
+    MOZ_ALWAYS_SUCCEEDS(mTimer->InitWithNamedFuncCallback(
+        TimerCallback, this, kSnapshotTimeoutMs, nsITimer::TYPE_ONE_SHOT,
+        "LSSnapshot::TimerCallback"));
 
     mHasPendingTimerCallback = true;
   }
@@ -781,5 +732,5 @@ LSSnapshot::Run()
   return NS_OK;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -13,19 +13,17 @@
 namespace mozilla {
 
 class RtpPacketQueue {
-public:
-
-  void Clear()
-  {
+ public:
+  void Clear() {
     mQueuedPackets.Clear();
     mQueueActive = false;
   }
 
-  void DequeueAll(MediaSessionConduit* conduit)
-  {
+  void DequeueAll(MediaSessionConduit* conduit) {
     // SSRC is set; insert queued packets
     for (auto& packet : mQueuedPackets) {
-      if (conduit->DeliverPacket(packet->mData, packet->mLen) != kMediaConduitNoError) {
+      if (conduit->DeliverPacket(packet->mData, packet->mLen) !=
+          kMediaConduitNoError) {
         // Keep delivering and then clear the queue
       }
     }
@@ -33,39 +31,30 @@ public:
     mQueueActive = false;
   }
 
-  void Enqueue(const void* data, int len)
-  {
+  void Enqueue(const void* data, int len) {
     UniquePtr<QueuedPacket> packet(new QueuedPacket(data, len));
     mQueuedPackets.AppendElement(std::move(packet));
     mQueueActive = true;
   }
 
-  bool IsQueueActive()
-  {
-    return mQueueActive;
-  }
+  bool IsQueueActive() { return mQueueActive; }
 
-private:
+ private:
   bool mQueueActive = false;
   struct QueuedPacket {
     const int mLen;
-    uint8_t *mData;
+    uint8_t* mData;
 
-    QueuedPacket(const void *aData, size_t aLen)
-      : mLen(aLen)
-    {
+    QueuedPacket(const void* aData, size_t aLen) : mLen(aLen) {
       mData = new uint8_t[mLen];
       memcpy(mData, aData, mLen);
     }
 
-    ~QueuedPacket()
-    {
-      delete(mData);
-    }
+    ~QueuedPacket() { delete (mData); }
   };
   nsTArray<UniquePtr<QueuedPacket>> mQueuedPackets;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif //RtpPacketQueue_h
+#endif  // RtpPacketQueue_h

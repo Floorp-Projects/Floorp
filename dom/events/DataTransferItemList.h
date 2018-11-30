@@ -16,17 +16,13 @@ namespace dom {
 
 class DataTransferItem;
 
-class DataTransferItemList final : public nsISupports
-                                 , public nsWrapperCache
-{
-public:
+class DataTransferItemList final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DataTransferItemList);
 
   DataTransferItemList(DataTransfer* aDataTransfer, bool aIsExternal)
-    : mDataTransfer(aDataTransfer)
-    , mIsExternal(aIsExternal)
-  {
+      : mDataTransfer(aDataTransfer), mIsExternal(aIsExternal) {
     MOZ_ASSERT(aDataTransfer);
     // We always allocate an index 0 in our DataTransferItemList. This is done
     // in order to maintain the invariants according to the spec. Mainly, within
@@ -41,47 +37,38 @@ public:
     mIndexedItems.SetLength(1);
   }
 
-  already_AddRefed<DataTransferItemList> Clone(DataTransfer* aDataTransfer) const;
+  already_AddRefed<DataTransferItemList> Clone(
+      DataTransfer* aDataTransfer) const;
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  uint32_t Length() const
-  {
-    return mItems.Length();
-  };
+  uint32_t Length() const { return mItems.Length(); };
 
   DataTransferItem* Add(const nsAString& aData, const nsAString& aType,
-                        nsIPrincipal& aSubjectPrincipal,
-                        ErrorResult& rv);
-  DataTransferItem* Add(File& aData,
-                        nsIPrincipal& aSubjectPrincipal,
+                        nsIPrincipal& aSubjectPrincipal, ErrorResult& rv);
+  DataTransferItem* Add(File& aData, nsIPrincipal& aSubjectPrincipal,
                         ErrorResult& aRv);
 
-  void Remove(uint32_t aIndex,
-              nsIPrincipal& aSubjectPrincipal,
+  void Remove(uint32_t aIndex, nsIPrincipal& aSubjectPrincipal,
               ErrorResult& aRv);
 
   DataTransferItem* IndexedGetter(uint32_t aIndex, bool& aFound) const;
 
-  DataTransfer* GetParentObject() const
-  {
-    return mDataTransfer;
-  }
+  DataTransfer* GetParentObject() const { return mDataTransfer; }
 
   void Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
 
-  already_AddRefed<DataTransferItem>
-  SetDataWithPrincipal(const nsAString& aType, nsIVariant* aData,
-                       uint32_t aIndex, nsIPrincipal* aPrincipal,
-                       bool aInsertOnly, bool aHidden, ErrorResult& aRv);
+  already_AddRefed<DataTransferItem> SetDataWithPrincipal(
+      const nsAString& aType, nsIVariant* aData, uint32_t aIndex,
+      nsIPrincipal* aPrincipal, bool aInsertOnly, bool aHidden,
+      ErrorResult& aRv);
 
   already_AddRefed<FileList> Files(nsIPrincipal* aPrincipal);
 
   // Moz-style helper methods for interacting with the stored data
   void MozRemoveByTypeAt(const nsAString& aType, uint32_t aIndex,
-                         nsIPrincipal& aSubjectPrincipal,
-                         ErrorResult& aRv);
+                         nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
   DataTransferItem* MozItemByTypeAt(const nsAString& aType, uint32_t aIndex);
   const nsTArray<RefPtr<DataTransferItem>>* MozItemsAt(uint32_t aIndex);
   uint32_t MozItemCount() const;
@@ -93,10 +80,9 @@ public:
   // permissions or read-only status (for internal use only).
   void ClearAllItems();
 
-private:
+ private:
   void ClearDataHelper(DataTransferItem* aItem, uint32_t aIndexHint,
-                       uint32_t aMozOffsetHint,
-                       nsIPrincipal& aSubjectPrincipal,
+                       uint32_t aMozOffsetHint, nsIPrincipal& aSubjectPrincipal,
                        ErrorResult& aRv);
   DataTransferItem* AppendNewItem(uint32_t aIndex, const nsAString& aType,
                                   nsIVariant* aData, nsIPrincipal* aPrincipal,
@@ -126,7 +112,7 @@ private:
   nsTArray<nsTArray<RefPtr<DataTransferItem>>> mIndexedItems;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_DataTransferItemList_h
+#endif  // mozilla_dom_DataTransferItemList_h

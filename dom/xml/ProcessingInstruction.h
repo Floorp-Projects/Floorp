@@ -18,10 +18,8 @@ class nsIURI;
 namespace mozilla {
 namespace dom {
 
-class ProcessingInstruction : public CharacterData
-                            , public nsStyleLinkElement
-{
-public:
+class ProcessingInstruction : public CharacterData, public nsStyleLinkElement {
+ public:
   ProcessingInstruction(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                         const nsAString& aData);
 
@@ -29,24 +27,21 @@ public:
   // has a pure-virtual QI.
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual already_AddRefed<CharacterData>
-    CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                  bool aCloneText) const override;
+  virtual already_AddRefed<CharacterData> CloneDataNode(
+      mozilla::dom::NodeInfo* aNodeInfo, bool aCloneText) const override;
 
 #ifdef DEBUG
   virtual void List(FILE* out, int32_t aIndent) const override;
-  virtual void DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const override;
+  virtual void DumpContent(FILE* out, int32_t aIndent,
+                           bool aDumpAll) const override;
 #endif
 
   // WebIDL API
-  void GetTarget(nsAString& aTarget)
-  {
-    aTarget = NodeName();
-  }
+  void GetTarget(nsAString& aTarget) { aTarget = NodeName(); }
 
   NS_IMPL_FROMNODE_HELPER(ProcessingInstruction, IsProcessingInstruction())
 
-protected:
+ protected:
   virtual ~ProcessingInstruction();
 
   /**
@@ -59,23 +54,24 @@ protected:
    * @param aValue [out] the value for the attribute with name specified in
    *                     aAttribute. Empty if the attribute isn't present.
    */
-  bool GetAttrValue(nsAtom *aName, nsAString& aValue);
+  bool GetAttrValue(nsAtom* aName, nsAString& aValue);
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
   // nsStyleLinkElement overrides, because we can't leave them pure virtual.
   Maybe<SheetInfo> GetStyleSheetInfo() override;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 /**
  * aNodeInfoManager must not be null.
  */
 already_AddRefed<mozilla::dom::ProcessingInstruction>
-NS_NewXMLProcessingInstruction(nsNodeInfoManager *aNodeInfoManager,
+NS_NewXMLProcessingInstruction(nsNodeInfoManager* aNodeInfoManager,
                                const nsAString& aTarget,
                                const nsAString& aData);
 
-#endif // mozilla_dom_ProcessingInstruction_h
+#endif  // mozilla_dom_ProcessingInstruction_h

@@ -34,9 +34,7 @@
 #include <string.h>
 #include <assert.h>
 
-NPUTF8*
-createCStringFromNPVariant(const NPVariant* variant)
-{
+NPUTF8* createCStringFromNPVariant(const NPVariant* variant) {
   size_t length = NPVARIANT_TO_STRING(*variant).UTF8Length;
   NPUTF8* result = (NPUTF8*)malloc(length + 1);
   memcpy(result, NPVARIANT_TO_STRING(*variant).UTF8Characters, length);
@@ -44,9 +42,7 @@ createCStringFromNPVariant(const NPVariant* variant)
   return result;
 }
 
-NPIdentifier
-variantToIdentifier(NPVariant variant)
-{
+NPIdentifier variantToIdentifier(NPVariant variant) {
   if (NPVARIANT_IS_STRING(variant))
     return stringVariantToIdentifier(variant);
   else if (NPVARIANT_IS_INT32(variant))
@@ -56,9 +52,7 @@ variantToIdentifier(NPVariant variant)
   return 0;
 }
 
-NPIdentifier
-stringVariantToIdentifier(NPVariant variant)
-{
+NPIdentifier stringVariantToIdentifier(NPVariant variant) {
   assert(NPVARIANT_IS_STRING(variant));
   NPUTF8* utf8String = createCStringFromNPVariant(&variant);
   NPIdentifier identifier = NPN_GetStringIdentifier(utf8String);
@@ -66,17 +60,13 @@ stringVariantToIdentifier(NPVariant variant)
   return identifier;
 }
 
-NPIdentifier
-int32VariantToIdentifier(NPVariant variant)
-{
+NPIdentifier int32VariantToIdentifier(NPVariant variant) {
   assert(NPVARIANT_IS_INT32(variant));
   int32_t integer = NPVARIANT_TO_INT32(variant);
   return NPN_GetIntIdentifier(integer);
 }
 
-NPIdentifier
-doubleVariantToIdentifier(NPVariant variant)
-{
+NPIdentifier doubleVariantToIdentifier(NPVariant variant) {
   assert(NPVARIANT_IS_DOUBLE(variant));
   double value = NPVARIANT_TO_DOUBLE(variant);
   // sadly there is no "getdoubleidentifier"
@@ -87,18 +77,15 @@ doubleVariantToIdentifier(NPVariant variant)
 /*
  * Parse a color in hex format, #AARRGGBB or AARRGGBB.
  */
-uint32_t
-parseHexColor(const char* color, int len)
-{
-  uint8_t bgra[4] = { 0, 0, 0, 0xFF };
+uint32_t parseHexColor(const char* color, int len) {
+  uint8_t bgra[4] = {0, 0, 0, 0xFF};
   int i = 0;
 
   // Ignore unsupported formats.
-  if (len != 9 && len != 8)
-    return 0;
+  if (len != 9 && len != 8) return 0;
 
   // start from the right and work to the left
-  while (len >= 2) { // we have at least #AA or AA left.
+  while (len >= 2) {  // we have at least #AA or AA left.
     char byte[3];
     // parse two hex digits
     byte[0] = color[len - 2];

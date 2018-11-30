@@ -14,27 +14,23 @@
 #include <bfd.h>
 #include <cxxabi.h>
 
-static bfd *try_debug_file(const char *filename, unsigned long crc32)
-{
+static bfd *try_debug_file(const char *filename, unsigned long crc32) {
   int fd = open(filename, O_RDONLY);
-  if (fd < 0)
-    return nullptr;
+  if (fd < 0) return nullptr;
 
-  unsigned char buf[4*1024];
+  unsigned char buf[4 * 1024];
   unsigned long crc = 0;
 
   while (1) {
     ssize_t count = read(fd, buf, sizeof(buf));
-    if (count <= 0)
-      break;
+    if (count <= 0) break;
 
     crc = bfd_calc_gnu_debuglink_crc32(crc, buf, count);
   }
 
   close(fd);
 
-  if (crc != crc32)
-    return nullptr;
+  if (crc != crc32) return nullptr;
 
   bfd *object = bfd_openr(filename, nullptr);
   if (!bfd_check_format(object, bfd_object)) {
@@ -45,15 +41,13 @@ static bfd *try_debug_file(const char *filename, unsigned long crc32)
   return object;
 }
 
-static bfd *find_debug_file(bfd *lib, const char *aFileName)
-{
+static bfd *find_debug_file(bfd *lib, const char *aFileName) {
   // check for a separate debug file with symbols
   asection *sect = bfd_get_section_by_name(lib, ".gnu_debuglink");
 
-  if (!sect)
-    return nullptr;
+  if (!sect) return nullptr;
 
-  bfd_size_type debuglinkSize = bfd_section_size (objfile->obfd, sect);
+  bfd_size_type debuglinkSize = bfd_section_size(objfile->obfd, sect);
 
   char *debuglink = new char[debuglinkSize];
   bfd_get_section_contents(lib, sect, debuglink, 0, debuglinkSize);
@@ -72,18 +66,16 @@ static bfd *find_debug_file(bfd *lib, const char *aFileName)
   static const char global_debug_dir[] = "/usr/lib/debug";
 
   char *filename =
-    new char[strlen(global_debug_dir) + strlen(dir) + crc_offset + 3];
+      new char[strlen(global_debug_dir) + strlen(dir) + crc_offset + 3];
 
   // /path/debuglink
   sprintf(filename, "%s/%s", dir, debuglink);
   bfd *debugFile = try_debug_file(filename, crc32);
   if (!debugFile) {
-
     // /path/.debug/debuglink
     sprintf(filename, "%s/%s/%s", dir, debug_subdir, debuglink);
     debugFile = try_debug_file(filename, crc32);
     if (!debugFile) {
-
       // /usr/lib/debug/path/debuglink
       sprintf(filename, "%s/%s/%s", global_debug_dir, dir, debuglink);
       debugFile = try_debug_file(filename, crc32);
@@ -97,15 +89,12 @@ static bfd *find_debug_file(bfd *lib, const char *aFileName)
   return debugFile;
 }
 
-
 // Use an indirect array to avoid copying tons of objects
-Symbol ** leaky::ExtendSymbols(int num)
-{
+Symbol **leaky::ExtendSymbols(int num) {
   long n = numExternalSymbols + num;
 
-  externalSymbols = (Symbol**)
-                    realloc(externalSymbols,
-                            (size_t) (sizeof(externalSymbols[0]) * n));
+  externalSymbols = (Symbol **)realloc(
+      externalSymbols, (size_t)(sizeof(externalSymbols[0]) * n));
   Symbol *new_array = new Symbol[n];
   for (int i = 0; i < num; i++) {
     externalSymbols[i + numExternalSymbols] = &new_array[i];
@@ -116,24 +105,25 @@ Symbol ** leaky::ExtendSymbols(int num)
   return sp;
 }
 
-#define NEXT_SYMBOL do { sp++; \
-                         if (sp >= lastSymbol) { \
-                           sp = ExtendSymbols(16384); \
-                         } \
-                       } while (0)
+#define NEXT_SYMBOL              \
+  do {                           \
+    sp++;                        \
+    if (sp >= lastSymbol) {      \
+      sp = ExtendSymbols(16384); \
+    }                            \
+  } while (0)
 
-void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
-{
+void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress) {
   int initialSymbols = usefulSymbols;
   if (nullptr == externalSymbols) {
-    externalSymbols = (Symbol**) calloc(sizeof(Symbol*),10000);
+    externalSymbols = (Symbol **)calloc(sizeof(Symbol *), 10000);
     Symbol *new_array = new Symbol[10000];
     for (int i = 0; i < 10000; i++) {
       externalSymbols[i] = &new_array[i];
     }
     numExternalSymbols = 10000;
   }
-  Symbol** sp = externalSymbols + usefulSymbols;
+  Symbol **sp = externalSymbols + usefulSymbols;
   lastSymbol = externalSymbols + numExternalSymbols;
 
   // Create a dummy symbol for the library so, if it doesn't have any
@@ -146,10 +136,10 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
   static int firstTime = 1;
   if (firstTime) {
     firstTime = 0;
-    bfd_init ();
+    bfd_init();
   }
 
-  bfd* lib = bfd_openr(aFileName, nullptr);
+  bfd *lib = bfd_openr(aFileName, nullptr);
   if (nullptr == lib) {
     return;
   }
@@ -183,36 +173,37 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
     symbolFile = lib;
   }
 
-  asymbol* store;
+  asymbol *store;
   store = bfd_make_empty_symbol(symbolFile);
 
   // Scan symbols
   size_t demangle_buffer_size = 128;
-  char *demangle_buffer = (char*) malloc(demangle_buffer_size);
-  bfd_byte* from = (bfd_byte *) minisyms;
-  bfd_byte* fromend = from + symcount * size;
+  char *demangle_buffer = (char *)malloc(demangle_buffer_size);
+  bfd_byte *from = (bfd_byte *)minisyms;
+  bfd_byte *fromend = from + symcount * size;
   for (; from < fromend; from += size) {
     asymbol *sym;
-    sym = bfd_minisymbol_to_symbol(symbolFile, kDynamic, (const PTR) from, store);
+    sym =
+        bfd_minisymbol_to_symbol(symbolFile, kDynamic, (const PTR)from, store);
 
     symbol_info syminfo;
-    bfd_get_symbol_info (symbolFile, sym, &syminfo);
+    bfd_get_symbol_info(symbolFile, sym, &syminfo);
 
-//    if ((syminfo.type == 'T') || (syminfo.type == 't')) {
-      const char* nm = bfd_asymbol_name(sym);
-      if (nm && nm[0]) {
-        char* dnm = nullptr;
-        if (strncmp("__thunk", nm, 7)) {
-          dnm =
+    //    if ((syminfo.type == 'T') || (syminfo.type == 't')) {
+    const char *nm = bfd_asymbol_name(sym);
+    if (nm && nm[0]) {
+      char *dnm = nullptr;
+      if (strncmp("__thunk", nm, 7)) {
+        dnm =
             abi::__cxa_demangle(nm, demangle_buffer, &demangle_buffer_size, 0);
-          if (dnm) {
-            demangle_buffer = dnm;
-          }
+        if (dnm) {
+          demangle_buffer = dnm;
         }
-        (*sp)->Init(dnm ? dnm : nm, syminfo.value + aBaseAddress);
-        NEXT_SYMBOL;
       }
-//    }
+      (*sp)->Init(dnm ? dnm : nm, syminfo.value + aBaseAddress);
+      NEXT_SYMBOL;
+    }
+    //    }
   }
 
   free(demangle_buffer);
@@ -222,8 +213,7 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
 
   int interesting = sp - externalSymbols;
   if (!quiet) {
-    printf("%s provided %d symbols\n", aFileName,
-           interesting - initialSymbols);
+    printf("%s provided %d symbols\n", aFileName, interesting - initialSymbols);
   }
   usefulSymbols = interesting;
 }

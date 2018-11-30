@@ -10,24 +10,20 @@
 #include "nsAutoPtr.h"
 #include "nsIGIOService.h"
 
-/* static */ bool
-nsGNOMERegistry::HandlerExists(const char *aProtocolScheme)
-{
+/* static */ bool nsGNOMERegistry::HandlerExists(const char* aProtocolScheme) {
   nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
   if (!giovfs) {
     return false;
   }
 
   nsCOMPtr<nsIHandlerApp> app;
-  return NS_SUCCEEDED(giovfs->GetAppForURIScheme(nsDependentCString(aProtocolScheme),
-                                                 getter_AddRefs(app)));
+  return NS_SUCCEEDED(giovfs->GetAppForURIScheme(
+      nsDependentCString(aProtocolScheme), getter_AddRefs(app)));
 }
 
 // XXX Check HandlerExists() before calling LoadURL.
 
-/* static */ nsresult
-nsGNOMERegistry::LoadURL(nsIURI *aURL)
-{
+/* static */ nsresult nsGNOMERegistry::LoadURL(nsIURI* aURL) {
   nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
   if (!giovfs) {
     return NS_ERROR_FAILURE;
@@ -36,13 +32,10 @@ nsGNOMERegistry::LoadURL(nsIURI *aURL)
   return giovfs->ShowURI(aURL);
 }
 
-/* static */ void
-nsGNOMERegistry::GetAppDescForScheme(const nsACString& aScheme,
-                                     nsAString& aDesc)
-{
+/* static */ void nsGNOMERegistry::GetAppDescForScheme(
+    const nsACString& aScheme, nsAString& aDesc) {
   nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
-  if (!giovfs)
-    return;
+  if (!giovfs) return;
 
   nsCOMPtr<nsIHandlerApp> app;
   if (NS_FAILED(giovfs->GetAppForURIScheme(aScheme, getter_AddRefs(app))))
@@ -51,10 +44,8 @@ nsGNOMERegistry::GetAppDescForScheme(const nsACString& aScheme,
   app->GetName(aDesc);
 }
 
-
-/* static */ already_AddRefed<nsMIMEInfoBase>
-nsGNOMERegistry::GetFromExtension(const nsACString& aFileExt)
-{
+/* static */ already_AddRefed<nsMIMEInfoBase> nsGNOMERegistry::GetFromExtension(
+    const nsACString& aFileExt) {
   nsAutoCString mimeType;
   nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
   if (!giovfs) {
@@ -76,9 +67,8 @@ nsGNOMERegistry::GetFromExtension(const nsACString& aFileExt)
   return mi.forget();
 }
 
-/* static */ already_AddRefed<nsMIMEInfoBase>
-nsGNOMERegistry::GetFromType(const nsACString& aMIMEType)
-{
+/* static */ already_AddRefed<nsMIMEInfoBase> nsGNOMERegistry::GetFromType(
+    const nsACString& aMIMEType) {
   RefPtr<nsMIMEInfoUnix> mimeInfo = new nsMIMEInfoUnix(aMIMEType);
   NS_ENSURE_TRUE(mimeInfo, nullptr);
 
@@ -91,7 +81,8 @@ nsGNOMERegistry::GetFromType(const nsACString& aMIMEType)
   }
 
   nsCOMPtr<nsIHandlerApp> handlerApp;
-  if (NS_FAILED(giovfs->GetAppForMimeType(aMIMEType, getter_AddRefs(handlerApp))) ||
+  if (NS_FAILED(
+          giovfs->GetAppForMimeType(aMIMEType, getter_AddRefs(handlerApp))) ||
       !handlerApp) {
     return nullptr;
   }

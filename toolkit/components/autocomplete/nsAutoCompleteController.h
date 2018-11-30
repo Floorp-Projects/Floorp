@@ -22,9 +22,8 @@
 class nsAutoCompleteController final : public nsIAutoCompleteController,
                                        public nsIAutoCompleteObserver,
                                        public nsITimerCallback,
-                                       public nsINamed
-{
-public:
+                                       public nsINamed {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsAutoCompleteController,
                                            nsIAutoCompleteController)
@@ -35,7 +34,7 @@ public:
 
   nsAutoCompleteController();
 
-protected:
+ protected:
   virtual ~nsAutoCompleteController();
 
   /**
@@ -48,8 +47,7 @@ protected:
    * SetSearchStringInternal() sets both mSearchString and mSetValue to
    * aSearchString.
    */
-  void SetSearchStringInternal(const nsAString& aSearchString)
-  {
+  void SetSearchStringInternal(const nsAString& aSearchString) {
     mSearchString = mSetValue = aSearchString;
   }
 
@@ -64,24 +62,24 @@ protected:
   nsresult ClearSearchTimer();
   void MaybeCompletePlaceholder();
 
-  nsresult ProcessResult(int32_t aSearchIndex, nsIAutoCompleteResult *aResult);
+  nsresult ProcessResult(int32_t aSearchIndex, nsIAutoCompleteResult* aResult);
   nsresult PostSearchCleanup();
 
-  nsresult EnterMatch(bool aIsPopupSelection,
-                      mozilla::dom::Event* aEvent);
+  nsresult EnterMatch(bool aIsPopupSelection, mozilla::dom::Event* aEvent);
   nsresult RevertTextValue();
 
   nsresult CompleteDefaultIndex(int32_t aResultIndex);
-  nsresult CompleteValue(nsString &aValue);
+  nsresult CompleteValue(nsString& aValue);
 
   nsresult GetResultAt(int32_t aIndex, nsIAutoCompleteResult** aResult,
                        int32_t* aMatchIndex);
   nsresult GetResultValueAt(int32_t aIndex, bool aGetFinalValue,
-                            nsAString & _retval);
-  nsresult GetResultLabelAt(int32_t aIndex, nsAString & _retval);
-private:
+                            nsAString& _retval);
+  nsresult GetResultLabelAt(int32_t aIndex, nsAString& _retval);
+
+ private:
   nsresult GetResultValueLabelAt(int32_t aIndex, bool aGetFinalValue,
-                                 bool aGetValue, nsAString & _retval);
+                                 bool aGetValue, nsAString& _retval);
 
   /**
    * Gets and validates the defaultComplete result and the relative
@@ -110,7 +108,7 @@ private:
    *        The value to be completed.
    */
   nsresult GetDefaultCompleteValue(int32_t aResultIndex, bool aPreserveCasing,
-                                   nsAString &_retval);
+                                   nsAString& _retval);
 
   /**
    * Gets the defaultComplete value to be used when the user confirms the
@@ -123,12 +121,12 @@ private:
    * @param _retval
    *        The value to be completed.
    */
-  nsresult GetFinalDefaultCompleteValue(nsAString &_retval);
+  nsresult GetFinalDefaultCompleteValue(nsAString& _retval);
 
   nsresult ClearResults(bool aIsSearching = false);
 
-  nsresult MatchIndexToSearch(int32_t aMatchIndex,
-                              int32_t *aSearchIndex, int32_t *aItemIndex);
+  nsresult MatchIndexToSearch(int32_t aMatchIndex, int32_t* aSearchIndex,
+                              int32_t* aItemIndex);
 
   // members //////////////////////////////////////////
 
@@ -189,7 +187,7 @@ private:
   // distinction is used to prevent mouse moves from inadvertently changing
   // what happens once the user hits Enter on the keyboard.
   // See bug 1043584 for more details.
-  int32_t  mCompletedSelectionIndex;
+  int32_t mCompletedSelectionIndex;
 };
 
 #endif /* __nsAutoCompleteController__ */

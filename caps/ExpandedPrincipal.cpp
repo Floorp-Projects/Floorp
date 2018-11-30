@@ -11,19 +11,13 @@ using namespace mozilla;
 
 NS_IMPL_CLASSINFO(ExpandedPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_EXPANDEDPRINCIPAL_CID)
-NS_IMPL_QUERY_INTERFACE_CI(ExpandedPrincipal,
-                           nsIPrincipal,
-                           nsIExpandedPrincipal,
-                           nsISerializable)
-NS_IMPL_CI_INTERFACE_GETTER(ExpandedPrincipal,
-                            nsIPrincipal,
-                            nsIExpandedPrincipal,
-                            nsISerializable)
+NS_IMPL_QUERY_INTERFACE_CI(ExpandedPrincipal, nsIPrincipal,
+                           nsIExpandedPrincipal, nsISerializable)
+NS_IMPL_CI_INTERFACE_GETTER(ExpandedPrincipal, nsIPrincipal,
+                            nsIExpandedPrincipal, nsISerializable)
 
-struct OriginComparator
-{
-  bool LessThan(nsIPrincipal* a, nsIPrincipal* b) const
-  {
+struct OriginComparator {
+  bool LessThan(nsIPrincipal* a, nsIPrincipal* b) const {
     nsAutoCString originA;
     DebugOnly<nsresult> rv = a->GetOrigin(originA);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -33,8 +27,7 @@ struct OriginComparator
     return originA < originB;
   }
 
-  bool Equals(nsIPrincipal* a, nsIPrincipal* b) const
-  {
+  bool Equals(nsIPrincipal* a, nsIPrincipal* b) const {
     nsAutoCString originA;
     DebugOnly<nsresult> rv = a->GetOrigin(originA);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -45,9 +38,9 @@ struct OriginComparator
   }
 };
 
-ExpandedPrincipal::ExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aAllowList)
-  : BasePrincipal(eExpandedPrincipal)
-{
+ExpandedPrincipal::ExpandedPrincipal(
+    nsTArray<nsCOMPtr<nsIPrincipal>>& aAllowList)
+    : BasePrincipal(eExpandedPrincipal) {
   // We force the principals to be sorted by origin so that ExpandedPrincipal
   // origins can have a canonical form.
   OriginComparator c;
@@ -56,18 +49,13 @@ ExpandedPrincipal::ExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aAllowLis
   }
 }
 
-ExpandedPrincipal::ExpandedPrincipal()
-  : BasePrincipal(eExpandedPrincipal)
-{
-}
+ExpandedPrincipal::ExpandedPrincipal() : BasePrincipal(eExpandedPrincipal) {}
 
-ExpandedPrincipal::~ExpandedPrincipal()
-{ }
+ExpandedPrincipal::~ExpandedPrincipal() {}
 
-already_AddRefed<ExpandedPrincipal>
-ExpandedPrincipal::Create(nsTArray<nsCOMPtr<nsIPrincipal>>& aAllowList,
-                          const OriginAttributes& aAttrs)
-{
+already_AddRefed<ExpandedPrincipal> ExpandedPrincipal::Create(
+    nsTArray<nsCOMPtr<nsIPrincipal>>& aAllowList,
+    const OriginAttributes& aAttrs) {
   RefPtr<ExpandedPrincipal> ep = new ExpandedPrincipal(aAllowList);
 
   nsAutoCString origin;
@@ -89,22 +77,17 @@ ExpandedPrincipal::Create(nsTArray<nsCOMPtr<nsIPrincipal>>& aAllowList,
 }
 
 NS_IMETHODIMP
-ExpandedPrincipal::GetDomain(nsIURI** aDomain)
-{
+ExpandedPrincipal::GetDomain(nsIURI** aDomain) {
   *aDomain = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-ExpandedPrincipal::SetDomain(nsIURI* aDomain)
-{
-  return NS_OK;
-}
+ExpandedPrincipal::SetDomain(nsIURI* aDomain) { return NS_OK; }
 
-bool
-ExpandedPrincipal::SubsumesInternal(nsIPrincipal* aOther,
-                                    BasePrincipal::DocumentDomainConsideration aConsideration)
-{
+bool ExpandedPrincipal::SubsumesInternal(
+    nsIPrincipal* aOther,
+    BasePrincipal::DocumentDomainConsideration aConsideration) {
   // If aOther is an ExpandedPrincipal too, we break it down into its component
   // nsIPrincipals, and check subsumes on each one.
   if (Cast(aOther)->Is<ExpandedPrincipal>()) {
@@ -132,10 +115,8 @@ ExpandedPrincipal::SubsumesInternal(nsIPrincipal* aOther,
   return false;
 }
 
-bool
-ExpandedPrincipal::MayLoadInternal(nsIURI* uri)
-{
-  for (uint32_t i = 0; i < mPrincipals.Length(); ++i){
+bool ExpandedPrincipal::MayLoadInternal(nsIURI* uri) {
+  for (uint32_t i = 0; i < mPrincipals.Length(); ++i) {
     if (BasePrincipal::Cast(mPrincipals[i])->MayLoadInternal(uri)) {
       return true;
     }
@@ -144,41 +125,32 @@ ExpandedPrincipal::MayLoadInternal(nsIURI* uri)
   return false;
 }
 
-uint32_t
-ExpandedPrincipal::GetHashValue()
-{
+uint32_t ExpandedPrincipal::GetHashValue() {
   MOZ_CRASH("extended principal should never be used as key in a hash map");
 }
 
 NS_IMETHODIMP
-ExpandedPrincipal::GetURI(nsIURI** aURI)
-{
+ExpandedPrincipal::GetURI(nsIURI** aURI) {
   *aURI = nullptr;
   return NS_OK;
 }
 
-const nsTArray<nsCOMPtr<nsIPrincipal>>&
-ExpandedPrincipal::AllowList()
-{
+const nsTArray<nsCOMPtr<nsIPrincipal>>& ExpandedPrincipal::AllowList() {
   return mPrincipals;
 }
 
 NS_IMETHODIMP
-ExpandedPrincipal::GetBaseDomain(nsACString& aBaseDomain)
-{
+ExpandedPrincipal::GetBaseDomain(nsACString& aBaseDomain) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-ExpandedPrincipal::GetAddonId(nsAString& aAddonId)
-{
+ExpandedPrincipal::GetAddonId(nsAString& aAddonId) {
   aAddonId.Truncate();
   return NS_OK;
 };
 
-bool
-ExpandedPrincipal::AddonHasPermission(const nsAtom* aPerm)
-{
+bool ExpandedPrincipal::AddonHasPermission(const nsAtom* aPerm) {
   for (size_t i = 0; i < mPrincipals.Length(); ++i) {
     if (BasePrincipal::Cast(mPrincipals[i])->AddonHasPermission(aPerm)) {
       return true;
@@ -187,9 +159,8 @@ ExpandedPrincipal::AddonHasPermission(const nsAtom* aPerm)
   return false;
 }
 
-bool
-ExpandedPrincipal::AddonAllowsLoad(nsIURI* aURI, bool aExplicit /* = false */)
-{
+bool ExpandedPrincipal::AddonAllowsLoad(nsIURI* aURI,
+                                        bool aExplicit /* = false */) {
   for (const auto& principal : mPrincipals) {
     if (Cast(principal)->AddonAllowsLoad(aURI, aExplicit)) {
       return true;
@@ -198,9 +169,7 @@ ExpandedPrincipal::AddonAllowsLoad(nsIURI* aURI, bool aExplicit /* = false */)
   return false;
 }
 
-nsIPrincipal*
-ExpandedPrincipal::PrincipalToInherit(nsIURI* aRequestedURI)
-{
+nsIPrincipal* ExpandedPrincipal::PrincipalToInherit(nsIURI* aRequestedURI) {
   if (aRequestedURI) {
     // If a given sub-principal subsumes the given URI, use that principal for
     // inheritance. In general, this only happens with certain CORS modes, loads
@@ -217,9 +186,7 @@ ExpandedPrincipal::PrincipalToInherit(nsIURI* aRequestedURI)
   return mPrincipals.LastElement();
 }
 
-nsresult
-ExpandedPrincipal::GetScriptLocation(nsACString& aStr)
-{
+nsresult ExpandedPrincipal::GetScriptLocation(nsACString& aStr) {
   aStr.AssignLiteral("[Expanded Principal [");
   for (size_t i = 0; i < mPrincipals.Length(); ++i) {
     if (i != 0) {
@@ -228,7 +195,7 @@ ExpandedPrincipal::GetScriptLocation(nsACString& aStr)
 
     nsAutoCString spec;
     nsresult rv =
-      nsJSPrincipals::get(mPrincipals.ElementAt(i))->GetScriptLocation(spec);
+        nsJSPrincipals::get(mPrincipals.ElementAt(i))->GetScriptLocation(spec);
     NS_ENSURE_SUCCESS(rv, rv);
 
     aStr.Append(spec);
@@ -246,8 +213,7 @@ ExpandedPrincipal::GetScriptLocation(nsACString& aStr)
 static const uint32_t kSerializationVersion = 1;
 
 NS_IMETHODIMP
-ExpandedPrincipal::Read(nsIObjectInputStream* aStream)
-{
+ExpandedPrincipal::Read(nsIObjectInputStream* aStream) {
   uint32_t version;
   nsresult rv = aStream->Read32(&version);
   if (version != kSerializationVersion) {
@@ -288,8 +254,7 @@ ExpandedPrincipal::Read(nsIObjectInputStream* aStream)
 }
 
 NS_IMETHODIMP
-ExpandedPrincipal::Write(nsIObjectOutputStream* aStream)
-{
+ExpandedPrincipal::Write(nsIObjectOutputStream* aStream) {
   nsresult rv = aStream->Write32(kSerializationVersion);
   if (NS_FAILED(rv)) {
     return rv;
@@ -310,9 +275,7 @@ ExpandedPrincipal::Write(nsIObjectOutputStream* aStream)
   return NS_OK;
 }
 
-nsresult
-ExpandedPrincipal::GetSiteIdentifier(SiteIdentifier& aSite)
-{
+nsresult ExpandedPrincipal::GetSiteIdentifier(SiteIdentifier& aSite) {
   // Call GetSiteIdentifier on each of our principals and return a new
   // ExpandedPrincipal.
 
@@ -325,7 +288,7 @@ ExpandedPrincipal::GetSiteIdentifier(SiteIdentifier& aSite)
   }
 
   RefPtr<ExpandedPrincipal> expandedPrincipal =
-    ExpandedPrincipal::Create(allowlist, OriginAttributesRef());
+      ExpandedPrincipal::Create(allowlist, OriginAttributesRef());
   MOZ_ASSERT(expandedPrincipal, "ExpandedPrincipal::Create returned nullptr?");
 
   aSite.Init(expandedPrincipal);

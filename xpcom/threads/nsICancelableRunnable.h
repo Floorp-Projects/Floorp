@@ -9,13 +9,15 @@
 
 #include "nsISupports.h"
 
-#define NS_ICANCELABLERUNNABLE_IID \
-{ 0xde93dc4c, 0x5eea, 0x4eb7, \
-{ 0xb6, 0xd1, 0xdb, 0xf1, 0xe0, 0xce, 0xf6, 0x5c } }
+#define NS_ICANCELABLERUNNABLE_IID                   \
+  {                                                  \
+    0xde93dc4c, 0x5eea, 0x4eb7, {                    \
+      0xb6, 0xd1, 0xdb, 0xf1, 0xe0, 0xce, 0xf6, 0x5c \
+    }                                                \
+  }
 
-class nsICancelableRunnable : public nsISupports
-{
-public:
+class nsICancelableRunnable : public nsISupports {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICANCELABLERUNNABLE_IID)
 
   /*
@@ -27,12 +29,11 @@ public:
    */
   virtual nsresult Cancel() = 0;
 
-protected:
-  nsICancelableRunnable() { }
+ protected:
+  nsICancelableRunnable() {}
   virtual ~nsICancelableRunnable() {}
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsICancelableRunnable,
-                              NS_ICANCELABLERUNNABLE_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICancelableRunnable, NS_ICANCELABLERUNNABLE_IID)
 
-#endif // nsICancelableRunnable_h__
+#endif  // nsICancelableRunnable_h__

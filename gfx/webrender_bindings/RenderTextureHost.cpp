@@ -10,43 +10,31 @@
 namespace mozilla {
 namespace wr {
 
-void
-ActivateBindAndTexParameteri(gl::GLContext* aGL,
-                             GLenum aActiveTexture,
-                             GLenum aBindTarget,
-                             GLuint aBindTexture,
-                             wr::ImageRendering aRendering)
-{
+void ActivateBindAndTexParameteri(gl::GLContext* aGL, GLenum aActiveTexture,
+                                  GLenum aBindTarget, GLuint aBindTexture,
+                                  wr::ImageRendering aRendering) {
   aGL->fActiveTexture(aActiveTexture);
   aGL->fBindTexture(aBindTarget, aBindTexture);
-  aGL->fTexParameteri(aBindTarget,
-                      LOCAL_GL_TEXTURE_MIN_FILTER,
+  aGL->fTexParameteri(aBindTarget, LOCAL_GL_TEXTURE_MIN_FILTER,
                       aRendering == wr::ImageRendering::Pixelated
-                        ? LOCAL_GL_NEAREST
-                        : LOCAL_GL_LINEAR);
-  aGL->fTexParameteri(aBindTarget,
-                      LOCAL_GL_TEXTURE_MAG_FILTER,
+                          ? LOCAL_GL_NEAREST
+                          : LOCAL_GL_LINEAR);
+  aGL->fTexParameteri(aBindTarget, LOCAL_GL_TEXTURE_MAG_FILTER,
                       aRendering == wr::ImageRendering::Pixelated
-                        ? LOCAL_GL_NEAREST
-                        : LOCAL_GL_LINEAR);
+                          ? LOCAL_GL_NEAREST
+                          : LOCAL_GL_LINEAR);
 }
 
-RenderTextureHost::RenderTextureHost()
-{
-  MOZ_COUNT_CTOR(RenderTextureHost);
-}
+RenderTextureHost::RenderTextureHost() { MOZ_COUNT_CTOR(RenderTextureHost); }
 
-RenderTextureHost::~RenderTextureHost()
-{
+RenderTextureHost::~RenderTextureHost() {
   MOZ_ASSERT(RenderThread::IsInRenderThread());
   MOZ_COUNT_DTOR(RenderTextureHost);
 }
 
-bool
-RenderTextureHost::IsFilterUpdateNecessary(wr::ImageRendering aRendering)
-{
+bool RenderTextureHost::IsFilterUpdateNecessary(wr::ImageRendering aRendering) {
   return mCachedRendering != aRendering;
 }
 
-} // namespace wr
-} // namespace mozilla
+}  // namespace wr
+}  // namespace mozilla

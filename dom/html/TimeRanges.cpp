@@ -21,20 +21,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TimeRanges)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-TimeRanges::TimeRanges()
-  : mParent(nullptr)
-{
-}
+TimeRanges::TimeRanges() : mParent(nullptr) {}
 
-TimeRanges::TimeRanges(nsISupports* aParent)
-  : mParent(aParent)
-{
-}
+TimeRanges::TimeRanges(nsISupports* aParent) : mParent(aParent) {}
 
 TimeRanges::TimeRanges(nsISupports* aParent,
                        const media::TimeIntervals& aTimeIntervals)
-  : TimeRanges(aParent)
-{
+    : TimeRanges(aParent) {
   if (aTimeIntervals.IsInvalid()) {
     return;
   }
@@ -44,13 +37,9 @@ TimeRanges::TimeRanges(nsISupports* aParent,
 }
 
 TimeRanges::TimeRanges(const media::TimeIntervals& aTimeIntervals)
-  : TimeRanges(nullptr, aTimeIntervals)
-{
-}
+    : TimeRanges(nullptr, aTimeIntervals) {}
 
-media::TimeIntervals
-TimeRanges::ToTimeIntervals() const
-{
+media::TimeIntervals TimeRanges::ToTimeIntervals() const {
   media::TimeIntervals t;
   for (uint32_t i = 0; i < Length(); i++) {
     t += media::TimeInterval(media::TimeUnit::FromSeconds(Start(i)),
@@ -59,13 +48,9 @@ TimeRanges::ToTimeIntervals() const
   return t;
 }
 
-TimeRanges::~TimeRanges()
-{
-}
+TimeRanges::~TimeRanges() {}
 
-double
-TimeRanges::Start(uint32_t aIndex, ErrorResult& aRv) const
-{
+double TimeRanges::Start(uint32_t aIndex, ErrorResult& aRv) const {
   if (aIndex >= mRanges.Length()) {
     aRv = NS_ERROR_DOM_INDEX_SIZE_ERR;
     return 0;
@@ -74,9 +59,7 @@ TimeRanges::Start(uint32_t aIndex, ErrorResult& aRv) const
   return Start(aIndex);
 }
 
-double
-TimeRanges::End(uint32_t aIndex, ErrorResult& aRv) const
-{
+double TimeRanges::End(uint32_t aIndex, ErrorResult& aRv) const {
   if (aIndex >= mRanges.Length()) {
     aRv = NS_ERROR_DOM_INDEX_SIZE_ERR;
     return 0;
@@ -85,39 +68,31 @@ TimeRanges::End(uint32_t aIndex, ErrorResult& aRv) const
   return End(aIndex);
 }
 
-void
-TimeRanges::Add(double aStart, double aEnd)
-{
+void TimeRanges::Add(double aStart, double aEnd) {
   if (aStart > aEnd) {
     NS_WARNING("Can't add a range if the end is older that the start.");
     return;
   }
-  mRanges.AppendElement(TimeRange(aStart,aEnd));
+  mRanges.AppendElement(TimeRange(aStart, aEnd));
 }
 
-double
-TimeRanges::GetStartTime()
-{
+double TimeRanges::GetStartTime() {
   if (mRanges.IsEmpty()) {
     return -1.0;
   }
   return mRanges[0].mStart;
 }
 
-double
-TimeRanges::GetEndTime()
-{
+double TimeRanges::GetEndTime() {
   if (mRanges.IsEmpty()) {
     return -1.0;
   }
   return mRanges[mRanges.Length() - 1].mEnd;
 }
 
-void
-TimeRanges::Normalize(double aTolerance)
-{
+void TimeRanges::Normalize(double aTolerance) {
   if (mRanges.Length() >= 2) {
-    AutoTArray<TimeRange,4> normalized;
+    AutoTArray<TimeRange, 4> normalized;
 
     mRanges.Sort(CompareTimeRanges());
 
@@ -142,20 +117,17 @@ TimeRanges::Normalize(double aTolerance)
   }
 }
 
-void
-TimeRanges::Union(const TimeRanges* aOtherRanges, double aTolerance)
-{
+void TimeRanges::Union(const TimeRanges* aOtherRanges, double aTolerance) {
   mRanges.AppendElements(aOtherRanges->mRanges);
   Normalize(aTolerance);
 }
 
-void
-TimeRanges::Intersection(const TimeRanges* aOtherRanges)
-{
-  AutoTArray<TimeRange,4> intersection;
+void TimeRanges::Intersection(const TimeRanges* aOtherRanges) {
+  AutoTArray<TimeRange, 4> intersection;
 
   const nsTArray<TimeRange>& otherRanges = aOtherRanges->mRanges;
-  for (index_type i = 0, j = 0; i < mRanges.Length() && j < otherRanges.Length();) {
+  for (index_type i = 0, j = 0;
+       i < mRanges.Length() && j < otherRanges.Length();) {
     double start = std::max(mRanges[i].mStart, otherRanges[j].mStart);
     double end = std::min(mRanges[i].mEnd, otherRanges[j].mEnd);
     if (start < end) {
@@ -171,9 +143,8 @@ TimeRanges::Intersection(const TimeRanges* aOtherRanges)
   mRanges = intersection;
 }
 
-TimeRanges::index_type
-TimeRanges::Find(double aTime, double aTolerance /* = 0 */)
-{
+TimeRanges::index_type TimeRanges::Find(double aTime,
+                                        double aTolerance /* = 0 */) {
   for (index_type i = 0; i < mRanges.Length(); ++i) {
     if (aTime < mRanges[i].mEnd && (aTime + aTolerance) >= mRanges[i].mStart) {
       return i;
@@ -182,26 +153,19 @@ TimeRanges::Find(double aTime, double aTolerance /* = 0 */)
   return NoIndex;
 }
 
-JSObject*
-TimeRanges::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* TimeRanges::WrapObject(JSContext* aCx,
+                                 JS::Handle<JSObject*> aGivenProto) {
   return TimeRanges_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsISupports*
-TimeRanges::GetParentObject() const
-{
-  return mParent;
-}
+nsISupports* TimeRanges::GetParentObject() const { return mParent; }
 
-void
-TimeRanges::Shift(double aOffset)
-{
+void TimeRanges::Shift(double aOffset) {
   for (index_type i = 0; i < mRanges.Length(); ++i) {
     mRanges[i].mStart += aOffset;
     mRanges[i].mEnd += aOffset;
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

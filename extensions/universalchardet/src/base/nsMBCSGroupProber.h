@@ -10,29 +10,31 @@
 #include "nsUTF8Prober.h"
 #include "nsEUCJPProber.h"
 
-#define NUM_OF_PROBERS    3
+#define NUM_OF_PROBERS 3
 
-class nsMBCSGroupProber: public nsCharSetProber {
-public:
+class nsMBCSGroupProber : public nsCharSetProber {
+ public:
   nsMBCSGroupProber();
   virtual ~nsMBCSGroupProber();
   nsProbingState HandleData(const char* aBuf, uint32_t aLen) override;
   const char* GetCharSetName() override;
-  nsProbingState GetState(void) override {return mState;}
-  void      Reset(void) override;
-  float     GetConfidence(void) override;
+  nsProbingState GetState(void) override { return mState; }
+  void Reset(void) override;
+  float GetConfidence(void) override;
 
 #ifdef DEBUG_chardet
-  void  DumpStatus();
+  void DumpStatus();
 #endif
 #ifdef DEBUG_jgmyers
-  void GetDetectorState(nsUniversalDetector::DetectorState (&states)[nsUniversalDetector::NumDetectors], uint32_t &offset);
+  void GetDetectorState(nsUniversalDetector::DetectorState (
+                            &states)[nsUniversalDetector::NumDetectors],
+                        uint32_t& offset);
 #endif
 
-protected:
+ protected:
   nsProbingState mState;
   nsCharSetProber* mProbers[NUM_OF_PROBERS];
-  bool            mIsActive[NUM_OF_PROBERS];
+  bool mIsActive[NUM_OF_PROBERS];
   int32_t mBestGuess;
   uint32_t mActiveNum;
   uint32_t mKeepNext;

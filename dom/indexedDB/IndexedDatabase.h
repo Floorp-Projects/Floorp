@@ -13,7 +13,7 @@
 
 namespace JS {
 struct WasmModule;
-} // namespace JS
+}  // namespace JS
 
 namespace mozilla {
 namespace dom {
@@ -27,8 +27,7 @@ namespace indexedDB {
 class FileInfo;
 class SerializedStructuredCloneReadInfo;
 
-struct StructuredCloneFile
-{
+struct StructuredCloneFile {
   enum FileType {
     eBlob,
     eMutableFile,
@@ -45,56 +44,46 @@ struct StructuredCloneFile
   FileType mType;
 
   // In IndexedDatabaseInlines.h
-  inline
-  StructuredCloneFile();
+  inline StructuredCloneFile();
 
   // In IndexedDatabaseInlines.h
-  inline
-  ~StructuredCloneFile();
+  inline ~StructuredCloneFile();
 
   // In IndexedDatabaseInlines.h
-  inline bool
-  operator==(const StructuredCloneFile& aOther) const;
+  inline bool operator==(const StructuredCloneFile& aOther) const;
 };
 
-struct StructuredCloneReadInfo
-{
+struct StructuredCloneReadInfo {
   JSStructuredCloneData mData;
   nsTArray<StructuredCloneFile> mFiles;
   IDBDatabase* mDatabase;
   bool mHasPreprocessInfo;
 
   // In IndexedDatabaseInlines.h
-  inline explicit
-  StructuredCloneReadInfo(JS::StructuredCloneScope aScope);
+  inline explicit StructuredCloneReadInfo(JS::StructuredCloneScope aScope);
 
   // In IndexedDatabaseInlines.h
-  inline
-  StructuredCloneReadInfo();
+  inline StructuredCloneReadInfo();
 
   // In IndexedDatabaseInlines.h
-  inline
-  ~StructuredCloneReadInfo();
+  inline ~StructuredCloneReadInfo();
 
   // In IndexedDatabaseInlines.h
-  inline
-  StructuredCloneReadInfo(StructuredCloneReadInfo&& aOther);
+  inline StructuredCloneReadInfo(StructuredCloneReadInfo&& aOther);
 
   // In IndexedDatabaseInlines.h
-  inline StructuredCloneReadInfo&
-  operator=(StructuredCloneReadInfo&& aOther);
+  inline StructuredCloneReadInfo& operator=(StructuredCloneReadInfo&& aOther);
 
   // In IndexedDatabaseInlines.h
-  inline
-  MOZ_IMPLICIT StructuredCloneReadInfo(SerializedStructuredCloneReadInfo&& aOther);
+  inline MOZ_IMPLICIT StructuredCloneReadInfo(
+      SerializedStructuredCloneReadInfo&& aOther);
 
   // In IndexedDatabaseInlines.h
-  inline
-  size_t Size() const;
+  inline size_t Size() const;
 };
 
-} // namespace indexedDB
-} // namespace dom
-} // namespace mozilla
+}  // namespace indexedDB
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_indexeddatabase_h__
+#endif  // mozilla_dom_indexeddatabase_h__

@@ -13,17 +13,12 @@ using namespace mozilla::a11y;
 // HTMLTableAccessibleWrap
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS_INHERITED0(HTMLTableAccessibleWrap,
-                             HTMLTableAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLTableAccessibleWrap, HTMLTableAccessible)
 
-IMPL_IUNKNOWN_INHERITED2(HTMLTableAccessibleWrap,
-                         AccessibleWrap,
-                         HyperTextAccessibleWrap,
-                         ia2AccessibleTable)
+IMPL_IUNKNOWN_INHERITED2(HTMLTableAccessibleWrap, AccessibleWrap,
+                         HyperTextAccessibleWrap, ia2AccessibleTable)
 
-void
-HTMLTableAccessibleWrap::Shutdown()
-{
+void HTMLTableAccessibleWrap::Shutdown() {
   ia2AccessibleTable::mTable = nullptr;
   HTMLTableAccessible::Shutdown();
 }
@@ -35,13 +30,10 @@ HTMLTableAccessibleWrap::Shutdown()
 NS_IMPL_ISUPPORTS_INHERITED0(HTMLTableCellAccessibleWrap,
                              HTMLTableCellAccessible)
 
-IMPL_IUNKNOWN_INHERITED1(HTMLTableCellAccessibleWrap,
-                         HyperTextAccessibleWrap,
+IMPL_IUNKNOWN_INHERITED1(HTMLTableCellAccessibleWrap, HyperTextAccessibleWrap,
                          ia2AccessibleTableCell)
 
-void
-HTMLTableCellAccessibleWrap::Shutdown()
-{
+void HTMLTableCellAccessibleWrap::Shutdown() {
   ia2AccessibleTableCell::mTableCell = nullptr;
   HTMLTableCellAccessible::Shutdown();
 }
@@ -54,12 +46,9 @@ NS_IMPL_ISUPPORTS_INHERITED0(HTMLTableHeaderCellAccessibleWrap,
                              HTMLTableHeaderCellAccessible)
 
 IMPL_IUNKNOWN_INHERITED1(HTMLTableHeaderCellAccessibleWrap,
-                         HyperTextAccessibleWrap,
-                         ia2AccessibleTableCell)
+                         HyperTextAccessibleWrap, ia2AccessibleTableCell)
 
-void
-HTMLTableHeaderCellAccessibleWrap::Shutdown()
-{
+void HTMLTableHeaderCellAccessibleWrap::Shutdown() {
   ia2AccessibleTableCell::mTableCell = nullptr;
   HTMLTableHeaderCellAccessible::Shutdown();
 }

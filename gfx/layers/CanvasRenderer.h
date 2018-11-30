@@ -7,17 +7,17 @@
 #ifndef GFX_CANVASRENDERER_H
 #define GFX_CANVASRENDERER_H
 
-#include <stdint.h>                     // for uint32_t
-#include "GLContextTypes.h"             // for GLContext
-#include "gfxContext.h"                 // for gfxContext, etc
+#include <stdint.h>          // for uint32_t
+#include "GLContextTypes.h"  // for GLContext
+#include "gfxContext.h"      // for gfxContext, etc
 #include "gfxTypes.h"
-#include "gfxPlatform.h"                // for gfxImageFormat
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/Preferences.h"        // for Preferences
-#include "mozilla/RefPtr.h"             // for RefPtr
-#include "mozilla/gfx/2D.h"             // for DrawTarget
-#include "mozilla/mozalloc.h"           // for operator delete, etc
-#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
+#include "gfxPlatform.h"          // for gfxImageFormat
+#include "mozilla/Assertions.h"   // for MOZ_ASSERT, etc
+#include "mozilla/Preferences.h"  // for Preferences
+#include "mozilla/RefPtr.h"       // for RefPtr
+#include "mozilla/gfx/2D.h"       // for DrawTarget
+#include "mozilla/mozalloc.h"     // for operator delete, etc
+#include "nsISupportsImpl.h"      // for MOZ_COUNT_CTOR, etc
 
 namespace mozilla {
 namespace layers {
@@ -30,25 +30,25 @@ class WebRenderCanvasRendererAsync;
 
 struct CanvasInitializeData {
   CanvasInitializeData()
-    : mBufferProvider(nullptr)
-    , mGLContext(nullptr)
-    , mRenderer(nullptr)
-    , mPreTransCallback(nullptr)
-    , mPreTransCallbackData(nullptr)
-    , mDidTransCallback(nullptr)
-    , mDidTransCallbackData(nullptr)
-    , mFrontbufferGLTex(0)
-    , mSize(0,0)
-    , mHasAlpha(false)
-    , mIsGLAlphaPremult(true)
-  { }
+      : mBufferProvider(nullptr),
+        mGLContext(nullptr),
+        mRenderer(nullptr),
+        mPreTransCallback(nullptr),
+        mPreTransCallbackData(nullptr),
+        mDidTransCallback(nullptr),
+        mDidTransCallbackData(nullptr),
+        mFrontbufferGLTex(0),
+        mSize(0, 0),
+        mHasAlpha(false),
+        mIsGLAlphaPremult(true) {}
 
   // One of these three must be specified for Canvas2D, but never more than one
-  PersistentBufferProvider* mBufferProvider; // A BufferProvider for the Canvas contents
-  mozilla::gl::GLContext* mGLContext; // or this, for GL.
-  AsyncCanvasRenderer* mRenderer; // or this, for OffscreenCanvas
+  PersistentBufferProvider*
+      mBufferProvider;  // A BufferProvider for the Canvas contents
+  mozilla::gl::GLContext* mGLContext;  // or this, for GL.
+  AsyncCanvasRenderer* mRenderer;      // or this, for OffscreenCanvas
 
-  typedef void (* TransactionCallback)(void* closureData);
+  typedef void (*TransactionCallback)(void* closureData);
   TransactionCallback mPreTransCallback;
   void* mPreTransCallbackData;
   TransactionCallback mDidTransCallback;
@@ -67,16 +67,16 @@ struct CanvasInitializeData {
   bool mIsGLAlphaPremult;
 };
 
-// Based class which used for canvas rendering. There are many derived classes for
-// different purposes. such as:
+// Based class which used for canvas rendering. There are many derived classes
+// for different purposes. such as:
 //
 // CopyableCanvasRenderer provides a utility which readback canvas content to a
 // SourceSurface. BasicCanvasLayer uses CopyableCanvasRenderer.
 //
 // ShareableCanvasRenderer provides IPC capabilities that allow sending canvas
 // content over IPC. This is pure virtual class because the IPC handling is
-// different in different LayerManager. So that we have following classes inherite
-// ShareableCanvasRenderer.
+// different in different LayerManager. So that we have following classes
+// inherite ShareableCanvasRenderer.
 //
 // ClientCanvasRenderer inherites ShareableCanvasRenderer and be used in
 // ClientCanvasLayer.
@@ -111,18 +111,17 @@ struct CanvasInitializeData {
 //                           +-------------+--------------+
 //                           |WebRenderCanvasRendererAsync|
 //                           +----------------------------+
-class CanvasRenderer
-{
-public:
+class CanvasRenderer {
+ public:
   CanvasRenderer();
   virtual ~CanvasRenderer();
 
-public:
+ public:
   virtual void Initialize(const CanvasInitializeData& aData);
   virtual bool IsDataValid(const CanvasInitializeData& aData) { return true; }
 
-  virtual void ClearCachedResources() { }
-  virtual void Destroy() { }
+  virtual void ClearCachedResources() {}
+  virtual void Destroy() {}
 
   const gfx::IntSize& GetSize() const { return mSize; }
 
@@ -132,38 +131,38 @@ public:
 
   virtual CopyableCanvasRenderer* AsCopyableCanvasRenderer() { return nullptr; }
   virtual ClientCanvasRenderer* AsClientCanvasRenderer() { return nullptr; }
-  virtual WebRenderCanvasRendererAsync* AsWebRenderCanvasRendererAsync() { return nullptr; }
+  virtual WebRenderCanvasRendererAsync* AsWebRenderCanvasRendererAsync() {
+    return nullptr;
+  }
 
-protected:
-  void FirePreTransactionCallback()
-  {
+ protected:
+  void FirePreTransactionCallback() {
     if (mPreTransCallback) {
       mPreTransCallback(mPreTransCallbackData);
     }
   }
 
-  void FireDidTransactionCallback()
-  {
+  void FireDidTransactionCallback() {
     if (mDidTransCallback) {
       mDidTransCallback(mDidTransCallbackData);
     }
   }
 
-  typedef void (* TransactionCallback)(void* closureData);
+  typedef void (*TransactionCallback)(void* closureData);
   TransactionCallback mPreTransCallback;
   void* mPreTransCallbackData;
   TransactionCallback mDidTransCallback;
   void* mDidTransCallbackData;
   gfx::IntSize mSize;
 
-private:
+ private:
   /**
    * Set to true in Updated(), cleared during a transaction.
    */
   bool mDirty;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

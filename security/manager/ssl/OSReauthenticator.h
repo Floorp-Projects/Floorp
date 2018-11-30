@@ -9,24 +9,27 @@
 
 #include "nsIOSReauthenticator.h"
 
-#define NS_OSREAUTHENTICATOR_CONTRACTID "@mozilla.org/security/osreauthenticator;1"
-#define NS_OSREAUTHENTICATOR_CID \
-  { 0x4fe082ae, 0x6ff0, 0x4b41, { 0xb2, 0x4f, 0xea, 0xa6, 0x64, 0xf6, 0xe4, 0x6a } }
+#define NS_OSREAUTHENTICATOR_CONTRACTID \
+  "@mozilla.org/security/osreauthenticator;1"
+#define NS_OSREAUTHENTICATOR_CID                     \
+  {                                                  \
+    0x4fe082ae, 0x6ff0, 0x4b41, {                    \
+      0xb2, 0x4f, 0xea, 0xa6, 0x64, 0xf6, 0xe4, 0x6a \
+    }                                                \
+  }
 
-class OSReauthenticator : public nsIOSReauthenticator
-{
-public:
+class OSReauthenticator : public nsIOSReauthenticator {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOSREAUTHENTICATOR
 
-private:
+ private:
   virtual ~OSReauthenticator() = default;
 };
 
 #ifdef XP_MACOSX
-nsresult
-ReauthenticateUserMacOS(const nsACString& aPrompt,
-              /* out */ bool& aReauthenticated);
-#endif // XP_MACOSX
+nsresult ReauthenticateUserMacOS(const nsACString& aPrompt,
+                                 /* out */ bool& aReauthenticated);
+#endif  // XP_MACOSX
 
-#endif // OSReauthenticator_h
+#endif  // OSReauthenticator_h

@@ -12,24 +12,21 @@
 #include "pk11func.h"
 
 // Implementation of an nsIInterfaceRequestor for use as context for NSS calls.
-class PipUIContext : public nsIInterfaceRequestor
-{
-public:
+class PipUIContext : public nsIInterfaceRequestor {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINTERFACEREQUESTOR
 
   PipUIContext();
 
-protected:
+ protected:
   virtual ~PipUIContext();
 };
 
 // Function to get the implementor for a certain set of NSS specific dialogs.
-nsresult
-getNSSDialogs(void **_result, REFNSIID aIID, const char *contract);
+nsresult getNSSDialogs(void** _result, REFNSIID aIID, const char* contract);
 
 // A function that sets the password on an unitialized slot.
-nsresult
-setPassword(PK11SlotInfo* slot, nsIInterfaceRequestor* ctx);
+nsresult setPassword(PK11SlotInfo* slot, nsIInterfaceRequestor* ctx);
 
-#endif // nsNSSHelper_h
+#endif  // nsNSSHelper_h

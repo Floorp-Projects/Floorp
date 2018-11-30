@@ -10,20 +10,19 @@
 
 // Each entry has the sandbox keyword as a string, the corresponding nsGkAtoms
 // atom name, and the corresponding sandbox flags.
-SANDBOX_KEYWORD("allow-same-origin", allowsameorigin,  SANDBOXED_ORIGIN)
-SANDBOX_KEYWORD("allow-forms", allowforms,  SANDBOXED_FORMS)
+SANDBOX_KEYWORD("allow-same-origin", allowsameorigin, SANDBOXED_ORIGIN)
+SANDBOX_KEYWORD("allow-forms", allowforms, SANDBOXED_FORMS)
 SANDBOX_KEYWORD("allow-scripts", allowscripts,
-		SANDBOXED_SCRIPTS | SANDBOXED_AUTOMATIC_FEATURES)
+                SANDBOXED_SCRIPTS | SANDBOXED_AUTOMATIC_FEATURES)
 SANDBOX_KEYWORD("allow-top-navigation", allowtopnavigation,
-		SANDBOXED_TOPLEVEL_NAVIGATION)
+                SANDBOXED_TOPLEVEL_NAVIGATION)
 SANDBOX_KEYWORD("allow-pointer-lock", allowpointerlock, SANDBOXED_POINTER_LOCK)
 SANDBOX_KEYWORD("allow-orientation-lock", alloworientationlock,
-		SANDBOXED_ORIENTATION_LOCK)
+                SANDBOXED_ORIENTATION_LOCK)
 SANDBOX_KEYWORD("allow-popups", allowpopups, SANDBOXED_AUXILIARY_NAVIGATION)
 SANDBOX_KEYWORD("allow-modals", allowmodals, SANDBOXED_MODALS)
 SANDBOX_KEYWORD("allow-popups-to-escape-sandbox", allowpopupstoescapesandbox,
                 SANDBOX_PROPAGATES_TO_AUXILIARY_BROWSING_CONTEXTS)
-SANDBOX_KEYWORD("allow-presentation", allowpresentation,
-                SANDBOXED_PRESENTATION)
+SANDBOX_KEYWORD("allow-presentation", allowpresentation, SANDBOXED_PRESENTATION)
 SANDBOX_KEYWORD("allow-storage-access-by-user-activation",
                 allowstorageaccessbyuseractivatetion, SANDBOXED_STORAGE_ACCESS)

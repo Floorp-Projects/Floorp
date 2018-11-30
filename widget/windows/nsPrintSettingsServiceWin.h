@@ -13,19 +13,19 @@
 class nsIPrintSettings;
 class nsIWebBrowserPrint;
 
-class nsPrintSettingsServiceWin final : public nsPrintSettingsService
-{
-public:
+class nsPrintSettingsServiceWin final : public nsPrintSettingsService {
+ public:
   nsPrintSettingsServiceWin() {}
 
-  NS_IMETHODIMP SerializeToPrintData(nsIPrintSettings* aSettings,
-                                     nsIWebBrowserPrint* aWBP,
-                                     mozilla::embedding::PrintData* data) override;
+  NS_IMETHODIMP SerializeToPrintData(
+      nsIPrintSettings* aSettings, nsIWebBrowserPrint* aWBP,
+      mozilla::embedding::PrintData* data) override;
 
-  NS_IMETHODIMP DeserializeToPrintSettings(const mozilla::embedding::PrintData& data,
-                                           nsIPrintSettings* settings) override;
+  NS_IMETHODIMP DeserializeToPrintSettings(
+      const mozilla::embedding::PrintData& data,
+      nsIPrintSettings* settings) override;
 
   nsresult _CreatePrintSettings(nsIPrintSettings** _retval) override;
 };
 
-#endif // nsPrintSettingsServiceWin_h
+#endif  // nsPrintSettingsServiceWin_h

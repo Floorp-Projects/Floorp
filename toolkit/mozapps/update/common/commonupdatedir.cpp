@@ -66,9 +66,8 @@ enum class WhichUpdateDir {
  * method of error checking is to attempt assignment and then check the length
  * of the result.
  */
-class SimpleAutoString
-{
-private:
+class SimpleAutoString {
+ private:
   size_t mLength;
   // Unique pointer frees the buffer when the class is deleted or goes out of
   // scope.
@@ -90,11 +89,8 @@ private:
     return mString.get() != nullptr;
   }
 
-public:
-  SimpleAutoString()
-  : mLength(0)
-  {
-  }
+ public:
+  SimpleAutoString() : mLength(0) {}
 
   /*
    * Allocates enough space for a string of the given length and formats it as
@@ -110,16 +106,10 @@ public:
    * These functions can potentially return null if no buffer has yet been
    * allocated.
    */
-  wchar_t* MutableString() {
-    return mString.get();
-  }
-  const wchar_t* String() const {
-    return mString.get();
-  }
+  wchar_t* MutableString() { return mString.get(); }
+  const wchar_t* String() const { return mString.get(); }
 
-  size_t Length() const {
-    return mLength;
-  }
+  size_t Length() const { return mLength; }
 
   void SwapBufferWith(mozilla::UniquePtr<wchar_t[]>& other) {
     mString.swap(other);
@@ -220,7 +210,7 @@ public:
       Truncate();
       return 0;
     }
-    if(!AllocEmpty(len)) {
+    if (!AllocEmpty(len)) {
       // AllocEmpty will Truncate, no need to call it here.
       return 0;
     }
@@ -289,8 +279,8 @@ public:
     return hrv;
   }
   HRESULT CopyFrom(const char* src) {
-    int bufferSize = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src, -1,
-                                         nullptr, 0);
+    int bufferSize =
+        MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src, -1, nullptr, 0);
     if (bufferSize == 0) {
       Truncate();
       return HRESULT_FROM_WIN32(GetLastError());
@@ -327,12 +317,8 @@ public:
 };
 
 // Deleter for use with UniquePtr
-struct CoTaskMemFreeDeleter
-{
-  void operator()(void* aPtr)
-  {
-    ::CoTaskMemFree(aPtr);
-  }
+struct CoTaskMemFreeDeleter {
+  void operator()(void* aPtr) { ::CoTaskMemFree(aPtr); }
 };
 
 /**
@@ -342,8 +328,7 @@ struct CoTaskMemFreeDeleter
  * construction data in one place so that it can be passed around and freed
  * properly.
  */
-struct AutoPerms
-{
+struct AutoPerms {
   SID_IDENTIFIER_AUTHORITY sidIdentifierAuthority;
   nsAutoSid usersSID;
   nsAutoSid adminsSID;
@@ -359,8 +344,7 @@ static bool GetCachedHash(const char16_t* installPath, HKEY rootKey,
                           const SimpleAutoString& regPath,
                           mozilla::UniquePtr<NS_tchar[]>& result);
 static HRESULT GetUpdateDirectory(const wchar_t* installPath,
-                                  const char* vendor,
-                                  const char* appName,
+                                  const char* vendor, const char* appName,
                                   WhichUpdateDir whichDir,
                                   SetPermissionsOf permsToSet,
                                   mozilla::UniquePtr<wchar_t[]>& result);
@@ -378,7 +362,7 @@ static bool PathConflictsWithLeaf(const SimpleAutoString& path,
                                   DWORD pathAttributes,
                                   bool permsSuccessfullySet,
                                   const SimpleAutoString& leafPath);
-#endif // XP_WIN
+#endif  // XP_WIN
 
 /**
  * Returns a hash of the install path, suitable for uniquely identifying the
@@ -405,11 +389,9 @@ static bool PathConflictsWithLeaf(const SimpleAutoString& path,
  * @param useCompatibilityMode Enables compatibiliy mode. Defaults to false.
  * @return NS_OK, if successful.
  */
-nsresult
-GetInstallHash(const char16_t* installPath, const char* vendor,
-               mozilla::UniquePtr<NS_tchar[]>& result,
-               bool useCompatibilityMode /* = false */)
-{
+nsresult GetInstallHash(const char16_t* installPath, const char* vendor,
+                        mozilla::UniquePtr<NS_tchar[]>& result,
+                        bool useCompatibilityMode /* = false */) {
   MOZ_ASSERT(installPath != nullptr,
              "Install path must not be null in GetInstallHash");
 
@@ -420,13 +402,13 @@ GetInstallHash(const char16_t* installPath, const char* vendor,
                                     vendor ? vendor : "Mozilla",
                                     MOZ_APP_BASENAME);
   if (regPath.Length() != 0) {
-    bool gotCachedHash = GetCachedHash(installPath, HKEY_LOCAL_MACHINE, regPath,
-                                       result);
+    bool gotCachedHash =
+        GetCachedHash(installPath, HKEY_LOCAL_MACHINE, regPath, result);
     if (gotCachedHash) {
       return NS_OK;
     }
-    gotCachedHash = GetCachedHash(installPath, HKEY_CURRENT_USER, regPath,
-                                  result);
+    gotCachedHash =
+        GetCachedHash(installPath, HKEY_CURRENT_USER, regPath, result);
     if (gotCachedHash) {
       return NS_OK;
     }
@@ -434,12 +416,12 @@ GetInstallHash(const char16_t* installPath, const char* vendor,
 #endif
 
   // Unable to get the cached hash, so compute it.
-  size_t pathSize = std::char_traits<char16_t>::length(installPath) *
-                    sizeof(*installPath);
-  uint64_t hash = CityHash64(reinterpret_cast<const char*>(installPath),
-                             pathSize);
+  size_t pathSize =
+      std::char_traits<char16_t>::length(installPath) * sizeof(*installPath);
+  uint64_t hash =
+      CityHash64(reinterpret_cast<const char*>(installPath), pathSize);
 
-  size_t hashStrSize = sizeof(hash) * 2 + 1; // 2 hex digits per byte + null
+  size_t hashStrSize = sizeof(hash) * 2 + 1;  // 2 hex digits per byte + null
   result = mozilla::MakeUnique<NS_tchar[]>(hashStrSize);
   int charsWritten;
   if (useCompatibilityMode) {
@@ -451,8 +433,8 @@ GetInstallHash(const char16_t* installPath, const char* vendor,
                                 static_cast<uint32_t>(hash >> 32),
                                 static_cast<uint32_t>(hash));
   } else {
-    charsWritten = NS_tsnprintf(result.get(), hashStrSize,
-                                NS_T("%") NS_T(PRIX64), hash);
+    charsWritten =
+        NS_tsnprintf(result.get(), hashStrSize, NS_T("%") NS_T(PRIX64), hash);
   }
   if (charsWritten < 1 || static_cast<size_t>(charsWritten) > hashStrSize - 1) {
     return NS_ERROR_FAILURE;
@@ -464,11 +446,9 @@ GetInstallHash(const char16_t* installPath, const char* vendor,
 /**
  * Returns true if the registry key was successfully found and read into result.
  */
-static bool
-GetCachedHash(const char16_t* installPath, HKEY rootKey,
-              const SimpleAutoString& regPath,
-              mozilla::UniquePtr<NS_tchar[]>& result)
-{
+static bool GetCachedHash(const char16_t* installPath, HKEY rootKey,
+                          const SimpleAutoString& regPath,
+                          mozilla::UniquePtr<NS_tchar[]>& result) {
   // Find the size of the string we are reading before we read it so we can
   // allocate space.
   unsigned long bufferSize;
@@ -539,14 +519,9 @@ GetCachedHash(const char16_t* installPath, HKEY rootKey,
 HRESULT
 GetCommonUpdateDirectory(const wchar_t* installPath,
                          SetPermissionsOf permsToSet,
-                         mozilla::UniquePtr<wchar_t[]>& result)
-{
-  return GetUpdateDirectory(installPath,
-                            nullptr,
-                            nullptr,
-                            WhichUpdateDir::CommonAppData,
-                            permsToSet,
-                            result);
+                         mozilla::UniquePtr<wchar_t[]>& result) {
+  return GetUpdateDirectory(installPath, nullptr, nullptr,
+                            WhichUpdateDir::CommonAppData, permsToSet, result);
 }
 
 /**
@@ -559,16 +534,12 @@ GetCommonUpdateDirectory(const wchar_t* installPath,
  * directory are acceptable as they are.
  */
 HRESULT
-GetUserUpdateDirectory(const wchar_t* installPath,
-                       const char* vendor,
+GetUserUpdateDirectory(const wchar_t* installPath, const char* vendor,
                        const char* appName,
-                       mozilla::UniquePtr<wchar_t[]>& result)
-{
-  return GetUpdateDirectory(installPath,
-                            vendor,
-                            appName,
+                       mozilla::UniquePtr<wchar_t[]>& result) {
+  return GetUpdateDirectory(installPath, vendor, appName,
                             WhichUpdateDir::UserAppData,
-                            SetPermissionsOf::BaseDir, // Arbitrary value
+                            SetPermissionsOf::BaseDir,  // Arbitrary value
                             result);
 }
 
@@ -581,23 +552,20 @@ GetUserUpdateDirectory(const wchar_t* installPath,
  * For information on the parameters and return value, see
  * GetCommonUpdateDirectory.
  */
-static HRESULT
-GetUpdateDirectory(const wchar_t* installPath,
-                   const char* vendor,
-                   const char* appName,
-                   WhichUpdateDir whichDir,
-                   SetPermissionsOf permsToSet,
-                   mozilla::UniquePtr<wchar_t[]>& result)
-{
+static HRESULT GetUpdateDirectory(const wchar_t* installPath,
+                                  const char* vendor, const char* appName,
+                                  WhichUpdateDir whichDir,
+                                  SetPermissionsOf permsToSet,
+                                  mozilla::UniquePtr<wchar_t[]>& result) {
   PWSTR baseDirParentPath;
-  REFKNOWNFOLDERID folderID =
-    (whichDir == WhichUpdateDir::CommonAppData) ? FOLDERID_ProgramData
-                                                : FOLDERID_LocalAppData;
+  REFKNOWNFOLDERID folderID = (whichDir == WhichUpdateDir::CommonAppData)
+                                  ? FOLDERID_ProgramData
+                                  : FOLDERID_LocalAppData;
   HRESULT hrv = SHGetKnownFolderPath(folderID, KF_FLAG_CREATE, nullptr,
                                      &baseDirParentPath);
   // Free baseDirParentPath when it goes out of scope.
-  mozilla::UniquePtr<wchar_t, CoTaskMemFreeDeleter>
-    baseDirParentPathUnique(baseDirParentPath);
+  mozilla::UniquePtr<wchar_t, CoTaskMemFreeDeleter> baseDirParentPathUnique(
+      baseDirParentPath);
   if (FAILED(hrv)) {
     return hrv;
   }
@@ -616,8 +584,8 @@ GetUpdateDirectory(const wchar_t* installPath,
 
   // Generate the base path (C:\ProgramData\Mozilla)
   SimpleAutoString basePath;
-  size_t basePathLen = wcslen(baseDirParentPath) + 1 /* path separator */ +
-                       baseDir.Length();
+  size_t basePathLen =
+      wcslen(baseDirParentPath) + 1 /* path separator */ + baseDir.Length();
   basePath.AllocAndAssignSprintf(basePathLen, L"%s\\%s", baseDirParentPath,
                                  baseDir.String());
   if (basePath.Length() != basePathLen) {
@@ -647,11 +615,11 @@ GetUpdateDirectory(const wchar_t* installPath,
 
   if (whichDir == WhichUpdateDir::CommonAppData) {
     if (updatePath.Length() > 0) {
-      hrv = SetUpdateDirectoryPermissions(basePath, updatePath, true,
-                                          permsToSet);
+      hrv =
+          SetUpdateDirectoryPermissions(basePath, updatePath, true, permsToSet);
     } else {
-      hrv = SetUpdateDirectoryPermissions(basePath, basePath, false,
-                                          permsToSet);
+      hrv =
+          SetUpdateDirectoryPermissions(basePath, basePath, false, permsToSet);
     }
     if (FAILED(hrv)) {
       return hrv;
@@ -689,15 +657,13 @@ GetUpdateDirectory(const wchar_t* installPath,
  * @param permsToSet See the documentation for GetCommonUpdateDirectory for the
  *                   descriptions of the effects of each SetPermissionsOf value.
  */
-static HRESULT
-SetUpdateDirectoryPermissions(const SimpleAutoString& basePath,
-                              const SimpleAutoString& updatePath,
-                              bool fullUpdatePath,
-                              SetPermissionsOf permsToSet)
-{
-  HRESULT returnValue = S_OK; // Stores the value that will eventually be
-                              // returned. If errors occur, this is set to the
-                              // first error encountered.
+static HRESULT SetUpdateDirectoryPermissions(const SimpleAutoString& basePath,
+                                             const SimpleAutoString& updatePath,
+                                             bool fullUpdatePath,
+                                             SetPermissionsOf permsToSet) {
+  HRESULT returnValue = S_OK;  // Stores the value that will eventually be
+                               // returned. If errors occur, this is set to the
+                               // first error encountered.
   DWORD attributes = GetFileAttributesW(basePath.String());
   // validBaseDir will be true if the basePath exists, and is a non-symlinked
   // directory.
@@ -754,8 +720,8 @@ SetUpdateDirectoryPermissions(const SimpleAutoString& basePath,
     // created the directory or not.
 
     // Now that there is nothing in the way of our base directory, create it.
-    BOOL success = CreateDirectoryW(basePath.String(),
-                                    &perms.securityAttributes);
+    BOOL success =
+        CreateDirectoryW(basePath.String(), &perms.securityAttributes);
     if (success) {
       // We successfully created a directory. It is safe to assume that it is
       // empty, so there is no reason to check the permissions of its contents.
@@ -763,8 +729,8 @@ SetUpdateDirectoryPermissions(const SimpleAutoString& basePath,
     } else {
       DWORD error = GetLastError();
       if (error != ERROR_ALREADY_EXISTS) {
-        returnValue = FAILED(returnValue) ? returnValue
-                                          : HRESULT_FROM_WIN32(error);
+        returnValue =
+            FAILED(returnValue) ? returnValue : HRESULT_FROM_WIN32(error);
       } else {
         // There is a bit of a race condition here that needs to be resolved.
         // Make sure no one else created the directory just before this process
@@ -772,8 +738,8 @@ SetUpdateDirectoryPermissions(const SimpleAutoString& basePath,
         attributes = GetFileAttributesW(basePath.String());
         if (attributes == INVALID_FILE_ATTRIBUTES ||
             !(attributes & FILE_ATTRIBUTE_DIRECTORY)) {
-          returnValue = FAILED(returnValue) ? returnValue
-                                            : HRESULT_FROM_WIN32(error);
+          returnValue =
+              FAILED(returnValue) ? returnValue : HRESULT_FROM_WIN32(error);
         } else if (permsToSet != SetPermissionsOf::BaseDirIfNotExists) {
           // Great! The update directory seems to exist and is a directory. Now,
           // if the caller requested it, set the permissions of the directory.
@@ -806,10 +772,9 @@ SetUpdateDirectoryPermissions(const SimpleAutoString& basePath,
     wchar_t patchDirectoryName[] = NS_T(PATCH_DIRECTORY);
     size_t leafDirLen = updatePath.Length() + wcslen(updateSubdirectoryName) +
                         wcslen(patchDirectoryName) + 2; /* 2 path seperators */
-    leafDirPath.AllocAndAssignSprintf(leafDirLen, L"%s\\%s\\%s",
-                                      updatePath.String(),
-                                      updateSubdirectoryName,
-                                      patchDirectoryName);
+    leafDirPath.AllocAndAssignSprintf(
+        leafDirLen, L"%s\\%s\\%s", updatePath.String(), updateSubdirectoryName,
+        patchDirectoryName);
     if (leafDirPath.Length() == leafDirLen) {
       hrv = SetPermissionsOfContents(basePath, leafDirPath, perms);
     } else {
@@ -829,86 +794,82 @@ SetUpdateDirectoryPermissions(const SimpleAutoString& basePath,
  * directory and its contents. Returns the permissions data via the result
  * outparam.
  */
-static HRESULT
-GeneratePermissions(AutoPerms& result)
-{
+static HRESULT GeneratePermissions(AutoPerms& result) {
   result.sidIdentifierAuthority = SECURITY_NT_AUTHORITY;
   ZeroMemory(&result.ea, sizeof(result.ea));
 
   // Make Users group SID and add it to the Explicit Access List.
   PSID usersSID = nullptr;
-  BOOL success = AllocateAndInitializeSid(&result.sidIdentifierAuthority, 2,
-                                          SECURITY_BUILTIN_DOMAIN_RID,
-                                          DOMAIN_ALIAS_RID_USERS,
-                                          0, 0, 0, 0, 0, 0, &usersSID);
+  BOOL success = AllocateAndInitializeSid(
+      &result.sidIdentifierAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
+      DOMAIN_ALIAS_RID_USERS, 0, 0, 0, 0, 0, 0, &usersSID);
   result.usersSID.own(usersSID);
   if (!success) {
     return HRESULT_FROM_WIN32(GetLastError());
   }
   result.ea[0].grfAccessPermissions = FILE_ALL_ACCESS;
   result.ea[0].grfAccessMode = SET_ACCESS;
-  result.ea[0].grfInheritance= SUB_CONTAINERS_AND_OBJECTS_INHERIT;
+  result.ea[0].grfInheritance = SUB_CONTAINERS_AND_OBJECTS_INHERIT;
   result.ea[0].Trustee.TrusteeForm = TRUSTEE_IS_SID;
   result.ea[0].Trustee.TrusteeType = TRUSTEE_IS_GROUP;
-  result.ea[0].Trustee.ptstrName  = static_cast<LPWSTR>(usersSID);
+  result.ea[0].Trustee.ptstrName = static_cast<LPWSTR>(usersSID);
 
   // Make Administrators group SID and add it to the Explicit Access List.
   PSID adminsSID = nullptr;
-  success = AllocateAndInitializeSid(&result.sidIdentifierAuthority, 2,
-                                     SECURITY_BUILTIN_DOMAIN_RID,
-                                     DOMAIN_ALIAS_RID_ADMINS,
-                                     0, 0, 0, 0, 0, 0, &adminsSID);
+  success = AllocateAndInitializeSid(
+      &result.sidIdentifierAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
+      DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &adminsSID);
   result.adminsSID.own(adminsSID);
   if (!success) {
     return HRESULT_FROM_WIN32(GetLastError());
   }
   result.ea[1].grfAccessPermissions = FILE_ALL_ACCESS;
   result.ea[1].grfAccessMode = SET_ACCESS;
-  result.ea[1].grfInheritance= SUB_CONTAINERS_AND_OBJECTS_INHERIT;
+  result.ea[1].grfInheritance = SUB_CONTAINERS_AND_OBJECTS_INHERIT;
   result.ea[1].Trustee.TrusteeForm = TRUSTEE_IS_SID;
   result.ea[1].Trustee.TrusteeType = TRUSTEE_IS_GROUP;
-  result.ea[1].Trustee.ptstrName  = static_cast<LPWSTR>(adminsSID);
+  result.ea[1].Trustee.ptstrName = static_cast<LPWSTR>(adminsSID);
 
   // Make SYSTEM user SID and add it to the Explicit Access List.
   PSID systemSID = nullptr;
   success = AllocateAndInitializeSid(&result.sidIdentifierAuthority, 1,
-                                     SECURITY_LOCAL_SYSTEM_RID,
-                                     0, 0, 0, 0, 0, 0, 0, &systemSID);
+                                     SECURITY_LOCAL_SYSTEM_RID, 0, 0, 0, 0, 0,
+                                     0, 0, &systemSID);
   result.systemSID.own(systemSID);
   if (!success) {
     return HRESULT_FROM_WIN32(GetLastError());
   }
   result.ea[2].grfAccessPermissions = FILE_ALL_ACCESS;
   result.ea[2].grfAccessMode = SET_ACCESS;
-  result.ea[2].grfInheritance= SUB_CONTAINERS_AND_OBJECTS_INHERIT;
+  result.ea[2].grfInheritance = SUB_CONTAINERS_AND_OBJECTS_INHERIT;
   result.ea[2].Trustee.TrusteeForm = TRUSTEE_IS_SID;
   result.ea[2].Trustee.TrusteeType = TRUSTEE_IS_USER;
-  result.ea[2].Trustee.ptstrName  = static_cast<LPWSTR>(systemSID);
+  result.ea[2].Trustee.ptstrName = static_cast<LPWSTR>(systemSID);
 
   PACL acl = nullptr;
   DWORD drv = SetEntriesInAclW(3, result.ea, nullptr, &acl);
   // Put the ACL in a unique pointer so that LocalFree is called when it goes
   // out of scope
   result.acl.reset(acl);
-  if(drv != ERROR_SUCCESS) {
+  if (drv != ERROR_SUCCESS) {
     return HRESULT_FROM_WIN32(drv);
   }
 
   result.securityDescriptorBuffer =
-    mozilla::MakeUnique<uint8_t[]>(SECURITY_DESCRIPTOR_MIN_LENGTH);
+      mozilla::MakeUnique<uint8_t[]>(SECURITY_DESCRIPTOR_MIN_LENGTH);
   if (!result.securityDescriptorBuffer) {
     return E_OUTOFMEMORY;
   }
-  result.securityDescriptor =
-    reinterpret_cast<PSECURITY_DESCRIPTOR>(result.securityDescriptorBuffer.get());
+  result.securityDescriptor = reinterpret_cast<PSECURITY_DESCRIPTOR>(
+      result.securityDescriptorBuffer.get());
   success = InitializeSecurityDescriptor(result.securityDescriptor,
                                          SECURITY_DESCRIPTOR_REVISION);
   if (!success) {
     return HRESULT_FROM_WIN32(GetLastError());
   }
 
-  success = SetSecurityDescriptorDacl(result.securityDescriptor, TRUE, acl,
-                                      FALSE);
+  success =
+      SetSecurityDescriptorDacl(result.securityDescriptor, TRUE, acl, FALSE);
   if (!success) {
     return HRESULT_FROM_WIN32(GetLastError());
   }
@@ -924,12 +885,10 @@ GeneratePermissions(AutoPerms& result)
  * Unfortunately this does not take a const string because SetNamedSecurityInfoW
  * doesn't take one.
  */
-static HRESULT
-SetPathPerms(SimpleAutoString& path, const AutoPerms& perms)
-{
+static HRESULT SetPathPerms(SimpleAutoString& path, const AutoPerms& perms) {
   DWORD drv = SetNamedSecurityInfoW(path.MutableString(), SE_FILE_OBJECT,
-                                    DACL_SECURITY_INFORMATION, nullptr,
-                                    nullptr, perms.acl.get(), nullptr);
+                                    DACL_SECURITY_INFORMATION, nullptr, nullptr,
+                                    perms.acl.get(), nullptr);
   return HRESULT_FROM_WIN32(drv);
 }
 
@@ -938,9 +897,7 @@ SetPathPerms(SimpleAutoString& path, const AutoPerms& perms)
  * If removal fails with an ERROR_FILE_NOT_FOUND, the file must not exist, so
  * this will return success in that case.
  */
-static HRESULT
-RemoveRecursive(const SimpleAutoString& path)
-{
+static HRESULT RemoveRecursive(const SimpleAutoString& path) {
   DWORD attributes = GetFileAttributesW(path.String());
 
   // Ignore errors setting attributes. We only care if it was successfully
@@ -980,20 +937,17 @@ RemoveRecursive(const SimpleAutoString& path)
  * If an attempt results in the error ERROR_FILE_NOT_FOUND, this function
  * considers the file to no longer be a conflict and returns success.
  */
-static HRESULT
-MoveConflicting(const SimpleAutoString& path)
-{
+static HRESULT MoveConflicting(const SimpleAutoString& path) {
   // Try to move the file to a backup location
   SimpleAutoString newPath;
   unsigned int maxTries = 9;
   const wchar_t newPathFormat[] = L"%s.bak%u";
-  size_t newPathMaxLength = newPath.AllocFromScprintf(newPathFormat,
-                                                      path.String(),
-                                                      maxTries);
+  size_t newPathMaxLength =
+      newPath.AllocFromScprintf(newPathFormat, path.String(), maxTries);
   if (newPathMaxLength > 0) {
     for (unsigned int suffix = 0; suffix <= maxTries; ++suffix) {
-      newPath.AssignSprintf(newPathMaxLength + 1, newPathFormat,
-                            path.String(), suffix);
+      newPath.AssignSprintf(newPathMaxLength + 1, newPathFormat, path.String(),
+                            suffix);
       if (newPath.Length() == 0) {
         // If we failed to make this string, we probably aren't going to
         // succeed on the next one.
@@ -1039,14 +993,12 @@ MoveConflicting(const SimpleAutoString& path)
  * encountered, the function will return the error *after* it attempts to set
  * permissions on all remaining files.
  */
-static HRESULT
-SetPermissionsOfContents(const SimpleAutoString& basePath,
-                         const SimpleAutoString& leafUpdateDir,
-                         const AutoPerms& perms)
-{
-  HRESULT returnValue = S_OK; // Stores the value that will eventually be
-                              // returned. If errors occur, this is set to the
-                              // first error encountered.
+static HRESULT SetPermissionsOfContents(const SimpleAutoString& basePath,
+                                        const SimpleAutoString& leafUpdateDir,
+                                        const AutoPerms& perms) {
+  HRESULT returnValue = S_OK;  // Stores the value that will eventually be
+                               // returned. If errors occur, this is set to the
+                               // first error encountered.
 
   SimpleAutoString pathBuffer;
   if (!pathBuffer.AllocEmpty(MAX_PATH)) {
@@ -1066,8 +1018,9 @@ SetPermissionsOfContents(const SimpleAutoString& basePath,
     pathBuffer.AssignSprintf(MAX_PATH + 1, L"%s\\%s", basePath.String(),
                              entry->d_name);
     if (pathBuffer.Length() == 0) {
-      returnValue = FAILED(returnValue) ? returnValue
-                  : HRESULT_FROM_WIN32(ERROR_BUFFER_OVERFLOW);
+      returnValue = FAILED(returnValue)
+                        ? returnValue
+                        : HRESULT_FROM_WIN32(ERROR_BUFFER_OVERFLOW);
       continue;
     }
 
@@ -1080,8 +1033,9 @@ SetPermissionsOfContents(const SimpleAutoString& basePath,
     pathBuffer.AssignSprintf(MAX_PATH + 1, L"%s\\%s", basePath.String(),
                              entry->d_name);
     if (pathBuffer.Length() == 0) {
-      returnValue = FAILED(returnValue) ? returnValue
-                  : HRESULT_FROM_WIN32(ERROR_BUFFER_OVERFLOW);
+      returnValue = FAILED(returnValue)
+                        ? returnValue
+                        : HRESULT_FROM_WIN32(ERROR_BUFFER_OVERFLOW);
       continue;
     }
 
@@ -1134,17 +1088,14 @@ SetPermissionsOfContents(const SimpleAutoString& basePath,
 /**
  * Returns true if the path conflicts with the leaf path.
  */
-static bool
-PathConflictsWithLeaf(const SimpleAutoString& path,
-                      DWORD pathAttributes,
-                      bool permsSuccessfullySet,
-                      const SimpleAutoString& leafPath)
-{
+static bool PathConflictsWithLeaf(const SimpleAutoString& path,
+                                  DWORD pathAttributes,
+                                  bool permsSuccessfullySet,
+                                  const SimpleAutoString& leafPath) {
   // Directories only conflict with our directory structure if we don't have
   // access to them
   if (pathAttributes != INVALID_FILE_ATTRIBUTES &&
-      pathAttributes & FILE_ATTRIBUTE_DIRECTORY &&
-      permsSuccessfullySet) {
+      pathAttributes & FILE_ATTRIBUTE_DIRECTORY && permsSuccessfullySet) {
     return false;
   }
   if (!leafPath.StartsWith(path)) {
@@ -1156,4 +1107,4 @@ PathConflictsWithLeaf(const SimpleAutoString& path,
   wchar_t charAfterPath = leafPath.String()[path.Length()];
   return (charAfterPath == L'\\' || charAfterPath == L'\0');
 }
-#endif // XP_WIN
+#endif  // XP_WIN

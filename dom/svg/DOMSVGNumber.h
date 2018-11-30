@@ -16,7 +16,7 @@
 
 class nsSVGElement;
 
-#define MOZ_SVG_LIST_INDEX_BIT_COUNT 27 // supports > 134 million list items
+#define MOZ_SVG_LIST_INDEX_BIT_COUNT 27  // supports > 134 million list items
 
 namespace mozilla {
 
@@ -33,9 +33,7 @@ namespace mozilla {
  *
  * See the comment in DOMSVGLength.h (yes, LENGTH), which applies here too.
  */
-class DOMSVGNumber final : public nsISupports
-                         , public nsWrapperCache
-{
+class DOMSVGNumber final : public nsISupports, public nsWrapperCache {
   friend class AutoChangeNumberNotifier;
 
   ~DOMSVGNumber() {
@@ -47,16 +45,14 @@ class DOMSVGNumber final : public nsISupports
     }
   }
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGNumber)
 
   /**
    * Generic ctor for DOMSVGNumber objects that are created for an attribute.
    */
-  DOMSVGNumber(DOMSVGNumberList *aList,
-               uint8_t aAttrEnum,
-               uint32_t aListIndex,
+  DOMSVGNumber(DOMSVGNumberList* aList, uint8_t aAttrEnum, uint32_t aListIndex,
                bool aIsAnimValItem);
 
   /**
@@ -69,22 +65,18 @@ public:
    * Create an unowned copy. The caller is responsible for the first AddRef().
    */
   DOMSVGNumber* Clone() {
-    DOMSVGNumber *clone = new DOMSVGNumber(mParent);
+    DOMSVGNumber* clone = new DOMSVGNumber(mParent);
     clone->mValue = ToSVGNumber();
     return clone;
   }
 
-  bool IsInList() const {
-    return !!mList;
-  }
+  bool IsInList() const { return !!mList; }
 
   /**
    * In future, if this class is used for non-list numbers, this will be
    * different to IsInList().
    */
-  bool HasOwner() const {
-    return !!mList;
-  }
+  bool HasOwner() const { return !!mList; }
 
   /**
    * This method is called to notify this DOM object that it is being inserted
@@ -95,19 +87,15 @@ public:
    * lists - it can - it's just that the logic to handle that (and send out
    * the necessary notifications) is located elsewhere (in DOMSVGNumberList).)
    */
-  void InsertingIntoList(DOMSVGNumberList *aList,
-                         uint8_t aAttrEnum,
-                         uint32_t aListIndex,
-                         bool aIsAnimValItem);
+  void InsertingIntoList(DOMSVGNumberList* aList, uint8_t aAttrEnum,
+                         uint32_t aListIndex, bool aIsAnimValItem);
 
   static uint32_t MaxListIndex() {
     return (1U << MOZ_SVG_LIST_INDEX_BIT_COUNT) - 1;
   }
 
   /// This method is called to notify this object that its list index changed.
-  void UpdateListIndex(uint32_t aListIndex) {
-    mListIndex = aListIndex;
-  }
+  void UpdateListIndex(uint32_t aListIndex) { mListIndex = aListIndex; }
 
   /**
    * This method is called to notify this DOM object that it is about to be
@@ -119,26 +107,19 @@ public:
 
   float ToSVGNumber();
 
-  nsISupports* GetParentObject()
-  {
-    return mParent;
-  }
+  nsISupports* GetParentObject() { return mParent; }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   float Value();
 
   void SetValue(float aValue, ErrorResult& aRv);
 
-private:
+ private:
+  nsSVGElement* Element() { return mList->Element(); }
 
-  nsSVGElement* Element() {
-    return mList->Element();
-  }
-
-  uint8_t AttrEnum() const {
-    return mAttrEnum;
-  }
+  uint8_t AttrEnum() const { return mAttrEnum; }
 
   /**
    * Get a reference to the internal SVGNumber list item that this DOM wrapper
@@ -161,16 +142,16 @@ private:
   // Bounds for the following are checked in the ctor, so be sure to update
   // that if you change the capacity of any of the following.
 
-  uint32_t mListIndex:MOZ_SVG_LIST_INDEX_BIT_COUNT;
-  uint32_t mAttrEnum:4; // supports up to 16 attributes
-  uint32_t mIsAnimValItem:1;
+  uint32_t mListIndex : MOZ_SVG_LIST_INDEX_BIT_COUNT;
+  uint32_t mAttrEnum : 4;  // supports up to 16 attributes
+  uint32_t mIsAnimValItem : 1;
 
   // The following member is only used when we're not in a list:
   float mValue;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #undef MOZ_SVG_LIST_INDEX_BIT_COUNT
 
-#endif // MOZILLA_DOMSVGNUMBER_H__
+#endif  // MOZILLA_DOMSVGNUMBER_H__

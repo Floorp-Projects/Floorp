@@ -26,18 +26,14 @@
 namespace mozilla {
 
 /** Set the contents of |aT| to 0. */
-template<typename T>
-static MOZ_ALWAYS_INLINE void
-PodZero(T* aT)
-{
+template <typename T>
+static MOZ_ALWAYS_INLINE void PodZero(T* aT) {
   memset(aT, 0, sizeof(T));
 }
 
 /** Set the contents of |aNElem| elements starting at |aT| to 0. */
-template<typename T>
-static MOZ_ALWAYS_INLINE void
-PodZero(T* aT, size_t aNElem)
-{
+template <typename T>
+static MOZ_ALWAYS_INLINE void PodZero(T* aT, size_t aNElem) {
   /*
    * This function is often called with 'aNElem' small; we use an inline loop
    * instead of calling 'memset' with a non-constant length.  The compiler
@@ -55,23 +51,19 @@ PodZero(T* aT, size_t aNElem)
  * ambiguous overload is left to catch mistaken uses of PodZero; if you get a
  * compile error involving PodZero and array types, use PodArrayZero instead.
  */
-template<typename T, size_t N>
+template <typename T, size_t N>
 static void PodZero(T (&aT)[N]) = delete;
-template<typename T, size_t N>
+template <typename T, size_t N>
 static void PodZero(T (&aT)[N], size_t aNElem) = delete;
 
 /** Set the contents of the array |aT| to zero. */
 template <class T, size_t N>
-static MOZ_ALWAYS_INLINE void
-PodArrayZero(T (&aT)[N])
-{
+static MOZ_ALWAYS_INLINE void PodArrayZero(T (&aT)[N]) {
   memset(aT, 0, N * sizeof(T));
 }
 
 template <typename T, size_t N>
-static MOZ_ALWAYS_INLINE void
-PodArrayZero(Array<T, N>& aArr)
-{
+static MOZ_ALWAYS_INLINE void PodArrayZero(Array<T, N>& aArr) {
   memset(&aArr[0], 0, N * sizeof(T));
 }
 
@@ -79,10 +71,8 @@ PodArrayZero(Array<T, N>& aArr)
  * Assign |*aSrc| to |*aDst|.  The locations must not be the same and must not
  * overlap.
  */
-template<typename T>
-static MOZ_ALWAYS_INLINE void
-PodAssign(T* aDst, const T* aSrc)
-{
+template <typename T>
+static MOZ_ALWAYS_INLINE void PodAssign(T* aDst, const T* aSrc) {
   MOZ_ASSERT(aDst + 1 <= aSrc || aSrc + 1 <= aDst,
              "destination and source must not overlap");
   memcpy(reinterpret_cast<char*>(aDst), reinterpret_cast<const char*>(aSrc),
@@ -93,10 +83,8 @@ PodAssign(T* aDst, const T* aSrc)
  * Copy |aNElem| T elements from |aSrc| to |aDst|.  The two memory ranges must
  * not overlap!
  */
-template<typename T>
-static MOZ_ALWAYS_INLINE void
-PodCopy(T* aDst, const T* aSrc, size_t aNElem)
-{
+template <typename T>
+static MOZ_ALWAYS_INLINE void PodCopy(T* aDst, const T* aSrc, size_t aNElem) {
   MOZ_ASSERT(aDst + aNElem <= aSrc || aSrc + aNElem <= aDst,
              "destination and source must not overlap");
   if (aNElem < 128) {
@@ -112,10 +100,9 @@ PodCopy(T* aDst, const T* aSrc, size_t aNElem)
   }
 }
 
-template<typename T>
-static MOZ_ALWAYS_INLINE void
-PodCopy(volatile T* aDst, const volatile T* aSrc, size_t aNElem)
-{
+template <typename T>
+static MOZ_ALWAYS_INLINE void PodCopy(volatile T* aDst, const volatile T* aSrc,
+                                      size_t aNElem) {
   MOZ_ASSERT(aDst + aNElem <= aSrc || aSrc + aNElem <= aDst,
              "destination and source must not overlap");
 
@@ -125,8 +112,7 @@ PodCopy(volatile T* aDst, const volatile T* aSrc, size_t aNElem)
    * loops manually, using operator= rather than memcpy for the same reason,
    * and let the compiler optimize to the extent it can.
    */
-  for (const volatile T* srcend = aSrc + aNElem;
-       aSrc < srcend;
+  for (const volatile T* srcend = aSrc + aNElem; aSrc < srcend;
        aSrc++, aDst++) {
     *aDst = *aSrc;
   }
@@ -137,9 +123,7 @@ PodCopy(volatile T* aDst, const volatile T* aSrc, size_t aNElem)
  * The arrays must not overlap!
  */
 template <class T, size_t N>
-static MOZ_ALWAYS_INLINE void
-PodArrayCopy(T (&aDst)[N], const T (&aSrc)[N])
-{
+static MOZ_ALWAYS_INLINE void PodArrayCopy(T (&aDst)[N], const T (&aSrc)[N]) {
   PodCopy(aDst, aSrc, N);
 }
 
@@ -149,10 +133,8 @@ PodArrayCopy(T (&aDst)[N], const T (&aSrc)[N])
  * first copied from |aSrc| to a temporary array, and then from the temporary
  * array to |aDst|.
  */
-template<typename T>
-static MOZ_ALWAYS_INLINE void
-PodMove(T* aDst, const T* aSrc, size_t aNElem)
-{
+template <typename T>
+static MOZ_ALWAYS_INLINE void PodMove(T* aDst, const T* aSrc, size_t aNElem) {
   MOZ_ASSERT(aNElem <= SIZE_MAX / sizeof(T),
              "trying to move an impossible number of elements");
   memmove(aDst, aSrc, aNElem * sizeof(T));
@@ -163,6 +145,6 @@ PodMove(T* aDst, const T* aSrc, size_t aNElem)
  * Note that we *cannot* use memcmp for this, due to padding bytes, etc..
  */
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_PodOperations_h */

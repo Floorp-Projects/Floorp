@@ -11,27 +11,26 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/DOMRect.h"
 
-class nsXMLElement : public mozilla::dom::Element
-{
-public:
+class nsXMLElement : public mozilla::dom::Element {
+ public:
   explicit nsXMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : mozilla::dom::Element(std::move(aNodeInfo))
-  {
-  }
+      : mozilla::dom::Element(std::move(aNodeInfo)) {}
 
   // nsISupports
   NS_INLINE_DECL_REFCOUNTING_INHERITED(nsXMLElement, mozilla::dom::Element)
 
   // nsINode interface methods
-  virtual nsresult Clone(mozilla::dom::NodeInfo*, nsINode **aResult) const override;
+  virtual nsresult Clone(mozilla::dom::NodeInfo*,
+                         nsINode** aResult) const override;
 
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
 
-protected:
+ protected:
   virtual ~nsXMLElement() {}
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 };
 
-#endif // nsXMLElement_h___
+#endif  // nsXMLElement_h___

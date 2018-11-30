@@ -6,8 +6,7 @@
 
 #include "nsElementTable.h"
 
-struct HTMLElement
-{
+struct HTMLElement {
 #ifdef DEBUG
   nsHTMLTag mTagID;
 #endif
@@ -16,12 +15,12 @@ struct HTMLElement
 };
 
 #ifdef DEBUG
-#define ELEM(tag, block, container) { eHTMLTag_##tag, block, container },
+#define ELEM(tag, block, container) {eHTMLTag_##tag, block, container},
 #else
-#define ELEM(tag, block, container) { block, container },
+#define ELEM(tag, block, container) {block, container},
 #endif
 
-#define ____ false    // This makes the table easier to read.
+#define ____ false  // This makes the table easier to read.
 
 // Note that the mIsBlock field disagrees with
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Block-level_elements for
@@ -34,7 +33,7 @@ struct HTMLElement
 // values for the abovementioned tags at some point.
 //
 static const HTMLElement gHTMLElements[] = {
-  // clang-format off
+    // clang-format off
   ELEM(unknown,     ____, ____)
   ELEM(a,           ____, true)
   ELEM(abbr,        ____, true)
@@ -182,30 +181,23 @@ static const HTMLElement gHTMLElements[] = {
   ELEM(markupDecl,  ____, true)
   ELEM(instruction, ____, true)
   ELEM(userdefined, ____, true)
-  // clang-format on
+    // clang-format on
 };
 
 #undef ELEM
 #undef ____
 
-bool
-nsHTMLElement::IsContainer(nsHTMLTag aId)
-{
+bool nsHTMLElement::IsContainer(nsHTMLTag aId) {
   return gHTMLElements[aId].mIsContainer;
 }
 
-bool
-nsHTMLElement::IsBlock(nsHTMLTag aId)
-{
+bool nsHTMLElement::IsBlock(nsHTMLTag aId) {
   return gHTMLElements[aId].mIsBlock;
 }
 
 #ifdef DEBUG
-void
-CheckElementTable()
-{
-  for (nsHTMLTag t = eHTMLTag_unknown;
-       t <= eHTMLTag_userdefined;
+void CheckElementTable() {
+  for (nsHTMLTag t = eHTMLTag_unknown; t <= eHTMLTag_userdefined;
        t = nsHTMLTag(t + 1)) {
     MOZ_ASSERT(gHTMLElements[t].mTagID == t,
                "gHTMLElements entries does match tag list.");

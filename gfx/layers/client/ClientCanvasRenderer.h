@@ -13,12 +13,9 @@ namespace mozilla {
 namespace layers {
 
 class ClientCanvasLayer;
-class ClientCanvasRenderer : public ShareableCanvasRenderer
-{
-public:
-  explicit ClientCanvasRenderer(ClientCanvasLayer* aLayer)
-    : mLayer(aLayer)
-  { }
+class ClientCanvasRenderer : public ShareableCanvasRenderer {
+ public:
+  explicit ClientCanvasRenderer(ClientCanvasLayer* aLayer) : mLayer(aLayer) {}
 
   ClientCanvasRenderer* AsClientCanvasRenderer() override { return this; }
 
@@ -26,11 +23,11 @@ public:
 
   bool CreateCompositable() override;
 
-protected:
+ protected:
   ClientCanvasLayer* mLayer;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

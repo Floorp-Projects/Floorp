@@ -14,69 +14,58 @@
 namespace mozilla {
 namespace webgl {
 
-static TextureBaseType
-ToBaseType(const ComponentType type)
-{
-    switch (type) {
+static TextureBaseType ToBaseType(const ComponentType type) {
+  switch (type) {
     case ComponentType::Int:
-        return TextureBaseType::Int;
+      return TextureBaseType::Int;
     case ComponentType::UInt:
-        return TextureBaseType::UInt;
+      return TextureBaseType::UInt;
     case ComponentType::NormInt:
     case ComponentType::NormUInt:
     case ComponentType::Float:
-    //case ComponentType::Depth:
-        return TextureBaseType::Float;
-    }
-    MOZ_CRASH("pacify gcc6 warning");
+      // case ComponentType::Depth:
+      return TextureBaseType::Float;
+  }
+  MOZ_CRASH("pacify gcc6 warning");
 }
 
-const char*
-ToString(const TextureBaseType x)
-{
-    switch (x) {
+const char* ToString(const TextureBaseType x) {
+  switch (x) {
     case webgl::TextureBaseType::Float:
-        return "FLOAT";
+      return "FLOAT";
     case webgl::TextureBaseType::Int:
-        return "INT";
+      return "INT";
     case webgl::TextureBaseType::UInt:
-        return "UINT";
-    }
-    MOZ_CRASH("pacify gcc6 warning");
+      return "UINT";
+  }
+  MOZ_CRASH("pacify gcc6 warning");
 }
 
 // -
 
-template<typename K, typename V, typename K2, typename V2>
-static inline void
-AlwaysInsert(std::map<K,V>& dest, const K2& key, const V2& val)
-{
-    auto res = dest.insert({ key, val });
-    bool didInsert = res.second;
-    MOZ_ALWAYS_TRUE(didInsert);
+template <typename K, typename V, typename K2, typename V2>
+static inline void AlwaysInsert(std::map<K, V>& dest, const K2& key,
+                                const V2& val) {
+  auto res = dest.insert({key, val});
+  bool didInsert = res.second;
+  MOZ_ALWAYS_TRUE(didInsert);
 }
 
-template<typename K, typename V, typename K2>
-static inline V*
-FindOrNull(const std::map<K,V*>& dest, const K2& key)
-{
-    auto itr = dest.find(key);
-    if (itr == dest.end())
-        return nullptr;
+template <typename K, typename V, typename K2>
+static inline V* FindOrNull(const std::map<K, V*>& dest, const K2& key) {
+  auto itr = dest.find(key);
+  if (itr == dest.end()) return nullptr;
 
-    return itr->second;
+  return itr->second;
 }
 
 // Returns a pointer to the in-place value for `key`.
-template<typename K, typename V, typename K2>
-static inline V*
-FindPtrOrNull(std::map<K,V>& dest, const K2& key)
-{
-    auto itr = dest.find(key);
-    if (itr == dest.end())
-        return nullptr;
+template <typename K, typename V, typename K2>
+static inline V* FindPtrOrNull(std::map<K, V>& dest, const K2& key) {
+  auto itr = dest.find(key);
+  if (itr == dest.end()) return nullptr;
 
-    return &(itr->second);
+  return &(itr->second);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -84,41 +73,36 @@ FindPtrOrNull(std::map<K,V>& dest, const K2& key)
 std::map<EffectiveFormat, const CompressedFormatInfo> gCompressedFormatInfoMap;
 std::map<EffectiveFormat, FormatInfo> gFormatInfoMap;
 
-static inline const CompressedFormatInfo*
-GetCompressedFormatInfo(EffectiveFormat format)
-{
-    MOZ_ASSERT(!gCompressedFormatInfoMap.empty());
-    return FindPtrOrNull(gCompressedFormatInfoMap, format);
+static inline const CompressedFormatInfo* GetCompressedFormatInfo(
+    EffectiveFormat format) {
+  MOZ_ASSERT(!gCompressedFormatInfoMap.empty());
+  return FindPtrOrNull(gCompressedFormatInfoMap, format);
 }
 
-static inline FormatInfo*
-GetFormatInfo_NoLock(EffectiveFormat format)
-{
-    MOZ_ASSERT(!gFormatInfoMap.empty());
-    return FindPtrOrNull(gFormatInfoMap, format);
+static inline FormatInfo* GetFormatInfo_NoLock(EffectiveFormat format) {
+  MOZ_ASSERT(!gFormatInfoMap.empty());
+  return FindPtrOrNull(gFormatInfoMap, format);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-static void
-AddCompressedFormatInfo(EffectiveFormat format, uint16_t bitsPerBlock, uint8_t blockWidth,
-                        uint8_t blockHeight, CompressionFamily family)
-{
-    MOZ_ASSERT(bitsPerBlock % 8 == 0);
-    uint16_t bytesPerBlock = bitsPerBlock / 8; // The specs always state these in bits,
-                                               // but it's only ever useful to us as
-                                               // bytes.
-    MOZ_ASSERT(bytesPerBlock <= 255);
+static void AddCompressedFormatInfo(EffectiveFormat format,
+                                    uint16_t bitsPerBlock, uint8_t blockWidth,
+                                    uint8_t blockHeight,
+                                    CompressionFamily family) {
+  MOZ_ASSERT(bitsPerBlock % 8 == 0);
+  uint16_t bytesPerBlock = bitsPerBlock / 8;  // The specs always state these in
+                                              // bits, but it's only ever useful
+                                              // to us as bytes.
+  MOZ_ASSERT(bytesPerBlock <= 255);
 
-    const CompressedFormatInfo info = { format, uint8_t(bytesPerBlock), blockWidth,
-                                        blockHeight, family };
-    AlwaysInsert(gCompressedFormatInfoMap, format, info);
+  const CompressedFormatInfo info = {format, uint8_t(bytesPerBlock), blockWidth,
+                                     blockHeight, family};
+  AlwaysInsert(gCompressedFormatInfoMap, format, info);
 }
 
-static void
-InitCompressedFormatInfo()
-{
-    // clang-format off
+static void InitCompressedFormatInfo() {
+  // clang-format off
 
     // GLES 3.0.4, p147, table 3.19
     // GLES 3.0.4, p286+, $C.1 "ETC Compressed Texture Image Formats"
@@ -197,87 +181,97 @@ InitCompressedFormatInfo()
     // OES_compressed_ETC1_RGB8_texture
     AddCompressedFormatInfo(EffectiveFormat::ETC1_RGB8_OES, 64, 4, 4, CompressionFamily::ETC1);
 
-    // clang-format on
+  // clang-format on
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-static void
-AddFormatInfo(EffectiveFormat format, const char* name, GLenum sizedFormat,
-              uint8_t bytesPerPixel, uint8_t r, uint8_t g, uint8_t b, uint8_t a,
-              uint8_t d, uint8_t s, UnsizedFormat unsizedFormat, bool isSRGB,
-              ComponentType componentType)
-{
-    switch (unsizedFormat) {
+static void AddFormatInfo(EffectiveFormat format, const char* name,
+                          GLenum sizedFormat, uint8_t bytesPerPixel, uint8_t r,
+                          uint8_t g, uint8_t b, uint8_t a, uint8_t d, uint8_t s,
+                          UnsizedFormat unsizedFormat, bool isSRGB,
+                          ComponentType componentType) {
+  switch (unsizedFormat) {
     case UnsizedFormat::R:
-        MOZ_ASSERT(r && !g && !b && !a && !d && !s);
-        break;
+      MOZ_ASSERT(r && !g && !b && !a && !d && !s);
+      break;
 
     case UnsizedFormat::RG:
-        MOZ_ASSERT(r && g && !b && !a && !d && !s);
-        break;
+      MOZ_ASSERT(r && g && !b && !a && !d && !s);
+      break;
 
     case UnsizedFormat::RGB:
-        MOZ_ASSERT(r && g && b && !a && !d && !s);
-        break;
+      MOZ_ASSERT(r && g && b && !a && !d && !s);
+      break;
 
     case UnsizedFormat::RGBA:
-        MOZ_ASSERT(r && g && b && a && !d && !s);
-        break;
+      MOZ_ASSERT(r && g && b && a && !d && !s);
+      break;
 
     case UnsizedFormat::L:
-        MOZ_ASSERT(r && !g && !b && !a && !d && !s);
-        break;
+      MOZ_ASSERT(r && !g && !b && !a && !d && !s);
+      break;
 
     case UnsizedFormat::A:
-        MOZ_ASSERT(!r && !g && !b && a && !d && !s);
-        break;
+      MOZ_ASSERT(!r && !g && !b && a && !d && !s);
+      break;
 
     case UnsizedFormat::LA:
-        MOZ_ASSERT(r && !g && !b && a && !d && !s);
-        break;
+      MOZ_ASSERT(r && !g && !b && a && !d && !s);
+      break;
 
     case UnsizedFormat::D:
-        MOZ_ASSERT(!r && !g && !b && !a && d && !s);
-        break;
+      MOZ_ASSERT(!r && !g && !b && !a && d && !s);
+      break;
 
     case UnsizedFormat::S:
-        MOZ_ASSERT(!r && !g && !b && !a && !d && s);
-        break;
+      MOZ_ASSERT(!r && !g && !b && !a && !d && s);
+      break;
 
     case UnsizedFormat::DEPTH_STENCIL:
-        MOZ_ASSERT(!r && !g && !b && !a && d && s);
-        break;
-    }
+      MOZ_ASSERT(!r && !g && !b && !a && d && s);
+      break;
+  }
 
-    const CompressedFormatInfo* compressedFormatInfo = GetCompressedFormatInfo(format);
-    MOZ_ASSERT(!bytesPerPixel == bool(compressedFormatInfo));
+  const CompressedFormatInfo* compressedFormatInfo =
+      GetCompressedFormatInfo(format);
+  MOZ_ASSERT(!bytesPerPixel == bool(compressedFormatInfo));
 
 #ifdef DEBUG
-    uint8_t totalBits = r + g + b + a + d + s;
-    if (format == EffectiveFormat::RGB9_E5) {
-        totalBits = 9 + 9 + 9 + 5;
-    }
+  uint8_t totalBits = r + g + b + a + d + s;
+  if (format == EffectiveFormat::RGB9_E5) {
+    totalBits = 9 + 9 + 9 + 5;
+  }
 
-    if (compressedFormatInfo) {
-        MOZ_ASSERT(totalBits);
-        MOZ_ASSERT(!bytesPerPixel);
-    } else {
-        MOZ_ASSERT(totalBits == bytesPerPixel*8);
-    }
+  if (compressedFormatInfo) {
+    MOZ_ASSERT(totalBits);
+    MOZ_ASSERT(!bytesPerPixel);
+  } else {
+    MOZ_ASSERT(totalBits == bytesPerPixel * 8);
+  }
 #endif
 
-    const FormatInfo info = { format, name, sizedFormat, unsizedFormat, componentType,
-                              ToBaseType(componentType), isSRGB, compressedFormatInfo,
-                              bytesPerPixel, r,g,b,a,d,s };
-    AlwaysInsert(gFormatInfoMap, format, info);
+  const FormatInfo info = {format,
+                           name,
+                           sizedFormat,
+                           unsizedFormat,
+                           componentType,
+                           ToBaseType(componentType),
+                           isSRGB,
+                           compressedFormatInfo,
+                           bytesPerPixel,
+                           r,
+                           g,
+                           b,
+                           a,
+                           d,
+                           s};
+  AlwaysInsert(gFormatInfoMap, format, info);
 }
 
-static void
-InitFormatInfo()
-{
-    // This function is full of expressive formatting, so:
-    // clang-format off
+static void InitFormatInfo() {
+  // This function is full of expressive formatting, so:
+  // clang-format off
 
 #define FOO(x) EffectiveFormat::x, #x, LOCAL_GL_ ## x
 
@@ -530,23 +524,22 @@ InitFormatInfo()
 
 #undef SET_COPY_DECAY
 
-    // clang-format on
+  // clang-format on
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
 bool gAreFormatTablesInitialized = false;
 
-static void
-EnsureInitFormatTables(const StaticMutexAutoLock&) // Prove that you locked it!
+static void EnsureInitFormatTables(
+    const StaticMutexAutoLock&)  // Prove that you locked it!
 {
-    if (MOZ_LIKELY(gAreFormatTablesInitialized))
-        return;
+  if (MOZ_LIKELY(gAreFormatTablesInitialized)) return;
 
-    gAreFormatTablesInitialized = true;
+  gAreFormatTablesInitialized = true;
 
-    InitCompressedFormatInfo();
-    InitFormatInfo();
+  InitCompressedFormatInfo();
+  InitFormatInfo();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -554,118 +547,109 @@ EnsureInitFormatTables(const StaticMutexAutoLock&) // Prove that you locked it!
 
 StaticMutex gFormatMapMutex;
 
-const FormatInfo*
-GetFormat(EffectiveFormat format)
-{
-    StaticMutexAutoLock lock(gFormatMapMutex);
-    EnsureInitFormatTables(lock);
+const FormatInfo* GetFormat(EffectiveFormat format) {
+  StaticMutexAutoLock lock(gFormatMapMutex);
+  EnsureInitFormatTables(lock);
 
-    return GetFormatInfo_NoLock(format);
+  return GetFormatInfo_NoLock(format);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-const FormatInfo*
-FormatInfo::GetCopyDecayFormat(UnsizedFormat uf) const
-{
-    return FindOrNull(this->copyDecayFormats, uf);
+const FormatInfo* FormatInfo::GetCopyDecayFormat(UnsizedFormat uf) const {
+  return FindOrNull(this->copyDecayFormats, uf);
 }
 
-bool
-GetBytesPerPixel(const PackingInfo& packing, uint8_t* const out_bytes)
-{
-    uint8_t bytesPerChannel;
+bool GetBytesPerPixel(const PackingInfo& packing, uint8_t* const out_bytes) {
+  uint8_t bytesPerChannel;
 
-    switch (packing.type) {
+  switch (packing.type) {
     case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
     case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
     case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
-        *out_bytes = 2;
-        return true;
+      *out_bytes = 2;
+      return true;
 
     case LOCAL_GL_UNSIGNED_INT_10F_11F_11F_REV:
     case LOCAL_GL_UNSIGNED_INT_2_10_10_10_REV:
     case LOCAL_GL_UNSIGNED_INT_24_8:
     case LOCAL_GL_UNSIGNED_INT_5_9_9_9_REV:
-        *out_bytes = 4;
-        return true;
+      *out_bytes = 4;
+      return true;
 
     case LOCAL_GL_FLOAT_32_UNSIGNED_INT_24_8_REV:
-        *out_bytes = 8;
-        return true;
+      *out_bytes = 8;
+      return true;
 
-    // Alright, that's all the fixed-size unpackTypes.
+      // Alright, that's all the fixed-size unpackTypes.
 
     case LOCAL_GL_BYTE:
     case LOCAL_GL_UNSIGNED_BYTE:
-        bytesPerChannel = 1;
-        break;
+      bytesPerChannel = 1;
+      break;
 
     case LOCAL_GL_SHORT:
     case LOCAL_GL_UNSIGNED_SHORT:
     case LOCAL_GL_HALF_FLOAT:
     case LOCAL_GL_HALF_FLOAT_OES:
-        bytesPerChannel = 2;
-        break;
+      bytesPerChannel = 2;
+      break;
 
     case LOCAL_GL_INT:
     case LOCAL_GL_UNSIGNED_INT:
     case LOCAL_GL_FLOAT:
-        bytesPerChannel = 4;
-        break;
+      bytesPerChannel = 4;
+      break;
 
     default:
-        return false;
-    }
+      return false;
+  }
 
-    uint8_t channels;
+  uint8_t channels;
 
-    switch (packing.format) {
+  switch (packing.format) {
     case LOCAL_GL_RED:
     case LOCAL_GL_RED_INTEGER:
     case LOCAL_GL_LUMINANCE:
     case LOCAL_GL_ALPHA:
     case LOCAL_GL_DEPTH_COMPONENT:
-        channels = 1;
-        break;
+      channels = 1;
+      break;
 
     case LOCAL_GL_RG:
     case LOCAL_GL_RG_INTEGER:
     case LOCAL_GL_LUMINANCE_ALPHA:
-        channels = 2;
-        break;
+      channels = 2;
+      break;
 
     case LOCAL_GL_RGB:
     case LOCAL_GL_RGB_INTEGER:
     case LOCAL_GL_SRGB:
-        channels = 3;
-        break;
+      channels = 3;
+      break;
 
     case LOCAL_GL_BGRA:
     case LOCAL_GL_RGBA:
     case LOCAL_GL_RGBA_INTEGER:
     case LOCAL_GL_SRGB_ALPHA:
-        channels = 4;
-        break;
+      channels = 4;
+      break;
 
     default:
-        return false;
-    }
+      return false;
+  }
 
-    *out_bytes = bytesPerChannel * channels;
-    return true;
+  *out_bytes = bytesPerChannel * channels;
+  return true;
 }
 
-uint8_t
-BytesPerPixel(const PackingInfo& packing)
-{
-    uint8_t ret;
-    if (MOZ_LIKELY(GetBytesPerPixel(packing, &ret)))
-        return ret;
+uint8_t BytesPerPixel(const PackingInfo& packing) {
+  uint8_t ret;
+  if (MOZ_LIKELY(GetBytesPerPixel(packing, &ret))) return ret;
 
-    gfxCriticalError() << "Bad `packing`: " << gfx::hexa(packing.format) << ", "
-                       << gfx::hexa(packing.type);
-    MOZ_CRASH("Bad `packing`.");
+  gfxCriticalError() << "Bad `packing`: " << gfx::hexa(packing.format) << ", "
+                     << gfx::hexa(packing.type);
+  MOZ_CRASH("Bad `packing`.");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -678,119 +662,99 @@ BytesPerPixel(const PackingInfo& packing)
 //////////////////////////////////////////////////////////////////////////////////////////
 // FormatUsageAuthority
 
-bool
-FormatUsageInfo::IsUnpackValid(const PackingInfo& key,
-                               const DriverUnpackInfo** const out_value) const
-{
-    auto itr = validUnpacks.find(key);
-    if (itr == validUnpacks.end())
-        return false;
+bool FormatUsageInfo::IsUnpackValid(
+    const PackingInfo& key, const DriverUnpackInfo** const out_value) const {
+  auto itr = validUnpacks.find(key);
+  if (itr == validUnpacks.end()) return false;
 
-    *out_value = &(itr->second);
-    return true;
+  *out_value = &(itr->second);
+  return true;
 }
 
-void
-FormatUsageInfo::ResolveMaxSamples(gl::GLContext* gl)
-{
-    MOZ_ASSERT(!this->maxSamplesKnown);
-    MOZ_ASSERT(this->maxSamples == 0);
-    MOZ_ASSERT(gl->IsCurrent());
+void FormatUsageInfo::ResolveMaxSamples(gl::GLContext* gl) {
+  MOZ_ASSERT(!this->maxSamplesKnown);
+  MOZ_ASSERT(this->maxSamples == 0);
+  MOZ_ASSERT(gl->IsCurrent());
 
-    this->maxSamplesKnown = true;
+  this->maxSamplesKnown = true;
 
-    const GLenum internalFormat = this->format->sizedFormat;
-    if (!internalFormat)
-        return;
+  const GLenum internalFormat = this->format->sizedFormat;
+  if (!internalFormat) return;
 
-    if (!gl->IsSupported(gl::GLFeature::internalformat_query))
-        return; // Leave it at 0.
+  if (!gl->IsSupported(gl::GLFeature::internalformat_query))
+    return;  // Leave it at 0.
 
-    GLint maxSamplesGL = 0;
-    gl->fGetInternalformativ(LOCAL_GL_RENDERBUFFER, internalFormat, LOCAL_GL_SAMPLES, 1,
-                             &maxSamplesGL);
+  GLint maxSamplesGL = 0;
+  gl->fGetInternalformativ(LOCAL_GL_RENDERBUFFER, internalFormat,
+                           LOCAL_GL_SAMPLES, 1, &maxSamplesGL);
 
-    this->maxSamples = maxSamplesGL;
+  this->maxSamples = maxSamplesGL;
 }
 
 ////////////////////////////////////////
 
-static void
-AddSimpleUnsized(FormatUsageAuthority* fua, GLenum unpackFormat, GLenum unpackType,
-                 EffectiveFormat effFormat)
-{
-    auto usage = fua->EditUsage(effFormat);
-    usage->isFilterable = true;
+static void AddSimpleUnsized(FormatUsageAuthority* fua, GLenum unpackFormat,
+                             GLenum unpackType, EffectiveFormat effFormat) {
+  auto usage = fua->EditUsage(effFormat);
+  usage->isFilterable = true;
 
-    const PackingInfo pi = {unpackFormat, unpackType};
-    const DriverUnpackInfo dui = {unpackFormat, unpackFormat, unpackType};
-    fua->AddTexUnpack(usage, pi, dui);
+  const PackingInfo pi = {unpackFormat, unpackType};
+  const DriverUnpackInfo dui = {unpackFormat, unpackFormat, unpackType};
+  fua->AddTexUnpack(usage, pi, dui);
 
-    fua->AllowUnsizedTexFormat(pi, usage);
+  fua->AllowUnsizedTexFormat(pi, usage);
 };
 
+/*static*/ const GLint FormatUsageInfo::kLuminanceSwizzleRGBA[4] = {
+    LOCAL_GL_RED, LOCAL_GL_RED, LOCAL_GL_RED, LOCAL_GL_ONE};
+/*static*/ const GLint FormatUsageInfo::kAlphaSwizzleRGBA[4] = {
+    LOCAL_GL_ZERO, LOCAL_GL_ZERO, LOCAL_GL_ZERO, LOCAL_GL_RED};
+/*static*/ const GLint FormatUsageInfo::kLumAlphaSwizzleRGBA[4] = {
+    LOCAL_GL_RED, LOCAL_GL_RED, LOCAL_GL_RED, LOCAL_GL_GREEN};
 
-/*static*/ const GLint FormatUsageInfo::kLuminanceSwizzleRGBA[4] = { LOCAL_GL_RED,
-                                                                     LOCAL_GL_RED,
-                                                                     LOCAL_GL_RED,
-                                                                     LOCAL_GL_ONE };
-/*static*/ const GLint FormatUsageInfo::kAlphaSwizzleRGBA[4] = { LOCAL_GL_ZERO,
-                                                                 LOCAL_GL_ZERO,
-                                                                 LOCAL_GL_ZERO,
-                                                                 LOCAL_GL_RED };
-/*static*/ const GLint FormatUsageInfo::kLumAlphaSwizzleRGBA[4] = { LOCAL_GL_RED,
-                                                                    LOCAL_GL_RED,
-                                                                    LOCAL_GL_RED,
-                                                                    LOCAL_GL_GREEN };
+static bool AddLegacyFormats_LA8(FormatUsageAuthority* fua, gl::GLContext* gl) {
+  if (gl->IsCoreProfile()) {
+    if (!gl->IsSupported(gl::GLFeature::texture_swizzle)) return false;
 
-static bool
-AddLegacyFormats_LA8(FormatUsageAuthority* fua, gl::GLContext* gl)
-{
-    if (gl->IsCoreProfile()) {
-        if (!gl->IsSupported(gl::GLFeature::texture_swizzle))
-            return false;
+    PackingInfo pi;
+    DriverUnpackInfo dui;
 
-        PackingInfo pi;
-        DriverUnpackInfo dui;
+    const auto fnAdd = [fua, &pi, &dui](EffectiveFormat effFormat,
+                                        const GLint* swizzle) {
+      auto usage = fua->EditUsage(effFormat);
+      usage->isFilterable = true;
+      usage->textureSwizzleRGBA = swizzle;
 
-        const auto fnAdd = [fua, &pi, &dui](EffectiveFormat effFormat,
-                                            const GLint* swizzle)
-        {
-            auto usage = fua->EditUsage(effFormat);
-            usage->isFilterable = true;
-            usage->textureSwizzleRGBA = swizzle;
+      fua->AddTexUnpack(usage, pi, dui);
 
-            fua->AddTexUnpack(usage, pi, dui);
+      fua->AllowUnsizedTexFormat(pi, usage);
+    };
 
-            fua->AllowUnsizedTexFormat(pi, usage);
-        };
+    pi = {LOCAL_GL_LUMINANCE, LOCAL_GL_UNSIGNED_BYTE};
+    dui = {LOCAL_GL_R8, LOCAL_GL_RED, LOCAL_GL_UNSIGNED_BYTE};
+    fnAdd(EffectiveFormat::Luminance8, FormatUsageInfo::kLuminanceSwizzleRGBA);
 
-        pi = {LOCAL_GL_LUMINANCE, LOCAL_GL_UNSIGNED_BYTE};
-        dui = {LOCAL_GL_R8, LOCAL_GL_RED, LOCAL_GL_UNSIGNED_BYTE};
-        fnAdd(EffectiveFormat::Luminance8, FormatUsageInfo::kLuminanceSwizzleRGBA);
+    pi = {LOCAL_GL_ALPHA, LOCAL_GL_UNSIGNED_BYTE};
+    dui = {LOCAL_GL_R8, LOCAL_GL_RED, LOCAL_GL_UNSIGNED_BYTE};
+    fnAdd(EffectiveFormat::Alpha8, FormatUsageInfo::kAlphaSwizzleRGBA);
 
-        pi = {LOCAL_GL_ALPHA, LOCAL_GL_UNSIGNED_BYTE};
-        dui = {LOCAL_GL_R8, LOCAL_GL_RED, LOCAL_GL_UNSIGNED_BYTE};
-        fnAdd(EffectiveFormat::Alpha8, FormatUsageInfo::kAlphaSwizzleRGBA);
-
-        pi = {LOCAL_GL_LUMINANCE_ALPHA, LOCAL_GL_UNSIGNED_BYTE};
-        dui = {LOCAL_GL_RG8, LOCAL_GL_RG, LOCAL_GL_UNSIGNED_BYTE};
-        fnAdd(EffectiveFormat::Luminance8Alpha8, FormatUsageInfo::kLumAlphaSwizzleRGBA);
-    } else {
-        // clang-format off
+    pi = {LOCAL_GL_LUMINANCE_ALPHA, LOCAL_GL_UNSIGNED_BYTE};
+    dui = {LOCAL_GL_RG8, LOCAL_GL_RG, LOCAL_GL_UNSIGNED_BYTE};
+    fnAdd(EffectiveFormat::Luminance8Alpha8,
+          FormatUsageInfo::kLumAlphaSwizzleRGBA);
+  } else {
+    // clang-format off
         AddSimpleUnsized(fua, LOCAL_GL_LUMINANCE      , LOCAL_GL_UNSIGNED_BYTE, EffectiveFormat::Luminance8      );
         AddSimpleUnsized(fua, LOCAL_GL_ALPHA          , LOCAL_GL_UNSIGNED_BYTE, EffectiveFormat::Alpha8          );
         AddSimpleUnsized(fua, LOCAL_GL_LUMINANCE_ALPHA, LOCAL_GL_UNSIGNED_BYTE, EffectiveFormat::Luminance8Alpha8);
-        // clang-format on
-    }
+    // clang-format on
+  }
 
-    return true;
+  return true;
 }
 
-static bool
-AddUnsizedFormats(FormatUsageAuthority* fua, gl::GLContext* gl)
-{
-    // clang-format off
+static bool AddUnsizedFormats(FormatUsageAuthority* fua, gl::GLContext* gl) {
+  // clang-format off
 
     // GLES 2.0.25, p63, Table 3.4
     AddSimpleUnsized(fua, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE         , EffectiveFormat::RGBA8  );
@@ -802,115 +766,112 @@ AddUnsizedFormats(FormatUsageAuthority* fua, gl::GLContext* gl)
     // L, A, LA
     return AddLegacyFormats_LA8(fua, gl);
 
-    // clang-format on
+  // clang-format on
 }
 
-void
-FormatUsageInfo::SetRenderable()
-{
-    this->isRenderable = true;
+void FormatUsageInfo::SetRenderable() {
+  this->isRenderable = true;
 
 #ifdef DEBUG
-    const auto format = this->format;
-    if (format->IsColorFormat()) {
-        const auto& map = format->copyDecayFormats;
-        const auto itr = map.find(format->unsizedFormat);
-        MOZ_ASSERT(itr != map.end(), "Renderable formats must be in copyDecayFormats.");
-        MOZ_ASSERT(itr->second == format);
-    }
+  const auto format = this->format;
+  if (format->IsColorFormat()) {
+    const auto& map = format->copyDecayFormats;
+    const auto itr = map.find(format->unsizedFormat);
+    MOZ_ASSERT(itr != map.end(),
+               "Renderable formats must be in copyDecayFormats.");
+    MOZ_ASSERT(itr->second == format);
+  }
 #endif
 }
 
-UniquePtr<FormatUsageAuthority>
-FormatUsageAuthority::CreateForWebGL1(gl::GLContext* gl)
-{
-    UniquePtr<FormatUsageAuthority> ret(new FormatUsageAuthority);
-    const auto ptr = ret.get();
+UniquePtr<FormatUsageAuthority> FormatUsageAuthority::CreateForWebGL1(
+    gl::GLContext* gl) {
+  UniquePtr<FormatUsageAuthority> ret(new FormatUsageAuthority);
+  const auto ptr = ret.get();
 
-    ////////////////////////////////////////////////////////////////////////////
-    // Usages
+  ////////////////////////////////////////////////////////////////////////////
+  // Usages
 
-    const auto fnSet = [ptr](EffectiveFormat effFormat, bool isRenderable,
-                             bool isFilterable)
-    {
-        MOZ_ASSERT(!ptr->GetUsage(effFormat));
+  const auto fnSet = [ptr](EffectiveFormat effFormat, bool isRenderable,
+                           bool isFilterable) {
+    MOZ_ASSERT(!ptr->GetUsage(effFormat));
 
-        auto usage = ptr->EditUsage(effFormat);
-        usage->isFilterable = isFilterable;
+    auto usage = ptr->EditUsage(effFormat);
+    usage->isFilterable = isFilterable;
 
-        if (isRenderable) {
-            usage->SetRenderable();
-        }
-    };
+    if (isRenderable) {
+      usage->SetRenderable();
+    }
+  };
 
-    // GLES 2.0.25, p117, Table 4.5
-    // RGBA8 is made renderable in WebGL 1.0, "Framebuffer Object Attachments"
-    //                              render filter
-    //                              able   able
-    fnSet(EffectiveFormat::RGBA8  , true, true);
-    fnSet(EffectiveFormat::RGBA4  , true, true);
-    fnSet(EffectiveFormat::RGB5_A1, true, true);
-    fnSet(EffectiveFormat::RGB565 , true, true);
+  // GLES 2.0.25, p117, Table 4.5
+  // RGBA8 is made renderable in WebGL 1.0, "Framebuffer Object Attachments"
+  //                              render filter
+  //                              able   able
+  fnSet(EffectiveFormat::RGBA8, true, true);
+  fnSet(EffectiveFormat::RGBA4, true, true);
+  fnSet(EffectiveFormat::RGB5_A1, true, true);
+  fnSet(EffectiveFormat::RGB565, true, true);
 
-    // RGB8 is not guaranteed to be renderable, but we should allow it for web-compat.
-    // Min-capability mode should mark this as non-renderable.
-    fnSet(EffectiveFormat::RGB8, true, true);
+  // RGB8 is not guaranteed to be renderable, but we should allow it for
+  // web-compat. Min-capability mode should mark this as non-renderable.
+  fnSet(EffectiveFormat::RGB8, true, true);
 
-    fnSet(EffectiveFormat::Luminance8Alpha8, false, true);
-    fnSet(EffectiveFormat::Luminance8      , false, true);
-    fnSet(EffectiveFormat::Alpha8          , false, true);
+  fnSet(EffectiveFormat::Luminance8Alpha8, false, true);
+  fnSet(EffectiveFormat::Luminance8, false, true);
+  fnSet(EffectiveFormat::Alpha8, false, true);
 
-    fnSet(EffectiveFormat::DEPTH_COMPONENT16, true, false);
-    fnSet(EffectiveFormat::STENCIL_INDEX8   , true, false);
+  fnSet(EffectiveFormat::DEPTH_COMPONENT16, true, false);
+  fnSet(EffectiveFormat::STENCIL_INDEX8, true, false);
 
-    // Added in WebGL 1.0 spec:
-    fnSet(EffectiveFormat::DEPTH24_STENCIL8, true, false);
+  // Added in WebGL 1.0 spec:
+  fnSet(EffectiveFormat::DEPTH24_STENCIL8, true, false);
 
-    ////////////////////////////////////
-    // RB formats
+  ////////////////////////////////////
+  // RB formats
 
-#define FOO(x) ptr->AllowRBFormat(LOCAL_GL_ ## x, ptr->GetUsage(EffectiveFormat::x))
+#define FOO(x) \
+  ptr->AllowRBFormat(LOCAL_GL_##x, ptr->GetUsage(EffectiveFormat::x))
 
-    FOO(RGBA4            );
-    FOO(RGB5_A1          );
-    FOO(RGB565           );
-    FOO(DEPTH_COMPONENT16);
-    FOO(STENCIL_INDEX8   );
-    //FOO(DEPTH24_STENCIL8 ); // WebGL 1 uses DEPTH_STENCIL instead of DEPTH24_STENCIL8.
+  FOO(RGBA4);
+  FOO(RGB5_A1);
+  FOO(RGB565);
+  FOO(DEPTH_COMPONENT16);
+  FOO(STENCIL_INDEX8);
+  // FOO(DEPTH24_STENCIL8 ); // WebGL 1 uses DEPTH_STENCIL instead of
+  // DEPTH24_STENCIL8.
 
 #undef FOO
 
-    ptr->AllowRBFormat(LOCAL_GL_DEPTH_STENCIL,
-                       ptr->GetUsage(EffectiveFormat::DEPTH24_STENCIL8));
+  ptr->AllowRBFormat(LOCAL_GL_DEPTH_STENCIL,
+                     ptr->GetUsage(EffectiveFormat::DEPTH24_STENCIL8));
 
-    ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
 
-    if (!AddUnsizedFormats(ptr, gl))
-        return nullptr;
+  if (!AddUnsizedFormats(ptr, gl)) return nullptr;
 
-    return ret;
+  return ret;
 }
 
-UniquePtr<FormatUsageAuthority>
-FormatUsageAuthority::CreateForWebGL2(gl::GLContext* gl)
-{
-    UniquePtr<FormatUsageAuthority> ret(new FormatUsageAuthority);
-    const auto ptr = ret.get();
+UniquePtr<FormatUsageAuthority> FormatUsageAuthority::CreateForWebGL2(
+    gl::GLContext* gl) {
+  UniquePtr<FormatUsageAuthority> ret(new FormatUsageAuthority);
+  const auto ptr = ret.get();
 
-    ////////////////////////////////////////////////////////////////////////////
-    // GLES 3.0.4 p111-113
+  ////////////////////////////////////////////////////////////////////////////
+  // GLES 3.0.4 p111-113
 
-    const auto fnAddSizedUnpack = [ptr](EffectiveFormat effFormat, GLenum internalFormat,
-                                        GLenum unpackFormat, GLenum unpackType)
-    {
-        auto usage = ptr->EditUsage(effFormat);
+  const auto fnAddSizedUnpack = [ptr](EffectiveFormat effFormat,
+                                      GLenum internalFormat,
+                                      GLenum unpackFormat, GLenum unpackType) {
+    auto usage = ptr->EditUsage(effFormat);
 
-        const PackingInfo pi = {unpackFormat, unpackType};
-        const DriverUnpackInfo dui = {internalFormat, unpackFormat, unpackType};
-        ptr->AddTexUnpack(usage, pi, dui);
-    };
+    const PackingInfo pi = {unpackFormat, unpackType};
+    const DriverUnpackInfo dui = {internalFormat, unpackFormat, unpackType};
+    ptr->AddTexUnpack(usage, pi, dui);
+  };
 
-    // clang-format off
+  // clang-format off
 #define FOO(x) EffectiveFormat::x, LOCAL_GL_ ## x
 
     // RGBA
@@ -1001,255 +962,240 @@ FormatUsageAuthority::CreateForWebGL2(gl::GLContext* gl)
     fnAddSizedUnpack(FOO(DEPTH32F_STENCIL8), LOCAL_GL_DEPTH_STENCIL, LOCAL_GL_FLOAT_32_UNSIGNED_INT_24_8_REV);
 
 #undef FOO
-    // clang-format on
+  // clang-format on
 
-    ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
 
-    // For renderable, see GLES 3.0.4, p212 "Framebuffer Completeness"
-    // For filterable, see GLES 3.0.4, p161 "...a texture is complete unless..."
+  // For renderable, see GLES 3.0.4, p212 "Framebuffer Completeness"
+  // For filterable, see GLES 3.0.4, p161 "...a texture is complete unless..."
 
-    const auto fnAllowES3TexFormat = [ptr](GLenum sizedFormat, EffectiveFormat effFormat,
-                                           bool isRenderable, bool isFilterable)
-    {
-        auto usage = ptr->EditUsage(effFormat);
-        usage->isFilterable = isFilterable;
+  const auto fnAllowES3TexFormat = [ptr](GLenum sizedFormat,
+                                         EffectiveFormat effFormat,
+                                         bool isRenderable, bool isFilterable) {
+    auto usage = ptr->EditUsage(effFormat);
+    usage->isFilterable = isFilterable;
 
-        if (isRenderable) {
-            usage->SetRenderable();
-        }
+    if (isRenderable) {
+      usage->SetRenderable();
+    }
 
-        ptr->AllowSizedTexFormat(sizedFormat, usage);
+    ptr->AllowSizedTexFormat(sizedFormat, usage);
 
-        if (isRenderable) {
-            ptr->AllowRBFormat(sizedFormat, usage);
-        }
-    };
+    if (isRenderable) {
+      ptr->AllowRBFormat(sizedFormat, usage);
+    }
+  };
 
-#define FOO(x) LOCAL_GL_ ## x, EffectiveFormat::x
+#define FOO(x) LOCAL_GL_##x, EffectiveFormat::x
 
-    // GLES 3.0.4, p128-129 "Required Texture Formats"
-    // GLES 3.0.4, p130-132, table 3.13
-    //                                   render filter
-    //                                    able   able
-    fnAllowES3TexFormat(FOO(R8         ), true , true );
-    fnAllowES3TexFormat(FOO(R8_SNORM   ), false, true );
-    fnAllowES3TexFormat(FOO(RG8        ), true , true );
-    fnAllowES3TexFormat(FOO(RG8_SNORM  ), false, true );
-    fnAllowES3TexFormat(FOO(RGB8       ), true , true );
-    fnAllowES3TexFormat(FOO(RGB8_SNORM ), false, true );
-    fnAllowES3TexFormat(FOO(RGB565     ), true , true );
-    fnAllowES3TexFormat(FOO(RGBA4      ), true , true );
-    fnAllowES3TexFormat(FOO(RGB5_A1    ), true , true );
-    fnAllowES3TexFormat(FOO(RGBA8      ), true , true );
-    fnAllowES3TexFormat(FOO(RGBA8_SNORM), false, true );
-    fnAllowES3TexFormat(FOO(RGB10_A2   ), true , true );
-    fnAllowES3TexFormat(FOO(RGB10_A2UI ), true , false);
+  // GLES 3.0.4, p128-129 "Required Texture Formats"
+  // GLES 3.0.4, p130-132, table 3.13
+  //                                   render filter
+  //                                    able   able
+  fnAllowES3TexFormat(FOO(R8), true, true);
+  fnAllowES3TexFormat(FOO(R8_SNORM), false, true);
+  fnAllowES3TexFormat(FOO(RG8), true, true);
+  fnAllowES3TexFormat(FOO(RG8_SNORM), false, true);
+  fnAllowES3TexFormat(FOO(RGB8), true, true);
+  fnAllowES3TexFormat(FOO(RGB8_SNORM), false, true);
+  fnAllowES3TexFormat(FOO(RGB565), true, true);
+  fnAllowES3TexFormat(FOO(RGBA4), true, true);
+  fnAllowES3TexFormat(FOO(RGB5_A1), true, true);
+  fnAllowES3TexFormat(FOO(RGBA8), true, true);
+  fnAllowES3TexFormat(FOO(RGBA8_SNORM), false, true);
+  fnAllowES3TexFormat(FOO(RGB10_A2), true, true);
+  fnAllowES3TexFormat(FOO(RGB10_A2UI), true, false);
 
-    fnAllowES3TexFormat(FOO(SRGB8       ), false, true);
-    fnAllowES3TexFormat(FOO(SRGB8_ALPHA8), true , true);
+  fnAllowES3TexFormat(FOO(SRGB8), false, true);
+  fnAllowES3TexFormat(FOO(SRGB8_ALPHA8), true, true);
 
-    fnAllowES3TexFormat(FOO(R16F   ), false, true);
-    fnAllowES3TexFormat(FOO(RG16F  ), false, true);
-    fnAllowES3TexFormat(FOO(RGB16F ), false, true);
-    fnAllowES3TexFormat(FOO(RGBA16F), false, true);
+  fnAllowES3TexFormat(FOO(R16F), false, true);
+  fnAllowES3TexFormat(FOO(RG16F), false, true);
+  fnAllowES3TexFormat(FOO(RGB16F), false, true);
+  fnAllowES3TexFormat(FOO(RGBA16F), false, true);
 
-    fnAllowES3TexFormat(FOO(R32F   ), false, false);
-    fnAllowES3TexFormat(FOO(RG32F  ), false, false);
-    fnAllowES3TexFormat(FOO(RGB32F ), false, false);
-    fnAllowES3TexFormat(FOO(RGBA32F), false, false);
+  fnAllowES3TexFormat(FOO(R32F), false, false);
+  fnAllowES3TexFormat(FOO(RG32F), false, false);
+  fnAllowES3TexFormat(FOO(RGB32F), false, false);
+  fnAllowES3TexFormat(FOO(RGBA32F), false, false);
 
-    fnAllowES3TexFormat(FOO(R11F_G11F_B10F), false, true);
-    fnAllowES3TexFormat(FOO(RGB9_E5       ), false, true);
+  fnAllowES3TexFormat(FOO(R11F_G11F_B10F), false, true);
+  fnAllowES3TexFormat(FOO(RGB9_E5), false, true);
 
-    fnAllowES3TexFormat(FOO(R8I  ), true, false);
-    fnAllowES3TexFormat(FOO(R8UI ), true, false);
-    fnAllowES3TexFormat(FOO(R16I ), true, false);
-    fnAllowES3TexFormat(FOO(R16UI), true, false);
-    fnAllowES3TexFormat(FOO(R32I ), true, false);
-    fnAllowES3TexFormat(FOO(R32UI), true, false);
+  fnAllowES3TexFormat(FOO(R8I), true, false);
+  fnAllowES3TexFormat(FOO(R8UI), true, false);
+  fnAllowES3TexFormat(FOO(R16I), true, false);
+  fnAllowES3TexFormat(FOO(R16UI), true, false);
+  fnAllowES3TexFormat(FOO(R32I), true, false);
+  fnAllowES3TexFormat(FOO(R32UI), true, false);
 
-    fnAllowES3TexFormat(FOO(RG8I  ), true, false);
-    fnAllowES3TexFormat(FOO(RG8UI ), true, false);
-    fnAllowES3TexFormat(FOO(RG16I ), true, false);
-    fnAllowES3TexFormat(FOO(RG16UI), true, false);
-    fnAllowES3TexFormat(FOO(RG32I ), true, false);
-    fnAllowES3TexFormat(FOO(RG32UI), true, false);
+  fnAllowES3TexFormat(FOO(RG8I), true, false);
+  fnAllowES3TexFormat(FOO(RG8UI), true, false);
+  fnAllowES3TexFormat(FOO(RG16I), true, false);
+  fnAllowES3TexFormat(FOO(RG16UI), true, false);
+  fnAllowES3TexFormat(FOO(RG32I), true, false);
+  fnAllowES3TexFormat(FOO(RG32UI), true, false);
 
-    fnAllowES3TexFormat(FOO(RGB8I  ), false, false);
-    fnAllowES3TexFormat(FOO(RGB8UI ), false, false);
-    fnAllowES3TexFormat(FOO(RGB16I ), false, false);
-    fnAllowES3TexFormat(FOO(RGB16UI), false, false);
-    fnAllowES3TexFormat(FOO(RGB32I ), false, false);
-    fnAllowES3TexFormat(FOO(RGB32UI), false, false);
+  fnAllowES3TexFormat(FOO(RGB8I), false, false);
+  fnAllowES3TexFormat(FOO(RGB8UI), false, false);
+  fnAllowES3TexFormat(FOO(RGB16I), false, false);
+  fnAllowES3TexFormat(FOO(RGB16UI), false, false);
+  fnAllowES3TexFormat(FOO(RGB32I), false, false);
+  fnAllowES3TexFormat(FOO(RGB32UI), false, false);
 
-    fnAllowES3TexFormat(FOO(RGBA8I  ), true, false);
-    fnAllowES3TexFormat(FOO(RGBA8UI ), true, false);
-    fnAllowES3TexFormat(FOO(RGBA16I ), true, false);
-    fnAllowES3TexFormat(FOO(RGBA16UI), true, false);
-    fnAllowES3TexFormat(FOO(RGBA32I ), true, false);
-    fnAllowES3TexFormat(FOO(RGBA32UI), true, false);
+  fnAllowES3TexFormat(FOO(RGBA8I), true, false);
+  fnAllowES3TexFormat(FOO(RGBA8UI), true, false);
+  fnAllowES3TexFormat(FOO(RGBA16I), true, false);
+  fnAllowES3TexFormat(FOO(RGBA16UI), true, false);
+  fnAllowES3TexFormat(FOO(RGBA32I), true, false);
+  fnAllowES3TexFormat(FOO(RGBA32UI), true, false);
 
-    // GLES 3.0.4, p133, table 3.14
-    fnAllowES3TexFormat(FOO(DEPTH_COMPONENT16 ), true, false);
-    fnAllowES3TexFormat(FOO(DEPTH_COMPONENT24 ), true, false);
-    fnAllowES3TexFormat(FOO(DEPTH_COMPONENT32F), true, false);
-    fnAllowES3TexFormat(FOO(DEPTH24_STENCIL8  ), true, false);
-    fnAllowES3TexFormat(FOO(DEPTH32F_STENCIL8 ), true, false);
+  // GLES 3.0.4, p133, table 3.14
+  fnAllowES3TexFormat(FOO(DEPTH_COMPONENT16), true, false);
+  fnAllowES3TexFormat(FOO(DEPTH_COMPONENT24), true, false);
+  fnAllowES3TexFormat(FOO(DEPTH_COMPONENT32F), true, false);
+  fnAllowES3TexFormat(FOO(DEPTH24_STENCIL8), true, false);
+  fnAllowES3TexFormat(FOO(DEPTH32F_STENCIL8), true, false);
 
 #undef FOO
 
-    // GLES 3.0.4, p206, "Required Renderbuffer Formats":
-    // "Implementations are also required to support STENCIL_INDEX8. Requesting this
-    // internal format for a renderbuffer will allocate at least 8 stencil bit planes."
+  // GLES 3.0.4, p206, "Required Renderbuffer Formats":
+  // "Implementations are also required to support STENCIL_INDEX8. Requesting
+  // this internal format for a renderbuffer will allocate at least 8 stencil
+  // bit planes."
 
-    auto usage = ptr->EditUsage(EffectiveFormat::STENCIL_INDEX8);
-    usage->SetRenderable();
-    ptr->AllowRBFormat(LOCAL_GL_STENCIL_INDEX8, usage);
+  auto usage = ptr->EditUsage(EffectiveFormat::STENCIL_INDEX8);
+  usage->SetRenderable();
+  ptr->AllowRBFormat(LOCAL_GL_STENCIL_INDEX8, usage);
 
-    ////////////////
-    // Legacy formats
+  ////////////////
+  // Legacy formats
 
-    if (!AddUnsizedFormats(ptr, gl))
-        return nullptr;
+  if (!AddUnsizedFormats(ptr, gl)) return nullptr;
 
-    ptr->AllowRBFormat(LOCAL_GL_DEPTH_STENCIL,
-                       ptr->GetUsage(EffectiveFormat::DEPTH24_STENCIL8));
+  ptr->AllowRBFormat(LOCAL_GL_DEPTH_STENCIL,
+                     ptr->GetUsage(EffectiveFormat::DEPTH24_STENCIL8));
 
-    ////////////////////////////////////
+  ////////////////////////////////////
 
-    return ret;
+  return ret;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-void
-FormatUsageAuthority::AddTexUnpack(FormatUsageInfo* usage, const PackingInfo& pi,
-                                   const DriverUnpackInfo& dui)
-{
-    // Don't AlwaysInsert here, since we'll see duplicates from sized and unsized formats.
-    auto res = usage->validUnpacks.insert({ pi, dui });
-    auto itr = res.first;
+void FormatUsageAuthority::AddTexUnpack(FormatUsageInfo* usage,
+                                        const PackingInfo& pi,
+                                        const DriverUnpackInfo& dui) {
+  // Don't AlwaysInsert here, since we'll see duplicates from sized and unsized
+  // formats.
+  auto res = usage->validUnpacks.insert({pi, dui});
+  auto itr = res.first;
 
-    if (!usage->idealUnpack) {
-        // First one!
-        usage->idealUnpack = &(itr->second);
-    }
+  if (!usage->idealUnpack) {
+    // First one!
+    usage->idealUnpack = &(itr->second);
+  }
 
-    mValidTexUnpackFormats.insert(pi.format);
-    mValidTexUnpackTypes.insert(pi.type);
+  mValidTexUnpackFormats.insert(pi.format);
+  mValidTexUnpackTypes.insert(pi.type);
 }
 
-static bool
-Contains(const std::set<GLenum>& set, GLenum key)
-{
-    return set.find(key) != set.end();
+static bool Contains(const std::set<GLenum>& set, GLenum key) {
+  return set.find(key) != set.end();
 }
 
-bool
-FormatUsageAuthority::IsInternalFormatEnumValid(GLenum internalFormat) const
-{
-    return Contains(mValidTexInternalFormats, internalFormat);
+bool FormatUsageAuthority::IsInternalFormatEnumValid(
+    GLenum internalFormat) const {
+  return Contains(mValidTexInternalFormats, internalFormat);
 }
 
-bool
-FormatUsageAuthority::AreUnpackEnumsValid(GLenum unpackFormat, GLenum unpackType) const
-{
-    return (Contains(mValidTexUnpackFormats, unpackFormat) &&
-            Contains(mValidTexUnpackTypes, unpackType));
+bool FormatUsageAuthority::AreUnpackEnumsValid(GLenum unpackFormat,
+                                               GLenum unpackType) const {
+  return (Contains(mValidTexUnpackFormats, unpackFormat) &&
+          Contains(mValidTexUnpackTypes, unpackType));
 }
 
 ////////////////////
 
-void
-FormatUsageAuthority::AllowRBFormat(GLenum sizedFormat, const FormatUsageInfo* usage)
-{
-    MOZ_ASSERT(!usage->format->compression);
-    MOZ_ASSERT(usage->format->sizedFormat);
-    MOZ_ASSERT(usage->IsRenderable());
+void FormatUsageAuthority::AllowRBFormat(GLenum sizedFormat,
+                                         const FormatUsageInfo* usage) {
+  MOZ_ASSERT(!usage->format->compression);
+  MOZ_ASSERT(usage->format->sizedFormat);
+  MOZ_ASSERT(usage->IsRenderable());
 
-    AlwaysInsert(mRBFormatMap, sizedFormat, usage);
+  AlwaysInsert(mRBFormatMap, sizedFormat, usage);
 }
 
-void
-FormatUsageAuthority::AllowSizedTexFormat(GLenum sizedFormat,
-                                          const FormatUsageInfo* usage)
-{
-    if (usage->format->compression) {
-        MOZ_ASSERT(usage->isFilterable, "Compressed formats should be filterable.");
-    } else {
-        MOZ_ASSERT(usage->validUnpacks.size() && usage->idealUnpack,
-                   "AddTexUnpack() first.");
-    }
+void FormatUsageAuthority::AllowSizedTexFormat(GLenum sizedFormat,
+                                               const FormatUsageInfo* usage) {
+  if (usage->format->compression) {
+    MOZ_ASSERT(usage->isFilterable, "Compressed formats should be filterable.");
+  } else {
+    MOZ_ASSERT(usage->validUnpacks.size() && usage->idealUnpack,
+               "AddTexUnpack() first.");
+  }
 
-    AlwaysInsert(mSizedTexFormatMap, sizedFormat, usage);
+  AlwaysInsert(mSizedTexFormatMap, sizedFormat, usage);
 
-    mValidTexInternalFormats.insert(sizedFormat);
+  mValidTexInternalFormats.insert(sizedFormat);
 }
 
-void
-FormatUsageAuthority::AllowUnsizedTexFormat(const PackingInfo& pi,
-                                            const FormatUsageInfo* usage)
-{
-    MOZ_ASSERT(!usage->format->compression);
-    MOZ_ASSERT(usage->validUnpacks.size() && usage->idealUnpack, "AddTexUnpack() first.");
+void FormatUsageAuthority::AllowUnsizedTexFormat(const PackingInfo& pi,
+                                                 const FormatUsageInfo* usage) {
+  MOZ_ASSERT(!usage->format->compression);
+  MOZ_ASSERT(usage->validUnpacks.size() && usage->idealUnpack,
+             "AddTexUnpack() first.");
 
-    AlwaysInsert(mUnsizedTexFormatMap, pi, usage);
+  AlwaysInsert(mUnsizedTexFormatMap, pi, usage);
 
-    mValidTexInternalFormats.insert(pi.format);
-    mValidTexUnpackFormats.insert(pi.format);
-    mValidTexUnpackTypes.insert(pi.type);
+  mValidTexInternalFormats.insert(pi.format);
+  mValidTexUnpackFormats.insert(pi.format);
+  mValidTexUnpackTypes.insert(pi.type);
 }
 
-const FormatUsageInfo*
-FormatUsageAuthority::GetRBUsage(GLenum sizedFormat) const
-{
-    return FindOrNull(mRBFormatMap, sizedFormat);
+const FormatUsageInfo* FormatUsageAuthority::GetRBUsage(
+    GLenum sizedFormat) const {
+  return FindOrNull(mRBFormatMap, sizedFormat);
 }
 
-const FormatUsageInfo*
-FormatUsageAuthority::GetSizedTexUsage(GLenum sizedFormat) const
-{
-    return FindOrNull(mSizedTexFormatMap, sizedFormat);
+const FormatUsageInfo* FormatUsageAuthority::GetSizedTexUsage(
+    GLenum sizedFormat) const {
+  return FindOrNull(mSizedTexFormatMap, sizedFormat);
 }
 
-const FormatUsageInfo*
-FormatUsageAuthority::GetUnsizedTexUsage(const PackingInfo& pi) const
-{
-    return FindOrNull(mUnsizedTexFormatMap, pi);
+const FormatUsageInfo* FormatUsageAuthority::GetUnsizedTexUsage(
+    const PackingInfo& pi) const {
+  return FindOrNull(mUnsizedTexFormatMap, pi);
 }
 
-FormatUsageInfo*
-FormatUsageAuthority::EditUsage(EffectiveFormat format)
-{
-    auto itr = mUsageMap.find(format);
+FormatUsageInfo* FormatUsageAuthority::EditUsage(EffectiveFormat format) {
+  auto itr = mUsageMap.find(format);
 
-    if (itr == mUsageMap.end()) {
-        const FormatInfo* formatInfo = GetFormat(format);
-        MOZ_RELEASE_ASSERT(formatInfo, "GFX: no format info set.");
+  if (itr == mUsageMap.end()) {
+    const FormatInfo* formatInfo = GetFormat(format);
+    MOZ_RELEASE_ASSERT(formatInfo, "GFX: no format info set.");
 
-        FormatUsageInfo usage(formatInfo);
+    FormatUsageInfo usage(formatInfo);
 
-        auto res = mUsageMap.insert({ format, usage });
-        DebugOnly<bool> didInsert = res.second;
-        MOZ_ASSERT(didInsert);
+    auto res = mUsageMap.insert({format, usage});
+    DebugOnly<bool> didInsert = res.second;
+    MOZ_ASSERT(didInsert);
 
-        itr = res.first;
-    }
+    itr = res.first;
+  }
 
-    return &(itr->second);
+  return &(itr->second);
 }
 
-const FormatUsageInfo*
-FormatUsageAuthority::GetUsage(EffectiveFormat format) const
-{
-    auto itr = mUsageMap.find(format);
-    if (itr == mUsageMap.end())
-        return nullptr;
+const FormatUsageInfo* FormatUsageAuthority::GetUsage(
+    EffectiveFormat format) const {
+  auto itr = mUsageMap.find(format);
+  if (itr == mUsageMap.end()) return nullptr;
 
-    return &(itr->second);
+  return &(itr->second);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace webgl
-} // namespace mozilla
+}  // namespace webgl
+}  // namespace mozilla

@@ -28,27 +28,19 @@ NS_IMPL_ADDREF_INHERITED(MerchantValidationEvent, Event)
 NS_IMPL_RELEASE_INHERITED(MerchantValidationEvent, Event)
 
 // User-land code constructor
-already_AddRefed<MerchantValidationEvent>
-MerchantValidationEvent::Constructor(
-  const GlobalObject& aGlobal,
-  const nsAString& aType,
-  const MerchantValidationEventInit& aEventInitDict,
-  ErrorResult& aRv)
-{
+already_AddRefed<MerchantValidationEvent> MerchantValidationEvent::Constructor(
+    const GlobalObject& aGlobal, const nsAString& aType,
+    const MerchantValidationEventInit& aEventInitDict, ErrorResult& aRv) {
   // validate passed URL
   nsCOMPtr<mozilla::dom::EventTarget> owner =
-    do_QueryInterface(aGlobal.GetAsSupports());
+      do_QueryInterface(aGlobal.GetAsSupports());
   return Constructor(owner, aType, aEventInitDict, aRv);
 }
 
 // Internal JS object constructor
-already_AddRefed<MerchantValidationEvent>
-MerchantValidationEvent::Constructor(
-  EventTarget* aOwner,
-  const nsAString& aType,
-  const MerchantValidationEventInit& aEventInitDict,
-  ErrorResult& aRv)
-{
+already_AddRefed<MerchantValidationEvent> MerchantValidationEvent::Constructor(
+    EventTarget* aOwner, const nsAString& aType,
+    const MerchantValidationEventInit& aEventInitDict, ErrorResult& aRv) {
   RefPtr<MerchantValidationEvent> e = new MerchantValidationEvent(aOwner);
   bool trusted = e->Init(aOwner);
   e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
@@ -60,15 +52,13 @@ MerchantValidationEvent::Constructor(
   return e.forget();
 }
 
-bool
-MerchantValidationEvent::init(const MerchantValidationEventInit& aEventInitDict,
-                              ErrorResult& aRv)
-{
+bool MerchantValidationEvent::init(
+    const MerchantValidationEventInit& aEventInitDict, ErrorResult& aRv) {
   // Check methodName is valid
   if (!aEventInitDict.mMethodName.IsEmpty()) {
     nsString errMsg;
     auto rv = PaymentRequest::IsValidPaymentMethodIdentifier(
-      aEventInitDict.mMethodName, errMsg);
+        aEventInitDict.mMethodName, errMsg);
     if (NS_FAILED(rv)) {
       aRv.ThrowRangeError<MSG_ILLEGAL_RANGE_PR_CONSTRUCTOR>(errMsg);
       return false;
@@ -88,11 +78,8 @@ MerchantValidationEvent::init(const MerchantValidationEventInit& aEventInitDict,
 
   nsresult rv;
   nsCOMPtr<nsIURI> validationUri;
-  rv = NS_NewURI(getter_AddRefs(validationUri),
-                 aEventInitDict.mValidationURL,
-                 nullptr,
-                 baseURI,
-                 nsContentUtils::GetIOService());
+  rv = NS_NewURI(getter_AddRefs(validationUri), aEventInitDict.mValidationURL,
+                 nullptr, baseURI, nsContentUtils::GetIOService());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.ThrowTypeError<MSG_INVALID_URL>(aEventInitDict.mValidationURL);
     return false;
@@ -108,16 +95,12 @@ MerchantValidationEvent::init(const MerchantValidationEventInit& aEventInitDict,
 }
 
 MerchantValidationEvent::MerchantValidationEvent(EventTarget* aOwner)
-  : Event(aOwner, nullptr, nullptr)
-  , mWaitForUpdate(false)
-{
+    : Event(aOwner, nullptr, nullptr), mWaitForUpdate(false) {
   MOZ_ASSERT(aOwner);
 }
 
-void
-MerchantValidationEvent::ResolvedCallback(JSContext* aCx,
-                                          JS::Handle<JS::Value> aValue)
-{
+void MerchantValidationEvent::ResolvedCallback(JSContext* aCx,
+                                               JS::Handle<JS::Value> aValue) {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(mRequest);
 
@@ -138,10 +121,8 @@ MerchantValidationEvent::ResolvedCallback(JSContext* aCx,
   mRequest->SetUpdating(false);
 }
 
-void
-MerchantValidationEvent::RejectedCallback(JSContext* aCx,
-                                          JS::Handle<JS::Value> aValue)
-{
+void MerchantValidationEvent::RejectedCallback(JSContext* aCx,
+                                               JS::Handle<JS::Value> aValue) {
   MOZ_ASSERT(mRequest);
   if (!mWaitForUpdate) {
     return;
@@ -151,9 +132,7 @@ MerchantValidationEvent::RejectedCallback(JSContext* aCx,
   mRequest->SetUpdating(false);
 }
 
-void
-MerchantValidationEvent::Complete(Promise& aPromise, ErrorResult& aRv)
-{
+void MerchantValidationEvent::Complete(Promise& aPromise, ErrorResult& aRv) {
   if (!IsTrusted()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -174,9 +153,7 @@ MerchantValidationEvent::Complete(Promise& aPromise, ErrorResult& aRv)
   mRequest->SetUpdating(true);
 }
 
-void
-MerchantValidationEvent::SetRequest(PaymentRequest* aRequest)
-{
+void MerchantValidationEvent::SetRequest(PaymentRequest* aRequest) {
   MOZ_ASSERT(IsTrusted());
   MOZ_ASSERT(!mRequest);
   MOZ_ASSERT(aRequest);
@@ -184,38 +161,28 @@ MerchantValidationEvent::SetRequest(PaymentRequest* aRequest)
   mRequest = aRequest;
 }
 
-void
-MerchantValidationEvent::GetValidationURL(nsAString& aValidationURL)
-{
+void MerchantValidationEvent::GetValidationURL(nsAString& aValidationURL) {
   aValidationURL.Assign(mValidationURL);
 }
 
-void
-MerchantValidationEvent::SetValidationURL(nsAString& aValidationURL)
-{
+void MerchantValidationEvent::SetValidationURL(nsAString& aValidationURL) {
   mValidationURL.Assign(aValidationURL);
 }
 
-void
-MerchantValidationEvent::GetMethodName(nsAString& aMethodName)
-{
+void MerchantValidationEvent::GetMethodName(nsAString& aMethodName) {
   aMethodName.Assign(mMethodName);
 }
 
-void
-MerchantValidationEvent::SetMethodName(const nsAString& aMethodName)
-{
+void MerchantValidationEvent::SetMethodName(const nsAString& aMethodName) {
   mMethodName.Assign(aMethodName);
 }
 
 MerchantValidationEvent::~MerchantValidationEvent() {}
 
-JSObject*
-MerchantValidationEvent::WrapObjectInternal(JSContext* aCx,
-                                            JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* MerchantValidationEvent::WrapObjectInternal(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return MerchantValidationEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

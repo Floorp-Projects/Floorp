@@ -20,18 +20,16 @@ class ThreadBound;
 namespace detail {
 
 template <bool Condition, typename T>
-struct AddConstIf
-{
+struct AddConstIf {
   using type = T;
 };
 
 template <typename T>
-struct AddConstIf<true, T>
-{
+struct AddConstIf<true, T> {
   using type = typename std::add_const<T>::type;
 };
 
-}
+}  // namespace detail
 
 // A ThreadBound<T> is a T that can only be accessed by a specific
 // thread. To enforce this rule, the inner T is only accessible
@@ -59,29 +57,23 @@ struct AddConstIf<true, T>
 // Note: A ThreadBound<T> may be destructed from any thread, not just
 // its designated thread at the time the destructor is invoked.
 template <typename T>
-class ThreadBound final
-{
-public:
+class ThreadBound final {
+ public:
   template <typename... Args>
   explicit ThreadBound(Args&&... aArgs)
-    : mData(std::forward<Args>(aArgs)...)
-    , mThread(PR_GetCurrentThread())
-    , mAccessCount(0)
-  {}
+      : mData(std::forward<Args>(aArgs)...),
+        mThread(PR_GetCurrentThread()),
+        mAccessCount(0) {}
 
-  ~ThreadBound()
-  {
-    AssertIsNotCurrentlyAccessed();
-  }
+  ~ThreadBound() { AssertIsNotCurrentlyAccessed(); }
 
-  void Transfer(const PRThread* const aDest)
-  {
+  void Transfer(const PRThread* const aDest) {
     AssertIsCorrectThread();
     AssertIsNotCurrentlyAccessed();
     mThread = aDest;
   }
 
-private:
+ private:
   T mData;
 
   // This member is (potentially) accessed by multiple threads and is
@@ -96,17 +88,15 @@ private:
   using AccessCountType = Atomic<int, ReleaseAcquire>;
   mutable AccessCountType mAccessCount;
 
-public:
+ public:
   template <bool IsConst>
-  class MOZ_STACK_CLASS Accessor final
-  {
+  class MOZ_STACK_CLASS Accessor final {
     using DataType = typename detail::AddConstIf<IsConst, T>::type;
 
-  public:
-    explicit Accessor(typename detail::AddConstIf<IsConst, ThreadBound>::type& aThreadBound)
-      : mData(aThreadBound.mData)
-      , mAccessCount(aThreadBound.mAccessCount)
-    {
+   public:
+    explicit Accessor(
+        typename detail::AddConstIf<IsConst, ThreadBound>::type& aThreadBound)
+        : mData(aThreadBound.mData), mAccessCount(aThreadBound.mAccessCount) {
       aThreadBound.AssertIsCorrectThread();
 
       // This load/store serves as a memory fence that guards mData
@@ -121,40 +111,26 @@ public:
     Accessor& operator=(const Accessor&) = delete;
     Accessor& operator=(Accessor&&) = delete;
 
-    ~Accessor()
-    {
-      --mAccessCount;
-    }
+    ~Accessor() { --mAccessCount; }
 
-    DataType* operator->()
-    {
-      return &mData;
-    }
+    DataType* operator->() { return &mData; }
 
-  private:
+   private:
     DataType& mData;
     AccessCountType& mAccessCount;
   };
 
   template <typename U>
-  using AccessorFor = Accessor<std::is_const<typename std::remove_reference<U>::type>::value>;
+  using AccessorFor =
+      Accessor<std::is_const<typename std::remove_reference<U>::type>::value>;
 
-private:
-  bool IsCorrectThread() const
-  {
-    return mThread == PR_GetCurrentThread();
-  }
+ private:
+  bool IsCorrectThread() const { return mThread == PR_GetCurrentThread(); }
 
-  bool IsNotCurrentlyAccessed() const
-  {
-    return mAccessCount == 0;
-  }
+  bool IsNotCurrentlyAccessed() const { return mAccessCount == 0; }
 
 #define MOZ_DEFINE_THREAD_BOUND_ASSERT(predicate) \
-  void Assert ## predicate() const \
-  { \
-    MOZ_DIAGNOSTIC_ASSERT(predicate()); \
-  }
+  void Assert##predicate() const { MOZ_DIAGNOSTIC_ASSERT(predicate()); }
 
   MOZ_DEFINE_THREAD_BOUND_ASSERT(IsCorrectThread)
   MOZ_DEFINE_THREAD_BOUND_ASSERT(IsNotCurrentlyAccessed)
@@ -165,6 +141,6 @@ private:
 #define MOZ_ACCESS_THREAD_BOUND(value, name) \
   decltype(value)::AccessorFor<decltype(*&value)> name(value)
 
-}
+}  // namespace mozilla
 
-#endif // mozilla_ThreadBound_h
+#endif  // mozilla_ThreadBound_h

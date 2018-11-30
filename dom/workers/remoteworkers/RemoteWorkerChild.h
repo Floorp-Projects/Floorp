@@ -22,74 +22,54 @@ class WorkerErrorReport;
 class WorkerPrivate;
 class OptionalMessagePortIdentifier;
 
-class RemoteWorkerChild final : public PRemoteWorkerChild
-{
-public:
+class RemoteWorkerChild final : public PRemoteWorkerChild {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteWorkerChild)
 
   RemoteWorkerChild();
 
-  void
-  ExecWorker(const RemoteWorkerData& aData);
+  void ExecWorker(const RemoteWorkerData& aData);
 
-  void
-  InitializeOnWorker(WorkerPrivate* aWorkerPrivate);
+  void InitializeOnWorker(WorkerPrivate* aWorkerPrivate);
 
-  void
-  ShutdownOnWorker();
+  void ShutdownOnWorker();
 
-  void
-  AddPortIdentifier(JSContext* aCx,
-                    WorkerPrivate* aWorkerPrivate,
-                    const MessagePortIdentifier& aPortIdentifier);
+  void AddPortIdentifier(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+                         const MessagePortIdentifier& aPortIdentifier);
 
-  void
-  ErrorPropagationOnMainThread(const WorkerErrorReport* aReport,
-                               bool aIsErrorEvent);
+  void ErrorPropagationOnMainThread(const WorkerErrorReport* aReport,
+                                    bool aIsErrorEvent);
 
-  void
-  CloseWorkerOnMainThread();
+  void CloseWorkerOnMainThread();
 
-  void
-  FlushReportsOnMainThread(nsIConsoleReportCollector* aReporter);
+  void FlushReportsOnMainThread(nsIConsoleReportCollector* aReporter);
 
-private:
+ private:
   class InitializeWorkerRunnable;
 
   ~RemoteWorkerChild();
 
-  void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult
-  RecvExecOp(const RemoteWorkerOp& aOp) override;
+  mozilla::ipc::IPCResult RecvExecOp(const RemoteWorkerOp& aOp) override;
 
-  void
-  RecvExecOpOnMainThread(const RemoteWorkerOp& aOp);
+  void RecvExecOpOnMainThread(const RemoteWorkerOp& aOp);
 
-  nsresult
-  ExecWorkerOnMainThread(const RemoteWorkerData& aData);
+  nsresult ExecWorkerOnMainThread(const RemoteWorkerData& aData);
 
-  void
-  ErrorPropagation(const ErrorValue& aValue);
+  void ErrorPropagation(const ErrorValue& aValue);
 
-  void
-  ErrorPropagationDispatch(nsresult aError);
+  void ErrorPropagationDispatch(nsresult aError);
 
-  void
-  CreationSucceededOnAnyThread();
+  void CreationSucceededOnAnyThread();
 
-  void
-  CreationSucceeded();
+  void CreationSucceeded();
 
-  void
-  CreationFailedOnAnyThread();
+  void CreationFailedOnAnyThread();
 
-  void
-  CreationFailed();
+  void CreationFailed();
 
-  void
-  WorkerTerminated();
+  void WorkerTerminated();
 
   // Touched on main-thread only.
   nsTArray<uint64_t> mWindowIDs;
@@ -98,8 +78,7 @@ private:
   RefPtr<WeakWorkerRef> mWorkerRef;
   bool mIPCActive;
 
-  enum WorkerState
-  {
+  enum WorkerState {
     // CreationSucceeded/CreationFailed not called yet.
     ePending,
 
@@ -121,7 +100,7 @@ private:
   nsTArray<RemoteWorkerOp> mPendingOps;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_RemoteWorkerChild_h
+#endif  // mozilla_dom_RemoteWorkerChild_h

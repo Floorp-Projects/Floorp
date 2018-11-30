@@ -21,19 +21,19 @@ namespace layers {
 class RefCountedShmem;
 
 // This just implement the methods externally.
-class RefCountedShm
-{
-public:
-
+class RefCountedShm {
+ public:
   static uint8_t* GetBytes(const RefCountedShmem& aShm);
 
   static size_t GetSize(const RefCountedShmem& aShm);
 
   static bool IsValid(const RefCountedShmem& aShm);
 
-  static bool Alloc(mozilla::ipc::IProtocol* aAllocator, size_t aSize, RefCountedShmem& aShm);
+  static bool Alloc(mozilla::ipc::IProtocol* aAllocator, size_t aSize,
+                    RefCountedShmem& aShm);
 
-  static void Dealloc(mozilla::ipc::IProtocol* aAllocator, RefCountedShmem& aShm);
+  static void Dealloc(mozilla::ipc::IProtocol* aAllocator,
+                      RefCountedShmem& aShm);
 
   static int32_t GetReferenceCount(const RefCountedShmem& aShm);
 
@@ -42,7 +42,7 @@ public:
   static int32_t Release(const RefCountedShmem& aShm);
 };
 
-} // namespace
-} // namespace
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

@@ -33,142 +33,127 @@ class Document;
 class DocumentFragment;
 class GlobalObject;
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#define XSLT_MSGS_URL  "chrome://global/locale/xslt/xslt.properties"
+#define XSLT_MSGS_URL "chrome://global/locale/xslt/xslt.properties"
 
 /**
  * txMozillaXSLTProcessor is a front-end to the XSLT Processor.
  */
 class txMozillaXSLTProcessor final : public nsIDocumentTransformer,
                                      public nsStubMutationObserver,
-                                     public nsWrapperCache
-{
-public:
-    /**
-     * Creates a new txMozillaXSLTProcessor
-     */
-    txMozillaXSLTProcessor();
+                                     public nsWrapperCache {
+ public:
+  /**
+   * Creates a new txMozillaXSLTProcessor
+   */
+  txMozillaXSLTProcessor();
 
-    // nsISupports interface
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(txMozillaXSLTProcessor,
-                                                           nsIDocumentTransformer)
+  // nsISupports interface
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(txMozillaXSLTProcessor,
+                                                         nsIDocumentTransformer)
 
-    // nsIDocumentTransformer interface
-    NS_IMETHOD SetTransformObserver(nsITransformObserver* aObserver) override;
-    NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsIDocument* aLoaderDocument) override;
-    NS_IMETHOD SetSourceContentModel(nsINode* aSource) override;
-    NS_IMETHOD CancelLoads() override {return NS_OK;}
-    NS_IMETHOD AddXSLTParamNamespace(const nsString& aPrefix,
-                                     const nsString& aNamespace) override;
-    NS_IMETHOD AddXSLTParam(const nsString& aName,
-                            const nsString& aNamespace,
-                            const nsString& aSelect,
-                            const nsString& aValue,
-                            nsINode* aContext) override;
+  // nsIDocumentTransformer interface
+  NS_IMETHOD SetTransformObserver(nsITransformObserver* aObserver) override;
+  NS_IMETHOD LoadStyleSheet(nsIURI* aUri,
+                            nsIDocument* aLoaderDocument) override;
+  NS_IMETHOD SetSourceContentModel(nsINode* aSource) override;
+  NS_IMETHOD CancelLoads() override { return NS_OK; }
+  NS_IMETHOD AddXSLTParamNamespace(const nsString& aPrefix,
+                                   const nsString& aNamespace) override;
+  NS_IMETHOD AddXSLTParam(const nsString& aName, const nsString& aNamespace,
+                          const nsString& aSelect, const nsString& aValue,
+                          nsINode* aContext) override;
 
-    // nsIMutationObserver interface
-    NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
-    NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
-    NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
-    NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
-    NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
-    NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
+  // nsIMutationObserver interface
+  NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
+  NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
-    // nsWrapperCache
-    virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  // nsWrapperCache
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-    // WebIDL
-    nsISupports*
-    GetParentObject() const
-    {
-        return mOwner;
-    }
+  // WebIDL
+  nsISupports* GetParentObject() const { return mOwner; }
 
-    mozilla::dom::DocGroup* GetDocGroup() const;
+  mozilla::dom::DocGroup* GetDocGroup() const;
 
-    static already_AddRefed<txMozillaXSLTProcessor>
-    Constructor(const mozilla::dom::GlobalObject& aGlobal,
-                mozilla::ErrorResult& aRv);
+  static already_AddRefed<txMozillaXSLTProcessor> Constructor(
+      const mozilla::dom::GlobalObject& aGlobal, mozilla::ErrorResult& aRv);
 
-    void ImportStylesheet(nsINode& stylesheet,
-                          mozilla::ErrorResult& aRv);
-    already_AddRefed<mozilla::dom::DocumentFragment>
-    TransformToFragment(nsINode& source, nsIDocument& docVal, mozilla::ErrorResult& aRv);
-    already_AddRefed<nsIDocument>
-    TransformToDocument(nsINode& source, mozilla::ErrorResult& aRv);
+  void ImportStylesheet(nsINode& stylesheet, mozilla::ErrorResult& aRv);
+  already_AddRefed<mozilla::dom::DocumentFragment> TransformToFragment(
+      nsINode& source, nsIDocument& docVal, mozilla::ErrorResult& aRv);
+  already_AddRefed<nsIDocument> TransformToDocument(nsINode& source,
+                                                    mozilla::ErrorResult& aRv);
 
-    void SetParameter(JSContext* aCx,
-                      const nsAString& aNamespaceURI,
-                      const nsAString& aLocalName,
-                      JS::Handle<JS::Value> aValue,
-                      mozilla::ErrorResult& aRv);
-    already_AddRefed<nsIVariant> GetParameter(const nsAString& aNamespaceURI,
-                                              const nsAString& aLocalName,
-                                              mozilla::ErrorResult& aRv);
-    void RemoveParameter(const nsAString& aNamespaceURI,
-                         const nsAString& aLocalName,
-                         mozilla::ErrorResult& aRv);
-    void ClearParameters();
-    void Reset();
+  void SetParameter(JSContext* aCx, const nsAString& aNamespaceURI,
+                    const nsAString& aLocalName, JS::Handle<JS::Value> aValue,
+                    mozilla::ErrorResult& aRv);
+  already_AddRefed<nsIVariant> GetParameter(const nsAString& aNamespaceURI,
+                                            const nsAString& aLocalName,
+                                            mozilla::ErrorResult& aRv);
+  void RemoveParameter(const nsAString& aNamespaceURI,
+                       const nsAString& aLocalName, mozilla::ErrorResult& aRv);
+  void ClearParameters();
+  void Reset();
 
-    uint32_t Flags(mozilla::dom::SystemCallerGuarantee);
-    void SetFlags(uint32_t aFlags, mozilla::dom::SystemCallerGuarantee);
+  uint32_t Flags(mozilla::dom::SystemCallerGuarantee);
+  void SetFlags(uint32_t aFlags, mozilla::dom::SystemCallerGuarantee);
 
-    nsresult setStylesheet(txStylesheet* aStylesheet);
-    void reportError(nsresult aResult, const char16_t *aErrorText,
-                     const char16_t *aSourceText);
+  nsresult setStylesheet(txStylesheet* aStylesheet);
+  void reportError(nsresult aResult, const char16_t* aErrorText,
+                   const char16_t* aSourceText);
 
-    nsINode *GetSourceContentModel()
-    {
-        return mSource;
-    }
+  nsINode* GetSourceContentModel() { return mSource; }
 
-    nsresult TransformToDoc(nsIDocument **aResult,
-                            bool aCreateDataDocument);
+  nsresult TransformToDoc(nsIDocument** aResult, bool aCreateDataDocument);
 
-    bool IsLoadDisabled()
-    {
-        return (mFlags & mozilla::dom::XSLTProcessor_Binding::DISABLE_ALL_LOADS) != 0;
-    }
+  bool IsLoadDisabled() {
+    return (mFlags & mozilla::dom::XSLTProcessor_Binding::DISABLE_ALL_LOADS) !=
+           0;
+  }
 
-    static nsresult Startup();
-    static void Shutdown();
+  static nsresult Startup();
+  static void Shutdown();
 
-private:
-    explicit txMozillaXSLTProcessor(nsISupports* aOwner);
-    /**
-     * Default destructor for txMozillaXSLTProcessor
-     */
-    ~txMozillaXSLTProcessor();
+ private:
+  explicit txMozillaXSLTProcessor(nsISupports* aOwner);
+  /**
+   * Default destructor for txMozillaXSLTProcessor
+   */
+  ~txMozillaXSLTProcessor();
 
-    nsresult DoTransform();
-    void notifyError();
-    nsresult ensureStylesheet();
+  nsresult DoTransform();
+  void notifyError();
+  nsresult ensureStylesheet();
 
-    // Helper method for the WebIDL SetParameter.
-    nsresult SetParameter(const nsAString& aNamespaceURI,
-                          const nsAString& aLocalName,
-                          nsIVariant* aValue);
+  // Helper method for the WebIDL SetParameter.
+  nsresult SetParameter(const nsAString& aNamespaceURI,
+                        const nsAString& aLocalName, nsIVariant* aValue);
 
-    nsCOMPtr<nsISupports> mOwner;
+  nsCOMPtr<nsISupports> mOwner;
 
-    RefPtr<txStylesheet> mStylesheet;
-    nsIDocument* mStylesheetDocument; // weak
-    nsCOMPtr<nsIContent> mEmbeddedStylesheetRoot;
+  RefPtr<txStylesheet> mStylesheet;
+  nsIDocument* mStylesheetDocument;  // weak
+  nsCOMPtr<nsIContent> mEmbeddedStylesheetRoot;
 
-    nsCOMPtr<nsINode> mSource;
-    nsresult mTransformResult;
-    nsresult mCompileResult;
-    nsString mErrorText, mSourceText;
-    nsCOMPtr<nsITransformObserver> mObserver;
-    txOwningExpandedNameMap<txIGlobalParameter> mVariables;
-    txNamespaceMap mParamNamespaceMap;
-    RefPtr<txResultRecycler> mRecycler;
+  nsCOMPtr<nsINode> mSource;
+  nsresult mTransformResult;
+  nsresult mCompileResult;
+  nsString mErrorText, mSourceText;
+  nsCOMPtr<nsITransformObserver> mObserver;
+  txOwningExpandedNameMap<txIGlobalParameter> mVariables;
+  txNamespaceMap mParamNamespaceMap;
+  RefPtr<txResultRecycler> mRecycler;
 
-    uint32_t mFlags;
+  uint32_t mFlags;
 };
 
 extern nsresult TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,

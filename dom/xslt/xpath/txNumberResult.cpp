@@ -6,7 +6,7 @@
 /**
  * NumberResult
  * Represents the a number as the result of evaluating an Expr
-**/
+ **/
 
 #include "mozilla/FloatingPoint.h"
 
@@ -14,36 +14,28 @@
 
 /**
  * Default Constructor
-**/
+ **/
 
 /**
  * Creates a new NumberResult with the value of the given double parameter
  * @param dbl the double to use for initialization of this NumberResult's value
-**/
+ **/
 NumberResult::NumberResult(double aValue, txResultRecycler* aRecycler)
-    : txAExprResult(aRecycler), value(aValue)
-{
-} //-- NumberResult
+    : txAExprResult(aRecycler), value(aValue) {}  //-- NumberResult
 
 /*
  * Virtual Methods from ExprResult
-*/
+ */
 
 short NumberResult::getResultType() {
-    return txAExprResult::NUMBER;
-} //-- getResultType
+  return txAExprResult::NUMBER;
+}  //-- getResultType
 
-void
-NumberResult::stringValue(nsString& aResult)
-{
-    txDouble::toString(value, aResult);
+void NumberResult::stringValue(nsString& aResult) {
+  txDouble::toString(value, aResult);
 }
 
-const nsString*
-NumberResult::stringValuePointer()
-{
-    return nullptr;
-}
+const nsString* NumberResult::stringValuePointer() { return nullptr; }
 
 bool NumberResult::booleanValue() {
   // OG+
@@ -51,9 +43,6 @@ bool NumberResult::booleanValue() {
   // it is neither positive 0 nor negative 0 nor NaN
   return (bool)(value != 0.0 && !mozilla::IsNaN(value));
   // OG-
-} //-- booleanValue
+}  //-- booleanValue
 
-double NumberResult::numberValue() {
-    return this->value;
-} //-- numberValue
-
+double NumberResult::numberValue() { return this->value; }  //-- numberValue

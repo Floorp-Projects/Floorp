@@ -22,17 +22,17 @@ static constexpr ValueOperand R2(esi, edi);
 
 // ICTailCallReg and ICStubReg reuse
 // registers from R2.
-static constexpr Register ICTailCallReg       = esi;
-static constexpr Register ICStubReg           = edi;
+static constexpr Register ICTailCallReg = esi;
+static constexpr Register ICStubReg = edi;
 
-static constexpr Register ExtractTemp0        = InvalidReg;
-static constexpr Register ExtractTemp1        = InvalidReg;
+static constexpr Register ExtractTemp0 = InvalidReg;
+static constexpr Register ExtractTemp1 = InvalidReg;
 
 // FloatReg0 must be equal to ReturnFloatReg.
-static constexpr FloatRegister FloatReg0      = xmm0;
-static constexpr FloatRegister FloatReg1      = xmm1;
+static constexpr FloatRegister FloatReg0 = xmm0;
+static constexpr FloatRegister FloatReg1 = xmm1;
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_x86_SharedICRegisters_x86_h */

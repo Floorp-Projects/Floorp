@@ -18,26 +18,23 @@ using namespace mozilla;
 
 struct val_strength_t {
   const char *strength_name;
-  int         signal_value;
+  int signal_value;
 };
 
-static val_strength_t strength_vals[] = {
-  { "very weak", -112 },
-  { "weak",      -88 },
-  { "good",      -68 },
-  { "very good", -40 },
-  { "excellent", -16 }
-};
+static val_strength_t strength_vals[] = {{"very weak", -112},
+                                         {"weak", -88},
+                                         {"good", -68},
+                                         {"very good", -40},
+                                         {"excellent", -16}};
 
-static nsWifiAccessPoint *
-do_parse_str(char *bssid_str, char *essid_str, char *strength)
-{
-  unsigned char mac_as_int[6] = { 0 };
+static nsWifiAccessPoint *do_parse_str(char *bssid_str, char *essid_str,
+                                       char *strength) {
+  unsigned char mac_as_int[6] = {0};
   sscanf(bssid_str, "%x:%x:%x:%x:%x:%x", &mac_as_int[0], &mac_as_int[1],
          &mac_as_int[2], &mac_as_int[3], &mac_as_int[4], &mac_as_int[5]);
 
   int signal = 0;
-  uint32_t strength_vals_count = sizeof(strength_vals) / sizeof (val_strength_t);
+  uint32_t strength_vals_count = sizeof(strength_vals) / sizeof(val_strength_t);
   for (uint32_t i = 0; i < strength_vals_count; i++) {
     if (!strncasecmp(strength, strength_vals[i].strength_name, DLADM_STRSIZE)) {
       signal = strength_vals[i].signal_value;
@@ -55,25 +52,24 @@ do_parse_str(char *bssid_str, char *essid_str, char *strength)
   return ap;
 }
 
-static void
-do_dladm(nsCOMArray<nsWifiAccessPoint> &accessPoints)
-{
+static void do_dladm(nsCOMArray<nsWifiAccessPoint> &accessPoints) {
   GError *err = nullptr;
   char *sout = nullptr;
   char *serr = nullptr;
   int exit_status = 0;
-  char * dladm_args[] = { "/usr/bin/pfexec", "/usr/sbin/dladm",
-                          "scan-wifi", "-p", "-o", "BSSID,ESSID,STRENGTH" };
+  char *dladm_args[] = {
+      "/usr/bin/pfexec",     "/usr/sbin/dladm", "scan-wifi", "-p", "-o",
+      "BSSID,ESSID,STRENGTH"};
 
   gboolean rv = g_spawn_sync("/", dladm_args, nullptr, (GSpawnFlags)0, nullptr,
                              nullptr, &sout, &serr, &exit_status, &err);
   if (rv && !exit_status) {
-    char wlan[DLADM_SECTIONS][DLADM_STRSIZE+1];
+    char wlan[DLADM_SECTIONS][DLADM_STRSIZE + 1];
     uint32_t section = 0;
     uint32_t sout_scan = 0;
     uint32_t wlan_put = 0;
     bool escape = false;
-    nsWifiAccessPoint* ap;
+    nsWifiAccessPoint *ap;
     char sout_char;
     do {
       sout_char = sout[sout_scan++];
@@ -85,7 +81,7 @@ do_dladm(nsCOMArray<nsWifiAccessPoint> &accessPoints)
         }
       }
 
-      if (sout_char =='\\') {
+      if (sout_char == '\\') {
         escape = true;
         continue;
       }
@@ -120,20 +116,18 @@ do_dladm(nsCOMArray<nsWifiAccessPoint> &accessPoints)
   g_free(serr);
 }
 
-nsresult
-nsWifiMonitor::DoScan()
-{
+nsresult nsWifiMonitor::DoScan() {
   // Regularly get the access point data.
 
   nsCOMArray<nsWifiAccessPoint> lastAccessPoints;
   nsCOMArray<nsWifiAccessPoint> accessPoints;
 
   while (mKeepGoing) {
-
     accessPoints.Clear();
     do_dladm(accessPoints);
 
-    bool accessPointsChanged = !AccessPointsEqual(accessPoints, lastAccessPoints);
+    bool accessPointsChanged =
+        !AccessPointsEqual(accessPoints, lastAccessPoints);
     ReplaceArray(lastAccessPoints, accessPoints);
 
     nsresult rv = CallWifiListeners(lastAccessPoints, accessPointsChanged);

@@ -19,14 +19,13 @@ class nsUrlClassifierPrefixSet;
 namespace mozilla {
 namespace safebrowsing {
 
-class VariableLengthPrefixSet final
-  : public nsIMemoryReporter
-{
-public:
+class VariableLengthPrefixSet final : public nsIMemoryReporter {
+ public:
   VariableLengthPrefixSet();
 
   nsresult Init(const nsACString& aName);
-  nsresult SetPrefixes(const mozilla::safebrowsing::PrefixStringMap& aPrefixMap);
+  nsresult SetPrefixes(
+      const mozilla::safebrowsing::PrefixStringMap& aPrefixMap);
   nsresult GetPrefixes(mozilla::safebrowsing::PrefixStringMap& aPrefixMap);
   nsresult GetFixedLengthPrefixes(FallibleTArray<uint32_t>& aPrefixes);
   nsresult Matches(const nsACString& aFullHash, uint32_t* aLength) const;
@@ -39,14 +38,13 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
 
-private:
+ private:
   virtual ~VariableLengthPrefixSet();
 
   static const uint32_t MAX_BUFFER_SIZE = 64 * 1024;
   static const uint32_t PREFIXSET_VERSION_MAGIC = 1;
 
-  bool BinarySearch(const nsACString& aFullHash,
-                    const nsACString& aPrefixes,
+  bool BinarySearch(const nsACString& aFullHash, const nsACString& aPrefixes,
                     uint32_t aPrefixSize) const;
 
   uint32_t CalculatePreallocateSize() const;
@@ -66,7 +64,7 @@ private:
   nsCString mMemoryReportPath;
 };
 
-} // namespace safebrowsing
-} // namespace mozilla
+}  // namespace safebrowsing
+}  // namespace mozilla
 
 #endif

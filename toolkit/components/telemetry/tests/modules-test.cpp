@@ -7,11 +7,10 @@
  *  - libmodules-test; it is automatically built by our build system (see the
  *    moz.build in the same directory as this file);
  *
- *  - testUnicodePDB32.dll and testUnicodePDB64.dll; they can be built by compiling
- *    this source file using MSVC and setting the target name to be "libmodμles",
- *    then renaming the resulting file:
- *      cl /Zi modules-test.cpp /link /DLL /OUT:libmodμles.dll
- *      cp libmodμles.dll testUnicodePDB*ARCH*.dll
+ *  - testUnicodePDB32.dll and testUnicodePDB64.dll; they can be built by
+ * compiling this source file using MSVC and setting the target name to be
+ * "libmodμles", then renaming the resulting file: cl /Zi modules-test.cpp /link
+ * /DLL /OUT:libmodμles.dll cp libmodμles.dll testUnicodePDB*ARCH*.dll
  *
  *  - testNoPDB32.dll and testNoPDB64.dll; they can be built by compiling this
  *    file using MSVC, without enabling generation of a PDB:
@@ -22,7 +21,4 @@
  *
  */
 
-void nothing()
-{
-}
-
+void nothing() {}

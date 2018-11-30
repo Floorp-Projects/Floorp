@@ -6,85 +6,55 @@
 #include "txTextHandler.h"
 #include "nsAString.h"
 
-txTextHandler::txTextHandler(bool aOnlyText) : mLevel(0),
-                                                mOnlyText(aOnlyText)
-{
+txTextHandler::txTextHandler(bool aOnlyText)
+    : mLevel(0), mOnlyText(aOnlyText) {}
+
+nsresult txTextHandler::attribute(nsAtom* aPrefix, nsAtom* aLocalName,
+                                  nsAtom* aLowercaseLocalName, int32_t aNsID,
+                                  const nsString& aValue) {
+  return NS_OK;
 }
 
-nsresult
-txTextHandler::attribute(nsAtom* aPrefix, nsAtom* aLocalName,
-                         nsAtom* aLowercaseLocalName, int32_t aNsID,
-                         const nsString& aValue)
-{
-    return NS_OK;
+nsresult txTextHandler::attribute(nsAtom* aPrefix, const nsAString& aLocalName,
+                                  const int32_t aNsID, const nsString& aValue) {
+  return NS_OK;
 }
 
-nsresult
-txTextHandler::attribute(nsAtom* aPrefix, const nsAString& aLocalName,
-                         const int32_t aNsID,
-                         const nsString& aValue)
-{
-    return NS_OK;
+nsresult txTextHandler::characters(const nsAString& aData, bool aDOE) {
+  if (mLevel == 0) mValue.Append(aData);
+
+  return NS_OK;
 }
 
-nsresult
-txTextHandler::characters(const nsAString& aData, bool aDOE)
-{
-    if (mLevel == 0)
-        mValue.Append(aData);
+nsresult txTextHandler::comment(const nsString& aData) { return NS_OK; }
 
-    return NS_OK;
+nsresult txTextHandler::endDocument(nsresult aResult) { return NS_OK; }
+
+nsresult txTextHandler::endElement() {
+  if (mOnlyText) --mLevel;
+
+  return NS_OK;
 }
 
-nsresult
-txTextHandler::comment(const nsString& aData)
-{
-    return NS_OK;
+nsresult txTextHandler::processingInstruction(const nsString& aTarget,
+                                              const nsString& aData) {
+  return NS_OK;
 }
 
-nsresult
-txTextHandler::endDocument(nsresult aResult)
-{
-    return NS_OK;
+nsresult txTextHandler::startDocument() { return NS_OK; }
+
+nsresult txTextHandler::startElement(nsAtom* aPrefix, nsAtom* aLocalName,
+                                     nsAtom* aLowercaseLocalName,
+                                     const int32_t aNsID) {
+  if (mOnlyText) ++mLevel;
+
+  return NS_OK;
 }
 
-nsresult
-txTextHandler::endElement()
-{
-    if (mOnlyText)
-        --mLevel;
+nsresult txTextHandler::startElement(nsAtom* aPrefix,
+                                     const nsAString& aLocalName,
+                                     const int32_t aNsID) {
+  if (mOnlyText) ++mLevel;
 
-    return NS_OK;
-}
-
-nsresult
-txTextHandler::processingInstruction(const nsString& aTarget, const nsString& aData)
-{
-    return NS_OK;
-}
-
-nsresult
-txTextHandler::startDocument()
-{
-    return NS_OK;
-}
-
-nsresult
-txTextHandler::startElement(nsAtom* aPrefix, nsAtom* aLocalName,
-                            nsAtom* aLowercaseLocalName, const int32_t aNsID)
-{
-    if (mOnlyText)
-        ++mLevel;
-
-    return NS_OK;
-}
-
-nsresult
-txTextHandler::startElement(nsAtom* aPrefix, const nsAString& aLocalName,
-                            const int32_t aNsID)
-{
-    if (mOnlyText)
-        ++mLevel;
-
-    return NS_OK;
+  return NS_OK;
 }

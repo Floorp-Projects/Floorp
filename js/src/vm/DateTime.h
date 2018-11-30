@@ -49,11 +49,9 @@ constexpr unsigned SecondsPerDay = SecondsPerHour * 24;
 constexpr double StartOfTime = -8.64e15;
 constexpr double EndOfTime = 8.64e15;
 
-extern bool
-InitDateTimeState();
+extern bool InitDateTimeState();
 
-extern void
-FinishDateTimeState();
+extern void FinishDateTimeState();
 
 enum class ResetTimeZoneMode : bool {
   DontResetIfOffsetUnchanged,
@@ -66,8 +64,7 @@ enum class ResetTimeZoneMode : bool {
  * behavior when calling JS::ResetTimeZone) or to try to reuse the previous
  * time zone data.
  */
-extern void
-ResetTimeZoneInternal(ResetTimeZoneMode mode);
+extern void ResetTimeZoneInternal(ResetTimeZoneMode mode);
 
 /*
  * Stores date/time information, particularly concerning the current local
@@ -115,201 +112,204 @@ ResetTimeZoneInternal(ResetTimeZoneMode mode);
  * that accommodates near-DST-change dates better; we don't believe the
  * potential win from better caching offsets the loss from extra complexity.)
  */
-class DateTimeInfo
-{
-    static ExclusiveData<DateTimeInfo>* instance;
-    friend class ExclusiveData<DateTimeInfo>;
+class DateTimeInfo {
+  static ExclusiveData<DateTimeInfo>* instance;
+  friend class ExclusiveData<DateTimeInfo>;
 
-    friend bool InitDateTimeState();
-    friend void FinishDateTimeState();
+  friend bool InitDateTimeState();
+  friend void FinishDateTimeState();
 
-    DateTimeInfo();
-    ~DateTimeInfo();
+  DateTimeInfo();
+  ~DateTimeInfo();
 
-  public:
-    // The spec implicitly assumes DST and time zone adjustment information
-    // never change in the course of a function -- sometimes even across
-    // reentrancy.  So make critical sections as narrow as possible.
+ public:
+  // The spec implicitly assumes DST and time zone adjustment information
+  // never change in the course of a function -- sometimes even across
+  // reentrancy.  So make critical sections as narrow as possible.
 
-    /**
-     * Get the DST offset in milliseconds at a UTC time.  This is usually
-     * either 0 or |msPerSecond * SecondsPerHour|, but at least one exotic time
-     * zone (Lord Howe Island, Australia) has a fractional-hour offset, just to
-     * keep things interesting.
-     */
-    static int32_t getDSTOffsetMilliseconds(int64_t utcMilliseconds) {
-        auto guard = instance->lock();
-        return guard->internalGetDSTOffsetMilliseconds(utcMilliseconds);
-    }
+  /**
+   * Get the DST offset in milliseconds at a UTC time.  This is usually
+   * either 0 or |msPerSecond * SecondsPerHour|, but at least one exotic time
+   * zone (Lord Howe Island, Australia) has a fractional-hour offset, just to
+   * keep things interesting.
+   */
+  static int32_t getDSTOffsetMilliseconds(int64_t utcMilliseconds) {
+    auto guard = instance->lock();
+    return guard->internalGetDSTOffsetMilliseconds(utcMilliseconds);
+  }
 
-    /**
-     * Return the local time zone adjustment (ES2019 20.3.1.7) as computed by
-     * the operating system.
-     */
-    static int32_t localTZA() {
-        auto guard = instance->lock();
-        return guard->localTZA_;
-    }
+  /**
+   * Return the local time zone adjustment (ES2019 20.3.1.7) as computed by
+   * the operating system.
+   */
+  static int32_t localTZA() {
+    auto guard = instance->lock();
+    return guard->localTZA_;
+  }
 
 #if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
-    enum class TimeZoneOffset { UTC, Local };
+  enum class TimeZoneOffset { UTC, Local };
 
-    /**
-     * Return the time zone offset, including DST, in milliseconds at the
-     * given time. The input time can be either at UTC or at local time.
-     */
-    static int32_t getOffsetMilliseconds(int64_t milliseconds, TimeZoneOffset offset) {
-        auto guard = instance->lock();
-        return guard->internalGetOffsetMilliseconds(milliseconds, offset);
-    }
+  /**
+   * Return the time zone offset, including DST, in milliseconds at the
+   * given time. The input time can be either at UTC or at local time.
+   */
+  static int32_t getOffsetMilliseconds(int64_t milliseconds,
+                                       TimeZoneOffset offset) {
+    auto guard = instance->lock();
+    return guard->internalGetOffsetMilliseconds(milliseconds, offset);
+  }
 
-    /**
-     * Copy the display name for the current time zone at the given time,
-     * localized for the specified locale, into the supplied buffer. If the
-     * buffer is too small, an empty string is stored. The stored display name
-     * is null-terminated in any case.
-     */
-    static bool timeZoneDisplayName(char16_t* buf, size_t buflen, int64_t utcMilliseconds,
-                                    const char* locale)
-    {
-        auto guard = instance->lock();
-        return guard->internalTimeZoneDisplayName(buf, buflen, utcMilliseconds, locale);
-    }
+  /**
+   * Copy the display name for the current time zone at the given time,
+   * localized for the specified locale, into the supplied buffer. If the
+   * buffer is too small, an empty string is stored. The stored display name
+   * is null-terminated in any case.
+   */
+  static bool timeZoneDisplayName(char16_t* buf, size_t buflen,
+                                  int64_t utcMilliseconds, const char* locale) {
+    auto guard = instance->lock();
+    return guard->internalTimeZoneDisplayName(buf, buflen, utcMilliseconds,
+                                              locale);
+  }
 #endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
 
-  private:
-    // We don't want anyone accidentally calling *only*
-    // DateTimeInfo::updateTimeZoneAdjustment() to respond to a system time
-    // zone change (missing the necessary poking of ICU as well), so ensure
-    // only js::ResetTimeZoneInternal() can call this via access restrictions.
-    friend void js::ResetTimeZoneInternal(ResetTimeZoneMode);
+ private:
+  // We don't want anyone accidentally calling *only*
+  // DateTimeInfo::updateTimeZoneAdjustment() to respond to a system time
+  // zone change (missing the necessary poking of ICU as well), so ensure
+  // only js::ResetTimeZoneInternal() can call this via access restrictions.
+  friend void js::ResetTimeZoneInternal(ResetTimeZoneMode);
 
-    // Returns true iff the internal DST offset cache was purged.
-    static bool updateTimeZoneAdjustment(ResetTimeZoneMode mode) {
-        auto guard = instance->lock();
-        return guard->internalUpdateTimeZoneAdjustment(mode);
-    }
+  // Returns true iff the internal DST offset cache was purged.
+  static bool updateTimeZoneAdjustment(ResetTimeZoneMode mode) {
+    auto guard = instance->lock();
+    return guard->internalUpdateTimeZoneAdjustment(mode);
+  }
 
-    struct RangeCache {
-        // Start and end offsets in seconds describing the current and the
-        // last cached range.
-        int64_t startSeconds, endSeconds;
-        int64_t oldStartSeconds, oldEndSeconds;
+  struct RangeCache {
+    // Start and end offsets in seconds describing the current and the
+    // last cached range.
+    int64_t startSeconds, endSeconds;
+    int64_t oldStartSeconds, oldEndSeconds;
 
-        // The current and the last cached offset in milliseconds.
-        int32_t offsetMilliseconds;
-        int32_t oldOffsetMilliseconds;
+    // The current and the last cached offset in milliseconds.
+    int32_t offsetMilliseconds;
+    int32_t oldOffsetMilliseconds;
 
-        void reset();
+    void reset();
 
-        void sanityCheck();
-    };
+    void sanityCheck();
+  };
 
-    /*
-     * The current local time zone adjustment, cached because retrieving this
-     * dynamically is Slow, and a certain venerable benchmark which shall not
-     * be named depends on it being fast.
-     *
-     * SpiderMonkey occasionally and arbitrarily updates this value from the
-     * system time zone to attempt to keep this reasonably up-to-date.  If
-     * temporary inaccuracy can't be tolerated, JSAPI clients may call
-     * JS::ResetTimeZone to forcibly sync this with the system time zone.
-     */
-    int32_t localTZA_;
+  /*
+   * The current local time zone adjustment, cached because retrieving this
+   * dynamically is Slow, and a certain venerable benchmark which shall not
+   * be named depends on it being fast.
+   *
+   * SpiderMonkey occasionally and arbitrarily updates this value from the
+   * system time zone to attempt to keep this reasonably up-to-date.  If
+   * temporary inaccuracy can't be tolerated, JSAPI clients may call
+   * JS::ResetTimeZone to forcibly sync this with the system time zone.
+   */
+  int32_t localTZA_;
 
-    /*
-     * Cached offset in seconds from the current UTC time to the current
-     * local standard time (i.e. not including any offset due to DST).
-     */
-    int32_t utcToLocalStandardOffsetSeconds_;
+  /*
+   * Cached offset in seconds from the current UTC time to the current
+   * local standard time (i.e. not including any offset due to DST).
+   */
+  int32_t utcToLocalStandardOffsetSeconds_;
 
-    RangeCache dstRange_; // UTC-based ranges
+  RangeCache dstRange_;  // UTC-based ranges
 
 #if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
-    // ICU's TimeZone class is currently only available through the C++ API,
-    // see <https://unicode-org.atlassian.net/browse/ICU-13706>. Due to the
-    // lack of a stable ABI in C++, we therefore need to restrict this class
-    // to only use ICU when we use our in-tree ICU copy.
+  // ICU's TimeZone class is currently only available through the C++ API,
+  // see <https://unicode-org.atlassian.net/browse/ICU-13706>. Due to the
+  // lack of a stable ABI in C++, we therefore need to restrict this class
+  // to only use ICU when we use our in-tree ICU copy.
 
-    // Use the full date-time range when we can use ICU's TimeZone support.
-    static constexpr int64_t MinTimeT = static_cast<int64_t>(StartOfTime / msPerSecond);
-    static constexpr int64_t MaxTimeT = static_cast<int64_t>(EndOfTime / msPerSecond);
+  // Use the full date-time range when we can use ICU's TimeZone support.
+  static constexpr int64_t MinTimeT =
+      static_cast<int64_t>(StartOfTime / msPerSecond);
+  static constexpr int64_t MaxTimeT =
+      static_cast<int64_t>(EndOfTime / msPerSecond);
 
-    RangeCache utcRange_; // localtime-based ranges
-    RangeCache localRange_; // UTC-based ranges
+  RangeCache utcRange_;    // localtime-based ranges
+  RangeCache localRange_;  // UTC-based ranges
 
-    /**
-     * The current ICU time zone. Lazily constructed to avoid potential I/O
-     * access when initializing this class.
-     */
-    mozilla::UniquePtr<icu::TimeZone> timeZone_;
+  /**
+   * The current ICU time zone. Lazily constructed to avoid potential I/O
+   * access when initializing this class.
+   */
+  mozilla::UniquePtr<icu::TimeZone> timeZone_;
 
-    /**
-     * Cached names of the standard and daylight savings display names of the
-     * current time zone for the default locale.
-     */
-    JS::UniqueChars locale_;
-    JS::UniqueTwoByteChars standardName_;
-    JS::UniqueTwoByteChars daylightSavingsName_;
+  /**
+   * Cached names of the standard and daylight savings display names of the
+   * current time zone for the default locale.
+   */
+  JS::UniqueChars locale_;
+  JS::UniqueTwoByteChars standardName_;
+  JS::UniqueTwoByteChars daylightSavingsName_;
 #else
-    // Restrict the data-time range to the minimum required time_t range as
-    // specified in POSIX. Most operating systems support 64-bit time_t
-    // values, but we currently still have some configurations which use
-    // 32-bit time_t, e.g. the ARM simulator on 32-bit Linux (bug 1406993).
-    // Bug 1406992 explores to use 64-bit time_t when supported by the
-    // underlying operating system.
-    static constexpr int64_t MinTimeT = 0; /* time_t 01/01/1970 */
-    static constexpr int64_t MaxTimeT = 2145830400; /* time_t 12/31/2037 */
+  // Restrict the data-time range to the minimum required time_t range as
+  // specified in POSIX. Most operating systems support 64-bit time_t
+  // values, but we currently still have some configurations which use
+  // 32-bit time_t, e.g. the ARM simulator on 32-bit Linux (bug 1406993).
+  // Bug 1406992 explores to use 64-bit time_t when supported by the
+  // underlying operating system.
+  static constexpr int64_t MinTimeT = 0;          /* time_t 01/01/1970 */
+  static constexpr int64_t MaxTimeT = 2145830400; /* time_t 12/31/2037 */
 #endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
 
-    static constexpr int64_t RangeExpansionAmount = 30 * SecondsPerDay;
+  static constexpr int64_t RangeExpansionAmount = 30 * SecondsPerDay;
 
-    bool internalUpdateTimeZoneAdjustment(ResetTimeZoneMode mode);
+  bool internalUpdateTimeZoneAdjustment(ResetTimeZoneMode mode);
 
-    int64_t toClampedSeconds(int64_t milliseconds);
+  int64_t toClampedSeconds(int64_t milliseconds);
 
-    using ComputeFn = int32_t (DateTimeInfo::*)(int64_t);
+  using ComputeFn = int32_t (DateTimeInfo::*)(int64_t);
 
-    /**
-     * Get or compute an offset value for the requested seconds value.
-     */
-    int32_t getOrComputeValue(RangeCache& range, int64_t seconds, ComputeFn compute);
+  /**
+   * Get or compute an offset value for the requested seconds value.
+   */
+  int32_t getOrComputeValue(RangeCache& range, int64_t seconds,
+                            ComputeFn compute);
 
-    /**
-     * Compute the DST offset at the given UTC time in seconds from the epoch.
-     * (getDSTOffsetMilliseconds attempts to return a cached value from the
-     * dstRange_ member, but in case of a cache miss it calls this method.)
-     */
-    int32_t computeDSTOffsetMilliseconds(int64_t utcSeconds);
+  /**
+   * Compute the DST offset at the given UTC time in seconds from the epoch.
+   * (getDSTOffsetMilliseconds attempts to return a cached value from the
+   * dstRange_ member, but in case of a cache miss it calls this method.)
+   */
+  int32_t computeDSTOffsetMilliseconds(int64_t utcSeconds);
 
-    int32_t internalGetDSTOffsetMilliseconds(int64_t utcMilliseconds);
+  int32_t internalGetDSTOffsetMilliseconds(int64_t utcMilliseconds);
 
 #if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
-    /**
-     * Compute the UTC offset in milliseconds for the given local time. Called
-     * by internalGetOffsetMilliseconds on a cache miss.
-     */
-    int32_t computeUTCOffsetMilliseconds(int64_t localSeconds);
+  /**
+   * Compute the UTC offset in milliseconds for the given local time. Called
+   * by internalGetOffsetMilliseconds on a cache miss.
+   */
+  int32_t computeUTCOffsetMilliseconds(int64_t localSeconds);
 
-    /**
-     * Compute the local time offset in milliseconds for the given UTC time.
-     * Called by internalGetOffsetMilliseconds on a cache miss.
-     */
-    int32_t computeLocalOffsetMilliseconds(int64_t utcSeconds);
+  /**
+   * Compute the local time offset in milliseconds for the given UTC time.
+   * Called by internalGetOffsetMilliseconds on a cache miss.
+   */
+  int32_t computeLocalOffsetMilliseconds(int64_t utcSeconds);
 
-    int32_t internalGetOffsetMilliseconds(int64_t milliseconds, TimeZoneOffset offset);
+  int32_t internalGetOffsetMilliseconds(int64_t milliseconds,
+                                        TimeZoneOffset offset);
 
-    bool internalTimeZoneDisplayName(char16_t* buf, size_t buflen, int64_t utcMilliseconds,
-                                     const char* locale);
+  bool internalTimeZoneDisplayName(char16_t* buf, size_t buflen,
+                                   int64_t utcMilliseconds, const char* locale);
 
-    icu::TimeZone* timeZone();
+  icu::TimeZone* timeZone();
 #endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
 };
 
 enum class IcuTimeZoneStatus { Valid, NeedsUpdate };
 
-extern ExclusiveData<IcuTimeZoneStatus>*
-IcuTimeZoneState;
+extern ExclusiveData<IcuTimeZoneStatus>* IcuTimeZoneState;
 
 /**
  * ICU's default time zone, used for various date/time formatting operations
@@ -318,9 +318,8 @@ IcuTimeZoneState;
  * default time zone is required, to resync ICU's default time zone with
  * reality.
  */
-extern void
-ResyncICUDefaultTimeZone();
+extern void ResyncICUDefaultTimeZone();
 
-}  /* namespace js */
+} /* namespace js */
 
 #endif /* vm_DateTime_h */
