@@ -7,19 +7,19 @@ const MOCKS_ROOT = CHROME_URL_ROOT + "mocks/";
 
 const { RUNTIMES } = require("devtools/client/aboutdebugging-new/src/constants");
 
-/* import-globals-from head-client-wrapper-mock.js */
+/* import-globals-from mocks/head-client-wrapper-mock.js */
 Services.scriptloader.loadSubScript(MOCKS_ROOT + "head-client-wrapper-mock.js", this);
-/* import-globals-from head-runtime-client-factory-mock.js */
+/* import-globals-from mocks/head-runtime-client-factory-mock.js */
 Services.scriptloader.loadSubScript(MOCKS_ROOT + "head-runtime-client-factory-mock.js",
   this);
-/* import-globals-from head-usb-runtimes-mock.js */
+/* import-globals-from mocks/head-usb-runtimes-mock.js */
 Services.scriptloader.loadSubScript(MOCKS_ROOT + "head-usb-runtimes-mock.js", this);
 
 /**
  * This wrapper around the USB mocks used in about:debugging tests provides helpers to
  * quickly setup mocks for typical USB runtime tests.
  */
-class UsbMocks {
+class Mocks {
   constructor() {
     // Setup the usb-runtimes mock to rely on the internal _runtimes array.
     this.usbRuntimesMock = createUsbRuntimesMock();
@@ -64,7 +64,7 @@ class UsbMocks {
     disableRuntimeClientFactoryMock();
   }
 
-  emitUpdate() {
+  emitUSBUpdate() {
     this._observerMock.emit("runtime-list-updated");
   }
 
@@ -82,7 +82,7 @@ class UsbMocks {
    * @return {Object} Returns the mock client created for this runtime so that methods
    * can be overridden on it.
    */
-  createRuntime(id, runtimeInfo = {}) {
+  createUSBRuntime(id, runtimeInfo = {}) {
     // Add a new runtime to the list of scanned runtimes.
     this._runtimes.push({
       id: id,
@@ -105,7 +105,7 @@ class UsbMocks {
     return mockUsbClient;
   }
 
-  removeRuntime(id) {
+  removeUSBRuntime(id) {
     this._runtimes = this._runtimes.filter(runtime => runtime.id !== id);
     delete this._clients[id];
   }
