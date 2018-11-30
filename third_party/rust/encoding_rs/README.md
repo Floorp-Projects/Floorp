@@ -369,6 +369,12 @@ To regenerate the generated code:
 
 ## Release Notes
 
+### 0.8.13
+
+* Made the UTF-8 to UTF-16 compare the number of code units written with the
+  length of the right slice (the output slice) to fix a panic introduced in
+  0.8.11.
+
 ### 0.8.12
 
 * Removed the `clippy::` prefix from clippy lint names.
