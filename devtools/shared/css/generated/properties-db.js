@@ -2940,9 +2940,9 @@ exports.CSS_PROPERTIES = {
       "overscroll-behavior-x",
       "overscroll-behavior-y",
       "isolation",
-      "page-break-after",
-      "page-break-before",
-      "page-break-inside",
+      "break-after",
+      "break-before",
+      "break-inside",
       "resize",
       "perspective",
       "perspective-origin",
@@ -4770,6 +4770,56 @@ exports.CSS_PROPERTIES = {
     "values": [
       "border-box",
       "content-box",
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
+  "break-after": {
+    "isInherited": false,
+    "subproperties": [
+      "break-after"
+    ],
+    "supports": [],
+    "values": [
+      "always",
+      "auto",
+      "avoid",
+      "inherit",
+      "initial",
+      "left",
+      "page",
+      "right",
+      "unset"
+    ]
+  },
+  "break-before": {
+    "isInherited": false,
+    "subproperties": [
+      "break-before"
+    ],
+    "supports": [],
+    "values": [
+      "always",
+      "auto",
+      "avoid",
+      "inherit",
+      "initial",
+      "left",
+      "page",
+      "right",
+      "unset"
+    ]
+  },
+  "break-inside": {
+    "isInherited": false,
+    "subproperties": [
+      "break-inside"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "avoid",
       "inherit",
       "initial",
       "unset"
@@ -7772,7 +7822,7 @@ exports.CSS_PROPERTIES = {
   "page-break-after": {
     "isInherited": false,
     "subproperties": [
-      "page-break-after"
+      "break-after"
     ],
     "supports": [],
     "values": [
@@ -7782,6 +7832,7 @@ exports.CSS_PROPERTIES = {
       "inherit",
       "initial",
       "left",
+      "page",
       "right",
       "unset"
     ]
@@ -7789,7 +7840,7 @@ exports.CSS_PROPERTIES = {
   "page-break-before": {
     "isInherited": false,
     "subproperties": [
-      "page-break-before"
+      "break-before"
     ],
     "supports": [],
     "values": [
@@ -7799,6 +7850,7 @@ exports.CSS_PROPERTIES = {
       "inherit",
       "initial",
       "left",
+      "page",
       "right",
       "unset"
     ]
@@ -7806,7 +7858,7 @@ exports.CSS_PROPERTIES = {
   "page-break-inside": {
     "isInherited": false,
     "subproperties": [
-      "page-break-inside"
+      "break-inside"
     ],
     "supports": [],
     "values": [

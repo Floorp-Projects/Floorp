@@ -36,6 +36,11 @@ const CSS_TYPE_TRUE_SHORTHAND = 1;
 // the current spec or earlier versions of the spec.
 const CSS_TYPE_SHORTHAND_AND_LONGHAND = 2;
 
+// Legacy shorthand properties, that behave mostly like an alias
+// (CSS_TYPE_SHORTHAND_AND_LONGHAND) but not quite because their syntax may not
+// match, plus they shouldn't serialize in cssText.
+const CSS_TYPE_LEGACY_SHORTHAND = 3;
+
 // Each property has the following fields:
 //   domProp: The name of the relevant member of nsIDOM[NS]CSS2Properties
 //   inherited: Whether the property is inherited by default (stated as
@@ -4299,18 +4304,44 @@ var gCSSProperties = {
   "page-break-after": {
     domProp: "pageBreakAfter",
     inherited: false,
-    type: CSS_TYPE_LONGHAND,
+    type: CSS_TYPE_LEGACY_SHORTHAND,
+    alias_for: "break-after",
+    subproperties: [ "break-after" ],
     initial_values: [ "auto" ],
     other_values: [ "always", "avoid", "left", "right" ],
-    invalid_values: []
+    legacy_mapping: {
+      always: "page",
+    },
+    invalid_values: [ "page", "column" ]
   },
   "page-break-before": {
     domProp: "pageBreakBefore",
     inherited: false,
-    type: CSS_TYPE_LONGHAND,
+    type: CSS_TYPE_LEGACY_SHORTHAND,
+    alias_for: "break-before",
+    subproperties: [ "break-before" ],
     initial_values: [ "auto" ],
     other_values: [ "always", "avoid", "left", "right" ],
-    invalid_values: []
+    legacy_mapping: {
+      always: "page",
+    },
+    invalid_values: [ "page", "column" ]
+  },
+  "break-after": {
+    domProp: "breakAfter",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "always", "page", "avoid", "left", "right" ],
+    invalid_values: [ ]
+  },
+  "break-before": {
+    domProp: "breakBefore",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "always", "page", "avoid", "left", "right" ],
+    invalid_values: [ ]
   },
   "break-inside": {
     domProp: "breakInside",
