@@ -4192,6 +4192,30 @@ SetWarningReporter(JSContext* cx, WarningReporter reporter);
 extern JS_PUBLIC_API WarningReporter
 GetWarningReporter(JSContext* cx);
 
+// Suppress the Warning Reporter callback temporarily.
+class MOZ_RAII JS_PUBLIC_API AutoSuppressWarningReporter
+{
+    JSContext* context_;
+    WarningReporter prevReporter_;
+
+  public:
+    explicit AutoSuppressWarningReporter(JSContext* cx)
+        : context_(cx)
+    {
+        prevReporter_ = SetWarningReporter(context_, nullptr);
+    }
+
+    ~AutoSuppressWarningReporter()
+    {
+#ifdef DEBUG
+        WarningReporter reporter =
+#endif
+            SetWarningReporter(context_, prevReporter_);
+        MOZ_ASSERT(reporter == nullptr, "Unexpected WarningReporter active");
+        SetWarningReporter(context_, prevReporter_);
+    }
+};
+
 extern JS_PUBLIC_API bool
 CreateError(JSContext* cx, JSExnType type, HandleObject stack,
             HandleString fileName, uint32_t lineNumber, uint32_t columnNumber,
