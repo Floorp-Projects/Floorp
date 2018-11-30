@@ -279,6 +279,10 @@ SubDialog.prototype = {
       await aEvent.target.contentDocument.mozSubdialogReady;
     }
 
+    await this.resizeDialog();
+  },
+
+  async resizeDialog() {
     // Do this on load to wait for the CSS to load and apply before calculating the size.
     let docEl = this._frame.contentDocument.documentElement;
 
