@@ -653,7 +653,7 @@ TEST_P(TlsConnectStream, TestResumptionOverrideCipher) {
 
   if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
     client_->ExpectSendAlert(kTlsAlertIllegalParameter);
-    server_->ExpectSendAlert(kTlsAlertBadRecordMac);
+    server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
   } else {
     ExpectAlert(client_, kTlsAlertHandshakeFailure);
   }
@@ -662,7 +662,7 @@ TEST_P(TlsConnectStream, TestResumptionOverrideCipher) {
   if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
     // The reason this test is stream only: the server is unable to decrypt
     // the alert that the client sends, see bug 1304603.
-    server_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
+    server_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_RECORD_TYPE);
   } else {
     server_->CheckErrorCode(SSL_ERROR_HANDSHAKE_FAILURE_ALERT);
   }
@@ -1046,10 +1046,10 @@ TEST_F(TlsConnectTest, TestTls13ResumptionForcedDowngrade) {
   // client expects to receive an unencrypted TLS 1.2 Certificate message.
   // The server can't decrypt the alert.
   client_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
-  server_->ExpectSendAlert(kTlsAlertBadRecordMac);  // Server can't read
+  server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);  // Server can't read
   ConnectExpectFail();
   client_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_APPLICATION_DATA);
-  server_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
+  server_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_RECORD_TYPE);
 }
 
 TEST_P(TlsConnectGenericResumption, ReConnectTicket) {
