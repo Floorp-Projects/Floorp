@@ -30,6 +30,12 @@
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/video_capture/video_capture.h"
 
+#if defined(_WIN32)
+#include "platform_uithread.h"
+#else
+#include "rtc_base/platform_thread.h"
+#endif
+
 namespace webrtc {
 
 ScreenDeviceInfoImpl::ScreenDeviceInfoImpl(const int32_t id) : _id(id) {}

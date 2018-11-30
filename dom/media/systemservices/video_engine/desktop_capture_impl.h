@@ -24,13 +24,18 @@
 #include "modules/desktop_capture/shared_memory.h"
 #include "modules/desktop_capture/desktop_device_info.h"
 #include "modules/desktop_capture/desktop_and_cursor_composer.h"
-#include "rtc_base/criticalsection.h"
-#include "rtc_base/platform_thread.h"
-#include "rtc_base/scoped_ref_ptr.h"
 #include "system_wrappers/include/event_wrapper.h"
 #include <set>
 
 using namespace webrtc::videocapturemodule;
+
+namespace rtc {
+#if defined(_WIN32)
+class PlatformUIThread;
+#else
+class PlatformThread;
+#endif
+}  // namespace rtc
 
 namespace webrtc {
 
