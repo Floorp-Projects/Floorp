@@ -21,7 +21,7 @@ namespace mozilla {
 namespace layers {
 
 StaticMutex APZSampler::sWindowIdLock;
-StaticAutoPtr<std::unordered_map<uint64_t, APZSampler*>>
+StaticAutoPtr<std::unordered_map<uint64_t, RefPtr<APZSampler>>>
     APZSampler::sWindowIdMap;
 
 APZSampler::APZSampler(const RefPtr<APZCTreeManager>& aApz,
@@ -34,9 +34,9 @@ APZSampler::APZSampler(const RefPtr<APZCTreeManager>& aApz,
   mApz->SetSampler(this);
 }
 
-APZSampler::~APZSampler() {
-  mApz->SetSampler(nullptr);
+APZSampler::~APZSampler() { mApz->SetSampler(nullptr); }
 
+void APZSampler::Destroy() {
   StaticMutexAutoLock lock(sWindowIdLock);
   if (mWindowId) {
     MOZ_ASSERT(sWindowIdMap);
@@ -49,7 +49,7 @@ void APZSampler::SetWebRenderWindowId(const wr::WindowId& aWindowId) {
   MOZ_ASSERT(!mWindowId);
   mWindowId = Some(aWindowId);
   if (!sWindowIdMap) {
-    sWindowIdMap = new std::unordered_map<uint64_t, APZSampler*>();
+    sWindowIdMap = new std::unordered_map<uint64_t, RefPtr<APZSampler>>();
     NS_DispatchToMainThread(NS_NewRunnableFunction(
         "APZUpdater::ClearOnShutdown", [] { ClearOnShutdown(&sWindowIdMap); }));
   }
