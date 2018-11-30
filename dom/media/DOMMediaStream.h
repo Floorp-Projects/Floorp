@@ -49,11 +49,6 @@ class ImageContainer;
 class OverlayImage;
 }  // namespace layers
 
-namespace media {
-template <typename V, typename E>
-class Pledge;
-}  // namespace media
-
 #define NS_DOMMEDIASTREAM_IID                        \
   {                                                  \
     0x8cb65468, 0x66c0, 0x444e, {                    \
@@ -276,11 +271,11 @@ class DOMMediaStream
 
     /**
      * Blocks aTrackId from going into mInputPort unless the port has been
-     * destroyed. Returns a pledge that gets resolved when the MediaStreamGraph
+     * destroyed. Returns a promise that gets resolved when the MediaStreamGraph
      * has applied the block in the playback stream.
      */
-    already_AddRefed<media::Pledge<bool, nsresult>> BlockSourceTrackId(
-        TrackID aTrackId, BlockingMode aBlockingMode);
+    RefPtr<GenericPromise> BlockSourceTrackId(TrackID aTrackId,
+                                              BlockingMode aBlockingMode);
 
    private:
     RefPtr<MediaInputPort> mInputPort;
