@@ -545,6 +545,9 @@ class GeckoEngineSession(
         defaultSettings?.trackingProtectionPolicy?.let { enableTrackingProtection(it) }
         defaultSettings?.requestInterceptor?.let { settings.requestInterceptor = it }
         defaultSettings?.historyTrackingDelegate?.let { settings.historyTrackingDelegate = it }
+        defaultSettings?.testingModeEnabled?.let {
+            geckoSession.settings.setBoolean(GeckoSessionSettings.FULL_ACCESSIBILITY_TREE, it)
+        }
 
         geckoSession.settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, privateMode)
         geckoSession.open(runtime)

@@ -735,6 +735,22 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun settingTestingMode() {
+        val runtime = mock(GeckoRuntime::class.java)
+        `when`(runtime.settings).thenReturn(mock(GeckoRuntimeSettings::class.java))
+
+        GeckoEngineSession(runtime,
+                geckoSessionProvider = geckoSessionProvider,
+                defaultSettings = DefaultSettings())
+        verify(geckoSession.settings).setBoolean(GeckoSessionSettings.FULL_ACCESSIBILITY_TREE, false)
+
+        GeckoEngineSession(runtime,
+            geckoSessionProvider = geckoSessionProvider,
+            defaultSettings = DefaultSettings(testingModeEnabled = true))
+        verify(geckoSession.settings).setBoolean(GeckoSessionSettings.FULL_ACCESSIBILITY_TREE, true)
+    }
+
+    @Test
     fun unsupportedSettings() {
         val settings = GeckoEngineSession(mock(GeckoRuntime::class.java),
                 geckoSessionProvider = geckoSessionProvider).settings

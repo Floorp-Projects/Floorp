@@ -66,12 +66,17 @@ class GeckoEngine(
         override var historyTrackingDelegate: HistoryTrackingDelegate?
             get() = defaultSettings?.historyTrackingDelegate
             set(value) { defaultSettings?.historyTrackingDelegate = value }
+
+        override var testingModeEnabled: Boolean
+            get() = defaultSettings?.testingModeEnabled ?: false
+            set(value) { defaultSettings?.testingModeEnabled = value }
     }.apply {
         defaultSettings?.let {
             this.javascriptEnabled = it.javascriptEnabled
             this.webFontsEnabled = it.webFontsEnabled
             this.trackingProtectionPolicy = it.trackingProtectionPolicy
             this.remoteDebuggingEnabled = it.remoteDebuggingEnabled
+            this.testingModeEnabled = it.testingModeEnabled
         }
     }
 }
