@@ -9,6 +9,9 @@
         <!-- /resources/testharness.js -->
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="pointerevent_support.js"></script>
         <script type="text/javascript">
@@ -46,6 +49,14 @@
                     });
                     test_pointerEvent.done(); // complete test
                 });
+
+                // Dispatch a mouse drag in target0.
+                new test_driver.Actions()
+                    .pointerMove(0, 0, {origin: target0})
+                    .pointerDown()
+                    .pointerMove(3, 3, {origin: target0})
+                    .pointerUp()
+                    .send();
             }
         </script>
     </head>
