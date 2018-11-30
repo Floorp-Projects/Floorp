@@ -217,7 +217,6 @@ using dom::Promise;
 using dom::Sequence;
 using media::NewRunnableFrom;
 using media::NewTaskFrom;
-using media::Pledge;
 using media::Refcountable;
 
 static Atomic<bool> sHasShutdown;
@@ -1516,12 +1515,6 @@ static void GetMediaDevices(MediaEngine* aEngine, uint64_t aWindowId,
     }
   }
 }
-
-// TODO: Remove once upgraded to GCC 4.8+ on linux. Bogus error on static func:
-// error: 'this' was not captured for this lambda function
-
-static auto& MediaManager_ToJSArray = MediaManager::ToJSArray;
-static auto& MediaManager_AnonymizeDevices = MediaManager::AnonymizeDevices;
 
 RefPtr<MediaManager::BadConstraintsPromise> MediaManager::SelectSettings(
     const MediaStreamConstraints& aConstraints, bool aIsChrome,
@@ -3163,7 +3156,7 @@ RefPtr<MediaManager::MediaDeviceSetPromise> MediaManager::EnumerateDevicesImpl(
                             __func__);
                       }
 
-                      MediaManager_AnonymizeDevices(**aDevices, aOriginKey);
+                      MediaManager::AnonymizeDevices(**aDevices, aOriginKey);
                       return MediaDeviceSetPromise::CreateAndResolve(
                           std::move(aDevices), __func__);
                     },
@@ -3185,14 +3178,16 @@ RefPtr<MediaManager::MediaDeviceSetPromise> MediaManager::EnumerateDevicesImpl(
           });
 }
 
-nsresult MediaManager::EnumerateDevices(
-    nsPIDOMWindowInner* aWindow,
-    nsIGetUserMediaDevicesSuccessCallback* aOnSuccess,
-    nsIDOMGetUserMediaErrorCallback* aOnFailure, dom::CallerType aCallerType) {
+RefPtr<MediaManager::MediaDeviceSetPromise> MediaManager::EnumerateDevices(
+    nsPIDOMWindowInner* aWindow, dom::CallerType aCallerType) {
   MOZ_ASSERT(NS_IsMainThread());
-  NS_ENSURE_TRUE(!sHasShutdown, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback> onSuccess(aOnSuccess);
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onFailure(aOnFailure);
+  if (sHasShutdown) {
+    return MediaDeviceSetPromise::CreateAndReject(
+        MakeRefPtr<MediaStreamError>(aWindow,
+                                     MediaStreamError::Name::AbortError,
+                                     NS_LITERAL_STRING("In shutdown")),
+        __func__);
+  }
   uint64_t windowId = aWindow->WindowID();
 
   nsIPrincipal* principal = aWindow->GetExtantDoc()->NodePrincipal();
@@ -3248,33 +3243,26 @@ nsresult MediaManager::EnumerateDevices(
   if (Preferences::GetBool("media.setsinkid.enabled")) {
     audioOutputType = MediaSinkEnum::Speaker;
   }
-  RefPtr<MediaDeviceSetPromise> p = EnumerateDevicesImpl(
-      windowId, MediaSourceEnum::Camera, MediaSourceEnum::Microphone,
-      audioOutputType, videoEnumerationType, audioEnumerationType);
-  p->Then(GetCurrentThreadSerialEventTarget(), __func__,
-          [onSuccess, windowListener,
-           sourceListener](RefPtr<MediaDeviceSetRefCnt>&& aDevices) mutable {
+  return EnumerateDevicesImpl(windowId, MediaSourceEnum::Camera,
+                              MediaSourceEnum::Microphone, audioOutputType,
+                              videoEnumerationType, audioEnumerationType)
+      ->Then(
+          GetCurrentThreadSerialEventTarget(), __func__,
+          [windowListener,
+           sourceListener](RefPtr<MediaDeviceSetRefCnt>&& aDevices) {
             DebugOnly<bool> rv = windowListener->Remove(sourceListener);
             MOZ_ASSERT(rv);
-            nsCOMPtr<nsIWritableVariant> array =
-                MediaManager_ToJSArray(**aDevices);
-            onSuccess->OnSuccess(array);
+            return MediaDeviceSetPromise::CreateAndResolve(std::move(aDevices),
+                                                           __func__);
           },
-          [onFailure, windowListener, sourceListener,
-           windowId](RefPtr<MediaStreamError>&& reason) mutable {
-            MediaManager* mgr = MediaManager::GetIfExists();
-            if (!mgr || !mgr->IsWindowStillActive(windowId)) {
-              // If an error happened, like navigate away
-              // leave the promise pending.
-              return;
-            }
+          [windowListener, sourceListener](RefPtr<MediaStreamError>&& error) {
             // This may fail, if a new doc has been set the OnNavigation method
             // should have removed all previous active listeners. Attempt to
             // clean it here, just in case, but ignore the return value.
-            windowListener->Remove(sourceListener);
-            onFailure->OnError(reason);
+            Unused << windowListener->Remove(sourceListener);
+            return MediaDeviceSetPromise::CreateAndReject(std::move(error),
+                                                          __func__);
           });
-  return NS_OK;
 }
 
 RefPtr<SinkInfoPromise> MediaManager::GetSinkDevice(nsPIDOMWindowInner* aWindow,
@@ -3361,7 +3349,7 @@ nsresult MediaManager::GetUserMediaDevices(
     if (!aCallID.Length() || aCallID == callID) {
       if (mActiveCallbacks.Get(callID, getter_AddRefs(task))) {
         nsCOMPtr<nsIWritableVariant> array =
-            MediaManager_ToJSArray(*task->mMediaDeviceSet);
+            MediaManager::ToJSArray(*task->mMediaDeviceSet);
         aOnSuccess.Call(array);
         return NS_OK;
       }
