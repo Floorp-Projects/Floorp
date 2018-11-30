@@ -47,12 +47,14 @@ const {nsIBlocklistService} = Ci;
  *         BOOTSTRAP_REASONS,
  *         DB_SCHEMA,
  *         XPIStates,
+ *         migrateAddonLoader
  */
 
 for (let sym of [
   "BOOTSTRAP_REASONS",
   "DB_SCHEMA",
   "XPIStates",
+  "migrateAddonLoader",
 ]) {
   XPCOMUtils.defineLazyGetter(this, sym, () => XPIInternal[sym]);
 }
@@ -1318,37 +1320,7 @@ this.XPIDatabase = {
       if (inputAddons.schemaVersion == 27) {
         // Types were translated in bug 857456.
         for (let addon of inputAddons.addons) {
-          switch (addon.type) {
-            case "extension":
-            case "dictionary":
-            case "locale":
-            case "theme":
-              addon.loader = "bootstrap";
-              break;
-
-            case "webbextension":
-              addon.type = "extension";
-              addon.loader = null;
-              break;
-
-            case "webextension-dictionary":
-              addon.type = "dictionary";
-              addon.loader = null;
-              break;
-
-            case "webextension-langpack":
-              addon.type = "locale";
-              addon.loader = null;
-              break;
-
-            case "webextension-theme":
-              addon.type = "theme";
-              addon.loader = null;
-              break;
-
-            default:
-              logger.warn(`Not converting unknown addon type ${addon.type}`);
-          }
+          migrateAddonLoader(addon);
         }
       } else if (inputAddons.schemaVersion != DB_SCHEMA) {
         // For now, we assume compatibility for JSON data with a
