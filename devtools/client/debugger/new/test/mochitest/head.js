@@ -46,6 +46,17 @@ Services.scriptloader.loadSubScript(
 const EXAMPLE_URL =
   "http://example.com/browser/devtools/client/debugger/new/test/mochitest/examples/";
 
+
+async function waitUntilPredicate(predicate) {
+  let result;
+  await waitUntil(() => {
+    result = predicate();
+    return result;
+  })
+
+  return result;
+}
+
 // NOTE: still experimental, the screenshots might not be exactly correct
 async function takeScreenshot(dbg) {
   let canvas = dbg.win.document.createElementNS(
@@ -67,6 +78,42 @@ async function attachDebugger(tab) {
   let toolbox = await gDevTools.showToolbox(target, "jsdebugger");
   return toolbox;
 }
+
+async function attatchRecordingDebugger(url, { waitForRecording } = { waitForRecording: false }) {
+  let tab = BrowserTestUtils.addTab(gBrowser, null, { recordExecution: "*" });
+  gBrowser.selectedTab = tab;
+  openTrustedLinkIn(EXAMPLE_URL + url, "current");
+  
+  if (waitForRecording) {
+    await once(Services.ppmm, "RecordingFinished");
+  }
+  const toolbox = await attachDebugger(tab);
+  const dbg = createDebuggerContext(toolbox)
+  const threadClient = dbg.toolbox.threadClient;
+
+  await threadClient.interrupt();
+  return {...dbg, tab, threadClient};
+}
+
+
+// Return a promise with a reference to jsterm, opening the split
+// console if necessary.  This cleans up the split console pref so
+// it won't pollute other tests.
+async function getSplitConsole(dbg) {
+  const { toolbox, win } = dbg;
+
+  if (!win) {
+    win = toolbox.win;
+  }
+
+  if (!toolbox.splitConsole) {
+    pressKey(dbg, "Escape");
+  }
+
+  await toolbox.openSplitConsole();
+  return toolbox.getPanel("webconsole");
+}
+
 
 // Return a promise that resolves when a breakpoint has been set.
 async function setBreakpoint(threadClient, expectedFile, lineno) {
@@ -142,4 +189,74 @@ function newRecordingFile() {
   ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
   return OS.Path.join(OS.Constants.Path.tmpDir,
                       "MochitestRecording" + Math.round(Math.random() * 1000000000));
+}
+
+
+async function warpToMessage(hud, threadClient, text) {
+  let messages = await waitForMessages(hud, text);
+  ok(messages.length == 1, "Found one message");
+  let message = messages.pop();
+
+  let menuPopup = await openConsoleContextMenu(hud, message);
+  console.log(`.>> menu`, menuPopup);
+
+
+  let timeWarpItem = menuPopup.querySelector("#console-menu-time-warp");
+  ok(timeWarpItem, "Time warp menu item is available");
+
+  timeWarpItem.click();
+
+  await Promise.all([
+    hideConsoleContextMenu(hud),
+    once(Services.ppmm, "TimeWarpFinished"),
+    waitForThreadEvents(threadClient, 'paused')
+  ]);
+
+  messages = findMessages(hud, "", ".paused");
+  ok(messages.length == 1, "Found one paused message");
+
+  return message;
+}
+
+
+function findMessage(hud, text, selector = ".message") {
+  return findMessages(hud, text, selector)[0]
+}
+
+function findMessages(hud, text, selector = ".message") {
+  const messages = hud.ui.outputNode.querySelectorAll(selector);
+  const elements = Array.prototype.filter.call(
+    messages,
+    (el) => el.textContent.includes(text)
+  );
+
+  if (elements.length == 0) {
+    return null;
+  }
+
+  return elements;
+}
+
+function waitForMessages(hud, text, selector = ".message") {
+  return waitUntilPredicate(() => findMessages(hud, text, selector))
+}
+
+async function openConsoleContextMenu(hud, element) {
+  const onConsoleMenuOpened = hud.ui.consoleOutput.once("menu-open");
+  synthesizeContextMenuEvent(element);
+  await onConsoleMenuOpened;
+  const doc = hud.ui.consoleOutput.owner.chromeWindow.document;
+  return doc.getElementById("webconsole-menu");
+}
+
+function hideConsoleContextMenu(hud) {
+  const doc = hud.ui.consoleOutput.owner.chromeWindow.document;
+  const popup = doc.getElementById("webconsole-menu");
+  if (!popup) {
+    return Promise.resolve();
+  }
+
+  const onPopupHidden = once(popup, "popuphidden");
+  popup.hidePopup();
+  return onPopupHidden;
 }
