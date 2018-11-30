@@ -283,8 +283,8 @@ button.invoke-getter {
   mask: url("resource://devtools/client/shared/components/reps/images/input.svg") no-repeat;
   display: inline-block;
   background-color: var(--comment-node-color);
-  height: 12px;
-  vertical-align:bottom;
+  height: 10px;
+  vertical-align: middle;
   border:none;
 }
 
