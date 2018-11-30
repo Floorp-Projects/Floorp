@@ -1159,7 +1159,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline
   void FinishStyle(nsPresContext*, const nsStyleOutline*) {}
   const static bool kHasFinishStyle = false;
 
-  void RecalcData();
   nsChangeHint CalcDifference(const nsStyleOutline& aNewData) const;
 
   nsStyleCorners  mOutlineRadius; // coord, percent, calc
@@ -1172,7 +1171,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline
   nscoord       mOutlineWidth;
   nscoord       mOutlineOffset;
   mozilla::StyleComplexColor mOutlineColor;
-  mozilla::StyleBorderStyle  mOutlineStyle;  // StyleBorderStyle::*
+  mozilla::StyleOutlineStyle mOutlineStyle;
 
   nscoord GetOutlineWidth() const
   {
@@ -1181,9 +1180,15 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline
 
   bool ShouldPaintOutline() const
   {
-    return mOutlineStyle == mozilla::StyleBorderStyle::Auto ||
-           (GetOutlineWidth() > 0 &&
-            mOutlineStyle != mozilla::StyleBorderStyle::None);
+    if (mOutlineStyle.IsAuto()) {
+      return true;
+    }
+    if (GetOutlineWidth() > 0) {
+      MOZ_ASSERT(mOutlineStyle.border_style._0 != mozilla::StyleBorderStyle::None,
+                 "outline-style: none implies outline-width of zero");
+      return true;
+    }
+    return false;
   }
 
 protected:

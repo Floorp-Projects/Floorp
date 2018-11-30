@@ -449,7 +449,7 @@ nsStyleOutline::nsStyleOutline(const nsPresContext* aContext)
   : mOutlineWidth(kMediumBorderWidth)
   , mOutlineOffset(0)
   , mOutlineColor(StyleComplexColor::CurrentColor())
-  , mOutlineStyle(StyleBorderStyle::None)
+  , mOutlineStyle(StyleOutlineStyle::BorderStyle(StyleBorderStyle::None))
   , mActualOutlineWidth(0)
   , mTwipsPerPixel(aContext->DevPixelsToAppUnits(1))
 {
@@ -471,17 +471,6 @@ nsStyleOutline::nsStyleOutline(const nsStyleOutline& aSrc)
   , mTwipsPerPixel(aSrc.mTwipsPerPixel)
 {
   MOZ_COUNT_CTOR(nsStyleOutline);
-}
-
-void
-nsStyleOutline::RecalcData()
-{
-  if (StyleBorderStyle::None == mOutlineStyle) {
-    mActualOutlineWidth = 0;
-  } else {
-    mActualOutlineWidth =
-      NS_ROUND_BORDER_TO_PIXELS(mOutlineWidth, mTwipsPerPixel);
-  }
 }
 
 nsChangeHint
