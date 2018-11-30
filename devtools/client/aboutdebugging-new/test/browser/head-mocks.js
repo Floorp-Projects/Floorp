@@ -16,22 +16,23 @@ Services.scriptloader.loadSubScript(MOCKS_ROOT + "head-runtime-client-factory-mo
 Services.scriptloader.loadSubScript(MOCKS_ROOT + "head-usb-runtimes-mock.js", this);
 
 /**
- * This wrapper around the USB mocks used in about:debugging tests provides helpers to
- * quickly setup mocks for typical USB runtime tests.
+ * This wrapper around the mocks used in about:debugging tests provides helpers to
+ * quickly setup mocks for runtime tests involving USB, network or wifi runtimes that can
+ * are difficult to setup in a test environment.
  */
 class Mocks {
   constructor() {
-    // Setup the usb-runtimes mock to rely on the internal _runtimes array.
+    // Setup the usb-runtimes mock to rely on the internal _usbRuntimes array.
     this.usbRuntimesMock = createUsbRuntimesMock();
-    this._runtimes = [];
+    this._usbRuntimes = [];
     this.usbRuntimesMock.getUSBRuntimes = () => {
-      return this._runtimes;
+      return this._usbRuntimes;
     };
 
     // refreshUSBRuntimes normally starts scan, which should ultimately fire the
     // "runtime-list-updated" event.
     this.usbRuntimesMock.refreshUSBRuntimes = () => {
-      this.emitUpdate();
+      this.emitUSBUpdate();
     };
 
     // Prepare a fake observer to be able to emit events from this mock.
@@ -39,15 +40,19 @@ class Mocks {
 
     // Setup the runtime-client-factory mock to rely on the internal _clients map.
     this.runtimeClientFactoryMock = createRuntimeClientFactoryMock();
-    this._clients = {};
+    this._clients = {
+      [RUNTIMES.NETWORK]: {},
+      [RUNTIMES.THIS_FIREFOX]: {},
+      [RUNTIMES.USB]: {},
+    };
     this.runtimeClientFactoryMock.createClientForRuntime = runtime => {
-      return this._clients[runtime.id];
+      return this._clients[runtime.type][runtime.id];
     };
 
     // Add a client for THIS_FIREFOX, since about:debugging will start on the This Firefox
     // page.
     this._thisFirefoxClient = createThisFirefoxClientMock();
-    this._clients[RUNTIMES.THIS_FIREFOX] = this._thisFirefoxClient;
+    this._clients[RUNTIMES.THIS_FIREFOX][RUNTIMES.THIS_FIREFOX] = this._thisFirefoxClient;
   }
 
   get thisFirefoxClient() {
@@ -62,6 +67,37 @@ class Mocks {
   disableMocks() {
     disableUsbRuntimesMock();
     disableRuntimeClientFactoryMock();
+
+    for (const host of Object.keys(this._clients[RUNTIMES.NETWORK])) {
+      this.removeNetworkRuntime(host);
+    }
+  }
+
+  createNetworkRuntime(host, runtimeInfo) {
+    const { addNetworkLocation } =
+      require("devtools/client/aboutdebugging-new/src/modules/network-locations");
+    addNetworkLocation(host);
+
+    // Add a valid client that can be returned for this particular runtime id.
+    const mockNetworkClient = createClientMock();
+    mockNetworkClient.getDeviceDescription = () => {
+      return {
+        name: runtimeInfo.name || "TestBrand",
+        channel: runtimeInfo.channel || "release",
+        version: runtimeInfo.version || "1.0",
+      };
+    };
+    this._clients[RUNTIMES.NETWORK][host] = mockNetworkClient;
+
+    return mockNetworkClient;
+  }
+
+  removeNetworkRuntime(host) {
+    const { removeNetworkLocation } =
+      require("devtools/client/aboutdebugging-new/src/modules/network-locations");
+    removeNetworkLocation(host);
+
+    delete this._clients[RUNTIMES.NETWORK][host];
   }
 
   emitUSBUpdate() {
@@ -84,7 +120,7 @@ class Mocks {
    */
   createUSBRuntime(id, runtimeInfo = {}) {
     // Add a new runtime to the list of scanned runtimes.
-    this._runtimes.push({
+    this._usbRuntimes.push({
       id: id,
       _socketPath: runtimeInfo.socketPath || "test/path",
       deviceName: runtimeInfo.deviceName || "test device name",
@@ -100,13 +136,13 @@ class Mocks {
         version: runtimeInfo.version || "1.0",
       };
     };
-    this._clients[id] = mockUsbClient;
+    this._clients[RUNTIMES.USB][id] = mockUsbClient;
 
     return mockUsbClient;
   }
 
   removeUSBRuntime(id) {
-    this._runtimes = this._runtimes.filter(runtime => runtime.id !== id);
-    delete this._clients[id];
+    this._usbRuntimes = this._usbRuntimes.filter(runtime => runtime.id !== id);
+    delete this._clients[RUNTIMES.USB][id];
   }
 }

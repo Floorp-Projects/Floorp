@@ -183,6 +183,6 @@ async function selectRuntime(deviceName, name, document) {
 
   await waitUntil(() => {
     const runtimeInfo = document.querySelector(".js-runtime-info");
-    return runtimeInfo.textContent.includes(name);
+    return runtimeInfo && runtimeInfo.textContent.includes(name);
   });
 }
