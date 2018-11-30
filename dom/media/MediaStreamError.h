@@ -51,11 +51,11 @@ class BaseMediaMgrError {
  protected:
   BaseMediaMgrError(Name aName, const nsAString& aMessage,
                     const nsAString& aConstraint);
+
+ public:
   nsString mNameString;
   nsString mMessage;
   const nsString mConstraint;
-
- private:
   const Name mName;
 };
 
