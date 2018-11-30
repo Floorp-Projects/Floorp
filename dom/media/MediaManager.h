@@ -215,11 +215,9 @@ class MediaManager final : public nsIMediaManagerService,
   typedef nsTArray<RefPtr<MediaDevice>> MediaDeviceSet;
   typedef media::Refcountable<MediaDeviceSet> MediaDeviceSetRefCnt;
 
-  typedef MozPromise<RefPtr<DOMMediaStream>, RefPtr<dom::MediaStreamError>,
-                     true>
+  typedef MozPromise<RefPtr<DOMMediaStream>, RefPtr<MediaMgrError>, true>
       StreamPromise;
-  typedef MozPromise<RefPtr<MediaDeviceSetRefCnt>,
-                     RefPtr<dom::MediaStreamError>, true>
+  typedef MozPromise<RefPtr<MediaDeviceSetRefCnt>, RefPtr<MediaMgrError>, true>
       MediaDeviceSetPromise;
   typedef MozPromise<const char*, nsresult, false> BadConstraintsPromise;
 

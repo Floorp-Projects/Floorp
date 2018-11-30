@@ -22,15 +22,12 @@ public:
   }
 
   RefPtr<ApplyConstraintsPromise>
-  ApplyConstraints(nsPIDOMWindowInner* aWindow,
-                   const dom::MediaTrackConstraints& aConstraints,
+  ApplyConstraints(const dom::MediaTrackConstraints& aConstraints,
                    dom::CallerType aCallerType) override
   {
     return ApplyConstraintsPromise::CreateAndReject(
-        MakeRefPtr<MediaStreamError>(aWindow,
-                                     MediaStreamError::Name::OverconstrainedError,
-                                     NS_LITERAL_STRING("")),
-        __func__);
+        MakeRefPtr<MediaMgrError>(MediaStreamError::Name::OverconstrainedError,
+                                  NS_LITERAL_STRING("")), __func__);
   }
 
   void Stop() override

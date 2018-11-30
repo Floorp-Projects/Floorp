@@ -691,21 +691,16 @@ void SpeechRecognition::Start(const Optional<NonNull<DOMMediaStream>>& aStream,
                    }
                  }
                },
-               [this, self](RefPtr<MediaStreamError>&& error) {
+               [this, self](RefPtr<MediaMgrError>&& error) {
                  SpeechRecognitionErrorCode errorCode;
 
-                 nsAutoString name;
-                 error->GetName(name);
-                 if (name.EqualsLiteral("NotAllowedError")) {
+                 if (error->mName == MediaMgrError::Name::NotAllowedError) {
                    errorCode = SpeechRecognitionErrorCode::Not_allowed;
                  } else {
                    errorCode = SpeechRecognitionErrorCode::Audio_capture;
                  }
-
-                 nsAutoString message;
-                 error->GetMessage(message);
                  DispatchError(SpeechRecognition::EVENT_AUDIO_ERROR, errorCode,
-                               message);
+                               error->mMessage);
                });
   }
 

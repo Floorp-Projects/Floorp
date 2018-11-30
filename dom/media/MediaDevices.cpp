@@ -67,16 +67,17 @@ already_AddRefed<Promise> MediaDevices::GetUserMedia(
       ->GetUserMedia(GetOwner(), aConstraints, aCallerType)
       ->Then(GetCurrentThreadSerialEventTarget(), __func__,
              [this, self, p](RefPtr<DOMMediaStream>&& aStream) {
-               if (NS_FAILED(CheckInnerWindowCorrectness())) {
+               if (!GetWindowIfCurrent()) {
                  return;  // Leave Promise pending after navigation by design.
                }
                p->MaybeResolve(std::move(aStream));
              },
-             [this, self, p](const RefPtr<MediaStreamError>& error) {
-               if (NS_FAILED(CheckInnerWindowCorrectness())) {
+             [this, self, p](const RefPtr<MediaMgrError>& error) {
+               nsPIDOMWindowInner* window = GetWindowIfCurrent();
+               if (!window) {
                  return;  // Leave Promise pending after navigation by design.
                }
-               p->MaybeReject(error);
+               p->MaybeReject(MakeRefPtr<MediaStreamError>(window, *error));
              });
   return p.forget();
 }
@@ -94,10 +95,11 @@ already_AddRefed<Promise> MediaDevices::EnumerateDevices(CallerType aCallerType,
       ->Then(GetCurrentThreadSerialEventTarget(), __func__,
              [this, self,
               p](RefPtr<MediaManager::MediaDeviceSetRefCnt>&& aDevices) {
-               if (NS_FAILED(CheckInnerWindowCorrectness())) {
+               nsPIDOMWindowInner* window = GetWindowIfCurrent();
+               if (!window) {
                  return;  // Leave Promise pending after navigation by design.
                }
-               auto windowId = GetOwner()->WindowID();
+               auto windowId = window->WindowID();
                nsTArray<RefPtr<MediaDeviceInfo>> infos;
                for (auto& device : *aDevices) {
                  MOZ_ASSERT(device->mKind == dom::MediaDeviceKind::Audioinput ||
@@ -117,11 +119,12 @@ already_AddRefed<Promise> MediaDevices::EnumerateDevices(CallerType aCallerType,
                }
                p->MaybeResolve(std::move(infos));
              },
-             [this, self, p](const RefPtr<MediaStreamError>& error) {
-               if (NS_FAILED(CheckInnerWindowCorrectness())) {
+             [this, self, p](const RefPtr<MediaMgrError>& error) {
+               nsPIDOMWindowInner* window = GetWindowIfCurrent();
+               if (!window) {
                  return;  // Leave Promise pending after navigation by design.
                }
-               p->MaybeReject(error);
+               p->MaybeReject(MakeRefPtr<MediaStreamError>(window, *error));
              });
   return p.forget();
 }

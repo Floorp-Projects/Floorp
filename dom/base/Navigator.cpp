@@ -1228,13 +1228,14 @@ Navigator::MozGetUserMedia(const MediaStreamConstraints& aConstraints,
       }
       MediaManager::CallOnSuccess(&onsuccess, *aStream);
     },
-    [weakWindow, onerror = std::move(onerror)](const RefPtr<dom::MediaStreamError>& aError) {
+    [weakWindow, onerror = std::move(onerror)](const RefPtr<MediaMgrError>& aError) {
       nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(weakWindow);
       if (!window || !window->GetOuterWindow() ||
           window->GetOuterWindow()->GetCurrentInnerWindow() != window) {
         return; // Leave Promise pending after navigation by design.
       }
-      MediaManager::CallOnError(&onerror, *aError);
+      auto error = MakeRefPtr<MediaStreamError>(window, *aError);
+      MediaManager::CallOnError(&onerror, *error);
     }
   );
 }
