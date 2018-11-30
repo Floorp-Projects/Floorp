@@ -9943,6 +9943,17 @@
     "releaseChannelCollection": "opt-out",
     "description": "How long has the rule view been active (seconds)"
   },
+  "DEVTOOLS_CHANGESVIEW_TIME_ACTIVE_SECONDS": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000000,
+    "n_buckets": 100,
+    "bug_numbers": [1509890],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "mbalfanz@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
+    "description": "How long has the Changes panel been active (seconds)"
+  },
   "DEVTOOLS_COMPUTEDVIEW_TIME_ACTIVE_SECONDS": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
