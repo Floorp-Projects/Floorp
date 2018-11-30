@@ -27,11 +27,12 @@ const TEST_DATA = [{
 add_task(async function() {
   await addTab(TEST_URI);
   const { inspector, flexboxInspector } = await openLayoutView();
-  const { document: doc } = flexboxInspector;
+  const { document: doc, store } = flexboxInspector;
 
   for (const { selector, expectedSections } of TEST_DATA) {
     info(`Checking the list of sections for the flex item ${selector}`);
-    const sections = await selectNodeAndGetFlexSizingSections(selector, inspector, doc);
+    const sections = await selectNodeAndGetFlexSizingSections(
+      selector, store, inspector, doc);
 
     is(sections.length, expectedSections.length, "Correct number of sections found");
     expectedSections.forEach((expectedSection, i) => {
@@ -41,13 +42,13 @@ add_task(async function() {
   }
 });
 
-async function selectNodeAndGetFlexSizingSections(selector, inspector, doc) {
-  const onFlexItemSizingRendered = waitForDOM(doc, "ul.flex-item-sizing");
+async function selectNodeAndGetFlexSizingSections(selector, store, inspector, doc) {
+  const onUpdate = waitUntilAction(store, "UPDATE_FLEXBOX");
   await selectNode(selector, inspector);
-  const [flexSizingContainer] = await onFlexItemSizingRendered;
+  await onUpdate;
 
   info(`Getting the list of displayed sections for ${selector}`);
-  const allSections = [...flexSizingContainer.querySelectorAll(".section .name")];
+  const allSections = [...doc.querySelectorAll("ul.flex-item-sizing .section .name")];
   const allSectionTitles = allSections.map(el => el.textContent);
 
   return allSectionTitles;

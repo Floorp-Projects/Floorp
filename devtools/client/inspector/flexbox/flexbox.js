@@ -305,7 +305,8 @@ class FlexboxInspector {
     if (!this.isPanelVisible() ||
         !this.store ||
         !this.selection.nodeFront ||
-        !this.hasGetCurrentFlexbox) {
+        !this.hasGetCurrentFlexbox ||
+        this._isUpdating) {
       return;
     }
 
@@ -409,13 +410,20 @@ class FlexboxInspector {
   /**
    * Handler for "new-root" event fired by the inspector and "new-node-front" event fired
    * by the inspector selection. Updates the flexbox panel if it is visible.
+   *
+   * @param  {Object}
+   *         This callback is sometimes executed on "new-node-front" events which means
+   *         that a first param is passed here (the nodeFront), which we don't care about.
+   * @param  {String} reason
+   *         On "new-node-front" events, a reason is passed here, and we need it to detect
+   *         if this update was caused by a node selection from the markup-view.
    */
-  onUpdatePanel() {
+  onUpdatePanel(_, reason) {
     if (!this.isPanelVisible()) {
       return;
     }
 
-    this.update();
+    this.update(null, null, reason === "treepanel");
   }
 
   /**
@@ -451,14 +459,19 @@ class FlexboxInspector {
    * @param  {Object|null} flexItemContainer
    *         An object consisting of the parent flex container's flex items and
    *         properties.
+   * @param  {Boolean} initiatedByMarkupViewSelection
+   *         True if the update was due to a node selection in the markup-view.
    */
-  async update(flexContainer, flexItemContainer) {
+  async update(flexContainer, flexItemContainer, initiatedByMarkupViewSelection) {
+    this._isUpdating = true;
+
     // Stop refreshing if the inspector or store is already destroyed or no node is
     // selected.
     if (!this.inspector ||
         !this.store ||
         !this.selection.nodeFront ||
         !this.hasGetCurrentFlexbox) {
+      this._isUpdating = false;
       return;
     }
 
@@ -472,6 +485,7 @@ class FlexboxInspector {
       // selection.
       if (!flexContainer) {
         this.store.dispatch(clearFlexbox());
+        this._isUpdating = false;
         return;
       }
 
@@ -489,6 +503,7 @@ class FlexboxInspector {
         flexContainer,
         flexItemContainer,
         highlighted,
+        initiatedByMarkupViewSelection,
       }));
 
       const isContainerInfoShown = !flexContainer.flexItemShown || !!flexItemContainer;
@@ -498,6 +513,8 @@ class FlexboxInspector {
       // This call might fail if called asynchrously after the toolbox is finished
       // closing.
     }
+
+    this._isUpdating = false;
   }
 }
 
