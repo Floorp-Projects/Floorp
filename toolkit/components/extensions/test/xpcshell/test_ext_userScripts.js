@@ -875,7 +875,6 @@ add_task(async function test_apiScript_method_ensure_xraywrapped_proxy_in_params
 
 add_task(async function test_apiScript_method_return_proxy_object() {
   function apiScript(sharedTestAPIMethods) {
-    const {cloneInto} = this;
     let proxyTrapsCount = 0;
     let scriptTrapsCount = 0;
 
@@ -892,13 +891,13 @@ add_task(async function test_apiScript_method_return_proxy_object() {
         },
         testAPIMethodOk() {
           return new script.global.Proxy(
-            cloneInto(["expectedArrayValue"], script.global),
-            cloneInto({
+            script.export(["expectedArrayValue"]),
+            script.export({
               getPrototypeOf(target) {
                 scriptTrapsCount++;
                 return script.global.Object.getPrototypeOf(target);
               },
-            }, script.global, {cloneFunctions: true}));
+            }));
         },
         assertNoProxyTrapTriggered() {
           browser.test.assertEq(0, proxyTrapsCount, "Proxy traps should not be triggered");
@@ -1160,6 +1159,46 @@ add_task(async function test_apiScript_method_avoid_unnecessary_params_cloning()
 
     assertTrue(result === obj,
                `Expect returned value to be strictly equal to the unwrapped API method parameter`);
+
+    notifyFinish();
+  }
+
+  await test_userScript_APIMethod({
+    userScript,
+    apiScript,
+  });
+});
+
+add_task(async function test_apiScript_method_export_sparse_arrays() {
+  function apiScript(sharedTestAPIMethods) {
+    browser.userScripts.onBeforeScript.addListener(script => {
+      script.defineGlobals({
+        ...sharedTestAPIMethods,
+        testAPIMethod() {
+          const sparseArray = [];
+          sparseArray[3] = "third-element";
+          sparseArray[5] = "fifth-element";
+          return script.export(sparseArray);
+        },
+      });
+    });
+  }
+
+  async function userScript() {
+    const {assertTrue, notifyFinish, testAPIMethod} = this;
+
+    const result = testAPIMethod(window, document);
+
+    // We expect the returned value to be the uncloneable window object.
+    assertTrue(result && result.length === 6,
+               `the returned value should be an array of the expected length: ${result}`);
+    assertTrue(result[3] === "third-element",
+               `the third array element should have the expected value: ${result[3]}`);
+    assertTrue(result[5] === "fifth-element",
+               `the fifth array element should have the expected value: ${result[5]}`);
+    assertTrue(result[0] === undefined,
+               `the first array element should have the expected value: ${result[0]}`);
+    assertTrue(!("0" in result), "Holey array should still be holey");
 
     notifyFinish();
   }
