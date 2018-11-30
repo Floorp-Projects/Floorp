@@ -17,8 +17,7 @@ tasks:
       deadline: {$fromNow: '2 hours'}
       provisionerId: aws-provisioner-v1
       workerType: github-worker
-      routes:
-        - 'notify.irc-channel.#android-ci.on-any'
+      routes: []
       scopes: []
       payload:
         maxRunTime: 7200
@@ -47,9 +46,9 @@ tasks:
         owner: ${event.pull_request.user.login}@users.noreply.github.com
         source: ${event.repository.url}
 ###############################################################################
-# Task: Master builds
+# Task: Builds on branches of the main repo
 #
-# Triggered whenever something is pushed/merged to the master branch.
+# Triggered whenever something is pushed/merged to the mozilla-mobile repo.
 #
 # Creates the following task pipeline:
 #
@@ -59,7 +58,7 @@ tasks:
 ###############################################################################
   - $if: 'tasks_for == "github-push"'
     then:
-      $if: 'event.ref == "refs/heads/master"'
+      $if: 'event.repository.fork == false'
       then:
         taskId: {$eval: as_slugid("decision_task")}
         # The next line won't be needed anymore after https://github.com/taskcluster/taskcluster-github/pull/273
@@ -75,6 +74,7 @@ tasks:
           - queue:scheduler-id:taskcluster-github
           - secrets:get:project/focus/firebase
           - secrets:get:project/focus/nimbledroid
+          - queue:route:notify.irc-channel.#android-ci.on-any
         payload:
           maxRunTime: 7200
           image: mozillamobile/focus-android:1.2
