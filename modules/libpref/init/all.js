@@ -5138,7 +5138,7 @@ pref("extensions.webextensions.performanceCountersMaxAge", 1000);
 
 // Report Site Issue button
 pref("extensions.webcompat-reporter.newIssueEndpoint", "https://webcompat.com/issues/new");
-#if defined(MOZ_DEV_EDITION) || defined(NIGHTLY_BUILD)
+#if MOZ_UPDATE_CHANNEL != release && MOZ_UPDATE_CHANNEL != esr
 pref("extensions.webcompat-reporter.enabled", true);
 #else
 pref("extensions.webcompat-reporter.enabled", false);
