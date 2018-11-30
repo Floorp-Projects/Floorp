@@ -208,21 +208,21 @@ class FirefoxBrowser(Browser):
         self.headless = headless
 
     def settings(self, test):
-        self.lsan_allowed = test.lsan_allowed
-
-    def settings(self, test):
-        self.lsan_allowed = test.lsan_allowed
-        self.lsan_max_stack_depth = test.lsan_max_stack_depth
-        self.mozleak_allowed = test.mozleak_allowed
-        self.mozleak_thresholds = test.mozleak_threshold
         return {"check_leaks": self.leak_check and not test.leaks,
-                "lsan_allowed": test.lsan_allowed}
+                "lsan_allowed": test.lsan_allowed,
+                "lsan_max_stack_depth": test.lsan_max_stack_depth,
+                "mozleak_allowed": self.leak_check and test.mozleak_allowed,
+                "mozleak_thresholds": self.leak_check and test.mozleak_threshold}
 
     def start(self, group_metadata=None, **kwargs):
         if group_metadata is None:
             group_metadata = {}
 
         self.group_metadata = group_metadata
+        self.lsan_allowed = kwargs.get("lsan_allowed")
+        self.lsan_max_stack_depth = kwargs.get("lsan_max_stack_depth")
+        self.mozleak_allowed = kwargs.get("mozleak_allowed")
+        self.mozleak_thresholds = kwargs.get("mozleak_thresholds")
 
         if self.marionette_port is None:
             self.marionette_port = get_free_port(2828, exclude=self.used_ports)
