@@ -99,7 +99,7 @@ already_AddRefed<Promise> MediaDevices::EnumerateDevices(CallerType aCallerType,
                }
                auto windowId = GetOwner()->WindowID();
                nsTArray<RefPtr<MediaDeviceInfo>> infos;
-               for (auto& device : **aDevices) {
+               for (auto& device : *aDevices) {
                  MOZ_ASSERT(device->mKind == dom::MediaDeviceKind::Audioinput ||
                             device->mKind == dom::MediaDeviceKind::Videoinput ||
                             device->mKind == dom::MediaDeviceKind::Audiooutput);

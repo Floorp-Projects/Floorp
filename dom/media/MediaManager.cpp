@@ -1527,7 +1527,7 @@ RefPtr<MediaManager::BadConstraintsPromise> MediaManager::SelectSettings(
   return MediaManager::PostTask<BadConstraintsPromise>(
       __func__, [aConstraints, aSources, aIsChrome](
                     MozPromiseHolder<BadConstraintsPromise>& holder) mutable {
-        auto& sources = **aSources;
+        auto& sources = *aSources;
 
         // Since the advanced part of the constraints algorithm needs to know
         // when a candidate set is overconstrained (zero members), we must split
@@ -1591,7 +1591,7 @@ class GetUserMediaTask : public Runnable {
                    SourceListener* aSourceListener,
                    const MediaEnginePrefs& aPrefs,
                    const ipc::PrincipalInfo& aPrincipalInfo, bool aIsChrome,
-                   MediaManager::MediaDeviceSet* aMediaDeviceSet,
+                   RefPtr<MediaManager::MediaDeviceSetRefCnt>&& aMediaDeviceSet,
                    bool aShouldFocusSource)
       : Runnable("GetUserMediaTask"),
         mConstraints(aConstraints),
@@ -1780,7 +1780,7 @@ class GetUserMediaTask : public Runnable {
   bool mDeviceChosen;
 
  public:
-  nsAutoPtr<MediaManager::MediaDeviceSet> mMediaDeviceSet;
+  RefPtr<MediaManager::MediaDeviceSetRefCnt> mMediaDeviceSet;
 
  private:
   RefPtr<MediaManager> mManager;  // get ref to this when creating the runnable
@@ -1891,7 +1891,7 @@ RefPtr<MediaManager::MediaDeviceSetPromise> MediaManager::EnumerateRawDevices(
       realBackend = manager->GetBackend(aWindowId);
     }
 
-    auto result = MakeRefPtr<MediaDeviceSetRefCnt>(new MediaDeviceSet);
+    auto result = MakeRefPtr<MediaDeviceSetRefCnt>();
 
     if (hasVideo) {
       MediaDeviceSet videos;
@@ -1902,7 +1902,7 @@ RefPtr<MediaManager::MediaDeviceSetPromise> MediaManager::EnumerateRawDevices(
                           ? fakeBackend
                           : realBackend,
                       aWindowId, aVideoInputType, videos, videoLoopDev.get());
-      (*result)->AppendElements(videos);
+      result->AppendElements(videos);
     }
     if (hasAudio) {
       MediaDeviceSet audios;
@@ -1913,14 +1913,14 @@ RefPtr<MediaManager::MediaDeviceSetPromise> MediaManager::EnumerateRawDevices(
                           ? fakeBackend
                           : realBackend,
                       aWindowId, aAudioInputType, audios, audioLoopDev.get());
-      (*result)->AppendElements(audios);
+      result->AppendElements(audios);
     }
     if (hasAudioOutput) {
       MediaDeviceSet outputs;
       MOZ_ASSERT(realBackend);
       realBackend->EnumerateDevices(aWindowId, MediaSourceEnum::Other,
                                     MediaSinkEnum::Speaker, &outputs);
-      (*result)->AppendElements(outputs);
+      result->AppendElements(outputs);
     }
 
     holder->Resolve(std::move(result), __func__);
@@ -2254,7 +2254,7 @@ void MediaManager::OnDeviceChange() {
 
               nsTArray<nsString> deviceIDs;
 
-              for (auto& device : **aDevices) {
+              for (auto& device : *aDevices) {
                 nsString id;
                 device->GetId(id);
                 id.ReplaceSubstring(NS_LITERAL_STRING("default: "),
@@ -2807,7 +2807,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
                     [self, windowID, c, windowListener, sourceListener,
                      askPermission, prefs, isHTTPS, isHandlingUserInput, callID,
                      principalInfo, isChrome, aDevices,
-                     resistFingerprinting](const char* badConstraint) {
+                     resistFingerprinting](const char* badConstraint) mutable {
                       LOG(
                           ("GetUserMedia: starting post enumeration promise2 "
                            "success "
@@ -2844,7 +2844,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
                                 NS_LITERAL_STRING(""), constraint),
                             __func__);
                       }
-                      if (!(*aDevices)->Length()) {
+                      if (!aDevices->Length()) {
                         LOG(
                             ("GetUserMedia: no devices found in post "
                              "enumeration promise2 "
@@ -2864,7 +2864,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
                       // before we give up devices below
                       nsCOMPtr<nsIMutableArray> devicesCopy = nsArray::Create();
                       if (!askPermission) {
-                        for (auto& device : **aDevices) {
+                        for (auto& device : *aDevices) {
                           nsresult rv = devicesCopy->AppendElement(device);
                           if (NS_WARN_IF(NS_FAILED(rv))) {
                             return StreamPromise::CreateAndReject(
@@ -2890,7 +2890,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
                       auto task = MakeRefPtr<GetUserMediaTask>(
                           c, std::move(holder), windowID, windowListener,
                           sourceListener, prefs, principalInfo, isChrome,
-                          aDevices->release(), focusSource);
+                          std::move(aDevices), focusSource);
 
                       // Store the task w/callbacks.
                       self->mActiveCallbacks.Put(callID, task.forget());
@@ -3135,7 +3135,7 @@ RefPtr<MediaManager::MediaDeviceSetPromise> MediaManager::EnumerateDevicesImpl(
                            aAudioInputEnumType !=
                                DeviceEnumerationType::Fake)) {
                         mgr->mDeviceIDs.Clear();
-                        for (auto& device : **aDevices) {
+                        for (auto& device : *aDevices) {
                           nsString id;
                           device->GetId(id);
                           id.ReplaceSubstring(NS_LITERAL_STRING("default: "),
@@ -3156,7 +3156,7 @@ RefPtr<MediaManager::MediaDeviceSetPromise> MediaManager::EnumerateDevicesImpl(
                             __func__);
                       }
 
-                      MediaManager::AnonymizeDevices(**aDevices, aOriginKey);
+                      MediaManager::AnonymizeDevices(*aDevices, aOriginKey);
                       return MediaDeviceSetPromise::CreateAndResolve(
                           std::move(aDevices), __func__);
                     },
@@ -3298,7 +3298,7 @@ RefPtr<SinkInfoPromise> MediaManager::GetSinkDevice(nsPIDOMWindowInner* aWindow,
                               DeviceEnumerationType::Normal)
       ->Then(GetCurrentThreadSerialEventTarget(), __func__,
              [aDeviceId, isSecure](RefPtr<MediaDeviceSetRefCnt>&& aDevices) {
-               for (RefPtr<MediaDevice>& device : **aDevices) {
+               for (RefPtr<MediaDevice>& device : *aDevices) {
                  if (aDeviceId.IsEmpty() && device->mSinkInfo->Preferred()) {
                    return SinkInfoPromise::CreateAndResolve(device->mSinkInfo,
                                                             __func__);

@@ -213,7 +213,7 @@ class MediaManager final : public nsIMediaManagerService,
                             DOMMediaStream& aStream);
 
   typedef nsTArray<RefPtr<MediaDevice>> MediaDeviceSet;
-  typedef media::Refcountable<UniquePtr<MediaDeviceSet>> MediaDeviceSetRefCnt;
+  typedef media::Refcountable<MediaDeviceSet> MediaDeviceSetRefCnt;
 
   typedef MozPromise<RefPtr<DOMMediaStream>, RefPtr<dom::MediaStreamError>,
                      true>
