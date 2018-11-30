@@ -1758,9 +1758,13 @@ BrowserGlue.prototype = {
 
     // There are several cases where we won't show a dialog here:
     // 1. There is only 1 tab open in 1 window
-    // 2. browser.warnOnQuit or browser.warnOnClose == false
+    // 2. browser.warnOnQuit == false
     // 3. The browser is currently in Private Browsing mode
     // 4. The browser will be restarted.
+    // 5. The user has automatic session restore enabled and
+    //    browser.sessionstore.warnOnQuit is not set to true.
+    // 6. The user doesn't have automatic session restore enabled
+    //    and browser.tabs.warnOnClose is not set to true.
     //
     // Otherwise, we will show the "closing multiple tabs" dialog.
     //
@@ -1792,28 +1796,65 @@ BrowserGlue.prototype = {
       aQuitType = "quit";
 
     // browser.warnOnQuit is a hidden global boolean to override all quit prompts
-    // browser.tabs.warnOnClose is the global "warn when closing multiple tabs" pref
-    if (!Services.prefs.getBoolPref("browser.warnOnQuit") ||
-        !Services.prefs.getBoolPref("browser.tabs.warnOnClose"))
+    if (!Services.prefs.getBoolPref("browser.warnOnQuit"))
       return;
+
+    // If we're going to automatically restore the session, only warn if the user asked for that.
+    let sessionWillBeRestored = Services.prefs.getIntPref("browser.startup.page") == 3 ||
+                                Services.prefs.getBoolPref("browser.sessionstore.resume_session_once");
+    // In the sessionWillBeRestored case, we only check the sessionstore-specific pref:
+    if (sessionWillBeRestored) {
+      if (!Services.prefs.getBoolPref("browser.sessionstore.warnOnQuit", false)) {
+        return;
+      }
+    // Otherwise, we check browser.tabs.warnOnClose
+    } else if (!Services.prefs.getBoolPref("browser.tabs.warnOnClose")) {
+      return;
+    }
 
     let win = BrowserWindowTracker.getTopWindow();
 
-    // warnAboutClosingTabs checks browser.tabs.warnOnClose and returns if it's
-    // ok to close the window. It doesn't actually close the window.
-    if (windowcount == 1) {
-      aCancelQuit.data =
-        !win.gBrowser.warnAboutClosingTabs(pagecount, win.gBrowser.closingTabsEnum.ALL);
-    } else {
-      // More than 1 window. Compose our own message.
+    let warningMessage;
+    // More than 1 window. Compose our own message.
+    if (windowcount > 1) {
       let tabSubstring = gTabbrowserBundle.GetStringFromName("tabs.closeWarningMultipleWindowsTabSnippet");
       tabSubstring = PluralForm.get(pagecount, tabSubstring).replace(/#1/, pagecount);
-      let windowString = gTabbrowserBundle.GetStringFromName("tabs.closeWarningMultipleWindows");
+
+      let stringID = sessionWillBeRestored ? "tabs.closeWarningMultipleWindowsSessionRestore"
+                                           : "tabs.closeWarningMultipleWindows";
+      let windowString = gTabbrowserBundle.GetStringFromName(stringID);
       windowString = PluralForm.get(windowcount, windowString).replace(/#1/, windowcount);
-      windowString = windowString.replace(/%(?:1\$)?S/i, tabSubstring);
-      aCancelQuit.data =
-        !win.gBrowser.warnAboutClosingTabs(pagecount, win.gBrowser.closingTabsEnum.ALL, windowString);
+      warningMessage = windowString.replace(/%(?:1\$)?S/i, tabSubstring);
+    } else {
+      let stringID = sessionWillBeRestored ? "tabs.closeWarningMultipleSessionRestore"
+                                           : "tabs.closeWarningMultiple";
+      warningMessage = gTabbrowserBundle.GetStringFromName(stringID);
+      warningMessage = PluralForm.get(pagecount, warningMessage).replace("#1", pagecount);
     }
+
+    let warnOnClose = {value: true};
+    let titleId = AppConstants.platform == "win" ? "tabs.closeAndQuitTitleTabsWin"
+                                                 : "tabs.closeAndQuitTitleTabs";
+    let flags = (Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0) +
+      (Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1);
+    // Only display the checkbox in the non-sessionrestore case.
+    let checkboxLabel = !sessionWillBeRestored ?
+      gTabbrowserBundle.GetStringFromName("tabs.closeWarningPromptMe") : null;
+
+    // buttonPressed will be 0 for closing, 1 for cancel (don't close/quit)
+    let buttonPressed = Services.prompt.confirmEx(win,
+      gTabbrowserBundle.GetStringFromName(titleId),
+      warningMessage, flags,
+      gTabbrowserBundle.GetStringFromName("tabs.closeButtonMultiple"),
+      null, null,
+      checkboxLabel,
+      warnOnClose);
+    // If the user has unticked the box, and has confirmed closing, stop showing
+    // the warning.
+    if (!sessionWillBeRestored && buttonPressed == 0 && !warnOnClose.value) {
+      Services.prefs.setBoolPref("browser.tabs.warnOnClose", false);
+    }
+    aCancelQuit.data = buttonPressed != 0;
   },
 
   _showUpdateNotification: function BG__showUpdateNotification() {
