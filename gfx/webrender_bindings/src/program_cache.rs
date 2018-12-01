@@ -21,17 +21,24 @@ fn deserialize_program_binary(path: &PathBuf) -> Result<Arc<ProgramBinary>, Erro
     let mut file = File::open(path)?;
     file.read_to_end(&mut buf)?;
 
-    if buf.len() <= 8 {
+    if buf.len() <= 8 + 4 {
         return Err(Error::new(ErrorKind::InvalidData, "File size is too small"));
     }
-    let hash = &buf[0 .. 8];
-    let data = &buf[8 ..];
+    let magic = &buf[0 .. 4];
+    let hash = &buf[4 .. 8 + 4];
+    let data = &buf[8 + 4 ..];
+
+    // Check if magic + version are correct.
+    let mv:u32 = bincode::deserialize(&magic).unwrap();
+    if mv != MAGIC_AND_VERSION {
+        return Err(Error::new(ErrorKind::InvalidData, "File data is invalid (magic+version)"));
+    }
 
     // Check if hash is correct
     let hash:u64 = bincode::deserialize(&hash).unwrap();
     let hash_data = fxhash::hash64(&data);
     if hash != hash_data {
-        return Err(Error::new(ErrorKind::InvalidData, "File data is invalid"));
+        return Err(Error::new(ErrorKind::InvalidData, "File data is invalid (hash)"));
     }
 
     // Deserialize ProgramBinary
@@ -83,6 +90,11 @@ struct WrProgramBinaryDiskCache {
     is_enabled: bool,
     workers: Arc<ThreadPool>,
 }
+
+// Magic number + version. Increment the version when the binary format changes.
+const MAGIC: u32 = 0xB154AD30; // BI-SHADE + version.
+const VERSION: u32 = 2;
+const MAGIC_AND_VERSION: u32 = MAGIC + VERSION;
 
 impl WrProgramBinaryDiskCache {
     #[allow(dead_code)]
@@ -145,6 +157,17 @@ impl WrProgramBinaryDiskCache {
                         error!("Unable to create file for program binary error: {}", err);
                         return;
                     }
+                };
+
+                // Write magic + version.
+                let mv = MAGIC_AND_VERSION;
+                let mv = bincode::serialize(&mv).unwrap();
+                assert!(mv.len() == 4);
+                match file.write_all(&mv) {
+                    Err(err) => {
+                        error!("Failed to write magic+version to file error: {}", err);
+                    }
+                    _ => {},
                 };
 
                 // Write hash
