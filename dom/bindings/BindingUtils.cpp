@@ -3808,6 +3808,7 @@ void ReportDeprecation(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
                                 aLineNumber, aColumnNumber);
 
   ReportingUtils::Report(aWindow, nsGkAtoms::deprecation,
+                         NS_LITERAL_STRING("default"),
                          NS_ConvertUTF8toUTF16(spec), body);
 }
 
