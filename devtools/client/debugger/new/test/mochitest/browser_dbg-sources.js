@@ -10,13 +10,11 @@ function getLabel(dbg, index) {
 }
 
 add_task(async function() {
-  const dbg = await initDebugger("doc-sources.html");
+  const dbg = await initDebugger("doc-sources.html", "simple1", "simple2", "nested-source", "long.js");
   const {
     selectors: { getSelectedSource },
     getState
   } = dbg;
-
-  await waitForSources(dbg, "simple1", "simple2", "nested-source", "long.js");
 
   // Expand nodes and make sure more sources appear.
   await assertSourceCount(dbg, 2);

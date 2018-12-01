@@ -5,7 +5,12 @@
 // @flow
 import classnames from "classnames";
 import { endTruncateStr } from "./utils";
-import { isPretty, getFilename, getSourceClassnames } from "./source";
+import {
+  isPretty,
+  getFilename,
+  getSourceClassnames,
+  getSourceQueryString
+} from "./source";
 
 import type { Location as BabelLocation } from "@babel/types";
 import type { Symbols } from "../reducers/ast";
@@ -53,9 +58,13 @@ export function parseLineColumn(query: string) {
 
 export function formatSourcesForList(source: Source, tabs: TabList) {
   const title = getFilename(source);
-  const subtitle = endTruncateStr(source.relativeUrl, 100);
+  const relativeUrlWithQuery = `${source.relativeUrl}${getSourceQueryString(
+    source
+  )}`;
+  const subtitle = endTruncateStr(relativeUrlWithQuery, 100);
+  const value = relativeUrlWithQuery;
   return {
-    value: source.relativeUrl,
+    value,
     title,
     subtitle,
     icon: tabs.some(tab => tab.url == source.url)
@@ -93,13 +102,12 @@ export function formatSymbol(symbol: SymbolDeclaration): QuickOpenResult {
 
 export function formatSymbols(symbols: ?Symbols): FormattedSymbolDeclarations {
   if (!symbols || symbols.loading) {
-    return { variables: [], functions: [] };
+    return { functions: [] };
   }
 
-  const { variables, functions } = symbols;
+  const { functions } = symbols;
 
   return {
-    variables: variables.map(formatSymbol),
     functions: functions.map(formatSymbol)
   };
 }

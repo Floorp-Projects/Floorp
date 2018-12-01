@@ -82,26 +82,22 @@ function promiseMiddleware({
 
     // Return the promise so action creators can still compose if they
     // want to.
-    return new Promise((resolve, reject) => {
-      promiseInst.then(
+    return Promise.resolve(promiseInst)
+      .finally(() => new Promise(resolve => executeSoon(resolve)))
+      .then(
         value => {
-          executeSoon(() => {
-            dispatch({ ...action, status: "done", value: value });
-            resolve(value);
-          });
+          dispatch({ ...action, status: "done", value: value });
+          return value;
         },
         error => {
-          executeSoon(() => {
-            dispatch({
-              ...action,
-              status: "error",
-              error: error.message || error
-            });
-            reject(error);
+          dispatch({
+            ...action,
+            status: "error",
+            error: error.message || error
           });
+          return Promise.reject(error);
         }
       );
-    });
   };
 }
 

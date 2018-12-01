@@ -25,7 +25,7 @@ function assertEditorBreakpoint(dbg, line) {
 }
 
 add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html");
+  const dbg = await initDebugger("doc-scripts.html", "simple1.js");
   const {
     selectors: { getBreakpoints, getBreakpoint },
     getState

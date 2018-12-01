@@ -20,7 +20,7 @@ import {
 import { originalToGeneratedId } from "devtools-source-map";
 import { prefs } from "../utils/prefs";
 
-import type { Source, SourceId, Location } from "../types";
+import type { Source, SourceId, SourceLocation } from "../types";
 import type { PendingSelectedLocation } from "./types";
 import type { Action, DonePromiseAction } from "../actions/types";
 import type { LoadSourceAction } from "../actions/types/SourceAction";
@@ -34,7 +34,7 @@ export type SourcesState = {
   urls: UrlsMap,
   relativeSources: SourcesMap,
   pendingSelectedLocation?: PendingSelectedLocation,
-  selectedLocation: ?Location,
+  selectedLocation: ?SourceLocation,
   projectDirectoryRoot: string
 };
 
@@ -483,7 +483,7 @@ export const getSelectedLocation = createSelector(
 export const getSelectedSource = createSelector(
   getSelectedLocation,
   getSources,
-  (selectedLocation: ?Location, sources: SourcesMap): ?Source => {
+  (selectedLocation: ?SourceLocation, sources: SourcesMap): ?Source => {
     if (!selectedLocation) {
       return;
     }
