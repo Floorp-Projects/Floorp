@@ -130,7 +130,7 @@ TEST_P(TlsConnectTls13, CaptureAlertClient) {
   client_->Handshake();
   if (variant_ == ssl_variant_stream) {
     // DTLS just drops the alert it can't decrypt.
-    server_->ExpectSendAlert(kTlsAlertBadRecordMac);
+    server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
   }
   server_->Handshake();
   EXPECT_EQ(kTlsAlertFatal, alert_recorder->level());
@@ -524,6 +524,26 @@ TEST_P(TlsConnectTls13, AlertWrongLevel) {
                    kTlsAlertUnexpectedMessage);
   client_->ExpectReadWriteError();
   client_->WaitForErrorCode(SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT, 2000);
+}
+
+TEST_P(TlsConnectTls13, UnknownRecord) {
+  static const uint8_t kUknownRecord[] = {
+      0xff, SSL_LIBRARY_VERSION_TLS_1_2 >> 8,
+      SSL_LIBRARY_VERSION_TLS_1_2 & 0xff, 0, 0};
+
+  Connect();
+  if (variant_ == ssl_variant_stream) {
+    // DTLS just drops the record with an invalid type.
+    server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
+  }
+  client_->SendDirect(DataBuffer(kUknownRecord, sizeof(kUknownRecord)));
+  server_->ExpectReadWriteError();
+  server_->ReadBytes();
+  if (variant_ == ssl_variant_stream) {
+    EXPECT_EQ(SSL_ERROR_RX_UNEXPECTED_RECORD_TYPE, server_->error_code());
+  } else {
+    EXPECT_EQ(SSL_ERROR_RX_UNKNOWN_RECORD_TYPE, server_->error_code());
+  }
 }
 
 TEST_F(TlsConnectStreamTls13, Tls13FailedWriteSecondFlight) {

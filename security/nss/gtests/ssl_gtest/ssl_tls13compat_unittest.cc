@@ -299,11 +299,11 @@ TEST_F(TlsConnectTest, TLS13NonCompatModeSessionID) {
 
   MakeTlsFilter<TlsSessionIDInjectFilter>(server_);
   client_->ExpectSendAlert(kTlsAlertIllegalParameter);
-  server_->ExpectSendAlert(kTlsAlertBadRecordMac);
+  server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
   ConnectExpectFail();
 
   client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
-  server_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
+  server_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_RECORD_TYPE);
 }
 
 static const uint8_t kCannedCcs[] = {
@@ -360,6 +360,19 @@ TEST_F(TlsConnectStreamTls13, ChangeCipherSpecBeforeClientHello12) {
   ConnectExpectAlert(server_, kTlsAlertUnexpectedMessage);
   server_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_CHANGE_CIPHER);
   client_->CheckErrorCode(SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT);
+}
+
+TEST_F(TlsConnectStreamTls13, ChangeCipherSpecAfterFinished13) {
+  EnsureTlsSetup();
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
+  Connect();
+  SendReceive(10);
+  // Client sends CCS after the handshake.
+  client_->SendDirect(DataBuffer(kCannedCcs, sizeof(kCannedCcs)));
+  server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
+  server_->ExpectReadWriteError();
+  server_->ReadBytes();
+  EXPECT_EQ(SSL_ERROR_RX_UNEXPECTED_RECORD_TYPE, server_->error_code());
 }
 
 TEST_F(TlsConnectDatagram13, CompatModeDtlsClient) {

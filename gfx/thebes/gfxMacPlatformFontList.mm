@@ -1,4 +1,4 @@
-/* -*- Mode: ObjC; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: ObjC; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: BSD
  *

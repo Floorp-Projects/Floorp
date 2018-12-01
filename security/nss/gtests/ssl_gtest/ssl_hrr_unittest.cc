@@ -924,10 +924,10 @@ TEST_F(TlsConnectStreamTls13, RetryWithDifferentCipherSuite) {
                                              TLS_CHACHA20_POLY1305_SHA256);
 
   client_->ExpectSendAlert(kTlsAlertIllegalParameter);
-  server_->ExpectSendAlert(kTlsAlertBadRecordMac);
+  server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
   ConnectExpectFail();
   EXPECT_EQ(SSL_ERROR_RX_MALFORMED_SERVER_HELLO, client_->error_code());
-  EXPECT_EQ(SSL_ERROR_BAD_MAC_READ, server_->error_code());
+  EXPECT_EQ(SSL_ERROR_RX_UNEXPECTED_RECORD_TYPE, server_->error_code());
 }
 
 // This tests that the second attempt at sending a ClientHello (after receiving

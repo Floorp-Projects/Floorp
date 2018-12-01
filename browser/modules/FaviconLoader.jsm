@@ -16,8 +16,15 @@ ChromeUtils.defineModuleGetter(this, "DeferredTask",
 ChromeUtils.defineModuleGetter(this, "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm");
 
+const STREAM_SEGMENT_SIZE = 4096;
+const PR_UINT32_MAX = 0xffffffff;
+
 const BinaryInputStream = Components.Constructor("@mozilla.org/binaryinputstream;1",
                                                  "nsIBinaryInputStream", "setInputStream");
+const StorageStream = Components.Constructor("@mozilla.org/storagestream;1",
+                                             "nsIStorageStream", "init");
+const BufferedOutputStream = Components.Constructor("@mozilla.org/network/buffered-output-stream;1",
+                                                    "nsIBufferedOutputStream", "init");
 
 const SIZES_TELEMETRY_ENUM = {
   NO_SIZES: 0,
@@ -39,6 +46,7 @@ const LOCAL_FAVICON_SCHEMES = [
 ];
 
 const MAX_FAVICON_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
+const MAX_ICON_SIZE = 2048;
 
 const TYPE_ICO = "image/x-icon";
 const TYPE_SVG = "image/svg+xml";
@@ -63,9 +71,23 @@ function promiseBlobAsOctets(blob) {
   });
 }
 
+function promiseImage(stream, type) {
+  return new Promise((resolve, reject) => {
+    let imgTools = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools);
+
+    imgTools.decodeImageAsync(stream, type, (image, result) => {
+      if (!Components.isSuccessCode(result)) {
+        reject();
+        return;
+      }
+
+      resolve(image);
+    }, Services.tm.currentThread);
+  });
+}
+
 class FaviconLoad {
   constructor(iconInfo) {
-    this.buffers = [];
     this.icon = iconInfo;
 
     this.channel = Services.io.newChannelFromURI2(
@@ -94,11 +116,19 @@ class FaviconLoad {
 
   load() {
     this._deferred = PromiseUtils.defer();
-    // Clear the channel reference when we succeed or fail.
-    this._deferred.promise.then(
-      () => this.channel = null,
-      () => this.channel = null
-    );
+
+    // Clear the references when we succeed or fail.
+    let cleanup = () => {
+      this.channel = null;
+      this.dataBuffer = null;
+      this.stream = null;
+    };
+    this._deferred.promise.then(cleanup, cleanup);
+
+    this.dataBuffer = new StorageStream(STREAM_SEGMENT_SIZE, PR_UINT32_MAX);
+
+    // storage streams do not implement writeFrom so wrap it with a buffered stream.
+    this.stream = new BufferedOutputStream(this.dataBuffer.getOutputStream(0), STREAM_SEGMENT_SIZE * 2);
 
     try {
       this.channel.asyncOpen2(this);
@@ -121,10 +151,7 @@ class FaviconLoad {
   }
 
   onDataAvailable(request, context, inputStream, offset, count) {
-    let stream = new BinaryInputStream(inputStream);
-    let buffer = new ArrayBuffer(count);
-    stream.readArrayBuffer(buffer.byteLength, buffer);
-    this.buffers.push(new Uint8Array(buffer));
+    this.stream.writeFrom(inputStream, count);
   }
 
   asyncOnChannelRedirect(oldChannel, newChannel, flags, callback) {
@@ -141,6 +168,9 @@ class FaviconLoad {
       // of the original channel.
       return;
     }
+
+    this.stream.close();
+    this.stream = null;
 
     if (!Components.isSuccessCode(statusCode)) {
       if (statusCode == Cr.NS_BINDING_ABORTED) {
@@ -173,8 +203,12 @@ class FaviconLoad {
     }
 
     try {
+      let stream = new BinaryInputStream(this.dataBuffer.newInputStream(0));
+      let buffer = new ArrayBuffer(this.dataBuffer.length);
+      stream.readArrayBuffer(buffer.byteLength, buffer);
+
       let type = this.channel.contentType;
-      let blob = new Blob(this.buffers, { type });
+      let blob = new Blob([buffer], { type });
 
       if (type != "image/svg+xml") {
         let octets = await promiseBlobAsOctets(blob);
@@ -187,6 +221,17 @@ class FaviconLoad {
         }
 
         blob = blob.slice(0, blob.size, type);
+
+        let image;
+        try {
+          image = await promiseImage(this.dataBuffer.newInputStream(0), type);
+        } catch (e) {
+          throw Components.Exception(`Favicon at "${this.icon.iconUri.spec}" could not be decoded.`, Cr.NS_ERROR_FAILURE);
+        }
+
+        if (image.width > MAX_ICON_SIZE || image.height > MAX_ICON_SIZE) {
+          throw Components.Exception(`Favicon at "${this.icon.iconUri.spec}" is too large.`, Cr.NS_ERROR_FAILURE);
+        }
       }
 
       let dataURL = await promiseBlobAsDataURL(blob);
