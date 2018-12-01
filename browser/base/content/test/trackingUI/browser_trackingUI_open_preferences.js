@@ -5,8 +5,6 @@
 
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TPC_PREF = "network.cookie.cookieBehavior";
-const TP_UI_PREF = "browser.contentblocking.trackingprotection.control-center.ui.enabled";
-const RT_UI_PREF = "browser.contentblocking.rejecttrackers.control-center.ui.enabled";
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 
 async function waitAndAssertPreferencesShown() {
