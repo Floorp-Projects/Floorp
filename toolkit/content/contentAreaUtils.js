@@ -19,12 +19,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 var ContentAreaUtils = {
-
-  // this is for backwards compatibility.
-  get ioService() {
-    return Services.io;
-  },
-
   get stringBundle() {
     delete this.stringBundle;
     return this.stringBundle =
