@@ -1342,10 +1342,16 @@ impl Device {
     }
 
     /// Link a program, attaching the supplied vertex format.
-    /// Ideally, this should be run some time after the program
-    /// is created. This gives some drivers time to compile the
-    /// shader on a background thread, before blocking due to
-    /// an API call accessing the shader.
+    ///
+    /// If `create_program()` finds a binary shader on disk, it will kick
+    /// off linking immediately, which some drivers (notably ANGLE) run
+    /// in parallel on background threads. As such, this function should
+    /// ideally be run sometime later, to give the driver time to do that
+    /// before blocking due to an API call accessing the shader.
+    ///
+    /// This generally means that the first run of the application will have
+    /// to do a bunch of blocking work to compile the shader from source, but
+    /// subsequent runs should load quickly.
     pub fn link_program(
         &mut self,
         program: &mut Program,
@@ -1874,9 +1880,11 @@ impl Device {
         Ok(program)
     }
 
-    /// Create a shader program. This does minimal amount of work
-    /// to start loading a binary shader. The main part of the
-    /// work is done in link_program.
+    /// Create a shader program. This does minimal amount of work to start
+    /// loading a binary shader. If a binary shader is found, we invoke
+    /// glProgramBinary, which, at least on ANGLE, will load and link the
+    /// binary on a background thread. This can speed things up later when
+    /// we invoke `link_program()`.
     pub fn create_program(
         &mut self,
         base_filename: &str,
