@@ -242,7 +242,7 @@ impl ProgramCacheObserver for WrProgramCacheObserver {
 
 
 pub struct WrProgramCache {
-    program_cache: Rc<ProgramCache>,
+    pub program_cache: Rc<ProgramCache>,
     disk_cache: Option<Rc<RefCell<WrProgramBinaryDiskCache>>>,
 }
 

@@ -6,6 +6,7 @@ use super::super::shader_source;
 use api::{ColorF, ImageFormat, MemoryReport};
 use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::TextureTarget;
+use api::VoidPtrToSizeFn;
 #[cfg(any(feature = "debug_renderer", feature="capture"))]
 use api::ImageDescriptor;
 use euclid::Transform3D;
@@ -20,6 +21,7 @@ use std::fs::File;
 use std::io::Read;
 use std::marker::PhantomData;
 use std::mem;
+use std::os::raw::c_void;
 use std::ops::Add;
 use std::path::PathBuf;
 use std::ptr;
@@ -740,6 +742,13 @@ impl ProgramCache {
     pub fn load_program_binary(&self, program_binary: Arc<ProgramBinary>) {
         let sources = program_binary.sources.clone();
         self.binaries.borrow_mut().insert(sources, program_binary);
+    }
+
+    /// Returns the number of bytes allocated for shaders in the cache.
+    pub fn report_memory(&self, op: VoidPtrToSizeFn) -> usize {
+        self.binaries.borrow().values()
+            .map(|b| unsafe { op(b.binary.as_ptr() as *const c_void ) })
+            .sum()
     }
 }
 
