@@ -84,3 +84,7 @@ void dav1d_ref_dec(Dav1dRef **const pref) {
     }
     *pref = NULL;
 }
+
+int dav1d_ref_is_writable(Dav1dRef *const ref) {
+    return atomic_load(&ref->ref_cnt) == 1;
+}
