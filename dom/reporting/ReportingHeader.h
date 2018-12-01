@@ -65,6 +65,10 @@ class ReportingHeader final : public nsIObserver {
                              const nsACString& aEndpointURL,
                              const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
+  // ChromeOnly-WebIDL methods
+
+  static bool HasReportingHeaderForOrigin(const nsACString& aOrigin);
+
  private:
   ReportingHeader();
   ~ReportingHeader();
