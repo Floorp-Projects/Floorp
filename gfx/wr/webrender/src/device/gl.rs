@@ -16,7 +16,7 @@ use log::Level;
 use sha2::{Digest, Sha256};
 use smallvec::SmallVec;
 use std::borrow::Cow;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::cmp;
 use std::collections::hash_map::Entry;
 use std::fs::File;
@@ -695,6 +695,15 @@ struct IBOId(gl::GLuint);
 #[cfg_attr(feature = "serialize_program", derive(Deserialize, Serialize))]
 pub struct ProgramSourceDigest([u8; 32]);
 
+impl ::std::fmt::Display for ProgramSourceDigest {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        for byte in self.0.iter() {
+            f.write_fmt(format_args!("{:02x}", byte))?;
+        }
+        Ok(())
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct ProgramSourceInfo {
     base_filename: &'static str,
@@ -761,31 +770,46 @@ impl ProgramSourceInfo {
 
 #[cfg_attr(feature = "serialize_program", derive(Deserialize, Serialize))]
 pub struct ProgramBinary {
-    binary: Vec<u8>,
+    bytes: Vec<u8>,
     format: gl::GLenum,
     source_digest: ProgramSourceDigest,
 }
 
 impl ProgramBinary {
-    fn new(binary: Vec<u8>,
+    fn new(bytes: Vec<u8>,
            format: gl::GLenum,
            source_digest: ProgramSourceDigest) -> Self {
         ProgramBinary {
-            binary,
+            bytes,
             format,
             source_digest,
         }
+    }
+
+    /// Returns a reference to the source digest hash.
+    pub fn source_digest(&self) -> &ProgramSourceDigest {
+        &self.source_digest
     }
 }
 
 /// The interfaces that an application can implement to handle ProgramCache update
 pub trait ProgramCacheObserver {
-    fn notify_binary_added(&self, program_binary: &Arc<ProgramBinary>);
+    fn update_disk_cache(&self, entries: Vec<Arc<ProgramBinary>>);
     fn notify_program_binary_failed(&self, program_binary: &Arc<ProgramBinary>);
 }
 
+struct ProgramCacheEntry {
+    /// The binary.
+    binary: Arc<ProgramBinary>,
+    /// True if the binary has been linked, i.e. used for rendering.
+    linked: bool,
+}
+
 pub struct ProgramCache {
-    binaries: RefCell<FastHashMap<ProgramSourceDigest, Arc<ProgramBinary>>>,
+    entries: RefCell<FastHashMap<ProgramSourceDigest, ProgramCacheEntry>>,
+
+    /// True if we've already updated the disk cache with the shaders used during startup.
+    updated_disk_cache: Cell<bool>,
 
     /// Optional trait object that allows the client
     /// application to handle ProgramCache updating
@@ -796,23 +820,46 @@ impl ProgramCache {
     pub fn new(program_cache_observer: Option<Box<ProgramCacheObserver>>) -> Rc<Self> {
         Rc::new(
             ProgramCache {
-                binaries: RefCell::new(FastHashMap::default()),
+                entries: RefCell::new(FastHashMap::default()),
+                updated_disk_cache: Cell::new(false),
                 program_cache_handler: program_cache_observer,
             }
         )
     }
+
+    /// Notify that we've rendered the first few frames, and that the shaders
+    /// we've loaded correspond to the shaders needed during startup, and thus
+    /// should be the ones cached to disk.
+    fn startup_complete(&self) {
+        if self.updated_disk_cache.get() {
+            return;
+        }
+
+        if let Some(ref handler) = self.program_cache_handler {
+            let active_shaders = self.entries.borrow().values()
+                .filter(|e| e.linked).map(|e| e.binary.clone())
+                .collect::<Vec<_>>();
+            handler.update_disk_cache(active_shaders);
+            self.updated_disk_cache.set(true);
+        }
+    }
+
     /// Load ProgramBinary to ProgramCache.
     /// The function is typically used to load ProgramBinary from disk.
     #[cfg(feature = "serialize_program")]
     pub fn load_program_binary(&self, program_binary: Arc<ProgramBinary>) {
         let digest = program_binary.source_digest.clone();
-        self.binaries.borrow_mut().insert(digest, program_binary);
+        let entry = ProgramCacheEntry {
+            binary: program_binary,
+            linked: false,
+        };
+        self.entries.borrow_mut().insert(digest, entry);
     }
 
     /// Returns the number of bytes allocated for shaders in the cache.
     pub fn report_memory(&self, op: VoidPtrToSizeFn) -> usize {
-        self.binaries.borrow().values()
-            .map(|b| unsafe { op(b.binary.as_ptr() as *const c_void ) })
+        self.entries.borrow().values()
+            .map(|e| unsafe { op(e.binary.bytes.as_ptr() as *const c_void ) })
             .sum()
     }
 }
@@ -1437,7 +1484,7 @@ impl Device {
 
         // See if we hit the binary shader cache
         if let Some(ref cached_programs) = self.cached_programs {
-            if let Some(binary) = cached_programs.binaries.borrow().get(&info.digest) {
+            if let Some(entry) = cached_programs.entries.borrow_mut().get_mut(&info.digest) {
                 let mut link_status = [0];
                 unsafe {
                     self.gl.get_program_iv(program.id, gl::LINK_STATUS, &mut link_status);
@@ -1451,9 +1498,10 @@ impl Device {
                       error_log
                     );
                     if let Some(ref program_cache_handler) = cached_programs.program_cache_handler {
-                        program_cache_handler.notify_program_binary_failed(&binary);
+                        program_cache_handler.notify_program_binary_failed(&entry.binary);
                     }
                 } else {
+                    entry.linked = true;
                     build_program = false;
                 }
             }
@@ -1525,14 +1573,14 @@ impl Device {
             }
 
             if let Some(ref cached_programs) = self.cached_programs {
-                if !cached_programs.binaries.borrow().contains_key(&info.digest) {
+                if !cached_programs.entries.borrow().contains_key(&info.digest) {
                     let (buffer, format) = self.gl.get_program_binary(program.id);
                     if buffer.len() > 0 {
-                        let program_binary = Arc::new(ProgramBinary::new(buffer, format, info.digest.clone()));
-                        if let Some(ref program_cache_handler) = cached_programs.program_cache_handler {
-                            program_cache_handler.notify_binary_added(&program_binary);
-                        }
-                        cached_programs.binaries.borrow_mut().insert(info.digest.clone(), program_binary);
+                        let entry = ProgramCacheEntry {
+                            binary: Arc::new(ProgramBinary::new(buffer, format, info.digest.clone())),
+                            linked: true,
+                        };
+                        cached_programs.entries.borrow_mut().insert(info.digest.clone(), entry);
                     }
                 }
             }
@@ -1975,8 +2023,8 @@ impl Device {
 
         // Attempt to load a cached binary if possible.
         if let Some(ref cached_programs) = self.cached_programs {
-            if let Some(binary) = cached_programs.binaries.borrow().get(&source_info.digest) {
-                self.gl.program_binary(pid, binary.format, &binary.binary);
+            if let Some(entry) = cached_programs.entries.borrow().get(&source_info.digest) {
+                self.gl.program_binary(pid, entry.binary.format, &entry.binary.bytes);
             }
         }
 
@@ -2519,6 +2567,15 @@ impl Device {
         self.gl.active_texture(gl::TEXTURE0);
 
         self.frame_id.0 += 1;
+
+        // Declare startup complete after the first ten frames. This number is
+        // basically a heuristic, which dictates how early a shader needs to be
+        // used in order to be cached to disk.
+        if self.frame_id.0 == 10 {
+            if let Some(ref cache) = self.cached_programs {
+                cache.startup_complete();
+            }
+        }
     }
 
     pub fn clear_target(
