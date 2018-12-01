@@ -112,6 +112,7 @@ assert_eq!(css_url.as_str(), "http://servo.github.io/rust-url/main.css");
 #[cfg(feature="heapsize")] #[macro_use] extern crate heapsize;
 
 pub extern crate idna;
+#[macro_use]
 pub extern crate percent_encoding;
 
 use encoding::EncodingOverride;
@@ -1343,7 +1344,7 @@ impl Url {
             self.serialization.push('?');
         }
 
-        let query = UrlQuery { url: self, fragment: fragment };
+        let query = UrlQuery { url: Some(self), fragment: fragment };
         form_urlencoded::Serializer::for_suffix(query, query_start + "?".len())
     }
 
@@ -2423,13 +2424,15 @@ fn io_error<T>(reason: &str) -> io::Result<T> {
 /// Implementation detail of `Url::query_pairs_mut`. Typically not used directly.
 #[derive(Debug)]
 pub struct UrlQuery<'a> {
-    url: &'a mut Url,
+    url: Option<&'a mut Url>,
     fragment: Option<String>,
 }
 
 impl<'a> Drop for UrlQuery<'a> {
     fn drop(&mut self) {
-        self.url.restore_already_parsed_fragment(self.fragment.take())
+        if let Some(url) = self.url.take() {
+            url.restore_already_parsed_fragment(self.fragment.take())
+        }
     }
 }
 

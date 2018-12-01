@@ -12,7 +12,7 @@
 
 [package]
 name = "url"
-version = "1.7.0"
+version = "1.7.2"
 authors = ["The rust-url developers"]
 description = "URL library for Rust, based on the WHATWG URL Standard"
 documentation = "https://docs.rs/url"
@@ -32,6 +32,10 @@ name = "unit"
 
 [[test]]
 name = "data"
+harness = false
+
+[[bench]]
+name = "parse_url"
 harness = false
 [dependencies.encoding]
 version = "0.2"
@@ -57,11 +61,14 @@ optional = true
 [dependencies.serde]
 version = ">=0.6.1, <0.9"
 optional = true
+[dev-dependencies.bencher]
+version = "0.1"
+
 [dev-dependencies.rustc-serialize]
 version = "0.3"
 
 [dev-dependencies.rustc-test]
-version = "0.2"
+version = "0.3"
 
 [dev-dependencies.serde_json]
 version = ">=0.6.1, <0.9"
