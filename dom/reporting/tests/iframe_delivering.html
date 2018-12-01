@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for delivering reports</title>
+</head>
+<body>
+
+<script type="application/javascript">
+
+function ok(a, msg) {
+  parent.postMessage({type: "test", check: !!a, msg }, "*");
+}
+
+function is(a, b, msg) {
+  ok(a === b, msg);
+}
+
+function finish() {
+  parent.postMessage({type: "finish" }, "*");
+}
+
+function checkReport() {
+  return new Promise(resolve => {
+    let id = setInterval(_ => {
+      fetch("delivering.sjs?task=check")
+      .then(r => r.text())
+      .then(text => {
+        if (text) {
+          resolve(JSON.parse(text));
+          clearInterval(id);
+        }
+      });
+    }, 1000);
+  });
+}
+
+// Let's register a group + endpoint
+fetch("delivering.sjs?task=header")
+.then(r => r.text())
+.then(text => {
+  is(text, "OK", "Report-to header sent");
+})
+
+// Call a deprecating operation.
+.then(_ => {
+  let testingInterface = new TestingDeprecatedInterface();
+  ok(true, "Created a deprecated interface");
+})
+
+// Check if the report has been received.
+.then(_ => {
+  return checkReport();
+})
+.then(report => {
+  is(report.contentType, "application/reports+json", "Correct mime-type");
+  is(report.origin, "https://example.org", "Origin correctly set");
+  ok(!!report.body, "We have a report.body");
+  ok(report.body.age > 0, "Age is correctly set");
+  is(report.body.user_agent, navigator.userAgent, "User-agent matches");
+  ok(report.body.type, "deprecation", "Type is fine.");
+  ok(!!report.body.body, "We have the real report.body");
+  is(report.body.body.id, "DeprecatedTestingInterface", "Correct report.body.id");
+  is(report.body.body.message, "TestingDeprecatedInterface is a testing-only interface and this is its testing deprecation message.", "We have a report.body.message");
+  is(report.body.body.sourceFile, "https://example.org/tests/dom/reporting/tests/iframe_delivering.html", "report.body.sourceFile");
+  is(report.body.body.lineNumber, 46, "report.body.lineNumber");
+  is(report.body.body.columnNumber, 25, "report.body.columnNumber");
+})
+
+.then(finish);
+
+</script>
+</body>
+</html>
