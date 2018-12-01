@@ -45,6 +45,10 @@ class APZSampler {
  public:
   APZSampler(const RefPtr<APZCTreeManager>& aApz, bool aIsUsingWebRender);
 
+  // Whoever creates this sampler is responsible for calling Destroy() on it
+  // before releasing the owning refptr.
+  void Destroy();
+
   void SetWebRenderWindowId(const wr::WindowId& aWindowId);
 
   /**
@@ -123,7 +127,8 @@ class APZSampler {
   // unordered_map. This also avoids the initializer/memory allocation in cases
   // where we're not using WebRender.
   static StaticMutex sWindowIdLock;
-  static StaticAutoPtr<std::unordered_map<uint64_t, APZSampler*>> sWindowIdMap;
+  static StaticAutoPtr<std::unordered_map<uint64_t, RefPtr<APZSampler>>>
+      sWindowIdMap;
   Maybe<wr::WrWindowId> mWindowId;
 
   // Lock used to protected mSamplerThreadId

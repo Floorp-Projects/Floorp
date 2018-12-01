@@ -57,8 +57,9 @@ class Accordion extends PureComponent {
 
   renderContainer(item, i) {
     const { opened, created } = this.state;
-    const containerClassName =
-          item.header.toLowerCase().replace(/\s/g, "-") + "-pane";
+    const containerClassName = item.className
+      ? item.className
+      : item.header.toLowerCase().replace(/\s/g, "-") + "-pane";
     let arrowClassName = "arrow theme-twisty";
     if (opened[i]) {
       arrowClassName += " open";

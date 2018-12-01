@@ -110,7 +110,7 @@ class Flexbox extends PureComponent {
     } = flexContainer;
 
     return (
-      dom.div({ id: "layout-flexbox-container" },
+      dom.div({ className: "layout-flexbox-wrapper" },
         Header({
           flexContainer,
           getSwatchColorPickerTooltip,

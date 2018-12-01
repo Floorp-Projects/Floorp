@@ -29,6 +29,8 @@ const TRACKING_PROTECTION_PREFS = ["privacy.trackingprotection.enabled",
 const PREF_OPT_OUT_STUDIES_ENABLED = "app.shield.optoutstudies.enabled";
 const PREF_NORMANDY_ENABLED = "app.normandy.enabled";
 
+const PREF_ADDON_RECOMMENDATIONS_ENABLED = "browser.discovery.enabled";
+
 XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function() {
   try {
     let alertsService = Cc["@mozilla.org/alerts-service;1"]
@@ -124,6 +126,7 @@ if (AppConstants.MOZ_DATA_REPORTING) {
   Preferences.addAll([
     // Preference instances for prefs that we need to monitor while the page is open.
     { id: PREF_OPT_OUT_STUDIES_ENABLED, type: "bool" },
+    { id: PREF_ADDON_RECOMMENDATIONS_ENABLED, type: "bool" },
     { id: PREF_UPLOAD_ENABLED, type: "bool" },
   ]);
 }
@@ -139,6 +142,35 @@ if (AppConstants.MOZ_CRASHREPORTER) {
 function setEventListener(aId, aEventType, aCallback) {
   document.getElementById(aId)
     .addEventListener(aEventType, aCallback.bind(gPrivacyPane));
+}
+
+function dataCollectionCheckboxHandler({checkbox, pref, matchPref = () => true, isDisabled = () => false}) {
+  function updateCheckbox() {
+    let collectionEnabled = Services.prefs.getBoolPref(PREF_UPLOAD_ENABLED, false);
+
+    if (collectionEnabled && matchPref()) {
+      if (Services.prefs.getBoolPref(pref, false)) {
+        checkbox.setAttribute("checked", "true");
+      } else {
+        checkbox.removeAttribute("checked");
+      }
+      checkbox.setAttribute("preference", pref);
+    } else {
+      checkbox.removeAttribute("preference");
+      checkbox.removeAttribute("checked");
+    }
+
+    // We can't use checkbox.disabled here because the XBL binding may not be present,
+    // in which case setting the property won't work properly.
+    if (!collectionEnabled || Services.prefs.prefIsLocked(pref) || isDisabled()) {
+      checkbox.setAttribute("disabled", "true");
+    } else {
+      checkbox.removeAttribute("disabled");
+    }
+  }
+
+  Preferences.get(PREF_UPLOAD_ENABLED).on("change", updateCheckbox);
+  updateCheckbox();
 }
 
 var gPrivacyPane = {
@@ -383,6 +415,7 @@ var gPrivacyPane = {
       setEventListener("submitHealthReportBox", "command",
         gPrivacyPane.updateSubmitHealthReport);
       this.initOptOutStudyCheckbox();
+      this.initAddonRecommendationsCheckbox();
     }
     this._initA11yState();
     let signonBundle = document.getElementById("signonBundle");
@@ -1536,59 +1569,43 @@ var gPrivacyPane = {
    */
   initOptOutStudyCheckbox(doc) {
     const allowedByPolicy = Services.policies.isAllowed("Shield");
-    const checkbox = document.getElementById("optOutStudiesEnabled");
 
-    function updateStudyCheckboxState() {
-      // The checkbox should be disabled if any of the below are true. This
-      // prevents the user from changing the value in the box.
-      //
-      // * the policy forbids shield
-      // * the Shield Study preference is locked
-      // * the FHR pref is false
-      //
-      // The checkbox should match the value of the preference only if all of
-      // these are true. Otherwise, the checkbox should remain unchecked. This
-      // is because in these situations, Shield studies are always disabled, and
-      // so showing a checkbox would be confusing.
-      //
-      // * the policy allows Shield
-      // * the FHR pref is true
-      // * Normandy is enabled
-
-      const checkboxMatchesPref = (
+    // The checkbox should be disabled if any of the below are true. This
+    // prevents the user from changing the value in the box.
+    //
+    // * the policy forbids shield
+    // * the Shield Study preference is locked
+    // * the FHR pref is false
+    //
+    // The checkbox should match the value of the preference only if all of
+    // these are true. Otherwise, the checkbox should remain unchecked. This
+    // is because in these situations, Shield studies are always disabled, and
+    // so showing a checkbox would be confusing.
+    //
+    // * the policy allows Shield
+    // * the FHR pref is true
+    // * Normandy is enabled
+    dataCollectionCheckboxHandler({
+      checkbox: document.getElementById("optOutStudiesEnabled"),
+      matchPref: () => (
         allowedByPolicy &&
-        Services.prefs.getBoolPref(PREF_UPLOAD_ENABLED, false) &&
         Services.prefs.getBoolPref(PREF_NORMANDY_ENABLED, false)
-      );
+      ),
+      isDisabled: () => !allowedByPolicy,
+      pref: PREF_OPT_OUT_STUDIES_ENABLED,
+    });
+  },
 
-      if (checkboxMatchesPref) {
-        if (Services.prefs.getBoolPref(PREF_OPT_OUT_STUDIES_ENABLED, false)) {
-          checkbox.setAttribute("checked", "checked");
-        } else {
-          checkbox.removeAttribute("checked");
-        }
-        checkbox.setAttribute("preference", PREF_OPT_OUT_STUDIES_ENABLED);
-      } else {
-        checkbox.removeAttribute("preference");
-        checkbox.removeAttribute("checked");
-      }
+  initAddonRecommendationsCheckbox() {
+    // Setup the learn more link.
+    const url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "personalized-addons";
+    document.getElementById("addonRecommendationLearnMore").setAttribute("href", url);
 
-      const isDisabled = (
-        !allowedByPolicy ||
-        Services.prefs.prefIsLocked(PREF_OPT_OUT_STUDIES_ENABLED) ||
-        !Services.prefs.getBoolPref(PREF_UPLOAD_ENABLED, false)
-      );
-
-      // We can't use checkbox.disabled here because the XBL binding may not be present,
-      // in which case setting the property won't work properly.
-      if (isDisabled) {
-        checkbox.setAttribute("disabled", "true");
-      } else {
-        checkbox.removeAttribute("disabled");
-      }
-    }
-    Preferences.get(PREF_UPLOAD_ENABLED).on("change", updateStudyCheckboxState);
-    updateStudyCheckboxState();
+    // Setup the checkbox.
+    dataCollectionCheckboxHandler({
+      checkbox: document.getElementById("addonRecommendationEnabled"),
+      pref: PREF_ADDON_RECOMMENDATIONS_ENABLED,
+    });
   },
 
   observe(aSubject, aTopic, aData) {

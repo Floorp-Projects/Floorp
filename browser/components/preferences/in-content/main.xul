@@ -46,6 +46,12 @@
   <vbox id="startupPageBox">
     <checkbox id="browserRestoreSession"
               data-l10n-id="startup-restore-previous-session"/>
+    <hbox class="indent">
+      <checkbox id="browserRestoreSessionQuitWarning"
+                preference="browser.sessionstore.warnOnQuit"
+                disabled="true"
+                data-l10n-id="startup-restore-warn-on-quit"/>
+    </hbox>
   </vbox>
 
 #ifdef HAVE_SHELL_SERVICE

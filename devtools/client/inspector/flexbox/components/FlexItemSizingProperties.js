@@ -113,11 +113,10 @@ class FlexItemSizingProperties extends PureComponent {
     );
   }
 
-  renderFlexibilitySection(flexItemSizing, properties, computedStyle) {
+  renderFlexibilitySection(flexItemSizing, mainFinalSize, properties, computedStyle) {
     const {
       mainDeltaSize,
       mainBaseSize,
-      mainFinalSize,
       lineGrowthState,
     } = flexItemSizing;
 
@@ -249,7 +248,7 @@ class FlexItemSizingProperties extends PureComponent {
     );
   }
 
-  renderFinalSizeSection({ mainFinalSize }) {
+  renderFinalSizeSection(mainFinalSize) {
     return (
       dom.li({ className: "section final no-property" },
         dom.span({ className: "name" },
@@ -282,15 +281,15 @@ class FlexItemSizingProperties extends PureComponent {
     let mainFinalSize = mainBaseSize + mainDeltaSize;
     mainFinalSize = Math.max(mainFinalSize, mainMinSize);
     mainFinalSize = Math.min(mainFinalSize, mainMaxSize);
-    flexItemSizing.mainFinalSize = mainFinalSize;
 
     return (
       dom.ul({ className: "flex-item-sizing" },
         this.renderBaseSizeSection(flexItemSizing, properties, dimension),
-        this.renderFlexibilitySection(flexItemSizing, properties, computedStyle),
+        this.renderFlexibilitySection(flexItemSizing, mainFinalSize, properties,
+          computedStyle),
         this.renderMinimumSizeSection(flexItemSizing, properties, dimension),
         this.renderMaximumSizeSection(flexItemSizing, properties, dimension),
-        this.renderFinalSizeSection(flexItemSizing)
+        this.renderFinalSizeSection(mainFinalSize)
       )
     );
   }

@@ -17,7 +17,7 @@ add_task(async function() {
   const spectrum = cPicker.spectrum;
 
   const onColorSwatchRendered = waitForDOM(doc,
-    "#layout-flexbox-container .layout-color-swatch");
+    ".layout-flexbox-wrapper .layout-color-swatch");
   await selectNode("#container", inspector);
   const [swatch] = await onColorSwatchRendered;
 
