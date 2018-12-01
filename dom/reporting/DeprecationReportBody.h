@@ -37,7 +37,7 @@ class DeprecationReportBody final : public ReportBody {
   Nullable<uint32_t> GetColumnNumber() const;
 
  protected:
-  void ToJSONInternal(JSONWriter& aJSONWriter) const override;
+  void ToJSON(JSONWriter& aJSONWriter) const override;
 
  private:
   ~DeprecationReportBody();

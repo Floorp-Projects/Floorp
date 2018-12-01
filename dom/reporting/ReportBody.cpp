@@ -31,26 +31,5 @@ JSObject* ReportBody::WrapObject(JSContext* aCx,
   return ReportBody_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-namespace {
-
-struct StringWriteFunc : public JSONWriteFunc {
-  nsAString& mBuffer;  // The lifetime of the struct must be bound to the buffer
-  explicit StringWriteFunc(nsAString& aBuffer) : mBuffer(aBuffer) {}
-
-  void Write(const char* aStr) override {
-    mBuffer.Append(NS_ConvertUTF8toUTF16(aStr));
-  }
-};
-
-}  // namespace
-
-void ReportBody::ToJSON(nsAString& aJSON) const {
-  JSONWriter w(MakeUnique<StringWriteFunc>(aJSON));
-
-  w.Start();
-  ToJSONInternal(w);
-  w.End();
-}
-
 }  // namespace dom
 }  // namespace mozilla

@@ -7,19 +7,28 @@
 #ifndef mozilla_dom_ReportDeliver_h
 #define mozilla_dom_ReportDeliver_h
 
+#include "nsIObserver.h"
+#include "nsITimer.h"
+
 class nsIPrincipal;
 class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
 
-class ReportDeliver final {
+class ReportDeliver final : public nsIObserver, public nsITimerCallback {
  public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+  NS_DECL_NSITIMERCALLBACK
+
   struct ReportData {
     nsString mType;
     nsString mURL;
     nsCString mEndpointURL;
-    nsString mReportBodyJSON;
+    nsString mUserAgent;
+    TimeStamp mCreationTime;
+    nsCString mReportBodyJSON;
     nsCOMPtr<nsIPrincipal> mPrincipal;
     uint32_t mFailures;
   };
@@ -29,6 +38,16 @@ class ReportDeliver final {
                      ReportBody* aBody);
 
   static void Fetch(const ReportData& aReportData);
+
+  void AppendReportData(const ReportData& aReportData);
+
+ private:
+  ReportDeliver();
+  ~ReportDeliver();
+
+  nsTArray<ReportData> mReportQueue;
+
+  nsCOMPtr<nsITimer> mTimer;
 };
 
 }  // namespace dom
