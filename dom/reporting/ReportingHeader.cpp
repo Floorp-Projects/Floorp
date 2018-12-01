@@ -1,0 +1,423 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "mozilla/dom/ReportingHeader.h"
+
+#include "js/JSON.h"
+#include "mozilla/dom/ReportingBinding.h"
+#include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/SimpleGlobalObject.h"
+#include "mozilla/OriginAttributes.h"
+#include "mozilla/Services.h"
+#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPtr.h"
+#include "nsContentUtils.h"
+#include "nsIHttpChannel.h"
+#include "nsIHttpProtocolHandler.h"
+#include "nsIObserverService.h"
+#include "nsIPrincipal.h"
+#include "nsIScriptError.h"
+#include "nsNetUtil.h"
+#include "nsXULAppAPI.h"
+
+namespace mozilla {
+namespace dom {
+
+namespace {
+
+StaticRefPtr<ReportingHeader> gReporting;
+
+}  // namespace
+
+/* static */ void ReportingHeader::Initialize() {
+  MOZ_ASSERT(!gReporting);
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+
+  RefPtr<ReportingHeader> service = new ReportingHeader();
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (NS_WARN_IF(!obs)) {
+    return;
+  }
+
+  obs->AddObserver(service, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC, false);
+  obs->AddObserver(service, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  gReporting = service;
+}
+
+/* static */ void ReportingHeader::Shutdown() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!gReporting) {
+    return;
+  }
+
+  RefPtr<ReportingHeader> service = gReporting;
+  gReporting = nullptr;
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (NS_WARN_IF(!obs)) {
+    return;
+  }
+
+  obs->RemoveObserver(service, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC);
+  obs->RemoveObserver(service, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+}
+
+ReportingHeader::ReportingHeader() = default;
+ReportingHeader::~ReportingHeader() = default;
+
+NS_IMETHODIMP
+ReportingHeader::Observe(nsISupports* aSubject, const char* aTopic,
+                         const char16_t* aData) {
+  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    Shutdown();
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(!strcmp(aTopic, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC));
+
+  // Pref disabled.
+  if (!StaticPrefs::dom_reporting_header_enabled()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aSubject);
+  if (NS_WARN_IF(!channel)) {
+    return NS_OK;
+  }
+
+  ReportingFromChannel(channel);
+  return NS_OK;
+}
+
+void ReportingHeader::ReportingFromChannel(nsIHttpChannel* aChannel) {
+  MOZ_ASSERT(aChannel);
+
+  if (!StaticPrefs::dom_reporting_header_enabled()) {
+    return;
+  }
+
+  // We want to use the final URI to check if Report-To should be allowed or
+  // not.
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  if (!IsSecureURI(uri)) {
+    return;
+  }
+
+  nsAutoCString headerValue;
+  rv =
+      aChannel->GetResponseHeader(NS_LITERAL_CSTRING("Report-To"), headerValue);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  if (NS_WARN_IF(!ssm)) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal;
+  rv = ssm->GetChannelURIPrincipal(aChannel, getter_AddRefs(principal));
+  if (NS_WARN_IF(NS_FAILED(rv)) || !principal) {
+    return;
+  }
+
+  nsAutoCString origin;
+  rv = principal->GetOrigin(origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  UniquePtr<Client> client = ParseHeader(aChannel, uri, headerValue);
+  if (client) {
+    // Here we override the previous data.
+    mOrigins.Put(origin, client.release());
+  }
+}
+
+/* static */ UniquePtr<ReportingHeader::Client> ReportingHeader::ParseHeader(
+    nsIHttpChannel* aChannel, nsIURI* aURI, const nsACString& aHeaderValue) {
+  MOZ_ASSERT(aURI);
+  // aChannel can be null in gtest
+
+  AutoJSAPI jsapi;
+
+  JSObject* cleanGlobal =
+      SimpleGlobalObject::Create(SimpleGlobalObject::GlobalType::BindingDetail);
+  if (NS_WARN_IF(!cleanGlobal)) {
+    return nullptr;
+  }
+
+  if (NS_WARN_IF(!jsapi.Init(cleanGlobal))) {
+    return nullptr;
+  }
+
+  // WebIDL dictionary parses single items. Let's create a object to parse the
+  // header.
+  nsAutoString json;
+  json.AppendASCII("{ \"items\": [");
+  json.Append(NS_ConvertUTF8toUTF16(aHeaderValue));
+  json.AppendASCII("]}");
+
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JS::Value> jsonValue(cx);
+  bool ok = JS_ParseJSON(cx, PromiseFlatString(json).get(), json.Length(),
+                         &jsonValue);
+  if (!ok) {
+    LogToConsoleInvalidJSON(aChannel, aURI);
+    return nullptr;
+  }
+
+  dom::ReportingHeaderValue data;
+  if (!data.Init(cx, jsonValue)) {
+    LogToConsoleInvalidJSON(aChannel, aURI);
+    return nullptr;
+  }
+
+  if (!data.mItems.WasPassed() || data.mItems.Value().IsEmpty()) {
+    return nullptr;
+  }
+
+  UniquePtr<Client> client = MakeUnique<Client>();
+
+  for (const dom::ReportingItem& item : data.mItems.Value()) {
+    nsAutoString groupName;
+
+    if (item.mGroup.isUndefined()) {
+      groupName.AssignLiteral("default");
+    } else if (!item.mGroup.isString()) {
+      LogToConsoleInvalidNameItem(aChannel, aURI);
+      continue;
+    } else {
+      JS::Rooted<JSString*> groupStr(cx, item.mGroup.toString());
+      MOZ_ASSERT(groupStr);
+
+      nsAutoJSString string;
+      if (NS_WARN_IF(!string.init(cx, groupStr))) {
+        continue;
+      }
+
+      groupName = string;
+    }
+
+    if (!item.mMax_age.isNumber() || !item.mEndpoints.isObject()) {
+      LogToConsoleIncompleteItem(aChannel, aURI, groupName);
+      continue;
+    }
+
+    JS::Rooted<JSObject*> endpoints(cx, &item.mEndpoints.toObject());
+    MOZ_ASSERT(endpoints);
+
+    bool isArray = false;
+    if (!JS_IsArrayObject(cx, endpoints, &isArray) || !isArray) {
+      LogToConsoleIncompleteItem(aChannel, aURI, groupName);
+      continue;
+    }
+
+    uint32_t endpointsLength;
+    if (!JS_GetArrayLength(cx, endpoints, &endpointsLength) ||
+        endpointsLength == 0) {
+      LogToConsoleIncompleteItem(aChannel, aURI, groupName);
+      continue;
+    }
+
+    bool found = false;
+    for (const Group& group : client->mGroups) {
+      if (group.mName == groupName) {
+        found = true;
+        break;
+      }
+    }
+
+    if (found) {
+      LogToConsoleDuplicateGroup(aChannel, aURI, groupName);
+      continue;
+    }
+
+    Group* group = client->mGroups.AppendElement();
+    group->mName = groupName;
+    group->mIncludeSubdomains = item.mInclude_subdomains;
+    group->mTTL = item.mMax_age.toNumber();
+    group->mCreationTime = TimeStamp::Now();
+
+    for (uint32_t i = 0; i < endpointsLength; ++i) {
+      JS::Rooted<JS::Value> element(cx);
+      if (!JS_GetElement(cx, endpoints, i, &element)) {
+        return nullptr;
+      }
+
+      ReportingEndpoint endpoint;
+      if (!endpoint.Init(cx, element)) {
+        LogToConsoleIncompleteEndpoint(aChannel, aURI, groupName);
+        continue;
+      }
+
+      if (!endpoint.mUrl.isString() ||
+          (!endpoint.mPriority.isUndefined() &&
+           (!endpoint.mPriority.isNumber() ||
+            endpoint.mPriority.toNumber() < 0)) ||
+          (!endpoint.mWeight.isUndefined() &&
+           (!endpoint.mWeight.isNumber() || endpoint.mWeight.toNumber() < 0))) {
+        LogToConsoleIncompleteEndpoint(aChannel, aURI, groupName);
+        continue;
+      }
+
+      JS::Rooted<JSString*> endpointUrl(cx, endpoint.mUrl.toString());
+      MOZ_ASSERT(endpointUrl);
+
+      nsAutoJSString endpointString;
+      if (NS_WARN_IF(!endpointString.init(cx, endpointUrl))) {
+        continue;
+      }
+
+      nsCOMPtr<nsIURI> uri;
+      nsresult rv = NS_NewURI(getter_AddRefs(uri), endpointString);
+      if (NS_FAILED(rv)) {
+        LogToConsoleInvalidURLEndpoint(aChannel, aURI, groupName,
+                                       endpointString);
+        continue;
+      }
+
+      Endpoint* ep = group->mEndpoints.AppendElement();
+      ep->mUrl = uri;
+      ep->mPriority =
+          endpoint.mPriority.isUndefined() ? 1 : endpoint.mPriority.toNumber();
+      ep->mWeight =
+          endpoint.mWeight.isUndefined() ? 1 : endpoint.mWeight.toNumber();
+    }
+  }
+
+  if (client->mGroups.IsEmpty()) {
+    return nullptr;
+  }
+
+  return client;
+}
+
+bool ReportingHeader::IsSecureURI(nsIURI* aURI) const {
+  MOZ_ASSERT(aURI);
+
+  bool prioriAuthenticated = false;
+  if (NS_WARN_IF(NS_FAILED(NS_URIChainHasFlags(
+          aURI, nsIProtocolHandler::URI_IS_POTENTIALLY_TRUSTWORTHY,
+          &prioriAuthenticated)))) {
+    return false;
+  }
+
+  return prioriAuthenticated;
+}
+
+/* static */ void ReportingHeader::LogToConsoleInvalidJSON(
+    nsIHttpChannel* aChannel, nsIURI* aURI) {
+  nsTArray<nsString> params;
+  LogToConsoleInternal(aChannel, aURI, "ReportingHeaderInvalidJSON", params);
+}
+
+/* static */ void ReportingHeader::LogToConsoleDuplicateGroup(
+    nsIHttpChannel* aChannel, nsIURI* aURI, const nsAString& aName) {
+  nsTArray<nsString> params;
+  params.AppendElement(aName);
+
+  LogToConsoleInternal(aChannel, aURI, "ReportingHeaderDuplicateGroup", params);
+}
+
+/* static */ void ReportingHeader::LogToConsoleInvalidNameItem(
+    nsIHttpChannel* aChannel, nsIURI* aURI) {
+  nsTArray<nsString> params;
+  LogToConsoleInternal(aChannel, aURI, "ReportingHeaderInvalidNameItem",
+                       params);
+}
+
+/* static */ void ReportingHeader::LogToConsoleIncompleteItem(
+    nsIHttpChannel* aChannel, nsIURI* aURI, const nsAString& aName) {
+  nsTArray<nsString> params;
+  params.AppendElement(aName);
+
+  LogToConsoleInternal(aChannel, aURI, "ReportingHeaderInvalidItem", params);
+}
+
+/* static */ void ReportingHeader::LogToConsoleIncompleteEndpoint(
+    nsIHttpChannel* aChannel, nsIURI* aURI, const nsAString& aName) {
+  nsTArray<nsString> params;
+  params.AppendElement(aName);
+
+  LogToConsoleInternal(aChannel, aURI, "ReportingHeaderInvalidEndpoint",
+                       params);
+}
+
+/* static */ void ReportingHeader::LogToConsoleInvalidURLEndpoint(
+    nsIHttpChannel* aChannel, nsIURI* aURI, const nsAString& aName,
+    const nsAString& aURL) {
+  nsTArray<nsString> params;
+  params.AppendElement(aURL);
+  params.AppendElement(aName);
+
+  LogToConsoleInternal(aChannel, aURI, "ReportingHeaderInvalidURLEndpoint",
+                       params);
+}
+
+/* static */ void ReportingHeader::LogToConsoleInternal(
+    nsIHttpChannel* aChannel, nsIURI* aURI, const char* aMsg,
+    const nsTArray<nsString>& aParams) {
+  MOZ_ASSERT(aURI);
+
+  if (!aChannel) {
+    // We are in a gtest.
+    return;
+  }
+
+  uint64_t windowID = 0;
+
+  nsresult rv = aChannel->GetTopLevelContentWindowId(&windowID);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  if (!windowID) {
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    nsresult rv = aChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
+    if (loadGroup) {
+      windowID = nsContentUtils::GetInnerWindowID(loadGroup);
+    }
+  }
+
+  nsAutoString localizedMsg;
+  rv = nsContentUtils::FormatLocalizedString(
+      nsContentUtils::eSECURITY_PROPERTIES, aMsg, aParams, localizedMsg);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  rv = nsContentUtils::ReportToConsoleByWindowID(
+      localizedMsg, nsIScriptError::infoFlag, NS_LITERAL_CSTRING("Reporting"),
+      windowID, aURI);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+}
+
+NS_INTERFACE_MAP_BEGIN(ReportingHeader)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(ReportingHeader)
+NS_IMPL_RELEASE(ReportingHeader)
+
+}  // namespace dom
+}  // namespace mozilla
