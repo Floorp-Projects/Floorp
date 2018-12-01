@@ -67,7 +67,7 @@ import "./Highlight.css";
 
 import type SourceEditor from "../../utils/editor/source-editor";
 import type { SymbolDeclarations } from "../../workers/parser";
-import type { SourceLocation, Source } from "../../types";
+import type { Location, Source } from "../../types";
 
 const cssVars = {
   searchbarHeight: "var(--editor-searchbar-height)",
@@ -75,7 +75,7 @@ const cssVars = {
 };
 
 export type Props = {
-  selectedLocation: ?SourceLocation,
+  selectedLocation: ?Location,
   selectedSource: ?Source,
   searchOn: boolean,
   horizontal: boolean,
@@ -549,7 +549,7 @@ class Editor extends PureComponent<Props, State> {
         <EmptyLines editor={editor} />
         <Breakpoints editor={editor} />
         <Preview editor={editor} editorRef={this.$editorWrapper} />;
-        <Footer editor={editor} horizontal={horizontal} />
+        <Footer horizontal={horizontal} />
         <HighlightLines editor={editor} />
         <EditorMenu editor={editor} />
         <GutterMenu editor={editor} />

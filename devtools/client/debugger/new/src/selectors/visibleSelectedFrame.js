@@ -9,9 +9,9 @@ import { getSelectedFrame } from "../reducers/pause";
 import { isOriginalId } from "devtools-source-map";
 import { createSelector } from "reselect";
 
-import type { Frame, SourceLocation } from "../types";
+import type { Frame, Location } from "../types";
 
-function getLocation(frame: Frame, location?: SourceLocation) {
+function getLocation(frame: Frame, location?: Location) {
   if (!location) {
     return frame.location;
   }

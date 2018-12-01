@@ -32,7 +32,7 @@ import { isEmptyLineInSource } from "../../reducers/ast";
 // this will need to be changed so that addCLientBreakpoint is removed
 
 import type { ThunkArgs, Action } from "../types";
-import type { Breakpoint, SourceLocation, XHRBreakpoint } from "../../types";
+import type { Breakpoint, Location, XHRBreakpoint } from "../../types";
 
 import { recordEvent } from "../../utils/telemetry";
 
@@ -47,7 +47,7 @@ type addBreakpointOptions = {
  * @memberof actions/breakpoints
  * @static
  */
-export function removeBreakpoint(location: SourceLocation) {
+export function removeBreakpoint(location: Location) {
   return ({ dispatch, getState, client }: ThunkArgs) => {
     const bp = getBreakpoint(getState(), location);
     if (!bp || bp.loading) {
@@ -84,7 +84,7 @@ export function removeBreakpoint(location: SourceLocation) {
  * @memberof actions/breakpoints
  * @static
  */
-export function disableBreakpoint(location: SourceLocation) {
+export function disableBreakpoint(location: Location) {
   return async ({ dispatch, getState, client }: ThunkArgs) => {
     const bp = getBreakpoint(getState(), location);
 
@@ -220,14 +220,14 @@ export function remapBreakpoints(sourceId: string) {
  * @throws {Error} "not implemented"
  * @memberof actions/breakpoints
  * @static
- * @param {SourceLocation} location
+ * @param {Location} location
  *        @see DebuggerController.Breakpoints.addBreakpoint
  * @param {string} condition
  *        The condition to set on the breakpoint
  * @param {Boolean} $1.disabled Disable value for breakpoint value
  */
 export function setBreakpointCondition(
-  location: SourceLocation,
+  location: Location,
   { condition }: addBreakpointOptions = {}
 ) {
   return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {

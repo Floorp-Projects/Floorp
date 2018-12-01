@@ -17,6 +17,7 @@ export * from "../reducers/ast";
 export * from "../reducers/project-text-search";
 export * from "../reducers/source-tree";
 
+export { getEventListeners } from "../reducers/event-listeners";
 export {
   getQuickOpenEnabled,
   getQuickOpenQuery,

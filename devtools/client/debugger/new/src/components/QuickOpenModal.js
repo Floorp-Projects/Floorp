@@ -35,9 +35,8 @@ import type {
   QuickOpenResult
 } from "../utils/quick-open";
 
-import type { SourceLocation, Source } from "../types";
+import type { Location, Source } from "../types";
 import type { QuickOpenType } from "../reducers/quick-open";
-import type { Tab } from "../reducers/tabs";
 
 import "./QuickOpenModal.css";
 
@@ -49,9 +48,9 @@ type Props = {
   searchType: QuickOpenType,
   symbols: FormattedSymbolDeclarations,
   symbolsLoading: boolean,
-  tabs: Tab[],
+  tabs: string[],
   shortcutsModalEnabled: boolean,
-  selectSpecificLocation: SourceLocation => void,
+  selectSpecificLocation: Location => void,
   setQuickOpenQuery: (query: string) => void,
   highlightLineRange: ({ start: number, end: number }) => void,
   closeQuickOpen: () => void,
@@ -126,12 +125,12 @@ export class QuickOpenModal extends Component<Props, State> {
 
   searchSymbols = (query: string) => {
     const {
-      symbols: { functions, identifiers }
+      symbols: { functions, variables }
     } = this.props;
 
     let results = functions;
     if (this.isVariableQuery()) {
-      results = identifiers;
+      results = variables;
     } else {
       results = results.filter(result => result.title !== "anonymous");
     }
@@ -155,10 +154,8 @@ export class QuickOpenModal extends Component<Props, State> {
   showTopSources = () => {
     const { tabs, sources } = this.props;
     if (tabs.length > 0) {
-      const tabUrls = tabs.map((tab: Tab) => tab.url);
-
       this.setState({
-        results: sources.filter(source => tabUrls.includes(source.url))
+        results: sources.filter(source => tabs.includes(source.url))
       });
     } else {
       this.setState({ results: sources.slice(0, 100) });

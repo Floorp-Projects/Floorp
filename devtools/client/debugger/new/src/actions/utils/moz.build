@@ -9,4 +9,5 @@ DIRS += [
 
 DebuggerModules(
     'create-store.js',
+    'symbols.js',
 )

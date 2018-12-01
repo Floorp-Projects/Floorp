@@ -8,7 +8,7 @@ import { workerUtils } from "devtools-utils";
 const { WorkerDispatcher } = workerUtils;
 
 import type { AstLocation, AstPosition, PausePoints } from "./types";
-import type { SourceLocation, Source, SourceId } from "../../types";
+import type { Location, Source, SourceId } from "../../types";
 import type { SourceScope } from "./getScopes/visitor";
 import type { SymbolDeclarations } from "./getSymbols";
 
@@ -26,15 +26,14 @@ export const findOutOfScopeLocations = async (
 export const getNextStep = async (
   sourceId: SourceId,
   pausedPosition: AstPosition
-): Promise<?SourceLocation> =>
+): Promise<?Location> =>
   dispatcher.invoke("getNextStep", sourceId, pausedPosition);
 
 export const clearASTs = async (): Promise<void> =>
   dispatcher.invoke("clearASTs");
 
-export const getScopes = async (
-  location: SourceLocation
-): Promise<SourceScope[]> => dispatcher.invoke("getScopes", location);
+export const getScopes = async (location: Location): Promise<SourceScope[]> =>
+  dispatcher.invoke("getScopes", location);
 
 export const clearScopes = async (): Promise<void> =>
   dispatcher.invoke("clearScopes");

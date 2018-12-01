@@ -2312,8 +2312,7 @@ menuseparator {
 }
 
 .source-footer .blackbox-summary,
-.source-footer .mapped-source,
-.source-footer .cursor-position {
+.source-footer .mapped-source {
   color: var(--theme-body-color);
   padding-left: 2.5px;
 }
@@ -2322,10 +2321,6 @@ menuseparator {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.source-footer .cursor-position {
-  padding: 5px;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -2690,37 +2685,42 @@ menuseparator {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .call-site {
-  display: inline;
-}
-
-.call-site svg {
+  position: relative;
   display: inline;
   cursor: pointer;
-  height: 12px;
+}
+
+.call-site::before {
+  content: "";
+  mask: url("resource://devtools/client/debugger/new/images/column-marker.svg") no-repeat 100% 100%;
+  mask-size: contain;
+  display: inline-block;
+  background-color: var(--blue-55);
+  opacity: 0.5;
   width: 9px;
-  vertical-align: top;
+  height: 12px;
 }
 
-.call-site.active svg {
-  fill: var(--blue-50);
-  stroke: var(--blue-60);
+.call-site.active::before {
+  opacity: 1;
 }
 
-.call-site.disabled svg {
-  fill: var(--blue-50);
-  stroke: var(--blue-40);
-  fill-opacity: 0.5;
+.theme-dark .call-site {
+  border-bottom: none;
 }
 
-.theme-dark .call-site.active svg {
-  fill: var(--blue-55);
-  stroke: var(--blue-40);
+.theme-dark .call-site-bp {
+  border-bottom: none;
 }
 
-.theme-dark .call-site.disabled svg {
-  fill: var(--blue-50);
-  stroke: var(--blue-60);
-  fill-opacity: 0.5;
+.theme-dark .call-site::before {
+  background-color: var(--blue-60);
+  opacity: 1;
+}
+
+.theme-dark .call-site-bp::before {
+  background-color: var(--blue-50);
+  opacity: 0.5;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -2814,18 +2814,10 @@ html[dir="rtl"] .editor-mount {
 
 .theme-light {
   --gutter-hover-background-color: #dde1e4;
-  --breakpoint-fill: var(--blue-50);
-  --breakpoint-stroke: var(--blue-60);
-  --breakpoint-fill-disabled: var(--blue-50);
-  --breakpoint-stroke-disabled: var(--blue-40);
 }
 
 .theme-dark {
   --gutter-hover-background-color: #414141;
-  --breakpoint-fill: var(--blue-55);
-  --breakpoint-stroke: var(--blue-40);
-  --breakpoint-fill-disabled: var(--blue-50);
-  --breakpoint-stroke-disabled: var(--blue-60);
 }
 
 :not(.empty-line):not(.new-breakpoint)
@@ -2880,8 +2872,7 @@ html[dir="rtl"] .editor-mount {
 }
 
 .editor.new-breakpoint svg {
-  fill: var(--breakpoint-fill);
-  stroke: var(--breakpoint-stroke);
+  fill: var(--theme-selection-background);
   width: 60px;
   height: 14px;
   position: absolute;
@@ -2908,15 +2899,12 @@ html[dir="rtl"] .editor-mount {
   right: -16px;
 }
 
-.new-breakpoint.has-condition .CodeMirror-gutter-wrapper svg {
+.new-breakpoint.has-condition svg {
   fill: var(--theme-graphs-yellow);
-  stroke: var(--theme-graphs-orange);
 }
 
 .editor.new-breakpoint.breakpoint-disabled svg {
-  fill: var(--breakpoint-fill-disabled);
-  stroke: var(--breakpoint-stroke-disabled);
-  fill-opacity: 0.5;
+  opacity: 0.3;
 }
 
 .editor.column-breakpoint svg {
@@ -3636,6 +3624,55 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 
 :root.theme-dark .annotation-logo:not(.angular) svg path {
   fill: var(--theme-highlight-blue);
+}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.event-listeners {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.event-listeners .listener {
+  padding: 7px 10px 7px 21px;
+  clear: both;
+  overflow: hidden;
+}
+
+.event-listeners .listener * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.event-listeners .listener:nth-of-type(2n) {
+  background-color: var(--theme-tab-toolbar-background);
+}
+
+.event-listeners .listener .type {
+  color: var(--theme-highlight-bluegrey);
+  padding-right: 5px;
+}
+
+.event-listeners .listener .selector {
+  color: var(--theme-content-color2);
+}
+
+.event-listeners .listener-checkbox {
+  margin-left: 0;
+}
+
+.event-listeners .listener .close-btn {
+  float: right;
+}
+
+.event-listeners .listener .close {
+  display: none;
+}
+
+.event-listeners .listener:hover .close {
+  display: block;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this

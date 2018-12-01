@@ -9,5 +9,4 @@ DIRS += [
 
 DebuggerModules(
     'setInScopeLines.js',
-    'setPausePoints.js',
 )

@@ -4,7 +4,7 @@
 // Tests basic pretty-printing functionality.
 
 add_task(async function() {
-  const dbg = await initDebugger("doc-minified.html", "math.min.js");
+  const dbg = await initDebugger("doc-minified.html");
 
   await selectSource(dbg, "math.min.js", 2);
   clickElement(dbg, "prettyPrintButton");

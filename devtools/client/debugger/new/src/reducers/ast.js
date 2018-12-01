@@ -21,7 +21,7 @@ import type {
 } from "../workers/parser";
 
 import type { Map } from "immutable";
-import type { SourceLocation, Source } from "../types";
+import type { Location, Source } from "../types";
 import type { Action, DonePromiseAction } from "../actions/types";
 import type { Record } from "../utils/makeRecord";
 
@@ -209,7 +209,7 @@ export function getPausePoints(
 
 export function getPausePoint(
   state: OuterState,
-  location: ?SourceLocation
+  location: ?Location
 ): ?PausePoint {
   if (!location) {
     return;

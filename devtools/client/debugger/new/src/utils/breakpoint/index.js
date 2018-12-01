@@ -14,7 +14,7 @@ export { getASTLocation, findScopeByName } from "./astBreakpointLocation";
 
 import type { FormattedBreakpoint } from "../../selectors/breakpointSources";
 import type {
-  SourceLocation,
+  Location,
   PendingLocation,
   Breakpoint,
   PendingBreakpoint
@@ -33,27 +33,24 @@ export function firstString(...args: string[]) {
   return null;
 }
 
-export function locationMoved(
-  location: SourceLocation,
-  newLocation: SourceLocation
-) {
+export function locationMoved(location: Location, newLocation: Location) {
   return (
     location.line !== newLocation.line || location.column !== newLocation.column
   );
 }
 
-export function makeLocationId(location: SourceLocation) {
+export function makeLocationId(location: Location) {
   const { sourceId, line, column } = location;
   const columnString = column || "";
   return `${sourceId}:${line}:${columnString}`;
 }
 
-export function getLocationWithoutColumn(location: SourceLocation) {
+export function getLocationWithoutColumn(location: Location) {
   const { sourceId, line } = location;
   return `${sourceId}:${line}`;
 }
 
-export function makePendingLocationId(location: SourceLocation) {
+export function makePendingLocationId(location: Location) {
   assertPendingLocation(location);
   const { sourceUrl, line, column } = location;
   const sourceUrlString = sourceUrl || "";
@@ -72,7 +69,7 @@ export function assertPendingBreakpoint(pendingBreakpoint: PendingBreakpoint) {
   assertPendingLocation(pendingBreakpoint.generatedLocation);
 }
 
-export function assertLocation(location: SourceLocation) {
+export function assertLocation(location: Location) {
   assertPendingLocation(location);
   const { sourceId } = location;
   assert(!!sourceId, "location must have a source id");
@@ -95,7 +92,7 @@ export function assertPendingLocation(location: PendingLocation) {
 // syncing
 export function breakpointAtLocation(
   breakpoints: Breakpoint[],
-  { line, column }: SourceLocation
+  { line, column }: Location
 ) {
   return breakpoints.find(breakpoint => {
     const sameLine = breakpoint.location.line === line;
@@ -113,13 +110,13 @@ export function breakpointAtLocation(
   });
 }
 
-export function breakpointExists(state: State, location: SourceLocation) {
+export function breakpointExists(state: State, location: Location) {
   const currentBp = getBreakpoint(state, location);
   return currentBp && !currentBp.disabled;
 }
 
 export function createBreakpoint(
-  location: SourceLocation,
+  location: Location,
   overrides: Object = {}
 ): Breakpoint {
   const {

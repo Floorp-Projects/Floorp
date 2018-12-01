@@ -7,15 +7,15 @@
 import { isOriginalId } from "devtools-source-map";
 import { getSource } from "../selectors";
 
-import type { SourceLocation, MappedLocation, Source } from "../types";
+import type { Location, MappedLocation, Source } from "../types";
 import { isGenerated } from "../utils/source";
 
 export async function getGeneratedLocation(
   state: Object,
   source: Source,
-  location: SourceLocation,
+  location: Location,
   sourceMaps: Object
-): Promise<SourceLocation> {
+): Promise<Location> {
   if (!isOriginalId(location.sourceId)) {
     return location;
   }
@@ -41,8 +41,8 @@ export async function getGeneratedLocation(
 export async function getMappedLocation(
   state: Object,
   sourceMaps: Object,
-  location: SourceLocation
-): Promise<SourceLocation> {
+  location: Location
+): Promise<Location> {
   const source = getSource(state, location.sourceId);
 
   if (!source) {

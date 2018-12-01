@@ -5,7 +5,7 @@
 // @flow
 // This module converts Firefox specific types to the generic types
 
-import type { Frame, Source, SourceLocation } from "../../types";
+import type { Frame, Source, Location } from "../../types";
 import type {
   PausedPacket,
   FramesResponse,
@@ -78,9 +78,9 @@ export function createPause(
 // exists, otherwise use `location`.
 
 export function createBreakpointLocation(
-  location: SourceLocation,
+  location: Location,
   actualLocation?: Object
-): SourceLocation {
+): Location {
   if (!actualLocation) {
     return location;
   }
