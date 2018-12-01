@@ -47,9 +47,6 @@ class Message extends Component {
       executionPoint: PropTypes.shape({
         progress: PropTypes.number,
       }),
-      pausedExecutionPoint: PropTypes.shape({
-        progress: PropTypes.number,
-      }),
       scrollToMessage: PropTypes.bool,
       exceptionDocURL: PropTypes.string,
       request: PropTypes.object,
@@ -165,7 +162,6 @@ class Message extends Component {
       timeStamp = Date.now(),
       timestampsVisible,
       executionPoint,
-      pausedExecutionPoint,
       notes,
     } = this.props;
 
@@ -176,12 +172,6 @@ class Message extends Component {
 
     if (isPaused) {
       topLevelClasses.push("paused");
-
-      if (pausedExecutionPoint
-        && executionPoint
-        && pausedExecutionPoint.progress < executionPoint.progress) {
-        topLevelClasses.push("paused-before");
-      }
     }
 
     let timestampEl;
