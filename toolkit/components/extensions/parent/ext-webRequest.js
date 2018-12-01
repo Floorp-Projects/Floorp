@@ -58,13 +58,26 @@ function registerEvent(extension, eventName, fire, filter, info, tabParent = nul
 
   let blockingAllowed = extension.hasPermission("webRequestBlocking");
 
+  let info2 = [];
+  if (info) {
+    for (let desc of info) {
+      if (desc == "blocking" && !blockingAllowed) {
+        Cu.reportError("Using webRequest.addListener with the blocking option " +
+                       "requires the 'webRequestBlocking' permission.");
+      } else {
+        info2.push(desc);
+      }
+    }
+  }
+
   let listenerDetails = {
     addonId: extension.id,
     extension: extension.policy,
     blockingAllowed,
   };
+
   WebRequest[eventName].addListener(
-    listener, filter2, info,
+    listener, filter2, info2,
     listenerDetails);
 
   return {
