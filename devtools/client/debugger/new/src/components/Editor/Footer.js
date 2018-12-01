@@ -30,10 +30,16 @@ import type { Source } from "../../types";
 
 import "./Footer.css";
 
+type CursorPosition = {
+  line: number,
+  column: number
+};
+
 type Props = {
   selectedSource: Source,
   mappedSource: Source,
   endPanelCollapsed: boolean,
+  editor: Object,
   horizontal: boolean,
   togglePrettyPrint: string => void,
   toggleBlackBox: Object => void,
@@ -41,7 +47,27 @@ type Props = {
   togglePaneCollapse: () => void
 };
 
-class SourceFooter extends PureComponent<Props> {
+type State = {
+  cursorPosition: CursorPosition
+};
+
+class SourceFooter extends PureComponent<Props, State> {
+  constructor() {
+    super();
+
+    this.state = { cursorPosition: { line: 1, column: 1 } };
+  }
+
+  componentDidMount() {
+    const { editor } = this.props;
+    editor.codeMirror.on("cursorActivity", this.onCursorChange);
+  }
+
+  componentWillUnmount() {
+    const { editor } = this.props;
+    editor.codeMirror.off("cursorActivity", this.onCursorChange);
+  }
+
   prettyPrintButton() {
     const { selectedSource, togglePrettyPrint } = this.props;
 
@@ -174,6 +200,22 @@ class SourceFooter extends PureComponent<Props> {
     );
   }
 
+  onCursorChange = event => {
+    const { line, ch } = event.doc.getCursor();
+    this.setState({ cursorPosition: { line, column: ch } });
+  };
+
+  renderCursorPosition() {
+    const { cursorPosition } = this.state;
+
+    const text = L10N.getFormatStr(
+      "sourceFooter.currentCursorPosition",
+      cursorPosition.line + 1,
+      cursorPosition.column + 1
+    );
+    return <span className="cursor-position">{text}</span>;
+  }
+
   render() {
     const { selectedSource, horizontal } = this.props;
 
@@ -184,6 +226,7 @@ class SourceFooter extends PureComponent<Props> {
     return (
       <div className="source-footer">
         {this.renderCommands()}
+        {this.renderCursorPosition()}
         {this.renderSourceSummary()}
         {this.renderToggleButton()}
       </div>

@@ -125,7 +125,12 @@ function checkSelectedSource(sourceId: string) {
       }
 
       await dispatch(
-        selectLocation({ ...pendingLocation, sourceId: source.id })
+        selectLocation({
+          sourceId: source.id,
+          line:
+            typeof pendingLocation.line === "number" ? pendingLocation.line : 0,
+          column: pendingLocation.column
+        })
       );
     }
   };

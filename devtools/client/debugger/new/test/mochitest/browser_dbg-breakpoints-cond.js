@@ -38,8 +38,15 @@ async function assertConditionalBreakpointIsFocused(dbg) {
 }
 
 async function setConditionalBreakpoint(dbg, index, condition) {
+  const {
+    addConditionalBreakpoint,
+    editBreakpoint
+  } = selectors.gutterContextMenu;
+  // Make this work with either add or edit menu items
+  const selector = `${addConditionalBreakpoint},${editBreakpoint}`;
+
   rightClickElement(dbg, "gutter", index);
-  selectMenuItem(dbg, 2);
+  selectContextMenuItem(dbg, selector);
   await waitForElement(dbg, "conditionalPanelInput");
   await assertConditionalBreakpointIsFocused(dbg);
 
@@ -50,7 +57,7 @@ async function setConditionalBreakpoint(dbg, index, condition) {
 }
 
 add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html");
+  const dbg = await initDebugger("doc-scripts.html", "simple2");
   await selectSource(dbg, "simple2");
   await waitForSelectedSource(dbg, "simple2");
 
@@ -86,7 +93,7 @@ add_task(async function() {
   //right click breakpoint in breakpoints list
   rightClickElement(dbg, "breakpointItem", 3)
   // select "remove condition";
-  selectMenuItem(dbg, 8);
+  selectContextMenuItem(dbg, selectors.breakpointContextMenu.removeCondition);
   await bpCondition;
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.condition, undefined, "breakpoint condition removed");

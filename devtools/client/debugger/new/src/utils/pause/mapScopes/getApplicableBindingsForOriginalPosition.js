@@ -9,7 +9,7 @@ import { positionCmp } from "./positionCmp";
 import { filterSortedArray } from "./filtering";
 import { mappingContains } from "./mappingContains";
 
-import type { Source, Location, Position } from "../../../types";
+import type { Source, SourceLocation, PartialPosition } from "../../../types";
 
 import type { GeneratedBindingLocation } from "./buildGeneratedBindingList";
 
@@ -21,8 +21,8 @@ export type ApplicableBinding = {
 };
 
 type GeneratedRange = {
-  start: Position,
-  end: Position
+  start: PartialPosition,
+  end: PartialPosition
 };
 
 export async function originalRangeStartsInside(
@@ -31,8 +31,8 @@ export async function originalRangeStartsInside(
     start,
     end
   }: {
-    start: Location,
-    end: Location
+    start: SourceLocation,
+    end: SourceLocation
   },
   sourceMaps: any
 ) {
@@ -53,8 +53,8 @@ export async function getApplicableBindingsForOriginalPosition(
     start,
     end
   }: {
-    start: Location,
-    end: Location
+    start: SourceLocation,
+    end: SourceLocation
   },
   bindingType: BindingType,
   locationType: BindingLocationType,
