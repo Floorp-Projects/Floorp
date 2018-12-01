@@ -539,13 +539,13 @@ struct MemoryReport {
   uintptr_t fonts;
   uintptr_t images;
   uintptr_t rasterized_blobs;
-  uintptr_t shader_cache;
   uintptr_t gpu_cache_textures;
   uintptr_t vertex_data_textures;
   uintptr_t render_target_textures;
   uintptr_t texture_cache_textures;
   uintptr_t depth_target_textures;
   uintptr_t swap_chain;
+  uintptr_t total_gpu_bytes_allocated;
 
   bool operator==(const MemoryReport& aOther) const {
     return primitive_stores == aOther.primitive_stores &&
@@ -557,13 +557,13 @@ struct MemoryReport {
            fonts == aOther.fonts &&
            images == aOther.images &&
            rasterized_blobs == aOther.rasterized_blobs &&
-           shader_cache == aOther.shader_cache &&
            gpu_cache_textures == aOther.gpu_cache_textures &&
            vertex_data_textures == aOther.vertex_data_textures &&
            render_target_textures == aOther.render_target_textures &&
            texture_cache_textures == aOther.texture_cache_textures &&
            depth_target_textures == aOther.depth_target_textures &&
-           swap_chain == aOther.swap_chain;
+           swap_chain == aOther.swap_chain &&
+           total_gpu_bytes_allocated == aOther.total_gpu_bytes_allocated;
   }
 };
 
@@ -1008,12 +1008,6 @@ struct MutByteSlice {
   }
 };
 
-// A C function that takes a pointer to a heap allocation and returns its size.
-//
-// This is borrowed from the malloc_size_of crate, upon which we want to avoid
-// a dependency from WebRender.
-using VoidPtrToSizeFn = uintptr_t(*)(const void*);
-
 struct RendererStats {
   uintptr_t total_draw_calls;
   uintptr_t alpha_target_count;
@@ -1121,6 +1115,12 @@ struct WrOpacityProperty {
            opacity == aOther.opacity;
   }
 };
+
+// A C function that takes a pointer to a heap allocation and returns its size.
+//
+// This is borrowed from the malloc_size_of crate, upon which we want to avoid
+// a dependency from WebRender.
+using VoidPtrToSizeFn = uintptr_t(*)(const void*);
 
 extern "C" {
 
@@ -1657,11 +1657,6 @@ WrProgramCache *wr_program_cache_new(const nsAString *aProfPath,
 WR_FUNC;
 
 WR_INLINE
-uintptr_t wr_program_cache_report_memory(const WrProgramCache *aCache,
-                                         VoidPtrToSizeFn aSizeOfOp)
-WR_FUNC;
-
-WR_INLINE
 void wr_renderer_accumulate_memory_report(Renderer *aRenderer,
                                           MemoryReport *aReport)
 WR_FUNC;
@@ -1859,6 +1854,10 @@ WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
 WrThreadPool *wr_thread_pool_new()
+WR_FUNC;
+
+WR_INLINE
+uintptr_t wr_total_gpu_bytes_allocated()
 WR_FUNC;
 
 WR_INLINE

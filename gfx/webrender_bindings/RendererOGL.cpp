@@ -208,6 +208,7 @@ void RendererOGL::AccumulateMemoryReport(MemoryReport* aReport) {
                             BytesPerPixel(SurfaceFormat::B8G8R8A8) *
                             (mCompositor->UseTripleBuffering() ? 3 : 2);
   aReport->swap_chain += swapChainSize;
+  aReport->total_gpu_bytes_allocated += swapChainSize;
 }
 
 static void DoNotifyWebRenderError(layers::CompositorBridgeParent* aBridge,

@@ -30,8 +30,6 @@ using namespace mozilla;
 
 static already_AddRefed<gl::GLContext> CreateGLContext();
 
-MOZ_DEFINE_MALLOC_SIZE_OF(WebRenderRendererMallocSizeOf)
-
 namespace mozilla {
 namespace wr {
 
@@ -130,18 +128,14 @@ void RenderThread::DoAccumulateMemoryReport(
     MemoryReport aReport,
     const RefPtr<MemoryReportPromise::Private>& aPromise) {
   MOZ_ASSERT(IsInRenderThread());
+  MOZ_ASSERT(aReport.total_gpu_bytes_allocated == 0);
 
   for (auto& r : mRenderers) {
     r.second->AccumulateMemoryReport(&aReport);
   }
 
-  // Note memory used by the shader cache, which is shared across all WR
-  // instances.
-  MOZ_ASSERT(aReport.shader_cache == 0);
-  if (mProgramCache) {
-    aReport.shader_cache = wr_program_cache_report_memory(
-        mProgramCache->Raw(), &WebRenderRendererMallocSizeOf);
-  }
+  // Note total gpu bytes allocated across all WR instances.
+  aReport.total_gpu_bytes_allocated += wr_total_gpu_bytes_allocated();
 
   aPromise->Resolve(aReport, __func__);
 }
