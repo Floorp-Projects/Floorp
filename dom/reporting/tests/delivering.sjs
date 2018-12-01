@@ -35,6 +35,22 @@ function handleRequest(aRequest, aResponse) {
   // Report check
   if (aRequest.method == "GET" && params.get("task") == "check") {
     aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
+
+    let reports = getState("report");
+    if (!reports) {
+      aResponse.write("");
+      return;
+    }
+
+    if (params.has("min")) {
+      let json = JSON.parse(reports);
+      if (json.length < params.get("min")) {
+        aResponse.write("");
+        return;
+      }
+    }
+      
+    aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
     aResponse.write(getState("report"));
     return;
   }
@@ -54,7 +70,15 @@ function handleRequest(aRequest, aResponse) {
       body: JSON.parse(String.fromCharCode.apply(null, bytes)),
     }
 
-    setState("report", JSON.stringify(data));
+    let reports = getState("report");
+    if (!reports) {
+      reports = [];
+    } else {
+      reports = JSON.parse(reports);
+    }
+
+    reports.push(data);
+    setState("report", JSON.stringify(reports));
 
     if (params.has("410")) {
       aResponse.setStatusLine(aRequest.httpVersion, 410, "Gone");

@@ -1928,6 +1928,13 @@ VARCACHE_PREF(
   uint32_t, 3
 )
 
+// How many reports should be stored in the report queue before being delivered.
+VARCACHE_PREF(
+  "dom.reporting.delivering.maxReports",
+   dom_reporting_delivering_maxReports,
+  uint32_t, 100
+)
+
 //---------------------------------------------------------------------------
 // End of prefs
 //---------------------------------------------------------------------------

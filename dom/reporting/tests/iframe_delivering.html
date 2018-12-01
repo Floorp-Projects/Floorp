@@ -22,7 +22,7 @@ function finish() {
 function checkReport() {
   return new Promise(resolve => {
     let id = setInterval(_ => {
-      fetch("delivering.sjs?task=check")
+      fetch("delivering.sjs?task=check&min=3")
       .then(r => r.text())
       .then(text => {
         if (text) {
@@ -43,7 +43,9 @@ fetch("delivering.sjs?task=header")
 
 // Call a deprecating operation.
 .then(_ => {
-  let testingInterface = new TestingDeprecatedInterface();
+  for (let i = 0; i < 100; ++i) {
+    new TestingDeprecatedInterface();
+  }
   ok(true, "Created a deprecated interface");
 })
 
@@ -51,7 +53,10 @@ fetch("delivering.sjs?task=header")
 .then(_ => {
   return checkReport();
 })
-.then(report => {
+.then(reports => {
+  is(reports.length, 3, "We have 3 report");
+
+  let report = reports[0];
   is(report.contentType, "application/reports+json", "Correct mime-type");
   is(report.origin, "https://example.org", "Origin correctly set");
   ok(!!report.body, "We have a report.body");
@@ -62,8 +67,8 @@ fetch("delivering.sjs?task=header")
   is(report.body.body.id, "DeprecatedTestingInterface", "Correct report.body.id");
   is(report.body.body.message, "TestingDeprecatedInterface is a testing-only interface and this is its testing deprecation message.", "We have a report.body.message");
   is(report.body.body.sourceFile, "https://example.org/tests/dom/reporting/tests/iframe_delivering.html", "report.body.sourceFile");
-  is(report.body.body.lineNumber, 46, "report.body.lineNumber");
-  is(report.body.body.columnNumber, 25, "report.body.columnNumber");
+  is(report.body.body.lineNumber, 47, "report.body.lineNumber");
+  is(report.body.body.columnNumber, 4, "report.body.columnNumber");
 })
 
 .then(finish);
