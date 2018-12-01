@@ -80,7 +80,7 @@ add_task(async function test_something() {
                       Services.io.newURI("https://five.example.com"), 0));
 
   // Test an empty db populates
-  await PinningPreloadClient.maybeSync(2000, Date.now());
+  await PinningPreloadClient.maybeSync(2000);
 
   // Open the collection, verify it's been populated:
   // Our test data has a single record; it should be in the local collection
@@ -92,7 +92,7 @@ add_task(async function test_something() {
                      Services.io.newURI("https://one.example.com"), 0));
 
   // Test the db is updated when we call again with a later lastModified value
-  await PinningPreloadClient.maybeSync(4000, Date.now());
+  await PinningPreloadClient.maybeSync(4000);
 
   // Open the collection, verify it's been updated:
   // Our data now has four new records; all should be in the local collection
@@ -114,17 +114,10 @@ add_task(async function test_something() {
   // should be attempted.
   // Clear the kinto base pref so any connections will cause a test failure
   Services.prefs.clearUserPref("services.settings.server");
-  await PinningPreloadClient.maybeSync(4000, Date.now());
+  await PinningPreloadClient.maybeSync(4000);
 
   // Try again with a lastModified value at some point in the past
-  await PinningPreloadClient.maybeSync(3000, Date.now());
-
-  // Check the pinning check time pref is modified, even if the collection
-  // hasn't changed
-  Services.prefs.setIntPref("services.blocklist.onecrl.checked", 0);
-  await PinningPreloadClient.maybeSync(3000, Date.now());
-  let newValue = Services.prefs.getIntPref("services.blocklist.pinning.checked");
-  Assert.notEqual(newValue, 0);
+  await PinningPreloadClient.maybeSync(3000);
 
   // Check that the HSTS preload added to the collection works...
   ok(sss.isSecureURI(sss.HEADER_HSTS,
@@ -139,7 +132,7 @@ add_task(async function test_something() {
   // acceptible test (the data below with last_modified of 300 is nonsense).
   Services.prefs.setCharPref("services.settings.server",
                              `http://localhost:${server.identity.primaryPort}/v1`);
-  await PinningPreloadClient.maybeSync(5000, Date.now());
+  await PinningPreloadClient.maybeSync(5000);
 
   // The STS entry for five.example.com now has includeSubdomains set;
   // ensure that the new includeSubdomains value is honored.

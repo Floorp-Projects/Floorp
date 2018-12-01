@@ -225,9 +225,13 @@
         </toolbaritem>
         <toolbarseparator class="sync-ui-item"/>
         <toolbaritem>
-          <toolbarbutton id="appMenu-tp-label"
-                         class="subviewbutton subviewbutton-iconic"
-                         oncommand="ContentBlocking.openPreferences('appMenu-trackingprotection');"/>
+          <toolbarbutton id="appMenu-tp-button"
+               class="subviewbutton subviewbutton-iconic"
+               oncommand="ContentBlocking.openPreferences('appMenu-trackingprotection');">
+            <image id="appMenu-tp-icon" class="toolbarbutton-icon"/>
+            <label id="appMenu-tp-label" class="toolbarbutton-text"/>
+            <label id="appMenu-tp-category"/>
+          </toolbarbutton>
         </toolbaritem>
         <toolbarseparator id="appMenu-tp-separator"/>
         <toolbarbutton id="appMenu-new-window-button"

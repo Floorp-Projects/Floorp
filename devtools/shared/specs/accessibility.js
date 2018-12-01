@@ -92,6 +92,12 @@ const accessibleSpec = generateActorSpec({
         relations: RetVal("array:accessibleRelation"),
       },
     },
+    snapshot: {
+      request: {},
+      response: {
+        snapshot: RetVal("json"),
+      },
+    },
   },
 });
 

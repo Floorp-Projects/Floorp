@@ -15,9 +15,11 @@ const TELEMETRY_RESULT_ENUM = {
 };
 
 window.onload = function() {
-  let defaultEngine = document.getElementById("defaultEngine");
+  let defaultEngineParagraph = document.getElementById("defaultEngineParagraph");
   let originalDefault = Services.search.originalDefaultEngine;
-  defaultEngine.textContent = originalDefault.name;
+  document.l10n.setAttributes(defaultEngineParagraph, "page-info-new-search-engine",
+                              { searchEngine: originalDefault.name });
+  let defaultEngine = document.getElementById("defaultEngine");
   defaultEngine.style.backgroundImage =
     'url("' + originalDefault.iconURI.spec + '")';
 

@@ -37,14 +37,8 @@ mochitest:
     suite: mochitest/plain-chunked
     treeherder-symbol: M()
     loopback-video: true
-    run-on-projects:
-        by-test-platform:
-            windows10-64-qr/debug: []  # bug 1424755
-            default: built-projects
-    tier:
-        by-test-platform:
-            windows10-64-qr/debug: 3  # this should be disabled but might run via try syntax anyway, so explicitly downgrade to tier-3
-            default: default
+    run-on-projects: built-projects
+    tier: default
     instance-size:
         by-test-platform:
             android-em.*: xlarge
