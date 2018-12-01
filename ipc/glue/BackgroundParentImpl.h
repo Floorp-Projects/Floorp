@@ -367,6 +367,10 @@ class BackgroundParentImpl : public PBackgroundParent {
 
   virtual bool DeallocPEndpointForReportParent(
       PEndpointForReportParent* aActor) override;
+
+  virtual mozilla::ipc::IPCResult RecvRemoveEndpoint(
+      const nsString& aGroupName, const nsCString& aEndpointURL,
+      const PrincipalInfo& aPrincipalInfo) override;
 };
 
 }  // namespace ipc

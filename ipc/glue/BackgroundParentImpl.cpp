@@ -39,6 +39,7 @@
 #include "mozilla/dom/simpledb/ActorsParent.h"
 #include "mozilla/dom/RemoteWorkerParent.h"
 #include "mozilla/dom/RemoteWorkerServiceParent.h"
+#include "mozilla/dom/ReportingHeader.h"
 #include "mozilla/dom/SharedWorkerParent.h"
 #include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/MIDIManagerParent.h"
@@ -1225,6 +1226,19 @@ bool BackgroundParentImpl::DeallocPEndpointForReportParent(
   RefPtr<dom::EndpointForReportParent> actor =
       dont_AddRef(static_cast<dom::EndpointForReportParent*>(aActor));
   return true;
+}
+
+mozilla::ipc::IPCResult BackgroundParentImpl::RecvRemoveEndpoint(
+    const nsString& aGroupName, const nsCString& aEndpointURL,
+    const PrincipalInfo& aPrincipalInfo) {
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction("BackgroundParentImpl::RecvRemoveEndpoint(",
+                             [aGroupName, aEndpointURL, aPrincipalInfo]() {
+                               dom::ReportingHeader::RemoveEndpoint(
+                                   aGroupName, aEndpointURL, aPrincipalInfo);
+                             }));
+
+  return IPC_OK();
 }
 
 }  // namespace ipc

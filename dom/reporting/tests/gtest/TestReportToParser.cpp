@@ -42,15 +42,19 @@ TEST(ReportToParser, Basic) {
           "\"https://example.com\", \"priority\": 1, \"weight\": 2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_TRUE(client->mGroups[0].mName.EqualsLiteral("default"));
-  ASSERT_FALSE(client->mGroups[0].mIncludeSubdomains);
-  ASSERT_EQ(42, client->mGroups[0].mTTL);
-  ASSERT_EQ((uint32_t)1, client->mGroups[0].mEndpoints.Length());
-  ASSERT_TRUE(NS_SUCCEEDED(client->mGroups[0].mEndpoints[0].mUrl->Equals(
-                  uri, &urlEqual)) &&
-              urlEqual);
-  ASSERT_EQ((uint32_t)1, client->mGroups[0].mEndpoints[0].mPriority);
-  ASSERT_EQ((uint32_t)2, client->mGroups[0].mEndpoints[0].mWeight);
+  ASSERT_TRUE(client->mGroups.ElementAt(0).mName.EqualsLiteral("default"));
+  ASSERT_FALSE(client->mGroups.ElementAt(0).mIncludeSubdomains);
+  ASSERT_EQ(42, client->mGroups.ElementAt(0).mTTL);
+  ASSERT_EQ((uint32_t)1, client->mGroups.ElementAt(0).mEndpoints.Length());
+  ASSERT_TRUE(
+      NS_SUCCEEDED(
+          client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mUrl->Equals(
+              uri, &urlEqual)) &&
+      urlEqual);
+  ASSERT_EQ((uint32_t)1,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mPriority);
+  ASSERT_EQ((uint32_t)2,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mWeight);
 
   // 2 clients, same group name.
   client = ReportingHeader::ParseHeader(
@@ -62,8 +66,8 @@ TEST(ReportToParser, Basic) {
           "\"https://example.com\", \"priority\": 1, \"weight\": 2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_TRUE(client->mGroups[0].mName.EqualsLiteral("default"));
-  ASSERT_EQ(43, client->mGroups[0].mTTL);
+  ASSERT_TRUE(client->mGroups.ElementAt(0).mName.EqualsLiteral("default"));
+  ASSERT_EQ(43, client->mGroups.ElementAt(0).mTTL);
 
   // 2 clients, the first one with an invalid group name.
   client = ReportingHeader::ParseHeader(
@@ -75,8 +79,8 @@ TEST(ReportToParser, Basic) {
           "\"https://example.com\", \"priority\": 1, \"weight\": 2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_TRUE(client->mGroups[0].mName.EqualsLiteral("default"));
-  ASSERT_EQ(44, client->mGroups[0].mTTL);
+  ASSERT_TRUE(client->mGroups.ElementAt(0).mName.EqualsLiteral("default"));
+  ASSERT_EQ(44, client->mGroups.ElementAt(0).mTTL);
 
   // 2 clients, the first one with an invalid group name.
   client = ReportingHeader::ParseHeader(
@@ -88,8 +92,8 @@ TEST(ReportToParser, Basic) {
           "\"https://example.com\", \"priority\": 1, \"weight\": 2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_TRUE(client->mGroups[0].mName.EqualsLiteral("default"));
-  ASSERT_EQ(44, client->mGroups[0].mTTL);
+  ASSERT_TRUE(client->mGroups.ElementAt(0).mName.EqualsLiteral("default"));
+  ASSERT_EQ(44, client->mGroups.ElementAt(0).mTTL);
 
   // 2 clients, the first one with an invalid group name.
   client = ReportingHeader::ParseHeader(
@@ -101,8 +105,8 @@ TEST(ReportToParser, Basic) {
           "\"https://example.com\", \"priority\": 1, \"weight\": 2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_TRUE(client->mGroups[0].mName.EqualsLiteral("default"));
-  ASSERT_EQ(44, client->mGroups[0].mTTL);
+  ASSERT_TRUE(client->mGroups.ElementAt(0).mName.EqualsLiteral("default"));
+  ASSERT_EQ(44, client->mGroups.ElementAt(0).mTTL);
 
   // Single client: optional params
   client = ReportingHeader::ParseHeader(
@@ -113,9 +117,9 @@ TEST(ReportToParser, Basic) {
           "\"priority\": 1, \"weight\": 2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_TRUE(client->mGroups[0].mName.EqualsLiteral("foobar"));
-  ASSERT_TRUE(client->mGroups[0].mIncludeSubdomains);
-  ASSERT_EQ(45, client->mGroups[0].mTTL);
+  ASSERT_TRUE(client->mGroups.ElementAt(0).mName.EqualsLiteral("foobar"));
+  ASSERT_TRUE(client->mGroups.ElementAt(0).mIncludeSubdomains);
+  ASSERT_EQ(45, client->mGroups.ElementAt(0).mTTL);
 
   // 2 clients, the first incomplete: missing max_age.
   client = ReportingHeader::ParseHeader(
@@ -127,7 +131,7 @@ TEST(ReportToParser, Basic) {
           "\"https://example.com\", \"priority\": 1, \"weight\": 2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_EQ(46, client->mGroups[0].mTTL);
+  ASSERT_EQ(46, client->mGroups.ElementAt(0).mTTL);
 
   // 2 clients, the first incomplete: invalid max_age.
   client = ReportingHeader::ParseHeader(
@@ -139,7 +143,7 @@ TEST(ReportToParser, Basic) {
           "\"https://example.com\", \"priority\": 1, \"weight\": 2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_EQ(46, client->mGroups[0].mTTL);
+  ASSERT_EQ(46, client->mGroups.ElementAt(0).mTTL);
 
   // 2 clients, the first incomplete: invalid max_age.
   client = ReportingHeader::ParseHeader(
@@ -151,7 +155,7 @@ TEST(ReportToParser, Basic) {
           "\"https://example.com\", \"priority\": 1, \"weight\": 2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_EQ(46, client->mGroups[0].mTTL);
+  ASSERT_EQ(46, client->mGroups.ElementAt(0).mTTL);
 
   // 2 clients, the first incomplete: invalid max_age.
   client = ReportingHeader::ParseHeader(
@@ -163,7 +167,7 @@ TEST(ReportToParser, Basic) {
           "\"https://example.com\", \"priority\": 1, \"weight\": 2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_EQ(46, client->mGroups[0].mTTL);
+  ASSERT_EQ(46, client->mGroups.ElementAt(0).mTTL);
 
   // 2 clients, the first incomplete: missing endpoints
   client = ReportingHeader::ParseHeader(
@@ -174,7 +178,7 @@ TEST(ReportToParser, Basic) {
           "\"https://example.com\", \"priority\": 1, \"weight\": 2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_EQ(48, client->mGroups[0].mTTL);
+  ASSERT_EQ(48, client->mGroups.ElementAt(0).mTTL);
 
   // 2 clients, the first incomplete: invalid endpoints
   client = ReportingHeader::ParseHeader(
@@ -185,7 +189,7 @@ TEST(ReportToParser, Basic) {
           "\"https://example.com\", \"priority\": 1, \"weight\": 2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_EQ(48, client->mGroups[0].mTTL);
+  ASSERT_EQ(48, client->mGroups.ElementAt(0).mTTL);
 
   // 2 clients, the first incomplete: invalid endpoints
   client = ReportingHeader::ParseHeader(
@@ -196,7 +200,7 @@ TEST(ReportToParser, Basic) {
           "\"https://example.com\", \"priority\": 1, \"weight\": 2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_EQ(48, client->mGroups[0].mTTL);
+  ASSERT_EQ(48, client->mGroups.ElementAt(0).mTTL);
 
   // 2 clients, the first incomplete: invalid endpoints
   client = ReportingHeader::ParseHeader(
@@ -207,7 +211,7 @@ TEST(ReportToParser, Basic) {
           "\"https://example.com\", \"priority\": 1, \"weight\": 2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_EQ(48, client->mGroups[0].mTTL);
+  ASSERT_EQ(48, client->mGroups.ElementAt(0).mTTL);
 
   // 2 clients, the first incomplete: invalid endpoints
   client = ReportingHeader::ParseHeader(
@@ -218,7 +222,7 @@ TEST(ReportToParser, Basic) {
           "\"https://example.com\", \"priority\": 1, \"weight\": 2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_EQ(48, client->mGroups[0].mTTL);
+  ASSERT_EQ(48, client->mGroups.ElementAt(0).mTTL);
 
   // 2 clients, the first incomplete: empty endpoints
   client = ReportingHeader::ParseHeader(
@@ -229,7 +233,7 @@ TEST(ReportToParser, Basic) {
           "\"https://example.com\", \"priority\": 1, \"weight\": 2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_EQ(50, client->mGroups[0].mTTL);
+  ASSERT_EQ(50, client->mGroups.ElementAt(0).mTTL);
 
   // 2 endpoints, the first incomplete: missing url
   client = ReportingHeader::ParseHeader(
@@ -240,12 +244,16 @@ TEST(ReportToParser, Basic) {
                          "\"weight\": 2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_EQ((uint32_t)1, client->mGroups[0].mEndpoints.Length());
-  ASSERT_TRUE(NS_SUCCEEDED(client->mGroups[0].mEndpoints[0].mUrl->Equals(
-                  uri, &urlEqual)) &&
-              urlEqual);
-  ASSERT_EQ((uint32_t)1, client->mGroups[0].mEndpoints[0].mPriority);
-  ASSERT_EQ((uint32_t)2, client->mGroups[0].mEndpoints[0].mWeight);
+  ASSERT_EQ((uint32_t)1, client->mGroups.ElementAt(0).mEndpoints.Length());
+  ASSERT_TRUE(
+      NS_SUCCEEDED(
+          client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mUrl->Equals(
+              uri, &urlEqual)) &&
+      urlEqual);
+  ASSERT_EQ((uint32_t)1,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mPriority);
+  ASSERT_EQ((uint32_t)2,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mWeight);
 
   // 2 endpoints, the first incomplete: invalid url
   client = ReportingHeader::ParseHeader(
@@ -256,12 +264,16 @@ TEST(ReportToParser, Basic) {
                          "\"weight\": 2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_EQ((uint32_t)1, client->mGroups[0].mEndpoints.Length());
-  ASSERT_TRUE(NS_SUCCEEDED(client->mGroups[0].mEndpoints[0].mUrl->Equals(
-                  uri, &urlEqual)) &&
-              urlEqual);
-  ASSERT_EQ((uint32_t)1, client->mGroups[0].mEndpoints[0].mPriority);
-  ASSERT_EQ((uint32_t)2, client->mGroups[0].mEndpoints[0].mWeight);
+  ASSERT_EQ((uint32_t)1, client->mGroups.ElementAt(0).mEndpoints.Length());
+  ASSERT_TRUE(
+      NS_SUCCEEDED(
+          client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mUrl->Equals(
+              uri, &urlEqual)) &&
+      urlEqual);
+  ASSERT_EQ((uint32_t)1,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mPriority);
+  ASSERT_EQ((uint32_t)2,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mWeight);
 
   // 2 endpoints, the first incomplete: invalid url
   client = ReportingHeader::ParseHeader(
@@ -273,12 +285,16 @@ TEST(ReportToParser, Basic) {
           "2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_EQ((uint32_t)1, client->mGroups[0].mEndpoints.Length());
-  ASSERT_TRUE(NS_SUCCEEDED(client->mGroups[0].mEndpoints[0].mUrl->Equals(
-                  uri, &urlEqual)) &&
-              urlEqual);
-  ASSERT_EQ((uint32_t)1, client->mGroups[0].mEndpoints[0].mPriority);
-  ASSERT_EQ((uint32_t)2, client->mGroups[0].mEndpoints[0].mWeight);
+  ASSERT_EQ((uint32_t)1, client->mGroups.ElementAt(0).mEndpoints.Length());
+  ASSERT_TRUE(
+      NS_SUCCEEDED(
+          client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mUrl->Equals(
+              uri, &urlEqual)) &&
+      urlEqual);
+  ASSERT_EQ((uint32_t)1,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mPriority);
+  ASSERT_EQ((uint32_t)2,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mWeight);
 
   // 2 endpoints, the first incomplete: invalid url
   client = ReportingHeader::ParseHeader(
@@ -289,12 +305,16 @@ TEST(ReportToParser, Basic) {
                          "\"weight\": 2}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_EQ((uint32_t)1, client->mGroups[0].mEndpoints.Length());
-  ASSERT_TRUE(NS_SUCCEEDED(client->mGroups[0].mEndpoints[0].mUrl->Equals(
-                  uri, &urlEqual)) &&
-              urlEqual);
-  ASSERT_EQ((uint32_t)1, client->mGroups[0].mEndpoints[0].mPriority);
-  ASSERT_EQ((uint32_t)2, client->mGroups[0].mEndpoints[0].mWeight);
+  ASSERT_EQ((uint32_t)1, client->mGroups.ElementAt(0).mEndpoints.Length());
+  ASSERT_TRUE(
+      NS_SUCCEEDED(
+          client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mUrl->Equals(
+              uri, &urlEqual)) &&
+      urlEqual);
+  ASSERT_EQ((uint32_t)1,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mPriority);
+  ASSERT_EQ((uint32_t)2,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mWeight);
 
   // 2 endpoints, the first incomplete: missing priority
   client = ReportingHeader::ParseHeader(
@@ -304,12 +324,16 @@ TEST(ReportToParser, Basic) {
           " {\"url\": \"https://example.com\", \"weight\": 3}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_EQ((uint32_t)1, client->mGroups[0].mEndpoints.Length());
-  ASSERT_TRUE(NS_SUCCEEDED(client->mGroups[0].mEndpoints[0].mUrl->Equals(
-                  uri, &urlEqual)) &&
-              urlEqual);
-  ASSERT_EQ((uint32_t)1, client->mGroups[0].mEndpoints[0].mPriority);
-  ASSERT_EQ((uint32_t)3, client->mGroups[0].mEndpoints[0].mWeight);
+  ASSERT_EQ((uint32_t)1, client->mGroups.ElementAt(0).mEndpoints.Length());
+  ASSERT_TRUE(
+      NS_SUCCEEDED(
+          client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mUrl->Equals(
+              uri, &urlEqual)) &&
+      urlEqual);
+  ASSERT_EQ((uint32_t)1,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mPriority);
+  ASSERT_EQ((uint32_t)3,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mWeight);
 
   // 2 endpoints, the first incomplete: invalid priority
   client = ReportingHeader::ParseHeader(
@@ -321,12 +345,16 @@ TEST(ReportToParser, Basic) {
                          "\"weight\": 3}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_EQ((uint32_t)1, client->mGroups[0].mEndpoints.Length());
-  ASSERT_TRUE(NS_SUCCEEDED(client->mGroups[0].mEndpoints[0].mUrl->Equals(
-                  uri, &urlEqual)) &&
-              urlEqual);
-  ASSERT_EQ((uint32_t)2, client->mGroups[0].mEndpoints[0].mPriority);
-  ASSERT_EQ((uint32_t)3, client->mGroups[0].mEndpoints[0].mWeight);
+  ASSERT_EQ((uint32_t)1, client->mGroups.ElementAt(0).mEndpoints.Length());
+  ASSERT_TRUE(
+      NS_SUCCEEDED(
+          client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mUrl->Equals(
+              uri, &urlEqual)) &&
+      urlEqual);
+  ASSERT_EQ((uint32_t)2,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mPriority);
+  ASSERT_EQ((uint32_t)3,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mWeight);
 
   // 2 endpoints, the first incomplete: invalid priority
   client = ReportingHeader::ParseHeader(
@@ -338,12 +366,16 @@ TEST(ReportToParser, Basic) {
                          "\"weight\": 3}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_EQ((uint32_t)1, client->mGroups[0].mEndpoints.Length());
-  ASSERT_TRUE(NS_SUCCEEDED(client->mGroups[0].mEndpoints[0].mUrl->Equals(
-                  uri, &urlEqual)) &&
-              urlEqual);
-  ASSERT_EQ((uint32_t)2, client->mGroups[0].mEndpoints[0].mPriority);
-  ASSERT_EQ((uint32_t)3, client->mGroups[0].mEndpoints[0].mWeight);
+  ASSERT_EQ((uint32_t)1, client->mGroups.ElementAt(0).mEndpoints.Length());
+  ASSERT_TRUE(
+      NS_SUCCEEDED(
+          client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mUrl->Equals(
+              uri, &urlEqual)) &&
+      urlEqual);
+  ASSERT_EQ((uint32_t)2,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mPriority);
+  ASSERT_EQ((uint32_t)3,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mWeight);
 
   // 2 endpoints, the first incomplete: missing weight
   client = ReportingHeader::ParseHeader(
@@ -353,12 +385,16 @@ TEST(ReportToParser, Basic) {
           " {\"url\": \"https://example.com\", \"priority\": 5}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_EQ((uint32_t)1, client->mGroups[0].mEndpoints.Length());
-  ASSERT_TRUE(NS_SUCCEEDED(client->mGroups[0].mEndpoints[0].mUrl->Equals(
-                  uri, &urlEqual)) &&
-              urlEqual);
-  ASSERT_EQ((uint32_t)5, client->mGroups[0].mEndpoints[0].mPriority);
-  ASSERT_EQ((uint32_t)1, client->mGroups[0].mEndpoints[0].mWeight);
+  ASSERT_EQ((uint32_t)1, client->mGroups.ElementAt(0).mEndpoints.Length());
+  ASSERT_TRUE(
+      NS_SUCCEEDED(
+          client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mUrl->Equals(
+              uri, &urlEqual)) &&
+      urlEqual);
+  ASSERT_EQ((uint32_t)5,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mPriority);
+  ASSERT_EQ((uint32_t)1,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mWeight);
 
   // 2 endpoints, the first incomplete: invalid weight
   client = ReportingHeader::ParseHeader(
@@ -370,10 +406,14 @@ TEST(ReportToParser, Basic) {
                          "\"weight\": 6}]}"));
   ASSERT_TRUE(!!client);
   ASSERT_EQ((uint32_t)1, client->mGroups.Length());
-  ASSERT_EQ((uint32_t)1, client->mGroups[0].mEndpoints.Length());
-  ASSERT_TRUE(NS_SUCCEEDED(client->mGroups[0].mEndpoints[0].mUrl->Equals(
-                  uri, &urlEqual)) &&
-              urlEqual);
-  ASSERT_EQ((uint32_t)5, client->mGroups[0].mEndpoints[0].mPriority);
-  ASSERT_EQ((uint32_t)6, client->mGroups[0].mEndpoints[0].mWeight);
+  ASSERT_EQ((uint32_t)1, client->mGroups.ElementAt(0).mEndpoints.Length());
+  ASSERT_TRUE(
+      NS_SUCCEEDED(
+          client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mUrl->Equals(
+              uri, &urlEqual)) &&
+      urlEqual);
+  ASSERT_EQ((uint32_t)5,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mPriority);
+  ASSERT_EQ((uint32_t)6,
+            client->mGroups.ElementAt(0).mEndpoints.ElementAt(0).mWeight);
 }

@@ -53,8 +53,18 @@ class ReportFetchHandler final : public PromiseNativeHandler {
       }
 
       if (response->Status() == 410) {
-        // TODO: remove
-        return;
+        mozilla::ipc::PBackgroundChild* actorChild =
+            mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
+
+        mozilla::ipc::PrincipalInfo principalInfo;
+        nsresult rv =
+            PrincipalToPrincipalInfo(mReportData.mPrincipal, &principalInfo);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return;
+        }
+
+        actorChild->SendRemoveEndpoint(mReportData.mGroupName,
+                                       mReportData.mEndpointURL, principalInfo);
       }
     }
   }
@@ -282,6 +292,7 @@ void SendReport(ReportDeliver::ReportData& aReportData,
 
   ReportData data;
   data.mType = aType;
+  data.mGroupName = aGroupName;
   data.mURL = aURL;
   data.mCreationTime = TimeStamp::Now();
   data.mReportBodyJSON = reportBodyJSON;
