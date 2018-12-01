@@ -10,6 +10,7 @@
 #include "mozilla/TimeStamp.h"
 #include "nsClassHashtable.h"
 #include "nsIObserver.h"
+#include "nsITimer.h"
 #include "nsTObserverArray.h"
 
 class nsIHttpChannel;
@@ -26,10 +27,11 @@ class PrincipalInfo;
 
 namespace dom {
 
-class ReportingHeader final : public nsIObserver {
+class ReportingHeader final : public nsIObserver, public nsITimerCallback {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSITIMERCALLBACK
 
   static void Initialize();
 
@@ -89,6 +91,12 @@ class ReportingHeader final : public nsIObserver {
 
   void RemoveOrigins();
 
+  void RemoveOriginsForTTL();
+
+  void MaybeCreateCleanupTimer();
+
+  void MaybeCancelCleanupTimer();
+
   static void LogToConsoleInvalidJSON(nsIHttpChannel* aChannel, nsIURI* aURI);
 
   static void LogToConsoleDuplicateGroup(nsIHttpChannel* aChannel, nsIURI* aURI,
@@ -117,6 +125,8 @@ class ReportingHeader final : public nsIObserver {
                                            nsACString& aEndpointURI);
 
   nsClassHashtable<nsCStringHashKey, Client> mOrigins;
+
+  nsCOMPtr<nsITimer> mCleanupTimer;
 };
 
 }  // namespace dom

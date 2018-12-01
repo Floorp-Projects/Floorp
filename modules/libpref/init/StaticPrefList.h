@@ -1914,6 +1914,13 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+// In seconds. The timeout to remove not-active report-to endpoints.
+VARCACHE_PREF(
+  "dom.reporting.cleanup.timeout",
+   dom_reporting_cleanup_timeout,
+  uint32_t, 3600
+)
+
 // Any X seconds the reports are dispatched to endpoints.
 VARCACHE_PREF(
   "dom.reporting.delivering.timeout",
