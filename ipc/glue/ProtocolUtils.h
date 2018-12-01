@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 et :
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=4 et :
  */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -555,12 +555,7 @@ class IToplevelProtocol : public IProtocol {
     return false;
   }
 
-  // This method is only used for collecting telemetry bits in various places,
-  // and we shouldn't pay the overhead of having it in protocol vtables when
-  // it's not being used.
-#ifdef EARLY_BETA_OR_EARLIER
   virtual void OnChannelReceivedMessage(const Message& aMsg) {}
-#endif
 
   bool IsMainThreadProtocol() const { return mIsMainThreadProtocol; }
   void SetIsMainThreadProtocol() { mIsMainThreadProtocol = NS_IsMainThread(); }

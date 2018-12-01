@@ -3,6 +3,10 @@
 [include]
 path:taskcluster/
 
+# Required for loading taskgraph.parameters.
+path:browser/config/version_display.txt
+path:browser/config/version.txt
+
 # Result from `grep -hr %include taskcluster/docker | grep -v " taskcluster/" | sort -u`
 path:python/mozbuild/mozbuild/action/tooltool.py
 path:testing/config/tooltool-manifests/linux64/releng.manifest
