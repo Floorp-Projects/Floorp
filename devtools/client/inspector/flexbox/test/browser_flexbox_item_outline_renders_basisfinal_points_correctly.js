@@ -12,24 +12,23 @@ const TEST_URI = URL_ROOT + "doc_flexbox_specific_cases.html";
 add_task(async function() {
   await addTab(TEST_URI);
   const { inspector, flexboxInspector } = await openLayoutView();
-  const { document: doc } = flexboxInspector;
+  const { document: doc, store } = flexboxInspector;
 
   info("Select a flex item whose basis size matches its final size.");
-  let onFlexItemOutlineRendered = waitForDOM(doc, ".flex-outline-container");
+  let onUpdate = waitUntilAction(store, "UPDATE_FLEXBOX");
   await selectNode(".item", inspector);
-  let [flexOutlineContainer] = await onFlexItemOutlineRendered;
+  await onUpdate;
 
-  const [basisFinalPoint] = [...flexOutlineContainer.querySelectorAll(
-    ".flex-outline-point.basisfinal")];
+  const [basisFinalPoint] = [...doc.querySelectorAll(".flex-outline-point.basisfinal")];
 
   ok(basisFinalPoint, "The basis/final point exists");
 
   info("Select a flex item whose basis size is different than its final size.");
-  onFlexItemOutlineRendered = waitForDOM(doc, ".flex-outline-container");
+  onUpdate = waitUntilAction(store, "UPDATE_FLEXBOX");
   await selectNode(".shrinking .item", inspector);
-  [flexOutlineContainer] = await onFlexItemOutlineRendered;
+  await onUpdate;
 
-  const [basis, final] = [...flexOutlineContainer.querySelectorAll(
+  const [basis, final] = [...doc.querySelectorAll(
     ".flex-outline-point.basis, .flex-outline-point.final")];
 
   ok(basis, "The basis point exists");

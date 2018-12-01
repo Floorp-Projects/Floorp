@@ -51,6 +51,10 @@ const INITIAL_FLEXBOX = {
   },
   // Whether or not the flexbox highlighter is highlighting the flex container.
   highlighted: false,
+  // Whether or not the node selection that led to the flexbox tool being shown came from
+  // the user selecting a node in the markup-view (whereas, say, selecting in the flex
+  // items list)
+  initiatedByMarkupViewSelection: false,
 };
 
 const reducers = {

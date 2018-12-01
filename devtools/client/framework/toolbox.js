@@ -73,6 +73,11 @@ loader.lazyGetter(this, "registerHarOverlay", () => {
   return require("devtools/client/netmonitor/src/har/toolbox-overlay").register;
 });
 
+loader.lazyGetter(this, "reloadAndRecordTab",
+  () => require("devtools/client/webreplay/menu.js").reloadAndRecordTab);
+loader.lazyGetter(this, "reloadAndStopRecordingTab",
+  () => require("devtools/client/webreplay/menu.js").reloadAndStopRecordingTab);
+
 /**
  * A "Toolbox" is the component that holds all the tools for one specific
  * target. Visually, it's a document that includes the tools tabs and all
@@ -129,6 +134,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId,
   this.toggleNoAutohide = this.toggleNoAutohide.bind(this);
   this._updateFrames = this._updateFrames.bind(this);
   this._splitConsoleOnKeypress = this._splitConsoleOnKeypress.bind(this);
+  this.closeToolbox = this.closeToolbox.bind(this);
   this.destroy = this.destroy.bind(this);
   this.highlighterUtils = getHighlighterUtils(this);
   this._highlighterReady = this._highlighterReady.bind(this);
@@ -930,7 +936,7 @@ Toolbox.prototype = {
                  });
 
     // Close toolbox key-shortcut handler
-    const onClose = event => this.destroy();
+    const onClose = event => this.closeToolbox();
     this.shortcuts.on(L10N.getStr("toolbox.toggleToolboxF12.key"), onClose);
 
     // CmdOrCtrl+W is registered only when the toolbox is running in
@@ -1150,7 +1156,7 @@ Toolbox.prototype = {
       toggleOptions: this.toggleOptions,
       toggleSplitConsole: this.toggleSplitConsole,
       toggleNoAutohide: this.toggleNoAutohide,
-      closeToolbox: this.destroy,
+      closeToolbox: this.closeToolbox,
       focusButton: this._onToolbarFocus,
       toolbox: this,
       showDebugTargetInfo: this._showDebugTargetInfo,
@@ -2179,7 +2185,6 @@ Toolbox.prototype = {
   reloadTarget: function(force) {
     if (this.target.canRewind) {
       // Recording tabs need to be reloaded in a new content process.
-      const { reloadAndRecordTab } = require("devtools/client/webreplay/menu");
       reloadAndRecordTab();
     } else {
       this.target.activeTab.reload({ force: force });
@@ -2799,6 +2804,14 @@ Toolbox.prototype = {
    */
   getNotificationBox: function() {
     return this.notificationBox;
+  },
+
+  closeToolbox: async function() {
+    const shouldStopRecording = this.target.isReplayEnabled();
+    await this.destroy();
+    if (shouldStopRecording) {
+      reloadAndStopRecordingTab();
+    }
   },
 
   /**

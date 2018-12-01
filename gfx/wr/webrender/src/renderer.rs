@@ -4771,6 +4771,7 @@ pub struct RendererOptions {
     pub chase_primitive: ChasePrimitive,
     pub support_low_priority_transactions: bool,
     pub namespace_alloc_by_client: bool,
+    pub enable_picture_caching: bool,
 }
 
 impl Default for RendererOptions {
@@ -4806,6 +4807,7 @@ impl Default for RendererOptions {
             chase_primitive: ChasePrimitive::Nothing,
             support_low_priority_transactions: false,
             namespace_alloc_by_client: false,
+            enable_picture_caching: false,
         }
     }
 }

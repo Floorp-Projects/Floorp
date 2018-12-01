@@ -699,6 +699,15 @@
                  class="learnMore text-link"
                  data-l10n-id="collection-studies-link"/>
         </hbox>
+
+        <hbox align="center">
+          <checkbox id="addonRecommendationEnabled"
+                    class="tail-with-learn-more"
+                    data-l10n-id="addon-recommendations"/>
+          <label id="addonRecommendationLearnMore"
+                 class="learnMore text-link"
+                 data-l10n-id="addon-recommendations-link"/>
+        </hbox>
       </vbox>
     </description>
 #ifndef MOZ_TELEMETRY_REPORTING

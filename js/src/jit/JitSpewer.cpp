@@ -391,7 +391,8 @@ void jit::CheckLogging() {
         "  bl-bails      Baseline bailouts\n"
         "  bl-dbg-osr    Baseline debug mode on stack recompile messages\n"
         "  bl-all        All baseline spew\n"
-        "  bl-ic-stats   Baseline IC Statistics\n"
+        "\n"
+        "See also SPEW=help for information on the Structured Spewer."
         "\n");
     exit(0);
     /*NOTREACHED*/
@@ -520,9 +521,6 @@ void jit::CheckLogging() {
   }
   if (ContainsFlag(env, "bl-dbg-osr")) {
     EnableChannel(JitSpew_BaselineDebugModeOSR);
-  }
-  if (ContainsFlag(env, "bl-ic-stats")) {
-    EnableChannel(JitSpew_BaselineIC_Statistics);
   }
   if (ContainsFlag(env, "bl-all")) {
     EnableChannel(JitSpew_BaselineAbort);
