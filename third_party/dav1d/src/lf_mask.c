@@ -287,7 +287,7 @@ static inline void mask_edges_chroma(uint16_t (*const masks)[32][2][2],
 void dav1d_create_lf_mask_intra(Av1Filter *const lflvl,
                                 uint8_t (*const level_cache)[4],
                                 const ptrdiff_t b4_stride,
-                                const Av1FrameHeader *const hdr,
+                                const Dav1dFrameHeader *const hdr,
                                 const uint8_t (*filter_level)[8][2],
                                 const int bx, const int by,
                                 const int iw, const int ih,
@@ -351,7 +351,7 @@ void dav1d_create_lf_mask_intra(Av1Filter *const lflvl,
 void dav1d_create_lf_mask_inter(Av1Filter *const lflvl,
                                 uint8_t (*const level_cache)[4],
                                 const ptrdiff_t b4_stride,
-                                const Av1FrameHeader *const hdr,
+                                const Dav1dFrameHeader *const hdr,
                                 const uint8_t (*filter_level)[8][2],
                                 const int bx, const int by,
                                 const int iw, const int ih,
@@ -435,7 +435,7 @@ void dav1d_calc_eih(Av1FilterLUT *const lim_lut, const int filter_sharpness) {
 static inline void calc_lf_value(uint8_t (*const lflvl_values)[2],
                                  const int is_chroma, const int base_lvl,
                                  const int lf_delta, const int seg_delta,
-                                 const Av1LoopfilterModeRefDeltas *const mr_delta)
+                                 const Dav1dLoopfilterModeRefDeltas *const mr_delta)
 {
     const int base = iclip(iclip(base_lvl + lf_delta, 0, 63) + seg_delta, 0, 63);
 
@@ -458,7 +458,7 @@ static inline void calc_lf_value(uint8_t (*const lflvl_values)[2],
 }
 
 void dav1d_calc_lf_values(uint8_t (*const lflvl_values)[4][8][2],
-                          const Av1FrameHeader *const hdr,
+                          const Dav1dFrameHeader *const hdr,
                           const int8_t lf_delta[4])
 {
     const int n_seg = hdr->segmentation.enabled ? 8 : 1;
@@ -468,11 +468,11 @@ void dav1d_calc_lf_values(uint8_t (*const lflvl_values)[4][8][2],
         return;
     }
 
-    const Av1LoopfilterModeRefDeltas *const mr_deltas =
+    const Dav1dLoopfilterModeRefDeltas *const mr_deltas =
         hdr->loopfilter.mode_ref_delta_enabled ?
         &hdr->loopfilter.mode_ref_deltas : NULL;
     for (int s = 0; s < n_seg; s++) {
-        const Av1SegmentationData *const segd =
+        const Dav1dSegmentationData *const segd =
             hdr->segmentation.enabled ? &hdr->segmentation.seg_data.d[s] : NULL;
 
         calc_lf_value(lflvl_values[s][0], 0, hdr->loopfilter.level_y[0],

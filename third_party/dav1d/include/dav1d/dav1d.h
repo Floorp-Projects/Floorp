@@ -41,10 +41,16 @@ extern "C" {
 typedef struct Dav1dContext Dav1dContext;
 typedef struct Dav1dRef Dav1dRef;
 
+#define DAV1D_MAX_FRAME_THREADS 256
+#define DAV1D_MAX_TILE_THREADS 64
+
 typedef struct Dav1dSettings {
     int n_frame_threads;
     int n_tile_threads;
     Dav1dPicAllocator allocator;
+    int apply_grain;
+    int operating_point; ///< select an operating point for scalable AV1 bitstreams (0 - 31)
+    int all_layers; ///< output all spatial layers of a scalable AV1 biststream
 } Dav1dSettings;
 
 /**
@@ -72,6 +78,22 @@ DAV1D_API void dav1d_default_settings(Dav1dSettings *s);
  * @return 0 on success, or < 0 (a negative errno code) on error.
  */
 DAV1D_API int dav1d_open(Dav1dContext **c_out, const Dav1dSettings *s);
+
+/**
+ * Parse a Sequence Header OBU from bitstream data.
+ *
+ * @param out Output Sequence Header.
+ * @param buf The data to be parser.
+ * @param sz  Size of the data.
+ *
+ * @return 0 on success, or < 0 (a negative errno code) on error.
+ *
+ * @note It is safe to feed this function data containing other OBUs than a
+ *       Sequence Header, as they will simply be ignored. If there is more than
+ *       one Sequence Header OBU present, only the last will be returned.
+ */
+DAV1D_API int dav1d_parse_sequence_header(Dav1dSequenceHeader *out,
+                                          const uint8_t *buf, const size_t sz);
 
 /**
  * Feed bitstream data to the decoder.
@@ -106,6 +128,39 @@ DAV1D_API int dav1d_send_data(Dav1dContext *c, Dav1dData *in);
  *
  * @note To drain buffered frames from the decoder (i.e. on end of stream),
  *       call this function until it returns -EAGAIN.
+ *
+ * @code{.c}
+ *  Dav1dData data = { 0 };
+ *  Dav1dPicture p = { 0 };
+ *  int res;
+ *
+ *  read_data(&data);
+ *  do {
+ *      res = dav1d_send_data(c, &data);
+ *      // Keep going even if the function can't consume the current data
+ *         packet. It eventually will after one or more frames have been
+ *         returned in this loop.
+ *      if (res < 0 && res != -EAGAIN)
+ *          free_and_abort();
+ *      res = dav1d_get_picture(c, &p);
+ *      if (res < 0) {
+ *          if (res != -EAGAIN)
+ *              free_and_abort();
+ *      } else
+ *          output_and_unref_picture(&p);
+ *  // Stay in the loop as long as there's data to consume.
+ *  } while (data.sz || read_data(&data) == SUCCESS);
+ *
+ *  // Handle EOS by draining all buffered frames.
+ *  do {
+ *      res = dav1d_get_picture(c, &p);
+ *      if (res < 0) {
+ *          if (res != -EAGAIN)
+ *              free_and_abort();
+ *      } else
+ *          output_and_unref_picture(&p);
+ *  } while (res == 0);
+ * @endcode
  */
 DAV1D_API int dav1d_get_picture(Dav1dContext *c, Dav1dPicture *out);
 
@@ -117,9 +172,14 @@ DAV1D_API int dav1d_get_picture(Dav1dContext *c, Dav1dPicture *out);
 DAV1D_API void dav1d_close(Dav1dContext **c_out);
 
 /**
- * Flush all delayed frames in decoder, to be used when seeking.
+ * Flush all delayed frames in decoder and clear internal decoder state,
+ * to be used when seeking.
  *
  * @param c Input decoder instance.
+ *
+ * @note Decoding will start only after a valid sequence header OBU is
+ *       delivered to dav1d_send_data().
+ *
  */
 DAV1D_API void dav1d_flush(Dav1dContext *c);
 

@@ -40,7 +40,7 @@
 #include "src/itx_1d.c"
 
 typedef void (*itx_1d_fn)(const coef *in, ptrdiff_t in_s,
-                          coef *out, ptrdiff_t out_s);
+                          coef *out, ptrdiff_t out_s, const int range);
 
 static void NOINLINE
 inv_txfm_add_c(pixel *dst, const ptrdiff_t stride,
@@ -54,6 +54,9 @@ inv_txfm_add_c(pixel *dst, const ptrdiff_t stride,
     // Maximum value for h and w is 64
     coef tmp[4096 /* w * h */], out[64 /* h */], in_mem[64 /* w */];
     const int is_rect2 = w * 2 == h || h * 2 == w;
+    const int row_clip_max = (1 << (BITDEPTH + 8 - 1)) - 1;
+    const int col_clip_max = (1 << (imax(BITDEPTH + 6, 16) - 1)) -1;
+    const int col_clip_min = -col_clip_max - 1;
 
     if (w != sw) memset(&in_mem[sw], 0, (w - sw) * sizeof(*in_mem));
     const int rnd1 = (1 << shift1) >> 1;
@@ -64,18 +67,19 @@ inv_txfm_add_c(pixel *dst, const ptrdiff_t stride,
                 if (is_rect2)
                     in_mem[j] = (in_mem[j] * 2896 + 2048) >> 12;
             }
-            first_1d_fn(in_mem, 1, &tmp[i * w], 1);
+            first_1d_fn(in_mem, 1, &tmp[i * w], 1, row_clip_max);
         } else {
-            first_1d_fn(&coeff[i], sh, &tmp[i * w], 1);
+            first_1d_fn(&coeff[i], sh, &tmp[i * w], 1, row_clip_max);
         }
         for (j = 0; j < w; j++)
-            tmp[i * w + j] = (tmp[i * w + j] + (rnd1)) >> shift1;
+            tmp[i * w + j] = iclip((tmp[i * w + j] + (rnd1)) >> shift1,
+                                   col_clip_min, col_clip_max);
     }
 
     if (h != sh) memset(&tmp[sh * w], 0, w * (h - sh) * sizeof(*tmp));
     const int rnd2 = (1 << shift2) >> 1;
     for (i = 0; i < w; i++) {
-        second_1d_fn(&tmp[i], w, out, 1);
+        second_1d_fn(&tmp[i], w, out, 1, col_clip_max);
         for (j = 0; j < h; j++)
             dst[i + j * PXSTRIDE(stride)] =
                 iclip_pixel(dst[i + j * PXSTRIDE(stride)] +
@@ -145,15 +149,18 @@ inv_txfm_fn64(64, 64, 2, 4)
 static void inv_txfm_add_wht_wht_4x4_c(pixel *dst, const ptrdiff_t stride,
                                        coef *const coeff, const int eob)
 {
-    int i, j;
+    const int col_clip_max = (1 << (imax(BITDEPTH + 6, 16) - 1)) -1;
+    const int col_clip_min = -col_clip_max - 1;
     coef tmp[4 * 4], out[4];
 
-    for (i = 0; i < 4; i++)
+    for (int i = 0; i < 4; i++)
         inv_wht4_1d(&coeff[i], 4, &tmp[i * 4], 1, 0);
+    for (int k = 0; k < 4 * 4; k++)
+        tmp[k] = iclip(tmp[k], col_clip_min, col_clip_max);
 
-    for (i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++) {
         inv_wht4_1d(&tmp[i], 4, out, 1, 1);
-        for (j = 0; j < 4; j++)
+        for (int j = 0; j < 4; j++)
             dst[i + j * PXSTRIDE(stride)] =
                 iclip_pixel(dst[i + j * PXSTRIDE(stride)] + out[j]);
     }
