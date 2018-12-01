@@ -1568,6 +1568,16 @@ function sortElements(aElements, aSortBy, aAscending) {
     return (UISTATE_ORDER.indexOf(a) - UISTATE_ORDER.indexOf(b));
   }
 
+  // Prioritize themes that have screenshots.
+  function hasPreview(aHasStr, bHasStr) {
+    let aHas = aHasStr == "true";
+    let bHas = bHasStr == "true";
+    if (aHas == bHas)
+      return 0;
+    dump("difference...\n");
+    return aHas ? -1 : 1;
+  }
+
   function getValue(aObj, aKey) {
     if (!aObj)
       return null;
@@ -1614,8 +1624,12 @@ function sortElements(aElements, aSortBy, aAscending) {
       aSortFuncs[i] = dateCompare;
     else if (NUMERIC_FIELDS.includes(sortBy))
       aSortFuncs[i] = numberCompare;
+    else if (sortBy == "hasPreview")
+      aSortFuncs[i] = hasPreview;
   }
 
+
+  dump(aSortFuncs.join(",") + "\n");
 
   aElements.sort(function(a, b) {
     if (!aAscending)
@@ -1635,8 +1649,10 @@ function sortElements(aElements, aSortBy, aAscending) {
       if (aValue != bValue) {
         var result = aSortFuncs[i](aValue, bValue);
 
-        if (result != 0)
+        if (result != 0) {
+          dump(`diff ${sortBy}\n`);
           return result;
+        }
       }
     }
 
@@ -2425,7 +2441,13 @@ var gListView = {
 
       this.showEmptyNotice(elements.length == 0);
       if (elements.length > 0) {
-        sortElements(elements, ["uiState", "name"], true);
+        let sortBy;
+        if (aType == "theme") {
+          sortBy = ["uiState", "hasPreview", "name"];
+        } else {
+          sortBy = ["uiState", "name"];
+        }
+        sortElements(elements, sortBy, true);
         for (let element of elements) {
           this._listBox.appendChild(element);
         }
