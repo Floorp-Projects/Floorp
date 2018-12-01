@@ -44,5 +44,6 @@ with Files('**'):
 FINAL_LIBRARY = 'xul'
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
 
 TEST_DIRS += [ 'tests/gtest' ]
