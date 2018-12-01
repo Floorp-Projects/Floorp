@@ -149,4 +149,8 @@ cargo_extra_outputs = {
     'baldrdash': [
         'bindings.rs',
     ],
+    'typenum': [
+        'op.rs',
+        'consts.rs',
+    ],
 }
