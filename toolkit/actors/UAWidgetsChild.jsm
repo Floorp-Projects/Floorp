@@ -79,16 +79,7 @@ class UAWidgetsChild extends ActorChild {
       Services.scriptloader.loadSubScript(uri, sandbox, "UTF-8");
     }
 
-    let widget;
-    try {
-      widget = new sandbox[widgetName](shadowRoot);
-    } catch (ex) {
-      // The widget may have thrown during construction.
-      // Report the failure and recover by clearing the Shadow DOM.
-      shadowRoot.innerHTML = "";
-      Cu.reportError(ex);
-      return;
-    }
+    let widget = new sandbox[widgetName](shadowRoot);
     this.widgets.set(aElement, widget);
   }
 
@@ -98,14 +89,7 @@ class UAWidgetsChild extends ActorChild {
       return;
     }
     if (typeof widget.wrappedJSObject.destructor == "function") {
-      try {
-        widget.wrappedJSObject.destructor();
-      } catch (ex) {
-        // The widget may have thrown during destruction.
-        // Report the failure and recover by clearing the Shadow DOM.
-        aElement.openOrClosedShadowRoot.innerHTML = "";
-        Cu.reportError(ex);
-      }
+      widget.wrappedJSObject.destructor();
     }
     this.widgets.delete(aElement);
   }
