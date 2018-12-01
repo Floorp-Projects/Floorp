@@ -35,6 +35,9 @@ class FeaturePolicyViolationReportBody final : public ReportBody {
 
   void GetDisposition(nsAString& aDisposition) const;
 
+ protected:
+  void ToJSONInternal(JSONWriter& aJSONWriter) const override;
+
  private:
   ~FeaturePolicyViolationReportBody();
 

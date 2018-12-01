@@ -51,5 +51,32 @@ void FeaturePolicyViolationReportBody::GetDisposition(
   aDisposition = mDisposition;
 }
 
+void FeaturePolicyViolationReportBody::ToJSONInternal(
+    JSONWriter& aWriter) const {
+  aWriter.StringProperty("featureId", NS_ConvertUTF16toUTF8(mFeatureId).get());
+
+  if (mSourceFile.IsEmpty()) {
+    aWriter.NullProperty("sourceFile");
+  } else {
+    aWriter.StringProperty("sourceFile",
+                           NS_ConvertUTF16toUTF8(mSourceFile).get());
+  }
+
+  if (mLineNumber.IsNull()) {
+    aWriter.NullProperty("lineNumber");
+  } else {
+    aWriter.IntProperty("lineNumber", mLineNumber.Value());
+  }
+
+  if (mColumnNumber.IsNull()) {
+    aWriter.NullProperty("columnNumber");
+  } else {
+    aWriter.IntProperty("columnNumber", mColumnNumber.Value());
+  }
+
+  aWriter.StringProperty("disposition",
+                         NS_ConvertUTF16toUTF8(mDisposition).get());
+}
+
 }  // namespace dom
 }  // namespace mozilla
