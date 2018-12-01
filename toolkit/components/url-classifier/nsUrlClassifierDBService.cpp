@@ -1757,26 +1757,32 @@ nsUrlClassifierDBService::AsyncClassifyLocalWithTables(
     rv = uri->GetHost(host);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsAutoCString tables;
     for (uint32_t i = 0; i < aExtraEntriesByPrefs.Length(); ++i) {
       nsTArray<nsCString> entries;
       Classifier::SplitTables(aExtraEntriesByPrefs[i], entries);
 
       if (entries.Contains(host)) {
-        nsCString table = aExtraTablesByPrefs[i];
-        nsCOMPtr<nsIURIClassifierCallback> callback(aCallback);
-        nsCOMPtr<nsIRunnable> cbRunnable = NS_NewRunnableFunction(
-            "nsUrlClassifierDBService::AsyncClassifyLocalWithTables",
-            [callback, table]() -> void {
-              callback->OnClassifyComplete(
-                  NS_OK,  // Not used.
-                  table,
-                  EmptyCString(),   // provider. (Not used)
-                  EmptyCString());  // prefix. (Not used)
-            });
-
-        NS_DispatchToMainThread(cbRunnable);
-        return NS_OK;
+        if (!tables.IsEmpty()) {
+          tables.AppendLiteral(",");
+        }
+        tables.Append(aExtraTablesByPrefs[i]);
       }
+    }
+
+    if (!tables.IsEmpty()) {
+      nsCOMPtr<nsIURIClassifierCallback> callback(aCallback);
+      nsCOMPtr<nsIRunnable> cbRunnable = NS_NewRunnableFunction(
+        "nsUrlClassifierDBService::AsyncClassifyLocalWithTables",
+        [callback, tables]() -> void {
+          callback->OnClassifyComplete(NS_OK, // Not used.
+                                       tables,
+                                       EmptyCString(),  // provider. (Not used)
+                                       EmptyCString()); // prefix. (Not used)
+        });
+
+      NS_DispatchToMainThread(cbRunnable);
+      return NS_OK;
     }
   }
 
