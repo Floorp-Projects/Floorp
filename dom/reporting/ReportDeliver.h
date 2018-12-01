@@ -24,6 +24,7 @@ class ReportDeliver final : public nsIObserver, public nsITimerCallback {
 
   struct ReportData {
     nsString mType;
+    nsString mGroupName;
     nsString mURL;
     nsCString mEndpointURL;
     nsString mUserAgent;

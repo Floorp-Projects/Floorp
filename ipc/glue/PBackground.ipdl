@@ -217,6 +217,9 @@ parent:
 
   async PEndpointForReport(nsString aGroupName, PrincipalInfo aPrincipalInfo);
 
+  async RemoveEndpoint(nsString aGroupName, nsCString aEndpointURL,
+                       PrincipalInfo aPrincipalInfo);
+
 child:
   async PCache();
   async PCacheStreamControl();

@@ -236,7 +236,10 @@ void ReportingHeader::ReportingFromChannel(nsIHttpChannel* aChannel) {
     }
 
     bool found = false;
-    for (const Group& group : client->mGroups) {
+    nsTObserverArray<Group>::ForwardIterator iter(client->mGroups);
+    while (iter.HasMore()) {
+      const Group& group = iter.GetNext();
+
       if (group.mName == groupName) {
         found = true;
         break;
@@ -438,7 +441,10 @@ bool ReportingHeader::IsSecureURI(nsIURI* aURI) const {
     return;
   }
 
-  for (const Group& group : client->mGroups) {
+  nsTObserverArray<Group>::ForwardIterator iter(client->mGroups);
+  while (iter.HasMore()) {
+    const Group& group = iter.GetNext();
+
     if (group.mName == aGroupName) {
       GetEndpointForReportInternal(group, aEndpointURI);
       break;
@@ -461,7 +467,10 @@ bool ReportingHeader::IsSecureURI(nsIURI* aURI) const {
   int64_t minPriority = -1;
   uint32_t totalWeight = 0;
 
-  for (const Endpoint& endpoint : aGroup.mEndpoints) {
+  nsTObserverArray<Endpoint>::ForwardIterator iter(aGroup.mEndpoints);
+  while (iter.HasMore()) {
+    const Endpoint& endpoint = iter.GetNext();
+
     if (minPriority == -1 || minPriority > endpoint.mPriority) {
       minPriority = endpoint.mPriority;
       totalWeight = endpoint.mWeight;
@@ -490,11 +499,85 @@ bool ReportingHeader::IsSecureURI(nsIURI* aURI) const {
 
   totalWeight = randomNumber % totalWeight;
 
-  for (const Endpoint& endpoint : aGroup.mEndpoints) {
+  nsTObserverArray<Endpoint>::ForwardIterator iter2(aGroup.mEndpoints);
+  while (iter2.HasMore()) {
+    const Endpoint& endpoint = iter2.GetNext();
+
     if (minPriority == endpoint.mPriority && totalWeight < endpoint.mWeight) {
       Unused << NS_WARN_IF(NS_FAILED(endpoint.mUrl->GetSpec(aEndpointURI)));
       break;
     }
+  }
+}
+
+/* static */ void ReportingHeader::RemoveEndpoint(
+    const nsAString& aGroupName, const nsACString& aEndpointURL,
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
+  if (!gReporting) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aEndpointURL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(aPrincipalInfo);
+  if (NS_WARN_IF(!principal)) {
+    return;
+  }
+
+  nsAutoCString origin;
+  rv = principal->GetOrigin(origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  Client* client = gReporting->mOrigins.Get(origin);
+  if (!client) {
+    return;
+  }
+
+  // Scope for the group iterator.
+  {
+    nsTObserverArray<Group>::BackwardIterator iter(client->mGroups);
+    while (iter.HasMore()) {
+      const Group& group = iter.GetNext();
+      if (group.mName != aGroupName) {
+        continue;
+      }
+
+      // Scope for the endpoint iterator.
+      {
+        nsTObserverArray<Endpoint>::BackwardIterator endpointIter(
+            group.mEndpoints);
+        while (endpointIter.HasMore()) {
+          const Endpoint& endpoint = endpointIter.GetNext();
+
+          bool equal = false;
+          rv = endpoint.mUrl->Equals(uri, &equal);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            continue;
+          }
+
+          if (equal) {
+            endpointIter.Remove();
+            break;
+          }
+        }
+      }
+
+      if (group.mEndpoints.IsEmpty()) {
+        iter.Remove();
+      }
+
+      break;
+    }
+  }
+
+  if (client->mGroups.IsEmpty()) {
+    gReporting->mOrigins.Remove(origin);
   }
 }
 
