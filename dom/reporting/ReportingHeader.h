@@ -17,6 +17,11 @@ class nsIPrincipal;
 class nsIURI;
 
 namespace mozilla {
+
+namespace ipc {
+class PrincipalInfo;
+}
+
 namespace dom {
 
 class ReportingHeader final : public nsIObserver {
@@ -48,6 +53,11 @@ class ReportingHeader final : public nsIObserver {
 
   static UniquePtr<Client> ParseHeader(nsIHttpChannel* aChannel, nsIURI* aURI,
                                        const nsACString& aHeaderValue);
+
+  static void GetEndpointForReport(
+      const nsAString& aGroupName,
+      const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+      nsACString& aEndpointURI);
 
  private:
   ReportingHeader();
@@ -85,6 +95,9 @@ class ReportingHeader final : public nsIObserver {
   static void LogToConsoleInternal(nsIHttpChannel* aChannel, nsIURI* aURI,
                                    const char* aMsg,
                                    const nsTArray<nsString>& aParams);
+
+  static void GetEndpointForReportInternal(const ReportingHeader::Group& aGrup,
+                                           nsACString& aEndpointURI);
 
   nsClassHashtable<nsCStringHashKey, Client> mOrigins;
 };

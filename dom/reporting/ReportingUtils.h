@@ -19,7 +19,8 @@ class ReportBody;
 class ReportingUtils final {
  public:
   static void Report(nsPIDOMWindowInner* aWindow, nsAtom* aType,
-                     const nsAString& aURL, ReportBody* aBody);
+                     const nsAString& aGroupName, const nsAString& aURL,
+                     ReportBody* aBody);
 };
 
 }  // namespace dom

@@ -18,6 +18,7 @@ include protocol PCache;
 include protocol PCacheStorage;
 include protocol PCacheStreamControl;
 include protocol PClientManager;
+include protocol PEndpointForReport;
 include protocol PFileDescriptorSet;
 include protocol PFileSystemRequest;
 include protocol PGamepadEventChannel;
@@ -89,6 +90,7 @@ sync protocol PBackground
   manages PCacheStorage;
   manages PCacheStreamControl;
   manages PClientManager;
+  manages PEndpointForReport;
   manages PFileDescriptorSet;
   manages PFileSystemRequest;
   manages PGamepadEventChannel;
@@ -212,6 +214,8 @@ parent:
   async PServiceWorkerContainer();
 
   async PServiceWorkerRegistration(IPCServiceWorkerRegistrationDescriptor aDescriptor);
+
+  async PEndpointForReport(nsString aGroupName, PrincipalInfo aPrincipalInfo);
 
 child:
   async PCache();

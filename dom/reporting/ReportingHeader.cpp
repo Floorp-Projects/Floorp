@@ -19,6 +19,7 @@
 #include "nsIHttpProtocolHandler.h"
 #include "nsIObserverService.h"
 #include "nsIPrincipal.h"
+#include "nsIRandomGenerator.h"
 #include "nsIScriptError.h"
 #include "nsNetUtil.h"
 #include "nsXULAppAPI.h"
@@ -409,6 +410,92 @@ bool ReportingHeader::IsSecureURI(nsIURI* aURI) const {
       localizedMsg, nsIScriptError::infoFlag, NS_LITERAL_CSTRING("Reporting"),
       windowID, aURI);
   Unused << NS_WARN_IF(NS_FAILED(rv));
+}
+
+/* static */ void ReportingHeader::GetEndpointForReport(
+    const nsAString& aGroupName,
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+    nsACString& aEndpointURI) {
+  MOZ_ASSERT(aEndpointURI.IsEmpty());
+
+  if (!gReporting) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(aPrincipalInfo);
+  if (NS_WARN_IF(!principal)) {
+    return;
+  }
+
+  nsAutoCString origin;
+  nsresult rv = principal->GetOrigin(origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  Client* client = gReporting->mOrigins.Get(origin);
+  if (!client) {
+    return;
+  }
+
+  for (const Group& group : client->mGroups) {
+    if (group.mName == aGroupName) {
+      GetEndpointForReportInternal(group, aEndpointURI);
+      break;
+    }
+  }
+}
+
+/* static */ void ReportingHeader::GetEndpointForReportInternal(
+    const ReportingHeader::Group& aGroup, nsACString& aEndpointURI) {
+  TimeDuration diff = TimeStamp::Now() - aGroup.mCreationTime;
+  if (diff.ToSeconds() > aGroup.mTTL) {
+    // Expired.
+    return;
+  }
+
+  if (aGroup.mEndpoints.IsEmpty()) {
+    return;
+  }
+
+  int64_t minPriority = -1;
+  uint32_t totalWeight = 0;
+
+  for (const Endpoint& endpoint : aGroup.mEndpoints) {
+    if (minPriority == -1 || minPriority > endpoint.mPriority) {
+      minPriority = endpoint.mPriority;
+      totalWeight = endpoint.mWeight;
+    } else if (minPriority == endpoint.mPriority) {
+      totalWeight += endpoint.mWeight;
+    }
+  }
+
+  nsCOMPtr<nsIRandomGenerator> randomGenerator =
+      do_GetService("@mozilla.org/security/random-generator;1");
+  if (NS_WARN_IF(!randomGenerator)) {
+    return;
+  }
+
+  uint32_t randomNumber = 0;
+
+  uint8_t* buffer;
+  nsresult rv =
+      randomGenerator->GenerateRandomBytes(sizeof(randomNumber), &buffer);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  memcpy(&randomNumber, buffer, sizeof(randomNumber));
+  free(buffer);
+
+  totalWeight = randomNumber % totalWeight;
+
+  for (const Endpoint& endpoint : aGroup.mEndpoints) {
+    if (minPriority == endpoint.mPriority && totalWeight < endpoint.mWeight) {
+      Unused << NS_WARN_IF(NS_FAILED(endpoint.mUrl->GetSpec(aEndpointURI)));
+      break;
+    }
+  }
 }
 
 NS_INTERFACE_MAP_BEGIN(ReportingHeader)
