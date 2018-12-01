@@ -141,7 +141,7 @@ static void check_lpf_sb(loopfilter_sb_fn fn, const char *const name,
 
             for (int j = 0; j < n_blks; j++) {
                 const int idx = rand() % (i + 2);
-                if (idx) vmask[idx - 1] |= 1 << j;
+                if (idx) vmask[idx - 1] |= 1U << j;
                 if (dir) {
                     l[j][lf_idx] = rand() & 63;
                     l[j + 32][lf_idx] = rand() & 63;

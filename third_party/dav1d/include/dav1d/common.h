@@ -25,8 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __COMMON_H__
-#define __COMMON_H__
+#ifndef __DAV1D_COMMON_H__
+#define __DAV1D_COMMON_H__
+
+#include <stddef.h>
+#include <stdint.h>
 
 #ifndef DAV1D_API
     #if defined _WIN32
@@ -40,4 +43,19 @@
     #endif
 #endif
 
-#endif // __COMMON_H__
+/**
+ * Input packet metadata which are copied from the input data used to
+ * decode each image into the matching structure of the output image
+ * returned back to the user. Since these are metadata fields, they
+ * can be used for other purposes than the documented ones, they will
+ * still be passed from input data to output picture without being
+ * used internally.
+ */
+typedef struct Dav1dDataProps {
+    int64_t timestamp; ///< container timestamp of input data, INT64_MIN if unknown (default)
+    int64_t duration; ///< container duration of input data, 0 if unknown (default)
+    int64_t offset; ///< stream offset of input data, -1 if unknown (default)
+    size_t size; ///< packet size, default Dav1dData.sz
+} Dav1dDataProps;
+
+#endif // __DAV1D_COMMON_H__

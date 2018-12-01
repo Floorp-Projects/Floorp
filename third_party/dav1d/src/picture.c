@@ -29,6 +29,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -74,29 +75,24 @@ int default_picture_allocator(Dav1dPicture *const p, void *cookie) {
     return 0;
 }
 
-void default_picture_release(uint8_t *const data, void *const allocator_data,
-                             void *cookie)
-{
+void default_picture_release(Dav1dPicture *const p, void *cookie) {
     assert(cookie == NULL);
 #ifndef NDEBUG /* safety check */
-    assert(allocator_data == data);
+    assert(p->allocator_data == p->data[0]);
 #endif
-    dav1d_free_aligned(data);
+    dav1d_free_aligned(p->data[0]);
 }
 
 struct pic_ctx_context {
     Dav1dPicAllocator allocator;
-    void *allocator_data;
-    uint8_t *data;
+    Dav1dPicture pic;
     void *extra_ptr; /* MUST BE AT THE END */
 };
 
-static void free_buffer(const uint8_t *data, void *user_data)
-{
+static void free_buffer(const uint8_t *const data, void *const user_data) {
     struct pic_ctx_context *pic_ctx = user_data;
 
-    pic_ctx->allocator.release_picture_callback(pic_ctx->data,
-                                                pic_ctx->allocator_data,
+    pic_ctx->allocator.release_picture_callback(&pic_ctx->pic,
                                                 pic_ctx->allocator.cookie);
     free(pic_ctx);
 }
@@ -121,10 +117,9 @@ static int picture_alloc_with_edges(Dav1dPicture *const p,
 
     p->p.w = w;
     p->p.h = h;
-    p->p.pri = DAV1D_COLOR_PRI_UNKNOWN;
-    p->p.trc = DAV1D_TRC_UNKNOWN;
-    p->p.mtrx = DAV1D_MC_UNKNOWN;
-    p->p.chr = DAV1D_CHR_UNKNOWN;
+    p->m.timestamp = INT64_MIN;
+    p->m.duration = 0;
+    p->m.offset = -1;
     p->p.layout = layout;
     p->p.bpc = bpc;
     int res = p_allocator->alloc_picture_callback(p, p_allocator->cookie);
@@ -134,12 +129,10 @@ static int picture_alloc_with_edges(Dav1dPicture *const p,
     }
 
     pic_ctx->allocator = *p_allocator;
-    pic_ctx->allocator_data = p->allocator_data;
-    pic_ctx->data = p->data[0];
+    pic_ctx->pic = *p;
 
     if (!(p->ref = dav1d_ref_wrap(p->data[0], free_buffer, pic_ctx))) {
-        p_allocator->release_picture_callback(p->data[0], p->allocator_data,
-                                              p_allocator->cookie);
+        p_allocator->release_picture_callback(p, p_allocator->cookie);
         fprintf(stderr, "Failed to wrap picture: %s\n", strerror(errno));
         return -ENOMEM;
     }
@@ -165,11 +158,33 @@ int dav1d_thread_picture_alloc(Dav1dThreadPicture *const p,
     if (res) return res;
 
     p->visible = visible;
-    p->flushed = 0;
     if (t) {
         atomic_init(&p->progress[0], 0);
         atomic_init(&p->progress[1], 0);
     }
+    return res;
+}
+
+int dav1d_picture_alloc_copy(Dav1dPicture *const dst, const int w,
+                             const Dav1dPicture *const src)
+{
+    struct pic_ctx_context *const pic_ctx = src->ref->user_data;
+    const int res = picture_alloc_with_edges(dst, w, src->p.h, src->p.layout,
+                                             src->p.bpc, &pic_ctx->allocator,
+                                             0, NULL);
+
+    if (!res) {
+        dst->p = src->p;
+        dst->m = src->m;
+        dst->p.w = w;
+        dst->frame_hdr = src->frame_hdr;
+        dst->frame_hdr_ref = src->frame_hdr_ref;
+        if (dst->frame_hdr_ref) dav1d_ref_inc(dst->frame_hdr_ref);
+        dst->seq_hdr = src->seq_hdr;
+        dst->seq_hdr_ref = src->seq_hdr_ref;
+        if (dst->seq_hdr_ref) dav1d_ref_inc(dst->seq_hdr_ref);
+    }
+
     return res;
 }
 
@@ -181,6 +196,8 @@ void dav1d_picture_ref(Dav1dPicture *const dst, const Dav1dPicture *const src) {
     if (src->ref) {
         validate_input(src->data[0] != NULL);
         dav1d_ref_inc(src->ref);
+        if (src->frame_hdr_ref) dav1d_ref_inc(src->frame_hdr_ref);
+        if (src->seq_hdr_ref) dav1d_ref_inc(src->seq_hdr_ref);
     }
     *dst = *src;
 }
@@ -204,7 +221,6 @@ void dav1d_thread_picture_ref(Dav1dThreadPicture *dst,
     dst->t = src->t;
     dst->visible = src->visible;
     dst->progress = src->progress;
-    dst->flushed = src->flushed;
 }
 
 void dav1d_picture_unref(Dav1dPicture *const p) {
@@ -213,6 +229,8 @@ void dav1d_picture_unref(Dav1dPicture *const p) {
     if (p->ref) {
         validate_input(p->data[0] != NULL);
         dav1d_ref_dec(&p->ref);
+        dav1d_ref_dec(&p->seq_hdr_ref);
+        dav1d_ref_dec(&p->frame_hdr_ref);
     }
     memset(p, 0, sizeof(*p));
 }
@@ -260,8 +278,10 @@ void dav1d_thread_picture_signal(const Dav1dThreadPicture *const p,
         return;
 
     pthread_mutex_lock(&p->t->lock);
-    if (plane_type != PLANE_TYPE_Y) atomic_store(&p->progress[0], y);
-    if (plane_type != PLANE_TYPE_BLOCK) atomic_store(&p->progress[1], y);
+    if (plane_type != PLANE_TYPE_Y)
+        atomic_store(&p->progress[0], y);
+    if (plane_type != PLANE_TYPE_BLOCK)
+        atomic_store(&p->progress[1], y);
     pthread_cond_broadcast(&p->t->cond);
     pthread_mutex_unlock(&p->t->lock);
 }

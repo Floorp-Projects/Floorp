@@ -78,7 +78,7 @@ static inline int resolve_divisor_32(const unsigned d, int *const shift) {
     return div_lut[f];
 }
 
-int dav1d_get_shear_params(WarpedMotionParams *const wm) {
+int dav1d_get_shear_params(Dav1dWarpedMotionParams *const wm) {
     const int32_t *const mat = wm->matrix;
 
     if (mat[2] <= 0) return 1;
@@ -129,7 +129,7 @@ static int get_mult_shift_diag(const int64_t px,
 
 int dav1d_find_affine_int(const int (*pts)[2][2], const int np,
                           const int bw4, const int bh4,
-                          const mv mv, WarpedMotionParams *const wm,
+                          const mv mv, Dav1dWarpedMotionParams *const wm,
                           const int bx4, const int by4)
 {
     int32_t *const mat = wm->matrix;

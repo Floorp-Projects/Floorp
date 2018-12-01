@@ -25,12 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_OBU_H__
-#define __DAV1D_SRC_OBU_H__
+#ifndef __DAV1D_SRC_FILM_GRAIN_H__
+#define __DAV1D_SRC_FILM_GRAIN_H__
 
-#include "dav1d/data.h"
-#include "src/internal.h"
+#include "dav1d/dav1d.h"
 
-int dav1d_parse_obus(Dav1dContext *c, Dav1dData *in, int global);
+void dav1d_apply_grain_8bpc(Dav1dPicture *const out,
+                            const Dav1dPicture *const in);
 
-#endif /* __DAV1D_SRC_OBU_H__ */
+void dav1d_apply_grain_10bpc(Dav1dPicture *const out,
+                             const Dav1dPicture *const in);
+
+#endif /* __DAV1D_SRC_FILM_GRAIN_H__ */
