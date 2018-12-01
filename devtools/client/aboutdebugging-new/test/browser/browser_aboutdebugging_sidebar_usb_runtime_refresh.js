@@ -10,34 +10,32 @@ const RUNTIME_APP_NAME = "TestApp";
 const OTHER_RUNTIME_ID = "other-runtime-id";
 const OTHER_RUNTIME_APP_NAME = "OtherApp";
 
-/* import-globals-from mocks/head-usb-mocks.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "mocks/head-usb-mocks.js", this);
+/* import-globals-from head-mocks.js */
+Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "head-mocks.js", this);
 
 // Test that USB runtimes are ot disconnected on refresh.
 add_task(async function() {
-  const usbMocks = new UsbMocks();
-  usbMocks.enableMocks();
-  registerCleanupFunction(() => usbMocks.disableMocks());
+  const mocks = new Mocks();
 
   const { document, tab } = await openAboutDebugging();
 
   info("Create a first runtime and connect to it");
-  usbMocks.createRuntime(RUNTIME_ID, {
+  mocks.createUSBRuntime(RUNTIME_ID, {
     deviceName: RUNTIME_DEVICE_NAME,
     name: RUNTIME_APP_NAME,
   });
-  usbMocks.emitUpdate();
+  mocks.emitUSBUpdate();
 
   await connectToRuntime(RUNTIME_DEVICE_NAME, document);
   await selectRuntime(RUNTIME_DEVICE_NAME, RUNTIME_APP_NAME, document);
 
   info("Create a second runtime and click on Refresh Devices");
-  usbMocks.createRuntime(OTHER_RUNTIME_ID, {
+  mocks.createUSBRuntime(OTHER_RUNTIME_ID, {
     deviceName: OTHER_RUNTIME_APP_NAME,
   });
 
   // Mock the refreshUSBRuntimes to emit an update.
-  usbMocks.usbRuntimesMock.refreshUSBRuntimes = () => usbMocks.emitUpdate();
+  mocks.usbRuntimesMock.refreshUSBRuntimes = () => mocks.emitUSBUpdate();
   document.querySelector(".js-refresh-devices-button").click();
 
   info(`Wait until the sidebar item for ${OTHER_RUNTIME_APP_NAME} appears`);

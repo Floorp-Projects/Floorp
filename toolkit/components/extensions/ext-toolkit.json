@@ -201,7 +201,7 @@
     "schema": "chrome://extensions/content/schemas/user_scripts_content.json",
     "scopes": ["content_child"],
     "paths": [
-      ["userScripts", "setScriptAPIs"]
+      ["userScripts", "onBeforeScript"]
     ]
   },
   "webNavigation": {

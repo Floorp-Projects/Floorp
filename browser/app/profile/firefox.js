@@ -1028,7 +1028,7 @@ pref("security.sandbox.gpu.level", 0);
 pref("security.sandbox.gmp.win32k-disable", false);
 #endif
 
-#if defined(NIGHTLY_BUILD) && defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 // Start the Mac sandbox early during child process startup instead
 // of when messaged by the parent after the message loop is running.
 pref("security.sandbox.content.mac.earlyinit", true);

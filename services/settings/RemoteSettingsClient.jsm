@@ -21,6 +21,8 @@ ChromeUtils.defineModuleGetter(this, "ClientEnvironmentBase",
                                "resource://gre/modules/components-utils/ClientEnvironment.jsm");
 ChromeUtils.defineModuleGetter(this, "RemoteSettingsWorker",
                                "resource://services-settings/RemoteSettingsWorker.jsm");
+ChromeUtils.defineModuleGetter(this, "Utils",
+                               "resource://services-settings/Utils.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
@@ -32,6 +34,8 @@ const MISSING_SIGNATURE = "Missing signature";
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "gServerURL",
                                       "services.settings.server");
+XPCOMUtils.defineLazyPreferenceGetter(this, "gChangesPath",
+                                      "services.settings.changes.path");
 XPCOMUtils.defineLazyPreferenceGetter(this, "gVerifySignature",
                                       "services.settings.verify_signature", true);
 
@@ -125,7 +129,7 @@ class EventEmitter {
    * @param {Object} payload  the event payload to call the listeners with
    */
   async emit(event, payload) {
-    const callbacks = this._listeners.get("sync");
+    const callbacks = this._listeners.get(event);
     let lastError;
     for (const cb of callbacks) {
       try {
@@ -164,7 +168,7 @@ class EventEmitter {
 class RemoteSettingsClient extends EventEmitter {
 
   constructor(collectionName, { bucketNamePref, signerName, filterFunc, localFields = [], lastCheckTimePref }) {
-    super(["sync"]);
+    super(["sync"]); // emitted events
 
     this.collectionName = collectionName;
     this.signerName = signerName;
@@ -212,20 +216,19 @@ class RemoteSettingsClient extends EventEmitter {
    * @return {Promise}
    */
   async get(options = {}) {
-    const {
-      filters = {},
-      order = "", // not sorted by default.
-    } = options;
+    const { filters = {}, order = "" } = options; // not sorted by default.
 
-    const c = await this.openCollection();
-
-    const timestamp = await c.db.getLastModified();
-    if (timestamp == null) {
-      // The local database for this collection was never synchronized.
-      // Before returning an empty list, we attempt to load a packaged JSON dump.
+    if (!(await Utils.hasLocalData(this))) {
       try {
-        // Load JSON dump if there is one.
-        await RemoteSettingsWorker.importJSONDump(this.bucketName, this.collectionName);
+        // .get() was called before we had the chance to synchronize the local database.
+        // We'll try to avoid returning an empty list.
+        if (await Utils.hasLocalDump(this.bucketName, this.collectionName)) {
+          // Since there is a JSON dump, load it as default data.
+          await RemoteSettingsWorker.importJSONDump(this.bucketName, this.collectionName);
+        } else {
+          // There is no JSON dump, force a synchronization from the server.
+          await this.sync({ loadDump: false });
+        }
       } catch (e) {
         // Report but return an empty list since there will be no data anyway.
         Cu.reportError(e);
@@ -234,24 +237,46 @@ class RemoteSettingsClient extends EventEmitter {
     }
 
     // Read from the local DB.
-    const { data } = await c.list({ filters, order });
+    const kintoCol = await this.openCollection();
+    const { data } = await kintoCol.list({ filters, order });
     // Filter the records based on `this.filterFunc` results.
     return this._filterEntries(data);
   }
 
   /**
-   * Synchronize from Kinto server, if necessary.
+   * Synchronize the local database with the remote server.
+   *
+   * @param {Object} options See #maybeSync() options.
+   */
+  async sync(options) {
+    // We want to know which timestamp we are expected to obtain in order to leverage
+    // cache busting. We don't provide ETag because we don't want a 304.
+    const { changes } = await Utils.fetchLatestChanges(gServerURL + gChangesPath, {
+      filters: {
+        collection: this.collectionName,
+        bucket: this.bucketName,
+      },
+    });
+    if (changes.length === 0) {
+      throw new Error(`Unknown collection "${this.identifier}"`);
+    }
+    // According to API, there will be one only (fail if not).
+    const [{ last_modified: expectedTimestamp }] = changes;
+
+    return this.maybeSync(expectedTimestamp, options);
+  }
+
+  /**
+   * Synchronize the local database with the remote server, **only if necessary**.
    *
    * @param {int}    expectedTimestamp the lastModified date (on the server) for the remote collection.
    *                                   This will be compared to the local timestamp, and will be used for
    *                                   cache busting if local data is out of date.
-   * @param {int}   serverTimeMillis   the current date return by the server.
-   *                                   This is only used to track the last check or synchronization.
    * @param {Object} options           additional advanced options.
    * @param {bool}   options.loadDump  load initial dump from disk on first sync (default: true)
    * @return {Promise}                 which rejects on sync or process failure.
    */
-  async maybeSync(expectedTimestamp, serverTimeMillis, options = { loadDump: true }) {
+  async maybeSync(expectedTimestamp, options = { loadDump: true }) {
     const { loadDump } = options;
 
     let reportStatus = null;
@@ -277,7 +302,6 @@ class RemoteSettingsClient extends EventEmitter {
       // If the data is up to date, there's no need to sync. We still need
       // to record the fact that a check happened.
       if (expectedTimestamp <= collectionLastModified) {
-        this._updateLastCheck(serverTimeMillis);
         reportStatus = UptakeTelemetry.STATUS.UP_TO_DATE;
         return;
       }
@@ -398,9 +422,6 @@ class RemoteSettingsClient extends EventEmitter {
         }
       }
 
-      // Track last update.
-      this._updateLastCheck(serverTimeMillis);
-
     } catch (e) {
       // No specific error was tracked, mark it as unknown.
       if (reportStatus === null) {
@@ -418,11 +439,17 @@ class RemoteSettingsClient extends EventEmitter {
   }
 
   /**
+   * Fetch the signature info from the collection metadata and verifies that the
+   * local set of records has the same.
    *
-   * @param {Array<Object>} remoteRecords
-   * @param {int} timestamp
-   * @param {Collection} collection
+   * @param {Array<Object>} remoteRecords   The list of changes to apply to the local database.
+   * @param {int} timestamp                 The timestamp associated with the list of remote records.
+   * @param {Collection} collection         Kinto.js Collection instance.
    * @param {Object} options
+   * @param {int} options.expectedTimestamp Cache busting of collection metadata
+   * @param {Boolean} options.ignoreLocal   When the signature verification is retried, since we refetch
+   *                                        the whole collection, we don't take into account the local
+   *                                        data (default: `false`)
    * @returns {Promise}
    */
   async _validateCollectionSignature(remoteRecords, timestamp, kintoCollection, options = {}) {
@@ -452,21 +479,12 @@ class RemoteSettingsClient extends EventEmitter {
   }
 
   /**
-   * Save last time server was checked in users prefs.
-   *
-   * @param {int} serverTimeMillis   the current date return by server.
-   */
-  _updateLastCheck(serverTimeMillis) {
-    const checkedServerTimeInSeconds = Math.round(serverTimeMillis / 1000);
-    Services.prefs.setIntPref(this.lastCheckTimePref, checkedServerTimeInSeconds);
-  }
-
-  /**
+   * Filter entries for which calls to `this.filterFunc` returns null.
    *
    * @param {Array<Objet>} data
+   * @returns {Array<Object>}
    */
   async _filterEntries(data) {
-    // Filter entries for which calls to `this.filterFunc` returns null.
     if (!this.filterFunc) {
       return data;
     }

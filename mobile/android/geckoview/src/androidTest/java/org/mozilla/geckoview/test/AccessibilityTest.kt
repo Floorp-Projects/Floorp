@@ -505,7 +505,8 @@ class AccessibilityTest : BaseSessionTest() {
     @Test fun testScroll() {
         var nodeId = View.NO_ID
         sessionRule.session.loadString(
-                """<body style="margin: 0;">
+                """<meta name="viewport" content="width=device-width initial-scale=1">
+                <body style="margin: 0;">
                         <div style="height: 100vh;"></div>
                         <button>Hello</button>
                         <p style="margin: 0;">Lorem ipsum dolor sit amet, consectetur adipiscing elit,

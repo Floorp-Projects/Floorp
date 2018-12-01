@@ -79,7 +79,7 @@ def main():
                 'os': mozinfo.info['os'],
                 # This would be easier if the locale was specified at configure time.
                 'locale': os.environ.get('AB_CD', 'en-US'),
-                'version': s['MOZ_APP_VERSION'],
+                'version': s['MOZ_APP_VERSION_DISPLAY'] or s['MOZ_APP_VERSION'],
                 'channel': s['MOZ_UPDATE_CHANNEL'],
             },
             'download': {

@@ -16,103 +16,46 @@ var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 /**
  * Make sure the listAddons request works as specified.
  */
-const ADDON1_ID = "jid1-oBAwBoE5rSecNg@jetpack";
-const ADDON1_PATH = "addon1.xpi";
-const ADDON2_ID = "jid1-qjtzNGV8xw5h2A@jetpack";
-const ADDON2_PATH = "addon2.xpi";
+const ADDON1_ID = "test-addon-1@mozilla.org";
+const ADDON1_PATH = "addons/test-addon-1/";
+const ADDON2_ID = "test-addon-2@mozilla.org";
+const ADDON2_PATH = "addons/test-addon-2/";
 
-var gAddon1, gAddon1Front, gAddon2, gClient;
-
-function test() {
+add_task(async function() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
   const transport = DebuggerServer.connectPipe();
-  gClient = new DebuggerClient(transport);
-  gClient.connect().then(([aType, aTraits]) => {
-    is(aType, "browser",
-      "Root actor should identify itself as a browser.");
+  const client = new DebuggerClient(transport);
 
-    promise.resolve(null)
-      .then(testFirstAddon)
-      .then(testSecondAddon)
-      .then(testRemoveFirstAddon)
-      .then(testRemoveSecondAddon)
-      .then(() => gClient.close())
-      .then(finish)
-      .catch(error => {
-        ok(false, "Got an error: " + error.message + "\n" + error.stack);
-      });
-  });
-}
+  const [type] = await client.connect();
+  is(type, "browser", "Root actor should identify itself as a browser.");
 
-function testFirstAddon() {
-  let addonListChanged = false;
-  gClient.mainRoot.once("addonListChanged").then(() => {
-    addonListChanged = true;
-  });
+  let addonListChangedEvents = 0;
+  client.mainRoot.on("addonListChanged", () => addonListChangedEvents++);
 
-  return addTemporaryAddon(ADDON1_PATH).then(addon => {
-    gAddon1 = addon;
+  const addon1 = await addTemporaryAddon(ADDON1_PATH);
+  const addonFront1 = await client.mainRoot.getAddon({ id: ADDON1_ID });
+  is(addonListChangedEvents, 0, "Should not receive addonListChanged yet.");
+  ok(addonFront1, "Should find an addon actor for addon1.");
 
-    return gClient.mainRoot.getAddon({ id: ADDON1_ID }).then(front => {
-      ok(!addonListChanged, "Should not yet be notified that list of addons changed.");
-      ok(front, "Should find an addon actor for addon1.");
-      gAddon1Front = front;
-    });
-  });
-}
+  const addon2 = await addTemporaryAddon(ADDON2_PATH);
+  const front1AfterAddingAddon2 = await client.mainRoot.getAddon({ id: ADDON1_ID });
+  const addonFront2 = await client.mainRoot.getAddon({ id: ADDON2_ID });
 
-function testSecondAddon() {
-  let addonListChanged = false;
-  gClient.mainRoot.once("addonListChanged").then(() => {
-    addonListChanged = true;
-  });
+  is(addonListChangedEvents, 1, "Should have received an addonListChanged event.");
+  ok(addonFront2, "Should find an addon actor for addon2.");
+  is(addonFront1, front1AfterAddingAddon2, "Front for addon1 should be the same");
 
-  return addTemporaryAddon(ADDON2_PATH).then(addon => {
-    gAddon2 = addon;
+  await removeAddon(addon1);
+  const front1AfterRemove = await client.mainRoot.getAddon({ id: ADDON1_ID });
+  is(addonListChangedEvents, 2, "Should have received an addonListChanged event.");
+  ok(!front1AfterRemove, "Should no longer get a front for addon1");
 
-    return gClient.mainRoot.getAddon({ id: ADDON1_ID }).then(front1 => {
-      return gClient.mainRoot.getAddon({ id: ADDON2_ID }).then(front2 => {
-        ok(addonListChanged, "Should be notified that list of addons changed.");
-        is(front1, gAddon1Front, "First addon's actor shouldn't have changed.");
-        ok(front2, "Should find a addon actor for the second addon.");
-      });
-    });
-  });
-}
+  await removeAddon(addon2);
+  const front2AfterRemove = await client.mainRoot.getAddon({ id: ADDON2_ID });
+  is(addonListChangedEvents, 3, "Should have received an addonListChanged event.");
+  ok(!front2AfterRemove, "Should no longer get a front for addon1");
 
-function testRemoveFirstAddon() {
-  let addonListChanged = false;
-  gClient.mainRoot.once("addonListChanged").then(() => {
-    addonListChanged = true;
-  });
-
-  return removeAddon(gAddon1).then(() => {
-    return gClient.mainRoot.getAddon({ id: ADDON1_ID }).then(front => {
-      ok(addonListChanged, "Should be notified that list of addons changed.");
-      ok(!front, "Shouldn't find a addon actor for the first addon anymore.");
-    });
-  });
-}
-
-function testRemoveSecondAddon() {
-  let addonListChanged = false;
-  gClient.mainRoot.once("addonListChanged").then(() => {
-    addonListChanged = true;
-  });
-
-  return removeAddon(gAddon2).then(() => {
-    return gClient.mainRoot.getAddon({ id: ADDON2_ID }).then(front => {
-      ok(addonListChanged, "Should be notified that list of addons changed.");
-      ok(!front, "Shouldn't find a addon actor for the second addon anymore.");
-    });
-  });
-}
-
-registerCleanupFunction(function() {
-  gAddon1 = null;
-  gAddon1Front = null;
-  gAddon2 = null;
-  gClient = null;
+  await client.close();
 });

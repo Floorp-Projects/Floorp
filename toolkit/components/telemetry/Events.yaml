@@ -540,7 +540,7 @@ devtools.main:
     extra_keys:
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   tool_timer:
-    objects: ["animationinspector", "computedview", "fontinspector", "layoutview", "ruleview"]
+    objects: ["animationinspector", "computedview", "changesview", "fontinspector", "layoutview", "ruleview"]
     bug_numbers: [1483817]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
     record_in_processes: ["main"]
