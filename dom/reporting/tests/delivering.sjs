@@ -16,6 +16,10 @@ function handleRequest(aRequest, aResponse) {
       extraParams.push("410=true");
     }
 
+    if (params.has("worker")) {
+      extraParams.push("worker=true");
+    }
+
     let body = {
       max_age: 1,
       endpoints: [{
@@ -52,6 +56,8 @@ function handleRequest(aRequest, aResponse) {
       
     aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
     aResponse.write(getState("report"));
+
+    setState("report", "");
     return;
   }
 
@@ -68,6 +74,8 @@ function handleRequest(aRequest, aResponse) {
       contentType: aRequest.getHeader("content-type"),
       origin: aRequest.getHeader("origin"),
       body: JSON.parse(String.fromCharCode.apply(null, bytes)),
+      url: aRequest.scheme + "://" + aRequest.host + aRequest.path +
+             (aRequest.queryString ? "&" + aRequest.queryString : ""),
     }
 
     let reports = getState("report");
