@@ -32,6 +32,11 @@ The ``get()`` method returns the list of entries for a specific key. Each entry 
     });
 
 .. note::
+    The data updates are managed internally, and ``.get()`` only returns the local data.
+    The data is pulled from the server only if this collection has no local data yet and no JSON dump
+    could be found (see :ref:`services/initial-data` below).
+
+.. note::
     The ``id`` and ``last_modified`` (timestamp) attributes are assigned by the server.
 
 Options
@@ -89,18 +94,23 @@ When an entry has a file attached to it, it has an ``attachment`` attribute, whi
           }
         });
 
+.. _services/initial-data:
+
 Initial data
 ------------
 
-For newly created user profiles, the list of entries returned by the ``.get()`` method will be empty until the first synchronization happens.
+It is possible to package a dump of the server records that will be loaded into the local database when no synchronization has happened yet.
 
-It is possible to package a dump of the server records that will be loaded into the local database when no synchronization has happened yet. It will thus serve as the default dataset and also reduce the amount of data to be downloaded on the first synchronization.
+The JSON dump will serve as the default dataset for ``.get()``, instead of doing a round-trip to pull the latest data. It will also reduce the amount of data to be downloaded on the first synchronization.
 
 #. Place the JSON dump of the server records in the ``services/settings/dumps/main/`` folder
 #. Add the filename to the ``FINAL_TARGET_FILES`` list in ``services/settings/dumps/main/moz.build``
 
 Now, when ``RemoteSettings("some-key").get()`` is called from an empty profile, the ``some-key.json`` file is going to be loaded before the results are returned.
 
+.. note::
+
+    JSON dumps are not shipped on Android to minimize the installer size.
 
 Targets and A/B testing
 =======================
@@ -170,14 +180,15 @@ The synchronization of every known remote settings clients can be triggered manu
 
     await RemoteSettings.pollChanges()
 
-The synchronization of a single client can be forced with ``maybeSync()``:
+The synchronization of a single client can be forced with the ``.sync()`` method:
 
 .. code-block:: js
 
-    const fakeTimestamp = Infinity;
-    const fakeServerTime = Date.now();
+    await RemoteSettings("a-key").sync();
 
-    await RemoteSettings("a-key").maybeSync(fakeTimestamp, fakeServerTime)
+.. important::
+
+    The above methods are only relevant during development or debugging and should never be called in production code.
 
 
 Manipulate local data

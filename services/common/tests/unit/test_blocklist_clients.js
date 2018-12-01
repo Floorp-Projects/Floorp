@@ -102,7 +102,7 @@ add_task(async function test_initial_dump_is_loaded_as_synced_when_collection_is
     }
 
     // Test an empty db populates, but don't reach server (specified timestamp <= dump).
-    await client.maybeSync(1, Date.now());
+    await client.maybeSync(1);
 
     // Verify the loaded data has status to synced:
     const collection = await client.openCollection();
@@ -134,19 +134,6 @@ add_task(async function test_initial_dump_is_loaded_when_using_get_on_empty_coll
 });
 add_task(clear_state);
 
-add_task(async function test_current_server_time_is_saved_in_pref() {
-  for (let {client} of gBlocklistClients) {
-    // The lastCheckTimePref was customized:
-    ok(/services\.blocklist\.(\w+)\.checked/.test(client.lastCheckTimePref), client.lastCheckTimePref);
-
-    const serverTime = Date.now();
-    await client.maybeSync(3000, serverTime);
-    const after = Services.prefs.getIntPref(client.lastCheckTimePref);
-    equal(after, Math.round(serverTime / 1000));
-  }
-});
-add_task(clear_state);
-
 add_task(async function test_sync_event_data_is_filtered_for_target() {
   // Here we will synchronize 4 times, the first two to initialize the local DB and
   // the last two about event filtered data.
@@ -154,25 +141,23 @@ add_task(async function test_sync_event_data_is_filtered_for_target() {
   const timestamp2 = 3001;
   const timestamp3 = 4001;
   const timestamp4 = 5001;
-  // Fake a date value obtained from server (used to store a pref, useless here).
-  const fakeServerTime = Date.now();
 
   for (let {client} of gBlocklistClients) {
     // Initialize the collection with some data (local is empty, thus no ?_since)
-    await client.maybeSync(timestamp1, fakeServerTime - 30, {loadDump: false});
+    await client.maybeSync(timestamp1, {loadDump: false});
     // This will pick the data with ?_since=3000.
-    await client.maybeSync(timestamp2, fakeServerTime - 20);
+    await client.maybeSync(timestamp2);
 
     // In ?_since=4000 entries, no target matches. The sync event is not called.
     let called = false;
     client.on("sync", e => called = true);
-    await client.maybeSync(timestamp3, fakeServerTime - 10);
+    await client.maybeSync(timestamp3);
     equal(called, false, `shouldn't have sync event for ${client.collectionName}`);
 
     // In ?_since=5000 entries, only one entry matches.
     let syncEventData;
     client.on("sync", e => syncEventData = e.data);
-    await client.maybeSync(timestamp4, fakeServerTime);
+    await client.maybeSync(timestamp4);
     const { current, created, updated, deleted } = syncEventData;
     equal(created.length + updated.length + deleted.length, 1, `event filtered data for ${client.collectionName}`);
 

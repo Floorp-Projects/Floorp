@@ -405,8 +405,11 @@ class FennecInstance(GeckoInstance):
     def __init__(self, emulator_binary=None, avd_home=None, avd=None,
                  adb_path=None, serial=None, connect_to_running_emulator=False,
                  package_name=None, *args, **kwargs):
+        required_prefs = deepcopy(FennecInstance.fennec_prefs)
+        required_prefs.update(kwargs.get("prefs", {}))
+
         super(FennecInstance, self).__init__(*args, **kwargs)
-        self.required_prefs.update(FennecInstance.fennec_prefs)
+        self.required_prefs.update(required_prefs)
 
         self.runner_class = FennecEmulatorRunner
         # runner args
@@ -583,8 +586,11 @@ class DesktopInstance(GeckoInstance):
     }
 
     def __init__(self, *args, **kwargs):
+        required_prefs = deepcopy(DesktopInstance.desktop_prefs)
+        required_prefs.update(kwargs.get("prefs", {}))
+
         super(DesktopInstance, self).__init__(*args, **kwargs)
-        self.required_prefs.update(DesktopInstance.desktop_prefs)
+        self.required_prefs.update(required_prefs)
 
 
 class NullOutput(object):

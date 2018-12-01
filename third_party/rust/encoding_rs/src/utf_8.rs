@@ -395,7 +395,7 @@ pub fn convert_utf8_to_utf16_up_to_invalid(src: &[u8], dst: &mut [u16]) -> (usiz
         // one to three shorter sequences.
         'tail: loop {
             // >= is better for bound check elision than ==
-            if read >= src.len() || written >= src.len() {
+            if read >= src.len() || written >= dst.len() {
                 break 'outer;
             }
             byte = src[read];
@@ -1099,6 +1099,22 @@ mod tests {
             assert!(had_errors);
             assert_eq!(output[0], 0xFFFD);
         }
+    }
+
+    #[test]
+    fn test_tail() {
+        let mut output = [0u16; 1];
+        let mut decoder = UTF_8.new_decoder_without_bom_handling();
+        {
+            let (result, read, written, had_errors) =
+                decoder.decode_to_utf16("\u{E4}a".as_bytes(), &mut output[..], false);
+            assert_eq!(result, CoderResult::OutputFull);
+            assert_eq!(read, 2);
+            assert_eq!(written, 1);
+            assert!(!had_errors);
+            assert_eq!(output[0], 0x00E4);
+        }
+
     }
 
 }

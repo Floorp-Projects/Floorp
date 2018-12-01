@@ -5,6 +5,7 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.import("chrome://marionette/content/assert.js");
@@ -81,18 +82,33 @@ reftest.Runner = class {
     await this.ensureWindow();
   }
 
-  async ensureWindow() {
+  async ensureWindow(timeout) {
     if (this.reftestWin && !this.reftestWin.closed) {
       return this.reftestWin;
     }
 
-    let reftestWin = await this.openWindow();
+    let reftestWin;
+    if (Services.appinfo.OS == "Android") {
+      logger.debug("Using current window");
+      reftestWin = this.parentWindow;
+      await this.driver.listener.get({
+        commandID: this.driver.listener.activeMessageId,
+        pageTimeout: timeout,
+        url: "about:blank",
+        loadEventExpected: false});
+
+    } else {
+      logger.debug("Using separate window");
+      reftestWin = await this.openWindow();
+    }
+
+    this.setupWindow(reftestWin);
+    this.windowUtils = reftestWin.windowUtils;
+    this.reftestWin = reftestWin;
 
     let found = this.driver.findWindow([reftestWin], () => true);
     await this.driver.setWindowHandle(found, true);
 
-    this.windowUtils = reftestWin.windowUtils;
-    this.reftestWin = reftestWin;
     return reftestWin;
   }
 
@@ -105,17 +121,27 @@ reftest.Runner = class {
     await new Promise(resolve => {
       reftestWin.addEventListener("load", resolve, {once: true});
     });
+    return reftestWin;
+  }
 
-    let browser = reftestWin.document.createElementNS(XUL_NS, "xul:browser");
-    browser.permanentKey = {};
-    browser.setAttribute("id", "browser");
-    browser.setAttribute("anonid", "initialBrowser");
-    browser.setAttribute("type", "content");
-    browser.setAttribute("primary", "true");
-
-    if (this.remote) {
-      browser.setAttribute("remote", "true");
-      browser.setAttribute("remoteType", "web");
+  setupWindow(reftestWin) {
+    let browser;
+    if (Services.appinfo.OS === "Android") {
+      browser = reftestWin.document.getElementsByTagName("browser")[0];
+      browser.setAttribute("remote", "false");
+    } else {
+      browser = reftestWin.document.createElementNS(XUL_NS, "xul:browser");
+      browser.permanentKey = {};
+      browser.setAttribute("id", "browser");
+      browser.setAttribute("anonid", "initialBrowser");
+      browser.setAttribute("type", "content");
+      browser.setAttribute("primary", "true");
+      if (this.remote) {
+        browser.setAttribute("remote", "true");
+        browser.setAttribute("remoteType", "web");
+      } else {
+        browser.setAttribute("remote", "false");
+      }
     }
     // Make sure the browser element is exactly 600x600, no matter
     // what size our window is
@@ -124,13 +150,17 @@ min-width: ${REFTEST_WIDTH}px; min-height: ${REFTEST_HEIGHT}px;
 max-width: ${REFTEST_WIDTH}px; max-height: ${REFTEST_HEIGHT}px`;
     browser.setAttribute("style", windowStyle);
 
-    let doc = reftestWin.document.documentElement;
-    while (doc.firstChild) {
-      doc.firstChild.remove();
+    if (Services.appinfo.OS !== "Android") {
+      let doc = reftestWin.document.documentElement;
+      while (doc.firstChild) {
+        doc.firstChild.remove();
+      }
+      doc.appendChild(browser);
     }
-    doc.appendChild(browser);
+    if (reftestWin.BrowserApp) {
+      reftestWin.BrowserApp = browser;
+    }
     reftestWin.gBrowser = browser;
-
     return reftestWin;
   }
 
@@ -218,7 +248,7 @@ max-width: ${REFTEST_WIDTH}px; max-height: ${REFTEST_HEIGHT}px`;
   }
 
   async runTest(testUrl, references, expected, timeout) {
-    let win = await this.ensureWindow();
+    let win = await this.ensureWindow(timeout);
 
     function toBase64(screenshot) {
       let dataURL = screenshot.canvas.toDataURL();
@@ -409,8 +439,17 @@ max-width: ${REFTEST_WIDTH}px; max-height: ${REFTEST_HEIGHT}px`;
 
       let ctxInterface = win.CanvasRenderingContext2D;
       let flags = ctxInterface.DRAWWINDOW_DRAW_CARET |
-          ctxInterface.DRAWWINDOW_USE_WIDGET_LAYERS |
           ctxInterface.DRAWWINDOW_DRAW_VIEW;
+
+      if (0 <= browserRect.left &&
+          0 <= browserRect.top &&
+          win.innerWidth >= browserRect.width &&
+          win.innerHeight >= browserRect.height) {
+        logger.debug("Using DRAWWINDOW_USE_WIDGET_LAYERS");
+        flags |= ctxInterface.DRAWWINDOW_USE_WIDGET_LAYERS;
+      } else {
+        logger.debug("Not using DRAWWINDOW_USE_WIDGET_LAYERS");
+      }
 
       logger.debug(`Starting load of ${url}`);
       let navigateOpts = {

@@ -145,7 +145,7 @@
 }
 
 .identity-popup-preferences-button:-moz-locale-dir(rtl) {
-  background-position: center left;
+  background-position: center left 8px;
 }
 
 .identity-popup-preferences-button > .toolbarbutton-text {
