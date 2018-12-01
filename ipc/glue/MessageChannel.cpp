@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 et :
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=4 et :
  */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1164,9 +1164,7 @@ void MessageChannel::OnMessageReceivedFromLink(Message&& aMsg) {
 
   if (MaybeInterceptSpecialIOMessage(aMsg)) return;
 
-#ifdef EARLY_BETA_OR_EARLIER
   mListener->OnChannelReceivedMessage(aMsg);
-#endif
 
   // Regardless of the Interrupt stack, if we're awaiting a sync reply,
   // we know that it needs to be immediately handled to unblock us.

@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sts=4 et sw=4 tw=99:
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -296,6 +296,9 @@ void CodeGenerator::visitMulI(LMulI* ins) {
                 !mul->canBeNegativeZero() && !mul->canOverflow());
 
   Register lhsreg = ToRegister(lhs);
+  const ARMRegister lhsreg32 = ARMRegister(lhsreg, 32);
+  Register destreg = ToRegister(dest);
+  const ARMRegister destreg32 = ARMRegister(destreg, 32);
 
   if (rhs->isConstant()) {
     // Bailout on -0.0.
@@ -309,23 +312,23 @@ void CodeGenerator::visitMulI(LMulI* ins) {
 
     switch (constant) {
       case -1:
-        masm.neg32(lhsreg);
-        break;
+        masm.Negs(destreg32, Operand(lhsreg32));
+        break;  // Go to overflow check.
       case 0:
-        masm.Mov(ARMRegister(lhsreg, 32), wzr);
-        return;  // escape overflow check;
+        masm.Mov(destreg32, wzr);
+        return;  // Avoid overflow check.
       case 1:
         // nop
-        return;  // escape overflow check;
+        return;  // Avoid overflow check.
       case 2:
-        masm.add32(lhsreg, lhsreg);
-        break;
+        masm.Adds(destreg32, lhsreg32, Operand(lhsreg32));
+        break;  // Go to overflow check.
       default:
         // Use shift if cannot overflow and constant is a power of 2
         if (!mul->canOverflow() && constant > 0) {
           int32_t shift = FloorLog2(constant);
           if ((1 << shift) == constant) {
-            masm.lshift32(Imm32(shift), lhsreg);
+            masm.Lsl(destreg32, lhsreg32, shift);
             return;
           }
         }
@@ -339,7 +342,7 @@ void CodeGenerator::visitMulI(LMulI* ins) {
         const Register scratch = temps.AcquireW().asUnsized();
 
         masm.move32(Imm32(constant), scratch);
-        masm.mul32(lhsreg, scratch, ToRegister(dest), onOverflow, onZero);
+        masm.mul32(lhsreg, scratch, destreg, onOverflow, onZero);
         if (onZero || onOverflow) {
           bailoutFrom(&bailout, ins->snapshot());
         }
@@ -358,7 +361,7 @@ void CodeGenerator::visitMulI(LMulI* ins) {
     Label* onZero = mul->canBeNegativeZero() ? &bailout : nullptr;
     Label* onOverflow = mul->canOverflow() ? &bailout : nullptr;
 
-    masm.mul32(lhsreg, rhsreg, ToRegister(dest), onOverflow, onZero);
+    masm.mul32(lhsreg, rhsreg, destreg, onOverflow, onZero);
     if (onZero || onOverflow) {
       bailoutFrom(&bailout, ins->snapshot());
     }
@@ -869,11 +872,33 @@ void CodeGenerator::visitFloat32(LFloat32* ins) {
 }
 
 void CodeGenerator::visitTestDAndBranch(LTestDAndBranch* test) {
-  MOZ_CRASH("visitTestDAndBranch");
+  const LAllocation* opd = test->input();
+  MBasicBlock* ifTrue = test->ifTrue();
+  MBasicBlock* ifFalse = test->ifFalse();
+
+  masm.Fcmp(ARMFPRegister(ToFloatRegister(opd), 64), 0.0);
+
+  // If the compare set the 0 bit, then the result is definitely false.
+  jumpToBlock(ifFalse, Assembler::Zero);
+
+  // Overflow means one of the operands was NaN, which is also false.
+  jumpToBlock(ifFalse, Assembler::Overflow);
+  jumpToBlock(ifTrue);
 }
 
 void CodeGenerator::visitTestFAndBranch(LTestFAndBranch* test) {
-  MOZ_CRASH("visitTestFAndBranch");
+  const LAllocation* opd = test->input();
+  MBasicBlock* ifTrue = test->ifTrue();
+  MBasicBlock* ifFalse = test->ifFalse();
+
+  masm.Fcmp(ARMFPRegister(ToFloatRegister(opd), 32), 0.0);
+
+  // If the compare set the 0 bit, then the result is definitely false.
+  jumpToBlock(ifFalse, Assembler::Zero);
+
+  // Overflow means one of the operands was NaN, which is also false.
+  jumpToBlock(ifFalse, Assembler::Overflow);
+  jumpToBlock(ifTrue);
 }
 
 void CodeGenerator::visitCompareD(LCompareD* comp) {

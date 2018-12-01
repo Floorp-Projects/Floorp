@@ -938,48 +938,56 @@ RSA_DecryptBlock(RSAPrivateKey *key,
                  const unsigned char *input,
                  unsigned int inputLen)
 {
-    SECStatus rv;
+    PRInt8 rv;
     unsigned int modulusLen = rsa_modulusLen(&key->modulus);
     unsigned int i;
-    unsigned char *buffer;
+    unsigned char *buffer = NULL;
+    unsigned int outLen = 0;
+    unsigned int copyOutLen = modulusLen - 11;
 
-    if (inputLen != modulusLen)
-        goto failure;
-
-    buffer = (unsigned char *)PORT_Alloc(modulusLen + 1);
-    if (!buffer)
-        goto failure;
-
-    rv = RSA_PrivateKeyOp(key, buffer, input);
-    if (rv != SECSuccess)
-        goto loser;
-
-    /* XXX(rsleevi): Constant time */
-    if (buffer[0] != RSA_BLOCK_FIRST_OCTET ||
-        buffer[1] != (unsigned char)RSA_BlockPublic) {
-        goto loser;
+    if (inputLen != modulusLen || modulusLen < 10) {
+        return SECFailure;
     }
-    *outputLen = 0;
-    for (i = 2; i < modulusLen; i++) {
-        if (buffer[i] == RSA_BLOCK_AFTER_PAD_OCTET) {
-            *outputLen = modulusLen - i - 1;
-            break;
-        }
-    }
-    if (*outputLen == 0)
-        goto loser;
-    if (*outputLen > maxOutputLen)
-        goto loser;
 
-    PORT_Memcpy(output, buffer + modulusLen - *outputLen, *outputLen);
+    if (copyOutLen > maxOutputLen) {
+        copyOutLen = maxOutputLen;
+    }
+
+    // Allocate enough space to decrypt + copyOutLen to allow copying outLen later.
+    buffer = PORT_ZAlloc(modulusLen + 1 + copyOutLen);
+    if (!buffer) {
+        return SECFailure;
+    }
+
+    // rv is 0 if everything is going well and 1 if an error occurs.
+    rv = RSA_PrivateKeyOp(key, buffer, input) != SECSuccess;
+    rv |= (buffer[0] != RSA_BLOCK_FIRST_OCTET) |
+          (buffer[1] != (unsigned char)RSA_BlockPublic);
+
+    // There have to be at least 8 bytes of padding.
+    for (i = 2; i < 10; i++) {
+        rv |= buffer[i] == RSA_BLOCK_AFTER_PAD_OCTET;
+    }
+
+    for (i = 10; i < modulusLen; i++) {
+        unsigned int newLen = modulusLen - i - 1;
+        unsigned int c = (buffer[i] == RSA_BLOCK_AFTER_PAD_OCTET) & (outLen == 0);
+        outLen = constantTimeCondition(c, newLen, outLen);
+    }
+    rv |= outLen == 0;
+    rv |= outLen > maxOutputLen;
+
+    // Note that output is set even if SECFailure is returned.
+    PORT_Memcpy(output, buffer + modulusLen - outLen, copyOutLen);
+    *outputLen = constantTimeCondition(outLen > maxOutputLen, maxOutputLen,
+                                       outLen);
 
     PORT_Free(buffer);
-    return SECSuccess;
 
-loser:
-    PORT_Free(buffer);
-failure:
-    return SECFailure;
+    for (i = 1; i < sizeof(rv) * 8; i <<= 1) {
+        rv |= rv << i;
+    }
+    return (SECStatus)rv;
 }
 
 /*

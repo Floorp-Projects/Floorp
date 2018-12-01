@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sts=4 et sw=4 tw=99:
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1421,7 +1421,7 @@ void CodeGenerator::visitTestDAndBranch(LTestDAndBranch* test) {
 
   MBasicBlock* ifTrue = test->ifTrue();
   MBasicBlock* ifFalse = test->ifFalse();
-  // If the compare set the 0 bit, then the result is definately false.
+  // If the compare set the 0 bit, then the result is definitely false.
   jumpToBlock(ifFalse, Assembler::Zero);
   // It is also false if one of the operands is NAN, which is shown as
   // Overflow.
@@ -1436,7 +1436,7 @@ void CodeGenerator::visitTestFAndBranch(LTestFAndBranch* test) {
 
   MBasicBlock* ifTrue = test->ifTrue();
   MBasicBlock* ifFalse = test->ifFalse();
-  // If the compare set the 0 bit, then the result is definately false.
+  // If the compare set the 0 bit, then the result is definitely false.
   jumpToBlock(ifFalse, Assembler::Zero);
   // It is also false if one of the operands is NAN, which is shown as
   // Overflow.

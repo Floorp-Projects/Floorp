@@ -563,10 +563,10 @@ TEST_F(TlsExtensionTest13Stream, DropServerKeyShare) {
   EnsureTlsSetup();
   MakeTlsFilter<TlsExtensionDropper>(server_, ssl_tls13_key_share_xtn);
   client_->ExpectSendAlert(kTlsAlertMissingExtension);
-  server_->ExpectSendAlert(kTlsAlertBadRecordMac);
+  server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
   ConnectExpectFail();
   EXPECT_EQ(SSL_ERROR_MISSING_KEY_SHARE, client_->error_code());
-  EXPECT_EQ(SSL_ERROR_BAD_MAC_READ, server_->error_code());
+  EXPECT_EQ(SSL_ERROR_RX_UNEXPECTED_RECORD_TYPE, server_->error_code());
 }
 
 TEST_F(TlsExtensionTest13Stream, WrongServerKeyShare) {
@@ -583,10 +583,10 @@ TEST_F(TlsExtensionTest13Stream, WrongServerKeyShare) {
   EnsureTlsSetup();
   MakeTlsFilter<TlsExtensionReplacer>(server_, ssl_tls13_key_share_xtn, buf);
   client_->ExpectSendAlert(kTlsAlertIllegalParameter);
-  server_->ExpectSendAlert(kTlsAlertBadRecordMac);
+  server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
   ConnectExpectFail();
   EXPECT_EQ(SSL_ERROR_RX_MALFORMED_KEY_SHARE, client_->error_code());
-  EXPECT_EQ(SSL_ERROR_BAD_MAC_READ, server_->error_code());
+  EXPECT_EQ(SSL_ERROR_RX_UNEXPECTED_RECORD_TYPE, server_->error_code());
 }
 
 TEST_F(TlsExtensionTest13Stream, UnknownServerKeyShare) {
@@ -603,10 +603,10 @@ TEST_F(TlsExtensionTest13Stream, UnknownServerKeyShare) {
   EnsureTlsSetup();
   MakeTlsFilter<TlsExtensionReplacer>(server_, ssl_tls13_key_share_xtn, buf);
   client_->ExpectSendAlert(kTlsAlertIllegalParameter);
-  server_->ExpectSendAlert(kTlsAlertBadRecordMac);
+  server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
   ConnectExpectFail();
   EXPECT_EQ(SSL_ERROR_RX_MALFORMED_KEY_SHARE, client_->error_code());
-  EXPECT_EQ(SSL_ERROR_BAD_MAC_READ, server_->error_code());
+  EXPECT_EQ(SSL_ERROR_RX_UNEXPECTED_RECORD_TYPE, server_->error_code());
 }
 
 TEST_F(TlsExtensionTest13Stream, AddServerSignatureAlgorithmsOnResumption) {
@@ -615,10 +615,10 @@ TEST_F(TlsExtensionTest13Stream, AddServerSignatureAlgorithmsOnResumption) {
   MakeTlsFilter<TlsExtensionInjector>(server_, ssl_signature_algorithms_xtn,
                                       empty);
   client_->ExpectSendAlert(kTlsAlertUnsupportedExtension);
-  server_->ExpectSendAlert(kTlsAlertBadRecordMac);
+  server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
   ConnectExpectFail();
   EXPECT_EQ(SSL_ERROR_EXTENSION_DISALLOWED_FOR_VERSION, client_->error_code());
-  EXPECT_EQ(SSL_ERROR_BAD_MAC_READ, server_->error_code());
+  EXPECT_EQ(SSL_ERROR_RX_UNEXPECTED_RECORD_TYPE, server_->error_code());
 }
 
 struct PskIdentity {
@@ -1025,7 +1025,7 @@ class TlsBogusExtensionTest13 : public TlsBogusExtensionTest {
     client_->ExpectSendAlert(alert);
     client_->Handshake();
     if (variant_ == ssl_variant_stream) {
-      server_->ExpectSendAlert(kTlsAlertBadRecordMac);
+      server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
     }
     server_->Handshake();
   }
