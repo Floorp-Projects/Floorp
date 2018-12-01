@@ -257,8 +257,16 @@ impl<'a> Target for &'a mut String {
 // * `Serializer` keeps its target in a private field
 // * Unlike in other `Target` impls, `UrlQuery::finished` does not return `Self`.
 impl<'a> Target for ::UrlQuery<'a> {
-    fn as_mut_string(&mut self) -> &mut String { &mut self.url.serialization }
-    fn finish(self) -> &'a mut ::Url { self.url }
+    fn as_mut_string(&mut self) -> &mut String {
+        &mut self.url.as_mut().unwrap().serialization
+    }
+
+    fn finish(mut self) -> &'a mut ::Url {
+        let url = self.url.take().unwrap();
+        url.restore_already_parsed_fragment(self.fragment.take());
+        url
+    }
+
     type Finished = &'a mut ::Url;
 }
 

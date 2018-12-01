@@ -4,7 +4,7 @@ version = "0.0.1"
 authors = ["Nika Layzell <nika@thelayzells.com>"]
 
 [dependencies]
-url = "1.5.1"
+url = "1.7.2"
 nsstring = { path = "../../../servo/support/gecko/nsstring" }
 nserror = { path = "../../../xpcom/rust/nserror" }
 xpcom = { path = "../../../xpcom/rust/xpcom" }
