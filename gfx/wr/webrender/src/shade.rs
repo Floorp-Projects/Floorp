@@ -424,7 +424,7 @@ fn create_prim_shader(
 
     debug!("PrimShader {}", name);
 
-    device.create_program(name, prefix)
+    device.create_program(name, &prefix)
 }
 
 fn create_clip_shader(name: &'static str, device: &mut Device) -> Result<Program, ShaderError> {
@@ -435,7 +435,7 @@ fn create_clip_shader(name: &'static str, device: &mut Device) -> Result<Program
 
     debug!("ClipShader {}", name);
 
-    device.create_program(name, prefix)
+    device.create_program(name, &prefix)
 }
 
 // NB: If you add a new shader here, make sure to deinitialize it

@@ -179,7 +179,6 @@ extern crate rayon;
 extern crate ron;
 #[cfg(feature = "debugger")]
 extern crate serde_json;
-extern crate sha2;
 extern crate smallvec;
 extern crate time;
 #[cfg(feature = "debugger")]
@@ -195,8 +194,8 @@ pub extern crate webrender_api;
 
 #[doc(hidden)]
 pub use device::{build_shader_strings, ReadPixelsFormat, UploadMethod, VertexUsageHint};
-pub use device::{ProgramBinary, ProgramCache, ProgramCacheObserver};
-pub use device::Device;
+pub use device::{ProgramBinary, ProgramCache, ProgramCacheObserver, ProgramSources};
+pub use device::{Device, total_gpu_bytes_allocated};
 pub use frame_builder::ChasePrimitive;
 pub use renderer::{AsyncPropertySampler, CpuProfile, DebugFlags, OutputImageHandler, RendererKind};
 pub use renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource, GpuProfile};
