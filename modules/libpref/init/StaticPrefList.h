@@ -1908,6 +1908,12 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+VARCACHE_PREF(
+  "dom.reporting.header.enabled",
+   dom_reporting_header_enabled,
+  RelaxedAtomicBool, false
+)
+
 //---------------------------------------------------------------------------
 // End of prefs
 //---------------------------------------------------------------------------
