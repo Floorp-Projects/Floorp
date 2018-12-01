@@ -410,6 +410,9 @@ impl Document {
         let accumulated_scale_factor = self.view.accumulated_scale_factor();
         let pan = self.view.pan.to_f32() / accumulated_scale_factor;
 
+        // Advance to the next frame.
+        self.stamp.advance();
+
         assert!(self.stamp.frame_id() != FrameId::INVALID,
                 "First frame increment must happen before build_frame()");
 
@@ -532,9 +535,6 @@ impl Document {
         let old_scrolling_states = self.clip_scroll_tree.drain();
         self.clip_scroll_tree = built_scene.clip_scroll_tree;
         self.clip_scroll_tree.finalize_and_apply_pending_scroll_offsets(old_scrolling_states);
-
-        // Advance to the next frame.
-        self.stamp.advance();
     }
 }
 
