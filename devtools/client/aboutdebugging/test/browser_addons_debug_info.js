@@ -13,29 +13,6 @@ function testFilePath(container, expectedFilePath) {
   is(filePath.previousElementSibling.textContent, "Location", "file path has label");
 }
 
-// Remove in Bug 1497264
-/*
-add_task(async function testLegacyAddon() {
-  const addonId = "test-devtools@mozilla.org";
-  const addonName = "test-devtools";
-  const { tab, document } = await openAboutDebugging("addons");
-  await waitForInitialAddonList(document);
-
-  await installAddon({
-    document,
-    path: "addons/unpacked/install.rdf",
-    name: addonName,
-  });
-
-  const container = document.querySelector(`[data-addon-id="${addonId}"]`);
-  testFilePath(container, "browser/devtools/client/aboutdebugging/test/addons/unpacked/");
-
-  await uninstallAddon({document, id: addonId, name: addonName});
-
-  await closeAboutDebugging(tab);
-});
-*/
-
 add_task(async function testWebExtension() {
   const addonId = "test-devtools-webextension-nobg@mozilla.org";
   const addonName = "test-devtools-webextension-nobg";
@@ -57,7 +34,6 @@ add_task(async function testWebExtension() {
     document,
     file: addonFile,
     name: addonName,
-    isWebExtension: true,
   });
 
   const container = document.querySelector(`[data-addon-id="${addonId}"]`);
@@ -95,7 +71,6 @@ add_task(async function testTemporaryWebExtension() {
     document,
     file: addonFile,
     name: addonName,
-    isWebExtension: true,
   });
 
   const addons =
@@ -138,7 +113,6 @@ add_task(async function testUnknownManifestProperty() {
     document,
     file: addonFile,
     name: addonName,
-    isWebExtension: true,
   });
 
   info("Wait until the addon appears in about:debugging");

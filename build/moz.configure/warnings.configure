@@ -14,10 +14,14 @@ add_old_configure_assignment(
 
 
 # GCC/Clang warnings:
-# https://gcc.gnu.org/onlinedocs/gcc-4.7.2/gcc/Warning-Options.html
+# https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
+# https://clang.llvm.org/docs/DiagnosticsReference.html
 
 # lots of useful warnings
 add_gcc_warning('-Wall')
+
+# catch implicit truncation of enum values assigned to smaller bit fields
+check_and_add_gcc_warning('-Wbitfield-enum-conversion')
 
 # catches bugs, e.g. "if (c); foo();", few false positives
 add_gcc_warning('-Wempty-body')

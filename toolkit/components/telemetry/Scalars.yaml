@@ -1424,6 +1424,38 @@ devtools.accessibility:
     record_in_processes:
       - 'main'
 
+  accessible_context_menu_opened:
+    bug_numbers:
+      - 1507870
+    description: >
+      Number of times a context menu was opened for an accessible object in the
+      accessibility tree.
+    expires: "70"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - yzenevich@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+  accessible_context_menu_item_activated:
+    bug_numbers:
+      - 1507870
+    description: >
+      Number of times a context menu item for an accessible object was activated (with
+      mouse or keyboard) from the context menu opened in the accessibility tree. Keyed by
+      the id of the context menu item.
+    expires: "70"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - yzenevich@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 devtools.application:
   opened_count:
     bug_numbers:
@@ -1516,6 +1548,21 @@ devtools.webreplay:
      - bhackett@mozilla.com
     record_in_processes:
      - 'main'
+
+devtools.changesview:
+  opened_count:
+    bug_numbers:
+      - 1509890
+    description: >
+      Number of times the Changes panel has been opened.
+    expires: never
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - mbalfanz@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
 
 navigator.storage:
   estimate_count:

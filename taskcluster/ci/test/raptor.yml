@@ -1,5 +1,9 @@
 job-defaults:
-    max-run-time: 1800
+    max-run-time:
+        by-test-platform:
+            .*-qr/.*: 2400
+            .*-ux/.*: 2400
+            default: 1800
     suite: raptor
     workdir:
         by-test-platform:
@@ -40,7 +44,6 @@ raptor-tp6-1-firefox:
         by-test-platform:
             windows10-64-ux: ['try', 'mozilla-central']
             default: built-projects
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-tp6-1
@@ -65,7 +68,6 @@ raptor-tp6-2-firefox:
     try-name: raptor-tp6-2-firefox
     treeherder-symbol: Rap(tp6-2)
     run-on-projects: built-projects
-    max-run-time: 1200
     mozharness:
         extra-options:
             - --test=raptor-tp6-2
@@ -79,7 +81,6 @@ raptor-tp6-2-chrome:
         by-test-platform:
             linux64.*: 3
             default: 2
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-tp6-2
@@ -91,7 +92,6 @@ raptor-tp6-3-firefox:
     treeherder-symbol: Rap(tp6-3)
     run-on-projects: ['try', 'mozilla-central']
     tier: 2
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-tp6-3
@@ -117,7 +117,6 @@ raptor-tp6-4-firefox:
     treeherder-symbol: Rap(tp6-4)
     run-on-projects: ['try', 'mozilla-central']
     tier: 2
-    max-run-time: 1200
     mozharness:
         extra-options:
             - --test=raptor-tp6-4
@@ -131,7 +130,6 @@ raptor-tp6-4-chrome:
         by-test-platform:
             linux64.*: 3
             default: 2
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-tp6-4
@@ -143,7 +141,6 @@ raptor-tp6-5-firefox:
     treeherder-symbol: Rap(tp6-5)
     run-on-projects: ['try', 'mozilla-central']
     tier: 2
-    max-run-time: 1200
     mozharness:
         extra-options:
             - --test=raptor-tp6-5
@@ -157,7 +154,6 @@ raptor-tp6-5-chrome:
         by-test-platform:
             linux64.*: 3
             default: 2
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-tp6-5
@@ -169,7 +165,6 @@ raptor-tp6-6-firefox:
     treeherder-symbol: Rap(tp6-6)
     run-on-projects: ['try', 'mozilla-central']
     tier: 2
-    max-run-time: 1200
     mozharness:
         extra-options:
             - --test=raptor-tp6-6
@@ -183,7 +178,6 @@ raptor-tp6-6-chrome:
         by-test-platform:
             linux64.*: 3
             default: 2
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-tp6-6
@@ -197,7 +191,6 @@ raptor-speedometer-firefox:
         by-test-platform:
             windows10-64-ux: ['try', 'mozilla-central']
             default: built-projects
-    max-run-time: 1500
     mozharness:
         extra-options:
             - --test=raptor-speedometer
@@ -237,7 +230,6 @@ raptor-stylebench-firefox:
         by-test-platform:
             windows10-64-ux: ['try', 'mozilla-central']
             default: built-projects
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-stylebench
@@ -248,7 +240,6 @@ raptor-stylebench-chrome:
     treeherder-symbol: Rap-C(sb)
     run-on-projects: ['try', 'mozilla-central']
     tier: 2
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-stylebench
@@ -262,7 +253,6 @@ raptor-motionmark-htmlsuite-firefox:
         by-test-platform:
             windows10-64-ux: ['try', 'mozilla-central']
             default: built-projects
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-motionmark-htmlsuite
@@ -273,7 +263,6 @@ raptor-motionmark-htmlsuite-chrome:
     treeherder-symbol: Rap-C(mm-h)
     run-on-projects: ['try', 'mozilla-central']
     tier: 2
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-motionmark-htmlsuite
@@ -287,7 +276,6 @@ raptor-motionmark-animometer-firefox:
         by-test-platform:
             windows10-64-ux: ['try', 'mozilla-central']
             default: built-projects
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-motionmark-animometer
@@ -298,7 +286,6 @@ raptor-motionmark-animometer-chrome:
     treeherder-symbol: Rap-C(mm-a)
     run-on-projects: ['try', 'mozilla-central']
     tier: 2
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-motionmark-animometer
@@ -312,7 +299,6 @@ raptor-webaudio-firefox:
         by-test-platform:
             windows10-64-ux: ['try', 'mozilla-central']
             default: built-projects
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-webaudio
@@ -322,7 +308,6 @@ raptor-webaudio-chrome:
     try-name: raptor-webaudio-chrome
     treeherder-symbol: Rap-C(wa)
     tier: 2
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-webaudio
@@ -340,7 +325,6 @@ raptor-sunspider-firefox:
         by-test-platform:
             windows10-64-ux: ['try', 'mozilla-central']
             default: built-projects
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-sunspider
@@ -351,7 +335,6 @@ raptor-sunspider-chrome:
     treeherder-symbol: Rap-C(ss)
     run-on-projects: ['try', 'mozilla-central']
     tier: 2
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-sunspider
@@ -365,7 +348,6 @@ raptor-unity-webgl-firefox:
         by-test-platform:
             windows10-64-ux: ['try', 'mozilla-central']
             default: built-projects
-    max-run-time: 3600
     mozharness:
         extra-options:
             - --test=raptor-unity-webgl
@@ -397,7 +379,6 @@ raptor-unity-webgl-chrome:
     treeherder-symbol: Rap-C(ugl)
     run-on-projects: ['try', 'mozilla-central']
     tier: 2
-    max-run-time: 3600
     mozharness:
         extra-options:
             - --test=raptor-unity-webgl
@@ -414,7 +395,6 @@ raptor-wasm-misc-firefox:
         by-test-platform:
             windows10-64-ux: ['try', 'mozilla-central']
             default: built-projects
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc
@@ -430,7 +410,6 @@ raptor-wasm-misc-baseline-firefox:
         by-test-platform:
             windows10-64-ux: ['try', 'mozilla-central']
             default: built-projects
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc-baseline
@@ -446,7 +425,6 @@ raptor-wasm-misc-ion-firefox:
         by-test-platform:
             windows10-64-ux: ['try', 'mozilla-central']
             default: built-projects
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc-ion
@@ -460,7 +438,6 @@ raptor-wasm-misc-chrome:
     treeherder-symbol: Rap-C(wm)
     run-on-projects: ['try', 'mozilla-central']
     tier: 2
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc
@@ -477,7 +454,11 @@ raptor-assorted-dom-firefox:
         by-test-platform:
             windows10-64-ux: ['try', 'mozilla-central']
             default: built-projects
-    max-run-time: 1500
+    max-run-time:
+        by-test-platform:
+            .*-qr/.*: 2100
+            .*-ux/.*: 2100
+            default: 1500
     mozharness:
         extra-options:
             - --test=raptor-assorted-dom
@@ -508,7 +489,11 @@ raptor-wasm-godot-firefox:
         by-test-platform:
             windows10-64-ux: ['try', 'mozilla-central']
             default: built-projects
-    max-run-time: 1500
+    max-run-time:
+        by-test-platform:
+            .*-qr/.*: 2100
+            .*-ux/.*: 2100
+            default: 1500
     mozharness:
         extra-options:
             - --test=raptor-wasm-godot
@@ -533,7 +518,11 @@ raptor-wasm-godot-baseline-firefox:
         by-test-platform:
             windows10-64-ux: ['try', 'mozilla-central']
             default: built-projects
-    max-run-time: 1500
+    max-run-time:
+        by-test-platform:
+            .*-qr/.*: 2100
+            .*-ux/.*: 2100
+            default: 1500
     mozharness:
         extra-options:
             - --test=raptor-wasm-godot-baseline
@@ -546,7 +535,11 @@ raptor-wasm-godot-ion-firefox:
         by-test-platform:
             windows10-64-ux: ['try', 'mozilla-central']
             default: built-projects
-    max-run-time: 1500
+    max-run-time:
+        by-test-platform:
+            .*-qr/.*: 2100
+            .*-ux/.*: 2100
+            default: 1500
     mozharness:
         extra-options:
             - --test=raptor-wasm-godot-ion

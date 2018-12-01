@@ -582,6 +582,18 @@ impl<Src, Dst> FastTransform<Src, Dst> {
         }
     }
 
+    /// Return true if this is an identity transform
+    pub fn is_identity(&self)-> bool {
+        match *self {
+            FastTransform::Offset(offset) => {
+                offset == TypedVector2D::zero()
+            }
+            FastTransform::Transform { ref transform, .. } => {
+                *transform == TypedTransform3D::identity()
+            }
+        }
+    }
+
     #[inline(always)]
     pub fn pre_mul<NewSrc>(
         &self,

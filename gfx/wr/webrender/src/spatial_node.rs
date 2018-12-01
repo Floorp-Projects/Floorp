@@ -96,6 +96,7 @@ impl SpatialNode {
         frame_rect: &LayoutRect,
         content_size: &LayoutSize,
         scroll_sensitivity: ScrollSensitivity,
+        frame_kind: ScrollFrameKind,
     ) -> Self {
         let node_type = SpatialNodeType::ScrollFrame(ScrollFrameInfo::new(
                 *frame_rect,
@@ -105,6 +106,7 @@ impl SpatialNode {
                     (content_size.height - frame_rect.size.height).max(0.0)
                 ),
                 external_id,
+                frame_kind,
             )
         );
 
@@ -558,6 +560,14 @@ impl SpatialNode {
     }
 }
 
+/// Defines whether we have an implicit scroll frame for a pipeline root,
+/// or an explicitly defined scroll frame from the display list.
+#[derive(Copy, Clone, Debug)]
+pub enum ScrollFrameKind {
+    PipelineRoot,
+    Explicit,
+}
+
 #[derive(Copy, Clone, Debug)]
 pub struct ScrollFrameInfo {
     /// The rectangle of the viewport of this scroll frame. This is important for
@@ -575,6 +585,14 @@ pub struct ScrollFrameInfo {
     /// which may change between frames.
     pub external_id: Option<ExternalScrollId>,
 
+    /// Stores whether this is a scroll frame added implicitly by WR when adding
+    /// a pipeline (either the root or an iframe). We need to exclude these
+    /// when searching for scroll roots we care about for picture caching.
+    /// TODO(gw): I think we can actually completely remove the implicit
+    ///           scroll frame being added by WR, and rely on the embedder
+    ///           to define scroll frames. However, that involves API changes
+    ///           so we will use this as a temporary hack!
+    pub frame_kind: ScrollFrameKind,
 }
 
 /// Manages scrolling offset.
@@ -584,6 +602,7 @@ impl ScrollFrameInfo {
         scroll_sensitivity: ScrollSensitivity,
         scrollable_size: LayoutSize,
         external_id: Option<ExternalScrollId>,
+        frame_kind: ScrollFrameKind,
     ) -> ScrollFrameInfo {
         ScrollFrameInfo {
             viewport_rect,
@@ -591,6 +610,7 @@ impl ScrollFrameInfo {
             scroll_sensitivity,
             scrollable_size,
             external_id,
+            frame_kind,
         }
     }
 
@@ -611,6 +631,7 @@ impl ScrollFrameInfo {
             scroll_sensitivity: self.scroll_sensitivity,
             scrollable_size: self.scrollable_size,
             external_id: self.external_id,
+            frame_kind: self.frame_kind,
         }
     }
 }
