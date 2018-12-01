@@ -3,6 +3,8 @@
  *   spoofed/disabled correctly.
  */
 
+"use strict";
+
 const CC = Components.Constructor;
 
 ChromeUtils.defineModuleGetter(this, "AppConstants",
@@ -32,24 +34,24 @@ const SPOOFED_PLATFORM = {
 };
 const SPOOFED_OSCPU = {
   linux: "Linux x86_64",
-  win: "Windows NT 6.1; Win64; x64",
+  win: "Windows NT 10.0; Win64; x64",
   macosx: "Intel Mac OS X 10.13",
   android: "Linux armv7l",
   other: "Linux x86_64",
 };
 const SPOOFED_UA_NAVIGATOR_OS = {
   linux: "X11; Linux x86_64",
-  win: "Windows NT 6.1; Win64; x64",
+  win: "Windows NT 10.0; Win64; x64",
   macosx: "Macintosh; Intel Mac OS X 10.13",
   android: "Android 6.0; Mobile",
   other: "X11; Linux x86_64",
 };
 const SPOOFED_UA_HTTPHEADER_OS = {
-  linux: "Windows NT 6.1",
-  win: "Windows NT 6.1",
-  macosx: "Windows NT 6.1",
+  linux: "Windows NT 10.0",
+  win: "Windows NT 10.0",
+  macosx: "Windows NT 10.0",
   android: "Android 6.0; Mobile",
-  other: "Windows NT 6.1",
+  other: "Windows NT 10.0",
 };
 const SPOOFED_HW_CONCURRENCY = 2;
 
