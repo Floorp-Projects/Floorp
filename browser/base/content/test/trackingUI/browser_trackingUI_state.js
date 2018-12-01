@@ -56,6 +56,7 @@ function testBenignPage() {
   info("Non-tracking content must not be blocked");
   ok(!ContentBlocking.content.hasAttribute("detected"), "no trackers are detected");
   ok(!ContentBlocking.content.hasAttribute("hasException"), "content shows no exception");
+  ok(!ContentBlocking.content.hasAttribute("active"), "content is not active");
 
   ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is not active");
   ok(!ContentBlocking.iconBox.hasAttribute("hasException"), "icon box shows no exception");
@@ -67,16 +68,14 @@ function testBenignPage() {
 
   ok(!hidden("#identity-popup-content-blocking-not-detected"), "blocking not detected label is visible");
   ok(hidden("#identity-popup-content-blocking-detected"), "blocking detected label is hidden");
-  ok(hidden("#identity-popup-content-blocking-category-cookies"),
-    "Not showing cookie restrictions category");
-  ok(hidden("#identity-popup-content-blocking-category-tracking-protection"),
-    "Not showing trackers category");
+  ok(hidden("#identity-popup-content-blocking-category-list"), "category list is hidden");
 }
 
 function testBenignPageWithException() {
   info("Non-tracking content must not be blocked");
   ok(!ContentBlocking.content.hasAttribute("detected"), "no trackers are detected");
   ok(ContentBlocking.content.hasAttribute("hasException"), "content shows exception");
+  ok(!ContentBlocking.content.hasAttribute("active"), "content is not active");
 
   ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is not active");
   ok(ContentBlocking.iconBox.hasAttribute("hasException"), "shield shows exception");
@@ -89,10 +88,7 @@ function testBenignPageWithException() {
 
   ok(!hidden("#identity-popup-content-blocking-not-detected"), "blocking not detected label is visible");
   ok(hidden("#identity-popup-content-blocking-detected"), "blocking detected label is hidden");
-  ok(hidden("#identity-popup-content-blocking-category-cookies"),
-    "Not showing cookie restrictions category");
-  ok(hidden("#identity-popup-content-blocking-category-tracking-protection"),
-    "Not showing trackers category");
+  ok(hidden("#identity-popup-content-blocking-category-list"), "category list is hidden");
 }
 
 function areTrackersBlocked(isPrivateBrowsing) {
@@ -110,6 +106,8 @@ function testTrackingPage(window) {
   let blockedByTP = areTrackersBlocked(isPrivateBrowsing);
   is(BrowserTestUtils.is_visible(ContentBlocking.iconBox), blockedByTP,
      "icon box is" + (blockedByTP ? "" : " not") + " visible");
+  is(ContentBlocking.content.hasAttribute("active"), blockedByTP,
+      "content is" + (blockedByTP ? "" : " not") + " active");
   is(ContentBlocking.iconBox.hasAttribute("active"), blockedByTP,
       "shield is" + (blockedByTP ? "" : " not") + " active");
   ok(!ContentBlocking.iconBox.hasAttribute("hasException"), "icon box shows no exception");
@@ -133,10 +131,32 @@ function testTrackingPage(window) {
   ok(hidden("#identity-popup-content-blocking-not-detected"), "blocking not detected label is hidden");
   ok(!hidden("#identity-popup-content-blocking-detected"), "blocking detected label is visible");
 
-  ok(!hidden("#identity-popup-content-blocking-category-tracking-protection"),
-    "Showing trackers category");
-  ok(!hidden("#identity-popup-content-blocking-category-cookies"),
-    "Showing cookie restrictions category");
+  ok(!hidden("#identity-popup-content-blocking-category-list"), "category list is visible");
+
+  let cookiesBlocked = Services.prefs.getIntPref(TPC_PREF) == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER;
+  if (cookiesBlocked) {
+    let category = "#identity-popup-content-blocking-category-3rdpartycookies";
+    is(hidden(category + " > .identity-popup-content-blocking-category-add-blocking"), blockedByTP,
+      "Category item is" + (blockedByTP ? " not" : "") + " showing add blocking");
+    is(hidden(category + " > .identity-popup-content-blocking-category-state-label"), !blockedByTP,
+      "Category item is" + (blockedByTP ? "" : " not") + " set to blocked");
+
+    ok(hidden("#identity-popup-content-blocking-category-label-default"),
+      "Not showing default cookie restrictions label.");
+    ok(!hidden("#identity-popup-content-blocking-category-label-trackers"),
+      "Showing trackers cookie restrictions label.");
+  } else {
+    let category = "#identity-popup-content-blocking-category-tracking-protection";
+    is(hidden(category + " > #identity-popup-content-blocking-tracking-protection-label-allowed"), blockedByTP,
+      "Category item is" + (blockedByTP ? " not" : "") + " showing the allowed label");
+    is(!hidden(category + " > #identity-popup-content-blocking-tracking-protection-label-blocked"), blockedByTP,
+      "Category item is" + (blockedByTP ? "" : " not") + " set to blocked");
+
+    ok(hidden("#identity-popup-content-blocking-category-label-trackers"),
+      "Not showing trackers cookie restrictions label.");
+    ok(!hidden("#identity-popup-content-blocking-category-label-default"),
+      "Showing default cookie restrictions label.");
+  }
 }
 
 function testTrackingPageUnblocked(blockedByTP, window) {
@@ -144,6 +164,7 @@ function testTrackingPageUnblocked(blockedByTP, window) {
   ok(ContentBlocking.content.hasAttribute("detected"), "trackers are detected");
   ok(ContentBlocking.content.hasAttribute("hasException"), "content shows exception");
 
+  ok(!ContentBlocking.content.hasAttribute("active"), "content is not active");
   ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is not active");
   ok(ContentBlocking.iconBox.hasAttribute("hasException"), "shield shows exception");
   is(ContentBlocking.iconBox.getAttribute("tooltiptext"),
@@ -156,10 +177,23 @@ function testTrackingPageUnblocked(blockedByTP, window) {
   ok(hidden("#identity-popup-content-blocking-not-detected"), "blocking not detected label is hidden");
   ok(!hidden("#identity-popup-content-blocking-detected"), "blocking detected label is visible");
 
-  ok(!hidden("#identity-popup-content-blocking-category-tracking-protection"),
-    "Showing trackers category");
-  ok(!hidden("#identity-popup-content-blocking-category-cookies"),
-    "Showing cookie restrictions category");
+  ok(!hidden("#identity-popup-content-blocking-category-list"), "category list is visible");
+
+  let cookiesBlocked = Services.prefs.getIntPref(TPC_PREF) == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER;
+  if (cookiesBlocked) {
+    let category = "#identity-popup-content-blocking-category-3rdpartycookies";
+    is(hidden(category + " > .identity-popup-content-blocking-category-add-blocking"), blockedByTP,
+      "Category item is" + (blockedByTP ? " not" : "") + " showing add blocking");
+    ok(!hidden("#identity-popup-content-blocking-category-tracking-protection > #identity-popup-content-blocking-tracking-protection-label-allowed"),
+      "TP category item is showing the allowed label");
+  } else {
+    let category = "#identity-popup-content-blocking-category-tracking-protection";
+    // If there's an exception we always show the "Allowed" label.
+    ok(!hidden(category + " > #identity-popup-content-blocking-tracking-protection-label-allowed"),
+      "Category item is showing the allowed label");
+    ok(hidden(category + " > #identity-popup-content-blocking-tracking-protection-label-blocked"),
+      "Category item is not set to blocked");
+  }
 }
 
 async function testContentBlocking(tab) {
