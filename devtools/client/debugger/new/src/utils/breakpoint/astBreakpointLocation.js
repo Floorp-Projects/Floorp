@@ -9,12 +9,12 @@ import { findClosestFunction } from "../ast";
 
 import type { SymbolDeclarations } from "../../workers/parser";
 
-import type { SourceLocation, Source, ASTLocation } from "../../types";
+import type { Location, Source, ASTLocation } from "../../types";
 
 export function getASTLocation(
   source: Source,
   symbols: SymbolDeclarations,
-  location: SourceLocation
+  location: Location
 ): ASTLocation {
   if (source.isWasm || !symbols || symbols.loading) {
     return { name: undefined, offset: location };

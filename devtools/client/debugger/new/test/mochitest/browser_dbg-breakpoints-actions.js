@@ -8,7 +8,7 @@ function openFirstBreakpointContextMenu(dbg){
 
 // Tests to see if we can trigger a breakpoint action via the context menu
 add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html", "simple2");
+  const dbg = await initDebugger("doc-scripts.html");
   await selectSource(dbg, "simple2");
   await waitForSelectedSource(dbg, "simple2");
 
@@ -16,7 +16,7 @@ add_task(async function() {
 
   openFirstBreakpointContextMenu(dbg)
   // select "Remove breakpoint"
-  selectContextMenuItem(dbg, selectors.breakpointContextMenu.remove);
+  selectMenuItem(dbg, 1);
 
   await waitForState(dbg, state => dbg.selectors.getBreakpointCount(state) === 0);
   ok("successfully removed the breakpoint");
@@ -36,7 +36,7 @@ add_task(async function() {
   openFirstBreakpointContextMenu(dbg);
   // select "Disable Others"
   let dispatched = waitForDispatch(dbg, "DISABLE_BREAKPOINT", 3);
-  selectContextMenuItem(dbg, selectors.breakpointContextMenu.disableOthers);
+  selectMenuItem(dbg, 7);
   await waitForState(dbg, state =>
     dbg.selectors.getBreakpointsList(state)
       .every(bp => (bp.location.line !== 1) === bp.disabled)
@@ -47,7 +47,7 @@ add_task(async function() {
   openFirstBreakpointContextMenu(dbg);
   // select "Disable All"
   dispatched = waitForDispatch(dbg, "DISABLE_ALL_BREAKPOINTS");
-  selectContextMenuItem(dbg, selectors.breakpointContextMenu.disableAll);
+  selectMenuItem(dbg, 9);
   await waitForState(dbg, state =>
     dbg.selectors.getBreakpointsList(state).every(bp => bp.disabled)
   );
@@ -57,7 +57,7 @@ add_task(async function() {
   openFirstBreakpointContextMenu(dbg);
   // select "Enable Others"
   dispatched = waitForDispatch(dbg, "ENABLE_BREAKPOINT", 3);
-  selectContextMenuItem(dbg, selectors.breakpointContextMenu.enableOthers);
+  selectMenuItem(dbg, 3);
   await waitForState(dbg, state =>
     dbg.selectors.getBreakpointsList(state)
       .every(bp => (bp.location.line === 1) === bp.disabled)
@@ -68,7 +68,7 @@ add_task(async function() {
   openFirstBreakpointContextMenu(dbg);
   // select "Remove Others"
   dispatched = waitForDispatch(dbg, "REMOVE_BREAKPOINT", 3);
-  selectContextMenuItem(dbg, selectors.breakpointContextMenu.removeOthers);
+  selectMenuItem(dbg, 6);
   await waitForState(dbg, state =>
     dbg.selectors.getBreakpointsList(state).length === 1 &&
     dbg.selectors.getBreakpointsList(state)[0].location.line === 1

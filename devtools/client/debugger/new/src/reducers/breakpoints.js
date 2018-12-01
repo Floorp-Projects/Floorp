@@ -14,7 +14,7 @@ import * as I from "immutable";
 import { isGeneratedId } from "devtools-source-map";
 import { makeLocationId } from "../utils/breakpoint";
 
-import type { XHRBreakpoint, Breakpoint, SourceLocation } from "../types";
+import type { XHRBreakpoint, Breakpoint, Location } from "../types";
 import type { Action, DonePromiseAction } from "../actions/types";
 
 export type BreakpointsMap = { [string]: Breakpoint };
@@ -270,7 +270,7 @@ export function getBreakpointCount(state: OuterState): number {
 
 export function getBreakpoint(
   state: OuterState,
-  location: SourceLocation
+  location: Location
 ): ?Breakpoint {
   const breakpoints = getBreakpointsMap(state);
   return breakpoints[makeLocationId(location)];
@@ -322,9 +322,7 @@ export function getHiddenBreakpoint(state: OuterState): ?Breakpoint {
   return breakpoints.find(bp => bp.hidden);
 }
 
-export function getHiddenBreakpointLocation(
-  state: OuterState
-): ?SourceLocation {
+export function getHiddenBreakpointLocation(state: OuterState): ?Location {
   const hiddenBreakpoint = getHiddenBreakpoint(state);
   if (!hiddenBreakpoint) {
     return null;

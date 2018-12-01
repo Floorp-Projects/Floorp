@@ -18,7 +18,7 @@ import { getSource } from "../../selectors";
 import type { ThunkArgs, Action } from "../types";
 
 import type {
-  SourceLocation,
+  Location,
   ASTLocation,
   PendingBreakpoint,
   SourceId,
@@ -26,13 +26,13 @@ import type {
 } from "../../types";
 
 type BreakpointSyncData = {
-  previousLocation: SourceLocation,
+  previousLocation: Location,
   breakpoint: ?Breakpoint
 };
 
 async function makeScopedLocation(
   { name, offset }: ASTLocation,
-  location: SourceLocation,
+  location: Location,
   source
 ) {
   const scope = await findScopeByName(source, name);
@@ -51,9 +51,9 @@ async function makeScopedLocation(
 function createSyncData(
   id: SourceId,
   pendingBreakpoint: PendingBreakpoint,
-  location: SourceLocation,
-  generatedLocation: SourceLocation,
-  previousLocation: SourceLocation,
+  location: Location,
+  generatedLocation: Location,
+  previousLocation: Location,
   text: string,
   originalText: string
 ): BreakpointSyncData {

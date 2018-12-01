@@ -14,6 +14,7 @@ import type {
 
 import { createPause, createSource } from "./create";
 import sourceQueue from "../../utils/source-queue";
+import { features } from "../../utils/prefs";
 
 const CALL_STACK_PAGE_SIZE = 1000;
 
@@ -99,6 +100,10 @@ function resumed(_: "resumed", packet: ResumedPacket) {
 
 function newSource(_: "newSource", { source }: SourcePacket) {
   sourceQueue.queue(source);
+
+  if (features.eventListeners) {
+    actions.fetchEventListeners();
+  }
 }
 
 function workerListChanged() {
