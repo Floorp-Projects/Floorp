@@ -704,7 +704,6 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
         helper.Report(aReport.images, "resource-cache/images");
         helper.Report(aReport.rasterized_blobs,
                       "resource-cache/rasterized-blobs");
-        helper.Report(aReport.shader_cache, "shader-cache");
 
         // GPU Memory.
         helper.ReportTexture(aReport.gpu_cache_textures, "gpu-cache");
@@ -713,6 +712,9 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
         helper.ReportTexture(aReport.texture_cache_textures, "texture-cache");
         helper.ReportTexture(aReport.depth_target_textures, "depth-targets");
         helper.ReportTexture(aReport.swap_chain, "swap-chains");
+
+        // Total GPU bytes, for sanity-checking the above.
+        helper.ReportTotalGPUBytes(aReport.total_gpu_bytes_allocated);
 
         FinishAsyncMemoryReport();
       },
