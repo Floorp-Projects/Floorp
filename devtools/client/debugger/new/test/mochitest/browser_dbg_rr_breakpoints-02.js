@@ -7,17 +7,21 @@
 async function test() {
   waitForExplicitFinish();
 
-  const dbg = await attatchRecordingDebugger("doc_rr_basic.html", { waitForRecording: true });
-  const {threadClient, tab, toolbox} = dbg;
+  let tab = BrowserTestUtils.addTab(gBrowser, null, { recordExecution: "*" });
+  gBrowser.selectedTab = tab;
+  openTrustedLinkIn(EXAMPLE_URL + "doc_rr_basic.html", "current");
+  await once(Services.ppmm, "RecordingFinished");
 
-  await setBreakpoint(threadClient, "doc_rr_basic.html", 21);
-  await rewindToLine(threadClient, 21);
-  await checkEvaluateInTopFrame(threadClient, "number", 10);
-  await checkEvaluateInTopFrameThrows(threadClient, "window.alert(3)");
-  await checkEvaluateInTopFrame(threadClient, "number", 10);
-  await checkEvaluateInTopFrameThrows(threadClient, "window.alert(3)");
-  await checkEvaluateInTopFrame(threadClient, "number", 10);
-  await checkEvaluateInTopFrame(threadClient, "testStepping2()", undefined);
+  let toolbox = await attachDebugger(tab), client = toolbox.threadClient;
+  await client.interrupt();
+  await setBreakpoint(client, "doc_rr_basic.html", 21);
+  await rewindToLine(client, 21);
+  await checkEvaluateInTopFrame(client, "number", 10);
+  await checkEvaluateInTopFrameThrows(client, "window.alert(3)");
+  await checkEvaluateInTopFrame(client, "number", 10);
+  await checkEvaluateInTopFrameThrows(client, "window.alert(3)");
+  await checkEvaluateInTopFrame(client, "number", 10);
+  await checkEvaluateInTopFrame(client, "testStepping2()", undefined);
 
   await toolbox.destroy();
   await gBrowser.removeTab(tab);

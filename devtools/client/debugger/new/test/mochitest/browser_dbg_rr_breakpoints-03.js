@@ -7,19 +7,21 @@
 async function test() {
   waitForExplicitFinish();
 
-  const dbg = await attatchRecordingDebugger("doc_rr_continuous.html");
-  const {threadClient, tab, toolbox} = dbg;
+  let tab = BrowserTestUtils.addTab(gBrowser, null, { recordExecution: "*" });
+  gBrowser.selectedTab = tab;
+  openTrustedLinkIn(EXAMPLE_URL + "doc_rr_continuous.html", "current");
 
-  await threadClient.interrupt();
-  await setBreakpoint(threadClient, "doc_rr_continuous.html", 19);
-  await resumeToLine(threadClient, 19);
-  await reverseStepOverToLine(threadClient, 18);
-  await checkEvaluateInTopFrame(threadClient, "SpecialPowers.Cu.recordReplayDirective(/* AlwaysTakeTemporarySnapshots */ 3)", undefined);
-  await stepInToLine(threadClient, 22);
-  await setBreakpoint(threadClient, "doc_rr_continuous.html", 24);
-  await resumeToLine(threadClient, 24);
-  await setBreakpoint(threadClient, "doc_rr_continuous.html", 22);
-  await rewindToLine(threadClient, 22);
+  let toolbox = await attachDebugger(tab), client = toolbox.threadClient;
+  await client.interrupt();
+  await setBreakpoint(client, "doc_rr_continuous.html", 19);
+  await resumeToLine(client, 19);
+  await reverseStepOverToLine(client, 18);
+  await checkEvaluateInTopFrame(client, "SpecialPowers.Cu.recordReplayDirective(/* AlwaysTakeTemporarySnapshots */ 3)", undefined);
+  await stepInToLine(client, 22);
+  await setBreakpoint(client, "doc_rr_continuous.html", 24);
+  await resumeToLine(client, 24);
+  await setBreakpoint(client, "doc_rr_continuous.html", 22);
+  await rewindToLine(client, 22);
 
   await toolbox.destroy();
   await gBrowser.removeTab(tab);
