@@ -73,7 +73,7 @@
   <string name="preference_autocomplete_add_confirmation">Novo URL personalizado adicionado.</string>
   <string name="preference_autocomplete_menu_remove">Remover</string>
   <string name="preference_autocomplete_action_remove_content_description">Remover</string>
-  <string name="preference_autocomplete_add_error">Verifique novamente o URL digitado.</string>
+  <string name="preference_autocomplete_add_error">Verifique novamente a URL digitada.</string>
   <string name="preference_language">Idioma</string>
   <string name="preference_language_systemdefault">Padrão do sistema</string>
   <string name="preference_category_privacy">Privacidade</string>
