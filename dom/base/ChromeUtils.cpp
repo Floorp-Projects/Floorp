@@ -19,6 +19,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/IdleDeadline.h"
+#include "mozilla/dom/ReportingHeader.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/WindowBinding.h"  // For IdleRequestCallback/Options
 #include "IOActivityMonitor.h"
@@ -724,6 +725,17 @@ constexpr auto kSkipSelfHosted = JS::SavedFrameSelfHosted::Exclude;
     GlobalObject& aGlobal,
     nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts) {
   BrowsingContext::GetRootBrowsingContexts(aBrowsingContexts);
+}
+
+/* static */ bool ChromeUtils::HasReportingHeaderForOrigin(
+    GlobalObject& global, const nsAString& aOrigin, ErrorResult& aRv) {
+  if (!XRE_IsParentProcess()) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return false;
+  }
+
+  return ReportingHeader::HasReportingHeaderForOrigin(
+      NS_ConvertUTF16toUTF8(aOrigin));
 }
 
 }  // namespace dom

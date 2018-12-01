@@ -165,6 +165,10 @@ class ChromeUtils {
   static void GetRootBrowsingContexts(
       GlobalObject& aGlobal,
       nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts);
+
+  static bool HasReportingHeaderForOrigin(GlobalObject& global,
+                                          const nsAString& aOrigin,
+                                          ErrorResult& aRv);
 };
 
 }  // namespace dom

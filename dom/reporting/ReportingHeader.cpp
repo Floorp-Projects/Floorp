@@ -653,6 +653,15 @@ void ReportingHeader::RemoveOriginsFromOriginAttributesPattern(
 
 void ReportingHeader::RemoveOrigins() { mOrigins.Clear(); }
 
+/* static */ bool ReportingHeader::HasReportingHeaderForOrigin(
+    const nsACString& aOrigin) {
+  if (!gReporting) {
+    return false;
+  }
+
+  return gReporting->mOrigins.Contains(aOrigin);
+}
+
 NS_INTERFACE_MAP_BEGIN(ReportingHeader)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
