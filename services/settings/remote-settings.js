@@ -21,6 +21,8 @@ ChromeUtils.defineModuleGetter(this, "pushBroadcastService",
                                "resource://gre/modules/PushBroadcastService.jsm");
 ChromeUtils.defineModuleGetter(this, "RemoteSettingsClient",
                                "resource://services-settings/RemoteSettingsClient.jsm");
+ChromeUtils.defineModuleGetter(this, "Utils",
+                               "resource://services-settings/Utils.jsm");
 ChromeUtils.defineModuleGetter(this, "FilterExpressions",
                                "resource://gre/modules/components-utils/FilterExpressions.jsm");
 
@@ -71,112 +73,6 @@ async function jexlFilterFunc(entry, environment) {
     Cu.reportError(e);
   }
   return result ? entry : null;
-}
-
-/**
- * Fetch the list of remote collections and their timestamp.
- * @param {String} url               The poll URL (eg. `http://${server}{pollingEndpoint}`)
- * @param {String} lastEtag          (optional) The Etag of the latest poll to be matched
- *                                    by the server (eg. `"123456789"`).
- * @param {int}    expectedTimestamp The timestamp that the server is supposed to return.
- *                                   We obtained it from the Megaphone notification payload,
- *                                   and we use it only for cache busting (Bug 1497159).
- */
-async function fetchLatestChanges(url, lastEtag, expectedTimestamp) {
-  //
-  // Fetch the list of changes objects from the server that looks like:
-  // {"data":[
-  //   {
-  //     "host":"kinto-ota.dev.mozaws.net",
-  //     "last_modified":1450717104423,
-  //     "bucket":"blocklists",
-  //     "collection":"certificates"
-  //    }]}
-
-  // Use ETag to obtain a `304 Not modified` when no change occurred,
-  // and `?_since` parameter to only keep entries that weren't processed yet.
-  const headers = {};
-  const params = {};
-  if (lastEtag) {
-    headers["If-None-Match"] = lastEtag;
-    params._since = lastEtag;
-  }
-  if (expectedTimestamp) {
-    params._expected = expectedTimestamp;
-  }
-  if (params) {
-    url += "?" + Object.entries(params).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&");
-  }
-  const response = await fetch(url, {headers});
-
-  let changes = [];
-  // If no changes since last time, go on with empty list of changes.
-  if (response.status != 304) {
-    let payload;
-    try {
-      payload = await response.json();
-    } catch (e) {
-      payload = e.message;
-    }
-
-    if (!payload.hasOwnProperty("data")) {
-      // If the server is failing, the JSON response might not contain the
-      // expected data. For example, real server errors (Bug 1259145)
-      // or dummy local server for tests (Bug 1481348)
-      const is404FromCustomServer = response.status == 404 && gPrefs.prefHasUserValue(PREF_SETTINGS_SERVER);
-      if (!is404FromCustomServer) {
-        throw new Error(`Server error ${response.status} ${response.statusText}: ${JSON.stringify(payload)}`);
-      }
-    } else {
-      changes = payload.data;
-    }
-  }
-  // The server should always return ETag. But we've had situations where the CDN
-  // was interfering.
-  const currentEtag = response.headers.has("ETag") ? response.headers.get("ETag") : undefined;
-  let serverTimeMillis = Date.parse(response.headers.get("Date"));
-  // Since the response is served via a CDN, the Date header value could have been cached.
-  const ageSeconds = response.headers.has("Age") ? parseInt(response.headers.get("Age"), 10) : 0;
-  serverTimeMillis += ageSeconds * 1000;
-
-  // Check if the server asked the clients to back off.
-  let backoffSeconds;
-  if (response.headers.has("Backoff")) {
-    const value = parseInt(response.headers.get("Backoff"), 10);
-    if (!isNaN(value)) {
-      backoffSeconds = value;
-    }
-  }
-
-  return { changes, currentEtag, serverTimeMillis, backoffSeconds };
-}
-
-/**
- * Check if local data exist for the specified client.
- *
- * @param {RemoteSettingsClient} client
- * @return {bool} Whether it exists or not.
- */
-async function hasLocalData(client) {
-  const kintoCol = await client.openCollection();
-  const timestamp = await kintoCol.db.getLastModified();
-  return timestamp !== null;
-}
-
-/**
- * Check if we ship a JSON dump for the specified bucket and collection.
- *
- * @param {String} bucket
- * @param {String} collection
- * @return {bool} Whether it is present or not.
- */
-async function hasLocalDump(bucket, collection) {
-  try {
-    await fetch(`resource://app/defaults/settings/${bucket}/${collection}.json`);
-    return true;
-  } catch (e) {
-    return false;
-  }
 }
 
 
@@ -236,8 +132,8 @@ function remoteSettingsFunction() {
     if (bucketName == Services.prefs.getCharPref(PREF_SETTINGS_DEFAULT_BUCKET)) {
       const c = new RemoteSettingsClient(collectionName, defaultOptions);
       const [dbExists, localDump] = await Promise.all([
-        hasLocalData(c),
-        hasLocalDump(bucketName, collectionName),
+        Utils.hasLocalData(c),
+        Utils.hasLocalDump(bucketName, collectionName),
       ]);
       if (dbExists || localDump) {
         return c;
@@ -272,14 +168,11 @@ function remoteSettingsFunction() {
       }
     }
 
-    let lastEtag;
-    if (gPrefs.prefHasUserValue(PREF_SETTINGS_LAST_ETAG)) {
-      lastEtag = gPrefs.getCharPref(PREF_SETTINGS_LAST_ETAG);
-    }
+    const lastEtag = gPrefs.getCharPref(PREF_SETTINGS_LAST_ETAG, "");
 
     let pollResult;
     try {
-      pollResult = await fetchLatestChanges(remoteSettings.pollingEndpoint, lastEtag, expectedTimestamp);
+      pollResult = await Utils.fetchLatestChanges(remoteSettings.pollingEndpoint, { expectedTimestamp, lastEtag });
     } catch (e) {
       // Report polling error to Uptake Telemetry.
       let report;
@@ -313,7 +206,9 @@ function remoteSettingsFunction() {
     // by the absolute of that value in seconds (positive means it's ahead)
     const clockDifference = Math.floor((Date.now() - serverTimeMillis) / 1000);
     gPrefs.setIntPref(PREF_SETTINGS_CLOCK_SKEW_SECONDS, clockDifference);
-    gPrefs.setIntPref(PREF_SETTINGS_LAST_UPDATE, serverTimeMillis / 1000);
+    const checkedServerTimeInSeconds = Math.round(serverTimeMillis / 1000);
+    gPrefs.setIntPref(PREF_SETTINGS_LAST_UPDATE, checkedServerTimeInSeconds);
+
 
     const loadDump = gPrefs.getBoolPref(PREF_SETTINGS_LOAD_DUMP, true);
 
@@ -330,7 +225,9 @@ function remoteSettingsFunction() {
       // Start synchronization! It will be a no-op if the specified `lastModified` equals
       // the one in the local database.
       try {
-        await client.maybeSync(last_modified, serverTimeMillis, {loadDump});
+        await client.maybeSync(last_modified, { loadDump });
+        // Save last time this client was successfully synced.
+        Services.prefs.setIntPref(client.lastCheckTimePref, checkedServerTimeInSeconds);
       } catch (e) {
         if (!firstError) {
           firstError = e;
@@ -356,7 +253,7 @@ function remoteSettingsFunction() {
    * known remote settings collections.
    */
   remoteSettings.inspect = async () => {
-    const { changes, currentEtag: serverTimestamp } = await fetchLatestChanges(remoteSettings.pollingEndpoint);
+    const { changes, currentEtag: serverTimestamp } = await Utils.fetchLatestChanges(remoteSettings.pollingEndpoint);
 
     const collections = await Promise.all(changes.map(async (change) => {
       const { bucket, collection, last_modified: serverTimestamp } = change;

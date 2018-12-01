@@ -49,6 +49,7 @@ define(function(require, exports, module) {
         id: PropTypes.string.isRequired,
         provider: PropTypes.object.isRequired,
         onClick: PropTypes.func.isRequired,
+        onContextMenu: PropTypes.func,
         onMouseOver: PropTypes.func,
         onMouseOut: PropTypes.func,
       };
@@ -120,12 +121,14 @@ define(function(require, exports, module) {
     render() {
       const member = this.props.member;
       const decorator = this.props.decorator;
+
       const props = {
         id: this.props.id,
         role: "treeitem",
         "aria-level": member.level,
         "aria-selected": !!member.selected,
         onClick: this.props.onClick,
+        onContextMenu: this.props.onContextMenu,
         onMouseOver: this.props.onMouseOver,
         onMouseOut: this.props.onMouseOut,
       };

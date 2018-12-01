@@ -1581,16 +1581,18 @@ def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target
             js_flags.append("-U_FORTIFY_SOURCE")
             js_flags.append("-D_FORTIFY_SOURCE=2")
 
+        # fstack-protector ------------------------------------
+        # Enable only if hardening is not disabled and ASAN is
+        # not on as ASAN will catch the crashes for us
+        if compiler_is_gccish and not asan:
+            # mingw-clang cross-compile toolchain has bugs with stack protector
+            if target.os != 'WINNT' or c_compiler == 'gcc':
+                flags.append("-fstack-protector-strong")
+
     # If ASAN _is_ on, undefine FOTIFY_SOURCE just to be safe
     if asan:
         flags.append("-U_FORTIFY_SOURCE")
         js_flags.append("-U_FORTIFY_SOURCE")
-
-    # fstack-protector ------------------------------------
-    # Enable only if --enable-hardening is passed and ASAN is
-    # not on as ASAN will catch the crashes for us
-    if hardening_flag and compiler_is_gccish and not asan:
-        flags.append("-fstack-protector-strong")
 
     # fno-common -----------------------------------------
     # Do not merge variables for ASAN; can detect some subtle bugs

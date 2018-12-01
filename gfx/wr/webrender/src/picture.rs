@@ -775,7 +775,7 @@ impl TileCache {
                     // exact content of this tile.
                     if let Some(handle) = retained_tiles.remove(&tile.descriptor) {
                         // Only use if not evicted from texture cache in the meantime.
-                        if !resource_cache.texture_cache.request(&handle, gpu_cache) {
+                        if resource_cache.texture_cache.is_allocated(&handle) {
                             // We found a matching tile from the previous scene, so use it!
                             tile.handle = handle;
                             tile.is_valid = true;
@@ -847,12 +847,19 @@ impl TileCache {
                     .expect("bug: unable to map tile to world coords");
                 tile.is_visible = frame_context.screen_world_rect.intersects(&tile_world_rect);
 
-                // If we have an invalid tile, which is also visible, add it to the
-                // dirty rect we will need to draw.
-                if !tile.is_valid && tile.is_visible && tile.in_use {
-                    dirty_rect = dirty_rect.union(&tile_rect);
-                    tile_offset.x = tile_offset.x.min(x);
-                    tile_offset.y = tile_offset.y.min(y);
+                if tile.is_visible && tile.in_use {
+                    // Ensure we request the texture cache handle for this tile
+                    // each frame it will be used so the texture cache doesn't
+                    // decide to evict tiles that we currently want to use.
+                    resource_cache.texture_cache.request(&tile.handle, gpu_cache);
+
+                    // If we have an invalid tile, which is also visible, add it to the
+                    // dirty rect we will need to draw.
+                    if !tile.is_valid {
+                        dirty_rect = dirty_rect.union(&tile_rect);
+                        tile_offset.x = tile_offset.x.min(x);
+                        tile_offset.y = tile_offset.y.min(y);
+                    }
                 }
             }
         }

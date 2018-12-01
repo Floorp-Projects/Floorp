@@ -1014,7 +1014,19 @@ void BaselineScript::toggleProfilerInstrumentation(bool enable) {
   }
 }
 
-void ICScript::purgeOptimizedStubs(Zone* zone) {
+void ICScript::purgeOptimizedStubs(JSScript* script) {
+  MOZ_ASSERT(script->icScript() == this);
+
+  Zone* zone = script->zone();
+  if (zone->isGCSweeping() && IsAboutToBeFinalizedDuringSweep(*script)) {
+    // We're sweeping and the script is dead. Don't purge optimized stubs
+    // because (1) accessing CacheIRStubInfo pointers in ICStubs is invalid
+    // because we may have swept them already when we started (incremental)
+    // sweeping and (2) it's unnecessary because this script will be finalized
+    // soon anyway.
+    return;
+  }
+
   JitSpew(JitSpew_BaselineIC, "Purging optimized stubs");
 
   for (size_t i = 0; i < numICEntries(); i++) {

@@ -596,8 +596,23 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 #appMenu-tp-label {
   -moz-context-properties: fill;
   fill: currentColor;
-  list-style-image: url(chrome://browser/skin/tracking-protection.svg);
   -moz-box-flex: 1;
+  padding: 0;
+  padding-inline-start: 8px;
+  margin: 0;
+}
+
+#appMenu-tp-icon {
+  list-style-image: url(chrome://browser/skin/tracking-protection.svg);
+}
+
+#appMenu-tp-button {
+  -moz-box-flex: 1;
+}
+
+#appMenu-tp-category {
+  color: var(--panel-disabled-color);
+  margin-inline-end: 0;
 }
 
 .addon-banner-item > .toolbarbutton-text,

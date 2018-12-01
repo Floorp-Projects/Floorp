@@ -16,6 +16,7 @@ const PREF_LAST_UPDATE = "services.settings.last_update_seconds";
 const PREF_LAST_ETAG = "services.settings.last_etag";
 const PREF_CLOCK_SKEW_SECONDS = "services.settings.clock_skew_seconds";
 
+const DB_NAME = "remote-settings";
 // Telemetry report result.
 const TELEMETRY_HISTOGRAM_KEY = "settings-changes-monitoring";
 const CHANGES_PATH = "/v1/buckets/monitor/collections/changes/records";
@@ -227,6 +228,34 @@ add_task(async function test_expected_timestamp() {
 });
 add_task(clear_state);
 
+
+add_task(async function test_client_last_check_is_saved() {
+  server.registerPathHandler(CHANGES_PATH, (request, response) => {
+      response.write(JSON.stringify({
+      data: [{
+        id: "695c2407-de79-4408-91c7-70720dd59d78",
+        last_modified: 1100,
+        host: "localhost",
+        bucket: "main",
+        collection: "models-recipes",
+      }],
+    }));
+    response.setHeader("ETag", '"42"');
+    response.setHeader("Date", (new Date()).toUTCString());
+    response.setStatusLine(null, 200, "OK");
+  });
+
+  const c = RemoteSettings("models-recipes");
+  c.maybeSync = () => {};
+
+  equal(c.lastCheckTimePref, "services.settings.main.models-recipes.last_check");
+  Services.prefs.setIntPref(c.lastCheckTimePref, 0);
+
+  await RemoteSettings.pollChanges({ expectedTimestamp: '"42"' });
+
+  notEqual(Services.prefs.getIntPref(c.lastCheckTimePref), 0);
+});
+add_task(clear_state);
 
 add_task(async function test_success_with_partial_list() {
   function partialList(request, response) {
@@ -503,9 +532,8 @@ add_task(async function test_syncs_clients_with_local_database() {
   // This simulates what remote-settings would do when initializing a local database.
   // We don't want to instantiate a client using the RemoteSettings() API
   // since we want to test «unknown» clients that have a local database.
-  const dbName = "remote-settings";
-  await (new Kinto.adapters.IDB("blocklists/addons", { dbName })).saveLastModified(42);
-  await (new Kinto.adapters.IDB("main/recipes", { dbName })).saveLastModified(43);
+  await (new Kinto.adapters.IDB("blocklists/addons", { dbName: DB_NAME })).saveLastModified(42);
+  await (new Kinto.adapters.IDB("main/recipes", { dbName: DB_NAME })).saveLastModified(43);
 
   let error;
   try {

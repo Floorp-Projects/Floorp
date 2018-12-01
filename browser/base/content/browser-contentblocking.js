@@ -318,7 +318,7 @@ var ContentBlocking = {
     XPCOMUtils.defineLazyPreferenceGetter(this, "reportBreakageEnabled",
       this.PREF_REPORT_BREAKAGE_ENABLED, false);
 
-    this.appMenuLabel.setAttribute("label", this.strings.appMenuTitle);
+    this.appMenuLabel.setAttribute("value", this.strings.appMenuTitle);
     this.appMenuLabel.setAttribute("tooltiptext", this.strings.appMenuTooltip);
 
     this.activeTooltipText =
@@ -347,6 +347,7 @@ var ContentBlocking = {
       return;
     }
     let button = document.getElementById("tracking-protection-preferences-button");
+    let appMenuCategoryLabel = document.getElementById("appMenu-tp-category");
     let label;
     let category = Services.prefs.getStringPref(this.PREF_CB_CATEGORY);
     switch (category) {
@@ -360,6 +361,7 @@ var ContentBlocking = {
       label = gNavigatorBundle.getString("contentBlocking.category.custom");
       break;
     }
+    appMenuCategoryLabel.value = label;
     button.label = label;
   },
 

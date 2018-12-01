@@ -259,7 +259,7 @@ void Zone::discardJitCode(FreeOp* fop, bool discardBaselineCode,
     // because TypeScript contains the ICScript* and there's no need to
     // purge stubs if we just destroyed the Typescript.
     if (discardBaselineCode && script->hasICScript()) {
-      script->icScript()->purgeOptimizedStubs(script->zone());
+      script->icScript()->purgeOptimizedStubs(script);
     }
   }
 

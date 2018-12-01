@@ -1051,6 +1051,13 @@ StorageAccessPermissionPrompt.prototype = {
     let origins = new Set();
     while (perms.length) {
       let perm = perms.shift();
+      // Let's make sure that we're not looking at a permission for
+      // https://exampletracker.company when we mean to look for the
+      // permisison for https://exampletracker.com!
+      if (perm.type != prefix &&
+          !perm.type.startsWith(`${prefix}^`)) {
+        continue;
+      }
       origins.add(perm.principal.origin);
     }
     return origins.size;

@@ -419,11 +419,11 @@ html|textarea {
   padding: 5px 8px;
 }
 
-html|input[type="email"]:hover,
-html|input[type="tel"]:hover,
-html|input[type="text"]:hover,
-html|textarea:hover,
-xul|textbox:hover {
+html|input[type="email"]:enabled:hover,
+html|input[type="tel"]:enabled:hover,
+html|input[type="text"]:enabled:hover,
+html|textarea:enabled:hover,
+xul|textbox:not([disabled="true"]):hover {
   border-color: var(--in-content-border-hover);
 }
 

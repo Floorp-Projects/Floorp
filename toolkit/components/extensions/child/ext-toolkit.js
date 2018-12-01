@@ -76,7 +76,7 @@ extensions.registerModules({
     url: "chrome://extensions/content/child/ext-userScripts-content.js",
     scopes: ["content_child"],
     paths: [
-      ["userScripts", "setScriptAPIs"],
+      ["userScripts", "onBeforeScript"],
     ],
   },
   webRequest: {
