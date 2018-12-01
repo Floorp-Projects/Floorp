@@ -891,7 +891,7 @@ class TupBackend(CommonBackend):
 
             invocation['full-deps'] = set()
 
-            if os.path.basename(invocation['program']) == 'build-script-build':
+            if os.path.basename(invocation['program']) in ['build-script-build', 'build-script-main']:
                 out_dir = invocation['env']['OUT_DIR']
                 for output in cargo_extra_outputs.get(shortname, []):
                     outputs.append(os.path.join(out_dir, output))

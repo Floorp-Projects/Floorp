@@ -10403,6 +10403,8 @@ void nsCSSFrameConstructor::ConstructBlock(
     ComputedStyle* aComputedStyle, nsContainerFrame** aNewFrame,
     nsFrameItems& aFrameItems, nsIFrame* aPositionedFrameForAbsPosContainer,
     PendingBinding* aPendingBinding) {
+  // clang-format off
+  //
   // If a block frame is in a multi-column subtree, its children may need to
   // be chopped into runs of blocks containing column-spans and runs of
   // blocks containing no column-spans. Each run containing column-spans
@@ -10446,22 +10448,33 @@ void nsCSSFrameConstructor::ConstructBlock(
   //  yields the following frame tree.
   //
   // A) ColumnSetWrapper (original style)
-  // B)   ColumnSet (-moz-column-set)   <-- always created by
-  // BeginBuildingColumns C)     Block (-moz-column-content) D)   Block
-  // (-moz-column-span-wrapper, created by x) E)     Block (div) F)       Text
-  // ("a") G)   ColumnSet (-moz-column-set) H)     Block (-moz-column-content,
-  // created by x) I)       Block (div, y) J)         Text ("b") K)   Block
-  // (-moz-column-span-wrapper, created by x) L)     Block
-  // (-moz-column-span-wrapper, created by y) M)       Block (div, new BFC) N)
-  // Text ("c") O)       Block (div, new BFC) P)         Text ("d") Q) ColumnSet
-  // (-moz-column-set) R)     Block (-moz-column-content, created by x) S) Block
-  // (div, y) T)         Text ("e") U) Block (div, new BFC)   <-- not in
-  // multi-column hierarchy V)   Text ("f")
+  // B)   ColumnSet (-moz-column-set)   <-- always created by BeginBuildingColumns
+  // C)     Block (-moz-column-content)
+  // D)   Block (-moz-column-span-wrapper, created by x)
+  // E)     Block (div)
+  // F)       Text ("a")
+  // G)   ColumnSet (-moz-column-set)
+  // H)     Block (-moz-column-content, created by x)
+  // I)       Block (div, y)
+  // J)         Text ("b")
+  // K)   Block (-moz-column-span-wrapper, created by x)
+  // L)     Block (-moz-column-span-wrapper, created by y)
+  // M)       Block (div, new BFC)
+  // N)         Text ("c")
+  // O)       Block (div, new BFC)
+  // P)         Text ("d")
+  // Q)   ColumnSet (-moz-column-set)
+  // R)     Block (-moz-column-content, created by x)
+  // S)       Block (div, y)
+  // T)         Text ("e")
+  // U) Block (div, new BFC)   <-- not in multi-column hierarchy
+  // V)   Text ("f")
   //
   // ColumnSet linkage described in 3): B -> G -> Q
   //
   // Block linkage described in 4): C -> H -> R  and  I -> S
   //
+  // clang-format on
 
   nsBlockFrame* blockFrame = do_QueryFrame(*aNewFrame);
   MOZ_ASSERT(blockFrame->IsBlockFrame() || blockFrame->IsDetailsFrame(),
