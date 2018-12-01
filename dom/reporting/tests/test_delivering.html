@@ -13,6 +13,7 @@
 SpecialPowers.pushPrefEnv({ set: [
   ["dom_reporting_delivering_timeout", 1],
   ["dom_reporting_delivering_maxFailures", 2],
+  ["dom.reporting.delivering.maxReports", 3],
 ]})
 
 // Tests run in iframes because the origin must be secure for report-to header.
