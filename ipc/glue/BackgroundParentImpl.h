@@ -357,6 +357,16 @@ class BackgroundParentImpl : public PBackgroundParent {
   virtual mozilla::ipc::IPCResult RecvPServiceWorkerRegistrationConstructor(
       PServiceWorkerRegistrationParent* aActor,
       const IPCServiceWorkerRegistrationDescriptor& aDescriptor) override;
+
+  virtual PEndpointForReportParent* AllocPEndpointForReportParent(
+      const nsString& aGroupName, const PrincipalInfo& aPrincipalInfo) override;
+
+  virtual mozilla::ipc::IPCResult RecvPEndpointForReportConstructor(
+      PEndpointForReportParent* actor, const nsString& aGroupName,
+      const PrincipalInfo& aPrincipalInfo) override;
+
+  virtual bool DeallocPEndpointForReportParent(
+      PEndpointForReportParent* aActor) override;
 };
 
 }  // namespace ipc

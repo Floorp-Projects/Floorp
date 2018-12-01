@@ -287,6 +287,12 @@ class BackgroundChildImpl : public PBackgroundChild {
 
   virtual bool DeallocPServiceWorkerRegistrationChild(
       PServiceWorkerRegistrationChild*) override;
+
+  virtual PEndpointForReportChild* AllocPEndpointForReportChild(
+      const nsString& aGroupName, const PrincipalInfo& aPrincipalInfo) override;
+
+  virtual bool DeallocPEndpointForReportChild(
+      PEndpointForReportChild* aActor) override;
 };
 
 class BackgroundChildImpl::ThreadLocal final {

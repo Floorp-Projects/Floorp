@@ -16,6 +16,7 @@
 #include "mozilla/dom/ClientManagerActors.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMTypes.h"
+#include "mozilla/dom/EndpointForReportParent.h"
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/GamepadEventChannelParent.h"
@@ -1201,6 +1202,29 @@ BackgroundParentImpl::RecvPServiceWorkerRegistrationConstructor(
     const IPCServiceWorkerRegistrationDescriptor& aDescriptor) {
   dom::InitServiceWorkerRegistrationParent(aActor, aDescriptor);
   return IPC_OK();
+}
+
+dom::PEndpointForReportParent*
+BackgroundParentImpl::AllocPEndpointForReportParent(
+    const nsString& aGroupName, const PrincipalInfo& aPrincipalInfo) {
+  RefPtr<dom::EndpointForReportParent> actor =
+      new dom::EndpointForReportParent();
+  return actor.forget().take();
+}
+
+mozilla::ipc::IPCResult BackgroundParentImpl::RecvPEndpointForReportConstructor(
+    PEndpointForReportParent* aActor, const nsString& aGroupName,
+    const PrincipalInfo& aPrincipalInfo) {
+  static_cast<dom::EndpointForReportParent*>(aActor)->Run(aGroupName,
+                                                          aPrincipalInfo);
+  return IPC_OK();
+}
+
+bool BackgroundParentImpl::DeallocPEndpointForReportParent(
+    PEndpointForReportParent* aActor) {
+  RefPtr<dom::EndpointForReportParent> actor =
+      dont_AddRef(static_cast<dom::EndpointForReportParent*>(aActor));
+  return true;
 }
 
 }  // namespace ipc
