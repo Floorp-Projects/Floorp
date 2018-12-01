@@ -425,7 +425,7 @@ const QuotaCleaner = {
   },
 
   deleteAll() {
-    // localStorage
+    // localStorage, Reporting headers, etc.
     Services.obs.notifyObservers(null, "extension:purge-localStorage");
 
     // ServiceWorkers

@@ -15,6 +15,7 @@
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/StaticPtr.h"
 #include "nsContentUtils.h"
+#include "nsIEffectiveTLDService.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIObserverService.h"
@@ -50,6 +51,10 @@ StaticRefPtr<ReportingHeader> gReporting;
 
   obs->AddObserver(service, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC, false);
   obs->AddObserver(service, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  obs->AddObserver(service, "browser:purge-domain-data", false);
+  obs->AddObserver(service, "clear-origin-attributes-data", false);
+  obs->AddObserver(service, "extension:purge-localStorage", false);
+
   gReporting = service;
 }
 
@@ -70,6 +75,9 @@ StaticRefPtr<ReportingHeader> gReporting;
 
   obs->RemoveObserver(service, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC);
   obs->RemoveObserver(service, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  obs->RemoveObserver(service, "browser:purge-domain-data");
+  obs->RemoveObserver(service, "clear-origin-attributes-data");
+  obs->RemoveObserver(service, "extension:purge-localStorage");
 }
 
 ReportingHeader::ReportingHeader() = default;
@@ -83,20 +91,43 @@ ReportingHeader::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
-  MOZ_ASSERT(!strcmp(aTopic, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC));
-
   // Pref disabled.
   if (!StaticPrefs::dom_reporting_header_enabled()) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aSubject);
-  if (NS_WARN_IF(!channel)) {
+  if (!strcmp(aTopic, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC)) {
+    nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aSubject);
+    if (NS_WARN_IF(!channel)) {
+      return NS_OK;
+    }
+
+    ReportingFromChannel(channel);
     return NS_OK;
   }
 
-  ReportingFromChannel(channel);
-  return NS_OK;
+  if (!strcmp(aTopic, "browser:purge-domain-data")) {
+    RemoveOriginsFromHost(nsDependentString(aData));
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, "clear-origin-attributes-data")) {
+    OriginAttributesPattern pattern;
+    if (!pattern.Init(nsDependentString(aData))) {
+      NS_ERROR("Cannot parse origin attributes pattern");
+      return NS_ERROR_FAILURE;
+    }
+
+    RemoveOriginsFromOriginAttributesPattern(pattern);
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, "extension:purge-localStorage")) {
+    RemoveOrigins();
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 void ReportingHeader::ReportingFromChannel(nsIHttpChannel* aChannel) {
@@ -115,6 +146,10 @@ void ReportingHeader::ReportingFromChannel(nsIHttpChannel* aChannel) {
   }
 
   if (!IsSecureURI(uri)) {
+    return;
+  }
+
+  if (NS_UsePrivateBrowsing(aChannel)) {
     return;
   }
 
@@ -580,6 +615,43 @@ bool ReportingHeader::IsSecureURI(nsIURI* aURI) const {
     gReporting->mOrigins.Remove(origin);
   }
 }
+
+void ReportingHeader::RemoveOriginsFromHost(const nsAString& aHost) {
+  nsCOMPtr<nsIEffectiveTLDService> tldService =
+      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  if (NS_WARN_IF(!tldService)) {
+    return;
+  }
+
+  NS_ConvertUTF16toUTF8 host(aHost);
+
+  for (auto iter = mOrigins.Iter(); !iter.Done(); iter.Next()) {
+    bool hasRootDomain = false;
+    nsresult rv = tldService->HasRootDomain(iter.Key(), host, &hasRootDomain);
+    if (NS_WARN_IF(NS_FAILED(rv)) || !hasRootDomain) {
+      continue;
+    }
+
+    iter.Remove();
+  }
+}
+
+void ReportingHeader::RemoveOriginsFromOriginAttributesPattern(
+    const OriginAttributesPattern& aPattern) {
+  for (auto iter = mOrigins.Iter(); !iter.Done(); iter.Next()) {
+    nsAutoCString suffix;
+    OriginAttributes attr;
+    if (NS_WARN_IF(!attr.PopulateFromOrigin(iter.Key(), suffix))) {
+      continue;
+    }
+
+    if (aPattern.Matches(attr)) {
+      iter.Remove();
+    }
+  }
+}
+
+void ReportingHeader::RemoveOrigins() { mOrigins.Clear(); }
 
 NS_INTERFACE_MAP_BEGIN(ReportingHeader)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
