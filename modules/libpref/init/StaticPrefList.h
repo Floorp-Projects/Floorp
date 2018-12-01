@@ -1914,6 +1914,20 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+// Any X seconds the reports are dispatched to endpoints.
+VARCACHE_PREF(
+  "dom.reporting.delivering.timeout",
+   dom_reporting_delivering_timeout,
+  uint32_t, 5
+)
+
+// How many times the delivering of a report should be tried.
+VARCACHE_PREF(
+  "dom.reporting.delivering.maxFailures",
+   dom_reporting_delivering_maxFailures,
+  uint32_t, 3
+)
+
 //---------------------------------------------------------------------------
 // End of prefs
 //---------------------------------------------------------------------------

@@ -51,8 +51,7 @@ void FeaturePolicyViolationReportBody::GetDisposition(
   aDisposition = mDisposition;
 }
 
-void FeaturePolicyViolationReportBody::ToJSONInternal(
-    JSONWriter& aWriter) const {
+void FeaturePolicyViolationReportBody::ToJSON(JSONWriter& aWriter) const {
   aWriter.StringProperty("featureId", NS_ConvertUTF16toUTF8(mFeatureId).get());
 
   if (mSourceFile.IsEmpty()) {
