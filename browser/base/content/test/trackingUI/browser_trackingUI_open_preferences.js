@@ -64,8 +64,6 @@ add_task(async function testOpenPreferencesFromAddBlockingButtons() {
   SpecialPowers.pushPrefEnv({set: [
     [TP_PREF, false],
     [TPC_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT],
-    [TP_UI_PREF, true],
-    [RT_UI_PREF, true],
   ]});
 
   await BrowserTestUtils.withNewTab(TRACKING_PAGE, async function() {
