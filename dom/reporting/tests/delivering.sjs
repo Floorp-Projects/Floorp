@@ -17,7 +17,7 @@ function handleRequest(aRequest, aResponse) {
     }
 
     let body = {
-      max_age: 100000,
+      max_age: 1,
       endpoints: [{
         url: "https://example.org/tests/dom/reporting/tests/delivering.sjs" +
                (extraParams.length ? "?" + extraParams.join("&") : ""),
