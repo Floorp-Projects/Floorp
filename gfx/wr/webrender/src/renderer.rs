@@ -1123,7 +1123,7 @@ impl GpuCacheTexture {
         let bus = if use_scatter {
             let program = device.create_program_linked(
                 "gpu_cache_update",
-                "",
+                String::new(),
                 &desc::GPU_CACHE_UPDATE,
             )?;
             let buf_position = device.create_vbo();
