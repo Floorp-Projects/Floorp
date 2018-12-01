@@ -1,3 +1,5 @@
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
+
 const TEST_HOST = "example.org";
 const TEST_DOMAIN = "https://" + TEST_HOST;
 const TEST_PATH = "/browser/dom/reporting/tests/";
@@ -21,6 +23,7 @@ add_task(async function() {
     ["dom.reporting.header.enabled", true],
     ["dom.reporting.testing.enabled", true],
     ["dom.reporting.delivering.timeout", 1],
+    ["dom.reporting.cleanup.timeout", 1],
     ["privacy.userContext.enabled", true],
   ]});
 });
@@ -163,6 +166,29 @@ add_task(async function() {
   ContextualIdentityService.remove(identity.userContextId);
 
   ok(!ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN + "^userContextId=" + identity.userContextId), "No more data after a container removal");
+});
+
+add_task(async function() {
+  info("TTL cleanup");
+
+  let tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
+  gBrowser.selectedTab = tab;
+
+  let browser = gBrowser.getBrowserForTab(tab);
+  await BrowserTestUtils.browserLoaded(browser);
+
+  ok(!ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "No data before the test");
+
+  await storeReportingHeader(browser);
+  ok(ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "We have data for the origin");
+
+  // Let's wait a bit.
+  await new Promise(resolve => { setTimeout(resolve, 5000); });
+
+  ok(!ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "No data anymore");
+
+  info("Removing the tab");
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function() {

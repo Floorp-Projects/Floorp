@@ -68,6 +68,11 @@ StaticRefPtr<ReportingHeader> gReporting;
   RefPtr<ReportingHeader> service = gReporting;
   gReporting = nullptr;
 
+  if (service->mCleanupTimer) {
+    service->mCleanupTimer->Cancel();
+    service->mCleanupTimer = nullptr;
+  }
+
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (NS_WARN_IF(!obs)) {
     return;
@@ -178,10 +183,14 @@ void ReportingHeader::ReportingFromChannel(nsIHttpChannel* aChannel) {
   }
 
   UniquePtr<Client> client = ParseHeader(aChannel, uri, headerValue);
-  if (client) {
-    // Here we override the previous data.
-    mOrigins.Put(origin, client.release());
+  if (!client) {
+    return;
   }
+
+  // Here we override the previous data.
+  mOrigins.Put(origin, client.release());
+
+  MaybeCreateCleanupTimer();
 }
 
 /* static */ UniquePtr<ReportingHeader::Client> ReportingHeader::ParseHeader(
@@ -613,6 +622,7 @@ bool ReportingHeader::IsSecureURI(nsIURI* aURI) const {
 
   if (client->mGroups.IsEmpty()) {
     gReporting->mOrigins.Remove(origin);
+    gReporting->MaybeCancelCleanupTimer();
   }
 }
 
@@ -634,6 +644,8 @@ void ReportingHeader::RemoveOriginsFromHost(const nsAString& aHost) {
 
     iter.Remove();
   }
+
+  MaybeCancelCleanupTimer();
 }
 
 void ReportingHeader::RemoveOriginsFromOriginAttributesPattern(
@@ -649,9 +661,39 @@ void ReportingHeader::RemoveOriginsFromOriginAttributesPattern(
       iter.Remove();
     }
   }
+
+  MaybeCancelCleanupTimer();
 }
 
-void ReportingHeader::RemoveOrigins() { mOrigins.Clear(); }
+void ReportingHeader::RemoveOrigins() {
+  mOrigins.Clear();
+  MaybeCancelCleanupTimer();
+}
+
+void ReportingHeader::RemoveOriginsForTTL() {
+  TimeStamp now = TimeStamp::Now();
+
+  for (auto iter = mOrigins.Iter(); !iter.Done(); iter.Next()) {
+    Client* client = iter.UserData();
+
+    // Scope of the iterator.
+    {
+      nsTObserverArray<Group>::BackwardIterator groupIter(client->mGroups);
+      while (groupIter.HasMore()) {
+        const Group& group = groupIter.GetNext();
+        TimeDuration diff = now - group.mCreationTime;
+        if (diff.ToSeconds() > group.mTTL) {
+          groupIter.Remove();
+          return;
+        }
+      }
+    }
+
+    if (client->mGroups.IsEmpty()) {
+      iter.Remove();
+    }
+  }
+}
 
 /* static */ bool ReportingHeader::HasReportingHeaderForOrigin(
     const nsACString& aOrigin) {
@@ -662,9 +704,50 @@ void ReportingHeader::RemoveOrigins() { mOrigins.Clear(); }
   return gReporting->mOrigins.Contains(aOrigin);
 }
 
+NS_IMETHODIMP
+ReportingHeader::Notify(nsITimer* aTimer) {
+  mCleanupTimer = nullptr;
+
+  RemoveOriginsForTTL();
+  MaybeCreateCleanupTimer();
+
+  return NS_OK;
+}
+
+void ReportingHeader::MaybeCreateCleanupTimer() {
+  if (mCleanupTimer) {
+    return;
+  }
+
+  if (mOrigins.Count() == 0) {
+    return;
+  }
+
+  uint32_t timeout = StaticPrefs::dom_reporting_cleanup_timeout() * 1000;
+  nsresult rv =
+      NS_NewTimerWithCallback(getter_AddRefs(mCleanupTimer), this, timeout,
+                              nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
+                              SystemGroup::EventTargetFor(TaskCategory::Other));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+}
+
+void ReportingHeader::MaybeCancelCleanupTimer() {
+  if (!mCleanupTimer) {
+    return;
+  }
+
+  if (mOrigins.Count() != 0) {
+    return;
+  }
+
+  mCleanupTimer->Cancel();
+  mCleanupTimer = nullptr;
+}
+
 NS_INTERFACE_MAP_BEGIN(ReportingHeader)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(ReportingHeader)
