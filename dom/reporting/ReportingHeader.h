@@ -10,7 +10,7 @@
 #include "mozilla/TimeStamp.h"
 #include "nsClassHashtable.h"
 #include "nsIObserver.h"
-#include "nsTArray.h"
+#include "nsTObserverArray.h"
 
 class nsIHttpChannel;
 class nsIPrincipal;
@@ -44,11 +44,11 @@ class ReportingHeader final : public nsIObserver {
     bool mIncludeSubdomains;
     int32_t mTTL;
     TimeStamp mCreationTime;
-    nsTArray<Endpoint> mEndpoints;
+    nsTObserverArray<Endpoint> mEndpoints;
   };
 
   struct Client {
-    nsTArray<Group> mGroups;
+    nsTObserverArray<Group> mGroups;
   };
 
   static UniquePtr<Client> ParseHeader(nsIHttpChannel* aChannel, nsIURI* aURI,
@@ -58,6 +58,10 @@ class ReportingHeader final : public nsIObserver {
       const nsAString& aGroupName,
       const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
       nsACString& aEndpointURI);
+
+  static void RemoveEndpoint(const nsAString& aGroupName,
+                             const nsACString& aEndpointURL,
+                             const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
  private:
   ReportingHeader();
