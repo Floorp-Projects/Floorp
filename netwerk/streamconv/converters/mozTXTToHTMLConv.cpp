@@ -7,6 +7,7 @@
 #include "mozTXTToHTMLConv.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
+#include "nsUnicodeProperties.h"
 #include "nsCRT.h"
 #include "nsIExternalProtocolHandler.h"
 #include "nsIIOService.h"
@@ -18,9 +19,6 @@
 #include "prtime.h"
 #include "prinrval.h"
 #endif
-
-using mozilla::IsAsciiAlpha;
-using mozilla::IsAsciiDigit;
 
 const double growthRate = 1.2;
 
@@ -35,7 +33,7 @@ static inline bool IsSpace(const char16_t aChar) {
 // Escape Char will take ch, escape it and append the result to
 // aStringToAppendTo
 void mozTXTToHTMLConv::EscapeChar(const char16_t ch,
-                                  nsString& aStringToAppendTo,
+                                  nsAString& aStringToAppendTo,
                                   bool inAttribute) {
   switch (ch) {
     case '<':
@@ -331,7 +329,7 @@ void mozTXTToHTMLConv::CalculateURLBoundaries(
 
   // FIX ME
   nsAutoString temp2;
-  ScanTXT(&aInString[descstart], pos - descstart,
+  ScanTXT(nsDependentSubstring(aInString, descstart),
           ~kURLs /*prevents loop*/ & whathasbeendone, temp2);
   replaceBefore = temp2.Length();
 }
@@ -507,6 +505,14 @@ bool mozTXTToHTMLConv::FindURL(const char16_t* aInString, int32_t aInLength,
   return state[check] == success;
 }
 
+static inline bool IsAlpha(const uint32_t aChar) {
+  return mozilla::unicode::GetGenCategory(aChar) == nsUGenCategory::kLetter;
+}
+
+static inline bool IsDigit(const uint32_t aChar) {
+  return mozilla::unicode::GetGenCategory(aChar) == nsUGenCategory::kNumber;
+}
+
 bool mozTXTToHTMLConv::ItMatchesDelimited(const char16_t* aInString,
                                           int32_t aInLength,
                                           const char16_t* rep, int32_t aRepLen,
@@ -525,17 +531,17 @@ bool mozTXTToHTMLConv::ItMatchesDelimited(const char16_t* aInString,
        textLen < aRepLen + 2))
     return false;
 
-  char16_t text0 = aInString[0];
-  char16_t textAfterPos = aInString[aRepLen + (before == LT_IGNORE ? 0 : 1)];
+  uint32_t text0 = aInString[0];
+  uint32_t textAfterPos = aInString[aRepLen + (before == LT_IGNORE ? 0 : 1)];
 
-  if ((before == LT_ALPHA && !IsAsciiAlpha(text0)) ||
-      (before == LT_DIGIT && !IsAsciiDigit(text0)) ||
+  if ((before == LT_ALPHA && !IsAlpha(text0)) ||
+      (before == LT_DIGIT && !IsDigit(text0)) ||
       (before == LT_DELIMITER &&
-       (IsAsciiAlpha(text0) || IsAsciiDigit(text0) || text0 == *rep)) ||
-      (after == LT_ALPHA && !IsAsciiAlpha(textAfterPos)) ||
-      (after == LT_DIGIT && !IsAsciiDigit(textAfterPos)) ||
+       (IsAlpha(text0) || IsDigit(text0) || text0 == *rep)) ||
+      (after == LT_ALPHA && !IsAlpha(textAfterPos)) ||
+      (after == LT_DIGIT && !IsDigit(textAfterPos)) ||
       (after == LT_DELIMITER &&
-       (IsAsciiAlpha(textAfterPos) || IsAsciiDigit(textAfterPos) ||
+       (IsAlpha(textAfterPos) || IsDigit(textAfterPos) ||
         textAfterPos == *rep)) ||
       !Substring(Substring(aInString, aInString + aInLength),
                  (before == LT_IGNORE ? 0 : 1), aRepLen)
@@ -566,7 +572,7 @@ uint32_t mozTXTToHTMLConv::NumberOfMatches(const char16_t* aInString,
 bool mozTXTToHTMLConv::StructPhraseHit(
     const char16_t* aInString, int32_t aInStringLength, bool col0,
     const char16_t* tagTXT, int32_t aTagTXTLen, const char* tagHTML,
-    const char* attributeHTML, nsString& aOutString, uint32_t& openTags) {
+    const char* attributeHTML, nsAString& aOutString, uint32_t& openTags) {
   /* We're searching for the following pattern:
      LT_DELIMITER - "*" - ALPHA -
      [ some text (maybe more "*"-pairs) - ALPHA ] "*" - LT_DELIMITER.
@@ -659,7 +665,7 @@ bool mozTXTToHTMLConv::SmilyHit(const char16_t* aInString, int32_t aLength,
 
 // the glyph is appended to aOutputString instead of the original string...
 bool mozTXTToHTMLConv::GlyphHit(const char16_t* aInString, int32_t aInLength,
-                                bool col0, nsString& aOutputString,
+                                bool col0, nsAString& aOutputString,
                                 int32_t& glyphTextLen) {
   char16_t text0 = aInString[0];
   char16_t text1 = aInString[1];
@@ -916,9 +922,19 @@ int32_t mozTXTToHTMLConv::CiteLevelTXT(const char16_t* line,
   return result;
 }
 
-void mozTXTToHTMLConv::ScanTXT(const char16_t* aInString,
-                               int32_t aInStringLength, uint32_t whattodo,
-                               nsString& aOutString) {
+NS_IMETHODIMP
+mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
+                          nsAString& aOutString) {
+  if (aInString.Length() == 0) {
+    aOutString.Truncate();
+    return NS_OK;
+  }
+
+  if (!aOutString.SetCapacity(uint32_t(aInString.Length() * growthRate),
+                              mozilla::fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   bool doURLs = 0 != (whattodo & kURLs);
   bool doGlyphSubstitution = 0 != (whattodo & kGlyphSubstitution);
   bool doStructPhrase = 0 != (whattodo & kStructPhrase);
@@ -930,23 +946,25 @@ void mozTXTToHTMLConv::ScanTXT(const char16_t* aInString,
 
   nsAutoString outputHTML;  // moved here for performance increase
 
-  for (uint32_t i = 0; int32_t(i) < aInStringLength;) {
+  const char16_t* rawInputString = aInString.BeginReading();
+
+  for (uint32_t i = 0; i < aInString.Length();) {
     if (doGlyphSubstitution) {
       int32_t glyphTextLen;
-      if (GlyphHit(&aInString[i], aInStringLength - i, i == 0, aOutString,
-                   glyphTextLen)) {
+      if (GlyphHit(&rawInputString[i], aInString.Length() - i, i == 0,
+                   aOutString, glyphTextLen)) {
         i += glyphTextLen;
         continue;
       }
     }
 
     if (doStructPhrase) {
-      const char16_t* newOffset = aInString;
-      int32_t newLength = aInStringLength;
+      const char16_t* newOffset = rawInputString;
+      int32_t newLength = aInString.Length();
       if (i > 0)  // skip the first element?
       {
-        newOffset = &aInString[i - 1];
-        newLength = aInStringLength - i + 1;
+        newOffset = &rawInputString[i - 1];
+        newLength = aInString.Length() - i + 1;
       }
 
       switch (aInString[i])  // Performance increase
@@ -993,12 +1011,13 @@ void mozTXTToHTMLConv::ScanTXT(const char16_t* aInString,
         case '@':
         case '.':
           if ((i == 0 || ((i > 0) && aInString[i - 1] != ' ')) &&
-              aInString[i + 1] != ' ')  // Performance increase
+              ((i == aInString.Length() - 1) ||
+               (aInString[i + 1] != ' ')))  // Performance increase
           {
             int32_t replaceBefore;
             int32_t replaceAfter;
-            if (FindURL(aInString, aInStringLength, i, whattodo, outputHTML,
-                        replaceBefore, replaceAfter) &&
+            if (FindURL(rawInputString, aInString.Length(), i, whattodo,
+                        outputHTML, replaceBefore, replaceAfter) &&
                 structPhrase_strong + structPhrase_italic +
                         structPhrase_underline + structPhrase_code ==
                     0
@@ -1029,10 +1048,18 @@ void mozTXTToHTMLConv::ScanTXT(const char16_t* aInString,
         break;
     }
   }
+  return NS_OK;
 }
 
-void mozTXTToHTMLConv::ScanHTML(nsString& aInString, uint32_t whattodo,
-                                nsString& aOutString) {
+NS_IMETHODIMP
+mozTXTToHTMLConv::ScanHTML(const nsAString& input, uint32_t whattodo,
+                           nsAString& aOutString) {
+  const nsPromiseFlatString& aInString = PromiseFlatString(input);
+  if (!aOutString.SetCapacity(uint32_t(aInString.Length() * growthRate),
+                              mozilla::fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   // some common variables we were recalculating
   // every time inside the for loop...
   int32_t lengthOfInString = aInString.Length();
@@ -1118,7 +1145,7 @@ void mozTXTToHTMLConv::ScanHTML(nsString& aInString, uint32_t whattodo,
       nsString tempString;
       tempString.SetCapacity(uint32_t((uint32_t(i) - start) * growthRate));
       UnescapeStr(uniBuffer, start, uint32_t(i) - start, tempString);
-      ScanTXT(tempString.get(), tempString.Length(), whattodo, aOutString);
+      ScanTXT(tempString, whattodo, aOutString);
     }
   }
 
@@ -1126,6 +1153,7 @@ void mozTXTToHTMLConv::ScanHTML(nsString& aInString, uint32_t whattodo,
   printf("ScanHTML time:    %d ms\n",
          PR_IntervalToMilliseconds(PR_IntervalNow() - parsing_start));
 #endif
+  return NS_OK;
 }
 
 /****************************************************************************
@@ -1170,46 +1198,6 @@ mozTXTToHTMLConv::CiteLevelTXT(const char16_t* line, uint32_t* logLineStart,
   if (!logLineStart || !_retval || !line) return NS_ERROR_NULL_POINTER;
   *_retval = CiteLevelTXT(line, *logLineStart);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-mozTXTToHTMLConv::ScanTXT(const char16_t* text, uint32_t whattodo,
-                          char16_t** _retval) {
-  NS_ENSURE_ARG(text);
-
-  // FIX ME!!!
-  nsString outString;
-  int32_t inLength = NS_strlen(text);
-  // by setting a large capacity up front, we save time
-  // when appending characters to the output string because we don't
-  // need to reallocate and re-copy the characters already in the out String.
-  NS_ASSERTION(inLength, "ScanTXT passed 0 length string");
-  if (inLength == 0) {
-    *_retval = NS_xstrdup(text);
-    return NS_OK;
-  }
-
-  outString.SetCapacity(uint32_t(inLength * growthRate));
-  ScanTXT(text, inLength, whattodo, outString);
-
-  *_retval = ToNewUnicode(outString);
-  return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP
-mozTXTToHTMLConv::ScanHTML(const char16_t* text, uint32_t whattodo,
-                           char16_t** _retval) {
-  NS_ENSURE_ARG(text);
-
-  // FIX ME!!!
-  nsString outString;
-  nsString inString(
-      text);  // look at this nasty extra copy of the entire input buffer!
-  outString.SetCapacity(uint32_t(inString.Length() * growthRate));
-
-  ScanHTML(inString, whattodo, outString);
-  *_retval = ToNewUnicode(outString);
-  return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 nsresult MOZ_NewTXTToHTMLConv(mozTXTToHTMLConv** aConv) {
