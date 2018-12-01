@@ -90,8 +90,7 @@ raptor-tp6-3-firefox:
     description: "Raptor tp6-3 on Firefox"
     try-name: raptor-tp6-3-firefox
     treeherder-symbol: Rap(tp6-3)
-    run-on-projects: ['try', 'mozilla-central']
-    tier: 2
+    run-on-projects: built-projects
     mozharness:
         extra-options:
             - --test=raptor-tp6-3
@@ -115,8 +114,7 @@ raptor-tp6-4-firefox:
     description: "Raptor tp6-4 on Firefox"
     try-name: raptor-tp6-4-firefox
     treeherder-symbol: Rap(tp6-4)
-    run-on-projects: ['try', 'mozilla-central']
-    tier: 2
+    run-on-projects: built-projects
     mozharness:
         extra-options:
             - --test=raptor-tp6-4
@@ -139,8 +137,7 @@ raptor-tp6-5-firefox:
     description: "Raptor tp6-5 on Firefox"
     try-name: raptor-tp6-5-firefox
     treeherder-symbol: Rap(tp6-5)
-    run-on-projects: ['try', 'mozilla-central']
-    tier: 2
+    run-on-projects: built-projects
     mozharness:
         extra-options:
             - --test=raptor-tp6-5
@@ -163,8 +160,7 @@ raptor-tp6-6-firefox:
     description: "Raptor tp6-6 on Firefox"
     try-name: raptor-tp6-6-firefox
     treeherder-symbol: Rap(tp6-6)
-    run-on-projects: ['try', 'mozilla-central']
-    tier: 2
+    run-on-projects: built-projects
     mozharness:
         extra-options:
             - --test=raptor-tp6-6
