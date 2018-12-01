@@ -33,12 +33,10 @@ class DAV1DDecoder : public MediaDataDecoder,
   void ReleaseDataBuffer(const uint8_t* buf);
 
  private:
-  ~DAV1DDecoder();
+  ~DAV1DDecoder() = default;
   RefPtr<DecodePromise> InvokeDecode(MediaRawData* aSample);
-  int GetPicture(const MediaRawData* aSample, DecodedData& aData,
-                 MediaResult& aResult);
-  already_AddRefed<VideoData> ConstructImage(const MediaRawData* aSample,
-                                             const Dav1dPicture&);
+  int GetPicture(DecodedData& aData, MediaResult& aResult);
+  already_AddRefed<VideoData> ConstructImage(const Dav1dPicture& aPicture);
 
   Dav1dContext* mContext;
 
@@ -49,12 +47,6 @@ class DAV1DDecoder : public MediaDataDecoder,
   // Keep the buffers alive until dav1d
   // does not need them any more.
   MediaRawDataHashtable mDecodingBuffers;
-
-  // Store the last timing values to use
-  // them during drain.
-  media::TimeUnit mLastTimecode;
-  media::TimeUnit mLastDuration;
-  int64_t mLastOffset = 0;
 };
 
 }  // namespace mozilla
