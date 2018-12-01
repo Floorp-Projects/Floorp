@@ -196,7 +196,7 @@ pub extern crate webrender_api;
 #[doc(hidden)]
 pub use device::{build_shader_strings, ReadPixelsFormat, UploadMethod, VertexUsageHint};
 pub use device::{ProgramBinary, ProgramCache, ProgramCacheObserver, ProgramSources};
-pub use device::{Device, total_gpu_bytes_allocated};
+pub use device::Device;
 pub use frame_builder::ChasePrimitive;
 pub use renderer::{AsyncPropertySampler, CpuProfile, DebugFlags, OutputImageHandler, RendererKind};
 pub use renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource, GpuProfile};

@@ -675,11 +675,6 @@ pub unsafe extern "C" fn wr_renderer_accumulate_memory_report(renderer: &mut Ren
     *report += renderer.report_memory();
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn wr_total_gpu_bytes_allocated() -> usize {
-    ::webrender::total_gpu_bytes_allocated()
-}
-
 // cbindgen doesn't support tuples, so we have a little struct instead, with
 // an Into implementation to convert from the tuple to the struct.
 #[repr(C)]
@@ -2798,4 +2793,12 @@ pub unsafe extern "C" fn wr_shaders_delete(shaders: *mut WrShaders, gl_context: 
       shaders.into_inner().deinit(&mut device);
     }
     // let shaders go out of scope and get dropped
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wr_program_cache_report_memory(
+    cache: *const WrProgramCache,
+    size_of_op: VoidPtrToSizeFn,
+    ) -> usize {
+    (*cache).program_cache.report_memory(size_of_op)
 }
