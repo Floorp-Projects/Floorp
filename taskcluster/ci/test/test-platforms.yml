@@ -199,6 +199,7 @@ windows10-64-ux/opt:
     build-platform: win64-nightly/opt
     test-sets:
         - raptor-firefox
+        - talos-ux
 
 windows10-64-pgo/opt:
     build-platform: win64-pgo/opt
