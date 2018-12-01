@@ -18,6 +18,8 @@ class nsIURI;
 
 namespace mozilla {
 
+class OriginAttributesPattern;
+
 namespace ipc {
 class PrincipalInfo;
 }
@@ -75,6 +77,13 @@ class ReportingHeader final : public nsIObserver {
   // This method checks if the protocol handler of the URI has the
   // URI_IS_POTENTIALLY_TRUSTWORTHY flag.
   bool IsSecureURI(nsIURI* aURI) const;
+
+  void RemoveOriginsFromHost(const nsAString& aHost);
+
+  void RemoveOriginsFromOriginAttributesPattern(
+      const OriginAttributesPattern& aPattern);
+
+  void RemoveOrigins();
 
   static void LogToConsoleInvalidJSON(nsIHttpChannel* aChannel, nsIURI* aURI);
 
