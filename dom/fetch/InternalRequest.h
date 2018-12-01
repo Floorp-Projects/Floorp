@@ -325,6 +325,11 @@ class InternalRequest final {
 
   InternalHeaders* Headers() { return mHeaders; }
 
+  void SetHeaders(InternalHeaders* aHeaders) {
+    MOZ_ASSERT(aHeaders);
+    mHeaders = aHeaders;
+  }
+
   bool SameOriginDataURL() const { return mSameOriginDataURL; }
 
   void UnsetSameOriginDataURL() { mSameOriginDataURL = false; }
