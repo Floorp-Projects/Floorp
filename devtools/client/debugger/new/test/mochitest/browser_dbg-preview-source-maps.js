@@ -33,12 +33,13 @@ function assertPreviewPopup(dbg, { field, value, expression }) {
 }
 
 add_task(async function() {
-  const dbg = await initDebugger("doc-sourcemaps.html", "entry.js", "output.js", "times2.js", "opts.js");
+  const dbg = await initDebugger("doc-sourcemaps.html");
   const {
     selectors: { getSelectedSource },
     getState
   } = dbg;
 
+  await waitForSources(dbg, "entry.js", "output.js", "times2.js", "opts.js");
   await selectSource(dbg, "times2");
   await addBreakpoint(dbg, "times2", 2);
 

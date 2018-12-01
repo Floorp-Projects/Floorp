@@ -3,11 +3,9 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // @flow
-import React, { PureComponent } from "react";
-import ReactDOM from "react-dom";
+import { PureComponent } from "react";
 import classnames from "classnames";
 import { getDocument } from "../../utils/editor";
-import Svg from "../shared/Svg";
 
 // eslint-disable-next-line max-len
 import type { ColumnBreakpoint as ColumnBreakpointType } from "../../selectors/visibleColumnBreakpoints";
@@ -26,11 +24,11 @@ type Props = {
 };
 
 const breakpointImg = document.createElement("div");
-ReactDOM.render(<Svg name={"column-marker"} />, breakpointImg);
 function makeBookmark(isActive, { onClick }) {
   const bp = breakpointImg.cloneNode(true);
-  const className = isActive ? "active" : "disabled";
-  bp.className = classnames("call-site", className);
+  bp.className = classnames("call-site", {
+    active: isActive
+  });
   bp.onclick = onClick;
   return bp;
 }

@@ -18,7 +18,7 @@ import { isWasm, lineToWasmOffset, wasmOffsetToLine } from "../wasm";
 
 import type { AstLocation } from "../../workers/parser";
 import type { EditorPosition, EditorRange } from "../editor/types";
-import type { SourceLocation } from "../../types";
+import type { Location } from "../../types";
 type Editor = Object;
 
 let editor: ?Editor;
@@ -96,7 +96,7 @@ export function toEditorLine(sourceId: string, lineOrOffset: number): number {
   return lineOrOffset ? lineOrOffset - 1 : 1;
 }
 
-export function toEditorPosition(location: SourceLocation): EditorPosition {
+export function toEditorPosition(location: Location): EditorPosition {
   return {
     line: toEditorLine(location.sourceId, location.line),
     column: isWasm(location.sourceId) || !location.column ? 0 : location.column
@@ -201,7 +201,7 @@ export function lineAtHeight(_editor, sourceId, event) {
 
 export function getSourceLocationFromMouseEvent(
   _editor: Object,
-  selectedLocation: SourceLocation,
+  selectedLocation: Location,
   e: MouseEvent
 ) {
   const { line, ch } = _editor.codeMirror.coordsChar({

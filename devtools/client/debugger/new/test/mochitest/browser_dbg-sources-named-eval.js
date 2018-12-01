@@ -18,13 +18,16 @@ function getLabel(dbg, index) {
 }
 
 add_task(async function() {
-  const dbg = await initDebugger("doc-sources.html", "simple1", "simple2", "nested-source", "long.js");
+  const dbg = await initDebugger("doc-sources.html");
   const {
     selectors: { getSelectedSource },
     getState
   } = dbg;
 
-  info(`>>> contentTask: evaluate evaled.js\n`)
+  await waitForSources(dbg, "simple1", "simple2", "nested-source", "long.js");
+
+
+  dump(`>>> contentTask: evaluate evaled.js\n`)
   ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.eval("window.evaledFunc = function() {} //# sourceURL=evaled.js");
   });

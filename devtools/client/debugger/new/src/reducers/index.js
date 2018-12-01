@@ -8,6 +8,7 @@
  */
 
 import expressions from "./expressions";
+import eventListeners from "./event-listeners";
 import sources from "./sources";
 import tabs from "./tabs";
 import breakpoints from "./breakpoints";
@@ -25,6 +26,7 @@ import { objectInspector } from "devtools-reps";
 
 export default {
   expressions,
+  eventListeners,
   sources,
   tabs,
   breakpoints,

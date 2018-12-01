@@ -4552,7 +4552,7 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 /***/ 348:
 /***/ (function(module, exports) {
 
-module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 16 16\" fill=\"context-fill #9B9B9B\"><path d=\"M8 13.4c-.5 0-.9-.2-1.2-.6L.4 5.2C0 4.7-.1 4.3.2 3.7S1 3 1.6 3h12.8c.6 0 1.2.1 1.4.7.3.6.2 1.1-.2 1.6l-6.4 7.6c-.3.4-.7.5-1.2.5z\"></path></svg>"
+module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 16 16\"><path d=\"M8 13.4c-.5 0-.9-.2-1.2-.6L.4 5.2C0 4.7-.1 4.3.2 3.7S1 3 1.6 3h12.8c.6 0 1.2.1 1.4.7.3.6.2 1.1-.2 1.6l-6.4 7.6c-.3.4-.7.5-1.2.5z\"></path></svg>"
 
 /***/ }),
 
@@ -8433,7 +8433,7 @@ function createStructuredSelector(selectors) {
 /***/ 3801:
 /***/ (function(module, exports) {
 
-module.exports = "<svg viewBox=\"0 0 9 12\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><g id=\"columnmarkergroup\" stroke-width=\"1\" fill-rule=\"evenodd\"><polygon id=\"columnmarker\" points=\"0 0 4 0 9 6 4 12 0 12\"></polygon></g></svg>"
+module.exports = "<svg viewBox=\"0 0 9 12\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><g id=\"columnmarkergroup\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\"><polygon id=\"columnmarker\" fill=\"#1B1B1D\" points=\"0 0 4 0 9 6 4 12 0 12\"></polygon></g></svg>"
 
 /***/ }),
 
