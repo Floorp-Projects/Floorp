@@ -337,6 +337,11 @@ void ReportDeliver::AppendReportData(const ReportData& aReportData) {
     return;
   }
 
+  while (mReportQueue.Length() >
+         StaticPrefs::dom_reporting_delivering_maxReports()) {
+    mReportQueue.RemoveElementAt(0);
+  }
+
   if (!mTimer) {
     uint32_t timeout = StaticPrefs::dom_reporting_delivering_timeout() * 1000;
     nsresult rv = NS_NewTimerWithCallback(
