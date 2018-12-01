@@ -14,6 +14,7 @@ use gleam::gl;
 use internal_types::{FastHashMap, LayerIndex, RenderTargetInfo};
 use log::Level;
 use smallvec::SmallVec;
+use std::borrow::Cow;
 use std::cell::RefCell;
 use std::cmp;
 use std::collections::hash_map::Entry;
@@ -182,7 +183,7 @@ fn get_shader_version(gl: &gl::Gl) -> &'static str {
 
 // Get a shader string by name, from the built in resources or
 // an override path, if supplied.
-fn get_shader_source(shader_name: &str, base_path: &Option<PathBuf>) -> Option<String> {
+fn get_shader_source(shader_name: &str, base_path: &Option<PathBuf>) -> Option<Cow<'static, str>> {
     if let Some(ref base) = *base_path {
         let shader_path = base.join(&format!("{}.glsl", shader_name));
         if shader_path.exists() {
@@ -191,18 +192,18 @@ fn get_shader_source(shader_name: &str, base_path: &Option<PathBuf>) -> Option<S
                 .unwrap()
                 .read_to_string(&mut source)
                 .unwrap();
-            return Some(source);
+            return Some(Cow::Owned(source));
         }
     }
 
     shader_source::SHADERS
         .get(shader_name)
-        .map(|s| s.to_string())
+        .map(|s| Cow::Borrowed(*s))
 }
 
 // Parse a shader string for imports. Imports are recursively processed, and
-// prepended to the list of outputs.
-fn parse_shader_source(source: String, base_path: &Option<PathBuf>, output: &mut String) {
+// prepended to the output stream.
+fn parse_shader_source<F: FnMut(&str)>(source: Cow<'static, str>, base_path: &Option<PathBuf>, output: &mut F) {
     for line in source.lines() {
         if line.starts_with(SHADER_IMPORT) {
             let imports = line[SHADER_IMPORT.len() ..].split(',');
@@ -214,50 +215,72 @@ fn parse_shader_source(source: String, base_path: &Option<PathBuf>, output: &mut
                 }
             }
         } else {
-            output.push_str(line);
-            output.push_str("\n");
+            output(line);
+            output("\n");
         }
     }
 }
 
+/// Creates heap-allocated strings for both vertex and fragment shaders. Public
+/// to be accessible to tests.
 pub fn build_shader_strings(
+     gl_version_string: &str,
+     features: &str,
+     base_filename: &str,
+     override_path: &Option<PathBuf>,
+) -> (String, String) {
+    let mut vs_source = String::new();
+    build_shader_string(
+        gl_version_string,
+        features,
+        SHADER_KIND_VERTEX,
+        base_filename,
+        override_path,
+        |s| vs_source.push_str(s),
+    );
+
+    let mut fs_source = String::new();
+    build_shader_string(
+        gl_version_string,
+        features,
+        SHADER_KIND_FRAGMENT,
+        base_filename,
+        override_path,
+        |s| fs_source.push_str(s),
+    );
+
+    (vs_source, fs_source)
+}
+
+/// Walks the given shader string and applies the output to the provided
+/// callback. Assuming an override path is not used, does no heap allocation
+/// and no I/O.
+fn build_shader_string<F: FnMut(&str)>(
     gl_version_string: &str,
     features: &str,
+    kind: &str,
     base_filename: &str,
     override_path: &Option<PathBuf>,
-) -> (String, String) {
-    // Construct a list of strings to be passed to the shader compiler.
-    let mut vs_source = String::new();
-    let mut fs_source = String::new();
-
+    mut output: F,
+) {
     // GLSL requires that the version number comes first.
-    vs_source.push_str(gl_version_string);
-    fs_source.push_str(gl_version_string);
+    output(gl_version_string);
 
     // Insert the shader name to make debugging easier.
     let name_string = format!("// {}\n", base_filename);
-    vs_source.push_str(&name_string);
-    fs_source.push_str(&name_string);
+    output(&name_string);
 
     // Define a constant depending on whether we are compiling VS or FS.
-    vs_source.push_str(SHADER_KIND_VERTEX);
-    fs_source.push_str(SHADER_KIND_FRAGMENT);
+    output(kind);
 
     // Add any defines that were passed by the caller.
-    vs_source.push_str(features);
-    fs_source.push_str(features);
+    output(features);
 
     // Parse the main .glsl file, including any imports
     // and append them to the list of sources.
-    let mut shared_result = String::new();
     if let Some(shared_source) = get_shader_source(base_filename, override_path) {
-        parse_shader_source(shared_source, override_path, &mut shared_result);
+        parse_shader_source(shared_source, override_path, &mut output);
     }
-
-    vs_source.push_str(&shared_result);
-    fs_source.push_str(&shared_result);
-
-    (vs_source, fs_source)
 }
 
 pub trait FileWatcherHandler: Send {
