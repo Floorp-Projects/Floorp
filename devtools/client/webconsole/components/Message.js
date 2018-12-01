@@ -166,6 +166,7 @@ class Message extends Component {
       timestampsVisible,
       executionPoint,
       pausedExecutionPoint,
+      messageId,
       notes,
     } = this.props;
 
@@ -298,6 +299,7 @@ class Message extends Component {
       ref: node => {
         this.messageNode = node;
       },
+      "data-message-id": messageId,
       "aria-live": type === MESSAGE_TYPE.COMMAND ? "off" : "polite",
     },
       timestampEl,
