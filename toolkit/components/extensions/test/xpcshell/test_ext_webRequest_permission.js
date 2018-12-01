@@ -88,29 +88,3 @@ add_task(async function test_permissions() {
   await extension.unload();
   await contentPage.close();
 });
-
-
-add_task(async function test_no_webRequestBlocking_error() {
-  function background() {
-    browser.webRequest.onBeforeRequest
-      .addListener(details => {}, {urls: ["<all_urls>"]}, ["blocking"]);
-  }
-
-  const extensionData = {
-    manifest: {permissions: ["webRequest", "<all_urls>"]},
-    background,
-  };
-
-  const extension = ExtensionTestUtils.loadExtension(extensionData);
-
-  const {messages} = await promiseConsoleOutput(async () => {
-    await extension.startup();
-    await extension.unload();
-  });
-
-  const errRegex = new RegExp("Using webRequest\.addListener with the " +
-          "blocking option requires the 'webRequestBlocking' permission\.");
-
-  ok(messages.some(msg => errRegex.test(msg.message)),
-     "Extension fails when blocking without 'webRequestBlocking' permission");
-});
