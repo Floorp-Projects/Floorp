@@ -3,8 +3,8 @@
 
 "use strict";
 
-/* import-globals-from mocks/head-usb-mocks.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "mocks/head-usb-mocks.js", this);
+/* import-globals-from head-mocks.js */
+Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "head-mocks.js", this);
 
 /**
  * Test that the initial route is /runtime/this-firefox
@@ -22,9 +22,7 @@ add_task(async function() {
  */
 add_task(async function() {
   // enable USB devices mocks
-  const usbMocks = new UsbMocks();
-  usbMocks.enableMocks();
-  registerCleanupFunction(() => usbMocks.disableMocks());
+  const mocks = new Mocks();
 
   const { document, tab } = await openAboutDebugging();
 
@@ -43,11 +41,11 @@ add_task(async function() {
 
   info("Check 'USB device runtime' page");
   // connect to a mocked USB runtime
-  usbMocks.createRuntime("1337id", {
+  mocks.createUSBRuntime("1337id", {
     deviceName: "Fancy Phone",
     name: "Lorem ipsum",
   });
-  usbMocks.emitUpdate();
+  mocks.emitUSBUpdate();
   await connectToRuntime("Fancy Phone", document);
   // navigate to it via URL
   document.location.hash = "#/runtime/1337id";

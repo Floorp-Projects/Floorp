@@ -723,6 +723,11 @@ function getChartsFromToolId(id) {
       timerHist = `DEVTOOLS_${id}_TIME_ACTIVE_SECONDS`;
       countScalar = `devtools.accessibility.picker_used_count`;
       break;
+    case "CHANGESVIEW":
+      useTimedEvent = true;
+      timerHist = `DEVTOOLS_${id}_TIME_ACTIVE_SECONDS`;
+      countScalar = `devtools.${lowerCaseId}.opened_count`;
+      break;
     case "ANIMATIONINSPECTOR":
     case "COMPUTEDVIEW":
     case "FONTINSPECTOR":

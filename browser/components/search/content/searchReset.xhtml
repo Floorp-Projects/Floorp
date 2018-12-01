@@ -4,21 +4,12 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE html [
-  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
-  %htmlDTD;
-  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-  %globalDTD;
-  <!ENTITY % searchresetDTD SYSTEM "chrome://browser/locale/aboutSearchReset.dtd">
-  %searchresetDTD;
-  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-  %brandDTD;
-]>
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <head>
-    <title>&searchreset.tabtitle;</title>
+    <title data-l10n-id="tab-title"/>
     <link rel="stylesheet" type="text/css" media="all"
           href="chrome://global/skin/in-content/info-pages.css"/>
     <link rel="stylesheet" type="text/css" media="all"
@@ -28,31 +19,35 @@
 
     <script type="application/javascript"
             src="chrome://browser/content/search/searchReset.js"/>
+    <link rel="localization" href="browser/aboutSearchReset.ftl"/>
+    <link rel="localization" href="branding/brand.ftl"/>
   </head>
 
-  <body dir="&locale.dir;">
+  <body>
 
     <div class="container">
       <div class="title">
-        <h1 class="title-text">&searchreset.pageTitle;</h1>
+        <h1 class="title-text" data-l10n-id="page-title"/>
       </div>
 
       <div class="description">
-        <p>&searchreset.pageInfo1;</p>
-        <p>&searchreset.selector.label;<span id="defaultEngine"/></p>
+        <p data-l10n-id="page-info-outofdate"/>
+        <p id="defaultEngineParagraph">
+          <span id="defaultEngine" data-l10n-name="default-engine"/>
+        </p>
 
-        <p>&searchreset.beforelink.pageInfo2;<a id="linkSettingsPage" href="about:preferences#search">&searchreset.link.pageInfo2;</a>&searchreset.afterlink.pageInfo2;</p>
+        <p data-l10n-id="page-info-how-to-change">
+          <a id="linkSettingsPage" href="about:preferences#search" data-l10n-name="link"></a>
+        </p>
       </div>
 
       <div class="button-container">
         <xul:button id="searchResetKeepCurrent"
-                    label="&searchreset.noChangeButton;"
-                    accesskey="&searchreset.noChangeButton.access;"
+                    data-l10n-id="no-change-button"
                     oncommand="keepCurrentEngine();"/>
         <xul:button class="primary"
                     id="searchResetChangeEngine"
-                    label="&searchreset.changeEngineButton;"
-                    accesskey="&searchreset.changeEngineButton.access;"
+                    data-l10n-id="change-engine-button"
                     oncommand="changeSearchEngine();"/>
       </div>
     </div>

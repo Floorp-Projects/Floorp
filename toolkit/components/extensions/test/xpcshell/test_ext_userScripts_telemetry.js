@@ -12,10 +12,14 @@ const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
 async function run_userScripts_telemetry_test() {
   function apiScript() {
-    browser.userScripts.setScriptAPIs({
-      US_test_sendMessage([msg, data], scriptMetadata, scriptGlobal) {
-        browser.test.sendMessage(msg, {data, scriptMetadata});
-      },
+    browser.userScripts.onBeforeScript.addListener(userScript => {
+      const scriptMetadata = userScript.metadata;
+
+      userScript.defineGlobals({
+        US_test_sendMessage(msg, data) {
+          browser.test.sendMessage(msg, {data, scriptMetadata});
+        },
+      });
     });
   }
 

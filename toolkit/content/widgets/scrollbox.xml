@@ -418,6 +418,11 @@
 
     <handlers>
       <handler event="wheel"><![CDATA[
+        // Don't consume the event if we can't scroll.
+        if (this.hasAttribute("notoverflowing")) {
+          return;
+        }
+
         let doScroll = false;
         let instant;
         let scrollAmount = 0;
