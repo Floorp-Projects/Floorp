@@ -179,6 +179,7 @@ extern crate rayon;
 extern crate ron;
 #[cfg(feature = "debugger")]
 extern crate serde_json;
+extern crate sha2;
 extern crate smallvec;
 extern crate time;
 #[cfg(feature = "debugger")]
