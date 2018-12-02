@@ -7,6 +7,7 @@
 #include "mozilla/layers/RenderRootStateManager.h"
 
 #include "mozilla/layers/WebRenderBridgeChild.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 
 namespace mozilla {
 namespace layers {
