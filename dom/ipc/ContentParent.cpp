@@ -2608,7 +2608,7 @@ void ContentParent::InitInternal(ProcessPriority aInitialPriority) {
 
   gpm->AddListener(this);
 
-  if (StaticPrefs::MediaRddProcessEnabled()) {
+  if (StaticPrefs::MediaRddProcessEnabled() && BrowserTabsRemoteAutostart()) {
     RDDProcessManager* rdd = RDDProcessManager::Get();
 
     Endpoint<PRemoteDecoderManagerChild> remoteManager;
