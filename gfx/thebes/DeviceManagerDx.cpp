@@ -267,6 +267,44 @@ bool DeviceManagerDx::CreateVRDevice() {
   return true;
 }
 
+bool DeviceManagerDx::CreateCanvasDevice() {
+  MOZ_ASSERT(ProcessOwnsCompositor());
+
+  if (mCanvasDevice) {
+    return true;
+  }
+
+  if (!LoadD3D11()) {
+    return false;
+  }
+
+  RefPtr<IDXGIAdapter1> adapter = GetDXGIAdapter();
+  if (!adapter) {
+    NS_WARNING("Failed to acquire a DXGI adapter for Canvas");
+    return false;
+  }
+
+  UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+
+  HRESULT hr;
+  if (!CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, flags, hr,
+                    mCanvasDevice)) {
+    gfxCriticalError() << "Crash during D3D11 device creation for Canvas";
+    return false;
+  }
+
+  if (FAILED(hr) || !mCanvasDevice) {
+    NS_WARNING("Failed to acquire a D3D11 device for Canvas");
+    return false;
+  }
+
+  if (XRE_IsGPUProcess()) {
+    Factory::SetDirect3D11Device(mCanvasDevice);
+  }
+
+  return true;
+}
+
 void DeviceManagerDx::CreateDirectCompositionDevice() {
   if (!gfxVars::UseWebRenderDCompWin()) {
     return;
@@ -866,6 +904,7 @@ void DeviceManagerDx::ResetDevices() {
   mMLGDevice = nullptr;
   mCompositorDevice = nullptr;
   mContentDevice = nullptr;
+  mCanvasDevice = nullptr;
   mImageDevice = nullptr;
   mDeviceStatus = Nothing();
   mDeviceResetReason = Nothing();
@@ -888,6 +927,7 @@ bool DeviceManagerDx::MaybeResetAndReacquireDevices() {
 
   bool createCompositorDevice = !!mCompositorDevice;
   bool createContentDevice = !!mContentDevice;
+  bool createCanvasDevice = !!mCanvasDevice;
 
   ResetDevices();
 
@@ -897,6 +937,9 @@ bool DeviceManagerDx::MaybeResetAndReacquireDevices() {
   }
   if (createContentDevice) {
     CreateContentDevices();
+  }
+  if (createCanvasDevice) {
+    CreateCanvasDevice();
   }
 
   return true;
@@ -986,7 +1029,8 @@ bool DeviceManagerDx::GetAnyDeviceRemovedReason(DeviceResetReason* aOutReason) {
   mDeviceLock.AssertCurrentThreadOwns();
 
   if (DidDeviceReset(mCompositorDevice, aOutReason) ||
-      DidDeviceReset(mContentDevice, aOutReason)) {
+      DidDeviceReset(mContentDevice, aOutReason) ||
+      DidDeviceReset(mCanvasDevice, aOutReason)) {
     return true;
   }
 
@@ -1067,6 +1111,14 @@ RefPtr<ID3D11Device> DeviceManagerDx::GetVRDevice() {
     CreateVRDevice();
   }
   return mVRDevice;
+}
+
+RefPtr<ID3D11Device> DeviceManagerDx::GetCanvasDevice() {
+  MutexAutoLock lock(mDeviceLock);
+  if (!mCanvasDevice) {
+    CreateCanvasDevice();
+  }
+  return mCanvasDevice;
 }
 
 RefPtr<IDCompositionDevice> DeviceManagerDx::GetDirectCompositionDevice() {
