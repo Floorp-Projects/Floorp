@@ -738,6 +738,30 @@ FT_Error Factory::LoadFTGlyph(FT_Face aFace, uint32_t aGlyphIndex,
 }
 #endif
 
+AutoSerializeWithMoz2D::AutoSerializeWithMoz2D(BackendType aBackendType) {
+#ifdef WIN32
+  // We use a multi-threaded ID2D1Factory1, so that makes the calls through the
+  // Direct2D API thread-safe. However, if the Moz2D objects are using Direct3D
+  // resources we need to make sure that calls through the Direct3D or DXGI API
+  // use the Direct2D synchronization. It's possible that this should be pushed
+  // down into the TextureD3D11 objects, so that we always use this.
+  if (aBackendType == BackendType::DIRECT2D1_1 ||
+      aBackendType == BackendType::DIRECT2D) {
+    D2DFactory()->QueryInterface(
+        static_cast<ID2D1Multithread**>(getter_AddRefs(mMT)));
+    mMT->Enter();
+  }
+#endif
+}
+
+AutoSerializeWithMoz2D::~AutoSerializeWithMoz2D() {
+#ifdef WIN32
+  if (mMT) {
+    mMT->Leave();
+  }
+#endif
+};
+
 #ifdef WIN32
 already_AddRefed<DrawTarget> Factory::CreateDrawTargetForD3D11Texture(
     ID3D11Texture2D* aTexture, SurfaceFormat aFormat) {

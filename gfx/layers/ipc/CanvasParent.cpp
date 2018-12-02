@@ -9,6 +9,8 @@
 #include "base/thread.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/TextureClient.h"
+#include "mozilla/SharedThreadPool.h"
+#include "prsystem.h"
 
 #if defined(XP_WIN)
 #  include "mozilla/gfx/DeviceManagerDx.h"
@@ -23,9 +25,11 @@ namespace mozilla {
 namespace layers {
 
 static base::Thread* sCanvasThread = nullptr;
+static StaticRefPtr<nsIThreadPool> sCanvasWorkers;
+static bool sShuttingDown = false;
 
 static MessageLoop* CanvasPlaybackLoop() {
-  if (!sCanvasThread) {
+  if (!sCanvasThread && !sShuttingDown) {
     MOZ_ASSERT(NS_IsInCompositorThread());
     base::Thread* canvasThread = new base::Thread("Canvas");
     if (canvasThread->Start()) {
@@ -33,13 +37,17 @@ static MessageLoop* CanvasPlaybackLoop() {
     }
   }
 
-  return sCanvasThread ? sCanvasThread->message_loop() : MessageLoop::current();
+  return sCanvasThread ? sCanvasThread->message_loop() : nullptr;
 }
 
 /* static */
 already_AddRefed<CanvasParent> CanvasParent::Create(
     ipc::Endpoint<PCanvasParent>&& aEndpoint) {
   MOZ_ASSERT(NS_IsInCompositorThread());
+
+  if (sShuttingDown) {
+    return nullptr;
+  }
 
   RefPtr<CanvasParent> canvasParent = new CanvasParent();
   if (CanvasPlaybackLoop()->IsAcceptingTasks()) {
@@ -52,14 +60,38 @@ already_AddRefed<CanvasParent> CanvasParent::Create(
 }
 
 /* static */ bool CanvasParent::IsInCanvasThread() {
-  return sCanvasThread &&
-         sCanvasThread->thread_id() == PlatformThread::CurrentId();
+  return (sCanvasWorkers && sCanvasWorkers->IsOnCurrentThread()) ||
+         (sCanvasThread &&
+          sCanvasThread->thread_id() == PlatformThread::CurrentId());
+}
+
+static already_AddRefed<nsIThreadPool> GetCanvasWorkers() {
+  if (!sCanvasWorkers && !sShuttingDown) {
+    // Given that the canvas workers are receiving instructions from content
+    // processes, it probably doesn't make sense to have more than half the
+    // number of processors doing canvas drawing. We set the lower limit to 2,
+    // so that even on single processor systems, if there is more than one
+    // window with canvas drawing, the OS can manage the load between them.
+    uint32_t threadLimit = std::max(2, PR_GetNumberOfProcessors() / 2);
+    sCanvasWorkers =
+        SharedThreadPool::Get(NS_LITERAL_CSTRING("CanvasWorkers"), threadLimit);
+  }
+
+  return do_AddRef(sCanvasWorkers);
 }
 
 /* static */ void CanvasParent::Shutdown() {
+  sShuttingDown = true;
+
   if (sCanvasThread) {
+    sCanvasThread->Stop();
     delete sCanvasThread;
     sCanvasThread = nullptr;
+  }
+
+  if (sCanvasWorkers) {
+    sCanvasWorkers->Shutdown();
+    sCanvasWorkers = nullptr;
   }
 }
 
@@ -92,23 +124,25 @@ ipc::IPCResult CanvasParent::RecvResumeTranslation() {
     return IPC_FAIL(this, "Canvas Translation failed.");
   }
 
-  PostStartTranslationTask();
+  PostStartTranslationTask(nsIThread::DISPATCH_NORMAL);
 
   return IPC_OK();
 }
 
-void CanvasParent::PostStartTranslationTask() {
-  if (MessageLoop::current()->IsAcceptingTasks()) {
-    RefPtr<Runnable> runnable =
-        NewRunnableMethod("CanvasParent::StartTranslation", this,
-                          &CanvasParent::StartTranslation);
-    MessageLoop::current()->PostTask(runnable.forget());
+void CanvasParent::PostStartTranslationTask(uint32_t aDispatchFlags) {
+  if (sShuttingDown) {
+    return;
   }
+
+  RefPtr<nsIThreadPool> canvasWorkers = GetCanvasWorkers();
+  RefPtr<Runnable> runnable = NewRunnableMethod(
+      "CanvasParent::StartTranslation", this, &CanvasParent::StartTranslation);
+  canvasWorkers->Dispatch(runnable.forget(), aDispatchFlags);
 }
 
 void CanvasParent::StartTranslation() {
   if (!mTranslator->TranslateRecording()) {
-    PostStartTranslationTask();
+    PostStartTranslationTask(nsIThread::DISPATCH_AT_END);
   }
 }
 
