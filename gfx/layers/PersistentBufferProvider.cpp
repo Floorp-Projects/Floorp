@@ -425,10 +425,15 @@ TextureClient* PersistentBufferProviderShared::GetTextureClient() {
 
 already_AddRefed<gfx::SourceSurface>
 PersistentBufferProviderShared::BorrowSnapshot() {
-  MOZ_ASSERT(!mDrawTarget);
-
   if (mPreviousSnapshot) {
     mSnapshot = mPreviousSnapshot;
+    return do_AddRef(mSnapshot);
+  }
+
+  if (mDrawTarget) {
+    auto back = GetTexture(mBack);
+    MOZ_ASSERT(back && back->IsLocked());
+    mSnapshot = back->BorrowSnapshot();
     return do_AddRef(mSnapshot);
   }
 
@@ -455,7 +460,7 @@ void PersistentBufferProviderShared::ReturnSnapshot(
   mSnapshot = nullptr;
   snapshot = nullptr;
 
-  if (mPreviousSnapshot) {
+  if (mPreviousSnapshot || mDrawTarget) {
     return;
   }
 

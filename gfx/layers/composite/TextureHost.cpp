@@ -216,6 +216,16 @@ already_AddRefed<TextureHost> TextureHost::Create(
       result = CreateTextureHostD3D11(aDesc, aDeallocator, aBackend, aFlags);
       break;
 #endif
+    case SurfaceDescriptor::TSurfaceDescriptorRecorded: {
+      const SurfaceDescriptorRecorded& desc =
+          aDesc.get_SurfaceDescriptorRecorded();
+      UniquePtr<SurfaceDescriptor> realDesc =
+          aDeallocator->AsCompositorBridgeParentBase()
+              ->LookupSurfaceDescriptorForClientDrawTarget(desc.drawTarget());
+      result = TextureHost::Create(*realDesc, aReadLock, aDeallocator, aBackend,
+                                   aFlags, aExternalImageId);
+      return result.forget();
+    }
     default:
       MOZ_CRASH("GFX: Unsupported Surface type host");
   }

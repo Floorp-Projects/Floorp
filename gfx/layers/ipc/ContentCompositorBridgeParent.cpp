@@ -22,6 +22,7 @@
 #include "mozilla/layers/APZCTreeManagerParent.h"  // for APZCTreeManagerParent
 #include "mozilla/layers/APZUpdater.h"             // for APZUpdater
 #include "mozilla/layers/AsyncCompositionManager.h"
+#include "mozilla/layers/CanvasParent.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/LayerManagerComposite.h"
@@ -612,6 +613,22 @@ PTextureParent* ContentCompositorBridgeParent::AllocPTextureParent(
 bool ContentCompositorBridgeParent::DeallocPTextureParent(
     PTextureParent* actor) {
   return TextureHost::DestroyIPDLActor(actor);
+}
+
+mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvInitPCanvasParent(
+    Endpoint<PCanvasParent>&& aEndpoint) {
+  MOZ_RELEASE_ASSERT(!mCanvasParent,
+                     "Canvas Parent should only be created once per "
+                     "CrossProcessCompositorBridgeParent.");
+
+  mCanvasParent = CanvasParent::Create(std::move(aEndpoint));
+  return IPC_OK();
+}
+
+UniquePtr<SurfaceDescriptor>
+ContentCompositorBridgeParent::LookupSurfaceDescriptorForClientDrawTarget(
+    const uintptr_t aDrawTarget) {
+  return mCanvasParent->LookupSurfaceDescriptorForClientDrawTarget(aDrawTarget);
 }
 
 bool ContentCompositorBridgeParent::IsSameProcess() const {

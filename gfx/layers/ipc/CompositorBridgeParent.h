@@ -85,6 +85,7 @@ class PAPZParent;
 class ContentCompositorBridgeParent;
 class CompositorThreadHolder;
 class InProcessCompositorSession;
+class TextureData;
 class WebRenderBridgeParent;
 
 struct ScopedLayerTreeRegistration {
@@ -188,6 +189,11 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
 
   virtual bool IsRemote() const { return false; }
 
+  virtual UniquePtr<SurfaceDescriptor>
+  LookupSurfaceDescriptorForClientDrawTarget(const uintptr_t aDrawTarget) {
+    MOZ_CRASH("Should only be called on ContentCompositorBridgeParent.");
+  }
+
   virtual void ForceComposeToTarget(gfx::DrawTarget* aTarget,
                                     const gfx::IntRect* aRect = nullptr) {
     MOZ_CRASH();
@@ -265,6 +271,8 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
       const uint32_t& startIndex, nsTArray<float>* intervals) = 0;
   virtual mozilla::ipc::IPCResult RecvCheckContentOnlyTDR(
       const uint32_t& sequenceNum, bool* isContentOnlyTDR) = 0;
+  virtual mozilla::ipc::IPCResult RecvInitPCanvasParent(
+      Endpoint<PCanvasParent>&& aEndpoint) = 0;
 
   bool mCanSend;
 
@@ -387,6 +395,9 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
       const LayersId& aId, const uint64_t& aSerial,
       const wr::MaybeExternalImageId& aExternalImageId) override;
   bool DeallocPTextureParent(PTextureParent* actor) override;
+
+  mozilla::ipc::IPCResult RecvInitPCanvasParent(
+      Endpoint<PCanvasParent>&& aEndpoint) final;
 
   bool IsSameProcess() const override;
 
