@@ -9,7 +9,6 @@
 #include "jsapi.h"
 
 #include "js/CharacterEncoding.h"
-#include "vm/Interpreter.h"  // For InstanceOfOperator
 
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -1373,7 +1372,7 @@ bool ScriptedProxyHandler::nativeCall(JSContext* cx, IsAcceptableThis test,
 
 bool ScriptedProxyHandler::hasInstance(JSContext* cx, HandleObject proxy,
                                        MutableHandleValue v, bool* bp) const {
-  return InstanceOfOperator(cx, proxy, v, bp);
+  return InstanceofOperator(cx, proxy, v, bp);
 }
 
 bool ScriptedProxyHandler::getBuiltinClass(JSContext* cx, HandleObject proxy,

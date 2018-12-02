@@ -773,7 +773,7 @@ bool JS::OrdinaryHasInstance(JSContext* cx, HandleObject objArg, HandleValue v,
   if (obj->is<JSFunction>() && obj->isBoundFunction()) {
     /* Steps 2a-b. */
     obj = obj->as<JSFunction>().getBoundFunctionTarget();
-    return InstanceOfOperator(cx, obj, v, bp);
+    return InstanceofOperator(cx, obj, v, bp);
   }
 
   /* Step 3. */
