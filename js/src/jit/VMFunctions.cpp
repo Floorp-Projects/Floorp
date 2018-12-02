@@ -606,10 +606,6 @@ bool CreateThis(JSContext* cx, HandleObject callee, HandleObject newTarget,
         return false;
       }
       AutoRealm ar(cx, script);
-      AutoKeepTypeScripts keepTypes(cx);
-      if (!script->ensureHasTypes(cx, keepTypes)) {
-        return false;
-      }
       if (!js::CreateThis(cx, fun, script, newTarget, GenericObject, rval)) {
         return false;
       }
