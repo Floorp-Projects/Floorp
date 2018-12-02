@@ -8,6 +8,7 @@
 #define MOZILLA_GFX_RECORDINGTYPES_H_
 
 #include <ostream>
+#include <vector>
 
 namespace mozilla {
 namespace gfx {
@@ -27,8 +28,28 @@ void WriteElement(S& aStream, const T& aElement) {
   ElementStreamFormat<S, T>::Write(aStream, aElement);
 }
 template <class S, class T>
+void WriteVector(S& aStream, const std::vector<T>& aVector) {
+  size_t size = aVector.size();
+  WriteElement(aStream, size);
+  if (size) {
+    aStream.write(reinterpret_cast<const char*>(aVector.data()),
+                  sizeof(T) * size);
+  }
+}
+template <class S, class T>
 void ReadElement(S& aStream, T& aElement) {
   ElementStreamFormat<S, T>::Read(aStream, aElement);
+}
+template <class S, class T>
+void ReadVector(S& aStream, std::vector<T>& aVector) {
+  size_t size;
+  ReadElement(aStream, size);
+  if (size) {
+    aVector.resize(size);
+    aStream.read(reinterpret_cast<char*>(aVector.data()), sizeof(T) * size);
+  } else {
+    aVector.clear();
+  }
 }
 
 }  // namespace gfx

@@ -12,123 +12,218 @@
 #include <ostream>
 
 #include "PathHelpers.h"
+#include "RecordingTypes.h"
 
 namespace mozilla {
 namespace gfx {
 
+class PathOps {
+ public:
+  PathOps() {}
+
+  template <class S>
+  explicit PathOps(S& aStream);
+
+  PathOps(PathOps&& aOther) : mPathData(std::move(aOther.mPathData)) {}
+
+  PathOps(const PathOps& aOther) : mPathData(aOther.mPathData) {}
+
+  PathOps& operator=(PathOps&& aOther) {
+    mPathData = std::move(aOther.mPathData);
+    return *this;
+  }
+
+  template <class S>
+  void Record(S& aStream) const;
+
+  bool StreamToSink(PathSink& aPathSink) const;
+
+  PathOps TransformedCopy(const Matrix& aTransform) const;
+
+  size_t NumberOfOps() const;
+
+  void MoveTo(const Point& aPoint) { AppendPathOp(OpType::OP_MOVETO, aPoint); }
+
+  void LineTo(const Point& aPoint) { AppendPathOp(OpType::OP_LINETO, aPoint); }
+
+  void BezierTo(const Point& aCP1, const Point& aCP2, const Point& aCP3) {
+    AppendPathOp(OpType::OP_BEZIERTO, ThreePoints{aCP1, aCP2, aCP3});
+  }
+
+  void QuadraticBezierTo(const Point& aCP1, const Point& aCP2) {
+    AppendPathOp(OpType::OP_QUADRATICBEZIERTO, TwoPoints{aCP1, aCP2});
+  }
+
+  void Arc(const Point& aOrigin, float aRadius, float aStartAngle,
+           float aEndAngle, bool aAntiClockwise) {
+    AppendPathOp(OpType::OP_ARC, ArcParams{aOrigin, aRadius, aStartAngle,
+                                           aEndAngle, aAntiClockwise});
+  }
+
+  void Close() {
+    size_t oldSize = mPathData.size();
+    mPathData.resize(oldSize + sizeof(OpType));
+    *reinterpret_cast<OpType*>(mPathData.data() + oldSize) = OpType::OP_CLOSE;
+  }
+
+ private:
+  void operator=(const PathOps&) = delete;  // assign using std::move()!
+
+  enum class OpType : uint32_t {
+    OP_MOVETO = 0,
+    OP_LINETO,
+    OP_BEZIERTO,
+    OP_QUADRATICBEZIERTO,
+    OP_ARC,
+    OP_CLOSE,
+    OP_INVALID
+  };
+
+  template <typename T>
+  void AppendPathOp(const OpType& aOpType, const T& aOpParams) {
+    size_t oldSize = mPathData.size();
+    mPathData.resize(oldSize + sizeof(OpType) + sizeof(T));
+    memcpy(mPathData.data() + oldSize, &aOpType, sizeof(OpType));
+    oldSize += sizeof(OpType);
+    memcpy(mPathData.data() + oldSize, &aOpParams, sizeof(T));
+  }
+
+  struct TwoPoints {
+    Point p1;
+    Point p2;
+  };
+
+  struct ThreePoints {
+    Point p1;
+    Point p2;
+    Point p3;
+  };
+
+  struct ArcParams {
+    Point origin;
+    float radius;
+    float startAngle;
+    float endAngle;
+    bool antiClockwise;
+  };
+
+  std::vector<uint8_t> mPathData;
+};
+
+template <class S>
+PathOps::PathOps(S& aStream) {
+  ReadVector(aStream, mPathData);
+}
+
+template <class S>
+inline void PathOps::Record(S& aStream) const {
+  WriteVector(aStream, mPathData);
+}
+
 class PathRecording;
 class DrawEventRecorderPrivate;
 
-class PathBuilderRecording : public PathBuilder {
+class PathBuilderRecording final : public PathBuilder {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathBuilderRecording, override)
 
   PathBuilderRecording(PathBuilder* aBuilder, FillRule aFillRule)
       : mPathBuilder(aBuilder), mFillRule(aFillRule) {}
 
+  PathBuilderRecording(PathBuilder* aBuilder, const PathOps& aPathOps,
+                       FillRule aFillRule)
+      : mPathBuilder(aBuilder), mFillRule(aFillRule), mPathOps(aPathOps) {}
+
   /* Move the current point in the path, any figure currently being drawn will
    * be considered closed during fill operations, however when stroking the
    * closing line segment will not be drawn.
    */
-  virtual void MoveTo(const Point& aPoint) override;
+  void MoveTo(const Point& aPoint) final;
+
   /* Add a linesegment to the current figure */
-  virtual void LineTo(const Point& aPoint) override;
+  void LineTo(const Point& aPoint) final;
+
   /* Add a cubic bezier curve to the current figure */
-  virtual void BezierTo(const Point& aCP1, const Point& aCP2,
-                        const Point& aCP3) override;
+  void BezierTo(const Point& aCP1, const Point& aCP2, const Point& aCP3) final;
+
   /* Add a quadratic bezier curve to the current figure */
-  virtual void QuadraticBezierTo(const Point& aCP1, const Point& aCP2) override;
+  void QuadraticBezierTo(const Point& aCP1, const Point& aCP2) final;
+
   /* Close the current figure, this will essentially generate a line segment
    * from the current point to the starting point for the current figure
    */
-  virtual void Close() override;
+  void Close() final;
 
   /* Add an arc to the current figure */
-  virtual void Arc(const Point& aOrigin, float aRadius, float aStartAngle,
-                   float aEndAngle, bool aAntiClockwise) override {
-    ArcToBezier(this, aOrigin, Size(aRadius, aRadius), aStartAngle, aEndAngle,
-                aAntiClockwise);
-  }
+  void Arc(const Point& aOrigin, float aRadius, float aStartAngle,
+           float aEndAngle, bool aAntiClockwise) final;
 
   /* Point the current subpath is at - or where the next subpath will start
    * if there is no active subpath.
    */
-  virtual Point CurrentPoint() const override {
+  Point CurrentPoint() const final {
     return mPathBuilder->CurrentPoint();
   }
 
-  virtual Point BeginPoint() const override {
+  Point BeginPoint() const final {
     return mPathBuilder->BeginPoint();
   }
 
-  virtual void SetCurrentPoint(const Point& aPoint) override {
+  void SetCurrentPoint(const Point& aPoint) final {
     mPathBuilder->SetCurrentPoint(aPoint);
   }
 
-  virtual void SetBeginPoint(const Point& aPoint) override {
+  void SetBeginPoint(const Point& aPoint) final {
     mPathBuilder->SetBeginPoint(aPoint);
   }
 
-  virtual already_AddRefed<Path> Finish() override;
+  already_AddRefed<Path> Finish() final;
 
-  virtual BackendType GetBackendType() const override {
-    return BackendType::RECORDING;
-  }
+  BackendType GetBackendType() const final { return BackendType::RECORDING; }
 
  private:
-  friend class PathRecording;
-
   RefPtr<PathBuilder> mPathBuilder;
   FillRule mFillRule;
-  std::vector<PathOp> mPathOps;
+  PathOps mPathOps;
 };
 
-class PathRecording : public Path {
+class PathRecording final : public Path {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathRecording, override)
 
-  PathRecording(Path* aPath, const std::vector<PathOp> aOps, FillRule aFillRule,
+  PathRecording(Path* aPath, PathOps&& aOps, FillRule aFillRule,
                 const Point& aCurrentPoint, const Point& aBeginPoint)
-      : mPath(aPath), mPathOps(aOps), mFillRule(aFillRule),
+      : mPath(aPath), mPathOps(std::move(aOps)), mFillRule(aFillRule),
         mCurrentPoint(aCurrentPoint), mBeginPoint(aBeginPoint) {}
 
   ~PathRecording();
 
-  virtual BackendType GetBackendType() const override {
-    return BackendType::RECORDING;
-  }
-  virtual already_AddRefed<PathBuilder> CopyToBuilder(
-      FillRule aFillRule) const override;
-  virtual already_AddRefed<PathBuilder> TransformedCopyToBuilder(
-      const Matrix& aTransform, FillRule aFillRule) const override;
-  virtual bool ContainsPoint(const Point& aPoint,
-                             const Matrix& aTransform) const override {
+  BackendType GetBackendType() const final { return BackendType::RECORDING; }
+  already_AddRefed<PathBuilder> CopyToBuilder(FillRule aFillRule) const final;
+  already_AddRefed<PathBuilder> TransformedCopyToBuilder(
+      const Matrix& aTransform, FillRule aFillRule) const final;
+  bool ContainsPoint(const Point& aPoint,
+                     const Matrix& aTransform) const final {
     return mPath->ContainsPoint(aPoint, aTransform);
   }
-  virtual bool StrokeContainsPoint(const StrokeOptions& aStrokeOptions,
-                                   const Point& aPoint,
-                                   const Matrix& aTransform) const override {
+  bool StrokeContainsPoint(const StrokeOptions& aStrokeOptions,
+                           const Point& aPoint,
+                           const Matrix& aTransform) const final {
     return mPath->StrokeContainsPoint(aStrokeOptions, aPoint, aTransform);
   }
 
-  virtual Rect GetBounds(const Matrix& aTransform = Matrix()) const override {
+  Rect GetBounds(const Matrix& aTransform = Matrix()) const final {
     return mPath->GetBounds(aTransform);
   }
 
-  virtual Rect GetStrokedBounds(
-      const StrokeOptions& aStrokeOptions,
-      const Matrix& aTransform = Matrix()) const override {
+  Rect GetStrokedBounds(const StrokeOptions& aStrokeOptions,
+                        const Matrix& aTransform = Matrix()) const final {
     return mPath->GetStrokedBounds(aStrokeOptions, aTransform);
   }
 
-  virtual void StreamToSink(PathSink* aSink) const override {
-    mPath->StreamToSink(aSink);
-  }
+  void StreamToSink(PathSink* aSink) const final { mPath->StreamToSink(aSink); }
 
-  virtual FillRule GetFillRule() const override { return mFillRule; }
-
-  void StorePath(std::ostream& aStream) const;
-  static void ReadPathToBuilder(std::istream& aStream, PathBuilder* aBuilder);
+  FillRule GetFillRule() const final { return mFillRule; }
 
  private:
   friend class DrawTargetWrapAndRecord;
@@ -136,7 +231,7 @@ class PathRecording : public Path {
   friend class RecordedPathCreation;
 
   RefPtr<Path> mPath;
-  std::vector<PathOp> mPathOps;
+  PathOps mPathOps;
   FillRule mFillRule;
   Point mCurrentPoint;
   Point mBeginPoint;
