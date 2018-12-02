@@ -55,3 +55,29 @@ interface TestingDeprecatedInterface {
   [Deprecated="DeprecatedTestingAttribute"]
   readonly attribute boolean deprecatedAttribute;
 };
+
+// Used internally to process the JSON
+dictionary ReportingHeaderValue {
+  sequence<ReportingItem> items;
+};
+
+// Used internally to process the JSON
+dictionary ReportingItem {
+  // This is a long.
+  any max_age;
+  // This is a sequence of ReportingEndpoint.
+  any endpoints;
+  // This is a string. If missing, the value is 'default'.
+  any group;
+  boolean include_subdomains = false;
+};
+
+// Used internally to process the JSON
+dictionary ReportingEndpoint {
+  // This is a string.
+  any url;
+  // This is an unsigned long.
+  any priority;
+  // This is an unsigned long.
+  any weight;
+};

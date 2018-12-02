@@ -364,6 +364,9 @@ partial namespace ChromeUtils {
    */
   [ChromeOnly]
   sequence<BrowsingContext> getRootBrowsingContexts();
+
+  [ChromeOnly, Throws]
+  boolean hasReportingHeaderForOrigin(DOMString aOrigin);
 };
 
 /**

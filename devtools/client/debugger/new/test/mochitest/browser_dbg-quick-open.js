@@ -110,16 +110,6 @@ add_task(async function() {
   pressKey(dbg, "Escape");
   assertDisabled(dbg);
 
-  info("Testing variable search");
-  quickOpen(dbg, "sw2");
-  pressKey(dbg, "Enter");
-
-  quickOpen(dbg, "#");
-  is(resultCount(dbg), 1, "one variable result");
-  const results = findAllElements(dbg, "resultItems");
-  results.forEach(result => is(result.textContent, "x13"));
-  await waitToClose(dbg);
-
   info("Testing goto line:column");
   assertLine(dbg, 0);
   assertColumn(dbg, null);

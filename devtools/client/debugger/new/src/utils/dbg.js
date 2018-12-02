@@ -49,8 +49,9 @@ function getCM() {
 }
 
 function _formatPausePoints(dbg: Object, url: string) {
-  const source = dbg.helpers.findSource(url);
-  const pausePoints = dbg.selectors.getPausePoints(source);
+  const source =
+    dbg.helpers.findSource(url) || dbg.selectors.getSelectedSource();
+  const pausePoints = dbg.selectors.getPausePoints(source.id);
   console.log(formatPausePoints(source.text, pausePoints));
 }
 

@@ -8,22 +8,21 @@
 async function test() {
   waitForExplicitFinish();
 
-  let tab = BrowserTestUtils.addTab(gBrowser, null, { recordExecution: "*" });
-  gBrowser.selectedTab = tab;
-  openTrustedLinkIn(EXAMPLE_URL + "doc_rr_basic.html", "current");
-  await once(Services.ppmm, "RecordingFinished");
+  const dbg = await attatchRecordingDebugger(
+    "doc_rr_basic.html", 
+    { waitForRecording: true }
+  );
 
-  let toolbox = await attachDebugger(tab), client = toolbox.threadClient;
-  await client.interrupt();
+  const {threadClient, tab, toolbox} = dbg;
 
   // Rewind to the beginning of the recording.
-  await rewindToLine(client, undefined);
+  await rewindToLine(threadClient, undefined);
 
-  await setBreakpoint(client, "doc_rr_basic.html", 21);
-  await resumeToLine(client, 21);
-  await checkEvaluateInTopFrame(client, "number", 1);
-  await resumeToLine(client, 21);
-  await checkEvaluateInTopFrame(client, "number", 2);
+  await setBreakpoint(threadClient, "doc_rr_basic.html", 21);
+  await resumeToLine(threadClient, 21);
+  await checkEvaluateInTopFrame(threadClient, "number", 1);
+  await resumeToLine(threadClient, 21);
+  await checkEvaluateInTopFrame(threadClient, "number", 2);
 
   await toolbox.destroy();
   await gBrowser.removeTab(tab);

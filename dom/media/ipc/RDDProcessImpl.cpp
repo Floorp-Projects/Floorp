@@ -26,6 +26,9 @@ bool RDDProcessImpl::Init(int aArgc, char* aArgv[]) {
 #endif
   char* parentBuildID = nullptr;
   for (int i = 1; i < aArgc; i++) {
+    if (!aArgv[i]) {
+      continue;
+    }
     if (strcmp(aArgv[i], "-parentBuildID") == 0) {
       parentBuildID = aArgv[i + 1];
     }

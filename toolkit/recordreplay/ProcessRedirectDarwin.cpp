@@ -724,7 +724,9 @@ static PreambleResult Preamble_pthread_join(CallArguments* aArguments) {
   Thread* thread = Thread::GetByNativeId(token);
   thread->Join();
 
-  *ptr = nullptr;
+  if (ptr) {
+    *ptr = nullptr;
+  }
   aArguments->Rval<ssize_t>() = 0;
   return PreambleResult::Veto;
 }
@@ -2491,16 +2493,87 @@ static SystemRedirection gSystemRedirections[] = {
 };
 
 ///////////////////////////////////////////////////////////////////////////////
+// Diagnostic Redirections
+///////////////////////////////////////////////////////////////////////////////
+
+// Diagnostic redirections are used to redirection functions in Gecko in order
+// to help hunt down the reasons for crashes or other failures. Because of the
+// unpredictable effects of inlining, diagnostic redirections may not be called
+// whenever the associated function is invoked, and should not be used to
+// modify Gecko's behavior.
+//
+// The address of the function to redirect is specified directly here, as we
+// cannot use dlsym() to lookup symbols that are not externally visible.
+
+// Functions which are not overloaded.
+#define FOR_EACH_DIAGNOSTIC_REDIRECTION(MACRO)                   \
+  MACRO(PL_HashTableAdd, Preamble_PLHashTable)                   \
+  MACRO(PL_HashTableRemove, Preamble_PLHashTable)                \
+  MACRO(PL_HashTableLookup, Preamble_PLHashTable)                \
+  MACRO(PL_HashTableLookupConst, Preamble_PLHashTable)           \
+  MACRO(PL_HashTableEnumerateEntries, Preamble_PLHashTable)      \
+  MACRO(PL_HashTableRawAdd, Preamble_PLHashTable)                \
+  MACRO(PL_HashTableRawRemove, Preamble_PLHashTable)             \
+  MACRO(PL_HashTableRawLookup, Preamble_PLHashTable)             \
+  MACRO(PL_HashTableRawLookupConst, Preamble_PLHashTable)
+
+// Member functions which need a type specification to resolve overloading.
+#define FOR_EACH_DIAGNOSTIC_MEMBER_PTR_WITH_TYPE_REDIRECTION(MACRO) \
+  MACRO(PLDHashEntryHdr* (PLDHashTable::*)(const void*, const fallible_t&), \
+        &PLDHashTable::Add, Preamble_PLDHashTable)
+
+// Member functions which are not overloaded.
+#define FOR_EACH_DIAGNOSTIC_MEMBER_PTR_REDIRECTION(MACRO)        \
+  MACRO(&PLDHashTable::Clear, Preamble_PLDHashTable)             \
+  MACRO(&PLDHashTable::Remove, Preamble_PLDHashTable)            \
+  MACRO(&PLDHashTable::RemoveEntry, Preamble_PLDHashTable)
+
+static PreambleResult
+Preamble_PLHashTable(CallArguments* aArguments)
+{
+  CheckPLHashTable(aArguments->Arg<0, PLHashTable*>());
+  return PreambleResult::IgnoreRedirect;
+}
+
+static PreambleResult
+Preamble_PLDHashTable(CallArguments* aArguments)
+{
+  CheckPLDHashTable(aArguments->Arg<0, PLDHashTable*>());
+  return PreambleResult::IgnoreRedirect;
+}
+
+#define MAKE_DIAGNOSTIC_ENTRY_WITH_TYPE(aType, aAddress, aPreamble) \
+  { #aAddress, nullptr, nullptr, nullptr, aPreamble },
+
+#define MAKE_DIAGNOSTIC_ENTRY(aAddress, aPreamble) \
+  { #aAddress, nullptr, nullptr, nullptr, aPreamble },
+
+static Redirection gDiagnosticRedirections[] = {
+  FOR_EACH_DIAGNOSTIC_REDIRECTION(MAKE_DIAGNOSTIC_ENTRY)
+  FOR_EACH_DIAGNOSTIC_MEMBER_PTR_WITH_TYPE_REDIRECTION(MAKE_DIAGNOSTIC_ENTRY_WITH_TYPE)
+  FOR_EACH_DIAGNOSTIC_MEMBER_PTR_REDIRECTION(MAKE_DIAGNOSTIC_ENTRY)
+};
+
+#undef MAKE_DIAGNOSTIC_ENTRY_WITH_TYPE
+#undef MAKE_DIAGNOSTIC_ENTRY
+
+///////////////////////////////////////////////////////////////////////////////
 // Redirection generation
 ///////////////////////////////////////////////////////////////////////////////
 
-size_t NumRedirections() { return ArrayLength(gSystemRedirections); }
+size_t NumRedirections() {
+  return ArrayLength(gSystemRedirections) + ArrayLength(gDiagnosticRedirections);
+}
 
 static Redirection* gRedirections;
 
 Redirection& GetRedirection(size_t aCallId) {
-  MOZ_RELEASE_ASSERT(aCallId < ArrayLength(gSystemRedirections));
-  return gRedirections[aCallId];
+  if (aCallId < ArrayLength(gSystemRedirections)) {
+    return gRedirections[aCallId];
+  }
+  aCallId -= ArrayLength(gSystemRedirections);
+  MOZ_RELEASE_ASSERT(aCallId < ArrayLength(gDiagnosticRedirections));
+  return gDiagnosticRedirections[aCallId];
 }
 
 // Get the instruction pointer to use as the address of the base function for a
@@ -2517,12 +2590,19 @@ static uint8_t* FunctionStartAddress(Redirection& aRedirection) {
   return addr;
 }
 
-void EarlyInitializeRedirections() {
-  size_t numRedirections = NumRedirections();
-  gRedirections = new Redirection[numRedirections];
-  PodZero(gRedirections, numRedirections);
+template <typename FnPtr>
+static uint8_t* ConvertMemberPtrToAddress(FnPtr aPtr) {
+  // Dig around in clang's internal representation of member function pointers.
+  uint8_t** contents = (uint8_t**) &aPtr;
+  return contents[0];
+}
 
-  for (size_t i = 0; i < numRedirections; i++) {
+void EarlyInitializeRedirections() {
+  size_t numSystemRedirections = ArrayLength(gSystemRedirections);
+  gRedirections = new Redirection[numSystemRedirections];
+  PodZero(gRedirections, numSystemRedirections);
+
+  for (size_t i = 0; i < numSystemRedirections; i++) {
     const SystemRedirection& systemRedirection = gSystemRedirections[i];
     Redirection& redirection = gRedirections[i];
 
@@ -2545,6 +2625,27 @@ void EarlyInitializeRedirections() {
         }
       }
     }
+  }
+
+  size_t diagnosticIndex = 0;
+
+#define LOAD_DIAGNOSTIC_ENTRY(aAddress, aPreamble) \
+  gDiagnosticRedirections[diagnosticIndex++].mBaseFunction = BitwiseCast<uint8_t*>(aAddress);
+  FOR_EACH_DIAGNOSTIC_REDIRECTION(LOAD_DIAGNOSTIC_ENTRY)
+#undef LOAD_DIAGNOSTIC_ENTRY
+
+#define LOAD_DIAGNOSTIC_ENTRY(aType, aAddress, aPreamble) \
+  gDiagnosticRedirections[diagnosticIndex++].mBaseFunction = ConvertMemberPtrToAddress<aType>(aAddress);
+  FOR_EACH_DIAGNOSTIC_MEMBER_PTR_WITH_TYPE_REDIRECTION(LOAD_DIAGNOSTIC_ENTRY)
+#undef LOAD_DIAGNOSTIC_ENTRY
+
+#define LOAD_DIAGNOSTIC_ENTRY(aAddress, aPreamble) \
+  gDiagnosticRedirections[diagnosticIndex++].mBaseFunction = ConvertMemberPtrToAddress(aAddress);
+  FOR_EACH_DIAGNOSTIC_MEMBER_PTR_REDIRECTION(LOAD_DIAGNOSTIC_ENTRY)
+#undef LOAD_DIAGNOSTIC_ENTRY
+
+  for (Redirection& redirection : gDiagnosticRedirections) {
+    redirection.mOriginalFunction = redirection.mBaseFunction;
   }
 
   // Bind the gOriginal functions to their redirections' base addresses until we

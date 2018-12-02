@@ -39,6 +39,7 @@ function ConsoleApiCall(props) {
     serviceContainer,
     timestampsVisible,
     repeat,
+    pausedExecutionPoint,
     isPaused,
   } = props;
   const {
@@ -116,6 +117,7 @@ function ConsoleApiCall(props) {
   return Message({
     messageId,
     executionPoint,
+    pausedExecutionPoint,
     isPaused,
     open,
     collapsible,
