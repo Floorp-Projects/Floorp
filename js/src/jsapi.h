@@ -1460,6 +1460,13 @@ extern JS_PUBLIC_API bool OrdinaryHasInstance(JSContext* cx,
                                               HandleObject objArg,
                                               HandleValue v, bool* bp);
 
+// Implementation of
+// https://www.ecma-international.org/ecma-262/6.0/#sec-instanceofoperator
+// This is almost identical to JS_HasInstance, except the latter may call a
+// custom hasInstance class op instead of InstanceofOperator.
+extern JS_PUBLIC_API bool InstanceofOperator(JSContext* cx, HandleObject obj,
+                                              HandleValue v, bool* bp);
+
 }  // namespace JS
 
 extern JS_PUBLIC_API void* JS_GetPrivate(JSObject* obj);
