@@ -479,7 +479,7 @@ class WebReplayPlayer extends Component {
         highlighted: isHighlighted,
       }),
       style: {
-        left: `${Math.max(offset - markerWidth/2, 0)}px`,
+        left: `${Math.max(offset - markerWidth / 2, 0)}px`,
         zIndex: `${index + 100}`,
       },
       title: getFormatStr("jumpMessage", index + 1),
