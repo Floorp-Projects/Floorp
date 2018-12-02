@@ -57,6 +57,12 @@ function testTrackingPage(window) {
 
   ok(hidden("#identity-popup-content-blocking-not-detected"), "blocking not detected label is hidden");
   ok(!hidden("#identity-popup-content-blocking-detected"), "blocking detected label is visible");
+
+  ok(!hidden("#identity-popup-content-blocking-category-list"), "category list is visible");
+  ok(hidden("#identity-popup-content-blocking-category-tracking-protection > #identity-popup-content-blocking-tracking-protection-label-allowed"),
+    "TP category item is not showing the allowed label");
+  ok(!hidden("#identity-popup-content-blocking-category-tracking-protection > #identity-popup-content-blocking-tracking-protection-label-blocked"),
+    "TP category item is set to blocked");
 }
 
 function testTrackingPageUnblocked() {
@@ -75,6 +81,12 @@ function testTrackingPageUnblocked() {
 
   ok(hidden("#identity-popup-content-blocking-not-detected"), "blocking not detected label is hidden");
   ok(!hidden("#identity-popup-content-blocking-detected"), "blocking detected label is visible");
+
+  ok(!hidden("#identity-popup-content-blocking-category-list"), "category list is visible");
+  ok(!hidden("#identity-popup-content-blocking-category-tracking-protection > #identity-popup-content-blocking-tracking-protection-label-allowed"),
+    "TP category item is showing the allowed label");
+  ok(hidden("#identity-popup-content-blocking-category-tracking-protection > #identity-popup-content-blocking-tracking-protection-label-blocked"),
+    "TP category item is not set to blocked");
 }
 
 add_task(async function testExceptionAddition() {
