@@ -1675,7 +1675,7 @@ fn ensure_libclang_is_loaded() {
 #[derive(Debug)]
 pub struct Bindings {
     options: BindgenOptions,
-    module: proc_macro2::TokenStream,
+    module: quote::Tokens,
 }
 
 impl Bindings {
@@ -1863,7 +1863,7 @@ impl Bindings {
             None => {
                 let path = which::which("rustfmt")
                     .map_err(|e| {
-                        io::Error::new(io::ErrorKind::Other, format!("{}", e))
+                        io::Error::new(io::ErrorKind::Other, e.to_owned())
                     })?;
 
                 Cow::Owned(path)

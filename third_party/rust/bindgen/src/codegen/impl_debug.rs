@@ -3,14 +3,14 @@ use ir::context::BindgenContext;
 use ir::derive::CanTriviallyDeriveDebug;
 use ir::item::{HasTypeParamInArray, IsOpaque, Item, ItemCanonicalName};
 use ir::ty::{RUST_DERIVE_IN_ARRAY_LIMIT, TypeKind};
-use proc_macro2;
+use quote;
 
 pub fn gen_debug_impl(
     ctx: &BindgenContext,
     fields: &[Field],
     item: &Item,
     kind: CompKind,
-) -> proc_macro2::TokenStream {
+) -> quote::Tokens {
     let struct_name = item.canonical_name(ctx);
     let mut format_string = format!("{} {{{{ ", struct_name);
     let mut tokens = vec![];
@@ -63,7 +63,7 @@ pub trait ImplDebug<'a> {
         &self,
         ctx: &BindgenContext,
         extra: Self::Extra,
-    ) -> Option<(String, Vec<proc_macro2::TokenStream>)>;
+    ) -> Option<(String, Vec<quote::Tokens>)>;
 }
 
 impl<'a> ImplDebug<'a> for FieldData {
@@ -73,7 +73,7 @@ impl<'a> ImplDebug<'a> for FieldData {
         &self,
         ctx: &BindgenContext,
         _: Self::Extra,
-    ) -> Option<(String, Vec<proc_macro2::TokenStream>)> {
+    ) -> Option<(String, Vec<quote::Tokens>)> {
         if let Some(name) = self.name() {
             ctx.resolve_item(self.ty()).impl_debug(ctx, name)
         } else {
@@ -89,7 +89,7 @@ impl<'a> ImplDebug<'a> for BitfieldUnit {
         &self,
         ctx: &BindgenContext,
         _: Self::Extra,
-    ) -> Option<(String, Vec<proc_macro2::TokenStream>)> {
+    ) -> Option<(String, Vec<quote::Tokens>)> {
         let mut format_string = String::new();
         let mut tokens = vec![];
         for (i, bitfield) in self.bitfields().iter().enumerate() {
@@ -118,7 +118,7 @@ impl<'a> ImplDebug<'a> for Item {
         &self,
         ctx: &BindgenContext,
         name: &str,
-    ) -> Option<(String, Vec<proc_macro2::TokenStream>)> {
+    ) -> Option<(String, Vec<quote::Tokens>)> {
         let name_ident = ctx.rust_ident(name);
 
         // We don't know if blacklisted items `impl Debug` or not, so we can't
@@ -136,8 +136,8 @@ impl<'a> ImplDebug<'a> for Item {
 
         fn debug_print(
             name: &str,
-            name_ident: proc_macro2::TokenStream,
-        ) -> Option<(String, Vec<proc_macro2::TokenStream>)> {
+            name_ident: quote::Tokens,
+        ) -> Option<(String, Vec<quote::Tokens>)> {
             Some((
                 format!("{}: {{:?}}", name),
                 vec![quote! {

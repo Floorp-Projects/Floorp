@@ -499,31 +499,6 @@ impl Cursor {
         }
     }
 
-    /// Does this cursor have the given simple attribute?
-    ///
-    /// Note that this will only work for attributes that don't have an existing libclang
-    /// CursorKind, e.g. pure, const, etc.
-    pub fn has_simple_attr(&self, attr: &str) -> bool {
-        let mut found_attr = false;
-        self.visit(|cur| {
-            if cur.kind() == CXCursor_UnexposedAttr {
-                found_attr = cur.tokens().map(|tokens| {
-                    tokens.iter().any(|t| {
-                        t.kind == CXToken_Identifier && t.spelling == attr
-                    })
-                }).unwrap_or(false);
-
-                if found_attr {
-                    return CXChildVisit_Break;
-                }
-            }
-
-            CXChildVisit_Continue
-        });
-
-        found_attr
-    }
-
     /// Given that this cursor's referent is a `typedef`, get the `Type` that is
     /// being aliased.
     pub fn typedef_type(&self) -> Option<Type> {
