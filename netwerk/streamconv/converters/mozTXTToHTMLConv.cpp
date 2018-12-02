@@ -949,6 +949,8 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
   uint32_t structPhrase_italic = 0;
   uint32_t structPhrase_code = 0;
 
+  uint32_t endOfLastURLOutput = 0;
+
   nsAutoString outputHTML;  // moved here for performance increase
 
   const char16_t* rawInputString = aInString.BeginReading();
@@ -1027,9 +1029,14 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
                         structPhrase_underline + structPhrase_code ==
                     0
                 /* workaround for bug #19445 */) {
+              // Don't cut into previously inserted HTML (bug 1509493)
+              if (aOutString.Length() - replaceBefore < endOfLastURLOutput) {
+                break;
+              }
               aOutString.Cut(aOutString.Length() - replaceBefore,
                              replaceBefore);
               aOutString += outputHTML;
+              endOfLastURLOutput = aOutString.Length();
               i += replaceAfter + 1;
               continue;
             }
