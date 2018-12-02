@@ -134,30 +134,21 @@ impl LitStr {
     /// # extern crate syn;
     /// #
     /// use proc_macro2::Span;
-    /// use syn::{Attribute, Ident, Lit, Meta, MetaNameValue, Path};
-    /// use syn::parse::{Error, Result};
+    /// use syn::{Attribute, Error, Ident, Lit, Meta, MetaNameValue, Path, Result};
     ///
     /// // Parses the path from an attribute that looks like:
     /// //
     /// //     #[path = "a::b::c"]
     /// //
-    /// // or returns the path `Self` as a default if the attribute is not of
-    /// // that form.
-    /// fn get_path(attr: &Attribute) -> Result<Path> {
-    ///     let default = || Path::from(Ident::new("Self", Span::call_site()));
-    ///
-    ///     let meta = match attr.interpret_meta() {
-    ///         Some(meta) => meta,
-    ///         None => return Ok(default()),
-    ///     };
-    ///
-    ///     if meta.name() != "path" {
-    ///         return Ok(default());
+    /// // or returns `None` if the input is some other attribute.
+    /// fn get_path(attr: &Attribute) -> Result<Option<Path>> {
+    ///     if !attr.path.is_ident("path") {
+    ///         return Ok(None);
     ///     }
     ///
-    ///     match meta {
+    ///     match attr.parse_meta()? {
     ///         Meta::NameValue(MetaNameValue { lit: Lit::Str(lit_str), .. }) => {
-    ///             lit_str.parse()
+    ///             lit_str.parse().map(Some)
     ///         }
     ///         _ => {
     ///             let error_span = attr.bracket_token.span;
@@ -656,20 +647,24 @@ mod value {
                     _ => {}
                 },
                 b'\'' => return Lit::Char(LitChar { token: token }),
-                b'0'...b'9' => if number_is_int(&value) {
-                    return Lit::Int(LitInt { token: token });
-                } else if number_is_float(&value) {
-                    return Lit::Float(LitFloat { token: token });
-                } else {
-                    // number overflow
-                    return Lit::Verbatim(LitVerbatim { token: token });
-                },
-                _ => if value == "true" || value == "false" {
-                    return Lit::Bool(LitBool {
-                        value: value == "true",
-                        span: token.span(),
-                    });
-                },
+                b'0'...b'9' => {
+                    if number_is_int(&value) {
+                        return Lit::Int(LitInt { token: token });
+                    } else if number_is_float(&value) {
+                        return Lit::Float(LitFloat { token: token });
+                    } else {
+                        // number overflow
+                        return Lit::Verbatim(LitVerbatim { token: token });
+                    }
+                }
+                _ => {
+                    if value == "true" || value == "false" {
+                        return Lit::Bool(LitBool {
+                            value: value == "true",
+                            span: token.span(),
+                        });
+                    }
+                }
             }
 
             panic!("Unrecognized literal: {}", value);
@@ -954,12 +949,13 @@ mod value {
         let mut ch = 0;
         let b0 = byte(s, 0);
         let b1 = byte(s, 1);
-        ch += 0x10 * match b0 {
-            b'0'...b'9' => b0 - b'0',
-            b'a'...b'f' => 10 + (b0 - b'a'),
-            b'A'...b'F' => 10 + (b0 - b'A'),
-            _ => panic!("unexpected non-hex character after \\x"),
-        };
+        ch += 0x10
+            * match b0 {
+                b'0'...b'9' => b0 - b'0',
+                b'a'...b'f' => 10 + (b0 - b'a'),
+                b'A'...b'F' => 10 + (b0 - b'A'),
+                _ => panic!("unexpected non-hex character after \\x"),
+            };
         ch += match b1 {
             b'0'...b'9' => b1 - b'0',
             b'a'...b'f' => 10 + (b1 - b'a'),

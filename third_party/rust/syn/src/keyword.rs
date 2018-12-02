@@ -52,8 +52,8 @@
 /// #[macro_use]
 /// extern crate syn;
 ///
-/// use syn::{LitBool, LitStr};
-/// use syn::parse::{Parse, ParseStream, Result};
+/// use syn::{LitBool, LitStr, Result};
+/// use syn::parse::{Parse, ParseStream};
 ///
 /// mod kw {
 ///     custom_keyword!(bool);

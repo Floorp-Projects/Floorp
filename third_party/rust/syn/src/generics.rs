@@ -490,19 +490,13 @@ pub mod parsing {
 
     impl Parse for Generics {
         fn parse(input: ParseStream) -> Result<Self> {
-            let mut params = Punctuated::new();
-
             if !input.peek(Token![<]) {
-                return Ok(Generics {
-                    lt_token: None,
-                    params: params,
-                    gt_token: None,
-                    where_clause: None,
-                });
+                return Ok(Generics::default());
             }
 
             let lt_token: Token![<] = input.parse()?;
 
+            let mut params = Punctuated::new();
             let mut has_type_param = false;
             loop {
                 if input.peek(Token![>]) {
@@ -658,7 +652,10 @@ pub mod parsing {
                     let mut bounds = Punctuated::new();
                     if has_colon {
                         loop {
-                            if input.peek(Token![,]) || input.peek(Token![>]) {
+                            if input.peek(Token![,])
+                                || input.peek(Token![>])
+                                || input.peek(Token![=])
+                            {
                                 break;
                             }
                             let value = input.parse()?;
