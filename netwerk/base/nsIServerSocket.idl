@@ -60,6 +60,13 @@ interface nsIServerSocket : nsISupports
               in long aBackLog);
 
     /**
+     * the same as init(), but initializes an IPv6 server socket
+     */
+    void initIPv6(in long aPort,
+                  in boolean aLoopbackOnly,
+                  in long aBackLog);
+
+    /**
      * initSpecialConnection
      *
      * This method initializes a server socket and offers the ability to have
