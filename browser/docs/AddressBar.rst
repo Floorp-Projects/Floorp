@@ -65,6 +65,10 @@ It is augmented as it progresses through the system, with various information:
     isPrivate; // {boolean} Whether the search started in a private context.
     userContextId; // {integer} The user context ID (containers feature).
 
+    // Optional properties.
+    muxer; // Name of a registered muxer. Muxers can be registered through the
+           // UrlbarProvidersManager
+
     // Properties added by the Model.
     tokens; // {array} tokens extracted from the searchString, each token is an
             // object in the form {type, value}.
@@ -88,9 +92,10 @@ startup and can register/unregister providers on the fly.
 It can manage multiple concurrent queries, and tracks them internally as
 separate *Query* objects.
 
-The *Controller* starts and stops queries through the *ProvidersManager*. It's
-possible to wait for the promise returned by *startQuery* to know when no more
-matches will be returned, it is not mandatory though. Queries can be canceled.
+The *Controller* starts and stops queries through the *UrlbarProvidersManager*.
+It's possible to wait for the promise returned by *startQuery* to know when no
+more matches will be returned, it is not mandatory though.
+Queries can be canceled.
 
 .. note::
 
@@ -114,6 +119,8 @@ used by the user to restrict the search to specific type of matches (See the
   UrlbarProvidersManager {
     registerProvider(providerObj);
     unregisterProvider(providerObj);
+    registerMuxer(muxerObj);
+    unregisterMuxer(muxerObjOrName);
     async startQuery(queryContext);
     cancelQuery(queryContext);
     // Can be used by providers to run uninterruptible queries.
@@ -160,14 +167,22 @@ UrlbarMuxer
 -----------
 
 The *Muxer* is responsible for sorting matches based on their importance and
-additional rules that depend on the QueryContext.
+additional rules that depend on the QueryContext. The muxer to use is indicated
+by the QueryContext.muxer property.
 
 .. caution
 
   The Muxer is a replaceable component, as such what is described here is a
   reference for the default View, but may not be valid for other implementations.
 
-*Content to be written*
+.. highlight:: JavaScript
+.. code:
+
+  UrlbarMuxer {
+    name; // {string} A simple name to track the provider.
+    // Invoked by the ProvidersManager to sort matches.
+    sort(queryContext);
+  }
 
 
 The Controller

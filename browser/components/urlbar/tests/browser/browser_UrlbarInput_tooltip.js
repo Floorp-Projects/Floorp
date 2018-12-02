@@ -4,9 +4,7 @@
 "use strict";
 
 function synthesizeMouseOver(element) {
-  window.windowUtils.disableNonTestMouseEvents(true);
-
-  let promise = BrowserTestUtils.waitForEvent(gURLBar.inputField, "mouseover");
+  let promise = BrowserTestUtils.waitForEvent(element, "mouseover");
 
   EventUtils.synthesizeMouse(element, 1, 1, {type: "mouseover"});
   EventUtils.synthesizeMouse(element, 2, 2, {type: "mousemove"});
@@ -17,20 +15,21 @@ function synthesizeMouseOver(element) {
 }
 
 function synthesizeMouseOut(element) {
-  let promise = BrowserTestUtils.waitForEvent(gURLBar.inputField, "mouseout");
+  let promise = BrowserTestUtils.waitForEvent(element, "mouseout");
 
   EventUtils.synthesizeMouse(element, 0, 0, {type: "mouseout"});
   EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
   EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
   EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
 
-  window.windowUtils.disableNonTestMouseEvents(false);
-
   return promise;
 }
 
 async function expectTooltip(text) {
-  ok(gURLBar.hasAttribute("textoverflow"), "Urlbar is overflowing");
+  if (!gURLBar._overflowing && !gURLBar._inOverflow) {
+    info("waiting for overflow event");
+    await BrowserTestUtils.waitForEvent(gURLBar.inputField, "overflow");
+  }
 
   let tooltip = document.getElementById("aHTMLTooltip");
   let element = gURLBar.inputField;
@@ -46,7 +45,10 @@ async function expectTooltip(text) {
 }
 
 async function expectNoTooltip() {
-  ok(!gURLBar.hasAttribute("textoverflow"), "Urlbar isn't overflowing");
+  if (gURLBar._overflowing || gURLBar._inOverflow) {
+    info("waiting for underflow event");
+    await BrowserTestUtils.waitForEvent(gURLBar.inputField, "underflow");
+  }
 
   let element = gURLBar.inputField;
   await synthesizeMouseOver(element);
@@ -57,6 +59,11 @@ async function expectNoTooltip() {
 }
 
 add_task(async function() {
+  window.windowUtils.disableNonTestMouseEvents(true);
+  registerCleanupFunction(() => {
+    window.windowUtils.disableNonTestMouseEvents(false);
+  });
+
   // Ensure the URL bar isn't focused.
   gBrowser.selectedBrowser.focus();
 
@@ -64,10 +71,7 @@ add_task(async function() {
   await expectNoTooltip();
 
   let longURL = "http://longurl.com/" + "foobar/".repeat(30);
-  let overflowPromise = BrowserTestUtils.waitForEvent(gURLBar.inputField, "overflow");
-  await window.promiseDocumentFlushed(() => {});
   gURLBar.value = longURL;
-  await overflowPromise;
   is(gURLBar.inputField.value, longURL.replace(/^http:\/\//, ""), "Urlbar value has http:// stripped");
   await expectTooltip(longURL);
 });
