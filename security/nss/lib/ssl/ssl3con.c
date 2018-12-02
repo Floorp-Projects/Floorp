@@ -9776,6 +9776,23 @@ ssl3_GenerateRSAPMS(sslSocket *ss, ssl3CipherSpec *spec,
     return pms;
 }
 
+static void
+ssl3_CSwapPK11SymKey(PK11SymKey **x, PK11SymKey **y, PRBool c)
+{
+    uintptr_t mask = (uintptr_t)c;
+    unsigned int i;
+    for (i = 1; i < sizeof(uintptr_t) * 8; i <<= 1) {
+        mask |= mask << i;
+    }
+    uintptr_t x_ptr = (uintptr_t)*x;
+    uintptr_t y_ptr = (uintptr_t)*y;
+    uintptr_t tmp = (x_ptr ^ y_ptr) & mask;
+    x_ptr = x_ptr ^ tmp;
+    y_ptr = y_ptr ^ tmp;
+    *x = (PK11SymKey *)x_ptr;
+    *y = (PK11SymKey *)y_ptr;
+}
+
 /* Note: The Bleichenbacher attack on PKCS#1 necessitates that we NEVER
  * return any indication of failure of the Client Key Exchange message,
  * where that failure is caused by the content of the client's message.
@@ -9796,9 +9813,9 @@ ssl3_HandleRSAClientKeyExchange(sslSocket *ss,
 {
     SECStatus rv;
     SECItem enc_pms;
-    PK11SymKey *tmpPms[2] = { NULL, NULL };
-    PK11SlotInfo *slot;
-    int useFauxPms = 0;
+    PK11SymKey *pms = NULL;
+    PK11SymKey *fauxPms = NULL;
+    PK11SlotInfo *slot = NULL;
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveRecvBufLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
@@ -9818,11 +9835,6 @@ ssl3_HandleRSAClientKeyExchange(sslSocket *ss,
             enc_pms.len = kLen;
         }
     }
-
-#define currentPms tmpPms[!useFauxPms]
-#define unusedPms tmpPms[useFauxPms]
-#define realPms tmpPms[1]
-#define fauxPms tmpPms[0]
 
     /*
      * Get as close to algorithm 2 from RFC 5246; Section 7.4.7.1
@@ -9878,39 +9890,32 @@ ssl3_HandleRSAClientKeyExchange(sslSocket *ss,
      *  the unwrap.  Rather, it is the mechanism with which the
      *      unwrapped pms will be used.
      */
-    realPms = PK11_PubUnwrapSymKey(serverKeyPair->privKey, &enc_pms,
-                                   CKM_SSL3_MASTER_KEY_DERIVE, CKA_DERIVE, 0);
+    pms = PK11_PubUnwrapSymKey(serverKeyPair->privKey, &enc_pms,
+                               CKM_SSL3_MASTER_KEY_DERIVE, CKA_DERIVE, 0);
     /* Temporarily use the PMS if unwrapping the real PMS fails. */
-    useFauxPms |= (realPms == NULL);
+    ssl3_CSwapPK11SymKey(&pms, &fauxPms, pms == NULL);
 
     /* Attempt to derive the MS from the PMS. This is the only way to
      * check the version field in the RSA PMS. If this fails, we
      * then use the faux PMS in place of the PMS. Note that this
      * operation should never fail if we are using the faux PMS
      * since it is correctly formatted. */
-    rv = ssl3_ComputeMasterSecret(ss, currentPms, NULL);
+    rv = ssl3_ComputeMasterSecret(ss, pms, NULL);
 
-    /* If we succeeded, then select the true PMS and discard the
-     * FPMS. Else, select the FPMS and select the true PMS */
-    useFauxPms |= (rv != SECSuccess);
-
-    if (unusedPms) {
-        PK11_FreeSymKey(unusedPms);
-    }
+    /* If we succeeded, then select the true PMS, else select the FPMS. */
+    ssl3_CSwapPK11SymKey(&pms, &fauxPms, (rv != SECSuccess) & (fauxPms != NULL));
 
     /* This step will derive the MS from the PMS, among other things. */
-    rv = ssl3_InitPendingCipherSpecs(ss, currentPms, PR_TRUE);
-    PK11_FreeSymKey(currentPms);
+    rv = ssl3_InitPendingCipherSpecs(ss, pms, PR_TRUE);
+
+    /* Clear both PMS. */
+    PK11_FreeSymKey(pms);
+    PK11_FreeSymKey(fauxPms);
 
     if (rv != SECSuccess) {
         (void)SSL3_SendAlert(ss, alert_fatal, handshake_failure);
         return SECFailure; /* error code set by ssl3_InitPendingCipherSpec */
     }
-
-#undef currentPms
-#undef unusedPms
-#undef realPms
-#undef fauxPms
 
     return SECSuccess;
 }

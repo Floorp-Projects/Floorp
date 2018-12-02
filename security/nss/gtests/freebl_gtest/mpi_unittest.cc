@@ -15,7 +15,7 @@
 #include "mpi.h"
 namespace nss_test {
 
-void gettime(struct timespec *tp) {
+void gettime(struct timespec* tp) {
 #ifdef __MACH__
   clock_serv_t cclock;
   mach_timespec_t mts;
@@ -69,6 +69,39 @@ class MPITest : public ::testing::Test {
     mp_clear(&b);
     mp_clear(&c);
   }
+
+  void dump(const std::string& prefix, const uint8_t* buf, size_t len) {
+    auto flags = std::cerr.flags();
+    std::cerr << prefix << ": [" << std::dec << len << "] ";
+    for (size_t i = 0; i < len; ++i) {
+      std::cerr << std::hex << std::setw(2) << std::setfill('0')
+                << static_cast<int>(buf[i]);
+    }
+    std::cerr << std::endl << std::resetiosflags(flags);
+  }
+
+  void TestToFixedOctets(const std::vector<uint8_t>& ref, size_t len) {
+    mp_int a;
+    ASSERT_EQ(MP_OKAY, mp_init(&a));
+    ASSERT_EQ(MP_OKAY, mp_read_unsigned_octets(&a, ref.data(), ref.size()));
+    uint8_t buf[len];
+    ASSERT_EQ(MP_OKAY, mp_to_fixlen_octets(&a, buf, len));
+    size_t compare;
+    if (len > ref.size()) {
+      for (size_t i = 0; i < len - ref.size(); ++i) {
+        ASSERT_EQ(0U, buf[i]) << "index " << i << " should be zero";
+      }
+      compare = ref.size();
+    } else {
+      compare = len;
+    }
+    dump("value", ref.data(), ref.size());
+    dump("output", buf, len);
+    ASSERT_EQ(0, memcmp(buf + len - compare, ref.data() + ref.size() - compare,
+                        compare))
+        << "comparing " << compare << " octets";
+    mp_clear(&a);
+  }
 };
 
 TEST_F(MPITest, MpiCmp01Test) { TestCmp("0", "1", -1); }
@@ -113,6 +146,47 @@ TEST_F(MPITest, MpiCmpUnalignedTest) {
 }
 #endif
 
+TEST_F(MPITest, MpiFixlenOctetsZero) {
+  std::vector<uint8_t> zero = {0};
+  TestToFixedOctets(zero, 1);
+  TestToFixedOctets(zero, 2);
+  TestToFixedOctets(zero, sizeof(mp_digit));
+  TestToFixedOctets(zero, sizeof(mp_digit) + 1);
+}
+
+TEST_F(MPITest, MpiFixlenOctetsVarlen) {
+  std::vector<uint8_t> packed;
+  for (size_t i = 0; i < sizeof(mp_digit) * 2; ++i) {
+    packed.push_back(0xa4);  // Any non-zero value will do.
+    TestToFixedOctets(packed, packed.size());
+    TestToFixedOctets(packed, packed.size() + 1);
+    TestToFixedOctets(packed, packed.size() + sizeof(mp_digit));
+  }
+}
+
+TEST_F(MPITest, MpiFixlenOctetsTooSmall) {
+  uint8_t buf[sizeof(mp_digit) * 3];
+  std::vector<uint8_t> ref;
+  for (size_t i = 0; i < sizeof(mp_digit) * 2; i++) {
+    ref.push_back(3);  // Any non-zero value will do.
+    dump("ref", ref.data(), ref.size());
+
+    mp_int a;
+    ASSERT_EQ(MP_OKAY, mp_init(&a));
+    ASSERT_EQ(MP_OKAY, mp_read_unsigned_octets(&a, ref.data(), ref.size()));
+#ifdef DEBUG
+    // ARGCHK maps to assert() in a debug build.
+    EXPECT_DEATH(mp_to_fixlen_octets(&a, buf, ref.size() - 1), "");
+#else
+    EXPECT_EQ(MP_BADARG, mp_to_fixlen_octets(&a, buf, ref.size() - 1));
+#endif
+    ASSERT_EQ(MP_OKAY, mp_to_fixlen_octets(&a, buf, ref.size()));
+    ASSERT_EQ(0, memcmp(buf, ref.data(), ref.size()));
+
+    mp_clear(&a);
+  }
+}
+
 // This test is slow. Disable it by default so we can run these tests on CI.
 class DISABLED_MPITest : public ::testing::Test {};
 
@@ -127,17 +201,17 @@ TEST_F(DISABLED_MPITest, MpiCmpConstTest) {
 
   mp_read_radix(
       &a,
-      const_cast<char *>(
+      const_cast<char*>(
           "FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551"),
       16);
   mp_read_radix(
       &b,
-      const_cast<char *>(
+      const_cast<char*>(
           "FF0FFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551"),
       16);
   mp_read_radix(
       &c,
-      const_cast<char *>(
+      const_cast<char*>(
           "FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632550"),
       16);
 
