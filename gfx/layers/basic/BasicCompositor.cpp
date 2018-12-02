@@ -19,6 +19,7 @@
 #include "mozilla/gfx/ssse3-scaler.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/SSE.h"
+#include "mozilla/StaticPrefs.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "YCbCrUtils.h"
