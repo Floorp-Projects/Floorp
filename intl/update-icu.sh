@@ -86,6 +86,7 @@ for patch in \
  suppress-warnings.diff \
  bug-1172609-timezone-recreateDefault.diff \
  bug-1198952-workaround-make-3.82-bug.diff \
+ bug-1504656-relativetimeformat-plural-other-fallback.diff \
 ; do
   echo "Applying local patch $patch"
   patch -d ${icu_dir}/../../ -p1 --no-backup-if-mismatch < ${icu_dir}/../icu-patches/$patch
