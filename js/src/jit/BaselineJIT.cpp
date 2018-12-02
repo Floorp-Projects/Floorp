@@ -264,6 +264,11 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
     return Method_Compiled;
   }
 
+  // Check script warm-up counter.
+  if (script->incWarmUpCounter() <= JitOptions.baselineWarmUpThreshold) {
+    return Method_Skipped;
+  }
+
   // Check this before calling ensureJitRealmExists, so we're less
   // likely to report OOM in JSRuntime::createJitRuntime.
   if (!CanLikelyAllocateMoreExecutableMemory()) {
@@ -272,11 +277,6 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
 
   if (!cx->realm()->ensureJitRealmExists(cx)) {
     return Method_Error;
-  }
-
-  // Check script warm-up counter.
-  if (script->incWarmUpCounter() <= JitOptions.baselineWarmUpThreshold) {
-    return Method_Skipped;
   }
 
   // Frames can be marked as debuggee frames independently of its underlying
