@@ -53,6 +53,7 @@ pub struct FrameBuilderConfig {
     pub dual_source_blending_is_supported: bool,
     pub dual_source_blending_is_enabled: bool,
     pub chase_primitive: ChasePrimitive,
+    pub enable_picture_caching: bool,
 }
 
 /// A builder structure for `tiling::Frame`
@@ -154,6 +155,7 @@ impl FrameBuilder {
                 dual_source_blending_is_enabled: true,
                 dual_source_blending_is_supported: false,
                 chase_primitive: ChasePrimitive::Nothing,
+                enable_picture_caching: false,
             },
         }
     }
