@@ -6,6 +6,7 @@
 
 #include "CanvasTranslator.h"
 
+#include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
 #include "RecordedCanvasEventImpl.h"
 
@@ -139,6 +140,8 @@ void CanvasTranslator::BeginTransaction() { mIsInTransaction = true; }
 
 void CanvasTranslator::Flush() {
 #if defined(XP_WIN)
+  gfx::AutoSerializeWithMoz2D serializeWithMoz2D(
+      GetReferenceDrawTarget()->GetBackendType());
   RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetCanvasDevice();
   RefPtr<ID3D11DeviceContext> deviceContext;
   device->GetImmediateContext(getter_AddRefs(deviceContext));
@@ -166,6 +169,8 @@ void CanvasTranslator::AddSurfaceDescriptor(gfx::ReferencePtr aRefPtr,
 already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
     gfx::ReferencePtr aRefPtr, const gfx::IntSize& aSize,
     gfx::SurfaceFormat aFormat) {
+  gfx::AutoSerializeWithMoz2D serializeWithMoz2D(
+      GetReferenceDrawTarget()->GetBackendType());
   TextureData* textureData = CreateTextureData(mTextureType, aSize, aFormat);
   textureData->Lock(OpenMode::OPEN_READ_WRITE);
   mTextureDatas[aRefPtr] = UniquePtr<TextureData>(textureData);
@@ -178,6 +183,8 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
 
 void CanvasTranslator::RemoveDrawTarget(gfx::ReferencePtr aDrawTarget) {
   InlineTranslator::RemoveDrawTarget(aDrawTarget);
+  gfx::AutoSerializeWithMoz2D serializeWithMoz2D(
+      GetReferenceDrawTarget()->GetBackendType());
   mTextureDatas.erase(aDrawTarget);
 }
 
