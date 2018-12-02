@@ -9,6 +9,7 @@ EXTRA_JS_MODULES += [
     'UrlbarController.jsm',
     'UrlbarInput.jsm',
     'UrlbarMatch.jsm',
+    'UrlbarMuxerUnifiedComplete.jsm',
     'UrlbarPrefs.jsm',
     'UrlbarProviderOpenTabs.jsm',
     'UrlbarProvidersManager.jsm',
