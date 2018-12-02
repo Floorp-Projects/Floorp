@@ -3003,7 +3003,7 @@ debug-expression-error {
   display: none;
 }
 
-.highlight-line .CodeMirror-line {
+.debugger:not(.can-rewind) .highlight-line .CodeMirror-line {
   animation: fade-highlight-out 1.5s normal forwards;
 }
 
