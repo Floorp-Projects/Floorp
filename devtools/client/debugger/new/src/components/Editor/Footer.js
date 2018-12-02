@@ -19,8 +19,7 @@ import {
   isLoaded,
   getFilename,
   isOriginal,
-  isLoading,
-  shouldBlackbox
+  isLoading
 } from "../../utils/source";
 import { getGeneratedSource } from "../../reducers/sources";
 import { shouldShowFooter, shouldShowPrettyPrint } from "../../utils/editor";
@@ -108,7 +107,7 @@ class SourceFooter extends PureComponent<Props, State> {
     const { selectedSource, toggleBlackBox } = this.props;
     const sourceLoaded = selectedSource && isLoaded(selectedSource);
 
-    if (!shouldBlackbox(selectedSource)) {
+    if (!sourceLoaded || selectedSource.isPrettyPrinted) {
       return;
     }
 

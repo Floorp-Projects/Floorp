@@ -14,7 +14,7 @@ import {
   getSourceLocationFromMouseEvent,
   toSourceLine
 } from "../../utils/editor";
-import { isPretty, getRawSourceURL, shouldBlackbox } from "../../utils/source";
+import { isPretty, getRawSourceURL } from "../../utils/source";
 import {
   getContextMenu,
   getPrettySource,
@@ -162,7 +162,8 @@ function getMenuItems(
     id: "node-menu-blackbox",
     label: toggleBlackBoxLabel,
     accesskey: blackboxKey,
-    disabled: !shouldBlackbox(selectedSource),
+    disabled:
+      isOriginal || isPrettyPrinted || hasSourceMap || !selectedSource.url,
     click: () => toggleBlackBox(selectedSource)
   };
 
