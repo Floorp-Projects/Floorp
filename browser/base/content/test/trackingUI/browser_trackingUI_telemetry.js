@@ -50,7 +50,7 @@ add_task(async function testShieldHistogram() {
   getShieldHistogram().clear();
 
   await promiseTabLoadEvent(tab, BENIGN_PAGE);
-  is(getShieldCounts()[0], 1, "Page loads without tracking");
+  is(getShieldCounts()[0], 2, "Page loads without tracking");
 
   await promiseTabLoadEvent(tab, TRACKING_PAGE);
   // Note that right now the shield histogram is not measuring what
@@ -86,7 +86,10 @@ add_task(async function testIdentityPopupEvents() {
 
   Services.telemetry.clearEvents();
 
-  await openIdentityPopup();
+  let { gIdentityHandler } = gBrowser.ownerGlobal;
+  let promisePanelOpen = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popupshown");
+  gIdentityHandler._identityBox.click();
+  await promisePanelOpen;
 
   let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true).parent;
   let openEvents = events.filter(
@@ -96,7 +99,9 @@ add_task(async function testIdentityPopupEvents() {
 
   await promiseTabLoadEvent(tab, TRACKING_PAGE);
 
-  await openIdentityPopup();
+  promisePanelOpen = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popupshown");
+  gIdentityHandler._identityBox.click();
+  await promisePanelOpen;
 
   events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true).parent;
   openEvents = events.filter(

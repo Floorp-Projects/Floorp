@@ -32,27 +32,3 @@ function promiseTabLoadEvent(tab, url) {
 
   return loaded;
 }
-
-function openIdentityPopup() {
-  let mainView = document.getElementById("identity-popup-mainView");
-  let viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
-  gIdentityHandler._identityBox.click();
-  return viewShown;
-}
-
-function waitForSecurityChange(numChanges = 1) {
-  return new Promise(resolve => {
-    let n = 0;
-    let listener = {
-      onSecurityChange() {
-        n = n + 1;
-        info("Received onSecurityChange event " + n + " of " + numChanges);
-        if (n >= numChanges) {
-          gBrowser.removeProgressListener(listener);
-          resolve(n);
-        }
-      },
-    };
-    gBrowser.addProgressListener(listener);
-  });
-}
