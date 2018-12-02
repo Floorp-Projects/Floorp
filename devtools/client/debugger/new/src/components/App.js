@@ -6,6 +6,7 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
+import classnames from "classnames";
 
 import { prefs, features } from "../utils/prefs";
 import actions from "../actions";
@@ -17,7 +18,8 @@ import {
   getPaneCollapse,
   getActiveSearch,
   getQuickOpenEnabled,
-  getOrientation
+  getOrientation,
+  getCanRewind
 } from "../selectors";
 
 import type { OrientationType } from "../reducers/types";
@@ -313,9 +315,9 @@ class App extends Component<Props, State> {
   }
 
   render() {
-    const { quickOpenEnabled } = this.props;
+    const { quickOpenEnabled, canRewind } = this.props;
     return (
-      <div className="debugger">
+      <div className={classnames("debugger", { "can-rewind": canRewind })}>
         <A11yIntention>
           {this.renderLayout()}
           {quickOpenEnabled === true && (
@@ -337,6 +339,7 @@ App.childContextTypes = {
 };
 
 const mapStateToProps = state => ({
+  canRewind: getCanRewind(state),
   selectedSource: getSelectedSource(state),
   startPanelCollapsed: getPaneCollapse(state, "start"),
   endPanelCollapsed: getPaneCollapse(state, "end"),
