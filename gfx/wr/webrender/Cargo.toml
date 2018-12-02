@@ -68,6 +68,7 @@ optional = true
 
 [dev-dependencies]
 mozangle = "0.1"
+rand = "0.4"
 
 [target.'cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))'.dependencies]
 freetype = { version = "0.4", default-features = false }
