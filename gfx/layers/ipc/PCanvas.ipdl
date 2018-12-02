@@ -1,0 +1,37 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+using mozilla::CrossProcessSemaphoreHandle from "mozilla/ipc/CrossProcessSemaphore.h";
+using mozilla::layers::TextureType from "mozilla/layers/LayersTypes.h";
+using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
+
+namespace mozilla {
+namespace layers {
+
+/**
+ * PCanvas is the IPDL for recorded Canvas drawing.
+ */
+sync protocol PCanvas {
+parent:
+  /**
+   * Create a CanvasTranslator for a particular TextureType, which translates
+   * events from a CanvasEventRingBuffer. aReadHandle is the shared memory
+   * handle for the ring buffer. aReaderSem and aWriterSem are handles for the
+   * semaphores to handle waiting on either side.
+   */
+  async CreateTranslator(TextureType aTextureType, Handle aReadHandle,
+                         CrossProcessSemaphoreHandle aReaderSem,
+                         CrossProcessSemaphoreHandle aWriterSem);
+
+  /**
+   * Used to tell the CanvasTranslator to start translating again after it has
+   * stopped due to a timeout waiting for events.
+   */
+  async ResumeTranslation();
+};
+
+} // layers
+} // mozilla

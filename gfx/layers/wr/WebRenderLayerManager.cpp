@@ -245,6 +245,8 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
     }
   }
 
+  GetCompositorBridgeChild()->EndCanvasTransaction();
+
   AutoTArray<RenderRootUpdates, wr::kRenderRootCount> renderRootUpdates;
   for (auto& stateManager : mStateManagers) {
     auto renderRoot = stateManager.GetRenderRoot();
@@ -427,6 +429,8 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
       WrBridge()->GetSyncObject()->Synchronize();
     }
   }
+
+  GetCompositorBridgeChild()->EndCanvasTransaction();
 
   {
     AUTO_PROFILER_TRACING("Paint", "ForwardDPTransaction", GRAPHICS);

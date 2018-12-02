@@ -18,6 +18,7 @@
 #include "mozilla/layers/APZChild.h"
 #include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/layers/APZCTreeManagerChild.h"
+#include "mozilla/layers/CanvasChild.h"
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/PaintThread.h"
 #include "mozilla/layers/PLayerTransactionChild.h"
@@ -115,6 +116,10 @@ void CompositorBridgeChild::AfterDestroy() {
   if (!mActorDestroyed) {
     Send__delete__(this);
     mActorDestroyed = true;
+  }
+
+  if (mCanvasChild) {
+    mCanvasChild->Destroy();
   }
 
   if (sCompositorBridge == this) {
@@ -245,6 +250,18 @@ void CompositorBridgeChild::InitForContent(uint32_t aNamespace) {
 
   mCanSend = true;
   mIdNamespace = aNamespace;
+
+  if (gfx::gfxVars::RemoteCanvasEnabled()) {
+    ipc::Endpoint<PCanvasParent> parentEndpoint;
+    ipc::Endpoint<PCanvasChild> childEndpoint;
+    nsresult rv = PCanvas::CreateEndpoints(OtherPid(), base::GetCurrentProcId(),
+                                           &parentEndpoint, &childEndpoint);
+    if (NS_SUCCEEDED(rv)) {
+      Unused << SendInitPCanvasParent(std::move(parentEndpoint));
+      mCanvasChild = new CanvasChild(std::move(childEndpoint));
+    }
+  }
+
   sCompositorBridge = this;
 }
 
@@ -916,6 +933,16 @@ PTextureChild* CompositorBridgeChild::CreateTexture(
   return SendPTextureConstructor(
       textureChild, aSharedData, aReadLock, aLayersBackend, aFlags,
       LayersId{0} /* FIXME? */, aSerial, aExternalImageId);
+}
+
+already_AddRefed<CanvasChild> CompositorBridgeChild::GetCanvasChild() {
+  return do_AddRef(mCanvasChild);
+}
+
+void CompositorBridgeChild::EndCanvasTransaction() {
+  if (mCanvasChild) {
+    mCanvasChild->EndTransaction();
+  }
 }
 
 bool CompositorBridgeChild::AllocUnsafeShmem(
