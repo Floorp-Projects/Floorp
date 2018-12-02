@@ -3948,7 +3948,11 @@ nsresult nsHttpConnectionMgr::nsHalfOpenSocket::SetupStreams(
     tmpFlags |= nsISocketTransport::BE_CONSERVATIVE;
   }
 
-  if (mEnt->PreferenceKnown()) {
+  if (mCaps & NS_HTTP_DISABLE_IPV4) {
+    tmpFlags |= nsISocketTransport::DISABLE_IPV4;
+  } else if (mCaps & NS_HTTP_DISABLE_IPV6) {
+    tmpFlags |= nsISocketTransport::DISABLE_IPV6;
+  } else if (mEnt->PreferenceKnown()) {
     if (mEnt->mPreferIPv6) {
       tmpFlags |= nsISocketTransport::DISABLE_IPV4;
     } else if (mEnt->mPreferIPv4) {
@@ -3988,6 +3992,9 @@ nsresult nsHttpConnectionMgr::nsHalfOpenSocket::SetupStreams(
     }
   }
 
+  MOZ_ASSERT(!(tmpFlags & nsISocketTransport::DISABLE_IPV4) ||
+                 !(tmpFlags & nsISocketTransport::DISABLE_IPV6),
+             "Both types should not be disabled at the same time.");
   socketTransport->SetConnectionFlags(tmpFlags);
   socketTransport->SetTlsFlags(ci->GetTlsFlags());
 

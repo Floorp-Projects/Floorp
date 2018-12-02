@@ -303,6 +303,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD GetNavigationStartTimeStamp(TimeStamp *aTimeStamp) override;
   NS_IMETHOD SetNavigationStartTimeStamp(TimeStamp aTimeStamp) override;
   NS_IMETHOD CancelForTrackingProtection() override;
+  virtual void SetIPv4Disabled(void) override;
+  virtual void SetIPv6Disabled(void) override;
 
   inline void CleanRedirectCacheChainIfNecessary() {
     mRedirectedCachekeys = nullptr;
