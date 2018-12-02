@@ -16,15 +16,27 @@ function run_test() {
       input: "RFC1738: <URL:http://mozilla.org> then",
       url: "http://mozilla.org"
     },
+    {
+      input: "RFC1738: <URL:mailto:john.doe+test@mozilla.org> then",
+      url: "mailto:john.doe+test@mozilla.org"
+    },
     // -- RFC2396E
     {
       input: "RFC2396E: <http://mozilla.org/> then",
       url: "http://mozilla.org/"
     },
+    {
+      input: "RFC2396E: <john.doe+test@mozilla.org> then",
+      url: "mailto:john.doe+test@mozilla.org"
+    },
     // -- abbreviated
     {
       input: "see www.mozilla.org maybe",
       url: "http://www.mozilla.org"
+    },
+    {
+      input: "mail john.doe+test@mozilla.org maybe",
+      url: "mailto:john.doe+test@mozilla.org"
     },
     // -- delimiters
     {
@@ -86,8 +98,16 @@ function run_test() {
       url: "http://localhost/"
     },
     {
+      input: "bracket: john.doe+test@mozilla.org[1] etc.",
+      url: "mailto:john.doe+test@mozilla.org"
+    },
+    {
       input: "parenthesis: (http://localhost/) etc.",
       url: "http://localhost/"
+    },
+    {
+      input: "parenthesis: (john.doe+test@mozilla.org) etc.",
+      url: "mailto:john.doe+test@mozilla.org"
     },
     {
       input: "(thunderbird)http://mozilla.org/thunderbird",
