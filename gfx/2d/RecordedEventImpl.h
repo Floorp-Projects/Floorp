@@ -2803,9 +2803,10 @@ void RecordedSourceSurfaceCreation::Record(S& aStream) const {
   WriteElement(aStream, mSize);
   WriteElement(aStream, mFormat);
   MOZ_ASSERT(mData);
-  for (int y = 0; y < mSize.height; y++) {
-    aStream.write((const char*)mData + y * mStride,
-                  BytesPerPixel(mFormat) * mSize.width);
+  size_t dataFormatWidth = BytesPerPixel(mFormat) * mSize.width;
+  const char* endSrc = (const char*)(mData + (mSize.height * mStride));
+  for (const char* src = (const char*)mData; src < endSrc; src += mStride) {
+    aStream.write(src, dataFormatWidth);
   }
 }
 
