@@ -32,10 +32,13 @@
 
 #include "common/attributes.h"
 
+#define CLIP(a) iclip(a, min, max)
+
 static void NOINLINE
 inv_dct4_1d(const coef *const in, const ptrdiff_t in_s,
-            coef *const out, const ptrdiff_t out_s)
+            coef *const out, const ptrdiff_t out_s, const int max)
 {
+    const int min = -max - 1;
     const int in0 = in[0 * in_s], in1 = in[1 * in_s];
     const int in2 = in[2 * in_s], in3 = in[3 * in_s];
 
@@ -44,19 +47,20 @@ inv_dct4_1d(const coef *const in, const ptrdiff_t in_s,
     int t2 = (in1 * 1567 - in3 * 3784 + 2048) >> 12;
     int t3 = (in1 * 3784 + in3 * 1567 + 2048) >> 12;
 
-    out[0 * out_s] = t0 + t3;
-    out[1 * out_s] = t1 + t2;
-    out[2 * out_s] = t1 - t2;
-    out[3 * out_s] = t0 - t3;
+    out[0 * out_s] = CLIP(t0 + t3);
+    out[1 * out_s] = CLIP(t1 + t2);
+    out[2 * out_s] = CLIP(t1 - t2);
+    out[3 * out_s] = CLIP(t0 - t3);
 }
 
 static void NOINLINE
 inv_dct8_1d(const coef *const in, const ptrdiff_t in_s,
-            coef *const out, const ptrdiff_t out_s)
+            coef *const out, const ptrdiff_t out_s, const int max)
 {
+    const int min = -max - 1;
     coef tmp[4];
 
-    inv_dct4_1d(in, in_s * 2, tmp, 1);
+    inv_dct4_1d(in, in_s * 2, tmp, 1, max);
 
     const int in1 = in[1 * in_s], in3 = in[3 * in_s];
     const int in5 = in[5 * in_s], in7 = in[7 * in_s];
@@ -66,31 +70,32 @@ inv_dct8_1d(const coef *const in, const ptrdiff_t in_s,
     int t6a = (in5 * 2276 + in3 * 3406 + 2048) >> 12;
     int t7a = (in1 * 4017 + in7 *  799 + 2048) >> 12;
 
-    int t4  = t4a + t5a;
-        t5a = t4a - t5a;
-    int t7  = t7a + t6a;
-        t6a = t7a - t6a;
+    int t4  = CLIP(t4a + t5a);
+        t5a = CLIP(t4a - t5a);
+    int t7  = CLIP(t7a + t6a);
+        t6a = CLIP(t7a - t6a);
 
     int t5  = ((t6a - t5a) * 2896 + 2048) >> 12;
     int t6  = ((t6a + t5a) * 2896 + 2048) >> 12;
 
-    out[0 * out_s] = tmp[0] + t7;
-    out[1 * out_s] = tmp[1] + t6;
-    out[2 * out_s] = tmp[2] + t5;
-    out[3 * out_s] = tmp[3] + t4;
-    out[4 * out_s] = tmp[3] - t4;
-    out[5 * out_s] = tmp[2] - t5;
-    out[6 * out_s] = tmp[1] - t6;
-    out[7 * out_s] = tmp[0] - t7;
+    out[0 * out_s] = CLIP(tmp[0] + t7);
+    out[1 * out_s] = CLIP(tmp[1] + t6);
+    out[2 * out_s] = CLIP(tmp[2] + t5);
+    out[3 * out_s] = CLIP(tmp[3] + t4);
+    out[4 * out_s] = CLIP(tmp[3] - t4);
+    out[5 * out_s] = CLIP(tmp[2] - t5);
+    out[6 * out_s] = CLIP(tmp[1] - t6);
+    out[7 * out_s] = CLIP(tmp[0] - t7);
 }
 
 static void NOINLINE
 inv_dct16_1d(const coef *const in, const ptrdiff_t in_s,
-             coef *const out, const ptrdiff_t out_s)
+             coef *const out, const ptrdiff_t out_s, const int max)
 {
+    const int min = -max - 1;
     coef tmp[8];
 
-    inv_dct8_1d(in, in_s * 2, tmp, 1);
+    inv_dct8_1d(in, in_s * 2, tmp, 1, max);
 
     const int in1  = in[ 1 * in_s], in3  = in[ 3 * in_s];
     const int in5  = in[ 5 * in_s], in7  = in[ 7 * in_s];
@@ -106,59 +111,60 @@ inv_dct16_1d(const coef *const in, const ptrdiff_t in_s,
     int t11a = (in13 * 3920 - in3  * 1189 + 2048) >> 12;
     int t12a = (in13 * 1189 + in3  * 3920 + 2048) >> 12;
 
-    int t8  = t8a  + t9a;
-    int t9  = t8a  - t9a;
-    int t10 = t11a - t10a;
-    int t11 = t11a + t10a;
-    int t12 = t12a + t13a;
-    int t13 = t12a - t13a;
-    int t14 = t15a - t14a;
-    int t15 = t15a + t14a;
+    int t8  = CLIP(t8a  + t9a);
+    int t9  = CLIP(t8a  - t9a);
+    int t10 = CLIP(t11a - t10a);
+    int t11 = CLIP(t11a + t10a);
+    int t12 = CLIP(t12a + t13a);
+    int t13 = CLIP(t12a - t13a);
+    int t14 = CLIP(t15a - t14a);
+    int t15 = CLIP(t15a + t14a);
 
     t9a  = (  t14 * 1567 - t9  * 3784  + 2048) >> 12;
     t14a = (  t14 * 3784 + t9  * 1567  + 2048) >> 12;
     t10a = (-(t13 * 3784 + t10 * 1567) + 2048) >> 12;
     t13a = (  t13 * 1567 - t10 * 3784  + 2048) >> 12;
 
-    t8a  = t8   + t11;
-    t9   = t9a  + t10a;
-    t10  = t9a  - t10a;
-    t11a = t8   - t11;
-    t12a = t15  - t12;
-    t13  = t14a - t13a;
-    t14  = t14a + t13a;
-    t15a = t15  + t12;
+    t8a  = CLIP(t8   + t11);
+    t9   = CLIP(t9a  + t10a);
+    t10  = CLIP(t9a  - t10a);
+    t11a = CLIP(t8   - t11);
+    t12a = CLIP(t15  - t12);
+    t13  = CLIP(t14a - t13a);
+    t14  = CLIP(t14a + t13a);
+    t15a = CLIP(t15  + t12);
 
     t10a = ((t13  - t10)  * 2896 + 2048) >> 12;
     t13a = ((t13  + t10)  * 2896 + 2048) >> 12;
     t11  = ((t12a - t11a) * 2896 + 2048) >> 12;
     t12  = ((t12a + t11a) * 2896 + 2048) >> 12;
 
-    out[ 0 * out_s] = tmp[0] + t15a;
-    out[ 1 * out_s] = tmp[1] + t14;
-    out[ 2 * out_s] = tmp[2] + t13a;
-    out[ 3 * out_s] = tmp[3] + t12;
-    out[ 4 * out_s] = tmp[4] + t11;
-    out[ 5 * out_s] = tmp[5] + t10a;
-    out[ 6 * out_s] = tmp[6] + t9;
-    out[ 7 * out_s] = tmp[7] + t8a;
-    out[ 8 * out_s] = tmp[7] - t8a;
-    out[ 9 * out_s] = tmp[6] - t9;
-    out[10 * out_s] = tmp[5] - t10a;
-    out[11 * out_s] = tmp[4] - t11;
-    out[12 * out_s] = tmp[3] - t12;
-    out[13 * out_s] = tmp[2] - t13a;
-    out[14 * out_s] = tmp[1] - t14;
-    out[15 * out_s] = tmp[0] - t15a;
+    out[ 0 * out_s] = CLIP(tmp[0] + t15a);
+    out[ 1 * out_s] = CLIP(tmp[1] + t14);
+    out[ 2 * out_s] = CLIP(tmp[2] + t13a);
+    out[ 3 * out_s] = CLIP(tmp[3] + t12);
+    out[ 4 * out_s] = CLIP(tmp[4] + t11);
+    out[ 5 * out_s] = CLIP(tmp[5] + t10a);
+    out[ 6 * out_s] = CLIP(tmp[6] + t9);
+    out[ 7 * out_s] = CLIP(tmp[7] + t8a);
+    out[ 8 * out_s] = CLIP(tmp[7] - t8a);
+    out[ 9 * out_s] = CLIP(tmp[6] - t9);
+    out[10 * out_s] = CLIP(tmp[5] - t10a);
+    out[11 * out_s] = CLIP(tmp[4] - t11);
+    out[12 * out_s] = CLIP(tmp[3] - t12);
+    out[13 * out_s] = CLIP(tmp[2] - t13a);
+    out[14 * out_s] = CLIP(tmp[1] - t14);
+    out[15 * out_s] = CLIP(tmp[0] - t15a);
 }
 
 static void NOINLINE
 inv_dct32_1d(const coef *const in, const ptrdiff_t in_s,
-             coef *const out, const ptrdiff_t out_s)
+             coef *const out, const ptrdiff_t out_s, const int max)
 {
+    const int min = -max - 1;
     coef tmp[16];
 
-    inv_dct16_1d(in, in_s * 2, tmp, 1);
+    inv_dct16_1d(in, in_s * 2, tmp, 1, max);
 
     const int in1  = in[ 1 * in_s], in3  = in[ 3 * in_s];
     const int in5  = in[ 5 * in_s], in7  = in[ 7 * in_s];
@@ -186,22 +192,22 @@ inv_dct32_1d(const coef *const in, const ptrdiff_t in_s,
     int t23a = (in29 * 4052 - in3  *  601 + 2048) >> 12;
     int t24a = (in29 *  601 + in3  * 4052 + 2048) >> 12;
 
-    int t16 = t16a + t17a;
-    int t17 = t16a - t17a;
-    int t18 = t19a - t18a;
-    int t19 = t19a + t18a;
-    int t20 = t20a + t21a;
-    int t21 = t20a - t21a;
-    int t22 = t23a - t22a;
-    int t23 = t23a + t22a;
-    int t24 = t24a + t25a;
-    int t25 = t24a - t25a;
-    int t26 = t27a - t26a;
-    int t27 = t27a + t26a;
-    int t28 = t28a + t29a;
-    int t29 = t28a - t29a;
-    int t30 = t31a - t30a;
-    int t31 = t31a + t30a;
+    int t16 = CLIP(t16a + t17a);
+    int t17 = CLIP(t16a - t17a);
+    int t18 = CLIP(t19a - t18a);
+    int t19 = CLIP(t19a + t18a);
+    int t20 = CLIP(t20a + t21a);
+    int t21 = CLIP(t20a - t21a);
+    int t22 = CLIP(t23a - t22a);
+    int t23 = CLIP(t23a + t22a);
+    int t24 = CLIP(t24a + t25a);
+    int t25 = CLIP(t24a - t25a);
+    int t26 = CLIP(t27a - t26a);
+    int t27 = CLIP(t27a + t26a);
+    int t28 = CLIP(t28a + t29a);
+    int t29 = CLIP(t28a - t29a);
+    int t30 = CLIP(t31a - t30a);
+    int t31 = CLIP(t31a + t30a);
 
     t17a = (  t30 *  799 - t17 * 4017  + 2048) >> 12;
     t30a = (  t30 * 4017 + t17 *  799  + 2048) >> 12;
@@ -212,22 +218,22 @@ inv_dct32_1d(const coef *const in, const ptrdiff_t in_s,
     t22a = (-(t25 * 2276 + t22 * 3406) + 2048) >> 12;
     t25a = (  t25 * 3406 - t22 * 2276  + 2048) >> 12;
 
-    t16a = t16  + t19;
-    t17  = t17a + t18a;
-    t18  = t17a - t18a;
-    t19a = t16  - t19;
-    t20a = t23  - t20;
-    t21  = t22a - t21a;
-    t22  = t22a + t21a;
-    t23a = t23  + t20;
-    t24a = t24  + t27;
-    t25  = t25a + t26a;
-    t26  = t25a - t26a;
-    t27a = t24  - t27;
-    t28a = t31  - t28;
-    t29  = t30a - t29a;
-    t30  = t30a + t29a;
-    t31a = t31  + t28;
+    t16a = CLIP(t16  + t19);
+    t17  = CLIP(t17a + t18a);
+    t18  = CLIP(t17a - t18a);
+    t19a = CLIP(t16  - t19);
+    t20a = CLIP(t23  - t20);
+    t21  = CLIP(t22a - t21a);
+    t22  = CLIP(t22a + t21a);
+    t23a = CLIP(t23  + t20);
+    t24a = CLIP(t24  + t27);
+    t25  = CLIP(t25a + t26a);
+    t26  = CLIP(t25a - t26a);
+    t27a = CLIP(t24  - t27);
+    t28a = CLIP(t31  - t28);
+    t29  = CLIP(t30a - t29a);
+    t30  = CLIP(t30a + t29a);
+    t31a = CLIP(t31  + t28);
 
     t18a = (  t29  * 1567 - t18  * 3784  + 2048) >> 12;
     t29a = (  t29  * 3784 + t18  * 1567  + 2048) >> 12;
@@ -238,22 +244,22 @@ inv_dct32_1d(const coef *const in, const ptrdiff_t in_s,
     t21a = (-(t26  * 3784 + t21  * 1567) + 2048) >> 12;
     t26a = (  t26  * 1567 - t21  * 3784  + 2048) >> 12;
 
-    t16  = t16a + t23a;
-    t17a = t17  + t22;
-    t18  = t18a + t21a;
-    t19a = t19  + t20;
-    t20a = t19  - t20;
-    t21  = t18a - t21a;
-    t22a = t17  - t22;
-    t23  = t16a - t23a;
-    t24  = t31a - t24a;
-    t25a = t30  - t25;
-    t26  = t29a - t26a;
-    t27a = t28  - t27;
-    t28a = t28  + t27;
-    t29  = t29a + t26a;
-    t30a = t30  + t25;
-    t31  = t31a + t24a;
+    t16  = CLIP(t16a + t23a);
+    t17a = CLIP(t17  + t22);
+    t18  = CLIP(t18a + t21a);
+    t19a = CLIP(t19  + t20);
+    t20a = CLIP(t19  - t20);
+    t21  = CLIP(t18a - t21a);
+    t22a = CLIP(t17  - t22);
+    t23  = CLIP(t16a - t23a);
+    t24  = CLIP(t31a - t24a);
+    t25a = CLIP(t30  - t25);
+    t26  = CLIP(t29a - t26a);
+    t27a = CLIP(t28  - t27);
+    t28a = CLIP(t28  + t27);
+    t29  = CLIP(t29a + t26a);
+    t30a = CLIP(t30  + t25);
+    t31  = CLIP(t31a + t24a);
 
     t20  = ((t27a - t20a) * 2896 + 2048) >> 12;
     t27  = ((t27a + t20a) * 2896 + 2048) >> 12;
@@ -264,47 +270,48 @@ inv_dct32_1d(const coef *const in, const ptrdiff_t in_s,
     t23a = ((t24  - t23 ) * 2896 + 2048) >> 12;
     t24a = ((t24  + t23 ) * 2896 + 2048) >> 12;
 
-    out[ 0 * out_s] = tmp[ 0] + t31;
-    out[ 1 * out_s] = tmp[ 1] + t30a;
-    out[ 2 * out_s] = tmp[ 2] + t29;
-    out[ 3 * out_s] = tmp[ 3] + t28a;
-    out[ 4 * out_s] = tmp[ 4] + t27;
-    out[ 5 * out_s] = tmp[ 5] + t26a;
-    out[ 6 * out_s] = tmp[ 6] + t25;
-    out[ 7 * out_s] = tmp[ 7] + t24a;
-    out[ 8 * out_s] = tmp[ 8] + t23a;
-    out[ 9 * out_s] = tmp[ 9] + t22;
-    out[10 * out_s] = tmp[10] + t21a;
-    out[11 * out_s] = tmp[11] + t20;
-    out[12 * out_s] = tmp[12] + t19a;
-    out[13 * out_s] = tmp[13] + t18;
-    out[14 * out_s] = tmp[14] + t17a;
-    out[15 * out_s] = tmp[15] + t16;
-    out[16 * out_s] = tmp[15] - t16;
-    out[17 * out_s] = tmp[14] - t17a;
-    out[18 * out_s] = tmp[13] - t18;
-    out[19 * out_s] = tmp[12] - t19a;
-    out[20 * out_s] = tmp[11] - t20;
-    out[21 * out_s] = tmp[10] - t21a;
-    out[22 * out_s] = tmp[ 9] - t22;
-    out[23 * out_s] = tmp[ 8] - t23a;
-    out[24 * out_s] = tmp[ 7] - t24a;
-    out[25 * out_s] = tmp[ 6] - t25;
-    out[26 * out_s] = tmp[ 5] - t26a;
-    out[27 * out_s] = tmp[ 4] - t27;
-    out[28 * out_s] = tmp[ 3] - t28a;
-    out[29 * out_s] = tmp[ 2] - t29;
-    out[30 * out_s] = tmp[ 1] - t30a;
-    out[31 * out_s] = tmp[ 0] - t31;
+    out[ 0 * out_s] = CLIP(tmp[ 0] + t31);
+    out[ 1 * out_s] = CLIP(tmp[ 1] + t30a);
+    out[ 2 * out_s] = CLIP(tmp[ 2] + t29);
+    out[ 3 * out_s] = CLIP(tmp[ 3] + t28a);
+    out[ 4 * out_s] = CLIP(tmp[ 4] + t27);
+    out[ 5 * out_s] = CLIP(tmp[ 5] + t26a);
+    out[ 6 * out_s] = CLIP(tmp[ 6] + t25);
+    out[ 7 * out_s] = CLIP(tmp[ 7] + t24a);
+    out[ 8 * out_s] = CLIP(tmp[ 8] + t23a);
+    out[ 9 * out_s] = CLIP(tmp[ 9] + t22);
+    out[10 * out_s] = CLIP(tmp[10] + t21a);
+    out[11 * out_s] = CLIP(tmp[11] + t20);
+    out[12 * out_s] = CLIP(tmp[12] + t19a);
+    out[13 * out_s] = CLIP(tmp[13] + t18);
+    out[14 * out_s] = CLIP(tmp[14] + t17a);
+    out[15 * out_s] = CLIP(tmp[15] + t16);
+    out[16 * out_s] = CLIP(tmp[15] - t16);
+    out[17 * out_s] = CLIP(tmp[14] - t17a);
+    out[18 * out_s] = CLIP(tmp[13] - t18);
+    out[19 * out_s] = CLIP(tmp[12] - t19a);
+    out[20 * out_s] = CLIP(tmp[11] - t20);
+    out[21 * out_s] = CLIP(tmp[10] - t21a);
+    out[22 * out_s] = CLIP(tmp[ 9] - t22);
+    out[23 * out_s] = CLIP(tmp[ 8] - t23a);
+    out[24 * out_s] = CLIP(tmp[ 7] - t24a);
+    out[25 * out_s] = CLIP(tmp[ 6] - t25);
+    out[26 * out_s] = CLIP(tmp[ 5] - t26a);
+    out[27 * out_s] = CLIP(tmp[ 4] - t27);
+    out[28 * out_s] = CLIP(tmp[ 3] - t28a);
+    out[29 * out_s] = CLIP(tmp[ 2] - t29);
+    out[30 * out_s] = CLIP(tmp[ 1] - t30a);
+    out[31 * out_s] = CLIP(tmp[ 0] - t31);
 }
 
 static void NOINLINE
 inv_dct64_1d(const coef *const in, const ptrdiff_t in_s,
-             coef *const out, const ptrdiff_t out_s)
+             coef *const out, const ptrdiff_t out_s, const int max)
 {
+    const int min = -max - 1;
     coef tmp[32];
 
-    inv_dct32_1d(in, in_s * 2, tmp, 1);
+    inv_dct32_1d(in, in_s * 2, tmp, 1, max);
 
     const int in1  = in[ 1 * in_s], in3  = in[ 3 * in_s];
     const int in5  = in[ 5 * in_s], in7  = in[ 7 * in_s];
@@ -356,38 +363,38 @@ inv_dct64_1d(const coef *const in, const ptrdiff_t in_s,
     int t62a = (in33 * 2824 + in31 * 2967 + 2048) >> 12;
     int t63a = (in1  * 4095 + in63 *  101 + 2048) >> 12;
 
-    int t32 = t32a + t33a;
-    int t33 = t32a - t33a;
-    int t34 = t35a - t34a;
-    int t35 = t35a + t34a;
-    int t36 = t36a + t37a;
-    int t37 = t36a - t37a;
-    int t38 = t39a - t38a;
-    int t39 = t39a + t38a;
-    int t40 = t40a + t41a;
-    int t41 = t40a - t41a;
-    int t42 = t43a - t42a;
-    int t43 = t43a + t42a;
-    int t44 = t44a + t45a;
-    int t45 = t44a - t45a;
-    int t46 = t47a - t46a;
-    int t47 = t47a + t46a;
-    int t48 = t48a + t49a;
-    int t49 = t48a - t49a;
-    int t50 = t51a - t50a;
-    int t51 = t51a + t50a;
-    int t52 = t52a + t53a;
-    int t53 = t52a - t53a;
-    int t54 = t55a - t54a;
-    int t55 = t55a + t54a;
-    int t56 = t56a + t57a;
-    int t57 = t56a - t57a;
-    int t58 = t59a - t58a;
-    int t59 = t59a + t58a;
-    int t60 = t60a + t61a;
-    int t61 = t60a - t61a;
-    int t62 = t63a - t62a;
-    int t63 = t63a + t62a;
+    int t32 = CLIP(t32a + t33a);
+    int t33 = CLIP(t32a - t33a);
+    int t34 = CLIP(t35a - t34a);
+    int t35 = CLIP(t35a + t34a);
+    int t36 = CLIP(t36a + t37a);
+    int t37 = CLIP(t36a - t37a);
+    int t38 = CLIP(t39a - t38a);
+    int t39 = CLIP(t39a + t38a);
+    int t40 = CLIP(t40a + t41a);
+    int t41 = CLIP(t40a - t41a);
+    int t42 = CLIP(t43a - t42a);
+    int t43 = CLIP(t43a + t42a);
+    int t44 = CLIP(t44a + t45a);
+    int t45 = CLIP(t44a - t45a);
+    int t46 = CLIP(t47a - t46a);
+    int t47 = CLIP(t47a + t46a);
+    int t48 = CLIP(t48a + t49a);
+    int t49 = CLIP(t48a - t49a);
+    int t50 = CLIP(t51a - t50a);
+    int t51 = CLIP(t51a + t50a);
+    int t52 = CLIP(t52a + t53a);
+    int t53 = CLIP(t52a - t53a);
+    int t54 = CLIP(t55a - t54a);
+    int t55 = CLIP(t55a + t54a);
+    int t56 = CLIP(t56a + t57a);
+    int t57 = CLIP(t56a - t57a);
+    int t58 = CLIP(t59a - t58a);
+    int t59 = CLIP(t59a + t58a);
+    int t60 = CLIP(t60a + t61a);
+    int t61 = CLIP(t60a - t61a);
+    int t62 = CLIP(t63a - t62a);
+    int t63 = CLIP(t63a + t62a);
 
     t33a = (t33 * -4076 + t62 *   401 + 2048) >> 12;
     t34a = (t34 * - 401 + t61 * -4076 + 2048) >> 12;
@@ -406,38 +413,38 @@ inv_dct64_1d(const coef *const in, const ptrdiff_t in_s,
     t61a = (t34 * -4076 + t61 *   401 + 2048) >> 12;
     t62a = (t33 *   401 + t62 *  4076 + 2048) >> 12;
 
-    t32a = t32  + t35;
-    t33  = t33a + t34a;
-    t34  = t33a - t34a;
-    t35a = t32  - t35;
-    t36a = t39  - t36;
-    t37  = t38a - t37a;
-    t38  = t38a + t37a;
-    t39a = t39  + t36;
-    t40a = t40  + t43;
-    t41  = t41a + t42a;
-    t42  = t41a - t42a;
-    t43a = t40  - t43;
-    t44a = t47  - t44;
-    t45  = t46a - t45a;
-    t46  = t46a + t45a;
-    t47a = t47  + t44;
-    t48a = t48  + t51;
-    t49  = t49a + t50a;
-    t50  = t49a - t50a;
-    t51a = t48  - t51;
-    t52a = t55  - t52;
-    t53  = t54a - t53a;
-    t54  = t54a + t53a;
-    t55a = t55  + t52;
-    t56a = t56  + t59;
-    t57  = t57a + t58a;
-    t58  = t57a - t58a;
-    t59a = t56  - t59;
-    t60a = t63  - t60;
-    t61  = t62a - t61a;
-    t62  = t62a + t61a;
-    t63a = t63  + t60;
+    t32a = CLIP(t32  + t35);
+    t33  = CLIP(t33a + t34a);
+    t34  = CLIP(t33a - t34a);
+    t35a = CLIP(t32  - t35);
+    t36a = CLIP(t39  - t36);
+    t37  = CLIP(t38a - t37a);
+    t38  = CLIP(t38a + t37a);
+    t39a = CLIP(t39  + t36);
+    t40a = CLIP(t40  + t43);
+    t41  = CLIP(t41a + t42a);
+    t42  = CLIP(t41a - t42a);
+    t43a = CLIP(t40  - t43);
+    t44a = CLIP(t47  - t44);
+    t45  = CLIP(t46a - t45a);
+    t46  = CLIP(t46a + t45a);
+    t47a = CLIP(t47  + t44);
+    t48a = CLIP(t48  + t51);
+    t49  = CLIP(t49a + t50a);
+    t50  = CLIP(t49a - t50a);
+    t51a = CLIP(t48  - t51);
+    t52a = CLIP(t55  - t52);
+    t53  = CLIP(t54a - t53a);
+    t54  = CLIP(t54a + t53a);
+    t55a = CLIP(t55  + t52);
+    t56a = CLIP(t56  + t59);
+    t57  = CLIP(t57a + t58a);
+    t58  = CLIP(t57a - t58a);
+    t59a = CLIP(t56  - t59);
+    t60a = CLIP(t63  - t60);
+    t61  = CLIP(t62a - t61a);
+    t62  = CLIP(t62a + t61a);
+    t63a = CLIP(t63  + t60);
 
     t34a = (t34  * -4017 + t61  *   799 + 2048) >> 12;
     t35  = (t35a * -4017 + t60a *   799 + 2048) >> 12;
@@ -456,38 +463,38 @@ inv_dct64_1d(const coef *const in, const ptrdiff_t in_s,
     t60  = (t35a *   799 + t60a *  4017 + 2048) >> 12;
     t61a = (t34  *   799 + t61  *  4017 + 2048) >> 12;
 
-    t32  = t32a + t39a;
-    t33a = t33  + t38;
-    t34  = t34a + t37a;
-    t35a = t35  + t36;
-    t36a = t35  - t36;
-    t37  = t34a - t37a;
-    t38a = t33  - t38;
-    t39  = t32a - t39a;
-    t40  = t47a - t40a;
-    t41a = t46  - t41;
-    t42  = t45a - t42a;
-    t43a = t44  - t43;
-    t44a = t44  + t43;
-    t45  = t45a + t42a;
-    t46a = t46  + t41;
-    t47  = t47a + t40a;
-    t48  = t48a + t55a;
-    t49a = t49  + t54;
-    t50  = t50a + t53a;
-    t51a = t51  + t52;
-    t52a = t51  - t52;
-    t53  = t50a - t53a;
-    t54a = t49  - t54;
-    t55  = t48a - t55a;
-    t56  = t63a - t56a;
-    t57a = t62  - t57;
-    t58  = t61a - t58a;
-    t59a = t60  - t59;
-    t60a = t60  + t59;
-    t61  = t61a + t58a;
-    t62a = t62  + t57;
-    t63  = t63a + t56a;
+    t32  = CLIP(t32a + t39a);
+    t33a = CLIP(t33  + t38);
+    t34  = CLIP(t34a + t37a);
+    t35a = CLIP(t35  + t36);
+    t36a = CLIP(t35  - t36);
+    t37  = CLIP(t34a - t37a);
+    t38a = CLIP(t33  - t38);
+    t39  = CLIP(t32a - t39a);
+    t40  = CLIP(t47a - t40a);
+    t41a = CLIP(t46  - t41);
+    t42  = CLIP(t45a - t42a);
+    t43a = CLIP(t44  - t43);
+    t44a = CLIP(t44  + t43);
+    t45  = CLIP(t45a + t42a);
+    t46a = CLIP(t46  + t41);
+    t47  = CLIP(t47a + t40a);
+    t48  = CLIP(t48a + t55a);
+    t49a = CLIP(t49  + t54);
+    t50  = CLIP(t50a + t53a);
+    t51a = CLIP(t51  + t52);
+    t52a = CLIP(t51  - t52);
+    t53  = CLIP(t50a - t53a);
+    t54a = CLIP(t49  - t54);
+    t55  = CLIP(t48a - t55a);
+    t56  = CLIP(t63a - t56a);
+    t57a = CLIP(t62  - t57);
+    t58  = CLIP(t61a - t58a);
+    t59a = CLIP(t60  - t59);
+    t60a = CLIP(t60  + t59);
+    t61  = CLIP(t61a + t58a);
+    t62a = CLIP(t62  + t57);
+    t63  = CLIP(t63a + t56a);
 
     t36  = (t36a * -3784 + t59a *  1567 + 2048) >> 12;
     t37a = (t37  * -3784 + t58  *  1567 + 2048) >> 12;
@@ -506,38 +513,38 @@ inv_dct64_1d(const coef *const in, const ptrdiff_t in_s,
     t58a = (t37  *  1567 + t58  *  3784 + 2048) >> 12;
     t59  = (t36a *  1567 + t59a *  3784 + 2048) >> 12;
 
-    t32a = t32  + t47;
-    t33  = t33a + t46a;
-    t34a = t34  + t45;
-    t35  = t35a + t44a;
-    t36a = t36  + t43;
-    t37  = t37a + t42a;
-    t38a = t38  + t41;
-    t39  = t39a + t40a;
-    t40  = t39a - t40a;
-    t41a = t38  - t41;
-    t42  = t37a - t42a;
-    t43a = t36  - t43;
-    t44  = t35a - t44a;
-    t45a = t34  - t45;
-    t46  = t33a - t46a;
-    t47a = t32  - t47;
-    t48a = t63  - t48;
-    t49  = t62a - t49a;
-    t50a = t61  - t50;
-    t51  = t60a - t51a;
-    t52a = t59  - t52;
-    t53  = t58a - t53a;
-    t54a = t57  - t54;
-    t55  = t56a - t55a;
-    t56  = t56a + t55a;
-    t57a = t57  + t54;
-    t58  = t58a + t53a;
-    t59a = t59  + t52;
-    t60  = t60a + t51a;
-    t61a = t61  + t50;
-    t62  = t62a + t49a;
-    t63a = t63  + t48;
+    t32a = CLIP(t32  + t47);
+    t33  = CLIP(t33a + t46a);
+    t34a = CLIP(t34  + t45);
+    t35  = CLIP(t35a + t44a);
+    t36a = CLIP(t36  + t43);
+    t37  = CLIP(t37a + t42a);
+    t38a = CLIP(t38  + t41);
+    t39  = CLIP(t39a + t40a);
+    t40  = CLIP(t39a - t40a);
+    t41a = CLIP(t38  - t41);
+    t42  = CLIP(t37a - t42a);
+    t43a = CLIP(t36  - t43);
+    t44  = CLIP(t35a - t44a);
+    t45a = CLIP(t34  - t45);
+    t46  = CLIP(t33a - t46a);
+    t47a = CLIP(t32  - t47);
+    t48a = CLIP(t63  - t48);
+    t49  = CLIP(t62a - t49a);
+    t50a = CLIP(t61  - t50);
+    t51  = CLIP(t60a - t51a);
+    t52a = CLIP(t59  - t52);
+    t53  = CLIP(t58a - t53a);
+    t54a = CLIP(t57  - t54);
+    t55  = CLIP(t56a - t55a);
+    t56  = CLIP(t56a + t55a);
+    t57a = CLIP(t57  + t54);
+    t58  = CLIP(t58a + t53a);
+    t59a = CLIP(t59  + t52);
+    t60  = CLIP(t60a + t51a);
+    t61a = CLIP(t61  + t50);
+    t62  = CLIP(t62a + t49a);
+    t63a = CLIP(t63  + t48);
 
     t40a = (t40  * -2896 + t55  * 2896 + 2048) >> 12;
     t41  = (t41a * -2896 + t54a * 2896 + 2048) >> 12;
@@ -556,75 +563,75 @@ inv_dct64_1d(const coef *const in, const ptrdiff_t in_s,
     t54  = (t41a *  2896 + t54a * 2896 + 2048) >> 12;
     t55a = (t40  *  2896 + t55  * 2896 + 2048) >> 12;
 
-    out[ 0 * out_s] = tmp[ 0] + t63a;
-    out[ 1 * out_s] = tmp[ 1] + t62;
-    out[ 2 * out_s] = tmp[ 2] + t61a;
-    out[ 3 * out_s] = tmp[ 3] + t60;
-    out[ 4 * out_s] = tmp[ 4] + t59a;
-    out[ 5 * out_s] = tmp[ 5] + t58;
-    out[ 6 * out_s] = tmp[ 6] + t57a;
-    out[ 7 * out_s] = tmp[ 7] + t56;
-    out[ 8 * out_s] = tmp[ 8] + t55a;
-    out[ 9 * out_s] = tmp[ 9] + t54;
-    out[10 * out_s] = tmp[10] + t53a;
-    out[11 * out_s] = tmp[11] + t52;
-    out[12 * out_s] = tmp[12] + t51a;
-    out[13 * out_s] = tmp[13] + t50;
-    out[14 * out_s] = tmp[14] + t49a;
-    out[15 * out_s] = tmp[15] + t48;
-    out[16 * out_s] = tmp[16] + t47;
-    out[17 * out_s] = tmp[17] + t46a;
-    out[18 * out_s] = tmp[18] + t45;
-    out[19 * out_s] = tmp[19] + t44a;
-    out[20 * out_s] = tmp[20] + t43;
-    out[21 * out_s] = tmp[21] + t42a;
-    out[22 * out_s] = tmp[22] + t41;
-    out[23 * out_s] = tmp[23] + t40a;
-    out[24 * out_s] = tmp[24] + t39;
-    out[25 * out_s] = tmp[25] + t38a;
-    out[26 * out_s] = tmp[26] + t37;
-    out[27 * out_s] = tmp[27] + t36a;
-    out[28 * out_s] = tmp[28] + t35;
-    out[29 * out_s] = tmp[29] + t34a;
-    out[30 * out_s] = tmp[30] + t33;
-    out[31 * out_s] = tmp[31] + t32a;
-    out[32 * out_s] = tmp[31] - t32a;
-    out[33 * out_s] = tmp[30] - t33;
-    out[34 * out_s] = tmp[29] - t34a;
-    out[35 * out_s] = tmp[28] - t35;
-    out[36 * out_s] = tmp[27] - t36a;
-    out[37 * out_s] = tmp[26] - t37;
-    out[38 * out_s] = tmp[25] - t38a;
-    out[39 * out_s] = tmp[24] - t39;
-    out[40 * out_s] = tmp[23] - t40a;
-    out[41 * out_s] = tmp[22] - t41;
-    out[42 * out_s] = tmp[21] - t42a;
-    out[43 * out_s] = tmp[20] - t43;
-    out[44 * out_s] = tmp[19] - t44a;
-    out[45 * out_s] = tmp[18] - t45;
-    out[46 * out_s] = tmp[17] - t46a;
-    out[47 * out_s] = tmp[16] - t47;
-    out[48 * out_s] = tmp[15] - t48;
-    out[49 * out_s] = tmp[14] - t49a;
-    out[50 * out_s] = tmp[13] - t50;
-    out[51 * out_s] = tmp[12] - t51a;
-    out[52 * out_s] = tmp[11] - t52;
-    out[53 * out_s] = tmp[10] - t53a;
-    out[54 * out_s] = tmp[ 9] - t54;
-    out[55 * out_s] = tmp[ 8] - t55a;
-    out[56 * out_s] = tmp[ 7] - t56;
-    out[57 * out_s] = tmp[ 6] - t57a;
-    out[58 * out_s] = tmp[ 5] - t58;
-    out[59 * out_s] = tmp[ 4] - t59a;
-    out[60 * out_s] = tmp[ 3] - t60;
-    out[61 * out_s] = tmp[ 2] - t61a;
-    out[62 * out_s] = tmp[ 1] - t62;
-    out[63 * out_s] = tmp[ 0] - t63a;
+    out[ 0 * out_s] = CLIP(tmp[ 0] + t63a);
+    out[ 1 * out_s] = CLIP(tmp[ 1] + t62);
+    out[ 2 * out_s] = CLIP(tmp[ 2] + t61a);
+    out[ 3 * out_s] = CLIP(tmp[ 3] + t60);
+    out[ 4 * out_s] = CLIP(tmp[ 4] + t59a);
+    out[ 5 * out_s] = CLIP(tmp[ 5] + t58);
+    out[ 6 * out_s] = CLIP(tmp[ 6] + t57a);
+    out[ 7 * out_s] = CLIP(tmp[ 7] + t56);
+    out[ 8 * out_s] = CLIP(tmp[ 8] + t55a);
+    out[ 9 * out_s] = CLIP(tmp[ 9] + t54);
+    out[10 * out_s] = CLIP(tmp[10] + t53a);
+    out[11 * out_s] = CLIP(tmp[11] + t52);
+    out[12 * out_s] = CLIP(tmp[12] + t51a);
+    out[13 * out_s] = CLIP(tmp[13] + t50);
+    out[14 * out_s] = CLIP(tmp[14] + t49a);
+    out[15 * out_s] = CLIP(tmp[15] + t48);
+    out[16 * out_s] = CLIP(tmp[16] + t47);
+    out[17 * out_s] = CLIP(tmp[17] + t46a);
+    out[18 * out_s] = CLIP(tmp[18] + t45);
+    out[19 * out_s] = CLIP(tmp[19] + t44a);
+    out[20 * out_s] = CLIP(tmp[20] + t43);
+    out[21 * out_s] = CLIP(tmp[21] + t42a);
+    out[22 * out_s] = CLIP(tmp[22] + t41);
+    out[23 * out_s] = CLIP(tmp[23] + t40a);
+    out[24 * out_s] = CLIP(tmp[24] + t39);
+    out[25 * out_s] = CLIP(tmp[25] + t38a);
+    out[26 * out_s] = CLIP(tmp[26] + t37);
+    out[27 * out_s] = CLIP(tmp[27] + t36a);
+    out[28 * out_s] = CLIP(tmp[28] + t35);
+    out[29 * out_s] = CLIP(tmp[29] + t34a);
+    out[30 * out_s] = CLIP(tmp[30] + t33);
+    out[31 * out_s] = CLIP(tmp[31] + t32a);
+    out[32 * out_s] = CLIP(tmp[31] - t32a);
+    out[33 * out_s] = CLIP(tmp[30] - t33);
+    out[34 * out_s] = CLIP(tmp[29] - t34a);
+    out[35 * out_s] = CLIP(tmp[28] - t35);
+    out[36 * out_s] = CLIP(tmp[27] - t36a);
+    out[37 * out_s] = CLIP(tmp[26] - t37);
+    out[38 * out_s] = CLIP(tmp[25] - t38a);
+    out[39 * out_s] = CLIP(tmp[24] - t39);
+    out[40 * out_s] = CLIP(tmp[23] - t40a);
+    out[41 * out_s] = CLIP(tmp[22] - t41);
+    out[42 * out_s] = CLIP(tmp[21] - t42a);
+    out[43 * out_s] = CLIP(tmp[20] - t43);
+    out[44 * out_s] = CLIP(tmp[19] - t44a);
+    out[45 * out_s] = CLIP(tmp[18] - t45);
+    out[46 * out_s] = CLIP(tmp[17] - t46a);
+    out[47 * out_s] = CLIP(tmp[16] - t47);
+    out[48 * out_s] = CLIP(tmp[15] - t48);
+    out[49 * out_s] = CLIP(tmp[14] - t49a);
+    out[50 * out_s] = CLIP(tmp[13] - t50);
+    out[51 * out_s] = CLIP(tmp[12] - t51a);
+    out[52 * out_s] = CLIP(tmp[11] - t52);
+    out[53 * out_s] = CLIP(tmp[10] - t53a);
+    out[54 * out_s] = CLIP(tmp[ 9] - t54);
+    out[55 * out_s] = CLIP(tmp[ 8] - t55a);
+    out[56 * out_s] = CLIP(tmp[ 7] - t56);
+    out[57 * out_s] = CLIP(tmp[ 6] - t57a);
+    out[58 * out_s] = CLIP(tmp[ 5] - t58);
+    out[59 * out_s] = CLIP(tmp[ 4] - t59a);
+    out[60 * out_s] = CLIP(tmp[ 3] - t60);
+    out[61 * out_s] = CLIP(tmp[ 2] - t61a);
+    out[62 * out_s] = CLIP(tmp[ 1] - t62);
+    out[63 * out_s] = CLIP(tmp[ 0] - t63a);
 }
 
 static void NOINLINE
 inv_adst4_1d(const coef *const in, const ptrdiff_t in_s,
-             coef *const out, const ptrdiff_t out_s)
+             coef *const out, const ptrdiff_t out_s, const int range)
 {
     const int in0 = in[0 * in_s], in1 = in[1 * in_s];
     const int in2 = in[2 * in_s], in3 = in[3 * in_s];
@@ -642,8 +649,9 @@ inv_adst4_1d(const coef *const in, const ptrdiff_t in_s,
 
 static void NOINLINE
 inv_adst8_1d(const coef *const in, const ptrdiff_t in_s,
-             coef *const out, const ptrdiff_t out_s)
+             coef *const out, const ptrdiff_t out_s, const int max)
 {
+    const int min = -max - 1;
     const int in0 = in[0 * in_s], in1 = in[1 * in_s];
     const int in2 = in[2 * in_s], in3 = in[3 * in_s];
     const int in4 = in[4 * in_s], in5 = in[5 * in_s];
@@ -658,29 +666,29 @@ inv_adst8_1d(const coef *const in, const ptrdiff_t in_s,
     int t6a = (1189 * in1 + 3920 * in6 + 2048) >> 12;
     int t7a = (3920 * in1 - 1189 * in6 + 2048) >> 12;
 
-    int t0 = t0a + t4a;
-    int t1 = t1a + t5a;
-    int t2 = t2a + t6a;
-    int t3 = t3a + t7a;
-    int t4 = t0a - t4a;
-    int t5 = t1a - t5a;
-    int t6 = t2a - t6a;
-    int t7 = t3a - t7a;
+    int t0 = CLIP(t0a + t4a);
+    int t1 = CLIP(t1a + t5a);
+    int t2 = CLIP(t2a + t6a);
+    int t3 = CLIP(t3a + t7a);
+    int t4 = CLIP(t0a - t4a);
+    int t5 = CLIP(t1a - t5a);
+    int t6 = CLIP(t2a - t6a);
+    int t7 = CLIP(t3a - t7a);
 
     t4a = (3784 * t4 + 1567 * t5 + 2048) >> 12;
     t5a = (1567 * t4 - 3784 * t5 + 2048) >> 12;
     t6a = (3784 * t7 - 1567 * t6 + 2048) >> 12;
     t7a = (1567 * t7 + 3784 * t6 + 2048) >> 12;
 
-    out[0 * out_s] =   t0 + t2;
-    out[7 * out_s] = -(t1 + t3);
-    t2             =   t0 - t2;
-    t3             =   t1 - t3;
+    out[0 * out_s] = CLIP(  t0 + t2);
+    out[7 * out_s] = CLIP(-(t1 + t3));
+    t2             = CLIP(  t0 - t2);
+    t3             = CLIP(  t1 - t3);
 
-    out[1 * out_s] = -(t4a + t6a);
-    out[6 * out_s] =   t5a + t7a;
-    t6             =   t4a - t6a;
-    t7             =   t5a - t7a;
+    out[1 * out_s] = CLIP(-(t4a + t6a));
+    out[6 * out_s] = CLIP(  t5a + t7a );
+    t6             = CLIP(  t4a - t6a );
+    t7             = CLIP(  t5a - t7a );
 
     out[3 * out_s] = -(((t2 + t3) * 2896 + 2048) >> 12);
     out[4 * out_s] =   ((t2 - t3) * 2896 + 2048) >> 12;
@@ -690,8 +698,9 @@ inv_adst8_1d(const coef *const in, const ptrdiff_t in_s,
 
 static void NOINLINE
 inv_adst16_1d(const coef *const in, const ptrdiff_t in_s,
-              coef *const out, const ptrdiff_t out_s)
+              coef *const out, const ptrdiff_t out_s, const int max)
 {
+    const int min = -max - 1;
     const int in0  = in[ 0 * in_s], in1  = in[ 1 * in_s];
     const int in2  = in[ 2 * in_s], in3  = in[ 3 * in_s];
     const int in4  = in[ 4 * in_s], in5  = in[ 5 * in_s];
@@ -718,22 +727,22 @@ inv_adst16_1d(const coef *const in, const ptrdiff_t in_s,
     int t14 = (in1  *  601 + in14 * 4052 + 2048) >> 12;
     int t15 = (in1  * 4052 - in14 *  601 + 2048) >> 12;
 
-    int t0a  = t0 + t8;
-    int t1a  = t1 + t9;
-    int t2a  = t2 + t10;
-    int t3a  = t3 + t11;
-    int t4a  = t4 + t12;
-    int t5a  = t5 + t13;
-    int t6a  = t6 + t14;
-    int t7a  = t7 + t15;
-    int t8a  = t0 - t8;
-    int t9a  = t1 - t9;
-    int t10a = t2 - t10;
-    int t11a = t3 - t11;
-    int t12a = t4 - t12;
-    int t13a = t5 - t13;
-    int t14a = t6 - t14;
-    int t15a = t7 - t15;
+    int t0a  = CLIP(t0 + t8 );
+    int t1a  = CLIP(t1 + t9 );
+    int t2a  = CLIP(t2 + t10);
+    int t3a  = CLIP(t3 + t11);
+    int t4a  = CLIP(t4 + t12);
+    int t5a  = CLIP(t5 + t13);
+    int t6a  = CLIP(t6 + t14);
+    int t7a  = CLIP(t7 + t15);
+    int t8a  = CLIP(t0 - t8 );
+    int t9a  = CLIP(t1 - t9 );
+    int t10a = CLIP(t2 - t10);
+    int t11a = CLIP(t3 - t11);
+    int t12a = CLIP(t4 - t12);
+    int t13a = CLIP(t5 - t13);
+    int t14a = CLIP(t6 - t14);
+    int t15a = CLIP(t7 - t15);
 
     t8   = (t8a  * 4017 + t9a  *  799 + 2048) >> 12;
     t9   = (t8a  *  799 - t9a  * 4017 + 2048) >> 12;
@@ -744,22 +753,22 @@ inv_adst16_1d(const coef *const in, const ptrdiff_t in_s,
     t14  = (t15a * 2276 - t14a * 3406 + 2048) >> 12;
     t15  = (t15a * 3406 + t14a * 2276 + 2048) >> 12;
 
-    t0   = t0a + t4a;
-    t1   = t1a + t5a;
-    t2   = t2a + t6a;
-    t3   = t3a + t7a;
-    t4   = t0a - t4a;
-    t5   = t1a - t5a;
-    t6   = t2a - t6a;
-    t7   = t3a - t7a;
-    t8a  = t8  + t12;
-    t9a  = t9  + t13;
-    t10a = t10 + t14;
-    t11a = t11 + t15;
-    t12a = t8  - t12;
-    t13a = t9  - t13;
-    t14a = t10 - t14;
-    t15a = t11 - t15;
+    t0   = CLIP(t0a + t4a);
+    t1   = CLIP(t1a + t5a);
+    t2   = CLIP(t2a + t6a);
+    t3   = CLIP(t3a + t7a);
+    t4   = CLIP(t0a - t4a);
+    t5   = CLIP(t1a - t5a);
+    t6   = CLIP(t2a - t6a);
+    t7   = CLIP(t3a - t7a);
+    t8a  = CLIP(t8  + t12);
+    t9a  = CLIP(t9  + t13);
+    t10a = CLIP(t10 + t14);
+    t11a = CLIP(t11 + t15);
+    t12a = CLIP(t8  - t12);
+    t13a = CLIP(t9  - t13);
+    t14a = CLIP(t10 - t14);
+    t15a = CLIP(t11 - t15);
 
     t4a  = (t4   * 3784 + t5   * 1567 + 2048) >> 12;
     t5a  = (t4   * 1567 - t5   * 3784 + 2048) >> 12;
@@ -770,22 +779,22 @@ inv_adst16_1d(const coef *const in, const ptrdiff_t in_s,
     t14  = (t15a * 3784 - t14a * 1567 + 2048) >> 12;
     t15  = (t15a * 1567 + t14a * 3784 + 2048) >> 12;
 
-    out[ 0 * out_s] =   t0  + t2;
-    out[15 * out_s] = -(t1  + t3);
-    t2a             =   t0  - t2;
-    t3a             =   t1  - t3;
-    out[ 3 * out_s] = -(t4a + t6a);
-    out[12 * out_s] =   t5a + t7a;
-    t6              =   t4a - t6a;
-    t7              =   t5a - t7a;
-    out[ 1 * out_s] = -(t8a + t10a);
-    out[14 * out_s] =   t9a + t11a;
-    t10             =   t8a - t10a;
-    t11             =   t9a - t11a;
-    out[ 2 * out_s] =   t12 + t14;
-    out[13 * out_s] = -(t13 + t15);
-    t14a            =   t12 - t14;
-    t15a            =   t13 - t15;
+    out[ 0 * out_s] = CLIP(  t0  + t2   );
+    out[15 * out_s] = CLIP(-(t1  + t3)  );
+    t2a             = CLIP(  t0  - t2   );
+    t3a             = CLIP(  t1  - t3   );
+    out[ 3 * out_s] = CLIP(-(t4a + t6a) );
+    out[12 * out_s] = CLIP(  t5a + t7a  );
+    t6              = CLIP(  t4a - t6a  );
+    t7              = CLIP(  t5a - t7a  );
+    out[ 1 * out_s] = CLIP(-(t8a + t10a));
+    out[14 * out_s] = CLIP(  t9a + t11a );
+    t10             = CLIP(  t8a - t10a );
+    t11             = CLIP(  t9a - t11a );
+    out[ 2 * out_s] = CLIP(  t12 + t14  );
+    out[13 * out_s] = CLIP(-(t13 + t15) );
+    t14a            = CLIP(  t12 - t14  );
+    t15a            = CLIP(  t13 - t15  );
 
     out[ 7 * out_s] = -(((t2a  + t3a)  * 2896 + 2048) >> 12);
     out[ 8 * out_s] =   ((t2a  - t3a)  * 2896 + 2048) >> 12;
@@ -799,9 +808,9 @@ inv_adst16_1d(const coef *const in, const ptrdiff_t in_s,
 
 #define flip_inv_adst(sz) \
 static void inv_flipadst##sz##_1d(const coef *const in, const ptrdiff_t in_s, \
-                                  coef *const out, const ptrdiff_t out_s) \
+                                  coef *const out, const ptrdiff_t out_s, const int range) \
 { \
-    inv_adst##sz##_1d(in, in_s, &out[(sz - 1) * out_s], -out_s); \
+    inv_adst##sz##_1d(in, in_s, &out[(sz - 1) * out_s], -out_s, range); \
 }
 
 flip_inv_adst(4)
@@ -812,7 +821,7 @@ flip_inv_adst(16)
 
 static void NOINLINE
 inv_identity4_1d(const coef *const in, const ptrdiff_t in_s,
-                 coef *const out, const ptrdiff_t out_s)
+                 coef *const out, const ptrdiff_t out_s, const int range)
 {
     for (int i = 0; i < 4; i++)
         out[out_s * i] = (in[in_s * i] * 5793 + 2048) >> 12;
@@ -820,7 +829,7 @@ inv_identity4_1d(const coef *const in, const ptrdiff_t in_s,
 
 static void NOINLINE
 inv_identity8_1d(const coef *const in, const ptrdiff_t in_s,
-                 coef *const out, const ptrdiff_t out_s)
+                 coef *const out, const ptrdiff_t out_s, const int range)
 {
     for (int i = 0; i < 8; i++)
         out[out_s * i] = in[in_s * i] * 2;
@@ -828,7 +837,7 @@ inv_identity8_1d(const coef *const in, const ptrdiff_t in_s,
 
 static void NOINLINE
 inv_identity16_1d(const coef *const in, const ptrdiff_t in_s,
-                  coef *const out, const ptrdiff_t out_s)
+                  coef *const out, const ptrdiff_t out_s, const int range)
 {
     for (int i = 0; i < 16; i++)
         out[out_s * i] = (in[in_s * i] * 2 * 5793 + 2048) >> 12;
@@ -836,7 +845,7 @@ inv_identity16_1d(const coef *const in, const ptrdiff_t in_s,
 
 static void NOINLINE
 inv_identity32_1d(const coef *const in, const ptrdiff_t in_s,
-                  coef *const out, const ptrdiff_t out_s)
+                  coef *const out, const ptrdiff_t out_s, const int range)
 {
     for (int i = 0; i < 32; i++)
         out[out_s * i] = in[in_s * i] * 4;

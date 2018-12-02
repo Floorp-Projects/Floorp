@@ -151,7 +151,8 @@ impl AlphaBatchList {
     ) -> &mut Vec<PrimitiveInstanceData> {
         if z_id != self.current_z_id ||
            self.current_batch_index == usize::MAX ||
-           !self.batches[self.current_batch_index].key.is_compatible_with(&key) {
+           !self.batches[self.current_batch_index].key.is_compatible_with(&key)
+        {
             let mut selected_batch_index = None;
 
             match key.blend_mode {

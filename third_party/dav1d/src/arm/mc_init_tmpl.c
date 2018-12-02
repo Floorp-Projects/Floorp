@@ -30,16 +30,66 @@
 #include "src/mc.h"
 #include "src/cpu.h"
 
+decl_mc_fn(dav1d_put_8tap_regular_8bpc_neon);
+decl_mc_fn(dav1d_put_8tap_regular_smooth_8bpc_neon);
+decl_mc_fn(dav1d_put_8tap_regular_sharp_8bpc_neon);
+decl_mc_fn(dav1d_put_8tap_smooth_8bpc_neon);
+decl_mc_fn(dav1d_put_8tap_smooth_regular_8bpc_neon);
+decl_mc_fn(dav1d_put_8tap_smooth_sharp_8bpc_neon);
+decl_mc_fn(dav1d_put_8tap_sharp_8bpc_neon);
+decl_mc_fn(dav1d_put_8tap_sharp_regular_8bpc_neon);
+decl_mc_fn(dav1d_put_8tap_sharp_smooth_8bpc_neon);
+decl_mc_fn(dav1d_put_bilin_8bpc_neon);
+
+decl_mct_fn(dav1d_prep_8tap_regular_8bpc_neon);
+decl_mct_fn(dav1d_prep_8tap_regular_smooth_8bpc_neon);
+decl_mct_fn(dav1d_prep_8tap_regular_sharp_8bpc_neon);
+decl_mct_fn(dav1d_prep_8tap_smooth_8bpc_neon);
+decl_mct_fn(dav1d_prep_8tap_smooth_regular_8bpc_neon);
+decl_mct_fn(dav1d_prep_8tap_smooth_sharp_8bpc_neon);
+decl_mct_fn(dav1d_prep_8tap_sharp_8bpc_neon);
+decl_mct_fn(dav1d_prep_8tap_sharp_regular_8bpc_neon);
+decl_mct_fn(dav1d_prep_8tap_sharp_smooth_8bpc_neon);
+decl_mct_fn(dav1d_prep_bilin_8bpc_neon);
+
 decl_avg_fn(dav1d_avg_8bpc_neon);
 decl_w_avg_fn(dav1d_w_avg_8bpc_neon);
 decl_mask_fn(dav1d_mask_8bpc_neon);
 
 void bitfn(dav1d_mc_dsp_init_arm)(Dav1dMCDSPContext *const c) {
+#define init_mc_fn(type, name, suffix) \
+    c->mc[type] = dav1d_put_##name##_8bpc_##suffix
+#define init_mct_fn(type, name, suffix) \
+    c->mct[type] = dav1d_prep_##name##_8bpc_##suffix
     const unsigned flags = dav1d_get_cpu_flags();
 
     if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;
 
 #if BITDEPTH == 8
+#if ARCH_AARCH64
+    init_mc_fn (FILTER_2D_8TAP_REGULAR,        8tap_regular,        neon);
+    init_mc_fn (FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_regular_smooth, neon);
+    init_mc_fn (FILTER_2D_8TAP_REGULAR_SHARP,  8tap_regular_sharp,  neon);
+    init_mc_fn (FILTER_2D_8TAP_SMOOTH_REGULAR, 8tap_smooth_regular, neon);
+    init_mc_fn (FILTER_2D_8TAP_SMOOTH,         8tap_smooth,         neon);
+    init_mc_fn (FILTER_2D_8TAP_SMOOTH_SHARP,   8tap_smooth_sharp,   neon);
+    init_mc_fn (FILTER_2D_8TAP_SHARP_REGULAR,  8tap_sharp_regular,  neon);
+    init_mc_fn (FILTER_2D_8TAP_SHARP_SMOOTH,   8tap_sharp_smooth,   neon);
+    init_mc_fn (FILTER_2D_8TAP_SHARP,          8tap_sharp,          neon);
+    init_mc_fn (FILTER_2D_BILINEAR,            bilin,               neon);
+
+    init_mct_fn(FILTER_2D_8TAP_REGULAR,        8tap_regular,        neon);
+    init_mct_fn(FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_regular_smooth, neon);
+    init_mct_fn(FILTER_2D_8TAP_REGULAR_SHARP,  8tap_regular_sharp,  neon);
+    init_mct_fn(FILTER_2D_8TAP_SMOOTH_REGULAR, 8tap_smooth_regular, neon);
+    init_mct_fn(FILTER_2D_8TAP_SMOOTH,         8tap_smooth,         neon);
+    init_mct_fn(FILTER_2D_8TAP_SMOOTH_SHARP,   8tap_smooth_sharp,   neon);
+    init_mct_fn(FILTER_2D_8TAP_SHARP_REGULAR,  8tap_sharp_regular,  neon);
+    init_mct_fn(FILTER_2D_8TAP_SHARP_SMOOTH,   8tap_sharp_smooth,   neon);
+    init_mct_fn(FILTER_2D_8TAP_SHARP,          8tap_sharp,          neon);
+    init_mct_fn(FILTER_2D_BILINEAR,            bilin,               neon);
+#endif
+
     c->avg = dav1d_avg_8bpc_neon;
     c->w_avg = dav1d_w_avg_8bpc_neon;
     c->mask = dav1d_mask_8bpc_neon;

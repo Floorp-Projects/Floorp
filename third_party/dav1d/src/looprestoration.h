@@ -74,6 +74,8 @@ typedef struct Dav1dLoopRestorationDSPContext {
 void dav1d_loop_restoration_dsp_init_8bpc(Dav1dLoopRestorationDSPContext *c);
 void dav1d_loop_restoration_dsp_init_10bpc(Dav1dLoopRestorationDSPContext *c);
 
+void dav1d_loop_restoration_dsp_init_arm_8bpc(Dav1dLoopRestorationDSPContext *c);
+void dav1d_loop_restoration_dsp_init_arm_10bpc(Dav1dLoopRestorationDSPContext *c);
 void dav1d_loop_restoration_dsp_init_x86_8bpc(Dav1dLoopRestorationDSPContext *c);
 void dav1d_loop_restoration_dsp_init_x86_10bpc(Dav1dLoopRestorationDSPContext *c);
 

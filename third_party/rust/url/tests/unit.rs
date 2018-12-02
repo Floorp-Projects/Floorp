@@ -110,6 +110,17 @@ fn new_directory_paths() {
 }
 
 #[test]
+fn path_backslash_fun() {
+    let mut special_url = "http://foobar.com".parse::<Url>().unwrap();
+    special_url.path_segments_mut().unwrap().push("foo\\bar");
+    assert_eq!(special_url.as_str(), "http://foobar.com/foo%5Cbar");
+
+    let mut nonspecial_url = "thing://foobar.com".parse::<Url>().unwrap();
+    nonspecial_url.path_segments_mut().unwrap().push("foo\\bar");
+    assert_eq!(nonspecial_url.as_str(), "thing://foobar.com/foo\\bar");
+}
+
+#[test]
 fn from_str() {
     assert!("http://testing.com/this".parse::<Url>().is_ok());
 }
