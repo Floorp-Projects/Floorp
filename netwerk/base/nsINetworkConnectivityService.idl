@@ -14,18 +14,23 @@ interface nsINetworkConnectivityService : nsISupports
    *   NOT_AVAILABLE, if the feature is blocked by the network.
    *                  Note that the endpoints are guaranteed to support the features.
    */
-  const long UNKNOWN             = 0;
-  const long OK                  = 1;
-  const long NOT_AVAILABLE       = 2;
+  cenum ConnectivityState: 8 {
+    UNKNOWN             = 0,
+    OK                  = 1,
+    NOT_AVAILABLE       = 2
+  };
 
   /* If DNS v4/v6 queries actually work on the current network */
-  readonly attribute long DNSv4;
-  readonly attribute long DNSv6;
+  readonly attribute nsINetworkConnectivityService_ConnectivityState DNSv4;
+  readonly attribute nsINetworkConnectivityService_ConnectivityState DNSv6;
 
   /* If connecting to IPv4/v6 works on the current network */
-  readonly attribute long IPv4;
-  readonly attribute long IPv6;
+  readonly attribute nsINetworkConnectivityService_ConnectivityState IPv4;
+  readonly attribute nsINetworkConnectivityService_ConnectivityState IPv6;
 
   /* Starts the DNS request to check for DNS v4/v6 availability */
   void recheckDNS();
+
+  /* Starts HTTP requests over IPv4 and IPv6, and checks if they work */
+  void recheckIPConnectivity();
 };
