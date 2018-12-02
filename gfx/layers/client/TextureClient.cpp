@@ -836,6 +836,17 @@ gfx::DrawTarget* TextureClient::BorrowDrawTarget() {
   return mBorrowedDrawTarget;
 }
 
+already_AddRefed<gfx::SourceSurface> TextureClient::BorrowSnapshot() {
+  MOZ_ASSERT(mIsLocked);
+
+  RefPtr<gfx::SourceSurface> surface = mData->BorrowSnapshot();
+  if (!surface) {
+    surface = BorrowDrawTarget()->Snapshot();
+  }
+
+  return surface.forget();
+}
+
 bool TextureClient::BorrowMappedData(MappedTextureData& aMap) {
   MOZ_ASSERT(IsValid());
 

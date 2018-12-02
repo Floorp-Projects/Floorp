@@ -268,6 +268,10 @@ class TextureData {
     return nullptr;
   }
 
+  virtual already_AddRefed<gfx::SourceSurface> BorrowSnapshot() {
+    return nullptr;
+  }
+
   virtual bool BorrowMappedData(MappedTextureData&) { return false; }
 
   virtual bool BorrowMappedYCbCrData(MappedYCbCrTextureData&) { return false; }
@@ -441,6 +445,8 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
    *
    */
   gfx::DrawTarget* BorrowDrawTarget();
+
+  already_AddRefed<gfx::SourceSurface> BorrowSnapshot();
 
   /**
    * Similar to BorrowDrawTarget but provides direct access to the texture's
