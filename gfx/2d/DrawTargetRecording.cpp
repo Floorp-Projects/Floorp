@@ -368,7 +368,13 @@ already_AddRefed<SourceSurface> DrawTargetRecording::IntoLuminanceSource(
   return retSurf.forget();
 }
 
-void DrawTargetRecording::DetachAllSnapshots() {}
+void DrawTargetRecording::Flush() {
+  mRecorder->RecordEvent(RecordedFlush(this));
+}
+
+void DrawTargetRecording::DetachAllSnapshots() {
+  mRecorder->RecordEvent(RecordedDetachAllSnapshots(this));
+}
 
 void DrawTargetRecording::DrawSurface(SourceSurface* aSurface,
                                       const Rect& aDest, const Rect& aSource,

@@ -1079,6 +1079,48 @@ class RecordedGradientStopsDestruction
   MOZ_IMPLICIT RecordedGradientStopsDestruction(S& aStream);
 };
 
+class RecordedFlush : public RecordedDrawingEvent<RecordedFlush> {
+ public:
+  explicit RecordedFlush(DrawTarget* aDT) : RecordedDrawingEvent(FLUSH, aDT) {}
+
+  bool PlayEvent(Translator* aTranslator) const final;
+
+  template <class S>
+  void Record(S& aStream) const;
+  virtual void OutputSimpleEventInfo(
+      std::stringstream& aStringStream) const override;
+
+  virtual std::string GetName() const override { return "Flush"; }
+
+ private:
+  friend class RecordedEvent;
+
+  template <class S>
+  MOZ_IMPLICIT RecordedFlush(S& aStream);
+};
+
+class RecordedDetachAllSnapshots
+    : public RecordedDrawingEvent<RecordedDetachAllSnapshots> {
+ public:
+  explicit RecordedDetachAllSnapshots(DrawTarget* aDT)
+      : RecordedDrawingEvent(DETACHALLSNAPSHOTS, aDT) {}
+
+  bool PlayEvent(Translator* aTranslator) const final;
+
+  template <class S>
+  void Record(S& aStream) const;
+  virtual void OutputSimpleEventInfo(
+      std::stringstream& aStringStream) const override;
+
+  virtual std::string GetName() const override { return "DetachAllSnapshots"; }
+
+ private:
+  friend class RecordedEvent;
+
+  template <class S>
+  MOZ_IMPLICIT RecordedDetachAllSnapshots(S& aStream);
+};
+
 class RecordedSnapshot : public RecordedEventDerived<RecordedSnapshot> {
  public:
   RecordedSnapshot(ReferencePtr aRefPtr, DrawTarget* aDT)
@@ -3014,6 +3056,45 @@ inline void RecordedIntoLuminanceSource::OutputSimpleEventInfo(
                 << ")";
 }
 
+inline bool RecordedFlush::PlayEvent(Translator* aTranslator) const {
+  aTranslator->LookupDrawTarget(mDT)->Flush();
+  return true;
+}
+
+template <class S>
+void RecordedFlush::Record(S& aStream) const {
+  RecordedDrawingEvent::Record(aStream);
+}
+
+template <class S>
+RecordedFlush::RecordedFlush(S& aStream)
+    : RecordedDrawingEvent(FLUSH, aStream) {}
+
+inline void RecordedFlush::OutputSimpleEventInfo(
+    std::stringstream& aStringStream) const {
+  aStringStream << "[" << mDT << "] Flush";
+}
+
+inline bool RecordedDetachAllSnapshots::PlayEvent(
+    Translator* aTranslator) const {
+  aTranslator->LookupDrawTarget(mDT)->DetachAllSnapshots();
+  return true;
+}
+
+template <class S>
+void RecordedDetachAllSnapshots::Record(S& aStream) const {
+  RecordedDrawingEvent::Record(aStream);
+}
+
+template <class S>
+RecordedDetachAllSnapshots::RecordedDetachAllSnapshots(S& aStream)
+    : RecordedDrawingEvent(DETACHALLSNAPSHOTS, aStream) {}
+
+inline void RecordedDetachAllSnapshots::OutputSimpleEventInfo(
+    std::stringstream& aStringStream) const {
+  aStringStream << "[" << mDT << "] DetachAllSnapshots";
+}
+
 inline bool RecordedSnapshot::PlayEvent(Translator* aTranslator) const {
   RefPtr<SourceSurface> src = aTranslator->LookupDrawTarget(mDT)->Snapshot();
   aTranslator->AddSourceSurface(mRefPtr, src);
@@ -3500,7 +3581,9 @@ inline void RecordedFilterNodeSetInput::OutputSimpleEventInfo(
   f(UNSCALEDFONTCREATION, RecordedUnscaledFontCreation);           \
   f(UNSCALEDFONTDESTRUCTION, RecordedUnscaledFontDestruction);     \
   f(INTOLUMINANCE, RecordedIntoLuminanceSource);                   \
-  f(EXTERNALSURFACECREATION, RecordedExternalSurfaceCreation);
+  f(EXTERNALSURFACECREATION, RecordedExternalSurfaceCreation);     \
+  f(FLUSH, RecordedFlush);                                         \
+  f(DETACHALLSNAPSHOTS, RecordedDetachAllSnapshots);
 
 #define DO_WITH_EVENT_TYPE(_typeenum, _class) \
   case _typeenum: {                           \
