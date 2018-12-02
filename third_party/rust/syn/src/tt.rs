@@ -41,10 +41,11 @@ impl<'a> PartialEq for TokenTreeHelper<'a> {
                 s2.next().is_none()
             }
             (&TokenTree::Punct(ref o1), &TokenTree::Punct(ref o2)) => {
-                o1.as_char() == o2.as_char() && match (o1.spacing(), o2.spacing()) {
-                    (Spacing::Alone, Spacing::Alone) | (Spacing::Joint, Spacing::Joint) => true,
-                    _ => false,
-                }
+                o1.as_char() == o2.as_char()
+                    && match (o1.spacing(), o2.spacing()) {
+                        (Spacing::Alone, Spacing::Alone) | (Spacing::Joint, Spacing::Joint) => true,
+                        _ => false,
+                    }
             }
             (&TokenTree::Literal(ref l1), &TokenTree::Literal(ref l2)) => {
                 l1.to_string() == l2.to_string()

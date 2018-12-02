@@ -2,7 +2,7 @@ use std::fmt;
 
 use syn::{Lit, NestedMeta};
 
-use {Result, FromMetaItem};
+use {FromMeta, Result};
 
 use self::Override::*;
 
@@ -42,7 +42,7 @@ pub enum Override<T> {
     Inherit,
 
     /// Explicitly set the value.
-    Explicit(T)
+    Explicit(T),
 }
 
 impl<T> Override<T> {
@@ -52,7 +52,7 @@ impl<T> Override<T> {
     pub fn as_ref<'a>(&'a self) -> Override<&'a T> {
         match *self {
             Inherit => Inherit,
-            Explicit(ref val) => Explicit(val)
+            Explicit(ref val) => Explicit(val),
         }
     }
 
@@ -62,7 +62,7 @@ impl<T> Override<T> {
     pub fn as_mut<'a>(&'a mut self) -> Override<&'a T> {
         match *self {
             Inherit => Inherit,
-            Explicit(ref mut val) => Explicit(val)
+            Explicit(ref mut val) => Explicit(val),
         }
     }
 
@@ -78,7 +78,7 @@ impl<T> Override<T> {
     pub fn explicit(self) -> Option<T> {
         match self {
             Inherit => None,
-            Explicit(val) => Some(val)
+            Explicit(val) => Some(val),
         }
     }
 
@@ -91,7 +91,10 @@ impl<T> Override<T> {
     }
 
     /// Unwraps an override, yielding the content of an `Explicit`. Otherwise, it calls `op`.
-    pub fn unwrap_or_else<F>(self, op: F) -> T where F: FnOnce() -> T {
+    pub fn unwrap_or_else<F>(self, op: F) -> T
+    where
+        F: FnOnce() -> T,
+    {
         match self {
             Inherit => op(),
             Explicit(val) => val,
@@ -131,17 +134,17 @@ impl<T: fmt::Display> fmt::Display for Override<T> {
 }
 
 /// Parses a `Meta`. A bare word will produce `Override::Inherit`, while
-/// any value will be forwarded to `T::from_meta_item`.
-impl<T: FromMetaItem> FromMetaItem for Override<T> {
+/// any value will be forwarded to `T::from_meta`.
+impl<T: FromMeta> FromMeta for Override<T> {
     fn from_word() -> Result<Self> {
         Ok(Inherit)
     }
 
     fn from_list(items: &[NestedMeta]) -> Result<Self> {
-        Ok(Explicit(FromMetaItem::from_list(items)?))
+        Ok(Explicit(FromMeta::from_list(items)?))
     }
 
     fn from_value(lit: &Lit) -> Result<Self> {
-        Ok(Explicit(FromMetaItem::from_value(lit)?))
+        Ok(Explicit(FromMeta::from_value(lit)?))
     }
 }

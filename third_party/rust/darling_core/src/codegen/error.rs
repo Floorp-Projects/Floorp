@@ -1,20 +1,19 @@
-use quote::{Tokens, ToTokens};
+use proc_macro2::TokenStream;
+use quote::{TokenStreamExt, ToTokens};
 
 /// Declares the local variable into which errors will be accumulated.
 pub struct ErrorDeclaration {
-    __hidden: ()
+    __hidden: (),
 }
 
 impl ErrorDeclaration {
     pub fn new() -> Self {
-        ErrorDeclaration {
-            __hidden: ()
-        }
+        ErrorDeclaration { __hidden: () }
     }
 }
 
 impl ToTokens for ErrorDeclaration {
-    fn to_tokens(&self, tokens: &mut Tokens) {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
         tokens.append_all(quote! {
             let mut __errors = Vec::new();
         })
@@ -24,14 +23,14 @@ impl ToTokens for ErrorDeclaration {
 /// Returns early if attribute or body parsing has caused any errors.
 pub struct ErrorCheck<'a> {
     location: Option<&'a str>,
-    __hidden: ()
+    __hidden: (),
 }
 
 impl<'a> ErrorCheck<'a> {
     pub fn new() -> Self {
         ErrorCheck {
             location: None,
-            __hidden: ()
+            __hidden: (),
         }
     }
 
@@ -44,7 +43,7 @@ impl<'a> ErrorCheck<'a> {
 }
 
 impl<'a> ToTokens for ErrorCheck<'a> {
-    fn to_tokens(&self, tokens: &mut Tokens) {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
         let at_call = if let Some(ref s) = self.location {
             quote!(.at(#s))
         } else {
