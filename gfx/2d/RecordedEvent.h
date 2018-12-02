@@ -169,6 +169,71 @@ struct MemWriter {
   char* mPtr;
 };
 
+// This is a simple interface for an EventRingBuffer, so we can use it in the
+// RecordedEvent reading and writing machinery.
+class EventRingBuffer {
+ public:
+  /**
+   * Templated RecordEvent function so that when we have enough contiguous
+   * space we can record into the buffer quickly using MemWriter.
+   *
+   * @param aRecordedEvent the event to record
+   */
+  template <class RE>
+  void RecordEvent(const RE* aRecordedEvent) {
+    SizeCollector size;
+    WriteElement(size, aRecordedEvent->GetType());
+    aRecordedEvent->Record(size);
+    if (size.mTotalSize > mAvailable) {
+      WaitForAndRecalculateAvailableSpace();
+    }
+    if (size.mTotalSize <= mAvailable) {
+      MemWriter writer(mBufPos);
+      WriteElement(writer, aRecordedEvent->GetType());
+      aRecordedEvent->Record(writer);
+      UpdateWriteTotalsBy(size.mTotalSize);
+    } else {
+      WriteElement(*this, aRecordedEvent->GetType());
+      aRecordedEvent->Record(*this);
+    }
+  }
+
+  /**
+   * Simple write function required by WriteElement.
+   *
+   * @param aData the data to be written to the buffer
+   * @param aSize the number of chars to write
+   */
+  virtual void write(const char* const aData, const size_t aSize) = 0;
+
+  /**
+   * Simple read function required by ReadElement.
+   *
+   * @param aOut the pointer to read into
+   * @param aSize the number of chars to read
+   */
+  virtual void read(char* const aOut, const size_t aSize) = 0;
+
+  virtual bool good() const = 0;
+
+ protected:
+  /**
+   * Wait until space is available for writing and then set mBufPos and
+   * mAvailable.
+   */
+  virtual bool WaitForAndRecalculateAvailableSpace() = 0;
+
+  /**
+   * Update write count, mBufPos and mAvailable.
+   *
+   * @param aCount number of bytes written
+   */
+  virtual void UpdateWriteTotalsBy(uint32_t aCount) = 0;
+
+  char* mBufPos = nullptr;
+  uint32_t mAvailable = 0;
+};
+
 struct MemStream {
   char* mData;
   size_t mLength;
@@ -274,6 +339,7 @@ class RecordedEvent {
 
   virtual void RecordToStream(std::ostream& aStream) const = 0;
   virtual void RecordToStream(EventStream& aStream) const = 0;
+  virtual void RecordToStream(EventRingBuffer& aStream) const = 0;
   virtual void RecordToStream(MemStream& aStream) const = 0;
 
   virtual void OutputSimpleEventInfo(std::stringstream& aStringStream) const {}
@@ -302,6 +368,9 @@ class RecordedEvent {
                           const std::function<bool(RecordedEvent*)>& aAction);
   static bool DoWithEventFromStream(
       EventStream& aStream, EventType aType,
+      const std::function<bool(RecordedEvent*)>& aAction);
+  static bool DoWithEventFromStream(
+      EventRingBuffer& aStream, EventType aType,
       const std::function<bool(RecordedEvent*)>& aAction);
 
   EventType GetType() const { return (EventType)mType; }
