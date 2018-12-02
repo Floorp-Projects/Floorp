@@ -26,7 +26,7 @@ import type { Action } from "../actions/types";
 import type { SourcesState } from "./sources";
 import type { Source } from "../types";
 
-type Tab = {
+export type Tab = {
   url: string,
   framework?: string | null,
   isOriginal: boolean,

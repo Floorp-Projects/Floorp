@@ -15,6 +15,9 @@
 class nsPIDOMWindowInner;
 
 namespace mozilla {
+
+class JSONWriter;
+
 namespace dom {
 
 class ReportBody : public nsISupports, public nsWrapperCache {
@@ -28,6 +31,8 @@ class ReportBody : public nsISupports, public nsWrapperCache {
                                JS::Handle<JSObject*> aGivenProto) override;
 
   nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
+
+  virtual void ToJSON(JSONWriter& aJSONWriter) const = 0;
 
  protected:
   virtual ~ReportBody();

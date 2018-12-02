@@ -9,7 +9,7 @@ import { positionCmp } from "./positionCmp";
 import { filterSortedArray } from "./filtering";
 
 import type { SourceScope } from "../../../workers/parser";
-import type { Position, Frame, Source } from "../../../types";
+import type { PartialPosition, Frame, Source } from "../../../types";
 
 type SourceOriginalRange = {
   line: number,
@@ -118,7 +118,7 @@ export async function loadRangeMetadata(
 
 export function findMatchingRange(
   sortedOriginalRanges: Array<MappedOriginalRange>,
-  bindingRange: { +end: Position, +start: Position }
+  bindingRange: { +end: PartialPosition, +start: PartialPosition }
 ): ?MappedOriginalRange {
   return filterSortedArray(sortedOriginalRanges, range => {
     if (range.line < bindingRange.start.line) {

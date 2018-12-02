@@ -4,7 +4,7 @@
 // Tests that the editor sets the correct mode for different file
 // types
 add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html");
+  const dbg = await initDebugger("doc-scripts.html", "simple1.js");
 
   await selectSource(dbg, "simple1.js");
   is(dbg.win.cm.getOption("mode").name, "javascript", "Mode is correct");

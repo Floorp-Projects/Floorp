@@ -437,23 +437,6 @@ bool nsChannelClassifier::ShouldEnableTrackingAnnotation() {
     return mTrackingAnnotationEnabled.value();
   }
 
-  // If tracking protection is enabled, no need to do channel annotation.
-  if (ShouldEnableTrackingProtection()) {
-    return mTrackingAnnotationEnabled.value();
-  }
-
-  // To prevent calling ShouldEnableTrackingProtectionInternal() again,
-  // check loadContext->UseTrackingProtection() here.
-  // If loadContext->UseTrackingProtection() is true, here it means
-  // ShouldEnableTrackingProtectionInternal() has been called before in
-  // ShouldEnableTrackingProtection() above and the result is false.
-  // So, we can just return false.
-  nsCOMPtr<nsILoadContext> loadContext;
-  NS_QueryNotificationCallbacks(mChannel, loadContext);
-  if (loadContext && loadContext->UseTrackingProtection()) {
-    return mTrackingAnnotationEnabled.value();
-  }
-
   Unused << ShouldEnableTrackingProtectionInternal(
       mChannel, true, mTrackingAnnotationEnabled.ptr());
 

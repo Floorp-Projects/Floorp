@@ -18,17 +18,17 @@ import { updateTab } from "./tabs";
 import { PROMISE } from "./utils/middleware/promise";
 
 import { setInScopeLines } from "./ast/setInScopeLines";
-import { updateSymbolLocations } from "./utils/symbols";
+import { setPausePoints } from "./ast/setPausePoints";
+export { setPausePoints };
+
 import {
   getSymbols,
   findOutOfScopeLocations,
   getFramework,
-  getPausePoints,
   type AstPosition
 } from "../workers/parser";
 
-import { features } from "../utils/prefs";
-import { isLoaded, isGenerated } from "../utils/source";
+import { isLoaded } from "../utils/source";
 
 import type { SourceId } from "../types";
 import type { ThunkArgs, Action } from "./types";
@@ -68,15 +68,7 @@ export function setSymbols(sourceId: SourceId) {
     await dispatch({
       type: "SET_SYMBOLS",
       sourceId,
-      [PROMISE]: (async function() {
-        const symbols = await getSymbols(sourceId);
-        const mappedSymbols = updateSymbolLocations(
-          symbols,
-          source,
-          sourceMaps
-        );
-        return mappedSymbols;
-      })()
+      [PROMISE]: getSymbols(sourceId)
     });
 
     if (isPaused(getState())) {
@@ -113,47 +105,5 @@ export function setOutOfScopeLocations() {
       }: Action)
     );
     dispatch(setInScopeLines());
-  };
-}
-
-function compressPausePoints(pausePoints) {
-  const compressed = {};
-  for (const line in pausePoints) {
-    compressed[line] = {};
-    for (const col in pausePoints[line]) {
-      const point = pausePoints[line][col];
-      compressed[line][col] = (point.break ? 1 : 0) | (point.step ? 2 : 0);
-    }
-  }
-
-  return compressed;
-}
-
-export function setPausePoints(sourceId: SourceId) {
-  return async ({ dispatch, getState, client }: ThunkArgs) => {
-    const source = getSourceFromId(getState(), sourceId);
-    if (!features.pausePoints || !source || !source.text) {
-      return;
-    }
-
-    if (source.isWasm) {
-      return;
-    }
-
-    const pausePoints = await getPausePoints(sourceId);
-    const compressed = compressPausePoints(pausePoints);
-
-    if (isGenerated(source)) {
-      await client.setPausePoints(sourceId, compressed);
-    }
-
-    dispatch(
-      ({
-        type: "SET_PAUSE_POINTS",
-        sourceText: source.text || "",
-        sourceId,
-        pausePoints
-      }: Action)
-    );
   };
 }

@@ -1,9 +1,7 @@
 add_task(async function() {
   const dbg = await initDebugger("doc-react.html", "App.js");
 
-  await waitForSource(dbg, "App.js");
   await addBreakpoint(dbg, "App.js", 11);
-
 
   info('Test previewing an immutable Map inside of a react component')
   invokeInTab("clickButton");

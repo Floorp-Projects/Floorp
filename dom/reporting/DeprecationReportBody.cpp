@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/DeprecationReportBody.h"
 #include "mozilla/dom/ReportingBinding.h"
+#include "mozilla/JSONWriter.h"
 
 namespace mozilla {
 namespace dom {
@@ -52,6 +53,31 @@ Nullable<uint32_t> DeprecationReportBody::GetLineNumber() const {
 
 Nullable<uint32_t> DeprecationReportBody::GetColumnNumber() const {
   return mColumnNumber;
+}
+
+void DeprecationReportBody::ToJSON(JSONWriter& aWriter) const {
+  aWriter.StringProperty("id", NS_ConvertUTF16toUTF8(mId).get());
+  // TODO: anticipatedRemoval? https://github.com/w3c/reporting/issues/132
+  aWriter.StringProperty("message", NS_ConvertUTF16toUTF8(mMessage).get());
+
+  if (mSourceFile.IsEmpty()) {
+    aWriter.NullProperty("sourceFile");
+  } else {
+    aWriter.StringProperty("sourceFile",
+                           NS_ConvertUTF16toUTF8(mSourceFile).get());
+  }
+
+  if (mLineNumber.IsNull()) {
+    aWriter.NullProperty("lineNumber");
+  } else {
+    aWriter.IntProperty("lineNumber", mLineNumber.Value());
+  }
+
+  if (mColumnNumber.IsNull()) {
+    aWriter.NullProperty("columnNumber");
+  } else {
+    aWriter.IntProperty("columnNumber", mColumnNumber.Value());
+  }
 }
 
 }  // namespace dom

@@ -4,7 +4,7 @@
 
 // @flow
 
-import type { Location, SourceId } from "../types";
+import type { SourceLocation, SourceId } from "../types";
 
 type IncompleteLocation = {
   sourceId: SourceId,
@@ -18,7 +18,7 @@ export function createLocation({
   line,
   column,
   sourceUrl
-}: IncompleteLocation): Location {
+}: IncompleteLocation): SourceLocation {
   return {
     sourceId,
     line: line || 0,

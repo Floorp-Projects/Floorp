@@ -79,7 +79,6 @@ WebConsoleFrame.prototype = {
     this._initUI();
     await this._initConnection();
     await this.consoleOutput.init();
-
     // Toggle the timestamp on preference change
     Services.prefs.addObserver(PREF_MESSAGE_TIMESTAMP, this._onToolboxPrefChanged);
     this._onToolboxPrefChanged();

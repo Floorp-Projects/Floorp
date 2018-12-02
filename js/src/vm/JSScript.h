@@ -643,6 +643,12 @@ class ScriptSource {
       JSContext* cx, const JS::ReadOnlyCompileOptions& options,
       const mozilla::Maybe<uint32_t>& parameterListEnd = mozilla::Nothing());
 
+  /**
+   * The minimum script length (in code units) necessary for a script to be
+   * eligible to be compressed.
+   */
+  static constexpr size_t MinimumCompressibleLength = 256;
+
   template <typename Unit>
   MOZ_MUST_USE bool setSourceCopy(JSContext* cx, JS::SourceText<Unit>& srcBuf);
 

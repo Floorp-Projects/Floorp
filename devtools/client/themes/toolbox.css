@@ -464,6 +464,8 @@
   --progress-recording-background: hsl(0, 100%, 97%);
   --progress-playing-background: hsl(207, 100%, 97%);
 
+  --progress-bar-transition: 200ms;
+
   --recording-marker-background: hsl(14.9, 100%, 67%);
   --recording-marker-background-hover: hsl(14.9, 100%, 47%);
   --command-button-size: 14px;
@@ -488,6 +490,7 @@
   width: 100%;
   height: 100%;
   background: var(--progress-playing-background);
+  transition-duration: var(--progress-bar-transition);
 }
 
 .webreplay-player #overlay:not(.recording) .progress::after {
@@ -503,6 +506,7 @@
 
 .webreplay-player .recording .progress {
   background: var(--progress-recording-background);
+  transition-duration: var(--progress-bar-transition);
 }
 
 .webreplay-player .message {
@@ -513,6 +517,7 @@
   border-radius: 4.5px;
   top: calc(50% - 3.5px);
   background: var(--blue-40);
+  transition-duration: 100ms;
 }
 
 .webreplay-player .message.overlayed {
@@ -527,6 +532,7 @@
 .webreplay-player .message.highlighted {
   background-color: var(--blue-60);
   transform: scale(1.25);
+  transition-duration: 100ms;
 }
 
 .webreplay-player .recording .message.highlighted {
@@ -611,8 +617,8 @@
   background: var(--blue-40);
   position: absolute;
   left: 0;
-  right: 10px;
   top: 50%;
+  transition-duration: var(--progress-bar-transition);
 }
 
 .webreplay-player .progress-line.end {

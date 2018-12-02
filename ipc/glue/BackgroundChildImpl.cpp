@@ -22,6 +22,7 @@
 #include "mozilla/dom/PBackgroundLSSimpleRequestChild.h"
 #include "mozilla/dom/PBackgroundSDBConnectionChild.h"
 #include "mozilla/dom/PFileSystemRequestChild.h"
+#include "mozilla/dom/EndpointForReportChild.h"
 #include "mozilla/dom/FileSystemTaskBase.h"
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/cache/ActorUtils.h"
@@ -770,6 +771,18 @@ bool BackgroundChildImpl::GetMessageSchedulerGroups(
   }
 
   return false;
+}
+
+dom::PEndpointForReportChild* BackgroundChildImpl::AllocPEndpointForReportChild(
+    const nsString& aGroupName, const PrincipalInfo& aPrincipalInfo) {
+  return new dom::EndpointForReportChild();
+}
+
+bool BackgroundChildImpl::DeallocPEndpointForReportChild(
+    PEndpointForReportChild* aActor) {
+  MOZ_ASSERT(aActor);
+  delete static_cast<dom::EndpointForReportChild*>(aActor);
+  return true;
 }
 
 }  // namespace ipc

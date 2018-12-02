@@ -8,6 +8,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/redux/visibility-handler-connect");
 const {initialize} = require("devtools/client/webconsole/actions/ui");
+const {sortBy} = require("devtools/client/shared/vendor/lodash");
 
 const {
   getAllMessagesById,
@@ -26,24 +27,18 @@ const {
   getInitialMessageCountForViewport,
 } = require("devtools/client/webconsole/utils/messages.js");
 
-// Finds the message that comes right after the current paused execution point.
-// NOTE: visibleMessages are not guaranteed to be ordered.
-function getPausedMessage(visibleMessages, messages, executionPoint) {
+function getClosestMessage(visibleMessages, messages, executionPoint) {
   if (!executionPoint || !visibleMessages) {
     return null;
   }
 
-  let pausedMessage = messages.get(visibleMessages[0]);
-  for (const messageId of visibleMessages) {
-    const message = messages.get(messageId);
-    if (message.executionPoint &&
-        executionPoint.progress >= message.executionPoint.progress &&
-        message.executionPoint.progress > pausedMessage.executionPoint.progress) {
-      pausedMessage = message;
-    }
-  }
+  const { progress } = executionPoint;
+  const getProgress = m => m && m.executionPoint && m.executionPoint.progress;
 
-  return pausedMessage;
+  return sortBy(
+    visibleMessages.map(id => messages.get(id)),
+    m => Math.abs(progress - getProgress(m))
+  )[0];
 }
 
 class ConsoleOutput extends Component {
@@ -165,7 +160,7 @@ class ConsoleOutput extends Component {
       }
     }
 
-    const pausedMessage = getPausedMessage(
+    const pausedMessage = getClosestMessage(
       visibleMessages, messages, pausedExecutionPoint);
 
     const messageNodes = visibleMessages.map((messageId) => MessageContainer({
