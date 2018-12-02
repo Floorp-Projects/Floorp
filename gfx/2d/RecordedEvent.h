@@ -291,8 +291,6 @@ class RecordedEvent {
 
   virtual std::string GetName() const = 0;
 
-  virtual ReferencePtr GetObjectRef() const = 0;
-
   virtual ReferencePtr GetDestinedDT() { return nullptr; }
 
   void OutputSimplePatternInfo(const PatternStorage& aStorage,

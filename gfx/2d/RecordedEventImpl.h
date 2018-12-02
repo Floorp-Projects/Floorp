@@ -60,8 +60,6 @@ class RecordedDrawingEvent : public RecordedEventDerived<Derived> {
   template <class S>
   void Record(S& aStream) const;
 
-  ReferencePtr GetObjectRef() const override;
-
   ReferencePtr mDT;
 };
 
@@ -88,7 +86,6 @@ class RecordedDrawTargetCreation
       std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "DrawTarget Creation"; }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
   ReferencePtr mRefPtr;
   BackendType mBackendType;
@@ -119,7 +116,6 @@ class RecordedDrawTargetDestruction
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "DrawTarget Destruction"; }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
   ReferencePtr mRefPtr;
 
@@ -150,7 +146,6 @@ class RecordedCreateSimilarDrawTarget
       std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "CreateSimilarDrawTarget"; }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
   ReferencePtr mRefPtr;
   IntSize mSize;
@@ -183,7 +178,6 @@ class RecordedCreateClippedDrawTarget
       std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "CreateClippedDrawTarget"; }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
   ReferencePtr mRefPtr;
   IntSize mMaxSize;
@@ -225,7 +219,6 @@ class RecordedCreateDrawTargetForFilter
   std::string GetName() const override {
     return "CreateSimilarDrawTargetForFilter";
   }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
   ReferencePtr mRefPtr;
   IntSize mMaxSize;
@@ -851,7 +844,6 @@ class RecordedPathCreation : public RecordedEventDerived<RecordedPathCreation> {
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "Path Creation"; }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -877,7 +869,6 @@ class RecordedPathDestruction
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "Path Destruction"; }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -911,7 +902,6 @@ class RecordedSourceSurfaceCreation
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "SourceSurface Creation"; }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -940,7 +930,6 @@ class RecordedSourceSurfaceDestruction
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "SourceSurface Destruction"; }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -970,7 +959,6 @@ class RecordedExternalSurfaceCreation
   virtual std::string GetName() const {
     return "SourceSurfaceSharedData Creation";
   }
-  virtual ReferencePtr GetObjectRef() const { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -999,7 +987,6 @@ class RecordedFilterNodeCreation
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "FilterNode Creation"; }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -1024,7 +1011,6 @@ class RecordedFilterNodeDestruction
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "FilterNode Destruction"; }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -1056,7 +1042,6 @@ class RecordedGradientStopsCreation
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "GradientStops Creation"; }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -1084,7 +1069,6 @@ class RecordedGradientStopsDestruction
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "GradientStops Destruction"; }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -1107,7 +1091,6 @@ class RecordedSnapshot : public RecordedEventDerived<RecordedSnapshot> {
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "Snapshot"; }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -1137,7 +1120,6 @@ class RecordedIntoLuminanceSource
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "IntoLuminanceSource"; }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -1179,7 +1161,6 @@ class RecordedFontData : public RecordedEventDerived<RecordedFontData> {
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "Font Data"; }
-  ReferencePtr GetObjectRef() const override { return nullptr; };
 
   void SetFontData(const uint8_t* aData, uint32_t aSize, uint32_t aIndex);
 
@@ -1226,7 +1207,6 @@ class RecordedFontDescriptor
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "Font Desc"; }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -1270,7 +1250,6 @@ class RecordedUnscaledFontCreation
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "UnscaledFont Creation"; }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
   void SetFontInstanceData(const uint8_t* aData, uint32_t aSize);
 
@@ -1298,7 +1277,6 @@ class RecordedUnscaledFontDestruction
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "UnscaledFont Destruction"; }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -1337,7 +1315,6 @@ class RecordedScaledFontCreation
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "ScaledFont Creation"; }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
   void SetFontInstanceData(const uint8_t* aData, uint32_t aSize,
                            const FontVariation* aVariations,
@@ -1369,7 +1346,6 @@ class RecordedScaledFontDestruction
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "ScaledFont Destruction"; }
-  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -1460,7 +1436,6 @@ class RecordedFilterNodeSetAttribute
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "SetAttribute"; }
-  ReferencePtr GetObjectRef() const override { return mNode; }
 
  private:
   friend class RecordedEvent;
@@ -1500,7 +1475,6 @@ class RecordedFilterNodeSetInput
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
   std::string GetName() const override { return "SetInput"; }
-  ReferencePtr GetObjectRef() const override { return mNode; }
 
  private:
   friend class RecordedEvent;
@@ -1739,11 +1713,6 @@ template <class T>
 template <class S>
 void RecordedDrawingEvent<T>::Record(S& aStream) const {
   WriteElement(aStream, mDT);
-}
-
-template <class T>
-ReferencePtr RecordedDrawingEvent<T>::GetObjectRef() const {
-  return mDT;
 }
 
 inline bool RecordedDrawTargetCreation::PlayEvent(
