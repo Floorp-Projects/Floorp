@@ -162,14 +162,20 @@ const UnicodeString& RelativeDateTimeCacheData::getAbsoluteUnitString(
         URelativeDateTimeUnit unit,
         int32_t pastFutureIndex,
         int32_t pluralUnit) const {
-    int32_t style = fStyle;
-    do {
-        if (relativeUnitsFormatters[style][unit][pastFutureIndex][pluralUnit] != nullptr) {
-            return relativeUnitsFormatters[style][unit][pastFutureIndex][pluralUnit];
+    while (true) {
+        int32_t style = fStyle;
+        do {
+            if (relativeUnitsFormatters[style][unit][pastFutureIndex][pluralUnit] != nullptr) {
+                return relativeUnitsFormatters[style][unit][pastFutureIndex][pluralUnit];
+            }
+            style = fallBackCache[style];
+        } while (style != -1);
+
+        if (pluralUnit == StandardPlural::OTHER) {
+            return nullptr;  // No formatter found.
         }
-        style = fallBackCache[style];
-    } while (style != -1);
-    return nullptr;  // No formatter found.
+        pluralUnit = StandardPlural::OTHER;
+    }
  }
 
 static UBool getStringWithFallback(
