@@ -37,11 +37,7 @@ class DrawTargetRecording : public DrawTarget {
 
   virtual IntSize GetSize() const override { return mSize; }
 
-  /* Ensure that the DrawTarget backend has flushed all drawing operations to
-   * this draw target. This must be called before using the backing surface of
-   * this draw target outside of GFX 2D code.
-   */
-  virtual void Flush() override { mFinalDT->Flush(); }
+  virtual void Flush() override;
 
   virtual void FlushItem(const IntRect& aBounds) override;
 

@@ -250,9 +250,10 @@ class RecordedEvent {
     UNSCALEDFONTDESTRUCTION,
     INTOLUMINANCE,
     EXTERNALSURFACECREATION,
+    FLUSH,
+    DETACHALLSNAPSHOTS,
+    LAST,
   };
-  static const uint32_t kTotalEventTypes =
-      RecordedEvent::FILTERNODESETINPUT + 1;
 
   virtual ~RecordedEvent() = default;
 
