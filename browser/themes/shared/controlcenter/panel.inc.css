@@ -165,8 +165,7 @@
 .identity-popup-footer,
 .tracking-protection-button,
 #identity-popup-trackersView-strict-info > label,
-.identity-popup-cookiesView-list-header,
-.identity-popup-content-blocking-list-item > label,
+.identity-popup-trackersView-list-item > label,
 #identity-popup-mainView-panel-header > label,
 #identity-popup-trackersView > .panel-header,
 #identity-popup-securityView > .panel-header,
@@ -404,93 +403,64 @@ description#identity-popup-content-verifier,
   background-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg");
 }
 
-.identity-popup-content-blocking-category {
+#identity-popup-content-blocking-category-tracking-protection {
   /* Overwrite toolbarbutton styles */
   -moz-appearance: none;
   margin: 0;
   padding-inline-start: 0;
 }
 
-.identity-popup-content-blocking-category:-moz-focusring,
-.identity-popup-content-blocking-category:hover {
+#identity-popup-content-blocking-category-tracking-protection:-moz-focusring,
+#identity-popup-content-blocking-category-tracking-protection:hover {
   border-radius: 2px;
-  background-color: var(--arrowpanel-dimmed);
-}
-
-.identity-popup-content-blocking-category:hover:active {
   background-color: var(--arrowpanel-dimmed-further);
 }
 
-.identity-popup-content-blocking-category::after {
+#identity-popup-content-blocking-category-tracking-protection:hover:active {
+  background-color: var(--arrowpanel-dimmed-even-further);
+}
+
+#identity-popup-content-blocking-category-tracking-protection::after {
   content: url(chrome://browser/skin/back-12.svg);
   -moz-context-properties: fill, fill-opacity;
   transform: scaleX(-1) translateY(1px);
   float: right;
 }
 
-.identity-popup-content-blocking-category:-moz-locale-dir(rtl)::after {
+#identity-popup-content-blocking-category-tracking-protection:-moz-locale-dir(rtl)::after {
   transform: scaleX(1) translateY(1px);
 }
 
 /* This subview could get filled with a lot of trackers, set a maximum size
  * and allow it to scroll vertically.*/
-#identity-popup-cookiesView,
 #identity-popup-trackersView {
   max-height: 600px;
 }
 
-.identity-popup-cookiesView-list-header {
-  color: var(--panel-disabled-color);
-  margin: 5px 0;
-}
-
-.identity-popup-content-blocking-list {
+#identity-popup-trackersView-list {
   padding: 5px 20px;
   -moz-box-flex: 1;
   overflow: auto;
 }
 
-.identity-popup-content-blocking-list-item {
+.identity-popup-trackersView-list-item {
   margin: 5px 0;
   overflow: hidden;
-  -moz-box-align: center;
 }
 
-.identity-popup-content-blocking-list-item:not(.allowed) {
-  color: var(--panel-disabled-color);
+.identity-popup-trackersView-list-item > label {
+  /* Limit to full width - container padding - icon width - icon margin */
+  max-width: calc(var(--identity-popup-width) - 40px - 16px - 10px);
 }
 
-.identity-popup-content-blocking-list-host-label {
-  -moz-box-flex: 1;
-}
-
-.identity-popup-content-blocking-list-state-label {
-  -moz-box-flex: 1;
-  text-align: end;
-  margin-inline-start: 5px;
-  margin-inline-end: 2px;
-}
-
-.identity-popup-trackersView-icon,
-.identity-popup-cookiesView-icon {
+.identity-popup-trackersView-list-item > image {
+  list-style-image: url(chrome://browser/skin/controlcenter/trackers-disabled.svg);
   margin-inline-end: 10px;
   -moz-context-properties: fill, fill-opacity;
 }
 
-.identity-popup-trackersView-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/trackers-disabled.svg);
-}
-
-.identity-popup-trackersView-icon.allowed {
+.identity-popup-trackersView-list-item.allowed > image {
   list-style-image: url(chrome://browser/skin/controlcenter/trackers.svg);
-}
-
-.identity-popup-cookiesView-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/3rdpartycookies-disabled.svg);
-}
-
-.identity-popup-cookiesView-icon.allowed {
-  list-style-image: url(chrome://browser/skin/controlcenter/3rdpartycookies.svg);
 }
 
 #identity-popup-trackersView-strict-info {
@@ -527,9 +497,32 @@ description#identity-popup-content-verifier,
   margin-top: 10px;
 }
 
+/* Don't show the categories when no trackers were detected. */
+#identity-popup-content-blocking-content:not([detected]) > #identity-popup-content-blocking-category-list {
+  display: none;
+}
+
 /* Show the "detected"/"not detected" message depending on the content state. */
 #identity-popup-content-blocking-content:not([detected]) > #identity-popup-content-blocking-detected,
 #identity-popup-content-blocking-content[detected] > #identity-popup-content-blocking-not-detected {
+  display: none;
+}
+
+.identity-popup-content-blocking-category-state-label {
+  display: none;
+}
+
+/* TODO: This will be cleaned up by bug 1501992 */
+/* Hide the state label unless we blocked something only for third party cookies */
+#identity-popup-content-blocking-content:not([hasException]) #identity-popup-content-blocking-category-3rdpartycookies.blocked .identity-popup-content-blocking-category-state-label,
+/* For trackers, either show a "blocked" or "allowed" label depending on the state. */
+#identity-popup-content-blocking-content:not([hasException]) #identity-popup-content-blocking-category-tracking-protection.blocked > #identity-popup-content-blocking-tracking-protection-label-blocked,
+#identity-popup-content-blocking-category-tracking-protection:not(.blocked) > #identity-popup-content-blocking-tracking-protection-label-allowed,
+#identity-popup-content-blocking-content[hasException] #identity-popup-content-blocking-tracking-protection-label-allowed {
+  display: -moz-box;
+}
+
+.identity-popup-content-blocking-category.blocked .identity-popup-content-blocking-category-add-blocking {
   display: none;
 }
 
@@ -537,8 +530,16 @@ description#identity-popup-content-verifier,
   list-style-image: url(chrome://browser/skin/controlcenter/trackers.svg);
 }
 
+#identity-popup-content-blocking-category-tracking-protection.blocked > .tracking-protection-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/trackers-disabled.svg);
+}
+
 .thirdpartycookies-icon {
   list-style-image: url(chrome://browser/skin/controlcenter/3rdpartycookies.svg);
+}
+
+#identity-popup-content-blocking-category-3rdpartycookies.blocked > .thirdpartycookies-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/3rdpartycookies-disabled.svg);
 }
 
 /* Content Blocking action button */
@@ -597,15 +598,15 @@ description#identity-popup-content-verifier,
 /* Hide the "report breakage" button if we have not detected any trackers
  * (except if the user added an exception, in which case they might still
  * (especially!) want to report the breakage). */
-#identity-popup-content-blocking-content:not([blocking]):not([hasException]) #identity-popup-content-blocking-report-breakage {
+#identity-popup-content-blocking-content:not([active]):not([hasException]) #identity-popup-content-blocking-report-breakage {
   display: none;
 }
 
 /* Show the right action buttons depending on content state */
 /* Offer to temporarily add an exception in private mode. */
-#main-window:not([privatebrowsingmode]) #identity-popup-content-blocking-content[blocking]:not([hasException]) > #tracking-action-unblock,
+#main-window:not([privatebrowsingmode]) #identity-popup-content-blocking-content[active]:not([hasException]) > #tracking-action-unblock,
 /* Offer to permanently add an exception in normal mode. */
-#main-window[privatebrowsingmode] #identity-popup-content-blocking-content[blocking]:not([hasException]) > #tracking-action-unblock-private,
+#main-window[privatebrowsingmode] #identity-popup-content-blocking-content[active]:not([hasException]) > #tracking-action-unblock-private,
 /* If there's an exception just offer to remove the exception again. */
 #identity-popup-content-blocking-content[hasException] > #tracking-action-block {
   display: -moz-box;
@@ -717,7 +718,6 @@ description#identity-popup-content-verifier,
   background-color: transparent;
   color: inherit;
   opacity: 0.6;
-  margin-inline-start: 2px;
 }
 
 .identity-popup-permission-remove-button > .button-box {
