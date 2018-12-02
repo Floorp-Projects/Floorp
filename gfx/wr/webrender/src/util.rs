@@ -17,7 +17,6 @@ const NEARLY_ZERO: f32 = 1.0 / 4096.0;
 
 /// A typesafe helper that separates new value construction from
 /// vector growing, allowing LLVM to ideally construct the element in place.
-#[must_use]
 pub struct Allocation<'a, T: 'a> {
     vec: &'a mut Vec<T>,
     index: usize,
@@ -37,8 +36,28 @@ impl<'a, T> Allocation<'a, T> {
     }
 }
 
+/// An entry into a vector, similar to `std::collections::hash_map::Entry`.
+pub enum VecEntry<'a, T: 'a> {
+    Vacant(Allocation<'a, T>),
+    Occupied(&'a mut T),
+}
+
+impl<'a, T> VecEntry<'a, T> {
+    #[inline(always)]
+    pub fn set(self, value: T) {
+        match self {
+            VecEntry::Vacant(alloc) => { alloc.init(value); }
+            VecEntry::Occupied(slot) => { *slot = value; }
+        }
+    }
+}
+
 pub trait VecHelper<T> {
+    /// Growns the vector by a single entry, returning the allocation.
     fn alloc(&mut self) -> Allocation<T>;
+    /// Either returns an existing elemenet, or grows the vector by one.
+    /// Doesn't expect indices to be higher than the current length.
+    fn entry(&mut self, index: usize) -> VecEntry<T>;
 }
 
 impl<T> VecHelper<T> for Vec<T> {
@@ -50,6 +69,17 @@ impl<T> VecHelper<T> for Vec<T> {
         Allocation {
             vec: self,
             index,
+        }
+    }
+
+    fn entry(&mut self, index: usize) -> VecEntry<T> {
+        if index < self.len() {
+            VecEntry::Occupied(unsafe {
+                self.get_unchecked_mut(index)
+            })
+        } else {
+            assert_eq!(index, self.len());
+            VecEntry::Vacant(self.alloc())
         }
     }
 }
