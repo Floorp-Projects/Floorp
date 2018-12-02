@@ -153,6 +153,8 @@ inline bool RecordedTextureLock::PlayCanvasEvent(
     return false;
   }
 
+  gfx::AutoSerializeWithMoz2D serializeWithMoz2D(
+      aTranslator->GetReferenceDrawTarget()->GetBackendType());
   textureData->Lock(mMode);
   return true;
 }
@@ -197,6 +199,8 @@ inline bool RecordedTextureUnlock::PlayCanvasEvent(
     return false;
   }
 
+  gfx::AutoSerializeWithMoz2D serializeWithMoz2D(
+      aTranslator->GetReferenceDrawTarget()->GetBackendType());
   textureData->Unlock();
   return true;
 }

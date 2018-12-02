@@ -83,7 +83,7 @@ class CanvasParent final : public PCanvasParent {
 
   void Bind(Endpoint<PCanvasParent>&& aEndpoint);
 
-  void PostStartTranslationTask();
+  void PostStartTranslationTask(uint32_t aDispatchFlags);
 
   void StartTranslation();
 
