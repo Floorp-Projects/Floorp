@@ -11,7 +11,7 @@ function getNthItem(dbg, index) {
 
 // Tests the outline pane fuzzy filtering of outline items
 add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html");
+  const dbg = await initDebugger("doc-scripts.html", "long");
   await selectSource(dbg, "long", 1);
   findElementWithSelector(dbg, ".outline-tab").click();
 

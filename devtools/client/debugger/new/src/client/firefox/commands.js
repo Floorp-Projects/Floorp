@@ -9,7 +9,7 @@ import type {
   BreakpointResult,
   Frame,
   FrameId,
-  Location,
+  SourceLocation,
   Script,
   Source,
   SourceId,
@@ -129,7 +129,7 @@ function sourceContents(sourceId: SourceId): Source {
   return sourceClient.source();
 }
 
-function getBreakpointByLocation(location: Location) {
+function getBreakpointByLocation(location: SourceLocation) {
   const id = makePendingLocationId(location);
   const bpClient = bpClients[id];
 
@@ -158,7 +158,7 @@ function removeXHRBreakpoint(path: string, method: string) {
 }
 
 function setBreakpoint(
-  location: Location,
+  location: SourceLocation,
   condition: boolean,
   noSliding: boolean
 ): Promise<BreakpointResult> {
@@ -184,7 +184,7 @@ function setBreakpoint(
 }
 
 function removeBreakpoint(
-  generatedLocation: Location
+  generatedLocation: SourceLocation
 ): Promise<void> | ?BreakpointResult {
   try {
     const id = makePendingLocationId(generatedLocation);
@@ -202,7 +202,7 @@ function removeBreakpoint(
 
 function setBreakpointCondition(
   breakpointId: BreakpointId,
-  location: Location,
+  location: SourceLocation,
   condition: boolean,
   noSliding: boolean
 ) {

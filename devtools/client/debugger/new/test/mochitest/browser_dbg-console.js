@@ -1,29 +1,6 @@
-// Return a promise with a reference to jsterm, opening the split
-// console if necessary.  This cleans up the split console pref so
-// it won't pollute other tests.
-function getSplitConsole(dbg) {
-  const { toolbox, win } = dbg;
-
-  if (!win) {
-    win = toolbox.win;
-  }
-
-  if (!toolbox.splitConsole) {
-    pressKey(dbg, "Escape");
-  }
-
-  return new Promise(resolve => {
-    toolbox.getPanelWhenReady("webconsole").then(() => {
-      ok(toolbox.splitConsole, "Split console is shown.");
-      let jsterm = toolbox.getPanel("webconsole").hud.jsterm;
-      resolve(jsterm);
-    });
-  });
-}
-
 add_task(async function() {
   Services.prefs.setBoolPref("devtools.toolbox.splitconsoleEnabled", true);
-  const dbg = await initDebugger("doc-script-switching.html");
+  const dbg = await initDebugger("doc-script-switching.html", "switching-01");
 
   await selectSource(dbg, "switching-01");
 

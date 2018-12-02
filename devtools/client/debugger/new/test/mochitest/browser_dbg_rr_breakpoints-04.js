@@ -8,27 +8,24 @@
 async function test() {
   waitForExplicitFinish();
 
-  let tab = BrowserTestUtils.addTab(gBrowser, null, { recordExecution: "*" });
-  gBrowser.selectedTab = tab;
-  openTrustedLinkIn(EXAMPLE_URL + "doc_rr_continuous.html", "current");
+  const dbg = await attatchRecordingDebugger("doc_rr_continuous.html");
+  const {threadClient, tab, toolbox} = dbg;
 
-  let toolbox = await attachDebugger(tab), client = toolbox.threadClient;
-  await client.interrupt();
-  await setBreakpoint(client, "doc_rr_continuous.html", 14);
-  await resumeToLine(client, 14);
-  let value = await evaluateInTopFrame(client, "number");
-  await resumeToLine(client, 14);
-  await checkEvaluateInTopFrame(client, "number", value + 1);
-  await rewindToLine(client, 14);
-  await checkEvaluateInTopFrame(client, "number", value);
-  await resumeToLine(client, 14);
-  await checkEvaluateInTopFrame(client, "number", value + 1);
-  await resumeToLine(client, 14);
-  await checkEvaluateInTopFrame(client, "number", value + 2);
-  await resumeToLine(client, 14);
-  await checkEvaluateInTopFrame(client, "number", value + 3);
-  await rewindToLine(client, 14);
-  await checkEvaluateInTopFrame(client, "number", value + 2);
+  await setBreakpoint(threadClient, "doc_rr_continuous.html", 14);
+  await resumeToLine(threadClient, 14);
+  let value = await evaluateInTopFrame(threadClient, "number");
+  await resumeToLine(threadClient, 14);
+  await checkEvaluateInTopFrame(threadClient, "number", value + 1);
+  await rewindToLine(threadClient, 14);
+  await checkEvaluateInTopFrame(threadClient, "number", value);
+  await resumeToLine(threadClient, 14);
+  await checkEvaluateInTopFrame(threadClient, "number", value + 1);
+  await resumeToLine(threadClient, 14);
+  await checkEvaluateInTopFrame(threadClient, "number", value + 2);
+  await resumeToLine(threadClient, 14);
+  await checkEvaluateInTopFrame(threadClient, "number", value + 3);
+  await rewindToLine(threadClient, 14);
+  await checkEvaluateInTopFrame(threadClient, "number", value + 2);
 
   await toolbox.destroy();
   await gBrowser.removeTab(tab);

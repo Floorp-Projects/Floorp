@@ -487,7 +487,7 @@ transforms.add_validate(test_description_schema)
 def resolve_keys(config, tests):
     for test in tests:
         resolve_keyed_by(
-            test, 'requite-signed-extensions',
+            test, 'require-signed-extensions',
             item_name=test['test-name'],
             **{
                 'release-type': config.params['release_type'],

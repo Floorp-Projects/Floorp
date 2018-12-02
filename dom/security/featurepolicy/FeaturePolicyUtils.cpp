@@ -149,6 +149,7 @@ FeaturePolicyUtils::DefaultAllowListFeature(const nsAString& aFeatureName) {
           columnNumber, NS_LITERAL_STRING("enforce"));
 
   ReportingUtils::Report(window, nsGkAtoms::featurePolicyViolation,
+                         NS_LITERAL_STRING("default"),
                          NS_ConvertUTF8toUTF16(spec), body);
 }
 

@@ -953,24 +953,49 @@ using ScratchI8 = ScratchI32;
 //  - the Header, comprising the Frame and DebugFrame elements;
 //  - the Local area, allocated below the header with various forms of
 //    alignment;
-//  - the Stack area, comprising the temporary storage the compiler uses
-//    for register spilling, allocated below the Local area;
+//  - the Dynamic area, comprising the temporary storage the compiler uses for
+//    register spilling, allocated below the Local area;
 //  - the Arguments area, comprising memory allocated for outgoing calls,
-//    allocated below the stack area.
+//    allocated below the Dynamic area.
 //
-// The header is addressed off the stack pointer.  masm.framePushed() is always
+//                 +============================+
+//                 |    Incoming arg            |
+//                 |    ...                     |
+//                 +----------------------------+
+//                 |    unspecified             |
+// --------------  +============================+
+//  ^              |    Frame (fixed size)      |
+// fixedSize       +----------------------------+ <------------------ FP
+//  |              |    DebugFrame (optional)   |               ^^
+//  |    --------  +============================+ ---------     ||
+//  |       ^      |    Local (static size)     |    ^          ||
+//  | localSize    |    ...                     |    |        framePushed
+//  v       v      |    (padding)               |    |          ||
+// --------------  +============================+ stackHeight   ||
+//          ^      |    Dynamic (variable)      |    |          ||
+//   dynamicSize   |    ...                     |    |          ||
+//          v      |    ...                     |    v          ||
+// --------------  |    (free space, sometimes) | ---------     v|
+//                 +============================+ <----- SP not-during calls
+//                 |    Arguments (sometimes)   |                |
+//                 |    ...                     |                v
+//                 +============================+ <----- SP during calls
+//
+// The Header is addressed off the stack pointer.  masm.framePushed() is always
 // correct, and masm.getStackPointer() + masm.framePushed() always addresses the
 // Frame, with the DebugFrame optionally below it.
 //
-// The local area is laid out by BaseLocalIter and is allocated and deallocated
+// The Local area is laid out by BaseLocalIter and is allocated and deallocated
 // by standard prologue and epilogue functions that manipulate the stack
 // pointer, but it is accessed via BaseStackFrame.
 //
-// The stack area is maintained by and accessed via BaseStackFrame.  On some
-// systems, the stack memory may be allocated in chunks because the SP needs a
-// specific alignment.
+// The Dynamic area is maintained by and accessed via BaseStackFrame.  On some
+// systems (such as ARM64), the Dynamic memory may be allocated in chunks
+// because the SP needs a specific alignment, and in this case there will
+// normally be some free space directly above the SP.  The stack height does not
+// include the free space, it reflects the logically used space only.
 //
-// The arguments area is allocated and deallocated via BaseStackFrame (see
+// The Arguments area is allocated and deallocated via BaseStackFrame (see
 // comments later) but is accessed directly off the stack pointer.
 
 // BaseLocalIter iterates over a vector of types of locals and provides offsets
@@ -1054,10 +1079,10 @@ void BaseLocalIter::operator++(int) {
   settle();
 }
 
-// Abstraction of the height of the stack, to avoid type confusion.
+// Abstraction of the height of the stack frame, to avoid type confusion.
 
 class StackHeight {
-  friend class BaseStackFrame;
+  friend class BaseStackFrameAllocator;
 
   uint32_t height;
 
@@ -1068,21 +1093,29 @@ class StackHeight {
 };
 
 // Abstraction of the baseline compiler's stack frame (except for the Frame /
-// DebugFrame parts).  See comments above for more.
+// DebugFrame parts).  See comments above for more.  Remember, "below" on the
+// stack means at lower addresses.
+//
+// The abstraction is split into two parts: BaseStackFrameAllocator is
+// responsible for allocating and deallocating space on the stack and for
+// performing computations that are affected by how the allocation is performed;
+// BaseStackFrame then provides a pleasant interface for stack frame management.
 
-class BaseStackFrame {
+class BaseStackFrameAllocator {
+  MacroAssembler& masm;
+
 #ifdef RABALDR_CHUNKY_STACK
   // On platforms that require the stack pointer to be aligned on a boundary
   // greater than the typical stack item (eg, ARM64 requires 16-byte alignment
   // but items are 8 bytes), allocate stack memory in chunks, and use a
   // separate stack height variable to track the effective stack pointer
   // within the allocated area.  Effectively, there's a variable amount of
-  // free space directly above the stack pointer.
+  // free space directly above the stack pointer.  See diagram above.
 
   // The following must be true in order for the stack height to be
   // predictable at control flow joins:
   //
-  // - The locals area is always aligned according to WasmStackAlignment, ie,
+  // - The Local area is always aligned according to WasmStackAlignment, ie,
   //   masm.framePushed() % WasmStackAlignment is zero after allocating
   //   locals.
   //
@@ -1091,7 +1124,7 @@ class BaseStackFrame {
   // - Pushing and popping are always in units of ChunkSize (hence preserving
   //   alignment).
   //
-  // - The free space on the stack (masm.framePushed() - currentFramePushed_)
+  // - The free space on the stack (masm.framePushed() - currentStackHeight_)
   //   is a predictable (nonnegative) amount.
 
   // As an optimization, we pre-allocate some space on the stack, the size of
@@ -1109,12 +1142,273 @@ class BaseStackFrame {
 
   static constexpr uint32_t ChunkSize = 8 * sizeof(void*);
   static constexpr uint32_t InitialChunk = ChunkSize;
+
+  // The current logical height of the frame, ie the sum of space for the
+  // Local and Dynamic areas.  The allocated size of the frame -- provided by
+  // masm.framePushed() -- is usually larger than currentStackHeight_, notably
+  // at the beginning of execution when we've allocated InitialChunk extra
+  // space.
+
+  uint32_t currentStackHeight_;
 #endif
 
+  // Size of the Local area in bytes (stable after BaseCompiler::init() has
+  // called BaseStackFrame::setupLocals(), which in turn calls
+  // BaseStackFrameAllocator::setLocalSize()), always rounded to the proper
+  // stack alignment.  The Local area is then allocated in beginFunction(),
+  // following the allocation of the Header.  See onFixedStackAllocated()
+  // below.
+
+  uint32_t localSize_;
+
+ protected:
+  ///////////////////////////////////////////////////////////////////////////
+  //
+  // Initialization
+
+  explicit BaseStackFrameAllocator(MacroAssembler& masm)
+      : masm(masm),
+#ifdef RABALDR_CHUNKY_STACK
+        currentStackHeight_(0),
+#endif
+        localSize_(UINT32_MAX) {
+  }
+
+ protected:
+  //////////////////////////////////////////////////////////////////////
+  //
+  // The Local area - the static part of the frame.
+
+  // Record the size of the Local area, once it is known.
+
+  void setLocalSize(uint32_t localSize) {
+    MOZ_ASSERT(localSize == AlignBytes(localSize, sizeof(void*)),
+               "localSize_ should be aligned to at least a pointer");
+    MOZ_ASSERT(localSize_ == UINT32_MAX);
+    localSize_ = localSize;
+  }
+
+  // Record the current stack height, after it has become stable in
+  // beginFunction().  See also BaseStackFrame::onFixedStackAllocated().
+
+  void onFixedStackAllocated() {
+    MOZ_ASSERT(localSize_ != UINT32_MAX);
+#ifdef RABALDR_CHUNKY_STACK
+    currentStackHeight_ = localSize_;
+#endif
+  }
+
+ public:
+  // The fixed amount of memory, in bytes, allocated on the stack below the
+  // Header for purposes such as locals and other fixed values.  Includes all
+  // necessary alignment.
+
+  uint32_t fixedSize() const {
+    MOZ_ASSERT(localSize_ != UINT32_MAX);
+#ifdef RABALDR_CHUNKY_STACK
+    return localSize_ + InitialChunk;
+#else
+    return localSize_;
+#endif
+  }
+
+ protected:
+  //////////////////////////////////////////////////////////////////////
+  //
+  // The Dynamic area - the dynamic part of the frame, for spilling and saving
+  // intermediate values.
+
+  // Offset off of sp_ for the slot at stack area location `offset`.
+
+  int32_t stackOffset(int32_t offset) { return masm.framePushed() - offset; }
+
+#ifdef RABALDR_CHUNKY_STACK
+  void pushChunkyBytes(uint32_t bytes) {
+    MOZ_ASSERT(bytes <= ChunkSize);
+    checkChunkyInvariants();
+    if (masm.framePushed() - currentStackHeight_ < bytes) {
+      masm.reserveStack(ChunkSize);
+    }
+    currentStackHeight_ += bytes;
+    checkChunkyInvariants();
+  }
+
+  void popChunkyBytes(uint32_t bytes) {
+    checkChunkyInvariants();
+    currentStackHeight_ -= bytes;
+    // Sometimes, popChunkyBytes() is used to pop a larger area, as when we
+    // drop values consumed by a call, and we may need to drop several
+    // chunks.  But never drop the initial chunk.
+    if (masm.framePushed() - currentStackHeight_ >= ChunkSize) {
+      uint32_t target =
+          Max(fixedSize(), AlignBytes(currentStackHeight_, ChunkSize));
+      uint32_t amount = masm.framePushed() - target;
+      if (amount) {
+        masm.freeStack(amount);
+      }
+      MOZ_ASSERT(masm.framePushed() >= fixedSize());
+    }
+    checkChunkyInvariants();
+  }
+#endif
+
+  uint32_t currentStackHeight() const {
+#ifdef RABALDR_CHUNKY_STACK
+    return currentStackHeight_;
+#else
+    return masm.framePushed();
+#endif
+  }
+
+ private:
+#ifdef RABALDR_CHUNKY_STACK
+  void checkChunkyInvariants() {
+    MOZ_ASSERT(masm.framePushed() >= currentStackHeight_);
+    MOZ_ASSERT(masm.framePushed() == fixedSize() ||
+               masm.framePushed() - currentStackHeight_ < ChunkSize);
+  }
+#endif
+
+  // For a given stack height, return the appropriate size of the allocated
+  // frame.
+
+  uint32_t framePushedForHeight(StackHeight stackHeight) {
+#ifdef RABALDR_CHUNKY_STACK
+    // The allocated frame size is frequently larger than the stack height;
+    // we round up to a chunk boundary, and special case the initial chunk.
+    return stackHeight.height <= fixedSize()
+               ? fixedSize()
+               : fixedSize() +
+                     AlignBytes(stackHeight.height - fixedSize(), ChunkSize);
+#else
+    // The allocated frame size equals the stack height.
+    return stackHeight.height;
+#endif
+  }
+
+ public:
+  // The current height of the stack area, not necessarily zero-based, in a
+  // type-safe way.
+
+  StackHeight stackHeight() const { return StackHeight(currentStackHeight()); }
+
+  // Set the frame height to a previously recorded value.
+
+  void setStackHeight(StackHeight amount) {
+#ifdef RABALDR_CHUNKY_STACK
+    currentStackHeight_ = amount.height;
+    masm.setFramePushed(framePushedForHeight(amount));
+    checkChunkyInvariants();
+#else
+    masm.setFramePushed(amount.height);
+#endif
+  }
+
+  // The current height of the dynamic part of the stack area (ie, the backing
+  // store for the evaluation stack), zero-based.
+
+  uint32_t dynamicHeight() const { return currentStackHeight() - localSize_; }
+
+  // Before branching to an outer control label, pop the execution stack to
+  // the level expected by that region, but do not update masm.framePushed()
+  // as that will happen as compilation leaves the block.
+  //
+  // Note these operate directly on the stack pointer register.
+
+  void popStackBeforeBranch(StackHeight destStackHeight) {
+    uint32_t framePushedHere = masm.framePushed();
+    uint32_t framePushedThere = framePushedForHeight(destStackHeight);
+    if (framePushedHere > framePushedThere) {
+      masm.addToStackPtr(Imm32(framePushedHere - framePushedThere));
+    }
+  }
+
+  bool willPopStackBeforeBranch(StackHeight destStackHeight) {
+    uint32_t framePushedHere = masm.framePushed();
+    uint32_t framePushedThere = framePushedForHeight(destStackHeight);
+    return framePushedHere > framePushedThere;
+  }
+
+  // Before exiting a nested control region, pop the execution stack
+  // to the level expected by the nesting region, and free the
+  // stack.
+  //
+  // Note this operates on the stack height, which is not the same as the
+  // stack pointer on chunky-stack systems; the stack pointer may or may not
+  // change on such systems.
+
+  void popStackOnBlockExit(StackHeight destStackHeight, bool deadCode) {
+    uint32_t stackHeightHere = currentStackHeight();
+    uint32_t stackHeightThere = destStackHeight.height;
+    if (stackHeightHere > stackHeightThere) {
+#ifdef RABALDR_CHUNKY_STACK
+      if (deadCode) {
+        setStackHeight(destStackHeight);
+      } else {
+        popChunkyBytes(stackHeightHere - stackHeightThere);
+      }
+#else
+      if (deadCode) {
+        masm.setFramePushed(stackHeightThere);
+      } else {
+        masm.freeStack(stackHeightHere - stackHeightThere);
+      }
+#endif
+    }
+  }
+
+ public:
+  //////////////////////////////////////////////////////////////////////
+  //
+  // The Argument area - for outgoing calls.
+  //
+  // We abstract these operations as an optimization: we can merge the freeing
+  // of the argument area and dropping values off the stack after a call.  But
+  // they always amount to manipulating the real stack pointer by some amount.
+  //
+  // Note that we do not update currentStackHeight_ for this; the frame does
+  // not know about outgoing arguments.  But we do update framePushed(), so we
+  // can still index into the frame below the outgoing arguments area.
+
+  // This is always equivalent to a masm.reserveStack() call.
+
+  void allocArgArea(size_t argSize) {
+    if (argSize) {
+      masm.reserveStack(argSize);
+    }
+  }
+
+  // This frees the argument area allocated by allocArgArea(), and `argSize`
+  // must be equal to the `argSize` argument to allocArgArea().  In addition
+  // we drop some values from the frame, corresponding to the values that were
+  // consumed by the call.
+
+  void freeArgAreaAndPopBytes(size_t argSize, size_t dropSize) {
+#ifdef RABALDR_CHUNKY_STACK
+    // Freeing the outgoing arguments and freeing the consumed values have
+    // different semantics here, which is why the operation is split.
+    if (argSize) {
+      masm.freeStack(argSize);
+    }
+    popChunkyBytes(dropSize);
+#else
+    if (argSize + dropSize) {
+      masm.freeStack(argSize + dropSize);
+    }
+#endif
+  }
+};
+
+class BaseStackFrame final : public BaseStackFrameAllocator {
   MacroAssembler& masm;
 
-  // Size of local area in bytes (stable after beginFunction).
-  uint32_t localSize_;
+  // The largest observed value of masm.framePushed(), ie, the size of the
+  // stack frame.  Read this for its true value only when code generation is
+  // finished.
+  uint32_t maxFramePushed_;
+
+  // Patch point where we check for stack overflow.
+  CodeOffset stackAddOffset_;
 
   // Low byte offset of local area for true locals (not parameters).
   uint32_t varLow_;
@@ -1122,44 +1416,71 @@ class BaseStackFrame {
   // High byte offset + 1 of local area for true locals.
   uint32_t varHigh_;
 
-#ifdef RABALDR_CHUNKY_STACK
-  // The current logical height of the frame, ie the sum of space for locals
-  // and space for what is currently pushed.  The allocated size of the frame
-  // -- provided by masm.framePushed() -- is usually larger than
-  // currentFramePushed_, notably at the beginning of execution when we've
-  // allocated InitialChunk extra space.
-  uint32_t currentFramePushed_;
-#endif
-
-  // The largest observed value of currentFramePushed().  Read this for its
-  // true value only when code generation is finished.
-  uint32_t maxFramePushed_;
-
-  // Patch point where we check for stack overflow.
-  CodeOffset stackAddOffset_;
-
   // The stack pointer, cached for brevity.
   RegisterOrSP sp_;
 
  public:
   explicit BaseStackFrame(MacroAssembler& masm)
-      : masm(masm),
-        localSize_(UINT32_MAX),
-        varLow_(UINT32_MAX),
-        varHigh_(UINT32_MAX),
-#ifdef RABALDR_CHUNKY_STACK
-        currentFramePushed_(0),
-#endif
+      : BaseStackFrameAllocator(masm),
+        masm(masm),
         maxFramePushed_(0),
         stackAddOffset_(0),
-        sp_(masm.getStackPointer()) {
+        varLow_(UINT32_MAX),
+        varHigh_(UINT32_MAX),
+        sp_(masm.getStackPointer()) {}
+
+  ///////////////////////////////////////////////////////////////////////////
+  //
+  // Stack management and overflow checking
+
+  // This must be called once beginFunction has allocated space for the Header
+  // (the Frame and DebugFrame) and the Local area, and will record the current
+  // frame size for internal use by the stack abstractions.
+
+  void onFixedStackAllocated() {
+    maxFramePushed_ = masm.framePushed();
+    BaseStackFrameAllocator::onFixedStackAllocated();
   }
 
-  //////////////////////////////////////////////////////////////////////
+  // We won't know until after we've generated code how big the frame will be
+  // (we may need arbitrary spill slots and outgoing param slots) so emit a
+  // patchable add that is patched in endFunction().
   //
-  // The local area.
+  // Note the platform scratch register may be used by branchPtr(), so
+  // generally tmp must be something else.
 
-  // Locals - the static part of the frame.
+  void checkStack(Register tmp, BytecodeOffset trapOffset) {
+    stackAddOffset_ = masm.sub32FromStackPtrWithPatch(tmp);
+    Label ok;
+    masm.branchPtr(Assembler::Below,
+                   Address(WasmTlsReg, offsetof(wasm::TlsData, stackLimit)),
+                   tmp, &ok);
+    masm.wasmTrap(Trap::StackOverflow, trapOffset);
+    masm.bind(&ok);
+  }
+
+  void patchCheckStack() {
+    masm.patchSub32FromStackPtr(stackAddOffset_,
+                                Imm32(int32_t(maxFramePushed_)));
+  }
+
+  // Very large frames are implausible, probably an attack.
+
+  bool checkStackHeight() {
+    // 512KiB should be enough, considering how Rabaldr uses the stack and
+    // what the standard limits are:
+    //
+    // - 1,000 parameters
+    // - 50,000 locals
+    // - 10,000 values on the eval stack (not an official limit)
+    //
+    // At sizeof(int64) bytes per slot this works out to about 480KiB.
+    return maxFramePushed_ <= 512 * 1024;
+  }
+
+  ///////////////////////////////////////////////////////////////////////////
+  //
+  // Local area
 
   struct Local {
     // Type of the value.
@@ -1177,22 +1498,9 @@ class BaseStackFrame {
 
   using LocalVector = Vector<Local, 8, SystemAllocPolicy>;
 
- private:
-  // Offset off of sp_ for `local`.
-  int32_t localOffset(const Local& local) { return localOffset(local.offs); }
-
-  // Offset off of sp_ for a local with offset `offset` from Frame.
-  int32_t localOffset(int32_t offset) { return masm.framePushed() - offset; }
-
-  // Just an alias, for clarity.
-  uint32_t minimumSize() const { return fixedSize(); }
-
- public:
   // Initialize `localInfo` based on the types of `locals` and `args`.
   bool setupLocals(const ValTypeVector& locals, const ValTypeVector& args,
                    bool debugEnabled, LocalVector* localInfo) {
-    MOZ_ASSERT(maxFramePushed_ != UINT32_MAX);
-
     if (!localInfo->reserve(locals.length())) {
       return false;
     }
@@ -1217,26 +1525,9 @@ class BaseStackFrame {
       index++;
     }
 
-    localSize_ = AlignBytes(varHigh_, WasmStackAlignment);
-    maxFramePushed_ = localSize_;
-#ifdef RABALDR_CHUNKY_STACK
-    currentFramePushed_ = localSize_;
-#endif
+    setLocalSize(AlignBytes(varHigh_, WasmStackAlignment));
+
     return true;
-  }
-
-  // The fixed amount of memory, in bytes, allocated on the stack below the
-  // Frame for purposes such as locals and other fixed values.  Includes all
-  // necessary alignment.
-
-  uint32_t fixedSize() const {
-    MOZ_ASSERT(localSize_ != UINT32_MAX);
-
-#ifdef RABALDR_CHUNKY_STACK
-    return localSize_ + InitialChunk;
-#else
-    return localSize_;
-#endif
   }
 
   void zeroLocals(BaseRegAlloc* ra);
@@ -1291,74 +1582,18 @@ class BaseStackFrame {
     masm.storeFloat32(src, Address(sp_, localOffset(dest)));
   }
 
-  //////////////////////////////////////////////////////////////////////
-  //
-  // The stack area - the dynamic part of the frame.
-
  private:
-  // Offset off of sp_ for the slot at stack area location `offset`
-  int32_t stackOffset(int32_t offset) { return masm.framePushed() - offset; }
+  // Offset off of sp_ for `local`.
+  int32_t localOffset(const Local& local) { return localOffset(local.offs); }
 
-#ifdef RABALDR_CHUNKY_STACK
-
-#define CHUNKY_INVARIANT()                               \
-  MOZ_ASSERT(masm.framePushed() >= currentFramePushed_); \
-  MOZ_ASSERT(masm.framePushed() == minimumSize() ||      \
-             masm.framePushed() - currentFramePushed_ < ChunkSize)
-
-  void pushChunkyBytes(uint32_t bytes) {
-    CHUNKY_INVARIANT();
-    if (masm.framePushed() - currentFramePushed_ < bytes) {
-      masm.reserveStack(ChunkSize);
-    }
-    currentFramePushed_ += bytes;
-    CHUNKY_INVARIANT();
-  }
-
-  void popChunkyBytes(uint32_t bytes) {
-    CHUNKY_INVARIANT();
-    currentFramePushed_ -= bytes;
-    // Sometimes, popChunkyBytes() is used to pop a larger area, as when we
-    // drop values consumed by a call, and we may need to drop several
-    // chunks.  But never drop the initial chunk.
-    if (masm.framePushed() - currentFramePushed_ >= ChunkSize) {
-      uint32_t target =
-          Max(minimumSize(), AlignBytes(currentFramePushed_, ChunkSize));
-      uint32_t amount = masm.framePushed() - target;
-      if (amount) {
-        masm.freeStack(amount);
-      }
-      MOZ_ASSERT(masm.framePushed() >= minimumSize());
-    }
-    CHUNKY_INVARIANT();
-  }
-#endif
-
-  // For a given stack height, return the appropriate size of the allocated
-  // frame.
-  uint32_t framePushedForHeight(StackHeight stackHeight) {
-#ifdef RABALDR_CHUNKY_STACK
-    // The allocated frame size is frequently larger than the stack height;
-    // we round up to a chunk boundary, and special case the initial chunk.
-    return stackHeight.height <= minimumSize()
-               ? minimumSize()
-               : minimumSize() +
-                     AlignBytes(stackHeight.height - minimumSize(), ChunkSize);
-#else
-    // The allocated frame size equals the stack height.
-    return stackHeight.height;
-#endif
-  }
-
-  uint32_t currentFramePushed() const {
-#ifdef RABALDR_CHUNKY_STACK
-    return currentFramePushed_;
-#else
-    return masm.framePushed();
-#endif
-  }
+  // Offset off of sp_ for a local with offset `offset` from Frame.
+  int32_t localOffset(int32_t offset) { return masm.framePushed() - offset; }
 
  public:
+  ///////////////////////////////////////////////////////////////////////////
+  //
+  // Dynamic area
+
   // Sizes of items in the stack area.
   //
   // The size values come from the implementations of Push() in
@@ -1376,129 +1611,76 @@ class BaseStackFrame {
 #endif
   static const size_t StackSizeOfDouble = sizeof(double);
 
-  // We won't know until after we've generated code how big the frame will be
-  // (we may need arbitrary spill slots and outgoing param slots) so emit a
-  // patchable add that is patched in endFunction().
-  //
-  // Note the platform scratch register may be used by branchPtr(), so
-  // generally tmp must be something else.
-
-  void checkStack(Register tmp, BytecodeOffset trapOffset) {
-    stackAddOffset_ = masm.sub32FromStackPtrWithPatch(tmp);
-    Label ok;
-    masm.branchPtr(Assembler::Below,
-                   Address(WasmTlsReg, offsetof(wasm::TlsData, stackLimit)),
-                   tmp, &ok);
-    masm.wasmTrap(Trap::StackOverflow, trapOffset);
-    masm.bind(&ok);
-  }
-
-  void patchCheckStack() {
-    masm.patchSub32FromStackPtr(stackAddOffset_,
-                                Imm32(int32_t(maxFramePushed_)));
-  }
-
-  // Very large frames are implausible, probably an attack.
-  bool checkStackHeight() {
-    // 512KiB should be enough, considering how Rabaldr uses the stack and
-    // what the standard limits are:
-    //
-    // - 1,000 parameters
-    // - 50,000 locals
-    // - 10,000 values on the eval stack (not an official limit)
-    //
-    // At sizeof(int64) bytes per slot this works out to about 480KiB.
-    return maxFramePushed_ <= 512 * 1024;
-  }
-
-  // The current height of the stack area, not necessarily zero-based.
-  StackHeight stackHeight() const { return StackHeight(currentFramePushed()); }
-
-  // The current height of the dynamic part of the stack area (ie, the backing
-  // store for the evaluation stack), zero-based.
-  uint32_t dynamicHeight() const { return currentFramePushed() - localSize_; }
-
-  // Set the frame height.
-  void setStackHeight(StackHeight amount) {
-#ifdef RABALDR_CHUNKY_STACK
-    currentFramePushed_ = amount.height;
-    masm.setFramePushed(framePushedForHeight(amount));
-    CHUNKY_INVARIANT();
-#else
-    masm.setFramePushed(amount.height);
-#endif
-  }
-
   uint32_t pushPtr(Register r) {
-    DebugOnly<uint32_t> stackBefore = currentFramePushed();
+    DebugOnly<uint32_t> stackBefore = currentStackHeight();
 #ifdef RABALDR_CHUNKY_STACK
     pushChunkyBytes(StackSizeOfPtr);
-    masm.storePtr(r, Address(sp_, stackOffset(currentFramePushed())));
+    masm.storePtr(r, Address(sp_, stackOffset(currentStackHeight())));
 #else
     masm.Push(r);
 #endif
-    maxFramePushed_ = Max(maxFramePushed_, currentFramePushed());
-    MOZ_ASSERT(stackBefore + StackSizeOfPtr == currentFramePushed());
-    return currentFramePushed();
+    maxFramePushed_ = Max(maxFramePushed_, masm.framePushed());
+    MOZ_ASSERT(stackBefore + StackSizeOfPtr == currentStackHeight());
+    return currentStackHeight();
   }
 
   uint32_t pushFloat32(FloatRegister r) {
-    DebugOnly<uint32_t> stackBefore = currentFramePushed();
+    DebugOnly<uint32_t> stackBefore = currentStackHeight();
 #ifdef RABALDR_CHUNKY_STACK
     pushChunkyBytes(StackSizeOfFloat);
-    masm.storeFloat32(r, Address(sp_, stackOffset(currentFramePushed())));
+    masm.storeFloat32(r, Address(sp_, stackOffset(currentStackHeight())));
 #else
     masm.Push(r);
 #endif
-    maxFramePushed_ = Max(maxFramePushed_, currentFramePushed());
-    MOZ_ASSERT(stackBefore + StackSizeOfFloat == currentFramePushed());
-    return currentFramePushed();
+    maxFramePushed_ = Max(maxFramePushed_, masm.framePushed());
+    MOZ_ASSERT(stackBefore + StackSizeOfFloat == currentStackHeight());
+    return currentStackHeight();
   }
 
   uint32_t pushDouble(FloatRegister r) {
-    DebugOnly<uint32_t> stackBefore = currentFramePushed();
+    DebugOnly<uint32_t> stackBefore = currentStackHeight();
 #ifdef RABALDR_CHUNKY_STACK
     pushChunkyBytes(StackSizeOfDouble);
-    masm.storeDouble(r, Address(sp_, stackOffset(currentFramePushed())));
+    masm.storeDouble(r, Address(sp_, stackOffset(currentStackHeight())));
 #else
     masm.Push(r);
 #endif
-    maxFramePushed_ = Max(maxFramePushed_, currentFramePushed());
-    MOZ_ASSERT(stackBefore + StackSizeOfDouble == currentFramePushed());
-    return currentFramePushed();
+    maxFramePushed_ = Max(maxFramePushed_, masm.framePushed());
+    MOZ_ASSERT(stackBefore + StackSizeOfDouble == currentStackHeight());
+    return currentStackHeight();
   }
 
   void popPtr(Register r) {
-    DebugOnly<uint32_t> stackBefore = currentFramePushed();
+    DebugOnly<uint32_t> stackBefore = currentStackHeight();
 #ifdef RABALDR_CHUNKY_STACK
-    masm.loadPtr(Address(sp_, stackOffset(currentFramePushed())), r);
+    masm.loadPtr(Address(sp_, stackOffset(currentStackHeight())), r);
     popChunkyBytes(StackSizeOfPtr);
 #else
     masm.Pop(r);
 #endif
-    MOZ_ASSERT(stackBefore - StackSizeOfPtr == currentFramePushed());
+    MOZ_ASSERT(stackBefore - StackSizeOfPtr == currentStackHeight());
   }
 
   void popFloat32(FloatRegister r) {
-    DebugOnly<uint32_t> stackBefore = currentFramePushed();
+    DebugOnly<uint32_t> stackBefore = currentStackHeight();
 #ifdef RABALDR_CHUNKY_STACK
-    masm.loadFloat32(Address(sp_, stackOffset(currentFramePushed())), r);
+    masm.loadFloat32(Address(sp_, stackOffset(currentStackHeight())), r);
     popChunkyBytes(StackSizeOfFloat);
 #else
     masm.Pop(r);
 #endif
-    MOZ_ASSERT(stackBefore - StackSizeOfFloat == currentFramePushed());
+    MOZ_ASSERT(stackBefore - StackSizeOfFloat == currentStackHeight());
   }
 
   void popDouble(FloatRegister r) {
-    DebugOnly<uint32_t> stackBefore = currentFramePushed();
+    DebugOnly<uint32_t> stackBefore = currentStackHeight();
 #ifdef RABALDR_CHUNKY_STACK
-    masm.loadDouble(Address(sp_, stackOffset(currentFramePushed())), r);
+    masm.loadDouble(Address(sp_, stackOffset(currentStackHeight())), r);
     popChunkyBytes(StackSizeOfDouble);
 #else
     masm.Pop(r);
 #endif
-    MOZ_ASSERT(stackBefore - StackSizeOfDouble == currentFramePushed());
+    MOZ_ASSERT(stackBefore - StackSizeOfDouble == currentStackHeight());
   }
 
   void popBytes(size_t bytes) {
@@ -1507,54 +1689,6 @@ class BaseStackFrame {
       popChunkyBytes(bytes);
 #else
       masm.freeStack(bytes);
-#endif
-    }
-  }
-
-  // Before branching to an outer control label, pop the execution stack to
-  // the level expected by that region, but do not update masm.framePushed()
-  // as that will happen as compilation leaves the block.
-  //
-  // Note these operate directly on the stack pointer register.
-
-  void popStackBeforeBranch(StackHeight destStackHeight) {
-    uint32_t framePushedHere = masm.framePushed();
-    uint32_t framePushedThere = framePushedForHeight(destStackHeight);
-    if (framePushedHere > framePushedThere) {
-      masm.addToStackPtr(Imm32(framePushedHere - framePushedThere));
-    }
-  }
-
-  bool willPopStackBeforeBranch(StackHeight destStackHeight) {
-    uint32_t framePushedHere = masm.framePushed();
-    uint32_t framePushedThere = framePushedForHeight(destStackHeight);
-    return framePushedHere > framePushedThere;
-  }
-
-  // Before exiting a nested control region, pop the execution stack
-  // to the level expected by the nesting region, and free the
-  // stack.
-  //
-  // Note this operates on the stack height, which is not the same as the
-  // stack pointer on chunky-stack systems; the stack pointer may or may not
-  // change on such systems.
-
-  void popStackOnBlockExit(StackHeight destStackHeight, bool deadCode) {
-    uint32_t stackHeightHere = currentFramePushed();
-    uint32_t stackHeightThere = destStackHeight.height;
-    if (stackHeightHere > stackHeightThere) {
-#ifdef RABALDR_CHUNKY_STACK
-      if (deadCode) {
-        setStackHeight(destStackHeight);
-      } else {
-        popChunkyBytes(stackHeightHere - stackHeightThere);
-      }
-#else
-      if (deadCode) {
-        masm.setFramePushed(stackHeightThere);
-      } else {
-        masm.freeStack(stackHeightHere - stackHeightThere);
-      }
 #endif
     }
   }
@@ -1591,44 +1725,6 @@ class BaseStackFrame {
   void loadStackF32(int32_t offset, RegF32 dest) {
     masm.loadFloat32(Address(sp_, stackOffset(offset)), dest);
   }
-
-  //////////////////////////////////////////////////////////////////////
-  //
-  // The argument area - for outgoing calls.
-  //
-  // We abstract these operations as an optimization: we can merge the freeing
-  // of the argument area and dropping values off the stack after a call.  But
-  // they always amount to manipulating the real stack pointer by some amount.
-  //
-  // Note that we do not update currentFramePushed_ for this; the frame does
-  // not know about outgoing arguments.  But we do update framePushed(), so we
-  // can still index into the frame below the outgoing arguments area.
-
-  // This is always equivalent to a masm.reserveStack() call.
-  void allocArgArea(size_t argSize) {
-    if (argSize) {
-      masm.reserveStack(argSize);
-    }
-  }
-
-  // This frees the argument area allocated by allocArgArea(), and `argSize`
-  // must be equal to the `argSize` argument to allocArgArea().  In addition
-  // we drop some values from the frame, corresponding to the values that were
-  // consumed by the call.
-  void freeArgAreaAndPopBytes(size_t argSize, size_t dropSize) {
-#ifdef RABALDR_CHUNKY_STACK
-    // Freeing the outgoing arguments and freeing the consumed values have
-    // different semantics here, which is why the operation is split.
-    if (argSize) {
-      masm.freeStack(argSize);
-    }
-    popChunkyBytes(dropSize);
-#else
-    if (argSize + dropSize) {
-      masm.freeStack(argSize + dropSize);
-    }
-#endif
-  }
 };
 
 void BaseStackFrame::zeroLocals(BaseRegAlloc* ra) {
@@ -1655,7 +1751,6 @@ void BaseStackFrame::zeroLocals(BaseRegAlloc* ra) {
   MOZ_ASSERT(low % wordSize == 0);
 
   const uint32_t high = AlignBytes(varHigh_, wordSize);
-  MOZ_ASSERT(high <= localSize_, "localSize_ should be aligned at least that");
 
   // An UNROLL_LIMIT of 16 is chosen so that we only need an 8-bit signed
   // immediate to represent the offset in the store instructions in the loop
@@ -3458,6 +3553,7 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     fr.checkStack(ABINonArgReg0, BytecodeOffset(func_.lineOrBytecode));
     masm.reserveStack(fr.fixedSize() - masm.framePushed());
+    fr.onFixedStackAllocated();
 
     // Copy arguments from registers to stack.
 
@@ -11151,7 +11247,6 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env,
   return code->swap(masm);
 }
 
-#undef CHUNKY_INVARIANT
 #undef RABALDR_INT_DIV_I64_CALLOUT
 #undef RABALDR_I64_TO_FLOAT_CALLOUT
 #undef RABALDR_FLOAT_TO_I64_CALLOUT

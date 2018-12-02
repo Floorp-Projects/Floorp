@@ -6,7 +6,7 @@
 // doesn't exist.
 
 add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html");
+  const dbg = await initDebugger("doc-scripts.html", "long.js");
   const {
     selectors: { getSource },
     getState

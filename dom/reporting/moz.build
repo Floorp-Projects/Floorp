@@ -6,9 +6,13 @@
 
 EXPORTS.mozilla.dom = [
     'DeprecationReportBody.h',
+    'EndpointForReportChild.h',
+    'EndpointForReportParent.h',
     'FeaturePolicyViolationReportBody.h',
     'Report.h',
     'ReportBody.h',
+    'ReportDeliver.h',
+    'ReportingHeader.h',
     'ReportingObserver.h',
     'ReportingUtils.h',
     'TestingDeprecatedInterface.h',
@@ -16,12 +20,20 @@ EXPORTS.mozilla.dom = [
 
 UNIFIED_SOURCES += [
     'DeprecationReportBody.cpp',
+    'EndpointForReportChild.cpp',
+    'EndpointForReportParent.cpp',
     'FeaturePolicyViolationReportBody.cpp',
     'Report.cpp',
     'ReportBody.cpp',
+    'ReportDeliver.cpp',
+    'ReportingHeader.cpp',
     'ReportingObserver.cpp',
     'ReportingUtils.cpp',
     'TestingDeprecatedInterface.cpp',
+]
+
+IPDL_SOURCES += [
+    'PEndpointForReport.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
@@ -32,3 +44,6 @@ with Files('**'):
 FINAL_LIBRARY = 'xul'
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
+
+TEST_DIRS += [ 'tests/gtest' ]

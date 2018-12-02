@@ -213,11 +213,18 @@ enum class PreambleResult {
   // Do not perform any further processing.
   Veto,
 
-  // Perform a function redirection as normal if events are not passed through.
+  // If events are not passed through, add an event for the function call and
+  // perform a function redirection as normal.
   Redirect,
 
-  // Do not add an event for the call, as if events were passed through.
-  PassThrough
+  // Don't add an event for the call or perform a normal function redirection.
+  // If events are not passed through, they may still be added for transitive
+  // callees.
+  IgnoreRedirect,
+
+  // Do not add an event for the call or anything it transitively calls, as if
+  // events were passed through.
+  PassThrough,
 };
 
 // Signature for a function that is called on entry to a redirection and can

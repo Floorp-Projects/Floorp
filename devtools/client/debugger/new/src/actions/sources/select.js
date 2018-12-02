@@ -34,10 +34,13 @@ import {
   getSelectedSource
 } from "../../selectors";
 
-import type { Location, Position, Source } from "../../types";
+import type { SourceLocation, PartialPosition, Source } from "../../types";
 import type { ThunkArgs } from "../types";
 
-export const setSelectedLocation = (source: Source, location: Location) => ({
+export const setSelectedLocation = (
+  source: Source,
+  location: SourceLocation
+) => ({
   type: "SET_SELECTED_LOCATION",
   source,
   location
@@ -64,7 +67,10 @@ export const clearSelectedLocation = () => ({
  * @memberof actions/sources
  * @static
  */
-export function selectSourceURL(url: string, options: Position = { line: 1 }) {
+export function selectSourceURL(
+  url: string,
+  options: PartialPosition = { line: 1 }
+) {
   return async ({ dispatch, getState, sourceMaps }: ThunkArgs) => {
     const source = getSourceByURL(getState(), url);
     if (!source) {
@@ -93,7 +99,7 @@ export function selectSource(sourceId: string) {
  * @static
  */
 export function selectLocation(
-  location: Location,
+  location: SourceLocation,
   { keepContext = true }: Object = {}
 ) {
   return async ({ dispatch, getState, sourceMaps, client }: ThunkArgs) => {
@@ -169,7 +175,7 @@ export function selectLocation(
  * @memberof actions/sources
  * @static
  */
-export function selectSpecificLocation(location: Location) {
+export function selectSpecificLocation(location: SourceLocation) {
   return selectLocation(location, { keepContext: false });
 }
 
@@ -177,7 +183,7 @@ export function selectSpecificLocation(location: Location) {
  * @memberof actions/sources
  * @static
  */
-export function jumpToMappedLocation(location: Location) {
+export function jumpToMappedLocation(location: SourceLocation) {
   return async function({ dispatch, getState, client, sourceMaps }: ThunkArgs) {
     if (!client) {
       return;

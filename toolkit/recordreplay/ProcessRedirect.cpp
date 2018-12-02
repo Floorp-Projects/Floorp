@@ -36,6 +36,9 @@ static bool CallPreambleHook(PreambleFn aPreamble, size_t aCallId,
   switch (result) {
     case PreambleResult::Veto:
       return true;
+    case PreambleResult::IgnoreRedirect:
+      RecordReplayInvokeCall(OriginalFunction(aCallId), aArguments);
+      return true;
     case PreambleResult::PassThrough: {
       AutoEnsurePassThroughThreadEvents pt;
       RecordReplayInvokeCall(OriginalFunction(aCallId), aArguments);
