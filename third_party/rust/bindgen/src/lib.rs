@@ -431,7 +431,7 @@ impl Builder {
         //Temporary placeholder for below 4 options
         let mut options: Vec<String> = Vec::new();
         if self.options.codegen_config.functions() {
-            options.push("function".into());
+            options.push("functions".into());
         }
         if self.options.codegen_config.types() {
             options.push("types".into());
@@ -1675,7 +1675,7 @@ fn ensure_libclang_is_loaded() {
 #[derive(Debug)]
 pub struct Bindings {
     options: BindgenOptions,
-    module: quote::Tokens,
+    module: proc_macro2::TokenStream,
 }
 
 impl Bindings {
@@ -1863,7 +1863,7 @@ impl Bindings {
             None => {
                 let path = which::which("rustfmt")
                     .map_err(|e| {
-                        io::Error::new(io::ErrorKind::Other, e.to_owned())
+                        io::Error::new(io::ErrorKind::Other, format!("{}", e))
                     })?;
 
                 Cow::Owned(path)
@@ -2053,7 +2053,7 @@ fn commandline_flag_unit_test_function() {
         "--rust-target",
         "--no-derive-default",
         "--generate",
-        "function,types,vars,methods,constructors,destructors",
+        "functions,types,vars,methods,constructors,destructors",
     ].iter()
         .map(|&x| x.into())
         .collect::<Vec<String>>();
@@ -2074,7 +2074,7 @@ fn commandline_flag_unit_test_function() {
         "input_header",
         "--no-derive-default",
         "--generate",
-        "function,types,vars,methods,constructors,destructors",
+        "functions,types,vars,methods,constructors,destructors",
         "--whitelist-type",
         "Distinct_Type",
         "--whitelist-function",

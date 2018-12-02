@@ -1,28 +1,29 @@
 use syn;
 
-use Result;
 use codegen;
 use options::{Core, ParseAttribute, ParseData};
+use Result;
 
-pub struct FmiOptions {
-    base: Core
+pub struct FromMetaOptions {
+    base: Core,
 }
 
-impl FmiOptions {
+impl FromMetaOptions {
     pub fn new(di: &syn::DeriveInput) -> Result<Self> {
-        (FmiOptions {
+        (FromMetaOptions {
             base: Core::start(di),
-        }).parse_attributes(&di.attrs)?.parse_body(&di.data)
+        }).parse_attributes(&di.attrs)?
+            .parse_body(&di.data)
     }
 }
 
-impl ParseAttribute for FmiOptions {
+impl ParseAttribute for FromMetaOptions {
     fn parse_nested(&mut self, mi: &syn::Meta) -> Result<()> {
         self.base.parse_nested(mi)
     }
 }
 
-impl ParseData for FmiOptions {
+impl ParseData for FromMetaOptions {
     fn parse_variant(&mut self, variant: &syn::Variant) -> Result<()> {
         self.base.parse_variant(variant)
     }
@@ -32,9 +33,9 @@ impl ParseData for FmiOptions {
     }
 }
 
-impl<'a> From<&'a FmiOptions> for codegen::FmiImpl<'a> {
-    fn from(v: &'a FmiOptions) -> Self {
-        codegen::FmiImpl {
+impl<'a> From<&'a FromMetaOptions> for codegen::FromMetaImpl<'a> {
+    fn from(v: &'a FromMetaOptions) -> Self {
+        codegen::FromMetaImpl {
             base: (&v.base).into(),
         }
     }

@@ -10,7 +10,7 @@ use super::derive::{CanDeriveCopy, CanDeriveDebug, CanDeriveDefault,
                     CanDeriveHash, CanDerivePartialOrd, CanDeriveOrd,
                     CanDerivePartialEq, CanDeriveEq, CanDerive};
 use super::int::IntKind;
-use super::item::{IsOpaque, Item, ItemAncestors, ItemCanonicalPath, ItemSet};
+use super::item::{IsOpaque, Item, ItemAncestors, ItemSet};
 use super::item_kind::ItemKind;
 use super::module::{Module, ModuleKind};
 use super::template::{TemplateInstantiation, TemplateParameters};
@@ -24,7 +24,7 @@ use cexpr;
 use clang::{self, Cursor};
 use clang_sys;
 use parse::ClangItemParser;
-use proc_macro2::{Term, Span};
+use proc_macro2::{Ident, Span};
 use std::borrow::Cow;
 use std::cell::Cell;
 use std::collections::{HashMap, HashSet, hash_map};
@@ -922,7 +922,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     }
 
     /// Returns a mangled name as a rust identifier.
-    pub fn rust_ident<S>(&self, name: S) -> Term
+    pub fn rust_ident<S>(&self, name: S) -> Ident
     where
         S: AsRef<str>
     {
@@ -930,11 +930,11 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     }
 
     /// Returns a mangled name as a rust identifier.
-    pub fn rust_ident_raw<T>(&self, name: T) -> Term
+    pub fn rust_ident_raw<T>(&self, name: T) -> Ident
     where
         T: AsRef<str>
     {
-        Term::new(name.as_ref(), Span::call_site())
+        Ident::new(name.as_ref(), Span::call_site())
     }
 
     /// Iterate over all items that have been defined.
@@ -1107,7 +1107,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                 _ => continue,
             }
 
-            let path = item.canonical_path(self);
+            let path = item.path_for_whitelisting(self);
             let replacement = self.replacements.get(&path[1..]);
 
             if let Some(replacement) = replacement {
@@ -2160,16 +2160,21 @@ If you encounter an error missing from this list, please file an issue or a PR!"
             ::clang_sys::CXCursor_Namespace,
             "Be a nice person"
         );
+
+        let mut module_name = None;
+        let spelling = cursor.spelling();
+        if !spelling.is_empty()
+        {
+            module_name = Some(spelling)
+        }
+
         let tokens = match cursor.tokens() {
             Some(tokens) => tokens,
-            None => return (None, ModuleKind::Normal),
+            None => return (module_name, ModuleKind::Normal),
         };
-
         let mut iter = tokens.iter();
         let mut kind = ModuleKind::Normal;
         let mut found_namespace_keyword = false;
-        let mut module_name = None;
-
         while let Some(token) = iter.next() {
             match &*token.spelling {
                 "inline" => {
@@ -2195,7 +2200,9 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                     break;
                 }
                 name if found_namespace_keyword => {
-                    module_name = Some(name.to_owned());
+                    if module_name.is_none() {
+                        module_name = Some(name.to_owned());
+                    }
                     break;
                 }
                 _ => {
@@ -2300,7 +2307,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                         return true;
                     }
 
-                    let name = item.canonical_path(self)[1..].join("::");
+                    let name = item.path_for_whitelisting(self)[1..].join("::");
                     debug!("whitelisted_items: testing {:?}", name);
                     match *item.kind() {
                         ItemKind::Module(..) => true,
@@ -2317,7 +2324,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
 
                             let parent = self.resolve_item(item.parent_id());
                             if parent.is_module() {
-                                let mut prefix_path = parent.canonical_path(self);
+                                let mut prefix_path = parent.path_for_whitelisting(self);
 
                                 // Unnamed top-level enums are special and we
                                 // whitelist them via the `whitelisted_vars` filter,
@@ -2386,7 +2393,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
 
     /// Convenient method for getting the prefix to use for most traits in
     /// codegen depending on the `use_core` option.
-    pub fn trait_prefix(&self) -> Term {
+    pub fn trait_prefix(&self) -> Ident {
         if self.options().use_core {
             self.rust_ident_raw("core")
         } else {
@@ -2563,19 +2570,19 @@ If you encounter an error missing from this list, please file an issue or a PR!"
 
     /// Check if `--no-partialeq` flag is enabled for this item.
     pub fn no_partialeq_by_name(&self, item: &Item) -> bool {
-        let name = item.canonical_path(self)[1..].join("::");
+        let name = item.path_for_whitelisting(self)[1..].join("::");
         self.options().no_partialeq_types.matches(&name)
     }
 
     /// Check if `--no-copy` flag is enabled for this item.
     pub fn no_copy_by_name(&self, item: &Item) -> bool {
-        let name = item.canonical_path(self)[1..].join("::");
+        let name = item.path_for_whitelisting(self)[1..].join("::");
         self.options().no_copy_types.matches(&name)
     }
 
     /// Check if `--no-hash` flag is enabled for this item.
     pub fn no_hash_by_name(&self, item: &Item) -> bool {
-        let name = item.canonical_path(self)[1..].join("::");
+        let name = item.path_for_whitelisting(self)[1..].join("::");
         self.options().no_hash_types.matches(&name)
     }
 }

@@ -103,7 +103,7 @@
 //! ```
 //!
 //! The [`heapsize`] example directory shows a complete working Macros 1.1
-//! implementation of a custom derive. It works on any Rust compiler \>=1.15.0.
+//! implementation of a custom derive. It works on any Rust compiler 1.15+.
 //! The example derives a `HeapSize` trait which computes an estimate of the
 //! amount of heap memory owned by a value.
 //!
@@ -133,13 +133,6 @@
 //!
 //! ## Spans and error reporting
 //!
-//! The [`heapsize2`] example directory is an extension of the `heapsize`
-//! example that demonstrates some of the hygiene and error reporting properties
-//! of Macros 2.0. This example currently requires a nightly Rust compiler
-//! \>=1.24.0-nightly but we are working to stabilize all of the APIs involved.
-//!
-//! [`heapsize2`]: https://github.com/dtolnay/syn/tree/master/examples/heapsize2
-//!
 //! The token-based procedural macro API provides great control over where the
 //! compiler's error messages are displayed in user code. Consider the error the
 //! user sees if one of their field types does not implement `HeapSize`.
@@ -154,20 +147,8 @@
 //! }
 //! ```
 //!
-//! In the Macros 1.1 string-based procedural macro world, the resulting error
-//! would point unhelpfully to the invocation of the derive macro and not to the
-//! actual problematic field.
-//!
-//! ```text
-//! error[E0599]: no method named `heap_size_of_children` found for type `std::thread::Thread` in the current scope
-//!  --> src/main.rs:4:10
-//!   |
-//! 4 | #[derive(HeapSize)]
-//!   |          ^^^^^^^^
-//! ```
-//!
 //! By tracking span information all the way through the expansion of a
-//! procedural macro as shown in the `heapsize2` example, token-based macros in
+//! procedural macro as shown in the `heapsize` example, token-based macros in
 //! Syn are able to trigger errors that directly pinpoint the source of the
 //! problem.
 //!
@@ -255,7 +236,7 @@
 //!   dynamic library libproc_macro from rustc toolchain.
 
 // Syn types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/syn/0.15.7")]
+#![doc(html_root_url = "https://docs.rs/syn/0.15.22")]
 #![cfg_attr(feature = "cargo-clippy", allow(renamed_and_removed_lints))]
 #![cfg_attr(feature = "cargo-clippy", deny(clippy, clippy_pedantic))]
 // Ignored clippy lints.
@@ -265,15 +246,14 @@
         block_in_if_condition_stmt,
         const_static_lifetime,
         cyclomatic_complexity,
+        deprecated_cfg_attr,
         doc_markdown,
         eval_order_dependence,
         large_enum_variant,
-        match_bool,
-        never_loop,
-        redundant_closure,
         needless_pass_by_value,
+        never_loop,
         redundant_field_names,
-        trivially_copy_pass_by_ref
+        too_many_arguments,
     )
 )]
 // Ignored clippy_pedantic lints.
@@ -284,7 +264,6 @@
         cast_possible_wrap,
         empty_enum,
         if_not_else,
-        indexing_slicing,
         items_after_statements,
         shadow_unrelated,
         similar_names,
@@ -292,7 +271,7 @@
         stutter,
         unseparated_literal_suffix,
         use_self,
-        used_underscore_binding
+        used_underscore_binding,
     )
 )]
 
@@ -325,7 +304,7 @@ pub use ident::Ident;
 #[cfg(any(feature = "full", feature = "derive"))]
 mod attr;
 #[cfg(any(feature = "full", feature = "derive"))]
-pub use attr::{AttrStyle, Attribute, Meta, MetaList, MetaNameValue, NestedMeta};
+pub use attr::{AttrStyle, Attribute, AttributeArgs, Meta, MetaList, MetaNameValue, NestedMeta};
 
 #[cfg(any(feature = "full", feature = "derive"))]
 mod data;
@@ -362,10 +341,7 @@ pub use generics::{
     PredicateLifetime, PredicateType, TraitBound, TraitBoundModifier, TypeParam, TypeParamBound,
     WhereClause, WherePredicate,
 };
-#[cfg(all(
-    any(feature = "full", feature = "derive"),
-    feature = "printing"
-))]
+#[cfg(all(any(feature = "full", feature = "derive"), feature = "printing"))]
 pub use generics::{ImplGenerics, Turbofish, TypeGenerics};
 
 #[cfg(feature = "full")]
@@ -435,16 +411,22 @@ pub mod buffer;
 #[cfg(feature = "parsing")]
 pub mod ext;
 pub mod punctuated;
-#[cfg(all(
-    any(feature = "full", feature = "derive"),
-    feature = "extra-traits"
-))]
+#[cfg(all(any(feature = "full", feature = "derive"), feature = "extra-traits"))]
 mod tt;
 
 // Not public API except the `parse_quote!` macro.
 #[cfg(feature = "parsing")]
 #[doc(hidden)]
 pub mod parse_quote;
+
+// Not public API except the `parse_macro_input!` macro.
+#[cfg(all(
+    not(all(target_arch = "wasm32", target_os = "unknown")),
+    feature = "parsing",
+    feature = "proc-macro"
+))]
+#[doc(hidden)]
+pub mod parse_macro_input;
 
 #[cfg(all(feature = "parsing", feature = "printing"))]
 pub mod spanned;
@@ -580,11 +562,10 @@ pub mod parse;
 
 mod span;
 
-#[cfg(all(
-    any(feature = "full", feature = "derive"),
-    feature = "printing"
-))]
+#[cfg(all(any(feature = "full", feature = "derive"), feature = "printing"))]
 mod print;
+
+mod thread;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -594,10 +575,8 @@ struct private;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#[cfg(feature = "parsing")]
 mod error;
-#[cfg(feature = "parsing")]
-use error::Error;
+pub use error::{Error, Result};
 
 /// Parse tokens of source code into the chosen syntax tree node.
 ///
@@ -650,7 +629,7 @@ use error::Error;
     feature = "parsing",
     feature = "proc-macro"
 ))]
-pub fn parse<T: parse::Parse>(tokens: proc_macro::TokenStream) -> Result<T, Error> {
+pub fn parse<T: parse::Parse>(tokens: proc_macro::TokenStream) -> Result<T> {
     parse::Parser::parse(T::parse, tokens)
 }
 
@@ -667,7 +646,7 @@ pub fn parse<T: parse::Parse>(tokens: proc_macro::TokenStream) -> Result<T, Erro
 ///
 /// *This function is available if Syn is built with the `"parsing"` feature.*
 #[cfg(feature = "parsing")]
-pub fn parse2<T: parse::Parse>(tokens: proc_macro2::TokenStream) -> Result<T, Error> {
+pub fn parse2<T: parse::Parse>(tokens: proc_macro2::TokenStream) -> Result<T> {
     parse::Parser::parse2(T::parse, tokens)
 }
 
@@ -685,8 +664,7 @@ pub fn parse2<T: parse::Parse>(tokens: proc_macro2::TokenStream) -> Result<T, Er
 /// ```rust
 /// # extern crate syn;
 /// #
-/// use syn::Expr;
-/// use syn::parse::Result;
+/// use syn::{Expr, Result};
 ///
 /// fn run() -> Result<()> {
 ///     let code = "assert_eq!(u8::max_value(), 255)";
@@ -698,7 +676,7 @@ pub fn parse2<T: parse::Parse>(tokens: proc_macro2::TokenStream) -> Result<T, Er
 /// # fn main() { run().unwrap() }
 /// ```
 #[cfg(feature = "parsing")]
-pub fn parse_str<T: parse::Parse>(s: &str) -> Result<T, Error> {
+pub fn parse_str<T: parse::Parse>(s: &str) -> Result<T> {
     parse::Parser::parse_str(T::parse, s)
 }
 
@@ -741,7 +719,7 @@ pub fn parse_str<T: parse::Parse>(s: &str) -> Result<T, Error> {
 /// # fn main() { run().unwrap() }
 /// ```
 #[cfg(all(feature = "parsing", feature = "full"))]
-pub fn parse_file(mut content: &str) -> Result<File, Error> {
+pub fn parse_file(mut content: &str) -> Result<File> {
     // Strip the BOM if it is present
     const BOM: &'static str = "\u{feff}";
     if content.starts_with(BOM) {
@@ -762,59 +740,4 @@ pub fn parse_file(mut content: &str) -> Result<File, Error> {
     let mut file: File = parse_str(content)?;
     file.shebang = shebang;
     Ok(file)
-}
-
-/// Parse the input TokenStream of a macro, triggering a compile error if the
-/// tokens fail to parse.
-///
-/// Refer to the [`parse` module] documentation for more details about parsing
-/// in Syn.
-///
-/// [`parse` module]: parse/index.html
-///
-/// # Intended usage
-///
-/// ```rust
-/// #[macro_use]
-/// extern crate syn;
-///
-/// extern crate proc_macro;
-///
-/// use proc_macro::TokenStream;
-/// use syn::parse::{Parse, ParseStream, Result};
-///
-/// struct MyMacroInput {
-///     /* ... */
-/// }
-///
-/// impl Parse for MyMacroInput {
-///     fn parse(input: ParseStream) -> Result<Self> {
-///         /* ... */
-/// #       Ok(MyMacroInput {})
-///     }
-/// }
-///
-/// # const IGNORE: &str = stringify! {
-/// #[proc_macro]
-/// # };
-/// pub fn my_macro(tokens: TokenStream) -> TokenStream {
-///     let input = parse_macro_input!(tokens as MyMacroInput);
-///
-///     /* ... */
-/// #   "".parse().unwrap()
-/// }
-/// #
-/// # fn main() {}
-/// ```
-#[cfg(feature = "proc-macro")]
-#[macro_export]
-macro_rules! parse_macro_input {
-    ($tokenstream:ident as $ty:ty) => {
-        match $crate::parse::<$ty>($tokenstream) {
-            $crate::export::Ok(data) => data,
-            $crate::export::Err(err) => {
-                return $crate::export::TokenStream::from(err.to_compile_error());
-            }
-        };
-    };
 }

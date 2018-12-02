@@ -9,7 +9,7 @@ Darling
 # Usage
 `darling` provides a set of traits which can be derived or manually implemented.
 
-1. `FromMetaItem` is used to extract values from a meta-item in an attribute. Implementations are likely reusable for many libraries, much like `FromStr` or `serde::Deserialize`. Trait implementations are provided for primitives, some std types, and some `syn` types.
+1. `FromMeta` is used to extract values from a meta-item in an attribute. Implementations are likely reusable for many libraries, much like `FromStr` or `serde::Deserialize`. Trait implementations are provided for primitives, some std types, and some `syn` types.
 1. `FromDeriveInput` is implemented or derived by each proc-macro crate which depends on `darling`. This is the root for input parsing; it gets access to the identity, generics, and visibility of the target type, and can specify which attribute names should be parsed or forwarded from the input AST.
 1. `FromField` is implemented or derived by each proc-macro crate which depends on `darling`. Structs deriving this trait will get access to the identity (if it exists), type, and visibility of the field.
 
@@ -20,7 +20,7 @@ Darling
 extern crate darling;
 extern crate syn;
 
-#[derive(Default, FromMetaItem)]
+#[derive(Default, FromMeta)]
 #[darling(default)]
 pub struct Lorem {
     #[darling(rename = "sit")]

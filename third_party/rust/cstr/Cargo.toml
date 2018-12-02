@@ -12,14 +12,14 @@
 
 [package]
 name = "cstr"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Xidorn Quan <me@upsuper.org>"]
 description = "Macro for building static CStr reference"
 keywords = ["macro", "cstr"]
 license = "MIT"
 repository = "https://github.com/upsuper/cstr"
 [dependencies.cstr-macros]
-version = "0.1.2"
+version = "0.1.3"
 
 [dependencies.procedural-masquerade]
 version = "0.1"

@@ -6,8 +6,7 @@ use ir::comp::CompInfo;
 use ir::context::BindgenContext;
 use ir::layout::Layout;
 use ir::ty::{Type, TypeKind};
-use quote;
-use proc_macro2::{Term, Span};
+use proc_macro2::{self, Ident, Span};
 use std::cmp;
 
 /// Trace the layout of struct.
@@ -154,7 +153,7 @@ impl<'a> StructLayoutTracker<'a> {
         field_name: &str,
         field_ty: &Type,
         field_offset: Option<usize>,
-    ) -> Option<quote::Tokens> {
+    ) -> Option<proc_macro2::TokenStream> {
         let mut field_layout = field_ty.layout(self.ctx)?;
 
         if let TypeKind::Array(inner, len) =
@@ -236,7 +235,7 @@ impl<'a> StructLayoutTracker<'a> {
         padding_layout.map(|layout| self.padding_field(layout))
     }
 
-    pub fn pad_struct(&mut self, layout: Layout) -> Option<quote::Tokens> {
+    pub fn pad_struct(&mut self, layout: Layout) -> Option<proc_macro2::TokenStream> {
         debug!(
             "pad_struct:\n\tself = {:#?}\n\tlayout = {:#?}",
             self,
@@ -310,13 +309,13 @@ impl<'a> StructLayoutTracker<'a> {
         align_to(self.latest_offset, layout.align) - self.latest_offset
     }
 
-    fn padding_field(&mut self, layout: Layout) -> quote::Tokens {
+    fn padding_field(&mut self, layout: Layout) -> proc_macro2::TokenStream {
         let ty = helpers::blob(self.ctx, layout);
         let padding_count = self.padding_count;
 
         self.padding_count += 1;
 
-        let padding_field_name = Term::new(&format!("__bindgen_padding_{}", padding_count), Span::call_site());
+        let padding_field_name = Ident::new(&format!("__bindgen_padding_{}", padding_count), Span::call_site());
 
         self.max_field_align = cmp::max(self.max_field_align, layout.align);
 

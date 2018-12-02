@@ -114,36 +114,45 @@ impl<T> Spanned for T
 where
     T: ToTokens,
 {
-    #[cfg(procmacro2_semver_exempt)]
     fn span(&self) -> Span {
-        let mut tokens = TokenStream::new();
-        self.to_tokens(&mut tokens);
-        let mut iter = tokens.into_iter();
-        let mut span = match iter.next() {
-            Some(tt) => tt.span(),
-            None => {
-                return Span::call_site();
-            }
-        };
-        for tt in iter {
-            if let Some(joined) = span.join(tt.span()) {
-                span = joined;
+        join_spans(self.into_token_stream())
+    }
+}
+
+fn join_spans(tokens: TokenStream) -> Span {
+    let mut iter = tokens.into_iter().filter_map(|tt| {
+        // FIXME: This shouldn't be required, since optimally spans should
+        // never be invalid. This filter_map can probably be removed when
+        // https://github.com/rust-lang/rust/issues/43081 is resolved.
+        let span = tt.span();
+        let debug = format!("{:?}", span);
+        if debug.ends_with("bytes(0..0)") {
+            None
+        } else {
+            Some(span)
+        }
+    });
+
+    let mut joined = match iter.next() {
+        Some(span) => span,
+        None => return Span::call_site(),
+    };
+
+    #[cfg(procmacro2_semver_exempt)]
+    {
+        for next in iter {
+            if let Some(span) = joined.join(next) {
+                joined = span;
             }
         }
-        span
     }
 
     #[cfg(not(procmacro2_semver_exempt))]
-    fn span(&self) -> Span {
-        let mut tokens = TokenStream::new();
-        self.to_tokens(&mut tokens);
-        let mut iter = tokens.into_iter();
-
+    {
         // We can't join spans without procmacro2_semver_exempt so just grab the
         // first one.
-        match iter.next() {
-            Some(tt) => tt.span(),
-            None => Span::call_site(),
-        }
+        joined = joined;
     }
+
+    joined
 }
