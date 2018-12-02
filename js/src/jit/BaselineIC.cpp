@@ -110,6 +110,9 @@ void ICEntry::trace(JSTracer* trc) {
 
 /* static */ UniquePtr<ICScript> ICScript::create(JSContext* cx,
                                                   JSScript* script) {
+  MOZ_ASSERT(cx->realm()->jitRealm());
+  MOZ_ASSERT(jit::IsBaselineEnabled(cx));
+
   FallbackICStubSpace stubSpace;
   js::Vector<ICEntry, 16, SystemAllocPolicy> icEntries;
 

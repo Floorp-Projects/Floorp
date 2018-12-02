@@ -4755,6 +4755,16 @@ bool jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg) {
     return true;
   }
 
+  // Check this before calling ensureJitRealmExists, so we're less
+  // likely to report OOM in JSRuntime::createJitRuntime.
+  if (!jit::CanLikelyAllocateMoreExecutableMemory()) {
+    return true;
+  }
+
+  if (!cx->realm()->ensureJitRealmExists(cx)) {
+    return false;
+  }
+
   AutoKeepTypeScripts keepTypes(cx);
   if (!script->ensureHasTypes(cx, keepTypes)) {
     return false;
@@ -4768,14 +4778,6 @@ bool jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg) {
   LifoAlloc alloc(TempAllocator::PreferredLifoChunkSize);
   TempAllocator temp(&alloc);
   JitContext jctx(cx, &temp);
-
-  if (!jit::CanLikelyAllocateMoreExecutableMemory()) {
-    return true;
-  }
-
-  if (!cx->realm()->ensureJitRealmExists(cx)) {
-    return false;
-  }
 
   MIRGraph graph(&temp);
   InlineScriptTree* inlineScriptTree =
