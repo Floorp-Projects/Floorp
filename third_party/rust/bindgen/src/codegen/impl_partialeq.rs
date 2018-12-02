@@ -3,6 +3,7 @@ use ir::comp::{CompInfo, CompKind, Field, FieldMethods};
 use ir::context::BindgenContext;
 use ir::item::{IsOpaque, Item};
 use ir::ty::{TypeKind, RUST_DERIVE_IN_ARRAY_LIMIT};
+use quote;
 use proc_macro2;
 
 /// Generate a manual implementation of `PartialEq` trait for the
@@ -11,8 +12,8 @@ pub fn gen_partialeq_impl(
     ctx: &BindgenContext,
     comp_info: &CompInfo,
     item: &Item,
-    ty_for_impl: &proc_macro2::TokenStream,
-) -> Option<proc_macro2::TokenStream> {
+    ty_for_impl: &quote::Tokens,
+) -> Option<quote::Tokens> {
     let mut tokens = vec![];
 
     if item.is_opaque(ctx, &()) {
@@ -70,8 +71,8 @@ pub fn gen_partialeq_impl(
     })
 }
 
-fn gen_field(ctx: &BindgenContext, ty_item: &Item, name: &str) -> proc_macro2::TokenStream {
-    fn quote_equals(name_ident: proc_macro2::Ident) -> proc_macro2::TokenStream {
+fn gen_field(ctx: &BindgenContext, ty_item: &Item, name: &str) -> quote::Tokens {
+    fn quote_equals(name_ident: proc_macro2::Term) -> quote::Tokens {
         quote! { self.#name_ident == other.#name_ident }
     }
 
