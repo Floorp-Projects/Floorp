@@ -809,7 +809,6 @@ class RecordedDrawFilter : public RecordedDrawingEvent<RecordedDrawFilter> {
 class RecordedPathCreation : public RecordedEventDerived<RecordedPathCreation> {
  public:
   MOZ_IMPLICIT RecordedPathCreation(PathRecording* aPath);
-  ~RecordedPathCreation();
 
   bool PlayEvent(Translator* aTranslator) const override;
 
@@ -824,7 +823,8 @@ class RecordedPathCreation : public RecordedEventDerived<RecordedPathCreation> {
 
   ReferencePtr mRefPtr;
   FillRule mFillRule;
-  std::vector<PathOp> mPathOps;
+  RefPtr<PathRecording> mPath;
+  UniquePtr<PathOps> mPathOps;
 
   template <class S>
   MOZ_IMPLICIT RecordedPathCreation(S& aStream);
@@ -2668,36 +2668,13 @@ inline RecordedPathCreation::RecordedPathCreation(PathRecording* aPath)
     : RecordedEventDerived(PATHCREATION),
       mRefPtr(aPath),
       mFillRule(aPath->mFillRule),
-      mPathOps(aPath->mPathOps) {}
-
-inline RecordedPathCreation::~RecordedPathCreation() {}
+      mPath(aPath) {}
 
 inline bool RecordedPathCreation::PlayEvent(Translator* aTranslator) const {
   RefPtr<PathBuilder> builder =
       aTranslator->GetReferenceDrawTarget()->CreatePathBuilder(mFillRule);
-
-  for (size_t i = 0; i < mPathOps.size(); i++) {
-    const PathOp& op = mPathOps[i];
-    switch (op.mType) {
-      case PathOp::OP_MOVETO:
-        builder->MoveTo(op.mP1);
-        break;
-      case PathOp::OP_LINETO:
-        builder->LineTo(op.mP1);
-        break;
-      case PathOp::OP_BEZIERTO:
-        builder->BezierTo(op.mP1, op.mP2, op.mP3);
-        break;
-      case PathOp::OP_QUADRATICBEZIERTO:
-        builder->QuadraticBezierTo(op.mP1, op.mP2);
-        break;
-      case PathOp::OP_ARC:
-        MOZ_ASSERT_UNREACHABLE("Recordings should not contain arc operations");
-        break;
-      case PathOp::OP_CLOSE:
-        builder->Close();
-        break;
-    }
+  if (!mPathOps->StreamToSink(*builder)) {
+    return false;
   }
 
   RefPtr<Path> path = builder->Finish();
@@ -2708,54 +2685,24 @@ inline bool RecordedPathCreation::PlayEvent(Translator* aTranslator) const {
 template <class S>
 void RecordedPathCreation::Record(S& aStream) const {
   WriteElement(aStream, mRefPtr);
-  WriteElement(aStream, uint64_t(mPathOps.size()));
   WriteElement(aStream, mFillRule);
-  typedef std::vector<PathOp> pathOpVec;
-  for (pathOpVec::const_iterator iter = mPathOps.begin();
-       iter != mPathOps.end(); iter++) {
-    WriteElement(aStream, iter->mType);
-    if (sPointCount[iter->mType] >= 1) {
-      WriteElement(aStream, iter->mP1);
-    }
-    if (sPointCount[iter->mType] >= 2) {
-      WriteElement(aStream, iter->mP2);
-    }
-    if (sPointCount[iter->mType] >= 3) {
-      WriteElement(aStream, iter->mP3);
-    }
-  }
+  mPath->mPathOps.Record(aStream);
 }
 
 template <class S>
 RecordedPathCreation::RecordedPathCreation(S& aStream)
     : RecordedEventDerived(PATHCREATION) {
-  uint64_t size;
-
   ReadElement(aStream, mRefPtr);
-  ReadElement(aStream, size);
   ReadElement(aStream, mFillRule);
-
-  for (uint64_t i = 0; i < size; i++) {
-    PathOp newPathOp;
-    ReadElement(aStream, newPathOp.mType);
-    if (sPointCount[newPathOp.mType] >= 1) {
-      ReadElement(aStream, newPathOp.mP1);
-    }
-    if (sPointCount[newPathOp.mType] >= 2) {
-      ReadElement(aStream, newPathOp.mP2);
-    }
-    if (sPointCount[newPathOp.mType] >= 3) {
-      ReadElement(aStream, newPathOp.mP3);
-    }
-
-    mPathOps.push_back(newPathOp);
-  }
+  mPathOps = MakeUnique<PathOps>(aStream);
 }
 
 inline void RecordedPathCreation::OutputSimpleEventInfo(
     std::stringstream& aStringStream) const {
-  aStringStream << "[" << mRefPtr
-                << "] Path created (OpCount: " << mPathOps.size() << ")";
+  size_t numberOfOps =
+      mPath ? mPath->mPathOps.NumberOfOps() : mPathOps->NumberOfOps();
+  aStringStream << "[" << mRefPtr << "] Path created (OpCount: " << numberOfOps
+                << ")";
 }
 inline bool RecordedPathDestruction::PlayEvent(Translator* aTranslator) const {
   aTranslator->RemovePath(mRefPtr);
