@@ -27,9 +27,9 @@ function test_cross_global(miHelper) {
   miHelper.addGetCalendarInfo(x);
   var waivedX = Cu.waiveXrays(x);
   equal(waivedX.getCalendarInfo instanceof Function, false);
-  equal(waivedX.getCalendarInfo instanceof global.Function, true);
+  equal(waivedX.getCalendarInfo instanceof Cu.waiveXrays(global.Function), true);
   equal(waivedX.getCalendarInfo() instanceof Object, false);
-  equal(waivedX.getCalendarInfo() instanceof global.Object, true);
+  equal(waivedX.getCalendarInfo() instanceof Cu.waiveXrays(global.Object), true);
 }
 
 function test_methods_presence(miHelper) {
