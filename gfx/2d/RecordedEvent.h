@@ -18,9 +18,6 @@
 namespace mozilla {
 namespace gfx {
 
-struct PathOp;
-class PathRecording;
-
 const uint32_t kMagicInt = 0xc001feed;
 
 // A change in major revision means a change in event binary format, causing
