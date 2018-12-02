@@ -26,6 +26,13 @@ add_task(async function setup() {
   });
 });
 
+function openIdentityPopup() {
+  let mainView = document.getElementById("identity-popup-mainView");
+  let viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
+  gIdentityHandler._identityBox.click();
+  return viewShown;
+}
+
 add_task(async function testReportBreakageVisibility() {
   let scenarios = [
     {
@@ -179,9 +186,11 @@ add_task(async function testReportBreakage() {
         let prefs = [
           "privacy.trackingprotection.enabled",
           "privacy.trackingprotection.pbmode.enabled",
+          "browser.contentblocking.trackingprotection.control-center.ui.enabled",
           "urlclassifier.trackingTable",
           "network.http.referer.defaultPolicy",
           "network.http.referer.defaultPolicy.pbmode",
+          "browser.contentblocking.rejecttrackers.control-center.ui.enabled",
           "network.cookie.cookieBehavior",
           "network.cookie.lifetimePolicy",
           "privacy.restrict3rdpartystorage.expiration",
