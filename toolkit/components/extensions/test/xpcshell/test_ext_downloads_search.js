@@ -14,6 +14,9 @@ const TXT_LEN = 46;
 const HTML_FILE = "file_download.html";
 const HTML_URL = BASE + "/" + HTML_FILE;
 const HTML_LEN = 117;
+const EMPTY_FILE = "empty_file_download.txt";
+const EMPTY_URL = BASE + "/" + EMPTY_FILE;
+const EMPTY_LEN = 0;
 const BIG_LEN = 1000; // something bigger both TXT_LEN and HTML_LEN
 
 function backgroundScript() {
@@ -142,6 +145,10 @@ add_task(async function test_search() {
   equal(msg.status, "success", "download() succeeded");
   downloadIds.txt2 = msg.id;
 
+  msg = await download({url: EMPTY_URL});
+  equal(msg.status, "success", "download() succeeded");
+  downloadIds.txt3 = msg.id;
+
   const time2 = new Date();
 
   msg = await download({url: HTML_URL});
@@ -185,6 +192,17 @@ add_task(async function test_search() {
     bytesReceived: TXT_LEN,
     totalBytes: TXT_LEN,
     fileSize: TXT_LEN,
+    exists: true,
+  });
+
+  await checkDownloadItem(downloadIds.txt3, {
+    url: EMPTY_URL,
+    filename: downloadPath(EMPTY_FILE),
+    mime: "text/plain",
+    state: "complete",
+    bytesReceived: EMPTY_LEN,
+    totalBytes: EMPTY_LEN,
+    fileSize: EMPTY_LEN,
     exists: true,
   });
 
@@ -262,7 +280,7 @@ add_task(async function test_search() {
   await checkSearch({filename: downloadPath(TXT_FILE), filenameRegex: HTML_REGEX}, [], "incompatible filename+filename regex");
 
   // Check that simple positive search terms work.
-  await checkSearch({query: ["file_download"]}, ["txt1", "txt2", "html1", "html2"],
+  await checkSearch({query: ["file_download"]}, ["txt1", "txt2", "txt3", "html1", "html2"],
                     "term file_download");
   await checkSearch({query: ["NewFile"]}, ["txt2"], "term NewFile");
 
@@ -304,11 +322,11 @@ add_task(async function test_search() {
 
   // Check startedBefore
   await checkSearchWithDate({startedBefore: time1}, [], "before time1");
-  await checkSearchWithDate({startedBefore: time2}, ["txt1", "txt2"], "before time2");
-  await checkSearchWithDate({startedBefore: time3}, ["txt1", "txt2", "html1", "html2"], "before time3");
+  await checkSearchWithDate({startedBefore: time2}, ["txt1", "txt2", "txt3"], "before time2");
+  await checkSearchWithDate({startedBefore: time3}, ["txt1", "txt2", "txt3", "html1", "html2"], "before time3");
 
   // Check startedAfter
-  await checkSearchWithDate({startedAfter: time1}, ["txt1", "txt2", "html1", "html2"], "after time1");
+  await checkSearchWithDate({startedAfter: time1}, ["txt1", "txt2", "txt3", "html1", "html2"], "after time1");
   await checkSearchWithDate({startedAfter: time2}, ["html1", "html2"], "after time2");
   await checkSearchWithDate({startedAfter: time3}, [], "after time3");
 
@@ -321,9 +339,12 @@ add_task(async function test_search() {
   await checkSearch({totalBytesGreater: 0}, ["txt1", "txt2", "html1", "html2"], "totalBytesGreater than 0");
   await checkSearch({totalBytesGreater: TXT_LEN}, ["html1", "html2"], `totalBytesGreater than ${TXT_LEN}`);
   await checkSearch({totalBytesGreater: HTML_LEN}, [], `totalBytesGreater than ${HTML_LEN}`);
-  await checkSearch({totalBytesLess: TXT_LEN}, [], `totalBytesLess than ${TXT_LEN}`);
-  await checkSearch({totalBytesLess: HTML_LEN}, ["txt1", "txt2"], `totalBytesLess than ${HTML_LEN}`);
-  await checkSearch({totalBytesLess: BIG_LEN}, ["txt1", "txt2", "html1", "html2"], `totalBytesLess than ${BIG_LEN}`);
+  await checkSearch({totalBytesLess: TXT_LEN}, ["txt3"], `totalBytesLess than ${TXT_LEN}`);
+  await checkSearch({totalBytesLess: HTML_LEN}, ["txt1", "txt2", "txt3"], `totalBytesLess than ${HTML_LEN}`);
+  await checkSearch({totalBytesLess: BIG_LEN}, ["txt1", "txt2", "txt3", "html1", "html2"], `totalBytesLess than ${BIG_LEN}`);
+
+  // Bug 1503760 check if 0 byte files with no search query are returned.
+  await checkSearch({}, ["txt1", "txt2", "txt3", "html1", "html2"], "totalBytesGreater than -1");
 
   // Check good combinations of totalBytes*.
   await checkSearch({totalBytes: HTML_LEN, totalBytesGreater: TXT_LEN}, ["html1", "html2"], "totalBytes and totalBytesGreater");
@@ -336,7 +357,7 @@ add_task(async function test_search() {
   await checkSearch({totalBytes: HTML_LEN, totalBytesLess: TXT_LEN}, [], "bad totalBytes, totalBytesLess combination");
 
   // Check mime.
-  await checkSearch({mime: "text/plain"}, ["txt1", "txt2"], "mime text/plain");
+  await checkSearch({mime: "text/plain"}, ["txt1", "txt2", "txt3"], "mime text/plain");
   await checkSearch({mime: "text/html"}, ["html1", "html2"], "mime text/htmlplain");
   await checkSearch({mime: "video/webm"}, [], "mime video/webm");
 
@@ -371,15 +392,16 @@ add_task(async function test_search() {
   }, ["txt1"], "many properties");
 
   // Check simple orderBy (forward and backward).
-  await checkSearch({orderBy: ["startTime"]}, ["txt1", "txt2", "html1", "html2"], "orderBy startTime", true);
-  await checkSearch({orderBy: ["-startTime"]}, ["html2", "html1", "txt2", "txt1"], "orderBy -startTime", true);
+  await checkSearch({orderBy: ["startTime"]}, ["txt1", "txt2", "txt3", "html1", "html2"], "orderBy startTime", true);
+  await checkSearch({orderBy: ["-startTime"]}, ["html2", "html1", "txt3", "txt2", "txt1"], "orderBy -startTime", true);
 
   // Check orderBy with multiple fields.
   // NB: TXT_URL and HTML_URL differ only in extension and .html precedes .txt
-  await checkSearch({orderBy: ["url", "-startTime"]}, ["html2", "html1", "txt2", "txt1"], "orderBy with multiple fields", true);
+  // EMPTY_URL begins with e which precedes f
+  await checkSearch({orderBy: ["url", "-startTime"]}, ["txt3", "html2", "html1", "txt2", "txt1"], "orderBy with multiple fields", true);
 
   // Check orderBy with limit.
-  await checkSearch({orderBy: ["url"], limit: 1}, ["html1"], "orderBy with limit", true);
+  await checkSearch({orderBy: ["url"], limit: 1}, ["txt3"], "orderBy with limit", true);
 
   // Check bad arguments.
   async function checkBadSearch(query, pattern, description) {

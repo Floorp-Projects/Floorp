@@ -29,6 +29,11 @@ var localProviderModules = {
   UrlbarProviderUnifiedComplete: "resource:///modules/UrlbarProviderUnifiedComplete.jsm",
 };
 
+// List of available local muxers, each is implemented in its own jsm module.
+var localMuxerModules = {
+  UrlbarMuxerUnifiedComplete: "resource:///modules/UrlbarMuxerUnifiedComplete.jsm",
+};
+
 // To improve dataflow and reduce UI work, when a match is added by a
 // non-immediate provider, we notify it to the controller after a delay, so
 // that we can chunk matches coming in that timeframe into a single call.
@@ -59,6 +64,13 @@ class ProvidersManager {
     // running a query that shouldn't be interrupted, and if so it should
     // bump this through disableInterrupt and enableInterrupt.
     this.interruptLevel = 0;
+
+    // This maps muxer names to muxers.
+    this.muxers = new Map();
+    for (let [symbol, module] of Object.entries(localMuxerModules)) {
+      let {[symbol]: muxer} = ChromeUtils.import(module, {});
+      this.registerMuxer(muxer);
+    }
   }
 
   /**
@@ -66,10 +78,15 @@ class ProvidersManager {
    * @param {object} provider
    */
   registerProvider(provider) {
-    logger.info(`Registering provider ${provider.name}`);
+    if (!provider || !provider.name ||
+        (typeof provider.startQuery != "function") ||
+        (typeof provider.cancelQuery != "function")) {
+      throw new Error(`Trying to register an invalid provider`);
+    }
     if (!Object.values(UrlbarUtils.PROVIDER_TYPE).includes(provider.type)) {
       throw new Error(`Unknown provider type ${provider.type}`);
     }
+    logger.info(`Registering provider ${provider.name}`);
     this.providers.get(provider.type).set(provider.name, provider);
   }
 
@@ -83,13 +100,41 @@ class ProvidersManager {
   }
 
   /**
+   * Registers a muxer object with the manager.
+   * @param {object} muxer a UrlbarMuxer object
+   */
+  registerMuxer(muxer) {
+    if (!muxer || !muxer.name || (typeof muxer.sort != "function")) {
+      throw new Error(`Trying to register an invalid muxer`);
+    }
+    logger.info(`Registering muxer ${muxer.name}`);
+    this.muxers.set(muxer.name, muxer);
+  }
+
+  /**
+   * Unregisters a previously registered muxer object.
+   * @param {object} muxer a UrlbarMuxer object or name.
+   */
+  unregisterMuxer(muxer) {
+    let muxerName = typeof muxer == "string" ? muxer : muxer.name;
+    logger.info(`Unregistering muxer ${muxerName}`);
+    this.muxers.delete(muxerName);
+  }
+
+  /**
    * Starts querying.
    * @param {object} queryContext The query context object
    * @param {object} controller a UrlbarController instance
    */
   async startQuery(queryContext, controller) {
     logger.info(`Query start ${queryContext.searchString}`);
-    let query = new Query(queryContext, controller, this.providers);
+    let muxerName = queryContext.muxer || "MuxerUnifiedComplete";
+    logger.info(`Using muxer ${muxerName}`);
+    let muxer = this.muxers.get(muxerName);
+    if (!muxer) {
+      throw new Error(`Muxer with name ${muxerName} not found`);
+    }
+    let query = new Query(queryContext, controller, muxer, this.providers);
     this.queries.set(queryContext, query);
     await query.start();
   }
@@ -145,12 +190,15 @@ class Query {
    *        The query context
    * @param {object} controller
    *        The controller to be notified
+   * @param {object} muxer
+   *        The muxer to sort matches
    * @param {object} providers
    *        Map of all the providers by type and name
    */
-  constructor(queryContext, controller, providers) {
+  constructor(queryContext, controller, muxer, providers) {
     this.context = queryContext;
     this.context.results = [];
+    this.muxer = muxer;
     this.controller = controller;
     this.providers = providers;
     this.started = false;
@@ -267,8 +315,7 @@ class Query {
         this._chunkTimer.cancel().catch(Cu.reportError);
         delete this._chunkTimer;
       }
-      // TODO:
-      //  * pass results to a muxer before sending them back to the controller.
+      this.muxer.sort(this.context);
       this.controller.receiveResults(this.context);
     };
 
