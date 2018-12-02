@@ -105,6 +105,12 @@ void (name)(intptr_t bw, intptr_t bh, intptr_t iw, intptr_t ih, intptr_t x, intp
             pixel *dst, ptrdiff_t dst_stride, const pixel *src, ptrdiff_t src_stride)
 typedef decl_emu_edge_fn(*emu_edge_fn);
 
+#define decl_resize_fn(name) \
+void (name)(pixel *dst, ptrdiff_t dst_stride, \
+            const pixel *src, ptrdiff_t src_stride, \
+            int dst_w, int src_w, int h, int dx, int mx)
+typedef decl_resize_fn(*resize_fn);
+
 typedef struct Dav1dMCDSPContext {
     mc_fn mc[N_2D_FILTERS];
     mc_scaled_fn mc_scaled[N_2D_FILTERS];
@@ -120,6 +126,7 @@ typedef struct Dav1dMCDSPContext {
     warp8x8_fn warp8x8;
     warp8x8t_fn warp8x8t;
     emu_edge_fn emu_edge;
+    resize_fn resize;
 } Dav1dMCDSPContext;
 
 void dav1d_mc_dsp_init_8bpc(Dav1dMCDSPContext *c);

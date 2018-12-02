@@ -103,7 +103,7 @@ impl FrameId {
     }
 
     /// Advances this FrameId to the next frame.
-    fn advance(&mut self) {
+    pub fn advance(&mut self) {
         self.0 += 1;
     }
 
@@ -1111,6 +1111,9 @@ impl RenderBackend {
         }
 
         if !transaction_msg.use_scene_builder_thread && txn.can_skip_scene_builder() {
+            if let Some(rasterizer) = txn.blob_rasterizer.take() {
+                self.resource_cache.set_blob_rasterizer(rasterizer);
+            }
             self.update_document(
                 txn.document_id,
                 replace(&mut txn.resource_updates, Vec::new()),

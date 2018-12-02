@@ -30,8 +30,8 @@ use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest};
 use scene::{Scene, ScenePipeline, StackingContextHelpers};
 use scene_builder::DocumentResources;
-use spatial_node::{StickyFrameInfo, ScrollFrameKind};
-use std::{f32, mem};
+use spatial_node::{StickyFrameInfo, ScrollFrameKind, SpatialNodeType};
+use std::{f32, mem, usize};
 use std::collections::vec_deque::VecDeque;
 use tiling::{CompositeOps};
 use util::{MaxRect, VecHelper};
@@ -154,6 +154,17 @@ pub struct DisplayListFlattener<'a> {
     /// The root picture index for this flattener. This is the picture
     /// to start the culling phase from.
     pub root_pic_index: PictureIndex,
+
+    /// TODO(gw): This is a complete hack that relies on knowledge of
+    ///           what the Gecko display list looks like. It's used
+    ///           for now to work out which scroll root to use to
+    ///           create the picture cache for the content. It's only
+    ///           ever used if picture caching is enabled in the
+    ///           RendererOptions struct. We will need to work out
+    ///           a better API to avoid this, before we enable it
+    ///           for all users. Another alternative is that this
+    ///           will disappear itself when document splitting is used.
+    picture_cache_scroll_root: Option<SpatialNodeIndex>,
 }
 
 impl<'a> DisplayListFlattener<'a> {
@@ -191,6 +202,7 @@ impl<'a> DisplayListFlattener<'a> {
             clip_store: ClipStore::new(),
             resources,
             root_pic_index: PictureIndex(0),
+            picture_cache_scroll_root: None,
         };
 
         flattener.push_root(
@@ -206,6 +218,12 @@ impl<'a> DisplayListFlattener<'a> {
 
         debug_assert!(flattener.sc_stack.is_empty());
 
+        // If picture caching is enabled, splice up the root
+        // stacking context to enable correct surface caching.
+        flattener.setup_picture_caching(
+            root_pipeline_id,
+        );
+
         new_scene.root_pipeline_id = Some(root_pipeline_id);
         new_scene.pipeline_epochs = scene.pipeline_epochs.clone();
         new_scene.pipelines = scene.pipelines.clone();
@@ -216,6 +234,164 @@ impl<'a> DisplayListFlattener<'a> {
             view.window_size,
             flattener,
         )
+    }
+
+    /// Cut the primitives in the root stacking context based on the picture
+    /// caching scroll root. This is a temporary solution for the initial
+    /// implementation of picture caching. We need to work out the specifics
+    /// of how WR should decide (or Gecko should communicate) where the main
+    /// content frame is that should get surface caching.
+    fn setup_picture_caching(
+        &mut self,
+        root_pipeline_id: PipelineId,
+    ) {
+        if !self.config.enable_picture_caching {
+            return;
+        }
+
+        // This method is basically a hack to set up picture caching in a minimal
+        // way without having to check the public API (yet). The intent is to
+        // work out a good API for this and switch to using it. In the mean
+        // time, this allows basic picture caching to be enabled and used for
+        // ironing out remaining bugs, fixing performance issues and profiling.
+
+        //
+        // We know that the display list will contain something like the following:
+        //  [Some number of primitives attached to root scroll now]
+        //  [IFrame for the content]
+        //  [A scroll root for the content (what we're interested in)]
+        //  [Primitives attached to the scroll root, possibly with sub-scroll roots]
+        //  [Some number of trailing primitives attached to root scroll frame]
+        //
+        // So we want to slice that stacking context up into:
+        //  [root primitives]
+        //  [tile cache picture]
+        //     [primitives attached to cached scroll root]
+        //  [trailing root primitives]
+        //
+        // This step is typically very quick, because there are only
+        // a small number of items in the root stacking context, since
+        // most of the content is embedded in its own picture.
+        //
+
+        // See if we found a scroll root for the cached surface root.
+        if let Some(picture_cache_scroll_root) = self.picture_cache_scroll_root {
+            // Get the list of existing primitives in the main stacking context.
+            let mut old_prim_list = mem::replace(
+                &mut self.prim_store.pictures[self.root_pic_index.0].prim_list,
+                PrimitiveList::empty(),
+            );
+
+            // Find the first primitive which has the desired scroll root.
+            let first_index = old_prim_list.prim_instances.iter().position(|instance| {
+                let scroll_root = self.find_scroll_root(
+                    instance.spatial_node_index,
+                );
+
+                scroll_root == picture_cache_scroll_root
+            }).unwrap_or(old_prim_list.prim_instances.len());
+
+            // Split off the preceding primtives.
+            let mut remaining_prims = old_prim_list.prim_instances.split_off(first_index);
+
+            // Find the first primitive in reverse order that is not the root scroll node.
+            let last_index = remaining_prims.iter().rposition(|instance| {
+                let scroll_root = self.find_scroll_root(
+                    instance.spatial_node_index,
+                );
+
+                scroll_root != ROOT_SPATIAL_NODE_INDEX
+            }).unwrap_or(remaining_prims.len() - 1);
+
+            let preceding_prims = old_prim_list.prim_instances;
+            let trailing_prims = remaining_prims.split_off(last_index + 1);
+
+            let prim_list = PrimitiveList::new(
+                remaining_prims,
+                &self.resources.prim_interner,
+            );
+
+            // Now, create a picture with tile caching enabled that will hold all
+            // of the primitives selected as belonging to the main scroll root.
+            let prim_key = PrimitiveKey::new(
+                true,
+                LayoutRect::zero(),
+                LayoutRect::max_rect(),
+                PrimitiveKeyKind::Unused,
+            );
+
+            let primitive_data_handle = self.resources
+                .prim_interner
+                .intern(&prim_key, || {
+                    PrimitiveSceneData {
+                        culling_rect: LayoutRect::zero(),
+                        is_backface_visible: true,
+                    }
+                }
+            );
+
+            let pic_index = self.prim_store.pictures.alloc().init(PicturePrimitive::new_image(
+                Some(PictureCompositeMode::TileCache { clear_color: ColorF::new(1.0, 1.0, 1.0, 1.0) }),
+                Picture3DContext::Out,
+                root_pipeline_id,
+                None,
+                true,
+                RasterSpace::Screen,
+                prim_list,
+                picture_cache_scroll_root,
+                LayoutRect::max_rect(),
+                &self.clip_store,
+            ));
+
+            let instance = PrimitiveInstance::new(
+                PrimitiveInstanceKind::Picture { pic_index: PictureIndex(pic_index) },
+                primitive_data_handle,
+                ClipChainId::NONE,
+                picture_cache_scroll_root,
+            );
+
+            // This contains the tile caching picture, with preceding and
+            // trailing primitives outside the main scroll root.
+            let mut new_prim_list = preceding_prims;
+            new_prim_list.push(instance);
+            new_prim_list.extend(trailing_prims);
+
+            // Finally, store the sliced primitive list in the root picture.
+            self.prim_store.pictures[self.root_pic_index.0].prim_list = PrimitiveList::new(
+                new_prim_list,
+                &self.resources.prim_interner,
+            );
+        }
+    }
+
+    /// Find the spatial node that is the scroll root for a given
+    /// spatial node.
+    fn find_scroll_root(
+        &self,
+        spatial_node_index: SpatialNodeIndex,
+    ) -> SpatialNodeIndex {
+        let mut scroll_root = ROOT_SPATIAL_NODE_INDEX;
+        let mut node_index = spatial_node_index;
+
+        while node_index != ROOT_SPATIAL_NODE_INDEX {
+            let node = &self.clip_scroll_tree.spatial_nodes[node_index.0];
+            match node.node_type {
+                SpatialNodeType::ReferenceFrame(..) |
+                SpatialNodeType::StickyFrame(..) => {
+                    // TODO(gw): In future, we may need to consider sticky frames.
+                }
+                SpatialNodeType::ScrollFrame(ref info) => {
+                    // If we found an explicit scroll root, store that
+                    // and keep looking up the tree.
+                    if let ScrollFrameKind::Explicit = info.frame_kind {
+                        scroll_root = node_index;
+                    }
+                }
+            }
+            node_index = node.parent.expect("unable to find parent node");
+        }
+
+        scroll_root
     }
 
     fn get_complex_clips(
@@ -374,7 +550,7 @@ impl<'a> DisplayListFlattener<'a> {
 
         self.add_clip_node(info.clip_id, clip_and_scroll_ids, clip_region);
 
-        self.add_scroll_frame(
+        let node_index = self.add_scroll_frame(
             info.scroll_frame_id,
             info.clip_id,
             info.external_id,
@@ -384,6 +560,14 @@ impl<'a> DisplayListFlattener<'a> {
             info.scroll_sensitivity,
             ScrollFrameKind::Explicit,
         );
+
+        // TODO(gw): See description of picture_cache_scroll_root field for information
+        //           about this temporary hack. What it's trying to identify is the first
+        //           scroll root within the first iframe that we encounter in the display
+        //           list.
+        if self.picture_cache_scroll_root.is_none() && pipeline_id != self.scene.root_pipeline_id.unwrap() {
+            self.picture_cache_scroll_root = Some(node_index);
+        }
     }
 
     fn flatten_reference_frame(

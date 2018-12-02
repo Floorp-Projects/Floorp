@@ -6,9 +6,8 @@ use internal_types::FastHashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::marker::PhantomData;
-use std::mem;
-use std::ops;
-use std::u64;
+use std::{mem, ops, u64};
+use util::VecHelper;
 
 /*
 
@@ -60,7 +59,9 @@ pub struct UpdateList<S> {
     /// The current epoch of the scene builder.
     epoch: Epoch,
     /// The additions and removals to apply.
-    updates: Vec<Update<S>>,
+    updates: Vec<Update>,
+    /// Actual new data to insert.
+    data: Vec<S>,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -89,17 +90,17 @@ impl <T> Handle<T> where T: Copy {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub enum UpdateKind<S> {
-    Insert(S),
+pub enum UpdateKind {
+    Insert,
     Remove,
     UpdateEpoch,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct Update<S> {
+pub struct Update {
     index: usize,
-    kind: UpdateKind<S>,
+    kind: UpdateKind,
 }
 
 /// The data item is stored with an epoch, for validating
@@ -137,18 +138,14 @@ impl<S, T, M> DataStore<S, T, M> where S: Debug, T: From<S>, M: Debug {
         &mut self,
         update_list: UpdateList<S>,
     ) {
+        let mut data_iter = update_list.data.into_iter();
         for update in update_list.updates {
             match update.kind {
-                UpdateKind::Insert(data) => {
-                    let item = Item {
-                        data: T::from(data),
+                UpdateKind::Insert => {
+                    self.items.entry(update.index).set(Item {
+                        data: T::from(data_iter.next().unwrap()),
                         epoch: update_list.epoch,
-                    };
-                    if self.items.len() == update.index {
-                        self.items.push(item)
-                    } else {
-                        self.items[update.index] = item;
-                    }
+                    });
                 }
                 UpdateKind::Remove => {
                     self.items[update.index].epoch = Epoch::INVALID;
@@ -158,6 +155,7 @@ impl<S, T, M> DataStore<S, T, M> where S: Debug, T: From<S>, M: Debug {
                 }
             }
         }
+        debug_assert!(data_iter.next().is_none());
     }
 }
 
@@ -194,7 +192,9 @@ pub struct Interner<S : Eq + Hash + Clone + Debug, D, M> {
     /// List of free slots in the data store for re-use.
     free_list: Vec<usize>,
     /// Pending list of updates that need to be applied.
-    updates: Vec<Update<S>>,
+    updates: Vec<Update>,
+    /// Pending new data to insert.
+    update_data: Vec<S>,
     /// The current epoch for the interner.
     current_epoch: Epoch,
     /// Incrementing counter for identifying stable values.
@@ -211,6 +211,7 @@ impl<S, D, M> Interner<S, D, M> where S: Eq + Hash + Clone + Debug, M: Copy + De
             map: FastHashMap::default(),
             free_list: Vec::new(),
             updates: Vec::new(),
+            update_data: Vec::new(),
             current_epoch: Epoch(1),
             next_uid: 0,
             local_data: Vec::new(),
@@ -259,8 +260,9 @@ impl<S, D, M> Interner<S, D, M> where S: Eq + Hash + Clone + Debug, M: Copy + De
         // Add a pending update to insert the new data.
         self.updates.push(Update {
             index,
-            kind: UpdateKind::Insert(data.clone()),
+            kind: UpdateKind::Insert,
         });
+        self.update_data.alloc().init(data.clone());
 
         // Generate a handle for access via the data store.
         let handle = Handle {
@@ -280,15 +282,10 @@ impl<S, D, M> Interner<S, D, M> where S: Eq + Hash + Clone + Debug, M: Copy + De
 
         // Create the local data for this item that is
         // being interned.
-        let local_item = Item {
+        self.local_data.entry(index).set(Item {
             epoch: self.current_epoch,
             data: f(),
-        };
-        if self.local_data.len() == index {
-            self.local_data.push(local_item);
-        } else {
-            self.local_data[index] = local_item;
-        }
+        });
 
         handle
     }
@@ -298,6 +295,8 @@ impl<S, D, M> Interner<S, D, M> where S: Eq + Hash + Clone + Debug, M: Copy + De
     /// a GC step that removes old entries.
     pub fn end_frame_and_get_pending_updates(&mut self) -> UpdateList<S> {
         let mut updates = mem::replace(&mut self.updates, Vec::new());
+        let data = mem::replace(&mut self.update_data, Vec::new());
+
         let free_list = &mut self.free_list;
         let current_epoch = self.current_epoch.0;
 
@@ -327,6 +326,7 @@ impl<S, D, M> Interner<S, D, M> where S: Eq + Hash + Clone + Debug, M: Copy + De
 
         let updates = UpdateList {
             updates,
+            data,
             epoch: self.current_epoch,
         };
 

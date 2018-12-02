@@ -9,7 +9,7 @@
 //! Data-driven tests
 
 extern crate rustc_serialize;
-extern crate test;
+extern crate rustc_test as test;
 extern crate url;
 
 use rustc_serialize::json::{self, Json};

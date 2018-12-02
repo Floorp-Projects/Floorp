@@ -1826,6 +1826,7 @@ impl Renderer {
             dual_source_blending_is_enabled: true,
             dual_source_blending_is_supported: ext_dual_source_blending,
             chase_primitive: options.chase_primitive,
+            enable_picture_caching: options.enable_picture_caching,
         };
 
         let device_pixel_ratio = options.device_pixel_ratio;

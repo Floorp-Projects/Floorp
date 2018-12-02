@@ -853,7 +853,21 @@ impl TextureCache {
                 match entry.eviction {
                     Eviction::Manual => false,
                     Eviction::Auto => threshold.should_evict(entry.last_access),
-                    Eviction::Eager => entry.last_access < self.now,
+                    Eviction::Eager => {
+                        // Texture cache entries can be evicted at the start of
+                        // a frame, or at any time during the frame when a cache
+                        // allocation is occurring. This means that entries tagged
+                        // with eager eviction may get evicted before they have a
+                        // chance to be requested on the current frame. Instead,
+                        // advance the frame id of the entry by one before
+                        // comparison. This ensures that an eager entry will
+                        // not be evicted until it is not used for at least
+                        // one complete frame.
+                        let mut entry_frame_id = entry.last_access.frame_id();
+                        entry_frame_id.advance();
+
+                        entry_frame_id < self.now.frame_id()
+                    }
                 }
             };
             if evict {

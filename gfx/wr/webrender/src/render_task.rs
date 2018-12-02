@@ -144,8 +144,12 @@ impl RenderTaskTree {
             pass_index
         };
 
-        let pass = &mut passes[pass_index];
-        pass.add_render_task(id, task.get_dynamic_size(), task.target_kind(), &task.location);
+        passes[pass_index].add_render_task(
+            id,
+            task.get_dynamic_size(),
+            task.target_kind(),
+            &task.location,
+        );
     }
 
     pub fn prepare_for_render(&mut self) {

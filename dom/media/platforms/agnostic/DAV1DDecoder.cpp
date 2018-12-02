@@ -18,8 +18,6 @@ DAV1DDecoder::DAV1DDecoder(const CreateDecoderParams& aParams)
       mTaskQueue(aParams.mTaskQueue),
       mImageContainer(aParams.mImageContainer) {}
 
-DAV1DDecoder::~DAV1DDecoder() {}
-
 RefPtr<MediaDataDecoder::InitPromise> DAV1DDecoder::Init() {
   Dav1dSettings settings;
   dav1d_default_settings(&settings);
@@ -77,10 +75,6 @@ RefPtr<MediaDataDecoder::DecodePromise> DAV1DDecoder::InvokeDecode(
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   MOZ_ASSERT(aSample);
 
-  // Save the last timing values to use in drain.
-  mLastTimecode = aSample->mTimecode;
-  mLastDuration = aSample->mDuration;
-  mLastOffset = aSample->mOffset;
   // Add the buffer to the hashtable in order to increase
   // the ref counter and keep it alive. When dav1d does not
   // need it any more will call it's release callback. Remove
@@ -93,6 +87,10 @@ RefPtr<MediaDataDecoder::DecodePromise> DAV1DDecoder::InvokeDecode(
   Dav1dData data;
   int res = dav1d_data_wrap(&data, aSample->Data(), aSample->Size(),
                             ReleaseDataBuffer_s, this);
+  data.m.timestamp = aSample->mTimecode.ToMicroseconds();
+  data.m.duration = aSample->mDuration.ToMicroseconds();
+  data.m.offset = aSample->mOffset;
+
   if (res < 0) {
     LOG("Create decoder data error.");
     return DecodePromise::CreateAndReject(
@@ -112,7 +110,7 @@ RefPtr<MediaDataDecoder::DecodePromise> DAV1DDecoder::InvokeDecode(
                (res == -EAGAIN && data.sz == aSample->Size()));
 
     MediaResult rs(NS_OK);
-    res = GetPicture(aSample, results, rs);
+    res = GetPicture(results, rs);
     if (res < 0) {
       if (res == -EAGAIN) {
         // No frames ready to return. This is not an
@@ -128,8 +126,7 @@ RefPtr<MediaDataDecoder::DecodePromise> DAV1DDecoder::InvokeDecode(
   return DecodePromise::CreateAndResolve(std::move(results), __func__);
 }
 
-int DAV1DDecoder::GetPicture(const MediaRawData* aSample, DecodedData& aData,
-                             MediaResult& aResult) {
+int DAV1DDecoder::GetPicture(DecodedData& aData, MediaResult& aResult) {
   class Dav1dPictureWrapper {
    public:
     Dav1dPicture* operator&() { return &p; }
@@ -152,7 +149,7 @@ int DAV1DDecoder::GetPicture(const MediaRawData* aSample, DecodedData& aData,
     return 0;
   }
 
-  RefPtr<VideoData> v = ConstructImage(aSample, *picture);
+  RefPtr<VideoData> v = ConstructImage(*picture);
   if (!v) {
     LOG("Image allocation error: %ux%u"
         " display %ux%u picture %ux%u",
@@ -166,47 +163,63 @@ int DAV1DDecoder::GetPicture(const MediaRawData* aSample, DecodedData& aData,
 }
 
 already_AddRefed<VideoData> DAV1DDecoder::ConstructImage(
-    const MediaRawData* aSample, const Dav1dPicture& picture) {
+    const Dav1dPicture& aPicture) {
   VideoData::YCbCrBuffer b;
-  if (picture.p.bpc == 10) {
+  if (aPicture.p.bpc == 10) {
     b.mColorDepth = ColorDepth::COLOR_10;
-  } else if (picture.p.bpc == 12) {
+  } else if (aPicture.p.bpc == 12) {
     b.mColorDepth = ColorDepth::COLOR_12;
   }
-  b.mPlanes[0].mData = static_cast<uint8_t*>(picture.data[0]);
-  b.mPlanes[0].mStride = picture.stride[0];
-  b.mPlanes[0].mHeight = picture.p.h;
-  b.mPlanes[0].mWidth = picture.p.w;
+
+  // On every other case use the default (BT601).
+  if (aPicture.seq_hdr->color_description_present) {
+    if (aPicture.seq_hdr->pri == DAV1D_COLOR_PRI_BT709) {
+      b.mYUVColorSpace = YUVColorSpace::BT709;
+    }
+  } else if (aPicture.p.h >= 720) {
+    b.mYUVColorSpace = YUVColorSpace::BT709;
+  }
+
+  b.mPlanes[0].mData = static_cast<uint8_t*>(aPicture.data[0]);
+  b.mPlanes[0].mStride = aPicture.stride[0];
+  b.mPlanes[0].mHeight = aPicture.p.h;
+  b.mPlanes[0].mWidth = aPicture.p.w;
   b.mPlanes[0].mOffset = 0;
   b.mPlanes[0].mSkip = 0;
 
-  b.mPlanes[1].mData = static_cast<uint8_t*>(picture.data[1]);
-  b.mPlanes[1].mStride = picture.stride[1];
+  b.mPlanes[1].mData = static_cast<uint8_t*>(aPicture.data[1]);
+  b.mPlanes[1].mStride = aPicture.stride[1];
   b.mPlanes[1].mOffset = 0;
   b.mPlanes[1].mSkip = 0;
 
-  b.mPlanes[2].mData = static_cast<uint8_t*>(picture.data[2]);
-  b.mPlanes[2].mStride = picture.stride[1];
+  b.mPlanes[2].mData = static_cast<uint8_t*>(aPicture.data[2]);
+  b.mPlanes[2].mStride = aPicture.stride[1];
   b.mPlanes[2].mOffset = 0;
   b.mPlanes[2].mSkip = 0;
 
   // https://code.videolan.org/videolan/dav1d/blob/master/tools/output/yuv.c#L67
-  const int ss_ver = picture.p.layout == DAV1D_PIXEL_LAYOUT_I420;
-  const int ss_hor = picture.p.layout != DAV1D_PIXEL_LAYOUT_I444;
+  const int ss_ver = aPicture.p.layout == DAV1D_PIXEL_LAYOUT_I420;
+  const int ss_hor = aPicture.p.layout != DAV1D_PIXEL_LAYOUT_I444;
 
-  b.mPlanes[1].mHeight = (picture.p.h + ss_ver) >> ss_ver;
-  b.mPlanes[1].mWidth = (picture.p.w + ss_hor) >> ss_hor;
+  b.mPlanes[1].mHeight = (aPicture.p.h + ss_ver) >> ss_ver;
+  b.mPlanes[1].mWidth = (aPicture.p.w + ss_hor) >> ss_hor;
 
-  b.mPlanes[2].mHeight = (picture.p.h + ss_ver) >> ss_ver;
-  b.mPlanes[2].mWidth = (picture.p.w + ss_hor) >> ss_hor;
+  b.mPlanes[2].mHeight = (aPicture.p.h + ss_ver) >> ss_ver;
+  b.mPlanes[2].mWidth = (aPicture.p.w + ss_hor) >> ss_hor;
 
   // Timestamp, duration and offset used here are wrong.
   // We need to take those values from the decoder. Latest
   // dav1d version allows for that.
+  media::TimeUnit timecode =
+      media::TimeUnit::FromMicroseconds(aPicture.m.timestamp);
+  media::TimeUnit duration =
+      media::TimeUnit::FromMicroseconds(aPicture.m.duration);
+  int64_t offset = aPicture.m.offset;
+  bool keyframe = aPicture.frame_hdr->frame_type == DAV1D_FRAME_TYPE_KEY;
+
   return VideoData::CreateAndCopyData(
-      mInfo, mImageContainer, aSample->mOffset, aSample->mTime,
-      aSample->mDuration, b, aSample->mKeyframe, aSample->mTimecode,
-      mInfo.ScaledImageRect(picture.p.w, picture.p.h));
+      mInfo, mImageContainer, offset, timecode, duration, b, keyframe, timecode,
+      mInfo.ScaledImageRect(aPicture.p.w, aPicture.p.h));
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> DAV1DDecoder::Drain() {
@@ -215,20 +228,13 @@ RefPtr<MediaDataDecoder::DecodePromise> DAV1DDecoder::Drain() {
     int res = 0;
     DecodedData results;
     do {
-      RefPtr<MediaRawData> empty(new MediaRawData());
-      // Update last timecode in case we loop over.
-      empty->mTimecode = empty->mTime = mLastTimecode =
-          mLastTimecode + mLastDuration;
-      empty->mDuration = mLastDuration;
-      empty->mOffset = mLastOffset;
-
       MediaResult rs(NS_OK);
-      res = GetPicture(empty, results, rs);
+      res = GetPicture(results, rs);
       if (res < 0 && res != -EAGAIN) {
         return DecodePromise::CreateAndReject(rs, __func__);
       }
     } while (res != -EAGAIN);
-    return DecodePromise::CreateAndResolve(results, __func__);
+    return DecodePromise::CreateAndResolve(std::move(results), __func__);
   });
 }
 
