@@ -19,7 +19,7 @@ import { renderWasmText } from "./wasm";
 import { toEditorPosition } from "./editor";
 export { isMinified } from "./isMinified";
 import { getURL, getFileExtension } from "./sources-tree";
-import { prefs, features } from "./prefs";
+import { prefs } from "./prefs";
 
 import type { Source, SourceLocation, JsSource } from "../types";
 import type { SourceMetaDataType } from "../reducers/ast";
@@ -53,22 +53,6 @@ function trimUrlQuery(url: string): string {
   );
 
   return url.slice(0, q);
-}
-
-export function shouldBlackbox(source: ?Source) {
-  if (!source) {
-    return false;
-  }
-
-  if (!isLoaded(source) || !source.url) {
-    return false;
-  }
-
-  if (isOriginalId(source.id) && !features.originalBlackbox) {
-    return false;
-  }
-
-  return true;
 }
 
 export function shouldPrettyPrint(source: Source) {

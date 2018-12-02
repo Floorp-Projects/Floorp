@@ -67,4 +67,3 @@ pref("devtools.debugger.features.skip-pausing", true);
 pref("devtools.debugger.features.autocomplete-expressions", false);
 pref("devtools.debugger.features.map-expression-bindings", true);
 pref("devtools.debugger.features.xhr-breakpoints", true);
-pref("devtools.debugger.features.origial-blackbox", false);
