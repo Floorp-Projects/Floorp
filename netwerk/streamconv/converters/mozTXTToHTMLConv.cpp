@@ -214,7 +214,8 @@ bool mozTXTToHTMLConv::FindURLStart(const char16_t* aInString,
              aInString[uint32_t(i)] != '[' && aInString[uint32_t(i)] != '(' &&
              aInString[uint32_t(i)] != '|' && aInString[uint32_t(i)] != '\\' &&
              !IsSpace(aInString[uint32_t(i)]) &&
-             (!isEmail || nsCRT::IsAscii(aInString[uint32_t(i)]));
+             (!isEmail || nsCRT::IsAscii(aInString[uint32_t(i)])) &&
+             (!isEmail || aInString[uint32_t(i)] != ')');
            i--)
         ;
       if (++i >= 0 && uint32_t(i) < pos &&
