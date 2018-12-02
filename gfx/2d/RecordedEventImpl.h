@@ -33,6 +33,9 @@ class RecordedEventDerived : public RecordedEvent {
     WriteElement(aStream, this->mType);
     static_cast<const Derived*>(this)->Record(aStream);
   }
+  void RecordToStream(EventRingBuffer& aStream) const final {
+    aStream.RecordEvent(static_cast<const Derived*>(this));
+  }
   void RecordToStream(MemStream& aStream) const override {
     SizeCollector size;
     WriteElement(size, this->mType);
