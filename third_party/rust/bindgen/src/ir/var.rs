@@ -199,9 +199,6 @@ impl ClangSubItemParser for Var {
                             true,
                             ctx,
                         );
-                        if let Some(callbacks) = ctx.parse_callbacks() {
-                            callbacks.str_macro(&name, &val);
-                        }
                         (TypeKind::Pointer(char_ty), VarType::String(val))
                     }
                     EvalResult::Int(Wrapping(value)) => {

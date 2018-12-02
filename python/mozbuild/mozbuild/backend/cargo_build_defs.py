@@ -5,19 +5,6 @@
 from __future__ import absolute_import, unicode_literals
 
 cargo_extra_outputs = {
-    'backtrace-sys': [
-        'backtrace-supported.h',
-        'config.h',
-        'src/libbacktrace/alloc.o',
-        'src/libbacktrace/dwarf.o',
-        'src/libbacktrace/fileline.o',
-        'src/libbacktrace/posix.o',
-        'src/libbacktrace/read.o',
-        'src/libbacktrace/sort.o',
-        'src/libbacktrace/state.o',
-        'src/libbacktrace/elf.o',
-        'libbacktrace.a',
-    ],
     'bindgen': [
         'tests.rs',
         'host-target.txt',
