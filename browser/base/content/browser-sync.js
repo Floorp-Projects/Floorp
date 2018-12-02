@@ -721,7 +721,7 @@ var gSync = {
 
   get relativeTimeFormat() {
     delete this.relativeTimeFormat;
-    return this.relativeTimeFormat = new Services.intl.RelativeTimeFormat(undefined, {style: "short"});
+    return this.relativeTimeFormat = new Services.intl.RelativeTimeFormat(undefined, {style: "long"});
   },
 
   formatLastSyncDate(date) {
