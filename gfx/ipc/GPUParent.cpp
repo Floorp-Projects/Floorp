@@ -205,7 +205,11 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
 
 #if defined(XP_WIN)
   if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
-    DeviceManagerDx::Get()->CreateCompositorDevices();
+    if (DeviceManagerDx::Get()->CreateCompositorDevices() &&
+        gfxVars::RemoteCanvasEnabled()) {
+      MOZ_ALWAYS_TRUE(DeviceManagerDx::Get()->CreateCanvasDevice());
+      MOZ_ALWAYS_TRUE(Factory::EnsureDWriteFactory());
+    }
   }
   if (gfxVars::UseWebRender()) {
     DeviceManagerDx::Get()->CreateDirectCompositionDevice();

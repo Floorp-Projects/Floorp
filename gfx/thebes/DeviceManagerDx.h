@@ -19,6 +19,7 @@
 #include <windows.h>
 #include <objbase.h>
 
+#include <d3d11.h>
 #include <dxgi.h>
 #include <dxgi1_6.h>
 
@@ -56,6 +57,7 @@ class DeviceManagerDx final {
 
   RefPtr<ID3D11Device> GetCompositorDevice();
   RefPtr<ID3D11Device> GetContentDevice();
+  RefPtr<ID3D11Device> GetCanvasDevice();
   RefPtr<ID3D11Device> GetImageDevice();
   RefPtr<IDCompositionDevice> GetDirectCompositionDevice();
   RefPtr<ID3D11Device> GetVRDevice();
@@ -88,6 +90,7 @@ class DeviceManagerDx final {
   bool CreateCompositorDevices();
   void CreateContentDevices();
   void CreateDirectCompositionDevice();
+  bool CreateCanvasDevice();
 
   void GetCompositorDevices(
       RefPtr<ID3D11Device>* aOutDevice,
@@ -165,6 +168,7 @@ class DeviceManagerDx final {
   RefPtr<IDXGIAdapter1> mAdapter;
   RefPtr<ID3D11Device> mCompositorDevice;
   RefPtr<ID3D11Device> mContentDevice;
+  RefPtr<ID3D11Device> mCanvasDevice;
   RefPtr<ID3D11Device> mImageDevice;
   RefPtr<ID3D11Device> mVRDevice;
   RefPtr<ID3D11Device> mDecoderDevice;
