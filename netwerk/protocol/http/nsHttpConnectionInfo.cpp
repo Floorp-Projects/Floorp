@@ -83,6 +83,8 @@ void nsHttpConnectionInfo::Init(const nsACString &host, int32_t port,
   mTlsFlags = 0x0;
   mTrrUsed = false;
   mTrrDisabled = false;
+  mIPv4Disabled = false;
+  mIPv6Disabled = false;
 
   mUsingHttpsProxy = (proxyInfo && proxyInfo->IsHTTPS());
   mUsingHttpProxy = mUsingHttpsProxy || (proxyInfo && proxyInfo->IsHTTP());
@@ -208,6 +210,14 @@ void nsHttpConnectionInfo::BuildHashKey() {
     mHashKey.AppendLiteral("[NOTRR]");
   }
 
+  if (GetIPv4Disabled()) {
+    mHashKey.AppendLiteral("[!v4]");
+  }
+
+  if (GetIPv6Disabled()) {
+    mHashKey.AppendLiteral("[!v6]");
+  }
+
   nsAutoCString originAttributes;
   mOriginAttributes.CreateSuffix(originAttributes);
   mHashKey.Append(originAttributes);
@@ -242,6 +252,8 @@ nsHttpConnectionInfo *nsHttpConnectionInfo::Clone() const {
   clone->SetTlsFlags(GetTlsFlags());
   clone->SetTrrUsed(GetTrrUsed());
   clone->SetTrrDisabled(GetTrrDisabled());
+  clone->SetIPv4Disabled(GetIPv4Disabled());
+  clone->SetIPv6Disabled(GetIPv6Disabled());
   MOZ_ASSERT(clone->Equals(this));
 
   return clone;
@@ -265,6 +277,9 @@ void nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo **outCI) {
   clone->SetTlsFlags(GetTlsFlags());
   clone->SetTrrUsed(GetTrrUsed());
   clone->SetTrrDisabled(GetTrrDisabled());
+  clone->SetIPv4Disabled(GetIPv4Disabled());
+  clone->SetIPv6Disabled(GetIPv6Disabled());
+
   clone.forget(outCI);
 }
 
@@ -291,6 +306,20 @@ nsresult nsHttpConnectionInfo::CreateWildCard(nsHttpConnectionInfo **outParam) {
 void nsHttpConnectionInfo::SetTrrDisabled(bool aNoTrr) {
   if (mTrrDisabled != aNoTrr) {
     mTrrDisabled = aNoTrr;
+    BuildHashKey();
+  }
+}
+
+void nsHttpConnectionInfo::SetIPv4Disabled(bool aNoIPv4) {
+  if (mIPv4Disabled != aNoIPv4) {
+    mIPv4Disabled = aNoIPv4;
+    BuildHashKey();
+  }
+}
+
+void nsHttpConnectionInfo::SetIPv6Disabled(bool aNoIPv6) {
+  if (mIPv6Disabled != aNoIPv6) {
+    mIPv6Disabled = aNoIPv6;
     BuildHashKey();
   }
 }
