@@ -148,7 +148,8 @@ static void md5_update(MD5Context *const md5, const uint8_t *data, unsigned len)
     }
 
     while (len >= 64) {
-        md5_body(md5, data);
+        memcpy(md5->data, data, 64);
+        md5_body(md5, md5->data);
         md5->len += 64;
         data += 64;
         len -= 64;

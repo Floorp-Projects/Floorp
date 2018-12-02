@@ -190,6 +190,8 @@ extern crate image as image_loader;
 extern crate base64;
 #[cfg(all(feature = "capture", feature = "png"))]
 extern crate png;
+#[cfg(test)]
+extern crate rand;
 
 pub extern crate webrender_api;
 

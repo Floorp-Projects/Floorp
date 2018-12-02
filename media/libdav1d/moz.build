@@ -10,6 +10,7 @@ LOCAL_INCLUDES += [
     '/third_party/dav1d',
     '/third_party/dav1d/include',
     '/third_party/dav1d/include/dav1d',
+    '/third_party/dav1d/src',
 ]
 
 if CONFIG['CPU_ARCH'] == 'x86':
@@ -73,6 +74,7 @@ EXPORTS.dav1d.src += [
     '../../third_party/dav1d/src/data.h',
     '../../third_party/dav1d/src/decode.h',
     '../../third_party/dav1d/src/dequant_tables.h',
+    '../../third_party/dav1d/src/film_grain.h',
     '../../third_party/dav1d/src/getbits.h',
     '../../third_party/dav1d/src/intra_edge.h',
     '../../third_party/dav1d/src/lf_mask.h',
@@ -94,6 +96,7 @@ relative_path = '../../third_party/dav1d/src/'
 bitdepth_basenames = [
     'cdef_apply_tmpl.c',
     'cdef_tmpl.c',
+    'film_grain_tmpl.c',
     'ipred_prepare_tmpl.c',
     'ipred_tmpl.c',
     'itx_tmpl.c',
@@ -158,6 +161,7 @@ EXPORTS.dav1d += [
    '../../third_party/dav1d/include/dav1d/common.h',
    '../../third_party/dav1d/include/dav1d/data.h',
    '../../third_party/dav1d/include/dav1d/dav1d.h',
+   '../../third_party/dav1d/include/dav1d/headers.h',
    '../../third_party/dav1d/include/dav1d/picture.h',
 ]
 
@@ -179,3 +183,6 @@ FINAL_LIBRARY = 'gkmedias'
 
 # We allow warnings for third-party code that can be updated from upstream.
 AllowCompilerWarnings()
+
+# And furthermore, don't show warnings.
+DisableCompilerWarnings()

@@ -63,8 +63,8 @@ extern const uint8_t dav1d_nz_map_ctx_offset[N_RECT_TX_SIZES][5][5];
 extern const uint8_t /* enum TxClass */
                      dav1d_tx_type_class[N_TX_TYPES_PLUS_LL];
 extern const uint8_t /* enum Filter2d */
-                     dav1d_filter_2d[N_FILTERS /* h */][N_FILTERS /* v */];
-extern const uint8_t /* enum FilterMode */ dav1d_filter_dir[N_2D_FILTERS][2];
+                     dav1d_filter_2d[DAV1D_N_FILTERS /* h */][DAV1D_N_FILTERS /* v */];
+extern const uint8_t /* enum Dav1dFilterMode */ dav1d_filter_dir[N_2D_FILTERS][2];
 extern const uint8_t dav1d_intra_mode_context[N_INTRA_PRED_MODES];
 extern const uint8_t dav1d_wedge_ctx_lut[N_BS_SIZES];
 
@@ -104,18 +104,21 @@ static const unsigned interintra_allowed_mask =
     (1 << BS_8x16) |
     (1 << BS_8x8);
 
-extern const WarpedMotionParams dav1d_default_wm_params;
+extern const Dav1dWarpedMotionParams dav1d_default_wm_params;
 
 extern const int16_t dav1d_sgr_params[16][4];
 extern const int dav1d_sgr_x_by_xplus1[256];
 
 extern const int8_t dav1d_mc_subpel_filters[5][15][8];
 extern const int8_t dav1d_mc_warp_filter[193][8];
+extern const int16_t dav1d_resize_filter[64][8];
 
 extern const uint8_t dav1d_sm_weights[128];
 extern const int16_t dav1d_dr_intra_derivative[90];
 extern const int8_t dav1d_filter_intra_taps[5][64];
 
 extern const uint8_t dav1d_obmc_masks[64];
+
+extern const int16_t dav1d_gaussian_sequence[2048]; // for fgs
 
 #endif /* __DAV1D_SRC_TABLES_H__ */
