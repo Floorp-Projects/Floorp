@@ -3486,10 +3486,6 @@ inline void RecordedFilterNodeSetInput::OutputSimpleEventInfo(
   aStringStream << ")";
 }
 
-#define LOAD_EVENT_TYPE(_typeenum, _class) \
-  case _typeenum:                          \
-    return new _class(aStream)
-
 #define FOR_EACH_EVENT(f)                                          \
   f(DRAWTARGETCREATION, RecordedDrawTargetCreation);               \
   f(DRAWTARGETDESTRUCTION, RecordedDrawTargetDestruction);         \
@@ -3537,23 +3533,16 @@ inline void RecordedFilterNodeSetInput::OutputSimpleEventInfo(
   f(INTOLUMINANCE, RecordedIntoLuminanceSource);                   \
   f(EXTERNALSURFACECREATION, RecordedExternalSurfaceCreation);
 
-template <class S>
-RecordedEvent* RecordedEvent::LoadEvent(S& aStream, EventType aType) {
-  switch (aType) {
-    FOR_EACH_EVENT(LOAD_EVENT_TYPE)
-    default:
-      return nullptr;
-  }
-}
-
 #define DO_WITH_EVENT_TYPE(_typeenum, _class) \
   case _typeenum: {                           \
     auto e = _class(aStream);                 \
-    return f(&e);                             \
+    return aAction(&e);                       \
   }
 
-template <class S, class F>
-bool RecordedEvent::DoWithEvent(S& aStream, EventType aType, F f) {
+template <class S>
+bool RecordedEvent::DoWithEvent(
+    S& aStream, EventType aType,
+    const std::function<bool(RecordedEvent*)>& aAction) {
   switch (aType) {
     FOR_EACH_EVENT(DO_WITH_EVENT_TYPE)
     default:

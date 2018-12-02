@@ -199,6 +199,7 @@ class EventStream {
  public:
   virtual void write(const char* aData, size_t aSize) = 0;
   virtual void read(char* aOut, size_t aSize) = 0;
+  virtual bool good() = 0;
 };
 
 class RecordedEvent {
@@ -298,17 +299,11 @@ class RecordedEvent {
                                std::stringstream& aOutput) const;
 
   template <class S>
-  static RecordedEvent* LoadEvent(S& aStream, EventType aType);
-  static RecordedEvent* LoadEventFromStream(std::istream& aStream,
-                                            EventType aType);
-  static RecordedEvent* LoadEventFromStream(EventStream& aStream,
-                                            EventType aType);
-
-  // An alternative to LoadEvent that avoids a heap allocation for the event.
-  // This accepts a callable `f' that will take a RecordedEvent* as a single
-  // parameter
-  template <class S, class F>
-  static bool DoWithEvent(S& aStream, EventType aType, F f);
+  static bool DoWithEvent(S& aStream, EventType aType,
+                          const std::function<bool(RecordedEvent*)>& aAction);
+  static bool DoWithEventFromStream(
+      EventStream& aStream, EventType aType,
+      const std::function<bool(RecordedEvent*)>& aAction);
 
   EventType GetType() const { return (EventType)mType; }
 
