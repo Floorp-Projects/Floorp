@@ -126,13 +126,13 @@ class InlineTranslator : public Translator {
     mNativeFontResources.Put(aKey, aScaledFontResouce);
   }
 
-  void RemoveDrawTarget(ReferencePtr aRefPtr) final {
+  void RemoveDrawTarget(ReferencePtr aRefPtr) override {
     mDrawTargets.Remove(aRefPtr);
   }
 
   void RemovePath(ReferencePtr aRefPtr) final { mPaths.Remove(aRefPtr); }
 
-  void RemoveSourceSurface(ReferencePtr aRefPtr) final {
+  void RemoveSourceSurface(ReferencePtr aRefPtr) override {
     mSourceSurfaces.Remove(aRefPtr);
   }
 
@@ -154,7 +154,7 @@ class InlineTranslator : public Translator {
 
   already_AddRefed<DrawTarget> CreateDrawTarget(
       ReferencePtr aRefPtr, const gfx::IntSize& aSize,
-      gfx::SurfaceFormat aFormat) final;
+      gfx::SurfaceFormat aFormat) override;
 
   mozilla::gfx::DrawTarget* GetReferenceDrawTarget() final { return mBaseDT; }
 
