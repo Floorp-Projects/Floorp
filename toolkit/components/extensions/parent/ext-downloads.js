@@ -266,7 +266,7 @@ const downloadQuery = query => {
   // const endedBefore = normalizeDownloadTime(query.endedBefore, true);
   // const endedAfter = normalizeDownloadTime(query.endedAfter, false);
 
-  const totalBytesGreater = query.totalBytesGreater || 0;
+  const totalBytesGreater = query.totalBytesGreater;
   const totalBytesLess = query.totalBytesLess != null ? query.totalBytesLess : Number.MAX_VALUE;
 
   // Handle options for which we can have a regular expression and/or

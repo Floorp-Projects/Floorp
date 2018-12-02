@@ -1754,11 +1754,6 @@ void nsPresContext::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
   RestyleManager()->PostRebuildAllStyleDataEvent(aExtraHint, aRestyleHint);
 }
 
-struct MediaFeatureHints {
-  nsRestyleHint restyleHint;
-  nsChangeHint changeHint;
-};
-
 static bool MediaFeatureValuesChangedAllDocumentsCallback(
     nsIDocument* aDocument, void* aChange) {
   auto* change = static_cast<const MediaFeatureChange*>(aChange);

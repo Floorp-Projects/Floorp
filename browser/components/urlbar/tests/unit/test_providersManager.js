@@ -4,6 +4,31 @@
 "use strict";
 
 add_task(async function test_providers() {
+  Assert.throws(() => UrlbarProvidersManager.registerProvider(),
+                /invalid provider/,
+                "Should throw with no arguments");
+  Assert.throws(() => UrlbarProvidersManager.registerProvider({}),
+                /invalid provider/,
+                "Should throw with empty object");
+  Assert.throws(() => UrlbarProvidersManager.registerProvider({
+                  name: "",
+                }),
+                /invalid provider/,
+                "Should throw with empty name");
+  Assert.throws(() => UrlbarProvidersManager.registerProvider({
+                  name: "test",
+                  startQuery: "no",
+                }),
+                /invalid provider/,
+                "Should throw with invalid startQuery");
+  Assert.throws(() => UrlbarProvidersManager.registerProvider({
+                  name: "test",
+                  startQuery: () => {},
+                  cancelQuery: "no",
+                }),
+                /invalid provider/,
+                "Should throw with invalid cancelQuery");
+
   let match = new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
                               UrlbarUtils.MATCH_SOURCE.TABS,
                               { url: "http://mozilla.org/foo/" });
