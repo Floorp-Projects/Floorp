@@ -63,6 +63,11 @@ def transforms_from(ftl, **substitutions):
     def into_argument(node):
         """Convert AST node into an argument to migration transforms."""
         if isinstance(node, FTL.StringLiteral):
+            # Special cases for booleans which don't exist in Fluent.
+            if node.value == "True":
+                return True
+            if node.value == "False":
+                return False
             return node.value
         if isinstance(node, FTL.MessageReference):
             try:
@@ -88,7 +93,10 @@ def transforms_from(ftl, **substitutions):
             name = node.callee.name
             if name == "COPY":
                 args = (into_argument(arg) for arg in node.positional)
-                return COPY(*args)
+                kwargs = {
+                    arg.name.name: into_argument(arg.value)
+                    for arg in node.named}
+                return COPY(*args, **kwargs)
             if name in IMPLICIT_TRANSFORMS:
                 raise NotSupportedError(
                     "{} may not be used with transforms_from(). It runs "
