@@ -1,4 +1,9 @@
-from __future__ import absolute_import
+# -*- coding: utf-8 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+from __future__ import absolute_import, print_function
 
 import os
 import re
@@ -50,15 +55,16 @@ class UpdateVerifyConfig(object):
 
     def _parseLine(self, line):
         entry = {}
-        items = re.findall("\w+=[\"'][^\"']*[\"']", line)
+        items = re.findall(r"\w+=[\"'][^\"']*[\"']", line)
         for i in items:
             m = re.search(
-                "(?P<key>\w+)=[\"'](?P<value>.+)[\"']", i).groupdict()
+                r"(?P<key>\w+)=[\"'](?P<value>.+)[\"']", i).groupdict()
             if m["key"] not in self.global_keys and m["key"] not in self.release_keys:
                 raise UpdateVerifyError(
                     "Unknown key '%s' found on line:\n%s" % (m["key"], line))
             if m["key"] in entry:
-                raise UpdateVerifyError("Multiple values found for key '%s' on line:\n%s" % (m["key"], line))
+                raise UpdateVerifyError(
+                    "Multiple values found for key '%s' on line:\n%s" % (m["key"], line))
             entry[m["key"]] = m["value"]
         if not entry:
             raise UpdateVerifyError("No parseable data in line '%s'" % line)
@@ -119,7 +125,9 @@ class UpdateVerifyConfig(object):
            If a string is passed, they will be converted to a list for internal
            storage"""
         if self.getRelease(build_id, from_path):
-            raise UpdateVerifyError("Couldn't add release identified by build_id '%s' and from_path '%s': already exists in config" % (build_id, from_path))
+            raise UpdateVerifyError(
+                "Couldn't add release identified by build_id '%s' and from_path '%s': "
+                "already exists in config" % (build_id, from_path))
         if isinstance(locales, basestring):
             locales = sorted(list(locales.split()))
         if isinstance(patch_types, basestring):
@@ -140,7 +148,9 @@ class UpdateVerifyConfig(object):
     def addLocaleToRelease(self, build_id, locale, from_path=None):
         r = self.getRelease(build_id, from_path)
         if not r:
-            raise UpdateVerifyError("Couldn't add '%s' to release identified by build_id '%s' and from_path '%s': '%s' doesn't exist in this config." % (locale, build_id, from_path, build_id))
+            raise UpdateVerifyError(
+                "Couldn't add '%s' to release identified by build_id '%s' and from_path '%s': "
+                "'%s' doesn't exist in this config." % (locale, build_id, from_path, build_id))
         r["locales"].append(locale)
         r["locales"] = sorted(r["locales"])
 

@@ -22,6 +22,7 @@ flake8:
         - python/mozboot
         - python/mozbuild/mozpack/path.py
         - python/mozlint
+        - python/mozrelease
         - python/mozterm
         - python/mozversioncontrol
         - python/safety

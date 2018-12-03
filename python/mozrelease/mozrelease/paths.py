@@ -6,6 +6,7 @@ product_ftp_map = {
     "fennec": "mobile",
 }
 
+
 def product2ftp(product):
     return product_ftp_map.get(product, product)
 
@@ -16,7 +17,7 @@ def getCandidatesDir(product, version, buildNumber, protocol=None, server=None):
 
     product = product2ftp(product)
     directory = "/{}/candidates/{}-candidates/build{}".format(
-        product, str(version), str(buildNumber)
+        product, str(version), str(buildNumber),
     )
 
     if protocol:
