@@ -7,6 +7,7 @@ Support for running jobs that are invoked via the `run-task` script.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from taskgraph.transforms.task import taskref_or_string
 from taskgraph.transforms.job import run_job_using
 from taskgraph.util.schema import Schema
 from taskgraph.transforms.job.common import support_vcs_checkout
@@ -33,7 +34,7 @@ run_task_schema = Schema({
     # The command arguments to pass to the `run-task` script, after the
     # checkout arguments.  If a list, it will be passed directly; otherwise
     # it will be included in a single argument to `bash -cx`.
-    Required('command'): Any([basestring], basestring),
+    Required('command'): Any([taskref_or_string], taskref_or_string),
 
     # Base work directory used to set up the task.
     Required('workdir'): basestring,
@@ -83,7 +84,8 @@ def docker_worker_run_task(config, job, taskdesc):
         })
 
     run_command = run['command']
-    if isinstance(run_command, basestring):
+    # dict is for the case of `{'task-reference': basestring}`.
+    if isinstance(run_command, (basestring, dict)):
         run_command = ['bash', '-cx', run_command]
     if run['comm-checkout']:
         command.append('--comm-checkout={workdir}/checkouts/gecko/comm'.format(**run))

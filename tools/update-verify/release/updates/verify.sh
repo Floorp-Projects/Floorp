@@ -27,7 +27,7 @@ touch ${diff_summary_log}
 pushd `dirname $0` &>/dev/null
 MY_DIR=$(pwd)
 popd &>/dev/null
-retry="$MY_DIR/../../buildfarm/utils/retry.py -s 1 -r 3"
+retry="$MY_DIR/../../../../mach python -m redo.cmd -s 1 -a 3"
 cert_replacer="$MY_DIR/../replace-updater-certs.py"
 
 dep_overrides="nightly_aurora_level3_primary.der dep1.der nightly_aurora_level3_secondary.der dep2.der release_primary.der dep1.der release_secondary.der dep2.der"

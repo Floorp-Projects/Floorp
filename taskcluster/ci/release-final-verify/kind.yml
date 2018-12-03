@@ -11,6 +11,7 @@ kind-dependencies:
 transforms:
    - taskgraph.transforms.release_deps:transforms
    - taskgraph.transforms.final_verify:transforms
+   - taskgraph.transforms.job:transforms
    - taskgraph.transforms.task:transforms
 
 job-defaults:
@@ -18,14 +19,11 @@ job-defaults:
    run-on-projects: []  # to make sure this never runs as part of CI
    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
    worker:
-      implementation: docker-worker
-      os: linux
       docker-image:
          in-tree: "update-verify"
       max-run-time: 7200
       retry-exit-status: [1]
-      env:
-         BUILD_TOOLS_REPO: https://hg.mozilla.org/build/tools
+
 
 jobs:
    firefox:

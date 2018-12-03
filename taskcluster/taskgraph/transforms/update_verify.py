@@ -31,16 +31,16 @@ def add_command(config, tasks):
             )
             if not chunked["worker"].get("env"):
                 chunked["worker"]["env"] = {}
-            chunked["worker"]["command"] = [
-                "/bin/bash",
-                "-c",
-                "hg clone $BUILD_TOOLS_REPO tools && " +
-                "tools/scripts/release/updates/chunked-verify.sh " +
-                "UNUSED UNUSED {} {}".format(
-                    total_chunks,
-                    this_chunk,
-                )
-            ]
+            chunked["run"] = {
+                'using': 'run-task',
+                'command': 'cd /builds/worker/checkouts/gecko && '
+                           'tools/update-verify/scripts/chunked-verify.sh '
+                           '{} {}'.format(
+                               total_chunks,
+                               this_chunk,
+                           ),
+                'sparse-profile': 'update-verify',
+            }
             for thing in ("CHANNEL", "VERIFY_CONFIG", "BUILD_TOOLS_REPO"):
                 thing = "worker.env.{}".format(thing)
                 resolve_keyed_by(

@@ -1,7 +1,7 @@
 pushd `dirname $0` &>/dev/null
 MY_DIR=$(pwd)
 popd &>/dev/null
-retry="$MY_DIR/../../buildfarm/utils/retry.py -s 1 -r 3"
+retry="$MY_DIR/../../../../mach python -m redo.cmd -s 1 -a 3"
 
 download_builds() {
   # cleanup
