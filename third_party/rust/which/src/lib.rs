@@ -17,14 +17,9 @@ extern crate libc;
 #[cfg(test)]
 extern crate tempdir;
 
-use std::path::{Path, PathBuf};
-use std::{env, fs};
-
-// Remove the `AsciiExt` will make `which-rs` build failed in older versions of Rust.
-// Please Keep it here though we don't need it in the latest Rust version.
-#[allow(unused)]
 use std::ascii::AsciiExt;
-
+use std::path::{Path,PathBuf};
+use std::{env, fs};
 #[cfg(unix)]
 use std::ffi::CString;
 use std::ffi::OsStr;
@@ -37,10 +32,7 @@ fn ensure_exe_extension<T: AsRef<Path>>(path: T) -> PathBuf {
         // Nothing to do.
         path.as_ref().to_path_buf()
     } else {
-        match path.as_ref()
-            .extension()
-            .and_then(|e| e.to_str())
-            .map(|e| e.eq_ignore_ascii_case(env::consts::EXE_EXTENSION)) {
+        match path.as_ref().extension().and_then(|e| e.to_str()).map(|e| e.eq_ignore_ascii_case(env::consts::EXE_EXTENSION)) {
             // Already has the right extension.
             Some(true) => path.as_ref().to_path_buf(),
             _ => {
@@ -76,18 +68,19 @@ fn ensure_exe_extension<T: AsRef<Path>>(path: T) -> PathBuf {
 /// assert_eq!(result, PathBuf::from("/usr/bin/rustc"));
 ///
 /// ```
-pub fn which<T: AsRef<OsStr>>(binary_name: T) -> Result<PathBuf, &'static str> {
+pub fn which<T: AsRef<OsStr>>(binary_name: T)
+             -> Result<PathBuf, &'static str> {
     env::current_dir()
         .or_else(|_| Err("Couldn't get current directory"))
         .and_then(|cwd| which_in(binary_name, env::var_os("PATH"), &cwd))
 }
 
 /// Find `binary_name` in the path list `paths`, using `cwd` to resolve relative paths.
-pub fn which_in<T, U, V>(binary_name: T, paths: Option<U>, cwd: V) -> Result<PathBuf, &'static str>
-    where T: AsRef<OsStr>,
-          U: AsRef<OsStr>,
-          V: AsRef<Path>
-{
+pub fn which_in<T, U, V>(binary_name: T, paths: Option<U>, cwd: V)
+             -> Result<PathBuf, &'static str>
+                where T: AsRef<OsStr>,
+                      U: AsRef<OsStr>,
+                      V: AsRef<Path> {
     let binary_checker = CompositeChecker::new()
         .add_checker(Box::new(ExistedChecker::new()))
         .add_checker(Box::new(ExecutableChecker::new()));
@@ -104,16 +97,12 @@ impl Finder {
         Finder
     }
 
-    fn find<T, U, V>(&self,
-                     binary_name: T,
-                     paths: Option<U>,
-                     cwd: V,
+    fn find<T, U, V>(&self, binary_name: T, paths: Option<U>, cwd: V,
                      binary_checker: &Checker)
                      -> Result<PathBuf, &'static str>
         where T: AsRef<OsStr>,
               U: AsRef<OsStr>,
-              V: AsRef<Path>
-    {
+              V: AsRef<Path> {
 
         let path = ensure_exe_extension(binary_name.as_ref());
 
@@ -141,12 +130,12 @@ impl Finder {
             }
         } else {
             // No separator, look it up in `paths`.
-            paths.and_then(|paths| {
-                    env::split_paths(paths.as_ref())
-                        .map(|p| ensure_exe_extension(p.join(binary_name.as_ref())))
-                        .skip_while(|p| !(binary_checker.is_valid(&p)))
-                        .next()
-                })
+            paths.and_then(
+                |paths|
+                env::split_paths(paths.as_ref())
+                    .map(|p| ensure_exe_extension(p.join(binary_name.as_ref())))
+                    .skip_while(|p| !(binary_checker.is_valid(&p)))
+                    .next())
                 .ok_or("Cannot find binary path")
         }
     }
@@ -169,14 +158,14 @@ impl Checker for ExecutableChecker {
     #[cfg(unix)]
     fn is_valid(&self, path: &Path) -> bool {
         CString::new(path.as_os_str().as_bytes())
-            .and_then(|c| Ok(unsafe { libc::access(c.as_ptr(), libc::X_OK) == 0 }))
+            .and_then(|c| {
+                Ok(unsafe { libc::access(c.as_ptr(), libc::X_OK) == 0 })
+            })
             .unwrap_or(false)
     }
 
     #[cfg(not(unix))]
-    fn is_valid(&self, _path: &Path) -> bool {
-        true
-    }
+    fn is_valid(&self, _path: &Path) -> bool { true }
 }
 
 struct ExistedChecker;
@@ -189,19 +178,21 @@ impl ExistedChecker {
 
 impl Checker for ExistedChecker {
     fn is_valid(&self, path: &Path) -> bool {
-        fs::metadata(path)
-            .map(|metadata| metadata.is_file())
-            .unwrap_or(false)
+        fs::metadata(path).map(|metadata|{
+            metadata.is_file()
+        }).unwrap_or(false)
     }
 }
 
 struct CompositeChecker {
-    checkers: Vec<Box<Checker>>,
+    checkers: Vec<Box<Checker>>
 }
 
 impl CompositeChecker {
     fn new() -> CompositeChecker {
-        CompositeChecker { checkers: Vec::new() }
+        CompositeChecker {
+            checkers: Vec::new()
+        }
     }
 
     fn add_checker(mut self, checker: Box<Checker>) -> CompositeChecker {
@@ -212,8 +203,7 @@ impl CompositeChecker {
 
 impl Checker for CompositeChecker {
     fn is_valid(&self, path: &Path) -> bool {
-        self.checkers
-            .iter()
+        self.checkers.iter()
             .all(|checker| checker.is_valid(path))
     }
 }
@@ -236,7 +226,8 @@ fn test_exe_extension_existing_extension() {
 #[test]
 #[cfg(windows)]
 fn test_exe_extension_existing_extension_uppercase() {
-    assert_eq!(PathBuf::from("foo.EXE"), ensure_exe_extension("foo.EXE"));
+    assert_eq!(PathBuf::from("foo.EXE"),
+               ensure_exe_extension("foo.EXE"));
 }
 
 #[cfg(test)]
@@ -244,10 +235,10 @@ mod test {
     use super::*;
 
     use std::env;
-    use std::ffi::{OsStr, OsString};
+    use std::ffi::{OsStr,OsString};
     use std::fs;
     use std::io;
-    use std::path::{Path, PathBuf};
+    use std::path::{Path,PathBuf};
     use tempdir::TempDir;
 
     struct TestFixture {
@@ -277,7 +268,8 @@ mod test {
 
     fn touch(dir: &Path, path: &str) -> io::Result<PathBuf> {
         let b = dir.join(path).with_extension(env::consts::EXE_EXTENSION);
-        fs::File::create(&b).and_then(|_f| b.canonicalize())
+        fs::File::create(&b)
+            .and_then(|_f| b.canonicalize())
     }
 
     #[cfg(not(unix))]
@@ -290,8 +282,8 @@ mod test {
             let tempdir = TempDir::new("which_tests").unwrap();
             let mut builder = fs::DirBuilder::new();
             builder.recursive(true);
-            let mut paths = vec![];
-            let mut bins = vec![];
+            let mut paths = vec!();
+            let mut bins = vec!();
             for d in SUBDIRS.iter() {
                 let p = tempdir.path().join(d);
                 builder.create(&p).unwrap();
@@ -345,7 +337,8 @@ mod test {
     fn test_which_extension() {
         let f = TestFixture::new();
         let b = Path::new(&BIN_NAME).with_extension(env::consts::EXE_EXTENSION);
-        assert_eq!(_which(&f, &b).unwrap().canonicalize().unwrap(), f.bins[0])
+        assert_eq!(_which(&f, &b).unwrap().canonicalize().unwrap(),
+                   f.bins[0])
     }
 
     #[test]

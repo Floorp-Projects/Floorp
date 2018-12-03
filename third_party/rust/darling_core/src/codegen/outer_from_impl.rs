@@ -1,9 +1,7 @@
-use proc_macro2::TokenStream;
-use quote::{TokenStreamExt, ToTokens};
-use syn::{GenericParam, Generics, Path, TraitBound, TraitBoundModifier, TypeParamBound};
+use syn::{Generics, Path, TraitBound, TraitBoundModifier, TypeParamBound, GenericParam};
+use quote::{Tokens, ToTokens};
 
 use codegen::TraitImpl;
-use usage::IdentSet;
 
 /// Wrapper for "outer From" traits, such as `FromDeriveInput`, `FromVariant`, and `FromField`.
 pub trait OuterFromImpl<'a> {
@@ -16,14 +14,11 @@ pub trait OuterFromImpl<'a> {
         self.trait_path()
     }
 
-    fn wrap<T: ToTokens>(&'a self, body: T, tokens: &mut TokenStream) {
+    fn wrap<T: ToTokens>(&'a self, body: T, tokens: &mut Tokens) {
         let base = self.base();
         let trayt = self.trait_path();
         let ty_ident = base.ident;
-        // The type parameters used in non-skipped, non-magic fields.
-        // These must impl `FromMeta` unless they have custom bounds.
-        let used = base.used_type_params();
-        let generics = compute_impl_bounds(self.trait_bound(), base.generics.clone(), &used);
+        let generics = compute_impl_bounds(self.trait_bound(), base.generics.clone());
         let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
         tokens.append_all(quote!(
@@ -36,23 +31,21 @@ pub trait OuterFromImpl<'a> {
     }
 }
 
-fn compute_impl_bounds(bound: Path, mut generics: Generics, applies_to: &IdentSet) -> Generics {
+fn compute_impl_bounds(bound: Path, mut generics: Generics) -> Generics {
     if generics.params.is_empty() {
         return generics;
     }
 
     let added_bound = TypeParamBound::Trait(TraitBound {
-        paren_token: None,
-        modifier: TraitBoundModifier::None,
-        lifetimes: None,
-        path: bound,
-    });
+            paren_token: None,
+            modifier: TraitBoundModifier::None,
+            lifetimes: None,
+            path: bound,
+        });
 
     for mut param in generics.params.iter_mut() {
         if let &mut GenericParam::Type(ref mut typ) = param {
-            if applies_to.contains(&typ.ident) {
-                typ.bounds.push(added_bound.clone());
-            }
+            typ.bounds.push(added_bound.clone());
         }
     }
 

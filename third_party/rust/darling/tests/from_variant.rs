@@ -24,4 +24,6 @@ impl From<syn::Ident> for Lorem {
 }
 
 #[test]
-fn expansion() {}
+fn expansion() {
+
+}

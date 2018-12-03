@@ -21,9 +21,9 @@ pub trait IdentExt: Sized + private::Sealed {
     /// #[macro_use]
     /// extern crate syn;
     ///
-    /// use syn::{Error, Ident, Result};
+    /// use syn::Ident;
     /// use syn::ext::IdentExt;
-    /// use syn::parse::ParseStream;
+    /// use syn::parse::{Error, ParseStream, Result};
     ///
     /// // Parses input that looks like `name = NAME` where `NAME` can be
     /// // any identifier.

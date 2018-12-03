@@ -1,21 +1,17 @@
 //! Utility types for attribute parsing.
 
-use std::ops::{BitAnd, BitOr, Deref, Not};
+use std::ops::{Deref, Not, BitAnd, BitOr};
 
 use syn;
-use {FromMeta, Result};
+use {FromMetaItem, Result};
 
 mod ident_list;
-mod ident_string;
 mod ignored;
 mod over_ride;
-mod with_original;
 
 pub use self::ident_list::IdentList;
-pub use self::ident_string::IdentString;
 pub use self::ignored::Ignored;
 pub use self::over_ride::Override;
-pub use self::with_original::WithOriginal;
 
 /// Marker type equivalent to `Option<()>` for use in attribute parsing.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -35,9 +31,9 @@ impl Deref for Flag {
     }
 }
 
-impl FromMeta for Flag {
-    fn from_meta(mi: &syn::Meta) -> Result<Self> {
-        FromMeta::from_meta(mi).map(Flag)
+impl FromMetaItem for Flag {
+    fn from_meta_item(mi: &syn::Meta) -> Result<Self> {
+        FromMetaItem::from_meta_item(mi).map(Flag)
     }
 }
 
@@ -49,11 +45,7 @@ impl From<Flag> for bool {
 
 impl From<bool> for Flag {
     fn from(v: bool) -> Self {
-        if v {
-            Flag::present()
-        } else {
-            Flag(None)
-        }
+        if v { Flag::present() } else { Flag(None) }
     }
 }
 

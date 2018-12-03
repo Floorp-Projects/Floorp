@@ -8,7 +8,6 @@ use std::io::{Read, Write};
 use std::path::Path;
 use syn;
 use syn::fold::Fold;
-use syn::parse::{Parse, ParseStream, Result};
 
 use proc_macro2::{Span, TokenStream};
 
@@ -31,23 +30,17 @@ struct MatchByte {
     arms: Vec<syn::Arm>,
 }
 
-impl Parse for MatchByte {
-    fn parse(input: ParseStream) -> Result<Self> {
-        Ok(MatchByte {
-            expr: {
-                let expr = input.parse()?;
-                input.parse::<Token![,]>()?;
-                expr
-            },
-            arms: {
-                let mut arms = Vec::new();
-                while !input.is_empty() {
-                    arms.push(input.call(syn::Arm::parse)?);
-                }
+impl syn::synom::Synom for MatchByte {
+    named!(parse -> Self, do_parse!(
+        expr: syn!(syn::Expr) >>
+        punct!(,) >>
+        arms: many0!(syn!(syn::Arm)) >> (
+            MatchByte {
+                expr,
                 arms
             }
-        })
-    }
+        )
+    ));
 }
 
 fn get_byte_from_expr_lit(expr: &Box<syn::Expr>) -> u8 {

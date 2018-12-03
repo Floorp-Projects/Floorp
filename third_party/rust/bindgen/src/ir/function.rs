@@ -562,7 +562,11 @@ impl ClangSubItemParser for Function {
             name.push_str("_destructor");
         }
 
-        let mangled_name = cursor_mangling(context, &cursor);
+        let mut mangled_name = cursor_mangling(context, &cursor);
+        if mangled_name.as_ref() == Some(&name) {
+            mangled_name = None;
+        }
+
         let comment = cursor.raw_comment();
 
         let function = Self::new(name, mangled_name, sig, comment, kind, linkage);

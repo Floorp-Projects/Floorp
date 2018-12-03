@@ -2,20 +2,19 @@
 
 #[macro_use]
 extern crate darling;
-extern crate proc_macro2;
+
 #[macro_use]
 extern crate quote;
 extern crate syn;
 
 use darling::ast;
 use darling::FromDeriveInput;
-use proc_macro2::TokenStream;
-use quote::ToTokens;
+use quote::{Tokens, ToTokens};
 use syn::parse_str;
 
 /// A speaking volume. Deriving `FromMeta` will cause this to be usable
 /// as a string value for a meta-item key.
-#[derive(Debug, Clone, Copy, FromMeta)]
+#[derive(Debug, Clone, Copy, FromMetaItem)]
 #[darling(default)]
 enum Volume {
     Normal,
@@ -29,7 +28,7 @@ impl Default for Volume {
     }
 }
 
-/// Support parsing from a full derive input. Unlike FromMeta, this isn't
+/// Support parsing from a full derive input. Unlike FromMetaItem, this isn't
 /// composable; each darling-dependent crate should have its own struct to handle
 /// when its trait is derived.
 #[derive(Debug, FromDeriveInput)]
@@ -55,7 +54,7 @@ struct MyInputReceiver {
 }
 
 impl ToTokens for MyInputReceiver {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
+    fn to_tokens(&self, tokens: &mut Tokens) {
         let MyInputReceiver {
             ref ident,
             ref generics,
@@ -79,10 +78,11 @@ impl ToTokens for MyInputReceiver {
                 // unfortunately.
                 format!(
                     "{} = {{}}",
-                    f.ident
-                        .as_ref()
-                        .map(|v| format!("{}", v))
-                        .unwrap_or_else(|| format!("{}", i))
+                    f.ident.as_ref().map(|v| format!("{}", v)).unwrap_or_else(
+                        || {
+                            format!("{}", i)
+                        },
+                    )
                 )
             })
             .collect::<Vec<_>>()
@@ -97,10 +97,7 @@ impl ToTokens for MyInputReceiver {
 
                 // This works with named or indexed fields, so we'll fall back to the index so we can
                 // write the output as a key-value pair.
-                let field_ident = f.ident
-                    .as_ref()
-                    .map(|v| quote!(#v))
-                    .unwrap_or_else(|| quote!(#i));
+                let field_ident = f.ident.as_ref().map(|v| quote!(#v)).unwrap_or_else(|| quote!(#i));
 
                 match field_volume {
                     Volume::Normal => quote!(self.#field_ident),
@@ -114,7 +111,7 @@ impl ToTokens for MyInputReceiver {
             })
             .collect::<Vec<_>>();
 
-        tokens.extend(quote! {
+        tokens.append_all(quote! {
             impl #imp Speak for #ident #ty #wher {
                 fn speak(&self, writer: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
                     write!(#fmt_string, #(#field_list),*)
@@ -155,8 +152,7 @@ pub struct Foo {
     let receiver = MyInputReceiver::from_derive_input(&parsed).unwrap();
     let tokens = quote!(#receiver);
 
-    println!(
-        r#"
+    println!(r#"
 INPUT:
 
 {}
@@ -168,7 +164,5 @@ PARSED AS:
 EMITS:
 
 {}
-    "#,
-        input, receiver, tokens
-    );
+    "#, input, receiver, tokens);
 }
