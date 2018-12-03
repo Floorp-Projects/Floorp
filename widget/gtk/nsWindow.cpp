@@ -1868,8 +1868,10 @@ gboolean nsWindow::OnExposeEvent(cairo_t *cr) {
   if (!mGdkWindow || mIsFullyObscured || !mHasMappedToplevel) return FALSE;
 
 #ifdef MOZ_WAYLAND
-  // Window does not have visible wl_surface yet.
-  if (!mIsX11Display && !GetWaylandSurface()) return FALSE;
+  // Window does not have visible MozContainer/wl_surface yet.
+  if (!mIsX11Display && (!mContainer || !mContainer->ready_to_draw)) {
+    return FALSE;
+  }
 #endif
 
   nsIWidgetListener *listener = GetListener();
@@ -6581,7 +6583,7 @@ wl_surface *nsWindow::GetWaylandSurface() {
 
 bool nsWindow::WaylandSurfaceNeedsClear() {
   if (mContainer) {
-    return moz_container_needs_clear(MOZ_CONTAINER(mContainer));
+    return moz_container_surface_needs_clear(MOZ_CONTAINER(mContainer));
   }
 
   NS_WARNING(
