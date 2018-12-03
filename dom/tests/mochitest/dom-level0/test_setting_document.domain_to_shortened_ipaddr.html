@@ -11,7 +11,7 @@
   
 </div>
 
-<iframe name="child" src="http://127.0.0.1:8888/tests/dom/tests/mochitest/dom-level0/child_ip_address.html"></iframe>
+<iframe id="childframe" name="child"></iframe>
 
 <pre id="test">
 <script class="testbody" type="application/javascript">
@@ -27,8 +27,16 @@ function receiveMessage(evt)
 
   SimpleTest.finish();
 }
-
 window.addEventListener("message", receiveMessage, false);
+
+// By default, proxies don't apply to 127.0.0.1.
+// We need them to for this test (at least on android), though:
+SpecialPowers.pushPrefEnv({set: [
+  ["network.proxy.no_proxies_on", ""]
+]}).then(function() {
+  var iframe = document.getElementById("childframe");
+  iframe.src = "http://127.0.0.1:8888/tests/dom/tests/mochitest/dom-level0/child_ip_address.html";
+});
 </script>
 </pre>
 </body>
