@@ -36,7 +36,10 @@ RUN bash /tmp/system-setup.sh
 
 # %include taskcluster/scripts/run-task
 ADD topsrcdir/taskcluster/scripts/run-task /builds/worker/bin/run-task
+# %include taskcluster/scripts/misc/fetch-content
+ADD topsrcdir/taskcluster/scripts/misc/fetch-content /builds/worker/bin/fetch-content
 RUN chown -R worker:worker /builds/worker/bin && chmod 755 /builds/worker/bin/*
+ENV PATH $PATH:/builds/worker/bin
 
 # Set variable normally configured at login, by the shells parent process, these
 # are taken from GNU su manual

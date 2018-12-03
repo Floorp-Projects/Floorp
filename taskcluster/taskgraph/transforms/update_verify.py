@@ -11,7 +11,6 @@ from copy import deepcopy
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
-from taskgraph.util.taskcluster import get_taskcluster_artifact_prefix
 from taskgraph.util.treeherder import add_suffix
 
 transforms = TransformSequence()
@@ -51,17 +50,13 @@ def add_command(config, tasks):
                     }
                 )
 
-            update_verify_config = None
             for upstream in chunked.get("dependencies", {}).keys():
                 if 'update-verify-config' in upstream:
-                    update_verify_config = "{}update-verify.cfg".format(
-                        get_taskcluster_artifact_prefix(task, "<{}>".format(upstream))
-                    )
-            if not update_verify_config:
+                    chunked.setdefault('fetches', {})[upstream] = [
+                        "update-verify.cfg",
+                    ]
+                    break
+            else:
                 raise Exception("Couldn't find upate verify config")
-
-            chunked["worker"]["env"]["TASKCLUSTER_VERIFY_CONFIG"] = {
-                "task-reference": update_verify_config
-            }
 
             yield chunked
