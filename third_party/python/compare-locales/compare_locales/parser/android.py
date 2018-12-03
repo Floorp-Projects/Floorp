@@ -13,22 +13,26 @@ break the full parsing, and result in a single Junk entry.
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+import re
 from xml.dom import minidom
 from xml.dom.minidom import Node
 
 from .base import (
     CAN_SKIP,
     EntityBase, Entity, Comment, Junk, Whitespace,
+    LiteralEntity,
     Parser
 )
 
 
 class AndroidEntity(Entity):
-    def __init__(self, ctx, pre_comment, node, all, key, raw_val, val):
+    def __init__(
+        self, ctx, pre_comment, white_space, node, all, key, raw_val, val
+    ):
         # fill out superclass as good as we can right now
         # most span can get modified at endElement
         super(AndroidEntity, self).__init__(
-            ctx, pre_comment,
+            ctx, pre_comment, white_space,
             (None, None),
             (None, None),
             (None, None)
@@ -41,7 +45,13 @@ class AndroidEntity(Entity):
 
     @property
     def all(self):
-        return self._all_literal
+        chunks = []
+        if self.pre_comment is not None:
+            chunks.append(self.pre_comment.all)
+        if self.inner_white is not None:
+            chunks.append(self.inner_white.all)
+        chunks.append(self._all_literal)
+        return ''.join(chunks)
 
     @property
     def key(self):
@@ -53,6 +63,23 @@ class AndroidEntity(Entity):
 
     def value_position(self, offset=0):
         return (0, offset)
+
+    def wrap(self, raw_val):
+        clone = self.node.cloneNode(True)
+        if clone.childNodes.length == 1:
+            child = clone.childNodes[0]
+        else:
+            for child in clone.childNodes:
+                if child.nodeType == Node.CDATA_SECTION_NODE:
+                    break
+        child.data = raw_val
+        all = []
+        if self.pre_comment is not None:
+            all.append(self.pre_comment.all)
+        if self.inner_white is not None:
+            all.append(self.inner_white.all)
+        all.append(clone.toxml())
+        return LiteralEntity(self.key, raw_val, ''.join(all))
 
 
 class NodeMixin(object):
@@ -82,6 +109,10 @@ class XMLComment(NodeMixin, Comment):
     def val(self):
         return self._val_literal
 
+    @property
+    def key(self):
+        return None
+
 
 class DocumentWrapper(NodeMixin, EntityBase):
     def __init__(self, all):
@@ -100,12 +131,25 @@ class XMLJunk(Junk):
 
 
 def textContent(node):
+    if node.childNodes.length == 0:
+        return ''
+    for child in node.childNodes:
+        if child.nodeType == minidom.Node.CDATA_SECTION_NODE:
+            return child.data
     if (
-            node.nodeType == minidom.Node.TEXT_NODE or
-            node.nodeType == minidom.Node.CDATA_SECTION_NODE
+            node.childNodes.length != 1 or
+            node.childNodes[0].nodeType != minidom.Node.TEXT_NODE
     ):
-        return node.nodeValue
-    return ''.join(textContent(child) for child in node.childNodes)
+        # Return something, we'll fail in checks on this
+        return node.toxml()
+    return node.childNodes[0].data
+
+
+NEWLINE = re.compile(r'[ \t]*\n[ \t]*')
+
+
+def normalize(val):
+    return NEWLINE.sub('\n', val.strip(' \t'))
 
 
 class AndroidParser(Parser):
@@ -135,25 +179,62 @@ class AndroidParser(Parser):
             yield DocumentWrapper(
                 '<?xml version="1.0" encoding="utf-8"?>\n<resources>'
             )
-        for node in root_children:
-            if node.nodeType == Node.ELEMENT_NODE:
-                yield self.handleElement(node)
-                self.last_comment = None
-            if node.nodeType in (Node.TEXT_NODE, Node.CDATA_SECTION_NODE):
-                if not only_localizable:
-                    yield XMLWhitespace(node.toxml(), node.nodeValue)
+        child_num = 0
+        while child_num < len(root_children):
+            node = root_children[child_num]
             if node.nodeType == Node.COMMENT_NODE:
-                self.last_comment = XMLComment(node.toxml(), node.nodeValue)
+                current_comment, child_num = self.handleComment(
+                    node, root_children, child_num
+                )
+                if child_num < len(root_children):
+                    node = root_children[child_num]
+                else:
+                    if not only_localizable:
+                        yield current_comment
+                    break
+            else:
+                current_comment = None
+            if node.nodeType in (Node.TEXT_NODE, Node.CDATA_SECTION_NODE):
+                white_space = XMLWhitespace(node.toxml(), node.nodeValue)
+                child_num += 1
+                if current_comment is None:
+                    if not only_localizable:
+                        yield white_space
+                    continue
+                if node.nodeValue.count('\n') > 1:
+                    if not only_localizable:
+                        if current_comment is not None:
+                            yield current_comment
+                        yield white_space
+                    continue
+                if child_num < len(root_children):
+                    node = root_children[child_num]
+                else:
+                    if not only_localizable:
+                        if current_comment is not None:
+                            yield current_comment
+                        yield white_space
+                    break
+            else:
+                white_space = None
+            if node.nodeType == Node.ELEMENT_NODE:
+                yield self.handleElement(node, current_comment, white_space)
+            else:
                 if not only_localizable:
-                    yield self.last_comment
+                    if current_comment:
+                        yield current_comment
+                    if white_space:
+                        yield white_space
+            child_num += 1
         if not only_localizable:
             yield DocumentWrapper('</resources>\n')
 
-    def handleElement(self, element):
+    def handleElement(self, element, current_comment, white_space):
         if element.nodeName == 'string' and element.hasAttribute('name'):
             return AndroidEntity(
                 self.ctx,
-                self.last_comment,
+                current_comment,
+                white_space,
                 element,
                 element.toxml(),
                 element.getAttribute('name'),
@@ -162,3 +243,33 @@ class AndroidParser(Parser):
             )
         else:
             return XMLJunk(element.toxml())
+
+    def handleComment(self, node, root_children, child_num):
+        all = node.toxml()
+        val = normalize(node.nodeValue)
+        while True:
+            child_num += 1
+            if child_num >= len(root_children):
+                break
+            node = root_children[child_num]
+            if node.nodeType == Node.TEXT_NODE:
+                if node.nodeValue.count('\n') > 1:
+                    break
+                white = node
+                child_num += 1
+                if child_num >= len(root_children):
+                    break
+                node = root_children[child_num]
+            else:
+                white = None
+            if node.nodeType != Node.COMMENT_NODE:
+                if white is not None:
+                    # do not consume this node
+                    child_num -= 1
+                break
+            if white:
+                all += white.toxml()
+                val += normalize(white.nodeValue)
+            all += node.toxml()
+            val += normalize(node.nodeValue)
+        return XMLComment(all, val), child_num
