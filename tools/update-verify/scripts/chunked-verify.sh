@@ -12,13 +12,7 @@ PYTHON='./mach python'
 chunks=$1
 thisChunk=$2
 
-if [ -n "$TASKCLUSTER_VERIFY_CONFIG" ]; then
-    wget -O "$SCRIPTS_DIR/release/updates/update-verify.cfg" "$TASKCLUSTER_VERIFY_CONFIG"
-    VERIFY_CONFIG="update-verify.cfg"
-else
-    echo "Unable to run without TASKCLUSTER_VERIFY_CONFIG."
-    exit 1
-fi
+VERIFY_CONFIG="$MOZ_FETCHES_DIR/update-verify.cfg"
 
 # release promotion
 if [ -n "$CHANNEL" ]; then
