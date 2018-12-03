@@ -107,15 +107,12 @@ class DTDParser(Parser):
         if (entity and isinstance(entity, Junk)) or entity is None:
             m = self.rePE.match(ctx.contents, offset)
             if m:
-                self.last_comment = None
                 entity = DTDEntity(
-                    ctx, '', m.span(), m.span('key'), m.span('val'))
+                    ctx, None, None, m.span(), m.span('key'), m.span('val'))
         return entity
 
-    def createEntity(self, ctx, m):
+    def createEntity(self, ctx, m, current_comment, white_space):
         valspan = m.span('val')
         valspan = (valspan[0]+1, valspan[1]-1)
-        pre_comment = self.last_comment
-        self.last_comment = None
-        return DTDEntity(ctx, pre_comment,
+        return DTDEntity(ctx, current_comment, white_space,
                          m.span(), m.span('key'), valspan)
