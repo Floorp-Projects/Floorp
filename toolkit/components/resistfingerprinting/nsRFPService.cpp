@@ -677,19 +677,20 @@ nsresult nsRFPService::GetSpoofedUserAgent(nsACString& userAgent,
   uint32_t firefoxVersion = appVersion.ToInteger(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+#ifdef DEBUG
   // If we are running in Firefox ESR, determine whether the formula of ESR
   // version has changed.  Once changed, we must update the formula in this
   // function.
   if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "esr")) {
-    MOZ_ASSERT(((firefoxVersion % 7) == 4),
-               "Please udpate ESR version formula in nsRFPService.cpp");
+    MOZ_ASSERT(((firefoxVersion % 8) == 4),
+               "Please update ESR version formula in nsRFPService.cpp");
   }
+#endif  // DEBUG
 
-  // Starting from Firefox 10, Firefox ESR was released once every seven
-  // Firefox releases, e.g. Firefox 10, 17, 24, 31, and so on.
-  // Except we used 60 as an ESR instead of 59.
+  // Starting with Firefox 52, a new ESR version will be released every
+  // eight Firefox versions: 52, 60, 68, ...
   // We infer the last and closest ESR version based on this rule.
-  uint32_t spoofedVersion = firefoxVersion - ((firefoxVersion - 4) % 7);
+  uint32_t spoofedVersion = firefoxVersion - ((firefoxVersion - 4) % 8);
   const char* spoofedOS = isForHTTPHeader ? SPOOFED_HTTP_UA_OS : SPOOFED_UA_OS;
   userAgent.Assign(nsPrintfCString(
       "Mozilla/5.0 (%s; rv:%d.0) Gecko/%s Firefox/%d.0", spoofedOS,
