@@ -179,13 +179,6 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
-// If this is true, event.returnValue is available.
-VARCACHE_PREF(
-  "dom.event.returnValue.enabled",
-   dom_event_returnValue_enabled,
-  RelaxedAtomicBool, false
-)
-
 // How long a content process can take before closing its IPC channel
 // after shutdown is initiated.  If the process exceeds the timeout,
 // we fear the worst and kill it.
