@@ -47,6 +47,9 @@ with Files("tryselect/selectors/release.py"):
 with Files("update-packaging/**"):
     BUG_COMPONENT = ("Release Engineering", "Other")
 
+with Files("update-verify/**"):
+    BUG_COMPONENT = ("Release Engineering", "Release Automation: Updates")
+
 SPHINX_TREES['lint'] = 'lint/docs'
 
 with Files('lint/docs/**'):
