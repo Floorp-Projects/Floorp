@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function
+
 import os.path
 import sys
 
@@ -24,7 +26,9 @@ for find_cert, replace_cert in zip(*[iter(cert_pairs)]*2):
         print("Didn't find {}...".format(find_cert))
 
 if len(updater_data) != len(new_updater):
-    print("WARNING: new updater is not the same length as the old one (old: {}, new: {})".format(len(updater_data), len(new_updater)))
+    print(
+        "WARNING: new updater is not the same length as the old one (old: {}, new: {})".format(
+            len(updater_data), len(new_updater)))
 
 if updater_data == new_updater:
     print("WARNING: updater is unchanged")
