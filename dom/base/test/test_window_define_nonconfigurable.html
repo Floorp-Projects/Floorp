@@ -22,8 +22,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107443
      "Should return false when 'failing' to define non-configurable property via Object.defineProperty.")
   var desc = Object.getOwnPropertyDescriptor(window, "nosuchprop");
   is(typeof(desc), "object", "Should have a property 'nosuchprop' now");
-  is(desc.configurable, true,
-     "Property 'nosuchprop' should be configurable");
+  todo_is(desc.configurable, true,
+          "Property 'nosuchprop' should be configurable");
   is(desc.writable, false, "Property 'nosuchprop' should be readonly");
   is(desc.value, 5, "Property 'nosuchprop' should have the right value");
 
@@ -32,8 +32,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107443
      "Should return object when succesfully defining 'nosuchprop2'");
   desc = Object.getOwnPropertyDescriptor(window, "nosuchprop2");
   is(typeof(desc), "object", "Should have a property 'nosuchprop2' now");
-  is(desc.configurable, true,
-     "Property 'nosuchprop2' should be configurable");
+  todo_is(desc.configurable, true,
+          "Property 'nosuchprop2' should be configurable");
   is(desc.writable, false, "Property 'nosuchprop2' should be readonly");
   is(desc.value, 6, "Property 'nosuchprop2' should have the right value");
 
@@ -54,8 +54,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107443
      "Should not be able to Reflect.defineProperty if non-configurable");
   desc = Object.getOwnPropertyDescriptor(window, "nosuchprop4");
   is(typeof(desc), "object", "Should have a property 'nosuchprop4' now");
-  is(desc.configurable, true,
-     "Property 'nosuchprop4' should be configurable");
+  todo_is(desc.configurable, true,
+          "Property 'nosuchprop4' should be configurable");
   is(desc.writable, false, "Property 'nosuchprop4' should be readonly");
   is(desc.value, 8, "Property 'nosuchprop4' should have the right value");
 
@@ -65,8 +65,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107443
      "Should be able to Reflect.defineProperty with default configurability");
   desc = Object.getOwnPropertyDescriptor(window, "nosuchprop5");
   is(typeof(desc), "object", "Should have a property 'nosuchprop5' now");
-  is(desc.configurable, true,
-     "Property 'nosuchprop5' should be configurable");
+  todo_is(desc.configurable, true,
+          "Property 'nosuchprop5' should be configurable");
   is(desc.writable, false, "Property 'nosuchprop5' should be readonly");
   is(desc.value, 9, "Property 'nosuchprop5' should have the right value");
 
