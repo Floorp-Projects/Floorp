@@ -33,6 +33,8 @@
 #include "nsIWidgetListener.h"
 #include "nsIScreenManager.h"
 #include "SystemTimeConverter.h"
+#include "nsIPresShell.h"
+#include "nsViewManager.h"
 
 #include "nsGtkKeyUtils.h"
 #include "nsGtkCursors.h"
@@ -3089,9 +3091,7 @@ void nsWindow::OnWindowStateEvent(GtkWidget *aWidget,
   }
 
   // This is a workaround for https://gitlab.gnome.org/GNOME/gtk/issues/1395
-  // Gtk+ controls window active appearance by window-state-event signal
-  // but gecko uses focus-in/out signals. So we need to repaint the titlebar
-  // when window-state-event comes.
+  // Gtk+ controls window active appearance by window-state-event signal.
   if (mDrawInTitlebar && (aEvent->changed_mask & GDK_WINDOW_STATE_FOCUSED)) {
     // Emulate what Gtk+ does at gtk_window_state_event().
     // We can't check GTK_STATE_FLAG_BACKDROP directly as it's set by Gtk+
@@ -3099,6 +3099,7 @@ void nsWindow::OnWindowStateEvent(GtkWidget *aWidget,
     mTitlebarBackdropState =
         !(aEvent->new_window_state & GDK_WINDOW_STATE_FOCUSED);
 
+    ForceTitlebarRedraw();
     return;
   }
 
@@ -6732,4 +6733,44 @@ bool nsWindow::GetTopLevelWindowActiveState(nsIFrame *aFrame) {
   }
 
   return !window->mTitlebarBackdropState;
+}
+
+static nsIFrame *FindTitlebarFrame(nsIFrame *aFrame) {
+  for (nsIFrame *childFrame : aFrame->PrincipalChildList()) {
+    const nsStyleDisplay *frameDisp = childFrame->StyleDisplay();
+    if (frameDisp->mAppearance == StyleAppearance::MozWindowTitlebar ||
+        frameDisp->mAppearance == StyleAppearance::MozWindowTitlebarMaximized) {
+      return childFrame;
+    }
+
+    if (nsIFrame *foundFrame = FindTitlebarFrame(childFrame)) {
+      return foundFrame;
+    }
+  }
+  return nullptr;
+}
+
+void nsWindow::ForceTitlebarRedraw(void) {
+  MOZ_ASSERT(mDrawInTitlebar, "We should not redraw invisible titlebar.");
+
+  nsIPresShell *shell =
+      mWidgetListener ? mWidgetListener->GetPresShell() : nullptr;
+  if (!shell) {
+    return;
+  }
+  nsView *view = nsView::GetViewFor(this);
+  if (!view) {
+    return;
+  }
+  nsIFrame *frame = view->GetFrame();
+  if (!frame) {
+    return;
+  }
+
+  frame = FindTitlebarFrame(frame);
+  if (frame) {
+    nsLayoutUtils::PostRestyleEvent(frame->GetContent()->AsElement(),
+                                    nsRestyleHint(0),
+                                    nsChangeHint_RepaintFrame);
+  }
 }
