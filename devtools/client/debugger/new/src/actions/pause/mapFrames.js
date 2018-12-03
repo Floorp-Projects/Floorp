@@ -4,15 +4,35 @@
 
 // @flow
 
-import { getFrames, getSymbols, getSource } from "../../selectors";
+import {
+  getFrames,
+  getSymbols,
+  getSource,
+  getSelectedFrame
+} from "../../selectors";
+
 import assert from "../../utils/assert";
 import { findClosestFunction } from "../../utils/ast";
 
 import type { Frame } from "../../types";
 import type { State } from "../../reducers/types";
 import type { ThunkArgs } from "../types";
+import { features } from "../../utils/prefs";
 
 import { isGeneratedId } from "devtools-source-map";
+
+function getSelectedFrameId(state, frames) {
+  if (!features.originalBlackbox) {
+    const selectedFrame = getSelectedFrame(state);
+    return selectedFrame && selectedFrame.id;
+  }
+
+  const selectedFrame =  frames.find(frame =>
+    !getSource(state, frame.location.sourceId).isBlackBoxed
+  )
+
+  return selectedFrame && selectedFrame.id
+}
 
 export function updateFrameLocation(frame: Frame, sourceMaps: any) {
   if (frame.isOriginal) {
@@ -149,9 +169,11 @@ export function mapFrames() {
     mappedFrames = await expandFrames(mappedFrames, sourceMaps, getState);
     mappedFrames = mapDisplayNames(mappedFrames, getState);
 
+    const selectedFrameId = getSelectedFrameId(getState(), mappedFrames)
     dispatch({
       type: "MAP_FRAMES",
-      frames: mappedFrames
+      frames: mappedFrames,
+      selectedFrameId
     });
   };
 }
