@@ -397,7 +397,7 @@ uint32_t Gecko_CalcStyleDifference(ComputedStyleBorrowed old_style,
                                    bool* reset_only_changed);
 
 // Get an element snapshot for a given element from the table.
-const ServoElementSnapshot* Gecko_GetElementSnapshot(
+const mozilla::ServoElementSnapshot* Gecko_GetElementSnapshot(
     const mozilla::ServoElementSnapshotTable* table,
     RawGeckoElementBorrowed element);
 
