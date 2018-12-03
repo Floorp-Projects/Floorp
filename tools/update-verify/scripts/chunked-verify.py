@@ -22,20 +22,19 @@ UPDATE_VERIFY_DIR = path.join(
 
 
 if __name__ == "__main__":
-    from optparse import OptionParser
-    parser = OptionParser("")
+    from argparse import ArgumentParser
+    parser = ArgumentParser("")
 
     parser.set_defaults(
-        configDict="updateChannels",
         chunks=None,
         thisChunk=None,
     )
-    parser.add_option("--verify-config", dest="verifyConfig")
-    parser.add_option("--verify-channel", dest="verify_channel")
-    parser.add_option("--chunks", dest="chunks", type="int")
-    parser.add_option("--this-chunk", dest="thisChunk", type="int")
+    parser.add_argument("--verify-config", required=True, dest="verifyConfig")
+    parser.add_argument("--verify-channel", required=True, dest="verify_channel")
+    parser.add_argument("--chunks", required=True, dest="chunks", type=int)
+    parser.add_argument("--this-chunk", required=True, dest="thisChunk", type=int)
 
-    options, args = parser.parse_args()
+    options = parser.parse_args()
     assert options.chunks and options.thisChunk, \
         "chunks and this-chunk are required"
     assert path.isfile(options.verifyConfig), "Update verify config must exist!"
