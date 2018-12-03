@@ -1,21 +1,20 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::cg;
 use crate::parse::ParseVariantAttrs;
 use crate::to_css::{CssFieldAttrs, CssInputAttrs, CssVariantAttrs};
-use proc_macro2::TokenStream;
-use quote::TokenStreamExt;
+use quote::Tokens;
 use syn::{Data, DeriveInput, Fields, Ident, Type};
 
-pub fn derive(mut input: DeriveInput) -> TokenStream {
+pub fn derive(mut input: DeriveInput) -> Tokens {
     let css_attrs = cg::parse_input_attrs::<CssInputAttrs>(&input);
     let mut types = vec![];
     let mut values = vec![];
 
-    let input_ident = &input.ident;
-    let input_name = || cg::to_css_identifier(&input_ident.to_string());
+    let input_ident = input.ident;
+    let input_name = || cg::to_css_identifier(input_ident.as_ref());
     if let Some(function) = css_attrs.function {
         values.push(function.explicit().unwrap_or_else(input_name));
     // If the whole value is wrapped in a function, value types of
@@ -50,7 +49,7 @@ pub fn derive(mut input: DeriveInput) -> TokenStream {
                         }
                     }
                     let ident = &v.ident;
-                    let variant_name = || cg::to_css_identifier(&ident.to_string());
+                    let variant_name = || cg::to_css_identifier(ident.as_ref());
                     if info_attrs.starts_with_keyword {
                         values.push(variant_name());
                         continue;
@@ -153,7 +152,7 @@ fn derive_struct_fields<'a>(
                 .ident
                 .as_ref()
                 .expect("only named field should use represents_keyword");
-            values.push(cg::to_css_identifier(&ident.to_string()));
+            values.push(cg::to_css_identifier(ident.as_ref()));
             return None;
         }
         if let Some(if_empty) = css_attrs.if_empty {

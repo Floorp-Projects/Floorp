@@ -12,10 +12,9 @@
 
 [package]
 name = "which"
-version = "1.0.5"
+version = "1.0.3"
 authors = ["fangyuanziti <tiziyuanfang@gmail.com>"]
 description = "A Rust equivalent of Unix command \"which\". Locate installed execuable in cross platforms."
-documentation = "https://docs.rs/which/"
 readme = "README.md"
 keywords = ["which", "which-rs", "unix", "command"]
 categories = ["os", "filesystem"]

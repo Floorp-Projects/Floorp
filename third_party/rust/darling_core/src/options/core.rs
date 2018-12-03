@@ -1,12 +1,12 @@
 use ident_case::RenameRule;
 use syn;
 
-use ast::{Data, Fields, Style};
+use {Result, Error, FromMetaItem};
+use ast::{Data, Style, Fields};
 use codegen;
 use options::{DefaultExpression, InputField, InputVariant, ParseAttribute, ParseData};
-use {Error, FromMeta, Result};
 
-/// A struct or enum which should have `FromMeta` or `FromDeriveInput` implementations
+/// A struct or enum which should have `FromMetaItem` or `FromDeriveInput` implementations
 /// generated.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Core {
@@ -45,7 +45,7 @@ impl Core {
             default: Default::default(),
             // See https://github.com/TedDriggs/darling/issues/10: We default to snake_case
             // for enums to help authors produce more idiomatic APIs.
-            rename_rule: if let syn::Data::Enum(_) = di.data {
+            rename_rule: if let syn::Data::Enum(_) = di.data{
                 RenameRule::SnakeCase
             } else {
                 Default::default()
@@ -56,10 +56,11 @@ impl Core {
     }
 
     fn as_codegen_default<'a>(&'a self) -> Option<codegen::DefaultExpression<'a>> {
-        self.default.as_ref().map(|expr| match *expr {
-            DefaultExpression::Explicit(ref path) => codegen::DefaultExpression::Explicit(path),
-            DefaultExpression::Inherit | DefaultExpression::Trait => {
-                codegen::DefaultExpression::Trait
+        self.default.as_ref().map(|expr| {
+            match *expr {
+                DefaultExpression::Explicit(ref path) => codegen::DefaultExpression::Explicit(path),
+                DefaultExpression::Inherit |
+                DefaultExpression::Trait => codegen::DefaultExpression::Trait,
             }
         })
     }
@@ -67,31 +68,31 @@ impl Core {
 
 impl ParseAttribute for Core {
     fn parse_nested(&mut self, mi: &syn::Meta) -> Result<()> {
-        match mi.name().to_string().as_str() {
+        match mi.name().as_ref() {
             "default" => {
                 if self.default.is_some() {
                     Err(Error::duplicate_field("default"))
                 } else {
-                    self.default = FromMeta::from_meta(mi)?;
+                    self.default = FromMetaItem::from_meta_item(mi)?;
                     Ok(())
                 }
             }
             "rename_all" => {
                 // WARNING: This may have been set based on body shape previously,
                 // so an overwrite may be permissible.
-                self.rename_rule = FromMeta::from_meta(mi)?;
+                self.rename_rule = FromMetaItem::from_meta_item(mi)?;
                 Ok(())
             }
             "map" => {
                 if self.map.is_some() {
                     Err(Error::duplicate_field("map"))
                 } else {
-                    self.map = FromMeta::from_meta(mi)?;
+                    self.map = FromMetaItem::from_meta_item(mi)?;
                     Ok(())
                 }
             }
             "bound" => {
-                self.bound = FromMeta::from_meta(mi)?;
+                self.bound = FromMetaItem::from_meta_item(mi)?;
                 Ok(())
             }
             n => Err(Error::unknown_field(n.as_ref())),
@@ -116,9 +117,9 @@ impl ParseData for Core {
         let f = InputField::from_field(field, Some(&self))?;
 
         match self.data {
-            Data::Struct(Fields {
-                style: Style::Unit, ..
-            }) => panic!("Core::parse_field should not be called on unit"),
+            Data::Struct(Fields { style: Style::Unit, .. }) => {
+                panic!("Core::parse_field should not be called on unit")
+            }
             Data::Struct(Fields { ref mut fields, .. }) => {
                 fields.push(f);
                 Ok(())

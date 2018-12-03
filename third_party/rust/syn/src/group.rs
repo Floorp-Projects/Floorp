@@ -101,8 +101,8 @@ fn parse_delimited(input: ParseStream, delimiter: Delimiter) -> Result<(Span, Pa
 /// #[macro_use]
 /// extern crate syn;
 ///
-/// use syn::{token, Ident, Result, Type};
-/// use syn::parse::{Parse, ParseStream};
+/// use syn::{token, Ident, Type};
+/// use syn::parse::{Parse, ParseStream, Result};
 /// use syn::punctuated::Punctuated;
 ///
 /// // Parse a simplified tuple struct syntax like:
@@ -161,8 +161,8 @@ macro_rules! parenthesized {
 /// #
 /// #[macro_use]
 /// extern crate syn;
-/// use syn::{token, Ident, Result, Type};
-/// use syn::parse::{Parse, ParseStream};
+/// use syn::{token, Ident, Type};
+/// use syn::parse::{Parse, ParseStream, Result};
 /// use syn::punctuated::Punctuated;
 ///
 /// // Parse a simplified struct syntax like:
@@ -246,8 +246,8 @@ macro_rules! braced {
 /// extern crate proc_macro2;
 ///
 /// use proc_macro2::TokenStream;
-/// use syn::{token, Result};
-/// use syn::parse::{Parse, ParseStream};
+/// use syn::token;
+/// use syn::parse::{Parse, ParseStream, Result};
 ///
 /// // Parse an outer attribute like:
 /// //

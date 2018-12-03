@@ -1,19 +1,16 @@
-use proc_macro2::TokenStream;
+use quote::Tokens;
 
-use ast::Fields;
 use ast::Style;
 use codegen::field;
 use codegen::Field;
+use ast::Fields;
 
 pub struct FieldsGen<'a>(pub &'a Fields<Field<'a>>);
 
 impl<'a> FieldsGen<'a> {
-    pub(in codegen) fn declarations(&self) -> TokenStream {
+    pub(in codegen) fn declarations(&self) -> Tokens {
         match *self.0 {
-            Fields {
-                style: Style::Struct,
-                ref fields,
-            } => {
+            Fields { style: Style::Struct, ref fields } => {
                 let vdr = fields.into_iter().map(Field::as_declaration);
                 quote!(#(#vdr)*)
             }
@@ -22,7 +19,7 @@ impl<'a> FieldsGen<'a> {
     }
 
     /// Generate the loop which walks meta items looking for property matches.
-    pub(in codegen) fn core_loop(&self) -> TokenStream {
+    pub(in codegen) fn core_loop(&self) -> Tokens {
         let arms: Vec<field::MatchArm> = self.0.as_ref().map(Field::as_match).fields;
 
         quote!(
@@ -38,20 +35,17 @@ impl<'a> FieldsGen<'a> {
         )
     }
 
-    pub fn require_fields(&self) -> TokenStream {
+    pub fn require_fields(&self) -> Tokens {
         match *self.0 {
-            Fields {
-                style: Style::Struct,
-                ref fields,
-            } => {
+            Fields { style: Style::Struct, ref fields } => {
                 let checks = fields.into_iter().map(Field::as_presence_check);
                 quote!(#(#checks)*)
             }
-            _ => panic!("FieldsGen doesn't support tuples for requirement checks"),
+            _ => panic!("FieldsGen doesn't support tuples for requirement checks")
         }
     }
 
-    pub(in codegen) fn initializers(&self) -> TokenStream {
+    pub(in codegen) fn initializers(&self) -> Tokens {
         let inits: Vec<_> = self.0.as_ref().map(Field::as_initializer).fields;
 
         quote!(#(#inits),*)

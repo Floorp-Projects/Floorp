@@ -4,13 +4,15 @@
 extern crate darling;
 extern crate syn;
 
-#[derive(Debug, FromMeta)]
-#[darling(rename_all = "snake_case")]
+#[derive(Debug, FromMetaItem)]
+#[darling(rename_all="snake_case")]
 enum Pattern {
     Owned,
     Immutable,
-    Mutable,
+    Mutable
 }
 
 #[test]
-fn expansion() {}
+fn expansion() {
+
+}
