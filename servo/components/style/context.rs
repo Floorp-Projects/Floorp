@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 //! The context within which style is calculated.
 
@@ -29,6 +29,8 @@ use crate::thread_state::{self, ThreadState};
 use crate::timer::Timer;
 use crate::traversal::DomTraversal;
 use crate::traversal_flags::TraversalFlags;
+#[cfg(feature = "servo")]
+use crossbeam_channel::Sender;
 use euclid::Size2D;
 use euclid::TypedScale;
 use fxhash::FxHashMap;
@@ -39,8 +41,6 @@ use selectors::NthIndexCache;
 use servo_arc::Arc;
 #[cfg(feature = "servo")]
 use servo_atoms::Atom;
-#[cfg(feature = "servo")]
-use servo_channel::Sender;
 use std::fmt;
 use std::ops;
 #[cfg(feature = "servo")]
