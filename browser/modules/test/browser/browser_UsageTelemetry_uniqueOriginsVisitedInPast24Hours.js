@@ -9,6 +9,8 @@ ChromeUtils.defineModuleGetter(this, "URICountListener",
                                "resource:///modules/BrowserUsageTelemetry.jsm");
 
 add_task(async function test_uniqueDomainsVisitedInPast24Hours() {
+  // By default, proxies don't apply to 127.0.0.1. We need them to for this test, though:
+  await SpecialPowers.pushPrefEnv({set: [["network.proxy.no_proxies_on", ""]]});
   registerCleanupFunction(async () => {
     info("Cleaning up");
     URICountListener.resetUniqueDomainsVisitedInPast24Hours();
@@ -33,10 +35,10 @@ add_task(async function test_uniqueDomainsVisitedInPast24Hours() {
   // Set the expiry time to 1 second
   await SpecialPowers.pushPrefEnv({set: [["browser.engagement.recent_visited_origins.expiry", 1]]});
 
-  // http://www.exämple.test
+  // http://www.exÃ¤mple.test
   await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "http://xn--exmple-cua.test");
   is(URICountListener.uniqueDomainsVisitedInPast24Hours, startingCount + 2,
-     "www.exämple.test should count as a unique visit");
+     "www.exÃ¤mple.test should count as a unique visit");
 
   let countBefore = URICountListener.uniqueDomainsVisitedInPast24Hours;
 
@@ -53,4 +55,3 @@ add_task(async function test_uniqueDomainsVisitedInPast24Hours() {
   BrowserTestUtils.removeTab(win.gBrowser.selectedTab);
   await BrowserTestUtils.closeWindow(win);
 });
-

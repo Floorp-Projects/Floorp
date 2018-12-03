@@ -9,6 +9,8 @@ const WARNING_PATTERN = [{
 }];
 
 add_task(async function testInsecurePasswordWarning() {
+  // By default, proxies don't apply to 127.0.0.1. We need them to for this test, though:
+  await SpecialPowers.pushPrefEnv({set: [["network.proxy.no_proxies_on", ""]]});
   let warningPatternHandler;
 
   function messageHandler(msgObj) {
