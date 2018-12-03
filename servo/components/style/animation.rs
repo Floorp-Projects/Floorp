@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 //! CSS transitions and animations.
 
@@ -25,9 +25,9 @@ use crate::values::computed::TimingFunction;
 use crate::values::generics::box_::AnimationIterationCount;
 use crate::values::generics::easing::{StepPosition, TimingFunction as GenericTimingFunction};
 use crate::Atom;
-use servo_arc::Arc;
 #[cfg(feature = "servo")]
-use servo_channel::Sender;
+use crossbeam_channel::Sender;
+use servo_arc::Arc;
 use std::fmt;
 #[cfg(feature = "gecko")]
 use std::sync::mpsc::Sender;
