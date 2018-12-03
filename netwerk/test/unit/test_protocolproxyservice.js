@@ -953,9 +953,40 @@ function isresolvable_callback(pi)
   Assert.equal(pi.port, 1234);
   Assert.equal(pi.host, "127.0.0.1");
 
+  run_localhost_pac();
+}
+
+function run_localhost_pac()
+{
+  // test localhost in the pac file
+
+  var pac = 'data:text/plain,' +
+            'function FindProxyForURL(url, host) {' +
+            ' return "PROXY totallycrazy:1234";' +
+            '}';
+
+  // Use default filter list string for "no_proxies_on" ("localhost, 127.0.0.1")
+  prefs.clearUserPref("network.proxy.no_proxies_on");
+  var channel = NetUtil.newChannel({
+    uri: "http://localhost/",
+    loadUsingSystemPrincipal: true
+  });
+  prefs.setIntPref("network.proxy.type", 2);
+  prefs.setCharPref("network.proxy.autoconfig_url", pac);
+
+  var cb = new resolveCallback();
+  cb.nextFunction = localhost_callback;
+  var req = pps.asyncResolve(channel, 0, cb);
+}
+
+function localhost_callback(pi)
+{
+  Assert.equal(pi, null); // no proxy!
+
   prefs.setIntPref("network.proxy.type", 0);
   do_test_finished();
 }
+
 
 function run_test() {
   register_test_protocol_handler();
