@@ -3,6 +3,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# -*- coding: utf-8 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 from __future__ import absolute_import, print_function
 
 import json
@@ -110,7 +115,7 @@ def test_get_previous_tag_version(version, tag, previous_tag):
 
     mock_hg_json = {
         'tags': [
-            {'tag': tag} for tag in ff_48_tags
+            {'tag': ff_48_tag} for ff_48_tag in ff_48_tags
         ],
     }
 
