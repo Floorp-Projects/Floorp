@@ -89,8 +89,6 @@ GType moz_container_get_type(void);
 GtkWidget *moz_container_new(void);
 void moz_container_put(MozContainer *container, GtkWidget *child_widget, gint x,
                        gint y);
-void moz_container_move(MozContainer *container, GtkWidget *child_widget,
-                        gint x, gint y, gint width, gint height);
 
 #ifdef MOZ_WAYLAND
 struct wl_surface *moz_container_get_wl_surface(MozContainer *container);

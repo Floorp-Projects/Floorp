@@ -120,29 +120,6 @@ void moz_container_put(MozContainer *container, GtkWidget *child_widget, gint x,
   gtk_widget_set_parent(child_widget, GTK_WIDGET(container));
 }
 
-void moz_container_move(MozContainer *container, GtkWidget *child_widget,
-                        gint x, gint y, gint width, gint height) {
-  MozContainerChild *child;
-  GtkAllocation new_allocation;
-
-  child = moz_container_get_child(container, child_widget);
-
-  child->x = x;
-  child->y = y;
-
-  new_allocation.x = x;
-  new_allocation.y = y;
-  new_allocation.width = width;
-  new_allocation.height = height;
-
-  /* printf("moz_container_move %p %p will allocate to %d %d %d %d\n",
-     (void *)container, (void *)child_widget,
-     new_allocation.x, new_allocation.y,
-     new_allocation.width, new_allocation.height); */
-
-  gtk_widget_size_allocate(child_widget, &new_allocation);
-}
-
 /* static methods */
 
 void moz_container_class_init(MozContainerClass *klass) {
