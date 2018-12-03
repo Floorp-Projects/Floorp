@@ -18,18 +18,18 @@ def retrier(attempts=5, sleeptime=10, max_sleeptime=300, sleepscale=1.5, jitter=
     backoff and jitter. The action you are retrying is meant to run after
     retrier yields.
 
-    At each iteration, we sleep for sleeptime + random.randint(-jitter, jitter).
+    At each iteration, we sleep for sleeptime + random.uniform(-jitter, jitter).
     Afterwards sleeptime is multiplied by sleepscale for the next iteration.
 
     Args:
         attempts (int): maximum number of times to try; defaults to 5
         sleeptime (float): how many seconds to sleep between tries; defaults to
-                           60s (one minute)
+                           10 seconds
         max_sleeptime (float): the longest we'll sleep, in seconds; defaults to
                                300s (five minutes)
         sleepscale (float): how much to multiply the sleep time by each
                             iteration; defaults to 1.5
-        jitter (int): random jitter to introduce to sleep time each iteration.
+        jitter (float): random jitter to introduce to sleep time each iteration.
                       the amount is chosen at random between [-jitter, +jitter]
                       defaults to 1
 
@@ -68,9 +68,9 @@ def retrier(attempts=5, sleeptime=10, max_sleeptime=300, sleepscale=1.5, jitter=
         yield sleeptime_real
 
         if jitter:
-            sleeptime_real = sleeptime + random.randint(-jitter, jitter)
+            sleeptime_real = sleeptime + random.uniform(-jitter, jitter)
             # our jitter should scale along with the sleeptime
-            jitter = int(jitter * sleepscale)
+            jitter = jitter * sleepscale
         else:
             sleeptime_real = sleeptime
 
@@ -87,7 +87,7 @@ def retrier(attempts=5, sleeptime=10, max_sleeptime=300, sleepscale=1.5, jitter=
 
 def retry(action, attempts=5, sleeptime=60, max_sleeptime=5 * 60,
           sleepscale=1.5, jitter=1, retry_exceptions=(Exception,),
-          cleanup=None, args=(), kwargs={}):
+          cleanup=None, args=(), kwargs={}, log_args=True):
     """
     Calls an action function until it succeeds, or we give up.
 
@@ -100,7 +100,7 @@ def retry(action, attempts=5, sleeptime=60, max_sleeptime=5 * 60,
                                300s (five minutes)
         sleepscale (float): how much to multiply the sleep time by each
                             iteration; defaults to 1.5
-        jitter (int): random jitter to introduce to sleep time each iteration.
+        jitter (float): random jitter to introduce to sleep time each iteration.
                       the amount is chosen at random between [-jitter, +jitter]
                       defaults to 1
         retry_exceptions (tuple): tuple of exceptions to be caught. If other
@@ -113,6 +113,8 @@ def retry(action, attempts=5, sleeptime=60, max_sleeptime=5 * 60,
                             function.
         args (tuple): positional arguments to call `action` with
         kwargs (dict): keyword arguments to call `action` with
+        log_args (bool): whether or not to include args and kwargs in log
+                         messages. Defaults to True.
 
     Returns:
         Whatever action(*args, **kwargs) returns
@@ -140,17 +142,17 @@ def retry(action, attempts=5, sleeptime=60, max_sleeptime=5 * 60,
     assert not cleanup or callable(cleanup)
 
     action_name = getattr(action, '__name__', action)
-    if args or kwargs:
-        log_attempt_format = ("retry: calling %s with args: %s,"
-                              " kwargs: %s, attempt #%%d"
-                              % (action_name, args, kwargs))
+    if log_args and (args or kwargs):
+        log_attempt_args = ("retry: calling %s with args: %s,"
+                            " kwargs: %s, attempt #%d",
+                            action_name, args, kwargs)
     else:
-        log_attempt_format = ("retry: calling %s, attempt #%%d"
-                              % action_name)
+        log_attempt_args = ("retry: calling %s, attempt #%d",
+                            action_name)
 
     if max_sleeptime < sleeptime:
-        log.debug("max_sleeptime %d less than sleeptime %d" % (
-            max_sleeptime, sleeptime))
+        log.debug("max_sleeptime %d less than sleeptime %d",
+                  max_sleeptime, sleeptime)
 
     n = 1
     for _ in retrier(attempts=attempts, sleeptime=sleeptime,
@@ -158,14 +160,15 @@ def retry(action, attempts=5, sleeptime=60, max_sleeptime=5 * 60,
                      jitter=jitter):
         try:
             logfn = log.info if n != 1 else log.debug
-            logfn(log_attempt_format, n)
+            log_attempt_args += (n, )
+            logfn(*log_attempt_args)
             return action(*args, **kwargs)
         except retry_exceptions:
             log.debug("retry: Caught exception: ", exc_info=True)
             if cleanup:
                 cleanup()
             if n == attempts:
-                log.info("retry: Giving up on %s" % action_name)
+                log.info("retry: Giving up on %s", action_name)
                 raise
             continue
         finally:

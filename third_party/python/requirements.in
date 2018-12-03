@@ -9,6 +9,7 @@ pipenv==2018.5.18
 psutil==5.4.3
 pytest==3.6.2
 python-hglib==2.4
+redo==2.0.2
 requests==2.9.1
 six==1.10.0
 taskcluster==4.0.1

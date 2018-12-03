@@ -6,7 +6,7 @@ except ImportError:
 
 setup(
     name="redo",
-    version="1.6",
+    version="2.0.2",
     description="Utilities to retry Python callables.",
     author="Ben Hearsum",
     author_email="ben@hearsum.ca",
