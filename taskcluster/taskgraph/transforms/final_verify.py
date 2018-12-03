@@ -28,15 +28,15 @@ def add_command(config, tasks):
                         get_taskcluster_artifact_prefix(task, "<{}>".format(upstream))
                     )
                 )
-        task["worker"]["command"] = [
-            "/bin/bash",
-            "-c",
-            {
-                "task-reference": "hg clone $BUILD_TOOLS_REPO tools && cd tools/release && " +
-                                  "./final-verification.sh " +
-                                  " ".join(final_verify_configs)
-            }
-        ]
+        task['run'] = {
+            'using': 'run-task',
+            'command': {
+                'task-reference': 'cd /builds/worker/checkouts/gecko && '
+                                  'tools/update-verify/release/final-verification.sh '
+                                  + ' '.join(final_verify_configs),
+            },
+            'sparse-profile': 'update-verify',
+        }
         for thing in ("BUILD_TOOLS_REPO",):
             thing = "worker.env.{}".format(thing)
             resolve_keyed_by(task, thing, thing, **config.params)
