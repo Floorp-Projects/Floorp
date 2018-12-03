@@ -526,7 +526,7 @@ class GCRuntime {
   void mergeRealms(JS::Realm* source, JS::Realm* target);
 
  private:
-  enum IncrementalResult { ResetIncremental = 0, ReturnToEvictNursery, Ok };
+  enum IncrementalResult { ResetIncremental = 0, Ok };
 
   // Delete an empty zone after its contents have been merged.
   void deleteEmptyZone(Zone* zone);
@@ -566,10 +566,8 @@ class GCRuntime {
   SliceBudget defaultBudget(JS::gcreason::Reason reason, int64_t millis);
   IncrementalResult budgetIncrementalGC(bool nonincrementalByAPI,
                                         JS::gcreason::Reason reason,
-                                        SliceBudget& budget,
-                                        AutoGCSession& session);
-  IncrementalResult resetIncrementalGC(AbortReason reason,
-                                       AutoGCSession& session);
+                                        SliceBudget& budget);
+  IncrementalResult resetIncrementalGC(AbortReason reason);
 
   // Assert if the system state is such that we should never
   // receive a request to do GC work.
@@ -590,8 +588,6 @@ class GCRuntime {
    * Returns:
    *  * ResetIncremental if we "reset" an existing incremental GC, which would
    *    force us to run another cycle or
-   *  * ReturnToEvictNursery if the collector needs the nursery to be
-   *    evicted before it can continue or
    *  * Ok otherwise.
    */
   MOZ_MUST_USE IncrementalResult gcCycle(bool nonincrementalByAPI,

@@ -31,7 +31,7 @@ void StoreBuffer::GenericBuffer::trace(StoreBuffer* owner, JSTracer* trc) {
   }
 }
 
-inline void StoreBuffer::checkEmpty() const {
+void StoreBuffer::checkEmpty() const {
   MOZ_ASSERT(bufferVal.isEmpty());
   MOZ_ASSERT(bufferCell.isEmpty());
   MOZ_ASSERT(bufferSlot.isEmpty());
