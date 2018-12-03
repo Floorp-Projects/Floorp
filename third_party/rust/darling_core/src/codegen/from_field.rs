@@ -1,10 +1,8 @@
-use proc_macro2::TokenStream;
-use quote::ToTokens;
+use quote::{Tokens, ToTokens};
 use syn::{self, Ident};
 
-use codegen::{ExtractAttribute, OuterFromImpl, TraitImpl};
+use codegen::{TraitImpl, ExtractAttribute, OuterFromImpl};
 use options::ForwardAttrs;
-use util::IdentList;
 
 /// `impl FromField` generator. This is used for parsing an individual
 /// field and its attributes.
@@ -14,13 +12,13 @@ pub struct FromFieldImpl<'a> {
     pub ty: Option<&'a Ident>,
     pub attrs: Option<&'a Ident>,
     pub base: TraitImpl<'a>,
-    pub attr_names: &'a IdentList,
+    pub attr_names: Vec<&'a str>,
     pub forward_attrs: Option<&'a ForwardAttrs>,
     pub from_ident: bool,
 }
 
 impl<'a> ToTokens for FromFieldImpl<'a> {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
+    fn to_tokens(&self, tokens: &mut Tokens) {
         let input = self.param_name();
 
         let error_declaration = self.base.declare_errors();
@@ -35,9 +33,7 @@ impl<'a> ToTokens for FromFieldImpl<'a> {
             self.base.fallback_decl()
         };
 
-        let passed_ident = self.ident
-            .as_ref()
-            .map(|i| quote!(#i: #input.ident.clone(),));
+        let passed_ident = self.ident.as_ref().map(|i| quote!(#i: #input.ident.clone(),));
         let passed_vis = self.vis.as_ref().map(|i| quote!(#i: #input.vis.clone(),));
         let passed_ty = self.ty.as_ref().map(|i| quote!(#i: #input.ty.clone(),));
         let passed_attrs = self.attrs.as_ref().map(|i| quote!(#i: __fwd_attrs,));
@@ -46,56 +42,53 @@ impl<'a> ToTokens for FromFieldImpl<'a> {
         let grab_attrs = self.extractor();
         let map = self.base.map_fn();
 
-        self.wrap(
-            quote!{
-                fn from_field(#input: &::syn::Field) -> ::darling::Result<Self> {
-                    #error_declaration
+        self.wrap(quote!{
+            fn from_field(#input: &::syn::Field) -> ::darling::Result<Self> {
+                #error_declaration
 
-                    #grab_attrs
+                #grab_attrs
 
-                    #require_fields
+                #require_fields
 
-                    #error_check
+                #error_check
 
-                    #default
+                #default
 
-                    ::darling::export::Ok(Self {
-                        #passed_ident
-                        #passed_ty
-                        #passed_vis
-                        #passed_attrs
-                        #initializers
-                    }) #map
+                ::darling::export::Ok(Self {
+                    #passed_ident
+                    #passed_ty
+                    #passed_vis
+                    #passed_attrs
+                    #initializers
+                }) #map
 
-                }
-            },
-            tokens,
-        );
+            }
+        }, tokens);
     }
 }
 
 impl<'a> ExtractAttribute for FromFieldImpl<'a> {
-    fn attr_names(&self) -> &IdentList {
-        &self.attr_names
+    fn attr_names(&self) -> &[&str] {
+        self.attr_names.as_slice()
     }
 
     fn forwarded_attrs(&self) -> Option<&ForwardAttrs> {
         self.forward_attrs
     }
 
-    fn param_name(&self) -> TokenStream {
+    fn param_name(&self) -> Tokens {
         quote!(__field)
     }
 
-    fn core_loop(&self) -> TokenStream {
+    fn core_loop(&self) -> Tokens {
         self.base.core_loop()
     }
 
-    fn local_declarations(&self) -> TokenStream {
+    fn local_declarations(&self) -> Tokens {
         self.base.local_declarations()
     }
 
-    fn immutable_declarations(&self) -> TokenStream {
+    fn immutable_declarations(&self) -> Tokens {
         self.base.immutable_declarations()
     }
 }
@@ -106,7 +99,7 @@ impl<'a> OuterFromImpl<'a> for FromFieldImpl<'a> {
     }
 
     fn trait_bound(&self) -> syn::Path {
-        path!(::darling::FromMeta)
+        path!(::darling::FromMetaItem)
     }
 
     fn base(&'a self) -> &'a TraitImpl<'a> {

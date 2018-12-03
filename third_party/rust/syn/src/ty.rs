@@ -308,26 +308,9 @@ pub mod parsing {
                     elem: Box::new(Type::TraitObject(content.parse()?)),
                 }));
             }
-            if content.peek(Token![?]) {
-                return Ok(Type::TraitObject(TypeTraitObject {
-                    dyn_token: None,
-                    bounds: {
-                        let mut bounds = Punctuated::new();
-                        bounds.push_value(TypeParamBound::Trait(TraitBound {
-                            paren_token: Some(paren_token),
-                            ..content.parse()?
-                        }));
-                        while let Some(plus) = input.parse()? {
-                            bounds.push_punct(plus);
-                            bounds.push_value(input.parse()?);
-                        }
-                        bounds
-                    },
-                }));
-            }
             let first: Type = content.parse()?;
             if content.peek(Token![,]) {
-                return Ok(Type::Tuple(TypeTuple {
+                Ok(Type::Tuple(TypeTuple {
                     paren_token: paren_token,
                     elems: {
                         let mut elems = Punctuated::new();
@@ -338,61 +321,13 @@ pub mod parsing {
                         elems.extend(rest);
                         elems
                     },
-                }));
+                }))
+            } else {
+                Ok(Type::Paren(TypeParen {
+                    paren_token: paren_token,
+                    elem: Box::new(first),
+                }))
             }
-            if allow_plus && input.peek(Token![+]) {
-                loop {
-                    let first = match first {
-                        Type::Path(TypePath { qself: None, path }) => {
-                            TypeParamBound::Trait(TraitBound {
-                                paren_token: Some(paren_token),
-                                modifier: TraitBoundModifier::None,
-                                lifetimes: None,
-                                path: path,
-                            })
-                        }
-                        Type::TraitObject(TypeTraitObject {
-                            dyn_token: None,
-                            ref bounds,
-                        }) => {
-                            if bounds.len() > 1 || bounds.trailing_punct() {
-                                break;
-                            }
-                            match first {
-                                Type::TraitObject(TypeTraitObject { bounds, .. }) => {
-                                    match bounds.into_iter().next().unwrap() {
-                                        TypeParamBound::Trait(trait_bound) => {
-                                            TypeParamBound::Trait(TraitBound {
-                                                paren_token: Some(paren_token),
-                                                ..trait_bound
-                                            })
-                                        }
-                                        other => other,
-                                    }
-                                }
-                                _ => unreachable!(),
-                            }
-                        }
-                        _ => break,
-                    };
-                    return Ok(Type::TraitObject(TypeTraitObject {
-                        dyn_token: None,
-                        bounds: {
-                            let mut bounds = Punctuated::new();
-                            bounds.push_value(first);
-                            while let Some(plus) = input.parse()? {
-                                bounds.push_punct(plus);
-                                bounds.push_value(input.parse()?);
-                            }
-                            bounds
-                        },
-                    }));
-                }
-            }
-            Ok(Type::Paren(TypeParen {
-                paren_token: paren_token,
-                elem: Box::new(first),
-            }))
         } else if lookahead.peek(Token![fn])
             || lookahead.peek(Token![unsafe])
             || lookahead.peek(Token![extern]) && !input.peek2(Token![::])
@@ -463,9 +398,6 @@ pub mod parsing {
                 if allow_plus {
                     while input.peek(Token![+]) {
                         bounds.push_punct(input.parse()?);
-                        if input.peek(Token![>]) {
-                            break;
-                        }
                         bounds.push_value(input.parse()?);
                     }
                 }
@@ -708,9 +640,6 @@ pub mod parsing {
                                 break;
                             }
                             bounds.push_punct(input.parse()?);
-                            if input.peek(Token![>]) {
-                                break;
-                            }
                         }
                     } else {
                         bounds.push_value(input.parse()?);

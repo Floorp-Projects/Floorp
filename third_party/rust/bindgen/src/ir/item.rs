@@ -875,11 +875,6 @@ impl Item {
 
         let name = names.join("_");
 
-        let name = ctx
-            .parse_callbacks()
-            .and_then(|callbacks| callbacks.item_name(&name))
-            .unwrap_or(name);
-
         ctx.rust_mangle(&name).into_owned()
     }
 
@@ -1319,8 +1314,7 @@ impl ClangItemParser for Item {
                 CXCursor_UsingDeclaration |
                 CXCursor_UsingDirective |
                 CXCursor_StaticAssert |
-                CXCursor_InclusionDirective |
-                CXCursor_FunctionTemplate => {
+                CXCursor_InclusionDirective => {
                     debug!(
                         "Unhandled cursor kind {:?}: {:?}",
                         cursor.kind(),

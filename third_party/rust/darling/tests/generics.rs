@@ -4,7 +4,7 @@ extern crate syn;
 
 use darling::FromDeriveInput;
 
-#[derive(Debug, Clone, FromMeta)]
+#[derive(Debug, Clone, FromMetaItem)]
 struct Wrapper<T>(pub T);
 
 #[derive(Debug, FromDeriveInput)]
@@ -15,12 +15,11 @@ struct Foo<T> {
 
 #[test]
 fn expansion() {
-    let di = syn::parse_str(
-        r#"
+    let di = syn::parse_str(r#"
         #[hello(lorem = "Hello")]
         pub struct Foo;
-    "#,
-    ).unwrap();
+    "#)
+        .unwrap();
 
     let _parsed = Foo::<String>::from_derive_input(&di).unwrap();
 }

@@ -1,15 +1,14 @@
 use std::ops::Deref;
-use std::string::ToString;
 
-use syn::{Ident, Meta, NestedMeta};
+use syn::{Ident, NestedMeta, Meta};
 
-use {Error, FromMeta, Result};
+use {FromMetaItem, Result, Error};
 
-/// A list of `syn::Ident` instances. This type is used to extract a list of words from an
+/// A list of `syn::Ident` instances. This type is used to extract a list of words from an 
 /// attribute.
 ///
 /// # Usage
-/// An `IdentList` field on a struct implementing `FromMeta` will turn `#[builder(derive(Debug, Clone))]` into:
+/// An `IdentList` field on a struct implementing `FromMetaItem` will turn `#[builder(derive(Debug, Clone))]` into:
 ///
 /// ```rust,ignore
 /// StructOptions {
@@ -25,9 +24,9 @@ impl IdentList {
         IdentList(vals.into_iter().map(T::into).collect())
     }
 
-    /// Create a new `Vec` containing the string representation of each ident.
-    pub fn to_strings(&self) -> Vec<String> {
-        self.0.iter().map(ToString::to_string).collect()
+    /// Creates a view of the contained identifiers as `&str`s.
+    pub fn as_strs<'a>(&'a self) -> Vec<&'a str> {
+        self.iter().map(|i| i.as_ref()).collect()
     }
 }
 
@@ -45,14 +44,14 @@ impl From<Vec<Ident>> for IdentList {
     }
 }
 
-impl FromMeta for IdentList {
+impl FromMetaItem for IdentList {
     fn from_list(v: &[NestedMeta]) -> Result<Self> {
         let mut idents = Vec::with_capacity(v.len());
         for nmi in v {
             if let NestedMeta::Meta(Meta::Word(ref ident)) = *nmi {
                 idents.push(ident.clone());
             } else {
-                return Err(Error::unexpected_type("non-word"));
+                return Err(Error::unexpected_type("non-word"))
             }
         }
 

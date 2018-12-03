@@ -1,15 +1,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::animate::{AnimationFieldAttrs, AnimationInputAttrs, AnimationVariantAttrs};
 use crate::cg;
-use proc_macro2::TokenStream;
-use quote::TokenStreamExt;
+use quote;
 use syn;
 use synstructure;
 
-pub fn derive(mut input: syn::DeriveInput) -> TokenStream {
+pub fn derive(mut input: syn::DeriveInput) -> quote::Tokens {
     let animation_input_attrs = cg::parse_input_attrs::<AnimationInputAttrs>(&input);
     let no_bound = animation_input_attrs.no_bound.unwrap_or_default();
     let mut where_clause = input.generics.where_clause.take();

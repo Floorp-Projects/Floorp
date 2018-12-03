@@ -40,8 +40,8 @@
 //! extern crate proc_macro;
 //!
 //! use proc_macro::TokenStream;
-//! use syn::{token, Field, Ident, Result};
-//! use syn::parse::{Parse, ParseStream};
+//! use syn::{token, Field, Ident};
+//! use syn::parse::{Parse, ParseStream, Result};
 //! use syn::punctuated::Punctuated;
 //!
 //! enum Item {
@@ -117,7 +117,7 @@
 //! ```
 //! use syn::Type;
 //!
-//! # fn run_parser() -> syn::Result<()> {
+//! # fn run_parser() -> Result<(), syn::parse::Error> {
 //! let t: Type = syn::parse_str("std::collections::HashMap<String, Value>")?;
 //! #     Ok(())
 //! # }
@@ -145,21 +145,10 @@
 //! The `Parse` trait is not implemented in these cases because there is no good
 //! behavior to consider the default.
 //!
-//! ```compile_fail
-//! # extern crate proc_macro;
-//! # extern crate syn;
-//! #
-//! # use syn::punctuated::Punctuated;
-//! # use syn::{PathSegment, Result, Token};
-//! #
-//! # fn f(tokens: proc_macro::TokenStream) -> Result<()> {
-//! #
+//! ```ignore
 //! // Can't parse `Punctuated` without knowing whether trailing punctuation
 //! // should be allowed in this context.
 //! let path: Punctuated<PathSegment, Token![::]> = syn::parse(tokens)?;
-//! #
-//! #     Ok(())
-//! # }
 //! ```
 //!
 //! In these cases the types provide a choice of parser functions rather than a
@@ -179,7 +168,7 @@
 //! use syn::punctuated::Punctuated;
 //! use syn::{Attribute, Expr, PathSegment};
 //!
-//! # fn run_parsers() -> syn::Result<()> {
+//! # fn run_parsers() -> Result<(), syn::parse::Error> {
 //! #     let tokens = TokenStream::new().into();
 //! // Parse a nonempty sequence of path segments separated by `::` punctuation
 //! // with no trailing punctuation.
@@ -208,7 +197,7 @@
 //! *This module is available if Syn is built with the `"parsing"` feature.*
 
 use std::cell::Cell;
-use std::fmt::{self, Debug, Display};
+use std::fmt::Display;
 use std::marker::PhantomData;
 use std::mem;
 use std::ops::Deref;
@@ -279,18 +268,6 @@ impl<'a> Drop for ParseBuffer<'a> {
     }
 }
 
-impl<'a> Display for ParseBuffer<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Display::fmt(&self.cursor().token_stream(), f)
-    }
-}
-
-impl<'a> Debug for ParseBuffer<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Debug::fmt(&self.cursor().token_stream(), f)
-    }
-}
-
 /// Cursor state associated with speculative parsing.
 ///
 /// This type is the input of the closure provided to [`ParseStream::step`].
@@ -304,8 +281,7 @@ impl<'a> Debug for ParseBuffer<'a> {
 /// # extern crate syn;
 /// #
 /// use proc_macro2::TokenTree;
-/// use syn::Result;
-/// use syn::parse::ParseStream;
+/// use syn::parse::{ParseStream, Result};
 ///
 /// // This function advances the stream past the next occurrence of `@`. If
 /// // no `@` is present in the stream, the stream position is unchanged and
@@ -325,21 +301,7 @@ impl<'a> Debug for ParseBuffer<'a> {
 ///     })
 /// }
 /// #
-/// #
-/// # fn remainder_after_skipping_past_next_at(
-/// #     input: ParseStream,
-/// # ) -> Result<proc_macro2::TokenStream> {
-/// #     skip_past_next_at(input)?;
-/// #     input.parse()
-/// # }
-/// #
-/// # fn main() {
-/// #     use syn::parse::Parser;
-/// #     let remainder = remainder_after_skipping_past_next_at
-/// #         .parse_str("a @ b c")
-/// #         .unwrap();
-/// #     assert_eq!(remainder.to_string(), "b c");
-/// # }
+/// # fn main() {}
 /// ```
 #[derive(Copy, Clone)]
 pub struct StepCursor<'c, 'a> {
@@ -396,8 +358,7 @@ fn skip(input: ParseStream) -> bool {
             } else {
                 Ok((false, *cursor))
             }
-        })
-        .unwrap()
+        }).unwrap()
 }
 
 impl private {
@@ -441,8 +402,8 @@ impl<'a> ParseBuffer<'a> {
     /// #[macro_use]
     /// extern crate syn;
     ///
-    /// use syn::{Attribute, Ident, Result};
-    /// use syn::parse::{Parse, ParseStream};
+    /// use syn::{Attribute, Ident};
+    /// use syn::parse::{Parse, ParseStream, Result};
     ///
     /// // Parses a unit struct with attributes.
     /// //
@@ -497,8 +458,8 @@ impl<'a> ParseBuffer<'a> {
     /// #[macro_use]
     /// extern crate syn;
     ///
-    /// use syn::{token, Generics, Ident, Result, TypeParamBound};
-    /// use syn::parse::{Parse, ParseStream};
+    /// use syn::{token, Generics, Ident, TypeParamBound};
+    /// use syn::parse::{Parse, ParseStream, Result};
     /// use syn::punctuated::Punctuated;
     ///
     /// // Parses a trait definition containing no associated items.
@@ -569,8 +530,8 @@ impl<'a> ParseBuffer<'a> {
     /// #[macro_use]
     /// extern crate syn;
     ///
-    /// use syn::{Ident, ItemUnion, Macro, Result};
-    /// use syn::parse::{Parse, ParseStream};
+    /// use syn::{Ident, ItemUnion, Macro};
+    /// use syn::parse::{Parse, ParseStream, Result};
     ///
     /// // Parses either a union or a macro invocation.
     /// enum UnionOrMacro {
@@ -618,8 +579,8 @@ impl<'a> ParseBuffer<'a> {
     /// #[macro_use]
     /// extern crate syn;
     ///
-    /// use syn::{token, Ident, Result, Type};
-    /// use syn::parse::{Parse, ParseStream};
+    /// use syn::{token, Ident, Type};
+    /// use syn::parse::{Parse, ParseStream, Result};
     /// use syn::punctuated::Punctuated;
     ///
     /// // Parse a simplified tuple struct syntax like:
@@ -671,8 +632,8 @@ impl<'a> ParseBuffer<'a> {
     /// #[macro_use]
     /// extern crate syn;
     ///
-    /// use syn::{token, Ident, Item, Result};
-    /// use syn::parse::{Parse, ParseStream};
+    /// use syn::{token, Ident, Item};
+    /// use syn::parse::{Parse, ParseStream, Result};
     ///
     /// // Parses a Rust `mod m { ... }` containing zero or more items.
     /// struct Mod {
@@ -701,7 +662,6 @@ impl<'a> ParseBuffer<'a> {
     /// }
     /// #
     /// # fn main() {}
-    /// ```
     pub fn is_empty(&self) -> bool {
         self.cursor().eof()
     }
@@ -715,8 +675,8 @@ impl<'a> ParseBuffer<'a> {
     /// #[macro_use]
     /// extern crate syn;
     ///
-    /// use syn::{ConstParam, Ident, Lifetime, LifetimeDef, Result, TypeParam};
-    /// use syn::parse::{Parse, ParseStream};
+    /// use syn::{ConstParam, Ident, Lifetime, LifetimeDef, TypeParam};
+    /// use syn::parse::{Parse, ParseStream, Result};
     ///
     /// // A generic parameter, a single one of the comma-separated elements inside
     /// // angle brackets in:
@@ -767,8 +727,8 @@ impl<'a> ParseBuffer<'a> {
     /// once.
     ///
     /// ```
-    /// # use syn::{Expr, Result};
-    /// # use syn::parse::ParseStream;
+    /// # use syn::Expr;
+    /// # use syn::parse::{ParseStream, Result};
     /// #
     /// # fn bad(input: ParseStream) -> Result<Expr> {
     /// // Do not do this.
@@ -824,9 +784,9 @@ impl<'a> ParseBuffer<'a> {
     /// #[macro_use]
     /// extern crate syn;
     ///
-    /// use syn::{token, Ident, Path, Result};
+    /// use syn::{token, Ident, Path};
     /// use syn::ext::IdentExt;
-    /// use syn::parse::{Parse, ParseStream};
+    /// use syn::parse::{Parse, ParseStream, Result};
     ///
     /// struct PubVisibility {
     ///     pub_token: Token![pub],
@@ -900,8 +860,8 @@ impl<'a> ParseBuffer<'a> {
     /// #[macro_use]
     /// extern crate syn;
     ///
-    /// use syn::{Expr, Result};
-    /// use syn::parse::{Parse, ParseStream};
+    /// use syn::Expr;
+    /// use syn::parse::{Parse, ParseStream, Result};
     ///
     /// // Some kind of loop: `while` or `for` or `loop`.
     /// struct Loop {
@@ -943,8 +903,7 @@ impl<'a> ParseBuffer<'a> {
     /// # extern crate syn;
     /// #
     /// use proc_macro2::TokenTree;
-    /// use syn::Result;
-    /// use syn::parse::ParseStream;
+    /// use syn::parse::{ParseStream, Result};
     ///
     /// // This function advances the stream past the next occurrence of `@`. If
     /// // no `@` is present in the stream, the stream position is unchanged and
@@ -952,7 +911,7 @@ impl<'a> ParseBuffer<'a> {
     /// fn skip_past_next_at(input: ParseStream) -> Result<()> {
     ///     input.step(|cursor| {
     ///         let mut rest = *cursor;
-    ///         while let Some((tt, next)) = rest.token_tree() {
+    ///         while let Some((tt, next)) = cursor.token_tree() {
     ///             match tt {
     ///                 TokenTree::Punct(ref punct) if punct.as_char() == '@' => {
     ///                     return Ok(((), next));
@@ -964,20 +923,7 @@ impl<'a> ParseBuffer<'a> {
     ///     })
     /// }
     /// #
-    /// # fn remainder_after_skipping_past_next_at(
-    /// #     input: ParseStream,
-    /// # ) -> Result<proc_macro2::TokenStream> {
-    /// #     skip_past_next_at(input)?;
-    /// #     input.parse()
-    /// # }
-    /// #
-    /// # fn main() {
-    /// #     use syn::parse::Parser;
-    /// #     let remainder = remainder_after_skipping_past_next_at
-    /// #         .parse_str("a @ b c")
-    /// #         .unwrap();
-    /// #     assert_eq!(remainder.to_string(), "b c");
-    /// # }
+    /// # fn main() {}
     /// ```
     pub fn step<F, R>(&self, function: F) -> Result<R>
     where

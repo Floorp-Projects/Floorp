@@ -1,9 +1,9 @@
 use syn;
 
-use ast::{Fields, Style};
+use {FromMetaItem, Error, Result};
+use ast::{Style, Fields};
 use codegen;
 use options::{Core, InputField, ParseAttribute};
-use {Error, FromMeta, Result};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InputVariant {
@@ -18,9 +18,7 @@ impl InputVariant {
         codegen::Variant {
             ty_ident,
             variant_ident: &self.ident,
-            name_in_attr: self.attr_name
-                .clone()
-                .unwrap_or(self.ident.to_string()),
+            name_in_attr: self.attr_name.as_ref().map(|s| s.as_str()).unwrap_or(self.ident.as_ref()),
             data: self.data.as_ref().map(InputField::as_codegen_field),
             skip: self.skip,
         }
@@ -46,7 +44,7 @@ impl InputVariant {
                     style: v.fields.clone().into(),
                     fields: items,
                 }
-            }
+            },
             syn::Fields::Named(ref fields) => {
                 let mut items = Vec::with_capacity(fields.named.len());
                 for item in &fields.named {
@@ -69,23 +67,24 @@ impl InputVariant {
 
     fn with_inherited(mut self, parent: &Core) -> Self {
         if self.attr_name.is_none() {
-            self.attr_name = Some(parent.rename_rule.apply_to_variant(self.ident.to_string()));
+            self.attr_name = Some(parent.rename_rule.apply_to_variant(&self.ident));
         }
 
         self
     }
 }
 
+
 impl ParseAttribute for InputVariant {
     fn parse_nested(&mut self, mi: &syn::Meta) -> Result<()> {
         let name = mi.name().to_string();
         match name.as_str() {
             "rename" => {
-                self.attr_name = FromMeta::from_meta(mi)?;
+                self.attr_name = FromMetaItem::from_meta_item(mi)?;
                 Ok(())
             }
             "skip" => {
-                self.skip = FromMeta::from_meta(mi)?;
+                self.skip = FromMetaItem::from_meta_item(mi)?;
                 Ok(())
             }
             n => Err(Error::unknown_field(n)),

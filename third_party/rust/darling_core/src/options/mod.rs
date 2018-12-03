@@ -1,16 +1,15 @@
 use syn;
 
-use {Error, FromMeta, Result};
+use {FromMetaItem, Result, Error};
 
 mod core;
 mod forward_attrs;
 mod from_derive;
 mod from_field;
-mod from_meta;
-mod from_type_param;
+mod from_meta_item;
 mod from_variant;
-mod input_field;
 mod input_variant;
+mod input_field;
 mod outer_from;
 mod shape;
 
@@ -18,11 +17,10 @@ pub use self::core::Core;
 pub use self::forward_attrs::ForwardAttrs;
 pub use self::from_derive::FdiOptions;
 pub use self::from_field::FromFieldOptions;
-pub use self::from_meta::FromMetaOptions;
-pub use self::from_type_param::FromTypeParamOptions;
+pub use self::from_meta_item::FmiOptions;
 pub use self::from_variant::FromVariantOptions;
-pub use self::input_field::InputField;
 pub use self::input_variant::InputVariant;
+pub use self::input_field::InputField;
 pub use self::outer_from::OuterFrom;
 pub use self::shape::{DataShape, Shape};
 
@@ -37,15 +35,13 @@ pub enum DefaultExpression {
 }
 
 #[doc(hidden)]
-impl FromMeta for DefaultExpression {
+impl FromMetaItem for DefaultExpression {
     fn from_word() -> Result<Self> {
         Ok(DefaultExpression::Trait)
     }
 
     fn from_string(lit: &str) -> Result<Self> {
-        Ok(DefaultExpression::Explicit(
-            syn::parse_str(lit).map_err(|_| Error::unknown_value(lit))?
-        ))
+        Ok(DefaultExpression::Explicit(syn::Path::from(lit)))
     }
 }
 
@@ -66,6 +62,10 @@ pub trait ParseAttribute: Sized {
 }
 
 fn parse_attr<T: ParseAttribute>(attr: &syn::Attribute, target: &mut T) -> Result<()> {
+    if attr.is_sugared_doc {
+        return Ok(())
+    }
+
     match attr.interpret_meta() {
         Some(syn::Meta::List(data)) => {
             for item in data.nested {
@@ -77,7 +77,7 @@ fn parse_attr<T: ParseAttribute>(attr: &syn::Attribute, target: &mut T) -> Resul
             }
 
             Ok(())
-        }
+        },
         Some(ref item) => panic!("Wasn't able to parse: `{:?}`", item),
         None => panic!("Unable to parse {:?}", attr),
     }
@@ -88,22 +88,24 @@ pub trait ParseData: Sized {
         use syn::{Data, Fields};
 
         match *body {
-            Data::Struct(ref data) => match data.fields {
-                Fields::Unit => Ok(self),
-                Fields::Named(ref fields) => {
-                    for field in &fields.named {
-                        self.parse_field(field)?;
+            Data::Struct(ref data) => {
+                match data.fields {
+                    Fields::Unit => Ok(self),
+                    Fields::Named(ref fields) => {
+                        for field in &fields.named {
+                            self.parse_field(field)?;
+                        }
+                        Ok(self)
                     }
-                    Ok(self)
-                }
-                Fields::Unnamed(ref fields) => {
-                    for field in &fields.unnamed {
-                        self.parse_field(field)?;
-                    }
+                    Fields::Unnamed(ref fields) => {
+                        for field in &fields.unnamed {
+                            self.parse_field(field)?;
+                        }
 
-                    Ok(self)
+                        Ok(self)
+                    }
                 }
-            },
+            }
             Data::Enum(ref data) => {
                 for variant in &data.variants {
                     self.parse_variant(variant)?;
