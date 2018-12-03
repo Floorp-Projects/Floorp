@@ -6690,15 +6690,19 @@ JS_PUBLIC_API JS::HeapState JS::RuntimeHeapState() {
 }
 
 GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
-    gc::AbortReason reason, AutoGCSession& session) {
-  MOZ_ASSERT(reason != gc::AbortReason::None);
+    gc::AbortReason reason) {
+  if (incrementalState == State::NotActive) {
+    return IncrementalResult::Ok;
+  }
+
+  minorGC(JS::gcreason::RESET, gcstats::PhaseKind::EVICT_NURSERY_FOR_MAJOR_GC);
+
+  AutoGCSession session(rt, JS::HeapState::MajorCollecting);
 
   switch (incrementalState) {
     case State::NotActive:
-      return IncrementalResult::Ok;
-
     case State::MarkRoots:
-      MOZ_CRASH("resetIncrementalGC did not expect MarkRoots state");
+      MOZ_CRASH("Unexpected GC state in resetIncrementalGC");
       break;
 
     case State::Mark: {
@@ -6890,6 +6894,8 @@ GCRuntime::IncrementalResult GCRuntime::incrementalSlice(
 
   bool destroyingRuntime = (reason == JS::gcreason::DESTROY_RUNTIME);
 
+  number++;
+
   initialState = incrementalState;
 
 #ifdef JS_GC_ZEAL
@@ -6935,6 +6941,7 @@ GCRuntime::IncrementalResult GCRuntime::incrementalSlice(
 
   switch (incrementalState) {
     case State::NotActive:
+      incMajorGcNumber();
       initialReason = reason;
       cleanUpEverything = ShouldCleanUpEverything(reason, invocationKind);
       isCompacting = shouldCompact();
@@ -7010,23 +7017,6 @@ GCRuntime::IncrementalResult GCRuntime::incrementalSlice(
         }
       }
 
-      /*
-       * If the nursery is not-empty we need to collect it before sweeping.
-       *
-       * This can happen regardless of 'isIncremental' since the GC may have
-       * been incremental when it started and later made a decision to do
-       * non-incremental collection.
-       *
-       * It's important to check this after the above case since this one
-       * wont give the mutator a chance to run.
-       */
-      if (!nursery().isEmpty()) {
-        lastMarkSlice = true;
-        stats().writeLogMessage(
-            "returning to collect the nursery before sweeping");
-        return IncrementalResult::ReturnToEvictNursery;
-      }
-
       incrementalState = State::Sweep;
       lastMarkSlice = false;
       beginSweepPhase(reason, session);
@@ -7035,6 +7025,7 @@ GCRuntime::IncrementalResult GCRuntime::incrementalSlice(
 
     case State::Sweep:
       MOZ_ASSERT(nursery().isEmpty());
+      storeBuffer().checkEmpty();
 
       AutoGCRooter::traceAllWrappers(rt->mainContextFromOwnThread(), &marker);
 
@@ -7084,6 +7075,9 @@ GCRuntime::IncrementalResult GCRuntime::incrementalSlice(
       MOZ_FALLTHROUGH;
 
     case State::Compact:
+      MOZ_ASSERT(nursery().isEmpty());
+      storeBuffer().checkEmpty();
+
       if (isCompacting) {
         MOZ_ASSERT(nursery().isEmpty());
         if (!startedCompacting) {
@@ -7157,8 +7151,8 @@ static inline void CheckZoneIsScheduled(Zone* zone, JS::gcreason::Reason reason,
 }
 
 GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
-    bool nonincrementalByAPI, JS::gcreason::Reason reason, SliceBudget& budget,
-    AutoGCSession& session) {
+    bool nonincrementalByAPI, JS::gcreason::Reason reason,
+    SliceBudget& budget) {
   if (nonincrementalByAPI) {
     stats().nonincremental(gc::AbortReason::NonIncrementalRequested);
     budget.makeUnlimited();
@@ -7168,8 +7162,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     // the caller expects this GC to collect certain objects, and we need
     // to make sure to collect everything possible.
     if (reason != JS::gcreason::ALLOC_TRIGGER) {
-      return resetIncrementalGC(gc::AbortReason::NonIncrementalRequested,
-                                session);
+      return resetIncrementalGC(gc::AbortReason::NonIncrementalRequested);
     }
 
     return IncrementalResult::Ok;
@@ -7178,7 +7171,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
   if (reason == JS::gcreason::ABORT_GC) {
     budget.makeUnlimited();
     stats().nonincremental(gc::AbortReason::AbortRequested);
-    return resetIncrementalGC(gc::AbortReason::AbortRequested, session);
+    return resetIncrementalGC(gc::AbortReason::AbortRequested);
   }
 
   AbortReason unsafeReason = IsIncrementalGCUnsafe(rt);
@@ -7193,7 +7186,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
   if (unsafeReason != AbortReason::None) {
     budget.makeUnlimited();
     stats().nonincremental(unsafeReason);
-    return resetIncrementalGC(unsafeReason, session);
+    return resetIncrementalGC(unsafeReason);
   }
 
   if (mallocCounter.shouldTriggerGC(tunables) == NonIncrementalTrigger) {
@@ -7226,7 +7219,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
   }
 
   if (reset) {
-    return resetIncrementalGC(AbortReason::ZoneChange, session);
+    return resetIncrementalGC(AbortReason::ZoneChange);
   }
 
   return IncrementalResult::Ok;
@@ -7326,11 +7319,26 @@ void GCRuntime::maybeCallGCCallback(JSGCStatus status) {
 MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
     bool nonincrementalByAPI, SliceBudget& budget,
     JS::gcreason::Reason reason) {
+  // Assert if this is a GC unsafe region.
+  rt->mainContextFromOwnThread()->verifyIsSafeToGC();
+
+  // It's ok if threads other than the main thread have suppressGC set, as
+  // they are operating on zones which will not be collected from here.
+  MOZ_ASSERT(!rt->mainContextFromOwnThread()->suppressGC);
+
   // Note that GC callbacks are allowed to re-enter GC.
   AutoCallGCCallbacks callCallbacks(*this);
 
   gcstats::AutoGCSlice agc(stats(), scanZonesBeforeGC(), invocationKind, budget,
                            reason);
+
+  auto result = budgetIncrementalGC(nonincrementalByAPI, reason, budget);
+
+  // If an ongoing incremental GC was reset, we may need to restart.
+  if (result == IncrementalResult::ResetIncremental) {
+    MOZ_ASSERT(!isIncrementalGCInProgress());
+    return result;
+  }
 
   if (shouldCollectNurseryForSlice(nonincrementalByAPI, budget)) {
     minorGC(reason, gcstats::PhaseKind::EVICT_NURSERY_FOR_MAJOR_GC);
@@ -7339,18 +7347,6 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
   AutoGCSession session(rt, JS::HeapState::MajorCollecting);
 
   majorGCTriggerReason = JS::gcreason::NO_REASON;
-
-  number++;
-  if (!isIncrementalGCInProgress()) {
-    incMajorGcNumber();
-  }
-
-  // It's ok if threads other than the main thread have suppressGC set, as
-  // they are operating on zones which will not be collected from here.
-  MOZ_ASSERT(!rt->mainContextFromOwnThread()->suppressGC);
-
-  // Assert if this is a GC unsafe region.
-  rt->mainContextFromOwnThread()->verifyIsSafeToGC();
 
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::WAIT_BACKGROUND_THREAD);
@@ -7373,15 +7369,6 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
   // incremental GC of the atoms zone.
   if (rt->activeGCInAtomsZone()) {
     session.maybeCheckAtomsAccess.emplace(rt);
-  }
-
-  auto result =
-      budgetIncrementalGC(nonincrementalByAPI, reason, budget, session);
-
-  // If an ongoing incremental GC was reset, we may need to restart.
-  if (result == IncrementalResult::ResetIncremental) {
-    MOZ_ASSERT(!isIncrementalGCInProgress());
-    return result;
   }
 
   gcTracer.traceMajorGCStart();
@@ -7581,9 +7568,6 @@ void GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget,
         repeat = true;
         reason = JS::gcreason::COMPARTMENT_REVIVED;
       }
-    } else if (cycleResult == ReturnToEvictNursery) {
-      /* Repeat so we can collect the nursery and run another slice. */
-      repeat = true;
     }
   } while (repeat);
 
