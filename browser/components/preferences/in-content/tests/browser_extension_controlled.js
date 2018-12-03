@@ -750,12 +750,14 @@ add_task(async function testExtensionControlledProxyConfig() {
         let manualControlContainer = controlGroup.querySelector("grid");
         return {
           manualControls: [
-            ...manualControlContainer.querySelectorAll("label"),
-            ...manualControlContainer.querySelectorAll("textbox"),
+            ...manualControlContainer.querySelectorAll("label:not([control=networkProxyNone])"),
+            ...manualControlContainer.querySelectorAll("textbox:not(#networkProxyNone)"),
             ...manualControlContainer.querySelectorAll("checkbox"),
             ...doc.querySelectorAll("#networkProxySOCKSVersion > radio")],
           pacControls: [doc.getElementById("networkProxyAutoconfigURL")],
           otherControls: [
+            manualControlContainer.querySelector("label[control=networkProxyNone]"),
+            doc.getElementById("networkProxyNone"),
             ...controlGroup.querySelectorAll(":scope > radio"),
             ...doc.querySelectorAll("#ConnectionsDialogPane > checkbox")],
         };
@@ -764,14 +766,14 @@ add_task(async function testExtensionControlledProxyConfig() {
       let controls = getProxyControls();
       for (let element of controls.manualControls) {
         let disabled = isControlled || proxyType !== proxySvc.PROXYCONFIG_MANUAL;
-        is(element.disabled, disabled, `Proxy controls are ${controlState}.`);
+        is(element.disabled, disabled, `Manual proxy controls should be ${controlState} - control: ${element.outerHTML}.`);
       }
       for (let element of controls.pacControls) {
         let disabled = isControlled || proxyType !== proxySvc.PROXYCONFIG_PAC;
-        is(element.disabled, disabled, `Proxy controls are ${controlState}.`);
+        is(element.disabled, disabled, `PAC proxy controls should be ${controlState} - control: ${element.outerHTML}.`);
       }
       for (let element of controls.otherControls) {
-        is(element.disabled, isControlled, `Proxy controls are ${controlState}.`);
+        is(element.disabled, isControlled, `Other proxy controls should be ${controlState} - control: ${element.outerHTML}.`);
       }
     } else {
       let elem = doc.getElementById(CONNECTION_SETTINGS_DESC_ID);

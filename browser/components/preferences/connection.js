@@ -128,7 +128,7 @@ var gConnectionsDialog = {
     var autologinProxyPref = Preferences.get("signon.autologin.proxy");
     autologinProxyPref.disabled = proxyTypePref.value == 0;
     var noProxiesPref = Preferences.get("network.proxy.no_proxies_on");
-    noProxiesPref.disabled = proxyTypePref.value != 1;
+    noProxiesPref.disabled = proxyTypePref.value == 0;
 
     var autoconfigURLPref = Preferences.get("network.proxy.autoconfig_url");
     autoconfigURLPref.disabled = proxyTypePref.value != 2;
