@@ -12,8 +12,8 @@ from redo import retrying
 log = logging.getLogger(__name__)
 
 
-def main():
-    from argparse import ArgumentParser
+def main(argv):
+    from argparse import ArgumentParser, REMAINDER
 
     parser = ArgumentParser()
     parser.add_argument(
@@ -26,9 +26,9 @@ def main():
         "-m", "--max-sleeptime", type=int, default=5*60,
         help="Maximum length of time to sleep between attempts (limits backoff length).")
     parser.add_argument("-v", "--verbose", action="store_true", default=False)
-    parser.add_argument("cmd", nargs="+", help="Command to run. Eg: wget http://blah")
+    parser.add_argument("cmd", nargs=REMAINDER, help="Command to run. Eg: wget http://blah")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv[1:])
 
     if args.verbose:
         logging.basicConfig(level=logging.INFO)
@@ -49,5 +49,6 @@ def main():
         rc = getattr(e, "returncode", -2)
         sys.exit(rc)
 
+
 if __name__ == "__main__":
-    main()
+    main(sys.argv)
