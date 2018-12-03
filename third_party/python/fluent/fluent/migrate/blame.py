@@ -7,6 +7,7 @@ import json
 import os
 
 from compare_locales.parser import getParser, Junk
+from compare_locales import mozpath
 import hglib
 from hglib.util import b, cmdbuilder
 
@@ -31,7 +32,7 @@ class Blame(object):
                 'blame': self.blame}
 
     def handleFile(self, file_blame):
-        path = file_blame['path']
+        path = mozpath.normsep(file_blame['path'])
 
         try:
             parser = getParser(path)
@@ -41,7 +42,7 @@ class Blame(object):
         self.blame[path] = {}
 
         self.readFile(parser, path)
-        entities, emap = parser.parse()
+        entities = parser.parse()
         for e in entities:
             if isinstance(e, Junk):
                 continue

@@ -48,6 +48,7 @@ and still has another line coming
                'and here is the 2nd part']
         i = iter(self.parser)
         for r, e in zip(ref, i):
+            self.assertTrue(e.localized)
             self.assertEqual(e.val, r)
 
     def test_bug121341(self):
@@ -155,6 +156,18 @@ foo = bar
             (Comment, 'LOCALIZATION NOTE'),
             (Whitespace, '\n\n\n')))
 
+    def test_standalone_license(self):
+        self._test('''\
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+foo = value
+''', (
+            (Comment, 'MPL'),
+            (Whitespace, '\n'),
+            ('foo', 'value'),
+            (Whitespace, '\n')))
+
     def test_empty_file(self):
         self._test('', tuple())
         self._test('\n', ((Whitespace, '\n'),))
@@ -205,6 +218,24 @@ t\xa0e = three\xa0''', (
             ('t\fo', 'two'),
             (Whitespace, '\n'),
             ('t\xa0e', 'three\xa0'),
+        ))
+
+    def test_pre_comment(self):
+        self._test('''\
+# comment
+one = string
+
+# standalone
+
+# glued
+second = string
+''', (
+            ('one', 'string', 'comment'),
+            (Whitespace, '\n\n'),
+            (Comment, 'standalone'),
+            (Whitespace, '\n\n'),
+            ('second', 'string', 'glued'),
+            (Whitespace, '\n'),
         ))
 
 

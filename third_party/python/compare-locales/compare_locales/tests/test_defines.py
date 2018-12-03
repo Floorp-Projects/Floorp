@@ -69,10 +69,11 @@ class TestDefinesParser(ParserTestMixin, unittest.TestCase):
             (Whitespace, '\n\n'),
             ('MOZ_LANGPACK_CREATOR', 'mozilla.org'),
             (Whitespace, '\n\n'),
-            (Comment, 'non-English'),
-            (Whitespace, '\n'),
-            ('MOZ_LANGPACK_CONTRIBUTORS',
-             '<em:contributor>Joe Solon</em:contributor>'),
+            (
+                'MOZ_LANGPACK_CONTRIBUTORS',
+                '<em:contributor>Joe Solon</em:contributor>',
+                'non-English',
+            ),
             (Whitespace, '\n\n'),
             (DefinesInstruction, 'unfilter emptyLines'),
             (Junk, '\n\n')))
@@ -91,9 +92,7 @@ class TestDefinesParser(ParserTestMixin, unittest.TestCase):
             (Whitespace, '\n'),
             (DefinesInstruction, 'filter emptyLines'),
             (Whitespace, '\n\n'),
-            (Comment, u'češtině'),
-            (Whitespace, '\n'),
-            ('seamonkey_l10n_long', ''),
+            ('seamonkey_l10n_long', '', 'češtině'),
             (Whitespace, '\n\n'),
             (DefinesInstruction, 'unfilter emptyLines'),
             (Junk, '\n\n')))
@@ -193,6 +192,36 @@ class TestDefinesParser(ParserTestMixin, unittest.TestCase):
             (Whitespace, '\n'),
             ('tre', '  '),
             (Whitespace, '\n'),))
+
+    def test_standalone_comments(self):
+        self._test(
+            '''\
+#filter emptyLines
+# One comment
+
+# Second comment
+
+#define foo
+# bar comment
+#define bar
+
+#unfilter emptyLines
+''',
+            (
+                (DefinesInstruction, 'filter emptyLines'),
+                (Whitespace, '\n'),
+                (Comment, 'One comment'),
+                (Whitespace, '\n\n'),
+                (Comment, 'Second comment'),
+                (Whitespace, '\n\n'),
+                ('foo', ''),
+                (Whitespace, '\n'),
+                ('bar', '', 'bar comment'),
+                (Whitespace, '\n\n'),
+                (DefinesInstruction, 'unfilter emptyLines'),
+                (Whitespace, '\n'),
+            )
+        )
 
 
 if __name__ == '__main__':
