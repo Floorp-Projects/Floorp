@@ -1,125 +1,332 @@
 from __future__ import unicode_literals
+from .errors import ParseError
 
 
-class StringIter():
-    def __init__(self, source):
-        self.source = source
-        self.len = len(source)
-        self.i = 0
-
-    def next(self):
-        if self.i < self.len:
-            ret = self.source[self.i]
-            self.i += 1
-            return ret
-        return None
-
-    def get_slice(self, start, end):
-        return self.source[start:end]
-
-
-class ParserStream():
+class ParserStream(object):
     def __init__(self, string):
-        self.iter = StringIter(string)
-        self.buf = []
-        self.peek_index = 0
+        self.string = string
         self.index = 0
+        self.peek_offset = 0
 
-        self.ch = None
+    def get(self, offset):
+        try:
+            return self.string[offset]
+        except IndexError:
+            return None
 
-        self.iter_end = False
-        self.peek_end = False
+    def char_at(self, offset):
+        # When the cursor is at CRLF, return LF but don't move the cursor. The
+        # cursor still points to the EOL position, which in this case is the
+        # beginning of the compound CRLF sequence. This ensures slices of
+        # [inclusive, exclusive) continue to work properly.
+        if self.get(offset) == '\r' \
+                and self.get(offset + 1) == '\n':
+            return '\n'
 
-        self.ch = self.iter.next()
+        return self.get(offset)
+
+    @property
+    def current_char(self):
+        return self.char_at(self.index)
+
+    @property
+    def current_peek(self):
+        return self.char_at(self.index + self.peek_offset)
 
     def next(self):
-        if self.iter_end:
-            return None
-
-        if len(self.buf) == 0:
-            self.ch = self.iter.next()
-        else:
-            self.ch = self.buf.pop(0)
-
+        self.peek_offset = 0
+        # Skip over CRLF as if it was a single character.
+        if self.get(self.index) == '\r' \
+                and self.get(self.index + 1) == '\n':
+            self.index += 1
         self.index += 1
-
-        if self.ch is None:
-            self.iter_end = True
-            self.peek_end = True
-
-        self.peek_index = self.index
-
-        return self.ch
-
-    def current(self):
-        return self.ch
-
-    def current_is(self, ch):
-        return self.ch == ch
-
-    def current_peek(self):
-        if self.peek_end:
-            return None
-
-        diff = self.peek_index - self.index
-
-        if diff == 0:
-            return self.ch
-        return self.buf[diff - 1]
-
-    def current_peek_is(self, ch):
-        return self.current_peek() == ch
+        return self.get(self.index)
 
     def peek(self):
-        if self.peek_end:
-            return None
+        # Skip over CRLF as if it was a single character.
+        if self.get(self.index + self.peek_offset) == '\r' \
+                and self.get(self.index + self.peek_offset + 1) == '\n':
+            self.peek_offset += 1
+        self.peek_offset += 1
+        return self.get(self.index + self.peek_offset)
 
-        self.peek_index += 1
-
-        diff = self.peek_index - self.index
-
-        if diff > len(self.buf):
-            ch = self.iter.next()
-            if ch is not None:
-                self.buf.append(ch)
-            else:
-                self.peek_end = True
-                return None
-
-        return self.buf[diff - 1]
-
-    def get_index(self):
-        return self.index
-
-    def get_peek_index(self):
-        return self.peek_index
-
-    def peek_char_is(self, ch):
-        if self.peek_end:
-            return False
-
-        ret = self.peek()
-
-        self.peek_index -= 1
-
-        return ret == ch
-
-    def reset_peek(self, pos=False):
-        if pos:
-            if pos < self.peek_index:
-                self.peek_end = False
-            self.peek_index = pos
-        else:
-            self.peek_index = self.index
-            self.peek_end = self.iter_end
+    def reset_peek(self, offset=0):
+        self.peek_offset = offset
 
     def skip_to_peek(self):
-        diff = self.peek_index - self.index
+        self.index += self.peek_offset
+        self.peek_offset = 0
 
-        for i in range(0, diff):
-            self.ch = self.buf.pop(0)
 
-        self.index = self.peek_index
+EOL = '\n'
+EOF = None
+SPECIAL_LINE_START_CHARS = ('}', '.', '[', '*')
 
-    def get_slice(self, start, end):
-        return self.iter.get_slice(start, end)
+
+class FluentParserStream(ParserStream):
+    last_comment_zero_four_syntax = False
+
+    def skip_blank_inline(self):
+        while self.current_char == ' ':
+            self.next()
+
+    def peek_blank_inline(self):
+        while self.current_peek == ' ':
+            self.peek()
+
+    def skip_blank_block(self):
+        line_count = 0
+        while True:
+            self.peek_blank_inline()
+
+            if self.current_peek == EOL:
+                self.skip_to_peek()
+                self.next()
+                line_count += 1
+            else:
+                self.reset_peek()
+                return line_count
+
+    def peek_blank_block(self):
+        while True:
+            line_start = self.peek_offset
+
+            self.peek_blank_inline()
+
+            if self.current_peek == EOL:
+                self.peek()
+            else:
+                self.reset_peek(line_start)
+                break
+
+    def skip_blank(self):
+        while self.current_char in (" ", EOL):
+            self.next()
+
+    def peek_blank(self):
+        while self.current_peek in (" ", EOL):
+            self.peek()
+
+    def expect_char(self, ch):
+        if self.current_char == ch:
+            self.next()
+            return True
+
+        raise ParseError('E0003', ch)
+
+    def expect_line_end(self):
+        if self.current_char is EOF:
+            # EOF is a valid line end in Fluent.
+            return True
+
+        if self.current_char == EOL:
+            self.next()
+            return True
+
+        # Unicode Character 'SYMBOL FOR NEWLINE' (U+2424)
+        raise ParseError('E0003', '\u2424')
+
+    def take_char(self, f):
+        ch = self.current_char
+        if ch is EOF:
+            return EOF
+        if f(ch):
+            self.next()
+            return ch
+        return False
+
+    def is_char_id_start(self, ch):
+        if ch is EOF:
+            return False
+
+        cc = ord(ch)
+        return (cc >= 97 and cc <= 122) or \
+               (cc >= 65 and cc <= 90)
+
+    def is_identifier_start(self):
+        return self.is_char_id_start(self.current_peek)
+
+    def is_number_start(self):
+        ch = self.peek() if self.current_char == '-' else self.current_char
+        if ch is EOF:
+            self.reset_peek()
+            return False
+
+        cc = ord(ch)
+        is_digit = cc >= 48 and cc <= 57
+        self.reset_peek()
+        return is_digit
+
+    def is_char_pattern_continuation(self, ch):
+        if ch is EOF:
+            return False
+
+        return ch not in SPECIAL_LINE_START_CHARS
+
+    def is_value_start(self, skip):
+        if skip is False:
+            raise NotImplementedError()
+
+        self.peek_blank_inline()
+        ch = self.current_peek
+
+        # Inline Patterns may start with any char.
+        if ch is not EOF and ch != EOL:
+            self.skip_to_peek()
+            return True
+
+        return self.is_next_line_value(skip)
+
+    def is_next_line_zero_four_comment(self, skip):
+        if skip is True:
+            raise NotImplementedError()
+
+        if self.current_peek != EOL:
+            return False
+
+        is_comment = (self.peek(), self.peek()) == ('/', '/')
+        self.reset_peek()
+        return is_comment
+
+    # -1 - any
+    #  0 - comment
+    #  1 - group comment
+    #  2 - resource comment
+    def is_next_line_comment(self, skip, level=-1):
+        if skip is True:
+            raise NotImplementedError()
+
+        if self.current_peek != EOL:
+            return False
+
+        i = 0
+
+        while (i <= level or (level == -1 and i < 3)):
+            if self.peek() != '#':
+                if i <= level and level != -1:
+                    self.reset_peek()
+                    return False
+                break
+            i += 1
+
+        # The first char after #, ## or ###.
+        if self.peek() in (' ', EOL):
+            self.reset_peek()
+            return True
+
+        self.reset_peek()
+        return False
+
+    def is_next_line_variant_start(self, skip):
+        if skip is True:
+            raise NotImplementedError()
+
+        if self.current_peek != EOL:
+            return False
+
+        self.peek_blank()
+
+        if self.current_peek == '*':
+            self.peek()
+
+        if self.current_peek == '[' and self.peek() != '[':
+            self.reset_peek()
+            return True
+
+        self.reset_peek()
+        return False
+
+    def is_next_line_attribute_start(self, skip):
+        if skip is False:
+            raise NotImplementedError()
+
+        self.peek_blank()
+
+        if self.current_peek == '.':
+            self.skip_to_peek()
+            return True
+
+        self.reset_peek()
+        return False
+
+    def is_next_line_value(self, skip):
+        if self.current_peek != EOL:
+            return False
+
+        self.peek_blank_block()
+
+        ptr = self.peek_offset
+
+        self.peek_blank_inline()
+
+        if self.current_peek != "{":
+            if (self.peek_offset - ptr == 0):
+                self.reset_peek()
+                return False
+
+            if not self.is_char_pattern_continuation(self.current_peek):
+                self.reset_peek()
+                return False
+
+        if skip:
+            self.skip_to_peek()
+        else:
+            self.reset_peek()
+
+        return True
+
+    def skip_to_next_entry_start(self, junk_start):
+        last_newline = self.string.rfind(EOL, 0, self.index)
+        if junk_start < last_newline:
+            # Last seen newline is _after_ the junk start. It's safe to rewind
+            # without the risk of resuming at the same broken entry.
+            self.index = last_newline
+
+        while self.current_char:
+            # We're only interested in beginnings of line.
+            if self.current_char != EOL:
+                self.next()
+                continue
+
+            # Break if the first char in this line looks like an entry start.
+            first = self.next()
+            if self.is_char_id_start(first) or first == '-' or first == '#':
+                break
+
+            # Syntax 0.4 compatibility
+            peek = self.peek()
+            self.reset_peek()
+            if (first, peek) == ('/', '/') or (first, peek) == ('[', '['):
+                break
+
+    def take_id_start(self):
+        if self.is_char_id_start(self.current_char):
+            ret = self.current_char
+            self.next()
+            return ret
+
+        raise ParseError('E0004', 'a-zA-Z')
+
+    def take_id_char(self):
+        def closure(ch):
+            cc = ord(ch)
+            return ((cc >= 97 and cc <= 122) or
+                    (cc >= 65 and cc <= 90) or
+                    (cc >= 48 and cc <= 57) or
+                    cc == 95 or cc == 45)
+        return self.take_char(closure)
+
+    def take_digit(self):
+        def closure(ch):
+            cc = ord(ch)
+            return (cc >= 48 and cc <= 57)
+        return self.take_char(closure)
+
+    def take_hex_digit(self):
+        def closure(ch):
+            cc = ord(ch)
+            return (
+                (cc >= 48 and cc <= 57)   # 0-9
+                or (cc >= 65 and cc <= 70)  # A-F
+                or (cc >= 97 and cc <= 102))  # a-f
+        return self.take_char(closure)
