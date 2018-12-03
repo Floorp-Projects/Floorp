@@ -5912,8 +5912,7 @@ if (AppConstants.platform == "macosx") {
 }
 
 const gDynamicTooltipCache = new Map();
-function UpdateDynamicShortcutTooltipText(aTooltip) {
-  let nodeId = aTooltip.triggerNode.id || aTooltip.triggerNode.getAttribute("anonid");
+function GetDynamicShortcutTooltipText(nodeId) {
   if (!gDynamicTooltipCache.has(nodeId) && nodeId in nodeToTooltipMap) {
     let strId = nodeToTooltipMap[nodeId];
     let args = [];
@@ -5926,8 +5925,14 @@ function UpdateDynamicShortcutTooltipText(aTooltip) {
     }
     gDynamicTooltipCache.set(nodeId, gNavigatorBundle.getFormattedString(strId, args));
   }
-  aTooltip.setAttribute("label", gDynamicTooltipCache.get(nodeId));
+  return gDynamicTooltipCache.get(nodeId);
 }
+
+function UpdateDynamicShortcutTooltipText(aTooltip) {
+  let nodeId = aTooltip.triggerNode.id || aTooltip.triggerNode.getAttribute("anonid");
+  aTooltip.setAttribute("label", GetDynamicShortcutTooltipText(nodeId));
+}
+
 
 /*
  * - [ Dependencies ] ---------------------------------------------------------
