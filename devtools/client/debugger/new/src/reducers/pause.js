@@ -118,7 +118,8 @@ function update(
     }
 
     case "MAP_FRAMES": {
-      return { ...state, frames: action.frames };
+      const { selectedFrameId, frames } = action;
+      return { ...state, frames, selectedFrameId };
     }
 
     case "ADD_EXTRA": {
