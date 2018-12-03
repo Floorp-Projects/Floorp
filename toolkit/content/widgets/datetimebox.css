@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @namespace url("http://www.w3.org/1999/xhtml");
+@namespace svg url("http://www.w3.org/2000/svg");
 
 .datetimebox {
   display: flex;
@@ -52,4 +53,8 @@
   flex: none;
   padding-left: 2px;
   padding-right: 2px;
+}
+
+svg|svg.datetime-reset-button-svg {
+  pointer-events: none;
 }
