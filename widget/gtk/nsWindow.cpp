@@ -434,6 +434,7 @@ nsWindow::nsWindow() {
   mPendingConfigures = 0;
   mCSDSupportLevel = CSD_SUPPORT_NONE;
   mDrawInTitlebar = false;
+  mTitlebarBackdropState = false;
 
   mHasAlphaVisual = false;
 }
@@ -3085,6 +3086,20 @@ void nsWindow::OnWindowStateEvent(GtkWidget *aWidget,
              aEvent->new_window_state & GDK_WINDOW_STATE_MAXIMIZED) {
     aEvent->changed_mask = static_cast<GdkWindowState>(
         aEvent->changed_mask | GDK_WINDOW_STATE_MAXIMIZED);
+  }
+
+  // This is a workaround for https://gitlab.gnome.org/GNOME/gtk/issues/1395
+  // Gtk+ controls window active appearance by window-state-event signal
+  // but gecko uses focus-in/out signals. So we need to repaint the titlebar
+  // when window-state-event comes.
+  if (mDrawInTitlebar && (aEvent->changed_mask & GDK_WINDOW_STATE_FOCUSED)) {
+    // Emulate what Gtk+ does at gtk_window_state_event().
+    // We can't check GTK_STATE_FLAG_BACKDROP directly as it's set by Gtk+
+    // *after* this window-state-event handler.
+    mTitlebarBackdropState =
+        !(aEvent->new_window_state & GDK_WINDOW_STATE_FOCUSED);
+
+    return;
   }
 
   // We don't care about anything but changes in the maximized/icon/fullscreen
@@ -6682,4 +6697,39 @@ already_AddRefed<nsIWidget> nsIWidget::CreateTopLevelWindow() {
 already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
   nsCOMPtr<nsIWidget> window = new nsWindow();
   return window.forget();
+}
+
+bool nsWindow::GetTopLevelWindowActiveState(nsIFrame *aFrame) {
+  // Used by window frame and button box rendering. We can end up in here in
+  // the content process when rendering one of these moz styles freely in a
+  // page. Fail in this case, there is no applicable window focus state.
+  if (!XRE_IsParentProcess()) {
+    return false;
+  }
+  // All headless windows are considered active so they are painted.
+  if (gfxPlatform::IsHeadless()) {
+    return true;
+  }
+  // Get the widget. nsIFrame's GetNearestWidget walks up the view chain
+  // until it finds a real window.
+  nsWindow *window = static_cast<nsWindow *>(aFrame->GetNearestWidget());
+  if (!window) {
+    return false;
+  }
+
+  // Get our toplevel nsWindow.
+  if (!window->mIsTopLevel) {
+    GtkWidget *widget = window->GetMozContainerWidget();
+    if (!widget) {
+      return false;
+    }
+
+    GtkWidget *toplevelWidget = gtk_widget_get_toplevel(widget);
+    window = get_window_for_gtk_widget(toplevelWidget);
+    if (!window) {
+      return false;
+    }
+  }
+
+  return !window->mTitlebarBackdropState;
 }
