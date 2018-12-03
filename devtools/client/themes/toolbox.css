@@ -483,6 +483,7 @@
   background: #fff;
   margin: 4px 10px 4px 0;
   border: 1px solid #bfc9d2;
+  overflow: hidden;
 }
 
 .webreplay-player .progress {
@@ -497,7 +498,7 @@
   background: var(--purple-50);
   width: 1px;
   height: 100%;
-  right: 0;
+  right: -0.5px;
   opacity: 0.4;
   display: block;
   content: "";
@@ -628,4 +629,55 @@
 .webreplay-player .recording .progress-line {
   background: #d0021b;
   opacity: 0.3;
+}
+
+.webreplay-player .tick {
+  position: absolute;
+  height: 100%;
+}
+
+.webreplay-player .tick::before,
+.webreplay-player .tick::after {
+  height: 1.5px;
+  width: 1px;
+  right: 0;
+  position: absolute;
+  content: "";
+  display: block;
+}
+
+.webreplay-player .recording .tick::before,
+.webreplay-player .recording .tick::after {
+  background: #d0021b;
+}
+
+.webreplay-player .tick.future::before,
+.webreplay-player .tick.future::after {
+  background: #bfc9d2;
+}
+
+.webreplay-player .tick::before,
+.webreplay-player .tick::after {
+  background: var(--blue-50);
+}
+
+.webreplay-player .tick::after {
+  bottom: 0;
+}
+
+.webreplay-player .tick::before {
+  top: 0;
+}
+
+
+.webreplay-player #overlay:hover .tick {
+  opacity: 1;
+}
+
+.webreplay-player #overlay .tick {
+  opacity: 0.5;
+}
+
+.webreplay-player #overlay .tick:hover ~ .tick {
+ opacity: 0.5; 
 }
