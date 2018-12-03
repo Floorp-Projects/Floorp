@@ -126,8 +126,24 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
           triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
         });
       }
-      if (mustChangeProcess) {
-        debug(`Tab will force a process flip on navigation, load about:blank first`);
+      // When the separate privileged content process is enabled, about:home and
+      // about:newtab will load in it, and we'll need to switch away if the user
+      // ever browses to a new URL. To avoid that, when the privileged process is
+      // enabled, we do the process flip immediately before entering RDM mode. The
+      // trade-off is that about:newtab can't be inspected in RDM, but it allows
+      // users to start RDM on that page and keep it open.
+      //
+      // The other trade is that sometimes users will be viewing the local file
+      // URI process, and will want to view the page in RDM. We allow this without
+      // blanking out the page, but we trade that for closing RDM if browsing ever
+      // causes them to flip processes.
+      //
+      // Bug 1510806 has been filed to fix this properly, by making RDM resilient
+      // to process flips.
+      if (mustChangeProcess &&
+          tab.linkedBrowser.remoteType == "privileged") {
+        debug(`Tab must flip away from the privileged content process ` +
+              `on navigation`);
         gBrowser.updateBrowserRemoteness(tab.linkedBrowser, true, {
           remoteType: requiredRemoteType,
         });

@@ -18,7 +18,7 @@ extern crate dwrote;
 #[cfg(feature = "env_logger")]
 extern crate env_logger;
 extern crate euclid;
-#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[cfg(all(unix, not(target_os = "android")))]
 extern crate font_loader;
 extern crate gleam;
 extern crate glutin;
