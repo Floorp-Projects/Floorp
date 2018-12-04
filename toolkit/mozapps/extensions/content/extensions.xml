@@ -915,6 +915,7 @@
             this.mAddon.screenshots[0] &&
             this.mAddon.screenshots[0].url;
           this.setAttribute("previewURL", previewURL ? previewURL : "");
+          this.setAttribute("hasPreview", previewURL ? "true" : "fase");
 
           let legacyWarning = legacyExtensionsEnabled && !this.mAddon.install &&
             isLegacyExtension(this.mAddon);
