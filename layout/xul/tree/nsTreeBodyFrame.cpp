@@ -277,8 +277,7 @@ void nsTreeBodyFrame::EnsureView() {
 
     RefPtr<XULTreeElement> tree = GetBaseElement();
     if (tree) {
-      nsCOMPtr<nsITreeView> treeView;
-      tree->GetView(getter_AddRefs(treeView));
+      nsCOMPtr<nsITreeView> treeView = tree->GetView();
       if (treeView && weakFrame.IsAlive()) {
         int32_t rowIndex = tree->GetCachedTopVisibleRow();
 
