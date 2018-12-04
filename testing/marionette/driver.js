@@ -62,6 +62,7 @@ const {
   IdlePromise,
   PollPromise,
   TimedPromise,
+  waitForEvent,
 } = ChromeUtils.import("chrome://marionette/content/sync.js", {});
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
@@ -3101,16 +3102,14 @@ GeckoDriver.prototype.dismissDialog = async function() {
   let win = assert.open(this.getCurrentWindow());
   this._checkIfAlertIsPresent();
 
-  await new Promise(resolve => {
-    win.addEventListener("DOMModalDialogClosed", async () => {
-      await new IdlePromise(win);
-      this.dialog = null;
-      resolve();
-    }, {once: true});
+  let dialogClosed = waitForEvent(win, "DOMModalDialogClosed");
 
-    let {button0, button1} = this.dialog.ui;
-    (button1 ? button1 : button0).click();
-  });
+  let {button0, button1} = this.dialog.ui;
+  (button1 ? button1 : button0).click();
+
+  await dialogClosed;
+
+  this.dialog = null;
 };
 
 /**
@@ -3121,16 +3120,14 @@ GeckoDriver.prototype.acceptDialog = async function() {
   let win = assert.open(this.getCurrentWindow());
   this._checkIfAlertIsPresent();
 
-  await new Promise(resolve => {
-    win.addEventListener("DOMModalDialogClosed", async () => {
-      await new IdlePromise(win);
-      this.dialog = null;
-      resolve();
-    }, {once: true});
+  let dialogClosed = waitForEvent(win, "DOMModalDialogClosed");
 
-    let {button0} = this.dialog.ui;
-    button0.click();
-  });
+  let {button0} = this.dialog.ui;
+  button0.click();
+
+  await dialogClosed;
+
+  this.dialog = null;
 };
 
 /**
