@@ -63,14 +63,19 @@ To create a new callback action you must create a file
 The arguments are:
 ``parameters``
   an instance of ``taskgraph.parameters.Parameters``, carrying decision task parameters from the original decision task.
+
 ``graph_config``
   an instance of ``taskgraph.config.GraphConfig``, carrying configuration for this tree
+
 ``input``
   the input from the user triggering the action (if any)
+
 ``task_group_id``
   the target task group on which this action should operate
+
 ``task_id``
   the target task on which this action should operate (or None if it is operating on the whole group)
+
 ``task``
   the definition of the target task (or None, as for ``task_id``)
 
