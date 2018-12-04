@@ -466,8 +466,7 @@ NS_IMETHODIMP nsTreeSelection::InvertSelection() {
 NS_IMETHODIMP nsTreeSelection::SelectAll() {
   if (!mTree) return NS_OK;
 
-  nsCOMPtr<nsITreeView> view;
-  mTree->GetView(getter_AddRefs(view));
+  nsCOMPtr<nsITreeView> view = mTree->GetView();
   if (!view) return NS_OK;
 
   int32_t rowCount;

@@ -155,7 +155,7 @@ void nsTreeColFrame::InvalidateColumns(bool aCanWalkFrameTree) {
     RefPtr<nsTreeColumns> columns;
 
     if (aCanWalkFrameTree) {
-      tree->GetColumns(getter_AddRefs(columns));
+      columns = tree->GetColumns();
     } else {
       nsTreeBodyFrame* body = tree->GetCachedTreeBodyFrame();
       if (body) {

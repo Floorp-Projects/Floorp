@@ -7984,16 +7984,14 @@ void PresShell::GetCurrentItemAndPositionForElement(
       // which could provide the current focus coordinates?
       if (tree) {
         tree->EnsureRowIsVisible(currentIndex);
-        int32_t firstVisibleRow, rowHeight;
-        tree->GetFirstVisibleRow(&firstVisibleRow);
-        tree->GetRowHeight(&rowHeight);
+        int32_t firstVisibleRow = tree->GetFirstVisibleRow();
+        int32_t rowHeight = tree->RowHeight();
 
         extraTreeY += nsPresContext::CSSPixelsToAppUnits(
             (currentIndex - firstVisibleRow + 1) * rowHeight);
         istree = true;
 
-        RefPtr<nsTreeColumns> cols;
-        tree->GetColumns(getter_AddRefs(cols));
+        RefPtr<nsTreeColumns> cols = tree->GetColumns();
         if (cols) {
           nsTreeColumn* col = cols->GetFirstColumn();
           if (col) {
