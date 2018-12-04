@@ -33,7 +33,6 @@
 #include "gfxContext.h"
 #include "nsIContent.h"
 #include "mozilla/ComputedStyle.h"
-#include "nsIBoxObject.h"
 #include "mozilla/dom/Document.h"
 #include "nsCSSRendering.h"
 #include "nsString.h"
@@ -42,6 +41,7 @@
 #include "nsViewManager.h"
 #include "nsVariant.h"
 #include "nsWidgetsCID.h"
+#include "nsIFrameInlines.h"
 #include "nsBoxFrame.h"
 #include "nsIURL.h"
 #include "nsBoxLayoutState.h"
@@ -61,7 +61,6 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ToJSValue.h"
-#include "mozilla/dom/TreeBoxObject.h"
 #include "mozilla/dom/TreeColumnBinding.h"
 #include <algorithm>
 #include "ScrollbarActivity.h"
@@ -159,7 +158,8 @@ void nsTreeBodyFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   mIndentation = GetIndentation();
   mRowHeight = GetRowHeight();
 
-  EnsureBoxObject();
+  // Call GetBaseElement so that mTree is assigned.
+  GetBaseElement();
 
   if (LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) != 0) {
     mScrollbarActivity =
@@ -170,15 +170,15 @@ void nsTreeBodyFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 nsSize nsTreeBodyFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) {
   EnsureView();
 
-  Element* baseElement = GetBaseElement();
+  RefPtr<XULTreeElement> tree(GetBaseElement());
 
   nsSize min(0, 0);
   int32_t desiredRows;
-  if (MOZ_UNLIKELY(!baseElement)) {
+  if (MOZ_UNLIKELY(!tree)) {
     desiredRows = 0;
   } else {
     nsAutoString rows;
-    baseElement->GetAttr(kNameSpaceID_None, nsGkAtoms::rows, rows);
+    tree->GetAttr(kNameSpaceID_None, nsGkAtoms::rows, rows);
     if (!rows.IsEmpty()) {
       nsresult err;
       desiredRows = rows.ToInteger(&err);
@@ -248,21 +248,8 @@ void nsTreeBodyFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
   if (mColumns) mColumns->SetTree(nullptr);
 
-  // Save off our info into the box object.
-  nsCOMPtr<nsPIBoxObject> box(do_QueryInterface(mTreeBoxObject));
-  if (box) {
-    if (mTopRowIndex > 0) {
-      nsAutoString topRowStr;
-      topRowStr.AssignLiteral("topRow");
-      nsAutoString topRow;
-      topRow.AppendInt(mTopRowIndex);
-      box->SetProperty(topRowStr.get(), topRow.get());
-    }
-
-    // Always null out the cached tree body frame.
-    box->ClearCachedValues();
-
-    mTreeBoxObject = nullptr;  // Drop our ref here.
+  if (mTree) {
+    mTree->BodyDestroyed(mTopRowIndex);
   }
 
   if (mView) {
@@ -276,33 +263,6 @@ void nsTreeBodyFrame::DestroyFrom(nsIFrame* aDestructRoot,
   nsLeafBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
-void nsTreeBodyFrame::EnsureBoxObject() {
-  if (!mTreeBoxObject) {
-    nsIContent* parent = GetBaseElement();
-    if (parent) {
-      Document* nsDoc = parent->GetComposedDoc();
-      if (!nsDoc)  // there may be no document, if we're called from Destroy()
-        return;
-      ErrorResult ignored;
-      nsCOMPtr<nsIBoxObject> box =
-          nsDoc->GetBoxObjectFor(parent->AsElement(), ignored);
-      // Ensure that we got a native box object.
-      nsCOMPtr<nsPIBoxObject> pBox = do_QueryInterface(box);
-      if (pBox) {
-        nsCOMPtr<nsITreeBoxObject> realTreeBoxObject = do_QueryInterface(pBox);
-        if (realTreeBoxObject) {
-          nsTreeBodyFrame* innerTreeBoxObject =
-              static_cast<dom::TreeBoxObject*>(realTreeBoxObject.get())
-                  ->GetCachedTreeBodyFrame();
-          NS_ENSURE_TRUE_VOID(!innerTreeBoxObject ||
-                              innerTreeBoxObject == this);
-          mTreeBoxObject = realTreeBoxObject;
-        }
-      }
-    }
-  }
-}
-
 void nsTreeBodyFrame::EnsureView() {
   if (!mView) {
     if (PresShell()->IsReflowLocked()) {
@@ -312,16 +272,15 @@ void nsTreeBodyFrame::EnsureView() {
       }
       return;
     }
-    nsCOMPtr<nsIBoxObject> box = do_QueryInterface(mTreeBoxObject);
-    if (box) {
-      AutoWeakFrame weakFrame(this);
+
+    AutoWeakFrame weakFrame(this);
+
+    RefPtr<XULTreeElement> tree = GetBaseElement();
+    if (tree) {
       nsCOMPtr<nsITreeView> treeView;
-      mTreeBoxObject->GetView(getter_AddRefs(treeView));
+      tree->GetView(getter_AddRefs(treeView));
       if (treeView && weakFrame.IsAlive()) {
-        nsString rowStr;
-        box->GetProperty(u"topRow", getter_Copies(rowStr));
-        nsresult error;
-        int32_t rowIndex = rowStr.ToInteger(&error);
+        int32_t rowIndex = tree->GetCachedTopVisibleRow();
 
         // Set our view.
         SetView(treeView);
@@ -331,10 +290,6 @@ void nsTreeBodyFrame::EnsureView() {
         // XXX is this optimal if we haven't laid out yet?
         ScrollToRow(rowIndex);
         NS_ENSURE_TRUE_VOID(weakFrame.IsAlive());
-
-        // Clear out the property info for the top row, but we always keep the
-        // view current.
-        box->RemoveProperty(u"topRow");
       }
     }
   }
@@ -384,7 +339,7 @@ bool nsTreeBodyFrame::ReflowFinished() {
     if (mTopRowIndex > lastPageTopRow)
       ScrollToRowInternal(parts, lastPageTopRow);
 
-    Element* treeContent = GetBaseElement();
+    XULTreeElement* treeContent = GetBaseElement();
     if (treeContent && treeContent->AttrValueIs(
                            kNameSpaceID_None, nsGkAtoms::keepcurrentinview,
                            nsGkAtoms::_true, eCaseMatters)) {
@@ -441,7 +396,7 @@ nsresult nsTreeBodyFrame::SetView(nsITreeView* aView) {
   // necessarily entail a full invalidation of the tree.
   Invalidate();
 
-  nsIContent* treeContent = GetBaseElement();
+  RefPtr<XULTreeElement> treeContent = GetBaseElement();
   if (treeContent) {
 #ifdef ACCESSIBILITY
     nsAccessibilityService* accService = nsIPresShell::AccService();
@@ -458,15 +413,15 @@ nsresult nsTreeBodyFrame::SetView(nsITreeView* aView) {
     nsCOMPtr<nsITreeSelection> sel;
     mView->GetSelection(getter_AddRefs(sel));
     if (sel) {
-      sel->SetTree(mTreeBoxObject);
+      sel->SetTree(treeContent);
     } else {
-      NS_NewTreeSelection(mTreeBoxObject, getter_AddRefs(sel));
+      NS_NewTreeSelection(treeContent, getter_AddRefs(sel));
       mView->SetSelection(sel);
     }
 
     // View, meet the tree.
     AutoWeakFrame weakFrame(this);
-    mView->SetTree(mTreeBoxObject);
+    mView->SetTree(treeContent);
     NS_ENSURE_STATE(weakFrame.IsAlive());
     mView->GetRowCount(&mRowCount);
 
@@ -686,8 +641,8 @@ static void FindScrollParts(nsIFrame* aCurrFrame,
 
 nsTreeBodyFrame::ScrollParts nsTreeBodyFrame::GetScrollParts() {
   ScrollParts result = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
-  nsIContent* baseElement = GetBaseElement();
-  nsIFrame* treeFrame = baseElement ? baseElement->GetPrimaryFrame() : nullptr;
+  XULTreeElement* tree = GetBaseElement();
+  nsIFrame* treeFrame = tree ? tree->GetPrimaryFrame() : nullptr;
   if (treeFrame) {
     // The way we do this, searching through the entire frame subtree, is pretty
     // dumb! We should know where these frames are.
@@ -1786,10 +1741,10 @@ void nsTreeBodyFrame::PrefillPropertyArray(int32_t aRowIndex,
     else
       mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::even);
 
-    Element* baseContent = GetBaseElement();
-    if (baseContent &&
-        baseContent->HasAttr(kNameSpaceID_None, nsGkAtoms::editing))
+    XULTreeElement* tree = GetBaseElement();
+    if (tree && tree->HasAttr(kNameSpaceID_None, nsGkAtoms::editing)) {
       mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::editing);
+    }
 
     // multiple columns
     if (mColumns->GetColumnAt(1))
@@ -2577,8 +2532,8 @@ void nsTreeBodyFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   aLists.Content()->AppendToTop(item);
 
 #ifdef XP_MACOSX
-  nsIContent* baseElement = GetBaseElement();
-  nsIFrame* treeFrame = baseElement ? baseElement->GetPrimaryFrame() : nullptr;
+  XULTreeElement* tree = GetBaseElement();
+  nsIFrame* treeFrame = tree ? tree->GetPrimaryFrame() : nullptr;
   nsCOMPtr<nsITreeSelection> selection;
   mView->GetSelection(getter_AddRefs(selection));
   nsITheme* theme = PresContext()->GetTheme();
@@ -3960,18 +3915,21 @@ ComputedStyle* nsTreeBodyFrame::GetPseudoComputedStyle(
                                       aPseudoElement, mScratchArray);
 }
 
-Element* nsTreeBodyFrame::GetBaseElement() {
-  nsIFrame* parent = GetParent();
-  while (parent) {
-    nsIContent* content = parent->GetContent();
-    if (content && content->IsXULElement(nsGkAtoms::tree)) {
-      return content->AsElement();
-    }
+XULTreeElement* nsTreeBodyFrame::GetBaseElement() {
+  if (!mTree) {
+    nsIFrame* parent = GetParent();
+    while (parent) {
+      nsIContent* content = parent->GetContent();
+      if (content && content->IsXULElement(nsGkAtoms::tree)) {
+        mTree = XULTreeElement::FromNodeOrNull(content->AsElement());
+        break;
+      }
 
-    parent = parent->GetParent();
+      parent = parent->GetInFlowParent();
+    }
   }
 
-  return nullptr;
+  return mTree;
 }
 
 nsresult nsTreeBodyFrame::ClearStyleAndImageCaches() {
@@ -4240,10 +4198,10 @@ static void InitCustomEvent(CustomEvent* aEvent, const nsAString& aType,
 }
 
 void nsTreeBodyFrame::FireRowCountChangedEvent(int32_t aIndex, int32_t aCount) {
-  nsCOMPtr<nsIContent> content(GetBaseElement());
-  if (!content) return;
+  RefPtr<XULTreeElement> tree(GetBaseElement());
+  if (!tree) return;
 
-  nsCOMPtr<Document> doc = content->OwnerDoc();
+  RefPtr<Document> doc = tree->OwnerDoc();
   MOZ_ASSERT(doc);
 
   RefPtr<Event> event = doc->CreateEvent(NS_LITERAL_STRING("customevent"),
@@ -4271,7 +4229,7 @@ void nsTreeBodyFrame::FireRowCountChangedEvent(int32_t aIndex, int32_t aCount) {
   event->SetTrusted(true);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(content, event);
+      new AsyncEventDispatcher(tree, event);
   asyncDispatcher->PostDOMEvent();
 }
 
@@ -4279,10 +4237,10 @@ void nsTreeBodyFrame::FireInvalidateEvent(int32_t aStartRowIdx,
                                           int32_t aEndRowIdx,
                                           nsTreeColumn* aStartCol,
                                           nsTreeColumn* aEndCol) {
-  nsCOMPtr<nsIContent> content(GetBaseElement());
-  if (!content) return;
+  RefPtr<XULTreeElement> tree(GetBaseElement());
+  if (!tree) return;
 
-  nsCOMPtr<Document> doc = content->OwnerDoc();
+  RefPtr<Document> doc = tree->OwnerDoc();
 
   RefPtr<Event> event = doc->CreateEvent(NS_LITERAL_STRING("customevent"),
                                          CallerType::System, IgnoreErrors());
@@ -4322,7 +4280,7 @@ void nsTreeBodyFrame::FireInvalidateEvent(int32_t aStartRowIdx,
   event->SetTrusted(true);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(content, event);
+      new AsyncEventDispatcher(tree, event);
   asyncDispatcher->PostDOMEvent();
 }
 #endif

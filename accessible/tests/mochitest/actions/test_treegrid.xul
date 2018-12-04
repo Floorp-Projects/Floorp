@@ -69,7 +69,7 @@
     {
       var treeNode = getNode("tabletree");
 
-      var treeBodyNode = treeNode.boxObject.treeBody;
+      var treeBodyNode = treeNode.treeBody;
       treeNode.focus();
 
       var tree = getAccessible(treeNode);

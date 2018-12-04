@@ -8,7 +8,11 @@
 #include "mozilla/ComputedStyle.h"
 #include "nsBoxFrame.h"
 
-class nsITreeBoxObject;
+namespace mozilla {
+namespace dom {
+class XULTreeElement;
+}
+}  // namespace mozilla
 
 nsIFrame* NS_NewTreeColFrame(nsIPresShell* aPresShell,
                              mozilla::ComputedStyle* aStyle);
@@ -43,9 +47,9 @@ class nsTreeColFrame final : public nsBoxFrame {
   virtual ~nsTreeColFrame();
 
   /**
-   * @return the tree box object of the tree this column belongs to, or nullptr.
+   * @return the tree that this column belongs to, or nullptr.
    */
-  nsITreeBoxObject* GetTreeBoxObject();
+  mozilla::dom::XULTreeElement* GetTree();
 
   /**
    * Helper method that gets the TreeColumns object this column belongs to
