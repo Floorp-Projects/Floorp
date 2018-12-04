@@ -482,7 +482,7 @@
                   </vbox>
                   <hbox class="card addon-detail" align="start">
                     <vbox flex="1">
-                      <image class="card-heading-image theme-screenshot" hidden="true"/>
+                      <image class="card-heading-image theme-screenshot"/>
                       <hbox align="start">
                         <vbox id="detail-icon-container" align="end">
                           <image id="detail-icon" class="icon"/>
