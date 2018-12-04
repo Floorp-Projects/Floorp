@@ -13,7 +13,7 @@
       class="subcategory"
       hidden="true"
       data-category="panePrivacy">
-  <label class="header-name" flex="1" data-l10n-id="privacy-header"/>
+  <html:h1 data-l10n-id="privacy-header"/>
 </hbox>
 
 <!-- Tracking / Content Blocking -->
@@ -440,7 +440,7 @@
       class="subcategory"
       hidden="true"
       data-category="panePrivacy">
-  <label class="header-name" flex="1" data-l10n-id="permissions-header"/>
+  <html:h1 data-l10n-id="permissions-header"/>
 </hbox>
 
 <!-- Permissions -->
@@ -671,7 +671,7 @@
       class="subcategory"
       hidden="true"
       data-category="panePrivacy">
-  <label class="header-name" flex="1" data-l10n-id="collection-header"/>
+  <html:h1 data-l10n-id="collection-header"/>
 </hbox>
 
 <groupbox id="dataCollectionGroup" data-category="panePrivacy" hidden="true">
@@ -750,7 +750,7 @@
       class="subcategory"
       hidden="true"
       data-category="panePrivacy">
-  <label class="header-name" flex="1" data-l10n-id="security-header"/>
+  <html:h1 data-l10n-id="security-header"/>
 </hbox>
 
 <!-- addons, forgery (phishing) UI Security -->
