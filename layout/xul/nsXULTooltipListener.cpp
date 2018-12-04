@@ -33,6 +33,7 @@
 #include "mozilla/dom/BoxObject.h"
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/TreeColumnBinding.h"
+#include "mozilla/dom/XULTreeElementBinding.h"
 #include "mozilla/TextEvents.h"
 
 using namespace mozilla;
@@ -337,10 +338,6 @@ void nsXULTooltipListener::CheckTreeBodyMove(MouseEvent* aMouseEvent) {
     int32_t x = aMouseEvent->ScreenX(CallerType::System);
     int32_t y = aMouseEvent->ScreenY(CallerType::System);
 
-    int32_t row;
-    RefPtr<nsTreeColumn> col;
-    nsAutoString obj;
-
     // subtract off the documentElement's boxObject
     int32_t boxX, boxY;
     bx->GetScreenX(&boxX);
@@ -348,7 +345,12 @@ void nsXULTooltipListener::CheckTreeBodyMove(MouseEvent* aMouseEvent) {
     x -= boxX;
     y -= boxY;
 
-    tree->GetCellAt(x, y, &row, getter_AddRefs(col), obj);
+    ErrorResult rv;
+    TreeCellInfo cellInfo;
+    tree->GetCellAt(x, y, cellInfo, rv);
+
+    int32_t row = cellInfo.mRow;
+    RefPtr<nsTreeColumn> col = cellInfo.mCol;
 
     // determine if we are going to need a titletip
     // XXX check the disabletitletips attribute on the tree content
@@ -357,9 +359,9 @@ void nsXULTooltipListener::CheckTreeBodyMove(MouseEvent* aMouseEvent) {
     if (col) {
       colType = col->Type();
     }
-    if (row >= 0 && obj.EqualsLiteral("text") &&
+    if (row >= 0 && cellInfo.mChildElt.EqualsLiteral("text") &&
         colType != TreeColumn_Binding::TYPE_PASSWORD) {
-      tree->IsCellCropped(row, col, &mNeedTitletip);
+      mNeedTitletip = tree->IsCellCropped(row, col, rv);
     }
 
     nsCOMPtr<nsIContent> currentTooltip = do_QueryReferent(mCurrentTooltip);
@@ -435,8 +437,7 @@ nsresult nsXULTooltipListener::ShowTooltip() {
 #ifdef MOZ_XUL
 static void SetTitletipLabel(XULTreeElement* aTree, Element* aTooltip,
                              int32_t aRow, nsTreeColumn* aCol) {
-  nsCOMPtr<nsITreeView> view;
-  aTree->GetView(getter_AddRefs(view));
+  nsCOMPtr<nsITreeView> view = aTree->GetView();
   if (view) {
     nsAutoString label;
 #ifdef DEBUG
