@@ -31,6 +31,7 @@
 #include "nsTreeBodyFrame.h"
 #include "nsTreeColumns.h"
 #include "nsTreeUtils.h"
+#include "mozilla/dom/XULTreeElementBinding.h"
 
 using namespace mozilla::a11y;
 
@@ -113,8 +114,7 @@ void XULTreeAccessible::Value(nsString& aValue) const {
   if (currentIndex >= 0) {
     RefPtr<nsTreeColumn> keyCol;
 
-    RefPtr<nsTreeColumns> cols;
-    mTree->GetColumns(getter_AddRefs(cols));
+    RefPtr<nsTreeColumns> cols = mTree->GetColumns();
     if (cols) keyCol = cols->GetKeyColumn();
 
     mTreeView->GetCellText(currentIndex, keyCol, aValue);
@@ -171,23 +171,21 @@ Accessible* XULTreeAccessible::ChildAtPoint(int32_t aX, int32_t aY,
   int32_t clientX = presContext->DevPixelsToIntCSSPixels(aX) - rootRect.X();
   int32_t clientY = presContext->DevPixelsToIntCSSPixels(aY) - rootRect.Y();
 
-  int32_t row = -1;
-  RefPtr<nsTreeColumn> column;
-  nsAutoString childEltUnused;
-  mTree->GetCellAt(clientX, clientY, &row, getter_AddRefs(column),
-                   childEltUnused);
+  ErrorResult rv;
+  dom::TreeCellInfo cellInfo;
+  mTree->GetCellAt(clientX, clientY, cellInfo, rv);
 
   // If we failed to find tree cell for the given point then it might be
   // tree columns.
-  if (row == -1 || !column)
+  if (cellInfo.mRow == -1 || !cellInfo.mCol)
     return AccessibleWrap::ChildAtPoint(aX, aY, aWhichChild);
 
-  Accessible* child = GetTreeItemAccessible(row);
+  Accessible* child = GetTreeItemAccessible(cellInfo.mRow);
   if (aWhichChild == eDeepestChild && child) {
     // Look for accessible cell for the found item accessible.
     RefPtr<XULTreeItemAccessibleBase> treeitem = do_QueryObject(child);
 
-    Accessible* cell = treeitem->GetCellAccessible(column);
+    Accessible* cell = treeitem->GetCellAccessible(cellInfo.mCol);
     if (cell) child = cell;
   }
 
@@ -524,8 +522,7 @@ void XULTreeAccessible::TreeViewInvalidated(int32_t aStartRow, int32_t aEndRow,
     endRow = rowCount - 1;
   }
 
-  RefPtr<nsTreeColumns> treeColumns;
-  mTree->GetColumns(getter_AddRefs(treeColumns));
+  RefPtr<nsTreeColumns> treeColumns = mTree->GetColumns();
   if (!treeColumns) return;
 
   int32_t endCol = aEndCol;
@@ -625,23 +622,19 @@ nsIntRect XULTreeItemAccessibleBase::BoundsInCSSPixels() const {
 
   RefPtr<nsTreeColumn> column = nsCoreUtils::GetFirstSensibleColumn(mTree);
 
-  int32_t x = 0, y = 0, width = 0, height = 0;
-  nsresult rv = mTree->GetCoordsForCellItem(mRow, column, EmptyString(), &x, &y,
-                                            &width, &height);
+  nsresult rv;
+  nsIntRect rect =
+      mTree->GetCoordsForCellItem(mRow, column, NS_LITERAL_STRING("cell"), rv);
   if (NS_FAILED(rv)) {
     return nsIntRect();
   }
 
-  boxObj->GetWidth(&width);
+  boxObj->GetWidth(&rect.width);
 
   int32_t tcX = 0, tcY = 0;
   boxObj->GetScreenX(&tcX);
   boxObj->GetScreenY(&tcY);
-
-  x = tcX;
-  y += tcY;
-
-  return nsIntRect(x, y, width, height);
+  return nsIntRect(tcX, rect.y + tcY, rect.width, rect.height);
 }
 
 nsRect XULTreeItemAccessibleBase::BoundsInAppUnits() const {
@@ -806,9 +799,8 @@ uint64_t XULTreeItemAccessibleBase::NativeState() const {
   if (FocusMgr()->IsFocused(this)) state |= states::FOCUSED;
 
   // invisible state
-  int32_t firstVisibleRow, lastVisibleRow;
-  mTree->GetFirstVisibleRow(&firstVisibleRow);
-  mTree->GetLastVisibleRow(&lastVisibleRow);
+  int32_t firstVisibleRow = mTree->GetFirstVisibleRow();
+  int32_t lastVisibleRow = mTree->GetLastVisibleRow();
   if (mRow < firstVisibleRow || mRow > lastVisibleRow)
     state |= states::INVISIBLE;
 
@@ -837,8 +829,7 @@ void XULTreeItemAccessibleBase::DispatchClickEvent(
     nsIContent* aContent, uint32_t aActionIndex) const {
   if (IsDefunct()) return;
 
-  RefPtr<nsTreeColumns> columns;
-  mTree->GetColumns(getter_AddRefs(columns));
+  RefPtr<nsTreeColumns> columns = mTree->GetColumns();
   if (!columns) return;
 
   // Get column and pseudo element.
@@ -874,8 +865,7 @@ bool XULTreeItemAccessibleBase::IsExpandable() const {
     bool isEmpty = false;
     mTreeView->IsContainerEmpty(mRow, &isEmpty);
     if (!isEmpty) {
-      RefPtr<nsTreeColumns> columns;
-      mTree->GetColumns(getter_AddRefs(columns));
+      RefPtr<nsTreeColumns> columns = mTree->GetColumns();
       if (columns) {
         nsTreeColumn* primaryColumn = columns->GetPrimaryColumn();
         if (primaryColumn && !nsCoreUtils::IsColumnHidden(primaryColumn))
@@ -946,8 +936,7 @@ void XULTreeItemAccessible::Shutdown() {
 }
 
 role XULTreeItemAccessible::NativeRole() const {
-  RefPtr<nsTreeColumns> columns;
-  mTree->GetColumns(getter_AddRefs(columns));
+  RefPtr<nsTreeColumns> columns = mTree->GetColumns();
   if (!columns) {
     NS_ERROR("No tree columns object in the tree!");
     return roles::NOTHING;
@@ -989,8 +978,7 @@ Accessible* XULTreeColumAccessible::GetSiblingAtOffset(int32_t aOffset,
 
   RefPtr<dom::XULTreeElement> tree = nsCoreUtils::GetTree(mContent);
   if (tree) {
-    nsCOMPtr<nsITreeView> treeView;
-    tree->GetView(getter_AddRefs(treeView));
+    nsCOMPtr<nsITreeView> treeView = tree->GetView();
     if (treeView) {
       int32_t rowCount = 0;
       treeView->GetRowCount(&rowCount);
