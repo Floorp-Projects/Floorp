@@ -63,7 +63,7 @@ bool ElemOpEmitter::emitGet() {
     }
   }
   if (isSuper()) {
-    if (!bce_->emit1(JSOP_SUPERBASE)) {
+    if (!bce_->emitSuperBase()) {
       //                [stack] THIS? THIS KEY SUPERBASE
       return false;
     }
@@ -132,7 +132,7 @@ bool ElemOpEmitter::prepareForRhs() {
   if (isSimpleAssignment()) {
     // For CompoundAssignment, SUPERBASE is already emitted by emitGet.
     if (isSuper()) {
-      if (!bce_->emit1(JSOP_SUPERBASE)) {
+      if (!bce_->emitSuperBase()) {
         //            [stack] THIS KEY SUPERBASE
         return false;
       }
@@ -164,7 +164,7 @@ bool ElemOpEmitter::emitDelete() {
       //                [stack] THIS KEY
       return false;
     }
-    if (!bce_->emit1(JSOP_SUPERBASE)) {
+    if (!bce_->emitSuperBase()) {
       //                [stack] THIS KEY SUPERBASE
       return false;
     }

@@ -1967,6 +1967,9 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       case JSOP_CALLEE:
         return write("CALLEE");
 
+      case JSOP_ENVCALLEE:
+        return write("ENVCALLEE");
+
       case JSOP_CALLSITEOBJ:
         return write("OBJ");
 
