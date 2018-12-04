@@ -38,11 +38,14 @@ function getThemeData(_id = id, manifest = {}, files = {}) {
   };
 }
 
-add_task(async function testThemePreviewShown() {
+async function init(startPage) {
   gManagerWindow = await open_manager(null);
   gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  return gCategoryUtilities.openType(startPage);
+}
 
-  await gCategoryUtilities.openType("theme");
+add_task(async function testThemePreviewShown() {
+  await init("theme");
 
   await AddonTestUtils.promiseInstallXPI(getThemeData());
   let addon = await AddonManager.getAddonByID(id);
@@ -69,4 +72,42 @@ add_task(async function testThemePreviewShown() {
 
   await close_manager(gManagerWindow);
   await addon.uninstall();
+});
+
+add_task(async function testThemeOrdering() {
+  // Install themes before loading the manager, if it's open they'll sort by install date.
+  let themeId = id => id + "@mochi.test";
+  let themeIds = [themeId(5), themeId(6), themeId(7), themeId(8)];
+  await AddonTestUtils.promiseInstallXPI(getThemeData(themeId(6), {name: "BBB"}));
+  await AddonTestUtils.promiseInstallXPI(getThemeData(themeId(7), {name: "CCC"}));
+  await AddonTestUtils.promiseInstallXPI(getThemeData(themeId(5), {name: "AAA"}, {previewURL: ""}));
+  await AddonTestUtils.promiseInstallXPI(getThemeData(themeId(8), {name: "DDD"}));
+
+  // Enable a theme to make sure it's first.
+  let addon = await AddonManager.getAddonByID(themeId(8));
+  addon.enable();
+
+  // Load themes now that the extensions are setup.
+  await init("theme");
+
+  // Find the order of ids for the ones we installed.
+  let list = gManagerWindow.document.getElementById("addon-list");
+  let idOrder = list.itemChildren
+    .map(row => row.getAttribute("value"))
+    .filter(id => themeIds.includes(id));
+
+  // Check the order.
+  Assert.deepEqual(
+    idOrder,
+    [
+      themeId(8), // The active theme first.
+      themeId(6), themeId(7), // With previews, ordered by name.
+      themeId(5), // The theme without a preview last.
+    ],
+    "Themes are ordered by enabled, previews, then name");
+
+  await close_manager(gManagerWindow);
+  for (let addon of await promiseAddonsByIDs(themeIds)) {
+    await addon.uninstall();
+  }
 });
