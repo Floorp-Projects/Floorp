@@ -128,15 +128,20 @@ nsMacUtilsImpl::GetIsTranslated(bool* aIsTranslated) {
 }
 
 #if defined(MOZ_CONTENT_SANDBOX)
-// Get the path to the .app directory for the parent process. When executing
-// in the child process, this is the outer .app (such as Firefox.app) and not
-// the inner .app containing the child process executable.
+// Get the path to the .app directory (aka bundle) for the parent process.
+// When executing in the child process, this is the outer .app (such as
+// Firefox.app) and not the inner .app containing the child process
+// executable. We don't rely on the actual .app extension to allow for the
+// bundle being renamed.
 bool nsMacUtilsImpl::GetAppPath(nsCString& aAppPath) {
   nsAutoCString appPath;
   nsAutoCString appBinaryPath(
       (CommandLine::ForCurrentProcess()->argv()[0]).c_str());
 
-  auto pattern = NS_LITERAL_CSTRING(".app/Contents/MacOS/");
+  // The binary path resides within the .app dir in Contents/MacOS,
+  // e.g., Firefox.app/Contents/MacOS/firefox. Search backwards in
+  // the binary path for the end of .app path.
+  auto pattern = NS_LITERAL_CSTRING("/Contents/MacOS/");
   nsAutoCString::const_iterator start, end;
   appBinaryPath.BeginReading(start);
   appBinaryPath.EndReading(end);
@@ -144,8 +149,9 @@ bool nsMacUtilsImpl::GetAppPath(nsCString& aAppPath) {
     end = start;
     appBinaryPath.BeginReading(start);
 
-    // If we're executing in a child process, get the
-    // parent .app by searching right-to-left once more.
+    // If we're executing in a child process, get the parent .app path
+    // by searching backwards once more. The child executable resides
+    // in Firefox.app/Contents/MacOS/plugin-container/Contents/MacOS.
     if (!XRE_IsParentProcess()) {
       if (RFindInReadable(pattern, start, end)) {
         end = start;
@@ -155,10 +161,6 @@ bool nsMacUtilsImpl::GetAppPath(nsCString& aAppPath) {
       }
     }
 
-    ++end;
-    ++end;
-    ++end;
-    ++end;
     appPath.Assign(Substring(start, end));
   } else {
     return false;
