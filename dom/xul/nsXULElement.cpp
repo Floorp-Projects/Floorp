@@ -296,16 +296,6 @@ NS_IMPL_RELEASE_INHERITED(nsXULElement, nsStyledElement)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULElement)
   NS_ELEMENT_INTERFACE_TABLE_TO_MAP_SEGUE
-
-  nsCOMPtr<nsISupports> iface =
-      CustomElementRegistry::CallGetCustomInterface(this, aIID);
-  if (iface) {
-    iface->QueryInterface(aIID, aInstancePtr);
-    if (*aInstancePtr) {
-      return NS_OK;
-    }
-  }
-
 NS_INTERFACE_MAP_END_INHERITING(nsStyledElement)
 
 //----------------------------------------------------------------------
