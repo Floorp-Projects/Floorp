@@ -549,9 +549,7 @@ bool nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
             bool disabled;
             controlItem->GetDisabled(&disabled);
             if (!disabled) {
-              nsCOMPtr<nsIDOMXULSelectControlElement> selectControl;
-              controlItem->GetControl(getter_AddRefs(selectControl));
-              elementToFocus = do_QueryInterface(selectControl);
+              controlItem->GetControl(getter_AddRefs(elementToFocus));
             }
           }
         } else {

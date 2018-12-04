@@ -73,12 +73,10 @@ void XULComboboxAccessible::Description(nsString& aDescription) {
   nsCOMPtr<nsIDOMXULMenuListElement> menuListElm(do_QueryInterface(mContent));
   if (!menuListElm) return;
 
-  nsCOMPtr<nsIDOMXULSelectControlItemElement> focusedOptionItem;
+  nsCOMPtr<Element> focusedOptionItem;
   menuListElm->GetSelectedItem(getter_AddRefs(focusedOptionItem));
-  nsCOMPtr<nsIContent> focusedOptionContent =
-      do_QueryInterface(focusedOptionItem);
-  if (focusedOptionContent && mDoc) {
-    Accessible* focusedOptionAcc = mDoc->GetAccessible(focusedOptionContent);
+  if (focusedOptionItem && mDoc) {
+    Accessible* focusedOptionAcc = mDoc->GetAccessible(focusedOptionItem);
     if (focusedOptionAcc) focusedOptionAcc->Description(aDescription);
   }
 }
