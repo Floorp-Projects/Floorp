@@ -149,7 +149,6 @@
 }
 
 .tab-throbber,
-.tab-throbber-tabslist,
 .tab-icon-pending,
 .tab-icon-image,
 .tab-sharing-icon-overlay,
@@ -168,7 +167,6 @@
 }
 
 .tab-throbber:not([pinned]),
-.tab-throbber-tabslist:not([pinned]),
 .tab-sharing-icon-overlay:not([pinned]),
 .tab-icon-pending:not([pinned]),
 .tab-icon-image:not([pinned]) {
@@ -334,7 +332,7 @@
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-loading.png");
 }
 
-#TabsToolbar[brighttext] .tab-throbber-tabslist[progress]:not([selected=true]) {
+:root[lwt-popup-brighttext] .tab-throbber-tabslist[progress]:not([selected=true]) {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-loading-inverted.png");
 }
 
@@ -347,7 +345,7 @@
     list-style-image: url("chrome://browser/skin/tabbrowser/tab-loading@2x.png");
   }
 
-  #TabsToolbar[brighttext] .tab-throbber-tabslist[progress]:not([selected=true]) {
+  :root[lwt-popup-brighttext] .tab-throbber-tabslist[progress]:not([selected=true]) {
     list-style-image: url("chrome://browser/skin/tabbrowser/tab-loading-inverted@2x.png");
   }
 }
@@ -755,11 +753,6 @@
 .all-tabs-item:hover > .all-tabs-secondary-button {
   /* Since the background is set on the item, don't set it on the children. */
   background-color: transparent !important;
-}
-
-.tab-throbber-tabslist {
-  display: block;
-  margin-inline-end: 0;
 }
 
 .all-tabs-item[selected] {
