@@ -3871,8 +3871,15 @@ void Element::GetCustomInterface(nsGetterAddRefs<T> aResult) {
   nsCOMPtr<nsISupports> iface = CustomElementRegistry::CallGetCustomInterface(
       this, NS_GET_TEMPLATE_IID(T));
   if (iface) {
-    CallQueryInterface(iface, static_cast<T**>(aResult));
+    if (NS_SUCCEEDED(CallQueryInterface(iface, static_cast<T**>(aResult)))) {
+      return;
+    }
   }
+
+  // Otherwise, check the binding manager to see if it implements the interface
+  // for this element.
+  OwnerDoc()->BindingManager()->GetBindingImplementation(
+      this, NS_GET_TEMPLATE_IID(T), aResult);
 }
 
 void Element::ClearServoData(nsIDocument* aDoc) {
