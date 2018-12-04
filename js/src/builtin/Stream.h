@@ -322,8 +322,6 @@ class ReadableStreamController : public StreamController {
   bool sourceLocked() const { return flags() & Flag_SourceLocked; }
   void setSourceLocked() { addFlags(Flag_SourceLocked); }
   void clearSourceLocked() { removeFlags(Flag_SourceLocked); }
-
-  static const Class class_;
 };
 
 class ReadableStreamDefaultController : public ReadableStreamController {

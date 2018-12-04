@@ -2435,8 +2435,6 @@ static const JSFunctionSpec ReadableStreamDefaultController_methods[] = {
     JS_FN("enqueue", ReadableStreamDefaultController_enqueue, 1, 0),
     JS_FN("error", ReadableStreamDefaultController_error, 1, 0), JS_FS_END};
 
-const Class ReadableStreamController::class_ = {"ReadableStreamController"};
-
 CLASS_SPEC(ReadableStreamDefaultController, 0, SlotCount,
            ClassSpec::DontDefineConstructor, 0, JS_NULL_CLASS_OPS);
 
