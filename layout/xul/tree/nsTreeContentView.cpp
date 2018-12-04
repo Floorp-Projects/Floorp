@@ -518,8 +518,7 @@ nsTreeContentView::SetTree(XULTreeElement* aTree) {
       mDocument = document;
     }
 
-    RefPtr<dom::Element> bodyElement;
-    mTree->GetTreeBody(getter_AddRefs(bodyElement));
+    RefPtr<dom::Element> bodyElement = mTree->GetTreeBody();
     if (bodyElement) {
       mBody = bodyElement.forget();
       int32_t index = 0;
@@ -779,8 +778,7 @@ void nsTreeContentView::AttributeChanged(dom::Element* aElement,
   if (aElement->IsXULElement(nsGkAtoms::treecol)) {
     if (aAttribute == nsGkAtoms::properties) {
       if (mTree) {
-        RefPtr<nsTreeColumns> cols;
-        mTree->GetColumns(getter_AddRefs(cols));
+        RefPtr<nsTreeColumns> cols = mTree->GetColumns();
         if (cols) {
           RefPtr<nsTreeColumn> col = cols->GetColumnFor(aElement);
           mTree->InvalidateColumn(col);

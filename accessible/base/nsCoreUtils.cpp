@@ -66,8 +66,7 @@ bool nsCoreUtils::HasClickListener(nsIContent *aContent) {
 void nsCoreUtils::DispatchClickEvent(XULTreeElement *aTree,
                                      int32_t aRowIndex, nsTreeColumn *aColumn,
                                      const nsAString &aPseudoElt) {
-  RefPtr<dom::Element> tcElm;
-  aTree->GetTreeBody(getter_AddRefs(tcElm));
+  RefPtr<dom::Element> tcElm = aTree->GetTreeBody();
   if (!tcElm) return;
 
   Document *document = tcElm->GetUncomposedDoc();
@@ -80,10 +79,12 @@ void nsCoreUtils::DispatchClickEvent(XULTreeElement *aTree,
   aTree->EnsureRowIsVisible(aRowIndex);
 
   // Calculate x and y coordinates.
-  int32_t x = 0, y = 0, width = 0, height = 0;
-  nsresult rv = aTree->GetCoordsForCellItem(aRowIndex, aColumn, aPseudoElt, &x,
-                                            &y, &width, &height);
-  if (NS_FAILED(rv)) return;
+  nsresult rv;
+  nsIntRect rect =
+      aTree->GetCoordsForCellItem(aRowIndex, aColumn, aPseudoElt, rv);
+  if (NS_FAILED(rv)) {
+    return;
+  }
 
   nsCOMPtr<nsIBoxObject> tcBoxObj =
       nsXULElement::FromNode(tcElm)->GetBoxObject(IgnoreErrors());
@@ -103,9 +104,9 @@ void nsCoreUtils::DispatchClickEvent(XULTreeElement *aTree,
 
   RefPtr<nsPresContext> presContext = presShell->GetPresContext();
 
-  int32_t cnvdX = presContext->CSSPixelsToDevPixels(tcX + x + 1) +
+  int32_t cnvdX = presContext->CSSPixelsToDevPixels(tcX + int32_t(rect.x) + 1) +
                   presContext->AppUnitsToDevPixels(offset.x);
-  int32_t cnvdY = presContext->CSSPixelsToDevPixels(tcY + y + 1) +
+  int32_t cnvdY = presContext->CSSPixelsToDevPixels(tcY + int32_t(rect.y) + 1) +
                   presContext->AppUnitsToDevPixels(offset.y);
 
   // XUL is just desktop, so there is no real reason for senfing touch events.
@@ -426,8 +427,7 @@ void nsCoreUtils::GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
 
 already_AddRefed<nsIBoxObject> nsCoreUtils::GetTreeBodyBoxObject(
     XULTreeElement *aTree) {
-  RefPtr<dom::Element> tcElm;
-  aTree->GetTreeBody(getter_AddRefs(tcElm));
+  RefPtr<dom::Element> tcElm = aTree->GetTreeBody();
   RefPtr<nsXULElement> tcXULElm = nsXULElement::FromNodeOrNull(tcElm);
   if (!tcXULElm) return nullptr;
 
@@ -449,8 +449,7 @@ XULTreeElement *nsCoreUtils::GetTree(nsIContent *aContent) {
 
 already_AddRefed<nsTreeColumn> nsCoreUtils::GetFirstSensibleColumn(
     XULTreeElement *aTree) {
-  RefPtr<nsTreeColumns> cols;
-  aTree->GetColumns(getter_AddRefs(cols));
+  RefPtr<nsTreeColumns> cols = aTree->GetColumns();
   if (!cols) return nullptr;
 
   RefPtr<nsTreeColumn> column = cols->GetFirstColumn();
@@ -462,8 +461,7 @@ already_AddRefed<nsTreeColumn> nsCoreUtils::GetFirstSensibleColumn(
 uint32_t nsCoreUtils::GetSensibleColumnCount(XULTreeElement *aTree) {
   uint32_t count = 0;
 
-  RefPtr<nsTreeColumns> cols;
-  aTree->GetColumns(getter_AddRefs(cols));
+  RefPtr<nsTreeColumns> cols = aTree->GetColumns();
   if (!cols) return count;
 
   nsTreeColumn *column = cols->GetFirstColumn();
