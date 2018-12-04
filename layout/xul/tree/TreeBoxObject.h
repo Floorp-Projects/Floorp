@@ -83,18 +83,6 @@ class TreeBoxObject final : public BoxObject, public nsITreeBoxObject {
 
   void RemoveImageCacheEntry(int32_t row, nsTreeColumn& col, ErrorResult& aRv);
 
-  // Deprecated APIs from old IDL
-  void GetCellAt(JSContext* cx, int32_t x, int32_t y,
-                 JS::Handle<JSObject*> rowOut, JS::Handle<JSObject*> colOut,
-                 JS::Handle<JSObject*> childEltOut, ErrorResult& aRv);
-
-  void GetCoordsForCellItem(JSContext* cx, int32_t row, nsTreeColumn& col,
-                            const nsAString& element,
-                            JS::Handle<JSObject*> xOut,
-                            JS::Handle<JSObject*> yOut,
-                            JS::Handle<JSObject*> widthOut,
-                            JS::Handle<JSObject*> heightOut, ErrorResult& aRv);
-
   // Same signature (except for nsresult return type) as the XPIDL impls
   // void Invalidate();
   // void BeginUpdateBatch();
