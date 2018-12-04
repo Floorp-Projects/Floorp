@@ -46,7 +46,7 @@ var SelectHelper = {
     let win = element.ownerGlobal;
     let selected = data.list;
 
-    if (element instanceof Ci.nsIDOMXULMenuListElement) {
+    if (this._isXULElement(element, "menulist")) {
       if (element.selectedIndex != selected[0]) {
         element.selectedIndex = selected[0];
         this.fireOnCommand(element);
@@ -90,9 +90,14 @@ var SelectHelper = {
     });
   },
 
+  _isXULElement: function(element, tag) {
+    return (!tag || element.localName == tag) &&
+           element.namespaceURI == "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+  },
+
   _isMenu: function(element) {
     let win = element.ownerGlobal;
-    return (element instanceof win.HTMLSelectElement || element instanceof Ci.nsIDOMXULMenuListElement);
+    return (element instanceof win.HTMLSelectElement || this._isXULElement(element, "menulist"));
   },
 
   // Return a list of Option elements within a Select excluding
@@ -122,7 +127,7 @@ var SelectHelper = {
   // Apply a function to all visible Option elements in a Select
   forVisibleOptions: function(element, aFunction, parent = null) {
     let win = element.ownerGlobal;
-    if (element instanceof Ci.nsIDOMXULMenuListElement) {
+    if (this._isXULElement(element, "menulist")) {
       element = element.menupopup;
     }
     let children = element.children;
@@ -139,7 +144,7 @@ var SelectHelper = {
       let style = win.getComputedStyle(child);
       if (style.display !== "none") {
         if (child instanceof win.HTMLOptionElement ||
-            child instanceof Ci.nsIDOMXULSelectControlItemElement) {
+            this._isXULElement(child)) {
           aFunction.call(this, child, {isGroup: false}, parent);
         } else if (child instanceof win.HTMLOptGroupElement) {
           aFunction.call(this, child, {isGroup: true});

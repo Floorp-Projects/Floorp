@@ -458,7 +458,9 @@
       <handler event="focus" phase="capturing">
         var btn = this.getButton(this.defaultButton);
         if (btn)
-          btn.setAttribute("default", event.originalTarget == btn || !(event.originalTarget instanceof Ci.nsIDOMXULButtonElement));
+          btn.setAttribute("default", event.originalTarget == btn ||
+                           !(event.originalTarget.localName == "button" ||
+                             event.originalTarget.localName == "toolbarbutton"));
       </handler>
 #endif
     </handlers>
