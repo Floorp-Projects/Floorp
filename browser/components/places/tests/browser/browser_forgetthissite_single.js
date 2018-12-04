@@ -50,7 +50,7 @@ var testForgetThisSiteVisibility = async function(selectionCount) {
   let popupShown = promisePopupShown(contextmenu);
 
   // Get cell coordinates.
-  let rect = tree.treeBoxObject.getCoordsForCellItem(0, tree.columns[0], "text");
+  let rect = tree.getCoordsForCellItem(0, tree.columns[0], "text");
   // Initiate a context menu for the selected cell.
   EventUtils.synthesizeMouse(tree.body, rect.x + rect.width / 2, rect.y + rect.height / 2, {type: "contextmenu", button: 2}, organizer);
   await popupShown;

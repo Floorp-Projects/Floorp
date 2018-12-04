@@ -96,9 +96,8 @@ add_task(async function test_remove_bookmark_from_library() {
 
   let popupShownPromise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
 
-  let treeBoxObject = library.ContentTree.view.treeBoxObject;
   let firstColumn = library.ContentTree.view.columns[0];
-  let firstBookmarkRect = treeBoxObject.getCoordsForCellItem(0, firstColumn, "bm0");
+  let firstBookmarkRect = library.ContentTree.view.getCoordsForCellItem(0, firstColumn, "bm0");
 
   EventUtils.synthesizeMouse(
     library.ContentTree.view.body,

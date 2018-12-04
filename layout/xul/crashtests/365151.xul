@@ -9,7 +9,7 @@ function boom()
 {
  try {
   var tree = document.getElementById("tree");
-  var col = tree.treeBoxObject.columns.getFirstColumn();
+  var col = tree.columns.getFirstColumn();
   var treecols = document.getElementById("treecols");
   treecols.parentNode.removeChild(treecols);
   var x = col.x;
