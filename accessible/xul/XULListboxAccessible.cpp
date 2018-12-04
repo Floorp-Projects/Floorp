@@ -108,8 +108,11 @@ void XULListboxAccessible::Value(nsString& aValue) const {
 
   nsCOMPtr<nsIDOMXULSelectControlElement> select(do_QueryInterface(mContent));
   if (select) {
-    nsCOMPtr<nsIDOMXULSelectControlItemElement> selectedItem;
-    select->GetSelectedItem(getter_AddRefs(selectedItem));
+    RefPtr<Element> element;
+    select->GetSelectedItem(getter_AddRefs(element));
+
+    nsCOMPtr<nsIDOMXULSelectControlItemElement> selectedItem =
+        do_QueryInterface(element);
     if (selectedItem) selectedItem->GetLabel(aValue);
   }
 }
@@ -143,14 +146,11 @@ Accessible* XULListboxAccessible::CellAt(uint32_t aRowIndex,
   nsCOMPtr<nsIDOMXULSelectControlElement> control = do_QueryInterface(mContent);
   NS_ENSURE_TRUE(control, nullptr);
 
-  nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
-  control->GetItemAtIndex(aRowIndex, getter_AddRefs(item));
-  if (!item) return nullptr;
+  RefPtr<Element> element;
+  control->GetItemAtIndex(aRowIndex, getter_AddRefs(element));
+  if (!element) return nullptr;
 
-  nsCOMPtr<nsIContent> itemContent(do_QueryInterface(item));
-  if (!itemContent) return nullptr;
-
-  Accessible* row = mDoc->GetAccessible(itemContent);
+  Accessible* row = mDoc->GetAccessible(element);
   NS_ENSURE_TRUE(row, nullptr);
 
   return row->GetChildAt(aColumnIndex);
@@ -173,9 +173,11 @@ bool XULListboxAccessible::IsRowSelected(uint32_t aRowIdx) {
   nsCOMPtr<nsIDOMXULSelectControlElement> control = do_QueryInterface(mContent);
   NS_ASSERTION(control, "Doesn't implement nsIDOMXULSelectControlElement.");
 
-  nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
-  nsresult rv = control->GetItemAtIndex(aRowIdx, getter_AddRefs(item));
+  RefPtr<Element> element;
+  nsresult rv = control->GetItemAtIndex(aRowIdx, getter_AddRefs(element));
   NS_ENSURE_SUCCESS(rv, false);
+
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> item = do_QueryInterface(element);
 
   bool isSelected = false;
   item->GetSelected(&isSelected);
@@ -332,9 +334,11 @@ void XULListboxAccessible::SelectRow(uint32_t aRowIdx) {
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
-  nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
+  RefPtr<Element> item;
   control->GetItemAtIndex(aRowIdx, getter_AddRefs(item));
-  control->SelectItem(item);
+
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm = do_QueryInterface(item);
+  control->SelectItem(itemElm);
 }
 
 void XULListboxAccessible::UnselectRow(uint32_t aRowIdx) {
@@ -343,9 +347,11 @@ void XULListboxAccessible::UnselectRow(uint32_t aRowIdx) {
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
-  nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
+  RefPtr<Element> item;
   control->GetItemAtIndex(aRowIdx, getter_AddRefs(item));
-  control->RemoveItemFromSelection(item);
+
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm = do_QueryInterface(item);
+  control->RemoveItemFromSelection(itemElm);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -426,13 +432,11 @@ Accessible* XULListitemAccessible::GetListAccessible() const {
       do_QueryInterface(mContent);
   if (!listItem) return nullptr;
 
-  nsCOMPtr<nsIDOMXULSelectControlElement> list;
-  listItem->GetControl(getter_AddRefs(list));
+  RefPtr<Element> listElement;
+  listItem->GetControl(getter_AddRefs(listElement));
+  if (!listElement) return nullptr;
 
-  nsCOMPtr<nsIContent> listContent(do_QueryInterface(list));
-  if (!listContent) return nullptr;
-
-  return mDoc->GetAccessible(listContent);
+  return mDoc->GetAccessible(listElement);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

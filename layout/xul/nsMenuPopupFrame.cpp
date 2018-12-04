@@ -1117,10 +1117,8 @@ nsIFrame* nsMenuPopupFrame::GetSelectedItemForAlignment() {
     }
   }
 
-  nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
-  select->GetSelectedItem(getter_AddRefs(item));
-
-  nsCOMPtr<nsIContent> selectedElement = do_QueryInterface(item);
+  nsCOMPtr<Element> selectedElement;
+  select->GetSelectedItem(getter_AddRefs(selectedElement));
   return selectedElement ? selectedElement->GetPrimaryFrame() : nullptr;
 }
 
