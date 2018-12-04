@@ -117,13 +117,13 @@ def test_output_leak(monkeypatch, runtests):
     assert status == 0
 
     tbpl_status, log_level, summary = get_mozharness_status(lines, status)
-    assert tbpl_status == TBPL_FAILURE
-    assert log_level == ERROR
+    assert tbpl_status == TBPL_WARNING
+    assert log_level == WARNING
 
-    errors = filter_action('log', lines)
-    errors = [e for e in errors if e['level'] == 'ERROR']
-    assert len(errors) == 1
-    assert 'leakcheck' in errors[0]['message']
+    leaks = filter_action('mozleak_total', lines)
+    assert len(leaks) == 1
+    assert leaks[0]['process'] == "default"
+    assert leaks[0]['bytes'] == 19915
 
 
 if __name__ == '__main__':
