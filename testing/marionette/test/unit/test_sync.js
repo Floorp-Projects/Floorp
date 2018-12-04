@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 const {
   DebounceCallback,
   IdlePromise,
@@ -10,6 +12,7 @@ const {
   TimedPromise,
   waitForEvent,
   waitForMessage,
+  waitForObserverTopic,
 } = ChromeUtils.import("chrome://marionette/content/sync.js", {});
 
 const DEFAULT_TIMEOUT = 2000;
@@ -421,5 +424,38 @@ add_task(async function test_waitForMessage_checkFnTypes() {
     messageManager.send("message", data1);
     messageManager.send("message", data2);
     equal(expected_data, await sent);
+  }
+});
+
+add_task(async function test_waitForObserverTopic_topicTypes() {
+  for (let topic of [42, null, undefined, true, [], {}]) {
+    Assert.throws(() => waitForObserverTopic(topic), /TypeError/);
+  }
+
+  let data = {"foo": "bar"};
+  let sent = waitForObserverTopic("message");
+  Services.obs.notifyObservers(this, "message", data);
+  let result = await sent;
+  equal(this, result.subject);
+  equal(data, result.data);
+});
+
+add_task(async function test_waitForObserverTopic_checkFnTypes() {
+  for (let checkFn of ["foo", 42, true, [], {}]) {
+    Assert.throws(() => waitForObserverTopic(
+        "message", {checkFn}), /TypeError/);
+  }
+
+  let data1 = {"fo": "bar"};
+  let data2 = {"foo": "bar"};
+
+  for (let checkFn of [null, undefined, (subject, data) => data == data2]) {
+    let expected_data = (checkFn == null) ? data1 : data2;
+
+    let sent = waitForObserverTopic("message");
+    Services.obs.notifyObservers(this, "message", data1);
+    Services.obs.notifyObservers(this, "message", data2);
+    let result = await sent;
+    equal(expected_data, result.data);
   }
 });
