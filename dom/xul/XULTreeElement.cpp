@@ -110,41 +110,30 @@ nsTreeBodyFrame* XULTreeElement::GetTreeBodyFrame(bool aFlushLayout) {
   return mTreeBody;
 }
 
-nsresult XULTreeElement::GetView(nsITreeView** aView) {
+already_AddRefed<nsITreeView> XULTreeElement::GetView() {
   if (!mTreeBody) {
     if (!GetTreeBodyFrame()) {
-      // Don't return an uninitialised view
-      *aView = nullptr;
-      return NS_OK;
+      return nullptr;
     }
 
     if (mView) {
+      nsCOMPtr<nsITreeView> view;
       // Our new frame needs to initialise itself
-      return mTreeBody->GetView(aView);
+      mTreeBody->GetView(getter_AddRefs(view));
+      return view.forget();
     }
   }
   if (!mView) {
     // No tree builder, create a tree content view.
-    nsresult rv = NS_NewTreeContentView(getter_AddRefs(mView));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(NS_NewTreeContentView(getter_AddRefs(mView)))) {
+      return nullptr;
+    }
 
     // Initialise the frame and view
     mTreeBody->SetView(mView);
   }
-  NS_IF_ADDREF(*aView = mView);
-  return NS_OK;
-}
 
-already_AddRefed<nsITreeView> XULTreeElement::GetView(CallerType /* unused */) {
-  nsCOMPtr<nsITreeView> view;
-  GetView(getter_AddRefs(view));
-  return view.forget();
-}
-
-nsresult XULTreeElement::SetView(nsITreeView* aView) {
-  ErrorResult rv;
-  SetView(aView, CallerType::System, rv);
-  return rv.StealNSResult();
+  return do_AddRef(mView);
 }
 
 void XULTreeElement::SetView(nsITreeView* aView, CallerType aCallerType,
@@ -157,108 +146,98 @@ void XULTreeElement::SetView(nsITreeView* aView, CallerType aCallerType,
 
   mView = aView;
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) body->SetView(aView);
+  if (body) {
+    body->SetView(aView);
+  }
 }
 
 bool XULTreeElement::Focused() {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) return body->GetFocused();
+  if (body) {
+    return body->GetFocused();
+  }
   return false;
-}
-
-nsresult XULTreeElement::GetFocused(bool* aFocused) {
-  *aFocused = Focused();
-  return NS_OK;
 }
 
 void XULTreeElement::SetFocused(bool aFocused) {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) body->SetFocused(aFocused);
-}
-
-nsresult XULTreeElement::GetTreeBody(Element** aElement) {
-  *aElement = nullptr;
-  nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) return body->GetTreeBody(aElement);
-  return NS_OK;
+  if (body) {
+    body->SetFocused(aFocused);
+  }
 }
 
 already_AddRefed<Element> XULTreeElement::GetTreeBody() {
-  RefPtr<Element> el;
-  GetTreeBody(getter_AddRefs(el));
-  return el.forget();
+  nsTreeBodyFrame* body = GetTreeBodyFrame();
+  if (body) {
+    nsCOMPtr<Element> element;
+    body->GetTreeBody(getter_AddRefs(element));
+    return element.forget();
+  }
+
+  return nullptr;
 }
 
 already_AddRefed<nsTreeColumns> XULTreeElement::GetColumns() {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) return body->Columns();
+  if (body) {
+    return body->Columns();
+  }
   return nullptr;
-}
-
-nsresult XULTreeElement::GetColumns(nsTreeColumns** aColumns) {
-  *aColumns = GetColumns().take();
-  return NS_OK;
 }
 
 int32_t XULTreeElement::RowHeight() {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) return body->RowHeight();
+  if (body) {
+    return body->RowHeight();
+  }
   return 0;
 }
 
 int32_t XULTreeElement::RowWidth() {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) return body->RowWidth();
+  if (body) {
+    return body->RowWidth();
+  }
   return 0;
-}
-
-nsresult XULTreeElement::GetRowHeight(int32_t* aRowHeight) {
-  *aRowHeight = RowHeight();
-  return NS_OK;
-}
-
-nsresult XULTreeElement::GetRowWidth(int32_t* aRowWidth) {
-  *aRowWidth = RowWidth();
-  return NS_OK;
 }
 
 int32_t XULTreeElement::GetFirstVisibleRow() {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) return body->FirstVisibleRow();
+  if (body) {
+    return body->FirstVisibleRow();
+  }
   return 0;
-}
-
-nsresult XULTreeElement::GetFirstVisibleRow(int32_t* aFirstVisibleRow) {
-  *aFirstVisibleRow = GetFirstVisibleRow();
-  return NS_OK;
 }
 
 int32_t XULTreeElement::GetLastVisibleRow() {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) return body->LastVisibleRow();
+  if (body) {
+    return body->LastVisibleRow();
+  }
   return 0;
-}
-
-nsresult XULTreeElement::GetLastVisibleRow(int32_t* aLastVisibleRow) {
-  *aLastVisibleRow = GetLastVisibleRow();
-  return NS_OK;
 }
 
 int32_t XULTreeElement::HorizontalPosition() {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) return body->GetHorizontalPosition();
+  if (body) {
+    return body->GetHorizontalPosition();
+  }
   return 0;
 }
 
 int32_t XULTreeElement::GetPageLength() {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) return body->PageLength();
+  if (body) {
+    return body->PageLength();
+  }
   return 0;
 }
 
 void XULTreeElement::EnsureRowIsVisible(int32_t aRow) {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) body->EnsureRowIsVisible(aRow);
+  if (body) {
+    body->EnsureRowIsVisible(aRow);
+  }
 }
 
 void XULTreeElement::EnsureCellIsVisible(int32_t aRow, nsTreeColumn* aCol,
@@ -291,32 +270,44 @@ void XULTreeElement::ScrollByLines(int32_t aNumLines) {
 
 void XULTreeElement::ScrollByPages(int32_t aNumPages) {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) body->ScrollByPages(aNumPages);
+  if (body) {
+    body->ScrollByPages(aNumPages);
+  }
 }
 
 void XULTreeElement::Invalidate() {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) body->Invalidate();
+  if (body) {
+    body->Invalidate();
+  }
 }
 
 void XULTreeElement::InvalidateColumn(nsTreeColumn* aCol) {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) body->InvalidateColumn(aCol);
+  if (body) {
+    body->InvalidateColumn(aCol);
+  }
 }
 
 void XULTreeElement::InvalidateRow(int32_t aIndex) {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) body->InvalidateRow(aIndex);
+  if (body) {
+    body->InvalidateRow(aIndex);
+  }
 }
 
 void XULTreeElement::InvalidateCell(int32_t aRow, nsTreeColumn* aCol) {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) body->InvalidateCell(aRow, aCol);
+  if (body) {
+    body->InvalidateCell(aRow, aCol);
+  }
 }
 
 void XULTreeElement::InvalidateRange(int32_t aStart, int32_t aEnd) {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) body->InvalidateRange(aStart, aEnd);
+  if (body) {
+    body->InvalidateRange(aStart, aEnd);
+  }
 }
 
 int32_t XULTreeElement::GetRowAt(int32_t x, int32_t y) {
@@ -327,82 +318,86 @@ int32_t XULTreeElement::GetRowAt(int32_t x, int32_t y) {
   return body->GetRowAt(x, y);
 }
 
-nsresult XULTreeElement::GetCellAt(int32_t aX, int32_t aY, int32_t* aRow,
-                                   nsTreeColumn** aCol, nsAString& aChildElt) {
-  *aRow = 0;
-  *aCol = nullptr;
+void XULTreeElement::GetCellAt(int32_t aX, int32_t aY, TreeCellInfo& aRetVal,
+                               ErrorResult& aRv) {
+  aRetVal.mRow = 0;
+  aRetVal.mCol = nullptr;
+
   nsTreeBodyFrame* body = GetTreeBodyFrame();
   if (body) {
     nsAutoCString element;
-    nsresult retval = body->GetCellAt(aX, aY, aRow, aCol, element);
-    CopyUTF8toUTF16(element, aChildElt);
-    return retval;
+    body->GetCellAt(aX, aY, &aRetVal.mRow, getter_AddRefs(aRetVal.mCol),
+                    element);
+    CopyUTF8toUTF16(element, aRetVal.mChildElt);
   }
-  return NS_OK;
 }
 
-void XULTreeElement::GetCellAt(int32_t x, int32_t y, TreeCellInfo& aRetVal,
-                               ErrorResult& aRv) {
-  GetCellAt(x, y, &aRetVal.mRow, getter_AddRefs(aRetVal.mCol),
-            aRetVal.mChildElt);
-}
+nsIntRect XULTreeElement::GetCoordsForCellItem(int32_t aRow, nsTreeColumn* aCol,
+                                               const nsAString& aElement,
+                                               nsresult& rv) {
+  rv = NS_OK;
+  nsIntRect rect;
 
-nsresult XULTreeElement::GetCoordsForCellItem(int32_t aRow, nsTreeColumn* aCol,
-                                              const nsAString& aElement,
-                                              int32_t* aX, int32_t* aY,
-                                              int32_t* aWidth,
-                                              int32_t* aHeight) {
-  *aX = *aY = *aWidth = *aHeight = 0;
   nsTreeBodyFrame* body = GetTreeBodyFrame();
   NS_ConvertUTF16toUTF8 element(aElement);
-  if (body)
-    return body->GetCoordsForCellItem(aRow, aCol, element, aX, aY, aWidth,
-                                      aHeight);
-  return NS_OK;
+  if (body) {
+    rv = body->GetCoordsForCellItem(aRow, aCol, element, &rect.x, &rect.y,
+                                    &rect.width, &rect.height);
+  }
+
+  return rect;
 }
 
 already_AddRefed<DOMRect> XULTreeElement::GetCoordsForCellItem(
-    int32_t row, nsTreeColumn& col, const nsAString& element,
+    int32_t aRow, nsTreeColumn& aCol, const nsAString& aElement,
     ErrorResult& aRv) {
-  int32_t x, y, w, h;
-  GetCoordsForCellItem(row, &col, element, &x, &y, &w, &h);
-  RefPtr<DOMRect> rect = new DOMRect(this, x, y, w, h);
-  return rect.forget();
+  nsresult rv;
+  nsIntRect rect = GetCoordsForCellItem(aRow, &aCol, aElement, rv);
+  aRv = rv;
+
+  RefPtr<DOMRect> domRect =
+      new DOMRect(this, rect.x, rect.y, rect.width, rect.height);
+  return domRect.forget();
 }
 
-nsresult XULTreeElement::IsCellCropped(int32_t aRow, nsTreeColumn* aCol,
-                                       bool* aIsCropped) {
-  *aIsCropped = false;
-  nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) return body->IsCellCropped(aRow, aCol, aIsCropped);
-  return NS_OK;
-}
-
-bool XULTreeElement::IsCellCropped(int32_t row, nsTreeColumn* col,
+bool XULTreeElement::IsCellCropped(int32_t aRow, nsTreeColumn* aCol,
                                    ErrorResult& aRv) {
-  bool ret;
-  aRv = IsCellCropped(row, col, &ret);
-  return ret;
+  bool cropped = false;
+
+  nsTreeBodyFrame* body = GetTreeBodyFrame();
+  if (body) {
+    aRv = body->IsCellCropped(aRow, aCol, &cropped);
+  }
+
+  return cropped;
 }
 
 void XULTreeElement::RowCountChanged(int32_t aIndex, int32_t aDelta) {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) body->RowCountChanged(aIndex, aDelta);
+  if (body) {
+    body->RowCountChanged(aIndex, aDelta);
+  }
 }
 
 void XULTreeElement::BeginUpdateBatch() {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) body->BeginUpdateBatch();
+  if (body) {
+    body->BeginUpdateBatch();
+  }
 }
 
 void XULTreeElement::EndUpdateBatch() {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) body->EndUpdateBatch();
+  if (body) {
+    body->EndUpdateBatch();
+  }
 }
 
 void XULTreeElement::ClearStyleAndImageCaches() {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body) body->ClearStyleAndImageCaches();
+  if (body) {
+    body->ClearStyleAndImageCaches();
+  }
 }
 
 void XULTreeElement::RemoveImageCacheEntry(int32_t aRowIndex,
