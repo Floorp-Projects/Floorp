@@ -37,6 +37,7 @@ uriloader/exthandler/**
 uriloader/exthandler/tests/mochitest/**
 widget/headless/tests/**
 widget/tests/**
+xpfe/**
 
 # We currently have no js files in these directories, so we ignore them by
 # default to aid ESLint's performance.
@@ -51,7 +52,6 @@ mozglue/**
 nsprpub/**
 other-licenses/**
 startupcache/**
-xpfe/**
 
 # These directories only contain crashtests, but we still skip the whole
 # directory to aid performance.
@@ -240,6 +240,7 @@ dom/xul/**
 # Third-party
 dom/canvas/test/webgl-conf/**
 dom/imptests/**
+dom/media/webaudio/test/blink/**
 dom/media/webvtt/**
 
 # Third-party
@@ -255,6 +256,9 @@ intl/icu/**
 intl/locale/**
 intl/strres/**
 intl/uconv/**
+
+# Third-party
+layout/mathml/imptests/**
 
 # Exclude everything but self-hosted JS
 js/ductwork/**

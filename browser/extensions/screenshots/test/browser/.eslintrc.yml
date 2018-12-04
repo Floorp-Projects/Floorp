@@ -1,5 +1,0 @@
-env:
-  node: true
-
-extends:
-  - plugin:mozilla/browser-test
