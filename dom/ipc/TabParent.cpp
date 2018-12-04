@@ -531,7 +531,8 @@ mozilla::ipc::IPCResult TabParent::RecvSizeShellTo(
 }
 
 mozilla::ipc::IPCResult TabParent::RecvDropLinks(nsTArray<nsString>&& aLinks) {
-  nsCOMPtr<nsIBrowser> browser = do_QueryInterface(mFrameElement);
+  nsCOMPtr<nsIBrowser> browser =
+      mFrameElement ? mFrameElement->AsBrowser() : nullptr;
   if (browser) {
     // Verify that links have not been modified by the child. If links have
     // not been modified then it's safe to load those links using the
@@ -1909,7 +1910,8 @@ mozilla::ipc::IPCResult TabParent::RecvRequestFocus(const bool& aCanRaise) {
 mozilla::ipc::IPCResult TabParent::RecvEnableDisableCommands(
     const nsString& aAction, nsTArray<nsCString>&& aEnabledCommands,
     nsTArray<nsCString>&& aDisabledCommands) {
-  nsCOMPtr<nsIBrowser> browser = do_QueryInterface(mFrameElement);
+  nsCOMPtr<nsIBrowser> browser =
+      mFrameElement ? mFrameElement->AsBrowser() : nullptr;
   bool isRemoteBrowser = false;
   if (browser) {
     browser->GetIsRemoteBrowser(&isRemoteBrowser);
@@ -3293,7 +3295,8 @@ mozilla::ipc::IPCResult TabParent::RecvLookUpDictionary(
 
 mozilla::ipc::IPCResult TabParent::RecvShowCanvasPermissionPrompt(
     const nsCString& aFirstPartyURI) {
-  nsCOMPtr<nsIBrowser> browser = do_QueryInterface(mFrameElement);
+  nsCOMPtr<nsIBrowser> browser =
+      mFrameElement ? mFrameElement->AsBrowser() : nullptr;
   if (!browser) {
     // If the tab is being closed, the browser may not be available.
     // In this case we can ignore the request.
