@@ -437,7 +437,7 @@ bool nsXULElement::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) {
   }
 #endif
 
-  nsCOMPtr<nsIDOMXULControlElement> xulControl = do_QueryObject(this);
+  nsCOMPtr<nsIDOMXULControlElement> xulControl = AsXULControl();
   if (xulControl) {
     // a disabled element cannot be focused and is not part of the tab order
     bool disabled;
@@ -543,8 +543,8 @@ bool nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
         nsCOMPtr<Element> elementToFocus;
         // for radio buttons, focus the radiogroup instead
         if (content->IsXULElement(nsGkAtoms::radio)) {
-          nsCOMPtr<nsIDOMXULSelectControlItemElement> controlItem(
-              do_QueryInterface(content));
+          nsCOMPtr<nsIDOMXULSelectControlItemElement> controlItem =
+              content->AsXULSelectControlItem();
           if (controlItem) {
             bool disabled;
             controlItem->GetDisabled(&disabled);
