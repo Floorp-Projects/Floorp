@@ -1453,6 +1453,49 @@ bool BytecodeEmitter::needsImplicitThis() {
   return false;
 }
 
+bool BytecodeEmitter::emitThisEnvironmentCallee() {
+  // Get the innermost enclosing function that has a |this| binding.
+
+  // Directly load callee from the frame if possible.
+  if (sc->isFunctionBox() && !sc->asFunctionBox()->isArrow()) {
+    return emit1(JSOP_CALLEE);
+  }
+
+  // We have to load the callee from the environment chain.
+  unsigned numHops = 0;
+  for (ScopeIter si(innermostScope()); si; si++) {
+    if (si.hasSyntacticEnvironment() && si.scope()->is<FunctionScope>()) {
+      JSFunction* fun = si.scope()->as<FunctionScope>().canonicalFunction();
+      if (!fun->isArrow()) {
+        break;
+      }
+    }
+    if (si.scope()->hasEnvironment()) {
+      numHops++;
+    }
+  }
+
+  static_assert(ENVCOORD_HOPS_LIMIT - 1 <= UINT8_MAX,
+                "JSOP_ENVCALLEE operand size should match ENVCOORD_HOPS_LIMIT");
+
+  // Note: we need to check numHops here because we don't call
+  // checkEnvironmentChainLength in all cases (like 'eval').
+  if (numHops >= ENVCOORD_HOPS_LIMIT - 1) {
+    reportError(nullptr, JSMSG_TOO_DEEP, js_function_str);
+    return false;
+  }
+
+  return emit2(JSOP_ENVCALLEE, numHops);
+}
+
+bool BytecodeEmitter::emitSuperBase() {
+  if (!emitThisEnvironmentCallee()) {
+    return false;
+  }
+
+  return emit1(JSOP_SUPERBASE);
+}
+
 void BytecodeEmitter::tellDebuggerAboutCompiledScript(JSContext* cx) {
   // Note: when parsing off thread the resulting scripts need to be handed to
   // the debugger after rejoining to the main thread.
