@@ -12,8 +12,8 @@ const {
   UnsupportedOperationError,
 } = ChromeUtils.import("chrome://marionette/content/error.js", {});
 const {
-  MessageManagerDestroyedPromise,
   waitForEvent,
+  waitForObserverTopic,
 } = ChromeUtils.import("chrome://marionette/content/sync.js", {});
 
 this.EXPORTED_SYMBOLS = ["browser", "Context", "WindowState"];
@@ -288,13 +288,15 @@ browser.Context = class {
    *     A promise which is resolved when the current window has been closed.
    */
   closeWindow() {
-    let destroyed = new MessageManagerDestroyedPromise(
-        this.window.messageManager);
+    // Create a copy of the messageManager before it is disconnected
+    let messageManager = this.window.messageManager;
+    let disconnected = waitForObserverTopic("message-manager-disconnect",
+        subject => subject === messageManager);
     let unloaded = waitForEvent(this.window, "unload");
 
     this.window.close();
 
-    return Promise.all([destroyed, unloaded]);
+    return Promise.all([disconnected, unloaded]);
   }
 
   /**
@@ -316,7 +318,11 @@ browser.Context = class {
       return this.closeWindow();
     }
 
-    let destroyed = new MessageManagerDestroyedPromise(this.messageManager);
+    // Create a copy of the messageManager before it is disconnected
+    let messageManager = this.messageManager;
+    let disconnected = waitForObserverTopic("message-manager-disconnect",
+        subject => subject === messageManager);
+
     let tabClosed;
 
     if (this.tabBrowser.closeTab) {
@@ -334,7 +340,7 @@ browser.Context = class {
         `closeTab() not supported in ${this.driver.appName}`);
     }
 
-    return Promise.all([destroyed, tabClosed]);
+    return Promise.all([disconnected, tabClosed]);
   }
 
   /**
