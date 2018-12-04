@@ -204,7 +204,7 @@ class UrlbarView {
     if (methodName in this) {
       this[methodName](event);
     } else {
-      throw "Unrecognized urlbar event: " + event.type;
+      throw new Error("Unrecognized UrlbarView event: " + event.type);
     }
   }
 
