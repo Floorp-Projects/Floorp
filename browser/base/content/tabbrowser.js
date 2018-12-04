@@ -962,13 +962,8 @@ window._gBrowser = {
     if (securityUI) {
       // Include the true final argument to indicate that this event is
       // simulated (instead of being observed by the webProgressListener).
-      // Note: check state first to make sure the security UI object updates its
-      // state from the docshell correctly.
-      let state = securityUI.state;
-      let oldState = securityUI.oldState;
       this._callProgressListeners(null, "onSecurityChange",
-                                  [webProgress, null, oldState, state,
-                                   securityUI.contentBlockingLogJSON, true],
+                                  [webProgress, null, securityUI.state, true],
                                   true, false);
     }
 
@@ -1713,17 +1708,12 @@ window._gBrowser = {
 
     // Restore the securityUI state.
     let securityUI = aBrowser.securityUI;
-    // Make sure to call the state getter before the oldState getter to give
-    // the securityUI object a chance to sync its state with the docshell
     let state = securityUI ? securityUI.state :
-      Ci.nsIWebProgressListener.STATE_IS_INSECURE;
-    let oldState = securityUI ? securityUI.oldState :
       Ci.nsIWebProgressListener.STATE_IS_INSECURE;
     // Include the true final argument to indicate that this event is
     // simulated (instead of being observed by the webProgressListener).
     this._callProgressListeners(aBrowser, "onSecurityChange",
-                                [aBrowser.webProgress, null, oldState, state,
-                                 securityUI.contentBlockingLogJSON, true],
+                                [aBrowser.webProgress, null, state, true],
                                 true, false);
 
     if (aShouldBeRemote) {
@@ -5206,10 +5196,9 @@ class TabProgressListener {
     this.mMessage = aMessage;
   }
 
-  onSecurityChange(aWebProgress, aRequest, aOldState, aState, aContentBlockingLogJSON) {
+  onSecurityChange(aWebProgress, aRequest, aState) {
     this._callProgressListeners("onSecurityChange",
-                                [aWebProgress, aRequest, aOldState, aState,
-                                 aContentBlockingLogJSON]);
+                                [aWebProgress, aRequest, aState]);
   }
 
   onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI) {
