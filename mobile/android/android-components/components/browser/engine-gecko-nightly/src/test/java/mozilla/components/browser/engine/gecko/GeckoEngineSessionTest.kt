@@ -751,6 +751,30 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun settingUserAgent() {
+        val runtime = mock(GeckoRuntime::class.java)
+        `when`(runtime.settings).thenReturn(mock(GeckoRuntimeSettings::class.java))
+
+        val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
+        engineSession.settings.userAgentString
+        verify(geckoSession.settings).getString(GeckoSessionSettings.USER_AGENT_OVERRIDE)
+
+        engineSession.settings.userAgentString = "test-ua"
+        verify(geckoSession.settings).setString(GeckoSessionSettings.USER_AGENT_OVERRIDE, "test-ua")
+    }
+
+    @Test
+    fun settingUserAgentDefault() {
+        val runtime = mock(GeckoRuntime::class.java)
+        `when`(runtime.settings).thenReturn(mock(GeckoRuntimeSettings::class.java))
+
+        GeckoEngineSession(runtime,
+                geckoSessionProvider = geckoSessionProvider,
+                defaultSettings = DefaultSettings(userAgentString = "test-ua"))
+        verify(geckoSession.settings).setString(GeckoSessionSettings.USER_AGENT_OVERRIDE, "test-ua")
+    }
+
+    @Test
     fun unsupportedSettings() {
         val settings = GeckoEngineSession(mock(GeckoRuntime::class.java),
                 geckoSessionProvider = geckoSessionProvider).settings

@@ -58,6 +58,9 @@ class GeckoEngineSession(
     override val settings: Settings = object : Settings() {
         override var requestInterceptor: RequestInterceptor? = null
         override var historyTrackingDelegate: HistoryTrackingDelegate? = null
+        override var userAgentString: String?
+            get() = geckoSession.settings.getString(GeckoSessionSettings.USER_AGENT_OVERRIDE)
+            set(value) = geckoSession.settings.setString(GeckoSessionSettings.USER_AGENT_OVERRIDE, value)
     }
 
     private var initialLoad = true
@@ -547,6 +550,9 @@ class GeckoEngineSession(
         defaultSettings?.historyTrackingDelegate?.let { settings.historyTrackingDelegate = it }
         defaultSettings?.testingModeEnabled?.let {
             geckoSession.settings.setBoolean(GeckoSessionSettings.FULL_ACCESSIBILITY_TREE, it)
+        }
+        defaultSettings?.userAgentString?.let {
+            geckoSession.settings.setString(GeckoSessionSettings.USER_AGENT_OVERRIDE, it)
         }
 
         geckoSession.settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, privateMode)
