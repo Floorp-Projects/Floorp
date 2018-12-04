@@ -16,3 +16,5 @@ Provides an assortment of synchronisation primitives.
 
 .. js:autoclass:: TimedPromise
   :members:
+
+.. js:autofunction:: waitForEvent
