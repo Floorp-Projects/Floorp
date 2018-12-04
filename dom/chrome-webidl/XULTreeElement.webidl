@@ -13,9 +13,9 @@ dictionary TreeCellInfo {
     DOMString childElt = "";
 };
 
-[NoInterfaceObject]
-interface TreeBoxObject : BoxObject {
-
+[HTMLConstructor, Func="IsChromeOrXBL"]
+interface XULTreeElement : XULElement
+{
   /**
    * Obtain the columns.
    */

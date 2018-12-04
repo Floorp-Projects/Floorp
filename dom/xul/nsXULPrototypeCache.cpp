@@ -10,6 +10,7 @@
 #include "nsXULPrototypeDocument.h"
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
+#include "nsNetUtil.h"
 
 #include "nsIFile.h"
 #include "nsIMemoryReporter.h"

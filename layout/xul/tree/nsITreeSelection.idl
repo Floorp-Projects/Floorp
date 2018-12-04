@@ -3,9 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-interface nsITreeBoxObject;
-
 #include "nsISupports.idl"
+
+webidl XULTreeElement;
 
 [scriptable, uuid(ab6fe746-300b-4ab4-abb9-1c0e3977874c)]
 interface nsITreeSelection : nsISupports
@@ -13,7 +13,7 @@ interface nsITreeSelection : nsISupports
   /**
    * The tree widget for this selection.
    */
-  attribute nsITreeBoxObject tree;
+  attribute XULTreeElement tree;
 
   /**
    * This attribute is a boolean indicating single selection.
