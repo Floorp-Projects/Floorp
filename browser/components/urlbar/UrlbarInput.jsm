@@ -172,7 +172,7 @@ class UrlbarInput {
     if (methodName in this) {
       this[methodName](event);
     } else {
-      throw "Unrecognized urlbar event: " + event.type;
+      throw new Error("Unrecognized UrlbarInput event: " + event.type);
     }
   }
 
