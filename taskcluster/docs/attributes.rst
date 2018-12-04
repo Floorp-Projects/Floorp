@@ -42,7 +42,7 @@ run_on_hg_branches
 
 On a given project, the mercurial branch where this task should be in the target
 task set.  This is how requirements like "only run this RELBRANCH" get implemented.
-These are either the regular expression of a branch (e.g.: "GECKOVIEW_\d+_RELBRANCH")
+These are either the regular expression of a branch (e.g.: ``GECKOVIEW_\d+_RELBRANCH``)
 or the following alias:
 
  * `all` -- everywhere (the default)
