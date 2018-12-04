@@ -234,13 +234,11 @@ nsBrowserStatusFilter::OnStatusChange(nsIWebProgress *aWebProgress,
 }
 
 NS_IMETHODIMP
-nsBrowserStatusFilter::OnSecurityChange(
-    nsIWebProgress *aWebProgress, nsIRequest *aRequest, uint32_t aOldState,
-    uint32_t aState, const nsAString &aContentBlockingLogJSON) {
+nsBrowserStatusFilter::OnSecurityChange(nsIWebProgress *aWebProgress,
+                                        nsIRequest *aRequest, uint32_t aState) {
   if (!mListener) return NS_OK;
 
-  return mListener->OnSecurityChange(aWebProgress, aRequest, aOldState, aState,
-                                     aContentBlockingLogJSON);
+  return mListener->OnSecurityChange(aWebProgress, aRequest, aState);
 }
 
 //-----------------------------------------------------------------------------
