@@ -195,6 +195,15 @@ bool JS::CompileForNonSyntacticScope(JSContext* cx,
   return CompileSourceBuffer(cx, options, srcBuf, script);
 }
 
+bool JS::CompileUtf8ForNonSyntacticScope(
+    JSContext* cx, const ReadOnlyCompileOptions& optionsArg, const char* bytes,
+    size_t length, JS::MutableHandleScript script) {
+  CompileOptions options(cx, optionsArg);
+  options.setNonSyntacticScope(true);
+
+  return ::CompileUtf8(cx, options, bytes, length, script);
+}
+
 bool JS::CompileLatin1ForNonSyntacticScope(
     JSContext* cx, const ReadOnlyCompileOptions& optionsArg, const char* bytes,
     size_t length, JS::MutableHandleScript script) {
