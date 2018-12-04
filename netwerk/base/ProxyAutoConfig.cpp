@@ -701,13 +701,17 @@ nsresult ProxyAutoConfig::SetupJS() {
 
   JS::Rooted<JSObject *> global(cx, mJSContext->Global());
 
-  JS::CompileOptions options(cx);
-  options.setFileAndLine(mPACURI.get(), 1);
+  auto CompilePACScript = [this](JSContext *cx,
+                                 JS::MutableHandle<JSScript *> script) {
+    JS::CompileOptions options(cx);
+    options.setFileAndLine(this->mPACURI.get(), 1);
+
+    return JS::CompileLatin1(cx, options, this->mPACScript.get(),
+                             this->mPACScript.Length(), script);
+  };
 
   JS::Rooted<JSScript *> script(cx);
-  if (!JS::CompileLatin1(cx, options, mPACScript.get(), mPACScript.Length(),
-                         &script) ||
-      !JS_ExecuteScript(cx, script)) {
+  if (!CompilePACScript(cx, &script) || !JS_ExecuteScript(cx, script)) {
     nsString alertMessage(
         NS_LITERAL_STRING("PAC file failed to install from "));
     if (isDataURI) {
