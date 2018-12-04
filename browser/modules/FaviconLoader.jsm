@@ -423,12 +423,6 @@ class IconLoader {
     }
 
     if (LOCAL_FAVICON_SCHEMES.includes(iconInfo.iconUri.scheme)) {
-      // We need to do a manual security check because the channel won't do
-      // it for us.
-      try {
-        Services.scriptSecurityManager.checkLoadURIWithPrincipal(
-          iconInfo.node.nodePrincipal, iconInfo.iconUri, 0);
-      } catch (ex) { return; }
       this.mm.sendAsyncMessage("Link:SetIcon", {
         pageURL: iconInfo.pageUri.spec,
         originalURL: iconInfo.iconUri.spec,
