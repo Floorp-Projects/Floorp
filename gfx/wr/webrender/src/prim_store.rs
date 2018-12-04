@@ -1017,7 +1017,7 @@ impl PrimitiveTemplateKind {
     fn write_prim_gpu_blocks(
         &self,
         request: &mut GpuDataRequest,
-        prim_rect: LayoutRect,
+        prim_size: LayoutSize,
     ) {
         match *self {
             PrimitiveTemplateKind::Clear => {
@@ -1034,8 +1034,8 @@ impl PrimitiveTemplateKind {
                 request.push(PremultipliedColorF::WHITE);
                 request.push(PremultipliedColorF::WHITE);
                 request.push([
-                    prim_rect.size.width,
-                    prim_rect.size.height,
+                    prim_size.width,
+                    prim_size.height,
                     0.0,
                     0.0,
                 ]);
@@ -1047,8 +1047,8 @@ impl PrimitiveTemplateKind {
                 request.push(PremultipliedColorF::WHITE);
                 request.push(PremultipliedColorF::WHITE);
                 request.push([
-                    prim_rect.size.width,
-                    prim_rect.size.height,
+                    prim_size.width,
+                    prim_size.height,
                     0.0,
                     0.0,
                 ]);
@@ -1165,15 +1165,8 @@ impl PrimitiveTemplateKind {
     fn write_segment_gpu_blocks(
         &self,
         request: &mut GpuDataRequest,
-        prim_rect: LayoutRect,
     ) {
         match *self {
-            PrimitiveTemplateKind::Clear => {
-                request.write_segment(
-                    prim_rect,
-                    [0.0; 4],
-                );
-            }
             PrimitiveTemplateKind::NormalBorder { ref template, .. } => {
                 for segment in &template.brush_segments {
                     // has to match VECS_PER_SEGMENT
@@ -1192,12 +1185,6 @@ impl PrimitiveTemplateKind {
                     );
                 }
             }
-            PrimitiveTemplateKind::LineDecoration { .. } => {
-                request.write_segment(
-                    prim_rect,
-                    [0.0; 4],
-                );
-            }
             PrimitiveTemplateKind::LinearGradient { ref brush_segments, .. } |
             PrimitiveTemplateKind::RadialGradient { ref brush_segments, .. } => {
                 for segment in brush_segments {
@@ -1208,6 +1195,8 @@ impl PrimitiveTemplateKind {
                     );
                 }
             }
+            PrimitiveTemplateKind::Clear |
+            PrimitiveTemplateKind::LineDecoration { .. } |
             PrimitiveTemplateKind::Image { .. } |
             PrimitiveTemplateKind::Rectangle { .. } |
             PrimitiveTemplateKind::TextRun { .. } |
@@ -1233,8 +1222,11 @@ impl PrimitiveTemplate {
         frame_state: &mut FrameBuildingState,
     ) {
         if let Some(mut request) = frame_state.gpu_cache.request(&mut self.gpu_cache_handle) {
-            self.kind.write_prim_gpu_blocks(&mut request, self.prim_rect);
-            self.kind.write_segment_gpu_blocks(&mut request, self.prim_rect);
+            self.kind.write_prim_gpu_blocks(
+                &mut request,
+                self.prim_rect.size,
+            );
+            self.kind.write_segment_gpu_blocks(&mut request);
         }
 
         self.opacity = match self.kind {
@@ -3097,10 +3089,6 @@ impl PrimitiveStore {
                         0.0,
                         0.0,
                     ]);
-                    request.write_segment(
-                        pic.local_rect,
-                        [0.0; 4],
-                    );
                 }
             }
             PrimitiveInstanceKind::TextRun { .. } |
@@ -3604,7 +3592,10 @@ impl PrimitiveStore {
             if let Some(mut request) = frame_state.gpu_cache.request(&mut segment_instance.gpu_cache_handle) {
                 let segments = &scratch.segments[segment_instance.segments_range];
 
-                prim_data.kind.write_prim_gpu_blocks(&mut request, prim_data.prim_rect);
+                prim_data.kind.write_prim_gpu_blocks(
+                    &mut request,
+                    prim_data.prim_rect.size,
+                );
 
                 for segment in segments {
                     request.write_segment(

@@ -586,7 +586,7 @@ impl AlphaBatchBuilder {
                 };
 
                 let instance = PrimitiveInstanceData::from(BrushInstance {
-                    segment_index: 0,
+                    segment_index: INVALID_SEGMENT_INDEX,
                     edge_flags: EdgeAaSegmentMask::all(),
                     clip_task_address,
                     brush_flags: BrushFlags::PERSPECTIVE_INTERPOLATION,
@@ -862,7 +862,7 @@ impl AlphaBatchBuilder {
                 };
 
                 let instance = PrimitiveInstanceData::from(BrushInstance {
-                    segment_index: 0,
+                    segment_index: INVALID_SEGMENT_INDEX,
                     edge_flags: EdgeAaSegmentMask::all(),
                     clip_task_address,
                     brush_flags: BrushFlags::PERSPECTIVE_INTERPOLATION,
@@ -1107,7 +1107,7 @@ impl AlphaBatchBuilder {
 
                                         let instance = BrushInstance {
                                             prim_header_index,
-                                            segment_index: 0,
+                                            segment_index: INVALID_SEGMENT_INDEX,
                                             edge_flags: EdgeAaSegmentMask::empty(),
                                             brush_flags: BrushFlags::empty(),
                                             clip_task_address,
@@ -1189,7 +1189,7 @@ impl AlphaBatchBuilder {
                                         let shadow_instance = BrushInstance {
                                             prim_header_index: shadow_prim_header_index,
                                             clip_task_address,
-                                            segment_index: 0,
+                                            segment_index: INVALID_SEGMENT_INDEX,
                                             edge_flags: EdgeAaSegmentMask::empty(),
                                             brush_flags: BrushFlags::empty(),
                                             user_data: shadow_uv_rect_address,
@@ -1198,7 +1198,7 @@ impl AlphaBatchBuilder {
                                         let content_instance = BrushInstance {
                                             prim_header_index: content_prim_header_index,
                                             clip_task_address,
-                                            segment_index: 0,
+                                            segment_index: INVALID_SEGMENT_INDEX,
                                             edge_flags: EdgeAaSegmentMask::empty(),
                                             brush_flags: BrushFlags::empty(),
                                             user_data: content_uv_rect_address,
@@ -1283,7 +1283,7 @@ impl AlphaBatchBuilder {
                                         let instance = BrushInstance {
                                             prim_header_index,
                                             clip_task_address,
-                                            segment_index: 0,
+                                            segment_index: INVALID_SEGMENT_INDEX,
                                             edge_flags: EdgeAaSegmentMask::empty(),
                                             brush_flags: BrushFlags::empty(),
                                             user_data: 0,
@@ -1328,7 +1328,7 @@ impl AlphaBatchBuilder {
                                 let instance = BrushInstance {
                                     prim_header_index,
                                     clip_task_address,
-                                    segment_index: 0,
+                                    segment_index: INVALID_SEGMENT_INDEX,
                                     edge_flags: EdgeAaSegmentMask::empty(),
                                     brush_flags: BrushFlags::empty(),
                                     user_data: 0,
@@ -1368,7 +1368,7 @@ impl AlphaBatchBuilder {
                                 let instance = BrushInstance {
                                     prim_header_index,
                                     clip_task_address,
-                                    segment_index: 0,
+                                    segment_index: INVALID_SEGMENT_INDEX,
                                     edge_flags: EdgeAaSegmentMask::empty(),
                                     brush_flags: BrushFlags::empty(),
                                     user_data: uv_rect_address,
