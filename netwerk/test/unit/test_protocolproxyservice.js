@@ -600,6 +600,56 @@ function run_pac4_test() {
 
   prefs.setIntPref("network.proxy.type", 2);
   prefs.setCharPref("network.proxy.autoconfig_url", pac);
+  var req = pps.asyncResolve(channel, 0, new TestResolveCallback("http", run_utf8_pac_test));
+}
+
+function run_utf8_pac_test() {
+  var pac = 'data:text/plain;charset=UTF-8,' +
+            'function FindProxyForURL(url, host) {' +
+            '  /*' +
+            '   U+00A9 COPYRIGHT SIGN: %C2%A9,' +
+            '   U+0B87 TAMIL LETTER I: %E0%AE%87,' +
+            '   U+10398 UGARITIC LETTER THANNA: %F0%90%8E%98 ' +
+            '  */' +
+            '  var multiBytes = "%C2%A9 %E0%AE%87 %F0%90%8E%98"; ' +
+            '  /* 6 UTF-16 units above if PAC script run as UTF-8; 11 units if run as Latin-1 */ ' +
+            '  return multiBytes.length === 6 ' +
+            '         ? "PROXY foopy:8080; DIRECT" ' +
+            '         : "PROXY epicfail-utf8:12345; DIRECT";' +
+            '}';
+
+  var channel = NetUtil.newChannel({
+    uri: "http://www.mozilla.org/",
+    loadUsingSystemPrincipal: true
+  });
+
+  // Configure PAC
+  prefs.setIntPref("network.proxy.type", 2);
+  prefs.setCharPref("network.proxy.autoconfig_url", pac);
+
+  var req = pps.asyncResolve(channel, 0, new TestResolveCallback("http", run_latin1_pac_test));
+}
+
+function run_latin1_pac_test() {
+  var pac = 'data:text/plain,' +
+            'function FindProxyForURL(url, host) {' +
+            '  /* A too-long encoding of U+0000, so not valid UTF-8 */ ' +
+            '  var multiBytes = "%C0%80"; ' +
+            '  /* 2 UTF-16 units because interpreted as Latin-1 */ ' +
+            '  return multiBytes.length === 2 ' +
+            '         ? "PROXY foopy:8080; DIRECT" ' +
+            '         : "PROXY epicfail-latin1:12345; DIRECT";' +
+            '}';
+
+  var channel = NetUtil.newChannel({
+    uri: "http://www.mozilla.org/",
+    loadUsingSystemPrincipal: true
+  });
+
+  // Configure PAC
+  prefs.setIntPref("network.proxy.type", 2);
+  prefs.setCharPref("network.proxy.autoconfig_url", pac);
+
   var req = pps.asyncResolve(channel, 0, new TestResolveCallback("http", finish_pac_test));
 }
 

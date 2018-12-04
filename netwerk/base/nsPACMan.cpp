@@ -240,10 +240,10 @@ class ExecutePACThreadAction final : public Runnable {
     mShutdown = aShutdown;
   }
 
-  void SetupPAC(const char *text, uint32_t datalen, const nsACString &pacURI,
+  void SetupPAC(const char *data, uint32_t dataLen, const nsACString &pacURI,
                 uint32_t extraHeapSize) {
     mSetupPAC = true;
-    mSetupPACData.Assign(text, datalen);
+    mSetupPACData.Assign(data, dataLen);
     mSetupPACURI = pacURI;
     mExtraHeapSize = extraHeapSize;
   }
@@ -815,18 +815,13 @@ nsPACMan::OnStreamComplete(nsIStreamLoader *loader, nsISupports *context,
       }
     }
 
-    // We assume that the PAC text is ASCII (or ISO-Latin-1).  We've had this
-    // assumption forever, and some real-world PAC scripts actually have some
-    // non-ASCII text in comment blocks (see bug 296163).
-    const char *text = (const char *)data;
-
-    // we have succeeded in loading the pac file using a bunch of interfaces
-    // that are main thread only, unfortunately we have to initialize the
-    // instance of the PAC evaluator (NS_PROXYAUTOCONFIG_CONTRACTID) on the pac
-    // thread, because that is where it will be used.
-
+    // We succeeded in loading the pac file using a bunch of interfaces that are
+    // main thread only.  Unfortunately, we have to initialize the instance of
+    // the PAC evaluator (NS_PROXYAUTOCONFIG_CONTRACTID) on the PAC thread,
+    // because that's where it will be used.
     RefPtr<ExecutePACThreadAction> pending = new ExecutePACThreadAction(this);
-    pending->SetupPAC(text, dataLen, pacURI, GetExtraJSContextHeapSize());
+    pending->SetupPAC(reinterpret_cast<const char *>(data), dataLen, pacURI,
+                      GetExtraJSContextHeapSize());
     DispatchToPAC(pending.forget());
 
     LOG(("OnStreamComplete: process the PAC contents\n"));
