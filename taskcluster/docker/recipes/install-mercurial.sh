@@ -16,13 +16,13 @@ if [ -f /etc/lsb-release ]; then
     if [ "${DISTRIB_ID}" = "Ubuntu" ] && [[ "${DISTRIB_RELEASE}" = "16.04" || "${DISTRIB_RELEASE}" = "17.10" || "${DISTRIB_RELEASE}" = "18.04" ]]
     then
         HG_DEB=1
-        HG_DIGEST=cbc3eafbc7598c7eafee81f4fb95f8d58dea5fede0fca6a04334eaa29667b9b464e3070fa24be91276d7294ba4629d7b7a648cbf969256289e9a28f5da684d09
-        HG_SIZE=250774
-        HG_FILENAME=mercurial_4.7.1_amd64.deb
+        HG_DIGEST=eca872b1e0007f6dee40013d41ba3e17fe636500051304b69720a14aacab298ebed2999ff2433cf462f8931ef9c1d3bbac8544374056a76348da738c186dcc20
+        HG_SIZE=278406
+        HG_FILENAME=mercurial_4.8_amd64.deb
 
-        HG_COMMON_DIGEST=15f9c72dba116d33c2d60831bc17cd714d66b830089aebe547c846b910dbc929200f7863e167a8dade67c77c4347b8e967e6da505c2fdffa4faaa7143eccdfd8
-        HG_COMMON_SIZE=2315652
-        HG_COMMON_FILENAME=mercurial-common_4.7.1_all.deb
+        HG_COMMON_DIGEST=ba4d267aba2c3fe02e9cd9227b9a910e4e287971ff5ebd60b238e11ce97d82b2316b9d43f54d3f2384e9947a7a7f403c982329fe6ca6309bdfb8ba91ac345f48
+        HG_COMMON_SIZE=2435262
+        HG_COMMON_FILENAME=mercurial-common_4.8_all.deb
     elif [ "${DISTRIB_ID}" = "Ubuntu" ] && [ "${DISTRIB_RELEASE}" = "12.04" ]
     then
         echo "Ubuntu 12.04 not supported"
@@ -88,7 +88,7 @@ tooltool_fetch <<EOF
 ]
 EOF
 
-    dpkg -i ${HG_COMMON_FILENAME} ${HG_FILENAME}
+    dpkg -i --auto-deconfigure ${HG_COMMON_FILENAME} ${HG_FILENAME}
 elif [ -n "${HG_RPM}" ]; then
 tooltool_fetch <<EOF
 [
@@ -106,15 +106,15 @@ elif [ -n "${PIP_PATH}" ]; then
 tooltool_fetch <<EOF
 [
   {
-    "size": 6480135,
-    "digest": "04d3f97dd4a0f36c6f6d639d8eccc7e4f29b2dc211fa69e7fc17dae0eb954f2ddaaf04f70facc6b968a166db7c07ed80792575d7a27e80bc0c1a43fc38b5e536",
+    "size": 6865809,
+    "digest": "83be5119355da6e43635a8ada3c152420314e72c4a7b98717ac8b5feb628f3ce96c0ca137cb4a624d441e4f800d9ca78ada3351ca403815c06ab151cc720077d",
     "algorithm": "sha512",
-    "filename": "mercurial-4.7.1.tar.gz"
+    "filename": "mercurial-4.8.tar.gz"
   }
 ]
 EOF
 
-   ${PIP_PATH} install mercurial-4.7.1.tar.gz
+   ${PIP_PATH} install mercurial-4.8.tar.gz
 else
     echo "Do not know how to install Mercurial on this OS"
     exit 1
