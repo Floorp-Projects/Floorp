@@ -9904,8 +9904,12 @@ static void AppendNativeAnonymousChildrenFromFrame(nsIFrame* aFrame,
 /* static */
 bool nsContentUtils::ShouldBlockReservedKeys(WidgetKeyboardEvent* aKeyEvent) {
   nsCOMPtr<nsIPrincipal> principal;
-  nsCOMPtr<nsIBrowser> targetBrowser =
+  nsCOMPtr<Element> targetElement =
       do_QueryInterface(aKeyEvent->mOriginalTarget);
+  nsCOMPtr<nsIBrowser> targetBrowser;
+  if (targetElement) {
+    targetBrowser = targetElement->AsBrowser();
+  }
   bool isRemoteBrowser = false;
   if (targetBrowser) {
     targetBrowser->GetIsRemoteBrowser(&isRemoteBrowser);
