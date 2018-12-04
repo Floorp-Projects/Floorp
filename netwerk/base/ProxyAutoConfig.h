@@ -31,7 +31,7 @@ class ProxyAutoConfig {
   ProxyAutoConfig();
   ~ProxyAutoConfig();
 
-  nsresult Init(const nsCString &aPACURI, const nsCString &aPACScript,
+  nsresult Init(const nsCString &aPACURI, const nsCString &aPACScriptData,
                 bool aIncludePath, uint32_t aExtraHeapSize,
                 nsIEventTarget *aEventTarget);
   void SetThreadLocalIndex(uint32_t index);
@@ -92,7 +92,7 @@ class ProxyAutoConfig {
   JSContextWrapper *mJSContext;
   bool mJSNeedsSetup;
   bool mShutdown;
-  nsCString mPACScript;
+  nsCString mConcatenatedPACData;
   nsCString mPACURI;
   bool mIncludePath;
   uint32_t mExtraHeapSize;
