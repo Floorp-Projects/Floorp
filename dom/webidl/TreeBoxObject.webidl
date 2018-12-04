@@ -132,23 +132,10 @@ interface TreeBoxObject : BoxObject {
   TreeCellInfo getCellAt(long x, long y);
 
   /**
-   * DEPRECATED: please use above version
-   */
-  [Throws]
-  void getCellAt(long x, long y, object row, object column, object childElt);
-
-  /**
    * Find the coordinates of an element within a specific cell.
    */
   [Throws]
   DOMRect? getCoordsForCellItem(long row, TreeColumn col, DOMString element);
-
-  /**
-   * DEPRECATED: Please use above version
-   */
-  [Throws]
-  void getCoordsForCellItem(long row, TreeColumn col, DOMString element,
-                            object x, object y, object width, object height);
 
   /**
    * Determine if the text of a cell is being cropped or not.
