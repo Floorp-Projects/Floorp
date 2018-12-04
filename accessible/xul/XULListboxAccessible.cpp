@@ -106,13 +106,13 @@ uint64_t XULListboxAccessible::NativeState() const {
 void XULListboxAccessible::Value(nsString& aValue) const {
   aValue.Truncate();
 
-  nsCOMPtr<nsIDOMXULSelectControlElement> select(do_QueryInterface(mContent));
+  nsCOMPtr<nsIDOMXULSelectControlElement> select = Elm()->AsXULSelectControl();
   if (select) {
     RefPtr<Element> element;
     select->GetSelectedItem(getter_AddRefs(element));
 
     nsCOMPtr<nsIDOMXULSelectControlItemElement> selectedItem =
-        do_QueryInterface(element);
+        element->AsXULSelectControlItem();
     if (selectedItem) selectedItem->GetLabel(aValue);
   }
 }
@@ -133,7 +133,7 @@ role XULListboxAccessible::NativeRole() const {
 uint32_t XULListboxAccessible::ColCount() const { return 0; }
 
 uint32_t XULListboxAccessible::RowCount() {
-  nsCOMPtr<nsIDOMXULSelectControlElement> element(do_QueryInterface(mContent));
+  nsCOMPtr<nsIDOMXULSelectControlElement> element = Elm()->AsXULSelectControl();
 
   uint32_t itemCount = 0;
   if (element) element->GetItemCount(&itemCount);
@@ -143,7 +143,7 @@ uint32_t XULListboxAccessible::RowCount() {
 
 Accessible* XULListboxAccessible::CellAt(uint32_t aRowIndex,
                                          uint32_t aColumnIndex) {
-  nsCOMPtr<nsIDOMXULSelectControlElement> control = do_QueryInterface(mContent);
+  nsCOMPtr<nsIDOMXULSelectControlElement> control = Elm()->AsXULSelectControl();
   NS_ENSURE_TRUE(control, nullptr);
 
   RefPtr<Element> element;
@@ -158,7 +158,7 @@ Accessible* XULListboxAccessible::CellAt(uint32_t aRowIndex,
 
 bool XULListboxAccessible::IsColSelected(uint32_t aColIdx) {
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
-      do_QueryInterface(mContent);
+      Elm()->AsXULMultiSelectControl();
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
@@ -170,14 +170,15 @@ bool XULListboxAccessible::IsColSelected(uint32_t aColIdx) {
 }
 
 bool XULListboxAccessible::IsRowSelected(uint32_t aRowIdx) {
-  nsCOMPtr<nsIDOMXULSelectControlElement> control = do_QueryInterface(mContent);
+  nsCOMPtr<nsIDOMXULSelectControlElement> control = Elm()->AsXULSelectControl();
   NS_ASSERTION(control, "Doesn't implement nsIDOMXULSelectControlElement.");
 
   RefPtr<Element> element;
   nsresult rv = control->GetItemAtIndex(aRowIdx, getter_AddRefs(element));
   NS_ENSURE_SUCCESS(rv, false);
 
-  nsCOMPtr<nsIDOMXULSelectControlItemElement> item = do_QueryInterface(element);
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> item =
+      element->AsXULSelectControlItem();
 
   bool isSelected = false;
   item->GetSelected(&isSelected);
@@ -190,7 +191,7 @@ bool XULListboxAccessible::IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx) {
 
 uint32_t XULListboxAccessible::SelectedCellCount() {
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
-      do_QueryInterface(mContent);
+      Elm()->AsXULMultiSelectControl();
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
@@ -205,7 +206,7 @@ uint32_t XULListboxAccessible::SelectedCellCount() {
 
 uint32_t XULListboxAccessible::SelectedColCount() {
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
-      do_QueryInterface(mContent);
+      Elm()->AsXULMultiSelectControl();
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
@@ -221,7 +222,7 @@ uint32_t XULListboxAccessible::SelectedColCount() {
 
 uint32_t XULListboxAccessible::SelectedRowCount() {
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
-      do_QueryInterface(mContent);
+      Elm()->AsXULMultiSelectControl();
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
@@ -234,7 +235,7 @@ uint32_t XULListboxAccessible::SelectedRowCount() {
 
 void XULListboxAccessible::SelectedCells(nsTArray<Accessible*>* aCells) {
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
-      do_QueryInterface(mContent);
+      Elm()->AsXULMultiSelectControl();
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
@@ -260,7 +261,7 @@ void XULListboxAccessible::SelectedCells(nsTArray<Accessible*>* aCells) {
 
 void XULListboxAccessible::SelectedCellIndices(nsTArray<uint32_t>* aCells) {
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
-      do_QueryInterface(mContent);
+      Elm()->AsXULMultiSelectControl();
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
@@ -277,9 +278,9 @@ void XULListboxAccessible::SelectedCellIndices(nsTArray<uint32_t>* aCells) {
   for (uint32_t selItemsIdx = 0, cellsIdx = 0; selItemsIdx < selectedItemsCount;
        selItemsIdx++) {
     nsIContent* itemContent = selectedItems->Item(selItemsIdx);
-    nsCOMPtr<nsIDOMXULSelectControlItemElement> item =
-        do_QueryInterface(itemContent);
 
+    nsCOMPtr<nsIDOMXULSelectControlItemElement> item =
+        itemContent->AsElement()->AsXULSelectControlItem();
     if (item) {
       int32_t itemIdx = -1;
       control->GetIndexOfItem(item, &itemIdx);
@@ -300,7 +301,7 @@ void XULListboxAccessible::SelectedColIndices(nsTArray<uint32_t>* aCols) {
 
 void XULListboxAccessible::SelectedRowIndices(nsTArray<uint32_t>* aRows) {
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
-      do_QueryInterface(mContent);
+      Elm()->AsXULMultiSelectControl();
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
@@ -318,7 +319,7 @@ void XULListboxAccessible::SelectedRowIndices(nsTArray<uint32_t>* aRows) {
   for (uint32_t rowIdx = 0; rowIdx < rowCount; rowIdx++) {
     nsIContent* itemContent = selectedItems->Item(rowIdx);
     nsCOMPtr<nsIDOMXULSelectControlItemElement> item =
-        do_QueryInterface(itemContent);
+        itemContent->AsElement()->AsXULSelectControlItem();
 
     if (item) {
       int32_t itemIdx = -1;
@@ -330,27 +331,29 @@ void XULListboxAccessible::SelectedRowIndices(nsTArray<uint32_t>* aRows) {
 
 void XULListboxAccessible::SelectRow(uint32_t aRowIdx) {
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
-      do_QueryInterface(mContent);
+      Elm()->AsXULMultiSelectControl();
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
   RefPtr<Element> item;
   control->GetItemAtIndex(aRowIdx, getter_AddRefs(item));
 
-  nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm = do_QueryInterface(item);
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm =
+      item->AsXULSelectControlItem();
   control->SelectItem(itemElm);
 }
 
 void XULListboxAccessible::UnselectRow(uint32_t aRowIdx) {
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
-      do_QueryInterface(mContent);
+      Elm()->AsXULMultiSelectControl();
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
   RefPtr<Element> item;
   control->GetItemAtIndex(aRowIdx, getter_AddRefs(item));
 
-  nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm = do_QueryInterface(item);
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm =
+      item->AsXULSelectControlItem();
   control->RemoveItemFromSelection(itemElm);
 }
 
@@ -388,13 +391,13 @@ bool XULListboxAccessible::AreItemsOperable() const {
 }
 
 Accessible* XULListboxAccessible::ContainerWidget() const {
-  if (IsAutoCompletePopup()) {
+  if (IsAutoCompletePopup() && mContent->GetParent()) {
     // This works for XUL autocompletes. It doesn't work for HTML forms
     // autocomplete because of potential crossprocess calls (when autocomplete
     // lives in content process while popup lives in chrome process). If that's
     // a problem then rethink Widgets interface.
     nsCOMPtr<nsIDOMXULMenuListElement> menuListElm =
-        do_QueryInterface(mContent->GetParent());
+        mContent->GetParent()->AsElement()->AsXULMenuList();
     if (menuListElm) {
       RefPtr<mozilla::dom::Element> inputElm;
       menuListElm->GetInputField(getter_AddRefs(inputElm));
@@ -429,7 +432,7 @@ Accessible* XULListitemAccessible::GetListAccessible() const {
   if (IsDefunct()) return nullptr;
 
   nsCOMPtr<nsIDOMXULSelectControlItemElement> listItem =
-      do_QueryInterface(mContent);
+      Elm()->AsXULSelectControlItem();
   if (!listItem) return nullptr;
 
   RefPtr<Element> listElement;
@@ -479,8 +482,7 @@ uint64_t XULListitemAccessible::NativeState() const {
   uint64_t states = NativeInteractiveState();
 
   nsCOMPtr<nsIDOMXULSelectControlItemElement> listItem =
-      do_QueryInterface(mContent);
-
+      Elm()->AsXULSelectControlItem();
   if (listItem) {
     bool isSelected;
     listItem->GetSelected(&isSelected);

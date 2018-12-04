@@ -9,7 +9,6 @@
 #include "nsAccessibilityService.h"
 #include "DocAccessible.h"
 
-#include "nsIDOMXULContainerElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIMutableArray.h"
@@ -29,7 +28,7 @@ XULSelectControlAccessible::XULSelectControlAccessible(nsIContent* aContent,
                                                        DocAccessible* aDoc)
     : AccessibleWrap(aContent, aDoc) {
   mGenericTypes |= eSelect;
-  mSelectControl = do_QueryInterface(aContent);
+  mSelectControl = aContent->AsElement();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,8 +56,10 @@ void XULSelectControlAccessible::SelectedItems(nsTArray<Accessible*>* aItems) {
       if (item) aItems->AppendElement(item);
     }
   } else {  // Single select?
+    nsCOMPtr<nsIDOMXULSelectControlElement> selectControl =
+        mSelectControl->AsXULSelectControl();
     RefPtr<Element> element;
-    mSelectControl->GetSelectedItem(getter_AddRefs(element));
+    selectControl->GetSelectedItem(getter_AddRefs(element));
     if (element) {
       Accessible* item = mDoc->GetAccessible(element);
       if (item) aItems->AppendElement(item);
@@ -68,13 +69,17 @@ void XULSelectControlAccessible::SelectedItems(nsTArray<Accessible*>* aItems) {
 
 Accessible* XULSelectControlAccessible::GetSelectedItem(uint32_t aIndex) {
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelectControl =
-      do_QueryInterface(mSelectControl);
+      mSelectControl->AsXULMultiSelectControl();
 
   RefPtr<Element> element;
   if (multiSelectControl) {
     multiSelectControl->MultiGetSelectedItem(aIndex, getter_AddRefs(element));
   } else if (aIndex == 0) {
-    mSelectControl->GetSelectedItem(getter_AddRefs(element));
+    nsCOMPtr<nsIDOMXULSelectControlElement> selectControl =
+        mSelectControl->AsXULSelectControl();
+    if (selectControl) {
+      selectControl->GetSelectedItem(getter_AddRefs(element));
+    }
   }
 
   return element && mDoc ? mDoc->GetAccessible(element) : nullptr;
@@ -83,7 +88,7 @@ Accessible* XULSelectControlAccessible::GetSelectedItem(uint32_t aIndex) {
 uint32_t XULSelectControlAccessible::SelectedItemCount() {
   // For XUL multi-select control
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelectControl =
-      do_QueryInterface(mSelectControl);
+      mSelectControl->AsXULMultiSelectControl();
   if (multiSelectControl) {
     int32_t count = 0;
     multiSelectControl->GetSelectedCount(&count);
@@ -91,17 +96,23 @@ uint32_t XULSelectControlAccessible::SelectedItemCount() {
   }
 
   // For XUL single-select control/menulist
-  int32_t index;
-  mSelectControl->GetSelectedIndex(&index);
-  return (index >= 0) ? 1 : 0;
+  nsCOMPtr<nsIDOMXULSelectControlElement> selectControl =
+      mSelectControl->AsXULSelectControl();
+  if (selectControl) {
+    int32_t index = -1;
+    selectControl->GetSelectedIndex(&index);
+    return (index >= 0) ? 1 : 0;
+  }
+
+  return 0;
 }
 
 bool XULSelectControlAccessible::AddItemToSelection(uint32_t aIndex) {
   Accessible* item = GetChildAt(aIndex);
-  if (!item) return false;
+  if (!item || !item->GetContent()) return false;
 
   nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm =
-      do_QueryInterface(item->GetContent());
+      item->GetContent()->AsElement()->AsXULSelectControlItem();
   if (!itemElm) return false;
 
   bool isItemSelected = false;
@@ -109,12 +120,16 @@ bool XULSelectControlAccessible::AddItemToSelection(uint32_t aIndex) {
   if (isItemSelected) return true;
 
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelectControl =
-      do_QueryInterface(mSelectControl);
+      mSelectControl->AsXULMultiSelectControl();
 
   if (multiSelectControl) {
     multiSelectControl->AddItemToSelection(itemElm);
   } else {
-    mSelectControl->SetSelectedItem(item->Elm());
+    nsCOMPtr<nsIDOMXULSelectControlElement> selectControl =
+        mSelectControl->AsXULSelectControl();
+    if (selectControl) {
+      selectControl->SetSelectedItem(item->Elm());
+    }
   }
 
   return true;
@@ -122,10 +137,10 @@ bool XULSelectControlAccessible::AddItemToSelection(uint32_t aIndex) {
 
 bool XULSelectControlAccessible::RemoveItemFromSelection(uint32_t aIndex) {
   Accessible* item = GetChildAt(aIndex);
-  if (!item) return false;
+  if (!item || !item->GetContent()) return false;
 
   nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm =
-      do_QueryInterface(item->GetContent());
+      item->GetContent()->AsElement()->AsXULSelectControlItem();
   if (!itemElm) return false;
 
   bool isItemSelected = false;
@@ -133,22 +148,27 @@ bool XULSelectControlAccessible::RemoveItemFromSelection(uint32_t aIndex) {
   if (!isItemSelected) return true;
 
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelectControl =
-      do_QueryInterface(mSelectControl);
+      mSelectControl->AsXULMultiSelectControl();
 
-  if (multiSelectControl)
+  if (multiSelectControl) {
     multiSelectControl->RemoveItemFromSelection(itemElm);
-  else
-    mSelectControl->SetSelectedItem(nullptr);
+  } else {
+    nsCOMPtr<nsIDOMXULSelectControlElement> selectControl =
+        mSelectControl->AsXULSelectControl();
+    if (selectControl) {
+      selectControl->SetSelectedItem(nullptr);
+    }
+  }
 
   return true;
 }
 
 bool XULSelectControlAccessible::IsItemSelected(uint32_t aIndex) {
   Accessible* item = GetChildAt(aIndex);
-  if (!item) return false;
+  if (!item || !item->GetContent()) return false;
 
   nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm =
-      do_QueryInterface(item->GetContent());
+      item->GetContent()->AsElement()->AsXULSelectControlItem();
   if (!itemElm) return false;
 
   bool isItemSelected = false;
@@ -158,16 +178,23 @@ bool XULSelectControlAccessible::IsItemSelected(uint32_t aIndex) {
 
 bool XULSelectControlAccessible::UnselectAll() {
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelectControl =
-      do_QueryInterface(mSelectControl);
-  multiSelectControl ? multiSelectControl->ClearSelection()
-                     : mSelectControl->SetSelectedIndex(-1);
+      mSelectControl->AsXULMultiSelectControl();
+  if (multiSelectControl) {
+    multiSelectControl->ClearSelection();
+  } else {
+    nsCOMPtr<nsIDOMXULSelectControlElement> selectControl =
+        mSelectControl->AsXULSelectControl();
+    if (selectControl) {
+      selectControl->SetSelectedIndex(-1);
+    }
+  }
 
   return true;
 }
 
 bool XULSelectControlAccessible::SelectAll() {
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelectControl =
-      do_QueryInterface(mSelectControl);
+      mSelectControl->AsXULMultiSelectControl();
   if (multiSelectControl) {
     multiSelectControl->SelectAll();
     return true;
@@ -185,11 +212,15 @@ Accessible* XULSelectControlAccessible::CurrentItem() const {
 
   RefPtr<Element> currentItemElm;
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelectControl =
-      do_QueryInterface(mSelectControl);
+      mSelectControl->AsXULMultiSelectControl();
   if (multiSelectControl) {
     multiSelectControl->GetCurrentItem(getter_AddRefs(currentItemElm));
   } else {
-    mSelectControl->GetSelectedItem(getter_AddRefs(currentItemElm));
+    nsCOMPtr<nsIDOMXULSelectControlElement> selectControl =
+        mSelectControl->AsXULSelectControl();
+    if (selectControl) {
+      selectControl->GetSelectedItem(getter_AddRefs(currentItemElm));
+    }
   }
 
   if (currentItemElm) {
@@ -205,9 +236,14 @@ void XULSelectControlAccessible::SetCurrentItem(const Accessible* aItem) {
 
   nsCOMPtr<Element> itemElm = aItem->Elm();
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelectControl =
-      do_QueryInterface(mSelectControl);
-  if (multiSelectControl)
+      itemElm->AsXULMultiSelectControl();
+  if (multiSelectControl) {
     multiSelectControl->SetCurrentItem(itemElm);
-  else
-    mSelectControl->SetSelectedItem(itemElm);
+  } else {
+    nsCOMPtr<nsIDOMXULSelectControlElement> selectControl =
+        mSelectControl->AsXULSelectControl();
+    if (selectControl) {
+      selectControl->SetSelectedItem(itemElm);
+    }
+  }
 }

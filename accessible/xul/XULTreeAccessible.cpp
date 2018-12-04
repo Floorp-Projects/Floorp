@@ -410,13 +410,13 @@ bool XULTreeAccessible::AreItemsOperable() const {
 }
 
 Accessible* XULTreeAccessible::ContainerWidget() const {
-  if (IsAutoCompletePopup()) {
+  if (IsAutoCompletePopup() && mContent->GetParent()) {
     // This works for XUL autocompletes. It doesn't work for HTML forms
     // autocomplete because of potential crossprocess calls (when autocomplete
     // lives in content process while popup lives in chrome process). If that's
     // a problem then rethink Widgets interface.
     nsCOMPtr<nsIDOMXULMenuListElement> menuListElm =
-        do_QueryInterface(mContent->GetParent());
+        mContent->GetParent()->AsElement()->AsXULMenuList();
     if (menuListElm) {
       RefPtr<mozilla::dom::Element> inputElm;
       menuListElm->GetInputField(getter_AddRefs(inputElm));
