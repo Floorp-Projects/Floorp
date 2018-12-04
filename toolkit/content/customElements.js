@@ -212,16 +212,14 @@ const MozElementMixin = Base => class MozElement extends Base {
    *        Array of interface names.
    */
   static implementCustomInterface(cls, ifaces) {
-    const numbers = new Set(ifaces.map(i => i.number));
-    if (cls.prototype.customInterfaceNumbers) {
-      // Base class already implemented some interfaces. Inherit:
-      cls.prototype.customInterfaceNumbers.forEach(number => numbers.add(number));
+    if (cls.prototype.customInterfaces) {
+      ifaces.push(...cls.prototype.customInterfaces);
     }
+    cls.prototype.customInterfaces = ifaces;
 
-    cls.prototype.customInterfaceNumbers = numbers;
     cls.prototype.QueryInterface = ChromeUtils.generateQI(ifaces);
-    cls.prototype.getCustomInterfaceCallback = function getCustomInterfaceCallback(iface) {
-      if (numbers.has(iface.number)) {
+    cls.prototype.getCustomInterfaceCallback = function getCustomInterfaceCallback(ifaceToCheck) {
+      if (cls.prototype.customInterfaces.some(iface => iface.equals(ifaceToCheck))) {
         return getInterfaceProxy(this);
       }
       return null;
