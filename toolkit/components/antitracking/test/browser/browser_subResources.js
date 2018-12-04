@@ -185,7 +185,7 @@ add_task(async function() {
 
   let log = JSON.parse(await browser.getContentBlockingLog());
   for (let trackerOrigin in log) {
-    is(trackerOrigin, TEST_3RD_PARTY_DOMAIN, "Correct tracker origin must be reported");
+    is(trackerOrigin + "/", TEST_3RD_PARTY_DOMAIN, "Correct tracker origin must be reported");
     let originLog = log[trackerOrigin];
     is(originLog.length, 4, "We should have 4 entries in the compressed log");
     expectTrackerFound(originLog[0]);

@@ -14,32 +14,7 @@ interface nsISecureBrowserUI : nsISupports
 {
     void init(in nsIDocShell docShell);
 
-    // A value composed of the Security State Flags and the Security
-    // Strength Flags defined in nsIWebProgressListener.
-    // Any undefined bits are reserved for future use.
-    // This represents the security state before the change.
-    readonly attribute unsigned long oldState;
-    // A value composed of the Security State Flags and the Security
-    // Strength Flags defined in nsIWebProgressListener.
-    // Any undefined bits are reserved for future use.
-    // This represents the security state after the change.
     readonly attribute unsigned long state;
-    // An optional JSON string representing a log of the content blocking
-    // events happened so far.  This will be a JSON object containing keys
-    // representing origins that content blocking has acted on, with values
-    // being an array of items, each representing one action.  Each action
-    // itself is an an array containing three elements, the first element
-    // being a blocking code from one of the Security State Flags above, and
-    // the second element being a boolean representing whether the origin
-    // was blocked (if true) or unblocked (if false) in that category, and
-    // the third element being the number of times that combination has been
-    // repeated consecutively.
-    // The reason JSON strings was chosen here was that we needed a format
-    // that is transferrable across processes in JS; and also the consumer
-    // of this data (browser-contentblocking.js) would be able to use the
-    // JSON.parse() API to parse out an object representation of the value.
-    readonly attribute AString contentBlockingLogJSON;
-    // Information about the connection security.
     readonly attribute nsITransportSecurityInfo secInfo;
 };
 
