@@ -77,8 +77,7 @@ nsLDBBrowserContentListener.prototype = {
       this.mStatusText.value = aMessage;
     },
 
-  onSecurityChange : function(aWebProgress, aRequest, aOldState, aState,
-                              aContentBlockingLogJSON)
+  onSecurityChange : function(aWebProgress, aRequest, aState)
     {
     },
 
