@@ -3028,7 +3028,7 @@ var ContentBlockingCategoriesPrefs = {
   CATEGORY_PREFS: {
     strict: [
       ["urlclassifier.trackingTable", null],
-      ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN],
+      ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
       ["privacy.trackingprotection.pbmode.enabled", true],
       ["privacy.trackingprotection.enabled", true],
     ],
