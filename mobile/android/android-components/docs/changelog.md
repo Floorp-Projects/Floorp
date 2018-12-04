@@ -15,7 +15,7 @@ permalink: /changelog/
   * Kotlin (Stdlib: 1.3.10, Coroutines: 1.0.1)
   * Kotlin (Stdlib: 1.3.0, Coroutines: 1.0.1)
   * GeckoView (Nightly: 65.0.20181129095546, Beta: 64.0.20181022150107, Release: 63.0.20181018182531)
-  * Mozilla App Services (FxA: 0.11.2, Sync Logins: 0.11.2, Places: 0.11.2)
+  * Mozilla App Services (FxA: **0.11.4** 🔺, Sync Logins: **0.11.4** 🔺, Places: **0.11.4** 🔺)
   * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
 
 * **feature-customtabs**
