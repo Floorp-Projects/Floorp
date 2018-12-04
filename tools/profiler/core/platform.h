@@ -116,4 +116,11 @@ void AppendSharedLibraries(mozilla::JSONWriter& aWriter);
 uint32_t ParseFeaturesFromStringArray(const char** aFeatures,
                                       uint32_t aFeatureCount);
 
+// Flags to conveniently track various JS features.
+enum class JSSamplingFlags {
+  StackSampling = 0x1,
+  TrackOptimizations = 0x2,
+  TraceLogging = 0x4
+};
+
 #endif /* ndef TOOLS_PLATFORM_H_ */

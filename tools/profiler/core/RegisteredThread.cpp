@@ -15,7 +15,7 @@ RegisteredThread::RegisteredThread(ThreadInfo* aInfo, nsIEventTarget* aThread,
       mThread(aThread),
       mContext(nullptr),
       mJSSampling(INACTIVE),
-      mJSTrackOptimizations(false) {
+      mJSFlags(0) {
   MOZ_COUNT_CTOR(RegisteredThread);
 
   // We don't have to guess on mac
