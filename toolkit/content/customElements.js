@@ -200,7 +200,8 @@ const MozElementMixin = Base => class MozElement extends Base {
 
   /**
    * Indicate that a class defining a XUL element implements one or more
-   * XPCOM interfaces by adding a getCustomInterface implementation to it.
+   * XPCOM interfaces by adding a getCustomInterface implementation to it,
+   * as well as an implementation of QueryInterface.
    *
    * The supplied class should implement the properties and methods of
    * all of the interfaces that are specified.
@@ -218,6 +219,7 @@ const MozElementMixin = Base => class MozElement extends Base {
     }
 
     cls.prototype.customInterfaceNumbers = numbers;
+    cls.prototype.QueryInterface = ChromeUtils.generateQI(ifaces);
     cls.prototype.getCustomInterfaceCallback = function getCustomInterfaceCallback(iface) {
       if (numbers.has(iface.number)) {
         return getInterfaceProxy(this);
