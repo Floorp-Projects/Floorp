@@ -12,7 +12,7 @@ import time
 import traceback
 
 from .logtypes import (Unicode, TestId, TestList, Status, SubStatus, Dict, List, Int, Any, Tuple,
-                       Boolean)
+                       Boolean, Nullable)
 from .logtypes import log_action, convertor_registry
 import six
 
@@ -65,6 +65,14 @@ Allowed actions, and subfields:
       bytes - Number of bytes leaked
       allocations - Number of allocations
       allowed - Boolean indicating whether all detected leaks matched allow rules
+
+  mozleak_object
+     process - Process that leaked
+     bytes - Number of bytes that leaked
+     name - Name of the object that leaked
+     scope - An identifier for the set of tests run during the browser session
+             (e.g. a directory name)
+     allowed - Boolean indicating whether the leak was permitted
 
   log
       level [CRITICAL | ERROR | WARNING |
@@ -488,6 +496,24 @@ class StructuredLogger(object):
                 Boolean("allowed", optional=True, default=False))
     def lsan_summary(self, data):
         self._log_data("lsan_summary", data)
+
+    @log_action(Unicode("process"),
+                Int("bytes"),
+                Unicode("name"),
+                Unicode("scope", optional=True, default=None),
+                Boolean("allowed", optional=True, default=False))
+    def mozleak_object(self, data):
+        self._log_data("mozleak_object", data)
+
+    @log_action(Unicode("process"),
+                Nullable(Int, "bytes"),
+                Int("threshold"),
+                List(Unicode, "objects"),
+                Unicode("scope", optional=True, default=None),
+                Boolean("induced_crash", optional=True, default=False),
+                Boolean("ignore_missing", optional=True, default=False))
+    def mozleak_total(self, data):
+        self._log_data("mozleak_total", data)
 
     @log_action()
     def shutdown(self, data):
