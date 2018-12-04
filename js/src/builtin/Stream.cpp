@@ -385,12 +385,10 @@ class TeeState : public NativeObject {
         &getFixedSlot(Slot_Branch1)
              .toObject()
              .as<ReadableStreamDefaultController>();
-    MOZ_ASSERT(controller->flags() & ReadableStreamController::Flag_TeeBranch);
     MOZ_ASSERT(controller->isTeeBranch1());
     return controller;
   }
   void setBranch1(ReadableStreamDefaultController* controller) {
-    MOZ_ASSERT(controller->flags() & ReadableStreamController::Flag_TeeBranch);
     MOZ_ASSERT(controller->isTeeBranch1());
     setFixedSlot(Slot_Branch1, ObjectValue(*controller));
   }
@@ -400,12 +398,10 @@ class TeeState : public NativeObject {
         &getFixedSlot(Slot_Branch2)
              .toObject()
              .as<ReadableStreamDefaultController>();
-    MOZ_ASSERT(controller->flags() & ReadableStreamController::Flag_TeeBranch);
     MOZ_ASSERT(controller->isTeeBranch2());
     return controller;
   }
   void setBranch2(ReadableStreamDefaultController* controller) {
-    MOZ_ASSERT(controller->flags() & ReadableStreamController::Flag_TeeBranch);
     MOZ_ASSERT(controller->isTeeBranch2());
     setFixedSlot(Slot_Branch2, ObjectValue(*controller));
   }
