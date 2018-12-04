@@ -9,19 +9,21 @@
 #define kCharsetUninitialized 0
 #define kCharsetFromFallback 1
 #define kCharsetFromTopLevelDomain 2
-#define kCharsetFromDocTypeDefault 3  // This and up confident for XHR
-#define kCharsetFromCache 4
-#define kCharsetFromParentFrame 5
-#define kCharsetFromAutoDetection 6
-#define kCharsetFromHintPrevDoc 7
-#define kCharsetFromMetaPrescan 8  // this one and smaller: HTML5 Tentative
-#define kCharsetFromMetaTag 9      // this one and greater: HTML5 Confident
-#define kCharsetFromIrreversibleAutoDetection 10
-#define kCharsetFromChannel 11
-#define kCharsetFromOtherComponent 12
-#define kCharsetFromParentForced 13  // propagates to child frames
-#define kCharsetFromUserForced 14    // propagates to child frames
-#define kCharsetFromByteOrderMark 15
-#define kCharsetFromUtf8OnlyMime 16  // For JSON, WebVTT and such
+#define kCharsetFromFileURLGuess 3
+#define kCharsetFromDocTypeDefault 4  // This and up confident for XHR
+#define kCharsetFromCache 5
+#define kCharsetFromParentFrame 6
+#define kCharsetFromAutoDetection 7
+#define kCharsetFromHintPrevDoc 8
+#define kCharsetFromMetaPrescan 9  // this one and smaller: HTML5 Tentative
+#define kCharsetFromMetaTag 10     // this one and greater: HTML5 Confident
+#define kCharsetFromIrreversibleAutoDetection 11
+#define kCharsetFromChannel 12
+#define kCharsetFromOtherComponent 13
+#define kCharsetFromParentForced 14  // propagates to child frames
+#define kCharsetFromUserForced 15    // propagates to child frames
+#define kCharsetFromByteOrderMark 16
+#define kCharsetFromUtf8OnlyMime 17  // For JSON, WebVTT and such
+#define kCharsetFromBuiltIn 18       // resource: URLs
 
 #endif /* nsCharsetSource_h_ */
