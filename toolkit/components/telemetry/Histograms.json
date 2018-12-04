@@ -1016,14 +1016,15 @@
   },
   "MEMORY_TOTAL": {
     "record_in_processes": ["main"],
-    "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1198209],
+    "alert_emails": ["memshrink-telemetry-alerts@mozilla.com", "erahm@mozilla.com"],
+    "bug_numbers": [1198209, 1511918],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 32768,
     "high": 16777216,
     "n_buckets": 100,
-    "description": "Total Memory Across All Processes (KB)"
+    "description": "Total Memory Across All Processes (KB)",
+    "releaseChannelCollection": "opt-out"
   },
   "MEMORY_DISTRIBUTION_AMONG_CONTENT": {
     "record_in_processes": ["main"],
