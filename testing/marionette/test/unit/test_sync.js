@@ -8,9 +8,52 @@ const {
   PollPromise,
   Sleep,
   TimedPromise,
+  waitForEvent,
 } = ChromeUtils.import("chrome://marionette/content/sync.js", {});
 
 const DEFAULT_TIMEOUT = 2000;
+
+/**
+ * Mimic a DOM node for listening for events.
+ */
+class MockElement {
+  constructor() {
+    this.capture = false;
+    this.func = null;
+    this.eventName = null;
+    this.untrusted = false;
+  }
+
+  addEventListener(name, func, capture, untrusted) {
+    this.eventName = name;
+    this.func = func;
+    if (capture != null) {
+      this.capture = capture;
+    }
+    if (untrusted != null) {
+      this.untrusted = untrusted;
+    }
+  }
+
+  click() {
+    if (this.func) {
+      let details = {
+        capture: this.capture,
+        target: this,
+        type: this.eventName,
+        untrusted: this.untrusted,
+      };
+      this.func(details);
+    }
+  }
+
+  removeEventListener(name, func) {
+    this.capture = false;
+    this.func = null;
+    this.eventName = null;
+    this.untrusted = false;
+  }
+}
 
 /**
  * Mimics nsITimer, but instead of using a system clock you can
@@ -229,4 +272,84 @@ add_task(async function test_DebounceCallback_repeatedCallback() {
 
   equal(ncalls, 1);
   ok(debouncer.timer.cancelled);
+});
+
+add_task(async function test_waitForEvent_subjectAndEventNameTypes() {
+  let element = new MockElement();
+
+  for (let subject of ["foo", 42, null, undefined, true, [], {}]) {
+    Assert.throws(() => waitForEvent(subject, "click"), /TypeError/);
+  }
+
+  for (let eventName of [42, null, undefined, true, [], {}]) {
+    Assert.throws(() => waitForEvent(element, eventName), /TypeError/);
+  }
+
+  let clicked = waitForEvent(element, "click");
+  element.click();
+  let event = await clicked;
+  equal(element, event.target);
+});
+
+add_task(async function test_waitForEvent_captureTypes() {
+  let element = new MockElement();
+
+  for (let capture of ["foo", 42, [], {}]) {
+    Assert.throws(() => waitForEvent(
+        element, "click", {capture}), /TypeError/);
+  }
+
+  for (let capture of [null, undefined, false, true]) {
+    let expected_capture = (capture == null) ? false : capture;
+
+    element = new MockElement();
+    let clicked = waitForEvent(element, "click", {capture});
+    element.click();
+    let event = await clicked;
+    equal(element, event.target);
+    equal(expected_capture, event.capture);
+  }
+});
+
+add_task(async function test_waitForEvent_checkFnTypes() {
+  let element = new MockElement();
+
+  for (let checkFn of ["foo", 42, true, [], {}]) {
+    Assert.throws(() => waitForEvent(
+        element, "click", {checkFn}), /TypeError/);
+  }
+
+  let count;
+  for (let checkFn of [null, undefined, event => count++ > 0]) {
+    let expected_count = (checkFn == null) ? 0 : 2;
+    count = 0;
+
+    element = new MockElement();
+    let clicked = waitForEvent(element, "click", {checkFn});
+    element.click();
+    element.click();
+    let event = await clicked;
+    equal(element, event.target);
+    equal(expected_count, count);
+  }
+});
+
+add_task(async function test_waitForEvent_wantsUntrustedTypes() {
+  let element = new MockElement();
+
+  for (let wantsUntrusted of ["foo", 42, [], {}]) {
+    Assert.throws(() => waitForEvent(
+        element, "click", {wantsUntrusted}), /TypeError/);
+  }
+
+  for (let wantsUntrusted of [null, undefined, false, true]) {
+    let expected_untrusted = (wantsUntrusted == null) ? false : wantsUntrusted;
+
+    element = new MockElement();
+    let clicked = waitForEvent(element, "click", {wantsUntrusted});
+    element.click();
+    let event = await clicked;
+    equal(element, event.target);
+    equal(expected_untrusted, event.untrusted);
+  }
 });
