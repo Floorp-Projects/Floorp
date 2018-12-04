@@ -1844,33 +1844,6 @@ static MOZ_ALWAYS_INLINE bool SetObjectElementOperation(
 }
 
 /*
- * Get the innermost enclosing function that has a 'this' binding.
- *
- * Implements ES6 12.3.5.2 GetSuperConstructor() steps 1-3, including
- * the loop in ES6 8.3.2 GetThisEnvironment(). Our implementation of
- * ES6 12.3.5.3 MakeSuperPropertyReference() also uses this code.
- */
-static JSFunction& GetSuperEnvFunction(JSContext* cx, InterpreterRegs& regs) {
-  JSObject* env = regs.fp()->environmentChain();
-  Scope* scope = regs.fp()->script()->innermostScope(regs.pc);
-  for (EnvironmentIter ei(cx, env, scope); ei; ei++) {
-    if (ei.hasSyntacticEnvironment() && ei.scope().is<FunctionScope>()) {
-      JSFunction& callee = ei.environment().as<CallObject>().callee();
-
-      // Arrow functions don't have the information we're looking for,
-      // their enclosing scopes do. Nevertheless, they might have call
-      // objects. Skip them to find what we came for.
-      if (callee.isArrow()) {
-        continue;
-      }
-
-      return callee;
-    }
-  }
-  MOZ_CRASH("unexpected env chain for GetSuperEnvFunction");
-}
-
-/*
  * As an optimization, the interpreter creates a handful of reserved Rooted<T>
  * variables at the beginning, thus inserting them into the Rooted list once
  * upon entry. ReservedRooted "borrows" a reserved Rooted variable and uses it
@@ -2244,7 +2217,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(JSOP_NOP_DESTRUCTURING)
     CASE(JSOP_TRY_DESTRUCTURING_ITERCLOSE)
     CASE(JSOP_UNUSED151)
-    CASE(JSOP_UNUSED206)
     CASE(JSOP_CONDSWITCH) {
       MOZ_ASSERT(CodeSpec[*REGS.pc].length == 1);
       ADVANCE_AND_DISPATCH(1);
@@ -4519,20 +4491,19 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(JSOP_INITHOMEOBJECT)
 
     CASE(JSOP_SUPERBASE) {
-      JSFunction& superEnvFunc = GetSuperEnvFunction(cx, REGS);
+      JSFunction& superEnvFunc = REGS.sp[-1].toObject().as<JSFunction>();
       MOZ_ASSERT(superEnvFunc.allowSuperProperty());
       MOZ_ASSERT(superEnvFunc.nonLazyScript()->needsHomeObject());
       const Value& homeObjVal = superEnvFunc.getExtendedSlot(
           FunctionExtended::METHOD_HOMEOBJECT_SLOT);
 
       ReservedRooted<JSObject*> homeObj(&rootObject0, &homeObjVal.toObject());
-      ReservedRooted<JSObject*> superBase(&rootObject1);
-      superBase = HomeObjectSuperBase(cx, homeObj);
+      JSObject* superBase = HomeObjectSuperBase(cx, homeObj);
       if (!superBase) {
         goto error;
       }
 
-      PUSH_OBJECT(*superBase);
+      REGS.sp[-1].setObject(*superBase);
     }
     END_CASE(JSOP_SUPERBASE)
 
@@ -4571,16 +4542,25 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(JSOP_DYNAMIC_IMPORT)
 
+    CASE(JSOP_ENVCALLEE) {
+      uint8_t numHops = GET_UINT8(REGS.pc);
+      JSObject* env = &REGS.fp()->environmentChain()->as<EnvironmentObject>();
+      for (unsigned i = 0; i < numHops; i++) {
+        env = &env->as<EnvironmentObject>().enclosingEnvironment();
+      }
+      PUSH_OBJECT(env->as<CallObject>().callee());
+    }
+    END_CASE(JSOP_ENVCALLEE)
+
     CASE(JSOP_SUPERFUN) {
       ReservedRooted<JSObject*> superEnvFunc(&rootObject0,
-                                             &GetSuperEnvFunction(cx, REGS));
-      ReservedRooted<JSObject*> superFun(&rootObject1);
-      superFun = SuperFunOperation(cx, superEnvFunc);
+                                             &REGS.sp[-1].toObject());
+      JSObject* superFun = SuperFunOperation(cx, superEnvFunc);
       if (!superFun) {
         goto error;
       }
 
-      PUSH_OBJECT(*superFun);
+      REGS.sp[-1].setObject(*superFun);
     }
     END_CASE(JSOP_SUPERFUN)
 

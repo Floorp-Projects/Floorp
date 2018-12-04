@@ -1051,15 +1051,15 @@
      */ \
     MACRO(JSOP_NEWARRAY_COPYONWRITE, 102, "newarray_copyonwrite", NULL, 5, 0, 1, JOF_OBJECT) \
     /*
-     * Pushes the prototype of the home object for current callee onto the
+     * Pushes the prototype of the home object for |callee| onto the
      * stack.
      *
      *   Category: Variables and Scopes
      *   Type: Super
      *   Operands:
-     *   Stack: => homeObjectProto
+     *   Stack: callee => homeObjectProto
      */ \
-    MACRO(JSOP_SUPERBASE, 103, "superbase", NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(JSOP_SUPERBASE, 103, "superbase", NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Pops the top two values, and pushes the property of one, using the other
      * as the receiver.
@@ -1777,14 +1777,15 @@
      */ \
     MACRO(JSOP_CHECKOBJCOERCIBLE, 163, "checkobjcoercible", NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Find the function to invoke with |super()| on the environment chain.
+     * Push the function to invoke with |super()|. This is the prototype of the
+     * function passed in as |callee|.
      *
      *   Category: Variables and Scopes
      *   Type: Super
      *   Operands:
-     *   Stack: => superFun
+     *   Stack: callee => superFun
      */ \
-    MACRO(JSOP_SUPERFUN, 164, "superfun", NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(JSOP_SUPERFUN, 164, "superfun", NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Behaves exactly like JSOP_NEW, but allows JITs to distinguish the two
      * cases.
@@ -2223,8 +2224,16 @@
      */ \
     MACRO(JSOP_RESUME, 205, "resume", NULL, 3, 2, 1, JOF_UINT16|JOF_INVOKE) \
     /*
+     * Load the callee stored in a CallObject on the environment chain. The
+     * numHops operand is the number of environment objects to skip on the
+     * environment chain.
+     *
+     *   Category: Variables and Scopes
+     *   Type: Arguments
+     *   Operands: uint8_t numHops
+     *   Stack: => callee
      */ \
-    MACRO(JSOP_UNUSED206, 206, "unused206", NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(JSOP_ENVCALLEE, 206, "envcallee", NULL, 2, 0, 1, JOF_UINT8) \
     /*
      * No-op bytecode only emitted in some self-hosted functions. Not handled
      * by the JITs so the script always runs in the interpreter.

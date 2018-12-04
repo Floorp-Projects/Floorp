@@ -51,7 +51,7 @@ bool PropOpEmitter::emitGet(JSAtom* prop) {
     }
   }
   if (isSuper()) {
-    if (!bce_->emit1(JSOP_SUPERBASE)) {
+    if (!bce_->emitSuperBase()) {
       //                [stack] THIS? THIS SUPERBASE
       return false;
     }
@@ -110,7 +110,7 @@ bool PropOpEmitter::prepareForRhs() {
   if (isSimpleAssignment()) {
     // For CompoundAssignment, SUPERBASE is already emitted by emitGet.
     if (isSuper()) {
-      if (!bce_->emit1(JSOP_SUPERBASE)) {
+      if (!bce_->emitSuperBase()) {
         //            [stack] THIS SUPERBASE
         return false;
       }
@@ -142,7 +142,7 @@ bool PropOpEmitter::emitDelete(JSAtom* prop) {
     return false;
   }
   if (isSuper()) {
-    if (!bce_->emit1(JSOP_SUPERBASE)) {
+    if (!bce_->emitSuperBase()) {
       //                [stack] THIS SUPERBASE
       return false;
     }
