@@ -57,9 +57,9 @@
                      value="standard"
                      data-l10n-id="content-blocking-setting-standard"
                      flex="1"/>
-              <button id="standardArrow" class="arrowhead"/>
+              <button id="standardArrow" class="arrowhead default-content-blocking-ui"/>
             </hbox>
-            <vbox class="indent">
+            <vbox class="indent default-content-blocking-ui">
               <description data-l10n-id="content-blocking-standard-desc"></description>
               <vbox class="content-blocking-extra-information">
                 <vbox class="indent">
@@ -73,6 +73,9 @@
                   </hbox>
                 </vbox>
               </vbox>
+            </vbox>
+            <vbox class="indent fallback-content-blocking-ui">
+              <description data-l10n-id="content-blocking-standard-description"/>
             </vbox>
           </vbox>
           <vbox id="contentBlockingOptionStrict" class="content-blocking-category">
