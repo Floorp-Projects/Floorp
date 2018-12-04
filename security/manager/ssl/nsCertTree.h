@@ -9,7 +9,6 @@
 #include "nsIServiceManager.h"
 #include "nsICertTree.h"
 #include "nsITreeView.h"
-#include "nsITreeBoxObject.h"
 #include "nsITreeSelection.h"
 #include "nsIMutableArray.h"
 #include "nsNSSComponent.h"
@@ -18,6 +17,24 @@
 #include "nsIX509CertDB.h"
 #include "nsCertOverrideService.h"
 #include "mozilla/Attributes.h"
+
+/* Disable the "base class XXX should be explicitly initialized
+   in the copy constructor" warning. */
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wextra"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wextra"
+#endif // __clang__ || __GNUC__
+
+#include "mozilla/dom/XULTreeElement.h"
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif // __clang__ || __GNUC__
 
 typedef struct treeArrayElStr treeArrayEl;
 
@@ -116,7 +133,7 @@ class nsCertTree : public nsICertTree {
   static const uint32_t kInitialCacheLength = 64;
 
   nsTArray<RefPtr<nsCertTreeDispInfo> > mDispInfo;
-  nsCOMPtr<nsITreeBoxObject> mTree;
+  RefPtr<mozilla::dom::XULTreeElement> mTree;
   nsCOMPtr<nsITreeSelection> mSelection;
   treeArrayEl *mTreeArray;
   int32_t mNumOrgs;

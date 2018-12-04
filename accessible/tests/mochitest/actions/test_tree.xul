@@ -49,7 +49,7 @@
     {
       var treeNode = getNode("tree");
 
-      var treeBodyNode = treeNode.boxObject.treeBody;
+      var treeBodyNode = treeNode.treeBody;
 
       var tree = getAccessible(treeNode);
       var expandedTreeItem = tree.getChildAt(2);

@@ -7,7 +7,7 @@ interface TreeColumns {
   /**
    * The tree widget for these columns.
    */
-  readonly attribute TreeBoxObject? tree;
+  readonly attribute XULTreeElement? tree;
 
   /**
    * The number of columns.

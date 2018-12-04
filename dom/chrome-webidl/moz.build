@@ -58,7 +58,8 @@ WEBIDL_FILES = [
     'XULFrameElement.webidl',
     'XULMenuElement.webidl',
     'XULScrollElement.webidl',
-    'XULTextElement.webidl'
+    'XULTextElement.webidl',
+    'XULTreeElement.webidl'
 ]
 
 if CONFIG['MOZ_PLACES']:
