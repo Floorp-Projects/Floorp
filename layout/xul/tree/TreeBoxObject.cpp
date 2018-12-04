@@ -362,34 +362,6 @@ void TreeBoxObject::GetCellAt(int32_t x, int32_t y, TreeCellInfo& aRetVal,
             aRetVal.mChildElt);
 }
 
-void TreeBoxObject::GetCellAt(JSContext* cx, int32_t x, int32_t y,
-                              JS::Handle<JSObject*> rowOut,
-                              JS::Handle<JSObject*> colOut,
-                              JS::Handle<JSObject*> childEltOut,
-                              ErrorResult& aRv) {
-  int32_t row;
-  RefPtr<nsTreeColumn> col;
-  nsAutoString childElt;
-  GetCellAt(x, y, &row, getter_AddRefs(col), childElt);
-
-  JS::Rooted<JS::Value> v(cx);
-
-  if (!ToJSValue(cx, row, &v) || !JS_SetProperty(cx, rowOut, "value", v)) {
-    aRv.Throw(NS_ERROR_XPC_CANT_SET_OUT_VAL);
-    return;
-  }
-  if (!dom::WrapObject(cx, col, &v) ||
-      !JS_SetProperty(cx, colOut, "value", v)) {
-    aRv.Throw(NS_ERROR_XPC_CANT_SET_OUT_VAL);
-    return;
-  }
-  if (!ToJSValue(cx, childElt, &v) ||
-      !JS_SetProperty(cx, childEltOut, "value", v)) {
-    aRv.Throw(NS_ERROR_XPC_CANT_SET_OUT_VAL);
-    return;
-  }
-}
-
 NS_IMETHODIMP
 TreeBoxObject::GetCoordsForCellItem(int32_t aRow, nsTreeColumn* aCol,
                                     const nsAString& aElement, int32_t* aX,
@@ -411,35 +383,6 @@ already_AddRefed<DOMRect> TreeBoxObject::GetCoordsForCellItem(
   GetCoordsForCellItem(row, &col, element, &x, &y, &w, &h);
   RefPtr<DOMRect> rect = new DOMRect(mContent, x, y, w, h);
   return rect.forget();
-}
-
-void TreeBoxObject::GetCoordsForCellItem(
-    JSContext* cx, int32_t row, nsTreeColumn& col, const nsAString& element,
-    JS::Handle<JSObject*> xOut, JS::Handle<JSObject*> yOut,
-    JS::Handle<JSObject*> widthOut, JS::Handle<JSObject*> heightOut,
-    ErrorResult& aRv) {
-  int32_t x, y, w, h;
-  GetCoordsForCellItem(row, &col, element, &x, &y, &w, &h);
-  JS::Rooted<JS::Value> v(cx, JS::Int32Value(x));
-  if (!JS_SetProperty(cx, xOut, "value", v)) {
-    aRv.Throw(NS_ERROR_XPC_CANT_SET_OUT_VAL);
-    return;
-  }
-  v.setInt32(y);
-  if (!JS_SetProperty(cx, yOut, "value", v)) {
-    aRv.Throw(NS_ERROR_XPC_CANT_SET_OUT_VAL);
-    return;
-  }
-  v.setInt32(w);
-  if (!JS_SetProperty(cx, widthOut, "value", v)) {
-    aRv.Throw(NS_ERROR_XPC_CANT_SET_OUT_VAL);
-    return;
-  }
-  v.setInt32(h);
-  if (!JS_SetProperty(cx, heightOut, "value", v)) {
-    aRv.Throw(NS_ERROR_XPC_CANT_SET_OUT_VAL);
-    return;
-  }
 }
 
 NS_IMETHODIMP
