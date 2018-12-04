@@ -104,7 +104,8 @@ inline const char* TLTextIdString(TraceLoggerTextId id) {
     case TraceLogger_Error:
       return "TraceLogger failed to process text";
     case TraceLogger_Internal:
-      return "TraceLogger overhead";
+    case TraceLogger_TreeItemEnd:
+      return "TraceLogger internal event";
 #define NAME(textId)         \
   case TraceLogger_##textId: \
     return #textId;

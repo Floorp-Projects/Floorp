@@ -160,7 +160,10 @@ class TimeStamp;
   MACRO(11, "threads", Threads)                                  \
                                                                  \
   /* Have the JavaScript engine track JIT optimizations. */      \
-  MACRO(12, "trackopts", TrackOptimizations)
+  MACRO(12, "trackopts", TrackOptimizations)                     \
+                                                                 \
+  /* Enable tracing of the JavaScript engine. */                 \
+  MACRO(13, "jstracer", JSTracer)
 
 struct ProfilerFeature {
 #define DECLARE(n_, str_, Name_)                                           \
