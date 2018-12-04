@@ -157,7 +157,7 @@
     {
       this.invoke = function setTreeView_invoke()
       {
-        gTreeBox.view = gView;
+        gTree.view = gView;
       }
 
       this.getID = function setTreeView_getID() { return "set tree view"; }
@@ -176,7 +176,7 @@
       this.invoke = function insertRow_invoke()
       {
         gView.appendItem("last");
-        gTreeBox.rowCountChanged(0, 1);
+        gTree.rowCountChanged(0, 1);
       }
 
       this.eventSeq =
@@ -229,7 +229,7 @@
         for (var i = 0; i < gView.rowCount; i++)
           gView.setCellText(i, firstCol, "hey " + String(i) + "x0");
 
-        gTreeBox.invalidateColumn(firstCol);
+        gTree.invalidateColumn(firstCol);
       }
 
       this.eventSeq =
@@ -266,7 +266,7 @@
           column = column.getNext();
         }
 
-        gTreeBox.invalidateRow(1);
+        gTree.invalidateRow(1);
       }
 
       this.eventSeq =
@@ -287,7 +287,6 @@
     // Test
 
     var gTree = null;
-    var gTreeBox = null;
     var gTreeView = null;
     var gQueue = null;
 
@@ -298,7 +297,6 @@
     {
       // Initialize the tree
       gTree = document.getElementById("tree");
-      gTreeBox = gTree.treeBoxObject;
       gView = new nsTableTreeView(5);
 
       // Perform actions

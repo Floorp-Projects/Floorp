@@ -18,8 +18,8 @@ function Tree(aId, aData) {
 }
 
 Tree.prototype = {
-  get boxObject() {
-    return this._tree.treeBoxObject;
+  get tree() {
+    return this._tree;
   },
   get isEmpty() {
     return !this._data.length;
@@ -131,7 +131,7 @@ var gTranslationExceptions = {
         if (!this._sites.length)
           return;
         let removed = this._sites.splice(0, this._sites.length);
-        this._siteTree.boxObject.rowCountChanged(0, -removed.length);
+        this._siteTree.tree.rowCountChanged(0, -removed.length);
       } else {
         let perm = aSubject.QueryInterface(Ci.nsIPermission);
         if (perm.type != kPermissionType)
@@ -142,15 +142,15 @@ var gTranslationExceptions = {
             return;
           this._sites.push(perm.principal.origin);
           this._sites.sort();
-          let boxObject = this._siteTree.boxObject;
-          boxObject.rowCountChanged(0, 1);
-          boxObject.invalidate();
+          let tree = this._siteTree.tree;
+          tree.rowCountChanged(0, 1);
+          tree.invalidate();
         } else if (aData == "deleted") {
           let index = this._sites.indexOf(perm.principal.origin);
           if (index == -1)
             return;
           this._sites.splice(index, 1);
-          this._siteTree.boxObject.rowCountChanged(index, -1);
+          this._siteTree.tree.rowCountChanged(index, -1);
           this.onSiteSelected();
           return;
         }
@@ -160,10 +160,10 @@ var gTranslationExceptions = {
       this._langs = this.getLanguageExceptions();
       let change = this._langs.length - this._langTree.rowCount;
       this._langTree._data = this._langs;
-      let boxObject = this._langTree.boxObject;
+      let tree = this._langTree.tree;
       if (change)
-        boxObject.rowCountChanged(0, change);
-      boxObject.invalidate();
+        tree.rowCountChanged(0, change);
+      tree.invalidate();
       this.onLanguageSelected();
     }
   },
@@ -211,7 +211,7 @@ var gTranslationExceptions = {
       return;
 
     let removedSites = this._sites.splice(0, this._sites.length);
-    this._siteTree.boxObject.rowCountChanged(0, -removedSites.length);
+    this._siteTree.tree.rowCountChanged(0, -removedSites.length);
 
     for (let origin of removedSites) {
       let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);

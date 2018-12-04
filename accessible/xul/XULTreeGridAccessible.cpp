@@ -199,7 +199,7 @@ already_AddRefed<Accessible> XULTreeGridAccessible::CreateTreeItemAccessible(
 
 XULTreeGridRowAccessible::XULTreeGridRowAccessible(
     nsIContent* aContent, DocAccessible* aDoc, Accessible* aTreeAcc,
-    nsITreeBoxObject* aTree, nsITreeView* aTreeView, int32_t aRow)
+    dom::XULTreeElement* aTree, nsITreeView* aTreeView, int32_t aRow)
     : XULTreeItemAccessibleBase(aContent, aDoc, aTreeAcc, aTree, aTreeView,
                                 aRow),
       mAccessibleCache(kDefaultTreeCacheLength) {
@@ -337,7 +337,7 @@ void XULTreeGridRowAccessible::RowInvalidated(int32_t aStartColIdx,
 
 XULTreeGridCellAccessible::XULTreeGridCellAccessible(
     nsIContent* aContent, DocAccessible* aDoc,
-    XULTreeGridRowAccessible* aRowAcc, nsITreeBoxObject* aTree,
+    XULTreeGridRowAccessible* aRowAcc, dom::XULTreeElement* aTree,
     nsITreeView* aTreeView, int32_t aRow, nsTreeColumn* aColumn)
     : LeafAccessible(aContent, aDoc),
       mTree(aTree),

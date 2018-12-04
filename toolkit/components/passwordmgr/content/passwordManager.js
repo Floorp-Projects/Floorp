@@ -49,7 +49,7 @@ let signonReloadDisplay = {
           if (filterField && filterField.value != "") {
             FilterPasswords();
           }
-          signonsTree.treeBoxObject.ensureRowIsVisible(signonsTree.view.selection.currentIndex);
+          signonsTree.ensureRowIsVisible(signonsTree.view.selection.currentIndex);
           break;
       }
       Services.obs.notifyObservers(null, "passwordmgr-dialog-updated");
@@ -191,7 +191,7 @@ let signonsTreeView = {
       table[row][field] = value;
       table[row].timePasswordChanged = Date.now();
       Services.logins.modifyLogin(existingLogin, table[row]);
-      signonsTree.treeBoxObject.invalidateRow(row);
+      signonsTree.invalidateRow(row);
     }
 
     if (col.id == "userCol") {
@@ -264,9 +264,9 @@ function SortTree(column, ascending) {
   }
 
   // display the results
-  signonsTree.treeBoxObject.invalidate();
+  signonsTree.invalidate();
   if (selectedRow >= 0) {
-    signonsTree.treeBoxObject.ensureRowIsVisible(selectedRow);
+    signonsTree.ensureRowIsVisible(selectedRow);
   }
 }
 
@@ -358,7 +358,7 @@ function DeleteSignon() {
       }
       table.splice(j, k - j);
       view.rowCount -= k - j;
-      tree.treeBoxObject.rowCountChanged(j, j - k);
+      tree.rowCountChanged(j, j - k);
     }
   }
 
@@ -402,9 +402,8 @@ function DeleteAllSignons() {
   // update the tree view and notify the tree
   view.rowCount = 0;
 
-  let box = signonsTree.treeBoxObject;
-  box.rowCountChanged(0, -deletedSignons.length);
-  box.invalidate();
+  signonsTree.rowCountChanged(0, -deletedSignons.length);
+  signonsTree.invalidate();
 
   // disable buttons
   removeButton.setAttribute("disabled", "true");
@@ -516,7 +515,7 @@ function SignonClearFilter() {
 
   // Clear the Tree Display
   signonsTreeView.rowCount = 0;
-  signonsTree.treeBoxObject.rowCountChanged(0, -signonsTreeView._filterSet.length);
+  signonsTree.rowCountChanged(0, -signonsTreeView._filterSet.length);
   signonsTreeView._filterSet = [];
 
   // Just reload the list to make sure deletions are respected
@@ -595,10 +594,10 @@ function FilterPasswords() {
   // Clear the display
   let oldRowCount = signonsTreeView.rowCount;
   signonsTreeView.rowCount = 0;
-  signonsTree.treeBoxObject.rowCountChanged(0, -oldRowCount);
+  signonsTree.rowCountChanged(0, -oldRowCount);
   // Set up the filtered display
   signonsTreeView.rowCount = signonsTreeView._filterSet.length;
-  signonsTree.treeBoxObject.rowCountChanged(0, signonsTreeView.rowCount);
+  signonsTree.rowCountChanged(0, signonsTreeView.rowCount);
 
   // if the view is not empty then select the first item
   if (signonsTreeView.rowCount > 0)

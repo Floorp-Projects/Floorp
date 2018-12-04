@@ -8,7 +8,6 @@ with Files('**'):
     BUG_COMPONENT = ('Core', 'XUL')
 
 XPIDL_SOURCES += [
-    'nsITreeBoxObject.idl',
     'nsITreeSelection.idl',
     'nsITreeView.idl',
 ]
@@ -21,10 +20,6 @@ EXPORTS += [
     'nsTreeUtils.h',
 ]
 
-EXPORTS.mozilla.dom += [
-    'TreeBoxObject.h'
-]
-
 UNIFIED_SOURCES += [
     'nsTreeBodyFrame.cpp',
     'nsTreeColFrame.cpp',
@@ -34,7 +29,6 @@ UNIFIED_SOURCES += [
     'nsTreeSelection.cpp',
     'nsTreeStyleCache.cpp',
     'nsTreeUtils.cpp',
-    'TreeBoxObject.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'

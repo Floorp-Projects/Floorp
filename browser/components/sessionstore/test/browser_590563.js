@@ -41,11 +41,11 @@ async function middleClickTest(win) {
   is(tree.view.rowCount, 3, "There should be three items");
 
   // click on the first tab item
-  var rect = tree.treeBoxObject.getCoordsForCellItem(1, tree.columns[1], "text");
+  var rect = tree.getCoordsForCellItem(1, tree.columns[1], "text");
   EventUtils.synthesizeMouse(tree.body, rect.x, rect.y, { button: 1 },
                              browser.contentWindow);
   // click on the second tab item
-  rect = tree.treeBoxObject.getCoordsForCellItem(2, tree.columns[1], "text");
+  rect = tree.getCoordsForCellItem(2, tree.columns[1], "text");
   EventUtils.synthesizeMouse(tree.body, rect.x, rect.y, { button: 1 },
                              browser.contentWindow);
 

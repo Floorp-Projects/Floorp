@@ -9,7 +9,6 @@
 #include "nsIServiceManager.h"
 #include "nsICertTree.h"
 #include "nsITreeView.h"
-#include "nsITreeBoxObject.h"
 #include "nsITreeSelection.h"
 #include "nsIMutableArray.h"
 #include "nsNSSComponent.h"
@@ -18,6 +17,7 @@
 #include "nsIX509CertDB.h"
 #include "nsCertOverrideService.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/XULTreeElement.h"
 
 typedef struct treeArrayElStr treeArrayEl;
 
@@ -116,7 +116,7 @@ class nsCertTree : public nsICertTree {
   static const uint32_t kInitialCacheLength = 64;
 
   nsTArray<RefPtr<nsCertTreeDispInfo> > mDispInfo;
-  nsCOMPtr<nsITreeBoxObject> mTree;
+  RefPtr<mozilla::dom::XULTreeElement> mTree;
   nsCOMPtr<nsITreeSelection> mSelection;
   treeArrayEl *mTreeArray;
   int32_t mNumOrgs;

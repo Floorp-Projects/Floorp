@@ -11,7 +11,7 @@ var gTreeUtils = {
     aItems.splice(0, aItems.length);
     var oldCount = aView.rowCount;
     aView._rowCount = 0;
-    aTree.treeBoxObject.rowCountChanged(0, -oldCount);
+    aTree.rowCountChanged(0, -oldCount);
   },
 
   deleteSelectedItems(aTree, aView, aItems, aDeletedItems) {
@@ -37,13 +37,13 @@ var gTreeUtils = {
         aItems.splice(i, j - i);
         nextSelection = j < aView.rowCount ? j - 1 : j - 2;
         aView._rowCount -= j - i;
-        aTree.treeBoxObject.rowCountChanged(i, i - j);
+        aTree.rowCountChanged(i, i - j);
       }
     }
 
     if (aItems.length) {
       selection.select(nextSelection);
-      aTree.treeBoxObject.ensureRowIsVisible(nextSelection);
+      aTree.ensureRowIsVisible(nextSelection);
       aTree.focus();
     }
     selection.selectEventsSuppressed = false;
@@ -65,8 +65,8 @@ var gTreeUtils = {
 
     aTree.view.selection.clearSelection();
     aTree.view.selection.select(0);
-    aTree.treeBoxObject.invalidate();
-    aTree.treeBoxObject.ensureRowIsVisible(0);
+    aTree.invalidate();
+    aTree.ensureRowIsVisible(0);
 
     return ascending;
   },

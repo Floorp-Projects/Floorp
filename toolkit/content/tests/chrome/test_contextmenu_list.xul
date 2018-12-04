@@ -245,7 +245,7 @@ function checkPopup()
       isRoundedX(menurect.left, bodyrect.left + contextMenuOffsetX,
          "tree selection keyboard left");
       isRoundedY(menurect.top, bodyrect.top +
-         tree.treeBoxObject.rowHeight * 3 + contextMenuOffsetY,
+         tree.rowHeight * 3 + contextMenuOffsetY,
          "tree selection keyboard top");
     }
   }
