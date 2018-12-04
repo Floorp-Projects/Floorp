@@ -113,12 +113,12 @@ function checkTreeCoords()
   var tree = $("tree");
   var treechildren = $("treechildren");
   tree.currentIndex = 0;
-  tree.treeBoxObject.scrollToRow(0);
-  synthesizeMouse(treechildren, 10, tree.treeBoxObject.rowHeight + 2, { });
+  tree.scrollToRow(0);
+  synthesizeMouse(treechildren, 10, tree.rowHeight + 2, { });
   is(tree.currentIndex, 1, "tree selection");
 
-  tree.treeBoxObject.scrollToRow(2);
-  synthesizeMouse(treechildren, 10, tree.treeBoxObject.rowHeight + 2, { });
+  tree.scrollToRow(2);
+  synthesizeMouse(treechildren, 10, tree.rowHeight + 2, { });
   is(tree.currentIndex, 3, "tree selection after scroll");
 }
 

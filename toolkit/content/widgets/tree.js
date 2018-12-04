@@ -22,7 +22,7 @@
               !this.parentNode.pageUpOrDownMovesSelection) &&
             !event.shiftKey && !event.metaKey) ||
           this.parentNode.view.selection.single) {
-          var b = this.parentNode.treeBoxObject;
+          var b = this.parentNode;
           var cell = b.getCellAt(event.clientX, event.clientY);
           var view = this.parentNode.view;
 
@@ -65,7 +65,7 @@
         if (event.button != 0) { return; }
         if (this.parentNode.disabled)
           return;
-        var b = this.parentNode.treeBoxObject;
+        var b = this.parentNode;
         var cell = b.getCellAt(event.clientX, event.clientY);
         var view = this.parentNode.view;
 
@@ -126,14 +126,14 @@
       this.addEventListener("dblclick", (event) => {
         if (this.parentNode.disabled)
           return;
-        var tbo = this.parentNode.treeBoxObject;
+        var tree = this.parentNode;
         var view = this.parentNode.view;
         var row = view.selection.currentIndex;
 
         if (row == -1)
           return;
 
-        var cell = tbo.getCellAt(event.clientX, event.clientY);
+        var cell = tree.getCellAt(event.clientX, event.clientY);
 
         if (cell.childElt != "twisty") {
           this.parentNode.startEditing(row, cell.col);
@@ -316,12 +316,12 @@
         col.mTargetCol.removeAttribute("insertbefore");
         col.mTargetCol.removeAttribute("insertafter");
         column = tree.columns.getColumnFor(col.mTargetCol);
-        tree.treeBoxObject.invalidateColumn(column);
+        tree.invalidateColumn(column);
         sib = col.mTargetCol._previousVisibleColumn;
         if (sib) {
           sib.removeAttribute("insertafter");
           column = tree.columns.getColumnFor(sib);
-          tree.treeBoxObject.invalidateColumn(column);
+          tree.invalidateColumn(column);
         }
         col.mTargetCol = null;
         col.mTargetDir = null;
@@ -337,11 +337,11 @@
           if (sib) {
             sib.setAttribute("insertafter", "true");
             column = tree.columns.getColumnFor(sib);
-            tree.treeBoxObject.invalidateColumn(column);
+            tree.invalidateColumn(column);
           }
         }
         column = tree.columns.getColumnFor(targetCol);
-        tree.treeBoxObject.invalidateColumn(column);
+        tree.invalidateColumn(column);
         col.mTargetCol = targetCol;
         col.mTargetDir = pos.value;
       }
@@ -381,7 +381,7 @@
           }
 
           // repaint to remove lines
-          col.parentNode.parentNode.treeBoxObject.invalidate();
+          col.parentNode.parentNode.invalidate();
 
           col.mTargetCol = null;
         }

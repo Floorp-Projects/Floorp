@@ -136,15 +136,13 @@
 #ifdef MOZ_XUL
 #include "nsMenuFrame.h"
 #include "nsTreeBodyFrame.h"
-#include "nsIBoxObject.h"
-#include "nsITreeBoxObject.h"
+#include "XULTreeElement.h"
 #include "nsMenuPopupFrame.h"
 #include "nsTreeColumns.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsXULElement.h"
-#include "mozilla/dom/BoxObject.h"
 #endif  // MOZ_XUL
 
 #include "mozilla/layers/CompositorBridgeChild.h"
@@ -7977,41 +7975,37 @@ void PresShell::GetCurrentItemAndPositionForElement(
     int32_t currentIndex;
     multiSelect->GetCurrentIndex(&currentIndex);
     if (currentIndex >= 0) {
-      RefPtr<nsXULElement> xulElement = nsXULElement::FromNode(focusedContent);
-      if (xulElement) {
-        nsCOMPtr<nsIBoxObject> box = xulElement->GetBoxObject(IgnoreErrors());
-        nsCOMPtr<nsITreeBoxObject> treeBox(do_QueryInterface(box));
-        // Tree view special case (tree items have no frames)
-        // Get the focused row and add its coordinates, which are already in
-        // pixels
-        // XXX Boris, should we create a new interface so that this doesn't
-        // need to know about trees? Something like nsINodelessChildCreator
-        // which could provide the current focus coordinates?
-        if (treeBox) {
-          treeBox->EnsureRowIsVisible(currentIndex);
-          int32_t firstVisibleRow, rowHeight;
-          treeBox->GetFirstVisibleRow(&firstVisibleRow);
-          treeBox->GetRowHeight(&rowHeight);
+      RefPtr<XULTreeElement> tree = XULTreeElement::FromNode(focusedContent);
+      // Tree view special case (tree items have no frames)
+      // Get the focused row and add its coordinates, which are already in
+      // pixels
+      // XXX Boris, should we create a new interface so that this doesn't
+      // need to know about trees? Something like nsINodelessChildCreator
+      // which could provide the current focus coordinates?
+      if (tree) {
+        tree->EnsureRowIsVisible(currentIndex);
+        int32_t firstVisibleRow, rowHeight;
+        tree->GetFirstVisibleRow(&firstVisibleRow);
+        tree->GetRowHeight(&rowHeight);
 
-          extraTreeY += nsPresContext::CSSPixelsToAppUnits(
-              (currentIndex - firstVisibleRow + 1) * rowHeight);
-          istree = true;
+        extraTreeY += nsPresContext::CSSPixelsToAppUnits(
+            (currentIndex - firstVisibleRow + 1) * rowHeight);
+        istree = true;
 
-          RefPtr<nsTreeColumns> cols;
-          treeBox->GetColumns(getter_AddRefs(cols));
-          if (cols) {
-            nsTreeColumn* col = cols->GetFirstColumn();
-            if (col) {
-              RefPtr<Element> colElement = col->Element();
-              nsIFrame* frame = colElement->GetPrimaryFrame();
-              if (frame) {
-                extraTreeY += frame->GetSize().height;
-              }
+        RefPtr<nsTreeColumns> cols;
+        tree->GetColumns(getter_AddRefs(cols));
+        if (cols) {
+          nsTreeColumn* col = cols->GetFirstColumn();
+          if (col) {
+            RefPtr<Element> colElement = col->Element();
+            nsIFrame* frame = colElement->GetPrimaryFrame();
+            if (frame) {
+              extraTreeY += frame->GetSize().height;
             }
           }
-        } else {
-          multiSelect->GetCurrentItem(getter_AddRefs(item));
         }
+      } else {
+        multiSelect->GetCurrentItem(getter_AddRefs(item));
       }
     }
   } else {

@@ -267,13 +267,13 @@
 #ifdef MOZ_XUL
 #include "mozilla/dom/XULBroadcastManager.h"
 #include "mozilla/dom/XULPersist.h"
-#include "mozilla/dom/TreeBoxObject.h"
 #include "nsIXULWindow.h"
 #include "nsXULCommandDispatcher.h"
 #include "nsXULPopupManager.h"
 #include "nsIDocShellTreeOwner.h"
 #endif
 #include "nsIPresShellInlines.h"
+#include "mozilla/dom/BoxObject.h"
 
 #include "mozilla/DocLoadingTimelineMarker.h"
 
@@ -5892,21 +5892,7 @@ already_AddRefed<BoxObject> Document::GetBoxObjectFor(Element* aElement,
     return boxObject.forget();
   }
 
-  int32_t namespaceID;
-  RefPtr<nsAtom> tag = BindingManager()->ResolveTag(aElement, &namespaceID);
-#ifdef MOZ_XUL
-  if (namespaceID == kNameSpaceID_XUL) {
-    if (tag == nsGkAtoms::tree) {
-      boxObject = new TreeBoxObject();
-    } else {
-      boxObject = new BoxObject();
-    }
-  } else
-#endif  // MOZ_XUL
-  {
-    boxObject = new BoxObject();
-  }
-
+  boxObject = new BoxObject();
   boxObject->Init(aElement);
   entry.OrInsert([&boxObject]() { return boxObject; });
 

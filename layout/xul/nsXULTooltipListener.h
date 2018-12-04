@@ -12,7 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #ifdef MOZ_XUL
-#include "nsITreeBoxObject.h"
+#include "XULTreeElement.h"
 #endif
 #include "nsIWeakReferenceUtils.h"
 #include "mozilla/Attributes.h"
@@ -53,7 +53,7 @@ class nsXULTooltipListener final : public nsIDOMEventListener {
 
 #ifdef MOZ_XUL
   void CheckTreeBodyMove(mozilla::dom::MouseEvent* aMouseEvent);
-  nsresult GetSourceTreeBoxObject(nsITreeBoxObject** aBoxObject);
+  mozilla::dom::XULTreeElement* GetSourceTree();
 #endif
 
   nsresult ShowTooltip();

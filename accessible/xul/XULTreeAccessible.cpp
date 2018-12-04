@@ -48,7 +48,7 @@ XULTreeAccessible::XULTreeAccessible(nsIContent* aContent, DocAccessible* aDoc,
   nsCOMPtr<nsITreeView> view = aTreeFrame->GetExistingView();
   mTreeView = view;
 
-  mTree = nsCoreUtils::GetTreeBoxObject(aContent);
+  mTree = nsCoreUtils::GetTree(aContent);
   NS_ASSERTION(mTree, "Can't get mTree!\n");
 
   nsIContent* parentContent = mContent->GetParent();
@@ -587,7 +587,7 @@ already_AddRefed<Accessible> XULTreeAccessible::CreateTreeItemAccessible(
 
 XULTreeItemAccessibleBase::XULTreeItemAccessibleBase(
     nsIContent* aContent, DocAccessible* aDoc, Accessible* aParent,
-    nsITreeBoxObject* aTree, nsITreeView* aTreeView, int32_t aRow)
+    dom::XULTreeElement* aTree, nsITreeView* aTreeView, int32_t aRow)
     : AccessibleWrap(aContent, aDoc),
       mTree(aTree),
       mTreeView(aTreeView),
@@ -906,7 +906,7 @@ void XULTreeItemAccessibleBase::GetCellName(nsTreeColumn* aColumn,
 
 XULTreeItemAccessible::XULTreeItemAccessible(
     nsIContent* aContent, DocAccessible* aDoc, Accessible* aParent,
-    nsITreeBoxObject* aTree, nsITreeView* aTreeView, int32_t aRow)
+    dom::XULTreeElement* aTree, nsITreeView* aTreeView, int32_t aRow)
     : XULTreeItemAccessibleBase(aContent, aDoc, aParent, aTree, aTreeView,
                                 aRow) {
   mStateFlags |= eNoKidsFromDOM;
@@ -987,7 +987,7 @@ Accessible* XULTreeColumAccessible::GetSiblingAtOffset(int32_t aOffset,
 
   if (aError) *aError = NS_OK;  // fail peacefully
 
-  nsCOMPtr<nsITreeBoxObject> tree = nsCoreUtils::GetTreeBoxObject(mContent);
+  RefPtr<dom::XULTreeElement> tree = nsCoreUtils::GetTree(mContent);
   if (tree) {
     nsCOMPtr<nsITreeView> treeView;
     tree->GetView(getter_AddRefs(treeView));
