@@ -68,7 +68,6 @@
 #include "mozilla/intl/LocaleService.h"
 #include "WindowDestroyedEvent.h"
 #include "nsDocShellLoadState.h"
-#include "mozilla/dom/WindowGlobalChild.h"
 
 // Helper Classes
 #include "nsJSUtils.h"
@@ -1962,10 +1961,6 @@ nsresult nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
   if (handleDocumentOpen) {
     newInnerWindow->MigrateStateForDocumentOpen(currentInner);
   }
-
-  // Tell the WindowGlobalParent that it should become the current window global
-  // for our BrowsingContext if it isn't already.
-  mInnerWindow->GetWindowGlobalChild()->SendBecomeCurrentWindowGlobal();
 
   // We no longer need the old inner window.  Start its destruction if
   // its not being reused and clear our reference.

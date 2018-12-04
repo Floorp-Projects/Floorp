@@ -921,9 +921,6 @@ class nsDocShell final : public nsDocLoader,
   nsCOMPtr<nsICommandManager> mCommandManager;
   RefPtr<mozilla::dom::BrowsingContext> mBrowsingContext;
 
-  // Weak reference to our TabChild actor.
-  nsWeakPtr mTabChild;
-
   // Dimensions of the docshell
   nsIntRect mBounds;
 
