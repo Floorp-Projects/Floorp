@@ -7897,7 +7897,7 @@ void PresShell::GetCurrentItemAndPositionForElement(
   // lists or just underneath the selected item for single-select lists. If
   // the element is not a list, or there is no selection, leave the position
   // as is.
-  nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
+  nsCOMPtr<Element> item;
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
       do_QueryInterface(aFocusedElement);
   if (multiSelect) {
@@ -7957,7 +7957,9 @@ void PresShell::GetCurrentItemAndPositionForElement(
     }
   }
 
-  if (item) focusedContent = do_QueryInterface(item);
+  if (item) {
+    focusedContent = item;
+  }
 #endif
 
   nsIFrame* frame = focusedContent->GetPrimaryFrame();
