@@ -2955,6 +2955,13 @@ uint64_t NextWindowID() {
   MOZ_RELEASE_ASSERT(windowID < (uint64_t(1) << kWindowIDWindowBits));
   uint64_t windowBits = windowID & ((uint64_t(1) << kWindowIDWindowBits) - 1);
 
+  // Make sure that the middleman process doesn't generate WindowIDs which
+  // conflict with the process it's wrapping (which shares a ContentParentID
+  // with it).
+  if (recordreplay::IsMiddleman()) {
+    windowBits |= uint64_t(1) << (kWindowIDWindowBits - 1);
+  }
+
   return (processBits << kWindowIDWindowBits) | windowBits;
 }
 

@@ -438,11 +438,12 @@ class IToplevelProtocol : public IProtocol {
     MessageChannel* GetIPCChannel() override;
 
    private:
+    int32_t NextId();
+
     IToplevelProtocol* const mProtocol;
+    int32_t mLastLocalId;
     IDMap<IProtocol*> mActorMap;
-    int32_t mLastRouteId;
     IDMap<Shmem::SharedMemory*> mShmemMap;
-    Shmem::id_t mLastShmemId;
 
     Mutex mEventTargetMutex;
     IDMap<nsCOMPtr<nsIEventTarget>> mEventTargetMap;
