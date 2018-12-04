@@ -1,9 +1,12 @@
-FROM          ubuntu:16.04
+# The base image is a last known working snapshot of this image. We do this
+# to work around problems rebuilding desktop1604-test. See bug 1503756 for
+# the ugly details. Bug 1511527 tracks undoing this hack and building from
+# a fresh ubuntu image.
+FROM          taskcluster/ubuntu1604-test:bug1503756
 MAINTAINER    Joel Maher <joel.maher@gmail.com>
 
-
-RUN mkdir /builds
-RUN useradd -d /builds/worker -s /bin/bash -m worker
+RUN mkdir -p /builds
+RUN id worker || useradd -d /builds/worker -s /bin/bash -m worker
 WORKDIR /builds/worker
 
 # We need to declare all potentially cache volumes as caches. Also,
@@ -73,7 +76,7 @@ RUN            chmod +x bin/*
 # allow the worker user to access video devices
 RUN usermod -a -G video worker
 
-RUN mkdir Documents; mkdir Pictures; mkdir Music; mkdir Videos; mkdir artifacts
+RUN mkdir -p Documents Pictures Music Videos artifacts
 
 ENV PATH $PATH:/builds/worker/bin
 
