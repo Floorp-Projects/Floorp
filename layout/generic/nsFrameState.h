@@ -67,6 +67,7 @@ namespace mozilla {
 #ifdef DEBUG
 nsCString GetFrameState(nsIFrame* aFrame);
 void PrintFrameState(nsIFrame* aFrame);
+void DebugVerifyFrameStateBits();
 #endif
 }  // namespace mozilla
 

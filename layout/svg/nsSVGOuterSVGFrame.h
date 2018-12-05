@@ -176,7 +176,7 @@ class nsSVGOuterSVGFrame final : public nsSVGDisplayContainerFrame,
   // A hash-set containing our nsSVGForeignObjectFrame descendants. Note we use
   // a hash-set to avoid the O(N^2) behavior we'd get tearing down an SVG frame
   // subtree if we were to use a list (see bug 381285 comment 20).
-  nsAutoPtr<nsTHashtable<nsPtrHashKey<nsSVGForeignObjectFrame> > >
+  nsAutoPtr<nsTHashtable<nsPtrHashKey<nsSVGForeignObjectFrame>>>
       mForeignObjectHash;
 
   nsRegion mInvalidRegion;

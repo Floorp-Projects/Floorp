@@ -2206,17 +2206,16 @@ static void ConstrainToCoordValues(gfxFloat& aStart, gfxFloat& aSize) {
 }
 
 nsRect nsLayoutUtils::RoundGfxRectToAppRect(const Rect& aRect, float aFactor) {
-  /* Get a new Rect whose units are app units by scaling by the specified
-   * factor. */
+  // Get a new Rect whose units are app units by scaling by the specified
+  // factor.
   Rect scaledRect = aRect;
   scaledRect.ScaleRoundOut(aFactor);
 
-  /* We now need to constrain our results to the max and min values for coords.
-   */
+  // We now need to constrain our results to the max and min values for coords.
   ConstrainToCoordValues(scaledRect.x, scaledRect.width);
   ConstrainToCoordValues(scaledRect.y, scaledRect.height);
 
-  /* Now typecast everything back.  This is guaranteed to be safe. */
+  // Now typecast everything back.  This is guaranteed to be safe.
   if (aRect.IsEmpty()) {
     return nsRect(nscoord(scaledRect.X()), nscoord(scaledRect.Y()), 0, 0);
   } else {
@@ -2227,17 +2226,16 @@ nsRect nsLayoutUtils::RoundGfxRectToAppRect(const Rect& aRect, float aFactor) {
 
 nsRect nsLayoutUtils::RoundGfxRectToAppRect(const gfxRect& aRect,
                                             float aFactor) {
-  /* Get a new gfxRect whose units are app units by scaling by the specified
-   * factor. */
+  // Get a new gfxRect whose units are app units by scaling by the specified
+  // factor.
   gfxRect scaledRect = aRect;
   scaledRect.ScaleRoundOut(aFactor);
 
-  /* We now need to constrain our results to the max and min values for coords.
-   */
+  // We now need to constrain our results to the max and min values for coords.
   ConstrainToCoordValues(scaledRect.x, scaledRect.width);
   ConstrainToCoordValues(scaledRect.y, scaledRect.height);
 
-  /* Now typecast everything back.  This is guaranteed to be safe. */
+  // Now typecast everything back.  This is guaranteed to be safe.
   if (aRect.IsEmpty()) {
     return nsRect(nscoord(scaledRect.X()), nscoord(scaledRect.Y()), 0, 0);
   } else {
@@ -6665,10 +6663,10 @@ static ImgDrawResult DrawImageInternal(
 }
 
 /* static */ void nsLayoutUtils::ComputeSizeForDrawing(
-    imgIContainer* aImage, CSSIntSize& aImageSize, /*outparam*/
-    nsSize& aIntrinsicRatio,                       /*outparam*/
-    bool& aGotWidth,                               /*outparam*/
-    bool& aGotHeight /*outparam*/) {
+    imgIContainer* aImage, /* outparam */ CSSIntSize& aImageSize,
+    /* outparam */ nsSize& aIntrinsicRatio,
+    /* outparam */ bool& aGotWidth,
+    /* outparam */ bool& aGotHeight) {
   aGotWidth = NS_SUCCEEDED(aImage->GetWidth(&aImageSize.width));
   aGotHeight = NS_SUCCEEDED(aImage->GetHeight(&aImageSize.height));
   bool gotRatio = NS_SUCCEEDED(aImage->GetIntrinsicRatio(&aIntrinsicRatio));

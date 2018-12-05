@@ -183,8 +183,8 @@ class nsStyleCoord {
   static nscoord ToLength(nsStyleUnit aUnit, nsStyleUnion aValue) {
     MOZ_ASSERT(ConvertsToLength(aUnit, aValue));
     if (IsCalcUnit(aUnit)) {
-      return AsCalcValue(aValue)
-          ->ToLength();  // Note: This asserts !mHasPercent
+      // Note: ToLength asserts !mHasPercent
+      return AsCalcValue(aValue)->ToLength();
     }
     MOZ_ASSERT(aUnit == eStyleUnit_Coord);
     return aValue.mInt;
