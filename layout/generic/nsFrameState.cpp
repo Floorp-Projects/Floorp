@@ -41,7 +41,7 @@ nsCString GetFrameState(nsIFrame* aFrame) {
     return result;
   }
 
-#define FRAME_STATE_GROUP(name_, class_)                                       \
+#define FRAME_STATE_GROUP_CLASS(name_, class_)                                 \
   {                                                                            \
     class_* frame = do_QueryFrame(aFrame);                                     \
     if (frame && (groups.IsEmpty() || strcmp(groups.LastElement(), #name_))) { \
@@ -57,7 +57,7 @@ nsCString GetFrameState(nsIFrame* aFrame) {
     state = state & ~NS_FRAME_STATE_BIT(value_);                          \
   }
 #include "nsFrameStateBits.h"
-#undef FRAME_STATE_GROUP
+#undef FRAME_STATE_GROUP_CLASS
 #undef FRAME_STATE_BIT
 
   if (state) {
