@@ -606,30 +606,27 @@ struct nsStyleImageLayers {
     Size mSize;
     StyleGeometryBox mClip;
     MOZ_INIT_OUTSIDE_CTOR StyleGeometryBox mOrigin;
-    StyleImageLayerAttachment mAttachment;
-    // background-only property
-    // This property is used for background layer
-    // only. For a mask layer, it should always
-    // be the initial value, which is
+
+    // This property is used for background layer only.
+    // For a mask layer, it should always be the initial value, which is
     // StyleImageLayerAttachment::Scroll.
+    StyleImageLayerAttachment mAttachment;
+
+    // This property is used for background layer only.
+    // For a mask layer, it should always be the initial value, which is
+    // NS_STYLE_BLEND_NORMAL.
     uint8_t mBlendMode;  // NS_STYLE_BLEND_*
-                         // background-only property
-                         // This property is used for background layer
-                         // only. For a mask layer, it should always
-                         // be the initial value, which is
-                         // NS_STYLE_BLEND_NORMAL.
+
+    // This property is used for mask layer only.
+    // For a background layer, it should always be the initial value, which is
+    // NS_STYLE_COMPOSITE_MODE_ADD.
     uint8_t mComposite;  // NS_STYLE_MASK_COMPOSITE_*
-                         // mask-only property
-                         // This property is used for mask layer only.
-                         // For a background layer, it should always
-                         // be the initial value, which is
-                         // NS_STYLE_COMPOSITE_MODE_ADD.
-    uint8_t mMaskMode;   // NS_STYLE_MASK_MODE_*
-                         // mask-only property
-                         // This property is used for mask layer only.
-                         // For a background layer, it should always
-                         // be the initial value, which is
-                         // NS_STYLE_MASK_MODE_MATCH_SOURCE.
+
+    // mask-only property. This property is used for mask layer only. For a
+    // background layer, it should always be the initial value, which is
+    // NS_STYLE_MASK_MODE_MATCH_SOURCE.
+    uint8_t mMaskMode;  // NS_STYLE_MASK_MODE_*
+
     Repeat mRepeat;
 
     // This constructor does not initialize mRepeat or mOrigin and Initialize()
@@ -662,9 +659,17 @@ struct nsStyleImageLayers {
 
   // The (positive) number of computed values of each property, since
   // the lengths of the lists are independent.
-  uint32_t mAttachmentCount, mClipCount, mOriginCount, mRepeatCount,
-      mPositionXCount, mPositionYCount, mImageCount, mSizeCount, mMaskModeCount,
-      mBlendModeCount, mCompositeCount;
+  uint32_t mAttachmentCount;
+  uint32_t mClipCount;
+  uint32_t mOriginCount;
+  uint32_t mRepeatCount;
+  uint32_t mPositionXCount;
+  uint32_t mPositionYCount;
+  uint32_t mImageCount;
+  uint32_t mSizeCount;
+  uint32_t mMaskModeCount;
+  uint32_t mBlendModeCount;
+  uint32_t mCompositeCount;
 
   // Layers are stored in an array, matching the top-to-bottom order in
   // which they are specified in CSS.  The number of layers to be used
@@ -1945,15 +1950,17 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   nsStyleCoord mChildPerspective;      // none, coord
   nsStyleCoord mPerspectiveOrigin[2];  // percent, coord, calc
 
-  nsStyleCoord
-      mVerticalAlign;  // coord, percent, calc, enum (NS_STYLE_VERTICAL_ALIGN_*)
+  nsStyleCoord mVerticalAlign;  // coord, percent, calc, enum
+                                // (NS_STYLE_VERTICAL_ALIGN_*)
 
   nsStyleAutoArray<mozilla::StyleTransition> mTransitions;
 
   // The number of elements in mTransitions that are not from repeating
   // a list due to another property being longer.
-  uint32_t mTransitionTimingFunctionCount, mTransitionDurationCount,
-      mTransitionDelayCount, mTransitionPropertyCount;
+  uint32_t mTransitionTimingFunctionCount;
+  uint32_t mTransitionDurationCount;
+  uint32_t mTransitionDelayCount;
+  uint32_t mTransitionPropertyCount;
 
   nsCSSPropertyID GetTransitionProperty(uint32_t aIndex) const {
     return mTransitions[aIndex % mTransitionPropertyCount].GetProperty();
@@ -1980,10 +1987,14 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
 
   // The number of elements in mAnimations that are not from repeating
   // a list due to another property being longer.
-  uint32_t mAnimationTimingFunctionCount, mAnimationDurationCount,
-      mAnimationDelayCount, mAnimationNameCount, mAnimationDirectionCount,
-      mAnimationFillModeCount, mAnimationPlayStateCount,
-      mAnimationIterationCountCount;
+  uint32_t mAnimationTimingFunctionCount;
+  uint32_t mAnimationDurationCount;
+  uint32_t mAnimationDelayCount;
+  uint32_t mAnimationNameCount;
+  uint32_t mAnimationDirectionCount;
+  uint32_t mAnimationFillModeCount;
+  uint32_t mAnimationPlayStateCount;
+  uint32_t mAnimationIterationCountCount;
 
   nsAtom* GetAnimationName(uint32_t aIndex) const {
     return mAnimations[aIndex % mAnimationNameCount].GetName();
