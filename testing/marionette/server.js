@@ -11,6 +11,7 @@ const ServerSocket = CC(
     "nsIServerSocket",
     "initSpecialConnection");
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.import("chrome://marionette/content/assert.js");
@@ -73,7 +74,7 @@ class TCPListener {
    */
   driverFactory() {
     MarionettePrefs.contentListener = false;
-    return new GeckoDriver(this);
+    return new GeckoDriver(Services.appinfo.ID, this);
   }
 
   set acceptConnections(value) {
