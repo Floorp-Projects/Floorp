@@ -931,7 +931,7 @@
       <method name="_notifyBackgroundTab">
         <parameter name="aTab"/>
         <body><![CDATA[
-          if (aTab.pinned || aTab.hidden)
+          if (aTab.pinned || aTab.hidden || this.getAttribute("overflow") != "true")
             return;
 
           var scrollRect = this.arrowScrollbox.scrollClientRect;
