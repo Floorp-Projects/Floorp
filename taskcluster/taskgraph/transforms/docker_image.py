@@ -15,7 +15,6 @@ from .. import GECKO
 from taskgraph.util.docker import (
     generate_context_hash,
 )
-from taskgraph.util.cached_tasks import add_optimization
 from taskgraph.util.schema import (
     Schema,
 )
@@ -80,15 +79,14 @@ def order_image_tasks(config, tasks):
 
 @transforms.add
 def fill_template(config, tasks):
-    available_packages = {}
+    available_packages = set()
     for task in config.kind_dependencies_tasks:
         if task.kind != 'packages':
             continue
         name = task.label.replace('packages-', '')
-        available_packages[name] = task.attributes['cache_digest']
+        available_packages.add(name)
 
     context_hashes = {}
-    image_digests = {}
 
     for task in order_image_tasks(config, tasks):
         image_name = task.pop('name')
@@ -121,9 +119,6 @@ def fill_template(config, tasks):
             context_hash = '0'*40
         digest_data = [context_hash]
         context_hashes[image_name] = context_hash
-
-        if parent:
-            digest_data += [image_digests[parent]]
 
         description = 'Build the docker image {} for use by dependent tasks'.format(
             image_name)
@@ -223,7 +218,6 @@ def fill_template(config, tasks):
             deps = taskdesc.setdefault('dependencies', {})
             for p in sorted(packages):
                 deps[p] = 'packages-{}'.format(p)
-                digest_data.append(available_packages[p])
 
         if parent:
             deps = taskdesc.setdefault('dependencies', {})
@@ -232,17 +226,11 @@ def fill_template(config, tasks):
                 'task-reference': '<{}>'.format(parent),
             }
 
-        if len(digest_data) > 1:
-            kwargs = {'digest_data': digest_data}
-        else:
-            kwargs = {'digest': digest_data[0]}
-        add_optimization(
-            config, taskdesc,
-            cache_type="docker-images.v1",
-            cache_name=image_name,
-            **kwargs
-        )
-
-        image_digests[image_name] = taskdesc['attributes']['cache_digest']
+        if not taskgraph.fast:
+            taskdesc['cache'] = {
+                'type': 'docker-images.v2',
+                'name': image_name,
+                'digest-data': digest_data,
+            }
 
         yield taskdesc

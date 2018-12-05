@@ -68,5 +68,8 @@ def add_optimization(config, taskdesc, cache_type, cache_name, digest=None, dige
         for route in EXTRA_CACHE_INDEXES
     ])
 
-    taskdesc['attributes']['cache_digest'] = digest
-    taskdesc['attributes']['cache_type'] = cache_type
+    taskdesc['attributes']['cached_task'] = {
+        'type': cache_type,
+        'name': cache_name,
+        'digest': digest,
+    }
