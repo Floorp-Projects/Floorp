@@ -18,6 +18,7 @@ const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
 this.EXPORTED_SYMBOLS = [
+  "executeSoon",
   "DebounceCallback",
   "IdlePromise",
   "MessageManagerDestroyedPromise",
@@ -29,6 +30,21 @@ this.EXPORTED_SYMBOLS = [
 const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
 
 const PROMISE_TIMEOUT = AppConstants.DEBUG ? 4500 : 1500;
+
+
+/**
+ * Dispatch a function to be executed on the main thread.
+ *
+ * @param {function} func
+ *     Function to be executed.
+ */
+function executeSoon(func) {
+  if (typeof func != "function") {
+    throw new TypeError();
+  }
+
+  Services.tm.dispatchToMainThread(func);
+}
 
 /**
  * @callback Condition
