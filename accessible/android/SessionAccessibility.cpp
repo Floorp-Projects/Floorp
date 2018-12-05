@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "Accessible-inl.h"
 #include "SessionAccessibility.h"
 #include "AndroidUiThread.h"
 #include "DocAccessibleParent.h"
@@ -371,9 +372,15 @@ void SessionAccessibility::UpdateCachedBounds(
   auto infos = jni::ObjectArray::New<java::GeckoBundle>(aAccessibles.Length());
   for (size_t i = 0; i < aAccessibles.Length(); i++) {
     AccessibleWrap* acc = aAccessibles.ElementAt(i);
+    if (!acc || acc->IsDefunct()) {
+      MOZ_ASSERT_UNREACHABLE("Updated accessible is gone.");
+      continue;
+    }
+
     if (aData.Length() == aAccessibles.Length()) {
       const BatchData& data = aData.ElementAt(i);
-      auto bundle = acc->ToSmallBundle(data.State(), data.Bounds(), data.ActionCount());
+      auto bundle =
+          acc->ToSmallBundle(data.State(), data.Bounds(), data.ActionCount());
       infos->SetElement(i, bundle);
     } else {
       infos->SetElement(i, acc->ToSmallBundle());
