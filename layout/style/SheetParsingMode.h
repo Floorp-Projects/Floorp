@@ -36,17 +36,11 @@ namespace css {
  * these are outright unsafe to expose; in particular, incorrect
  * styling of anonymous box pseudo-elements can violate layout
  * invariants.
- *
- * Agent sheets that do not use any unsafe rules could use
- * eSafeAgentSheetFeatures when creating the sheet. This enum value allows
- * Servo backend to recognize the sheets as the agent level, but Gecko
- * backend will parse it under _author_ level.
  */
 enum SheetParsingMode : uint8_t {
   eAuthorSheetFeatures = 0,
   eUserSheetFeatures,
   eAgentSheetFeatures,
-  eSafeAgentSheetFeatures,
 };
 
 }  // namespace css
