@@ -4,14 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/StaticPrefs.h"
+#include "BasicCardPayment.h"
 #include "mozilla/dom/PaymentResponse.h"
 #include "mozilla/dom/BasicCardPaymentBinding.h"
 #include "mozilla/dom/PaymentRequestUpdateEvent.h"
-#include "BasicCardPayment.h"
+#include "mozilla/EventStateManager.h"
+#include "mozilla/StaticPrefs.h"
+#include "nsContentUtils.h"
 #include "PaymentAddress.h"
 #include "PaymentRequestUtils.h"
-#include "mozilla/EventStateManager.h"
 
 namespace mozilla {
 namespace dom {
@@ -256,16 +257,12 @@ already_AddRefed<Promise> PaymentResponse::Retry(
     return promise.forget();
   }
 
-  nsresult rv = ValidatePaymentValidationErrors(aErrors);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    promise->MaybeReject(rv);
-    return promise.forget();
-  }
+  ValidatePaymentValidationErrors(aErrors);
 
   // Depending on the PMI, try to do IDL type conversion
   // (e.g., basic-card expects at BasicCardErrors dictionary)
   nsAutoString errorMsg;
-  rv = ConvertPaymentMethodErrors(aCx, aErrors, errorMsg);
+  nsresult rv = ConvertPaymentMethodErrors(aCx, aErrors, errorMsg);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     MOZ_ASSERT(!errorMsg.IsEmpty());
     ErrorResult error;
@@ -337,78 +334,119 @@ nsresult PaymentResponse::ConvertPaymentMethodErrors(
   return NS_OK;
 }
 
-nsresult PaymentResponse::ValidatePaymentValidationErrors(
+void PaymentResponse::ValidatePaymentValidationErrors(
     const PaymentValidationErrors& aErrors) {
-  // Should not be empty errors
   // check PaymentValidationErrors.error
   if (aErrors.mError.WasPassed() && !aErrors.mError.Value().IsEmpty()) {
-    return NS_OK;
+    return;
   }
+  PaymentOptions options;
+  mRequest->GetOptions(options);
+  nsIDocument* doc = GetOwner()->GetExtantDoc();
   // check PaymentValidationErrors.payer
   if (aErrors.mPayer.WasPassed()) {
     PayerErrors payerErrors(aErrors.mPayer.Value());
     if (payerErrors.mName.WasPassed() && !payerErrors.mName.Value().IsEmpty()) {
-      return NS_OK;
+      if (!options.mRequestPayerName && doc) {
+        const char16_t* params[] = { mRequestId.get() };
+        nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                        NS_LITERAL_CSTRING("DOM::Web Payments"),
+                                        doc,
+                                        nsContentUtils::eDOM_PROPERTIES,
+                                        "PaymentRequestRetryWithNonemptyPayerErrorName",
+                                        params,
+                                        1);
+      }
+      return;
     }
     if (payerErrors.mEmail.WasPassed() &&
         !payerErrors.mEmail.Value().IsEmpty()) {
-      return NS_OK;
+      if (!options.mRequestPayerEmail && doc) {
+        const char16_t* params[] = { mRequestId.get() };
+        nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                        NS_LITERAL_CSTRING("DOM::Web Payments"),
+                                        doc,
+                                        nsContentUtils::eDOM_PROPERTIES,
+                                        "PaymentRequestRetryWithNonemptyPayerErrorEmail",
+                                        params,
+                                        1);
+      }
+      return;
     }
     if (payerErrors.mPhone.WasPassed() &&
         !payerErrors.mPhone.Value().IsEmpty()) {
-      return NS_OK;
+      if (!options.mRequestPayerPhone && doc) {
+        const char16_t* params[] = { mRequestId.get() };
+        nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                        NS_LITERAL_CSTRING("DOM::Web Payments"),
+                                        doc,
+                                        nsContentUtils::eDOM_PROPERTIES,
+                                        "PaymentRequestRetryWithNonemptyPayerErrorPhone",
+                                        params,
+                                        1);
+      }
+      return;
     }
   }
   // check PaymentValidationErrors.paymentMethod
   if (aErrors.mPaymentMethod.WasPassed()) {
-    return NS_OK;
+    return;
   }
   // check PaymentValidationErrors.shippingAddress
   if (aErrors.mShippingAddress.WasPassed()) {
     AddressErrors addErrors(aErrors.mShippingAddress.Value());
     if (addErrors.mAddressLine.WasPassed() &&
         !addErrors.mAddressLine.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mCity.WasPassed() && !addErrors.mCity.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mCountry.WasPassed() &&
         !addErrors.mCountry.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mDependentLocality.WasPassed() &&
         !addErrors.mDependentLocality.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mOrganization.WasPassed() &&
         !addErrors.mOrganization.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mPhone.WasPassed() && !addErrors.mPhone.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mPostalCode.WasPassed() &&
         !addErrors.mPostalCode.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mRecipient.WasPassed() &&
         !addErrors.mRecipient.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mRegion.WasPassed() && !addErrors.mRegion.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mRegionCode.WasPassed() &&
         !addErrors.mRegionCode.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mSortingCode.WasPassed() &&
         !addErrors.mSortingCode.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
   }
-  return NS_ERROR_DOM_ABORT_ERR;
+  if (doc) {
+    const char16_t* params[] = { mRequestId.get() };
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_LITERAL_CSTRING("DOM::Web Payments"),
+                                    doc,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "PaymentRequestRetryWithEmptyErrors",
+                                    params,
+                                    1);
+  }
 }
 
 NS_IMETHODIMP
