@@ -36,6 +36,7 @@ struct BatchData
   uint64_t ID;
   uint64_t State;
   nsIntRect Bounds;
+  uint8_t ActionCount;
   nsString Name;
   nsString TextValue;
   nsString DOMNodeID;
