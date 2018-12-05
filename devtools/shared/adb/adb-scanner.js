@@ -7,7 +7,7 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 const { ADB } = require("devtools/shared/adb/adb");
-const { trackDevices } = require("devtools/shared/adb/commands/index");
+const { TrackDevicesCommand } = require("devtools/shared/adb/commands/index");
 const { adbDevicesRegistry } = require("devtools/shared/adb/adb-devices-registry");
 const { AdbRuntime } = require("devtools/shared/adb/adb-runtime");
 
@@ -17,6 +17,7 @@ class ADBScanner extends EventEmitter {
   constructor() {
     super();
     this._runtimes = [];
+    this._trackDevicesCommand = new TrackDevicesCommand();
 
     this._onDeviceConnected = this._onDeviceConnected.bind(this);
     this._onDeviceDisconnected = this._onDeviceDisconnected.bind(this);
@@ -24,21 +25,21 @@ class ADBScanner extends EventEmitter {
   }
 
   enable() {
-    EventEmitter.on(ADB, "device-connected", this._onDeviceConnected);
-    EventEmitter.on(ADB, "device-disconnected", this._onDeviceDisconnected);
+    this._trackDevicesCommand.on("device-connected", this._onDeviceConnected);
+    this._trackDevicesCommand.on("device-disconnected", this._onDeviceDisconnected);
 
     adbDevicesRegistry.on("register", this._updateRuntimes);
     adbDevicesRegistry.on("unregister", this._updateRuntimes);
 
     ADB.start().then(() => {
-      trackDevices();
+      this._trackDevicesCommand.run();
     });
     this._updateRuntimes();
   }
 
   disable() {
-    EventEmitter.off(ADB, "device-connected", this._onDeviceConnected);
-    EventEmitter.off(ADB, "device-disconnected", this._onDeviceDisconnected);
+    this._trackDevicesCommand.off("device-connected", this._onDeviceConnected);
+    this._trackDevicesCommand.off("device-disconnected", this._onDeviceDisconnected);
     adbDevicesRegistry.off("register", this._updateRuntimes);
     adbDevicesRegistry.off("unregister", this._updateRuntimes);
     this._updateRuntimes();
