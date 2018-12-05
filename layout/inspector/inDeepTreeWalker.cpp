@@ -8,7 +8,6 @@
 #include "inLayoutUtils.h"
 
 #include "BindingStyleRule.h"
-#include "InspectorUtils.h"
 #include "nsString.h"
 #include "nsIDocument.h"
 #include "nsServiceManagerUtils.h"
