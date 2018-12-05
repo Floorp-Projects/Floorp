@@ -9,5 +9,5 @@
     android:viewportHeight="32">
   <path
       android:pathData="M24,0c0,0.69 0.088,1.36 0.252,2H4a2,2 0,0 0,-2 2v24a2,2 0,0 0,2 2h24a2,2 0,0 0,2 -2V7.748c0.64,0.164 1.31,0.252 2,0.252v20a4,4 0,0 1,-4 4H4a4,4 0,0 1,-4 -4V4a4,4 0,0 1,4 -4z"
-      android:fillColor="#b5007f"/>
+      android:fillColor="@color/focusContrastPink"/>
 </vector>

@@ -5,7 +5,9 @@
 <resources>
     <color name="colorPrimary">#ff272727</color>
     <color name="colorPrimaryDark">#6c3b6e</color>
-    <color name="colorAccent">@color/photonMagenta70</color>
+    <color name="colorAccent">@color/focusContrastPink</color>
+
+    <color name="focusContrastPink">#e452B9</color>
 
     <color name="colorSettingsTint">#f9f9fa</color>
     <color name="colorAccentSettings">@color/photonBlue50</color>
@@ -58,7 +60,7 @@
     <color name="searchSuggestionPromptTitleColor">@color/photonGrey10</color>
     <color name="searchSuggestionPromptSubtitleColor">#9e9fad</color>
     <color name="searchSuggestionPromptBorderColor">#343751</color>
-    <color name="searchSuggestionPromptButtonTextColor">@color/photonMagenta70</color>
+    <color name="searchSuggestionPromptButtonTextColor">@color/focusContrastPink</color>
 
     <color name="searchHintTextColor">#ffffffff</color>
     <color name="searchHintBackgroundColor">@color/photonInk80</color>
@@ -67,7 +69,7 @@
     <color name="onboarding_indicator_default">#7FFFFFFF</color>
     <color name="onboarding_indicator_selected">#FFFFFFFF</color>
 
-    <color name="dialogAccent">@color/photonMagenta70</color>
+    <color name="dialogAccent">@color/focusContrastPink</color>
 
     <color name="colorSession">@color/photonInk80</color>
     <color name="colorActiveSession">#353852</color>
@@ -76,7 +78,7 @@
     <color name="add_to_homescreen_text">#B3FFFFFF</color>
     <color name="add_to_homescreen_icon_background">#4C0074</color>
 
-    <color name="firefoxInstallHint">@color/photonMagenta70</color>
+    <color name="firefoxInstallHint">@color/focusContrastPink</color>
 
     <color name="preference_row_selected">#353852</color>
     <color name="preference_row_disabled">#B3313131</color>
@@ -100,8 +102,8 @@
 
     <!-- Add to Home screen dialog color palette -->
     <color name="home_screen_dialog_bg">@color/photonInk80</color>
-    <color name="home_screen_dialog_button_text">@color/photonMagenta70</color>
-    <color name="home_screen_dialog_bg_tint">@color/photonMagenta70</color>
+    <color name="home_screen_dialog_button_text">@color/focusContrastPink</color>
+    <color name="home_screen_dialog_bg_tint">@color/focusContrastPink</color>
     <color name="home_screen_dialog_text">@color/photonGrey10</color>
 
     <color name="home_screen_dialog_warning_bg">#353852</color>
