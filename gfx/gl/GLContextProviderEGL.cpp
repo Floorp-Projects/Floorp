@@ -437,8 +437,7 @@ GLContextEGL::MakeCurrentImpl() const
     if (!succeeded) {
         const auto eglError = mEgl->fGetError();
         if (eglError == LOCAL_EGL_CONTEXT_LOST) {
-            mContextLost = true;
-            NS_WARNING("EGL context has been lost.");
+            OnContextLostError();
         } else {
             NS_WARNING("Failed to make GL context current!");
 #ifdef DEBUG

@@ -340,7 +340,6 @@ public:
 
 protected:
     bool mIsOffscreen;
-    mutable bool mContextLost = false;
 
     /**
      * mVersion store the OpenGL's version, multiplied by 100. For example, if
@@ -553,95 +552,59 @@ private:
 public:
 // -----------------------------------------------------------------------------
 // Error handling
-    static const char* GLErrorToString(GLenum aError) {
-        switch (aError) {
-            case LOCAL_GL_INVALID_ENUM:
-                return "GL_INVALID_ENUM";
-            case LOCAL_GL_INVALID_VALUE:
-                return "GL_INVALID_VALUE";
-            case LOCAL_GL_INVALID_OPERATION:
-                return "GL_INVALID_OPERATION";
-            case LOCAL_GL_STACK_OVERFLOW:
-                return "GL_STACK_OVERFLOW";
-            case LOCAL_GL_STACK_UNDERFLOW:
-                return "GL_STACK_UNDERFLOW";
-            case LOCAL_GL_OUT_OF_MEMORY:
-                return "GL_OUT_OF_MEMORY";
-            case LOCAL_GL_TABLE_TOO_LARGE:
-                return "GL_TABLE_TOO_LARGE";
-            case LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION:
-                return "GL_INVALID_FRAMEBUFFER_OPERATION";
-            default:
-                return "";
-        }
-    }
-
 private:
+    mutable bool mContextLost = false;
     mutable GLenum mTopError = 0;
 
-    GLenum RawGetError() const {
-        return mSymbols.fGetError();
+protected:
+    void OnContextLostError() const;
+
+public:
+    static const char* GLErrorToString(GLenum aError);
+
+    static bool IsBadCallError(const GLenum err) {
+        return !(err == 0 ||
+                 err == LOCAL_GL_CONTEXT_LOST);
     }
 
-    GLenum RawGetErrorAndClear() const {
-        GLenum err = RawGetError();
-
-        if (err)
-            while (RawGetError()) {}
-
-        return err;
-    }
-
-    GLenum FlushErrors() const {
-        GLenum err = RawGetErrorAndClear();
-        if (!mTopError)
-            mTopError = err;
-        return err;
-    }
+    class LocalErrorScope;
+private:
+    mutable std::stack<const LocalErrorScope*> mLocalErrorScopeStack;
+    mutable UniquePtr<LocalErrorScope> mDebugErrorScope;
 
     ////////////////////////////////////
     // Use this safer option.
 
 public:
-    class LocalErrorScope;
-
-private:
-    std::stack<const LocalErrorScope*> mLocalErrorScopeStack;
-
-public:
     class LocalErrorScope {
-        GLContext& mGL;
+        const GLContext& mGL;
         GLenum mOldTop;
         bool mHasBeenChecked;
 
     public:
-        explicit LocalErrorScope(GLContext& gl)
+        explicit LocalErrorScope(const GLContext& gl)
             : mGL(gl)
             , mHasBeenChecked(false)
         {
             mGL.mLocalErrorScopeStack.push(this);
-
-            mGL.FlushErrors();
-
-            mOldTop = mGL.mTopError;
-            mGL.mTopError = LOCAL_GL_NO_ERROR;
+            mOldTop = mGL.GetError();
         }
 
+        /// Never returns CONTEXT_LOST.
         GLenum GetError() {
             MOZ_ASSERT(!mHasBeenChecked);
             mHasBeenChecked = true;
 
-            const GLenum ret = mGL.fGetError();
-
-            while (mGL.fGetError()) {}
-
+            const auto ret = mGL.GetError();
+            if (ret == LOCAL_GL_CONTEXT_LOST)
+                return 0;
             return ret;
         }
 
         ~LocalErrorScope() {
             MOZ_ASSERT(mHasBeenChecked);
 
-            MOZ_ASSERT(mGL.fGetError() == LOCAL_GL_NO_ERROR);
+            MOZ_ASSERT(!IsBadCallError(mGL.GetError()));
 
             MOZ_ASSERT(mGL.mLocalErrorScopeStack.top() == this);
             mGL.mLocalErrorScopeStack.pop();
@@ -649,6 +612,8 @@ public:
             mGL.mTopError = mOldTop;
         }
     };
+
+    // -
 
     bool GetPotentialInteger(GLenum pname, GLint* param) {
         LocalErrorScope localError(*this);
@@ -714,20 +679,22 @@ private:
     bool BeforeGLCall(const char* const funcName) const {
         if (mImplicitMakeCurrent) {
             if (MOZ_UNLIKELY( !MakeCurrent() )) {
-                OnImplicitMakeCurrentFailure(funcName);
+                if (!mContextLost) {
+                    OnImplicitMakeCurrentFailure(funcName);
+                }
                 return false;
             }
         }
         MOZ_ASSERT(IsCurrentImpl());
 
-        if (mDebugFlags) {
+        if (MOZ_UNLIKELY( mDebugFlags )) {
             BeforeGLCall_Debug(funcName);
         }
         return true;
     }
 
     void AfterGLCall(const char* const funcName) const {
-        if (mDebugFlags) {
+        if (MOZ_UNLIKELY( mDebugFlags )) {
             AfterGLCall_Debug(funcName);
         }
     }
@@ -801,17 +768,17 @@ public:
 public:
     // We smash all errors together, so you never have to loop on this. We
     // guarantee that immediately after this call, there are no errors left.
+    // Always returns the top-most error, except if followed by CONTEXT_LOST, then return
+    // that instead.
+    GLenum GetError() const;
+
     GLenum fGetError() {
-        GLenum err = LOCAL_GL_CONTEXT_LOST;
-        BEFORE_GL_CALL;
-
-        FlushErrors();
-        err = mTopError;
-        mTopError = LOCAL_GL_NO_ERROR;
-
-        AFTER_GL_CALL;
-        return err;
+        return GetError();
     }
+
+    GLenum fGetGraphicsResetStatus() const;
+
+    // -
 
     void fActiveTexture(GLenum texture) {
         BEFORE_GL_CALL;
@@ -2298,16 +2265,6 @@ public:
     void fDeleteTextures(GLsizei n, const GLuint* names) {
         raw_fDeleteTextures(n, names);
         TRACKING_CONTEXT(DeletedTextures(this, n, names));
-    }
-
-    GLenum fGetGraphicsResetStatus() {
-        GLenum ret = 0;
-        BEFORE_GL_CALL;
-        ASSERT_SYMBOL_PRESENT(fGetGraphicsResetStatus);
-        ret = mSymbols.fGetGraphicsResetStatus();
-        OnSyncCall();
-        AFTER_GL_CALL;
-        return ret;
     }
 
 
