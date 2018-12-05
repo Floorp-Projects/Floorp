@@ -22,12 +22,12 @@ this.EXPORTED_SYMBOLS = [
   "executeSoon",
   "DebounceCallback",
   "IdlePromise",
-  "MessageManagerDestroyedPromise",
   "PollPromise",
   "Sleep",
   "TimedPromise",
   "waitForEvent",
   "waitForMessage",
+  "waitForObserverTopic",
 ];
 
 const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
@@ -256,46 +256,6 @@ function Sleep(timeout) {
 }
 
 /**
- * Detects when the specified message manager has been destroyed.
- *
- * One can observe the removal and detachment of a content browser
- * (`<xul:browser>`) or a chrome window by its message manager
- * disconnecting.
- *
- * When a browser is associated with a tab, this is safer than only
- * relying on the event `TabClose` which signalises the _intent to_
- * remove a tab and consequently would lead to the destruction of
- * the content browser and its browser message manager.
- *
- * When closing a chrome window it is safer than only relying on
- * the event 'unload' which signalises the _intent to_ close the
- * chrome window and consequently would lead to the destruction of
- * the window and its window message manager.
- *
- * @param {MessageListenerManager} messageManager
- *     The message manager to observe for its disconnect state.
- *     Use the browser message manager when closing a content browser,
- *     and the window message manager when closing a chrome window.
- *
- * @return {Promise}
- *     A promise that resolves when the message manager has been destroyed.
- */
-function MessageManagerDestroyedPromise(messageManager) {
-  return new Promise(resolve => {
-    function observe(subject, topic) {
-      log.trace(`Received observer notification ${topic}`);
-
-      if (subject == messageManager) {
-        Services.obs.removeObserver(this, "message-manager-disconnect");
-        resolve();
-      }
-    }
-
-    Services.obs.addObserver(observe, "message-manager-disconnect");
-  });
-}
-
-/**
  * Throttle until the main thread is idle and `window` has performed
  * an animation frame (in that order).
  *
@@ -509,5 +469,53 @@ function waitForMessage(messageManager, messageName,
       messageManager.removeMessageListener(messageName, onMessage);
       resolve(msg.data);
     });
+  });
+}
+
+/**
+ * Wait for the specified observer topic to be observed.
+ *
+ * This method has been duplicated from TestUtils.jsm.
+ *
+ * Because this function is intended for testing, any error in checkFn
+ * will cause the returned promise to be rejected instead of waiting for
+ * the next notification, since this is probably a bug in the test.
+ *
+ * @param {string} topic
+ *     The topic to observe.
+ * @param {Object=} options
+ *     Extra options.
+ * @param {function(String,Object)=} options.checkFn
+ *     Called with ``subject``, and ``data`` as arguments, should return true
+ *     if the notification is the expected one, or false if it should be
+ *     ignored and listening should continue. If not specified, the first
+ *     notification for the specified topic resolves the returned promise.
+ *
+ * @return {Promise.<Array<String, Object>>}
+ *     Promise which resolves to an array of ``subject``, and ``data`` from
+ *     the observed notification.
+ */
+function waitForObserverTopic(topic, {checkFn = null} = {}) {
+  if (typeof topic != "string") {
+    throw new TypeError();
+  }
+  if (checkFn != null && typeof checkFn != "function") {
+    throw new TypeError();
+  }
+
+  return new Promise((resolve, reject) => {
+    Services.obs.addObserver(function observer(subject, topic, data) {
+      log.trace(`Received observer notification ${topic}`);
+      try {
+        if (checkFn && !checkFn(subject, data)) {
+          return;
+        }
+        Services.obs.removeObserver(observer, topic);
+        resolve({subject, data});
+      } catch (ex) {
+        Services.obs.removeObserver(observer, topic);
+        reject(ex);
+      }
+    }, topic);
   });
 }
