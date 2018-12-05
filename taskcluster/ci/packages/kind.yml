@@ -7,6 +7,7 @@ loader: taskgraph.loader.transform:loader
 transforms:
   - taskgraph.transforms.try_job:transforms
   - taskgraph.transforms.job:transforms
+  - taskgraph.transforms.cached_tasks:transforms
   - taskgraph.transforms.task:transforms
 
 job-defaults:
