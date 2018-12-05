@@ -9,6 +9,7 @@ const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 const { getFileForBinary } = require("devtools/shared/adb/adb-binary");
 const { check } = require("devtools/shared/adb/adb-running-checker");
 const { ADB } = require("devtools/shared/adb/adb");
+const { trackDevices } = require("devtools/shared/adb/commands/index");
 
 const ADB_JSON = {
   "Linux": {
@@ -229,7 +230,7 @@ add_task({
     EventEmitter.on(ADB, "device-connected", deviceId => {
       resolve(deviceId);
     });
-    ADB.trackDevices();
+    trackDevices();
   });
 
   equal(receivedDeviceId, "1234567890");

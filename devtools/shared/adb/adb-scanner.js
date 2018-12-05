@@ -7,6 +7,7 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 const { ADB } = require("devtools/shared/adb/adb");
+const { trackDevices } = require("devtools/shared/adb/commands/index");
 const { adbDevicesRegistry } = require("devtools/shared/adb/adb-devices-registry");
 const { AdbRuntime } = require("devtools/shared/adb/adb-runtime");
 
@@ -30,7 +31,7 @@ class ADBScanner extends EventEmitter {
     adbDevicesRegistry.on("unregister", this._updateRuntimes);
 
     ADB.start().then(() => {
-      ADB.trackDevices();
+      trackDevices();
     });
     this._updateRuntimes();
   }
