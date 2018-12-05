@@ -4,10 +4,10 @@
 
 from __future__ import absolute_import
 
-from marionette_driver import Actions, By, Wait
+from marionette_driver import By
 from marionette_driver.keys import Keys
 
-from marionette_harness import MarionetteTestCase, skip_if_mobile, WindowManagerMixin
+from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
@@ -20,13 +20,7 @@ class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
         else:
             self.mod_key = Keys.CONTROL
 
-        self.empty_page = self.marionette.absolute_url("empty.html")
-        self.test_page = self.marionette.absolute_url("windowHandles.html")
-
         self.selected_tab_index = self.get_selected_tab_index()
-
-        with self.marionette.using_context("content"):
-            self.marionette.navigate(self.test_page)
 
     def tearDown(self):
         self.close_all_tabs()
@@ -69,66 +63,41 @@ class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
                 }
             """)
 
-    def open_tab_in_background(self):
-        with self.marionette.using_context("content"):
-            link = self.marionette.find_element(By.ID, "new-tab")
-
-            action = Actions(self.marionette)
-            action.key_down(self.mod_key).click(link).perform()
-
-    def open_tab_in_foreground(self):
-        with self.marionette.using_context("content"):
-            link = self.marionette.find_element(By.ID, "new-tab")
-            link.click()
-
     def test_switch_tabs_with_focus_change(self):
-        new_tab = self.open_tab(self.open_tab_in_foreground)
+        new_tab = self.open_tab(focus=True)
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
         self.assertNotEqual(self.get_selected_tab_index(), self.selected_tab_index)
-        with self.marionette.using_context("content"):
-            self.assertEqual(self.marionette.get_url(), self.test_page)
 
+        # Switch to new tab first because it is already selected
         self.marionette.switch_to_window(new_tab)
         self.assertEqual(self.marionette.current_window_handle, new_tab)
         self.assertNotEqual(self.get_selected_tab_index(), self.selected_tab_index)
 
-        with self.marionette.using_context("content"):
-            Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
-                lambda _: self.marionette.get_url() == self.empty_page,
-                message="{} has been loaded in the newly opened tab.".format(self.empty_page))
-
+        # Switch to original tab by explicitely setting the focus
         self.marionette.switch_to_window(self.start_tab, focus=True)
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
         self.assertEqual(self.get_selected_tab_index(), self.selected_tab_index)
-        with self.marionette.using_context("content"):
-            self.assertEqual(self.marionette.get_url(), self.test_page)
 
         self.marionette.switch_to_window(new_tab)
         self.marionette.close()
-        self.marionette.switch_to_window(self.start_tab)
 
+        self.marionette.switch_to_window(self.start_tab)
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
         self.assertEqual(self.get_selected_tab_index(), self.selected_tab_index)
-        with self.marionette.using_context("content"):
-            self.assertEqual(self.marionette.get_url(), self.test_page)
 
     def test_switch_tabs_without_focus_change(self):
-        new_tab = self.open_tab(self.open_tab_in_foreground)
+        new_tab = self.open_tab(focus=True)
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
         self.assertNotEqual(self.get_selected_tab_index(), self.selected_tab_index)
-        with self.marionette.using_context("content"):
-            self.assertEqual(self.marionette.get_url(), self.test_page)
 
         # Switch to new tab first because it is already selected
         self.marionette.switch_to_window(new_tab)
         self.assertEqual(self.marionette.current_window_handle, new_tab)
 
+        # Switch to original tab by explicitely not setting the focus
         self.marionette.switch_to_window(self.start_tab, focus=False)
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
         self.assertNotEqual(self.get_selected_tab_index(), self.selected_tab_index)
-
-        with self.marionette.using_context("content"):
-            self.assertEqual(self.marionette.get_url(), self.test_page)
 
         self.marionette.switch_to_window(new_tab)
         self.marionette.close()
@@ -136,11 +105,9 @@ class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
         self.marionette.switch_to_window(self.start_tab)
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
         self.assertEqual(self.get_selected_tab_index(), self.selected_tab_index)
-        with self.marionette.using_context("content"):
-            self.assertEqual(self.marionette.get_url(), self.test_page)
 
     def test_switch_from_content_to_chrome_window_should_not_change_selected_tab(self):
-        new_tab = self.open_tab(self.open_tab_in_foreground)
+        new_tab = self.open_tab(focus=True)
 
         self.marionette.switch_to_window(new_tab)
         self.assertEqual(self.marionette.current_window_handle, new_tab)
@@ -150,24 +117,31 @@ class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
         self.assertEqual(self.marionette.current_window_handle, new_tab)
         self.assertEqual(self.get_selected_tab_index(), new_tab_index)
 
-    @skip_if_mobile("New windows not supported in Fennec")
-    def test_switch_to_new_private_browsing_window_has_to_register_browsers(self):
+    def test_switch_to_new_private_browsing_tab(self):
         # Test that tabs (browsers) are correctly registered for a newly opened
-        # private browsing window. This has to also happen without explicitely
+        # private browsing window/tab. This has to also happen without explicitely
         # switching to the tab itself before using any commands in content scope.
         #
         # Note: Not sure why this only affects private browsing windows only.
+        new_tab = self.open_tab(focus=True)
+        self.marionette.switch_to_window(new_tab)
 
-        def open_private_browsing_window():
+        def open_private_browsing_window_firefox():
             with self.marionette.using_context("content"):
-                self.marionette.navigate("about:privatebrowsing")
-                button = self.marionette.find_element(By.ID, "startPrivateBrowsing")
-                button.click()
+                self.marionette.find_element(By.ID, "startPrivateBrowsing").click()
 
-        new_window = self.open_window(open_private_browsing_window)
-        self.marionette.switch_to_window(new_window)
-        self.assertEqual(self.marionette.current_chrome_window_handle, new_window)
-        self.assertNotEqual(self.marionette.current_window_handle, self.start_tab)
+        def open_private_browsing_tab_fennec():
+            with self.marionette.using_context("content"):
+                self.marionette.find_element(By.ID, "newPrivateTabLink").click()
 
         with self.marionette.using_context("content"):
-            self.marionette.execute_script(" return true; ")
+            self.marionette.navigate("about:privatebrowsing")
+            if self.marionette.session_capabilities["browserName"] == "fennec":
+                new_pb_tab = self.open_tab(open_private_browsing_tab_fennec)
+            else:
+                new_pb_tab = self.open_tab(open_private_browsing_window_firefox)
+
+        self.marionette.switch_to_window(new_pb_tab)
+        self.assertEqual(self.marionette.current_window_handle, new_pb_tab)
+
+        self.marionette.execute_script(" return true; ")
