@@ -8820,6 +8820,13 @@ static void MaybeReflowForInflationScreenSizeChange(
   } else {
     metrics.SetPresShellResolution(1.0f);
   }
+
+  if (presShell->IsResolutionUpdated()) {
+    metadata.SetResolutionUpdated(true);
+    // We only need to tell APZ about the resolution update once.
+    presShell->SetResolutionUpdated(false);
+  }
+
   // The cumulative resolution is the resolution at which the scroll frame's
   // content is actually rendered. It includes the pres shell resolutions of
   // all the pres shells from here up to the root, as well as any css-driven

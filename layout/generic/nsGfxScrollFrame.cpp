@@ -6145,7 +6145,8 @@ void ScrollFrameHelper::RestoreState(PresState* aState) {
   if (mIsRoot) {
     nsIPresShell* presShell = mOuter->PresShell();
     if (aState->scaleToResolution()) {
-      presShell->SetResolutionAndScaleTo(aState->resolution());
+      presShell->SetResolutionAndScaleTo(aState->resolution(),
+                                         nsGkAtoms::restore);
     } else {
       presShell->SetResolution(aState->resolution());
     }

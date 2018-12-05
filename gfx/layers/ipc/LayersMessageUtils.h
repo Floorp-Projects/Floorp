@@ -339,6 +339,7 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
     WriteParam(aMsg, aParam.mIsAutoDirRootContentRTL);
     WriteParam(aMsg, aParam.mUsesContainerScrolling);
     WriteParam(aMsg, aParam.mForceDisableApz);
+    WriteParam(aMsg, aParam.mResolutionUpdated);
     WriteParam(aMsg, aParam.mDisregardedDirection);
     WriteParam(aMsg, aParam.mOverscrollBehavior);
   }
@@ -373,6 +374,8 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
                                 &paramType::SetUsesContainerScrolling) &&
             ReadBoolForBitfield(aMsg, aIter, aResult,
                                 &paramType::SetForceDisableApz) &&
+            ReadBoolForBitfield(aMsg, aIter, aResult,
+                                &paramType::SetResolutionUpdated) &&
             ReadParam(aMsg, aIter, &aResult->mDisregardedDirection) &&
             ReadParam(aMsg, aIter, &aResult->mOverscrollBehavior));
   }
