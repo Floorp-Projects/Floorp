@@ -20,14 +20,16 @@ class nsTableColFrame final : public nsSplittableFrame {
   enum {
     eWIDTH_SOURCE_NONE = 0,  // no cell has contributed to the width style
     eWIDTH_SOURCE_CELL = 1,  // a cell specified a width
-    eWIDTH_SOURCE_CELL_WITH_SPAN =
-        2  // a cell implicitly specified a width via colspan
+    eWIDTH_SOURCE_CELL_WITH_SPAN = 2  // a cell implicitly specified a width via
+                                      // colspan
   };
 
   nsTableColType GetColType() const;
   void SetColType(nsTableColType aType);
 
-  /** instantiate a new instance of nsTableRowFrame.
+  /**
+   * instantiate a new instance of nsTableRowFrame.
+   *
    * @param aPresShell the pres shell for this frame
    *
    * @return           the frame that was created

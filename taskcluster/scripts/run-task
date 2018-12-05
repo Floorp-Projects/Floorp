@@ -266,7 +266,7 @@ def configure_cache_posix(cache, user, group,
     if not os.listdir(cache):
         print_line(b'cache', b'cache %s is empty; writing requirements: '
                              b'%s\n' % (
-                    cache.encode('utf-8'), b' '.join(sorted(our_requirements))))
+                                 cache.encode('utf-8'), b' '.join(sorted(our_requirements))))
 
         # We write a requirements file so future invocations know what the
         # requirements are.
@@ -427,7 +427,7 @@ def vcs_checkout(source_repo, dest, store_path,
             res = urllib.request.urlopen(FINGERPRINT_URL, timeout=10)
             secret = res.read()
             try:
-                secret = json.loads(secret, encoding='utf-8')
+                secret = json.loads(secret.decode('utf-8'))
             except ValueError:
                 print_line(b'vcs', b'invalid JSON in hg fingerprint secret')
                 sys.exit(1)
@@ -699,6 +699,7 @@ def main(args):
             os.environ['GECKO_HEAD_REPOSITORY'],
             args.vcs_checkout,
             os.environ['HG_STORE_PATH'],
+            fetch_hgfingerprint=args.fetch_hgfingerprint,
             base_repo=base_repo,
             revision=os.environ.get('GECKO_HEAD_REV'),
             branch=os.environ.get('GECKO_HEAD_REF'),
@@ -713,6 +714,7 @@ def main(args):
         vcs_checkout('https://hg.mozilla.org/build/tools',
                      args.tools_checkout,
                      os.environ['HG_STORE_PATH'],
+                     fetch_hgfingerprint=args.fetch_hgfingerprint,
                      # Always check out the latest commit on default branch.
                      # This is non-deterministic!
                      branch='default')
@@ -728,6 +730,7 @@ def main(args):
             os.environ['COMM_HEAD_REPOSITORY'],
             args.comm_checkout,
             os.environ['HG_STORE_PATH'],
+            fetch_hgfingerprint=args.fetch_hgfingerprint,
             base_repo=base_repo,
             revision=os.environ.get('COMM_HEAD_REV'),
             branch=os.environ.get('COMM_HEAD_REF'))

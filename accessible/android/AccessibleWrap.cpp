@@ -187,6 +187,21 @@ void AccessibleWrap::Shutdown() {
   Accessible::Shutdown();
 }
 
+bool AccessibleWrap::DoAction(uint8_t aIndex) const {
+  if (ActionCount()) {
+    return Accessible::DoAction(aIndex);
+  }
+
+  if (mContent) {
+    // We still simulate a click on an accessible even if there is no
+    // known actions. For the sake of bad markup.
+    DoCommand();
+    return true;
+  }
+
+  return false;
+}
+
 int32_t AccessibleWrap::AcquireID() { return sIDSet.GetID(); }
 
 void AccessibleWrap::ReleaseID(int32_t aID) { sIDSet.ReleaseID(aID); }
@@ -214,7 +229,8 @@ bool AccessibleWrap::GetSelectionBounds(int32_t* aStartOffset,
   return false;
 }
 
-uint32_t AccessibleWrap::GetFlags(role aRole, uint64_t aState) {
+uint32_t AccessibleWrap::GetFlags(role aRole, uint64_t aState,
+                                  uint8_t aActionCount) {
   uint32_t flags = 0;
   if (aState & states::CHECKABLE) {
     flags |= java::SessionAccessibility::FLAG_CHECKABLE;
@@ -232,7 +248,7 @@ uint32_t AccessibleWrap::GetFlags(role aRole, uint64_t aState) {
     flags |= java::SessionAccessibility::FLAG_EDITABLE;
   }
 
-  if (aState & states::SENSITIVE) {
+  if (aActionCount && aRole != roles::TEXT_LEAF) {
     flags |= java::SessionAccessibility::FLAG_CLICKABLE;
   }
 
@@ -396,15 +412,16 @@ mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle() {
 
   nsCOMPtr<nsIPersistentProperties> attributes = Attributes();
 
-  return ToBundle(State(), Bounds(), name, textValue, nodeID, curValue,
-                  minValue, maxValue, step, attributes);
+  return ToBundle(State(), Bounds(), ActionCount(), name, textValue, nodeID,
+                  curValue, minValue, maxValue, step, attributes);
 }
 
 mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(
-    const uint64_t aState, const nsIntRect& aBounds, const nsString& aName,
-    const nsString& aTextValue, const nsString& aDOMNodeID,
-    const double& aCurVal, const double& aMinVal, const double& aMaxVal,
-    const double& aStep, nsIPersistentProperties* aAttributes) {
+    const uint64_t aState, const nsIntRect& aBounds, const uint8_t aActionCount,
+    const nsString& aName, const nsString& aTextValue,
+    const nsString& aDOMNodeID, const double& aCurVal, const double& aMinVal,
+    const double& aMaxVal, const double& aStep,
+    nsIPersistentProperties* aAttributes) {
   if (!IsProxy() && IsDefunct()) {
     return nullptr;
   }
@@ -418,7 +435,7 @@ mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(
       java::sdk::Integer::ValueOf(parent ? parent->VirtualViewID() : 0));
 
   role role = WrapperRole();
-  uint32_t flags = GetFlags(role, aState);
+  uint32_t flags = GetFlags(role, aState, aActionCount);
   GECKOBUNDLE_PUT(nodeInfo, "flags", java::sdk::Integer::ValueOf(flags));
   GECKOBUNDLE_PUT(nodeInfo, "className",
                   java::sdk::Integer::ValueOf(AndroidClass()));
@@ -556,11 +573,12 @@ mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(
 }
 
 mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToSmallBundle() {
-  return ToSmallBundle(State(), Bounds());
+  return ToSmallBundle(State(), Bounds(), ActionCount());
 }
 
 mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToSmallBundle(
-    const uint64_t aState, const nsIntRect& aBounds) {
+    const uint64_t aState, const nsIntRect& aBounds,
+    const uint8_t aActionCount) {
   GECKOBUNDLE_START(nodeInfo);
   GECKOBUNDLE_PUT(nodeInfo, "id", java::sdk::Integer::ValueOf(VirtualViewID()));
 
@@ -569,7 +587,7 @@ mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToSmallBundle(
       nodeInfo, "parentId",
       java::sdk::Integer::ValueOf(parent ? parent->VirtualViewID() : 0));
 
-  uint32_t flags = GetFlags(WrapperRole(), aState);
+  uint32_t flags = GetFlags(WrapperRole(), aState, aActionCount);
   GECKOBUNDLE_PUT(nodeInfo, "flags", java::sdk::Integer::ValueOf(flags));
   GECKOBUNDLE_PUT(nodeInfo, "className",
                   java::sdk::Integer::ValueOf(AndroidClass()));

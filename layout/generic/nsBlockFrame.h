@@ -529,10 +529,12 @@ class nsBlockFrame : public nsContainerFrame {
 
   virtual void UnionChildOverflow(nsOverflowAreas& aOverflowAreas) override;
 
-  /** Load all of aFrame's floats into the float manager iff aFrame is not a
-   *  block formatting context. Handles all necessary float manager
-   * translations; assumes float manager is in aFrame's parent's coord system.
-   *  Safe to call on non-blocks (does nothing).
+  /**
+   * Load all of aFrame's floats into the float manager iff aFrame is not a
+   * block formatting context. Handles all necessary float manager translations;
+   * assumes float manager is in aFrame's parent's coord system.
+   *
+   * Safe to call on non-blocks (does nothing).
    */
   static void RecoverFloatsFor(nsIFrame* aFrame, nsFloatManager& aFloatManager,
                                mozilla::WritingMode aWM,
@@ -673,11 +675,14 @@ class nsBlockFrame : public nsContainerFrame {
   // Methods for line reflow
   /**
    * Reflow a line.
-   * @param aState           the current reflow state
-   * @param aLine            the line to reflow.  can contain a single block
-   * frame or contain 1 or more inline frames.
-   * @param aKeepReflowGoing [OUT] indicates whether the caller should continue
-   * to reflow more lines
+   *
+   * @param aState
+   *   the current reflow state
+   * @param aLine
+   *   the line to reflow.  can contain a single block frame or contain 1 or
+   *   more inline frames.
+   * @param aKeepReflowGoing [OUT]
+   *   indicates whether the caller should continue to reflow more lines
    */
   void ReflowLine(BlockReflowInput& aState, LineIterator aLine,
                   bool* aKeepReflowGoing);

@@ -188,8 +188,9 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   void SetPopupState(nsPopupState aPopupState) { mPopupState = aPopupState; }
 
   NS_IMETHOD SetActive(bool aActiveFlag) override {
+    // We don't care.
     return NS_OK;
-  }  // We don't care.
+  }
   virtual bool IsActive() override { return false; }
   virtual bool IsMenuBar() override { return false; }
 
