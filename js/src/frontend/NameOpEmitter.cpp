@@ -32,37 +32,37 @@ bool NameOpEmitter::emitGet() {
   switch (loc_.kind()) {
     case NameLocation::Kind::Dynamic:
       if (!bce_->emitAtomOp(name_, JSOP_GETNAME)) {
-        //                [stack] VAL
+        //          [stack] VAL
         return false;
       }
       break;
     case NameLocation::Kind::Global:
       if (!bce_->emitAtomOp(name_, JSOP_GETGNAME)) {
-        //                [stack] VAL
+        //          [stack] VAL
         return false;
       }
       break;
     case NameLocation::Kind::Intrinsic:
       if (!bce_->emitAtomOp(name_, JSOP_GETINTRINSIC)) {
-        //                [stack] VAL
+        //          [stack] VAL
         return false;
       }
       break;
     case NameLocation::Kind::NamedLambdaCallee:
       if (!bce_->emit1(JSOP_CALLEE)) {
-        //                [stack] VAL
+        //          [stack] VAL
         return false;
       }
       break;
     case NameLocation::Kind::Import:
       if (!bce_->emitAtomOp(name_, JSOP_GETIMPORT)) {
-        //                [stack] VAL
+        //          [stack] VAL
         return false;
       }
       break;
     case NameLocation::Kind::ArgumentSlot:
       if (!bce_->emitArgOp(JSOP_GETARG, loc_.argumentSlot())) {
-        //                [stack] VAL
+        //          [stack] VAL
         return false;
       }
       break;
@@ -73,7 +73,7 @@ bool NameOpEmitter::emitGet() {
         }
       }
       if (!bce_->emitLocalOp(JSOP_GETLOCAL, loc_.frameSlot())) {
-        //                [stack] VAL
+        //          [stack] VAL
         return false;
       }
       break;
@@ -85,7 +85,7 @@ bool NameOpEmitter::emitGet() {
       }
       if (!bce_->emitEnvCoordOp(JSOP_GETALIASEDVAR,
                                 loc_.environmentCoordinate())) {
-        //                [stack] VAL
+        //          [stack] VAL
         return false;
       }
       break;
@@ -101,14 +101,14 @@ bool NameOpEmitter::emitGet() {
         JSOp thisOp =
             bce_->needsImplicitThis() ? JSOP_IMPLICITTHIS : JSOP_GIMPLICITTHIS;
         if (!bce_->emitAtomOp(name_, thisOp)) {
-          //            [stack] CALLEE THIS
+          //        [stack] CALLEE THIS
           return false;
         }
         break;
       }
       case NameLocation::Kind::Global:
         if (!bce_->emitAtomOp(name_, JSOP_GIMPLICITTHIS)) {
-          //            [stack] CALLEE THIS
+          //        [stack] CALLEE THIS
           return false;
         }
         break;
@@ -119,7 +119,7 @@ bool NameOpEmitter::emitGet() {
       case NameLocation::Kind::FrameSlot:
       case NameLocation::Kind::EnvironmentCoordinate:
         if (!bce_->emit1(JSOP_UNDEFINED)) {
-          //            [stack] CALLEE UNDEF
+          //        [stack] CALLEE UNDEF
           return false;
         }
         break;
@@ -151,12 +151,12 @@ bool NameOpEmitter::prepareForRhs() {
         // even if lexical environments in between contain same-named
         // bindings.
         if (!bce_->emit1(JSOP_BINDVAR)) {
-          //            [stack] ENV
+          //        [stack] ENV
           return false;
         }
       } else {
         if (!bce_->emitIndexOp(JSOP_BINDNAME, atomIndex_)) {
-          //            [stack] ENV
+          //        [stack] ENV
           return false;
         }
       }
@@ -172,7 +172,7 @@ bool NameOpEmitter::prepareForRhs() {
         MOZ_ASSERT(bce_->innermostScope()->is<GlobalScope>());
       } else {
         if (!bce_->emitIndexOp(JSOP_BINDGNAME, atomIndex_)) {
-          //            [stack] ENV
+          //        [stack] ENV
           return false;
         }
         emittedBindOp_ = true;
@@ -214,16 +214,16 @@ bool NameOpEmitter::prepareForRhs() {
       // GETBOUNDNAME uses the environment already pushed on the stack
       // from the earlier BINDNAME.
       if (!bce_->emit1(JSOP_DUP)) {
-        //            [stack] ENV ENV
+        //          [stack] ENV ENV
         return false;
       }
       if (!bce_->emitAtomOp(name_, JSOP_GETBOUNDNAME)) {
-        //            [stack] ENV V
+        //          [stack] ENV V
         return false;
       }
     } else {
       if (!emitGet()) {
-        //            [stack] ENV? V
+        //          [stack] ENV? V
         return false;
       }
     }
@@ -354,44 +354,44 @@ bool NameOpEmitter::emitIncDec() {
 
   JSOp binOp = isInc() ? JSOP_ADD : JSOP_SUB;
   if (!prepareForRhs()) {
-    //                    [stack] ENV? V
+    //              [stack] ENV? V
     return false;
   }
   if (!bce_->emit1(JSOP_POS)) {
-    //                    [stack] ENV? N
+    //              [stack] ENV? N
     return false;
   }
   if (isPostIncDec()) {
     if (!bce_->emit1(JSOP_DUP)) {
-      //                [stack] ENV? N? N
+      //            [stack] ENV? N? N
       return false;
     }
   }
   if (!bce_->emit1(JSOP_ONE)) {
-    //                    [stack] ENV? N? N 1
+    //              [stack] ENV? N? N 1
     return false;
   }
   if (!bce_->emit1(binOp)) {
-    //                    [stack] ENV? N? N+1
+    //              [stack] ENV? N? N+1
     return false;
   }
   if (isPostIncDec() && emittedBindOp()) {
     if (!bce_->emit2(JSOP_PICK, 2)) {
-      //                [stack] N? N+1 ENV?
+      //            [stack] N? N+1 ENV?
       return false;
     }
     if (!bce_->emit1(JSOP_SWAP)) {
-      //                [stack] N? ENV? N+1
+      //            [stack] N? ENV? N+1
       return false;
     }
   }
   if (!emitAssignment()) {
-    //                    [stack] N? N+1
+    //              [stack] N? N+1
     return false;
   }
   if (isPostIncDec()) {
     if (!bce_->emit1(JSOP_POP)) {
-      //                [stack] N
+      //            [stack] N
       return false;
     }
   }
