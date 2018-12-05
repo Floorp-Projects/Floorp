@@ -2226,9 +2226,16 @@ void nsGlobalWindowOuter::SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
   NS_ASSERTION(mOpener || !aOpener, "Opener must support weak references!");
 
   if (mDocShell) {
-    MOZ_DIAGNOSTIC_ASSERT(!aOriginalOpener || !aOpener ||
-                          aOpener->GetBrowsingContext() ==
-                              GetBrowsingContext()->GetOpener());
+    MOZ_DIAGNOSTIC_ASSERT(
+        !aOriginalOpener || !aOpener ||
+        // TODO(farre): Allowing to set a closed or closing window as
+        // opener is not ideal, since it won't have a docshell and
+        // therefore no browsing context. This means that we're
+        // effectively setting the browsing context opener to null and
+        // the window opener to a closed window. This needs to be
+        // cleaned up, see Bug 1511353.
+        nsGlobalWindowOuter::Cast(aOpener)->IsClosedOrClosing() ||
+        aOpener->GetBrowsingContext() == GetBrowsingContext()->GetOpener());
     // TODO(farre): Here we really wish to only consider the case
     // where 'aOriginalOpener'. See bug 1509016.
     GetBrowsingContext()->SetOpener(aOpener ? aOpener->GetBrowsingContext()
