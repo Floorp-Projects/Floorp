@@ -22,7 +22,7 @@ import mozilla.components.support.base.log.logger.Logger
 @SuppressLint("StaticFieldLeak")
 internal object UuidsStorageEngine : UuidsStorageEngineImplementation()
 
-open class UuidsStorageEngineImplementation(
+internal open class UuidsStorageEngineImplementation(
     override val logger: Logger = Logger("glean/UuidsStorageEngine")
 ) : GenericScalarStorageEngine<UUID>() {
 

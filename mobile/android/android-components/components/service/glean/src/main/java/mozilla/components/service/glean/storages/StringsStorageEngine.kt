@@ -20,7 +20,7 @@ import mozilla.components.support.base.log.logger.Logger
 @SuppressLint("StaticFieldLeak")
 internal object StringsStorageEngine : StringsStorageEngineImplementation()
 
-open class StringsStorageEngineImplementation(
+internal open class StringsStorageEngineImplementation(
     override val logger: Logger = Logger("glean/StringsStorageEngine")
 ) : GenericScalarStorageEngine<String>() {
 
