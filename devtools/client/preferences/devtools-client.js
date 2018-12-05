@@ -277,12 +277,8 @@ pref("devtools.webconsole.sidebarToggle", false);
 // Enable CodeMirror in the JsTerm
 pref("devtools.webconsole.jsterm.codeMirror", true);
 
-// Enable console input reverse-search in Nightly builds
-#if defined(NIGHTLY_BUILD)
+// Enable console input reverse-search everywhere
 pref("devtools.webconsole.jsterm.reverse-search", true);
-#else
-pref("devtools.webconsole.jsterm.reverse-search", false);
-#endif
 
 // Disable the new performance recording panel by default
 pref("devtools.performance.new-panel-enabled", false);
