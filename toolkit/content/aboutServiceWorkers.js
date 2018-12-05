@@ -7,12 +7,6 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const bundle = Services.strings.createBundle(
-  "chrome://global/locale/aboutServiceWorkers.properties");
-
-const brandBundle = Services.strings.createBundle(
-  "chrome://branding/locale/brand.properties");
-
 var gSWM;
 var gSWCount = 0;
 
@@ -63,69 +57,61 @@ function init() {
   }
 }
 
-function display(info, pushService) {
+async function display(info, pushService) {
   let parent = document.getElementById("serviceworkers");
 
   let div = document.createElement("div");
   parent.appendChild(div);
 
   let title = document.createElement("h2");
-  let titleStr = bundle.formatStringFromName("title", [info.principal.origin], 1);
-  title.appendChild(document.createTextNode(titleStr));
+  document.l10n.setAttributes(title, "origin-title", { originTitle: info.principal.origin });
   div.appendChild(title);
 
   if (info.principal.appId) {
     let b2gtitle = document.createElement("h3");
-    let trueFalse = bundle.GetStringFromName(info.principal.isInIsolatedMozBrowserElement ? "true" : "false");
-
-    let b2gtitleStr =
-      bundle.formatStringFromName("b2gtitle", [ brandBundle.getString("brandShortName"),
-                                                info.principal.appId,
-                                                trueFalse], 2);
-    b2gtitle.appendChild(document.createTextNode(b2gtitleStr));
+    let trueFalse = info.principal.isInIsolatedMozBrowserElement ? "true" : "false";
+    document.l10n.setAttributes(b2gtitle, "app-title", { appId: info.principal.appId, isInIsolatedElement: trueFalse });
     div.appendChild(b2gtitle);
   }
 
   let list = document.createElement("ul");
   div.appendChild(list);
 
-  function createItem(title, value, makeLink) {
+  function createItem(l10nId, value, makeLink) {
     let item = document.createElement("li");
     list.appendChild(item);
-
     let bold = document.createElement("strong");
-    bold.appendChild(document.createTextNode(title + " "));
+    bold.setAttribute("data-l10n-name", "item-label");
     item.appendChild(bold);
-
-    let textNode = document.createTextNode(value);
-
-    if (makeLink) {
+    if (!value) {
+      document.l10n.setAttributes(item, l10nId);
+    } else if (makeLink) {
       let link = document.createElement("a");
-      link.href = value;
-      link.target = "_blank";
-      link.appendChild(textNode);
+      link.setAttribute("target", "_blank");
+      link.setAttribute("data-l10n-name", "link");
+      link.setAttribute("href", value);
       item.appendChild(link);
+      document.l10n.setAttributes(item, l10nId, { url: value });
     } else {
-      item.appendChild(textNode);
+      document.l10n.setAttributes(item, l10nId, { name: value });
     }
-
-    return textNode;
+      return item;
   }
 
-  createItem(bundle.GetStringFromName("scope"), info.scope);
-  createItem(bundle.GetStringFromName("scriptSpec"), info.scriptSpec, true);
+  createItem("scope", info.scope);
+  createItem("script-spec", info.scriptSpec, true);
   let currentWorkerURL = info.activeWorker ? info.activeWorker.scriptSpec : "";
-  createItem(bundle.GetStringFromName("currentWorkerURL"), currentWorkerURL, true);
+  createItem("current-worker-url", currentWorkerURL, true);
   let activeCacheName = info.activeWorker ? info.activeWorker.cacheName : "";
-  createItem(bundle.GetStringFromName("activeCacheName"), activeCacheName);
+  createItem("active-cache-name", activeCacheName);
   let waitingCacheName = info.waitingWorker ? info.waitingWorker.cacheName : "";
-  createItem(bundle.GetStringFromName("waitingCacheName"), waitingCacheName);
+  createItem("waiting-cache-name", waitingCacheName);
 
-  let pushItem = createItem(bundle.GetStringFromName("pushEndpoint"), bundle.GetStringFromName("waiting"));
+  let pushItem = createItem("push-end-point-waiting");
   if (pushService) {
     pushService.getSubscription(info.scope, info.principal, (status, pushRecord) => {
       if (Components.isSuccessCode(status)) {
-        pushItem.data = JSON.stringify(pushRecord);
+        document.l10n.setAttributes(pushItem, "push-end-point-result", { name: JSON.stringify(pushRecord) });
       } else {
         dump("about:serviceworkers - retrieving push registration failed\n");
       }
@@ -133,18 +119,18 @@ function display(info, pushService) {
   }
 
   let updateButton = document.createElement("button");
-  updateButton.appendChild(document.createTextNode(bundle.GetStringFromName("update")));
+  document.l10n.setAttributes(updateButton, "update-button");
   updateButton.onclick = function() {
     gSWM.propagateSoftUpdate(info.principal.originAttributes, info.scope);
   };
   div.appendChild(updateButton);
 
   let unregisterButton = document.createElement("button");
-  unregisterButton.appendChild(document.createTextNode(bundle.GetStringFromName("unregister")));
+  document.l10n.setAttributes(unregisterButton, "unregister-button");
   div.appendChild(unregisterButton);
 
   let loadingMessage = document.createElement("span");
-  loadingMessage.appendChild(document.createTextNode(bundle.GetStringFromName("waiting")));
+  document.l10n.setAttributes(loadingMessage, "waiting");
   loadingMessage.classList.add("inactive");
   div.appendChild(loadingMessage);
 
@@ -159,8 +145,9 @@ function display(info, pushService) {
         }
       },
 
-      unregisterFailed() {
-        alert(bundle.GetStringFromName("unregisterError"));
+      async unregisterFailed() {
+        let [alertMsg] = await document.l10n.formatValues([{ id: "unregister-error" }]);
+        alert(alertMsg);
       },
 
       QueryInterface: ChromeUtils.generateQI([Ci.nsIServiceWorkerUnregisterCallback]),
