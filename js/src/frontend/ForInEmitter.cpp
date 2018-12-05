@@ -37,14 +37,14 @@ bool ForInEmitter::emitInitialize() {
   tdzCacheForIteratedValue_.reset();
 
   if (!bce_->emit1(JSOP_ITER)) {
-    //                    [stack] ITER
+    //              [stack] ITER
     return false;
   }
 
   // For-in loops have both the iterator and the value on the stack. Push
   // undefined to balance the stack.
   if (!bce_->emit1(JSOP_UNDEFINED)) {
-    //                    [stack] ITER ITERVAL
+    //              [stack] ITER ITERVAL
     return false;
   }
 
@@ -58,12 +58,12 @@ bool ForInEmitter::emitInitialize() {
   // Jump down to the loop condition to minimize overhead (assuming at
   // least one iteration, just like the other loop forms).
   if (!loopInfo_->emitEntryJump(bce_)) {
-    //                    [stack] ITER ITERVAL
+    //              [stack] ITER ITERVAL
     return false;
   }
 
   if (!loopInfo_->emitLoopHead(bce_, Nothing())) {
-    //                    [stack] ITER ITERVAL
+    //              [stack] ITER ITERVAL
     return false;
   }
 
@@ -82,7 +82,7 @@ bool ForInEmitter::emitInitialize() {
 
     if (headLexicalEmitterScope_->hasEnvironment()) {
       if (!bce_->emit1(JSOP_RECREATELEXICALENV)) {
-        //            [stack] ITER ITERVAL
+        //          [stack] ITER ITERVAL
         return false;
       }
     }
@@ -99,7 +99,7 @@ bool ForInEmitter::emitInitialize() {
   MOZ_ASSERT(loopDepth_ >= 2);
 
   if (!bce_->emit1(JSOP_ITERNEXT)) {
-    //                    [stack] ITER ITERVAL
+    //              [stack] ITER ITERVAL
     return false;
   }
 
@@ -134,24 +134,24 @@ bool ForInEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
   }
 
   if (!loopInfo_->emitLoopEntry(bce_, Nothing())) {
-    //                    [stack] ITER ITERVAL
+    //              [stack] ITER ITERVAL
     return false;
   }
   if (!bce_->emit1(JSOP_POP)) {
-    //                    [stack] ITER
+    //              [stack] ITER
     return false;
   }
   if (!bce_->emit1(JSOP_MOREITER)) {
-    //                    [stack] ITER NEXTITERVAL?
+    //              [stack] ITER NEXTITERVAL?
     return false;
   }
   if (!bce_->emit1(JSOP_ISNOITER)) {
-    //                    [stack] ITER NEXTITERVAL? ISNOITER
+    //              [stack] ITER NEXTITERVAL? ISNOITER
     return false;
   }
 
   if (!loopInfo_->emitLoopEnd(bce_, JSOP_IFEQ)) {
-    //                    [stack] ITER NEXTITERVAL
+    //              [stack] ITER NEXTITERVAL
     return false;
   }
 
@@ -167,7 +167,7 @@ bool ForInEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
 
   // Pop the enumeration value.
   if (!bce_->emit1(JSOP_POP)) {
-    //                    [stack] ITER
+    //              [stack] ITER
     return false;
   }
 
@@ -177,7 +177,7 @@ bool ForInEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
   }
 
   if (!bce_->emit1(JSOP_ENDITER)) {
-    //                    [stack]
+    //              [stack]
     return false;
   }
 
