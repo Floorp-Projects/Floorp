@@ -11,6 +11,8 @@
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/RestyleManager.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsIContent.h"
+#include "nsIContentInlines.h"
 #include "nsISupportsImpl.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGMarkerFrame.h"
