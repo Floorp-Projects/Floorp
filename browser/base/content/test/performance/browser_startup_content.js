@@ -65,7 +65,6 @@ const whitelist = {
 
     // Telemetry
     "resource://gre/modules/TelemetryController.jsm", // bug 1470339
-    "resource://gre/modules/MemoryTelemetry.jsm", // bug 1481812
     "resource://gre/modules/TelemetryUtils.jsm", // bug 1470339
 
     // Extensions

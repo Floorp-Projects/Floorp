@@ -5582,6 +5582,10 @@ nsBrowserAccess.prototype = {
   canClose() {
     return CanCloseWindow();
   },
+
+  get tabCount() {
+    return gBrowser.tabs.length;
+  },
 };
 
 function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {

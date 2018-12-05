@@ -652,6 +652,8 @@ child:
     async ShareCodeCoverageMutex(CrossProcessMutexHandle handle);
     async FlushCodeCoverageCounters() returns (bool unused);
 
+    async GetMemoryUniqueSetSize() returns (int64_t uss);
+
     /*
      * IPC message to enable the input event queue on the main thread of the
      * content process.
