@@ -5084,11 +5084,13 @@ void MStoreSlot::printOpcode(GenericPrinter& out) const {
 #endif
 
 MDefinition* MFunctionEnvironment::foldsTo(TempAllocator& alloc) {
-  if (!input()->isLambda()) {
-    return this;
+  if (input()->isLambda()) {
+    return input()->toLambda()->environmentChain();
   }
-
-  return input()->toLambda()->environmentChain();
+  if (input()->isLambdaArrow()) {
+    return input()->toLambdaArrow()->environmentChain();
+  }
+  return this;
 }
 
 static bool AddIsANonZeroAdditionOf(MAdd* add, MDefinition* ins) {
