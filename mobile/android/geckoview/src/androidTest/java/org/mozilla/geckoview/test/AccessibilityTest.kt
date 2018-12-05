@@ -191,6 +191,7 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat("Label accessibility focused", node.className.toString(),
                         equalTo("android.view.View"))
                 assertThat("Text node should not be focusable", node.isFocusable, equalTo(false))
+                assertThat("Text node should not be clickable", node.isClickable, equalTo(false))
             }
         })
 
@@ -205,6 +206,7 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat("Editbox accessibility focused", node.className.toString(),
                         equalTo("android.widget.EditText"))
                 assertThat("Entry node should be focusable", node.isFocusable, equalTo(true))
+                assertThat("Entry node should be clickable", node.isClickable, equalTo(true))
             }
         })
     }

@@ -134,10 +134,10 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
                      : reinterpret_cast<uint64_t>(accessible->UniqueID());
       cacheData.AppendElement(
           BatchData(accessible->Document()->IPCDoc(), uid, accessible->State(),
-                    accessible->Bounds(), nsString(), nsString(), nsString(),
+                    accessible->Bounds(), accessible->ActionCount(), nsString(),
+                    nsString(), nsString(), UnspecifiedNaN<double>(),
                     UnspecifiedNaN<double>(), UnspecifiedNaN<double>(),
-                    UnspecifiedNaN<double>(), UnspecifiedNaN<double>(),
-                    nsTArray<Attribute>()));
+                    UnspecifiedNaN<double>(), nsTArray<Attribute>()));
     }
 
     ipcDoc->SendBatch(eBatch_Viewport, cacheData);
@@ -199,10 +199,10 @@ void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
       nsCOMPtr<nsIPersistentProperties> props = acc->Attributes();
       nsTArray<Attribute> attributes;
       nsAccUtils::PersistentPropertiesToArray(props, &attributes);
-      cacheData.AppendElement(
-          BatchData(acc->Document()->IPCDoc(), uid, acc->State(), acc->Bounds(),
-                    name, textValue, nodeID, acc->CurValue(), acc->MinValue(),
-                    acc->MaxValue(), acc->Step(), attributes));
+      cacheData.AppendElement(BatchData(
+          acc->Document()->IPCDoc(), uid, acc->State(), acc->Bounds(),
+          acc->ActionCount(), name, textValue, nodeID, acc->CurValue(),
+          acc->MinValue(), acc->MaxValue(), acc->Step(), attributes));
       mFocusPath.Put(acc->UniqueID(), acc);
     }
 
@@ -233,7 +233,7 @@ void DocAccessibleWrap::UpdateFocusPathBounds() {
                      ? 0
                      : reinterpret_cast<uint64_t>(accessible->UniqueID());
       boundsData.AppendElement(BatchData(
-          accessible->Document()->IPCDoc(), uid, 0, accessible->Bounds(),
+          accessible->Document()->IPCDoc(), uid, 0, accessible->Bounds(), 0,
           nsString(), nsString(), nsString(), UnspecifiedNaN<double>(),
           UnspecifiedNaN<double>(), UnspecifiedNaN<double>(),
           UnspecifiedNaN<double>(), nsTArray<Attribute>()));
