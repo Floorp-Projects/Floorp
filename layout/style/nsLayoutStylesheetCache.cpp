@@ -7,7 +7,6 @@
 #include "nsLayoutStylesheetCache.h"
 
 #include "nsAppDirectoryServiceDefs.h"
-#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/Preferences.h"

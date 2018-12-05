@@ -44,7 +44,6 @@
 static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsTextFrame.h"
 
-#include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Preferences.h"
 
