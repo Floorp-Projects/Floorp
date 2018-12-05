@@ -130,7 +130,7 @@ var Impl = {
             getService(Ci.nsIMemoryReporterManager);
     } catch (e) {
       // OK to skip memory reporters in xpcshell
-      return;
+      return Promise.resolve();
     }
 
     let histogram = Telemetry.getHistogramById("TELEMETRY_MEMORY_REPORTER_MS");
@@ -176,7 +176,7 @@ var Impl = {
     c("GHOST_WINDOWS", "ghostWindows");
 
     if (!Telemetry.canRecordExtended) {
-      return;
+      return Promise.resolve();
     }
 
     b("MEMORY_VSIZE", "vsize");
@@ -196,14 +196,18 @@ var Impl = {
     cc("LOW_MEMORY_EVENTS_PHYSICAL", "lowMemoryEventsPhysical");
     cc("PAGE_FAULTS_HARD", "pageFaultsHard");
 
-    try {
-      mgr.getHeapAllocatedAsync(heapAllocated => {
-        boundHandleMemoryReport("MEMORY_HEAP_ALLOCATED",
-                                Ci.nsIMemoryReporter.UNITS_BYTES,
-                                heapAllocated);
-      });
-    } catch (e) {
-    }
+    let promise = new Promise(resolve => {
+      try {
+        mgr.getHeapAllocatedAsync(heapAllocated => {
+          boundHandleMemoryReport("MEMORY_HEAP_ALLOCATED",
+                                  Ci.nsIMemoryReporter.UNITS_BYTES,
+                                  heapAllocated);
+          resolve();
+        });
+      } catch (e) {
+        resolve();
+      }
+    });
 
     if (!Utils.isContentProcess && !this._totalMemoryTimeout) {
       // Only the chrome process should gather total memory
@@ -240,6 +244,8 @@ var Impl = {
     }
 
     histogram.add(new Date() - startTime);
+
+    return promise;
   },
 
   handleMemoryReport(id, units, amount, key) {

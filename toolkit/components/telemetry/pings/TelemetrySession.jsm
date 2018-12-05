@@ -1048,10 +1048,10 @@ var Impl = {
   /**
    * Send data to the server. Record success/send-time in histograms
    */
-  send: function send(reason) {
+  send: async function send(reason) {
     this._log.trace("send - Reason " + reason);
     // populate histograms one last time
-    MemoryTelemetry.gatherMemory();
+    await MemoryTelemetry.gatherMemory();
 
     const isSubsession = !this._isClassicReason(reason);
     let payload = this.getSessionPayload(reason, isSubsession);
@@ -1138,7 +1138,7 @@ var Impl = {
         await TelemetryStorage.saveSessionData(this._getSessionDataObject());
 
         this.addObserver("idle-daily");
-        MemoryTelemetry.gatherMemory();
+        await MemoryTelemetry.gatherMemory();
 
         Telemetry.asyncFetchTelemetryData(function() {});
 
