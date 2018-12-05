@@ -3735,21 +3735,39 @@ const DOMEventHandler = {
   setIconFromLink(aBrowser, aPageURL, aOriginalURL, aCanUseForTab, aExpiration, aIconURL) {
     let tab = gBrowser.getTabForBrowser(aBrowser);
     if (!tab) {
-      return false;
+      return;
+    }
+
+    if (aCanUseForTab) {
+      this.clearPendingIcon(aBrowser);
+    }
+
+    let iconURI;
+    try {
+      iconURI = Services.io.newURI(aIconURL);
+    } catch (ex) {
+      Cu.reportError(ex);
+      return;
+    }
+    if (iconURI.scheme != "data") {
+      try {
+        Services.scriptSecurityManager.checkLoadURIWithPrincipal(
+          aBrowser.contentPrincipal, iconURI, Services.scriptSecurityManager.ALLOW_CHROME);
+      } catch (ex) {
+        return;
+      }
     }
     try {
       PlacesUIUtils.loadFavicon(aBrowser, Services.scriptSecurityManager.getSystemPrincipal(),
                                 makeURI(aPageURL), makeURI(aOriginalURL),
-                                aExpiration, makeURI(aIconURL));
+                                aExpiration, iconURI);
     } catch (ex) {
       Cu.reportError(ex);
     }
 
     if (aCanUseForTab) {
-      this.clearPendingIcon(aBrowser);
       gBrowser.setIcon(tab, aIconURL, aOriginalURL);
     }
-    return true;
   },
 
   addSearch(aBrowser, aEngine, aURL) {
