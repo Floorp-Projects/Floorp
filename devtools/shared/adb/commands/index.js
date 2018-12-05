@@ -8,12 +8,12 @@ const { listDevices } = require("./list-devices");
 const { prepareTCPConnection } = require("./prepare-tcp-connection");
 const { runCommand } = require("./run-command");
 const { shell } = require("./shell");
-const { trackDevices } = require("./track-devices");
+const { TrackDevicesCommand } = require("./track-devices");
 
 module.exports = {
   listDevices,
   prepareTCPConnection,
   runCommand,
   shell,
-  trackDevices,
+  TrackDevicesCommand,
 };
