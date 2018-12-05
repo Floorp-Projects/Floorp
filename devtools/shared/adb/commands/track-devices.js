@@ -10,7 +10,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 const { setTimeout } = require("resource://gre/modules/Timer.jsm");
 
-const { ADB } = require("../adb");
+const { adbProcess } = require("../adb-process");
 const client = require("../adb-client");
 
 const OKAY = 0x59414b4f;
@@ -66,9 +66,9 @@ class TrackDevicesCommand extends EventEmitter {
     // Give some time to the new adb to start
     setTimeout(() => {
       // Only try to reconnect/restart if the add-on is still enabled
-      if (ADB.ready) {
+      if (adbProcess.ready) {
         // try to connect to the new local adb server or spawn a new one
-        ADB.start().then(() => {
+        adbProcess.start().then(() => {
           // Re-track devices
           this.run();
         });

@@ -8,7 +8,7 @@
 
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 const { setTimeout } = require("resource://gre/modules/Timer.jsm");
-const { ADB } = require("../adb");
+const { adbProcess } = require("../adb-process");
 const client = require("../adb-client");
 
 const OKAY = 0x59414b4f;
@@ -19,7 +19,7 @@ const OKAY = 0x59414b4f;
 const runCommand = function(command) {
   dumpn("runCommand " + command);
   return new Promise((resolve, reject) => {
-    if (!ADB.ready) {
+    if (!adbProcess.ready) {
       setTimeout(function() {
         reject("ADB_NOT_READY");
       });
