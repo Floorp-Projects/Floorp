@@ -271,7 +271,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   "dom.payments.response.timeout",
    dom_payments_response_timeout,
-  uint32_t, 5000
+  uint32_t, 20000
 )
 
 // SW Cache API

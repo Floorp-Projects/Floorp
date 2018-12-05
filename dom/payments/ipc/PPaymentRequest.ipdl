@@ -88,7 +88,7 @@ struct IPCPaymentCanMakeActionRequest
 struct IPCPaymentShowActionRequest
 {
   nsString requestId;
-  bool isUpdating;
+  nsString internalCompleteStatus;
 };
 
 struct IPCPaymentAbortActionRequest
@@ -107,6 +107,7 @@ struct IPCPaymentUpdateActionRequest
   nsString requestId;
   IPCPaymentDetails details;
   nsString shippingOption;
+  nsString internalCompleteStatus;
 };
 
 struct IPCPaymentCloseActionRequest
