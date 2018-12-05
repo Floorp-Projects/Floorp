@@ -17,6 +17,8 @@ in int aClipTransformId;
 in int aPrimTransformId;
 in int aClipSegment;
 in ivec4 aClipDataResourceAddress;
+in vec2 aClipLocalPos;
+in vec4 aClipTileRect;
 
 struct ClipMaskInstance {
     int render_task_address;
@@ -25,6 +27,8 @@ struct ClipMaskInstance {
     int segment;
     ivec2 clip_data_address;
     ivec2 resource_address;
+    vec2 local_pos;
+    RectWithSize tile_rect;
 };
 
 ClipMaskInstance fetch_clip_item() {
@@ -36,6 +40,8 @@ ClipMaskInstance fetch_clip_item() {
     cmi.segment = aClipSegment;
     cmi.clip_data_address = aClipDataResourceAddress.xy;
     cmi.resource_address = aClipDataResourceAddress.zw;
+    cmi.local_pos = aClipLocalPos;
+    cmi.tile_rect = RectWithSize(aClipTileRect.xy, aClipTileRect.zw);
 
     return cmi;
 }

@@ -148,10 +148,6 @@ vec3 LinearToSrgb(vec3 color) {
 Fragment brush_fs() {
     vec4 Cs = texture(sColor0, vUv);
 
-    if (Cs.a == 0.0) {
-        return Fragment(vec4(0.0)); // could also `discard`
-    }
-
     // Un-premultiply the input.
     float alpha = Cs.a;
     vec3 color = Cs.rgb / Cs.a;

@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test anchor target=_blank rel=noopener referrer header for Bug 1502678</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+
+  <!--
+  Testing that anchor referrer header are honoured correctly
+  * anchor tag with rel=noopener target=_blank
+  https://bugzilla.mozilla.org/show_bug.cgi?id=1502678
+  -->
+
+  <script type="application/javascript">
+  // We are going to open new tabs with target=_blank and rel=noopener
+  // Listen a new tab is opened then close the new tab, otherwise we will lose
+  // focus for the next tests
+  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+  const gBrowser = Services.wm.getMostRecentWindow("navigator:browser").gBrowser;
+  window.addEventListener("message", function(event) {
+    if (event.data == "childLoadReady") {
+      BrowserTestUtils.waitForNewTab(gBrowser, null,
+        true).then(function(aNewTab) {
+          BrowserTestUtils.removeTab(aNewTab);
+          advance();
+        });
+    }
+  });
+
+  const SJS = "://example.com/tests/dom/base/test/referrer_testserver.sjs?";
+  const PARAMS = ["RP_HEADER", "META_POLICY", "REL", "SCHEME_FROM", "SCHEME_TO"];
+
+  const testCases = [
+    {ACTION: ["generate-anchor-target-blank-policy-test"],
+      TESTS: [
+        // Referrer policy is set in meta
+        {NAME: 'origin-in-meta-rel-noopener',
+         META_POLICY: 'origin',
+         DESC: "origin in meta and rel=noopener",
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'origin'},
+        {NAME: 'unsafe-url-in-meta-rel-noopener',
+         META_POLICY: 'unsafe-url',
+         DESC: "unsafe-url in meta and rel=noopener",
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'full'},
+        {NAME: 'no-referrer-in-meta-rel-noopener',
+         META_POLICY: 'no-referrer',
+         DESC: "no-referrer in meta and rel=noopener",
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'none'},
+        {NAME: 'strict-origin-in-meta-rel-noopener',
+         META_POLICY: 'strict-origin',
+         DESC: "strict-origin in meta and rel=noopener",
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'none'},
+        {NAME: 'strict-origin-when-cross-origin-in-meta-rel-noopener',
+         META_POLICY: 'strict-origin-when-cross-origin',
+         DESC: "strict-origin-when-cross-origin in meta and rel=noopener",
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'none'},
+        {NAME: 'same-origin-in-meta-rel-noopener',
+         META_POLICY: 'same-origin',
+         DESC: "same-origin in meta and rel=noopener",
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'none'},
+        {NAME: 'no-meta-rel-noopener',
+         META_POLICY: '',
+         DESC: "no meta and rel=noopener",
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'none'},
+
+        // Referrer policy is set in Referrer-Policy Header
+        {NAME: 'origin-in-referrer-policy-header-rel-noopener',
+         RP_HEADER: 'origin',
+         DESC: "origin in Referrer-Policy Header and rel=noopener",
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'origin'},
+        {NAME: 'unsafe-url-in-referrer-policy-header-rel-noopener',
+         RP_HEADER: 'unsafe-url',
+         DESC: "unsafe-url in Referrer-Policy Header and rel=noopener",
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'full'},
+        {NAME: 'no-referrer-in-referrer-policy-header-rel-noopener',
+         RP_HEADER: 'no-referrer',
+         DESC: "no-referrer in Referrer-Policy Header and rel=noopener",
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'none'},
+        {NAME: 'strict-origin-in-referrer-policy-header-rel-noopener',
+         RP_HEADER: 'strict-origin',
+         DESC: "strict-origin in Referrer-Policy Header and rel=noopener",
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'none'},
+        {NAME: 'strict-origin-when-cross-origin-in-referrer-policy-header-rel-noopener',
+         RP_HEADER: 'strict-origin-when-cross-origin',
+         DESC: "strict-origin-when-cross-origin in Referrer-Policy Header and rel=noopener",
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'none'},
+        {NAME: 'same-origin-in-referrer-policy-header-rel-noopener',
+         RP_HEADER: 'same-origin',
+         DESC: "same-origin in Referrer-Policy Header and rel=noopener",
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'none'},
+        {NAME: 'no-referrer-policy-header-rel-noopener',
+         RP_HEADER: '',
+         DESC: "no Referrer-Policy Header and rel=noopener",
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'none'}
+
+      ]}
+  ];
+  </script>
+  <script type="application/javascript" src="referrer_helper.js"></script>
+</head>
+<body onload="tests.next();">
+  <iframe id="testframe"></iframe>
+</body>
+</html>
+
