@@ -25,8 +25,8 @@ function populateInputFile(aInputFile) {
     MockFilePicker.useDirectory(message.dir);
 
     var input = document.getElementById(aInputFile);
-    input.setAttribute('data-name', message.name);
-    input.addEventListener('change', function() {
+    input.setAttribute("data-name", message.name);
+    input.addEventListener("change", function() {
       MockFilePicker.cleanup();
       script.destroy();
       next();
@@ -36,7 +36,7 @@ function populateInputFile(aInputFile) {
   }
 
   script.addMessageListener("dir.opened", onOpened);
-  script.sendAsyncMessage("dir.open", { path: 'test' });
+  script.sendAsyncMessage("dir.open", { path: "test" });
 }
 
 function checkFile(file, fileList, dirName) {
@@ -101,7 +101,7 @@ function test_changeDataWhileWorking() {
     }
 
     script.addMessageListener("dir.opened", onOpened);
-    script.sendAsyncMessage("dir.open", { path: 'root' });
+    script.sendAsyncMessage("dir.open", { path: "root" });
   })
 
   // input.click() pointing to the root dir
@@ -123,7 +123,7 @@ function test_changeDataWhileWorking() {
       }
 
       script.addMessageListener("dir.opened", onOpened);
-      script.sendAsyncMessage("dir.open", { path: 'test' });
+      script.sendAsyncMessage("dir.open", { path: "test" });
     });
   })
 
@@ -135,17 +135,17 @@ function test_changeDataWhileWorking() {
       MockFilePicker.useDirectory(aDir);
 
       var input = document.getElementById("inputFileDirectoryChange");
-      input.addEventListener('change', function() {
+      input.addEventListener("change", function() {
         MockFilePicker.cleanup();
         resolve();
       });
 
       input.click();
-    })
+    });
   })
 
   .then(function() {
-    test_fileList('inputFileWebkitDirectory', testDirData);
+    test_fileList("inputFileWebkitDirectory", testDirData);
   });
 }
 
@@ -155,19 +155,19 @@ function test_setup() {
                                      ["dom.webkitBlink.dirPicker.enabled", true]]}, next);
 }
 
-var testDirData = [ { name: 'foo.txt', path: '/foo.txt' },
-                    { name: 'bar.txt', path: '/subdir/bar.txt' }];
+var testDirData = [ { name: "foo.txt", path: "/foo.txt" },
+                    { name: "bar.txt", path: "/subdir/bar.txt" }];
 
 var tests = [
   test_setup,
 
-  function() { populateInputFile('inputFileWebkitDirectory'); },
-  function() { populateInputFile('inputFileWebkitDirectoryAndDirectory'); },
-  function() { populateInputFile('inputFileDirectory'); },
+  function() { populateInputFile("inputFileWebkitDirectory"); },
+  function() { populateInputFile("inputFileWebkitDirectoryAndDirectory"); },
+  function() { populateInputFile("inputFileDirectory"); },
 
-  function() { test_fileList('inputFileWebkitDirectory', testDirData) },
-  function() { test_fileList('inputFileWebkitDirectoryAndDirectory', testDirData) },
-  function() { test_fileList('inputFileDirectory', null); },
+  function() { test_fileList("inputFileWebkitDirectory", testDirData); },
+  function() { test_fileList("inputFileWebkitDirectoryAndDirectory", testDirData); },
+  function() { test_fileList("inputFileDirectory", null); },
 
   test_webkitdirectory_attribute,
 
