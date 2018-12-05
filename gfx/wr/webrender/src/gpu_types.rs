@@ -5,7 +5,7 @@
 use api::{
     DevicePoint, DeviceSize, DeviceRect, LayoutRect, LayoutToWorldTransform, LayoutTransform,
     PremultipliedColorF, LayoutToPictureTransform, PictureToLayoutTransform, PicturePixel,
-    WorldPixel, WorldToLayoutTransform,
+    WorldPixel, WorldToLayoutTransform, LayoutPoint,
 };
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use gpu_cache::{GpuCacheAddress, GpuDataRequest};
@@ -140,6 +140,8 @@ pub struct ClipMaskInstance {
     pub segment: i32,
     pub clip_data_address: GpuCacheAddress,
     pub resource_address: GpuCacheAddress,
+    pub local_pos: LayoutPoint,
+    pub tile_rect: LayoutRect,
 }
 
 /// A border corner dot or dash drawn into the clipping mask.
