@@ -9,7 +9,6 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 const { setTimeout } = require("resource://gre/modules/Timer.jsm");
-const { Services } = require("resource://gre/modules/Services.jsm");
 
 const { ADB } = require("../adb");
 const client = require("../adb-client");
@@ -43,14 +42,12 @@ class TrackDevicesCommand extends EventEmitter {
 
   _onOpen() {
     dumpn("trackDevices onopen");
-    Services.obs.notifyObservers(null, "adb-track-devices-start");
     const req = client.createRequest("host:track-devices");
     this._socket.send(req);
   }
 
   _onError(event) {
     dumpn("trackDevices onerror: " + event);
-    Services.obs.notifyObservers(null, "adb-track-devices-stop");
   }
 
   _onClose() {
@@ -61,8 +58,6 @@ class TrackDevicesCommand extends EventEmitter {
       this._devices[dev] = false;
       this.emit("device-disconnected", dev);
     }
-
-    Services.obs.notifyObservers(null, "adb-track-devices-stop");
 
     // When we lose connection to the server,
     // and the adb is still on, we most likely got our server killed
