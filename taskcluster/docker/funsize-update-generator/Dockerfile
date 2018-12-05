@@ -8,7 +8,7 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update -q && \
     apt-get install -yyq --no-install-recommends \
     python3.6 python3-setuptools python3-cryptography libgetopt-simple-perl \
-    bzip2 clamav clamav-freshclam python3-requests python3-sh curl \
+    bzip2 python3-requests python3-sh curl \
     python3-dev gcc liblzma-dev xz-utils jq libdpkg-perl locales && \
     apt-get clean
 RUN useradd -d /home/worker -s /bin/bash -m worker
@@ -19,9 +19,6 @@ ENV LANG en_CA.UTF-8
 ENV LANGUAGE en_CA.UTF-8
 ENV LANG_ALL en_CA.UTF-8
 ENV LC_ALL en_CA.UTF-8
-
-# Freshclam may be flaky, retry if it fails
-RUN for i in 1 2 3 4 5; do freshclam --verbose && break || sleep 15; done
 
 # python-pip installs a lot of dependencies increasing the size of an image
 # drastically. Install it like this saves us almost 200M.
