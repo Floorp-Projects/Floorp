@@ -49,6 +49,7 @@ void main(void) {
 
         vec4[2] segment_info = fetch_from_gpu_cache_2(segment_address);
         segment_rect = RectWithSize(segment_info[0].xy, segment_info[0].zw);
+        segment_rect.p0 += ph.local_rect.p0;
         segment_data = segment_info[1];
     }
 

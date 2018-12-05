@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceSize, DeviceIntSideOffsets};
-use api::{DevicePixelScale, ImageDescriptor, ImageFormat};
+use api::{DevicePixelScale, ImageDescriptor, ImageFormat, LayoutPoint};
 use api::{LineStyle, LineOrientation, LayoutSize, ColorF, DirtyRect};
 #[cfg(feature = "pathfinder")]
 use api::FontRenderMode;
@@ -253,6 +253,7 @@ pub struct CacheMaskTask {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ClipRegionTask {
     pub clip_data_address: GpuCacheAddress,
+    pub local_pos: LayoutPoint,
 }
 
 #[derive(Debug)]
@@ -587,6 +588,7 @@ impl RenderTask {
                             let mask_task = RenderTask::new_rounded_rect_mask(
                                 cache_size,
                                 clip_data_address,
+                                info.minimal_shadow_rect.origin,
                             );
 
                             let mask_task_id = render_tasks.add(mask_task);
@@ -628,12 +630,14 @@ impl RenderTask {
     pub fn new_rounded_rect_mask(
         size: DeviceIntSize,
         clip_data_address: GpuCacheAddress,
+        local_pos: LayoutPoint,
     ) -> Self {
         RenderTask::with_dynamic_location(
             size,
             Vec::new(),
             RenderTaskKind::ClipRegion(ClipRegionTask {
                 clip_data_address,
+                local_pos,
             }),
             ClearMode::One,
         )
