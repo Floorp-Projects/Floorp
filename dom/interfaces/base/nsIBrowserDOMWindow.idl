@@ -173,5 +173,11 @@ interface nsIBrowserDOMWindow : nsISupports
    * BrowserUtils.jsm for a simple implementation of this method.
    */
   boolean canClose();
+
+  /**
+   * The number browser tabs in the window. This number currently includes
+   * lazy tabs, though for most uses it probably should not.
+   */
+  readonly attribute unsigned long tabCount;
 };
 
