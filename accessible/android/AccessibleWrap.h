@@ -81,8 +81,11 @@ class AccessibleWrap : public Accessible {
 
   virtual role WrapperRole() { return Role(); }
 
-  static void GetRoleDescription(role aRole, nsAString& aGeckoRole,
+  static void GetRoleDescription(role aRole,
+                                 nsIPersistentProperties* aAttributes,
+                                 nsAString& aGeckoRole,
                                  nsAString& aRoleDescription);
+
   static uint32_t GetFlags(role aRole, uint64_t aState, uint8_t aActionCount);
 };
 
