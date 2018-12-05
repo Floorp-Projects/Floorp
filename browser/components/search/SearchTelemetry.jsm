@@ -17,31 +17,31 @@ const SEARCH_COUNTS_HISTOGRAM_KEY = "SEARCH_COUNTS";
 // Used to identify various parameters (query, code, etc.) in search URLS.
 const SEARCH_PROVIDER_INFO = {
   "google": {
-    "regexp": /^https:\/\/www\.(google)\.(?:.+)\/search/,
+    "regexp": /^https:\/\/www\.google\.(?:.+)\/search/,
     "queryParam": "q",
     "codeParam": "client",
     "codePrefixes": ["firefox"],
     "followonParams": ["oq", "ved", "ei"],
   },
   "duckduckgo": {
-    "regexp": /^https:\/\/(duckduckgo)\.com\//,
+    "regexp": /^https:\/\/duckduckgo\.com\//,
     "queryParam": "q",
     "codeParam": "t",
     "codePrefixes": ["ff"],
   },
   "yahoo": {
-    "regexp": /^https:\/\/(?:.*)search\.(yahoo)\.com\/search/,
+    "regexp": /^https:\/\/(?:.*)search\.yahoo\.com\/search/,
     "queryParam": "p",
   },
   "baidu": {
-    "regexp": /^https:\/\/www\.(baidu)\.com\/(?:s|baidu)/,
+    "regexp": /^https:\/\/www\.baidu\.com\/(?:s|baidu)/,
     "queryParam": "wd",
     "codeParam": "tn",
     "codePrefixes": ["monline_dg"],
     "followonParams": ["oq"],
   },
   "bing": {
-    "regexp": /^https:\/\/www\.(bing)\.com\/search/,
+    "regexp": /^https:\/\/www\.bing\.com\/search/,
     "queryParam": "q",
     "codeParam": "pc",
     "codePrefixes": ["MOZ", "MZ"],
