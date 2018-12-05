@@ -417,6 +417,10 @@ PaymentDetails::GetError(nsAString& aError) {
 NS_IMETHODIMP
 PaymentDetails::GetShippingAddressErrors(JSContext* aCx,
                                          JS::MutableHandleValue aErrors) {
+  aErrors.set(JS::NullValue());
+  if (mShippingAddressErrors.IsEmpty()) {
+    return NS_OK;
+  }
   AddressErrors errors;
   errors.Init(mShippingAddressErrors);
   if (!ToJSValue(aCx, errors, aErrors)) {
@@ -427,6 +431,10 @@ PaymentDetails::GetShippingAddressErrors(JSContext* aCx,
 
 NS_IMETHODIMP
 PaymentDetails::GetPayerErrors(JSContext* aCx, JS::MutableHandleValue aErrors) {
+  aErrors.set(JS::NullValue());
+  if (mPayerErrors.IsEmpty()) {
+    return NS_OK;
+  }
   PayerErrors errors;
   errors.Init(mPayerErrors);
   if (!ToJSValue(aCx, errors, aErrors)) {
@@ -438,8 +446,8 @@ PaymentDetails::GetPayerErrors(JSContext* aCx, JS::MutableHandleValue aErrors) {
 NS_IMETHODIMP
 PaymentDetails::GetPaymentMethodErrors(JSContext* aCx,
                                        JS::MutableHandleValue aErrors) {
+  aErrors.set(JS::NullValue());
   if (mPaymentMethodErrors.IsEmpty()) {
-    aErrors.set(JS::NullValue());
     return NS_OK;
   }
   nsresult rv = DeserializeToJSValue(mPaymentMethodErrors, aCx, aErrors);
