@@ -1,3 +1,4 @@
+/* eslint-env worker */
 importScripts("filesystem_commons.js");
 
 function finish() {

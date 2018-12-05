@@ -1,19 +1,14 @@
+/* eslint-env mozilla/frame-script */
 Cu.importGlobalProperties(["File", "Directory"]);
-
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 var tmpFile, tmpDir;
 
 addMessageListener("entries.open", function(e) {
-  tmpFile = Cc["@mozilla.org/file/directory_service;1"]
-              .getService(Ci.nsIDirectoryService)
-              .QueryInterface(Ci.nsIProperties)
-              .get("TmpD", Ci.nsIFile);
+  tmpFile = Services.dirsvc.QueryInterface(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
   tmpFile.append("file.txt");
   tmpFile.createUnique(Ci.nsIFile.FILE_TYPE, 0o600);
 
-  tmpDir = Cc["@mozilla.org/file/directory_service;1"]
-              .getService(Ci.nsIDirectoryService)
-              .QueryInterface(Ci.nsIProperties)
-              .get("TmpD", Ci.nsIFile);
+  tmpDir = Services.dirsvc.QueryInterface(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
 
   tmpDir.append("dir-test");
   tmpDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o700);
