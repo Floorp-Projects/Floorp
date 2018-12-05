@@ -210,10 +210,10 @@ WebConsoleOutputWrapper.prototype = {
           },
           sourceMapService: this.toolbox ? this.toolbox.sourceMapURLService : null,
           highlightDomElement: async (grip, options = {}) => {
+            await this.toolbox.initInspector();
             if (!this.toolbox.highlighter) {
               return null;
             }
-            await this.toolbox.initInspector();
             const nodeFront = await this.toolbox.walker.gripToNodeFront(grip);
             return this.toolbox.highlighter.highlight(nodeFront, options);
           },
@@ -223,6 +223,7 @@ WebConsoleOutputWrapper.prototype = {
               : null;
           },
           openNodeInInspector: async (grip) => {
+            await this.toolbox.initInspector();
             const onSelectInspector = this.toolbox.selectTool("inspector", "inspect_dom");
             const onGripNodeToFront = this.toolbox.walker.gripToNodeFront(grip);
             const [
