@@ -155,7 +155,7 @@ public class SessionAccessibility {
                     }
                 return true;
             case AccessibilityNodeInfo.ACTION_CLICK:
-                mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityActivate", null);
+                nativeProvider.click(virtualViewId);
                 GeckoBundle nodeInfo = nativeProvider.getNodeInfo(virtualViewId);
                 final int flags = nodeInfo != null ? nodeInfo.getInt("flags") : 0;
                 if ((flags & (FLAG_SELECTABLE | FLAG_CHECKABLE)) == 0) {
@@ -173,7 +173,7 @@ public class SessionAccessibility {
                 mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityScrollBackward", null);
                 return true;
             case AccessibilityNodeInfo.ACTION_SELECT:
-                mSession.getEventDispatcher().dispatch("GeckoView:AccessibilitySelect", null);
+                nativeProvider.click(virtualViewId);
                 return true;
             case AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT:
             case AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT:
@@ -747,6 +747,9 @@ public class SessionAccessibility {
 
         @WrapForJNI(dispatchTo = "gecko")
         public native void setText(int id, String text);
+
+        @WrapForJNI(dispatchTo = "gecko")
+        public native void click(int id);
 
         @WrapForJNI(calledFrom = "gecko", stubName = "SendEvent")
         private void sendEventNative(final int eventType, final int sourceId, final int className, final GeckoBundle eventData) {
