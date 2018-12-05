@@ -1867,36 +1867,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMarginRightWidth() {
   return GetMarginWidthFor(eSideRight);
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOverscrollBehaviorX() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(
-      nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mOverscrollBehaviorX,
-                                     nsCSSProps::kOverscrollBehaviorKTable));
-  return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOverscrollBehaviorY() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(
-      nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mOverscrollBehaviorY,
-                                     nsCSSProps::kOverscrollBehaviorKTable));
-  return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetScrollSnapTypeX() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(nsCSSProps::ValueToKeywordEnum(
-      StyleDisplay()->mScrollSnapTypeX, nsCSSProps::kScrollSnapTypeKTable));
-  return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetScrollSnapTypeY() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(nsCSSProps::ValueToKeywordEnum(
-      StyleDisplay()->mScrollSnapTypeY, nsCSSProps::kScrollSnapTypeKTable));
-  return val.forget();
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::GetScrollSnapPoints(
     const nsStyleCoord& aCoord) {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
@@ -2549,22 +2519,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOverflowY() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetIdent(nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mOverflowY,
                                                nsCSSProps::kOverflowSubKTable));
-  return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOverflowClipBoxBlock() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(
-      nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mOverflowClipBoxBlock,
-                                     nsCSSProps::kOverflowClipBoxKTable));
-  return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOverflowClipBoxInline() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(
-      nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mOverflowClipBoxInline,
-                                     nsCSSProps::kOverflowClipBoxKTable));
   return val.forget();
 }
 
