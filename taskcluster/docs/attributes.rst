@@ -261,15 +261,18 @@ cron
 Indicates that a task is meant to be run via cron tasks, and should not be run
 on push.
 
-cache_digest
-============
-Some tasks generate artifacts that are cached between pushes. This is the unique string used
-to identify the current version of the artifacts. See :py:mod:`taskgraph.util.cached_task`.
+cached_task
+===========
+Some tasks generate artifacts that are cached between pushes. This is a
+dictionary with the type and name of the cache, and the unique string used to
+identify the current version of the artifacts. See :py:mod:`taskgraph.util.cached_task`.
 
-cache_type
-==========
-Some tasks generate artifacts that are cached between pushes. This is the type of cache that is
-used for the this task. See :py:mod:`taskgraph.util.cached_task`.
+.. code:: yaml
+
+   cached_task:
+       digest: 66dfc2204600b48d92a049b6a18b83972bb9a92f9504c06608a9c20eb4c9d8ae
+       name: debian7-base
+       type: docker-images.v2
 
 required_signoffs
 =================
