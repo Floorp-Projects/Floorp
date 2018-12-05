@@ -86,6 +86,12 @@ ProxyAccessibleWrap::ActionCount() const
   return Proxy()->ActionCount();
 }
 
+bool
+ProxyAccessibleWrap::DoAction(uint8_t aIndex) const
+{
+  return Proxy()->DoAction(aIndex);
+}
+
 // Other
 
 void ProxyAccessibleWrap::SetTextContents(const nsAString& aText) {

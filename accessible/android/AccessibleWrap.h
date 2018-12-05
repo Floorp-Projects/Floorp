@@ -20,7 +20,10 @@ class AccessibleWrap : public Accessible {
   virtual ~AccessibleWrap();
 
   virtual nsresult HandleAccEvent(AccEvent* aEvent) override;
+
   virtual void Shutdown() override;
+
+  virtual bool DoAction(uint8_t aIndex) const override;
 
   int32_t VirtualViewID() const { return mID; }
 
