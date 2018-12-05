@@ -90,6 +90,9 @@ def push_to_try(method, msg, labels=None, templates=None, try_task_config=None,
     commit_message = ('%s%s\n\nPushed via `mach try %s`' %
                       (msg, closed_tree_string, method))
 
+    if templates is not None:
+        templates.setdefault('env', {}).update({'TRY_SELECTOR': method})
+
     if labels or labels == []:
         try_task_config = {
             'version': 1,
