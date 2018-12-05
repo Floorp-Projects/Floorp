@@ -9,7 +9,6 @@
 <body>
 <input id="entries" type="file"></input>
 <script type="application/javascript">
-
 var fileEntry;
 var directoryEntry;
 var script;
@@ -103,9 +102,9 @@ function test_directoryEntry_createReader() {
     }
 
     // Called twice:
-    reader.readEntries(function(a) {
-      ok(Array.isArray(a), "We want an array.");
-      is(a.length, 0, "reader.readyEntries returns 0 elements.");
+    reader.readEntries(function(a1) {
+      ok(Array.isArray(a1), "We want an array.");
+      is(a1.length, 0, "reader.readyEntries returns 0 elements.");
       next();
     }, function() {
       ok(false, "Something when wrong!");
@@ -255,7 +254,7 @@ function test_filesystem() {
   is(fs.root.name, "", "FileSystem.root.name must be an empty string.");
   is(fs.root.fullPath, "/", "FileSystem.root.fullPath must be '/'");
 
-  reader = fs.root.createReader();
+  var reader = fs.root.createReader();
   reader.readEntries(function(a) {
     ok(Array.isArray(a), "We want an array.");
     is(a.length, 2, "reader.readyEntries returns 2 elements.");
