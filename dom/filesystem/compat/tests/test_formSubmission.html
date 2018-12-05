@@ -29,7 +29,7 @@ function setup_tests() {
   iframe.onload = function() {
     info("Frame loaded!");
     next();
-  }
+  };
 
   SpecialPowers.pushPrefEnv({"set": [["dom.input.dirpicker", true],
                                      ["dom.webkitBlink.dirPicker.enabled", true],
@@ -45,13 +45,13 @@ function populate_entries(webkitDirectory) {
     form.removeChild(input);
   }
 
-  input = document.createElement('input');
-  input.setAttribute('id', 'input');
-  input.setAttribute('type', 'file');
-  input.setAttribute('name', 'input');
+  input = document.createElement("input");
+  input.setAttribute("id", "input");
+  input.setAttribute("type", "file");
+  input.setAttribute("name", "input");
 
   if (webkitDirectory) {
-    input.setAttribute('webkitdirectory', 'true');
+    input.setAttribute("webkitdirectory", "true");
   }
 
   form.appendChild(input);

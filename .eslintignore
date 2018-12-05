@@ -184,7 +184,6 @@ dom/encoding/**
 dom/events/**
 dom/fetch/**
 dom/file/**
-dom/filesystem/**
 dom/flex/**
 dom/grid/**
 dom/html/**

@@ -1,11 +1,11 @@
-importScripts('filesystem_commons.js');
+importScripts("filesystem_commons.js");
 
 function finish() {
-  postMessage({ type: 'finish' });
+  postMessage({ type: "finish" });
 }
 
 function ok(a, msg) {
-  postMessage({ type: 'test', test: !!a, message: msg });
+  postMessage({ type: "test", test: !!a, message: msg });
 }
 
 function is(a, b, msg) {
@@ -38,4 +38,4 @@ var directory;
 onmessage = function(e) {
   directory = e.data;
   next();
-}
+};
