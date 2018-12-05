@@ -321,7 +321,7 @@ void SessionAccessibility::ReplaceViewportCache(
     AccessibleWrap* acc = aAccessibles.ElementAt(i);
     if (aData.Length() == aAccessibles.Length()) {
       const BatchData& data = aData.ElementAt(i);
-      auto bundle = acc->ToSmallBundle(data.State(), data.Bounds());
+      auto bundle = acc->ToSmallBundle(data.State(), data.Bounds(), data.ActionCount());
       infos->SetElement(i, bundle);
     } else {
       infos->SetElement(i, acc->ToSmallBundle());
@@ -341,10 +341,10 @@ void SessionAccessibility::ReplaceFocusPathCache(
       const BatchData& data = aData.ElementAt(i);
       nsCOMPtr<nsIPersistentProperties> props =
           AccessibleWrap::AttributeArrayToProperties(data.Attributes());
-      auto bundle =
-          acc->ToBundle(data.State(), data.Bounds(), data.Name(),
-                        data.TextValue(), data.DOMNodeID(), data.CurValue(),
-                        data.MinValue(), data.MaxValue(), data.Step(), props);
+      auto bundle = acc->ToBundle(
+          data.State(), data.Bounds(), data.ActionCount(), data.Name(),
+          data.TextValue(), data.DOMNodeID(), data.CurValue(), data.MinValue(),
+          data.MaxValue(), data.Step(), props);
       infos->SetElement(i, bundle);
     } else {
       infos->SetElement(i, acc->ToBundle());
@@ -362,7 +362,7 @@ void SessionAccessibility::UpdateCachedBounds(
     AccessibleWrap* acc = aAccessibles.ElementAt(i);
     if (aData.Length() == aAccessibles.Length()) {
       const BatchData& data = aData.ElementAt(i);
-      auto bundle = acc->ToSmallBundle(data.State(), data.Bounds());
+      auto bundle = acc->ToSmallBundle(data.State(), data.Bounds(), data.ActionCount());
       infos->SetElement(i, bundle);
     } else {
       infos->SetElement(i, acc->ToSmallBundle());
