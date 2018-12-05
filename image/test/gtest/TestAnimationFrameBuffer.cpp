@@ -146,7 +146,8 @@ VerifyMarkComplete(AnimationFrameBuffer& aQueue,
   if (aQueue.IsRecycling() && !aQueue.SizeKnown()) {
     const AnimationFrameRecyclingQueue& queue =
       *static_cast<AnimationFrameRecyclingQueue*>(&aQueue);
-    EXPECT_TRUE(queue.FirstFrameRefreshArea().IsEmpty());
+    EXPECT_EQ(queue.FirstFrame()->GetRect(),
+              queue.FirstFrameRefreshArea());
   }
 
   bool keepDecoding = aQueue.MarkComplete(aRefreshArea);
@@ -193,12 +194,6 @@ VerifyReset(AnimationFrameBuffer& aQueue,
     EXPECT_EQ(size_t(0), queue.Display().size());
     EXPECT_EQ(aFirstFrame, queue.FirstFrame());
     EXPECT_EQ(nullptr, aQueue.Get(0, false));
-  }
-
-  if (aQueue.IsRecycling()) {
-    const AnimationFrameRecyclingQueue& queue =
-      *static_cast<AnimationFrameRecyclingQueue*>(&aQueue);
-    EXPECT_EQ(size_t(0), queue.Recycle().size());
   }
 }
 
@@ -635,6 +630,104 @@ TEST_F(ImageAnimationFrameBuffer, DiscardingReset)
   TestDiscardingQueueReset(buffer, firstFrame, kThreshold, kBatch, kStartFrame);
 }
 
+TEST_F(ImageAnimationFrameBuffer, ResetBeforeDiscardingThreshold)
+{
+  const size_t kThreshold = 3;
+  const size_t kBatch = 1;
+  const size_t kStartFrame = 0;
+
+  // Get the starting buffer to just before the point where we need to switch
+  // to a discarding buffer, reset the animation so advancing points at the
+  // first frame, and insert the last frame to cross the threshold.
+  AnimationFrameRetainedBuffer retained(kThreshold, kBatch, kStartFrame);
+  VerifyInsert(retained, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsertAndAdvance(retained, 1, AnimationFrameBuffer::InsertStatus::YIELD);
+  bool restartDecoder = retained.Reset();
+  EXPECT_FALSE(restartDecoder);
+  VerifyInsert(retained, AnimationFrameBuffer::InsertStatus::DISCARD_YIELD);
+
+  const imgFrame* firstFrame = retained.Frames()[0].get();
+  EXPECT_TRUE(firstFrame != nullptr);
+  AnimationFrameDiscardingQueue buffer(std::move(retained));
+  const imgFrame* displayFirstFrame = buffer.Get(0, true);
+  const imgFrame* advanceFirstFrame = buffer.Get(0, false);
+  EXPECT_EQ(firstFrame, displayFirstFrame);
+  EXPECT_EQ(firstFrame, advanceFirstFrame);
+}
+
+TEST_F(ImageAnimationFrameBuffer, DiscardingTooFewFrames)
+{
+  const size_t kThreshold = 3;
+  const size_t kBatch = 1;
+  const size_t kStartFrame = 0;
+
+  // First get us to a discarding buffer state.
+  AnimationFrameRetainedBuffer retained(kThreshold, kBatch, kStartFrame);
+  VerifyInsert(retained, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsertAndAdvance(retained, 1, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsert(retained, AnimationFrameBuffer::InsertStatus::DISCARD_YIELD);
+
+  // Insert one more frame.
+  AnimationFrameDiscardingQueue buffer(std::move(retained));
+  VerifyAdvance(buffer, 2, true);
+  VerifyInsert(buffer, AnimationFrameBuffer::InsertStatus::YIELD);
+
+  // Mark it as complete.
+  bool restartDecoder = buffer.MarkComplete(IntRect(0, 0, 1, 1));
+  EXPECT_FALSE(restartDecoder);
+  EXPECT_FALSE(buffer.HasRedecodeError());
+
+  // Insert one fewer frame than before.
+  VerifyAdvance(buffer, 3, true);
+  VerifyInsertAndAdvance(buffer, 0, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsertAndAdvance(buffer, 1, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsertAndAdvance(buffer, 2, AnimationFrameBuffer::InsertStatus::YIELD);
+
+  // When we mark it as complete, it should fail due to too few frames.
+  restartDecoder = buffer.MarkComplete(IntRect(0, 0, 1, 1));
+  EXPECT_TRUE(buffer.HasRedecodeError());
+  EXPECT_EQ(size_t(0), buffer.PendingDecode());
+  EXPECT_EQ(size_t(4), buffer.Size());
+}
+
+TEST_F(ImageAnimationFrameBuffer, DiscardingTooManyFrames)
+{
+  const size_t kThreshold = 3;
+  const size_t kBatch = 1;
+  const size_t kStartFrame = 0;
+
+  // First get us to a discarding buffer state.
+  AnimationFrameRetainedBuffer retained(kThreshold, kBatch, kStartFrame);
+  VerifyInsert(retained, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsertAndAdvance(retained, 1, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsert(retained, AnimationFrameBuffer::InsertStatus::DISCARD_YIELD);
+
+  // Insert one more frame.
+  AnimationFrameDiscardingQueue buffer(std::move(retained));
+  VerifyAdvance(buffer, 2, true);
+  VerifyInsert(buffer, AnimationFrameBuffer::InsertStatus::YIELD);
+
+  // Mark it as complete.
+  bool restartDecoder = buffer.MarkComplete(IntRect(0, 0, 1, 1));
+  EXPECT_FALSE(restartDecoder);
+  EXPECT_FALSE(buffer.HasRedecodeError());
+
+  // Advance and insert to get us back to the end on the redecode.
+  VerifyAdvance(buffer, 3, true);
+  VerifyInsertAndAdvance(buffer, 0, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsertAndAdvance(buffer, 1, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsertAndAdvance(buffer, 2, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsertAndAdvance(buffer, 3, AnimationFrameBuffer::InsertStatus::YIELD);
+
+  // Attempt to insert a 5th frame, it should fail.
+  RefPtr<imgFrame> frame = CreateEmptyFrame();
+  AnimationFrameBuffer::InsertStatus status = buffer.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
+  EXPECT_TRUE(buffer.HasRedecodeError());
+  EXPECT_EQ(size_t(0), buffer.PendingDecode());
+  EXPECT_EQ(size_t(4), buffer.Size());
+}
+
 TEST_F(ImageAnimationFrameBuffer, RecyclingReset)
 {
   const size_t kThreshold = 8;
@@ -645,6 +738,60 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingReset)
   const imgFrame* firstFrame = retained.Frames()[0].get();
   AnimationFrameRecyclingQueue buffer(std::move(retained));
   TestDiscardingQueueReset(buffer, firstFrame, kThreshold, kBatch, kStartFrame);
+}
+
+TEST_F(ImageAnimationFrameBuffer, RecyclingResetBeforeComplete)
+{
+  const size_t kThreshold = 3;
+  const size_t kBatch = 1;
+  const size_t kStartFrame = 0;
+  const IntSize kImageSize(100, 100);
+  const IntRect kImageRect(IntPoint(0, 0), kImageSize);
+  AnimationFrameRetainedBuffer retained(kThreshold, kBatch, kStartFrame);
+
+  // Get the starting buffer to just before the point where we need to switch
+  // to a discarding buffer, reset the animation so advancing points at the
+  // first frame, and insert the last frame to cross the threshold.
+  RefPtr<imgFrame> frame;
+  frame = CreateEmptyFrame(kImageSize, kImageRect, false);
+  AnimationFrameBuffer::InsertStatus status = retained.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::CONTINUE, status);
+
+  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(10, 10), IntSize(1, 1)), false);
+  status = retained.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
+
+  VerifyAdvance(retained, 1, true);
+
+  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(20, 10), IntSize(1, 1)), false);
+  status = retained.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::DISCARD_YIELD, status);
+
+  AnimationFrameRecyclingQueue buffer(std::move(retained));
+  bool restartDecoding = buffer.Reset();
+  EXPECT_TRUE(restartDecoding);
+
+  // None of the buffers were recyclable.
+  EXPECT_TRUE(buffer.Recycle().empty());
+
+  // Reinsert the first two frames as recyclable and reset again.
+  frame = CreateEmptyFrame(kImageSize, kImageRect, true);
+  status = buffer.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::CONTINUE, status);
+
+  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(10, 10), IntSize(1, 1)), true);
+  status = buffer.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
+
+  restartDecoding = buffer.Reset();
+  EXPECT_TRUE(restartDecoding);
+
+  // Now both buffers should have been saved and the dirty rect replaced with
+  // the full image rect since we don't know the first frame refresh area yet.
+  EXPECT_EQ(size_t(2), buffer.Recycle().size());
+  for (const auto& entry : buffer.Recycle()) {
+    EXPECT_EQ(kImageRect, entry.mDirtyRect);
+  }
 }
 
 TEST_F(ImageAnimationFrameBuffer, RecyclingRect)
