@@ -98,8 +98,7 @@ class nsAutoPushCurrentTableItem {
 #endif
 };
 
-/* ============================================================================
- */
+/* ========================================================================== */
 
 enum nsTableColType {
   eColContent = 0,            // there is real col content associated
@@ -131,7 +130,9 @@ class nsTableFrame : public nsContainerFrame {
   /** nsTableWrapperFrame has intimate knowledge of the inner table frame */
   friend class nsTableWrapperFrame;
 
-  /** instantiate a new instance of nsTableRowFrame.
+  /**
+   * instantiate a new instance of nsTableRowFrame.
+   *
    * @param aPresShell the pres shell for this frame
    *
    * @return           the frame that was created
@@ -322,16 +323,23 @@ class nsTableFrame : public nsContainerFrame {
                                 nscoord aWidthInCB);
 
   // XXXldb REWRITE THIS COMMENT!
-  /** inner tables are reflowed in two steps.
+  // clang-format off
+  /**
+   * Inner tables are reflowed in two steps.
    * <pre>
-   * if mFirstPassValid is false, this is our first time through since content
-   * was last changed set pass to 1 do pass 1 get min/max info for all cells in
-   * an infinite space do column balancing set mFirstPassValid to true do pass 2
+   * if mFirstPassValid is false, this is our first time through since content was last changed
+   *   set pass to 1
+   *   do pass 1
+   *     get min/max info for all cells in an infinite space
+   *   do column balancing
+   *   set mFirstPassValid to true
+   *   do pass 2
    *     use column widths to Reflow cells
    * </pre>
    *
    * @see nsIFrame::Reflow
    */
+  // clang-format on
   virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
@@ -839,8 +847,8 @@ class nsTableFrame : public nsContainerFrame {
     uint32_t mHasPctCol : 1;        // does any cell or col have a pct width
     uint32_t mCellSpansPctCol : 1;  // does any cell span a col with a pct width
                                     // (or containing a cell with a pct width)
-    uint32_t
-        mIsBorderCollapse : 1;  // border collapsing model vs. separate model
+    uint32_t mIsBorderCollapse : 1;  // border collapsing model vs. separate
+                                     // model
     uint32_t mRowInserted : 1;
     uint32_t mNeedToCalcBCBorders : 1;
     uint32_t mGeometryDirty : 1;
@@ -854,11 +862,11 @@ class nsTableFrame : public nsContainerFrame {
 
   std::map<int32_t, int32_t> mDeletedRowIndexRanges;  // maintains ranges of row
                                                       // indices of deleted rows
-  nsTableCellMap*
-      mCellMap;  // maintains the relationships between rows, cols, and cells
-  nsITableLayoutStrategy*
-      mTableLayoutStrategy;  // the layout strategy for this frame
-  nsFrameList mColGroups;    // the list of colgroup frames
+  nsTableCellMap* mCellMap;  // maintains the relationships between rows, cols,
+                             // and cells
+  nsITableLayoutStrategy* mTableLayoutStrategy;  // the layout strategy for this
+                                                 // frame
+  nsFrameList mColGroups;                        // the list of colgroup frames
 };
 
 inline bool nsTableFrame::IsRowGroup(mozilla::StyleDisplay aDisplayType) const {
