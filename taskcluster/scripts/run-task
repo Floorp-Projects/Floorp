@@ -427,7 +427,7 @@ def vcs_checkout(source_repo, dest, store_path,
             res = urllib.request.urlopen(FINGERPRINT_URL, timeout=10)
             secret = res.read()
             try:
-                secret = json.loads(secret, encoding='utf-8')
+                secret = json.loads(secret.decode('utf-8'))
             except ValueError:
                 print_line(b'vcs', b'invalid JSON in hg fingerprint secret')
                 sys.exit(1)
