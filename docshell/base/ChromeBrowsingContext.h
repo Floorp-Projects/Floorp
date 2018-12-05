@@ -4,18 +4,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ChromeBrowsingContext_h
-#define ChromeBrowsingContext_h
+#ifndef mozilla_dom_ChromeBrowsingContext_h
+#define mozilla_dom_ChromeBrowsingContext_h
 
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/RefPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
 
 class nsIDocShell;
 
 namespace mozilla {
 namespace dom {
+
+class WindowGlobalParent;
 
 // ChromeBrowsingContext is a BrowsingContext living in the parent
 // process, with whatever extra data that a BrowsingContext in the
@@ -31,9 +35,24 @@ class ChromeBrowsingContext final : public BrowsingContext {
     return mProcessId == aProcessId;
   }
 
+  void GetWindowGlobals(nsTArray<RefPtr<WindowGlobalParent>>& aWindows);
+
+  // Called by WindowGlobalParent to register and unregister window globals.
+  void RegisterWindowGlobal(WindowGlobalParent* aGlobal);
+  void UnregisterWindowGlobal(WindowGlobalParent* aGlobal);
+
+  // The current active WindowGlobal.
+  WindowGlobalParent* GetCurrentWindowGlobal() const {
+    return mCurrentWindowGlobal;
+  }
+  void SetCurrentWindowGlobal(WindowGlobalParent* aGlobal);
+
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
+
  protected:
-  void Traverse(nsCycleCollectionTraversalCallback& cb) {}
-  void Unlink() {}
+  void Traverse(nsCycleCollectionTraversalCallback& cb);
+  void Unlink();
 
   using Type = BrowsingContext::Type;
   ChromeBrowsingContext(BrowsingContext* aParent, BrowsingContext* aOpener,
@@ -46,8 +65,13 @@ class ChromeBrowsingContext final : public BrowsingContext {
   // XXX(farre): Store a ContentParent pointer here rather than mProcessId?
   // Indicates which process owns the docshell.
   uint64_t mProcessId;
+
+  // All live window globals within this browsing context.
+  nsTHashtable<nsRefPtrHashKey<WindowGlobalParent>> mWindowGlobals;
+  RefPtr<WindowGlobalParent> mCurrentWindowGlobal;
 };
 
 }  // namespace dom
 }  // namespace mozilla
-#endif
+
+#endif  // !defined(mozilla_dom_ChromeBrowsingContext_h)
