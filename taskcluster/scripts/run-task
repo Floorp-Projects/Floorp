@@ -266,7 +266,7 @@ def configure_cache_posix(cache, user, group,
     if not os.listdir(cache):
         print_line(b'cache', b'cache %s is empty; writing requirements: '
                              b'%s\n' % (
-                    cache.encode('utf-8'), b' '.join(sorted(our_requirements))))
+                                 cache.encode('utf-8'), b' '.join(sorted(our_requirements))))
 
         # We write a requirements file so future invocations know what the
         # requirements are.
