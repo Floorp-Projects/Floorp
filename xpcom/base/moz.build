@@ -119,6 +119,7 @@ EXPORTS.mozilla += [
     'MemoryInfo.h',
     'MemoryMapping.h',
     'MemoryReportingProcess.h',
+    'MemoryTelemetry.h',
     'nsMemoryInfoDumper.h',
     'NSPRLogModulesParser.h',
     'OwningNonNull.h',
@@ -150,6 +151,7 @@ UNIFIED_SOURCES += [
     'LogCommandLineHandler.cpp',
     'Logging.cpp',
     'LogModulePrefWatcher.cpp',
+    'MemoryTelemetry.cpp',
     'nsClassInfoImpl.cpp',
     'nsCOMPtr.cpp',
     'nsConsoleMessage.cpp',
@@ -217,6 +219,7 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../build',
     '/dom/base',
+    '/js/xpconnect/loader', # for mozJSComponentLoader.h
     '/mfbt',
     '/xpcom/ds',
 ]
