@@ -627,6 +627,11 @@ bool IToplevelProtocol::OpenWithAsyncPid(mozilla::ipc::Transport* aTransport,
   return GetIPCChannel()->Open(aTransport, aThread, aSide);
 }
 
+bool IToplevelProtocol::OpenOnSameThread(MessageChannel* aChannel, Side aSide) {
+  SetOtherProcessId(base::GetCurrentProcId());
+  return GetIPCChannel()->OpenOnSameThread(aChannel, aSide);
+}
+
 void IToplevelProtocol::Close() { GetIPCChannel()->Close(); }
 
 void IToplevelProtocol::SetReplyTimeoutMs(int32_t aTimeoutMs) {
@@ -637,13 +642,29 @@ bool IToplevelProtocol::IsOnCxxStack() const {
   return GetIPCChannel()->IsOnCxxStack();
 }
 
+int32_t IToplevelProtocol::ToplevelState::NextId() {
+  // Genreate the next ID to use for a shared memory or protocol. Parent and
+  // Child sides of the protocol use different pools, and actors created in the
+  // middleman need to use a distinct pool as well.
+  int32_t tag = 0;
+  if (recordreplay::IsMiddleman()) {
+    tag |= 1 << 0;
+  }
+  if (mProtocol->GetSide() == ParentSide) {
+    tag |= 1 << 1;
+  }
+
+  // Compute the ID to use with the low two bits as our tag, and the remaining
+  // bits as a monotonic.
+  return (++mLastLocalId << 2) | tag;
+}
+
 int32_t IToplevelProtocol::ToplevelState::Register(IProtocol* aRouted) {
   if (aRouted->Id() != kNullActorId && aRouted->Id() != kFreedActorId) {
     // If there's already an ID, just return that.
     return aRouted->Id();
   }
-  int32_t id =
-      mProtocol->GetSide() == ParentSide ? ++mLastRouteId : --mLastRouteId;
+  int32_t id = NextId();
   mActorMap.AddWithID(aRouted, id);
   aRouted->SetId(id);
 
@@ -682,8 +703,7 @@ IToplevelProtocol::ToplevelState::ToplevelState(const char* aName,
                                                 Side aSide)
     : ProtocolState(),
       mProtocol(aProtocol),
-      mLastRouteId(aSide == ParentSide ? kFreedActorId : kNullActorId),
-      mLastShmemId(aSide == ParentSide ? kFreedActorId : kNullActorId),
+      mLastLocalId(0),
       mEventTargetMutex("ProtocolEventTargetMutex"),
       mChannel(aName, aProtocol) {}
 
@@ -696,8 +716,7 @@ Shmem::SharedMemory* IToplevelProtocol::ToplevelState::CreateSharedMemory(
   if (!segment) {
     return nullptr;
   }
-  int32_t id =
-      mProtocol->GetSide() == ParentSide ? ++mLastShmemId : --mLastShmemId;
+  int32_t id = NextId();
   Shmem shmem(Shmem::PrivateIPDLCaller(), segment.get(), id);
 
   base::ProcessId pid =
