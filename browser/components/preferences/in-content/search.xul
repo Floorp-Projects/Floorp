@@ -5,7 +5,7 @@
           class="subcategory"
           hidden="true"
           data-category="paneSearch">
-      <label class="header-name" flex="1" data-l10n-id="pane-search-title" />
+      <html:h1 data-l10n-id="pane-search-title"/>
     </hbox>
 
     <groupbox id="searchbarGroup" data-category="paneSearch">
