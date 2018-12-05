@@ -1123,8 +1123,14 @@ class GetUserMediaStreamRunnable : public Runnable {
               "TracksCreatedListener::mTrack", aTrack)) {}
 
     ~TracksCreatedListener() {
-      mHolder.RejectIfExists(
-          MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError), __func__);
+      RejectIfExists(MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
+                     __func__);
+    }
+
+    // TODO: The need for this should be removed by an upcoming refactor.
+    void RejectIfExists(RefPtr<MediaMgrError>&& aError,
+                        const char* aMethodName) {
+      mHolder.RejectIfExists(std::move(aError), aMethodName);
     }
 
     void NotifyOutput(MediaStreamGraph* aGraph,
@@ -1384,7 +1390,7 @@ class GetUserMediaStreamRunnable : public Runnable {
           manager->SendPendingGUMRequest();
         },
         [manager = mManager, windowID = mWindowID,
-         holder = std::move(mHolder)](RefPtr<MediaMgrError>&& aError) mutable {
+         tracksCreatedListener](RefPtr<MediaMgrError>&& aError) {
           MOZ_ASSERT(NS_IsMainThread());
           LOG(
               ("GetUserMediaStreamRunnable::Run: starting failure callback "
@@ -1397,7 +1403,7 @@ class GetUserMediaStreamRunnable : public Runnable {
           }
           // This is safe since we're on main-thread, and the windowlist can
           // only be invalidated from the main-thread (see OnNavigation)
-          holder.Reject(std::move(aError), __func__);
+          tracksCreatedListener->RejectIfExists(std::move(aError), __func__);
         });
 
     if (!IsPincipalInfoPrivate(mPrincipalInfo)) {
