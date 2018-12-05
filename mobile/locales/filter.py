@@ -41,6 +41,9 @@ def test(mod, path, entity=None):
         if re.match(r"toolkit/about/[^/]*About.ftl", path):
             # error on toolkit/about/*About.ftl
             return "error"
+        if re.match(r"toolkit/about/[^/]*Plugins.ftl", path):
+            # error on toolkit/about/*Plugins.ftl
+            return "error"
         return "ignore"
 
     if mod == "dom":
