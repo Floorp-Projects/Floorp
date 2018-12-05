@@ -353,7 +353,6 @@ public:
 
     virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override = 0;
 
-    virtual void OnVisibilityChange() override;
     virtual void OnMemoryPressure() override;
 
     // nsICanvasRenderingContextInternal
@@ -1484,7 +1483,6 @@ protected:
     bool mIsMesa;
     bool mLoseContextOnMemoryPressure;
     bool mCanLoseContextInForeground;
-    bool mRestoreWhenVisible;
     bool mShouldPresent;
     bool mDisableFragHighP;
     bool mVRReady;
@@ -1496,11 +1494,7 @@ protected:
     GLenum mDefaultFB_DrawBuffer0 = 0;
     GLenum mDefaultFB_ReadBuffer = 0;
 
-    // glGetError sources:
-    bool mEmitContextLostErrorOnce;
     mutable GLenum mWebGLError;
-    mutable GLenum mUnderlyingGLError;
-    GLenum GetAndFlushUnderlyingGLErrors() const;
 
     bool mBypassShaderValidation;
 
@@ -1926,7 +1920,6 @@ protected:
     bool mAllowContextRestore;
     bool mLastLossWasSimulated;
     ContextStatus mContextStatus = ContextStatus::NotLost;
-    bool mContextLostErrorSet;
 
     // Used for some hardware (particularly Tegra 2 and 4) that likes to
     // be Flushed while doing hundreds of draw calls.

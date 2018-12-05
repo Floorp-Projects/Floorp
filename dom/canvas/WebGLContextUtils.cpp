@@ -632,20 +632,6 @@ WebGLContext::ErrorInvalidEnumArg(const char* argName, GLenum val) const
     ErrorInvalidEnum("Bad `%s`: %s", argName, enumName.BeginReading());
 }
 
-GLenum
-WebGLContext::GetAndFlushUnderlyingGLErrors() const
-{
-    // Get and clear GL error in ALL cases.
-    GLenum error = gl->fGetError();
-
-    // Only store in mUnderlyingGLError if is hasn't already recorded an
-    // error.
-    if (!mUnderlyingGLError)
-        mUnderlyingGLError = error;
-
-    return error;
-}
-
 #ifdef DEBUG
 // For NaNs, etc.
 static bool
@@ -699,7 +685,7 @@ void
 WebGLContext::AssertCachedBindings() const
 {
 #ifdef DEBUG
-    GetAndFlushUnderlyingGLErrors();
+    gl::GLContext::LocalErrorScope errorScope(*gl);
 
     if (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::OES_vertex_array_object)) {
         GLuint bound = mBoundVertexArray ? mBoundVertexArray->GLName() : 0;
@@ -739,7 +725,7 @@ WebGLContext::AssertCachedBindings() const
     bound = curBuff ? curBuff->mGLName : 0;
     AssertUintParamCorrect(gl, LOCAL_GL_ELEMENT_ARRAY_BUFFER_BINDING, bound);
 
-    MOZ_ASSERT(!GetAndFlushUnderlyingGLErrors());
+    MOZ_ASSERT(!gl::GLContext::IsBadCallError(errorScope.GetError()));
 #endif
 
     // We do not check the renderbuffer binding, because we never rely on it matching.
@@ -749,7 +735,7 @@ void
 WebGLContext::AssertCachedGlobalState() const
 {
 #ifdef DEBUG
-    GetAndFlushUnderlyingGLErrors();
+    gl::GLContext::LocalErrorScope errorScope(*gl);
 
     ////////////////
 
@@ -807,7 +793,7 @@ WebGLContext::AssertCachedGlobalState() const
         AssertUintParamCorrect(gl, LOCAL_GL_PACK_SKIP_PIXELS   , mPixelStore_PackSkipPixels);
     }
 
-    MOZ_ASSERT(!GetAndFlushUnderlyingGLErrors());
+    MOZ_ASSERT(!gl::GLContext::IsBadCallError(errorScope.GetError()));
 #endif
 }
 
