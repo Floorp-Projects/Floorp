@@ -61,6 +61,18 @@ class TestMarionette(MarionetteTestCase):
         self.assertEqual(current_socket_timeout,
                          self.marionette.client._sock.gettimeout())
 
+    @skip_if_mobile("No application update service available on Android")
+    def test_application_update_disabled(self):
+        # Updates of the application should always be disabled by default
+        with self.marionette.using_context("chrome"):
+            update_allowed = self.marionette.execute_script("""
+              let aus = Cc['@mozilla.org/updates/update-service;1']
+                        .getService(Ci.nsIApplicationUpdateService);
+              return aus.canCheckForUpdates;
+            """)
+
+        self.assertFalse(update_allowed)
+
 
 class TestContext(MarionetteTestCase):
 
