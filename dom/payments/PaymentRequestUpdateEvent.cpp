@@ -52,6 +52,9 @@ void PaymentRequestUpdateEvent::ResolvedCallback(JSContext* aCx,
                                                  JS::Handle<JS::Value> aValue) {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(mRequest);
+  if (!mRequest->InFullyActiveDocument()) {
+    return;
+  }
 
   if (NS_WARN_IF(!aValue.isObject()) || !mWaitForUpdate) {
     return;
@@ -89,6 +92,9 @@ void PaymentRequestUpdateEvent::ResolvedCallback(JSContext* aCx,
 void PaymentRequestUpdateEvent::RejectedCallback(JSContext* aCx,
                                                  JS::Handle<JS::Value> aValue) {
   MOZ_ASSERT(mRequest);
+  if (!mRequest->InFullyActiveDocument()) {
+    return;
+  }
 
   mRequest->AbortUpdate(NS_ERROR_DOM_ABORT_ERR);
   mWaitForUpdate = false;
@@ -103,6 +109,9 @@ void PaymentRequestUpdateEvent::UpdateWith(Promise& aPromise,
   }
 
   MOZ_ASSERT(mRequest);
+  if (!mRequest->InFullyActiveDocument()) {
+    return;
+  }
 
   if (mWaitForUpdate || !mRequest->ReadyForUpdate()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
