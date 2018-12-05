@@ -40,7 +40,7 @@ APPLICATION_CHOICE = '''
 Note on Artifact Mode:
 
 Artifact builds download prebuilt C++ components rather than building
-them locally.
+them locally. Artifact builds are faster!
 
 Artifact builds are recommended for people working on Firefox or
 Firefox for Android frontends. They are unsuitable for those working
