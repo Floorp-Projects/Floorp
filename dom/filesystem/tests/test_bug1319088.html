@@ -36,7 +36,7 @@ function checkBug() {
   var input = document.getElementById("input");
   is(input.files[0].webkitRelativePath, "", "No relative path!");
 
-  let form = document.createElement('form');
+  let form = document.createElement("form");
   form.appendChild(input);
 
   is(input.files[0].webkitRelativePath, "", "No relative path!");

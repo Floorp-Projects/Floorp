@@ -25,7 +25,7 @@ function populate_entries() {
   script = SpecialPowers.loadChromeScript(url);
 
   function onOpened(message) {
-    var entries = document.getElementById('entries');
+    var entries = document.getElementById("entries");
     SpecialPowers.wrap(entries).mozSetDndFilesAndDirectories(message.data);
     next();
   }
@@ -35,7 +35,7 @@ function populate_entries() {
 }
 
 function test_entries() {
-  var entries = document.getElementById('entries');
+  var entries = document.getElementById("entries");
   ok("webkitEntries" in entries, "HTMLInputElement.webkitEntries");
   is(entries.webkitEntries.length, 2, "HTMLInputElement.webkitEntries.length == 2");
   is(entries.files.length, 1, "HTMLInputElement.files is still populated");
@@ -399,7 +399,7 @@ function test_getParent(entry, parentEntry, nested) {
   entry.getParent(function(e) {
     ok(e, "We have a parent Entry.");
     if (!nested) {
-      is (e, parentEntry, "Parent entry matches");
+      is(e, parentEntry, "Parent entry matches");
       next();
     } else {
       test_getParent(e, parentEntry, false);
