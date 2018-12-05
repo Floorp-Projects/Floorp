@@ -189,7 +189,20 @@ static void moz_container_unmap_wayland(MozContainer *container) {
   g_clear_pointer(&container->subsurface, wl_subsurface_destroy);
   g_clear_pointer(&container->surface, wl_surface_destroy);
   g_clear_pointer(&container->frame_callback_handler, wl_callback_destroy);
+
   container->ready_to_draw = false;
+}
+
+static gint moz_container_get_scale(MozContainer *container) {
+    static auto sGdkWindowGetScaleFactorPtr = (gint(*)(GdkWindow *))dlsym(
+        RTLD_DEFAULT, "gdk_window_get_scale_factor");
+
+    if (sGdkWindowGetScaleFactorPtr) {
+      GdkWindow *window = gtk_widget_get_window(GTK_WIDGET(container));
+      return (*sGdkWindowGetScaleFactorPtr)(window);
+    }
+
+    return 1;
 }
 #endif
 
@@ -321,8 +334,10 @@ void moz_container_size_allocate(GtkWidget *widget, GtkAllocation *allocation) {
     wl_subsurface_set_position(container->subsurface, x, y);
   }
   if (container->eglwindow) {
-    wl_egl_window_resize(container->eglwindow, allocation->width,
-                         allocation->height, 0, 0);
+    gint scale = moz_container_get_scale(container);
+    wl_egl_window_resize(container->eglwindow,
+                         allocation->width * scale,
+                         allocation->height * scale, 0, 0);
   }
 #endif
 }
@@ -458,12 +473,8 @@ struct wl_surface *moz_container_get_wl_surface(MozContainer *container) {
     wl_surface_set_input_region(container->surface, region);
     wl_region_destroy(region);
 
-    static auto sGdkWindowGetScaleFactorPtr = (gint(*)(GdkWindow *))dlsym(
-        RTLD_DEFAULT, "gdk_window_get_scale_factor");
-    if (sGdkWindowGetScaleFactorPtr) {
-      gint scaleFactor = (*sGdkWindowGetScaleFactorPtr)(window);
-      wl_surface_set_buffer_scale(container->surface, scaleFactor);
-    }
+    wl_surface_set_buffer_scale(container->surface,
+                                moz_container_get_scale(container));
   }
 
   return container->surface;
@@ -477,8 +488,10 @@ struct wl_egl_window *moz_container_get_wl_egl_window(MozContainer *container) {
     }
 
     GdkWindow *window = gtk_widget_get_window(GTK_WIDGET(container));
+    gint scale = moz_container_get_scale(container);
     container->eglwindow = wl_egl_window_create(
-        surface, gdk_window_get_width(window), gdk_window_get_height(window));
+        surface, gdk_window_get_width(window) * scale,
+                 gdk_window_get_height(window) * scale);
   }
   return container->eglwindow;
 }

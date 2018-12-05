@@ -3624,10 +3624,6 @@ nsresult nsWindow::Create(nsIWidget *aParent, nsNativeWidget aNativeParent,
             gdk_window_set_decorations(mGdkWindow, (GdkWMDecoration)wmd);
         }
 
-        if (!mIsX11Display) {
-          gtk_widget_set_app_paintable(mShell, TRUE);
-        }
-
         // If the popup ignores mouse events, set an empty input shape.
         if (aInitData->mMouseTransparent) {
           cairo_rectangle_int_t rect = {0, 0, 0, 0};
