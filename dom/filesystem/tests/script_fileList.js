@@ -1,10 +1,8 @@
+/* eslint-env mozilla/frame-script */
 Cu.importGlobalProperties(["File"]);
-
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 function createProfDFile() {
-  return Cc["@mozilla.org/file/directory_service;1"]
-           .getService(Ci.nsIDirectoryService)
-           .QueryInterface(Ci.nsIProperties)
-           .get("ProfD", Ci.nsIFile);
+  return Services.dirsvc.QueryInterface(Ci.nsIProperties).get("ProfD", Ci.nsIFile);
 }
 
 // Creates a parametric arity directory hierarchy as a function of depth.
@@ -23,10 +21,7 @@ function createProfDFile() {
 // Returns the parent directory of the subtree.
 function createTreeFile(depth, parent) {
   if (!parent) {
-    parent = Cc["@mozilla.org/file/directory_service;1"]
-                .getService(Ci.nsIDirectoryService)
-                .QueryInterface(Ci.nsIProperties)
-                .get("TmpD", Ci.nsIFile);
+    parent = Services.dirsvc.QueryInterface(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
     parent.append("dir-tree-test");
     parent.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o700);
   }
@@ -39,7 +34,7 @@ function createTreeFile(depth, parent) {
     nextFile.append("subdir" + depth);
     nextFile.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o700);
     // Decrement the maximal depth by one for each level of nesting.
-    for (i = 0; i < depth; i++) {
+    for (var i = 0; i < depth; i++) {
       createTreeFile(i, nextFile);
     }
   }
@@ -64,10 +59,7 @@ function createRootFile() {
 }
 
 function createTestFile() {
-  var tmpFile = Cc["@mozilla.org/file/directory_service;1"]
-                  .getService(Ci.nsIDirectoryService)
-                  .QueryInterface(Ci.nsIProperties)
-                  .get("TmpD", Ci.nsIFile);
+  var tmpFile = Services.dirsvc.QueryInterface(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
   tmpFile.append("dir-test");
   tmpFile.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o700);
 
@@ -116,10 +108,7 @@ addMessageListener("dir.open", function(e) {
 });
 
 addMessageListener("file.open", function(e) {
-  var testFile = Cc["@mozilla.org/file/directory_service;1"]
-                   .getService(Ci.nsIDirectoryService)
-                   .QueryInterface(Ci.nsIProperties)
-                   .get("ProfD", Ci.nsIFile);
+  var testFile = Services.dirsvc.QueryInterface(Ci.nsIProperties).get("ProfD", Ci.nsIFile);
   testFile.append("prefs.js");
 
   File.createFromNsIFile(testFile).then(function(file) {
