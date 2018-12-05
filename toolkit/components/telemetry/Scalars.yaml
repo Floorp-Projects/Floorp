@@ -2288,6 +2288,40 @@ update:
     record_in_processes:
       - main
 
+# The following section contains search counters.
+browser.search:
+  with_ads:
+    bug_numbers:
+      - 1495548
+      - 1505411
+    description: >
+      Records counts of SERP pages with adverts displayed. The key format is ‘<engine-name>’.
+    expires: never
+    keyed: true
+    kind: uint
+    notification_emails:
+      - fx-search@mozilla.com
+      - adw@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+
+  ad_clicks:
+    bug_numbers:
+      - 1495548
+      - 1505411
+    description: >
+      Records clicks of adverts on SERP pages. The key format is ‘<engine-name>’.
+    expires: never
+    keyed: true
+    kind: uint
+    notification_emails:
+      - fx-search@mozilla.com
+      - adw@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
 telemetry.test:
