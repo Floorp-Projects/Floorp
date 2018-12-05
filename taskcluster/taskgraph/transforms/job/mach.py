@@ -30,14 +30,19 @@ mach_schema = Schema({
 })
 
 
-@run_job_using("docker-worker", "mach", schema=mach_schema, defaults={'comm-checkout': False})
-@run_job_using("native-engine", "mach", schema=mach_schema, defaults={'comm-checkout': False})
-@run_job_using("generic-worker", "mach", schema=mach_schema, defaults={'comm-checkout': False})
-def docker_worker_mach(config, job, taskdesc):
+defaults = {
+    'comm-checkout': False,
+}
+
+
+@run_job_using("docker-worker", "mach", schema=mach_schema, defaults=defaults)
+@run_job_using("native-engine", "mach", schema=mach_schema, defaults=defaults)
+@run_job_using("generic-worker", "mach", schema=mach_schema, defaults=defaults)
+def configure_mach(config, job, taskdesc):
     run = job['run']
 
     # defer to the run_task implementation
-    run['command'] = 'cd {workdir}/checkouts/gecko && ./mach {mach}'.format(**run)
+    run['command'] = 'cd $GECKO_PATH && ./mach {mach}'.format(**run)
     run['using'] = 'run-task'
     del run['mach']
     configure_taskdesc_for_run(config, job, taskdesc, job['worker']['implementation'])
