@@ -2831,10 +2831,18 @@ class StaticAnalysis(MachCommandBase):
             return 0
 
     def _run_clang_format_path(self, clang_format, show, paths):
+        import shutil
+
         # Run clang-format on files or directories directly
         from subprocess import check_output, CalledProcessError
 
         args = [clang_format, "-i"]
+
+        if show:
+            # We just want to show the diff, we create the directory to copy it
+            tmpdir = os.path.join(self.topobjdir, 'tmp')
+            if not os.path.exists(tmpdir):
+                os.makedirs(tmpdir)
 
         path_list = self._generate_path_list(paths)
 
@@ -2844,9 +2852,24 @@ class StaticAnalysis(MachCommandBase):
         print("Processing %d file(s)..." % len(path_list))
 
         batchsize = 200
+        if show:
+            batchsize = 1
 
         for i in range(0, len(path_list), batchsize):
             l = path_list[i: (i + batchsize)]
+            if show:
+                # Copy the files into a temp directory
+                # and run clang-format on the temp directory
+                # and show the diff
+                original_path = l[0]
+                local_path = original_path.replace(self.topsrcdir, ".")
+                target_file = os.path.join(tmpdir, local_path)
+                faketmpdir = os.path.dirname(target_file)
+                if not os.path.isdir(faketmpdir):
+                    os.makedirs(faketmpdir)
+                shutil.copy(l[0], faketmpdir)
+                l[0] = target_file
+
             # Run clang-format on the list
             try:
                 check_output(args + l)
@@ -2855,20 +2878,19 @@ class StaticAnalysis(MachCommandBase):
                 print("clang-format: An error occured while running clang-format.")
                 return e.returncode
 
+            if show:
+                # show the diff
+                diff_command = ["diff", "-u", original_path, target_file]
+                try:
+                    output = check_output(diff_command)
+                except CalledProcessError as e:
+                    # diff -u returns 0 when no change
+                    # here, we expect changes. if we are here, this means that
+                    # there is a diff to show
+                    if e.output:
+                        print(e.output)
         if show:
-            # show the diff
-            if self.repository.name == 'hg':
-                diff_command = ["hg", "diff"] + paths
-            else:
-                assert self.repository.name == 'git'
-                diff_command = ["git", "diff"] + paths
-            try:
-                output = check_output(diff_command)
-                print(output)
-            except CalledProcessError as e:
-                # Something wrong happend
-                print("clang-format: Unable to run the diff command.")
-                return e.returncode
+            shutil.rmtree(tmpdir)
         return 0
 
 @CommandProvider
