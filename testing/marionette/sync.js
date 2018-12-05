@@ -13,6 +13,7 @@ const {
   stack,
   TimeoutError,
 } = ChromeUtils.import("chrome://marionette/content/error.js", {});
+const {truncate} = ChromeUtils.import("chrome://marionette/content/format.js", {});
 const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
@@ -26,6 +27,7 @@ this.EXPORTED_SYMBOLS = [
   "Sleep",
   "TimedPromise",
   "waitForEvent",
+  "waitForMessage",
 ];
 
 const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
@@ -462,5 +464,50 @@ function waitForEvent(subject, eventName,
         executeSoon(() => reject(ex));
       }
     }, capture, wantsUntrusted);
+  });
+}
+
+/**
+ * Wait for a message to be fired from a particular message manager.
+ *
+ * This method has been duplicated from BrowserTestUtils.jsm.
+ *
+ * @param {nsIMessageManager} messageManager
+ *     The message manager that should be used.
+ * @param {string} messageName
+ *     The message to wait for.
+ * @param {Object=} options
+ *     Extra options.
+ * @param {function(Message)=} options.checkFn
+ *     Called with the ``Message`` object as argument, should return ``true``
+ *     if the message is the expected one, or ``false`` if it should be
+ *     ignored and listening should continue. If not specified, the first
+ *     message with the specified name resolves the returned promise.
+ *
+ * @return {Promise.<Object>}
+ *     Promise which resolves to the data property of the received
+ *     ``Message``.
+ */
+function waitForMessage(messageManager, messageName,
+    {checkFn = undefined} = {}) {
+  if (messageManager == null || !("addMessageListener" in messageManager)) {
+    throw new TypeError();
+  }
+  if (typeof messageName != "string") {
+    throw new TypeError();
+  }
+  if (checkFn && typeof checkFn != "function") {
+    throw new TypeError();
+  }
+
+  return new Promise(resolve => {
+    messageManager.addMessageListener(messageName, function onMessage(msg) {
+      log.trace(`Received ${messageName} for ${msg.target}`);
+      if (checkFn && !checkFn(msg)) {
+        return;
+      }
+      messageManager.removeMessageListener(messageName, onMessage);
+      resolve(msg.data);
+    });
   });
 }
