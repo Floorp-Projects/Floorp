@@ -42,6 +42,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PaymentRequest,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResponse)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mShippingAddress)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFullShippingAddress)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTimer)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PaymentRequest,
@@ -52,10 +53,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PaymentRequest,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mResponse)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mShippingAddress)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFullShippingAddress)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTimer)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PaymentRequest)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentActivity)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(PaymentRequest, DOMEventTargetHelper)
@@ -724,6 +727,13 @@ already_AddRefed<Promise> PaymentRequest::Show(
   if (aDetailsPromise.WasPassed()) {
     aDetailsPromise.Value().AppendNativeHandler(this);
     mUpdating = true;
+    if (!mTimer) {
+      NS_NewTimerWithCallback(getter_AddRefs(mTimer),
+                              this,
+                              StaticPrefs::dom_payments_response_timeout(),
+                              nsITimer::TYPE_ONE_SHOT,
+                              win->EventTargetFor(TaskCategory::Other));
+    }
   }
 
   RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
@@ -864,8 +874,8 @@ void PaymentRequest::RespondAbortPayment(bool aSuccess) {
 }
 
 nsresult PaymentRequest::UpdatePayment(JSContext* aCx,
-                                       const PaymentDetailsUpdate& aDetails) {
-  NS_ENSURE_ARG_POINTER(aCx);
+                                       const PaymentDetailsUpdate& aDetails,
+                                       bool aTimedout) {
   if (mState != eInteractive) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
@@ -873,11 +883,23 @@ nsresult PaymentRequest::UpdatePayment(JSContext* aCx,
   if (NS_WARN_IF(!manager)) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = manager->UpdatePayment(aCx, this, aDetails, mRequestShipping);
+  nsresult rv = manager->UpdatePayment(
+      aCx, this, aDetails, mRequestShipping, aTimedout);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
   return NS_OK;
+}
+
+nsresult PaymentRequest::UpdatePaymentWithNoEventListener() {
+  RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
+  MOZ_ASSERT(manager);
+  return manager->UpdatePayment(nullptr,                // JSContext
+                                this,                   // PaymentRequest
+                                PaymentDetailsUpdate(), // PaymentDetailsUpdate
+                                false,                  // requestShipping
+                                false,                  // timedout
+                                true);                  // no event handler
 }
 
 void PaymentRequest::AbortUpdate(nsresult aRv) {
@@ -1016,6 +1038,10 @@ nsresult PaymentRequest::UpdateShippingAddress(
     const nsAString& aPostalCode, const nsAString& aSortingCode,
     const nsAString& aOrganization, const nsAString& aRecipient,
     const nsAString& aPhone) {
+  if (!HasListenersFor(NS_LITERAL_STRING("shippingaddresschange"))) {
+    return UpdatePaymentWithNoEventListener();
+  }
+
   nsTArray<nsString> emptyArray;
   mShippingAddress =
       new PaymentAddress(GetOwner(), aCountry, emptyArray, aRegion, aRegionCode,
@@ -1039,6 +1065,10 @@ void PaymentRequest::GetShippingOption(nsAString& aRetVal) const {
 
 nsresult PaymentRequest::UpdateShippingOption(
     const nsAString& aShippingOption) {
+  if (!HasListenersFor(NS_LITERAL_STRING("shippingoptionchange"))) {
+    return UpdatePaymentWithNoEventListener();
+  }
+
   mShippingOption = aShippingOption;
 
   // Fire shippingaddresschange event
@@ -1047,6 +1077,10 @@ nsresult PaymentRequest::UpdateShippingOption(
 
 nsresult PaymentRequest::UpdatePaymentMethod(
     const nsAString& aMethodName, const ChangeDetails& aMethodDetails) {
+  if (!HasListenersFor(NS_LITERAL_STRING("paymentmethodchange"))) {
+    return UpdatePaymentWithNoEventListener();
+  }
+
   return DispatchPaymentMethodChangeEvent(aMethodName, aMethodDetails);
 }
 
@@ -1074,9 +1108,13 @@ void PaymentRequest::ResolvedCallback(JSContext* aCx,
   }
 
   MOZ_ASSERT(aCx);
-  mUpdating = false;
-  if (NS_WARN_IF(!aValue.isObject())) {
+  if (NS_WARN_IF(!aValue.isObject()) || !mUpdating) {
     return;
+  }
+  mUpdating = false;
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nullptr;
   }
 
   // Converting value to a PaymentDetailsUpdate dictionary
@@ -1183,6 +1221,18 @@ void PaymentRequest::NotifyOwnerDocumentActivityChanged() {
     RefPtr<PaymentRequestManager> mgr = PaymentRequestManager::GetSingleton();
     mgr->ClosePayment(this);
   }
+}
+
+NS_IMETHODIMP PaymentRequest::Notify(nsITimer* aTimer) {
+  mTimer = nullptr;
+  if (!InFullyActiveDocument()) {
+    return NS_OK;
+  }
+  mUpdating = false;
+  if (NS_FAILED(UpdatePayment(nullptr, PaymentDetailsUpdate(), true))) {
+    AbortUpdate(NS_ERROR_DOM_ABORT_ERR);
+  }
+  return NS_OK;
 }
 
 PaymentRequest::~PaymentRequest() {

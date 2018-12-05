@@ -523,7 +523,11 @@ nsresult PaymentRequestManager::CanMakePayment(PaymentRequest* aRequest) {
 nsresult PaymentRequestManager::ShowPayment(PaymentRequest* aRequest) {
   nsAutoString requestId;
   aRequest->GetInternalId(requestId);
-  IPCPaymentShowActionRequest action(requestId, aRequest->IsUpdating());
+  nsAutoString internalCompleteStatus;
+  if (aRequest->IsUpdating()) {
+    internalCompleteStatus = NS_LITERAL_STRING("initial");
+  }
+  IPCPaymentShowActionRequest action(requestId, internalCompleteStatus);
   return SendRequestPayment(aRequest, action);
 }
 
@@ -556,24 +560,36 @@ nsresult PaymentRequestManager::CompletePayment(
 
 nsresult PaymentRequestManager::UpdatePayment(
     JSContext* aCx, PaymentRequest* aRequest,
-    const PaymentDetailsUpdate& aDetails, bool aRequestShipping) {
-  NS_ENSURE_ARG_POINTER(aCx);
+    const PaymentDetailsUpdate& aDetails, bool aRequestShipping, bool aTimedout,
+    bool aNoHandler) {
   IPCPaymentDetails details;
-  nsresult rv = ConvertDetailsUpdate(aCx, aDetails, details, aRequestShipping);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
 
   nsAutoString shippingOption;
   SetDOMStringToNull(shippingOption);
-  if (aRequestShipping) {
-    GetSelectedShippingOption(aDetails, shippingOption);
-    aRequest->SetShippingOption(shippingOption);
+  nsAutoString internalCompleteStatus;
+
+  if (!aTimedout && !aNoHandler) {
+    NS_ENSURE_ARG_POINTER(aCx);
+    nsresult rv = ConvertDetailsUpdate(aCx, aDetails, details, aRequestShipping);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (aRequestShipping) {
+      GetSelectedShippingOption(aDetails, shippingOption);
+      aRequest->SetShippingOption(shippingOption);
+    }
+  } else if (aNoHandler) {
+    internalCompleteStatus = NS_LITERAL_STRING("noeventhandler");
+  } else if (aTimedout) {
+    internalCompleteStatus = NS_LITERAL_STRING("timeout");
   }
 
   nsAutoString requestId;
   aRequest->GetInternalId(requestId);
-  IPCPaymentUpdateActionRequest action(requestId, details, shippingOption);
+  IPCPaymentUpdateActionRequest action(requestId, details, shippingOption,
+      internalCompleteStatus);
+
   return SendRequestPayment(aRequest, action, false);
 }
 

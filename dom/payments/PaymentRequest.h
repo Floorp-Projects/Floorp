@@ -13,6 +13,7 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/ErrorResult.h"
 #include "nsIDocumentActivity.h"
+#include "nsITimer.h"
 #include "nsWrapperCache.h"
 #include "PaymentRequestUpdateEvent.h"
 
@@ -86,12 +87,14 @@ class ChangeDetails final {
 
 class PaymentRequest final : public DOMEventTargetHelper,
                              public PromiseNativeHandler,
-                             public nsIDocumentActivity {
+                             public nsIDocumentActivity,
+                             public nsITimerCallback {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(PaymentRequest,
                                                          DOMEventTargetHelper)
   NS_DECL_NSIDOCUMENTACTIVITY
+  NS_DECL_NSITIMERCALLBACK
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -189,7 +192,10 @@ class PaymentRequest final : public DOMEventTargetHelper,
   void SetOptions(const PaymentOptions& aOptions);
   nsresult UpdateShippingOption(const nsAString& aShippingOption);
 
-  nsresult UpdatePayment(JSContext* aCx, const PaymentDetailsUpdate& aDetails);
+  nsresult UpdatePayment(JSContext* aCx,
+                         const PaymentDetailsUpdate& aDetails,
+                         bool aTimedout = false);
+  nsresult UpdatePaymentWithNoEventListener();
   void AbortUpdate(nsresult aRv);
 
   void SetShippingType(const Nullable<PaymentShippingType>& aShippingType);
@@ -269,6 +275,7 @@ class PaymentRequest final : public DOMEventTargetHelper,
   enum { eUnknown, eCreated, eInteractive, eClosed } mState;
 
   PaymentRequestChild* mIPC;
+  nsCOMPtr<nsITimer> mTimer;
 };
 }  // namespace dom
 }  // namespace mozilla
