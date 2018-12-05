@@ -387,7 +387,12 @@ class HttpChannelChild final : public PHttpChannelChild,
   // parent channel, nor dequeued from the ChannelEventQueue.
   Atomic<bool, ReleaseAcquire> mFlushedForDiversion;
 
-  uint8_t mIsFromCache : 1;
+  Atomic<bool, SequentiallyConsistent> mIsFromCache;
+  // Set if we get the result and cache |mNeedToReportBytesRead|
+  Atomic<bool, SequentiallyConsistent> mCacheNeedToReportBytesReadInitialized;
+  // True if we need to tell the parent the size of unreported received data
+  Atomic<bool, SequentiallyConsistent> mNeedToReportBytesRead;
+
   uint8_t mCacheEntryAvailable : 1;
   uint8_t mAltDataCacheEntryAvailable : 1;
 
@@ -427,12 +432,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   // Set if the corresponding parent channel should suspend after a response
   // is synthesized.
   uint8_t mSuspendParentAfterSynthesizeResponse : 1;
-
-  // Set if we get the result and cache |mNeedToReportBytesRead|
-  uint8_t mCacheNeedToReportBytesReadInitialized : 1;
-
-  // True if we need to tell the parent the size of unreported received data
-  uint8_t mNeedToReportBytesRead : 1;
 
   void FinishInterceptedRedirect();
   void CleanupRedirectingChannel(nsresult rv);
