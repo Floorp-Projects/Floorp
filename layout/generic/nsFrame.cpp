@@ -47,7 +47,6 @@
 #include "nsStyleConsts.h"
 #include "nsIPresShell.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Sprintf.h"
 #include "nsLayoutUtils.h"
 #include "LayoutLogging.h"
 #include "mozilla/RestyleManager.h"
@@ -116,9 +115,6 @@
 #include "ActiveLayerTracker.h"
 
 #include "nsITheme.h"
-#include "nsStyleConsts.h"
-
-#include "ImageLoader.h"
 
 using namespace mozilla;
 using namespace mozilla::css;

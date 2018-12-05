@@ -47,7 +47,6 @@ static const char sPrintSettingsServiceContractID[] =
 
 // Print Preview
 #include "imgIContainer.h"       // image animation mode constants
-#include "nsIWebBrowserPrint.h"  // needed for PrintPreview Navigation constants
 
 // Print Progress
 #include "nsIPrintProgress.h"
@@ -94,7 +93,6 @@ static const char kPrintingPromptService[] =
 #include "nsIDeviceContextSpec.h"
 #include "nsDeviceContextSpecProxy.h"
 #include "nsViewManager.h"
-#include "nsView.h"
 
 #include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
