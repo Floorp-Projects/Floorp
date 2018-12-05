@@ -83,6 +83,7 @@ typedef struct {
   uint16_t bit_depth;
   uint32_t sample_rate;
   uint16_t profile;
+  uint16_t extended_profile;
   Mp4parseByteData codec_specific_config;
   Mp4parseByteData extra_data;
   Mp4parseSinfInfo protected_data;

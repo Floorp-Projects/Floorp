@@ -87,13 +87,12 @@ void MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
   mRate = audio->sample_rate;
   mChannels = audio->channels;
   mBitDepth = audio->bit_depth;
-  mExtendedProfile = audio->profile;
+  mExtendedProfile = audio->extended_profile;
   mDuration = TimeUnit::FromMicroseconds(track->duration);
   mMediaTime = TimeUnit::FromMicroseconds(track->media_time);
   mTrackId = track->track_id;
 
   // In stagefright, mProfile is kKeyAACProfile, mExtendedProfile is kKeyAACAOT.
-  // Both are from audioObjectType in AudioSpecificConfig.
   if (audio->profile <= 4) {
     mProfile = audio->profile;
   }
