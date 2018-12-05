@@ -401,6 +401,10 @@ void MobileViewportManager::RefreshVisualViewportSize() {
   // This function is a subset of RefreshViewportSize, and only updates the
   // visual viewport size.
 
+  if (!gfxPrefs::APZAllowZooming()) {
+    return;
+  }
+
   ScreenIntSize displaySize = ViewAs<ScreenPixel>(
       mDisplaySize, PixelCastJustification::LayoutDeviceIsScreenForBounds);
 
@@ -476,10 +480,6 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
   if (gfxPrefs::APZAllowZooming()) {
     UpdateResolution(viewportInfo, displaySize, viewport,
                      displayWidthChangeRatio, UpdateType::ViewportSize);
-  } else {
-    // Even without zoom, we need to update that the visual viewport size
-    // has changed.
-    RefreshVisualViewportSize();
   }
   if (gfxPlatform::AsyncPanZoomEnabled()) {
     UpdateDisplayPortMargins();
