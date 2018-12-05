@@ -106,6 +106,17 @@ void SessionAccessibility::SetText(int32_t aID, jni::String::Param aText) {
   }
 }
 
+void SessionAccessibility::Click(int32_t aID) {
+  if (RootAccessibleWrap* rootAcc = GetRoot()) {
+    AccessibleWrap* acc = rootAcc->FindAccessibleById(aID);
+    if (!acc) {
+      return;
+    }
+
+    acc->DoAction(0);
+  }
+}
+
 SessionAccessibility* SessionAccessibility::GetInstanceFor(
     ProxyAccessible* aAccessible) {
   auto tab = static_cast<dom::TabParent*>(aAccessible->Document()->Manager());
