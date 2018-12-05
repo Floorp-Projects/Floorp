@@ -269,6 +269,7 @@ class App extends Component<Props, State> {
         vert={horizontal}
         onResizeEnd={num => {
           prefs.endPanelSize = num;
+          this.triggerEditorPaneResize();
         }}
         startPanel={
           <SplitBox
@@ -293,7 +294,6 @@ class App extends Component<Props, State> {
           />
         }
         endPanelCollapsed={endPanelCollapsed}
-        onResizeEnd={this.triggerEditorPaneResize}
       />
     );
   };
