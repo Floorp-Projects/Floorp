@@ -910,19 +910,11 @@ WebGLContext::CreateTexture()
     return globj.forget();
 }
 
-static GLenum
-GetAndClearError(GLenum* errorVar)
-{
-    MOZ_ASSERT(errorVar);
-    GLenum ret = *errorVar;
-    *errorVar = LOCAL_GL_NO_ERROR;
-    return ret;
-}
-
 GLenum
 WebGLContext::GetError()
 {
     const FuncScope funcScope(*this, "getError");
+
     /* WebGL 1.0: Section 5.14.3: Setting and getting state:
      *   If the context's webgl context lost flag is set, returns
      *   CONTEXT_LOST_WEBGL the first time this method is called.
@@ -935,28 +927,26 @@ WebGLContext::GetError()
      *   even when the context is lost.
      */
 
-    if (IsContextLost()) {
-        if (mEmitContextLostErrorOnce) {
-            mEmitContextLostErrorOnce = false;
-            return LOCAL_GL_CONTEXT_LOST_WEBGL;
-        }
-        // Don't return yet, since WEBGL_lose_contexts contradicts the
-        // original spec, and allows error generation while lost.
-    }
-
-    GLenum err = GetAndClearError(&mWebGLError);
-    if (err != LOCAL_GL_NO_ERROR)
+    auto err = mWebGLError;
+    mWebGLError = 0;
+    if (IsContextLost() || err) // Must check IsContextLost in all flow paths.
         return err;
-
-    if (IsContextLost())
-        return LOCAL_GL_NO_ERROR;
 
     // Either no WebGL-side error, or it's already been cleared.
     // UnderlyingGL-side errors, now.
+    err = gl->fGetError();
+    if (gl->IsContextLost()) {
+        UpdateContextLossStatus();
+        return GetError();
+    }
+    MOZ_ASSERT(err != LOCAL_GL_CONTEXT_LOST);
 
-    GetAndFlushUnderlyingGLErrors();
-
-    err = GetAndClearError(&mUnderlyingGLError);
+    if (err) {
+        GenerateWarning("Driver error unexpected by WebGL: 0x%04x", err);
+        // This might be:
+        // - INVALID_OPERATION from ANGLE due to incomplete RBAB implementation for DrawElements
+        //   with DYNAMIC_DRAW index buffer.
+    }
     return err;
 }
 

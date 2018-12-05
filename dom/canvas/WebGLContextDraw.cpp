@@ -230,8 +230,6 @@ const webgl::CachedDrawFetchLimits*
 ValidateDraw(WebGLContext* const webgl, const GLenum mode,
              const uint32_t instanceCount)
 {
-    MOZ_ASSERT(webgl->gl->IsCurrent());
-
     if (!webgl->BindCurFBForDraw())
         return nullptr;
 
