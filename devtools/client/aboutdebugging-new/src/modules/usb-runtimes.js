@@ -4,42 +4,29 @@
 
 "use strict";
 
-loader.lazyGetter(this, "adbScanner", () => {
-  const { AddonAwareADBScanner } = require("devtools/shared/adb/addon-aware-adb-scanner");
-  return new AddonAwareADBScanner();
-});
+loader.lazyRequireGetter(this, "adb", "devtools/shared/adb/adb", true);
 
 /**
  * This module provides a collection of helper methods to detect USB runtimes whom Firefox
  * is running on.
  */
 function addUSBRuntimesObserver(listener) {
-  adbScanner.on("runtime-list-updated", listener);
+  adb.registerListener(listener);
 }
 exports.addUSBRuntimesObserver = addUSBRuntimesObserver;
 
-function disableUSBRuntimes() {
-  adbScanner.disable();
-}
-exports.disableUSBRuntimes = disableUSBRuntimes;
-
-async function enableUSBRuntimes() {
-  adbScanner.enable();
-}
-exports.enableUSBRuntimes = enableUSBRuntimes;
-
 function getUSBRuntimes() {
-  return adbScanner.listRuntimes();
+  return adb.getRuntimes();
 }
 exports.getUSBRuntimes = getUSBRuntimes;
 
 function removeUSBRuntimesObserver(listener) {
-  adbScanner.off("runtime-list-updated", listener);
+  adb.unregisterListener(listener);
 }
 exports.removeUSBRuntimesObserver = removeUSBRuntimesObserver;
 
 function refreshUSBRuntimes() {
-  return adbScanner.scan();
+  return adb.updateRuntimes();
 }
 exports.refreshUSBRuntimes = refreshUSBRuntimes;
 
