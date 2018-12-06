@@ -130,7 +130,14 @@ const uint32_t DefaultHeapMaxBytes = 32 * 1024 * 1024;
 namespace shadow {
 
 struct Zone {
-  enum GCState : uint8_t { NoGC, Mark, MarkGray, Sweep, Finished, Compact };
+  enum GCState : uint8_t {
+    NoGC,
+    MarkBlackOnly,
+    MarkBlackAndGray,
+    Sweep,
+    Finished,
+    Compact
+  };
 
  protected:
   JSRuntime* const runtime_;
@@ -164,12 +171,14 @@ struct Zone {
 
   GCState gcState() const { return gcState_; }
   bool wasGCStarted() const { return gcState_ != NoGC; }
-  bool isGCMarkingBlack() const { return gcState_ == Mark; }
-  bool isGCMarkingGray() const { return gcState_ == MarkGray; }
+  bool isGCMarkingBlackOnly() const { return gcState_ == MarkBlackOnly; }
+  bool isGCMarkingBlackAndGray() const { return gcState_ == MarkBlackAndGray; }
   bool isGCSweeping() const { return gcState_ == Sweep; }
   bool isGCFinished() const { return gcState_ == Finished; }
   bool isGCCompacting() const { return gcState_ == Compact; }
-  bool isGCMarking() const { return gcState_ == Mark || gcState_ == MarkGray; }
+  bool isGCMarking() const {
+    return isGCMarkingBlackOnly() || isGCMarkingBlackAndGray();
+  }
   bool isGCSweepingOrCompacting() const {
     return gcState_ == Sweep || gcState_ == Compact;
   }
