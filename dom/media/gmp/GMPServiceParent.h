@@ -114,7 +114,7 @@ class GeckoMediaPluginServiceParent final
   void ReAddOnGMPThread(const RefPtr<GMPParent>& aOld);
   void PluginTerminated(const RefPtr<GMPParent>& aOld);
   void InitializePlugins(AbstractThread* aAbstractGMPThread) override;
-  RefPtr<GenericPromise::AllPromiseType> LoadFromEnvironment();
+  RefPtr<GenericPromise> LoadFromEnvironment();
   RefPtr<GenericPromise> AddOnGMPThread(nsString aDirectory);
 
   virtual RefPtr<GetGMPContentParentPromise> GetContentParent(
