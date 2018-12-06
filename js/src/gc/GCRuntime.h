@@ -625,9 +625,8 @@ class GCRuntime {
   void markWeakReferences(gcstats::PhaseKind phase);
   void markWeakReferencesInCurrentGroup(gcstats::PhaseKind phase);
   template <class ZoneIterT>
-  void markGrayReferences(gcstats::PhaseKind phase);
+  void markGrayRoots(gcstats::PhaseKind phase);
   void markBufferedGrayRoots(JS::Zone* zone);
-  void markGrayReferencesInCurrentGroup(gcstats::PhaseKind phase);
   void markAllWeakReferences(gcstats::PhaseKind phase);
   void markAllGrayReferences(gcstats::PhaseKind phase);
 
@@ -635,6 +634,8 @@ class GCRuntime {
   void groupZonesForSweeping(JS::gcreason::Reason reason);
   MOZ_MUST_USE bool findInterZoneEdges();
   void getNextSweepGroup();
+  IncrementalProgress markGrayReferencesInCurrentGroup(FreeOp* fop,
+                                                       SliceBudget& budget);
   IncrementalProgress endMarkingSweepGroup(FreeOp* fop, SliceBudget& budget);
   void markIncomingCrossCompartmentPointers(MarkColor color);
   IncrementalProgress beginSweepingSweepGroup(FreeOp* fop, SliceBudget& budget);
