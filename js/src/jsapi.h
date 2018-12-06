@@ -3156,6 +3156,12 @@ extern JS_PUBLIC_API void SetScriptPrivate(JSScript* script,
  */
 extern JS_PUBLIC_API JS::Value GetScriptPrivate(JSScript* script);
 
+/*
+ * Return the private value associated with currently executing script or
+ * module, or undefined if there is no such script.
+ */
+extern JS_PUBLIC_API JS::Value GetScriptedCallerPrivate(JSContext* cx);
+
 /**
  * A hook that's called whenever a script or module which has a private value
  * set with SetScriptPrivate() or SetModulePrivate() is finalized. This can be
