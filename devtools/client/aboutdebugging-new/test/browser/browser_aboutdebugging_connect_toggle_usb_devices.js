@@ -4,7 +4,7 @@
 "use strict";
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
-const { ADB } = require("devtools/shared/adb/adb");
+const { adbProcess } = require("devtools/shared/adb/adb-process");
 
 /**
  * Check that USB Devices scanning can be enabled and disabled from the connect page.
@@ -48,7 +48,7 @@ add_task(async function() {
   // fail and we will have an unhandled promise rejection.
   // See Bug 1498469.
   info("Wait until ADB has started.");
-  await waitUntil(() => ADB.ready);
+  await waitUntil(() => adbProcess.ready);
 
   info("Click on the toggle button");
   usbToggleButton.click();

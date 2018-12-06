@@ -5,7 +5,7 @@
 "use strict";
 
 const { RuntimeTypes } = require("devtools/client/webide/modules/runtime-types");
-const { ADB } = require("devtools/shared/adb/adb");
+const { prepareTCPConnection } = require("devtools/shared/adb/commands/index");
 
 class AdbRuntime {
   constructor(adbDevice, model, socketPath) {
@@ -33,7 +33,7 @@ class AdbRuntime {
   }
 
   connect(connection) {
-    return ADB.prepareTCPConnection(this._socketPath).then(port => {
+    return prepareTCPConnection(this._socketPath).then(port => {
       connection.host = "localhost";
       connection.port = port;
       connection.connect();
