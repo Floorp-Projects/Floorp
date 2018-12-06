@@ -709,8 +709,12 @@ void CheckGrayMarkingTracer::checkCell(Cell* cell) {
     dumpCellPath();
 
 #ifdef DEBUG
+    if (parent->is<JSObject>()) {
+      fprintf(stderr, "\nSource: ");
+      DumpObject(parent->as<JSObject>(), stderr);
+    }
     if (cell->is<JSObject>()) {
-      fprintf(stderr, "\n");
+      fprintf(stderr, "\nTarget: ");
       DumpObject(cell->as<JSObject>(), stderr);
     }
 #endif
