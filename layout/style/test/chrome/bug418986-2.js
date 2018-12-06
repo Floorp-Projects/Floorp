@@ -253,7 +253,9 @@ var testCSS = function (resisting) {
 var testOSXFontSmoothing = function (resisting) {
   let div = document.createElement("div");
   div.style.MozOsxFontSmoothing = "unset";
+  document.documentElement.appendChild(div);
   let readBack = window.getComputedStyle(div).MozOsxFontSmoothing;
+  div.remove();
   let smoothingPref = SpecialPowers.getBoolPref("layout.css.osx-font-smoothing.enabled", false);
   is(readBack, resisting ? "" : (smoothingPref ? "auto" : ""),
                "-moz-osx-font-smoothing");
