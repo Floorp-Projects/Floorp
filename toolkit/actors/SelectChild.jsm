@@ -39,10 +39,6 @@ var SelectContentHelper = function(aElement, aOptions, aGlobal) {
   this.isOpenedViaTouch = aOptions.isOpenedViaTouch;
   this._selectBackgroundColor = null;
   this._selectColor = null;
-  this._uaBackgroundColor = null;
-  this._uaColor = null;
-  this._uaSelectBackgroundColor = null;
-  this._uaSelectColor = null;
   this._closeAfterBlur = true;
   this._pseudoStylesSetup = false;
   this._lockedDescendants = null;
@@ -109,19 +105,19 @@ this.SelectContentHelper.prototype = {
     this._selectBackgroundColor = computedStyles.backgroundColor;
     this._selectColor = computedStyles.color;
     this._selectTextShadow = computedStyles.textShadow;
+    let options = this._buildOptionList();
+    let defaultStyles = this.element.ownerGlobal.getDefaultComputedStyle(this.element);
     this.global.sendAsyncMessage("Forms:ShowDropDown", {
       direction: computedStyles.direction,
       isOpenedViaTouch: this.isOpenedViaTouch,
-      options: this._buildOptionList(),
+      options,
       rect,
       selectedIndex: this.element.selectedIndex,
       selectBackgroundColor: this._selectBackgroundColor,
       selectColor: this._selectColor,
       selectTextShadow: this._selectTextShadow,
-      uaBackgroundColor: this.uaBackgroundColor,
-      uaColor: this.uaColor,
-      uaSelectBackgroundColor: this.uaSelectBackgroundColor,
-      uaSelectColor: this.uaSelectColor,
+      uaSelectBackgroundColor: defaultStyles.backgroundColor,
+      uaSelectColor: defaultStyles.color,
     });
     this._clearPseudoClassStyles();
     gOpen = true;
@@ -182,64 +178,18 @@ this.SelectContentHelper.prototype = {
     this._selectBackgroundColor = computedStyles.backgroundColor;
     this._selectColor = computedStyles.color;
     this._selectTextShadow = computedStyles.textShadow;
+
+    let defaultStyles = this.element.ownerGlobal.getDefaultComputedStyle(this.element);
     this.global.sendAsyncMessage("Forms:UpdateDropDown", {
       options: this._buildOptionList(),
       selectedIndex: this.element.selectedIndex,
       selectBackgroundColor: this._selectBackgroundColor,
       selectColor: this._selectColor,
       selectTextShadow: this._selectTextShadow,
-      uaBackgroundColor: this.uaBackgroundColor,
-      uaColor: this.uaColor,
-      uaSelectBackgroundColor: this.uaSelectBackgroundColor,
-      uaSelectColor: this.uaSelectColor,
+      uaSelectBackgroundColor: defaultStyles.backgroundColor,
+      uaSelectColor: defaultStyles.color,
     });
     this._clearPseudoClassStyles();
-  },
-
-  // Determine user agent background-color and color.
-  // This is used to skip applying the custom color if it matches
-  // the user agent values.
-  _calculateUAColors() {
-    let dummyOption = this.element.ownerDocument.createElementNS("http://www.w3.org/1999/xhtml", "option");
-    dummyOption.style.setProperty("color", "-moz-comboboxtext", "important");
-    dummyOption.style.setProperty("background-color", "-moz-combobox", "important");
-    let optionCS = this.element.ownerGlobal.getComputedStyle(dummyOption);
-    this._uaBackgroundColor = optionCS.backgroundColor;
-    this._uaColor = optionCS.color;
-    let dummySelect = this.element.ownerDocument.createElementNS("http://www.w3.org/1999/xhtml", "select");
-    dummySelect.style.setProperty("color", "-moz-fieldtext", "important");
-    dummySelect.style.setProperty("background-color", "-moz-field", "important");
-    let selectCS = this.element.ownerGlobal.getComputedStyle(dummySelect);
-    this._uaSelectBackgroundColor = selectCS.backgroundColor;
-    this._uaSelectColor = selectCS.color;
-  },
-
-  get uaBackgroundColor() {
-    if (!this._uaBackgroundColor) {
-      this._calculateUAColors();
-    }
-    return this._uaBackgroundColor;
-  },
-
-  get uaColor() {
-    if (!this._uaColor) {
-      this._calculateUAColors();
-    }
-    return this._uaColor;
-  },
-
-  get uaSelectBackgroundColor() {
-    if (!this._selectBackgroundColor) {
-      this._calculateUAColors();
-    }
-    return this._uaSelectBackgroundColor;
-  },
-
-  get uaSelectColor() {
-    if (!this._selectBackgroundColor) {
-      this._calculateUAColors();
-    }
-    return this._uaSelectColor;
   },
 
   dispatchMouseEvent(win, target, eventName) {
