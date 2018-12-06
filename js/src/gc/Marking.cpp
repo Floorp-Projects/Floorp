@@ -616,9 +616,15 @@ struct ImplicitEdgeHolderType<JSScript*> {
 
 void GCMarker::markEphemeronValues(gc::Cell* markedCell,
                                    WeakEntryVector& values) {
-  size_t initialLen = values.length();
-  for (size_t i = 0; i < initialLen; i++) {
-    values[i].weakmap->markEntry(this, markedCell, values[i].key);
+  DebugOnly<size_t> initialLen = values.length();
+
+  for (const auto& markable : values) {
+    if (color == gc::MarkColor::Black &&
+        markable.weakmap->markColor == gc::MarkColor::Gray) {
+      continue;
+    }
+
+    markable.weakmap->markEntry(this, markedCell, markable.key);
   }
 
   // The vector should not be appended to during iteration because the key is
@@ -3241,22 +3247,22 @@ static inline void CheckIsMarkedThing(T* thingp) {
 }
 
 template <typename T>
-static bool IsMarkedInternalCommon(T* thingp) {
+static inline bool ShouldCheckMarkState(JSRuntime* rt, T** thingp) {
   CheckIsMarkedThing(thingp);
   MOZ_ASSERT(!IsInsideNursery(*thingp));
 
   TenuredCell& thing = (*thingp)->asTenured();
   Zone* zone = thing.zoneFromAnyThread();
   if (!zone->isCollectingFromAnyThread() || zone->isGCFinished()) {
-    return true;
+    return false;
   }
 
   if (zone->isGCCompacting() && IsForwarded(*thingp)) {
     *thingp = Forwarded(*thingp);
-    return true;
+    return false;
   }
 
-  return thing.isMarkedAny();
+  return true;
 }
 
 template <typename T>
@@ -3277,7 +3283,30 @@ bool js::gc::IsMarkedInternal(JSRuntime* rt, T** thingp) {
     return Nursery::getForwardedPointer(cellp);
   }
 
-  return IsMarkedInternalCommon(thingp);
+  if (!ShouldCheckMarkState(rt, thingp)) {
+    return true;
+  }
+
+  return (*thingp)->asTenured().isMarkedAny();
+}
+
+template <typename T>
+bool js::gc::IsMarkedBlackInternal(JSRuntime* rt, T** thingp) {
+  if (IsOwnedByOtherRuntime(rt, *thingp)) {
+    return true;
+  }
+
+  if (MightBeNurseryAllocated<T>::value && IsInsideNursery(*thingp)) {
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+    Cell** cellp = reinterpret_cast<Cell**>(thingp);
+    return Nursery::getForwardedPointer(cellp);
+  }
+
+  if (!ShouldCheckMarkState(rt, thingp)) {
+    return true;
+  }
+
+  return (*thingp)->asTenured().isMarkedBlack();
 }
 
 template <typename S>
@@ -3293,6 +3322,22 @@ template <typename T>
 bool js::gc::IsMarkedInternal(JSRuntime* rt, T* thingp) {
   bool rv = true;
   *thingp = DispatchTyped(IsMarkedFunctor<T>(), *thingp, rt, &rv);
+  return rv;
+}
+
+template <typename S>
+struct IsMarkedBlackFunctor : public IdentityDefaultAdaptor<S> {
+  template <typename T>
+  S operator()(T* t, JSRuntime* rt, bool* rv) {
+    *rv = IsMarkedBlackInternal(rt, &t);
+    return js::gc::RewrapTaggedPointer<S, T>::wrap(t);
+  }
+};
+
+template <typename T>
+bool js::gc::IsMarkedBlackInternal(JSRuntime* rt, T* thingp) {
+  bool rv = true;
+  *thingp = DispatchTyped(IsMarkedBlackFunctor<T>(), *thingp, rt, &rv);
   return rv;
 }
 
@@ -3368,8 +3413,9 @@ FOR_EACH_PUBLIC_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_HEAP_TRACE_FUNCTIONS)
 FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(
     INSTANTIATE_ALL_VALID_HEAP_TRACE_FUNCTIONS)
 
-#define INSTANTIATE_INTERNAL_MARKING_FUNCTIONS(type)          \
-  template bool IsMarkedInternal(JSRuntime* rt, type* thing); \
+#define INSTANTIATE_INTERNAL_MARKING_FUNCTIONS(type)               \
+  template bool IsMarkedInternal(JSRuntime* rt, type* thing);      \
+  template bool IsMarkedBlackInternal(JSRuntime* rt, type* thing); \
   template bool IsAboutToBeFinalizedInternal(type* thingp);
 
 #define INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND(_1, type, _2) \
