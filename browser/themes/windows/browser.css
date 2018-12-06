@@ -94,7 +94,7 @@
  * illegible.
  */
 @media (-moz-windows-default-theme) {
-  @media not all and (-moz-os-version: windows-win7) {
+  @media not (-moz-os-version: windows-win7) {
     #toolbar-menubar:not(:-moz-lwtheme):-moz-window-inactive {
       color: ThreeDShadow;
     }
