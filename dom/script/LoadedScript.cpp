@@ -24,13 +24,11 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION_CLASS(LoadedScript)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(LoadedScript)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoader)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchOptions)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBaseURL)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(LoadedScript)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoader)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchOptions)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -40,13 +38,11 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(LoadedScript)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(LoadedScript)
 
-LoadedScript::LoadedScript(ScriptKind aKind, ScriptLoader* aLoader,
-                           ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL)
+LoadedScript::LoadedScript(ScriptKind aKind, ScriptFetchOptions* aFetchOptions,
+                           nsIURI* aBaseURL)
     : mKind(aKind),
-      mLoader(aLoader),
       mFetchOptions(aFetchOptions),
       mBaseURL(aBaseURL) {
-  MOZ_ASSERT(mLoader);
   MOZ_ASSERT(mFetchOptions);
   MOZ_ASSERT(mBaseURL);
 }
@@ -84,10 +80,9 @@ void HostFinalizeTopLevelScript(JSFreeOp* aFop, const JS::Value& aPrivate) {
 // ClassicScript
 //////////////////////////////////////////////////////////////
 
-ClassicScript::ClassicScript(ScriptLoader* aLoader,
-                             ScriptFetchOptions* aFetchOptions,
+ClassicScript::ClassicScript(ScriptFetchOptions* aFetchOptions,
                              nsIURI* aBaseURL)
-    : LoadedScript(ScriptKind::eClassic, aLoader, aFetchOptions, aBaseURL) {}
+    : LoadedScript(ScriptKind::eClassic, aFetchOptions, aBaseURL) {}
 
 //////////////////////////////////////////////////////////////
 // ModuleScript
@@ -116,9 +111,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_ADDREF_INHERITED(ModuleScript, LoadedScript)
 NS_IMPL_RELEASE_INHERITED(ModuleScript, LoadedScript)
 
-ModuleScript::ModuleScript(ScriptLoader* aLoader,
-                           ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL)
-    : LoadedScript(ScriptKind::eModule, aLoader, aFetchOptions, aBaseURL),
+ModuleScript::ModuleScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL)
+    : LoadedScript(ScriptKind::eModule, aFetchOptions, aBaseURL),
       mSourceElementAssociated(false) {
   MOZ_ASSERT(!ModuleRecord());
   MOZ_ASSERT(!HasParseError());
