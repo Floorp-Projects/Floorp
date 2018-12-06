@@ -1372,6 +1372,13 @@ class nsIPresShell : public nsStubDocumentObserver {
   virtual float GetCumulativeResolution() = 0;
 
   /**
+   * Accessors for a flag that tracks whether the most recent change to
+   * the pres shell's resolution was originated by the main thread.
+   */
+  virtual bool IsResolutionUpdated() const = 0;
+  virtual void SetResolutionUpdated(bool aUpdated) = 0;
+
+  /**
    * Calculate the cumulative scale resolution from this document up to
    * but not including the root document.
    */
@@ -1385,8 +1392,13 @@ class nsIPresShell : public nsStubDocumentObserver {
   /**
    * Similar to SetResolution() but also increases the scale of the content
    * by the same amount.
+   * |aOrigin| specifies who originated the resolution change. For changes
+   * sent by APZ, pass nsGkAtoms::apz. For changes sent by the main thread,
+   * use pass nsGkAtoms::other or nsGkAtoms::restore (similar to the |aOrigin|
+   * parameter of nsIScrollableFrame::ScrollToCSSPixels()).
    */
-  virtual nsresult SetResolutionAndScaleTo(float aResolution) = 0;
+  virtual nsresult SetResolutionAndScaleTo(float aResolution,
+                                           nsAtom* aOrigin) = 0;
 
   /**
    * Return whether we are scaling to the set resolution.

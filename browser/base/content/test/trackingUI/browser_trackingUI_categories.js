@@ -70,6 +70,8 @@ add_task(async function testCategoryLabelsInAppMenu() {
 });
 
 add_task(async function testSubcategoryLabels() {
+  SpecialPowers.pushPrefEnv({set: [["browser.contentblocking.control-center.ui.showAllowedLabels", true]]});
+
   await BrowserTestUtils.withNewTab("http://www.example.com", async function() {
     let categoryLabel =
       document.getElementById("identity-popup-content-blocking-tracking-protection-state-label");

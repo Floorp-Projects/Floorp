@@ -32,7 +32,6 @@
 #include "mozilla/ReflowOutput.h"
 #include "ImageContainer.h"
 #include "gfx2DGlue.h"
-#include "nsStyleConsts.h"
 #include "SVGImageContext.h"
 #include <limits>
 #include <algorithm>

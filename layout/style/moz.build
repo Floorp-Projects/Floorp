@@ -112,6 +112,7 @@ EXPORTS.mozilla += [
     'StyleSheetInfo.h',
     'StyleSheetInlines.h',
     'URLExtraData.h',
+    'UserAgentStyleSheetList.h',
 ]
 
 EXPORTS.mozilla.dom += [
