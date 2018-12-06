@@ -3,7 +3,6 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
 const { ExtensionTestUtils } = ChromeUtils.import("resource://testing-common/ExtensionXPCShellUtils.jsm", {});
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 const { getFileForBinary } = require("devtools/shared/adb/adb-binary");
