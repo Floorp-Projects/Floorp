@@ -440,7 +440,7 @@ bool nsHTMLCanvasFrame::UpdateWebRenderCanvasData(
 
 void nsHTMLCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayListSet& aLists) {
-  if (!IsVisibleForPainting(aBuilder)) return;
+  if (!IsVisibleForPainting()) return;
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 

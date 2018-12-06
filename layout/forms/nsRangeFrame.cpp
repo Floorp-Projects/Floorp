@@ -246,7 +246,7 @@ void nsRangeFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   // Draw a focus outline if appropriate:
 
-  if (!aBuilder->IsForPainting() || !IsVisibleForPainting(aBuilder)) {
+  if (!aBuilder->IsForPainting() || !IsVisibleForPainting()) {
     // we don't want the focus ring item for hit-testing or if the item isn't
     // in the area being [re]painted
     return;

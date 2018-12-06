@@ -861,15 +861,6 @@ class nsPresContext : public nsISupports,
    */
   uint32_t GetBidi() const;
 
-  /**
-   * Render only Selection
-   */
-  void SetIsRenderingOnlySelection(bool aResult) {
-    mIsRenderingOnlySelection = aResult;
-  }
-
-  bool IsRenderingOnlySelection() const { return mIsRenderingOnlySelection; }
-
   bool IsTopLevelWindowInactive();
 
   /*
@@ -1401,7 +1392,6 @@ class nsPresContext : public nsISupports,
   unsigned mDrawImageBackground : 1;
   unsigned mDrawColorBackground : 1;
   unsigned mNeverAnimate : 1;
-  unsigned mIsRenderingOnlySelection : 1;
   unsigned mPaginated : 1;
   unsigned mCanPaginatedScroll : 1;
   unsigned mDoScaledTwips : 1;

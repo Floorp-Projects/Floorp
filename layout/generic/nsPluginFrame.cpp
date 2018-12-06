@@ -1057,7 +1057,7 @@ bool nsPluginFrame::IsTransparentMode() const {
 void nsPluginFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                      const nsDisplayListSet& aLists) {
   // XXX why are we painting collapsed object frames?
-  if (!IsVisibleOrCollapsedForPainting(aBuilder)) return;
+  if (!IsVisibleOrCollapsedForPainting()) return;
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 

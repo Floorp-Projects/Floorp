@@ -5032,7 +5032,7 @@ void nsDisplayText::RenderToContext(gfxContext* aCtx,
 
 void nsTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                    const nsDisplayListSet& aLists) {
-  if (!IsVisibleForPainting(aBuilder)) return;
+  if (!IsVisibleForPainting()) return;
 
   DO_GLOBAL_REFLOW_COUNT_DSP("nsTextFrame");
 
@@ -7156,26 +7156,6 @@ int16_t nsTextFrame::GetSelectionStatus(int16_t* aSelectionFlags) {
   selectionController->GetDisplaySelection(&selectionValue);
 
   return selectionValue;
-}
-
-bool nsTextFrame::IsVisibleInSelection(Selection* aSelection) {
-  // Check the quick way first
-  if (!GetContent()->IsSelectionDescendant()) return false;
-
-  UniquePtr<SelectionDetails> details = GetSelectionDetails();
-  bool found = false;
-
-  // where are the selection points "really"
-  for (SelectionDetails* sdptr = details.get(); sdptr;
-       sdptr = sdptr->mNext.get()) {
-    if (sdptr->mEnd > GetContentOffset() && sdptr->mStart < GetContentEnd() &&
-        sdptr->mSelectionType == SelectionType::eNormal) {
-      found = true;
-      break;
-    }
-  }
-
-  return found;
 }
 
 /**

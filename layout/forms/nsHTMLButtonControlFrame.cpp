@@ -90,7 +90,7 @@ void nsHTMLButtonControlFrame::BuildDisplayList(
   }
 
   nsDisplayList onTop;
-  if (IsVisibleForPainting(aBuilder)) {
+  if (IsVisibleForPainting()) {
     mRenderer.DisplayButton(aBuilder, aLists.BorderBackground(), &onTop);
   }
 

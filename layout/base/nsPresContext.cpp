@@ -217,7 +217,6 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
       mDrawImageBackground(true),  // always draw the background
       mDrawColorBackground(true),
       // mNeverAnimate is initialised below, in constructor body
-      mIsRenderingOnlySelection(false),
       mPaginated(aType != eContext_Galley),
       mCanPaginatedScroll(false),
       mDoScaledTwips(true),

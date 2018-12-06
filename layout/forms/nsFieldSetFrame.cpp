@@ -196,7 +196,7 @@ void nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // the background/border display item won't do anything, and if it isn't
   // empty, we need to paint the outline
   if (!(GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) &&
-      IsVisibleForPainting(aBuilder)) {
+      IsVisibleForPainting()) {
     if (StyleEffects()->mBoxShadow) {
       aLists.BorderBackground()->AppendToTop(
           MakeDisplayItem<nsDisplayBoxShadowOuter>(aBuilder, this));

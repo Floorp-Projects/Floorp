@@ -4960,7 +4960,7 @@ void PresShell::AddCanvasBackgroundColorItem(
         aFrame->PresShell()->GetRootScrollFrameAsScrollable();
     if (sf) {
       nsCanvasFrame* canvasFrame = do_QueryFrame(sf->GetScrolledFrame());
-      if (canvasFrame && canvasFrame->IsVisibleForPainting(&aBuilder)) {
+      if (canvasFrame && canvasFrame->IsVisibleForPainting()) {
         addedScrollingBackgroundColor = AddCanvasBackgroundColor(
             aList, canvasFrame, bgcolor, mHasCSSBackgroundColor);
       }
