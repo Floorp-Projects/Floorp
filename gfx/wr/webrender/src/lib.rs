@@ -64,9 +64,6 @@ extern crate serde;
 #[macro_use]
 extern crate thread_profiler;
 
-#[macro_use]
-mod storage;
-
 mod batch;
 mod border;
 mod box_shadow;
@@ -112,6 +109,7 @@ mod scene_builder;
 mod segment;
 mod shade;
 mod spatial_node;
+mod storage;
 mod surface;
 mod texture_allocator;
 mod texture_cache;
