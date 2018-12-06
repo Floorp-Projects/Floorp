@@ -6001,7 +6001,8 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
       nsresult rv;
       {
         nsJSUtils::ExecutionContext exec(aes.cx(), global);
-        rv = exec.CompileAndExec(options, script);
+        exec.Compile(options, script);
+        rv = exec.ExecScript();
       }
 
       if (rv == NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE) {

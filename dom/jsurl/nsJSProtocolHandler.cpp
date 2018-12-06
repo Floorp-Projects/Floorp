@@ -254,8 +254,8 @@ nsresult nsJSThunk::EvaluateScript(
   {
     nsJSUtils::ExecutionContext exec(cx, globalJSObject);
     exec.SetCoerceToString(true);
-    exec.CompileAndExec(options, NS_ConvertUTF8toUTF16(script));
-    rv = exec.ExtractReturnValue(&v);
+    exec.Compile(options, NS_ConvertUTF8toUTF16(script));
+    rv = exec.ExecScript(&v);
   }
 
   js::AssertSameCompartment(cx, v);

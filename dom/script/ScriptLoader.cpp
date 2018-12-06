@@ -8,8 +8,8 @@
 #include "ScriptLoadHandler.h"
 #include "ScriptLoadRequest.h"
 #include "ScriptTrace.h"
-#include "ModuleLoadRequest.h"
 #include "LoadedScript.h"
+#include "ModuleLoadRequest.h"
 
 #include "prsystem.h"
 #include "jsapi.h"
@@ -2470,13 +2470,14 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
           if (aRequest->mOffThreadToken) {
             LOG(("ScriptLoadRequest (%p): Decode Bytecode & Join and Execute",
                  aRequest));
-            rv = exec.DecodeJoinAndExec(&aRequest->mOffThreadToken);
+            exec.JoinDecode(&aRequest->mOffThreadToken);
           } else {
             LOG(("ScriptLoadRequest (%p): Decode Bytecode and Execute",
                  aRequest));
-            rv = exec.DecodeAndExec(options, aRequest->mScriptBytecode,
-                                    aRequest->mBytecodeOffset);
+            exec.Decode(options, aRequest->mScriptBytecode,
+                        aRequest->mBytecodeOffset);
           }
+          rv = exec.ExecScript();
           // We do not expect to be saving anything when we already have some
           // bytecode.
           MOZ_ASSERT(!aRequest->mCacheInfo);
@@ -2496,29 +2497,33 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
                    "Execute",
                    aRequest));
               if (aRequest->IsBinASTSource()) {
-                rv = exec.DecodeBinASTJoinAndExec(&aRequest->mOffThreadToken,
-                                                  &script);
+                rv = exec.JoinDecodeBinAST(&aRequest->mOffThreadToken);
               } else {
                 MOZ_ASSERT(aRequest->IsTextSource());
-                rv = exec.JoinAndExec(&aRequest->mOffThreadToken, &script);
+                rv = exec.JoinCompile(&aRequest->mOffThreadToken);
               }
             } else {
               // Main thread parsing (inline and small scripts)
               LOG(("ScriptLoadRequest (%p): Compile And Exec", aRequest));
               if (aRequest->IsBinASTSource()) {
-                rv = exec.DecodeBinASTAndExec(
-                    options, aRequest->ScriptBinASTData().begin(),
-                    aRequest->ScriptBinASTData().length(), &script);
+                rv = exec.DecodeBinAST(options,
+                                       aRequest->ScriptBinASTData().begin(),
+                                       aRequest->ScriptBinASTData().length());
               } else {
                 MOZ_ASSERT(aRequest->IsTextSource());
                 auto srcBuf = GetScriptSource(cx, aRequest);
 
                 if (srcBuf) {
-                  rv = exec.CompileAndExec(options, *srcBuf, &script);
+                  rv = exec.Compile(options, *srcBuf);
                 } else {
                   rv = NS_ERROR_OUT_OF_MEMORY;
                 }
               }
+            }
+
+            if (rv == NS_OK) {
+              script = exec.GetScript();
+              rv = exec.ExecScript();
             }
           }
 
