@@ -15,6 +15,10 @@
  * an iframe with id "testframe".
  */
 
+/* import-globals-from ./parser_datreader.js */
+/* import-globals-from ./html5_tree_construction_exceptions.js */
+/* globals parserDatFiles */
+
 var functionsToRunAsync = [];
 
 window.addEventListener("message", function(event) {
@@ -87,6 +91,7 @@ function makeFragmentTestChecker(input,
       context = document.createElementNS("http://www.w3.org/1999/xhtml",
                                          fragment);
     }
+    // eslint-disable-next-line no-unsanitized/property
     context.innerHTML = input;
     var domAsString = fragmentToTestOutput(context);
     is(domAsString, expected, "HTML5 expected success. " + new Date());
@@ -99,7 +104,6 @@ function makeFragmentTestChecker(input,
 
 var testcases;
 function nextTest(testframe) {
-  var test = 0;
   var {done, value} = testcases.next();
   if (done) {
     SimpleTest.finish();

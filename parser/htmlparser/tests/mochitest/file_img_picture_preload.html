@@ -43,7 +43,7 @@
       request.send(null);
       is(request.status, 200, "Getting status from sjs helper should succeed");
       if (request.status === 200) {
-        var preloadedImages = JSON.parse(request.responseText);
+        preloadedImages = JSON.parse(request.responseText);
       }
     }
 
@@ -146,7 +146,7 @@
       for (var img of images) {
         var imgName = img.id;
         if (img.currentSrc) {
-          var split = img.currentSrc.split("?")[1].split(":");
+          split = img.currentSrc.split("?")[1].split(":");
           is(split[0], imgName,
              "image " + imgName + " source matches element id");
           is(split[1], preloadByName[imgName],
