@@ -231,7 +231,7 @@ bool SVGGeometryFrame::IsSVGTransformed(
 void SVGGeometryFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                         const nsDisplayListSet& aLists) {
   if (!static_cast<const nsSVGElement*>(GetContent())->HasValidDimensions() ||
-      (!IsVisibleForPainting(aBuilder) && aBuilder->IsForPainting())) {
+      (!IsVisibleForPainting() && aBuilder->IsForPainting())) {
     return;
   }
   DisplayOutline(aBuilder, aLists);

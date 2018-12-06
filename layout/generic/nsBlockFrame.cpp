@@ -6348,15 +6348,6 @@ static void ComputeVisualOverflowArea(nsLineList& aLines, nscoord aWidth,
 }
 #endif
 
-bool nsBlockFrame::IsVisibleInSelection(Selection* aSelection) {
-  if (mContent->IsAnyOfHTMLElements(nsGkAtoms::html, nsGkAtoms::body))
-    return true;
-
-  IgnoredErrorResult rv;
-  bool visible = aSelection->ContainsNode(*mContent, true, rv);
-  return !rv.Failed() && visible;
-}
-
 #ifdef DEBUG
 static void DebugOutputDrawLine(int32_t aDepth, nsLineBox* aLine, bool aDrawn) {
   if (nsBlockFrame::gNoisyDamageRepair) {

@@ -92,7 +92,7 @@ void nsLeafBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // leaf boxes continue to receive events in the foreground layer.
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
-  if (!aBuilder->IsForEventDelivery() || !IsVisibleForPainting(aBuilder))
+  if (!aBuilder->IsForEventDelivery() || !IsVisibleForPainting())
     return;
 
   aLists.Content()->AppendToTop(

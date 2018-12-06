@@ -338,7 +338,7 @@ nsRect nsDisplayXULTextBox::GetComponentAlphaBounds(
 
 void nsTextBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                       const nsDisplayListSet& aLists) {
-  if (!IsVisibleForPainting(aBuilder)) return;
+  if (!IsVisibleForPainting()) return;
 
   nsLeafBoxFrame::BuildDisplayList(aBuilder, aLists);
 

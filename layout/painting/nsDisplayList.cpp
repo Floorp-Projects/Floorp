@@ -1069,16 +1069,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
 
   mBuildCompositorHitTestInfo = mAsyncPanZoomEnabled && IsForPainting();
 
-  nsPresContext* pc = aReferenceFrame->PresContext();
-  nsIPresShell* shell = pc->PresShell();
-  if (pc->IsRenderingOnlySelection()) {
-    nsCOMPtr<nsISelectionController> selcon(do_QueryInterface(shell));
-    if (selcon) {
-      mBoundingSelection =
-          selcon->GetSelection(nsISelectionController::SELECTION_NORMAL);
-    }
-  }
-
   static_assert(
       static_cast<uint32_t>(DisplayItemType::TYPE_MAX) < (1 << TYPE_BITS),
       "Check TYPE_MAX should not overflow");
