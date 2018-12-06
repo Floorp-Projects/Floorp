@@ -48,6 +48,8 @@ class LoadedScript : public nsISupports {
   ScriptLoader* Loader() const { return mLoader; }
   ScriptFetchOptions* FetchOptions() const { return mFetchOptions; }
   nsIURI* BaseURL() const { return mBaseURL; }
+
+  void AssociateWithScript(JSScript* aScript);
 };
 
 class ClassicScript final : public LoadedScript {

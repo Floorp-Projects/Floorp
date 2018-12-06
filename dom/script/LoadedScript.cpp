@@ -53,6 +53,33 @@ LoadedScript::LoadedScript(ScriptKind aKind, ScriptLoader* aLoader,
 
 LoadedScript::~LoadedScript() { DropJSObjects(this); }
 
+void LoadedScript::AssociateWithScript(JSScript* aScript) {
+  // Set a JSScript's private value to point to this object and
+  // increment our reference count. This is decremented by
+  // HostFinalizeTopLevelScript() below when the JSScript dies.
+
+  MOZ_ASSERT(JS::GetScriptPrivate(aScript).isUndefined());
+  JS::SetScriptPrivate(aScript, JS::PrivateValue(this));
+  AddRef();
+}
+
+void HostFinalizeTopLevelScript(JSFreeOp* aFop, const JS::Value& aPrivate) {
+  // Decrement the reference count of a LoadedScript object that is
+  // pointed to by a dying JSScript. The reference count was
+  // originally incremented by AssociateWithScript() above.
+
+  auto script = static_cast<LoadedScript*>(aPrivate.toPrivate());
+
+#ifdef DEBUG
+  if (script->IsModuleScript()) {
+    JSObject* module = script->AsModuleScript()->mModuleRecord.unbarrieredGet();
+    MOZ_ASSERT(JS::GetModulePrivate(module) == aPrivate);
+  }
+#endif
+
+  script->Release();
+}
+
 //////////////////////////////////////////////////////////////
 // ClassicScript
 //////////////////////////////////////////////////////////////
@@ -130,15 +157,6 @@ void ModuleScript::SetModuleRecord(JS::Handle<JSObject*> aModuleRecord) {
 
   HoldJSObjects(this);
   AddRef();
-}
-
-void HostFinalizeTopLevelScript(JSFreeOp* aFop, const JS::Value& aPrivate) {
-  auto script = static_cast<ModuleScript*>(aPrivate.toPrivate());
-  if (script) {
-    MOZ_ASSERT(JS::GetModulePrivate(script->mModuleRecord.unbarrieredGet()) ==
-               aPrivate);
-    script->UnlinkModuleRecord();
-  }
 }
 
 void ModuleScript::SetParseError(const JS::Value& aError) {
