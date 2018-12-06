@@ -177,7 +177,7 @@ static void moz_container_map_wayland(MozContainer *container) {
   container->surface_needs_clear = true;
   container->ready_to_draw = false;
 
-  static wl_surface *gtk_container_surface =
+  wl_surface *gtk_container_surface =
       moz_container_get_gtk_container_surface(container);
   container->frame_callback_handler = wl_surface_frame(gtk_container_surface);
   wl_callback_add_listener(container->frame_callback_handler, &frame_listener,
