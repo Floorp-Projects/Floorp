@@ -83,7 +83,7 @@ function insert_iframe(index, doctype) {
 // Iterate over the tests
 //
 function doTest() {
-  for (i = 0; i < doctypes.length; i += 2) {
+  for (var i = 0; i < doctypes.length; i += 2) {
     insert_iframe(i, doctypes[i + 1]);
   }
 }

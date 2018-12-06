@@ -29,10 +29,8 @@ function updateDocumentSourceMaps(src) {
 
     handleAttributes: function handleAttributes(aAttributes) {
       for (var i = 0; i < aAttributes.length; i++) {
-        var attrNamespaceURI = aAttributes.getURI(i);
         var attrLocalName = aAttributes.getLocalName(i);
         var attrNodeName = aAttributes.getQName(i);
-        var value = aAttributes.getValue(i);
         do_parse_check(attrLocalName, "Missing attribute local name");
         do_parse_check(attrNodeName, "Missing attribute node name");
       }

@@ -28,6 +28,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=566879
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+var initialState;
+
 function runTest() {
   initialState = document.getElementById("content").innerHTML;
   document.getElementById("textfield").value = "foo";
@@ -39,6 +41,7 @@ function runTest() {
 }
 
 function continuation1() {
+  // eslint-disable-next-line no-unsanitized/property
   document.getElementById("content").innerHTML = initialState;
   setTimeout(continuation2, 1);
 }
