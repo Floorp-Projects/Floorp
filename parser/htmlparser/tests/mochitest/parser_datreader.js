@@ -36,7 +36,7 @@ function parseTestcase(testcase) {
   var lines = testcase.split("\n");
 
   /* check that the first non-empty, non-comment line is #data */
-  for (var line of lines) {
+  for (let line of lines) {
     if (!line || startsWith(line, "##")) {
       continue;
     }
@@ -51,7 +51,7 @@ function parseTestcase(testcase) {
   var errors = [];
   var fragment = [];
   var currentList = input;
-  for (var line of lines) {
+  for (let line of lines) {
     if (startsWith(line, "##todo")) {
       todo(false, line.substring(6));
       continue;
@@ -146,7 +146,7 @@ function addLevels(walker, buf, indent) {
           if (walker.currentNode.hasAttributes()) {
             var valuesByName = {};
             var attrs = walker.currentNode.attributes;
-            for (var i = 0; i < attrs.length; ++i) {
+            for (let i = 0; i < attrs.length; ++i) {
               var localName = attrs[i].localName;
               var name;
               var attrNs = attrs[i].namespaceURI;
@@ -164,7 +164,7 @@ function addLevels(walker, buf, indent) {
               valuesByName[name] = attrs[i].value;
             }
             var keys = Object.keys(valuesByName).sort();
-            for (var i = 0; i < keys.length; ++i) {
+            for (let i = 0; i < keys.length; ++i) {
               buf += "\n" + indent + "  " + keys[i] +
                      "=\"" + valuesByName[keys[i]] + "\"";
             }
