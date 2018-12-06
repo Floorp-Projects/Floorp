@@ -38,24 +38,15 @@ class nsLayoutStylesheetCache final : public nsIObserver,
 
   static nsLayoutStylesheetCache* Singleton();
 
-  mozilla::StyleSheet* ScrollbarsSheet();
-  mozilla::StyleSheet* FormsSheet();
+#define STYLE_SHEET(identifier_, url_, lazy_) \
+  mozilla::StyleSheet* identifier_##Sheet();
+#include "mozilla/UserAgentStyleSheetList.h"
+#undef STYLE_SHEET
+
   mozilla::StyleSheet* UserContentSheet();
   mozilla::StyleSheet* UserChromeSheet();
-  mozilla::StyleSheet* UASheet();
-  mozilla::StyleSheet* HTMLSheet();
-  mozilla::StyleSheet* MinimalXULSheet();
-  mozilla::StyleSheet* XULSheet();
-  mozilla::StyleSheet* QuirkSheet();
-  mozilla::StyleSheet* SVGSheet();
-  mozilla::StyleSheet* MathMLSheet();
-  mozilla::StyleSheet* CounterStylesSheet();
-  mozilla::StyleSheet* NoScriptSheet();
-  mozilla::StyleSheet* NoFramesSheet();
   mozilla::StyleSheet* ChromePreferenceSheet(nsPresContext* aPresContext);
   mozilla::StyleSheet* ContentPreferenceSheet(nsPresContext* aPresContext);
-  mozilla::StyleSheet* ContentEditableSheet();
-  mozilla::StyleSheet* DesignModeSheet();
 
   static void InvalidatePreferenceSheets();
 

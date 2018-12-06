@@ -36,7 +36,7 @@
       "32": "icons/icon-v2.svg"
     },
     "default_title": "__MSG_contextMenuLabel__",
-    "show_matches": ["<all_urls>"],
+    "show_matches": ["<all_urls>", "about:reader*"],
     "pinned": false
   },
   "icons": {

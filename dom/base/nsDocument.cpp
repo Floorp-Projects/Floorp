@@ -10188,7 +10188,7 @@ void nsIDocument::CleanupFullscreenState() {
   // Restore the zoom level that was in place prior to entering fullscreen.
   if (nsIPresShell* shell = GetShell()) {
     if (shell->GetMobileViewportManager()) {
-      shell->SetResolutionAndScaleTo(mSavedResolution);
+      shell->SetResolutionAndScaleTo(mSavedResolution, nsGkAtoms::restore);
     }
   }
 
@@ -10585,7 +10585,8 @@ bool nsIDocument::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest) {
               shell->GetMobileViewportManager()) {
         // Save the previous resolution so it can be restored.
         child->mSavedResolution = shell->GetResolution();
-        shell->SetResolutionAndScaleTo(manager->ComputeIntrinsicResolution());
+        shell->SetResolutionAndScaleTo(manager->ComputeIntrinsicResolution(),
+                                       nsGkAtoms::other);
       }
     }
 

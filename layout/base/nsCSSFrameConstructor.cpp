@@ -104,7 +104,6 @@
 #include "nsBackdropFrame.h"
 #include "nsTransitionManager.h"
 #include "DetailsFrame.h"
-#include "nsStyleConsts.h"
 
 #ifdef MOZ_XUL
 #include "nsIPopupContainer.h"
