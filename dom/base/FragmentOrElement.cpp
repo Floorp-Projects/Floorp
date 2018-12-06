@@ -1908,11 +1908,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
   }
 
   // Traverse attribute names.
-  {
+  if (tmp->IsElement()) {
+    Element* element = tmp->AsElement();
     uint32_t i;
-    uint32_t attrs = tmp->mAttrs.AttrCount();
+    uint32_t attrs = element->GetAttrCount();
     for (i = 0; i < attrs; i++) {
-      const nsAttrName* name = tmp->mAttrs.AttrNameAt(i);
+      const nsAttrName* name = element->GetUnsafeAttrNameAt(i);
       if (!name->IsAtom()) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mAttrs[i]->NodeInfo()");
         cb.NoteNativeChild(name->NodeInfo(),
@@ -1927,24 +1928,6 @@ NS_INTERFACE_MAP_BEGIN(FragmentOrElement)
 NS_INTERFACE_MAP_END_INHERITING(nsIContent)
 
 //----------------------------------------------------------------------
-
-nsresult FragmentOrElement::CopyInnerTo(FragmentOrElement* aDst) {
-  nsresult rv = aDst->mAttrs.EnsureCapacityToClone(mAttrs);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  uint32_t i, count = mAttrs.AttrCount();
-  for (i = 0; i < count; ++i) {
-    const nsAttrName* name = mAttrs.AttrNameAt(i);
-    const nsAttrValue* value = mAttrs.AttrAt(i);
-    nsAutoString valStr;
-    value->ToString(valStr);
-    rv = aDst->AsElement()->SetAttr(name->NamespaceID(), name->LocalName(),
-                                    name->GetPrefix(), valStr, false);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
-}
 
 const nsTextFragment* FragmentOrElement::GetText() { return nullptr; }
 
@@ -2167,7 +2150,6 @@ void FragmentOrElement::FireNodeRemovedForChildren() {
 void FragmentOrElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
                                                size_t* aNodeSize) const {
   nsIContent::AddSizeOfExcludingThis(aSizes, aNodeSize);
-  *aNodeSize += mAttrs.SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
 
   nsDOMSlots* slots = GetExistingDOMSlots();
   if (slots) {
