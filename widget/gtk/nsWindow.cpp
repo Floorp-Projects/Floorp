@@ -1870,13 +1870,6 @@ gboolean nsWindow::OnExposeEvent(cairo_t *cr) {
   // Windows that are not visible will be painted after they become visible.
   if (!mGdkWindow || mIsFullyObscured || !mHasMappedToplevel) return FALSE;
 
-#ifdef MOZ_WAYLAND
-  // Window does not have visible MozContainer/wl_surface yet.
-  if (!mIsX11Display && (!mContainer || !mContainer->ready_to_draw)) {
-    return FALSE;
-  }
-#endif
-
   nsIWidgetListener *listener = GetListener();
   if (!listener) return FALSE;
 
