@@ -47,7 +47,7 @@ const imports = [
   /^(?:Cu|Components\.utils|ChromeUtils)\.import\(".*\/((.*?)\.jsm?)"(?:, this)?\)/,
 ];
 
-const workerImportFilenameMatch = /(.*\/)*(.*?\.jsm?)/;
+const workerImportFilenameMatch = /(.*\/)*((.*?)\.jsm?)/;
 
 module.exports = {
   get modulesGlobalData() {
@@ -204,6 +204,8 @@ module.exports = {
             results = results.concat(globalModules[match[2]].map(name => {
               return { name, writable: true };
             }));
+          } else {
+            results.push({ name: match[3], writable: true, explicit: true });
           }
         }
       }
