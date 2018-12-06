@@ -515,11 +515,10 @@ void CrossProcessCompositorBridgeParent::FlushApzRepaints(
   MOZ_ASSERT(aLayersId.IsValid());
   const CompositorBridgeParent::LayerTreeState* state =
       CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
-  if (!state) {
+  if (!state || !state->mParent) {
     return;
   }
 
-  MOZ_ASSERT(state->mParent);
   state->mParent->FlushApzRepaints(aLayersId);
 }
 
