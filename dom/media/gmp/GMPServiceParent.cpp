@@ -497,7 +497,8 @@ GeckoMediaPluginServiceParent::LoadFromEnvironment() {
 
   const char* env = PR_GetEnv("MOZ_GMP_PATH");
   if (!env || !*env) {
-    return GenericPromise::AllPromiseType::CreateAndResolve(true, __func__);
+    return GenericPromise::AllPromiseType::CreateAndResolve(
+        nsTArray<bool>{true}, __func__);
   }
 
   nsString allpaths;
