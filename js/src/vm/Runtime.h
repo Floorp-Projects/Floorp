@@ -979,6 +979,9 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
   // module import and can accessed by off-thread parsing.
   mozilla::Atomic<JS::ModuleDynamicImportHook> moduleDynamicImportHook;
 
+  // A hook called on script finalization.
+  js::MainThreadData<JS::ScriptPrivateFinalizeHook> scriptPrivateFinalizeHook;
+
  public:
 #if defined(JS_BUILD_BINAST)
   js::BinaryASTSupport& binast() { return binast_; }

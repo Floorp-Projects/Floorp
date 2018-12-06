@@ -1317,6 +1317,16 @@ void ScriptSourceObject::finalize(FreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
   ScriptSourceObject* sso = &obj->as<ScriptSourceObject>();
   sso->source()->decref();
+
+  Value value = sso->canonicalPrivate();
+  if (!value.isUndefined()) {
+    // The embedding may need to dispose of its private data.
+    JS::AutoSuppressGCAnalysis suppressGC;
+    if (JS::ScriptPrivateFinalizeHook hook =
+            fop->runtime()->scriptPrivateFinalizeHook) {
+      hook(fop, value);
+    }
+  }
 }
 
 void ScriptSourceObject::trace(JSTracer* trc, JSObject* obj) {

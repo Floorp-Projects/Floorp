@@ -1176,8 +1176,10 @@ class ScriptSourceObject : public NativeObject {
     setReservedSlot(PRIVATE_SLOT, value);
   }
 
-  Value unwrappedPrivate() const {
-    return unwrappedCanonical()->getReservedSlot(PRIVATE_SLOT);
+  Value canonicalPrivate() const {
+    Value value = getReservedSlot(PRIVATE_SLOT);
+    MOZ_ASSERT_IF(!isCanonical(), value.isUndefined());
+    return value;
   }
 
  private:
