@@ -374,8 +374,7 @@ void KeyframeEffect::EnsureBaseStyles(
     return;
   }
 
-  Maybe<nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue>>
-      previousBaseStyles;
+  Maybe<BaseValuesHashmap> previousBaseStyles;
   if (aBaseStylesChanged != nullptr) {
     previousBaseStyles.emplace(std::move(mBaseValues));
   }

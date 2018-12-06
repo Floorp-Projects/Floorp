@@ -402,7 +402,9 @@ class KeyframeEffect : public AnimationEffect {
   // The non-animated values for properties in this effect that contain at
   // least one animation value that is composited with the underlying value
   // (i.e. it uses the additive or accumulate composite mode).
-  nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue> mBaseValues;
+  using BaseValuesHashmap =
+      nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue>;
+  BaseValuesHashmap mBaseValues;
 
   // True if this effect is in the EffectSet for its target element. This is
   // used as an optimization to avoid unnecessary hashmap lookups on the
