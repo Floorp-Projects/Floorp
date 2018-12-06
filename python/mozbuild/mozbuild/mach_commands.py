@@ -12,6 +12,7 @@ import logging
 import operator
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -1311,7 +1312,6 @@ class PackageFrontend(MachCommandBase):
         from requests.adapters import HTTPAdapter
         import redo
         import requests
-        import shutil
 
         from taskgraph.util.taskcluster import (
             get_artifact_url,
@@ -2012,7 +2012,6 @@ class StaticAnalysis(MachCommandBase):
 
         import concurrent.futures
         import multiprocessing
-        import shutil
 
         max_workers = multiprocessing.cpu_count()
 
@@ -2221,7 +2220,6 @@ class StaticAnalysis(MachCommandBase):
             return self.TOOLS_GRADLE_FAILED
         issues = json.load(open(mozpath.join(out_folder, 'report.json')))
         # remove folder that infer creates because the issues are loaded into memory
-        import shutil
         shutil.rmtree(out_folder)
         # Verify to see if we got any issues, if not raise exception
         if not issues:
@@ -2611,7 +2609,6 @@ class StaticAnalysis(MachCommandBase):
         if os.path.isdir(self._clang_tools_path) and download_if_needed:
             # The directory exists, perhaps it's corrupted?  Delete it
             # and start from scratch.
-            import shutil
             shutil.rmtree(self._clang_tools_path)
             return self._get_clang_tools(force=force, skip_cache=skip_cache,
                                             source=source, verbose=verbose,
@@ -2718,7 +2715,6 @@ class StaticAnalysis(MachCommandBase):
             if os.path.isdir(infer_path) and download_if_needed:
                 # The directory exists, perhaps it's corrupted?  Delete it
                 # and start from scratch.
-                import shutil
                 shutil.rmtree(infer_path)
                 return self._get_infer(force=force, skip_cache=skip_cache,
                                        verbose=verbose,
@@ -2831,7 +2827,6 @@ class StaticAnalysis(MachCommandBase):
             return 0
 
     def _run_clang_format_path(self, clang_format, show, paths):
-        import shutil
 
         # Run clang-format on files or directories directly
         from subprocess import check_output, CalledProcessError
