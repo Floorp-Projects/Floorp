@@ -5,7 +5,7 @@
 
 /**
  * A test suite that runs WHATWG HTML parser tests.
- * The tests are from html5lib. 
+ * The tests are from html5lib.
  *
  * http://html5lib.googlecode.com/
  */
@@ -14,15 +14,15 @@
  * A few utility functions.
  */
 function log(entry) {
-    
+
 }
 
 function startsWith(s, s2) {
-  return s.indexOf(s2)==0;
+  return s.indexOf(s2) == 0;
 }
 
 function trimString(s) {
-  return(s.replace(/^\s+/,'').replace(/\s+$/,''));
+  return (s.replace(/^\s+/, "").replace(/\s+$/, ""));
 }
 
 /**
@@ -43,7 +43,7 @@ function parseTestcase(testcase) {
     if (line == "#data")
       break;
     log(lines);
-    throw "Unknown test format."
+    throw "Unknown test format.";
   }
 
   var input = [];
@@ -72,7 +72,7 @@ function parseTestcase(testcase) {
   while (!output[output.length - 1]) {
     output.pop(); // zap trailing blank lines
   }
-  //logger.log(input.length, output.length, errors.length);
+  // logger.log(input.length, output.length, errors.length);
   return [input.join("\n"), output.join("\n"), errors, fragment[0]];
 }
 
@@ -94,14 +94,14 @@ function* test_parser(testlist) {
 }
 
 /**
- * Transforms a DOM document to a string matching the format in 
+ * Transforms a DOM document to a string matching the format in
  * the test cases.
  *
  * @param the DOM document
  */
 function docToTestOutput(doc) {
   var walker = doc.createTreeWalker(doc, NodeFilter.SHOW_ALL, null);
-  return addLevels(walker, "", "| ").slice(0,-1); // remove the last newline
+  return addLevels(walker, "", "| ").slice(0, -1); // remove the last newline
 }
 
 /**
@@ -111,7 +111,7 @@ function docToTestOutput(doc) {
  */
 function createFragmentWalker(elt) {
   return elt.ownerDocument.createTreeWalker(elt, NodeFilter.SHOW_ALL,
-    function (node) {
+    function(node) {
       return elt == node ? NodeFilter.FILTER_SKIP : NodeFilter.FILTER_ACCEPT;
     });
 }
@@ -124,16 +124,16 @@ function createFragmentWalker(elt) {
  */
 function fragmentToTestOutput(elt) {
   var walker = createFragmentWalker(elt);
-  return addLevels(walker, "", "| ").slice(0,-1); // remove the last newline
+  return addLevels(walker, "", "| ").slice(0, -1); // remove the last newline
 }
 
 function addLevels(walker, buf, indent) {
-  if(walker.firstChild()) {
+  if (walker.firstChild()) {
     do {
       buf += indent;
       switch (walker.currentNode.nodeType) {
         case Node.ELEMENT_NODE:
-          buf += "<"
+          buf += "<";
           var ns = walker.currentNode.namespaceURI;
           if ("http://www.w3.org/1998/Math/MathML" == ns) {
             buf += "math ";
@@ -165,8 +165,8 @@ function addLevels(walker, buf, indent) {
             }
             var keys = Object.keys(valuesByName).sort();
             for (var i = 0; i < keys.length; ++i) {
-              buf += "\n" + indent + "  " + keys[i] + 
-                     "=\"" + valuesByName[keys[i]] +"\"";
+              buf += "\n" + indent + "  " + keys[i] +
+                     "=\"" + valuesByName[keys[i]] + "\"";
             }
           }
           break;
@@ -199,7 +199,7 @@ function addLevels(walker, buf, indent) {
         buf = addLevels(templateWalker, buf, indent + "    ");
       }
       buf = addLevels(walker, buf, indent + "  ");
-    } while(walker.nextSibling());
+    } while (walker.nextSibling());
     walker.parentNode();
   }
   return buf;
