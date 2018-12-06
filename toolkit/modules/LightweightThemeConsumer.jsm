@@ -219,7 +219,7 @@ LightweightThemeConsumer.prototype = {
         stylesheet.remove();
       }
       if (usedVariables) {
-        for (const [variable, value] of usedVariables) {
+        for (const [variable] of usedVariables) {
           _setProperty(root, false, variable);
         }
       }
@@ -341,7 +341,7 @@ function _sanitizeCSSColor(doc, cssColor) {
   span.style.setProperty("color", cssColor, "important");
 
   // CSS variables are not allowed and should compute to black.
-  if (span.style.color.indexOf("var(") !== -1) {
+  if (span.style.color.includes("var(")) {
     span.style.color = "";
   }
 
