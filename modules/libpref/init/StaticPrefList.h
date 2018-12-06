@@ -1097,11 +1097,17 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+#if defined(XP_WIN)
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   "media.rdd-process.enabled",
    MediaRddProcessEnabled,
-  RelaxedAtomicBool, false
+  RelaxedAtomicBool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 VARCACHE_PREF(
   "media.rdd-process.startup_timeout_ms",
@@ -1412,11 +1418,17 @@ VARCACHE_PREF(
 )
 
 // AV1
+#if defined(XP_WIN)
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   "media.av1.enabled",
    MediaAv1Enabled,
-  RelaxedAtomicBool, false
+  RelaxedAtomicBool, PREF_VALUE
 )
+#undef PREF_VALUE
 VARCACHE_PREF(
   "media.av1.use-dav1d",
    MediaAv1UseDav1d,
