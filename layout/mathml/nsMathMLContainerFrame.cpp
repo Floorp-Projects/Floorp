@@ -594,7 +594,7 @@ void nsMathMLContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                               const nsDisplayListSet& aLists) {
   // report an error if something wrong was found in this frame
   if (NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
-    if (!IsVisibleForPainting(aBuilder)) return;
+    if (!IsVisibleForPainting()) return;
 
     aLists.Content()->AppendToTop(
         MakeDisplayItem<nsDisplayMathMLError>(aBuilder, this));

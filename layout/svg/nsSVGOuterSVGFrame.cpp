@@ -753,7 +753,7 @@ void nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     nsDisplayListSet set(contentList, contentList, contentList, contentList,
                          contentList, contentList);
     BuildDisplayListForNonBlockChildren(aBuilder, set);
-  } else if (IsVisibleForPainting(aBuilder) || !aBuilder->IsForPainting()) {
+  } else if (IsVisibleForPainting() || !aBuilder->IsForPainting()) {
     aLists.Content()->AppendToTop(
         MakeDisplayItem<nsDisplayOuterSVG>(aBuilder, this));
   }

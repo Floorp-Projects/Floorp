@@ -2939,7 +2939,7 @@ void SVGTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // painting.
     return;
   }
-  if (!IsVisibleForPainting(aBuilder) && aBuilder->IsForPainting()) {
+  if (!IsVisibleForPainting() && aBuilder->IsForPainting()) {
     return;
   }
   DisplayOutline(aBuilder, aLists);

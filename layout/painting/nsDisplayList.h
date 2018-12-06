@@ -556,12 +556,6 @@ class nsDisplayListBuilder {
   }
 
   /**
-   * @return the selection that painting should be restricted to (or nullptr
-   * in the normal unrestricted case)
-   */
-  mozilla::dom::Selection* GetBoundingSelection() { return mBoundingSelection; }
-
-  /**
    * @return the root of given frame's (sub)tree, whose origin
    * establishes the coordinate system for the child display items.
    */
@@ -1867,7 +1861,6 @@ class nsDisplayListBuilder {
   nsIFrame* mIgnoreScrollFrame;
   nsPresArena mPool;
 
-  RefPtr<mozilla::dom::Selection> mBoundingSelection;
   AutoTArray<PresShellState, 8> mPresShellStates;
   AutoTArray<nsIFrame*, 400> mFramesMarkedForDisplay;
   AutoTArray<nsIFrame*, 40> mFramesMarkedForDisplayIfVisible;

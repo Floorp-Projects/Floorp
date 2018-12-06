@@ -436,7 +436,7 @@ bool nsTableCellFrame::ShouldPaintBordersAndBackgrounds() const {
 }
 
 bool nsTableCellFrame::ShouldPaintBackground(nsDisplayListBuilder* aBuilder) {
-  return ShouldPaintBordersAndBackgrounds() && IsVisibleInSelection(aBuilder);
+  return ShouldPaintBordersAndBackgrounds();
 }
 
 void nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,

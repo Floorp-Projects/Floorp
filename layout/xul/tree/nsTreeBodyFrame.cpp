@@ -2564,7 +2564,7 @@ class nsDisplayTreeBody final : public nsDisplayItem {
 void nsTreeBodyFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                        const nsDisplayListSet& aLists) {
   // REVIEW: why did we paint if we were collapsed? that makes no sense!
-  if (!IsVisibleForPainting(aBuilder))
+  if (!IsVisibleForPainting())
     return;  // We're invisible.  Don't paint.
 
   // Handles painting our background, border, and outline.
