@@ -9,7 +9,7 @@
 #include "ScriptLoadRequest.h"
 #include "ScriptTrace.h"
 #include "ModuleLoadRequest.h"
-#include "ModuleScript.h"
+#include "LoadedScript.h"
 
 #include "prsystem.h"
 #include "jsapi.h"
