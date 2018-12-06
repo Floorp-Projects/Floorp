@@ -8927,7 +8927,7 @@ JS_PUBLIC_API bool js::gc::detail::CellIsMarkedGrayIfKnown(const Cell* cell) {
 
 #ifdef DEBUG
 
-JS_PUBLIC_API bool js::gc::detail::CellIsNotGray(const Cell* cell) {
+JS_PUBLIC_API void js::gc::detail::AssertCellIsNotGray(const Cell* cell) {
   // Check that a cell is not marked gray.
   //
   // Since this is a debug-only check, take account of the eventual mark state
@@ -8935,7 +8935,7 @@ JS_PUBLIC_API bool js::gc::detail::CellIsNotGray(const Cell* cell) {
   // GC. For performance reasons we don't do this in CellIsMarkedGrayIfKnown.
 
   if (!CanCheckGrayBits(cell)) {
-    return true;
+    return;
   }
 
   // TODO: I'd like to AssertHeapIsIdle() here, but this ends up getting
@@ -8943,7 +8943,7 @@ JS_PUBLIC_API bool js::gc::detail::CellIsNotGray(const Cell* cell) {
   MOZ_ASSERT(!JS::RuntimeHeapIsCycleCollecting());
 
   auto tc = &cell->asTenured();
-  return !detail::CellIsMarkedGray(tc);
+  MOZ_ASSERT(!detail::CellIsMarkedGray(tc));
 }
 
 extern JS_PUBLIC_API bool js::gc::detail::ObjectIsMarkedBlack(

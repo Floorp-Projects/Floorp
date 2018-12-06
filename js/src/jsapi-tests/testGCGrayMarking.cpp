@@ -490,15 +490,15 @@ bool TestCCWs() {
   CHECK(!IsMarkedGray(wrapper));
   CHECK(IsMarkedGray(target));
 
-  // Betweeen GC slices: source marked black by barrier, target is still
-  // gray. Target will be marked gray eventually. ObjectIsMarkedGray() is
-  // conservative and reports that target is not marked gray; ObjectIsNotGray
-  // reports the actual state.
+  // Betweeen GC slices: source marked black by barrier, target is
+  // still gray. Target will be marked gray
+  // eventually. ObjectIsMarkedGray() is conservative and reports
+  // that target is not marked gray; AssertObjectIsNotGray() will
+  // assert.
   grayRoots.grayRoot1.get();
   CHECK(IsMarkedBlack(wrapper));
   CHECK(IsMarkedGray(target));
   CHECK(!JS::ObjectIsMarkedGray(target));
-  MOZ_ASSERT(!JS::ObjectIsNotGray(target));
 
   // Final state: source and target are black.
   JS::FinishIncrementalGC(cx, JS::gcreason::API);

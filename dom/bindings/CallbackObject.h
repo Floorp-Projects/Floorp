@@ -138,7 +138,7 @@ class CallbackObject : public nsISupports {
    * ExposeObjectToActiveJS().
    */
   JS::Handle<JSObject*> CallbackKnownNotGray() const {
-    MOZ_ASSERT(JS::ObjectIsNotGray(mCallback));
+    JS::AssertObjectIsNotGray(mCallback);
     return CallbackPreserveColor();
   }
 

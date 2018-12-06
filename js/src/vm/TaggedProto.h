@@ -87,12 +87,10 @@ struct MovableCellHasher<TaggedProto> {
 };
 
 #ifdef DEBUG
-MOZ_ALWAYS_INLINE bool TaggedProtoIsNotGray(const TaggedProto& proto) {
-  if (!proto.isObject()) {
-    return true;
+MOZ_ALWAYS_INLINE void AssertTaggedProtoIsNotGray(const TaggedProto& proto) {
+  if (proto.isObject()) {
+    JS::AssertObjectIsNotGray(proto.toObject());
   }
-
-  return JS::ObjectIsNotGray(proto.toObject());
 }
 #endif
 
@@ -107,8 +105,8 @@ struct InternalBarrierMethods<TaggedProto> {
   static bool isMarkable(const TaggedProto& proto) { return proto.isObject(); }
 
 #ifdef DEBUG
-  static bool thingIsNotGray(const TaggedProto& proto) {
-    return TaggedProtoIsNotGray(proto);
+  static void assertThingIsNotGray(const TaggedProto& proto) {
+    AssertTaggedProtoIsNotGray(proto);
   }
 #endif
 };
