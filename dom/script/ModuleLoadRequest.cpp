@@ -8,7 +8,7 @@
 
 #include "mozilla/HoldDropJSObjects.h"
 
-#include "ModuleScript.h"
+#include "LoadedScript.h"
 #include "ScriptLoader.h"
 
 namespace mozilla {
