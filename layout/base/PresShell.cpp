@@ -12,7 +12,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
@@ -781,6 +780,7 @@ PresShell::PresShell()
       mHasReceivedPaintMessage(false),
       mIsLastKeyDownCanceled(false),
       mHasHandledUserInput(false),
+      mResolutionUpdated(false),
       mForceDispatchKeyPressEventsForNonPrintableKeys(false),
       mForceUseLegacyKeyCodeAndCharCodeValues(false),
       mInitializedWithKeyPressEventDispatchingBlacklist(false) {
@@ -5106,7 +5106,8 @@ void PresShell::SetIgnoreViewportScrolling(bool aIgnore) {
 }
 
 nsresult PresShell::SetResolutionImpl(float aResolution,
-                                      bool aScaleToResolution) {
+                                      bool aScaleToResolution,
+                                      nsAtom* aOrigin) {
   if (!(aResolution > 0.0)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
@@ -5120,6 +5121,9 @@ nsresult PresShell::SetResolutionImpl(float aResolution,
   mScaleToResolution = aScaleToResolution;
   if (mMobileViewportManager) {
     mMobileViewportManager->ResolutionUpdated();
+  }
+  if (aOrigin != nsGkAtoms::apz) {
+    mResolutionUpdated = true;
   }
 
   return NS_OK;

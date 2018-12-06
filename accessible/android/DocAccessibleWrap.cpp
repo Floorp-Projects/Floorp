@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "Accessible-inl.h"
 #include "DocAccessibleWrap.h"
 #include "nsIDocShell.h"
 #include "nsLayoutUtils.h"
@@ -229,6 +230,11 @@ void DocAccessibleWrap::UpdateFocusPathBounds() {
     nsTArray<BatchData> boundsData(mFocusPath.Count());
     for (auto iter = mFocusPath.Iter(); !iter.Done(); iter.Next()) {
       Accessible* accessible = iter.Data();
+      if (!accessible || accessible->IsDefunct()) {
+        MOZ_ASSERT_UNREACHABLE("Focus path cached accessible is gone.");
+        continue;
+      }
+
       auto uid = accessible->IsDoc() && accessible->AsDoc()->IPCDoc()
                      ? 0
                      : reinterpret_cast<uint64_t>(accessible->UniqueID());

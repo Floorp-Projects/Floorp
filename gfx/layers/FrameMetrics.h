@@ -812,6 +812,7 @@ struct ScrollMetadata {
         mIsAutoDirRootContentRTL(false),
         mUsesContainerScrolling(false),
         mForceDisableApz(false),
+        mResolutionUpdated(false),
         mOverscrollBehavior() {}
 
   bool operator==(const ScrollMetadata& aOther) const {
@@ -827,6 +828,7 @@ struct ScrollMetadata {
            mIsAutoDirRootContentRTL == aOther.mIsAutoDirRootContentRTL &&
            mUsesContainerScrolling == aOther.mUsesContainerScrolling &&
            mForceDisableApz == aOther.mForceDisableApz &&
+           mResolutionUpdated == aOther.mResolutionUpdated &&
            mDisregardedDirection == aOther.mDisregardedDirection &&
            mOverscrollBehavior == aOther.mOverscrollBehavior;
   }
@@ -907,6 +909,8 @@ struct ScrollMetadata {
     mForceDisableApz = aForceDisable;
   }
   bool IsApzForceDisabled() const { return mForceDisableApz; }
+  void SetResolutionUpdated(bool aUpdated) { mResolutionUpdated = aUpdated; }
+  bool IsResolutionUpdated() const { return mResolutionUpdated; }
 
   // For more details about the concept of a disregarded direction, refer to the
   // code which defines mDisregardedDirection.
@@ -982,6 +986,11 @@ struct ScrollMetadata {
   // Whether or not the compositor should actually do APZ-scrolling on this
   // scrollframe.
   bool mForceDisableApz : 1;
+
+  // Whether the pres shell resolution stored in mMetrics reflects a change
+  // originated by the main thread. Plays a similar role for the resolution as
+  // FrameMetrics::mScrollUpdateType) does for the scroll offset.
+  bool mResolutionUpdated : 1;
 
   // The disregarded direction means the direction which is disregarded anyway,
   // even if the scroll frame overflows in that direction and the direction is

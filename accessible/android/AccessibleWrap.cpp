@@ -287,7 +287,9 @@ uint32_t AccessibleWrap::GetFlags(role aRole, uint64_t aState,
   return flags;
 }
 
-void AccessibleWrap::GetRoleDescription(role aRole, nsAString& aGeckoRole,
+void AccessibleWrap::GetRoleDescription(role aRole,
+                                        nsIPersistentProperties* aAttributes,
+                                        nsAString& aGeckoRole,
                                         nsAString& aRoleDescription) {
   nsresult rv = NS_OK;
 
@@ -303,6 +305,19 @@ void AccessibleWrap::GetRoleDescription(role aRole, nsAString& aGeckoRole,
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to get string bundle");
     return;
+  }
+
+  if (aRole == roles::HEADING) {
+    nsString level;
+    rv = aAttributes->GetStringProperty(NS_LITERAL_CSTRING("level"), level);
+    if (NS_SUCCEEDED(rv)) {
+      const char16_t* formatString[] = {level.get()};
+      rv = bundle->FormatStringFromName("headingLevel", formatString, 1,
+                                        aRoleDescription);
+      if (NS_SUCCEEDED(rv)) {
+        return;
+      }
+    }
   }
 
   GetAccService()->GetStringRole(aRole, aGeckoRole);
@@ -450,7 +465,7 @@ mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(
   nsAutoString geckoRole;
   nsAutoString roleDescription;
   if (VirtualViewID() != kNoID) {
-    GetRoleDescription(role, geckoRole, roleDescription);
+    GetRoleDescription(role, aAttributes, geckoRole, roleDescription);
   }
 
   GECKOBUNDLE_PUT(nodeInfo, "roleDescription",

@@ -82,7 +82,6 @@
 
 #include "nsPrintfCString.h"
 
-#include "gfxContext.h"
 #include "mozilla/gfx/DrawTargetRecording.h"
 
 #include "mozilla/UniquePtr.h"

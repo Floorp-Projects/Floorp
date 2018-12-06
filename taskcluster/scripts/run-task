@@ -448,13 +448,14 @@ def vcs_checkout(source_repo, dest, store_path,
     if sparse_profile:
         args.extend(['--sparseprofile', sparse_profile])
 
+    dest = os.path.abspath(dest)
     args.extend([
         revision_flag, revision_value,
         source_repo, dest,
     ])
 
     res = run_and_prefix_output(b'vcs', args,
-                                extra_env={b'PYTHONUNBUFFERED': b'1'})
+                                extra_env={'PYTHONUNBUFFERED': '1'})
     if res:
         sys.exit(res)
 
@@ -741,6 +742,9 @@ def main(args):
         return 1
 
     try:
+        if 'GECKO_PATH' in os.environ:
+            os.environ['GECKO_PATH'] = os.path.abspath(os.environ['GECKO_PATH'])
+
         if 'MOZ_FETCHES' in os.environ:
             fetch_artifacts()
 
