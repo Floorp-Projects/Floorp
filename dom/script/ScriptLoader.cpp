@@ -210,8 +210,6 @@ static void CollectScriptTelemetry(ScriptLoadRequest* aRequest) {
   if (aRequest->IsLoadingSource()) {
     if (aRequest->mIsInline) {
       AccumulateCategorical(LABELS_DOM_SCRIPT_LOADING_SOURCE::Inline);
-      nsAutoString inlineData;
-      aRequest->Element()->GetScriptText(inlineData);
     } else if (aRequest->IsTextSource()) {
       AccumulateCategorical(LABELS_DOM_SCRIPT_LOADING_SOURCE::SourceFallback);
     }
@@ -960,7 +958,7 @@ void ScriptLoader::ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) {
       RefPtr<ScriptLoadRequest> req = mDynamicImportRequests.Steal(aRequest);
       RunScriptWhenSafe(req);
     } else if (aRequest->mIsInline &&
-               aRequest->Element()->GetParserCreated() == NOT_FROM_PARSER) {
+               aRequest->GetParserCreated() == NOT_FROM_PARSER) {
       MOZ_ASSERT(!aRequest->isInList());
       RunScriptWhenSafe(aRequest);
     } else {
@@ -1058,10 +1056,12 @@ nsresult ScriptLoader::AssociateSourceElementsForModuleTree(
   JS::Rooted<JSObject*> module(aCx, moduleScript->ModuleRecord());
   MOZ_ASSERT(module);
 
-  nsresult rv =
-      nsJSUtils::InitModuleSourceElement(aCx, module, aRequest->Element());
-  NS_ENSURE_SUCCESS(rv, rv);
-  moduleScript->SetSourceElementAssociated();
+  nsIScriptElement* element = aRequest->Element();
+  if (element) {
+    nsresult rv = nsJSUtils::InitModuleSourceElement(aCx, module, element);
+    NS_ENSURE_SUCCESS(rv, rv);
+    moduleScript->SetSourceElementAssociated();
+  }
 
   // The script is now ready to be exposed to the debugger.
   JS::Rooted<JSScript*> script(aCx, JS::GetModuleScript(module));
@@ -1711,7 +1711,7 @@ ScriptLoadRequest* ScriptLoader::LookupPreloadRequest(
   // Found preloaded request. Note that a script-inserted script can steal a
   // preload!
   RefPtr<ScriptLoadRequest> request = mPreloads[i].mRequest;
-  request->SetElement(aElement);
+  request->SetIsLoadRequest(aElement);
   nsString preloadCharset(mPreloads[i].mCharset);
   mPreloads.RemoveElementAt(i);
 
@@ -2073,7 +2073,7 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
   }
 
   nsCOMPtr<nsIScriptElement> oldParserInsertedScript;
-  uint32_t parserCreated = aRequest->Element()->GetParserCreated();
+  uint32_t parserCreated = aRequest->GetParserCreated();
   if (parserCreated) {
     oldParserInsertedScript = mCurrentParserInsertedScript;
     mCurrentParserInsertedScript = aRequest->Element();
@@ -2379,14 +2379,14 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
   }
 
   nsCOMPtr<nsIContent> scriptContent(do_QueryInterface(aRequest->Element()));
-  nsIDocument* ownerDoc = scriptContent->OwnerDoc();
-  if (ownerDoc != mDocument) {
-    // Willful violation of HTML5 as of 2010-12-01
-    return NS_ERROR_FAILURE;
+  MOZ_ASSERT_IF(!scriptContent, aRequest->AsModuleRequest()->IsDynamicImport());
+  if (scriptContent) {
+    nsIDocument* ownerDoc = scriptContent->OwnerDoc();
+    if (ownerDoc != mDocument) {
+      // Willful violation of HTML5 as of 2010-12-01
+      return NS_ERROR_FAILURE;
+    }
   }
-
-  // Get the script-type to be used by this element.
-  NS_ASSERTION(scriptContent, "no content - what is default script-type?");
 
   nsCOMPtr<nsIScriptGlobalObject> globalObject = GetScriptGlobalObject();
   if (!globalObject) {
@@ -3106,7 +3106,7 @@ void ScriptLoader::ReportErrorToConsole(ScriptLoadRequest* aRequest,
                                         nsresult aResult) const {
   MOZ_ASSERT(aRequest);
 
-  if (!aRequest->Element()) {
+  if (aRequest->IsPreload()) {
     return;
   }
 
@@ -3126,8 +3126,9 @@ void ScriptLoader::ReportErrorToConsole(ScriptLoadRequest* aRequest,
   NS_ConvertUTF8toUTF16 url(aRequest->mURI->GetSpecOrDefault());
   const char16_t* params[] = {url.get()};
 
-  uint32_t lineNo = aRequest->Element()->GetScriptLineNumber();
-  uint32_t columnNo = aRequest->Element()->GetScriptColumnNumber();
+  nsIScriptElement* element = aRequest->Element();
+  uint32_t lineNo = element ? element->GetScriptLineNumber() : 0;
+  uint32_t columnNo = element ? element->GetScriptColumnNumber() : 0;
 
   nsContentUtils::ReportToConsole(
       nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Script Loader"),
@@ -3459,6 +3460,7 @@ void ScriptLoader::PreloadURI(
   request->mIsInline = false;
   request->mScriptFromHead = aScriptFromHead;
   request->SetScriptMode(aDefer, aAsync);
+  request->SetIsPreloadRequest();
 
   if (LOG_ENABLED()) {
     nsAutoCString url;
