@@ -929,6 +929,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       sweepGroups(nullptr),
       currentSweepGroup(nullptr),
       sweepZone(nullptr),
+      hasMarkedGrayRoots(false),
       abortSweepAfterCurrentGroup(false),
       startedCompacting(false),
       relocatedArenasToRelease(nullptr),
@@ -4963,7 +4964,7 @@ void GCRuntime::getNextSweepGroup() {
   }
 
   for (Zone* zone = currentSweepGroup; zone; zone = zone->nextNodeInGroup()) {
-    MOZ_ASSERT(zone->isGCMarking());
+    MOZ_ASSERT(zone->isGCMarkingBlackOnly());
     MOZ_ASSERT(!zone->isQueuedForBackgroundSweep());
   }
 
@@ -4983,6 +4984,8 @@ void GCRuntime::getNextSweepGroup() {
     abortSweepAfterCurrentGroup = false;
     currentSweepGroup = nullptr;
   }
+
+  hasMarkedGrayRoots = false;
 }
 
 /*
@@ -5134,8 +5137,6 @@ void GCRuntime::markIncomingCrossCompartmentPointers(MarkColor color) {
       c->gcIncomingGrayPointers = nullptr;
     }
   }
-
-  drainMarkStack();
 }
 
 static bool RemoveFromGrayList(JSObject* wrapper) {
@@ -5254,12 +5255,17 @@ IncrementalProgress GCRuntime::markGrayReferencesInCurrentGroup(
     FreeOp* fop, SliceBudget& budget) {
   MOZ_ASSERT(marker.markColor() == MarkColor::Black);
 
+  if (hasMarkedGrayRoots) {
+    return Finished;
+  }
+
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_MARK);
 
   // Mark any incoming gray pointers from previously swept compartments that
   // have subsequently been marked black. This can occur when gray cells
   // become black by the action of UnmarkGray.
   markIncomingCrossCompartmentPointers(MarkColor::Black);
+  drainMarkStack();
 
   // Change state of current group to MarkGray to restrict marking to this
   // group.  Note that there may be pointers to the atoms zone, and
@@ -5276,10 +5282,8 @@ IncrementalProgress GCRuntime::markGrayReferencesInCurrentGroup(
 
   markGrayRoots<SweepGroupZonesIter>(gcstats::PhaseKind::SWEEP_MARK_GRAY);
 
-  // TODO: Make this incremental.
-  drainMarkStack();
-
-  return Finished;
+  hasMarkedGrayRoots = true;
+  return marker.markUntilBudgetExhausted(budget) ? Finished : NotFinished;
 }
 
 IncrementalProgress GCRuntime::endMarkingSweepGroup(FreeOp* fop,
@@ -5785,16 +5789,14 @@ void GCRuntime::beginSweepPhase(JS::gcreason::Reason reason,
   sweepOnBackgroundThread = reason != JS::gcreason::DESTROY_RUNTIME &&
                             !gcTracer.traceEnabled() && CanUseExtraThreads();
 
+  hasMarkedGrayRoots = false;
+
   AssertNoWrappersInGrayList(rt);
   DropStringWrappers(rt);
 
   groupZonesForSweeping(reason);
 
   sweepActions->assertFinished();
-
-  // We must not yield after this point until we start sweeping the first sweep
-  // group.
-  safeToYield = false;
 }
 
 bool ArenaLists::foregroundFinalize(FreeOp* fop, AllocKind thingKind,
@@ -6788,8 +6790,6 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
 
     case State::Sweep: {
       // Finish sweeping the current sweep group, then abort.
-      marker.reset();
-
       for (CompartmentsIter c(rt); !c.done(); c.next()) {
         c->gcState.scheduledForDestruction = false;
       }
