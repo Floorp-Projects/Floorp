@@ -547,7 +547,7 @@ static nsresult HandleResolveFailure(JSContext* aCx, ModuleScript* aScript,
 }
 
 static already_AddRefed<nsIURI> ResolveModuleSpecifier(
-    ModuleScript* aScript, const nsAString& aSpecifier) {
+    LoadedScript* aScript, const nsAString& aSpecifier) {
   // The following module specifiers are allowed by the spec:
   //  - a valid absolute URL
   //  - a valid relative URL that starts with "/", "./" or "../"
@@ -738,9 +738,12 @@ JSObject* HostResolveImportedModule(JSContext* aCx,
     return nullptr;
   }
 
-  auto script = static_cast<ModuleScript*>(aReferencingPrivate.toPrivate());
-  MOZ_ASSERT(JS::GetModulePrivate(script->ModuleRecord()) ==
-             aReferencingPrivate);
+  RefPtr<LoadedScript> script =
+      static_cast<LoadedScript*>(aReferencingPrivate.toPrivate());
+  MOZ_ASSERT_IF(
+      script->IsModuleScript(),
+      JS::GetModulePrivate(script->AsModuleScript()->ModuleRecord()) ==
+          aReferencingPrivate);
 
   // Let url be the result of resolving a module specifier given referencing
   // module script and specifier.
@@ -769,7 +772,9 @@ JSObject* HostResolveImportedModule(JSContext* aCx,
 bool HostPopulateImportMeta(JSContext* aCx,
                             JS::Handle<JS::Value> aReferencingPrivate,
                             JS::Handle<JSObject*> aMetaObject) {
-  auto script = static_cast<ModuleScript*>(aReferencingPrivate.toPrivate());
+  RefPtr<ModuleScript> script =
+      static_cast<ModuleScript*>(aReferencingPrivate.toPrivate());
+  MOZ_ASSERT(script->IsModuleScript());
   MOZ_ASSERT(JS::GetModulePrivate(script->ModuleRecord()) ==
              aReferencingPrivate);
 
@@ -797,9 +802,11 @@ bool HostImportModuleDynamically(JSContext* aCx,
     return false;
   }
 
-  auto script = static_cast<ModuleScript*>(aReferencingPrivate.toPrivate());
-  MOZ_ASSERT(JS::GetModulePrivate(script->ModuleRecord()) ==
-             aReferencingPrivate);
+  auto script = static_cast<LoadedScript*>(aReferencingPrivate.toPrivate());
+  MOZ_ASSERT_IF(
+      script->IsModuleScript(),
+      JS::GetModulePrivate(script->AsModuleScript()->ModuleRecord()) ==
+          aReferencingPrivate);
 
   // Attempt to resolve the module specifier.
   nsAutoJSString string;
@@ -1633,10 +1640,10 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
   LOG(("ScriptLoadRequest (%p): Created request for inline script",
        request.get()));
 
+  request->mBaseURL = mDocument->GetDocBaseURI();
+
   if (request->IsModuleRequest()) {
     ModuleLoadRequest* modReq = request->AsModuleRequest();
-    modReq->mBaseURL = mDocument->GetDocBaseURI();
-
     if (aElement->GetParserCreated() != NOT_FROM_PARSER) {
       if (aElement->GetScriptAsync()) {
         AddAsyncRequest(modReq);
@@ -2523,6 +2530,13 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
 
             if (rv == NS_OK) {
               script = exec.GetScript();
+
+              // Create a ClassicScript object and associate it with the
+              // JSScript.
+              RefPtr<ClassicScript> classicScript = new ClassicScript(
+                  this, aRequest->mFetchOptions, aRequest->mBaseURL);
+              classicScript->AssociateWithScript(script);
+
               rv = exec.ExecScript();
             }
           }
@@ -3301,6 +3315,18 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
                    mParserBlockingRequest == aRequest,
                "aRequest should be pending!");
 
+  nsCOMPtr<nsIURI> uri;
+  rv = channel->GetOriginalURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Fixup moz-extension: and resource: URIs, because the channel URI will
+  // point to file:, which won't be allowed to load.
+  if (uri && IsInternalURIScheme(uri)) {
+    aRequest->mBaseURL = uri;
+  } else {
+    channel->GetURI(getter_AddRefs(aRequest->mBaseURL));
+  }
+
   if (aRequest->IsModuleRequest()) {
     MOZ_ASSERT(aRequest->IsSource());
     ModuleLoadRequest* request = aRequest->AsModuleRequest();
@@ -3312,18 +3338,6 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
     NS_ConvertUTF8toUTF16 typeString(mimeType);
     if (!nsContentUtils::IsJavascriptMIMEType(typeString)) {
       return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIURI> uri;
-    rv = channel->GetOriginalURI(getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Fixup moz-extension: and resource: URIs, because the channel URI will
-    // point to file:, which won't be allowed to load.
-    if (uri && IsInternalURIScheme(uri)) {
-      request->mBaseURL = uri;
-    } else {
-      channel->GetURI(getter_AddRefs(request->mBaseURL));
     }
 
     // Attempt to compile off main thread.

@@ -59,7 +59,7 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
 
   // Create a module load request for dynamic module import.
   static ModuleLoadRequest* CreateDynamicImport(
-      nsIURI* aURI, ModuleScript* aScript,
+      nsIURI* aURI, LoadedScript* aScript,
       JS::Handle<JS::Value> aReferencingPrivate,
       JS::Handle<JSString*> aSpecifier, JS::Handle<JSObject*> aPromise);
 
@@ -86,9 +86,6 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
 
   // Is this the top level request for a dynamic module import?
   const bool mIsDynamicImport;
-
-  // The base URL used for resolving relative module imports.
-  nsCOMPtr<nsIURI> mBaseURL;
 
   // Pointer to the script loader, used to trigger actions when the module load
   // finishes.
