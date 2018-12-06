@@ -210,6 +210,8 @@ class ScriptLoadRequest
 
   void ClearScriptSource();
 
+  void SetScript(JSScript* aScript);
+
   void MaybeCancelOffThreadScript();
   void DropBytecodeCacheReferences();
 
