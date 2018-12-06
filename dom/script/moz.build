@@ -18,6 +18,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.dom += [
+    'LoadedScript.h',
     'ScriptElement.h',
     'ScriptLoader.h',
     'ScriptLoadRequest.h',
