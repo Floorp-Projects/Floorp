@@ -1110,10 +1110,10 @@ impl RenderBackend {
             txn.blob_rasterizer = blob_rasterizer;
         }
 
-        if !transaction_msg.use_scene_builder_thread && txn.can_skip_scene_builder() {
-            if let Some(rasterizer) = txn.blob_rasterizer.take() {
-                self.resource_cache.set_blob_rasterizer(rasterizer);
-            }
+        if !transaction_msg.use_scene_builder_thread &&
+            txn.can_skip_scene_builder() &&
+            txn.blob_rasterizer.is_none() {
+
             self.update_document(
                 txn.document_id,
                 replace(&mut txn.resource_updates, Vec::new()),

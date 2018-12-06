@@ -3579,6 +3579,9 @@ void nsIDocument::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData) {
 
   if (aHeaderField == nsGkAtoms::headerContentLanguage) {
     CopyUTF16toUTF8(aData, mContentLanguage);
+    if (auto* presContext = GetPresContext()) {
+      presContext->ContentLanguageChanged();
+    }
   }
 
   if (aHeaderField == nsGkAtoms::headerDefaultStyle) {
