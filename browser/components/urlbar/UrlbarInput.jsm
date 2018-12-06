@@ -50,6 +50,7 @@ class UrlbarInput {
     this.controller = options.controller || new UrlbarController({
       browserWindow: this.window,
     });
+    this.controller.setInput(this);
     this.view = new UrlbarView(this);
     this.valueIsTyped = false;
     this.userInitiatedFocus = false;
@@ -104,7 +105,7 @@ class UrlbarInput {
     this.inputField.addEventListener("underflow", this);
     this.inputField.addEventListener("scrollend", this);
     this.inputField.addEventListener("select", this);
-    this.inputField.addEventListener("keyup", this);
+    this.inputField.addEventListener("keydown", this);
 
     this.inputField.controllers.insertControllerAt(0, new CopyCutController(this));
   }
@@ -180,7 +181,7 @@ class UrlbarInput {
    * Handles an event which would cause a url or text to be opened.
    * XXX the name is currently handleCommand which is compatible with
    * urlbarBindings. However, it is no longer called automatically by autocomplete,
-   * See _on_keyup.
+   * See _on_keydown.
    *
    * @param {Event} event The event triggering the open.
    * @param {string} [openWhere] Where we expect the result to be opened.
@@ -255,12 +256,12 @@ class UrlbarInput {
   }
 
   /**
-   * Called by the view when a result is selected.
+   * Called by the view when a result is picked.
    *
-   * @param {Event} event The event that selected the result.
-   * @param {UrlbarMatch} result The result that was selected.
+   * @param {Event} event The event that picked the result.
+   * @param {UrlbarMatch} result The result that was picked.
    */
-  resultSelected(event, result) {
+  pickResult(event, result) {
     this.setValueFromResult(result);
 
     // TODO: Work out how we get the user selection behavior, probably via passing
@@ -712,13 +713,8 @@ class UrlbarInput {
     this.controller.tabContextChanged();
   }
 
-  _on_keyup(event) {
-    // TODO: We may have an autoFill entry, so we should use that instead.
-    // TODO: We should have an input bufferrer so that we can use search results
-    // if appropriate.
-    if (event.key == "Enter") {
-      this.handleCommand(event);
-    }
+  _on_keydown(event) {
+    this.controller.handleKeyNavigation(event);
   }
 }
 
