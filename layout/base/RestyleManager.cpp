@@ -23,7 +23,6 @@
 #include "mozilla/dom/HTMLBodyElement.h"
 
 #include "Layers.h"
-#include "LayerAnimationInfo.h"  // For LayerAnimationInfo::sRecords
 #include "nsAnimationManager.h"
 #include "nsBlockFrame.h"
 #include "nsBulletFrame.h"
@@ -44,7 +43,6 @@
 #include "StickyScrollContainer.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/IntegerRange.h"
-#include "mozilla/ViewportFrame.h"
 #include "SVGObserverUtils.h"
 #include "SVGTextFrame.h"
 #include "ActiveLayerTracker.h"

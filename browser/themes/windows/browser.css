@@ -101,6 +101,19 @@
   }
 }
 
+@media not (-moz-os-version: windows-win7) {
+  @media not (-moz-os-version: windows-win8) {
+    /* On Windows 10, when temporarily showing the menu bar, make it at least as
+     * tall as the tab bar such that the window controls don't appear to move up. */
+    :root[tabsintitlebar] #toolbar-menubar[autohide="true"] {
+      height: calc(var(--tab-min-height) - @navbarTabsShadowSize@);
+    }
+    :root[tabsintitlebar][sizemode="normal"] #toolbar-menubar[autohide="true"] {
+      height: calc(var(--tab-min-height) + var(--space-above-tabbar) - @navbarTabsShadowSize@);
+    }
+  }
+}
+
 :root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar > .toolbar-items,
 :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .toolbar-items {
   padding-top: var(--space-above-tabbar);
@@ -956,9 +969,8 @@ notification[value="translation"] {
 
 /* End customization mode */
 
-/* Prevent titlebar items (window caption buttons, private browsing indicator,
- * accessibility indicator, etc) from overlapping the nav bar's shadow on the
- * tab bar. */
+/* Prevent window controls from overlapping the nav bar's shadow on the tab
+ * bar. */
 #TabsToolbar > .titlebar-buttonbox-container {
   margin-bottom: @navbarTabsShadowSize@;
 }

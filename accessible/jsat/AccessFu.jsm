@@ -26,7 +26,6 @@ const GECKOVIEW_MESSAGE = {
   PREVIOUS: "GeckoView:AccessibilityPrevious",
   SCROLL_BACKWARD: "GeckoView:AccessibilityScrollBackward",
   SCROLL_FORWARD: "GeckoView:AccessibilityScrollForward",
-  SELECT: "GeckoView:AccessibilitySelect",
   SET_SELECTION: "GeckoView:AccessibilitySetSelection",
   VIEW_FOCUSED: "GeckoView:AccessibilityViewFocused",
 };
@@ -192,9 +191,6 @@ var AccessFu = {
       case GECKOVIEW_MESSAGE.CLIPBOARD:
         this.Input.clipboard(data);
         break;
-      case GECKOVIEW_MESSAGE.SELECT:
-        this.Input.selectCurrent(data);
-        break;
     }
   },
 
@@ -299,11 +295,6 @@ var Input = {
   activateCurrent: function activateCurrent(aData) {
     let mm = Utils.getMessageManager();
     mm.sendAsyncMessage("AccessFu:Activate", { offset: 0 });
-  },
-
-  selectCurrent: function selectCurrent(aData) {
-    let mm = Utils.getMessageManager();
-    mm.sendAsyncMessage("AccessFu:Select", aData);
   },
 
   doScroll: function doScroll(aDetails, aBrowser) {

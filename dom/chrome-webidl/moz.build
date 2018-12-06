@@ -54,6 +54,7 @@ WEBIDL_FILES = [
     'TelemetryStopwatch.webidl',
     'WebExtensionContentScript.webidl',
     'WebExtensionPolicy.webidl',
+    'WindowGlobalActors.webidl',
     'XULFrameElement.webidl',
     'XULMenuElement.webidl',
     'XULScrollElement.webidl',

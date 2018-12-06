@@ -15,7 +15,6 @@
 #include "mozilla/LoadInfo.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/URLPreloader.h"
@@ -65,7 +64,6 @@
 #include "mozilla/dom/SRICheck.h"
 
 #include "mozilla/Encoding.h"
-#include "mozilla/Logging.h"
 
 using namespace mozilla::dom;
 

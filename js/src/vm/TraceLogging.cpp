@@ -636,6 +636,278 @@ void TraceLoggerThread::stopEvent(uint32_t id) {
   log(TraceLogger_Stop);
 }
 
+JS::AutoTraceLoggerLockGuard::AutoTraceLoggerLockGuard() {
+  traceLoggerState->lock.lock();
+}
+
+JS::AutoTraceLoggerLockGuard::~AutoTraceLoggerLockGuard() {
+  traceLoggerState->lock.unlock();
+}
+
+size_t JS::TraceLoggerDictionaryImpl::NextChunk(JSContext* cx,
+                                                size_t* dataIndex,
+                                                char buffer[],
+                                                size_t bufferSize) {
+  MOZ_ASSERT(dataIndex != nullptr);
+  if (!traceLoggerState || bufferSize == 0 || !buffer ||
+      !jit::JitOptions.enableTraceLogger) {
+    return 0;
+  }
+
+  size_t bufferIndex = 0;
+
+  const char* eventString = nullptr;
+  if (*dataIndex < TraceLogger_Last) {
+    eventString = TLTextIdString(static_cast<TraceLoggerTextId>(*dataIndex));
+  } else {
+    uint32_t dictId = *dataIndex - TraceLogger_Last;
+    if (dictId < traceLoggerState->dictionaryData.length()) {
+      eventString = traceLoggerState->dictionaryData[dictId].get();
+      MOZ_ASSERT(eventString);
+    }
+  }
+
+  if (eventString) {
+    size_t length = strlen(eventString);
+    if (length < bufferSize - 1) {
+      memcpy(buffer, eventString, length);
+      buffer[length] = '\0';
+      bufferIndex = length;
+    } else {
+      memcpy(buffer, eventString, bufferSize);
+      buffer[bufferSize - 1] = '\0';
+      bufferIndex = bufferSize - 1;
+    }
+  }
+
+  (*dataIndex)++;
+  return bufferIndex;
+}
+
+size_t JS::TraceLoggerIdImpl::NextChunk(JSContext* cx, size_t* dataIndex,
+                                        uint32_t buffer[], size_t bufferSize) {
+  MOZ_ASSERT(dataIndex != nullptr);
+  if (!cx || !cx->traceLogger) {
+    return 0;
+  }
+
+  if (bufferSize == 0 || !buffer || !jit::JitOptions.enableTraceLogger) {
+    return 0;
+  }
+
+  size_t bufferIndex = 0;
+  ContinuousSpace<EventEntry>& events = cx->traceLogger->events;
+
+  for (; *dataIndex < events.size(); (*dataIndex)++) {
+    if (TLTextIdIsInternalEvent(events[*dataIndex].textId)) {
+      continue;
+    }
+
+    if (events[*dataIndex].textId >= TraceLogger_Last) {
+      TraceLoggerEventPayload* payload =
+          traceLoggerState->getPayload(events[*dataIndex].textId);
+      MOZ_ASSERT(payload);
+      // Write the index of this event into the jsTracerDictionary array
+      // property
+      uint32_t dictId = TraceLogger_Last + payload->dictionaryId();
+      buffer[bufferIndex++] = dictId;
+      payload->release();
+    } else {
+      buffer[bufferIndex++] = events[*dataIndex].textId;
+      ;
+    }
+
+    if (bufferIndex == bufferSize) {
+      break;
+    }
+  }
+
+  return bufferIndex;
+}
+
+size_t JS::TraceLoggerLineNoImpl::NextChunk(JSContext* cx, size_t* dataIndex,
+                                            int32_t buffer[],
+                                            size_t bufferSize) {
+  MOZ_ASSERT(dataIndex != nullptr);
+  if (!cx || !cx->traceLogger) {
+    return 0;
+  }
+
+  if (bufferSize == 0 || !buffer || !jit::JitOptions.enableTraceLogger) {
+    return 0;
+  }
+
+  size_t bufferIndex = 0;
+  ContinuousSpace<EventEntry>& events = cx->traceLogger->events;
+
+  for (; *dataIndex < events.size(); (*dataIndex)++) {
+    if (TLTextIdIsInternalEvent(events[*dataIndex].textId)) {
+      continue;
+    }
+
+    if (events[*dataIndex].textId >= TraceLogger_Last) {
+      TraceLoggerEventPayload* payload =
+          traceLoggerState->getPayload(events[*dataIndex].textId);
+      MOZ_ASSERT(payload);
+      mozilla::Maybe<uint32_t> line = payload->line();
+      payload->release();
+      if (line) {
+        buffer[bufferIndex++] = *line;
+      } else {
+        buffer[bufferIndex++] = -1;
+      }
+    } else {
+      buffer[bufferIndex++] = -1;
+    }
+    if (bufferIndex == bufferSize) {
+      break;
+    }
+  }
+
+  return bufferIndex;
+}
+
+size_t JS::TraceLoggerColNoImpl::NextChunk(JSContext* cx, size_t* dataIndex,
+                                           int32_t buffer[],
+                                           size_t bufferSize) {
+  MOZ_ASSERT(dataIndex != nullptr);
+  if (!cx || !cx->traceLogger) {
+    return 0;
+  }
+
+  if (bufferSize == 0 || !buffer || !jit::JitOptions.enableTraceLogger) {
+    return 0;
+  }
+
+  size_t bufferIndex = 0;
+  ContinuousSpace<EventEntry>& events = cx->traceLogger->events;
+
+  for (; *dataIndex < events.size(); (*dataIndex)++) {
+    if (TLTextIdIsInternalEvent(events[*dataIndex].textId)) {
+      continue;
+    }
+
+    if (events[*dataIndex].textId >= TraceLogger_Last) {
+      TraceLoggerEventPayload* payload =
+          traceLoggerState->getPayload(events[*dataIndex].textId);
+      MOZ_ASSERT(payload);
+      mozilla::Maybe<uint32_t> column = payload->column();
+      payload->release();
+      if (column) {
+        buffer[bufferIndex++] = *column;
+      } else {
+        buffer[bufferIndex++] = -1;
+      }
+    } else {
+      buffer[bufferIndex++] = -1;
+    }
+    if (bufferIndex == bufferSize) {
+      break;
+    }
+  }
+
+  return bufferIndex;
+}
+
+size_t JS::TraceLoggerTimeStampImpl::NextChunk(JSContext* cx, size_t* dataIndex,
+                                               mozilla::TimeStamp buffer[],
+                                               size_t bufferSize) {
+  MOZ_ASSERT(dataIndex != nullptr);
+  if (!cx || !cx->traceLogger) {
+    return 0;
+  }
+
+  if (bufferSize == 0 || !buffer || !jit::JitOptions.enableTraceLogger) {
+    return 0;
+  }
+
+  size_t bufferIndex = 0;
+  ContinuousSpace<EventEntry>& events = cx->traceLogger->events;
+
+  for (; *dataIndex < events.size(); (*dataIndex)++) {
+    if (TLTextIdIsInternalEvent(events[*dataIndex].textId)) {
+      continue;
+    }
+    buffer[bufferIndex++] = events[*dataIndex].time;
+    if (bufferIndex == bufferSize) {
+      break;
+    }
+  }
+
+  return bufferIndex;
+}
+
+size_t JS::TraceLoggerDurationImpl::NextChunk(JSContext* cx, size_t* dataIndex,
+                                              double buffer[],
+                                              size_t bufferSize) {
+  MOZ_ASSERT(dataIndex != nullptr);
+  if (!cx || !cx->traceLogger) {
+    return 0;
+  }
+
+  if (bufferSize == 0 || !buffer || !jit::JitOptions.enableTraceLogger) {
+    return 0;
+  }
+
+  ContinuousSpace<EventEntry>& events = cx->traceLogger->events;
+  Vector<size_t, 0, js::SystemAllocPolicy> eventStack;
+  using EventDurationMap =
+      HashMap<size_t, double, DefaultHasher<size_t>, SystemAllocPolicy>;
+  EventDurationMap eventMap;
+
+  size_t bufferIndex = 0;
+  for (; *dataIndex < events.size(); (*dataIndex)++) {
+    if (TLTextIdIsInternalEvent(events[*dataIndex].textId)) {
+      continue;
+    }
+    double duration = 0;
+    if (TLTextIdIsLogEvent(events[*dataIndex].textId)) {
+      // log events are snapshot events with no start & stop
+      duration = -1;
+    } else if (EventDurationMap::Ptr p = eventMap.lookup(*dataIndex)) {
+      // value has already been cached
+      duration = p->value();
+    } else {
+      MOZ_ASSERT(eventStack.empty());
+      if (!eventStack.append(*dataIndex)) {
+        return 0;
+      }
+
+      // Search through the events array to find the matching stop event in
+      // order to calculate the duration time.  Cache all other durations we
+      // calculate in the meantime.
+      for (size_t j = *dataIndex + 1; j < events.size(); j++) {
+        uint32_t id = events[j].textId;
+        if (id == TraceLogger_Stop) {
+          uint32_t prev = eventStack.popCopy();
+          double delta = (events[j].time - events[prev].time).ToMicroseconds();
+          if (prev == *dataIndex) {
+            MOZ_ASSERT(eventStack.empty());
+            duration = delta;
+            break;
+          }
+
+          if (!eventMap.putNew(prev, delta)) {
+            return 0;
+          }
+
+        } else if (TLTextIdIsTreeEvent(id)) {
+          if (!eventStack.append(j)) {
+            return 0;
+          }
+        }
+      }
+    }
+
+    buffer[bufferIndex++] = duration;
+    if (bufferIndex == bufferSize) {
+      break;
+    }
+  }
+
+  return bufferIndex;
+}
+
 void TraceLoggerThread::logTimestamp(TraceLoggerTextId id) {
   logTimestamp(uint32_t(id));
 }
@@ -1109,33 +1381,36 @@ TraceLoggerEvent::TraceLoggerEvent(const TraceLoggerEvent& other)
 
 JS_PUBLIC_API void JS::ResetTraceLogger(void) { js::ResetTraceLogger(); }
 
-JS_PUBLIC_API void JS::StartTraceLogger(JSContext* cx,
-                                        mozilla::TimeStamp profilerStart) {
-  if (jit::JitOptions.enableTraceLogger || !traceLoggerState) {
+JS_PUBLIC_API void JS::StartTraceLogger(JSContext* cx) {
+  if (!EnsureTraceLoggerState()) {
     return;
   }
 
-  LockGuard<Mutex> guard(traceLoggerState->lock);
-  traceLoggerState->enableTextIdsForProfiler();
-  jit::JitOptions.enableTraceLogger = true;
+  if (!jit::JitOptions.enableTraceLogger) {
+    LockGuard<Mutex> guard(traceLoggerState->lock);
+    traceLoggerState->enableTextIdsForProfiler();
+    jit::JitOptions.enableTraceLogger = true;
+  }
 
-  // Reset the start time to profile start so it aligns with sampling.
-  traceLoggerState->startTime = profilerStart;
-
-  if (cx->traceLogger) {
-    cx->traceLogger->enable();
+  TraceLoggerThread* logger = traceLoggerState->forCurrentThread(cx);
+  if (logger) {
+    logger->enable();
   }
 }
 
 JS_PUBLIC_API void JS::StopTraceLogger(JSContext* cx) {
-  if (!jit::JitOptions.enableTraceLogger || !traceLoggerState) {
+  if (!traceLoggerState) {
     return;
   }
 
-  LockGuard<Mutex> guard(traceLoggerState->lock);
-  traceLoggerState->disableTextIdsForProfiler();
-  jit::JitOptions.enableTraceLogger = false;
-  if (cx->traceLogger) {
-    cx->traceLogger->disable();
+  if (jit::JitOptions.enableTraceLogger) {
+    LockGuard<Mutex> guard(traceLoggerState->lock);
+    traceLoggerState->disableTextIdsForProfiler();
+    jit::JitOptions.enableTraceLogger = false;
+  }
+
+  TraceLoggerThread* logger = traceLoggerState->forCurrentThread(cx);
+  if (logger) {
+    logger->disable();
   }
 }

@@ -64,8 +64,9 @@ add_task(async function() {
     window.windowUtils.disableNonTestMouseEvents(false);
   });
 
-  // Ensure the URL bar isn't focused.
+  // Ensure the URL bar is neither focused nor hovered before we start.
   gBrowser.selectedBrowser.focus();
+  await synthesizeMouseOut(gURLBar.inputField);
 
   gURLBar.value = "short string";
   await expectNoTooltip();

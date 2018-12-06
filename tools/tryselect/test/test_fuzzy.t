@@ -14,6 +14,11 @@ Test fuzzy selector
           "test/foo-debug",
           "test/foo-opt"
       ],
+      "templates": {
+          "env": {
+              "TRY_SELECTOR": "fuzzy"
+          }
+      },
       "version": 1
   }
   
@@ -30,6 +35,11 @@ Test fuzzy selector
           "test/bar-debug",
           "test/bar-opt"
       ],
+      "templates": {
+          "env": {
+              "TRY_SELECTOR": "fuzzy"
+          }
+      },
       "version": 1
   }
   
@@ -49,6 +59,11 @@ Test multiple selectors
           "test/foo-debug",
           "test/foo-opt"
       ],
+      "templates": {
+          "env": {
+              "TRY_SELECTOR": "fuzzy"
+          }
+      },
       "version": 1
   }
   
@@ -69,6 +84,9 @@ Test templates
       "templates": {
           "artifact": {
               "enabled": "1"
+          },
+          "env": {
+              "TRY_SELECTOR": "fuzzy"
           }
       },
       "version": 1
@@ -88,7 +106,8 @@ Test templates
       "templates": {
           "env": {
               "BAR": "baz",
-              "FOO": "1"
+              "FOO": "1",
+              "TRY_SELECTOR": "fuzzy"
           }
       },
       "version": 1

@@ -3117,7 +3117,8 @@ static PrefPair debug_PrefValues[] = {
     {"nglayout.debug.invalidate_dumping", false},
     {"nglayout.debug.motion_event_dumping", false},
     {"nglayout.debug.paint_dumping", false},
-    {"nglayout.debug.paint_flashing", false}};
+    {"nglayout.debug.paint_flashing", false},
+    {"nglayout.debug.paint_flashing_chrome", false}};
 
 //////////////////////////////////////////////////////////////
 bool nsBaseWidget::debug_GetCachedBoolPref(const char* aPrefName) {

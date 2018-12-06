@@ -175,3 +175,63 @@ add_task(async function test_pageAction_all_urls() {
   let rejects = await extension.startup().then(() => false, () => true);
   is(rejects, true, "startup failed");
 });
+
+add_task(async function test_pageAction_restrictScheme_false() {
+  info("Check restricted origins are allowed in show_matches for privileged extensions");
+  let extension = ExtensionTestUtils.loadExtension({
+    isPrivileged: true,
+    manifest: {
+      permissions: ["mozillaAddons", "tabs"],
+      page_action: {
+        "show_matches": ["about:reader*"],
+        "hide_matches": ["*://*/*"],
+      },
+    },
+    background: function() {
+      browser.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
+        if (changeInfo.url && changeInfo.url.startsWith("about:reader")) {
+          browser.test.sendMessage("readerModeEntered");
+        }
+      });
+
+      browser.test.onMessage.addListener(async (msg) => {
+        if (msg !== "enterReaderMode") {
+          browser.test.fail(`Received unexpected test message: ${msg}`);
+          return;
+        }
+
+        browser.tabs.toggleReaderMode();
+      });
+    },
+  });
+
+  async function expectPageAction(extension, tab, isShown) {
+    await promiseAnimationFrame();
+    let widgetId = makeWidgetId(extension.id);
+    let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(widgetId);
+    let iconEl = document.getElementById(pageActionId);
+
+    if (isShown) {
+      ok(iconEl && !iconEl.hasAttribute("disabled"), "pageAction is shown");
+    } else {
+      ok(iconEl == null || iconEl.getAttribute("disabled") == "true", "pageAction is hidden");
+    }
+  }
+
+  const baseUrl = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com");
+  const url = `${baseUrl}/readerModeArticle.html`;
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url, true, true);
+
+  await extension.startup();
+
+  await expectPageAction(extension, tab, false);
+
+  extension.sendMessage("enterReaderMode");
+  await extension.awaitMessage("readerModeEntered");
+
+  await expectPageAction(extension, tab, true);
+
+  BrowserTestUtils.removeTab(tab);
+
+  await extension.unload();
+});

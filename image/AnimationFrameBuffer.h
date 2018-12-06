@@ -189,10 +189,6 @@ class AnimationFrameBuffer {
     MOZ_ASSERT(aFrame);
 
     --mPending;
-    if (!mSizeKnown) {
-      ++mSize;
-    }
-
     bool retain = InsertInternal(std::move(aFrame));
 
     if (mAdvance > 0 && mSize > 1) {

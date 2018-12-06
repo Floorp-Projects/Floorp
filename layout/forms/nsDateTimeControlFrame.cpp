@@ -14,7 +14,6 @@
 #include "nsContentUtils.h"
 #include "nsCheckboxRadioFrame.h"
 #include "nsGkAtoms.h"
-#include "nsContentUtils.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/HTMLInputElement.h"

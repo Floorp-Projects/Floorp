@@ -2432,7 +2432,14 @@ UpdateService.prototype = {
   },
 
   get disabledForTesting() {
-    return Cu.isInAutomation &&
+    let marionetteRunning = false;
+
+    if ("nsIMarionette" in Ci) {
+      marionetteRunning = Cc["@mozilla.org/remote/marionette;1"].
+                          createInstance(Ci.nsIMarionette).running;
+    }
+
+    return (Cu.isInAutomation || marionetteRunning) &&
            Services.prefs.getBoolPref(PREF_APP_UPDATE_DISABLEDFORTESTING, false);
   },
 
@@ -3114,6 +3121,7 @@ Checker.prototype = {
     // |force| can override |canCheckForUpdates| since |force| indicates a
     // manual update check. But nothing should override enterprise policies.
     if (UpdateServiceInstance.disabledByPolicy) {
+      LOG("Checker: checkForUpdates, disabled by policy");
       return;
     }
     if (!UpdateServiceInstance.canCheckForUpdates && !force) {

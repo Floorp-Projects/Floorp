@@ -652,6 +652,7 @@ impl RenderTarget for AlphaRenderTarget {
                 self.clip_batcher.add_clip_region(
                     task_address,
                     task.clip_data_address,
+                    task.local_pos,
                 );
             }
             RenderTaskKind::Scaling(ref info) => {

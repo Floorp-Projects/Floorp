@@ -35,7 +35,8 @@
           "stackwalk",
           "tasktracer",
           "threads",
-          "trackopts"
+          "trackopts",
+          "jstracer"
         ]
       },
       {

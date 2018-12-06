@@ -338,16 +338,15 @@ std::ostream& operator<<(std::ostream& aStream, const nsReflowStatus& aStatus);
  * If all four deltas are zero, this means that no overflow rect has
  * actually been set (this is the initial state of newly-created frames).
  */
-#define NS_FRAME_OVERFLOW_DELTA_MAX 0xfe  // max delta we can store
 
-#define NS_FRAME_OVERFLOW_NONE \
-  0x00000000  // there are no overflow rects;
-              // code relies on this being
-              // the all-zero value
+// max delta we can store
+#define NS_FRAME_OVERFLOW_DELTA_MAX 0xfe
 
-#define NS_FRAME_OVERFLOW_LARGE \
-  0x000000ff  // overflow is stored as a
-              // separate rect property
+// there are no overflow rects; code relies on this being the all-zero value
+#define NS_FRAME_OVERFLOW_NONE 0x00000000
+
+// overflow is stored as a separate rect property
+#define NS_FRAME_OVERFLOW_LARGE 0x000000ff
 
 /**
  * nsBidiLevel is the type of the level values in our Unicode Bidi
@@ -381,14 +380,16 @@ std::ostream& operator<<(std::ostream& aStream, const nsReflowStatus& aStatus);
  */
 typedef uint8_t nsBidiLevel;
 
-/** Paragraph level setting.
- *  If there is no strong character, then set the paragraph level to 0
+/**
+ * Paragraph level setting.
+ * If there is no strong character, then set the paragraph level to 0
  * (left-to-right).
  */
 #define NSBIDI_DEFAULT_LTR 0xfe
 
-/** Paragraph level setting.
- *  If there is no strong character, then set the paragraph level to 1
+/**
+ * Paragraph level setting.
+ * If there is no strong character, then set the paragraph level to 1
  * (right-to-left).
  */
 #define NSBIDI_DEFAULT_RTL 0xff
@@ -397,7 +398,6 @@ typedef uint8_t nsBidiLevel;
  * Maximum explicit embedding level.
  * (The maximum resolved level can be up to
  * <code>NSBIDI_MAX_EXPLICIT_LEVEL+1</code>).
- *
  */
 #define NSBIDI_MAX_EXPLICIT_LEVEL 125
 
@@ -617,7 +617,8 @@ class nsIFrame : public nsQueryFrame {
     // Note that |this| is deleted at this point.
   }
 
-  /** Flags for PeekOffsetCharacter, PeekOffsetNoAmount, PeekOffsetWord return
+  /**
+   * Flags for PeekOffsetCharacter, PeekOffsetNoAmount, PeekOffsetWord return
    * values.
    */
   enum FrameSearchResult {
@@ -1147,13 +1148,13 @@ class nsIFrame : public nsQueryFrame {
 #define NS_DECLARE_FRAME_PROPERTY_RELEASABLE(prop, type) \
   NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(prop, type, ReleaseValue)
 
-#define NS_DECLARE_FRAME_PROPERTY_WITH_DTOR_NEVER_CALLED(prop, type)     \
-  static void AssertOnDestroyingProperty##prop(type*) {                  \
-    MOZ_ASSERT_UNREACHABLE("Frame property " #prop                       \
-                           " should never "                              \
-                           "be destroyed by the FrameProperties class"); \
-  }                                                                      \
-  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(prop, type,                        \
+#define NS_DECLARE_FRAME_PROPERTY_WITH_DTOR_NEVER_CALLED(prop, type) \
+  static void AssertOnDestroyingProperty##prop(type*) {              \
+    MOZ_ASSERT_UNREACHABLE(                                          \
+        "Frame property " #prop                                      \
+        " should never be destroyed by the FrameProperties class");  \
+  }                                                                  \
+  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(prop, type,                    \
                                       AssertOnDestroyingProperty##prop)
 
 #define NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(prop, type) \
@@ -1833,11 +1834,11 @@ class nsIFrame : public nsQueryFrame {
   /**
    * Event handling of GUI events.
    *
-   * @param   aEvent event structure describing the type of event and rge widget
-   *            where the event originated
-   *          The |point| member of this is in the coordinate system of the
-   *          view returned by GetOffsetFromView.
-   * @param   aEventStatus a return value indicating whether the event was
+   * @param aEvent event structure describing the type of event and rge widget
+   * where the event originated. The |point| member of this is in the coordinate
+   * system of the view returned by GetOffsetFromView.
+   *
+   * @param aEventStatus a return value indicating whether the event was
    * handled and whether default processing should be done
    *
    * XXX From a frame's perspective it's unclear what the effect of the event
@@ -2324,8 +2325,8 @@ class nsIFrame : public nsQueryFrame {
      * https://drafts.csswg.org/css-grid/#min-size-auto
      * https://drafts.csswg.org/css-align-3/#valdef-justify-self-stretch
      */
-    eIApplyAutoMinSize =
-        1 << 4,  // only has an effect when eShrinkWrap is false
+    eIApplyAutoMinSize = 1 << 4,  // only has an effect when eShrinkWrap is
+                                  // false
   };
 
   /**
@@ -3184,27 +3185,28 @@ class nsIFrame : public nsQueryFrame {
   }
 
   /**
-   *  called to discover where this frame, or a parent frame has user-select
+   * Called to discover where this frame, or a parent frame has user-select
    * style applied, which affects that way that it is selected.
    *
-   *  @param aSelectStyle  out param. Returns the type of selection style found
-   *                        (using values defined in nsStyleConsts.h).
+   * @param aSelectStyle out param. Returns the type of selection style found
+   * (using values defined in nsStyleConsts.h).
    *
-   *  @return Whether the frame can be selected (i.e. is not affected by
-   *          user-select: none)
+   * @return Whether the frame can be selected (i.e. is not affected by
+   * user-select: none)
    */
   bool IsSelectable(mozilla::StyleUserSelect* aSelectStyle) const;
 
   /**
-   *  Called to retrieve the SelectionController associated with the frame.
-   *  @param aSelCon will contain the selection controller associated with
-   *  the frame.
+   * Called to retrieve the SelectionController associated with the frame.
+   *
+   * @param aSelCon will contain the selection controller associated with
+   * the frame.
    */
   virtual nsresult GetSelectionController(nsPresContext* aPresContext,
                                           nsISelectionController** aSelCon) = 0;
 
   /**
-   *  Call to get nsFrameSelection for this frame.
+   * Call to get nsFrameSelection for this frame.
    */
   already_AddRefed<nsFrameSelection> GetFrameSelection();
 
@@ -3215,28 +3217,36 @@ class nsIFrame : public nsQueryFrame {
   const nsFrameSelection* GetConstFrameSelection() const;
 
   /**
-   *  called to find the previous/next character, word, or line  returns the
-   * actual nsIFrame and the frame offset.  THIS DOES NOT CHANGE SELECTION STATE
-   *  uses frame's begin selection state to start. if no selection on this frame
-   * will return NS_ERROR_FAILURE
-   *  @param aPOS is defined in nsFrameSelection
+   * called to find the previous/next character, word, or line. Returns the
+   * actual nsIFrame and the frame offset. THIS DOES NOT CHANGE SELECTION STATE.
+   * Uses frame's begin selection state to start. If no selection on this frame
+   * will return NS_ERROR_FAILURE.
+   *
+   * @param aPOS is defined in nsFrameSelection
    */
   virtual nsresult PeekOffset(nsPeekOffsetStruct* aPos);
 
   /**
-   *  called to find the previous/next non-anonymous selectable leaf frame.
-   *  @param aDirection [in] the direction to move in (eDirPrevious or eDirNext)
-   *  @param aVisual [in] whether bidi caret behavior is visual (true) or
+   * Called to find the previous/next non-anonymous selectable leaf frame.
+   *
+   * @param aDirection [in] the direction to move in (eDirPrevious or eDirNext)
+   *
+   * @param aVisual [in] whether bidi caret behavior is visual (true) or
    * logical (false)
-   *  @param aJumpLines [in] whether to allow jumping across line boundaries
-   *  @param aScrollViewStop [in] whether to stop when reaching a scroll frame
+   *
+   * @param aJumpLines [in] whether to allow jumping across line boundaries
+   * @param aScrollViewStop [in] whether to stop when reaching a scroll frame
    * boundary
-   *  @param aOutFrame [out] the previous/next selectable leaf frame
-   *  @param aOutOffset [out] 0 indicates that we arrived at the beginning of
+   *
+   * @param aOutFrame [out] the previous/next selectable leaf frame
+   *
+   * @param aOutOffset [out] 0 indicates that we arrived at the beginning of
    * the output frame; -1 indicates that we arrived at its end.
-   *  @param aOutJumpedLine [out] whether this frame and the returned frame are
+   *
+   * @param aOutJumpedLine [out] whether this frame and the returned frame are
    * on different lines
-   *  @param aOutMovedOverNonSelectableText [out] whether we jumped over a
+   *
+   * @param aOutMovedOverNonSelectableText [out] whether we jumped over a
    * non-selectable frame during the search
    */
   nsresult GetFrameFromDirection(nsDirection aDirection, bool aVisual,
@@ -3247,17 +3257,22 @@ class nsIFrame : public nsQueryFrame {
                                  bool* aOutMovedOverNonSelectableText);
 
   /**
-   *  called to see if the children of the frame are visible from indexstart to
-   * index end. this does not change any state. returns true only if the indexes
-   * are valid and any of the children are visible.  for textframes this index
-   * is the character index. if aStart = aEnd result will be false
-   *  @param aStart start index of first child from 0-N (number of children)
-   *  @param aEnd   end index of last child from 0-N
-   *  @param aRecurse should this frame talk to siblings to get to the contents
+   * Called to see if the children of the frame are visible from indexstart to
+   * index end. This does not change any state. Returns true only if the indexes
+   * are valid and any of the children are visible. For textframes this index
+   * is the character index. If aStart = aEnd result will be false.
+   *
+   * @param aStart start index of first child from 0-N (number of children)
+   *
+   * @param aEnd end index of last child from 0-N
+   *
+   * @param aRecurse should this frame talk to siblings to get to the contents
    * other children?
-   *  @param aFinished did this frame have the aEndIndex? or is there more work
+   *
+   * @param aFinished did this frame have the aEndIndex? or is there more work
    * to do
-   *  @param _retval  return value true or false. false = range is not rendered.
+   *
+   * @param _retval return value true or false. false = range is not rendered.
    */
   virtual nsresult CheckVisibility(nsPresContext* aContext, int32_t aStartIndex,
                                    int32_t aEndIndex, bool aRecurse,
@@ -4283,30 +4298,38 @@ class nsIFrame : public nsQueryFrame {
   // Helpers
   /**
    * Can we stop inside this frame when we're skipping non-rendered whitespace?
-   * @param  aForward [in] Are we moving forward (or backward) in content order.
-   * @param  aOffset [in/out] At what offset into the frame to start looking.
-   *         on output - what offset was reached (whether or not we found a
-   * place to stop).
-   * @return STOP: An appropriate offset was found within this frame,
-   *         and is given by aOffset.
-   *         CONTINUE: Not found within this frame, need to try the next frame.
-   *         see enum FrameSearchResult for more details.
+   *
+   * @param aForward [in] Are we moving forward (or backward) in content order.
+   *
+   * @param aOffset [in/out] At what offset into the frame to start looking.
+   * at offset was reached (whether or not we found a place to stop).
+   *
+   * @return
+   *   * STOP: An appropriate offset was found within this frame,
+   *     and is given by aOffset.
+   *   * CONTINUE: Not found within this frame, need to try the next frame.
+   *     See enum FrameSearchResult for more details.
    */
   virtual FrameSearchResult PeekOffsetNoAmount(bool aForward,
                                                int32_t* aOffset) = 0;
 
   /**
    * Search the frame for the next character
-   * @param  aForward [in] Are we moving forward (or backward) in content order.
-   * @param  aOffset [in/out] At what offset into the frame to start looking.
-   *         on output - what offset was reached (whether or not we found a
-   * place to stop).
-   * @param  aOptions [in] Options, see the comment in
-   *         PeekOffsetCharacterOptions for the detail.
-   * @return STOP: An appropriate offset was found within this frame,
-   *         and is given by aOffset.
-   *         CONTINUE: Not found within this frame, need to try the next frame.
-   *         see enum FrameSearchResult for more details.
+   *
+   * @param aForward [in] Are we moving forward (or backward) in content order.
+   *
+   * @param aOffset [in/out] At what offset into the frame to start looking.
+   * on output - what offset was reached (whether or not we found a place to
+   * stop).
+   *
+   * @param aOptions [in] Options, see the comment in PeekOffsetCharacterOptions
+   * for the detail.
+   *
+   * @return
+   *   * STOP: An appropriate offset was found within this frame, and is given
+   *     by aOffset.
+   *   * CONTINUE: Not found within this frame, need to try the next frame. See
+   *     enum FrameSearchResult for more details.
    */
   virtual FrameSearchResult PeekOffsetCharacter(
       bool aForward, int32_t* aOffset,

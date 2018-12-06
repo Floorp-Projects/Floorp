@@ -255,6 +255,43 @@ class MachFormatter(base.BaseFormatter):
                 "SUMMARY: AddressSanitizer: %d byte(s) leaked in %d allocation(s)." %
                 (prefix, data["bytes"], data["allocations"]))
 
+    def mozleak_object(self, data):
+        data_log = data.copy()
+        data_log["level"] = "INFO"
+        data_log["message"] = ("leakcheck: %s leaked %d %s" %
+                               (data["process"], data["bytes"], data["name"]))
+        return self.log(data_log)
+
+    def mozleak_total(self, data):
+        if data["bytes"] is None:
+            # We didn't see a line with name 'TOTAL'
+            if data.get("induced_crashed", False):
+                data_log = data.copy()
+                data_log["level"] = "INFO"
+                data_log["message"] = ("leakcheck: %s deliberate crash and thus no leak log\n"
+                                       % data["process"])
+                return self.log(data_log)
+            if data.get("ignore_missing", False):
+                return ("%s ignoring missing output line for total leaks\n" %
+                        data["process"])
+
+            status = self.term.red("FAIL")
+            return ("%s leakcheck: "
+                    "%s missing output line for total leaks!\n" %
+                    (status, data["process"]))
+
+        if data["bytes"] == 0:
+            return ("%s leakcheck: %s no leaks detected!\n" %
+                    (self.term.green("PASS"), data["process"]))
+
+        message = "leakcheck: %s %d bytes leaked\n" % (data["process"], data["bytes"])
+
+        # data["bytes"] will include any expected leaks, so it can be off
+        # by a few thousand bytes.
+        failure = data["bytes"] > data["threshold"]
+        status = self.term.red("UNEXPECTED-FAIL") if failure else self.term.yellow("FAIL")
+        return "%s %s\n" % (status, message)
+
     def test_status(self, data):
         test = self._get_test_id(data)
         if test not in self.status_buffer:

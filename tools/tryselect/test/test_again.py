@@ -39,7 +39,10 @@ def test_try_again(monkeypatch):
 
     try_task_config = kwargs.pop('try_task_config')
     assert sorted(try_task_config.get('tasks')) == sorted(['foo', 'bar'])
-    assert try_task_config.get('templates') == {'artifact': True}
+    assert try_task_config.get('templates') == {
+        'artifact': True,
+        'env': {'TRY_SELECTOR': 'fuzzy'},
+    }
 
     with open(push.history_path, 'r') as fh:
         assert len(fh.readlines()) == 1

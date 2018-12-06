@@ -20,7 +20,7 @@ def _get_default_logger():
 
 def process_single_leak_file(leakLogFileName, processType, leakThreshold,
                              ignoreMissingLeaks, log=None,
-                             stackFixer=None):
+                             stackFixer=None, scope=None, allowed=None):
     """Process a single leak log.
     """
 
@@ -36,12 +36,18 @@ def process_single_leak_file(leakLogFileName, processType, leakThreshold,
 
     log = log or _get_default_logger()
 
+    if allowed is None:
+        allowed = {}
+
     processString = "%s process:" % processType
     crashedOnPurpose = False
     totalBytesLeaked = None
     leakedObjectAnalysis = []
     leakedObjectNames = []
     recordLeakedObjects = False
+    log.info("leakcheck | Processing leak log file %s"
+             % leakLogFileName)
+
     with open(leakLogFileName, "r") as leaks:
         for line in leaks:
             if line.find("purposefully crash") > -1:
@@ -81,59 +87,37 @@ def process_single_leak_file(leakLogFileName, processType, leakThreshold,
                     recordLeakedObjects = True
                 else:
                     recordLeakedObjects = False
-            if size < 0 or bytesLeaked < 0 or numLeaked < 0:
+            if (size < 0 or bytesLeaked < 0 or numLeaked < 0) and leakThreshold >= 0:
                 log.error("TEST-UNEXPECTED-FAIL | leakcheck | %s negative leaks caught!"
                           % processString)
                 continue
             if name != "TOTAL" and numLeaked != 0 and recordLeakedObjects:
                 leakedObjectNames.append(name)
-                leakedObjectAnalysis.append("TEST-INFO | leakcheck | %s leaked %d %s"
-                                            % (processString, numLeaked, name))
+                leakedObjectAnalysis.append((numLeaked, name))
 
-    log.info('\n'.join(leakedObjectAnalysis))
+    for numLeaked, name in leakedObjectAnalysis:
+        leak_allowed = False
+        if name in allowed:
+            limit = leak_allowed[name]
+            leak_allowed = limit is None or numLeaked <= limit
+        log.mozleak_object(processType,
+                           numLeaked,
+                           name,
+                           scope=scope,
+                           allowed=leak_allowed)
 
-    if totalBytesLeaked is None:
-        # We didn't see a line with name 'TOTAL'
-        if crashedOnPurpose:
-            log.info("TEST-INFO | leakcheck | %s deliberate crash and thus no leak log"
-                     % processString)
-        elif ignoreMissingLeaks:
-            log.info("TEST-INFO | leakcheck | %s ignoring missing output line for total leaks"
-                     % processString)
-        else:
-            log.error("TEST-UNEXPECTED-FAIL | leakcheck | %s missing output line for total leaks!"
-                      % processString)
-            log.info("TEST-INFO | leakcheck | missing output line from log file %s"
-                     % leakLogFileName)
-        return
-
-    if totalBytesLeaked == 0:
-        log.info("TEST-PASS | leakcheck | %s no leaks detected!" %
-                 processString)
-        return
-
-    # Create a comma delimited string of the first N leaked objects found,
-    # to aid with bug summary matching in TBPL. Note: The order of the objects
-    # had no significance (they're sorted alphabetically).
-    maxSummaryObjects = 5
-    leakedObjectSummary = ', '.join(leakedObjectNames[:maxSummaryObjects])
-    if len(leakedObjectNames) > maxSummaryObjects:
-        leakedObjectSummary += ', ...'
-
-    message = "leakcheck | %s %d bytes leaked (%s)" % (
-            processString, totalBytesLeaked, leakedObjectSummary)
-
-    # totalBytesLeaked will include any expected leaks, so it can be off
-    # by a few thousand bytes.
-    if totalBytesLeaked > leakThreshold:
-        log.error("TEST-UNEXPECTED-FAIL | %s" % message)
-    else:
-        log.warning(message)
+    log.mozleak_total(processType,
+                      totalBytesLeaked,
+                      leakThreshold,
+                      leakedObjectNames,
+                      scope=scope,
+                      induced_crash=crashedOnPurpose,
+                      ignore_missing=ignoreMissingLeaks)
 
 
 def process_leak_log(leak_log_file, leak_thresholds=None,
                      ignore_missing_leaks=None, log=None,
-                     stack_fixer=None):
+                     stack_fixer=None, scope=None, allowed=None):
     """Process the leak log, including separate leak logs created
     by child processes.
 
@@ -151,13 +135,19 @@ def process_leak_log(leak_log_file, leak_thresholds=None,
 
     leak_thresholds should be a dict mapping process types to leak thresholds,
     in bytes. If a process type is not present in the dict the threshold
-    will be 0.
+    will be 0. If the threshold is a negative number we additionally ignore
+    the case where there's negative leaks.
+
+    allowed - A dictionary mapping process types to dictionaries containing
+    the number of objects of that type which are allowed to leak.
+
+    scope - An identifier for the set of tests run during the browser session
+            (e.g. a directory name)
 
     ignore_missing_leaks should be a list of process types. If a process
     creates a leak log without a TOTAL, then we report an error if it isn't
     in the list ignore_missing_leaks.
     """
-
     log = log or _get_default_logger()
 
     leakLogFile = leak_log_file
@@ -166,12 +156,15 @@ def process_leak_log(leak_log_file, leak_thresholds=None,
             "leakcheck | refcount logging is off, so leaks can't be detected!")
         return
 
+    log.info("leakcheck | Processing log file %s%s" %
+             (leakLogFile, (" for scope %s" % scope) if scope is not None else ""))
+
     leakThresholds = leak_thresholds or {}
     ignoreMissingLeaks = ignore_missing_leaks or []
 
     # This list is based on kGeckoProcessTypeString. ipdlunittest processes likely
     # are not going to produce leak logs we will ever see.
-    knownProcessTypes = ["default", "plugin", "tab", "geckomediaplugin", "gpu"]
+    knownProcessTypes = ["default", "plugin", "tab", "geckomediaplugin", "gpu", "rdd"]
 
     for processType in knownProcessTypes:
         log.info("TEST-INFO | leakcheck | %s process: leak threshold set at %d bytes"
@@ -203,4 +196,5 @@ def process_leak_log(leak_log_file, leak_thresholds=None,
             leakThreshold = leakThresholds.get(processType, 0)
             process_single_leak_file(thisFile, processType, leakThreshold,
                                      processType in ignoreMissingLeaks,
-                                     log=log, stackFixer=stack_fixer)
+                                     log=log, stackFixer=stack_fixer,
+                                     scope=scope, allowed=allowed)

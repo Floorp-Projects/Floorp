@@ -396,7 +396,7 @@ static inline void js_free(void* p) {
 #include <new>
 
 /*
- * Low-level memory management in SpiderMonkey:
+ * [SMDOC] Low-level memory management in SpiderMonkey
  *
  *  ** Do not use the standard malloc/free/realloc: SpiderMonkey allows these
  *     to be redefined (via JS_USE_CUSTOM_ALLOCATOR) and Gecko even #define's

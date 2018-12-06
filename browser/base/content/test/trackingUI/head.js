@@ -40,7 +40,10 @@ function openIdentityPopup() {
   return viewShown;
 }
 
-function waitForSecurityChange(numChanges = 1) {
+function waitForSecurityChange(numChanges = 1, win = null) {
+  if (!win) {
+    win = window;
+  }
   return new Promise(resolve => {
     let n = 0;
     let listener = {
@@ -48,11 +51,11 @@ function waitForSecurityChange(numChanges = 1) {
         n = n + 1;
         info("Received onSecurityChange event " + n + " of " + numChanges);
         if (n >= numChanges) {
-          gBrowser.removeProgressListener(listener);
+          win.gBrowser.removeProgressListener(listener);
           resolve(n);
         }
       },
     };
-    gBrowser.addProgressListener(listener);
+    win.gBrowser.addProgressListener(listener);
   });
 }

@@ -416,6 +416,7 @@ class nsWindow final : public nsBaseWidget {
   static CSDSupportLevel GetSystemCSDSupportLevel();
 
   static bool TopLevelWindowUseARGBVisual();
+  static bool GetTopLevelWindowActiveState(nsIFrame* aFrame);
 
  protected:
   virtual ~nsWindow();
@@ -535,6 +536,8 @@ class nsWindow final : public nsBaseWidget {
   CSDSupportLevel mCSDSupportLevel;
   // If true, draw our own window titlebar.
   bool mDrawInTitlebar;
+  // Draw titlebar with :backdrop css state (inactive/unfocused).
+  bool mTitlebarBackdropState;
   // Draggable titlebar region maintained by UpdateWindowDraggingRegion
   LayoutDeviceIntRegion mDraggableRegion;
 
@@ -621,6 +624,8 @@ class nsWindow final : public nsBaseWidget {
   void CleanLayerManagerRecursive();
 
   virtual int32_t RoundsWidgetCoordinatesTo() override;
+
+  void ForceTitlebarRedraw();
 
   /**
    * |mIMContext| takes all IME related stuff.

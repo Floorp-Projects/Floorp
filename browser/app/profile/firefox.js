@@ -956,8 +956,10 @@ pref("security.alternate_certificate_error_page", "certerror");
 // Enable the new certificate error pages.
 #ifdef EARLY_BETA_OR_EARLIER
 pref("browser.security.newcerterrorpage.enabled", true);
+pref("browser.security.newcerterrorpage.mitm.enabled", true);
 #else
 pref("browser.security.newcerterrorpage.enabled", false);
+pref("browser.security.newcerterrorpage.mitm.enabled", false);
 #endif
 
 pref("security.certerrors.recordEventTelemetry", true);
@@ -1471,9 +1473,9 @@ pref("media.gmp-widevinecdm.enabled", true);
 // Switch block autoplay logic to v2, and enable UI.
 pref("media.autoplay.enabled.user-gestures-needed", true);
 // Allow asking for permission to autoplay to appear in UI.
-pref("media.autoplay.ask-permission", true);
+pref("media.autoplay.ask-permission", false);
 // Set Firefox to block autoplay, asking for permission by default.
-pref("media.autoplay.default", 2); // 0=Allowed, 1=Blocked, 2=Prompt
+pref("media.autoplay.default", 1); // 0=Allowed, 1=Blocked, 2=Prompt
 #else
 pref("media.autoplay.default", 0); // 0=Allowed, 1=Blocked, 2=Prompt
 pref("media.autoplay.enabled.user-gestures-needed", false);
@@ -1536,6 +1538,8 @@ pref("dom.storage_access.max_concurrent_auto_grants", 5);
 // Define a set of default features for the Content Blocking UI.
 pref("browser.contentblocking.trackingprotection.control-center.ui.enabled", true);
 pref("browser.contentblocking.rejecttrackers.control-center.ui.enabled", true);
+
+pref("browser.contentblocking.control-center.ui.showAllowedLabels", false);
 
 // Enable the Report Breakage UI on Nightly and Beta but not on Release yet.
 #ifdef EARLY_BETA_OR_EARLIER

@@ -68,6 +68,7 @@ class ServiceWorker;
 class ServiceWorkerDescriptor;
 class Timeout;
 class TimeoutManager;
+class WindowGlobalChild;
 class CustomElementRegistry;
 enum class CallerType : uint32_t;
 }  // namespace dom
@@ -376,6 +377,10 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
       MaybeCreateDoc();
     }
     return mDoc;
+  }
+
+  mozilla::dom::WindowGlobalChild* GetWindowGlobalChild() {
+    return mWindowGlobalChild;
   }
 
   virtual PopupControlState GetPopupControlState() const = 0;
@@ -695,6 +700,12 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   // also set as permissions, but it could happen that we need to access them
   // synchronously in this context, and for this, we need a copy here.
   nsTArray<nsCString> mStorageAccessGranted;
+
+  // The WindowGlobalChild actor for this window.
+  //
+  // This will be non-null during the full lifetime of the window, initialized
+  // during SetNewDocument, and cleared during FreeInnerObjects.
+  RefPtr<mozilla::dom::WindowGlobalChild> mWindowGlobalChild;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowInner, NS_PIDOMWINDOWINNER_IID)

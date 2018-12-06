@@ -216,18 +216,30 @@ const reducers = {
         // Find the position of any added declaration which matches the incoming
         // declaration to be removed.
         const addIndex = rule.add.findIndex(addDecl => {
-          return addDecl.index === decl.index;
+          return addDecl.index === decl.index &&
+                 addDecl.property === decl.property &&
+                 addDecl.value === decl.value;
+        });
+
+        // Find the position of any removed declaration which matches the incoming
+        // declaration to be removed. It's possible to get duplicate remove operations
+        // when, for example, disabling a declaration then deleting it.
+        const removeIndex = rule.remove.findIndex(removeDecl => {
+          return removeDecl.index === decl.index &&
+                 removeDecl.property === decl.property &&
+                 removeDecl.value === decl.value;
         });
 
         // Track the remove operation only if the property was not previously introduced
         // by an add operation. This ensures repeated changes of the same property
-        // register as a single remove operation of its original value.
-        if (addIndex < 0) {
+        // register as a single remove operation of its original value. Avoid tracking the
+        // remove declaration if already tracked (happens on disable followed by delete).
+        if (addIndex < 0 && removeIndex < 0) {
           rule.remove.push(decl);
         }
 
         // Delete any previous add operation which would be canceled out by this remove.
-        if (rule.add[addIndex] && rule.add[addIndex].value === decl.value) {
+        if (rule.add[addIndex]) {
           rule.add.splice(addIndex, 1);
         }
 
@@ -258,18 +270,19 @@ const reducers = {
         // Find the position of any removed declaration which matches the incoming
         // declaration to be added.
         const removeIndex = rule.remove.findIndex(removeDecl => {
-          return removeDecl.index === decl.index;
+          return removeDecl.index === decl.index &&
+                 removeDecl.value === decl.value &&
+                 removeDecl.property === decl.property;
         });
 
         // Find the position of any added declaration which matches the incoming
         // declaration to be added in case we need to replace it.
         const addIndex = rule.add.findIndex(addDecl => {
-          return addDecl.index === decl.index;
+          return addDecl.index === decl.index &&
+                 addDecl.property === decl.property;
         });
 
-        if (rule.remove[removeIndex] &&
-            rule.remove[removeIndex].value === decl.value &&
-            rule.remove[removeIndex].property === decl.property) {
+        if (rule.remove[removeIndex]) {
           // Delete any previous remove operation which would be canceled out by this add.
           rule.remove.splice(removeIndex, 1);
         } else if (rule.add[addIndex]) {

@@ -43,8 +43,8 @@ class ZoomConstraintsClient final : public nsIDOMEventListener,
   void RefreshZoomConstraints();
 
   nsCOMPtr<nsIDocument> mDocument;
-  nsIPresShell* MOZ_NON_OWNING_REF
-      mPresShell;  // raw ref since the presShell owns this
+  // raw ref since the presShell owns this
+  nsIPresShell* MOZ_NON_OWNING_REF mPresShell;
   nsCOMPtr<mozilla::dom::EventTarget> mEventTarget;
   mozilla::Maybe<mozilla::layers::ScrollableLayerGuid> mGuid;
 };

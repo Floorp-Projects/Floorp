@@ -20,17 +20,6 @@ const DATA = [
     value: null,
     extra: {
       oldpanel: "layoutview",
-      newpanel: "changesview",
-    },
-  },
-  {
-    timestamp: null,
-    category: "devtools.main",
-    method: "sidepanel_changed",
-    object: "inspector",
-    value: null,
-    extra: {
-      oldpanel: "changesview",
       newpanel: "animationinspector",
     },
   },
@@ -75,17 +64,6 @@ const DATA = [
     value: null,
     extra: {
       oldpanel: "computedview",
-      newpanel: "changesview",
-    },
-  },
-  {
-    timestamp: null,
-    category: "devtools.main",
-    method: "sidepanel_changed",
-    object: "inspector",
-    value: null,
-    extra: {
-      oldpanel: "changesview",
       newpanel: "animationinspector",
     },
   },
@@ -128,9 +106,6 @@ add_task(async function() {
   // Let's reset the counts.
   Services.telemetry.clearEvents();
 
-  // Ensure the Changes panel is enabled before running the tests.
-  await pushPref("devtools.inspector.changes.enabled", true);
-
   // Ensure no events have been logged
   const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
   ok(!snapshot.parent, "No events have been logged for the main process");
@@ -155,7 +130,7 @@ function testSidebar(toolbox) {
 
   const inspector = toolbox.getCurrentPanel();
   let sidebarTools = ["computedview", "layoutview", "fontinspector",
-                      "animationinspector", "changesview"];
+                      "animationinspector"];
 
   // Concatenate the array with itself so that we can open each tool twice.
   sidebarTools = [...sidebarTools, ...sidebarTools];
@@ -184,11 +159,9 @@ function checkResults() {
   checkTelemetry("DEVTOOLS_COMPUTEDVIEW_OPENED_COUNT", "", {0: 2, 1: 0}, "array");
   checkTelemetry("DEVTOOLS_LAYOUTVIEW_OPENED_COUNT", "", {0: 3, 1: 0}, "array");
   checkTelemetry("DEVTOOLS_FONTINSPECTOR_OPENED_COUNT", "", {0: 2, 1: 0}, "array");
-  checkTelemetry("devtools.changesview.opened_count", "", 2, "scalar");
   checkTelemetry("DEVTOOLS_COMPUTEDVIEW_TIME_ACTIVE_SECONDS", "", null, "hasentries");
   checkTelemetry("DEVTOOLS_LAYOUTVIEW_TIME_ACTIVE_SECONDS", "", null, "hasentries");
   checkTelemetry("DEVTOOLS_FONTINSPECTOR_TIME_ACTIVE_SECONDS", "", null, "hasentries");
-  checkTelemetry("DEVTOOLS_CHANGESVIEW_TIME_ACTIVE_SECONDS", "", null, "hasentries");
 }
 
 function checkEventTelemetry() {

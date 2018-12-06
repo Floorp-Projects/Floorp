@@ -1,0 +1,35 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PWindowGlobal;
+
+include DOMTypes;
+
+namespace mozilla {
+namespace ipc {
+
+/**
+ * PInProcess is intended for use as an alternative actor manager to PContent
+ * for async actors which want to be used uniformly in both Content->Chrome and
+ * Chrome->Chrome circumstances.
+ *
+ * `mozilla::ipc::InProcess{Parent, Child}::Singleton()` should be used to get
+ * an instance of this actor.
+ */
+async protocol PInProcess
+{
+  manages PWindowGlobal;
+
+parent:
+  /**
+   * Construct a new WindowGlobal actor for a window global in the given
+   * BrowsingContext and with the given principal.
+   */
+  async PWindowGlobal(WindowGlobalInit init);
+};
+
+} // namespace ipc
+} // namespace mozilla

@@ -28,10 +28,11 @@ class TestMainTabScalars(TelemetryTestCase):
 
         ping = self.wait_for_ping(self.restart_browser, MAIN_SHUTDOWN_PING)
 
-        assert ping["type"] == "main"
-        assert ping["clientId"] == self.client_id
+        self.assertEqual(ping["type"], "main")
+        self.assertEqual(ping["clientId"], self.client_id)
 
         scalars = ping["payload"]["processes"]["parent"]["scalars"]
-        assert scalars["browser.engagement.max_concurrent_tab_count"] == 3
-        assert scalars["browser.engagement.tab_open_event_count"] == 2
-        assert scalars["browser.engagement.max_concurrent_window_count"] == 1
+
+        self.assertEqual(scalars["browser.engagement.max_concurrent_tab_count"], 3)
+        self.assertEqual(scalars["browser.engagement.tab_open_event_count"], 2)
+        self.assertEqual(scalars["browser.engagement.max_concurrent_window_count"], 1)

@@ -59,9 +59,8 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext, nsIFrame* aFrame,
                          gfxContext* aRenderingContext,
                          const LogicalSize& aAvailableSpace, uint32_t aFlags)
     : SizeComputationInput(aFrame, aRenderingContext),
-      mCBReflowInput(
-          nullptr)  // will be setup properly later in InitCBReflowInput
-      ,
+      // will be setup properly later in InitCBReflowInput
+      mCBReflowInput(nullptr),
       mBlockDelta(0),
       mOrthogonalLimit(NS_UNCONSTRAINEDSIZE),
       mAvailableWidth(0),
@@ -176,9 +175,8 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
                          const LogicalSize* aContainingBlockSize,
                          uint32_t aFlags)
     : SizeComputationInput(aFrame, aParentReflowInput.mRenderingContext),
-      mCBReflowInput(
-          nullptr)  // will be setup properly later in InitCBReflowInput
-      ,
+      // will be setup properly later in InitCBReflowInput
+      mCBReflowInput(nullptr),
       mBlockDelta(0),
       mOrthogonalLimit(NS_UNCONSTRAINEDSIZE),
       mAvailableWidth(0),

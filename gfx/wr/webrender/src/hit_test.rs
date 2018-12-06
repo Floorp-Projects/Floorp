@@ -34,13 +34,20 @@ pub struct HitTestClipNode {
 }
 
 impl HitTestClipNode {
-    fn new(node: &ClipNode) -> Self {
+    fn new(local_pos: LayoutPoint, node: &ClipNode) -> Self {
         let region = match node.item {
-            ClipItem::Rectangle(ref rect, mode) => HitTestRegion::Rectangle(*rect, mode),
-            ClipItem::RoundedRectangle(ref rect, ref radii, ref mode) =>
-                HitTestRegion::RoundedRectangle(*rect, *radii, *mode),
-            ClipItem::Image { ref mask, .. } =>
-                HitTestRegion::Rectangle(mask.rect, ClipMode::Clip),
+            ClipItem::Rectangle(size, mode) => {
+                let rect = LayoutRect::new(local_pos, size);
+                HitTestRegion::Rectangle(rect, mode)
+            }
+            ClipItem::RoundedRectangle(size, radii, mode) => {
+                let rect = LayoutRect::new(local_pos, size);
+                HitTestRegion::RoundedRectangle(rect, radii, mode)
+            }
+            ClipItem::Image { size, .. } => {
+                let rect = LayoutRect::new(local_pos, size);
+                HitTestRegion::Rectangle(rect, ClipMode::Clip)
+            }
             ClipItem::BoxShadow(_) => HitTestRegion::Invalid,
         };
 
@@ -170,7 +177,7 @@ impl HitTester {
         for node in &clip_store.clip_chain_nodes {
             let clip_node = &clip_data_store[node.handle];
             self.clip_chains.push(HitTestClipChainNode {
-                region: HitTestClipNode::new(clip_node),
+                region: HitTestClipNode::new(node.local_pos, clip_node),
                 spatial_node_index: node.spatial_node_index,
                 parent_clip_chain_id: HitTestClipChainId(node.parent_clip_chain_id.0),
             });

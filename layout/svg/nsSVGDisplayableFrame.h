@@ -104,15 +104,16 @@ class nsSVGDisplayableFrame : public nsQueryFrame {
 
   // Flags to pass to NotifySVGChange:
   //
-  // DO_NOT_NOTIFY_RENDERING_OBSERVERS - this should only be used when
-  //                           updating the descendant frames of a clipPath,
-  //                           mask, pattern or marker frame (or other similar
-  //                           NS_FRAME_IS_NONDISPLAY frame) immediately
-  //                           prior to painting that frame's descendants.
-  // TRANSFORM_CHANGED     - the current transform matrix for this frame has
-  // changed COORD_CONTEXT_CHANGED - the dimensions of this frame's coordinate
-  // context has
-  //                           changed (percentage lengths must be reevaluated)
+  // DO_NOT_NOTIFY_RENDERING_OBSERVERS:
+  //   this should only be used when updating the descendant frames of a
+  //   clipPath, mask, pattern or marker frame (or other similar
+  //   NS_FRAME_IS_NONDISPLAY frame) immediately prior to painting that frame's
+  //   descendants.
+  // TRANSFORM_CHANGED:
+  //   the current transform matrix for this frame has changed
+  // COORD_CONTEXT_CHANGED:
+  //   the dimensions of this frame's coordinate context has changed (percentage
+  //   lengths must be reevaluated)
   enum SVGChangedFlags {
     TRANSFORM_CHANGED = 0x01,
     COORD_CONTEXT_CHANGED = 0x02,

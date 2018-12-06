@@ -75,6 +75,7 @@ class SessionAccessibility final
   using Base::DisposeNative;
   jni::Object::LocalRef GetNodeInfo(int32_t aID);
   void SetText(int32_t aID, jni::String::Param aText);
+  void Click(int32_t aID);
   void StartNativeAccessibility();
 
   // Event methods

@@ -3,6 +3,8 @@ extern crate thin_vec;
 
 #[cfg(feature = "parse_elf")]
 extern crate object;
+#[cfg(feature = "parse_elf")]
+extern crate goblin;
 
 mod compact_symbol_table;
 

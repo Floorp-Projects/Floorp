@@ -43,6 +43,7 @@ function runTest() {
   editDoc().body.innerHTML = "<div>errror and an other errror</div>";
   gMisspeltWords = ["errror", "errror"];
   editDoc().designMode = "on";
+  editDoc().defaultView.focus();
 
   SpecialPowers.Cu.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm")

@@ -25,7 +25,6 @@
 #include "nsSVGUtils.h"
 #include "SVGContentUtils.h"
 #include "FilterSupport.h"
-#include "gfx2DGlue.h"
 #include "mozilla/Unused.h"
 
 using namespace mozilla;

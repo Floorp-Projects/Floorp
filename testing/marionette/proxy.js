@@ -15,7 +15,7 @@ ChromeUtils.import("chrome://marionette/content/evaluate.js");
 const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
 ChromeUtils.import("chrome://marionette/content/modal.js");
 const {
-  MessageManagerDestroyedPromise,
+  waitForObserverTopic,
 } = ChromeUtils.import("chrome://marionette/content/sync.js", {});
 
 this.EXPORTED_SYMBOLS = ["proxy"];
@@ -156,7 +156,9 @@ proxy.AsyncMessageChannel = class {
             break;
         }
 
-        await new MessageManagerDestroyedPromise(messageManager);
+        await waitForObserverTopic("message-manager-disconnect",
+            subject => subject === messageManager);
+
         this.removeHandlers();
         resolve();
       };

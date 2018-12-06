@@ -467,6 +467,13 @@ class ExtensionData {
     });
   }
 
+  get restrictSchemes() {
+    // ExtensionData can't check the signature (as it is not yet passed to its constructor
+    // as it is for the Extension class, where this getter is overridden to check both the
+    // signature and the permissions).
+    return !this.hasPermission("mozillaAddons");
+  }
+
   /**
    * Returns an object representing any capabilities that the extension
    * has access to based on fixed properties in the manifest.  The result
@@ -481,7 +488,7 @@ class ExtensionData {
 
     let permissions = new Set();
     let origins = new Set();
-    let restrictSchemes = !this.hasPermission("mozillaAddons");
+    let {restrictSchemes} = this;
     for (let perm of this.manifest.permissions || []) {
       let type = classifyPermission(perm, restrictSchemes);
       if (type.origin) {
@@ -858,7 +865,9 @@ class ExtensionData {
     await this.apiManager.lazyInit();
 
     this.webAccessibleResources = manifestData.webAccessibleResources.map(res => new MatchGlob(res));
-    this.whiteListedHosts = new MatchPatternSet(manifestData.originPermissions, {restrictSchemes: !this.hasPermission("mozillaAddons")});
+    this.whiteListedHosts = new MatchPatternSet(manifestData.originPermissions, {
+      restrictSchemes: this.restrictSchemes,
+    });
 
     return this.manifest;
   }
@@ -1376,8 +1385,10 @@ class Extension extends ExtensionData {
       if (permissions.origins.length > 0) {
         let patterns = this.whiteListedHosts.patterns.map(host => host.pattern);
 
-        this.whiteListedHosts = new MatchPatternSet(new Set([...patterns, ...permissions.origins]),
-                                                    {restrictSchemes: !this.hasPermission("mozillaAddons"), ignorePath: true});
+        this.whiteListedHosts = new MatchPatternSet(new Set([...patterns, ...permissions.origins]), {
+          restrictSchemes: this.restrictSchemes,
+          ignorePath: true,
+        });
       }
 
       this.policy.permissions = Array.from(this.permissions);
@@ -1404,6 +1415,10 @@ class Extension extends ExtensionData {
       this.cachePermissions();
     });
     /* eslint-enable mozilla/balanced-listeners */
+  }
+
+  get restrictSchemes() {
+    return !(this.isPrivileged && this.hasPermission("mozillaAddons"));
   }
 
   // Some helpful properties added elsewhere:
@@ -2015,7 +2030,7 @@ class Extension extends ExtensionData {
 
   get optionalOrigins() {
     if (this._optionalOrigins == null) {
-      let restrictSchemes = !this.hasPermission("mozillaAddons");
+      let {restrictSchemes} = this;
       let origins = this.manifest.optional_permissions.filter(perm => classifyPermission(perm, restrictSchemes).origin);
       this._optionalOrigins = new MatchPatternSet(origins, {restrictSchemes, ignorePath: true});
     }

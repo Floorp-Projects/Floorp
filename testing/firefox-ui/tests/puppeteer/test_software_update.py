@@ -29,7 +29,8 @@ class TestSoftwareUpdate(PuppeteerMixin, MarionetteTestCase):
         self.assertTrue(self.software_update.ABI)
 
     def test_allowed(self):
-        self.assertTrue(self.software_update.allowed)
+        # Updates are only allowed when run via the UpdateTestCase class
+        self.assertFalse(self.software_update.allowed)
 
     def test_build_info(self):
         self.software_update.update_url = self.marionette.absolute_url(

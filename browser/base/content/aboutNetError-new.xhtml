@@ -68,6 +68,7 @@
         <h1 id="et_sslv3Used">&sslv3Used.title;</h1>
         <h1 id="et_inadequateSecurityError">&inadequateSecurityError.title;</h1>
         <h1 id="et_blockedByPolicy">&blockedByPolicy.title;</h1>
+        <h1 id="et_mitm">&certerror.mitm.title;</h1>
         <h1 id="et_clockSkewError">&clockSkewError.title;</h1>
         <h1 id="et_networkProtocolError">&networkProtocolError.title;</h1>
       </div>
@@ -96,6 +97,7 @@
         <div id="ed_nssBadCert">&certerror.introPara2;</div>
         <div id="ed_nssBadCert_sts">&certerror.sts.introPara;</div>
         <div id="ed_nssBadCert_SEC_ERROR_EXPIRED_CERTIFICATE">&certerror.expiredCert.introPara;</div>
+        <div id="ed_mitm">&certerror.mitm.longDesc;</div>
         <div id="ed_cspBlocked">&cspBlocked.longDesc;</div>
         <div id="ed_remoteXUL">&remoteXUL.longDesc;</div>
         <div id="ed_corruptedContentErrorv2">&corruptedContentErrorv2.longDesc;</div>
@@ -119,11 +121,19 @@
         <div id="es_nssBadCert_MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE">&certerror.expiredCert.whatCanYouDoAboutIt2;</div>
         <div id="es_nssBadCert_MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE">&certerror.expiredCert.whatCanYouDoAboutIt2;</div>
         <div id="es_nssBadCert_SSL_ERROR_BAD_CERT_DOMAIN">&certerror.badCertDomain.whatCanYouDoAboutIt;</div>
+        <div id="es_nssBadCert_MOZILLA_PKIX_ERROR_MITM_DETECTED">
+          <ul>
+            <li>&certerror.mitm.whatCanYouDoAboutIt1;</li>
+            <li>&certerror.mitm.whatCanYouDoAboutIt2;</li>
+            <li id="mitmWhatCanYouDoAboutIt3">&certerror.mitm.whatCanYouDoAboutIt3;</li>
+          </ul>
+        </div>
       </div>
       <!-- Stores an alternative text for when we don't want to add "Recommended" to the
            return button. This is one of many l10n atrocities in this file and should be
            removed when we finally switch to Fluent. -->
       <span id="stsReturnButtonText">&returnToPreviousPage.label;</span>
+      <span id="stsMitmWhatCanYouDoAboutIt3">&certerror.mitm.sts.whatCanYouDoAboutIt3;</span>
     </div>
 
     <!-- PAGE CONTAINER (for styling purposes only) -->

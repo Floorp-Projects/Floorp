@@ -694,9 +694,8 @@ nsDocShellTreeOwner::OnStatusChange(nsIWebProgress* aWebProgress,
 }
 
 NS_IMETHODIMP
-nsDocShellTreeOwner::OnSecurityChange(
-    nsIWebProgress* aWebProgress, nsIRequest* aRequest, uint32_t aOldState,
-    uint32_t aState, const nsAString& aContentBlockingLogJSON) {
+nsDocShellTreeOwner::OnSecurityChange(nsIWebProgress* aWebProgress,
+                                      nsIRequest* aRequest, uint32_t aState) {
   return NS_OK;
 }
 

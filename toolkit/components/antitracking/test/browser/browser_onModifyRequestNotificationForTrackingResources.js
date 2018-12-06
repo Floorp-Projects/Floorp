@@ -17,7 +17,7 @@ async function onModifyRequest() {
       let httpChannel = subject.QueryInterface(Ci.nsIHttpChannel);
       let spec = httpChannel.URI.spec;
       info("Observed channel for " + spec);
-      if (httpChannel.URI.prePath != TEST_3RD_PARTY_DOMAIN_TP) {
+      if (httpChannel.URI.prePath + "/" != TEST_3RD_PARTY_DOMAIN_TP) {
         return;
       }
       if (spec.endsWith("empty.js")) {

@@ -6,29 +6,28 @@
 
 <!DOCTYPE html [
 <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd"> %htmlDTD;
-<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd"> %brandDTD;
-<!ENTITY % serviceworkersDTD SYSTEM "chrome://global/locale/aboutServiceWorkers.dtd"> %serviceworkersDTD;
 ]>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
-        <title>&aboutServiceWorkers.title;</title>
+        <title data-l10n-id="about-service-workers-title"></title>
         <link rel="stylesheet" href="chrome://global/skin/about.css" type="text/css" />
         <link rel="stylesheet" href="chrome://mozapps/skin/aboutServiceWorkers.css" type="text/css" />
+        <link rel="localization" href="toolkit/about/aboutServiceWorkers.ftl"/>
+        <link rel="localization" href="branding/brand.ftl"/>
         <script type="application/javascript" src="chrome://global/content/aboutServiceWorkers.js" />
     </head>
-    <body id="body" dir="&locale.dir;">
+    <body id="body">
         <div id="warning_not_enabled" class="warningBackground">
-            <div class="warningMessage">&aboutServiceWorkers.warning_not_enabled;</div>
+            <div class="warningMessage" data-l10n-id="about-service-workers-warning-not-enabled"></div>
         </div>
 
         <div id="warning_no_serviceworkers" class="warningBackground">
-            <div class="warningMessage">&aboutServiceWorkers.warning_no_serviceworkers;</div>
+            <div class="warningMessage" data-l10n-id="about-service-workers-warning-no-service-workers"></div>
         </div>
 
         <div id="serviceworkers" class="tab active">
-          <h1>&aboutServiceWorkers.maintitle;</h1>
+          <h1 data-l10n-id="about-service-workers-main-title"></h1>
         </div>
     </body>
 </html>

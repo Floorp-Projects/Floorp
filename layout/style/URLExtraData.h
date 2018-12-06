@@ -28,10 +28,9 @@ struct URLExtraData {
       : mBaseURI(std::move(aBaseURI)),
         mReferrer(std::move(aReferrer)),
         mReferrerPolicy(aReferrerPolicy),
-        mPrincipal(std::move(aPrincipal))
+        mPrincipal(std::move(aPrincipal)),
         // When we hold the URI data of a style sheet, mReferrer is always
         // equal to the sheet URI.
-        ,
         mIsChrome(mReferrer ? dom::IsChromeURI(mReferrer) : false) {
     MOZ_ASSERT(mBaseURI);
     MOZ_ASSERT(mPrincipal);

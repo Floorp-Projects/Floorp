@@ -45,8 +45,8 @@ enum nsFrameborder {
 };
 
 struct nsFramesetDrag {
-  nsHTMLFramesetFrame*
-      mSource;      // frameset whose border was dragged to cause the resize
+  nsHTMLFramesetFrame* mSource;  // frameset whose border was dragged to cause
+                                 // the resize
   int32_t mIndex;   // index of left col or top row of effected area
   int32_t mChange;  // pos for left to right or top to bottom, neg otherwise
   bool mVertical;   // vertical if true, otherwise horizontal

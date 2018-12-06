@@ -2,25 +2,15 @@
 
 The missing YAML 1.2 implementation for Rust.
 
-[![Build Status](https://travis-ci.org/chyh1990/yaml-rust.svg?branch=master)](https://travis-ci.org/chyh1990/yaml-rust)
-[![Build status](https://ci.appveyor.com/api/projects/status/scf47535ckp4ylg4?svg=true)](https://ci.appveyor.com/project/chyh1990/yaml-rust)
-[![license](https://img.shields.io/crates/l/yaml-rust.svg)](https://crates.io/crates/yaml-rust/)
-[![version](https://img.shields.io/crates/v/yaml-rust.svg)](https://crates.io/crates/yaml-rust/)
+[![Travis](https://travis-ci.org/chyh1990/yaml-rust.svg?branch=master)](https://travis-ci.org/chyh1990/yaml-rust)
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/scf47535ckp4ylg4?svg=true)](https://ci.appveyor.com/project/chyh1990/yaml-rust)
+[![crates.io](https://img.shields.io/crates/v/yaml-rust.svg)](https://crates.io/crates/yaml-rust)
+[![docs.rs](https://img.shields.io/badge/api-rustdoc-blue.svg)](https://docs.rs/yaml-rust)
 
 `yaml-rust` is a pure Rust YAML 1.2 implementation,
 which enjoys the memory safety
 property and other benefits from the Rust language.
 The parser is heavily influenced by `libyaml` and `yaml-cpp`.
-
-This crate works on all Rust-supported platforms. It also works on
-Rust 1.0.0 and nightly!
-
-See [Document](http://chyh1990.github.io/yaml-rust/doc/yaml_rust/)
-
-> NOTE: This library is still under heavy development.
-
-> WARNING: This library needs more tests and it is NOT ready for
-> parsing arbitrary user input from *untrusted source*.
 
 ## Quick Start
 
@@ -28,14 +18,7 @@ Add the following to the Cargo.toml of your project:
 
 ```toml
 [dependencies]
-yaml-rust = "0.3"
-```
-
-or
-
-```toml
-[dependencies.yaml-rust]
-git = "https://github.com/chyh1990/yaml-rust.git"
+yaml-rust = "0.4"
 ```
 
 and import:

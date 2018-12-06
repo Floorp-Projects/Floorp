@@ -12,7 +12,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
@@ -364,11 +363,11 @@ class ReflowCountMgr {
   FILE* GetOutFile() { return mFD; }
 
   void SetPresContext(nsPresContext* aPresContext) {
-    mPresContext = aPresContext;
-  }  // weak reference
+    mPresContext = aPresContext;  // weak reference
+  }
   void SetPresShell(nsIPresShell* aPresShell) {
-    mPresShell = aPresShell;
-  }  // weak reference
+    mPresShell = aPresShell;  // weak reference
+  }
 
   void SetDumpFrameCounts(bool aVal) { mDumpFrameCounts = aVal; }
   void SetDumpFrameByFrameCounts(bool aVal) { mDumpFrameByFrameCounts = aVal; }
@@ -706,16 +705,13 @@ static uint32_t sNextPresShellId;
 
 nsIPresShell::nsIPresShell()
     : mViewManager(nullptr),
-      mFrameManager(nullptr)
+      mFrameManager(nullptr),
 #ifdef ACCESSIBILITY
-      ,
-      mDocAccessible(nullptr)
+      mDocAccessible(nullptr),
 #endif
 #ifdef DEBUG
-      ,
-      mDrawEventTargetFrame(nullptr)
+      mDrawEventTargetFrame(nullptr),
 #endif
-      ,
       mPaintCount(0),
       mAutoWeakFrames(nullptr),
       mCanvasBackgroundColor(NS_RGBA(0, 0, 0, 0)),
@@ -754,17 +750,14 @@ nsIPresShell::nsIPresShell()
 }
 
 PresShell::PresShell()
-    : mCaretEnabled(false)
+    : mCaretEnabled(false),
 #ifdef DEBUG
-      ,
       mInVerifyReflow(false),
-      mCurrentReflowRoot(nullptr)
+      mCurrentReflowRoot(nullptr),
 #endif
 #ifdef MOZ_REFLOW_PERF
-      ,
-      mReflowCountMgr(nullptr)
+      mReflowCountMgr(nullptr),
 #endif
-      ,
       mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
       mFirstCallbackEventRequest(nullptr),
       mLastCallbackEventRequest(nullptr),
@@ -787,6 +780,7 @@ PresShell::PresShell()
       mHasReceivedPaintMessage(false),
       mIsLastKeyDownCanceled(false),
       mHasHandledUserInput(false),
+      mResolutionUpdated(false),
       mForceDispatchKeyPressEventsForNonPrintableKeys(false),
       mForceUseLegacyKeyCodeAndCharCodeValues(false),
       mInitializedWithKeyPressEventDispatchingBlacklist(false) {
@@ -3917,12 +3911,22 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
   MOZ_ASSERT(NeedFlush(flushType), "Why did we get called?");
 
 #ifdef MOZ_GECKO_PROFILER
+  // clang-format off
   static const EnumeratedArray<FlushType, FlushType::Count, const char*>
-      flushTypeNames = {"", "Event", "Content", "ContentAndNotify",
-                        // As far as the profiler is concerned,
-                        // EnsurePresShellInitAndFrames and Frames are the same
-                        "Style", "Style", "InterruptibleLayout", "Layout",
-                        "Display"};
+      flushTypeNames = {
+    "",
+    "Event",
+    "Content",
+    "ContentAndNotify",
+    // As far as the profiler is concerned, EnsurePresShellInitAndFrames and
+    // Frames are the same
+    "Style",
+    "Style",
+    "InterruptibleLayout",
+    "Layout",
+    "Display"
+  };
+  // clang-format on
   AUTO_PROFILER_LABEL_DYNAMIC_CSTR("PresShell::DoFlushPendingNotifications",
                                    LAYOUT, flushTypeNames[flushType]);
 #endif
@@ -5102,7 +5106,8 @@ void PresShell::SetIgnoreViewportScrolling(bool aIgnore) {
 }
 
 nsresult PresShell::SetResolutionImpl(float aResolution,
-                                      bool aScaleToResolution) {
+                                      bool aScaleToResolution,
+                                      nsAtom* aOrigin) {
   if (!(aResolution > 0.0)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
@@ -5116,6 +5121,9 @@ nsresult PresShell::SetResolutionImpl(float aResolution,
   mScaleToResolution = aScaleToResolution;
   if (mMobileViewportManager) {
     mMobileViewportManager->ResolutionUpdated();
+  }
+  if (aOrigin != nsGkAtoms::apz) {
+    mResolutionUpdated = true;
   }
 
   return NS_OK;
@@ -9857,8 +9865,7 @@ void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
   }
 
   MOZ_ASSERT(mMobileViewportManager,
-             "Shouldn't reach this without a "
-             "MobileViewportManager.");
+             "Shouldn't reach this without a MobileViewportManager.");
   mMobileViewportManager->Destroy();
   mMobileViewportManager = nullptr;
 

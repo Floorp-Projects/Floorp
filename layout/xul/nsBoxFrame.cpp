@@ -14,12 +14,17 @@
 // How boxes layout
 // ----------------
 // Boxes layout a bit differently than html. html does a bottom up layout. Where
-// boxes do a top down. 1) First thing a box does it goes out and askes each
-// child for its min, max, and preferred sizes. 2) It then adds them up to
-// determine its size. 3) If the box was asked to layout it self intrinically it
-// will layout its children at their preferred size
-//    otherwise it will layout the child at the size it was told to. It will
-//    squeeze or stretch its children if Necessary.
+// boxes do a top down.
+//
+// 1) First thing a box does it goes out and askes each child for its min, max,
+//    and preferred sizes.
+//
+// 2) It then adds them up to determine its size.
+//
+// 3) If the box was asked to layout it self intrinically it will layout its
+//    children at their preferred size otherwise it will layout the child at
+//    the size it was told to. It will squeeze or stretch its children if
+//    Necessary.
 //
 // However there is a catch. Some html components like block frames can not
 // determine their preferred size. this is their size if they were laid out

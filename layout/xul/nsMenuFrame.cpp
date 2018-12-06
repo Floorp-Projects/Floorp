@@ -879,8 +879,7 @@ void nsMenuFrame::UpdateMenuSpecialState() {
         /* uncheck the old item */
         sib->GetContent()->AsElement()->UnsetAttr(kNameSpaceID_None,
                                                   nsGkAtoms::checked, true);
-        /* XXX in DEBUG, check to make sure that there aren't two checked items
-         */
+        // XXX in DEBUG, check to make sure that there aren't two checked items
         return;
       }
     }

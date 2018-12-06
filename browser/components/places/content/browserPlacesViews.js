@@ -798,7 +798,7 @@ PlacesToolbar.prototype = {
   __proto__: PlacesViewBase.prototype,
 
   _cbEvents: ["dragstart", "dragover", "dragexit", "dragend", "drop",
-              "mousemove", "mouseover", "mouseout"],
+              "mousemove", "mouseover", "mouseout", "mousedown"],
 
   QueryInterface: ChromeUtils.generateQI(["nsITimerCallback",
                                           ...PlacesViewBase.interfaces]),
@@ -1016,6 +1016,9 @@ PlacesToolbar.prototype = {
         break;
       case "mouseout":
         this._onMouseOut(aEvent);
+        break;
+      case "mousedown":
+        this._onMouseDown(aEvent);
         break;
       case "popupshowing":
         this._onPopupShowing(aEvent);
@@ -1467,6 +1470,20 @@ PlacesToolbar.prototype = {
 
   _onMouseOut: function PT__onMouseOut(aEvent) {
     window.XULBrowserWindow.setOverLink("", null);
+  },
+
+  _onMouseDown: function PT__onMouseDown(aEvent) {
+    let target = aEvent.target;
+    if (aEvent.button == 0 &&
+        target.localName == "toolbarbutton" &&
+        target.getAttribute("type") == "menu") {
+      let modifKey = aEvent.shiftKey || aEvent.getModifierState("Accel");
+      if (modifKey) {
+        // Do not open the popup since BEH_onClick is about to
+        // open all child uri nodes in tabs.
+        this._allowPopupShowing = false;
+      }
+    }
   },
 
   _cleanupDragDetails: function PT__cleanupDragDetails() {

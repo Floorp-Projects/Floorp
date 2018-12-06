@@ -21,7 +21,9 @@ class nsTableColGroupFrame final : public nsContainerFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsTableColGroupFrame)
 
-  /** instantiate a new instance of nsTableRowFrame.
+  /**
+   * instantiate a new instance of nsTableRowFrame.
+   *
    * @param aPresShell the pres shell for this frame
    *
    * @return           the frame that was created

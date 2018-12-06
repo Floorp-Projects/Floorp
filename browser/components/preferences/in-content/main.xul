@@ -20,7 +20,7 @@
       class="subcategory"
       hidden="true"
       data-category="paneGeneral">
-      <label class="header-name" flex="1" data-l10n-id="pane-general-title"/>
+  <html:h1 data-l10n-id="pane-general-title"/>
 </hbox>
 
 <!-- Startup -->
@@ -33,7 +33,7 @@
   <vbox id="separateProfileBox">
     <checkbox id="separateProfileMode"
               data-l10n-id="separate-profile-mode"/>
-    <hbox id="sync-dev-edition-root" lign="center" class="indent" hidden="true">
+    <hbox id="sync-dev-edition-root" align="center" class="indent" hidden="true">
       <label id="useFirefoxSync" data-l10n-id="use-firefox-sync"/>
       <deck id="getStarted">
         <label class="text-link" data-l10n-id="get-started-not-logged-in"/>
@@ -139,7 +139,7 @@
       class="subcategory"
       hidden="true"
       data-category="paneGeneral">
-  <label class="header-name" flex="1" data-l10n-id="language-and-appearance-header"/>
+  <html:h1 data-l10n-id="language-and-appearance-header"/>
 </hbox>
 
 <!-- Fonts and Colors -->
@@ -354,7 +354,7 @@
       class="subcategory"
       hidden="true"
       data-category="paneGeneral">
-  <label class="header-name" flex="1" data-l10n-id="files-and-applications-title"/>
+  <html:h1 data-l10n-id="files-and-applications-title"/>
 </hbox>
 
 <!--Downloads-->
@@ -436,7 +436,7 @@
       class="subcategory"
       hidden="true"
       data-category="paneGeneral">
-  <label class="header-name" flex="1" data-l10n-id="update-application-title"/>
+  <html:h1 data-l10n-id="update-application-title"/>
 </hbox>
 
 <!-- Update -->
@@ -582,7 +582,7 @@
       class="subcategory"
       hidden="true"
       data-category="paneGeneral">
-  <label class="header-name" flex="1" data-l10n-id="performance-title"/>
+  <html:h1 data-l10n-id="performance-title"/>
 </hbox>
 
 <!-- Performance -->
@@ -628,7 +628,7 @@
       class="subcategory"
       hidden="true"
       data-category="paneGeneral">
-  <label class="header-name" flex="1" data-l10n-id="browsing-title"/>
+  <html:h1 data-l10n-id="browsing-title"/>
 </hbox>
 
 <!-- Browsing -->
@@ -667,7 +667,7 @@
       class="subcategory"
       hidden="true"
       data-category="paneGeneral">
-  <label class="header-name" flex="1" data-l10n-id="network-settings-title"/>
+  <html:h1 data-l10n-id="network-settings-title"/>
 </hbox>
 
 <!-- Network Settings-->

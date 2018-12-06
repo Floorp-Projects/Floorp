@@ -458,9 +458,9 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   StyleSheet* mParent;  // weak ref
 
   nsString mTitle;
-  dom::DocumentOrShadowRoot*
-      mDocumentOrShadowRoot;       // weak ref; parents maintain this for their
-                                   // children
+
+  // weak ref; parents maintain this for their children
+  dom::DocumentOrShadowRoot* mDocumentOrShadowRoot;
   nsINode* mOwningNode;            // weak ref
   dom::CSSImportRule* mOwnerRule;  // weak ref
 

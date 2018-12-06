@@ -39,9 +39,9 @@ def main(lang, reference_dir, localization_dir, migrations, dry_run):
         try:
             # Add the migration spec.
             migration.migrate(ctx)
-        except MigrationError:
-            print('  Skipping migration {} for {}'.format(
-                migration.__name__, lang))
+        except MigrationError as e:
+            print('  Skipping migration {} for {}:\n    {}'.format(
+                migration.__name__, lang, e))
             continue
 
         # Keep track of how many changesets we're committing.

@@ -26,13 +26,17 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
     this.targetActor = targetActor;
 
     this.onTrackChange = this.pushChange.bind(this);
+    this.onWillNavigate = this.clearChanges.bind(this);
+
     TrackChangeEmitter.on("track-change", this.onTrackChange);
+    this.targetActor.on("will-navigate", this.onWillNavigate);
 
     this.changes = [];
   },
 
   destroy: function() {
     this.clearChanges();
+    this.targetActor.off("will-navigate", this.onWillNavigate);
     TrackChangeEmitter.off("track-change", this.onTrackChange);
     protocol.Actor.prototype.destroy.call(this);
   },

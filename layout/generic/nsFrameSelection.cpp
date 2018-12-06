@@ -44,7 +44,6 @@
 static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsTextFrame.h"
 
-#include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Preferences.h"
 
@@ -637,9 +636,8 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
   nsPresContext* context = mShell->GetPresContext();
   if (!context) return NS_ERROR_FAILURE;
 
-  nsPoint desiredPos(
-      0,
-      0);  // we must keep this around and revalidate it when its just UP/DOWN
+  // we must keep this around and revalidate it when its just UP/DOWN
+  nsPoint desiredPos(0, 0);
 
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   RefPtr<Selection> sel = mDomSelections[index];
@@ -965,16 +963,17 @@ nsresult nsFrameSelection::MaintainSelection(nsSelectionAmount aAmount) {
   return NS_OK;
 }
 
-/** After moving the caret, its Bidi level is set according to the following
+/**
+ * After moving the caret, its Bidi level is set according to the following
  * rules:
  *
- *  After moving over a character with left/right arrow, set to the Bidi level
+ * After moving over a character with left/right arrow, set to the Bidi level
  * of the last moved over character. After Home and End, set to the paragraph
  * embedding level. After up/down arrow, PageUp/Down, set to the lower level of
  * the 2 surrounding characters. After mouse click, set to the level of the
  * current frame.
  *
- *  The following two methods use GetPrevNextBidiLevels to determine the new
+ * The following two methods use GetPrevNextBidiLevels to determine the new
  * Bidi level. BidiLevelFromMove is called when the caret is moved in response
  * to a keyboard event
  *
@@ -1245,8 +1244,8 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
       mBatching = batching;
       mChangesDuringBatching = changes;
     } else {
-      bool oldDesiredPosSet =
-          mDesiredPosSet;  // need to keep old desired position if it was set.
+      bool oldDesiredPosSet = mDesiredPosSet;  // need to keep old desired
+                                               // position if it was set.
       mDomSelections[index]->Collapse(aNewFocus, aContentOffset);
       mDesiredPosSet = oldDesiredPosSet;  // now reset desired pos back.
       mBatching = batching;

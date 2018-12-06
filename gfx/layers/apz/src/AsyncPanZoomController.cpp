@@ -4418,11 +4418,13 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     // in some things into our local Metrics() because these things are
     // determined by Gecko and our copy in Metrics() may be stale.
 
+    // TODO: Rely entirely on |aScrollMetadata.IsResolutionUpdated()| to
+    //       determine which branch to take, and drop the other conditions.
     if (FuzzyEqualsAdditive(Metrics().GetCompositionBounds().Width(),
                             aLayerMetrics.GetCompositionBounds().Width()) &&
         Metrics().GetDevPixelsPerCSSPixel() ==
             aLayerMetrics.GetDevPixelsPerCSSPixel() &&
-        !viewportUpdated) {
+        !viewportUpdated && !aScrollMetadata.IsResolutionUpdated()) {
       // Any change to the pres shell resolution was requested by APZ and is
       // already included in our zoom; however, other components of the
       // cumulative resolution (a parent document's pres-shell resolution, or

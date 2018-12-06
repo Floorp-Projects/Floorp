@@ -646,10 +646,7 @@ PlacesController.prototype = {
     if (!node && !nodes.length) {
       node = this._view.result.root;
     }
-    if (node && PlacesUtils.nodeIsContainer(node))
-      PlacesUIUtils.openContainerNodeInTabs(node, aEvent, this._view);
-    else
-      PlacesUIUtils.openURINodesInTabs(nodes, aEvent, this._view);
+    PlacesUIUtils.openMultipleLinksInTabs(node ? node : nodes, aEvent, this._view);
   },
 
   /**

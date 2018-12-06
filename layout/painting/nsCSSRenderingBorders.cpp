@@ -27,7 +27,6 @@
 #include "nsClassHashtable.h"
 #include "nsPresContext.h"
 #include "nsStyleStruct.h"
-#include "mozilla/gfx/2D.h"
 #include "gfx2DGlue.h"
 #include "gfxGradientCache.h"
 #include "mozilla/layers/StackingContextHelper.h"

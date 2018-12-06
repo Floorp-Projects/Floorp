@@ -50,6 +50,8 @@ class ParserTestMixin():
             if isinstance(entity, parser.Entity):
                 self.assertEqual(entity.key, ref[0])
                 self.assertEqual(entity.val, ref[1])
+                if len(ref) == 3:
+                    self.assertIn(ref[2], entity.pre_comment.val)
             else:
                 self.assertIsInstance(entity, ref[0])
                 self.assertIn(ref[1], entity.all)

@@ -39,8 +39,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 // Constants
-const uint32_t kMaxDropDownRows =
-    20;  // This matches the setting for 4.x browsers
+const uint32_t kMaxDropDownRows = 20;  // matches the setting for 4.x browsers
 const int32_t kNothingSelected = -1;
 
 // Static members

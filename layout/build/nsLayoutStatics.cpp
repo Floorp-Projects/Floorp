@@ -27,6 +27,7 @@
 #include "mozilla/dom/Attr.h"
 #include "mozilla/EventListenerManager.h"
 #include "nsFrame.h"
+#include "nsFrameState.h"
 #include "nsGlobalWindow.h"
 #include "nsGkAtoms.h"
 #include "nsImageFrame.h"
@@ -142,6 +143,7 @@ nsresult nsLayoutStatics::Initialize() {
 #ifdef DEBUG
   nsCSSPseudoElements::AssertAtoms();
   nsCSSAnonBoxes::AssertAtoms();
+  DebugVerifyFrameStateBits();
 #endif
 
   StartupJSEnvironment();

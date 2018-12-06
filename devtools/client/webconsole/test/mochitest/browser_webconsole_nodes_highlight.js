@@ -24,7 +24,6 @@ const TEST_URI = "data:text/html;charset=utf-8," + encodeURI(HTML);
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const toolbox = gDevTools.getToolbox(hud.target);
-  await toolbox.initInspector();
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.wrappedJSObject.logNode("h1");
@@ -36,7 +35,12 @@ add_task(async function() {
   const view = node.ownerDocument.defaultView;
 
   info("Highlight the node by moving the cursor on it");
-  const onNodeHighlight = toolbox.highlighter.once("node-highlight");
+
+  // the inspector should be initialized first and then the node should
+  // highlight after the hover effect.
+  const onNodeHighlight = toolbox.target.once("inspector")
+    .then(inspector => inspector.highlighter.once("node-highlight"));
+
   EventUtils.synthesizeMouseAtCenter(node, {type: "mousemove"}, view);
 
   const nodeFront = await onNodeHighlight;

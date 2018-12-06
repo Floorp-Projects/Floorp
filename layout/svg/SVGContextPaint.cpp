@@ -14,7 +14,6 @@
 #include "nsIDocument.h"
 #include "nsSVGPaintServerFrame.h"
 #include "SVGObserverUtils.h"
-#include "nsSVGPaintServerFrame.h"
 
 using namespace mozilla::gfx;
 using namespace mozilla::image;

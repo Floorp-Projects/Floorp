@@ -48,12 +48,12 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
 
   if (iterKind_ == IteratorKind::Async) {
     if (!bce_->emitAsyncIterator()) {
-      //                [stack] NEXT ITER
+      //            [stack] NEXT ITER
       return false;
     }
   } else {
     if (!bce_->emitIterator()) {
-      //                [stack] NEXT ITER
+      //            [stack] NEXT ITER
       return false;
     }
   }
@@ -64,7 +64,7 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
   // the result.value on the stack.
   // Push an undefined to balance the stack.
   if (!bce_->emit1(JSOP_UNDEFINED)) {
-    //                    [stack] NEXT ITER UNDEF
+    //              [stack] NEXT ITER UNDEF
     return false;
   }
 
@@ -76,12 +76,12 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
   }
 
   if (!loopInfo_->emitEntryJump(bce_)) {
-    //                    [stack] NEXT ITER UNDEF
+    //              [stack] NEXT ITER UNDEF
     return false;
   }
 
   if (!loopInfo_->emitLoopHead(bce_, Nothing())) {
-    //                    [stack] NEXT ITER UNDEF
+    //              [stack] NEXT ITER UNDEF
     return false;
   }
 
@@ -99,7 +99,7 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
 
     if (headLexicalEmitterScope_->hasEnvironment()) {
       if (!bce_->emit1(JSOP_RECREATELEXICALENV)) {
-        //            [stack] NEXT ITER UNDEF
+        //          [stack] NEXT ITER UNDEF
         return false;
       }
     }
@@ -122,54 +122,54 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
   }
 
   if (!bce_->emit1(JSOP_POP)) {
-    //                    [stack] NEXT ITER
+    //              [stack] NEXT ITER
     return false;
   }
   if (!bce_->emit1(JSOP_DUP2)) {
-    //                    [stack] NEXT ITER NEXT ITER
+    //              [stack] NEXT ITER NEXT ITER
     return false;
   }
 
   if (!bce_->emitIteratorNext(forPos, iterKind_, allowSelfHostedIter_)) {
-    //                    [stack] NEXT ITER RESULT
+    //              [stack] NEXT ITER RESULT
     return false;
   }
 
   if (!bce_->emit1(JSOP_DUP)) {
-    //                    [stack] NEXT ITER RESULT RESULT
+    //              [stack] NEXT ITER RESULT RESULT
     return false;
   }
   if (!bce_->emitAtomOp(bce_->cx->names().done, JSOP_GETPROP)) {
-    //                    [stack] NEXT ITER RESULT DONE
+    //              [stack] NEXT ITER RESULT DONE
     return false;
   }
 
   InternalIfEmitter ifDone(bce_);
 
   if (!ifDone.emitThen()) {
-    //                    [stack] NEXT ITER RESULT
+    //              [stack] NEXT ITER RESULT
     return false;
   }
 
   // Remove RESULT from the stack to release it.
   if (!bce_->emit1(JSOP_POP)) {
-    //                    [stack] NEXT ITER
+    //              [stack] NEXT ITER
     return false;
   }
   if (!bce_->emit1(JSOP_UNDEFINED)) {
-    //                    [stack] NEXT ITER UNDEF
+    //              [stack] NEXT ITER UNDEF
     return false;
   }
 
   // If the iteration is done, leave loop here, instead of the branch at
   // the end of the loop.
   if (!loopInfo_->emitSpecialBreakForDone(bce_)) {
-    //                    [stack] NEXT ITER UNDEF
+    //              [stack] NEXT ITER UNDEF
     return false;
   }
 
   if (!ifDone.emitEnd()) {
-    //                    [stack] NEXT ITER RESULT
+    //              [stack] NEXT ITER RESULT
     return false;
   }
 
@@ -178,7 +178,7 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
   // Note that ES 13.7.5.13, step 5.c says getting result.value does not
   // call IteratorClose, so start JSTRY_ITERCLOSE after the GETPROP.
   if (!bce_->emitAtomOp(bce_->cx->names().value, JSOP_GETPROP)) {
-    //                    [stack] NEXT ITER VALUE
+    //              [stack] NEXT ITER VALUE
     return false;
   }
 
@@ -201,11 +201,11 @@ bool ForOfEmitter::emitBody() {
 
   // Remove VALUE from the stack to release it.
   if (!bce_->emit1(JSOP_POP)) {
-    //                    [stack] NEXT ITER
+    //              [stack] NEXT ITER
     return false;
   }
   if (!bce_->emit1(JSOP_UNDEFINED)) {
-    //                    [stack] NEXT ITER UNDEF
+    //              [stack] NEXT ITER UNDEF
     return false;
   }
 
@@ -236,11 +236,11 @@ bool ForOfEmitter::emitEnd(const Maybe<uint32_t>& iteratedPos) {
   }
 
   if (!bce_->emit1(JSOP_FALSE)) {
-    //                    [stack] NEXT ITER UNDEF FALSE
+    //              [stack] NEXT ITER UNDEF FALSE
     return false;
   }
   if (!loopInfo_->emitLoopEnd(bce_, JSOP_IFEQ)) {
-    //                    [stack] NEXT ITER UNDEF
+    //              [stack] NEXT ITER UNDEF
     return false;
   }
 
@@ -262,7 +262,7 @@ bool ForOfEmitter::emitEnd(const Maybe<uint32_t>& iteratedPos) {
   }
 
   if (!bce_->emitPopN(3)) {
-    //                    [stack]
+    //              [stack]
     return false;
   }
 

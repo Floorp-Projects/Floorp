@@ -75,9 +75,12 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
-  /** calls Reflow for all of its child rows.
+  /**
+   * Calls Reflow for all of its child rows.
+   *
    * Rows are all set to the same isize and stacked in the block direction.
-   * <P> rows are not split unless absolutely necessary.
+   *
+   * Rows are not split unless absolutely necessary.
    *
    * @param aDesiredSize isize set to isize of rows, bsize set to
    *                     sum of bsize of rows that fit in AvailableBSize.
@@ -223,11 +226,10 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
 
   /** Find the orginating cell frame on a row that is the nearest to the
    * inline-dir coordinate of aPos.
-   * @param aLineNumber          - the index of the row relative to the row
-   * group
-   * @param aPos                 - coordinate in twips relative to the
-   *                               origin of the row group
-   * @param aFrameFound          - pointer to the cellframe
+   * @param aLineNumber        - the index of the row relative to the row group
+   * @param aPos               - coordinate in twips relative to the
+   *                             origin of the row group
+   * @param aFrameFound        - pointer to the cellframe
    * @param aPosIsBeforeFirstFrame - the point is before the first originating
    *                               cellframe
    * @param aPosIsAfterLastFrame   - the point is after the last originating

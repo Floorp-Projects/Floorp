@@ -40,7 +40,6 @@
 
 using mozilla::DebugOnly;
 using mozilla::LogLevel;
-using mozilla::dom::ContentBlockingLog;
 
 //
 // Log module for nsIDocumentLoader logging...
@@ -1394,25 +1393,21 @@ NS_IMETHODIMP nsDocLoader::AsyncOnChannelRedirect(
  * Implementation of nsISecurityEventSink method...
  */
 
-NS_IMETHODIMP nsDocLoader::OnSecurityChange(
-    nsISupports* aContext, uint32_t aOldState, uint32_t aState,
-    ContentBlockingLog* aContentBlockingLog) {
+NS_IMETHODIMP nsDocLoader::OnSecurityChange(nsISupports* aContext,
+                                            uint32_t aState) {
   //
   // Fire progress notifications out to any registered nsIWebProgressListeners.
   //
 
   nsCOMPtr<nsIRequest> request = do_QueryInterface(aContext);
   nsIWebProgress* webProgress = static_cast<nsIWebProgress*>(this);
-  nsAutoString contentBlockingLogJSON(
-      aContentBlockingLog ? aContentBlockingLog->Stringify() : EmptyString());
 
   NOTIFY_LISTENERS(nsIWebProgress::NOTIFY_SECURITY,
-                   listener->OnSecurityChange(webProgress, request, aOldState,
-                                              aState, contentBlockingLogJSON););
+                   listener->OnSecurityChange(webProgress, request, aState););
 
   // Pass the notification up to the parent...
   if (mParent) {
-    mParent->OnSecurityChange(aContext, aOldState, aState, aContentBlockingLog);
+    mParent->OnSecurityChange(aContext, aState);
   }
   return NS_OK;
 }

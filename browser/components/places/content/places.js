@@ -353,7 +353,7 @@ var PlacesOrganizer = {
         // The command execution function will take care of seeing if the
         // selection is a folder or a different container type, and will
         // load its contents in tabs.
-        PlacesUIUtils.openContainerNodeInTabs(node, aEvent, this._places);
+        PlacesUIUtils.openMultipleLinksInTabs(node, aEvent, this._places);
       }
     }
   },
@@ -1295,7 +1295,7 @@ var ContentTree = {
         // The command execution function will take care of seeing if the
         // selection is a folder or a different container type, and will
         // load its contents in tabs.
-        PlacesUIUtils.openContainerNodeInTabs(node, aEvent, this.view);
+        PlacesUIUtils.openMultipleLinksInTabs(node, aEvent, this.view);
       }
     }
   },

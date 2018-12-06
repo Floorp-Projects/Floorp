@@ -18,8 +18,8 @@ bar = Bar 1
 foo = Foo 2
 bar = Bar 2
 """)
-        self.assertEqual(
-            merge_channels(self.name, *channels), b"""
+        self.assertMultiLineEqual(
+            merge_channels(self.name, channels).decode("utf-8"), """
 foo = Foo 1
 # Bar Comment 1
 bar = Bar 1
@@ -34,10 +34,9 @@ foo = Foo 2
 # Bar Comment 2
 bar = Bar 2
 """)
-        self.assertEqual(
-            merge_channels(self.name, *channels), b"""
+        self.assertMultiLineEqual(
+            merge_channels(self.name, channels).decode("utf-8"), """
 foo = Foo 1
-# Bar Comment 2
 bar = Bar 1
 """)
 
@@ -51,8 +50,8 @@ foo = Foo 2
 # Bar Comment 2
 bar = Bar 2
 """)
-        self.assertEqual(
-            merge_channels(self.name, *channels), b"""
+        self.assertMultiLineEqual(
+            merge_channels(self.name, channels).decode("utf-8"), """
 foo = Foo 1
 # Bar Comment 1
 bar = Bar 1
@@ -72,8 +71,8 @@ foo = Foo 1
 # Foo Comment 2
 foo = Foo 2
 """)
-        self.assertEqual(
-            merge_channels(self.name, *channels), b"""
+        self.assertMultiLineEqual(
+            merge_channels(self.name, channels).decode("utf-8"), """
 # Standalone Comment 1
 
 # Foo Comment 1
@@ -90,8 +89,8 @@ foo = Foo 1
 # Foo Comment 2
 foo = Foo 2
 """)
-        self.assertEqual(
-            merge_channels(self.name, *channels), b"""
+        self.assertMultiLineEqual(
+            merge_channels(self.name, channels).decode("utf-8"), """
 # Standalone Comment 2
 
 # Foo Comment 1
@@ -110,8 +109,8 @@ foo = Foo 1
 # Foo Comment 2
 foo = Foo 2
 """)
-        self.assertEqual(
-            merge_channels(self.name, *channels), b"""
+        self.assertMultiLineEqual(
+            merge_channels(self.name, channels).decode("utf-8"), """
 # Standalone Comment 2
 
 # Standalone Comment 1
@@ -132,8 +131,8 @@ foo = Foo 1
 # Foo Comment 2
 foo = Foo 2
 """)
-        self.assertEqual(
-            merge_channels(self.name, *channels), b"""
+        self.assertMultiLineEqual(
+            merge_channels(self.name, channels).decode("utf-8"), """
 # Standalone Comment
 
 # Foo Comment 1
@@ -153,10 +152,11 @@ bar = Bar 1
 # Bar Comment 2
 bar = Bar 2
 """)
-        self.assertEqual(
-            merge_channels(self.name, *channels), b"""
+        self.assertMultiLineEqual(
+            merge_channels(self.name, channels).decode("utf-8"), """
 # Ambiguous Comment
 
+# Ambiguous Comment
 foo = Foo 1
 
 # Bar Comment 1
@@ -176,10 +176,12 @@ foo = Foo 1
 # Bar Comment 2
 bar = Bar 2
 """)
-        self.assertEqual(
-            merge_channels(self.name, *channels), b"""
+        self.assertMultiLineEqual(
+            merge_channels(self.name, channels).decode("utf-8"), """
 # Ambiguous Comment
 foo = Foo 1
+
+# Ambiguous Comment
 
 # Bar Comment 1
 bar = Bar 1

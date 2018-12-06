@@ -387,12 +387,10 @@ DisplayItemData* DisplayItemData::AssertDisplayItemData(
 class LayerManagerData : public LayerUserData {
  public:
   explicit LayerManagerData(LayerManager* aManager)
-      : mLayerManager(aManager)
+      : mLayerManager(aManager),
 #ifdef DEBUG_DISPLAY_ITEM_DATA
-        ,
-        mParent(nullptr)
+        mParent(nullptr),
 #endif
-        ,
         mInvalidateAllLayers(false) {
     MOZ_COUNT_CTOR(LayerManagerData);
   }

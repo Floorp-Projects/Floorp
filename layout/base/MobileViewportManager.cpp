@@ -280,10 +280,9 @@ void MobileViewportManager::UpdateResolution(
       // (a) The meta-viewport tag information changes, and so the CSS viewport
       //     might change as a result. If this happens after the content has
       //     been painted, we want to adjust the zoom to compensate. OR
-      // (b) The display size changed from a nonzero value to another nonzero
-      // value.
-      //     This covers the case where e.g. the device was rotated, and again
-      //     we want to adjust the zoom to compensate.
+      // (b) The display size changed from a nonzero value to another
+      //     nonzero value. This covers the case where e.g. the device was
+      //     rotated, and again we want to adjust the zoom to compensate.
       // Note in particular that aDisplayWidthChangeRatio will be None if all
       // that happened was a change in the full-zoom. In this case, we still
       // want to compute a new CSS viewport, but we don't want to update the
@@ -292,14 +291,11 @@ void MobileViewportManager::UpdateResolution(
       // Given the above, the algorithm below accounts for all types of changes
       // I can conceive of:
       // 1. screen size changes, CSS viewport does not (pages with no meta
-      // viewport
-      //    or a fixed size viewport)
+      //    viewport or a fixed size viewport)
       // 2. screen size changes, CSS viewport also does (pages with a
-      // device-width
-      //    viewport)
+      //    device-width viewport)
       // 3. screen size remains constant, but CSS viewport changes (meta
-      // viewport
-      //    tag is added or removed)
+      //    viewport tag is added or removed)
       // 4. neither screen size nor CSS viewport changes
       if (aDisplayWidthChangeRatio) {
         newZoom = Some(
@@ -333,7 +329,7 @@ void MobileViewportManager::UpdateResolution(
   if (newZoom) {
     LayoutDeviceToLayerScale resolution = ZoomToResolution(*newZoom, cssToDev);
     MVM_LOG("%p: setting resolution %f\n", this, resolution.scale);
-    mPresShell->SetResolutionAndScaleTo(resolution.scale);
+    mPresShell->SetResolutionAndScaleTo(resolution.scale, nsGkAtoms::other);
 
     MVM_LOG("%p: New zoom is %f\n", this, newZoom->scale);
   }

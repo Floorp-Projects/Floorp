@@ -67,6 +67,18 @@ TitleText=Some Title
             ('TitleText', 'Some Title'),
             (Whitespace, '\n')))
 
+    def testMPL2_no_space(self):
+        self._test(mpl2 + '''
+[Strings]
+TitleText=Some Title
+''', (
+            (Comment, mpl2),
+            (Whitespace, '\n'),
+            (IniSection, 'Strings'),
+            (Whitespace, '\n'),
+            ('TitleText', 'Some Title'),
+            (Whitespace, '\n')))
+
     def testMPL2_MultiSpace(self):
         self._test(mpl2 + '''
 

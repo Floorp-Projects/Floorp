@@ -11,7 +11,7 @@
       class="subcategory"
       hidden="true"
       data-category="paneSync">
-  <label class="header-name" flex="1" data-l10n-id="pane-sync-title" />
+  <html:h1 data-l10n-id="pane-sync-title"/>
 </hbox>
 
 <deck id="weavePrefsDeck" data-category="paneSync" hidden="true"

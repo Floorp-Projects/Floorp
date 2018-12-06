@@ -21,14 +21,14 @@ class TestCloseWindow(WindowManagerMixin, MarionetteTestCase):
         super(TestCloseWindow, self).tearDown()
 
     def test_close_chrome_window_for_browser_window(self):
-        win = self.open_window()
-        self.marionette.switch_to_window(win)
+        new_window = self.open_window()
+        self.marionette.switch_to_window(new_window)
 
-        self.assertNotIn(win, self.marionette.window_handles)
+        self.assertNotIn(new_window, self.marionette.window_handles)
         chrome_window_handles = self.marionette.close_chrome_window()
-        self.assertNotIn(win, chrome_window_handles)
+        self.assertNotIn(new_window, chrome_window_handles)
         self.assertListEqual(self.start_windows, chrome_window_handles)
-        self.assertNotIn(win, self.marionette.window_handles)
+        self.assertNotIn(new_window, self.marionette.window_handles)
 
     def test_close_chrome_window_for_non_browser_window(self):
         win = self.open_chrome_window("chrome://marionette/content/test.xul")
@@ -50,20 +50,20 @@ class TestCloseWindow(WindowManagerMixin, MarionetteTestCase):
         self.assertIsNotNone(self.marionette.session)
 
     def test_close_window_for_browser_tab(self):
-        tab = self.open_tab()
-        self.marionette.switch_to_window(tab)
+        new_tab = self.open_tab()
+        self.marionette.switch_to_window(new_tab)
 
         window_handles = self.marionette.close()
-        self.assertNotIn(tab, window_handles)
+        self.assertNotIn(new_tab, window_handles)
         self.assertListEqual(self.start_tabs, window_handles)
 
     def test_close_window_for_browser_window_with_single_tab(self):
-        win = self.open_window()
-        self.marionette.switch_to_window(win)
+        new_window = self.open_window()
+        self.marionette.switch_to_window(new_window)
 
         self.assertEqual(len(self.start_tabs) + 1, len(self.marionette.window_handles))
         window_handles = self.marionette.close()
-        self.assertNotIn(win, window_handles)
+        self.assertNotIn(new_window, window_handles)
         self.assertListEqual(self.start_tabs, window_handles)
         self.assertListEqual(self.start_windows, self.marionette.chrome_window_handles)
 

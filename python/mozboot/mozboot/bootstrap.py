@@ -40,7 +40,7 @@ APPLICATION_CHOICE = '''
 Note on Artifact Mode:
 
 Artifact builds download prebuilt C++ components rather than building
-them locally.
+them locally. Artifact builds are faster!
 
 Artifact builds are recommended for people working on Firefox or
 Firefox for Android frontends. They are unsuitable for those working
@@ -380,9 +380,9 @@ class Bootstrapper(object):
             sys.exit(1)
 
         self.instance.state_dir = state_dir
-        self.instance.ensure_clang_static_analysis_package(checkout_root)
         self.instance.ensure_stylo_packages(state_dir, checkout_root)
         self.instance.ensure_node_packages(state_dir, checkout_root)
+        self.instance.ensure_clang_static_analysis_package(checkout_root)
 
     def check_telemetry_opt_in(self, state_dir):
         # We can't prompt the user.

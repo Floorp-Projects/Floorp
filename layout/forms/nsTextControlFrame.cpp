@@ -761,8 +761,7 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint) {
 
 nsresult nsTextControlFrame::SetFormProperty(nsAtom* aName,
                                              const nsAString& aValue) {
-  if (!mIsProcessing)  // some kind of lock.
-  {
+  if (!mIsProcessing) {  // some kind of lock.
     mIsProcessing = true;
     if (nsGkAtoms::select == aName) {
       // Select all the text.

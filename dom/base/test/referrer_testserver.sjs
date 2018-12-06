@@ -18,9 +18,11 @@ const IMG_BYTES = atob(
   "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12" +
   "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==");
 
-function createTestUrl(aPolicy, aAction, aName, aType, aSchemeFrom, aSchemeTo, crossOrigin) {
+function createTestUrl(aPolicy, aAction, aName, aType, aSchemeFrom, aSchemeTo,
+                       crossOrigin, referrerPolicyHeader) {
   var schemeTo = aSchemeTo || "http";
   var schemeFrom = aSchemeFrom || "http";
+  var rpHeader = referrerPolicyHeader || "";
   var url = schemeTo + "://";
   url += (crossOrigin ? CROSS_ORIGIN_URL : BASE_URL);
   url +=
@@ -28,6 +30,7 @@ function createTestUrl(aPolicy, aAction, aName, aType, aSchemeFrom, aSchemeTo, c
          "policy=" + aPolicy + "&" +
          "NAME=" + aName + "&" +
          "type=" + aType + "&" +
+         "RP_HEADER=" + rpHeader + "&" +
          "SCHEME_FROM=" + schemeFrom;
   return url;
   }
@@ -123,6 +126,31 @@ function createAETestPageUsingRefferer(aMetaPolicy, aAttributePolicy, aNewAttrib
                  window.addEventListener("load", function() {
                    ${changeString}
                    document.getElementById("link").click();
+                 }.bind(window), false);
+               </script>
+             </body>
+           </html>`;
+}
+
+// test page using anchor target=_blank rel=noopener
+function createTargetBlankRefferer(aMetaPolicy, aName, aSchemeFrom,
+                                   aSchemeTo, aRpHeader) {
+  var metaString = "";
+  if (aMetaPolicy) {
+    metaString = `<head><meta name="referrer" content="${aMetaPolicy}"></head>`;
+  }
+  var elementString = `<a href="${createTestUrl(aMetaPolicy, 'test', aName, 'link', aSchemeFrom, aSchemeTo, aRpHeader)}" target=_blank rel="noopener" id="link">link</a>`;
+
+  return `<!DOCTYPE HTML>
+           <html>
+             ${metaString}
+             <body>
+               ${elementString}
+               <script>
+                 window.addEventListener("load", function() {
+                   let link = document.getElementById("link");
+                   SpecialPowers.wrap(window).parent.postMessage("childLoadReady", "*");
+                   link.click();
                  }.bind(window), false);
                </script>
              </body>
@@ -243,8 +271,12 @@ function handleRequest(request, response) {
   var schemeFrom = params.get("SCHEME_FROM") || "http";
   var schemeTo = params.get("SCHEME_TO") || "http";
   var crossOrigin = params.get("CROSS_ORIGIN") || false;
+  var referrerPolicyHeader = params.get("RP_HEADER") || "";
 
   response.setHeader("Access-Control-Allow-Origin", "*", false);
+  if (referrerPolicyHeader) {
+    response.setHeader("Referrer-Policy", referrerPolicyHeader, false);
+  }
 
   if (action === "resetState") {
     setSharedState(SHARED_KEY, "{}");
@@ -370,6 +402,10 @@ function handleRequest(request, response) {
   }
   if (action === "generate-area-changing-policy-test-property") {
     response.write(_getAreaPage("property"));
+    return;
+  }
+  if (action === "generate-anchor-target-blank-policy-test") {
+    response.write(createTargetBlankRefferer(metaPolicy, name, schemeFrom, schemeTo, referrerPolicyHeader));
     return;
   }
 

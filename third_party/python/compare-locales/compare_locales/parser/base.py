@@ -9,6 +9,8 @@ import bisect
 import codecs
 from collections import Counter
 import logging
+from compare_locales.keyedtuple import KeyedTuple
+from compare_locales.paths import File
 
 import six
 
@@ -43,12 +45,15 @@ class EntityBase(object):
 
     <--- definition ---->
     '''
-    def __init__(self, ctx, pre_comment, span, key_span, val_span):
+    def __init__(
+        self, ctx, pre_comment, inner_white, span, key_span, val_span
+    ):
         self.ctx = ctx
         self.span = span
         self.key_span = key_span
         self.val_span = val_span
         self.pre_comment = pre_comment
+        self.inner_white = inner_white
 
     def position(self, offset=0):
         """Get the 1-based line and column of the character
@@ -75,9 +80,17 @@ class EntityBase(object):
             pos = self.val_span[0] + offset
         return self.ctx.linecol(pos)
 
+    def _span_start(self):
+        start = self.span[0]
+        if hasattr(self, 'pre_comment') and self.pre_comment is not None:
+            start = self.pre_comment.span[0]
+        return start
+
     @property
     def all(self):
-        return self.ctx.contents[self.span[0]:self.span[1]]
+        start = self._span_start()
+        end = self.span[1]
+        return self.ctx.contents[start:end]
 
     @property
     def key(self):
@@ -112,7 +125,63 @@ class EntityBase(object):
 
 
 class Entity(EntityBase):
-    pass
+    @property
+    def localized(self):
+        '''Is this entity localized.
+
+        Always true for monolingual files.
+        In bilingual files, this is a dynamic property.
+        '''
+        return True
+
+    def unwrap(self):
+        """Return the literal value to be used by tools.
+        """
+        return self.raw_val
+
+    def wrap(self, raw_val):
+        """Create literal entity based on reference and raw value.
+
+        This is used by the serialization logic.
+        """
+        start = self._span_start()
+        all = (
+            self.ctx.contents[start:self.val_span[0]] +
+            raw_val +
+            self.ctx.contents[self.val_span[1]:self.span[1]]
+        )
+        return LiteralEntity(self.key, raw_val, all)
+
+
+class LiteralEntity(Entity):
+    """Subclass of Entity to represent entities without context slices.
+
+    It's storing string literals for key, raw_val and all instead of spans.
+    """
+    def __init__(self, key, val, all):
+        super(LiteralEntity, self).__init__(None, None, None, None, None, None)
+        self._key = key
+        self._raw_val = val
+        self._all = all
+
+    @property
+    def key(self):
+        return self._key
+
+    @property
+    def raw_val(self):
+        return self._raw_val
+
+    @property
+    def all(self):
+        return self._all
+
+
+class PlaceholderEntity(LiteralEntity):
+    """Subclass of Entity to be removed in merges.
+    """
+    def __init__(self, key):
+        super(PlaceholderEntity, self).__init__(key, "", "\nplaceholder\n")
 
 
 class Comment(EntityBase):
@@ -206,6 +275,12 @@ class Whitespace(EntityBase):
         return self.raw_val
 
 
+class BadEntity(ValueError):
+    '''Raised when the parser can't create an Entity for a found match.
+    '''
+    pass
+
+
 class Parser(object):
     capabilities = CAN_SKIP | CAN_MERGE
     reWhitespace = re.compile('[ \t\r\n]+', re.M)
@@ -217,8 +292,7 @@ class Parser(object):
         "Fixture for content and line numbers"
         def __init__(self, contents):
             self.contents = contents
-            # Subclasses may use bitmasks to keep state.
-            self.state = 0
+            # cache split lines
             self._lines = None
 
         def linecol(self, position):
@@ -238,10 +312,11 @@ class Parser(object):
         if not hasattr(self, 'encoding'):
             self.encoding = 'utf-8'
         self.ctx = None
-        self.last_comment = None
 
     def readFile(self, file):
         '''Read contents from disk, with universal_newlines'''
+        if isinstance(file, File):
+            file = file.fullpath
         # python 2 has binary input with universal newlines,
         # python 3 doesn't. Let's split code paths
         if six.PY2:
@@ -268,12 +343,10 @@ class Parser(object):
         self.readUnicode(contents)
 
     def readUnicode(self, contents):
-        self.ctx = Parser.Context(contents)
+        self.ctx = self.Context(contents)
 
     def parse(self):
-        list_ = list(self)
-        map_ = dict((e.key, i) for i, e in enumerate(list_))
-        return (list_, map_)
+        return KeyedTuple(self)
 
     def __iter__(self):
         return self.walk(only_localizable=True)
@@ -297,17 +370,55 @@ class Parser(object):
             next_offset = entity.span[1]
 
     def getNext(self, ctx, offset):
-        m = self.reWhitespace.match(ctx.contents, offset)
-        if m:
-            return Whitespace(ctx, m.span())
-        m = self.reKey.match(ctx.contents, offset)
-        if m:
-            return self.createEntity(ctx, m)
+        '''Parse the next fragment.
+
+        Parse comments first, then white-space.
+        If an entity follows, create that entity with such pre_comment and
+        inner white-space. If not, emit comment or white-space as standlone.
+        It's OK that this might parse whitespace more than once.
+        Comments are associated with entities if they're not separated by
+        blank lines. Multiple consecutive comments are joined.
+        '''
+        junk_offset = offset
         m = self.reComment.match(ctx.contents, offset)
         if m:
-            self.last_comment = self.Comment(ctx, m.span())
-            return self.last_comment
-        return self.getJunk(ctx, offset, self.reKey, self.reComment)
+            current_comment = self.Comment(ctx, m.span())
+            if offset < 2 and 'License' in current_comment.val:
+                # Heuristic. A early comment with "License" is probably
+                # a license header, and should be standalone.
+                # Not glueing ourselves to offset == 0 as we might have
+                # skipped a BOM.
+                return current_comment
+            offset = m.end()
+        else:
+            current_comment = None
+        m = self.reWhitespace.match(ctx.contents, offset)
+        if m:
+            white_space = Whitespace(ctx, m.span())
+            offset = m.end()
+            if (
+                current_comment is not None
+                and white_space.raw_val.count('\n') > 1
+            ):
+                # standalone comment
+                # return the comment, and reparse the whitespace next time
+                return current_comment
+            if current_comment is None:
+                return white_space
+        else:
+            white_space = None
+        m = self.reKey.match(ctx.contents, offset)
+        if m:
+            try:
+                return self.createEntity(ctx, m, current_comment, white_space)
+            except BadEntity:
+                # fall through to Junk, probably
+                pass
+        if current_comment is not None:
+            return current_comment
+        if white_space is not None:
+            return white_space
+        return self.getJunk(ctx, junk_offset, self.reKey, self.reComment)
 
     def getJunk(self, ctx, offset, *expressions):
         junkend = None
@@ -317,10 +428,11 @@ class Parser(object):
                 junkend = min(junkend, m.start()) if junkend else m.start()
         return Junk(ctx, (offset, junkend or len(ctx.contents)))
 
-    def createEntity(self, ctx, m):
-        pre_comment = self.last_comment
-        self.last_comment = None
-        return Entity(ctx, pre_comment, m.span(), m.span('key'), m.span('val'))
+    def createEntity(self, ctx, m, current_comment, white_space):
+        return Entity(
+            ctx, current_comment, white_space,
+            m.span(), m.span('key'), m.span('val')
+        )
 
     @classmethod
     def findDuplicates(cls, entities):

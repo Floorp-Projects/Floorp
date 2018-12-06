@@ -93,7 +93,7 @@
                            anonid="tabs-newtab-button"
                            command="cmd_newNavigatorTab"
                            onclick="checkForMiddleClick(this, event);"
-                           tooltip="dynamic-shortcut-tooltip"/>
+                           />
         <xul:spacer class="closing-tabs-spacer" anonid="closing-tabs-spacer"
                     style="width: 0;"/>
       </xul:arrowscrollbox>
@@ -111,6 +111,10 @@
 
           var tab = this.firstElementChild;
           tab.label = this.emptyTabTitle;
+
+          let newTabButton = document.getAnonymousElementByAttribute(
+            this, "anonid", "tabs-newtab-button");
+          newTabButton.setAttribute("tooltiptext", GetDynamicShortcutTooltipText("tabs-newtab-button"));
 
           window.addEventListener("resize", this);
 

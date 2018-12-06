@@ -16,7 +16,6 @@
 
 #include "nsCSSKeywords.h"
 #include "nsLayoutUtils.h"
-#include "nsStyleConsts.h"
 #include "nsIWidget.h"
 #include "nsStyleConsts.h"  // For system widget appearance types
 

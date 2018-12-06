@@ -149,7 +149,8 @@ class CheckTestCompleteParser(OutputParser):
                                                 levels=TBPL_WORST_LEVEL_TUPLE)
 
         # Account for the possibility that no test summary was output.
-        if self.pass_count == 0 and self.fail_count == 0:
+        if (self.pass_count == 0 and self.fail_count == 0 and
+           os.environ.get('TRY_SELECTOR') != 'coverage'):
             self.error('No tests run or test summary not found')
             self.tbpl_status = self.worst_level(TBPL_WARNING, self.tbpl_status,
                                                 levels=TBPL_WORST_LEVEL_TUPLE)

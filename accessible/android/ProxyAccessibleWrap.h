@@ -45,6 +45,10 @@ class ProxyAccessibleWrap : public AccessibleWrap {
 
   virtual void ScrollTo(uint32_t aHow) const override;
 
+  virtual uint8_t ActionCount() const override;
+
+  virtual bool DoAction(uint8_t aIndex) const override;
+
   // AccessibleWrap
 
   virtual void SetTextContents(const nsAString& aText) override;

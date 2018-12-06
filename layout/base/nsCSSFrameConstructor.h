@@ -1206,8 +1206,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
     void operator delete(void*) = delete;
 #endif
     void operator delete[](void*) = delete;
-    FrameConstructionItem(const FrameConstructionItem& aOther) =
-        delete; /* not implemented */
+    FrameConstructionItem(const FrameConstructionItem& aOther) = delete;
     // Not allocated from the stack!
     ~FrameConstructionItem() {
       MOZ_COUNT_DTOR(FrameConstructionItem);
@@ -1982,7 +1981,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
 
   void RecoverLetterFrames(nsContainerFrame* aBlockFrame);
 
-  //
   void RemoveLetterFrames(nsIPresShell* aPresShell,
                           nsContainerFrame* aBlockFrame);
 
