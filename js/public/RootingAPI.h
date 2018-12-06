@@ -370,7 +370,7 @@ static MOZ_ALWAYS_INLINE bool ObjectIsMarkedGray(
 
 #ifdef DEBUG
 
-inline void AssertCellIsNotGray(js::gc::Cell* maybeCell) {
+inline void AssertCellIsNotGray(const js::gc::Cell* maybeCell) {
   if (maybeCell) {
     js::gc::detail::AssertCellIsNotGray(maybeCell);
   }

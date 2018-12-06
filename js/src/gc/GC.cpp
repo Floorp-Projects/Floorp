@@ -5259,6 +5259,8 @@ IncrementalProgress GCRuntime::markGrayReferencesInCurrentGroup(
     return Finished;
   }
 
+  MOZ_ASSERT(cellsToAssertNotGray.ref().empty());
+
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_MARK);
 
   // Mark any incoming gray pointers from previously swept compartments that
@@ -5620,6 +5622,13 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(FreeOp* fop,
   }
 
   validateIncrementalMarking();
+
+#ifdef DEBUG
+  for (auto cell : cellsToAssertNotGray.ref()) {
+    JS::AssertCellIsNotGray(cell);
+  }
+  cellsToAssertNotGray.ref().clearAndFree();
+#endif
 
   {
     AutoPhase ap(stats(), PhaseKind::FINALIZE_START);
@@ -6698,6 +6707,7 @@ void GCRuntime::finishCollection() {
   }
 
   MOZ_ASSERT(zonesToMaybeCompact.ref().isEmpty());
+  MOZ_ASSERT(cellsToAssertNotGray.ref().empty());
 
   lastGCTime = currentTime;
 }
@@ -8943,6 +8953,18 @@ JS_PUBLIC_API void js::gc::detail::AssertCellIsNotGray(const Cell* cell) {
   MOZ_ASSERT(!JS::RuntimeHeapIsCycleCollecting());
 
   auto tc = &cell->asTenured();
+  if (tc->zone()->isGCMarkingBlackAndGray()) {
+    // We are doing gray marking in the cell's zone. Even if the cell is
+    // currently marked gray it may eventually be marked black. Delay the check
+    // until we finish gray marking.
+    JSRuntime* rt = tc->zone()->runtimeFromMainThread();
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    if (!rt->gc.cellsToAssertNotGray.ref().append(cell)) {
+      oomUnsafe.crash("Can't append to delayed gray checks list");
+    }
+    return;
+  }
+
   MOZ_ASSERT(!detail::CellIsMarkedGray(tc));
 }
 
