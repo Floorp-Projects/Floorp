@@ -324,11 +324,18 @@ void KeyframeEffect::UpdateProperties(const ComputedStyle* aStyle) {
 
   nsTArray<AnimationProperty> properties = BuildProperties(aStyle);
 
+  bool propertiesChanged = mProperties != properties;
+
   // We need to update base styles even if any properties are not changed at all
   // since base styles might have been changed due to parent style changes, etc.
-  EnsureBaseStyles(aStyle, properties);
+  bool baseStylesChanged = false;
+  EnsureBaseStyles(aStyle, properties,
+                   !propertiesChanged ? &baseStylesChanged : nullptr);
 
-  if (mProperties == properties) {
+  if (!propertiesChanged) {
+    if (baseStylesChanged) {
+      RequestRestyle(EffectCompositor::RestyleType::Layer);
+    }
     return;
   }
 
@@ -358,9 +365,19 @@ void KeyframeEffect::UpdateProperties(const ComputedStyle* aStyle) {
 
 void KeyframeEffect::EnsureBaseStyles(
     const ComputedStyle* aComputedValues,
-    const nsTArray<AnimationProperty>& aProperties) {
+    const nsTArray<AnimationProperty>& aProperties, bool* aBaseStylesChanged) {
+  if (aBaseStylesChanged != nullptr) {
+    *aBaseStylesChanged = false;
+  }
+
   if (!mTarget) {
     return;
+  }
+
+  Maybe<nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue>>
+      previousBaseStyles;
+  if (aBaseStylesChanged != nullptr) {
+    previousBaseStyles.emplace(std::move(mBaseValues));
   }
 
   mBaseValues.Clear();
@@ -384,6 +401,16 @@ void KeyframeEffect::EnsureBaseStyles(
   RefPtr<ComputedStyle> baseComputedStyle;
   for (const AnimationProperty& property : aProperties) {
     EnsureBaseStyle(property, presContext, aComputedValues, baseComputedStyle);
+  }
+
+  if (aBaseStylesChanged != nullptr) {
+    for (auto iter = mBaseValues.Iter(); !iter.Done(); iter.Next()) {
+      if (AnimationValue(iter.Data()) !=
+          AnimationValue(previousBaseStyles->Get(iter.Key()))) {
+        *aBaseStylesChanged = true;
+        break;
+      }
+    }
   }
 }
 
