@@ -234,6 +234,8 @@ template <typename SyncInterface, typename AsyncInterface,
           template <typename Iface> class WaitPolicy =
               detail::FireAndForgetInvoker>
 class MOZ_RAII AsyncInvoker final : public WaitPolicy<AsyncInterface> {
+  using Base = WaitPolicy<AsyncInterface>;
+
  public:
   typedef SyncInterface SyncInterfaceT;
   typedef AsyncInterface AsyncInterfaceT;
@@ -263,7 +265,7 @@ class MOZ_RAII AsyncInvoker final : public WaitPolicy<AsyncInterface> {
       return;
     }
 
-    mAsyncCall = new AsyncCallType(callFactory);
+    this->mAsyncCall = new typename Base::AsyncCallType(callFactory);
   }
 
   /**
@@ -285,12 +287,12 @@ class MOZ_RAII AsyncInvoker final : public WaitPolicy<AsyncInterface> {
       return (mSyncObj->*aSyncMethod)(std::forward<Args>(aArgs)...);
     }
 
-    MOZ_ASSERT(mAsyncCall);
-    if (!mAsyncCall) {
+    MOZ_ASSERT(this->mAsyncCall);
+    if (!this->mAsyncCall) {
       return E_POINTER;
     }
 
-    AsyncInterface* asyncInterface = mAsyncCall->GetInterface();
+    AsyncInterface* asyncInterface = this->mAsyncCall->GetInterface();
     MOZ_ASSERT(asyncInterface);
     if (!asyncInterface) {
       return E_POINTER;
