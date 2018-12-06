@@ -1082,7 +1082,7 @@ impl ResourceCache {
         &mut self,
         keys: &[BlobImageKey]
     ) -> (Option<Box<AsyncBlobImageRasterizer>>, Vec<BlobImageParams>) {
-        if self.blob_image_handler.is_none() {
+        if self.blob_image_handler.is_none() || keys.is_empty() {
             return (None, Vec::new());
         }
 
