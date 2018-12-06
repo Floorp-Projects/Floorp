@@ -924,6 +924,7 @@ linux64-tup/opt:
     treeherder:
         platform: linux64/opt
         symbol: Btup
+        tier: 3
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 3600
