@@ -34,6 +34,7 @@ class SessionCallbackProxy(private val session: Session, private val delegate: I
     }
 
     override fun onPageFinished(isSecure: Boolean) {
+        session.progress = MAXIMUM_PROGRESS
         session.loading = false
         if (!isDownload || !AppConstants.isGeckoBuild) {
             session.securityInfo = Session.SecurityInfo(
