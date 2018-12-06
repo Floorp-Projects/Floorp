@@ -273,6 +273,8 @@ class nsPresContext : public nsISupports,
   void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
                                     nsRestyleHint aRestyleHint);
 
+  void ContentLanguageChanged();
+
   /**
    * Handle changes in the values of media features (used in media
    * queries).
