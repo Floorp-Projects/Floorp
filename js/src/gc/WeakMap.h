@@ -129,8 +129,10 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   // Zone containing this weak map.
   JS::Zone* zone_;
 
-  // Whether this object has been traced during garbage collection.
+  // Whether this object has been marked during garbage collection and which
+  // color it was marked.
   bool marked;
+  gc::MarkColor markColor;
 };
 
 template <class Key, class Value>
@@ -193,9 +195,9 @@ class WeakMap
     JS::ExposeObjectToActiveJS(obj);
   }
 
-  bool keyNeedsMark(JSObject* key) const;
-  bool keyNeedsMark(JSScript* script) const;
-  bool keyNeedsMark(LazyScript* script) const;
+  bool keyNeedsMark(GCMarker* marker, JSObject* key) const;
+  bool keyNeedsMark(GCMarker* marker, JSScript* script) const;
+  bool keyNeedsMark(GCMarker* marker, LazyScript* script) const;
 
   bool findZoneEdges() override {
     // This is overridden by ObjectValueMap.
