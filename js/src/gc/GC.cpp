@@ -4461,6 +4461,8 @@ void GCRuntime::markWeakReferencesInCurrentGroup(gcstats::PhaseKind phase) {
 
 template <class ZoneIterT>
 void GCRuntime::markGrayReferences(gcstats::PhaseKind phase) {
+  MOZ_ASSERT(marker.markColor() == MarkColor::Gray);
+
   gcstats::AutoPhase ap(stats(), phase);
   if (hasValidGrayRootsBuffer()) {
     for (ZoneIterT zone(rt); !zone.done(); zone.next()) {
@@ -5242,6 +5244,8 @@ static inline void MaybeCheckWeakMapMarking(GCRuntime* gc)
 
 IncrementalProgress GCRuntime::endMarkingSweepGroup(FreeOp* fop,
                                                     SliceBudget& budget) {
+  MOZ_ASSERT(marker.markColor() == MarkColor::Black);
+
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_MARK);
 
   // Mark any incoming black pointers from previously swept compartments
@@ -7092,6 +7096,7 @@ void GCRuntime::incrementalSlice(
   }
 
   MOZ_ASSERT(safeToYield);
+  MOZ_ASSERT(marker.markColor() == MarkColor::Black);
 }
 
 gc::AbortReason gc::IsIncrementalGCUnsafe(JSRuntime* rt) {

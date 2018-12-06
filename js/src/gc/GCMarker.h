@@ -49,16 +49,16 @@ using WeakKeyTable =
                    js::SystemAllocPolicy>;
 
 /*
- * When the native stack is low, the GC does not call js::TraceChildren to mark
+ * When the mark stack is full, the GC does not call js::TraceChildren to mark
  * the reachable "children" of the thing. Rather the thing is put aside and
- * js::TraceChildren is called later with more space on the C stack.
+ * js::TraceChildren is called later when the mark stack is empty.
  *
  * To implement such delayed marking of the children with minimal overhead for
- * the normal case of sufficient native stack, the code adds a field per arena.
- * The field markingDelay->link links all arenas with delayed things into a
- * stack list with the pointer to stack top in GCMarker::unmarkedArenaStackTop.
- * GCMarker::delayMarkingChildren adds arenas to the stack as necessary while
- * markDelayedChildren pops the arenas from the stack until it empties.
+ * the normal case of sufficient stack, we link arenas into a list using
+ * Arena::setNextDelayedMarking(). The head of the list is stored in
+ * GCMarker::unmarkedArenaStackTop. GCMarker::delayMarkingChildren() adds arenas
+ * to the list as necessary while markAllDelayedChildren() pops the arenas from
+ * the stack until it is empty.
  */
 class MarkStack {
  public:
@@ -280,8 +280,10 @@ class GCMarker : public JSTracer {
 
   void delayMarkingArena(gc::Arena* arena);
   void delayMarkingChildren(const void* thing);
-  void markDelayedChildren(gc::Arena* arena);
-  MOZ_MUST_USE bool markDelayedChildren(SliceBudget& budget);
+  void markDelayedChildren(gc::Arena* arena, gc::MarkColor color);
+  MOZ_MUST_USE bool markAllDelayedChildren(SliceBudget& budget);
+  bool processDelayedMarkingList(gc::Arena** outputList, gc::MarkColor color,
+                                 bool shouldYield, SliceBudget& budget);
   bool hasDelayedChildren() const { return !!unmarkedArenaStackTop; }
 
   bool isDrained() { return isMarkStackEmpty() && !unmarkedArenaStackTop; }
@@ -348,6 +350,10 @@ class GCMarker : public JSTracer {
 
   bool isMarkStackEmpty() { return stack.isEmpty(); }
 
+  bool hasBlackEntries() const { return stack.position() > grayPosition; }
+
+  bool hasGrayEntries() const { return grayPosition > 0 && !stack.isEmpty(); }
+
   MOZ_MUST_USE bool restoreValueArray(
       const gc::MarkStack::SavedValueArray& array, HeapSlot** vpp,
       HeapSlot** endp);
@@ -362,6 +368,9 @@ class GCMarker : public JSTracer {
 
   /* The mark stack. Pointers in this stack are "gray" in the GC sense. */
   gc::MarkStack stack;
+
+  /* Stack entries at positions below this are considered gray. */
+  MainThreadData<size_t> grayPosition;
 
   /* The color is only applied to objects and functions. */
   MainThreadData<gc::MarkColor> color;
