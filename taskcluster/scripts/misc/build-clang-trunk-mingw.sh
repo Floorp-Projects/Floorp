@@ -32,8 +32,9 @@ SRC_DIR=$TOOLCHAIN_DIR/src
 
 make_flags="-j$(nproc)"
 
-mingw_version=70860d945e6be713af352ee62820bccb653589c2
+mingw_version=d66350ea60d043a8992ada752040fc4ea48537c3
 libunwind_version=1f89d78bb488bc71cfdee8281fc0834e9fbe5dce
+llvm_mingw_version=53db1c3a4c9c81972b70556a5ba5cd6ccd8e6e7d
 
 binutils_version=2.27
 binutils_ext=bz2
@@ -62,6 +63,11 @@ prepare() {
   git clone https://github.com/llvm-mirror/libunwind.git
   pushd libunwind
   git checkout $libunwind_version
+  popd
+
+  git clone https://github.com/mstorsjo/llvm-mingw.git
+  pushd llvm-mingw
+  git checkout $llvm_mingw_version
   popd
 
   wget -c --progress=dot:mega ftp://ftp.gnu.org/gnu/binutils/binutils-$binutils_version.tar.$binutils_ext
@@ -268,8 +274,7 @@ build_libcxx() {
   popd
 }
 
-build_windres() {
-  # we build whole binutils, but use only windres in our toolchain
+build_utils() {
   mkdir binutils
   pushd binutils
   $SRC_DIR/binutils-$binutils_version/configure --prefix=$INSTALL_DIR \
@@ -278,12 +283,12 @@ build_windres() {
                                                 --target=$machine-w64-mingw32
   make $make_flags
 
-  # Manually install only nm and windres
-  cp binutils/windres $INSTALL_DIR/bin/$machine-w64-mingw32-windres
+  # Manually install only nm
   cp binutils/nm-new $INSTALL_DIR/bin/$machine-w64-mingw32-nm
 
   pushd $INSTALL_DIR/bin/
   ln -s llvm-readobj $machine-w64-mingw32-readobj
+  ./clang $SRC_DIR/llvm-mingw/wrappers/windres-wrapper.c -O2 -Wl,-s -o $machine-w64-mingw32-windres
   popd
 
   popd
@@ -308,7 +313,7 @@ install_wrappers
 build_mingw
 build_compiler_rt
 build_libcxx
-build_windres
+build_utils
 
 popd
 
