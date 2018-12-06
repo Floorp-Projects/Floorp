@@ -4135,7 +4135,7 @@ bool GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason,
     if (ShouldCollectZone(zone, reason)) {
       MOZ_ASSERT(zone->canCollect());
       any = true;
-      zone->changeGCState(Zone::NoGC, Zone::Mark);
+      zone->changeGCState(Zone::NoGC, Zone::MarkBlackOnly);
     } else {
       *isFullOut = false;
     }
@@ -4184,7 +4184,7 @@ bool GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason,
 }
 
 static void DiscardJITCodeForGC(JSRuntime* rt) {
-  js::CancelOffThreadIonCompile(rt, JS::Zone::Mark);
+  js::CancelOffThreadIonCompile(rt, JS::Zone::MarkBlackOnly);
   for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
     gcstats::AutoPhase ap(rt->gc.stats(),
                           gcstats::PhaseKind::MARK_DISCARD_CODE);
@@ -4647,7 +4647,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
 
     /* Update zone state for gray marking. */
     for (GCZonesIter zone(runtime); !zone.done(); zone.next()) {
-      zone->changeGCState(Zone::Mark, Zone::MarkGray);
+      zone->changeGCState(Zone::MarkBlackOnly, Zone::MarkBlackAndGray);
     }
 
     AutoSetMarkColor setColorGray(gc->marker, MarkColor::Gray);
@@ -4657,7 +4657,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
 
     /* Restore zone state. */
     for (GCZonesIter zone(runtime); !zone.done(); zone.next()) {
-      zone->changeGCState(Zone::MarkGray, Zone::Mark);
+      zone->changeGCState(Zone::MarkBlackAndGray, Zone::MarkBlackOnly);
     }
     MOZ_ASSERT(gc->marker.isDrained());
   }
@@ -4973,7 +4973,7 @@ void GCRuntime::getNextSweepGroup() {
     for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
       MOZ_ASSERT(!zone->gcNextGraphComponent);
       zone->setNeedsIncrementalBarrier(false);
-      zone->changeGCState(Zone::Mark, Zone::NoGC);
+      zone->changeGCState(Zone::MarkBlackOnly, Zone::NoGC);
       zone->arenas.unmarkPreMarkedFreeCells();
       zone->gcGrayRoots().clearAndFree();
     }
@@ -5108,8 +5108,9 @@ void GCRuntime::markIncomingCrossCompartmentPointers(MarkColor color) {
   bool unlinkList = color == MarkColor::Gray;
 
   for (SweepGroupCompartmentsIter c(rt); !c.done(); c.next()) {
-    MOZ_ASSERT_IF(color == MarkColor::Gray, c->zone()->isGCMarkingGray());
-    MOZ_ASSERT_IF(color == MarkColor::Black, c->zone()->isGCMarkingBlack());
+    MOZ_ASSERT_IF(color == MarkColor::Gray,
+                  c->zone()->isGCMarkingBlackAndGray());
+    MOZ_ASSERT_IF(color == MarkColor::Black, c->zone()->isGCMarkingBlackOnly());
     MOZ_ASSERT_IF(c->gcIncomingGrayPointers,
                   IsGrayListObject(c->gcIncomingGrayPointers));
 
@@ -5254,7 +5255,7 @@ IncrementalProgress GCRuntime::endMarkingSweepGroup(FreeOp* fop,
   // these will be marked through, as they are not marked with
   // TraceCrossCompartmentEdge.
   for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
-    zone->changeGCState(Zone::Mark, Zone::MarkGray);
+    zone->changeGCState(Zone::MarkBlackOnly, Zone::MarkBlackAndGray);
   }
 
   AutoSetMarkColor setColorGray(marker, MarkColor::Gray);
@@ -5267,10 +5268,6 @@ IncrementalProgress GCRuntime::endMarkingSweepGroup(FreeOp* fop,
   markGrayReferencesInCurrentGroup(gcstats::PhaseKind::SWEEP_MARK_GRAY);
   markWeakReferencesInCurrentGroup(gcstats::PhaseKind::SWEEP_MARK_GRAY_WEAK);
 
-  // Restore marking state.
-  for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
-    zone->changeGCState(Zone::MarkGray, Zone::Mark);
-  }
   MOZ_ASSERT(marker.isDrained());
 
   // We must not yield after this point before we start sweeping the group.
@@ -5575,7 +5572,7 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(FreeOp* fop,
   bool sweepingAtoms = false;
   for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
     /* Set the GC state to sweeping. */
-    zone->changeGCState(Zone::Mark, Zone::Sweep);
+    zone->changeGCState(Zone::MarkBlackAndGray, Zone::Sweep);
 
     /* Purge the ArenaLists before sweeping. */
     zone->arenas.unmarkPreMarkedFreeCells();
@@ -6743,7 +6740,7 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
 
       for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
         zone->setNeedsIncrementalBarrier(false);
-        zone->changeGCState(Zone::Mark, Zone::NoGC);
+        zone->changeGCState(Zone::MarkBlackOnly, Zone::NoGC);
         zone->arenas.unmarkPreMarkedFreeCells();
       }
 

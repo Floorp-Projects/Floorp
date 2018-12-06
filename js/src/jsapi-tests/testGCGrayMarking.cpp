@@ -460,7 +460,7 @@ bool TestCCWs() {
   CHECK(JS::IsIncrementalGCInProgress(cx));
 
   CHECK(!IsMarkedBlack(wrapper));
-  CHECK(wrapper->zone()->isGCMarkingBlack());
+  CHECK(wrapper->zone()->isGCMarkingBlackOnly());
 
   CHECK(GetCrossCompartmentWrapper(target) == wrapper);
   CHECK(IsMarkedBlack(wrapper));
@@ -484,7 +484,7 @@ bool TestCCWs() {
   budget = js::SliceBudget(js::WorkBudget(1));
   cx->runtime()->gc.startDebugGC(GC_NORMAL, budget);
   CHECK(JS::IsIncrementalGCInProgress(cx));
-  CHECK(wrapper->zone()->isGCMarkingBlack());
+  CHECK(wrapper->zone()->isGCMarkingBlackOnly());
   CHECK(!target->zone()->wasGCStarted());
   CHECK(!IsMarkedBlack(wrapper));
   CHECK(!IsMarkedGray(wrapper));

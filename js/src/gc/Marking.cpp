@@ -250,7 +250,7 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
                   zone->isCollecting() || zone->isAtomsZone());
 
     MOZ_ASSERT_IF(gcMarker->markColor() == MarkColor::Gray,
-                  !zone->isGCMarkingBlack() || zone->isAtomsZone());
+                  !zone->isGCMarkingBlackOnly() || zone->isAtomsZone());
 
     MOZ_ASSERT(!(zone->isGCSweeping() || zone->isGCFinished() ||
                  zone->isGCCompacting()));
@@ -336,7 +336,7 @@ static inline bool ShouldMarkCrossCompartment(GCMarker* marker, JSObject* src,
     // Check our sweep groups are correct as above.
     MOZ_ASSERT_IF(!dst.isMarkedAny(), !dstZone->isGCSweeping());
 
-    if (dstZone->isGCMarkingBlack()) {
+    if (dstZone->isGCMarkingBlackOnly()) {
       /*
        * The destination compartment is being not being marked gray now,
        * but it will be later, so record the cell so it can be marked gray
@@ -348,7 +348,7 @@ static inline bool ShouldMarkCrossCompartment(GCMarker* marker, JSObject* src,
       return false;
     }
 
-    return dstZone->isGCMarkingGray();
+    return dstZone->isGCMarkingBlackAndGray();
   }
 }
 
