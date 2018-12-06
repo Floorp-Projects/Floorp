@@ -271,6 +271,21 @@ class GCMarker : public JSTracer {
   void setMarkColor(gc::MarkColor newColor);
   gc::MarkColor markColor() const { return color; }
 
+  // Return whether a cell is marked relative to the current marking color. If
+  // the cell is black then this returns true, but if it's gray it will return
+  // false if the mark color is black.
+  template <typename T>
+  bool isMarked(T* thingp) {
+    return color == gc::MarkColor::Black ? gc::IsMarkedBlack(runtime(), thingp)
+                                         : gc::IsMarked(runtime(), thingp);
+  }
+  template <typename T>
+  bool isMarkedUnbarriered(T* thingp) {
+    return color == gc::MarkColor::Black
+               ? gc::IsMarkedBlackUnbarriered(runtime(), thingp)
+               : gc::IsMarkedUnbarriered(runtime(), thingp);
+  }
+
   void enterWeakMarkingMode();
   void leaveWeakMarkingMode();
   void abortLinearWeakMarking() {
