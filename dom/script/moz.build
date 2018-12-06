@@ -25,8 +25,8 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    'LoadedScript.cpp',
     'ModuleLoadRequest.cpp',
-    'ModuleScript.cpp',
     'ScriptElement.cpp',
     'ScriptLoader.cpp',
     'ScriptLoadHandler.cpp',
