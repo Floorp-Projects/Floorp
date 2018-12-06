@@ -69,7 +69,7 @@ JSObject* DocumentTimeline::WrapObject(JSContext* aCx,
   return timeline.forget();
 }
 
-Nullable<TimeDuration> DocumentTimeline::GetCurrentTime() const {
+Nullable<TimeDuration> DocumentTimeline::GetCurrentTimeAsDuration() const {
   return ToTimelineTime(GetCurrentTimeStamp());
 }
 
