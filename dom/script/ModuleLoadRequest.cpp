@@ -74,17 +74,16 @@ static VisitedURLSet* NewVisitedSetForTopLevelImport(nsIURI* aURI) {
 }
 
 /* static */ ModuleLoadRequest* ModuleLoadRequest::CreateDynamicImport(
-    nsIURI* aURI, LoadedScript* aScript,
-    JS::Handle<JS::Value> aReferencingPrivate, JS::Handle<JSString*> aSpecifier,
-    JS::Handle<JSObject*> aPromise) {
+    nsIURI* aURI, ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
+    ScriptLoader* aLoader, JS::Handle<JS::Value> aReferencingPrivate,
+    JS::Handle<JSString*> aSpecifier, JS::Handle<JSObject*> aPromise) {
   MOZ_ASSERT(aSpecifier);
   MOZ_ASSERT(aPromise);
 
   auto request = new ModuleLoadRequest(
-      aURI, aScript->FetchOptions(), SRIMetadata(), aScript->BaseURL(),
-      true, /* is top level */
+      aURI, aFetchOptions, SRIMetadata(), aBaseURL, true, /* is top level */
       true, /* is dynamic import */
-      aScript->Loader(), NewVisitedSetForTopLevelImport(aURI));
+      aLoader, NewVisitedSetForTopLevelImport(aURI));
 
   request->mIsInline = false;
   request->mScriptMode = ScriptMode::eAsync;

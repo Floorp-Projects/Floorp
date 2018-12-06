@@ -17,6 +17,7 @@
 #include "js/CompilationAndEvaluation.h"
 #include "js/MemoryFunctions.h"
 #include "js/OffThreadScriptCompilation.h"
+#include "js/Realm.h"
 #include "js/SourceText.h"
 #include "js/Utility.h"
 #include "xpcpublic.h"
@@ -29,6 +30,7 @@
 #include "mozilla/dom/SRILogHelper.h"
 #include "nsGkAtoms.h"
 #include "nsNetUtil.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptSecurityManager.h"
@@ -475,7 +477,7 @@ nsresult ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest) {
     MOZ_ASSERT(NS_SUCCEEDED(rv) == (module != nullptr));
 
     RefPtr<ModuleScript> moduleScript =
-        new ModuleScript(this, aRequest->mFetchOptions, aRequest->mBaseURL);
+        new ModuleScript(aRequest->mFetchOptions, aRequest->mBaseURL);
     aRequest->mModuleScript = moduleScript;
 
     if (!module) {
@@ -545,7 +547,7 @@ static nsresult HandleResolveFailure(JSContext* aCx, ModuleScript* aScript,
 }
 
 static already_AddRefed<nsIURI> ResolveModuleSpecifier(
-    LoadedScript* aScript, const nsAString& aSpecifier) {
+    ScriptLoader* aLoader, LoadedScript* aScript, const nsAString& aSpecifier) {
   // The following module specifiers are allowed by the spec:
   //  - a valid absolute URL
   //  - a valid relative URL that starts with "/", "./" or "../"
@@ -569,7 +571,15 @@ static already_AddRefed<nsIURI> ResolveModuleSpecifier(
     return nullptr;
   }
 
-  rv = NS_NewURI(getter_AddRefs(uri), aSpecifier, nullptr, aScript->BaseURL());
+  // Get the document's base URL if we don't have a referencing script here.
+  nsCOMPtr<nsIURI> baseURL;
+  if (aScript) {
+    baseURL = aScript->BaseURL();
+  } else {
+    baseURL = aLoader->GetDocument()->GetDocBaseURI();
+  }
+
+  rv = NS_NewURI(getter_AddRefs(uri), aSpecifier, nullptr, baseURL);
   if (NS_SUCCEEDED(rv)) {
     return uri.forget();
   }
@@ -613,7 +623,8 @@ static nsresult ResolveRequestedModules(ModuleLoadRequest* aRequest,
 
     // Let url be the result of resolving a module specifier given module script
     // and requested.
-    nsCOMPtr<nsIURI> uri = ResolveModuleSpecifier(ms, specifier);
+    nsCOMPtr<nsIURI> uri =
+        ResolveModuleSpecifier(aRequest->mLoader, ms, specifier);
     if (!uri) {
       uint32_t lineNumber = 0;
       uint32_t columnNumber = 0;
@@ -725,32 +736,81 @@ RefPtr<GenericPromise> ScriptLoader::StartFetchingModuleAndDependencies(
   return ready;
 }
 
-// 8.1.3.8.1 HostResolveImportedModule(referencingModule, specifier)
-JSObject* HostResolveImportedModule(JSContext* aCx,
-                                    JS::Handle<JS::Value> aReferencingPrivate,
-                                    JS::Handle<JSString*> aSpecifier) {
-  // Let referencing module script be referencingModule.[[HostDefined]].
-  if (aReferencingPrivate.isUndefined()) {
-    JS_ReportErrorNumberUC(aCx, js::GetErrorMessage, nullptr,
-                           JSMSG_IMPORT_SCRIPT_NOT_FOUND);
+static ScriptLoader* GetCurrentScriptLoader(JSContext* aCx) {
+  JSObject* object = JS::CurrentGlobalOrNull(aCx);
+  if (!object) {
     return nullptr;
   }
 
-  RefPtr<LoadedScript> script =
-      static_cast<LoadedScript*>(aReferencingPrivate.toPrivate());
+  nsIGlobalObject* global = xpc::NativeGlobal(object);
+  if (!global) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(global);
+  nsGlobalWindowInner* innerWindow = nsGlobalWindowInner::Cast(win);
+  if (!innerWindow) {
+    return nullptr;
+  }
+
+  nsIDocument* document = innerWindow->GetDocument();
+  if (!document) {
+    return nullptr;
+  }
+
+  ScriptLoader* loader = document->ScriptLoader();
+  if (!loader) {
+    return nullptr;
+  }
+
+  return loader;
+}
+
+static LoadedScript* GetLoadedScriptOrNull(
+    JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate) {
+  if (aReferencingPrivate.isUndefined()) {
+    return nullptr;
+  }
+
+  auto script = static_cast<LoadedScript*>(aReferencingPrivate.toPrivate());
   MOZ_ASSERT_IF(
       script->IsModuleScript(),
       JS::GetModulePrivate(script->AsModuleScript()->ModuleRecord()) ==
           aReferencingPrivate);
 
+  return script;
+}
+
+// 8.1.3.8.1 HostResolveImportedModule(referencingModule, specifier)
+JSObject* HostResolveImportedModule(JSContext* aCx,
+                                    JS::Handle<JS::Value> aReferencingPrivate,
+                                    JS::Handle<JSString*> aSpecifier) {
+  JS::Rooted<JSObject*> module(aCx);
+  ScriptLoader::ResolveImportedModule(aCx, aReferencingPrivate, aSpecifier,
+                                      &module);
+  return module;
+}
+
+/* static */ void ScriptLoader::ResolveImportedModule(
+    JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
+    JS::Handle<JSString*> aSpecifier, JS::MutableHandle<JSObject*> aModuleOut) {
+  MOZ_ASSERT(!aModuleOut);
+
+  RefPtr<LoadedScript> script(GetLoadedScriptOrNull(aCx, aReferencingPrivate));
+
   // Let url be the result of resolving a module specifier given referencing
   // module script and specifier.
   nsAutoJSString string;
   if (!string.init(aCx, aSpecifier)) {
-    return nullptr;
+    return;
   }
 
-  nsCOMPtr<nsIURI> uri = ResolveModuleSpecifier(script, string);
+  RefPtr<ScriptLoader> loader = GetCurrentScriptLoader(aCx);
+  if (!loader) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> uri = ResolveModuleSpecifier(loader, script, string);
 
   // This cannot fail because resolving a module specifier must have been
   // previously successful with these same two arguments.
@@ -758,13 +818,12 @@ JSObject* HostResolveImportedModule(JSContext* aCx,
 
   // Let resolved module script be moduleMap[url]. (This entry must exist for us
   // to have gotten to this point.)
-  ModuleScript* ms = script->Loader()->GetFetchedModule(uri);
+  ModuleScript* ms = loader->GetFetchedModule(uri);
   MOZ_ASSERT(ms, "Resolved module not found in module map");
-
   MOZ_ASSERT(!ms->HasParseError());
   MOZ_ASSERT(ms->ModuleRecord());
 
-  return ms->ModuleRecord();
+  aModuleOut.set(ms->ModuleRecord());
 }
 
 bool HostPopulateImportMeta(JSContext* aCx,
@@ -794,17 +853,7 @@ bool HostImportModuleDynamically(JSContext* aCx,
                                  JS::Handle<JS::Value> aReferencingPrivate,
                                  JS::Handle<JSString*> aSpecifier,
                                  JS::Handle<JSObject*> aPromise) {
-  if (aReferencingPrivate.isUndefined()) {
-    JS_ReportErrorNumberUC(aCx, js::GetErrorMessage, nullptr,
-                           JSMSG_IMPORT_SCRIPT_NOT_FOUND);
-    return false;
-  }
-
-  auto script = static_cast<LoadedScript*>(aReferencingPrivate.toPrivate());
-  MOZ_ASSERT_IF(
-      script->IsModuleScript(),
-      JS::GetModulePrivate(script->AsModuleScript()->ModuleRecord()) ==
-          aReferencingPrivate);
+  RefPtr<LoadedScript> script(GetLoadedScriptOrNull(aCx, aReferencingPrivate));
 
   // Attempt to resolve the module specifier.
   nsAutoJSString string;
@@ -812,7 +861,12 @@ bool HostImportModuleDynamically(JSContext* aCx,
     return false;
   }
 
-  nsCOMPtr<nsIURI> uri = ResolveModuleSpecifier(script, string);
+  RefPtr<ScriptLoader> loader = GetCurrentScriptLoader(aCx);
+  if (!loader) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> uri = ResolveModuleSpecifier(loader, script, string);
   if (!uri) {
     JS_ReportErrorNumberUC(aCx, js::GetErrorMessage, nullptr,
                            JSMSG_BAD_MODULE_SPECIFIER, string.get());
@@ -820,10 +874,27 @@ bool HostImportModuleDynamically(JSContext* aCx,
   }
 
   // Create a new top-level load request.
-  RefPtr<ModuleLoadRequest> request = ModuleLoadRequest::CreateDynamicImport(
-      uri, script, aReferencingPrivate, aSpecifier, aPromise);
+  ScriptFetchOptions* options;
+  nsIURI* baseURL;
+  if (script) {
+    options = script->FetchOptions();
+    baseURL = script->BaseURL();
+  } else {
+    // We don't have a referencing script so fall back on using
+    // options from the document. This can happen when the user
+    // triggers an inline event handler, as there is no active script
+    // there.
+    nsIDocument* document = loader->GetDocument();
+    options = new ScriptFetchOptions(mozilla::CORS_NONE,
+                                     document->GetReferrerPolicy(), nullptr,
+                                     document->NodePrincipal());
+    baseURL = document->GetDocBaseURI();
+  }
 
-  script->Loader()->StartDynamicImport(request);
+  RefPtr<ModuleLoadRequest> request = ModuleLoadRequest::CreateDynamicImport(
+      uri, options, baseURL, loader, aReferencingPrivate, aSpecifier, aPromise);
+
+  loader->StartDynamicImport(request);
   return true;
 }
 
@@ -848,7 +919,7 @@ void ScriptLoader::FinishDynamicImport(ModuleLoadRequest* aRequest,
 void ScriptLoader::FinishDynamicImport(JSContext* aCx,
                                        ModuleLoadRequest* aRequest,
                                        nsresult aResult) {
-  LOG(("ScriptLoadRequest (%p): Finish dynamic import %d %d", aRequest,
+  LOG(("ScriptLoadRequest (%p): Finish dynamic import %x %d", aRequest,
        unsigned(aResult), JS_IsExceptionPending(aCx)));
 
   // Complete the dynamic import, report failures indicated by aResult or as a
@@ -2534,7 +2605,7 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
               // Create a ClassicScript object and associate it with the
               // JSScript.
               RefPtr<ClassicScript> classicScript = new ClassicScript(
-                  this, aRequest->mFetchOptions, aRequest->mBaseURL);
+                  aRequest->mFetchOptions, aRequest->mBaseURL);
               classicScript->AssociateWithScript(script);
 
               rv = exec.ExecScript();
