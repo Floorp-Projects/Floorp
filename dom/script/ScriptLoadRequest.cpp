@@ -30,6 +30,7 @@ ScriptFetchOptions::ScriptFetchOptions(
     nsIScriptElement* aElement, nsIPrincipal* aTriggeringPrincipal)
     : mCORSMode(aCORSMode),
       mReferrerPolicy(aReferrerPolicy),
+      mIsPreload(false),
       mElement(aElement),
       mTriggeringPrincipal(aTriggeringPrincipal) {
   MOZ_ASSERT(mTriggeringPrincipal);
