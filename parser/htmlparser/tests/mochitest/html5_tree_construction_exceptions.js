@@ -5,9 +5,9 @@
  * tests.
  */
 var html5Exceptions = {
-  "<!doctype html><keygen><frameset>" : true, // Bug 101019
-  "<select><keygen>" : true, // Bug 101019
-  "<!DOCTYPE html><body><keygen>A" : true, // Bug 101019
-  "<p><table></p>" : true, // parser_web_testrunner.js uses srcdoc which forces quirks mode
-  "<p><table></table>" : true, // parser_web_testrunner.js uses srcdoc which forces quirks mode
-}
+  "<!doctype html><keygen><frameset>": true, // Bug 101019
+  "<select><keygen>": true, // Bug 101019
+  "<!DOCTYPE html><body><keygen>A": true, // Bug 101019
+  "<p><table></p>": true, // parser_web_testrunner.js uses srcdoc which forces quirks mode
+  "<p><table></table>": true, // parser_web_testrunner.js uses srcdoc which forces quirks mode
+};

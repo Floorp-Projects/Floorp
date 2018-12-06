@@ -39,7 +39,7 @@
     var preloadedImages = [];
     while (preloadedImages.length < EXPECTED_PRELOADS) {
       var request = new XMLHttpRequest();
-      request.open('GET', "./file_img_picture_preload.sjs?status", false);
+      request.open("GET", "./file_img_picture_preload.sjs?status", false);
       request.send(null);
       is(request.status, 200, "Getting status from sjs helper should succeed");
       if (request.status === 200) {
@@ -142,7 +142,7 @@
       }
 
       // Check all images, ensure each one had a preload
-      var images = document.querySelectorAll('img');
+      var images = document.querySelectorAll("img");
       for (var img of images) {
         var imgName = img.id;
         if (img.currentSrc) {

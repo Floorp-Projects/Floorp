@@ -7,8 +7,7 @@ function updateDocumentSourceMaps(src) {
   try {
     saxReader.setFeature("http://xml.org/sax/features/namespace-prefixes", true);
     saxReader.setFeature("http://xml.org/sax/features/namespace", true);
-  }
-  catch (e) {
+  } catch (e) {
     // do nothing, we'll accept it as it is.
   }
   var parseErrorLog = [];
@@ -56,7 +55,7 @@ function updateDocumentSourceMaps(src) {
 
     processingInstruction: function processingInstruction(aTarget, aData) {
       do_parse_check(aTarget, "Missing processing instruction target");
-    }
+    },
   };
 
   var errorHandler = {
@@ -70,7 +69,7 @@ function updateDocumentSourceMaps(src) {
 
     ignorableWarning: function ignorableWarning(aError) {
       do_parse_check(!aError, "XML ignorable warning");
-    }
+    },
   };
 
   saxReader.contentHandler = contentHandler;

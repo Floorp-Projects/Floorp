@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=358797
 
 var range = document.createRange();
 range.selectNode(document.firstChild);
-var cf = range.createContextualFragment('<span></span>');
+var cf = range.createContextualFragment("<span></span>");
 ok(cf != null,
    "range.createContextualFragment() should work when range node is DocType");
 
