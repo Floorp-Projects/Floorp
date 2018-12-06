@@ -70,7 +70,7 @@ class ContextChecks {
 
   void check(JSObject* obj, int argIndex) {
     if (obj) {
-      MOZ_ASSERT(JS::ObjectIsNotGray(obj));
+      JS::AssertObjectIsNotGray(obj);
       MOZ_ASSERT(!js::gc::IsAboutToBeFinalizedUnbarriered(&obj));
       check(obj->compartment(), argIndex);
     }
@@ -95,7 +95,7 @@ class ContextChecks {
   }
 
   void check(JSString* str, int argIndex) {
-    MOZ_ASSERT(JS::CellIsNotGray(str));
+    JS::AssertCellIsNotGray(str);
     if (str->isAtom()) {
       checkAtom(&str->asAtom(), argIndex);
     } else {
@@ -159,7 +159,7 @@ class ContextChecks {
   }
 
   void check(JSScript* script, int argIndex) {
-    MOZ_ASSERT(JS::CellIsNotGray(script));
+    JS::AssertCellIsNotGray(script);
     if (script) {
       check(script->realm(), argIndex);
     }
@@ -385,17 +385,17 @@ inline void JSContext::setZone(js::Zone* zone,
 }
 
 inline void JSContext::enterRealmOf(JSObject* target) {
-  MOZ_ASSERT(JS::CellIsNotGray(target));
+  JS::AssertCellIsNotGray(target);
   enterRealm(target->nonCCWRealm());
 }
 
 inline void JSContext::enterRealmOf(JSScript* target) {
-  MOZ_ASSERT(JS::CellIsNotGray(target));
+  JS::AssertCellIsNotGray(target);
   enterRealm(target->realm());
 }
 
 inline void JSContext::enterRealmOf(js::ObjectGroup* target) {
-  MOZ_ASSERT(JS::CellIsNotGray(target));
+  JS::AssertCellIsNotGray(target);
   enterRealm(target->realm());
 }
 

@@ -1449,13 +1449,13 @@ struct WrapNativeHelper {
     JSObject* obj;
     if ((obj = cache->GetWrapper())) {
       // GetWrapper always unmarks gray.
-      MOZ_ASSERT(JS::ObjectIsNotGray(obj));
+      JS::AssertObjectIsNotGray(obj);
       return obj;
     }
 
     // WrapObject never returns a gray thing.
     obj = parent->WrapObject(cx, nullptr);
-    MOZ_ASSERT(JS::ObjectIsNotGray(obj));
+    JS::AssertObjectIsNotGray(obj);
 
     return obj;
   }
@@ -1475,12 +1475,12 @@ struct WrapNativeHelper<T, false> {
                    "Unexpected object in nsWrapperCache");
       obj = rootedObj;
 #endif
-      MOZ_ASSERT(JS::ObjectIsNotGray(obj));
+      JS::AssertObjectIsNotGray(obj);
       return obj;
     }
 
     obj = WrapNativeISupports(cx, parent, cache);
-    MOZ_ASSERT(JS::ObjectIsNotGray(obj));
+    JS::AssertObjectIsNotGray(obj);
     return obj;
   }
 };
@@ -1499,7 +1499,7 @@ static inline JSObject* FindAssociatedGlobal(
   if (!obj) {
     return nullptr;
   }
-  MOZ_ASSERT(JS::ObjectIsNotGray(obj));
+  JS::AssertObjectIsNotGray(obj);
 
   // The object is never a CCW but it may not be in the current compartment of
   // the JSContext.
@@ -1516,7 +1516,7 @@ static inline JSObject* FindAssociatedGlobal(
       JS::Rooted<JSObject*> rootedObj(cx, obj);
       JSObject* xblScope = xpc::GetXBLScope(cx, rootedObj);
       MOZ_ASSERT_IF(xblScope, JS_IsGlobalObject(xblScope));
-      MOZ_ASSERT(JS::ObjectIsNotGray(xblScope));
+      JS::AssertObjectIsNotGray(xblScope);
       return xblScope;
     }
 
@@ -1529,7 +1529,7 @@ static inline JSObject* FindAssociatedGlobal(
       JS::Rooted<JSObject*> rootedObj(cx, obj);
       JSObject* uaWidgetScope = xpc::GetUAWidgetScope(cx, rootedObj);
       MOZ_ASSERT_IF(uaWidgetScope, JS_IsGlobalObject(uaWidgetScope));
-      MOZ_ASSERT(JS::ObjectIsNotGray(uaWidgetScope));
+      JS::AssertObjectIsNotGray(uaWidgetScope);
       return uaWidgetScope;
     }
 

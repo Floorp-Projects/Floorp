@@ -3958,7 +3958,7 @@ JS::Handle<JSObject*> GetPerInterfaceObjectHandle(
 
   const JS::Heap<JSObject*>& entrySlot =
       protoAndIfaceCache.EntrySlotMustExist(aSlotId);
-  MOZ_ASSERT(JS::ObjectIsNotGray(entrySlot));
+  JS::AssertObjectIsNotGray(entrySlot);
   return JS::Handle<JSObject*>::fromMarkedLocation(entrySlot.address());
 }
 

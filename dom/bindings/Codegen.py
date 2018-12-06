@@ -3771,7 +3771,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
               return false;
             }
             MOZ_ASSERT(JS_IsGlobalObject(global));
-            MOZ_ASSERT(JS::ObjectIsNotGray(global));
+            JS::AssertObjectIsNotGray(global);
 
             // That might have ended up wrapping us already, due to the wonders
             // of XBL.  Check for that, and bail out as needed.

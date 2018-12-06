@@ -308,12 +308,14 @@ JSObject* Wrapper::wrappedObject(JSObject* wrapper) {
     MOZ_ASSERT_IF(IsCrossCompartmentWrapper(wrapper),
                   !IsCrossCompartmentWrapper(target));
 
+#ifdef DEBUG
     // An incremental GC will eventually mark the targets of black wrappers
     // black but while it is in progress we can observe gray targets.
-    MOZ_ASSERT_IF(
-        !wrapper->runtimeFromMainThread()->gc.isIncrementalGCInProgress() &&
-            wrapper->isMarkedBlack(),
-        JS::ObjectIsNotGray(target));
+    if (!wrapper->runtimeFromMainThread()->gc.isIncrementalGCInProgress() &&
+        wrapper->isMarkedBlack()) {
+      JS::AssertObjectIsNotGray(target);
+    }
+#endif
 
     // Unmark wrapper targets that should be black in case an incremental GC
     // hasn't marked them the correct color yet.

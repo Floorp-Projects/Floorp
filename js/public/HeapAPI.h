@@ -437,7 +437,7 @@ static MOZ_ALWAYS_INLINE bool CellIsMarkedGray(const Cell* cell) {
 extern JS_PUBLIC_API bool CellIsMarkedGrayIfKnown(const Cell* cell);
 
 #ifdef DEBUG
-extern JS_PUBLIC_API bool CellIsNotGray(const Cell* cell);
+extern JS_PUBLIC_API void AssertCellIsNotGray(const Cell* cell);
 
 extern JS_PUBLIC_API bool ObjectIsMarkedBlack(const JSObject* obj);
 #endif

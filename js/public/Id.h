@@ -171,12 +171,10 @@ struct GCPolicy<jsid> {
 };
 
 #ifdef DEBUG
-MOZ_ALWAYS_INLINE bool IdIsNotGray(jsid id) {
-  if (!JSID_IS_GCTHING(id)) {
-    return true;
+MOZ_ALWAYS_INLINE void AssertIdIsNotGray(jsid id) {
+  if (JSID_IS_GCTHING(id)) {
+    AssertCellIsNotGray(JSID_TO_GCTHING(id).asCell());
   }
-
-  return CellIsNotGray(JSID_TO_GCTHING(id).asCell());
 }
 #endif
 
