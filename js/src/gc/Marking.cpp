@@ -319,16 +319,27 @@ static inline bool ShouldMarkCrossCompartment(GCMarker* marker, JSObject* src,
     MOZ_ASSERT_IF(!dst.isMarkedBlack(), !dstZone->isGCSweeping());
 
     /*
-     * Having black->gray edges violates our promise to the cycle
-     * collector. This can happen if we're collecting a compartment and it
-     * has an edge to an uncollected compartment: it's possible that the
-     * source and destination of the cross-compartment edge should be gray,
-     * but the source was marked black by the write barrier.
+     * Having black->gray edges violates our promise to the cycle collector so
+     * we ensure that gray things we encounter when marking black end up getting
+     * marked black.
+     *
+     * This can happen for two reasons:
+     *
+     * 1) If we're collecting a compartment and it has an edge to an uncollected
+     * compartment it's possible that the source and destination of the
+     * cross-compartment edge should be gray, but the source was marked black by
+     * the write barrier.
+     *
+     * 2) If we yield during gray marking and the write barrier marks a gray
+     * thing black.
+     *
+     * We handle the first case before returning whereas the second case happens
+     * as part of normal marking.
      */
-    if (dst.isMarkedGray()) {
-      MOZ_ASSERT(!dstZone->isCollecting());
+    if (dst.isMarkedGray() && !dstZone->isGCMarking()) {
       UnmarkGrayGCThing(marker->runtime(),
                         JS::GCCellPtr(&dst, dst.getTraceKind()));
+      return false;
     }
 
     return dstZone->isGCMarking();
@@ -1609,7 +1620,6 @@ bool GCMarker::markUntilBudgetExhausted(SliceBudget& budget) {
       do {
         processMarkStackTop(budget);
         if (budget.isOverBudget()) {
-          MOZ_CRASH("Incremental gray marking NYI");
           return false;
         }
       } while (hasGrayEntries());
@@ -2475,7 +2485,7 @@ void GCMarker::pushValueArray(JSObject* obj, HeapSlot* start, HeapSlot* end) {
 
 void GCMarker::repush(JSObject* obj) {
   MOZ_ASSERT_IF(markColor() == MarkColor::Gray,
-                gc::TenuredCell::fromPointer(obj)->isMarkedGray());
+                gc::TenuredCell::fromPointer(obj)->isMarkedAny());
   MOZ_ASSERT_IF(markColor() == MarkColor::Black,
                 gc::TenuredCell::fromPointer(obj)->isMarkedBlack());
   pushTaggedPtr(obj);
@@ -3502,13 +3512,28 @@ class UnmarkGrayTracer : public JS::CallbackTracer {
 #endif
 };
 
+static bool
+IsCCTraceKindInternal(JS::TraceKind kind)
+{
+    switch (kind) {
+#define EXPAND_IS_CC_TRACE_KIND(name, _, addToCCKind)    \
+      case JS::TraceKind::name:                          \
+        return addToCCKind;
+JS_FOR_EACH_TRACEKIND(EXPAND_IS_CC_TRACE_KIND)
+      default:
+        MOZ_CRASH("Unexpected trace kind");
+    }
+}
+
 void UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing) {
   Cell* cell = thing.asCell();
 
-  // Cells in the nursery cannot be gray, and therefore must necessarily point
-  // to only black edges.
-  if (!cell->isTenured()) {
+  // Cells in the nursery cannot be gray, and nor can certain kinds of tenured
+  // cells. These must necessarily point only to black edges.
+  if (!cell->isTenured() ||
+      !IsCCTraceKindInternal(cell->asTenured().getTraceKind())) {
 #ifdef DEBUG
+    MOZ_ASSERT(!cell->isMarkedGray());
     AssertNonGrayTracer nongray(runtime());
     TraceChildren(&nongray, cell, thing.kind());
 #endif
@@ -3516,6 +3541,24 @@ void UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing) {
   }
 
   TenuredCell& tenured = cell->asTenured();
+
+  // If the cell is in a zone that we're currently marking gray, then it's
+  // possible that it is currently white but will end up gray. To handle this
+  // case, push any cells in zones that are currently being marked onto the
+  // mark stack and they will eventually get marked black.
+  Zone* zone = tenured.zone();
+  if (zone->needsIncrementalBarrier()) {
+    if (!cell->isMarkedBlack()) {
+      Cell* tmp = cell;
+      TraceManuallyBarrieredGenericPointerEdge(zone->barrierTracer(), &tmp,
+                                               "read barrier");
+      MOZ_ASSERT(tmp == cell);
+      unmarkedAny = true;
+    }
+    return;
+  }
+
+  MOZ_ASSERT(!zone->isGCMarkingBlackAndGray());
   if (!tenured.isMarkedGray()) {
     return;
   }
@@ -3556,6 +3599,7 @@ bool js::IsUnmarkGrayTracer(JSTracer* trc) {
 
 static bool UnmarkGrayGCThing(JSRuntime* rt, JS::GCCellPtr thing) {
   MOZ_ASSERT(thing);
+  MOZ_ASSERT(thing.asCell()->isMarkedGray());
 
   // Gray cell unmarking can occur at different points between recording and
   // replay, so disallow recorded events from occurring in the tracer.
