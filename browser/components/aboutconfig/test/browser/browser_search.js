@@ -24,19 +24,26 @@ add_task(async function test_search() {
 
     // Test page loaded with correct number of prefs.
     await ContentTask.spawn(browser, prefArray, aPrefArray => {
-      Assert.equal(content.document.getElementById("prefs").childElementCount,
-                   aPrefArray.length);
+      // The total number of preferences may change at any time because of
+      // operations running in the background, so we only test approximately.
+      // The change in count would be because of one or two added preferences,
+      // but we tolerate a difference of up to 50 preferences just to be safe.
+      // We want thousands of prefs instead of a few dozen that are filtered.
+      Assert.greater(content.document.getElementById("prefs").childElementCount,
+                     aPrefArray.length - 50);
 
-      // Test page search of "button" returns correct number of preferences.
+      // Filter a subset of preferences. The "browser.download." branch is
+      // chosen because it is very unlikely that its preferences would be
+      // modified by other code during the execution of this test.
       let search = content.document.getElementById("search");
-      search.value = "button   ";
+      search.value = "wser.down   ";
       search.focus();
     });
 
     EventUtils.sendKey("return");
     await ContentTask.spawn(browser, prefArray, aPrefArray => {
       let filteredPrefArray =
-          aPrefArray.filter(pref => pref.includes("button"));
+          aPrefArray.filter(pref => pref.includes("wser.down"));
       // Adding +1 to the list since button does not match an exact
       // preference name then a row is added for the user to add a
       // new button preference if desired
@@ -51,8 +58,13 @@ add_task(async function test_search() {
 
     EventUtils.sendKey("return");
     await ContentTask.spawn(browser, prefArray, aPrefArray => {
-      Assert.equal(content.document.getElementById("prefs").childElementCount,
-                   aPrefArray.length);
+      // The total number of preferences may change at any time because of
+      // operations running in the background, so we only test approximately.
+      // The change in count would be because of one or two added preferences,
+      // but we tolerate a difference of up to 50 preferences just to be safe.
+      // We want thousands of prefs instead of a few dozen that are filtered.
+      Assert.greater(content.document.getElementById("prefs").childElementCount,
+                     aPrefArray.length - 50);
 
       // Test invalid search returns no preferences.
       let search = content.document.getElementById("search");

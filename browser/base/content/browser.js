@@ -7431,7 +7431,7 @@ const gAccessibilityServiceIndicator = {
       let a11yServicesSupportURL =
         Services.urlFormatter.formatURLPref("accessibility.support.url");
       // This is a known URL coming from trusted UI
-      gBrowser.selectedTab = gBrowser.addTrustedTab(a11yServicesSupportURL);
+      openTrustedLinkIn(a11yServicesSupportURL, "tab");
       Services.telemetry.scalarSet("a11y.indicator_acted_on", true);
     }
   },
