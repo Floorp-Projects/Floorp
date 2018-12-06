@@ -47,7 +47,7 @@ function tick() {
     d.close();
     return;
   }
-  
+
   if (runNumber == 2) {
     var text = textChildren(d.body);
     is(text, "XYZ", "Wrong text before reload.");
@@ -59,7 +59,7 @@ function tick() {
     var text = textChildren(d.body);
     is(text, "XYZ", "Wrong text after reload.");
     SimpleTest.finish();
-    return;
+
   }
 }
 
