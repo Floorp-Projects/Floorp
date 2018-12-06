@@ -25,13 +25,13 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(ModuleLoadRequest)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ModuleLoadRequest,
                                                 ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mBaseURL, mLoader, mModuleScript, mImports)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoader, mModuleScript, mImports)
   tmp->ClearDynamicImport();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ModuleLoadRequest,
                                                   ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBaseURL, mLoader, mModuleScript, mImports)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoader, mModuleScript, mImports)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ModuleLoadRequest,
@@ -74,7 +74,7 @@ static VisitedURLSet* NewVisitedSetForTopLevelImport(nsIURI* aURI) {
 }
 
 /* static */ ModuleLoadRequest* ModuleLoadRequest::CreateDynamicImport(
-    nsIURI* aURI, ModuleScript* aScript,
+    nsIURI* aURI, LoadedScript* aScript,
     JS::Handle<JS::Value> aReferencingPrivate, JS::Handle<JSString*> aSpecifier,
     JS::Handle<JSObject*> aPromise) {
   MOZ_ASSERT(aSpecifier);
