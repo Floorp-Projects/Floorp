@@ -30,7 +30,9 @@ use frame_builder::{FrameBuilder, FrameBuilderConfig};
 use gpu_cache::GpuCache;
 use hit_test::{HitTest, HitTester};
 use internal_types::{DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
-use prim_store::{PrimitiveDataStore, PrimitiveScratchBuffer};
+use prim_store::{PrimitiveDataStore, PrimitiveScratchBuffer, PrimitiveInstance};
+use prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData};
+use prim_store::text_run::TextRunDataStore;
 use profiler::{BackendProfileCounters, IpcProfileCounters, ResourceProfileCounters};
 use record::ApiRecordingReceiver;
 use renderer::{AsyncPropertySampler, PipelineInfo};
@@ -192,6 +194,7 @@ impl FrameStamp {
 // between display lists.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Default)]
 pub struct FrameResources {
     /// The store of currently active / available clip nodes. This is kept
     /// in sync with the clip interner in the scene builder for each document.
@@ -200,13 +203,32 @@ pub struct FrameResources {
     /// Currently active / available primitives. Kept in sync with the
     /// primitive interner in the scene builder, per document.
     pub prim_data_store: PrimitiveDataStore,
+    pub text_run_data_store: TextRunDataStore,
 }
 
 impl FrameResources {
-    fn new() -> Self {
-        FrameResources {
-            clip_data_store: ClipDataStore::new(),
-            prim_data_store: PrimitiveDataStore::new(),
+    pub fn as_common_data(
+        &self,
+        prim_inst: &PrimitiveInstance
+    ) -> &PrimTemplateCommonData {
+        match prim_inst.kind {
+            PrimitiveInstanceKind::Picture { data_handle, .. } |
+            PrimitiveInstanceKind::LineDecoration { data_handle, .. } |
+            PrimitiveInstanceKind::NormalBorder { data_handle, .. } |
+            PrimitiveInstanceKind::ImageBorder { data_handle, .. } |
+            PrimitiveInstanceKind::Rectangle { data_handle, .. } |
+            PrimitiveInstanceKind::YuvImage { data_handle, .. } |
+            PrimitiveInstanceKind::Image { data_handle, .. } |
+            PrimitiveInstanceKind::LinearGradient { data_handle, .. } |
+            PrimitiveInstanceKind::RadialGradient { data_handle, .. } |
+            PrimitiveInstanceKind::Clear { data_handle, .. } => {
+                let prim_data = &self.prim_data_store[data_handle];
+                &prim_data.common
+            }
+            PrimitiveInstanceKind::TextRun { data_handle, .. }  => {
+                let prim_data = &self.text_run_data_store[data_handle];
+                &prim_data.common
+            }
         }
     }
 }
@@ -289,7 +311,7 @@ impl Document {
             hit_tester_is_valid: false,
             rendered_frame_is_valid: false,
             has_built_scene: false,
-            resources: FrameResources::new(),
+            resources: FrameResources::default(),
             scratch: PrimitiveScratchBuffer::new(),
         }
     }
@@ -1183,6 +1205,7 @@ impl RenderBackend {
         if let Some(updates) = doc_resource_updates {
             doc.resources.clip_data_store.apply_updates(updates.clip_updates);
             doc.resources.prim_data_store.apply_updates(updates.prim_updates);
+            doc.resources.text_run_data_store.apply_updates(updates.text_run_updates);
         }
 
         // TODO: this scroll variable doesn't necessarily mean we scrolled. It is only used

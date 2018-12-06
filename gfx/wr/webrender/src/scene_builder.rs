@@ -12,8 +12,11 @@ use frame_builder::{FrameBuilderConfig, FrameBuilder};
 use clip::{ClipDataInterner, ClipDataUpdateList};
 use clip_scroll_tree::ClipScrollTree;
 use display_list_flattener::DisplayListFlattener;
+use intern::{Internable, Interner};
 use internal_types::{FastHashMap, FastHashSet};
-use prim_store::{PrimitiveDataInterner, PrimitiveDataUpdateList, PrimitiveStoreStats};
+use prim_store::{PrimitiveDataInterner, PrimitiveDataUpdateList, PrimitiveKeyKind};
+use prim_store::PrimitiveStoreStats;
+use prim_store::text_run::{TextRunDataInterner, TextRun, TextRunDataUpdateList};
 use resource_cache::FontInstanceMap;
 use render_backend::DocumentView;
 use renderer::{PipelineInfo, SceneBuilderHooks};
@@ -28,6 +31,7 @@ use std::time::Duration;
 pub struct DocumentResourceUpdates {
     pub clip_updates: ClipDataUpdateList,
     pub prim_updates: PrimitiveDataUpdateList,
+    pub text_run_updates: TextRunDataUpdateList,
 }
 
 /// Represents the work associated to a transaction before scene building.
@@ -159,19 +163,31 @@ pub enum SceneSwapResult {
 //   display lists is (a) fast (b) done during scene building.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Default)]
 pub struct DocumentResources {
     pub clip_interner: ClipDataInterner,
     pub prim_interner: PrimitiveDataInterner,
+    pub text_run_interner: TextRunDataInterner,
 }
 
-impl DocumentResources {
-    fn new() -> Self {
-        DocumentResources {
-            clip_interner: ClipDataInterner::new(),
-            prim_interner: PrimitiveDataInterner::new(),
-        }
+// Access to `DocumentResources` interners by `Internable`
+pub trait InternerMut<I: Internable>
+{
+    fn interner_mut(&mut self) -> &mut Interner<I::Source, I::InternData, I::Marker>;
+}
+
+impl InternerMut<PrimitiveKeyKind> for DocumentResources {
+    fn interner_mut(&mut self) -> &mut PrimitiveDataInterner {
+        &mut self.prim_interner
     }
 }
+
+impl InternerMut<TextRun> for DocumentResources {
+    fn interner_mut(&mut self) -> &mut TextRunDataInterner {
+        &mut self.text_run_interner
+    }
+}
+
 
 // A document in the scene builder contains the current scene,
 // as well as a persistent clip interner. This allows clips
@@ -187,7 +203,7 @@ impl Document {
     fn new(scene: Scene) -> Self {
         Document {
             scene,
-            resources: DocumentResources::new(),
+            resources: DocumentResources::default(),
             prim_store_stats: PrimitiveStoreStats::empty(),
         }
     }
@@ -341,10 +357,16 @@ impl SceneBuilder {
                     .prim_interner
                     .end_frame_and_get_pending_updates();
 
+                let text_run_updates = item
+                    .doc_resources
+                    .text_run_interner
+                    .end_frame_and_get_pending_updates();
+
                 doc_resource_updates = Some(
                     DocumentResourceUpdates {
                         clip_updates,
                         prim_updates,
+                        text_run_updates,
                     }
                 );
 
@@ -453,10 +475,16 @@ impl SceneBuilder {
                     .prim_interner
                     .end_frame_and_get_pending_updates();
 
+                let text_run_updates = doc
+                    .resources
+                    .text_run_interner
+                    .end_frame_and_get_pending_updates();
+
                 doc_resource_updates = Some(
                     DocumentResourceUpdates {
                         clip_updates,
                         prim_updates,
+                        text_run_updates,
                     }
                 );
 
