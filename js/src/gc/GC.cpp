@@ -1021,7 +1021,9 @@ const char gc::ZealModeHelpText[] =
     "yields\n"
     "        before sweeping shape trees\n"
     "    24: (CheckWeakMapMarking) Check weak map marking invariants after "
-    "every GC\n";
+    "every GC\n"
+    "    25: (YieldWhileGrayMarking) Incremental GC in two slices that yields\n"
+    "        during gray marking\n";
 
 // The set of zeal modes that control incremental slices. These modes are
 // mutually exclusive.
@@ -5285,6 +5287,13 @@ IncrementalProgress GCRuntime::markGrayReferencesInCurrentGroup(
   markGrayRoots<SweepGroupZonesIter>(gcstats::PhaseKind::SWEEP_MARK_GRAY);
 
   hasMarkedGrayRoots = true;
+
+#ifdef JS_GC_ZEAL
+  if (shouldYieldForZeal(ZealMode::YieldWhileGrayMarking)) {
+    return NotFinished;
+  }
+#endif
+
   return marker.markUntilBudgetExhausted(budget) ? Finished : NotFinished;
 }
 
