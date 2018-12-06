@@ -327,6 +327,14 @@ static void NotifyDidRender(layers::CompositorBridgeParent* aBridge,
   }
 }
 
+static void NotifyDidStartRender(layers::CompositorBridgeParent* aBridge) {
+  // Starting a render will change increment mRenderingCount, and potentially
+  // change whether we can allow the bridge to intiate another frame.
+  if (aBridge->GetWrBridge()) {
+    aBridge->GetWrBridge()->CompositeIfNeeded();
+  }
+}
+
 void RenderThread::UpdateAndRender(wr::WindowId aWindowId,
                                    const TimeStamp& aStartTime, bool aRender,
                                    const Maybe<gfx::IntSize>& aReadbackSize,
@@ -345,6 +353,11 @@ void RenderThread::UpdateAndRender(wr::WindowId aWindowId,
   TimeStamp start = TimeStamp::Now();
 
   auto& renderer = it->second;
+
+  layers::CompositorThreadHolder::Loop()->PostTask(
+      NewRunnableFunction("NotifyDidStartRenderRunnable", &NotifyDidStartRender,
+                          renderer->GetCompositorBridge()));
+
   bool rendered = false;
   RendererStats stats = {0};
   if (aRender) {
