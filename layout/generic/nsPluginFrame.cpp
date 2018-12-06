@@ -1181,8 +1181,7 @@ void nsPluginFrame::PrintPlugin(gfxContext& aRenderingContext,
    * meta surface.
    */
 
-  /* we'll already be translated into the right spot by gfxWindowsNativeDrawing
-   */
+  // we'll already be translated into the right spot by gfxWindowsNativeDrawing
   nsSize contentSize = GetContentRectRelativeToSelf().Size();
   window.x = 0;
   window.y = 0;
@@ -1191,8 +1190,7 @@ void nsPluginFrame::PrintPlugin(gfxContext& aRenderingContext,
 
   aRenderingContext.Save();
 
-  /* Make sure plugins don't do any damage outside of where they're supposed to
-   */
+  // Make sure plugins don't do any damage outside of where they're supposed to
   aRenderingContext.NewPath();
   gfxRect r(window.x, window.y, window.width, window.height);
   aRenderingContext.Rectangle(r);

@@ -885,10 +885,15 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  // Let's check if this is a 3rd party context.
-  if (!nsContentUtils::IsThirdPartyWindowOrChannel(aWindow, nullptr, aURI)) {
-    LOG(("Our window isn't a third-party window"));
-    return true;
+  // As a performance optimization, we only perform this check for
+  // BEHAVIOR_REJECT_FOREIGN and BEHAVIOR_LIMIT_FOREIGN.  For
+  // BEHAVIOR_REJECT_TRACKER, third-partiness is implicily checked later below.
+  if (behavior != nsICookieService::BEHAVIOR_REJECT_TRACKER) {
+    // Let's check if this is a 3rd party context.
+    if (!nsContentUtils::IsThirdPartyWindowOrChannel(aWindow, nullptr, aURI)) {
+      LOG(("Our window isn't a third-party window"));
+      return true;
+    }
   }
 
   if (behavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN ||
@@ -908,6 +913,20 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     LOG(("Our window isn't a third-party tracking window"));
     return true;
   }
+
+#ifdef DEBUG
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
+  if (thirdPartyUtil) {
+    bool thirdParty = false;
+    nsresult rv = thirdPartyUtil->IsThirdPartyWindow(aWindow->GetOuterWindow(),
+                                                     aURI, &thirdParty);
+    // The result of this assertion depends on whether IsThirdPartyWindow
+    // succeeds, because otherwise IsThirdPartyWindowOrChannel artificially
+    // fails.
+    MOZ_ASSERT(nsContentUtils::IsThirdPartyWindowOrChannel(
+                   aWindow, nullptr, aURI) == NS_SUCCEEDED(rv));
+  }
+#endif
 
   nsCOMPtr<nsIPrincipal> parentPrincipal;
   nsCOMPtr<nsIURI> parentPrincipalURI;

@@ -168,7 +168,8 @@ NonBlockingAsyncInputStream::Close() {
 NS_IMETHODIMP
 NonBlockingAsyncInputStream::Available(uint64_t* aLength) {
   nsresult rv = mInputStream->Available(aLength);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  // Don't issue warnings for legal condition NS_BASE_STREAM_CLOSED.
+  if (rv == NS_BASE_STREAM_CLOSED || NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 

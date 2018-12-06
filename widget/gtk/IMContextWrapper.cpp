@@ -842,8 +842,19 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
         // ibus won't send back key press events in a dead key sequcne.
         if (mMaybeInDeadKeySequence && aEvent->type == GDK_KEY_PRESS) {
           maybeHandledAsynchronously = false;
-          isUnexpectedAsyncEvent = isHandlingAsyncEvent;
-          break;
+          if (isHandlingAsyncEvent) {
+            isUnexpectedAsyncEvent = true;
+            break;
+          }
+          // Some keyboard layouts which have dead keys may send
+          // "empty" key event to make us call
+          // gtk_im_context_filter_keypress() to commit composed
+          // character during a GDK_KEY_PRESS event dispatching.
+          if (!gdk_keyval_to_unicode(aEvent->keyval) &&
+              !aEvent->hardware_keycode) {
+            isUnexpectedAsyncEvent = true;
+            break;
+          }
         }
         // ibus handles key events synchronously if focused editor is
         // <input type="password"> or |ime-mode: disabled;|.
@@ -878,8 +889,19 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
         // fcitx won't send back key press events in a dead key sequcne.
         if (mMaybeInDeadKeySequence && aEvent->type == GDK_KEY_PRESS) {
           maybeHandledAsynchronously = false;
-          isUnexpectedAsyncEvent = isHandlingAsyncEvent;
-          break;
+          if (isHandlingAsyncEvent) {
+            isUnexpectedAsyncEvent = true;
+            break;
+          }
+          // Some keyboard layouts which have dead keys may send
+          // "empty" key event to make us call
+          // gtk_im_context_filter_keypress() to commit composed
+          // character during a GDK_KEY_PRESS event dispatching.
+          if (!gdk_keyval_to_unicode(aEvent->keyval) &&
+              !aEvent->hardware_keycode) {
+            isUnexpectedAsyncEvent = true;
+            break;
+          }
         }
 
         // fcitx handles key events asynchronously even if focused

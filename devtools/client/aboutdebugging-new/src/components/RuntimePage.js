@@ -25,7 +25,7 @@ const TemporaryExtensionInstaller =
 const WorkerDetail = createFactory(require("./debugtarget/WorkerDetail"));
 
 const Actions = require("../actions/index");
-const { DEBUG_TARGET_PANE, PAGE_TYPES } = require("../constants");
+const { DEBUG_TARGET_PANE, PAGE_TYPES, RUNTIMES } = require("../constants");
 
 const {
   getCurrentConnectionPromptSetting,
@@ -98,6 +98,7 @@ class RuntimePage extends PureComponent {
       dispatch,
       installedExtensions,
       otherWorkers,
+      runtimeId,
       runtimeInfo,
       serviceWorkers,
       sharedWorkers,
@@ -111,12 +112,17 @@ class RuntimePage extends PureComponent {
       return null;
     }
 
+    // do not show the connection prompt setting in 'This Firefox'
+    const shallShowPromptSetting = runtimeId !== RUNTIMES.THIS_FIREFOX;
+
     return dom.article(
       {
         className: "page js-runtime-page",
       },
       RuntimeInfo(runtimeInfo),
-      this.renderConnectionPromptSetting(),
+      shallShowPromptSetting
+        ? this.renderConnectionPromptSetting()
+        : null,
       isSupportedDebugTargetPane(runtimeInfo.type, DEBUG_TARGET_PANE.TEMPORARY_EXTENSION)
         ? TemporaryExtensionInstaller({ dispatch })
         : null,

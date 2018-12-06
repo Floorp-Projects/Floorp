@@ -102,8 +102,8 @@ CONFIG_PER_BOUNCER_PRODUCT = {
         'name_postfix': '-msi-SSL',
         'path_template': RELEASES_PATH_TEMPLATE,
         'file_names': {
-            'win': '{pretty_product}%20Installer.msi',
-            'win64': '{pretty_product}%20Installer.msi',
+            'win': '{pretty_product}%20Setup%20{version}.msi',
+            'win64': '{pretty_product}%20Setup%20{version}.msi',
         }
     }
 }

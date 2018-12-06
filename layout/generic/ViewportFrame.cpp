@@ -151,8 +151,8 @@ void ViewportFrame::BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
       // be handled as top layer element here.
       if (!(frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
         MOZ_ASSERT(!elem->GetParent()->IsHTMLElement(),
-                   "HTML element "
-                   "should always be out-of-flow if in the top layer");
+                   "HTML element should always be out-of-flow if in the top "
+                   "layer");
         continue;
       }
       if (nsIFrame* backdropPh =

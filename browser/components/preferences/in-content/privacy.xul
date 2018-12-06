@@ -13,7 +13,7 @@
       class="subcategory"
       hidden="true"
       data-category="panePrivacy">
-  <label class="header-name" flex="1" data-l10n-id="privacy-header"/>
+  <html:h1 data-l10n-id="privacy-header"/>
 </hbox>
 
 <!-- Tracking / Content Blocking -->
@@ -57,9 +57,9 @@
                      value="standard"
                      data-l10n-id="content-blocking-setting-standard"
                      flex="1"/>
-              <button id="standardArrow" class="arrowhead"/>
+              <button id="standardArrow" class="arrowhead default-content-blocking-ui"/>
             </hbox>
-            <vbox class="indent">
+            <vbox class="indent default-content-blocking-ui">
               <description data-l10n-id="content-blocking-standard-desc"></description>
               <vbox class="content-blocking-extra-information">
                 <vbox class="indent">
@@ -73,6 +73,9 @@
                   </hbox>
                 </vbox>
               </vbox>
+            </vbox>
+            <vbox class="indent fallback-content-blocking-ui">
+              <description data-l10n-id="content-blocking-standard-description"/>
             </vbox>
           </vbox>
           <vbox id="contentBlockingOptionStrict" class="content-blocking-category">
@@ -437,7 +440,7 @@
       class="subcategory"
       hidden="true"
       data-category="panePrivacy">
-  <label class="header-name" flex="1" data-l10n-id="permissions-header"/>
+  <html:h1 data-l10n-id="permissions-header"/>
 </hbox>
 
 <!-- Permissions -->
@@ -668,7 +671,7 @@
       class="subcategory"
       hidden="true"
       data-category="panePrivacy">
-  <label class="header-name" flex="1" data-l10n-id="collection-header"/>
+  <html:h1 data-l10n-id="collection-header"/>
 </hbox>
 
 <groupbox id="dataCollectionGroup" data-category="panePrivacy" hidden="true">
@@ -747,7 +750,7 @@
       class="subcategory"
       hidden="true"
       data-category="panePrivacy">
-  <label class="header-name" flex="1" data-l10n-id="security-header"/>
+  <html:h1 data-l10n-id="security-header"/>
 </hbox>
 
 <!-- addons, forgery (phishing) UI Security -->

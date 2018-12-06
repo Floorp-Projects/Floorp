@@ -42,7 +42,7 @@ class DTDChecker(Checker):
     def known_entities(self, refValue):
         if self.__known_entities is None and self.reference is not None:
             self.__known_entities = set()
-            for ent in self.reference:
+            for ent in self.reference.values():
                 self.__known_entities.update(
                     self.entities_for_value(ent.raw_val))
         return self.__known_entities if self.__known_entities is not None \

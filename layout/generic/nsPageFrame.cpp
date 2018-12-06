@@ -16,7 +16,6 @@
 #include "nsIPresShell.h"
 #include "nsPageContentFrame.h"
 #include "nsDisplayList.h"
-#include "nsLayoutUtils.h"              // for function BinarySearchForPosition
 #include "nsSimplePageSequenceFrame.h"  // for nsSharedPageData
 #include "nsTextFormatter.h"  // for page number localization formatting
 #include "nsBidiUtils.h"

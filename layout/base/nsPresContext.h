@@ -102,10 +102,11 @@ enum nsPresContext_CachedIntPrefType {
 // IDs for the default variable and fixed fonts (not to be changed, see
 // nsFont.h) To be used for Get/SetDefaultFont(). The other IDs in nsFont.h are
 // also supported.
-const uint8_t kPresContext_DefaultVariableFont_ID =
-    0x00;  // kGenericFont_moz_variable
-const uint8_t kPresContext_DefaultFixedFont_ID =
-    0x01;  // kGenericFont_moz_fixed
+//
+// kGenericFont_moz_variable
+const uint8_t kPresContext_DefaultVariableFont_ID = 0x00;
+// kGenericFont_moz_fixed
+const uint8_t kPresContext_DefaultFixedFont_ID = 0x01;
 
 #ifdef DEBUG
 struct nsAutoLayoutPhase;

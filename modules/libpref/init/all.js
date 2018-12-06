@@ -5137,6 +5137,9 @@ pref("extensions.webextensions.enablePerformanceCounters", true);
 pref("extensions.webextensions.performanceCountersMaxAge", 1000);
 
 // Report Site Issue button
+// Note that on enabling the button in other release channels, make sure to
+// disable it in problematic tests, see disableNonReleaseActions() inside
+// browser/modules/test/browser/head.js
 pref("extensions.webcompat-reporter.newIssueEndpoint", "https://webcompat.com/issues/new");
 #if MOZ_UPDATE_CHANNEL != release && MOZ_UPDATE_CHANNEL != esr
 pref("extensions.webcompat-reporter.enabled", true);

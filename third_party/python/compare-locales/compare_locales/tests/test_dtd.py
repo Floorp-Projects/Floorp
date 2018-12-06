@@ -26,6 +26,10 @@ class TestDTD(ParserTestMixin, unittest.TestCase):
     def test_one_entity(self):
         self._test('''<!ENTITY foo.label "stuff">''',
                    (('foo.label', 'stuff'),))
+        self.assertListEqual(
+            [e.localized for e in self.parser],
+            [True]
+        )
 
     quoteContent = '''<!ENTITY good.one "one">
 <!ENTITY bad.one "bad " quote">
@@ -98,6 +102,22 @@ class TestDTD(ParserTestMixin, unittest.TestCase):
         self.assertEqual(e.val, 'value')
         self.assertEqual(len(entities), 4)
         p.readContents(b'''\
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+
+<!ENTITY foo "value">
+''')
+        entities = list(p.walk())
+        self.assertIsInstance(entities[0], parser.Comment)
+        self.assertIn('MPL', entities[0].all)
+        e = entities[2]
+        self.assertIsInstance(e, parser.Entity)
+        self.assertEqual(e.key, 'foo')
+        self.assertEqual(e.val, 'value')
+        self.assertEqual(len(entities), 4)
+        # Test again without empty line after licence header, and with BOM.
+        p.readContents(b'''\xEF\xBB\xBF\
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
@@ -214,6 +234,37 @@ spanning lines -->  <!--
         self.assertEqual(entity.val, ' last line ')
         entity = next(entities)
         self.assertIsInstance(entity, parser.Whitespace)
+
+    def test_pre_comment(self):
+        self.parser.readContents(b'''\
+<!-- comment -->
+<!ENTITY one "string">
+
+<!-- standalone -->
+
+<!-- glued --><!ENTITY second "string">
+''')
+        entities = self.parser.walk()
+
+        entity = next(entities)
+        self.assertIsInstance(entity.pre_comment, parser.Comment)
+        self.assertEqual(entity.pre_comment.val, ' comment ')
+        entity = next(entities)
+        self.assertIsInstance(entity, parser.Whitespace)
+
+        entity = next(entities)
+        self.assertIsInstance(entity, parser.Comment)
+        self.assertEqual(entity.val, ' standalone ')
+        entity = next(entities)
+        self.assertIsInstance(entity, parser.Whitespace)
+
+        entity = next(entities)
+        self.assertIsInstance(entity.pre_comment, parser.Comment)
+        self.assertEqual(entity.pre_comment.val, ' glued ')
+        entity = next(entities)
+        self.assertIsInstance(entity, parser.Whitespace)
+        with self.assertRaises(StopIteration):
+            next(entities)
 
 
 if __name__ == '__main__':

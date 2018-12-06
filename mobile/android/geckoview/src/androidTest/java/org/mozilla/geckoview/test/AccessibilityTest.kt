@@ -191,6 +191,7 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat("Label accessibility focused", node.className.toString(),
                         equalTo("android.view.View"))
                 assertThat("Text node should not be focusable", node.isFocusable, equalTo(false))
+                assertThat("Text node should not be clickable", node.isClickable, equalTo(false))
             }
         })
 
@@ -205,6 +206,7 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat("Editbox accessibility focused", node.className.toString(),
                         equalTo("android.widget.EditText"))
                 assertThat("Entry node should be focusable", node.isFocusable, equalTo(true))
+                assertThat("Entry node should be clickable", node.isClickable, equalTo(true))
             }
         })
     }
@@ -433,6 +435,64 @@ class AccessibilityTest : BaseSessionTest() {
                 AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
                 moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE))
         waitUntilTextTraversed(0, 18) // "Lorem ipsum dolor "
+    }
+
+    @Test fun testHeadings() {
+        var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID;
+        sessionRule.session.loadString("""
+            <a href=\"%23\">preamble</a>
+            <h1>Fried cheese</h1><p>with club sauce.</p>
+            <h2>Popcorn shrimp</h2><button>with club sauce.</button>
+            <h3>Chicken fingers</h3><p>with spicy club sauce.</p>""".trimIndent(), "text/html")
+        waitForInitialFocus()
+
+        val bundle = Bundle()
+        bundle.putString(AccessibilityNodeInfo.ACTION_ARGUMENT_HTML_ELEMENT_STRING, "HEADING")
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, bundle)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on first heading", node.text as String, startsWith("Fried cheese"))
+                if (Build.VERSION.SDK_INT >= 19) {
+                    assertThat("First heading is level 1",
+                            node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription").toString(),
+                            equalTo("heading level 1"))
+                }
+            }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, bundle)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on second heading", node.text as String, startsWith("Popcorn shrimp"))
+                if (Build.VERSION.SDK_INT >= 19) {
+                    assertThat("Second heading is level 2",
+                            node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription").toString(),
+                            equalTo("heading level 2"))
+                }
+            }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, bundle)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on second heading", node.text as String, startsWith("Chicken fingers"))
+                if (Build.VERSION.SDK_INT >= 19) {
+                    assertThat("Third heading is level 3",
+                            node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription").toString(),
+                            equalTo("heading level 3"))
+                }
+            }
+        })
     }
 
     @Test fun testCheckbox() {

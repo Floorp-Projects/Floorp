@@ -698,38 +698,37 @@ class nsIPresShell : public nsStubDocumentObserver {
     WhenToScroll mWhenToScroll : 8;
     bool mOnlyIfPerceivedScrollableDirection : 1;
     /**
-     * @param aWhere: Either a percentage or a special value.
-     *                nsIPresShell defines:
-     *                * (Default) SCROLL_MINIMUM = -1: The visible area is
-     * scrolled the minimum amount to show as much as possible of the frame.
-     *                This won't hide any initially visible part of the frame.
-     *                * SCROLL_TOP = 0: The frame's upper edge is aligned with
-     * the top edge of the visible area.
-     *                * SCROLL_BOTTOM = 100: The frame's bottom edge is aligned
-     *                with the bottom edge of the visible area.
-     *                * SCROLL_LEFT = 0: The frame's left edge is aligned with
-     * the left edge of the visible area.
-     *                * SCROLL_RIGHT = 100: The frame's right edge is aligned
-     * with the right edge of the visible area.
-     *                * SCROLL_CENTER = 50: The frame is centered along the axis
-     *                the ScrollAxis is used for.
+     * aWhere:
+     *   Either a percentage or a special value. nsIPresShell defines:
+     *   * (Default) SCROLL_MINIMUM = -1: The visible area is scrolled the
+     *     minimum amount to show as much as possible of the frame. This won't
+     *     hide any initially visible part of the frame.
+     *   * SCROLL_TOP = 0: The frame's upper edge is aligned with the top edge
+     *     of the visible area.
+     *   * SCROLL_BOTTOM = 100: The frame's bottom edge is aligned with the
+     *     bottom edge of the visible area.
+     *   * SCROLL_LEFT = 0: The frame's left edge is aligned with the left edge
+     *     of the visible area.
+     *   * SCROLL_RIGHT = 100: The frame's right edge is aligned* with the right
+     *     edge of the visible area.
+     *   * SCROLL_CENTER = 50: The frame is centered along the axis the
+     *     ScrollAxis is used for.
      *
-     *                Other values are treated as a percentage, and the point
-     *                "percent" down the frame is placed at the point "percent"
-     *                down the visible area.
-     * @param aWhen:
-     *                * (Default) SCROLL_IF_NOT_FULLY_VISIBLE: Move the frame
-     * only if it is not fully visible (including if it's not visible at all).
-     * Note that in this case if the frame is too large to fit in view, it will
-     * only be scrolled if more of it can fit than is already in view.
-     *                * SCROLL_IF_NOT_VISIBLE: Move the frame only if none of it
-     *                is visible.
-     *                * SCROLL_ALWAYS: Move the frame regardless of its current
-     *                visibility.
-     * @param aOnlyIfPerceivedScrollableDirection:
-     *                If the direction is not a perceived scrollable direction
-     * (i.e. no scrollbar showing and less than one device pixel of scrollable
-     * distance), don't scroll. Defaults to false.
+     *   Other values are treated as a percentage, and the point*"percent"
+     *   down the frame is placed at the point "percent" down the visible area.
+     *
+     * aWhen:
+     *   * (Default) SCROLL_IF_NOT_FULLY_VISIBLE: Move the frame only if it is
+     *     not fully visible (including if it's not visible at all). Note that
+     *     in this case if the frame is too large to fit in view, it will only
+     *     be scrolled if more of it can fit than is already in view.
+     *   * SCROLL_IF_NOT_VISIBLE: Move the frame only if none of it is visible.
+     *   * SCROLL_ALWAYS: Move the frame regardless of its current visibility.
+     *
+     * aOnlyIfPerceivedScrollableDirection:
+     *   If the direction is not a perceived scrollable direction (i.e. no
+     *   scrollbar showing and less than one device pixel of scrollable
+     *   distance), don't scroll. Defaults to false.
      */
     explicit ScrollAxis(int16_t aWhere = SCROLL_MINIMUM,
                         WhenToScroll aWhen = SCROLL_IF_NOT_FULLY_VISIBLE,
@@ -1214,15 +1213,19 @@ class nsIPresShell : public nsStubDocumentObserver {
    * canvas frame (if the FORCE_DRAW flag is passed then this check is skipped).
    * aBackstopColor is composed behind the background color of the canvas, it is
    * transparent by default.
+   *
    * We attempt to make the background color part of the scrolled canvas (to
    * reduce transparent layers), and if async scrolling is enabled (and the
    * background is opaque) then we add a second, unscrolled item to handle the
-   * checkerboarding case. ADD_FOR_SUBDOC shoud be specified when calling this
-   * for a subdocument, and LayoutUseContainersForRootFrame might cause the
-   * whole list to be scrolled. In that case the second unscrolled item will be
-   * elided. APPEND_UNSCROLLED_ONLY only attempts to add the unscrolled item, so
-   * that we can add it manually after LayoutUseContainersForRootFrame has built
-   * the scrolling ContainerLayer.
+   * checkerboarding case.
+   *
+   * ADD_FOR_SUBDOC should be specified when calling this for a subdocument, and
+   * LayoutUseContainersForRootFrame might cause the whole list to be scrolled.
+   * In that case the second unscrolled item will be elided.
+   *
+   * APPEND_UNSCROLLED_ONLY only attempts to add the unscrolled item, so that
+   * we can add it manually after LayoutUseContainersForRootFrame has built the
+   * scrolling ContainerLayer.
    */
   enum {
     FORCE_DRAW = 0x01,
@@ -1369,6 +1372,13 @@ class nsIPresShell : public nsStubDocumentObserver {
   virtual float GetCumulativeResolution() = 0;
 
   /**
+   * Accessors for a flag that tracks whether the most recent change to
+   * the pres shell's resolution was originated by the main thread.
+   */
+  virtual bool IsResolutionUpdated() const = 0;
+  virtual void SetResolutionUpdated(bool aUpdated) = 0;
+
+  /**
    * Calculate the cumulative scale resolution from this document up to
    * but not including the root document.
    */
@@ -1382,8 +1392,13 @@ class nsIPresShell : public nsStubDocumentObserver {
   /**
    * Similar to SetResolution() but also increases the scale of the content
    * by the same amount.
+   * |aOrigin| specifies who originated the resolution change. For changes
+   * sent by APZ, pass nsGkAtoms::apz. For changes sent by the main thread,
+   * use pass nsGkAtoms::other or nsGkAtoms::restore (similar to the |aOrigin|
+   * parameter of nsIScrollableFrame::ScrollToCSSPixels()).
    */
-  virtual nsresult SetResolutionAndScaleTo(float aResolution) = 0;
+  virtual nsresult SetResolutionAndScaleTo(float aResolution,
+                                           nsAtom* aOrigin) = 0;
 
   /**
    * Return whether we are scaling to the set resolution.

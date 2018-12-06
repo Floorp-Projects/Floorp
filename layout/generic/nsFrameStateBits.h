@@ -12,18 +12,20 @@
   in nsIFrame::mState -- and groups of frame state bits and which
   classes they apply to.
 
-  There are two macros that can be defined before #including this
+  There are three macros that can be defined before #including this
   file:
 
-  FRAME_STATE_GROUP(name_, class_)
+  FRAME_STATE_GROUP_NAME(name_)
 
     This denotes the existence of a named group of frame state bits.
-    name_ is the name of the group and class_ is the name of a frame
-    class that uses the frame state bits that are a part of the group.
 
     The main group of frame state bits is named "Generic" and is
     defined to apply to nsIFrame, i.e. all frames.  All of the global
     frame state bits -- bits 0..19 and 32..59 -- are in this group.
+
+  FRAME_STATE_GROUP_CLASS(group_, class_)
+    class_ is the name of a frame class that uses the frame state bits
+    that are a part of the group.
 
   FRAME_STATE_BIT(group_, value_, name_)
 
@@ -38,15 +40,25 @@
 
  ******/
 
-#ifndef FRAME_STATE_GROUP
-#define FRAME_STATE_GROUP(name_, class_) /* nothing */
-#define DEFINED_FRAME_STATE_GROUP
+#ifndef FRAME_STATE_GROUP_NAME
+#define FRAME_STATE_GROUP_NAME(name_) /* nothing */
+#define DEFINED_FRAME_STATE_GROUP_NAME
+#endif
+
+#ifndef FRAME_STATE_GROUP_CLASS
+#define FRAME_STATE_GROUP_CLASS(name_, class_) /* nothing */
+#define DEFINED_FRAME_STATE_GROUP_CLASS
 #endif
 
 #ifndef FRAME_STATE_BIT
 #define FRAME_STATE_BIT(group_, value_, name_) /* nothing */
 #define DEFINED_FRAME_STATE_BIT
 #endif
+
+// Helper macro for the common case of a single class
+#define FRAME_STATE_GROUP(name_, class_) \
+  FRAME_STATE_GROUP_NAME(name_)          \
+  FRAME_STATE_GROUP_CLASS(name_, class_)
 
 // == Frame state bits that apply to all frames ===============================
 
@@ -374,8 +386,9 @@ FRAME_STATE_BIT(GridContainer, 28, NS_STATE_GRID_HAS_CHILD_NIFS)
 
 // == Frame state bits that apply to SVG frames ===============================
 
-FRAME_STATE_GROUP(SVG, nsSVGDisplayableFrame)
-FRAME_STATE_GROUP(SVG, nsSVGContainerFrame)
+FRAME_STATE_GROUP_NAME(SVG)
+FRAME_STATE_GROUP_CLASS(SVG, nsSVGDisplayableFrame)
+FRAME_STATE_GROUP_CLASS(SVG, nsSVGContainerFrame)
 
 FRAME_STATE_BIT(SVG, 20, NS_STATE_IS_OUTER_SVG)
 
@@ -578,8 +591,8 @@ FRAME_STATE_BIT(Block, 63, NS_BLOCK_HAS_FIRST_LETTER_CHILD)
 
 FRAME_STATE_GROUP(Bullet, nsBulletFrame)
 
-FRAME_STATE_BIT(Block, 62, BULLET_FRAME_HAS_FONT_INFLATION)
-FRAME_STATE_BIT(Block, 63, BULLET_FRAME_IMAGE_LOADING)
+FRAME_STATE_BIT(Bullet, 62, BULLET_FRAME_HAS_FONT_INFLATION)
+FRAME_STATE_BIT(Bullet, 63, BULLET_FRAME_IMAGE_LOADING)
 
 // == Frame state bits that apply to image frames =============================
 
@@ -660,8 +673,9 @@ FRAME_STATE_BIT(TableCell, 31, NS_TABLE_CELL_CONTENT_EMPTY)
 
 // == Frame state bits that apply to table rows and table row group frames ====
 
-FRAME_STATE_GROUP(TableRowAndRowGroup, nsTableRowFrame)
-FRAME_STATE_GROUP(TableRowAndRowGroup, nsTableRowGroupFrame)
+FRAME_STATE_GROUP_NAME(TableRowAndRowGroup)
+FRAME_STATE_GROUP_CLASS(TableRowAndRowGroup, nsTableRowFrame)
+FRAME_STATE_GROUP_CLASS(TableRowAndRowGroup, nsTableRowGroupFrame)
 
 // see nsTableRowGroupFrame::InitRepeatedFrame
 FRAME_STATE_BIT(TableRowAndRowGroup, 28, NS_REPEATED_ROW_OR_ROWGROUP)
@@ -690,9 +704,16 @@ FRAME_STATE_GROUP(Table, nsTableFrame)
 
 FRAME_STATE_BIT(Table, 28, NS_TABLE_PART_HAS_FIXED_BACKGROUND)
 
-#ifdef DEFINED_FRAME_STATE_GROUP
-#undef DEFINED_FRAME_STATE_GROUP
 #undef FRAME_STATE_GROUP
+
+#ifdef DEFINED_FRAME_STATE_GROUP_NAME
+#undef DEFINED_FRAME_STATE_GROUP_NAME
+#undef FRAME_STATE_GROUP_NAME
+#endif
+
+#ifdef DEFINED_FRAME_STATE_GROUP_CLASS
+#undef DEFINED_FRAME_STATE_GROUP_CLASS
+#undef FRAME_STATE_GROUP_CLASS
 #endif
 
 #ifdef DEFINED_FRAME_STATE_BIT

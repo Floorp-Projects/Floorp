@@ -235,6 +235,7 @@
 #include "mozilla/HangAnnotations.h"
 #include "mozilla/Encoding.h"
 #include "nsXULElement.h"
+#include "mozilla/RecordReplay.h"
 
 #include "nsIBidiKeyboard.h"
 
@@ -10095,6 +10096,12 @@ static const uint64_t kIdBits = 64 - kIdProcessBits;
   uint64_t id = aId;
   MOZ_RELEASE_ASSERT(id < (uint64_t(1) << kIdBits));
   uint64_t bits = id & ((uint64_t(1) << kIdBits) - 1);
+
+  // Set the high bit for middleman processes so it doesn't conflict with the
+  // content process's generated IDs.
+  if (recordreplay::IsMiddleman()) {
+    bits |= uint64_t(1) << (kIdBits - 1);
+  }
 
   return (processBits << kIdBits) | bits;
 }

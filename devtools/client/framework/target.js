@@ -375,6 +375,7 @@ Target.prototype = {
       return this._inspector;
     }
     this._inspector = await getFront(this.client, "inspector", this.form);
+    this.emit("inspector", this._inspector);
     return this._inspector;
   },
 

@@ -42,5 +42,5 @@ pathfinder = [ "webrender/pathfinder" ]
 dwrote = "0.6.2"
 mozangle = {version = "0.1.5", features = ["egl"]}
 
-[target.'cfg(any(target_os = "linux", target_os = "macos"))'.dependencies]
+[target.'cfg(all(unix, not(target_os = "android")))'.dependencies]
 font-loader = "0.7"

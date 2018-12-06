@@ -53,14 +53,12 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy, StyleSheet* aParentToUse,
       mOwningNode(aOwningNodeToUse),
       mOwnerRule(aOwnerRuleToUse),
       mParsingMode(aCopy.mParsingMode),
-      mState(aCopy.mState)
+      mState(aCopy.mState),
       // We only use this constructor during cloning.  It's the cloner's
       // responsibility to notify us if we end up being owned by a document.
-      ,
       mAssociationMode(NotOwnedByDocumentOrShadowRoot),
-      mInner(
-          aCopy.mInner)  // Shallow copy, but concrete subclasses will fix up.
-{
+      // Shallow copy, but concrete subclasses will fix up.
+      mInner(aCopy.mInner) {
   MOZ_ASSERT(mInner, "Should only copy StyleSheets with an mInner.");
   mInner->AddSheet(this);
 
@@ -857,9 +855,10 @@ already_AddRefed<StyleSheet> StyleSheet::CreateEmptyChildSheet(
 //
 // (1) The pref is off.
 // (2) The browser is recording CSS errors (which parallel parsing can't
-// handle). (3) The stylesheet is a chrome stylesheet, since those can use
-// -moz-bool-pref,
-//     which needs to access the pref service, which is not threadsafe.
+//     handle).
+// (3) The stylesheet is a chrome stylesheet, since those can use
+//     -moz-bool-pref, which needs to access the pref service, which is not
+//     threadsafe.
 static bool AllowParallelParse(css::Loader* aLoader, nsIURI* aSheetURI) {
   // Check the pref.
   if (!StaticPrefs::layout_css_parsing_parallel()) {

@@ -917,14 +917,14 @@ impl<'a> DisplayListFlattener<'a> {
 
                     for _ in 0 .. item_clip_node.count {
                         // Get the id of the clip sources entry for that clip chain node.
-                        let (handle, spatial_node_index) = {
+                        let (handle, spatial_node_index, local_pos) = {
                             let clip_chain = self
                                 .clip_store
                                 .get_clip_chain(clip_node_clip_chain_id);
 
                             clip_node_clip_chain_id = clip_chain.parent_clip_chain_id;
 
-                            (clip_chain.handle, clip_chain.spatial_node_index)
+                            (clip_chain.handle, clip_chain.spatial_node_index, clip_chain.local_pos)
                         };
 
                         // Add a new clip chain node, which references the same clip sources, and
@@ -933,6 +933,7 @@ impl<'a> DisplayListFlattener<'a> {
                             .clip_store
                             .add_clip_chain_node(
                                 handle,
+                                local_pos,
                                 spatial_node_index,
                                 clip_chain_id,
                             );
@@ -984,7 +985,7 @@ impl<'a> DisplayListFlattener<'a> {
     // just return the parent clip chain id directly.
     fn build_clip_chain(
         &mut self,
-        clip_items: Vec<ClipItemKey>,
+        clip_items: Vec<(LayoutPoint, ClipItemKey)>,
         spatial_node_index: SpatialNodeIndex,
         parent_clip_chain_id: ClipChainId,
     ) -> ClipChainId {
@@ -993,7 +994,7 @@ impl<'a> DisplayListFlattener<'a> {
         } else {
             let mut clip_chain_id = parent_clip_chain_id;
 
-            for item in clip_items {
+            for (local_pos, item) in clip_items {
                 // Intern this clip item, and store the handle
                 // in the clip chain node.
                 let handle = self.resources
@@ -1012,6 +1013,7 @@ impl<'a> DisplayListFlattener<'a> {
                 clip_chain_id = self.clip_store
                                     .add_clip_chain_node(
                                         handle,
+                                        local_pos,
                                         spatial_node_index,
                                         clip_chain_id,
                                     );
@@ -1107,7 +1109,7 @@ impl<'a> DisplayListFlattener<'a> {
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
         info: &LayoutPrimitiveInfo,
-        clip_items: Vec<ClipItemKey>,
+        clip_items: Vec<(LayoutPoint, ClipItemKey)>,
         key_kind: PrimitiveKeyKind,
     ) {
         // If a shadow context is not active, then add the primitive
@@ -1587,7 +1589,7 @@ impl<'a> DisplayListFlattener<'a> {
         let handle = self
             .resources
             .clip_interner
-            .intern(&ClipItemKey::rectangle(clip_region.main, ClipMode::Clip), || {
+            .intern(&ClipItemKey::rectangle(clip_region.main.size, ClipMode::Clip), || {
                 ClipItemSceneData {
                     clip_rect: clip_region.main,
                 }
@@ -1597,6 +1599,7 @@ impl<'a> DisplayListFlattener<'a> {
             .clip_store
             .add_clip_chain_node(
                 handle,
+                clip_region.main.origin,
                 spatial_node,
                 parent_clip_chain_index,
             );
@@ -1616,6 +1619,7 @@ impl<'a> DisplayListFlattener<'a> {
                 .clip_store
                 .add_clip_chain_node(
                     handle,
+                    image_mask.rect.origin,
                     spatial_node,
                     parent_clip_chain_index,
                 );
@@ -1626,7 +1630,7 @@ impl<'a> DisplayListFlattener<'a> {
             let handle = self
                 .resources
                 .clip_interner
-                .intern(&ClipItemKey::rounded_rect(region.rect, region.radii, region.mode), || {
+                .intern(&ClipItemKey::rounded_rect(region.rect.size, region.radii, region.mode), || {
                     ClipItemSceneData {
                         clip_rect: region.get_local_clip_rect().unwrap_or(LayoutRect::max_rect()),
                     }
@@ -1636,6 +1640,7 @@ impl<'a> DisplayListFlattener<'a> {
                 .clip_store
                 .add_clip_chain_node(
                     handle,
+                    region.rect.origin,
                     spatial_node,
                     parent_clip_chain_index,
                 );

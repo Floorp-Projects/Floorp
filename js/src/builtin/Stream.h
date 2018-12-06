@@ -265,11 +265,10 @@ class ReadableStreamController : public StreamController {
     Flag_Pulling = 1 << 1,
     Flag_PullAgain = 1 << 2,
     Flag_CloseRequested = 1 << 3,
-    Flag_TeeBranch = 1 << 4,
-    Flag_TeeBranch1 = 1 << 5,
-    Flag_TeeBranch2 = 1 << 6,
-    Flag_ExternalSource = 1 << 7,
-    Flag_SourceLocked = 1 << 8,
+    Flag_TeeBranch1 = 1 << 4,
+    Flag_TeeBranch2 = 1 << 5,
+    Flag_ExternalSource = 1 << 6,
+    Flag_SourceLocked = 1 << 7,
   };
 
   ReadableStream* stream() const {
@@ -315,15 +314,19 @@ class ReadableStreamController : public StreamController {
   bool closeRequested() const { return flags() & Flag_CloseRequested; }
   void setCloseRequested() { addFlags(Flag_CloseRequested); }
   bool isTeeBranch1() const { return flags() & Flag_TeeBranch1; }
-  void setTeeBranch1() { addFlags(Flag_TeeBranch | Flag_TeeBranch1); }
+  void setTeeBranch1() {
+    MOZ_ASSERT(!isTeeBranch2());
+    addFlags(Flag_TeeBranch1);
+  }
   bool isTeeBranch2() const { return flags() & Flag_TeeBranch2; }
-  void setTeeBranch2() { addFlags(Flag_TeeBranch | Flag_TeeBranch2); }
+  void setTeeBranch2() {
+    MOZ_ASSERT(!isTeeBranch1());
+    addFlags(Flag_TeeBranch2);
+  }
   bool hasExternalSource() const { return flags() & Flag_ExternalSource; }
   bool sourceLocked() const { return flags() & Flag_SourceLocked; }
   void setSourceLocked() { addFlags(Flag_SourceLocked); }
   void clearSourceLocked() { removeFlags(Flag_SourceLocked); }
-
-  static const Class class_;
 };
 
 class ReadableStreamDefaultController : public ReadableStreamController {

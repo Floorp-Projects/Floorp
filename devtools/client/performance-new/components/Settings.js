@@ -148,6 +148,11 @@ const featureCheckboxes = [
     value: "screenshots",
     title: "Record screenshots of all browser windows.",
   },
+  {
+    name: "JSTracer",
+    value: "jstracer",
+    title: "Trace JS engine (Experimental, requires custom build.)",
+  },
 ];
 
 /**

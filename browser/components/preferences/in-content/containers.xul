@@ -17,7 +17,7 @@
       class="header"
       hidden="true"
       data-category="paneContainers">
-  <label class="header-name" flex="1" data-l10n-id="containers-header"/>
+  <html:h1 data-l10n-id="containers-header"/>
 </hbox>
 
 <!-- Containers -->

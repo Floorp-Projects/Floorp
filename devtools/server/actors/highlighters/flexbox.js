@@ -757,18 +757,6 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
   }
 
   _update() {
-    // If this.currentNode is not a flex container we have nothing to highlight.
-    // We can't simply use getAsFlexContainer() here because this fails for
-    // text fields. This will be removed by https://bugzil.la/1509460.
-    if (!this.computedStyle) {
-      this.computedStyle = getComputedStyle(this.currentNode);
-    }
-
-    if (this.computedStyle.display !== "flex" &&
-        this.computedStyle.display !== "inline-flex") {
-      return false;
-    }
-
     setIgnoreLayoutChanges(true);
 
     const root = this.getElement("root");

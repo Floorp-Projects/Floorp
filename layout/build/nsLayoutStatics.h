@@ -53,10 +53,4 @@ class nsLayoutStatics {
   static nsrefcnt sLayoutStaticRefcnt;
 };
 
-class nsLayoutStaticsRef {
- public:
-  nsLayoutStaticsRef() { nsLayoutStatics::AddRef(); }
-  ~nsLayoutStaticsRef() { nsLayoutStatics::Release(); }
-};
-
 #endif  // nsLayoutStatics_h__

@@ -646,9 +646,13 @@ EditorSpellCheck::UpdateCurrentDictionary(
   nsCOMPtr<nsIContent> rootContent;
   HTMLEditor* htmlEditor = mEditor->AsHTMLEditor();
   if (htmlEditor) {
-    rootContent = htmlEditor->GetActiveEditingHost();
+    rootContent = htmlEditor->GetFocusedContent();
   } else {
     rootContent = mEditor->GetRoot();
+  }
+
+  if (!rootContent) {
+    return NS_ERROR_FAILURE;
   }
 
   // Try to get topmost document's document element for embedded mail editor.
@@ -660,11 +664,10 @@ EditorSpellCheck::UpdateCurrentDictionary(
     nsIDocument* parentDoc = ownerDoc->GetParentDocument();
     if (parentDoc) {
       rootContent = parentDoc->GetDocumentElement();
+      if (!rootContent) {
+        return NS_ERROR_FAILURE;
+      }
     }
-  }
-
-  if (!rootContent) {
-    return NS_ERROR_FAILURE;
   }
 
   RefPtr<DictionaryFetcher> fetcher =

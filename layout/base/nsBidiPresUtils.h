@@ -427,7 +427,7 @@ class nsBidiPresUtils {
    *                             direction, it's the distance to the end,
    *                             otherwise, it's the distance to the start.
    * @param aContinuationStates  A map from nsIFrame* to
-   * nsFrameContinuationState
+   *                             nsFrameContinuationState
    * @return                     The isize aFrame takes, including margins.
    */
   static nscoord RepositionFrame(
@@ -443,7 +443,7 @@ class nsBidiPresUtils {
    * @param aFrame               The frame which itself and its descendants will
    *                             be initialized
    * @param aContinuationStates  A map from nsIFrame* to
-   * nsFrameContinuationState
+   *                             nsFrameContinuationState
    */
   static void InitContinuationStates(nsIFrame* aFrame,
                                      nsContinuationStates* aContinuationStates);

@@ -669,15 +669,14 @@ nsresult nsCaret::GetCaretFrameForNodeOffset(
                                 std::min(levelBefore, levelAfter));  // rule c3
           aBidiLevel = std::min(aBidiLevel,
                                 std::max(levelBefore, levelAfter));  // rule c4
-          if (aBidiLevel == levelBefore                              // rule c1
-              || (aBidiLevel > levelBefore && aBidiLevel < levelAfter &&
-                  IS_SAME_DIRECTION(aBidiLevel, levelBefore))  // rule c5
-              || (aBidiLevel < levelBefore && aBidiLevel > levelAfter &&
-                  IS_SAME_DIRECTION(aBidiLevel, levelBefore)))  // rule c9
+          if (aBidiLevel == levelBefore ||                           // rule c1
+              (aBidiLevel > levelBefore && aBidiLevel < levelAfter &&
+               IS_SAME_DIRECTION(aBidiLevel, levelBefore)) ||  // rule c5
+              (aBidiLevel < levelBefore && aBidiLevel > levelAfter &&
+               IS_SAME_DIRECTION(aBidiLevel, levelBefore)))  // rule c9
           {
             if (theFrame != frameBefore) {
-              if (frameBefore)  // if there is a frameBefore, move into it
-              {
+              if (frameBefore) {  // if there is a frameBefore, move into it
                 theFrame = frameBefore;
                 theFrame->GetOffsets(start, end);
                 theFrameOffset = end;
@@ -699,10 +698,9 @@ nsresult nsCaret::GetCaretFrameForNodeOffset(
                 }
               }
             }
-          } else if (aBidiLevel == levelAfter  // rule c2
-                     || (aBidiLevel > levelBefore && aBidiLevel < levelAfter &&
-                         IS_SAME_DIRECTION(aBidiLevel, levelAfter))  // rule c6
-                     ||
+          } else if (aBidiLevel == levelAfter ||  // rule c2
+                     (aBidiLevel > levelBefore && aBidiLevel < levelAfter &&
+                      IS_SAME_DIRECTION(aBidiLevel, levelAfter)) ||  // rule c6
                      (aBidiLevel < levelBefore && aBidiLevel > levelAfter &&
                       IS_SAME_DIRECTION(aBidiLevel, levelAfter)))  // rule c10
           {
@@ -732,15 +730,11 @@ nsresult nsCaret::GetCaretFrameForNodeOffset(
               }
             }
           } else if (aBidiLevel > levelBefore &&
-                     aBidiLevel < levelAfter  // rule c7/8
-                     &&
-                     IS_SAME_DIRECTION(
-                         levelBefore,
-                         levelAfter)  // before and after have the same parity
-                     &&
-                     !IS_SAME_DIRECTION(
-                         aBidiLevel, levelAfter))  // caret has different parity
-          {
+                     aBidiLevel < levelAfter &&  // rule c7/8
+                     // before and after have the same parity
+                     IS_SAME_DIRECTION(levelBefore, levelAfter) &&
+                     // caret has different parity
+                     !IS_SAME_DIRECTION(aBidiLevel, levelAfter)) {
             if (NS_SUCCEEDED(aFrameSelection->GetFrameFromLevel(
                     frameAfter, eDirNext, aBidiLevel, &theFrame))) {
               theFrame->GetOffsets(start, end);
@@ -752,15 +746,11 @@ nsresult nsCaret::GetCaretFrameForNodeOffset(
                 theFrameOffset = IS_LEVEL_RTL(levelAfter) ? end : start;
             }
           } else if (aBidiLevel < levelBefore &&
-                     aBidiLevel > levelAfter  // rule c11/12
-                     &&
-                     IS_SAME_DIRECTION(
-                         levelBefore,
-                         levelAfter)  // before and after have the same parity
-                     &&
-                     !IS_SAME_DIRECTION(
-                         aBidiLevel, levelAfter))  // caret has different parity
-          {
+                     aBidiLevel > levelAfter &&  // rule c11/12
+                     // before and after have the same parity
+                     IS_SAME_DIRECTION(levelBefore, levelAfter) &&
+                     // caret has different parity
+                     !IS_SAME_DIRECTION(aBidiLevel, levelAfter)) {
             if (NS_SUCCEEDED(aFrameSelection->GetFrameFromLevel(
                     frameBefore, eDirPrevious, aBidiLevel, &theFrame))) {
               theFrame->GetOffsets(start, end);

@@ -10,7 +10,7 @@ clap = "^2"
 env_logger = "^0.5.6"
 itertools = "^0.7.6"
 log = "0.4"
-yaml-rust = "^0.4"
+yaml-rust = "^0.4.2"
 webidl = "^0.8"
 
 [[bin]]

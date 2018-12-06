@@ -5,7 +5,7 @@ const ROOT = "http://mochi.test:8888/browser/browser/base/content/test/favicons/
 
 add_task(async () => {
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, async (browser) => {
-    let faviconPromise = waitForFaviconMessage();
+    let faviconPromise = waitForFaviconMessage(true, `${ROOT}large.png`);
 
     BrowserTestUtils.loadURI(browser, ROOT + "large_favicon.html");
     await BrowserTestUtils.browserLoaded(browser);

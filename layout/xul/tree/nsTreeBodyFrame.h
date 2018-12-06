@@ -473,7 +473,7 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
    * @param aEndRow    the end index of invalidated rows, -1 means that columns
    *                   have been invalidated only
    * @param aStartCol  the start invalidated column, nullptr means that only
-   * rows have been invalidated
+   *                   rows have been invalidated
    * @param aEndCol    the end invalidated column, nullptr means that rows have
    *                   been invalidated only
    */

@@ -48,16 +48,11 @@ HOST_CXX="$TOOLTOOL_DIR/clang/bin/clang++"
 CC="$TOOLTOOL_DIR/clang/bin/x86_64-w64-mingw32-clang"
 CXX="$TOOLTOOL_DIR/clang/bin/x86_64-w64-mingw32-clang++"
 CXXFLAGS="-fms-extensions"
-CPP="$TOOLTOOL_DIR/clang/bin/x86_64-w64-mingw32-clang -E"
 AR=llvm-ar
 RANLIB=llvm-ranlib
 
 # For Stylo
 BINDGEN_CFLAGS="-I$TOOLTOOL_DIR/clang/x86_64-w64-mingw32/include/c++/v1 -I$TOOLTOOL_DIR/clang/lib/clang/8.0.0/include -I$TOOLTOOL_DIR/clang/x86_64-w64-mingw32/include"
-
-# Since we use windres from binutils without the rest of tools (like cpp), we need to
-# explicitly specify clang as a preprocessor.
-WINDRES="x86_64-w64-mingw32-windres --preprocessor=\"$CPP -xc\" -DRC_INVOKED"
 
 # Bug 1471698 - Work around binutils corrupting mingw clang binaries.
 LDFLAGS="-Wl,-S"

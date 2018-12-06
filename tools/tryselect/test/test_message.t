@@ -16,6 +16,11 @@ Test custom commit messages with fuzzy selector
           "test/foo-debug",
           "test/foo-opt"
       ],
+      "templates": {
+          "env": {
+              "TRY_SELECTOR": "fuzzy"
+          }
+      },
       "version": 1
   }
   
@@ -30,6 +35,11 @@ Test custom commit messages with fuzzy selector
           "test/foo-debug",
           "test/foo-opt"
       ],
+      "templates": {
+          "env": {
+              "TRY_SELECTOR": "fuzzy"
+          }
+      },
       "version": 1
   }
   

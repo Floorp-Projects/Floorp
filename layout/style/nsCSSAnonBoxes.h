@@ -71,7 +71,10 @@ class nsCSSAnonBoxes {
   static bool IsWrapperAnonBox(nsAtom* aPseudo) {
     // We commonly get null passed here, and want to quickly return false for
     // it.
-    return aPseudo && (
+    if (!aPseudo) {
+      return false;
+    }
+    return
 #define CSS_ANON_BOX(_name, _value) /* nothing */
 #define CSS_WRAPPER_ANON_BOX(_name, _value) \
   nsGkAtoms::AnonBox_##_name == aPseudo ||
@@ -80,7 +83,7 @@ class nsCSSAnonBoxes {
 #undef CSS_NON_INHERITING_ANON_BOX
 #undef CSS_WRAPPER_ANON_BOX
 #undef CSS_ANON_BOX
-                          false);
+        false;
   }
 
   // Get the NonInheriting type for a given pseudo tag.  The pseudo tag must

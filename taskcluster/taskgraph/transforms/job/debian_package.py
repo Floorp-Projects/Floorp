@@ -18,7 +18,7 @@ from taskgraph.transforms.job.common import add_artifacts
 
 from taskgraph.util.hash import hash_path
 from taskgraph import GECKO
-from taskgraph.util.cached_tasks import add_optimization
+import taskgraph
 
 DSC_PACKAGE_RE = re.compile('.*(?=_)')
 SOURCE_PACKAGE_RE = re.compile('.*(?=[-_]\d)')
@@ -212,15 +212,6 @@ def docker_worker_debian_package(config, job, taskdesc):
         )
     ]
 
-    # Use the command generated above as the base for the index hash.
-    # We rely on it not varying depending on the head_repository or head_rev.
-    data = list(worker['command'])
-    if 'patch' in run:
-        data.append(hash_path(os.path.join(GECKO, 'build', 'debian-packages', run['patch'])))
-
-    if docker_repo != 'debian':
-        data.append(docker_repo)
-
     if run.get('packages'):
         env = worker.setdefault('env', {})
         env['PACKAGES'] = {
@@ -230,7 +221,20 @@ def docker_worker_debian_package(config, job, taskdesc):
         deps = taskdesc.setdefault('dependencies', {})
         for p in run['packages']:
             deps[p] = 'packages-{}'.format(p)
-            data.append(p)
 
-    add_optimization(config, taskdesc, cache_type='packages.v1',
-                     cache_name=name, digest_data=data)
+    # Use the command generated above as the base for the index hash.
+    # We rely on it not varying depending on the head_repository or head_rev.
+    digest_data = list(worker['command'])
+    if 'patch' in run:
+        digest_data.append(
+            hash_path(os.path.join(GECKO, 'build', 'debian-packages', run['patch'])))
+
+    if docker_repo != 'debian':
+        digest_data.append(docker_repo)
+
+    if not taskgraph.fast:
+        taskdesc['cache'] = {
+            'type': 'packages.v1',
+            'name': name,
+            'digest-data': digest_data
+        }

@@ -82,7 +82,6 @@
 
 #include "nsPrintfCString.h"
 
-#include "gfxContext.h"
 #include "mozilla/gfx/DrawTargetRecording.h"
 
 #include "mozilla/UniquePtr.h"
@@ -2933,42 +2932,40 @@ static bool IsJustifiableCharacter(const nsStyleText* aTextStyle,
     return false;
   }
   if (aLangIsCJ) {
-    if ((0x2150u <= ch &&
-         ch <= 0x22ffu) ||  // Number Forms, Arrows, Mathematical Operators
-        (0x2460u <= ch && ch <= 0x24ffu) ||  // Enclosed Alphanumerics
-        (0x2580u <= ch &&
-         ch <= 0x27bfu) ||  // Block Elements, Geometric Shapes, Miscellaneous
-                            // Symbols, Dingbats
-        (0x27f0u <= ch &&
-         ch <= 0x2bffu) ||  // Supplemental Arrows-A, Braille Patterns,
-                            // Supplemental Arrows-B, Miscellaneous Mathematical
-                            // Symbols-B, Supplemental Mathematical Operators,
-                            // Miscellaneous Symbols and Arrows
-        (0x2e80u <= ch &&
-         ch <= 0x312fu) ||  // CJK Radicals Supplement, CJK Radicals Supplement,
-                            // Ideographic Description Characters, CJK Symbols
-                            // and Punctuation, Hiragana, Katakana, Bopomofo
-        (0x3190u <= ch &&
-         ch <= 0xabffu) ||  // Kanbun, Bopomofo Extended, Katakana Phonetic
-                            // Extensions, Enclosed CJK Letters and Months, CJK
-                            // Compatibility, CJK Unified Ideographs Extension
-                            // A, Yijing Hexagram Symbols, CJK Unified
-                            // Ideographs, Yi Syllables, Yi Radicals
-        (0xf900u <= ch && ch <= 0xfaffu) ||  // CJK Compatibility Ideographs
-        (0xff5eu <= ch &&
-         ch <= 0xff9fu)  // Halfwidth and Fullwidth Forms(a part)
-    ) {
+    if (  // Number Forms, Arrows, Mathematical Operators
+        (0x2150u <= ch && ch <= 0x22ffu) ||
+        // Enclosed Alphanumerics
+        (0x2460u <= ch && ch <= 0x24ffu) ||
+        // Block Elements, Geometric Shapes, Miscellaneous Symbols, Dingbats
+        (0x2580u <= ch && ch <= 0x27bfu) ||
+        // Supplemental Arrows-A, Braille Patterns, Supplemental Arrows-B,
+        // Miscellaneous Mathematical Symbols-B,
+        // Supplemental Mathematical Operators, Miscellaneous Symbols and Arrows
+        (0x27f0u <= ch && ch <= 0x2bffu) ||
+        // CJK Radicals Supplement, CJK Radicals Supplement, Ideographic
+        // Description Characters, CJK Symbols and Punctuation, Hiragana,
+        // Katakana, Bopomofo
+        (0x2e80u <= ch && ch <= 0x312fu) ||
+        // Kanbun, Bopomofo Extended, Katakana Phonetic Extensions,
+        // Enclosed CJK Letters and Months, CJK Compatibility,
+        // CJK Unified Ideographs Extension A, Yijing Hexagram Symbols,
+        // CJK Unified Ideographs, Yi Syllables, Yi Radicals
+        (0x3190u <= ch && ch <= 0xabffu) ||
+        // CJK Compatibility Ideographs
+        (0xf900u <= ch && ch <= 0xfaffu) ||
+        // Halfwidth and Fullwidth Forms (a part)
+        (0xff5eu <= ch && ch <= 0xff9fu)) {
       return true;
     }
     char16_t ch2;
     if (NS_IS_HIGH_SURROGATE(ch) && aFrag->GetLength() > uint32_t(aPos) + 1 &&
         NS_IS_LOW_SURROGATE(ch2 = aFrag->CharAt(aPos + 1))) {
       uint32_t u = SURROGATE_TO_UCS4(ch, ch2);
-      if (0x20000u <= u &&
-          u <= 0x2ffffu) {  // CJK Unified Ideographs Extension B,
-                            // CJK Unified Ideographs Extension C,
-                            // CJK Unified Ideographs Extension D,
-                            // CJK Compatibility Ideographs Supplement
+      // CJK Unified Ideographs Extension B,
+      // CJK Unified Ideographs Extension C,
+      // CJK Unified Ideographs Extension D,
+      // CJK Compatibility Ideographs Supplement
+      if (0x20000u <= u && u <= 0x2ffffu) {
         return true;
       }
     }
@@ -3550,10 +3547,11 @@ gfxFloat PropertyProvider::GetHyphenWidth() const {
 }
 
 static inline bool IS_HYPHEN(char16_t u) {
-  return (u == char16_t('-') || u == 0x058A ||  // ARMENIAN HYPHEN
-          u == 0x2010 ||                        // HYPHEN
-          u == 0x2012 ||                        // FIGURE DASH
-          u == 0x2013);                         // EN DASH
+  return u == char16_t('-') ||  // HYPHEN-MINUS
+         u == 0x058A ||         // ARMENIAN HYPHEN
+         u == 0x2010 ||         // HYPHEN
+         u == 0x2012 ||         // FIGURE DASH
+         u == 0x2013;           // EN DASH
 }
 
 void PropertyProvider::GetHyphenationBreaks(Range aRange,

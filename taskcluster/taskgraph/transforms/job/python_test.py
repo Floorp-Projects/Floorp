@@ -25,12 +25,15 @@ python_test_schema = Schema({
 })
 
 
-@run_job_using(
-    'docker-worker',
-    'python-test',
-    schema=python_test_schema,
-    defaults={'python-version': 2, 'subsuite': 'default'})
-def docker_worker_python_test(config, job, taskdesc):
+defaults = {
+    'python-version': 2,
+    'subsuite': 'default',
+}
+
+
+@run_job_using('docker-worker', 'python-test', schema=python_test_schema, defaults=defaults)
+@run_job_using('generic-worker', 'python-test', schema=python_test_schema, defaults=defaults)
+def configure_python_test(config, job, taskdesc):
     run = job['run']
 
     # defer to the mach implementation

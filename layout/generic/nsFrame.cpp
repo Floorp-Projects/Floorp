@@ -47,7 +47,6 @@
 #include "nsStyleConsts.h"
 #include "nsIPresShell.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Sprintf.h"
 #include "nsLayoutUtils.h"
 #include "LayoutLogging.h"
 #include "mozilla/RestyleManager.h"
@@ -116,9 +115,6 @@
 #include "ActiveLayerTracker.h"
 
 #include "nsITheme.h"
-#include "nsStyleConsts.h"
-
-#include "ImageLoader.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -7539,8 +7535,8 @@ nsresult nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
   nsIFrame* resultFrame = nullptr;
   nsIFrame* farStoppingFrame = nullptr;  // we keep searching until we find a
                                          // "this" frame then we go to next line
-  nsIFrame* nearStoppingFrame =
-      nullptr;  // if we are backing up from edge, stop here
+  nsIFrame* nearStoppingFrame = nullptr;  // if we are backing up from edge,
+                                          // stop here
   nsIFrame* firstFrame;
   nsIFrame* lastFrame;
   nsRect rect;
@@ -9543,21 +9539,18 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState) {
 
   // Ok we need to compute our minimum, preferred, and maximum sizes.
   // 1) Maximum size. This is easy. Its infinite unless it is overloaded by CSS.
-  // 2) Preferred size. This is a little harder. This is the size the block
-  // would be
-  //      if it were laid out on an infinite canvas. So we can get this by
-  //      reflowing the block with and INTRINSIC width and height. We can also
-  //      do a nice optimization for incremental reflow. If the reflow is
-  //      incremental then we can pass a flag to have the block compute the
-  //      preferred width for us! Preferred height can just be the minimum
-  //      height;
+  // 2) Preferred size. This is a little harder. This is the size the
+  //    block would be if it were laid out on an infinite canvas. So we can
+  //    get this by reflowing the block with and INTRINSIC width and height. We
+  //    can also do a nice optimization for incremental reflow. If the reflow is
+  //    incremental then we can pass a flag to have the block compute the
+  //    preferred width for us! Preferred height can just be the minimum height;
   // 3) Minimum size. This is a toughy. We can pass the block a flag asking for
-  // the max element
-  //    size. That would give us the width. Unfortunately you can only ask for a
-  //    maxElementSize during an incremental reflow. So on other reflows we will
-  //    just have to use 0. The min height on the other hand is fairly easy we
-  //    need to get the largest line height. This can be done with the line
-  //    iterator.
+  //    the max element size. That would give us the width. Unfortunately you
+  //    can only ask for a maxElementSize during an incremental reflow. So on
+  //    other reflows we will just have to use 0. The min height on the other
+  //    hand is fairly easy we need to get the largest line height. This can be
+  //    done with the line iterator.
 
   // if we do have a rendering context
   gfxContext* rendContext = aState.GetRenderingContext();

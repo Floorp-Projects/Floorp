@@ -7,6 +7,8 @@
 #include "ColumnSetWrapperFrame.h"
 
 #include "nsContentUtils.h"
+#include "nsIFrame.h"
+#include "nsIFrameInlines.h"
 
 using namespace mozilla;
 

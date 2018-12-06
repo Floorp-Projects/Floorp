@@ -10,6 +10,7 @@ http://creativecommons.org/licenses/publicdomain/
 <head>
   <title>Test for Bug 1038811</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/AddTask.js"></script>
   <script type="text/javascript" src="/tests/dom/push/test/test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
@@ -28,56 +29,24 @@ http://creativecommons.org/licenses/publicdomain/
   // console.log(str + "\n");
   }
 
-  function start() {
-    return navigator.serviceWorker.register("worker.js" + "?" + (Math.random()), {scope: "."})
-    .then((swr) => {
-      registration = swr;
-      return waitForActive(registration);
-    });
-  }
+  add_task(async function start() {
+    await setupPrefsAndMockSocket(new MockWebSocket());
 
-  function unregister() {
-    return registration.unregister().then(function(result) {
-      ok(result, "Unregister should return true.");
-    }, function(e) {
-      dump("Unregistering the SW failed with " + e + "\n");
-    });
-  }
+    var url = "worker.js" + "?" + Math.random();
+    registration = await navigator.serviceWorker.register(url, {scope: "."});
+    await waitForActive(registration);
+  });
 
-  function hasPermission(swr) {
-    var p = new Promise(function(res, rej) {
-      swr.pushManager.permissionState().then(
-        function(state) {
-          debug("state: " + state);
-          ok(["granted", "denied", "prompt"].includes(state), "permissionState() returned a valid state.");
-          res(swr);
-        }, function(error) {
-          ok(false, "permissionState() failed.");
-          res(swr);
-        }
-        );
-    });
-    return p;
-  }
+  add_task(async function hasPermission() {
+    var state = await registration.pushManager.permissionState();
+    debug("state: " + state);
+    ok(["granted", "denied", "prompt"].includes(state), "permissionState() returned a valid state.");
+  });
 
-  function runTest() {
-    start()
-    .then(hasPermission)
-    .then(unregister)
-    .catch(function(e) {
-      ok(false, "Some test failed with error " + e);
-    }).then(SimpleTest.finish);
-  }
-
-  SpecialPowers.addPermission("desktop-notification", false, document);
-  SpecialPowers.pushPrefEnv({"set": [
-    ["dom.push.enabled", true],
-    ["dom.push.connection.enabled", true],
-    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
-    ["dom.serviceWorkers.enabled", true],
-    ["dom.serviceWorkers.testing.enabled", true]
-    ]}, runTest);
-  SimpleTest.waitForExplicitFinish();
+  add_task(async function unregister() {
+    var result = await registration.unregister();
+    ok(result, "Unregister should return true.");
+  });
 
 </script>
 </body>

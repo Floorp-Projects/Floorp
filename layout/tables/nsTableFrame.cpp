@@ -1829,62 +1829,66 @@ void nsTableFrame::RequestSpecialBSizeReflow(const ReflowInput& aReflowInput) {
  * After the intrinsic isize calculation, the table determines the
  * column widths using BalanceColumnISizes() and
  * then reflows each child again with a constrained avail isize. This reflow is
- *referred to as the pass 2 reflow.
+ * referred to as the pass 2 reflow.
  *
  * A special bsize reflow (pass 3 reflow) can occur during an initial or resize
- *reflow if (a) a row group, row, cell, or a frame inside a cell has a percent
- *bsize but no computed bsize or (b) in paginated mode, a table has a bsize. (a)
- *supports percent nested tables contained inside cells whose bsizes aren't
- *known until after the pass 2 reflow. (b) is necessary because the table cannot
- *split until after the pass 2 reflow. The mechanics of the special bsize reflow
- *(variety a) are as follows:
+ * reflow if (a) a row group, row, cell, or a frame inside a cell has a percent
+ * bsize but no computed bsize or (b) in paginated mode, a table has a bsize.
+ * (a) supports percent nested tables contained inside cells whose bsizes aren't
+ * known until after the pass 2 reflow. (b) is necessary because the table
+ * cannot split until after the pass 2 reflow. The mechanics of the special
+ * bsize reflow (variety a) are as follows:
  *
  * 1) Each table related frame (table, row group, row, cell) implements
- *NeedsSpecialReflow() to indicate that it should get the reflow. It does this
- *when it has a percent bsize but no computed bsize by calling
- *CheckRequestSpecialBSizeReflow(). This method calls
+ *    NeedsSpecialReflow() to indicate that it should get the reflow. It does
+ *    this when it has a percent bsize but no computed bsize by calling
+ *    CheckRequestSpecialBSizeReflow(). This method calls
  *    RequestSpecialBSizeReflow() which calls SetNeedSpecialReflow() on its
- *ancestors until it reaches the containing table and calls
- *SetNeedToInitiateSpecialReflow() on it. For percent bsize frames inside cells,
- *during DidReflow(), the cell's NotifyPercentBSize() is called (the cell is the
- *reflow state's mPercentBSizeObserver in this case). NotifyPercentBSize() calls
- *RequestSpecialBSizeReflow().
+ *    ancestors until it reaches the containing table and calls
+ *    SetNeedToInitiateSpecialReflow() on it. For percent bsize frames inside
+ *    cells, during DidReflow(), the cell's NotifyPercentBSize() is called
+ *    (the cell is the reflow state's mPercentBSizeObserver in this case).
+ *    NotifyPercentBSize() calls RequestSpecialBSizeReflow().
  *
  * XXX (jfkthame) This comment appears to be out of date; it refers to
- *methods/flags that are no longer present in the code. 2) After the pass 2
- *reflow, if the table's NeedToInitiateSpecialReflow(true) was called, it will
- *do the special bsize reflow, setting the reflow state's
- *mFlags.mSpecialBSizeReflow to true and mSpecialHeightInitiator to itself. It
- *won't do this if IsPrematureSpecialHeightReflow() returns true because in that
- *case another special bsize reflow will be coming along with the containing
- *table as the mSpecialHeightInitiator. It is only relevant to do the reflow
- *when the mSpecialHeightInitiator is the containing table, because if it is a
- *remote ancestor, then appropriate bsizes will not be known.
+ * methods/flags that are no longer present in the code.
+ *
+ * 2) After the pass 2 reflow, if the table's NeedToInitiateSpecialReflow(true)
+ *    was called, it will do the special bsize reflow, setting the reflow
+ *    state's mFlags.mSpecialBSizeReflow to true and mSpecialHeightInitiator to
+ *    itself. It won't do this if IsPrematureSpecialHeightReflow() returns true
+ *    because in that case another special bsize reflow will be coming along
+ *    with the containing table as the mSpecialHeightInitiator. It is only
+ *    relevant to do the reflow when the mSpecialHeightInitiator is the
+ *    containing table, because if it is a remote ancestor, then appropriate
+ *    bsizes will not be known.
  *
  * 3) Since the bsizes of the table, row groups, rows, and cells was determined
- *during the pass 2 reflow, they return their last desired sizes during the
- *special bsize reflow. The reflow only permits percent bsize frames inside the
- *cells to resize based on the cells bsize and that bsize was determined during
- *the pass 2 reflow.
+ *    during the pass 2 reflow, they return their last desired sizes during the
+ *    special bsize reflow. The reflow only permits percent bsize frames inside
+ *    the cells to resize based on the cells bsize and that bsize was
+ *    determined during the pass 2 reflow.
  *
  * So, in the case of deeply nested tables, all of the tables that were told to
- *initiate a special reflow will do so, but if a table is already in a special
- *reflow, it won't inititate the reflow until the current initiator is its
- *containing table. Since these reflows are only received by frames that need
- *them and they don't cause any rebalancing of tables, the extra overhead is
- *minimal.
+ * initiate a special reflow will do so, but if a table is already in a special
+ * reflow, it won't inititate the reflow until the current initiator is its
+ * containing table. Since these reflows are only received by frames that need
+ * them and they don't cause any rebalancing of tables, the extra overhead is
+ * minimal.
  *
  * The type of special reflow that occurs during printing (variety b) follows
- *the same mechanism except that all frames will receive the reflow even if they
- *don't really need them.
+ * the same mechanism except that all frames will receive the reflow even if
+ * they don't really need them.
  *
  * Open issues with the special bsize reflow:
  *
  * 1) At some point there should be 2 kinds of special bsize reflows because (a)
- *and (b) above are really quite different. This would avoid unnecessary reflows
- *during printing. 2) When a cell contains frames whose percent bsizes > 100%,
- *there is data loss (see bug 115245). However, this can also occur if a cell
- *has a fixed bsize and there is no special bsize reflow.
+ *    and (b) above are really quite different. This would avoid unnecessary
+ *    reflows during printing.
+ *
+ * 2) When a cell contains frames whose percent bsizes > 100%, there is data
+ *    loss (see bug 115245). However, this can also occur if a cell has a fixed
+ *    bsize and there is no special bsize reflow.
  *
  * XXXldb Special bsize reflow should really be its own method, not
  * part of nsIFrame::Reflow.  It should then call nsIFrame::Reflow on
@@ -4060,8 +4064,8 @@ bool nsTableFrame::ColumnHasCellSpacingBefore(int32_t aColIndex) const {
  *  3) the border styles are ranked in this order, highest to lowest precedence:
  *     double, solid, dashed, dotted, ridge, outset, groove, inset
  *  4) borders that are of equal width and style (differ only in color) have
- *this precedence: cell, row, rowgroup, col, colgroup, table 5) if all border
- *styles are NONE, then that's the computed border style.
+ *     this precedence: cell, row, rowgroup, col, colgroup, table
+ *  5) if all border styles are NONE, then that's the computed border style.
  *******************************************************************************/
 
 #ifdef DEBUG
@@ -5549,11 +5553,15 @@ BCCellBorder BCMapCellInfo::GetBStartInternalBorder() {
    n=rowspan left and right border edges per cell.
 
    1) On the top edge of the table, store the top edge. Never store the top edge
-   otherwise, since a bottom edge from a cell above will take care of it. 2) On
-   the left edge of the table, store the left edge. Never store the left edge
-   othewise, since a right edge from a cell to the left will take care of it. 3)
-   Store the right edge (or edges if a row span) 4) Store the bottom edge (or
-   edges if a col span)
+      otherwise, since a bottom edge from a cell above will take care of it.
+
+   2) On the left edge of the table, store the left edge. Never store the left
+      edge othewise, since a right edge from a cell to the left will take care
+      of it.
+
+   3) Store the right edge (or edges if a row span)
+
+   4) Store the bottom edge (or edges if a col span)
 
    Since corners are computed with only an array of BCCornerInfo indexed by the
    number-of-cols, corner calculations are somewhat complicated. Using an array
@@ -5567,20 +5575,25 @@ BCCellBorder BCMapCellInfo::GetBStartInternalBorder() {
    edges per cell and n=rowspan left and right border edges per cell.
 
    1) On the top edge of the table, store the top-left corner, unless on the
-   left edge of the table. Never store the top-right corner, since it will get
-   stored as a right-top corner. 2) On the left edge of the table, store the
-   left-top corner. Never store the left-bottom corner, since it will get stored
-   as a bottom-left corner. 3) Store the right-top corner if (a) it is the top
-   right corner of the table or (b) it is not on the top edge of the table.
-   Never store the right-bottom corner since it will get stored as a
-      bottom-right corner.
+      left edge of the table. Never store the top-right corner, since it will
+      get stored as a right-top corner.
+
+   2) On the left edge of the table, store the left-top corner. Never store the
+      left-bottom corner, since it will get stored as a bottom-left corner.
+
+   3) Store the right-top corner if (a) it is the top right corner of the table
+      or (b) it is not on the top edge of the table. Never store the
+      right-bottom corner since it will get stored as a bottom-right corner.
+
    4) Store the bottom-right corner, if it is the bottom right corner of the
-   table. Never store it otherwise, since it will get stored as either a
-   right-top corner by a cell below or a bottom-left corner from a cell to the
-   right. 5) Store the bottom-left corner, if (a) on the bottom edge of the
-   table or (b) if the left edge hits the top side of a colspan in its interior.
-   Never store the corner otherwise, since it will get stored as a right-top
-   corner by a cell from below.
+      table. Never store it otherwise, since it will get stored as either a
+      right-top corner by a cell below or a bottom-left corner from a cell to
+      the right.
+
+   5) Store the bottom-left corner, if (a) on the bottom edge of the table or
+      (b) if the left edge hits the top side of a colspan in its interior.
+      Never store the corner otherwise, since it will get stored as a right-top
+      corner by a cell from below.
 
    XXX the BC-RTL hack - The correct fix would be a rewrite as described in bug
    203686. In order to draw borders in rtl conditions somehow correct, the

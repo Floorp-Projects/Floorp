@@ -234,6 +234,13 @@ certificate.">
 
 <!ENTITY blockedByPolicy.title "Blocked Page">
 
+<!ENTITY certerror.mitm.title "Software is Preventing &brandShortName; From Safely Connecting to This Site">
+<!ENTITY certerror.mitm.longDesc "<span class='hostname'></span> is most likely a safe site, but a secure connection could not be established. This issue is caused by <span class='mitm-name'/>, which is either software on your computer or your network.">
+<!ENTITY certerror.mitm.whatCanYouDoAboutIt1 "If your antivirus software includes a feature that scans encrypted connections (often called “web scanning” or “https scanning”), you can disable that feature. If that doesn’t work, you can remove and reinstall the antivirus software.">
+<!ENTITY certerror.mitm.whatCanYouDoAboutIt2 "If you are on a corporate network, you can contact your IT department.">
+<!ENTITY certerror.mitm.whatCanYouDoAboutIt3 "If you are not familiar with <span class='mitm-name'/>, then this could be an attack and you should not continue to the site.">
+<!ENTITY certerror.mitm.sts.whatCanYouDoAboutIt3 "If you are not familiar with <span class='mitm-name'/>, then this could be an attack, and there is nothing you can do to access the site.">
+
 <!ENTITY clockSkewError.title "Your Computer Clock is Wrong">
 <!ENTITY clockSkewError.longDesc "Your computer thinks it is <span id='wrongSystemTime_systemDate1'/>, which prevents &brandShortName; from connecting securely. To visit <span class='hostname'></span>, update your computer clock in your system settings to the current date, time, and time zone, and then refresh <span class='hostname'></span>.">
 

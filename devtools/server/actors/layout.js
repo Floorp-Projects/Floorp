@@ -89,7 +89,8 @@ const FlexboxActor = ActorClassWithSpec(flexboxSpec, {
    * Returns an array of FlexItemActor objects for all the flex item elements contained
    * in the flex container element.
    *
-   * @return {Array} An array of FlexItemActor objects.
+   * @return {Array}
+   *         An array of FlexItemActor objects.
    */
   getFlexItems() {
     if (isNodeDead(this.containerEl)) {
@@ -335,12 +336,11 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
    *         The node to start iterating at.
    * @param  {String} type
    *         Can be "grid" or "flex", the display type we are searching for.
-   * @param  {Node|null} container
-   *         The container of the current node.
-   * @return {GridActor|FlexboxActor|null} The GridActor or FlexboxActor of the
-   * grid/flex container of the give node. Otherwise, returns null.
+   * @return {GridActor|FlexboxActor|null}
+   *         The GridActor or FlexboxActor of the grid/flex container of the given node.
+   *         Otherwise, returns null.
    */
-  getCurrentDisplay(node, type, container) {
+  getCurrentDisplay(node, type) {
     if (isNodeDead(node)) {
       return null;
     }
@@ -350,33 +350,20 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
       node = node.rawNode;
     }
 
-    const treeWalker = this.walker.getDocumentWalker(node, SHOW_ELEMENT);
-    let currentNode = treeWalker.currentNode;
-    let displayType = this.walker.getNode(currentNode).displayType;
+    const flexType = type === "flex";
+    const gridType = type === "grid";
+    const displayType = this.walker.getNode(node).displayType;
 
     // If the node is an element, check first if it is itself a flex or a grid.
-    if (currentNode.nodeType === currentNode.ELEMENT_NODE) {
+    if (node.nodeType === node.ELEMENT_NODE) {
       if (!displayType) {
         return null;
       }
 
-      if (type == "flex") {
-        // If only the current node is being considered when finding its display, then
-        // return it as only a flex container.
-        if ((displayType == "inline-flex" || displayType == "flex") &&
-              !container) {
-          return new FlexboxActor(this, currentNode);
-
-        // If considering the current node's container, then we are trying to determine
-        // the current node's flex item status.
-        } else if (container) {
-          if (this.isNodeFlexItemInContainer(currentNode, container)) {
-            return new FlexboxActor(this, container);
-          }
-        }
-      } else if (type == "grid" &&
-                 (displayType == "inline-grid" || displayType == "grid")) {
-        return new GridActor(this, currentNode);
+      if (flexType && displayType.includes("flex")) {
+        return new FlexboxActor(this, node);
+      } else if (gridType && displayType.includes("grid")) {
+        return new GridActor(this, node);
       }
     }
 
@@ -385,68 +372,53 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
     // Note that text nodes that are children of flex/grid containers are wrapped in
     // anonymous containers, so even if their displayType getter returns null we still
     // want to walk up the chain to find their container.
-    while ((currentNode = treeWalker.parentNode())) {
-      if (!currentNode) {
-        break;
-      }
-
-      displayType = this.walker.getNode(currentNode).displayType;
-
-      if (type == "flex" &&
-          (displayType == "inline-flex" || displayType == "flex")) {
-        if (this.isNodeFlexItemInContainer(node, currentNode)) {
-          return new FlexboxActor(this, currentNode);
-        }
-      } else if (type == "grid" &&
-                 (displayType == "inline-grid" || displayType == "grid")) {
-        return new GridActor(this, currentNode);
-      } else if (displayType == "contents") {
-        // Continue walking up the tree since the parent node is a content element.
-        continue;
-      }
-
-      break;
+    const container = findFlexOrGridParentContainerForNode(node, type, this.walker);
+    if (container && flexType) {
+      return new FlexboxActor(this, container);
+    }
+    if (container && gridType) {
+      return new GridActor(this, container);
     }
 
     return null;
   },
 
   /**
-   * Returns the grid container found by iterating on the given selected node. The current
-   * node can be a grid container or grid item. If it is a grid item, returns the parent
-   * grid container. Otherwise, return null if the current or parent node is not a grid
+   * Returns the grid container for a given selected node.
+   * The node itself can be a container, but if not, walk up the DOM to find its
    * container.
+   * Returns null if no container can be found.
    *
    * @param  {Node|NodeActor} node
    *         The node to start iterating at.
-   * @return {GridActor|null} The GridActor of the grid container of the given node.
-   * Otherwise, returns null.
+   * @return {GridActor|null}
+   *         The GridActor of the grid container of the given node. Otherwise, returns
+   *         null.
    */
   getCurrentGrid(node) {
     return this.getCurrentDisplay(node, "grid");
   },
 
   /**
-   * Returns the flex container found by iterating on the given selected node. The current
-   * node can be a flex container or flex item. If it is a flex item, returns the parent
-   * flex container. Otherwise, return null if the current or parent node is not a flex
+   * Returns the flex container for a given selected node.
+   * The node itself can be a container, but if not, walk up the DOM to find its
    * container.
+   * Returns null if no container can be found.
    *
    * @param  {Node|NodeActor} node
    *         The node to start iterating at.
    * @param  {Boolean|null} onlyLookAtParents
-   *         Whether or not to only consider the parent node of the given node.
-   * @return {FlexboxActor|null} The FlexboxActor of the flex container of the given node.
-   * Otherwise, returns null.
+   *         If true, skip the passed node and only start looking at its parent and up.
+   * @return {FlexboxActor|null}
+   *         The FlexboxActor of the flex container of the given node. Otherwise, returns
+   *         null.
    */
   getCurrentFlexbox(node, onlyLookAtParents) {
-    let container = null;
-
     if (onlyLookAtParents) {
-      container = node.rawNode.parentNode;
+      node = node.rawNode.parentNode;
     }
 
-    return this.getCurrentDisplay(node, "flex", container);
+    return this.getCurrentDisplay(node, "flex");
   },
 
   /**
@@ -482,41 +454,93 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
 
     return gridActors;
   },
-
-  /**
-   * Returns whether or not the given node is actually considered a flex item by its
-   * container.
-   *
-   * @param  {Node|NodeActor} supposedItem
-   *         The node that might be a flex item of its container.
-   * @param  {Node} container
-   *         The node's container.
-   * @return {Boolean} Whether or not the node we are looking at is a flex item of its
-   * container.
-   */
-  isNodeFlexItemInContainer(supposedItem, container) {
-    const containerDisplayType = this.walker.getNode(container).displayType;
-
-    if (containerDisplayType == "inline-flex" || containerDisplayType == "flex") {
-      const containerFlex = container.getAsFlexContainer();
-
-      for (const line of containerFlex.getLines()) {
-        for (const item of line.getItems()) {
-          if (item.node === supposedItem) {
-            return true;
-          }
-        }
-      }
-    }
-
-    return false;
-  },
 });
 
 function isNodeDead(node) {
   return !node || (node.rawNode && Cu.isDeadWrapper(node.rawNode));
 }
 
+/**
+ * If the provided node is a grid of flex item, then return its parent grid or flex
+ * container.
+ *
+ * @param  {DOMNode} node
+ *         The node that is supposedly a grid or flex item.
+ * @param  {String} type
+ *         The type of container/item to look for: "flex" or "grid".
+ * @param  {WalkerActor} walkerActor
+ *         The current instance of WalkerActor.
+ * @return {DOMNode|null}
+ *         The parent grid or flex container if found, null otherwise.
+ */
+function findFlexOrGridParentContainerForNode(node, type, walker) {
+  const treeWalker = walker.getDocumentWalker(node, SHOW_ELEMENT);
+  let currentNode = treeWalker.currentNode;
+
+  const flexType = type === "flex";
+  const gridType = type === "grid";
+
+  try {
+    while ((currentNode = treeWalker.parentNode())) {
+      if (!currentNode) {
+        break;
+      }
+
+      const displayType = walker.getNode(currentNode).displayType;
+      if (!displayType) {
+        break;
+      }
+
+      if (flexType && displayType.includes("flex")) {
+        if (isNodeAFlexItemInContainer(node, currentNode, walker)) {
+          return currentNode;
+        }
+      } else if (gridType && displayType.includes("grid")) {
+        return currentNode;
+      } else if (displayType === "contents") {
+        // Continue walking up the tree since the parent node is a content element.
+        continue;
+      }
+
+      break;
+    }
+  } catch (e) {
+    // Getting the parentNode can fail when the supplied node is in shadow DOM.
+  }
+
+  return null;
+}
+
+/**
+ * Returns whether or not the given node is actually considered a flex item by its
+ * container.
+ *
+ * @param  {Node|NodeActor} supposedItem
+ *         The node that might be a flex item of its container.
+ * @param  {Node} container
+ *         The node's container.
+ * @return {Boolean}
+ *         Whether or not the node we are looking at is a flex item of its container.
+ */
+function isNodeAFlexItemInContainer(supposedItem, container, walker) {
+  const containerDisplayType = walker.getNode(container).displayType;
+
+  if (containerDisplayType.includes("flex")) {
+    const containerFlex = container.getAsFlexContainer();
+
+    for (const line of containerFlex.getLines()) {
+      for (const item of line.getItems()) {
+        if (item.node === supposedItem) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+exports.findFlexOrGridParentContainerForNode = findFlexOrGridParentContainerForNode;
 exports.FlexboxActor = FlexboxActor;
 exports.FlexItemActor = FlexItemActor;
 exports.GridActor = GridActor;

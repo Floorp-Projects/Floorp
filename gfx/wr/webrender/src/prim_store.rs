@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AlphaType, BorderRadius, ClipMode, ColorF, PictureRect, ColorU};
+use api::{AlphaType, BorderRadius, ClipMode, ColorF, PictureRect, ColorU, LayoutVector2D};
 use api::{DeviceIntRect, DeviceIntSize, DevicePixelScale, ExtendMode, DeviceRect, LayoutSideOffsetsAu};
 use api::{FilterOp, GlyphInstance, GradientStop, ImageKey, ImageRendering, TileOffset, RepeatMode};
 use api::{RasterSpace, LayoutPoint, LayoutRect, LayoutSideOffsets, LayoutSize, LayoutToWorldTransform};
@@ -833,7 +833,7 @@ impl PrimitiveKeyKind {
                 let mut border_segments = Vec::new();
 
                 create_border_segments(
-                    rect,
+                    rect.size,
                     &border,
                     &widths,
                     &mut border_segments,
@@ -854,7 +854,7 @@ impl PrimitiveKeyKind {
                 ref nine_patch,
                 ..
             } => {
-                let brush_segments = nine_patch.create_segments(rect);
+                let brush_segments = nine_patch.create_segments(rect.size);
 
                 PrimitiveTemplateKind::ImageBorder {
                     request,
@@ -921,7 +921,7 @@ impl PrimitiveKeyKind {
                 let mut brush_segments = Vec::new();
 
                 if let Some(ref nine_patch) = nine_patch {
-                    brush_segments = nine_patch.create_segments(rect);
+                    brush_segments = nine_patch.create_segments(rect.size);
                 }
 
                 // Save opacity of the stops for use in
@@ -955,7 +955,7 @@ impl PrimitiveKeyKind {
                 let mut brush_segments = Vec::new();
 
                 if let Some(ref nine_patch) = nine_patch {
-                    brush_segments = nine_patch.create_segments(rect);
+                    brush_segments = nine_patch.create_segments(rect.size);
                 }
 
                 let stops = stops.iter().map(|stop| {
@@ -1017,7 +1017,7 @@ impl PrimitiveTemplateKind {
     fn write_prim_gpu_blocks(
         &self,
         request: &mut GpuDataRequest,
-        prim_rect: LayoutRect,
+        prim_size: LayoutSize,
     ) {
         match *self {
             PrimitiveTemplateKind::Clear => {
@@ -1034,8 +1034,8 @@ impl PrimitiveTemplateKind {
                 request.push(PremultipliedColorF::WHITE);
                 request.push(PremultipliedColorF::WHITE);
                 request.push([
-                    prim_rect.size.width,
-                    prim_rect.size.height,
+                    prim_size.width,
+                    prim_size.height,
                     0.0,
                     0.0,
                 ]);
@@ -1047,8 +1047,8 @@ impl PrimitiveTemplateKind {
                 request.push(PremultipliedColorF::WHITE);
                 request.push(PremultipliedColorF::WHITE);
                 request.push([
-                    prim_rect.size.width,
-                    prim_rect.size.height,
+                    prim_size.width,
+                    prim_size.height,
                     0.0,
                     0.0,
                 ]);
@@ -1165,15 +1165,8 @@ impl PrimitiveTemplateKind {
     fn write_segment_gpu_blocks(
         &self,
         request: &mut GpuDataRequest,
-        prim_rect: LayoutRect,
     ) {
         match *self {
-            PrimitiveTemplateKind::Clear => {
-                request.write_segment(
-                    prim_rect,
-                    [0.0; 4],
-                );
-            }
             PrimitiveTemplateKind::NormalBorder { ref template, .. } => {
                 for segment in &template.brush_segments {
                     // has to match VECS_PER_SEGMENT
@@ -1192,12 +1185,6 @@ impl PrimitiveTemplateKind {
                     );
                 }
             }
-            PrimitiveTemplateKind::LineDecoration { .. } => {
-                request.write_segment(
-                    prim_rect,
-                    [0.0; 4],
-                );
-            }
             PrimitiveTemplateKind::LinearGradient { ref brush_segments, .. } |
             PrimitiveTemplateKind::RadialGradient { ref brush_segments, .. } => {
                 for segment in brush_segments {
@@ -1208,6 +1195,8 @@ impl PrimitiveTemplateKind {
                     );
                 }
             }
+            PrimitiveTemplateKind::Clear |
+            PrimitiveTemplateKind::LineDecoration { .. } |
             PrimitiveTemplateKind::Image { .. } |
             PrimitiveTemplateKind::Rectangle { .. } |
             PrimitiveTemplateKind::TextRun { .. } |
@@ -1233,8 +1222,11 @@ impl PrimitiveTemplate {
         frame_state: &mut FrameBuildingState,
     ) {
         if let Some(mut request) = frame_state.gpu_cache.request(&mut self.gpu_cache_handle) {
-            self.kind.write_prim_gpu_blocks(&mut request, self.prim_rect);
-            self.kind.write_segment_gpu_blocks(&mut request, self.prim_rect);
+            self.kind.write_prim_gpu_blocks(
+                &mut request,
+                self.prim_rect.size,
+            );
+            self.kind.write_segment_gpu_blocks(&mut request);
         }
 
         self.opacity = match self.kind {
@@ -1536,7 +1528,7 @@ pub struct VisibleImageTile {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct VisibleMaskImageTile {
     pub tile_offset: TileOffset,
-    pub handle: GpuCacheHandle,
+    pub tile_rect: LayoutRect,
 }
 
 #[derive(Debug)]
@@ -2065,16 +2057,18 @@ impl ClipCorner {
 #[derive(Debug)]
 #[repr(C)]
 pub struct ImageMaskData {
-    /// The local rect of the whole masked area.
-    pub local_mask_rect: LayoutRect,
-    /// The local rect of an individual tile.
-    pub local_tile_rect: LayoutRect,
+    /// The local size of the whole masked area.
+    pub local_mask_size: LayoutSize,
 }
 
 impl ToGpuBlocks for ImageMaskData {
     fn write_gpu_blocks(&self, mut request: GpuDataRequest) {
-        request.push(self.local_mask_rect);
-        request.push(self.local_tile_rect);
+        request.push([
+            self.local_mask_size.width,
+            self.local_mask_size.height,
+            0.0,
+            0.0,
+        ]);
     }
 }
 
@@ -2088,10 +2082,19 @@ pub struct ClipData {
 }
 
 impl ClipData {
-    pub fn rounded_rect(rect: &LayoutRect, radii: &BorderRadius, mode: ClipMode) -> ClipData {
+    pub fn rounded_rect(size: LayoutSize, radii: &BorderRadius, mode: ClipMode) -> ClipData {
+        // TODO(gw): For simplicity, keep most of the clip GPU structs the
+        //           same as they were, even though the origin is now always
+        //           zero, since they are in the clip's local space. In future,
+        //           we could reduce the GPU cache size of ClipData.
+        let rect = LayoutRect::new(
+            LayoutPoint::zero(),
+            size,
+        );
+
         ClipData {
             rect: ClipRect {
-                rect: *rect,
+                rect,
                 mode: mode as u32 as f32,
             },
             top_left: ClipCorner {
@@ -2146,7 +2149,16 @@ impl ClipData {
         }
     }
 
-    pub fn uniform(rect: LayoutRect, radius: f32, mode: ClipMode) -> ClipData {
+    pub fn uniform(size: LayoutSize, radius: f32, mode: ClipMode) -> ClipData {
+        // TODO(gw): For simplicity, keep most of the clip GPU structs the
+        //           same as they were, even though the origin is now always
+        //           zero, since they are in the clip's local space. In future,
+        //           we could reduce the GPU cache size of ClipData.
+        let rect = LayoutRect::new(
+            LayoutPoint::zero(),
+            size,
+        );
+
         ClipData {
             rect: ClipRect {
                 rect,
@@ -3097,10 +3109,6 @@ impl PrimitiveStore {
                         0.0,
                         0.0,
                     ]);
-                    request.write_segment(
-                        pic.local_rect,
-                        [0.0; 4],
-                    );
                 }
             }
             PrimitiveInstanceKind::TextRun { .. } |
@@ -3486,7 +3494,6 @@ impl PrimitiveStore {
                                     request.push(PremultipliedColorF::WHITE);
                                     request.push(PremultipliedColorF::WHITE);
                                     request.push([tile.rect.size.width, tile.rect.size.height, 0.0, 0.0]);
-                                    request.write_segment(tile.rect, [0.0; 4]);
                                 }
 
                                 image_instance.visible_tiles.push(VisibleImageTile {
@@ -3526,7 +3533,7 @@ impl PrimitiveStore {
                         frame_state,
                         &pic_context.dirty_world_rect,
                         &mut scratch.gradient_tiles,
-                        &mut |rect, mut request| {
+                        &mut |_, mut request| {
                             request.push([
                                 start_point.x,
                                 start_point.y,
@@ -3539,7 +3546,6 @@ impl PrimitiveStore {
                                 stretch_size.height,
                                 0.0,
                             ]);
-                            request.write_segment(*rect, [0.0; 4]);
                         }
                     );
 
@@ -3566,7 +3572,7 @@ impl PrimitiveStore {
                         frame_state,
                         &pic_context.dirty_world_rect,
                         &mut scratch.gradient_tiles,
-                        &mut |rect, mut request| {
+                        &mut |_, mut request| {
                             request.push([
                                 center.x,
                                 center.y,
@@ -3579,7 +3585,6 @@ impl PrimitiveStore {
                                 stretch_size.width,
                                 stretch_size.height,
                             ]);
-                            request.write_segment(*rect, [0.0; 4]);
                         },
                     );
 
@@ -3604,7 +3609,10 @@ impl PrimitiveStore {
             if let Some(mut request) = frame_state.gpu_cache.request(&mut segment_instance.gpu_cache_handle) {
                 let segments = &scratch.segments[segment_instance.segments_range];
 
-                prim_data.kind.write_prim_gpu_blocks(&mut request, prim_data.prim_rect);
+                prim_data.kind.write_prim_gpu_blocks(
+                    &mut request,
+                    prim_data.prim_rect.size,
+                );
 
                 for segment in segments {
                     request.write_segment(
@@ -3761,12 +3769,12 @@ impl<'a> GpuDataRequest<'a> {
             local_clip_count += 1;
 
             let (local_clip_rect, radius, mode) = match clip_node.item {
-                ClipItem::RoundedRectangle(rect, radii, clip_mode) => {
+                ClipItem::RoundedRectangle(size, radii, clip_mode) => {
                     rect_clips_only = false;
-                    (rect, Some(radii), clip_mode)
+                    (LayoutRect::new(clip_instance.local_pos, size), Some(radii), clip_mode)
                 }
-                ClipItem::Rectangle(rect, mode) => {
-                    (rect, None, mode)
+                ClipItem::Rectangle(size, mode) => {
+                    (LayoutRect::new(clip_instance.local_pos, size), None, mode)
                 }
                 ClipItem::BoxShadow(ref info) => {
                     rect_clips_only = false;
@@ -3784,9 +3792,12 @@ impl<'a> GpuDataRequest<'a> {
                     // box-shadow can have an effect on the result. This
                     // ensures clip-mask tasks get allocated for these
                     // pixel regions, even if no other clips affect them.
+                    let prim_shadow_rect = info.prim_shadow_rect.translate(
+                        &LayoutVector2D::new(clip_instance.local_pos.x, clip_instance.local_pos.y),
+                    );
                     segment_builder.push_mask_region(
-                        info.prim_shadow_rect,
-                        info.prim_shadow_rect.inflate(
+                        prim_shadow_rect,
+                        prim_shadow_rect.inflate(
                             -0.5 * info.original_alloc_size.width,
                             -0.5 * info.original_alloc_size.height,
                         ),
@@ -3905,7 +3916,7 @@ impl PrimitiveInstance {
                 frame_state.segment_builder.build(|segment| {
                     segments.push(
                         BrushSegment::new(
-                            segment.rect,
+                            segment.rect.translate(&LayoutVector2D::new(-prim_local_rect.origin.x, -prim_local_rect.origin.y)),
                             segment.has_mask,
                             segment.edge_flags,
                             [0.0; 4],
@@ -3936,6 +3947,7 @@ impl PrimitiveInstance {
 
     fn update_clip_task_for_brush(
         &mut self,
+        prim_origin: LayoutPoint,
         prim_local_clip_rect: LayoutRect,
         root_spatial_node_index: SpatialNodeIndex,
         prim_bounding_rect: WorldRect,
@@ -4084,7 +4096,7 @@ impl PrimitiveInstance {
                     .clip_store
                     .build_clip_chain_instance(
                         self.clip_chain_id,
-                        segment.local_rect,
+                        segment.local_rect.translate(&LayoutVector2D::new(prim_origin.x, prim_origin.y)),
                         prim_local_clip_rect,
                         prim_context.spatial_node_index,
                         &pic_state.map_local_to_pic,
@@ -4151,6 +4163,7 @@ impl PrimitiveInstance {
 
         // First try to  render this primitive's mask using optimized brush rendering.
         if self.update_clip_task_for_brush(
+            prim_local_rect.origin,
             prim_local_clip_rect,
             root_spatial_node_index,
             prim_bounding_rect,

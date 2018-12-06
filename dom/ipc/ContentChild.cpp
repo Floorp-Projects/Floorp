@@ -890,9 +890,6 @@ nsresult ContentChild::ProvideWindowCommon(
   TabContext newTabContext = aTabOpener ? *aTabOpener : TabContext();
   RefPtr<TabChild> newChild =
       new TabChild(this, tabId, tabGroup, newTabContext, aChromeFlags);
-  if (NS_FAILED(newChild->Init(aParent))) {
-    return NS_ERROR_ABORT;
-  }
 
   if (aTabOpener) {
     MOZ_ASSERT(ipcContext->type() == IPCTabContext::TPopupIPCTabContext);
@@ -907,6 +904,12 @@ nsresult ContentChild::ProvideWindowCommon(
       // We release this ref in DeallocPBrowserChild
       RefPtr<TabChild>(newChild).forget().take(), tabId, TabId(0), *ipcContext,
       aChromeFlags, GetID(), IsForBrowser());
+
+  // Now that |newChild| has had its IPC link established, call |Init| to set it
+  // up.
+  if (NS_FAILED(newChild->Init(aParent))) {
+    return NS_ERROR_ABORT;
+  }
 
   nsCOMPtr<nsPIDOMWindowInner> parentTopInnerWindow;
   if (aParent) {
@@ -2951,6 +2954,13 @@ uint64_t NextWindowID() {
 
   MOZ_RELEASE_ASSERT(windowID < (uint64_t(1) << kWindowIDWindowBits));
   uint64_t windowBits = windowID & ((uint64_t(1) << kWindowIDWindowBits) - 1);
+
+  // Make sure that the middleman process doesn't generate WindowIDs which
+  // conflict with the process it's wrapping (which shares a ContentParentID
+  // with it).
+  if (recordreplay::IsMiddleman()) {
+    windowBits |= uint64_t(1) << (kWindowIDWindowBits - 1);
+  }
 
   return (processBits << kWindowIDWindowBits) | windowBits;
 }

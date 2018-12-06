@@ -113,6 +113,11 @@
   margin-inline-end: 28px;
 }
 
+#contentBlockingCategories[fallback-ui] .default-content-blocking-ui,
+#contentBlockingCategories:not([fallback-ui]) .fallback-content-blocking-ui {
+  display: none;
+}
+
 .arrowhead {
   -moz-appearance: none;
   border: none;

@@ -8,7 +8,7 @@ use blob;
 use crossbeam::sync::chase_lev;
 #[cfg(windows)]
 use dwrote;
-#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[cfg(all(unix, not(target_os = "android")))]
 use font_loader::system_fonts;
 use winit::EventsLoopProxy;
 use json_frame_writer::JsonFrameWriter;
@@ -423,7 +423,7 @@ impl Wrench {
         self.font_key_from_native_handle(&desc)
     }
 
-    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    #[cfg(all(unix, not(target_os = "android")))]
     pub fn font_key_from_properties(
         &mut self,
         family: &str,
@@ -438,7 +438,18 @@ impl Wrench {
         self.font_key_from_bytes(font, index as u32)
     }
 
-    #[cfg(unix)]
+    #[cfg(target_os = "android")]
+    pub fn font_key_from_properties(
+        &mut self,
+        family: &str,
+        _weight: u32,
+        _style: u32,
+        _stretch: u32,
+    ) -> FontKey {
+        unimplemented!()
+    }
+
+    #[cfg(all(unix, not(target_os = "android")))]
     pub fn font_key_from_name(&mut self, font_name: &str) -> FontKey {
         let property = system_fonts::FontPropertyBuilder::new()
             .family(font_name)

@@ -19,6 +19,7 @@
 
 #include "js/AllocPolicy.h"
 #include "js/HashTable.h"
+#include "js/TraceLoggerAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Vector.h"
 #include "threading/LockGuard.h"
@@ -218,6 +219,12 @@ class TraceLoggerEventPayload {
 // Per thread trace logger state.
 class TraceLoggerThread : public mozilla::LinkedListElement<TraceLoggerThread> {
 #ifdef JS_TRACE_LOGGING
+  friend JS::TraceLoggerIdImpl;
+  friend JS::TraceLoggerTimeStampImpl;
+  friend JS::TraceLoggerDurationImpl;
+  friend JS::TraceLoggerLineNoImpl;
+  friend JS::TraceLoggerColNoImpl;
+
  private:
   uint32_t enabled_;
   bool failed;
@@ -345,6 +352,7 @@ class TraceLoggerThread : public mozilla::LinkedListElement<TraceLoggerThread> {
 // Process wide trace logger state.
 class TraceLoggerThreadState {
 #ifdef JS_TRACE_LOGGING
+  friend JS::TraceLoggerDictionaryImpl;
 #ifdef DEBUG
   bool initialized;
 #endif

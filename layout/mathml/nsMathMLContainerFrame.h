@@ -124,8 +124,7 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
   //        we just re-layout them using ReLayoutChildren(this);
   //        (e.g., this happens with <ms>).
   //    2b. If the automatic data to update affects us in some way, we ask our
-  //    parent
-  //        to re-layout its children using ReLayoutChildren(mParent);
+  //        parent to re-layout its children using ReLayoutChildren(mParent);
   //        Therefore, there is an overhead here in that our siblings are
   //        re-laid too (e.g., this happens with <munder>, <mover>,
   //        <munderover>).

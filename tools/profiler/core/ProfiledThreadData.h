@@ -63,7 +63,10 @@ class ProfiledThreadData final {
   void StreamJSON(const ProfileBuffer& aBuffer, JSContext* aCx,
                   SpliceableJSONWriter& aWriter,
                   const mozilla::TimeStamp& aProcessStartTime,
-                  double aSinceTime);
+                  double aSinceTime, bool aJSTracerEnabled);
+
+  void StreamTraceLoggerJSON(JSContext* aCx, SpliceableJSONWriter& aWriter,
+                             const TimeStamp& aProcessStartTime);
 
   // Returns nullptr if this is not the main thread, the responsiveness
   // feature is not turned on, or if this thread is not being profiled.

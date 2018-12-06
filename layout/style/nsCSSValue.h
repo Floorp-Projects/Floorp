@@ -250,8 +250,8 @@ enum nsCSSUnit {
   eCSSUnit_Unset = 4,    // (n/a) value equivalent to 'initial' if on a reset
                          // property, 'inherit' otherwise
   eCSSUnit_None = 5,     // (n/a) value is none
-  eCSSUnit_Normal =
-      6,  // (n/a) value is normal (algorithmic, different than auto)
+  eCSSUnit_Normal = 6,   // (n/a) value is normal (algorithmic, different than
+                         // auto)
   eCSSUnit_System_Font = 7,    // (n/a) value is -moz-use-system-font
   eCSSUnit_All = 8,            // (n/a) value is all
   eCSSUnit_Dummy = 9,          // (n/a) a fake but specified value, used
@@ -264,32 +264,28 @@ enum nsCSSUnit {
   eCSSUnit_Attr = 14,     // (char16_t*) a attr(string) value
   eCSSUnit_Element = 15,  // (char16_t*) an element id
 
-  eCSSUnit_Array = 20,  // (nsCSSValue::Array*) a list of values
-  eCSSUnit_Counter =
-      21,  // (nsCSSValue::Array*) a counter(string,[string]) value
-  eCSSUnit_Counters =
-      22,  // (nsCSSValue::Array*) a counters(string,string[,string]) value
-  eCSSUnit_Cubic_Bezier = 23,  // (nsCSSValue::Array*) a list of float values
-  eCSSUnit_Steps = 24,  // (nsCSSValue::Array*) a list of (integer, enumerated)
-  eCSSUnit_Symbols =
-      25,  // (nsCSSValue::Array*) a symbols(enumerated, symbols) value
-  eCSSUnit_Function = 26,  // (nsCSSValue::Array*) a function with
-                           //  parameters.  First elem of array is name,
-                           //  an nsCSSKeyword as eCSSUnit_Enumerated,
-                           //  the rest of the values are arguments.
+  // nsCSSValue::Array* values
+  eCSSUnit_Array = 20,     // (Array*) a list of values
+  eCSSUnit_Counter = 21,   // (Array*) a counter(string,[string]) value
+  eCSSUnit_Counters = 22,  // (Array*) a counters(string,string[,string]) value
+  eCSSUnit_Cubic_Bezier = 23,  // (Array*) a list of float values
+  eCSSUnit_Steps = 24,         // (Array*) a list of (integer, enumerated)
+  eCSSUnit_Symbols = 25,       // (Array*) a symbols(enumerated, symbols) value
+  eCSSUnit_Function = 26,  // (Array*) a function with parameters. First elem of
+                           // array is name, an nsCSSKeyword as
+                           // eCSSUnit_Enumerated, the rest of the values are
+                           // arguments.
 
   // The top level of a calc() expression is eCSSUnit_Calc.  All
   // remaining eCSSUnit_Calc_* units only occur inside these toplevel
   // calc values.
 
-  // eCSSUnit_Calc has an array with exactly 1 element.  eCSSUnit_Calc
-  // exists so we can distinguish calc(2em) from 2em as specified values
-  // (but we drop this distinction for nsStyleCoord when we store
+  // eCSSUnit_Calc exists so we can distinguish calc(2em) from 2em as specified
+  // values (but we drop this distinction for nsStyleCoord when we store
   // computed values).
-  eCSSUnit_Calc = 30,  // (nsCSSValue::Array*) calc() value
-  // Plus, Minus, Times_* and Divided have arrays with exactly 2
-  // elements.  a + b + c + d is grouped as ((a + b) + c) + d
-  eCSSUnit_Calc_Plus = 31,  // (nsCSSValue::Array*) + node within calc()
+  eCSSUnit_Calc = 30,       // (Array*) calc() value -- exactly 1 elt.
+  eCSSUnit_Calc_Plus = 31,  // (Array*) + node within calc(); exactly 2 elts.
+                            // a + b + c + d is grouped as ((a + b) + c) + d
 
   eCSSUnit_Pair = 50,        // (nsCSSValuePair*) pair of values
   eCSSUnit_List = 53,        // (nsCSSValueList*) list of values
@@ -303,29 +299,28 @@ enum nsCSSUnit {
   eCSSUnit_Integer = 70,     // (int) simple value
   eCSSUnit_Enumerated = 71,  // (int) value has enumerated meaning
 
-  eCSSUnit_Percent =
-      100,  // (float) 1.0 == 100%) value is percentage of something
-  eCSSUnit_Number = 101,  // (float) value is numeric (usually multiplier,
-                          // different behavior than percent)
+  eCSSUnit_Percent = 100,  // (float) (1.0 == 100%) value is percentage of
+                           // something
+  eCSSUnit_Number = 101,   // (float) value is numeric (usually multiplier,
+                           // different behavior than percent)
 
   // Length units - relative
   // Viewport relative measure
-  eCSSUnit_ViewportWidth =
-      700,  // (float) 1% of the width of the initial containing block
-  eCSSUnit_ViewportHeight =
-      701,  // (float) 1% of the height of the initial containing block
-  eCSSUnit_ViewportMin =
-      702,  // (float) smaller of ViewportWidth and ViewportHeight
-  eCSSUnit_ViewportMax =
-      703,  // (float) larger of ViewportWidth and ViewportHeight
+  eCSSUnit_ViewportWidth = 700,   // (float) 1% of the width of the initial
+                                  // containing block (ICB)
+  eCSSUnit_ViewportHeight = 701,  // (float) 1% of the height of the ICB
+  eCSSUnit_ViewportMin = 702,     // (float) smaller of ViewportWidth and
+                                  // ViewportHeight
+  eCSSUnit_ViewportMax = 703,     // (float) larger of ViewportWidth and
+                                  // ViewportHeight
 
   // Font relative measure
-  eCSSUnit_EM = 800,  // (float) == current font size
-  eCSSUnit_XHeight =
-      801,  // (float) distance from top of lower case x to baseline
-  eCSSUnit_Char =
-      802,  // (float) number of characters, used for width with monospace font
-  eCSSUnit_RootEM = 803,  // (float) == root element font size
+  eCSSUnit_EM = 800,       // (float) == current font size
+  eCSSUnit_XHeight = 801,  // (float) distance from top of lower case x to
+                           // baseline
+  eCSSUnit_Char = 802,     // (float) number of characters, used for width with
+                           // monospace font
+  eCSSUnit_RootEM = 803,   // (float) == root element font size
 
   // Screen relative measure
   eCSSUnit_Point = 900,       // (float) 4/3 of a CSS pixel

@@ -41,14 +41,10 @@ third line
 
     def test_empty_parser(self):
         p = parser.Parser()
-        entities, _map = p.parse()
-        self.assertListEqual(
+        entities = p.parse()
+        self.assertTupleEqual(
             entities,
-            []
-        )
-        self.assertDictEqual(
-            _map,
-            {}
+            tuple()
         )
 
 

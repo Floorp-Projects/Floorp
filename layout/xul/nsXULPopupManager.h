@@ -477,8 +477,8 @@ class nsXULPopupManager final : public nsIDOMEventListener,
    * aHideChain - true if the entire chain of menus should be closed. If false,
    *              only this popup is closed.
    * aDeselectMenu - true if the parent <menu> of the popup should be
-   * deselected. This will be false when the menu is closed by pressing the
-   *                 Escape key.
+   *                 deselected. This will be false when the menu is closed by
+   *                 pressing the Escape key.
    * aAsynchronous - true if the first popuphiding event should be sent
    *                 asynchrously. This should be true if HidePopup is called
    *                 from a frame.

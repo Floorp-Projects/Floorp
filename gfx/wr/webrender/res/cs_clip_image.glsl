@@ -13,15 +13,12 @@ flat varying float vLayer;
 
 #ifdef WR_VERTEX_SHADER
 struct ImageMaskData {
-    RectWithSize local_mask_rect;
-    RectWithSize local_tile_rect;
+    vec2 local_mask_size;
 };
 
 ImageMaskData fetch_mask_data(ivec2 address) {
-    vec4 data[2] = fetch_from_gpu_cache_2_direct(address);
-    RectWithSize mask_rect = RectWithSize(data[0].xy, data[0].zw);
-    RectWithSize tile_rect = RectWithSize(data[1].xy, data[1].zw);
-    ImageMaskData mask_data = ImageMaskData(mask_rect, tile_rect);
+    vec4 data = fetch_from_gpu_cache_1_direct(address);
+    ImageMaskData mask_data = ImageMaskData(data.xy);
     return mask_data;
 }
 
@@ -31,7 +28,7 @@ void main(void) {
     Transform clip_transform = fetch_transform(cmi.clip_transform_id);
     Transform prim_transform = fetch_transform(cmi.prim_transform_id);
     ImageMaskData mask = fetch_mask_data(cmi.clip_data_address);
-    RectWithSize local_rect = mask.local_mask_rect;
+    RectWithSize local_rect = RectWithSize(cmi.local_pos, mask.local_mask_size);
     ImageResource res = fetch_image_resource_direct(cmi.resource_address);
 
     ClipVertexInfo vi = write_clip_tile_vertex(
@@ -42,7 +39,7 @@ void main(void) {
     );
     vLocalPos = vi.local_pos.xy / vi.local_pos.z;
     vLayer = res.layer;
-    vClipMaskImageUv = (vLocalPos - mask.local_tile_rect.p0) / mask.local_tile_rect.size;
+    vClipMaskImageUv = (vLocalPos - cmi.tile_rect.p0) / cmi.tile_rect.size;
     vec2 texture_size = vec2(textureSize(sColor0, 0));
     vClipMaskUvRect = vec4(res.uv_rect.p0, res.uv_rect.p1 - res.uv_rect.p0) / texture_size.xyxy;
     // applying a half-texel offset to the UV boundaries to prevent linear samples from the outside

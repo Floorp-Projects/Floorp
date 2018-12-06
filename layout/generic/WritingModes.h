@@ -376,47 +376,49 @@ class WritingMode {
    * (This is the inverse of the PhysicalSide() method above.)
    */
   LogicalSide LogicalSideForPhysicalSide(mozilla::Side aSide) const {
+    // clang-format off
     // indexes are four-bit values:
     //   bit 0 = the eOrientationMask value
     //   bit 1 = the eInlineFlowMask value
     //   bit 2 = the eBlockFlowMask value
     //   bit 3 = the eLineOrientMask value
     static const LogicalSide kPhysicalToLogicalSides[][4] = {
-        // top                right
-        // bottom             left
-        {eLogicalSideBStart, eLogicalSideIEnd, eLogicalSideBEnd,
-         eLogicalSideIStart},  // horizontal-tb         ltr
-        {eLogicalSideIStart, eLogicalSideBStart, eLogicalSideIEnd,
-         eLogicalSideBEnd},  // vertical-rl           ltr
-        {eLogicalSideBStart, eLogicalSideIStart, eLogicalSideBEnd,
-         eLogicalSideIEnd},  // horizontal-tb         rtl
-        {eLogicalSideIEnd, eLogicalSideBStart, eLogicalSideIStart,
-         eLogicalSideBEnd},  // vertical-rl           rtl
-        {eLogicalSideBEnd, eLogicalSideIStart, eLogicalSideBStart,
-         eLogicalSideIEnd},  // (horizontal-bt) (inv) ltr
-        {eLogicalSideIStart, eLogicalSideBEnd, eLogicalSideIEnd,
-         eLogicalSideBStart},  // vertical-lr   sw-left rtl
-        {eLogicalSideBEnd, eLogicalSideIEnd, eLogicalSideBStart,
-         eLogicalSideIStart},  // (horizontal-bt) (inv) rtl
-        {eLogicalSideIEnd, eLogicalSideBEnd, eLogicalSideIStart,
-         eLogicalSideBStart},  // vertical-lr   sw-left ltr
-        {eLogicalSideBStart, eLogicalSideIEnd, eLogicalSideBEnd,
-         eLogicalSideIStart},  // horizontal-tb   (inv) rtl
-        {eLogicalSideIStart, eLogicalSideBStart, eLogicalSideIEnd,
-         eLogicalSideBEnd},  // vertical-rl   sw-left rtl
-        {eLogicalSideBStart, eLogicalSideIStart, eLogicalSideBEnd,
-         eLogicalSideIEnd},  // horizontal-tb   (inv) ltr
-        {eLogicalSideIEnd, eLogicalSideBStart, eLogicalSideIStart,
-         eLogicalSideBEnd},  // vertical-rl   sw-left ltr
-        {eLogicalSideBEnd, eLogicalSideIEnd, eLogicalSideBStart,
-         eLogicalSideIStart},  // (horizontal-bt)       ltr
-        {eLogicalSideIStart, eLogicalSideBEnd, eLogicalSideIEnd,
-         eLogicalSideBStart},  // vertical-lr           ltr
-        {eLogicalSideBEnd, eLogicalSideIStart, eLogicalSideBStart,
-         eLogicalSideIEnd},  // (horizontal-bt)       rtl
-        {eLogicalSideIEnd, eLogicalSideBEnd, eLogicalSideIStart,
-         eLogicalSideBStart},  // vertical-lr           rtl
+      // top                right
+      // bottom             left
+      { eLogicalSideBStart, eLogicalSideIEnd,
+        eLogicalSideBEnd,   eLogicalSideIStart },  // horizontal-tb         ltr
+      { eLogicalSideIStart, eLogicalSideBStart,
+        eLogicalSideIEnd,   eLogicalSideBEnd   },  // vertical-rl           ltr
+      { eLogicalSideBStart, eLogicalSideIStart,
+        eLogicalSideBEnd,   eLogicalSideIEnd   },  // horizontal-tb         rtl
+      { eLogicalSideIEnd,   eLogicalSideBStart,
+        eLogicalSideIStart, eLogicalSideBEnd   },  // vertical-rl           rtl
+      { eLogicalSideBEnd,   eLogicalSideIStart,
+        eLogicalSideBStart, eLogicalSideIEnd   },  // (horizontal-bt) (inv) ltr
+      { eLogicalSideIStart, eLogicalSideBEnd,
+        eLogicalSideIEnd,   eLogicalSideBStart },  // vertical-lr   sw-left rtl
+      { eLogicalSideBEnd,   eLogicalSideIEnd,
+        eLogicalSideBStart, eLogicalSideIStart },  // (horizontal-bt) (inv) rtl
+      { eLogicalSideIEnd,   eLogicalSideBEnd,
+        eLogicalSideIStart, eLogicalSideBStart },  // vertical-lr   sw-left ltr
+      { eLogicalSideBStart, eLogicalSideIEnd,
+        eLogicalSideBEnd,   eLogicalSideIStart },  // horizontal-tb   (inv) rtl
+      { eLogicalSideIStart, eLogicalSideBStart,
+        eLogicalSideIEnd,   eLogicalSideBEnd   },  // vertical-rl   sw-left rtl
+      { eLogicalSideBStart, eLogicalSideIStart,
+        eLogicalSideBEnd,   eLogicalSideIEnd   },  // horizontal-tb   (inv) ltr
+      { eLogicalSideIEnd,   eLogicalSideBStart,
+        eLogicalSideIStart, eLogicalSideBEnd   },  // vertical-rl   sw-left ltr
+      { eLogicalSideBEnd,   eLogicalSideIEnd,
+        eLogicalSideBStart, eLogicalSideIStart },  // (horizontal-bt)       ltr
+      { eLogicalSideIStart, eLogicalSideBEnd,
+        eLogicalSideIEnd,   eLogicalSideBStart },  // vertical-lr           ltr
+      { eLogicalSideBEnd,   eLogicalSideIStart,
+        eLogicalSideBStart, eLogicalSideIEnd   },  // (horizontal-bt)       rtl
+      { eLogicalSideIEnd,   eLogicalSideBEnd,
+        eLogicalSideIStart, eLogicalSideBStart },  // vertical-lr           rtl
     };
+    // clang-format on
 
     static_assert(eOrientationMask == 0x01 && eInlineFlowMask == 0x02 &&
                       eBlockFlowMask == 0x04 && eLineOrientMask == 0x08,
@@ -614,12 +616,13 @@ class WritingMode {
   enum Masks {
     // Masks for our bits; true chosen as opposite of commonest case
     eOrientationMask = 0x01,  // true means vertical text
-    eInlineFlowMask =
-        0x02,  // true means absolute RTL/BTT (against physical coords)
-    eBlockFlowMask =
-        0x04,  // true means vertical-LR (or horizontal-BT if added)
-    eLineOrientMask = 0x08,  // true means over != block-start
-    eBidiMask = 0x10,        // true means line-relative RTL (bidi RTL)
+    eInlineFlowMask = 0x02,   // true means absolute RTL/BTT (against physical
+                              // coords)
+    eBlockFlowMask = 0x04,    // true means vertical-LR (or horizontal-BT if
+                              // added)
+    eLineOrientMask = 0x08,   // true means over != block-start
+    eBidiMask = 0x10,         // true means line-relative RTL (bidi RTL)
+
     // Note: We have one excess bit of info; WritingMode can pack into 4 bits.
     // But since we have space, we're caching interesting things for fast
     // access.

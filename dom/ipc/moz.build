@@ -49,6 +49,8 @@ EXPORTS.mozilla.dom += [
     'TabParent.h',
     'URLClassifierChild.h',
     'URLClassifierParent.h',
+    'WindowGlobalChild.h',
+    'WindowGlobalParent.h',
 ]
 
 EXPORTS.mozilla += [
@@ -83,6 +85,8 @@ UNIFIED_SOURCES += [
     'TabMessageUtils.cpp',
     'TabParent.cpp',
     'URLClassifierParent.cpp',
+    'WindowGlobalChild.cpp',
+    'WindowGlobalParent.cpp',
 ]
 
 # ContentChild.cpp cannot be compiled in unified mode on  linux due to Time conflict
@@ -110,6 +114,7 @@ IPDL_SOURCES += [
     'PURLClassifier.ipdl',
     'PURLClassifierInfo.ipdlh',
     'PURLClassifierLocal.ipdl',
+    'PWindowGlobal.ipdl',
     'ServiceWorkerConfiguration.ipdlh',
 ]
 

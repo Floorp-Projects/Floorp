@@ -37,9 +37,17 @@ StaticPresData::StaticPresData() {
   _pref.Assign(_s0);                        \
   _pref.Append(_s1);
 
+// clang-format off
 static const char* const kGenericFont[] = {
-    ".variable.",  ".fixed.",   ".serif.",  ".sans-serif.",
-    ".monospace.", ".cursive.", ".fantasy."};
+  ".variable.",
+  ".fixed.",
+  ".serif.",
+  ".sans-serif.",
+  ".monospace.",
+  ".cursive.",
+  ".fantasy."
+};
+// clang-format on
 
 // These are private, use the list in nsFont.h if you want a public list.
 enum {
@@ -61,12 +69,24 @@ void LangGroupFontPrefs::Initialize(nsAtom* aLangGroupAtom) {
      for the GFX font sub-system...
 
   -- attributes for generic fonts --------------------------------------
-  font.default.[langGroup] = serif | sans-serif - fallback generic font
-  font.name.[generic].[langGroup] = current user' selected font on the pref
-  dialog font.name-list.[generic].[langGroup] = fontname1, fontname2, ...
-  [factory pre-built list] font.size.[generic].[langGroup] = integer - settable
-  by the user font.size-adjust.[generic].[langGroup] = "float" - settable by the
-  user font.minimum-size.[langGroup] = integer - settable by the user
+
+  font.default.[langGroup] = serif | sans-serif
+    fallback generic font
+
+  font.name.[generic].[langGroup]
+    current user' selected font on the pref dialog
+
+  font.name-list.[generic].[langGroup] = fontname1, fontname2, ...
+    [factory pre-built list]
+
+  font.size.[generic].[langGroup] = integer
+    settable by the user
+
+  font.size-adjust.[generic].[langGroup] = "float"
+    settable by the user
+
+  font.minimum-size.[langGroup] = integer
+    settable by the user
   */
 
   nsAutoCString langGroup;
@@ -84,10 +104,17 @@ void LangGroupFontPrefs::Initialize(nsAtom* aLangGroupAtom) {
   int32_t size = Preferences::GetInt(pref.get());
   mMinimumFontSize = nsPresContext::CSSPixelsToAppUnits(size);
 
-  nsFont* fontTypes[] = {&mDefaultVariableFont,  &mDefaultFixedFont,
-                         &mDefaultSerifFont,     &mDefaultSansSerifFont,
-                         &mDefaultMonospaceFont, &mDefaultCursiveFont,
-                         &mDefaultFantasyFont};
+  // clang-format off
+  nsFont* fontTypes[] = {
+    &mDefaultVariableFont,
+    &mDefaultFixedFont,
+    &mDefaultSerifFont,
+    &mDefaultSansSerifFont,
+    &mDefaultMonospaceFont,
+    &mDefaultCursiveFont,
+    &mDefaultFantasyFont
+  };
+  // clang-format on
   static_assert(MOZ_ARRAY_LENGTH(fontTypes) == eDefaultFont_COUNT,
                 "FontTypes array count is not correct");
 

@@ -212,6 +212,13 @@ var gPrivacyPane = {
       Services.obs.notifyObservers(window, "privacy-pane-tp-ui-updated");
     }
 
+    // We watch the network.cookie.cookieBehavior default value, if it is
+    // BEHAVIOR_ACCEPT (0) then show the fallback UI. When we change
+    // this default to BEHAVIOR_REJECT_TRACKER (4) show our default UI.
+    let defaults = Services.prefs.getDefaultBranch("");
+    document.getElementById("contentBlockingCategories").toggleAttribute("fallback-ui",
+      defaults.getIntPref("network.cookie.cookieBehavior") === Ci.nsICookieService.BEHAVIOR_ACCEPT);
+
     if (isLocked) {
       // An extension can't control this setting if either pref is locked.
       hideControllingExtension(TRACKING_PROTECTION_KEY);

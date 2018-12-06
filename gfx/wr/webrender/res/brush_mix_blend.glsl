@@ -208,16 +208,14 @@ Fragment brush_fs() {
     vec4 Cb = textureLod(sPrevPassColor, vBackdropUv, 0.0);
     vec4 Cs = textureLod(sPrevPassColor, vSrcUv, 0.0);
 
-    if (Cb.a == 0.0) {
-        return Fragment(Cs);
-    }
-    if (Cs.a == 0.0) {
-        return Fragment(vec4(0.0));
+    // The mix-blend-mode functions assume no premultiplied alpha
+    if (Cb.a != 0.0) {
+        Cb.rgb /= Cb.a;
     }
 
-    // The mix-blend-mode functions assume no premultiplied alpha
-    Cb.rgb /= Cb.a;
-    Cs.rgb /= Cs.a;
+    if (Cs.a != 0.0) {
+        Cs.rgb /= Cs.a;
+    }
 
     // Return yellow if none of the branches match (shouldn't happen).
     vec4 result = vec4(1.0, 1.0, 0.0, 1.0);

@@ -6,6 +6,7 @@
 # ***** END LICENSE BLOCK *****
 
 import re
+import os
 
 from mozharness.mozilla.testing.errors import TinderBoxPrintRe
 from mozharness.base.log import OutputParser, WARNING, INFO, CRITICAL, ERROR
@@ -202,8 +203,9 @@ class DesktopUnittestOutputParser(OutputParser):
                                                 levels=TBPL_WORST_LEVEL_TUPLE)
 
         # Account for the possibility that no test summary was output.
-        if self.pass_count <= 0 and self.fail_count <= 0 and \
-                (self.known_fail_count is None or self.known_fail_count <= 0):
+        if (self.pass_count <= 0 and self.fail_count <= 0 and
+           (self.known_fail_count is None or self.known_fail_count <= 0) and
+           os.environ.get('TRY_SELECTOR') != 'coverage'):
             self.error('No tests run or test summary not found')
             self.worst_log_level = self.worst_level(WARNING,
                                                     self.worst_log_level)

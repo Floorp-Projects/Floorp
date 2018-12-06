@@ -80,9 +80,9 @@ var TrackingProtection = {
     if (this.enabled) {
       label = "contentBlocking.trackers.blocked.label";
     } else {
-      label = "contentBlocking.trackers.allowed.label";
+      label = ContentBlocking.showAllowedLabels ? "contentBlocking.trackers.allowed.label" : null;
     }
-    this.categoryLabel.textContent = gNavigatorBundle.getString(label);
+    this.categoryLabel.textContent = label ? gNavigatorBundle.getString(label) : "";
   },
 
   isBlocking(state) {
@@ -266,10 +266,10 @@ var ThirdPartyCookies = {
       Cu.reportError(`Error: Unknown cookieBehavior pref observed: ${this.behaviorPref}`);
       // fall through
     case Ci.nsICookieService.BEHAVIOR_ACCEPT:
-      label = "contentBlocking.cookies.allowed.label";
+      label = ContentBlocking.showAllowedLabels ? "contentBlocking.cookies.allowed.label" : null;
       break;
     }
-    this.categoryLabel.textContent = gNavigatorBundle.getString(label);
+    this.categoryLabel.textContent = label ? gNavigatorBundle.getString(label) : "";
   },
 
   init() {
@@ -488,6 +488,7 @@ var ContentBlocking = {
   PREF_REPORT_BREAKAGE_URL: "browser.contentblocking.reportBreakage.url",
   PREF_INTRO_COUNT_CB: "browser.contentblocking.introCount",
   PREF_CB_CATEGORY: "browser.contentblocking.category",
+  PREF_SHOW_ALLOWED_LABELS: "browser.contentblocking.control-center.ui.showAllowedLabels",
   content: null,
   icon: null,
   activeTooltipText: null,
@@ -575,6 +576,12 @@ var ContentBlocking = {
 
     Services.prefs.addObserver(this.PREF_ANIMATIONS_ENABLED, this.updateAnimationsEnabled);
 
+    XPCOMUtils.defineLazyPreferenceGetter(this, "showAllowedLabels",
+      this.PREF_SHOW_ALLOWED_LABELS, false, () => {
+        for (let blocker of this.blockers) {
+          blocker.updateCategoryLabel();
+        }
+    });
     XPCOMUtils.defineLazyPreferenceGetter(this, "reportBreakageEnabled",
       this.PREF_REPORT_BREAKAGE_ENABLED, false);
 
@@ -717,8 +724,7 @@ var ContentBlocking = {
     Services.telemetry.getHistogramById("TRACKING_PROTECTION_SHIELD").add(value);
   },
 
-  onSecurityChange(oldState, state, webProgress, isSimulated,
-                   contentBlockingLogJSON) {
+  onSecurityChange(state, webProgress, isSimulated) {
     let baseURI = this._baseURIForChannelClassifier;
 
     // Don't deal with about:, file: etc.
