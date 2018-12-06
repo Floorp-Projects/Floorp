@@ -258,28 +258,12 @@ def _abortIfFalse(cond, msg):
         [cond, ExprLiteral.String(msg)]))
 
 
-def _refptr(T, ptr=0, ref=0):
-    return Type('RefPtr', T=T, ptr=ptr, ref=ref)
-
-
-def _refptrGet(expr):
-    return ExprCall(ExprSelect(expr, '.', 'get'))
-
-
-def _refptrForget(expr):
-    return ExprCall(ExprSelect(expr, '.', 'forget'))
-
-
-def _refptrTake(expr):
-    return ExprCall(ExprSelect(expr, '.', 'take'))
+def _refptr(T):
+    return Type('RefPtr', T=T)
 
 
 def _uniqueptr(T):
     return Type('UniquePtr', T=T)
-
-
-def _uniqueptrGet(expr):
-    return ExprCall(ExprSelect(expr, '.', 'get'))
 
 
 def _tuple(types, const=0, ref=0):
