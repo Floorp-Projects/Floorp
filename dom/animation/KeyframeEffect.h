@@ -368,10 +368,8 @@ class KeyframeEffect : public AnimationEffect {
   void MarkCascadeNeedsUpdate();
 
   void EnsureBaseStyles(const ComputedStyle* aComputedValues,
-                        const nsTArray<AnimationProperty>& aProperties);
-
-  // Stylo version of the above function that also first checks for an additive
-  // value in |aProperty|'s list of segments.
+                        const nsTArray<AnimationProperty>& aProperties,
+                        bool* aBaseStylesChanged);
   void EnsureBaseStyle(const AnimationProperty& aProperty,
                        nsPresContext* aPresContext,
                        const ComputedStyle* aComputedValues,
