@@ -549,6 +549,12 @@ impl AlphaBatchBuilder {
             render_tasks,
         ).unwrap_or(OPAQUE_TASK_ADDRESS);
 
+        let prim_data = &ctx.resources.as_common_data(&prim_instance);
+        let prim_rect = LayoutRect::new(
+            prim_instance.prim_origin,
+            prim_data.prim_size,
+        );
+
         match prim_instance.kind {
             PrimitiveInstanceKind::Clear { data_handle } => {
                 let prim_data = &ctx.resources.prim_data_store[data_handle];
@@ -559,7 +565,7 @@ impl AlphaBatchBuilder {
                 //           use of interning.
 
                 let prim_header = PrimitiveHeader {
-                    local_rect: prim_data.prim_rect,
+                    local_rect: prim_rect,
                     local_clip_rect: prim_instance.combined_local_clip_rect,
                     task_address,
                     specific_prim_address: prim_cache_address,
@@ -628,7 +634,7 @@ impl AlphaBatchBuilder {
                 };
 
                 let prim_header = PrimitiveHeader {
-                    local_rect: prim_data.prim_rect,
+                    local_rect: prim_rect,
                     local_clip_rect: prim_instance.combined_local_clip_rect,
                     task_address,
                     specific_prim_address: prim_cache_address,
@@ -684,7 +690,7 @@ impl AlphaBatchBuilder {
                 let prim_cache_address = gpu_cache.get_address(&prim_data.gpu_cache_handle);
 
                 let prim_header = PrimitiveHeader {
-                    local_rect: prim_data.prim_rect,
+                    local_rect: prim_rect,
                     local_clip_rect: prim_instance.combined_local_clip_rect,
                     task_address,
                     specific_prim_address: prim_cache_address,
@@ -832,7 +838,7 @@ impl AlphaBatchBuilder {
                 };
 
                 let prim_header = PrimitiveHeader {
-                    local_rect: prim_data.prim_rect,
+                    local_rect: prim_rect,
                     local_clip_rect: prim_instance.combined_local_clip_rect,
                     task_address,
                     specific_prim_address: prim_cache_address,
@@ -1421,7 +1427,7 @@ impl AlphaBatchBuilder {
                 };
 
                 let prim_header = PrimitiveHeader {
-                    local_rect: prim_data.prim_rect,
+                    local_rect: prim_rect,
                     local_clip_rect: prim_instance.combined_local_clip_rect,
                     task_address,
                     specific_prim_address: prim_cache_address,
@@ -1495,7 +1501,7 @@ impl AlphaBatchBuilder {
                 };
 
                 let prim_header = PrimitiveHeader {
-                    local_rect: prim_data.prim_rect,
+                    local_rect: prim_rect,
                     local_clip_rect: prim_instance.combined_local_clip_rect,
                     task_address,
                     specific_prim_address: prim_cache_address,
@@ -1609,7 +1615,7 @@ impl AlphaBatchBuilder {
                 };
 
                 let prim_header = PrimitiveHeader {
-                    local_rect: prim_data.prim_rect,
+                    local_rect: prim_rect,
                     local_clip_rect: prim_instance.combined_local_clip_rect,
                     task_address,
                     specific_prim_address: prim_cache_address,
@@ -1718,7 +1724,7 @@ impl AlphaBatchBuilder {
                     };
 
                     let prim_header = PrimitiveHeader {
-                        local_rect: prim_data.prim_rect,
+                        local_rect: prim_rect,
                         local_clip_rect: prim_instance.combined_local_clip_rect,
                         task_address,
                         specific_prim_address: prim_cache_address,
@@ -1794,7 +1800,7 @@ impl AlphaBatchBuilder {
                 let specified_blend_mode = BlendMode::PremultipliedAlpha;
 
                 let mut prim_header = PrimitiveHeader {
-                    local_rect: prim_data.prim_rect,
+                    local_rect: prim_rect,
                     local_clip_rect: prim_instance.combined_local_clip_rect,
                     task_address,
                     specific_prim_address: GpuCacheAddress::invalid(),
@@ -1881,7 +1887,7 @@ impl AlphaBatchBuilder {
                 let specified_blend_mode = BlendMode::PremultipliedAlpha;
 
                 let mut prim_header = PrimitiveHeader {
-                    local_rect: prim_data.prim_rect,
+                    local_rect: prim_rect,
                     local_clip_rect: prim_instance.combined_local_clip_rect,
                     task_address,
                     specific_prim_address: GpuCacheAddress::invalid(),
