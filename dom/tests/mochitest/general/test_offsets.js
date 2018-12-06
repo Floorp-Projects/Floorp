@@ -216,7 +216,7 @@ function gcs(element, prop)
 {
   var propVal = (element instanceof SVGElement && (prop == "width" || prop == "height")) ?
                    element.getAttribute(prop) : getComputedStyle(element, "")[prop];
-  if (propVal == "auto" || element.id == "nonappended")
+  if (propVal == "auto")
     return 0;
   return parseFloat(propVal);
 }
