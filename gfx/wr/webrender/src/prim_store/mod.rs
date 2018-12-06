@@ -337,7 +337,8 @@ impl GpuCacheAddress {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PrimitiveSceneData {
-    pub culling_rect: LayoutRect,
+    pub prim_size: LayoutSize,
+    pub prim_relative_clip_rect: LayoutRect,
     pub is_backface_visible: bool,
 }
 
@@ -625,16 +626,19 @@ impl From<LayoutPoint> for PointKey {
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct PrimKeyCommonData {
     pub is_backface_visible: bool,
-    pub prim_rect: RectangleKey,
-    pub clip_rect: RectangleKey,
+    pub prim_size: SizeKey,
+    pub prim_relative_clip_rect: RectangleKey,
 }
 
 impl PrimKeyCommonData {
-    pub fn with_info(info: &LayoutPrimitiveInfo) -> Self {
+    pub fn with_info(
+        info: &LayoutPrimitiveInfo,
+        prim_relative_clip_rect: LayoutRect,
+    ) -> Self {
         PrimKeyCommonData {
             is_backface_visible: info.is_backface_visible,
-            prim_rect: info.rect.into(),
-            clip_rect: info.clip_rect.into(),
+            prim_size: info.rect.size.into(),
+            prim_relative_clip_rect: prim_relative_clip_rect.into(),
         }
     }
 }
@@ -650,15 +654,15 @@ pub struct PrimitiveKey {
 impl PrimitiveKey {
     pub fn new(
         is_backface_visible: bool,
-        prim_rect: LayoutRect,
-        clip_rect: LayoutRect,
+        prim_size: LayoutSize,
+        prim_relative_clip_rect: LayoutRect,
         kind: PrimitiveKeyKind,
     ) -> Self {
         PrimitiveKey {
             common: PrimKeyCommonData {
                 is_backface_visible,
-                prim_rect: prim_rect.into(),
-                clip_rect: clip_rect.into(),
+                prim_size: prim_size.into(),
+                prim_relative_clip_rect: prim_relative_clip_rect.into(),
             },
             kind,
         }
@@ -821,7 +825,7 @@ pub enum PrimitiveTemplateKind {
 impl PrimitiveKeyKind {
     fn into_template(
         self,
-        rect: &LayoutRect,
+        size: LayoutSize,
     ) -> PrimitiveTemplateKind {
         match self {
             PrimitiveKeyKind::Unused => PrimitiveTemplateKind::Unused,
@@ -839,7 +843,7 @@ impl PrimitiveKeyKind {
                 let mut border_segments = Vec::new();
 
                 create_border_segments(
-                    rect.size,
+                    size,
                     &border,
                     &widths,
                     &mut border_segments,
@@ -860,7 +864,7 @@ impl PrimitiveKeyKind {
                 ref nine_patch,
                 ..
             } => {
-                let brush_segments = nine_patch.create_segments(rect.size);
+                let brush_segments = nine_patch.create_segments(size);
 
                 PrimitiveTemplateKind::ImageBorder {
                     request,
@@ -927,7 +931,7 @@ impl PrimitiveKeyKind {
                 let mut brush_segments = Vec::new();
 
                 if let Some(ref nine_patch) = nine_patch {
-                    brush_segments = nine_patch.create_segments(rect.size);
+                    brush_segments = nine_patch.create_segments(size);
                 }
 
                 // Save opacity of the stops for use in
@@ -961,7 +965,7 @@ impl PrimitiveKeyKind {
                 let mut brush_segments = Vec::new();
 
                 if let Some(ref nine_patch) = nine_patch {
-                    brush_segments = nine_patch.create_segments(rect.size);
+                    brush_segments = nine_patch.create_segments(size);
                 }
 
                 let stops = stops.iter().map(|stop| {
@@ -990,8 +994,8 @@ impl PrimitiveKeyKind {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PrimTemplateCommonData {
     pub is_backface_visible: bool,
-    pub prim_rect: LayoutRect,
-    pub clip_rect: LayoutRect,
+    pub prim_size: LayoutSize,
+    pub prim_relative_clip_rect: LayoutRect,
     pub opacity: PrimitiveOpacity,
     /// The GPU cache handle for a primitive template. Since this structure
     /// is retained across display lists by interning, this GPU cache handle
@@ -1004,8 +1008,8 @@ impl PrimTemplateCommonData {
     pub fn with_key_common(common: PrimKeyCommonData) -> Self {
         PrimTemplateCommonData {
             is_backface_visible: common.is_backface_visible,
-            prim_rect: common.prim_rect.into(),
-            clip_rect: common.clip_rect.into(),
+            prim_size: common.prim_size.into(),
+            prim_relative_clip_rect: common.prim_relative_clip_rect.into(),
             gpu_cache_handle: GpuCacheHandle::new(),
             opacity: PrimitiveOpacity::translucent(),
         }
@@ -1035,7 +1039,7 @@ impl ops::DerefMut for PrimitiveTemplate {
 impl From<PrimitiveKey> for PrimitiveTemplate {
     fn from(item: PrimitiveKey) -> Self {
         let common = PrimTemplateCommonData::with_key_common(item.common);
-        let kind = item.kind.into_template(&common.prim_rect);
+        let kind = item.kind.into_template(common.prim_size);
 
         PrimitiveTemplate { common, kind, }
     }
@@ -1218,7 +1222,7 @@ impl PrimitiveTemplate {
         if let Some(mut request) = frame_state.gpu_cache.request(&mut self.common.gpu_cache_handle) {
             self.kind.write_prim_gpu_blocks(
                 &mut request,
-                self.common.prim_rect.size,
+                self.common.prim_size,
             );
             self.kind.write_segment_gpu_blocks(&mut request);
         }
@@ -1257,8 +1261,8 @@ impl PrimitiveTemplate {
                 // then we just assume the gradient is translucent for now.
                 // (In the future we could consider segmenting in some cases).
                 let stride = stretch_size + tile_spacing;
-                if stride.width >= self.common.prim_rect.size.width &&
-                   stride.height >= self.common.prim_rect.size.height {
+                if stride.width >= self.common.prim_size.width &&
+                   stride.height >= self.common.prim_size.height {
                     stops_opacity
                 } else {
                     PrimitiveOpacity::translucent()
@@ -1465,11 +1469,15 @@ impl intern::Internable for PrimitiveKeyKind {
     type StoreData = PrimitiveTemplate;
     type InternData = PrimitiveSceneData;
 
-    fn build_key(self, info: &LayoutPrimitiveInfo) -> PrimitiveKey {
+    fn build_key(
+        self,
+        info: &LayoutPrimitiveInfo,
+        prim_relative_clip_rect: LayoutRect,
+    ) -> PrimitiveKey {
         PrimitiveKey::new(
             info.is_backface_visible,
-            info.rect,
-            info.clip_rect,
+            info.rect.size,
+            prim_relative_clip_rect,
             self,
         )
     }
@@ -2313,6 +2321,10 @@ pub struct PrimitiveInstance {
     /// can be found.
     pub kind: PrimitiveInstanceKind,
 
+    /// Local space origin of this primitive. The size
+    /// of the primitive is defined by the template.
+    pub prim_origin: LayoutPoint,
+
     /// The current combined local clip for this primitive, from
     /// the primitive local clip above and the current clip chain.
     pub combined_local_clip_rect: LayoutRect,
@@ -2349,11 +2361,13 @@ pub struct PrimitiveInstance {
 
 impl PrimitiveInstance {
     pub fn new(
+        prim_origin: LayoutPoint,
         kind: PrimitiveInstanceKind,
         clip_chain_id: ClipChainId,
         spatial_node_index: SpatialNodeIndex,
     ) -> Self {
         PrimitiveInstance {
+            prim_origin,
             kind,
             combined_local_clip_rect: LayoutRect::zero(),
             bounding_rect: None,
@@ -2839,7 +2853,16 @@ impl PrimitiveStore {
             }
             _ => {
                 let prim_data = &resources.as_common_data(&prim_instance);
-                (prim_data.prim_rect, prim_data.clip_rect)
+
+                let prim_rect = LayoutRect::new(
+                    prim_instance.prim_origin,
+                    prim_data.prim_size,
+                );
+                let clip_rect = prim_data
+                    .prim_relative_clip_rect
+                    .translate(&LayoutVector2D::new(prim_instance.prim_origin.x, prim_instance.prim_origin.y));
+
+                (prim_rect, clip_rect)
             }
         };
 
@@ -3034,6 +3057,7 @@ impl PrimitiveStore {
             PrimitiveInstanceKind::LineDecoration { .. } => {
                 self.prepare_interned_prim_for_render(
                     prim_instance,
+                    prim_local_rect,
                     prim_context,
                     pic_context,
                     frame_context,
@@ -3142,6 +3166,7 @@ impl PrimitiveStore {
     fn prepare_interned_prim_for_render(
         &mut self,
         prim_instance: &mut PrimitiveInstance,
+        prim_local_rect: LayoutRect,
         prim_context: &PrimitiveContext,
         pic_context: &PictureContext,
         frame_context: &FrameBuildingContext,
@@ -3395,7 +3420,7 @@ impl PrimitiveStore {
                         // rect and we want to clip these extra parts out.
                         let tight_clip_rect = prim_instance
                             .combined_local_clip_rect
-                            .intersection(&prim_data.prim_rect).unwrap();
+                            .intersection(&prim_local_rect).unwrap();
 
                         let visible_rect = compute_conservative_visible_rect(
                             prim_context,
@@ -3408,7 +3433,7 @@ impl PrimitiveStore {
                         let stride = *stretch_size + *tile_spacing;
 
                         let repetitions = image::repetitions(
-                            &prim_data.prim_rect,
+                            &prim_local_rect,
                             &visible_rect,
                             stride,
                         );
@@ -3490,7 +3515,7 @@ impl PrimitiveStore {
                 if *tile_spacing != LayoutSize::zero() {
                     *visible_tiles_range = decompose_repeated_primitive(
                         &prim_instance.combined_local_clip_rect,
-                        &prim_data.prim_rect,
+                        &prim_local_rect,
                         &stretch_size,
                         &tile_spacing,
                         prim_context,
@@ -3541,7 +3566,7 @@ impl PrimitiveStore {
                 if *tile_spacing != LayoutSize::zero() {
                     *visible_tiles_range = decompose_repeated_primitive(
                         &prim_instance.combined_local_clip_rect,
-                        &prim_data.prim_rect,
+                        &prim_local_rect,
                         &stretch_size,
                         &tile_spacing,
                         prim_context,
@@ -3594,7 +3619,7 @@ fn write_segment(
 
             prim_data.kind.write_prim_gpu_blocks(
                 &mut request,
-                prim_data.prim_rect.size,
+                prim_data.prim_size,
             );
 
             for segment in segments {
@@ -4298,10 +4323,10 @@ fn test_struct_sizes() {
     //     test expectations and move on.
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
-    assert_eq!(mem::size_of::<PrimitiveInstance>(), 120, "PrimitiveInstance size changed");
+    assert_eq!(mem::size_of::<PrimitiveInstance>(), 128, "PrimitiveInstance size changed");
     assert_eq!(mem::size_of::<PrimitiveInstanceKind>(), 40, "PrimitiveInstanceKind size changed");
-    assert_eq!(mem::size_of::<PrimitiveTemplate>(), 176, "PrimitiveTemplate size changed");
+    assert_eq!(mem::size_of::<PrimitiveTemplate>(), 168, "PrimitiveTemplate size changed");
     assert_eq!(mem::size_of::<PrimitiveTemplateKind>(), 112, "PrimitiveTemplateKind size changed");
-    assert_eq!(mem::size_of::<PrimitiveKey>(), 136, "PrimitiveKey size changed");
+    assert_eq!(mem::size_of::<PrimitiveKey>(), 128, "PrimitiveKey size changed");
     assert_eq!(mem::size_of::<PrimitiveKeyKind>(), 96, "PrimitiveKeyKind size changed");
 }

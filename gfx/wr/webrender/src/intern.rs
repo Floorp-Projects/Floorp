@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::LayoutPrimitiveInfo;
+use api::{LayoutPrimitiveInfo, LayoutRect};
 use internal_types::FastHashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
@@ -388,5 +388,9 @@ pub trait Internable {
     type InternData;
 
     /// Build a new key from self with `info`.
-    fn build_key(self, info: &LayoutPrimitiveInfo) -> Self::Source;
+    fn build_key(
+        self,
+        info: &LayoutPrimitiveInfo,
+        prim_relative_clip_rect: LayoutRect,
+    ) -> Self::Source;
 }
