@@ -4460,7 +4460,7 @@ void GCRuntime::markWeakReferencesInCurrentGroup(gcstats::PhaseKind phase) {
 }
 
 template <class ZoneIterT>
-void GCRuntime::markGrayReferences(gcstats::PhaseKind phase) {
+void GCRuntime::markGrayRoots(gcstats::PhaseKind phase) {
   MOZ_ASSERT(marker.markColor() == MarkColor::Gray);
 
   gcstats::AutoPhase ap(stats(), phase);
@@ -4474,11 +4474,6 @@ void GCRuntime::markGrayReferences(gcstats::PhaseKind phase) {
       (*op)(&marker, grayRootTracer.data);
     }
   }
-  drainMarkStack();
-}
-
-void GCRuntime::markGrayReferencesInCurrentGroup(gcstats::PhaseKind phase) {
-  markGrayReferences<SweepGroupZonesIter>(phase);
 }
 
 void GCRuntime::markAllWeakReferences(gcstats::PhaseKind phase) {
@@ -4486,7 +4481,8 @@ void GCRuntime::markAllWeakReferences(gcstats::PhaseKind phase) {
 }
 
 void GCRuntime::markAllGrayReferences(gcstats::PhaseKind phase) {
-  markGrayReferences<GCZonesIter>(phase);
+  markGrayRoots<GCZonesIter>(phase);
+  drainMarkStack();
 }
 
 #ifdef JS_GC_ZEAL
@@ -5110,9 +5106,9 @@ void GCRuntime::markIncomingCrossCompartmentPointers(MarkColor color) {
   bool unlinkList = color == MarkColor::Gray;
 
   for (SweepGroupCompartmentsIter c(rt); !c.done(); c.next()) {
+    MOZ_ASSERT(c->zone()->isGCMarking());
     MOZ_ASSERT_IF(color == MarkColor::Gray,
                   c->zone()->isGCMarkingBlackAndGray());
-    MOZ_ASSERT_IF(color == MarkColor::Black, c->zone()->isGCMarkingBlackOnly());
     MOZ_ASSERT_IF(c->gcIncomingGrayPointers,
                   IsGrayListObject(c->gcIncomingGrayPointers));
 
@@ -5186,6 +5182,18 @@ static void ResetGrayList(Compartment* comp) {
   comp->gcIncomingGrayPointers = nullptr;
 }
 
+#ifdef DEBUG
+static bool HasIncomingCrossCompartmentPointers(JSRuntime* rt) {
+  for (SweepGroupCompartmentsIter c(rt); !c.done(); c.next()) {
+    if (c->gcIncomingGrayPointers) {
+      return true;
+    }
+  }
+
+  return false;
+}
+#endif
+
 void js::NotifyGCNukeWrapper(JSObject* obj) {
   /*
    * References to target of wrapper are being removed, we no longer have to
@@ -5242,17 +5250,16 @@ static inline void MaybeCheckWeakMapMarking(GCRuntime* gc)
 #endif
 }
 
-IncrementalProgress GCRuntime::endMarkingSweepGroup(FreeOp* fop,
-                                                    SliceBudget& budget) {
+IncrementalProgress GCRuntime::markGrayReferencesInCurrentGroup(
+    FreeOp* fop, SliceBudget& budget) {
   MOZ_ASSERT(marker.markColor() == MarkColor::Black);
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_MARK);
 
-  // Mark any incoming black pointers from previously swept compartments
-  // whose referents are not marked. This can occur when gray cells become
-  // black by the action of UnmarkGray.
+  // Mark any incoming gray pointers from previously swept compartments that
+  // have subsequently been marked black. This can occur when gray cells
+  // become black by the action of UnmarkGray.
   markIncomingCrossCompartmentPointers(MarkColor::Black);
-  markWeakReferencesInCurrentGroup(gcstats::PhaseKind::SWEEP_MARK_WEAK);
 
   // Change state of current group to MarkGray to restrict marking to this
   // group.  Note that there may be pointers to the atoms zone, and
@@ -5267,9 +5274,26 @@ IncrementalProgress GCRuntime::endMarkingSweepGroup(FreeOp* fop,
   // Mark incoming gray pointers from previously swept compartments.
   markIncomingCrossCompartmentPointers(MarkColor::Gray);
 
-  // Mark gray roots and mark transitively inside the current compartment
-  // group.
-  markGrayReferencesInCurrentGroup(gcstats::PhaseKind::SWEEP_MARK_GRAY);
+  markGrayRoots<SweepGroupZonesIter>(gcstats::PhaseKind::SWEEP_MARK_GRAY);
+
+  // TODO: Make this incremental.
+  drainMarkStack();
+
+  return Finished;
+}
+
+IncrementalProgress GCRuntime::endMarkingSweepGroup(FreeOp* fop,
+                                                    SliceBudget& budget) {
+  MOZ_ASSERT(marker.markColor() == MarkColor::Black);
+  MOZ_ASSERT(!HasIncomingCrossCompartmentPointers(rt));
+
+  gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_MARK);
+
+  markWeakReferencesInCurrentGroup(gcstats::PhaseKind::SWEEP_MARK_WEAK);
+
+  AutoSetMarkColor setColorGray(marker, MarkColor::Gray);
+
+  // Mark transitively inside the current compartment group.
   markWeakReferencesInCurrentGroup(gcstats::PhaseKind::SWEEP_MARK_GRAY_WEAK);
 
   MOZ_ASSERT(marker.isDrained());
@@ -6441,6 +6465,7 @@ bool GCRuntime::initSweepActions() {
   sweepActions.ref() = RepeatForSweepGroup(
       rt,
       Sequence(
+          Call(&GCRuntime::markGrayReferencesInCurrentGroup),
           Call(&GCRuntime::endMarkingSweepGroup),
           Call(&GCRuntime::beginSweepingSweepGroup),
           MaybeYield(ZealMode::IncrementalMultipleSlices),
