@@ -3752,6 +3752,18 @@ JS_PUBLIC_API JS::Value JS::GetScriptPrivate(JSScript* script) {
   return script->sourceObject()->canonicalPrivate();
 }
 
+JS_PUBLIC_API JS::Value JS::GetScriptedCallerPrivate(JSContext* cx) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
+  NonBuiltinFrameIter iter(cx, cx->realm()->principals());
+  if (iter.done() || !iter.hasScript()) {
+    return UndefinedValue();
+  }
+
+  return FindScriptOrModulePrivateForScript(iter.script());
+}
+
 JS_PUBLIC_API JS::ScriptPrivateFinalizeHook JS::GetScriptPrivateFinalizeHook(
     JSRuntime* rt) {
   AssertHeapIsIdle();
