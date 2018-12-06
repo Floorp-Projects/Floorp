@@ -36,22 +36,40 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   ModuleLoadRequest(const ModuleLoadRequest& aOther) = delete;
   ModuleLoadRequest(ModuleLoadRequest&& aOther) = delete;
 
- public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ModuleLoadRequest, ScriptLoadRequest)
-
-  // Create a top-level module load request.
   ModuleLoadRequest(nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
                     const SRIMetadata& aIntegrity, nsIURI* aReferrer,
-                    ScriptLoader* aLoader);
+                    bool aIsTopLevel, bool aIsDynamicImport,
+                    ScriptLoader* aLoader, VisitedURLSet* aVisitedSet);
 
-  // Create a module load request for an imported module.
-  ModuleLoadRequest(nsIURI* aURI, ModuleLoadRequest* aParent);
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ModuleLoadRequest,
+                                                         ScriptLoadRequest)
+
+  // Create a top-level module load request.
+  static ModuleLoadRequest* CreateTopLevel(nsIURI* aURI,
+                                           ScriptFetchOptions* aFetchOptions,
+                                           const SRIMetadata& aIntegrity,
+                                           nsIURI* aReferrer,
+                                           ScriptLoader* aLoader);
+
+  // Create a module load request for a static module import.
+  static ModuleLoadRequest* CreateStaticImport(nsIURI* aURI,
+                                               ModuleLoadRequest* aParent);
+
+  // Create a module load request for dynamic module import.
+  static ModuleLoadRequest* CreateDynamicImport(
+      nsIURI* aURI, ModuleScript* aScript,
+      JS::Handle<JS::Value> aReferencingPrivate,
+      JS::Handle<JSString*> aSpecifier, JS::Handle<JSObject*> aPromise);
 
   bool IsTopLevel() const override { return mIsTopLevel; }
 
+  bool IsDynamicImport() const { return mIsDynamicImport; }
+
   void SetReady() override;
   void Cancel() override;
+  void ClearDynamicImport();
 
   void ModuleLoaded();
   void ModuleErrored();
@@ -65,6 +83,9 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
  public:
   // Is this a request for a top level module script or an import?
   const bool mIsTopLevel;
+
+  // Is this the top level request for a dynamic module import?
+  const bool mIsDynamicImport;
 
   // The base URL used for resolving relative module imports.
   nsCOMPtr<nsIURI> mBaseURL;
@@ -88,6 +109,11 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   // Set of module URLs visited while fetching the module graph this request is
   // part of.
   RefPtr<VisitedURLSet> mVisitedSet;
+
+  // For dynamic imports, the details to pass to FinishDynamicImport.
+  JS::Heap<JS::Value> mDynamicReferencingPrivate;
+  JS::Heap<JSString*> mDynamicSpecifier;
+  JS::Heap<JSObject*> mDynamicPromise;
 };
 
 }  // namespace dom
