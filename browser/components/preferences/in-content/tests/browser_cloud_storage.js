@@ -107,6 +107,7 @@ add_task(async function setup() {
     [CLOUD_SERVICES_PREF + "api.enabled", true],
     [CLOUD_SERVICES_PREF + "storage.key", "Dropbox"],
   ]});
+
   let folderName = "CloudStorage";
   registerFakePath("Home", folderName);
   registerFakePath("LocalAppData", folderName);
@@ -153,6 +154,8 @@ add_task(async function() {
   alwaysAsk.click();
   is(downloadFolder.disabled, true, "downloadFolder filefield is disabled");
   is(chooseFolder.disabled, true, "chooseFolder button is disabled");
+  saveTo.click();
+  ok(saveTo.selected, "Reset back first option as selected by default");
 
   gBrowser.removeCurrentTab();
 });
