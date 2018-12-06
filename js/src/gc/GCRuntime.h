@@ -893,6 +893,7 @@ class GCRuntime {
   MainThreadOrGCTaskData<JS::Zone*> sweepZone;
   MainThreadData<mozilla::Maybe<AtomsTable::SweepIterator>> maybeAtomsToSweep;
   MainThreadOrGCTaskData<JS::detail::WeakCacheBase*> sweepCache;
+  MainThreadData<bool> hasMarkedGrayRoots;
   MainThreadData<bool> abortSweepAfterCurrentGroup;
 
   friend class SweepGroupsIter;
