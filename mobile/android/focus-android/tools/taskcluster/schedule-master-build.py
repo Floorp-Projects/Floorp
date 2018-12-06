@@ -53,7 +53,7 @@ def generate_compare_locales_task():
     return taskcluster.slugId(), generate_task(
         name="(Focus for Android) String validation",
         description="Check Focus/Klar for Android for errors in en-US and l10n.",
-        command=('pip install "compare-locales>=4.0.1,<5.0"'
+        command=('pip install "compare-locales>=5.0.2,<6.0"'
                  ' && mkdir -p /opt/focus-android/test_artifacts'
                  ' && compare-locales --validate l10n.toml .'
                  ' && compare-locales --json=/opt/focus-android/test_artifacts/data.json l10n.toml .'),
@@ -189,4 +189,3 @@ if __name__ == "__main__":
 
     uploadNDTaskId, uploadNDTask = upload_apk_nimbledroid_task([unitTestTaskId, codeQualityTaskId])
     schedule_task(queue, uploadNDTaskId, uploadNDTask)
-
