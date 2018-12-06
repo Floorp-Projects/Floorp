@@ -210,6 +210,7 @@ namespace jit {
   _(JSOP_FINALYIELDRVAL)              \
   _(JSOP_RESUME)                      \
   _(JSOP_CALLEE)                      \
+  _(JSOP_ENVCALLEE)                   \
   _(JSOP_SUPERBASE)                   \
   _(JSOP_SUPERFUN)                    \
   _(JSOP_GETRVAL)                     \
@@ -402,8 +403,6 @@ class BaselineCodeGen {
   Address getEnvironmentCoordinateAddressFromObject(Register objReg,
                                                     Register reg);
   Address getEnvironmentCoordinateAddress(Register reg);
-
-  void getThisEnvironmentCallee(Register reg);
 };
 
 // Interface used by BaselineCodeGen for BaselineCompiler.

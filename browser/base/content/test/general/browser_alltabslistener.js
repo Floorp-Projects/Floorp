@@ -36,8 +36,7 @@ var gFrontProgressListener = {
   onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
   },
 
-  onSecurityChange(aWebProgress, aRequest, aOldState, aState,
-                   aContentBlockingLogJSON) {
+  onSecurityChange(aWebProgress, aRequest, aState) {
     if (aRequest &&
         aRequest.QueryInterface(Ci.nsIChannel).originalURI.spec == "about:blank") {
       // ignore initial about blank
@@ -96,8 +95,7 @@ var gAllProgressListener = {
     ok(aBrowser == gTestBrowser, state + " notification came from the correct browser");
   },
 
-  onSecurityChange(aBrowser, aWebProgress, aRequest, aOldState, aState,
-                   aContentBlockingLogJSON) {
+  onSecurityChange(aBrowser, aWebProgress, aRequest, aState) {
     if (aRequest &&
         aRequest.QueryInterface(Ci.nsIChannel).originalURI.spec == "about:blank") {
       // ignore initial about blank

@@ -226,10 +226,9 @@ struct MOZ_STACK_CLASS ScrollReflowInput {
   bool mShowVScrollbar;
 
   ScrollReflowInput(nsIScrollableFrame* aFrame, const ReflowInput& aReflowInput)
-      : mReflowInput(aReflowInput)
+      : mReflowInput(aReflowInput),
         // mBoxState is just used for scrollbars so we don't need to
         // worry about the reflow depth here
-        ,
         mBoxState(aReflowInput.mFrame->PresContext(),
                   aReflowInput.mRenderingContext) {
     ScrollStyles styles = aFrame->GetScrollStyles();
@@ -1867,10 +1866,11 @@ ComputeBezierAnimationSettingsForOrigin(nsAtom* aOrigin) {
   }
 
   // Keep the animation duration longer than the average event intervals
-  //   (to "connect" consecutive scroll animations before the scroll comes to a
-  //   stop).
-  static const double kDefaultDurationToIntervalRatio =
-      2;  // Duplicated at all.js
+  // (to "connect" consecutive scroll animations before the scroll comes to a
+  // stop).
+  //
+  // Default value is duplicated in all.js.
+  static const double kDefaultDurationToIntervalRatio = 2;
   intervalRatio =
       Preferences::GetInt("general.smoothScroll.durationToIntervalRatio",
                           kDefaultDurationToIntervalRatio * 100) /
@@ -6145,7 +6145,8 @@ void ScrollFrameHelper::RestoreState(PresState* aState) {
   if (mIsRoot) {
     nsIPresShell* presShell = mOuter->PresShell();
     if (aState->scaleToResolution()) {
-      presShell->SetResolutionAndScaleTo(aState->resolution());
+      presShell->SetResolutionAndScaleTo(aState->resolution(),
+                                         nsGkAtoms::restore);
     } else {
       presShell->SetResolution(aState->resolution());
     }

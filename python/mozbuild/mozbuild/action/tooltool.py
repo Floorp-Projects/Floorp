@@ -494,10 +494,9 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None, regio
                          (file_record.filename, base_url, temp_path))
                 fetched_path = temp_path
                 break
-        except (urllib2.URLError, urllib2.HTTPError, ValueError) as e:
+        except (urllib2.URLError, urllib2.HTTPError, ValueError):
             log.info("...failed to fetch '%s' from %s" %
-                     (file_record.filename, base_url))
-            log.debug("%s" % e)
+                     (file_record.filename, base_url), exc_info=True)
         except IOError:  # pragma: no cover
             log.info("failed to write to temporary file for '%s'" %
                      file_record.filename, exc_info=True)

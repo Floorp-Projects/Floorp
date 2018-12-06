@@ -26,6 +26,8 @@ using CSSSize from "Units.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
 using hal::ScreenOrientation from "mozilla/HalScreenConfiguration.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
+using refcounted class nsIPrincipal from "mozilla/dom/PermissionMessageUtils.h";
+using mozilla::dom::BrowsingContextId from "mozilla/dom/ipc/IdType.h";
 
 
 namespace mozilla {
@@ -181,6 +183,14 @@ struct PerformanceInfo
   PerformanceMemoryInfo memory;
   // Counters per category. For workers, a single entry
   CategoryDispatch[] items;
+};
+
+struct WindowGlobalInit
+{
+  nsIPrincipal principal;
+  BrowsingContextId browsingContextId;
+  uint64_t innerWindowId;
+  uint64_t outerWindowId;
 };
 
 } // namespace dom

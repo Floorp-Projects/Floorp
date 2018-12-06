@@ -753,8 +753,7 @@ enum class StyleWhiteSpace : uint8_t {
 // ruby-position, see nsStyleText
 #define NS_STYLE_RUBY_POSITION_OVER 0
 #define NS_STYLE_RUBY_POSITION_UNDER 1
-#define NS_STYLE_RUBY_POSITION_INTER_CHARACTER \
-  2 /* placeholder, not yet parsed */
+#define NS_STYLE_RUBY_POSITION_INTER_CHARACTER 2  // placeholder, not yet parsed
 
 // See nsStyleText
 #define NS_STYLE_TEXT_SIZE_ADJUST_NONE 0

@@ -35,7 +35,6 @@
 #include "nsIPresShell.h"
 #include "nsHTMLParts.h"
 #include "nsGkAtoms.h"
-#include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
 #include "mozilla/Sprintf.h"
 #include "nsFloatManager.h"

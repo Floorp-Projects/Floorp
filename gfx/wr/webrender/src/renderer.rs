@@ -534,6 +534,16 @@ pub(crate) mod desc {
                 count: 4,
                 kind: VertexAttributeKind::U16,
             },
+            VertexAttribute {
+                name: "aClipLocalPos",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aClipTileRect",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            }
         ],
     };
 

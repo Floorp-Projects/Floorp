@@ -21,11 +21,10 @@ from taskgraph.transforms.job.common import (
 )
 from taskgraph.util.hash import hash_paths
 from taskgraph import GECKO
-from taskgraph.util.cached_tasks import add_optimization
 import taskgraph
 
 
-CACHE_TYPE = 'toolchains.v2'
+CACHE_TYPE = 'toolchains.v3'
 
 toolchain_run_schema = Schema({
     Required('using'): 'toolchain-script',
@@ -83,14 +82,6 @@ def get_digest_data(config, run, taskdesc):
     # Accumulate dependency hashes for index generation.
     data = [hash_paths(GECKO, files)]
 
-    # If the task has dependencies, we need those dependencies to influence
-    # the index path. So take the digest from the files above, add the list
-    # of its dependencies, and hash the aggregate.
-    # If the task has no dependencies, just use the digest from above.
-    deps = taskdesc['dependencies']
-    if deps:
-        data.extend(sorted(deps.values()))
-
     # If the task uses an in-tree docker image, we want it to influence
     # the index path as well. Ideally, the content of the docker image itself
     # should have an influence, but at the moment, we can't get that
@@ -100,7 +91,7 @@ def get_digest_data(config, run, taskdesc):
     # accompanied with a docker image name change.
     image = taskdesc['worker'].get('docker-image', {}).get('in-tree')
     if image:
-        data.extend(image)
+        data.append(image)
 
     # Likewise script arguments should influence the index.
     args = run.get('arguments')
@@ -183,12 +174,11 @@ def docker_worker_toolchain(config, job, taskdesc):
 
     if not taskgraph.fast:
         name = taskdesc['label'].replace('{}-'.format(config.kind), '', 1)
-        add_optimization(
-            config, taskdesc,
-            cache_type=CACHE_TYPE,
-            cache_name=name,
-            digest_data=get_digest_data(config, run, taskdesc),
-        )
+        taskdesc['cache'] = {
+            'type': CACHE_TYPE,
+            'name': name,
+            'digest-data': get_digest_data(config, run, taskdesc),
+        }
 
 
 @run_job_using("generic-worker", "toolchain-script",
@@ -242,9 +232,8 @@ def windows_toolchain(config, job, taskdesc):
 
     if not taskgraph.fast:
         name = taskdesc['label'].replace('{}-'.format(config.kind), '', 1)
-        add_optimization(
-            config, taskdesc,
-            cache_type=CACHE_TYPE,
-            cache_name=name,
-            digest_data=get_digest_data(config, run, taskdesc),
-        )
+        taskdesc['cache'] = {
+            'type': CACHE_TYPE,
+            'name': name,
+            'digest-data': get_digest_data(config, run, taskdesc),
+        }

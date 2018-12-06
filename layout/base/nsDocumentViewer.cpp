@@ -49,7 +49,6 @@
 #include "nsIPageSequenceFrame.h"
 #include "nsNetUtil.h"
 #include "nsIContentViewerEdit.h"
-#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Loader.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -2138,8 +2137,8 @@ nsDocumentViewer::Show(void) {
     if (base_win) {
       base_win->GetParentWidget(&mParentWidget);
       if (mParentWidget) {
-        mParentWidget
-            ->Release();  // GetParentWidget AddRefs, but mParentWidget is weak
+        // GetParentWidget AddRefs, but mParentWidget is weak
+        mParentWidget->Release();
       }
     }
 
@@ -2558,9 +2557,9 @@ mozilla::dom::Selection* nsDocumentViewer::GetDocumentSelection() {
   return mPresShell->GetCurrentSelection(SelectionType::eNormal);
 }
 
-/* ========================================================================================
+/* ============================================================================
  * nsIContentViewerEdit
- * ========================================================================================
+ * ============================================================================
  */
 
 NS_IMETHODIMP nsDocumentViewer::ClearSelection() {

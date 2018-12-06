@@ -175,6 +175,8 @@ HttpChannelChild::HttpChannelChild()
       mDivertingToParent(false),
       mFlushedForDiversion(false),
       mIsFromCache(false),
+      mCacheNeedToReportBytesReadInitialized(false),
+      mNeedToReportBytesRead(true),
       mCacheEntryAvailable(false),
       mAltDataCacheEntryAvailable(false),
       mSendResumeAt(false),
@@ -186,9 +188,7 @@ HttpChannelChild::HttpChannelChild()
       mPostRedirectChannelShouldIntercept(false),
       mPostRedirectChannelShouldUpgrade(false),
       mShouldParentIntercept(false),
-      mSuspendParentAfterSynthesizeResponse(false),
-      mCacheNeedToReportBytesReadInitialized(false),
-      mNeedToReportBytesRead(true) {
+      mSuspendParentAfterSynthesizeResponse(false) {
   LOG(("Creating HttpChannelChild @%p\n", this));
 
   mChannelCreationTime = PR_Now();
@@ -1910,6 +1910,7 @@ void HttpChannelChild::ProcessDivertMessages() {
 // channel.
 bool HttpChannelChild::Redirect3Complete(OverrideRunnable* aRunnable) {
   LOG(("HttpChannelChild::Redirect3Complete [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIHttpChannelChild> chan = do_QueryInterface(mRedirectChannelChild);
@@ -1978,6 +1979,7 @@ NS_IMETHODIMP
 HttpChannelChild::ConnectParent(uint32_t registrarId) {
   LOG(("HttpChannelChild::ConnectParent [this=%p, id=%" PRIu32 "]\n", this,
        registrarId));
+  MOZ_ASSERT(NS_IsMainThread());
   mozilla::dom::TabChild* tabChild = nullptr;
   nsCOMPtr<nsITabChild> iTabChild;
   GetCallback(iTabChild);
@@ -2052,6 +2054,7 @@ NS_IMETHODIMP
 HttpChannelChild::CompleteRedirectSetup(nsIStreamListener* listener,
                                         nsISupports* aContext) {
   LOG(("HttpChannelChild::FinishRedirectSetup [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
 
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
@@ -2111,6 +2114,7 @@ HttpChannelChild::CompleteRedirectSetup(nsIStreamListener* listener,
 NS_IMETHODIMP
 HttpChannelChild::OnRedirectVerifyCallback(nsresult result) {
   LOG(("HttpChannelChild::OnRedirectVerifyCallback [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
   OptionalURIParams redirectURI;
   nsresult rv;
 
@@ -2286,6 +2290,7 @@ HttpChannelChild::Suspend() {
   LOG(("HttpChannelChild::Suspend [this=%p, mSuspendCount=%" PRIu32 ", "
        "mDivertingToParent=%d]\n",
        this, mSuspendCount + 1, static_cast<bool>(mDivertingToParent)));
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE(RemoteChannelExists() || mInterceptListener,
                  NS_ERROR_NOT_AVAILABLE);
 
@@ -2311,6 +2316,7 @@ HttpChannelChild::Resume() {
   LOG(("HttpChannelChild::Resume [this=%p, mSuspendCount=%" PRIu32 ", "
        "mDivertingToParent=%d]\n",
        this, mSuspendCount - 1, static_cast<bool>(mDivertingToParent)));
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE(RemoteChannelExists() || mInterceptListener,
                  NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(mSuspendCount > 0, NS_ERROR_UNEXPECTED);
@@ -2868,6 +2874,7 @@ HttpChannelChild::SetupFallbackChannel(const char* aFallbackKey) {
 NS_IMETHODIMP
 HttpChannelChild::GetCacheTokenFetchCount(int32_t* _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (mSynthesizedCacheInfo) {
     return mSynthesizedCacheInfo->GetCacheTokenFetchCount(_retval);
@@ -2884,6 +2891,7 @@ HttpChannelChild::GetCacheTokenFetchCount(int32_t* _retval) {
 NS_IMETHODIMP
 HttpChannelChild::GetCacheTokenExpirationTime(uint32_t* _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (mSynthesizedCacheInfo) {
     return mSynthesizedCacheInfo->GetCacheTokenExpirationTime(_retval);
@@ -2897,6 +2905,7 @@ HttpChannelChild::GetCacheTokenExpirationTime(uint32_t* _retval) {
 
 NS_IMETHODIMP
 HttpChannelChild::GetCacheTokenCachedCharset(nsACString& _retval) {
+  MOZ_ASSERT(NS_IsMainThread());
   if (mSynthesizedCacheInfo) {
     return mSynthesizedCacheInfo->GetCacheTokenCachedCharset(_retval);
   }
@@ -2952,6 +2961,7 @@ HttpChannelChild::GetCacheEntryId(uint64_t* aCacheEntryId) {
 
 NS_IMETHODIMP
 HttpChannelChild::GetCacheKey(uint32_t* cacheKey) {
+  MOZ_ASSERT(NS_IsMainThread());
   if (mSynthesizedCacheInfo) {
     return mSynthesizedCacheInfo->GetCacheKey(cacheKey);
   }
@@ -3298,6 +3308,7 @@ HttpChannelChild::DivertToParent(ChannelDiverterChild** aChild) {
   MOZ_RELEASE_ASSERT(aChild);
   MOZ_RELEASE_ASSERT(gNeckoChild);
   MOZ_RELEASE_ASSERT(!mDivertingToParent);
+  MOZ_ASSERT(NS_IsMainThread());
 
   nsresult rv = NS_OK;
 
@@ -3558,6 +3569,7 @@ void HttpChannelChild::OverrideWithSynthesizedResponse(
     nsIInterceptedBodyCallback* aSynthesizedCallback,
     InterceptStreamListener* aStreamListener,
     nsICacheInfoChannel* aCacheInfoChannel) {
+  MOZ_ASSERT(NS_IsMainThread());
   nsresult rv = NS_OK;
   auto autoCleanup = MakeScopeExit([&] {
     // Auto-cancel on failure.  Do this first to get mStatus set, if necessary.
@@ -3659,6 +3671,7 @@ void HttpChannelChild::OverrideWithSynthesizedResponse(
 NS_IMETHODIMP
 HttpChannelChild::ForceIntercepted(bool aPostRedirectChannelShouldIntercept,
                                    bool aPostRedirectChannelShouldUpgrade) {
+  MOZ_ASSERT(NS_IsMainThread());
   mShouldParentIntercept = true;
   mPostRedirectChannelShouldIntercept = aPostRedirectChannelShouldIntercept;
   mPostRedirectChannelShouldUpgrade = aPostRedirectChannelShouldUpgrade;
@@ -3669,6 +3682,7 @@ void HttpChannelChild::ForceIntercepted(
     nsIInputStream* aSynthesizedInput,
     nsIInterceptedBodyCallback* aSynthesizedCallback,
     nsICacheInfoChannel* aCacheInfo) {
+  MOZ_ASSERT(NS_IsMainThread());
   mSynthesizedInput = aSynthesizedInput;
   mSynthesizedCallback = aSynthesizedCallback;
   mSynthesizedCacheInfo = aCacheInfo;

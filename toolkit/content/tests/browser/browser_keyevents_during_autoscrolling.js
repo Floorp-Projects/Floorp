@@ -1,6 +1,7 @@
 add_task(async function() {
   const kPrefName_AutoScroll = "general.autoScroll";
   Services.prefs.setBoolPref(kPrefName_AutoScroll, true);
+  registerCleanupFunction(() => Services.prefs.clearUserPref(kPrefName_AutoScroll));
 
   const kNoKeyEvents   = 0;
   const kKeyDownEvent  = 1;
@@ -61,55 +62,52 @@ add_task(async function() {
 
   var dataUri = 'data:text/html,<body style="height:10000px;"></body>';
 
-  let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  BrowserTestUtils.loadURI(gBrowser, dataUri);
-  await loadedPromise;
+  await BrowserTestUtils.withNewTab(dataUri, async function(browser) {
+    info("Loaded data URI in new tab");
+    await SimpleTest.promiseFocus(browser);
+    info("Focused selected browser");
 
-  await SimpleTest.promiseFocus(gBrowser.selectedBrowser);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("keypress", onKey);
+    window.addEventListener("keyup", onKey);
+    registerCleanupFunction(() => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keypress", onKey);
+      window.removeEventListener("keyup", onKey);
+    });
 
-  window.addEventListener("keydown", onKey);
-  window.addEventListener("keypress", onKey);
-  window.addEventListener("keyup", onKey);
+    // Test whether the key events are handled correctly under normal condition
+    expectedKeyEvents = kAllKeyEvents;
+    sendChar("A");
 
-  // Test whether the key events are handled correctly under normal condition
-  expectedKeyEvents = kAllKeyEvents;
-  sendChar("A");
+    // Start autoscrolling by middle button click on the page
+    info("Creating popup shown promise");
+    let shownPromise = BrowserTestUtils.waitForEvent(window, "popupshown", false,
+                         event => event.originalTarget.className == "autoscroller");
+    await BrowserTestUtils.synthesizeMouseAtPoint(10, 10, { button: 1 },
+                                                  gBrowser.selectedBrowser);
+    info("Waiting for autoscroll popup to show");
+    await shownPromise;
 
-  // Start autoscrolling by middle button click on the page
-  let shownPromise = BrowserTestUtils.waitForEvent(window, "popupshown", false,
-                       event => event.originalTarget.className == "autoscroller");
-  await BrowserTestUtils.synthesizeMouseAtPoint(10, 10, { button: 1 },
-                                                gBrowser.selectedBrowser);
-  await shownPromise;
+    // Most key events should be eaten by the browser.
+    expectedKeyEvents = kNoKeyEvents;
+    sendChar("A");
+    sendKey("DOWN");
+    sendKey("RETURN");
+    sendKey("RETURN");
+    sendKey("HOME");
+    sendKey("END");
+    sendKey("TAB");
+    sendKey("RETURN");
 
-  // Most key events should be eaten by the browser.
-  expectedKeyEvents = kNoKeyEvents;
-  sendChar("A");
-  sendKey("DOWN");
-  sendKey("RETURN");
-  sendKey("RETURN");
-  sendKey("HOME");
-  sendKey("END");
-  sendKey("TAB");
-  sendKey("RETURN");
+    // Finish autoscrolling by ESC key.  Note that only keydown and keypress
+    // events are eaten because keyup event is fired *after* the autoscrolling
+    // is finished.
+    expectedKeyEvents = kKeyUpEvent;
+    sendKey("ESCAPE");
 
-  // Finish autoscrolling by ESC key.  Note that only keydown and keypress
-  // events are eaten because keyup event is fired *after* the autoscrolling
-  // is finished.
-  expectedKeyEvents = kKeyUpEvent;
-  sendKey("ESCAPE");
-
-  // Test whether the key events are handled correctly under normal condition
-  expectedKeyEvents = kAllKeyEvents;
-  sendChar("A");
-
-  window.removeEventListener("keydown", onKey);
-  window.removeEventListener("keypress", onKey);
-  window.removeEventListener("keyup", onKey);
-
-  // restore the changed prefs
-  if (Services.prefs.prefHasUserValue(kPrefName_AutoScroll))
-    Services.prefs.clearUserPref(kPrefName_AutoScroll);
-
-  finish();
+    // Test whether the key events are handled correctly under normal condition
+    expectedKeyEvents = kAllKeyEvents;
+    sendChar("A");
+  });
 });

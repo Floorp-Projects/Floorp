@@ -117,32 +117,47 @@ impl<'a> DisplayListFlattener<'a> {
                     }
 
                     // TODO(gw): Add a fast path for ClipOut + zero border radius!
-                    clips.push(ClipItemKey::rounded_rect(
-                        prim_info.rect,
-                        border_radius,
-                        ClipMode::ClipOut,
-                    ));
+                    clips.push(
+                        (
+                            prim_info.rect.origin,
+                            ClipItemKey::rounded_rect(
+                                prim_info.rect.size,
+                                border_radius,
+                                ClipMode::ClipOut,
+                            ),
+                        )
+                    );
 
                     (shadow_rect, shadow_radius)
                 }
                 BoxShadowClipMode::Inset => {
                     if shadow_rect.is_well_formed_and_nonempty() {
-                        clips.push(ClipItemKey::rounded_rect(
-                            shadow_rect,
-                            shadow_radius,
-                            ClipMode::ClipOut,
-                        ));
+                        clips.push(
+                            (
+                                shadow_rect.origin,
+                                ClipItemKey::rounded_rect(
+                                    shadow_rect.size,
+                                    shadow_radius,
+                                    ClipMode::ClipOut,
+                                ),
+                            )
+                        );
                     }
 
                     (prim_info.rect, border_radius)
                 }
             };
 
-            clips.push(ClipItemKey::rounded_rect(
-                final_prim_rect,
-                clip_radius,
-                ClipMode::Clip,
-            ));
+            clips.push(
+                (
+                    final_prim_rect.origin,
+                    ClipItemKey::rounded_rect(
+                        final_prim_rect.size,
+                        clip_radius,
+                        ClipMode::Clip,
+                    ),
+                )
+            );
 
             self.add_primitive(
                 clip_and_scroll,
@@ -159,11 +174,16 @@ impl<'a> DisplayListFlattener<'a> {
 
             // Add a normal clip mask to clip out the contents
             // of the surrounding primitive.
-            extra_clips.push(ClipItemKey::rounded_rect(
-                prim_info.rect,
-                border_radius,
-                prim_clip_mode,
-            ));
+            extra_clips.push(
+                (
+                    prim_info.rect.origin,
+                    ClipItemKey::rounded_rect(
+                        prim_info.rect.size,
+                        border_radius,
+                        prim_clip_mode,
+                    ),
+                )
+            );
 
             // Get the local rect of where the shadow will be drawn,
             // expanded to include room for the blurred region.
@@ -179,7 +199,7 @@ impl<'a> DisplayListFlattener<'a> {
             let shadow_clip_source = ClipItemKey::box_shadow(
                 shadow_rect,
                 shadow_radius,
-                dest_rect,
+                dest_rect.translate(&LayoutVector2D::new(-prim_info.rect.origin.x, -prim_info.rect.origin.y)),
                 blur_radius,
                 clip_mode,
             );
@@ -192,7 +212,12 @@ impl<'a> DisplayListFlattener<'a> {
                     }
 
                     // Add the box-shadow clip source.
-                    extra_clips.push(shadow_clip_source);
+                    extra_clips.push(
+                        (
+                            prim_info.rect.origin,
+                            shadow_clip_source,
+                        ),
+                    );
 
                     // Outset shadows are expanded by the shadow
                     // region from the original primitive.
@@ -212,7 +237,12 @@ impl<'a> DisplayListFlattener<'a> {
                     // inset shadow rect becomes invalid (they will
                     // just look like a solid rectangle).
                     if shadow_rect.is_well_formed_and_nonempty() {
-                        extra_clips.push(shadow_clip_source);
+                        extra_clips.push(
+                            (
+                                prim_info.rect.origin,
+                                shadow_clip_source,
+                            ),
+                        );
                     }
 
                     // Inset shadows draw inside the original primitive.

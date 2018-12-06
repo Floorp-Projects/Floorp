@@ -1,0 +1,38 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBrowser;
+include protocol PInProcess;
+
+include DOMTypes;
+
+using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
+
+namespace mozilla {
+namespace dom {
+
+/**
+ * A PWindowGlobal actor has a lifetime matching that of a single Window Global,
+ * specifically a |nsGlobalWindowInner|. These actors will form a parent/child
+ * link either between the chrome/content process, or will be in-process, for
+ * documents which are loaded in the chrome process.
+ */
+async protocol PWindowGlobal
+{
+  manager PBrowser or PInProcess;
+
+parent:
+  /// Update the URI of the document in this WindowGlobal.
+  async UpdateDocumentURI(nsIURI aUri);
+
+  /// Notify the parent that this PWindowGlobal is now the current global.
+  async BecomeCurrentWindowGlobal();
+
+  async __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla

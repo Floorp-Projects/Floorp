@@ -35,6 +35,7 @@ loader.lazyRequireGetter(this, "SKIP_TO_SIBLING", "devtools/server/actors/inspec
 loader.lazyRequireGetter(this, "NodeActor", "devtools/server/actors/inspector/node", true);
 loader.lazyRequireGetter(this, "NodeListActor", "devtools/server/actors/inspector/node", true);
 loader.lazyRequireGetter(this, "LayoutActor", "devtools/server/actors/layout", true);
+loader.lazyRequireGetter(this, "findFlexOrGridParentContainerForNode", "devtools/server/actors/layout", true);
 loader.lazyRequireGetter(this, "getLayoutChangesObserver", "devtools/server/actors/reflow", true);
 loader.lazyRequireGetter(this, "releaseLayoutChangesObserver", "devtools/server/actors/reflow", true);
 loader.lazyRequireGetter(this, "WalkerSearch", "devtools/server/actors/utils/walker-search", true);
@@ -509,13 +510,13 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *
    * @param NodeActor node
    */
-  inlineTextChild: function(node) {
+  inlineTextChild: function({ rawNode }) {
     // Quick checks to prevent creating a new walker if possible.
-    if (isBeforePseudoElement(node.rawNode) ||
-        isAfterPseudoElement(node.rawNode) ||
-        isShadowHost(node.rawNode) ||
-        node.rawNode.nodeType != Node.ELEMENT_NODE ||
-        node.rawNode.children.length > 0) {
+    if (isBeforePseudoElement(rawNode) ||
+        isAfterPseudoElement(rawNode) ||
+        isShadowHost(rawNode) ||
+        rawNode.nodeType != Node.ELEMENT_NODE ||
+        rawNode.children.length > 0) {
       return undefined;
     }
 
@@ -524,11 +525,11 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       // By default always try to use an anonymous walker. Even for DirectShadowHostChild,
       // children should be available through an anonymous walker (unless the child is not
       // slotted, see catch block).
-      walker = this.getDocumentWalker(node.rawNode);
+      walker = this.getDocumentWalker(rawNode);
     } catch (e) {
       // Using an anonymous walker might throw, for instance on unslotted shadow host
       // children.
-      walker = this.getNonAnonymousWalker(node.rawNode);
+      walker = this.getNonAnonymousWalker(rawNode);
     }
 
     const firstChild = walker.firstChild();
@@ -539,17 +540,23 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     // - unique child is a text node, but is too long to be inlined
     // - we are a slot -> these are always represented on their own lines with
     //                    a link to the original node.
+    // - we are a flex item -> these are always shown on their own lines so they can be
+    //                         selected by the flexbox inspector.
     const isAssignedSlot =
       !!firstChild &&
-      node.rawNode.nodeName === "SLOT" &&
+      rawNode.nodeName === "SLOT" &&
       isDirectShadowHostChild(firstChild);
+
+    const isFlexItem =
+      !!firstChild &&
+      findFlexOrGridParentContainerForNode(firstChild, "flex", this);
 
     if (!firstChild ||
         walker.nextSibling() ||
         firstChild.nodeType !== Node.TEXT_NODE ||
         firstChild.nodeValue.length > gValueSummaryLength ||
-        isAssignedSlot
-        ) {
+        isAssignedSlot ||
+        isFlexItem) {
       return undefined;
     }
 

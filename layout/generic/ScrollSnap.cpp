@@ -57,8 +57,8 @@ class CalcSnapPoints : public SnappingEdgeCallback {
 
  protected:
   nsIScrollableFrame::ScrollUnit mUnit;
-  nsPoint
-      mDestination;   // gives the position after scrolling but before snapping
+  nsPoint mDestination;  // gives the position after scrolling but before
+                         // snapping
   nsPoint mStartPos;  // gives the position before scrolling
   nsIntPoint mScrollingDirection;  // always -1, 0, or 1
   nsPoint mBestEdge;  // keeps track of the position of the current best edge

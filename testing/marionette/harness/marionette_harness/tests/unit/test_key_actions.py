@@ -77,22 +77,3 @@ class TestKeyActions(WindowManagerMixin, MarionetteTestCase):
                         .key_down("x")
                         .perform())
         self.assertEqual(self.key_reporter_value, "")
-
-    @skip_if_mobile("Interacting with chrome windows not available for Fennec")
-    def test_open_in_new_window_shortcut(self):
-
-        def open_window_with_action():
-            el = self.marionette.find_element(By.TAG_NAME, "a")
-            (self.key_action.key_down(Keys.SHIFT)
-                            .press(el)
-                            .release()
-                            .key_up(Keys.SHIFT)
-                            .perform())
-
-        self.marionette.navigate(inline("<a href='#'>Click</a>"))
-        new_window = self.open_window(trigger=open_window_with_action)
-
-        self.marionette.switch_to_window(new_window)
-        self.marionette.close_chrome_window()
-
-        self.marionette.switch_to_window(self.start_window)

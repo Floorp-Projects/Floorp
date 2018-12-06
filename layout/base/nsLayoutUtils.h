@@ -32,7 +32,6 @@
 #include "mozilla/ReflowOutput.h"
 #include "ImageContainer.h"
 #include "gfx2DGlue.h"
-#include "nsStyleConsts.h"
 #include "SVGImageContext.h"
 #include <limits>
 #include <algorithm>
@@ -853,13 +852,17 @@ class nsLayoutUtils {
    *
    * |aMatrixCache| allows for optimizations in recomputing the same matrix over
    * and over. The argument can be one of the following values:
+   *
    * nullptr (the default) - No optimization; the transform matrix is computed
-   * on every call to this function. non-null pointer to an empty
-   * Maybe<Matrix4x4> - Upon return, the Maybe is filled with the transform
-   * matrix that was computed. This can then be passed in to subsequent calls
-   * with the same source and destination frames to avoid recomputing the
-   * matrix. non-null pointer to a non-empty Matrix4x4 - The provided matrix
-   * will be used as the transform matrix and applied to the rect.
+   * on every call to this function.
+   *
+   * non-null pointer to an empty Maybe<Matrix4x4> - Upon return, the Maybe is
+   * filled with the transform matrix that was computed. This can then be passed
+   * in to subsequent calls with the same source and destination frames to avoid
+   * recomputing the matrix.
+   *
+   * non-null pointer to a non-empty Matrix4x4 - The provided matrix will be
+   * used as the transform matrix and applied to the rect.
    */
   static nsRect TransformFrameRectToAncestor(
       const nsIFrame* aFrame, const nsRect& aRect, const nsIFrame* aAncestor,
@@ -1743,30 +1746,35 @@ class nsLayoutUtils {
    * Draw a background image.  The image's dimensions are as specified in aDest;
    * the image itself is not consulted to determine a size.
    * See https://wiki.mozilla.org/Gecko:Image_Snapping_and_Rendering
-   *   @param aContext          The context to draw to, already set up with an
-   *                            appropriate scale and transform for drawing in
-   *                            app units.
-   *   @param aForFrame         The nsIFrame that we're drawing this image for.
-   *   @param aImage            The image.
-   *   @param aImageSize        The unscaled size of the image being drawn.
-   *                            (This might be the image's size if no scaling
-   *                            occurs, or it might be the image's size if
-   *                            the image is a vector image being rendered at
-   *                            that size.)
-   *   @param aDest             The position and scaled area where one copy of
-   *                            the image should be drawn. This area represents
-   *                            the image itself in its correct position as
-   * defined with the background-position css property.
-   *   @param aFill             The area to be filled with copies of the image.
-   *   @param aRepeatSize       The distance between the positions of two
-   * subsequent repeats of the image. Sizes larger than aDest.Size() create gaps
-   * between the images.
-   *   @param aAnchor           A point in aFill which we will ensure is
-   *                            pixel-aligned in the output.
-   *   @param aDirty            Pixels outside this area may be skipped.
-   *   @param aImageFlags       Image flags of the imgIContainer::FLAG_*
-   * variety.
-   *   @param aExtendMode       How to extend the image over the dest rect.
+   *
+   * @param aContext
+   *   The context to draw to, already set up with an appropriate scale and
+   *   transform for drawing in app units.
+   * @param aForFrame
+   *   The nsIFrame that we're drawing this image for.
+   * @param aImage
+   *   The image.
+   * @param aImageSize
+   *  The unscaled size of the image being drawn. (This might be the image's
+   *  size if no scaling occurs, or it might be the image's size if the image is
+   *  a vector image being rendered at that size.)
+   * @param aDest
+   *  The position and scaled area where one copy of the image should be drawn.
+   *  This area represents the image itself in its correct position as defined
+   *  with the background-position css property.
+   * @param aFill
+   *  The area to be filled with copies of the image.
+   * @param aRepeatSize
+   *  The distance between the positions of two subsequent repeats of the image.
+   *  Sizes larger than aDest.Size() create gaps between the images.
+   * @param aAnchor
+   *  A point in aFill which we will ensure is pixel-aligned in the output.
+   * @param aDirty
+   *   Pixels outside this area may be skipped.
+   * @param aImageFlags
+   *   Image flags of the imgIContainer::FLAG_* variety.
+   * @param aExtendMode
+   *   How to extend the image over the dest rect.
    */
   static ImgDrawResult DrawBackgroundImage(
       gfxContext& aContext, nsIFrame* aForFrame, nsPresContext* aPresContext,
@@ -2912,13 +2920,15 @@ class nsLayoutUtils {
    * If not, returns the first frame on the next line if such a next line
    * exists.
    *
-   * @return  true if the node is an invisible break.
-   *          aNextLineFrame is returned null in this case.
-   *          false if the node causes a visible break or if the node is no
-   * break.
+   * @return
+   *   true if the node is an invisible break. aNextLineFrame is returned null
+   *   in this case.
    *
-   * @param   aNextLineFrame  assigned to first frame on the next line if such a
-   *                          next line exists, null otherwise.
+   *   false if the node causes a visible break or if the node is no break.
+   *
+   * @param aNextLineFrame
+   *   assigned to first frame on the next line if such a next line exists, null
+   *   otherwise.
    */
   static bool IsInvisibleBreak(nsINode* aNode,
                                nsIFrame** aNextLineFrame = nullptr);

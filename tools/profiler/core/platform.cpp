@@ -73,6 +73,7 @@
 #include "shared-libraries.h"
 #include "prdtoa.h"
 #include "prtime.h"
+#include "js/TraceLoggerAPI.h"
 
 #if defined(XP_WIN)
 #include <processthreadsapi.h>  // for GetCurrentProcessId()
@@ -589,6 +590,17 @@ class ActivePS {
   PROFILER_FOR_EACH_FEATURE(PS_GET_FEATURE)
 
 #undef PS_GET_FEATURE
+
+  static uint32_t JSFlags(PSLockRef aLock) {
+    uint32_t Flags = 0;
+    Flags |= FeatureJS(aLock) ? uint32_t(JSSamplingFlags::StackSampling) : 0;
+    Flags |= FeatureTrackOptimizations(aLock)
+                 ? uint32_t(JSSamplingFlags::TrackOptimizations)
+                 : 0;
+    Flags |=
+        FeatureJSTracer(aLock) ? uint32_t(JSSamplingFlags::TraceLogging) : 0;
+    return Flags;
+  }
 
   PS_GET(const Vector<std::string>&, Filters)
 
@@ -1964,7 +1976,8 @@ static void locked_profiler_stream_json_for_this_process(
           registeredThread ? registeredThread->GetJSContext() : nullptr;
       ProfiledThreadData* profiledThreadData = thread.second();
       profiledThreadData->StreamJSON(buffer, cx, aWriter,
-                                     CorePS::ProcessStartTime(), aSinceTime);
+                                     CorePS::ProcessStartTime(), aSinceTime,
+                                     ActivePS::FeatureJSTracer(aLock));
     }
 
 #if defined(GP_OS_android)
@@ -1980,13 +1993,27 @@ static void locked_profiler_stream_json_for_this_process(
       ProfiledThreadData profiledThreadData(
           threadInfo, nullptr, ActivePS::FeatureResponsiveness(aLock));
       profiledThreadData.StreamJSON(*javaBuffer.get(), nullptr, aWriter,
-                                    CorePS::ProcessStartTime(), aSinceTime);
+                                    CorePS::ProcessStartTime(), aSinceTime,
+                                    ActivePS::FeatureJSTracer(aLock));
 
       java::GeckoJavaSampler::Unpause();
     }
 #endif
   }
   aWriter.EndArray();
+
+  if (ActivePS::FeatureJSTracer(aLock)) {
+    aWriter.StartArrayProperty("jsTracerDictionary");
+    {
+      JS::AutoTraceLoggerLockGuard lockGuard;
+      // Collect Event Dictionary
+      JS::TraceLoggerDictionaryBuffer collectionBuffer(lockGuard);
+      while (collectionBuffer.NextChunk()) {
+        aWriter.StringElement(collectionBuffer.internalBuffer());
+      }
+    }
+    aWriter.EndArray();
+  }
 
   aWriter.StartArrayProperty("pausedRanges");
   { buffer.StreamPausedRangesToJSON(aWriter, aSinceTime); }
@@ -2492,8 +2519,7 @@ static ProfilingStack* locked_register_thread(PSLockRef aLock,
     if (ActivePS::FeatureJS(aLock)) {
       // This StartJSSampling() call is on-thread, so we can poll manually to
       // start JS sampling immediately.
-      registeredThread->StartJSSampling(
-          ActivePS::FeatureTrackOptimizations(aLock));
+      registeredThread->StartJSSampling(ActivePS::JSFlags(aLock));
       registeredThread->PollJSSampling();
       if (registeredThread->GetJSContext()) {
         profiledThreadData->NotifyReceivedJSContext(
@@ -3115,8 +3141,7 @@ static void locked_profiler_start(PSLockRef aLock, uint32_t aCapacity,
           MakeUnique<ProfiledThreadData>(
               info, eventTarget, ActivePS::FeatureResponsiveness(aLock)));
       if (ActivePS::FeatureJS(aLock)) {
-        registeredThread->StartJSSampling(
-            ActivePS::FeatureTrackOptimizations(aLock));
+        registeredThread->StartJSSampling(ActivePS::JSFlags(aLock));
         if (info->ThreadId() == tid) {
           // We can manually poll the current thread so it starts sampling
           // immediately.
@@ -3825,8 +3850,7 @@ void profiler_clear_js_context() {
 
       // Tell the thread that we'd like to have JS sampling on this
       // thread again, once it gets a new JSContext (if ever).
-      registeredThread->StartJSSampling(
-          ActivePS::FeatureTrackOptimizations(lock));
+      registeredThread->StartJSSampling(ActivePS::JSFlags(lock));
       return;
     }
   }

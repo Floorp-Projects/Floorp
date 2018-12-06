@@ -16,7 +16,7 @@ foo = Foo 1
 foo = Foo 2
 """)
         self.assertEqual(
-            merge_channels(self.name, *channels), b"""
+            merge_channels(self.name, channels), b"""
 foo = Foo 1
       """)
 
@@ -30,7 +30,7 @@ foo = Foo 2
 bar = Bar 2
 """)
         self.assertEqual(
-            merge_channels(self.name, *channels), b"""
+            merge_channels(self.name, channels), b"""
 foo = Foo 1
 
 bar = Bar 1
@@ -43,7 +43,7 @@ foo = Foo 2
 bar = Bar 2
 """)
         self.assertEqual(
-            merge_channels(self.name, *channels), b"""
+            merge_channels(self.name, channels), b"""
 foo = Foo 1
 bar = Bar 2
 """)
@@ -65,7 +65,7 @@ baz = Baz 2
 
 """)
         self.assertEqual(
-            merge_channels(self.name, *channels), b"""
+            merge_channels(self.name, channels), b"""
 
 foo = Foo 1
 

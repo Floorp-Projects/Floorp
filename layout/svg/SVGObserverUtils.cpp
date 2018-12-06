@@ -8,22 +8,24 @@
 #include "SVGObserverUtils.h"
 
 // Keep others in (case-insensitive) order:
+#include "mozilla/css/ImageLoader.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
+#include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/RestyleManager.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsIContent.h"
+#include "nsIContentInlines.h"
+#include "nsIReflowCallback.h"
 #include "nsISupportsImpl.h"
 #include "nsSVGClipPathFrame.h"
-#include "nsSVGMarkerFrame.h"
-#include "nsSVGPaintServerFrame.h"
 #include "nsSVGFilterFrame.h"
+#include "nsSVGMarkerFrame.h"
 #include "nsSVGMaskFrame.h"
-#include "nsIReflowCallback.h"
-#include "nsCycleCollectionParticipant.h"
+#include "nsSVGPaintServerFrame.h"
 #include "SVGGeometryElement.h"
 #include "SVGTextPathElement.h"
 #include "SVGUseElement.h"
-#include "ImageLoader.h"
-#include "mozilla/net/ReferrerPolicy.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

@@ -289,6 +289,16 @@ bool AnimationSurfaceProvider::CheckForNewFrameAtYield() {
     // Append the new frame to the list.
     AnimationFrameBuffer::InsertStatus status =
         mFrames->Insert(std::move(frame));
+
+    // If we hit a redecode error, then we actually want to stop. This happens
+    // when we tried to insert more frames than we originally had (e.g. the
+    // original decoder attempt hit an OOM error sooner than we did). Better to
+    // stop the animation than to get out of sync with FrameAnimator.
+    if (mFrames->HasRedecodeError()) {
+      mDecoder = nullptr;
+      return false;
+    }
+
     switch (status) {
       case AnimationFrameBuffer::InsertStatus::DISCARD_CONTINUE:
         continueDecoding = true;
@@ -353,6 +363,13 @@ bool AnimationSurfaceProvider::CheckForNewFrameAtTerminalState() {
     // Append the new frame to the list.
     AnimationFrameBuffer::InsertStatus status =
         mFrames->Insert(std::move(frame));
+
+    // If we hit a redecode error, then we actually want to stop. This will be
+    // fully handled in FinishDecoding.
+    if (mFrames->HasRedecodeError()) {
+      return false;
+    }
+
     switch (status) {
       case AnimationFrameBuffer::InsertStatus::DISCARD_CONTINUE:
       case AnimationFrameBuffer::InsertStatus::DISCARD_YIELD:

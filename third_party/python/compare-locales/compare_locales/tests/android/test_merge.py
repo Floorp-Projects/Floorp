@@ -24,7 +24,7 @@ class TestMerge(unittest.TestCase):
 </resources>
 ''')
         self.assertEqual(
-            merge_channels(self.name, *channels), b'''\
+            merge_channels(self.name, channels), b'''\
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <!-- bar -->
@@ -47,7 +47,7 @@ class TestMerge(unittest.TestCase):
 </resources>
 ''')
         self.assertEqual(
-            merge_channels(self.name, *channels), b'''\
+            merge_channels(self.name, channels), b'''\
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <!-- Bar -->

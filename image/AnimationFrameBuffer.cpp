@@ -35,6 +35,7 @@ bool AnimationFrameRetainedBuffer::InsertInternal(RefPtr<imgFrame>&& aFrame) {
   MOZ_ASSERT(!mSizeKnown);
   MOZ_ASSERT(mFrames.Length() < mThreshold);
 
+  ++mSize;
   mFrames.AppendElement(std::move(aFrame));
   MOZ_ASSERT(mSize == mFrames.Length());
   return mSize < mThreshold;
@@ -140,20 +141,32 @@ AnimationFrameDiscardingQueue::AnimationFrameDiscardingQueue(
     AnimationFrameRetainedBuffer&& aQueue)
     : AnimationFrameBuffer(aQueue),
       mInsertIndex(aQueue.mFrames.Length()),
-      mFirstFrame(std::move(aQueue.mFrames[0])) {
+      mFirstFrame(aQueue.mFrames[0]) {
   MOZ_ASSERT(!mSizeKnown);
   MOZ_ASSERT(!mRedecodeError);
   MOZ_ASSERT(mInsertIndex > 0);
-  MOZ_ASSERT(mGetIndex > 0);
   mMayDiscard = true;
 
-  for (size_t i = aQueue.mGetIndex; i < mInsertIndex; ++i) {
+  // We avoided moving aQueue.mFrames[0] for mFirstFrame above because it is
+  // possible the animation was reset back to the beginning, and then we crossed
+  // the threshold without advancing further. That would mean mGetIndex is 0.
+  for (size_t i = mGetIndex; i < mInsertIndex; ++i) {
     MOZ_ASSERT(aQueue.mFrames[i]);
     mDisplay.push_back(std::move(aQueue.mFrames[i]));
   }
 }
 
 bool AnimationFrameDiscardingQueue::InsertInternal(RefPtr<imgFrame>&& aFrame) {
+  if (mInsertIndex == mSize) {
+    if (mSizeKnown) {
+      // We produced more frames on a subsequent decode than on the first pass.
+      mRedecodeError = true;
+      mPending = 0;
+      return true;
+    }
+    ++mSize;
+  }
+
   // Even though we don't use redecoded first frames for display purposes, we
   // will still use them for recycling, so we still need to insert it.
   mDisplay.push_back(std::move(aFrame));
@@ -174,7 +187,6 @@ bool AnimationFrameDiscardingQueue::ResetInternal() {
 bool AnimationFrameDiscardingQueue::MarkComplete(
     const gfx::IntRect& aFirstFrameRefreshArea) {
   if (NS_WARN_IF(mInsertIndex != mSize)) {
-    MOZ_ASSERT(mSizeKnown);
     mRedecodeError = true;
     mPending = 0;
   }
@@ -296,6 +308,10 @@ AnimationFrameRecyclingQueue::AnimationFrameRecyclingQueue(
   // recycling but none of the frames were marked as recyclable. We will incur
   // the extra allocation cost for a few more frames.
   mRecycling = true;
+
+  // Until we reach the end of the animation, set the first frame refresh area
+  // to match that of the full area of the first frame.
+  mFirstFrameRefreshArea = mFirstFrame->GetRect();
 }
 
 void AnimationFrameRecyclingQueue::AddSizeOfExcludingThis(
@@ -370,7 +386,20 @@ void AnimationFrameRecyclingQueue::AdvanceInternal() {
 }
 
 bool AnimationFrameRecyclingQueue::ResetInternal() {
-  mRecycle.clear();
+  // We should save any display frames that we can to save on at least the
+  // allocation. The first frame refresh area is guaranteed to be the aggregate
+  // dirty rect or the entire frame, and so the bare minimum area we can
+  // recycle. We don't need to worry about updating the dirty rect for the
+  // existing mRecycle entries, because that will happen in RecycleFrame when
+  // we try to pull out a frame to redecode the first frame.
+  for (RefPtr<imgFrame>& frame : mDisplay) {
+    if (frame->ShouldRecycle()) {
+      RecycleEntry newEntry(mFirstFrameRefreshArea);
+      newEntry.mFrame = std::move(frame);
+      mRecycle.push_back(std::move(newEntry));
+    }
+  }
+
   return AnimationFrameDiscardingQueue::ResetInternal();
 }
 
@@ -382,8 +411,6 @@ RawAccessFrameRef AnimationFrameRecyclingQueue::RecycleFrame(
     // area. We know that all of the frames still in the recycling queue
     // need to take into account the same dirty rect because they are also
     // frames which cross the boundary.
-    MOZ_ASSERT(mSizeKnown);
-    MOZ_ASSERT(!mFirstFrameRefreshArea.IsEmpty());
     for (RecycleEntry& entry : mRecycle) {
       MOZ_ASSERT(mFirstFrameRefreshArea.Contains(entry.mDirtyRect));
       entry.mDirtyRect = mFirstFrameRefreshArea;
@@ -439,11 +466,10 @@ bool AnimationFrameRecyclingQueue::MarkComplete(
   bool continueDecoding =
       AnimationFrameDiscardingQueue::MarkComplete(aFirstFrameRefreshArea);
 
-  MOZ_ASSERT_IF(!mRedecodeError, mFirstFrameRefreshArea.IsEmpty() ||
-                                     mFirstFrameRefreshArea.IsEqualEdges(
-                                         aFirstFrameRefreshArea));
-
-  mFirstFrameRefreshArea = aFirstFrameRefreshArea;
+  // If we encounter a redecode error, just make the first frame refresh area to
+  // be the full frame, because we don't really know what we can safely recycle.
+  mFirstFrameRefreshArea = mRedecodeError ? mFirstFrame->GetRect()
+                                          : aFirstFrameRefreshArea;
   return continueDecoding;
 }
 

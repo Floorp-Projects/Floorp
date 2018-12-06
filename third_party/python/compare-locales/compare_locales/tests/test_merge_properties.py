@@ -20,7 +20,7 @@ foo = Foo 1
 foo = Foo 2
 """)
         self.assertEqual(
-            merge_channels(self.name, *channels), b"""
+            merge_channels(self.name, channels), b"""
 foo = Foo 1
 """)
 
@@ -30,7 +30,7 @@ foo = Foo 1…
 """, "utf8"), encode(u"""
 foo = Foo 2…
 """, "utf8"))
-        output = merge_channels(self.name, *channels)
+        output = merge_channels(self.name, channels)
         self.assertEqual(output, encode(u"""
 foo = Foo 1…
 """, "utf8"))
@@ -39,3 +39,30 @@ foo = Foo 1…
         self.assertEqual(u_output, u"""
 foo = Foo 1…
 """)
+
+    def test_repetitive(self):
+        channels = (b"""\
+# comment
+one = one
+# comment
+three = three
+""", b"""\
+# comment
+one = one
+# comment
+two = two
+# comment
+three = three
+""")
+        output = merge_channels(self.name, channels)
+        self.assertMultiLineEqual(
+            decode(output, "utf-8"),
+            """\
+# comment
+one = one
+# comment
+two = two
+# comment
+three = three
+"""
+        )

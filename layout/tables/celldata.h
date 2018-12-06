@@ -110,13 +110,13 @@ class CellData {
   friend class nsCellMap;
   friend class BCCellData;
 
-  /** constructor.
+  /**
+   * Implemented in nsCellMap.cpp
+   *
    * @param aOrigCell  the table cell frame which will be stored in mOrigCell.
    */
-  explicit CellData(
-      nsTableCellFrame* aOrigCell);  // implemented in nsCellMap.cpp
+  explicit CellData(nsTableCellFrame* aOrigCell);
 
-  /** destructor */
   ~CellData();  // implemented in nsCellMap.cpp
 
  protected:

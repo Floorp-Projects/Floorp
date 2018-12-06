@@ -21,14 +21,34 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   info("Take two snapshots");
   takeSnapshot(panel.panelWin);
   takeSnapshot(panel.panelWin);
+  takeSnapshot(panel.panelWin);
   await waitUntilState(gStore, state =>
-  state.snapshots.length === 2 &&
-  state.snapshots[0].treeMap && state.snapshots[1].treeMap &&
-  state.snapshots[0].treeMap.state === treeMapState.SAVED &&
-  state.snapshots[1].treeMap.state === treeMapState.SAVED);
+    state.snapshots.length === 3 &&
+    state.snapshots[0].treeMap && state.snapshots[1].treeMap &&
+    state.snapshots[2].treeMap &&
+    state.snapshots[0].treeMap.state === treeMapState.SAVED &&
+    state.snapshots[1].treeMap.state === treeMapState.SAVED &&
+    state.snapshots[2].treeMap.state === treeMapState.SAVED);
 
   snapshotEls = document.querySelectorAll("#memory-tool-container .list li");
+  is(snapshotEls.length, 3, "Three snapshots visible");
+  is(document.querySelectorAll(".selected").length, 1, "One selected snapshot visible");
+  ok(snapshotEls[2].classList.contains("selected"), "Third snapshot selected");
+
+  info("Clicking on first snapshot delete button");
+  document.querySelectorAll(".delete")[0].click();
+
+  await waitUntilState(gStore, state =>
+    state.snapshots.length === 2 &&
+    state.snapshots[0].treeMap && state.snapshots[1].treeMap &&
+    state.snapshots[0].treeMap.state === treeMapState.SAVED &&
+    state.snapshots[1].treeMap.state === treeMapState.SAVED);
+
+  snapshotEls = document.querySelectorAll(".snapshot-list-item");
   is(snapshotEls.length, 2, "Two snapshots visible");
+  // Bug 1476289
+  ok(!snapshotEls[0].classList.contains("selected"), "First snapshot not selected");
+  ok(snapshotEls[1].classList.contains("selected"), "Second snapshot selected");
 
   info("Click on Clear Snapshots");
   await clearSnapshots(panel.panelWin);

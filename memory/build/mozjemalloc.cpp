@@ -3228,10 +3228,6 @@ void arena_t::DallocSmall(arena_chunk_t* aChunk, void* aPtr,
   size = bin->mSizeClass;
   MOZ_DIAGNOSTIC_ASSERT(uintptr_t(aPtr) >=
                         uintptr_t(run) + bin->mRunFirstRegionOffset);
-  MOZ_DIAGNOSTIC_ASSERT(
-      (uintptr_t(aPtr) - (uintptr_t(run) + bin->mRunFirstRegionOffset)) %
-          size ==
-      0);
 
   memset(aPtr, kAllocPoison, size);
 

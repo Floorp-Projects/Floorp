@@ -92,7 +92,10 @@ class SnapshotListItem extends Component {
     }, L10N.getStr("snapshot.io.save"));
 
     const deleteButton = !snapshot.path ? void 0 : dom.button({
-      onClick: () => onDelete(snapshot),
+      onClick: (event) => {
+        event.stopPropagation();
+        onDelete(snapshot);
+      },
       className: "delete",
       title: L10N.getStr("snapshot.io.delete"),
     });

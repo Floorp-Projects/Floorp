@@ -54,13 +54,8 @@ pref("devtools.inspector.showUserAgentShadowRoots", false);
 pref("devtools.inspector.shapesHighlighter.enabled", true);
 // Enable the font highlight-on-hover feature
 pref("devtools.inspector.fonthighlighter.enabled", true);
-
 // Enable tracking of style changes and the Changes panel in the Inspector
-#if defined(NIGHTLY_BUILD)
 pref("devtools.inspector.changes.enabled", true);
-#else
-pref("devtools.inspector.changes.enabled", false);
-#endif
 
 // Flexbox preferences
 pref("devtools.inspector.flexboxHighlighter.enabled", true);
@@ -282,12 +277,8 @@ pref("devtools.webconsole.sidebarToggle", false);
 // Enable CodeMirror in the JsTerm
 pref("devtools.webconsole.jsterm.codeMirror", true);
 
-// Enable console input reverse-search in Nightly builds
-#if defined(NIGHTLY_BUILD)
+// Enable console input reverse-search everywhere
 pref("devtools.webconsole.jsterm.reverse-search", true);
-#else
-pref("devtools.webconsole.jsterm.reverse-search", false);
-#endif
 
 // Disable the new performance recording panel by default
 pref("devtools.performance.new-panel-enabled", false);

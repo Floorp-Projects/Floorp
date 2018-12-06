@@ -53,7 +53,7 @@ function ModuleGetExportedNames(exportStarSet = [])
     for (let i = 0; i < starExportEntries.length; i++) {
         let e = starExportEntries[i];
         let requestedModule = CallModuleResolveHook(module, e.moduleRequest,
-                                                    MODULE_STATUS_INSTANTIATING);
+                                                    MODULE_STATUS_UNINSTANTIATED);
         let starNames = callFunction(requestedModule.getExportedNames, requestedModule,
                                      exportStarSet);
         for (let j = 0; j < starNames.length; j++) {

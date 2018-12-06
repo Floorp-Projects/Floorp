@@ -375,6 +375,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   bool needsImplicitThis();
 
+  MOZ_MUST_USE bool emitThisEnvironmentCallee();
+  MOZ_MUST_USE bool emitSuperBase();
+
   void tellDebuggerAboutCompiledScript(JSContext* cx);
 
   BytecodeVector& code() const { return current->code; }

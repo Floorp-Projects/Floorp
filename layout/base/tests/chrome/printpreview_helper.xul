@@ -30,8 +30,7 @@ function printpreview() {
     onProgressChange: function(webProgress, request, curSelfProgress, 
                                maxSelfProgress, curTotalProgress,
                                maxTotalProgress) { },
-    onSecurityChange: function(webProgress, request, oldState, state,
-                               contentBlockingLogJSON) { },
+    onSecurityChange: function(webProgress, request, state) { },
     onStateChange: function(webProgress, request, stateFlags, status) { },
     onStatusChange: function(webProgress, request, status, message) { },
     QueryInterface: function(iid) {

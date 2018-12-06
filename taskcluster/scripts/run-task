@@ -40,8 +40,8 @@ import urllib.request
 FINGERPRINT_URL = 'http://taskcluster/secrets/v1/secret/project/taskcluster/gecko/hgfingerprint'
 FALLBACK_FINGERPRINT = {
     'fingerprints':
-        "sha256:8e:ad:f7:6a:eb:44:06:15:ed:f3:e4:69:a6:64:60:37:2d:ff:98:88:37"
-        ":bf:d7:b8:40:84:01:48:9c:26:ce:d9"}
+        "sha256:17:38:aa:92:0b:84:3e:aa:8e:52:52:e9:4c:2f:98:a9:0e:bf:6c:3e:e9"
+        ":15:ff:0a:29:80:f7:06:02:5b:e8:48"}
 
 
 CACHE_UID_GID_MISMATCH = '''
@@ -266,7 +266,7 @@ def configure_cache_posix(cache, user, group,
     if not os.listdir(cache):
         print_line(b'cache', b'cache %s is empty; writing requirements: '
                              b'%s\n' % (
-                    cache.encode('utf-8'), b' '.join(sorted(our_requirements))))
+                                 cache.encode('utf-8'), b' '.join(sorted(our_requirements))))
 
         # We write a requirements file so future invocations know what the
         # requirements are.
@@ -427,7 +427,7 @@ def vcs_checkout(source_repo, dest, store_path,
             res = urllib.request.urlopen(FINGERPRINT_URL, timeout=10)
             secret = res.read()
             try:
-                secret = json.loads(secret, encoding='utf-8')
+                secret = json.loads(secret.decode('utf-8'))
             except ValueError:
                 print_line(b'vcs', b'invalid JSON in hg fingerprint secret')
                 sys.exit(1)
@@ -448,13 +448,14 @@ def vcs_checkout(source_repo, dest, store_path,
     if sparse_profile:
         args.extend(['--sparseprofile', sparse_profile])
 
+    dest = os.path.abspath(dest)
     args.extend([
         revision_flag, revision_value,
         source_repo, dest,
     ])
 
     res = run_and_prefix_output(b'vcs', args,
-                                extra_env={b'PYTHONUNBUFFERED': b'1'})
+                                extra_env={'PYTHONUNBUFFERED': '1'})
     if res:
         sys.exit(res)
 
@@ -699,6 +700,7 @@ def main(args):
             os.environ['GECKO_HEAD_REPOSITORY'],
             args.vcs_checkout,
             os.environ['HG_STORE_PATH'],
+            fetch_hgfingerprint=args.fetch_hgfingerprint,
             base_repo=base_repo,
             revision=os.environ.get('GECKO_HEAD_REV'),
             branch=os.environ.get('GECKO_HEAD_REF'),
@@ -713,6 +715,7 @@ def main(args):
         vcs_checkout('https://hg.mozilla.org/build/tools',
                      args.tools_checkout,
                      os.environ['HG_STORE_PATH'],
+                     fetch_hgfingerprint=args.fetch_hgfingerprint,
                      # Always check out the latest commit on default branch.
                      # This is non-deterministic!
                      branch='default')
@@ -728,6 +731,7 @@ def main(args):
             os.environ['COMM_HEAD_REPOSITORY'],
             args.comm_checkout,
             os.environ['HG_STORE_PATH'],
+            fetch_hgfingerprint=args.fetch_hgfingerprint,
             base_repo=base_repo,
             revision=os.environ.get('COMM_HEAD_REV'),
             branch=os.environ.get('COMM_HEAD_REF'))
@@ -738,6 +742,9 @@ def main(args):
         return 1
 
     try:
+        if 'GECKO_PATH' in os.environ:
+            os.environ['GECKO_PATH'] = os.path.abspath(os.environ['GECKO_PATH'])
+
         if 'MOZ_FETCHES' in os.environ:
             fetch_artifacts()
 

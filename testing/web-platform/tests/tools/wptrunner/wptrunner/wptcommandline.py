@@ -254,8 +254,11 @@ scheme host and port.""")
     gecko_group.add_argument("--setpref", dest="extra_prefs", action='append',
                              default=[], metavar="PREF=VALUE",
                              help="Defines an extra user preference (overrides those in prefs_root)")
-    gecko_group.add_argument("--leak-check", dest="leak_check", action="store_true",
-                             help="Enable leak checking")
+    gecko_group.add_argument("--leak-check", dest="leak_check", action="store_true", default=None,
+                             help="Enable leak checking (enabled by default for debug builds, "
+                             "silently ignored for opt)")
+    gecko_group.add_argument("--no-leak-check", dest="leak_check", action="store_false", default=None,
+                             help="Disable leak checking")
     gecko_group.add_argument("--stylo-threads", action="store", type=int, default=1,
                              help="Number of parallel threads to use for stylo")
     gecko_group.add_argument("--reftest-internal", dest="reftest_internal", action="store_true",

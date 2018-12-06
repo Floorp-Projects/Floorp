@@ -20,7 +20,10 @@ class AccessibleWrap : public Accessible {
   virtual ~AccessibleWrap();
 
   virtual nsresult HandleAccEvent(AccEvent* aEvent) override;
+
   virtual void Shutdown() override;
+
+  virtual bool DoAction(uint8_t aIndex) const override;
 
   int32_t VirtualViewID() const { return mID; }
 
@@ -33,13 +36,15 @@ class AccessibleWrap : public Accessible {
   mozilla::java::GeckoBundle::LocalRef ToBundle();
 
   mozilla::java::GeckoBundle::LocalRef ToBundle(
-      const uint64_t aState, const nsIntRect& aBounds, const nsString& aName,
+      const uint64_t aState, const nsIntRect& aBounds,
+      const uint8_t aActionCount, const nsString& aName,
       const nsString& aTextValue, const nsString& aDOMNodeID,
       const double& aCurVal, const double& aMinVal, const double& aMaxVal,
       const double& aStep, nsIPersistentProperties* aAttributes);
 
-  mozilla::java::GeckoBundle::LocalRef ToSmallBundle(const uint64_t aState,
-                                                     const nsIntRect& aBounds);
+  mozilla::java::GeckoBundle::LocalRef ToSmallBundle(
+      const uint64_t aState, const nsIntRect& aBounds,
+      const uint8_t aActionCount);
 
   mozilla::java::GeckoBundle::LocalRef ToSmallBundle();
 
@@ -76,9 +81,12 @@ class AccessibleWrap : public Accessible {
 
   virtual role WrapperRole() { return Role(); }
 
-  static void GetRoleDescription(role aRole, nsAString& aGeckoRole,
+  static void GetRoleDescription(role aRole,
+                                 nsIPersistentProperties* aAttributes,
+                                 nsAString& aGeckoRole,
                                  nsAString& aRoleDescription);
-  static uint32_t GetFlags(role aRole, uint64_t aState);
+
+  static uint32_t GetFlags(role aRole, uint64_t aState, uint8_t aActionCount);
 };
 
 static inline AccessibleWrap* WrapperFor(const ProxyAccessible* aProxy) {

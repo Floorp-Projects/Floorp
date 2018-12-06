@@ -13,8 +13,8 @@
 var fileList;
 
 function create_fileList() {
-  fileList = document.createElement('input');
-  fileList.setAttribute('type', 'file');
+  fileList = document.createElement("input");
+  fileList.setAttribute("type", "file");
   document.body.appendChild(fileList);
 
   var url = SimpleTest.getTestFileURL("script_fileList.js");
@@ -27,22 +27,22 @@ function create_fileList() {
   }
 
   script.addMessageListener("dir.opened", onOpened);
-  script.sendAsyncMessage("dir.open", { path: 'test' });
+  script.sendAsyncMessage("dir.open", { path: "test" });
 }
 
 function test_worker() {
   fileList.getFilesAndDirectories().then(function(array) {
-    var worker = new Worker('worker_basic.js');
+    var worker = new Worker("worker_basic.js");
     worker.onmessage = function(e) {
-      if (e.data.type == 'finish') {
+      if (e.data.type == "finish") {
         next();
         return;
       }
 
-      if (e.data.type == 'test') {
+      if (e.data.type == "test") {
         ok(e.data.test, e.data.message);
       }
-    }
+    };
 
     worker.postMessage(array[0]);
   });

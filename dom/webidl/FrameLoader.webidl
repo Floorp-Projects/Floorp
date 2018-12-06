@@ -34,6 +34,12 @@ interface FrameLoader {
   readonly attribute LoadContext loadContext;
 
   /**
+   * Get the root BrowsingContext within the frame.
+   * This may be null immediately after creating a remote frame.
+   */
+  readonly attribute BrowsingContext? browsingContext;
+
+  /**
    * Get the ParentSHistory for the nsFrameLoader. May return null if this
    * frameloader is not for a toplevel frame.
    */

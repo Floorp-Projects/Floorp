@@ -7,7 +7,6 @@
 #include "nsLayoutStylesheetCache.h"
 
 #include "nsAppDirectoryServiceDefs.h"
-#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/Preferences.h"
@@ -60,25 +59,15 @@ nsresult nsLayoutStylesheetCache::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-StyleSheet* nsLayoutStylesheetCache::ScrollbarsSheet() {
-  if (!mScrollbarsSheet) {
-    // Scrollbars don't need access to unsafe rules
-    LoadSheetURL("chrome://global/skin/scrollbars.css", &mScrollbarsSheet,
-                 eSafeAgentSheetFeatures, eCrash);
+#define STYLE_SHEET(identifier_, url_, lazy_)                                  \
+  StyleSheet* nsLayoutStylesheetCache::identifier_##Sheet() {                  \
+    if (lazy_ && !m##identifier_##Sheet) {                                     \
+      LoadSheetURL(url_, &m##identifier_##Sheet, eAgentSheetFeatures, eCrash); \
+    }                                                                          \
+    return m##identifier_##Sheet;                                              \
   }
-
-  return mScrollbarsSheet;
-}
-
-StyleSheet* nsLayoutStylesheetCache::FormsSheet() {
-  if (!mFormsSheet) {
-    // forms.css needs access to unsafe rules
-    LoadSheetURL("resource://gre-resources/forms.css", &mFormsSheet,
-                 eAgentSheetFeatures, eCrash);
-  }
-
-  return mFormsSheet;
-}
+#include "mozilla/UserAgentStyleSheetList.h"
+#undef STYLE_SHEET
 
 StyleSheet* nsLayoutStylesheetCache::UserContentSheet() {
   return mUserContentSheet;
@@ -86,65 +75,6 @@ StyleSheet* nsLayoutStylesheetCache::UserContentSheet() {
 
 StyleSheet* nsLayoutStylesheetCache::UserChromeSheet() {
   return mUserChromeSheet;
-}
-
-StyleSheet* nsLayoutStylesheetCache::UASheet() {
-  if (!mUASheet) {
-    LoadSheetURL("resource://gre-resources/ua.css", &mUASheet,
-                 eAgentSheetFeatures, eCrash);
-  }
-
-  return mUASheet;
-}
-
-StyleSheet* nsLayoutStylesheetCache::HTMLSheet() { return mHTMLSheet; }
-
-StyleSheet* nsLayoutStylesheetCache::MinimalXULSheet() {
-  return mMinimalXULSheet;
-}
-
-StyleSheet* nsLayoutStylesheetCache::XULSheet() {
-  if (!mXULSheet) {
-    LoadSheetURL("chrome://global/content/xul.css", &mXULSheet,
-                 eAgentSheetFeatures, eCrash);
-  }
-
-  return mXULSheet;
-}
-
-StyleSheet* nsLayoutStylesheetCache::QuirkSheet() { return mQuirkSheet; }
-
-StyleSheet* nsLayoutStylesheetCache::SVGSheet() { return mSVGSheet; }
-
-StyleSheet* nsLayoutStylesheetCache::MathMLSheet() {
-  if (!mMathMLSheet) {
-    LoadSheetURL("resource://gre-resources/mathml.css", &mMathMLSheet,
-                 eAgentSheetFeatures, eCrash);
-  }
-
-  return mMathMLSheet;
-}
-
-StyleSheet* nsLayoutStylesheetCache::CounterStylesSheet() {
-  return mCounterStylesSheet;
-}
-
-StyleSheet* nsLayoutStylesheetCache::NoScriptSheet() {
-  if (!mNoScriptSheet) {
-    LoadSheetURL("resource://gre-resources/noscript.css", &mNoScriptSheet,
-                 eAgentSheetFeatures, eCrash);
-  }
-
-  return mNoScriptSheet;
-}
-
-StyleSheet* nsLayoutStylesheetCache::NoFramesSheet() {
-  if (!mNoFramesSheet) {
-    LoadSheetURL("resource://gre-resources/noframes.css", &mNoFramesSheet,
-                 eAgentSheetFeatures, eCrash);
-  }
-
-  return mNoFramesSheet;
 }
 
 StyleSheet* nsLayoutStylesheetCache::ChromePreferenceSheet(
@@ -163,24 +93,6 @@ StyleSheet* nsLayoutStylesheetCache::ContentPreferenceSheet(
   }
 
   return mContentPreferenceSheet;
-}
-
-StyleSheet* nsLayoutStylesheetCache::ContentEditableSheet() {
-  if (!mContentEditableSheet) {
-    LoadSheetURL("resource://gre/res/contenteditable.css",
-                 &mContentEditableSheet, eAgentSheetFeatures, eCrash);
-  }
-
-  return mContentEditableSheet;
-}
-
-StyleSheet* nsLayoutStylesheetCache::DesignModeSheet() {
-  if (!mDesignModeSheet) {
-    LoadSheetURL("resource://gre/res/designmode.css", &mDesignModeSheet,
-                 eAgentSheetFeatures, eCrash);
-  }
-
-  return mDesignModeSheet;
 }
 
 void nsLayoutStylesheetCache::Shutdown() {
@@ -215,24 +127,14 @@ size_t nsLayoutStylesheetCache::SizeOfIncludingThis(
 
 #define MEASURE(s) n += s ? s->SizeOfIncludingThis(aMallocSizeOf) : 0;
 
+#define STYLE_SHEET(identifier_, url_, lazy_) MEASURE(m##identifier_##Sheet);
+#include "mozilla/UserAgentStyleSheetList.h"
+#undef STYLE_SHEET
+
   MEASURE(mChromePreferenceSheet);
-  MEASURE(mContentEditableSheet);
   MEASURE(mContentPreferenceSheet);
-  MEASURE(mCounterStylesSheet);
-  MEASURE(mDesignModeSheet);
-  MEASURE(mFormsSheet);
-  MEASURE(mHTMLSheet);
-  MEASURE(mMathMLSheet);
-  MEASURE(mMinimalXULSheet);
-  MEASURE(mNoFramesSheet);
-  MEASURE(mNoScriptSheet);
-  MEASURE(mQuirkSheet);
-  MEASURE(mSVGSheet);
-  MEASURE(mScrollbarsSheet);
-  MEASURE(mUASheet);
   MEASURE(mUserChromeSheet);
   MEASURE(mUserContentSheet);
-  MEASURE(mXULSheet);
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
@@ -256,16 +158,13 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache() {
 
   // And make sure that we load our UA sheets.  No need to do this
   // per-profile, since they're profile-invariant.
-  LoadSheetURL("resource://gre-resources/counterstyles.css",
-               &mCounterStylesSheet, eAgentSheetFeatures, eCrash);
-  LoadSheetURL("resource://gre-resources/html.css", &mHTMLSheet,
-               eAgentSheetFeatures, eCrash);
-  LoadSheetURL("chrome://global/content/minimal-xul.css", &mMinimalXULSheet,
-               eAgentSheetFeatures, eCrash);
-  LoadSheetURL("resource://gre-resources/quirk.css", &mQuirkSheet,
-               eAgentSheetFeatures, eCrash);
-  LoadSheetURL("resource://gre/res/svg.css", &mSVGSheet, eAgentSheetFeatures,
-               eCrash);
+#define STYLE_SHEET(identifier_, url_, lazy_)                                \
+  if (!lazy_) {                                                              \
+    LoadSheetURL(url_, &m##identifier_##Sheet, eAgentSheetFeatures, eCrash); \
+  }
+#include "mozilla/UserAgentStyleSheetList.h"
+#undef STYLE_SHEET
+
   if (XRE_IsParentProcess()) {
     // We know we need xul.css for the UI, so load that now too:
     XULSheet();

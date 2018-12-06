@@ -3735,21 +3735,39 @@ const DOMEventHandler = {
   setIconFromLink(aBrowser, aPageURL, aOriginalURL, aCanUseForTab, aExpiration, aIconURL) {
     let tab = gBrowser.getTabForBrowser(aBrowser);
     if (!tab) {
-      return false;
+      return;
+    }
+
+    if (aCanUseForTab) {
+      this.clearPendingIcon(aBrowser);
+    }
+
+    let iconURI;
+    try {
+      iconURI = Services.io.newURI(aIconURL);
+    } catch (ex) {
+      Cu.reportError(ex);
+      return;
+    }
+    if (iconURI.scheme != "data") {
+      try {
+        Services.scriptSecurityManager.checkLoadURIWithPrincipal(
+          aBrowser.contentPrincipal, iconURI, Services.scriptSecurityManager.ALLOW_CHROME);
+      } catch (ex) {
+        return;
+      }
     }
     try {
       PlacesUIUtils.loadFavicon(aBrowser, Services.scriptSecurityManager.getSystemPrincipal(),
                                 makeURI(aPageURL), makeURI(aOriginalURL),
-                                aExpiration, makeURI(aIconURL));
+                                aExpiration, iconURI);
     } catch (ex) {
       Cu.reportError(ex);
     }
 
     if (aCanUseForTab) {
-      this.clearPendingIcon(aBrowser);
       gBrowser.setIcon(tab, aIconURL, aOriginalURL);
     }
-    return true;
   },
 
   addSearch(aBrowser, aEngine, aURL) {
@@ -4927,8 +4945,7 @@ var XULBrowserWindow = {
   //  3. Called directly during this object's initializations.
   // aRequest will be null always in case 2 and 3, and sometimes in case 1 (for
   // instance, there won't be a request when STATE_BLOCKED_TRACKING_CONTENT is observed).
-  onSecurityChange(aWebProgress, aRequest, aOldState, aState,
-                   aContentBlockingLogJSON, aIsSimulated) {
+  onSecurityChange(aWebProgress, aRequest, aState, aIsSimulated) {
     // Don't need to do anything if the data we use to update the UI hasn't
     // changed
     let uri = gBrowser.currentURI;
@@ -4955,8 +4972,7 @@ var XULBrowserWindow = {
       uri = Services.uriFixup.createExposableURI(uri);
     } catch (e) {}
     gIdentityHandler.updateIdentity(this._state, uri);
-    ContentBlocking.onSecurityChange(aOldState, this._state, aWebProgress, aIsSimulated,
-                                     aContentBlockingLogJSON);
+    ContentBlocking.onSecurityChange(this._state, aWebProgress, aIsSimulated);
   },
 
   // simulate all change notifications after switching tabs
@@ -5912,8 +5928,7 @@ if (AppConstants.platform == "macosx") {
 }
 
 const gDynamicTooltipCache = new Map();
-function UpdateDynamicShortcutTooltipText(aTooltip) {
-  let nodeId = aTooltip.triggerNode.id || aTooltip.triggerNode.getAttribute("anonid");
+function GetDynamicShortcutTooltipText(nodeId) {
   if (!gDynamicTooltipCache.has(nodeId) && nodeId in nodeToTooltipMap) {
     let strId = nodeToTooltipMap[nodeId];
     let args = [];
@@ -5926,8 +5941,14 @@ function UpdateDynamicShortcutTooltipText(aTooltip) {
     }
     gDynamicTooltipCache.set(nodeId, gNavigatorBundle.getFormattedString(strId, args));
   }
-  aTooltip.setAttribute("label", gDynamicTooltipCache.get(nodeId));
+  return gDynamicTooltipCache.get(nodeId);
 }
+
+function UpdateDynamicShortcutTooltipText(aTooltip) {
+  let nodeId = aTooltip.triggerNode.id || aTooltip.triggerNode.getAttribute("anonid");
+  aTooltip.setAttribute("label", GetDynamicShortcutTooltipText(nodeId));
+}
+
 
 /*
  * - [ Dependencies ] ---------------------------------------------------------
@@ -7410,7 +7431,7 @@ const gAccessibilityServiceIndicator = {
       let a11yServicesSupportURL =
         Services.urlFormatter.formatURLPref("accessibility.support.url");
       // This is a known URL coming from trusted UI
-      gBrowser.selectedTab = gBrowser.addTrustedTab(a11yServicesSupportURL);
+      openTrustedLinkIn(a11yServicesSupportURL, "tab");
       Services.telemetry.scalarSet("a11y.indicator_acted_on", true);
     }
   },

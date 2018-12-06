@@ -28,14 +28,17 @@ groupbox[data-category] {
   margin: 0 0 32px;
 }
 
+html|h1 {
+  margin: 0 0 8px;
+  font-size: 1.46em;
+  font-weight: 300;
+  line-height: 1.3em;
+}
+
 html|h2 {
   margin: 16px 0 4px;
   font-size: 1.14em;
   line-height: normal;
-}
-
-.header-name {
-  margin-bottom: 8px;
 }
 
 description.indent,

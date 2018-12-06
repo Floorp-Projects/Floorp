@@ -100,6 +100,7 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ParentSHistory.h"
 #include "mozilla/dom/ChildSHistory.h"
+#include "mozilla/dom/ChromeBrowsingContext.h"
 
 #include "mozilla/dom/HTMLBodyElement.h"
 
@@ -3020,6 +3021,16 @@ already_AddRefed<nsILoadContext> nsFrameLoader::LoadContext() {
     loadContext = do_GetInterface(GetDocShell(IgnoreErrors()));
   }
   return loadContext.forget();
+}
+
+already_AddRefed<BrowsingContext> nsFrameLoader::GetBrowsingContext() {
+  RefPtr<BrowsingContext> browsingContext;
+  if (IsRemoteFrame() && (mRemoteBrowser || TryRemoteBrowser())) {
+    browsingContext = mRemoteBrowser->GetBrowsingContext();
+  } else if (GetDocShell(IgnoreErrors())) {
+    browsingContext = nsDocShell::Cast(mDocShell)->GetBrowsingContext();
+  }
+  return browsingContext.forget();
 }
 
 void nsFrameLoader::InitializeBrowserAPI() {

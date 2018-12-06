@@ -63,7 +63,9 @@ void main(void) {
     Transform clip_transform = fetch_transform(cmi.clip_transform_id);
     Transform prim_transform = fetch_transform(cmi.prim_transform_id);
     ClipData clip = fetch_clip(cmi.clip_data_address);
+
     RectWithSize local_rect = clip.rect.rect;
+    local_rect.p0 = cmi.local_pos;
 
     ClipVertexInfo vi = write_clip_tile_vertex(
         local_rect,

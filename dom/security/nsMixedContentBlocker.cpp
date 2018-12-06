@@ -102,7 +102,6 @@ class nsMixedContentEvent : public Runnable {
     nsCOMPtr<nsIDocument> rootDoc = sameTypeRoot->GetDocument();
     NS_ASSERTION(rootDoc,
                  "No root document from document shell root tree item.");
-    ContentBlockingLog* contentBlockingLog = rootDoc->GetContentBlockingLog();
 
     // Get eventSink and the current security state from the docShell
     nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(docShell);
@@ -146,18 +145,16 @@ class nsMixedContentEvent : public Runnable {
           }
 
           eventSink->OnSecurityChange(
-              mContext, state,
+              mContext,
               (state |
-               nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT),
-              contentBlockingLog);
+               nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT));
         } else {
           // root not secure, mixed active content loaded in an https subframe
           if (NS_SUCCEEDED(stateRV)) {
             eventSink->OnSecurityChange(
-                mContext, state,
+                mContext,
                 (state |
-                 nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT),
-                contentBlockingLog);
+                 nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT));
           }
         }
       }
@@ -188,18 +185,16 @@ class nsMixedContentEvent : public Runnable {
           }
 
           eventSink->OnSecurityChange(
-              mContext, state,
+              mContext,
               (state |
-               nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT),
-              contentBlockingLog);
+               nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT));
         } else {
           // root not secure, mixed display content loaded in an https subframe
           if (NS_SUCCEEDED(stateRV)) {
             eventSink->OnSecurityChange(
-                mContext, state,
+                mContext,
                 (state |
-                 nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT),
-                contentBlockingLog);
+                 nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT));
           }
         }
       }
@@ -900,7 +895,6 @@ nsresult nsMixedContentBlocker::ShouldLoad(
   // Get the root document from the sameTypeRoot
   nsCOMPtr<nsIDocument> rootDoc = sameTypeRoot->GetDocument();
   NS_ASSERTION(rootDoc, "No root document from document shell root tree item.");
-  ContentBlockingLog* contentBlockingLog = rootDoc->GetContentBlockingLog();
 
   // Get eventSink and the current security state from the docShell
   nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(docShell);
@@ -991,19 +985,17 @@ nsresult nsMixedContentBlocker::ShouldLoad(
         }
 
         eventSink->OnSecurityChange(
-            aRequestingContext, state,
+            aRequestingContext,
             (state |
-             nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT),
-            contentBlockingLog);
+             nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT));
       } else {
         // User has overriden the pref and the root is not https;
         // mixed display content was allowed on an https subframe.
         if (NS_SUCCEEDED(stateRV)) {
           eventSink->OnSecurityChange(
-              aRequestingContext, state,
+              aRequestingContext,
               (state |
-               nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT),
-              contentBlockingLog);
+               nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT));
         }
       }
     } else {
@@ -1014,10 +1006,9 @@ nsresult nsMixedContentBlocker::ShouldLoad(
           NS_SUCCEEDED(stateRV)) {
         rootDoc->SetHasMixedDisplayContentBlocked(true);
         eventSink->OnSecurityChange(
-            aRequestingContext, state,
+            aRequestingContext,
             (state |
-             nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT),
-            contentBlockingLog);
+             nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT));
       }
     }
     return NS_OK;
@@ -1049,9 +1040,9 @@ nsresult nsMixedContentBlocker::ShouldLoad(
         }
 
         eventSink->OnSecurityChange(
-            aRequestingContext, state,
-            (state | nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT),
-            contentBlockingLog);
+            aRequestingContext,
+            (state |
+             nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT));
 
         return NS_OK;
       } else {
@@ -1059,10 +1050,9 @@ nsresult nsMixedContentBlocker::ShouldLoad(
         // mixed active content was allowed on an https subframe.
         if (NS_SUCCEEDED(stateRV)) {
           eventSink->OnSecurityChange(
-              aRequestingContext, state,
+              aRequestingContext,
               (state |
-               nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT),
-              contentBlockingLog);
+               nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT));
         }
         return NS_OK;
       }
@@ -1083,10 +1073,9 @@ nsresult nsMixedContentBlocker::ShouldLoad(
       // option by calling eventSink which will invoke the doorhanger
       if (NS_SUCCEEDED(stateRV)) {
         eventSink->OnSecurityChange(
-            aRequestingContext, state,
+            aRequestingContext,
             (state |
-             nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT),
-            contentBlockingLog);
+             nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT));
       }
       return NS_OK;
     }

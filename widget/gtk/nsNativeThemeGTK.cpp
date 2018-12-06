@@ -443,8 +443,11 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
         aAppearance == StyleAppearance::MozWindowButtonClose ||
         aAppearance == StyleAppearance::MozWindowButtonMinimize ||
         aAppearance == StyleAppearance::MozWindowButtonMaximize ||
-        aAppearance == StyleAppearance::MozWindowButtonRestore ||
-        aAppearance == StyleAppearance::ScrollbarbuttonUp ||
+        aAppearance == StyleAppearance::MozWindowButtonRestore) {
+      aState->backdrop = !nsWindow::GetTopLevelWindowActiveState(aFrame);
+    }
+
+    if (aAppearance == StyleAppearance::ScrollbarbuttonUp ||
         aAppearance == StyleAppearance::ScrollbarbuttonDown ||
         aAppearance == StyleAppearance::ScrollbarbuttonLeft ||
         aAppearance == StyleAppearance::ScrollbarbuttonRight ||
@@ -1988,12 +1991,6 @@ nsITheme::Transparency nsNativeThemeGTK::GetWidgetTransparency(
 bool nsNativeThemeGTK::WidgetAppearanceDependsOnWindowFocus(
     StyleAppearance aAppearance) {
   switch (aAppearance) {
-    case StyleAppearance::MozWindowTitlebar:
-    case StyleAppearance::MozWindowTitlebarMaximized:
-    case StyleAppearance::MozWindowButtonClose:
-    case StyleAppearance::MozWindowButtonMinimize:
-    case StyleAppearance::MozWindowButtonMaximize:
-    case StyleAppearance::MozWindowButtonRestore:
     case StyleAppearance::ScrollbarbuttonUp:
     case StyleAppearance::ScrollbarbuttonDown:
     case StyleAppearance::ScrollbarbuttonLeft:

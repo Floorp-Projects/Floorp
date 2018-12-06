@@ -10,7 +10,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"

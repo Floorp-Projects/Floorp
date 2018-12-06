@@ -2,3 +2,8 @@
 # https://hg.mozilla.org/mozilla-central/rev/0ceae9db9ec0be18daa1a279511ad305723185d4
 abd6d77c618998827e5ffc3dab12f1a34d6ed03d # cinnabar
 804b8b8883ba2a6795b0fcf65ebcb18306b6416b # gecko-dev
+
+# Bug 1511181 - Reformat everything to the Google coding style r=ehsan
+# https://hg.mozilla.org/mozilla-central/rev/6f3709b3878117466168c40affa7bca0b60cf75b
+0e0308d10a5fd4a8dcf0601978776342a2abf2df # cinnabar
+265e6721798a455604328ed5262f430cfcc37c2f # gecko-dev

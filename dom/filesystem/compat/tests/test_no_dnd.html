@@ -8,7 +8,6 @@
 
 <body>
 <script type="application/javascript">
-
 var fileEntry;
 var directoryEntry;
 var script;
@@ -21,8 +20,8 @@ function setup_tests() {
 }
 
 function populate_entries() {
-  entries = document.createElement('input');
-  entries.setAttribute('type', 'file');
+  entries = document.createElement("input");
+  entries.setAttribute("type", "file");
   document.body.appendChild(entries);
 
   var url = SimpleTest.getTestFileURL("script_entries.js");

@@ -103,6 +103,8 @@ def post_to_docker(tar, api_path, **kwargs):
                 sys.stderr.write('{}\n'.format(data['status']))
         elif 'stream' in data:
             sys.stderr.write(data['stream'])
+        elif 'aux' in data:
+            sys.stderr.write(repr(data['aux']))
         elif 'error' in data:
             sys.stderr.write('{}\n'.format(data['error']))
             # Sadly, docker doesn't give more than a plain string for errors,

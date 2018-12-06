@@ -108,8 +108,14 @@ def chain_elements(elements):
                 'Expected Pattern, PatternElement or Expression')
 
 
-re_leading_ws = re.compile(r'^(?P<whitespace>\s+)(?P<text>.*?)$')
-re_trailing_ws = re.compile(r'^(?P<text>.*?)(?P<whitespace>\s+)$')
+re_leading_ws = re.compile(
+    r'\A(?:(?P<whitespace> +)(?P<text>.*?)|(?P<block_text>\n.*?))\Z',
+    re.S,
+)
+re_trailing_ws = re.compile(
+    r'\A(?:(?P<text>.*?)(?P<whitespace> +)|(?P<block_text>.*\n))\Z',
+    re.S
+)
 
 
 def extract_whitespace(regex, element):
@@ -119,15 +125,21 @@ def extract_whitespace(regex, element):
     encodes the extracted whitespace as a StringLiteral and the
     TextElement has the same amount of whitespace removed. The
     Placeable with the extracted whitespace is always returned first.
+    If the element starts or ends with a newline, add an empty
+    StringLiteral.
     '''
     match = re.search(regex, element.value)
     if match:
-        whitespace = match.group('whitespace')
+        # If white-space is None, we're a newline. Add an
+        # empty { "" }
+        whitespace = match.group('whitespace') or ''
         placeable = FTL.Placeable(FTL.StringLiteral(whitespace))
         if whitespace == element.value:
             return placeable, None
         else:
-            return placeable, FTL.TextElement(match.group('text'))
+            # Either text or block_text matched the rest.
+            text = match.group('text') or match.group('block_text')
+            return placeable, FTL.TextElement(text)
     else:
         return None, element
 
@@ -198,7 +210,7 @@ class Source(Transform):
 
     """
 
-    def __init__(self, path, key):
+    def __init__(self, path, key, trim=False):
         if path.endswith('.ftl'):
             raise NotSupportedError(
                 'Migrating translations from Fluent files is not supported '
@@ -206,9 +218,25 @@ class Source(Transform):
 
         self.path = path
         self.key = key
+        self.trim = trim
+
+    def get_text(self, ctx):
+        return ctx.get_source(self.path, self.key)
+
+    @staticmethod
+    def trim_text(text):
+        # strip leading white-space
+        text = re.sub('^[ \t]+', '', text, flags=re.M)
+        # strip trailing white-space
+        text = re.sub('[ \t]+$', '', text, flags=re.M)
+        # strip leading and trailing empty lines
+        text = text.strip('\r\n')
+        return text
 
     def __call__(self, ctx):
-        text = ctx.get_source(self.path, self.key)
+        text = self.get_text(ctx)
+        if self.trim:
+            text = self.trim_text(text)
         return FTL.TextElement(text)
 
 
@@ -220,47 +248,97 @@ class COPY(Source):
         return Transform.pattern_of(element)
 
 
+PRINTF = re.compile(
+    r'%(?P<good>%|'
+    r'(?:(?P<number>[1-9][0-9]*)\$)?'
+    r'(?P<width>\*|[0-9]+)?'
+    r'(?P<prec>\.(?:\*|[0-9]+)?)?'
+    r'(?P<spec>[duxXosScpfg]))'
+)
+
+
+def number():
+    i = 1
+    while True:
+        yield i
+        i += 1
+
+
+def normalize_printf(text):
+    """Normalize printf arguments so that they're all numbered.
+    Gecko forbids mixing unnumbered and numbered ones, so
+    we just need to convert unnumbered to numbered ones.
+    Also remove ones that have zero width, as they're intended
+    to be removed from the output by the localizer.
+    """
+    next_number = number()
+
+    def normalized(match):
+        if match.group('good') == '%':
+            return '%'
+        hidden = match.group('width') == '0'
+        if match.group('number'):
+            return '' if hidden else match.group()
+        num = next(next_number)
+        return '' if hidden else '%{}${}'.format(num, match.group('spec'))
+
+    return PRINTF.sub(normalized, text)
+
+
 class REPLACE_IN_TEXT(Transform):
     """Create a Pattern from a TextElement and replace legacy placeables.
 
     The original placeables are defined as keys on the `replacements` dict.
-    For each key the value is defined as a FTL Pattern, Placeable,
-    TextElement or Expressions to be interpolated.
+    For each key the value must be defined as a FTL Pattern, Placeable,
+    TextElement or Expression to be interpolated.
     """
 
-    def __init__(self, element, replacements):
+    def __init__(self, element, replacements, normalize_printf=False):
         self.element = element
         self.replacements = replacements
+        self.normalize_printf = normalize_printf
 
     def __call__(self, ctx):
-        # Only replace placeables which are present in the translation.
-        replacements = {
-            key: evaluate(ctx, repl)
-            for key, repl in self.replacements.items()
-            if key in self.element.value
+        # For each specified replacement, find all indices of the original
+        # placeable in the source translation. If missing, the list of indices
+        # will be empty.
+        value = self.element.value
+        if self.normalize_printf:
+            value = normalize_printf(value)
+        key_indices = {
+            key: [m.start() for m in re.finditer(re.escape(key), value)]
+            for key in self.replacements.keys()
         }
 
-        # Order the original placeables by their position in the translation.
-        keys_in_order = sorted(
-            replacements.keys(),
-            key=lambda x: self.element.value.find(x)
+        # Build a dict of indices to replacement keys.
+        keys_indexed = {}
+        for key, indices in key_indices.items():
+            for index in indices:
+                keys_indexed[index] = key
+
+        # Order the replacements by the position of the original placeable in
+        # the translation.
+        replacements = (
+            (key, evaluate(ctx, self.replacements[key]))
+            for index, key
+            in sorted(keys_indexed.items(), key=lambda x: x[0])
         )
 
         # A list of PatternElements built from the legacy translation and the
         # FTL replacements. It may contain empty or adjacent TextElements.
         elements = []
-        tail = self.element.value
+        tail = value
 
         # Convert original placeables and text into FTL Nodes. For each
         # original placeable the translation will be partitioned around it and
         # the text before it will be converted into an `FTL.TextElement` and
         # the placeable will be replaced with its replacement.
-        for key in keys_in_order:
+        for key, node in replacements:
             before, key, tail = tail.partition(key)
             elements.append(FTL.TextElement(before))
-            elements.append(replacements[key])
+            elements.append(node)
 
-        # Dont' forget about the tail after the loop ends.
+        # Don't forget about the tail after the loop ends.
         elements.append(FTL.TextElement(tail))
         return Transform.pattern_of(*elements)
 
@@ -272,13 +350,20 @@ class REPLACE(Source):
     replaced with FTL placeables using the `REPLACE_IN_TEXT` transform.
     """
 
-    def __init__(self, path, key, replacements):
-        super(REPLACE, self).__init__(path, key)
+    def __init__(
+        self, path, key, replacements,
+        normalize_printf=False, **kwargs
+    ):
+        super(REPLACE, self).__init__(path, key, **kwargs)
         self.replacements = replacements
+        self.normalize_printf = normalize_printf
 
     def __call__(self, ctx):
         element = super(REPLACE, self).__call__(ctx)
-        return REPLACE_IN_TEXT(element, self.replacements)(ctx)
+        return REPLACE_IN_TEXT(
+            element, self.replacements,
+            normalize_printf=self.normalize_printf
+        )(ctx)
 
 
 class PLURALS(Source):
@@ -293,8 +378,9 @@ class PLURALS(Source):
     """
     DEFAULT_ORDER = ('zero', 'one', 'two', 'few', 'many', 'other')
 
-    def __init__(self, path, key, selector, foreach=Transform.pattern_of):
-        super(PLURALS, self).__init__(path, key)
+    def __init__(self, path, key, selector, foreach=Transform.pattern_of,
+                 **kwargs):
+        super(PLURALS, self).__init__(path, key, **kwargs)
         self.selector = selector
         self.foreach = foreach
 
@@ -349,7 +435,7 @@ class PLURALS(Source):
             # variant. Then evaluate it to a migrated FTL node.
             value = evaluate(ctx, self.foreach(form))
             return FTL.Variant(
-                key=FTL.VariantName(key),
+                key=FTL.Identifier(key),
                 value=value,
                 default=key == default_key
             )

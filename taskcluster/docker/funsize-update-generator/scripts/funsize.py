@@ -320,12 +320,6 @@ async def manage_partial(partial_def, work_env, filename_template, artifacts_dir
                 use_old_format = True
                 log.info("Forcing BZ2 compression for %s", f)
 
-        log.info("AV-scanning %s ...", unpack_dir)
-        metric_tags = [
-            "platform:{}".format(partial_def['platform']),
-        ]
-        with ddstats.timer('mar.clamscan.time', tags=metric_tags):
-            await run_command("clamscan -r {}".format(unpack_dir), label='clamscan')
         log.info("Done.")
 
     to_path = os.path.join(work_env.workdir, "to")
@@ -455,8 +449,6 @@ def main():
                         help="Allow files from staging buckets.")
     parser.add_argument("--filename-template",
                         default=DEFAULT_FILENAME_TEMPLATE)
-    parser.add_argument("--no-freshclam", action="store_true", default=False,
-                        help="Do not refresh ClamAV DB")
     parser.add_argument("-q", "--quiet", dest="log_level",
                         action="store_const", const=logging.WARNING,
                         default=logging.DEBUG)
@@ -490,17 +482,6 @@ def main():
         write_dogrc(dd_api_key)
     else:
         log.info("No metric collection")
-
-    if args.no_freshclam:
-        log.info("Skipping freshclam")
-    else:
-        log.info("Refreshing clamav db...")
-        try:
-            redo.retry(lambda: sh.freshclam("--stdout", "--verbose",
-                                            _timeout=300, _err_to_out=True))
-            log.info("Done.")
-        except sh.ErrorReturnCode:
-            log.warning("Freshclam failed, skipping DB update")
 
     loop = asyncio.get_event_loop()
     manifest = loop.run_until_complete(async_main(args, signing_certs))

@@ -543,15 +543,12 @@ static void keyboard_handle_keymap(void* data, struct wl_keyboard* wl_keyboard,
 static void keyboard_handle_enter(void* data, struct wl_keyboard* keyboard,
                                   uint32_t serial, struct wl_surface* surface,
                                   struct wl_array* keys) {}
-
 static void keyboard_handle_leave(void* data, struct wl_keyboard* keyboard,
                                   uint32_t serial, struct wl_surface* surface) {
 }
-
 static void keyboard_handle_key(void* data, struct wl_keyboard* keyboard,
                                 uint32_t serial, uint32_t time, uint32_t key,
                                 uint32_t state) {}
-
 static void keyboard_handle_modifiers(void* data, struct wl_keyboard* keyboard,
                                       uint32_t serial, uint32_t mods_depressed,
                                       uint32_t mods_latched,
@@ -562,35 +559,48 @@ static const struct wl_keyboard_listener keyboard_listener = {
     keyboard_handle_key,    keyboard_handle_modifiers,
 };
 
+static void seat_handle_capabilities(void* data, struct wl_seat* seat,
+                                     unsigned int caps) {
+  static wl_keyboard* keyboard = nullptr;
+
+  if ((caps & WL_SEAT_CAPABILITY_KEYBOARD) && !keyboard) {
+    keyboard = wl_seat_get_keyboard(seat);
+    wl_keyboard_add_listener(keyboard, &keyboard_listener, nullptr);
+  } else if (!(caps & WL_SEAT_CAPABILITY_KEYBOARD) && keyboard) {
+    wl_keyboard_destroy(keyboard);
+    keyboard = nullptr;
+  }
+}
+
+static const struct wl_seat_listener seat_listener = {
+    seat_handle_capabilities,
+};
+
+static void gdk_registry_handle_global(void* data, struct wl_registry* registry,
+                                       uint32_t id, const char* interface,
+                                       uint32_t version) {
+  if (strcmp(interface, "wl_seat") == 0) {
+    wl_seat* seat =
+        (wl_seat*)wl_registry_bind(registry, id, &wl_seat_interface, 1);
+    wl_seat_add_listener(seat, &seat_listener, data);
+  }
+}
+
+static void gdk_registry_handle_global_remove(void* data,
+                                              struct wl_registry* registry,
+                                              uint32_t id) {}
+
+static const struct wl_registry_listener keyboard_registry_listener = {
+    gdk_registry_handle_global, gdk_registry_handle_global_remove};
+
 void KeymapWrapper::InitBySystemSettingsWayland() {
-  GdkDeviceManager* manager =
-      gdk_display_get_device_manager(gdk_display_get_default());
-  GList* devices =
-      gdk_device_manager_list_devices(manager, GDK_DEVICE_TYPE_MASTER);
-  GdkDevice* device = nullptr;
-
-  GList* list = devices;
-  while (devices) {
-    device = static_cast<GdkDevice*>(devices->data);
-    if (gdk_device_get_source(device) == GDK_SOURCE_KEYBOARD) {
-      break;
-    }
-    devices = devices->next;
-  }
-
-  if (list) {
-    g_list_free(list);
-  }
-
-  if (device) {
-    // Present in Gtk+ 3.10
-    static auto sGdkWaylandDeviceGetWlKeyboard =
-        (struct wl_keyboard * (*)(GdkDevice * device))
-            dlsym(RTLD_DEFAULT, "gdk_wayland_device_get_wl_keyboard");
-
-    wl_keyboard_add_listener(sGdkWaylandDeviceGetWlKeyboard(device),
-                             &keyboard_listener, nullptr);
-  }
+  // Available as of GTK 3.8+
+  static auto sGdkWaylandDisplayGetWlDisplay = (wl_display * (*)(GdkDisplay*))
+      dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_wl_display");
+  wl_display* display =
+      sGdkWaylandDisplayGetWlDisplay(gdk_display_get_default());
+  wl_registry_add_listener(wl_display_get_registry(display),
+                           &keyboard_registry_listener, this);
 }
 #endif
 

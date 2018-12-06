@@ -1620,7 +1620,7 @@ class XPCShellTests(object):
                 self.log.error(t)
             raise exceptions[0]
 
-        if self.testCount == 0:
+        if self.testCount == 0 and os.environ.get('TRY_SELECTOR') != 'coverage':
             self.log.error("No tests run. Did you pass an invalid --test-path?")
             self.failCount = 1
 

@@ -39,7 +39,6 @@ this.ContentControl.prototype = {
                        "AccessFu:MoveByGranularity",
                        "AccessFu:MoveCursor",
                        "AccessFu:MoveToPoint",
-                       "AccessFu:Select",
                        "AccessFu:SetSelection"],
 
   start: function cc_start() {
@@ -174,16 +173,6 @@ this.ContentControl.prototype = {
 
   handleAutoMove: function cc_handleAutoMove(aMessage) {
     this.autoMove(null, aMessage.json);
-  },
-
-  handleSelect: function cc_handleSelect(aMessage) {
-    const vc = this.vc;
-    if (!this.sendToChild(vc, aMessage, null, true)) {
-      const acc = vc.position;
-      if (Utils.getState(acc).contains(States.SELECTABLE)) {
-        this.handleActivate(aMessage);
-      }
-    }
   },
 
   handleActivate: function cc_handleActivate(aMessage) {

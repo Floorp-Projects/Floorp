@@ -53,22 +53,22 @@ def update(tests, *logs):
 def create_updater(tests, url_base="/", **kwargs):
     id_test_map = {}
     m = create_test_manifest(tests, url_base)
-    test_manifests = {
-        m: {"url_base": "/",
-            "tests_path": "."}
-    }
+    expected_data = {}
+    metadata.load_expected = lambda _, __, test_path, *args: expected_data[test_path]
+
     for test_path, test_ids, test_type, manifest_str in tests:
         tests = list(m.iterpath(test_path))
         if isinstance(test_ids, (str, unicode)):
             test_ids = [test_ids]
-        test_data = metadata.TestFileData(m, None, test_path, tests)
-        test_data._expected = manifestupdate.compile(BytesIO(manifest_str),
-                                                     test_path,
-                                                     url_base)
+        test_data = metadata.TestFileData("/", "testharness", None, test_path, tests)
+        expected_data[test_path] = manifestupdate.compile(BytesIO(manifest_str),
+                                                          test_path,
+                                                          url_base)
+
         for test_id in test_ids:
             id_test_map[test_id] = test_data
 
-    return id_test_map, metadata.ExpectedUpdater(test_manifests, id_test_map, **kwargs)
+    return id_test_map, metadata.ExpectedUpdater(id_test_map, **kwargs)
 
 
 def create_log(entries):
@@ -607,3 +607,98 @@ def test_update_wptreport_1():
 
     assert len(updated) == 1
     assert updated[0][1].get("lsan-allowed") == ["baz"]
+
+
+def test_update_leak_total_0():
+    test_id = "/path/to/test.htm"
+    dir_id = "path/to/__dir__"
+    tests = [("path/to/test.htm", [test_id], "testharness", ""),
+             ("path/to/__dir__", [dir_id], None, "")]
+
+    log_0 = suite_log([("mozleak_total", {"scope": "path/to/",
+                                          "process": "default",
+                                          "bytes": 100,
+                                          "threshold": 0,
+                                          "objects": []})])
+
+    updated = update(tests, log_0)
+    new_manifest = updated[0][1]
+
+    assert not new_manifest.is_empty
+    assert new_manifest.get("leak-threshold") == ['default:110']
+
+
+def test_update_leak_total_1():
+    test_id = "/path/to/test.htm"
+    dir_id = "path/to/__dir__"
+    tests = [("path/to/test.htm", [test_id], "testharness", ""),
+             ("path/to/__dir__", [dir_id], None, "")]
+
+    log_0 = suite_log([("mozleak_total", {"scope": "path/to/",
+                                          "process": "default",
+                                          "bytes": 100,
+                                          "threshold": 1000,
+                                          "objects": []})])
+
+    updated = update(tests, log_0)
+    assert not updated
+
+
+def test_update_leak_total_2():
+    test_id = "/path/to/test.htm"
+    dir_id = "path/to/__dir__"
+    tests = [("path/to/test.htm", [test_id], "testharness", ""),
+             ("path/to/__dir__", [dir_id], None, """
+leak-total: 110""")]
+
+    log_0 = suite_log([("mozleak_total", {"scope": "path/to/",
+                                          "process": "default",
+                                          "bytes": 100,
+                                          "threshold": 110,
+                                          "objects": []})])
+
+    updated = update(tests, log_0)
+    assert not updated
+
+
+def test_update_leak_total_3():
+    test_id = "/path/to/test.htm"
+    dir_id = "path/to/__dir__"
+    tests = [("path/to/test.htm", [test_id], "testharness", ""),
+             ("path/to/__dir__", [dir_id], None, """
+leak-total: 100""")]
+
+    log_0 = suite_log([("mozleak_total", {"scope": "path/to/",
+                                          "process": "default",
+                                          "bytes": 1000,
+                                          "threshold": 100,
+                                          "objects": []})])
+
+    updated = update(tests, log_0)
+    new_manifest = updated[0][1]
+
+    assert not new_manifest.is_empty
+    assert new_manifest.get("leak-threshold") == ['default:1100']
+
+
+def test_update_leak_total_4():
+    test_id = "/path/to/test.htm"
+    dir_id = "path/to/__dir__"
+    tests = [("path/to/test.htm", [test_id], "testharness", ""),
+             ("path/to/__dir__", [dir_id], None, """
+leak-total: 110""")]
+
+    log_0 = suite_log([
+        ("lsan_leak", {"scope": "path/to/",
+                       "frames": ["foo", "bar"]}),
+        ("mozleak_total", {"scope": "path/to/",
+                           "process": "default",
+                           "bytes": 100,
+                           "threshold": 110,
+                           "objects": []})])
+
+    updated = update(tests, log_0)
+    new_manifest = updated[0][1]
+
+    assert not new_manifest.is_empty
+    assert new_manifest.has_key("leak-threshold") is False

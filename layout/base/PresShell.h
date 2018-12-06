@@ -195,12 +195,19 @@ class PresShell final : public nsIPresShell,
   void SetIgnoreViewportScrolling(bool aIgnore) override;
 
   nsresult SetResolution(float aResolution) override {
-    return SetResolutionImpl(aResolution, /* aScaleToResolution = */ false);
+    return SetResolutionImpl(aResolution, /* aScaleToResolution = */ false,
+                             nsGkAtoms::other);
   }
-  nsresult SetResolutionAndScaleTo(float aResolution) override {
-    return SetResolutionImpl(aResolution, /* aScaleToResolution = */ true);
+  nsresult SetResolutionAndScaleTo(float aResolution,
+                                   nsAtom* aOrigin) override {
+    return SetResolutionImpl(aResolution, /* aScaleToResolution = */ true,
+                             aOrigin);
   }
   bool ScaleToResolution() const override;
+  bool IsResolutionUpdated() const override { return mResolutionUpdated; }
+  void SetResolutionUpdated(bool aUpdated) override {
+    mResolutionUpdated = aUpdated;
+  }
   float GetCumulativeResolution() override;
   float GetCumulativeNonRootScaleResolution() override;
   void SetRestoreResolution(float aResolution,
@@ -711,7 +718,8 @@ class PresShell final : public nsIPresShell,
   // that we last did an approximate frame visibility update.
   VisibleFrames mApproximatelyVisibleFrames;
 
-  nsresult SetResolutionImpl(float aResolution, bool aScaleToResolution);
+  nsresult SetResolutionImpl(float aResolution, bool aScaleToResolution,
+                             nsAtom* aOrigin);
 
   nsIContent* GetOverrideClickTarget(WidgetGUIEvent* aEvent, nsIFrame* aFrame);
 #ifdef DEBUG
@@ -827,6 +835,10 @@ class PresShell final : public nsIPresShell,
 
   // Whether we have ever handled a user input event
   bool mHasHandledUserInput : 1;
+
+  // Whether the most recent change to the pres shell resolution was
+  // originated by the main thread.
+  bool mResolutionUpdated : 1;
 
   // Whether we should dispatch keypress events even for non-printable keys
   // for keeping backward compatibility.

@@ -297,6 +297,47 @@ class TbplFormatter(BaseFormatter):
                 "SUMMARY: AddressSanitizer: %d byte(s) leaked in %d allocation(s)." %
                 (level, data["bytes"], data["allocations"]))
 
+    def mozleak_object(self, data):
+        return ("TEST-INFO | leakcheck | %s leaked %d %s\n" %
+                (data["process"], data["bytes"], data["name"]))
+
+    def mozleak_total(self, data):
+        if data["bytes"] is None:
+            # We didn't see a line with name 'TOTAL'
+            if data.get("induced_crashed", False):
+                return ("TEST-INFO | leakcheck | %s deliberate crash and thus no leak log\n"
+                        % data["process"])
+            if data.get("ignore_missing", False):
+                return ("TEST-INFO | leakcheck | "
+                        "%s ignoring missing output line for total leaks\n" %
+                        data["process"])
+
+            return ("TEST-UNEXPECTED-FAIL | leakcheck | "
+                    "%s missing output line for total leaks!\n" %
+                    data["process"])
+
+        if data["bytes"] == 0:
+            return ("TEST-PASS | leakcheck | %s no leaks detected!\n" %
+                    data["process"])
+
+        # Create a comma delimited string of the first N leaked objects found,
+        # to aid with bug summary matching in TBPL. Note: The order of the objects
+        # had no significance (they're sorted alphabetically).
+        max_objects = 5
+        object_summary = ', '.join(data["objects"][:max_objects])
+        if len(data["objects"]) > max_objects:
+            object_summary += ', ...'
+
+        message = "leakcheck | %s %d bytes leaked (%s)\n" % (
+            data["process"], data["bytes"], object_summary)
+
+        # data["bytes"] will include any expected leaks, so it can be off
+        # by a few thousand bytes.
+        if data["bytes"] > data["threshold"]:
+            return "TEST-UNEXPECTED-FAIL | %s\n" % message
+        else:
+            return "WARNING | %s\n" % message
+
     def _format_suite_summary(self, suite, summary):
         counts = summary['counts']
         logs = summary['unexpected_logs']

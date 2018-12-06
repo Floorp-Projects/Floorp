@@ -26,6 +26,7 @@ function createClientMock() {
     // add a reference to the internal event emitter so that consumers can fire client
     // events.
     _eventEmitter: eventEmitter,
+    _preferences: {},
     addOneTimeListener: (evt, listener) => {
       eventEmitter.once(evt, listener);
     },
@@ -55,7 +56,10 @@ function createClientMock() {
     // no-op
     getDeviceDescription: () => {},
     // Return default preference value or null if no match.
-    getPreference: (prefName) => {
+    getPreference: function(prefName) {
+      if (prefName in this._preferences) {
+        return this._preferences[prefName];
+      }
       if (prefName in DEFAULT_PREFERENCES) {
         return DEFAULT_PREFERENCES[prefName];
       }
@@ -71,8 +75,10 @@ function createClientMock() {
       serviceWorkers: [],
       sharedWorkers: [],
     }),
-    // no-op
-    setPreference: () => {},
+    // stores the preference locally (doesn't update about:config)
+    setPreference: function(prefName, value) {
+      this._preferences[prefName] = value;
+    },
   };
 }
 

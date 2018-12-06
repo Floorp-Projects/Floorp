@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import re
 
 from .base import (
-    EntityBase, OffsetComment, Whitespace,
+    EntityBase, OffsetComment,
     Parser
 )
 
@@ -45,18 +45,14 @@ class IniParser(Parser):
 
     def getNext(self, ctx, offset):
         contents = ctx.contents
-        m = self.reWhitespace.match(contents, offset)
-        if m:
-            return Whitespace(ctx, m.span())
-        m = self.reComment.match(contents, offset)
-        if m:
-            self.last_comment = self.Comment(ctx, m.span())
-            return self.last_comment
         m = self.reSection.match(contents, offset)
         if m:
             return IniSection(ctx, m.span(), m.span('val'))
-        m = self.reKey.match(contents, offset)
-        if m:
-            return self.createEntity(ctx, m)
-        return self.getJunk(
-            ctx, offset, self.reComment, self.reSection, self.reKey)
+
+        return super(IniParser, self).getNext(ctx, offset)
+
+    def getJunk(self, ctx, offset, *expressions):
+        # base.Parser.getNext calls us with self.reKey, self.reComment.
+        # Add self.reSection to the end-of-junk expressions
+        expressions = expressions + (self.reSection,)
+        return super(IniParser, self).getJunk(ctx, offset, *expressions)

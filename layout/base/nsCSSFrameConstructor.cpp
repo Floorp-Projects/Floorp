@@ -104,7 +104,6 @@
 #include "nsBackdropFrame.h"
 #include "nsTransitionManager.h"
 #include "DetailsFrame.h"
-#include "nsStyleConsts.h"
 
 #ifdef MOZ_XUL
 #include "nsIPopupContainer.h"
@@ -320,9 +319,7 @@ static void AssertAnonymousFlexOrGridItemParent(const nsIFrame* aChild,
   }
 }
 #else
-#define AssertAnonymousFlexOrGridItemParent(x, y) \
-  do { /* nothing */                              \
-  } while (0)
+#define AssertAnonymousFlexOrGridItemParent(x, y) PR_BEGIN_MACRO PR_END_MACRO
 #endif
 
 static inline nsContainerFrame* GetFieldSetBlockFrame(
@@ -2576,9 +2573,8 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
       the root element.
     mDocElementContainingBlock is the parent of mRootElementFrame
       (i.e. nsCanvasFrame or nsRootBoxFrame)
-
     mPageSequenceFrame is the nsSimplePageSequenceFrame, or null if there isn't
-  one
+      one
   */
 
   // --------- CREATE ROOT FRAME -------
@@ -2589,8 +2585,7 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
   // The root frame serves two purposes:
   // - reserves space for any margins needed for the document element's frame
   // - renders the document element's background. This ensures the background
-  // covers
-  //   the entire canvas as specified by the CSS2 spec
+  //   covers the entire canvas as specified by the CSS2 spec
 
   nsPresContext* presContext = mPresShell->GetPresContext();
   bool isPaginated = presContext->IsRootPaginatedDocument();
@@ -4185,7 +4180,7 @@ void nsCSSFrameConstructor::FinishBuildingScrollFrame(
 
 /**
  * Called to wrap a gfx scrollframe around a frame. The hierarchy will look like
- *this
+ * this
  *
  * ------- for gfx scrollbars ------
  *
@@ -4196,27 +4191,29 @@ void nsCSSFrameConstructor::FinishBuildingScrollFrame(
  *               Frame (scrolled frame you passed in)
  *
  *
- *-----------------------------------
+ * -----------------------------------
  * LEGEND:
  *
  * ScrollFrame: This is a frame that manages gfx cross platform frame based
- *scrollbars.
+ * scrollbars.
  *
  * @param aContent the content node of the child to wrap.
+
  * @param aScrolledFrame The frame of the content to wrap. This should not be
- *                    Initialized. This method will initialize it with a
- *scrolled pseudo and no nsIContent. The content will be attached to the
- *scrollframe returned.
+ * Initialized. This method will initialize it with a scrolled pseudo and no
+ * nsIContent. The content will be attached to the scrollframe returned.
+
  * @param aContentStyle the style that has already been resolved for the content
- *                      being passed in.
+ * being passed in.
  *
  * @param aParentFrame The parent to attach the scroll frame to
  *
  * @param aNewFrame The new scrollframe or gfx scrollframe that we create. It
- *will contain the scrolled frame you passed in. (returned) If this is not null,
- *we'll just use it
+ * will contain the scrolled frame you passed in. (returned) If this is not
+ * null,  we'll just use it
+ *
  * @param aScrolledContentStyle the style that was resolved for the scrolled
- *frame. (returned)
+ * frame. (returned)
  */
 void nsCSSFrameConstructor::BuildScrollFrame(nsFrameConstructorState& aState,
                                              nsIContent* aContent,
@@ -8692,29 +8689,29 @@ void nsCSSFrameConstructor::ShouldHaveSpecialBlockStyle(
 /* static */
 const nsCSSFrameConstructor::PseudoParentData
     nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
-        {// Cell
-         FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
+        // Cell
+        {FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
                               FCDATA_USE_CHILD_ITEMS |
                               FCDATA_IS_WRAPPER_ANON_BOX |
                               FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRow),
                           &nsCSSFrameConstructor::ConstructTableCell),
          nsCSSAnonBoxes::tableCell()},
-        {// Row
-         FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
+        // Row
+        {FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
                               FCDATA_USE_CHILD_ITEMS |
                               FCDATA_IS_WRAPPER_ANON_BOX |
                               FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRowGroup),
                           &nsCSSFrameConstructor::ConstructTableRowOrRowGroup),
          nsCSSAnonBoxes::tableRow()},
-        {// Row group
-         FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
+        // Row group
+        {FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
                               FCDATA_USE_CHILD_ITEMS |
                               FCDATA_IS_WRAPPER_ANON_BOX |
                               FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
                           &nsCSSFrameConstructor::ConstructTableRowOrRowGroup),
          nsCSSAnonBoxes::tableRowGroup()},
-        {// Column group
-         FCDATA_DECL(
+        // Column group
+        {FCDATA_DECL(
              FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
                  FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_USE_CHILD_ITEMS |
                  FCDATA_SKIP_ABSPOS_PUSH |
@@ -8723,41 +8720,41 @@ const nsCSSFrameConstructor::PseudoParentData
                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
              NS_NewTableColGroupFrame),
          nsCSSAnonBoxes::tableColGroup()},
-        {// Table
-         FULL_CTOR_FCDATA(FCDATA_SKIP_FRAMESET | FCDATA_USE_CHILD_ITEMS |
+        // Table
+        {FULL_CTOR_FCDATA(FCDATA_SKIP_FRAMESET | FCDATA_USE_CHILD_ITEMS |
                               FCDATA_IS_WRAPPER_ANON_BOX,
                           &nsCSSFrameConstructor::ConstructTable),
          nsCSSAnonBoxes::table()},
-        {// Ruby
-         FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT | FCDATA_USE_CHILD_ITEMS |
+        // Ruby
+        {FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT | FCDATA_USE_CHILD_ITEMS |
                          FCDATA_IS_WRAPPER_ANON_BOX | FCDATA_SKIP_FRAMESET,
                      NS_NewRubyFrame),
          nsCSSAnonBoxes::ruby()},
-        {// Ruby Base
-         FCDATA_DECL(
+        // Ruby Base
+        {FCDATA_DECL(
              FCDATA_USE_CHILD_ITEMS | FCDATA_IS_LINE_PARTICIPANT |
                  FCDATA_IS_WRAPPER_ANON_BOX |
                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRubyBaseContainer) |
                  FCDATA_SKIP_FRAMESET,
              NS_NewRubyBaseFrame),
          nsCSSAnonBoxes::rubyBase()},
-        {// Ruby Base Container
-         FCDATA_DECL(FCDATA_USE_CHILD_ITEMS | FCDATA_IS_LINE_PARTICIPANT |
+        // Ruby Base Container
+        {FCDATA_DECL(FCDATA_USE_CHILD_ITEMS | FCDATA_IS_LINE_PARTICIPANT |
                          FCDATA_IS_WRAPPER_ANON_BOX |
                          FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby) |
                          FCDATA_SKIP_FRAMESET,
                      NS_NewRubyBaseContainerFrame),
          nsCSSAnonBoxes::rubyBaseContainer()},
-        {// Ruby Text
-         FCDATA_DECL(
+        // Ruby Text
+        {FCDATA_DECL(
              FCDATA_USE_CHILD_ITEMS | FCDATA_IS_LINE_PARTICIPANT |
                  FCDATA_IS_WRAPPER_ANON_BOX |
                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRubyTextContainer) |
                  FCDATA_SKIP_FRAMESET,
              NS_NewRubyTextFrame),
          nsCSSAnonBoxes::rubyText()},
-        {// Ruby Text Container
-         FCDATA_DECL(FCDATA_USE_CHILD_ITEMS | FCDATA_IS_WRAPPER_ANON_BOX |
+        // Ruby Text Container
+        {FCDATA_DECL(FCDATA_USE_CHILD_ITEMS | FCDATA_IS_WRAPPER_ANON_BOX |
                          FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby) |
                          FCDATA_SKIP_FRAMESET,
                      NS_NewRubyTextContainerFrame),
@@ -10923,10 +10920,9 @@ nsIFrame* nsCSSFrameConstructor::ConstructInline(
   // Initialize the frame
   InitAndRestoreFrame(aState, content, aParentFrame, newFrame);
 
-  nsFrameConstructorSaveState
-      absoluteSaveState;  // definition cannot be inside next block
-                          // because the object's destructor is significant
-                          // this is part of the fix for bug 42372
+  // definition cannot be inside next block because the object's destructor is
+  // significant. this is part of the fix for bug 42372
+  nsFrameConstructorSaveState absoluteSaveState;
 
   bool isAbsPosCB = newFrame->IsAbsPosContainingBlock();
   newFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);

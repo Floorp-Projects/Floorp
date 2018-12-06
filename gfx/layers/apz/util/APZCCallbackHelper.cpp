@@ -317,7 +317,7 @@ void APZCCallbackHelper::UpdateRootFrame(const RepaintRequest& aRequest) {
     // last paint.
     presShellResolution =
         aRequest.GetPresShellResolution() * aRequest.GetAsyncZoom().scale;
-    shell->SetResolutionAndScaleTo(presShellResolution);
+    shell->SetResolutionAndScaleTo(presShellResolution, nsGkAtoms::apz);
   }
 
   // Do this as late as possible since scrolling can flush layout. It also

@@ -288,7 +288,7 @@ release-notify-promote
 Notify when a release has been promoted.
 
 release-notify-started
--------------------
+----------------------
 Notify when a release has been started.
 
 release-bouncer-sub

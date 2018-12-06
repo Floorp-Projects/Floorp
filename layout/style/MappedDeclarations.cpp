@@ -7,6 +7,7 @@
 #include "MappedDeclarations.h"
 
 #include "nsAttrValue.h"
+#include "nsAttrValueInlines.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 

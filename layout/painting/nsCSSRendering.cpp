@@ -39,7 +39,6 @@
 #include "nsCSSRendering.h"
 #include "nsCSSColorUtils.h"
 #include "nsITheme.h"
-#include "nsStyleConsts.h"
 #include "nsLayoutUtils.h"
 #include "nsBlockFrame.h"
 #include "nsStyleStructInlines.h"

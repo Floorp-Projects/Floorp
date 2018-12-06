@@ -9,7 +9,6 @@
 <body>
 <input id="entries" type="file"></input>
 <script type="application/javascript">
-
 var fileEntry;
 var directoryEntry;
 var script;
@@ -25,7 +24,7 @@ function populate_entries() {
   script = SpecialPowers.loadChromeScript(url);
 
   function onOpened(message) {
-    var entries = document.getElementById('entries');
+    var entries = document.getElementById("entries");
     SpecialPowers.wrap(entries).mozSetDndFilesAndDirectories(message.data);
     next();
   }
@@ -35,7 +34,7 @@ function populate_entries() {
 }
 
 function test_entries() {
-  var entries = document.getElementById('entries');
+  var entries = document.getElementById("entries");
   ok("webkitEntries" in entries, "HTMLInputElement.webkitEntries");
   is(entries.webkitEntries.length, 2, "HTMLInputElement.webkitEntries.length == 2");
   is(entries.files.length, 1, "HTMLInputElement.files is still populated");
@@ -103,9 +102,9 @@ function test_directoryEntry_createReader() {
     }
 
     // Called twice:
-    reader.readEntries(function(a) {
-      ok(Array.isArray(a), "We want an array.");
-      is(a.length, 0, "reader.readyEntries returns 0 elements.");
+    reader.readEntries(function(a1) {
+      ok(Array.isArray(a1), "We want an array.");
+      is(a1.length, 0, "reader.readyEntries returns 0 elements.");
       next();
     }, function() {
       ok(false, "Something when wrong!");
@@ -255,7 +254,7 @@ function test_filesystem() {
   is(fs.root.name, "", "FileSystem.root.name must be an empty string.");
   is(fs.root.fullPath, "/", "FileSystem.root.fullPath must be '/'");
 
-  reader = fs.root.createReader();
+  var reader = fs.root.createReader();
   reader.readEntries(function(a) {
     ok(Array.isArray(a), "We want an array.");
     is(a.length, 2, "reader.readyEntries returns 2 elements.");
@@ -399,7 +398,7 @@ function test_getParent(entry, parentEntry, nested) {
   entry.getParent(function(e) {
     ok(e, "We have a parent Entry.");
     if (!nested) {
-      is (e, parentEntry, "Parent entry matches");
+      is(e, parentEntry, "Parent entry matches");
       next();
     } else {
       test_getParent(e, parentEntry, false);

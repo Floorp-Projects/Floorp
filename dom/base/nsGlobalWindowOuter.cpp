@@ -68,6 +68,7 @@
 #include "mozilla/intl/LocaleService.h"
 #include "WindowDestroyedEvent.h"
 #include "nsDocShellLoadState.h"
+#include "mozilla/dom/WindowGlobalChild.h"
 
 // Helper Classes
 #include "nsJSUtils.h"
@@ -1962,6 +1963,10 @@ nsresult nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
     newInnerWindow->MigrateStateForDocumentOpen(currentInner);
   }
 
+  // Tell the WindowGlobalParent that it should become the current window global
+  // for our BrowsingContext if it isn't already.
+  mInnerWindow->GetWindowGlobalChild()->SendBecomeCurrentWindowGlobal();
+
   // We no longer need the old inner window.  Start its destruction if
   // its not being reused and clear our reference.
   if (doomCurrentInner) {
@@ -2226,9 +2231,16 @@ void nsGlobalWindowOuter::SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
   NS_ASSERTION(mOpener || !aOpener, "Opener must support weak references!");
 
   if (mDocShell) {
-    MOZ_DIAGNOSTIC_ASSERT(!aOriginalOpener || !aOpener ||
-                          aOpener->GetBrowsingContext() ==
-                              GetBrowsingContext()->GetOpener());
+    MOZ_DIAGNOSTIC_ASSERT(
+        !aOriginalOpener || !aOpener ||
+        // TODO(farre): Allowing to set a closed or closing window as
+        // opener is not ideal, since it won't have a docshell and
+        // therefore no browsing context. This means that we're
+        // effectively setting the browsing context opener to null and
+        // the window opener to a closed window. This needs to be
+        // cleaned up, see Bug 1511353.
+        nsGlobalWindowOuter::Cast(aOpener)->IsClosedOrClosing() ||
+        aOpener->GetBrowsingContext() == GetBrowsingContext()->GetOpener());
     // TODO(farre): Here we really wish to only consider the case
     // where 'aOriginalOpener'. See bug 1509016.
     GetBrowsingContext()->SetOpener(aOpener ? aOpener->GetBrowsingContext()
@@ -5075,8 +5087,7 @@ void nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
     return;
   }
 
-  eventSink->OnSecurityChange(aChannel, oldState, state,
-                              doc->GetContentBlockingLog());
+  eventSink->OnSecurityChange(aChannel, state);
 }
 
 // static

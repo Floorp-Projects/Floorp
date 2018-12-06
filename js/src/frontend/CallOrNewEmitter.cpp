@@ -45,7 +45,7 @@ bool CallOrNewEmitter::emitNameCallee(JSAtom* name) {
       bce_, name,
       isCall() ? NameOpEmitter::Kind::Call : NameOpEmitter::Kind::Get);
   if (!noe.emitGet()) {
-    //                    [stack] CALLEE THIS
+    //              [stack] CALLEE THIS
     return false;
   }
 
@@ -101,12 +101,16 @@ bool CallOrNewEmitter::prepareForFunctionCallee() {
 bool CallOrNewEmitter::emitSuperCallee() {
   MOZ_ASSERT(state_ == State::Start);
 
+  if (!bce_->emitThisEnvironmentCallee()) {
+    //              [stack] CALLEE
+    return false;
+  }
   if (!bce_->emit1(JSOP_SUPERFUN)) {
-    //                    [stack] CALLEE
+    //              [stack] CALLEE
     return false;
   }
   if (!bce_->emit1(JSOP_IS_CONSTRUCTING)) {
-    //                    [stack] CALLEE THIS
+    //              [stack] CALLEE THIS
     return false;
   }
 
@@ -159,12 +163,12 @@ bool CallOrNewEmitter::emitThis() {
   if (needsThis) {
     if (isNew() || isSuperCall()) {
       if (!bce_->emit1(JSOP_IS_CONSTRUCTING)) {
-        //            [stack] CALLEE THIS
+        //          [stack] CALLEE THIS
         return false;
       }
     } else {
       if (!bce_->emit1(JSOP_UNDEFINED)) {
-        //            [stack] CALLEE THIS
+        //          [stack] CALLEE THIS
         return false;
       }
     }
@@ -216,23 +220,23 @@ bool CallOrNewEmitter::emitSpreadArgumentsTest() {
     // operation.  See the comment in OptimizeSpreadCall in
     // Interpreter.cpp for the optimizable conditons.
 
-    //                    [stack] CALLEE THIS ARG0
+    //              [stack] CALLEE THIS ARG0
 
     ifNotOptimizable_.emplace(bce_);
     if (!bce_->emit1(JSOP_OPTIMIZE_SPREADCALL)) {
-      //                [stack] CALLEE THIS ARG0 OPTIMIZED
+      //            [stack] CALLEE THIS ARG0 OPTIMIZED
       return false;
     }
     if (!bce_->emit1(JSOP_NOT)) {
-      //                [stack] CALLEE THIS ARG0 !OPTIMIZED
+      //            [stack] CALLEE THIS ARG0 !OPTIMIZED
       return false;
     }
     if (!ifNotOptimizable_->emitThen()) {
-      //                [stack] CALLEE THIS ARG0
+      //            [stack] CALLEE THIS ARG0
       return false;
     }
     if (!bce_->emit1(JSOP_POP)) {
-      //                [stack] CALLEE THIS
+      //            [stack] CALLEE THIS
       return false;
     }
   }
@@ -246,7 +250,7 @@ bool CallOrNewEmitter::emitEnd(uint32_t argc, const Maybe<uint32_t>& beginPos) {
 
   if (isSingleSpreadRest()) {
     if (!ifNotOptimizable_->emitEnd()) {
-      //                [stack] CALLEE THIS ARR
+      //            [stack] CALLEE THIS ARR
       return false;
     }
 
@@ -255,21 +259,21 @@ bool CallOrNewEmitter::emitEnd(uint32_t argc, const Maybe<uint32_t>& beginPos) {
   if (isNew() || isSuperCall()) {
     if (isSuperCall()) {
       if (!bce_->emit1(JSOP_NEWTARGET)) {
-        //            [stack] CALLEE THIS ARG.. NEW.TARGET
+        //          [stack] CALLEE THIS ARG.. NEW.TARGET
         return false;
       }
     } else {
       // Repush the callee as new.target
       uint32_t effectiveArgc = isSpread() ? 1 : argc;
       if (!bce_->emitDupAt(effectiveArgc + 1)) {
-        //            [stack] CALLEE THIS ARR CALLEE
+        //          [stack] CALLEE THIS ARR CALLEE
         return false;
       }
     }
   }
   if (!isSpread()) {
     if (!bce_->emitCall(op_, argc, beginPos)) {
-      //                [stack] RVAL
+      //            [stack] RVAL
       return false;
     }
   } else {
@@ -279,7 +283,7 @@ bool CallOrNewEmitter::emitEnd(uint32_t argc, const Maybe<uint32_t>& beginPos) {
       }
     }
     if (!bce_->emit1(op_)) {
-      //                [stack] RVAL
+      //            [stack] RVAL
       return false;
     }
   }

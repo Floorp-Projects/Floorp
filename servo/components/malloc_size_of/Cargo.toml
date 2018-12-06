@@ -10,13 +10,13 @@ path = "lib.rs"
 
 [features]
 servo = [
+    "crossbeam-channel",
     "hyper",
     "hyper_serde",
     "keyboard-types",
     "mozjs",
     "serde",
     "serde_bytes",
-    "servo_channel",
     "string_cache",
     "time",
     "url",
@@ -26,18 +26,17 @@ servo = [
 
 [dependencies]
 app_units = "0.7"
+crossbeam-channel = { version = "0.3", optional = true }
 cssparser = "0.25"
 euclid = "0.19"
 hashglobe = { path = "../hashglobe" }
 hyper = { version = "0.12", optional = true }
 hyper_serde = { version = "0.9", optional = true }
 keyboard-types = {version = "0.4.3", optional = true}
-mozjs = { version = "0.9.4", optional = true }
 selectors = { path = "../selectors" }
 serde = { version = "1.0.27", optional = true }
 serde_bytes = { version = "0.10", optional = true }
 servo_arc = { path = "../servo_arc" }
-servo_channel = { path = "../channel", optional = true }
 smallbitvec = "2.1.0"
 smallvec = "0.6"
 string_cache = { version = "0.7", optional = true }
@@ -47,3 +46,9 @@ url = { version = "1.2", optional = true }
 webrender_api = { git = "https://github.com/servo/webrender", features = ["ipc"], optional = true }
 xml5ever = { version = "0.12", optional = true }
 void = "1.0.2"
+
+[target.'cfg(target_os = "android")'.dependencies]
+mozjs = { version = "0.9.5", optional = true, features=["init_once"]}
+
+[target.'cfg(not(target_os = "android"))'.dependencies]
+mozjs = { version = "0.9.5", optional = true}

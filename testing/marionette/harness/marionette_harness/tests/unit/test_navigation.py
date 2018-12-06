@@ -55,13 +55,8 @@ class BaseNavigationTestCase(WindowManagerMixin, MarionetteTestCase):
         else:
             self.mod_key = Keys.CONTROL
 
-        def open_with_link():
-            link = self.marionette.find_element(By.ID, "new-blank-tab")
-            link.click()
-
         # Always use a blank new tab for an empty history
-        self.marionette.navigate(self.marionette.absolute_url("windowHandles.html"))
-        self.new_tab = self.open_tab(open_with_link)
+        self.new_tab = self.open_tab()
         self.marionette.switch_to_window(self.new_tab)
         Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
             lambda _: self.history_length == 1,
@@ -298,7 +293,6 @@ class TestNavigate(BaseNavigationTestCase):
         focus_el = self.marionette.find_element(By.CSS_SELECTOR, ":focus")
         self.assertEqual(self.marionette.get_active_element(), focus_el)
 
-    @skip_if_mobile("Needs application independent method to open a new tab")
     def test_no_hang_when_navigating_after_closing_original_tab(self):
         # Close the start tab
         self.marionette.switch_to_window(self.start_tab)
@@ -339,22 +333,6 @@ class TestNavigate(BaseNavigationTestCase):
             lambda mn: mn.get_url() == self.test_page_remote,
             message="'{}' hasn't been loaded".format(self.test_page_remote))
         self.assertTrue(self.is_remote_tab)
-
-    @skip_if_mobile("On Android no shortcuts are available")
-    def test_navigate_shortcut_key(self):
-
-        def open_with_shortcut():
-            self.marionette.navigate(self.test_page_remote)
-            with self.marionette.using_context("chrome"):
-                main_win = self.marionette.find_element(By.ID, "main-window")
-                main_win.send_keys(self.mod_key, Keys.SHIFT, "a")
-
-        new_tab = self.open_tab(trigger=open_with_shortcut)
-        self.marionette.switch_to_window(new_tab)
-
-        Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
-            lambda mn: mn.get_url() == "about:addons",
-            message="'about:addons' hasn't been loaded")
 
 
 class TestBackForwardNavigation(BaseNavigationTestCase):
@@ -823,7 +801,7 @@ class TestPageLoadStrategy(BaseNavigationTestCase):
     @skip("Bug 1422741 - Causes following tests to fail in loading remote browser")
     @run_if_e10s("Requires e10s mode enabled")
     def test_strategy_after_remoteness_change(self):
-        """Bug 1378191 - Reset of capabilities after listener reload"""
+        """Bug 1378191 - Reset of capabilities after listener reload."""
         self.marionette.delete_session()
         self.marionette.start_session({"pageLoadStrategy": "eager"})
 

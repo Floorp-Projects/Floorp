@@ -145,7 +145,8 @@ body:not(:-moz-any(.clockSkewError,.badStsCert,.neterror)) #advancedButton {
   margin-top: 1em;
 }
 
-span#hostname {
+.mitm-name,
+#hostname {
   font-weight: bold;
 }
 

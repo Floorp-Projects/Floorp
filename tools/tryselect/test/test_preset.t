@@ -76,6 +76,11 @@ Test preset with fuzzy subcommand
       "tasks": [
           "build-baz"
       ],
+      "templates": {
+          "env": {
+              "TRY_SELECTOR": "fuzzy"
+          }
+      },
       "version": 1
   }
   
@@ -89,6 +94,11 @@ Test preset with fuzzy subcommand
       "tasks": [
           "build-baz"
       ],
+      "templates": {
+          "env": {
+              "TRY_SELECTOR": "fuzzy"
+          }
+      },
       "version": 1
   }
   
@@ -105,6 +115,11 @@ Test preset with fuzzy subcommand
           "test/foo-debug",
           "test/foo-opt"
       ],
+      "templates": {
+          "env": {
+              "TRY_SELECTOR": "fuzzy"
+          }
+      },
       "version": 1
   }
   
@@ -118,6 +133,11 @@ Test preset with fuzzy subcommand
       "tasks": [
           "build-baz"
       ],
+      "templates": {
+          "env": {
+              "TRY_SELECTOR": "fuzzy"
+          }
+      },
       "version": 1
   }
   

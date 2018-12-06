@@ -47,7 +47,6 @@ static const char sPrintSettingsServiceContractID[] =
 
 // Print Preview
 #include "imgIContainer.h"       // image animation mode constants
-#include "nsIWebBrowserPrint.h"  // needed for PrintPreview Navigation constants
 
 // Print Progress
 #include "nsIPrintProgress.h"
@@ -94,7 +93,6 @@ static const char kPrintingPromptService[] =
 #include "nsIDeviceContextSpec.h"
 #include "nsDeviceContextSpecProxy.h"
 #include "nsViewManager.h"
-#include "nsView.h"
 
 #include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
@@ -2018,8 +2016,7 @@ nsPrintJob::OnStatusChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest,
 
 NS_IMETHODIMP
 nsPrintJob::OnSecurityChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest,
-                             uint32_t aState, uint32_t aOldState,
-                             const nsAString& aContentBlockingLogJSON) {
+                             uint32_t aState) {
   MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }

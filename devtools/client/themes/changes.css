@@ -26,6 +26,16 @@
   --diff-source-background: #222225;
 }
 
+:root[dir="rtl"] {
+  /* Increase minimum offset on right-to-left layout to clear the floating scrollbar. */
+  --diff-level-min-offset: 15px;
+}
+
+:root[dir="rtl"] #sidebar-panel-changes .source {
+  /* Enforce left-to-right code rendering on right-to-left layout. */
+  direction: ltr;
+}
+
 #sidebar-panel-changes {
   margin: 0;
   padding: 0;
@@ -43,7 +53,12 @@
   border-top: 1px solid var(--theme-splitter-color);
   border-bottom: 1px solid var(--theme-splitter-color);
   padding: 4px;
+  padding-inline-start: var(--diff-level-min-offset);
   font-size: 12px;
+}
+
+#sidebar-panel-changes .source:first-child .href {
+  border-top: unset;
 }
 
 #sidebar-panel-changes .href span {

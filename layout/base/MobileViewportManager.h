@@ -136,8 +136,8 @@ class MobileViewportManager final : public nsIDOMEventListener,
                                    const mozilla::ScreenIntSize& aDisplaySize);
 
   nsCOMPtr<nsIDocument> mDocument;
-  nsIPresShell* MOZ_NON_OWNING_REF
-      mPresShell;  // raw ref since the presShell owns this
+  // raw ref since the presShell owns this
+  nsIPresShell* MOZ_NON_OWNING_REF mPresShell;
   nsCOMPtr<mozilla::dom::EventTarget> mEventTarget;
   bool mIsFirstPaint;
   bool mPainted;

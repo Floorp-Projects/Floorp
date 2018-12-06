@@ -154,6 +154,10 @@ exclude-multi-locale = [
     l10n = "{l}dom/chrome/dom/dom.properties"
 
 [[paths]]
+    reference = "toolkit/locales/en-US/toolkit/about/*Plugins.ftl"
+    l10n = "{l}toolkit/toolkit/about/*Plugins.ftl"
+
+[[paths]]
     reference = "dom/locales/en-US/chrome/plugins.properties"
     l10n = "{l}dom/chrome/plugins.properties"
 

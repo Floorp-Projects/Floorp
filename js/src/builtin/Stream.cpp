@@ -163,42 +163,54 @@ inline static MOZ_MUST_USE bool SetNewList(
   return true;
 }
 
-class ByteStreamChunk : public NativeObject {
- private:
-  enum Slots { Slot_Buffer = 0, Slot_ByteOffset, Slot_ByteLength, SlotCount };
+#if 0  // disable user-defined byte streams
 
- public:
-  static const Class class_;
+class ByteStreamChunk : public NativeObject
+{
+  private:
+    enum Slots {
+        Slot_Buffer = 0,
+        Slot_ByteOffset,
+        Slot_ByteLength,
+        SlotCount
+    };
 
-  ArrayBufferObject* buffer() {
-    return &getFixedSlot(Slot_Buffer).toObject().as<ArrayBufferObject>();
-  }
-  uint32_t byteOffset() { return getFixedSlot(Slot_ByteOffset).toInt32(); }
-  void SetByteOffset(uint32_t offset) {
-    setFixedSlot(Slot_ByteOffset, Int32Value(offset));
-  }
-  uint32_t byteLength() { return getFixedSlot(Slot_ByteLength).toInt32(); }
-  void SetByteLength(uint32_t length) {
-    setFixedSlot(Slot_ByteLength, Int32Value(length));
-  }
+  public:
+    static const Class class_;
 
-  static ByteStreamChunk* create(JSContext* cx, HandleObject buffer,
-                                 uint32_t byteOffset, uint32_t byteLength) {
-    Rooted<ByteStreamChunk*> chunk(
-        cx, NewBuiltinClassInstance<ByteStreamChunk>(cx));
-    if (!chunk) {
-      return nullptr;
+    ArrayBufferObject* buffer() {
+        return &getFixedSlot(Slot_Buffer).toObject().as<ArrayBufferObject>();
+    }
+    uint32_t byteOffset() { return getFixedSlot(Slot_ByteOffset).toInt32(); }
+    void SetByteOffset(uint32_t offset) {
+        setFixedSlot(Slot_ByteOffset, Int32Value(offset));
+    }
+    uint32_t byteLength() { return getFixedSlot(Slot_ByteLength).toInt32(); }
+    void SetByteLength(uint32_t length) {
+        setFixedSlot(Slot_ByteLength, Int32Value(length));
     }
 
-    chunk->setFixedSlot(Slot_Buffer, ObjectValue(*buffer));
-    chunk->setFixedSlot(Slot_ByteOffset, Int32Value(byteOffset));
-    chunk->setFixedSlot(Slot_ByteLength, Int32Value(byteLength));
-    return chunk;
-  }
+    static ByteStreamChunk* create(JSContext* cx, HandleObject buffer, uint32_t byteOffset,
+                                   uint32_t byteLength)
+    {
+        Rooted<ByteStreamChunk*> chunk(cx, NewBuiltinClassInstance<ByteStreamChunk>(cx));
+        if (!chunk) {
+            return nullptr;
+        }
+
+        chunk->setFixedSlot(Slot_Buffer, ObjectValue(*buffer));
+        chunk->setFixedSlot(Slot_ByteOffset, Int32Value(byteOffset));
+        chunk->setFixedSlot(Slot_ByteLength, Int32Value(byteLength));
+        return chunk;
+    }
 };
 
-const Class ByteStreamChunk::class_ = {"ByteStreamChunk",
-                                       JSCLASS_HAS_RESERVED_SLOTS(SlotCount)};
+const Class ByteStreamChunk::class_ = {
+    "ByteStreamChunk",
+    JSCLASS_HAS_RESERVED_SLOTS(SlotCount)
+};
+
+#endif  // user-defined byte streams
 
 class PullIntoDescriptor : public NativeObject {
  private:
@@ -385,12 +397,10 @@ class TeeState : public NativeObject {
         &getFixedSlot(Slot_Branch1)
              .toObject()
              .as<ReadableStreamDefaultController>();
-    MOZ_ASSERT(controller->flags() & ReadableStreamController::Flag_TeeBranch);
     MOZ_ASSERT(controller->isTeeBranch1());
     return controller;
   }
   void setBranch1(ReadableStreamDefaultController* controller) {
-    MOZ_ASSERT(controller->flags() & ReadableStreamController::Flag_TeeBranch);
     MOZ_ASSERT(controller->isTeeBranch1());
     setFixedSlot(Slot_Branch1, ObjectValue(*controller));
   }
@@ -400,12 +410,10 @@ class TeeState : public NativeObject {
         &getFixedSlot(Slot_Branch2)
              .toObject()
              .as<ReadableStreamDefaultController>();
-    MOZ_ASSERT(controller->flags() & ReadableStreamController::Flag_TeeBranch);
     MOZ_ASSERT(controller->isTeeBranch2());
     return controller;
   }
   void setBranch2(ReadableStreamDefaultController* controller) {
-    MOZ_ASSERT(controller->flags() & ReadableStreamController::Flag_TeeBranch);
     MOZ_ASSERT(controller->isTeeBranch2());
     setFixedSlot(Slot_Branch2, ObjectValue(*controller));
   }
@@ -2435,8 +2443,6 @@ static const JSFunctionSpec ReadableStreamDefaultController_methods[] = {
     JS_FN("enqueue", ReadableStreamDefaultController_enqueue, 1, 0),
     JS_FN("error", ReadableStreamDefaultController_error, 1, 0), JS_FS_END};
 
-const Class ReadableStreamController::class_ = {"ReadableStreamController"};
-
 CLASS_SPEC(ReadableStreamDefaultController, 0, SlotCount,
            ClassSpec::DontDefineConstructor, 0, JS_NULL_CLASS_OPS);
 
@@ -3403,7 +3409,12 @@ static MOZ_MUST_USE JSObject* ReadableByteStreamControllerPullSteps(
 
     RootedObject view(cx);
 
-    if (unwrappedStream->mode() == JS::ReadableStreamMode::ExternalSource) {
+    MOZ_RELEASE_ASSERT(unwrappedStream->mode() ==
+                       JS::ReadableStreamMode::ExternalSource);
+#if 0   // disable user-defined byte streams
+        if (unwrappedStream->mode() == JS::ReadableStreamMode::ExternalSource)
+#endif  // user-defined byte streams
+    {
       JS::ReadableStreamUnderlyingSource* source =
           unwrappedController->externalSource();
 
@@ -3425,38 +3436,41 @@ static MOZ_MUST_USE JSObject* ReadableByteStreamControllerPullSteps(
       }
 
       queueTotalSize = queueTotalSize - bytesWritten;
-    } else {
-      // Step 3.b: Let entry be the first element of this.[[queue]].
-      // Step 3.c: Remove entry from this.[[queue]], shifting all other
-      //           elements downward (so that the second becomes the
-      //           first, and so on).
-      Rooted<ListObject*> unwrappedQueue(cx, unwrappedController->queue());
-      Rooted<ByteStreamChunk*> unwrappedEntry(
-          cx, UnwrapAndDowncastObject<ByteStreamChunk>(
-                  cx, &unwrappedQueue->popFirstAs<JSObject>(cx)));
-      if (!unwrappedEntry) {
-        return nullptr;
-      }
-
-      queueTotalSize = queueTotalSize - unwrappedEntry->byteLength();
-
-      // Step 3.f: Let view be ! Construct(%Uint8Array%,
-      //                                   « entry.[[buffer]],
-      //                                     entry.[[byteOffset]],
-      //                                     entry.[[byteLength]] »).
-      // (reordered)
-      RootedObject buffer(cx, unwrappedEntry->buffer());
-      if (!cx->compartment()->wrap(cx, &buffer)) {
-        return nullptr;
-      }
-
-      uint32_t byteOffset = unwrappedEntry->byteOffset();
-      view = JS_NewUint8ArrayWithBuffer(cx, buffer, byteOffset,
-                                        unwrappedEntry->byteLength());
-      if (!view) {
-        return nullptr;
-      }
     }
+
+#if 0   // disable user-defined byte streams
+        else {
+            // Step 3.b: Let entry be the first element of this.[[queue]].
+            // Step 3.c: Remove entry from this.[[queue]], shifting all other
+            //           elements downward (so that the second becomes the
+            //           first, and so on).
+            Rooted<ListObject*> unwrappedQueue(cx, unwrappedController->queue());
+            Rooted<ByteStreamChunk*> unwrappedEntry(cx,
+                UnwrapAndDowncastObject<ByteStreamChunk>(
+                    cx, &unwrappedQueue->popFirstAs<JSObject>(cx)));
+            if (!unwrappedEntry) {
+                return nullptr;
+            }
+
+            queueTotalSize = queueTotalSize - unwrappedEntry->byteLength();
+
+            // Step 3.f: Let view be ! Construct(%Uint8Array%,
+            //                                   « entry.[[buffer]],
+            //                                     entry.[[byteOffset]],
+            //                                     entry.[[byteLength]] »).
+            // (reordered)
+            RootedObject buffer(cx, unwrappedEntry->buffer());
+            if (!cx->compartment()->wrap(cx, &buffer)) {
+                return nullptr;
+            }
+
+            uint32_t byteOffset = unwrappedEntry->byteOffset();
+            view = JS_NewUint8ArrayWithBuffer(cx, buffer, byteOffset, unwrappedEntry->byteLength());
+            if (!view) {
+                return nullptr;
+            }
+        }
+#endif  // user-defined byte streams
 
     // Step 3.d: Set this.[[queueTotalSize]] to
     //           this.[[queueTotalSize]] − entry.[[byteLength]].

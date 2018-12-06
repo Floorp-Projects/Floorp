@@ -43,28 +43,28 @@ bool PropOpEmitter::emitGet(JSAtom* prop) {
   }
   if (isCall()) {
     if (!bce_->emit1(JSOP_DUP)) {
-      //                [stack] # if Super
-      //                [stack] THIS THIS
-      //                [stack] # otherwise
-      //                [stack] OBJ OBJ
+      //            [stack] # if Super
+      //            [stack] THIS THIS
+      //            [stack] # otherwise
+      //            [stack] OBJ OBJ
       return false;
     }
   }
   if (isSuper()) {
-    if (!bce_->emit1(JSOP_SUPERBASE)) {
-      //                [stack] THIS? THIS SUPERBASE
+    if (!bce_->emitSuperBase()) {
+      //            [stack] THIS? THIS SUPERBASE
       return false;
     }
   }
   if (isIncDec() || isCompoundAssignment()) {
     if (isSuper()) {
       if (!bce_->emit1(JSOP_DUP2)) {
-        //            [stack] THIS SUPERBASE THIS SUPERBASE
+        //          [stack] THIS SUPERBASE THIS SUPERBASE
         return false;
       }
     } else {
       if (!bce_->emit1(JSOP_DUP)) {
-        //            [stack] OBJ OBJ
+        //          [stack] OBJ OBJ
         return false;
       }
     }
@@ -79,19 +79,19 @@ bool PropOpEmitter::emitGet(JSAtom* prop) {
     op = isLength_ ? JSOP_LENGTH : JSOP_GETPROP;
   }
   if (!bce_->emitAtomOp(propAtomIndex_, op)) {
-    //                    [stack] # if Get
-    //                    [stack] PROP
-    //                    [stack] # if Call
-    //                    [stack] THIS PROP
-    //                    [stack] # if Inc/Dec/Compound, Super]
-    //                    [stack] THIS SUPERBASE PROP
-    //                    [stack] # if Inc/Dec/Compound, other
-    //                    [stack] OBJ PROP
+    //              [stack] # if Get
+    //              [stack] PROP
+    //              [stack] # if Call
+    //              [stack] THIS PROP
+    //              [stack] # if Inc/Dec/Compound, Super]
+    //              [stack] THIS SUPERBASE PROP
+    //              [stack] # if Inc/Dec/Compound, other
+    //              [stack] OBJ PROP
     return false;
   }
   if (isCall()) {
     if (!bce_->emit1(JSOP_SWAP)) {
-      //                [stack] PROP THIS
+      //            [stack] PROP THIS
       return false;
     }
   }
@@ -110,8 +110,8 @@ bool PropOpEmitter::prepareForRhs() {
   if (isSimpleAssignment()) {
     // For CompoundAssignment, SUPERBASE is already emitted by emitGet.
     if (isSuper()) {
-      if (!bce_->emit1(JSOP_SUPERBASE)) {
-        //            [stack] THIS SUPERBASE
+      if (!bce_->emitSuperBase()) {
+        //          [stack] THIS SUPERBASE
         return false;
       }
     }
@@ -142,27 +142,27 @@ bool PropOpEmitter::emitDelete(JSAtom* prop) {
     return false;
   }
   if (isSuper()) {
-    if (!bce_->emit1(JSOP_SUPERBASE)) {
-      //                [stack] THIS SUPERBASE
+    if (!bce_->emitSuperBase()) {
+      //            [stack] THIS SUPERBASE
       return false;
     }
 
     // Unconditionally throw when attempting to delete a super-reference.
     if (!bce_->emitUint16Operand(JSOP_THROWMSG, JSMSG_CANT_DELETE_SUPER)) {
-      //                [stack] THIS SUPERBASE
+      //            [stack] THIS SUPERBASE
       return false;
     }
 
     // Another wrinkle: Balance the stack from the emitter's point of view.
     // Execution will not reach here, as the last bytecode threw.
     if (!bce_->emit1(JSOP_POP)) {
-      //                [stack] THIS
+      //            [stack] THIS
       return false;
     }
   } else {
     JSOp op = bce_->sc->strict() ? JSOP_STRICTDELPROP : JSOP_DELPROP;
     if (!bce_->emitAtomOp(propAtomIndex_, op)) {
-      //                [stack] SUCCEEDED
+      //            [stack] SUCCEEDED
       return false;
     }
   }
@@ -188,7 +188,7 @@ bool PropOpEmitter::emitAssignment(JSAtom* prop) {
           ? bce_->sc->strict() ? JSOP_STRICTSETPROP_SUPER : JSOP_SETPROP_SUPER
           : bce_->sc->strict() ? JSOP_STRICTSETPROP : JSOP_SETPROP;
   if (!bce_->emitAtomOp(propAtomIndex_, setOp)) {
-    //                    [stack] VAL
+    //              [stack] VAL
     return false;
   }
 
@@ -211,50 +211,50 @@ bool PropOpEmitter::emitIncDec(JSAtom* prop) {
   JSOp binOp = isInc() ? JSOP_ADD : JSOP_SUB;
 
   if (!bce_->emit1(JSOP_POS)) {
-    //                    [stack] ... N
+    //              [stack] ... N
     return false;
   }
   if (isPostIncDec()) {
     if (!bce_->emit1(JSOP_DUP)) {
-      //                [stack] .. N N
+      //            [stack] .. N N
       return false;
     }
   }
   if (!bce_->emit1(JSOP_ONE)) {
-    //                    [stack] ... N? N 1
+    //              [stack] ... N? N 1
     return false;
   }
   if (!bce_->emit1(binOp)) {
-    //                    [stack] ... N? N+1
+    //              [stack] ... N? N+1
     return false;
   }
   if (isPostIncDec()) {
     if (isSuper()) {
-      //                [stack] THIS OBJ N N+1
+      //            [stack] THIS OBJ N N+1
       if (!bce_->emit2(JSOP_PICK, 3)) {
-        //            [stack] OBJ N N+1 THIS
+        //          [stack] OBJ N N+1 THIS
         return false;
       }
       if (!bce_->emit1(JSOP_SWAP)) {
-        //            [stack] OBJ N THIS N+1
+        //          [stack] OBJ N THIS N+1
         return false;
       }
       if (!bce_->emit2(JSOP_PICK, 3)) {
-        //            [stack] N THIS N+1 OBJ
+        //          [stack] N THIS N+1 OBJ
         return false;
       }
       if (!bce_->emit1(JSOP_SWAP)) {
-        //            [stack] N THIS OBJ N+1
+        //          [stack] N THIS OBJ N+1
         return false;
       }
     } else {
-      //                [stack] OBJ N N+1
+      //            [stack] OBJ N N+1
       if (!bce_->emit2(JSOP_PICK, 2)) {
-        //            [stack] N N+1 OBJ
+        //          [stack] N N+1 OBJ
         return false;
       }
       if (!bce_->emit1(JSOP_SWAP)) {
-        //            [stack] N OBJ N+1
+        //          [stack] N OBJ N+1
         return false;
       }
     }
@@ -265,12 +265,12 @@ bool PropOpEmitter::emitIncDec(JSAtom* prop) {
           ? bce_->sc->strict() ? JSOP_STRICTSETPROP_SUPER : JSOP_SETPROP_SUPER
           : bce_->sc->strict() ? JSOP_STRICTSETPROP : JSOP_SETPROP;
   if (!bce_->emitAtomOp(propAtomIndex_, setOp)) {
-    //                    [stack] N? N+1
+    //              [stack] N? N+1
     return false;
   }
   if (isPostIncDec()) {
     if (!bce_->emit1(JSOP_POP)) {
-      //                [stack] N
+      //            [stack] N
       return false;
     }
   }

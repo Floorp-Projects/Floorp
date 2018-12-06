@@ -80,8 +80,12 @@ class nsTableRowFrame : public nsContainerFrame {
   inline nsTableCellFrame* GetFirstCell() const;
 
   /** calls Reflow for all of its child cells.
+   *
    * Cells with rowspan=1 are all set to the same height and stacked
-   * horizontally. <P> Cells are not split unless absolutely necessary. <P>
+   * horizontally.
+   *
+   * Cells are not split unless absolutely necessary.
+   *
    * Cells are resized in nsTableFrame::BalanceColumnWidths and
    * nsTableFrame::ShrinkWrapChildren
    *

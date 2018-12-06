@@ -119,7 +119,8 @@ needs-focus != 824080-6.html 824080-7.html
 fails-if(Android) needs-focus != spellcheck-contenteditable-attr.html spellcheck-contenteditable-ref.html
 needs-focus == spellcheck-contenteditable-focused.html spellcheck-contenteditable-ref.html
 needs-focus == spellcheck-contenteditable-focused-reframe.html spellcheck-contenteditable-ref.html
-== spellcheck-contenteditable-nofocus.html spellcheck-contenteditable-disabled-ref.html
+== spellcheck-contenteditable-nofocus-1.html spellcheck-contenteditable-disabled-ref.html
+== spellcheck-contenteditable-nofocus-2.html spellcheck-contenteditable-disabled-ref.html
 == spellcheck-contenteditable-disabled.html spellcheck-contenteditable-disabled-ref.html
 == spellcheck-contenteditable-disabled-partial.html spellcheck-contenteditable-disabled-partial-ref.html
 == spellcheck-contenteditable-attr-inherit.html spellcheck-contenteditable-disabled-ref.html

@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
 import sys
 
 
@@ -17,8 +18,8 @@ class WebPlatformTestsRunner(object):
         self.setup = setup
 
     def setup_logging(self, **kwargs):
-        from wptrunner import wptrunner
-        return wptrunner.setup_logging(kwargs, {self.setup.default_log_type: sys.stdout})
+        from tools.wpt import run
+        return run.setup_logging(kwargs, {self.setup.default_log_type: sys.stdout})
 
     def run(self, logger, **kwargs):
         from wptrunner import wptrunner

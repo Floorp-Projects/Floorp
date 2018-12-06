@@ -7,7 +7,7 @@
       hidden="true"
       data-hidden-from-search="true"
       data-category="paneSearchResults">
-  <label class="header-name" flex="1" data-l10n-id="search-results-header" />
+  <html:h1 data-l10n-id="search-results-header"/>
 </hbox>
 
 <groupbox id="no-results-message"

@@ -12,7 +12,6 @@
 #include "nsStyleStruct.h"
 #include "nsStyleStructInlines.h"
 #include "nsStyleConsts.h"
-#include "nsStyleConsts.h"
 #include "nsString.h"
 #include "nsPresContext.h"
 #include "nsIAppShellService.h"
@@ -121,8 +120,7 @@ nsStyleFont::nsStyleFont(const nsPresContext* aContext)
       mScriptLevel(0),
       mMathVariant(NS_MATHML_MATHVARIANT_NONE),
       mMathDisplay(NS_MATHML_DISPLAYSTYLE_INLINE),
-      mMinFontSizeRatio(100)  // 100%
-      ,
+      mMinFontSizeRatio(100),  // 100%
       mExplicitLanguage(false),
       mAllowZoom(true),
       mScriptUnconstrainedSize(mSize),
@@ -653,8 +651,7 @@ nsChangeHint nsStyleColumn::CalcDifference(
 // nsStyleSVG
 //
 nsStyleSVG::nsStyleSVG(const nsPresContext* aContext)
-    : mFill(eStyleSVGPaintType_Color)  // Will be initialized to NS_RGB(0, 0, 0)
-      ,
+    : mFill(eStyleSVGPaintType_Color),  // Will be initialized to NS_RGB(0,0,0)
       mStroke(eStyleSVGPaintType_None),
       mStrokeDashoffset(0, nsStyleCoord::CoordConstructor),
       mStrokeWidth(nsPresContext::CSSPixelsToAppUnits(1),

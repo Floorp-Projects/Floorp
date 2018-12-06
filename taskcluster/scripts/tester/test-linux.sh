@@ -58,7 +58,7 @@ if [[ -z ${MOZHARNESS_SCRIPT} ]]; then fail "MOZHARNESS_SCRIPT is not set"; fi
 if [[ -z ${MOZHARNESS_CONFIG} ]]; then fail "MOZHARNESS_CONFIG is not set"; fi
 
 # make sure artifact directories exist
-mkdir -p "$WORKSPACE/build/upload/logs"
+mkdir -p "$WORKSPACE/logs"
 mkdir -p "$WORKING_DIR/artifacts/public"
 mkdir -p "$WORKSPACE/build/blobber_upload_dir"
 
@@ -146,6 +146,12 @@ if $NEED_WINDOW_MANAGER; then
     gsettings set org.gnome.desktop.screensaver lock-delay 3600
     # Disable the screen saver
     xset s off s reset
+
+    # This starts the gnome-keyring-daemon with an unlocked login keyring. libsecret uses this to
+    # store secrets. Firefox uses libsecret to store a key that protects sensitive information like
+    # credit card numbers.
+    eval `dbus-launch --sh-syntax`
+    eval `echo '' | /usr/bin/gnome-keyring-daemon -r -d --unlock --components=secrets`
 
     if [ "${UBUNTU_1604}" ]; then
         # start compiz for our window manager

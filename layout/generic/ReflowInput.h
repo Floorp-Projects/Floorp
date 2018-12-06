@@ -185,55 +185,74 @@ struct SizeComputationInput {
 
   struct ReflowInputFlags {
     ReflowInputFlags() { memset(this, 0, sizeof(*this)); }
-    bool mSpecialBSizeReflow : 1;   // used by tables to communicate special
-                                    // reflow (in process) to handle percent
-                                    // bsize frames inside cells which may not
-                                    // have computed bsizes
-    bool mNextInFlowUntouched : 1;  // nothing in the frame's next-in-flow (or
-                                    // its descendants) is changing
-    bool mIsTopOfPage : 1;          // Is the current context at the top of a
-                                    // page?  When true, we force something
-                                    // that's too tall for a page/column to
-                                    // fit anyway to avoid infinite loops.
-    bool mAssumingHScrollbar : 1;   // parent frame is an nsIScrollableFrame and
-                                    // it is assuming a horizontal scrollbar
-    bool mAssumingVScrollbar : 1;   // parent frame is an nsIScrollableFrame and
-                                    // it is assuming a vertical scrollbar
 
-    bool mIsIResize : 1;  // Is frame (a) not dirty and (b) a
-                          // different inline-size than before?
+    // used by tables to communicate special reflow (in process) to handle
+    // percent bsize frames inside cells which may not have computed bsizes
+    bool mSpecialBSizeReflow : 1;
 
-    bool mIsBResize : 1;          // Is frame (a) not dirty and (b) a
-                                  // different block-size than before or
-                                  // (potentially) in a context where
-                                  // percent block-sizes have a different
-                                  // basis?
-    bool mTableIsSplittable : 1;  // tables are splittable, this should happen
-                                  // only inside a page and never insider a
-                                  // column frame
-    bool mHeightDependsOnAncestorCell : 1;  // Does frame height depend on
-                                            // an ancestor table-cell?
-    bool mIsColumnBalancing : 1;  // nsColumnSetFrame is balancing columns
-    bool mIsFlexContainerMeasuringBSize : 1;  // nsFlexContainerFrame is
-                                              // reflowing this child to
-                                              // measure its intrinsic BSize.
-    bool mDummyParentReflowInput : 1;         // a "fake" reflow state made
-                                              // in order to be the parent
-                                              // of a real one
-    bool mMustReflowPlaceholders : 1;  // Should this frame reflow its place-
-                                       // holder children? If the available
-                                       // height of this frame didn't change,
-                                       // but its in a paginated environment
-                                       // (e.g. columns), it should always
-                                       // reflow its placeholder children.
-    bool mShrinkWrap : 1;    // stores the COMPUTE_SIZE_SHRINK_WRAP ctor flag
-    bool mUseAutoBSize : 1;  // stores the COMPUTE_SIZE_USE_AUTO_BSIZE ctor flag
-    bool mStaticPosIsCBOrigin : 1;     // the STATIC_POS_IS_CB_ORIGIN ctor flag
-    bool mIClampMarginBoxMinSize : 1;  // the I_CLAMP_MARGIN_BOX_MIN_SIZE ctor
-                                       // flag
-    bool mBClampMarginBoxMinSize : 1;  // the B_CLAMP_MARGIN_BOX_MIN_SIZE ctor
-                                       // flag
-    bool mApplyAutoMinSize : 1;        // the I_APPLY_AUTO_MIN_SIZE ctor flag
+    // nothing in the frame's next-in-flow (or its descendants) is changing
+    bool mNextInFlowUntouched : 1;
+
+    // Is the current context at the top of a page?  When true, we force
+    // something that's too tall for a page/column to fit anyway to avoid
+    // infinite loops.
+    bool mIsTopOfPage : 1;
+
+    // parent frame is an nsIScrollableFrame and it is assuming a horizontal
+    // scrollbar
+    bool mAssumingHScrollbar : 1;
+
+    // parent frame is an nsIScrollableFrame and it is assuming a vertical
+    // scrollbar
+    bool mAssumingVScrollbar : 1;
+
+    // Is frame (a) not dirty and (b) a different inline-size than before?
+    bool mIsIResize : 1;
+
+    // Is frame (a) not dirty and (b) a different block-size than before or
+    // (potentially) in a context where percent block-sizes have a different
+    // basis?
+    bool mIsBResize : 1;
+
+    // tables are splittable, this should happen only inside a page and never
+    // insider a column frame
+    bool mTableIsSplittable : 1;
+
+    // Does frame height depend on an ancestor table-cell?
+    bool mHeightDependsOnAncestorCell : 1;
+
+    // nsColumnSetFrame is balancing columns
+    bool mIsColumnBalancing : 1;
+
+    // nsFlexContainerFrame is reflowing this child to measure its intrinsic
+    // BSize.
+    bool mIsFlexContainerMeasuringBSize : 1;
+
+    // a "fake" reflow state made in order to be the parent of a real one
+    bool mDummyParentReflowInput : 1;
+
+    // Should this frame reflow its place-holder children? If the available
+    // height of this frame didn't change, but its in a paginated environment
+    // (e.g. columns), it should always reflow its placeholder children.
+    bool mMustReflowPlaceholders : 1;
+
+    // stores the COMPUTE_SIZE_SHRINK_WRAP ctor flag
+    bool mShrinkWrap : 1;
+
+    // stores the COMPUTE_SIZE_USE_AUTO_BSIZE ctor flag
+    bool mUseAutoBSize : 1;
+
+    // the STATIC_POS_IS_CB_ORIGIN ctor flag
+    bool mStaticPosIsCBOrigin : 1;
+
+    // the I_CLAMP_MARGIN_BOX_MIN_SIZE ctor flag
+    bool mIClampMarginBoxMinSize : 1;
+
+    // the B_CLAMP_MARGIN_BOX_MIN_SIZE ctor flag
+    bool mBClampMarginBoxMinSize : 1;
+
+    // the I_APPLY_AUTO_MIN_SIZE ctor flag
+    bool mApplyAutoMinSize : 1;
 
     // If set, the following two flags indicate that:
     // (1) this frame is absolutely-positioned (or fixed-positioned).
@@ -838,7 +857,7 @@ struct ReflowInput : public SizeComputationInput {
    * size computed so far.
    *
    * @param aBSize The block-size that we've computed an to which we want to
-   * apply min/max constraints.
+   *        apply min/max constraints.
    * @param aConsumed The amount of the computed block-size that was consumed by
    *        our prev-in-flows.
    */

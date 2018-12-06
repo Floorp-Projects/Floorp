@@ -14,7 +14,7 @@ import re
 import sys
 
 # The column index of '[' of '[stack]'
-ALIGNMENT_COLUMN = 30
+ALIGNMENT_COLUMN = 20
 
 # The maximum column for comment
 MAX_CHARS_PER_LINE = 80

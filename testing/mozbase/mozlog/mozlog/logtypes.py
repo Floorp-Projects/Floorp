@@ -265,3 +265,10 @@ class Tuple(ContainerType):
             raise ValueError("Expected %i items got %i" % (len(self.item_type), len(data)))
         return tuple(item_type.convert(value)
                      for item_type, value in zip(self.item_type, data))
+
+
+class Nullable(ContainerType):
+    def convert(self, data):
+        if data is None:
+            return data
+        return self.item_type.convert(data)
