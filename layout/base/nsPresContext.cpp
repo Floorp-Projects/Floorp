@@ -1720,6 +1720,11 @@ void nsPresContext::CacheAllLangs() {
   mFontGroupCacheDirty = false;
 }
 
+void nsPresContext::ContentLanguageChanged() {
+  mFontGroupCacheDirty = true;
+  PostRebuildAllStyleDataEvent(nsChangeHint(0), eRestyle_ForceDescendants);
+}
+
 void nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint,
                                         nsRestyleHint aRestyleHint) {
   if (!mShell) {
