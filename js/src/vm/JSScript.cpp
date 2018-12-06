@@ -3830,7 +3830,7 @@ bool js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
   /* NB: Keep this in sync with XDRScript. */
 
   /* Some embeddings are not careful to use ExposeObjectToActiveJS as needed. */
-  MOZ_ASSERT(!src->sourceObject()->isMarkedGray());
+  JS::AssertObjectIsNotGray(src->sourceObject());
 
   uint32_t nscopes = src->scopes().size();
   uint32_t nconsts = src->hasConsts() ? src->consts().size() : 0;
