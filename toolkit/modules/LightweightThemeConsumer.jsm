@@ -219,51 +219,47 @@ LightweightThemeConsumer.prototype = {
         stylesheet.remove();
       }
       if (usedVariables) {
-        for (const [variable] of usedVariables) {
+        for (const variable of usedVariables) {
           _setProperty(root, false, variable);
         }
       }
     }
-
-    this._lastExperimentData = {};
-
-    if (!active || !experiment) {
-      return;
-    }
-
-    let usedVariables = [];
-    if (properties.colors) {
-      for (const property in properties.colors) {
-        const cssVariable = experiment.colors[property];
-        const value = _sanitizeCSSColor(root.ownerDocument, properties.colors[property]);
-        usedVariables.push([cssVariable, value]);
+    if (active && experiment) {
+      this._lastExperimentData = {};
+      if (experiment.stylesheet) {
+        /* Stylesheet URLs are validated using WebExtension schemas */
+        let stylesheetAttr = `href="${experiment.stylesheet}" type="text/css"`;
+        let stylesheet = this._doc.createProcessingInstruction("xml-stylesheet",
+          stylesheetAttr);
+        this._doc.insertBefore(stylesheet, root);
+        this._lastExperimentData.stylesheet = stylesheet;
       }
-    }
-
-    if (properties.images) {
-      for (const property in properties.images) {
-        const cssVariable = experiment.images[property];
-        usedVariables.push([cssVariable, `url(${properties.images[property]})`]);
+      let usedVariables = [];
+      if (properties.colors) {
+        for (const property in properties.colors) {
+          const cssVariable = experiment.colors[property];
+          const value = _sanitizeCSSColor(root.ownerDocument, properties.colors[property]);
+          _setProperty(root, active, cssVariable, value);
+          usedVariables.push(cssVariable);
+        }
       }
-    }
-    if (properties.properties) {
-      for (const property in properties.properties) {
-        const cssVariable = experiment.properties[property];
-        usedVariables.push([cssVariable, properties.properties[property]]);
+      if (properties.images) {
+        for (const property in properties.images) {
+          const cssVariable = experiment.images[property];
+          _setProperty(root, active, cssVariable, `url(${properties.images[property]})`);
+          usedVariables.push(cssVariable);
+        }
       }
-    }
-    for (const [variable, value] of usedVariables) {
-      _setProperty(root, true, variable, value);
-    }
-    this._lastExperimentData.usedVariables = usedVariables;
-
-    if (experiment.stylesheet) {
-      /* Stylesheet URLs are validated using WebExtension schemas */
-      let stylesheetAttr = `href="${experiment.stylesheet}" type="text/css"`;
-      let stylesheet = this._doc.createProcessingInstruction("xml-stylesheet",
-        stylesheetAttr);
-      this._doc.insertBefore(stylesheet, root);
-      this._lastExperimentData.stylesheet = stylesheet;
+      if (properties.properties) {
+        for (const property in properties.properties) {
+          const cssVariable = experiment.properties[property];
+          _setProperty(root, active, cssVariable, properties.properties[property]);
+          usedVariables.push(cssVariable);
+        }
+      }
+      this._lastExperimentData.usedVariables = usedVariables;
+    } else {
+      this._lastExperimentData = null;
     }
   },
 };
@@ -297,8 +293,6 @@ function _setProperty(elem, active, variableName, value) {
 }
 
 function _setProperties(root, active, themeData) {
-  let properties = [];
-
   for (let map of [toolkitVariableMap, ThemeVariableMap]) {
     for (let [cssVarName, definition] of map) {
       const {
@@ -309,6 +303,7 @@ function _setProperties(root, active, themeData) {
       } = definition;
       let elem = optionalElementID ? root.ownerDocument.getElementById(optionalElementID)
                                    : root;
+
       let val = themeData[lwtProperty];
       if (isColor) {
         val = _sanitizeCSSColor(root.ownerDocument, val);
@@ -316,13 +311,8 @@ function _setProperties(root, active, themeData) {
           val = processColor(_parseRGBA(val), elem);
         }
       }
-      properties.push([elem, cssVarName, val]);
+      _setProperty(elem, active, cssVarName, val);
     }
-  }
-
-  // Set all the properties together, since _sanitizeCSSColor flushes.
-  for (const [elem, cssVarName, val] of properties) {
-    _setProperty(elem, active, cssVarName, val);
   }
 }
 
@@ -333,22 +323,12 @@ function _sanitizeCSSColor(doc, cssColor) {
   const HTML_NS = "http://www.w3.org/1999/xhtml";
   // style.color normalizes color values and makes invalid ones black, so a
   // simple round trip gets us a sanitized color value.
-  // Use !important so that the theme's stylesheets cannot override us.
   let div = doc.createElementNS(HTML_NS, "div");
-  div.style.setProperty("color", "black", "important");
-  div.style.setProperty("display", "none", "important");
+  div.style.color = "black";
   let span = doc.createElementNS(HTML_NS, "span");
-  span.style.setProperty("color", cssColor, "important");
-
-  // CSS variables are not allowed and should compute to black.
-  if (span.style.color.includes("var(")) {
-    span.style.color = "";
-  }
-
+  span.style.color = cssColor;
   div.appendChild(span);
-  doc.documentElement.appendChild(div);
   cssColor = doc.defaultView.getComputedStyle(span).color;
-  div.remove();
   return cssColor;
 }
 
