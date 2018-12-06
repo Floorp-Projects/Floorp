@@ -55,7 +55,7 @@ void HeapSlot::assertPreconditionForWriteBarrierPost(
             ->get() == target);
   }
 
-  CheckTargetIsNotGray(obj);
+  AssertTargetIsNotGray(obj);
 }
 
 bool CurrentThreadIsIonCompiling() { return TlsContext.get()->ionCompiling; }

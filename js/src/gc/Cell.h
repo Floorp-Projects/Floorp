@@ -134,7 +134,7 @@ struct alignas(gc::CellAlignBytes) Cell {
   }
 
 #ifdef DEBUG
-  static inline bool thingIsNotGray(Cell* cell);
+  static inline void assertThingIsNotGray(Cell* cell);
   inline bool isAligned() const;
   void dump(GenericPrinter& out) const;
   void dump() const;
@@ -430,8 +430,8 @@ static MOZ_ALWAYS_INLINE void AssertValidToSkipBarrier(TenuredCell* thing) {
 
 #ifdef DEBUG
 
-/* static */ bool Cell::thingIsNotGray(Cell* cell) {
-  return JS::CellIsNotGray(cell);
+/* static */ void Cell::assertThingIsNotGray(Cell* cell) {
+  JS::AssertCellIsNotGray(cell);
 }
 
 bool Cell::isAligned() const {

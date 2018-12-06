@@ -364,24 +364,32 @@ static MOZ_ALWAYS_INLINE bool ObjectIsMarkedGray(
   return ObjectIsMarkedGray(obj.unbarrieredGet());
 }
 
-// The following *IsNotGray functions are for use in assertions and take account
-// of the eventual gray marking state at the end of any ongoing incremental GC.
+// The following *IsNotGray functions take account of the eventual
+// gray marking state at the end of any ongoing incremental GC by
+// delaying the checks if necessary.
+
 #ifdef DEBUG
-inline bool CellIsNotGray(js::gc::Cell* maybeCell) {
-  if (!maybeCell) {
-    return true;
+
+inline void AssertCellIsNotGray(js::gc::Cell* maybeCell) {
+  if (maybeCell) {
+    js::gc::detail::AssertCellIsNotGray(maybeCell);
   }
-
-  return js::gc::detail::CellIsNotGray(maybeCell);
 }
 
-inline bool ObjectIsNotGray(JSObject* maybeObj) {
-  return CellIsNotGray(reinterpret_cast<js::gc::Cell*>(maybeObj));
+inline void AssertObjectIsNotGray(JSObject* maybeObj) {
+  AssertCellIsNotGray(reinterpret_cast<js::gc::Cell*>(maybeObj));
 }
 
-inline bool ObjectIsNotGray(const JS::Heap<JSObject*>& obj) {
-  return ObjectIsNotGray(obj.unbarrieredGet());
+inline void AssertObjectIsNotGray(const JS::Heap<JSObject*>& obj) {
+  AssertObjectIsNotGray(obj.unbarrieredGet());
 }
+
+#else
+
+inline void AssertCellIsNotGray(js::gc::Cell* maybeCell) {}
+inline void AssertObjectIsNotGray(JSObject* maybeObj) {}
+inline void AssertObjectIsNotGray(const JS::Heap<JSObject*>& obj) {}
+
 #endif
 
 /**
