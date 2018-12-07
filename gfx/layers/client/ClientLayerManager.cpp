@@ -681,6 +681,9 @@ void ClientLayerManager::ForwardTransaction(bool aScheduleComposite) {
   mLatestTransactionId =
       mTransactionIdAllocator->GetTransactionId(!mIsRepeatTransaction);
   TimeStamp refreshStart = mTransactionIdAllocator->GetTransactionStart();
+  if (!refreshStart) {
+    refreshStart = mTransactionStart;
+  }
 
   if (gfxPrefs::AlwaysPaint() && XRE_IsContentProcess()) {
     mForwarder->SendPaintTime(mLatestTransactionId, mLastPaintTime);
