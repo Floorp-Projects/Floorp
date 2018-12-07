@@ -147,9 +147,6 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
                                    LayersObserverEpoch aEpoch,
                                    bool aActive) = 0;
 
-  virtual void DidComposite(LayersId aId, TimeStamp& aCompositeStart,
-                            TimeStamp& aCompositeEnd) = 0;
-
   // HostIPCAllocator
   base::ProcessId GetChildProcessId() override;
   void NotifyNotUsed(PTextureParent* aTexture,
@@ -314,6 +311,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   void NotifyWebRenderContextPurge();
   void NotifyPipelineRendered(const wr::PipelineId& aPipelineId,
                               const wr::Epoch& aEpoch,
+                              const VsyncId& aCompositeStartId,
                               TimeStamp& aCompositeStart,
                               TimeStamp& aRenderStart, TimeStamp& aCompositeEnd,
                               wr::RendererStats* aStats = nullptr);
@@ -628,11 +626,10 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
    */
   bool CanComposite();
 
-  void DidComposite(LayersId aId, TimeStamp& aCompositeStart,
-                    TimeStamp& aCompositeEnd) override;
-  void DidComposite(TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd);
+  void DidComposite(const VsyncId& aId, TimeStamp& aCompositeStart,
+                    TimeStamp& aCompositeEnd);
 
-  void NotifyDidComposite(TransactionId aTransactionId,
+  void NotifyDidComposite(TransactionId aTransactionId, VsyncId aId,
                           TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd);
 
   // The indirect layer tree lock must be held before calling this function.
