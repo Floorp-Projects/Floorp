@@ -42,8 +42,8 @@ void VsyncBridgeParent::Open(Endpoint<PVsyncBridgeParent>&& aEndpoint) {
 }
 
 mozilla::ipc::IPCResult VsyncBridgeParent::RecvNotifyVsync(
-    const TimeStamp& aTimeStamp, const LayersId& aLayersId) {
-  CompositorBridgeParent::NotifyVsync(aTimeStamp, aLayersId);
+    const VsyncEvent& aVsync, const LayersId& aLayersId) {
+  CompositorBridgeParent::NotifyVsync(aVsync, aLayersId);
   return IPC_OK();
 }
 
