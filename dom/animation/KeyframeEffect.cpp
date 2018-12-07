@@ -374,9 +374,9 @@ void KeyframeEffect::EnsureBaseStyles(
     return;
   }
 
-  Maybe<BaseValuesHashmap> previousBaseStyles;
+  BaseValuesHashmap previousBaseStyles;
   if (aBaseStylesChanged != nullptr) {
-    previousBaseStyles.emplace(std::move(mBaseValues));
+    previousBaseStyles = std::move(mBaseValues);
   }
 
   mBaseValues.Clear();
@@ -405,7 +405,7 @@ void KeyframeEffect::EnsureBaseStyles(
   if (aBaseStylesChanged != nullptr) {
     for (auto iter = mBaseValues.Iter(); !iter.Done(); iter.Next()) {
       if (AnimationValue(iter.Data()) !=
-          AnimationValue(previousBaseStyles->Get(iter.Key()))) {
+          AnimationValue(previousBaseStyles.Get(iter.Key()))) {
         *aBaseStylesChanged = true;
         break;
       }

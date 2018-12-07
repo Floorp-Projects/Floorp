@@ -351,17 +351,6 @@ toolbarpaletteitem {
 }
 %endif
 
-%ifdef XP_WIN
-:root[sizemode="maximized"] #titlebar-buttonbox {
-  -moz-appearance: -moz-window-button-box-maximized;
-}
-
-:root[tabletmode] #titlebar-min,
-:root[tabletmode] #titlebar-max {
-  display: none !important;
-}
-%endif
-
 :root[inDOMFullscreen] #navigator-toolbox,
 :root[inDOMFullscreen] #fullscr-toggler,
 :root[inDOMFullscreen] #sidebar-box,

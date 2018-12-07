@@ -4,8 +4,8 @@
 <head>
 <script>
 function installEngine() {
-  var query = window.location.search.substring(1);
-  var args = JSON.parse(decodeURIComponent(query));
+  let query = window.location.search.substring(1);
+  let args = JSON.parse(decodeURIComponent(query));
 
   window.external.AddSearchProvider(...args);
 }
