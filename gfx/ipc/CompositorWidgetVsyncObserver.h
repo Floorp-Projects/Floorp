@@ -24,7 +24,7 @@ class CompositorWidgetVsyncObserver : public VsyncObserver {
   CompositorWidgetVsyncObserver(RefPtr<VsyncBridgeChild> aVsyncBridge,
                                 const layers::LayersId& aRootLayerTreeId);
 
-  bool NotifyVsync(const VsyncEvent& aVsync) override;
+  bool NotifyVsync(TimeStamp aVsyncTimestamp) override;
 
  private:
   RefPtr<VsyncBridgeChild> mVsyncBridge;

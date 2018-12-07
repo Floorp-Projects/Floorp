@@ -389,18 +389,22 @@ void CrossProcessCompositorBridgeParent::ShadowLayersUpdated(
       static_cast<uint32_t>(
           (endTime - aInfo.transactionStart()).ToMilliseconds()));
 
-  aLayerTree->SetPendingTransactionId(
-      aInfo.id(), aInfo.vsyncId(), aInfo.refreshStart(),
-      aInfo.transactionStart(), aInfo.url(), aInfo.fwdTime());
+  aLayerTree->SetPendingTransactionId(aInfo.id(), aInfo.refreshStart(),
+                                      aInfo.transactionStart(), aInfo.url(),
+                                      aInfo.fwdTime());
+}
+
+void CrossProcessCompositorBridgeParent::DidComposite(
+    LayersId aId, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd) {
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  DidCompositeLocked(aId, aCompositeStart, aCompositeEnd);
 }
 
 void CrossProcessCompositorBridgeParent::DidCompositeLocked(
-    LayersId aId, const VsyncId& aVsyncId, TimeStamp& aCompositeStart,
-    TimeStamp& aCompositeEnd) {
+    LayersId aId, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd) {
   sIndirectLayerTreesLock->AssertCurrentThreadOwns();
   if (LayerTransactionParent* layerTree = sIndirectLayerTrees[aId].mLayerTree) {
-    TransactionId transactionId =
-        layerTree->FlushTransactionId(aVsyncId, aCompositeEnd);
+    TransactionId transactionId = layerTree->FlushTransactionId(aCompositeEnd);
     if (transactionId.IsValid()) {
       Unused << SendDidComposite(aId, transactionId, aCompositeStart,
                                  aCompositeEnd);

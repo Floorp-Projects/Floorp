@@ -46,21 +46,21 @@ void VsyncBridgeChild::Open(Endpoint<PVsyncBridgeChild>&& aEndpoint) {
 
 class NotifyVsyncTask : public Runnable {
  public:
-  NotifyVsyncTask(RefPtr<VsyncBridgeChild> aVsyncBridge,
-                  const VsyncEvent& aVsync, const layers::LayersId& aLayersId)
+  NotifyVsyncTask(RefPtr<VsyncBridgeChild> aVsyncBridge, TimeStamp aTimeStamp,
+                  const layers::LayersId& aLayersId)
       : Runnable("gfx::NotifyVsyncTask"),
         mVsyncBridge(aVsyncBridge),
-        mVsync(aVsync),
+        mTimeStamp(aTimeStamp),
         mLayersId(aLayersId) {}
 
   NS_IMETHOD Run() override {
-    mVsyncBridge->NotifyVsyncImpl(mVsync, mLayersId);
+    mVsyncBridge->NotifyVsyncImpl(mTimeStamp, mLayersId);
     return NS_OK;
   }
 
  private:
   RefPtr<VsyncBridgeChild> mVsyncBridge;
-  VsyncEvent mVsync;
+  TimeStamp mTimeStamp;
   layers::LayersId mLayersId;
 };
 
@@ -68,16 +68,17 @@ bool VsyncBridgeChild::IsOnVsyncIOThread() const {
   return MessageLoop::current() == mLoop;
 }
 
-void VsyncBridgeChild::NotifyVsync(const VsyncEvent& aVsync,
+void VsyncBridgeChild::NotifyVsync(TimeStamp aTimeStamp,
                                    const layers::LayersId& aLayersId) {
   // This should be on the Vsync thread (not the Vsync I/O thread).
   MOZ_ASSERT(!IsOnVsyncIOThread());
 
-  RefPtr<NotifyVsyncTask> task = new NotifyVsyncTask(this, aVsync, aLayersId);
+  RefPtr<NotifyVsyncTask> task =
+      new NotifyVsyncTask(this, aTimeStamp, aLayersId);
   mLoop->PostTask(task.forget());
 }
 
-void VsyncBridgeChild::NotifyVsyncImpl(const VsyncEvent& aVsync,
+void VsyncBridgeChild::NotifyVsyncImpl(TimeStamp aTimeStamp,
                                        const layers::LayersId& aLayersId) {
   // This should be on the Vsync I/O thread.
   MOZ_ASSERT(IsOnVsyncIOThread());
@@ -85,7 +86,7 @@ void VsyncBridgeChild::NotifyVsyncImpl(const VsyncEvent& aVsync,
   if (!mProcessToken) {
     return;
   }
-  SendNotifyVsync(aVsync, aLayersId);
+  SendNotifyVsync(aTimeStamp, aLayersId);
 }
 
 void VsyncBridgeChild::Close() {

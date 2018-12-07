@@ -55,14 +55,11 @@ void VsyncSource::Display::NotifyVsync(TimeStamp aVsyncTimestamp) {
   // Called on the vsync thread
   MutexAutoLock lock(mDispatcherLock);
 
-  mVsyncId = mVsyncId.Next();
-  VsyncEvent event(mVsyncId, aVsyncTimestamp);
-
   for (size_t i = 0; i < mCompositorVsyncDispatchers.Length(); i++) {
-    mCompositorVsyncDispatchers[i]->NotifyVsync(event);
+    mCompositorVsyncDispatchers[i]->NotifyVsync(aVsyncTimestamp);
   }
 
-  mRefreshTimerVsyncDispatcher->NotifyVsync(event);
+  mRefreshTimerVsyncDispatcher->NotifyVsync(aVsyncTimestamp);
 }
 
 TimeDuration VsyncSource::Display::GetVsyncRate() {
