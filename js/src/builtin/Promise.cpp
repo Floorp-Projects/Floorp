@@ -3344,16 +3344,8 @@ MOZ_MUST_USE bool js::OriginalPromiseThen(
     JSContext* cx, HandleObject promiseObj, HandleValue onFulfilled,
     HandleValue onRejected, MutableHandleObject dependent,
     CreateDependentPromise createDependent) {
-  RootedValue promiseVal(cx, ObjectValue(*promiseObj));
   Rooted<PromiseObject*> promise(
-      cx, UnwrapAndTypeCheckValue<PromiseObject>(cx, promiseVal, [=] {
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                                   JSMSG_INCOMPATIBLE_PROTO, "Promise", "then",
-                                   promiseObj->getClass()->name);
-      }));
-  if (!promise) {
-    return false;
-  }
+      cx, &CheckedUnwrap(promiseObj)->as<PromiseObject>());
 
   // Steps 3-4.
   Rooted<PromiseCapability> resultCapability(cx);
