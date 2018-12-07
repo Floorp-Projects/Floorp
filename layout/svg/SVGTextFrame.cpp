@@ -2904,7 +2904,7 @@ void nsDisplaySVGText::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
 // nsQueryFrame methods
 
 NS_QUERYFRAME_HEAD(SVGTextFrame)
-NS_QUERYFRAME_ENTRY(SVGTextFrame)
+  NS_QUERYFRAME_ENTRY(SVGTextFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsSVGDisplayContainerFrame)
 
 // ---------------------------------------------------------------------

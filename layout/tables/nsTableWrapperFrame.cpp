@@ -46,7 +46,7 @@ nsTableWrapperFrame::nsTableWrapperFrame(ComputedStyle* aStyle, ClassID aID)
 nsTableWrapperFrame::~nsTableWrapperFrame() {}
 
 NS_QUERYFRAME_HEAD(nsTableWrapperFrame)
-NS_QUERYFRAME_ENTRY(nsTableWrapperFrame)
+  NS_QUERYFRAME_ENTRY(nsTableWrapperFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 #ifdef ACCESSIBILITY
