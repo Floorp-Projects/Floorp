@@ -381,6 +381,7 @@ pub struct BackendProfileCounters {
     pub total_time: TimeProfileCounter,
     pub resources: ResourceProfileCounters,
     pub ipc: IpcProfileCounters,
+    pub intern: InternProfileCounters,
 }
 
 #[derive(Clone)]
@@ -398,6 +399,13 @@ pub struct IpcProfileCounters {
     pub send_time: TimeProfileCounter,
     pub total_time: TimeProfileCounter,
     pub display_lists: ResourceProfileCounter,
+}
+
+#[derive(Clone)]
+pub struct InternProfileCounters {
+    pub prims: ResourceProfileCounter,
+    pub text_runs: ResourceProfileCounter,
+    pub clips: ResourceProfileCounter,
 }
 
 impl IpcProfileCounters {
@@ -437,6 +445,11 @@ impl BackendProfileCounters {
                 send_time: TimeProfileCounter::new("Display List Send Time", false),
                 total_time: TimeProfileCounter::new("Total Display List Time", false),
                 display_lists: ResourceProfileCounter::new("Display Lists Sent"),
+            },
+            intern: InternProfileCounters {
+                prims: ResourceProfileCounter::new("Interned primitives"),
+                text_runs: ResourceProfileCounter::new("Interned text runs"),
+                clips: ResourceProfileCounter::new("Interned clips"),
             },
         }
     }
@@ -1076,6 +1089,17 @@ impl Profiler {
             &[
                 &backend_profile.resources.font_templates,
                 &backend_profile.resources.image_templates,
+            ],
+            debug_renderer,
+            true,
+            &mut self.draw_state
+        );
+
+        Profiler::draw_counters(
+            &[
+                &backend_profile.intern.clips,
+                &backend_profile.intern.prims,
+                &backend_profile.intern.text_runs,
             ],
             debug_renderer,
             true,
