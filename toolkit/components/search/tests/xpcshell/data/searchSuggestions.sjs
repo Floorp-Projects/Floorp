@@ -21,7 +21,10 @@ function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, 200, "OK");
 
   let q = request.method == "GET" ? query.q : undefined;
-  if (q == "no remote" || q == "no results") {
+  if (q == "cookie") {
+    response.setHeader("Set-Cookie", "cookie=1");
+    writeSuggestions(q);
+  } else if (q == "no remote" || q == "no results") {
     writeSuggestions(q);
   } else if (q == "Query Mismatch") {
     writeSuggestions("This is an incorrect query string", ["some result"]);
