@@ -236,7 +236,7 @@
 	<string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">惡意軟體網站問題</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
-	<p>%S 這個網站被回報為有害網站，已依照您的安全性偏好設定予以封鎖。</p>
+	<p>%1$s 這個網站被回報為有害網站，已依照您的安全性偏好設定予以封鎖。</p>
 	]]></string>
 
 	<!-- The document title and heading of an error page. -->
