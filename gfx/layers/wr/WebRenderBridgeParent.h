@@ -181,9 +181,9 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
       const bool aIsFirstPaint, const bool aUseForTelemetry = true);
   TransactionId LastPendingTransactionId();
   TransactionId FlushTransactionIdsForEpoch(
-      const wr::Epoch& aEpoch, const TimeStamp& aCompositeStartTime,
-      const TimeStamp& aRenderStartTime, const TimeStamp& aEndTime,
-      UiCompositorControllerParent* aUiController,
+      const wr::Epoch& aEpoch, const VsyncId& aCompositeStartId,
+      const TimeStamp& aCompositeStartTime, const TimeStamp& aRenderStartTime,
+      const TimeStamp& aEndTime, UiCompositorControllerParent* aUiController,
       wr::RendererStats* aStats = nullptr,
       nsTArray<FrameStats>* aOutputStats = nullptr);
   void NotifySceneBuiltForEpoch(const wr::Epoch& aEpoch,
@@ -316,7 +316,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   void FlushFrameGeneration();
   void FlushFramePresentation();
 
-  void MaybeGenerateFrame(bool aForceGenerateFrame);
+  void MaybeGenerateFrame(VsyncId aId, bool aForceGenerateFrame);
 
  private:
   struct PendingTransactionId {
