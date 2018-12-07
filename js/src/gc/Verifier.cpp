@@ -751,13 +751,7 @@ static JSObject* MaybeGetDelegate(Cell* cell) {
   }
 
   JSObject* object = cell->as<JSObject>();
-  JSWeakmapKeyDelegateOp op = object->getClass()->extWeakmapKeyDelegateOp();
-  if (!op) {
-    return nullptr;
-  }
-
-  JS::AutoSuppressGCAnalysis nogc; // Calling the delegate op cannot GC.
-  return op(object);
+  return js::UncheckedUnwrapWithoutExpose(object);
 }
 
 bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
