@@ -1790,13 +1790,7 @@ impl AlphaBatchBuilder {
                 }
             }
             PrimitiveInstanceKind::LinearGradient { data_handle, ref visible_tiles_range, .. } => {
-                let prim_data = &ctx.resources.prim_data_store[data_handle];
-                let (ref stops_handle, brush_segments) = match prim_data.kind {
-                    PrimitiveTemplateKind::LinearGradient { stops_handle, ref brush_segments, .. } => {
-                        (stops_handle, brush_segments)
-                    }
-                    _ => unreachable!()
-                };
+                let prim_data = &ctx.resources.linear_grad_data_store[data_handle];
                 let specified_blend_mode = BlendMode::PremultipliedAlpha;
 
                 let mut prim_header = PrimitiveHeader {
@@ -1822,7 +1816,7 @@ impl AlphaBatchBuilder {
                         BrushBatchKind::LinearGradient,
                         BatchTextures::no_texture(),
                         [
-                            stops_handle.as_int(gpu_cache),
+                            prim_data.stops_handle.as_int(gpu_cache),
                             0,
                             0,
                         ],
@@ -1837,10 +1831,10 @@ impl AlphaBatchBuilder {
                         batch_params.prim_user_data,
                     );
 
-                    let segments = if brush_segments.is_empty() {
+                    let segments = if prim_data.brush_segments.is_empty() {
                         None
                     } else {
-                        Some(brush_segments.as_slice())
+                        Some(prim_data.brush_segments.as_slice())
                     };
 
                     self.add_segmented_prim_to_batch(
@@ -1863,7 +1857,7 @@ impl AlphaBatchBuilder {
 
                     add_gradient_tiles(
                         visible_tiles,
-                        stops_handle,
+                        &prim_data.stops_handle,
                         BrushBatchKind::LinearGradient,
                         specified_blend_mode,
                         bounding_rect,
@@ -1877,13 +1871,7 @@ impl AlphaBatchBuilder {
                 }
             }
             PrimitiveInstanceKind::RadialGradient { data_handle, ref visible_tiles_range, .. } => {
-                let prim_data = &ctx.resources.prim_data_store[data_handle];
-                let (stops_handle, brush_segments) = match prim_data.kind {
-                    PrimitiveTemplateKind::RadialGradient { ref stops_handle, ref brush_segments, .. } => {
-                        (stops_handle, brush_segments)
-                    }
-                    _ => unreachable!()
-                };
+                let prim_data = &ctx.resources.radial_grad_data_store[data_handle];
                 let specified_blend_mode = BlendMode::PremultipliedAlpha;
 
                 let mut prim_header = PrimitiveHeader {
@@ -1909,7 +1897,7 @@ impl AlphaBatchBuilder {
                         BrushBatchKind::RadialGradient,
                         BatchTextures::no_texture(),
                         [
-                            stops_handle.as_int(gpu_cache),
+                            prim_data.stops_handle.as_int(gpu_cache),
                             0,
                             0,
                         ],
@@ -1924,10 +1912,10 @@ impl AlphaBatchBuilder {
                         batch_params.prim_user_data,
                     );
 
-                    let segments = if brush_segments.is_empty() {
+                    let segments = if prim_data.brush_segments.is_empty() {
                         None
                     } else {
-                        Some(brush_segments.as_slice())
+                        Some(prim_data.brush_segments.as_slice())
                     };
 
                     self.add_segmented_prim_to_batch(
@@ -1950,7 +1938,7 @@ impl AlphaBatchBuilder {
 
                     add_gradient_tiles(
                         visible_tiles,
-                        stops_handle,
+                        &prim_data.stops_handle,
                         BrushBatchKind::RadialGradient,
                         specified_blend_mode,
                         bounding_rect,
