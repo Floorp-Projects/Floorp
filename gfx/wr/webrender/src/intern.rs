@@ -4,6 +4,7 @@
 
 use api::{LayoutPrimitiveInfo, LayoutRect};
 use internal_types::FastHashMap;
+use profiler::ResourceProfileCounter;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::marker::PhantomData;
@@ -153,6 +154,7 @@ impl<S, T, M> DataStore<S, T, M> where S: Debug, T: From<S>, M: Debug
     pub fn apply_updates(
         &mut self,
         update_list: UpdateList<S>,
+        profile_counter: &mut ResourceProfileCounter,
     ) {
         let mut data_iter = update_list.data.into_iter();
         for update in update_list.updates {
@@ -171,6 +173,10 @@ impl<S, T, M> DataStore<S, T, M> where S: Debug, T: From<S>, M: Debug
                 }
             }
         }
+
+        let per_item_size = mem::size_of::<S>() + mem::size_of::<T>();
+        profile_counter.set(self.items.len(), per_item_size * self.items.len());
+
         debug_assert!(data_iter.next().is_none());
     }
 }
