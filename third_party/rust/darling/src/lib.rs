@@ -4,12 +4,12 @@
 //!
 //! ## Design
 //! Darling takes considerable design inspiration from [`serde`]. A data structure that can be
-//! read from any attribute implements `FromMetaItem` (or has an implementation automatically 
-//! generated using `derive`). Any crate can provide `FromMetaItem` implementations, even one not
+//! read from any attribute implements `FromMeta` (or has an implementation automatically
+//! generated using `derive`). Any crate can provide `FromMeta` implementations, even one not
 //! specifically geared towards proc-macro authors.
 //!
-//! Proc-macro crates should provide their own structs which implement or derive `FromDeriveInput` and
-//! `FromField` to gather settings relevant to their operation.
+//! Proc-macro crates should provide their own structs which implement or derive `FromDeriveInput`,
+//! `FromField`, `FromVariant`, `FromGenerics`, _et alia_ to gather settings relevant to their operation.
 //!
 //! ## Attributes
 //! There are a number of attributes that `darling` exposes to enable finer-grained control over the code
@@ -24,10 +24,10 @@
 //!   `Default::default()` for their value, but you can override that with an explicit default or a value from the type-level default.
 //!
 //! ## Forwarded Fields
-//! The traits `FromDeriveInput` and `FromField` support forwarding fields from the input AST directly 
-//! to the derived struct. These fields are matched up by identifier **before** `rename` attribute values are
-//! considered. The deriving struct is responsible for making sure the types of fields it does declare match this
-//! table.
+//! All derivable traits except `FromMeta` support forwarding some fields from the input AST to the derived struct.
+//! These fields are matched up by identifier **before** `rename` attribute values are considered,
+//! allowing you to use their names for your own properties.
+//! The deriving struct is responsible for making sure the types of fields it chooses to declare are compatible with this table.
 //!
 //! A deriving struct is free to include or exclude any of the fields below.
 //!
@@ -36,8 +36,8 @@
 //! |---|---|---|
 //! |`ident`|`syn::Ident`|The identifier of the passed-in type|
 //! |`vis`|`syn::Visibility`|The visibility of the passed-in type|
-//! |`generics`|`syn::Generics`|The generics of the passed-in type|
-//! |`body`|`darling::ast::Data`|The body of the passed-in type|
+//! |`generics`|`T: darling::FromGenerics`|The generics of the passed-in type. This can be `syn::Generics`, `darling::ast::Generics`, or any compatible type.|
+//! |`data`|`darling::ast::Data`|The body of the passed-in type|
 //! |`attrs`|`Vec<syn::Attribute>`|The forwarded attributes from the passed in type. These are controlled using the `forward_attrs` attribute.|
 //!
 //! ### `FromField`
@@ -47,6 +47,14 @@
 //! |`vis`|`syn::Visibility`|The visibility of the passed-in field|
 //! |`ty`|`syn::Type`|The type of the passed-in field|
 //! |`attrs`|`Vec<syn::Attribute>`|The forwarded attributes from the passed in field. These are controlled using the `forward_attrs` attribute.|
+//!
+//! ### `FromTypeParam`
+//! |Field name|Type|Meaning|
+//! |---|---|---|
+//! |`ident`|`syn::Ident`|The identifier of the passed-in type param|
+//! |`bounds`|`Vec<syn::TypeParamBound>`|The bounds applied to the type param|
+//! |`default`|`Option<syn::Type>`|The default type of the parameter, if one exists|
+//! |`attrs`|`Vec<syn::Attribute>`|The forwarded attributes from the passed in type param. These are controlled using the `forward_attrs` attribute.|
 
 extern crate core;
 extern crate darling_core;
@@ -59,22 +67,32 @@ extern crate darling_macro;
 pub use darling_macro::*;
 
 #[doc(inline)]
-pub use darling_core::{FromMetaItem, FromDeriveInput, FromField, FromVariant};
+pub use darling_core::{FromDeriveInput, FromField, FromGenericParam, FromGenerics, FromMeta,
+                       FromTypeParam, FromVariant};
 
 #[doc(inline)]
-pub use darling_core::{Result, Error};
+pub use darling_core::{Error, Result};
 
 #[doc(inline)]
-pub use darling_core::{ast, error, util};
+pub use darling_core::{ast, error, usage, util};
+
+// XXX exported so that `ExtractAttribute::extractor` can convert a path into tokens.
+// This is likely to change in the future, so only generated code should depend on this export.
+#[doc(hidden)]
+pub use darling_core::ToTokens;
 
 /// Core/std trait re-exports. This should help produce generated code which doesn't
 /// depend on `std` unnecessarily, and avoids problems caused by aliasing `std` or any
 /// of the referenced types.
 #[doc(hidden)]
-pub mod export {    
-    pub use ::core::convert::From;
-    pub use ::core::option::Option::{self, Some, None};
-    pub use ::core::result::Result::{self, Ok, Err};
-    pub use ::core::default::Default;
-    pub use ::std::vec::Vec;
+pub mod export {
+    pub use core::convert::From;
+    pub use core::default::Default;
+    pub use core::option::Option::{self, None, Some};
+    pub use core::result::Result::{self, Err, Ok};
+    pub use std::vec::Vec;
+    pub use std::string::ToString;
 }
+
+#[macro_use]
+mod macros_public;

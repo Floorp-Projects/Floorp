@@ -1,15 +1,16 @@
-use quote::{Tokens, ToTokens};
+use proc_macro2::TokenStream;
+use quote::ToTokens;
 use syn;
 
-use ast::{Data, Style, Fields};
-use codegen::{Field, TraitImpl, OuterFromImpl, Variant};
+use ast::{Data, Fields, Style};
+use codegen::{Field, OuterFromImpl, TraitImpl, Variant};
 
-pub struct FmiImpl<'a> {
+pub struct FromMetaImpl<'a> {
     pub base: TraitImpl<'a>,
 }
 
-impl<'a> ToTokens for FmiImpl<'a> {
-    fn to_tokens(&self, tokens: &mut Tokens) {
+impl<'a> ToTokens for FromMetaImpl<'a> {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
         let base = &self.base;
 
         let impl_block = match base.data {
@@ -24,15 +25,23 @@ impl<'a> ToTokens for FmiImpl<'a> {
             }
 
             // Newtype structs proxy to the sole value they contain.
-            Data::Struct(Fields { ref fields, style: Style::Tuple, .. }) if fields.len() == 1 => {
+            Data::Struct(Fields {
+                ref fields,
+                style: Style::Tuple,
+                ..
+            }) if fields.len() == 1 =>
+            {
                 let ty_ident = base.ident;
                 quote!(
-                    fn from_meta_item(__item: &::syn::Meta) -> ::darling::Result<Self> {
-                        Ok(#ty_ident(::darling::FromMetaItem::from_meta_item(__item)?))
+                    fn from_meta(__item: &::syn::Meta) -> ::darling::Result<Self> {
+                        Ok(#ty_ident(::darling::FromMeta::from_meta(__item)?))
                     }
                 )
             }
-            Data::Struct(Fields { style: Style::Tuple, .. }) => {
+            Data::Struct(Fields {
+                style: Style::Tuple,
+                ..
+            }) => {
                 panic!("Multi-field tuples are not supported");
             }
             Data::Struct(ref data) => {
@@ -44,7 +53,6 @@ impl<'a> ToTokens for FmiImpl<'a> {
                 let core_loop = base.core_loop();
                 let default = base.fallback_decl();
                 let map = base.map_fn();
-
 
                 quote!(
                     fn from_list(__items: &[::syn::NestedMeta]) -> ::darling::Result<Self> {
@@ -79,7 +87,7 @@ impl<'a> ToTokens for FmiImpl<'a> {
                             0 => ::darling::export::Err(::darling::Error::too_few_items(1)),
                             1 => {
                                 if let ::syn::NestedMeta::Meta(ref __nested) = __outer[0] {
-                                    match __nested.name().as_ref() {
+                                    match __nested.name().to_string().as_ref() {
                                         #(#struct_arms)*
                                         __other => ::darling::export::Err(::darling::Error::unknown_value(__other))
                                     }
@@ -105,9 +113,9 @@ impl<'a> ToTokens for FmiImpl<'a> {
     }
 }
 
-impl<'a> OuterFromImpl<'a> for FmiImpl<'a> {
+impl<'a> OuterFromImpl<'a> for FromMetaImpl<'a> {
     fn trait_path(&self) -> syn::Path {
-        path!(::darling::FromMetaItem)
+        path!(::darling::FromMeta)
     }
 
     fn base(&'a self) -> &'a TraitImpl<'a> {
