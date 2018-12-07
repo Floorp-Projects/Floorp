@@ -1,7 +1,37 @@
 # Changelog
 
-## Unreleased Features
-_None_
+## v0.8.0
+- Update dependency on `syn` to 0.15 [#44](https://github.com/darling/pull/44). Thanks to @hcpl
+
+## v0.7.0 (July 24, 2018)
+- Update dependencies on `syn` and `proc-macro2`
+- Add `util::IdentString`, which acts as an Ident or its string equivalent
+
+## v0.6.3 (May 22, 2018)
+- Add support for `Uses*` traits in where predicates
+
+## v0.6.2 (May 22, 2018)
+- Add `usage` module for tracking type param and lifetime usage in generic declarations
+  - Add `UsesTypeParams` and `CollectsTypeParams` traits [#37](https://github.com/darling/issues/37)
+  - Add `UsesLifetimes` and `CollectLifetimes` traits [#41](https://github.com/darling/pull/41)
+- Don't add `FromMeta` bounds to type parameters only used by skipped fields [#40](https://github.com/darling/pull/40)
+
+## v0.6.1 (May 17, 2018)
+- Fix an issue where the `syn` update broke shape validation [#36](https://github.com/TedDriggs/darling/issues/36)
+
+## v0.6.0 (May 15, 2018)
+
+### Breaking Changes
+- Renamed `FromMetaItem` to `FromMeta`, and renamed `from_meta_item` method to `from_meta`
+- Added dedicated `derive(FromMetaItem)` which panics and redirects users to `FromMeta`
+
+## v0.5.0 (May 10, 2018)
+- Add `ast::Generics` and `ast::GenericParam` to work with generics in a manner similar to `ast::Data`
+- Add `ast::GenericParamExt` to support alternate representations of generic parameters
+- Add `util::WithOriginal` to get a parsed representation and syn's own struct for a syntax block
+- Add `FromGenerics` and `FromGenericParam` traits (without derive support)
+- Change generated code for `generics` magic field to invoke `FromGenerics` trait during parsing
+- Add `FromTypeParam` trait [#30](https://github.com/TedDriggs/darling/pull/30). Thanks to @upsuper
 
 ## v0.4.0 (April 5, 2018)
 - Update dependencies on `proc-macro`, `quote`, and `syn` [#26](https://github.com/TedDriggs/darling/pull/26). Thanks to @hcpl
