@@ -1180,8 +1180,8 @@ static MOZ_MUST_USE JSObject* ReadableStreamTee_Cancel(
   return cancelPromise;
 }
 
-static MOZ_MUST_USE bool ReadableStreamDefaultControllerErrorIfNeeded(
-    JSContext* cx, Handle<ReadableStreamDefaultController*> unwrappedController,
+static MOZ_MUST_USE bool ReadableStreamControllerError(
+    JSContext* cx, Handle<ReadableStreamController*> unwrappedController,
     HandleValue e);
 
 /**
@@ -1200,17 +1200,19 @@ static bool TeeReaderClosedHandler(JSContext* cx, unsigned argc, Value* vp) {
     // leave the teeState in an undefined state.
     teeState->setClosedOrErrored();
 
-    // Step a.i: Perform ! ReadableStreamDefaultControllerErrorIfNeeded(
-    //                          branch1.[[readableStreamController]], r).
+    // Step a.i: Perform
+    //           ! ReadableStreamDefaultControllerError(
+    //               branch1.[[readableStreamController]], r).
     Rooted<ReadableStreamDefaultController*> branch1(cx, teeState->branch1());
-    if (!ReadableStreamDefaultControllerErrorIfNeeded(cx, branch1, reason)) {
+    if (!ReadableStreamControllerError(cx, branch1, reason)) {
       return false;
     }
 
-    // Step a.ii: Perform ! ReadableStreamDefaultControllerErrorIfNeeded(
-    //                          branch2.[[readableStreamController]], r).
+    // Step a.ii: Perform
+    //            ! ReadableStreamDefaultControllerError(
+    //                branch2.[[readableStreamController]], r).
     Rooted<ReadableStreamDefaultController*> branch2(cx, teeState->branch2());
-    if (!ReadableStreamDefaultControllerErrorIfNeeded(cx, branch2, reason)) {
+    if (!ReadableStreamControllerError(cx, branch2, reason)) {
       return false;
     }
   }
@@ -2231,14 +2233,10 @@ static bool ControllerStartHandler(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static MOZ_MUST_USE bool ReadableStreamControllerError(
-    JSContext* cx, Handle<ReadableStreamController*> unwrappedController,
-    HandleValue e);
-
 /**
- * Streams spec, 3.8.3, step 11.b.
+ * Streams spec, 3.9.11, step 12.a.
  * and
- * Streams spec, 3.10.3, step 16.b.
+ * Streams spec, 3.12.26, step 17.a.
  */
 static bool ControllerStartFailedHandler(JSContext* cx, unsigned argc,
                                          Value* vp) {
@@ -2246,21 +2244,12 @@ static bool ControllerStartFailedHandler(JSContext* cx, unsigned argc,
   Rooted<ReadableStreamController*> controller(
       cx, TargetFromHandler<ReadableStreamController>(args));
 
-  // 3.8.3, Step 11.b.i:
-  // Perform ! ReadableStreamDefaultControllerErrorIfNeeded(controller, r).
-  if (controller->is<ReadableStreamDefaultController>()) {
-    Rooted<ReadableStreamDefaultController*> defaultController(
-        cx, &controller->as<ReadableStreamDefaultController>());
-    return ReadableStreamDefaultControllerErrorIfNeeded(cx, defaultController,
-                                                        args.get(0));
-  }
-
-  // 3.10.3, Step 16.b.i: If stream.[[state]] is "readable", perform
-  //                      ! ReadableByteStreamControllerError(controller, r).
-  if (controller->stream()->readable()) {
-    if (!ReadableStreamControllerError(cx, controller, args.get(0))) {
-      return false;
-    }
+  // 3.9.11, Step 12.a: Perform
+  //      ! ReadableStreamDefaultControllerError(controller, r).
+  // 3.12.26, Step 17.a: Perform
+  //      ! ReadableByteStreamControllerError(controller, r).
+  if (!ReadableStreamControllerError(cx, controller, args.get(0))) {
+    return false;
   }
 
   args.rval().setUndefined();
@@ -2429,7 +2418,6 @@ static bool ReadableStreamDefaultController_error(JSContext* cx, unsigned argc,
                                                   Value* vp) {
   // Step 1: If ! IsReadableStreamDefaultController(this) is false, throw a
   //         TypeError exception.
-
   CallArgs args = CallArgsFromVp(argc, vp);
   Rooted<ReadableStreamDefaultController*> unwrappedController(
       cx, UnwrapAndTypeCheckThis<ReadableStreamDefaultController>(cx, args,
@@ -2438,19 +2426,11 @@ static bool ReadableStreamDefaultController_error(JSContext* cx, unsigned argc,
     return false;
   }
 
-  // Step 2: Let stream be this.[[controlledReadableStream]].
-  // Step 3: If stream.[[state]] is not "readable", throw a TypeError exception.
-  if (!unwrappedController->stream()->readable()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_READABLESTREAMCONTROLLER_NOT_READABLE,
-                              "error");
-    return false;
-  }
-
-  // Step 4: Perform ! ReadableStreamDefaultControllerError(this, e).
+  // Step 2: Perform ! ReadableStreamDefaultControllerError(this, e).
   if (!ReadableStreamControllerError(cx, unwrappedController, args.get(0))) {
     return false;
   }
+
   args.rval().setUndefined();
   return true;
 }
@@ -2727,12 +2707,10 @@ static bool ControllerPullFailedHandler(JSContext* cx, unsigned argc,
     return false;
   }
 
-  // Step a: If controller.[[controlledReadableStream]].[[state]] is "readable",
-  //         perform ! ReadableByteStreamControllerError(controller, e).
-  if (controller->stream()->readable()) {
-    if (!ReadableStreamControllerError(cx, controller, e)) {
-      return false;
-    }
+  // Step a: Perform ! ReadableStreamDefaultControllerError(controller, e).
+  //         (ReadableByteStreamControllerError in 3.12.3.)
+  if (!ReadableStreamControllerError(cx, controller, e)) {
+    return false;
   }
 
   args.rval().setUndefined();
@@ -2982,10 +2960,7 @@ static MOZ_MUST_USE bool ReadableStreamDefaultControllerEnqueue(
   // Step 2: Assert: controller.[[closeRequested]] is false.
   MOZ_ASSERT(!unwrappedController->closeRequested());
 
-  // Step 3: Assert: stream.[[state]] is "readable".
-  MOZ_ASSERT(unwrappedStream->readable());
-
-  // Step 4: If ! IsReadableStreamLocked(stream) is true and
+  // Step 3: If ! IsReadableStreamLocked(stream) is true and
   //         ! ReadableStreamGetNumReadRequests(stream) > 0, perform
   //         ! ReadableStreamFulfillReadRequest(stream, chunk, false).
   if (unwrappedStream->locked() &&
@@ -2995,32 +2970,31 @@ static MOZ_MUST_USE bool ReadableStreamDefaultControllerEnqueue(
       return false;
     }
   } else {
-    // Step 5: Otherwise,
-    // Step a: Let chunkSize be 1.
+    // Step 4: Otherwise,
+    // Step a: Let result be the result of performing
+    //         controller.[[strategySizeAlgorithm]], passing in chunk, and
+    //         interpreting the result as an ECMAScript completion value.
+    // Step c: (on success) Let chunkSize be result.[[Value]].
     RootedValue chunkSize(cx, NumberValue(1));
     bool success = true;
-
-    // Step b: If controller.[[strategySize]] is not undefined,
     RootedValue strategySize(cx, unwrappedController->strategySize());
     if (!strategySize.isUndefined()) {
-      // Step i: Set chunkSize to
-      //         Call(stream.[[strategySize]], undefined, chunk).
       if (!cx->compartment()->wrap(cx, &strategySize)) {
         return false;
       }
       success = Call(cx, strategySize, UndefinedHandleValue, chunk, &chunkSize);
     }
 
-    // Step c: Let enqueueResult be
+    // Step d: Let enqueueResult be
     //         EnqueueValueWithSize(controller, chunk, chunkSize).
     if (success) {
       success = EnqueueValueWithSize(cx, unwrappedController, chunk, chunkSize);
     }
 
     if (!success) {
-      // Step b.ii: If chunkSize is an abrupt completion,
+      // Step b: If result is an abrupt completion,
       // and
-      // Step d: If enqueueResult is an abrupt completion,
+      // Step e: If enqueueResult is an abrupt completion,
       RootedValue exn(cx);
       if (!cx->isExceptionPending() || !GetAndClearException(cx, &exn)) {
         // Uncatchable error. Die immediately without erroring the
@@ -3028,15 +3002,17 @@ static MOZ_MUST_USE bool ReadableStreamDefaultControllerEnqueue(
         return false;
       }
 
-      // Step b.ii.1: Perform
-      //              ! ReadableStreamDefaultControllerErrorIfNeeded(
-      //                  controller, chunkSize.[[Value]]).
-      if (!ReadableStreamDefaultControllerErrorIfNeeded(cx, unwrappedController,
-                                                        exn)) {
+      // Step b.i: Perform ! ReadableStreamDefaultControllerError(
+      //           controller, result.[[Value]]).
+      // Step e.i: Perform ! ReadableStreamDefaultControllerError(
+      //           controller, enqueueResult.[[Value]]).
+      if (!ReadableStreamControllerError(cx, unwrappedController, exn)) {
         return false;
       }
 
-      // Step b.ii.2: Return chunkSize.
+      // Step b.ii: Return result.
+      // Step e.ii: Return enqueueResult.
+      // (I.e., propagate the exception.)
       cx->setPendingException(exn);
       return false;
     }
@@ -3064,8 +3040,10 @@ static MOZ_MUST_USE bool ReadableStreamControllerError(
   // Step 1: Let stream be controller.[[controlledReadableStream]].
   Rooted<ReadableStream*> unwrappedStream(cx, unwrappedController->stream());
 
-  // Step 2: Assert: stream.[[state]] is "readable".
-  MOZ_ASSERT(unwrappedStream->readable());
+  // Step 2: If stream.[[state]] is not "readable", return.
+  if (!unwrappedStream->readable()) {
+    return true;
+  }
 
   // Step 3 of 3.12.10:
   // Perform ! ReadableByteStreamControllerClearPendingPullIntos(controller).
@@ -3085,23 +3063,6 @@ static MOZ_MUST_USE bool ReadableStreamControllerError(
 
   // Step 4 (or 5): Perform ! ReadableStreamError(stream, e).
   return ReadableStreamErrorInternal(cx, unwrappedStream, e);
-}
-
-/**
- * Streams spec, 3.9.7.
- *      ReadableStreamDefaultControllerErrorIfNeeded ( controller, e ) nothrow
- */
-static MOZ_MUST_USE bool ReadableStreamDefaultControllerErrorIfNeeded(
-    JSContext* cx, Handle<ReadableStreamDefaultController*> unwrappedController,
-    HandleValue e) {
-  MOZ_ASSERT(!cx->isExceptionPending());
-
-  // Step 1: If controller.[[controlledReadableStream]].[[state]] is "readable",
-  //         perform ! ReadableStreamDefaultControllerError(controller, e).
-  if (unwrappedController->stream()->readable()) {
-    return ReadableStreamControllerError(cx, unwrappedController, e);
-  }
-  return true;
 }
 
 /**
@@ -4826,15 +4787,6 @@ JS_PUBLIC_API bool JS::ReadableStreamError(JSContext* cx,
     return false;
   }
 
-  // Step 3: If stream.[[state]] is not "readable", throw a TypeError exception.
-  if (!unwrappedStream->readable()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_READABLESTREAMCONTROLLER_NOT_READABLE,
-                              "error");
-    return false;
-  }
-
-  // Step 4: Perform ! ReadableStreamDefaultControllerError(this, e).
   Rooted<ReadableStreamController*> unwrappedController(
       cx, unwrappedStream->controller());
   return ReadableStreamControllerError(cx, unwrappedController, error);
