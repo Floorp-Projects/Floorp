@@ -46,8 +46,8 @@
 }
 
 @media (-moz-windows-compositor) {
-  @media not all and (-moz-os-version: windows-win7) {
-    @media not all and (-moz-os-version: windows-win8) {
+  @media not (-moz-os-version: windows-win7) {
+    @media not (-moz-os-version: windows-win8) {
       @media (-moz-windows-default-theme) {
         :root:not(:-moz-lwtheme) {
           background-color: hsl(0, 0%, 78%);
