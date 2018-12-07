@@ -44,6 +44,8 @@
   --base-line-height: 1.8;
   --micro-font-size: 11px;
 
+  --monospace-font-family: monospace;
+
   /*
   * Variables particular to about:debugging
   */
@@ -103,6 +105,11 @@ a:active {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Technical text that should use a monospace font, such as code, error messages. */
+.technical-text {
+  font-family: var(--monospace-font-family);
 }
 
 /*
@@ -187,7 +194,6 @@ a:active {
   fill: currentColor;
   -moz-context-properties: fill;
 }
-
 
 /*
 * Layout elements
