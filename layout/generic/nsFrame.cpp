@@ -475,7 +475,7 @@ void nsFrame::operator delete(void*, size_t) {
 }
 
 NS_QUERYFRAME_HEAD(nsFrame)
-NS_QUERYFRAME_ENTRY(nsIFrame)
+  NS_QUERYFRAME_ENTRY(nsIFrame)
 NS_QUERYFRAME_TAIL_INHERITANCE_ROOT
 
 /////////////////////////////////////////////////////////////////////////////
