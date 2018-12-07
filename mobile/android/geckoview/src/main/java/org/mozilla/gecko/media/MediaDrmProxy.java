@@ -282,6 +282,16 @@ public final class MediaDrmProxy {
         return mDrmStubId;
     }
 
+    @WrapForJNI
+    public boolean setServerCertificate(final byte[] cert) {
+        try {
+            mImpl.setServerCertificate(cert);
+            return true;
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
     // Get corresponding MediaCrypto object by a generated UUID for MediaCodec.
     // Will be called on MediaFormatReader's TaskQueue.
     @WrapForJNI
