@@ -2557,6 +2557,11 @@ void gfxPlatform::InitCompositorAccelerationPrefs() {
   return (env && *env == '1');
 }
 
+static bool WebRenderEnvvarDisabled() {
+  const char* env = PR_GetEnv("MOZ_WEBRENDER");
+  return (env && *env == '0');
+}
+
 // If the "gfx.webrender.all.qualified" pref is true we want to enable
 // WebRender for qualifying hardware. The Normandy pref rollout code sets
 // default values on rolled out prefs on every startup, but Gfx starts up
@@ -2722,7 +2727,7 @@ void gfxPlatform::InitWebRenderConfig() {
   // If the user set the pref to force-disable, let's do that. This will
   // override all the other enabling prefs (gfx.webrender.enabled,
   // gfx.webrender.all, and gfx.webrender.all.qualified).
-  if (gfxPrefs::WebRenderForceDisabled()) {
+  if (gfxPrefs::WebRenderForceDisabled() || WebRenderEnvvarDisabled()) {
     featureWebRender.UserDisable(
         "User force-disabled WR",
         NS_LITERAL_CSTRING("FEATURE_FAILURE_USER_FORCE_DISABLED"));
