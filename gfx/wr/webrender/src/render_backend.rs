@@ -1507,6 +1507,8 @@ impl ToDebugString for SpecificDisplayItem {
             SpecificDisplayItem::StickyFrame(..) => String::from("sticky_frame"),
             SpecificDisplayItem::Text(..) => String::from("text"),
             SpecificDisplayItem::YuvImage(..) => String::from("yuv_image"),
+            SpecificDisplayItem::PushCacheMarker(..) => String::from("push_cache_marker"),
+            SpecificDisplayItem::PopCacheMarker => String::from("pop_cache_marker"),
         }
     }
 }
