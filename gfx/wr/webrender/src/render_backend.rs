@@ -1203,9 +1203,18 @@ impl RenderBackend {
         // If there are any additions or removals of clip modes
         // during the scene build, apply them to the data store now.
         if let Some(updates) = doc_resource_updates {
-            doc.resources.clip_data_store.apply_updates(updates.clip_updates);
-            doc.resources.prim_data_store.apply_updates(updates.prim_updates);
-            doc.resources.text_run_data_store.apply_updates(updates.text_run_updates);
+            doc.resources.clip_data_store.apply_updates(
+                updates.clip_updates,
+                &mut profile_counters.intern.clips,
+            );
+            doc.resources.prim_data_store.apply_updates(
+                updates.prim_updates,
+                &mut profile_counters.intern.prims,
+            );
+            doc.resources.text_run_data_store.apply_updates(
+                updates.text_run_updates,
+                &mut profile_counters.intern.text_runs,
+            );
         }
 
         // TODO: this scroll variable doesn't necessarily mean we scrolled. It is only used
