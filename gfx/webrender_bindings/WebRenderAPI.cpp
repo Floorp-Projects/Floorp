@@ -371,8 +371,9 @@ void WebRenderAPI::Readback(const TimeStamp& aStartTime, gfx::IntSize size,
     ~Readback() { MOZ_COUNT_DTOR(Readback); }
 
     virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
-      aRenderThread.UpdateAndRender(aWindowId, mStartTime, /* aRender */ true,
-                                    Some(mSize), Some(mBuffer), false);
+      aRenderThread.UpdateAndRender(aWindowId, VsyncId(), mStartTime,
+                                    /* aRender */ true, Some(mSize),
+                                    Some(mBuffer), false);
       layers::AutoCompleteTask complete(mTask);
     }
 

@@ -394,17 +394,13 @@ void CrossProcessCompositorBridgeParent::ShadowLayersUpdated(
       aInfo.transactionStart(), aInfo.url(), aInfo.fwdTime());
 }
 
-void CrossProcessCompositorBridgeParent::DidComposite(
-    LayersId aId, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd) {
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  DidCompositeLocked(aId, aCompositeStart, aCompositeEnd);
-}
-
 void CrossProcessCompositorBridgeParent::DidCompositeLocked(
-    LayersId aId, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd) {
+    LayersId aId, const VsyncId& aVsyncId, TimeStamp& aCompositeStart,
+    TimeStamp& aCompositeEnd) {
   sIndirectLayerTreesLock->AssertCurrentThreadOwns();
   if (LayerTransactionParent* layerTree = sIndirectLayerTrees[aId].mLayerTree) {
-    TransactionId transactionId = layerTree->FlushTransactionId(aCompositeEnd);
+    TransactionId transactionId =
+        layerTree->FlushTransactionId(aVsyncId, aCompositeEnd);
     if (transactionId.IsValid()) {
       Unused << SendDidComposite(aId, transactionId, aCompositeStart,
                                  aCompositeEnd);
