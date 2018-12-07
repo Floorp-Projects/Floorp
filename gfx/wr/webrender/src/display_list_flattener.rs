@@ -981,6 +981,10 @@ impl<'a> DisplayListFlattener<'a> {
             SpecificDisplayItem::PopAllShadows => {
                 self.pop_all_shadows();
             }
+            SpecificDisplayItem::PushCacheMarker(_marker) => {
+            }
+            SpecificDisplayItem::PopCacheMarker => {
+            }
         }
         None
     }
