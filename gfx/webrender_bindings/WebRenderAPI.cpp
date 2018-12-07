@@ -73,7 +73,8 @@ class NewRenderer : public RendererEvent {
     wr::Renderer* wrRenderer = nullptr;
     if (!wr_window_new(
             aWindowId, mSize.width, mSize.height,
-            supportLowPriorityTransactions, compositor->gl(),
+            supportLowPriorityTransactions, gfxPrefs::WebRenderPictureCaching(),
+            compositor->gl(),
             aRenderThread.ProgramCache() ? aRenderThread.ProgramCache()->Raw()
                                          : nullptr,
             aRenderThread.Shaders() ? aRenderThread.Shaders()->RawShaders()

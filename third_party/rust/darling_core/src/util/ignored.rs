@@ -1,38 +1,52 @@
 use syn;
 
-use {FromMetaItem, FromDeriveInput, FromField, FromVariant, Result};
+use usage::{self, UsesLifetimes, UsesTypeParams};
+use {
+    FromDeriveInput, FromField, FromGenericParam, FromGenerics, FromMeta, FromTypeParam,
+    FromVariant, Result,
+};
 
-/// An efficient way of discarding data from an attribute.
+/// An efficient way of discarding data from a syntax element.
 ///
-/// All meta-items, fields, and variants will be successfully read into
+/// All syntax elements will be successfully read into
 /// the `Ignored` struct, with all properties discarded.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct Ignored;
 
-impl FromMetaItem for Ignored {
-    fn from_meta_item(_: &syn::Meta) -> Result<Self> {
-        Ok(Ignored)
-    }
+macro_rules! ignored {
+    ($trayt:ident, $method:ident, $syn:path) => {
+        impl $trayt for Ignored {
+            fn $method(_: &$syn) -> Result<Self> {
+                Ok(Ignored)
+            }
+        }
+    };
+}
 
-    fn from_nested_meta_item(_: &syn::NestedMeta) -> Result<Self> {
-        Ok(Ignored)
+ignored!(FromGenericParam, from_generic_param, syn::GenericParam);
+ignored!(FromGenerics, from_generics, syn::Generics);
+ignored!(FromTypeParam, from_type_param, syn::TypeParam);
+ignored!(FromMeta, from_meta, syn::Meta);
+ignored!(FromDeriveInput, from_derive_input, syn::DeriveInput);
+ignored!(FromField, from_field, syn::Field);
+ignored!(FromVariant, from_variant, syn::Variant);
+
+impl UsesTypeParams for Ignored {
+    fn uses_type_params<'a>(
+        &self,
+        _opts: &usage::Options,
+        _: &'a usage::IdentSet,
+    ) -> usage::IdentRefSet<'a> {
+        Default::default()
     }
 }
 
-impl FromDeriveInput for Ignored {
-    fn from_derive_input(_: &syn::DeriveInput) -> Result<Self> {
-        Ok(Ignored)
-    }
-}
-
-impl FromField for Ignored {
-    fn from_field(_: &syn::Field) -> Result<Self> {
-        Ok(Ignored)
-    }
-}
-
-impl FromVariant for Ignored {
-    fn from_variant(_: &syn::Variant) -> Result<Self> {
-        Ok(Ignored)
+impl UsesLifetimes for Ignored {
+    fn uses_lifetimes<'a>(
+        &self,
+        _opts: &usage::Options,
+        _: &'a usage::LifetimeSet,
+    ) -> usage::LifetimeRefSet<'a> {
+        Default::default()
     }
 }

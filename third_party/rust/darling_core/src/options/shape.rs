@@ -1,7 +1,8 @@
-use quote::{Tokens, ToTokens};
+use proc_macro2::TokenStream;
+use quote::{TokenStreamExt, ToTokens};
 use syn::{Meta, NestedMeta};
 
-use {Error, FromMetaItem, Result};
+use {Error, FromMeta, Result};
 
 #[derive(Debug, Clone)]
 pub struct Shape {
@@ -29,16 +30,16 @@ impl Default for Shape {
     }
 }
 
-impl FromMetaItem for Shape {
+impl FromMeta for Shape {
     fn from_list(items: &[NestedMeta]) -> Result<Self> {
         let mut new = Shape::default();
         for item in items {
             if let NestedMeta::Meta(Meta::Word(ref ident)) = *item {
-                let word = ident.as_ref();
+                let word = ident.to_string();
+                let word = word.as_str();
                 if word == "any" {
                     new.any = true;
-                }
-                else if word.starts_with("enum_") {
+                } else if word.starts_with("enum_") {
                     new.enum_values.set_word(word)?;
                 } else if word.starts_with("struct_") {
                     new.struct_values.set_word(word)?;
@@ -55,11 +56,10 @@ impl FromMetaItem for Shape {
 }
 
 impl ToTokens for Shape {
-    fn to_tokens(&self, tokens: &mut Tokens) {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
         let fn_body = if self.any == true {
             quote!(::darling::export::Ok(()))
-        }
-        else {
+        } else {
             let en = &self.enum_values;
             let st = &self.struct_values;
             quote! {
@@ -75,7 +75,8 @@ impl ToTokens for Shape {
 
                         Ok(())
                     }
-                    ::syn::Data::Struct(ref data) => {
+                    ::syn::Data::Struct(ref struct_data) => {
+                        let data = &struct_data.fields;
                         #st
                     }
                     ::syn::Data::Union(_) => unreachable!(),
@@ -144,12 +145,12 @@ impl DataShape {
     }
 }
 
-impl FromMetaItem for DataShape {
+impl FromMeta for DataShape {
     fn from_list(items: &[NestedMeta]) -> Result<Self> {
         let mut new = DataShape::default();
         for item in items {
             if let NestedMeta::Meta(Meta::Word(ref ident)) = *item {
-                new.set_word(ident.as_ref())?;
+                new.set_word(ident.to_string().as_str())?;
             } else {
                 return Err(Error::unsupported_format("non-word"));
             }
@@ -160,12 +161,12 @@ impl FromMetaItem for DataShape {
 }
 
 impl ToTokens for DataShape {
-    fn to_tokens(&self, tokens: &mut Tokens) {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
         let body = if self.any {
             quote!(::darling::export::Ok(()))
         } else if self.supports_none() {
             let ty = self.prefix.trim_right_matches("_");
-            quote!(::darling::export::Err(::darling::Error::unsupported_format(#ty)))
+            quote!(::darling::export::Err(::darling::Error::unsupported_shape(#ty)))
         } else {
             let unit = match_arm("unit", self.unit);
             let newtype = match_arm("newtype", self.newtype);
@@ -195,49 +196,49 @@ impl ToTokens for DataShape {
     }
 }
 
-fn match_arm(name: &'static str, is_supported: bool) -> Tokens {
+fn match_arm(name: &'static str, is_supported: bool) -> TokenStream {
     if is_supported {
         quote!(::darling::export::Ok(()))
     } else {
-        quote!(::darling::export::Err(::darling::Error::unsupported_format(#name)))
+        quote!(::darling::export::Err(::darling::Error::unsupported_shape(#name)))
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use proc_macro2::TokenStream;
     use syn;
-    use quote::Tokens;
 
     use super::Shape;
-    use {FromMetaItem};
+    use FromMeta;
 
     /// parse a string as a syn::Meta instance.
-    fn pmi(tokens: Tokens) -> ::std::result::Result<syn::Meta, String> {
+    fn pm(tokens: TokenStream) -> ::std::result::Result<syn::Meta, String> {
         let attribute: syn::Attribute = parse_quote!(#[#tokens]);
         attribute.interpret_meta().ok_or("Unable to parse".into())
     }
 
-    fn fmi<T: FromMetaItem>(tokens: Tokens) -> T {
-        FromMetaItem::from_meta_item(&pmi(tokens).expect("Tests should pass well-formed input"))
+    fn fm<T: FromMeta>(tokens: TokenStream) -> T {
+        FromMeta::from_meta(&pm(tokens).expect("Tests should pass well-formed input"))
             .expect("Tests should pass valid input")
     }
 
     #[test]
     fn supports_any() {
-        let decl = fmi::<Shape>(quote!(ignore(any)));
+        let decl = fm::<Shape>(quote!(ignore(any)));
         assert_eq!(decl.any, true);
     }
 
     #[test]
     fn supports_struct() {
-        let decl = fmi::<Shape>(quote!(ignore(struct_any, struct_newtype)));
+        let decl = fm::<Shape>(quote!(ignore(struct_any, struct_newtype)));
         assert_eq!(decl.struct_values.any, true);
         assert_eq!(decl.struct_values.newtype, true);
     }
 
     #[test]
     fn supports_mixed() {
-        let decl = fmi::<Shape>(quote!(ignore(struct_newtype, enum_newtype, enum_tuple)));
+        let decl = fm::<Shape>(quote!(ignore(struct_newtype, enum_newtype, enum_tuple)));
         assert_eq!(decl.struct_values.newtype, true);
         assert_eq!(decl.enum_values.newtype, true);
         assert_eq!(decl.enum_values.tuple, true);
