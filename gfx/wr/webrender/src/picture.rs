@@ -1301,10 +1301,14 @@ impl PrimitiveList {
                 PrimitiveInstanceKind::Rectangle { data_handle, .. } |
                 PrimitiveInstanceKind::YuvImage { data_handle, .. } |
                 PrimitiveInstanceKind::Image { data_handle, .. } |
-                PrimitiveInstanceKind::LinearGradient { data_handle, .. } |
-                PrimitiveInstanceKind::RadialGradient { data_handle, ..} |
-                PrimitiveInstanceKind::Clear {  data_handle, .. } => {
+                PrimitiveInstanceKind::Clear { data_handle, .. } => {
                     &resources.prim_interner[data_handle]
+                }
+                PrimitiveInstanceKind::LinearGradient { data_handle, .. } => {
+                    &resources.linear_grad_interner[data_handle]
+                }
+                PrimitiveInstanceKind::RadialGradient { data_handle, ..} => {
+                    &resources.radial_grad_interner[data_handle]
                 }
                 PrimitiveInstanceKind::TextRun { data_handle, .. } => {
                     &resources.text_run_interner[data_handle]

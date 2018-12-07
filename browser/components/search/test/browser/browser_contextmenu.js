@@ -7,7 +7,7 @@
 add_task(async function() {
   const ss = Services.search;
   const ENGINE_NAME = "Foo";
-  var contextMenu;
+  let contextMenu;
 
   // We want select events to be fired.
   await SpecialPowers.pushPrefEnv({set: [["dom.select_events.enabled", true]]});
@@ -28,7 +28,7 @@ add_task(async function() {
     function observer(aSub, aTopic, aData) {
       switch (aData) {
         case "engine-added":
-          var engine = ss.getEngineByName(ENGINE_NAME);
+          let engine = ss.getEngineByName(ENGINE_NAME);
           ok(engine, "Engine was added.");
           ss.defaultEngine = engine;
           envService.set("XPCSHELL_TEST_PROFILE_DIR", originalValue);
@@ -66,14 +66,14 @@ add_task(async function() {
     });
   });
 
-  var eventDetails = { type: "contextmenu", button: 2 };
+  let eventDetails = { type: "contextmenu", button: 2 };
 
   let popupPromise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
   BrowserTestUtils.synthesizeMouseAtCenter("body", eventDetails, gBrowser.selectedBrowser);
   await popupPromise;
 
   info("checkContextMenu");
-  var searchItem = contextMenu.getElementsByAttribute("id", "context-searchselect")[0];
+  let searchItem = contextMenu.getElementsByAttribute("id", "context-searchselect")[0];
   ok(searchItem, "Got search context menu item");
   is(searchItem.label, "Search " + ENGINE_NAME + " for \u201ctest search\u201d", "Check context menu label");
   is(searchItem.disabled, false, "Check that search context menu item is enabled");

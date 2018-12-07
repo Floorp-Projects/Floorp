@@ -16,6 +16,10 @@ use intern::{Internable, Interner};
 use internal_types::{FastHashMap, FastHashSet};
 use prim_store::{PrimitiveDataInterner, PrimitiveDataUpdateList, PrimitiveKeyKind};
 use prim_store::PrimitiveStoreStats;
+use prim_store::gradient::{
+    LinearGradient, LinearGradientDataInterner, LinearGradientDataUpdateList,
+    RadialGradient, RadialGradientDataInterner, RadialGradientDataUpdateList
+};
 use prim_store::text_run::{TextRunDataInterner, TextRun, TextRunDataUpdateList};
 use resource_cache::FontInstanceMap;
 use render_backend::DocumentView;
@@ -31,6 +35,8 @@ use std::time::Duration;
 pub struct DocumentResourceUpdates {
     pub clip_updates: ClipDataUpdateList,
     pub prim_updates: PrimitiveDataUpdateList,
+    pub linear_grad_updates: LinearGradientDataUpdateList,
+    pub radial_grad_updates: RadialGradientDataUpdateList,
     pub text_run_updates: TextRunDataUpdateList,
 }
 
@@ -167,6 +173,8 @@ pub enum SceneSwapResult {
 pub struct DocumentResources {
     pub clip_interner: ClipDataInterner,
     pub prim_interner: PrimitiveDataInterner,
+    pub linear_grad_interner: LinearGradientDataInterner,
+    pub radial_grad_interner: RadialGradientDataInterner,
     pub text_run_interner: TextRunDataInterner,
 }
 
@@ -179,6 +187,18 @@ pub trait InternerMut<I: Internable>
 impl InternerMut<PrimitiveKeyKind> for DocumentResources {
     fn interner_mut(&mut self) -> &mut PrimitiveDataInterner {
         &mut self.prim_interner
+    }
+}
+
+impl InternerMut<LinearGradient> for DocumentResources {
+    fn interner_mut(&mut self) -> &mut LinearGradientDataInterner {
+        &mut self.linear_grad_interner
+    }
+}
+
+impl InternerMut<RadialGradient> for DocumentResources {
+    fn interner_mut(&mut self) -> &mut RadialGradientDataInterner {
+        &mut self.radial_grad_interner
     }
 }
 
@@ -347,6 +367,8 @@ impl SceneBuilder {
                     &PrimitiveStoreStats::empty(),
                 );
 
+                // TODO(djg): Can we do better than this?  Use a #[derive] to
+                // write the code for us, or unify updates into one enum/list?
                 let clip_updates = item
                     .doc_resources
                     .clip_interner
@@ -355,6 +377,16 @@ impl SceneBuilder {
                 let prim_updates = item
                     .doc_resources
                     .prim_interner
+                    .end_frame_and_get_pending_updates();
+
+                let linear_grad_updates = item
+                    .doc_resources
+                    .linear_grad_interner
+                    .end_frame_and_get_pending_updates();
+
+                let radial_grad_updates = item
+                    .doc_resources
+                    .radial_grad_interner
                     .end_frame_and_get_pending_updates();
 
                 let text_run_updates = item
@@ -366,6 +398,8 @@ impl SceneBuilder {
                     DocumentResourceUpdates {
                         clip_updates,
                         prim_updates,
+                        linear_grad_updates,
+                        radial_grad_updates,
                         text_run_updates,
                     }
                 );
@@ -475,6 +509,16 @@ impl SceneBuilder {
                     .prim_interner
                     .end_frame_and_get_pending_updates();
 
+                let linear_grad_updates = doc
+                    .resources
+                    .linear_grad_interner
+                    .end_frame_and_get_pending_updates();
+
+                let radial_grad_updates = doc
+                    .resources
+                    .radial_grad_interner
+                    .end_frame_and_get_pending_updates();
+
                 let text_run_updates = doc
                     .resources
                     .text_run_interner
@@ -484,6 +528,8 @@ impl SceneBuilder {
                     DocumentResourceUpdates {
                         clip_updates,
                         prim_updates,
+                        linear_grad_updates,
+                        radial_grad_updates,
                         text_run_updates,
                     }
                 );
