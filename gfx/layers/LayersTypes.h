@@ -79,50 +79,38 @@ struct LayersId {
   };
 };
 
-template <typename T>
-struct BaseTransactionId {
-  uint64_t mId = 0;
+struct TransactionId {
+  uint64_t mId;
 
   bool IsValid() const { return mId != 0; }
 
-  MOZ_MUST_USE BaseTransactionId<T> Next() const {
-    return BaseTransactionId<T>{mId + 1};
-  }
+  MOZ_MUST_USE TransactionId Next() const { return TransactionId{mId + 1}; }
 
-  MOZ_MUST_USE BaseTransactionId<T> Prev() const {
-    return BaseTransactionId<T>{mId - 1};
-  }
+  MOZ_MUST_USE TransactionId Prev() const { return TransactionId{mId - 1}; }
 
-  int64_t operator-(const BaseTransactionId<T>& aOther) const {
+  int64_t operator-(const TransactionId& aOther) const {
     return mId - aOther.mId;
   }
 
   // Allow explicit cast to a uint64_t for now
   explicit operator uint64_t() const { return mId; }
 
-  bool operator<(const BaseTransactionId<T>& aOther) const {
-    return mId < aOther.mId;
-  }
+  bool operator<(const TransactionId& aOther) const { return mId < aOther.mId; }
 
-  bool operator<=(const BaseTransactionId<T>& aOther) const {
+  bool operator<=(const TransactionId& aOther) const {
     return mId <= aOther.mId;
   }
 
-  bool operator>(const BaseTransactionId<T>& aOther) const {
-    return mId > aOther.mId;
-  }
+  bool operator>(const TransactionId& aOther) const { return mId > aOther.mId; }
 
-  bool operator>=(const BaseTransactionId<T>& aOther) const {
+  bool operator>=(const TransactionId& aOther) const {
     return mId >= aOther.mId;
   }
 
-  bool operator==(const BaseTransactionId<T>& aOther) const {
+  bool operator==(const TransactionId& aOther) const {
     return mId == aOther.mId;
   }
 };
-
-class TransactionIdType {};
-typedef BaseTransactionId<TransactionIdType> TransactionId;
 
 struct LayersObserverEpoch {
   uint64_t mId;

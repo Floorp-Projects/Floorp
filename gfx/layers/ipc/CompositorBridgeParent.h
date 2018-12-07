@@ -41,7 +41,6 @@
 #include "nsISupportsImpl.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 #include "mozilla/layers/UiCompositorControllerParent.h"
-#include "mozilla/VsyncDispatcher.h"
 
 class MessageLoop;
 class nsIWidget;
@@ -146,6 +145,9 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
   virtual void ObserveLayersUpdate(LayersId aLayersId,
                                    LayersObserverEpoch aEpoch,
                                    bool aActive) = 0;
+
+  virtual void DidComposite(LayersId aId, TimeStamp& aCompositeStart,
+                            TimeStamp& aCompositeEnd) = 0;
 
   // HostIPCAllocator
   base::ProcessId GetChildProcessId() override;
@@ -311,7 +313,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   void NotifyWebRenderContextPurge();
   void NotifyPipelineRendered(const wr::PipelineId& aPipelineId,
                               const wr::Epoch& aEpoch,
-                              const VsyncId& aCompositeStartId,
                               TimeStamp& aCompositeStart,
                               TimeStamp& aRenderStart, TimeStamp& aCompositeEnd,
                               wr::RendererStats* aStats = nullptr);
@@ -392,7 +393,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   /**
    * Notify the compositor for the given layer tree that vsync has occurred.
    */
-  static void NotifyVsync(const VsyncEvent& aVsync, const LayersId& aLayersId);
+  static void NotifyVsync(const TimeStamp& aTimeStamp,
+                          const LayersId& aLayersId);
 
   /**
    * Set aController as the pan/zoom callback for the subtree referred
@@ -593,7 +595,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   // CompositorVsyncSchedulerOwner
   bool IsPendingComposite() override;
   void FinishPendingComposite() override;
-  void CompositeToTarget(VsyncId aId, gfx::DrawTarget* aTarget,
+  void CompositeToTarget(gfx::DrawTarget* aTarget,
                          const gfx::IntRect* aRect = nullptr) override;
 
   bool InitializeAdvancedLayers(const nsTArray<LayersBackend>& aBackendHints,
@@ -626,10 +628,11 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
    */
   bool CanComposite();
 
-  void DidComposite(const VsyncId& aId, TimeStamp& aCompositeStart,
-                    TimeStamp& aCompositeEnd);
+  void DidComposite(LayersId aId, TimeStamp& aCompositeStart,
+                    TimeStamp& aCompositeEnd) override;
+  void DidComposite(TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd);
 
-  void NotifyDidComposite(TransactionId aTransactionId, VsyncId aId,
+  void NotifyDidComposite(TransactionId aTransactionId,
                           TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd);
 
   // The indirect layer tree lock must be held before calling this function.
