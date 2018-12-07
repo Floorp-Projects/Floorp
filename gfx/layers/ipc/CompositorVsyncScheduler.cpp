@@ -48,13 +48,12 @@ CompositorVsyncScheduler::Observer::Observer(CompositorVsyncScheduler* aOwner)
 
 CompositorVsyncScheduler::Observer::~Observer() { MOZ_ASSERT(!mOwner); }
 
-bool CompositorVsyncScheduler::Observer::NotifyVsync(
-    TimeStamp aVsyncTimestamp) {
+bool CompositorVsyncScheduler::Observer::NotifyVsync(const VsyncEvent& aVsync) {
   MutexAutoLock lock(mMutex);
   if (!mOwner) {
     return false;
   }
-  return mOwner->NotifyVsync(aVsyncTimestamp);
+  return mOwner->NotifyVsync(aVsync);
 }
 
 void CompositorVsyncScheduler::Observer::Destroy() {
@@ -167,7 +166,7 @@ void CompositorVsyncScheduler::ScheduleComposition() {
   }
 }
 
-bool CompositorVsyncScheduler::NotifyVsync(TimeStamp aVsyncTimestamp) {
+bool CompositorVsyncScheduler::NotifyVsync(const VsyncEvent& aVsync) {
   // Called from the vsync dispatch thread. When in the GPU Process, that's
   // the same as the compositor thread.
   MOZ_ASSERT_IF(XRE_IsParentProcess(),
@@ -175,8 +174,8 @@ bool CompositorVsyncScheduler::NotifyVsync(TimeStamp aVsyncTimestamp) {
   MOZ_ASSERT_IF(XRE_GetProcessType() == GeckoProcessType_GPU,
                 CompositorThreadHolder::IsInCompositorThread());
   MOZ_ASSERT(!NS_IsMainThread());
-  PostCompositeTask(aVsyncTimestamp);
-  PostVRTask(aVsyncTimestamp);
+  PostCompositeTask(aVsync.mTime);
+  PostVRTask(aVsync.mTime);
   return true;
 }
 
