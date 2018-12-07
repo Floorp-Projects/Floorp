@@ -2781,7 +2781,7 @@ void BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun,
 }
 
 NS_QUERYFRAME_HEAD(nsTextFrame)
-NS_QUERYFRAME_ENTRY(nsTextFrame)
+  NS_QUERYFRAME_ENTRY(nsTextFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsFrame)
 
 gfxSkipCharsIterator nsTextFrame::EnsureTextRun(

@@ -46,7 +46,7 @@ using namespace mozilla::layout;
 nsContainerFrame::~nsContainerFrame() {}
 
 NS_QUERYFRAME_HEAD(nsContainerFrame)
-NS_QUERYFRAME_ENTRY(nsContainerFrame)
+  NS_QUERYFRAME_ENTRY(nsContainerFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsSplittableFrame)
 
 void nsContainerFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
