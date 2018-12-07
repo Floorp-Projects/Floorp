@@ -10,7 +10,6 @@
 #include "nsISupportsImpl.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/VsyncDispatcher.h"
 
 namespace mozilla {
 namespace layers {
@@ -81,8 +80,6 @@ class TransactionIdAllocator {
    * Get the start time of the current refresh tick.
    */
   virtual mozilla::TimeStamp GetTransactionStart() = 0;
-
-  virtual VsyncId GetVsyncId() = 0;
 };
 
 }  // namespace layers

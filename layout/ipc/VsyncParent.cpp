@@ -42,18 +42,18 @@ VsyncParent::~VsyncParent() {
   // VsyncParent is always released on the background thread.
 }
 
-bool VsyncParent::NotifyVsync(const VsyncEvent& aVsync) {
+bool VsyncParent::NotifyVsync(TimeStamp aTimeStamp) {
   // Called on hardware vsync thread. We should post to current ipc thread.
   MOZ_ASSERT(!IsOnBackgroundThread());
-  nsCOMPtr<nsIRunnable> vsyncEvent = NewRunnableMethod<VsyncEvent>(
+  nsCOMPtr<nsIRunnable> vsyncEvent = NewRunnableMethod<TimeStamp>(
       "layout::VsyncParent::DispatchVsyncEvent", this,
-      &VsyncParent::DispatchVsyncEvent, aVsync);
+      &VsyncParent::DispatchVsyncEvent, aTimeStamp);
   MOZ_ALWAYS_SUCCEEDS(
       mBackgroundThread->Dispatch(vsyncEvent, NS_DISPATCH_NORMAL));
   return true;
 }
 
-void VsyncParent::DispatchVsyncEvent(const VsyncEvent& aVsync) {
+void VsyncParent::DispatchVsyncEvent(TimeStamp aTimeStamp) {
   AssertIsOnBackgroundThread();
 
   // If we call NotifyVsync() when we handle ActorDestroy() message, we might
@@ -62,7 +62,7 @@ void VsyncParent::DispatchVsyncEvent(const VsyncEvent& aVsync) {
   // NotifyVsync(). We use mObservingVsync and mDestroyed flags to skip this
   // notification.
   if (mObservingVsync && !mDestroyed) {
-    Unused << SendNotify(aVsync);
+    Unused << SendNotify(aTimeStamp);
   }
 }
 

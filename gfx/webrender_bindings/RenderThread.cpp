@@ -244,7 +244,6 @@ void RenderThread::HandleFrame(wr::WindowId aWindowId, bool aRender) {
   }
 
   TimeStamp startTime;
-  VsyncId startId;
 
   bool hadSlowFrame;
   {  // scope lock
@@ -254,13 +253,11 @@ void RenderThread::HandleFrame(wr::WindowId aWindowId, bool aRender) {
     WindowInfo* info = it->second;
     MOZ_ASSERT(info->mPendingCount > 0);
     startTime = info->mStartTimes.front();
-    startId = info->mStartIds.front();
     hadSlowFrame = info->mHadSlowFrame;
     info->mHadSlowFrame = false;
   }
 
-  UpdateAndRender(aWindowId, startId, startTime, aRender,
-                  /* aReadbackSize */ Nothing(),
+  UpdateAndRender(aWindowId, startTime, aRender, /* aReadbackSize */ Nothing(),
                   /* aReadbackBuffer */ Nothing(), hadSlowFrame);
   FrameRenderingComplete(aWindowId);
 }
@@ -307,7 +304,6 @@ void RenderThread::RunEvent(wr::WindowId aWindowId,
 
 static void NotifyDidRender(layers::CompositorBridgeParent* aBridge,
                             RefPtr<WebRenderPipelineInfo> aInfo,
-                            VsyncId aCompositeStartId,
                             TimeStamp aCompositeStart, TimeStamp aRenderStart,
                             TimeStamp aEnd, bool aRender,
                             RendererStats aStats) {
@@ -321,9 +317,13 @@ static void NotifyDidRender(layers::CompositorBridgeParent* aBridge,
   auto info = aInfo->Raw();
 
   for (uintptr_t i = 0; i < info.epochs.length; i++) {
-    aBridge->NotifyPipelineRendered(
-        info.epochs.data[i].pipeline_id, info.epochs.data[i].epoch,
-        aCompositeStartId, aCompositeStart, aRenderStart, aEnd, &aStats);
+    aBridge->NotifyPipelineRendered(info.epochs.data[i].pipeline_id,
+                                    info.epochs.data[i].epoch, aCompositeStart,
+                                    aRenderStart, aEnd, &aStats);
+  }
+
+  if (aBridge->GetWrBridge()) {
+    aBridge->GetWrBridge()->CompositeIfNeeded();
   }
 }
 
@@ -336,7 +336,6 @@ static void NotifyDidStartRender(layers::CompositorBridgeParent* aBridge) {
 }
 
 void RenderThread::UpdateAndRender(wr::WindowId aWindowId,
-                                   const VsyncId& aStartId,
                                    const TimeStamp& aStartTime, bool aRender,
                                    const Maybe<gfx::IntSize>& aReadbackSize,
                                    const Maybe<Range<uint8_t>>& aReadbackBuffer,
@@ -375,8 +374,8 @@ void RenderThread::UpdateAndRender(wr::WindowId aWindowId,
 
   layers::CompositorThreadHolder::Loop()->PostTask(
       NewRunnableFunction("NotifyDidRenderRunnable", &NotifyDidRender,
-                          renderer->GetCompositorBridge(), info, aStartId,
-                          aStartTime, start, end, aRender, stats));
+                          renderer->GetCompositorBridge(), info, aStartTime,
+                          start, end, aRender, stats));
 
   if (rendered) {
     // Wait for GPU after posting NotifyDidRender, since the wait is not
@@ -464,7 +463,6 @@ void RenderThread::SetDestroyed(wr::WindowId aWindowId) {
 }
 
 void RenderThread::IncPendingFrameCount(wr::WindowId aWindowId,
-                                        const VsyncId& aStartId,
                                         const TimeStamp& aStartTime) {
   MutexAutoLock lock(mFrameCountMapLock);
   auto it = mWindowInfos.find(AsUint64(aWindowId));
@@ -474,7 +472,6 @@ void RenderThread::IncPendingFrameCount(wr::WindowId aWindowId,
   }
   it->second->mPendingCount++;
   it->second->mStartTimes.push(aStartTime);
-  it->second->mStartIds.push(aStartId);
 }
 
 void RenderThread::DecPendingFrameCount(wr::WindowId aWindowId) {
@@ -498,7 +495,6 @@ void RenderThread::DecPendingFrameCount(wr::WindowId aWindowId) {
   mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::COMPOSITE_TIME,
                                           info->mStartTimes.front());
   info->mStartTimes.pop();
-  info->mStartIds.pop();
 }
 
 void RenderThread::IncRenderingFrameCount(wr::WindowId aWindowId) {
@@ -533,7 +529,6 @@ void RenderThread::FrameRenderingComplete(wr::WindowId aWindowId) {
   mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::COMPOSITE_TIME,
                                           info->mStartTimes.front());
   info->mStartTimes.pop();
-  info->mStartIds.pop();
 }
 
 void RenderThread::NotifySlowFrame(wr::WindowId aWindowId) {

@@ -24,7 +24,6 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/RefCountedShmem.h"
 #include "mozilla/layers/RepaintRequest.h"
-#include "VsyncSource.h"
 #include "mozilla/Move.h"
 
 #include <stdint.h>
@@ -39,28 +38,9 @@ template <>
 struct ParamTraits<mozilla::layers::LayersId>
     : public PlainOldDataSerializer<mozilla::layers::LayersId> {};
 
-template <typename T>
-struct ParamTraits<mozilla::layers::BaseTransactionId<T>>
-    : public PlainOldDataSerializer<mozilla::layers::BaseTransactionId<T>> {};
-
 template <>
-struct ParamTraits<mozilla::VsyncId>
-    : public PlainOldDataSerializer<mozilla::VsyncId> {};
-
-template <>
-struct ParamTraits<mozilla::VsyncEvent> {
-  typedef mozilla::VsyncEvent paramType;
-
-  static void Write(Message* msg, const paramType& param) {
-    WriteParam(msg, param.mId);
-    WriteParam(msg, param.mTime);
-  }
-  static bool Read(const Message* msg, PickleIterator* iter,
-                   paramType* result) {
-    return ReadParam(msg, iter, &result->mId) &&
-           ReadParam(msg, iter, &result->mTime);
-  }
-};
+struct ParamTraits<mozilla::layers::TransactionId>
+    : public PlainOldDataSerializer<mozilla::layers::TransactionId> {};
 
 template <>
 struct ParamTraits<mozilla::layers::LayersObserverEpoch>
