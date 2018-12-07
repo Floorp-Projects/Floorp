@@ -242,19 +242,34 @@ class ReadableStreamController : public StreamController {
    * Memory layout for ReadableStream controllers, starting after the slots
    * reserved for queue container usage.
    *
-   * UnderlyingSource is usually treated as an opaque value. It might be a
-   * wrapped object from another compartment, but that case is handled
-   * correctly by all operations the controller might invoke on it.
+   * Storage of the internal slots listed in the standard is fairly
+   * straightforward except for [[pullAlgorithm]] and [[cancelAlgorithm]].
+   * These algorithms are not stored as JSFunction objects. Rather, there are
+   * three cases:
    *
-   * The only case where we don't treat underlyingSource as an opaque value is
-   * if it's a TeeState. All functions operating on TeeState properly handle
-   * TeeState instances from other compartments.
+   * -   Streams created with `new ReadableStream`: The methods are stored
+   *     in Slot_PullMethod and Slot_CancelMethod. The underlying source
+   *     object (`this` for these methods) is in Slot_UnderlyingSource.
+   *
+   * -   External source streams. Slot_UnderlyingSource is a PrivateValue
+   *     pointing to the JS::ReadableStreamUnderlyingSource object. The
+   *     algorithms are implemented using the .pull() and .cancel() methods
+   *     of that object. Slot_Pull/CancelMethod are undefined.
+   *
+   * -   Tee streams. Slot_UnderlyingSource is a TeeState object. The
+   *     pull/cancel algorithms are implemented as separate functions in
+   *     Stream.cpp. Slot_Pull/CancelMethod are undefined.
+   *
+   * UnderlyingSource, PullMethod, and CancelMethod can be wrappers to objects
+   * in other compartments.
    *
    * StrategyHWM and Flags are both primitive (numeric) values.
    */
   enum Slots {
     Slot_Stream = StreamController::SlotCount,
     Slot_UnderlyingSource,
+    Slot_PullMethod,
+    Slot_CancelMethod,
     Slot_StrategyHWM,
     Slot_Flags,
     SlotCount
@@ -280,6 +295,14 @@ class ReadableStreamController : public StreamController {
   Value underlyingSource() const { return getFixedSlot(Slot_UnderlyingSource); }
   void setUnderlyingSource(const Value& underlyingSource) {
     setFixedSlot(Slot_UnderlyingSource, underlyingSource);
+  }
+  Value pullMethod() const { return getFixedSlot(Slot_PullMethod); }
+  void setPullMethod(const Value& pullMethod) {
+    setFixedSlot(Slot_PullMethod, pullMethod);
+  }
+  Value cancelMethod() const { return getFixedSlot(Slot_CancelMethod); }
+  void setCancelMethod(const Value& cancelMethod) {
+    setFixedSlot(Slot_CancelMethod, cancelMethod);
   }
   JS::ReadableStreamUnderlyingSource* externalSource() const {
     static_assert(alignof(JS::ReadableStreamUnderlyingSource) >= 2,
