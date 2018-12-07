@@ -189,3 +189,79 @@ add_task(async function unsupportedSchemeWithoutPattern() {
 
   await extension.unload();
 });
+
+add_task(async function privileged_are_allowed_to_use_restrictedSchemes() {
+  let privilegedExtension = ExtensionTestUtils.loadExtension({
+    isPrivileged: true,
+    manifest: {
+      permissions: ["tabs", "contextMenus", "mozillaAddons"],
+    },
+    async background() {
+      browser.contextMenus.create({
+        id: "privileged-extension",
+        title: "Privileged Extension",
+        contexts: ["page"],
+        documentUrlPatterns: ["about:reader*"],
+      });
+
+      browser.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
+        if (changeInfo.url && changeInfo.url.startsWith("about:reader")) {
+          browser.test.sendMessage("readerModeEntered");
+        }
+      });
+
+      browser.test.onMessage.addListener(async (msg) => {
+        if (msg !== "enterReaderMode") {
+          browser.test.fail(`Received unexpected test message: ${msg}`);
+          return;
+        }
+
+        browser.tabs.toggleReaderMode();
+      });
+    },
+  });
+
+  let nonPrivilegedExtension = ExtensionTestUtils.loadExtension({
+    isPrivileged: false,
+    manifest: {
+      permissions: ["contextMenus", "mozillaAddons"],
+    },
+    async background() {
+      browser.contextMenus.create({
+        id: "non-privileged-extension",
+        title: "Non Privileged Extension",
+        contexts: ["page"],
+        documentUrlPatterns: ["about:reader*"],
+      });
+    },
+  });
+
+  const baseUrl = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com");
+  const url = `${baseUrl}/readerModeArticle.html`;
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url, true, true);
+
+  await Promise.all([
+    privilegedExtension.startup(),
+    nonPrivilegedExtension.startup(),
+  ]);
+
+  privilegedExtension.sendMessage("enterReaderMode");
+  await privilegedExtension.awaitMessage("readerModeEntered");
+
+  const contextMenu = await openContextMenu("body > h1");
+
+  let item = contextMenu.getElementsByAttribute("label", "Privileged Extension");
+  is(item.length, 1, "Privileged extension's contextMenu item found as expected");
+
+  item = contextMenu.getElementsByAttribute("label", "Non Privileged Extension");
+  is(item.length, 0, "Non privileged extension's contextMenu not found as expected");
+
+  await closeContextMenu();
+
+  BrowserTestUtils.removeTab(tab);
+
+  await Promise.all([
+    privilegedExtension.unload(),
+    nonPrivilegedExtension.unload(),
+  ]);
+});

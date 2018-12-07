@@ -350,7 +350,7 @@
   }
 }
 
-/* titlebar command buttons */
+/* window control buttons */
 
 .titlebar-min {
   -moz-appearance: -moz-window-button-minimize;
@@ -360,7 +360,7 @@
   -moz-appearance: -moz-window-button-maximize;
 }
 
-#main-window[sizemode="maximized"] .titlebar-max {
+:root[sizemode="maximized"] .titlebar-max {
   -moz-appearance: -moz-window-button-restore;
 }
 
@@ -372,6 +372,11 @@
   .titlebar-min {
     margin-inline-end: 2px;
   }
+}
+
+:root[tabletmode] .titlebar-min,
+:root[tabletmode] .titlebar-max {
+  display: none;
 }
 
 /* ::::: bookmark menus ::::: */

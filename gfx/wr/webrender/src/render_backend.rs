@@ -32,6 +32,7 @@ use hit_test::{HitTest, HitTester};
 use internal_types::{DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
 use prim_store::{PrimitiveDataStore, PrimitiveScratchBuffer, PrimitiveInstance};
 use prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData};
+use prim_store::gradient::{LinearGradientDataStore, RadialGradientDataStore};
 use prim_store::text_run::TextRunDataStore;
 use profiler::{BackendProfileCounters, IpcProfileCounters, ResourceProfileCounters};
 use record::ApiRecordingReceiver;
@@ -203,6 +204,8 @@ pub struct FrameResources {
     /// Currently active / available primitives. Kept in sync with the
     /// primitive interner in the scene builder, per document.
     pub prim_data_store: PrimitiveDataStore,
+    pub linear_grad_data_store: LinearGradientDataStore,
+    pub radial_grad_data_store: RadialGradientDataStore,
     pub text_run_data_store: TextRunDataStore,
 }
 
@@ -219,10 +222,16 @@ impl FrameResources {
             PrimitiveInstanceKind::Rectangle { data_handle, .. } |
             PrimitiveInstanceKind::YuvImage { data_handle, .. } |
             PrimitiveInstanceKind::Image { data_handle, .. } |
-            PrimitiveInstanceKind::LinearGradient { data_handle, .. } |
-            PrimitiveInstanceKind::RadialGradient { data_handle, .. } |
             PrimitiveInstanceKind::Clear { data_handle, .. } => {
                 let prim_data = &self.prim_data_store[data_handle];
+                &prim_data.common
+            }
+            PrimitiveInstanceKind::LinearGradient { data_handle, .. } => {
+                let prim_data = &self.linear_grad_data_store[data_handle];
+                &prim_data.common
+            }
+            PrimitiveInstanceKind::RadialGradient { data_handle, .. } =>{
+                let prim_data = &self.radial_grad_data_store[data_handle];
                 &prim_data.common
             }
             PrimitiveInstanceKind::TextRun { data_handle, .. }  => {
@@ -1203,9 +1212,26 @@ impl RenderBackend {
         // If there are any additions or removals of clip modes
         // during the scene build, apply them to the data store now.
         if let Some(updates) = doc_resource_updates {
-            doc.resources.clip_data_store.apply_updates(updates.clip_updates);
-            doc.resources.prim_data_store.apply_updates(updates.prim_updates);
-            doc.resources.text_run_data_store.apply_updates(updates.text_run_updates);
+            doc.resources.clip_data_store.apply_updates(
+                updates.clip_updates,
+                &mut profile_counters.intern.clips,
+            );
+            doc.resources.prim_data_store.apply_updates(
+                updates.prim_updates,
+                &mut profile_counters.intern.prims,
+            );
+            doc.resources.linear_grad_data_store.apply_updates(
+                updates.linear_grad_updates,
+                &mut profile_counters.intern.linear_gradients,
+            );
+            doc.resources.radial_grad_data_store.apply_updates(
+                updates.radial_grad_updates,
+                &mut profile_counters.intern.radial_gradients,
+            );
+            doc.resources.text_run_data_store.apply_updates(
+                updates.text_run_updates,
+                &mut profile_counters.intern.text_runs,
+            );
         }
 
         // TODO: this scroll variable doesn't necessarily mean we scrolled. It is only used

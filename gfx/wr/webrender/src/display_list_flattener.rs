@@ -22,10 +22,11 @@ use image::simplify_repeated_primitive;
 use intern::{Handle, Internable};
 use internal_types::{FastHashMap, FastHashSet};
 use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PrimitiveList};
-use prim_store::{PrimitiveInstance, PrimitiveKeyKind, RadialGradientParams};
-use prim_store::{PrimitiveKey, PrimitiveSceneData, PrimitiveInstanceKind, GradientStopKey, NinePatchDescriptor};
+use prim_store::{PrimitiveInstance, PrimitiveKeyKind};
+use prim_store::{PrimitiveKey, PrimitiveSceneData, PrimitiveInstanceKind, NinePatchDescriptor};
 use prim_store::{PrimitiveDataHandle, PrimitiveStore, PrimitiveStoreStats, LineDecorationCacheKey};
 use prim_store::{ScrollNodeAndClipChain, PictureIndex, register_prim_chase_id, get_line_decoration_sizes};
+use prim_store::gradient::{GradientStopKey, LinearGradient, RadialGradient, RadialGradientParams};
 use prim_store::text_run::TextRun;
 use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest};
@@ -781,7 +782,7 @@ impl<'a> DisplayListFlattener<'a> {
                     pipeline_id,
                     None,
                 ) {
-                    self.add_primitive(
+                    self.add_nonshadowable_primitive(
                         clip_and_scroll,
                         &prim_info,
                         Vec::new(),
@@ -803,7 +804,7 @@ impl<'a> DisplayListFlattener<'a> {
                     pipeline_id,
                     None,
                 );
-                self.add_primitive(
+                self.add_nonshadowable_primitive(
                     clip_and_scroll,
                     &prim_info,
                     Vec::new(),
@@ -1113,6 +1114,33 @@ impl<'a> DisplayListFlattener<'a> {
 
     /// Convenience interface that creates a primitive entry and adds it
     /// to the draw list.
+    fn add_nonshadowable_primitive<P>(
+        &mut self,
+        clip_and_scroll: ScrollNodeAndClipChain,
+        info: &LayoutPrimitiveInfo,
+        clip_items: Vec<(LayoutPoint, ClipItemKey)>,
+        prim: P,
+    )
+    where
+        P: Internable<InternData = PrimitiveSceneData> + IsVisible,
+        P::Source: AsInstanceKind<Handle<P::Marker>>,
+        DocumentResources: InternerMut<P>,
+    {
+        if prim.is_visible() {
+            let clip_chain_id = self.build_clip_chain(
+                clip_items,
+                clip_and_scroll.spatial_node_index,
+                clip_and_scroll.clip_chain_id,
+            );
+            self.add_prim_to_draw_list(
+                info,
+                clip_chain_id,
+                clip_and_scroll,
+                prim
+            );
+        }
+    }
+
     pub fn add_primitive<P>(
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
@@ -1129,19 +1157,7 @@ impl<'a> DisplayListFlattener<'a> {
         // If a shadow context is not active, then add the primitive
         // directly to the parent picture.
         if self.pending_shadow_items.is_empty() {
-            if prim.is_visible() {
-                let clip_chain_id = self.build_clip_chain(
-                    clip_items,
-                    clip_and_scroll.spatial_node_index,
-                    clip_and_scroll.clip_chain_id,
-                );
-                self.add_prim_to_draw_list(
-                    info,
-                    clip_chain_id,
-                    clip_and_scroll,
-                    prim
-                );
-            }
+            self.add_nonshadowable_primitive(clip_and_scroll, info, clip_items, prim);
         } else {
             debug_assert!(clip_items.is_empty(), "No per-prim clips expected for shadowed primitives");
 
@@ -2075,19 +2091,26 @@ impl<'a> DisplayListFlattener<'a> {
                     widths: border_item.widths.into(),
                 };
 
-                let prim = match border.source {
+                match border.source {
                     NinePatchBorderSource::Image(image_key) => {
-                        PrimitiveKeyKind::ImageBorder {
+                        let prim = PrimitiveKeyKind::ImageBorder {
                             request: ImageRequest {
                                 key: image_key,
                                 rendering: ImageRendering::Auto,
                                 tile: None,
                             },
                             nine_patch,
-                        }
+                        };
+
+                        self.add_primitive(
+                            clip_and_scroll,
+                            info,
+                            Vec::new(),
+                            prim,
+                        );
                     }
                     NinePatchBorderSource::Gradient(gradient) => {
-                        match self.create_linear_gradient_prim(
+                        let prim = match self.create_linear_gradient_prim(
                             &info,
                             gradient.start_point,
                             gradient.end_point,
@@ -2100,10 +2123,17 @@ impl<'a> DisplayListFlattener<'a> {
                         ) {
                             Some(prim) => prim,
                             None => return,
-                        }
+                        };
+
+                        self.add_nonshadowable_primitive(
+                            clip_and_scroll,
+                            info,
+                            Vec::new(),
+                            prim,
+                        );
                     }
                     NinePatchBorderSource::RadialGradient(gradient) => {
-                        self.create_radial_gradient_prim(
+                        let prim = self.create_radial_gradient_prim(
                             &info,
                             gradient.center,
                             gradient.start_offset * gradient.radius.width,
@@ -2115,16 +2145,16 @@ impl<'a> DisplayListFlattener<'a> {
                             LayoutSize::zero(),
                             pipeline_id,
                             Some(Box::new(nine_patch)),
-                        )
+                        );
+
+                        self.add_nonshadowable_primitive(
+                            clip_and_scroll,
+                            info,
+                            Vec::new(),
+                            prim,
+                        );
                     }
                 };
-
-                self.add_primitive(
-                    clip_and_scroll,
-                    info,
-                    Vec::new(),
-                    prim,
-                );
             }
             BorderDetails::Normal(ref border) => {
                 self.add_normal_border(
@@ -2148,7 +2178,7 @@ impl<'a> DisplayListFlattener<'a> {
         mut tile_spacing: LayoutSize,
         pipeline_id: PipelineId,
         nine_patch: Option<Box<NinePatchDescriptor>>,
-    ) -> Option<PrimitiveKeyKind> {
+    ) -> Option<LinearGradient> {
         let mut prim_rect = info.rect;
         simplify_repeated_primitive(&stretch_size, &mut tile_spacing, &mut prim_rect);
 
@@ -2190,7 +2220,7 @@ impl<'a> DisplayListFlattener<'a> {
             (start_point, end_point)
         };
 
-        Some(PrimitiveKeyKind::LinearGradient {
+        Some(LinearGradient {
             extend_mode,
             start_point: sp.into(),
             end_point: ep.into(),
@@ -2215,7 +2245,7 @@ impl<'a> DisplayListFlattener<'a> {
         mut tile_spacing: LayoutSize,
         pipeline_id: PipelineId,
         nine_patch: Option<Box<NinePatchDescriptor>>,
-    ) -> PrimitiveKeyKind {
+    ) -> RadialGradient {
         let mut prim_rect = info.rect;
         simplify_repeated_primitive(&stretch_size, &mut tile_spacing, &mut prim_rect);
 
@@ -2237,7 +2267,7 @@ impl<'a> DisplayListFlattener<'a> {
             }
         }).collect();
 
-        PrimitiveKeyKind::RadialGradient {
+        RadialGradient {
             extend_mode,
             center: center.into(),
             params,

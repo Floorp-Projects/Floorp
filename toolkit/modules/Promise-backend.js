@@ -60,8 +60,8 @@ var Components_ = this.require ? require("chrome").components : Components;
 if (Cu) {
   // If we're in a devtools module environment, ChromeUtils won't exist.
   /* eslint "mozilla/use-chromeutils-import": ["error", {allowCu: true}] */
-  Cu.import("resource://gre/modules/Services.jsm");
-  Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+  Cu.import("resource://gre/modules/Services.jsm", this);
+  Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
   XPCOMUtils.defineLazyServiceGetter(this, "FinalizationWitnessService",
                                      "@mozilla.org/toolkit/finalizationwitness;1",

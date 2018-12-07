@@ -101,7 +101,7 @@ add_task(async function test_urlBarChangeEngine() {
  * Promises that an engine change has happened for the current engine, which
  * has resulted in the test engine now being the current engine.
  *
- * @return {Promise} Resolved once the test engine is set as the current engine.
+ * @returns {Promise} Resolved once the test engine is set as the current engine.
  */
 function promiseCurrentEngineChanged() {
   return new Promise(resolve => {
@@ -121,13 +121,13 @@ function promiseCurrentEngineChanged() {
  * Opens the specified urlbar/search popup and gets the test engine from the
  * one-off buttons.
  *
- * @param {Boolean} isSearch true if the search popup should be opened; false
+ * @param {boolean} isSearch true if the search popup should be opened; false
  *                           for the urlbar popup.
- * @param {Object} popup The expected popup.
- * @param {Object} oneOffInstance The expected one-off instance for the popup.
- * @param {String} baseId The expected string for the id of the current
+ * @param {object} popup The expected popup.
+ * @param {object} oneOffInstance The expected one-off instance for the popup.
+ * @param {string} baseId The expected string for the id of the current
  *                        engine button, without the engine name.
- * @return {Object} Returns an object that represents the one off button for the
+ * @returns {object} Returns an object that represents the one off button for the
  *                          test engine.
  */
 async function openPopupAndGetEngineButton(isSearch, popup, oneOffInstance, baseId) {
