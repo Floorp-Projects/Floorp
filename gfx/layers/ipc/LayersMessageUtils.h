@@ -38,9 +38,9 @@ template <>
 struct ParamTraits<mozilla::layers::LayersId>
     : public PlainOldDataSerializer<mozilla::layers::LayersId> {};
 
-template <>
-struct ParamTraits<mozilla::layers::TransactionId>
-    : public PlainOldDataSerializer<mozilla::layers::TransactionId> {};
+template <typename T>
+struct ParamTraits<mozilla::layers::BaseTransactionId<T>>
+    : public PlainOldDataSerializer<mozilla::layers::BaseTransactionId<T>> {};
 
 template <>
 struct ParamTraits<mozilla::layers::LayersObserverEpoch>
