@@ -1135,19 +1135,17 @@ void nsHtml5StreamParser::DoDataAvailable(Span<const uint8_t> aBuffer) {
 class nsHtml5DataAvailable : public Runnable {
  private:
   nsHtml5StreamParserPtr mStreamParser;
-  UniquePtr<uint8_t[]> mData;
-  uint32_t mLength;
+  Buffer<uint8_t> mData;
 
  public:
   nsHtml5DataAvailable(nsHtml5StreamParser* aStreamParser,
-                       UniquePtr<uint8_t[]> aData, uint32_t aLength)
+                       Buffer<uint8_t>&& aData)
       : Runnable("nsHtml5DataAvailable"),
         mStreamParser(aStreamParser),
-        mData(std::move(aData)),
-        mLength(aLength) {}
+        mData(std::move(aData)) {}
   NS_IMETHOD Run() override {
     mozilla::MutexAutoLock autoLock(mStreamParser->mTokenizerMutex);
-    mStreamParser->DoDataAvailable(MakeSpan(mData.get(), mLength));
+    mStreamParser->DoDataAvailable(mData);
     return NS_OK;
   }
 };
@@ -1166,17 +1164,18 @@ nsresult nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
   uint32_t totalRead;
   // Main thread to parser thread dispatch requires copying to buffer first.
   if (NS_IsMainThread()) {
-    auto data = MakeUniqueFallible<uint8_t[]>(aLength);
-    if (!data) {
+    Maybe<Buffer<uint8_t>> maybe = Buffer<uint8_t>::Alloc(aLength);
+    if (maybe.isNothing()) {
       return mExecutor->MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
     }
-    rv = aInStream->Read(reinterpret_cast<char*>(data.get()), aLength,
-                         &totalRead);
+    Buffer<uint8_t> data(std::move(*maybe));
+    rv = aInStream->Read(reinterpret_cast<char*>(data.Elements()),
+                         data.Length(), &totalRead);
     NS_ENSURE_SUCCESS(rv, rv);
-    NS_ASSERTION(totalRead <= aLength, "Read more bytes than were available?");
+    MOZ_ASSERT(totalRead == aLength);
 
     nsCOMPtr<nsIRunnable> dataAvailable =
-        new nsHtml5DataAvailable(this, std::move(data), totalRead);
+        new nsHtml5DataAvailable(this, std::move(data));
     if (NS_FAILED(mEventTarget->Dispatch(dataAvailable,
                                          nsIThread::DISPATCH_NORMAL))) {
       NS_WARNING("Dispatching DataAvailable event failed.");
