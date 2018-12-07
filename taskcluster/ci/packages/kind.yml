@@ -273,8 +273,9 @@ jobs:
     run:
       using: debian-package
       dsc:
-        url: http://snapshot.debian.org/archive/debian/20160426T155816Z/pool/main/n/nasm/nasm_2.12.01-1.dsc
-        sha256: 70b0478243ca8b36e163af15fb8a0a9be504b3321a9fb7d67ba0767dbfcc32ec
+        url: http://snapshot.debian.org/archive/debian/20170704T094954Z/pool/main/n/nasm/nasm_2.13.01-1.dsc
+        sha256: 76528365eddc646f3f53c9f501ae9c2ba1678a163303d297e9014e3da36643c8
+      patch: nasm-wheezy.diff
 
   deb7-pcre3:
     description: "pcre3 8.31 for Debian Wheezy"
