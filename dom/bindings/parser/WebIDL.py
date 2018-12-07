@@ -609,6 +609,34 @@ class IDLExternalInterface(IDLObjectWithIdentifier, IDLExposureMixins):
         return set()
 
 
+class IDLPartialDictionary(IDLObject):
+    def __init__(self, location, name, members, nonPartialDictionary):
+        assert isinstance(name, IDLUnresolvedIdentifier)
+
+        IDLObject.__init__(self, location)
+        self.identifier = name
+        self.members = members
+        self._nonPartialDictionary = nonPartialDictionary
+        self._finished = False
+        nonPartialDictionary.addPartialDictionary(self)
+
+    def addExtendedAttributes(self, attrs):
+        pass
+
+    def finish(self, scope):
+        if self._finished:
+            return
+        self._finished = True
+
+        # Need to make sure our non-partial dictionary gets
+        # finished so it can report cases when we only have partial
+        # dictionaries.
+        self._nonPartialDictionary.finish(scope)
+
+    def validate(self):
+        pass
+
+
 class IDLPartialInterfaceOrNamespace(IDLObject):
     def __init__(self, location, name, members, nonPartialInterfaceOrNamespace):
         assert isinstance(name, IDLUnresolvedIdentifier)
@@ -1842,6 +1870,7 @@ class IDLDictionary(IDLObjectWithScope):
         self.parent = parent
         self._finished = False
         self.members = list(members)
+        self._partialDictionaries = []
 
         IDLObjectWithScope.__init__(self, location, parentScope, name)
 
@@ -1877,6 +1906,11 @@ class IDLDictionary(IDLObjectWithScope):
             # Make sure the parent resolves all its members before we start
             # looking at them.
             self.parent.finish(scope)
+
+        # Now go ahead and merge in our partial dictionaries.
+        for partial in self._partialDictionaries:
+            partial.finish(scope)
+            self.members.extend(partial.members)
 
         for member in self.members:
             member.resolve(self)
@@ -1982,6 +2016,9 @@ class IDLDictionary(IDLObjectWithScope):
             deps.add(self.parent)
         return deps
 
+    def addPartialDictionary(self, partial):
+        assert self.identifier.name == partial.identifier.name
+        self._partialDictionaries.append(partial)
 
 class IDLEnum(IDLObjectWithIdentifier):
     def __init__(self, location, parentScope, name, values):
@@ -5530,9 +5567,10 @@ class Parser(Tokenizer):
     def handleNonPartialObject(self, location, identifier, constructor,
                                constructorArgs, nonPartialArgs):
         """
-        This handles non-partial objects (interfaces and namespaces) by
-        checking for an existing partial object, and promoting it to
-        non-partial as needed.  The return value is the non-partial object.
+        This handles non-partial objects (interfaces, namespaces and
+        dictionaries) by checking for an existing partial object, and promoting
+        it to non-partial as needed.  The return value is the non-partial
+        object.
 
         constructorArgs are all the args for the constructor except the last
         one: isKnownNonPartial.
@@ -5622,6 +5660,7 @@ class Parser(Tokenizer):
         """
             PartialDefinition : PartialInterface
                               | PartialNamespace
+                              | PartialDictionary
         """
         p[0] = p[1]
 
@@ -5629,17 +5668,17 @@ class Parser(Tokenizer):
                             nonPartialConstructorArgs,
                             partialConstructorArgs):
         """
-        This handles partial objects (interfaces and namespaces) by checking for
-        an existing non-partial object, and adding ourselves to it as needed.
-        The return value is our partial object.  For now we just use
-        IDLPartialInterfaceOrNamespace for partial objects.
+        This handles partial objects (interfaces, namespaces and dictionaries)
+        by checking for an existing non-partial object, and adding ourselves to
+        it as needed.  The return value is our partial object.  We use
+        IDLPartialInterfaceOrNamespace for partial interfaces or namespaces,
+        and IDLPartialDictionary for partial dictionaries.
 
         nonPartialConstructorArgs are all the args for the non-partial
         constructor except the last two: members and isKnownNonPartial.
 
-        partialConstructorArgs are the arguments for the
-        IDLPartialInterfaceOrNamespace constructor, except the last one (the
-        non-partial object).
+        partialConstructorArgs are the arguments for the partial object
+        constructor, except the last one (the non-partial object).
         """
         # The name of the class starts with "IDL", so strip that off.
         # Also, starts with a capital letter after that, so nix that
@@ -5664,9 +5703,19 @@ class Parser(Tokenizer):
             nonPartialObject = nonPartialConstructor(
                 # No members, False for isKnownNonPartial
                 *(nonPartialConstructorArgs + [[], False]))
-        partialInterface = IDLPartialInterfaceOrNamespace(
-            *(partialConstructorArgs + [nonPartialObject]))
-        return partialInterface
+
+        partialObject = None
+        if isinstance(nonPartialObject, IDLDictionary):
+            partialObject = IDLPartialDictionary(
+                *(partialConstructorArgs + [nonPartialObject]))
+        elif isinstance(nonPartialObject, (IDLInterface, IDLNamespace)):
+            partialObject = IDLPartialInterfaceOrNamespace(
+                *(partialConstructorArgs + [nonPartialObject]))
+        else:
+            raise WebIDLError("Unknown partial object type %s" %
+                    type(partialObject))
+
+        return partialObject
 
     def p_PartialInterface(self, p):
         """
@@ -5691,6 +5740,19 @@ class Parser(Tokenizer):
 
         p[0] = self.handlePartialObject(
             location, identifier, IDLNamespace,
+            [location, self.globalScope(), identifier],
+            [location, identifier, members])
+
+    def p_PartialDictionary(self, p):
+        """
+            PartialDictionary : DICTIONARY IDENTIFIER LBRACE DictionaryMembers RBRACE SEMICOLON
+        """
+        location = self.getLocation(p, 1)
+        identifier = IDLUnresolvedIdentifier(self.getLocation(p, 2), p[2])
+        members = p[4]
+
+        p[0] = self.handlePartialObject(
+            location, identifier, IDLDictionary,
             [location, self.globalScope(), identifier],
             [location, identifier, members])
 
