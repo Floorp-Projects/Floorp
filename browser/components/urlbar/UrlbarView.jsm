@@ -197,17 +197,20 @@ class UrlbarView {
     let item = this._createElement("div");
     item.className = "urlbarView-row";
     item.setAttribute("resultIndex", resultIndex);
+
     if (result.type == UrlbarUtils.MATCH_TYPE.TAB_SWITCH) {
-      item.setAttribute("action", "switch-to-tab");
+      item.setAttribute("type", "switchtab");
+    } else if (result.source == UrlbarUtils.MATCH_SOURCE.BOOKMARKS) {
+      item.setAttribute("type", "bookmark");
     }
 
     let content = this._createElement("span");
     content.className = "urlbarView-row-inner";
     item.appendChild(content);
 
-    let actionIcon = this._createElement("span");
-    actionIcon.className = "urlbarView-action-icon";
-    content.appendChild(actionIcon);
+    let typeIcon = this._createElement("span");
+    typeIcon.className = "urlbarView-type-icon";
+    content.appendChild(typeIcon);
 
     let favicon = this._createElement("img");
     favicon.className = "urlbarView-favicon";
