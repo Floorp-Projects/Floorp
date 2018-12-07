@@ -854,9 +854,9 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
     nsTArray<OpUpdateResource>&& aResourceUpdates,
     nsTArray<RefCountedShmem>&& aSmallShmems,
     nsTArray<ipc::Shmem>&& aLargeShmems, const wr::IdNamespace& aIdNamespace,
-    const bool& aContainsSVGGroup, const TimeStamp& aRefreshStartTime,
-    const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
-    const TimeStamp& aFwdTime) {
+    const bool& aContainsSVGGroup, const VsyncId& aVsyncId,
+    const TimeStamp& aRefreshStartTime, const TimeStamp& aTxnStartTime,
+    const nsCString& aTxnURL, const TimeStamp& aFwdTime) {
   if (mDestroyed) {
     for (const auto& op : aToDestroy) {
       DestroyActor(op);
@@ -945,7 +945,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
                                            mChildLayersObserverEpoch, true);
   }
 
-  HoldPendingTransactionId(wrEpoch, aTransactionId, aContainsSVGGroup,
+  HoldPendingTransactionId(wrEpoch, aTransactionId, aContainsSVGGroup, aVsyncId,
                            aRefreshStartTime, aTxnStartTime, aTxnURL, aFwdTime,
                            mIsFirstPaint);
   mIsFirstPaint = false;
@@ -973,8 +973,9 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
     nsTArray<OpUpdateResource>&& aResourceUpdates,
     nsTArray<RefCountedShmem>&& aSmallShmems,
     nsTArray<ipc::Shmem>&& aLargeShmems, const wr::IdNamespace& aIdNamespace,
-    const TimeStamp& aRefreshStartTime, const TimeStamp& aTxnStartTime,
-    const nsCString& aTxnURL, const TimeStamp& aFwdTime) {
+    const VsyncId& aVsyncId, const TimeStamp& aRefreshStartTime,
+    const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
+    const TimeStamp& aFwdTime) {
   if (mDestroyed) {
     for (const auto& op : aToDestroy) {
       DestroyActor(op);
@@ -1058,8 +1059,8 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
 
   // Only register a value for CONTENT_FRAME_TIME telemetry if we actually drew
   // something. It is for consistency with disabling WebRender.
-  HoldPendingTransactionId(mWrEpoch, aTransactionId, false, aRefreshStartTime,
-                           aTxnStartTime, aTxnURL, aFwdTime,
+  HoldPendingTransactionId(mWrEpoch, aTransactionId, false, aVsyncId,
+                           aRefreshStartTime, aTxnStartTime, aTxnURL, aFwdTime,
                            /* aIsFirstPaint */ false,
                            /* aUseForTelemetry */ scheduleComposite);
 
@@ -1642,11 +1643,12 @@ bool WebRenderBridgeParent::SampleAnimations(
 void WebRenderBridgeParent::CompositeIfNeeded() {
   if (mSkippedComposite) {
     mSkippedComposite = false;
-    CompositeToTarget(nullptr, nullptr);
+    CompositeToTarget(VsyncId(), nullptr, nullptr);
   }
 }
 
-void WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget,
+void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
+                                              gfx::DrawTarget* aTarget,
                                               const gfx::IntRect* aRect) {
   // This function should only get called in the root WRBP
   MOZ_ASSERT(IsRootWebRenderBridgeParent());
@@ -1751,13 +1753,13 @@ void WebRenderBridgeParent::MaybeGenerateFrame(bool aForceGenerateFrame) {
 
 void WebRenderBridgeParent::HoldPendingTransactionId(
     const wr::Epoch& aWrEpoch, TransactionId aTransactionId,
-    bool aContainsSVGGroup, const TimeStamp& aRefreshStartTime,
-    const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
-    const TimeStamp& aFwdTime, const bool aIsFirstPaint,
-    const bool aUseForTelemetry) {
+    bool aContainsSVGGroup, const VsyncId& aVsyncId,
+    const TimeStamp& aRefreshStartTime, const TimeStamp& aTxnStartTime,
+    const nsCString& aTxnURL, const TimeStamp& aFwdTime,
+    const bool aIsFirstPaint, const bool aUseForTelemetry) {
   MOZ_ASSERT(aTransactionId > LastPendingTransactionId());
   mPendingTransactionIds.push_back(PendingTransactionId(
-      aWrEpoch, aTransactionId, aContainsSVGGroup, aRefreshStartTime,
+      aWrEpoch, aTransactionId, aContainsSVGGroup, aVsyncId, aRefreshStartTime,
       aTxnStartTime, aTxnURL, aFwdTime, aIsFirstPaint, aUseForTelemetry));
 }
 
