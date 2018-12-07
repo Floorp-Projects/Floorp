@@ -168,20 +168,7 @@ bool WeakMap<K, V>::markIteratively(GCMarker* marker) {
 
 template <class K, class V>
 inline JSObject* WeakMap<K, V>::getDelegate(JSObject* key) const {
-  JS::AutoSuppressGCAnalysis nogc;
-
-  JSWeakmapKeyDelegateOp op = key->getClass()->extWeakmapKeyDelegateOp();
-  if (!op) {
-    return nullptr;
-  }
-
-  JSObject* obj = op(key);
-  if (!obj) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(obj->runtimeFromMainThread() == zone()->runtimeFromMainThread());
-  return obj;
+  return UncheckedUnwrapWithoutExpose(key);
 }
 
 template <class K, class V>

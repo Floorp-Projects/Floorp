@@ -448,7 +448,6 @@ static const js::ClassOps SandboxClassOps = {
 };
 
 static const js::ClassExtension SandboxClassExtension = {
-    nullptr,      /* weakmapKeyDelegateOp */
     sandbox_moved /* objectMovedOp */
 };
 

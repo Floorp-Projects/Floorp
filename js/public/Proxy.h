@@ -373,8 +373,6 @@ class JS_FRIEND_API BaseProxyHandler {
   virtual bool getElements(JSContext* cx, HandleObject proxy, uint32_t begin,
                            uint32_t end, ElementAdder* adder) const;
 
-  /* See comment for weakmapKeyDelegateOp in js/Class.h. */
-  virtual JSObject* weakmapKeyDelegate(JSObject* proxy) const;
   virtual bool isScripted() const { return false; }
 };
 
