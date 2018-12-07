@@ -232,8 +232,9 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
 
   WrBridge()->EndEmptyTransaction(mFocusTarget, mPendingScrollUpdates,
                                   mAsyncResourceUpdates, mPaintSequenceNumber,
-                                  mLatestTransactionId, refreshStart,
-                                  mTransactionStart, mURL);
+                                  mLatestTransactionId,
+                                  mTransactionIdAllocator->GetVsyncId(),
+                                  refreshStart, mTransactionStart, mURL);
   ClearPendingScrollInfoUpdate();
 
   mTransactionStart = TimeStamp();
@@ -363,8 +364,9 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     AUTO_PROFILER_TRACING("Paint", "ForwardDPTransaction");
     WrBridge()->EndTransaction(contentSize, dl, resourceUpdates,
                                size.ToUnknownSize(), mLatestTransactionId,
-                               mScrollData, containsSVGGroup, refreshStart,
-                               mTransactionStart, mURL);
+                               mScrollData, containsSVGGroup,
+                               mTransactionIdAllocator->GetVsyncId(),
+                               refreshStart, mTransactionStart, mURL);
   }
 
   mTransactionStart = TimeStamp();

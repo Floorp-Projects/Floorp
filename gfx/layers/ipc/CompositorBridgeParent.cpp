@@ -888,7 +888,7 @@ void CompositorBridgeParent::ScheduleComposition() {
   });
 }
 
-void CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget,
+void CompositorBridgeParent::CompositeToTarget(VsyncId aId, DrawTarget* aTarget,
                                                const gfx::IntRect* aRect) {
   AUTO_PROFILER_TRACING("Paint", "Composite");
   AUTO_PROFILER_LABEL("CompositorBridgeParent::CompositeToTarget", GRAPHICS);
