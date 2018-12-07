@@ -82,23 +82,6 @@ public final class MediaDrmProxy {
         return false;
     }
 
-    @WrapForJNI
-    public static boolean CanDecode(String mimeType) {
-        for (int i = 0; i < MediaCodecList.getCodecCount(); ++i) {
-            MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
-            if (info.isEncoder()) {
-                continue;
-            }
-            for (String m : info.getSupportedTypes()) {
-                if (m.equals(mimeType)) {
-                  return true;
-                }
-            }
-        }
-        if (DEBUG) Log.d(LOGTAG, "cannot decode mimetype = " + mimeType);
-        return false;
-    }
-
      // Interface for callback to native.
     public interface Callbacks {
         void onSessionCreated(int createSessionToken,
