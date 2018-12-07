@@ -495,8 +495,6 @@ extern JS_FRIEND_API void VisitGrayWrapperTargets(JS::Zone* zone,
                                                   GCThingCallback callback,
                                                   void* closure);
 
-extern JS_FRIEND_API JSObject* GetWeakmapKeyDelegate(JSObject* key);
-
 /**
  * Invoke cellCallback on every gray JSObject in the given zone.
  */

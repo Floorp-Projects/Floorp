@@ -377,10 +377,6 @@ size_t BaseProxyHandler::objectMoved(JSObject* proxy, JSObject* old) const {
   return 0;
 }
 
-JSObject* BaseProxyHandler::weakmapKeyDelegate(JSObject* proxy) const {
-  return nullptr;
-}
-
 bool BaseProxyHandler::getPrototype(JSContext* cx, HandleObject proxy,
                                     MutableHandleObject protop) const {
   MOZ_CRASH("must override getPrototype with dynamic prototype");

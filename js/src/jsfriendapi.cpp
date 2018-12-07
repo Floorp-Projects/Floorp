@@ -575,13 +575,6 @@ JS_FRIEND_API void js::VisitGrayWrapperTargets(Zone* zone,
   }
 }
 
-JS_FRIEND_API JSObject* js::GetWeakmapKeyDelegate(JSObject* key) {
-  if (JSWeakmapKeyDelegateOp op = key->getClass()->extWeakmapKeyDelegateOp()) {
-    return op(key);
-  }
-  return nullptr;
-}
-
 JS_FRIEND_API JSLinearString* js::StringToLinearStringSlow(JSContext* cx,
                                                            JSString* str) {
   return str->ensureLinear(cx);
@@ -1046,7 +1039,7 @@ struct DumpHeapTracer : public JS::CallbackTracer, public WeakMapTracer {
   void trace(JSObject* map, JS::GCCellPtr key, JS::GCCellPtr value) override {
     JSObject* kdelegate = nullptr;
     if (key.is<JSObject>()) {
-      kdelegate = js::GetWeakmapKeyDelegate(&key.as<JSObject>());
+      kdelegate = UncheckedUnwrapWithoutExpose(&key.as<JSObject>());
     }
 
     fprintf(output, "WeakMapEntry map=%p key=%p keyDelegate=%p value=%p\n", map,

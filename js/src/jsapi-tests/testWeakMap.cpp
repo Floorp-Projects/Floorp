@@ -70,11 +70,14 @@ BEGIN_TEST(testWeakMap_keyDelegates) {
   JS::RootedObject map(cx, JS::NewWeakMapObject(cx));
   CHECK(map);
 
-  JS::RootedObject key(cx, newKey());
-  CHECK(key);
-
   JS::RootedObject delegate(cx, newDelegate());
+  JS::RootedObject key(cx, delegate);
+  if (!JS_WrapObject(cx, &key)) {
+    return false;
+  }
+  CHECK(key);
   CHECK(delegate);
+
   keyDelegate = delegate;
 
   JS::RootedObject delegateRoot(cx);
@@ -146,15 +149,11 @@ static size_t DelegateObjectMoved(JSObject* obj, JSObject* old) {
   return 0;
 }
 
-static JSObject* GetKeyDelegate(JSObject* obj) { return keyDelegate; }
-
 JSObject* newKey() {
-  static const js::ClassExtension keyClassExtension = {GetKeyDelegate};
-
   static const js::Class keyClass = {
       "keyWithDelegate",  JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1),
       JS_NULL_CLASS_OPS,  JS_NULL_CLASS_SPEC,
-      &keyClassExtension, JS_NULL_OBJECT_OPS};
+      JS_NULL_CLASS_EXT, JS_NULL_OBJECT_OPS};
 
   JS::RootedObject key(cx, JS_NewObject(cx, Jsvalify(&keyClass)));
   if (!key) {
@@ -167,8 +166,8 @@ JSObject* newKey() {
 JSObject* newCCW(JS::HandleObject sourceZone, JS::HandleObject destZone) {
   /*
    * Now ensure that this zone will be swept first by adding a cross
-   * compartment wrapper to a new objct in the same zone as the
-   * delegate obejct.
+   * compartment wrapper to a new object in the same zone as the
+   * delegate object.
    */
   JS::RootedObject object(cx);
   {
@@ -208,7 +207,7 @@ JSObject* newDelegate() {
   };
 
   static const js::ClassExtension delegateClassExtension = {
-      nullptr, DelegateObjectMoved};
+      DelegateObjectMoved};
 
   static const js::Class delegateClass = {
       "delegate",

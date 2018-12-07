@@ -508,7 +508,6 @@ class CGDOMJSClass(CGThing):
             };
 
             static const js::ClassExtension sClassExtension = {
-              nullptr, /* weakmapKeyDelegateOp */
               ${objectMoved} /* objectMovedOp */
             };
 

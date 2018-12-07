@@ -280,11 +280,6 @@ bool ForwardingProxyHandler::isConstructor(JSObject* obj) const {
   return target->isConstructor();
 }
 
-JSObject* Wrapper::weakmapKeyDelegate(JSObject* proxy) const {
-  // This may be called during GC.
-  return UncheckedUnwrapWithoutExpose(proxy);
-}
-
 JSObject* Wrapper::New(JSContext* cx, JSObject* obj, const Wrapper* handler,
                        const WrapperOptions& options) {
   // If this is a cross-compartment wrapper allocate it in the compartment's
@@ -340,8 +335,8 @@ JS_FRIEND_API JSObject* js::UncheckedUnwrapWithoutExpose(JSObject* wrapped) {
     }
     wrapped = wrapped->as<WrapperObject>().target();
 
-    // This can be called from Wrapper::weakmapKeyDelegate() on a wrapper
-    // whose referent has been moved while it is still unmarked.
+    // This can be called from when getting a weakmap key delegate() on a
+    // wrapper whose referent has been moved while it is still unmarked.
     if (wrapped) {
       wrapped = MaybeForwarded(wrapped);
     }

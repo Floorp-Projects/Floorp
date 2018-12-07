@@ -183,6 +183,15 @@ class WeakMap
 
   bool markIteratively(GCMarker* marker) override;
 
+  /**
+   * If a wrapper is used as a key in a weakmap, the garbage collector should
+   * keep that object around longer than it otherwise would. We want to avoid
+   * collecting the wrapper (and removing the weakmap entry) as long as the
+   * wrapped object is alive (because the object can be rewrapped and looked up
+   * again). As long as the wrapper is used as a weakmap key, it will not be
+   * collected (and remain in the weakmap) until the wrapped object is
+   * collected.
+   */
   JSObject* getDelegate(JSObject* key) const;
   JSObject* getDelegate(JSScript* script) const;
   JSObject* getDelegate(LazyScript* script) const;

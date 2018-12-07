@@ -663,7 +663,6 @@ static const js::ClassOps XPC_WN_NoHelper_JSClassOps = {
 };
 
 const js::ClassExtension XPC_WN_JSClassExtension = {
-    nullptr,  // weakmapKeyDelegateOp
     WrappedNativeObjectMoved};
 
 const js::Class XPC_WN_NoHelper_JSClass = {
@@ -1114,7 +1113,6 @@ static const js::ClassOps XPC_WN_Proto_JSClassOps = {
 };
 
 static const js::ClassExtension XPC_WN_Proto_ClassExtension = {
-    nullptr, /* weakmapKeyDelegateOp */
     XPC_WN_Proto_ObjectMoved};
 
 const js::Class XPC_WN_Proto_JSClass = {
@@ -1204,7 +1202,6 @@ static const js::ClassOps XPC_WN_Tearoff_JSClassOps = {
 };
 
 static const js::ClassExtension XPC_WN_Tearoff_JSClassExtension = {
-    nullptr,  // weakmapKeyDelegateOp
     XPC_WN_TearOff_ObjectMoved};
 
 const js::Class XPC_WN_Tearoff_JSClass = {
