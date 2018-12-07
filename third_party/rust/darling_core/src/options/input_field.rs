@@ -1,9 +1,8 @@
 use syn;
 
-use ::{FromMetaItem, Error, Result};
 use codegen;
 use options::{Core, DefaultExpression, ParseAttribute};
-
+use {Error, FromMeta, Result};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InputField {
@@ -25,10 +24,14 @@ impl InputField {
     pub fn as_codegen_field<'a>(&'a self) -> codegen::Field<'a> {
         codegen::Field {
             ident: &self.ident,
-            name_in_attr: self.attr_name.as_ref().map(|n| n.as_str()).unwrap_or(self.ident.as_ref()),
+            name_in_attr: self.attr_name
+                .clone()
+                .unwrap_or(self.ident.to_string()),
             ty: &self.ty,
             default_expression: self.as_codegen_default(),
-            with_path: self.with.clone().unwrap_or(parse_quote!(::darling::FromMetaItem::from_meta_item)),
+            with_path: self.with
+                .clone()
+                .unwrap_or(parse_quote!(::darling::FromMeta::from_meta)),
             skip: self.skip,
             map: self.map.as_ref(),
             multiple: self.multiple,
@@ -38,12 +41,10 @@ impl InputField {
     /// Generate a codegen::DefaultExpression for this field. This requires the field name
     /// in the `Inherit` case.
     fn as_codegen_default<'a>(&'a self) -> Option<codegen::DefaultExpression<'a>> {
-        self.default.as_ref().map(|expr| {
-            match *expr {
-                DefaultExpression::Explicit(ref path) => codegen::DefaultExpression::Explicit(path),
-                DefaultExpression::Inherit => codegen::DefaultExpression::Inherit(&self.ident),
-                DefaultExpression::Trait => codegen::DefaultExpression::Trait,
-            }
+        self.default.as_ref().map(|expr| match *expr {
+            DefaultExpression::Explicit(ref path) => codegen::DefaultExpression::Explicit(path),
+            DefaultExpression::Inherit => codegen::DefaultExpression::Inherit(&self.ident),
+            DefaultExpression::Trait => codegen::DefaultExpression::Trait,
         })
     }
 
@@ -61,7 +62,10 @@ impl InputField {
     }
 
     pub fn from_field(f: &syn::Field, parent: Option<&Core>) -> Result<Self> {
-        let ident = f.ident.clone().unwrap_or(syn::Ident::new("__unnamed", ::proc_macro2::Span::call_site()));
+        let ident = f.ident.clone().unwrap_or(syn::Ident::new(
+            "__unnamed",
+            ::proc_macro2::Span::call_site(),
+        ));
         let ty = f.ty.clone();
         let base = Self::new(ident, ty).parse_attributes(&f.attrs)?;
 
@@ -78,7 +82,7 @@ impl InputField {
         // explicit renamings take precedence over rename rules on the container,
         // but in the absence of an explicit name we apply the rule.
         if self.attr_name.is_none() {
-            self.attr_name = Some(parent.rename_rule.apply_to_field(&self.ident));
+            self.attr_name = Some(parent.rename_rule.apply_to_field(self.ident.to_string()));
         }
 
         // Determine the default expression for this field, based on three pieces of information:
@@ -109,12 +113,30 @@ impl ParseAttribute for InputField {
     fn parse_nested(&mut self, mi: &syn::Meta) -> Result<()> {
         let name = mi.name().to_string();
         match name.as_str() {
-            "rename" => { self.attr_name = FromMetaItem::from_meta_item(mi)?; Ok(()) }
-            "default" => { self.default = FromMetaItem::from_meta_item(mi)?; Ok(()) }
-            "with" => { self.with = Some(FromMetaItem::from_meta_item(mi)?); Ok(()) }
-            "skip" => { self.skip = FromMetaItem::from_meta_item(mi)?; Ok(()) }
-            "map" => { self.map = Some(FromMetaItem::from_meta_item(mi)?); Ok(()) }
-            "multiple" => { self.multiple = FromMetaItem::from_meta_item(mi)?; Ok(()) }
+            "rename" => {
+                self.attr_name = FromMeta::from_meta(mi)?;
+                Ok(())
+            }
+            "default" => {
+                self.default = FromMeta::from_meta(mi)?;
+                Ok(())
+            }
+            "with" => {
+                self.with = Some(FromMeta::from_meta(mi)?);
+                Ok(())
+            }
+            "skip" => {
+                self.skip = FromMeta::from_meta(mi)?;
+                Ok(())
+            }
+            "map" => {
+                self.map = Some(FromMeta::from_meta(mi)?);
+                Ok(())
+            }
+            "multiple" => {
+                self.multiple = FromMeta::from_meta(mi)?;
+                Ok(())
+            }
             n => Err(Error::unknown_field(n)),
         }
     }
