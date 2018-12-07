@@ -48,7 +48,7 @@ class CompositorVsyncScheduler {
    * Notify this class of a vsync. This will trigger a composite if one is
    * needed. This must be called from the vsync dispatch thread.
    */
-  bool NotifyVsync(TimeStamp aVsyncTimestamp);
+  bool NotifyVsync(const VsyncEvent& aVsync);
 
   /**
    * Do cleanup. This must be called on the compositor thread.
@@ -126,7 +126,7 @@ class CompositorVsyncScheduler {
   class Observer final : public VsyncObserver {
    public:
     explicit Observer(CompositorVsyncScheduler* aOwner);
-    virtual bool NotifyVsync(TimeStamp aVsyncTimestamp) override;
+    virtual bool NotifyVsync(const VsyncEvent& aVsync) override;
     void Destroy();
 
    private:

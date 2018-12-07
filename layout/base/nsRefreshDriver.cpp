@@ -501,7 +501,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       static mozilla::Atomic<bool> sHighPriorityEnabled;
     };
 
-    bool NotifyVsync(TimeStamp aVsyncTimestamp) override {
+    bool NotifyVsync(const VsyncEvent& aVsync) override {
       // IMPORTANT: All paths through this method MUST hold a strong ref on
       // |this| for the duration of the TickRefreshDriver callback.
 
@@ -512,7 +512,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
         // if the main thread is blocked for long periods of time
         {  // scope lock
           MonitorAutoLock lock(mRefreshTickLock);
-          mRecentVsync = aVsyncTimestamp;
+          mRecentVsync = aVsync.mTime;
           if (!mProcessedVsync) {
             return true;
           }
@@ -520,11 +520,11 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
         }
 
         nsCOMPtr<nsIRunnable> vsyncEvent =
-            new ParentProcessVsyncNotifier(this, aVsyncTimestamp);
+            new ParentProcessVsyncNotifier(this, aVsync.mTime);
         NS_DispatchToMainThread(vsyncEvent);
       } else {
-        mRecentVsync = aVsyncTimestamp;
-        if (!mBlockUntil.IsNull() && mBlockUntil > aVsyncTimestamp) {
+        mRecentVsync = aVsync.mTime;
+        if (!mBlockUntil.IsNull() && mBlockUntil > aVsync.mTime) {
           if (mProcessedVsync) {
             // Re-post vsync update as a normal priority runnable. This way
             // runnables already in normal priority queue get processed.
@@ -539,7 +539,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
         }
 
         RefPtr<RefreshDriverVsyncObserver> kungFuDeathGrip(this);
-        TickRefreshDriver(aVsyncTimestamp);
+        TickRefreshDriver(aVsync.mTime);
       }
 
       return true;
