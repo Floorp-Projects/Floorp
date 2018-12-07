@@ -1572,7 +1572,7 @@ CompositorBridgeParent* CompositorBridgeParent::RemoveCompositor(uint64_t id) {
   return retval;
 }
 
-void CompositorBridgeParent::NotifyVsync(const TimeStamp& aTimeStamp,
+void CompositorBridgeParent::NotifyVsync(const VsyncEvent& aVsync,
                                          const LayersId& aLayersId) {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
@@ -1587,7 +1587,7 @@ void CompositorBridgeParent::NotifyVsync(const TimeStamp& aTimeStamp,
   RefPtr<VsyncObserver> obs = cbp->mWidget->GetVsyncObserver();
   if (!obs) return;
 
-  obs->NotifyVsync(aTimeStamp);
+  obs->NotifyVsync(aVsync);
 }
 
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvNotifyChildCreated(
