@@ -28,7 +28,7 @@ class ErrorMessage extends PureComponent {
   render() {
     return dom.div(
       {
-        className: "error-message",
+        className: "error-message js-error-message",
       },
       dom.div(
         {
