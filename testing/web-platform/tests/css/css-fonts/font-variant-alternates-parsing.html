@@ -5,10 +5,9 @@
 <link rel="help" href="https://www.w3.org/TR/css-fonts-4/#font-variant-alternates-prop">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<div></div>
 <script>
 test(function() {
-  let div = document.querySelector('div');
+  let div = document.createElement('div');
   div.style.fontVariantAlternates = "Historical-Forms";
   assert_equals(
     getComputedStyle(div).fontVariantAlternates,

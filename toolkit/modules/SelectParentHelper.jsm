@@ -48,13 +48,15 @@ var SelectParentHelper = {
    * @param {Array<Element>} items
    * @param {Number}         selectedIndex
    * @param {Number}         zoom
+   * @param {String}         uaBackgroundColor
+   * @param {String}         uaColor
    * @param {String}         uaSelectBackgroundColor
    * @param {String}         uaSelectColor
    * @param {String}         selectBackgroundColor
    * @param {String}         selectColor
    * @param {String}         selectTextShadow
    */
-  populate(menulist, items, selectedIndex, zoom,
+  populate(menulist, items, selectedIndex, zoom, uaBackgroundColor, uaColor,
            uaSelectBackgroundColor, uaSelectColor, selectBackgroundColor,
            selectColor, selectTextShadow) {
     // Clear the current contents of the popup
@@ -97,7 +99,7 @@ var SelectParentHelper = {
       ruleBody += `color: ${selectColor};`;
       usedSelectColor = selectColor;
     } else {
-      usedSelectColor = uaSelectColor;
+      usedSelectColor = uaColor;
     }
 
     if (customStylingEnabled &&
@@ -250,13 +252,16 @@ var SelectParentHelper = {
 
       let options = msg.data.options;
       let selectedIndex = msg.data.selectedIndex;
+      let uaBackgroundColor = msg.data.uaBackgroundColor;
+      let uaColor = msg.data.uaColor;
       let uaSelectBackgroundColor = msg.data.uaSelectBackgroundColor;
       let uaSelectColor = msg.data.uaSelectColor;
       let selectBackgroundColor = msg.data.selectBackgroundColor;
       let selectColor = msg.data.selectColor;
       let selectTextShadow = msg.data.selectTextShadow;
       this.populate(currentMenulist, options, selectedIndex,
-                    currentZoom, uaSelectBackgroundColor, uaSelectColor,
+                    currentZoom, uaBackgroundColor, uaColor,
+                    uaSelectBackgroundColor, uaSelectColor,
                     selectBackgroundColor, selectColor, selectTextShadow);
 
       // Restore scroll position to what it was prior to the update.
