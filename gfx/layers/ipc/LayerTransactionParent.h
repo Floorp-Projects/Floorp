@@ -84,7 +84,8 @@ class LayerTransactionParent final : public PLayerTransactionParent,
     mTxnURL = aURL;
     mFwdTime = aFwdTime;
   }
-  TransactionId FlushTransactionId(TimeStamp& aCompositeEnd);
+  TransactionId FlushTransactionId(const VsyncId& aId,
+                                   TimeStamp& aCompositeEnd);
 
   // CompositableParentManager
   void SendAsyncMessage(
