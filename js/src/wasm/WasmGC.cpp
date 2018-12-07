@@ -19,5 +19,56 @@
 #include "wasm/WasmGC.h"
 
 namespace js {
-namespace wasm {}  // namespace wasm
+namespace wasm {
+
+void EmitWasmPreBarrierGuard(MacroAssembler& masm, Register tls,
+                             Register scratch, Register valueAddr,
+                             Label* skipBarrier) {
+  // If no incremental GC has started, we don't need the barrier.
+  masm.loadPtr(
+    Address(tls, offsetof(TlsData, addressOfNeedsIncrementalBarrier)),
+    scratch);
+  masm.branchTest32(Assembler::Zero, Address(scratch, 0), Imm32(0x1),
+                    skipBarrier);
+
+  // If the previous value is null, we don't need the barrier.
+  masm.loadPtr(Address(valueAddr, 0), scratch);
+  masm.branchTestPtr(Assembler::Zero, scratch, scratch, skipBarrier);
+}
+
+void EmitWasmPreBarrierCall(MacroAssembler& masm, Register tls,
+                            Register scratch, Register valueAddr) {
+  MOZ_ASSERT(valueAddr == PreBarrierReg);
+
+  masm.loadPtr(Address(tls, offsetof(TlsData, instance)), scratch);
+  masm.loadPtr(Address(scratch, Instance::offsetOfPreBarrierCode()), scratch);
+#if defined(DEBUG) && defined(JS_CODEGEN_ARM64)
+  // The prebarrier assumes that x28 == sp.
+  Label ok;
+  masm.Cmp(sp, vixl::Operand(x28));
+  masm.B(&ok, Assembler::Equal);
+  masm.breakpoint();
+  masm.bind(&ok);
+#endif
+  masm.call(scratch);
+}
+
+void EmitWasmPostBarrierGuard(MacroAssembler& masm, const Maybe<Register>& object,
+                              Register otherScratch, Register setValue,
+                              Label* skipBarrier) {
+  // If the pointer being stored is null, no barrier.
+  masm.branchTestPtr(Assembler::Zero, setValue, setValue, skipBarrier);
+
+  // If there is a containing object and it is in the nursery, no barrier.
+  if (object) {
+    masm.branchPtrInNurseryChunk(Assembler::Equal, *object, otherScratch,
+                                 skipBarrier);
+  }
+
+  // If the pointer being stored is to a tenured object, no barrier.
+  masm.branchPtrInNurseryChunk(Assembler::NotEqual, setValue, otherScratch,
+                               skipBarrier);
+}
+
+}  // namespace wasm
 }  // namespace js
