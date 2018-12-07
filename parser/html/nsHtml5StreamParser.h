@@ -22,6 +22,7 @@
 #include "nsITimer.h"
 #include "nsICharsetDetector.h"
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/Buffer.h"
 
 class nsHtml5Parser;
 
