@@ -145,7 +145,7 @@
   <string name="external_app_prompt_no_app_title">Găsește o aplicație care poate deschide linkul</string>
   <string name="external_app_prompt_no_app">Niciuna dintre aplicațiile de pe dispozitiv nu poate deschide acest link. Poți părăsi %1$s ca să cauți în %2$s o aplicație care poate.</string>
   <string name="external_multiple_apps_matched_exit">Ieși din navigarea privată?</string>
-  <string name="download_snackbar_finished">%1$s s-a încheiat</string>
+  <string name="download_snackbar_finished">Descărcarea %1$s s-a terminat</string>
   <string name="download_snackbar_open">Deschide</string>
   <string name="download_dialog_warning"><![CDATA["Fișierele descărcate "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nu vor fi &#537;terse</b>" la ștergerea istoricului %1$s."]]></string>
   <string name="download_dialog_title">Descarcă fișierul</string>
@@ -192,7 +192,7 @@
   <string name="dialog_addtohomescreen_action_cancel">Renunță</string>
   <string name="dialog_addtohomescreen_tracking_protection">Scurtătura se va deschide cu protecţia împotriva urmăririi dezactivată</string>
   <string name="notification_browsing_session_channel_name">Sesiune de navigare privată</string>
-  <string name="notification_browsing_session_channel_description">Notificările îți permit să ștergi sesiunea %1$s cu o atingere. Nu ai nevoie să deschizi aplicația sau să vezi ce rulează în browser.</string>
+  <string name="notification_browsing_session_channel_description">Notificările îți permit să ștergi sesiunea %1$s cu o atingere. Nu e nevoie să deschizi aplicația sau să vezi ce rulează în browser.</string>
   <string name="tabs_tray_action_erase">Șterge istoricul de navigare</string>
   <string name="download_firefox">Descarcă Firefox</string>
   <string name="your_rights_content1">%1$s este un program liber și cu sursă deschisă realizat de Mozilla și alți colaboratori.</string>

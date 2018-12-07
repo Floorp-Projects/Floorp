@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Escriviu una cerca o adreça</string>
   <string name="teaser">Navegació privada automàtica.\nNavegueu. Esborreu. Torneu-hi.</string>
   <string name="feedback_erase">S\'ha esborrat l\'historial de navegació.</string>
+  <string name="feedback_erase_custom_tab">S\'ha esborrat l\'historial de navegació de la pestanya.</string>
   <string name="search_hint">Cerca %1$s</string>
   <string name="menu_share">Comparteix…</string>
   <string name="menu_report_site_issue">Informa d\'un problema amb el lloc</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Ajuda</string>
   <string name="menu_rights">Els vostres drets</string>
   <string name="menu_trackers_blocked_title">Elements blocats</string>
+  <string name="menu_trackers_blocked_subtitle">Si es desactiva, pot ser que s\'arreglin problemes amb alguns llocs</string>
+  <string name="menu_content_blocking">Bloqueig de contingut</string>
+  <string name="menu_content_blocking_subtitle">Desactiveu-ho per arreglar problemes amb alguns llocs</string>
   <string name="menu_custom_tab_branding">Funciona amb el %1$s</string>
   <string name="share_dialog_title">Comparteix mitjançant</string>
   <string name="notification_erase_text">Esborra l\'historial de navegació</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Esborra i obre</string>
   <string name="shortcut_erase_short_label">Esborra</string>
   <string name="shortcut_erase_long_label">Esborra l\'historial de navegació</string>
+  <string name="shortcut_erase_and_open_short_label">Esborra i obre</string>
+  <string name="shortcut_erase_and_open_long_label">Esborra i obre el %1$s</string>
   <string name="text_selection_search_action">Cerca privada</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">El %1$s us d&#243;na el control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Com a navegador privat, us permet:\n  "<ul>"\n    "<li>Cercar i navegar directament des de l\'aplicaci&#243;</li>"\n    "<li>Blocar els elements de seguiment (o canviar els par&#224;metres per permetre\'ls)</li>"\n    "<li>Esborrar les galetes i l\'historial de cerques i de navegaci&#243;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">El %1$s est&#224; creat per Mozilla. La nostra missi&#243; &#233;s fomentar un Internet obert i saludable.<br/>\n<a href="%2$s">M&#233;s informaci&#243;</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Privadesa i seguretat</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Contingut web</string>
   <string name="preference_category_switching_apps">Canvi d\'aplicacions</string>
   <string name="preference_category_general">General</string>
+  <string name="preference_general_summary">Navegador per defecte, pestanyes, llengua</string>
   <string name="preference_category_data_collection_use">Ús i recollida de dades</string>
   <string name="preference_category_search">Cerca</string>
   <string name="preference_show_search_suggestions">Mostra suggeriments de cerca</string>
   <string name="preference_show_search_suggestions_summary">El %1$s enviarà al motor de cerca tot allò que escriviu a la barra d\'adreces</string>
   <string name="preference_search_engine_default">Per defecte</string>
+  <string name="preference_search_engine_label">Motor de cerca</string>
   <string name="preference_state_on">Activat</string>
   <string name="preference_state_off">Desactivat</string>
   <string name="preference_subitem_autocomplete">Emplenament automàtic d\'URL</string>
+  <string name="preference_switch_autocomplete_topsites">Per als llocs principals</string>
+  <string name="preference_autocomplete_topsite_summary">Activeu-ho per permetre l\'emplenament automàtic més de 450 URL populars a la barra d\'adreces.</string>
+  <string name="preference_switch_autocomplete_user_list">Per als llocs que afegiu</string>
+  <string name="preference_autocomplete_user_list_summary">Activeu-ho per permetre l\'emplenament automàtic més de 450 URL populars a la barra d\'adreces.</string>
+  <string name="preference_category_autocomplete_manage_sites">Gestiona els llocs</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Gestiona els llocs</string>
   <string name="preference_autocomplete_action_add">+ Afegeix un URL personalitzat</string>
   <string name="preference_autocomplete_title_add">URL personalitzat nou</string>
   <string name="custom_autocomplete_quick_add">Afegeix URL personalitzat</string>
+  <string name="add_custom_autocomplete_label">Afegeix l\'enllaç a l\'emplenament automàtic</string>
   <string name="preference_category_cookies">Galetes i dades dels llocs</string>
   <string name="preference_category_data_choices">Elecció de dades</string>
   <string name="preference_autocomplete_title_remove">Elimina URL personalitzats</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Si s\'activa, algunes pàgines podrien comportar-se de forma inesperada</string>
   <string name="preference_privacy_category_cookies">Bloca les galetes</string>
   <string name="preference_privacy_should_block_cookies_no_option">No</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Bloca només les galetes de seguiment de tercers</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloca només les galetes de tercers</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Sí</string>
   <string name="preference_security_biometric">Utilitza l\'empremta digital per desblocar l\'aplicació</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">S\'està carregant…</string>
   <string name="accessibility_announcement_loading_finished">S\'ha carregat el lloc web</string>
   <string name="content_description_menu">Més opcions</string>
+  <string name="indicator_content_description_menu">Botó de més opcions</string>
   <string name="content_description_forward">Navega cap endavant</string>
   <string name="content_description_reload">Actualitza el lloc web</string>
   <string name="content_description_back">Vés enrere</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Aix&#242; podria ser un problema amb la configuraci&#243; del servidor, o b&#233; podria ser que alg&#250; estigu&#233;s intentant fer-se passar pel servidor.</li>"\n  "<li>Si us hi heu connectat sense cap problema alguna altra vegada, l\'error podria ser temporal i podeu tornar-ho a provar m&#233;s tard.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups.</string>
   <string name="error_generic_message">No s\'ha pogut carregar aquesta pàgina per algun motiu.</string>
+  <string name="contextmenu_open_in_app">Obre amb una aplicació</string>
   <string name="contextmenu_link_share">Comparteix l\'enllaç</string>
   <string name="contextmenu_link_copy">Copia l\'adreça de l\'enllaç</string>
   <string name="contextmenu_image_share">Comparteix la imatge</string>
@@ -212,7 +230,7 @@
   <string name="biometric_auth_not_recognized_error">No s\'ha reconegut l\'empremta digital. Torneu-ho a provar.</string>
   <string name="biometric_auth_moved_too_quickly">El dit s\'ha mogut massa ràpid. Torneu-ho a provar.</string>
   <string name="enable_search_suggestion_title">Voleu activar els suggeriments de cerca?</string>
-  <string name="enable_search_suggestion_subtitle">Ver obtenir els suggeriments de cerca, el %1$s ha d\'enviar al motor de cerca que heu triat tot allò que escriviu a la barra d\'adreces. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle">Per veure els suggeriments de cerca, el %1$s ha d\'enviar al motor de cerca que heu triat tot allò que escriviu a la barra d\'adreces. %2$s.</string>
   <string name="enable_search_suggestion_subtitle_learnmore">Més informació</string>
   <string name="enable_search_suggestions_no">No</string>
   <string name="enable_search_suggestions_yes">Sí</string>
@@ -224,4 +242,25 @@
   <string name="tip_autocomplete_url">Emplenament automàtic dels URL dels llocs que més utilitzeu\n Manteniu premut qualsevol URL de la barra d\'adreces</string>
   <string name="tip_open_in_new_tab">Obriu un enllaç en una pestanya nova\n Manteniu premut qualsevol enllaç de la pàgina</string>
   <string name="tip_request_desktop">Preferiu veure el lloc com es mostra en l\'escriptori?%1$s Menú &gt; Mostra el lloc d\'escriptori</string>
+  <string name="tip_disable_tips2">Desactiva els consells de la pantalla d\'inici</string>
+  <string name="tip_explain_allowlist">Aquest lloc és de confiança?\n La llista de llocs permesos desactiva la protecció contra el seguiment dels llocs que coneixeu i en què confieu.</string>
+  <string name="new_tab_opened_snackbar">S\'ha obert una pestanya nova</string>
+  <string name="open_new_tab_snackbar">Vés-hi</string>
+  <string name="preference_open_new_tab">En obrir un enllaç en una pestanya nova, vés-hi immediatament</string>
+  <string name="preference_category_safe_browsing">Navegació segura</string>
+  <string name="preference_safe_browsing_title">Bloca els llocs potencialment perillosos i maliciosos</string>
+  <string name="preference_safe_browsing_summary">Bloca els llocs atacants i els llocs amb programari maliciós i indesitjable.</string>
+  <string name="preference_exceptions">Excepcions</string>
+  <string name="preference_exceptions_description">Heu desactivat el bloqueig de contingut en aquests llocs web.</string>
+  <string name="preference_exceptions_menu_remove">Elimina</string>
+  <string name="preference_exceptions_remove_all_button_label">Elimina tots els llocs web</string>
+  <string name="tab_crash_report_title">La pestanya ha fallat</string>
+  <string name="tab_crash_report_headline">S\'ha produït un problema amb aquesta pestanya.</string>
+  <string name="tab_crash_report_description">Com a navegador privat, aquesta pestanya no s\'ha desat i, per tant, no es pot restaurar.</string>
+  <string name="tab_crash_report_close_tab_button_label">Tanca la pestanya</string>
+  <string name="fatal_crash_report_title">El %1$s ha tingut un problema i ha fallat.</string>
+  <string name="fatal_crash_report_description">Com a navegador privat, la vostra sessió de navegació no s\'ha desat i, per tant, no es pot restaurar.</string>
+  <string name="fatal_crash_report_close_button_label">Tanca</string>
+  <string name="fatal_crash_report_restart_firefox_label">Reinicia el %1$s</string>
+  <string name="crash_report_send_crash_label">Envia un informe de fallada a Mozilla</string>
 </resources>

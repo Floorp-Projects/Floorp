@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">清除并打开</string>
   <string name="shortcut_erase_and_open_long_label">清除并打开 %1$s</string>
   <string name="text_selection_search_action">私密搜索</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#35753;&#24744;&#25484;&#25511;&#32447;&#19978;&#29983;&#27963;&#12290;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#29992;&#20316;&#38544;&#31169;&#27983;&#35272;&#22120;&#65292;&#21487;&#20197;&#65306;\n  "<ul>"\n    "<li>&#30452;&#25509;&#22312;&#24212;&#29992;&#20013;&#25628;&#32034;&#21644;&#27983;&#35272;</li>"\n    "<li>&#25318;&#25130;&#36319;&#36394;&#22120;&#65288;&#20063;&#21487;&#35843;&#25972;&#20026;&#20801;&#35768;&#36319;&#36394;&#22120;&#65289;</li>"\n    "<li>&#33258;&#21160;&#28165;&#38500; Cookie&#12289;&#25628;&#32034;&#35760;&#24405;&#21644;&#27983;&#35272;&#35760;&#24405;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#30001; Mozilla &#20986;&#21697;&#12290;&#25105;&#20204;&#30340;&#20351;&#21629;&#26159;&#20419;&#25104;&#20581;&#24247;&#12289;&#24320;&#25918;&#30340;&#20114;&#32852;&#32593;&#12290;<br/>\n<a href="%2$s">&#35814;&#32454;&#20102;&#35299;</a></p>]]></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#35753;&#24744;&#25484;&#25511;&#32447;&#19978;&#29983;&#27963;&#12290;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#20316;&#20026;&#38544;&#31169;&#27983;&#35272;&#22120;&#65292;&#23427;&#21487;&#20197;&#65306;\n  "<ul>"\n    "<li>&#30452;&#25509;&#22312;&#24212;&#29992;&#20013;&#25628;&#32034;&#21644;&#27983;&#35272;</li>"\n    "<li>&#25318;&#25130;&#36319;&#36394;&#22120;&#65288;&#20063;&#21487;&#35843;&#25972;&#20026;&#20801;&#35768;&#36319;&#36394;&#22120;&#65289;</li>"\n    "<li>&#33258;&#21160;&#28165;&#38500; Cookie&#12289;&#25628;&#32034;&#35760;&#24405;&#21644;&#27983;&#35272;&#35760;&#24405;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#30001; Mozilla &#20986;&#21697;&#12290;&#25105;&#20204;&#30340;&#20351;&#21629;&#26159;&#20419;&#25104;&#20581;&#24247;&#12289;&#24320;&#25918;&#30340;&#20114;&#32852;&#32593;&#12290;<br/>\n<a href="%2$s">&#35814;&#32454;&#20102;&#35299;</a></p>]]></string>
   <string name="preference_privacy_and_security_header">隐私与安全</string>
   <string name="preference_privacy_and_security_summary">跟踪、Cookie、数据反馈</string>
   <string name="preference_search_summary">设置默认引擎、自动补全</string>
@@ -78,13 +78,13 @@
   <string name="preference_language_systemdefault">系统默认</string>
   <string name="preference_category_privacy">隐私</string>
   <string name="preference_privacy_block_ads">拦截广告跟踪器</string>
-  <string name="preference_privacy_block_ads_summary">一些广告跟踪您的访问，即便您没有点击广告</string>
+  <string name="preference_privacy_block_ads_summary">一些广告在跟踪您的访问，即使您没有点击广告</string>
   <string name="preference_privacy_block_analytics">拦截分析跟踪器</string>
-  <string name="preference_privacy_block_analytics_summary">会收集、分析和测量您的活动，例如点击与滚动</string>
+  <string name="preference_privacy_block_analytics_summary">它们会收集、分析和测量您的活动，例如点按和滚动</string>
   <string name="preference_privacy_block_social">拦截社交跟踪器</string>
-  <string name="preference_privacy_block_social_summary">嵌入到网站上从而跟踪您的访问和显示分享按钮</string>
+  <string name="preference_privacy_block_social_summary">嵌入在网站上来跟踪您的访问，并显示分享按钮等功能</string>
   <string name="preference_privacy_block_content">拦截其他内容跟踪器</string>
-  <string name="preference_privacy_block_content_summary2">启用可能导致部分网站工作异常</string>
+  <string name="preference_privacy_block_content_summary2">启用可能导致部分网站运作不正常</string>
   <string name="preference_privacy_category_cookies">阻止 Cookie</string>
   <string name="preference_privacy_should_block_cookies_no_option">否</string>
   <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">仅阻止第三方跟踪器 Cookie</string>
@@ -100,11 +100,11 @@
   <string name="preference_performance_block_webfonts_summary">可能造成图标或图像缺失</string>
   <string name="preference_performance_block_javascript">阻止 JavaScript</string>
   <string name="preference_performance_block_javascript_summary">页面加载可能更快，但可能遭遇意外状况</string>
-  <string name="preference_default_browser2">使 %1$s 成为默认浏览器</string>
+  <string name="preference_default_browser2">将 %1$s 设为默认浏览器</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">发送使用统计</string>
   <string name="preference_mozilla_telemetry_summary">详细了解</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla 坚持仅收集用来为大众改进 %1$s 所必需的数据。</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla 坚持仅收集为大众提供和改进 %1$s 所必需的数据。</string>
   <string name="preference_privacy_notice">隐私声明</string>
   <string name="preference_about">关于 %1$s</string>
   <string name="preference_search_installed_search_engines">已安装的搜索引擎</string>
@@ -246,7 +246,7 @@
   <string name="tip_explain_allowlist">是受信任的网站吗？\n可通过允许列表来对您信任的网站禁用跟踪保护功能。</string>
   <string name="new_tab_opened_snackbar">已打开新标签页</string>
   <string name="open_new_tab_snackbar">切换</string>
-  <string name="preference_open_new_tab">立即切换到新标签页中的链接</string>
+  <string name="preference_open_new_tab">立即显示新建打开的链接</string>
   <string name="preference_category_safe_browsing">安全浏览</string>
   <string name="preference_safe_browsing_title">拦截潜在的危险与诈骗网站</string>
   <string name="preference_safe_browsing_summary">拦截已被报告的诈骗、攻击性，或含有恶意软件、垃圾软件的网站。</string>

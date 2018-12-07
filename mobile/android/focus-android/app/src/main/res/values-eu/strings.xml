@@ -19,7 +19,9 @@
   <string name="menu_help">Laguntza</string>
   <string name="menu_rights">Zure eskubideak</string>
   <string name="menu_trackers_blocked_title">Blokeatutako elementuak</string>
+  <string name="menu_trackers_blocked_subtitle">Hau itzaltzeak zenbait guneren arazoak konpon litzake</string>
   <string name="menu_content_blocking">Edukia blokeatzea</string>
+  <string name="menu_content_blocking_subtitle">Itzali zenbait gune konpontzeko</string>
   <string name="menu_custom_tab_branding">%1$s nabigatzaileak hornitua</string>
   <string name="share_dialog_title">Partekatu</string>
   <string name="notification_erase_text">Ezabatu nabigatze-historia</string>
@@ -39,6 +41,7 @@
   <string name="preference_category_web_content">Web edukia</string>
   <string name="preference_category_switching_apps">Aplikazioak aldatzea</string>
   <string name="preference_category_general">Orokorra</string>
+  <string name="preference_general_summary">Nabigatzaile lehenetsia, fitxak, hizkuntza</string>
   <string name="preference_category_data_collection_use">Datuen bilketa eta erabilera</string>
   <string name="preference_category_search">Bilaketa</string>
   <string name="preference_show_search_suggestions">Eskuratu bilaketa-iradokizunak</string>
@@ -48,11 +51,16 @@
   <string name="preference_state_on">Aktibatuta</string>
   <string name="preference_state_off">Desaktibatuta</string>
   <string name="preference_subitem_autocomplete">URLen osatze automatikoa</string>
+  <string name="preference_switch_autocomplete_topsites">Gune erabilienetarako</string>
+  <string name="preference_autocomplete_topsite_summary">Gaituz gero, helbide-barran automatikoki osatuko dira 450 URL ezagun baino gehiago.</string>
+  <string name="preference_switch_autocomplete_user_list">Gehitzen dituzun guneetarako</string>
+  <string name="preference_autocomplete_user_list_summary">Gaituz gero, helbide-barran automatikoki osatuko dira 450 URL ezagun baino gehiago.</string>
   <string name="preference_category_autocomplete_manage_sites">Kudeatu guneak</string>
   <string name="preference_autocomplete_subitem_manage_sites">Kudeatu guneak</string>
   <string name="preference_autocomplete_action_add">+ Gehitu URL perstonalizatua</string>
   <string name="preference_autocomplete_title_add">Gehitu URL perstonalizatua</string>
   <string name="custom_autocomplete_quick_add">Gehitu URL pertsonalizatua</string>
+  <string name="add_custom_autocomplete_label">Gehitu automatikoki osatzeko lotura</string>
   <string name="preference_category_cookies">Cookieak eta guneetako datuak</string>
   <string name="preference_category_data_choices">Datu-aukerak</string>
   <string name="preference_autocomplete_title_remove">Kendu URL pertsonalizatuak</string>
@@ -79,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Gaituz gero, zenbait orrik espero gabeko portaera izan lezakete</string>
   <string name="preference_privacy_category_cookies">Blokeatu cookieak</string>
   <string name="preference_privacy_should_block_cookies_no_option">Ez</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blokeatu soilik hirugarrenen jarraipen-cookieak</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokeatu soilik hirugarrenen cookieak</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Bai</string>
   <string name="preference_security_biometric">Erabili hatz-marka aplikazioa desblokeatzeko</string>
@@ -122,6 +131,7 @@
   <string name="accessibility_announcement_loading">Kargatzen</string>
   <string name="accessibility_announcement_loading_finished">Webgunea kargatuta</string>
   <string name="content_description_menu">Aukera gehiago</string>
+  <string name="indicator_content_description_menu">Aukera gehiagorako botoia</string>
   <string name="content_description_forward">Nabigatu aurrera</string>
   <string name="content_description_reload">Berritu webgunea</string>
   <string name="content_description_back">Nabigatu atzera</string>
@@ -158,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Hau zerbitzariaren konfigurazio-errore batengatik edo\nnorbait zerbitzariaren nortasuna hartzen ari delako izan daiteke.</li>"\n  "<li>Aurretik zerbitzari honetara behar bezala konektatu bazara, errorea\nbehin-behinekoa izan daiteke eta geroago saia zaitezke.</li>\n</ul>]]></string>
   <string name="error_generic_title">Iepa</string>
   <string name="error_generic_message">Ezin dugu orri hau kargatu arrazoi ezezagun batengatik.</string>
+  <string name="contextmenu_open_in_app">Ireki aplikazioarekin</string>
   <string name="contextmenu_link_share">Partekatu lotura</string>
   <string name="contextmenu_link_copy">Kopiatu loturaren helbidea</string>
   <string name="contextmenu_image_share">Partekatu irudia</string>
@@ -231,10 +242,24 @@
   <string name="tip_autocomplete_url">Osatu automatikoki gehien bisitatzen dituzun guneetako URLak\n Mantendu sakatuta helbide-barran edozein URL</string>
   <string name="tip_open_in_new_tab">Ireki lotura fitxa berri batean\n Mantendu sakatuta orri bateko edozein lotura</string>
   <string name="tip_request_desktop">Nahiago duzu mahaigaineko gune osoa ikusi?%1$s Menua &gt; Mahaigaineko gunea</string>
+  <string name="tip_disable_tips2">Desgaitu hasierako pantailako aholkuak</string>
+  <string name="tip_explain_allowlist">Gune fidagarria?\nBaimentze-zerrendak jarraipenaren babesa desgaitzen du ezagutzen dituzun eta fidagarriak zaizkizun guneetarako.</string>
+  <string name="new_tab_opened_snackbar">Fitxa berria irekita</string>
+  <string name="open_new_tab_snackbar">Aldatu</string>
+  <string name="preference_open_new_tab">Aldatu berehala loturara fitxa berrian</string>
+  <string name="preference_category_safe_browsing">Nabigatze segurua</string>
+  <string name="preference_safe_browsing_title">Blokeatu arriskutsuak eta iruzurtiak izan litezkeen guneak</string>
+  <string name="preference_safe_browsing_summary">Blokeatu iruzurti eta erasotzaile gisa identifikatutako guneak, hala nola malwarea eta eskatu gabeko softwarea duten guneak.</string>
+  <string name="preference_exceptions">Salbuespenak</string>
+  <string name="preference_exceptions_description">Edukia blokeatzea desgaitu duzu gune hauetarako.</string>
   <string name="preference_exceptions_menu_remove">Kendu</string>
   <string name="preference_exceptions_remove_all_button_label">Kendu webgune guztiak</string>
   <string name="tab_crash_report_title">Fitxak huts egin du</string>
+  <string name="tab_crash_report_headline">Barkatu. Arazo bat izaten ari gara fitxa honekin.</string>
+  <string name="tab_crash_report_description">Nabigatzaile pribatu gisa, inoiz ez dugu ezer gordetzen eta ezin dugu fitxa hau berreskuratu.</string>
   <string name="tab_crash_report_close_tab_button_label">Itxi fitxa</string>
+  <string name="fatal_crash_report_title">Barkatu. %1$s(e)k arazo bat izan du eta huts egin du.</string>
+  <string name="fatal_crash_report_description">Nabigatzaile pribatu gisa, inoiz ez dugu ezer gordetzen eta ezin dugu zure azken nabigazio-saioa berreskuratu.</string>
   <string name="fatal_crash_report_close_button_label">Itxi</string>
   <string name="fatal_crash_report_restart_firefox_label">Berrabiarazi %1$s</string>
   <string name="crash_report_send_crash_label">Bidali hutsegite-txostena Mozillara</string>
