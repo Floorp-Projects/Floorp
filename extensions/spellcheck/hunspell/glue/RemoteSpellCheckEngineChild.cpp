@@ -20,29 +20,24 @@ RemoteSpellcheckEngineChild::~RemoteSpellcheckEngineChild() {
 RefPtr<GenericPromise>
 RemoteSpellcheckEngineChild::SetCurrentDictionaryFromList(
     const nsTArray<nsString>& aList) {
-  MozPromiseHolder<GenericPromise>* promiseHolder =
-      new MozPromiseHolder<GenericPromise>();
-  RefPtr<GenericPromise> promise = promiseHolder->Ensure(__func__);
   RefPtr<mozSpellChecker> spellChecker = mOwner;
 
-  SendSetDictionaryFromList(aList)->Then(
+  return SendSetDictionaryFromList(aList)->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [spellChecker, promiseHolder](Tuple<bool, nsString>&& aParam) {
-        UniquePtr<MozPromiseHolder<GenericPromise>> holder(promiseHolder);
+      [spellChecker](Tuple<bool, nsString>&& aParam) {
         if (!Get<0>(aParam)) {
           spellChecker->mCurrentDictionary.Truncate();
-          holder->Reject(NS_ERROR_NOT_AVAILABLE, __func__);
-          return;
+          return GenericPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
+                                                 __func__);
         }
         spellChecker->mCurrentDictionary = std::move(Get<1>(aParam));
-        holder->Resolve(true, __func__);
+        return GenericPromise::CreateAndResolve(true, __func__);
       },
-      [spellChecker, promiseHolder](ResponseRejectReason&& aReason) {
-        UniquePtr<MozPromiseHolder<GenericPromise>> holder(promiseHolder);
+      [spellChecker](ResponseRejectReason&& aReason) {
         spellChecker->mCurrentDictionary.Truncate();
-        holder->Reject(NS_ERROR_NOT_AVAILABLE, __func__);
+        return GenericPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
+                                               __func__);
       });
-  return promise;
 }
 
 }  // namespace mozilla
