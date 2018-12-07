@@ -404,6 +404,7 @@ dnl ========================================================
 CFLAGS="$CFLAGS $MOZ_HARDENING_CFLAGS"
 CPPFLAGS="$CPPFLAGS $MOZ_HARDENING_CFLAGS"
 CXXFLAGS="$CXXFLAGS $MOZ_HARDENING_CFLAGS"
+LDFLAGS="$CFLAGS $MOZ_HARDENING_LDFLAGS"
 
 dnl ========================================================
 dnl GNU specific defaults
