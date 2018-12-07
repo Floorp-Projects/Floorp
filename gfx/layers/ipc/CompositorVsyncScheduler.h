@@ -108,7 +108,7 @@ class CompositorVsyncScheduler {
 
   // Post a task to run Composite() on the compositor thread, if there isn't
   // such a task already queued. Can be called from any thread.
-  void PostCompositeTask(TimeStamp aCompositeTimestamp);
+  void PostCompositeTask(VsyncId aId, TimeStamp aCompositeTimestamp);
 
   // Post a task to run DispatchVREvents() on the VR thread, if there isn't
   // such a task already queued. Can be called from any thread.
@@ -116,7 +116,7 @@ class CompositorVsyncScheduler {
 
   // This gets run at vsync time and "does" a composite (which really means
   // update internal state and call the owner to do the composite).
-  void Composite(TimeStamp aVsyncTimestamp);
+  void Composite(VsyncId aId, TimeStamp aVsyncTimestamp);
 
   void ObserveVsync();
   void UnobserveVsync();
