@@ -304,17 +304,26 @@ var ThirdPartyCookies = {
     this.subViewList.textContent = "";
 
     for (let category of ["firstParty", "trackers", "thirdParty"]) {
-      if (categories[category].length) {
-        let box = document.createXULElement("vbox");
-        let label = document.createXULElement("label");
-        label.className = "identity-popup-cookiesView-list-header";
-        label.textContent = gNavigatorBundle.getString(`contentBlocking.cookiesView.${category}.label`);
-        box.appendChild(label);
-        for (let info of categories[category]) {
-          box.appendChild(this._createListItem(info));
-        }
-        this.subViewList.appendChild(box);
+      let box = document.createXULElement("vbox");
+      let label = document.createXULElement("label");
+      label.className = "identity-popup-cookiesView-list-header";
+      label.textContent = gNavigatorBundle.getString(`contentBlocking.cookiesView.${category}.label`);
+      box.appendChild(label);
+
+      for (let info of categories[category]) {
+        box.appendChild(this._createListItem(info));
       }
+
+      // If the category is empty, add a label noting that to the user.
+      if (categories[category].length == 0) {
+        let emptyLabel = document.createXULElement("label");
+        emptyLabel.classList.add("identity-popup-content-blocking-empty-label");
+        emptyLabel.textContent =
+          gNavigatorBundle.getString(`contentBlocking.cookiesView.${category}.empty.label`);
+        box.appendChild(emptyLabel);
+      }
+
+      this.subViewList.appendChild(box);
     }
   },
 
