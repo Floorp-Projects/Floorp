@@ -45,22 +45,6 @@ void WeakMapBase::traceZone(JS::Zone* zone, JSTracer* tracer) {
   }
 }
 
-#if defined(JS_GC_ZEAL) || defined(DEBUG)
-bool WeakMapBase::checkMarkingForZone(JS::Zone* zone) {
-  // This is called at the end of marking.
-  MOZ_ASSERT(zone->isGCMarking());
-
-  bool ok = true;
-  for (WeakMapBase* m : zone->gcWeakMapList()) {
-    if (m->marked && !m->checkMarking()) {
-      ok = false;
-    }
-  }
-
-  return ok;
-}
-#endif
-
 bool WeakMapBase::markZoneIteratively(JS::Zone* zone, GCMarker* marker) {
   bool markedAny = false;
   for (WeakMapBase* m : zone->gcWeakMapList()) {

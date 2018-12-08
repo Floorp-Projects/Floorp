@@ -1018,9 +1018,7 @@ const char gc::ZealModeHelpText[] =
     "        before sweeping non-object GC things\n"
     "    23: (YieldBeforeSweepingShapeTrees) Incremental GC in two slices that "
     "yields\n"
-    "        before sweeping shape trees\n"
-    "    24: (CheckWeakMapMarking) Check weak map marking invariants after "
-    "every GC\n";
+    "        before sweeping shape trees\n";
 
 // The set of zeal modes that control incremental slices. These modes are
 // mutually exclusive.
@@ -5218,26 +5216,6 @@ void js::NotifyGCPostSwap(JSObject* a, JSObject* b, unsigned removedFlags) {
   }
 }
 
-static inline void MaybeCheckWeakMapMarking(GCRuntime* gc)
-{
-#if defined(JS_GC_ZEAL) || defined(DEBUG)
-
-  bool shouldCheck;
-#if defined(DEBUG)
-  shouldCheck = true;
-#else
-  shouldCheck = gc->hasZealMode(ZealMode::CheckWeakMapMarking);
-#endif
-
-  if (shouldCheck) {
-    for (SweepGroupZonesIter zone(gc->rt); !zone.done(); zone.next()) {
-      MOZ_RELEASE_ASSERT(WeakMapBase::checkMarkingForZone(zone));
-    }
-  }
-
-#endif
-}
-
 IncrementalProgress GCRuntime::endMarkingSweepGroup(FreeOp* fop,
                                                     SliceBudget& budget) {
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_MARK);
@@ -5274,8 +5252,6 @@ IncrementalProgress GCRuntime::endMarkingSweepGroup(FreeOp* fop,
 
   // We must not yield after this point before we start sweeping the group.
   safeToYield = false;
-
-  MaybeCheckWeakMapMarking(this);
 
   return Finished;
 }
