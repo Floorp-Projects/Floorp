@@ -78,7 +78,7 @@ var TrackingProtection = {
   updateCategoryLabel() {
     let label;
     if (this.enabled) {
-      label = "contentBlocking.trackers.blocked.label";
+      label = ContentBlocking.showBlockedLabels ? "contentBlocking.trackers.blocking.label" : null;
     } else {
       label = ContentBlocking.showAllowedLabels ? "contentBlocking.trackers.allowed.label" : null;
     }
@@ -251,16 +251,16 @@ var ThirdPartyCookies = {
     let label;
     switch (this.behaviorPref) {
     case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
-      label = "contentBlocking.cookies.3rdPartyBlocked.label";
+      label = ContentBlocking.showBlockedLabels ? "contentBlocking.cookies.blocking3rdParty.label" : null;
       break;
     case Ci.nsICookieService.BEHAVIOR_REJECT:
-      label = "contentBlocking.cookies.allBlocked.label";
+      label = ContentBlocking.showBlockedLabels ? "contentBlocking.cookies.blockingAll.label" : null;
       break;
     case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
-      label = "contentBlocking.cookies.unvisitedBlocked.label";
+      label = ContentBlocking.showBlockedLabels ? "contentBlocking.cookies.blockingUnvisited.label" : null;
       break;
     case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
-      label = "contentBlocking.cookies.trackersBlocked.label";
+      label = ContentBlocking.showBlockedLabels ? "contentBlocking.cookies.blockingTrackers.label" : null;
       break;
     default:
       Cu.reportError(`Error: Unknown cookieBehavior pref observed: ${this.behaviorPref}`);
@@ -489,6 +489,7 @@ var ContentBlocking = {
   PREF_INTRO_COUNT_CB: "browser.contentblocking.introCount",
   PREF_CB_CATEGORY: "browser.contentblocking.category",
   PREF_SHOW_ALLOWED_LABELS: "browser.contentblocking.control-center.ui.showAllowedLabels",
+  PREF_SHOW_BLOCKED_LABELS: "browser.contentblocking.control-center.ui.showBlockedLabels",
   content: null,
   icon: null,
   activeTooltipText: null,
@@ -576,6 +577,12 @@ var ContentBlocking = {
 
     Services.prefs.addObserver(this.PREF_ANIMATIONS_ENABLED, this.updateAnimationsEnabled);
 
+    XPCOMUtils.defineLazyPreferenceGetter(this, "showBlockedLabels",
+      this.PREF_SHOW_BLOCKED_LABELS, false, () => {
+        for (let blocker of this.blockers) {
+          blocker.updateCategoryLabel();
+        }
+    });
     XPCOMUtils.defineLazyPreferenceGetter(this, "showAllowedLabels",
       this.PREF_SHOW_ALLOWED_LABELS, false, () => {
         for (let blocker of this.blockers) {
