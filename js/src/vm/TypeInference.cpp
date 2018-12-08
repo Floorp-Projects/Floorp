@@ -3844,6 +3844,8 @@ void PreliminaryObjectArrayWithTemplate::maybeAnalyze(JSContext* cx,
   MOZ_ASSERT(cx->zone()->types.activeAnalysis);
   MOZ_ASSERT(!group->newScript(sweep));
   MOZ_ASSERT(!group->maybeUnboxedLayout(sweep));
+  MOZ_ASSERT(cx->realm() == group->realm());
+  MOZ_ASSERT(cx->realm() == fun->realm());
 
   // rollbackPartiallyInitializedObjects expects function_ to be
   // canonicalized.
