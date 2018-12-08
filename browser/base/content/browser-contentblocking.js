@@ -581,17 +581,17 @@ var ContentBlocking = {
   },
 
   init() {
-    let $ = selector => document.querySelector(selector);
-    this.content = $("#identity-popup-content-blocking-content");
-    this.icon = $("#tracking-protection-icon");
-    this.iconBox = $("#tracking-protection-icon-box");
-    this.animatedIcon = $("#tracking-protection-icon-animatable-image");
+    let $ = id => document.getElementById(id);
+    this.content = $("identity-popup-content-blocking-content");
+    this.icon = $("tracking-protection-icon");
+    this.iconBox = $("tracking-protection-icon-box");
+    this.animatedIcon = $("tracking-protection-icon-animatable-image");
     this.animatedIcon.addEventListener("animationend", () => this.iconBox.removeAttribute("animate"));
 
-    this.identityPopupMultiView = $("#identity-popup-multiView");
-    this.reportBreakageButton = $("#identity-popup-content-blocking-report-breakage");
-    this.reportBreakageURL = $("#identity-popup-breakageReportView-collection-url");
-    this.reportBreakageLearnMore = $("#identity-popup-breakageReportView-learn-more");
+    this.identityPopupMultiView = $("identity-popup-multiView");
+    this.reportBreakageButton = $("identity-popup-content-blocking-report-breakage");
+    this.reportBreakageURL = $("identity-popup-breakageReportView-collection-url");
+    this.reportBreakageLearnMore = $("identity-popup-breakageReportView-learn-more");
 
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
     this.reportBreakageLearnMore.href = baseURL + "blocking-breakage";
