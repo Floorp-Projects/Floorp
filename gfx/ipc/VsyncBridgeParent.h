@@ -23,7 +23,7 @@ class VsyncBridgeParent final : public PVsyncBridgeParent {
   static RefPtr<VsyncBridgeParent> Start(
       Endpoint<PVsyncBridgeParent>&& aEndpoint);
 
-  mozilla::ipc::IPCResult RecvNotifyVsync(const TimeStamp& vsyncTimeStamp,
+  mozilla::ipc::IPCResult RecvNotifyVsync(const VsyncEvent& aVsync,
                                           const LayersId& aLayersId) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void DeallocPVsyncBridgeParent() override;
