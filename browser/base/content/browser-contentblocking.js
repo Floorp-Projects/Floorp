@@ -115,6 +115,31 @@ var TrackingProtection = {
       }
     }
 
+    // If we don't have trackers we would usually not show the menu item
+    // allowing the user to show the sub-panel. However, in the edge case
+    // that we annotated trackers on the page using the strict list but did
+    // not detect trackers on the page using the basic list, we currently
+    // still show the panel. To reduce the confusion, tell the user that we have
+    // not detected any tracker.
+    if (fragment.childNodes.length == 0) {
+      let emptyBox = document.createXULElement("vbox");
+      let emptyImage = document.createXULElement("image");
+      emptyImage.classList.add("identity-popup-content-blocking-trackersView-empty-image");
+      emptyImage.classList.add("tracking-protection-icon");
+
+      let emptyLabel = document.createXULElement("label");
+      emptyLabel.classList.add("identity-popup-content-blocking-empty-label");
+      emptyLabel.textContent = gNavigatorBundle.getString("contentBlocking.trackersView.empty.label");
+
+      emptyBox.appendChild(emptyImage);
+      emptyBox.appendChild(emptyLabel);
+      fragment.appendChild(emptyBox);
+
+      this.subViewList.classList.add("empty");
+    } else {
+      this.subViewList.classList.remove("empty");
+    }
+
     // This might have taken a while. Only update the list if we're still on the same page.
     if (previousURI == gBrowser.currentURI.spec &&
         previousWindow == gBrowser.selectedBrowser.innerWindowID) {
