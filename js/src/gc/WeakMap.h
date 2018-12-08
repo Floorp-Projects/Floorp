@@ -25,14 +25,7 @@ class WeakMapBase;
 struct WeakMapTracer;
 
 namespace gc {
-
 struct WeakMarkable;
-
-#if defined(JS_GC_ZEAL) || defined(DEBUG)
-// Check whether a weak map entry is marked correctly.
-bool CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key, Cell* value);
-#endif
-
 }  // namespace gc
 
 // A subclass template of js::HashMap whose keys and values may be
@@ -69,7 +62,7 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   // Unmark all weak maps in a zone.
   static void unmarkZone(JS::Zone* zone);
 
-  // Trace all the weakmaps in a zone.
+  // Mark all the weakmaps in a zone.
   static void traceZone(JS::Zone* zone, JSTracer* tracer);
 
   // Check all weak maps in a zone that have been marked as live in this garbage
@@ -86,7 +79,7 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   // entries of live weak maps whose keys are dead.
   static void sweepZone(JS::Zone* zone);
 
-  // Trace all weak map bindings. Used by the cycle collector.
+  // Trace all delayed weak map bindings. Used by the cycle collector.
   static void traceAllMappings(WeakMapTracer* tracer);
 
   // Save information about which weak maps are marked for a zone.
@@ -95,10 +88,6 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
 
   // Restore information about which weak maps are marked for many zones.
   static void restoreMarkedWeakMaps(WeakMapSet& markedWeakMaps);
-
-#if defined(JS_GC_ZEAL) || defined(DEBUG)
-  static bool checkMarkingForZone(JS::Zone* zone);
-#endif
 
  protected:
   // Instance member functions called by the above. Instantiations of WeakMap
@@ -116,13 +105,7 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
 
   virtual bool markIteratively(GCMarker* marker) = 0;
 
-#ifdef JS_GC_ZEAL
-  virtual bool checkMarking() const = 0;
-  virtual bool allowKeysInOtherZones() const { return false; }
-  friend bool gc::CheckWeakMapEntryMarking(const WeakMapBase*, gc::Cell*,
-                                           gc::Cell*);
-#endif
-
+ protected:
   // Object that this weak map is part of, if any.
   GCPtrObject memberOf;
 
@@ -216,10 +199,6 @@ class WeakMap
  protected:
 #if DEBUG
   void assertEntriesNotAboutToBeFinalized();
-#endif
-
-#ifdef JS_GC_ZEAL
-  bool checkMarking() const override;
 #endif
 };
 

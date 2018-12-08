@@ -247,23 +247,6 @@ void WeakMap<K, V>::assertEntriesNotAboutToBeFinalized() {
 }
 #endif
 
-#ifdef JS_GC_ZEAL
-template <class K, class V>
-bool WeakMap<K, V>::checkMarking() const {
-  bool ok = true;
-  for (Range r = Base::all(); !r.empty(); r.popFront()) {
-    gc::Cell* key = gc::ToMarkable(r.front().key());
-    gc::Cell* value = gc::ToMarkable(r.front().value());
-    if (key && value) {
-      if (!gc::CheckWeakMapEntryMarking(this, key, value)) {
-        ok = false;
-      }
-    }
-  }
-  return ok;
-}
-#endif
-
 } /* namespace js */
 
 #endif /* gc_WeakMap_inl_h */

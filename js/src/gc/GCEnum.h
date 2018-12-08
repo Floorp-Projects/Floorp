@@ -73,8 +73,7 @@ enum class AbortReason {
   D(YieldBeforeSweepingTypes, 20)      \
   D(YieldBeforeSweepingObjects, 21)    \
   D(YieldBeforeSweepingNonObjects, 22) \
-  D(YieldBeforeSweepingShapeTrees, 23) \
-  D(CheckWeakMapMarking, 24)
+  D(YieldBeforeSweepingShapeTrees, 23)
 
 enum class ZealMode {
 #define ZEAL_MODE(name, value) name = value,
