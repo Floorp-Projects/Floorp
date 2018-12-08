@@ -11,6 +11,7 @@
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 #include "mozilla/RefPtr.h"
+#include "VsyncSource.h"
 
 namespace mozilla {
 
@@ -23,7 +24,7 @@ class VsyncObserver {
   // thread from VsyncSource. But it might also be called on PVsync ipc thread
   // if this notification is cross process. Thus all observer should check the
   // thread model before handling the real task.
-  virtual bool NotifyVsync(TimeStamp aVsyncTimestamp) = 0;
+  virtual bool NotifyVsync(const VsyncEvent& aVsync) = 0;
 
  protected:
   VsyncObserver() {}
@@ -49,7 +50,7 @@ class CompositorVsyncDispatcher final {
   CompositorVsyncDispatcher();
 
   // Called on the vsync thread when a hardware vsync occurs
-  void NotifyVsync(TimeStamp aVsyncTimestamp);
+  void NotifyVsync(const VsyncEvent& aVsync);
 
   // Compositor vsync observers must be added/removed on the compositor thread
   void SetCompositorVsyncObserver(VsyncObserver* aVsyncObserver);
@@ -72,7 +73,7 @@ class RefreshTimerVsyncDispatcher final {
   RefreshTimerVsyncDispatcher();
 
   // Please check CompositorVsyncDispatcher::NotifyVsync().
-  void NotifyVsync(TimeStamp aVsyncTimestamp);
+  void NotifyVsync(const VsyncEvent& aVsync);
 
   // Set chrome process's RefreshTimer to this dispatcher.
   // This function can be called from any thread.

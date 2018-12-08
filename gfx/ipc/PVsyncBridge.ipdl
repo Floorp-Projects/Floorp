@@ -5,6 +5,7 @@
 
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
+using mozilla::VsyncEvent from "mozilla/VsyncDispatcher.h";
 
 namespace mozilla {
 namespace gfx {
@@ -16,7 +17,7 @@ namespace gfx {
 sync protocol PVsyncBridge
 {
 parent:
-  async NotifyVsync(TimeStamp vsyncTimeStamp, LayersId layersId);
+  async NotifyVsync(VsyncEvent vsync, LayersId layersId);
 };
 
 } // namespace gfx
