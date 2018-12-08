@@ -440,8 +440,21 @@ description#identity-popup-content-verifier,
   max-height: 600px;
 }
 
+#identity-popup-trackersView-list.empty {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+}
+
 .identity-popup-content-blocking-empty-label {
+  margin-inline-start: 0;
   color: var(--panel-disabled-color);
+}
+
+.identity-popup-content-blocking-trackersView-empty-image {
+  width: 48px;
+  height: 48px;
+  -moz-context-properties: fill, fill-opacity;
+  margin-bottom: 16px;
 }
 
 #identity-popup-cookiesView .identity-popup-content-blocking-empty-label {
