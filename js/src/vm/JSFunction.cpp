@@ -2348,6 +2348,7 @@ JSFunction* js::CloneFunctionReuseScript(
     gc::AllocKind allocKind /* = FUNCTION */,
     NewObjectKind newKind /* = GenericObject */,
     HandleObject proto /* = nullptr */) {
+  MOZ_ASSERT(cx->realm() == fun->realm());
   MOZ_ASSERT(NewFunctionEnvironmentIsWellFormed(cx, enclosingEnv));
   MOZ_ASSERT(fun->isInterpreted());
   MOZ_ASSERT(!fun->isBoundFunction());
