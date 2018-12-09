@@ -857,6 +857,11 @@ ClearDataService.prototype = Object.freeze({
     });
   },
 
+  deleteDataFromOriginAttributesPattern(aPattern) {
+    Services.obs.notifyObservers(null, "clear-origin-attributes-data",
+      JSON.stringify(aPattern));
+  },
+
   // This internal method uses aFlags against FLAGS_MAP in order to retrieve a
   // list of 'Cleaners'. For each of them, the aHelper callback retrieves a
   // promise object. All these promise objects are resolved before calling
