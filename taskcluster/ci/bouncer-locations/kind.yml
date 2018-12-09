@@ -8,6 +8,9 @@ transforms:
    - taskgraph.transforms.bouncer_locations:transforms
    - taskgraph.transforms.task:transforms
 
+kind-dependencies:
+   - bouncer-locations-breakpoint
+
 job-defaults:
    description: nightly bouncer locations job
    attributes:
