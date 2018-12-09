@@ -334,17 +334,11 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DoGetContain();
   already_AddRefed<CSSValue> DoGetWillChange();
   already_AddRefed<CSSValue> DoGetOverflowY();
-  already_AddRefed<CSSValue> DoGetOverflowClipBoxBlock();
-  already_AddRefed<CSSValue> DoGetOverflowClipBoxInline();
   already_AddRefed<CSSValue> DoGetTouchAction();
   already_AddRefed<CSSValue> DoGetTransform();
   already_AddRefed<CSSValue> DoGetTransformOrigin();
   already_AddRefed<CSSValue> DoGetPerspective();
   already_AddRefed<CSSValue> DoGetPerspectiveOrigin();
-  already_AddRefed<CSSValue> DoGetOverscrollBehaviorX();
-  already_AddRefed<CSSValue> DoGetOverscrollBehaviorY();
-  already_AddRefed<CSSValue> DoGetScrollSnapTypeX();
-  already_AddRefed<CSSValue> DoGetScrollSnapTypeY();
   already_AddRefed<CSSValue> DoGetScrollSnapPointsX();
   already_AddRefed<CSSValue> DoGetScrollSnapPointsY();
   already_AddRefed<CSSValue> DoGetScrollbarColor();

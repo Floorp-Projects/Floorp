@@ -2322,10 +2322,10 @@ static bool ApplyOverflowClipping(
   auto wm = aFrame->GetWritingMode();
   bool cbH = (wm.IsVertical() ? disp->mOverflowClipBoxBlock
                               : disp->mOverflowClipBoxInline) ==
-             NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX;
+             StyleOverflowClipBox::ContentBox;
   bool cbV = (wm.IsVertical() ? disp->mOverflowClipBoxInline
                               : disp->mOverflowClipBoxBlock) ==
-             NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX;
+             StyleOverflowClipBox::ContentBox;
   nsMargin bp = aFrame->GetUsedPadding();
   if (!cbH) {
     bp.left = bp.right = nscoord(0);
@@ -7342,9 +7342,7 @@ void nsIFrame::RootFrameList(nsPresContext* aPresContext, FILE* out,
 }
 #endif
 
-bool nsIFrame::IsVisibleForPainting() {
-  return StyleVisibility()->IsVisible();
-}
+bool nsIFrame::IsVisibleForPainting() { return StyleVisibility()->IsVisible(); }
 
 bool nsIFrame::IsVisibleOrCollapsedForPainting() {
   return StyleVisibility()->IsVisibleOrCollapsed();
