@@ -842,8 +842,7 @@ async function sanitizeSessionPrincipal(principal) {
 function sanitizeNewTabSegregation() {
   let identity = ContextualIdentityService.getPrivateIdentity("userContextIdInternal.thumbnail");
   if (identity) {
-    Services.obs.notifyObservers(null, "clear-origin-attributes-data",
-                                 JSON.stringify({ userContextId: identity.userContextId }));
+    Services.clearData.deleteDataFromOriginAttributesPattern({ userContextId: identity.userContextId });
   }
 }
 

@@ -59,7 +59,7 @@ class CalcSnapPoints : public SnappingEdgeCallback {
   nsIScrollableFrame::ScrollUnit mUnit;
   nsPoint mDestination;  // gives the position after scrolling but before
                          // snapping
-  nsPoint mStartPos;  // gives the position before scrolling
+  nsPoint mStartPos;     // gives the position before scrolling
   nsIntPoint mScrollingDirection;  // always -1, 0, or 1
   nsPoint mBestEdge;  // keeps track of the position of the current best edge
   bool mHorizontalEdgeFound;  // true if mBestEdge.x is storing a valid
@@ -252,8 +252,8 @@ Maybe<nsPoint> ScrollSnapUtils::GetSnapPointForDestination(
     const ScrollSnapInfo& aSnapInfo, nsIScrollableFrame::ScrollUnit aUnit,
     const nsSize& aScrollPortSize, const nsRect& aScrollRange,
     const nsPoint& aStartPos, const nsPoint& aDestination) {
-  if (aSnapInfo.mScrollSnapTypeY == NS_STYLE_SCROLL_SNAP_TYPE_NONE &&
-      aSnapInfo.mScrollSnapTypeX == NS_STYLE_SCROLL_SNAP_TYPE_NONE) {
+  if (aSnapInfo.mScrollSnapTypeY == StyleScrollSnapType::None &&
+      aSnapInfo.mScrollSnapTypeX == StyleScrollSnapType::None) {
     return Nothing();
   }
 
@@ -276,13 +276,13 @@ Maybe<nsPoint> ScrollSnapUtils::GetSnapPointForDestination(
   nsPoint finalPos = calcSnapPoints.GetBestEdge();
   nscoord proximityThreshold = gfxPrefs::ScrollSnapProximityThreshold();
   proximityThreshold = nsPresContext::CSSPixelsToAppUnits(proximityThreshold);
-  if (aSnapInfo.mScrollSnapTypeY == NS_STYLE_SCROLL_SNAP_TYPE_PROXIMITY &&
+  if (aSnapInfo.mScrollSnapTypeY == StyleScrollSnapType::Proximity &&
       std::abs(aDestination.y - finalPos.y) > proximityThreshold) {
     finalPos.y = aDestination.y;
   } else {
     snapped = true;
   }
-  if (aSnapInfo.mScrollSnapTypeX == NS_STYLE_SCROLL_SNAP_TYPE_PROXIMITY &&
+  if (aSnapInfo.mScrollSnapTypeX == StyleScrollSnapType::Proximity &&
       std::abs(aDestination.x - finalPos.x) > proximityThreshold) {
     finalPos.x = aDestination.x;
   } else {
