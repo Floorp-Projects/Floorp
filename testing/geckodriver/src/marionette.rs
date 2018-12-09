@@ -55,10 +55,6 @@ use crate::capabilities::{FirefoxCapabilities, FirefoxOptions};
 use crate::logging;
 use crate::prefs;
 
-// localhost may be routed to the IPv6 stack on certain systems,
-// and nsIServerSocket in Marionette only supports IPv4
-const DEFAULT_HOST: &'static str = "127.0.0.1";
-
 #[derive(Debug, PartialEq, Deserialize)]
 pub struct MarionetteHandshake {
     #[serde(rename = "marionetteProtocol")]
@@ -69,6 +65,7 @@ pub struct MarionetteHandshake {
 
 #[derive(Default)]
 pub struct MarionetteSettings {
+    pub host: String,
     pub port: Option<u16>,
     pub binary: Option<PathBuf>,
     pub connect_existing: bool,
@@ -119,12 +116,13 @@ impl MarionetteHandler {
             logging::set_max_level(l);
         }
 
-        let port = self.settings.port.unwrap_or(get_free_port()?);
+        let host = self.settings.host.to_owned();
+        let port = self.settings.port.unwrap_or(get_free_port(&host)?);
         if !self.settings.connect_existing {
             self.start_browser(port, options)?;
         }
 
-        let mut connection = MarionetteConnection::new(port, session_id.clone());
+        let mut connection = MarionetteConnection::new(host, port, session_id.clone());
         connection.connect(&mut self.browser).or_else(|e| {
             if let Some(ref mut runner) = self.browser {
                 runner.kill()?;
@@ -1045,24 +1043,27 @@ impl Into<WebDriverError> for MarionetteError {
     }
 }
 
-fn get_free_port() -> IoResult<u16> {
-    TcpListener::bind((DEFAULT_HOST, 0))
+fn get_free_port(host: &str) -> IoResult<u16> {
+    TcpListener::bind((host, 0))
         .and_then(|stream| stream.local_addr())
         .map(|x| x.port())
 }
 
 pub struct MarionetteConnection {
+    host: String,
     port: u16,
     stream: Option<TcpStream>,
     pub session: MarionetteSession,
 }
 
 impl MarionetteConnection {
-    pub fn new(port: u16, session_id: Option<String>) -> MarionetteConnection {
+    pub fn new(host: String, port: u16, session_id: Option<String>) -> MarionetteConnection {
+        let session = MarionetteSession::new(session_id);
         MarionetteConnection {
-            port: port,
+            host,
+            port,
             stream: None,
-            session: MarionetteSession::new(session_id),
+            session,
         }
     }
 
@@ -1074,7 +1075,7 @@ impl MarionetteConnection {
         debug!(
             "Waiting {}s to connect to browser on {}:{}",
             timeout.as_secs(),
-            DEFAULT_HOST,
+            self.host,
             self.port
         );
         loop {
@@ -1098,7 +1099,7 @@ impl MarionetteConnection {
                 }
             }
 
-            match TcpStream::connect(&(DEFAULT_HOST, self.port)) {
+            match TcpStream::connect((&self.host[..], self.port)) {
                 Ok(stream) => {
                     self.stream = Some(stream);
                     break;
@@ -1118,7 +1119,7 @@ impl MarionetteConnection {
 
         debug!(
             "Connection established on {}:{}. Waiting for Marionette handshake",
-            DEFAULT_HOST, self.port,
+            self.host, self.port,
         );
 
         let data = self.handshake()?;
