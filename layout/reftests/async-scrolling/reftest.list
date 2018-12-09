@@ -88,7 +88,7 @@ default-preferences
 
 skip-if(!Android) pref(apz.allow_zooming,true) == position-fixed-async-zoom-1.html position-fixed-async-zoom-1-ref.html
 skip-if(!Android) pref(apz.allow_zooming,true) == position-fixed-async-zoom-2.html position-fixed-async-zoom-2-ref.html
-fails skip-if(!Android) pref(apz.allow_zooming,true) == position-fixed-async-zoom-3.html position-fixed-async-zoom-3-ref.html
-fails skip-if(!Android) pref(apz.allow_zooming,true) == position-fixed-async-zoom-4.html position-fixed-async-zoom-4-ref.html
+skip-if(!Android) pref(apz.allow_zooming,true) == position-fixed-async-zoom-3.html position-fixed-async-zoom-3-ref.html
+skip-if(!Android) pref(apz.allow_zooming,true) == position-fixed-async-zoom-4.html position-fixed-async-zoom-4-ref.html
 skip-if(!Android) pref(apz.allow_zooming,true) == position-sticky-async-zoom-1.html position-sticky-async-zoom-1-ref.html
 skip-if(!Android) pref(apz.allow_zooming,true) == position-sticky-async-zoom-2.html position-sticky-async-zoom-2-ref.html
