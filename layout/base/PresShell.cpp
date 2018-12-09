@@ -3439,17 +3439,15 @@ bool PresShell::ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
       // Inflate the scrolled rect by the container's padding in each dimension,
       // unless we have 'overflow-clip-box-*: content-box' in that dimension.
       auto* disp = container->StyleDisplay();
-      if (disp->mOverflowClipBoxBlock ==
-              NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX ||
-          disp->mOverflowClipBoxInline ==
-              NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX) {
+      if (disp->mOverflowClipBoxBlock == StyleOverflowClipBox::ContentBox ||
+          disp->mOverflowClipBoxInline == StyleOverflowClipBox::ContentBox) {
         WritingMode wm = container->GetWritingMode();
         bool cbH = (wm.IsVertical() ? disp->mOverflowClipBoxBlock
                                     : disp->mOverflowClipBoxInline) ==
-                   NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX;
+                   StyleOverflowClipBox::ContentBox;
         bool cbV = (wm.IsVertical() ? disp->mOverflowClipBoxInline
                                     : disp->mOverflowClipBoxBlock) ==
-                   NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX;
+                   StyleOverflowClipBox::ContentBox;
         nsMargin padding = container->GetUsedPadding();
         if (!cbH) {
           padding.left = padding.right = nscoord(0);
