@@ -80,6 +80,12 @@ struct ParamTraits<mozilla::layers::ScaleMode>
           mozilla::layers::kHighestScaleMode> {};
 
 template <>
+struct ParamTraits<mozilla::StyleScrollSnapType>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::StyleScrollSnapType, mozilla::StyleScrollSnapType::None,
+          mozilla::StyleScrollSnapType::Proximity> {};
+
+template <>
 struct ParamTraits<mozilla::layers::TextureFlags>
     : public BitFlagsEnumSerializer<mozilla::layers::TextureFlags,
                                     mozilla::layers::TextureFlags::ALL_BITS> {};

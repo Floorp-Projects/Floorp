@@ -709,17 +709,11 @@ VARCACHE_PREF(
 )
 
 // Are -moz-prefixed gradient functions enabled?
-#ifdef NIGHTLY_BUILD
-# define PREF_VALUE false
-#else
-# define PREF_VALUE true
-#endif
 VARCACHE_PREF(
   "layout.css.prefixes.gradients",
    layout_css_prefixes_gradients,
-  bool, PREF_VALUE
+  bool, true
 )
-#undef PREF_VALUE
 
 // Whether the offset-* logical property aliases are enabled.
 VARCACHE_PREF(
