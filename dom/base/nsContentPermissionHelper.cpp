@@ -523,20 +523,20 @@ ContentPermissionRequestBase::ContentPermissionRequestBase(
 NS_IMETHODIMP
 ContentPermissionRequestBase::GetPrincipal(
     nsIPrincipal** aRequestingPrincipal) {
-  NS_ADDREF(*aRequestingPrincipal = mPrincipal);
+  NS_IF_ADDREF(*aRequestingPrincipal = mPrincipal);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 ContentPermissionRequestBase::GetTopLevelPrincipal(
     nsIPrincipal** aRequestingPrincipal) {
-  NS_ADDREF(*aRequestingPrincipal = mTopLevelPrincipal);
+  NS_IF_ADDREF(*aRequestingPrincipal = mTopLevelPrincipal);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 ContentPermissionRequestBase::GetWindow(mozIDOMWindow** aRequestingWindow) {
-  NS_ADDREF(*aRequestingWindow = mWindow);
+  NS_IF_ADDREF(*aRequestingWindow = mWindow);
   return NS_OK;
 }
 
