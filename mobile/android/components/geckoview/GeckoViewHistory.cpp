@@ -26,6 +26,9 @@ using namespace mozilla::dom;
 using namespace mozilla::ipc;
 using namespace mozilla::widget;
 
+static const char16_t kOnVisitedMessage[] = u"GeckoView:OnVisited";
+static const char16_t kGetVisitedMessage[] = u"GeckoView:GetVisited";
+
 // Keep in sync with `GeckoSession.HistoryDelegate.VisitFlags`.
 enum class GeckoViewVisitFlags : int32_t {
   VISIT_TOP_LEVEL = 1 << 0,
@@ -386,6 +389,11 @@ GeckoViewHistory::VisitURI(nsIWidget* aWidget, nsIURI* aURI,
     return NS_OK;
   }
 
+  // If nobody is listening for this, we can stop now.
+  if (!dispatcher->HasListener(kOnVisitedMessage)) {
+    return NS_OK;
+  }
+
   AutoTArray<jni::String::LocalRef, 3> keys;
   AutoTArray<jni::Object::LocalRef, 3> values;
 
@@ -444,8 +452,8 @@ GeckoViewHistory::VisitURI(nsIWidget* aWidget, nsIURI* aURI,
   nsCOMPtr<nsIAndroidEventCallback> callback =
       new OnVisitedCallback(this, dispatcher->GetGlobalObject(), aURI);
 
-  Unused << NS_WARN_IF(NS_FAILED(
-      dispatcher->Dispatch(u"GeckoView:OnVisited", bundle, callback)));
+  Unused << NS_WARN_IF(
+      NS_FAILED(dispatcher->Dispatch(kOnVisitedMessage, bundle, callback)));
 
   return NS_OK;
 }
@@ -590,6 +598,11 @@ void GeckoViewHistory::QueryVisitedState(
     return;
   }
 
+  // If nobody is listening for this we can stop now
+  if (!dispatcher->HasListener(kGetVisitedMessage)) {
+    return;
+  }
+
   // Assemble a bundle like `{ urls: ["http://example.com/1", ...] }`.
   auto uris = jni::ObjectArray::New<jni::String>(aURIs.Length());
   for (size_t i = 0; i < aURIs.Length(); ++i) {
@@ -614,8 +627,8 @@ void GeckoViewHistory::QueryVisitedState(
   nsCOMPtr<nsIAndroidEventCallback> callback =
       new GetVisitedCallback(this, dispatcher->GetGlobalObject(), aURIs);
 
-  Unused << NS_WARN_IF(NS_FAILED(
-      dispatcher->Dispatch(u"GeckoView:GetVisited", bundle, callback)));
+  Unused << NS_WARN_IF(
+      NS_FAILED(dispatcher->Dispatch(kGetVisitedMessage, bundle, callback)));
 }
 
 /**

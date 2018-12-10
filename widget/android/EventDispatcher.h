@@ -44,6 +44,7 @@ class EventDispatcher final
                     java::GeckoBundle::Param aData = nullptr,
                     nsIAndroidEventCallback* aCallback = nullptr);
 
+  bool HasListener(const char16_t* aEvent);
   bool HasGeckoListener(jni::String::Param aEvent);
   void DispatchToGecko(jni::String::Param aEvent, jni::Object::Param aData,
                        jni::Object::Param aCallback);
