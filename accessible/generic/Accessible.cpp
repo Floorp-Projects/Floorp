@@ -734,13 +734,15 @@ void Accessible::XULElmName(DocAccessible* aDocument, nsIContent* aElm,
    */
 
   // CASE #1 (via label attribute) -- great majority of the cases
-  nsCOMPtr<nsIDOMXULSelectControlItemElement> itemEl = do_QueryInterface(aElm);
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> itemEl =
+      aElm->AsElement()->AsXULSelectControlItem();
   if (itemEl) {
     itemEl->GetLabel(aName);
   } else {
     // Use @label if this is not a select control element, which uses label
     // attribute to indicate, which option is selected.
-    nsCOMPtr<nsIDOMXULSelectControlElement> select = do_QueryInterface(aElm);
+    nsCOMPtr<nsIDOMXULSelectControlElement> select =
+        aElm->AsElement()->AsXULSelectControl();
     if (!select) {
       aElm->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
     }
@@ -1673,7 +1675,7 @@ Relation Accessible::RelationByType(RelationType aType) const {
       } else {
         // In XUL, use first <button default="true" .../> in the document
         nsIDocument* doc = mContent->OwnerDoc();
-        nsCOMPtr<nsIDOMXULButtonElement> buttonEl;
+        nsIContent* buttonEl = nullptr;
         if (doc->IsXULDocument()) {
           dom::XULDocument* xulDoc = doc->AsXULDocument();
           nsCOMPtr<nsIHTMLCollection> possibleDefaultButtons =
@@ -1683,7 +1685,13 @@ Relation Accessible::RelationByType(RelationType aType) const {
             uint32_t length = possibleDefaultButtons->Length();
             // Check for button in list of default="true" elements
             for (uint32_t count = 0; count < length && !buttonEl; count++) {
-              buttonEl = do_QueryInterface(possibleDefaultButtons->Item(count));
+              nsIContent* item = possibleDefaultButtons->Item(count);
+              RefPtr<nsIDOMXULButtonElement> button =
+                  item->IsElement() ? item->AsElement()->AsXULButton()
+                                    : nullptr;
+              if (button) {
+                buttonEl = item;
+              }
             }
           }
           if (!buttonEl) {  // Check for anonymous accept button in <dialog>
@@ -1692,11 +1700,16 @@ Relation Accessible::RelationByType(RelationType aType) const {
               nsIContent* possibleButtonEl =
                   rootElm->OwnerDoc()->GetAnonymousElementByAttribute(
                       rootElm, nsGkAtoms::_default, NS_LITERAL_STRING("true"));
-              buttonEl = do_QueryInterface(possibleButtonEl);
+              if (possibleButtonEl && possibleButtonEl->IsElement()) {
+                RefPtr<nsIDOMXULButtonElement> button =
+                    possibleButtonEl->AsElement()->AsXULButton();
+                if (button) {
+                  buttonEl = possibleButtonEl;
+                }
+              }
             }
           }
-          nsCOMPtr<nsIContent> relatedContent(do_QueryInterface(buttonEl));
-          return Relation(mDoc, relatedContent);
+          return Relation(mDoc, buttonEl);
         }
       }
       return Relation();

@@ -189,6 +189,8 @@ function run_test() {
   const scanTXTstrings = [
     "underline",                                  // ASCII
     "äöüßáéíóúî",                                 // Latin-1
+    "a\u0301c\u0327c\u030Ce\u0309n\u0303t\u0326e\u0308d\u0323",
+                                                  // áçčẻñțëḍ Latin
     "\u016B\u00F1\u0257\u0119\u0211\u0142\u00ED\u00F1\u0119",
                                                   // Pseudo-ese ūñɗęȑłíñę
     "\u01DDu\u0131\u0283\u0279\u01DDpun",         // Upside down ǝuıʃɹǝpun
@@ -196,7 +198,11 @@ function run_test() {
                                                   // Greek υπογράμμιση
     "\u0441\u0438\u043B\u044C\u043D\u0443\u044E", // Russian сильную
     "\u0C2C\u0C32\u0C2E\u0C46\u0C56\u0C28",       // Telugu బలమైన
-    "\u508D\u7DDA\u3059\u308B"                    // Japanese 傍線する
+    "\u508D\u7DDA\u3059\u308B",                   // Japanese 傍線する
+    "\uD841\uDF0E\uD841\uDF31\uD841\uDF79\uD843\uDC53\uD843\uDC78",
+                                                  // Chinese (supplementary plane)
+    "\uD801\uDC14\uD801\uDC2F\uD801\uDC45\uD801\uDC28\uD801\uDC49\uD801\uDC2F\uD801\uDC3B"
+                                                  // Deseret 𐐔𐐯𐑅𐐨𐑉𐐯𐐻
   ];
 
   const scanTXTstructs = [

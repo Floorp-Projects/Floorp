@@ -63,6 +63,17 @@ class nsDocument;
 class nsDOMStringMap;
 struct ServoNodeData;
 
+class nsIDOMXULButtonElement;
+class nsIDOMXULContainerElement;
+class nsIDOMXULContainerItemElement;
+class nsIDOMXULControlElement;
+class nsIDOMXULMenuListElement;
+class nsIDOMXULMultiSelectControlElement;
+class nsIDOMXULRelatedElement;
+class nsIDOMXULSelectControlElement;
+class nsIDOMXULSelectControlItemElement;
+class nsIBrowser;
+
 namespace mozilla {
 class DeclarationBlock;
 struct MutationClosureData;
@@ -1566,6 +1577,20 @@ class Element : public FragmentOrElement {
   void UnlinkIntersectionObservers();
   bool UpdateIntersectionObservation(DOMIntersectionObserver* aObserver,
                                      int32_t threshold);
+
+  // A number of methods to cast to various XUL interfaces. They return a
+  // pointer only if the element implements that interface.
+  already_AddRefed<nsIDOMXULButtonElement> AsXULButton();
+  already_AddRefed<nsIDOMXULContainerElement> AsXULContainer();
+  already_AddRefed<nsIDOMXULContainerItemElement> AsXULContainerItem();
+  already_AddRefed<nsIDOMXULControlElement> AsXULControl();
+  already_AddRefed<nsIDOMXULMenuListElement> AsXULMenuList();
+  already_AddRefed<nsIDOMXULMultiSelectControlElement>
+  AsXULMultiSelectControl();
+  already_AddRefed<nsIDOMXULRelatedElement> AsXULRelated();
+  already_AddRefed<nsIDOMXULSelectControlElement> AsXULSelectControl();
+  already_AddRefed<nsIDOMXULSelectControlItemElement> AsXULSelectControlItem();
+  already_AddRefed<nsIBrowser> AsBrowser();
 
  protected:
   /*

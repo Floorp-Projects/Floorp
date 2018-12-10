@@ -162,10 +162,11 @@ bool ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
                           NamesOfInterfacesWithProtos(aProtoId));
 }
 
-bool ThrowNoSetterArg(JSContext* aCx, prototypes::ID aProtoId) {
+bool ThrowNoSetterArg(JSContext* aCx, const JS::CallArgs& aArgs,
+                      prototypes::ID aProtoId) {
   nsPrintfCString errorMessage("%s attribute setter",
                                NamesOfInterfacesWithProtos(aProtoId));
-  return ThrowErrorMessage(aCx, MSG_MISSING_ARGUMENTS, errorMessage.get());
+  return aArgs.requireAtLeast(aCx, errorMessage.get(), 1);
 }
 
 }  // namespace dom
@@ -3008,7 +3009,7 @@ bool GenericSetter(JSContext* cx, unsigned argc, JS::Value* vp) {
     }
   }
   if (args.length() == 0) {
-    return ThrowNoSetterArg(cx, protoID);
+    return ThrowNoSetterArg(cx, args, protoID);
   }
   MOZ_ASSERT(info->type() == JSJitInfo::Setter);
   JSJitSetterOp setter = info->setter;

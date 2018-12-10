@@ -8042,8 +8042,8 @@ class CGMethodCall(CGThing):
             if requiredArgs > 0 and not method.isMaplikeOrSetlikeOrIterableMethod():
                 code = fill(
                     """
-                    if (MOZ_UNLIKELY(args.length() < ${requiredArgs})) {
-                      return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, "${methodName}");
+                    if (!args.requireAtLeast(cx, "${methodName}", ${requiredArgs})) {
+                      return false;
                     }
                     """,
                     requiredArgs=requiredArgs,
@@ -8385,8 +8385,15 @@ class CGMethodCall(CGThing):
         overloadCGThings.append(
             CGSwitch("argcount",
                      argCountCases,
-                     CGGeneric('return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, "%s");\n' %
-                               methodName)))
+                     CGGeneric(fill(
+                         """
+                         // Using nsPrintfCString here would require including that
+                         // header.  Let's not worry about it.
+                         nsAutoCString argCountStr;
+                         argCountStr.AppendPrintf("%u", args.length());
+                         return ThrowErrorMessage(cx, MSG_INVALID_OVERLOAD_ARGCOUNT, "${methodName}", argCountStr.get());
+                         """,
+                         methodName=methodName))))
         overloadCGThings.append(
             CGGeneric('MOZ_CRASH("We have an always-returning default case");\n'
                       'return false;\n'))
@@ -9137,8 +9144,8 @@ class CGStaticSetter(CGAbstractStaticBindingMethod):
                                                         self.attr)
         checkForArg = CGGeneric(fill(
             """
-            if (args.length() == 0) {
-              return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, "${name} setter");
+            if (!args.requireAtLeast(cx, "${name} setter", 1)) {
+              return false;
             }
             """,
             name=self.attr.identifier.name))
@@ -15359,8 +15366,8 @@ class CGJSImplClass(CGBindingImplClass):
         return fill(
             """
             JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-            if (args.length() < 2) {
-              return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, "${ifaceName}._create");
+            if (!args.requireAtLeast(cx, "${ifaceName}._create", 2)) {
+              return false;
             }
             if (!args[0].isObject()) {
               return ThrowErrorMessage(cx, MSG_NOT_OBJECT, "Argument 1 of ${ifaceName}._create");

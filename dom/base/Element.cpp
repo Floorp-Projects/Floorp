@@ -148,6 +148,17 @@
 #include "nsDOMStringMap.h"
 #include "DOMIntersectionObserver.h"
 
+#include "nsIDOMXULButtonElement.h"
+#include "nsIDOMXULContainerElement.h"
+#include "nsIDOMXULControlElement.h"
+#include "nsIDOMXULMenuListElement.h"
+#include "nsIDOMXULMultSelectCntrlEl.h"
+#include "nsIDOMXULRelatedElement.h"
+#include "nsIDOMXULMultSelectCntrlEl.h"
+#include "nsIDOMXULSelectCntrlEl.h"
+#include "nsIDOMXULSelectCntrlItemEl.h"
+#include "nsIBrowser.h"
+
 #include "nsISpeculativeConnect.h"
 #include "nsIIOService.h"
 
@@ -3860,8 +3871,15 @@ void Element::GetCustomInterface(nsGetterAddRefs<T> aResult) {
   nsCOMPtr<nsISupports> iface = CustomElementRegistry::CallGetCustomInterface(
       this, NS_GET_TEMPLATE_IID(T));
   if (iface) {
-    CallQueryInterface(iface, static_cast<T**>(aResult));
+    if (NS_SUCCEEDED(CallQueryInterface(iface, static_cast<T**>(aResult)))) {
+      return;
+    }
   }
+
+  // Otherwise, check the binding manager to see if it implements the interface
+  // for this element.
+  OwnerDoc()->BindingManager()->GetBindingImplementation(
+      this, NS_GET_TEMPLATE_IID(T), aResult);
 }
 
 void Element::ClearServoData(nsIDocument* aDoc) {
@@ -3929,6 +3947,68 @@ void Element::SetCustomElementDefinition(CustomElementDefinition* aDefinition) {
   MOZ_ASSERT(data);
 
   data->SetCustomElementDefinition(aDefinition);
+}
+
+already_AddRefed<nsIDOMXULButtonElement> Element::AsXULButton() {
+  nsCOMPtr<nsIDOMXULButtonElement> value;
+  GetCustomInterface(getter_AddRefs(value));
+  return value.forget();
+}
+
+already_AddRefed<nsIDOMXULContainerElement> Element::AsXULContainer() {
+  nsCOMPtr<nsIDOMXULContainerElement> value;
+  GetCustomInterface(getter_AddRefs(value));
+  return value.forget();
+}
+
+already_AddRefed<nsIDOMXULContainerItemElement> Element::AsXULContainerItem() {
+  nsCOMPtr<nsIDOMXULContainerItemElement> value;
+  GetCustomInterface(getter_AddRefs(value));
+  return value.forget();
+}
+
+already_AddRefed<nsIDOMXULControlElement> Element::AsXULControl() {
+  nsCOMPtr<nsIDOMXULControlElement> value;
+  GetCustomInterface(getter_AddRefs(value));
+  return value.forget();
+}
+
+already_AddRefed<nsIDOMXULMenuListElement> Element::AsXULMenuList() {
+  nsCOMPtr<nsIDOMXULMenuListElement> value;
+  GetCustomInterface(getter_AddRefs(value));
+  return value.forget();
+}
+
+already_AddRefed<nsIDOMXULMultiSelectControlElement>
+Element::AsXULMultiSelectControl() {
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> value;
+  GetCustomInterface(getter_AddRefs(value));
+  return value.forget();
+}
+
+already_AddRefed<nsIDOMXULRelatedElement> Element::AsXULRelated() {
+  nsCOMPtr<nsIDOMXULRelatedElement> value;
+  GetCustomInterface(getter_AddRefs(value));
+  return value.forget();
+}
+
+already_AddRefed<nsIDOMXULSelectControlElement> Element::AsXULSelectControl() {
+  nsCOMPtr<nsIDOMXULSelectControlElement> value;
+  GetCustomInterface(getter_AddRefs(value));
+  return value.forget();
+}
+
+already_AddRefed<nsIDOMXULSelectControlItemElement>
+Element::AsXULSelectControlItem() {
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> value;
+  GetCustomInterface(getter_AddRefs(value));
+  return value.forget();
+}
+
+already_AddRefed<nsIBrowser> Element::AsBrowser() {
+  nsCOMPtr<nsIBrowser> value;
+  GetCustomInterface(getter_AddRefs(value));
+  return value.forget();
 }
 
 MOZ_DEFINE_MALLOC_SIZE_OF(ServoElementMallocSizeOf)

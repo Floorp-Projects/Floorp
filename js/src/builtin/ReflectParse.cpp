@@ -3438,10 +3438,7 @@ bool ASTSerializer::functionBody(ParseNode* pn, TokenPos* pos,
 static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (args.length() < 1) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_MORE_ARGS_NEEDED, "Reflect.parse", "0",
-                              "s");
+  if (!args.requireAtLeast(cx, "Reflect.parse", 1)) {
     return false;
   }
 

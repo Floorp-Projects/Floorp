@@ -77,8 +77,7 @@
                                                 "nextSibling";
           while (aStartItem) {
             aStartItem = aStartItem[prop];
-            if (aStartItem && aStartItem instanceof
-                Ci.nsIDOMXULSelectControlItemElement &&
+            if (aStartItem && aStartItem.localName == "richlistitem" &&
                 (!this._userSelecting || this._canUserSelect(aStartItem))) {
               --aDelta;
               if (aDelta == 0)
@@ -100,8 +99,7 @@
                                                 "previousSibling";
           while (aStartItem) {
             aStartItem = aStartItem[prop];
-            if (aStartItem && aStartItem instanceof
-                Ci.nsIDOMXULSelectControlItemElement &&
+            if (aStartItem && aStartItem.localName == "richlistitem" &&
                 (!this._userSelecting || this._canUserSelect(aStartItem))) {
               --aDelta;
               if (aDelta == 0)
@@ -581,9 +579,8 @@
       <property name="itemChildren" readonly="true">
         <getter>
           <![CDATA[
-            let iface = Ci.nsIDOMXULSelectControlItemElement;
             let children = Array.from(this.children)
-                                .filter(node => node instanceof iface);
+                                .filter(node => node.localName == "richlistitem");
             if (this.dir == "reverse" && this._mayReverse) {
               children.reverse();
             }
@@ -1050,7 +1047,7 @@
         <getter><![CDATA[
           var parent = this.parentNode;
           while (parent) {
-            if (parent instanceof Ci.nsIDOMXULSelectControlElement)
+            if (parent.localName == "richlistbox")
               return parent;
             parent = parent.parentNode;
           }

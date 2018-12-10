@@ -62,7 +62,8 @@ uint64_t XULTabAccessible::NativeState() const {
   uint64_t state = AccessibleWrap::NativeState();
 
   // Check whether the tab is selected and/or pinned
-  nsCOMPtr<nsIDOMXULSelectControlItemElement> tab(do_QueryInterface(mContent));
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> tab =
+      Elm()->AsXULSelectControlItem();
   if (tab) {
     bool selected = false;
     if (NS_SUCCEEDED(tab->GetSelected(&selected)) && selected)
@@ -86,8 +87,11 @@ Relation XULTabAccessible::RelationByType(RelationType aType) const {
   if (aType != RelationType::LABEL_FOR) return rel;
 
   // Expose 'LABEL_FOR' relation on tab accessible for tabpanel accessible.
+  nsIContent* parent = mContent->GetParent();
+  if (!parent) return rel;
+
   nsCOMPtr<nsIDOMXULRelatedElement> tabsElm =
-      do_QueryInterface(mContent->GetParent());
+      parent->AsElement()->AsXULRelated();
   if (!tabsElm) return rel;
 
   RefPtr<mozilla::dom::Element> tabpanelElement;
@@ -197,8 +201,10 @@ Relation XULTabpanelAccessible::RelationByType(RelationType aType) const {
   if (aType != RelationType::LABELLED_BY) return rel;
 
   // Expose 'LABELLED_BY' relation on tabpanel accessible for tab accessible.
+  if (!mContent->GetParent()) return rel;
+
   nsCOMPtr<nsIDOMXULRelatedElement> tabpanelsElm =
-      do_QueryInterface(mContent->GetParent());
+      mContent->GetParent()->AsElement()->AsXULRelated();
   if (!tabpanelsElm) return rel;
 
   RefPtr<mozilla::dom::Element> tabElement;
