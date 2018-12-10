@@ -114,12 +114,17 @@ ext.gleanGenerateMetricsAPI = {
             }
         }
 
-        // This is an Android-Gradle plugin 3+-ism.  Culted from reading the source,
-        // searching for "registerJavaGeneratingTask", and finding
-        // https://github.com/GoogleCloudPlatform/endpoints-framework-gradle-plugin/commit/2f2b91476fb1c6647791e2c6fe531a47615a1e85.
-        // The added directory doesn't appear in the paths listed by the
-        // `sourceSets` task, for reasons unknown.
-        variant.registerJavaGeneratingTask(generateKotlinAPI, new File(sourceOutputDir))
+        // Only attach the generation task if the metrics file is available. We don't need to
+        // fail hard otherwise, as some 3rd party project might just want metrics included in
+        // glean and nothing more.
+        if (file("$projectDir/metrics.yaml").exists()) {
+            // This is an Android-Gradle plugin 3+-ism.  Culted from reading the source,
+            // searching for "registerJavaGeneratingTask", and finding
+            // https://github.com/GoogleCloudPlatform/endpoints-framework-gradle-plugin/commit/2f2b91476fb1c6647791e2c6fe531a47615a1e85.
+            // The added directory doesn't appear in the paths listed by the
+            // `sourceSets` task, for reasons unknown.
+            variant.registerJavaGeneratingTask(generateKotlinAPI, new File(sourceOutputDir))
+        }
     }
 }
 
