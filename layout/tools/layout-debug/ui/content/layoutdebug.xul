@@ -29,7 +29,7 @@
         windowtype="mozapp:layoutdebug"
         onload="OnLDBLoad();"
         onunload="OnLDBUnload();"
-        width="610" height="450"
+        width="1024" height="768"
         screenX="4" screenY="4"
         >
 
