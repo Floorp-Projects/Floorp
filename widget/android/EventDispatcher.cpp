@@ -760,6 +760,16 @@ EventDispatcher::WrapCallback(nsIAndroidEventCallback* aCallback,
   return callback;
 }
 
+bool EventDispatcher::HasListener(const char16_t* aEvent) {
+  java::EventDispatcher::LocalRef dispatcher(mDispatcher);
+  if (!dispatcher) {
+    return false;
+  }
+
+  nsDependentString event(aEvent);
+  return dispatcher->HasListener(event);
+}
+
 NS_IMETHODIMP
 EventDispatcher::Dispatch(JS::HandleValue aEvent, JS::HandleValue aData,
                           nsIAndroidEventCallback* aCallback,
