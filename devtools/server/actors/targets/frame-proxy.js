@@ -124,11 +124,23 @@ FrameTargetActorProxy.prototype = {
     return this;
   },
 
+  _isZombieTab() {
+    // Check for Firefox on Android.
+    if (this._browser.hasAttribute("pending")) {
+      return true;
+    }
+
+    // Check for other.
+    const tabbrowser = this._tabbrowser;
+    const tab = tabbrowser ? tabbrowser.getTabForBrowser(this._browser) : null;
+    return tab && tab.hasAttribute && tab.hasAttribute("pending");
+  },
+
   /**
    * If we don't have a title from the content side because it's a zombie tab, try to find
    * it on the chrome side.
    */
-  get title() {
+  _getZombieTabTitle() {
     // On Fennec, we can check the session store data for zombie tabs
     if (this._browser && this._browser.__SS_restore) {
       const sessionStore = this._browser.__SS_data;
@@ -145,14 +157,15 @@ FrameTargetActorProxy.prototype = {
         return tab.label;
       }
     }
-    return "";
+
+    return null;
   },
 
   /**
    * If we don't have a url from the content side because it's a zombie tab, try to find
    * it on the chrome side.
    */
-  get url() {
+  _getZombieTabUrl() {
     // On Fennec, we can check the session store data for zombie tabs
     if (this._browser && this._browser.__SS_restore) {
       const sessionStore = this._browser.__SS_data;
@@ -160,19 +173,16 @@ FrameTargetActorProxy.prototype = {
       const entry = sessionStore.entries[sessionStore.index - 1];
       return entry.url;
     }
+
     return null;
   },
 
   form() {
     const form = Object.assign({}, this._form);
-    // In some cases, the title and url fields might be empty.  Zombie tabs (not yet
-    // restored) are a good example.  In such cases, try to look up values for these
-    // fields using other data in the parent process.
-    if (!form.title) {
-      form.title = this.title;
-    }
-    if (!form.url) {
-      form.url = this.url;
+    // In case of Zombie tabs (not yet restored), look up title and url from other.
+    if (this._isZombieTab()) {
+      form.title = this._getZombieTabTitle() || form.title;
+      form.url = this._getZombieTabUrl() || form.url;
     }
 
     return form;
