@@ -70,7 +70,8 @@ static nsCString CollectProfileOrEmptyString(bool aIsShuttingDown) {
   UniquePtr<char[]> profile =
       profiler_get_profile(/* aSinceTime */ 0, aIsShuttingDown);
   if (profile) {
-    profileCString = nsCString(profile.get(), strlen(profile.get()));
+    size_t len = strlen(profile.get());
+    profileCString.Adopt(profile.release(), len);
   } else {
     profileCString = EmptyCString();
   }
