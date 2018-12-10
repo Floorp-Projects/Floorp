@@ -524,7 +524,6 @@ STATIC_ATOMS = [
     Atom("infinity", "infinity"),
     Atom("inherits", "inherits"),
     Atom("inheritOverflow", "inherit-overflow"),
-    Atom("inheritScrollBehavior", "inherit-scroll-behavior"),
     Atom("inheritstyle", "inheritstyle"),
     Atom("initial_scale", "initial-scale"),
     Atom("input", "input"),
