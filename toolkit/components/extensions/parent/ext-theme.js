@@ -411,6 +411,10 @@ this.theme = class extends ExtensionAPI {
           if (!windowId) {
             windowId = windowTracker.getId(windowTracker.topWindow);
           }
+          // Force access validation for incognito mode by getting the window.
+          if (!windowTracker.getWindow(windowId, context)) {
+            return Promise.reject(`Invalid window ID: ${windowId}`);
+          }
 
           if (windowOverrides.has(windowId)) {
             return Promise.resolve(windowOverrides.get(windowId).details);
@@ -453,7 +457,10 @@ this.theme = class extends ExtensionAPI {
           register: fire => {
             let callback = (event, theme, windowId) => {
               if (windowId) {
-                fire.async({theme, windowId});
+                // Force access validation for incognito mode by getting the window.
+                if (windowTracker.getWindow(windowId, context, false)) {
+                  fire.async({theme, windowId});
+                }
               } else {
                 fire.async({theme});
               }
