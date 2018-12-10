@@ -29,6 +29,8 @@ permalink: /changelog/
     override val engine: Engine by lazy { components.engine }
   }
   ```
+* **feature-prompts**
+  * Added support alerts dialogs.
 
 * **concept-engine**, **engine-gecko-nightly**:
   * Add setting to enable testing mode which is used in engine-gecko to set `FULL_ACCESSIBILITY_TREE` to `true`. This allows access to the full DOM tree for testing purposes.
