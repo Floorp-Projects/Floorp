@@ -13,6 +13,7 @@
 #include "gfxFont.h"
 #include "gfxFontConstants.h"
 #include "gfxPlatformMac.h"
+#include "nsCSSColorUtils.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
@@ -132,6 +133,32 @@ nsLookAndFeel::RefreshImpl()
   mInitialized = false;
 }
 
+// Turns an opaque selection color into a partially transparent selection color,
+// which usually leads to better contrast with the text color and which should
+// look more visually appealing in most contexts.
+// The idea is that the text and its regular, non-selected background are
+// usually chosen in such a way that they contrast well. Making the selection
+// color partially transparent causes the selection color to mix with the text's
+// regular background, so the end result will often have better contrast with
+// the text than an arbitrary opaque selection color.
+// The motivating example for this is the URL bar text field in the dark theme:
+// White text on a light blue selection color has very bad contrast, whereas
+// white text on dark blue (which what you get if you mix partially-transparent
+// light blue with the black textbox background) has much better contrast.
+nscolor
+nsLookAndFeel::ProcessSelectionBackground(nscolor aColor)
+{
+  uint16_t hue, sat, value;
+  uint8_t alpha;
+  nscolor resultColor = aColor;
+  NS_RGB2HSV(resultColor, hue, sat, value, alpha);
+  int factor = 2;
+  alpha = alpha / factor;
+  sat = sat * factor;
+  NS_HSV2RGB(resultColor, hue, sat, value, alpha);
+  return resultColor;
+}
+
 nsresult
 nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
 {
@@ -171,12 +198,12 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       aColor = NS_RGB(0x00,0x00,0x00);
       break;
     case eColorID_TextSelectBackground:
-      aColor = mColorTextSelectBackground;
+      aColor = ProcessSelectionBackground(mColorTextSelectBackground);
       break;
     // This is used to gray out the selection when it's not focused. Used with
     // nsISelectionController::SELECTION_DISABLED.
     case eColorID_TextSelectBackgroundDisabled:
-      aColor = mColorTextSelectBackgroundDisabled;
+      aColor = ProcessSelectionBackground(mColorTextSelectBackgroundDisabled);
       break;
     case eColorID_highlight: // CSS2 color
       aColor = mColorHighlight;
