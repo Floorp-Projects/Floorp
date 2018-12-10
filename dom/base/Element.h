@@ -1897,7 +1897,7 @@ class Element : public FragmentOrElement {
   // descendants of display: none elements.
   mozilla::RustCell<ServoNodeData*> mServoData;
 
-protected:
+ protected:
   // Array containing all attributes for this element
   AttrArray mAttrs;
 };

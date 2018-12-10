@@ -1773,13 +1773,14 @@ nsUrlClassifierDBService::AsyncClassifyLocalWithTables(
     if (!tables.IsEmpty()) {
       nsCOMPtr<nsIURIClassifierCallback> callback(aCallback);
       nsCOMPtr<nsIRunnable> cbRunnable = NS_NewRunnableFunction(
-        "nsUrlClassifierDBService::AsyncClassifyLocalWithTables",
-        [callback, tables]() -> void {
-          callback->OnClassifyComplete(NS_OK, // Not used.
-                                       tables,
-                                       EmptyCString(),  // provider. (Not used)
-                                       EmptyCString()); // prefix. (Not used)
-        });
+          "nsUrlClassifierDBService::AsyncClassifyLocalWithTables",
+          [callback, tables]() -> void {
+            callback->OnClassifyComplete(
+                NS_OK,  // Not used.
+                tables,
+                EmptyCString(),   // provider. (Not used)
+                EmptyCString());  // prefix. (Not used)
+          });
 
       NS_DispatchToMainThread(cbRunnable);
       return NS_OK;

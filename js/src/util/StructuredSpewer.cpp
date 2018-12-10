@@ -176,7 +176,7 @@ void StructuredSpewer::parseSpewFlags(const char* flags) {
 #undef CHECK_CHANNEL
 
   if (ContainsFlag(flags, "help")) {
-     printf(
+    printf(
         "\n"
         "usage: SPEW=option,option,option,... where options can be:\n"
         "\n"
@@ -208,7 +208,7 @@ void StructuredSpewer::parseSpewFlags(const char* flags) {
         "        output goes to $MOZ_UPLOAD_DIR/spew_output* to ease usage\n"
         "        with Treeherder.\n"
 
-        );
+    );
     exit(0);
   }
 }

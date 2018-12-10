@@ -46,7 +46,7 @@ static const char sPrintSettingsServiceContractID[] =
 #include "nsIWebBrowserPrint.h"
 
 // Print Preview
-#include "imgIContainer.h"       // image animation mode constants
+#include "imgIContainer.h"  // image animation mode constants
 
 // Print Progress
 #include "nsIPrintProgress.h"

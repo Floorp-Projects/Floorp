@@ -215,9 +215,9 @@ void LIRGeneratorARM64::lowerDivI(MDiv* div) {
 
 void LIRGeneratorARM64::lowerMulI(MMul* mul, MDefinition* lhs,
                                   MDefinition* rhs) {
-  LMulI* lir = new(alloc()) LMulI;
+  LMulI* lir = new (alloc()) LMulI;
   if (mul->fallible()) {
-      assignSnapshot(lir, Bailout_DoubleOutput);
+    assignSnapshot(lir, Bailout_DoubleOutput);
   }
   lowerForALU(lir, mul, lhs, rhs);
 }

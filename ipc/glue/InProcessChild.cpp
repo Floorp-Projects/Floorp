@@ -12,20 +12,17 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace ipc {
 
-PWindowGlobalChild*
-InProcessChild::AllocPWindowGlobalChild(const WindowGlobalInit& aInit)
-{
+PWindowGlobalChild* InProcessChild::AllocPWindowGlobalChild(
+    const WindowGlobalInit& aInit) {
   MOZ_ASSERT_UNREACHABLE("PWindowGlobalChild should not be created manually");
   return nullptr;
 }
 
-bool
-InProcessChild::DeallocPWindowGlobalChild(PWindowGlobalChild* aActor)
-{
+bool InProcessChild::DeallocPWindowGlobalChild(PWindowGlobalChild* aActor) {
   // Free IPC-held reference
   static_cast<WindowGlobalChild*>(aActor)->Release();
   return true;
 }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
