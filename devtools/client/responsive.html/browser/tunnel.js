@@ -230,13 +230,21 @@ function tunnelToInnerBrowser(outer, inner) {
 
       // Add mozbrowser event handlers
       inner.addEventListener("mozbrowseropenwindow", this);
+      inner.addEventListener("mozbrowsershowmodalprompt", this);
     },
 
     handleEvent(event) {
-      if (event.type != "mozbrowseropenwindow") {
-        return;
+      switch (event.type) {
+        case "mozbrowseropenwindow":
+          this.handleOpenWindowEvent(event);
+          break;
+        case "mozbrowsershowmodalprompt":
+          this.handleModalPromptEvent(event);
+          break;
       }
+    },
 
+    handleOpenWindowEvent(event) {
       // Minimal support for <a target/> and window.open() which just ensures we at
       // least open them somewhere (in a new tab).  The following things are ignored:
       //   * Specific target names (everything treated as _blank)
@@ -255,6 +263,29 @@ function tunnelToInnerBrowser(outer, inner) {
         .openURI(uri, null, Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
                  Ci.nsIBrowserDOMWindow.OPEN_NEW,
                  outer.contentPrincipal);
+    },
+
+    handleModalPromptEvent({ detail }) {
+      // Relay window.alert(), window.prompt() and window.confirm() dialogs through the
+      // outer window and make sure the return value is passed back to the inner window.
+      // When this event handler is called, the inner iframe is spinning in a nested event
+      // loop waiting to be unblocked.
+      // If we were calling preventDefault() here, then we would have to call
+      // detail.unblock() to unblock the inner iframe.
+      // But since we aren't the inner iframe will be unblocked automatically as soon as
+      // the mozbrowsershowmodalprompt event is done dispatching (i.e. as soon as this
+      // handler completes).
+      // See _handleShowModelPrompt in /dom/browser-element/BrowserElementParent.js
+
+      if (!["alert", "prompt", "confirm"].includes(detail.promptType)) {
+        return;
+      }
+
+      const promptFunction = outer.contentWindow[detail.promptType];
+      // Passing the initial value is useful for window.prompt() and doesn't hurt
+      // window.alert() and window.confirm(). See the Window webidl:
+      // https://searchfox.org/mozilla-central/source/dom/webidl/Window.webidl#77-80
+      detail.returnValue = promptFunction(detail.message, detail.initialValue);
     },
 
     stop() {
@@ -289,6 +320,7 @@ function tunnelToInnerBrowser(outer, inner) {
 
       // Remove mozbrowser event handlers
       inner.removeEventListener("mozbrowseropenwindow", this);
+      inner.removeEventListener("mozbrowsershowmodalprompt", this);
 
       mmTunnel.destroy();
       mmTunnel = null;

@@ -79,7 +79,7 @@ const STATE_SUCCEEDED       = "succeeded";
 const STATE_DOWNLOAD_FAILED = "download-failed";
 const STATE_FAILED          = "failed";
 
-// The values below used by this code are from common/errors.h
+// The values below used by this code are from common/updatererrors.h
 const WRITE_ERROR                          = 7;
 const ELEVATION_CANCELED                   = 9;
 const SERVICE_UPDATER_COULD_NOT_BE_STARTED = 24;
@@ -141,7 +141,7 @@ const SERVICE_ERRORS = [SERVICE_UPDATER_COULD_NOT_BE_STARTED,
                         SERVICE_COULD_NOT_IMPERSONATE];
 
 // Error codes 80 through 99 are reserved for nsUpdateService.js and are not
-// defined in common/errors.h
+// defined in common/updatererrors.h
 const ERR_OLDER_VERSION_OR_SAME_BUILD      = 90;
 const ERR_UPDATE_STATE_NONE                = 91;
 const ERR_CHANNEL_CHANGE                   = 92;

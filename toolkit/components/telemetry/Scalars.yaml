@@ -2276,7 +2276,7 @@ update:
     description: >
       If the binary transparency information for an update does not verify
       successfully, this probe will contain an error code from
-      toolkit/mozapps/update/common/errors.h indicating why.
+      toolkit/mozapps/update/common/updatererrors.h indicating why.
     expires: "73"
     kind: uint
     keyed: true
