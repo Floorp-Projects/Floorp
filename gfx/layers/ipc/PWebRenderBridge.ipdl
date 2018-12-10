@@ -28,6 +28,7 @@ using mozilla::layers::WebRenderScrollData from "mozilla/layers/WebRenderScrollD
 using mozilla::layers::FocusTarget from "mozilla/layers/FocusTarget.h";
 using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
+using mozilla::VsyncId from "mozilla/VsyncDispatcher.h";
 
 namespace mozilla {
 namespace layers {
@@ -48,11 +49,11 @@ parent:
                        LayoutSize aContentSize, ByteBuf aDL, BuiltDisplayListDescriptor aDLDesc,
                        WebRenderScrollData aScrollData,
                        OpUpdateResource[] aResourceUpdates, RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems,
-                       IdNamespace aIdNamespace, bool containsSVGGroup, TimeStamp refreshStartTime, TimeStamp txnStartTime, nsCString txnURL, TimeStamp fwdTime);
+                       IdNamespace aIdNamespace, bool containsSVGGroup, VsyncId vsyncId, TimeStamp refreshStartTime, TimeStamp txnStartTime, nsCString txnURL, TimeStamp fwdTime);
   async EmptyTransaction(FocusTarget focusTarget, ScrollUpdatesMap scrollUpdates, uint32_t aPaintSequenceNumber,
                          WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, TransactionId transactionId,
                          OpUpdateResource[] aResourceUpdates, RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems,
-                         IdNamespace aIdNamespace, TimeStamp refreshStartTime, TimeStamp txnStartTime, nsCString txnURL, TimeStamp fwdTime);
+                         IdNamespace aIdNamespace, VsyncId vsyncId, TimeStamp refreshStartTime, TimeStamp txnStartTime, nsCString txnURL, TimeStamp fwdTime);
   async SetFocusTarget(FocusTarget focusTarget);
   async UpdateResources(OpUpdateResource[] aResourceUpdates, RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems);
   async ParentCommands(WebRenderParentCommand[] commands);

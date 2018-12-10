@@ -16,14 +16,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=174351
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-  var iframe = document.createElement('iframe');
+  var iframe = document.createElement("iframe");
   iframe.src = "invalidchar.xml";
-  iframe.onload = function () {
-    var doc = document.getElementById('test').childNodes[1].contentDocument;
+  iframe.onload = function() {
+    var doc = document.getElementById("test").childNodes[1].contentDocument;
     ok(doc.documentElement.tagName != "root", "Since XML has invalid enconding, must throw error");
   };
 
-  document.getElementById('test').appendChild(iframe);
+  document.getElementById("test").appendChild(iframe);
 </script>
 </pre>
 </body>

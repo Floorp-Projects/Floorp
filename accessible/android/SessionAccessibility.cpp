@@ -371,9 +371,15 @@ void SessionAccessibility::UpdateCachedBounds(
   auto infos = jni::ObjectArray::New<java::GeckoBundle>(aAccessibles.Length());
   for (size_t i = 0; i < aAccessibles.Length(); i++) {
     AccessibleWrap* acc = aAccessibles.ElementAt(i);
+    if (!acc) {
+      MOZ_ASSERT_UNREACHABLE("Updated accessible is gone.");
+      continue;
+    }
+
     if (aData.Length() == aAccessibles.Length()) {
       const BatchData& data = aData.ElementAt(i);
-      auto bundle = acc->ToSmallBundle(data.State(), data.Bounds(), data.ActionCount());
+      auto bundle =
+          acc->ToSmallBundle(data.State(), data.Bounds(), data.ActionCount());
       infos->SetElement(i, bundle);
     } else {
       infos->SetElement(i, acc->ToSmallBundle());

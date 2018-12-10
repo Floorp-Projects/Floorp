@@ -105,7 +105,8 @@ void WebRenderBridgeChild::EndTransaction(
     const wr::LayoutSize& aContentSize, wr::BuiltDisplayList& aDL,
     wr::IpcResourceUpdateQueue& aResources, const gfx::IntSize& aSize,
     TransactionId aTransactionId, const WebRenderScrollData& aScrollData,
-    bool aContainsSVGGroup, const mozilla::TimeStamp& aRefreshStartTime,
+    bool aContainsSVGGroup, const mozilla::VsyncId& aVsyncId,
+    const mozilla::TimeStamp& aRefreshStartTime,
     const mozilla::TimeStamp& aTxnStartTime, const nsCString& aTxnURL) {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(mIsInTransaction);
@@ -121,11 +122,12 @@ void WebRenderBridgeChild::EndTransaction(
   nsTArray<ipc::Shmem> largeShmems;
   aResources.Flush(resourceUpdates, smallShmems, largeShmems);
 
-  this->SendSetDisplayList(
-      aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(),
-      aTransactionId, aContentSize, dlData, aDL.dl_desc, aScrollData,
-      resourceUpdates, smallShmems, largeShmems, mIdNamespace,
-      aContainsSVGGroup, aRefreshStartTime, aTxnStartTime, aTxnURL, fwdTime);
+  this->SendSetDisplayList(aSize, mParentCommands, mDestroyedActors,
+                           GetFwdTransactionId(), aTransactionId, aContentSize,
+                           dlData, aDL.dl_desc, aScrollData, resourceUpdates,
+                           smallShmems, largeShmems, mIdNamespace,
+                           aContainsSVGGroup, aVsyncId, aRefreshStartTime,
+                           aTxnStartTime, aTxnURL, fwdTime);
 
   mParentCommands.Clear();
   mDestroyedActors.Clear();
@@ -136,6 +138,7 @@ void WebRenderBridgeChild::EndEmptyTransaction(
     const FocusTarget& aFocusTarget, const ScrollUpdatesMap& aUpdates,
     Maybe<wr::IpcResourceUpdateQueue>& aResources,
     uint32_t aPaintSequenceNumber, TransactionId aTransactionId,
+    const mozilla::VsyncId& aVsyncId,
     const mozilla::TimeStamp& aRefreshStartTime,
     const mozilla::TimeStamp& aTxnStartTime, const nsCString& aTxnURL) {
   MOZ_ASSERT(!mDestroyed);
@@ -154,8 +157,8 @@ void WebRenderBridgeChild::EndEmptyTransaction(
   this->SendEmptyTransaction(
       aFocusTarget, aUpdates, aPaintSequenceNumber, mParentCommands,
       mDestroyedActors, GetFwdTransactionId(), aTransactionId, resourceUpdates,
-      smallShmems, largeShmems, mIdNamespace, aRefreshStartTime, aTxnStartTime,
-      aTxnURL, fwdTime);
+      smallShmems, largeShmems, mIdNamespace, aVsyncId, aRefreshStartTime,
+      aTxnStartTime, aTxnURL, fwdTime);
   mParentCommands.Clear();
   mDestroyedActors.Clear();
   mIsInTransaction = false;

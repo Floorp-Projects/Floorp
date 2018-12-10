@@ -239,11 +239,11 @@ nsComboboxControlFrame::nsComboboxControlFrame(ComputedStyle* aStyle)
 //--------------------------------------------------------------
 
 NS_QUERYFRAME_HEAD(nsComboboxControlFrame)
-NS_QUERYFRAME_ENTRY(nsComboboxControlFrame)
-NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
-NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-NS_QUERYFRAME_ENTRY(nsISelectControlFrame)
-NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
+  NS_QUERYFRAME_ENTRY(nsComboboxControlFrame)
+  NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
+  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
+  NS_QUERYFRAME_ENTRY(nsISelectControlFrame)
+  NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
 #ifdef ACCESSIBILITY
@@ -1471,7 +1471,7 @@ void nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       if ((!IsThemed(disp) ||
            !presContext->GetTheme()->ThemeDrawsFocusForWidget(
                disp->mAppearance)) &&
-          mDisplayFrame && IsVisibleForPainting(aBuilder)) {
+          mDisplayFrame && IsVisibleForPainting()) {
         aLists.Content()->AppendToTop(
             MakeDisplayItem<nsDisplayComboboxFocus>(aBuilder, this));
       }

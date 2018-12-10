@@ -1226,10 +1226,15 @@ OutputParser.prototype = {
         container.appendChild(swatch);
       }
 
-      if (options.defaultColorType) {
-        color = colorObj.toString();
-        container.dataset.color = color;
+      if (!options.defaultColorType) {
+        // If we're not being asked to convert the color to the default color type
+        // specified by the user, then force the CssColor instance to be set to the type
+        // of the current color.
+        // Not having a type means that the default color type will be automatically used.
+        colorObj.colorUnit = colorUtils.classifyColor(color);
       }
+      color = colorObj.toString();
+      container.dataset.color = color;
 
       const value = this._createNode("span", {
         class: options.colorClass,

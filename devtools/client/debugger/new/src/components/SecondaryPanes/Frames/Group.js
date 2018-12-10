@@ -79,7 +79,8 @@ export default class Group extends Component<Props, State> {
     );
   }
 
-  toggleFrames = () => {
+  toggleFrames = (event) => {
+    event.stopPropagation();
     this.setState(prevState => ({ expanded: !prevState.expanded }));
   };
 

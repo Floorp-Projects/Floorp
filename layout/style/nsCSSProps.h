@@ -317,9 +317,6 @@ class nsCSSProps {
   static const KTableEntry kLineHeightKTable[];
   static const KTableEntry kContainKTable[];
   static const KTableEntry kOverflowSubKTable[];
-  static const KTableEntry kOverflowClipBoxKTable[];
-  static const KTableEntry kOverscrollBehaviorKTable[];
-  static const KTableEntry kScrollSnapTypeKTable[];
   static const KTableEntry kTextAlignKTable[];
   static const KTableEntry kTextDecorationLineKTable[];
   static const KTableEntry kTextDecorationStyleKTable[];

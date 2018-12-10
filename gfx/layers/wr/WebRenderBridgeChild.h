@@ -66,17 +66,21 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
 
   void UpdateResources(wr::IpcResourceUpdateQueue& aResources);
   void BeginTransaction();
-  void EndTransaction(
-      const wr::LayoutSize& aContentSize, wr::BuiltDisplayList& dl,
-      wr::IpcResourceUpdateQueue& aResources, const gfx::IntSize& aSize,
-      TransactionId aTransactionId, const WebRenderScrollData& aScrollData,
-      bool aContainsSVGroup, const mozilla::TimeStamp& aRefreshStartTime,
-      const mozilla::TimeStamp& aTxnStartTime, const nsCString& aTxtURL);
+  void EndTransaction(const wr::LayoutSize& aContentSize,
+                      wr::BuiltDisplayList& dl,
+                      wr::IpcResourceUpdateQueue& aResources,
+                      const gfx::IntSize& aSize, TransactionId aTransactionId,
+                      const WebRenderScrollData& aScrollData,
+                      bool aContainsSVGroup, const mozilla::VsyncId& aVsyncId,
+                      const mozilla::TimeStamp& aRefreshStartTime,
+                      const mozilla::TimeStamp& aTxnStartTime,
+                      const nsCString& aTxtURL);
   void EndEmptyTransaction(const FocusTarget& aFocusTarget,
                            const ScrollUpdatesMap& aUpdates,
                            Maybe<wr::IpcResourceUpdateQueue>& aResources,
                            uint32_t aPaintSequenceNumber,
                            TransactionId aTransactionId,
+                           const mozilla::VsyncId& aVsyncId,
                            const mozilla::TimeStamp& aRefreshStartTime,
                            const mozilla::TimeStamp& aTxnStartTime,
                            const nsCString& aTxtURL);

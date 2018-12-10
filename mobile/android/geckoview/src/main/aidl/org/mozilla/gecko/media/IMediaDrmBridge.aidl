@@ -22,4 +22,6 @@ interface IMediaDrmBridge {
     oneway void closeSession(int promiseId, String sessionId);
 
     oneway void release();
+
+    void setServerCertificate(in byte[] cert);
 }

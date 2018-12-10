@@ -12,6 +12,7 @@ import logging
 import operator
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -564,9 +565,8 @@ class Warnings(MachCommandBase):
         joined_path = mozpath.join(dir1, dir2)
         if os.path.isdir(joined_path):
             return joined_path
-        else:
-            print('Specified directory not found.')
-            return None
+        print('Specified directory not found.')
+        return None
 
 @CommandProvider
 class GTestCommands(MachCommandBase):
@@ -1311,7 +1311,6 @@ class PackageFrontend(MachCommandBase):
         from requests.adapters import HTTPAdapter
         import redo
         import requests
-        import shutil
 
         from taskgraph.util.taskcluster import (
             get_artifact_url,
@@ -1931,13 +1930,13 @@ class StaticAnalysis(MachCommandBase):
                 infer_args + [gradle] + args,
                 env=dict(os.environ, **extra_env),
                 cwd=cwd, stdout=devnull, stderr=subprocess.STDOUT, close_fds=True)
-        else:
-            return self.run_process(
-                infer_args + [gradle] + args,
-                append_env=extra_env,
-                pass_thru=True,  # Allow user to run gradle interactively.
-                ensure_exit_code=False,  # Don't throw on non-zero exit code.
-                cwd=cwd)
+
+        return self.run_process(
+            infer_args + [gradle] + args,
+            append_env=extra_env,
+            pass_thru=True,  # Allow user to run gradle interactively.
+            ensure_exit_code=False,  # Don't throw on non-zero exit code.
+            cwd=cwd)
 
     @StaticAnalysisSubCommand('static-analysis', 'autotest',
                               'Run the auto-test suite in order to determine that'
@@ -2012,7 +2011,6 @@ class StaticAnalysis(MachCommandBase):
 
         import concurrent.futures
         import multiprocessing
-        import shutil
 
         max_workers = multiprocessing.cpu_count()
 
@@ -2221,7 +2219,6 @@ class StaticAnalysis(MachCommandBase):
             return self.TOOLS_GRADLE_FAILED
         issues = json.load(open(mozpath.join(out_folder, 'report.json')))
         # remove folder that infer creates because the issues are loaded into memory
-        import shutil
         shutil.rmtree(out_folder)
         # Verify to see if we got any issues, if not raise exception
         if not issues:
@@ -2367,9 +2364,9 @@ class StaticAnalysis(MachCommandBase):
         if path is None:
             return self._run_clang_format_diff(self._clang_format_diff,
                                                self._clang_format_path, show)
-        else:
-            if assume_filename:
-                return self._run_clang_format_in_console(self._clang_format_path, path, assume_filename)
+
+        if assume_filename:
+            return self._run_clang_format_in_console(self._clang_format_path, path, assume_filename)
 
         return self._run_clang_format_path(self._clang_format_path, show, path)
 
@@ -2524,26 +2521,26 @@ class StaticAnalysis(MachCommandBase):
         self._compile_db = mozpath.join(self.topobjdir, 'compile_commands.json')
         if os.path.exists(self._compile_db):
             return 0
-        else:
-            rc, config, ran_configure = self._get_config_environment()
+
+        rc, config, ran_configure = self._get_config_environment()
+        if rc != 0:
+            return rc
+
+        if ran_configure:
+            # Configure may have created the compilation database if the
+            # mozconfig enables building the CompileDB backend by default,
+            # So we recurse to see if the file exists once again.
+            return self._build_compile_db(verbose=verbose)
+
+        if config:
+            print('Looks like a clang compilation database has not been '
+                  'created yet, creating it now...')
+            builder = Build(self._mach_context)
+            rc = builder.build_backend(['CompileDB'], verbose=verbose)
             if rc != 0:
                 return rc
-
-            if ran_configure:
-                # Configure may have created the compilation database if the
-                # mozconfig enables building the CompileDB backend by default,
-                # So we recurse to see if the file exists once again.
-                return self._build_compile_db(verbose=verbose)
-
-            if config:
-                print('Looks like a clang compilation database has not been '
-                      'created yet, creating it now...')
-                builder = Build(self._mach_context)
-                rc = builder.build_backend(['CompileDB'], verbose=verbose)
-                if rc != 0:
-                    return rc
-                assert os.path.exists(self._compile_db)
-                return 0
+            assert os.path.exists(self._compile_db)
+            return 0
 
     def _build_export(self, jobs, verbose=False):
         def on_line(line):
@@ -2611,7 +2608,6 @@ class StaticAnalysis(MachCommandBase):
         if os.path.isdir(self._clang_tools_path) and download_if_needed:
             # The directory exists, perhaps it's corrupted?  Delete it
             # and start from scratch.
-            import shutil
             shutil.rmtree(self._clang_tools_path)
             return self._get_clang_tools(force=force, skip_cache=skip_cache,
                                             source=source, verbose=verbose,
@@ -2634,8 +2630,8 @@ class StaticAnalysis(MachCommandBase):
             raise Exception('The current platform isn\'t supported. '
                             'Currently only the following platforms are '
                             'supported: win32/win64, linux64 and macosx64.')
-        else:
-            job += '-clang-tidy'
+
+        job += '-clang-tidy'
 
         # We want to unpack data in the clang-tidy mozbuild folder
         currentWorkingDir = os.getcwd()
@@ -2714,35 +2710,34 @@ class StaticAnalysis(MachCommandBase):
             return not os.path.exists(self._infer_path)
         if os.path.exists(self._infer_path) and not force:
             return 0
+
+        if os.path.isdir(infer_path) and download_if_needed:
+            # The directory exists, perhaps it's corrupted?  Delete it
+            # and start from scratch.
+            shutil.rmtree(infer_path)
+            return self._get_infer(force=force, skip_cache=skip_cache,
+                                   verbose=verbose,
+                                   download_if_needed=download_if_needed)
+        os.mkdir(infer_path)
+        self._artifact_manager = PackageFrontend(self._mach_context)
+        if not download_if_needed:
+            return 0
+        job, _ = self.platform
+        if job != 'linux64':
+            return -1
         else:
-            if os.path.isdir(infer_path) and download_if_needed:
-                # The directory exists, perhaps it's corrupted?  Delete it
-                # and start from scratch.
-                import shutil
-                shutil.rmtree(infer_path)
-                return self._get_infer(force=force, skip_cache=skip_cache,
-                                       verbose=verbose,
-                                       download_if_needed=download_if_needed)
-            os.mkdir(infer_path)
-            self._artifact_manager = PackageFrontend(self._mach_context)
-            if not download_if_needed:
-                return 0
-            job, _ = self.platform
-            if job != 'linux64':
-                return -1
-            else:
-                job += '-infer'
-            # We want to unpack data in the infer mozbuild folder
-            currentWorkingDir = os.getcwd()
-            os.chdir(infer_path)
-            rc = self._artifact_manager.artifact_toolchain(verbose=verbose,
-                                                           skip_cache=skip_cache,
-                                                           from_build=[job],
-                                                           no_unpack=False,
-                                                           retry=0)
-            # Change back the cwd
-            os.chdir(currentWorkingDir)
-            return rc
+            job += '-infer'
+        # We want to unpack data in the infer mozbuild folder
+        currentWorkingDir = os.getcwd()
+        os.chdir(infer_path)
+        rc = self._artifact_manager.artifact_toolchain(verbose=verbose,
+                                                       skip_cache=skip_cache,
+                                                       from_build=[job],
+                                                       no_unpack=False,
+                                                       retry=0)
+        # Change back the cwd
+        os.chdir(currentWorkingDir)
+        return rc
 
     def _run_clang_format_diff(self, clang_format_diff, clang_format, show):
         # Run clang-format on the diff
@@ -2831,10 +2826,17 @@ class StaticAnalysis(MachCommandBase):
             return 0
 
     def _run_clang_format_path(self, clang_format, show, paths):
+
         # Run clang-format on files or directories directly
         from subprocess import check_output, CalledProcessError
 
         args = [clang_format, "-i"]
+
+        if show:
+            # We just want to show the diff, we create the directory to copy it
+            tmpdir = os.path.join(self.topobjdir, 'tmp')
+            if not os.path.exists(tmpdir):
+                os.makedirs(tmpdir)
 
         path_list = self._generate_path_list(paths)
 
@@ -2844,9 +2846,24 @@ class StaticAnalysis(MachCommandBase):
         print("Processing %d file(s)..." % len(path_list))
 
         batchsize = 200
+        if show:
+            batchsize = 1
 
         for i in range(0, len(path_list), batchsize):
             l = path_list[i: (i + batchsize)]
+            if show:
+                # Copy the files into a temp directory
+                # and run clang-format on the temp directory
+                # and show the diff
+                original_path = l[0]
+                local_path = original_path.replace(self.topsrcdir, ".")
+                target_file = os.path.join(tmpdir, local_path)
+                faketmpdir = os.path.dirname(target_file)
+                if not os.path.isdir(faketmpdir):
+                    os.makedirs(faketmpdir)
+                shutil.copy(l[0], faketmpdir)
+                l[0] = target_file
+
             # Run clang-format on the list
             try:
                 check_output(args + l)
@@ -2855,20 +2872,19 @@ class StaticAnalysis(MachCommandBase):
                 print("clang-format: An error occured while running clang-format.")
                 return e.returncode
 
+            if show:
+                # show the diff
+                diff_command = ["diff", "-u", original_path, target_file]
+                try:
+                    output = check_output(diff_command)
+                except CalledProcessError as e:
+                    # diff -u returns 0 when no change
+                    # here, we expect changes. if we are here, this means that
+                    # there is a diff to show
+                    if e.output:
+                        print(e.output)
         if show:
-            # show the diff
-            if self.repository.name == 'hg':
-                diff_command = ["hg", "diff"] + paths
-            else:
-                assert self.repository.name == 'git'
-                diff_command = ["git", "diff"] + paths
-            try:
-                output = check_output(diff_command)
-                print(output)
-            except CalledProcessError as e:
-                # Something wrong happend
-                print("clang-format: Unable to run the diff command.")
-                return e.returncode
+            shutil.rmtree(tmpdir)
         return 0
 
 @CommandProvider

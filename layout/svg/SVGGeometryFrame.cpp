@@ -48,8 +48,8 @@ NS_IMPL_FRAMEARENA_HELPERS(SVGGeometryFrame)
 // nsQueryFrame methods
 
 NS_QUERYFRAME_HEAD(SVGGeometryFrame)
-NS_QUERYFRAME_ENTRY(nsSVGDisplayableFrame)
-NS_QUERYFRAME_ENTRY(SVGGeometryFrame)
+  NS_QUERYFRAME_ENTRY(nsSVGDisplayableFrame)
+  NS_QUERYFRAME_ENTRY(SVGGeometryFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsFrame)
 
 //----------------------------------------------------------------------
@@ -231,7 +231,7 @@ bool SVGGeometryFrame::IsSVGTransformed(
 void SVGGeometryFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                         const nsDisplayListSet& aLists) {
   if (!static_cast<const nsSVGElement*>(GetContent())->HasValidDimensions() ||
-      (!IsVisibleForPainting(aBuilder) && aBuilder->IsForPainting())) {
+      (!IsVisibleForPainting() && aBuilder->IsForPainting())) {
     return;
   }
   DisplayOutline(aBuilder, aLists);

@@ -3456,13 +3456,15 @@ extern JS_PUBLIC_API bool RejectPromise(JSContext* cx,
  * Calls the current compartment's original Promise.prototype.then on the
  * given `promise`, with `onResolve` and `onReject` passed as arguments.
  *
- * Asserts if the passed-in `promise` object isn't an unwrapped instance of
- * `Promise` or a subclass or `onResolve` and `onReject` aren't both either
- * `nullptr` or callable objects.
+ * Throws a TypeError if `promise` isn't a Promise (or possibly a different
+ * error if it's a security wrapper or dead object proxy).
+ *
+ * Asserts that `onFulfilled` and `onRejected` are each either callable or
+ * null.
  */
 extern JS_PUBLIC_API JSObject* CallOriginalPromiseThen(
-    JSContext* cx, JS::HandleObject promise, JS::HandleObject onResolve,
-    JS::HandleObject onReject);
+    JSContext* cx, JS::HandleObject promise, JS::HandleObject onFulfilled,
+    JS::HandleObject onRejected);
 
 /**
  * Unforgeable, optimized version of the JS builtin Promise.prototype.then.
@@ -3471,14 +3473,16 @@ extern JS_PUBLIC_API JSObject* CallOriginalPromiseThen(
  * as reactions for that promise. In difference to Promise.prototype.then,
  * this doesn't create and return a new Promise instance.
  *
- * Asserts if the passed-in `promise` object isn't an unwrapped instance of
- * `Promise` or a subclass or `onResolve` and `onReject` aren't both callable
- * objects.
+ * Throws a TypeError if `promise` isn't a Promise (or possibly a different
+ * error if it's a security wrapper or dead object proxy).
+ *
+ * Asserts that `onFulfilled` and `onRejected` are each either callable or
+ * null.
  */
 extern JS_PUBLIC_API bool AddPromiseReactions(JSContext* cx,
                                               JS::HandleObject promise,
-                                              JS::HandleObject onResolve,
-                                              JS::HandleObject onReject);
+                                              JS::HandleObject onFulfilled,
+                                              JS::HandleObject onRejected);
 
 // This enum specifies whether a promise is expected to keep track of
 // information that is useful for embedders to implement user activation

@@ -67,7 +67,7 @@ function promiseClipboard(aPopulateClipboardFn, aFlavor) {
 
 function synthesizeClickOnSelectedTreeCell(aTree, aOptions) {
   let tbo = aTree.treeBoxObject;
-  if (tbo.view.selection.count < 1)
+  if (tbo.view.selection.count != 1)
      throw new Error("The test node should be successfully selected");
   // Get selection rowID.
   let min = {}, max = {};

@@ -7,6 +7,10 @@
 /* eslint-env mozilla/browser-window */
 /* globals XULCommandEvent */
 
+/**
+ * Defines the search one-off button elements. These are displayed at the bottom
+ * of the address bar or the search bar.
+ */
 class SearchOneOffs {
   constructor(container) {
     this.container = container;
@@ -166,10 +170,14 @@ class SearchOneOffs {
   get buttonWidth() {
     return 49;
   }
+
   /**
    * The popup that contains the one-offs.  This is required, so it should
    * never be null or undefined, except possibly before the one-offs are
    * used.
+   *
+   * @param {DOMElement} val
+   *        The new value to set.
    */
   set popup(val) {
     let events = [
@@ -207,6 +215,9 @@ class SearchOneOffs {
    * automatically keep the related one-offs UI up to date.  Otherwise you
    * can leave it null/undefined, and in that case you should update the
    * query property manually.
+   *
+   * @param {DOMElement} val
+   *        The new value to set.
    */
   set textbox(val) {
     if (this._textbox) {
@@ -230,6 +241,9 @@ class SearchOneOffs {
    * The query string currently shown in the one-offs.  If the textbox
    * property is non-null, then this is automatically updated on
    * input.
+   *
+   * @param {string} val
+   *        The new query string to set.
    */
   set query(val) {
     this._query = val;
@@ -242,9 +256,13 @@ class SearchOneOffs {
   get query() {
     return this._query;
   }
+
   /**
    * The selected one-off, a xul:button, including the add-engine button
-   * and the search-settings button.  Null if no one-off is selected.
+   * and the search-settings button.
+   *
+   * @param {DOMElement|null} val
+   *        The selected one-off button. Null if no one-off is selected.
    */
   set selectedButton(val) {
     if (val && val.classList.contains("dummy")) {
@@ -276,9 +294,13 @@ class SearchOneOffs {
   get selectedButton() {
     return this._selectedButton;
   }
+
   /**
    * The index of the selected one-off, including the add-engine button
-   * and the search-settings button.  -1 if no one-off is selected.
+   * and the search-settings button.
+   *
+   * @param {number} val
+   *        The new index to set, -1 for nothing selected.
    */
   set selectedButtonIndex(val) {
     let buttons = this.getSelectableButtons(true);
@@ -622,7 +644,7 @@ class SearchOneOffs {
    * Updates the popup and textbox for the currently selected or moused-over
    * button.
    *
-   * @param mousedOverButton
+   * @param {DOMElement} mousedOverButton
    *        The currently moused-over button, or null if there isn't one.
    */
   _updateStateForButton(mousedOverButton) {
@@ -696,7 +718,7 @@ class SearchOneOffs {
         };
       }
     } else {
-      var newTabPref = Services.prefs.getBoolPref("browser.search.openintab");
+      let newTabPref = Services.prefs.getBoolPref("browser.search.openintab");
       if ((aEvent instanceof KeyboardEvent && aEvent.altKey) ^ newTabPref &&
           !gBrowser.selectedTab.isEmpty) {
         where = "tab";
@@ -716,10 +738,10 @@ class SearchOneOffs {
   /**
    * Increments or decrements the index of the currently selected one-off.
    *
-   * @param aForward
+   * @param {boolean} aForward
    *        If true, the index is incremented, and if false, the index is
    *        decremented.
-   * @param aIncludeNonEngineButtons
+   * @param {boolean} aIncludeNonEngineButtons
    *        If true, non-dummy buttons that do not have engines are included.
    *        These buttons include the OpenSearch and settings buttons.  For
    *        example, if the currently selected button is an engine button,
@@ -728,11 +750,9 @@ class SearchOneOffs {
    *        settings to be selected.  Passing false for this value would
    *        cause the selection to clear or wrap around, depending on what
    *        value you passed for the aWrapAround parameter.
-   * @param aWrapAround
+   * @param {boolean} aWrapAround
    *        If true, the selection wraps around between the first and last
    *        buttons.
-   * @return True if the selection can continue to advance after this method
-   *         returns and false if not.
    */
   advanceSelection(aForward, aIncludeNonEngineButtons, aWrapAround) {
     let buttons = this.getSelectableButtons(aIncludeNonEngineButtons);
@@ -764,18 +784,18 @@ class SearchOneOffs {
    * If this method handles the key press, then event.defaultPrevented will
    * be true when it returns.
    *
-   * @param event
+   * @param {Event} event
    *        The key event.
-   * @param numListItems
+   * @param {number} numListItems
    *        The number of items in the list.  The reason that this is a
    *        parameter at all is that the list may contain items at the end
    *        that should be ignored, depending on the consumer.  That's true
    *        for the urlbar for example.
-   * @param allowEmptySelection
+   * @param {boolean} allowEmptySelection
    *        Pass true if it's OK that neither the list nor the one-off
    *        buttons contains a selection.  Pass false if either the list or
    *        the one-off buttons (or both) should always contain a selection.
-   * @param textboxUserValue
+   * @param {string} [textboxUserValue]
    *        When the last list item is selected and the user presses Down,
    *        the first one-off becomes selected and the textbox value is
    *        restored to the value that the user typed.  Pass that value here.
@@ -965,13 +985,13 @@ class SearchOneOffs {
    * one-off telemetry for it.  this.telemetryOrigin will be appended to the
    * computed source, so make sure you set that first.
    *
-   * @param aEvent
+   * @param {Event} aEvent
    *        An event, like a click on a one-off button.
-   * @param aOpenUILinkWhere
+   * @param {string} aOpenUILinkWhere
    *        The "where" passed to openUILink.
-   * @param aOpenUILinkParams
+   * @param {object} aOpenUILinkParams
    *        The "params" passed to openUILink.
-   * @return True if telemetry was recorded and false if not.
+   * @returns {boolean} True if telemetry was recorded and false if not.
    */
   maybeRecordTelemetry(aEvent, aOpenUILinkWhere, aOpenUILinkParams) {
     if (!aEvent) {
@@ -1233,4 +1253,3 @@ class SearchOneOffs {
 }
 
 window.SearchOneOffs = SearchOneOffs;
-

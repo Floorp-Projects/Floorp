@@ -2,18 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+DIRS += [
+    'commands',
+]
+
 DevToolsModules(
     'adb-addon.js',
     'adb-binary.js',
     'adb-client.js',
     'adb-device.js',
-    'adb-devices-registry.js',
+    'adb-process.js',
     'adb-running-checker.js',
     'adb-runtime.js',
-    'adb-scanner.js',
     'adb-socket.js',
     'adb.js',
-    'addon-aware-adb-scanner.js',
 )
 
 with Files('**'):

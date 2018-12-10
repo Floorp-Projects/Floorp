@@ -460,14 +460,18 @@ TraceLoggerEventPayload* TraceLoggerThreadState::getOrCreateEventPayload(
     nextDictionaryId++;
   }
 
-  uint32_t textId = nextTextId;
+  // Look for a free entry, as some textId's may
+  // already be taken from previous profiling sessions.
+  while (textIdPayloads.has(nextTextId)) {
+    nextTextId++;
+  }
 
-  auto* payload = js_new<TraceLoggerEventPayload>(textId, dictId);
+  auto* payload = js_new<TraceLoggerEventPayload>(nextTextId, dictId);
   if (!payload) {
     return nullptr;
   }
 
-  if (!textIdPayloads.putNew(textId, payload)) {
+  if (!textIdPayloads.putNew(nextTextId, payload)) {
     js_delete(payload);
     return nullptr;
   }
@@ -976,33 +980,72 @@ void TraceLoggerThread::log(uint32_t id) {
   entry.textId = id;
 }
 
-void TraceLoggerThreadState::clear() {
-  LockGuard<Mutex> guard(lock);
-  for (TraceLoggerThread* logger : threadLoggers) {
-    logger->clear();
-  }
+bool TraceLoggerThreadState::remapDictionaryEntries(
+    mozilla::Vector<UniqueChars, 0, SystemAllocPolicy>* newDictionary,
+    uint32_t* newNextDictionaryId) {
+  MOZ_ASSERT(newNextDictionaryId != nullptr && newDictionary != nullptr);
+
+  typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>,
+                  SystemAllocPolicy>
+      DictionaryMap;
+  DictionaryMap dictionaryMap;
 
   // Clear all payloads that are not currently used.  There may be some events
-  // that still hold a pointer to a payload.  Restarting the profiler may add
-  // this event to the new events array and so we need to maintain it's
-  // existence.
+  // that still hold a pointer to a payload.  Restarting the profiler may reuse
+  // the exact same event as a previous session if it's still alive so we need
+  // to maintain it's existence.
   for (TextIdToPayloadMap::Enum e(textIdPayloads); !e.empty(); e.popFront()) {
     if (e.front().value()->uses() == 0) {
       js_delete(e.front().value());
       e.removeFront();
+    } else {
+      TraceLoggerEventPayload* payload = e.front().value();
+      uint32_t dictId = payload->dictionaryId();
+
+      if (dictionaryMap.has(dictId)) {
+        DictionaryMap::Ptr mapPointer = dictionaryMap.lookup(dictId);
+        MOZ_ASSERT(mapPointer);
+        payload->setDictionaryId(mapPointer->value());
+      } else {
+        if (!newDictionary->append(std::move(dictionaryData[dictId]))) {
+          return false;
+        }
+        payload->setDictionaryId(*newNextDictionaryId);
+
+        if (!dictionaryMap.putNew(dictId, *newNextDictionaryId)) {
+          return false;
+        }
+
+        (*newNextDictionaryId)++;
+      }
     }
   }
 
-  // Clear and free any data used for the string dictionary.
-  for (auto range = dictionaryData.all(); !range.empty(); range.popFront()) {
-    range.front().reset();
+  return true;
+}
+
+void TraceLoggerThreadState::clear() {
+  LockGuard<Mutex> guard(lock);
+
+  uint32_t newNextDictionaryId = 0;
+  mozilla::Vector<UniqueChars, 0, SystemAllocPolicy> newDictionary;
+  if (remapDictionaryEntries(&newDictionary, &newNextDictionaryId)) {
+    // Clear and free any data used for the string dictionary.
+    for (auto range = dictionaryData.all(); !range.empty(); range.popFront()) {
+      range.front().reset();
+    }
+    dictionaryData.clearAndFree();
+    dictionaryData = std::move(newDictionary);
+
+    payloadDictionary.clearAndCompact();
+
+    nextTextId = TraceLogger_Last;
+    nextDictionaryId = newNextDictionaryId;
   }
 
-  dictionaryData.clearAndFree();
-  payloadDictionary.clearAndCompact();
-
-  nextTextId = TraceLogger_Last;
-  nextDictionaryId = 0;
+  for (TraceLoggerThread* logger : threadLoggers) {
+    logger->clear();
+  }
 }
 
 void TraceLoggerThread::clear() {

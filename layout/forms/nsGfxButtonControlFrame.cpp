@@ -61,7 +61,7 @@ void nsGfxButtonControlFrame::AppendAnonymousContentTo(
 }
 
 NS_QUERYFRAME_HEAD(nsGfxButtonControlFrame)
-NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
+  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
 NS_QUERYFRAME_TAIL_INHERITING(nsHTMLButtonControlFrame)
 
 // Initially we hardcoded the default strings here.

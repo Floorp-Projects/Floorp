@@ -24,9 +24,9 @@ function done() {
   // have gotten ignored due to the parser still being not-script-created.
   var iframe = document.getElementById("iframe");
   var divs = iframe.contentWindow.document.getElementsByTagName("div").length;
-  is(divs, 2, "<div>s are still there.")
+  is(divs, 2, "<div>s are still there.");
   var ps = iframe.contentWindow.document.getElementsByTagName("p").length;
-  is(ps, 0, "<p> did not get written.")
+  is(ps, 0, "<p> did not get written.");
   SimpleTest.finish();
 }
 

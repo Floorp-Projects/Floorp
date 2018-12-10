@@ -32,4 +32,5 @@ public interface GeckoMediaDrm {
     void closeSession(int promiseId, String sessionId);
     void release();
     MediaCrypto getMediaCrypto();
+    void setServerCertificate(final byte[] cert);
 }

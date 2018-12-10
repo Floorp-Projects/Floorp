@@ -192,7 +192,7 @@ add_task(async function testContentBlockingStrictCategory() {
   is(Services.prefs.getStringPref(CAT_PREF), "strict", `${CAT_PREF} has been set to strict`);
   is(Services.prefs.getBoolPref(TP_PREF), true, `${TP_PREF} has been set to true`);
   is(Services.prefs.getBoolPref(TP_PBM_PREF), true, `${TP_PBM_PREF} has been set to true`);
-  is(Services.prefs.getIntPref(NCB_PREF), Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN, `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN}`);
+  is(Services.prefs.getIntPref(NCB_PREF), Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER, `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER}`);
   ok(!Services.prefs.prefHasUserValue(TP_LIST_PREF), `reset the pref ${TP_LIST_PREF}`);
 
   gBrowser.removeCurrentTab();
@@ -231,8 +231,8 @@ add_task(async function testContentBlockingCustomCategory() {
   await TestUtils.waitForCondition(() => Services.prefs.getStringPref(CAT_PREF) == "strict");
 
   // Changing the NCB_PREF should necessarily set CAT_PREF to "custom"
-  Services.prefs.setIntPref(NCB_PREF, 4);
-  await TestUtils.waitForCondition(() => !Services.prefs.prefHasUserValue(NCB_PREF));
+  Services.prefs.setIntPref(NCB_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT);
+  await TestUtils.waitForCondition(() => Services.prefs.prefHasUserValue(NCB_PREF));
   is(Services.prefs.getStringPref(CAT_PREF), "custom", `${CAT_PREF} has been set to custom`);
 
   gBrowser.removeCurrentTab();

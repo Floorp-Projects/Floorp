@@ -46,7 +46,7 @@ add_task(async function() {
   ok(message, "Found console.trace message from Scratchpad");
 
   info("Clicking link to switch to and focus Scratchpad");
-  const anchor = message.querySelector(".stacktrace .frame");
+  const anchor = await waitFor(() => message.querySelector(".stacktrace .frame"));
   const onScratchpadSelected = toolbox.once("scratchpad-selected");
 
   EventUtils.sendMouseEvent({ type: "mousedown" }, anchor);

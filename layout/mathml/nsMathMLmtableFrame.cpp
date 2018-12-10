@@ -649,7 +649,7 @@ static void ListMathMLTree(nsIFrame* atLeast) {
 // implementation of nsMathMLmtableWrapperFrame
 
 NS_QUERYFRAME_HEAD(nsMathMLmtableWrapperFrame)
-NS_QUERYFRAME_ENTRY(nsIMathMLFrame)
+  NS_QUERYFRAME_ENTRY(nsIMathMLFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsTableWrapperFrame)
 
 nsContainerFrame* NS_NewMathMLmtableOuterFrame(nsIPresShell* aPresShell,
@@ -1023,7 +1023,7 @@ void nsMathMLmtableFrame::SetUseCSSSpacing() {
 }
 
 NS_QUERYFRAME_HEAD(nsMathMLmtableFrame)
-NS_QUERYFRAME_ENTRY(nsMathMLmtableFrame)
+  NS_QUERYFRAME_ENTRY(nsMathMLmtableFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsTableFrame)
 
 // --------
@@ -1164,7 +1164,7 @@ nsMargin nsMathMLmtdFrame::GetBorderOverflow() {
 // implementation of nsMathMLmtdInnerFrame
 
 NS_QUERYFRAME_HEAD(nsMathMLmtdInnerFrame)
-NS_QUERYFRAME_ENTRY(nsIMathMLFrame)
+  NS_QUERYFRAME_ENTRY(nsIMathMLFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
 nsContainerFrame* NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell,

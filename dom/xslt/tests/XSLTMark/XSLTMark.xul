@@ -17,7 +17,7 @@
 <hbox>
   <groupbox orient="horizontal">
     <caption label="test description file" />
-    <label value=""/><!-- needed, otherwise groupbox fucks up :-( -->
+    <label value=""/><!-- needed, otherwise groupbox is broken :-( -->
     <textbox id="config" persist="value" readonly="true"/>
     <button label="browse..." oncommand="view.browseForConfig();" />
   </groupbox>

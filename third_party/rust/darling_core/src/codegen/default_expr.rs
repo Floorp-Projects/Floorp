@@ -1,4 +1,5 @@
-use quote::{Tokens, ToTokens};
+use proc_macro2::TokenStream;
+use quote::{TokenStreamExt, ToTokens};
 use syn::{Ident, Path};
 
 /// This will be in scope during struct initialization after option parsing.
@@ -21,12 +22,12 @@ impl<'a> DefaultExpression<'a> {
 }
 
 impl<'a> ToTokens for DefaultExpression<'a> {
-    fn to_tokens(&self, tokens: &mut Tokens) {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
         tokens.append_all(match *self {
             DefaultExpression::Inherit(ident) => {
                 let dsn = Ident::new(DEFAULT_STRUCT_NAME, ::proc_macro2::Span::call_site());
                 quote!(#dsn.#ident)
-            },
+            }
             DefaultExpression::Explicit(path) => quote!(#path()),
             DefaultExpression::Trait => quote!(::darling::export::Default::default()),
         });
@@ -37,7 +38,7 @@ impl<'a> ToTokens for DefaultExpression<'a> {
 pub struct DefaultDeclaration<'a>(&'a DefaultExpression<'a>);
 
 impl<'a> ToTokens for DefaultDeclaration<'a> {
-    fn to_tokens(&self, tokens: &mut Tokens) {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = Ident::new(DEFAULT_STRUCT_NAME, ::proc_macro2::Span::call_site());
         let expr = self.0;
         tokens.append_all(quote!(let #name: Self = #expr;));

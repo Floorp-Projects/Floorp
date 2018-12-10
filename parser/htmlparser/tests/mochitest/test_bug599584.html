@@ -29,7 +29,7 @@ function startTest() {
     return;
   }
   alreadyRan = true;
-  setTimeout(function () {
+  setTimeout(function() {
     var iframe = document.getElementsByTagName("iframe")[0];
     is(iframe.contentWindow.location.search, "", "Should not have navigated with query string.");
     SimpleTest.finish();

@@ -150,4 +150,15 @@ final class RemoteMediaDrmBridge implements GeckoMediaDrm {
         assertTrue(false);
         return null;
     }
+
+    @Override
+    public synchronized void setServerCertificate(final byte[] cert) {
+        try {
+            mRemote.setServerCertificate(cert);
+        } catch (Exception e) {
+            Log.e(LOGTAG, "Got exception while setting server certificate.", e);
+            throw new RuntimeException(e);
+        }
+    }
 }
+

@@ -154,6 +154,9 @@ let URICountListener = {
   },
 
   onLocationChange(browser, webProgress, request, uri, flags) {
+    // By default, assume we no longer need to track this tab.
+    SearchTelemetry.stopTrackingBrowser(browser);
+
     // Don't count this URI if it's an error page.
     if (flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
       return;
@@ -219,7 +222,7 @@ let URICountListener = {
 
     if (shouldRecordSearchCount(browser.getTabBrowser()) &&
         !(flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
-      SearchTelemetry.recordSearchURLTelemetry(uriSpec);
+      SearchTelemetry.updateTrackingStatus(browser, uriSpec);
     }
 
     if (!shouldCountURI) {

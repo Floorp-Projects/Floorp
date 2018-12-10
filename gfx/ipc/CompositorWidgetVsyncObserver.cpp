@@ -18,12 +18,12 @@ CompositorWidgetVsyncObserver::CompositorWidgetVsyncObserver(
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-bool CompositorWidgetVsyncObserver::NotifyVsync(TimeStamp aTimeStamp) {
+bool CompositorWidgetVsyncObserver::NotifyVsync(const VsyncEvent& aVsync) {
   // Vsync notifications should only arrive on the vsync thread.
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!NS_IsMainThread());
 
-  mVsyncBridge->NotifyVsync(aTimeStamp, mRootLayerTreeId);
+  mVsyncBridge->NotifyVsync(aVsync, mRootLayerTreeId);
   return true;
 }
 

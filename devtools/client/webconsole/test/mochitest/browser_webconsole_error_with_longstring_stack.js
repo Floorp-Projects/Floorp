@@ -23,7 +23,9 @@ add_task(async function() {
   ok(errorNode, "The error object is logged as expected");
   ok(errorNode.textContent.includes("longString stack"));
 
-  const stackTraceElement = errorNode.querySelector(".frames");
+  info("Wait until the stacktrace gets rendered");
+  const stackTraceElement = await waitFor(() => errorNode.querySelector(".frames"));
+
   ok(stackTraceElement, "There's a stacktrace element");
   ok(stackTraceElement.querySelectorAll(".frame .title").length > 0,
     "Frames functions are displayed");

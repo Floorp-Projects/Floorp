@@ -51,8 +51,7 @@ void VsyncChild::ActorDestroy(ActorDestroyReason aActorDestroyReason) {
   }
 }
 
-mozilla::ipc::IPCResult VsyncChild::RecvNotify(
-    const TimeStamp& aVsyncTimestamp) {
+mozilla::ipc::IPCResult VsyncChild::RecvNotify(const VsyncEvent& aVsync) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mIsShutdown);
 
@@ -63,7 +62,7 @@ mozilla::ipc::IPCResult VsyncChild::RecvNotify(
       return IPC_OK();
     }
 
-    mObserver->NotifyVsync(aVsyncTimestamp);
+    mObserver->NotifyVsync(aVsync);
   }
   return IPC_OK();
 }

@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1104732
   var asyncState = "not loaded";
   SimpleTest.waitForExplicitFinish();
   is(document.readyState, "loading", "Document should have been loading.");
-  document.addEventListener("DOMContentLoaded", function () {
+  document.addEventListener("DOMContentLoaded", function() {
     is(document.readyState, "interactive", "readyState should be interactive during DOMContentLoaded.");
     is(state, "defer", "Bad state upon DOMContentLoaded");
     state = "DOMContentLoaded";
@@ -35,9 +35,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1104732
     // it will sometimes be the case...
     // isnot(asyncState, "loaded", "Async script should not have delayed domcontentloaded");
   });
-  window.addEventListener("load", function () {
+  window.addEventListener("load", function() {
     is(document.readyState, "complete", "readyState should be complete during load.");
-    is(state, "DOMContentLoaded", "Bad state upon load")
+    is(state, "DOMContentLoaded", "Bad state upon load");
     state = "load";
     is(asyncState, "loaded", "Async script should be loaded upon document load event");
     SimpleTest.finish();

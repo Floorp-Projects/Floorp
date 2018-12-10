@@ -682,9 +682,7 @@ struct FrameMetrics {
 };
 
 struct ScrollSnapInfo {
-  ScrollSnapInfo()
-      : mScrollSnapTypeX(NS_STYLE_SCROLL_SNAP_TYPE_NONE),
-        mScrollSnapTypeY(NS_STYLE_SCROLL_SNAP_TYPE_NONE) {}
+  ScrollSnapInfo() = default;
 
   bool operator==(const ScrollSnapInfo& aOther) const {
     return mScrollSnapTypeX == aOther.mScrollSnapTypeX &&
@@ -696,14 +694,15 @@ struct ScrollSnapInfo {
   }
 
   bool HasScrollSnapping() const {
-    return mScrollSnapTypeY != NS_STYLE_SCROLL_SNAP_TYPE_NONE ||
-           mScrollSnapTypeX != NS_STYLE_SCROLL_SNAP_TYPE_NONE;
+    return mScrollSnapTypeY != mozilla::StyleScrollSnapType::None ||
+           mScrollSnapTypeX != mozilla::StyleScrollSnapType::None;
   }
 
   // The scroll frame's scroll-snap-type.
-  // One of NS_STYLE_SCROLL_SNAP_{NONE, MANDATORY, PROXIMITY}.
-  uint8_t mScrollSnapTypeX;
-  uint8_t mScrollSnapTypeY;
+  mozilla::StyleScrollSnapType mScrollSnapTypeX =
+      mozilla::StyleScrollSnapType::None;
+  mozilla::StyleScrollSnapType mScrollSnapTypeY =
+      mozilla::StyleScrollSnapType::None;
 
   // The intervals derived from the scroll frame's scroll-snap-points.
   Maybe<nscoord> mScrollSnapIntervalX;

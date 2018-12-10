@@ -60,26 +60,25 @@ async function run_all_tests() {
   if (procType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT)
     return;
 
-  let attrs_inBrowser = JSON.stringify({ appId:1, inIsolatedMozBrowser:true });
-  let attrs_notInBrowser = JSON.stringify({ appId:1 });
+  let attrs_inBrowser = { appId:1, inIsolatedMozBrowser:true };
+  let attrs_notInBrowser = { appId:1 };
 
-  Services.obs.notifyObservers(null, "clear-origin-attributes-data", attrs_inBrowser);
+  Services.clearData.deleteDataFromOriginAttributesPattern(attrs_inBrowser);
 
   for (let test of secondTests) {
     handlers_called = 0;
     await test_channel(...test);
   }
 
-  Services.obs.notifyObservers(null, "clear-origin-attributes-data", attrs_notInBrowser);
-  Services.obs.notifyObservers(null, "clear-origin-attributes-data", attrs_inBrowser);
+  Services.clearData.deleteDataFromOriginAttributesPattern(attrs_notInBrowser);
+  Services.clearData.deleteDataFromOriginAttributesPattern(attrs_inBrowser);
 
   for (let test of thirdTests) {
     handlers_called = 0;
     await test_channel(...test);
   }
 
-  let attrs_userContextId = JSON.stringify({ userContextId: 1 });
-  Services.obs.notifyObservers(null, "clear-origin-attributes-data", attrs_userContextId);
+  Services.clearData.deleteDataFromOriginAttributesPattern({ userContextId: 1 });
 
   for (let test of fourthTests) {
     handlers_called = 0;

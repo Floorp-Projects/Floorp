@@ -295,8 +295,7 @@ _ContextualIdentityService.prototype = {
       return false;
     }
 
-    Services.obs.notifyObservers(null, "clear-origin-attributes-data",
-                                 JSON.stringify({ userContextId }));
+    Services.clearData.deleteDataFromOriginAttributesPattern({ userContextId });
 
     let deletedOutput = this.getIdentityObserverOutput(this.getPublicIdentityFromId(userContextId));
     this._identities.splice(index, 1);
@@ -467,8 +466,7 @@ _ContextualIdentityService.prototype = {
       if (!identity.public) {
         continue;
       }
-      Services.obs.notifyObservers(null, "clear-origin-attributes-data",
-                                   JSON.stringify({ userContextId: identity.userContextId }));
+      Services.clearData.deleteDataFromOriginAttributesPattern({ userContextId: identity.userContextId });
     }
   },
 
@@ -536,8 +534,7 @@ _ContextualIdentityService.prototype = {
     }
 
     for (let userContextId of cookiesUserContextIds) {
-      Services.obs.notifyObservers(null, "clear-origin-attributes-data",
-                                   JSON.stringify({ userContextId }));
+      Services.clearData.deleteDataFromOriginAttributesPattern({ userContextId });
     }
   },
 

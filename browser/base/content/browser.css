@@ -43,7 +43,7 @@
   background-repeat: var(--lwt-background-tiling);
 }
 
-#main-window:not([chromehidden~="toolbar"]) {
+:root:not([chromehidden~="toolbar"]) {
 %ifdef XP_MACOSX
   min-width: 335px;
 %else
@@ -51,7 +51,7 @@
 %endif
 }
 
-#main-window[customize-entered] {
+:root[customize-entered] {
   min-width: -moz-fit-content;
 }
 
@@ -285,12 +285,12 @@ window:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-but
 #toolbar-menubar:not([autohide=true]) + #TabsToolbar .titlebar-spacer,
 %endif
 %ifndef MOZ_WIDGET_COCOA
-#main-window:not([sizemode=normal]) .titlebar-spacer[type="pre-tabs"],
+:root:not([sizemode=normal]) .titlebar-spacer[type="pre-tabs"],
 %endif
-#main-window:not([chromemargin]) .titlebar-buttonbox-container,
-#main-window[inFullscreen] .titlebar-buttonbox-container,
-#main-window[inFullscreen] .titlebar-spacer,
-#main-window:not([tabsintitlebar]) .titlebar-spacer {
+:root:not([chromemargin]) .titlebar-buttonbox-container,
+:root[inFullscreen] .titlebar-buttonbox-container,
+:root[inFullscreen] .titlebar-spacer,
+:root:not([tabsintitlebar]) .titlebar-spacer {
   display: none;
 }
 
@@ -304,11 +304,11 @@ window:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-but
   -moz-window-dragging: drag;
 }
 
-#main-window[tabsintitlebar] .titlebar-buttonbox {
+:root[tabsintitlebar] .titlebar-buttonbox {
   position: relative;
 }
 
-#main-window:not([tabsintitlebar]) .titlebar-buttonbox {
+:root:not([tabsintitlebar]) .titlebar-buttonbox {
   display: none;
 }
 
@@ -351,23 +351,12 @@ toolbarpaletteitem {
 }
 %endif
 
-%ifdef XP_WIN
-#main-window[sizemode="maximized"] #titlebar-buttonbox {
-  -moz-appearance: -moz-window-button-box-maximized;
-}
-
-#main-window[tabletmode] #titlebar-min,
-#main-window[tabletmode] #titlebar-max {
-  display: none !important;
-}
-%endif
-
-#main-window[inDOMFullscreen] #navigator-toolbox,
-#main-window[inDOMFullscreen] #fullscr-toggler,
-#main-window[inDOMFullscreen] #sidebar-box,
-#main-window[inDOMFullscreen] #sidebar-splitter,
-#main-window[inFullscreen]:not([OSXLionFullscreen]) toolbar:not([fullscreentoolbar=true]),
-#main-window[inFullscreen] .global-notificationbox {
+:root[inDOMFullscreen] #navigator-toolbox,
+:root[inDOMFullscreen] #fullscr-toggler,
+:root[inDOMFullscreen] #sidebar-box,
+:root[inDOMFullscreen] #sidebar-splitter,
+:root[inFullscreen]:not([OSXLionFullscreen]) toolbar:not([fullscreentoolbar=true]),
+:root[inFullscreen] .global-notificationbox {
   visibility: collapse;
 }
 
@@ -517,7 +506,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 
 %ifdef XP_MACOSX
-#main-window[inFullscreen="true"] {
+:root[inFullscreen="true"] {
   padding-top: 0; /* override drawintitlebar="true" */
 }
 %endif
@@ -572,7 +561,7 @@ html|input.urlbar-input[dir=ltr]:-moz-locale-dir(rtl) {
  *
  * Attribute is controlled by browser.js:/gRemoteControl.
  */
-#main-window[remotecontrol] #urlbar {
+:root[remotecontrol] #urlbar {
   background: repeating-linear-gradient(
     -45deg,
     transparent,
@@ -582,7 +571,7 @@ html|input.urlbar-input[dir=ltr]:-moz-locale-dir(rtl) {
   background-color: rgba(255,170,68,.8);
   color: black;
 }
-#main-window[remotecontrol] #urlbar #identity-box {
+:root[remotecontrol] #urlbar #identity-box {
   background: white;
 }
 
@@ -954,7 +943,7 @@ html|*.pointerlockfswarning[ontop] {
   /* Use -10px to hide the border and border-radius on the top */
   transform: translate(-50%, -10px);
 }
-#main-window[OSXLionFullscreen] html|*.pointerlockfswarning[ontop] {
+:root[OSXLionFullscreen] html|*.pointerlockfswarning[ontop] {
   transform: translate(-50%, 80px);
 }
 
@@ -1282,8 +1271,8 @@ toolbarpaletteitem > toolbaritem {
   pointer-events: none;
 }
 
-#main-window[customizing=true] .addon-banner-item,
-#main-window[customizing=true] .panel-banner-item {
+:root[customizing=true] .addon-banner-item,
+:root[customizing=true] .panel-banner-item {
   display: none;
 }
 

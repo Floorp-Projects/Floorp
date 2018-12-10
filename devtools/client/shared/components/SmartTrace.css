@@ -19,11 +19,12 @@
 .frames .frame {
   display: contents;
   cursor: pointer;
+  white-space: normal;
 }
 
 .frames .title {
   text-overflow: ellipsis;
-  overflow: hidden;
+  white-space: nowrap;
   grid-column: 1 / 2;
   color: var(--console-output-color);
 }
@@ -31,6 +32,10 @@
 .frames .location {
   color: var(--frame-link-source);
   grid-column: -1 / -2;
+  /* Force the location to be on one line and crop at start */
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
 }
 
 .frames .location .line {
@@ -88,6 +93,8 @@
   padding: 1px 4px;
   font-size: 0.9em;
   display: inline-block;
+  text-align: center;
+  cursor: default;
 }
 
 .annotation-logo {
@@ -97,6 +104,6 @@
   vertical-align: middle;
 }
 
-:root.theme-dark .annotation-logo svg path {
+:root.theme-dark .annotation-logo:not(.angular) svg path {
   fill: var(--theme-highlight-blue);
 }

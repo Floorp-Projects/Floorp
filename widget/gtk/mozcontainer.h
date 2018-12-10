@@ -75,9 +75,9 @@ struct _MozContainer {
   struct wl_surface *surface;
   struct wl_subsurface *subsurface;
   struct wl_egl_window *eglwindow;
+  struct wl_callback *frame_callback_handler;
   gboolean surface_needs_clear;
   gboolean ready_to_draw;
-  gulong frame_clock_after_paint_handler;
 #endif
 };
 
@@ -93,6 +93,7 @@ void moz_container_put(MozContainer *container, GtkWidget *child_widget, gint x,
 #ifdef MOZ_WAYLAND
 struct wl_surface *moz_container_get_wl_surface(MozContainer *container);
 struct wl_egl_window *moz_container_get_wl_egl_window(MozContainer *container);
+
 gboolean moz_container_has_wl_egl_window(MozContainer *container);
 gboolean moz_container_surface_needs_clear(MozContainer *container);
 #endif

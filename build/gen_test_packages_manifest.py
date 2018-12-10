@@ -76,9 +76,12 @@ def generate_package_data(args):
     # specific zips.
     tests_common = args.tests_common
     jsshell = args.jsshell
+    web_platform = getattr(args, 'web-platform')
 
     harness_requirements = dict([(k, [tests_common]) for k in ALL_HARNESSES])
     harness_requirements['jittest'].append(jsshell)
+    harness_requirements['jittest'].append(web_platform)
+
     for harness in PACKAGE_SPECIFIED_HARNESSES + OPTIONAL_PACKAGES:
         pkg_name = getattr(args, harness, None)
         if pkg_name is None:

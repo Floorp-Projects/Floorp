@@ -1902,11 +1902,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleBreakWithin mBreakInside;
   mozilla::StyleBreakBetween mBreakBefore;
   mozilla::StyleBreakBetween mBreakAfter;
-  uint8_t mOverflowX;              // NS_STYLE_OVERFLOW_*
-  uint8_t mOverflowY;              // NS_STYLE_OVERFLOW_*
-  uint8_t mOverflowClipBoxBlock;   // NS_STYLE_OVERFLOW_CLIP_BOX_*
-  uint8_t mOverflowClipBoxInline;  // NS_STYLE_OVERFLOW_CLIP_BOX_*
-  uint8_t mResize;                 // NS_STYLE_RESIZE_*
+  uint8_t mOverflowX;  // NS_STYLE_OVERFLOW_*
+  uint8_t mOverflowY;  // NS_STYLE_OVERFLOW_*
+  mozilla::StyleOverflowClipBox mOverflowClipBoxBlock;
+  mozilla::StyleOverflowClipBox mOverflowClipBoxInline;
+  mozilla::StyleResize mResize;
   mozilla::StyleOrient mOrient;
   uint8_t mIsolation;           // NS_STYLE_ISOLATION_*
   uint8_t mTopLayer;            // NS_STYLE_TOP_LAYER_*
@@ -1922,8 +1922,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   uint8_t mScrollBehavior;  // NS_STYLE_SCROLL_BEHAVIOR_*
   mozilla::StyleOverscrollBehavior mOverscrollBehaviorX;
   mozilla::StyleOverscrollBehavior mOverscrollBehaviorY;
-  uint8_t mScrollSnapTypeX;  // NS_STYLE_SCROLL_SNAP_TYPE_*
-  uint8_t mScrollSnapTypeY;  // NS_STYLE_SCROLL_SNAP_TYPE_*
+  mozilla::StyleScrollSnapType mScrollSnapTypeX;
+  mozilla::StyleScrollSnapType mScrollSnapTypeY;
   nsStyleCoord mScrollSnapPointsX;
   nsStyleCoord mScrollSnapPointsY;
   mozilla::Position mScrollSnapDestination;

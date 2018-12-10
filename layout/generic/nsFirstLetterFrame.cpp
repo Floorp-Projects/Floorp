@@ -29,7 +29,7 @@ nsFirstLetterFrame* NS_NewFirstLetterFrame(nsIPresShell* aPresShell,
 NS_IMPL_FRAMEARENA_HELPERS(nsFirstLetterFrame)
 
 NS_QUERYFRAME_HEAD(nsFirstLetterFrame)
-NS_QUERYFRAME_ENTRY(nsFirstLetterFrame)
+  NS_QUERYFRAME_ENTRY(nsFirstLetterFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 #ifdef DEBUG_FRAME_DUMP

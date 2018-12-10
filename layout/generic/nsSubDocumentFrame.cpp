@@ -74,7 +74,7 @@ a11y::AccType nsSubDocumentFrame::AccessibleType() {
 #endif
 
 NS_QUERYFRAME_HEAD(nsSubDocumentFrame)
-NS_QUERYFRAME_ENTRY(nsSubDocumentFrame)
+  NS_QUERYFRAME_ENTRY(nsSubDocumentFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsAtomicContainerFrame)
 
 class AsyncFrameInit : public Runnable {
@@ -296,7 +296,7 @@ static void WrapBackgroundColorInOwnLayer(nsDisplayListBuilder* aBuilder,
 
 void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                           const nsDisplayListSet& aLists) {
-  if (!IsVisibleForPainting(aBuilder)) return;
+  if (!IsVisibleForPainting()) return;
 
   nsFrameLoader* frameLoader = FrameLoader();
   RenderFrame* rf = nullptr;

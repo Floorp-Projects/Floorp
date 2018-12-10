@@ -33,13 +33,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=396568
 
  var reached = false;
  try {
+   // eslint-disable-next-line no-undef
    noSuchIdentifier;
    reached = true;
  } catch (e) {
-   is(e.lineNumber, 36, "Unexpected line number"); //this line number is dependent on the line number of noSuchIdentifier
+   is(e.lineNumber, 37, "Unexpected line number"); // this line number is dependent on the line number of noSuchIdentifier
  }
  is(reached, false, "Exception needed to be thrown");
- 
+
 </script>
 </pre>
 </body>

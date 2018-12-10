@@ -1328,7 +1328,6 @@ fn mode_to_origin(mode: SheetParsingMode) -> Origin {
         SheetParsingMode::eAuthorSheetFeatures => Origin::Author,
         SheetParsingMode::eUserSheetFeatures => Origin::User,
         SheetParsingMode::eAgentSheetFeatures => Origin::UserAgent,
-        SheetParsingMode::eSafeAgentSheetFeatures => Origin::UserAgent,
     }
 }
 

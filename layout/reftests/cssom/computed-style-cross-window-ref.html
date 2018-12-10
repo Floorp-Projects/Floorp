@@ -18,10 +18,8 @@ function run() {
 
   var pout = document.getElementById("out");
   var poutnone = document.getElementById("outnone");
-  var poutdet = document.createElement("p");
   var pin = i.contentDocument.getElementsByTagName("p")[0];
   var pinnone = i.contentDocument.getElementsByTagName("p")[1];
-  var pindet = i.contentDocument.createElement("p");
 
   document.getElementById("res1").style.color =
     window.getComputedStyle(pin).color;
@@ -34,12 +32,6 @@ function run() {
 
   document.getElementById("res4").style.color =
     i.contentWindow.getComputedStyle(poutnone).color;
-
-  document.getElementById("res5").style.color =
-    window.getComputedStyle(pindet).color;
-
-  document.getElementById("res6").style.color =
-    i.contentWindow.getComputedStyle(poutdet).color;
 }
 
 </script>
@@ -64,12 +56,4 @@ iframe is.</div>
 
 <div style="color:blue">This paragraph is the color that
 iframeWindow.getComputedStyle says the display:none paragraph outside
-the iframe is.</div>
-
-<div style="color:blue">This paragraph is the color that
-outerWindow.getComputedStyle says the detached paragraph inside the
-iframe is.</div>
-
-<div style="color:fuchsia">This paragraph is the color that
-iframeWindow.getComputedStyle says the detached paragraph outside
 the iframe is.</div>

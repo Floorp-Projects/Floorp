@@ -30,8 +30,8 @@ registerCleanupFunction(async function() {
   } catch (e) {
     // Will throw if the addon is already uninstalled, ignore exceptions here.
   }
-  const { ADB } = require("devtools/shared/adb/adb");
-  await ADB.kill();
+  const { adbProcess } = require("devtools/shared/adb/adb-process");
+  await adbProcess.kill();
 
   const { remoteClientManager } =
     require("devtools/client/shared/remote-debugging/remote-client-manager");

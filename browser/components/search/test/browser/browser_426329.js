@@ -4,17 +4,17 @@ ChromeUtils.defineModuleGetter(this, "FormHistory",
 
 function expectedURL(aSearchTerms) {
   const ENGINE_HTML_BASE = "http://mochi.test:8888/browser/browser/components/search/test/browser/test.html";
-  var searchArg = Services.textToSubURI.ConvertAndEscape("utf-8", aSearchTerms);
+  let searchArg = Services.textToSubURI.ConvertAndEscape("utf-8", aSearchTerms);
   return ENGINE_HTML_BASE + "?test=" + searchArg;
 }
 
 function simulateClick(aEvent, aTarget) {
-  var event = document.createEvent("MouseEvent");
-  var ctrlKeyArg  = aEvent.ctrlKey || false;
-  var altKeyArg   = aEvent.altKey || false;
-  var shiftKeyArg = aEvent.shiftKey || false;
-  var metaKeyArg  = aEvent.metaKey || false;
-  var buttonArg   = aEvent.button || 0;
+  let event = document.createEvent("MouseEvent");
+  let ctrlKeyArg  = aEvent.ctrlKey || false;
+  let altKeyArg   = aEvent.altKey || false;
+  let shiftKeyArg = aEvent.shiftKey || false;
+  let metaKeyArg  = aEvent.metaKey || false;
+  let buttonArg   = aEvent.button || 0;
   event.initMouseEvent("click", true, true, window,
                         0, 0, 0, 0, 0,
                         ctrlKeyArg, altKeyArg, shiftKeyArg, metaKeyArg,
@@ -24,9 +24,9 @@ function simulateClick(aEvent, aTarget) {
 
 // modified from toolkit/components/satchel/test/test_form_autocomplete.html
 function checkMenuEntries(expectedValues) {
-  var actualValues = getMenuEntries();
+  let actualValues = getMenuEntries();
   is(actualValues.length, expectedValues.length, "Checking length of expected menu");
-  for (var i = 0; i < expectedValues.length; i++)
+  for (let i = 0; i < expectedValues.length; i++)
     is(actualValues[i], expectedValues[i], "Checking menu entry #" + i);
 }
 
@@ -58,12 +58,12 @@ var searchButton;
 var searchEntries = ["test"];
 function promiseSetEngine() {
   return new Promise(resolve => {
-    var ss = Services.search;
+    let ss = Services.search;
 
     function observer(aSub, aTopic, aData) {
       switch (aData) {
         case "engine-added":
-          var engine = ss.getEngineByName("Bug 426329");
+          let engine = ss.getEngineByName("Bug 426329");
           ok(engine, "Engine was added.");
           ss.defaultEngine = engine;
           break;
@@ -88,7 +88,7 @@ function promiseSetEngine() {
 
 function promiseRemoveEngine() {
   return new Promise(resolve => {
-    var ss = Services.search;
+    let ss = Services.search;
 
     function observer(aSub, aTopic, aData) {
       if (aData == "engine-removed") {
@@ -98,7 +98,7 @@ function promiseRemoveEngine() {
     }
 
     Services.obs.addObserver(observer, "browser-search-engine-modified");
-    var engine = ss.getEngineByName("Bug 426329");
+    let engine = ss.getEngineByName("Bug 426329");
     ss.removeEngine(engine);
   });
 }
@@ -217,15 +217,15 @@ add_task(async function testRightClick() {
 });
 
 add_task(async function testSearchHistory() {
-  var textbox = searchBar._textbox;
-  for (var i = 0; i < searchEntries.length; i++) {
+  let textbox = searchBar._textbox;
+  for (let i = 0; i < searchEntries.length; i++) {
     let count = await countEntries(textbox.getAttribute("autocompletesearchparam"), searchEntries[i]);
     ok(count > 0, "form history entry '" + searchEntries[i] + "' should exist");
   }
 });
 
 add_task(async function testAutocomplete() {
-  var popup = searchBar.textbox.popup;
+  let popup = searchBar.textbox.popup;
   let popupShownPromise = BrowserTestUtils.waitForEvent(popup, "popupshown");
   searchBar.textbox.showHistoryPopup();
   await popupShownPromise;

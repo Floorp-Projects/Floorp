@@ -65,7 +65,7 @@ nsIFrame* NS_NewTextBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
 NS_IMPL_FRAMEARENA_HELPERS(nsTextBoxFrame)
 
 NS_QUERYFRAME_HEAD(nsTextBoxFrame)
-NS_QUERYFRAME_ENTRY(nsTextBoxFrame)
+  NS_QUERYFRAME_ENTRY(nsTextBoxFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsLeafBoxFrame)
 
 nsresult nsTextBoxFrame::AttributeChanged(int32_t aNameSpaceID,
@@ -338,7 +338,7 @@ nsRect nsDisplayXULTextBox::GetComponentAlphaBounds(
 
 void nsTextBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                       const nsDisplayListSet& aLists) {
-  if (!IsVisibleForPainting(aBuilder)) return;
+  if (!IsVisibleForPainting()) return;
 
   nsLeafBoxFrame::BuildDisplayList(aBuilder, aLists);
 

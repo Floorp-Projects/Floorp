@@ -7,6 +7,13 @@ let gCUITestUtils = new CustomizableUITestUtils(window);
 /**
  * Recursively compare two objects and check that every property of expectedObj has the same value
  * on actualObj.
+ *
+ * @param {object} expectedObj
+ *        The expected object to find.
+ * @param {object} actualObj
+ *        The object to inspect.
+ * @param {string} name
+ *        The name of the engine, used for test detail logging.
  */
 function isSubObjectOf(expectedObj, actualObj, name) {
   for (let prop in expectedObj) {
@@ -40,9 +47,9 @@ function promiseEvent(aTarget, aEventName, aPreventDefault) {
 /**
  * Adds a new search engine to the search service and confirms it completes.
  *
- * @param {String} basename  The file to load that contains the search engine
+ * @param {string} basename  The file to load that contains the search engine
  *                           details.
- * @param {Object} [options] Options for the test:
+ * @param {object} [options] Options for the test:
  *   - {String} [iconURL]       The icon to use for the search engine.
  *   - {Boolean} [setAsCurrent] Whether to set the new engine to be the
  *                              current engine or not.
@@ -151,11 +158,11 @@ function promiseStateChangeURI() {
  * Waits for a load (or custom) event to finish in a given tab. If provided
  * load an uri into the tab.
  *
- * @param tab
+ * @param {object} tab
  *        The tab to load into.
- * @param [optional] url
+ * @param {string} [url]
  *        The url to load, or the current url.
- * @return {Promise} resolved when the event is handled.
+ * @returns {Promise} resolved when the event is handled.
  * @resolves to the received event
  * @rejects if a valid load event is not received within a meaningful interval
  */

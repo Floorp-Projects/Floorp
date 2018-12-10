@@ -18,61 +18,92 @@ namespace jit {
 
 // [SMDOC] IonMonkey Bailouts
 //
-// A "bailout" is a condition in which we need to recover a baseline frame from
-// an IonFrame. Bailouts can happen for the following reasons:
-//   (1) A deoptimization guard, for example, an add overflows or a type check
-//       fails.
-//   (2) A check or assumption held by the JIT is invalidated by the VM, and
-//       JIT code must be thrown away. This includes the GC possibly deciding
-//       to evict live JIT code, or a Type Inference reflow.
+// A "bailout" is the process of recovering a baseline frame from an IonFrame.
+// Bailouts are implemented in js::jit::BailoutIonToBaseline, which has the
+// following callers:
 //
-// Note that bailouts as described here do not include normal Ion frame
-// inspection, for example, if an exception must be built or the GC needs to
-// scan an Ion frame for gcthings.
+// *   js::jit::Bailout - This is used when a guard fails in the Ion code
+//     itself; for example, an LGuardShape fails or an LAddI overflows. See
+//     callers of CodeGenerator::bailoutFrom() for more examples.
 //
-// The second type of bailout needs a different name - "deoptimization" or
-// "deep bailout". Here we are concerned with eager (or maybe "shallow")
-// bailouts, that happen from JIT code. These happen from guards, like:
+// *   js::jit::ExceptionHandlerBailout - Something called from Ion code
+//     failed. Ion doesn't implement `catch`; it handles all exceptions by
+//     bailing out.
 //
-//  cmp [obj + shape], 0x50M37TH1NG
-//  jmp _bailout
+// *   js::jit::InvalidationBailout - We returned to Ion code that was
+//     invalidated while it was on the stack. See "OSI" below. Ion code can be
+//     invalidated for several reasons: when GC evicts Ion code to save memory,
+//     for example, or when assumptions baked into the jitted code are
+//     invalidated by the VM (see callers of IonBuilder::constraints()).
 //
-// The bailout target needs to somehow translate the Ion frame (whose state
-// will differ at each program point) to a baseline frame. This state is
-// captured into the IonScript's snapshot buffer, and for each bailout we know
-// which snapshot corresponds to its state.
+// (Some stack inspection can be done without bailing out, including GC stack
+// marking, Error object construction, and Gecko profiler sampling.)
 //
-// Roughly, the following needs to happen at the bailout target.
-//   (1) Move snapshot ID into a known stack location (registers cannot be
-//       mutated).
-//   (2) Spill all registers to the stack.
-//   (3) Call a Bailout() routine, whose argument is the stack pointer.
-//   (4) Bailout() will find the IonScript on the stack, use the snapshot ID
-//       to find the structure of the frame, and then use the stack and spilled
-//       registers to perform frame conversion.
-//   (5) Bailout() returns, and the JIT must immediately return to the
-//       baseline JIT code (all frames are converted at once).
+// Consider the first case. When an Ion guard fails, we can't continue in
+// Ion. There's no IC fallback case coming to save us; we've got a broken
+// assumption baked into the code we're running. So we jump to an out-of-line
+// code path that's responsible for abandoning Ion execution and resuming in
+// baseline: the bailout path.
 //
-// (2) and (3) are implemented by a trampoline held in the compartment.
-// Naively, we could implement (1) like:
+// We were in the midst of optimized Ion code, so bits of program state may be
+// in registers or spilled to the native stack; values may be unboxed; some
+// objects may have been optimized away; thanks to inlining, whole call frames
+// may be missing. The bailout path must put all these pieces back together
+// into the structure the baseline code expects.
 //
-//   _bailout_ID_1:
-//     push 1
-//     jmp _global_bailout_handler
-//   _bailout_ID_2:
-//     push 2
-//     jmp _global_bailout_handler
+// The data structure that makes this possible is called a *snapshot*.
+// Snapshots are created during Ion codegen and associated with the IonScript;
+// they tell how to recover each value in a BaselineFrame from the current
+// machine state at a given point in the Ion JIT code. This is potentially
+// different at every place in an Ion script where we might bail out. (See
+// Snapshots.h.)
+//
+// The bailout path performs roughly the following steps:
+//
+// 1.  Push a snapshot index and the frame size to the native stack.
+// 2.  Spill all registers.
+// 3.  Call js::jit::Bailout to reconstruct the baseline frame(s).
+// 4.  memmove() those to the right place on the native stack.
+// 5.  Jump to baseline code.
+//
+// (This last step requires baseline JIT code to have an entry point at each pc
+// where an eventual Ion guard may be inserted.)
+//
+// When C++ code invalidates Ion code, we do on-stack invalidation, or OSI, to
+// arrange for every affected Ion frame on the stack to bail out as soon as
+// control returns to it. OSI patches every instruction in the JIT code that's
+// at a return address currently on the stack. See InvalidateActivation.
+//
+//
+// ## Bailout path implementation details
+//
+// Ion code has a lot of guards, so each bailout path must be small. Steps 2
+// and 3 above are therefore implemented by a shared per-Runtime trampoline,
+// rt->jitRuntime()->getGenericBailoutHandler().
+//
+// Naively, we could implement step 1 like:
+//
+//     _bailout_ID_1:
+//       push 1
+//       jmp _deopt
+//     _bailout_ID_2:
+//       push 2
+//       jmp _deopt
+//     ...
+//     _deopt:
+//       push imm(FrameSize)
+//       call _global_bailout_handler
 //
 // This takes about 10 extra bytes per guard. On some platforms, we can reduce
 // this overhead to 4 bytes by creating a global jump table, shared again in
 // the compartment:
 //
-//     call _global_bailout_handler
-//     call _global_bailout_handler
-//     call _global_bailout_handler
-//     call _global_bailout_handler
-//      ...
-//    _global_bailout_handler:
+//       call _global_bailout_handler
+//       call _global_bailout_handler
+//       call _global_bailout_handler
+//       call _global_bailout_handler
+//       ...
+//     _global_bailout_handler:
 //
 // In the bailout handler, we can recompute which entry in the table was
 // selected by subtracting the return addressed pushed by the call, from the

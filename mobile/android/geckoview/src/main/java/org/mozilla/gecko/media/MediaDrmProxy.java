@@ -82,23 +82,6 @@ public final class MediaDrmProxy {
         return false;
     }
 
-    @WrapForJNI
-    public static boolean CanDecode(String mimeType) {
-        for (int i = 0; i < MediaCodecList.getCodecCount(); ++i) {
-            MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
-            if (info.isEncoder()) {
-                continue;
-            }
-            for (String m : info.getSupportedTypes()) {
-                if (m.equals(mimeType)) {
-                  return true;
-                }
-            }
-        }
-        if (DEBUG) Log.d(LOGTAG, "cannot decode mimetype = " + mimeType);
-        return false;
-    }
-
      // Interface for callback to native.
     public interface Callbacks {
         void onSessionCreated(int createSessionToken,
@@ -297,6 +280,16 @@ public final class MediaDrmProxy {
     @WrapForJNI(calledFrom = "gecko")
     private String getStubId() {
         return mDrmStubId;
+    }
+
+    @WrapForJNI
+    public boolean setServerCertificate(final byte[] cert) {
+        try {
+            mImpl.setServerCertificate(cert);
+            return true;
+        } catch (RuntimeException e) {
+            return false;
+        }
     }
 
     // Get corresponding MediaCrypto object by a generated UUID for MediaCodec.

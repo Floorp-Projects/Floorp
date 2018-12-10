@@ -20,6 +20,9 @@ Unreleased
 - Added new endpoint `GET /session/{session id}/moz/screenshot/full`
   for taking full document screenshots, thanks to Greg Fraley.
 
+- Added new `--marionette-host <HOSTNAME>` flag for binding to a
+  particular interface/IP layer on the system.
+
 # Changed
 
 - Allow file uploads to hidden `<input type=file>` elements

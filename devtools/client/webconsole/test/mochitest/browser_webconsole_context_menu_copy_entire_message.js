@@ -57,6 +57,8 @@ add_task(async function() {
 
   info("Test copy menu item for the stack trace message");
   message = await waitFor(() => findMessage(hud, "console.trace"));
+  // Wait for the stacktrace to be rendered.
+  await waitFor(() => message.querySelector(".frames"));
   clipboardText = await copyMessageContent(hud, message);
   ok(true, "Clipboard text was found and saved");
 

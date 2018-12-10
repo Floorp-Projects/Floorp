@@ -180,12 +180,16 @@
 
 #tracking-protection-icon-box:not([hasException])[active] #tracking-protection-icon-animatable-image {
   background-image: url(chrome://browser/skin/tracking-protection-animation.svg);
-  transform: translateX(-1232px);
-  width: 1248px;
+  transform: translateX(-2816px);
+  width: 2832px;
   background-size: auto;
   height: 16px;
   min-height: 20px;
   -moz-context-properties: fill, fill-opacity;
+}
+
+:root[lwt-toolbar-field-brighttext] #tracking-protection-icon-box:not([hasException])[active] #tracking-protection-icon-animatable-image {
+  background-image: url(chrome://browser/skin/tracking-protection-animation-brighttext.svg);
 }
 
 #tracking-protection-icon-box[active] #tracking-protection-icon-animatable-image:-moz-locale-dir(rtl) {
@@ -194,7 +198,7 @@
 
 #tracking-protection-icon-box[active][animate] #tracking-protection-icon-animatable-image {
   animation-name: tp-icon-animation;
-  animation-timing-function: steps(77);
+  animation-timing-function: steps(176);
   animation-duration: 3s;
   animation-fill-mode: forwards;
 }
@@ -216,63 +220,21 @@
   visibility: collapse;
 }
 
-#tracking-protection-icon-animatable-image {
-  --tracking-protection-shield-color: #7f00d6;
-}
-
-:root[lwt-toolbar-field-brighttext] #tracking-protection-icon-animatable-image {
-  --tracking-protection-shield-color: #c069ff;
-}
-
 @keyframes tp-icon-animation {
   from {
     transform: translateX(0);
-    fill-opacity: 0.3;
   }
-  30% {
-    fill: inherit;
-    fill-opacity: 0.3;
-  }
-  31% {
-    fill: var(--tracking-protection-shield-color);
-    fill-opacity: 1;
-  }
-  50% {
-    transform: translateX(-1232px);
-  }
-  65% {
-    fill: var(--tracking-protection-shield-color);
-    fill-opacity: 1;
-  }
-  to {
-    fill: inherit;
-    fill-opacity: inherit;
+  100% {
+    transform: translateX(-2816px);
   }
 }
 
 @keyframes tp-icon-animation-rtl {
   from {
     transform: scaleX(-1) translateX(0);
-    fill-opacity: 0.3;
   }
-  30% {
-    fill: inherit;
-    fill-opacity: 0.3;
-  }
-  31% {
-    fill: var(--tracking-protection-shield-color);
-    fill-opacity: 1;
-  }
-  50% {
-    transform: scaleX(-1) translateX(-1232px);
-  }
-  65% {
-    fill: var(--tracking-protection-shield-color);
-    fill-opacity: 1;
-  }
-  to {
-    fill: inherit;
-    fill-opacity: inherit;
+  100% {
+    transform: scaleX(-1) translateX(-2816px);
   }
 }
 

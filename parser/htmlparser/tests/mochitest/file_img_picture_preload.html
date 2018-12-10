@@ -39,11 +39,11 @@
     var preloadedImages = [];
     while (preloadedImages.length < EXPECTED_PRELOADS) {
       var request = new XMLHttpRequest();
-      request.open('GET', "./file_img_picture_preload.sjs?status", false);
+      request.open("GET", "./file_img_picture_preload.sjs?status", false);
       request.send(null);
       is(request.status, 200, "Getting status from sjs helper should succeed");
       if (request.status === 200) {
-        var preloadedImages = JSON.parse(request.responseText);
+        preloadedImages = JSON.parse(request.responseText);
       }
     }
 
@@ -142,11 +142,11 @@
       }
 
       // Check all images, ensure each one had a preload
-      var images = document.querySelectorAll('img');
+      var images = document.querySelectorAll("img");
       for (var img of images) {
         var imgName = img.id;
         if (img.currentSrc) {
-          var split = img.currentSrc.split("?")[1].split(":");
+          split = img.currentSrc.split("?")[1].split(":");
           is(split[0], imgName,
              "image " + imgName + " source matches element id");
           is(split[1], preloadByName[imgName],

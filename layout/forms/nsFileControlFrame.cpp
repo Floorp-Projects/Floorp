@@ -302,8 +302,8 @@ void nsFileControlFrame::AppendAnonymousContentTo(
 }
 
 NS_QUERYFRAME_HEAD(nsFileControlFrame)
-NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
+  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
+  NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
 void nsFileControlFrame::SetFocus(bool aOn, bool aRepaint) {}

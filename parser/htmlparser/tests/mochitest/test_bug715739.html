@@ -37,6 +37,7 @@ function tick() {
   runNumber++;
   var f = document.getElementsByTagName("iframe")[0];
   var d = f.contentDocument;
+  var text;
 
   if (runNumber == 1) {
     d.open();
@@ -47,19 +48,19 @@ function tick() {
     d.close();
     return;
   }
-  
+
   if (runNumber == 2) {
-    var text = textChildren(d.body);
+    text = textChildren(d.body);
     is(text, "XYZ", "Wrong text before reload.");
     f.contentWindow.location.reload();
     return;
   }
 
   if (runNumber == 3) {
-    var text = textChildren(d.body);
+    text = textChildren(d.body);
     is(text, "XYZ", "Wrong text after reload.");
     SimpleTest.finish();
-    return;
+
   }
 }
 

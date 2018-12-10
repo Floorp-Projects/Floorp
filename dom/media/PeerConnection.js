@@ -299,7 +299,7 @@ class RTCStatsReport {
   // enumerable read-only properties directly on our content-facing object.
   //
   // In addition, we warn on iteration over isRemote:true entries, which is set
-  // to break in Firefox 65.
+  // to break in Firefox 66.
   //
   // Must be called after our webidl sandwich is made.
 
@@ -538,16 +538,16 @@ class RTCPeerConnection {
 
     // Warn just once per PeerConnection about deprecated getStats usage.
     this._warnDeprecatedStatsAccessNullable = { warn: () =>
-      this.logWarning("non-maplike pc.getStats access is deprecated, and will be removed in the near future! " +
+      this.logWarning("non-maplike pc.getStats access is deprecated, and will be removed in Firefox 66! " +
                       "See http://w3c.github.io/webrtc-pc/#getstats-example for usage.") };
 
     this._warnDeprecatedStatsCallbacksNullable = { warn: () =>
-      this.logWarning("Callback-based pc.getStats is deprecated, and will be removed in the near future! Use promise-version! " +
+      this.logWarning("Callback-based pc.getStats is deprecated, and will be removed in Firefox 66! Use promise-version! " +
                       "See http://w3c.github.io/webrtc-pc/#getstats-example for usage.") };
 
     this._warnDeprecatedStatsRemoteAccessNullable = { warn: (key) =>
-      this.logWarning(`Detected soon-to-break getStats() use with key="${key}"! stat.isRemote goes away in Firefox 65, but won't warn there!\
- - See https://blog.mozilla.org/webrtc/getstats-isremote-65/`) };
+      this.logWarning(`Detected soon-to-break getStats() use with key="${key}"! stat.isRemote goes away in Firefox 66, but won't warn there!\
+ - See https://blog.mozilla.org/webrtc/getstats-isremote-66/`) };
 
     // Add a reference to the PeerConnection to global list (before init).
     _globalPCList.addPC(this);

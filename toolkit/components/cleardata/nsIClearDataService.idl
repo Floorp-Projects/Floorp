@@ -79,6 +79,12 @@ interface nsIClearDataService : nsISupports
   void deleteData(in uint32_t aFlags,
                   in nsIClearDataCallback aCallback);
 
+  /**
+   * Delete all data from an OriginAttributesPatternDictionary.
+   * @param aOriginAttributesPattern the originAttributes dictionary.
+   */
+  void deleteDataFromOriginAttributesPattern(in jsval aOriginAttributesPattern);
+
   /**************************************************************************
    * Listed below are the various flags which may be or'd together.
    */

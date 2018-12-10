@@ -5,7 +5,7 @@ extern crate syn;
 
 use darling::FromDeriveInput;
 
-#[derive(Debug, FromMetaItem)]
+#[derive(Debug, FromMeta)]
 struct Dolor {
     #[darling(rename = "amet")]
     sit: bool,
@@ -33,20 +33,24 @@ impl From<syn::Ident> for Lorem {
 
 #[test]
 fn parsing_fail() {
-    let di = syn::parse_str(r#"
+    let di = syn::parse_str(
+        r#"
         #[hello(ipsum(amet = "yes", world = false))]
         pub struct Foo;
-    "#).unwrap();
+    "#,
+    ).unwrap();
 
     println!("{}", Lorem::from_derive_input(&di).unwrap_err());
 }
 
 #[test]
 fn missing_field() {
-    let di = syn::parse_str(r#"
+    let di = syn::parse_str(
+        r#"
         #[hello(ipsum(amet = true))]
         pub struct Foo;
-    "#).unwrap();
+    "#,
+    ).unwrap();
 
     println!("{}", Lorem::from_derive_input(&di).unwrap_err());
 }

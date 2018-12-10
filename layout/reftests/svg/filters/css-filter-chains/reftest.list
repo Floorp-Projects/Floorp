@@ -2,6 +2,6 @@
 # e.g. filter: blur(3px) grayscale(0.5) invert(0.2);
 
 # Some platforms render this complex filter chain a little differently, and that's ok.
-fuzzy(0-5,0-13638) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&layersGPUAccelerated,0-35,0-13638) fuzzy-if(webrender,4-6,12004-18853) == long-chain.html long-chain-ref.html # Win10: Bug 1258241
+fuzzy(0-5,0-13638) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&layersGPUAccelerated,0-35,0-13638) fuzzy-if(webrender,4-6,12000-18853) == long-chain.html long-chain-ref.html # Win10: Bug 1258241
 == moz-element.html moz-element-ref.html
 == same-filter.html same-filter-ref.html

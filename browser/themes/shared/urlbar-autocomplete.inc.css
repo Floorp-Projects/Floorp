@@ -68,7 +68,7 @@
   color: var(--autocomplete-popup-highlight-color);
 }
 
-.urlbarView-action-icon,
+.urlbarView-type-icon,
 .urlbarView-favicon {
   display: inline-block;
   vertical-align: middle;
@@ -82,7 +82,11 @@
   fill-opacity: 0.6;
 }
 
-.urlbarView-row[action=switch-to-tab] > .urlbarView-row-inner > .urlbarView-action-icon {
+.urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-type-icon {
+  background-image: url(chrome://browser/skin/bookmark.svg);
+}
+
+.urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-type-icon {
   background-image: url(chrome://browser/skin/tab.svg);
 }
 

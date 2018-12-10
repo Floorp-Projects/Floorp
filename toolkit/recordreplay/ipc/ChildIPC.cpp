@@ -414,9 +414,12 @@ void SetVsyncObserver(VsyncObserver* aObserver) {
   gVsyncObserver = aObserver;
 }
 
-static void NotifyVsyncObserver() {
+void NotifyVsyncObserver() {
   if (gVsyncObserver) {
-    gVsyncObserver->NotifyVsync(TimeStamp::Now());
+    static VsyncId vsyncId;
+    vsyncId = vsyncId.Next();
+    VsyncEvent event(vsyncId, TimeStamp::Now());
+    gVsyncObserver->NotifyVsync(event);
   }
 }
 

@@ -40,6 +40,11 @@ _DEBUGGER_INFO = {
         'args': ['-q', '--args']
     },
 
+    'rust-gdb': {
+        'interactive': True,
+        'args': ['-q', '--args']
+    },
+
     'lldb': {
         'interactive': True,
         'args': ['--'],

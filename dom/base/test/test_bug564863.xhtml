@@ -81,11 +81,12 @@ function checkHasId(test) {
 }
 
 function checkHasIdNoGEBI(test) {
-  is(div_cs.color, "rgb(10, 10, 10)", "div color " + test);
-  is(a_cs.color,   "rgb(20, 20, 20)", "a color " + test);
-  is(xul_cs.color, "rgb(30, 30, 30)", "xul color " + test);
-  is(svg_cs.color, "rgb(40, 40, 40)", "svg color " + test);
-  is(nsx_cs.color, "rgb(50, 50, 50)", "nsx color " + test);
+  const connected = test != "removed node";
+  is(div_cs.color, connected ? "rgb(10, 10, 10)" : "", "div color " + test);
+  is(a_cs.color,   connected ? "rgb(20, 20, 20)" : "", "a color " + test);
+  is(xul_cs.color, connected ? "rgb(30, 30, 30)" : "", "xul color " + test);
+  is(svg_cs.color, connected ? "rgb(40, 40, 40)" : "", "svg color " + test);
+  is(nsx_cs.color, connected ? "rgb(50, 50, 50)" : "", "nsx color " + test);
 
   is(div.id, "div_id", "div id " + test);
   is(a.id,   "a_id",   "a id " + test);

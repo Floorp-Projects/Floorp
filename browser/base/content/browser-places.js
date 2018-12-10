@@ -748,7 +748,7 @@ var BookmarksEventHandler = {
       // is middle-clicked or when a non-bookmark item (except for Open in Tabs)
       // in a bookmarks menupopup is middle-clicked.
       if (target.localName == "menu" || target.localName == "toolbarbutton")
-        PlacesUIUtils.openMultipleLinksInTabs(target._placesNode, aEvent, aView);
+        PlacesUIUtils.openContainerNodeInTabs(target._placesNode, aEvent, aView);
     } else if (aEvent.button == 1) {
       // left-clicks with modifier are already served by onCommand
       this.onCommand(aEvent);

@@ -1275,12 +1275,17 @@ pref("browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts", 
 
 // ASRouter provider configuration
 #if defined(NIGHTLY_BUILD)
-pref("browser.newtabpage.activity-stream.asrouter.providers.snippets", "{\"id\":\"snippets\",\"enabled\":true,\"type\":\"remote\",\"url\":\"https://snippets.cdn.mozilla.net/%STARTPAGE_VERSION%/%NAME%/%VERSION%/%APPBUILDID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/\",\"updateCycleInMs\":14400000}");
 pref("browser.newtabpage.activity-stream.asrouter.providers.cfr", "{\"id\":\"cfr\",\"enabled\":true,\"type\":\"local\",\"localProvider\":\"CFRMessageProvider\",\"frequency\":{\"custom\":[{\"period\":\"daily\",\"cap\":1}]}}");
 #else
-pref("browser.newtabpage.activity-stream.asrouter.providers.snippets", "{\"id\":\"snippets\",\"enabled\":false,\"type\":\"remote\",\"url\":\"https://snippets.cdn.mozilla.net/%STARTPAGE_VERSION%/%NAME%/%VERSION%/%APPBUILDID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/\",\"updateCycleInMs\":14400000}");
 pref("browser.newtabpage.activity-stream.asrouter.providers.cfr", "{\"id\":\"cfr\",\"enabled\":false,\"type\":\"local\",\"localProvider\":\"CFRMessageProvider\",\"frequency\":{\"custom\":[{\"period\":\"daily\",\"cap\":1}]}}");
 #endif
+
+#ifdef EARLY_BETA_OR_EARLIER
+pref("browser.newtabpage.activity-stream.asrouter.providers.snippets", "{\"id\":\"snippets\",\"enabled\":true,\"type\":\"remote\",\"url\":\"https://snippets.cdn.mozilla.net/%STARTPAGE_VERSION%/%NAME%/%VERSION%/%APPBUILDID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/\",\"updateCycleInMs\":14400000}");
+#else
+pref("browser.newtabpage.activity-stream.asrouter.providers.snippets", "{\"id\":\"snippets\",\"enabled\":false,\"type\":\"remote\",\"url\":\"https://snippets.cdn.mozilla.net/%STARTPAGE_VERSION%/%NAME%/%VERSION%/%APPBUILDID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/\",\"updateCycleInMs\":14400000}");
+#endif
+
 
 
 // Enable the DOM fullscreen API.
@@ -1349,44 +1354,21 @@ pref("dom.debug.propagate_gesture_events_through_content", false);
 
 // All the Geolocation preferences are here.
 //
-
-// Geolocation preferences for the RELEASE and "later" Beta channels.
-// Some of these prefs are specified even though they are redundant; they are
-// here for clarity and end-user experiments.
-#ifndef EARLY_BETA_OR_EARLIER
 pref("geo.wifi.uri", "https://www.googleapis.com/geolocation/v1/geolocate?key=%GOOGLE_API_KEY%");
-
-#ifdef XP_MACOSX
-pref("geo.provider.use_corelocation", false);
-#endif
-
-#ifdef XP_WIN
-pref("geo.provider.ms-windows-location", false);
-#endif
-
-#ifdef MOZ_WIDGET_GTK
-pref("geo.provider.use_gpsd", false);
-#endif
-
-#else
-
-// Geolocation preferences for Nightly/Aurora/Beta.
-pref("geo.wifi.uri", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
+// MLS URL:
+// pref("geo.wifi.uri", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
 
 #ifdef XP_MACOSX
 pref("geo.provider.use_corelocation", true);
 #endif
 
-// The native Windows location provider is only enabled in Nightly and likely to
-// be unstable. Set to false if things are really broken.
-#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+// Set to false if things are really broken.
+#ifdef XP_WIN
 pref("geo.provider.ms-windows-location", true);
 #endif
 
 #if defined(MOZ_WIDGET_GTK) && defined(MOZ_GPSD)
 pref("geo.provider.use_gpsd", true);
-#endif
-
 #endif
 
 // CustomizableUI debug logging.
@@ -1539,6 +1521,7 @@ pref("dom.storage_access.max_concurrent_auto_grants", 5);
 pref("browser.contentblocking.trackingprotection.control-center.ui.enabled", true);
 pref("browser.contentblocking.rejecttrackers.control-center.ui.enabled", true);
 
+pref("browser.contentblocking.control-center.ui.showBlockedLabels", false);
 pref("browser.contentblocking.control-center.ui.showAllowedLabels", false);
 
 // Enable the Report Breakage UI on Nightly and Beta but not on Release yet.

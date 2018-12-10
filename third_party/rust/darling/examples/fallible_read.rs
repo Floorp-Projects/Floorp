@@ -10,7 +10,7 @@ extern crate darling;
 
 extern crate syn;
 
-use darling::{FromDeriveInput, FromMetaItem};
+use darling::{FromDeriveInput, FromMeta};
 use syn::parse_str;
 
 #[derive(Debug, FromDeriveInput)]
@@ -36,14 +36,18 @@ impl MyInputReceiver {
     /// skipped fields or to perform corrections that don't lend themselves to being
     /// done elsewhere.
     fn autocorrect(self) -> Self {
-        let Self { name, frequency, amplitude } = self;
+        let Self {
+            name,
+            frequency,
+            amplitude,
+        } = self;
 
         // Amplitude doesn't have a sign, so if we received a negative number then
         // we'll go ahead and make it positive.
         let amplitude = match amplitude {
             Ok(amp) => amp,
             Err(mi) => {
-                let val: i64 = if let Ok(v) = FromMetaItem::from_meta_item(&mi) {
+                let val: i64 = if let Ok(v) = FromMeta::from_meta(&mi) {
                     v
                 } else {
                     panic!(format!("amplitude should have been an integer"))
@@ -69,7 +73,8 @@ pub struct Foo;"#;
     let parsed = parse_str(input).unwrap();
     let receiver = MyInputReceiver::from_derive_input(&parsed).unwrap();
 
-    println!(r#"
+    println!(
+        r#"
 INPUT:
 
 {}
@@ -77,5 +82,7 @@ INPUT:
 PARSED AS:
 
 {:?}
-    "#, input, receiver);
+    "#,
+        input, receiver
+    );
 }

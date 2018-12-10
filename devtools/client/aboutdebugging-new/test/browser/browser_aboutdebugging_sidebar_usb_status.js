@@ -4,7 +4,7 @@
 "use strict";
 
 const { adbAddon } = require("devtools/shared/adb/adb-addon");
-const { ADB } = require("devtools/shared/adb/adb");
+const { adbProcess } = require("devtools/shared/adb/adb-process");
 
 /**
  * This test asserts that the sidebar shows a message describing the status of the USB
@@ -31,7 +31,7 @@ add_task(async function() {
   // fail and we will have an unhandled promise rejection.
   // See Bug 1498469.
   info("Wait until ADB has started.");
-  await waitUntil(() => ADB.ready);
+  await waitUntil(() => adbProcess.ready);
 
   info("Uninstall the adb extension and wait for the message to udpate");
   adbAddon.uninstall();

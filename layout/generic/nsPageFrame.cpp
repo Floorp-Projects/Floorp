@@ -35,7 +35,7 @@ nsPageFrame* NS_NewPageFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
 NS_IMPL_FRAMEARENA_HELPERS(nsPageFrame)
 
 NS_QUERYFRAME_HEAD(nsPageFrame)
-NS_QUERYFRAME_ENTRY(nsPageFrame)
+  NS_QUERYFRAME_ENTRY(nsPageFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 nsPageFrame::nsPageFrame(ComputedStyle* aStyle)

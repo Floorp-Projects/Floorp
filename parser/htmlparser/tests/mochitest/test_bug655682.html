@@ -62,7 +62,7 @@ function probe() {
       setTimeout(probe, 0);
       return;
     case 2:
-      is(tdsSeen, 1, "Should have seen one td before seeing two.");      
+      is(tdsSeen, 1, "Should have seen one td before seeing two.");
       finishedTesting = true;
       tryFinishTest();
       return;

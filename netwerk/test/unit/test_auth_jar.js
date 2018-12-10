@@ -23,8 +23,7 @@ function run_test() {
   am.setAuthIdentity("http", "a.example.com", -1, "basic", "realm", "", "example.com", "user3", "pass3", false, app1browser);
   am.setAuthIdentity("http", "a.example.com", -1, "basic", "realm", "", "example.com", "user2", "pass2", false, app10);
 
-  let attrs_inBrowser = JSON.stringify({ appId:1, inIsolatedMozBrowser:true });
-  Services.obs.notifyObservers(null, "clear-origin-attributes-data", attrs_inBrowser);
+  Services.clearData.deleteDataFromOriginAttributesPattern({ appId:1, inIsolatedMozBrowser:true });
   
   var domain = {value: ""}, user = {value: ""}, pass = {value: ""};
   try {

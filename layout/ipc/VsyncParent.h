@@ -34,14 +34,14 @@ class VsyncParent final : public PVsyncParent, public VsyncObserver {
   VsyncParent();
   virtual ~VsyncParent();
 
-  virtual bool NotifyVsync(TimeStamp aTimeStamp) override;
+  virtual bool NotifyVsync(const VsyncEvent& aVsync) override;
   virtual mozilla::ipc::IPCResult RecvRequestVsyncRate() override;
 
   virtual mozilla::ipc::IPCResult RecvObserve() override;
   virtual mozilla::ipc::IPCResult RecvUnobserve() override;
   virtual void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;
 
-  void DispatchVsyncEvent(TimeStamp aTimeStamp);
+  void DispatchVsyncEvent(const VsyncEvent& aVsync);
 
   bool mObservingVsync;
   bool mDestroyed;

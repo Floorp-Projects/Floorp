@@ -324,11 +324,18 @@ void KeyframeEffect::UpdateProperties(const ComputedStyle* aStyle) {
 
   nsTArray<AnimationProperty> properties = BuildProperties(aStyle);
 
+  bool propertiesChanged = mProperties != properties;
+
   // We need to update base styles even if any properties are not changed at all
   // since base styles might have been changed due to parent style changes, etc.
-  EnsureBaseStyles(aStyle, properties);
+  bool baseStylesChanged = false;
+  EnsureBaseStyles(aStyle, properties,
+                   !propertiesChanged ? &baseStylesChanged : nullptr);
 
-  if (mProperties == properties) {
+  if (!propertiesChanged) {
+    if (baseStylesChanged) {
+      RequestRestyle(EffectCompositor::RestyleType::Layer);
+    }
     return;
   }
 
@@ -358,12 +365,21 @@ void KeyframeEffect::UpdateProperties(const ComputedStyle* aStyle) {
 
 void KeyframeEffect::EnsureBaseStyles(
     const ComputedStyle* aComputedValues,
-    const nsTArray<AnimationProperty>& aProperties) {
+    const nsTArray<AnimationProperty>& aProperties, bool* aBaseStylesChanged) {
+  if (aBaseStylesChanged != nullptr) {
+    *aBaseStylesChanged = false;
+  }
+
   if (!mTarget) {
     return;
   }
 
-  mBaseStyleValuesForServo.Clear();
+  BaseValuesHashmap previousBaseStyles;
+  if (aBaseStylesChanged != nullptr) {
+    previousBaseStyles = std::move(mBaseValues);
+  }
+
+  mBaseValues.Clear();
 
   nsPresContext* presContext =
       nsContentUtils::GetContextForContent(mTarget->mElement);
@@ -384,6 +400,16 @@ void KeyframeEffect::EnsureBaseStyles(
   RefPtr<ComputedStyle> baseComputedStyle;
   for (const AnimationProperty& property : aProperties) {
     EnsureBaseStyle(property, presContext, aComputedValues, baseComputedStyle);
+  }
+
+  if (aBaseStylesChanged != nullptr) {
+    for (auto iter = mBaseValues.Iter(); !iter.Done(); iter.Next()) {
+      if (AnimationValue(iter.Data()) !=
+          AnimationValue(previousBaseStyles.Get(iter.Key()))) {
+        *aBaseStylesChanged = true;
+        break;
+      }
+    }
   }
 }
 
@@ -414,7 +440,7 @@ void KeyframeEffect::EnsureBaseStyle(
       Servo_ComputedValues_ExtractAnimationValue(aBaseComputedStyle,
                                                  aProperty.mProperty)
           .Consume();
-  mBaseStyleValuesForServo.Put(aProperty.mProperty, baseValue);
+  mBaseValues.Put(aProperty.mProperty, baseValue);
 }
 
 void KeyframeEffect::WillComposeStyle() {
@@ -428,10 +454,9 @@ void KeyframeEffect::ComposeStyleRule(
     const AnimationProperty& aProperty,
     const AnimationPropertySegment& aSegment,
     const ComputedTiming& aComputedTiming) {
-  Servo_AnimationCompose(&aAnimationValues, &mBaseStyleValuesForServo,
-                         aProperty.mProperty, &aSegment,
-                         &aProperty.mSegments.LastElement(), &aComputedTiming,
-                         mEffectOptions.mIterationComposite);
+  Servo_AnimationCompose(&aAnimationValues, &mBaseValues, aProperty.mProperty,
+                         &aSegment, &aProperty.mSegments.LastElement(),
+                         &aComputedTiming, mEffectOptions.mIterationComposite);
 }
 
 void KeyframeEffect::ComposeStyle(RawServoAnimationValueMap& aComposeResult,
@@ -1056,7 +1081,7 @@ void KeyframeEffect::GetKeyframes(JSContext*& aCx, nsTArray<JSObject*>& aResult,
             &stringValue, computedStyle, customProperties);
       } else {
         RawServoAnimationValue* value =
-            mBaseStyleValuesForServo.GetWeak(propertyValue.mProperty);
+            mBaseValues.GetWeak(propertyValue.mProperty);
 
         if (value) {
           Servo_AnimationValue_Serialize(value, propertyValue.mProperty,

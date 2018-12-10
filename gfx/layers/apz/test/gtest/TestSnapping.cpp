@@ -26,7 +26,7 @@ TEST_F(APZCSnappingTester, Bug1265510) {
   SetScrollHandoff(layers[1], root);
 
   ScrollSnapInfo snap;
-  snap.mScrollSnapTypeY = NS_STYLE_SCROLL_SNAP_TYPE_MANDATORY;
+  snap.mScrollSnapTypeY = StyleScrollSnapType::Mandatory;
   snap.mScrollSnapIntervalY = Some(100 * AppUnitsPerCSSPixel());
 
   ScrollMetadata metadata = root->GetScrollMetadata(0);
@@ -96,7 +96,7 @@ TEST_F(APZCSnappingTester, Snap_After_Pinch) {
 
   // Set up some basic scroll snapping
   ScrollSnapInfo snap;
-  snap.mScrollSnapTypeY = NS_STYLE_SCROLL_SNAP_TYPE_MANDATORY;
+  snap.mScrollSnapTypeY = StyleScrollSnapType::Mandatory;
   snap.mScrollSnapIntervalY = Some(100 * AppUnitsPerCSSPixel());
 
   // Save the scroll snap info on the root APZC.
