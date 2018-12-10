@@ -124,21 +124,17 @@ using JS::SourceText;
 #define JS_ADDRESSOF_VA_LIST(ap) (&(ap))
 #endif
 
-JS_PUBLIC_API bool JS::CallArgs::requireAtLeast(JSContext* cx,
-                                                const char* fnname,
-                                                unsigned required) const {
-  if (length() < required) {
-    char requiredArgsStr[40];
-    SprintfLiteral(requiredArgsStr, "%u", required);
-    char actualArgsStr[40];
-    SprintfLiteral(actualArgsStr, "%u", length());
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_MORE_ARGS_NEEDED, fnname, requiredArgsStr,
-                              required == 1 ? "" : "s", actualArgsStr);
-    return false;
-  }
-
-  return true;
+JS_PUBLIC_API void JS::CallArgs::reportMoreArgsNeeded(JSContext* cx,
+                                                      const char* fnname,
+                                                      unsigned required,
+                                                      unsigned actual) {
+  char requiredArgsStr[40];
+  SprintfLiteral(requiredArgsStr, "%u", required);
+  char actualArgsStr[40];
+  SprintfLiteral(actualArgsStr, "%u", actual);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_MORE_ARGS_NEEDED, fnname, requiredArgsStr,
+                            required == 1 ? "" : "s", actualArgsStr);
 }
 
 static bool ErrorTakesArguments(unsigned msg) {
