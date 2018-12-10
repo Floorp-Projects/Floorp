@@ -261,9 +261,13 @@ mozilla::ipc::IPCResult WyciwygChannelParent::RecvSetCharsetAndSource(
 
 mozilla::ipc::IPCResult WyciwygChannelParent::RecvSetSecurityInfo(
     const nsCString& aSecurityInfo) {
+  nsresult rv;
   if (mChannel) {
     nsCOMPtr<nsISupports> securityInfo;
-    NS_DeserializeObject(aSecurityInfo, getter_AddRefs(securityInfo));
+    rv = NS_DeserializeObject(aSecurityInfo, getter_AddRefs(securityInfo));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
+                          "Deserializing security info should not fail");
+    Unused << rv;  // So we don't get an unused error in release builds.
     mChannel->SetSecurityInfo(securityInfo);
   }
 

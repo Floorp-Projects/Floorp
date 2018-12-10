@@ -546,8 +546,11 @@ void HttpChannelChild::OnStartRequest(
     mResponseHead = new nsHttpResponseHead(responseHead);
 
   if (!securityInfoSerialization.IsEmpty()) {
-    NS_DeserializeObject(securityInfoSerialization,
-                         getter_AddRefs(mSecurityInfo));
+    nsresult rv = NS_DeserializeObject(securityInfoSerialization,
+                                       getter_AddRefs(mSecurityInfo));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
+                          "Deserializing security info should not fail");
+    Unused << rv;  // So we don't get an unused error in release builds.
   }
 
   ipc::MergeParentLoadInfoForwarder(loadInfoForwarder, mLoadInfo);
@@ -1666,8 +1669,10 @@ void HttpChannelChild::Redirect1Begin(
                               kCacheUnknown, &mTransactionTimings, uri);
 
   if (!securityInfoSerialization.IsEmpty()) {
-    NS_DeserializeObject(securityInfoSerialization,
-                         getter_AddRefs(mSecurityInfo));
+    rv = NS_DeserializeObject(securityInfoSerialization,
+                              getter_AddRefs(mSecurityInfo));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
+                          "Deserializing security info should not fail");
   }
 
   nsCOMPtr<nsIChannel> newChannel;

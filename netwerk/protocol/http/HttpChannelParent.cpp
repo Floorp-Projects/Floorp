@@ -556,7 +556,10 @@ bool HttpChannelParent::DoAsyncOpen(
 
     if (!aSecurityInfoSerialization.IsEmpty()) {
       nsCOMPtr<nsISupports> secInfo;
-      NS_DeserializeObject(aSecurityInfoSerialization, getter_AddRefs(secInfo));
+      rv = NS_DeserializeObject(aSecurityInfoSerialization,
+                                getter_AddRefs(secInfo));
+      MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
+                            "Deserializing security info should not fail");
       rv = httpChannel->OverrideSecurityInfo(secInfo);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
