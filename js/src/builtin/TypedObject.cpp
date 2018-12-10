@@ -224,10 +224,7 @@ uint32_t ScalarTypeDescr::alignment(Type t) {
 
 bool ScalarTypeDescr::call(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  if (args.length() < 1) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_MORE_ARGS_NEEDED,
-                              args.callee().getClass()->name, "0", "s");
+  if (!args.requireAtLeast(cx, args.callee().getClass()->name, 1)) {
     return false;
   }
 
@@ -370,10 +367,7 @@ bool js::ReferenceTypeDescr::call(JSContext* cx, unsigned argc, Value* vp) {
   Rooted<ReferenceTypeDescr*> descr(cx,
                                     &args.callee().as<ReferenceTypeDescr>());
 
-  if (args.length() < 1) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_MORE_ARGS_NEEDED, descr->typeName(), "0",
-                              "s");
+  if (!args.requireAtLeast(cx, descr->typeName(), 1)) {
     return false;
   }
 
@@ -615,9 +609,7 @@ bool ArrayMetaTypeDescr::construct(JSContext* cx, unsigned argc, Value* vp) {
   RootedObject arrayTypeGlobal(cx, &args.callee());
 
   // Expect two arguments. The first is a type object, the second is a length.
-  if (args.length() < 2) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_MORE_ARGS_NEEDED, "ArrayType", "1", "");
+  if (!args.requireAtLeast(cx, "ArrayType", 2)) {
     return false;
   }
 

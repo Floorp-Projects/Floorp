@@ -1107,20 +1107,21 @@ nsPoint nsMenuPopupFrame::AdjustPositionForAnchorAlign(nsRect& anchorRect,
 nsIFrame* nsMenuPopupFrame::GetSelectedItemForAlignment() {
   // This method adjusts a menulist's popup such that the selected item is under
   // the cursor, aligned with the menulist label.
-  nsCOMPtr<nsIDOMXULSelectControlElement> select =
-      do_QueryInterface(mAnchorContent);
+  nsCOMPtr<nsIDOMXULSelectControlElement> select;
+  if (mAnchorContent) {
+    select = mAnchorContent->AsElement()->AsXULSelectControl();
+  }
+
   if (!select) {
     // If there isn't an anchor, then try just getting the parent of the popup.
-    select = do_QueryInterface(mContent->GetParent());
+    select = mContent->GetParent()->AsElement()->AsXULSelectControl();
     if (!select) {
       return nullptr;
     }
   }
 
-  nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
-  select->GetSelectedItem(getter_AddRefs(item));
-
-  nsCOMPtr<nsIContent> selectedElement = do_QueryInterface(item);
+  nsCOMPtr<Element> selectedElement;
+  select->GetSelectedItem(getter_AddRefs(selectedElement));
   return selectedElement ? selectedElement->GetPrimaryFrame() : nullptr;
 }
 

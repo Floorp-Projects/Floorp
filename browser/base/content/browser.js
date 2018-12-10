@@ -6825,7 +6825,7 @@ var CanvasPermissionPromptHelper = {
       let contentWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
       browser = contentWindow.docShell.chromeEventHandler;
     } else {
-      browser = aSubject.QueryInterface(Ci.nsIBrowser);
+      browser = aSubject;
     }
 
     let uri = Services.io.newURI(aData);

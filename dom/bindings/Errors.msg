@@ -23,7 +23,7 @@
  */
 
 MSG_DEF(MSG_INVALID_ENUM_VALUE, 3, JSEXN_TYPEERR, "{0} '{1}' is not a valid value for enumeration {2}.")
-MSG_DEF(MSG_MISSING_ARGUMENTS, 1, JSEXN_TYPEERR, "Not enough arguments to {0}.")
+MSG_DEF(MSG_INVALID_OVERLOAD_ARGCOUNT, 2, JSEXN_TYPEERR, "{1} is not a valid argument count for any overload of {0}.")
 MSG_DEF(MSG_NOT_OBJECT, 1, JSEXN_TYPEERR, "{0} is not an object.")
 MSG_DEF(MSG_NOT_CALLABLE, 1, JSEXN_TYPEERR, "{0} is not callable.")
 MSG_DEF(MSG_NOT_CONSTRUCTOR, 1, JSEXN_TYPEERR, "{0} is not a constructor.")
