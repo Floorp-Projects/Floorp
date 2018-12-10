@@ -80,7 +80,7 @@ class DeviceRunner(BaseRunner):
         timeout = 10  # seconds
         end_time = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
         while not self.is_running() and datetime.datetime.now() < end_time:
-            time.sleep(.1)
+            time.sleep(.5)
         if not self.is_running():
             print("timed out waiting for '%s' process to start" % self.app_ctx.remote_process)
 
@@ -131,7 +131,7 @@ class DeviceRunner(BaseRunner):
         while self.is_running():
             if end_time is not None and datetime.datetime.now() > end_time:
                 break
-            time.sleep(.1)
+            time.sleep(.5)
 
         return self.returncode
 
