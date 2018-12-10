@@ -133,27 +133,27 @@ job-template:
             linux.*:    # linux64 and 32 get same treatment here
                 EN_US_PACKAGE_NAME: target.tar.bz2
                 EN_US_BINARY_URL:
-                    task-reference: https://queue.taskcluster.net/v1/task/<build-signing>/artifacts/{artifact_prefix}
+                    artifact-reference: <build-signing/artifacts/{artifact_prefix}>
                 MAR_TOOLS_URL:
-                    task-reference: https://queue.taskcluster.net/v1/task/<build>/artifacts/{artifact_prefix}/host/bin
+                    artifact-reference: <build/artifacts/{artifact_prefix}/host/bin>
             macosx64.*:
                 EN_US_PACKAGE_NAME: target.dmg
                 EN_US_BINARY_URL:
-                    task-reference: https://queue.taskcluster.net/v1/task/<repackage>/artifacts/{artifact_prefix}
+                    artifact-reference: <repackage/artifacts/{artifact_prefix}>
                 MAR_TOOLS_URL:
-                    task-reference: https://queue.taskcluster.net/v1/task/<build>/artifacts/{artifact_prefix}/host/bin
+                    artifact-reference: <build/artifacts/{artifact_prefix}/host/bin>
             win.*:
                 EN_US_PACKAGE_NAME: target.zip
                 EN_US_BINARY_URL:
-                    task-reference: https://queue.taskcluster.net/v1/task/<build-signing>/artifacts/{artifact_prefix}
+                    artifact-reference: <build-signing/artifacts/{artifact_prefix}>
                 EN_US_INSTALLER_BINARY_URL:
-                    task-reference: https://queue.taskcluster.net/v1/task/<repackage-signing>/artifacts/{artifact_prefix}
+                    artifact-reference: <repackage-signing/artifacts/{artifact_prefix}>
                 MAR_TOOLS_URL:
-                    task-reference: https://queue.taskcluster.net/v1/task/<build>/artifacts/{artifact_prefix}/host/bin
+                    artifact-reference: <build/artifacts/{artifact_prefix}/host/bin>
             android-api-16-nightly:
                 EN_US_PACKAGE_NAME: target.apk
                 EN_US_BINARY_URL:
-                    task-reference: https://queue.taskcluster.net/v1/task/<build>/artifacts/{artifact_prefix}/en-US
+                    artifact-reference: <build/artifacts/{artifact_prefix}/en-US>
     mozharness:
         config:
             by-build-platform:
