@@ -967,11 +967,13 @@ void MediaDecoder::UpdateVideoDecodeMode() {
     return;
   }
 
-  // If an element is in-tree with UNTRACKED visibility, the visibility is
-  // incomplete and don't update the video decode mode.
+  // If the element is in-tree with UNTRACKED visibility, that means the element
+  // is not close enough to the viewport so we have not start to update its
+  // visibility. In this case, it's equals to invisible.
   if (mIsElementInTree && mElementVisibility == Visibility::UNTRACKED) {
-    LOG("UpdateVideoDecodeMode(), early return because we have incomplete "
-        "visibility states.");
+    LOG("UpdateVideoDecodeMode(), set Suspend because element hasn't be "
+        "updated visibility state.");
+    mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Suspend);
     return;
   }
 
