@@ -645,6 +645,10 @@ win64-ccov/debug:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
+        artifacts:
+            - name: public/code-coverage-grcov.zip
+              path: build\src\obj-firefox\code-coverage-grcov.zip
+              type: file
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
