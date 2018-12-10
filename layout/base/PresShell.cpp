@@ -775,7 +775,6 @@ PresShell::PresShell()
       mApproximateFrameVisibilityVisited(false),
       mNextPaintCompressed(false),
       mHasCSSBackgroundColor(false),
-      mScaleToResolution(false),
       mIsLastChromeOnlyEscapeKeyConsumed(false),
       mHasReceivedPaintMessage(false),
       mIsLastKeyDownCanceled(false),
@@ -5103,9 +5102,8 @@ void PresShell::SetIgnoreViewportScrolling(bool aIgnore) {
   SetRenderingState(state);
 }
 
-nsresult PresShell::SetResolutionImpl(float aResolution,
-                                      bool aScaleToResolution,
-                                      nsAtom* aOrigin) {
+nsresult PresShell::SetResolutionAndScaleTo(float aResolution,
+                                            nsAtom* aOrigin) {
   if (!(aResolution > 0.0)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
@@ -5116,7 +5114,6 @@ nsresult PresShell::SetResolutionImpl(float aResolution,
   RenderingState state(this);
   state.mResolution = Some(aResolution);
   SetRenderingState(state);
-  mScaleToResolution = aScaleToResolution;
   if (mMobileViewportManager) {
     mMobileViewportManager->ResolutionUpdated();
   }
@@ -5126,8 +5123,6 @@ nsresult PresShell::SetResolutionImpl(float aResolution,
 
   return NS_OK;
 }
-
-bool PresShell::ScaleToResolution() const { return mScaleToResolution; }
 
 float PresShell::GetCumulativeResolution() {
   float resolution = GetResolution();
@@ -5144,9 +5139,7 @@ float PresShell::GetCumulativeNonRootScaleResolution() {
   while (currentShell) {
     nsPresContext* currentCtx = currentShell->GetPresContext();
     if (currentCtx != currentCtx->GetRootPresContext()) {
-      resolution *= currentShell->ScaleToResolution()
-                        ? currentShell->GetResolution()
-                        : 1.0f;
+      resolution *= currentShell->GetResolution();
     }
     nsPresContext* parentCtx = currentCtx->GetParentPresContext();
     if (parentCtx) {

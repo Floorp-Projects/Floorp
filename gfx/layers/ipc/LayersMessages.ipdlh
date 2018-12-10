@@ -286,7 +286,6 @@ struct ContainerLayerAttributes {
   float inheritedXScale;
   float inheritedYScale;
   float presShellResolution;
-  bool scaleToResolution;
 };
 
 struct GlyphArray
