@@ -335,7 +335,8 @@
               // react to pressing enter as a command, so you can't trigger the
               // default without tabbing to it or something that isn't a button.
               let focusedDefault = (event.originalTarget == defaultButton);
-              let someButtonFocused = event.originalTarget instanceof Ci.nsIDOMXULButtonElement;
+              let someButtonFocused = event.originalTarget.localName == "button" ||
+                                      event.originalTarget.localName == "toolbarbutton";
               defaultButton.setAttribute("default", focusedDefault || !someButtonFocused);
             }
         </handler>
