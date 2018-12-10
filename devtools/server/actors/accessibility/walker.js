@@ -500,12 +500,14 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     // highlighter temporarily modifies text color related CSS properties. In case where
     // there are transitions that affect them, there might be unexpected side effects when
     // taking a snapshot for contrast measurement)
-    loadSheet(this.rootWin, HIGHLIGHTER_STYLES_SHEET);
+    const { DOMNode: rawNode } = accessible.rawAccessible;
+    const win = rawNode.ownerGlobal;
+    loadSheet(win, HIGHLIGHTER_STYLES_SHEET);
     const { audit, name, role } = accessible;
-    const shown = this.highlighter.show({ rawNode: accessible.rawAccessible.DOMNode },
-                                      { ...options, ...bounds, name, role, audit });
+    const shown = this.highlighter.show({ rawNode },
+                                        { ...options, ...bounds, name, role, audit });
     // Re-enable transitions.
-    removeSheet(this.rootWin, HIGHLIGHTER_STYLES_SHEET);
+    removeSheet(win, HIGHLIGHTER_STYLES_SHEET);
     return shown;
   },
 
