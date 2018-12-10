@@ -176,8 +176,6 @@ tps_result\.json
 # Ignore Visual Studio Code workspace files.
 \.vscode/(?!extensions\.json|tasks\.json)
 
-subinclude:servo/.hgignore
-
 # Ignore Infer output
 ^infer-out/
 
