@@ -23,7 +23,6 @@ DIRS += [
     'performance-new',
     'platform',
     'protocol',
-    'pretty-fast',
     'qrcode',
     'screenshot',
     'security',

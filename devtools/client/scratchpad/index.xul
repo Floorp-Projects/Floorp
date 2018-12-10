@@ -56,7 +56,6 @@
   <command id="sp-cmd-run" oncommand=";"/>
   <command id="sp-cmd-inspect" oncommand=";"/>
   <command id="sp-cmd-display" oncommand=";"/>
-  <command id="sp-cmd-pprint" oncommand=";"/>
   <command id="sp-cmd-contentContext" oncommand=";"/>
   <command id="sp-cmd-browserContext" oncommand=";" disabled="true"/>
   <command id="sp-cmd-reloadAndRun" oncommand=";"/>
@@ -111,10 +110,6 @@
   <key id="sp-key-display"
        key="&display.key;"
        command="sp-cmd-display"
-       modifiers="accel"/>
-  <key id="sp-key-pprint"
-       key="&pprint.key;"
-       command="sp-cmd-pprint"
        modifiers="accel"/>
   <key id="sp-key-reloadAndRun"
        key="&reloadAndRun.key;"
@@ -223,11 +218,6 @@
           accesskey="&gotoLineCmd.accesskey;"
           key="key_gotoLine"
           command="cmd_gotoLine"/>
-      <menuitem id="sp-menu-pprint"
-          label="&pprint.label;"
-          accesskey="&pprint.accesskey;"
-          key="sp-key-pprint"
-          command="sp-cmd-pprint"/>
     </menupopup>
   </menu>
 
@@ -360,11 +350,6 @@
                  class="devtools-toolbarbutton"
                  label="&display.label;"
                  command="sp-cmd-display"/>
-  <toolbarspacer/>
-  <toolbarbutton id="sp-toolbar-pprint"
-                 class="devtools-toolbarbutton"
-                 label="&pprint.label;"
-                 command="sp-cmd-pprint"/>
 </toolbar>
 
 
