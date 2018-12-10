@@ -194,15 +194,15 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "ProgressEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "PushEvent",
+    { name: "PushEvent", fennecOrDesktop: true },
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "PushManager",
+    { name: "PushManager", fennecOrDesktop: true },
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "PushMessageData",
+    { name: "PushMessageData", fennecOrDesktop: true },
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "PushSubscription",
+    { name: "PushSubscription", fennecOrDesktop: true },
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "PushSubscriptionOptions",
+    { name: "PushSubscriptionOptions", fennecOrDesktop: true },
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Request",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -239,12 +239,7 @@ var interfaceNamesInGlobalScope =
   ];
 // IMPORTANT: Do not change the list above without review from a DOM peer!
 
-function createInterfaceMap(version, userAgent) {
-  var isNightly = version.endsWith("a1");
-  var isRelease = !version.includes("a");
-  var isDesktop = !/Mobile|Tablet/.test(userAgent);
-  var isAndroid = !!navigator.userAgent.includes("Android");
-
+function createInterfaceMap({ version, isNightly, isRelease, isDesktop, isAndroid, isInsecureContext, isFennec }) {
   var interfaceMap = {};
 
   function addInterfaces(interfaces)
@@ -259,6 +254,7 @@ function createInterfaceMap(version, userAgent) {
             (entry.nonReleaseAndroid === !(isAndroid && !isRelease) && isAndroid) ||
             (entry.desktop === !isDesktop) ||
             (entry.android === !isAndroid && !entry.nonReleaseAndroid && !entry.nightlyAndroid) ||
+            (entry.fennecOrDesktop === (isAndroid && !isFennec)) ||
             (entry.release === !isRelease) ||
             entry.disabled) {
           interfaceMap[entry.name] = false;
@@ -277,8 +273,8 @@ function createInterfaceMap(version, userAgent) {
   return interfaceMap;
 }
 
-function runTest(version, userAgent) {
-  var interfaceMap = createInterfaceMap(version, userAgent);
+function runTest(data) {
+  var interfaceMap = createInterfaceMap(data);
   for (var name of Object.getOwnPropertyNames(self)) {
     // An interface name should start with an upper case character.
     if (!/^[A-Z]/.test(name)) {
@@ -305,9 +301,7 @@ function runTest(version, userAgent) {
      "The following interface(s) are not enumerated: " + Object.keys(interfaceMap).join(", "));
 }
 
-workerTestGetVersion(function(version) {
-  workerTestGetUserAgent(function(userAgent) {
-    runTest(version, userAgent);
-    workerTestDone();
-  });
+workerTestGetHelperData(function(data) {
+  runTest(data);
+  workerTestDone();
 });
