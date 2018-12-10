@@ -454,6 +454,10 @@ class BaseContext {
   }
 
   setContentWindow(contentWindow) {
+    if (!this.canAccessWindow(contentWindow)) {
+      throw new Error("BaseContext attempted to load when extension is not allowed due to incognito settings.");
+    }
+
     this.innerWindowID = getInnerWindowID(contentWindow);
     this.messageManager = contentWindow.docShell.messageManager;
 
