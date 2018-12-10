@@ -2205,15 +2205,13 @@ class ContainerLayer : public Layer {
     Mutated();
   }
 
-  void SetScaleToResolution(bool aScaleToResolution, float aResolution) {
-    if (mScaleToResolution == aScaleToResolution &&
-        mPresShellResolution == aResolution) {
+  void SetScaleToResolution(float aResolution) {
+    if (mPresShellResolution == aResolution) {
       return;
     }
 
     MOZ_LAYERS_LOG_IF_SHADOWABLE(
         this, ("Layer::Mutated(%p) ScaleToResolution", this));
-    mScaleToResolution = aScaleToResolution;
     mPresShellResolution = aResolution;
     Mutated();
   }
@@ -2240,7 +2238,6 @@ class ContainerLayer : public Layer {
   float GetInheritedXScale() const { return mInheritedXScale; }
   float GetInheritedYScale() const { return mInheritedYScale; }
   float GetPresShellResolution() const { return mPresShellResolution; }
-  bool ScaleToResolution() const { return mScaleToResolution; }
 
   MOZ_LAYER_DECL_NAME("ContainerLayer", TYPE_CONTAINER)
 
@@ -2380,8 +2377,6 @@ class ContainerLayer : public Layer {
   // For layers corresponding to an nsDisplayResolution, the resolution of the
   // associated pres shell; for other layers, 1.0.
   float mPresShellResolution;
-  // Whether the compositor should scale to mPresShellResolution.
-  bool mScaleToResolution;
   bool mUseIntermediateSurface;
   bool mSupportsComponentAlphaChildren;
   bool mMayHaveReadbackChild;

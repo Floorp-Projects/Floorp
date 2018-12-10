@@ -765,7 +765,6 @@ ContainerLayer::ContainerLayer(LayerManager* aManager, void* aImplData)
       mInheritedXScale(1.0f),
       mInheritedYScale(1.0f),
       mPresShellResolution(1.0f),
-      mScaleToResolution(false),
       mUseIntermediateSurface(false),
       mSupportsComponentAlphaChildren(false),
       mMayHaveReadbackChild(false),
@@ -945,8 +944,7 @@ bool ContainerLayer::RepositionChild(Layer* aChild, Layer* aAfter) {
 
 void ContainerLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs) {
   aAttrs = ContainerLayerAttributes(mPreXScale, mPreYScale, mInheritedXScale,
-                                    mInheritedYScale, mPresShellResolution,
-                                    mScaleToResolution);
+                                    mInheritedYScale, mPresShellResolution);
 }
 
 bool ContainerLayer::Creates3DContextWithExtendingChildren() {
@@ -1956,11 +1954,9 @@ void ContainerLayer::PrintInfo(std::stringstream& aStream,
     aStream
         << nsPrintfCString(" [preScale=%g, %g]", mPreXScale, mPreYScale).get();
   }
-  if (mScaleToResolution) {
-    aStream << nsPrintfCString(" [presShellResolution=%g]",
-                               mPresShellResolution)
-                   .get();
-  }
+  aStream << nsPrintfCString(" [presShellResolution=%g]",
+                             mPresShellResolution)
+                 .get();
 }
 
 void ContainerLayer::DumpPacket(layerscope::LayersPacket* aPacket,
