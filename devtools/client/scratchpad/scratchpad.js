@@ -39,7 +39,6 @@ const WRAP_TEXT = "devtools.scratchpad.wrapText";
 const SHOW_TRAILING_SPACE = "devtools.scratchpad.showTrailingSpace";
 const EDITOR_FONT_SIZE = "devtools.scratchpad.editorFontSize";
 const ENABLE_AUTOCOMPLETION = "devtools.scratchpad.enableAutocompletion";
-const TAB_SIZE = "devtools.editor.tabsize";
 const FALLBACK_CHARSET_LIST = "intl.fallbackCharsetList.ISO-8859-1";
 
 const VARIABLES_VIEW_URL = "chrome://devtools/content/shared/widgets/VariablesView.xul";
@@ -49,9 +48,7 @@ const {require, loader} = ChromeUtils.import("resource://devtools/shared/Loader.
 const Editor = require("devtools/client/sourceeditor/editor");
 const TargetFactory = require("devtools/client/framework/target").TargetFactory;
 const EventEmitter = require("devtools/shared/event-emitter");
-const {DevToolsWorker} = require("devtools/shared/worker/worker");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const flags = require("devtools/shared/flags");
 const Services = require("Services");
 const {gDevTools} = require("devtools/client/framework/devtools");
 const { extend } = require("devtools/shared/extend");
@@ -202,9 +199,6 @@ var Scratchpad = {
       },
       "sp-cmd-display": () => {
         Scratchpad.display();
-      },
-      "sp-cmd-pprint": () => {
-        Scratchpad.prettyPrint();
       },
       "sp-cmd-contentContext": () => {
         Scratchpad.setContentContext();
@@ -597,45 +591,6 @@ var Scratchpad = {
       this.writeAsComment(response.displayString);
       return [string, error, result];
     }
-  },
-
-  _prettyPrintWorker: null,
-
-  /**
-   * Get or create the worker that handles pretty printing.
-   */
-  get prettyPrintWorker() {
-    if (!this._prettyPrintWorker) {
-      this._prettyPrintWorker = new DevToolsWorker(
-        "resource://devtools/server/actors/pretty-print-worker.js",
-        { name: "pretty-print",
-          verbose: flags.wantLogging }
-      );
-    }
-    return this._prettyPrintWorker;
-  },
-
-  /**
-   * Pretty print the source text inside the scratchpad.
-   *
-   * @return Promise
-   *         A promise resolved with the pretty printed code, or rejected with
-   *         an error.
-   */
-  prettyPrint: function SP_prettyPrint() {
-    const uglyText = this.getText();
-    const tabsize = Services.prefs.getIntPref(TAB_SIZE);
-
-    return this.prettyPrintWorker.performTask("pretty-print", {
-      url: "(scratchpad)",
-      indent: tabsize,
-      source: uglyText,
-    }).then(data => {
-      this.editor.setText(data.code);
-    }).catch(error => {
-      this.writeAsErrorComment({ exception: error });
-      throw error;
-    });
   },
 
   /**
@@ -1726,11 +1681,6 @@ var Scratchpad = {
     if (this._sidebar) {
       this._sidebar.destroy();
       this._sidebar = null;
-    }
-
-    if (this._prettyPrintWorker) {
-      this._prettyPrintWorker.destroy();
-      this._prettyPrintWorker = null;
     }
 
     scratchpadTargets = null;
