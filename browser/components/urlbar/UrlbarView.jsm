@@ -131,6 +131,10 @@ class UrlbarView {
   }
 
   _openPanel() {
+    if (this.isOpen) {
+      return;
+    }
+
     this.panel.removeAttribute("hidden");
 
     this._alignPanel();
