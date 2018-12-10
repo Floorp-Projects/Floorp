@@ -712,6 +712,14 @@ class BrowserExtensionContent extends EventEmitter {
     return this._manifest;
   }
 
+  get privateBrowsingAllowed() {
+    return this.policy.privateBrowsingAllowed;
+  }
+
+  canAccessWindow(window) {
+    return this.policy.canAccessWindow(window);
+  }
+
   getAPIManager() {
     let apiManagers = [ExtensionPageChild.apiManager];
 
