@@ -4,6 +4,7 @@
 
 package org.mozilla.mozstumbler.service.stumblerthread.scanners;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -211,6 +212,7 @@ public class WifiScanner extends BroadcastReceiver {
         return true;
     }
 
+    @SuppressLint("WifiManagerPotentialLeak")
     private WifiManager getWifiManager() {
         return (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
     }
