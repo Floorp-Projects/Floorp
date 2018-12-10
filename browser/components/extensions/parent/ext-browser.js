@@ -1061,6 +1061,11 @@ class TabManager extends TabManagerBase {
     return super.revokeActiveTabPermission(nativeTab);
   }
 
+  canAccessTab(nativeTab) {
+    return this.extension.privateBrowsingAllowed ||
+           !PrivateBrowsingUtils.isBrowserPrivate(nativeTab.linkedBrowser);
+  }
+
   wrapTab(nativeTab) {
     return new Tab(this.extension, nativeTab, tabTracker.getId(nativeTab));
   }
@@ -1073,9 +1078,19 @@ class WindowManager extends WindowManagerBase {
     return this.getWrapper(window);
   }
 
-  * getAll() {
+  canAccessWindow(window, context) {
+    return (context && context.canAccessWindow(window)) || this.extension.canAccessWindow(window);
+  }
+
+  * getAll(context) {
     for (let window of windowTracker.browserWindows()) {
-      yield this.getWrapper(window);
+      if (!this.canAccessWindow(window, context)) {
+        continue;
+      }
+      let wrapped = this.getWrapper(window);
+      if (wrapped) {
+        yield wrapped;
+      }
     }
   }
 

@@ -66,6 +66,10 @@ class TabBase {
     this.id = id;
     this.nativeTab = nativeTab;
     this.activeTabWindowID = null;
+
+    if (!extension.privateBrowsingAllowed && this._incognito) {
+      throw new ExtensionError(`Invalid tab ID: ${id}`);
+    }
   }
 
   /**
@@ -799,6 +803,9 @@ const WINDOW_ID_CURRENT = -2;
  */
 class WindowBase {
   constructor(extension, window, id) {
+    if (!extension.canAccessWindow(window)) {
+      throw new ExtensionError("extension cannot access window");
+    }
     this.extension = extension;
     this.window = window;
     this.id = id;
@@ -1401,6 +1408,31 @@ class WindowTrackerBase extends EventEmitter {
   }
 
   /**
+   * @property {DOMWindow|null} topWindow
+   *        The currently active, or topmost, browser window that is not
+   *        private browsing, or null if no browser window is currently open.
+   *        @readonly
+   */
+  get topNonPBWindow() {
+    return Services.wm.getMostRecentNonPBWindow("navigator:browser");
+  }
+
+  /**
+   * Returns the top window accessible by the extension.
+   *
+   * @param {BaseContext} context
+   *        The extension context for which to return the current window.
+   *
+   * @returns {DOMWindow|null}
+   */
+  getTopWindow(context) {
+    if (context && !context.privateBrowsingAllowed) {
+      return this.topNonPBWindow;
+    }
+    return this.topWindow;
+  }
+
+  /**
    * Returns the numeric ID for the given browser window.
    *
    * @param {DOMWindow} window
@@ -1423,7 +1455,7 @@ class WindowTrackerBase extends EventEmitter {
    * @returns {DOMWindow|null}
    */
   getCurrentWindow(context) {
-    return (context && context.currentWindow) || this.topWindow;
+    return (context && context.currentWindow) || this.getTopWindow(context);
   }
 
   /**
@@ -1450,9 +1482,11 @@ class WindowTrackerBase extends EventEmitter {
     let window = Services.wm.getOuterWindowWithId(id);
     if (window && !window.closed && (window.document.readyState !== "complete"
         || this.isBrowserWindow(window))) {
-      // Tolerate incomplete windows because isBrowserWindow is only reliable
-      // once the window is fully loaded.
-      return window;
+      if (!context || context.canAccessWindow(window)) {
+        // Tolerate incomplete windows because isBrowserWindow is only reliable
+        // once the window is fully loaded.
+        return window;
+      }
     }
 
     if (strict) {
@@ -1829,11 +1863,27 @@ class TabManagerBase {
    * @param {NativeTab} nativeTab
    *        The tab for which to return a wrapper.
    *
-   * @returns {TabBase}
+   * @returns {TabBase|undefined}
    *        The wrapper for this tab.
    */
   getWrapper(nativeTab) {
-    return this._tabs.get(nativeTab);
+    if (this.canAccessTab(nativeTab)) {
+      return this._tabs.get(nativeTab);
+    }
+  }
+
+  /**
+   * Determines access using extension context.
+   *
+   * @param {NativeTab} nativeTab
+   *        The tab to check access on.
+   * @returns {boolean}
+   *        True if the extension has permissions for this tab.
+   * @protected
+   * @abstract
+   */
+  canAccessTab(nativeTab) {
+    throw new Error("Not implemented");
   }
 
   /**
@@ -1970,11 +2020,13 @@ class WindowManagerBase {
    * @param {DOMWindow} window
    *        The browser window for which to return a wrapper.
    *
-   * @returns {WindowBase}
+   * @returns {WindowBase|undefined}
    *        The wrapper for this tab.
    */
   getWrapper(window) {
-    return this._windows.get(window);
+    if (this.extension.canAccessWindow(window)) {
+      return this._windows.get(window);
+    }
   }
 
   // The JSDoc validator does not support @returns tags in abstract functions or
@@ -2008,11 +2060,14 @@ class WindowManagerBase {
           return;
         }
         if (lastFocusedWindow === true) {
-          yield windowManager.getWrapper(global.windowTracker.topWindow);
+          let window = global.windowTracker.getTopWindow(context);
+          if (window) {
+            yield windowManager.getWrapper(window);
+          }
           return;
         }
       }
-      yield* windowManager.getAll();
+      yield* windowManager.getAll(context);
     }
     for (let windowWrapper of candidates(this)) {
       if (!queryInfo || windowWrapper.matches(queryInfo, context)) {

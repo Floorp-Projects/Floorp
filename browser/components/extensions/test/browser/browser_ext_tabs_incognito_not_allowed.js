@@ -15,10 +15,10 @@ add_task(async function testExecuteScriptIncognitoNotAllowed() {
         // Test that executeScript and insertCSS will fail to
         // load into an incognito window.
         await browser.test.assertRejects(browser.tabs.executeScript(pbw.tabId, {code: "document.URL"}),
-                                         /Extension cannot access window/,
+                                         /Invalid tab ID/,
                                          "should not be able to executeScript");
         await browser.test.assertRejects(browser.tabs.insertCSS(pbw.tabId, {code: "* { background: rgb(42, 42, 42) }"}),
-                                         /Extension cannot access window/,
+                                         /Invalid tab ID/,
                                          "should not be able to insertCSS");
         browser.test.notifyPass("pass");
       });

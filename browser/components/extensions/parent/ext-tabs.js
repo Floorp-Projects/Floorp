@@ -377,6 +377,10 @@ this.tabs = class extends ExtensionAPI {
       } else {
         tab = tabManager.getWrapper(tabTracker.activeTab);
       }
+      if (!tab) {
+        throw new ExtensionError(tabId == null ?
+          "Cannot access activeTab" : `Invalid tab ID: ${tabId}`);
+      }
 
       await tabListener.awaitTabReady(tab.nativeTab);
 
@@ -809,25 +813,21 @@ this.tabs = class extends ExtensionAPI {
 
         async detectLanguage(tabId) {
           let tab = await promiseTabWhenReady(tabId);
-
           return tab.sendMessage(context, "Extension:DetectLanguage");
         },
 
         async executeScript(tabId, details) {
           let tab = await promiseTabWhenReady(tabId);
-
           return tab.executeScript(context, details);
         },
 
         async insertCSS(tabId, details) {
           let tab = await promiseTabWhenReady(tabId);
-
           return tab.insertCSS(context, details);
         },
 
         async removeCSS(tabId, details) {
           let tab = await promiseTabWhenReady(tabId);
-
           return tab.removeCSS(context, details);
         },
 
