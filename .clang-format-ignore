@@ -55,6 +55,7 @@ gfx/webrender_bindings/webrender_ffi_generated.h
 intl/unicharutil/util/nsUnicodePropertyData.cpp
 intl/unicharutil/util/nsUnicodeScriptCodes.h
 media/mp4parse-rust/mp4parse.h
+security/manager/ssl/StaticHPKPins.h
 widget/gtk/wayland/gtk-primary-selection-client-protocol.h
 widget/gtk/wayland/gtk-primary-selection-protocol.c
 
