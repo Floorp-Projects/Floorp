@@ -31,6 +31,9 @@ static void moz_container_init(MozContainer *container);
 
 /* widget class methods */
 static void moz_container_map(GtkWidget *widget);
+#if defined(MOZ_WAYLAND)
+static gboolean moz_container_map_wayland(GtkWidget *widget, GdkEventAny *event);
+#endif
 static void moz_container_unmap(GtkWidget *widget);
 static void moz_container_realize(GtkWidget *widget);
 static void moz_container_size_allocate(GtkWidget *widget,
@@ -129,6 +132,11 @@ void moz_container_class_init(MozContainerClass *klass) {
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
 
   widget_class->map = moz_container_map;
+#if defined(MOZ_WAYLAND)
+    if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+      widget_class->map_event = moz_container_map_wayland;
+    }
+#endif
   widget_class->unmap = moz_container_unmap;
   widget_class->realize = moz_container_realize;
   widget_class->size_allocate = moz_container_size_allocate;
@@ -174,15 +182,23 @@ static void frame_callback_handler(void *data, struct wl_callback *callback,
 static const struct wl_callback_listener frame_listener = {
     frame_callback_handler};
 
-static void moz_container_map_wayland(MozContainer *container) {
-  container->surface_needs_clear = true;
-  container->ready_to_draw = false;
+static gboolean moz_container_map_wayland(GtkWidget *widget, GdkEventAny *event) {
+  MozContainer* container = MOZ_CONTAINER(widget);
+
+  if (container->ready_to_draw || container->frame_callback_handler) {
+    return FALSE;
+  }
 
   wl_surface *gtk_container_surface =
       moz_container_get_gtk_container_surface(container);
-  container->frame_callback_handler = wl_surface_frame(gtk_container_surface);
-  wl_callback_add_listener(container->frame_callback_handler, &frame_listener,
-                           container);
+
+  if (gtk_container_surface) {
+    container->frame_callback_handler = wl_surface_frame(gtk_container_surface);
+    wl_callback_add_listener(container->frame_callback_handler, &frame_listener,
+                             container);
+  }
+
+  return FALSE;
 }
 
 static void moz_container_unmap_wayland(MozContainer *container) {
@@ -191,6 +207,7 @@ static void moz_container_unmap_wayland(MozContainer *container) {
   g_clear_pointer(&container->surface, wl_surface_destroy);
   g_clear_pointer(&container->frame_callback_handler, wl_callback_destroy);
 
+  container->surface_needs_clear = true;
   container->ready_to_draw = false;
 }
 
@@ -231,7 +248,7 @@ void moz_container_map(GtkWidget *widget) {
     gdk_window_show(gtk_widget_get_window(widget));
 #if defined(MOZ_WAYLAND)
     if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
-      moz_container_map_wayland(MOZ_CONTAINER(widget));
+      moz_container_map_wayland(widget, nullptr);
     }
 #endif
   }
