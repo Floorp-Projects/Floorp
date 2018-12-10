@@ -12,7 +12,7 @@
 #include <windows.h>
 #endif
 #include "archivereader.h"
-#include "errors.h"
+#include "updatererrors.h"
 #ifdef XP_WIN
 #include "nsAlgorithm.h"  // Needed by nsVersionComparator.cpp
 #include "updatehelper.h"

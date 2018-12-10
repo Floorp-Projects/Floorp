@@ -6,7 +6,6 @@
 
 srcs = [
     'archivereader.cpp',
-    'bspatch.cpp',
     'updater.cpp',
 ]
 
@@ -48,6 +47,7 @@ elif CONFIG['OS_ARCH'] == 'Linux' and CONFIG['MOZ_VERIFY_MAR_SIGNATURE']:
     OS_LIBS += CONFIG['NSPR_LIBS']
 
 USE_LIBS += [
+    'bspatch',
     'mar',
     'updatecommon',
     'xz-embedded',

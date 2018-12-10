@@ -26,7 +26,7 @@
 #include "updater/resource.h"
 #include "updater/progressui.h"
 #include "common/readstrings.h"
-#include "common/errors.h"
+#include "common/updatererrors.h"
 #include "common/updatedefines.h"
 #include "mozilla/ArrayUtils.h"
 

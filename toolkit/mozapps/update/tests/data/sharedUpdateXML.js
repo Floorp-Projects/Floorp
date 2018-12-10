@@ -46,7 +46,7 @@ const INVALID_CALLBACK_PATH_ERROR              = 77;
 const INVALID_CALLBACK_DIR_ERROR               = 78;
 
 // Error codes 80 through 99 are reserved for nsUpdateService.js and are not
-// defined in common/errors.h
+// defined in common/updatererrors.h
 const ERR_OLDER_VERSION_OR_SAME_BUILD      = 90;
 const ERR_UPDATE_STATE_NONE                = 91;
 const ERR_CHANNEL_CHANGE                   = 92;
