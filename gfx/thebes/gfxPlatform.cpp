@@ -2715,8 +2715,13 @@ void gfxPlatform::InitWebRenderConfig() {
 #endif
 
     // gfx.webrender.all.qualified works on all channels
-  } else if (wrQualifiedAll && featureWebRenderQualified.IsEnabled()) {
-    featureWebRender.UserEnable("Qualified enabled by pref ");
+  } else if (wrQualifiedAll) {
+    if (featureWebRenderQualified.IsEnabled()) {
+      featureWebRender.UserEnable("Qualified enabled by pref ");
+    } else {
+      featureWebRender.ForceDisable(FeatureStatus::Blocked,
+                                    "Qualified enable blocked", failureId);
+    }
   }
 
   // If the user set the pref to force-disable, let's do that. This will
