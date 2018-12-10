@@ -287,7 +287,7 @@ class KeyframeEffect : public AnimationEffect {
     // We cannot use getters_AddRefs on RawServoAnimationValue because it is
     // an incomplete type, so Get() doesn't work. Instead, use GetWeak, and
     // then assign the raw pointer to a RefPtr.
-    result.mServo = mBaseStyleValuesForServo.GetWeak(aProperty, &hasProperty);
+    result.mServo = mBaseValues.GetWeak(aProperty, &hasProperty);
     MOZ_ASSERT(hasProperty || result.IsNull());
     return result;
   }
@@ -368,10 +368,8 @@ class KeyframeEffect : public AnimationEffect {
   void MarkCascadeNeedsUpdate();
 
   void EnsureBaseStyles(const ComputedStyle* aComputedValues,
-                        const nsTArray<AnimationProperty>& aProperties);
-
-  // Stylo version of the above function that also first checks for an additive
-  // value in |aProperty|'s list of segments.
+                        const nsTArray<AnimationProperty>& aProperties,
+                        bool* aBaseStylesChanged);
   void EnsureBaseStyle(const AnimationProperty& aProperty,
                        nsPresContext* aPresContext,
                        const ComputedStyle* aComputedValues,
@@ -404,8 +402,9 @@ class KeyframeEffect : public AnimationEffect {
   // The non-animated values for properties in this effect that contain at
   // least one animation value that is composited with the underlying value
   // (i.e. it uses the additive or accumulate composite mode).
-  nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue>
-      mBaseStyleValuesForServo;
+  using BaseValuesHashmap =
+      nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue>;
+  BaseValuesHashmap mBaseValues;
 
   // True if this effect is in the EffectSet for its target element. This is
   // used as an optimization to avoid unnecessary hashmap lookups on the

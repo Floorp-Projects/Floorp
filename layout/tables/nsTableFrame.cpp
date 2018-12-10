@@ -1376,7 +1376,7 @@ void nsTableFrame::CalcHasBCBorders() {
     nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
     const nsDisplayListSet& aLists,
     DisplayGenericTablePartTraversal aTraversal) {
-  bool isVisible = aFrame->IsVisibleForPainting(aBuilder);
+  bool isVisible = aFrame->IsVisibleForPainting();
   bool isTable = aFrame->IsTableFrame();
 
   // Note that we UpdateForFrameBackground() even if we're not visible, unless

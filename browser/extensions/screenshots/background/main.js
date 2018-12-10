@@ -147,6 +147,10 @@ this.main = (function() {
     if (shouldOpenMyShots(url)) {
       return true;
     }
+    // Allow screenshots on urls related to web pages in reader mode.
+    if (url && url.startsWith("about:reader?url=")) {
+      return true;
+    }
     if (isShotOrMyShotPage(url) || /^(?:about|data|moz-extension):/i.test(url) || isBlacklistedUrl(url)) {
       return false;
     }

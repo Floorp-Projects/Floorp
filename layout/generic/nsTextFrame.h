@@ -207,8 +207,6 @@ class nsTextFrame : public nsFrame {
                                          int32_t* outFrameContentOffset,
                                          nsIFrame** outChildFrame) final;
 
-  bool IsVisibleInSelection(mozilla::dom::Selection* aSelection) final;
-
   bool IsEmpty() final;
   bool IsSelfEmpty() final { return IsEmpty(); }
   nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const final;

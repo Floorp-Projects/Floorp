@@ -217,7 +217,6 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
       mDrawImageBackground(true),  // always draw the background
       mDrawColorBackground(true),
       // mNeverAnimate is initialised below, in constructor body
-      mIsRenderingOnlySelection(false),
       mPaginated(aType != eContext_Galley),
       mCanPaginatedScroll(false),
       mDoScaledTwips(true),
@@ -1245,8 +1244,8 @@ static bool CheckOverflow(const nsStyleDisplay* aDisplay,
       aDisplay->mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_AUTO &&
       aDisplay->mOverscrollBehaviorX == StyleOverscrollBehavior::Auto &&
       aDisplay->mOverscrollBehaviorY == StyleOverscrollBehavior::Auto &&
-      aDisplay->mScrollSnapTypeX == NS_STYLE_SCROLL_SNAP_TYPE_NONE &&
-      aDisplay->mScrollSnapTypeY == NS_STYLE_SCROLL_SNAP_TYPE_NONE &&
+      aDisplay->mScrollSnapTypeX == StyleScrollSnapType::None &&
+      aDisplay->mScrollSnapTypeY == StyleScrollSnapType::None &&
       aDisplay->mScrollSnapPointsX == nsStyleCoord(eStyleUnit_None) &&
       aDisplay->mScrollSnapPointsY == nsStyleCoord(eStyleUnit_None) &&
       !aDisplay->mScrollSnapDestination.mXPosition.mHasPercent &&
@@ -1718,6 +1717,11 @@ void nsPresContext::CacheAllLangs() {
     }
   }
   mFontGroupCacheDirty = false;
+}
+
+void nsPresContext::ContentLanguageChanged() {
+  mFontGroupCacheDirty = true;
+  PostRebuildAllStyleDataEvent(nsChangeHint(0), eRestyle_ForceDescendants);
 }
 
 void nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint,

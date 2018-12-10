@@ -39,6 +39,8 @@
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
 
+using mozilla::Telemetry::LABELS_CONTENT_FRAME_TIME_REASON;
+
 namespace mozilla {
 namespace layers {
 
@@ -884,12 +886,49 @@ bool LayerTransactionParent::IsSameProcess() const {
 }
 
 TransactionId LayerTransactionParent::FlushTransactionId(
-    TimeStamp& aCompositeEnd) {
+    const VsyncId& aId, TimeStamp& aCompositeEnd) {
   if (mId.IsValid() && mPendingTransaction.IsValid() && !mVsyncRate.IsZero()) {
     double latencyMs = (aCompositeEnd - mTxnStartTime).ToMilliseconds();
     double latencyNorm = latencyMs / mVsyncRate.ToMilliseconds();
     int32_t fracLatencyNorm = lround(latencyNorm * 100.0);
     Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME, fracLatencyNorm);
+
+    // Record CONTENT_FRAME_TIME_REASON. See
+    // WebRenderBridgeParent::FlushTransactionIdsForEpoch for more details.
+    //
+    // Note that deseralizing a layers update (RecvUpdate) can delay the receipt
+    // of the composite vsync message
+    // (CompositorBridgeParent::CompositeToTarget), since they're using the same
+    // thread. This can mean that compositing might start significantly late,
+    // but this code will still detect it as having successfully started on the
+    // right vsync (which is somewhat correct). We'd now have reduced time left
+    // in the vsync interval to finish compositing, so the chances of a missed
+    // frame increases. This is effectively including the RecvUpdate work as
+    // part of the 'compositing' phase for this metric, but it isn't included in
+    // COMPOSITE_TIME, and *is* included in CONTENT_FULL_PAINT_TIME.
+    latencyMs = (aCompositeEnd - mRefreshStartTime).ToMilliseconds();
+    latencyNorm = latencyMs / mVsyncRate.ToMilliseconds();
+    fracLatencyNorm = lround(latencyNorm * 100.0);
+    if (fracLatencyNorm < 200) {
+      // Success
+      Telemetry::AccumulateCategorical(
+          LABELS_CONTENT_FRAME_TIME_REASON::OnTime);
+    } else {
+      if (mTxnVsyncId == VsyncId() || aId == VsyncId() || mTxnVsyncId >= aId) {
+        // Vsync ids are nonsensical, possibly something got trigged from
+        // outside vsync?
+        Telemetry::AccumulateCategorical(
+            LABELS_CONTENT_FRAME_TIME_REASON::NoVsync);
+      } else if (aId - mTxnVsyncId > 1) {
+        // Composite started late (and maybe took too long as well)
+        Telemetry::AccumulateCategorical(
+            LABELS_CONTENT_FRAME_TIME_REASON::MissedComposite);
+      } else {
+        // Composite start on time, but must have taken too long.
+        Telemetry::AccumulateCategorical(
+            LABELS_CONTENT_FRAME_TIME_REASON::SlowComposite);
+      }
+    }
   }
 
 #if defined(ENABLE_FRAME_LATENCY_LOG)

@@ -285,10 +285,10 @@ class RefreshDriverTimer {
    */
   void Tick() {
     TimeStamp now = TimeStamp::Now();
-    Tick(now);
+    Tick(VsyncId(), now);
   }
 
-  void TickRefreshDrivers(TimeStamp aNow,
+  void TickRefreshDrivers(VsyncId aId, TimeStamp aNow,
                           nsTArray<RefPtr<nsRefreshDriver>>& aDrivers) {
     if (aDrivers.IsEmpty()) {
       return;
@@ -301,14 +301,14 @@ class RefreshDriverTimer {
         continue;
       }
 
-      TickDriver(driver, aNow);
+      TickDriver(driver, aId, aNow);
     }
   }
 
   /*
    * Tick the refresh drivers based on the given timestamp.
    */
-  void Tick(TimeStamp now) {
+  void Tick(VsyncId aId, TimeStamp now) {
     ScheduleNextTick(now);
 
     mLastFireTime = now;
@@ -317,14 +317,14 @@ class RefreshDriverTimer {
     // RD is short for RefreshDriver
     AUTO_PROFILER_TRACING("Paint", "RefreshDriverTick");
 
-    TickRefreshDrivers(now, mContentRefreshDrivers);
-    TickRefreshDrivers(now, mRootRefreshDrivers);
+    TickRefreshDrivers(aId, now, mContentRefreshDrivers);
+    TickRefreshDrivers(aId, now, mRootRefreshDrivers);
 
     LOG("[%p] done.", this);
   }
 
-  static void TickDriver(nsRefreshDriver* driver, TimeStamp now) {
-    driver->Tick(now);
+  static void TickDriver(nsRefreshDriver* driver, VsyncId aId, TimeStamp now) {
+    driver->Tick(aId, now);
   }
 
   TimeStamp mLastFireTime;
@@ -462,11 +462,12 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
                                              public nsIRunnablePriority {
      public:
       ParentProcessVsyncNotifier(RefreshDriverVsyncObserver* aObserver,
-                                 TimeStamp aVsyncTimestamp)
+                                 VsyncId aId, TimeStamp aVsyncTimestamp)
           : Runnable(
                 "VsyncRefreshDriverTimer::RefreshDriverVsyncObserver::"
                 "ParentProcessVsyncNotifier"),
             mObserver(aObserver),
+            mId(aId),
             mVsyncTimestamp(aVsyncTimestamp) {}
 
       NS_DECL_ISUPPORTS_INHERITED
@@ -483,7 +484,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
         }
         sHighPriorityEnabled = sHighPriorityPrefValue;
 
-        mObserver->TickRefreshDriver(mVsyncTimestamp);
+        mObserver->TickRefreshDriver(mId, mVsyncTimestamp);
         return NS_OK;
       }
 
@@ -497,11 +498,12 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
      private:
       ~ParentProcessVsyncNotifier() {}
       RefPtr<RefreshDriverVsyncObserver> mObserver;
+      VsyncId mId;
       TimeStamp mVsyncTimestamp;
       static mozilla::Atomic<bool> sHighPriorityEnabled;
     };
 
-    bool NotifyVsync(TimeStamp aVsyncTimestamp) override {
+    bool NotifyVsync(const VsyncEvent& aVsync) override {
       // IMPORTANT: All paths through this method MUST hold a strong ref on
       // |this| for the duration of the TickRefreshDriver callback.
 
@@ -512,7 +514,8 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
         // if the main thread is blocked for long periods of time
         {  // scope lock
           MonitorAutoLock lock(mRefreshTickLock);
-          mRecentVsync = aVsyncTimestamp;
+          mRecentVsync = aVsync.mTime;
+          mRecentVsyncId = aVsync.mId;
           if (!mProcessedVsync) {
             return true;
           }
@@ -520,11 +523,12 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
         }
 
         nsCOMPtr<nsIRunnable> vsyncEvent =
-            new ParentProcessVsyncNotifier(this, aVsyncTimestamp);
+            new ParentProcessVsyncNotifier(this, aVsync.mId, aVsync.mTime);
         NS_DispatchToMainThread(vsyncEvent);
       } else {
-        mRecentVsync = aVsyncTimestamp;
-        if (!mBlockUntil.IsNull() && mBlockUntil > aVsyncTimestamp) {
+        mRecentVsync = aVsync.mTime;
+        mRecentVsyncId = aVsync.mId;
+        if (!mBlockUntil.IsNull() && mBlockUntil > aVsync.mTime) {
           if (mProcessedVsync) {
             // Re-post vsync update as a normal priority runnable. This way
             // runnables already in normal priority queue get processed.
@@ -539,7 +543,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
         }
 
         RefPtr<RefreshDriverVsyncObserver> kungFuDeathGrip(this);
-        TickRefreshDriver(aVsyncTimestamp);
+        TickRefreshDriver(aVsync.mId, aVsync.mTime);
       }
 
       return true;
@@ -561,7 +565,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
           mRecentVsync > mLastProcessedTickInChildProcess) {
         // mBlockUntil is for high priority vsync notifications only.
         mBlockUntil = TimeStamp();
-        TickRefreshDriver(mRecentVsync);
+        TickRefreshDriver(mRecentVsyncId, mRecentVsync);
       }
 
       mProcessedVsync = true;
@@ -615,7 +619,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       }
     }
 
-    void TickRefreshDriver(TimeStamp aVsyncTimestamp) {
+    void TickRefreshDriver(VsyncId aId, TimeStamp aVsyncTimestamp) {
       MOZ_ASSERT(NS_IsMainThread());
 
       RecordTelemetryProbes(aVsyncTimestamp);
@@ -639,7 +643,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       // before use.
       if (mVsyncRefreshDriverTimer) {
         RefPtr<VsyncRefreshDriverTimer> timer = mVsyncRefreshDriverTimer;
-        timer->RunRefreshDrivers(aVsyncTimestamp);
+        timer->RunRefreshDrivers(aId, aVsyncTimestamp);
         // Note: mVsyncRefreshDriverTimer might be null now.
       }
 
@@ -655,6 +659,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     VsyncRefreshDriverTimer* mVsyncRefreshDriverTimer;
     Monitor mRefreshTickLock;
     TimeStamp mRecentVsync;
+    VsyncId mRecentVsyncId;
     TimeStamp mLastChildTick;
     TimeStamp mLastProcessedTickInChildProcess;
     TimeStamp mBlockUntil;
@@ -717,7 +722,9 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     // RefreshDriverVsyncObserver.
   }
 
-  void RunRefreshDrivers(TimeStamp aTimeStamp) { Tick(aTimeStamp); }
+  void RunRefreshDrivers(VsyncId aId, TimeStamp aTimeStamp) {
+    Tick(aId, aTimeStamp);
+  }
 
   RefPtr<RefreshDriverVsyncObserver> mVsyncObserver;
   // Used for parent process.
@@ -871,7 +878,7 @@ class InactiveRefreshDriverTimer final
 
     if (index < drivers.Length() &&
         !drivers[index]->IsTestControllingRefreshesEnabled()) {
-      TickDriver(drivers[index], now);
+      TickDriver(drivers[index], VsyncId(), now);
     }
 
     mNextDriverIndex++;
@@ -1364,9 +1371,9 @@ void nsRefreshDriver::DoTick() {
              "Shouldn't have a JSContext on the stack");
 
   if (mTestControllingRefreshes) {
-    Tick(mMostRecentRefresh);
+    Tick(VsyncId(), mMostRecentRefresh);
   } else {
-    Tick(TimeStamp::Now());
+    Tick(VsyncId(), TimeStamp::Now());
   }
 }
 
@@ -1608,7 +1615,7 @@ void nsRefreshDriver::CancelIdleRunnable(nsIRunnable* aRunnable) {
   }
 }
 
-void nsRefreshDriver::Tick(TimeStamp aNowTime) {
+void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   MOZ_ASSERT(!nsContentUtils::GetCurrentJSContext(),
              "Shouldn't have a JSContext on the stack");
 
@@ -1675,6 +1682,7 @@ void nsRefreshDriver::Tick(TimeStamp aNowTime) {
 
   AutoRestore<TimeStamp> restoreTickStart(mTickStart);
   mTickStart = TimeStamp::Now();
+  mTickVsyncId = aId;
 
   gfxPlatform::GetPlatform()->SchedulePaintIfDeviceReset();
 
@@ -2051,6 +2059,8 @@ void nsRefreshDriver::ResetInitialTransactionId(
 }
 
 mozilla::TimeStamp nsRefreshDriver::GetTransactionStart() { return mTickStart; }
+
+VsyncId nsRefreshDriver::GetVsyncId() { return mTickVsyncId; }
 
 void nsRefreshDriver::NotifyTransactionCompleted(
     mozilla::layers::TransactionId aTransactionId) {

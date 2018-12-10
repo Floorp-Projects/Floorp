@@ -108,6 +108,26 @@ class UrlbarController {
   }
 
   /**
+   * Hooks up the controller with an input.
+   *
+   * @param {UrlbarInput} input
+   *   The UrlbarInput instance associated with this controller.
+   */
+  setInput(input) {
+    this.input = input;
+  }
+
+  /**
+   * Hooks up the controller with a view.
+   *
+   * @param {UrlbarView} view
+   *   The UrlbarView instance associated with this controller.
+   */
+  setView(view) {
+    this.view = view;
+  }
+
+  /**
    * Takes a query context and starts the query based on the user input.
    *
    * @param {QueryContext} queryContext The query details.
@@ -171,6 +191,55 @@ class UrlbarController {
    */
   tabContextChanged() {
     // TODO: implementation needed (bug 1496685)
+  }
+
+  /**
+   * Receives keyboard events from the input and handles those that should
+   * navigate within the view or pick the currently selected item.
+   *
+   * @param {KeyboardEvent} event
+   *   The DOM KeyboardEvent.
+   */
+  handleKeyNavigation(event) {
+    // Handle readline/emacs-style navigation bindings on Mac.
+    if (AppConstants.platform == "macosx" &&
+        this.view.isOpen &&
+        event.ctrlKey &&
+        (event.key == "n" || event.key == "p")) {
+      this.view.selectNextItem({ reverse: event.key == "p" });
+      event.preventDefault();
+      return;
+    }
+
+    switch (event.keyCode) {
+      case KeyEvent.DOM_VK_RETURN:
+        if (AppConstants.platform == "macosx" &&
+            event.metaKey) {
+          // Prevent beep on Mac.
+          event.preventDefault();
+        }
+        // TODO: We may have an autoFill entry, so we should use that instead.
+        // TODO: We should have an input bufferrer so that we can use search results
+        // if appropriate.
+        this.input.handleCommand(event);
+        return;
+      case KeyEvent.DOM_VK_TAB:
+        this.view.selectNextItem({ reverse: event.shiftKey });
+        event.preventDefault();
+        break;
+      case KeyEvent.DOM_VK_DOWN:
+        if (!event.ctrlKey && !event.altKey) {
+          this.view.selectNextItem();
+          event.preventDefault();
+        }
+        break;
+      case KeyEvent.DOM_VK_UP:
+        if (!event.ctrlKey && !event.altKey) {
+          this.view.selectNextItem({ reverse: true });
+          event.preventDefault();
+        }
+        break;
+    }
   }
 
   /**

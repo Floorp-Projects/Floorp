@@ -27,14 +27,13 @@ CompositorVsyncDispatcher::~CompositorVsyncDispatcher() {
   // nsBaseWidget
 }
 
-void CompositorVsyncDispatcher::NotifyVsync(TimeStamp aVsyncTimestamp) {
+void CompositorVsyncDispatcher::NotifyVsync(const VsyncEvent& aVsync) {
   // In vsync thread
-  layers::CompositorBridgeParent::PostInsertVsyncProfilerMarker(
-      aVsyncTimestamp);
+  layers::CompositorBridgeParent::PostInsertVsyncProfilerMarker(aVsync.mTime);
 
   MutexAutoLock lock(mCompositorObserverLock);
   if (mCompositorVsyncObserver) {
-    mCompositorVsyncObserver->NotifyVsync(aVsyncTimestamp);
+    mCompositorVsyncObserver->NotifyVsync(aVsync);
   }
 }
 
@@ -101,15 +100,15 @@ RefreshTimerVsyncDispatcher::~RefreshTimerVsyncDispatcher() {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-void RefreshTimerVsyncDispatcher::NotifyVsync(TimeStamp aVsyncTimestamp) {
+void RefreshTimerVsyncDispatcher::NotifyVsync(const VsyncEvent& aVsync) {
   MutexAutoLock lock(mRefreshTimersLock);
 
   for (size_t i = 0; i < mChildRefreshTimers.Length(); i++) {
-    mChildRefreshTimers[i]->NotifyVsync(aVsyncTimestamp);
+    mChildRefreshTimers[i]->NotifyVsync(aVsync);
   }
 
   if (mParentRefreshTimer) {
-    mParentRefreshTimer->NotifyVsync(aVsyncTimestamp);
+    mParentRefreshTimer->NotifyVsync(aVsync);
   }
 }
 

@@ -35,6 +35,8 @@
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
 
+using mozilla::Telemetry::LABELS_CONTENT_FRAME_TIME_REASON;
+
 #ifdef MOZ_GECKO_PROFILER
 #include "ProfilerMarkerPayload.h"
 #endif
@@ -854,9 +856,9 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
     nsTArray<OpUpdateResource>&& aResourceUpdates,
     nsTArray<RefCountedShmem>&& aSmallShmems,
     nsTArray<ipc::Shmem>&& aLargeShmems, const wr::IdNamespace& aIdNamespace,
-    const bool& aContainsSVGGroup, const TimeStamp& aRefreshStartTime,
-    const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
-    const TimeStamp& aFwdTime) {
+    const bool& aContainsSVGGroup, const VsyncId& aVsyncId,
+    const TimeStamp& aRefreshStartTime, const TimeStamp& aTxnStartTime,
+    const nsCString& aTxnURL, const TimeStamp& aFwdTime) {
   if (mDestroyed) {
     for (const auto& op : aToDestroy) {
       DestroyActor(op);
@@ -945,7 +947,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
                                            mChildLayersObserverEpoch, true);
   }
 
-  HoldPendingTransactionId(wrEpoch, aTransactionId, aContainsSVGGroup,
+  HoldPendingTransactionId(wrEpoch, aTransactionId, aContainsSVGGroup, aVsyncId,
                            aRefreshStartTime, aTxnStartTime, aTxnURL, aFwdTime,
                            mIsFirstPaint);
   mIsFirstPaint = false;
@@ -955,7 +957,8 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
     // though DisplayList was not pushed to webrender.
     if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
       TimeStamp now = TimeStamp::Now();
-      cbp->NotifyPipelineRendered(mPipelineId, wrEpoch, now, now, now);
+      cbp->NotifyPipelineRendered(mPipelineId, wrEpoch, VsyncId(), now, now,
+                                  now);
     }
   }
 
@@ -973,8 +976,9 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
     nsTArray<OpUpdateResource>&& aResourceUpdates,
     nsTArray<RefCountedShmem>&& aSmallShmems,
     nsTArray<ipc::Shmem>&& aLargeShmems, const wr::IdNamespace& aIdNamespace,
-    const TimeStamp& aRefreshStartTime, const TimeStamp& aTxnStartTime,
-    const nsCString& aTxnURL, const TimeStamp& aFwdTime) {
+    const VsyncId& aVsyncId, const TimeStamp& aRefreshStartTime,
+    const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
+    const TimeStamp& aFwdTime) {
   if (mDestroyed) {
     for (const auto& op : aToDestroy) {
       DestroyActor(op);
@@ -1058,8 +1062,8 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
 
   // Only register a value for CONTENT_FRAME_TIME telemetry if we actually drew
   // something. It is for consistency with disabling WebRender.
-  HoldPendingTransactionId(mWrEpoch, aTransactionId, false, aRefreshStartTime,
-                           aTxnStartTime, aTxnURL, aFwdTime,
+  HoldPendingTransactionId(mWrEpoch, aTransactionId, false, aVsyncId,
+                           aRefreshStartTime, aTxnStartTime, aTxnURL, aFwdTime,
                            /* aIsFirstPaint */ false,
                            /* aUseForTelemetry */ scheduleComposite);
 
@@ -1075,7 +1079,8 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
     MOZ_ASSERT(mPendingTransactionIds.size() == 1);
     if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
       TimeStamp now = TimeStamp::Now();
-      cbp->NotifyPipelineRendered(mPipelineId, mWrEpoch, now, now, now);
+      cbp->NotifyPipelineRendered(mPipelineId, mWrEpoch, VsyncId(), now, now,
+                                  now);
     }
   }
 
@@ -1217,7 +1222,7 @@ void WebRenderBridgeParent::FlushFrameGeneration() {
     mCompositorScheduler->CancelCurrentCompositeTask();
     // Update timestamp of scheduler for APZ and animation.
     mCompositorScheduler->UpdateLastComposeTime();
-    MaybeGenerateFrame(/* aForceGenerateFrame */ true);
+    MaybeGenerateFrame(VsyncId(), /* aForceGenerateFrame */ true);
   }
 }
 
@@ -1642,11 +1647,12 @@ bool WebRenderBridgeParent::SampleAnimations(
 void WebRenderBridgeParent::CompositeIfNeeded() {
   if (mSkippedComposite) {
     mSkippedComposite = false;
-    CompositeToTarget(nullptr, nullptr);
+    CompositeToTarget(VsyncId(), nullptr, nullptr);
   }
 }
 
-void WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget,
+void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
+                                              gfx::DrawTarget* aTarget,
                                               const gfx::IntRect* aRect) {
   // This function should only get called in the root WRBP
   MOZ_ASSERT(IsRootWebRenderBridgeParent());
@@ -1677,7 +1683,7 @@ void WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget,
     }
     return;
   }
-  MaybeGenerateFrame(/* aForceGenerateFrame */ false);
+  MaybeGenerateFrame(aId, /* aForceGenerateFrame */ false);
 }
 
 TimeDuration WebRenderBridgeParent::GetVsyncInterval() const {
@@ -1689,7 +1695,8 @@ TimeDuration WebRenderBridgeParent::GetVsyncInterval() const {
   return TimeDuration();
 }
 
-void WebRenderBridgeParent::MaybeGenerateFrame(bool aForceGenerateFrame) {
+void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
+                                               bool aForceGenerateFrame) {
   // This function should only get called in the root WRBP
   MOZ_ASSERT(IsRootWebRenderBridgeParent());
 
@@ -1737,7 +1744,7 @@ void WebRenderBridgeParent::MaybeGenerateFrame(bool aForceGenerateFrame) {
 
   SetAPZSampleTime();
 
-  wr::RenderThread::Get()->IncPendingFrameCount(mApi->GetId(), start);
+  wr::RenderThread::Get()->IncPendingFrameCount(mApi->GetId(), aId, start);
 
 #if defined(ENABLE_FRAME_LATENCY_LOG)
   auto startTime = TimeStamp::Now();
@@ -1751,13 +1758,13 @@ void WebRenderBridgeParent::MaybeGenerateFrame(bool aForceGenerateFrame) {
 
 void WebRenderBridgeParent::HoldPendingTransactionId(
     const wr::Epoch& aWrEpoch, TransactionId aTransactionId,
-    bool aContainsSVGGroup, const TimeStamp& aRefreshStartTime,
-    const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
-    const TimeStamp& aFwdTime, const bool aIsFirstPaint,
-    const bool aUseForTelemetry) {
+    bool aContainsSVGGroup, const VsyncId& aVsyncId,
+    const TimeStamp& aRefreshStartTime, const TimeStamp& aTxnStartTime,
+    const nsCString& aTxnURL, const TimeStamp& aFwdTime,
+    const bool aIsFirstPaint, const bool aUseForTelemetry) {
   MOZ_ASSERT(aTransactionId > LastPendingTransactionId());
   mPendingTransactionIds.push_back(PendingTransactionId(
-      aWrEpoch, aTransactionId, aContainsSVGGroup, aRefreshStartTime,
+      aWrEpoch, aTransactionId, aContainsSVGGroup, aVsyncId, aRefreshStartTime,
       aTxnStartTime, aTxnURL, aFwdTime, aIsFirstPaint, aUseForTelemetry));
 }
 
@@ -1780,10 +1787,10 @@ void WebRenderBridgeParent::NotifySceneBuiltForEpoch(
 }
 
 TransactionId WebRenderBridgeParent::FlushTransactionIdsForEpoch(
-    const wr::Epoch& aEpoch, const TimeStamp& aCompositeStartTime,
-    const TimeStamp& aRenderStartTime, const TimeStamp& aEndTime,
-    UiCompositorControllerParent* aUiController, wr::RendererStats* aStats,
-    nsTArray<FrameStats>* aOutputStats) {
+    const wr::Epoch& aEpoch, const VsyncId& aCompositeStartId,
+    const TimeStamp& aCompositeStartTime, const TimeStamp& aRenderStartTime,
+    const TimeStamp& aEndTime, UiCompositorControllerParent* aUiController,
+    wr::RendererStats* aStats, nsTArray<FrameStats>* aOutputStats) {
   TransactionId id{0};
   while (!mPendingTransactionIds.empty()) {
     const auto& transactionId = mPendingTransactionIds.front();
@@ -1819,6 +1826,50 @@ TransactionId WebRenderBridgeParent::FlushTransactionIdsForEpoch(
                                             aEndTime));
       }
 #endif
+
+      // Record CONTENT_FRAME_TIME_REASON.
+      //
+      // This uses the refresh start time (CONTENT_FRAME_TIME uses the start of
+      // display list building), since that includes layout/style time, and 200
+      // should correlate more closely with missing a vsync.
+      //
+      // Also of note is that when the root WebRenderBridgeParent decides to
+      // skip a composite (due to the Renderer being busy), that won't notify
+      // child WebRenderBridgeParents. That failure will show up as the
+      // composite starting late (since it did), but it's really a fault of a
+      // slow composite on the previous frame, not a slow
+      // CONTENT_FULL_PAINT_TIME. It would be nice to have a separate bucket for
+      // this category (scene was ready on the next vsync, but we chose not to
+      // composite), but I can't find a way to locate the right child
+      // WebRenderBridgeParents from the root. WebRender notifies us of the
+      // child pipelines contained within a render, after it finishes, but I
+      // can't see how to query what child pipeline would have been rendered,
+      // when we choose to not do it.
+      latencyMs = (aEndTime - transactionId.mRefreshStartTime).ToMilliseconds();
+      latencyNorm = latencyMs / mVsyncRate.ToMilliseconds();
+      fracLatencyNorm = lround(latencyNorm * 100.0);
+      if (fracLatencyNorm < 200) {
+        // Success
+        Telemetry::AccumulateCategorical(
+            LABELS_CONTENT_FRAME_TIME_REASON::OnTime);
+      } else {
+        if (transactionId.mVsyncId == VsyncId() ||
+            aCompositeStartId == VsyncId() ||
+            transactionId.mVsyncId >= aCompositeStartId) {
+          // Vsync ids are nonsensical, possibly something got trigged from
+          // outside vsync?
+          Telemetry::AccumulateCategorical(
+              LABELS_CONTENT_FRAME_TIME_REASON::NoVsync);
+        } else if (aCompositeStartId - transactionId.mVsyncId > 1) {
+          // Composite started late (and maybe took too long as well)
+          Telemetry::AccumulateCategorical(
+              LABELS_CONTENT_FRAME_TIME_REASON::MissedComposite);
+        } else {
+          // Composite start on time, but must have taken too long.
+          Telemetry::AccumulateCategorical(
+              LABELS_CONTENT_FRAME_TIME_REASON::SlowComposite);
+        }
+      }
 
       if (fracLatencyNorm > 200) {
         aOutputStats->AppendElement(FrameStats(

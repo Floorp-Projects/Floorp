@@ -19,7 +19,7 @@ SimpleTest.waitForExplicitFinish();
 
 function loaded(iframe) {
   is(SpecialPowers.wrap(iframe).contentWindow.location.href, iframe.src, "should load correct URL");
-  is(SpecialPowers.wrap(iframe).contentDocument.body.textContent, 'CACHE MANIFEST', "text/cache-manifest should be treated as text");
+  is(SpecialPowers.wrap(iframe).contentDocument.body.textContent, "CACHE MANIFEST", "text/cache-manifest should be treated as text");
   SimpleTest.finish();
 }
 </script>

@@ -20,10 +20,10 @@ Adding a <meta> element by writing to innerHTML should work correctly.
 <script class="testbody" type="text/javascript">
   function $(id) { return document.getElementById(id); }
 
-  var iframe=document.createElement("iframe");
+  var iframe = document.createElement("iframe");
   iframe.setAttribute("id", "iframe");
   iframe.src = "bug_502091_iframe.html";
-  iframe.onload = function () {
+  iframe.onload = function() {
     var div = $("iframe").contentDocument.getElementById("testdiv");
     var meta = div.getElementsByTagName("meta");
     is(meta.length, 1, "meta element not added to div");

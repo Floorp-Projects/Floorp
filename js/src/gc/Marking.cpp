@@ -914,20 +914,10 @@ void js::GCMarker::traverseEdge(S source, const T& thing) {
 
 namespace {
 
-template <typename T>
-struct TypeParticipatesInCC {};
-#define EXPAND_PARTICIPATES_IN_CC(_, type, addToCCKind) \
-  template <>                                           \
-  struct TypeParticipatesInCC<type> {                   \
-    static const bool value = addToCCKind;              \
-  };
-JS_FOR_EACH_TRACEKIND(EXPAND_PARTICIPATES_IN_CC)
-#undef EXPAND_PARTICIPATES_IN_CC
-
 struct ParticipatesInCCFunctor {
   template <typename T>
   bool operator()() {
-    return TypeParticipatesInCC<T>::value;
+    return JS::TypeParticipatesInCC<T>::value;
   }
 };
 
@@ -945,7 +935,7 @@ bool js::GCMarker::mark(T* thing) {
   AssertShouldMarkInZone(thing);
   TenuredCell* cell = TenuredCell::fromPointer(thing);
 
-  if (!TypeParticipatesInCC<T>::value) {
+  if (!JS::TypeParticipatesInCC<T>::value) {
     return cell->markIfUnmarked(MarkColor::Black);
   }
 

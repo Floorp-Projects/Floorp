@@ -61,7 +61,7 @@
 //! ```
 //!
 //! [chongo]: http://www.isthe.com/chongo/tech/comp/fnv/index.html
-//! [faq]: https://www.rust-lang.org/faq.html#why-are-rusts-hashmaps-slow
+//! [faq]: https://www.rust-lang.org/en-US/faq.html#why-are-rusts-hashmaps-slow
 //! [graphs]: http://cglab.ca/~abeinges/blah/hash-rs/
 
 

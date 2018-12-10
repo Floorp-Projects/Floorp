@@ -21,7 +21,7 @@ using namespace mozilla;
 // =======================
 
 NS_QUERYFRAME_HEAD(nsRubyTextFrame)
-NS_QUERYFRAME_ENTRY(nsRubyTextFrame)
+  NS_QUERYFRAME_ENTRY(nsRubyTextFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsRubyContentFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsRubyTextFrame)

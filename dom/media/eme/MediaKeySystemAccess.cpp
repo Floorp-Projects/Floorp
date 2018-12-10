@@ -34,6 +34,7 @@
 #include "mozilla/dom/MediaSource.h"
 #include "DecoderTraits.h"
 #ifdef MOZ_WIDGET_ANDROID
+#include "AndroidDecoderModule.h"
 #include "FennecJNIWrappers.h"
 #include "GeneratedJNIWrappers.h"
 #endif
@@ -309,9 +310,9 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
       }
 #elif !defined(MOZ_WIDGET_ANDROID)
       widevine.mMP4.SetCanDecrypt(EME_CODEC_AAC);
-#endif
       widevine.mMP4.SetCanDecrypt(EME_CODEC_FLAC);
       widevine.mMP4.SetCanDecrypt(EME_CODEC_OPUS);
+#endif
 
 #if defined(MOZ_WIDGET_ANDROID)
       using namespace mozilla::java;
@@ -351,7 +352,7 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
       for (const auto& data : validationList) {
         if (MediaDrmProxy::IsCryptoSchemeSupported(kEMEKeySystemWidevine,
                                                    data.mMimeType)) {
-          if (MediaDrmProxy::CanDecode(data.mCodecType)) {
+          if (AndroidDecoderModule::SupportsMimeType(data.mMimeType)) {
             data.mSupportType->SetCanDecryptAndDecode(data.mEMECodecType);
           } else {
             data.mSupportType->SetCanDecrypt(data.mEMECodecType);

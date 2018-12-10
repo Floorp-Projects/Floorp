@@ -17,12 +17,6 @@
 
 struct JSContext;
 
-// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
-// GetTickCount().
-#ifdef GetCurrentTime
-#undef GetCurrentTime
-#endif
-
 namespace mozilla {
 namespace dom {
 
@@ -64,7 +58,10 @@ class DocumentTimeline final : public AnimationTimeline,
       ErrorResult& aRv);
 
   // AnimationTimeline methods
-  virtual Nullable<TimeDuration> GetCurrentTime() const override;
+
+  // This is deliberately _not_ called GetCurrentTime since that would clash
+  // with a macro defined in winbase.h
+  virtual Nullable<TimeDuration> GetCurrentTimeAsDuration() const override;
 
   bool TracksWallclockTime() const override {
     nsRefreshDriver* refreshDriver = GetRefreshDriver();

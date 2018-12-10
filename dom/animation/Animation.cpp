@@ -222,13 +222,13 @@ void Animation::SetStartTime(const Nullable<TimeDuration>& aNewStartTime) {
     // The spec says to check if the timeline is active (has a resolved time)
     // before using it here, but we don't need to since it's harmless to set
     // the already null time to null.
-    timelineTime = mTimeline->GetCurrentTime();
+    timelineTime = mTimeline->GetCurrentTimeAsDuration();
   }
   if (timelineTime.IsNull() && !aNewStartTime.IsNull()) {
     mHoldTime.SetNull();
   }
 
-  Nullable<TimeDuration> previousCurrentTime = GetCurrentTime();
+  Nullable<TimeDuration> previousCurrentTime = GetCurrentTimeAsDuration();
 
   ApplyPendingPlaybackRate();
   mStartTime = aNewStartTime;
@@ -265,7 +265,7 @@ Nullable<TimeDuration> Animation::GetCurrentTimeForHoldTime(
   }
 
   if (mTimeline && !mStartTime.IsNull()) {
-    Nullable<TimeDuration> timelineTime = mTimeline->GetCurrentTime();
+    Nullable<TimeDuration> timelineTime = mTimeline->GetCurrentTimeAsDuration();
     if (!timelineTime.IsNull()) {
       result = CurrentTimeFromTimelineTime(timelineTime.Value(),
                                            mStartTime.Value(), mPlaybackRate);
@@ -281,7 +281,7 @@ void Animation::SetCurrentTime(const TimeDuration& aSeekTime) {
   // including the current value has the effect of aborting the
   // pause so we should not return early in that case.
   if (mPendingState != PendingState::PausePending &&
-      Nullable<TimeDuration>(aSeekTime) == GetCurrentTime()) {
+      Nullable<TimeDuration>(aSeekTime) == GetCurrentTimeAsDuration()) {
     return;
   }
 
@@ -319,14 +319,14 @@ void Animation::SetPlaybackRate(double aPlaybackRate) {
 
   AutoMutationBatchForAnimation mb(*this);
 
-  Nullable<TimeDuration> previousTime = GetCurrentTime();
+  Nullable<TimeDuration> previousTime = GetCurrentTimeAsDuration();
   mPlaybackRate = aPlaybackRate;
   if (!previousTime.IsNull()) {
     SetCurrentTime(previousTime.Value());
   }
 
-  // In the case where GetCurrentTime() returns the same result before and
-  // after updating mPlaybackRate, SetCurrentTime will return early since,
+  // In the case where GetCurrentTimeAsDuration() returns the same result before
+  // and after updating mPlaybackRate, SetCurrentTime will return early since,
   // as far as it can tell, nothing has changed.
   // As a result, we need to perform the following updates here:
   // - update timing (since, if the sign of the playback rate has changed, our
@@ -383,7 +383,7 @@ void Animation::UpdatePlaybackRate(double aPlaybackRate) {
       nsNodeUtils::AnimationChanged(this);
     }
   } else if (playState == AnimationPlayState::Finished) {
-    MOZ_ASSERT(mTimeline && !mTimeline->GetCurrentTime().IsNull(),
+    MOZ_ASSERT(mTimeline && !mTimeline->GetCurrentTimeAsDuration().IsNull(),
                "If we have no active timeline, we should be idle or paused");
     if (aPlaybackRate != 0) {
       // The unconstrained current time can only be unresolved if either we
@@ -394,11 +394,11 @@ void Animation::UpdatePlaybackRate(double aPlaybackRate) {
                  "Unconstrained current time should be resolved");
       TimeDuration unconstrainedCurrentTime =
           GetUnconstrainedCurrentTime().Value();
-      TimeDuration timelineTime = mTimeline->GetCurrentTime().Value();
+      TimeDuration timelineTime = mTimeline->GetCurrentTimeAsDuration().Value();
       mStartTime = StartTimeFromTimelineTime(
           timelineTime, unconstrainedCurrentTime, aPlaybackRate);
     } else {
-      mStartTime = mTimeline->GetCurrentTime();
+      mStartTime = mTimeline->GetCurrentTimeAsDuration();
     }
 
     ApplyPendingPlaybackRate();
@@ -421,7 +421,7 @@ void Animation::UpdatePlaybackRate(double aPlaybackRate) {
 
 // https://drafts.csswg.org/web-animations/#play-state
 AnimationPlayState Animation::PlayState() const {
-  Nullable<TimeDuration> currentTime = GetCurrentTime();
+  Nullable<TimeDuration> currentTime = GetCurrentTimeAsDuration();
   if (currentTime.IsNull() && !Pending()) {
     return AnimationPlayState::Idle;
   }
@@ -493,7 +493,7 @@ void Animation::Finish(ErrorResult& aRv) {
   // Seek to the end
   TimeDuration limit =
       mPlaybackRate > 0 ? TimeDuration(EffectEnd()) : TimeDuration(0);
-  bool didChange = GetCurrentTime() != Nullable<TimeDuration>(limit);
+  bool didChange = GetCurrentTimeAsDuration() != Nullable<TimeDuration>(limit);
   SilentlySetCurrentTime(limit);
 
   // If we are paused or play-pending we need to fill in the start time in
@@ -504,9 +504,9 @@ void Animation::Finish(ErrorResult& aRv) {
   // we can't transition to the running state (this finished state is really
   // a substate of the running state).
   if (mStartTime.IsNull() && mTimeline &&
-      !mTimeline->GetCurrentTime().IsNull()) {
-    mStartTime = StartTimeFromTimelineTime(mTimeline->GetCurrentTime().Value(),
-                                           limit, mPlaybackRate);
+      !mTimeline->GetCurrentTimeAsDuration().IsNull()) {
+    mStartTime = StartTimeFromTimelineTime(
+        mTimeline->GetCurrentTimeAsDuration().Value(), limit, mPlaybackRate);
     didChange = true;
   }
 
@@ -539,7 +539,7 @@ void Animation::Play(ErrorResult& aRv, LimitBehavior aLimitBehavior) {
 
 // https://drafts.csswg.org/web-animations/#reverse-an-animation
 void Animation::Reverse(ErrorResult& aRv) {
-  if (!mTimeline || mTimeline->GetCurrentTime().IsNull()) {
+  if (!mTimeline || mTimeline->GetCurrentTimeAsDuration().IsNull()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -581,13 +581,13 @@ void Animation::SetStartTimeAsDouble(const Nullable<double>& aStartTime) {
 }
 
 Nullable<double> Animation::GetCurrentTimeAsDouble() const {
-  return AnimationUtils::TimeDurationToDouble(GetCurrentTime());
+  return AnimationUtils::TimeDurationToDouble(GetCurrentTimeAsDuration());
 }
 
 void Animation::SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
                                        ErrorResult& aRv) {
   if (aCurrentTime.IsNull()) {
-    if (!GetCurrentTime().IsNull()) {
+    if (!GetCurrentTimeAsDuration().IsNull()) {
       aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     }
     return;
@@ -603,12 +603,12 @@ void Animation::Tick() {
   // have an active timeline.
   if (mPendingState != PendingState::NotPending &&
       !mPendingReadyTime.IsNull() && mTimeline &&
-      !mTimeline->GetCurrentTime().IsNull()) {
+      !mTimeline->GetCurrentTimeAsDuration().IsNull()) {
     // Even though mPendingReadyTime is initialized using TimeStamp::Now()
     // during the *previous* tick of the refresh driver, it can still be
     // ahead of the *current* timeline time when we are using the
     // vsync timer so we need to clamp it to the timeline time.
-    TimeDuration currentTime = mTimeline->GetCurrentTime().Value();
+    TimeDuration currentTime = mTimeline->GetCurrentTimeAsDuration().Value();
     if (currentTime < mPendingReadyTime.Value()) {
       mPendingReadyTime.SetValue(currentTime);
     }
@@ -617,9 +617,9 @@ void Animation::Tick() {
   }
 
   if (IsPossiblyOrphanedPendingAnimation()) {
-    MOZ_ASSERT(mTimeline && !mTimeline->GetCurrentTime().IsNull(),
+    MOZ_ASSERT(mTimeline && !mTimeline->GetCurrentTimeAsDuration().IsNull(),
                "Orphaned pending animations should have an active timeline");
-    FinishPendingAt(mTimeline->GetCurrentTime().Value());
+    FinishPendingAt(mTimeline->GetCurrentTimeAsDuration().Value());
   }
 
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
@@ -664,12 +664,12 @@ void Animation::TriggerNow() {
   // However, this is a test-only method that we don't expect to be used in
   // conjunction with animations without an active timeline so generate
   // a warning if we do find ourselves in that situation.
-  if (!mTimeline || mTimeline->GetCurrentTime().IsNull()) {
+  if (!mTimeline || mTimeline->GetCurrentTimeAsDuration().IsNull()) {
     NS_WARNING("Failed to trigger an animation with an active timeline");
     return;
   }
 
-  FinishPendingAt(mTimeline->GetCurrentTime().Value());
+  FinishPendingAt(mTimeline->GetCurrentTimeAsDuration().Value());
 }
 
 Nullable<TimeDuration> Animation::GetCurrentOrPendingStartTime() const {
@@ -758,14 +758,15 @@ TimeStamp Animation::ElapsedTimeToTimeStamp(
 // https://drafts.csswg.org/web-animations/#silently-set-the-current-time
 void Animation::SilentlySetCurrentTime(const TimeDuration& aSeekTime) {
   if (!mHoldTime.IsNull() || mStartTime.IsNull() || !mTimeline ||
-      mTimeline->GetCurrentTime().IsNull() || mPlaybackRate == 0.0) {
+      mTimeline->GetCurrentTimeAsDuration().IsNull() || mPlaybackRate == 0.0) {
     mHoldTime.SetValue(aSeekTime);
-    if (!mTimeline || mTimeline->GetCurrentTime().IsNull()) {
+    if (!mTimeline || mTimeline->GetCurrentTimeAsDuration().IsNull()) {
       mStartTime.SetNull();
     }
   } else {
-    mStartTime = StartTimeFromTimelineTime(mTimeline->GetCurrentTime().Value(),
-                                           aSeekTime, mPlaybackRate);
+    mStartTime =
+        StartTimeFromTimelineTime(mTimeline->GetCurrentTimeAsDuration().Value(),
+                                  aSeekTime, mPlaybackRate);
   }
 
   mPreviousCurrentTime.SetNull();
@@ -927,7 +928,7 @@ void Animation::ComposeStyle(RawServoAnimationValueMap& aComposeResult,
 
   // In order to prevent flicker, there are a few cases where we want to use
   // a different time for rendering that would otherwise be returned by
-  // GetCurrentTime. These are:
+  // GetCurrentTimeAsDuration. These are:
   //
   // (a) For animations that are pausing but which are still running on the
   //     compositor. In this case we send a layer transaction that removes the
@@ -1008,7 +1009,7 @@ void Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior) {
 
   double effectivePlaybackRate = CurrentOrPendingPlaybackRate();
 
-  Nullable<TimeDuration> currentTime = GetCurrentTime();
+  Nullable<TimeDuration> currentTime = GetCurrentTimeAsDuration();
   if (effectivePlaybackRate > 0.0 &&
       (currentTime.IsNull() || (aLimitBehavior == LimitBehavior::AutoRewind &&
                                 (currentTime.Value() < TimeDuration() ||
@@ -1100,7 +1101,7 @@ void Animation::Pause(ErrorResult& aRv) {
   AutoMutationBatchForAnimation mb(*this);
 
   // If we are transitioning from idle, fill in the current time
-  if (GetCurrentTime().IsNull()) {
+  if (GetCurrentTimeAsDuration().IsNull()) {
     if (mPlaybackRate >= 0.0) {
       mHoldTime.SetValue(TimeDuration(0));
     } else {
@@ -1226,7 +1227,7 @@ void Animation::UpdateTiming(SeekFlag aSeekFlag,
 // https://drafts.csswg.org/web-animations/#update-an-animations-finished-state
 void Animation::UpdateFinishedState(SeekFlag aSeekFlag,
                                     SyncNotifyFlag aSyncNotifyFlag) {
-  Nullable<TimeDuration> currentTime = GetCurrentTime();
+  Nullable<TimeDuration> currentTime = GetCurrentTimeAsDuration();
   TimeDuration effectEnd = TimeDuration(EffectEnd());
 
   if (!mStartTime.IsNull() && mPendingState == PendingState::NotPending) {
@@ -1250,11 +1251,11 @@ void Animation::UpdateFinishedState(SeekFlag aSeekFlag,
         mHoldTime.SetValue(0);
       }
     } else if (mPlaybackRate != 0.0 && !currentTime.IsNull() && mTimeline &&
-               !mTimeline->GetCurrentTime().IsNull()) {
+               !mTimeline->GetCurrentTimeAsDuration().IsNull()) {
       if (aSeekFlag == SeekFlag::DidSeek && !mHoldTime.IsNull()) {
-        mStartTime =
-            StartTimeFromTimelineTime(mTimeline->GetCurrentTime().Value(),
-                                      mHoldTime.Value(), mPlaybackRate);
+        mStartTime = StartTimeFromTimelineTime(
+            mTimeline->GetCurrentTimeAsDuration().Value(), mHoldTime.Value(),
+            mPlaybackRate);
       }
       mHoldTime.SetNull();
     }
@@ -1268,7 +1269,7 @@ void Animation::UpdateFinishedState(SeekFlag aSeekFlag,
   }
   // We must recalculate the current time to take account of any mHoldTime
   // changes the code above made.
-  mPreviousCurrentTime = GetCurrentTime();
+  mPreviousCurrentTime = GetCurrentTimeAsDuration();
 }
 
 void Animation::UpdateEffect() {
@@ -1390,7 +1391,7 @@ bool Animation::IsPossiblyOrphanedPendingAnimation() const {
 
   // If we don't have an active timeline then we shouldn't start until
   // we do.
-  if (!mTimeline || mTimeline->GetCurrentTime().IsNull()) {
+  if (!mTimeline || mTimeline->GetCurrentTimeAsDuration().IsNull()) {
     return false;
   }
 

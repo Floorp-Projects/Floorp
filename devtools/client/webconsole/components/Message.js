@@ -209,6 +209,7 @@ class Message extends Component {
             || serviceContainer.onViewSource,
           onViewSourceInScratchpad: serviceContainer.onViewSourceInScratchpad
             || serviceContainer.onViewSource,
+          onViewSource: serviceContainer.onViewSource,
           sourceMapService: serviceContainer.sourceMapService,
         }),
       );

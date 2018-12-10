@@ -156,7 +156,7 @@ nsIFrame* NS_NewMenuItemFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
 NS_IMPL_FRAMEARENA_HELPERS(nsMenuFrame)
 
 NS_QUERYFRAME_HEAD(nsMenuFrame)
-NS_QUERYFRAME_ENTRY(nsMenuFrame)
+  NS_QUERYFRAME_ENTRY(nsMenuFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 nsMenuFrame::nsMenuFrame(ComputedStyle* aStyle)

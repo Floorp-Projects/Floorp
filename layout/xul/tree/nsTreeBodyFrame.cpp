@@ -103,8 +103,8 @@ nsIFrame* NS_NewTreeBodyFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
 NS_IMPL_FRAMEARENA_HELPERS(nsTreeBodyFrame)
 
 NS_QUERYFRAME_HEAD(nsTreeBodyFrame)
-NS_QUERYFRAME_ENTRY(nsIScrollbarMediator)
-NS_QUERYFRAME_ENTRY(nsTreeBodyFrame)
+  NS_QUERYFRAME_ENTRY(nsIScrollbarMediator)
+  NS_QUERYFRAME_ENTRY(nsTreeBodyFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsLeafBoxFrame)
 
 // Constructor
@@ -2564,7 +2564,7 @@ class nsDisplayTreeBody final : public nsDisplayItem {
 void nsTreeBodyFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                        const nsDisplayListSet& aLists) {
   // REVIEW: why did we paint if we were collapsed? that makes no sense!
-  if (!IsVisibleForPainting(aBuilder))
+  if (!IsVisibleForPainting())
     return;  // We're invisible.  Don't paint.
 
   // Handles painting our background, border, and outline.

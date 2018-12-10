@@ -59,7 +59,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsBulletFrame)
 
 #ifdef DEBUG
 NS_QUERYFRAME_HEAD(nsBulletFrame)
-NS_QUERYFRAME_ENTRY(nsBulletFrame)
+  NS_QUERYFRAME_ENTRY(nsBulletFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsFrame)
 #endif
 
@@ -641,7 +641,7 @@ void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
 
 void nsBulletFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                      const nsDisplayListSet& aLists) {
-  if (!IsVisibleForPainting(aBuilder)) return;
+  if (!IsVisibleForPainting()) return;
 
   DO_GLOBAL_REFLOW_COUNT_DSP("nsBulletFrame");
 

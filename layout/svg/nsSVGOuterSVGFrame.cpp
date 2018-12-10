@@ -136,7 +136,7 @@ void nsSVGOuterSVGFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 // nsQueryFrame methods
 
 NS_QUERYFRAME_HEAD(nsSVGOuterSVGFrame)
-NS_QUERYFRAME_ENTRY(nsISVGSVGFrame)
+  NS_QUERYFRAME_ENTRY(nsISVGSVGFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsSVGDisplayContainerFrame)
 
 //----------------------------------------------------------------------
@@ -753,7 +753,7 @@ void nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     nsDisplayListSet set(contentList, contentList, contentList, contentList,
                          contentList, contentList);
     BuildDisplayListForNonBlockChildren(aBuilder, set);
-  } else if (IsVisibleForPainting(aBuilder) || !aBuilder->IsForPainting()) {
+  } else if (IsVisibleForPainting() || !aBuilder->IsForPainting()) {
     aLists.Content()->AppendToTop(
         MakeDisplayItem<nsDisplayOuterSVG>(aBuilder, this));
   }

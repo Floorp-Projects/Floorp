@@ -28,12 +28,6 @@
 #undef CurrentTime
 #endif
 
-// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
-// GetTickCount().
-#ifdef GetCurrentTime
-#undef GetCurrentTime
-#endif
-
 struct JSContext;
 class nsCSSPropertyIDSet;
 class nsIDocument;
@@ -98,7 +92,9 @@ class Animation : public DOMEventTargetHelper,
   void SetTimeline(AnimationTimeline* aTimeline);
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
   void SetStartTime(const Nullable<TimeDuration>& aNewStartTime);
-  Nullable<TimeDuration> GetCurrentTime() const {
+  // This is deliberately _not_ called GetCurrentTime since that would clash
+  // with a macro defined in winbase.h
+  Nullable<TimeDuration> GetCurrentTimeAsDuration() const {
     return GetCurrentTimeForHoldTime(mHoldTime);
   }
   void SetCurrentTime(const TimeDuration& aNewCurrentTime);
@@ -306,7 +302,7 @@ class Animation : public DOMEventTargetHelper,
 
   bool IsPlaying() const {
     return mPlaybackRate != 0.0 && mTimeline &&
-           !mTimeline->GetCurrentTime().IsNull() &&
+           !mTimeline->GetCurrentTimeAsDuration().IsNull() &&
            PlayState() == AnimationPlayState::Running;
   }
 

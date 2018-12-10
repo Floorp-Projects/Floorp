@@ -11,7 +11,6 @@ toolkit.jar:
   skin/classic/mozapps/extensions/rating-not-won.png              (extensions/rating-not-won.png)
   skin/classic/mozapps/extensions/cancel.png                      (extensions/cancel.png)
   skin/classic/mozapps/extensions/toolbarbutton-dropmarker.png    (extensions/toolbarbutton-dropmarker.png)
-  skin/classic/mozapps/extensions/heart.png                       (extensions/heart.png)
 * skin/classic/mozapps/extensions/extensions.css                  (extensions/extensions.css)
   skin/classic/mozapps/extensions/blocklist.css                   (extensions/blocklist.css)
   skin/classic/mozapps/profile/profileSelection.css               (profile/profileSelection.css)

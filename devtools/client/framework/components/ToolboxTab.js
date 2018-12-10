@@ -26,13 +26,14 @@ class ToolboxTab extends Component {
     this.renderIcon = this.renderIcon.bind(this);
   }
 
-  renderIcon(definition, isHighlighted) {
+  renderIcon(definition) {
     const {icon} = definition;
     if (!icon) {
       return [];
     }
     return [
       img({
+        alt: "",
         src: icon,
       }),
     ];
@@ -74,7 +75,7 @@ class ToolboxTab extends Component {
           className: "devtools-tab-line",
         }
       ),
-      ...this.renderIcon(panelDefinition, isHighlighted),
+      ...this.renderIcon(panelDefinition),
       iconOnly ?
         null :
         span(

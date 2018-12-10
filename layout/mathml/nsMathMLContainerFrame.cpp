@@ -29,8 +29,8 @@ using namespace mozilla::gfx;
 //
 
 NS_QUERYFRAME_HEAD(nsMathMLContainerFrame)
-NS_QUERYFRAME_ENTRY(nsIMathMLFrame)
-NS_QUERYFRAME_ENTRY(nsMathMLContainerFrame)
+  NS_QUERYFRAME_ENTRY(nsIMathMLFrame)
+  NS_QUERYFRAME_ENTRY(nsMathMLContainerFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 // =============================================================================
@@ -594,7 +594,7 @@ void nsMathMLContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                               const nsDisplayListSet& aLists) {
   // report an error if something wrong was found in this frame
   if (NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
-    if (!IsVisibleForPainting(aBuilder)) return;
+    if (!IsVisibleForPainting()) return;
 
     aLists.Content()->AppendToTop(
         MakeDisplayItem<nsDisplayMathMLError>(aBuilder, this));
@@ -1459,7 +1459,7 @@ nsContainerFrame* NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell,
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmathBlockFrame)
 
 NS_QUERYFRAME_HEAD(nsMathMLmathBlockFrame)
-NS_QUERYFRAME_ENTRY(nsMathMLmathBlockFrame)
+  NS_QUERYFRAME_ENTRY(nsMathMLmathBlockFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
 nsContainerFrame* NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell,
@@ -1470,5 +1470,5 @@ nsContainerFrame* NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell,
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmathInlineFrame)
 
 NS_QUERYFRAME_HEAD(nsMathMLmathInlineFrame)
-NS_QUERYFRAME_ENTRY(nsIMathMLFrame)
+  NS_QUERYFRAME_ENTRY(nsIMathMLFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsInlineFrame)

@@ -1151,6 +1151,11 @@ impl YamlFrameWriter {
                     yaml_node(&mut v, "previously-applied-offset", Yaml::Array(applied));
                 }
 
+                PopCacheMarker => return,
+                PushCacheMarker(_) => {
+                    str_node(&mut v, "type", "cache-marker");
+                }
+
                 PopStackingContext => return,
                 PopReferenceFrame => return,
                 SetGradientStops => panic!("dummy item yielded?"),

@@ -36,7 +36,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsPlaceholderFrame)
 
 #ifdef DEBUG
 NS_QUERYFRAME_HEAD(nsPlaceholderFrame)
-NS_QUERYFRAME_ENTRY(nsPlaceholderFrame)
+  NS_QUERYFRAME_ENTRY(nsPlaceholderFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsFrame)
 #endif
 

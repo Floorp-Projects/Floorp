@@ -301,6 +301,16 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         return mCrypto;
     }
 
+    @Override
+    public void setServerCertificate(final byte[] cert) {
+        if (DEBUG) Log.d(LOGTAG, "setServerCertificate()");
+        if (mDrm == null) {
+            throw new IllegalStateException("MediaDrm instance doesn't exist !!");
+        }
+        mDrm.setPropertyByteArray("serviceCertificate", cert);
+        return;
+    }
+
     protected void HandleKeyStatusChangeByDummyKey(String sessionId)
     {
         SessionKeyInfo[] keyInfos = new SessionKeyInfo[1];

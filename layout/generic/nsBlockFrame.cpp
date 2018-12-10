@@ -376,7 +376,7 @@ void nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot,
 }
 
 NS_QUERYFRAME_HEAD(nsBlockFrame)
-NS_QUERYFRAME_ENTRY(nsBlockFrame)
+  NS_QUERYFRAME_ENTRY(nsBlockFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 #ifdef DEBUG_FRAME_DUMP
@@ -6347,15 +6347,6 @@ static void ComputeVisualOverflowArea(nsLineList& aLines, nscoord aWidth,
   aResult.height = yb - ya;
 }
 #endif
-
-bool nsBlockFrame::IsVisibleInSelection(Selection* aSelection) {
-  if (mContent->IsAnyOfHTMLElements(nsGkAtoms::html, nsGkAtoms::body))
-    return true;
-
-  IgnoredErrorResult rv;
-  bool visible = aSelection->ContainsNode(*mContent, true, rv);
-  return !rv.Failed() && visible;
-}
 
 #ifdef DEBUG
 static void DebugOutputDrawLine(int32_t aDepth, nsLineBox* aLine, bool aDrawn) {

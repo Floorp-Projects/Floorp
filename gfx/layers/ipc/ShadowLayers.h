@@ -252,6 +252,7 @@ class ShadowLayerForwarder final : public LayersIPCActor,
   bool EndTransaction(const nsIntRegion& aRegionToClear, TransactionId aId,
                       bool aScheduleComposite, uint32_t aPaintSequenceNumber,
                       bool aIsRepeatTransaction,
+                      const mozilla::VsyncId& aVsyncId,
                       const mozilla::TimeStamp& aRefreshStart,
                       const mozilla::TimeStamp& aTransactionStart,
                       const nsCString& aURL, bool* aSent);

@@ -9,7 +9,7 @@
 *|*:root {
   --in-content-page-color: #0c0c0d;
   --in-content-page-background: #f9f9fa;
-  --in-content-text-color: #0c0c0d;
+  --in-content-text-color: var(--grey-90);
   --in-content-selected-text: #fff;
   --in-content-box-background: #fff;
   --in-content-box-background-odd: rgba(12, 12, 13, 0.05); /* grey 90 a05 */
@@ -39,6 +39,9 @@
   --in-content-link-color-hover: #0060df;
   --in-content-link-color-active: #003eaa;
   --in-content-link-color-visited: #0a8dff;
+  --in-content-button-background: var(--grey-90-a10);
+  --in-content-button-background-hover: var(--grey-90-a20);
+  --in-content-button-background-active: var(--grey-30);
   --in-content-primary-button-background: var(--blue-60);
   --in-content-primary-button-background-hover: var(--blue-70);
   --in-content-primary-button-background-active: var(--blue-80);
@@ -163,12 +166,16 @@ xul|menulist,
 html|*.numberbox-input::-moz-number-spin-up,
 html|*.numberbox-input::-moz-number-spin-down {
   -moz-appearance: none;
-  min-height: 30px;
+  min-height: 32px;
   /* !important overrides button.css for disabled and default XUL buttons: */
   color: var(--in-content-text-color) !important;
-  border: 1px solid var(--in-content-box-border-color);
+  border: none;
   border-radius: 2px;
-  background-color: var(--in-content-page-background);
+  background-color: var(--in-content-button-background);
+  font-weight: 400;
+  padding: 0 8px;
+  text-align: center;
+  text-decoration: none;
   margin: 4px 8px;
   /* Ensure font-size isn't overridden by widget styling (e.g. in forms.css) */
   font-size: 1em;
@@ -179,6 +186,16 @@ html|button {
   /* use the same margin of other elements for the alignment */
   margin-left: 4px;
   margin-right: 4px;
+}
+
+*|button::-moz-focus-inner {
+  border: none;
+}
+
+*|button:-moz-focusring {
+  box-shadow: 0 0 0 1px var(--in-content-border-active) inset,
+    0 0 0 1px var(--in-content-border-active),
+    0 0 0 4px var(--in-content-border-active-shadow);
 }
 
 html|select:not([size]):not([multiple]) {
@@ -203,7 +220,7 @@ html|*.numberbox-input::-moz-number-spin-down:hover,
 html|input[type="color"]:hover,
 xul|button:not([disabled="true"]):hover,
 xul|menulist:not([disabled="true"]):hover {
-  background-color: var(--in-content-box-background-hover);
+  background-color: var(--in-content-button-background-hover);
 }
 
 html|button:enabled:hover:active,
@@ -213,7 +230,7 @@ html|*.numberbox-input::-moz-number-spin-down:hover:active,
 html|input[type="color"]:enabled:hover:active,
 xul|button:not([disabled="true"]):hover:active,
 xul|menulist[open="true"]:not([disabled="true"]) {
-  background-color: var(--in-content-box-background-active);
+  background-color: var(--in-content-button-background-active);
 }
 
 html|button:disabled,
@@ -222,12 +239,11 @@ html|*.numberbox-input:disabled::-moz-number-spin-box,
 html|input[type="color"]:disabled,
 xul|button[disabled="true"],
 xul|menulist[disabled="true"] {
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
 *|button.primary {
   background-color: var(--in-content-primary-button-background);
-  border-color: transparent;
   color: var(--in-content-selected-text) !important;
 }
 
@@ -422,11 +438,11 @@ html|textarea {
   padding: 5px 8px;
 }
 
-html|input[type="email"]:enabled:hover,
-html|input[type="tel"]:enabled:hover,
-html|input[type="text"]:enabled:hover,
-html|textarea:enabled:hover,
-xul|textbox:not([disabled="true"]):hover {
+html|input[type="email"]:enabled:not(:focus):hover,
+html|input[type="tel"]:enabled:not(:focus):hover,
+html|input[type="text"]:enabled:not(:focus):hover,
+html|textarea:enabled:not(:focus):hover,
+xul|textbox:not([disabled="true"]):not([focused]):hover {
   border-color: var(--in-content-border-hover);
 }
 
@@ -436,7 +452,8 @@ html|input[type="text"]:focus,
 html|textarea:focus,
 xul|textbox[focused] {
   border-color: var(--in-content-border-active);
-  box-shadow: 0 0 0 3px var(--in-content-border-active-shadow);
+  box-shadow: 0 0 0 1px var(--in-content-border-active),
+    0 0 0 4px var(--in-content-border-active-shadow);
 }
 
 html|input[type="email"]:-moz-ui-invalid,

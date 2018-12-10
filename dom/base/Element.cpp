@@ -3134,6 +3134,24 @@ nsDOMTokenList* Element::GetTokenList(
   return list;
 }
 
+nsresult Element::CopyInnerTo(Element* aDst) {
+  nsresult rv = aDst->mAttrs.EnsureCapacityToClone(mAttrs);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint32_t i, count = mAttrs.AttrCount();
+  for (i = 0; i < count; ++i) {
+    const nsAttrName* name = mAttrs.AttrNameAt(i);
+    const nsAttrValue* value = mAttrs.AttrAt(i);
+    nsAutoString valStr;
+    value->ToString(valStr);
+    rv = aDst->SetAttr(name->NamespaceID(), name->LocalName(),
+                       name->GetPrefix(), valStr, false);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
 Element* Element::Closest(const nsAString& aSelector, ErrorResult& aResult) {
   const RawServoSelectorList* list = ParseSelectorList(aSelector, aResult);
   if (!list) {
@@ -3919,6 +3937,7 @@ MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(ServoElementMallocEnclosingSizeOf)
 void Element::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
                                      size_t* aNodeSize) const {
   FragmentOrElement::AddSizeOfExcludingThis(aSizes, aNodeSize);
+  *aNodeSize += mAttrs.SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
 
   if (HasServoData()) {
     // Measure the ElementData object itself.

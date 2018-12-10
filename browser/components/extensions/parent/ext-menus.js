@@ -655,11 +655,17 @@ MenuItem.prototype = {
     }
 
     if (createProperties.documentUrlPatterns != null) {
-      this.documentUrlMatchPattern = new MatchPatternSet(this.documentUrlPatterns);
+      this.documentUrlMatchPattern = new MatchPatternSet(this.documentUrlPatterns, {
+        restrictSchemes: this.extension.restrictSchemes,
+      });
     }
 
     if (createProperties.targetUrlPatterns != null) {
-      this.targetUrlMatchPattern = new MatchPatternSet(this.targetUrlPatterns, {restrictSchemes: false});
+      this.targetUrlMatchPattern = new MatchPatternSet(this.targetUrlPatterns, {
+        // restrictSchemes default to false when matching links instead of pages
+        // (see Bug 1280370 for a rationale).
+        restrictSchemes: false,
+      });
     }
 
     // If a child MenuItem does not specify any contexts, then it should

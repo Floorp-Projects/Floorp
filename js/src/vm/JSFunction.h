@@ -648,9 +648,15 @@ class JSFunction : public js::NativeObject {
     return false;
   }
 
-  void setScript(JSScript* script_) { mutableScript() = script_; }
+  void setScript(JSScript* script) {
+    MOZ_ASSERT(realm() == script->realm());
+    mutableScript() = script;
+  }
 
-  void initScript(JSScript* script_) { mutableScript().init(script_); }
+  void initScript(JSScript* script) {
+    MOZ_ASSERT_IF(script, realm() == script->realm());
+    mutableScript().init(script);
+  }
 
   void setUnlazifiedScript(JSScript* script) {
     MOZ_ASSERT(isInterpretedLazy());

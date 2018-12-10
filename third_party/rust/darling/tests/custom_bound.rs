@@ -4,8 +4,8 @@ extern crate syn;
 
 use std::ops::Add;
 
-#[derive(Debug, Clone, FromMetaItem)]
-#[darling(bound = "T: FromMetaItem + Add")]
+#[derive(Debug, Clone, FromMeta)]
+#[darling(bound = "T: FromMeta + Add")]
 struct Wrapper<T>(pub T);
 
 impl<T: Add> Add for Wrapper<T> {
@@ -16,7 +16,7 @@ impl<T: Add> Add for Wrapper<T> {
 }
 
 #[derive(Debug, FromDeriveInput)]
-#[darling(attributes(hello), bound = "Wrapper<T>: Add, T: FromMetaItem")]
+#[darling(attributes(hello), bound = "Wrapper<T>: Add, T: FromMeta")]
 struct Foo<T> {
     lorem: Wrapper<T>,
 }

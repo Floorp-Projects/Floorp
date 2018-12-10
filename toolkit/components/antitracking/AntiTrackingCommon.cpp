@@ -1452,18 +1452,22 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
   }
 
   // Can be called in EITHER the parent or child process.
-  nsCOMPtr<nsIParentChannel> parentChannel;
-  NS_QueryNotificationCallbacks(aChannel, parentChannel);
-  if (parentChannel) {
-    // This channel is a parent-process proxy for a child process request.
-    // Tell the child process channel to do this instead.
-    if (aDecision == BlockingDecision::eBlock) {
-      parentChannel->NotifyTrackingCookieBlocked(aRejectedReason);
-    } else {
-      parentChannel->NotifyCookieAllowed();
+  if (XRE_IsParentProcess()) {
+    nsCOMPtr<nsIParentChannel> parentChannel;
+    NS_QueryNotificationCallbacks(aChannel, parentChannel);
+    if (parentChannel) {
+      // This channel is a parent-process proxy for a child process request.
+      // Tell the child process channel to do this instead.
+      if (aDecision == BlockingDecision::eBlock) {
+        parentChannel->NotifyTrackingCookieBlocked(aRejectedReason);
+      } else {
+        parentChannel->NotifyCookieAllowed();
+      }
     }
     return;
   }
+
+  MOZ_ASSERT(XRE_IsContentProcess());
 
   nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
   if (!thirdPartyUtil) {

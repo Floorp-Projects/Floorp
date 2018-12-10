@@ -3,12 +3,12 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
 const { ExtensionTestUtils } = ChromeUtils.import("resource://testing-common/ExtensionXPCShellUtils.jsm", {});
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 const { getFileForBinary } = require("devtools/shared/adb/adb-binary");
 const { check } = require("devtools/shared/adb/adb-running-checker");
-const { ADB } = require("devtools/shared/adb/adb");
+const { adbProcess } = require("devtools/shared/adb/adb-process");
+const { TrackDevicesCommand } = require("devtools/shared/adb/commands/index");
 
 const ADB_JSON = {
   "Linux": {
@@ -176,22 +176,22 @@ add_task({
   await extension.startup();
 
   // Call start() once and call stop() afterwards.
-  await ADB.start();
-  ok(ADB.ready);
+  await adbProcess.start();
+  ok(adbProcess.ready);
   ok(await check(), "adb is now running");
 
-  await ADB.stop();
-  ok(!ADB.ready);
+  await adbProcess.stop();
+  ok(!adbProcess.ready);
   ok(!(await check()), "adb is no longer running");
 
   // Call start() twice and call stop() afterwards.
-  await ADB.start();
-  await ADB.start();
-  ok(ADB.ready);
+  await adbProcess.start();
+  await adbProcess.start();
+  ok(adbProcess.ready);
   ok(await check(), "adb is now running");
 
-  await ADB.stop();
-  ok(!ADB.ready);
+  await adbProcess.stop();
+  ok(!adbProcess.ready);
   ok(!(await check()), "adb is no longer running");
 
   await extension.unload();
@@ -220,22 +220,23 @@ add_task({
 
   await extension.startup();
 
-  await ADB.start();
-  ok(ADB.ready);
+  await adbProcess.start();
+  ok(adbProcess.ready);
 
   ok(await check(), "adb is now running");
 
   const receivedDeviceId = await new Promise(resolve => {
-    EventEmitter.on(ADB, "device-connected", deviceId => {
+    const trackDevicesCommand = new TrackDevicesCommand();
+    trackDevicesCommand.on("device-connected", deviceId => {
       resolve(deviceId);
     });
-    ADB.trackDevices();
+    trackDevicesCommand.run();
   });
 
   equal(receivedDeviceId, "1234567890");
 
-  await ADB.stop();
-  ok(!ADB.ready);
+  await adbProcess.stop();
+  ok(!adbProcess.ready);
 
   await extension.unload();
 });

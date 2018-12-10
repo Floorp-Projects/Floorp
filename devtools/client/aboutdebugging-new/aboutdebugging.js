@@ -28,8 +28,6 @@ const {
 } = require("./src/modules/network-locations");
 const {
   addUSBRuntimesObserver,
-  disableUSBRuntimes,
-  enableUSBRuntimes,
   getUSBRuntimes,
   removeUSBRuntimesObserver,
 } = require("./src/modules/usb-runtimes");
@@ -76,8 +74,10 @@ const AboutDebugging = {
     this.actions.updateNetworkLocations(getNetworkLocations());
 
     addNetworkLocationsObserver(this.onNetworkLocationsUpdated);
+
+    // Listen to USB runtime updates and retrieve the initial list of runtimes.
     addUSBRuntimesObserver(this.onUSBRuntimesUpdated);
-    await enableUSBRuntimes();
+    getUSBRuntimes();
 
     adbAddon.on("update", this.onAdbAddonUpdated);
     this.onAdbAddonUpdated();
@@ -113,7 +113,6 @@ const AboutDebugging = {
 
     removeNetworkLocationsObserver(this.onNetworkLocationsUpdated);
     removeUSBRuntimesObserver(this.onUSBRuntimesUpdated);
-    disableUSBRuntimes();
     adbAddon.off("update", this.onAdbAddonUpdated);
     setDebugTargetCollapsibilities(state.ui.debugTargetCollapsibilities);
     unmountComponentAtNode(this.mount);

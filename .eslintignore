@@ -31,7 +31,6 @@ netwerk/cookie/test/browser/**
 netwerk/test/browser/**
 netwerk/test/mochitests/**
 netwerk/test/unit*/**
-parser/**
 tools/update-packaging/**
 uriloader/exthandler/**
 uriloader/exthandler/tests/mochitest/**

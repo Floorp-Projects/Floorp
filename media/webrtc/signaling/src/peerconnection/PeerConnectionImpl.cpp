@@ -144,7 +144,7 @@ namespace {
 // inline, and we link this file without libxul in some cases (e.g. for our test
 // setup).  So we can't use ErrorResult or IgnoredErrorResult because those call
 // SuppressException...  And we can't use FastErrorResult because we can't
-// include BindingUtils.h, because our linking is completely fucked up.  Use
+// include BindingUtils.h, because our linking is completely broken. Use
 // BaseErrorResult directly.  Please do not let me see _anyone_ doing this
 // without really careful review from someone who knows what they are doing.
 class JSErrorResult : public binding_danger::TErrorResult<

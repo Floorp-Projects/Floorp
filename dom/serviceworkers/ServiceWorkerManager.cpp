@@ -737,18 +737,21 @@ RefPtr<ServiceWorkerRegistrationPromise> ServiceWorkerManager::Register(
   nsresult rv =
       NS_NewURI(getter_AddRefs(scopeURI), aScopeURL, nullptr, nullptr);
   if (NS_FAILED(rv)) {
-    return ServiceWorkerRegistrationPromise::CreateAndReject(rv, __func__);
+    return ServiceWorkerRegistrationPromise::CreateAndReject(
+        CopyableErrorResult(rv), __func__);
   }
 
   nsCOMPtr<nsIURI> scriptURI;
   rv = NS_NewURI(getter_AddRefs(scriptURI), aScriptURL, nullptr, nullptr);
   if (NS_FAILED(rv)) {
-    return ServiceWorkerRegistrationPromise::CreateAndReject(rv, __func__);
+    return ServiceWorkerRegistrationPromise::CreateAndReject(
+        CopyableErrorResult(rv), __func__);
   }
 
   rv = ServiceWorkerScopeAndScriptAreValid(aClientInfo, scopeURI, scriptURI);
   if (NS_FAILED(rv)) {
-    return ServiceWorkerRegistrationPromise::CreateAndReject(rv, __func__);
+    return ServiceWorkerRegistrationPromise::CreateAndReject(
+        CopyableErrorResult(rv), __func__);
   }
 
   // If the previous validation step passed then we must have a principal.
@@ -757,7 +760,8 @@ RefPtr<ServiceWorkerRegistrationPromise> ServiceWorkerManager::Register(
   nsAutoCString scopeKey;
   rv = PrincipalToScopeKey(principal, scopeKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return ServiceWorkerRegistrationPromise::CreateAndReject(rv, __func__);
+    return ServiceWorkerRegistrationPromise::CreateAndReject(
+        CopyableErrorResult(rv), __func__);
   }
 
   RefPtr<ServiceWorkerJobQueue> queue =

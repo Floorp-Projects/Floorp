@@ -626,36 +626,26 @@ var PlacesUIUtils = {
     });
   },
 
-  /**
-   * Loads a selected node's or nodes' URLs in tabs,
-   * warning the user when lots of URLs are being opened
-   *
-   * @param {object|array} nodeOrNodes
-   *          Contains the node or nodes that we're opening in tabs
-   * @param {event} event
-   *          The DOM mouse/key event with modifier keys set that track the
-   *          user's preferred destination window or tab.
-   * @param {object} view
-   *          The current view that contains the node or nodes selected for
-   *          opening
-   */
-  openMultipleLinksInTabs(nodeOrNodes, event, view) {
-    let window = view.ownerWindow;
-    let urlsToOpen = [];
+  openContainerNodeInTabs:
+  function PUIU_openContainerInTabs(aNode, aEvent, aView) {
+    let window = aView.ownerWindow;
 
-    if (PlacesUtils.nodeIsContainer(nodeOrNodes)) {
-      urlsToOpen = PlacesUtils.getURLsForContainerNode(nodeOrNodes);
-    } else {
-      for (var i = 0; i < nodeOrNodes.length; i++) {
-        // Skip over separators and folders.
-        if (PlacesUtils.nodeIsURI(nodeOrNodes[i])) {
-          urlsToOpen.push({uri: nodeOrNodes[i].uri, isBookmark: PlacesUtils.nodeIsBookmark(nodeOrNodes[i])});
-        }
-      }
-    }
+    let urlsToOpen = PlacesUtils.getURLsForContainerNode(aNode);
     if (OpenInTabsUtils.confirmOpenInTabs(urlsToOpen.length, window)) {
-      this._openTabset(urlsToOpen, event, window);
+      this._openTabset(urlsToOpen, aEvent, window);
     }
+  },
+
+  openURINodesInTabs: function PUIU_openURINodesInTabs(aNodes, aEvent, aView) {
+    let window = aView.ownerWindow;
+
+    let urlsToOpen = [];
+    for (var i = 0; i < aNodes.length; i++) {
+      // Skip over separators and folders.
+      if (PlacesUtils.nodeIsURI(aNodes[i]))
+        urlsToOpen.push({uri: aNodes[i].uri, isBookmark: PlacesUtils.nodeIsBookmark(aNodes[i])});
+    }
+    this._openTabset(urlsToOpen, aEvent, window);
   },
 
   /**
@@ -966,7 +956,7 @@ var PlacesUIUtils = {
     } else if (!mouseInGutter && openInTabs &&
                event.originalTarget.localName == "treechildren") {
       tbo.view.selection.select(cell.row);
-      this.openMultipleLinksInTabs(tree.selectedNode, event, tree);
+      this.openContainerNodeInTabs(tree.selectedNode, event, tree);
     } else if (!mouseInGutter && !isContainer &&
                event.originalTarget.localName == "treechildren") {
       // Clear all other selection since we're loading a link now. We must

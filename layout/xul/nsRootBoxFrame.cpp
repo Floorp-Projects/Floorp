@@ -214,7 +214,7 @@ void nsRootBoxFrame::SetDefaultTooltip(Element* aTooltip) {
 }
 
 NS_QUERYFRAME_HEAD(nsRootBoxFrame)
-NS_QUERYFRAME_ENTRY(nsIPopupContainer)
+  NS_QUERYFRAME_ENTRY(nsIPopupContainer)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 #ifdef DEBUG_FRAME_DUMP

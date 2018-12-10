@@ -20,7 +20,7 @@ var SearchTestUtils = Object.freeze({
    * Adds a search engine to the search service. It will remove the engine
    * at the end of the test.
    *
-   * @param {String}   url                     The URL of the engine to add.
+   * @param {string}   url                     The URL of the engine to add.
    * @param {Function} registerCleanupFunction Pass the registerCleanupFunction
    *                                           from the test's scope.
    * @returns {Promise} Returns a promise that is resolved with the new engine

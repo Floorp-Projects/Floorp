@@ -89,7 +89,7 @@ void nsImageControlFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 }
 
 NS_QUERYFRAME_HEAD(nsImageControlFrame)
-NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
+  NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsImageFrame)
 
 #ifdef ACCESSIBILITY

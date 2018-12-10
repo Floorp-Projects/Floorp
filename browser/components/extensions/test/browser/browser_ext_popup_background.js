@@ -20,7 +20,10 @@ async function testPanel(browser, standAlone, initial_background) {
         // to resolve CSS named colors such as -moz-field.
         let span = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
         span.style.color = default_background;
+        span.style.display = "none";
+        document.documentElement.appendChild(span);
         let default_background_computed = getComputedStyle(span).color;
+        span.remove();
 
         is(getComputedStyle(arrow).fill, default_background_computed, "Arrow fill should be the default one");
       }

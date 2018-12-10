@@ -223,7 +223,6 @@ class nsBlockFrame : public nsContainerFrame {
   };
 
   void ChildIsDirty(nsIFrame* aChild) override;
-  bool IsVisibleInSelection(mozilla::dom::Selection* aSelection) override;
 
   bool IsEmpty() override;
   bool CachedIsEmpty() override;

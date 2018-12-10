@@ -15,21 +15,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=460437
 </div>
 <pre id="test">
 <script type="application/javascript">
+/* eslint-disable no-unsanitized/property */
 <![CDATA[
 
 SimpleTest.expectAssertions(1);
 
 /** Test for Bug 460437 **/
 
-var s = '<i>invalid</i';
+var s = "<i>invalid</i";
 try {
-  document.getElementById('test460437').innerHTML = s;
+  document.getElementById("test460437").innerHTML = s;
 } catch (e) {
 }
-is(document.getElementById('test460437').innerHTML, "", "setting invalid innerHTML should clear it");
-s = '<i>valid</i>';
-document.getElementById('test460437').innerHTML = s;
-is(document.getElementById('test460437').innerHTML, "<i xmlns=\"http://www.w3.org/1999/xhtml\">valid</i>", "failed to set valid innerHTML");
+is(document.getElementById("test460437").innerHTML, "", "setting invalid innerHTML should clear it");
+s = "<i>valid</i>";
+document.getElementById("test460437").innerHTML = s;
+is(document.getElementById("test460437").innerHTML, "<i xmlns=\"http://www.w3.org/1999/xhtml\">valid</i>", "failed to set valid innerHTML");
 
 
 ]]>

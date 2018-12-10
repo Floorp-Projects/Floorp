@@ -8,7 +8,7 @@
 #define mozilla_ScrollStyles_h
 
 #include <stdint.h>
-#include "nsStyleConsts.h"  // for NS_STYLE_SCROLL_SNAP_*
+#include "nsStyleConsts.h"
 #include "nsStyleCoord.h"   // for nsStyleCoord
 #include "mozilla/dom/WindowBinding.h"
 
@@ -27,10 +27,8 @@ struct ScrollStyles {
   uint8_t mScrollBehavior;
   mozilla::StyleOverscrollBehavior mOverscrollBehaviorX;
   mozilla::StyleOverscrollBehavior mOverscrollBehaviorY;
-  // Always one of NS_STYLE_SCROLL_SNAP_NONE, NS_STYLE_SCROLL_SNAP_MANDATORY,
-  // or NS_STYLE_SCROLL_SNAP_PROXIMITY.
-  uint8_t mScrollSnapTypeX;
-  uint8_t mScrollSnapTypeY;
+  mozilla::StyleScrollSnapType mScrollSnapTypeX;
+  mozilla::StyleScrollSnapType mScrollSnapTypeY;
   nsStyleCoord mScrollSnapPointsX;
   nsStyleCoord mScrollSnapPointsY;
   nsStyleCoord::CalcValue mScrollSnapDestinationX;
@@ -42,8 +40,8 @@ struct ScrollStyles {
         mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO),
         mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
         mOverscrollBehaviorY(StyleOverscrollBehavior::Auto),
-        mScrollSnapTypeX(NS_STYLE_SCROLL_SNAP_TYPE_NONE),
-        mScrollSnapTypeY(NS_STYLE_SCROLL_SNAP_TYPE_NONE),
+        mScrollSnapTypeX(mozilla::StyleScrollSnapType::None),
+        mScrollSnapTypeY(mozilla::StyleScrollSnapType::None),
         mScrollSnapPointsX(nsStyleCoord(eStyleUnit_None)),
         mScrollSnapPointsY(nsStyleCoord(eStyleUnit_None)) {
     mScrollSnapDestinationX.mPercent = 0;

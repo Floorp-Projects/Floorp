@@ -128,6 +128,8 @@ pub enum SpecificDisplayItem {
     SetGradientStops,
     PushShadow(Shadow),
     PopAllShadows,
+    PushCacheMarker(CacheMarkerDisplayItem),
+    PopCacheMarker,
 }
 
 /// This is a "complete" version of the DI specifics,
@@ -159,6 +161,8 @@ pub enum CompletelySpecificDisplayItem {
     SetGradientStops(Vec<GradientStop>),
     PushShadow(Shadow),
     PopAllShadows,
+    PushCacheMarker(CacheMarkerDisplayItem),
+    PopCacheMarker,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -515,6 +519,12 @@ pub struct RadialGradientDisplayItem {
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct PushReferenceFrameDisplayListItem {
     pub reference_frame: ReferenceFrame,
+}
+
+/// Provides a hint to WR that it should try to cache the items
+/// within a cache marker context in an off-screen surface.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct CacheMarkerDisplayItem {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]

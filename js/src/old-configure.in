@@ -572,7 +572,7 @@ dnl ========================================================
 
 case "$target" in
 *-darwin*)
-    MOZ_OPTIMIZE_FLAGS="-O3 -fno-stack-protector"
+    MOZ_OPTIMIZE_FLAGS="-O3"
     CFLAGS="$CFLAGS -fno-common"
     CXXFLAGS="$CXXFLAGS -fno-common -stdlib=libc++"
     DSO_LDOPTS=''

@@ -243,4 +243,14 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
         mCallbacks = null;
         mStubId = "";
     }
+
+    @Override
+    public synchronized void setServerCertificate(final byte[] cert) {
+        try {
+            mBridge.setServerCertificate(cert);
+        } catch (IllegalStateException e) {
+            Log.e(LOGTAG, "Failed to setServerCertificate.", e);
+            throw e;
+        }
+    }
 }

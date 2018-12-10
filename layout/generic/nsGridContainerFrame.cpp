@@ -2484,7 +2484,7 @@ static uint16_t GetAlignJustifyFallbackIfAny(uint16_t aAlignment,
 // =======================
 
 NS_QUERYFRAME_HEAD(nsGridContainerFrame)
-NS_QUERYFRAME_ENTRY(nsGridContainerFrame)
+  NS_QUERYFRAME_ENTRY(nsGridContainerFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsGridContainerFrame)

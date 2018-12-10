@@ -5,6 +5,7 @@ job-defaults:
     virtualization:
         by-test-platform:
             windows10-64-qr/.*: virtual-with-gpu
+            windows10-64/.*: virtual-with-gpu
             default: virtual
     allow-software-gl-layers: false
     mozharness:

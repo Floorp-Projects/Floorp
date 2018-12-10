@@ -252,6 +252,16 @@ let ACTORS = {
     },
   },
 
+  SearchTelemetry: {
+    child: {
+      module: "resource:///actors/SearchTelemetryChild.jsm",
+      events: {
+        DOMContentLoaded: {},
+        "pageshow": {mozSystemGroup: true},
+      },
+    },
+  },
+
   ShieldFrame: {
     child: {
       module: "resource://normandy-content/ShieldFrameChild.jsm",
@@ -426,6 +436,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
   SaveToPocket: "chrome://pocket/content/SaveToPocket.jsm",
+  SearchTelemetry: "resource:///modules/SearchTelemetry.jsm",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
@@ -1444,6 +1455,7 @@ BrowserGlue.prototype = {
     }
 
     BrowserUsageTelemetry.uninit();
+    SearchTelemetry.uninit();
     // Only uninit PingCentre if the getter has initialized it
     if (Object.prototype.hasOwnProperty.call(this, "pingCentre")) {
       this.pingCentre.uninit();
@@ -1511,6 +1523,7 @@ BrowserGlue.prototype = {
     }
 
     BrowserUsageTelemetry.init();
+    SearchTelemetry.init();
 
     // Show update notification, if needed.
     if (Services.prefs.prefHasUserValue("app.update.postupdate"))
@@ -3028,7 +3041,7 @@ var ContentBlockingCategoriesPrefs = {
   CATEGORY_PREFS: {
     strict: [
       ["urlclassifier.trackingTable", null],
-      ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN],
+      ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
       ["privacy.trackingprotection.pbmode.enabled", true],
       ["privacy.trackingprotection.enabled", true],
     ],

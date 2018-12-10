@@ -33,6 +33,9 @@ elif CONFIG['CPU_ARCH'] == 'arm':
 elif CONFIG['CPU_ARCH'] == 'aarch64':
     LOCAL_INCLUDES += ['/media/libdav1d/config/aarch64/']
     EXPORTS.dav1d += ['config/aarch64/config.h']
+else:
+    LOCAL_INCLUDES += ['/media/libdav1d/config/other/']
+    EXPORTS.dav1d += ['config/other/config.h']
 
 EXPORTS.dav1d += [
     'version.h',

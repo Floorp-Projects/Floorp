@@ -7,6 +7,7 @@ include protocol PBackground;
 include "mozilla/layers/LayersMessageUtils.h";
 
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
+using mozilla::VsyncEvent from "mozilla/VsyncDispatcher.h";
 
 namespace mozilla {
 namespace layout {
@@ -22,7 +23,7 @@ async protocol PVsync
 
 child:
   // Send vsync event from chrome to content process.
-  prio(high) async Notify(TimeStamp aVsyncTimestamp) compress;
+  prio(high) async Notify(VsyncEvent aVsync) compress;
 
   // Send the vsync rate to the content process.
   async VsyncRate(float aVsyncRate);

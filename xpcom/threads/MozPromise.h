@@ -244,6 +244,9 @@ class MozPromise : public MozPromiseBase {
   template <typename ResolveValueType_>
   static RefPtr<MozPromise> CreateAndResolve(ResolveValueType_&& aResolveValue,
                                              const char* aResolveSite) {
+    static_assert(IsConvertible<ResolveValueType_, ResolveValueT>::value,
+                  "Resolve() argument must be implicitly convertible to "
+                  "MozPromise's ResolveValueT");
     RefPtr<typename MozPromise::Private> p =
         new MozPromise::Private(aResolveSite);
     p->Resolve(std::forward<ResolveValueType_>(aResolveValue), aResolveSite);
@@ -253,6 +256,9 @@ class MozPromise : public MozPromiseBase {
   template <typename RejectValueType_>
   static RefPtr<MozPromise> CreateAndReject(RejectValueType_&& aRejectValue,
                                             const char* aRejectSite) {
+    static_assert(IsConvertible<RejectValueType_, RejectValueT>::value,
+                  "Reject() argument must be implicitly convertible to "
+                  "MozPromise's RejectValueT");
     RefPtr<typename MozPromise::Private> p =
         new MozPromise::Private(aRejectSite);
     p->Reject(std::forward<RejectValueType_>(aRejectValue), aRejectSite);
@@ -1130,10 +1136,10 @@ class MozPromiseHolder {
 
   template <typename ResolveValueType_>
   void Resolve(ResolveValueType_&& aResolveValue, const char* aMethodName) {
-    static_assert(
-        IsConvertible<ResolveValueType_,
-                      typename PromiseType::ResolveValueType>::value,
-        "Resolve() argument must be convertible to MozPromise's ResolveValueT");
+    static_assert(IsConvertible<ResolveValueType_,
+                                typename PromiseType::ResolveValueType>::value,
+                  "Resolve() argument must be implicitly convertible to "
+                  "MozPromise's ResolveValueT");
 
     if (mMonitor) {
       mMonitor->AssertCurrentThreadOwns();
@@ -1154,10 +1160,10 @@ class MozPromiseHolder {
 
   template <typename RejectValueType_>
   void Reject(RejectValueType_&& aRejectValue, const char* aMethodName) {
-    static_assert(
-        IsConvertible<RejectValueType_,
-                      typename PromiseType::RejectValueType>::value,
-        "Reject() argument must be convertible to MozPromise's RejectValueT");
+    static_assert(IsConvertible<RejectValueType_,
+                                typename PromiseType::RejectValueType>::value,
+                  "Reject() argument must be implicitly convertible to "
+                  "MozPromise's RejectValueT");
 
     if (mMonitor) {
       mMonitor->AssertCurrentThreadOwns();

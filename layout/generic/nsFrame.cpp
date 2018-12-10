@@ -475,7 +475,7 @@ void nsFrame::operator delete(void*, size_t) {
 }
 
 NS_QUERYFRAME_HEAD(nsFrame)
-NS_QUERYFRAME_ENTRY(nsIFrame)
+  NS_QUERYFRAME_ENTRY(nsIFrame)
 NS_QUERYFRAME_TAIL_INHERITANCE_ROOT
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2131,7 +2131,7 @@ already_AddRefed<ComputedStyle> nsIFrame::ComputeSelectionStyle() const {
 void nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder* aBuilder,
                                       nsDisplayList* aList,
                                       uint16_t aContentType) {
-  if (!IsSelected() || !IsVisibleForPainting(aBuilder)) {
+  if (!IsSelected() || !IsVisibleForPainting()) {
     return;
   }
 
@@ -2189,14 +2189,14 @@ void nsFrame::DisplayOutlineUnconditional(nsDisplayListBuilder* aBuilder,
 
 void nsFrame::DisplayOutline(nsDisplayListBuilder* aBuilder,
                              const nsDisplayListSet& aLists) {
-  if (!IsVisibleForPainting(aBuilder)) return;
+  if (!IsVisibleForPainting()) return;
 
   DisplayOutlineUnconditional(aBuilder, aLists);
 }
 
 void nsIFrame::DisplayCaret(nsDisplayListBuilder* aBuilder,
                             nsDisplayList* aList) {
-  if (!IsVisibleForPainting(aBuilder)) return;
+  if (!IsVisibleForPainting()) return;
 
   aList->AppendToTop(MakeDisplayItem<nsDisplayCaret>(aBuilder, this));
 }
@@ -2226,7 +2226,7 @@ void nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder* aBuilder,
   // The visibility check belongs here since child elements have the
   // opportunity to override the visibility property and display even if
   // their parent is hidden.
-  if (!IsVisibleForPainting(aBuilder)) {
+  if (!IsVisibleForPainting()) {
     return;
   }
 
@@ -2322,10 +2322,10 @@ static bool ApplyOverflowClipping(
   auto wm = aFrame->GetWritingMode();
   bool cbH = (wm.IsVertical() ? disp->mOverflowClipBoxBlock
                               : disp->mOverflowClipBoxInline) ==
-             NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX;
+             StyleOverflowClipBox::ContentBox;
   bool cbV = (wm.IsVertical() ? disp->mOverflowClipBoxInline
                               : disp->mOverflowClipBoxBlock) ==
-             NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX;
+             StyleOverflowClipBox::ContentBox;
   nsMargin bp = aFrame->GetUsedPadding();
   if (!cbH) {
     bp.left = bp.right = nscoord(0);
@@ -2665,7 +2665,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
   // Replaced elements have their visibility handled here, because
   // they're visually atomic
-  if (IsFrameOfType(eReplaced) && !IsVisibleForPainting(aBuilder)) return;
+  if (IsFrameOfType(eReplaced) && !IsVisibleForPainting()) return;
 
   const nsStyleDisplay* disp = StyleDisplay();
   const nsStyleEffects* effects = StyleEffects();
@@ -7342,48 +7342,10 @@ void nsIFrame::RootFrameList(nsPresContext* aPresContext, FILE* out,
 }
 #endif
 
-bool nsIFrame::IsVisibleForPainting(nsDisplayListBuilder* aBuilder) {
-  if (!StyleVisibility()->IsVisible()) return false;
-  Selection* sel = aBuilder->GetBoundingSelection();
-  return !sel || IsVisibleInSelection(sel);
-}
+bool nsIFrame::IsVisibleForPainting() { return StyleVisibility()->IsVisible(); }
 
-bool nsIFrame::IsVisibleForPainting() {
-  if (!StyleVisibility()->IsVisible()) return false;
-
-  nsPresContext* pc = PresContext();
-  if (!pc->IsRenderingOnlySelection()) return true;
-
-  nsCOMPtr<nsISelectionController> selcon(do_QueryInterface(pc->PresShell()));
-  if (selcon) {
-    RefPtr<Selection> sel =
-        selcon->GetSelection(nsISelectionController::SELECTION_NORMAL);
-    if (sel) {
-      return IsVisibleInSelection(sel);
-    }
-  }
-  return true;
-}
-
-bool nsIFrame::IsVisibleInSelection(nsDisplayListBuilder* aBuilder) {
-  Selection* sel = aBuilder->GetBoundingSelection();
-  return !sel || IsVisibleInSelection(sel);
-}
-
-bool nsIFrame::IsVisibleOrCollapsedForPainting(nsDisplayListBuilder* aBuilder) {
-  if (!StyleVisibility()->IsVisibleOrCollapsed()) return false;
-  Selection* sel = aBuilder->GetBoundingSelection();
-  return !sel || IsVisibleInSelection(sel);
-}
-
-bool nsIFrame::IsVisibleInSelection(Selection* aSelection) {
-  if (!GetContent() || !GetContent()->IsSelectionDescendant()) {
-    return false;
-  }
-
-  ErrorResult rv;
-  bool vis = aSelection->ContainsNode(*mContent, true, rv);
-  return rv.Failed() || vis;
+bool nsIFrame::IsVisibleOrCollapsedForPainting() {
+  return StyleVisibility()->IsVisibleOrCollapsed();
 }
 
 /* virtual */ bool nsFrame::IsEmpty() { return false; }

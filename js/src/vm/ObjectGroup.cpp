@@ -502,8 +502,10 @@ MOZ_ALWAYS_INLINE ObjectGroup* ObjectGroupRealm::DefaultNewGroupCache::lookup(
       associated = associated->as<JSFunction>().maybeCanonicalFunction();
 
       // If we have previously cleared the 'new' script information for this
-      // function, don't try to construct another one.
-      if (associated && associated->as<JSFunction>().wasNewScriptCleared()) {
+      // function, don't try to construct another one. Also, for simplicity,
+      // don't bother optimizing cross-realm constructors.
+      if (associated && (associated->as<JSFunction>().wasNewScriptCleared() ||
+                         associated->as<JSFunction>().realm() != cx->realm())) {
         associated = nullptr;
       }
 

@@ -144,6 +144,9 @@ class MediaKeys final : public nsISupports,
   void ResolvePromiseWithKeyStatus(PromiseId aId,
                                    dom::MediaKeyStatus aMediaKeyStatus);
 
+  template <typename T>
+  void ResolvePromiseWithResult(PromiseId aId, const T& aResult);
+
  private:
   // Instantiate CDMProxy instance.
   // It could be MediaDrmCDMProxy (Widevine on Fennec) or ChromiumCDMProxy (the

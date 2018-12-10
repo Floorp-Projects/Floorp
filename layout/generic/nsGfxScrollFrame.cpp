@@ -596,19 +596,17 @@ void nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput* aState,
   aMetrics->UnionOverflowAreasWithDesiredBounds();
 
   auto* disp = StyleDisplay();
-  if (MOZ_UNLIKELY(disp->mOverflowClipBoxBlock ==
-                       NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX ||
-                   disp->mOverflowClipBoxInline ==
-                       NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX)) {
+  if (MOZ_UNLIKELY(
+          disp->mOverflowClipBoxBlock == StyleOverflowClipBox::ContentBox ||
+          disp->mOverflowClipBoxInline == StyleOverflowClipBox::ContentBox)) {
     nsOverflowAreas childOverflow;
     nsLayoutUtils::UnionChildOverflow(mHelper.mScrolledFrame, childOverflow);
     nsRect childScrollableOverflow = childOverflow.ScrollableOverflow();
-    if (disp->mOverflowClipBoxBlock == NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX) {
+    if (disp->mOverflowClipBoxBlock == StyleOverflowClipBox::PaddingBox) {
       padding.BStart(wm) = nscoord(0);
       padding.BEnd(wm) = nscoord(0);
     }
-    if (disp->mOverflowClipBoxInline ==
-        NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX) {
+    if (disp->mOverflowClipBoxInline == StyleOverflowClipBox::PaddingBox) {
       padding.IStart(wm) = nscoord(0);
       padding.IEnd(wm) = nscoord(0);
     }
@@ -1152,10 +1150,10 @@ a11y::AccType nsHTMLScrollFrame::AccessibleType() {
 #endif
 
 NS_QUERYFRAME_HEAD(nsHTMLScrollFrame)
-NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-NS_QUERYFRAME_ENTRY(nsIScrollableFrame)
-NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
-NS_QUERYFRAME_ENTRY(nsIScrollbarMediator)
+  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
+  NS_QUERYFRAME_ENTRY(nsIScrollableFrame)
+  NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
+  NS_QUERYFRAME_ENTRY(nsIScrollbarMediator)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 //----------nsXULScrollFrame-------------------------------------------
@@ -1589,10 +1587,10 @@ nsXULScrollFrame::DoXULLayout(nsBoxLayoutState& aState) {
 }
 
 NS_QUERYFRAME_HEAD(nsXULScrollFrame)
-NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-NS_QUERYFRAME_ENTRY(nsIScrollableFrame)
-NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
-NS_QUERYFRAME_ENTRY(nsIScrollbarMediator)
+  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
+  NS_QUERYFRAME_ENTRY(nsIScrollableFrame)
+  NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
+  NS_QUERYFRAME_ENTRY(nsIScrollbarMediator)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 //-------------------- Helper ----------------------
@@ -3363,17 +3361,16 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   Maybe<nsRect> contentBoxClip;
   Maybe<const DisplayItemClipChain*> extraContentBoxClipForNonCaretContent;
-  if (MOZ_UNLIKELY(disp->mOverflowClipBoxBlock ==
-                       NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX ||
-                   disp->mOverflowClipBoxInline ==
-                       NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX)) {
+  if (MOZ_UNLIKELY(
+          disp->mOverflowClipBoxBlock == StyleOverflowClipBox::ContentBox ||
+          disp->mOverflowClipBoxInline == StyleOverflowClipBox::ContentBox)) {
     WritingMode wm = mScrolledFrame->GetWritingMode();
     bool cbH = (wm.IsVertical() ? disp->mOverflowClipBoxBlock
                                 : disp->mOverflowClipBoxInline) ==
-               NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX;
+               StyleOverflowClipBox::ContentBox;
     bool cbV = (wm.IsVertical() ? disp->mOverflowClipBoxInline
                                 : disp->mOverflowClipBoxBlock) ==
-               NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX;
+               StyleOverflowClipBox::ContentBox;
     // We only clip if there is *scrollable* overflow, to avoid clipping
     // *visual* overflow unnecessarily.
     nsRect clipRect = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
@@ -4075,8 +4072,8 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta,
 
   if (aSnap == nsIScrollableFrame::ENABLE_SNAP) {
     ScrollStyles styles = GetScrollStylesFromFrame();
-    if (styles.mScrollSnapTypeY != NS_STYLE_SCROLL_SNAP_TYPE_NONE ||
-        styles.mScrollSnapTypeX != NS_STYLE_SCROLL_SNAP_TYPE_NONE) {
+    if (styles.mScrollSnapTypeY != StyleScrollSnapType::None ||
+        styles.mScrollSnapTypeX != StyleScrollSnapType::None) {
       nscoord appUnitsPerDevPixel =
           mOuter->PresContext()->AppUnitsPerDevPixel();
       deltaMultiplier = nsSize(appUnitsPerDevPixel, appUnitsPerDevPixel);
@@ -4521,8 +4518,8 @@ nsresult ScrollFrameHelper::CreateAnonymousContent(
   // For info on what is generated content, see [2].
   // [1]: https://drafts.csswg.org/css-ui/#resize
   // [2]: https://www.w3.org/TR/CSS2/generate.html#content
-  int8_t resizeStyle = mOuter->StyleDisplay()->mResize;
-  bool isResizable = resizeStyle != NS_STYLE_RESIZE_NONE &&
+  auto resizeStyle = mOuter->StyleDisplay()->mResize;
+  bool isResizable = resizeStyle != StyleResize::None &&
                      !mOuter->HasAnyStateBits(NS_FRAME_GENERATED_CONTENT);
 
   nsIScrollableFrame* scrollable = do_QueryFrame(mOuter);
@@ -4625,21 +4622,21 @@ nsresult ScrollFrameHelper::CreateAnonymousContent(
 
     nsAutoString dir;
     switch (resizeStyle) {
-      case NS_STYLE_RESIZE_HORIZONTAL:
+      case StyleResize::Horizontal:
         if (IsScrollbarOnRight()) {
           dir.AssignLiteral("right");
         } else {
           dir.AssignLiteral("left");
         }
         break;
-      case NS_STYLE_RESIZE_VERTICAL:
+      case StyleResize::Vertical:
         dir.AssignLiteral("bottom");
         if (!IsScrollbarOnRight()) {
           mResizerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::flip,
                                    EmptyString(), false);
         }
         break;
-      case NS_STYLE_RESIZE_BOTH:
+      case StyleResize::Both:
         if (IsScrollbarOnRight()) {
           dir.AssignLiteral("bottomright");
         } else {
@@ -6251,8 +6248,8 @@ static layers::ScrollSnapInfo ComputeScrollSnapInfo(
 
   ScrollStyles styles = aScrollFrame.GetScrollStylesFromFrame();
 
-  if (styles.mScrollSnapTypeY == NS_STYLE_SCROLL_SNAP_TYPE_NONE &&
-      styles.mScrollSnapTypeX == NS_STYLE_SCROLL_SNAP_TYPE_NONE) {
+  if (styles.mScrollSnapTypeY == StyleScrollSnapType::None &&
+      styles.mScrollSnapTypeX == StyleScrollSnapType::None) {
     // We won't be snapping, short-circuit the computation.
     return result;
   }

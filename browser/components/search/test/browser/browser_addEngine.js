@@ -33,7 +33,7 @@ function observer(aSubject, aTopic, aData) {
 
 function checkEngine(checkObj, engineObj) {
   info("Checking engine");
-  for (var prop in checkObj)
+  for (let prop in checkObj)
     is(checkObj[prop], engineObj[prop], prop + " is correct");
 }
 

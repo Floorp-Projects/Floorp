@@ -476,13 +476,19 @@ already_AddRefed<MediaKeySession> MediaKeys::CreateSession(
 }
 
 void MediaKeys::OnSessionLoaded(PromiseId aId, bool aSuccess) {
+  EME_LOG("MediaKeys[%p]::OnSessionLoaded() resolve promise id=%d", this, aId);
+
+  ResolvePromiseWithResult(aId, aSuccess);
+}
+
+template <typename T>
+void MediaKeys::ResolvePromiseWithResult(PromiseId aId, const T& aResult) {
   RefPtr<DetailedPromise> promise(RetrievePromise(aId));
   if (!promise) {
     return;
   }
-  EME_LOG("MediaKeys[%p]::OnSessionLoaded() resolve promise id=%d", this, aId);
 
-  promise->MaybeResolve(aSuccess);
+  promise->MaybeResolve(aResult);
 }
 
 void MediaKeys::OnSessionClosed(MediaKeySession* aSession) {

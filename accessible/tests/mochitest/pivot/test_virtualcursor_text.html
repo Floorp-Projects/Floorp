@@ -236,6 +236,13 @@
       gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [20, 28],
                   getAccessible(doc.getElementById("section-1"), nsIAccessibleText)));
 
+      gQueue.push(new setVCPosInvoker(docAcc, null, null,
+                                      getAccessible(doc.getElementById("image-desc-link"))));
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", CHAR_BOUNDARY, [0, 1],
+                  getAccessible(doc.getElementById("image-desc-link"), nsIAccessibleText)));
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", CHAR_BOUNDARY, [1, 2],
+                  getAccessible(doc.getElementById("image-desc-link"), nsIAccessibleText)));
+
       gQueue.invoke();
     }
 

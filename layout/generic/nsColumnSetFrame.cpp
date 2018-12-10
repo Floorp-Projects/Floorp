@@ -1223,7 +1223,7 @@ void nsColumnSetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                         const nsDisplayListSet& aLists) {
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
-  if (IsVisibleForPainting(aBuilder)) {
+  if (IsVisibleForPainting()) {
     aLists.BorderBackground()->AppendToTop(
         MakeDisplayItem<nsDisplayColumnRule>(aBuilder, this));
   }

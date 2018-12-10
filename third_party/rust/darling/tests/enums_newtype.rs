@@ -5,15 +5,15 @@ use darling::FromDeriveInput;
 
 extern crate syn;
 
-#[derive(Debug, Default, PartialEq, Eq, FromMetaItem)]
+#[derive(Debug, Default, PartialEq, Eq, FromMeta)]
 #[darling(default)]
 pub struct Amet {
     hello: bool,
     world: String,
 }
 
-#[derive(Debug, PartialEq, Eq, FromMetaItem)]
-#[darling(rename_all="snake_case")]
+#[derive(Debug, PartialEq, Eq, FromMeta)]
+#[darling(rename_all = "snake_case")]
 pub enum Lorem {
     Ipsum(bool),
     Dolor(String),
@@ -34,10 +34,12 @@ impl PartialEq<Lorem> for Holder {
 
 #[test]
 fn bool_word() {
-    let di = syn::parse_str(r#"
+    let di = syn::parse_str(
+        r#"
         #[hello(lorem(ipsum))]
         pub struct Bar;
-    "#).unwrap();
+    "#,
+    ).unwrap();
 
     let pr = Holder::from_derive_input(&di).unwrap();
     assert_eq!(pr, Lorem::Ipsum(true));
@@ -45,10 +47,12 @@ fn bool_word() {
 
 #[test]
 fn bool_literal() {
-    let di = syn::parse_str(r#"
+    let di = syn::parse_str(
+        r#"
         #[hello(lorem(ipsum = false))]
         pub struct Bar;
-    "#).unwrap();
+    "#,
+    ).unwrap();
 
     let pr = Holder::from_derive_input(&di).unwrap();
     assert_eq!(pr, Lorem::Ipsum(false));
@@ -56,10 +60,12 @@ fn bool_literal() {
 
 #[test]
 fn string_literal() {
-    let di = syn::parse_str(r#"
+    let di = syn::parse_str(
+        r#"
         #[hello(lorem(dolor = "Hello"))]
         pub struct Bar;
-    "#).unwrap();
+    "#,
+    ).unwrap();
 
     let pr = Holder::from_derive_input(&di).unwrap();
     assert_eq!(pr, Lorem::Dolor("Hello".to_string()));
@@ -67,25 +73,32 @@ fn string_literal() {
 
 #[test]
 fn struct_nested() {
-    let di = syn::parse_str(r#"
+    let di = syn::parse_str(
+        r#"
         #[hello(lorem(sit(world = "Hello", hello = false)))]
         pub struct Bar;
-    "#).unwrap();
+    "#,
+    ).unwrap();
 
     let pr = Holder::from_derive_input(&di).unwrap();
-    assert_eq!(pr, Lorem::Sit(Amet {
-        hello: false,
-        world: "Hello".to_string(),
-    }));
+    assert_eq!(
+        pr,
+        Lorem::Sit(Amet {
+            hello: false,
+            world: "Hello".to_string(),
+        })
+    );
 }
 
 #[test]
 #[should_panic]
 fn format_mismatch() {
-    let di = syn::parse_str(r#"
+    let di = syn::parse_str(
+        r#"
         #[hello(lorem(dolor(world = "Hello", hello = false)))]
         pub struct Bar;
-    "#).unwrap();
+    "#,
+    ).unwrap();
 
     Holder::from_derive_input(&di).unwrap();
 }
