@@ -86,7 +86,7 @@
   background-image: url(chrome://browser/skin/bookmark.svg);
 }
 
-.urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-type-icon {
+.urlbarView-row[type=tab] > .urlbarView-row-inner > .urlbarView-type-icon {
   background-image: url(chrome://browser/skin/tab.svg);
 }
 
