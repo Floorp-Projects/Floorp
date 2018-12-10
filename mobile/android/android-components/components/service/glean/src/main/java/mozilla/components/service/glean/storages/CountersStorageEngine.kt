@@ -43,8 +43,8 @@ internal open class CountersStorageEngineImplementation(
         amount: Int
     ) {
         // Use a custom combiner to add the amount to the existing counters rather than overwriting
-        super.recordScalar(metricData, amount) { currentValue, amount ->
-            currentValue?.let { it + amount } ?: amount
+        super.recordScalar(metricData, amount) { currentValue, newAmount ->
+            currentValue?.let { it + newAmount } ?: newAmount
         }
     }
 }
