@@ -194,16 +194,8 @@ class PresShell final : public nsIPresShell,
 
   void SetIgnoreViewportScrolling(bool aIgnore) override;
 
-  nsresult SetResolution(float aResolution) override {
-    return SetResolutionImpl(aResolution, /* aScaleToResolution = */ false,
-                             nsGkAtoms::other);
-  }
   nsresult SetResolutionAndScaleTo(float aResolution,
-                                   nsAtom* aOrigin) override {
-    return SetResolutionImpl(aResolution, /* aScaleToResolution = */ true,
-                             aOrigin);
-  }
-  bool ScaleToResolution() const override;
+                                   nsAtom* aOrigin) override;
   bool IsResolutionUpdated() const override { return mResolutionUpdated; }
   void SetResolutionUpdated(bool aUpdated) override {
     mResolutionUpdated = aUpdated;
@@ -819,11 +811,6 @@ class PresShell final : public nsIPresShell,
   bool mNextPaintCompressed : 1;
 
   bool mHasCSSBackgroundColor : 1;
-
-  // Whether content should be scaled by the resolution amount. If this is
-  // not set, a transform that scales by the inverse of the resolution is
-  // applied to rendered layers.
-  bool mScaleToResolution : 1;
 
   // Whether the last chrome-only escape key event is consumed.
   bool mIsLastChromeOnlyEscapeKeyConsumed : 1;

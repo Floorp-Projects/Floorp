@@ -371,8 +371,7 @@ void MobileViewportManager::UpdateVisualViewportSize(
 void MobileViewportManager::UpdateDisplayPortMargins() {
   if (nsIFrame* root = mPresShell->GetRootScrollFrame()) {
     bool hasDisplayPort = nsLayoutUtils::HasDisplayPort(root->GetContent());
-    bool hasResolution =
-        mPresShell->ScaleToResolution() && mPresShell->GetResolution() != 1.0f;
+    bool hasResolution = mPresShell->GetResolution() != 1.0f;
     if (!hasDisplayPort && !hasResolution) {
       // We only want to update the displayport if there is one already, or
       // add one if there's a resolution on the document (see bug 1225508

@@ -207,20 +207,11 @@ interface nsIDOMWindowUtils : nsISupports {
    *
    * The effect of this API is for gfx code to allocate more or fewer
    * pixels for rescalable content by a factor of |resolution| in
-   * both dimensions.  The scale at which the content is displayed does
-   * not change; if that is desired, use setResolutionAndScaleTo() instead.
-   *
-   * The caller of this method must have chrome privileges.
-   */
-  void setResolution(in float aResolution);
-
-  void getResolution(out float aResolution);
-
-  /**
-   * Similar to setResolution(), but also scales the content by the
-   * amount of the resolution, so that it is displayed at a
-   * correspondingly larger or smaller size, without the need for
-   * the caller to set an additional transform.
+   * both dimensions.
+   * 
+   * In addition, the content is scaled by the amount of the resolution,
+   * so that it is displayed at a correspondingly larger or smaller size, 
+   * without the need for the caller to set an additional transform.
    *
    * This can be used to implement a non-reflowing scale-zoom, e.g.
    * for pinch-zoom on mobile platforms.
@@ -228,6 +219,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * The caller of this method must have chrome privileges.
    */
   void setResolutionAndScaleTo(in float aResolution);
+
+  void getResolution(out float aResolution);
 
   /**
    * Set a resolution on the presShell which is the "restored" from history.

@@ -3770,10 +3770,9 @@ bool ScrollFrameHelper::DecideScrollableLayer(
       // we have resolution but no displayPort then we need to adjust for
       // resolution here.
       nsIPresShell* presShell = mOuter->PresShell();
-      *aVisibleRect = aVisibleRect->RemoveResolution(
-          presShell->ScaleToResolution() ? presShell->GetResolution() : 1.0f);
-      *aDirtyRect = aDirtyRect->RemoveResolution(
-          presShell->ScaleToResolution() ? presShell->GetResolution() : 1.0f);
+      *aVisibleRect =
+          aVisibleRect->RemoveResolution(presShell->GetResolution());
+      *aDirtyRect = aDirtyRect->RemoveResolution(presShell->GetResolution());
     }
   }
 
@@ -6123,7 +6122,6 @@ UniquePtr<PresState> ScrollFrameHelper::SaveState() const {
     // Only save resolution properties for root scroll frames
     nsIPresShell* shell = mOuter->PresShell();
     state->resolution() = shell->GetResolution();
-    state->scaleToResolution() = shell->ScaleToResolution();
   }
   return state;
 }
@@ -6136,17 +6134,12 @@ void ScrollFrameHelper::RestoreState(PresState* aState) {
   mLastPos = mScrolledFrame ? GetLogicalScrollPosition() : nsPoint(0, 0);
 
   // Resolution properties should only exist on root scroll frames.
-  MOZ_ASSERT(mIsRoot ||
-             (!aState->scaleToResolution() && aState->resolution() == 1.0));
+  MOZ_ASSERT(mIsRoot || aState->resolution() == 1.0);
 
   if (mIsRoot) {
     nsIPresShell* presShell = mOuter->PresShell();
-    if (aState->scaleToResolution()) {
-      presShell->SetResolutionAndScaleTo(aState->resolution(),
-                                         nsGkAtoms::restore);
-    } else {
-      presShell->SetResolution(aState->resolution());
-    }
+    presShell->SetResolutionAndScaleTo(aState->resolution(), 
+                                       nsGkAtoms::restore);
   }
 }
 
