@@ -1510,6 +1510,17 @@ void BytecodeEmitter::tellDebuggerAboutCompiledScript(JSContext* cx) {
   }
 }
 
+void BytecodeEmitter::reportNeedMoreArgsError(ParseNode* pn,
+                                              const char* errorName,
+                                              const char* requiredArgs,
+                                              const char* pluralizer,
+                                              const ListNode* argsList) {
+  char actualArgsStr[40];
+  SprintfLiteral(actualArgsStr, "%u", argsList->count());
+  reportError(pn, JSMSG_MORE_ARGS_NEEDED, errorName, requiredArgs, pluralizer,
+              actualArgsStr);
+}
+
 void BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...) {
   MOZ_ASSERT_IF(!pn, this->scriptStartOffsetSet);
   uint32_t offset = pn ? pn->pn_pos.begin : this->scriptStartOffset;
@@ -6819,7 +6830,7 @@ bool BytecodeEmitter::emitSelfHostedCallFunction(BinaryNode* callNode) {
   const char* errorName = SelfHostedCallFunctionName(calleeNode->name(), cx);
 
   if (argsList->count() < 2) {
-    reportError(callNode, JSMSG_MORE_ARGS_NEEDED, errorName, "2", "s");
+    reportNeedMoreArgsError(calleeNode, errorName, "2", "s", argsList);
     return false;
   }
 
@@ -6892,7 +6903,7 @@ bool BytecodeEmitter::emitSelfHostedResumeGenerator(BinaryNode* callNode) {
 
   // Syntax: resumeGenerator(gen, value, 'next'|'throw'|'return')
   if (argsList->count() != 3) {
-    reportError(callNode, JSMSG_MORE_ARGS_NEEDED, "resumeGenerator", "1", "s");
+    reportNeedMoreArgsError(callNode, "resumeGenerator", "3", "s", argsList);
     return false;
   }
 
@@ -6933,7 +6944,7 @@ bool BytecodeEmitter::emitSelfHostedAllowContentIter(BinaryNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
   if (argsList->count() != 1) {
-    reportError(callNode, JSMSG_MORE_ARGS_NEEDED, "allowContentIter", "1", "");
+    reportNeedMoreArgsError(callNode, "allowContentIter", "1", "", argsList);
     return false;
   }
 
@@ -6972,7 +6983,7 @@ bool BytecodeEmitter::emitSelfHostedHasOwn(BinaryNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
   if (argsList->count() != 2) {
-    reportError(callNode, JSMSG_MORE_ARGS_NEEDED, "hasOwn", "2", "");
+    reportNeedMoreArgsError(callNode, "hasOwn", "2", "s", argsList);
     return false;
   }
 
@@ -6993,7 +7004,7 @@ bool BytecodeEmitter::emitSelfHostedGetPropertySuper(BinaryNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
   if (argsList->count() != 3) {
-    reportError(callNode, JSMSG_MORE_ARGS_NEEDED, "getPropertySuper", "3", "");
+    reportNeedMoreArgsError(callNode, "getPropertySuper", "3", "s", argsList);
     return false;
   }
 

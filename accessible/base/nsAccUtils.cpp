@@ -92,11 +92,14 @@ int32_t nsAccUtils::GetARIAOrDefaultLevel(const Accessible* aAccessible) {
 }
 
 int32_t nsAccUtils::GetLevelForXULContainerItem(nsIContent* aContent) {
-  nsCOMPtr<nsIDOMXULContainerItemElement> item(do_QueryInterface(aContent));
+  nsCOMPtr<nsIDOMXULContainerItemElement> item =
+      aContent->AsElement()->AsXULContainerItem();
   if (!item) return 0;
 
-  nsCOMPtr<nsIDOMXULContainerElement> container;
-  item->GetParentContainer(getter_AddRefs(container));
+  nsCOMPtr<Element> containerElement;
+  item->GetParentContainer(getter_AddRefs(containerElement));
+  nsCOMPtr<nsIDOMXULContainerElement> container =
+      containerElement ? containerElement->AsXULContainer() : nullptr;
   if (!container) return 0;
 
   // Get level of the item.
@@ -104,9 +107,8 @@ int32_t nsAccUtils::GetLevelForXULContainerItem(nsIContent* aContent) {
   while (container) {
     level++;
 
-    nsCOMPtr<nsIDOMXULContainerElement> parentContainer;
-    container->GetParentContainer(getter_AddRefs(parentContainer));
-    parentContainer.swap(container);
+    container->GetParentContainer(getter_AddRefs(containerElement));
+    container = containerElement ? containerElement->AsXULContainer() : nullptr;
   }
 
   return level;
