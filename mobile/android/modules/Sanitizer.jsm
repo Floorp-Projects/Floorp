@@ -81,8 +81,8 @@ Sanitizer.prototype = {
   // Any further specific differences caused by architectural differences between
   // Fennec and desktop Firefox are documented below for each item.
   items: {
-    // The difference is specifically the Sanitize:Cache message, 
-    // so that the Android front-end can clear its caches as well, 
+    // The difference is specifically the Sanitize:Cache message,
+    // so that the Android front-end can clear its caches as well,
     // while everything else is unchanged.
     cache: {
       clear: function() {
