@@ -198,8 +198,8 @@ class UrlbarView {
     item.className = "urlbarView-row";
     item.setAttribute("resultIndex", resultIndex);
 
-    if (result.type == UrlbarUtils.MATCH_TYPE.TAB_SWITCH) {
-      item.setAttribute("type", "switchtab");
+    if (result.source == UrlbarUtils.MATCH_SOURCE.TABS) {
+      item.setAttribute("type", "tab");
     } else if (result.source == UrlbarUtils.MATCH_SOURCE.BOOKMARKS) {
       item.setAttribute("type", "bookmark");
     }
