@@ -194,11 +194,11 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "ProgressEvent", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "PushManager", insecureContext: true},
+    {name: "PushManager", insecureContext: true, fennecOrDesktop: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "PushSubscription", insecureContext: true},
+    {name: "PushSubscription", insecureContext: true, fennecOrDesktop: true },
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "PushSubscriptionOptions", insecureContext: true},
+    {name: "PushSubscriptionOptions", insecureContext: true, fennecOrDesktop: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "Request", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -259,13 +259,7 @@ var interfaceNamesInGlobalScope =
   ];
 // IMPORTANT: Do not change the list above without review from a DOM peer!
 
-function createInterfaceMap(version, userAgent) {
-  var isNightly = version.endsWith("a1");
-  var isRelease = !version.includes("a");
-  var isDesktop = !/Mobile|Tablet/.test(userAgent);
-  var isAndroid = !!navigator.userAgent.includes("Android");
-  var isInsecureContext = !self.isSecureContext;
-
+function createInterfaceMap({ version, isNightly, isRelease, isDesktop, isAndroid, isInsecureContext, isFennec }) {
   var interfaceMap = {};
 
   function addInterfaces(interfaces)
@@ -279,6 +273,7 @@ function createInterfaceMap(version, userAgent) {
             (entry.nightlyAndroid === !(isAndroid && isNightly) && isAndroid) ||
             (entry.desktop === !isDesktop) ||
             (entry.android === !isAndroid && !entry.nightlyAndroid) ||
+            (entry.fennecOrDesktop === (isAndroid && !isFennec)) ||
             (entry.release === !isRelease) ||
 	    // The insecureContext test is very purposefully converting
 	    // entry.insecureContext to boolean, so undefined will convert to
@@ -301,8 +296,8 @@ function createInterfaceMap(version, userAgent) {
   return interfaceMap;
 }
 
-function runTest(version, userAgent) {
-  var interfaceMap = createInterfaceMap(version, userAgent);
+function runTest(data) {
+  var interfaceMap = createInterfaceMap(data);
   for (var name of Object.getOwnPropertyNames(self)) {
     // An interface name should start with an upper case character.
     if (!/^[A-Z]/.test(name)) {
@@ -325,9 +320,7 @@ function runTest(version, userAgent) {
      "The following interface(s) are not enumerated: " + Object.keys(interfaceMap).join(", "));
 }
 
-workerTestGetVersion(function(version) {
-  workerTestGetUserAgent(function(userAgent) {
-    runTest(version, userAgent);
-    workerTestDone();
-  });
+workerTestGetHelperData(function(data) {
+  runTest(data);
+  workerTestDone();
 });
