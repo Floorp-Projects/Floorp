@@ -18,8 +18,6 @@ const { joinURI } = require("devtools/shared/path");
 const { sourceSpec } = require("devtools/shared/specs/source");
 const { findClosestScriptBySource } = require("devtools/server/actors/utils/closest-scripts");
 
-loader.lazyRequireGetter(this, "SourceMapConsumer", "source-map", true);
-loader.lazyRequireGetter(this, "SourceMapGenerator", "source-map", true);
 loader.lazyRequireGetter(this, "mapURIToAddonID", "devtools/server/actors/utils/map-uri-to-addon-id");
 loader.lazyRequireGetter(this, "arrayBufferGrip", "devtools/server/actors/array-buffer", true);
 
@@ -118,8 +116,6 @@ function resolveURIToLocalPath(uri) {
  * - A single sourcemapped source which creates N original sources
  * - An HTML page with multiple inline scripts, which are distinct
  *   sources, but should be represented as a single source
- * - A pretty-printed source (which may or may not be an original
- *   sourcemapped source), which generates a sourcemap for itself
  *
  * The complexity of `SourceActor` and `ThreadSources` are to handle
  * all of thise cases and hopefully internalize the complexities.
@@ -151,27 +147,16 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     this._isInlineSource = isInlineSource;
 
     this.onSource = this.onSource.bind(this);
-    this._invertSourceMap = this._invertSourceMap.bind(this);
-    this._encodeAndSetSourceMapURL = this._encodeAndSetSourceMapURL.bind(this);
     this._getSourceText = this._getSourceText.bind(this);
 
     this._mapSourceToAddon();
 
-    if (this.threadActor.sources.isPrettyPrinted(this.url)) {
-      this._init = this.prettyPrint(
-        this.threadActor.sources.prettyPrintIndent(this.url)
-      ).catch(error => {
-        DevToolsUtils.reportException("SourceActor", error);
-      });
-    } else {
-      this._init = null;
-    }
+    this._init = null;
   },
 
   get isSourceMapped() {
     return !!(!this.isInlineSource && (
-      this._originalURL || this._generatedSource ||
-        this.threadActor.sources.isPrettyPrinted(this.url)
+      this._originalURL || this._generatedSource
     ));
   },
 
@@ -210,10 +195,6 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     return this._addonPath;
   },
 
-  get prettyPrintWorker() {
-    return this.threadActor.prettyPrintWorker;
-  },
-
   get isCacheEnabled() {
     if (this.threadActor._parent._getCacheDisabled) {
       return !this.threadActor._parent._getCacheDisabled();
@@ -238,7 +219,6 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       addonID: this._addonID,
       addonPath: this._addonPath,
       isBlackBoxed: this.threadActor.sources.isBlackBoxed(this.url),
-      isPrettyPrinted: this.threadActor.sources.isPrettyPrinted(this.url),
       isSourceMapped: this.isSourceMapped,
       sourceMapURL: source ? source.sourceMapURL : null,
       introductionUrl: introductionUrl ? introductionUrl.split(" -> ").pop() : null,
@@ -514,136 +494,6 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
         throw new Error("Could not load the source for " + this.url + ".\n" +
                         DevToolsUtils.safeErrorString(error));
       });
-  },
-
-  /**
-   * Handler for the "prettyPrint" packet.
-   */
-  prettyPrint: function(indent) {
-    this.threadActor.sources.prettyPrint(this.url, indent);
-    return this._getSourceText()
-      .then(this._sendToPrettyPrintWorker(indent))
-      .then(this._invertSourceMap)
-      .then(this._encodeAndSetSourceMapURL)
-      .then(() => {
-        // We need to reset `_init` now because we have already done the work of
-        // pretty printing, and don't want onSource to wait forever for
-        // initialization to complete.
-        this._init = null;
-      })
-      .then(this.onSource)
-      .catch(error => {
-        this.disablePrettyPrint();
-        throw new Error(DevToolsUtils.safeErrorString(error));
-      });
-  },
-
-  /**
-   * Return a function that sends a request to the pretty print worker, waits on
-   * the worker's response, and then returns the pretty printed code.
-   *
-   * @param Number indent
-   *        The number of spaces to indent by the code by, when we send the
-   *        request to the pretty print worker.
-   * @returns Function
-   *          Returns a function which takes an AST, and returns a promise that
-   *          is resolved with `{ code, mappings }` where `code` is the pretty
-   *          printed code, and `mappings` is an array of source mappings.
-   */
-  _sendToPrettyPrintWorker: function(indent) {
-    return ({ content }) => {
-      return this.prettyPrintWorker.performTask("pretty-print", {
-        url: this.url,
-        indent,
-        source: content,
-      });
-    };
-  },
-
-  /**
-   * Invert a source map. So if a source map maps from a to b, return a new
-   * source map from b to a. We need to do this because the source map we get
-   * from _generatePrettyCodeAndMap goes the opposite way we want it to for
-   * debugging.
-   *
-   * Note that the source map is modified in place.
-   */
-  _invertSourceMap: function({ code, mappings }) {
-    const generator = new SourceMapGenerator({ file: this.url });
-    return DevToolsUtils.yieldingEach(mappings._array, m => {
-      const mapping = {
-        generated: {
-          line: m.originalLine,
-          column: m.originalColumn,
-        },
-      };
-      if (m.source) {
-        mapping.source = m.source;
-        mapping.original = {
-          line: m.generatedLine,
-          column: m.generatedColumn,
-        };
-        mapping.name = m.name;
-      }
-      generator.addMapping(mapping);
-    }).then(() => {
-      generator.setSourceContent(this.url, code);
-      const consumer = SourceMapConsumer.fromSourceMap(generator);
-
-      return {
-        code: code,
-        map: consumer,
-      };
-    });
-  },
-
-  /**
-   * Save the source map back to our thread's ThreadSources object so that
-   * stepping, breakpoints, debugger statements, etc can use it. If we are
-   * pretty printing a source mapped source, we need to compose the existing
-   * source map with our new one.
-   */
-  _encodeAndSetSourceMapURL: function({ map: sm }) {
-    const source = this.generatedSource || this.source;
-    const sources = this.threadActor.sources;
-
-    return sources.getSourceMap(source).then(prevMap => {
-      if (prevMap) {
-        // Compose the source maps
-        this._oldSourceMapping = {
-          url: source.sourceMapURL,
-          map: prevMap,
-        };
-
-        prevMap = SourceMapGenerator.fromSourceMap(prevMap);
-        prevMap.applySourceMap(sm, this.url);
-        sm = SourceMapConsumer.fromSourceMap(prevMap);
-      }
-
-      const actorSources = this.threadActor.sources;
-      actorSources.clearSourceMapCache(source.sourceMapURL);
-      actorSources.setSourceMapHard(source, null, sm);
-    });
-  },
-
-  /**
-   * Handler for the "disablePrettyPrint" packet.
-   */
-  disablePrettyPrint: function() {
-    const source = this.generatedSource || this.source;
-    const sources = this.threadActor.sources;
-
-    sources.clearSourceMapCache(source.sourceMapURL, { hard: true });
-
-    if (this._oldSourceMapping) {
-      sources.setSourceMapHard(source,
-                               this._oldSourceMapping.url,
-                               this._oldSourceMapping.map);
-      this._oldSourceMapping = null;
-    }
-
-    this.threadActor.sources.disablePrettyPrint(this.url);
-    return this.onSource();
   },
 
   /**
