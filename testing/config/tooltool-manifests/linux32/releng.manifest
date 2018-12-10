@@ -1,8 +1,8 @@
 [
   {
-    "size": 1845800,
+    "size": 866276,
     "visibility": "public",
-    "digest": "70cf423b4cc04c2a7bdb50b802e2528d517c5c5192cd94b729e7b07fc5e943c709bed2357287b5388a5332b7be31b13a0d334fded6ae7c36c12ceda1710b901a",
+    "digest": "a063a151555ef78f8d5795f558632dd7d3f511ad6276915f3c8cfec44146ba1e82c0a3db063a3e30921171563880d4d7794da1a036b00fab03d95988d491dc6b",
     "algorithm": "sha512",
     "filename": "linux32-minidump_stackwalk"
   }
