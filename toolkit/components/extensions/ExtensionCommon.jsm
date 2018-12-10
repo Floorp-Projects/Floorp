@@ -445,6 +445,14 @@ class BaseContext {
     return this.cloneScopePromise || this.cloneScope.Promise;
   }
 
+  get privateBrowsingAllowed() {
+    return this.extension.privateBrowsingAllowed;
+  }
+
+  canAccessWindow(window) {
+    return this.extension.canAccessWindow(window);
+  }
+
   setContentWindow(contentWindow) {
     this.innerWindowID = getInnerWindowID(contentWindow);
     this.messageManager = contentWindow.docShell.messageManager;

@@ -368,6 +368,7 @@ var ExtensionTestCommon = class ExtensionTestCommon {
       resourceURI: jarURI,
       cleanupFile: file,
       signedState,
+      incognitoOverride: data.incognitoOverride,
       temporarilyInstalled: !!data.temporarilyInstalled,
       TEST_NO_ADDON_MANAGER: true,
     });
