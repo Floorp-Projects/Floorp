@@ -36,12 +36,6 @@ void BlankDetectorDesktopCapturerWrapper::Start(
   callback_ = callback;
 }
 
-void BlankDetectorDesktopCapturerWrapper::Stop()
-{
-  capturer_->Stop();
-  callback_ = nullptr;
-}
-
 void BlankDetectorDesktopCapturerWrapper::SetSharedMemoryFactory(
     std::unique_ptr<SharedMemoryFactory> shared_memory_factory) {
   capturer_->SetSharedMemoryFactory(std::move(shared_memory_factory));

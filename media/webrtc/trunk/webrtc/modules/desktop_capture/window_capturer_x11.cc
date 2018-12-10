@@ -42,7 +42,6 @@ class WindowCapturerLinux : public DesktopCapturer,
 
   // DesktopCapturer interface.
   void Start(Callback* callback) override;
-  void Stop() override;
   void CaptureFrame() override;
   bool GetSourceList(SourceList* sources) override;
   bool SelectSource(SourceId id) override;
@@ -184,10 +183,6 @@ void WindowCapturerLinux::Start(Callback* callback) {
   RTC_DCHECK(callback);
 
   callback_ = callback;
-}
-
-void WindowCapturerLinux::Stop() {
-  callback_ = NULL;
 }
 
 void WindowCapturerLinux::CaptureFrame() {

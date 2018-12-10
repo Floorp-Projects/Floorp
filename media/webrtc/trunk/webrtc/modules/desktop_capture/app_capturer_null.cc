@@ -30,7 +30,6 @@ public:
 
   // DesktopCapturer interface.
   virtual void Start(Callback* callback) override;
-  virtual void Stop() override;
   virtual void Capture(const DesktopRegion& region) override;
 
 private:
@@ -67,10 +66,6 @@ void AppCapturerNull::Start(Callback* callback) {
   assert(callback);
 
   callback_ = callback;
-}
-
-void AppCapturerNull::Stop() {
-  callback_ = NULL;
 }
 
 void AppCapturerNull::Capture(const DesktopRegion& region) {

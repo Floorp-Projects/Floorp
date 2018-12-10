@@ -37,7 +37,6 @@ class AppCapturerMac : public AppCapturer {
 
   // DesktopCapturer interface.
   virtual void Start(Callback* callback) override;
-  virtual void Stop() override;
   virtual void CaptureFrame() override;
   virtual bool SelectSource(SourceId id) override
   {
@@ -81,10 +80,6 @@ void AppCapturerMac::Start(Callback* callback) {
   assert(callback);
 
   callback_ = callback;
-}
-
-void AppCapturerMac::Stop() {
-  callback_ = NULL;
 }
 
 void AppCapturerMac::CaptureFrame() {
