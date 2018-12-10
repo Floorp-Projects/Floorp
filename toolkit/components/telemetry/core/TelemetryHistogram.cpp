@@ -1420,17 +1420,13 @@ nsresult KeyedHistogram::GetSnapshot(const StaticMutexAutoLock& aLock,
  * @param {aIncludeGPU} whether or not to include data for the GPU.
  * @param {aOutSnapshot} the container in which the snapshot data will be
  *                       stored.
- * @param {aSkipEmpty} whether or not to skip empty keyed histograms from the
- *        snapshot. Can't always assume "true" for consistency with the other
- *        callers.
  * @return {nsresult} NS_OK if the snapshot was successfully taken or
  *         NS_ERROR_OUT_OF_MEMORY if it failed to allocate memory.
  */
 nsresult internal_GetKeyedHistogramsSnapshot(
     const StaticMutexAutoLock& aLock, const nsACString& aStore,
     unsigned int aDataset, bool aClearSubsession, bool aIncludeGPU,
-    bool aFilterTest, KeyedHistogramProcessSnapshotsArray& aOutSnapshot,
-    bool aSkipEmpty = false) {
+    bool aFilterTest, KeyedHistogramProcessSnapshotsArray& aOutSnapshot) {
   if (!aOutSnapshot.resize(static_cast<uint32_t>(ProcessID::Count))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1458,8 +1454,7 @@ nsresult internal_GetKeyedHistogramsSnapshot(
       KeyedHistogram* keyed =
           internal_GetKeyedHistogramById(id, ProcessID(process),
                                          /* instantiate = */ false);
-      if (!keyed || (aSkipEmpty && keyed->IsEmpty(aStore)) ||
-          keyed->IsExpired()) {
+      if (!keyed || keyed->IsEmpty(aStore) || keyed->IsExpired()) {
         continue;
       }
 
@@ -2819,7 +2814,7 @@ nsresult TelemetryHistogram::GetKeyedHistogramSnapshots(
     StaticMutexAutoLock locker(gTelemetryHistogramMutex);
     nsresult rv = internal_GetKeyedHistogramsSnapshot(
         locker, aStore, aDataset, aClearSubsession, includeGPUProcess,
-        aFilterTest, processHistArray, true /* skipEmpty */);
+        aFilterTest, processHistArray);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -3121,8 +3116,7 @@ nsresult TelemetryHistogram::SerializeKeyedHistograms(
             locker, NS_LITERAL_CSTRING("main"),
             nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN,
             false /* aClearSubsession */, includeGPUProcess,
-            false /* aFilterTest */, processHistArray,
-            true /* aSkipEmpty */))) {
+            false /* aFilterTest */, processHistArray))) {
       return NS_ERROR_FAILURE;
     }
   }
