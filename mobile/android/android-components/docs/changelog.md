@@ -28,6 +28,19 @@ permalink: /changelog/
   }
   ```
 
+* **concept-engine**, **engine-gecko-nightly**:  
+  * Add setting to enable testing mode which is used in engine-gecko to set `FULL_ACCESSIBILITY_TREE` to `true`. This allows access to the full DOM tree for testing purposes.
+
+  ```Kotlin  
+  // Turn testing mode on by default when the engine is created
+  val engine = GeckoEngine(runtime, DefaultSettings(testingModeEnabled=true))
+
+  // Or turn testing mode on at a later point
+  engine.settings.testingModeEnabled = true
+  ```
+
+  * The existing `userAgentString` setting is now supported by `engine-gecko-nightly`.
+
 # 0.34.2
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.34.1...v0.34.2)
