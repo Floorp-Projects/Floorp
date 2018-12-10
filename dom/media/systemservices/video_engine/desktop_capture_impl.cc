@@ -213,16 +213,7 @@ int32_t AppDeviceInfoImpl::GetOrientation(const char* deviceUniqueIdUTF8,
 VideoCaptureModule* DesktopCaptureImpl::Create(const int32_t id,
                                                const char* uniqueId,
                                                const CaptureDeviceType type) {
-  rtc::RefCountedObject<DesktopCaptureImpl>* capture =
-      new rtc::RefCountedObject<DesktopCaptureImpl>(id);
-
-  // create real screen capturer.
-  if (capture->Init(uniqueId, type)) {
-    capture->Release();
-    return nullptr;
-  }
-
-  return capture;
+  return new rtc::RefCountedObject<DesktopCaptureImpl>(id, uniqueId, type);
 }
 
 int32_t WindowDeviceInfoImpl::Init() {
@@ -340,20 +331,24 @@ const char* DesktopCaptureImpl::CurrentDeviceName() const {
   return _deviceUniqueId.c_str();
 }
 
-int32_t DesktopCaptureImpl::Init(const char* uniqueId,
-                                 const CaptureDeviceType type) {
+int32_t DesktopCaptureImpl::Init() {
+  // Already initialized
+  if (desktop_capturer_cursor_composer_) {
+    return 0;
+  }
+
   DesktopCaptureOptions options = DesktopCaptureOptions::CreateDefault();
   // Leave desktop effects enabled during WebRTC captures.
   options.set_disable_effects(false);
 
-  if (type == CaptureDeviceType::Application) {
+  if (_deviceType == CaptureDeviceType::Application) {
     std::unique_ptr<DesktopCapturer> pAppCapturer =
         DesktopCapturer::CreateAppCapturer(options);
     if (!pAppCapturer) {
       return -1;
     }
 
-    DesktopCapturer::SourceId sourceId = atoi(uniqueId);
+    DesktopCapturer::SourceId sourceId = atoi(_deviceUniqueId.c_str());
     pAppCapturer->SelectSource(sourceId);
 
     MouseCursorMonitor* pMouseCursorMonitor =
@@ -362,32 +357,29 @@ int32_t DesktopCaptureImpl::Init(const char* uniqueId,
     desktop_capturer_cursor_composer_ =
         std::unique_ptr<DesktopAndCursorComposer>(new DesktopAndCursorComposer(
             pAppCapturer.release(), pMouseCursorMonitor));
-  } else if (type == CaptureDeviceType::Screen) {
+  } else if (_deviceType == CaptureDeviceType::Screen) {
     std::unique_ptr<DesktopCapturer> pScreenCapturer =
         DesktopCapturer::CreateScreenCapturer(options);
     if (!pScreenCapturer.get()) {
       return -1;
     }
 
-    DesktopCapturer::SourceId sourceId = atoi(uniqueId);
+    DesktopCapturer::SourceId sourceId = atoi(_deviceUniqueId.c_str());
     pScreenCapturer->SelectSource(sourceId);
-
-    // Upstream removed the ShapeObserver
-    // pScreenCapturer->SetMouseShapeObserver(this);
 
     MouseCursorMonitor* pMouseCursorMonitor =
         MouseCursorMonitor::CreateForScreen(options, sourceId);
     desktop_capturer_cursor_composer_ =
         std::unique_ptr<DesktopAndCursorComposer>(new DesktopAndCursorComposer(
             pScreenCapturer.release(), pMouseCursorMonitor));
-  } else if (type == CaptureDeviceType::Window) {
+  } else if (_deviceType == CaptureDeviceType::Window) {
     std::unique_ptr<DesktopCapturer> pWindowCapturer =
         DesktopCapturer::CreateWindowCapturer(options);
     if (!pWindowCapturer.get()) {
       return -1;
     }
 
-    DesktopCapturer::SourceId sourceId = atoi(uniqueId);
+    DesktopCapturer::SourceId sourceId = atoi(_deviceUniqueId.c_str());
     pWindowCapturer->SelectSource(sourceId);
 
     MouseCursorMonitor* pMouseCursorMonitor =
@@ -397,14 +389,15 @@ int32_t DesktopCaptureImpl::Init(const char* uniqueId,
         std::unique_ptr<DesktopAndCursorComposer>(new DesktopAndCursorComposer(
             pWindowCapturer.release(), pMouseCursorMonitor));
   }
-  _deviceUniqueId = uniqueId;
 
   return 0;
 }
 
-DesktopCaptureImpl::DesktopCaptureImpl(const int32_t id)
+DesktopCaptureImpl::DesktopCaptureImpl(const int32_t id, const char* uniqueId,
+                                       const CaptureDeviceType type)
     : _id(id),
-      _deviceUniqueId(""),
+      _deviceUniqueId(uniqueId),
+      _deviceType(type),
       _requestedCapability(),
       _rotateFrame(kVideoRotation_0),
       last_capture_time_(rtc::TimeNanos() / rtc::kNumNanosecsPerMillisec),
@@ -613,6 +606,12 @@ int32_t DesktopCaptureImpl::StartCapture(
         new rtc::PlatformThread(Run, this, "ScreenCaptureThread"));
   }
 #endif
+
+  uint32_t err = Init();
+  if (err) {
+    return err;
+  }
+
   desktop_capturer_cursor_composer_->Start(this);
   capturer_thread_->Start();
   started_ = true;
@@ -621,6 +620,11 @@ int32_t DesktopCaptureImpl::StartCapture(
 }
 
 bool DesktopCaptureImpl::FocusOnSelectedSource() {
+  uint32_t err = Init();
+  if (err) {
+    return false;
+  }
+
   return desktop_capturer_cursor_composer_->FocusOnSelectedSource();
 }
 
@@ -628,7 +632,7 @@ int32_t DesktopCaptureImpl::StopCapture() {
   if (started_) {
     capturer_thread_
         ->Stop();  // thread is guaranteed stopped before this returns
-    desktop_capturer_cursor_composer_->Stop();
+    desktop_capturer_cursor_composer_.reset();
     started_ = false;
     return 0;
   }
