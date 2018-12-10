@@ -37,6 +37,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   static bool AllowOverlayScrollbarsOverlap();
 
   static bool SystemWantsDarkTheme();
+  static nscolor ProcessSelectionBackground(nscolor aColor);
 
  private:
   int32_t mUseOverlayScrollbars;

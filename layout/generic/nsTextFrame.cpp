@@ -435,6 +435,10 @@ class nsTextPaintStyle {
   nsSelectionStyle* GetSelectionStyle(int32_t aIndex);
   void InitSelectionStyle(int32_t aIndex);
 
+  // Ensures sufficient contrast between the frame background color and the
+  // selection background color, and swaps the selection text and background
+  // colors accordingly.
+  // Only used on platforms where mSelectionTextColor != NS_DONT_CHANGE_COLOR
   bool EnsureSufficientContrast(nscolor* aForeColor, nscolor* aBackColor);
 
   nscolor GetResolvedForeColor(nscolor aColor, nscolor aDefaultForeColor,
@@ -4018,7 +4022,8 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
       LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectForeground);
 
   if (mResolveColors) {
-    // On MacOS X, we don't exchange text color and BG color.
+    // On MacOS X, only the background color gets set,
+    // the text color remains intact.
     if (mSelectionTextColor == NS_DONT_CHANGE_COLOR) {
       nscolor frameColor =
           nsSVGUtils::IsInSVGTextSubtree(mFrame)
