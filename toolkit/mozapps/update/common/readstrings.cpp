@@ -8,7 +8,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "readstrings.h"
-#include "errors.h"
+#include "updatererrors.h"
 
 #ifdef XP_WIN
 #define NS_tfopen _wfopen

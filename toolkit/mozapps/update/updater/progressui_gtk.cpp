@@ -10,7 +10,7 @@
 #include "mozilla/Sprintf.h"
 #include "progressui.h"
 #include "readstrings.h"
-#include "errors.h"
+#include "updatererrors.h"
 
 #define TIMER_INTERVAL 100
 

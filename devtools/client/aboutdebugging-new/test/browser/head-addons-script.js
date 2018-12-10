@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 /* import-globals-from ../../../shared/test/shared-head.js */
+/* import-globals-from head.js */
 
 "use strict";
 
@@ -21,10 +22,7 @@ function getSupportsFile(path) {
 // eslint-disable-next-line no-unused-vars
 async function installTemporaryExtension(path, name, document) {
   // Mock the file picker to select a test addon
-  const MockFilePicker = SpecialPowers.MockFilePicker;
-  MockFilePicker.init(window);
-  const file = getSupportsFile(path);
-  MockFilePicker.setFiles([file.file]);
+  prepareMockFilePicker(path);
 
   const onAddonInstalled = new Promise(done => {
     Management.on("startup", function listener(event, extension) {
@@ -42,4 +40,20 @@ async function installTemporaryExtension(path, name, document) {
 
   info("Wait for addon to be installed");
   await onAddonInstalled;
+}
+
+async function removeTemporaryExtension(name, document) {
+  info(`Remove the temporary extension with name: '${name}'`);
+  const temporaryExtensionItem = findDebugTargetByText(name, document);
+  temporaryExtensionItem.querySelector(".js-temporary-extension-remove-button").click();
+
+  info("Wait until the debug target item disappears");
+  await waitUntil(() => !findDebugTargetByText(name, document));
+}
+
+function prepareMockFilePicker(path) {
+  // Mock the file picker to select a test addon
+  const MockFilePicker = SpecialPowers.MockFilePicker;
+  MockFilePicker.init(window);
+  MockFilePicker.setFiles([getSupportsFile(path).file]);
 }

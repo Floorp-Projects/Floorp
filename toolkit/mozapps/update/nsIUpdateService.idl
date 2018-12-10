@@ -53,7 +53,7 @@ interface nsIUpdatePatch : nsISupports
   /**
    * A numeric error code that conveys additional information about the state of
    * a failed update. If the update is not in the "failed" state the value is
-   * zero. The possible values are located in common/errors.h and values between
+   * zero. The possible values are located in common/updatererrors.h and values between
    * 80 and 99 are in nsUpdateService.js.
    */
   attribute long errorCode;
@@ -194,7 +194,7 @@ interface nsIUpdate : nsISupports
   /**
    * A numeric error code that conveys additional information about the state of
    * a failed update. If the update is not in the "failed" state the value is
-   * zero. The possible values are located in common/errors.h and values between
+   * zero. The possible values are located in common/updatererrors.h and values between
    * 80 and 99 are in nsUpdateService.js.
    */
   attribute long errorCode;

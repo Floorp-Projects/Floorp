@@ -47,6 +47,7 @@ class RuntimePage extends PureComponent {
       sharedWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
       tabs: PropTypes.arrayOf(PropTypes.object).isRequired,
       temporaryExtensions: PropTypes.arrayOf(PropTypes.object).isRequired,
+      temporaryInstallError: PropTypes.string,
     };
   }
 
@@ -104,6 +105,7 @@ class RuntimePage extends PureComponent {
       sharedWorkers,
       tabs,
       temporaryExtensions,
+      temporaryInstallError,
     } = this.props;
 
     if (!runtimeInfo) {
@@ -124,8 +126,10 @@ class RuntimePage extends PureComponent {
         ? this.renderConnectionPromptSetting()
         : null,
       isSupportedDebugTargetPane(runtimeInfo.type, DEBUG_TARGET_PANE.TEMPORARY_EXTENSION)
-        ? TemporaryExtensionInstaller({ dispatch })
-        : null,
+        ? TemporaryExtensionInstaller({
+            dispatch,
+            temporaryInstallError,
+        }) : null,
       this.renderDebugTargetPane("Temporary Extensions",
                                  temporaryExtensions,
                                  TemporaryExtensionAction,
@@ -177,6 +181,7 @@ const mapStateToProps = state => {
     sharedWorkers: state.debugTargets.sharedWorkers,
     tabs: state.debugTargets.tabs,
     temporaryExtensions: state.debugTargets.temporaryExtensions,
+    temporaryInstallError: state.ui.temporaryInstallError,
   };
 };
 

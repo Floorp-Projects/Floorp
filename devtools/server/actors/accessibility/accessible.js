@@ -385,10 +385,10 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       return null;
     }
 
-    return getContrastRatioFor(this.rawAccessible.DOMNode.parentNode, {
+    const { DOMNode: rawNode } = this.rawAccessible;
+    return getContrastRatioFor(rawNode.parentNode, {
       bounds: this.bounds,
-      contexts: this.walker.contexts,
-      win: this.walker.rootWin,
+      win: rawNode.ownerGlobal,
     });
   },
 
