@@ -150,8 +150,8 @@ nsPluginFrame::~nsPluginFrame() {
 }
 
 NS_QUERYFRAME_HEAD(nsPluginFrame)
-NS_QUERYFRAME_ENTRY(nsPluginFrame)
-NS_QUERYFRAME_ENTRY(nsIObjectFrame)
+  NS_QUERYFRAME_ENTRY(nsPluginFrame)
+  NS_QUERYFRAME_ENTRY(nsIObjectFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsFrame)
 
 #ifdef ACCESSIBILITY

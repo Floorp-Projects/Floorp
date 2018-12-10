@@ -40,7 +40,7 @@ void nsCheckboxRadioFrame::DestroyFrom(nsIFrame* aDestructRoot,
 NS_IMPL_FRAMEARENA_HELPERS(nsCheckboxRadioFrame)
 
 NS_QUERYFRAME_HEAD(nsCheckboxRadioFrame)
-NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
+  NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsAtomicContainerFrame)
 
 /* virtual */ nscoord nsCheckboxRadioFrame::GetMinISize(

@@ -48,8 +48,8 @@ NS_IMPL_FRAMEARENA_HELPERS(SVGGeometryFrame)
 // nsQueryFrame methods
 
 NS_QUERYFRAME_HEAD(SVGGeometryFrame)
-NS_QUERYFRAME_ENTRY(nsSVGDisplayableFrame)
-NS_QUERYFRAME_ENTRY(SVGGeometryFrame)
+  NS_QUERYFRAME_ENTRY(nsSVGDisplayableFrame)
+  NS_QUERYFRAME_ENTRY(SVGGeometryFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsFrame)
 
 //----------------------------------------------------------------------

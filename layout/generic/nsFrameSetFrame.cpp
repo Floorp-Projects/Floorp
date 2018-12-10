@@ -182,7 +182,7 @@ nsHTMLFramesetFrame::nsHTMLFramesetFrame(ComputedStyle* aStyle)
 nsHTMLFramesetFrame::~nsHTMLFramesetFrame() {}
 
 NS_QUERYFRAME_HEAD(nsHTMLFramesetFrame)
-NS_QUERYFRAME_ENTRY(nsHTMLFramesetFrame)
+  NS_QUERYFRAME_ENTRY(nsHTMLFramesetFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 void nsHTMLFramesetFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -1487,7 +1487,7 @@ nsresult nsHTMLFramesetBorderFrame::GetFrameName(nsAString& aResult) const {
  ******************************************************************************/
 
 NS_QUERYFRAME_HEAD(nsHTMLFramesetBlankFrame)
-NS_QUERYFRAME_ENTRY(nsHTMLFramesetBlankFrame)
+  NS_QUERYFRAME_ENTRY(nsHTMLFramesetBlankFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsLeafFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsHTMLFramesetBlankFrame)

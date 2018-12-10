@@ -376,7 +376,7 @@ void nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot,
 }
 
 NS_QUERYFRAME_HEAD(nsBlockFrame)
-NS_QUERYFRAME_ENTRY(nsBlockFrame)
+  NS_QUERYFRAME_ENTRY(nsBlockFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 #ifdef DEBUG_FRAME_DUMP

@@ -21,12 +21,12 @@ using namespace mozilla;
 using namespace mozilla::image;
 
 NS_QUERYFRAME_HEAD(nsSVGContainerFrame)
-NS_QUERYFRAME_ENTRY(nsSVGContainerFrame)
+  NS_QUERYFRAME_ENTRY(nsSVGContainerFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 NS_QUERYFRAME_HEAD(nsSVGDisplayContainerFrame)
-NS_QUERYFRAME_ENTRY(nsSVGDisplayContainerFrame)
-NS_QUERYFRAME_ENTRY(nsSVGDisplayableFrame)
+  NS_QUERYFRAME_ENTRY(nsSVGDisplayContainerFrame)
+  NS_QUERYFRAME_ENTRY(nsSVGDisplayableFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsSVGContainerFrame)
 
 nsIFrame* NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
