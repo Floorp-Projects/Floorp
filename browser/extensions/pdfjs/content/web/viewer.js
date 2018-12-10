@@ -416,21 +416,14 @@ let PDFViewerApplication = {
   },
 
   async _readPreferences() {
-    const OVERRIDES = {
-      disableFontFace: true,
-      disableRange: true,
-      disableStream: true,
-      textLayerMode: _ui_utils.TextLayerMode.DISABLE
-    };
+    if (_app_options.AppOptions.get('disablePreferences') === true) {
+      return;
+    }
 
     try {
       const prefs = await this.preferences.getAll();
 
-      for (let name in prefs) {
-        if (name in OVERRIDES && _app_options.AppOptions.get(name) === OVERRIDES[name]) {
-          continue;
-        }
-
+      for (const name in prefs) {
         _app_options.AppOptions.set(name, prefs[name]);
       }
     } catch (reason) {}
@@ -5980,7 +5973,7 @@ class PDFHistory {
 
     let forceReplace = false;
 
-    if (this._destination.page === position.first || this._destination.page === position.page) {
+    if (this._destination.page >= position.first && this._destination.page <= position.page) {
       if (this._destination.dest || !this._destination.first) {
         return;
       }
