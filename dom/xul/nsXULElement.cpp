@@ -1741,6 +1741,15 @@ nsresult nsXULPrototypeElement::SetAttrAt(uint32_t aPos,
   // Any changes should be made to both functions.
 
   if (!mNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
+    if (mNodeInfo->NamespaceEquals(kNameSpaceID_XHTML) &&
+        mAttributes[aPos].mName.Equals(nsGkAtoms::is)) {
+      // We still care about the is attribute set on HTML elements.
+      mAttributes[aPos].mValue.ParseAtom(aValue);
+      mIsAtom = mAttributes[aPos].mValue.GetAtomValue();
+
+      return NS_OK;
+    }
+
     mAttributes[aPos].mValue.ParseStringOrAtom(aValue);
 
     return NS_OK;
