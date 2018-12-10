@@ -537,7 +537,24 @@ bool mozTXTToHTMLConv::ItMatchesDelimited(const char16_t* aInString,
     return false;
 
   uint32_t text0 = aInString[0];
-  uint32_t textAfterPos = aInString[aRepLen + (before == LT_IGNORE ? 0 : 1)];
+  if (NS_IS_HIGH_SURROGATE(text0) && aInLength > 1 &&
+      NS_IS_LOW_SURROGATE(aInString[1])) {
+    text0 = SURROGATE_TO_UCS4(text0, aInString[1]);
+  }
+  // find length of the char/cluster to be ignored
+  int32_t ignoreLen = before == LT_IGNORE ? 0 : 1;
+  if (ignoreLen) {
+    mozilla::unicode::ClusterIterator ci(aInString, aInLength);
+    ci.Next();
+    ignoreLen = ci - aInString;
+  }
+
+  int32_t afterIndex = aRepLen + ignoreLen;
+  uint32_t textAfterPos = aInString[afterIndex];
+  if (NS_IS_HIGH_SURROGATE(textAfterPos) && aInLength > afterIndex + 1 &&
+      NS_IS_LOW_SURROGATE(aInString[afterIndex + 1])) {
+    textAfterPos = SURROGATE_TO_UCS4(textAfterPos, aInString[afterIndex + 1]);
+  }
 
   if ((before == LT_ALPHA && !IsAlpha(text0)) ||
       (before == LT_DIGIT && !IsDigit(text0)) ||
@@ -548,8 +565,8 @@ bool mozTXTToHTMLConv::ItMatchesDelimited(const char16_t* aInString,
       (after == LT_DELIMITER &&
        (IsAlpha(textAfterPos) || IsDigit(textAfterPos) ||
         textAfterPos == *rep)) ||
-      !Substring(Substring(aInString, aInString + aInLength),
-                 (before == LT_IGNORE ? 0 : 1), aRepLen)
+      !Substring(Substring(aInString, aInString + aInLength), ignoreLen,
+                 aRepLen)
            .Equals(Substring(rep, rep + aRepLen),
                    nsCaseInsensitiveStringComparator()))
     return false;
@@ -563,11 +580,12 @@ uint32_t mozTXTToHTMLConv::NumberOfMatches(const char16_t* aInString,
                                            LIMTYPE before, LIMTYPE after) {
   uint32_t result = 0;
 
-  for (int32_t i = 0; i < aInStringLength; i++) {
-    const char16_t* indexIntoString = &aInString[i];
-    if (ItMatchesDelimited(indexIntoString, aInStringLength - i, rep, aRepLen,
-                           before, after))
+  const char16_t* end = aInString + aInStringLength;
+  for (mozilla::unicode::ClusterIterator ci(aInString, aInStringLength);
+       !ci.AtEnd(); ci.Next()) {
+    if (ItMatchesDelimited(ci, end - ci, rep, aRepLen, before, after)) {
       result++;
+    }
   }
   return result;
 }
@@ -954,13 +972,19 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
   nsAutoString outputHTML;  // moved here for performance increase
 
   const char16_t* rawInputString = aInString.BeginReading();
+  uint32_t inLength = aInString.Length();
 
-  for (uint32_t i = 0; i < aInString.Length();) {
+  for (mozilla::unicode::ClusterIterator ci(rawInputString, inLength);
+       !ci.AtEnd();) {
+    uint32_t i = ci - rawInputString;
     if (doGlyphSubstitution) {
       int32_t glyphTextLen;
-      if (GlyphHit(&rawInputString[i], aInString.Length() - i, i == 0,
-                   aOutString, glyphTextLen)) {
+      if (GlyphHit(&rawInputString[i], inLength - i, i == 0, aOutString,
+                   glyphTextLen)) {
         i += glyphTextLen;
+        while (ci < rawInputString + i) {
+          ci.Next();
+        }
         continue;
       }
     }
@@ -970,8 +994,10 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
       int32_t newLength = aInString.Length();
       if (i > 0)  // skip the first element?
       {
-        newOffset = &rawInputString[i - 1];
-        newLength = aInString.Length() - i + 1;
+        mozilla::unicode::ClusterReverseIterator ri(rawInputString, i);
+        ri.Next();
+        newOffset = ri;
+        newLength = aInString.Length() - (ri - rawInputString);
       }
 
       switch (aInString[i])  // Performance increase
@@ -980,7 +1006,7 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
           if (StructPhraseHit(newOffset, newLength, i == 0, u"*", 1, "b",
                               "class=\"moz-txt-star\"", aOutString,
                               structPhrase_strong)) {
-            i++;
+            ci.Next();
             continue;
           }
           break;
@@ -988,7 +1014,7 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
           if (StructPhraseHit(newOffset, newLength, i == 0, u"/", 1, "i",
                               "class=\"moz-txt-slash\"", aOutString,
                               structPhrase_italic)) {
-            i++;
+            ci.Next();
             continue;
           }
           break;
@@ -997,7 +1023,7 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
                               "span" /* <u> is deprecated */,
                               "class=\"moz-txt-underscore\"", aOutString,
                               structPhrase_underline)) {
-            i++;
+            ci.Next();
             continue;
           }
           break;
@@ -1005,7 +1031,7 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
           if (StructPhraseHit(newOffset, newLength, i == 0, u"|", 1, "code",
                               "class=\"moz-txt-verticalline\"", aOutString,
                               structPhrase_code)) {
-            i++;
+            ci.Next();
             continue;
           }
           break;
@@ -1038,6 +1064,9 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
               aOutString += outputHTML;
               endOfLastURLOutput = aOutString.Length();
               i += replaceAfter + 1;
+              while (ci < rawInputString + i) {
+                ci.Next();
+              }
               continue;
             }
           }
@@ -1051,13 +1080,15 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
       case '>':
       case '&':
         EscapeChar(aInString[i], aOutString, false);
-        i++;
+        ci.Next();
         break;
       // Normal characters
-      default:
-        aOutString += aInString[i];
-        i++;
+      default: {
+        const char16_t* start = ci;
+        ci.Next();
+        aOutString += Substring(start, (const char16_t*)ci);
         break;
+      }
     }
   }
   return NS_OK;

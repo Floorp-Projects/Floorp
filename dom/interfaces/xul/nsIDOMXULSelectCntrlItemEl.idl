@@ -6,6 +6,8 @@
 #include "nsISupports.idl"
 interface nsIDOMXULSelectControlElement;
 
+webidl Element;
+
 [scriptable, uuid(5c6be58f-17df-4750-88a5-4a59ac28adc9)]
 interface nsIDOMXULSelectControlItemElement : nsISupports {
   attribute boolean disabled;
@@ -19,7 +21,7 @@ interface nsIDOMXULSelectControlItemElement : nsISupports {
   
   readonly attribute boolean selected;
   
-  readonly attribute nsIDOMXULSelectControlElement control;
+  readonly attribute Element control;
   
   // XXX defined in XULElement, but should be defined here
   // void doCommand();

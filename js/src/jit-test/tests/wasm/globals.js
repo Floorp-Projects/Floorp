@@ -320,7 +320,7 @@ wasmAssert(`(module
     // These types should not work:
     assertErrorMessage(() => new Global({}),                TypeError, /bad type for a WebAssembly.Global/);
     assertErrorMessage(() => new Global({value: "fnord"}),  TypeError, /bad type for a WebAssembly.Global/);
-    assertErrorMessage(() => new Global(),                  TypeError, /Global requires more than 0 arguments/);
+    assertErrorMessage(() => new Global(),                  TypeError, /Global requires at least 1 argument/);
     assertErrorMessage(() => new Global({value: "i64"}, 0), TypeError, /bad type for a WebAssembly.Global/); // Initial value does not work
 
     // Coercion of init value; ".value" accessor

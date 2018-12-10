@@ -391,9 +391,7 @@
         <getter>
           <![CDATA[
             var parent = this.parentNode;
-            if (parent instanceof Ci.nsIDOMXULSelectControlElement)
-              return parent;
-            return null;
+            return (parent.localName == "tabs") ? parent : null;
           ]]>
         </getter>
       </property>

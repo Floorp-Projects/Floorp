@@ -227,9 +227,7 @@ bool js::FromPropertyDescriptorToObject(JSContext* cx,
 bool js::GetFirstArgumentAsObject(JSContext* cx, const CallArgs& args,
                                   const char* method,
                                   MutableHandleObject objp) {
-  if (args.length() == 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_MORE_ARGS_NEEDED, method, "0", "s");
+  if (!args.requireAtLeast(cx, method, 1)) {
     return false;
   }
 

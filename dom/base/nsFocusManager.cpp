@@ -337,7 +337,8 @@ Element* nsFocusManager::GetRedirectedFocus(nsIContent* aContent) {
       return aContent->OwnerDoc()->GetAnonymousElementByAttribute(
           aContent, nsGkAtoms::anonid, NS_LITERAL_STRING("input"));
     } else {
-      nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(aContent);
+      nsCOMPtr<nsIDOMXULMenuListElement> menulist =
+          aContent->AsElement()->AsXULMenuList();
       if (menulist) {
         RefPtr<Element> inputField;
         menulist->GetInputField(getter_AddRefs(inputField));

@@ -945,7 +945,8 @@ static bool IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame,
   if (!aFrame->IsVisibleConsideringAncestors()) return false;
 
   // XUL controls can be activated.
-  nsCOMPtr<nsIDOMXULControlElement> control(do_QueryInterface(aContent));
+  nsCOMPtr<nsIDOMXULControlElement> control =
+      aContent->AsElement()->AsXULControl();
   if (control) return true;
 
   // HTML area, label and legend elements are never focusable, so
@@ -3017,15 +3018,15 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           // an anonymous node of the targeted element.
           suppressBlur = (ui->mUserFocus == StyleUserFocus::Ignore);
 
+          nsCOMPtr<Element> element = do_QueryInterface(aEvent->mTarget);
           if (!suppressBlur) {
-            nsCOMPtr<Element> element = do_QueryInterface(aEvent->mTarget);
             suppressBlur =
                 element && element->State().HasState(NS_EVENT_STATE_DISABLED);
           }
 
-          if (!suppressBlur) {
+          if (!suppressBlur && element) {
             nsCOMPtr<nsIDOMXULControlElement> xulControl =
-                do_QueryInterface(aEvent->mTarget);
+                element->AsXULControl();
             if (xulControl) {
               bool disabled;
               xulControl->GetDisabled(&disabled);

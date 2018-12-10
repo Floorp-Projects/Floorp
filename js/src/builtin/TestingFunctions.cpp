@@ -3539,9 +3539,7 @@ struct FindPathHandler {
 
 static bool FindPath(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  if (argc < 2) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
-                              "findPath", "1", "");
+  if (!args.requireAtLeast(cx, "findPath", 2)) {
     return false;
   }
 

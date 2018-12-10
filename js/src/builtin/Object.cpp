@@ -693,10 +693,7 @@ JSString* js::ObjectClassToString(JSContext* cx, HandleObject obj) {
 static bool obj_setPrototypeOf(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (args.length() < 2) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_MORE_ARGS_NEEDED, "Object.setPrototypeOf",
-                              "1", "");
+  if (!args.requireAtLeast(cx, "Object.setPrototypeOf", 2)) {
     return false;
   }
 
@@ -1115,10 +1112,7 @@ bool js::obj_create(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
-  if (args.length() == 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_MORE_ARGS_NEEDED, "Object.create", "0",
-                              "s");
+  if (!args.requireAtLeast(cx, "Object.create", 1)) {
     return false;
   }
 
@@ -1897,10 +1891,7 @@ static bool obj_defineProperties(JSContext* cx, unsigned argc, Value* vp) {
   args.rval().setObject(*obj);
 
   /* Step 2. */
-  if (args.length() < 2) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_MORE_ARGS_NEEDED, "Object.defineProperties",
-                              "0", "s");
+  if (!args.requireAtLeast(cx, "Object.defineProperties", 2)) {
     return false;
   }
 

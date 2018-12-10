@@ -193,8 +193,8 @@
     MozXULElement.implementCustomInterface(ExtendedElement, [Ci.nsIDOMXULSelectControlElement]);
     customElements.define("extendedelement", ExtendedElement);
     const extendedInstance = document.createXULElement("extendedelement");
-    ok(extendedInstance instanceof Ci.nsIDOMXULSelectControlElement, "interface applied");
-    ok(extendedInstance instanceof Ci.nsIDOMXULControlElement, "inherited interface applied");
+    ok(extendedInstance.QueryInterface(Ci.nsIDOMXULSelectControlElement), "interface applied");
+    ok(extendedInstance.QueryInterface(Ci.nsIDOMXULControlElement), "inherited interface applied");
   }
   ]]>
   </script>

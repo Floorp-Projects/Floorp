@@ -2370,7 +2370,7 @@ void nsFrameLoader::SetClampScrollPosition(bool aClamp) {
 static Tuple<ContentParent*, TabParent*> GetContentParent(Element* aBrowser) {
   using ReturnTuple = Tuple<ContentParent*, TabParent*>;
 
-  nsCOMPtr<nsIBrowser> browser = do_QueryInterface(aBrowser);
+  nsCOMPtr<nsIBrowser> browser = aBrowser ? aBrowser->AsBrowser() : nullptr;
   if (!browser) {
     return ReturnTuple(nullptr, nullptr);
   }

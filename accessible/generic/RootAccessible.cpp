@@ -337,7 +337,7 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent) {
     // If multiselect tree, we should fire selectionadd or selection removed
     if (FocusMgr()->HasDOMFocus(targetNode)) {
       nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSel =
-          do_QueryInterface(targetNode);
+          targetNode->AsElement()->AsXULMultiSelectControl();
       nsAutoString selType;
       multiSel->GetSelType(selType);
       if (selType.IsEmpty() || !selType.EqualsLiteral("single")) {
