@@ -33,7 +33,7 @@ using namespace mozilla::image;
 // ---------------------------------------------------------------------
 // nsQueryFrame methods
 NS_QUERYFRAME_HEAD(nsSVGImageFrame)
-NS_QUERYFRAME_ENTRY(nsSVGImageFrame)
+  NS_QUERYFRAME_ENTRY(nsSVGImageFrame)
 NS_QUERYFRAME_TAIL_INHERITING(SVGGeometryFrame)
 
 nsIFrame* NS_NewSVGImageFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {

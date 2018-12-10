@@ -39,7 +39,7 @@ void nsLegendFrame::DestroyFrom(nsIFrame* aDestructRoot,
 }
 
 NS_QUERYFRAME_HEAD(nsLegendFrame)
-NS_QUERYFRAME_ENTRY(nsLegendFrame)
+  NS_QUERYFRAME_ENTRY(nsLegendFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
 void nsLegendFrame::Reflow(nsPresContext* aPresContext,

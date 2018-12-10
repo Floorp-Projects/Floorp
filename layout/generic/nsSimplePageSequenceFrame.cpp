@@ -68,7 +68,7 @@ nsSimplePageSequenceFrame::~nsSimplePageSequenceFrame() {
 }
 
 NS_QUERYFRAME_HEAD(nsSimplePageSequenceFrame)
-NS_QUERYFRAME_ENTRY(nsIPageSequenceFrame)
+  NS_QUERYFRAME_ENTRY(nsIPageSequenceFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 //----------------------------------------------------------------------

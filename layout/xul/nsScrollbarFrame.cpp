@@ -38,8 +38,8 @@ nsIFrame* NS_NewScrollbarFrame(nsIPresShell* aPresShell,
 NS_IMPL_FRAMEARENA_HELPERS(nsScrollbarFrame)
 
 NS_QUERYFRAME_HEAD(nsScrollbarFrame)
-NS_QUERYFRAME_ENTRY(nsScrollbarFrame)
-NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
+  NS_QUERYFRAME_ENTRY(nsScrollbarFrame)
+  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 void nsScrollbarFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
