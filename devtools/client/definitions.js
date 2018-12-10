@@ -412,7 +412,8 @@ Tools.accessibility = {
   label: l10n("accessibility.label"),
   panelLabel: l10n("accessibility.panelLabel"),
   get tooltip() {
-    return l10n("accessibility.tooltip2");
+    return l10n("accessibility.tooltip3",
+                "Shift+" + functionkey(l10n("accessibility.commandkey")));
   },
   inMenu: true,
 
