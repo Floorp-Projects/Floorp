@@ -128,11 +128,13 @@ JS_PUBLIC_API bool JS::CallArgs::requireAtLeast(JSContext* cx,
                                                 const char* fnname,
                                                 unsigned required) const {
   if (length() < required) {
-    char numArgsStr[40];
-    SprintfLiteral(numArgsStr, "%u", required - 1);
+    char requiredArgsStr[40];
+    SprintfLiteral(requiredArgsStr, "%u", required);
+    char actualArgsStr[40];
+    SprintfLiteral(actualArgsStr, "%u", length());
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_MORE_ARGS_NEEDED, fnname, numArgsStr,
-                              required == 2 ? "" : "s");
+                              JSMSG_MORE_ARGS_NEEDED, fnname, requiredArgsStr,
+                              required == 1 ? "" : "s", actualArgsStr);
     return false;
   }
 
