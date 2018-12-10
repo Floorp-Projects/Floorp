@@ -703,8 +703,10 @@ void nsProfiler::FinishGathering() {
   mWriter->End();
 
   UniquePtr<char[]> buf = mWriter->WriteFunc()->CopyData();
-  nsCString result(buf.get());
-  mPromiseHolder->Resolve(result, __func__);
+  size_t len = strlen(buf.get());
+  nsCString result;
+  result.Adopt(buf.release(), len);
+  mPromiseHolder->Resolve(std::move(result), __func__);
 
   ResetGathering();
 }
