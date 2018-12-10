@@ -231,7 +231,7 @@ nsIFrame* NS_NewHTMLCanvasFrame(nsIPresShell* aPresShell,
 }
 
 NS_QUERYFRAME_HEAD(nsHTMLCanvasFrame)
-NS_QUERYFRAME_ENTRY(nsHTMLCanvasFrame)
+  NS_QUERYFRAME_ENTRY(nsHTMLCanvasFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsHTMLCanvasFrame)

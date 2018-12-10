@@ -1150,10 +1150,10 @@ a11y::AccType nsHTMLScrollFrame::AccessibleType() {
 #endif
 
 NS_QUERYFRAME_HEAD(nsHTMLScrollFrame)
-NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-NS_QUERYFRAME_ENTRY(nsIScrollableFrame)
-NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
-NS_QUERYFRAME_ENTRY(nsIScrollbarMediator)
+  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
+  NS_QUERYFRAME_ENTRY(nsIScrollableFrame)
+  NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
+  NS_QUERYFRAME_ENTRY(nsIScrollbarMediator)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 //----------nsXULScrollFrame-------------------------------------------
@@ -1587,10 +1587,10 @@ nsXULScrollFrame::DoXULLayout(nsBoxLayoutState& aState) {
 }
 
 NS_QUERYFRAME_HEAD(nsXULScrollFrame)
-NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-NS_QUERYFRAME_ENTRY(nsIScrollableFrame)
-NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
-NS_QUERYFRAME_ENTRY(nsIScrollbarMediator)
+  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
+  NS_QUERYFRAME_ENTRY(nsIScrollableFrame)
+  NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
+  NS_QUERYFRAME_ENTRY(nsIScrollbarMediator)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 //-------------------- Helper ----------------------

@@ -193,7 +193,7 @@ nsImageFrame::nsImageFrame(ComputedStyle* aStyle, ClassID aID, Kind aKind)
 nsImageFrame::~nsImageFrame() {}
 
 NS_QUERYFRAME_HEAD(nsImageFrame)
-NS_QUERYFRAME_ENTRY(nsImageFrame)
+  NS_QUERYFRAME_ENTRY(nsImageFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsAtomicContainerFrame)
 
 #ifdef ACCESSIBILITY

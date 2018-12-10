@@ -52,8 +52,8 @@ nsRangeFrame::~nsRangeFrame() {}
 NS_IMPL_FRAMEARENA_HELPERS(nsRangeFrame)
 
 NS_QUERYFRAME_HEAD(nsRangeFrame)
-NS_QUERYFRAME_ENTRY(nsRangeFrame)
-NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
+  NS_QUERYFRAME_ENTRY(nsRangeFrame)
+  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 void nsRangeFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,

@@ -74,7 +74,7 @@ a11y::AccType nsSubDocumentFrame::AccessibleType() {
 #endif
 
 NS_QUERYFRAME_HEAD(nsSubDocumentFrame)
-NS_QUERYFRAME_ENTRY(nsSubDocumentFrame)
+  NS_QUERYFRAME_ENTRY(nsSubDocumentFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsAtomicContainerFrame)
 
 class AsyncFrameInit : public Runnable {
