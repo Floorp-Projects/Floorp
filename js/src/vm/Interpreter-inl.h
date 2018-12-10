@@ -548,7 +548,7 @@ static MOZ_ALWAYS_INLINE bool GetPrimitiveElementOperation(
   MOZ_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);
 
   // FIXME: Bug 1234324 We shouldn't be boxing here.
-  RootedObject boxed(cx, ToObjectFromStackForPropertyAccess(cx, receiver, key));
+  RootedObject boxed(cx, ToObjectFromStack(cx, receiver));
   if (!boxed) {
     return false;
   }
