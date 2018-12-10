@@ -28,6 +28,7 @@ class UuidMetricTypeTest {
 
     @Before
     fun setUp() {
+        Glean.initialized = true
         UuidsStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
         // Clear the stored "user" preferences between tests.
         ApplicationProvider.getApplicationContext<Context>()

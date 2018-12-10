@@ -26,30 +26,9 @@ import mozilla.components.service.glean.metrics.Baseline
 import mozilla.components.support.base.log.logger.Logger
 import java.io.File
 
-object Glean {
-    /**
-    * Enumeration of different metric lifetimes.
-    */
-    enum class PingEvent {
-        /**
-        * When the application goes into the background
-        */
-        Background,
-        /**
-        * A periodic event to send the default ping
-        */
-        Default
-    }
-
+@Suppress("TooManyFunctions")
+open class GleanInternalAPI {
     private val logger = Logger("glean/Glean")
-
-    internal const val SCHEMA_VERSION = 1
-
-    /**
-     * The name of the directory, inside the application's directory,
-     * in which Glean files are stored.
-     */
-    internal const val GLEAN_DATA_DIR = "glean_data"
 
     // Include our singletons of StorageEngineManager and PingMaker
     private lateinit var storageEngineManager: StorageEngineManager
@@ -60,7 +39,8 @@ object Glean {
 
     private val gleanLifecycleObserver by lazy { GleanLifecycleObserver() }
 
-    private var initialized = false
+    // `internal` so this can be modified for testing
+    internal var initialized = false
     private var metricsEnabled = true
 
     /**
@@ -72,8 +52,13 @@ object Glean {
      * @param applicationContext [Context] to access application features, such
      * as shared preferences
      * @param configuration A Glean [Configuration] object with global settings.
+     * @raises Exception if called more than once
      */
     fun initialize(applicationContext: Context, configuration: Configuration = Configuration()) {
+        if (isInitialized()) {
+            throw IllegalStateException("Glean may not be initialized multiple times")
+        }
+
         storageEngineManager = StorageEngineManager(applicationContext = applicationContext)
         pingMaker = PingMaker(storageEngineManager)
         this.configuration = configuration
@@ -83,6 +68,13 @@ object Glean {
         initializeCoreMetrics(applicationContext)
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(gleanLifecycleObserver)
+    }
+
+    /**
+     * Returns true if the Glean library has been initialized.
+     */
+    internal fun isInitialized(): Boolean {
+        return initialized
     }
 
     /**
@@ -140,7 +132,7 @@ object Glean {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun makePath(docType: String, uuid: UUID): String {
-        return "/submit/glean/$docType/$SCHEMA_VERSION/$uuid"
+        return "/submit/glean/$docType/${Glean.SCHEMA_VERSION}/$uuid"
     }
 
     /**
@@ -149,7 +141,7 @@ object Glean {
      *
      * @return The [Job] created by the ping submission.
      */
-    private fun sendPing(store: String, docType: String): Job {
+    internal fun sendPing(store: String, docType: String): Job {
         val pingContent = pingMaker.collect(store)
         val uuid = UUID.randomUUID()
         val path = makePath(docType, uuid)
@@ -163,7 +155,7 @@ object Glean {
      * Initialize the core metrics internally managed by Glean (e.g. client id).
      */
     private fun initializeCoreMetrics(applicationContext: Context) {
-        val gleanDataDir = File(applicationContext.applicationInfo.dataDir, GLEAN_DATA_DIR)
+        val gleanDataDir = File(applicationContext.applicationInfo.dataDir, Glean.GLEAN_DATA_DIR)
 
         // Make sure the data directory exists and is writable.
         if (!gleanDataDir.exists() && !gleanDataDir.mkdirs()) {
@@ -201,10 +193,39 @@ object Glean {
      * @return A [Job], **only** to be used when testing, which allows to wait on
      *         the ping submission.
      */
-    fun handleEvent(pingEvent: PingEvent): Job {
+    fun handleEvent(pingEvent: Glean.PingEvent): Job {
+        if (!isInitialized()) {
+            logger.error("Glean must be initialized before handling events.")
+            return Job()
+        }
+
         return when (pingEvent) {
-            PingEvent.Background -> sendPing("baseline", "baseline")
-            PingEvent.Default -> sendPing("metrics", "metrics")
+            Glean.PingEvent.Background -> sendPing("baseline", "baseline")
+            Glean.PingEvent.Default -> sendPing("metrics", "metrics")
         }
     }
+}
+
+object Glean : GleanInternalAPI() {
+    /**
+    * Enumeration of different metric lifetimes.
+    */
+    enum class PingEvent {
+        /**
+        * When the application goes into the background
+        */
+        Background,
+        /**
+        * A periodic event to send the default ping
+        */
+        Default
+    }
+
+    internal const val SCHEMA_VERSION = 1
+
+    /**
+    * The name of the directory, inside the application's directory,
+    * in which Glean files are stored.
+    */
+    internal const val GLEAN_DATA_DIR = "glean_data"
 }

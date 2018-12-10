@@ -27,6 +27,7 @@ class CounterMetricTypeTest {
 
     @Before
     fun setUp() {
+        Glean.initialized = true
         CountersStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
         // Clear the stored "user" preferences between tests.
         ApplicationProvider.getApplicationContext<Context>()

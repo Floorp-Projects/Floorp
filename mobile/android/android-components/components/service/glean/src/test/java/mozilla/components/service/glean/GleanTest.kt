@@ -25,7 +25,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doAnswer
+import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.spy
 import org.robolectric.RobolectricTestRunner
 import java.io.File
 import java.util.UUID
@@ -40,6 +42,7 @@ class GleanTest {
 
     @Before
     fun setup() {
+        Glean.initialized = false
         Glean.initialize(
             applicationContext = ApplicationProvider.getApplicationContext()
         )
@@ -49,6 +52,7 @@ class GleanTest {
     fun resetGlobalState() {
         Glean.setMetricsEnabled(true)
         Glean.clearExperiments()
+        Glean.initialized = false
     }
 
     @Test
@@ -179,6 +183,8 @@ class GleanTest {
         // Create a file in its place.
         assertTrue(gleanDir.createNewFile())
 
+        Glean.initialized = false
+
         // Try to init Glean: it should not crash.
         Glean.initialize(
             applicationContext = ApplicationProvider.getApplicationContext()
@@ -186,5 +192,41 @@ class GleanTest {
 
         // Clean up after this, so that other tests don't fail.
         assertTrue(gleanDir.delete())
+    }
+
+    @Test
+    fun `Don't send metrics if not initialized`() {
+        val stringMetric = StringMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "string_metric",
+            sendInPings = listOf("store1")
+        )
+        StringsStorageEngine.clearAllStores()
+        Glean.initialized = false
+        stringMetric.set("foo")
+        assertNull(
+            "Metrics should not be recorded if glean is not initialized",
+            StringsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
+        )
+
+        Glean.initialized = true
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun `Don't initialize twice`() {
+        Glean.initialize(
+            applicationContext = ApplicationProvider.getApplicationContext()
+        )
+    }
+
+    @Test
+    fun `Don't handle events when uninitialized`() {
+        val gleanSpy = spy<GleanInternalAPI>(GleanInternalAPI::class.java)
+
+        doThrow(IllegalStateException("Shouldn't send ping")).`when`(gleanSpy).sendPing(anyString(), anyString())
+        gleanSpy.initialized = false
+        gleanSpy.handleEvent(Glean.PingEvent.Default)
     }
 }

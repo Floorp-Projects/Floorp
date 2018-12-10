@@ -27,6 +27,7 @@ class StringMetricTypeTest {
 
     @Before
     fun setUp() {
+        Glean.initialized = true
         StringsStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
         // Clear the stored "user" preferences between tests.
         ApplicationProvider.getApplicationContext<Context>()

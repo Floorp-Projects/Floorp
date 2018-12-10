@@ -28,6 +28,7 @@ class EventMetricTypeTest {
 
     @Before
     fun setUp() {
+        Glean.initialized = true
         EventsStorageEngine.clearAllStores()
     }
 
