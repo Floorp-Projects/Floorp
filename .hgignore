@@ -184,6 +184,10 @@ subinclude:servo/.hgignore
 # https://bz.mercurial-scm.org/show_bug.cgi?id=5322
 ^comm/
 
+# Ignore temp files created by patch command.
+\.orig$
+\.rej$
+
 # Ignore various raptor performance framework files
 ^testing/raptor/.raptor-venv
 ^testing/raptor/raptor-venv
