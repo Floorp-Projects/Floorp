@@ -60,9 +60,16 @@ function InitDetectorTests()
 
 function SetDetectorPref(aPrefValue)
 {
+    var fallback = "";
+    if (aPrefValue == "ja_parallel_state_machine") {
+        fallback = "Shift_JIS";
+    } else if (aPrefValue == "ruprob" || aPrefValue == "ukprob") {
+        fallback = "windows-1251";
+    }
     var prefService = Cc["@mozilla.org/preferences-service;1"]
                       .getService(Ci.nsIPrefBranch);
     prefService.setStringPref("intl.charset.detector", aPrefValue);
+    prefService.setStringPref("intl.charset.fallback.override", fallback);
     gCurrentDetector = aPrefValue;
 }
 
