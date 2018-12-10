@@ -31,42 +31,16 @@ function workerTestDone() {
   client.postMessage({ type: 'finish' });
 }
 
-function workerTestGetVersion(cb) {
-  addEventListener('message', function workerTestGetVersionCB(e) {
-    if (e.data.type !== 'returnVersion') {
+function workerTestGetHelperData(cb) {
+  addEventListener('message', function workerTestGetHelperDataCB(e) {
+    if (e.data.type !== 'returnHelperData') {
       return;
     }
-    removeEventListener('message', workerTestGetVersionCB);
+    removeEventListener('message', workerTestGetHelperDataCB);
     cb(e.data.result);
   });
   client.postMessage({
-    type: 'getVersion'
-  });
-}
-
-function workerTestGetUserAgent(cb) {
-  addEventListener('message', function workerTestGetUserAgentCB(e) {
-    if (e.data.type !== 'returnUserAgent') {
-      return;
-    }
-    removeEventListener('message', workerTestGetUserAgentCB);
-    cb(e.data.result);
-  });
-  client.postMessage({
-    type: 'getUserAgent'
-  });
-}
-
-function workerTestGetOSCPU(cb) {
-  addEventListener('message', function workerTestGetOSCPUCB(e) {
-    if (e.data.type !== 'returnOSCPU') {
-      return;
-    }
-    removeEventListener('message', workerTestGetOSCPUCB);
-    cb(e.data.result);
-  });
-  client.postMessage({
-    type: 'getOSCPU'
+    type: 'getHelperData'
   });
 }
 
