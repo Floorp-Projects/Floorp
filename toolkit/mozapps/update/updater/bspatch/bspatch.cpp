@@ -30,7 +30,7 @@
  */
 
 #include "bspatch.h"
-#include "errors.h"
+#include "updatererrors.h"
 
 #include <sys/stat.h>
 #include <stdlib.h>

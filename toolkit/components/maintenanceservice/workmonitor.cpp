@@ -31,7 +31,7 @@ using mozilla::UniquePtr;
 #include "uachelper.h"
 #include "updatehelper.h"
 #include "pathhash.h"
-#include "errors.h"
+#include "updatererrors.h"
 #include "commonupdatedir.h"
 
 #define PATCH_DIR_PATH L"\\updates\\0"

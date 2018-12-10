@@ -13,7 +13,7 @@
 #include "resource.h"
 #include "progressui.h"
 #include "readstrings.h"
-#include "errors.h"
+#include "updatererrors.h"
 
 #define TIMER_ID 1
 #define TIMER_INTERVAL 100
