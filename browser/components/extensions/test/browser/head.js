@@ -22,6 +22,7 @@
  *          promiseAnimationFrame getCustomizableUIPanelID
  *          awaitEvent BrowserWindowIterator
  *          navigateTab historyPushState promiseWindowRestored
+ *          getIncognitoWindow
  */
 
 // There are shutdown issues for which multiple rejections are left uncaught.
@@ -535,4 +536,37 @@ function navigateTab(tab, url) {
 
 function historyPushState(tab, url) {
   return locationChange(tab, url, (url) => { content.history.pushState(null, null, url); });
+}
+
+async function getIncognitoWindow(url) {
+  // Since events will be limited based on incognito, we need a
+  // spanning extension to get the tab id so we can test access failure.
+
+  // avoid linting issue with background
+  /* eslint-disable no-use-before-define */
+  function background(expectUrl) {
+    browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+      if (changeInfo.status === "complete" && tab.url === expectUrl) {
+        browser.test.sendMessage("data", {tabId, windowId: tab.windowId});
+      }
+    });
+  }
+
+  let windowWatcher = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"],
+    },
+    background: `(${background})("${url}")`,
+  });
+
+  await windowWatcher.startup();
+  let data = windowWatcher.awaitMessage("data");
+
+  let win = await BrowserTestUtils.openNewBrowserWindow({private: true, url});
+  let browser = win.getBrowser().selectedBrowser;
+  BrowserTestUtils.loadURI(browser, url);
+
+  let details = await data;
+  await windowWatcher.unload();
+  return {win, details};
 }
