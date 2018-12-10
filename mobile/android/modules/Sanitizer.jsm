@@ -81,26 +81,31 @@ Sanitizer.prototype = {
   // Any further specific differences caused by architectural differences between
   // Fennec and desktop Firefox are documented below for each item.
   items: {
-    // Same as desktop Firefox.
+    // The difference is specifically the Sanitize:Cache message,
+    // so that the Android front-end can clear its caches as well,
+    // while everything else is unchanged.
     cache: {
       clear: function() {
-        return new Promise(function(resolve, reject) {
-          let refObj = {};
-          TelemetryStopwatch.start("FX_SANITIZE_CACHE", refObj);
+        let refObj = {};
+        TelemetryStopwatch.start("FX_SANITIZE_CACHE", refObj);
 
-          try {
-            Services.cache2.clear();
-          } catch (er) {}
+        try {
+          Services.cache2.clear();
+        } catch (er) {}
 
-          let imageCache = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+        let imageCache = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                                                            .getImgCacheForDocument(null);
-          try {
-            imageCache.clearCache(false); // true=chrome, false=content
-          } catch (er) {}
+        try {
+          imageCache.clearCache(false); // true=chrome, false=content
+        } catch (er) {}
 
-          TelemetryStopwatch.finish("FX_SANITIZE_CACHE", refObj);
-          resolve();
-        });
+        return EventDispatcher.instance.sendRequestForResult({ type: "Sanitize:Cache" })
+          .catch((err) => {
+            Cu.reportError(`Java-side cache clearing failed with error: ${err}`);
+          })
+          .then(() => {
+            TelemetryStopwatch.finish("FX_SANITIZE_CACHE", refObj);
+          });
       },
 
       get canClear() {

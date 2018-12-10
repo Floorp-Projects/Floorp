@@ -11,6 +11,8 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
+const ErrorMessage = createFactory(require("../shared/ErrorMessage"));
+
 const Actions = require("../../actions/index");
 
 /**
@@ -20,6 +22,7 @@ class TemporaryExtensionInstaller extends PureComponent {
   static get propTypes() {
     return {
       dispatch: PropTypes.func.isRequired,
+      temporaryInstallError: PropTypes.string,
     };
   }
 
@@ -28,17 +31,32 @@ class TemporaryExtensionInstaller extends PureComponent {
   }
 
   render() {
-    return Localized(
-      {
-        id: "about-debugging-tmp-extension-install-button",
-      },
-      dom.button(
+    const { temporaryInstallError } = this.props;
+    return dom.div(
+      {},
+      Localized(
         {
-          className: "default-button js-temporary-extension-install-button",
-          onClick: e => this.install(),
+          id: "about-debugging-tmp-extension-install-button",
         },
-        "Load Temporary Add-on…"
-      )
+        dom.button(
+          {
+            className: "default-button js-temporary-extension-install-button",
+            onClick: e => this.install(),
+          },
+          "Load Temporary Add-on…"
+        )
+      ),
+      temporaryInstallError ? ErrorMessage(
+        {
+          errorDescriptionKey: "about-debugging-tmp-extension-install-error",
+        },
+        dom.div(
+          {
+            className: "technical-text",
+          },
+          temporaryInstallError
+        )
+      ) : null
     );
   }
 }

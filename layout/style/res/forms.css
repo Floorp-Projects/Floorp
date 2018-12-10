@@ -172,12 +172,13 @@ input > .preview-div {
   white-space: pre;
 }
 
-textarea > .anonymous-div.inherit-overflow {
-  overflow: inherit;
-}
-textarea > .anonymous-div.inherit-scroll-behavior {
+textarea > .anonymous-div {
   scroll-behavior: inherit;
   overscroll-behavior: inherit;
+}
+
+textarea > .anonymous-div.inherit-overflow {
+  overflow: inherit;
 }
 
 input::placeholder,

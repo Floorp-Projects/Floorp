@@ -96,7 +96,7 @@ add_task(async function simple_no_result_callback() {
       resolve();
     });
 
-    controller.fetch("no remote", getEngine);
+    controller.fetch("no remote", false, getEngine);
   });
 });
 
@@ -110,7 +110,7 @@ add_task(async function simple_no_result_callback_and_promise() {
     deferred.resolve();
   });
 
-  let result = await controller.fetch("no results", getEngine);
+  let result = await controller.fetch("no results", false, getEngine);
   Assert.equal(result.term, "no results");
   Assert.equal(result.local.length, 0);
   Assert.equal(result.remote.length, 0);
@@ -120,7 +120,7 @@ add_task(async function simple_no_result_callback_and_promise() {
 
 add_task(async function simple_no_result_promise() {
   let controller = new SearchSuggestionController();
-  let result = await controller.fetch("no remote", getEngine);
+  let result = await controller.fetch("no remote", false, getEngine);
   Assert.equal(result.term, "no remote");
   Assert.equal(result.local.length, 0);
   Assert.equal(result.remote.length, 0);
@@ -128,7 +128,7 @@ add_task(async function simple_no_result_promise() {
 
 add_task(async function simple_remote_no_local_result() {
   let controller = new SearchSuggestionController();
-  let result = await controller.fetch("mo", getEngine);
+  let result = await controller.fetch("mo", false, getEngine);
   Assert.equal(result.term, "mo");
   Assert.equal(result.local.length, 0);
   Assert.equal(result.remote.length, 3);
@@ -139,7 +139,7 @@ add_task(async function simple_remote_no_local_result() {
 
 add_task(async function simple_remote_no_local_result_alternative_type() {
   let controller = new SearchSuggestionController();
-  let result = await controller.fetch("mo", alternateJSONEngine);
+  let result = await controller.fetch("mo", false, alternateJSONEngine);
   Assert.equal(result.term, "mo");
   Assert.equal(result.local.length, 0);
   Assert.equal(result.remote.length, 3);
@@ -150,7 +150,7 @@ add_task(async function simple_remote_no_local_result_alternative_type() {
 
 add_task(async function remote_term_case_mismatch() {
   let controller = new SearchSuggestionController();
-  let result = await controller.fetch("Query Case Mismatch", getEngine);
+  let result = await controller.fetch("Query Case Mismatch", false, getEngine);
   Assert.equal(result.term, "Query Case Mismatch");
   Assert.equal(result.remote.length, 1);
   Assert.equal(result.remote[0], "Query Case Mismatch");
@@ -160,7 +160,7 @@ add_task(async function simple_local_no_remote_result() {
   await updateSearchHistory("bump", "no remote entries");
 
   let controller = new SearchSuggestionController();
-  let result = await controller.fetch("no remote", getEngine);
+  let result = await controller.fetch("no remote", false, getEngine);
   Assert.equal(result.term, "no remote");
   Assert.equal(result.local.length, 1);
   Assert.equal(result.local[0], "no remote entries");
@@ -173,7 +173,7 @@ add_task(async function simple_non_ascii() {
   await updateSearchHistory("bump", "I ❤️ XUL");
 
   let controller = new SearchSuggestionController();
-  let result = await controller.fetch("I ❤️", getEngine);
+  let result = await controller.fetch("I ❤️", false, getEngine);
   Assert.equal(result.term, "I ❤️");
   Assert.equal(result.local.length, 1);
   Assert.equal(result.local[0], "I ❤️ XUL");
@@ -185,7 +185,7 @@ add_task(async function both_local_remote_result_dedupe() {
   await updateSearchHistory("bump", "Mozilla");
 
   let controller = new SearchSuggestionController();
-  let result = await controller.fetch("mo", getEngine);
+  let result = await controller.fetch("mo", false, getEngine);
   Assert.equal(result.term, "mo");
   Assert.equal(result.local.length, 1);
   Assert.equal(result.local[0], "Mozilla");
@@ -196,7 +196,7 @@ add_task(async function both_local_remote_result_dedupe() {
 
 add_task(async function POST_both_local_remote_result_dedupe() {
   let controller = new SearchSuggestionController();
-  let result = await controller.fetch("mo", postEngine);
+  let result = await controller.fetch("mo", false, postEngine);
   Assert.equal(result.term, "mo");
   Assert.equal(result.local.length, 1);
   Assert.equal(result.local[0], "Mozilla");
@@ -209,7 +209,7 @@ add_task(async function both_local_remote_result_dedupe2() {
   await updateSearchHistory("bump", "mom");
 
   let controller = new SearchSuggestionController();
-  let result = await controller.fetch("mo", getEngine);
+  let result = await controller.fetch("mo", false, getEngine);
   Assert.equal(result.term, "mo");
   Assert.equal(result.local.length, 2);
   Assert.equal(result.local[0], "mom");
@@ -223,7 +223,7 @@ add_task(async function both_local_remote_result_dedupe3() {
   await updateSearchHistory("bump", "modern");
 
   let controller = new SearchSuggestionController();
-  let result = await controller.fetch("mo", getEngine);
+  let result = await controller.fetch("mo", false, getEngine);
   Assert.equal(result.term, "mo");
   Assert.equal(result.local.length, 3);
   Assert.equal(result.local[0], "modern");
@@ -238,10 +238,10 @@ add_task(async function fetch_twice_in_a_row() {
   await updateSearchHistory("bump", "delayed local");
 
   let controller = new SearchSuggestionController();
-  let resultPromise1 = controller.fetch("delay", getEngine);
+  let resultPromise1 = controller.fetch("delay", false, getEngine);
 
   // A second fetch while the server is still waiting to return results leads to an abort.
-  let resultPromise2 = controller.fetch("delayed ", getEngine);
+  let resultPromise2 = controller.fetch("delayed ", false, getEngine);
   await resultPromise1.then((results) => Assert.equal(null, results));
 
   let result = await resultPromise2;
@@ -259,7 +259,7 @@ add_task(async function fetch_twice_subset_reuse_formHistoryResult() {
   await updateSearchHistory("bump", "delayed local");
 
   let controller = new SearchSuggestionController();
-  let result = await controller.fetch("delay", getEngine);
+  let result = await controller.fetch("delay", false, getEngine);
   Assert.equal(result.term, "delay");
   Assert.equal(result.local.length, 2);
   Assert.equal(result.local[0], "delay local");
@@ -270,7 +270,7 @@ add_task(async function fetch_twice_subset_reuse_formHistoryResult() {
   // Remove the entry from the DB but it should remain in the cached formHistoryResult.
   await updateSearchHistory("remove", "delayed local");
 
-  let result2 = await controller.fetch("delayed ", getEngine);
+  let result2 = await controller.fetch("delayed ", false, getEngine);
   Assert.equal(result2.term, "delayed ");
   Assert.equal(result2.local.length, 1);
   Assert.equal(result2.local[0], "delayed local");
@@ -287,7 +287,7 @@ add_task(async function both_identical_with_more_than_max_results() {
   let controller = new SearchSuggestionController();
   controller.maxLocalResults = 7;
   controller.maxRemoteResults = 10;
-  let result = await controller.fetch("letter ", getEngine);
+  let result = await controller.fetch("letter ", false, getEngine);
   Assert.equal(result.term, "letter ");
   Assert.equal(result.local.length, 7);
   for (let i = 0; i < controller.maxLocalResults; i++) {
@@ -304,7 +304,7 @@ add_task(async function noremote_maxLocal() {
   let controller = new SearchSuggestionController();
   controller.maxLocalResults = 2; // (should be ignored because no remote results)
   controller.maxRemoteResults = 0;
-  let result = await controller.fetch("letter ", getEngine);
+  let result = await controller.fetch("letter ", false, getEngine);
   Assert.equal(result.term, "letter ");
   Assert.equal(result.local.length, 26);
   for (let i = 0; i < result.local.length; i++) {
@@ -317,7 +317,7 @@ add_task(async function someremote_maxLocal() {
   let controller = new SearchSuggestionController();
   controller.maxLocalResults = 2;
   controller.maxRemoteResults = 4;
-  let result = await controller.fetch("letter ", getEngine);
+  let result = await controller.fetch("letter ", false, getEngine);
   Assert.equal(result.term, "letter ");
   Assert.equal(result.local.length, 2);
   for (let i = 0; i < result.local.length; i++) {
@@ -334,7 +334,7 @@ add_task(async function one_of_each() {
   let controller = new SearchSuggestionController();
   controller.maxLocalResults = 1;
   controller.maxRemoteResults = 2;
-  let result = await controller.fetch("letter ", getEngine);
+  let result = await controller.fetch("letter ", false, getEngine);
   Assert.equal(result.term, "letter ");
   Assert.equal(result.local.length, 1);
   Assert.equal(result.local[0], "letter A");
@@ -347,7 +347,7 @@ add_task(async function local_result_returned_remote_result_disabled() {
   let controller = new SearchSuggestionController();
   controller.maxLocalResults = 1;
   controller.maxRemoteResults = 1;
-  let result = await controller.fetch("letter ", getEngine);
+  let result = await controller.fetch("letter ", false, getEngine);
   Assert.equal(result.term, "letter ");
   Assert.equal(result.local.length, 26);
   for (let i = 0; i < 26; i++) {
@@ -362,7 +362,7 @@ add_task(async function local_result_returned_remote_result_disabled_after_creat
   controller.maxLocalResults = 1;
   controller.maxRemoteResults = 1;
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
-  let result = await controller.fetch("letter ", getEngine);
+  let result = await controller.fetch("letter ", false, getEngine);
   Assert.equal(result.term, "letter ");
   Assert.equal(result.local.length, 26);
   for (let i = 0; i < 26; i++) {
@@ -378,7 +378,7 @@ add_task(async function one_of_each_disabled_before_creation_enabled_after_creat
   controller.maxLocalResults = 1;
   controller.maxRemoteResults = 2;
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
-  let result = await controller.fetch("letter ", getEngine);
+  let result = await controller.fetch("letter ", false, getEngine);
   Assert.equal(result.term, "letter ");
   Assert.equal(result.local.length, 1);
   Assert.equal(result.local[0], "letter A");
@@ -394,7 +394,7 @@ add_task(async function one_local_zero_remote() {
   let controller = new SearchSuggestionController();
   controller.maxLocalResults = 1;
   controller.maxRemoteResults = 0;
-  let result = await controller.fetch("letter ", getEngine);
+  let result = await controller.fetch("letter ", false, getEngine);
   Assert.equal(result.term, "letter ");
   Assert.equal(result.local.length, 26);
   for (let i = 0; i < 26; i++) {
@@ -407,7 +407,7 @@ add_task(async function zero_local_one_remote() {
   let controller = new SearchSuggestionController();
   controller.maxLocalResults = 0;
   controller.maxRemoteResults = 1;
-  let result = await controller.fetch("letter ", getEngine);
+  let result = await controller.fetch("letter ", false, getEngine);
   Assert.equal(result.term, "letter ");
   Assert.equal(result.local.length, 0);
   Assert.equal(result.remote.length, 1);
@@ -418,7 +418,7 @@ add_task(async function stop_search() {
   let controller = new SearchSuggestionController((result) => {
     do_throw("The callback shouldn't be called after stop()");
   });
-  let resultPromise = controller.fetch("mo", getEngine);
+  let resultPromise = controller.fetch("mo", false, getEngine);
   controller.stop();
   await resultPromise.then((result) => {
     Assert.equal(null, result);
@@ -428,7 +428,7 @@ add_task(async function stop_search() {
 add_task(async function empty_searchTerm() {
   // Empty searches don't go to the server but still get form history.
   let controller = new SearchSuggestionController();
-  let result = await controller.fetch("", getEngine);
+  let result = await controller.fetch("", false, getEngine);
   Assert.equal(result.term, "");
   Assert.ok(result.local.length > 0);
   Assert.equal(result.remote.length, 0);
@@ -450,7 +450,7 @@ add_task(async function slow_timeout() {
     check_result(result);
     d.resolve();
   }, 2000);
-  let result = await controller.fetch("slow ", getEngine);
+  let result = await controller.fetch("slow ", false, getEngine);
   check_result(result);
   await d.promise;
 });
@@ -458,7 +458,7 @@ add_task(async function slow_timeout() {
 add_task(async function slow_stop() {
   let d = PromiseUtils.defer();
   let controller = new SearchSuggestionController();
-  let resultPromise = controller.fetch("slow ", getEngine);
+  let resultPromise = controller.fetch("slow ", false, getEngine);
   setTimeout(function check_timeout() {
     // The HTTP response takes 10 seconds but we timeout in less than a second so just use 0.
     controller.stop();
@@ -478,7 +478,7 @@ add_task(async function remote_term_mismatch() {
   await updateSearchHistory("bump", "Query Mismatch Entry");
 
   let controller = new SearchSuggestionController();
-  let result = await controller.fetch("Query Mismatch", getEngine);
+  let result = await controller.fetch("Query Mismatch", false, getEngine);
   Assert.equal(result.term, "Query Mismatch");
   Assert.equal(result.local.length, 1);
   Assert.equal(result.local[0], "Query Mismatch Entry");
@@ -489,7 +489,7 @@ add_task(async function http_404() {
   await updateSearchHistory("bump", "HTTP 404 Entry");
 
   let controller = new SearchSuggestionController();
-  let result = await controller.fetch("HTTP 404", getEngine);
+  let result = await controller.fetch("HTTP 404", false, getEngine);
   Assert.equal(result.term, "HTTP 404");
   Assert.equal(result.local.length, 1);
   Assert.equal(result.local[0], "HTTP 404 Entry");
@@ -500,7 +500,7 @@ add_task(async function http_500() {
   await updateSearchHistory("bump", "HTTP 500 Entry");
 
   let controller = new SearchSuggestionController();
-  let result = await controller.fetch("HTTP 500", getEngine);
+  let result = await controller.fetch("HTTP 500", false, getEngine);
   Assert.equal(result.term, "HTTP 500");
   Assert.equal(result.local.length, 1);
   Assert.equal(result.local[0], "HTTP 500 Entry");
@@ -511,7 +511,7 @@ add_task(async function unresolvable_server() {
   await updateSearchHistory("bump", "Unresolvable Server Entry");
 
   let controller = new SearchSuggestionController();
-  let result = await controller.fetch("Unresolvable Server", unresolvableEngine);
+  let result = await controller.fetch("Unresolvable Server", false, unresolvableEngine);
   Assert.equal(result.term, "Unresolvable Server");
   Assert.equal(result.local.length, 1);
   Assert.equal(result.local[0], "Unresolvable Server Entry");
@@ -521,17 +521,24 @@ add_task(async function unresolvable_server() {
 
 // Exception handling
 
+add_task(async function missing_pb() {
+  Assert.throws(() => {
+    let controller = new SearchSuggestionController();
+    controller.fetch("No privacy");
+  }, /priva/i);
+});
+
 add_task(async function missing_engine() {
   Assert.throws(() => {
     let controller = new SearchSuggestionController();
-    controller.fetch("No engine");
+    controller.fetch("No engine", false);
   }, /engine/i);
 });
 
 add_task(async function invalid_engine() {
   Assert.throws(() => {
     let controller = new SearchSuggestionController();
-    controller.fetch("invalid engine", {});
+    controller.fetch("invalid engine", false, {});
   }, /engine/i);
 });
 
@@ -540,7 +547,7 @@ add_task(async function no_results_requested() {
     let controller = new SearchSuggestionController();
     controller.maxLocalResults = 0;
     controller.maxRemoteResults = 0;
-    controller.fetch("No results requested", getEngine);
+    controller.fetch("No results requested", false, getEngine);
   }, /result/i);
 });
 
@@ -548,18 +555,18 @@ add_task(async function minus_one_results_requested() {
   Assert.throws(() => {
     let controller = new SearchSuggestionController();
     controller.maxLocalResults = -1;
-    controller.fetch("-1 results requested", getEngine);
+    controller.fetch("-1 results requested", false, getEngine);
   }, /result/i);
 });
 
 add_task(async function test_userContextId() {
   let controller = new SearchSuggestionController();
-  controller._fetchRemote = function(searchTerm, engine, userContextId, privateMode) {
+  controller._fetchRemote = function(searchTerm, engine, privateMode, userContextId) {
     Assert.equal(userContextId, 1);
     return PromiseUtils.defer();
   };
 
-  controller.fetch("test", getEngine, 1);
+  controller.fetch("test", false, getEngine, 1);
 });
 
 // Helpers

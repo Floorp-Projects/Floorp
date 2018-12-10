@@ -33,7 +33,7 @@
 #include "progressui.h"
 #include "archivereader.h"
 #include "readstrings.h"
-#include "errors.h"
+#include "updatererrors.h"
 
 #include <stdio.h>
 #include <string.h>

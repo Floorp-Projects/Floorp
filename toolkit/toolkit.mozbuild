@@ -64,7 +64,10 @@ if CONFIG['MOZ_AUTH_EXTENSION']:
     DIRS += ['/extensions/auth']
 
 if CONFIG['MOZ_UPDATER'] and CONFIG['OS_TARGET'] != 'Android':
-    DIRS += ['/other-licenses/bsdiff']
+    DIRS += [
+        '/toolkit/mozapps/update/updater/bspatch',
+        '/other-licenses/bsdiff',
+    ]
 
 # Gecko/Core components.
 

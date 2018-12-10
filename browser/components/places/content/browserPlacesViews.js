@@ -658,7 +658,7 @@ PlacesViewBase.prototype = {
         aPopup._endOptOpenAllInTabs.classList.add(this.options.extraClasses.footer);
 
       aPopup._endOptOpenAllInTabs.setAttribute("oncommand",
-        "PlacesUIUtils.openContainerNodeInTabs(this.parentNode._placesNode, event, " +
+        "PlacesUIUtils.openMultipleLinksInTabs(this.parentNode._placesNode, event, " +
                                                "PlacesUIUtils.getViewForNode(this));");
       aPopup._endOptOpenAllInTabs.setAttribute("onclick",
         "checkForMiddleClick(this, event); event.stopPropagation();");
