@@ -46,5 +46,5 @@ add_task(async function test_throws_error_if_worker_fails() {
   } catch (e) {
     error = e;
   }
-  Assert.equal("TypeError: localRecords is null; can't access its \"concat\" property", error.message);
+  Assert.equal("TypeError: localRecords is null", error.message);
 });
