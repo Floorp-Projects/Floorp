@@ -83,8 +83,7 @@ void NetworkConnectivityService::PerformChecks() {
   RecheckIPConnectivity();
 }
 
-static inline void NotifyObservers(const char *aTopic)
-{
+static inline void NotifyObservers(const char *aTopic) {
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   obs->NotifyObservers(nullptr, aTopic, nullptr);
 }
