@@ -1,0 +1,30 @@
+# Version of this schema
+schema: 1
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: "Toolkit"
+  component: "Application Update"
+
+# The source from this directory was adapted from Colin Percival's bspatch
+# tool in mid 2005 and was obtained from bsdiff version 4.2. Edits were
+# later added by the Chromium dev team and were copied to here as well
+
+# Document the source of externally hosted code
+origin:
+  name: "bsdiff/bspatch"
+  description: "Builds and applies patches to binary files"
+
+  # Full URL for the package's homepage/etc
+  # Usually different from repository url
+  url: "https://www.daemonology.net/bsdiff/bsdiff-4.2.tar.gz"
+
+  # Human-readable identifier for this version/release
+  # Generally "version NNN", "tag SSS", "bookmark SSS"
+  release: "version 4.2"
+
+  # The package's license, where possible using the mnemonic from
+  # https://spdx.org/licenses/
+  # Multiple licenses can be specified (as a YAML list)
+  # A "LICENSE" file must exist containing the full license text
+  license: "BSD-2-Clause"

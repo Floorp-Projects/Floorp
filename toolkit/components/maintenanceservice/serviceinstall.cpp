@@ -18,7 +18,7 @@
 #include "updatehelper.h"
 #include "shellapi.h"
 #include "readstrings.h"
-#include "errors.h"
+#include "updatererrors.h"
 #include "commonupdatedir.h"
 
 #pragma comment(lib, "version.lib")

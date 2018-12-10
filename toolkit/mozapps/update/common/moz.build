@@ -9,6 +9,7 @@ EXPORTS += [
     'readstrings.h',
     'updatecommon.h',
     'updatedefines.h',
+    'updatererrors.h',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
