@@ -309,13 +309,28 @@ class MOZ_STACK_CLASS CallArgs
     return args;
   }
 
+  /*
+   * Helper for requireAtLeast to report the actual exception.
+   */
+  static JS_PUBLIC_API void reportMoreArgsNeeded(JSContext* cx,
+                                                 const char* fnname,
+                                                 unsigned required,
+                                                 unsigned actual);
+
  public:
   /*
    * Returns true if there are at least |required| arguments passed in. If
    * false, it reports an error message on the context.
    */
-  JS_PUBLIC_API bool requireAtLeast(JSContext* cx, const char* fnname,
-                                    unsigned required) const;
+  JS_PUBLIC_API inline bool requireAtLeast(JSContext* cx, const char* fnname,
+                                           unsigned required) const {
+    if (MOZ_LIKELY(required <= length())) {
+      return true;
+    }
+
+    reportMoreArgsNeeded(cx, fnname, required, length());
+    return false;
+  }
 };
 
 MOZ_ALWAYS_INLINE CallArgs CallArgsFromVp(unsigned argc, Value* vp) {
