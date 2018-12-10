@@ -1,17 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
 
 /**
- * Testing search suggestions from SearchSuggestionController.jsm.
+ * Test that search suggestions from SearchSuggestionController.jsm don't store
+ * cookies.
  */
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
 ChromeUtils.import("resource://gre/modules/SearchSuggestionController.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 
 // We must make sure the FormHistoryStartup component is
 // initialized in order for it to respond to FormHistory
@@ -21,71 +18,104 @@ var formHistoryStartup = Cc["@mozilla.org/satchel/form-history-startup;1"].
 formHistoryStartup.observe(null, "profile-after-change", null);
 
 var httpServer = new HttpServer();
-var getEngine;
+
+function countCacheEntries() {
+  info("Enumerating cache entries");
+  return new Promise(resolve => {
+    let storage = Services.cache2.diskCacheStorage(Services.loadContextInfo.default, false);
+    storage.asyncVisitStorage({
+      onCacheStorageInfo(num, consumption) {
+        this._num = num;
+      },
+      onCacheEntryInfo(uri) {
+        info("Found cache entry: " + uri.asciiSpec);
+      },
+      onCacheEntryVisitCompleted() {
+        resolve(this._num || 0);
+      },
+    }, true /* Do walk entries */);
+  });
+}
+
+function countCookieEntries() {
+  info("Enumerating cookies");
+  let enumerator = Services.cookies.enumerator;
+  let cookieCount = 0;
+  for (let cookie of enumerator) {
+    info("Cookie:" + cookie.rawHost + " " + JSON.stringify(cookie.originAttributes));
+    cookieCount++;
+    break;
+  }
+  return cookieCount;
+}
 
 add_task(async function setup() {
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
 
-  let server = useHttpServer();
-  server.registerContentType("sjs", "sjs");
-
   registerCleanupFunction(async function cleanup() {
+    // Clean up all the data.
+    await new Promise(resolve =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, resolve));
     Services.prefs.clearUserPref("browser.search.suggest.enabled");
   });
 
-  [getEngine] = await addTestEngines([
+  let server = useHttpServer();
+  server.registerContentType("sjs", "sjs");
+
+  let unicodeName = ["\u30a8", "\u30c9"].join("");
+  let engines = await addTestEngines([
     {
-      name: "GET suggestion engine",
+      name: unicodeName,
       xmlFileName: "engineMaker.sjs?" + JSON.stringify({
         baseURL: gDataUrl,
-        name: "GET suggestion engine",
+        name: unicodeName,
+        method: "GET",
+      }),
+    },
+    {
+      name: "engine two",
+      xmlFileName: "engineMaker.sjs?" + JSON.stringify({
+        baseURL: gDataUrl,
+        name: "engine two",
         method: "GET",
       }),
     },
   ]);
+
+  // Clean up all the data.
+  await new Promise(resolve =>
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, resolve));
+  Assert.equal(await countCacheEntries(), 0, "The cache should be empty");
+  Assert.equal(await countCookieEntries(), 0, "Should not find any cookie");
+
+  await test_engine(engines, true);
+  await test_engine(engines, false);
 });
 
-add_task(async function test_private() {
-  await new Promise(resolve => {
-    let controller = new SearchSuggestionController((result) => {
-      Assert.equal(result.term, "cookie");
-      Assert.equal(result.local.length, 0);
-      Assert.equal(result.remote.length, 0);
-      resolve();
-    });
-    controller.fetch("cookie", getEngine);
-  });
-  info("Enumerating cookies");
-  let enumerator = Services.cookies.enumerator;
-  let cookies = [];
-  for (let cookie of enumerator) {
-    info("Cookie:" + cookie.rawHost + " " + JSON.stringify(cookie.originAttributes));
-    cookies.push(cookie);
-    break;
-  }
-  Assert.equal(cookies.length, 0, "Should not find any cookie");
-});
-
-add_task(async function test_nonprivate() {
+async function test_engine(engines, privateMode) {
   let controller;
   await new Promise(resolve => {
-     controller = new SearchSuggestionController((result) => {
-      Assert.equal(result.term, "cookie");
+    controller = new SearchSuggestionController((result) => {
       Assert.equal(result.local.length, 0);
       Assert.equal(result.remote.length, 0);
-      resolve();
+      if (result.term == "cookie") {
+        resolve();
+      }
     });
-    controller.fetch("cookie", getEngine, 0, false);
+    controller.fetch("test", privateMode, engines[0]);
+    controller.fetch("cookie", privateMode, engines[1]);
   });
-  info("Enumerating cookies");
-  let enumerator = Services.cookies.enumerator;
-  let cookies = [];
-  for (let cookie of enumerator) {
-    info("Cookie:" + cookie.rawHost + " " + JSON.stringify(cookie.originAttributes));
-    cookies.push(cookie);
-    break;
-  }
-  Assert.equal(cookies.length, 1, "Should find one cookie");
-  Assert.equal(cookies[0].originAttributes.firstPartyDomain,
-               controller.FIRST_PARTY_DOMAIN, "Check firstPartyDomain");
-});
+  Assert.equal(await countCacheEntries(), 0, "The cache should be empty");
+  Assert.equal(await countCookieEntries(), 0, "Should not find any cookie");
+
+  let firstPartyDomain1 = controller.firstPartyDomains.get(engines[0].name);
+  Assert.ok(/^[\.a-z0-9-]+\.search\.suggestions\.mozilla/.test(firstPartyDomain1),
+            "Check firstPartyDomain1");
+
+  let firstPartyDomain2 = controller.firstPartyDomains.get(engines[1].name);
+  Assert.ok(/^[\.a-z0-9-]+\.search\.suggestions\.mozilla/.test(firstPartyDomain2),
+            "Check firstPartyDomain2");
+
+  Assert.notEqual(firstPartyDomain1, firstPartyDomain2,
+                  "Check firstPartyDomain id unique per engine");
+}

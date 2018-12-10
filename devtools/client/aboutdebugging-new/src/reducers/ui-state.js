@@ -9,6 +9,8 @@ const {
   DEBUG_TARGET_COLLAPSIBILITY_UPDATED,
   NETWORK_LOCATIONS_UPDATED,
   PAGE_SELECTED,
+  TEMPORARY_EXTENSION_INSTALL_FAILURE,
+  TEMPORARY_EXTENSION_INSTALL_SUCCESS,
   USB_RUNTIMES_SCAN_START,
   USB_RUNTIMES_SCAN_SUCCESS,
 } = require("../constants");
@@ -24,6 +26,7 @@ function UiState(locations = [], debugTargetCollapsibilities = {},
     selectedPage: null,
     selectedRuntime: null,
     showSystemAddons,
+    temporaryInstallError: null,
     wifiEnabled,
   };
 }
@@ -59,6 +62,15 @@ function uiReducer(state = UiState(), action) {
 
     case USB_RUNTIMES_SCAN_SUCCESS: {
       return Object.assign({}, state, { isScanningUsb: false });
+    }
+
+    case TEMPORARY_EXTENSION_INSTALL_SUCCESS: {
+      return Object.assign({}, state, { temporaryInstallError: null });
+    }
+
+    case TEMPORARY_EXTENSION_INSTALL_FAILURE: {
+      const { error } = action;
+      return Object.assign({}, state, { temporaryInstallError: error.message });
     }
 
     default:

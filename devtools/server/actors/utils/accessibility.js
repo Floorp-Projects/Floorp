@@ -162,9 +162,6 @@ function getBgRGBA(dataText, dataBackground) {
  * @param  {Object}  options
  *         - bounds   {Object}
  *                    Bounds for the accessible object.
- *         - contexts {null|Object}
- *                    Canvas rendering contexts that have a window drawn as is and also
- *                    with the all text made transparent for contrast comparison.
  *         - win      {Object}
  *                    Target window.
  *

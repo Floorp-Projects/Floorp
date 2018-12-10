@@ -149,6 +149,7 @@ import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.ContextUtils;
 import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -785,6 +786,7 @@ public class BrowserApp extends GeckoApp
             "Feedback:MaybeLater",
             "Sanitize:ClearHistory",
             "Sanitize:ClearSyncedTabs",
+            "Sanitize:Cache",
             "Telemetry:Gather",
             "Download:AndroidDownloadManager",
             "Website:AppInstalled",
@@ -1520,6 +1522,7 @@ public class BrowserApp extends GeckoApp
             "Feedback:MaybeLater",
             "Sanitize:ClearHistory",
             "Sanitize:ClearSyncedTabs",
+            "Sanitize:Cache",
             "Telemetry:Gather",
             "Download:AndroidDownloadManager",
             "Website:AppInstalled",
@@ -1887,6 +1890,18 @@ public class BrowserApp extends GeckoApp
             case "Sanitize:ClearHistory":
                 BrowserDB.from(getProfile()).clearHistory(
                         getContentResolver(), message.getBoolean("clearSearchHistory", false));
+                callback.sendSuccess(null);
+                break;
+
+            case "Sanitize:Cache":
+                final File cacheFolder = new File(getCacheDir(), FileUtils.CONTENT_TEMP_DIRECTORY);
+                // file.delete() throws an exception if the path does not exists
+                // e.g you can get in this scenario after two cache clearing in a row
+                if (cacheFolder.exists()) {
+                    FileUtils.delTree(cacheFolder, null, true);
+                    // now we can delete the folder
+                    cacheFolder.delete();
+                }
                 callback.sendSuccess(null);
                 break;
 
