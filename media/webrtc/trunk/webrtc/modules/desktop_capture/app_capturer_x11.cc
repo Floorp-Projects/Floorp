@@ -65,7 +65,6 @@ public:
 
   // DesktopCapturer interface.
   virtual void Start(Callback* callback) override;
-  virtual void Stop() override;
   virtual void CaptureFrame() override;
   virtual bool SelectSource(SourceId id) override
   {
@@ -135,10 +134,6 @@ void AppCapturerLinux::Start(Callback* callback) {
   assert(callback);
 
   callback_ = callback;
-}
-
-void AppCapturerLinux::Stop() {
-  callback_ = NULL;
 }
 
 void AppCapturerLinux::CaptureFrame() {
