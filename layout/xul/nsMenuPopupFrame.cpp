@@ -85,7 +85,7 @@ nsIFrame* NS_NewMenuPopupFrame(nsIPresShell* aPresShell,
 NS_IMPL_FRAMEARENA_HELPERS(nsMenuPopupFrame)
 
 NS_QUERYFRAME_HEAD(nsMenuPopupFrame)
-NS_QUERYFRAME_ENTRY(nsMenuPopupFrame)
+  NS_QUERYFRAME_ENTRY(nsMenuPopupFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 //

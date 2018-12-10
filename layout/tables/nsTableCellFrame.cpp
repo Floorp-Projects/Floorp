@@ -436,7 +436,7 @@ bool nsTableCellFrame::ShouldPaintBordersAndBackgrounds() const {
 }
 
 bool nsTableCellFrame::ShouldPaintBackground(nsDisplayListBuilder* aBuilder) {
-  return ShouldPaintBordersAndBackgrounds() && IsVisibleInSelection(aBuilder);
+  return ShouldPaintBordersAndBackgrounds();
 }
 
 void nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
@@ -950,9 +950,9 @@ void nsTableCellFrame::Reflow(nsPresContext* aPresContext,
 /* ----- global methods ----- */
 
 NS_QUERYFRAME_HEAD(nsTableCellFrame)
-NS_QUERYFRAME_ENTRY(nsTableCellFrame)
-NS_QUERYFRAME_ENTRY(nsITableCellLayout)
-NS_QUERYFRAME_ENTRY(nsIPercentBSizeObserver)
+  NS_QUERYFRAME_ENTRY(nsTableCellFrame)
+  NS_QUERYFRAME_ENTRY(nsITableCellLayout)
+  NS_QUERYFRAME_ENTRY(nsIPercentBSizeObserver)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 #ifdef ACCESSIBILITY

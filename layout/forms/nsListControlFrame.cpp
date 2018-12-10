@@ -251,9 +251,9 @@ void nsListControlFrame::InvalidateFocus() {
 }
 
 NS_QUERYFRAME_HEAD(nsListControlFrame)
-NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
-NS_QUERYFRAME_ENTRY(nsISelectControlFrame)
-NS_QUERYFRAME_ENTRY(nsListControlFrame)
+  NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
+  NS_QUERYFRAME_ENTRY(nsISelectControlFrame)
+  NS_QUERYFRAME_ENTRY(nsListControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsHTMLScrollFrame)
 
 #ifdef ACCESSIBILITY

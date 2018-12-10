@@ -25,6 +25,7 @@ add_task(async function test_saveCreditCard() {
     EventUtils.synthesizeKey(TEST_CREDIT_CARD_1["cc-number"], {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey("0" + TEST_CREDIT_CARD_1["cc-exp-month"].toString(), {}, win);
+    is(win.document.activeElement.selectedOptions[0].text, "04 - April", "Displayed month should match number and name");
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD_1["cc-exp-year"].toString(), {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);

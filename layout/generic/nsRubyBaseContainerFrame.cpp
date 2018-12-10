@@ -30,7 +30,7 @@ using namespace mozilla::gfx;
 // =======================
 
 NS_QUERYFRAME_HEAD(nsRubyBaseContainerFrame)
-NS_QUERYFRAME_ENTRY(nsRubyBaseContainerFrame)
+  NS_QUERYFRAME_ENTRY(nsRubyBaseContainerFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsRubyBaseContainerFrame)

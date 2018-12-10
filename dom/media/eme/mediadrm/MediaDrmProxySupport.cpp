@@ -261,4 +261,11 @@ void MediaDrmProxySupport::Shutdown() {
   mDestroyed = true;
 }
 
+bool MediaDrmProxySupport::SetServerCertificate(
+    const nsTArray<uint8_t>& aCert) {
+  jni::ByteArray::LocalRef cert = jni::ByteArray::New(
+      reinterpret_cast<const int8_t*>(aCert.Elements()), aCert.Length());
+  return mBridgeProxy->SetServerCertificate(cert);
+}
+
 }  // namespace mozilla

@@ -32,7 +32,7 @@ ViewportFrame* NS_NewViewportFrame(nsIPresShell* aPresShell,
 
 NS_IMPL_FRAMEARENA_HELPERS(ViewportFrame)
 NS_QUERYFRAME_HEAD(ViewportFrame)
-NS_QUERYFRAME_ENTRY(ViewportFrame)
+  NS_QUERYFRAME_ENTRY(ViewportFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 void ViewportFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,

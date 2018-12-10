@@ -57,7 +57,7 @@ public class WifiScanner extends BroadcastReceiver {
     /* ------- */
 
     public WifiScanner(Context c) {
-        mContext = c;
+        mContext = c.getApplicationContext();
     }
 
     private boolean isWifiEnabled() {

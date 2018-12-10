@@ -3414,28 +3414,12 @@ class nsIFrame : public nsQueryFrame {
    * Determines whether a frame is visible for painting;
    * taking into account whether it is painting a selection or printing.
    */
-  bool IsVisibleForPainting(nsDisplayListBuilder* aBuilder);
+  bool IsVisibleForPainting();
   /**
    * Determines whether a frame is visible for painting or collapsed;
    * taking into account whether it is painting a selection or printing,
    */
-  bool IsVisibleOrCollapsedForPainting(nsDisplayListBuilder* aBuilder);
-  /**
-   * As above, but slower because we have to recompute some stuff that
-   * aBuilder already has.
-   */
-  bool IsVisibleForPainting();
-  /**
-   * Check whether this frame is visible in the current selection. Returns
-   * true if there is no current selection.
-   */
-  bool IsVisibleInSelection(nsDisplayListBuilder* aBuilder);
-
-  /**
-   * Overridable function to determine whether this frame should be considered
-   * "in" the given non-null aSelection for visibility purposes.
-   */
-  virtual bool IsVisibleInSelection(mozilla::dom::Selection* aSelection);
+  bool IsVisibleOrCollapsedForPainting();
 
   /**
    * Determines if this frame is a stacking context.

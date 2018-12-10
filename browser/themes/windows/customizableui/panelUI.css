@@ -44,7 +44,7 @@ menuitem.subviewbutton[disabled]:not(.menuitem-iconic) {
 }
 
 /* Win8 and beyond. */
-@media not all and (-moz-os-version: windows-win7) {
+@media not (-moz-os-version: windows-win7) {
   #BMB_bookmarksPopup menupopup[placespopup=true] > hbox,
   #edit-controls@inAnyPanel@,
   #zoom-controls@inAnyPanel@,

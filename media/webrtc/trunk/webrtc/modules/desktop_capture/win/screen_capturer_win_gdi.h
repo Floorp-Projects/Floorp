@@ -78,8 +78,6 @@ class ScreenCapturerWinGdi : public DesktopCapturer {
   DwmEnableCompositionFunc composition_func_ = nullptr;
   DwmIsCompositionEnabledFunc composition_enabled_func_;
 
-  bool disable_composition_;
-
   RTC_DISALLOW_COPY_AND_ASSIGN(ScreenCapturerWinGdi);
 };
 

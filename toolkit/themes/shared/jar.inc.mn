@@ -35,6 +35,7 @@ toolkit.jar:
   skin/classic/global/icons/error.svg                      (../../shared/icons/error.svg)
   skin/classic/global/icons/find-previous-arrow.svg        (../../shared/icons/find-previous-arrow.svg)
   skin/classic/global/icons/find-next-arrow.svg            (../../shared/icons/find-next-arrow.svg)
+  skin/classic/global/icons/heart.svg                      (../../shared/icons/heart.svg)
   skin/classic/global/icons/help.svg                       (../../shared/icons/help.svg)
   skin/classic/global/icons/info.svg                       (../../shared/incontent-icons/info.svg)
   skin/classic/global/icons/loading.png                    (../../shared/icons/loading.png)

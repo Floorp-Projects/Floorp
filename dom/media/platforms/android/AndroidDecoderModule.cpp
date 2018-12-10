@@ -21,6 +21,9 @@
   MOZ_LOG(                                                \
       sAndroidDecoderModuleLog, mozilla::LogLevel::Debug, \
       ("AndroidDecoderModule(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define SLOG(arg, ...)                                        \
+  MOZ_LOG(sAndroidDecoderModuleLog, mozilla::LogLevel::Debug, \
+          ("%s: " arg, __func__, ##__VA_ARGS__))
 
 using namespace mozilla;
 using namespace mozilla::gl;
@@ -57,8 +60,7 @@ AndroidDecoderModule::AndroidDecoderModule(CDMProxy* aProxy) {
   mProxy = static_cast<MediaDrmCDMProxy*>(aProxy);
 }
 
-bool AndroidDecoderModule::SupportsMimeType(
-    const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
+bool AndroidDecoderModule::SupportsMimeType(const nsACString& aMimeType) {
   if (jni::GetAPIVersion() < 16) {
     return false;
   }
@@ -92,19 +94,24 @@ bool AndroidDecoderModule::SupportsMimeType(
   if (OpusDataDecoder::IsOpus(aMimeType) ||
       VorbisDataDecoder::IsVorbis(aMimeType) ||
       aMimeType.EqualsLiteral("audio/flac")) {
-    LOG("Rejecting audio of type %s", aMimeType.Data());
+    SLOG("Rejecting audio of type %s", aMimeType.Data());
     return false;
   }
 
   // Prefer the gecko decoder for Theora.
   // Not all android devices support Theora even when they say they do.
   if (TheoraDecoder::IsTheora(aMimeType)) {
-    LOG("Rejecting video of type %s", aMimeType.Data());
+    SLOG("Rejecting video of type %s", aMimeType.Data());
     return false;
   }
 
   return java::HardwareCodecCapabilityUtils::FindDecoderCodecInfoForMimeType(
       TranslateMimeType(aMimeType));
+}
+
+bool AndroidDecoderModule::SupportsMimeType(
+    const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
+  return AndroidDecoderModule::SupportsMimeType(aMimeType);
 }
 
 already_AddRefed<MediaDataDecoder> AndroidDecoderModule::CreateVideoDecoder(

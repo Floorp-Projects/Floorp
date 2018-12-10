@@ -72,18 +72,20 @@ class LayerTransactionParent final : public PLayerTransactionParent,
   bool IsSameProcess() const override;
 
   const TransactionId& GetPendingTransactionId() { return mPendingTransaction; }
-  void SetPendingTransactionId(TransactionId aId,
+  void SetPendingTransactionId(TransactionId aId, const VsyncId& aVsyncId,
                                const TimeStamp& aRefreshStartTime,
                                const TimeStamp& aTxnStartTime,
                                const nsCString& aURL,
                                const TimeStamp& aFwdTime) {
     mPendingTransaction = aId;
+    mTxnVsyncId = aVsyncId;
     mRefreshStartTime = aRefreshStartTime;
     mTxnStartTime = aTxnStartTime;
     mTxnURL = aURL;
     mFwdTime = aFwdTime;
   }
-  TransactionId FlushTransactionId(TimeStamp& aCompositeEnd);
+  TransactionId FlushTransactionId(const VsyncId& aId,
+                                   TimeStamp& aCompositeEnd);
 
   // CompositableParentManager
   void SendAsyncMessage(
@@ -202,6 +204,7 @@ class LayerTransactionParent final : public PLayerTransactionParent,
   TimeDuration mVsyncRate;
 
   TransactionId mPendingTransaction;
+  VsyncId mTxnVsyncId;
   TimeStamp mRefreshStartTime;
   TimeStamp mTxnStartTime;
   TimeStamp mFwdTime;

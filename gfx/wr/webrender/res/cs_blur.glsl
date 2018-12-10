@@ -99,9 +99,6 @@ void main(void) {
 //           with a offset / weight uniform table and a constant
 //           loop iteration count!
 
-// TODO(gw): Make use of the bilinear sampling trick to reduce
-//           the number of texture fetches needed for a gaussian blur.
-
 void main(void) {
     SAMPLE_TYPE original_color = SAMPLE_TEXTURE(vUv);
 
@@ -119,24 +116,47 @@ void main(void) {
     gauss_coefficient.y = exp(-0.5 / (vSigma * vSigma));
     gauss_coefficient.z = gauss_coefficient.y * gauss_coefficient.y;
 
-    float gauss_coefficient_sum = 0.0;
+    float gauss_coefficient_total = gauss_coefficient.x;
     SAMPLE_TYPE avg_color = original_color * gauss_coefficient.x;
-    gauss_coefficient_sum += gauss_coefficient.x;
     gauss_coefficient.xy *= gauss_coefficient.yz;
 
-    for (int i = 1; i <= vSupport; i++) {
-        vec2 offset = vOffsetScale * float(i);
+    // Evaluate two adjacent texels at a time. We can do this because, if c0
+    // and c1 are colors of adjacent texels and k0 and k1 are arbitrary
+    // factors, this formula:
+    //
+    //     k0 * c0 + k1 * c1          (Equation 1)
+    //
+    // is equivalent to:
+    //
+    //                                 k1
+    //     (k0 + k1) * lerp(c0, c1, -------)
+    //                              k0 + k1
+    //
+    // A texture lookup of adjacent texels evaluates this formula:
+    //
+    //     lerp(c0, c1, t)
+    //
+    // for some t. So we can let `t = k1/(k0 + k1)` and effectively evaluate
+    // Equation 1 with a single texture lookup.
+
+    for (int i = 1; i <= vSupport; i += 2) {
+        float gauss_coefficient_subtotal = gauss_coefficient.x;
+        gauss_coefficient.xy *= gauss_coefficient.yz;
+        gauss_coefficient_subtotal += gauss_coefficient.x;
+        float gauss_ratio = gauss_coefficient.x / gauss_coefficient_subtotal;
+
+        vec2 offset = vOffsetScale * (float(i) + gauss_ratio);
 
         vec2 st0 = clamp(vUv.xy - offset, vUvRect.xy, vUvRect.zw);
-        avg_color += SAMPLE_TEXTURE(vec3(st0, vUv.z)) * gauss_coefficient.x;
+        avg_color += SAMPLE_TEXTURE(vec3(st0, vUv.z)) * gauss_coefficient_subtotal;
 
         vec2 st1 = clamp(vUv.xy + offset, vUvRect.xy, vUvRect.zw);
-        avg_color += SAMPLE_TEXTURE(vec3(st1, vUv.z)) * gauss_coefficient.x;
+        avg_color += SAMPLE_TEXTURE(vec3(st1, vUv.z)) * gauss_coefficient_subtotal;
 
-        gauss_coefficient_sum += 2.0 * gauss_coefficient.x;
+        gauss_coefficient_total += 2.0 * gauss_coefficient_subtotal;
         gauss_coefficient.xy *= gauss_coefficient.yz;
     }
 
-    oFragColor = vec4(avg_color) / gauss_coefficient_sum;
+    oFragColor = vec4(avg_color) / gauss_coefficient_total;
 }
 #endif

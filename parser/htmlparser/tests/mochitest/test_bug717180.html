@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717180
 
 SimpleTest.waitForExplicitFinish();
 
-window.addEventListener("load", function () {
+window.addEventListener("load", function() {
   var iframe = document.getElementsByTagName("iframe")[0];
   var d = iframe.contentDocument;
   d.open();
@@ -31,7 +31,7 @@ window.addEventListener("load", function () {
     SimpleTest.finish();
   });
   d.write("\u003Cscript>");
-  d.write("window.location = 'file_bug717180.html';")
+  d.write("window.location = 'file_bug717180.html';");
   d.write("\u003C/script>");
   d.write("FAIL");
   d.close();

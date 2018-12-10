@@ -2,11 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use api::{LayoutPrimitiveInfo, LayoutRect};
 use internal_types::FastHashMap;
+use profiler::ResourceProfileCounter;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::marker::PhantomData;
 use std::{mem, ops, u64};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use util::VecHelper;
 
 /*
@@ -64,26 +67,37 @@ pub struct UpdateList<S> {
     data: Vec<S>,
 }
 
+lazy_static! {
+    static ref NEXT_UID: AtomicUsize = AtomicUsize::new(0);
+}
+
+/// A globally, unique identifier
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
-pub struct ItemUid<T> {
+pub struct ItemUid {
     uid: usize,
-    _marker: PhantomData<T>,
+}
+
+impl ItemUid {
+    pub fn next_uid() -> ItemUid {
+        let uid = NEXT_UID.fetch_add(1, Ordering::Relaxed);
+        ItemUid { uid }
+    }
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, Copy, Clone)]
-pub struct Handle<T> {
+pub struct Handle<M: Copy> {
     index: u32,
     epoch: Epoch,
-    uid: ItemUid<T>,
-    _marker: PhantomData<T>,
+    uid: ItemUid,
+    _marker: PhantomData<M>,
 }
 
-impl <T> Handle<T> where T: Copy {
-    pub fn uid(&self) -> ItemUid<T> {
+impl <M> Handle<M> where M: Copy {
+    pub fn uid(&self) -> ItemUid {
         self.uid
     }
 }
@@ -122,21 +136,25 @@ pub struct DataStore<S, T, M> {
     _marker: PhantomData<M>,
 }
 
-impl<S, T, M> DataStore<S, T, M> where S: Debug, T: From<S>, M: Debug {
-    /// Construct a new data store
-    pub fn new() -> Self {
+impl<S, T, M> ::std::default::Default for DataStore<S, T, M> where S: Debug, T: From<S>, M: Debug
+{
+    fn default() -> Self {
         DataStore {
             items: Vec::new(),
             _source: PhantomData,
             _marker: PhantomData,
         }
     }
+}
 
+impl<S, T, M> DataStore<S, T, M> where S: Debug, T: From<S>, M: Debug
+{
     /// Apply any updates from the scene builder thread to
     /// this data store.
     pub fn apply_updates(
         &mut self,
         update_list: UpdateList<S>,
+        profile_counter: &mut ResourceProfileCounter,
     ) {
         let mut data_iter = update_list.data.into_iter();
         for update in update_list.updates {
@@ -155,12 +173,18 @@ impl<S, T, M> DataStore<S, T, M> where S: Debug, T: From<S>, M: Debug {
                 }
             }
         }
+
+        let per_item_size = mem::size_of::<S>() + mem::size_of::<T>();
+        profile_counter.set(self.items.len(), per_item_size * self.items.len());
+
         debug_assert!(data_iter.next().is_none());
     }
 }
 
 /// Retrieve an item from the store via handle
-impl<S, T, M> ops::Index<Handle<M>> for DataStore<S, T, M> {
+impl<S, T, M> ops::Index<Handle<M>> for DataStore<S, T, M>
+where M: Copy
+{
     type Output = T;
     fn index(&self, handle: Handle<M>) -> &T {
         let item = &self.items[handle.index as usize];
@@ -171,7 +195,10 @@ impl<S, T, M> ops::Index<Handle<M>> for DataStore<S, T, M> {
 
 /// Retrieve a mutable item from the store via handle
 /// Retrieve an item from the store via handle
-impl<S, T, M> ops::IndexMut<Handle<M>> for DataStore<S, T, M> {
+impl<S, T, M> ops::IndexMut<Handle<M>> for DataStore<S, T, M>
+where
+    M: Copy
+{
     fn index_mut(&mut self, handle: Handle<M>) -> &mut T {
         let item = &mut self.items[handle.index as usize];
         assert_eq!(item.epoch, handle.epoch);
@@ -186,7 +213,11 @@ impl<S, T, M> ops::IndexMut<Handle<M>> for DataStore<S, T, M> {
 /// an update list of additions / removals.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct Interner<S : Eq + Hash + Clone + Debug, D, M> {
+pub struct Interner<S, D, M>
+where
+    S: Eq + Hash + Clone + Debug,
+    M: Copy
+{
     /// Uniquely map an interning key to a handle
     map: FastHashMap<S, Handle<M>>,
     /// List of free slots in the data store for re-use.
@@ -197,27 +228,33 @@ pub struct Interner<S : Eq + Hash + Clone + Debug, D, M> {
     update_data: Vec<S>,
     /// The current epoch for the interner.
     current_epoch: Epoch,
-    /// Incrementing counter for identifying stable values.
-    next_uid: usize,
     /// The information associated with each interned
     /// item that can be accessed by the interner.
     local_data: Vec<Item<D>>,
 }
 
-impl<S, D, M> Interner<S, D, M> where S: Eq + Hash + Clone + Debug, M: Copy + Debug {
-    /// Construct a new interner
-    pub fn new() -> Self {
+impl<S, D, M> ::std::default::Default for Interner<S, D, M>
+where
+    S: Eq + Hash + Clone + Debug,
+    M: Copy + Debug
+{
+    fn default() -> Self {
         Interner {
             map: FastHashMap::default(),
             free_list: Vec::new(),
             updates: Vec::new(),
             update_data: Vec::new(),
             current_epoch: Epoch(1),
-            next_uid: 0,
             local_data: Vec::new(),
         }
     }
+}
 
+impl<S, D, M> Interner<S, D, M>
+where
+    S: Eq + Hash + Clone + Debug,
+    M: Copy + Debug
+{
     /// Intern a data structure, and return a handle to
     /// that data. The handle can then be stored in the
     /// frame builder, and safely accessed via the data
@@ -268,17 +305,13 @@ impl<S, D, M> Interner<S, D, M> where S: Eq + Hash + Clone + Debug, M: Copy + De
         let handle = Handle {
             index: index as u32,
             epoch: self.current_epoch,
-            uid: ItemUid {
-                uid: self.next_uid,
-                _marker: PhantomData,
-            },
+            uid: ItemUid::next_uid(),
             _marker: PhantomData,
         };
 
         // Store this handle so the next time it is
         // interned, it gets re-used.
         self.map.insert(data.clone(), handle);
-        self.next_uid += 1;
 
         // Create the local data for this item that is
         // being interned.
@@ -338,11 +371,32 @@ impl<S, D, M> Interner<S, D, M> where S: Eq + Hash + Clone + Debug, M: Copy + De
 }
 
 /// Retrieve the local data for an item from the interner via handle
-impl<S, D, M> ops::Index<Handle<M>> for Interner<S, D, M> where S: Eq + Clone + Hash + Debug, M: Copy + Debug {
+impl<S, D, M> ops::Index<Handle<M>> for Interner<S, D, M>
+where
+    S: Eq + Clone + Hash + Debug,
+    M: Copy + Debug
+{
     type Output = D;
     fn index(&self, handle: Handle<M>) -> &D {
         let item = &self.local_data[handle.index as usize];
         assert_eq!(item.epoch, handle.epoch);
         &item.data
     }
+}
+
+/// Implement `Internable` for a type that wants participate in interning.
+///
+/// see DisplayListFlattener::add_interned_primitive<P>
+pub trait Internable {
+    type Marker: Copy + Debug;
+    type Source: Eq + Hash + Clone + Debug;
+    type StoreData: From<Self::Source>;
+    type InternData;
+
+    /// Build a new key from self with `info`.
+    fn build_key(
+        self,
+        info: &LayoutPrimitiveInfo,
+        prim_relative_clip_rect: LayoutRect,
+    ) -> Self::Source;
 }

@@ -200,6 +200,7 @@ class TraceLoggerEventPayload {
   mozilla::Maybe<uint32_t> column() { return col_; }
   uint32_t textId() { return textId_; }
   uint32_t dictionaryId() { return dictionaryId_; }
+  void setDictionaryId(uint32_t dictId) { dictionaryId_ = dictId; }
   uint32_t uses() { return uses_; }
 
   // Payloads may have their use count change at any time, *except* the count
@@ -426,6 +427,9 @@ class TraceLoggerThreadState {
   void enableFrontendLogging();
 
   void clear();
+  bool remapDictionaryEntries(
+      mozilla::Vector<UniqueChars, 0, SystemAllocPolicy>* newDictionary,
+      uint32_t* newNextDictionaryId);
 
   TraceLoggerThread* forCurrentThread(JSContext* cx);
   void destroyLogger(TraceLoggerThread* logger);

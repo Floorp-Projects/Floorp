@@ -486,25 +486,22 @@ void GeckoMediaPluginServiceParent::CrashPlugins() {
   }
 }
 
-RefPtr<GenericPromise::AllPromiseType>
-GeckoMediaPluginServiceParent::LoadFromEnvironment() {
+RefPtr<GenericPromise> GeckoMediaPluginServiceParent::LoadFromEnvironment() {
   MOZ_ASSERT(mGMPThread->EventTarget()->IsOnCurrentThread());
   RefPtr<AbstractThread> thread(GetAbstractGMPThread());
   if (!thread) {
-    return GenericPromise::AllPromiseType::CreateAndReject(NS_ERROR_FAILURE,
-                                                           __func__);
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
   const char* env = PR_GetEnv("MOZ_GMP_PATH");
   if (!env || !*env) {
-    return GenericPromise::AllPromiseType::CreateAndResolve(true, __func__);
+    return GenericPromise::CreateAndResolve(true, __func__);
   }
 
   nsString allpaths;
   if (NS_WARN_IF(NS_FAILED(
           NS_CopyNativeToUnicode(nsDependentCString(env), allpaths)))) {
-    return GenericPromise::AllPromiseType::CreateAndReject(NS_ERROR_FAILURE,
-                                                           __func__);
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
   nsTArray<RefPtr<GenericPromise>> promises;
@@ -525,7 +522,13 @@ GeckoMediaPluginServiceParent::LoadFromEnvironment() {
   }
 
   mScannedPluginOnDisk = true;
-  return GenericPromise::All(thread, promises);
+  return GenericPromise::All(thread, promises)
+      ->Then(thread, __func__,
+             []() { return GenericPromise::CreateAndResolve(true, __func__); },
+             []() {
+               return GenericPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                      __func__);
+             });
 }
 
 class NotifyObserversTask final : public mozilla::Runnable {

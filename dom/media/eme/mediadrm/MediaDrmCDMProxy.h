@@ -114,6 +114,9 @@ class MediaDrmCDMProxy : public CDMProxy {
 
   void OnCDMCreated(uint32_t aPromiseId);
 
+  template <typename T>
+  void ResolvePromiseWithResult(PromiseId aId, const T& aResult);
+
   struct CreateSessionData {
     MediaKeySessionType mSessionType;
     uint32_t mCreateSessionToken;
@@ -163,6 +166,8 @@ class MediaDrmCDMProxy : public CDMProxy {
   // For MediaDrmProxySupport
   void md_Init(uint32_t aPromiseId);
   void md_CreateSession(UniquePtr<CreateSessionData>&& aData);
+  void md_SetServerCertificate(PromiseId aPromiseId,
+                               const nsTArray<uint8_t>& aCert);
   void md_UpdateSession(UniquePtr<UpdateSessionData>&& aData);
   void md_CloseSession(UniquePtr<SessionOpData>&& aData);
   void md_Shutdown();

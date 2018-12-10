@@ -22,13 +22,28 @@ class SmartTrace extends Component {
       onViewSourceInScratchpad: PropTypes.func,
       // Service to enable the source map feature.
       sourceMapService: PropTypes.object,
+      initialRenderDelay: PropTypes.number,
+      onSourceMapResultDebounceDelay: PropTypes.number,
+    };
+  }
+
+  static get defaultProps() {
+    return {
+      initialRenderDelay: 100,
+      onSourceMapResultDebounceDelay: 200,
     };
   }
 
   constructor(props) {
     super(props);
-    this.onSourceMapServiceChange = this.onSourceMapServiceChange.bind(this);
-    this.state = { hasError: false };
+    this.state = {
+      hasError: false,
+      // If a sourcemap service is passed, we want to introduce a small delay in rendering
+      // so we can have the results from the sourcemap service, or render if they're not
+      // available yet.
+      ready: !props.sourceMapService,
+      frozen: false,
+    };
   }
 
   getChildContext() {
@@ -37,17 +52,58 @@ class SmartTrace extends Component {
 
   componentWillMount() {
     if (this.props.sourceMapService) {
-      this.sourceMapServiceUnsubscriptions = this.props.stacktrace.map((frame, index) => {
-        const { lineNumber, columnNumber, filename } = frame;
-        const source = filename.split(" -> ").pop();
-        return this.props.sourceMapService.subscribe(source, lineNumber, columnNumber,
-          (isSourceMapped, url, line, column) =>
-            this.onSourceMapServiceChange(isSourceMapped, url, line, column, index));
+      this.sourceMapServiceUnsubscriptions = [];
+      const subscriptions = this.props.stacktrace.map((frame, index) =>
+        new Promise(resolve => {
+          const { lineNumber, columnNumber, filename } = frame;
+          const source = filename.split(" -> ").pop();
+          const subscribeCallback = (isSourceMapped, url, line, column) => {
+            this.onSourceMapServiceChange(isSourceMapped, url, line, column, index);
+            resolve();
+          };
+          const unsubscribe = this.props.sourceMapService.subscribe(
+            source, lineNumber, columnNumber, subscribeCallback);
+          this.sourceMapServiceUnsubscriptions.push(unsubscribe);
+        }));
+
+      const delay = new Promise(res => {
+        this.initialRenderDelayTimeoutId = setTimeout(res, this.props.initialRenderDelay);
+      });
+
+      const sourceMapInit = Promise.all(subscriptions);
+
+      // We wait either for the delay to be other or the sourcemapService results to
+      // be available before setting the state as initialized.
+      Promise.race([delay, sourceMapInit]).then(() => {
+        if (this.initialRenderDelayTimeoutId) {
+          clearTimeout(this.initialRenderDelayTimeoutId);
+        }
+        this.setState(state => ({...state, ready: true}));
       });
     }
   }
 
+  shouldComponentUpdate(_, nextState) {
+    if (this.state.ready === false && nextState.ready === true) {
+      return true;
+    }
+
+    if (this.state.ready && this.state.frozen && !nextState.frozen) {
+      return true;
+    }
+
+    return false;
+  }
+
   componentWillUnmount() {
+    if (this.initialRenderDelayTimeoutId) {
+      clearTimeout(this.initialRenderDelayTimeoutId);
+    }
+
+    if (this.onFrameLocationChangedTimeoutId) {
+      clearTimeout(this.initialRenderDelayTimeoutId);
+    }
+
     if (this.sourceMapServiceUnsubscriptions) {
       this.sourceMapServiceUnsubscriptions.forEach(unsubscribe => {
         if (typeof unsubscribe === "function") {
@@ -57,8 +113,17 @@ class SmartTrace extends Component {
     }
   }
 
+  componentDidCatch(error, info) {
+    console.error("Error while rendering stacktrace:", error, info, "props:", this.props);
+    this.setState({ hasError: true });
+  }
+
   onSourceMapServiceChange(isSourceMapped, filename, lineNumber, columnNumber, index) {
     if (isSourceMapped) {
+      if (this.onFrameLocationChangedTimeoutId) {
+        clearTimeout(this.onFrameLocationChangedTimeoutId);
+      }
+
       this.setState(state => {
         const stacktrace = ((state && state.stacktrace) || this.props.stacktrace);
         const frame = stacktrace[index];
@@ -72,19 +137,28 @@ class SmartTrace extends Component {
 
         return {
           isSourceMapped: true,
+          frozen: true,
           stacktrace: newStacktrace,
         };
       });
+
+      // We only want to have a pending timeout if the component is ready.
+      if (this.state.ready === true) {
+        this.onFrameLocationChangedTimeoutId = setTimeout(() => {
+          this.setState(state => ({
+            ...state,
+            frozen: false,
+          }));
+        }, this.props.onSourceMapResultDebounceDelay);
+      }
     }
   }
 
-  componentDidCatch(error, info) {
-    console.error("Error while rendering stacktrace:", error, info, "props:", this.props);
-    this.setState({ hasError: true });
-  }
-
   render() {
-    if (this.state && this.state.hasError) {
+    if (this.state.hasError || (
+      Number.isFinite(this.props.initialRenderDelay) &&
+      !this.state.ready
+    )) {
       return null;
     }
 
@@ -94,7 +168,7 @@ class SmartTrace extends Component {
       onViewSourceInScratchpad,
     } = this.props;
 
-    const stacktrace = this.state && this.state.isSourceMapped
+    const stacktrace = this.state.isSourceMapped
       ? this.state.stacktrace
       : this.props.stacktrace;
 

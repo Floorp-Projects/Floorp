@@ -41,7 +41,7 @@ this.startBackground = (function() {
     id: "create-screenshot",
     title: browser.i18n.getMessage("contextMenuLabel"),
     contexts: ["page"],
-    documentUrlPatterns: ["<all_urls>"],
+    documentUrlPatterns: ["<all_urls>", "about:reader*"],
   });
 
   browser.contextMenus.onClicked.addListener((info, tab) => {

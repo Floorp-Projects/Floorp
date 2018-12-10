@@ -186,9 +186,9 @@ static bool EvalScript(JSContext* cx, HandleObject targetObj,
       return false;
     }
     if (!loadScope) {
-      // A null loadScope means we are cross-compartment. In this case, we
-      // should check the target isn't in the JSM loader shared-global or
-      // we will contaiminate all JSMs in the compartment.
+      // A null loadScope means we are cross-realm. In this case, we should
+      // check the target isn't in the JSM loader shared-global or we will
+      // contaminate all JSMs in the realm.
       //
       // NOTE: If loadScope is already a shared-global JSM, we can't
       // determine which JSM the target belongs to and have to assume it
@@ -582,8 +582,8 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
 
   MOZ_ASSERT(!js::IsWrapper(targetObj), "JS_FindCompilationScope must unwrap");
 
-  if (js::GetObjectCompartment(loadScope) !=
-      js::GetObjectCompartment(targetObj)) {
+  if (js::GetNonCCWObjectRealm(loadScope) !=
+      js::GetNonCCWObjectRealm(targetObj)) {
     loadScope = nullptr;
   }
 

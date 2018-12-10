@@ -140,8 +140,11 @@ button > .button-box {
 
 .study-name {
   font-weight: bold;
-  margin-bottom: 0.3em;
   white-space: pre;
+}
+
+.study-header {
+  margin-bottom: .3em;
 }
 
 .study-header > * {
@@ -153,7 +156,13 @@ button > .button-box {
 }
 
 .study-description code {
-  font: italic 1.0rem 'Fira Mono', 'mono', 'monospace';
+  background-color: var(--grey-20);
+  border-radius: 3px;
+  box-sizing: border-box;
+  color: var(--in-content-text-color);
+  font-size: 85%;
+  font-family: 'Fira Mono', 'mono', monospace;
+  padding: .2em .4em;
 }
 
 .study-actions {

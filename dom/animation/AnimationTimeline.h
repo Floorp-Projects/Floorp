@@ -17,12 +17,6 @@
 #include "nsIGlobalObject.h"
 #include "nsTHashtable.h"
 
-// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
-// GetTickCount().
-#ifdef GetCurrentTime
-#undef GetCurrentTime
-#endif
-
 class nsIDocument;
 
 namespace mozilla {
@@ -46,24 +40,24 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
   nsIGlobalObject* GetParentObject() const { return mWindow; }
 
   // AnimationTimeline methods
-  virtual Nullable<TimeDuration> GetCurrentTime() const = 0;
+  virtual Nullable<TimeDuration> GetCurrentTimeAsDuration() const = 0;
 
   // Wrapper functions for AnimationTimeline DOM methods when called from
   // script.
   Nullable<double> GetCurrentTimeAsDouble() const {
-    return AnimationUtils::TimeDurationToDouble(GetCurrentTime());
+    return AnimationUtils::TimeDurationToDouble(GetCurrentTimeAsDuration());
   }
 
   TimeStamp GetCurrentTimeAsTimeStamp() const {
-    Nullable<TimeDuration> currentTime = GetCurrentTime();
+    Nullable<TimeDuration> currentTime = GetCurrentTimeAsDuration();
     return !currentTime.IsNull() ? ToTimeStamp(currentTime.Value())
                                  : TimeStamp();
   }
 
   /**
-   * Returns true if the times returned by GetCurrentTime() are convertible
-   * to and from wallclock-based TimeStamp (e.g. from TimeStamp::Now()) values
-   * using ToTimelineTime() and ToTimeStamp().
+   * Returns true if the times returned by GetCurrentTimeAsDuration() are
+   * convertible to and from wallclock-based TimeStamp (e.g. from
+   * TimeStamp::Now()) values using ToTimelineTime() and ToTimeStamp().
    *
    * Typically this is true, but it will be false in the case when this
    * timeline has no refresh driver or is tied to a refresh driver under test

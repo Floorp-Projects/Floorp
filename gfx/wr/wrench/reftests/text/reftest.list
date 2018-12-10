@@ -14,7 +14,7 @@
 != shadow-clipped-text.yaml blank.yaml
 != non-opaque.yaml non-opaque-notref.yaml
 == decorations.yaml decorations-ref.yaml
-fuzzy(1,100) == decorations-suite.yaml decorations-suite.png
+fuzzy(1,173) == decorations-suite.yaml decorations-suite.png
 == 1658.yaml 1658-ref.yaml
 == split-batch.yaml split-batch-ref.yaml
 == shadow-red.yaml shadow-red-ref.yaml
@@ -54,7 +54,7 @@ platform(linux) == clipped-transform.yaml clipped-transform.png
 platform(mac) == color-bitmap-shadow.yaml color-bitmap-shadow-ref.yaml
 platform(linux) == writing-modes.yaml writing-modes-ref.yaml
 platform(linux) == blurred-shadow-local-clip-rect.yaml blurred-shadow-local-clip-rect-ref.png
-platform(linux) == two-shadows.yaml two-shadows.png
+fuzzy(1,1) platform(linux) == two-shadows.yaml two-shadows.png
 == shadow-clip.yaml shadow-clip-ref.yaml
 == shadow-fast-clip.yaml shadow-fast-clip-ref.yaml
 == shadow-partial-glyph.yaml shadow-partial-glyph-ref.yaml

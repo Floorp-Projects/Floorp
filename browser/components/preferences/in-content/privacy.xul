@@ -96,7 +96,7 @@
                   </hbox>
                   <hbox class="extra-information-label">
                     <image class="content-blocking-cookies-image"/>
-                    <label data-l10n-id="content-blocking-all-third-party-cookies"/>
+                    <label data-l10n-id="content-blocking-third-party-cookies"/>
                   </hbox>
                 </vbox>
                 <vbox class="content-blocking-warning">

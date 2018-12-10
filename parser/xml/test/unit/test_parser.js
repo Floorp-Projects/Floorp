@@ -7,8 +7,7 @@ function updateDocumentSourceMaps(src) {
   try {
     saxReader.setFeature("http://xml.org/sax/features/namespace-prefixes", true);
     saxReader.setFeature("http://xml.org/sax/features/namespace", true);
-  }
-  catch (e) {
+  } catch (e) {
     // do nothing, we'll accept it as it is.
   }
   var parseErrorLog = [];
@@ -30,10 +29,8 @@ function updateDocumentSourceMaps(src) {
 
     handleAttributes: function handleAttributes(aAttributes) {
       for (var i = 0; i < aAttributes.length; i++) {
-        var attrNamespaceURI = aAttributes.getURI(i);
         var attrLocalName = aAttributes.getLocalName(i);
         var attrNodeName = aAttributes.getQName(i);
-        var value = aAttributes.getValue(i);
         do_parse_check(attrLocalName, "Missing attribute local name");
         do_parse_check(attrNodeName, "Missing attribute node name");
       }
@@ -56,7 +53,7 @@ function updateDocumentSourceMaps(src) {
 
     processingInstruction: function processingInstruction(aTarget, aData) {
       do_parse_check(aTarget, "Missing processing instruction target");
-    }
+    },
   };
 
   var errorHandler = {
@@ -70,7 +67,7 @@ function updateDocumentSourceMaps(src) {
 
     ignorableWarning: function ignorableWarning(aError) {
       do_parse_check(!aError, "XML ignorable warning");
-    }
+    },
   };
 
   saxReader.contentHandler = contentHandler;

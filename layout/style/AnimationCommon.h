@@ -151,13 +151,8 @@ PhaseType GetAnimationPhaseWithoutEffect(const dom::Animation& aAnimation) {
   MOZ_ASSERT(!aAnimation.GetEffect(),
              "Should only be called when we do not have an effect");
 
-// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
-// GetTickCount().
-#ifdef GetCurrentTime
-#undef GetCurrentTime
-#endif
-
-  dom::Nullable<TimeDuration> currentTime = aAnimation.GetCurrentTime();
+  dom::Nullable<TimeDuration> currentTime =
+      aAnimation.GetCurrentTimeAsDuration();
   if (currentTime.IsNull()) {
     return PhaseType::Idle;
   }

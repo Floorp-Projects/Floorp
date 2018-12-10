@@ -61,6 +61,7 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
       onViewSourceInScratchpad: serviceContainer
         ? serviceContainer.onViewSourceInScratchpad || serviceContainer.onViewSource
         : null,
+      onViewSource: serviceContainer.onViewSource,
       sourceMapService: serviceContainer ? serviceContainer.sourceMapService : null,
     }),
   };

@@ -1556,6 +1556,7 @@ bool nsFocusManager::Blur(nsPIDOMWindowOuter* aWindowToClear,
 
   nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
   if (!docShell) {
+    mFocusedWindow = nullptr;
     mFocusedElement = nullptr;
     return true;
   }
@@ -1565,6 +1566,7 @@ bool nsFocusManager::Blur(nsPIDOMWindowOuter* aWindowToClear,
   nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
   if (!presShell) {
     mFocusedElement = nullptr;
+    mFocusedWindow = nullptr;
     return true;
   }
 

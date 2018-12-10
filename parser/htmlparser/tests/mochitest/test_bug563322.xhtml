@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=563322
 /** Test for Bug 563322 **/
 
 var div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
-div.innerHTML = "<script>ok(false, 'Script ran but should not have')</script><script>ok(false, 'Script ran but should not have')</script>"
+div.innerHTML = "<script>ok(false, 'Script ran but should not have')</script><script>ok(false, 'Script ran but should not have')</script>";
 
 document.getElementById("content").appendChild(div);
 

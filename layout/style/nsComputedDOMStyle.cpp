@@ -508,11 +508,12 @@ already_AddRefed<ComputedStyle> nsComputedDOMStyle::DoGetComputedStyleNoFlush(
     return nullptr;
   }
 
-  if (aElement->IsInNativeAnonymousSubtree() && !aElement->IsInComposedDoc()) {
-    // Normal web content can't access NAC, but Accessibility, DevTools and
-    // Editor use this same API and this may get called for anonymous content.
-    // Computing the style of a pseudo-element that doesn't have a parent
-    // doesn't really make sense.
+  if (!aElement->IsInComposedDoc()) {
+    // Don't return styles for disconnected elements, that makes no sense. This
+    // can only happen with a non-null presShell for cross-document calls.
+    //
+    // FIXME(emilio, bug 1483798): This should also not return styles for
+    // elements outside of the flat tree, not just outside of the document.
     return nullptr;
   }
 
@@ -1866,36 +1867,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMarginRightWidth() {
   return GetMarginWidthFor(eSideRight);
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOverscrollBehaviorX() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(
-      nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mOverscrollBehaviorX,
-                                     nsCSSProps::kOverscrollBehaviorKTable));
-  return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOverscrollBehaviorY() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(
-      nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mOverscrollBehaviorY,
-                                     nsCSSProps::kOverscrollBehaviorKTable));
-  return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetScrollSnapTypeX() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(nsCSSProps::ValueToKeywordEnum(
-      StyleDisplay()->mScrollSnapTypeX, nsCSSProps::kScrollSnapTypeKTable));
-  return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetScrollSnapTypeY() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(nsCSSProps::ValueToKeywordEnum(
-      StyleDisplay()->mScrollSnapTypeY, nsCSSProps::kScrollSnapTypeKTable));
-  return val.forget();
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::GetScrollSnapPoints(
     const nsStyleCoord& aCoord) {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
@@ -2548,22 +2519,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOverflowY() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetIdent(nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mOverflowY,
                                                nsCSSProps::kOverflowSubKTable));
-  return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOverflowClipBoxBlock() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(
-      nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mOverflowClipBoxBlock,
-                                     nsCSSProps::kOverflowClipBoxKTable));
-  return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOverflowClipBoxInline() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(
-      nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mOverflowClipBoxInline,
-                                     nsCSSProps::kOverflowClipBoxKTable));
   return val.forget();
 }
 

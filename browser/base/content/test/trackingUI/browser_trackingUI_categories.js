@@ -70,7 +70,10 @@ add_task(async function testCategoryLabelsInAppMenu() {
 });
 
 add_task(async function testSubcategoryLabels() {
-  SpecialPowers.pushPrefEnv({set: [["browser.contentblocking.control-center.ui.showAllowedLabels", true]]});
+  SpecialPowers.pushPrefEnv({set: [
+    ["browser.contentblocking.control-center.ui.showAllowedLabels", true],
+    ["browser.contentblocking.control-center.ui.showBlockedLabels", true],
+  ]});
 
   await BrowserTestUtils.withNewTab("http://www.example.com", async function() {
     let categoryLabel =
@@ -78,9 +81,9 @@ add_task(async function testSubcategoryLabels() {
 
     Services.prefs.setBoolPref(TP_PREF, true);
     await TestUtils.waitForCondition(() => categoryLabel.textContent ==
-      gNavigatorBundle.getString("contentBlocking.trackers.blocked.label"),
+      gNavigatorBundle.getString("contentBlocking.trackers.blocking.label"),
       "The category label has updated correctly");
-    is(categoryLabel.textContent, gNavigatorBundle.getString("contentBlocking.trackers.blocked.label"));
+    is(categoryLabel.textContent, gNavigatorBundle.getString("contentBlocking.trackers.blocking.label"));
 
     Services.prefs.setBoolPref(TP_PREF, false);
     await TestUtils.waitForCondition(() => categoryLabel.textContent ==
@@ -99,26 +102,26 @@ add_task(async function testSubcategoryLabels() {
 
     Services.prefs.setIntPref(TPC_PREF, Ci.nsICookieService.BEHAVIOR_REJECT);
     await TestUtils.waitForCondition(() => categoryLabel.textContent ==
-      gNavigatorBundle.getString("contentBlocking.cookies.allBlocked.label"),
+      gNavigatorBundle.getString("contentBlocking.cookies.blockingAll.label"),
       "The category label has updated correctly");
-    is(categoryLabel.textContent, gNavigatorBundle.getString("contentBlocking.cookies.allBlocked.label"));
+    is(categoryLabel.textContent, gNavigatorBundle.getString("contentBlocking.cookies.blockingAll.label"));
 
     Services.prefs.setIntPref(TPC_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN);
     await TestUtils.waitForCondition(() => categoryLabel.textContent ==
-      gNavigatorBundle.getString("contentBlocking.cookies.3rdPartyBlocked.label"),
+      gNavigatorBundle.getString("contentBlocking.cookies.blocking3rdParty.label"),
       "The category label has updated correctly");
-    is(categoryLabel.textContent, gNavigatorBundle.getString("contentBlocking.cookies.3rdPartyBlocked.label"));
+    is(categoryLabel.textContent, gNavigatorBundle.getString("contentBlocking.cookies.blocking3rdParty.label"));
 
     Services.prefs.setIntPref(TPC_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
     await TestUtils.waitForCondition(() => categoryLabel.textContent ==
-      gNavigatorBundle.getString("contentBlocking.cookies.trackersBlocked.label"),
+      gNavigatorBundle.getString("contentBlocking.cookies.blockingTrackers.label"),
       "The category label has updated correctly");
-    is(categoryLabel.textContent, gNavigatorBundle.getString("contentBlocking.cookies.trackersBlocked.label"));
+    is(categoryLabel.textContent, gNavigatorBundle.getString("contentBlocking.cookies.blockingTrackers.label"));
 
     Services.prefs.setIntPref(TPC_PREF, Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN);
     await TestUtils.waitForCondition(() => categoryLabel.textContent ==
-      gNavigatorBundle.getString("contentBlocking.cookies.unvisitedBlocked.label"),
+      gNavigatorBundle.getString("contentBlocking.cookies.blockingUnvisited.label"),
       "The category label has updated correctly");
-    is(categoryLabel.textContent, gNavigatorBundle.getString("contentBlocking.cookies.unvisitedBlocked.label"));
+    is(categoryLabel.textContent, gNavigatorBundle.getString("contentBlocking.cookies.blockingUnvisited.label"));
   });
 });

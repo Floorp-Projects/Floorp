@@ -34,10 +34,10 @@ async function assertSitesListed(trackersBlocked, thirdPartyBlocked, firstPartyB
     ok(true, "Cookies view was shown");
 
     let listHeaders = cookiesView.querySelectorAll(".identity-popup-cookiesView-list-header");
-    is(listHeaders.length, 1, "We have 1 list header");
-    is(listHeaders[0].textContent,
-       gNavigatorBundle.getString(`contentBlocking.cookiesView.trackers.label`),
-       "The list header is for tracking cookies.");
+    is(listHeaders.length, 3, "We have 3 list headers");
+
+    let emptyLabels = cookiesView.querySelectorAll(".identity-popup-content-blocking-empty-label");
+    is(emptyLabels.length, 2, "We have 2 empty labels");
 
     let listItems = cookiesView.querySelectorAll(".identity-popup-content-blocking-list-item");
     is(listItems.length, 1, "We have 1 cookie in the list");
@@ -73,11 +73,8 @@ async function assertSitesListed(trackersBlocked, thirdPartyBlocked, firstPartyB
 
     ok(true, "Cookies view was shown");
 
-    listHeaders = cookiesView.querySelectorAll(".identity-popup-cookiesView-list-header");
-    is(listHeaders.length, 2, "We now have 2 list headers");
-    is(listHeaders[1].textContent,
-       gNavigatorBundle.getString(`contentBlocking.cookiesView.thirdParty.label`),
-       "The new list header is for third party cookies.");
+    emptyLabels = cookiesView.querySelectorAll(".identity-popup-content-blocking-empty-label");
+    is(emptyLabels.length, 1, "We have 1 empty label");
 
     listItems = cookiesView.querySelectorAll(".identity-popup-content-blocking-list-item");
     is(listItems.length, 2, "We have 2 cookies in the list");
@@ -111,11 +108,8 @@ async function assertSitesListed(trackersBlocked, thirdPartyBlocked, firstPartyB
 
     ok(true, "Cookies view was shown");
 
-    listHeaders = cookiesView.querySelectorAll(".identity-popup-cookiesView-list-header");
-    is(listHeaders.length, 3, "We now have 3 list headers");
-    is(listHeaders[0].textContent,
-       gNavigatorBundle.getString(`contentBlocking.cookiesView.firstParty.label`),
-       "The new list header is for first party cookies.");
+    emptyLabels = cookiesView.querySelectorAll(".identity-popup-content-blocking-empty-label");
+    is(emptyLabels.length, 0, "We have 0 empty label");
 
     listItems = cookiesView.querySelectorAll(".identity-popup-content-blocking-list-item");
     is(listItems.length, 3, "We have 2 cookies in the list");
@@ -163,12 +157,6 @@ add_task(async function testCookiesSubViewAllowed() {
     await viewShown;
 
     ok(true, "Cookies view was shown");
-
-    let listHeaders = cookiesView.querySelectorAll(".identity-popup-cookiesView-list-header");
-    is(listHeaders.length, 1, "We have 1 list header");
-    is(listHeaders[0].textContent,
-       gNavigatorBundle.getString(`contentBlocking.cookiesView.trackers.label`),
-       "The list header is for tracking cookies.");
 
     let listItems = cookiesView.querySelectorAll(".identity-popup-content-blocking-list-item");
     is(listItems.length, 1, "We have 1 cookie in the list");

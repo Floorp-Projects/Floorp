@@ -990,6 +990,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                 window_width: i32,
                                 window_height: i32,
                                 support_low_priority_transactions: bool,
+                                enable_picture_caching: bool,
                                 gl_context: *mut c_void,
                                 program_cache: Option<&mut WrProgramCache>,
                                 shaders: Option<&mut WrShaders>,
@@ -1070,6 +1071,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         clear_color: Some(ColorF::new(0.0, 0.0, 0.0, 0.0)),
         precache_flags,
         namespace_alloc_by_client: true,
+        enable_picture_caching,
         ..Default::default()
     };
 

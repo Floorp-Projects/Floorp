@@ -29,7 +29,7 @@ platform(linux,mac) fuzzy(1,133) == filter-large-blur-radius.yaml filter-large-b
 == filter-saturate-blue-alpha-1.yaml filter-saturate-blue-alpha-1-ref.yaml
 == filter-hue-rotate-1.yaml filter-hue-rotate-1-ref.yaml
 == filter-hue-rotate-alpha-1.yaml filter-hue-rotate-alpha-1-ref.yaml
-== filter-long-chain.yaml filter-long-chain.png
+fuzzy(1,14) == filter-long-chain.yaml filter-long-chain.png
 platform(linux,mac) == filter-drop-shadow.yaml filter-drop-shadow.png
 platform(linux,mac) == filter-drop-shadow-on-viewport-edge.yaml filter-drop-shadow-on-viewport-edge.png
 platform(linux,mac) == blend-clipped.yaml blend-clipped.png

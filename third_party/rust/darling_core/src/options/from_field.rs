@@ -1,8 +1,8 @@
 use syn::{self, Ident};
 
-use {Result};
 use codegen::FromFieldImpl;
-use options::{ParseAttribute, ParseData, OuterFrom};
+use options::{OuterFrom, ParseAttribute, ParseData};
+use Result;
 
 #[derive(Debug)]
 pub struct FromFieldOptions {
@@ -17,7 +17,8 @@ impl FromFieldOptions {
             base: OuterFrom::start(di),
             vis: Default::default(),
             ty: Default::default(),
-        }).parse_attributes(&di.attrs)?.parse_body(&di.data)
+        }).parse_attributes(&di.attrs)?
+            .parse_body(&di.data)
     }
 }
 
@@ -33,10 +34,22 @@ impl ParseData for FromFieldOptions {
     }
 
     fn parse_field(&mut self, field: &syn::Field) -> Result<()> {
-        match field.ident.as_ref().map(|v| v.as_ref()) {
-            Some("vis") => { self.vis = field.ident.clone(); Ok(()) },
-            Some("ty") => { self.ty = field.ident.clone(); Ok(()) }
-            _ => self.base.parse_field(field)
+        match field
+            .ident
+            .as_ref()
+            .map(|v| v.to_string())
+            .as_ref()
+            .map(|v| v.as_str())
+        {
+            Some("vis") => {
+                self.vis = field.ident.clone();
+                Ok(())
+            }
+            Some("ty") => {
+                self.ty = field.ident.clone();
+                Ok(())
+            }
+            _ => self.base.parse_field(field),
         }
     }
 }
@@ -49,7 +62,7 @@ impl<'a> From<&'a FromFieldOptions> for FromFieldImpl<'a> {
             ty: v.ty.as_ref(),
             attrs: v.base.attrs.as_ref(),
             base: (&v.base.container).into(),
-            attr_names: v.base.attr_names.as_strs(),
+            attr_names: &v.base.attr_names,
             forward_attrs: v.base.forward_attrs.as_ref(),
             from_ident: v.base.from_ident,
         }

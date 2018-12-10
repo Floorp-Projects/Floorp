@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1067345
 
     document.body.appendChild(iframe);
 
-    SpecialPowers.pushPrefEnv({'set': [ [ "dom.image.srcset.enabled", true ],
+    SpecialPowers.pushPrefEnv({"set": [ [ "dom.image.srcset.enabled", true ],
                                         [ "dom.image.picture.enabled", true ]] },
                               function() {
       // Reset the sjs helper so repeat runs work
@@ -35,7 +35,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1067345
     function resetRequests() {
       // Ask the SJS to reset requests
       var request = new XMLHttpRequest();
-      request.open('GET', "./file_img_picture_preload.sjs?reset", false);
+      request.open("GET", "./file_img_picture_preload.sjs?reset", false);
       request.send(null);
       is(request.status, 200, "Sending reset to helper should succeed");
       // Script responds with pre-reset request count
@@ -64,8 +64,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1067345
         // To avoid spurious image loads being reported when the resolution changes,
         // load an intermediate iframe.
         iframe.src = "about:blank";
-        iframe.addEventListener('load', function() {
-          SpecialPowers.pushPrefEnv({'set': [ [ "layout.css.devPixelsPerPx", currentDPI ]] },
+        iframe.addEventListener("load", function() {
+          SpecialPowers.pushPrefEnv({"set": [ [ "layout.css.devPixelsPerPx", currentDPI ]] },
                                     function() {
             // Clear image cache for next run (we don't try to validate cached items
             // in preload).

@@ -52,8 +52,7 @@ class VsyncChild final : public PVsyncChild {
   VsyncChild();
   virtual ~VsyncChild();
 
-  virtual mozilla::ipc::IPCResult RecvNotify(
-      const TimeStamp& aVsyncTimestamp) override;
+  virtual mozilla::ipc::IPCResult RecvNotify(const VsyncEvent& aVsync) override;
   virtual mozilla::ipc::IPCResult RecvVsyncRate(
       const float& aVsyncRate) override;
   virtual void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;

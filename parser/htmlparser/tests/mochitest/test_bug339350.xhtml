@@ -37,22 +37,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=339350
 </div>
 <pre id="test">
 <script type="text/javascript">
-var text1 = 'foo bar';
-var text2 = 'foo [bar]';
-var text3 = 'foo {bar}';
+/* eslint-disable no-unsanitized/property */
+var text1 = "foo bar";
+var text2 = "foo [bar]";
+var text3 = "foo {bar}";
 
-<!-- This is the long way to write this stuff, 
-     you can use MochiKit functions too -->
-document.getElementById('i1').innerHTML = text1;
-document.getElementById('i2').innerHTML = text2;
-document.getElementById('i3').innerHTML = text3;
+// This is the long way to write this stuff,
+// you can use MochiKit functions too
+document.getElementById("i1").innerHTML = text1;
+document.getElementById("i2").innerHTML = text2;
+document.getElementById("i3").innerHTML = text3;
 
-document.getElementById('t1').appendChild(document.createTextNode(text1));
-document.getElementById('t2').appendChild(document.createTextNode(text2));
-document.getElementById('t3').appendChild(document.createTextNode(text3));
+document.getElementById("t1").appendChild(document.createTextNode(text1));
+document.getElementById("t2").appendChild(document.createTextNode(text2));
+document.getElementById("t3").appendChild(document.createTextNode(text3));
 
 <!-- The is() function is one way to add a test -->
-is(document.getElementById('i2').innerHTML, text2, "XHTML innerHTML with trailing brackets ']]'");
+is(document.getElementById("i2").innerHTML, text2, "XHTML innerHTML with trailing brackets ']]'");
 
 </script>
 </pre>

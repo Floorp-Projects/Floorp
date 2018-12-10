@@ -153,6 +153,11 @@ case $cmd in
         ${TOPSRCDIR}/testing/mozbase \
         ${tgtpath}/testing/
 
+    ${MKDIR} -p ${tgtpath}/testing/web-platform/tests
+    cp -pPR \
+        ${TOPSRCDIR}/testing/web-platform/tests/streams \
+        ${tgtpath}/testing/web-platform/tests/
+
     ${MKDIR} -p ${tgtpath}/taskcluster/taskgraph
     cp -pPR \
         ${TOPSRCDIR}/taskcluster/moz.build \

@@ -315,7 +315,6 @@ add_task(async function() {
       urlClass: URL_CLASS,
       bezierClass: CUBIC_BEZIER_CLASS,
       angleClass: ANGLE_CLASS,
-      defaultColorType: false,
     }));
   }
 });

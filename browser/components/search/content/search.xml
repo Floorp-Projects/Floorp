@@ -27,12 +27,12 @@
         if (Services.prefs.getBoolPref("browser.urlbar.clickSelectsAll"))
           this.setAttribute("clickSelectsAll", true);
 
-        var textBox = document.getAnonymousElementByAttribute(this,
+        let textBox = document.getAnonymousElementByAttribute(this,
                                               "anonid", "moz-input-box");
 
         // Force the Custom Element to upgrade until Bug 1470242 handles this:
         customElements.upgrade(textBox);
-        var cxmenu = textBox.menupopup;
+        let cxmenu = textBox.menupopup;
         cxmenu.addEventListener("popupshowing",
                                 () => { this.initContextMenu(cxmenu); },
                                 {capture: true, once: true});
@@ -167,7 +167,7 @@
             return;
           }
 
-          var popup = this.popup;
+          let popup = this.popup;
           if (!popup.mPopupOpen) {
             // Initially the panel used for the searchbar (PopupSearchAutoComplete
             // in browser.xul) is hidden to avoid impacting startup / new
@@ -189,8 +189,8 @@
 
             document.popupNode = null;
 
-            var outerRect = this.getBoundingClientRect();
-            var innerRect = this.inputField.getBoundingClientRect();
+            let outerRect = this.getBoundingClientRect();
+            let innerRect = this.inputField.getBoundingClientRect();
             let width = RTL_UI ?
                         innerRect.right - outerRect.left :
                         outerRect.right - innerRect.left;
@@ -199,7 +199,7 @@
             // invalidate() depends on the width attribute
             popup._invalidate();
 
-            var yOffset = outerRect.bottom - innerRect.bottom;
+            let yOffset = outerRect.bottom - innerRect.bottom;
             popup.openPopup(this.inputField, "after_start", 0, yOffset, false, false);
           }
         ]]></body>
@@ -299,7 +299,7 @@
         doCommand(aCommand) {
           switch (aCommand) {
             case "cmd_clearhistory":
-              var param = this._self.getAttribute("autocompletesearchparam");
+              let param = this._self.getAttribute("autocompletesearchparam");
 
               BrowserSearch.searchBar.FormHistory.update({ op: "remove", fieldname: param }, null);
               this._self.value = "";
@@ -343,7 +343,7 @@
 
       <handler event="dragover">
       <![CDATA[
-        var types = event.dataTransfer.types;
+        let types = event.dataTransfer.types;
         if (types.includes("text/plain") || types.includes("text/x-moz-text-internal"))
           event.preventDefault();
       ]]>
@@ -351,8 +351,8 @@
 
       <handler event="drop">
       <![CDATA[
-        var dataTransfer = event.dataTransfer;
-        var data = dataTransfer.getData("text/plain");
+        let dataTransfer = event.dataTransfer;
+        let data = dataTransfer.getData("text/plain");
         if (!data)
           data = dataTransfer.getData("text/x-moz-text-internal");
         if (data) {
@@ -398,8 +398,8 @@
           if (aEvent.button == 2)
             return;
 
-          var searchBar = BrowserSearch.searchBar;
-          var popupForSearchBar = searchBar && searchBar.textbox == this.mInput;
+          let searchBar = BrowserSearch.searchBar;
+          let popupForSearchBar = searchBar && searchBar.textbox == this.mInput;
           if (popupForSearchBar) {
             searchBar.telemetrySearchDetails = {
               index: this.selectedIndex,
@@ -422,10 +422,10 @@
             );
 
             // Handle search bar popup clicks
-            var search = this.input.controller.getValueAt(this.selectedIndex);
+            let search = this.input.controller.getValueAt(this.selectedIndex);
 
             // open the search results according to the clicking subtlety
-            var where = whereToOpenLink(aEvent, false, true);
+            let where = whereToOpenLink(aEvent, false, true);
             let params = {};
 
             // But open ctrl/cmd clicks on autocomplete items in a new background tab.

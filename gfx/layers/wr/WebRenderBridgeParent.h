@@ -102,9 +102,9 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
       nsTArray<OpUpdateResource>&& aResourceUpdates,
       nsTArray<RefCountedShmem>&& aSmallShmems,
       nsTArray<ipc::Shmem>&& aLargeShmems, const wr::IdNamespace& aIdNamespace,
-      const bool& aContainsSVGGroup, const TimeStamp& aRefreshStartTime,
-      const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
-      const TimeStamp& aFwdTime) override;
+      const bool& aContainsSVGGroup, const VsyncId& aVsyncId,
+      const TimeStamp& aRefreshStartTime, const TimeStamp& aTxnStartTime,
+      const nsCString& aTxnURL, const TimeStamp& aFwdTime) override;
   mozilla::ipc::IPCResult RecvEmptyTransaction(
       const FocusTarget& aFocusTarget, const ScrollUpdatesMap& aUpdates,
       const uint32_t& aPaintSequenceNumber,
@@ -114,8 +114,9 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
       nsTArray<OpUpdateResource>&& aResourceUpdates,
       nsTArray<RefCountedShmem>&& aSmallShmems,
       nsTArray<ipc::Shmem>&& aLargeShmems, const wr::IdNamespace& aIdNamespace,
-      const TimeStamp& aRefreshStartTime, const TimeStamp& aTxnStartTime,
-      const nsCString& aTxnURL, const TimeStamp& aFwdTime) override;
+      const VsyncId& aVsyncId, const TimeStamp& aRefreshStartTime,
+      const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
+      const TimeStamp& aFwdTime) override;
   mozilla::ipc::IPCResult RecvSetFocusTarget(
       const FocusTarget& aFocusTarget) override;
   mozilla::ipc::IPCResult RecvParentCommands(
@@ -158,7 +159,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   // CompositorVsyncSchedulerOwner
   bool IsPendingComposite() override { return false; }
   void FinishPendingComposite() override {}
-  void CompositeToTarget(gfx::DrawTarget* aTarget,
+  void CompositeToTarget(VsyncId aId, gfx::DrawTarget* aTarget,
                          const gfx::IntRect* aRect = nullptr) override;
   TimeDuration GetVsyncInterval() const override;
 
@@ -174,15 +175,15 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
 
   void HoldPendingTransactionId(
       const wr::Epoch& aWrEpoch, TransactionId aTransactionId,
-      bool aContainsSVGGroup, const TimeStamp& aRefreshStartTime,
-      const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
-      const TimeStamp& aFwdTime, const bool aIsFirstPaint,
-      const bool aUseForTelemetry = true);
+      bool aContainsSVGGroup, const VsyncId& aVsyncId,
+      const TimeStamp& aRefreshStartTime, const TimeStamp& aTxnStartTime,
+      const nsCString& aTxnURL, const TimeStamp& aFwdTime,
+      const bool aIsFirstPaint, const bool aUseForTelemetry = true);
   TransactionId LastPendingTransactionId();
   TransactionId FlushTransactionIdsForEpoch(
-      const wr::Epoch& aEpoch, const TimeStamp& aCompositeStartTime,
-      const TimeStamp& aRenderStartTime, const TimeStamp& aEndTime,
-      UiCompositorControllerParent* aUiController,
+      const wr::Epoch& aEpoch, const VsyncId& aCompositeStartId,
+      const TimeStamp& aCompositeStartTime, const TimeStamp& aRenderStartTime,
+      const TimeStamp& aEndTime, UiCompositorControllerParent* aUiController,
       wr::RendererStats* aStats = nullptr,
       nsTArray<FrameStats>* aOutputStats = nullptr);
   void NotifySceneBuiltForEpoch(const wr::Epoch& aEpoch,
@@ -315,18 +316,19 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   void FlushFrameGeneration();
   void FlushFramePresentation();
 
-  void MaybeGenerateFrame(bool aForceGenerateFrame);
+  void MaybeGenerateFrame(VsyncId aId, bool aForceGenerateFrame);
 
  private:
   struct PendingTransactionId {
     PendingTransactionId(const wr::Epoch& aEpoch, TransactionId aId,
-                         bool aContainsSVGGroup,
+                         bool aContainsSVGGroup, const VsyncId& aVsyncId,
                          const TimeStamp& aRefreshStartTime,
                          const TimeStamp& aTxnStartTime,
                          const nsCString& aTxnURL, const TimeStamp& aFwdTime,
                          const bool aIsFirstPaint, const bool aUseForTelemetry)
         : mEpoch(aEpoch),
           mId(aId),
+          mVsyncId(aVsyncId),
           mRefreshStartTime(aRefreshStartTime),
           mTxnStartTime(aTxnStartTime),
           mTxnURL(aTxnURL),
@@ -337,6 +339,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
           mUseForTelemetry(aUseForTelemetry) {}
     wr::Epoch mEpoch;
     TransactionId mId;
+    VsyncId mVsyncId;
     TimeStamp mRefreshStartTime;
     TimeStamp mTxnStartTime;
     nsCString mTxnURL;

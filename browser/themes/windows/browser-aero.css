@@ -46,8 +46,8 @@
 }
 
 @media (-moz-windows-compositor) {
-  @media not all and (-moz-os-version: windows-win7) {
-    @media not all and (-moz-os-version: windows-win8) {
+  @media not (-moz-os-version: windows-win7) {
+    @media not (-moz-os-version: windows-win8) {
       @media (-moz-windows-default-theme) {
         :root:not(:-moz-lwtheme) {
           background-color: hsl(0, 0%, 78%);
@@ -204,30 +204,30 @@
 
         #main-menubar > menu[_moz-menuactive="true"],
         .titlebar-button:hover {
-          background-color: hsla(0,0%,100%,.22);
-        }
-        .titlebar-button:hover:active {
-          background-color: hsla(0,0%,100%,.32);
-        }
-        #main-menubar > menu[_moz-menuactive="true"]:-moz-lwtheme-darktext,
-        .titlebar-button:-moz-lwtheme-darktext:hover {
           background-color: hsla(0,0%,0%,.12);
         }
-        .titlebar-button:-moz-lwtheme-darktext:hover:active {
+        .titlebar-button:hover:active {
           background-color: hsla(0,0%,0%,.22);
         }
 
-        .titlebar-button:not(:hover) > .toolbarbutton-icon:-moz-window-inactive {
-          opacity: 0.5;
+        #toolbar-menubar[brighttext] > #main-menubar > menu[_moz-menuactive="true"],
+        toolbar[brighttext] .titlebar-button:not(.titlebar-close):hover {
+          background-color: hsla(0,0%,100%,.22);
+        }
+        toolbar[brighttext] .titlebar-button:not(.titlebar-close):hover:active {
+          background-color: hsla(0,0%,100%,.32);
         }
 
         .titlebar-close:hover {
           stroke: white;
           background-color: hsl(355,86%,49%);
         }
-
         .titlebar-close:hover:active {
           background-color: hsl(355,82%,69%);
+        }
+
+        .titlebar-button:not(:hover) > .toolbarbutton-icon:-moz-window-inactive {
+          opacity: 0.5;
         }
       }
 

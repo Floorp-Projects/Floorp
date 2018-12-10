@@ -14,7 +14,7 @@ use std::marker::PhantomData;
 use std::ops::Range;
 use std::{io, mem, ptr, slice};
 use time::precise_time_ns;
-use {AlphaType, BorderDetails, BorderDisplayItem, BorderRadius, BoxShadowClipMode};
+use {AlphaType, BorderDetails, BorderDisplayItem, BorderRadius, BoxShadowClipMode, CacheMarkerDisplayItem};
 use {BoxShadowDisplayItem, ClipAndScrollInfo, ClipChainId, ClipChainItem, ClipDisplayItem, ClipId};
 use {ColorF, ComplexClipRegion, DisplayItem, ExtendMode, ExternalScrollId, FilterOp};
 use {FontInstanceKey, GlyphInstance, GlyphOptions, RasterSpace, Gradient, GradientBuilder};
@@ -502,6 +502,8 @@ impl Serialize for BuiltDisplayList {
                     ),
                     SpecificDisplayItem::PushShadow(v) => PushShadow(v),
                     SpecificDisplayItem::PopAllShadows => PopAllShadows,
+                    SpecificDisplayItem::PushCacheMarker(m) => PushCacheMarker(m),
+                    SpecificDisplayItem::PopCacheMarker => PopCacheMarker,
                 },
                 clip_and_scroll: display_item.clip_and_scroll,
                 info: display_item.info,
@@ -588,6 +590,8 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                     },
                     PushShadow(specific_item) => SpecificDisplayItem::PushShadow(specific_item),
                     PopAllShadows => SpecificDisplayItem::PopAllShadows,
+                    PushCacheMarker(marker) => SpecificDisplayItem::PushCacheMarker(marker),
+                    PopCacheMarker => SpecificDisplayItem::PopCacheMarker,
                 },
                 clip_and_scroll: complete.clip_and_scroll,
                 info: complete.info,
@@ -1259,6 +1263,19 @@ impl DisplayListBuilder {
         });
         self.push_item(&item, info);
         id
+    }
+
+    pub fn push_cache_marker(&mut self) {
+        self.push_new_empty_item(&SpecificDisplayItem::PushCacheMarker(CacheMarkerDisplayItem {
+            // The display item itself is empty for now while we experiment with
+            // the API. In future it may contain extra information, such as details
+            // on whether the surface is known to be opaque and/or a background color
+            // hint that WR should clear the surface to.
+        }));
+    }
+
+    pub fn pop_cache_marker(&mut self) {
+        self.push_new_empty_item(&SpecificDisplayItem::PopCacheMarker);
     }
 
     pub fn pop_reference_frame(&mut self) {

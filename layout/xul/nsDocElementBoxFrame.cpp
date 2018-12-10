@@ -129,7 +129,7 @@ void nsDocElementBoxFrame::AppendAnonymousContentTo(
 }
 
 NS_QUERYFRAME_HEAD(nsDocElementBoxFrame)
-NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
+  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 #ifdef DEBUG_FRAME_DUMP

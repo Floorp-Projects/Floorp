@@ -51,6 +51,8 @@ class MediaDrmProxySupport final {
 
   const nsString& GetMediaDrmStubId() const { return mMediaDrmStubId; }
 
+  bool SetServerCertificate(const nsTArray<uint8_t>& aCert);
+
  private:
   const nsString mKeySystem;
   java::MediaDrmProxy::GlobalRef mBridgeProxy;

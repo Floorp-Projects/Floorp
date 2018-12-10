@@ -721,23 +721,13 @@ button.warning {
 }
 
 #detail-contrib-btn {
-  color: var(--in-content-selected-text);
-  text-shadow: none;
-  border: 1px solid transparent;
-  list-style-image: url("chrome://mozapps/skin/extensions/heart.png");
-  background-color: var(--in-content-primary-button-background);
+  -moz-context-properties: fill;
+  fill: currentColor;
+  list-style-image: url("chrome://global/skin/icons/heart.svg");
 }
 
 #detail-contrib-btn .button-icon {
   margin-inline-end: 5px;
-}
-
-#detail-contrib-btn:not(:active):hover {
-  background-color: var(--in-content-primary-button-background-hover);
-}
-
-#detail-contrib-btn:active:hover {
-  background-color: var(--in-content-primary-button-background-active);
 }
 
 #detail-grid {

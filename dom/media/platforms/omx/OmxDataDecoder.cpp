@@ -693,8 +693,8 @@ OmxDataDecoder::CollectBufferPromises(OMX_DIRTYPE aType) {
     return OmxBufferPromise::All(mOmxTaskQueue, promises);
   }
 
-  nsTArray<BufferData*> headers;
-  return OmxBufferPromise::AllPromiseType::CreateAndResolve(headers, __func__);
+  return OmxBufferPromise::AllPromiseType::CreateAndResolve(
+      nsTArray<BufferData*>(), __func__);
 }
 
 void OmxDataDecoder::PortSettingsChanged() {

@@ -78,7 +78,7 @@ var TrackingProtection = {
   updateCategoryLabel() {
     let label;
     if (this.enabled) {
-      label = "contentBlocking.trackers.blocked.label";
+      label = ContentBlocking.showBlockedLabels ? "contentBlocking.trackers.blocking.label" : null;
     } else {
       label = ContentBlocking.showAllowedLabels ? "contentBlocking.trackers.allowed.label" : null;
     }
@@ -113,6 +113,31 @@ var TrackingProtection = {
       if (listItem) {
         fragment.appendChild(listItem);
       }
+    }
+
+    // If we don't have trackers we would usually not show the menu item
+    // allowing the user to show the sub-panel. However, in the edge case
+    // that we annotated trackers on the page using the strict list but did
+    // not detect trackers on the page using the basic list, we currently
+    // still show the panel. To reduce the confusion, tell the user that we have
+    // not detected any tracker.
+    if (fragment.childNodes.length == 0) {
+      let emptyBox = document.createXULElement("vbox");
+      let emptyImage = document.createXULElement("image");
+      emptyImage.classList.add("identity-popup-content-blocking-trackersView-empty-image");
+      emptyImage.classList.add("tracking-protection-icon");
+
+      let emptyLabel = document.createXULElement("label");
+      emptyLabel.classList.add("identity-popup-content-blocking-empty-label");
+      emptyLabel.textContent = gNavigatorBundle.getString("contentBlocking.trackersView.empty.label");
+
+      emptyBox.appendChild(emptyImage);
+      emptyBox.appendChild(emptyLabel);
+      fragment.appendChild(emptyBox);
+
+      this.subViewList.classList.add("empty");
+    } else {
+      this.subViewList.classList.remove("empty");
     }
 
     // This might have taken a while. Only update the list if we're still on the same page.
@@ -251,16 +276,16 @@ var ThirdPartyCookies = {
     let label;
     switch (this.behaviorPref) {
     case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
-      label = "contentBlocking.cookies.3rdPartyBlocked.label";
+      label = ContentBlocking.showBlockedLabels ? "contentBlocking.cookies.blocking3rdParty.label" : null;
       break;
     case Ci.nsICookieService.BEHAVIOR_REJECT:
-      label = "contentBlocking.cookies.allBlocked.label";
+      label = ContentBlocking.showBlockedLabels ? "contentBlocking.cookies.blockingAll.label" : null;
       break;
     case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
-      label = "contentBlocking.cookies.unvisitedBlocked.label";
+      label = ContentBlocking.showBlockedLabels ? "contentBlocking.cookies.blockingUnvisited.label" : null;
       break;
     case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
-      label = "contentBlocking.cookies.trackersBlocked.label";
+      label = ContentBlocking.showBlockedLabels ? "contentBlocking.cookies.blockingTrackers.label" : null;
       break;
     default:
       Cu.reportError(`Error: Unknown cookieBehavior pref observed: ${this.behaviorPref}`);
@@ -304,17 +329,26 @@ var ThirdPartyCookies = {
     this.subViewList.textContent = "";
 
     for (let category of ["firstParty", "trackers", "thirdParty"]) {
-      if (categories[category].length) {
-        let box = document.createXULElement("vbox");
-        let label = document.createXULElement("label");
-        label.className = "identity-popup-cookiesView-list-header";
-        label.textContent = gNavigatorBundle.getString(`contentBlocking.cookiesView.${category}.label`);
-        box.appendChild(label);
-        for (let info of categories[category]) {
-          box.appendChild(this._createListItem(info));
-        }
-        this.subViewList.appendChild(box);
+      let box = document.createXULElement("vbox");
+      let label = document.createXULElement("label");
+      label.className = "identity-popup-cookiesView-list-header";
+      label.textContent = gNavigatorBundle.getString(`contentBlocking.cookiesView.${category}.label`);
+      box.appendChild(label);
+
+      for (let info of categories[category]) {
+        box.appendChild(this._createListItem(info));
       }
+
+      // If the category is empty, add a label noting that to the user.
+      if (categories[category].length == 0) {
+        let emptyLabel = document.createXULElement("label");
+        emptyLabel.classList.add("identity-popup-content-blocking-empty-label");
+        emptyLabel.textContent =
+          gNavigatorBundle.getString(`contentBlocking.cookiesView.${category}.empty.label`);
+        box.appendChild(emptyLabel);
+      }
+
+      this.subViewList.appendChild(box);
     }
   },
 
@@ -489,6 +523,7 @@ var ContentBlocking = {
   PREF_INTRO_COUNT_CB: "browser.contentblocking.introCount",
   PREF_CB_CATEGORY: "browser.contentblocking.category",
   PREF_SHOW_ALLOWED_LABELS: "browser.contentblocking.control-center.ui.showAllowedLabels",
+  PREF_SHOW_BLOCKED_LABELS: "browser.contentblocking.control-center.ui.showBlockedLabels",
   content: null,
   icon: null,
   activeTooltipText: null,
@@ -546,17 +581,17 @@ var ContentBlocking = {
   },
 
   init() {
-    let $ = selector => document.querySelector(selector);
-    this.content = $("#identity-popup-content-blocking-content");
-    this.icon = $("#tracking-protection-icon");
-    this.iconBox = $("#tracking-protection-icon-box");
-    this.animatedIcon = $("#tracking-protection-icon-animatable-image");
+    let $ = id => document.getElementById(id);
+    this.content = $("identity-popup-content-blocking-content");
+    this.icon = $("tracking-protection-icon");
+    this.iconBox = $("tracking-protection-icon-box");
+    this.animatedIcon = $("tracking-protection-icon-animatable-image");
     this.animatedIcon.addEventListener("animationend", () => this.iconBox.removeAttribute("animate"));
 
-    this.identityPopupMultiView = $("#identity-popup-multiView");
-    this.reportBreakageButton = $("#identity-popup-content-blocking-report-breakage");
-    this.reportBreakageURL = $("#identity-popup-breakageReportView-collection-url");
-    this.reportBreakageLearnMore = $("#identity-popup-breakageReportView-learn-more");
+    this.identityPopupMultiView = $("identity-popup-multiView");
+    this.reportBreakageButton = $("identity-popup-content-blocking-report-breakage");
+    this.reportBreakageURL = $("identity-popup-breakageReportView-collection-url");
+    this.reportBreakageLearnMore = $("identity-popup-breakageReportView-learn-more");
 
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
     this.reportBreakageLearnMore.href = baseURL + "blocking-breakage";
@@ -576,6 +611,12 @@ var ContentBlocking = {
 
     Services.prefs.addObserver(this.PREF_ANIMATIONS_ENABLED, this.updateAnimationsEnabled);
 
+    XPCOMUtils.defineLazyPreferenceGetter(this, "showBlockedLabels",
+      this.PREF_SHOW_BLOCKED_LABELS, false, () => {
+        for (let blocker of this.blockers) {
+          blocker.updateCategoryLabel();
+        }
+    });
     XPCOMUtils.defineLazyPreferenceGetter(this, "showAllowedLabels",
       this.PREF_SHOW_ALLOWED_LABELS, false, () => {
         for (let blocker of this.blockers) {

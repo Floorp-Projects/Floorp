@@ -52,6 +52,7 @@ using mozilla::CrossProcessSemaphoreHandle from "mozilla/ipc/CrossProcessSemapho
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
+using mozilla::VsyncId from "mozilla/VsyncDispatcher.h";
 
 namespace mozilla {
 namespace layers {
@@ -554,6 +555,7 @@ struct TransactionInfo
   bool scheduleComposite;
   uint32_t paintSequenceNumber;
   bool isRepeatTransaction;
+  VsyncId vsyncId;
   TimeStamp refreshStart;
   TimeStamp transactionStart;
   nsCString url;

@@ -2094,3 +2094,4 @@ test-pref(layout.css.visited_links_enabled,false) == 1488155.html 1488155-ref.ht
 == 1492660-1.html 1492660-1-ref.html
 pref(layout.css.supports-selector.enabled,true) == 1499386.html 1499386-ref.html
 pref(layout.css.supports-selector.enabled,false) != 1499386.html 1499386-ref.html
+== 1511570.html 1511570-ref.html

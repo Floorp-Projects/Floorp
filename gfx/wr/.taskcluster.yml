@@ -18,19 +18,8 @@ metadata:
 # instances configured and running.
 tasks:
   # For the docker-worker tasks, the Docker image used
-  # (staktrace/webrender-test:freetype28) was created using this Dockerfile:
-  # ---
-  #   FROM ubuntu:16.04
-  #   RUN apt-get -y update && apt-get install -y curl git python python-pip cmake pkg-config libx11-dev libgl1-mesa-dev libfontconfig1-dev software-properties-common
-  #   RUN add-apt-repository -y -u ppa:glasen/freetype2
-  #   RUN apt-get -y install freetype2-demos
-  #   RUN pip install mako voluptuous PyYAML servo-tidy
-  #   RUN useradd -d /home/worker -s /bin/bash -m worker
-  #   USER worker
-  #   WORKDIR /home/worker
-  #   ENV PATH $PATH:/home/worker/.cargo/bin
-  #   CMD /bin/bash
-  # ---
+  # (staktrace/webrender-test:debian) was created using the Dockerfile in
+  # ci-scripts/docker-image.
   #
   # The docker image may need to be updated over time if the set of required
   # packages increases. Note in particular that rust/cargo are not part of the
@@ -55,7 +44,7 @@ tasks:
           - master
     payload:
       maxRunTime: 7200
-      image: 'staktrace/webrender-test:freetype28'
+      image: 'staktrace/webrender-test:debian'
       env:
         RUST_BACKTRACE: 'full'
         RUSTFLAGS: '--deny warnings'
@@ -65,6 +54,7 @@ tasks:
         - '-c'
         - >-
           curl https://sh.rustup.rs -sSf | sh -s -- -y &&
+          source $HOME/.cargo/env &&
           git clone {{event.head.repo.url}} webrender && cd webrender &&
           git checkout {{event.head.sha}} &&
           servo-tidy &&
@@ -88,7 +78,7 @@ tasks:
           - master
     payload:
       maxRunTime: 7200
-      image: 'staktrace/webrender-test:freetype28'
+      image: 'staktrace/webrender-test:debian'
       env:
         RUST_BACKTRACE: 'full'
         RUSTFLAGS: '--deny warnings'
@@ -98,6 +88,7 @@ tasks:
         - '-c'
         - >-
           curl https://sh.rustup.rs -sSf | sh -s -- -y &&
+          source $HOME/.cargo/env &&
           git clone {{event.head.repo.url}} webrender && cd webrender &&
           git checkout {{event.head.sha}} &&
           servo-tidy &&

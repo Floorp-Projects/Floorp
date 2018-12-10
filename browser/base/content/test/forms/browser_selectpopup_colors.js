@@ -185,8 +185,12 @@ const SELECT_INHERITED_COLORS_ON_OPTIONS_DONT_GET_UNIQUE_RULES_IF_RULE_SET_ON_SE
 function getSystemColor(color) {
   // Need to convert system color to RGB color.
   let textarea = document.createElementNS("http://www.w3.org/1999/xhtml", "textarea");
+  textarea.style.display = "none";
   textarea.style.color = color;
-  return getComputedStyle(textarea).color;
+  document.documentElement.appendChild(textarea);
+  let computed = getComputedStyle(textarea).color;
+  textarea.remove();
+  return computed;
 }
 
 function testOptionColors(index, item, menulist) {
@@ -211,7 +215,7 @@ function testOptionColors(index, item, menulist) {
 
   if (expected.unstyled) {
     ok(!item.hasAttribute("customoptionstyling"),
-      `Item ${index} should not have any custom option styling`);
+      `Item ${index} should not have any custom option styling: ${item.outerHTML}`);
   } else {
     is(getComputedStyle(item).color, expected.color,
        "Item " + (index) + " has correct foreground color");

@@ -150,8 +150,8 @@ nsPluginFrame::~nsPluginFrame() {
 }
 
 NS_QUERYFRAME_HEAD(nsPluginFrame)
-NS_QUERYFRAME_ENTRY(nsPluginFrame)
-NS_QUERYFRAME_ENTRY(nsIObjectFrame)
+  NS_QUERYFRAME_ENTRY(nsPluginFrame)
+  NS_QUERYFRAME_ENTRY(nsIObjectFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsFrame)
 
 #ifdef ACCESSIBILITY
@@ -1057,7 +1057,7 @@ bool nsPluginFrame::IsTransparentMode() const {
 void nsPluginFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                      const nsDisplayListSet& aLists) {
   // XXX why are we painting collapsed object frames?
-  if (!IsVisibleOrCollapsedForPainting(aBuilder)) return;
+  if (!IsVisibleOrCollapsedForPainting()) return;
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 

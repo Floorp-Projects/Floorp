@@ -73,7 +73,8 @@ class NewRenderer : public RendererEvent {
     wr::Renderer* wrRenderer = nullptr;
     if (!wr_window_new(
             aWindowId, mSize.width, mSize.height,
-            supportLowPriorityTransactions, compositor->gl(),
+            supportLowPriorityTransactions, gfxPrefs::WebRenderPictureCaching(),
+            compositor->gl(),
             aRenderThread.ProgramCache() ? aRenderThread.ProgramCache()->Raw()
                                          : nullptr,
             aRenderThread.Shaders() ? aRenderThread.Shaders()->RawShaders()
@@ -371,8 +372,9 @@ void WebRenderAPI::Readback(const TimeStamp& aStartTime, gfx::IntSize size,
     ~Readback() { MOZ_COUNT_DTOR(Readback); }
 
     virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
-      aRenderThread.UpdateAndRender(aWindowId, mStartTime, /* aRender */ true,
-                                    Some(mSize), Some(mBuffer), false);
+      aRenderThread.UpdateAndRender(aWindowId, VsyncId(), mStartTime,
+                                    /* aRender */ true, Some(mSize),
+                                    Some(mBuffer), false);
       layers::AutoCompleteTask complete(mTask);
     }
 

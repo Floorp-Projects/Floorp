@@ -27,7 +27,7 @@ nsBlockFrame* NS_NewColumnSetWrapperFrame(nsIPresShell* aPresShell,
 NS_IMPL_FRAMEARENA_HELPERS(ColumnSetWrapperFrame)
 
 NS_QUERYFRAME_HEAD(ColumnSetWrapperFrame)
-NS_QUERYFRAME_ENTRY(ColumnSetWrapperFrame)
+  NS_QUERYFRAME_ENTRY(ColumnSetWrapperFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
 ColumnSetWrapperFrame::ColumnSetWrapperFrame(ComputedStyle* aStyle)

@@ -8,6 +8,7 @@
 #import <CoreServices/CoreServices.h>
 #import <Cocoa/Cocoa.h>
 
+#include "MacAutoreleasePool.h"
 #include "nsCOMPtr.h"
 #include "nsCocoaFeatures.h"
 #include "nsNativeAppSupportBase.h"
@@ -56,6 +57,57 @@ GetNativeWindowPointerFromDOMWindow(mozIDOMWindowProxy *a_window, NSWindow **a_n
   return NS_OK;
 }
 
+// Essentially this notification handler implements the
+// "Mozilla remote" functionality on Mac, handing command line arguments (passed
+// to a newly launched process) to another copy of the current process that was
+// already running (which had registered the handler for this notification). All
+// other new copies just broadcast this notification and quit (unless -no-remote
+// was specified in either of these processes), making the original process handle
+// the arguments passed to this handler.
+void
+remoteClientNotificationCallback(CFNotificationCenterRef aCenter,
+                                 void* aObserver, CFStringRef aName,
+                                 const void* aObject,
+                                 CFDictionaryRef aUserInfo)
+{
+  // Autorelease pool to prevent memory leaks, in case there is no outer pool.
+  mozilla::MacAutoreleasePool pool;
+  NSDictionary* userInfoDict = (__bridge NSDictionary*)aUserInfo;
+  if (userInfoDict && [userInfoDict objectForKey:@"commandLineArgs"]) {
+    NSArray* args = [userInfoDict objectForKey:@"commandLineArgs"];
+    nsCOMPtr<nsICommandLineRunner> cmdLine(new nsCommandLine());
+
+    // Converting Objective-C array into a C array,
+    // which nsICommandLineRunner understands.
+    int argc = [args count];
+    const char** argv = new const char*[argc];
+    for (int i = 0; i < argc; i++) {
+      const char* arg = [[args objectAtIndex:i] UTF8String];
+      argv[i] = arg;
+    }
+
+    // We're not currently passing the working dir as third argument because it
+    // does not appear to be required.
+    nsresult rv = cmdLine->Init(argc, argv, nullptr,
+                                nsICommandLine::STATE_REMOTE_AUTO);
+
+    // Cleaning up C array.
+    delete[] argv;
+
+    if (NS_FAILED(rv)) {
+      NS_ERROR("Error initializing command line.");
+      return;
+    }
+
+    // Processing the command line, passed from a remote instance
+    // in the current instance.
+    cmdLine->Run();
+
+    // And bring the app's window to front.
+    [[NSRunningApplication currentApplication] activateWithOptions:0];
+  }
+}
+
 class nsNativeAppSupportCocoa : public nsNativeAppSupportBase
 {
 public:
@@ -95,6 +147,102 @@ NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool *_retval)
   }
 
   *_retval = true;
+
+  // Here are the "special" CLI arguments that we can expect to be passed that
+  // should alter the default "hand args list to remote process and quit" algorithm:
+  // -headless : was already handled on macOS (allowing running multiple instances
+  // of the app), meaning this patch shouldn't break it.
+  // -no-remote : should always proceed, creating a second instance (which will
+  // fail on macOS, showing a MessageBox "Only one instance can be run at a time",
+  // unless a different profile dir path is specified).
+  // The rest of the arguments should be either passed on to
+  // the original running process (exiting the current process), or be processed by
+  // the current process (if -no-remote is specified).
+
+  mozilla::MacAutoreleasePool pool;
+  NSArray* arguments = [[NSProcessInfo processInfo] arguments];
+  BOOL shallProceedLikeNoRemote = NO;
+  for (NSString* arg in arguments) {
+    if ([arg isEqualToString:@"-no-remote"] || [arg isEqualToString:@"-headless"]) {
+      shallProceedLikeNoRemote = YES;
+      break;
+    }
+  }
+
+  // Apart from -no-remote, the user can specify an env variable
+  // MOZ_NO_REMOTE=1, which makes it behave the same way.
+  if (shallProceedLikeNoRemote == NO) {
+    NSDictionary* environmentVariables = [[NSProcessInfo processInfo] environment];
+    for (NSString* key in [environmentVariables allKeys]) {
+      if ([key isEqualToString:@"MOZ_NO_REMOTE"] &&
+          [environmentVariables[key] isEqualToString:@"1"]) {
+        shallProceedLikeNoRemote = YES;
+        break;
+      }
+    }
+  }
+
+  if (shallProceedLikeNoRemote) {
+    // Continue start up sequence. Do not register as a "first and only instance"
+    // listening for notifications, nor send notifications to another instance -
+    // essentially allowing launching multiple instances of the app.
+    *_retval = true;
+    return NS_OK;
+  }
+
+  // Now that we have handled no-remote-like arguments, at this point:
+  // 1) Either only the first instance of the process has been launched in any way
+  //    (.app double click, "open", "open -n", invoking executable in Terminal, etc.
+  // 2) Or the process has been launched with a "macos single instance" mechanism
+  //    override (using "open -n" OR directly by invoking the executable in Terminal
+  //    instead of clicking the .app bundle's icon, etc.).
+
+  // So, let's check if this is the first instance ever of the process for the
+  // current user.
+  NSString* notificationName = [[[NSBundle mainBundle] bundleIdentifier]
+                                  stringByAppendingString:
+                                  @".distributedNotification.commandLineArgs"];
+  if ([[NSRunningApplication runningApplicationsWithBundleIdentifier:
+        [[NSBundle mainBundle] bundleIdentifier]] count] > 1) {
+    // There is another instance of this app already running!
+    NSArray* arguments = [[NSProcessInfo processInfo] arguments];
+    CFDictionaryRef userInfoDict = (__bridge CFDictionaryRef)@{@"commandLineArgs":
+                                                                 arguments};
+
+    // This code is shared between Firefox, Thunderbird and other Mozilla products.
+    // So we need a notification name that is unique to the product, so we
+    // do not send a notification to Firefox from Thunderbird and so on. I am using
+    // bundle Id (assuming all Mozilla products come wrapped in .app bundles) -
+    // it should be unique
+    // (e.g., org.mozilla.firefox.distributedNotification.commandLineArgs for Firefox).
+    // We also need to make sure the notifications are "local" to the current user,
+    // so we do not pass it on to perhaps another running Thunderbird by another
+    // logged in user. Distributed notifications is the best candidate
+    // (while darwin notifications ignore the user context).
+    CFNotificationCenterPostNotification(CFNotificationCenterGetDistributedCenter(),
+                                         (__bridge CFStringRef)notificationName,
+                                         NULL,
+                                         userInfoDict,
+                                         true);
+
+    // Do not continue start up sequence for this process - just self-terminate,
+    // we already passed the arguments on to the original instance of the process.
+    *_retval = false;
+  } else {
+    // This is the first instance ever! Let's register a notification listener here,
+    // In case future instances would want to notify us about command line arguments
+    // passed to them
+    CFNotificationCenterAddObserver(CFNotificationCenterGetDistributedCenter(),
+                                    NULL,
+                                    remoteClientNotificationCallback,
+                                    (__bridge CFStringRef)notificationName,
+                                    NULL,
+                                    CFNotificationSuspensionBehaviorDeliverImmediately);
+
+    // Continue the start up sequence of this process.
+    *_retval = true;
+  }
+
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;

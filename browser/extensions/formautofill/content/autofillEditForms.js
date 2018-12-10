@@ -406,7 +406,7 @@ class EditCreditCard extends EditAutofillForm {
     let dateFormat = new Intl.DateTimeFormat(navigator.language, {month: "long"}).format;
     for (let i = 0; i < count; i++) {
       let monthNumber = (i + 1).toString();
-      let monthName = dateFormat(new Date(Date.UTC(1970, i, 1)));
+      let monthName = dateFormat(new Date(1970, i));
       let option = new Option();
       option.value = monthNumber;
       // XXX: Bug 1446164 - Localize this string.

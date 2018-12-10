@@ -7,24 +7,27 @@ use api::{DeviceIntRect, DevicePoint, LayoutRect, PictureToRasterTransform, Layo
 use api::{DevicePixelScale, RasterRect, RasterSpace, PictureSize, DeviceIntPoint, ColorF, ImageKey, DirtyRect};
 use api::{PicturePixel, RasterPixel, WorldPixel, WorldRect, ImageFormat, ImageDescriptor};
 use box_shadow::{BLUR_SAMPLE_SCALE};
-use clip::{ClipNodeCollector, ClipStore, ClipChainId, ClipChainNode, ClipUid};
+use clip::{ClipNodeCollector, ClipStore, ClipChainId, ClipChainNode};
 use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex};
 use device::TextureFilter;
 use euclid::{TypedScale, vec3, TypedRect, TypedPoint2D, TypedSize2D};
 use euclid::approxeq::ApproxEq;
+use intern::ItemUid;
 use internal_types::{FastHashMap, PlaneSplitter};
 use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PictureContext};
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use gpu_types::{TransformPalette, TransformPaletteId, UvRectKind};
 use internal_types::FastHashSet;
 use plane_split::{Clipper, Polygon, Splitter};
-use prim_store::{PictureIndex, PrimitiveInstance, SpaceMapper, VisibleFace, PrimitiveInstanceKind, PrimitiveUid};
-use prim_store::{get_raster_rects, PrimitiveDataInterner, PrimitiveDataStore, CoordinateSpaceMapping};
+use prim_store::{PictureIndex, PrimitiveInstance, SpaceMapper, VisibleFace, PrimitiveInstanceKind};
+use prim_store::{get_raster_rects, CoordinateSpaceMapping};
 use prim_store::{OpacityBindingStorage, PrimitiveTemplateKind, ImageInstanceStorage, OpacityBindingIndex, SizeKey};
+use render_backend::FrameResources;
 use render_task::{ClearMode, RenderTask, RenderTaskCacheEntryHandle, TileBlit};
 use render_task::{RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskId, RenderTaskLocation};
 use resource_cache::ResourceCache;
 use scene::{FilterOpHelpers, SceneProperties};
+use scene_builder::DocumentResources;
 use smallvec::SmallVec;
 use surface::{SurfaceDescriptor, TransformKey};
 use std::{mem, ops};
@@ -236,11 +239,11 @@ pub struct TileTransformIndex(u32);
 pub struct TileDescriptor {
     /// List of primitive unique identifiers. The uid is guaranteed
     /// to uniquely describe the content of the primitive.
-    pub prim_uids: Vec<PrimitiveUid>,
+    pub prim_uids: Vec<ItemUid>,
 
     /// List of clip node unique identifiers. The uid is guaranteed
     /// to uniquely describe the content of the clip node.
-    pub clip_uids: Vec<ClipUid>,
+    pub clip_uids: Vec<ItemUid>,
 
     /// List of local tile transform ids that are used to position
     /// the primitive and clip items above.
@@ -600,7 +603,7 @@ impl TileCache {
         prim_instance: &PrimitiveInstance,
         surface_spatial_node_index: SpatialNodeIndex,
         clip_scroll_tree: &ClipScrollTree,
-        prim_data_store: &PrimitiveDataStore,
+        resources: &FrameResources,
         clip_chain_nodes: &[ClipChainNode],
         pictures: &[PicturePrimitive],
         resource_cache: &ResourceCache,
@@ -612,13 +615,21 @@ impl TileCache {
             clip_scroll_tree,
         );
 
-        let prim_data = &prim_data_store[prim_instance.prim_data_handle];
+        let prim_data = &resources.as_common_data(&prim_instance);
+
+        let prim_rect = LayoutRect::new(
+            prim_instance.prim_origin,
+            prim_data.prim_size,
+        );
+        let clip_rect = prim_data
+            .prim_relative_clip_rect
+            .translate(&prim_instance.prim_origin.to_vector());
 
         // Map the primitive local rect into the picture space.
         // TODO(gw): We should maybe store this in the primitive template
         //           during interning so that we never have to calculate
         //           it during frame building.
-        let culling_rect = match prim_data.prim_rect.intersection(&prim_data.clip_rect) {
+        let culling_rect = match prim_rect.intersection(&clip_rect) {
             Some(rect) => rect,
             None => return,
         };
@@ -648,18 +659,18 @@ impl TileCache {
         // Build the list of resources that this primitive has dependencies on.
         let mut opacity_bindings: SmallVec<[PropertyBindingId; 4]> = SmallVec::new();
         let mut clip_chain_spatial_nodes: SmallVec<[SpatialNodeIndex; 8]> = SmallVec::new();
-        let mut clip_chain_uids: SmallVec<[ClipUid; 8]> = SmallVec::new();
+        let mut clip_chain_uids: SmallVec<[ItemUid; 8]> = SmallVec::new();
         let mut image_keys: SmallVec<[ImageKey; 8]> = SmallVec::new();
         let mut current_clip_chain_id = prim_instance.clip_chain_id;
 
         // Some primitives can not be cached (e.g. external video images)
         let is_cacheable = prim_instance.is_cacheable(
-            prim_data_store,
+            &resources.prim_data_store,
             resource_cache,
         );
 
         match prim_instance.kind {
-            PrimitiveInstanceKind::Picture { pic_index } => {
+            PrimitiveInstanceKind::Picture { pic_index,.. } => {
                 // Pictures can depend on animated opacity bindings.
                 let pic = &pictures[pic_index.0];
                 if let Some(PictureCompositeMode::Filter(FilterOp::Opacity(binding, _))) = pic.requested_composite_mode {
@@ -678,7 +689,8 @@ impl TileCache {
                     }
                 }
             }
-            PrimitiveInstanceKind::Image { image_instance_index, .. } => {
+            PrimitiveInstanceKind::Image { data_handle, image_instance_index, .. } => {
+                let prim_data = &resources.prim_data_store[data_handle];
                 let image_instance = &image_instances[image_instance_index];
                 let opacity_binding_index = image_instance.opacity_binding_index;
 
@@ -700,7 +712,8 @@ impl TileCache {
                     }
                 }
             }
-            PrimitiveInstanceKind::YuvImage { .. } => {
+            PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
+                let prim_data = &resources.prim_data_store[data_handle];
                 match prim_data.kind {
                     PrimitiveTemplateKind::YuvImage { ref yuv_key, .. } => {
                         image_keys.extend_from_slice(yuv_key);
@@ -712,7 +725,7 @@ impl TileCache {
             }
             PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::LineDecoration { .. } |
-            PrimitiveInstanceKind::Clear |
+            PrimitiveInstanceKind::Clear { .. } |
             PrimitiveInstanceKind::NormalBorder { .. } |
             PrimitiveInstanceKind::LinearGradient { .. } |
             PrimitiveInstanceKind::RadialGradient { .. } |
@@ -777,7 +790,7 @@ impl TileCache {
                 }
 
                 // Update the tile descriptor, used for tile comparison during scene swaps.
-                tile.descriptor.prim_uids.push(prim_instance.prim_data_handle.uid());
+                tile.descriptor.prim_uids.push(prim_instance.uid());
                 tile.descriptor.clip_uids.extend_from_slice(&clip_chain_uids);
             }
         }
@@ -1258,7 +1271,7 @@ impl PrimitiveList {
     /// significantly faster.
     pub fn new(
         mut prim_instances: Vec<PrimitiveInstance>,
-        prim_interner: &PrimitiveDataInterner,
+        resources: &DocumentResources
     ) -> Self {
         let mut pictures = SmallVec::new();
         let mut clusters_map = FastHashMap::default();
@@ -1271,7 +1284,7 @@ impl PrimitiveList {
             // Check if this primitive is a picture. In future we should
             // remove this match and embed this info directly in the primitive instance.
             let is_pic = match prim_instance.kind {
-                PrimitiveInstanceKind::Picture { pic_index } => {
+                PrimitiveInstanceKind::Picture { pic_index, .. } => {
                     pictures.push(pic_index);
                     true
                 }
@@ -1280,9 +1293,30 @@ impl PrimitiveList {
                 }
             };
 
+            let prim_data = match prim_instance.kind {
+                PrimitiveInstanceKind::Picture { data_handle, .. } |
+                PrimitiveInstanceKind::LineDecoration { data_handle, .. } |
+                PrimitiveInstanceKind::NormalBorder { data_handle, .. } |
+                PrimitiveInstanceKind::ImageBorder { data_handle, .. } |
+                PrimitiveInstanceKind::Rectangle { data_handle, .. } |
+                PrimitiveInstanceKind::YuvImage { data_handle, .. } |
+                PrimitiveInstanceKind::Image { data_handle, .. } |
+                PrimitiveInstanceKind::Clear { data_handle, .. } => {
+                    &resources.prim_interner[data_handle]
+                }
+                PrimitiveInstanceKind::LinearGradient { data_handle, .. } => {
+                    &resources.linear_grad_interner[data_handle]
+                }
+                PrimitiveInstanceKind::RadialGradient { data_handle, ..} => {
+                    &resources.radial_grad_interner[data_handle]
+                }
+                PrimitiveInstanceKind::TextRun { data_handle, .. } => {
+                    &resources.text_run_interner[data_handle]
+                }
+            };
+
             // Get the key for the cluster that this primitive should
             // belong to.
-            let prim_data = &prim_interner[prim_instance.prim_data_handle];
             let key = PrimitiveClusterKey {
                 spatial_node_index: prim_instance.spatial_node_index,
                 is_backface_visible: prim_data.is_backface_visible,
@@ -1306,7 +1340,18 @@ impl PrimitiveList {
             // a picture, include a minimal bounding rect in the cluster bounds.
             let cluster = &mut clusters[cluster_index];
             if !is_pic {
-                cluster.bounding_rect = cluster.bounding_rect.union(&prim_data.culling_rect);
+                let prim_rect = LayoutRect::new(
+                    prim_instance.prim_origin,
+                    prim_data.prim_size,
+                );
+                let clip_rect = prim_data
+                    .prim_relative_clip_rect
+                    .translate(&prim_instance.prim_origin.to_vector());
+                let culling_rect = clip_rect
+                    .intersection(&prim_rect)
+                    .unwrap_or(LayoutRect::zero());
+
+                cluster.bounding_rect = cluster.bounding_rect.union(&culling_rect);
             }
 
             // Define a range of clusters that this primitive belongs to. For now, this
@@ -1908,7 +1953,7 @@ impl PicturePrimitive {
         state: &mut PictureUpdateState,
         frame_context: &FrameBuildingContext,
         resource_cache: &mut ResourceCache,
-        prim_data_store: &PrimitiveDataStore,
+        resources: &FrameResources,
         pictures: &[PicturePrimitive],
         clip_store: &ClipStore,
         opacity_binding_store: &OpacityBindingStorage,
@@ -1926,7 +1971,7 @@ impl PicturePrimitive {
                     prim_instance,
                     surface_spatial_node_index,
                     &frame_context.clip_scroll_tree,
-                    prim_data_store,
+                    resources,
                     &clip_store.clip_chain_nodes,
                     pictures,
                     resource_cache,

@@ -8,7 +8,7 @@ extern crate quote;
 
 use darling::FromDeriveInput;
 
-#[derive(Default, FromMetaItem, PartialEq, Debug)]
+#[derive(Default, FromMeta, PartialEq, Debug)]
 #[darling(default)]
 struct Lorem {
     ipsum: bool,
@@ -21,7 +21,7 @@ struct Core {
     ident: syn::Ident,
     vis: syn::Visibility,
     generics: syn::Generics,
-    lorem: Lorem
+    lorem: Lorem,
 }
 
 #[derive(FromDeriveInput, PartialEq, Debug)]
@@ -34,37 +34,47 @@ struct TraitCore {
 
 #[test]
 fn simple() {
-    let di = syn::parse_str(r#"
+    let di = syn::parse_str(
+        r#"
         #[derive(Foo)]
         #[darling_demo(lorem(ipsum))]
         pub struct Bar;
-    "#).unwrap();
+    "#,
+    ).unwrap();
 
-    assert_eq!(Core::from_derive_input(&di).unwrap(), Core {
-        ident: syn::Ident::from("Bar"),
-        vis: parse_quote!(pub),
-        generics: Default::default(),
-        lorem: Lorem {
-            ipsum: true,
-            dolor: None,
+    assert_eq!(
+        Core::from_derive_input(&di).unwrap(),
+        Core {
+            ident: parse_quote!(Bar),
+            vis: parse_quote!(pub),
+            generics: Default::default(),
+            lorem: Lorem {
+                ipsum: true,
+                dolor: None,
+            },
         }
-    });
+    );
 }
 
 #[test]
 fn trait_type() {
-    let di = syn::parse_str(r#"
+    let di = syn::parse_str(
+        r#"
         #[derive(Foo)]
         #[darling_demo(lorem(dolor = "hello"))]
         pub struct Bar;
-    "#).unwrap();
+    "#,
+    ).unwrap();
 
-    assert_eq!(TraitCore::from_derive_input(&di).unwrap(), TraitCore {
-        ident: syn::Ident::from("Bar"),
-        generics: Default::default(),
-        lorem: Lorem {
-            ipsum: false,
-            dolor: Some("hello".to_owned()),
+    assert_eq!(
+        TraitCore::from_derive_input(&di).unwrap(),
+        TraitCore {
+            ident: parse_quote!(Bar),
+            generics: Default::default(),
+            lorem: Lorem {
+                ipsum: false,
+                dolor: Some("hello".to_owned()),
+            }
         }
-    });
+    );
 }

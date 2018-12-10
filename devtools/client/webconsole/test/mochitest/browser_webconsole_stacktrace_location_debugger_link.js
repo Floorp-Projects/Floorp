@@ -30,7 +30,9 @@ add_task(async function() {
 async function testOpenInDebugger(hud, toolbox, text) {
   info(`Testing message with text "${text}"`);
   const messageNode = await waitFor(() => findMessage(hud, text));
-  const frameNodes = messageNode.querySelectorAll(".frames .frame");
+  const framesNode = await waitFor(() => messageNode.querySelector(".frames"));
+
+  const frameNodes = framesNode.querySelectorAll(".frame");
   is(frameNodes.length, 3,
     "The message does have the expected number of frames in the stacktrace");
 

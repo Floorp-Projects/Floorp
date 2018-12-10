@@ -156,6 +156,10 @@ class ContentBlockingLog final {
   }
 
   bool HasBlockedAnyOfType(uint32_t aType) {
+    // Note: nothing inside this loop should return false, the goal for the
+    // loop is to scan the log to see if we find a matching entry, and if so
+    // we would return true, otherwise in the end of the function outside of
+    // the loop we take the common `return false;` statement.
     for (auto iter = mLog.Iter(); !iter.Done(); iter.Next()) {
       if (!iter.UserData()) {
         continue;
@@ -166,10 +170,10 @@ class ContentBlockingLog final {
           return true;
         }
       } else if (aType == nsIWebProgressListener::STATE_COOKIES_LOADED) {
-        if (Get<1>(*iter.UserData()).isSome()) {
-          return Get<1>(*iter.UserData()).value();
+        if (Get<1>(*iter.UserData()).isSome() &&
+            Get<1>(*iter.UserData()).value()) {
+          return true;
         }
-        return false;  // false means not blocked, aka not loaded any cookies
       } else {
         for (auto& item : Get<2>(*iter.UserData())) {
           if ((item.mType & aType) != 0) {
