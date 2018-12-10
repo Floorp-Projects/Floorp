@@ -48,7 +48,7 @@ class WrPrefRolloutWorkAroundTestCase(MarionetteTestCase):
         self.marionette.restart(clean=False, in_app=True)
         status, compositor = self.wr_status()
         print('self.wr_status()={},{}'.format(status, compositor))
-        self.assertEqual(status, 'blocked', 'WR rolled out on non-qualifying hardware should be blocked.')
+        self.assertEqual(status, 'opt-in', 'WR rolled out on non-qualifying hardware should not use WR.')
         self.assertTrue(compositor != 'webrender', 'WR rolled out on non-qualifying HW should not be used.')
 
         # Simulate a rollback of the rollout; set the pref to false at runtime.
