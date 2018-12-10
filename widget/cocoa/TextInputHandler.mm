@@ -4065,7 +4065,12 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
     // range as selection.
     if (aReplacementRange && aReplacementRange->location != NSNotFound &&
         !NSEqualRanges(SelectedRange(), *aReplacementRange)) {
-      NS_ENSURE_TRUE_VOID(SetSelection(*aReplacementRange));
+      // Set temporary selection range since OnSelectionChange is async.
+      mSelectedRange = *aReplacementRange;
+      if (NS_WARN_IF(!SetSelection(*aReplacementRange))) {
+        mSelectedRange.location = NSNotFound; // Marking dirty
+        return;
+      }
     }
 
     mMarkedRange.location = SelectedRange().location;
