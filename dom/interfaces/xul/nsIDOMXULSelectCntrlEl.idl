@@ -6,15 +6,17 @@
 #include "nsIDOMXULControlElement.idl"
 interface nsIDOMXULSelectControlItemElement;
 
+webidl Element;
+
 [scriptable, uuid(9bf188a7-d6f9-431b-b5c7-118013998e8b)]
 interface nsIDOMXULSelectControlElement : nsIDOMXULControlElement {
-  attribute nsIDOMXULSelectControlItemElement selectedItem;
+  attribute Element selectedItem;
   attribute long selectedIndex;
 
   attribute AString value;
 
   readonly attribute unsigned long itemCount;
   long getIndexOfItem(in nsIDOMXULSelectControlItemElement item);
-  nsIDOMXULSelectControlItemElement getItemAtIndex(in long index);
+  Element getItemAtIndex(in long index);
 };
 

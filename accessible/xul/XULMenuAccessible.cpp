@@ -74,8 +74,8 @@ uint64_t XULMenuitemAccessible::NativeState() const {
   if (isComboboxOption) {
     // Is selected?
     bool isSelected = false;
-    nsCOMPtr<nsIDOMXULSelectControlItemElement> item(
-        do_QueryInterface(mContent));
+    nsCOMPtr<nsIDOMXULSelectControlItemElement> item =
+        Elm()->AsXULSelectControlItem();
     NS_ENSURE_TRUE(item, state);
     item->GetSelected(&isSelected);
 
@@ -220,7 +220,7 @@ KeyBinding XULMenuitemAccessible::KeyboardShortcut() const {
 }
 
 role XULMenuitemAccessible::NativeRole() const {
-  nsCOMPtr<nsIDOMXULContainerElement> xulContainer(do_QueryInterface(mContent));
+  nsCOMPtr<nsIDOMXULContainerElement> xulContainer = Elm()->AsXULContainer();
   if (xulContainer) return roles::PARENT_MENUITEM;
 
   if (mParent && mParent->Role() == roles::COMBOBOX_LIST)
@@ -340,8 +340,16 @@ XULMenupopupAccessible::XULMenupopupAccessible(nsIContent* aContent,
   if (menuPopupFrame && menuPopupFrame->IsMenu()) mType = eMenuPopupType;
 
   // May be the anonymous <menupopup> inside <menulist> (a combobox)
-  mSelectControl = do_QueryInterface(mContent->GetFlattenedTreeParent());
-  if (!mSelectControl) mGenericTypes &= ~eSelect;
+  nsIContent* parent = mContent->GetFlattenedTreeParent();
+  nsCOMPtr<nsIDOMXULSelectControlElement> selectControl =
+      parent && parent->AsElement() ? parent->AsElement()->AsXULSelectControl()
+                                    : nullptr;
+  if (selectControl) {
+    mSelectControl = parent->AsElement();
+  } else {
+    mSelectControl = nullptr;
+    mGenericTypes &= ~eSelect;
+  }
 
   mStateFlags |= eNoXBLKids;
 }

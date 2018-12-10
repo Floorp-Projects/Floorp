@@ -123,8 +123,9 @@ nsresult nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
         break;
       }
       if (NS_VK_RETURN == keyEvent->mKeyCode) {
-        nsCOMPtr<nsIDOMXULButtonElement> buttonEl(do_QueryInterface(mContent));
-        if (buttonEl) {
+        RefPtr<nsIDOMXULButtonElement> button =
+            mContent->AsElement()->AsXULButton();
+        if (button) {
           MouseClicked(aEvent);
           *aEventStatus = nsEventStatus_eConsumeNoDefault;
         }

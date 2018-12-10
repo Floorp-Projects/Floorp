@@ -2,7 +2,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-
+<!-- globals XULMenuElement -->
 
 <bindings id="menuitemBindings"
    xmlns="http://www.mozilla.org/xbl"
@@ -21,9 +21,10 @@
         <getter>
           <![CDATA[
             var parent = this.parentNode;
-            if (parent &&
-                parent.parentNode instanceof Ci.nsIDOMXULSelectControlElement)
+            // Return the parent if it is a menu or menulist.
+            if (parent && parent.parentNode instanceof XULMenuElement) {
               return parent.parentNode;
+            }
             return null;
           ]]>
         </getter>
@@ -33,8 +34,9 @@
       <property name="parentContainer" readonly="true">
         <getter>
           for (var parent = this.parentNode; parent; parent = parent.parentNode) {
-            if (parent instanceof Ci.nsIDOMXULContainerElement)
+            if (parent instanceof XULMenuElement) {
               return parent;
+            }
           }
           return null;
         </getter>

@@ -162,10 +162,6 @@
 #include "nsIXULWindow.h"
 #include "nsITimedChannel.h"
 #include "nsServiceManagerUtils.h"
-#ifdef MOZ_XUL
-#include "nsIDOMXULControlElement.h"
-#include "nsMenuPopupFrame.h"
-#endif
 #include "mozilla/dom/CustomEvent.h"
 #include "nsIJARChannel.h"
 #include "nsIScreenManager.h"
