@@ -413,6 +413,11 @@ class nsHtml5StreamParser final : public nsICharsetDetectionObserver {
   NotNull<const Encoding*> mEncoding;
 
   /**
+   * The character encoding that is the base expectation for detection.
+   */
+  const Encoding* mFeedChardetIfEncoding;
+
+  /**
    * Whether reparse is forbidden
    */
   bool mReparseForbidden;
@@ -529,11 +534,6 @@ class nsHtml5StreamParser final : public nsICharsetDetectionObserver {
    * The chardet instance if chardet is enabled.
    */
   nsCOMPtr<nsICharsetDetector> mChardet;
-
-  /**
-   * If false, don't push data to chardet.
-   */
-  bool mFeedChardet;
 
   /**
    * Whether the initial charset source was kCharsetFromParentFrame
