@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-no-flush">
+<style>
+#target {
+  background-color: green;
+  width: 100px;
+  height: 100px;
+  transition: background-color 100s steps(1, end);
+  opacity: 0.5;
+}
+#target.hover {
+  background-color: white;
+}
+</style>
+<div id="target"></div>
+<script>
+document.addEventListener('MozReftestInvalidate', () => {
+  target.className = 'hover';
+  target.addEventListener('transitionstart', () => {
+    document.documentElement.classList.remove('reftest-wait');
+  });
+}, false);
+</script>
+</html>

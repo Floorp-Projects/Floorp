@@ -53,6 +53,10 @@ class GeckoViewTab extends GeckoViewModule {
       getBrowserForOuterWindowID: function(aID) {
         return this.browser;
       },
+
+      getBrowserForDocument: function(aDocument) {
+        return this.selectedBrowser;
+      },
     };
   }
 }
