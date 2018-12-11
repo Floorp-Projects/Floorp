@@ -312,14 +312,13 @@ class PromiseListHolder final {
       : mResultPromise(new ClientOpPromise::Private(__func__)),
         mOutstandingPromiseCount(0) {}
 
-  already_AddRefed<ClientOpPromise> GetResultPromise() {
+  RefPtr<ClientOpPromise> GetResultPromise() {
     RefPtr<PromiseListHolder> kungFuDeathGrip = this;
-    mResultPromise->Then(GetCurrentThreadSerialEventTarget(), __func__,
-                         [kungFuDeathGrip](const ClientOpResult& aResult) {},
-                         [kungFuDeathGrip](nsresult aResult) {});
-
-    RefPtr<ClientOpPromise> ref = mResultPromise;
-    return ref.forget();
+    return mResultPromise->Then(
+        GetCurrentThreadSerialEventTarget(), __func__,
+        [kungFuDeathGrip](const ClientOpPromise::ResolveOrRejectValue& aValue) {
+          return ClientOpPromise::CreateAndResolveOrReject(aValue, __func__);
+        });
   }
 
   void AddPromise(RefPtr<ClientOpPromise>&& aPromise) {

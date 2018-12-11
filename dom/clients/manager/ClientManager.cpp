@@ -166,7 +166,7 @@ already_AddRefed<ClientHandle> ClientManager::CreateHandleInternal(
   return handle.forget();
 }
 
-already_AddRefed<ClientOpPromise> ClientManager::StartOp(
+RefPtr<ClientOpPromise> ClientManager::StartOp(
     const ClientOpConstructorArgs& aArgs,
     nsISerialEventTarget* aSerialEventTarget) {
   RefPtr<ClientOpPromise::Private> promise =
@@ -188,8 +188,7 @@ already_AddRefed<ClientOpPromise> ClientManager::StartOp(
       },
       [promise] { promise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__); });
 
-  RefPtr<ClientOpPromise> ref = promise.get();
-  return ref.forget();
+  return promise.forget();
 }
 
 // static
