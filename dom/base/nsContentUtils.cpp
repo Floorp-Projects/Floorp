@@ -2553,6 +2553,56 @@ int32_t nsContentUtils::ComparePoints(nsINode* aParent1, int32_t aOffset1,
   return child1index < aOffset2 ? -1 : 1;
 }
 
+// static
+nsINode*
+nsContentUtils::GetCommonAncestorUnderInteractiveContent(nsINode* aNode1,
+                                                         nsINode* aNode2)
+{
+  if (!aNode1 || !aNode2) {
+    return nullptr;
+  }
+
+  if (aNode1 == aNode2) {
+    return aNode1;
+  }
+
+  // Build the chain of parents
+  AutoTArray<nsINode*, 30> parents1;
+  do {
+    parents1.AppendElement(aNode1);
+    if (aNode1->IsElement() &&
+        aNode1->AsElement()->IsInteractiveHTMLContent(true)) {
+      break;
+    }
+    aNode1 = aNode1->GetFlattenedTreeParentNode();
+  } while (aNode1);
+
+  AutoTArray<nsINode*, 30> parents2;
+  do {
+    parents2.AppendElement(aNode2);
+    if (aNode2->IsElement() &&
+        aNode2->AsElement()->IsInteractiveHTMLContent(true)) {
+      break;
+    }
+    aNode2 = aNode2->GetFlattenedTreeParentNode();
+  } while (aNode2);
+
+  // Find where the parent chain differs
+  uint32_t pos1 = parents1.Length();
+  uint32_t pos2 = parents2.Length();
+  nsINode* parent = nullptr;
+  for (uint32_t len = std::min(pos1, pos2); len > 0; --len) {
+    nsINode* child1 = parents1.ElementAt(--pos1);
+    nsINode* child2 = parents2.ElementAt(--pos2);
+    if (child1 != child2) {
+      break;
+    }
+    parent = child1;
+  }
+
+  return parent;
+}
+
 /* static */
 int32_t nsContentUtils::ComparePoints(const RawRangeBoundary& aFirst,
                                       const RawRangeBoundary& aSecond,
