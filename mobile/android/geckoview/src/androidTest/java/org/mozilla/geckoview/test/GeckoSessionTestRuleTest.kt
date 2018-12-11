@@ -1526,6 +1526,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
     @WithDevToolsAPI
     @Test fun waitForChromeJS() {
+        assumeThat(sessionRule.env.isDebugBuild, equalTo(false))
         sessionRule.session.reload()
         sessionRule.session.waitForPageStop()
 
