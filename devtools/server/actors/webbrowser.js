@@ -313,7 +313,8 @@ BrowserTabList.prototype._getActorForBrowser = function(browser, browserActorOpt
   return actor.connect();
 };
 
-BrowserTabList.prototype.getTab = function({ outerWindowID, tabId }) {
+BrowserTabList.prototype.getTab = function({ outerWindowID, tabId },
+                                           browserActorOptions) {
   if (typeof outerWindowID == "number") {
     // First look for in-process frames with this ID
     const window = Services.wm.getOuterWindowWithId(outerWindowID);
@@ -327,14 +328,14 @@ BrowserTabList.prototype.getTab = function({ outerWindowID, tabId }) {
     if (window) {
       const iframe = window.windowUtils.containerElement;
       if (iframe) {
-        return this._getActorForBrowser(iframe);
+        return this._getActorForBrowser(iframe, browserActorOptions);
       }
     }
     // Then also look on registered <xul:browsers> when using outerWindowID for
     // OOP tabs
     for (const browser of this._getBrowsers()) {
       if (browser.outerWindowID == outerWindowID) {
-        return this._getActorForBrowser(browser);
+        return this._getActorForBrowser(browser, browserActorOptions);
       }
     }
     return Promise.reject({
@@ -347,7 +348,7 @@ BrowserTabList.prototype.getTab = function({ outerWindowID, tabId }) {
       if (browser.frameLoader &&
           browser.frameLoader.tabParent &&
           browser.frameLoader.tabParent.tabId === tabId) {
-        return this._getActorForBrowser(browser);
+        return this._getActorForBrowser(browser, browserActorOptions);
       }
     }
     return Promise.reject({
@@ -360,7 +361,7 @@ BrowserTabList.prototype.getTab = function({ outerWindowID, tabId }) {
     DebuggerServer.chromeWindowType);
   if (topXULWindow) {
     const selectedBrowser = this._getSelectedBrowser(topXULWindow);
-    return this._getActorForBrowser(selectedBrowser);
+    return this._getActorForBrowser(selectedBrowser, browserActorOptions);
   }
   return Promise.reject({
     error: "noTab",
