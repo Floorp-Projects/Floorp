@@ -154,7 +154,8 @@ public final class GeckoProfile {
             }
         }
 
-        if (profileName == null && profilePath == null) {
+        if (TextUtils.isEmpty(profileName) && profilePath == null) {
+            informIfCustomProfileIsUnavailable(profileName, false);
             // Get the default profile for the Activity.
             return getDefaultProfile(context);
         }
@@ -212,14 +213,20 @@ public final class GeckoProfile {
         //     No     |    Yes    | Profile with specified name at default dir.
         //     Yes    |    No     | Custom (anonymous) profile with specified dir.
         //     No     |    No     | Profile with specified name at specified dir.
+        //
+        // Empty name?| Null dir? | Returned profile
+        // ------------------------------------------
+        //     Yes    |    Yes    | Active profile or default profile
 
-        if (profileName == null && profileDir == null) {
+        if (TextUtils.isEmpty(profileName) && profileDir == null) {
             // If no profile info was passed in, look for the active profile or a default profile.
             final GeckoProfile profile = GeckoThread.getActiveProfile();
             if (profile != null) {
+                informIfCustomProfileIsUnavailable(profileName, true);
                 return profile;
             }
 
+            informIfCustomProfileIsUnavailable(profileName, false);
             return GeckoProfile.initFromArgs(context, sIntentArgs);
         } else if (profileName == null) {
             // If only profile dir was passed in, use custom (anonymous) profile.
@@ -273,6 +280,28 @@ public final class GeckoProfile {
         return profile;
     }
 
+    /**
+     * Custom profiles are an edge use case (must be passed in via Intent arguments)<br>
+     * Will inform users if the received arguments are invalid and the app fallbacks to use
+     * the currently active or the default Gecko profile.<br>
+     * Only to be called if other conditions than the profile name are already checked.
+     *
+     * @see <a href="http://google.com">Reasoning behind custom profiles</a>
+     *
+     * @param profileName intended profile name. Will be checked against {{@link #CUSTOM_PROFILE}}
+     *                    to decide if we should inform or not about using the fallback profile.
+     * @param activeOrDefaultProfileFallback true - will fallback to use the currently active Gecko profile
+     *                                       false - will fallback to use the default Gecko profile
+     */
+    private static void informIfCustomProfileIsUnavailable(
+            final String profileName, final boolean activeOrDefaultProfileFallback) {
+        if (CUSTOM_PROFILE.equals(profileName)) {
+            final String fallbackProfileName = activeOrDefaultProfileFallback ? "active" : "default";
+            Log.w(LOGTAG, String.format("Custom profile must have a directory specified! " +
+                    "Reverting to use the %s profile", fallbackProfileName));
+        }
+    }
+
     // Currently unused outside of testing.
     @RobocopTarget
     public static boolean removeProfile(final Context context, final GeckoProfile profile) {
@@ -313,8 +342,6 @@ public final class GeckoProfile {
     private GeckoProfile(Context context, String profileName, File profileDir) throws NoMozillaDirectoryException {
         if (profileName == null) {
             throw new IllegalArgumentException("Unable to create GeckoProfile for empty profile name.");
-        } else if (CUSTOM_PROFILE.equals(profileName) && profileDir == null) {
-            throw new IllegalArgumentException("Custom profile must have a directory");
         }
 
         mName = profileName;
