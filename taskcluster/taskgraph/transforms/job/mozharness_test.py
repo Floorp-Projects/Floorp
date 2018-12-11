@@ -140,7 +140,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
     # If we have a source checkout, run mozharness from it instead of
     # downloading a zip file with the same content.
     if test['checkout']:
-        command.extend(['--firefox-checkout', '{workdir}/checkouts/gecko'.format(**run)])
+        command.extend(['--gecko-checkout', '{workdir}/checkouts/gecko'.format(**run)])
         env['MOZHARNESS_PATH'] = '{workdir}/checkouts/gecko/testing/mozharness'.format(**run)
     else:
         env['MOZHARNESS_URL'] = {'task-reference': mozharness_url}

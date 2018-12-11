@@ -1924,10 +1924,10 @@ def check_run_task_caches(config, tasks):
                 if arg == '--':
                     break
 
-                if arg.startswith('--firefox-sparse-profile'):
+                if arg.startswith('--gecko-sparse-profile'):
                     if '=' not in arg:
                         raise Exception(
-                            '{} is specifying `--firefox-sparse-profile` to run-task '
+                            '{} is specifying `--gecko-sparse-profile` to run-task '
                             'as two arguments. Unable to determine if the sparse '
                             'profile exists.'.format(
                                 task['label']))
