@@ -64,6 +64,8 @@ linux64-nightly/opt:
         - awsy
         - raptor-chrome
         - raptor-fetch-chrome
+        - raptor-profiling
+        - raptor-fetch-profiling
 linux64-devedition/opt:
     build-platform: linux64-devedition-nightly/opt
     test-sets:
@@ -221,6 +223,7 @@ windows10-64-nightly/opt:
         - marionette-gpu-tests
         - windows-tests
         - raptor-chrome
+        - raptor-profiling
 
 windows10-64-devedition/opt:
     build-platform: win64-devedition-nightly/opt
@@ -271,6 +274,7 @@ macosx64-nightly/opt:
         - macosx64-tests
         - awsy
         - raptor-chrome
+        - raptor-profiling
 
 macosx64-devedition/opt:
     build-platform: macosx64-devedition-nightly/opt
