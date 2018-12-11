@@ -387,24 +387,10 @@ def configure_volume_posix(volume, user, group, running_as_root):
 
 
 def vcs_checkout(source_repo, dest, store_path,
-                 base_repo=None, revision=None, branch=None,
+                 base_repo=None, revision=None,
                  fetch_hgfingerprint=False, sparse_profile=None):
-    # Specify method to checkout a revision. This defaults to revisions as
-    # SHA-1 strings, but also supports symbolic revisions like `tip` via the
-    # branch flag.
-    if revision:
-        revision_flag = '--revision'
-        revision_value = revision
-    elif branch:
-        revision_flag = '--branch'
-        revision_value = branch
-    else:
-        print('revision is not specified for checkout')
-        sys.exit(1)
-
     if not revision:
-        print('symbolic revisions (%s) to specific checkout revision are not'
-              'allowed; specify a full revision hash instead' % branch)
+        print('full revision hash for checkouts must be specified')
         sys.exit(1)
 
     if IS_POSIX:
@@ -455,7 +441,7 @@ def vcs_checkout(source_repo, dest, store_path,
 
     dest = os.path.abspath(dest)
     args.extend([
-        revision_flag, revision_value,
+        '--revision', revision,
         source_repo, dest,
     ])
 
@@ -525,7 +511,6 @@ def collect_vcs_options(args, project):
     base_repo = os.environ.get('%s_BASE_REPOSITORY' % env_prefix)
     head_repo = os.environ.get('%s_HEAD_REPOSITORY' % env_prefix)
     revision = os.environ.get('%s_HEAD_REV' % env_prefix)
-    branch = os.environ.get('%s_HEAD_REF' % env_prefix)
 
     store_path = os.environ['HG_STORE_PATH']
 
@@ -548,7 +533,6 @@ def collect_vcs_options(args, project):
         'base-repo': base_repo,
         'head-repo': head_repo,
         'revision': revision,
-        'branch': branch,
     }
 
 
@@ -565,7 +549,6 @@ def vcs_checkout_from_args(args, project):
         base_repo=options['base-repo'],
         revision=options['revision'],
         fetch_hgfingerprint=args.fetch_hgfingerprint,
-        branch=options['branch'],
         sparse_profile=options['sparse-profile'])
 
 
