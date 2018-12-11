@@ -1348,6 +1348,7 @@ public class GeckoSession implements Parcelable {
         return mAccessibility;
     }
 
+    @Retention(RetentionPolicy.SOURCE)
     @IntDef(flag = true,
             value = { LOAD_FLAGS_NONE, LOAD_FLAGS_BYPASS_CACHE, LOAD_FLAGS_BYPASS_PROXY,
                       LOAD_FLAGS_EXTERNAL, LOAD_FLAGS_ALLOW_POPUPS })
@@ -2369,6 +2370,7 @@ public class GeckoSession implements Parcelable {
          * Class representing security information for a site.
          */
         public class SecurityInformation {
+            @Retention(RetentionPolicy.SOURCE)
             @IntDef({SECURITY_MODE_UNKNOWN, SECURITY_MODE_IDENTIFIED,
                      SECURITY_MODE_VERIFIED})
             /* package */ @interface SecurityMode {}
@@ -2376,6 +2378,7 @@ public class GeckoSession implements Parcelable {
             public static final int SECURITY_MODE_IDENTIFIED = 1;
             public static final int SECURITY_MODE_VERIFIED = 2;
 
+            @Retention(RetentionPolicy.SOURCE)
             @IntDef({CONTENT_UNKNOWN, CONTENT_BLOCKED, CONTENT_LOADED})
             /* package */ @interface ContentType {}
             public static final int CONTENT_UNKNOWN = 0;
@@ -2585,6 +2588,7 @@ public class GeckoSession implements Parcelable {
          * Element details for onContextMenu callbacks.
          */
         public static class ContextElement {
+            @Retention(RetentionPolicy.SOURCE)
             @IntDef({TYPE_NONE, TYPE_IMAGE, TYPE_VIDEO, TYPE_AUDIO})
             /* package */ @interface Type {}
             public static final int TYPE_NONE = 0;
@@ -2688,6 +2692,7 @@ public class GeckoSession implements Parcelable {
     }
 
     public interface SelectionActionDelegate {
+        @Retention(RetentionPolicy.SOURCE)
         @IntDef(flag = true, value = {FLAG_IS_COLLAPSED,
                                       FLAG_IS_EDITABLE})
         /* package */ @interface Flag {}
@@ -2706,6 +2711,7 @@ public class GeckoSession implements Parcelable {
          */
         final int FLAG_IS_PASSWORD = 4;
 
+        @Retention(RetentionPolicy.SOURCE)
         @StringDef({ACTION_HIDE,
                     ACTION_CUT,
                     ACTION_COPY,
@@ -2837,6 +2843,7 @@ public class GeckoSession implements Parcelable {
         void onShowActionRequest(GeckoSession session, Selection selection,
                                  @Action String[] actions, GeckoResponse<String> response);
 
+        @Retention(RetentionPolicy.SOURCE)
         @IntDef({HIDE_REASON_NO_SELECTION,
                  HIDE_REASON_INVISIBLE_SELECTION,
                  HIDE_REASON_ACTIVE_SELECTION,
@@ -2899,6 +2906,7 @@ public class GeckoSession implements Parcelable {
         */
         void onCanGoForward(GeckoSession session, boolean canGoForward);
 
+        @Retention(RetentionPolicy.SOURCE)
         @IntDef({TARGET_WINDOW_NONE, TARGET_WINDOW_CURRENT, TARGET_WINDOW_NEW})
         /* package */ @interface TargetWindow {}
         public static final int TARGET_WINDOW_NONE = 0;
@@ -3153,6 +3161,7 @@ public class GeckoSession implements Parcelable {
         }
 
         class AuthOptions {
+            @Retention(RetentionPolicy.SOURCE)
             @IntDef(flag = true,
                     value = {AUTH_FLAG_HOST, AUTH_FLAG_PROXY,
                              AUTH_FLAG_ONLY_PASSWORD, AUTH_FLAG_PREVIOUS_FAILED,
@@ -3180,6 +3189,7 @@ public class GeckoSession implements Parcelable {
              */
             public static final int AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE = 32;
 
+            @Retention(RetentionPolicy.SOURCE)
             @IntDef({AUTH_LEVEL_NONE, AUTH_LEVEL_PW_ENCRYPTED, AUTH_LEVEL_SECURE})
             /* package */ @interface AuthLevel {}
 
@@ -3254,6 +3264,7 @@ public class GeckoSession implements Parcelable {
                            AuthOptions options, AuthCallback callback);
 
         class Choice {
+            @Retention(RetentionPolicy.SOURCE)
             @IntDef({CHOICE_TYPE_MENU, CHOICE_TYPE_SINGLE, CHOICE_TYPE_MULTIPLE})
             /* package */ @interface ChoiceType {}
 
@@ -3410,6 +3421,7 @@ public class GeckoSession implements Parcelable {
         void onColorPrompt(GeckoSession session, String title, String value,
                             TextCallback callback);
 
+        @Retention(RetentionPolicy.SOURCE)
         @IntDef({DATETIME_TYPE_DATE, DATETIME_TYPE_MONTH, DATETIME_TYPE_WEEK,
                  DATETIME_TYPE_TIME, DATETIME_TYPE_DATETIME_LOCAL})
         /* package */ @interface DatetimeType {}
@@ -3478,6 +3490,7 @@ public class GeckoSession implements Parcelable {
             void confirm(Context context, Uri[] uris);
         }
 
+        @Retention(RetentionPolicy.SOURCE)
         @IntDef({FILE_TYPE_SINGLE, FILE_TYPE_MULTIPLE})
         /* package */ @interface FileType {}
         static final int FILE_TYPE_SINGLE = 1;
@@ -3751,6 +3764,7 @@ public class GeckoSession implements Parcelable {
      * permission dialog.
      **/
     public interface PermissionDelegate {
+        @Retention(RetentionPolicy.SOURCE)
         @IntDef({PERMISSION_GEOLOCATION, PERMISSION_DESKTOP_NOTIFICATION, PERMISSION_AUTOPLAY_MEDIA})
         /* package */ @interface Permission {}
 
@@ -3817,6 +3831,7 @@ public class GeckoSession implements Parcelable {
                                         @Permission int type, Callback callback);
 
         class MediaSource {
+            @Retention(RetentionPolicy.SOURCE)
             @IntDef({SOURCE_CAMERA, SOURCE_SCREEN, SOURCE_APPLICATION,
                      SOURCE_WINDOW, SOURCE_BROWSER, SOURCE_MICROPHONE,
                      SOURCE_AUDIOCAPTURE, SOURCE_OTHER})
@@ -3862,6 +3877,7 @@ public class GeckoSession implements Parcelable {
              */
             public static final int SOURCE_OTHER = 7;
 
+            @Retention(RetentionPolicy.SOURCE)
             @IntDef({TYPE_VIDEO, TYPE_AUDIO})
             /* package */ @interface Type {}
 
