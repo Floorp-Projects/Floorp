@@ -21,7 +21,7 @@ use prim_store::gradient::{
     RadialGradient, RadialGradientDataInterner, RadialGradientDataUpdateList
 };
 use prim_store::text_run::{TextRunDataInterner, TextRun, TextRunDataUpdateList};
-use resource_cache::FontInstanceMap;
+use resource_cache::{BlobImageRasterizerEpoch, FontInstanceMap};
 use render_backend::DocumentView;
 use renderer::{PipelineInfo, SceneBuilderHooks};
 use scene::Scene;
@@ -48,7 +48,7 @@ pub struct Transaction {
     pub epoch_updates: Vec<(PipelineId, Epoch)>,
     pub request_scene_build: Option<SceneRequest>,
     pub blob_requests: Vec<BlobImageParams>,
-    pub blob_rasterizer: Option<Box<AsyncBlobImageRasterizer>>,
+    pub blob_rasterizer: Option<(Box<AsyncBlobImageRasterizer>, BlobImageRasterizerEpoch)>,
     pub rasterized_blobs: Vec<(BlobImageRequest, BlobImageResult)>,
     pub resource_updates: Vec<ResourceUpdate>,
     pub frame_ops: Vec<FrameMsg>,
@@ -72,6 +72,13 @@ impl Transaction {
         !self.display_list_updates.is_empty() ||
             self.set_root_pipeline.is_some()
     }
+
+    fn rasterize_blobs(&mut self, is_low_priority: bool) {
+        if let Some((ref mut rasterizer, _)) = self.blob_rasterizer {
+            let rasterized_blobs = rasterizer.rasterize(&self.blob_requests, is_low_priority);
+            self.rasterized_blobs.extend(rasterized_blobs);
+        }
+    }
 }
 
 /// Represent the remaining work associated to a transaction after the scene building
@@ -81,7 +88,7 @@ pub struct BuiltTransaction {
     pub built_scene: Option<BuiltScene>,
     pub resource_updates: Vec<ResourceUpdate>,
     pub rasterized_blobs: Vec<(BlobImageRequest, BlobImageResult)>,
-    pub blob_rasterizer: Option<Box<AsyncBlobImageRasterizer>>,
+    pub blob_rasterizer: Option<(Box<AsyncBlobImageRasterizer>, BlobImageRasterizerEpoch)>,
     pub frame_ops: Vec<FrameMsg>,
     pub removed_pipelines: Vec<PipelineId>,
     pub notifications: Vec<NotificationRequest>,
@@ -543,12 +550,7 @@ impl SceneBuilder {
         }
 
         let is_low_priority = false;
-        let blob_requests = replace(&mut txn.blob_requests, Vec::new());
-        let mut rasterized_blobs = txn.blob_rasterizer.as_mut().map_or(
-            Vec::new(),
-            |rasterizer| rasterizer.rasterize(&blob_requests, is_low_priority),
-        );
-        rasterized_blobs.append(&mut txn.rasterized_blobs);
+        txn.rasterize_blobs(is_low_priority);
 
         drain_filter(
             &mut txn.notifications,
@@ -565,7 +567,7 @@ impl SceneBuilder {
             render_frame: txn.render_frame,
             invalidate_rendered_frame: txn.invalidate_rendered_frame,
             built_scene,
-            rasterized_blobs,
+            rasterized_blobs: replace(&mut txn.rasterized_blobs, Vec::new()),
             resource_updates: replace(&mut txn.resource_updates, Vec::new()),
             blob_rasterizer: replace(&mut txn.blob_rasterizer, None),
             frame_ops: replace(&mut txn.frame_ops, Vec::new()),
@@ -670,13 +672,8 @@ impl LowPrioritySceneBuilder {
     }
 
     fn process_transaction(&mut self, mut txn: Box<Transaction>) -> Box<Transaction> {
-        let blob_requests = replace(&mut txn.blob_requests, Vec::new());
         let is_low_priority = true;
-        let mut more_rasterized_blobs = txn.blob_rasterizer.as_mut().map_or(
-            Vec::new(),
-            |rasterizer| rasterizer.rasterize(&blob_requests, is_low_priority),
-        );
-        txn.rasterized_blobs.append(&mut more_rasterized_blobs);
+        txn.rasterize_blobs(is_low_priority);
 
         if self.simulate_slow_ms > 0 {
             thread::sleep(Duration::from_millis(self.simulate_slow_ms as u64));
