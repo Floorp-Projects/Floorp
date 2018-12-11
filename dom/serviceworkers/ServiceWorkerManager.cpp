@@ -357,16 +357,17 @@ RefPtr<GenericPromise> ServiceWorkerManager::StartControllingClient(
 
     // Always check to see if we failed to actually control the client.  In
     // that case removed the client from our list of controlled clients.
-    promise->Then(SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
-                  [](bool) {
-                    // do nothing on success
-                  },
-                  [self, aClientInfo](nsresult aRv) {
-                    // failed to control, forget about this client
-                    self->StopControllingClient(aClientInfo);
-                  });
-
-    return promise;
+    return promise->Then(
+        SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
+        [](bool) {
+          // do nothing on success
+          return GenericPromise::CreateAndResolve(true, __func__);
+        },
+        [self, aClientInfo](nsresult aRv) {
+          // failed to control, forget about this client
+          self->StopControllingClient(aClientInfo);
+          return GenericPromise::CreateAndReject(aRv, __func__);
+        });
   }
 
   RefPtr<ClientHandle> clientHandle = ClientManager::CreateHandle(
@@ -392,16 +393,17 @@ RefPtr<GenericPromise> ServiceWorkerManager::StartControllingClient(
 
   // Always check to see if we failed to actually control the client.  In
   // that case removed the client from our list of controlled clients.
-  promise->Then(SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
-                [](bool) {
-                  // do nothing on success
-                },
-                [self, aClientInfo](nsresult aRv) {
-                  // failed to control, forget about this client
-                  self->StopControllingClient(aClientInfo);
-                });
-
-  return promise.forget();
+  return promise->Then(
+      SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
+      [](bool) {
+        // do nothing on success
+        return GenericPromise::CreateAndResolve(true, __func__);
+      },
+      [self, aClientInfo](nsresult aRv) {
+        // failed to control, forget about this client
+        self->StopControllingClient(aClientInfo);
+        return GenericPromise::CreateAndReject(aRv, __func__);
+      });
 }
 
 void ServiceWorkerManager::StopControllingClient(
