@@ -342,7 +342,7 @@ RootActor.prototype = {
 
     let targetActor;
     try {
-      targetActor = await tabList.getTab(options);
+      targetActor = await tabList.getTab(options, { forceUnzombify: true });
     } catch (error) {
       if (error.error) {
         // Pipe expected errors as-is to the client
