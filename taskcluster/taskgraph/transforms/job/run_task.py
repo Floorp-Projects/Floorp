@@ -46,10 +46,10 @@ def common_setup(config, job, taskdesc, command, geckodir):
     if run['checkout']:
         support_vcs_checkout(config, job, taskdesc,
                              sparse=bool(run['sparse-profile']))
-        command.append('--firefox-checkout={}'.format(geckodir))
+        command.append('--gecko-checkout={}'.format(geckodir))
 
     if run['sparse-profile']:
-        command.append('--firefox-sparse-profile=build/sparse-profiles/%s' %
+        command.append('--firefox-gecko-profile=build/sparse-profiles/%s' %
                        run['sparse-profile'])
 
     taskdesc['worker'].setdefault('env', {})['MOZ_SCM_LEVEL'] = config.params['level']
