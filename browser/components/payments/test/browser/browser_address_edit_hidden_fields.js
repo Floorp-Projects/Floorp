@@ -41,7 +41,7 @@ add_task(async function test_hiddenFieldNotSaved() {
 
     let shippingAddressChangePromise = ContentTask.spawn(browser, {
       eventName: "shippingaddresschange",
-    }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
+    }, PTU.ContentTasks.awaitPaymentEventPromise);
 
     let options = {
       addLinkSelector: "address-picker.shipping-related .add-link",
@@ -108,7 +108,7 @@ add_task(async function test_hiddenFieldRemovedWhenCountryChanged() {
 
     let shippingAddressChangePromise = ContentTask.spawn(browser, {
       eventName: "shippingaddresschange",
-    }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
+    }, PTU.ContentTasks.awaitPaymentEventPromise);
 
     await spawnPaymentDialogTask(frame, async (args) => {
       let {

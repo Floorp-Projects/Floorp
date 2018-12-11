@@ -200,6 +200,10 @@ var paymentRequest = {
     this.sendMessageToChrome("changeShippingOption", data);
   },
 
+  changePayerAddress(data) {
+    this.sendMessageToChrome("changePayerAddress", data);
+  },
+
   /**
    * Add/update an autofill storage record.
    *
