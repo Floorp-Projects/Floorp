@@ -649,10 +649,6 @@ class Safari(Browser):
         return m.group(1)
 
 
-class SafariWebDriver(Safari):
-    product = "safari_webdriver"
-
-
 class Servo(Browser):
     """Servo-specific interface."""
 
