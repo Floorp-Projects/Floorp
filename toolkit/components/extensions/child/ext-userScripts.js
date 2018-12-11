@@ -7,6 +7,7 @@ var USERSCRIPT_DISABLED_ERRORMSG = `userScripts APIs are currently experimental 
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "userScriptsEnabled", USERSCRIPT_PREFNAME, false);
 
+// eslint-disable-next-line mozilla/reject-importGlobalProperties
 Cu.importGlobalProperties(["crypto", "TextEncoder"]);
 
 var {
