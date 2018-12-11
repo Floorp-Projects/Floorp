@@ -874,11 +874,11 @@ function threadClientTest(test, options = {}) {
 
     // Attach to the fake tab target and retrieve the ThreadClient instance.
     // Automatically resume as the thread is paused by default after attach.
-    const [, , threadClient] =
+    const [, targetFront, threadClient] =
       await attachTestTabAndResume(client, scriptName);
 
     // Run the test function
-    await test({ threadClient, debuggee, client });
+    await test({ threadClient, debuggee, client, targetFront });
 
     // Cleanup the client after the test ran
     await client.close();
