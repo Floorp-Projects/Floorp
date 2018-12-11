@@ -72,7 +72,6 @@ const prefs = {
       // We use the same pref to enable the sidebar on webconsole and browser console.
       SIDEBAR_TOGGLE: "devtools.webconsole.sidebarToggle",
       JSTERM_CODE_MIRROR: "devtools.webconsole.jsterm.codeMirror",
-      JSTERM_REVERSE_SEARCH: "devtools.webconsole.jsterm.reverse-search",
     },
   },
 };

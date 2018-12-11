@@ -15,6 +15,8 @@ if (typeof Components != "undefined") {
 
   var SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
 
+  /* eslint-disable no-unused-vars */
+
   // At this stage, we need to import all sources at once to avoid
   // a unique failure on tbpl + talos that seems caused by a
   // what looks like a nested event loop bug (see bug 794091).
@@ -31,6 +33,8 @@ if (typeof Components != "undefined") {
       "resource://gre/modules/osfile/osfile_unix_front.jsm"
     );
   }
+
+  /* eslint-enable no-unused-vars */
 
   OS.Path = require("resource://gre/modules/osfile/ospath.jsm");
 }

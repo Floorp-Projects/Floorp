@@ -46,7 +46,6 @@ class App extends Component {
       serviceContainer: PropTypes.object.isRequired,
       closeSplitConsole: PropTypes.func.isRequired,
       jstermCodeMirror: PropTypes.bool,
-      jstermReverseSearch: PropTypes.bool,
       currentReverseSearchEntry: PropTypes.string,
       reverseSearchInputVisible: PropTypes.bool,
     };
@@ -63,14 +62,11 @@ class App extends Component {
   onKeyDown(event) {
     const {
       dispatch,
-      jstermReverseSearch,
     } = this.props;
 
     if (
-      jstermReverseSearch && (
-        (!isMacOS && event.key === "F9") ||
-        (isMacOS && event.key === "r" && event.ctrlKey === true)
-      )
+      (!isMacOS && event.key === "F9") ||
+      (isMacOS && event.key === "r" && event.ctrlKey === true)
     ) {
       dispatch(actions.reverseSearchInputToggle());
       event.stopPropagation();
@@ -199,7 +195,6 @@ class App extends Component {
       serviceContainer,
       closeSplitConsole,
       jstermCodeMirror,
-      jstermReverseSearch,
     } = this.props;
 
     const classNames = ["webconsole-output-wrapper"];
@@ -245,11 +240,9 @@ class App extends Component {
             onPaste: this.onPaste,
             codeMirrorEnabled: jstermCodeMirror,
           }),
-          jstermReverseSearch
-            ? ReverseSearchInput({
-              hud,
-            })
-            : null
+          ReverseSearchInput({
+            hud,
+          })
         ),
         SideBar({
           serviceContainer,
