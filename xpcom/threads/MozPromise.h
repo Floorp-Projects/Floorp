@@ -805,9 +805,9 @@ class MozPromise : public MozPromiseBase {
                    mMagic3 == sMagic && mMagic4 == &mMutex);
     RefPtr<ThenValueBase> thenValue = aThenValue;
     MutexAutoLock lock(mMutex);
-    // MOZ_DIAGNOSTIC_ASSERT(
-    //     !IsExclusive || !mHaveRequest,
-    //     "Using an exclusive promise in a non-exclusive fashion");
+    MOZ_DIAGNOSTIC_ASSERT(
+        !IsExclusive || !mHaveRequest,
+        "Using an exclusive promise in a non-exclusive fashion");
     mHaveRequest = true;
     PROMISE_LOG("%s invoking Then() [this=%p, aThenValue=%p, isPending=%d]",
                 aCallSite, this, thenValue.get(), (int)IsPending());
@@ -918,9 +918,9 @@ class MozPromise : public MozPromiseBase {
   void ChainTo(already_AddRefed<Private> aChainedPromise,
                const char* aCallSite) {
     MutexAutoLock lock(mMutex);
-    // MOZ_DIAGNOSTIC_ASSERT(
-    //     !IsExclusive || !mHaveRequest,
-    //     "Using an exclusive promise in a non-exclusive fashion");
+    MOZ_DIAGNOSTIC_ASSERT(
+        !IsExclusive || !mHaveRequest,
+        "Using an exclusive promise in a non-exclusive fashion");
     mHaveRequest = true;
     RefPtr<Private> chainedPromise = aChainedPromise;
     PROMISE_LOG(
