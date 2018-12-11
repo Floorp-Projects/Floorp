@@ -175,7 +175,7 @@ function clearCurrentNodeSelection(inspector) {
  * @param {string} url  The URL to open.
  * @param {String} hostType Optional hostType, as defined in Toolbox.HostType
  * @return A promise that is resolved once the tab and inspector have loaded
- *         with an object: { tab, toolbox, inspector }.
+ *         with an object: { tab, toolbox, inspector }.
  */
 var openInspectorForURL = async function(url, hostType) {
   const tab = await addTab(url);
