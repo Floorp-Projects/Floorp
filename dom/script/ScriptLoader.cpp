@@ -340,7 +340,7 @@ void ScriptLoader::SetModuleFetchFinishedAndResumeWaitingRequests(
        "%u)",
        aRequest, aRequest->mModuleScript.get(), unsigned(aResult)));
 
-  RefPtr<GenericPromise::Private> promise;
+  RefPtr<GenericNonExclusivePromise::Private> promise;
   MOZ_ALWAYS_TRUE(
       mFetchingModules.Remove(aRequest->mURI, getter_AddRefs(promise)));
 
@@ -360,12 +360,13 @@ void ScriptLoader::SetModuleFetchFinishedAndResumeWaitingRequests(
   }
 }
 
-RefPtr<GenericPromise> ScriptLoader::WaitForModuleFetch(nsIURI* aURL) {
+RefPtr<GenericNonExclusivePromise> ScriptLoader::WaitForModuleFetch(
+    nsIURI* aURL) {
   MOZ_ASSERT(ModuleMapContainsURL(aURL));
 
   if (auto entry = mFetchingModules.Lookup(aURL)) {
     if (!entry.Data()) {
-      entry.Data() = new GenericPromise::Private(__func__);
+      entry.Data() = new GenericNonExclusivePromise::Private(__func__);
     }
     return entry.Data();
   }
@@ -373,10 +374,11 @@ RefPtr<GenericPromise> ScriptLoader::WaitForModuleFetch(nsIURI* aURL) {
   RefPtr<ModuleScript> ms;
   MOZ_ALWAYS_TRUE(mFetchedModules.Get(aURL, getter_AddRefs(ms)));
   if (!ms) {
-    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+    return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                       __func__);
   }
 
-  return GenericPromise::CreateAndResolve(true, __func__);
+  return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
 }
 
 ModuleScript* ScriptLoader::GetFetchedModule(nsIURI* aURL) const {
