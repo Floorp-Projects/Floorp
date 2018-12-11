@@ -14,6 +14,7 @@ var EXPORTED_SYMBOLS = ["UrlbarUtils"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  BinarySearch: "resource://gre/modules/BinarySearch.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
@@ -189,5 +190,38 @@ var UrlbarUtils = {
     mimeStream.addHeader("Content-Type", type);
     mimeStream.setData(dataStream);
     return mimeStream.QueryInterface(Ci.nsIInputStream);
+  },
+
+  /**
+   * Returns a list of all the token substring matches in a string.  Each match
+   * in the list is a tuple: [matchIndex, matchLength].  matchIndex is the index
+   * in the string of the match, and matchLength is the length of the match.
+   *
+   * @param {array} tokens The tokens to search for.
+   * @param {string} str The string to match against.
+   * @returns {array} An array: [
+   *            [matchIndex_0, matchLength_0],
+   *            [matchIndex_1, matchLength_1],
+   *            ...
+   *            [matchIndex_n, matchLength_n]
+   *          ].
+   *          The array is sorted by match indexes ascending.
+   */
+  getTokenMatches(tokens, str) {
+    return tokens.reduce((matches, token) => {
+      let index = 0;
+      while (index >= 0) {
+        index = str.indexOf(token.value, index);
+        if (index >= 0) {
+          let match = [index, token.value.length];
+          let matchesIndex = BinarySearch.insertionIndexOf((a, b) => {
+            return a[0] - b[0];
+          }, matches, match);
+          matches.splice(matchesIndex, 0, match);
+          index += token.value.length;
+        }
+      }
+      return matches;
+    }, []);
   },
 };
