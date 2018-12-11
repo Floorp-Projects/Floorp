@@ -35,10 +35,6 @@ ADD topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /setup/install-mer
 # %include taskcluster/docker/recipes/install-node.sh
 ADD topsrcdir/taskcluster/docker/recipes/install-node.sh /setup/install-node.sh
 
-# Add the tooltool manifest containing the minidump_stackwalk binary.
-# %include testing/config/tooltool-manifests/linux64/releng.manifest
-ADD topsrcdir/testing/config/tooltool-manifests/linux64/releng.manifest /tmp/minidump_stackwalk.manifest
-
 # %include taskcluster/docker/recipes/ubuntu1604-test-system-setup.sh
 ADD topsrcdir/taskcluster/docker/recipes/ubuntu1604-test-system-setup.sh /setup/system-setup.sh
 RUN           bash /setup/system-setup.sh
