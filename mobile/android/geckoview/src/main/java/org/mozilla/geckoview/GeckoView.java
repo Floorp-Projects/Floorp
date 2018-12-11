@@ -412,10 +412,14 @@ public class GeckoView extends FrameLayout {
             return;
         }
 
+        // Release the display before we detach from the window.
+        mSession.releaseDisplay(mDisplay.release());
+
         // If we saved state earlier, we don't want to close the window.
         if (!mStateSaved && mSession.isOpen()) {
             mSession.close();
         }
+
     }
 
     @Override
