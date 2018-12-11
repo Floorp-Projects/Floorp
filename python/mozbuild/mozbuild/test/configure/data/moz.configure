@@ -91,10 +91,9 @@ def with_env5(values):
 set_config('VALUES3', with_env5)
 
 # The result from @depends functions can also be used as input to options.
-# The result must be returned, not implied. The function must also depend
-# on --help.
-@depends('--enable-simple', '--help')
-def simple(simple, help):
+# The result must be returned, not implied.
+@depends('--enable-simple')
+def simple(simple):
     return 'simple' if simple else 'not-simple'
 
 option('--with-returned-default', default=simple, help='Returned default')
@@ -105,8 +104,8 @@ def default(value):
 
 set_config('DEFAULTED', default)
 
-@depends('--enable-values', '--help')
-def choices(values, help):
+@depends('--enable-values')
+def choices(values):
     if len(values):
         return {
             'alpha': ('a', 'b', 'c'),
@@ -133,11 +132,10 @@ set_config('REMAINDER', remainder)
 include('included.configure')
 
 # It is also possible for the include file path to come from the result of a
-# @depends function. That function needs to depend on '--help' like for option
-# defaults and choices.
+# @depends function.
 option('--enable-include', nargs=1, help='Include')
-@depends('--enable-include', '--help')
-def include_path(path, help):
+@depends('--enable-include')
+def include_path(path):
     return path[0] if path else None
 
 include(include_path)
