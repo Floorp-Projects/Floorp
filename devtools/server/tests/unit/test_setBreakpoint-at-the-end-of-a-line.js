@@ -1,28 +1,10 @@
 "use strict";
 
-var SOURCE_URL = getFileUrl("setBreakpoint-on-column.js");
+const SOURCE_URL = getFileUrl("setBreakpoint-on-column.js");
 
-async function run_test() {
-  do_test_pending();
-
-  const { createRootActor } = require("xpcshell-test/testactors");
-  DebuggerServer.setRootActor(createRootActor);
-  DebuggerServer.init(() => true);
-
-  const global = createTestGlobal("test");
-  DebuggerServer.addTestGlobal(global);
-
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  await connect(client);
-
-  const { tabs } = await listTabs(client);
-  const tab = findTab(tabs, "test");
-  const [, targetFront] = await attachTarget(client, tab);
-  const [, threadClient] = await attachThread(targetFront);
-  await resume(threadClient);
-
+add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   const promise = waitForNewSource(threadClient, SOURCE_URL);
-  loadSubScript(SOURCE_URL, global);
+  loadSubScript(SOURCE_URL, debuggee);
   const { source } = await promise;
   const sourceClient = threadClient.source(source);
 
@@ -36,7 +18,7 @@ async function run_test() {
   Assert.equal(false, "actualLocation" in packet);
 
   packet = await executeOnNextTickAndWaitForPause(function() {
-    Cu.evalInSandbox("f()", global);
+    Cu.evalInSandbox("f()", debuggee);
   }, client);
 
   Assert.equal(packet.type, "paused");
@@ -57,7 +39,4 @@ async function run_test() {
   Assert.equal(variables.c.value.type, "undefined");
 
   await resume(threadClient);
-  await close(client);
-
-  do_test_finished();
-}
+}, { doNotRunWorker: true }));
