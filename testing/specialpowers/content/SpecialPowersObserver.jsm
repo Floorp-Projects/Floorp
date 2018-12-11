@@ -14,7 +14,6 @@
 var EXPORTED_SYMBOLS = ["SpecialPowersObserver"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-Cu.importGlobalProperties(["File"]);
 
 const CHILD_SCRIPT_API = "resource://specialpowers/specialpowersFrameScript.js";
 const CHILD_LOGGER_SCRIPT = "resource://specialpowers/MozillaLogger.js";

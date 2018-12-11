@@ -14,7 +14,6 @@ add_task(async function() {
                                                 "https://example.com") + "dummy_page.html";
   await BrowserTestUtils.withNewTab(uri, async (browser) => {
     await ContentTask.spawn(browser, null, async () => {
-      Cu.importGlobalProperties(["Blob", "URL"]);
       let debug = {hello: "world"};
       let blob = new Blob([JSON.stringify(debug, null, 2)], {type: "application/json"});
       let blobUri = URL.createObjectURL(blob);
