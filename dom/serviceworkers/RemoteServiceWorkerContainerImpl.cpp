@@ -78,7 +78,7 @@ void RemoteServiceWorkerContainerImpl::Register(
         auto& ipcDesc = aResult.get_IPCServiceWorkerRegistrationDescriptor();
         successCB(ServiceWorkerRegistrationDescriptor(ipcDesc));
       },
-      [aFailureCB](ResponseRejectReason aReason) {
+      [aFailureCB](ResponseRejectReason&& aReason) {
         // IPC layer error
         aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
       });
@@ -112,7 +112,7 @@ void RemoteServiceWorkerContainerImpl::GetRegistration(
         auto& ipcDesc = aResult.get_IPCServiceWorkerRegistrationDescriptor();
         successCB(ServiceWorkerRegistrationDescriptor(ipcDesc));
       },
-      [aFailureCB](ResponseRejectReason aReason) {
+      [aFailureCB](ResponseRejectReason&& aReason) {
         // IPC layer error
         aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
       });
@@ -151,7 +151,7 @@ void RemoteServiceWorkerContainerImpl::GetRegistrations(
         }
         successCB(std::move(list));
       },
-      [aFailureCB](ResponseRejectReason aReason) {
+      [aFailureCB](ResponseRejectReason&& aReason) {
         // IPC layer error
         aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
       });
@@ -184,7 +184,7 @@ void RemoteServiceWorkerContainerImpl::GetReady(
         auto& ipcDesc = aResult.get_IPCServiceWorkerRegistrationDescriptor();
         successCB(ServiceWorkerRegistrationDescriptor(ipcDesc));
       },
-      [aFailureCB](ResponseRejectReason aReason) {
+      [aFailureCB](ResponseRejectReason&& aReason) {
         // IPC layer error
         aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
       });
