@@ -716,7 +716,7 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 
         FinishAsyncMemoryReport();
       },
-      [](mozilla::ipc::ResponseRejectReason aReason) {
+      [](mozilla::ipc::ResponseRejectReason&& aReason) {
         FinishAsyncMemoryReport();
       });
 

@@ -73,7 +73,7 @@ nsresult Request(JSContext* cx, Promise** aPromise, RequestType requestType) {
       }
     };
 
-    auto reject = [promise](ResponseRejectReason aReason) {
+    auto reject = [promise](ResponseRejectReason&& aReason) {
       promise->MaybeReject(NS_ERROR_FAILURE);
     };
 
