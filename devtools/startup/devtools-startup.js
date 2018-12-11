@@ -170,6 +170,12 @@ XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function() {
       shortcut: KeyShortcutsBundle.GetStringFromName("dom.commandkey"),
       modifiers,
     },
+    // Key for opening the Accessibility Panel
+    {
+      toolId: "accessibility",
+      shortcut: KeyShortcutsBundle.GetStringFromName("accessibility.commandkey"),
+      modifiers: "shift",
+    },
   ];
 
   if (isMac) {
