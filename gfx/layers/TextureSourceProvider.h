@@ -26,6 +26,7 @@ namespace layers {
 class TextureHost;
 class DataTextureSource;
 class Compositor;
+class CompositorOGL;
 
 // Provided by a HostLayerManager or Compositor for allocating backend-specific
 // texture types.
@@ -84,6 +85,10 @@ class TextureSourceProvider {
   // If this provider is also a Compositor, return the compositor. Otherwise
   // return null.
   virtual Compositor* AsCompositor() { return nullptr; }
+
+  // If this provider is also a CompositorOGL, return the compositor. Otherwise return
+  // nullptr.
+  virtual CompositorOGL* AsCompositorOGL() { return nullptr; }
 
 #ifdef XP_WIN
   // On Windows, if this provides Direct3D textures, it must expose the device.
