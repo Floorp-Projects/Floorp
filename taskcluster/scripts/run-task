@@ -522,7 +522,11 @@ def collect_vcs_options(args, project, env_prefix=None):
     revision = os.environ.get('%s_HEAD_REV' % env_prefix)
     branch = os.environ.get('%s_HEAD_REF' % env_prefix)
 
+    store_path = os.environ['HG_STORE_PATH']
+
+    # Expand ~ in some paths.
     checkout = os.path.expanduser(checkout)
+    store_path = os.path.expanduser(store_path)
 
     # Some callers set the base repository to mozilla-central for historical
     # reasons. Switch to mozilla-unified because robustcheckout works best
@@ -531,6 +535,7 @@ def collect_vcs_options(args, project, env_prefix=None):
         base_repo = 'https://hg.mozilla.org/mozilla-unified'
 
     return {
+        'store-path': store_path,
         'project': project,
         'checkout': checkout,
         'sparse-profile': sparse_profile,
@@ -567,10 +572,6 @@ def main(args):
                         'using the taskclsuerProxy')
 
     args = parser.parse_args(our_args)
-
-    # expand ~ in some paths
-    if 'HG_STORE_PATH' in os.environ:
-        os.environ['HG_STORE_PATH'] = os.path.expanduser(os.environ['HG_STORE_PATH'])
 
     uid = gid = gids = None
     if IS_POSIX and running_as_root:
@@ -728,7 +729,7 @@ def main(args):
         os.environ['GECKO_HEAD_REV'] = vcs_checkout(
             firefox_checkout['head-repo'],
             firefox_checkout['checkout'],
-            os.environ['HG_STORE_PATH'],
+            firefox_checkout['store-path'],
             fetch_hgfingerprint=args.fetch_hgfingerprint,
             base_repo=firefox_checkout['base-repo'],
             revision=firefox_checkout['revision'],
@@ -749,7 +750,7 @@ def main(args):
         os.environ['COMM_HEAD_REV'] = vcs_checkout(
             comm_checkout['head-repo'],
             comm_checkout['checkout'],
-            os.environ['HG_STORE_PATH'],
+            comm_checkout['store-path'],
             fetch_hgfingerprint=args.fetch_hgfingerprint,
             base_repo=comm_checkout['base-repo'],
             revision=comm_checkout['revision'],
