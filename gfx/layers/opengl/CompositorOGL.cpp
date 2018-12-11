@@ -291,6 +291,16 @@ void CompositorOGL::CleanupResources() {
   }
   mPrograms.clear();
 
+#ifdef MOZ_WIDGET_GTK
+  // TextureSources might hold RefPtr<gl::GLContext>.
+  // All of them needs to be released to destroy GLContext.
+  // GLContextGLX has to be destroyed before related gtk window is destroyed.
+  for (auto textureSource : mRegisteredTextureSources) {
+    textureSource->DeallocateDeviceData();
+  }
+  mRegisteredTextureSources.clear();
+#endif
+
   ctx->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
 
   if (mQuadVBO) {
@@ -2005,6 +2015,24 @@ void PerUnitTexturePoolOGL::DestroyTextures() {
 
 bool CompositorOGL::SupportsLayerGeometry() const {
   return gfxPrefs::OGLLayerGeometry();
+}
+
+void CompositorOGL::RegisterTextureSource(TextureSource* aTextureSource) {
+#ifdef MOZ_WIDGET_GTK
+  if (mDestroyed) {
+    return;
+  }
+  mRegisteredTextureSources.insert(aTextureSource);
+#endif
+}
+
+void CompositorOGL::UnregisterTextureSource(TextureSource* aTextureSource) {
+#ifdef MOZ_WIDGET_GTK
+  if (mDestroyed) {
+    return;
+  }
+  mRegisteredTextureSources.erase(aTextureSource);
+#endif
 }
 
 }  // namespace layers
