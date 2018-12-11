@@ -155,6 +155,20 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
   }
 
   /**
+   * Called when the selectedPaymentCard or its relevant properties or billingAddress are changed.
+   * @param {string} selectedPaymentCardGUID
+   */
+  changePaymentMethod(selectedPaymentCardGUID) {
+    // Clear paymentMethod merchant errors when the paymentMethod or billingAddress changes.
+    let request = Object.assign({}, this.requestStore.getState().request);
+    request.paymentDetails = Object.assign({}, request.paymentDetails);
+    request.paymentDetails.paymentMethodErrors = null;
+    this.requestStore.setState({request});
+
+    // TODO: Bug 1477113 - Dispatch paymentmethodchange
+  }
+
+  /**
    * Called when the selectedPayerAddress or its relevant properties are changed.
    * @param {string} payerAddressGUID
    */
@@ -216,6 +230,7 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
    */
   async setStateFromParent(state) { // eslint-disable-line complexity
     let oldAddresses = paymentRequest.getAddresses(this.requestStore.getState());
+    let oldBasicCards = paymentRequest.getBasicCards(this.requestStore.getState());
     if (state.request) {
       state = this._updateCompleteStatus(state);
     }
@@ -269,9 +284,28 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
       }
     }
 
+    let basicCards = paymentRequest.getBasicCards(state);
+    let oldPaymentMethod = selectedPaymentCard && oldBasicCards[selectedPaymentCard];
+    let paymentMethod = selectedPaymentCard && basicCards[selectedPaymentCard];
+    if (oldPaymentMethod && paymentMethod.guid == oldPaymentMethod.guid &&
+        paymentMethod.timeLastModified != oldPaymentMethod.timeLastModified) {
+      delete this._cachedState.selectedPaymentCard;
+    } else {
+      // Changes to the billing address record don't change the `timeLastModified`
+      // on the card record so we have to check for changes to the address separately.
+
+      let billingAddressGUID = paymentMethod && paymentMethod.billingAddressGUID;
+      let billingAddress = billingAddressGUID && addresses[billingAddressGUID];
+      let oldBillingAddress = billingAddressGUID && oldAddresses[billingAddressGUID];
+
+      if (oldBillingAddress && billingAddress &&
+          billingAddress.timeLastModified != oldBillingAddress.timeLastModified) {
+        delete this._cachedState.selectedPaymentCard;
+      }
+    }
+
     // Ensure `selectedPaymentCard` never refers to a deleted payment card and refers
     // to a payment card if one exists.
-    let basicCards = paymentRequest.getBasicCards(state);
     if (!basicCards[selectedPaymentCard]) {
       // Determining the initial selection is tracked in bug 1455789
       this.requestStore.setState({
@@ -398,6 +432,10 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
       }
     }
 
+    if (state.selectedPaymentCard != this._cachedState.selectedPaymentCard) {
+      this.changePaymentMethod(state.selectedPaymentCard);
+    }
+
     if (this._isPayerRequested(state.request.paymentOptions)) {
       if (state.selectedPayerAddress != this._cachedState.selectedPayerAddress) {
         this.changePayerAddress(state.selectedPayerAddress);
@@ -406,6 +444,7 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
 
     this._cachedState.selectedShippingAddress = state.selectedShippingAddress;
     this._cachedState.selectedShippingOption = state.selectedShippingOption;
+    this._cachedState.selectedPaymentCard = state.selectedPaymentCard;
     this._cachedState.selectedPayerAddress = state.selectedPayerAddress;
   }
 
