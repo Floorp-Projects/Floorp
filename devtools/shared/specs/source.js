@@ -14,13 +14,6 @@ const sourceSpec = generateActorSpec({
       request: { type: "source" },
       response: RetVal("json"),
     },
-    prettyPrint: {
-      request: { indent: Arg(0, "number") },
-      response: RetVal("json"),
-    },
-    disablePrettyPrint: {
-      response: RetVal("json"),
-    },
     setPausePoints: {
       request: {
         pausePoints: Arg(0, "json"),

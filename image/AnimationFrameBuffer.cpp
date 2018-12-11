@@ -468,8 +468,8 @@ bool AnimationFrameRecyclingQueue::MarkComplete(
 
   // If we encounter a redecode error, just make the first frame refresh area to
   // be the full frame, because we don't really know what we can safely recycle.
-  mFirstFrameRefreshArea = mRedecodeError ? mFirstFrame->GetRect()
-                                          : aFirstFrameRefreshArea;
+  mFirstFrameRefreshArea =
+      mRedecodeError ? mFirstFrame->GetRect() : aFirstFrameRefreshArea;
   return continueDecoding;
 }
 

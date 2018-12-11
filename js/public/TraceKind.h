@@ -110,12 +110,11 @@ struct MapTypeToTraceKind {
 // from somewhere unknown, and results in leaking the subgraph which contains
 // the key.
 // See the comments in NoteWeakMapsTracer::trace for more details.
-inline constexpr bool IsCCTraceKind(JS::TraceKind aKind)
-{
+inline constexpr bool IsCCTraceKind(JS::TraceKind aKind) {
   switch (aKind) {
 #define JS_EXPAND_DEF(name, _, isCCTraceKind) \
-    case JS::TraceKind::name: \
-      return isCCTraceKind;
+  case JS::TraceKind::name:                   \
+    return isCCTraceKind;
     JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
 #undef JS_EXPAND_DEF
     default:

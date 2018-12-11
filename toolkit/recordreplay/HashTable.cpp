@@ -111,8 +111,7 @@ class StableHashTableInfo {
         mCallbackStorage(nullptr),
         mDestroyed(false),
         mTable(nullptr),
-        mCallbackHash(0)
-  {
+        mCallbackHash(0) {
     // Use AllocateMemory, as the result will have RWX permissions.
     mCallbackStorage =
         (uint8_t*)AllocateMemory(CallbackStorageCapacity, MemoryKind::Tracked);
@@ -142,7 +141,8 @@ class StableHashTableInfo {
       mCallbackHash = HashBytes(mCallbackStorage, mCallbackStorageSize);
     } else {
       MOZ_RELEASE_ASSERT(mTable == aTable);
-      MOZ_RELEASE_ASSERT(mCallbackHash == HashBytes(mCallbackStorage, mCallbackStorageSize));
+      MOZ_RELEASE_ASSERT(mCallbackHash ==
+                         HashBytes(mCallbackStorage, mCallbackStorageSize));
     }
   }
 
@@ -212,8 +212,7 @@ class StableHashTableInfo {
     explicit Assembler(StableHashTableInfo& aInfo)
         : recordreplay::Assembler(aInfo.mCallbackStorage,
                                   CallbackStorageCapacity),
-          mInfo(aInfo)
-    {}
+          mInfo(aInfo) {}
 
     ~Assembler() {
       mInfo.mCallbackStorageSize = Current() - mInfo.mCallbackStorage;
@@ -424,7 +423,7 @@ void DestroyPLHashTableCallbacks(void* aAllocPrivate) {
   PLHashTableInfo* info = PLHashTableInfo::MaybeFromPrivate(aAllocPrivate);
   if (info) {
     info->MarkDestroyed();
-    //delete info;
+    // delete info;
   }
 }
 

@@ -625,6 +625,8 @@ simple_keyfile('Pocket API')
 
 
 # WebRender integration
+# ==============================================================
+
 option('--enable-webrender', nargs='?', choices=('build',),
        help='Include WebRender in the build and/or enable it at runtime')
 
@@ -655,6 +657,7 @@ set_define('MOZ_BUILD_WEBRENDER', webrender.build)
 set_config('MOZ_ENABLE_WEBRENDER', webrender.enable)
 
 # SIMD acceleration for Rust code (currently just encoding_rs)
+# ==============================================================
 
 option('--enable-rust-simd', env='MOZ_RUST_SIMD',
        help='Enable explicit SIMD in Rust code.')
@@ -1251,3 +1254,17 @@ option('--enable-reflow-perf',
 # in old-configure, which was unexplained there as well.
 set_define('MOZ_REFLOW_PERF', depends_if('--enable-reflow-perf')(lambda _: True))
 set_define('MOZ_REFLOW_PERF_DSP', reflow_perf)
+
+# Layout debugger
+# ==============================================================
+
+@depends(moz_debug, '--help')
+def layout_debugger(debug, _):
+    if debug:
+        return True
+
+option('--enable-layout-debugger',
+       default=layout_debugger,
+       help='{Enable|Disable} layout debugger')
+
+set_config('MOZ_LAYOUT_DEBUGGER', depends_if('--enable-layout-debugger')(lambda _: True))

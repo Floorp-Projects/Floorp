@@ -265,9 +265,9 @@ var SessionHistoryInternal = {
    */
   _getSerializablePresState(layoutHistoryState, stateKey) {
     let presState = { stateKey };
-    let x = {}, y = {}, scrollOriginDowngrade = {}, res = {}, scaleToRes = {};
+    let x = {}, y = {}, scrollOriginDowngrade = {}, res = {};
 
-    layoutHistoryState.getPresState(stateKey, x, y, scrollOriginDowngrade, res, scaleToRes);
+    layoutHistoryState.getPresState(stateKey, x, y, scrollOriginDowngrade, res);
     if (x.value !== 0 || y.value !== 0) {
       presState.scroll = x.value + "," + y.value;
     }
@@ -276,9 +276,6 @@ var SessionHistoryInternal = {
     }
     if (res.value != 1.0) {
       presState.res = res.value;
-    }
-    if (scaleToRes.value === true) {
-      presState.scaleToRes = scaleToRes.value;
     }
 
     return presState;
@@ -495,10 +492,9 @@ var SessionHistoryInternal = {
     let scrollOriginDowngrade =
       typeof presState.scrollOriginDowngrade == "boolean" ? presState.scrollOriginDowngrade : true;
     let res = presState.res || 1.0;
-    let scaleToRes = presState.scaleToRes || false;
 
     layoutHistoryState.addNewPresState(stateKey, ...this._deserializeScrollPosition(presState.scroll),
-                                       scrollOriginDowngrade, res, scaleToRes);
+                                       scrollOriginDowngrade, res);
   },
 
   /**

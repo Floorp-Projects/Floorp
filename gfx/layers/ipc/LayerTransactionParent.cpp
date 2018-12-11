@@ -592,8 +592,7 @@ bool LayerTransactionParent::SetLayerAttributes(
       containerLayer->SetPreScale(attrs.preXScale(), attrs.preYScale());
       containerLayer->SetInheritedScale(attrs.inheritedXScale(),
                                         attrs.inheritedYScale());
-      containerLayer->SetScaleToResolution(attrs.scaleToResolution(),
-                                           attrs.presShellResolution());
+      containerLayer->SetScaleToResolution(attrs.presShellResolution());
       break;
     }
     case Specific::TColorLayerAttributes: {

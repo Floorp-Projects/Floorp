@@ -926,8 +926,8 @@ gfxRect nsSVGUtils::GetClipRectForFrame(nsIFrame* aFrame, float aX, float aY,
     return gfxRect(aX, aY, aWidth, aHeight);
   }
 
-  if (disp->mOverflowX == NS_STYLE_OVERFLOW_HIDDEN ||
-      disp->mOverflowY == NS_STYLE_OVERFLOW_HIDDEN) {
+  if (disp->mOverflowX == StyleOverflow::Hidden ||
+      disp->mOverflowY == StyleOverflow::Hidden) {
     nsIntRect clipPxRect = effects->mClip.ToOutsidePixels(
         aFrame->PresContext()->AppUnitsPerDevPixel());
     gfxRect clipRect = gfxRect(clipPxRect.x, clipPxRect.y, clipPxRect.width,
@@ -940,11 +940,11 @@ gfxRect nsSVGUtils::GetClipRectForFrame(nsIFrame* aFrame, float aX, float aY,
       clipRect.height = aHeight - clipRect.Y();
     }
 
-    if (disp->mOverflowX != NS_STYLE_OVERFLOW_HIDDEN) {
+    if (disp->mOverflowX != StyleOverflow::Hidden) {
       clipRect.x = aX;
       clipRect.width = aWidth;
     }
-    if (disp->mOverflowY != NS_STYLE_OVERFLOW_HIDDEN) {
+    if (disp->mOverflowY != StyleOverflow::Hidden) {
       clipRect.y = aY;
       clipRect.height = aHeight;
     }

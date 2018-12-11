@@ -542,18 +542,6 @@ nsDOMWindowUtils::SetDisplayPortBaseForElement(int32_t aX, int32_t aY,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::SetResolution(float aResolution) {
-  nsIPresShell* presShell = GetPresShell();
-  if (!presShell) {
-    return NS_ERROR_FAILURE;
-  }
-
-  presShell->SetResolution(aResolution);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::SetResolutionAndScaleTo(float aResolution) {
   nsIPresShell* presShell = GetPresShell();
   if (!presShell) {

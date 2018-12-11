@@ -2500,8 +2500,7 @@ FrameLayerBuilder* nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
     // Root is being scaled up by the X/Y resolution. Scale it back down.
     root->SetPostScale(1.0f / containerParameters.mXScale,
                        1.0f / containerParameters.mYScale);
-    root->SetScaleToResolution(presShell->ScaleToResolution(),
-                               containerParameters.mXScale);
+    root->SetScaleToResolution(containerParameters.mXScale);
 
     auto callback = [root](ScrollableLayerGuid::ViewID aScrollId) -> bool {
       return nsLayoutUtils::ContainsMetricsWithId(root, aScrollId);
@@ -6552,8 +6551,7 @@ void nsDisplayResolution::HitTest(nsDisplayListBuilder* aBuilder,
                                   const nsRect& aRect, HitTestState* aState,
                                   nsTArray<nsIFrame*>* aOutFrames) {
   nsIPresShell* presShell = mFrame->PresShell();
-  nsRect rect = aRect.RemoveResolution(
-      presShell->ScaleToResolution() ? presShell->GetResolution() : 1.0f);
+  nsRect rect = aRect.RemoveResolution(presShell->GetResolution());
   mList.HitTest(aBuilder, rect, aState, aOutFrames);
 }
 
@@ -6569,8 +6567,7 @@ already_AddRefed<Layer> nsDisplayResolution::BuildLayer(
       nsDisplaySubDocument::BuildLayer(aBuilder, aManager, containerParameters);
   layer->SetPostScale(1.0f / presShell->GetResolution(),
                       1.0f / presShell->GetResolution());
-  layer->AsContainerLayer()->SetScaleToResolution(
-      presShell->ScaleToResolution(), presShell->GetResolution());
+  layer->AsContainerLayer()->SetScaleToResolution(presShell->GetResolution());
   return layer.forget();
 }
 

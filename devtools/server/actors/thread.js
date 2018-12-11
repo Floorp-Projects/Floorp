@@ -13,9 +13,7 @@ const { createValueGrip } = require("devtools/server/actors/object/utils");
 const { longStringGrip } = require("devtools/server/actors/object/long-string");
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const flags = require("devtools/shared/flags");
 const { assert, dumpn } = DevToolsUtils;
-const { DevToolsWorker } = require("devtools/shared/worker/worker");
 const { threadSpec } = require("devtools/shared/specs/script");
 
 loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
@@ -166,18 +164,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return this.dbg.getNewestFrame();
   },
 
-  _prettyPrintWorker: null,
-  get prettyPrintWorker() {
-    if (!this._prettyPrintWorker) {
-      this._prettyPrintWorker = new DevToolsWorker(
-        "resource://devtools/server/actors/pretty-print-worker.js",
-        { name: "pretty-print",
-          verbose: flags.wantLogging }
-      );
-    }
-    return this._prettyPrintWorker;
-  },
-
   /**
    * Keep track of all of the nested event loops we use to pause the debuggee
    * when we hit a breakpoint/debugger statement/etc in one place so we can
@@ -242,11 +228,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this.clearDebuggees();
     this.conn.removeActorPool(this._threadLifetimePool);
     this._threadLifetimePool = null;
-
-    if (this._prettyPrintWorker) {
-      this._prettyPrintWorker.destroy();
-      this._prettyPrintWorker = null;
-    }
 
     if (!this._dbg) {
       return;

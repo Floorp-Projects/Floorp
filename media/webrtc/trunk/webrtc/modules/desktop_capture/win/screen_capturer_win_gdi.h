@@ -37,7 +37,6 @@ class ScreenCapturerWinGdi : public DesktopCapturer {
 
   // Overridden from ScreenCapturer:
   void Start(Callback* callback) override;
-  void Stop() override;
   void SetSharedMemoryFactory(
       std::unique_ptr<SharedMemoryFactory> shared_memory_factory) override;
   void CaptureFrame() override;

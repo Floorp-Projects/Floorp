@@ -14,28 +14,23 @@ namespace ipc {
 
 NS_IMPL_ISUPPORTS(InProcessParent, nsIObserver)
 
-IPCResult
-InProcessParent::RecvPWindowGlobalConstructor(PWindowGlobalParent* aActor,
-                                              const WindowGlobalInit& aInit)
-{
+IPCResult InProcessParent::RecvPWindowGlobalConstructor(
+    PWindowGlobalParent* aActor, const WindowGlobalInit& aInit) {
   static_cast<WindowGlobalParent*>(aActor)->Init(aInit);
   return IPC_OK();
 }
 
-PWindowGlobalParent*
-InProcessParent::AllocPWindowGlobalParent(const WindowGlobalInit& aInit)
-{
+PWindowGlobalParent* InProcessParent::AllocPWindowGlobalParent(
+    const WindowGlobalInit& aInit) {
   // Reference freed in DeallocPWindowGlobalParent.
   return do_AddRef(new WindowGlobalParent(aInit, /* inproc */ true)).take();
 }
 
-bool
-InProcessParent::DeallocPWindowGlobalParent(PWindowGlobalParent* aActor)
-{
+bool InProcessParent::DeallocPWindowGlobalParent(PWindowGlobalParent* aActor) {
   // Free IPC-held reference.
   static_cast<WindowGlobalParent*>(aActor)->Release();
   return true;
 }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla

@@ -163,7 +163,6 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
   static VideoCaptureModule::DeviceInfo* CreateDeviceInfo(
       const int32_t id, const CaptureDeviceType type);
 
-  int32_t Init(const char* uniqueId, const CaptureDeviceType type);
   // Call backs
   void RegisterCaptureDataCallback(
       rtc::VideoSinkInterface<VideoFrame>* dataCallback) override;
@@ -191,7 +190,8 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
   int32_t CaptureSettings(VideoCaptureCapability& settings) override;
 
  protected:
-  DesktopCaptureImpl(const int32_t id);
+  DesktopCaptureImpl(const int32_t id, const char* uniqueId,
+                     const CaptureDeviceType type);
   virtual ~DesktopCaptureImpl();
   int32_t DeliverCapturedFrame(webrtc::VideoFrame& captureFrame,
                                int64_t capture_time);
@@ -201,12 +201,14 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
 
   int32_t _id;                  // Module ID
   std::string _deviceUniqueId;  // current Device unique name;
+  CaptureDeviceType _deviceType;
   rtc::CriticalSection _apiCs;
   VideoCaptureCapability
       _requestedCapability;  // Should be set by platform dependent code in
                              // StartCapture.
 
  private:
+  int32_t Init();
   void UpdateFrameCount();
   uint32_t CalculateFrameRate(int64_t now_ns);
 
@@ -237,7 +239,11 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
   void process();
 
  private:
+  // This is created on the main thread and accessed on both the main thread
+  // and the capturer thread. It is created prior to the capturer thread
+  // starting and is destroyed after it is stopped.
   std::unique_ptr<DesktopAndCursorComposer> desktop_capturer_cursor_composer_;
+
   std::unique_ptr<EventWrapper> time_event_;
 #if defined(_WIN32)
   std::unique_ptr<rtc::PlatformUIThread> capturer_thread_;

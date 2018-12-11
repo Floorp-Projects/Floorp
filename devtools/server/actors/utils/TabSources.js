@@ -25,13 +25,11 @@ function TabSources(threadActor, allowSourceFn = () => true) {
   this._thread = threadActor;
   this._useSourceMaps = true;
   this._autoBlackBox = true;
-  this._anonSourceMapId = 1;
   this.allowSource = source => {
     return !isHiddenSource(source) && allowSourceFn(source);
   };
 
   this.blackBoxedSources = new Set();
-  this.prettyPrintedSources = new Map();
   this.neverAutoBlackBoxSources = new Set();
 
   // generated Debugger.Source -> promise of SourceMapConsumer
@@ -535,39 +533,6 @@ TabSources.prototype = {
     }
   },
 
-  /*
-   * Forcefully change the source map of a source, changing the
-   * sourceMapURL and installing the source map in the cache. This is
-   * necessary to expose changes across Debugger instances
-   * (pretty-printing is the use case). Generate a random url if one
-   * isn't specified, allowing you to set "anonymous" source maps.
-   *
-   * @param source Debugger.Source
-   *        The source to change the sourceMapURL property
-   * @param url string
-   *        The source map URL (optional)
-   * @param map SourceMapConsumer
-   *        The source map instance
-   */
-  setSourceMapHard: function(source, url, map) {
-    if (!url) {
-      // This is a littly hacky, but we want to forcefully set a
-      // sourcemap regardless of sourcemap settings. We want to
-      // literally change the sourceMapURL so that all debuggers will
-      // get this and pretty-printing will Just Work (Debugger.Source
-      // instances are per-debugger, so we can't key off that). To
-      // avoid tons of work serializing the sourcemap into a data url,
-      // just make a fake URL and stick the sourcemap there.
-      url = "internal://sourcemap" + (this._anonSourceMapId++) + "/";
-    }
-    source.sourceMapURL = url;
-
-    // Forcefully set the sourcemap cache. This will be used even if
-    // sourcemaps are disabled.
-    this._sourceMapCache[url] = Promise.resolve(map);
-    this.emit("updatedSource", this.getSourceActor(source));
-  },
-
   /**
    * Return the non-source-mapped location of an offset in a script.
    *
@@ -691,53 +656,6 @@ TabSources.prototype = {
   },
 
   /**
-   * Returns a promise of the location in the generated source corresponding to
-   * the original source and line given.
-   *
-   * When we pass a script S representing generated code to `sourceMap`,
-   * above, that returns a promise P. The process of resolving P populates
-   * the tables this function uses; thus, it won't know that S's original
-   * source URLs map to S until P is resolved.
-   */
-  getGeneratedLocation: function(originalLocation) {
-    const { originalSourceActor } = originalLocation;
-
-    // Both original sources and normal sources could have sourcemaps,
-    // because normal sources can be pretty-printed which generates a
-    // sourcemap for itself. Check both of the source properties to make it work
-    // for both kinds of sources.
-    const source = originalSourceActor.source || originalSourceActor.generatedSource;
-
-    // See comment about `fetchSourceMap` in `getOriginalLocation`.
-    return this.fetchSourceMap(source).then((map) => {
-      if (map) {
-        const {
-          originalLine,
-          originalColumn,
-        } = originalLocation;
-
-        const {
-          line: generatedLine,
-          column: generatedColumn,
-        } = map.generatedPositionFor({
-          source: originalSourceActor.url,
-          line: originalLine,
-          column: originalColumn == null ? 0 : originalColumn,
-          bias: SourceMapConsumer.LEAST_UPPER_BOUND,
-        });
-
-        return new GeneratedLocation(
-          this.createNonSourceMappedActor(source),
-          generatedLine,
-          generatedColumn
-        );
-      }
-
-      return GeneratedLocation.fromOriginalLocation(originalLocation);
-    });
-  },
-
-  /**
    * Returns true if URL for the given source is black boxed.
    *
    * @param url String
@@ -766,43 +684,6 @@ TabSources.prototype = {
    */
   unblackBox: function(url) {
     this.blackBoxedSources.delete(url);
-  },
-
-  /**
-   * Returns true if the given URL is pretty printed.
-   *
-   * @param url String
-   *        The URL of the source that might be pretty printed.
-   */
-  isPrettyPrinted: function(url) {
-    return this.prettyPrintedSources.has(url);
-  },
-
-  /**
-   * Add the given URL to the set of sources that are pretty printed.
-   *
-   * @param url String
-   *        The URL of the source to be pretty printed.
-   */
-  prettyPrint: function(url, indent) {
-    this.prettyPrintedSources.set(url, indent);
-  },
-
-  /**
-   * Return the indent the given URL was pretty printed by.
-   */
-  prettyPrintIndent: function(url) {
-    return this.prettyPrintedSources.get(url);
-  },
-
-  /**
-   * Remove the given URL from the set of sources that are pretty printed.
-   *
-   * @param url String
-   *        The URL of the source that is no longer pretty printed.
-   */
-  disablePrettyPrint: function(url) {
-    this.prettyPrintedSources.delete(url);
   },
 
   iter: function() {

@@ -9,7 +9,7 @@
 
 namespace mozilla {
 
-ScrollStyles::ScrollStyles(uint8_t aH, uint8_t aV,
+ScrollStyles::ScrollStyles(StyleOverflow aH, StyleOverflow aV,
                            const nsStyleDisplay* aDisplay)
     : mHorizontal(aH),
       mVertical(aV),

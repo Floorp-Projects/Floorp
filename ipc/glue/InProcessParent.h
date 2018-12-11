@@ -14,7 +14,7 @@ namespace mozilla {
 namespace dom {
 class PWindowGlobalParent;
 class PWindowGlobalChild;
-} // namespace dom
+}  // namespace dom
 
 namespace ipc {
 
@@ -28,10 +28,8 @@ class InProcessChild;
  * for async actors which want to communicate uniformly between Content->Chrome
  * and Chrome->Chrome situations.
  */
-class InProcessParent : public nsIObserver
-                      , public PInProcessParent
-{
-public:
+class InProcessParent : public nsIObserver, public PInProcessParent {
+ public:
   friend class InProcessChild;
 
   NS_DECL_ISUPPORTS
@@ -45,18 +43,18 @@ public:
   // |nullptr|.
   static IProtocol* ChildActorFor(IProtocol* aActor);
 
-protected:
-  virtual mozilla::dom::PWindowGlobalParent*
-  AllocPWindowGlobalParent(const WindowGlobalInit& aInit) override;
+ protected:
+  virtual mozilla::dom::PWindowGlobalParent* AllocPWindowGlobalParent(
+      const WindowGlobalInit& aInit) override;
 
-  virtual bool
-  DeallocPWindowGlobalParent(mozilla::dom::PWindowGlobalParent* aActor) override;
+  virtual bool DeallocPWindowGlobalParent(
+      mozilla::dom::PWindowGlobalParent* aActor) override;
 
-  virtual IPCResult
-  RecvPWindowGlobalConstructor(mozilla::dom::PWindowGlobalParent* aActor,
-                               const WindowGlobalInit& aInit) override;
+  virtual IPCResult RecvPWindowGlobalConstructor(
+      mozilla::dom::PWindowGlobalParent* aActor,
+      const WindowGlobalInit& aInit) override;
 
-private:
+ private:
   // Lifecycle management is implemented in InProcessImpl.cpp
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
   virtual void DeallocPInProcessParent() override;
@@ -69,8 +67,7 @@ private:
   static bool sShutdown;
 };
 
+}  // namespace ipc
+}  // namespace mozilla
 
-} // namespace ipc
-} // namespace mozilla
-
-#endif // defined(mozilla_ipc_InProcessParent_h)
+#endif  // defined(mozilla_ipc_InProcessParent_h)

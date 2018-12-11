@@ -443,11 +443,11 @@ nsresult nsTextControlFrame::CreateRootNode() {
   if (!IsSingleLineTextControl()) {
     // We can't just inherit the overflow because setting visible overflow will
     // crash when the number of lines exceeds the height of the textarea and
-    // setting -moz-hidden-unscrollable overflow (NS_STYLE_OVERFLOW_CLIP)
-    // doesn't paint the caret for some reason.
+    // setting -moz-hidden-unscrollable overflow doesn't paint the caret for
+    // some reason.
     const nsStyleDisplay* disp = StyleDisplay();
-    if (disp->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE &&
-        disp->mOverflowX != NS_STYLE_OVERFLOW_CLIP) {
+    if (disp->mOverflowX != StyleOverflow::Visible &&
+        disp->mOverflowX != StyleOverflow::MozHiddenUnscrollable) {
       classValue.AppendLiteral(" inherit-overflow");
     }
   }
