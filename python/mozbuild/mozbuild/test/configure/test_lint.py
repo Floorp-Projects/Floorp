@@ -35,6 +35,10 @@ class TestLint(unittest.TestCase):
                          'moz.configure'): textwrap.dedent(source)
         })
 
+    def test_configure_testcase(self):
+        # Lint python/mozbuild/mozbuild/test/configure/data/moz.configure
+        self.lint_test()
+
     def test_depends_failures(self):
         with self.moz_configure('''
             option('--foo', help='foo')
