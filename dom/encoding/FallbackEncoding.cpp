@@ -55,7 +55,6 @@ NS_IMPL_ISUPPORTS(FallbackEncoding, nsIObserver)
 
 StaticRefPtr<FallbackEncoding> FallbackEncoding::sInstance;
 bool FallbackEncoding::sGuessFallbackFromTopLevelDomain = true;
-bool FallbackEncoding::sFallbackToUTF8ForFile = false;
 
 FallbackEncoding::FallbackEncoding() : mFallback(nullptr) {
   MOZ_ASSERT(!FallbackEncoding::sInstance, "Singleton already exists.");
@@ -141,8 +140,6 @@ void FallbackEncoding::Initialize() {
                                 "intl.charset.fallback.override");
   Preferences::AddBoolVarCache(&sGuessFallbackFromTopLevelDomain,
                                "intl.charset.fallback.tld");
-  Preferences::AddBoolVarCache(&sFallbackToUTF8ForFile,
-                               "intl.charset.fallback.utf8_for_file");
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
