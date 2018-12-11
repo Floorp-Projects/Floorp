@@ -219,7 +219,6 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../build',
     '/dom/base',
-    '/js/xpconnect/loader', # for mozJSComponentLoader.h
     '/mfbt',
     '/xpcom/ds',
 ]
