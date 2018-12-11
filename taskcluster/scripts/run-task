@@ -388,7 +388,8 @@ def configure_volume_posix(volume, user, group, running_as_root):
 
 def vcs_checkout(source_repo, dest, store_path,
                  base_repo=None, revision=None, branch=None,
-                 fetch_hgfingerprint=False, sparse_profile=None):
+                 fetch_hgfingerprint=False, sparse_profile=None,
+                 prevent_symbolic_revisions=True):
     # Specify method to checkout a revision. This defaults to revisions as
     # SHA-1 strings, but also supports symbolic revisions like `tip` via the
     # branch flag.
@@ -400,6 +401,11 @@ def vcs_checkout(source_repo, dest, store_path,
         revision_value = branch
     else:
         print('revision is not specified for checkout')
+        sys.exit(1)
+
+    if prevent_symbolic_revisions and not revision:
+        print('symbolic revisions (%s) to specific checkout revision are not'
+              'allowed; specify a full revision hash instead' % branch)
         sys.exit(1)
 
     if IS_POSIX:
@@ -736,11 +742,6 @@ def main(args):
             branch=firefox_checkout['branch'],
             sparse_profile=firefox_checkout['sparse-profile'])
 
-    elif not os.environ.get('GECKO_HEAD_REV') and \
-            os.environ.get('GECKO_HEAD_REF'):
-        print('task should be defined in terms of non-symbolic revision')
-        return 1
-
     # Checkout the repository, setting the COMM_HEAD_REV to the current
     # revision hash. Revision hashes have priority over symbolic revisions. We
     # disallow running tasks with symbolic revisions unless they have been
@@ -756,11 +757,6 @@ def main(args):
             revision=comm_checkout['revision'],
             branch=comm_checkout['branch'],
             sparse_profile=comm_checkout['sparse-profile'])
-
-    elif not os.environ.get('COMM_HEAD_REV') and \
-            os.environ.get('COMM_HEAD_REF'):
-        print('task should be defined in terms of non-symbolic revision')
-        return 1
 
     try:
         if 'GECKO_PATH' in os.environ:
