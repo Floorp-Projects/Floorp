@@ -1,4 +1,5 @@
-// |jit-test| error: ReferenceError: WritableStream is not defined
-
 load(libdir + "web-platform-testharness.js");
-load_web_platform_test("streams/readable-streams/reentrant-strategies.js");
+load_web_platform_test("streams/resources/recording-streams.js");
+load_web_platform_test("streams/resources/rs-utils.js");
+load_web_platform_test("streams/resources/test-utils.js");
+load_web_platform_test("streams/readable-streams/reentrant-strategies.any.js");
