@@ -1960,7 +1960,7 @@ public class GeckoAppShell
     public static int getAudioOutputFramesPerBuffer() {
         final int DEFAULT = 512;
 
-        if (SysInfo.getVersion() < 17) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
             return DEFAULT;
         }
         final AudioManager am = (AudioManager)getApplicationContext()
@@ -1979,7 +1979,7 @@ public class GeckoAppShell
     public static int getAudioOutputSampleRate() {
         final int DEFAULT = 44100;
 
-        if (SysInfo.getVersion() < 17) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
             return DEFAULT;
         }
         final AudioManager am = (AudioManager)getApplicationContext()
