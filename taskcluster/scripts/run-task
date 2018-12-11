@@ -388,8 +388,7 @@ def configure_volume_posix(volume, user, group, running_as_root):
 
 def vcs_checkout(source_repo, dest, store_path,
                  base_repo=None, revision=None, branch=None,
-                 fetch_hgfingerprint=False, sparse_profile=None,
-                 prevent_symbolic_revisions=True):
+                 fetch_hgfingerprint=False, sparse_profile=None):
     # Specify method to checkout a revision. This defaults to revisions as
     # SHA-1 strings, but also supports symbolic revisions like `tip` via the
     # branch flag.
@@ -403,7 +402,7 @@ def vcs_checkout(source_repo, dest, store_path,
         print('revision is not specified for checkout')
         sys.exit(1)
 
-    if prevent_symbolic_revisions and not revision:
+    if not revision:
         print('symbolic revisions (%s) to specific checkout revision are not'
               'allowed; specify a full revision hash instead' % branch)
         sys.exit(1)
@@ -553,7 +552,7 @@ def collect_vcs_options(args, project):
     }
 
 
-def vcs_checkout_from_args(args, project, prevent_symbolic_revisions=True):
+def vcs_checkout_from_args(args, project):
     options = collect_vcs_options(args, project)
 
     if not options:
@@ -567,8 +566,7 @@ def vcs_checkout_from_args(args, project, prevent_symbolic_revisions=True):
         revision=options['revision'],
         fetch_hgfingerprint=args.fetch_hgfingerprint,
         branch=options['branch'],
-        sparse_profile=options['sparse-profile'],
-        prevent_symbolic_revisions=prevent_symbolic_revisions)
+        sparse_profile=options['sparse-profile'])
 
 
 def main(args):
