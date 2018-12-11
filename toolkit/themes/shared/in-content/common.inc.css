@@ -41,7 +41,7 @@
   --in-content-link-color-visited: #0a8dff;
   --in-content-button-background: var(--grey-90-a10);
   --in-content-button-background-hover: var(--grey-90-a20);
-  --in-content-button-background-active: var(--grey-30);
+  --in-content-button-background-active: var(--grey-90-a30);
   --in-content-primary-button-background: var(--blue-60);
   --in-content-primary-button-background-hover: var(--blue-70);
   --in-content-primary-button-background-active: var(--blue-80);
