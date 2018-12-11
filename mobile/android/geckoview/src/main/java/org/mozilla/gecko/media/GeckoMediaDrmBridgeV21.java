@@ -304,6 +304,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         return mCrypto;
     }
 
+    @SuppressLint("WrongConstant")
     @Override
     public void setServerCertificate(final byte[] cert) {
         if (DEBUG) Log.d(LOGTAG, "setServerCertificate()");
