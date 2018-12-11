@@ -757,20 +757,20 @@ nsFind::Find(const char16_t* aPatText, nsRange* aSearchRange,
           matchStartOffset = mao;
           matchEndOffset = findex + 1;
         }
+
         if (startParent && endParent && IsVisibleNode(startParent) &&
             IsVisibleNode(endParent)) {
-          range->SetStart(*startParent, matchStartOffset, IgnoreErrors());
-          range->SetEnd(*endParent, matchEndOffset, IgnoreErrors());
-          *aRangeRet = range.get();
-          NS_ADDREF(*aRangeRet);
-        } else {
-          // This match is no good -- invisible or bad range
-          startParent = nullptr;
+          IgnoredErrorResult rv;
+          range->SetStart(*startParent, matchStartOffset, rv);
+          if (!rv.Failed()) {
+            range->SetEnd(*endParent, matchEndOffset, rv);
+          }
+          if (!rv.Failed()) {
+            range.forget(aRangeRet);
+            return NS_OK;
+          }
         }
 
-        if (startParent) {
-          return NS_OK;
-        }
         // This match is no good, continue on in document
         matchAnchorNode = nullptr;
       }
