@@ -4,16 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsPrintfCString.h"
-#include "MediaQueue.h"
 #include "AudioSink.h"
-#include "VideoUtils.h"
 #include "AudioConverter.h"
-
+#include "MediaQueue.h"
+#include "VideoUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/StaticPrefs.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
 
@@ -25,13 +24,13 @@ extern LazyLogModule gMediaDecoderLog;
   MOZ_LOG(gMediaDecoderLog, LogLevel::Verbose, \
           ("AudioSink=%p " msg, this, ##__VA_ARGS__))
 
-namespace media {
-
 // The amount of audio frames that is used to fuzz rounding errors.
 static const int64_t AUDIO_FUZZ_FRAMES = 1;
 
 // Amount of audio frames we will be processing ahead of use
 static const int32_t LOW_AUDIO_USECS = 300000;
+
+using media::TimeUnit;
 
 AudioSink::AudioSink(AbstractThread* aThread,
                      MediaQueue<AudioData>& aAudioQueue,
@@ -70,7 +69,7 @@ AudioSink::AudioSink(AbstractThread* aThread,
 AudioSink::~AudioSink() {}
 
 nsresult AudioSink::Init(const PlaybackParams& aParams,
-                         RefPtr<GenericPromise>& aEndPromise) {
+                         RefPtr<MediaSink::EndedPromise>& aEndedPromise) {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
   mAudioQueueListener = mAudioQueue.PushEvent().Connect(
@@ -83,10 +82,10 @@ nsresult AudioSink::Init(const PlaybackParams& aParams,
   // To ensure at least one audio packet will be popped from AudioQueue and
   // ready to be played.
   NotifyAudioNeeded();
-  aEndPromise = mEndPromise.Ensure(__func__);
+  aEndedPromise = mEndedPromise.Ensure(__func__);
   nsresult rv = InitializeAudioStream(aParams);
   if (NS_FAILED(rv)) {
-    mEndPromise.Reject(rv, __func__);
+    mEndedPromise.Reject(rv, __func__);
   }
   return rv;
 }
@@ -131,7 +130,7 @@ void AudioSink::Shutdown() {
   }
   mProcessedQueue.Reset();
   mProcessedQueue.Finish();
-  mEndPromise.ResolveIfExists(true, __func__);
+  mEndedPromise.ResolveIfExists(true, __func__);
 }
 
 void AudioSink::SetVolume(double aVolume) {
@@ -294,7 +293,7 @@ bool AudioSink::Ended() const {
 void AudioSink::Drained() {
   SINK_LOG("Drained");
   mPlaybackComplete = true;
-  mEndPromise.ResolveIfExists(true, __func__);
+  mEndedPromise.ResolveIfExists(true, __func__);
 }
 
 void AudioSink::CheckIsAudible(const AudioData* aData) {
@@ -507,5 +506,4 @@ nsCString AudioSink::GetDebugInfo() {
       mOutputRate, mWritten, bool(mErrored), bool(mPlaybackComplete));
 }
 
-}  // namespace media
 }  // namespace mozilla

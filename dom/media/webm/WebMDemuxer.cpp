@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsError.h"
-#include "MediaDecoderStateMachine.h"
 #include "MediaResource.h"
 #ifdef MOZ_AV1
 #include "AOMDecoder.h"
