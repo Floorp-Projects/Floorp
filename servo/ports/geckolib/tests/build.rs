@@ -85,6 +85,7 @@ fn main() {
         for line in r.lines() {
             let s = line
                 .unwrap()
+                .replace("#[no_mangle]", "")
                 .replace("pub extern \"C\" fn", "pub unsafe extern \"C\" fn");
             w.write_all(s.as_bytes()).unwrap();
             w.write_all(b"\n").unwrap();

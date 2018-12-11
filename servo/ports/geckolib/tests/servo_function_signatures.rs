@@ -16,11 +16,15 @@ mod error_reporter;
 #[path = "../../../ports/geckolib/stylesheet_loader.rs"]
 mod stylesheet_loader;
 
-#[allow(non_snake_case, unused_unsafe, private_no_mangle_fns)]
+#[allow(non_snake_case, unused_unsafe)]
 mod glue {
-    // this module pretends to be glue.rs, with the safe functions swapped for unsafe ones. This is
-    // a hack to compensate for the fact that `fn` types cannot coerce to `unsafe fn` types. The
-    // imports are populated with the same things so the type assertion should be equivalent
+    // this module pretends to be glue.rs, with the safe functions swapped for
+    // unsafe ones. This is a hack to compensate for the fact that `fn` types
+    // cannot coerce to `unsafe fn` types. The imports are populated with the
+    // same things so the type assertion should be equivalent.
+    //
+    // We also rely on #[no_mangle] being stripped out so that it can link on
+    // Windows without linking to Gecko, see bug 1512271.
     use geckoservo::*;
     include!(concat!(env!("OUT_DIR"), "/glue.rs"));
 }
