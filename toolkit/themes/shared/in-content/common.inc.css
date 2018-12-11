@@ -49,6 +49,8 @@
   --in-content-table-border-dark-color: #d1d1d1;
   --in-content-table-header-background: #0a84ff;
 
+  --blue-40: #45a1ff;
+  --blue-40-a10: rgb(69, 161, 255, 0.1);
   --blue-50: #0a84ff;
   --blue-50-a30: rgba(10, 132, 255, 0.3);
   --blue-60: #0060df;
