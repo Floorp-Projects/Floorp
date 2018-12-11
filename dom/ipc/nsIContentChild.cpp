@@ -23,6 +23,7 @@
 #include "mozilla/ipc/PParentToChildStreamChild.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
 
+#include "MMPrinter.h"
 #include "nsPrintfCString.h"
 #include "xpcpublic.h"
 
@@ -147,6 +148,7 @@ mozilla::ipc::IPCResult nsIContentChild::RecvAsyncMessage(
     const IPC::Principal& aPrincipal, const ClonedMessageData& aData) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
       "nsIContentChild::RecvAsyncMessage", OTHER, aMsg);
+  MMPrinter::Print("nsIContentChild::RecvAsyncMessage", aMsg, aData);
 
   CrossProcessCpowHolder cpows(this, aCpows);
   RefPtr<nsFrameMessageManager> cpm =
