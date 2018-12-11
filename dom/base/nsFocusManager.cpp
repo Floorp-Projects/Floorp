@@ -3363,8 +3363,8 @@ nsresult nsFocusManager::GetNextTabbableContent(
         bool focusableHostSlot;
         int32_t tabIndex =
             HostOrSlotTabIndexValue(currentContent, &focusableHostSlot);
-        // Host or slot itself isn't focusable, enter its scope.
-        if (!focusableHostSlot && tabIndex >= 0 &&
+        // Host or slot itself isn't focusable or going backwards, enter its scope.
+        if ((!aForward || !focusableHostSlot) && tabIndex >= 0 &&
             (aIgnoreTabIndex || aCurrentTabIndex == tabIndex)) {
           nsIContent* contentToFocus = GetNextTabbableContentInScope(
               currentContent, currentContent, aOriginalStartContent, aForward,
@@ -3460,19 +3460,6 @@ nsresult nsFocusManager::GetNextTabbableContent(
             else if (currentContent == aRootContent ||
                      (currentContent != startContent &&
                       (aForward || !GetRedirectedFocus(currentContent)))) {
-              // If currentContent is a shadow host in backward
-              // navigation, search in scope owned by currentContent
-              if (!aForward && currentContent->GetShadowRoot()) {
-                nsIContent* contentToFocus = GetNextTabbableContentInScope(
-                    currentContent, currentContent, aOriginalStartContent,
-                    aForward, aForward ? 1 : 0, aIgnoreTabIndex,
-                    aForDocumentNavigation, true /* aSkipOwner */);
-                if (contentToFocus) {
-                  NS_ADDREF(*aResultContent = contentToFocus);
-                  return NS_OK;
-                }
-              }
-
               NS_ADDREF(*aResultContent = currentContent);
               return NS_OK;
             }
