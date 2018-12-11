@@ -8,7 +8,6 @@
 #include "nsMemoryReporterManager.h"
 
 #include "GCTelemetry.h"
-#include "mozJSComponentLoader.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
@@ -25,6 +24,7 @@
 #include "nsIDOMChromeWindow.h"
 #include "nsIMemoryReporter.h"
 #include "nsIWindowMediator.h"
+#include "nsImportModule.h"
 #include "nsNetCID.h"
 #include "nsObserverService.h"
 #include "nsReadableUtils.h"
@@ -49,19 +49,11 @@ static constexpr const char* kTopicCycleCollectorBegin =
 static constexpr uint32_t kTotalMemoryCollectorTimeout = 200;
 
 static Result<nsCOMPtr<mozIGCTelemetry>, nsresult> GetGCTelemetry() {
-  AutoJSAPI jsapi;
-  MOZ_ALWAYS_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()));
-  JSContext* cx = jsapi.cx();
+  nsresult rv;
 
-  JS::RootedObject global(cx);
-  JS::RootedObject exports(cx);
-  MOZ_TRY(mozJSComponentLoader::Get()->Import(
-      cx, NS_LITERAL_CSTRING("resource://gre/modules/GCTelemetry.jsm"), &global,
-      &exports));
-
-  nsCOMPtr<mozIGCTelemetryJSM> jsm;
-  MOZ_TRY(nsContentUtils::XPConnect()->WrapJS(
-      cx, exports, NS_GET_IID(mozIGCTelemetryJSM), getter_AddRefs(jsm)));
+  nsCOMPtr<mozIGCTelemetryJSM> jsm =
+      do_ImportModule("resource://gre/modules/GCTelemetry.jsm", &rv);
+  MOZ_TRY(rv);
 
   nsCOMPtr<mozIGCTelemetry> gcTelemetry;
   MOZ_TRY(jsm->GetGCTelemetry(getter_AddRefs(gcTelemetry)));
