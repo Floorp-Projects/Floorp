@@ -427,11 +427,6 @@ class nsFocusManager final : public nsIFocusManager,
   nsIContent* FindOwner(nsIContent* aContent);
 
   /**
-   * Returns true if aContent is a shadow host or slot
-   */
-  bool IsHostOrSlot(nsIContent* aContent);
-
-  /**
    * Host and Slot elements need to be handled as if they had tabindex 0 even
    * when they don't have the attribute. This is a helper method to get the
    * right value for focus navigation. If aIsFocusable is passed, it is set to
