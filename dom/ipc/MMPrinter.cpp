@@ -16,6 +16,22 @@ void MMPrinter::PrintImpl(char const* aLocation, const nsAString& aMsg,
                           ClonedMessageData const& aData) {
   NS_ConvertUTF16toUTF8 charMsg(aMsg);
 
+  /*
+   * The topic will be skipped if the topic name appears anywhere as a substring
+   * of the filter.
+   *
+   * Example:
+   *   MOZ_LOG_MESSAGEMANAGER_SKIP="foobar|extension"
+   *     Will  match the topics 'foobar', 'foo', 'bar', and 'ten' (even though
+   * you may not have intended to match the latter three) and it will not match
+   * the topics 'extensionresult' or 'Foo'.
+   */
+  char* mmSkipLog = PR_GetEnv("MOZ_LOG_MESSAGEMANAGER_SKIP");
+
+  if (mmSkipLog && strstr(mmSkipLog, charMsg.get())) {
+    return;
+  }
+
   MOZ_LOG(MMPrinter::sMMLog, LogLevel::Debug,
           ("%s Message: %s in process type: %s", aLocation, charMsg.get(),
            XRE_ChildProcessTypeToString(XRE_GetProcessType())));
