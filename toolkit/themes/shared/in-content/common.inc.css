@@ -168,7 +168,7 @@ html|*.numberbox-input::-moz-number-spin-down {
   -moz-appearance: none;
   min-height: 32px;
   /* !important overrides button.css for disabled and default XUL buttons: */
-  color: var(--in-content-text-color) !important;
+  color: inherit !important;
   border: none;
   border-radius: 2px;
   background-color: var(--in-content-button-background);
