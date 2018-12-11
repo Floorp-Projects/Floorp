@@ -27,7 +27,8 @@ enum class MarkColor : uint32_t { Black = 0, Gray };
   D(Sweep)          \
   D(Finalize)       \
   D(Compact)        \
-  D(Decommit)
+  D(Decommit)       \
+  D(Finish)
 enum class State {
 #define MAKE_STATE(name) name,
   GCSTATES(MAKE_STATE)
