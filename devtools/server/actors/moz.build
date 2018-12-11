@@ -50,7 +50,6 @@ DevToolsModules(
     'performance-recording.js',
     'performance.js',
     'preference.js',
-    'pretty-print-worker.js',
     'process.js',
     'promises.js',
     'reflow.js',

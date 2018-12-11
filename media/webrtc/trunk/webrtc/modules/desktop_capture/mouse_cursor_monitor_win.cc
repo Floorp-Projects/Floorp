@@ -46,7 +46,6 @@ class MouseCursorMonitorWin : public MouseCursorMonitor {
   ~MouseCursorMonitorWin() override;
 
   void Init(Callback* callback, Mode mode) override;
-  void Stop() override;
   void Capture() override;
 
  private:
@@ -100,14 +99,6 @@ void MouseCursorMonitorWin::Init(Callback* callback, Mode mode) {
   mode_ = mode;
 
   desktop_dc_ = GetDC(NULL);
-}
-
-void MouseCursorMonitorWin::Stop() {
-  callback_ = NULL;
-
-  if (desktop_dc_)
-    ReleaseDC(NULL, desktop_dc_);
-  desktop_dc_ = NULL;
 }
 
 void MouseCursorMonitorWin::Capture() {

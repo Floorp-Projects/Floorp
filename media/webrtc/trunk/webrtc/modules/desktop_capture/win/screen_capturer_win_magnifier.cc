@@ -44,22 +44,6 @@ static LPCTSTR kMagnifierWindowName = L"MagnifierWindow";
 
 ScreenCapturerWinMagnifier::ScreenCapturerWinMagnifier() = default;
 ScreenCapturerWinMagnifier::~ScreenCapturerWinMagnifier() {
-  Stop();
-}
-
-void ScreenCapturerWinMagnifier::Start(Callback* callback) {
-  RTC_DCHECK(!callback_);
-  RTC_DCHECK(callback);
-  callback_ = callback;
-
-  if (!InitializeMagnifier()) {
-    RTC_LOG_F(LS_WARNING) << "Magnifier initialization failed.";
-  }
-}
-
-void ScreenCapturerWinMagnifier::Stop() {
-  callback_ = NULL;
-
   // DestroyWindow must be called before MagUninitialize. magnifier_window_ is
   // destroyed automatically when host_window_ is destroyed.
   if (host_window_) {
@@ -80,6 +64,16 @@ void ScreenCapturerWinMagnifier::Stop() {
   if (desktop_dc_) {
     ReleaseDC(NULL, desktop_dc_);
     desktop_dc_ = NULL;
+  }
+}
+
+void ScreenCapturerWinMagnifier::Start(Callback* callback) {
+  RTC_DCHECK(!callback_);
+  RTC_DCHECK(callback);
+  callback_ = callback;
+
+  if (!InitializeMagnifier()) {
+    RTC_LOG_F(LS_WARNING) << "Magnifier initialization failed.";
   }
 }
 

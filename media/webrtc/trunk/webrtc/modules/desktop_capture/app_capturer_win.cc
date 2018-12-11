@@ -84,7 +84,6 @@ public:
 
   // DesktopCapturer interface.
   virtual void Start(Callback* callback) override;
-  virtual void Stop() override;
   virtual void CaptureFrame() override;
   virtual bool SelectSource(SourceId id) override
   {
@@ -173,9 +172,7 @@ void AppCapturerWin::Start(Callback* callback) {
 
   callback_ = callback;
 }
-void AppCapturerWin::Stop() {
-  callback_ = nullptr;
-}
+
 void AppCapturerWin::CaptureFrame() {
   assert(IsGUIThread(false));
   CaptureBySample();

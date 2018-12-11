@@ -2506,53 +2506,52 @@ static SystemRedirection gSystemRedirections[] = {
 // cannot use dlsym() to lookup symbols that are not externally visible.
 
 // Functions which are not overloaded.
-#define FOR_EACH_DIAGNOSTIC_REDIRECTION(MACRO)                   \
-  MACRO(PL_HashTableAdd, Preamble_PLHashTable)                   \
-  MACRO(PL_HashTableRemove, Preamble_PLHashTable)                \
-  MACRO(PL_HashTableLookup, Preamble_PLHashTable)                \
-  MACRO(PL_HashTableLookupConst, Preamble_PLHashTable)           \
-  MACRO(PL_HashTableEnumerateEntries, Preamble_PLHashTable)      \
-  MACRO(PL_HashTableRawAdd, Preamble_PLHashTable)                \
-  MACRO(PL_HashTableRawRemove, Preamble_PLHashTable)             \
-  MACRO(PL_HashTableRawLookup, Preamble_PLHashTable)             \
+#define FOR_EACH_DIAGNOSTIC_REDIRECTION(MACRO)              \
+  MACRO(PL_HashTableAdd, Preamble_PLHashTable)              \
+  MACRO(PL_HashTableRemove, Preamble_PLHashTable)           \
+  MACRO(PL_HashTableLookup, Preamble_PLHashTable)           \
+  MACRO(PL_HashTableLookupConst, Preamble_PLHashTable)      \
+  MACRO(PL_HashTableEnumerateEntries, Preamble_PLHashTable) \
+  MACRO(PL_HashTableRawAdd, Preamble_PLHashTable)           \
+  MACRO(PL_HashTableRawRemove, Preamble_PLHashTable)        \
+  MACRO(PL_HashTableRawLookup, Preamble_PLHashTable)        \
   MACRO(PL_HashTableRawLookupConst, Preamble_PLHashTable)
 
 // Member functions which need a type specification to resolve overloading.
-#define FOR_EACH_DIAGNOSTIC_MEMBER_PTR_WITH_TYPE_REDIRECTION(MACRO) \
+#define FOR_EACH_DIAGNOSTIC_MEMBER_PTR_WITH_TYPE_REDIRECTION(MACRO)         \
   MACRO(PLDHashEntryHdr* (PLDHashTable::*)(const void*, const fallible_t&), \
         &PLDHashTable::Add, Preamble_PLDHashTable)
 
 // Member functions which are not overloaded.
-#define FOR_EACH_DIAGNOSTIC_MEMBER_PTR_REDIRECTION(MACRO)        \
-  MACRO(&PLDHashTable::Clear, Preamble_PLDHashTable)             \
-  MACRO(&PLDHashTable::Remove, Preamble_PLDHashTable)            \
+#define FOR_EACH_DIAGNOSTIC_MEMBER_PTR_REDIRECTION(MACRO) \
+  MACRO(&PLDHashTable::Clear, Preamble_PLDHashTable)      \
+  MACRO(&PLDHashTable::Remove, Preamble_PLDHashTable)     \
   MACRO(&PLDHashTable::RemoveEntry, Preamble_PLDHashTable)
 
-static PreambleResult
-Preamble_PLHashTable(CallArguments* aArguments)
-{
+static PreambleResult Preamble_PLHashTable(CallArguments* aArguments) {
   CheckPLHashTable(aArguments->Arg<0, PLHashTable*>());
   return PreambleResult::IgnoreRedirect;
 }
 
-static PreambleResult
-Preamble_PLDHashTable(CallArguments* aArguments)
-{
+static PreambleResult Preamble_PLDHashTable(CallArguments* aArguments) {
   CheckPLDHashTable(aArguments->Arg<0, PLDHashTable*>());
   return PreambleResult::IgnoreRedirect;
 }
 
 #define MAKE_DIAGNOSTIC_ENTRY_WITH_TYPE(aType, aAddress, aPreamble) \
-  { #aAddress, nullptr, nullptr, nullptr, aPreamble },
+  {#aAddress, nullptr, nullptr, nullptr, aPreamble},
 
 #define MAKE_DIAGNOSTIC_ENTRY(aAddress, aPreamble) \
-  { #aAddress, nullptr, nullptr, nullptr, aPreamble },
+  {#aAddress, nullptr, nullptr, nullptr, aPreamble},
 
 static Redirection gDiagnosticRedirections[] = {
+  // clang-format off
   FOR_EACH_DIAGNOSTIC_REDIRECTION(MAKE_DIAGNOSTIC_ENTRY)
   FOR_EACH_DIAGNOSTIC_MEMBER_PTR_WITH_TYPE_REDIRECTION(MAKE_DIAGNOSTIC_ENTRY_WITH_TYPE)
   FOR_EACH_DIAGNOSTIC_MEMBER_PTR_REDIRECTION(MAKE_DIAGNOSTIC_ENTRY)
+  // clang-format on
 };
+
 
 #undef MAKE_DIAGNOSTIC_ENTRY_WITH_TYPE
 #undef MAKE_DIAGNOSTIC_ENTRY
@@ -2562,7 +2561,8 @@ static Redirection gDiagnosticRedirections[] = {
 ///////////////////////////////////////////////////////////////////////////////
 
 size_t NumRedirections() {
-  return ArrayLength(gSystemRedirections) + ArrayLength(gDiagnosticRedirections);
+  return ArrayLength(gSystemRedirections) +
+         ArrayLength(gDiagnosticRedirections);
 }
 
 static Redirection* gRedirections;
@@ -2593,7 +2593,7 @@ static uint8_t* FunctionStartAddress(Redirection& aRedirection) {
 template <typename FnPtr>
 static uint8_t* ConvertMemberPtrToAddress(FnPtr aPtr) {
   // Dig around in clang's internal representation of member function pointers.
-  uint8_t** contents = (uint8_t**) &aPtr;
+  uint8_t** contents = (uint8_t**)&aPtr;
   return contents[0];
 }
 
@@ -2629,18 +2629,21 @@ void EarlyInitializeRedirections() {
 
   size_t diagnosticIndex = 0;
 
-#define LOAD_DIAGNOSTIC_ENTRY(aAddress, aPreamble) \
-  gDiagnosticRedirections[diagnosticIndex++].mBaseFunction = BitwiseCast<uint8_t*>(aAddress);
+#define LOAD_DIAGNOSTIC_ENTRY(aAddress, aPreamble)           \
+  gDiagnosticRedirections[diagnosticIndex++].mBaseFunction = \
+      BitwiseCast<uint8_t*>(aAddress);
   FOR_EACH_DIAGNOSTIC_REDIRECTION(LOAD_DIAGNOSTIC_ENTRY)
 #undef LOAD_DIAGNOSTIC_ENTRY
 
-#define LOAD_DIAGNOSTIC_ENTRY(aType, aAddress, aPreamble) \
-  gDiagnosticRedirections[diagnosticIndex++].mBaseFunction = ConvertMemberPtrToAddress<aType>(aAddress);
+#define LOAD_DIAGNOSTIC_ENTRY(aType, aAddress, aPreamble)    \
+  gDiagnosticRedirections[diagnosticIndex++].mBaseFunction = \
+      ConvertMemberPtrToAddress<aType>(aAddress);
   FOR_EACH_DIAGNOSTIC_MEMBER_PTR_WITH_TYPE_REDIRECTION(LOAD_DIAGNOSTIC_ENTRY)
 #undef LOAD_DIAGNOSTIC_ENTRY
 
-#define LOAD_DIAGNOSTIC_ENTRY(aAddress, aPreamble) \
-  gDiagnosticRedirections[diagnosticIndex++].mBaseFunction = ConvertMemberPtrToAddress(aAddress);
+#define LOAD_DIAGNOSTIC_ENTRY(aAddress, aPreamble)           \
+  gDiagnosticRedirections[diagnosticIndex++].mBaseFunction = \
+      ConvertMemberPtrToAddress(aAddress);
   FOR_EACH_DIAGNOSTIC_MEMBER_PTR_REDIRECTION(LOAD_DIAGNOSTIC_ENTRY)
 #undef LOAD_DIAGNOSTIC_ENTRY
 

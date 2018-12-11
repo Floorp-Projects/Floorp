@@ -30,11 +30,6 @@ void CroppingWindowCapturer::Start(DesktopCapturer::Callback* callback) {
   window_capturer_->Start(callback);
 }
 
-void CroppingWindowCapturer::Stop() {
-  window_capturer_->Stop();
-  callback_ = NULL;
-}
-
 void CroppingWindowCapturer::SetSharedMemoryFactory(
     std::unique_ptr<SharedMemoryFactory> shared_memory_factory) {
   window_capturer_->SetSharedMemoryFactory(std::move(shared_memory_factory));

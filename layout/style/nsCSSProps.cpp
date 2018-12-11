@@ -447,15 +447,6 @@ const KTableEntry nsCSSProps::kContainKTable[] = {
     {eCSSKeyword_size, NS_STYLE_CONTAIN_SIZE},
     {eCSSKeyword_UNKNOWN, -1}};
 
-const KTableEntry nsCSSProps::kOverflowSubKTable[] = {
-    {eCSSKeyword_auto, NS_STYLE_OVERFLOW_AUTO},
-    {eCSSKeyword_visible, NS_STYLE_OVERFLOW_VISIBLE},
-    {eCSSKeyword_hidden, NS_STYLE_OVERFLOW_HIDDEN},
-    {eCSSKeyword_scroll, NS_STYLE_OVERFLOW_SCROLL},
-    // Deprecated:
-    {eCSSKeyword__moz_hidden_unscrollable, NS_STYLE_OVERFLOW_CLIP},
-    {eCSSKeyword_UNKNOWN, -1}};
-
 const KTableEntry nsCSSProps::kTextAlignKTable[] = {
     {eCSSKeyword_left, NS_STYLE_TEXT_ALIGN_LEFT},
     {eCSSKeyword_right, NS_STYLE_TEXT_ALIGN_RIGHT},

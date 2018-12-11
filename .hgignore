@@ -176,13 +176,15 @@ tps_result\.json
 # Ignore Visual Studio Code workspace files.
 \.vscode/(?!extensions\.json|tasks\.json)
 
-subinclude:servo/.hgignore
-
 # Ignore Infer output
 ^infer-out/
 
 # https://bz.mercurial-scm.org/show_bug.cgi?id=5322
 ^comm/
+
+# Ignore temp files created by patch command.
+\.orig$
+\.rej$
 
 # Ignore various raptor performance framework files
 ^testing/raptor/.raptor-venv

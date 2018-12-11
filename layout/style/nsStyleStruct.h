@@ -1902,8 +1902,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleBreakWithin mBreakInside;
   mozilla::StyleBreakBetween mBreakBefore;
   mozilla::StyleBreakBetween mBreakAfter;
-  uint8_t mOverflowX;  // NS_STYLE_OVERFLOW_*
-  uint8_t mOverflowY;  // NS_STYLE_OVERFLOW_*
+  mozilla::StyleOverflow mOverflowX;
+  mozilla::StyleOverflow mOverflowY;
   mozilla::StyleOverflowClipBox mOverflowClipBoxBlock;
   mozilla::StyleOverflowClipBox mOverflowClipBoxInline;
   mozilla::StyleResize mResize;
@@ -2137,9 +2137,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
 
   bool IsScrollableOverflow() const {
     // mOverflowX and mOverflowY always match when one of them is
-    // NS_STYLE_OVERFLOW_VISIBLE or NS_STYLE_OVERFLOW_CLIP.
-    return mOverflowX != NS_STYLE_OVERFLOW_VISIBLE &&
-           mOverflowX != NS_STYLE_OVERFLOW_CLIP;
+    // Visible or MozHiddenUnscrollable.
+    return mOverflowX != mozilla::StyleOverflow::Visible &&
+           mOverflowX != mozilla::StyleOverflow::MozHiddenUnscrollable;
   }
 
   bool IsContainPaint() const {

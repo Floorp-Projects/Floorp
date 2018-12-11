@@ -332,7 +332,8 @@ void SessionAccessibility::ReplaceViewportCache(
     AccessibleWrap* acc = aAccessibles.ElementAt(i);
     if (aData.Length() == aAccessibles.Length()) {
       const BatchData& data = aData.ElementAt(i);
-      auto bundle = acc->ToSmallBundle(data.State(), data.Bounds(), data.ActionCount());
+      auto bundle =
+          acc->ToSmallBundle(data.State(), data.Bounds(), data.ActionCount());
       infos->SetElement(i, bundle);
     } else {
       infos->SetElement(i, acc->ToSmallBundle());

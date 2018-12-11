@@ -1380,8 +1380,14 @@ nsresult XULDocument::CreateElementFromPrototype(
         aPrototype->mNodeInfo->NamespaceID(), ELEMENT_NODE);
     if (!newNodeInfo) return NS_ERROR_OUT_OF_MEMORY;
     RefPtr<mozilla::dom::NodeInfo> xtfNi = newNodeInfo;
-    rv = NS_NewElement(getter_AddRefs(result), newNodeInfo.forget(),
-                       NOT_FROM_PARSER);
+    if (aPrototype->mIsAtom &&
+        newNodeInfo->NamespaceID() == kNameSpaceID_XHTML) {
+      rv = NS_NewHTMLElement(getter_AddRefs(result), newNodeInfo.forget(),
+                             NOT_FROM_PARSER, aPrototype->mIsAtom);
+    } else {
+      rv = NS_NewElement(getter_AddRefs(result), newNodeInfo.forget(),
+                         NOT_FROM_PARSER);
+    }
     if (NS_FAILED(rv)) return rv;
 
     rv = AddAttributes(aPrototype, result);

@@ -67,7 +67,6 @@ class MouseCursorMonitorX11 : public MouseCursorMonitor,
   ~MouseCursorMonitorX11() override;
 
   void Init(Callback* callback, Mode mode) override;
-  void Stop() override;
   void Capture() override;
 
  private:
@@ -128,7 +127,10 @@ MouseCursorMonitorX11::MouseCursorMonitorX11(
 }
 
 MouseCursorMonitorX11::~MouseCursorMonitorX11() {
-  Stop();
+  if (have_xfixes_) {
+    x_display_->RemoveEventHandler(xfixes_event_base_ + XFixesCursorNotify,
+                                   this);
+  }
 }
 
 void MouseCursorMonitorX11::Init(Callback* callback, Mode mode) {
@@ -151,14 +153,6 @@ void MouseCursorMonitorX11::Init(Callback* callback, Mode mode) {
     CaptureCursor();
   } else {
     RTC_LOG(LS_INFO) << "X server does not support XFixes.";
-  }
-}
-
-void MouseCursorMonitorX11::Stop() {
-  callback_ = NULL;
-  if (have_xfixes_) {
-    x_display_->RemoveEventHandler(xfixes_event_base_ + XFixesCursorNotify,
-                                   this);
   }
 }
 

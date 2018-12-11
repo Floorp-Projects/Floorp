@@ -249,7 +249,6 @@ class ScreenCapturerMac : public DesktopCapturer {
 
   // DesktopCapturer interface.
   void Start(Callback* callback) override;
-  void Stop() override;
   void CaptureFrame() override;
   void SetExcludedWindow(WindowId window) override;
   bool GetSourceList(SourceList* screens) override;
@@ -381,10 +380,6 @@ void ScreenCapturerMac::Start(Callback* callback) {
   desktop_config_monitor_->Lock();
   update_screen_configuration_ = true;
   desktop_config_monitor_->Unlock();
-}
-
-void ScreenCapturerMac::Stop() {
-  callback_ = NULL;
 }
 
 void ScreenCapturerMac::CaptureFrame() {

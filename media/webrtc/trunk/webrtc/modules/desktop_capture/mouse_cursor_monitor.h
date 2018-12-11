@@ -97,9 +97,6 @@ class MouseCursorMonitor {
   // capturer is destroyed.
   virtual void Init(Callback* callback, Mode mode) = 0;
 
-  // clears the callback
-  virtual void Stop() = 0;
-
   // Captures current cursor shape and position (depending on the |mode| passed
   // to Init()). Calls Callback::OnMouseCursor() if cursor shape has
   // changed since the last call (or when Capture() is called for the first

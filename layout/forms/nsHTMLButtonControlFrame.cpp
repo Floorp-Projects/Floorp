@@ -72,7 +72,7 @@ nsresult nsHTMLButtonControlFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 bool nsHTMLButtonControlFrame::ShouldClipPaintingToBorderBox() {
-  return IsInput() || StyleDisplay()->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE;
+  return IsInput() || StyleDisplay()->mOverflowX != StyleOverflow::Visible;
 }
 
 void nsHTMLButtonControlFrame::BuildDisplayList(

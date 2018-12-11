@@ -71,6 +71,17 @@ GeckoViewStartup.prototype = {
           handler: _ => this.GeckoViewConsole,
         });
 
+        // Handle invalid form submission. If we don't hook up to this,
+        // invalid forms are allowed to be submitted!
+        Services.obs.addObserver({
+          QueryInterface: ChromeUtils.generateQI([
+            Ci.nsIObserver, Ci.nsIFormSubmitObserver,
+          ]),
+          notifyInvalidSubmit: (form, element) => {
+            // We should show the validation message here, bug 1510450.
+          },
+        }, "invalidformsubmit");
+
         if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT) {
           ActorManagerParent.flush();
 

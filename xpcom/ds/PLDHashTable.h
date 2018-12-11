@@ -436,10 +436,7 @@ class PLDHashTable {
   }
 
   // Provide access to the raw ops to internal record/replay structures.
-  const PLDHashTableOps* RecordReplayWrappedOps() const
-  {
-    return mOps;
-  }
+  const PLDHashTableOps* RecordReplayWrappedOps() const { return mOps; }
 
   // Size in entries (gross, not net of free and removed sentinels) for table.
   // This can be zero if no elements have been added yet, in which case the
