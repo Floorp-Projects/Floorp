@@ -1741,8 +1741,28 @@ class nsIPresShell : public nsStubDocumentObserver {
   // A hash table of heap allocated weak frames.
   nsTHashtable<nsPtrHashKey<WeakFrame>> mWeakFrames;
 
+  class DirtyRootsList {
+   public:
+    void AppendElement(nsIFrame* aFrame);
+    void RemoveElement(nsIFrame* aFrame);
+    void RemoveElements(nsIFrame* aFrame);
+    void RemoveElementAt(size_t aIndex);
+    void Clear();
+    bool Contains(nsIFrame* aFrame) const;
+    bool IsEmpty() const;
+    size_t Length() const;
+    auto begin() const { return mList.begin(); }
+    auto begin() { return mList.begin(); }
+    auto end() const { return mList.end(); }
+    auto end() { return mList.end(); }
+    auto& operator[](size_t i) { return mList[i]; }
+
+   private:
+    nsTArray<nsIFrame*> mList;
+  };
+
   // Reflow roots that need to be reflowed.
-  nsTArray<nsIFrame*> mDirtyRoots;
+  DirtyRootsList mDirtyRoots;
 
 #ifdef MOZ_GECKO_PROFILER
   // These two fields capture call stacks of any changes that require a restyle
