@@ -72,7 +72,7 @@ class LintSandbox(ConfigureSandbox):
         for num, arg in enumerate(all_args):
             if arg not in used_args:
                 dep = obj.dependencies[num]
-                if dep != self._help_option:
+                if dep != self._help_option or not self._need_help_dependency(obj):
                     if isinstance(dep, DependsFunction):
                         dep = dep.name
                     else:
@@ -82,12 +82,11 @@ class LintSandbox(ConfigureSandbox):
                         % (loc, dep)
                     )
 
-    def _missing_help_dependency(self, obj):
+    def _need_help_dependency(self, obj):
         if isinstance(obj, (CombinedDependsFunction, TrivialDependsFunction)):
             return False
         if isinstance(obj, DependsFunction):
-            if (self._help_option in obj.dependencies or
-                obj in (self._always, self._never)):
+            if obj in (self._always, self._never):
                 return False
             func, glob = self.unwrap(obj._func)
             # We allow missing --help dependencies for functions that:
@@ -107,6 +106,12 @@ class LintSandbox(ConfigureSandbox):
                         continue
                     return True
         return False
+
+    def _missing_help_dependency(self, obj):
+        if (isinstance(obj, DependsFunction) and
+                self._help_option in obj.dependencies):
+            return False
+        return self._need_help_dependency(obj)
 
     @memoize
     def _value_for_depends(self, obj, need_help_dependency=False):

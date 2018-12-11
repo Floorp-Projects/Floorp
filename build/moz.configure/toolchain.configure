@@ -191,8 +191,8 @@ add_old_configure_assignment('YASM', have_yasm)
 # ==============================================================
 
 
-@depends('--disable-compile-environment', build_project, '--help')
-def compiling_android(compile_env, build_project, _):
+@depends('--disable-compile-environment', build_project)
+def compiling_android(compile_env, build_project):
     return compile_env and build_project in ('mobile/android', 'js')
 
 
