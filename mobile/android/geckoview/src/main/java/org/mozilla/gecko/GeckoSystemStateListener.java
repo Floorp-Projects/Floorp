@@ -84,6 +84,10 @@ public class GeckoSystemStateListener
     @WrapForJNI(calledFrom = "gecko")
     // For prefers-reduced-motion media queries feature.
     private static boolean prefersReducedMotion() {
+        if (SysInfo.getVersion() < 17) {
+          return false;
+        }
+
         ContentResolver contentResolver = sApplicationContext.getContentResolver();
 
         return Settings.Global.getFloat(contentResolver,
