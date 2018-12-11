@@ -1743,22 +1743,44 @@ class nsIPresShell : public nsStubDocumentObserver {
 
   class DirtyRootsList {
    public:
-    void AppendElement(nsIFrame* aFrame);
-    void RemoveElement(nsIFrame* aFrame);
-    void RemoveElements(nsIFrame* aFrame);
-    void RemoveElementAt(size_t aIndex);
+    // Add a dirty root.
+    void Add(nsIFrame* aFrame);
+    // Remove this frame if present.
+    void Remove(nsIFrame* aFrame);
+    // Remove and return one of the shallowest dirty roots from the list.
+    // (If two roots are at the same depth, order is indeterminate.)
+    nsIFrame* PopShallowestRoot();
+    // Remove all dirty roots.
     void Clear();
+    // Is this frame one of the dirty roots?
     bool Contains(nsIFrame* aFrame) const;
+    // Are there no dirty roots?
     bool IsEmpty() const;
-    size_t Length() const;
-    auto begin() const { return mList.begin(); }
-    auto begin() { return mList.begin(); }
-    auto end() const { return mList.end(); }
-    auto end() { return mList.end(); }
-    auto& operator[](size_t i) { return mList[i]; }
+    // Is the given frame an ancestor of any dirty root?
+    bool FrameIsAncestorOfDirtyRoot(nsIFrame* aFrame) const;
 
    private:
-    nsTArray<nsIFrame*> mList;
+    struct FrameAndDepth {
+      nsIFrame* mFrame;
+      const uint32_t mDepth;
+
+      // Easy conversion to nsIFrame*, as it's the most likely need.
+      operator nsIFrame*() const { return mFrame; }
+
+      // Used to sort by reverse depths, i.e., deeper < shallower.
+      class CompareByReverseDepth {
+       public:
+        bool Equals(const FrameAndDepth& aA, const FrameAndDepth& aB) const {
+          return aA.mDepth == aB.mDepth;
+        }
+        bool LessThan(const FrameAndDepth& aA, const FrameAndDepth& aB) const {
+          // Reverse depth! So '>' instead of '<'.
+          return aA.mDepth > aB.mDepth;
+        }
+      };
+    };
+    // List of all known dirty roots, sorted by decreasing depths.
+    nsTArray<FrameAndDepth> mList;
   };
 
   // Reflow roots that need to be reflowed.
