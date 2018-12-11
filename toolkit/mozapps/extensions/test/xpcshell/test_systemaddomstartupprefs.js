@@ -13,8 +13,7 @@ AddonTestUtils.usePrivilegedSignatures = "system";
 
 add_task(initSystemAddonDirs);
 
-let Monitor = SlightlyLessDodgyBootstrapMonitor;
-Monitor.init();
+BootstrapMonitor.init();
 
 add_task(async function setup() {
   let xpi = await getSystemAddonXPI(1, "1.0");
@@ -29,12 +28,12 @@ add_task(async function systemAddonPreffedOff() {
 
   await promiseStartupManager();
 
-  Monitor.checkInstalled(id);
-  Monitor.checkNotStarted(id);
+  BootstrapMonitor.checkInstalled(id);
+  BootstrapMonitor.checkNotStarted(id);
 
   await promiseRestartManager();
 
-  Monitor.checkNotStarted(id);
+  BootstrapMonitor.checkNotStarted(id);
 
   await promiseShutdownManager(false);
 });
@@ -45,12 +44,12 @@ add_task(async function systemAddonPreffedOn() {
 
   await promiseStartupManager("2.0");
 
-  Monitor.checkInstalled(id);
-  Monitor.checkStarted(id);
+  BootstrapMonitor.checkInstalled(id);
+  BootstrapMonitor.checkStarted(id);
 
   await promiseRestartManager();
 
-  Monitor.checkStarted(id);
+  BootstrapMonitor.checkStarted(id);
 
   await promiseShutdownManager();
 });
