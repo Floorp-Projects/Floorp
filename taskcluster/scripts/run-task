@@ -387,10 +387,19 @@ def configure_volume_posix(volume, user, group, running_as_root):
 
 
 def vcs_checkout(source_repo, dest, store_path,
-                 base_repo=None, revision=None,
+                 base_repo=None, revision=None, branch=None,
                  fetch_hgfingerprint=False, sparse_profile=None):
-    if not revision:
-        print('full revision hash for checkouts must be specified')
+    # Specify method to checkout a revision. This defaults to revisions as
+    # SHA-1 strings, but also supports symbolic revisions like `tip` via the
+    # branch flag.
+    if revision:
+        revision_flag = '--revision'
+        revision_value = revision
+    elif branch:
+        revision_flag = '--branch'
+        revision_value = branch
+    else:
+        print('revision is not specified for checkout')
         sys.exit(1)
 
     if IS_POSIX:
@@ -441,7 +450,7 @@ def vcs_checkout(source_repo, dest, store_path,
 
     dest = os.path.abspath(dest)
     args.extend([
-        '--revision', revision,
+        revision_flag, revision_value,
         source_repo, dest,
     ])
 
@@ -489,69 +498,6 @@ def fetch_artifacts():
     print_line(b'fetches', b'finished fetching artifacts\n')
 
 
-def add_vcs_arguments(parser, project, name):
-    """Adds arguments to ArgumentParser to control VCS options for a project."""
-
-    parser.add_argument('--%s-checkout' % project,
-                        help='Directory where %s checkout should be created' %
-                             name)
-    parser.add_argument('--%s-sparse-profile' % project,
-                        help='Path to sparse profile for %s checkout' % name)
-
-
-def collect_vcs_options(args, project):
-    checkout = getattr(args, '%s_checkout' % project)
-    sparse_profile = getattr(args, '%s_sparse_profile' % project)
-
-    if not checkout:
-        return None
-
-    env_prefix = project.upper()
-
-    base_repo = os.environ.get('%s_BASE_REPOSITORY' % env_prefix)
-    head_repo = os.environ.get('%s_HEAD_REPOSITORY' % env_prefix)
-    revision = os.environ.get('%s_HEAD_REV' % env_prefix)
-
-    store_path = os.environ['HG_STORE_PATH']
-
-    # Expand ~ in some paths.
-    checkout = os.path.expanduser(checkout)
-    store_path = os.path.expanduser(store_path)
-
-    # Some callers set the base repository to mozilla-central for historical
-    # reasons. Switch to mozilla-unified because robustcheckout works best
-    # with it.
-    if base_repo == 'https://hg.mozilla.org/mozilla-central':
-        base_repo = 'https://hg.mozilla.org/mozilla-unified'
-
-    return {
-        'store-path': store_path,
-        'project': project,
-        'env-prefix': env_prefix,
-        'checkout': checkout,
-        'sparse-profile': sparse_profile,
-        'base-repo': base_repo,
-        'head-repo': head_repo,
-        'revision': revision,
-    }
-
-
-def vcs_checkout_from_args(args, project):
-    options = collect_vcs_options(args, project)
-
-    if not options:
-        return
-
-    os.environ['%s_HEAD_REV' % options['env-prefix']] = vcs_checkout(
-        options['head-repo'],
-        options['checkout'],
-        options['store-path'],
-        base_repo=options['base-repo'],
-        revision=options['revision'],
-        fetch_hgfingerprint=args.fetch_hgfingerprint,
-        sparse_profile=options['sparse-profile'])
-
-
 def main(args):
     print_line(b'setup', b'run-task started in %s\n' % os.getcwd().encode('utf-8'))
     running_as_root = IS_POSIX and os.getuid() == 0
@@ -569,15 +515,27 @@ def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--user', default='worker', help='user to run as')
     parser.add_argument('--group', default='worker', help='group to run as')
-
-    add_vcs_arguments(parser, 'gecko', 'Firefox')
-    add_vcs_arguments(parser, 'comm', 'Comm')
-
+    parser.add_argument('--vcs-checkout',
+                        help='Directory where Gecko checkout should be created')
+    parser.add_argument('--sparse-profile',
+                        help='Path to sparse checkout profile to use')
+    parser.add_argument('--comm-checkout',
+                        help='Directory where Comm checkout should be created')
+    parser.add_argument('--tools-checkout',
+                        help='Directory where build/tools checkout should be created')
     parser.add_argument('--fetch-hgfingerprint', action='store_true',
                         help='Fetch the latest hgfingerprint from the secrets store, '
                         'using the taskclsuerProxy')
 
     args = parser.parse_args(our_args)
+
+    # expand ~ in some paths
+    if args.vcs_checkout:
+        args.vcs_checkout = os.path.expanduser(args.vcs_checkout)
+    if args.tools_checkout:
+        args.tools_checkout = os.path.expanduser(args.tools_checkout)
+    if 'HG_STORE_PATH' in os.environ:
+        os.environ['HG_STORE_PATH'] = os.path.expanduser(os.environ['HG_STORE_PATH'])
 
     uid = gid = gids = None
     if IS_POSIX and running_as_root:
@@ -708,8 +666,9 @@ def main(args):
         if running_as_root:
             os.chown(store_path, uid, gid)
 
-    prepare_checkout_dir(args.gecko_checkout)
-    if args.gecko_checkout or args.comm_checkout:
+    prepare_checkout_dir(args.vcs_checkout)
+    prepare_checkout_dir(args.tools_checkout)
+    if args.vcs_checkout or args.tools_checkout or args.comm_checkout:
         prepare_hg_store_path()
 
     if IS_POSIX and running_as_root:
@@ -725,8 +684,62 @@ def main(args):
         os.setresgid(gid, gid, gid)
         os.setresuid(uid, uid, uid)
 
-    vcs_checkout_from_args(args, 'gecko')
-    vcs_checkout_from_args(args, 'comm')
+    # Checkout the repository, setting the GECKO_HEAD_REV to the current
+    # revision hash. Revision hashes have priority over symbolic revisions. We
+    # disallow running tasks with symbolic revisions unless they have been
+    # resolved by a checkout.
+    if args.vcs_checkout:
+        base_repo = os.environ.get('GECKO_BASE_REPOSITORY')
+        # Some callers set the base repository to mozilla-central for historical
+        # reasons. Switch to mozilla-unified because robustcheckout works best
+        # with it.
+        if base_repo == 'https://hg.mozilla.org/mozilla-central':
+            base_repo = 'https://hg.mozilla.org/mozilla-unified'
+
+        os.environ['GECKO_HEAD_REV'] = vcs_checkout(
+            os.environ['GECKO_HEAD_REPOSITORY'],
+            args.vcs_checkout,
+            os.environ['HG_STORE_PATH'],
+            fetch_hgfingerprint=args.fetch_hgfingerprint,
+            base_repo=base_repo,
+            revision=os.environ.get('GECKO_HEAD_REV'),
+            branch=os.environ.get('GECKO_HEAD_REF'),
+            sparse_profile=args.sparse_profile)
+
+    elif not os.environ.get('GECKO_HEAD_REV') and \
+            os.environ.get('GECKO_HEAD_REF'):
+        print('task should be defined in terms of non-symbolic revision')
+        return 1
+
+    if args.tools_checkout:
+        vcs_checkout('https://hg.mozilla.org/build/tools',
+                     args.tools_checkout,
+                     os.environ['HG_STORE_PATH'],
+                     fetch_hgfingerprint=args.fetch_hgfingerprint,
+                     # Always check out the latest commit on default branch.
+                     # This is non-deterministic!
+                     branch='default')
+
+    # Checkout the repository, setting the COMM_HEAD_REV to the current
+    # revision hash. Revision hashes have priority over symbolic revisions. We
+    # disallow running tasks with symbolic revisions unless they have been
+    # resolved by a checkout.
+    if args.comm_checkout:
+        base_repo = os.environ.get('COMM_BASE_REPOSITORY')
+
+        os.environ['COMM_HEAD_REV'] = vcs_checkout(
+            os.environ['COMM_HEAD_REPOSITORY'],
+            args.comm_checkout,
+            os.environ['HG_STORE_PATH'],
+            fetch_hgfingerprint=args.fetch_hgfingerprint,
+            base_repo=base_repo,
+            revision=os.environ.get('COMM_HEAD_REV'),
+            branch=os.environ.get('COMM_HEAD_REF'))
+
+    elif not os.environ.get('COMM_HEAD_REV') and \
+            os.environ.get('COMM_HEAD_REF'):
+        print('task should be defined in terms of non-symbolic revision')
+        return 1
 
     try:
         if 'GECKO_PATH' in os.environ:

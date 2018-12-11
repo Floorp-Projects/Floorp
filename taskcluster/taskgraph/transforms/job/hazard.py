@@ -69,7 +69,7 @@ def docker_worker_hazard(config, job, taskdesc):
 
     worker['command'] = [
         '{workdir}/bin/run-task'.format(**run),
-        '--gecko-checkout', '{workdir}/checkouts/gecko'.format(**run),
+        '--vcs-checkout', '{workdir}/checkouts/gecko'.format(**run),
         '--',
         '/bin/bash', '-c', run['command']
     ]
