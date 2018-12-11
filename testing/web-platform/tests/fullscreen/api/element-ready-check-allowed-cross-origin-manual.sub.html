@@ -26,9 +26,7 @@ async_test((t) => {
   elem.addEventListener('load', () => {
     trusted_click(t, () => {
       elem.contentWindow.postMessage({"action": "report"}, "*");
-    }, elem.contentDocument.body);
-    // TODO(mustaq): The click above should activate the subframe.  But
-    // elem.contentDocument is inaccessible (null) from a cross origin parent!
+    }, document.body);
   });
 });
 </script>

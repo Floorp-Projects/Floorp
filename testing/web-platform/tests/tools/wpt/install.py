@@ -7,6 +7,7 @@ latest_channels = {
     'firefox': 'nightly',
     'chrome': 'dev',
     'safari': 'preview',
+    'safari_webdriver': 'preview',
     'servo': 'nightly'
 }
 

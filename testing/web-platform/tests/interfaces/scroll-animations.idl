@@ -4,6 +4,7 @@
 // Source: Scroll-linked Animations (https://wicg.github.io/scroll-animations/)
 
 enum ScrollDirection {
+  "auto",
   "block",
   "inline",
   "horizontal",
@@ -13,16 +14,15 @@ enum ScrollDirection {
 enum ScrollTimelineAutoKeyword { "auto" };
 
 dictionary ScrollTimelineOptions {
-  Element? scrollSource = null;
-  ScrollDirection orientation = "block";
+  Element scrollSource;
+  ScrollDirection orientation = "auto";
   DOMString startScrollOffset = "auto";
   DOMString endScrollOffset = "auto";
   (double or ScrollTimelineAutoKeyword) timeRange = "auto";
   FillMode fill = "none";
 };
 
-[Exposed=Window,
- Constructor(optional ScrollTimelineOptions options)]
+[Constructor(optional ScrollTimelineOptions options)]
 interface ScrollTimeline : AnimationTimeline {
   readonly attribute Element scrollSource;
   readonly attribute ScrollDirection orientation;

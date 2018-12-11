@@ -29,7 +29,7 @@ partial interface CSSRule {
 };
 
 interface CSSFontPaletteValuesRule : CSSRule {
-  maplike<unsigned long, CSSOMString>;
+  maplike<unsigned long, (CSSOMString or CSSOMRGBColor)>;
   attribute CSSOMString fontFamily;
   attribute CSSOMString basePalette;
 };
