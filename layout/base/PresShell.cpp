@@ -94,6 +94,7 @@
 #ifdef MOZ_REFLOW_PERF
 #include "nsFontMetrics.h"
 #endif
+#include "OverflowChangedTracker.h"
 #include "PositionedEventTargeting.h"
 
 #include "nsIReflowCallback.h"
@@ -1910,7 +1911,7 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
         nsViewManager::AutoDisableRefresh refreshBlocker(viewManager);
 
         mDirtyRoots.RemoveElement(rootFrame);
-        DoReflow(rootFrame, true);
+        DoReflow(rootFrame, true, nullptr);
 
         if (shrinkToFit) {
           const bool reflowAgain =
@@ -1919,7 +1920,7 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
 
           if (reflowAgain) {
             mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
-            DoReflow(rootFrame, true);
+            DoReflow(rootFrame, true, nullptr);
           }
         }
       }
@@ -8357,7 +8358,8 @@ bool PresShell::ScheduleReflowOffTimer() {
   return true;
 }
 
-bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible) {
+bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
+                         OverflowChangedTracker* aOverflowTracker) {
 #ifdef MOZ_GECKO_PROFILER
   nsIURI* uri = mDocument->GetDocumentURI();
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
@@ -8404,6 +8406,10 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible) {
 
   const bool isRoot = target == mFrameConstructor->GetRootFrame();
 
+  MOZ_ASSERT(isRoot || aOverflowTracker,
+             "caller must provide overflow tracker when reflowing "
+             "non-root frames");
+
   // CreateReferenceRenderingContext can return nullptr
   RefPtr<gfxContext> rcx(CreateReferenceRenderingContext());
 
@@ -8420,6 +8426,11 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible) {
     size = LogicalSize(wm, mPresContext->GetVisibleArea().Size());
   } else {
     size = target->GetLogicalSize();
+  }
+
+  nsOverflowAreas oldOverflow;  // initialized and used only when !isRoot
+  if (!isRoot) {
+    oldOverflow = target->GetOverflowAreas();
   }
 
   NS_ASSERTION(!target->GetNextInFlow() && !target->GetPrevInFlow(),
@@ -8491,12 +8502,6 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible) {
                     desiredSize.BSize(wm) == size.BSize(wm)),
                "non-root frame's desired size changed during an "
                "incremental reflow");
-  NS_ASSERTION(isRoot || desiredSize.VisualOverflow().IsEqualInterior(
-                             boundsRelativeToTarget),
-               "non-root reflow roots must not have visible overflow");
-  NS_ASSERTION(isRoot || desiredSize.ScrollableOverflow().IsEqualEdges(
-                             boundsRelativeToTarget),
-               "non-root reflow roots must not have scrollable overflow");
   NS_ASSERTION(status.IsEmpty(), "reflow roots should never split");
 
   target->SetSize(boundsRelativeToTarget.Size());
@@ -8520,6 +8525,12 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible) {
 #ifdef DEBUG
   mCurrentReflowRoot = nullptr;
 #endif
+
+  if (!isRoot && oldOverflow != target->GetOverflowAreas()) {
+    // The overflow area changed.  Propagate this change to ancestors.
+    aOverflowTracker->AddFrame(target->GetParent(),
+                               OverflowChangedTracker::CHILDREN_CHANGED);
+  }
 
   NS_ASSERTION(
       mPresContext->HasPendingInterrupt() || mFramesToDirty.Count() == 0,
@@ -8631,6 +8642,8 @@ bool PresShell::ProcessReflowCommands(bool aInterruptible) {
       AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
       nsViewManager::AutoDisableRefresh refreshBlocker(mViewManager);
 
+      OverflowChangedTracker overflowTracker;
+
       do {
         // Send an incremental reflow notification to the target frame.
         int32_t idx = mDirtyRoots.Length() - 1;
@@ -8644,7 +8657,7 @@ bool PresShell::ProcessReflowCommands(bool aInterruptible) {
           continue;
         }
 
-        interrupted = !DoReflow(target, aInterruptible);
+        interrupted = !DoReflow(target, aInterruptible, &overflowTracker);
 
         // Keep going until we're out of reflow commands, or we've run
         // past our deadline, or we're interrupted.
@@ -8652,6 +8665,8 @@ bool PresShell::ProcessReflowCommands(bool aInterruptible) {
                (!aInterruptible || PR_IntervalNow() < deadline));
 
       interrupted = !mDirtyRoots.IsEmpty();
+
+      overflowTracker.Flush();
     }
 
     // Exiting the scriptblocker might have killed us

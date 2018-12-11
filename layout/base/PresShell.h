@@ -51,6 +51,7 @@ class Selection;
 }  // namespace dom
 
 class EventDispatchingCallback;
+class OverflowChangedTracker;
 
 // A set type for tracking visible frames, for use by the visibility code in
 // PresShell. The set contains nsIFrame* pointers.
@@ -426,7 +427,10 @@ class PresShell final : public nsIPresShell,
   void ScheduleReflow();
 
   // DoReflow returns whether the reflow finished without interruption
-  bool DoReflow(nsIFrame* aFrame, bool aInterruptible);
+  // If aFrame is not the root frame, the caller must pass a non-null
+  // aOverflowTracker.
+  bool DoReflow(nsIFrame* aFrame, bool aInterruptible,
+                mozilla::OverflowChangedTracker* aOverflowTracker);
 #ifdef DEBUG
   void DoVerifyReflow();
   void VerifyHasDirtyRootAncestor(nsIFrame* aFrame);
