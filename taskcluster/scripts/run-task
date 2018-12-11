@@ -508,12 +508,19 @@ def add_vcs_arguments(parser, project, name):
                         help='Path to sparse profile for %s checkout' % name)
 
 
-def collect_vcs_options(args, project):
+def collect_vcs_options(args, project, env_prefix=None):
     checkout = getattr(args, '%s_checkout' % project)
     sparse_profile = getattr(args, '%s_sparse_profile' % project)
 
     if not checkout:
         return None
+
+    env_prefix = env_prefix or project.upper()
+
+    base_repo = os.environ.get('%s_BASE_REPOSITORY' % env_prefix)
+    head_repo = os.environ.get('%s_HEAD_REPOSITORY' % env_prefix)
+    revision = os.environ.get('%s_HEAD_REV' % env_prefix)
+    branch = os.environ.get('%s_HEAD_REF' % env_prefix)
 
     checkout = os.path.expanduser(checkout)
 
@@ -521,6 +528,10 @@ def collect_vcs_options(args, project):
         'project': project,
         'checkout': checkout,
         'sparse-profile': sparse_profile,
+        'base-repo': base_repo,
+        'head-repo': head_repo,
+        'revision': revision,
+        'branch': branch,
     }
 
 
@@ -707,10 +718,10 @@ def main(args):
     # revision hash. Revision hashes have priority over symbolic revisions. We
     # disallow running tasks with symbolic revisions unless they have been
     # resolved by a checkout.
-    firefox_checkout = collect_vcs_options(args, 'firefox')
+    firefox_checkout = collect_vcs_options(args, 'firefox', env_prefix='GECKO')
 
     if firefox_checkout:
-        base_repo = os.environ.get('GECKO_BASE_REPOSITORY')
+        base_repo = firefox_checkout['base-repo']
         # Some callers set the base repository to mozilla-central for historical
         # reasons. Switch to mozilla-unified because robustcheckout works best
         # with it.
@@ -718,13 +729,13 @@ def main(args):
             base_repo = 'https://hg.mozilla.org/mozilla-unified'
 
         os.environ['GECKO_HEAD_REV'] = vcs_checkout(
-            os.environ['GECKO_HEAD_REPOSITORY'],
+            firefox_checkout['head-repo'],
             firefox_checkout['checkout'],
             os.environ['HG_STORE_PATH'],
             fetch_hgfingerprint=args.fetch_hgfingerprint,
             base_repo=base_repo,
-            revision=os.environ.get('GECKO_HEAD_REV'),
-            branch=os.environ.get('GECKO_HEAD_REF'),
+            revision=firefox_checkout['revision'],
+            branch=firefox_checkout['branch'],
             sparse_profile=firefox_checkout['sparse-profile'])
 
     elif not os.environ.get('GECKO_HEAD_REV') and \
@@ -750,16 +761,14 @@ def main(args):
     # resolved by a checkout.
     comm_checkout = collect_vcs_options(args, 'comm')
     if comm_checkout:
-        base_repo = os.environ.get('COMM_BASE_REPOSITORY')
-
         os.environ['COMM_HEAD_REV'] = vcs_checkout(
-            os.environ['COMM_HEAD_REPOSITORY'],
+            comm_checkout['head-repo'],
             comm_checkout['checkout'],
             os.environ['HG_STORE_PATH'],
             fetch_hgfingerprint=args.fetch_hgfingerprint,
-            base_repo=base_repo,
-            revision=os.environ.get('COMM_HEAD_REV'),
-            branch=os.environ.get('COMM_HEAD_REF'),
+            base_repo=comm_checkout['base-repo'],
+            revision=comm_checkout['revision'],
+            branch=comm_checkout['branch'],
             sparse_profile=comm_checkout['sparse-profile'])
 
     elif not os.environ.get('COMM_HEAD_REV') and \
