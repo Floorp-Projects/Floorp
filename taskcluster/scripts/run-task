@@ -498,6 +498,32 @@ def fetch_artifacts():
     print_line(b'fetches', b'finished fetching artifacts\n')
 
 
+def add_vcs_arguments(parser, project, name):
+    """Adds arguments to ArgumentParser to control VCS options for a project."""
+
+    parser.add_argument('--%s-checkout' % project,
+                        help='Directory where %s checkout should be created' %
+                             name)
+    parser.add_argument('--%s-sparse-profile' % project,
+                        help='Path to sparse profile for %s checkout' % name)
+
+
+def collect_vcs_options(args, project):
+    checkout = getattr(args, '%s_checkout' % project)
+    sparse_profile = getattr(args, '%s_sparse_profile' % project)
+
+    if not checkout:
+        return None
+
+    checkout = os.path.expanduser(checkout)
+
+    return {
+        'project': project,
+        'checkout': checkout,
+        'sparse-profile': sparse_profile,
+    }
+
+
 def main(args):
     print_line(b'setup', b'run-task started in %s\n' % os.getcwd().encode('utf-8'))
     running_as_root = IS_POSIX and os.getuid() == 0
@@ -515,14 +541,11 @@ def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--user', default='worker', help='user to run as')
     parser.add_argument('--group', default='worker', help='group to run as')
-    parser.add_argument('--firefox-checkout',
-                        help='Directory where Firefox checkout should be created')
-    parser.add_argument('--firefox-sparse-profile',
-                        help='Path to sparse checkout profile to use')
-    parser.add_argument('--comm-checkout',
-                        help='Directory where Comm checkout should be created')
-    parser.add_argument('--tools-checkout',
-                        help='Directory where build/tools checkout should be created')
+
+    add_vcs_arguments(parser, 'firefox', 'Firefox')
+    add_vcs_arguments(parser, 'comm', 'Comm')
+    add_vcs_arguments(parser, 'tools', 'build/tools')
+
     parser.add_argument('--fetch-hgfingerprint', action='store_true',
                         help='Fetch the latest hgfingerprint from the secrets store, '
                         'using the taskclsuerProxy')
@@ -530,10 +553,6 @@ def main(args):
     args = parser.parse_args(our_args)
 
     # expand ~ in some paths
-    if args.firefox_checkout:
-        args.firefox_checkout = os.path.expanduser(args.firefox_checkout)
-    if args.tools_checkout:
-        args.tools_checkout = os.path.expanduser(args.tools_checkout)
     if 'HG_STORE_PATH' in os.environ:
         os.environ['HG_STORE_PATH'] = os.path.expanduser(os.environ['HG_STORE_PATH'])
 
@@ -688,7 +707,9 @@ def main(args):
     # revision hash. Revision hashes have priority over symbolic revisions. We
     # disallow running tasks with symbolic revisions unless they have been
     # resolved by a checkout.
-    if args.firefox_checkout:
+    firefox_checkout = collect_vcs_options(args, 'firefox')
+
+    if firefox_checkout:
         base_repo = os.environ.get('GECKO_BASE_REPOSITORY')
         # Some callers set the base repository to mozilla-central for historical
         # reasons. Switch to mozilla-unified because robustcheckout works best
@@ -698,43 +719,48 @@ def main(args):
 
         os.environ['GECKO_HEAD_REV'] = vcs_checkout(
             os.environ['GECKO_HEAD_REPOSITORY'],
-            args.firefox_checkout,
+            firefox_checkout['checkout'],
             os.environ['HG_STORE_PATH'],
             fetch_hgfingerprint=args.fetch_hgfingerprint,
             base_repo=base_repo,
             revision=os.environ.get('GECKO_HEAD_REV'),
             branch=os.environ.get('GECKO_HEAD_REF'),
-            sparse_profile=args.firefox_sparse_profile)
+            sparse_profile=firefox_checkout['sparse-profile'])
 
     elif not os.environ.get('GECKO_HEAD_REV') and \
             os.environ.get('GECKO_HEAD_REF'):
         print('task should be defined in terms of non-symbolic revision')
         return 1
 
-    if args.tools_checkout:
+    tools_checkout = collect_vcs_options(args, 'tools')
+
+    if tools_checkout:
         vcs_checkout('https://hg.mozilla.org/build/tools',
-                     args.tools_checkout,
+                     tools_checkout['checkout'],
                      os.environ['HG_STORE_PATH'],
                      fetch_hgfingerprint=args.fetch_hgfingerprint,
                      # Always check out the latest commit on default branch.
                      # This is non-deterministic!
-                     branch='default')
+                     branch='default',
+                     sparse_profile=tools_checkout['sparse-profile'])
 
     # Checkout the repository, setting the COMM_HEAD_REV to the current
     # revision hash. Revision hashes have priority over symbolic revisions. We
     # disallow running tasks with symbolic revisions unless they have been
     # resolved by a checkout.
-    if args.comm_checkout:
+    comm_checkout = collect_vcs_options(args, 'comm')
+    if comm_checkout:
         base_repo = os.environ.get('COMM_BASE_REPOSITORY')
 
         os.environ['COMM_HEAD_REV'] = vcs_checkout(
             os.environ['COMM_HEAD_REPOSITORY'],
-            args.comm_checkout,
+            comm_checkout['checkout'],
             os.environ['HG_STORE_PATH'],
             fetch_hgfingerprint=args.fetch_hgfingerprint,
             base_repo=base_repo,
             revision=os.environ.get('COMM_HEAD_REV'),
-            branch=os.environ.get('COMM_HEAD_REF'))
+            branch=os.environ.get('COMM_HEAD_REF'),
+            sparse_profile=comm_checkout['sparse-profile'])
 
     elif not os.environ.get('COMM_HEAD_REV') and \
             os.environ.get('COMM_HEAD_REF'):
