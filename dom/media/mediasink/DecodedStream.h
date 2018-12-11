@@ -33,8 +33,8 @@ class TimeStamp;
 template <class T>
 class MediaQueue;
 
-class DecodedStream : public media::MediaSink {
-  using media::MediaSink::PlaybackParams;
+class DecodedStream : public MediaSink {
+  using MediaSink::PlaybackParams;
 
  public:
   DecodedStream(AbstractThread* aOwnerThread, AbstractThread* aMainThread,
@@ -47,7 +47,7 @@ class DecodedStream : public media::MediaSink {
   const PlaybackParams& GetPlaybackParams() const override;
   void SetPlaybackParams(const PlaybackParams& aParams) override;
 
-  RefPtr<GenericPromise> OnEnded(TrackType aType) override;
+  RefPtr<EndedPromise> OnEnded(TrackType aType) override;
   media::TimeUnit GetEndTime(TrackType aType) const override;
   media::TimeUnit GetPosition(TimeStamp* aTimeStamp = nullptr) const override;
   bool HasUnplayedFrames(TrackType aType) const override {
@@ -108,8 +108,8 @@ class DecodedStream : public media::MediaSink {
    */
   WatchManager<DecodedStream> mWatchManager;
   UniquePtr<DecodedStreamData> mData;
-  RefPtr<GenericPromise> mAudioEndPromise;
-  RefPtr<GenericPromise> mVideoEndPromise;
+  RefPtr<EndedPromise> mAudioEndedPromise;
+  RefPtr<EndedPromise> mVideoEndedPromise;
 
   Watchable<bool> mPlaying;
   const bool& mSameOrigin;  // valid until Shutdown() is called.
