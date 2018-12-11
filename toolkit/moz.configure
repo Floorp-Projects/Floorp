@@ -466,8 +466,8 @@ set_define('MOZ_OMX', openmax)
 # EME Support
 # ==============================================================
 # Widevine is enabled by default in desktop browser builds.
-@depends(build_project, '--help')
-def eme_default(build_project, help):
+@depends(build_project)
+def eme_default(build_project):
     if build_project == 'browser':
         return 'widevine'
 
@@ -711,8 +711,8 @@ set_config('MOZ_SYNTH_SPEECHD',
 # ==============================================================
 option('--disable-webspeech', help='Disable support for HTML Speech API')
 
-@depends('--disable-webspeech', '--help')
-def webspeech(value, _):
+@depends('--disable-webspeech')
+def webspeech(value):
     if value:
         return True
 
@@ -1241,8 +1241,8 @@ set_config('MOZ_TASK_TRACER', depends_if('--enable-tasktracer')(lambda _: True))
 # Reflow counting
 # ==============================================================
 
-@depends(moz_debug, '--help')
-def reflow_perf(debug, _):
+@depends(moz_debug)
+def reflow_perf(debug):
     if debug:
         return True
 
@@ -1258,8 +1258,8 @@ set_define('MOZ_REFLOW_PERF_DSP', reflow_perf)
 # Layout debugger
 # ==============================================================
 
-@depends(moz_debug, '--help')
-def layout_debugger(debug, _):
+@depends(moz_debug)
+def layout_debugger(debug):
     if debug:
         return True
 

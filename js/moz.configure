@@ -7,8 +7,8 @@
 # /!\ Use js_option() instead of option() in this file. /!\
 # =========================================================
 
-@depends(build_project, '--help')
-def building_js(build_project, help):
+@depends(build_project)
+def building_js(build_project):
     return build_project == 'js'
 
 # Exception to the rule above: JS_STANDALONE is a special option that doesn't
@@ -258,8 +258,8 @@ def callgrind(value):
 set_define('MOZ_CALLGRIND', callgrind)
 imply_option('--enable-profiling', callgrind)
 
-@depends(milestone, '--help')
-def enable_profiling(milestone, help):
+@depends(milestone)
+def enable_profiling(milestone):
     return milestone.is_nightly
 
 js_option('--enable-profiling', env='MOZ_PROFILING', default=enable_profiling,
@@ -401,8 +401,8 @@ set_define('JS_MORE_DETERMINISTIC', more_deterministic)
 
 # CTypes
 # =======================================================
-@depends(building_js, '--help')
-def ctypes_default(building_js, _):
+@depends(building_js)
+def ctypes_default(building_js):
     return not building_js
 
 js_option('--enable-ctypes',
@@ -424,8 +424,8 @@ set_config('JS_HAS_CTYPES', js_has_ctypes)
 set_define('JS_HAS_CTYPES', js_has_ctypes)
 add_old_configure_assignment('JS_HAS_CTYPES', js_has_ctypes)
 
-@depends('--enable-ctypes', '--enable-compile-environment', '--help')
-def ctypes_and_compile_environment(ctypes, compile_environment, _):
+@depends('--enable-ctypes', '--enable-compile-environment')
+def ctypes_and_compile_environment(ctypes, compile_environment):
     return ctypes and compile_environment
 
 include('ffi.configure', when=ctypes_and_compile_environment)

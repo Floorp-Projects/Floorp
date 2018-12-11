@@ -987,8 +987,8 @@ option('--enable-application', nargs=1, env='MOZ_BUILD_APP',
        help='Application to build. Same as --enable-project.')
 
 
-@depends('--enable-application', '--help')
-def application(app, help):
+@depends('--enable-application')
+def application(app):
     if app:
         return app
 
@@ -996,8 +996,8 @@ def application(app, help):
 imply_option('--enable-project', application)
 
 
-@depends(check_build_environment, '--help')
-def default_project(build_env, help):
+@depends(check_build_environment)
+def default_project(build_env):
     if build_env.topobjdir.endswith('/js/src'):
         return 'js'
     return 'browser'
@@ -1024,8 +1024,8 @@ def include_project_configure(project, external_source_dir, build_env, help):
     return path
 
 
-@depends(include_project_configure, check_build_environment, '--help')
-def build_project(include_project_configure, build_env, help):
+@depends(include_project_configure, check_build_environment)
+def build_project(include_project_configure, build_env):
     ret = os.path.dirname(os.path.relpath(include_project_configure,
                                           build_env.topsrcdir))
     return ret
@@ -1209,8 +1209,8 @@ def project_flag(env=None, set_for_old_configure=False,
 # milestone.is_nightly corresponds to cases NIGHTLY_BUILD is set.
 
 
-@depends(milestone, '--help')
-def enabled_in_nightly(milestone, _):
+@depends(milestone)
+def enabled_in_nightly(milestone):
     return milestone.is_nightly
 
 # Set the MOZ_CONFIGURE_OPTIONS variable with all the options that

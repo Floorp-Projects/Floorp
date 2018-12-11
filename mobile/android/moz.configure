@@ -36,8 +36,8 @@ add_old_configure_assignment('MOZ_NATIVE_DEVICES',
                              depends_if('MOZ_NATIVE_DEVICES')(lambda _: True))
 
 # Enable install tracking SDK if we have Google Play support.
-@depends(milestone, google_play_services, '--help')
-def install_tracking_default(milestone, google_play_services, help):
+@depends(milestone, google_play_services)
+def install_tracking_default(milestone, google_play_services):
     return bool(milestone.is_release_or_beta and google_play_services)
 
 option(env='MOZ_INSTALL_TRACKING',
