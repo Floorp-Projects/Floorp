@@ -7,6 +7,7 @@ package org.mozilla.gecko.gfx;
 
 import android.graphics.SurfaceTexture;
 import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,6 +41,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
         init(handle, false);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private GeckoSurfaceTexture(int handle, boolean singleBufferMode) {
         super(0, singleBufferMode);
         init(handle, singleBufferMode);
