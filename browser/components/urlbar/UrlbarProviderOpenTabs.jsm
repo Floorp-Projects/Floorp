@@ -160,11 +160,17 @@ class ProviderOpenTabs {
         cancel();
         return;
       }
-      addCallback(this, new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
-                                        UrlbarUtils.MATCH_SOURCE.TABS, {
-        url: row.getResultByName("url"),
-        userContextId: row.getResultByName("userContextId"),
-      }));
+      addCallback(
+        this,
+        new UrlbarMatch(
+          UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
+          UrlbarUtils.MATCH_SOURCE.TABS,
+          ...UrlbarMatch.payloadAndSimpleHighlights(queryContext.tokens, {
+            url: [row.getResultByName("url"), true],
+            userContextId: [row.getResultByName("userContextId"), false],
+          })
+        )
+      );
     });
     // We are done.
     this.queries.delete(queryContext);
