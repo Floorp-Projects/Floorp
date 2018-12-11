@@ -136,22 +136,25 @@ public class GeckoViewActivity extends AppCompatActivity {
             sGeckoRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
         }
 
-        mGeckoSession = (GeckoSession)getIntent().getParcelableExtra("session");
-        if (mGeckoSession != null) {
-            connectSession(mGeckoSession);
+        if(savedInstanceState == null) {
+            mGeckoSession = (GeckoSession)getIntent().getParcelableExtra("session");
+            if (mGeckoSession != null) {
+                connectSession(mGeckoSession);
 
-            if (!mGeckoSession.isOpen()) {
-                mGeckoSession.open(sGeckoRuntime);
+                if (!mGeckoSession.isOpen()) {
+                    mGeckoSession.open(sGeckoRuntime);
+                }
+
+                mUseMultiprocess = mGeckoSession.getSettings().getBoolean(GeckoSessionSettings.USE_MULTIPROCESS);
+                mFullAccessibilityTree = mGeckoSession.getSettings().getBoolean(GeckoSessionSettings.FULL_ACCESSIBILITY_TREE);
+
+                mGeckoView.setSession(mGeckoSession);
+            } else {
+                mGeckoSession = createSession();
+                mGeckoView.setSession(mGeckoSession, sGeckoRuntime);
+
+                loadFromIntent(getIntent());
             }
-
-            mUseMultiprocess = mGeckoSession.getSettings().getBoolean(GeckoSessionSettings.USE_MULTIPROCESS);
-            mFullAccessibilityTree = mGeckoSession.getSettings().getBoolean(GeckoSessionSettings.FULL_ACCESSIBILITY_TREE);
-
-            mGeckoView.setSession(mGeckoSession);
-        } else {
-            mGeckoSession = createSession();
-            mGeckoView.setSession(mGeckoSession, sGeckoRuntime);
-            loadFromIntent(getIntent());
         }
 
         mLocationView.setCommitListener(mCommitListener);
@@ -193,12 +196,24 @@ public class GeckoViewActivity extends AppCompatActivity {
     }
 
     private void recreateSession() {
-        mGeckoSession.close();
+        if(mGeckoSession != null) {
+            mGeckoSession.close();
+        }
 
         mGeckoSession = createSession();
         mGeckoSession.open(sGeckoRuntime);
         mGeckoView.setSession(mGeckoSession);
         mGeckoSession.loadUri(mCurrentUri != null ? mCurrentUri : DEFAULT_URL);
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if(savedInstanceState != null) {
+            mGeckoSession = mGeckoView.getSession();
+        } else {
+            recreateSession();
+        }
     }
 
     private void updateTrackingProtection(GeckoSession session) {
@@ -295,7 +310,7 @@ public class GeckoViewActivity extends AppCompatActivity {
     }
 
 
-        private void loadFromIntent(final Intent intent) {
+    private void loadFromIntent(final Intent intent) {
         final Uri uri = intent.getData();
         mGeckoSession.loadUri(uri != null ? uri.toString() : DEFAULT_URL);
     }

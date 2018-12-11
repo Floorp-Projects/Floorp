@@ -46,14 +46,14 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
   },
 });
 
-var RootFront = protocol.FrontClassWithSpec(rootSpec, {
-  initialize: function(client) {
+class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
+  constructor(client) {
+    super(client);
     this.actorID = "root";
-    protocol.Front.prototype.initialize.call(this, client);
     // Root owns itself.
     this.manage(this);
-  },
-});
+  }
+}
 
 function run_test() {
   DebuggerServer.createRootActor = RootActor;
@@ -64,7 +64,7 @@ function run_test() {
   let rootFront;
 
   client.connect().then(([applicationType, traits]) => {
-    rootFront = RootFront(client);
+    rootFront = new RootFront(client);
 
     rootFront.simpleReturn().then(() => {
       ok(false, "Connection was aborted, request shouldn't resolve");

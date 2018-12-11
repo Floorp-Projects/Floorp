@@ -4,10 +4,9 @@
 "use strict";
 
 const {
-  Front,
   FrontClassWithSpec,
-  custom,
   types,
+  registerFront,
 } = require("devtools/shared/protocol.js");
 
 const {
@@ -26,42 +25,39 @@ const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
 /**
  * Client side of a node list as returned by querySelectorAll()
  */
-const NodeListFront = FrontClassWithSpec(nodeListSpec, {
-  initialize: function(client, form) {
-    Front.prototype.initialize.call(this, client, form);
-  },
+class NodeListFront extends FrontClassWithSpec(nodeListSpec) {
+  constructor(client, form) {
+    super(client, form);
+  }
 
-  destroy: function() {
-    Front.prototype.destroy.call(this);
-  },
+  destroy() {
+    super.destroy();
+  }
 
-  marshallPool: function() {
+  marshallPool() {
     return this.parent();
-  },
+  }
 
   // Update the object given a form representation off the wire.
-  form: function(json) {
+  form(json) {
     this.length = json.length;
-  },
+  }
 
-  item: custom(function(index) {
-    return this._item(index).then(response => {
+  item(index) {
+    return super.item(index).then(response => {
       return response.node;
     });
-  }, {
-    impl: "_item",
-  }),
+  }
 
-  items: custom(function(start, end) {
-    return this._items(start, end).then(response => {
+  items(start, end) {
+    return super.items(start, end).then(response => {
       return response.nodes;
     });
-  }, {
-    impl: "_items",
-  }),
-});
+  }
+}
 
 exports.NodeListFront = NodeListFront;
+registerFront(NodeListFront);
 
 /**
  * Convenience API for building a list of attribute modifications
@@ -118,8 +114,9 @@ class AttributeModificationList {
  * the parent node from clients, but the `children` request should be used
  * to traverse children.
  */
-const NodeFront = FrontClassWithSpec(nodeSpec, {
-  initialize: function(conn, form, detail, ctx) {
+class NodeFront extends FrontClassWithSpec(nodeSpec) {
+  constructor(conn, form, detail, ctx) {
+    super(conn, form, detail, ctx);
     // The parent node
     this._parent = null;
     // The first child of this node.
@@ -128,20 +125,19 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
     this._next = null;
     // The previous sibling of this node.
     this._prev = null;
-    Front.prototype.initialize.call(this, conn, form, detail, ctx);
-  },
+  }
 
   /**
    * Destroy a node front.  The node must have been removed from the
    * ownership tree before this is called, unless the whole walker front
    * is being destroyed.
    */
-  destroy: function() {
-    Front.prototype.destroy.call(this);
-  },
+  destroy() {
+    super.destroy();
+  }
 
   // Update the object given a form representation off the wire.
-  form: function(form, detail, ctx) {
+  form(form, detail, ctx) {
     if (detail === "actorid") {
       this.actorID = form;
       return;
@@ -177,22 +173,22 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
     } else {
       this.inlineTextChild = undefined;
     }
-  },
+  }
 
   /**
    * Returns the parent NodeFront for this NodeFront.
    */
-  parentNode: function() {
+  parentNode() {
     return this._parent;
-  },
+  }
 
   /**
    * Returns the NodeFront corresponding to the parentNode of this NodeFront, or the
    * NodeFront corresponding to the host element for shadowRoot elements.
    */
-  parentOrHost: function() {
+  parentOrHost() {
     return this.isShadowRoot ? this.host : this._parent;
-  },
+  }
 
   /**
    * Process a mutation entry as returned from the walker's `getMutations`
@@ -200,7 +196,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
    * themselves (character data and attribute changes), the walker itself
    * will keep the ownership tree up to date.
    */
-  updateMutation: function(change) {
+  updateMutation(change) {
     if (change.type === "attributes") {
       // We'll need to lazily reparse the attributes after this change.
       this._attrMap = undefined;
@@ -236,140 +232,140 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
     } else if (change.type === "events") {
       this._form.hasEventListeners = change.hasEventListeners;
     }
-  },
+  }
 
   // Some accessors to make NodeFront feel more like a Node
 
   get id() {
     return this.getAttribute("id");
-  },
+  }
 
   get nodeType() {
     return this._form.nodeType;
-  },
+  }
   get namespaceURI() {
     return this._form.namespaceURI;
-  },
+  }
   get nodeName() {
     return this._form.nodeName;
-  },
+  }
   get displayName() {
     const {displayName, nodeName} = this._form;
 
     // Keep `nodeName.toLowerCase()` for backward compatibility
     return displayName || nodeName.toLowerCase();
-  },
+  }
   get doctypeString() {
     return "<!DOCTYPE " + this._form.name +
      (this._form.publicId ? " PUBLIC \"" + this._form.publicId + "\"" : "") +
      (this._form.systemId ? " \"" + this._form.systemId + "\"" : "") +
      ">";
-  },
+  }
 
   get baseURI() {
     return this._form.baseURI;
-  },
+  }
 
   get className() {
     return this.getAttribute("class") || "";
-  },
+  }
 
   get hasChildren() {
     return this._form.numChildren > 0;
-  },
+  }
   get numChildren() {
     return this._form.numChildren;
-  },
+  }
   get hasEventListeners() {
     return this._form.hasEventListeners;
-  },
+  }
 
   get isBeforePseudoElement() {
     return this._form.isBeforePseudoElement;
-  },
+  }
   get isAfterPseudoElement() {
     return this._form.isAfterPseudoElement;
-  },
+  }
   get isPseudoElement() {
     return this.isBeforePseudoElement || this.isAfterPseudoElement;
-  },
+  }
   get isAnonymous() {
     return this._form.isAnonymous;
-  },
+  }
   get isInHTMLDocument() {
     return this._form.isInHTMLDocument;
-  },
+  }
   get tagName() {
     return this.nodeType === nodeConstants.ELEMENT_NODE ? this.nodeName : null;
-  },
+  }
 
   get isDocumentElement() {
     return !!this._form.isDocumentElement;
-  },
+  }
 
   get isShadowRoot() {
     return this._form.isShadowRoot;
-  },
+  }
 
   get shadowRootMode() {
     return this._form.shadowRootMode;
-  },
+  }
 
   get isShadowHost() {
     return this._form.isShadowHost;
-  },
+  }
 
   get customElementLocation() {
     return this._form.customElementLocation;
-  },
+  }
 
   get isDirectShadowHostChild() {
     return this._form.isDirectShadowHostChild;
-  },
+  }
 
   // doctype properties
   get name() {
     return this._form.name;
-  },
+  }
   get publicId() {
     return this._form.publicId;
-  },
+  }
   get systemId() {
     return this._form.systemId;
-  },
+  }
 
-  getAttribute: function(name) {
+  getAttribute(name) {
     const attr = this._getAttribute(name);
     return attr ? attr.value : null;
-  },
-  hasAttribute: function(name) {
+  }
+  hasAttribute(name) {
     this._cacheAttributes();
     return (name in this._attrMap);
-  },
+  }
 
   get hidden() {
     const cls = this.getAttribute("class");
     return cls && cls.indexOf(HIDDEN_CLASS) > -1;
-  },
+  }
 
   get attributes() {
     return this._form.attrs;
-  },
+  }
 
   get pseudoClassLocks() {
     return this._form.pseudoClassLocks || [];
-  },
-  hasPseudoClassLock: function(pseudo) {
+  }
+  hasPseudoClassLock(pseudo) {
     return this.pseudoClassLocks.some(locked => locked === pseudo);
-  },
+  }
 
   get displayType() {
     return this._form.displayType;
-  },
+  }
 
   get isDisplayed() {
     return this._form.isDisplayed;
-  },
+  }
 
   get isTreeDisplayed() {
     let parent = this;
@@ -380,29 +376,27 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
       parent = parent.parentNode();
     }
     return true;
-  },
+  }
 
-  getNodeValue: custom(function() {
+  getNodeValue() {
     // backward-compatibility: if nodevalue is null and shortValue is defined, the actual
     // value of the node needs to be fetched on the server.
     if (this._form.nodeValue === null && this._form.shortValue) {
-      return this._getNodeValue();
+      return super.getNodeValue();
     }
 
     const str = this._form.nodeValue || "";
     return promise.resolve(new SimpleStringFront(str));
-  }, {
-    impl: "_getNodeValue",
-  }),
+  }
 
   /**
    * Return a new AttributeModificationList for this node.
    */
-  startModifyingAttributes: function() {
+  startModifyingAttributes() {
     return new AttributeModificationList(this);
-  },
+  }
 
-  _cacheAttributes: function() {
+  _cacheAttributes() {
     if (typeof this._attrMap != "undefined") {
       return;
     }
@@ -410,19 +404,19 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
     for (const attr of this.attributes) {
       this._attrMap[attr.name] = attr;
     }
-  },
+  }
 
-  _getAttribute: function(name) {
+  _getAttribute(name) {
     this._cacheAttributes();
     return this._attrMap[name] || undefined;
-  },
+  }
 
   /**
    * Set this node's parent.  Note that the children saved in
    * this tree are unordered and incomplete, so shouldn't be used
    * instead of a `children` request.
    */
-  reparent: function(parent) {
+  reparent(parent) {
     if (this._parent === parent) {
       return;
     }
@@ -448,18 +442,18 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
       this._next._prev = this;
     }
     parent._child = this;
-  },
+  }
 
   /**
    * Return all the known children of this node.
    */
-  treeChildren: function() {
+  treeChildren() {
     const ret = [];
     for (let child = this._child; child != null; child = child._next) {
       ret.push(child);
     }
     return ret;
-  },
+  }
 
   /**
    * Do we use a local target?
@@ -468,16 +462,16 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
    * This will, one day, be removed. External code should
    * not need to know if the target is remote or not.
    */
-  isLocalToBeDeprecated: function() {
+  isLocalToBeDeprecated() {
     return !!this.conn._transport._serverConnection;
-  },
+  }
 
   /**
    * Get a Node for the given node front.  This only works locally,
    * and is only intended as a stopgap during the transition to the remote
    * protocol.  If you depend on this you're likely to break soon.
    */
-  rawNode: function(rawNode) {
+  rawNode(rawNode) {
     if (!this.isLocalToBeDeprecated()) {
       console.warn("Tried to use rawNode on a remote connection.");
       return null;
@@ -490,7 +484,8 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
       return null;
     }
     return actor.rawNode;
-  },
-});
+  }
+}
 
 exports.NodeFront = NodeFront;
+registerFront(NodeFront);

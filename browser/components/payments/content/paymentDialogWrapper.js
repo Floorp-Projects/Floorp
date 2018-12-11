@@ -627,6 +627,20 @@ var paymentDialogWrapper = {
     this.sendMessageToContent("responseSent");
   },
 
+  async onChangePayerAddress({payerAddressGUID}) {
+    if (payerAddressGUID) {
+      // If a payer address was de-selected e.g. the selected address was deleted, we'll
+      // just wait to send the address change when the payer address is eventually selected
+      // before clicking Pay since it's a required field.
+      let {
+        payerName,
+        payerEmail,
+        payerPhone,
+      } = await this._convertProfileAddressToPayerData(payerAddressGUID);
+      paymentSrv.changePayerDetail(this.request.requestId, payerName, payerEmail, payerPhone);
+    }
+  },
+
   async onChangeShippingAddress({shippingAddressGUID}) {
     if (shippingAddressGUID) {
       // If a shipping address was de-selected e.g. the selected address was deleted, we'll
@@ -731,6 +745,10 @@ var paymentDialogWrapper = {
       }
       case "initializeRequest": {
         this.initializeFrame();
+        break;
+      }
+      case "changePayerAddress": {
+        this.onChangePayerAddress(data);
         break;
       }
       case "changeShippingAddress": {

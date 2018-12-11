@@ -258,9 +258,7 @@ class PageAction {
 
     headerLabel.value = await this.getStrings(content.heading_text);
     headerLink.setAttribute("href", SUMO_BASE_URL + content.info_icon.sumo_path);
-    const isRTL = this.window.getComputedStyle(notification).direction === "rtl";
-    const attribute = isRTL ? "left" : "right";
-    headerLink.setAttribute(attribute, 0);
+    headerLink.setAttribute(this.window.RTL_UI ? "left" : "right", 0);
     headerImage.setAttribute("tooltiptext", await this.getStrings(content.info_icon.label, "tooltiptext"));
     headerLink.onclick = () => this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "RATIONALE"});
 

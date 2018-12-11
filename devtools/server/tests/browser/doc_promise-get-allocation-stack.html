@@ -1,0 +1,27 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Promise test page</title>
+  </head>
+
+  <body>
+    <script type="text/javascript">
+      "use strict";
+
+      // eslint-disable-next-line no-unused-vars
+      function makePromises() {
+        const p = new Promise(() => {});
+        p.name = "p";
+        const q = p.then();
+        q.name = "q";
+        const r = p.catch(() => {});
+        r.name = "r";
+      }
+    </script>
+  </body>
+
+</html>

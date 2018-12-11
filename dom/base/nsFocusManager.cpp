@@ -2842,6 +2842,10 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
   return NS_OK;
 }
 
+static bool IsHostOrSlot(const nsIContent* aContent) {
+  return aContent->GetShadowRoot() || aContent->IsHTMLElement(nsGkAtoms::slot);
+}
+
 // Helper class to iterate contents in scope by traversing flattened tree
 // in tree order
 class MOZ_STACK_CLASS ScopedContentTraversal {
@@ -2856,7 +2860,7 @@ class MOZ_STACK_CLASS ScopedContentTraversal {
 
   void Reset() { SetCurrent(mOwner); }
 
-  nsIContent* GetCurrent() { return mCurrent; }
+  nsIContent* GetCurrent() const { return mCurrent; }
 
  private:
   void SetCurrent(nsIContent* aContent) { mCurrent = aContent; }
@@ -2869,9 +2873,7 @@ void ScopedContentTraversal::Next() {
   MOZ_ASSERT(mCurrent);
 
   // Get mCurrent's first child if it's in the same scope.
-  if (!(mCurrent->GetShadowRoot() ||
-        mCurrent->IsHTMLElement(nsGkAtoms::slot)) ||
-      mCurrent == mOwner) {
+  if (!IsHostOrSlot(mCurrent) || mCurrent == mOwner) {
     StyleChildrenIterator iter(mCurrent);
     nsIContent* child = iter.GetNextChild();
     if (child) {
@@ -2932,7 +2934,7 @@ void ScopedContentTraversal::Prev() {
 
   while (last) {
     parent = last;
-    if (parent->GetShadowRoot() || parent->IsHTMLElement(nsGkAtoms::slot)) {
+    if (IsHostOrSlot(parent)) {
       // Skip contents in other scopes
       break;
     }
@@ -2969,11 +2971,6 @@ nsIContent* nsFocusManager::FindOwner(nsIContent* aContent) {
   }
 
   return nullptr;
-}
-
-bool nsFocusManager::IsHostOrSlot(nsIContent* aContent) {
-  return aContent->GetShadowRoot() ||               // shadow host
-         aContent->IsHTMLElement(nsGkAtoms::slot);  // slot
 }
 
 int32_t nsFocusManager::HostOrSlotTabIndexValue(nsIContent* aContent,
@@ -3038,7 +3035,7 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
       iterContent = contentTraversal.GetCurrent();
 
       if (firstNonChromeOnly && firstNonChromeOnly == iterContent) {
-        // We just broke out from the native anonynous content, so move
+        // We just broke out from the native anonymous content, so move
         // to the previous/next node of the native anonymous owner.
         if (aForward) {
           contentTraversal.Next();

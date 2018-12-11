@@ -4,8 +4,8 @@
 
 do-not-track-description = Send websites a “Do Not Track” signal that you don’t want to be tracked
 do-not-track-learn-more = Learn more
-do-not-track-option-default-content-blocking =
-    .label = Only when { -brand-short-name } is set to block Detected Trackers
+do-not-track-option-default-content-blocking-known =
+    .label = Only when { -brand-short-name } is set to block known trackers
 do-not-track-option-always =
     .label = Always
 
@@ -178,8 +178,8 @@ open-new-link-as-tabs =
     .label = Open links in tabs instead of new windows
     .accesskey = w
 
-warn-on-quit-close-multiple-tabs =
-    .label = Warn you when quitting and closing multiple tabs
+warn-on-close-multiple-tabs =
+    .label = Warn you when closing multiple tabs
     .accesskey = m
 
 warn-on-open-many-tabs =

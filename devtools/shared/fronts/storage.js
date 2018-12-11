@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
-const specs = require("devtools/shared/specs/storage");
+const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
+const { childSpecs, storageSpec } = require("devtools/shared/specs/storage");
 
-for (const childSpec of Object.values(specs.childSpecs)) {
-  protocol.FrontClassWithSpec(childSpec, {
+for (const childSpec of Object.values(childSpecs)) {
+  class ChildStorageFront extends FrontClassWithSpec(childSpec) {
     form(form, detail) {
       if (detail === "actorid") {
         this.actorID = form;
@@ -17,16 +17,18 @@ for (const childSpec of Object.values(specs.childSpecs)) {
       this.actorID = form.actor;
       this.hosts = form.hosts;
       return null;
-    },
-  });
+    }
+  }
+  registerFront(ChildStorageFront);
 }
 
-const StorageFront = protocol.FrontClassWithSpec(specs.storageSpec, {
-  initialize(client, tabForm) {
-    protocol.Front.prototype.initialize.call(this, client);
+class StorageFront extends FrontClassWithSpec(storageSpec) {
+  constructor(client, tabForm) {
+    super(client);
     this.actorID = tabForm.storageActor;
     this.manage(this);
-  },
-});
+  }
+}
 
 exports.StorageFront = StorageFront;
+registerFront(StorageFront);

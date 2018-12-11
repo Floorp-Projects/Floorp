@@ -117,7 +117,7 @@ void ProcessThreadImpl::PostTask(std::unique_ptr<rtc::QueuedTask> task) {
 
 void ProcessThreadImpl::RegisterModule(Module* module,
                                        const rtc::Location& from) {
-  // RTC_DCHECK(thread_checker_.CalledOnValidThread());  Not really needed
+  RTC_DCHECK(thread_checker_.CalledOnValidThread());
   RTC_DCHECK(module) << from.ToString();
 
 #if RTC_DCHECK_IS_ON

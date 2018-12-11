@@ -69,23 +69,24 @@ const RootActor = protocol.ActorClassWithSpec(rootSpec, {
   },
 });
 
-const ChildFront = protocol.FrontClassWithSpec(childSpec, {
+class ChildFront extends protocol.FrontClassWithSpec(childSpec) {
   form(form, detail) {
     if (detail === "actorid") {
       return;
     }
     this.childID = form.childID;
-  },
-});
+  }
+}
+protocol.registerFront(ChildFront);
 
-const RootFront = protocol.FrontClassWithSpec(rootSpec, {
-  initialize(client) {
+class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
+  constructor(client) {
+    super(client);
     this.actorID = "root";
-    protocol.Front.prototype.initialize.call(this, client);
     // Root owns itself.
     this.manage(this);
-  },
-});
+  }
+}
 
 add_task(async function run_test() {
   DebuggerServer.createRootActor = RootActor;

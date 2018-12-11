@@ -4,8 +4,7 @@
 "use strict";
 
 const {cssUsageSpec} = require("devtools/shared/specs/csscoverage");
-const protocol = require("devtools/shared/protocol");
-const {custom} = protocol;
+const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/shared/locales/csscoverage.properties");
@@ -32,14 +31,15 @@ var chromeWindow;
 /**
  * Front for CSSUsageActor
  */
-const CSSUsageFront = protocol.FrontClassWithSpec(cssUsageSpec, {
-  initialize: function(client, form) {
-    protocol.Front.prototype.initialize.call(this, client, form);
+class CSSUsageFront extends FrontClassWithSpec(cssUsageSpec) {
+  constructor(client, form) {
+    super(client, form);
     this.actorID = form.cssUsageActor;
     this.manage(this);
-  },
+    this.before("state-change", this._onStateChange.bind(this));
+  }
 
-  _onStateChange: protocol.preEvent("state-change", function(ev) {
+  _onStateChange(ev) {
     isRunning = ev.isRunning;
     ev.target = target;
 
@@ -70,38 +70,35 @@ const CSSUsageFront = protocol.FrontClassWithSpec(cssUsageSpec, {
       gDevTools.showToolbox(target, "styleeditor");
       target = undefined;
     }
-  }),
+  }
 
   /**
    * Server-side start is above. Client-side start adds a notification box
    */
-  start: custom(function(newChromeWindow, newTarget, noreload = false) {
+  start(newChromeWindow, newTarget, noreload = false) {
     target = newTarget;
     chromeWindow = newChromeWindow;
 
-    return this._start(noreload);
-  }, {
-    impl: "_start",
-  }),
+    return super.start(noreload);
+  }
 
   /**
    * Server-side start is above. Client-side start adds a notification box
    */
-  toggle: custom(function(newChromeWindow, newTarget) {
+  toggle(newChromeWindow, newTarget) {
     target = newTarget;
     chromeWindow = newChromeWindow;
 
-    return this._toggle();
-  }, {
-    impl: "_toggle",
-  }),
+    return super.toggle();
+  }
 
   /**
    * We count STARTING and STOPPING as 'running'
    */
-  isRunning: function() {
+  isRunning() {
     return isRunning;
-  },
-});
+  }
+}
 
 exports.CSSUsageFront = CSSUsageFront;
+registerFront(CSSUsageFront);
