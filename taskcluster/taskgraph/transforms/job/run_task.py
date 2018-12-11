@@ -46,7 +46,7 @@ def common_setup(config, job, taskdesc, command, geckodir):
     if run['checkout']:
         support_vcs_checkout(config, job, taskdesc,
                              sparse=bool(run['sparse-profile']))
-        command.append('--vcs-checkout={}'.format(geckodir))
+        command.append('--firefox-checkout={}'.format(geckodir))
 
     if run['sparse-profile']:
         command.append('--sparse-profile=build/sparse-profiles/%s' %
