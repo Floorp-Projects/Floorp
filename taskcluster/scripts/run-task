@@ -524,6 +524,12 @@ def collect_vcs_options(args, project, env_prefix=None):
 
     checkout = os.path.expanduser(checkout)
 
+    # Some callers set the base repository to mozilla-central for historical
+    # reasons. Switch to mozilla-unified because robustcheckout works best
+    # with it.
+    if base_repo == 'https://hg.mozilla.org/mozilla-central':
+        base_repo = 'https://hg.mozilla.org/mozilla-unified'
+
     return {
         'project': project,
         'checkout': checkout,
@@ -721,19 +727,12 @@ def main(args):
     firefox_checkout = collect_vcs_options(args, 'firefox', env_prefix='GECKO')
 
     if firefox_checkout:
-        base_repo = firefox_checkout['base-repo']
-        # Some callers set the base repository to mozilla-central for historical
-        # reasons. Switch to mozilla-unified because robustcheckout works best
-        # with it.
-        if base_repo == 'https://hg.mozilla.org/mozilla-central':
-            base_repo = 'https://hg.mozilla.org/mozilla-unified'
-
         os.environ['GECKO_HEAD_REV'] = vcs_checkout(
             firefox_checkout['head-repo'],
             firefox_checkout['checkout'],
             os.environ['HG_STORE_PATH'],
             fetch_hgfingerprint=args.fetch_hgfingerprint,
-            base_repo=base_repo,
+            base_repo=firefox_checkout['base-repo'],
             revision=firefox_checkout['revision'],
             branch=firefox_checkout['branch'],
             sparse_profile=firefox_checkout['sparse-profile'])
