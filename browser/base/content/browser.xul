@@ -762,13 +762,13 @@ xmlns="http://www.w3.org/1999/xhtml"
                aria-label="&tabsToolbar.label;"
                context="toolbar-context-menu"
                flex="1">
+
+        <hbox class="titlebar-spacer" type="pre-tabs"/>
+
         <vbox flex="1" class="toolbar-items">
           <spacer flex="1000"/>
 
           <hbox id="TabsToolbar-customization-target" flex="1">
-            <hbox class="titlebar-spacer" type="pre-tabs"
-                  skipintoolbarset="true"/>
-
             <tabs id="tabbrowser-tabs"
                   flex="1"
                   setfocus="false"
@@ -796,19 +796,15 @@ xmlns="http://www.w3.org/1999/xhtml"
                            label="&listAllTabs.label;"
                            tooltiptext="&listAllTabs.label;"
                            removable="false"/>
-
-            <hbox class="titlebar-spacer" type="post-tabs"
-                  ordinal="1000"
-                  skipintoolbarset="true"/>
           </hbox>
         </vbox>
 
+        <hbox class="titlebar-spacer" type="post-tabs"/>
+
 #ifndef XP_MACOSX
         <button class="accessibility-indicator" tooltiptext="&accessibilityIndicator.tooltip;"
-                ordinal="1000"
-                aria-live="polite" skipintoolbarset="true"/>
-        <hbox class="private-browsing-indicator" skipintoolbarset="true"
-              ordinal="1000"/>
+                aria-live="polite"/>
+        <hbox class="private-browsing-indicator"/>
 #endif
 
 #include titlebar-items.inc.xul

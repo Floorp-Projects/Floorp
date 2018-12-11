@@ -63,6 +63,9 @@ async function takeNodeScreenshot(inspector) {
   image.src = OS.Path.toFileURI(filePath);
   await once(image, "load");
 
+  info("Remove the downloaded screenshot file");
+  await OS.File.remove(filePath);
+
   return image;
 }
 /* exported takeNodeScreenshot */
