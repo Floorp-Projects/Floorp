@@ -16,22 +16,19 @@ if (!gMultiProcessBrowser) {
 
 const TAB_URL = EXAMPLE_URL + "doc_terminate-on-tab-close.html";
 
-function test() {
-  let options = {
+add_task(async () => {
+  const options = {
     source: TAB_URL,
     line: 1
   };
-  initDebugger(TAB_URL, options).then(([aTab, aPanel]) => {
-    const gTab = aTab;
-    const gPanel = aPanel;
-    const gDebugger = gPanel.panelWin;
+  const { tab, panel } = await initDebugger(TAB_URL, options);
+  const { gThreadClient } = panel.panelWin;
 
-    gDebugger.gThreadClient.addOneTimeListener("paused", () => {
-      resumeDebuggerThenCloseAndFinish(gPanel).then(function () {
-        ok(true, "should not throw after this point");
-      });
+  gThreadClient.addOneTimeListener("paused", () => {
+    resumeDebuggerThenCloseAndFinish(gPanel).then(function () {
+      ok(true, "should not throw after this point");
     });
-
-    callInTab(gTab, "debuggerThenThrow");
   });
-}
+
+  callInTab(gTab, "debuggerThenThrow");
+});
