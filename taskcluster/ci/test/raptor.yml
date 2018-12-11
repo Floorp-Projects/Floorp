@@ -48,6 +48,17 @@ raptor-tp6-1-firefox:
         extra-options:
             - --test=raptor-tp6-1
 
+raptor-tp6-1-firefox-profiling:
+    description: "Raptor tp6-1 on Firefox with Gecko Profiling"
+    try-name: raptor-tp6-1-firefox-profiling
+    treeherder-symbol: Rap-Prof(tp6-1)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-1
+            - --gecko-profile
+
 raptor-tp6-1-chrome:
     description: "Raptor tp6-1 on Chrome"
     try-name: raptor-tp6-1-chrome
@@ -72,6 +83,17 @@ raptor-tp6-2-firefox:
         extra-options:
             - --test=raptor-tp6-2
 
+raptor-tp6-2-firefox-profiling:
+    description: "Raptor tp6-2 on Firefox with Gecko Profiling"
+    try-name: raptor-tp6-2-firefox-profiling
+    treeherder-symbol: Rap-Prof(tp6-2)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-2
+            - --gecko-profile
+
 raptor-tp6-2-chrome:
     description: "Raptor tp6-2 on Chrome"
     try-name: raptor-tp6-2-chrome
@@ -94,6 +116,17 @@ raptor-tp6-3-firefox:
     mozharness:
         extra-options:
             - --test=raptor-tp6-3
+
+raptor-tp6-3-firefox-profiling:
+    description: "Raptor tp6-3 on Firefox with Gecko Profiling"
+    try-name: raptor-tp6-3-firefox-profiling
+    treeherder-symbol: Rap-Prof(tp6-3)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-3
+            - --gecko-profile
 
 raptor-tp6-3-chrome:
     description: "Raptor tp6-3 on Chrome"
@@ -119,6 +152,17 @@ raptor-tp6-4-firefox:
         extra-options:
             - --test=raptor-tp6-4
 
+raptor-tp6-4-firefox-profiling:
+    description: "Raptor tp6-4 on Firefox with Gecko Profiling"
+    try-name: raptor-tp6-4-firefox-profiling
+    treeherder-symbol: Rap-Prof(tp6-4)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-4
+            - --gecko-profile
+
 raptor-tp6-4-chrome:
     description: "Raptor tp6-4 on Chrome"
     try-name: raptor-tp6-4-chrome
@@ -142,6 +186,17 @@ raptor-tp6-5-firefox:
         extra-options:
             - --test=raptor-tp6-5
 
+raptor-tp6-5-firefox-profiling:
+    description: "Raptor tp6-5 on Firefox with Gecko Profiling"
+    try-name: raptor-tp6-5-firefox-profiling
+    treeherder-symbol: Rap-Prof(tp6-5)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-5
+            - --gecko-profile
+
 raptor-tp6-5-chrome:
     description: "Raptor tp6-5 on Chrome"
     try-name: raptor-tp6-5-chrome
@@ -164,6 +219,17 @@ raptor-tp6-6-firefox:
     mozharness:
         extra-options:
             - --test=raptor-tp6-6
+
+raptor-tp6-6-firefox-profiling:
+    description: "Raptor tp6-6 on Firefox with Gecko Profiling"
+    try-name: raptor-tp6-6-firefox-profiling
+    treeherder-symbol: Rap-Prof(tp6-6)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-6
+            - --gecko-profile
 
 raptor-tp6-6-chrome:
     description: "Raptor tp6-6 on Chrome"
@@ -190,6 +256,17 @@ raptor-speedometer-firefox:
     mozharness:
         extra-options:
             - --test=raptor-speedometer
+
+raptor-speedometer-firefox-profiling:
+    description: "Raptor Speedometer on Firefox with Gecko Profiling"
+    try-name: raptor-speedometer-firefox-profiling
+    treeherder-symbol: Rap-Prof(sp)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-speedometer
+            - --gecko-profile
 
 raptor-speedometer-geckoview:
     description: "Raptor Speedometer on Geckoview"
@@ -230,6 +307,17 @@ raptor-stylebench-firefox:
         extra-options:
             - --test=raptor-stylebench
 
+raptor-stylebench-firefox-profiling:
+    description: "Raptor StyleBench on Firefox with Gecko Profiling"
+    try-name: raptor-stylebench-firefox-profiling
+    treeherder-symbol: Rap-Prof(sb)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-stylebench
+            - --gecko-profile
+
 raptor-stylebench-chrome:
     description: "Raptor StyleBench on Chrome"
     try-name: raptor-stylebench-chrome
@@ -252,6 +340,17 @@ raptor-motionmark-htmlsuite-firefox:
     mozharness:
         extra-options:
             - --test=raptor-motionmark-htmlsuite
+
+raptor-motionmark-htmlsuite-firefox-profiling:
+    description: "Raptor MotionMark HtmlSuite on Firefox with Gecko Profiling"
+    try-name: raptor-motionmark-htmlsuite-firefox-profiling
+    treeherder-symbol: Rap-Prof(mm-h)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-motionmark-htmlsuite
+            - --gecko-profile
 
 raptor-motionmark-htmlsuite-chrome:
     description: "Raptor MotionMark HtmlSuite on Chrome"
@@ -276,6 +375,17 @@ raptor-motionmark-animometer-firefox:
         extra-options:
             - --test=raptor-motionmark-animometer
 
+raptor-motionmark-animometer-firefox-profiling:
+    description: "Raptor MotionMark Animometer on Firefox with Gecko Profiling"
+    try-name: raptor-motionmark-animometer-firefox-profiling
+    treeherder-symbol: Rap-Prof(mm-a)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-motionmark-animometer
+            - --gecko-profile
+
 raptor-motionmark-animometer-chrome:
     description: "Raptor MotionMark Animometer on Chrome"
     try-name: raptor-motionmark-animometer-chrome
@@ -298,6 +408,17 @@ raptor-webaudio-firefox:
     mozharness:
         extra-options:
             - --test=raptor-webaudio
+
+raptor-webaudio-firefox-profiling:
+    description: "Raptor WebAudio on Firefox with Gecko Profiling"
+    try-name: raptor-webaudio-firefox
+    treeherder-symbol: Rap-Prof(wa)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-webaudio
+            - --gecko-profile
 
 raptor-webaudio-chrome:
     description: "Raptor WebAudio on Chrome"
@@ -325,6 +446,17 @@ raptor-sunspider-firefox:
         extra-options:
             - --test=raptor-sunspider
 
+raptor-sunspider-firefox-profiling:
+    description: "Raptor SunSpider on Firefox with Gecko Profiling"
+    try-name: raptor-sunspider-firefox-profiling
+    treeherder-symbol: Rap-Prof(ss)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-sunspider
+            - --gecko-profile
+
 raptor-sunspider-chrome:
     description: "Raptor SunSpider on Chrome"
     try-name: raptor-sunspider-chrome
@@ -347,6 +479,20 @@ raptor-unity-webgl-firefox:
     mozharness:
         extra-options:
             - --test=raptor-unity-webgl
+    fetches:
+        fetch:
+            - unity-webgl
+
+raptor-unity-webgl-firefox-profiling:
+    description: "Raptor Unity WebGL on Firefox with Gecko Profiling"
+    try-name: raptor-unity-webgl-firefox-profiling
+    treeherder-symbol: Rap-Prof(ugl)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-unity-webgl
+            - --gecko-profile
     fetches:
         fetch:
             - unity-webgl
@@ -398,6 +544,20 @@ raptor-wasm-misc-firefox:
         fetch:
             - wasm-misc
 
+raptor-wasm-misc-firefox-profiling:
+    description: "Raptor WASM Misc on Firefox with Gecko Profiling"
+    try-name: raptor-wasm-misc-firefox-profiling
+    treeherder-symbol: Rap-Prof(wm)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-wasm-misc
+            - --gecko-profile
+    fetches:
+        fetch:
+            - wasm-misc
+
 raptor-wasm-misc-baseline-firefox:
     description: "Raptor WASM Misc on Firefox with baseline JIT"
     try-name: raptor-wasm-misc-baseline-firefox
@@ -413,6 +573,20 @@ raptor-wasm-misc-baseline-firefox:
         fetch:
             - wasm-misc
 
+raptor-wasm-misc-baseline-firefox-profiling:
+    description: "Raptor WASM Misc on Firefox with baseline JIT and Gecko Profiling"
+    try-name: raptor-wasm-misc-baseline-firefox-profiling
+    treeherder-symbol: Rap-Prof(wm-b)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-wasm-misc-baseline
+            - --gecko-profile
+    fetches:
+        fetch:
+            - wasm-misc
+
 raptor-wasm-misc-ion-firefox:
     description: "Raptor WASM Misc on Firefox with ION Monkey"
     try-name: raptor-wasm-misc-ion-firefox
@@ -424,6 +598,20 @@ raptor-wasm-misc-ion-firefox:
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc-ion
+    fetches:
+        fetch:
+            - wasm-misc
+
+raptor-wasm-misc-ion-firefox-profiling:
+    description: "Raptor WASM Misc on Firefox with ION Monkey and Gecko Profiling"
+    try-name: raptor-wasm-misc-ion-firefox-profiling
+    treeherder-symbol: Rap-Prof(wm-i)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-wasm-misc-ion
+            - --gecko-profile
     fetches:
         fetch:
             - wasm-misc
@@ -462,6 +650,20 @@ raptor-assorted-dom-firefox:
         fetch:
             - assorted-dom
 
+raptor-assorted-dom-firefox-profiling:
+    description: "Raptor Assorted-Dom on Firefox with Gecko Profiling"
+    try-name: raptor-assorted-dom-firefox-profiling
+    treeherder-symbol: Rap-Prof(dom)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-assorted-dom
+            - --gecko-profile
+    fetches:
+        fetch:
+            - assorted-dom
+
 raptor-assorted-dom-chrome:
     description: "Raptor Assorted-Dom on Chrome"
     try-name: raptor-assorted-dom-chrome
@@ -494,6 +696,17 @@ raptor-wasm-godot-firefox:
         extra-options:
             - --test=raptor-wasm-godot
 
+raptor-wasm-godot-firefox-profiling:
+    description: "Raptor Wasm Godot on Firefox with Gecko Profiling"
+    try-name: raptor-wasm-godot-firefox-profiling
+    treeherder-symbol: Rap-Prof(godot)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-wasm-godot
+            - --gecko-profile
+
 raptor-wasm-godot-chrome:
     description: "Raptor Wasm Godot on Chrome"
     try-name: raptor-wasm-godot-chrome
@@ -523,6 +736,17 @@ raptor-wasm-godot-baseline-firefox:
         extra-options:
             - --test=raptor-wasm-godot-baseline
 
+raptor-wasm-godot-baseline-firefox-profiling:
+    description: "Raptor Wasm Godot on Firefox with baseline JIT and Gecko Profiling"
+    try-name: raptor-wasm-godot-baseline-firefox-profiling
+    treeherder-symbol: Rap-Prof(godot-b)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-wasm-godot-baseline
+            - --gecko-profile
+
 raptor-wasm-godot-ion-firefox:
     description: "Raptor WASM godot on Firefox with ION Monkey"
     try-name: raptor-wasm-godot-ion-firefox
@@ -539,3 +763,14 @@ raptor-wasm-godot-ion-firefox:
     mozharness:
         extra-options:
             - --test=raptor-wasm-godot-ion
+
+raptor-wasm-godot-ion-firefox-profiling:
+    description: "Raptor WASM godot on Firefox with ION Monkey and Gecko Profiling"
+    try-name: raptor-wasm-godot-ion-firefox-profiling
+    treeherder-symbol: Rap-Prof(godot-i)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-wasm-godot-ion
+            - --gecko-profile
