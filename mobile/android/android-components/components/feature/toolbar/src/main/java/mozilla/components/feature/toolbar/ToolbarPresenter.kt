@@ -36,13 +36,16 @@ class ToolbarPresenter(
         initializeView()
     }
 
-    private fun initializeView() {
+    internal fun initializeView() {
         activeSession?.let { session ->
             toolbar.url = session.url
 
             session.customTabConfig?.toolbarColor?.let {
                 toolbar.asView().setBackgroundColor(it)
             }
+
+            updateToolbarSecurity(session.securityInfo)
+
             // TODO Apply remaining configurations: https://github.com/mozilla-mobile/android-components/issues/306
         }
     }
@@ -60,10 +63,12 @@ class ToolbarPresenter(
         toolbar.setSearchTerms(searchTerms)
     }
 
-    override fun onSecurityChanged(session: Session, securityInfo: Session.SecurityInfo) {
+    override fun onSecurityChanged(session: Session, securityInfo: Session.SecurityInfo) =
+        updateToolbarSecurity(securityInfo)
+
+    private fun updateToolbarSecurity(securityInfo: Session.SecurityInfo) =
         when (securityInfo.secure) {
             true -> toolbar.siteSecure = Toolbar.SiteSecurity.SECURE
             false -> toolbar.siteSecure = Toolbar.SiteSecurity.INSECURE
         }
-    }
 }
