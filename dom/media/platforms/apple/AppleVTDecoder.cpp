@@ -462,7 +462,7 @@ MediaResult AppleVTDecoder::InitializeSession() {
   CFBooleanRef isUsingHW = nullptr;
   rv = VTSessionCopyProperty(
       mSession,
-      kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder,
+      kVTDecompressionPropertyKey_UsingHardwareAcceleratedVideoDecoder,
       kCFAllocatorDefault, &isUsingHW);
   if (rv != noErr) {
     LOG("AppleVTDecoder: system doesn't support hardware acceleration");
