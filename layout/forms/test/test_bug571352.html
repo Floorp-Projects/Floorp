@@ -11,7 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=571352
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=571352">Mozilla Bug 571352</a>
-<p id="display"></p>
+<p id="display"><select multiple style="width:300px/*to avoid any overlay scrollbar messing with our mouse clicks*/"><option>0<option>1<option>2<option>3<option>4<option>5</select></p>
 <div id="content" style="display: none">
   
 </div>
@@ -22,8 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=571352
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function test() {
-  function createList() {
-    $('display').innerHTML = '<select multiple><option>0<option>1<option>2<option>3<option>4<option>5</select>';
+  function focusList() {
     $('display').firstChild.focus();
   }
   function option(index) {
@@ -32,6 +31,7 @@ SimpleTest.waitForFocus(function test() {
   function remove(index) {
    var sel = $('display').firstChild;
    sel.removeChild(sel.childNodes[index]);
+   document.body.clientHeight;
   }
   function up() { synthesizeKey("KEY_ArrowUp"); }
   function shiftUp() { synthesizeKey("KEY_ArrowUp", {shiftKey:true}); }
@@ -43,10 +43,10 @@ SimpleTest.waitForFocus(function test() {
 
   const click = {};
   const shiftClick = {shiftKey:true};
-  const CtrlClick = {CtrlKey:true};
-  createList();
+  focusList();
   mouseEvent(0,click)
   is(document.activeElement,$('display').firstChild,"<select> is focused");
+  ok(option(0).selected,"first option is selected");
   mouseEvent(2,shiftClick)
   remove(0);
   ok(option(0).selected && option(1).selected,"first two options are selected");
