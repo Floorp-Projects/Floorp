@@ -431,7 +431,7 @@ async function navigateToAddAddressPage(frame, aOptions = {}) {
 
 async function navigateToAddShippingAddressPage(frame, aOptions = {}) {
   let options = Object.assign({
-    addLinkSelector: "address-picker[selected-state-key=\"selectedShippingAddress\"] a.add-link",
+    addLinkSelector: "address-picker[selected-state-key=\"selectedShippingAddress\"] .add-link",
     initialPageId: "payment-summary",
     addressPageId: "shipping-address-page",
   }, aOptions);
