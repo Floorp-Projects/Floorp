@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-already_AddRefed<ClientOpPromise> ClientOpenWindowInCurrentProcess(
+MOZ_MUST_USE RefPtr<ClientOpPromise> ClientOpenWindowInCurrentProcess(
     const ClientOpenWindowArgs &aArgs);
 
 }  // namespace dom
