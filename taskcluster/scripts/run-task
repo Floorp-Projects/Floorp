@@ -543,6 +543,7 @@ def collect_vcs_options(args, project, env_prefix=None):
     return {
         'store-path': store_path,
         'project': project,
+        'env-prefix': env_prefix,
         'checkout': checkout,
         'sparse-profile': sparse_profile,
         'base-repo': base_repo,
@@ -550,6 +551,25 @@ def collect_vcs_options(args, project, env_prefix=None):
         'revision': revision,
         'branch': branch,
     }
+
+
+def vcs_checkout_from_args(args, project, env_prefix=None,
+                           prevent_symbolic_revisions=True):
+    options = collect_vcs_options(args, project, env_prefix=env_prefix)
+
+    if not options:
+        return
+
+    os.environ['%s_HEAD_REV' % options['env-prefix']] = vcs_checkout(
+        options['head-repo'],
+        options['checkout'],
+        options['store-path'],
+        base_repo=options['base-repo'],
+        revision=options['revision'],
+        fetch_hgfingerprint=args.fetch_hgfingerprint,
+        branch=options['branch'],
+        sparse_profile=options['sparse-profile'],
+        prevent_symbolic_revisions=prevent_symbolic_revisions)
 
 
 def main(args):
@@ -725,38 +745,8 @@ def main(args):
         os.setresgid(gid, gid, gid)
         os.setresuid(uid, uid, uid)
 
-    # Checkout the repository, setting the GECKO_HEAD_REV to the current
-    # revision hash. Revision hashes have priority over symbolic revisions. We
-    # disallow running tasks with symbolic revisions unless they have been
-    # resolved by a checkout.
-    firefox_checkout = collect_vcs_options(args, 'firefox', env_prefix='GECKO')
-
-    if firefox_checkout:
-        os.environ['GECKO_HEAD_REV'] = vcs_checkout(
-            firefox_checkout['head-repo'],
-            firefox_checkout['checkout'],
-            firefox_checkout['store-path'],
-            fetch_hgfingerprint=args.fetch_hgfingerprint,
-            base_repo=firefox_checkout['base-repo'],
-            revision=firefox_checkout['revision'],
-            branch=firefox_checkout['branch'],
-            sparse_profile=firefox_checkout['sparse-profile'])
-
-    # Checkout the repository, setting the COMM_HEAD_REV to the current
-    # revision hash. Revision hashes have priority over symbolic revisions. We
-    # disallow running tasks with symbolic revisions unless they have been
-    # resolved by a checkout.
-    comm_checkout = collect_vcs_options(args, 'comm')
-    if comm_checkout:
-        os.environ['COMM_HEAD_REV'] = vcs_checkout(
-            comm_checkout['head-repo'],
-            comm_checkout['checkout'],
-            comm_checkout['store-path'],
-            fetch_hgfingerprint=args.fetch_hgfingerprint,
-            base_repo=comm_checkout['base-repo'],
-            revision=comm_checkout['revision'],
-            branch=comm_checkout['branch'],
-            sparse_profile=comm_checkout['sparse-profile'])
+    vcs_checkout_from_args(args, 'firefox', env_prefix='GECKO')
+    vcs_checkout_from_args(args, 'comm')
 
     try:
         if 'GECKO_PATH' in os.environ:
