@@ -183,12 +183,17 @@
 /* Summary tabpanel */
 
 .network-monitor .tabpanel-summary-container {
+  flex-wrap: wrap;
   padding: 1px;
+  padding-inline-start: 4px;
+}
+
+.network-monitor .tabpanel-summary-labelvalue {
+  white-space: pre-wrap;
 }
 
 .network-monitor .tabpanel-summary-label {
   display: inline-block;
-  padding-inline-start: 4px;
   padding-inline-end: 3px;
   font-weight: 600;
 }
