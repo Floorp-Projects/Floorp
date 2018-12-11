@@ -160,6 +160,52 @@ add_task(async function test_show_field_specific_error_on_addresschange() {
       }
     });
 
+    info("setting up the event handler for a 2nd shippingaddresschange with a different error");
+    await ContentTask.spawn(browser, {
+      eventName: "shippingaddresschange",
+      details: Object.assign({},
+                             {
+                               shippingAddressErrors: {
+                                 phone: "Invalid phone number",
+                               },
+                             },
+                             PTU.Details.noShippingOptions,
+                             PTU.Details.total2USD),
+    }, PTU.ContentTasks.updateWith);
+
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.clickPrimaryButton);
+
+    await spawnPaymentDialogTask(frame, async function checkForNewErrors() {
+      let {
+        PaymentTestUtils: PTU,
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+
+      await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "payment-summary" &&
+               state.request.paymentDetails.shippingAddressErrors.phone == "Invalid phone number";
+      }, "Check the new error is in state");
+
+      ok(content.document.querySelector("#payment-summary").innerText
+                .includes("Invalid phone number"),
+         "Check error visibility on summary page");
+      ok(content.document.getElementById("pay").disabled,
+         "Pay button should be disabled until the field error is addressed");
+    });
+
+    await navigateToAddShippingAddressPage(frame, {
+      addLinkSelector: "address-picker[selected-state-key=\"selectedShippingAddress\"] .edit-link",
+    });
+
+    await spawnPaymentDialogTask(frame, async function checkForNewErrorOnEdit() {
+      let addressForm = content.document.querySelector("#shipping-address-page");
+      is(addressForm.querySelectorAll(".error-text:not(:empty)").length, 1,
+         "Check one error shown");
+    });
+
+    await fillInShippingAddressForm(frame, {
+      tel: PTU.Addresses.TimBL2.tel,
+    });
+
     info("setup updateWith to clear errors");
     await ContentTask.spawn(browser, {
       eventName: "shippingaddresschange",
@@ -168,13 +214,12 @@ add_task(async function test_show_field_specific_error_on_addresschange() {
                              PTU.Details.total2USD),
     }, PTU.ContentTasks.updateWith);
 
-    await spawnPaymentDialogTask(frame, async () => {
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.clickPrimaryButton);
+
+    await spawnPaymentDialogTask(frame, async function fixLastError() {
       let {
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
-
-      info("saving corrections");
-      content.document.querySelector("#shipping-address-page .save-button").click();
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "payment-summary";
