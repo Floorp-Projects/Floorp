@@ -281,11 +281,10 @@ def _makePromise(returns, side, resolver=False):
     else:
         resolvetype = returns[0].bareType(side)
 
-    needmove = not all(d.isCopyable() for d in returns)
-
+    # MozPromise is purposefully made to be exclusive only. Really, we mean it.
     return _promise(resolvetype,
                     _ResponseRejectReason.Type(),
-                    ExprLiteral.TRUE if needmove else ExprLiteral.FALSE,
+                    ExprLiteral.TRUE,
                     resolver=resolver)
 
 
@@ -4129,7 +4128,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         resolvecallback = [StmtExpr(ExprCall(ExprSelect(callback, '->', 'Resolve'),
                                              args=[resolvearg]))]
         rejectcallback = [StmtExpr(ExprCall(ExprSelect(callback, '->', 'Reject'),
-                                            args=[reason]))]
+                                            args=[ExprMove(reason)]))]
         ifresolve = StmtIf(resolve)
         ifresolve.addifstmts(desstmts)
         ifresolve.addifstmts(resolvecallback)
@@ -4689,11 +4688,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                     ExprVar('__func__')])),
         ])
 
+        rejecttype = _ResponseRejectReason.Type()
+        rejecttype.ref = 2
         rejectfn = ExprLambda([retpromise],
-                              [Decl(_ResponseRejectReason.Type(), "aReason")])
+                              [Decl(rejecttype, "aReason")])
         rejectfn.addstmts([
             StmtExpr(ExprCall(ExprSelect(retpromise, '->', 'Reject'),
-                              args=[ExprVar('aReason'),
+                              args=[ExprMove(ExprVar('aReason')),
                                     ExprVar('__func__')])),
         ])
 

@@ -111,7 +111,7 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver {
 
     virtual ~UntypedCallbackHolder() {}
 
-    void Reject(ResponseRejectReason aReason) { mReject(aReason); }
+    void Reject(ResponseRejectReason&& aReason) { mReject(std::move(aReason)); }
 
     ActorIdType mActorId;
     RejectCallback mReject;

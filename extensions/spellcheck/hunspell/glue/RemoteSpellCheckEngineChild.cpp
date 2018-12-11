@@ -27,17 +27,17 @@ RemoteSpellcheckEngineChild::SetCurrentDictionaryFromList(
 
   SendSetDictionaryFromList(aList)->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [spellChecker, promiseHolder](const Tuple<bool, nsString>& aParam) {
+      [spellChecker, promiseHolder](Tuple<bool, nsString>&& aParam) {
         UniquePtr<MozPromiseHolder<GenericPromise>> holder(promiseHolder);
         if (!Get<0>(aParam)) {
           spellChecker->mCurrentDictionary.Truncate();
           holder->Reject(NS_ERROR_NOT_AVAILABLE, __func__);
           return;
         }
-        spellChecker->mCurrentDictionary = Get<1>(aParam);
+        spellChecker->mCurrentDictionary = std::move(Get<1>(aParam));
         holder->Resolve(true, __func__);
       },
-      [spellChecker, promiseHolder](ResponseRejectReason aReason) {
+      [spellChecker, promiseHolder](ResponseRejectReason&& aReason) {
         UniquePtr<MozPromiseHolder<GenericPromise>> holder(promiseHolder);
         spellChecker->mCurrentDictionary.Truncate();
         holder->Reject(NS_ERROR_NOT_AVAILABLE, __func__);
