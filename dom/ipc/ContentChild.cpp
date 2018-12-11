@@ -242,6 +242,7 @@
 #include "VRManagerChild.h"
 #include "private/pprio.h"
 #include "nsString.h"
+#include "MMPrinter.h"
 
 #ifdef MOZ_WIDGET_GTK
 #include "nsAppRunner.h"
@@ -2259,6 +2260,7 @@ mozilla::ipc::IPCResult ContentChild::RecvAsyncMessage(
     const IPC::Principal& aPrincipal, const ClonedMessageData& aData) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("ContentChild::RecvAsyncMessage",
                                              OTHER, aMsg);
+  MMPrinter::Print("ContentChild::RecvAsyncMessage", aMsg, aData);
 
   CrossProcessCpowHolder cpows(this, aCpows);
   RefPtr<nsFrameMessageManager> cpm =
