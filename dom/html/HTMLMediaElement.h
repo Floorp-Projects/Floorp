@@ -1491,7 +1491,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   MozPromiseRequestHolder<SetCDMPromise> mSetCDMRequest;
   // Request holder for permission prompt to autoplay. Non-null if we're
   // currently showing a prompt for permission to autoplay.
-  MozPromiseRequestHolder<GenericPromise> mAutoplayPermissionRequest;
+  MozPromiseRequestHolder<GenericNonExclusivePromise>
+      mAutoplayPermissionRequest;
 
   // Stores the time at the start of the current 'played' range.
   double mCurrentPlayRangeStart = 1.0;

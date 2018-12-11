@@ -475,7 +475,7 @@ class ScriptLoader final : public nsISupports {
   bool IsFetchingModule(ModuleLoadRequest* aRequest) const;
 
   bool ModuleMapContainsURL(nsIURI* aURL) const;
-  RefPtr<mozilla::GenericPromise> WaitForModuleFetch(nsIURI* aURL);
+  RefPtr<mozilla::GenericNonExclusivePromise> WaitForModuleFetch(nsIURI* aURL);
   ModuleScript* GetFetchedModule(nsIURI* aURL) const;
 
   friend JSObject* HostResolveImportedModule(
@@ -553,7 +553,7 @@ class ScriptLoader final : public nsISupports {
   bool mGiveUpEncoding;
 
   // Module map
-  nsRefPtrHashtable<nsURIHashKey, mozilla::GenericPromise::Private>
+  nsRefPtrHashtable<nsURIHashKey, mozilla::GenericNonExclusivePromise::Private>
       mFetchingModules;
   nsRefPtrHashtable<nsURIHashKey, ModuleScript> mFetchedModules;
 
