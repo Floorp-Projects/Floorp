@@ -824,30 +824,35 @@ var DownloadsView = {
    * Mouse listeners to handle selection on hover.
    */
   onDownloadMouseOver(aEvent) {
-    if (aEvent.originalTarget.classList.contains("downloadButton")) {
-      aEvent.target.classList.add("downloadHoveringButton");
+    let item = aEvent.target.closest("richlistitem,richlistbox");
+    if (item.localName != "richlistitem") {
+      return;
     }
-    if (!(this.contextMenuOpen || this.subViewOpen) &&
-        aEvent.target.parentNode == this.richListBox) {
-      this.richListBox.selectedItem = aEvent.target;
+
+    if (aEvent.target.classList.contains("downloadButton")) {
+      item.classList.add("downloadHoveringButton");
+    }
+
+    if (!this.contextMenuOpen && !this.subViewOpen) {
+      this.richListBox.selectedItem = item;
     }
   },
 
   onDownloadMouseOut(aEvent) {
-    if (aEvent.originalTarget.classList.contains("downloadButton")) {
-      aEvent.target.classList.remove("downloadHoveringButton");
+    let item = aEvent.target.closest("richlistitem,richlistbox");
+    if (item.localName != "richlistitem") {
+      return;
     }
-    if (!(this.contextMenuOpen || this.subViewOpen) &&
-        aEvent.target.parentNode == this.richListBox) {
-      // If the destination element is outside of the richlistitem, clear the
-      // selection.
-      let element = aEvent.relatedTarget;
-      while (element && element != aEvent.target) {
-        element = element.parentNode;
-      }
-      if (!element) {
-        this.richListBox.selectedIndex = -1;
-      }
+
+    if (aEvent.target.classList.contains("downloadButton")) {
+      item.classList.remove("downloadHoveringButton");
+    }
+
+    // If the destination element is outside of the richlistitem, clear the
+    // selection.
+    if (!this.contextMenuOpen && !this.subViewOpen &&
+        !item.contains(aEvent.relatedTarget)) {
+      this.richListBox.selectedIndex = -1;
     }
   },
 
