@@ -1277,8 +1277,8 @@ bool KeyframeEffect::CanThrottleOverflowChangesInScrollable(
   }
 
   ScrollStyles ss = scrollable->GetScrollStyles();
-  if (ss.mVertical == NS_STYLE_OVERFLOW_HIDDEN &&
-      ss.mHorizontal == NS_STYLE_OVERFLOW_HIDDEN &&
+  if (ss.mVertical == StyleOverflow::Hidden &&
+      ss.mHorizontal == StyleOverflow::Hidden &&
       scrollable->GetLogicalScrollPosition() == nsPoint(0, 0)) {
     return true;
   }
