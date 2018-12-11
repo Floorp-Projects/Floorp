@@ -61,19 +61,31 @@ class BackgroundPage extends HiddenExtensionPage {
 }
 
 this.backgroundPage = class extends ExtensionAPI {
-  onManifestEntry(entryName) {
+  build() {
+    if (this.bgPage) {
+      return;
+    }
+
     let {extension} = this;
     let {manifest} = extension;
 
     this.bgPage = new BackgroundPage(extension, manifest.background);
+    return this.bgPage.build();
+  }
+
+  onManifestEntry(entryName) {
+    let {extension} = this;
+
+    this.bgPage = null;
+
     if (extension.startupReason !== "APP_STARTUP" || !DELAYED_STARTUP) {
-      return this.bgPage.build();
+      return this.build();
     }
 
     EventManager.primeListeners(extension);
 
     extension.once("start-background-page", async () => {
-      await this.bgPage.build();
+      await this.build();
       EventManager.clearPrimedListeners(extension);
     });
 
@@ -95,6 +107,8 @@ this.backgroundPage = class extends ExtensionAPI {
   }
 
   onShutdown() {
-    this.bgPage.shutdown();
+    if (this.bgPage) {
+      this.bgPage.shutdown();
+    }
   }
 };
