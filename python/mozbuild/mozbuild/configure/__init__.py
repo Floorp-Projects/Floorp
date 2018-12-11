@@ -346,6 +346,8 @@ class ConfigureSandbox(dict):
             def queue_debug():
                 yield
 
+        self._logger = logger
+
         # Some callers will manage to log a bytestring with characters in it
         # that can't be converted to ascii. Make our log methods robust to this
         # by detecting the encoding that a producer is likely to have used.
@@ -446,7 +448,11 @@ class ConfigureSandbox(dict):
         # All options should have been removed (handled) by now.
         for arg in self._helper:
             without_value = arg.split('=', 1)[0]
-            raise InvalidOptionError('Unknown option: %s' % without_value)
+            msg = 'Unknown option: %s' % without_value
+            if self._help:
+                self._logger.warning(msg)
+            else:
+                raise InvalidOptionError(msg)
 
         # Run the execution queue
         for func, args in self._execution_queue:
