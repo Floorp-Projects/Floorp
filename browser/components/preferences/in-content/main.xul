@@ -91,7 +91,7 @@
               onsyncfrompreference="return gMainPane.readLinkTarget();"
               onsynctopreference="return gMainPane.writeLinkTarget();"/>
 
-    <checkbox id="warnCloseMultiple" data-l10n-id="warn-on-quit-close-multiple-tabs"
+    <checkbox id="warnCloseMultiple" data-l10n-id="warn-on-close-multiple-tabs"
               preference="browser.tabs.warnOnClose"/>
 
     <checkbox id="warnOpenMany" data-l10n-id="warn-on-open-many-tabs"
