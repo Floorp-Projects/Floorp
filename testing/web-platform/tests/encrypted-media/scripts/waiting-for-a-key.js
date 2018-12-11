@@ -101,7 +101,7 @@ function runTest(config)
 
         // Typical test duration is 6 seconds on release builds
         // (12 seconds on debug).
-    }, 'Waiting for a key.');
+    }, 'Waiting for a key.', {timeout: 20000});
 
     // Wait for an 'encrypted' event
     function wait_for_encrypted_event(video)

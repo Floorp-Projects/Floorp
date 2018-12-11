@@ -5,6 +5,10 @@
   <title>CSS Reftest Reference</title>
   <link rel="author" title="Morgan Rae Reschenberg" href="mailto:mreschenberg@berkeley.edu">
   <style>
+  .basic {
+    border: none;
+    visibility: hidden;
+  }
   .container {
     border: 10px solid green;
     display: inline-block;
@@ -33,7 +37,7 @@
 </head>
 <body>
   <div class="flexBaselineCheck">
-  outside before<fieldset>
+  outside before<fieldset class="basc">
     <legend>l</legend>
     <div class="innerContents">i</div>
   </fieldset>outside after
