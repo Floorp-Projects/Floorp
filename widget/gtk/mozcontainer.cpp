@@ -148,7 +148,8 @@ void moz_container_init(MozContainer *container) {
   container->subsurface = nullptr;
   container->eglwindow = nullptr;
   container->frame_callback_handler = nullptr;
-  container->ready_to_draw = false;
+  // We can draw to x11 window any time.
+  container->ready_to_draw = GDK_IS_X11_DISPLAY(gdk_display_get_default());
   container->surface_needs_clear = true;
 #endif
 }
