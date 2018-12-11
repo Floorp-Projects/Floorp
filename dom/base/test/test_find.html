@@ -7,7 +7,7 @@
 const t = async_test("Test window.find / nsFind");
 
 function testFindable(isFindable, textToFind, buildDoc, description) {
-  try{
+  try {
     const iframe = document.querySelector("iframe")
     iframe.contentDocument.documentElement.innerHTML =
       (typeof buildDoc == "string") ? buildDoc : "";
@@ -111,6 +111,17 @@ let runTests = t.step_func_done(function() {
     div.attachShadow({ mode: "open" }).innerHTML = `This is Shadow <slot></slot>`;
     document.documentElement.appendChild(div);
   }, "Mixed shadow and non-shadow text");
+
+  // NOTE(emilio): It is probably doable / worth changing this to return true,
+  // maybe, by relaxing the security checks in the ranges nsFind returns or
+  // such.
+  //
+  // See bug 1442466 / bug 1510485 / bug 1505887.
+  testFindable(false, "foo", function(document) {
+    let input = document.createElement("input");
+    input.value = "foo";
+    document.documentElement.appendChild(input);
+  }, "Native anonymous content isn't exposed in window.find");
 });
 
 window.onload = function() {

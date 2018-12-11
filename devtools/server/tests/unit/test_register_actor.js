@@ -49,7 +49,7 @@ function test_lazy_api() {
     Assert.ok("lazyActor" in response);
 
     const {LazyFront} = require("xpcshell-test/registertestactors-lazy");
-    const front = LazyFront(client, response);
+    const front = new LazyFront(client, response);
     front.hello().then(onRequest);
   }
   function onRequest(response) {

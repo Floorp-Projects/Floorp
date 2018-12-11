@@ -6,27 +6,27 @@
 const {DebuggerServer} = require("devtools/server/main");
 const promise = require("promise");
 const {longStringSpec, SimpleStringFront} = require("devtools/shared/specs/string");
-const protocol = require("devtools/shared/protocol");
+const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
 
-const LongStringFront = protocol.FrontClassWithSpec(longStringSpec, {
-  initialize: function(client) {
-    protocol.Front.prototype.initialize.call(this, client);
-  },
+class LongStringFront extends FrontClassWithSpec(longStringSpec) {
+  constructor(client) {
+    super(client);
+  }
 
-  destroy: function() {
+  destroy() {
     this.initial = null;
     this.length = null;
     this.strPromise = null;
-    protocol.Front.prototype.destroy.call(this);
-  },
+    super.destroy();
+  }
 
-  form: function(form) {
+  form(form) {
     this.actorID = form.actor;
     this.initial = form.initial;
     this.length = form.length;
-  },
+  }
 
-  string: function() {
+  string() {
     if (!this.strPromise) {
       const promiseRest = (thusFar) => {
         if (thusFar.length === this.length) {
@@ -40,8 +40,10 @@ const LongStringFront = protocol.FrontClassWithSpec(longStringSpec, {
       this.strPromise = promiseRest(this.initial);
     }
     return this.strPromise;
-  },
-});
+  }
+}
 
 exports.LongStringFront = LongStringFront;
+registerFront(LongStringFront);
 exports.SimpleStringFront = SimpleStringFront;
+registerFront(SimpleStringFront);

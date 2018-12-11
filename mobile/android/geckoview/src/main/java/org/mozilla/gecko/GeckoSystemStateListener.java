@@ -10,9 +10,11 @@ import android.content.Context;
 import android.database.ContentObserver;
 import android.hardware.input.InputManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.InputDevice;
 import org.mozilla.gecko.annotation.WrapForJNI;
@@ -81,8 +83,13 @@ public class GeckoSystemStateListener
         mContentObserver = null;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @WrapForJNI(calledFrom = "gecko")
-    // For prefers-reduced-motion media queries feature.
+    /**
+     * For prefers-reduced-motion media queries feature.
+     *
+     * Uses `Settings.Global` which was introduced in API version 17.
+     */
     private static boolean prefersReducedMotion() {
         ContentResolver contentResolver = sApplicationContext.getContentResolver();
 

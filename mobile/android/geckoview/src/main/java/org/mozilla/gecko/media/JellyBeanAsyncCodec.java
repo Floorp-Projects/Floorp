@@ -10,6 +10,7 @@ import android.media.MediaCodec;
 import android.media.MediaCodecInfo.CodecCapabilities;
 import android.media.MediaCrypto;
 import android.media.MediaFormat;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -361,7 +362,8 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
 
         mInputEnded = (flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
 
-        if ((android.os.Build.VERSION.SDK_INT >= 19) && ((flags & MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0)) {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
+                && ((flags & MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0)) {
             Bundle params = new Bundle();
             params.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0);
             mCodec.setParameters(params);

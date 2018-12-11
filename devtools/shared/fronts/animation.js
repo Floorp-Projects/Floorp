@@ -4,35 +4,34 @@
 "use strict";
 
 const {
-  Front,
   FrontClassWithSpec,
-  custom,
-  preEvent,
+  registerFront,
 } = require("devtools/shared/protocol");
 const {
   animationPlayerSpec,
   animationsSpec,
 } = require("devtools/shared/specs/animation");
 
-const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
-  initialize: function(conn, form, detail, ctx) {
-    Front.prototype.initialize.call(this, conn, form, detail, ctx);
+class AnimationPlayerFront extends FrontClassWithSpec(animationPlayerSpec) {
+  constructor(conn, form, detail, ctx) {
+    super(conn, form, detail, ctx);
 
     this.state = {};
-  },
+    this.before("changed", this.onChanged.bind(this));
+  }
 
-  form: function(form, detail) {
+  form(form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
       return;
     }
     this._form = form;
     this.state = this.initialState;
-  },
+  }
 
-  destroy: function() {
-    Front.prototype.destroy.call(this);
-  },
+  destroy() {
+    super.destroy();
+  }
 
   /**
    * If the AnimationsActor was given a reference to the WalkerActor previously
@@ -44,7 +43,7 @@ const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
     }
 
     return this.conn.getActor(this._form.animationTargetNodeActorID);
-  },
+  }
 
   /**
    * Getter for the initial state of the player. Up to date states can be
@@ -74,16 +73,16 @@ const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
       currentTimeAtCreated: this._form.currentTimeAtCreated,
       absoluteValues: this.calculateAbsoluteValues(this._form),
     };
-  },
+  }
 
   /**
    * Executed when the AnimationPlayerActor emits a "changed" event. Used to
    * update the local knowledge of the state.
    */
-  onChanged: preEvent("changed", function(partialState) {
+  onChanged(partialState) {
     const {state} = this.reconstructState(partialState);
     this.state = state;
-  }),
+  }
 
   /**
    * Refresh the current state of this animation on the client from information
@@ -94,24 +93,22 @@ const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
     if (this.currentStateHasChanged) {
       this.state = data;
     }
-  },
+  }
 
   /**
    * getCurrentState interceptor re-constructs incomplete states since the actor
    * only sends the values that have changed.
    */
-  getCurrentState: custom(function() {
+  getCurrentState() {
     this.currentStateHasChanged = false;
-    return this._getCurrentState().then(partialData => {
+    return super.getCurrentState().then(partialData => {
       const {state, hasChanged} = this.reconstructState(partialData);
       this.currentStateHasChanged = hasChanged;
       return state;
     });
-  }, {
-    impl: "_getCurrentState",
-  }),
+  }
 
-  reconstructState: function(data) {
+  reconstructState(data) {
     let hasChanged = false;
 
     for (const key in this.state) {
@@ -124,7 +121,7 @@ const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
 
     data.absoluteValues = this.calculateAbsoluteValues(data);
     return {state: data, hasChanged};
-  },
+  }
 
   calculateAbsoluteValues(data) {
     const {
@@ -198,20 +195,22 @@ const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
       startTime: absoluteStartTime,
       startTimeAtCreated: absoluteStartTimeAtCreated,
     };
-  },
-});
+  }
+}
 
 exports.AnimationPlayerFront = AnimationPlayerFront;
+registerFront(AnimationPlayerFront);
 
-const AnimationsFront = FrontClassWithSpec(animationsSpec, {
-  initialize: function(client, {animationsActor}) {
-    Front.prototype.initialize.call(this, client, {actor: animationsActor});
+class AnimationsFront extends FrontClassWithSpec(animationsSpec) {
+  constructor(client, {animationsActor}) {
+    super(client, {actor: animationsActor});
     this.manage(this);
-  },
+  }
 
-  destroy: function() {
-    Front.prototype.destroy.call(this);
-  },
-});
+  destroy() {
+    super.destroy();
+  }
+}
 
 exports.AnimationsFront = AnimationsFront;
+registerFront(AnimationsFront);

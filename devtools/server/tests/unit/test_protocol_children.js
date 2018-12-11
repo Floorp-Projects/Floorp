@@ -8,7 +8,7 @@
  * Test simple requests using the protocol helpers.
  */
 var protocol = require("devtools/shared/protocol");
-var {preEvent, types, Arg, RetVal} = protocol;
+var {types, Arg, RetVal} = protocol;
 
 var EventEmitter = require("devtools/shared/event-emitter");
 
@@ -162,46 +162,51 @@ var ChildActor = protocol.ActorClassWithSpec(childSpec, {
   release: function() { },
 });
 
-var ChildFront = protocol.FrontClassWithSpec(childSpec, {
-  initialize: function(client, form) {
-    protocol.Front.prototype.initialize.call(this, client, form);
-  },
+class ChildFront extends protocol.FrontClassWithSpec(childSpec) {
+  constructor(client, form) {
+    super(client, form);
 
-  destroy: function() {
+    this.before("event1", this.onEvent1.bind(this));
+    this.before("event2", this.onEvent2a.bind(this));
+    this.on("event2", this.onEvent2b.bind(this));
+  }
+
+  destroy() {
     this.destroyed = true;
-    protocol.Front.prototype.destroy.call(this);
-  },
+    super.destroy();
+  }
 
-  marshallPool: function() {
+  marshallPool() {
     return this.parent();
-  },
+  }
 
-  toString: function() {
+  toString() {
     return "[child front " + this.childID + "]";
-  },
+  }
 
-  form: function(form, detail) {
+  form(form, detail) {
     if (detail === "actorid") {
       return;
     }
     this.childID = form.childID;
     this.detail = form.detail;
-  },
+  }
 
-  onEvent1: preEvent("event1", function(a, b, c) {
+  onEvent1(a, b, c) {
     this.event1arg3 = c;
-  }),
+  }
 
-  onEvent2a: preEvent("event2", function(a, b, c) {
+  onEvent2a(a, b, c) {
     return Promise.resolve().then(() => {
       this.event2arg3 = c;
     });
-  }),
+  }
 
-  onEvent2b: preEvent("event2", function(a, b, c) {
+  onEvent2b(a, b, c) {
     this.event2arg2 = b;
-  }),
-});
+  }
+}
+protocol.registerFront(ChildFront);
 
 types.addDictType("manyChildrenDict", {
   child5: "childActor",
@@ -301,39 +306,36 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
   },
 });
 
-var RootFront = protocol.FrontClassWithSpec(rootSpec, {
-  toString: function() {
-    return "[root front]";
-  },
-  initialize: function(client) {
+class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
+  constructor(client) {
+    super(client);
     this.actorID = "root";
-    protocol.Front.prototype.initialize.call(this, client);
     // Root actor owns itself.
     this.manage(this);
-  },
+  }
 
-  getTemporaryChild: protocol.custom(function(id) {
+  toString() {
+    return "[root front]";
+  }
+
+  getTemporaryChild(id) {
     if (!this._temporaryHolder) {
       this._temporaryHolder = new protocol.Front(this.conn);
       this._temporaryHolder.actorID = this.actorID + "_temp";
       this.manage(this._temporaryHolder);
     }
-    return this._getTemporaryChild(id);
-  }, {
-    impl: "_getTemporaryChild",
-  }),
+    return super.getTemporaryChild(id);
+  }
 
-  clearTemporaryChildren: protocol.custom(function() {
+  clearTemporaryChildren() {
     if (!this._temporaryHolder) {
       return Promise.resolve(undefined);
     }
     this._temporaryHolder.destroy();
     delete this._temporaryHolder;
-    return this._clearTemporaryChildren();
-  }, {
-    impl: "_clearTemporaryChildren",
-  }),
-});
+    return super.clearTemporaryChildren();
+  }
+}
 
 function run_test() {
   DebuggerServer.createRootActor = (conn => {
@@ -349,7 +351,7 @@ function run_test() {
                          "traits": []});
     Assert.equal(applicationType, "xpcshell-tests");
 
-    const rootFront = RootFront(client);
+    const rootFront = new RootFront(client);
     let childFront = null;
 
     const expectRootChildren = size => {

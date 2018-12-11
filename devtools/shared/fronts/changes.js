@@ -4,21 +4,22 @@
 
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
+const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
 const {changesSpec} = require("devtools/shared/specs/changes");
 
 /**
  * ChangesFront, the front object for the ChangesActor
  */
-const ChangesFront = protocol.FrontClassWithSpec(changesSpec, {
-  initialize: function(client, {changesActor}) {
-    protocol.Front.prototype.initialize.call(this, client, {actor: changesActor});
+class ChangesFront extends FrontClassWithSpec(changesSpec) {
+  constructor(client, {changesActor}) {
+    super(client, {actor: changesActor});
     this.manage(this);
-  },
+  }
 
-  destroy: function() {
-    protocol.Front.prototype.destroy.call(this);
-  },
-});
+  destroy() {
+    super.destroy();
+  }
+}
 
 exports.ChangesFront = ChangesFront;
+registerFront(ChangesFront);

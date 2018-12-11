@@ -4,11 +4,11 @@
 "use strict";
 
 const {contentProcessTargetSpec} = require("devtools/shared/specs/targets/content-process");
-const protocol = require("devtools/shared/protocol");
+const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
 
-const ContentProcessTargetFront = protocol.FrontClassWithSpec(contentProcessTargetSpec, {
-  initialize: function(client, form) {
-    protocol.Front.prototype.initialize.call(this, client, form);
+class ContentProcessTargetFront extends FrontClassWithSpec(contentProcessTargetSpec) {
+  constructor(client, form) {
+    super(client, form);
 
     this.client = client;
     this.chromeDebugger = form.chromeDebugger;
@@ -18,17 +18,18 @@ const ContentProcessTargetFront = protocol.FrontClassWithSpec(contentProcessTarg
     this.targetForm = form;
 
     this.traits = {};
-  },
+  }
 
   attachThread() {
     return this.client.attachThread(this.chromeDebugger);
-  },
+  }
 
-  reconfigure: function() {
+  reconfigure() {
     // Toolbox and options panel are calling this method but Worker Target can't be
     // reconfigured. So we ignore this call here.
     return Promise.resolve();
-  },
-});
+  }
+}
 
 exports.ContentProcessTargetFront = ContentProcessTargetFront;
+registerFront(ContentProcessTargetFront);

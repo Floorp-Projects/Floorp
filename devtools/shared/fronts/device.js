@@ -5,17 +5,17 @@
 
 const {Cu} = require("chrome");
 const {deviceSpec} = require("devtools/shared/specs/device");
-const protocol = require("devtools/shared/protocol");
+const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
 const defer = require("devtools/shared/defer");
 
-const DeviceFront = protocol.FrontClassWithSpec(deviceSpec, {
-  initialize: function(client, form) {
-    protocol.Front.prototype.initialize.call(this, client);
+class DeviceFront extends FrontClassWithSpec(deviceSpec) {
+  constructor(client, form) {
+    super(client);
     this.actorID = form.deviceActor;
     this.manage(this);
-  },
+  }
 
-  screenshotToBlob: function() {
+  screenshotToBlob() {
     return this.screenshotToDataURL().then(longstr => {
       return longstr.string().then(dataURL => {
         const deferred = defer();
@@ -33,7 +33,8 @@ const DeviceFront = protocol.FrontClassWithSpec(deviceSpec, {
         return deferred.promise;
       });
     });
-  },
-});
+  }
+}
 
 exports.DeviceFront = DeviceFront;
+registerFront(DeviceFront);

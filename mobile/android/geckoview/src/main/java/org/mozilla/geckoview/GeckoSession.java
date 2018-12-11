@@ -441,8 +441,8 @@ public class GeckoSession implements Parcelable {
                         callback.sendError("Blocked unsafe intent URI");
 
                         delegate.onLoadError(GeckoSession.this, request.uri,
-                                             new WebRequestError(WebRequestError.ERROR_CATEGORY_URI,
-                                                                 WebRequestError.ERROR_MALFORMED_URI));
+                                             new WebRequestError(WebRequestError.ERROR_MALFORMED_URI,
+                                                                 WebRequestError.ERROR_CATEGORY_URI));
 
                         return;
                     }
@@ -707,7 +707,7 @@ public class GeckoSession implements Parcelable {
                     final SelectionActionDelegate.Selection selection =
                             new SelectionActionDelegate.Selection(message);
 
-                    final String[] actions = message.getStringArray("actions");
+                    final @SelectionActionDelegate.Action String[] actions = message.getStringArray("actions");
                     final int seqNo = message.getInt("seqNo");
                     final GeckoResponse<String> response = new GeckoResponse<String>() {
                         @Override

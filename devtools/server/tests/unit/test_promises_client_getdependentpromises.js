@@ -50,7 +50,7 @@ add_task(async function() {
 });
 
 async function testGetDependentPromises(client, form, makePromises) {
-  const front = PromisesFront(client, form);
+  const front = new PromisesFront(client, form);
 
   await front.attach();
   await front.listPromises();
