@@ -1289,6 +1289,12 @@ var Front = function(conn = null, form = null, detail = null, context = null) {
   // of new fronts via this dedicated EventEmitter object.
   this._frontListeners = new EventEmitter();
 
+  // List of optional listener for each event, that is processed immediatly on packet
+  // receival, before emitting event via EventEmitter on the Front.
+  // These listeners are register via Front.before function.
+  // Map(Event Name[string] => Event Listener[function])
+  this._beforeListeners = new Map();
+
   // protocol.js no longer uses this data in the constructor, only external
   // uses do.  External usage of manually-constructed fronts will be
   // drastically reduced if we convert the root and target actors to
@@ -1303,9 +1309,6 @@ var Front = function(conn = null, form = null, detail = null, context = null) {
 Front.prototype = extend(Pool.prototype, {
   actorID: null,
 
-  // Existing Fronts extending this class expect initialize to contain constructor logic.
-  initialize: Front,
-
   destroy: function() {
     // Reject all outstanding requests, they won't make sense after
     // the front is destroyed.
@@ -1319,6 +1322,7 @@ Front.prototype = extend(Pool.prototype, {
     Pool.prototype.destroy.call(this);
     this.actorID = null;
     this._frontListeners = null;
+    this._beforeListeners = null;
   },
 
   manage: function(front) {
@@ -1343,6 +1347,24 @@ Front.prototype = extend(Pool.prototype, {
     }
     // Then register the callback for fronts instantiated in the future
     this._frontListeners.on(typeName, callback);
+  },
+
+  /**
+   * Register an event listener that will be called immediately on packer receival.
+   * The given callback is going to be called before emitting the event via EventEmitter
+   * API on the Front. Event emitting will be delayed if the callback is async.
+   * Only one such listener can be registered per type of event.
+   *
+   * @param String type
+   *   Event emitted by the actor to intercept.
+   * @param Function callback
+   *   Function that will process the event.
+   */
+  before(type, callback) {
+    if (this._beforeListeners.has(type)) {
+      throw new Error(`Can't register multiple before listeners for "${type}".`);
+    }
+    this._beforeListeners.set(type, callback);
   },
 
   toString: function() {
@@ -1403,13 +1425,16 @@ Front.prototype = extend(Pool.prototype, {
         console.exception(ex);
         throw ex;
       }
-      if (event.pre) {
-        const results = event.pre.map(pre => pre.apply(this, args));
-
-        // Check to see if any of the preEvents returned a promise -- if so,
+      // Check for "pre event" callback to be processed before emitting events on fronts
+      // Use event.name instead of packet.type to use specific event name instead of RDP
+      // packet's type.
+      const beforeEvent = this._beforeListeners.get(event.name);
+      if (beforeEvent) {
+        const result = beforeEvent.apply(this, args);
+        // Check to see if the beforeEvent returned a promise -- if so,
         // wait for their resolution before emitting. Otherwise, emit synchronously.
-        if (results.some(result => result && typeof result.then === "function")) {
-          Promise.all(results).then(() => {
+        if (result && typeof result.then == "function") {
+          result.then(() => {
             return EventEmitter.emit.apply(null, [this, event.name].concat(args));
           });
           return;
@@ -1466,31 +1491,6 @@ Front.prototype = extend(Pool.prototype, {
 exports.Front = Front;
 
 /**
- * A method tagged with preEvent will be called after recieving a packet
- * for that event, and before the front emits the event.
- */
-exports.preEvent = function(eventName, fn) {
-  fn._preEvent = eventName;
-  return fn;
-};
-
-/**
- * Mark a method as a custom front implementation, replacing the generated
- * front method.
- *
- * @param function fn
- *    The front implementation, will be returned.
- * @param object options
- *    Options object:
- *      impl (string): If provided, the generated front method will be
- *        stored as this property on the prototype.
- */
-exports.custom = function(fn, options = {}) {
-  fn._customFront = options;
-  return fn;
-};
-
-/**
  * Generates request methods as described by the given actor specification on
  * the given front prototype. Returns the front prototype.
  */
@@ -1504,22 +1504,7 @@ var generateRequestMethods = function(actorSpec, frontProto) {
   // Generate request methods.
   const methods = actorSpec.methods;
   methods.forEach(spec => {
-    let name = spec.name;
-
-    // If there's already a property by this name in the front, it must
-    // be a custom front method.
-    if (name in frontProto) {
-      const custom = frontProto[spec.name]._customFront;
-      if (custom === undefined) {
-        throw Error(`Existing method for ${spec.name} not marked customFront while ` +
-                    ` processing ${actorSpec.typeName}.`);
-      }
-      // If the user doesn't need the impl don't generate it.
-      if (!custom.impl) {
-        return;
-      }
-      name = custom.impl;
-    }
+    const name = spec.name;
 
     frontProto[name] = function(...args) {
       // If this.actorID are not available, the request will not be able to complete.
@@ -1571,34 +1556,12 @@ var generateRequestMethods = function(actorSpec, frontProto) {
 
   const actorEvents = actorSpec.events;
   if (actorEvents) {
-    // This actor has events, scan the prototype for preEvent handlers...
-    const preHandlers = new Map();
-    for (const name of Object.getOwnPropertyNames(frontProto)) {
-      const desc = Object.getOwnPropertyDescriptor(frontProto, name);
-      if (!desc.value) {
-        continue;
-      }
-      if (desc.value._preEvent) {
-        const preEvent = desc.value._preEvent;
-        if (!actorEvents.has(preEvent)) {
-          throw Error("preEvent for event that doesn't exist: " + preEvent);
-        }
-        let handlers = preHandlers.get(preEvent);
-        if (!handlers) {
-          handlers = [];
-          preHandlers.set(preEvent, handlers);
-        }
-        handlers.push(desc.value);
-      }
-    }
-
     frontProto._clientSpec.events = new Map();
 
     for (const [name, request] of actorEvents) {
       frontProto._clientSpec.events.set(request.type, {
-        name: name,
-        request: request,
-        pre: preHandlers.get(name),
+        name,
+        request,
       });
     }
   }
@@ -1617,29 +1580,21 @@ var generateRequestMethods = function(actorSpec, frontProto) {
  *    The object prototype.  Must have a 'typeName' property,
  *    should have method definitions, can have event definitions.
  */
-var FrontClassWithSpec = function(actorSpec, frontProto) {
-  // Existing Fronts are relying on the initialize instead of constructor methods.
-  const cls = function() {
-    const instance = Object.create(cls.prototype);
-    const initializer = instance.initialize.apply(instance, arguments);
-
-    // Async Initialization
-    // return a promise that resolves with the instance if the initializer is async
-    if (initializer && typeof initializer.then === "function") {
-      return initializer.then(resolve => instance);
-    }
-    return instance;
-  };
-  cls.prototype = extend(Front.prototype, generateRequestMethods(actorSpec, frontProto));
-
-  if (!registeredTypes.has(actorSpec.typeName)) {
-    types.addActorType(actorSpec.typeName);
+var FrontClassWithSpec = function(actorSpec) {
+  class OneFront extends Front {
   }
-  registeredTypes.get(actorSpec.typeName).frontClass = cls;
-
-  return cls;
+  generateRequestMethods(actorSpec, OneFront.prototype);
+  return OneFront;
 };
 exports.FrontClassWithSpec = FrontClassWithSpec;
+
+exports.registerFront = function(cls) {
+  const { typeName } = cls.prototype;
+  if (!registeredTypes.has(typeName)) {
+    types.addActorType(typeName);
+  }
+  registeredTypes.get(typeName).frontClass = cls;
+};
 
 exports.dumpActorSpec = function(type) {
   const actorSpec = type.actorSpec;
@@ -1702,6 +1657,13 @@ function getFront(client, typeName, form) {
   if (!type.frontClass) {
     lazyLoadFront(typeName);
   }
-  return type.frontClass(client, form);
+  // Use intermediate Class variable to please eslint requiring
+  // a capital letter for all constructors.
+  const Class = type.frontClass;
+  const instance = new Class(client, form);
+  if (typeof (instance.initialize) == "function") {
+    return instance.initialize(client, form).then(() => instance);
+  }
+  return instance;
 }
 exports.getFront = getFront;

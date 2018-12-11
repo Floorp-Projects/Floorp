@@ -34,7 +34,7 @@ add_task(async function() {
 async function testListPromises(client, form, makePromise) {
   const resolution = SECRET + Math.random();
   const promise = makePromise(resolution);
-  const front = PromisesFront(client, form);
+  const front = new PromisesFront(client, form);
 
   await front.attach();
 
