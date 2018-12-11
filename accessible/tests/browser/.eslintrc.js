@@ -9,7 +9,7 @@ module.exports = {
   },
   "rules": {
     "mozilla/no-aArgs": "error",
-    "mozilla/reject-importGlobalProperties": "error",
+    "mozilla/reject-importGlobalProperties": ["error", "everything"],
     "mozilla/var-only-at-top-level": "error",
 
     "block-scoped-var": "error",
