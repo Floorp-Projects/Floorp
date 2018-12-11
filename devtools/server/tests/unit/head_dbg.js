@@ -392,6 +392,8 @@ function getTestTab(client, title, callback) {
 function attachTestTab(client, title, callback) {
   getTestTab(client, title, function(tab) {
     client.attachTarget(tab).then(([response, targetFront]) => {
+      Assert.equal(response.type, "tabAttached");
+      Assert.ok(typeof response.threadActor === "string");
       callback(response, targetFront);
     });
   });
@@ -404,6 +406,10 @@ function attachTestTab(client, title, callback) {
 function attachTestThread(client, title, callback) {
   attachTestTab(client, title, function(tabResponse, targetFront) {
     function onAttach([response, threadClient]) {
+      Assert.equal(threadClient.state, "paused", "Thread client is paused");
+      Assert.equal(response.type, "paused");
+      Assert.ok("why" in response);
+      Assert.equal(response.why.type, "attached");
       callback(response, targetFront, threadClient, tabResponse);
     }
     targetFront.attachThread({
@@ -421,6 +427,7 @@ function attachTestTabAndResume(client, title, callback = () => {}) {
   return new Promise((resolve) => {
     attachTestThread(client, title, function(response, targetFront, threadClient) {
       threadClient.resume(function(response) {
+        Assert.equal(response.type, "resumed");
         callback(response, targetFront, threadClient);
         resolve([response, targetFront, threadClient]);
       });
