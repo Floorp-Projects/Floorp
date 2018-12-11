@@ -252,6 +252,10 @@ Hexa<T> hexa(T val) {
   return Hexa<T>(val);
 }
 
+#ifdef WIN32
+void LogWStr(const wchar_t* aStr, std::stringstream& aOut);
+#endif
+
 template <int L, typename Logger = BasicLogger>
 class Log {
  public:
@@ -305,16 +309,7 @@ class Log {
 #ifdef WIN32
   Log& operator<<(const wchar_t aWStr[]) {
     if (MOZ_UNLIKELY(LogIt())) {
-      int wLen = (int)wcslen(aWStr);
-      std::vector<char> str;
-      int n = WideCharToMultiByte(0, 0, aWStr, wLen, nullptr, 0, nullptr,
-                                  nullptr);
-      if (n > 0) {
-        std::vector<char> str(n+1);
-        WideCharToMultiByte(0, 0, aWStr, wLen, str.data(), n+1, nullptr,
-                            nullptr);
-        mMessage << str.data();
-      }
+      LogWStr(aWStr, mMessage);
     }
     return *this;
   }
