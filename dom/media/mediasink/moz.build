@@ -12,6 +12,10 @@ UNIFIED_SOURCES += [
     'VideoSink.cpp',
 ]
 
+EXPORTS += [
+    'MediaSink.h'
+]
+
 FINAL_LIBRARY = 'xul'
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
