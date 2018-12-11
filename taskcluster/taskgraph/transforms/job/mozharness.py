@@ -219,7 +219,7 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
 
     command = [
         '{workdir}/bin/run-task'.format(**run),
-        '--vcs-checkout', env['GECKO_PATH'],
+        '--firefox-checkout', env['GECKO_PATH'],
         '--tools-checkout', '{workdir}/workspace/build/tools'.format(**run),
     ]
     if run['comm-checkout']:

@@ -38,7 +38,7 @@ fi
 
 # Build image
 run-task \
-  --vcs-checkout "/builds/worker/checkouts/gecko" \
+  --firefox-checkout "/builds/worker/checkouts/gecko" \
   --sparse-profile build/sparse-profiles/docker-image \
   -- \
   sh -x -c "$LOAD_COMMAND \
