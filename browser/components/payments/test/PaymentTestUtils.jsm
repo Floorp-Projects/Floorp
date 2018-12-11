@@ -236,7 +236,7 @@ var PaymentTestUtils = {
       let {requestStore} = Cu.waiveXrays(content.document.querySelector("payment-dialog"));
       let {page} = requestStore.getState();
       let button = content.document.querySelector(`#${page.id} button.primary`);
-      ok(!button.disabled, "Primary button should not be disabled when clicking it");
+      ok(!button.disabled, `#${page.id} primary button should not be disabled when clicking it`);
       button.click();
     },
 
@@ -260,7 +260,15 @@ var PaymentTestUtils = {
      *
      * @returns {undefined}
      */
-    completePayment: () => {
+    completePayment: async () => {
+      let {
+        PaymentTestUtils: PTU,
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+
+      await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "payment-summary";
+      }, "Wait for change to payment-summary before clicking Pay");
+
       let button = content.document.getElementById("pay");
       ok(!button.disabled, "Pay button should not be disabled when clicking it");
       button.click();
