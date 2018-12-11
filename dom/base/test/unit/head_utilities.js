@@ -10,20 +10,20 @@ const nsIDocumentEncoder = Ci.nsIDocumentEncoder;
 const replacementChar = Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER;
 
 function loadContentFile(aFile, aCharset) {
-    //if(aAsIso == undefined) aAsIso = false;
-    if(aCharset == undefined)
-        aCharset = 'UTF-8';
+    // if(aAsIso == undefined) aAsIso = false;
+    if (aCharset == undefined)
+        aCharset = "UTF-8";
 
     var file = do_get_file(aFile);
-    var ios = Cc['@mozilla.org/network/io-service;1']
+    var ios = Cc["@mozilla.org/network/io-service;1"]
             .getService(Ci.nsIIOService);
     var chann = NetUtil.newChannel({
       uri: ios.newFileURI(file),
-      loadUsingSystemPrincipal: true
+      loadUsingSystemPrincipal: true,
     });
     chann.contentCharset = aCharset;
 
-    /*var inputStream = Components.classes["@mozilla.org/scriptableinputstream;1"]
+    /* var inputStream = Components.classes["@mozilla.org/scriptableinputstream;1"]
                         .createInstance(Components.interfaces.nsIScriptableInputStream);
     inputStream.init(chann.open2());
     return inputStream.read(file.fileSize);
@@ -32,7 +32,7 @@ function loadContentFile(aFile, aCharset) {
     var inputStream = Cc["@mozilla.org/intl/converter-input-stream;1"]
                        .createInstance(Ci.nsIConverterInputStream);
     inputStream.init(chann.open2(), aCharset, 1024, replacementChar);
-    var str = {}, content = '';
+    var str = {}, content = "";
     while (inputStream.readString(4096, str) != 0) {
         content += str.value;
     }

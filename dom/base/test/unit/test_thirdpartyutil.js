@@ -17,8 +17,7 @@ prefs.setBoolPref("network.loadinfo.skip_type_assertion", true);
 
 var NS_ERROR_INVALID_ARG = Cr.NS_ERROR_INVALID_ARG;
 
-function do_check_throws(f, result, stack)
-{
+function do_check_throws(f, result, stack) {
   if (!stack) {
     try {
       // We might not have a 'Components' object.
