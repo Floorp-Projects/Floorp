@@ -11,7 +11,7 @@ var EXPORTED_SYMBOLS = ["AddonTestUtils", "MockAsyncShutdown"];
 
 const CERTDB_CONTRACTID = "@mozilla.org/security/x509certdb;1";
 
-Cu.importGlobalProperties(["fetch"]);
+Cu.importGlobalProperties(["fetch", "TextEncoder"]);
 
 ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");

@@ -175,7 +175,6 @@ module.exports = {
     "mozilla/no-import-into-var-and-global": "error",
     "mozilla/no-useless-parameters": "error",
     "mozilla/no-useless-removeEventListener": "error",
-    "mozilla/reject-importGlobalProperties": ["error", "allownonwebidl"],
     "mozilla/rejects-requires-await": "error",
     "mozilla/use-cc-etc": "error",
     "mozilla/use-chromeutils-generateqi": "error",

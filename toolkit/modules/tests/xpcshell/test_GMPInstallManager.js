@@ -15,6 +15,7 @@ ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
+Cu.importGlobalProperties(["DOMParser"]);
 
 var ProductAddonCheckerScope = ChromeUtils.import("resource://gre/modules/addons/ProductAddonChecker.jsm", {});
 

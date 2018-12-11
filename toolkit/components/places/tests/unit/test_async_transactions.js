@@ -11,6 +11,7 @@ const annosvc  = PlacesUtils.annotations;
 const PT       = PlacesTransactions;
 const menuGuid = PlacesUtils.bookmarks.menuGuid;
 
+Cu.importGlobalProperties(["URL"]);
 ChromeUtils.defineModuleGetter(this, "Preferences",
                                "resource://gre/modules/Preferences.jsm");
 

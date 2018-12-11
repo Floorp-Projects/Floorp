@@ -9,6 +9,8 @@ const PREF_APP_DISTRIBUTION           = "distribution.id";
 const PREF_APP_DISTRIBUTION_VERSION   = "distribution.version";
 const PREF_APP_UPDATE_CHANNEL         = "app.update.channel";
 
+Cu.importGlobalProperties(["URLSearchParams"]);
+
 // Get the HTTP server.
 var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 

@@ -3,6 +3,7 @@ ChromeUtils.import("resource://gre/modules/PlacesSyncUtils.jsm");
 ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.defineModuleGetter(this, "Preferences",
                                "resource://gre/modules/Preferences.jsm");
+Cu.importGlobalProperties(["URLSearchParams"]);
 
 const SYNC_PARENT_ANNO = "sync/parent";
 

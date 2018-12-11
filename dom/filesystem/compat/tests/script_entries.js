@@ -1,5 +1,4 @@
 /* eslint-env mozilla/frame-script */
-// eslint-disable-next-line mozilla/reject-importGlobalProperties
 Cu.importGlobalProperties(["File", "Directory"]);
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 var tmpFile, tmpDir;
