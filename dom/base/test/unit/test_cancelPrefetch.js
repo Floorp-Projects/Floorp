@@ -1,10 +1,8 @@
 // Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 var prefetch = Cc["@mozilla.org/prefetch-service;1"].
                getService(Ci.nsIPrefetchService);
-var ios = Cc["@mozilla.org/network/io-service;1"].
-          getService(Ci.nsIIOService);
-var prefs = Cc["@mozilla.org/preferences-service;1"].
-            getService(Ci.nsIPrefBranch);
+var ios = Services.io;
+var prefs = Services.prefs;
 
 Cu.importGlobalProperties(["DOMParser"]);
 var parser = new DOMParser();

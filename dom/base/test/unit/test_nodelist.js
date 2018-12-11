@@ -99,7 +99,7 @@ function test_getElementsByTagNameNS() {
   var numTests = doc.getElementsByTagNameNS("*", "test").length;
   Assert.equal(numTests, 14);
 
-  for (var i = 1; i <= numTests; ++i) {
+  for (i = 1; i <= numTests; ++i) {
     Assert.ok(Element.isInstance(doc.getElementById("test" + i)));
     Assert.equal(doc.getElementById("test" + i),
                  doc.getElementsByTagNameNS("*", "test").item(i - 1));
@@ -157,7 +157,7 @@ function test_getElementsByTagNameNS() {
   Assert.equal(list2.length, 0);
   var newNode = doc.createElementNS("random-bogus-namespace", "foo");
   doc.documentElement.appendChild(newNode);
-  var newNode = doc.createElementNS("random-bogus-namespace2", "foo");
+  newNode = doc.createElementNS("random-bogus-namespace2", "foo");
   doc.documentElement.appendChild(newNode);
   Assert.equal(list1.length, 1);
   Assert.equal(list2.length, 1);
