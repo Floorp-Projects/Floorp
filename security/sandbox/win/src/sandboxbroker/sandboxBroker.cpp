@@ -753,6 +753,16 @@ bool SandboxBroker::SetSecurityLevelForRDDProcess() {
       result,
       "With these static arguments AddRule should never fail, what happened?");
 
+  // This section is needed to avoid an assert during crash reporting code
+  // when running mochitests.  The assertion is here:
+  // toolkit/crashreporter/nsExceptionHandler.cpp:2041
+  result =
+      mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_HANDLES,
+                       sandbox::TargetPolicy::HANDLES_DUP_BROKER, L"Section");
+  SANDBOX_ENSURE_SUCCESS(
+      result,
+      "With these static arguments AddRule should never fail, what happened?");
+
   return true;
 }
 
