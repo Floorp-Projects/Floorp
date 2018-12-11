@@ -12,6 +12,7 @@ import org.mozilla.gecko.InputMethods;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
@@ -638,6 +639,7 @@ public class GeckoView extends FrameLayout {
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(final MotionEvent event) {
         if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
