@@ -222,7 +222,41 @@ void LIRGeneratorARM64::lowerMulI(MMul* mul, MDefinition* lhs,
   lowerForALU(lir, mul, lhs, rhs);
 }
 
-void LIRGeneratorARM64::lowerModI(MMod* mod) { MOZ_CRASH("lowerModI"); }
+void LIRGeneratorARM64::lowerModI(MMod* mod) {
+  if (mod->isUnsigned()) {
+    lowerUMod(mod);
+    return;
+  }
+
+  if (mod->rhs()->isConstant()) {
+    int32_t rhs = mod->rhs()->toConstant()->toInt32();
+    int32_t shift = FloorLog2(rhs);
+    if (rhs > 0 && 1 << shift == rhs) {
+      LModPowTwoI* lir = new(alloc()) LModPowTwoI(useRegister(mod->lhs()), shift);
+      if (mod->fallible()) {
+        assignSnapshot(lir, Bailout_DoubleOutput);
+      }
+      define(lir, mod);
+      return;
+    } else if (shift < 31 && (1 << (shift + 1)) - 1 == rhs) {
+      LModMaskI* lir = new(alloc()) LModMaskI(useRegister(mod->lhs()),
+                                              temp(),
+                                              temp(),
+                                              shift + 1);
+      if (mod->fallible()) {
+        assignSnapshot(lir, Bailout_DoubleOutput);
+      }
+      define(lir, mod);
+    }
+  }
+
+  LModI* lir = new(alloc()) LModI(useRegister(mod->lhs()),
+                                  useRegister(mod->rhs()), temp());
+  if (mod->fallible()) {
+    assignSnapshot(lir, Bailout_DoubleOutput);
+  }
+  define(lir, mod);
+}
 
 void LIRGeneratorARM64::lowerDivI64(MDiv* div) { MOZ_CRASH("NYI"); }
 
@@ -279,7 +313,14 @@ void LIRGenerator::visitWasmSelect(MWasmSelect* ins) {
 
 void LIRGeneratorARM64::lowerUDiv(MDiv* div) { MOZ_CRASH("lowerUDiv"); }
 
-void LIRGeneratorARM64::lowerUMod(MMod* mod) { MOZ_CRASH("lowerUMod"); }
+void LIRGeneratorARM64::lowerUMod(MMod* mod) {
+  LUMod* lir = new(alloc()) LUMod(useRegister(mod->getOperand(0)),
+                                  useRegister(mod->getOperand(1)));
+  if (mod->fallible()) {
+    assignSnapshot(lir, Bailout_DoubleOutput);
+  }
+  define(lir, mod);
+}
 
 void LIRGenerator::visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins) {
   MOZ_CRASH("visitWasmUnsignedToDouble");
