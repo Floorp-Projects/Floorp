@@ -67,6 +67,7 @@
 #include "nsIUUIDGenerator.h"
 #include "mozilla/Unused.h"
 #if defined(XP_WIN)
+#include "sandboxBroker.h"
 #include "WinUtils.h"
 #endif
 #endif
@@ -991,6 +992,17 @@ nsXREDirProvider::DoStartup() {
         policies->Observe(nullptr, "policies-startup", nullptr);
       }
     }
+
+#if defined(MOZ_SANDBOX) && defined(XP_WIN)
+    // Call SandboxBroker to initialize things that depend on Gecko machinery
+    // like the directory provider. We insert this initialization code here
+    // (rather than in XRE_mainRun) because we need NS_APP_USER_PROFILE_50_DIR
+    // to be known and so that any child content processes spawned by extensions
+    // from the notifications below will have all the requisite directories
+    // white-listed for read/write access. An example of this is the
+    // tor-launcher launching the network configuration window. See bug 1485836.
+    mozilla::SandboxBroker::GeckoDependentInitialize();
+#endif
 
     // Init the Extension Manager
     nsCOMPtr<nsIObserver> em =
