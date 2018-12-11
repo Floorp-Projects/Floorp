@@ -8402,7 +8402,7 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible) {
     mReflowContinueTimer = nullptr;
   }
 
-  nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
+  const bool isRoot = target == mFrameConstructor->GetRootFrame();
 
   // CreateReferenceRenderingContext can return nullptr
   RefPtr<gfxContext> rcx(CreateReferenceRenderingContext());
@@ -8416,7 +8416,7 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible) {
   // then use the target frame's size as the available space.
   WritingMode wm = target->GetWritingMode();
   LogicalSize size(wm);
-  if (target == rootFrame) {
+  if (isRoot) {
     size = LogicalSize(wm, mPresContext->GetVisibleArea().Size());
   } else {
     size = target->GetLogicalSize();
@@ -8432,7 +8432,7 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible) {
                           ReflowInput::CALLER_WILL_INIT);
   reflowInput.mOrthogonalLimit = size.BSize(wm);
 
-  if (rootFrame == target) {
+  if (isRoot) {
     reflowInput.Init(mPresContext);
 
     // When the root frame is being reflowed with unconstrained block-size
@@ -8486,20 +8486,17 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible) {
   // height was unconstrained to start with.
   nsRect boundsRelativeToTarget =
       nsRect(0, 0, desiredSize.Width(), desiredSize.Height());
-  NS_ASSERTION(
-      (target == rootFrame && size.BSize(wm) == NS_UNCONSTRAINEDSIZE) ||
-          (desiredSize.ISize(wm) == size.ISize(wm) &&
-           desiredSize.BSize(wm) == size.BSize(wm)),
-      "non-root frame's desired size changed during an "
-      "incremental reflow");
-  NS_ASSERTION(
-      target == rootFrame ||
-          desiredSize.VisualOverflow().IsEqualInterior(boundsRelativeToTarget),
-      "non-root reflow roots must not have visible overflow");
-  NS_ASSERTION(
-      target == rootFrame ||
-          desiredSize.ScrollableOverflow().IsEqualEdges(boundsRelativeToTarget),
-      "non-root reflow roots must not have scrollable overflow");
+  NS_ASSERTION((isRoot && size.BSize(wm) == NS_UNCONSTRAINEDSIZE) ||
+                   (desiredSize.ISize(wm) == size.ISize(wm) &&
+                    desiredSize.BSize(wm) == size.BSize(wm)),
+               "non-root frame's desired size changed during an "
+               "incremental reflow");
+  NS_ASSERTION(isRoot || desiredSize.VisualOverflow().IsEqualInterior(
+                             boundsRelativeToTarget),
+               "non-root reflow roots must not have visible overflow");
+  NS_ASSERTION(isRoot || desiredSize.ScrollableOverflow().IsEqualEdges(
+                             boundsRelativeToTarget),
+               "non-root reflow roots must not have scrollable overflow");
   NS_ASSERTION(status.IsEmpty(), "reflow roots should never split");
 
   target->SetSize(boundsRelativeToTarget.Size());
@@ -8516,7 +8513,7 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible) {
                                          nsContainerFrame::SET_ASYNC);
 
   target->DidReflow(mPresContext, nullptr);
-  if (target == rootFrame && size.BSize(wm) == NS_UNCONSTRAINEDSIZE) {
+  if (isRoot && size.BSize(wm) == NS_UNCONSTRAINEDSIZE) {
     mPresContext->SetVisibleArea(boundsRelativeToTarget);
   }
 
