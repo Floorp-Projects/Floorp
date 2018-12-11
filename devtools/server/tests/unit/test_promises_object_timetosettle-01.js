@@ -8,18 +8,12 @@
 
 "use strict";
 
-const { PromisesFront } = require("devtools/shared/fronts/promises");
-
-var EventEmitter = require("devtools/shared/event-emitter");
-
 add_task(async function() {
-  const client = await startTestDebuggerServer("test-promises-timetosettle");
-  const parentProcessActors = await getParentProcessActors(client);
+  const { promisesFront } = await createMainProcessPromisesFront();
 
   ok(Promise.toString().includes("native code"), "Expect native DOM Promise.");
 
-  // We have to attach the chrome target actor before playing with the PromiseActor
-  await testGetTimeToSettle(client, parentProcessActors, () => {
+  await testGetTimeToSettle(promisesFront, () => {
     const p = new Promise(() => {});
     p.name = "p";
     const q = p.then();
@@ -27,15 +21,12 @@ add_task(async function() {
 
     return p;
   });
+});
 
-  const response = await listTabs(client);
-  const targetTab = findTab(response.tabs, "test-promises-timetosettle");
-  ok(targetTab, "Found our target tab.");
+add_task(async function() {
+  const { debuggee, promisesFront } = await createTabPromisesFront();
 
-  await testGetTimeToSettle(client, targetTab, () => {
-    const debuggee =
-      DebuggerServer.getTestGlobal("test-promises-timetosettle");
-
+  await testGetTimeToSettle(promisesFront, () => {
     const p = new debuggee.Promise(() => {});
     p.name = "p";
     const q = p.then();
@@ -43,18 +34,14 @@ add_task(async function() {
 
     return p;
   });
-
-  await close(client);
 });
 
-async function testGetTimeToSettle(client, form, makePromises) {
-  const front = new PromisesFront(client, form);
-
+async function testGetTimeToSettle(front, makePromises) {
   await front.attach();
   await front.listPromises();
 
   const onNewPromise = new Promise(resolve => {
-    EventEmitter.on(front, "new-promises", promises => {
+    front.on("new-promises", promises => {
       for (const p of promises) {
         if (p.promiseState.state === "pending") {
           ok(!p.promiseState.timeToSettle,
