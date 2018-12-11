@@ -567,6 +567,32 @@ class MOZ_STACK_CLASS AutoPointerEventTargetUpdater final {
   nsIContent** mTargetContent;
 };
 
+void nsIPresShell::DirtyRootsList::AppendElement(nsIFrame* aFrame) {
+  mList.AppendElement(aFrame);
+}
+
+void nsIPresShell::DirtyRootsList::RemoveElement(nsIFrame* aFrame) {
+  mList.RemoveElement(aFrame);
+}
+
+void nsIPresShell::DirtyRootsList::RemoveElements(nsIFrame* aFrame) {
+  mList.RemoveElementsBy([&](nsIFrame* aRoot) { return aRoot == aFrame; });
+}
+
+void nsIPresShell::DirtyRootsList::RemoveElementAt(size_t aIndex) {
+  return mList.RemoveElementAt(aIndex);
+}
+
+void nsIPresShell::DirtyRootsList::Clear() { mList.Clear(); }
+
+bool nsIPresShell::DirtyRootsList::Contains(nsIFrame* aFrame) const {
+  return mList.Contains(aFrame);
+}
+
+bool nsIPresShell::DirtyRootsList::IsEmpty() const { return mList.IsEmpty(); }
+
+size_t nsIPresShell::DirtyRootsList::Length() const { return mList.Length(); }
+
 bool PresShell::sDisableNonTestMouseEvents = false;
 
 mozilla::LazyLogModule PresShell::gLog("PresShell");
@@ -2040,12 +2066,7 @@ void PresShell::NotifyDestroyingFrame(nsIFrame* aFrame) {
 
     mFrameConstructor->NotifyDestroyingFrame(aFrame);
 
-    for (int32_t idx = mDirtyRoots.Length(); idx;) {
-      --idx;
-      if (mDirtyRoots[idx] == aFrame) {
-        mDirtyRoots.RemoveElementAt(idx);
-      }
-    }
+    mDirtyRoots.RemoveElements(aFrame);
 
     // Remove frame properties
     aFrame->DeleteAllProperties();
