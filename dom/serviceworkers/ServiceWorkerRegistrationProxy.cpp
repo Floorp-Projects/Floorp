@@ -196,7 +196,7 @@ RefPtr<GenericPromise> ServiceWorkerRegistrationProxy::Unregister() {
 
   MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
 
-  return promise;
+  return promise.forget();
 }
 
 namespace {
