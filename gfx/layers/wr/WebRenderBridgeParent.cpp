@@ -35,6 +35,10 @@
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
 
+#ifdef XP_WIN
+#include "dwrite.h"
+#endif
+
 using mozilla::Telemetry::LABELS_CONTENT_FRAME_TIME_REASON;
 
 #ifdef MOZ_GECKO_PROFILER
@@ -695,6 +699,48 @@ void WebRenderBridgeParent::ObserveSharedSurfaceRelease(
   for (const auto& pair : aPairs) {
     SharedSurfacesParent::Release(pair.id);
   }
+}
+
+// Debugging kluge for bug 1455848. Remove once debugged!
+mozilla::ipc::IPCResult WebRenderBridgeParent::RecvValidateFontDescriptor(
+    nsTArray<uint8_t>&& aData) {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
+#ifdef XP_WIN
+  nsTArray<uint8_t> data(aData);
+  wchar_t* family = (wchar_t*)data.Elements();
+  size_t remaining = data.Length() / sizeof(wchar_t);
+  size_t familyLength = wcsnlen_s(family, remaining);
+  MOZ_ASSERT(familyLength < remaining && family[familyLength] == 0);
+  remaining -= familyLength + 1;
+  wchar_t* files = family + familyLength + 1;
+  BOOL exists = FALSE;
+  if (RefPtr<IDWriteFontCollection> systemFonts = Factory::GetDWriteSystemFonts()) {
+    UINT32 idx;
+    systemFonts->FindFamilyName(family, &idx, &exists);
+  }
+  if (!remaining) {
+    gfxCriticalNote << (exists ? "found" : "MISSING")
+                    << " font family \"" << family
+                    << "\" has no files!";
+  }
+  while (remaining > 0) {
+    size_t fileLength = wcsnlen_s(files, remaining);
+    MOZ_ASSERT(fileLength < remaining && files[fileLength] == 0);
+    DWORD attribs = GetFileAttributesW(files);
+    if (!exists || attribs == INVALID_FILE_ATTRIBUTES) {
+      gfxCriticalNote << (exists ? "found" : "MISSING")
+                      << " font family \"" << family
+                      << "\" has " << (attribs == INVALID_FILE_ATTRIBUTES ? "INVALID" : "valid")
+                      << " file \"" << files
+                      << "\"";
+    }
+    remaining -= fileLength + 1;
+    files += fileLength + 1;
+  }
+#endif
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvUpdateResources(

@@ -302,6 +302,23 @@ class Log {
     }
     return *this;
   }
+#ifdef WIN32
+  Log& operator<<(const wchar_t aWStr[]) {
+    if (MOZ_UNLIKELY(LogIt())) {
+      int wLen = (int)wcslen(aWStr);
+      std::vector<char> str;
+      int n = WideCharToMultiByte(0, 0, aWStr, wLen, nullptr, 0, nullptr,
+                                  nullptr);
+      if (n > 0) {
+        std::vector<char> str(n+1);
+        WideCharToMultiByte(0, 0, aWStr, wLen, str.data(), n+1, nullptr,
+                            nullptr);
+        mMessage << str.data();
+      }
+    }
+    return *this;
+  }
+#endif
   Log& operator<<(bool aBool) {
     if (MOZ_UNLIKELY(LogIt())) {
       mMessage << (aBool ? "true" : "false");
