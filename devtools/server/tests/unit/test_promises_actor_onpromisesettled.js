@@ -42,7 +42,7 @@ add_task(async function() {
 
 async function testPromisesSettled(client, form, makeResolvePromise,
     makeRejectPromise) {
-  const front = PromisesFront(client, form);
+  const front = new PromisesFront(client, form);
   const resolution = "MyLittleSecret" + Math.random();
 
   await front.attach();

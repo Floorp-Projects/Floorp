@@ -8,6 +8,7 @@ const { openToolbox, closeToolbox, testSetup, testTeardown, runTest,
         SIMPLE_URL } = require("../head");
 
 const protocol = require("devtools/shared/protocol");
+const { FrontClassWithSpec } = protocol;
 const { dampTestSpec } = require("./spec");
 
 // Test parameters
@@ -16,14 +17,14 @@ const STRING_SIZE = 1000;
 const ARRAY_SIZE = 50;
 const REPEAT = 300;
 
-const DampTestFront = protocol.FrontClassWithSpec(dampTestSpec, {
-  initialize(client, tabForm) {
+class DampTestFront extends FrontClassWithSpec(dampTestSpec) {
+  constructor(client, tabForm) {
+    super(client, tabForm);
     this.actorID = tabForm.dampTestActor;
-    protocol.Front.prototype.initialize.call(this, client);
     // Root owns itself.
     this.manage(this);
-  },
-});
+  }
+}
 
 module.exports = async function() {
   let tab = await testSetup(SIMPLE_URL);
@@ -63,7 +64,7 @@ module.exports = async function() {
 
   // Instanciate a front for this test actor
   let { target } = toolbox;
-  let front = DampTestFront(target.client, target.form);
+  let front = new DampTestFront(target.client, target.form);
 
   // Execute the core of this test, call one method multiple times
   // and listen for an event sent by this method

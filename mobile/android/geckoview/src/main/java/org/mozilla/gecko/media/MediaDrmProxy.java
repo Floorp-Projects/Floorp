@@ -11,6 +11,7 @@ import java.util.UUID;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
+import android.annotation.SuppressLint;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 import android.media.MediaCrypto;
@@ -49,13 +50,14 @@ public final class MediaDrmProxy {
 
     private static boolean isSystemSupported() {
         // Support versions >= Marshmallow
-        if (Build.VERSION.SDK_INT < 23) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             if (DEBUG) Log.d(LOGTAG, "System Not supported !!, current SDK version is " + Build.VERSION.SDK_INT);
             return false;
         }
         return true;
     }
 
+    @SuppressLint("NewApi")
     @WrapForJNI
     public static boolean isSchemeSupported(String keySystem) {
         if (!isSystemSupported()) {
@@ -69,6 +71,7 @@ public final class MediaDrmProxy {
         return false;
     }
 
+    @SuppressLint("NewApi")
     @WrapForJNI
     public static boolean IsCryptoSchemeSupported(String keySystem,
                                                   String container) {

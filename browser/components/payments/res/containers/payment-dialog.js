@@ -132,7 +132,17 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     paymentRequest.pay(data);
   }
 
+  /**
+   * Called when the selectedShippingAddress or its properties are changed.
+   * @param {string} shippingAddressGUID
+   */
   changeShippingAddress(shippingAddressGUID) {
+    // Clear shipping address merchant errors when the shipping address changes.
+    let request = Object.assign({}, this.requestStore.getState().request);
+    request.paymentDetails = Object.assign({}, request.paymentDetails);
+    request.paymentDetails.shippingAddressErrors = {};
+    this.requestStore.setState({request});
+
     paymentRequest.changeShippingAddress({
       shippingAddressGUID,
     });
@@ -141,6 +151,36 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
   changeShippingOption(optionID) {
     paymentRequest.changeShippingOption({
       optionID,
+    });
+  }
+
+  /**
+   * Called when the selectedPaymentCard or its relevant properties or billingAddress are changed.
+   * @param {string} selectedPaymentCardGUID
+   */
+  changePaymentMethod(selectedPaymentCardGUID) {
+    // Clear paymentMethod merchant errors when the paymentMethod or billingAddress changes.
+    let request = Object.assign({}, this.requestStore.getState().request);
+    request.paymentDetails = Object.assign({}, request.paymentDetails);
+    request.paymentDetails.paymentMethodErrors = null;
+    this.requestStore.setState({request});
+
+    // TODO: Bug 1477113 - Dispatch paymentmethodchange
+  }
+
+  /**
+   * Called when the selectedPayerAddress or its relevant properties are changed.
+   * @param {string} payerAddressGUID
+   */
+  changePayerAddress(payerAddressGUID) {
+    // Clear payer address merchant errors when the payer address changes.
+    let request = Object.assign({}, this.requestStore.getState().request);
+    request.paymentDetails = Object.assign({}, request.paymentDetails);
+    request.paymentDetails.payerErrors = {};
+    this.requestStore.setState({request});
+
+    paymentRequest.changePayerAddress({
+      payerAddressGUID,
     });
   }
 
@@ -188,8 +228,9 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
    *
    * @param {object} state - See `PaymentsStore.setState`
    */
-  async setStateFromParent(state) {
+  async setStateFromParent(state) { // eslint-disable-line complexity
     let oldAddresses = paymentRequest.getAddresses(this.requestStore.getState());
+    let oldBasicCards = paymentRequest.getBasicCards(this.requestStore.getState());
     if (state.request) {
       state = this._updateCompleteStatus(state);
     }
@@ -204,33 +245,67 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
       selectedShippingOption,
     } = state;
     let addresses = paymentRequest.getAddresses(state);
-    let shippingOptions = state.request.paymentDetails.shippingOptions;
-    let shippingAddress = selectedShippingAddress && addresses[selectedShippingAddress];
-    let oldShippingAddress = selectedShippingAddress &&
-                             oldAddresses[selectedShippingAddress];
+    let {paymentOptions} = state.request;
 
-    // Ensure `selectedShippingAddress` never refers to a deleted address.
-    // We also compare address timestamps to notify about changes
-    // made outside the payments UI.
-    if (shippingAddress) {
-      // invalidate the cached value if the address was modified
-      if (oldShippingAddress &&
-          shippingAddress.guid == oldShippingAddress.guid &&
-          shippingAddress.timeLastModified != oldShippingAddress.timeLastModified) {
-        delete this._cachedState.selectedShippingAddress;
+    if (paymentOptions.requestShipping) {
+      let shippingOptions = state.request.paymentDetails.shippingOptions;
+      let shippingAddress = selectedShippingAddress && addresses[selectedShippingAddress];
+      let oldShippingAddress = selectedShippingAddress &&
+                               oldAddresses[selectedShippingAddress];
+
+      // Ensure `selectedShippingAddress` never refers to a deleted address.
+      // We also compare address timestamps to notify about changes
+      // made outside the payments UI.
+      if (shippingAddress) {
+        // invalidate the cached value if the address was modified
+        if (oldShippingAddress &&
+            shippingAddress.guid == oldShippingAddress.guid &&
+            shippingAddress.timeLastModified != oldShippingAddress.timeLastModified) {
+          delete this._cachedState.selectedShippingAddress;
+        }
+      } else if (selectedShippingAddress !== null) {
+        // null out the `selectedShippingAddress` property if it is undefined,
+        // or if the address it pointed to was removed from storage.
+        log.debug("resetting invalid/deleted shipping address");
+        this.requestStore.setState({
+          selectedShippingAddress: null,
+        });
       }
-    } else if (selectedShippingAddress !== null) {
-      // null out the `selectedShippingAddress` property if it is undefined,
-      // or if the address it pointed to was removed from storage.
-      log.debug("resetting invalid/deleted shipping address");
-      this.requestStore.setState({
-        selectedShippingAddress: null,
-      });
+
+      // Ensure `selectedShippingOption` never refers to a deleted shipping option and
+      // matches the merchant's selected option if the user hasn't made a choice.
+      if (shippingOptions && (!selectedShippingOption ||
+                              !shippingOptions.find(opt => opt.id == selectedShippingOption))) {
+        this._cachedState.selectedShippingOption = selectedShippingOption;
+        this.requestStore.setState({
+          // Use the DOM's computed selected shipping option:
+          selectedShippingOption: state.request.shippingOption,
+        });
+      }
+    }
+
+    let basicCards = paymentRequest.getBasicCards(state);
+    let oldPaymentMethod = selectedPaymentCard && oldBasicCards[selectedPaymentCard];
+    let paymentMethod = selectedPaymentCard && basicCards[selectedPaymentCard];
+    if (oldPaymentMethod && paymentMethod.guid == oldPaymentMethod.guid &&
+        paymentMethod.timeLastModified != oldPaymentMethod.timeLastModified) {
+      delete this._cachedState.selectedPaymentCard;
+    } else {
+      // Changes to the billing address record don't change the `timeLastModified`
+      // on the card record so we have to check for changes to the address separately.
+
+      let billingAddressGUID = paymentMethod && paymentMethod.billingAddressGUID;
+      let billingAddress = billingAddressGUID && addresses[billingAddressGUID];
+      let oldBillingAddress = billingAddressGUID && oldAddresses[billingAddressGUID];
+
+      if (oldBillingAddress && billingAddress &&
+          billingAddress.timeLastModified != oldBillingAddress.timeLastModified) {
+        delete this._cachedState.selectedPaymentCard;
+      }
     }
 
     // Ensure `selectedPaymentCard` never refers to a deleted payment card and refers
     // to a payment card if one exists.
-    let basicCards = paymentRequest.getBasicCards(state);
     if (!basicCards[selectedPaymentCard]) {
       // Determining the initial selection is tracked in bug 1455789
       this.requestStore.setState({
@@ -239,23 +314,26 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
       });
     }
 
-    // Ensure `selectedShippingOption` never refers to a deleted shipping option and
-    // matches the merchant's selected option if the user hasn't made a choice.
-    if (shippingOptions && (!selectedShippingOption ||
-                            !shippingOptions.find(option => option.id == selectedShippingOption))) {
-      this._cachedState.selectedShippingOption = selectedShippingOption;
-      this.requestStore.setState({
-        // Use the DOM's computed selected shipping option:
-        selectedShippingOption: state.request.shippingOption,
-      });
-    }
+    if (this._isPayerRequested(state.request.paymentOptions)) {
+      let payerAddress = selectedPayerAddress && addresses[selectedPayerAddress];
+      let oldPayerAddress = selectedPayerAddress && oldAddresses[selectedPayerAddress];
 
-    // Ensure `selectedPayerAddress` never refers to a deleted address and refers
-    // to an address if one exists.
-    if (!addresses[selectedPayerAddress]) {
-      this.requestStore.setState({
-        selectedPayerAddress: Object.keys(addresses)[0] || null,
-      });
+      if (oldPayerAddress && payerAddress && (
+          (paymentOptions.requestPayerName && payerAddress.name != oldPayerAddress.name) ||
+          (paymentOptions.requestPayerEmail && payerAddress.email != oldPayerAddress.email) ||
+          (paymentOptions.requestPayerPhone && payerAddress.tel != oldPayerAddress.tel)
+      )) {
+        // invalidate the cached value if the payer address fields were modified
+        delete this._cachedState.selectedPayerAddress;
+      }
+
+      // Ensure `selectedPayerAddress` never refers to a deleted address and refers
+      // to an address if one exists.
+      if (!addresses[selectedPayerAddress]) {
+        this.requestStore.setState({
+          selectedPayerAddress: Object.keys(addresses)[0] || null,
+        });
+      }
     }
   }
 
@@ -354,8 +432,20 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
       }
     }
 
+    if (state.selectedPaymentCard != this._cachedState.selectedPaymentCard) {
+      this.changePaymentMethod(state.selectedPaymentCard);
+    }
+
+    if (this._isPayerRequested(state.request.paymentOptions)) {
+      if (state.selectedPayerAddress != this._cachedState.selectedPayerAddress) {
+        this.changePayerAddress(state.selectedPayerAddress);
+      }
+    }
+
     this._cachedState.selectedShippingAddress = state.selectedShippingAddress;
     this._cachedState.selectedShippingOption = state.selectedShippingOption;
+    this._cachedState.selectedPaymentCard = state.selectedPaymentCard;
+    this._cachedState.selectedPayerAddress = state.selectedPayerAddress;
   }
 
   render(state) {

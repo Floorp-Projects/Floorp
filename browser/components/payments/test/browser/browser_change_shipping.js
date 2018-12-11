@@ -58,7 +58,7 @@ add_task(async function test_change_shipping() {
 
     await ContentTask.spawn(browser, {
       eventName: "shippingaddresschange",
-    }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
+    }, PTU.ContentTasks.awaitPaymentEventPromise);
     info("got shippingaddresschange event");
 
     // verify update of shippingOptions
@@ -177,7 +177,7 @@ add_task(async function test_default_shippingOptions_noneSelected() {
 
     await ContentTask.spawn(browser, {
       eventName: "shippingaddresschange",
-    }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
+    }, PTU.ContentTasks.awaitPaymentEventPromise);
     info("got shippingaddresschange event");
 
     shippingOptions =
@@ -236,7 +236,7 @@ add_task(async function test_default_shippingOptions_allSelected() {
 
     await ContentTask.spawn(browser, {
       eventName: "shippingaddresschange",
-    }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
+    }, PTU.ContentTasks.awaitPaymentEventPromise);
     info("got shippingaddresschange event");
 
     shippingOptions =
@@ -330,7 +330,7 @@ add_task(async function test_address_edit() {
 
     await ContentTask.spawn(browser, {
       eventName: "shippingaddresschange",
-    }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
+    }, PTU.ContentTasks.awaitPaymentEventPromise);
 
     addressOptions =
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingAddresses);

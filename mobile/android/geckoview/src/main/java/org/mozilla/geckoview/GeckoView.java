@@ -12,6 +12,7 @@ import org.mozilla.gecko.InputMethods;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
@@ -412,10 +413,14 @@ public class GeckoView extends FrameLayout {
             return;
         }
 
+        // Release the display before we detach from the window.
+        mSession.releaseDisplay(mDisplay.release());
+
         // If we saved state earlier, we don't want to close the window.
         if (!mStateSaved && mSession.isOpen()) {
             mSession.close();
         }
+
     }
 
     @Override
@@ -634,6 +639,7 @@ public class GeckoView extends FrameLayout {
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(final MotionEvent event) {
         if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {

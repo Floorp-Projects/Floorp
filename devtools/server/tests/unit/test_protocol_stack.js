@@ -47,14 +47,14 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
   },
 });
 
-var RootFront = protocol.FrontClassWithSpec(rootSpec, {
-  initialize: function(client) {
+class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
+  constructor(client) {
+    super(client);
     this.actorID = "root";
-    protocol.Front.prototype.initialize.call(this, client);
     // Root owns itself.
     this.manage(this);
-  },
-});
+  }
+}
 
 function run_test() {
   if (!Services.prefs.getBoolPref("javascript.options.asyncstack")) {
@@ -70,7 +70,7 @@ function run_test() {
   let rootFront;
 
   client.connect().then(function onConnect() {
-    rootFront = RootFront(client);
+    rootFront = new RootFront(client);
 
     rootFront.simpleReturn().then(() => {
       let stack = Components.stack;

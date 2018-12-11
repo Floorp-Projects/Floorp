@@ -29,11 +29,11 @@ add_task(async function() {
   const { client } = target;
   const form = targetFront.targetForm;
 
-  const inContentFront = InContentFront(client, form);
+  const inContentFront = new InContentFront(client, form);
   const isInContent = await inContentFront.isInContent();
   ok(isInContent, "ContentActor really runs in the content process");
   const formSpawn = await inContentFront.spawnInParent(ACTOR_URL);
-  const inParentFront = InParentFront(client, formSpawn);
+  const inParentFront = new InParentFront(client, formSpawn);
   const {
     args,
     isInParent,

@@ -97,7 +97,7 @@ How do you get an initial reference to the front?  That's a bit tricky, but basi
 
 Manually - If you're using a DebuggerClient instance, you can discover the actorID manually and create a Front for it:
 
-    let hello = HelloFront(this.client, { actor: <hello actorID> });
+    let hello = new HelloFront(this.client, { actor: <hello actorID> });
 
 Magically - Once you have an initial reference to a protocol.js object, it can return other protocol.js objects and fronts will automatically be created.
 

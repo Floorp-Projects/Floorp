@@ -11,11 +11,9 @@ const SHOW_ALL_ANONYMOUS_CONTENT_PREF = "devtools.inspector.showAllAnonymousCont
 const SHOW_UA_SHADOW_ROOTS_PREF = "devtools.inspector.showUserAgentShadowRoots";
 
 const {
-  Front,
   FrontClassWithSpec,
-  custom,
-  preEvent,
   types,
+  registerFront,
 } = require("devtools/shared/protocol.js");
 const {
   inspectorSpec,
@@ -34,39 +32,41 @@ loader.lazyRequireGetter(this, "flags",
 /**
  * Client side of the DOM walker.
  */
-const WalkerFront = FrontClassWithSpec(walkerSpec, {
-  // Set to true if cleanup should be requested after every mutation list.
-  autoCleanup: true,
-
+class WalkerFront extends FrontClassWithSpec(walkerSpec) {
   /**
    * This is kept for backward-compatibility reasons with older remote target.
    * Targets previous to bug 916443
    */
-  pick: custom(function() {
-    return this._pick().then(response => {
+  pick() {
+    return super.pick().then(response => {
       return response.node;
     });
-  }, {impl: "_pick"}),
+  }
 
-  initialize: function(client, form) {
+  constructor(client, form) {
+    super(client, form);
     this._createRootNodePromise();
-    Front.prototype.initialize.call(this, client, form);
     this._orphaned = new Set();
     this._retainedOrphans = new Set();
-  },
 
-  destroy: function() {
-    Front.prototype.destroy.call(this);
-  },
+    // Set to true if cleanup should be requested after every mutation list.
+    this.autoCleanup = true;
+
+    this.before("new-mutations", this.onMutations.bind(this));
+  }
+
+  destroy() {
+    super.destroy();
+  }
 
   // Update the object given a form representation off the wire.
-  form: function(json) {
+  form(json) {
     this.actorID = json.actor;
     this.rootNode = types.getType("domnode").read(json.root, this);
     this._rootNodeDeferred.resolve(this.rootNode);
     // FF42+ the actor starts exposing traits
     this.traits = json.traits || {};
-  },
+  }
 
   /**
    * Clients can use walker.rootNode to get the current root node of the
@@ -74,20 +74,20 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
    * method returns a promise that will resolve to the root node when it is
    * set.
    */
-  getRootNode: function() {
+  getRootNode() {
     return this._rootNodeDeferred.promise;
-  },
+  }
 
   /**
    * Create the root node promise, triggering the "new-root" notification
    * on resolution.
    */
-  _createRootNodePromise: function() {
+  _createRootNodePromise() {
     this._rootNodeDeferred = defer();
     this._rootNodeDeferred.promise.then(() => {
       this.emit("new-root");
     });
-  },
+  }
 
   /**
    * When reading an actor form off the wire, we want to hook it up to its
@@ -97,14 +97,14 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
    * a bare-bones stand-in node.  The stand-in node will be updated
    * with a real form by the end of the deserialization.
    */
-  ensureDOMNodeFront: function(id) {
+  ensureDOMNodeFront(id) {
     const front = this.get(id);
     if (front) {
       return front;
     }
 
     return types.getType("domnode").read({ actor: id }, this, "standin");
-  },
+  }
 
   /**
    * See the documentation for WalkerActor.prototype.retainNode for
@@ -126,84 +126,68 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
    * semantics by setting our local retained flag on the node only AFTER
    * a SUCCESSFUL retainNode call.
    */
-  retainNode: custom(function(node) {
-    return this._retainNode(node).then(() => {
+  retainNode(node) {
+    return super.retainNode(node).then(() => {
       node.retained = true;
     });
-  }, {
-    impl: "_retainNode",
-  }),
+  }
 
-  unretainNode: custom(function(node) {
-    return this._unretainNode(node).then(() => {
+  unretainNode(node) {
+    return super.unretainNode(node).then(() => {
       node.retained = false;
       if (this._retainedOrphans.has(node)) {
         this._retainedOrphans.delete(node);
         this._releaseFront(node);
       }
     });
-  }, {
-    impl: "_unretainNode",
-  }),
+  }
 
-  releaseNode: custom(function(node, options = {}) {
+  releaseNode(node, options = {}) {
     // NodeFront.destroy will destroy children in the ownership tree too,
     // mimicking what the server will do here.
     const actorID = node.actorID;
     this._releaseFront(node, !!options.force);
-    return this._releaseNode({ actorID: actorID });
-  }, {
-    impl: "_releaseNode",
-  }),
+    return super.releaseNode({ actorID: actorID });
+  }
 
-  findInspectingNode: custom(function() {
-    return this._findInspectingNode().then(response => {
+  findInspectingNode() {
+    return super.findInspectingNode().then(response => {
       return response.node;
     });
-  }, {
-    impl: "_findInspectingNode",
-  }),
+  }
 
-  querySelector: custom(function(queryNode, selector) {
-    return this._querySelector(queryNode, selector).then(response => {
+  querySelector(queryNode, selector) {
+    return super.querySelector(queryNode, selector).then(response => {
       return response.node;
     });
-  }, {
-    impl: "_querySelector",
-  }),
+  }
 
-  gripToNodeFront: async function(grip) {
+  async gripToNodeFront(grip) {
     const response = await this.getNodeActorFromObjectActor(grip.actor);
     const nodeFront = response ? response.node : null;
     if (!nodeFront) {
       throw new Error("The ValueGrip passed could not be translated to a NodeFront");
     }
     return nodeFront;
-  },
+  }
 
-  getNodeActorFromWindowID: custom(function(windowID) {
-    return this._getNodeActorFromWindowID(windowID).then(response => {
+  getNodeActorFromWindowID(windowID) {
+    return super.getNodeActorFromWindowID(windowID).then(response => {
       return response ? response.node : null;
     });
-  }, {
-    impl: "_getNodeActorFromWindowID",
-  }),
+  }
 
-  getStyleSheetOwnerNode: custom(function(styleSheetActorID) {
-    return this._getStyleSheetOwnerNode(styleSheetActorID).then(response => {
+  getStyleSheetOwnerNode(styleSheetActorID) {
+    return super.getStyleSheetOwnerNode(styleSheetActorID).then(response => {
       return response ? response.node : null;
     });
-  }, {
-    impl: "_getStyleSheetOwnerNode",
-  }),
+  }
 
-  getNodeFromActor: custom(function(actorID, path) {
-    return this._getNodeFromActor(actorID, path).then(response => {
+  getNodeFromActor(actorID, path) {
+    return super.getNodeFromActor(actorID, path).then(response => {
       return response ? response.node : null;
     });
-  }, {
-    impl: "_getNodeFromActor",
-  }),
+  }
 
   /*
    * Incrementally search the document for a given string.
@@ -216,9 +200,9 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
    * @param {Object} options
    *    - "reverse": search backwards
    */
-  search: custom(async function(query, options = { }) {
+  async search(query, options = { }) {
     const searchData = this.searchData = this.searchData || { };
-    const result = await this._search(query, options);
+    const result = await super.search(query, options);
     const nodeList = result.list;
 
     // If this is a new search, start at the beginning.
@@ -249,11 +233,9 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
       resultsLength: nodeList.length,
       resultsIndex: searchData.index,
     };
-  }, {
-    impl: "_search",
-  }),
+  }
 
-  _releaseFront: function(node, force) {
+  _releaseFront(node, force) {
     if (node.retained && !force) {
       node.reparent(null);
       this._retainedOrphans.add(node);
@@ -273,13 +255,13 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
     // All children will have been removed from the node by this point.
     node.reparent(null);
     node.destroy();
-  },
+  }
 
   /**
    * Get any unprocessed mutation records and process them.
    */
-  getMutations: custom(function(options = {}) {
-    return this._getMutations(options).then(mutations => {
+  getMutations(options = {}) {
+    return super.getMutations(options).then(mutations => {
       const emitMutations = [];
       for (const change of mutations) {
         // The target is only an actorID, get the associated front.
@@ -422,44 +404,42 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
 
       this.emit("mutations", emitMutations);
     });
-  }, {
-    impl: "_getMutations",
-  }),
+  }
 
   /**
    * Handle the `new-mutations` notification by fetching the
    * available mutation records.
    */
-  onMutations: preEvent("new-mutations", function() {
+  onMutations() {
     // Fetch and process the mutations.
     this.getMutations({cleanup: this.autoCleanup}).catch(() => {});
-  }),
+  }
 
-  isLocal: function() {
+  isLocal() {
     return !!this.conn._transport._serverConnection;
-  },
+  }
 
-  removeNode: custom(async function(node) {
+  async removeNode(node) {
     const previousSibling = await this.previousSibling(node);
-    const nextSibling = await this._removeNode(node);
+    const nextSibling = await super.removeNode(node);
     return {
       previousSibling: previousSibling,
       nextSibling: nextSibling,
     };
-  }, {
-    impl: "_removeNode",
-  }),
-});
+  }
+}
 
 exports.WalkerFront = WalkerFront;
+registerFront(WalkerFront);
 
 /**
  * Client side of the inspector actor, which is used to create
  * inspector-related actors, including the walker.
  */
-var InspectorFront = FrontClassWithSpec(inspectorSpec, {
-  initialize: async function(client, tabForm) {
-    Front.prototype.initialize.call(this, client);
+class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
+  constructor(client, tabForm) {
+    super(client, tabForm);
+
     this.actorID = tabForm.inspectorActor;
     this._client = client;
     this._highlighters = new Map();
@@ -467,17 +447,19 @@ var InspectorFront = FrontClassWithSpec(inspectorSpec, {
     // XXX: This is the first actor type in its hierarchy to use the protocol
     // library, so we're going to self-own on the client side for now.
     this.manage(this);
+  }
 
-    // async initialization
+  // async initialization
+  async initialize() {
     await Promise.all([
       this._getWalker(),
       this._getHighlighter(),
     ]);
 
     this.selection = new Selection(this.walker);
-  },
+  }
 
-  _getWalker: async function() {
+  async _getWalker() {
     const showAllAnonymousContent = Services.prefs.getBoolPref(
       SHOW_ALL_ANONYMOUS_CONTENT_PREF);
     const showUserAgentShadowRoots = Services.prefs.getBoolPref(
@@ -486,18 +468,18 @@ var InspectorFront = FrontClassWithSpec(inspectorSpec, {
       showAllAnonymousContent,
       showUserAgentShadowRoots,
     });
-  },
+  }
 
-  _getHighlighter: async function() {
+  async _getHighlighter() {
     const autohide = !flags.testing;
     this.highlighter = await this.getHighlighter(autohide);
-  },
+  }
 
   hasHighlighter(type) {
     return this._highlighters.has(type);
-  },
+  }
 
-  destroy: function() {
+  destroy() {
     // Selection isn't a Front and so isn't managed by InspectorFront
     // and has to be destroyed manually
     this.selection.destroy();
@@ -505,41 +487,40 @@ var InspectorFront = FrontClassWithSpec(inspectorSpec, {
     // automatically destroyed. But we have to clear the `_highlighters`
     // Map as well as explicitly call `finalize` request on all of them.
     this.destroyHighlighters();
-    Front.prototype.destroy.call(this);
-  },
+    super.destroy();
+  }
 
-  destroyHighlighters: function() {
+  destroyHighlighters() {
     for (const type of this._highlighters.keys()) {
       if (this._highlighters.has(type)) {
         this._highlighters.get(type).finalize();
         this._highlighters.delete(type);
       }
     }
-  },
+  }
 
-  getKnownHighlighter: function(type) {
+  getKnownHighlighter(type) {
     return this._highlighters.get(type);
-  },
+  }
 
-  getOrCreateHighlighterByType: async function(type) {
+  async getOrCreateHighlighterByType(type) {
     let front =  this._highlighters.get(type);
     if (!front) {
       front = await this.getHighlighterByType(type);
       this._highlighters.set(type, front);
     }
     return front;
-  },
+  }
 
-  pickColorFromPage: custom(async function(options) {
-    await this._pickColorFromPage(options);
+  async pickColorFromPage(options) {
+    await super.pickColorFromPage(options);
     if (options && options.fromMenu) {
       telemetry.getHistogramById(TELEMETRY_EYEDROPPER_OPENED_MENU).add(true);
     } else {
       telemetry.getHistogramById(TELEMETRY_EYEDROPPER_OPENED).add(true);
     }
-  }, {
-    impl: "_pickColorFromPage",
-  }),
-});
+  }
+}
 
 exports.InspectorFront = InspectorFront;
+registerFront(InspectorFront);

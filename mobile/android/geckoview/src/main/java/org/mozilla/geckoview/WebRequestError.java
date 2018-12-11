@@ -8,6 +8,7 @@ package org.mozilla.geckoview;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 
+import android.annotation.SuppressLint;
 import android.support.annotation.IntDef;
 
 import java.lang.annotation.Retention;
@@ -250,6 +251,7 @@ public class WebRequestError extends Exception {
         return new WebRequestError(code, category);
     }
 
+    @SuppressLint("WrongConstant")
     @WrapForJNI
     /* package */ static @ErrorCategory int getErrorCategory(
             long errorModule, @Error int error) {
