@@ -7,6 +7,8 @@
 #ifndef MOZILLA_GFX_COMPOSITOROGL_H
 #define MOZILLA_GFX_COMPOSITOROGL_H
 
+#include <unordered_set>
+
 #include "gfx2DGlue.h"
 #include "GLContextTypes.h"             // for GLContext, etc
 #include "GLDefs.h"                     // for GLuint, LOCAL_GL_TEXTURE_2D, etc
@@ -262,6 +264,11 @@ class CompositorOGL final : public Compositor {
     mSurfaceOrigin = aOrigin;
   }
 
+  // Register TextureSource which own device data that have to be deleted before
+  // destroying this CompositorOGL.
+  void RegisterTextureSource(TextureSource* aTextureSource);
+  void UnregisterTextureSource(TextureSource* aTextureSource);
+
  private:
   template <typename Geometry>
   void DrawGeometry(const Geometry& aGeometry, const gfx::Rect& aRect,
@@ -442,6 +449,12 @@ class CompositorOGL final : public Compositor {
   GLint FlipY(GLint y) const { return mViewportSize.height - y; }
 
   RefPtr<CompositorTexturePoolOGL> mTexturePool;
+
+#ifdef MOZ_WIDGET_GTK
+  // Hold TextureSources which own device data that have to be deleted before
+  // destroying this CompositorOGL.
+  std::unordered_set<TextureSource*> mRegisteredTextureSources;
+#endif
 
   bool mDestroyed;
 
