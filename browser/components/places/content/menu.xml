@@ -548,7 +548,7 @@
             arrowbox.style.transform = "translate(0, " + -offset + "px)";
 
             // The assigned side stays the same regardless of direction.
-            var isRTL = (window.getComputedStyle(this).direction == "rtl");
+            let isRTL = this.matches(":-moz-locale-dir(rtl)");
 
             if (position.indexOf("start_") == 0) {
               container.dir = "reverse";
