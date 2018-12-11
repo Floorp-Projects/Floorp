@@ -25,8 +25,6 @@ var EXPORTED_SYMBOLS = [
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-Cu.importGlobalProperties(["Element"]);
-
 var TestUtils = {
   executeSoon(callbackFn) {
     Services.tm.dispatchToMainThread(callbackFn);

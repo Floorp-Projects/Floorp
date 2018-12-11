@@ -16,8 +16,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "resProto",
                                    "@mozilla.org/network/protocol;1?name=resource",
                                    "nsISubstitutingProtocolHandler");
 
-Cu.importGlobalProperties(["TextEncoder"]);
-
 const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
 let frameScriptURL;

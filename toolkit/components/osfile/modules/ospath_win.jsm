@@ -29,7 +29,6 @@
 // Boilerplate used to be able to import this module both from the main
 // thread and from worker threads.
 if (typeof Components != "undefined") {
-  Cu.importGlobalProperties(["URL"]);
   // Global definition of |exports|, to keep everybody happy.
   // In non-main thread, |exports| is provided by the module
   // loader.
