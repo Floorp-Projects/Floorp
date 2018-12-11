@@ -386,6 +386,7 @@ RefPtr<ClientOpPromise> ClientOpenWindowInCurrentProcess(
           nsresult rv = OpenWindow(aArgs, getter_AddRefs(outerWindow));
           if (NS_WARN_IF(NS_FAILED(rv))) {
             promise->Reject(rv, __func__);
+            return;
           }
 
           WaitForLoad(aArgs, outerWindow, promise);
