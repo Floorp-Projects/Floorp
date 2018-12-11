@@ -37,6 +37,14 @@ ChromeUtils.defineModuleGetter(this, "ServiceWorkerCleanUp",
 ChromeUtils.defineModuleGetter(this, "PerTestCoverageUtils",
   "resource://testing-common/PerTestCoverageUtils.jsm");
 
+try {
+    Cu.importGlobalProperties(["DOMParser", "File", "InspectorUtils",
+                               "NodeFilter", "PromiseDebugging"]);
+} catch (e) {
+  // We are in window scope hence DOMParser, File, InspectorUtils, NodeFilter,
+  // and PromiseDebugging are already defined, So do nothing.
+}
+
 // Allow stuff from this scope to be accessed from non-privileged scopes. This
 // would crash if used outside of automation.
 Cu.forcePermissiveCOWs();
@@ -509,6 +517,7 @@ SpecialPowersAPI.prototype = {
     var mc = new window.MessageChannel();
     sb.port = mc.port1;
     try {
+      Cu.importGlobalProperties(["URL", "Blob"]);
       let blob = new Blob([str], {type: "application/javascript"});
       let blobUrl = URL.createObjectURL(blob);
       Services.scriptloader.loadSubScript(blobUrl, sb);

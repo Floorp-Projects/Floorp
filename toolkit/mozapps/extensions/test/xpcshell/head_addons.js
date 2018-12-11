@@ -9,6 +9,8 @@ if (!_TEST_FILE[0].includes("toolkit/mozapps/extensions/test/xpcshell/")) {
              "the add-on manager component."));
 }
 
+Cu.importGlobalProperties(["TextEncoder"]);
+
 const PREF_EM_CHECK_UPDATE_SECURITY   = "extensions.checkUpdateSecurity";
 const PREF_EM_STRICT_COMPATIBILITY    = "extensions.strictCompatibility";
 const PREF_GETADDONS_BYIDS               = "extensions.getAddons.get.url";

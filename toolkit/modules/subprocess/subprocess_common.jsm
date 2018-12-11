@@ -8,6 +8,7 @@
 /* eslint-disable mozilla/balanced-listeners */
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.importGlobalProperties(["TextDecoder"]);
 
 ChromeUtils.defineModuleGetter(this, "AsyncShutdown",
                                "resource://gre/modules/AsyncShutdown.jsm");

@@ -5,6 +5,8 @@
 // This verifies that add-on update check correctly fills in the
 // %COMPATIBILITY_MODE% token in the update URL.
 
+Cu.importGlobalProperties(["URLSearchParams"]);
+
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 

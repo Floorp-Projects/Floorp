@@ -16,6 +16,8 @@ XPCOMUtils.defineLazyGetter(this, "BASE_URL", function() {
   return "http://localhost:" + srv.identity.primaryPort + "/";
 });
 
+Cu.importGlobalProperties(["DOMParser"]);
+
 function run_test() {
   createTestDirectory();
 

@@ -8,6 +8,8 @@ server.registerDirectory("/data/", do_get_file("data"));
 
 const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 const {
   createAppInfo,
   promiseShutdownManager,

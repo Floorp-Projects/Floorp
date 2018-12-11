@@ -13,6 +13,8 @@ Services.prefs.setBoolPref("lightweightThemes.update.enabled", true);
 
 ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
 
+Cu.importGlobalProperties(["URLSearchParams"]);
+
 var gInstallDate;
 
 const updateFile = "test_update.json";
@@ -953,3 +955,4 @@ add_task(async function run_test_locked_install() {
   let installs = await AddonManager.getAllInstalls();
   equal(installs.length, 0);
 });
+
