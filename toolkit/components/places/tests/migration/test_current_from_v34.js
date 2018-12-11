@@ -1,4 +1,4 @@
-Cu.importGlobalProperties(["URL", "crypto"]);
+Cu.importGlobalProperties(["crypto"]);
 
 const { TYPE_BOOKMARK, TYPE_FOLDER } = Ci.nsINavBookmarksService;
 const { EXPIRE_NEVER, TYPE_INT32 } = Ci.nsIAnnotationService;

@@ -25,7 +25,7 @@ function childFrameScript() {
   const blobText = blobData.join("");
   const blobType = "text/plain";
 
-  Cu.importGlobalProperties(["indexedDB", "Blob"]);
+  Cu.importGlobalProperties(["indexedDB"]);
 
   function info(msg) {
     sendAsyncMessage(mmName, { op: "info", msg });

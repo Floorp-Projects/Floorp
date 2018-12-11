@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["MockDocument"];
 
-Cu.importGlobalProperties(["DOMParser", "URL"]);
-
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
 
 const MockDocument = {
