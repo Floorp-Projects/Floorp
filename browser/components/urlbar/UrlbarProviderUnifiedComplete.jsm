@@ -167,7 +167,7 @@ function convertResultToMatches(context, result, urls) {
     urls.add(url);
     // Not used yet: result.getValueAt(i), result.getLabelAt(i)
     let style = result.getStyleAt(i);
-    let match = makeUrlbarMatch({
+    let match = makeUrlbarMatch(context.tokens, {
       url,
       icon: result.getImageAt(i),
       style,
@@ -194,10 +194,11 @@ function convertResultToMatches(context, result, urls) {
 
 /**
  * Creates a new UrlbarMatch from the provided data.
+ * @param {array} tokens the search tokens.
  * @param {object} info includes properties from the legacy match.
  * @returns {object} an UrlbarMatch
  */
-function makeUrlbarMatch(info) {
+function makeUrlbarMatch(tokens, info) {
   let action = PlacesUtils.parseActionUrl(info.url);
   if (action) {
     switch (action.type) {
@@ -205,56 +206,56 @@ function makeUrlbarMatch(info) {
         return new UrlbarMatch(
           UrlbarUtils.MATCH_TYPE.SEARCH,
           UrlbarUtils.MATCH_SOURCE.SEARCH,
-          {
-            engine: action.params.engineName,
-            suggestion: action.params.searchSuggestion,
-            keyword: action.params.alias,
-            query: action.params.searchQuery,
-            icon: info.icon,
-          }
+          ...UrlbarMatch.payloadAndSimpleHighlights(tokens, {
+            engine: [action.params.engineName, true],
+            suggestion: [action.params.searchSuggestion, true],
+            keyword: [action.params.alias, true],
+            query: [action.params.searchQuery, true],
+            icon: [info.icon, false],
+          })
         );
       case "keyword":
         return new UrlbarMatch(
           UrlbarUtils.MATCH_TYPE.KEYWORD,
           UrlbarUtils.MATCH_SOURCE.BOOKMARKS,
-          {
-            url: action.params.url,
-            keyword: info.firstToken,
-            postData: action.params.postData,
-            icon: info.icon,
-          }
+          ...UrlbarMatch.payloadAndSimpleHighlights(tokens, {
+            url: [action.params.url, true],
+            keyword: [info.firstToken, true],
+            postData: [action.params.postData, false],
+            icon: [info.icon, false],
+          })
         );
       case "extension":
         return new UrlbarMatch(
           UrlbarUtils.MATCH_TYPE.OMNIBOX,
           UrlbarUtils.MATCH_SOURCE.OTHER_NETWORK,
-          {
-            title: info.comment,
-            content: action.params.content,
-            keyword: action.params.keyword,
-            icon: info.icon,
-          }
+          ...UrlbarMatch.payloadAndSimpleHighlights(tokens, {
+            title: [info.comment, true],
+            content: [action.params.content, true],
+            keyword: [action.params.keyword, true],
+            icon: [info.icon, false],
+          })
         );
       case "remotetab":
         return new UrlbarMatch(
           UrlbarUtils.MATCH_TYPE.REMOTE_TAB,
           UrlbarUtils.MATCH_SOURCE.TABS,
-          {
-            url: action.params.url,
-            title: info.comment,
-            device: action.params.deviceName,
-            icon: info.icon,
-          }
+          ...UrlbarMatch.payloadAndSimpleHighlights(tokens, {
+            url: [action.params.url, true],
+            title: [info.comment, true],
+            device: [action.params.deviceName, true],
+            icon: [info.icon, false],
+          })
         );
       case "visiturl":
         return new UrlbarMatch(
           UrlbarUtils.MATCH_TYPE.URL,
           UrlbarUtils.MATCH_SOURCE.OTHER_LOCAL,
-          {
-            title: info.comment,
-            url: action.params.url,
-            icon: info.icon,
-          }
+          ...UrlbarMatch.payloadAndSimpleHighlights(tokens, {
+            title: [info.comment, true],
+            url: [action.params.url, true],
+            icon: [info.icon, false],
+          })
         );
       default:
         Cu.reportError("Unexpected action type");
@@ -266,10 +267,10 @@ function makeUrlbarMatch(info) {
     return new UrlbarMatch(
       UrlbarUtils.MATCH_TYPE.SEARCH,
       UrlbarUtils.MATCH_SOURCE.SEARCH,
-      {
-        engine: info.comment,
-        icon: info.icon,
-      }
+      ...UrlbarMatch.payloadAndSimpleHighlights(tokens, {
+        engine: [info.comment, true],
+        icon: [info.icon, false],
+      })
     );
   }
 
@@ -291,11 +292,11 @@ function makeUrlbarMatch(info) {
   return new UrlbarMatch(
     UrlbarUtils.MATCH_TYPE.URL,
     source,
-    {
-      url: info.url,
-      icon: info.icon,
-      title: comment,
-      tags,
-    }
+    ...UrlbarMatch.payloadAndSimpleHighlights(tokens, {
+      url: [info.url, true],
+      icon: [info.icon, false],
+      title: [comment, true],
+      tags: [tags, true],
+    })
   );
 }
