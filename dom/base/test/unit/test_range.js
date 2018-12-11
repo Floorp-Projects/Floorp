@@ -122,7 +122,7 @@ function evalXPathInDocumentFragment(aContextNode, aPath) {
       }
 
       return NodeFilter.FILTER_ACCEPT;
-    }
+    },
   };
 
   // Look for the node matching the step from the document fragment.
@@ -291,7 +291,7 @@ function do_extract_test(doc) {
         foundEnd = true;
         break;
       }
-    } while (walker.nextNode())
+    } while (walker.nextNode());
     Assert.ok(foundEnd);
 
     /* Now, we reset our test for the deleteContents case.  This one differs
@@ -324,7 +324,7 @@ function do_extract_test(doc) {
         foundEnd = true;
         break;
       }
-    } while (walker.nextNode())
+    } while (walker.nextNode());
     Assert.ok(foundEnd);
 
     // Clean up after ourselves.
@@ -389,7 +389,7 @@ function do_miscellaneous_tests(doc) {
     } catch (e) {
       Assert.equal(e.name, "IndexSizeError");
     }
-  
+
     // Invalid index
     var newOffset = isText(startContainer) ?
                       startContainer.nodeValue.length + 1 :
@@ -400,7 +400,7 @@ function do_miscellaneous_tests(doc) {
     } catch (e) {
       Assert.equal(e.name, "IndexSizeError");
     }
-  
+
     newOffset--;
     // Valid index
     baseRange.setStart(startContainer, newOffset);
@@ -414,7 +414,7 @@ function do_miscellaneous_tests(doc) {
     Assert.equal(baseRange.startOffset, 0);
     Assert.ok(baseRange.collapsed);
   } else {
-    do_throw("The first test should be a text-only range test.  Test is invalid.")
+    do_throw("The first test should be a text-only range test.  Test is invalid.");
   }
 
   /* See what happens when a range has a startContainer in one fragment, and an
