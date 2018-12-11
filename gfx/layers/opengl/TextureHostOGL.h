@@ -146,8 +146,7 @@ class TextureImageTextureSourceOGL final : public DataTextureSource,
                                            public BigImageIterator {
  public:
   explicit TextureImageTextureSourceOGL(
-      CompositorOGL* aCompositor, TextureFlags aFlags = TextureFlags::DEFAULT)
-      : mGL(aCompositor->gl()), mFlags(aFlags), mIterating(false) {}
+      CompositorOGL* aCompositor, TextureFlags aFlags = TextureFlags::DEFAULT);
 
   virtual const char* Name() const override {
     return "TextureImageTextureSourceOGL";
@@ -166,10 +165,7 @@ class TextureImageTextureSourceOGL final : public DataTextureSource,
 
   // TextureSource
 
-  virtual void DeallocateDeviceData() override {
-    mTexImage = nullptr;
-    SetUpdateSerial(0);
-  }
+  virtual void DeallocateDeviceData() override;
 
   virtual TextureSourceOGL* AsSourceOGL() override { return this; }
 
@@ -207,8 +203,11 @@ class TextureImageTextureSourceOGL final : public DataTextureSource,
   virtual bool NextTile() override { return mTexImage->NextTile(); }
 
  protected:
+  ~TextureImageTextureSourceOGL();
+
   RefPtr<gl::TextureImage> mTexImage;
   RefPtr<gl::GLContext> mGL;
+  RefPtr<CompositorOGL> mCompositor;
   TextureFlags mFlags;
   bool mIterating;
 };
