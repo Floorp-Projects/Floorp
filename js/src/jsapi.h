@@ -1465,7 +1465,7 @@ extern JS_PUBLIC_API bool OrdinaryHasInstance(JSContext* cx,
 // This is almost identical to JS_HasInstance, except the latter may call a
 // custom hasInstance class op instead of InstanceofOperator.
 extern JS_PUBLIC_API bool InstanceofOperator(JSContext* cx, HandleObject obj,
-                                              HandleValue v, bool* bp);
+                                             HandleValue v, bool* bp);
 
 }  // namespace JS
 

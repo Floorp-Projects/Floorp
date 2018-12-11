@@ -16,7 +16,7 @@ class nsIURI;
 class nsFrameLoader;
 
 namespace mozilla {
-namespace dom  {
+namespace dom {
 
 class ChromeBrowsingContext;
 class WindowGlobalChild;
@@ -24,18 +24,17 @@ class WindowGlobalChild;
 /**
  * A handle in the parent process to a specific nsGlobalWindowInner object.
  */
-class WindowGlobalParent final : public nsWrapperCache
-                               , public PWindowGlobalParent
-{
-public:
+class WindowGlobalParent final : public nsWrapperCache,
+                                 public PWindowGlobalParent {
+ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WindowGlobalParent)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WindowGlobalParent)
 
-  static already_AddRefed<WindowGlobalParent>
-  GetByInnerWindowId(uint64_t aInnerWindowId);
+  static already_AddRefed<WindowGlobalParent> GetByInnerWindowId(
+      uint64_t aInnerWindowId);
 
-  static already_AddRefed<WindowGlobalParent>
-  GetByInnerWindowId(const GlobalObject& aGlobal, uint64_t aInnerWindowId) {
+  static already_AddRefed<WindowGlobalParent> GetByInnerWindowId(
+      const GlobalObject& aGlobal, uint64_t aInnerWindowId) {
     return GetByInnerWindowId(aInnerWindowId);
   }
 
@@ -85,14 +84,14 @@ public:
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-protected:
+ protected:
   // IPC messages
   mozilla::ipc::IPCResult RecvUpdateDocumentURI(nsIURI* aURI) override;
   mozilla::ipc::IPCResult RecvBecomeCurrentWindowGlobal() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-private:
+ private:
   ~WindowGlobalParent();
 
   // NOTE: This document principal doesn't reflect possible |document.domain|
@@ -107,7 +106,7 @@ private:
   bool mIPCClosed;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // !defined(mozilla_dom_WindowGlobalParent_h)
+#endif  // !defined(mozilla_dom_WindowGlobalParent_h)

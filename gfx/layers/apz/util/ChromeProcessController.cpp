@@ -130,8 +130,7 @@ void ChromeProcessController::HandleDoubleTap(
   // resolution of the document and so we must remove it before calculating
   // the zoomToRect.
   nsIPresShell* presShell = document->GetShell();
-  const float resolution =
-      presShell->ScaleToResolution() ? presShell->GetResolution() : 1.0f;
+  const float resolution = presShell->GetResolution();
   CSSPoint point(aPoint.x / resolution, aPoint.y / resolution);
   CSSRect zoomToRect = CalculateRectToZoomTo(document, point);
 

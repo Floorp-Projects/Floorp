@@ -55,7 +55,6 @@ class WindowCapturerMac : public DesktopCapturer {
 
   // DesktopCapturer interface.
   void Start(Callback* callback) override;
-  void Stop() override;
   void CaptureFrame() override;
   bool GetSourceList(SourceList* sources) override;
   bool SelectSource(SourceId id) override;
@@ -153,10 +152,6 @@ void WindowCapturerMac::Start(Callback* callback) {
   assert(callback);
 
   callback_ = callback;
-}
-
-void WindowCapturerMac::Stop() {
-  callback_ = NULL;
 }
 
 void WindowCapturerMac::CaptureFrame() {

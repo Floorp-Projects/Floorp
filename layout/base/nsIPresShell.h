@@ -1365,9 +1365,18 @@ class nsIPresShell : public nsStubDocumentObserver {
    * resolution bounds are sane, and the resolution of this was
    * actually updated.
    *
+   * Also increase the scale of the content by the same amount
+   * (that's the "AndScaleTo" part).
+   *
    * The resolution defaults to 1.0.
+   *
+   * |aOrigin| specifies who originated the resolution change. For changes
+   * sent by APZ, pass nsGkAtoms::apz. For changes sent by the main thread,
+   * use pass nsGkAtoms::other or nsGkAtoms::restore (similar to the |aOrigin|
+   * parameter of nsIScrollableFrame::ScrollToCSSPixels()).
    */
-  virtual nsresult SetResolution(float aResolution) = 0;
+  virtual nsresult SetResolutionAndScaleTo(float aResolution,
+                                           nsAtom* aOrigin) = 0;
   float GetResolution() const { return mResolution.valueOr(1.0); }
   virtual float GetCumulativeResolution() = 0;
 
@@ -1388,24 +1397,6 @@ class nsIPresShell : public nsStubDocumentObserver {
    * Was the current resolution set by the user or just default initialized?
    */
   bool IsResolutionSet() { return mResolution.isSome(); }
-
-  /**
-   * Similar to SetResolution() but also increases the scale of the content
-   * by the same amount.
-   * |aOrigin| specifies who originated the resolution change. For changes
-   * sent by APZ, pass nsGkAtoms::apz. For changes sent by the main thread,
-   * use pass nsGkAtoms::other or nsGkAtoms::restore (similar to the |aOrigin|
-   * parameter of nsIScrollableFrame::ScrollToCSSPixels()).
-   */
-  virtual nsresult SetResolutionAndScaleTo(float aResolution,
-                                           nsAtom* aOrigin) = 0;
-
-  /**
-   * Return whether we are scaling to the set resolution.
-   * This is initially false; it's set to true by a call to
-   * SetResolutionAndScaleTo(), and set to false by a call to SetResolution().
-   */
-  virtual bool ScaleToResolution() const = 0;
 
   /**
    * Used by session restore code to restore a resolution before the first

@@ -20,7 +20,6 @@ const noop = () => {};
 function SourceClient(client, form) {
   this._form = form;
   this._isBlackBoxed = form.isBlackBoxed;
-  this._isPrettyPrinted = form.isPrettyPrinted;
   this._activeThread = client;
   this._client = client.client;
 }
@@ -31,9 +30,6 @@ SourceClient.prototype = {
   },
   get isBlackBoxed() {
     return this._isBlackBoxed;
-  },
-  get isPrettyPrinted() {
-    return this._isPrettyPrinted;
   },
   get actor() {
     return this._form.actor;
@@ -103,39 +99,6 @@ SourceClient.prototype = {
       type: "source",
     };
     return this._client.request(packet).then(response => {
-      return this._onSourceResponse(response);
-    });
-  },
-
-  /**
-   * Pretty print this source's text.
-   */
-  prettyPrint: function(indent) {
-    const packet = {
-      to: this._form.actor,
-      type: "prettyPrint",
-      indent,
-    };
-    return this._client.request(packet).then(response => {
-      this._isPrettyPrinted = true;
-      this._activeThread._clearFrames();
-      this._activeThread.emit("prettyprintchange", this);
-      return this._onSourceResponse(response);
-    });
-  },
-
-  /**
-   * Stop pretty printing this source's text.
-   */
-  disablePrettyPrint: function() {
-    const packet = {
-      to: this._form.actor,
-      type: "disablePrettyPrint",
-    };
-    return this._client.request(packet).then(response => {
-      this._isPrettyPrinted = false;
-      this._activeThread._clearFrames();
-      this._activeThread.emit("prettyprintchange", this);
       return this._onSourceResponse(response);
     });
   },

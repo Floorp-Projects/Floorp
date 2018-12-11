@@ -6995,7 +6995,7 @@ void nsIDocument::UpdateViewportOverflowType(nscoord aScrolledWidth,
   MOZ_ASSERT(mPresShell);
   nsPresContext* pc = GetPresContext();
   MOZ_ASSERT(pc->GetViewportScrollStylesOverride().mHorizontal ==
-                 NS_STYLE_OVERFLOW_HIDDEN,
+                 StyleOverflow::Hidden,
              "Should only be called when viewport has overflow-x: hidden");
   MOZ_ASSERT(aScrolledWidth > aScrollportWidth,
              "Should only be called when viewport is overflowed");
@@ -9317,15 +9317,15 @@ bool nsIDocument::IsPotentiallyScrollable(HTMLBodyElement* aBody) {
   MOZ_ASSERT(aBody->GetParent() == aBody->OwnerDoc()->GetRootElement());
   nsIFrame* parentFrame = aBody->GetParent()->GetPrimaryFrame();
   if (parentFrame &&
-      parentFrame->StyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE &&
-      parentFrame->StyleDisplay()->mOverflowY == NS_STYLE_OVERFLOW_VISIBLE) {
+      parentFrame->StyleDisplay()->mOverflowX == StyleOverflow::Visible &&
+      parentFrame->StyleDisplay()->mOverflowY == StyleOverflow::Visible) {
     return false;
   }
 
   // The element's used value of the overflow-x or overflow-y properties is not
   // visible.
-  if (bodyFrame->StyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE &&
-      bodyFrame->StyleDisplay()->mOverflowY == NS_STYLE_OVERFLOW_VISIBLE) {
+  if (bodyFrame->StyleDisplay()->mOverflowX == StyleOverflow::Visible &&
+      bodyFrame->StyleDisplay()->mOverflowY == StyleOverflow::Visible) {
     return false;
   }
 

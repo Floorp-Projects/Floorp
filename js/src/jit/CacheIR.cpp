@@ -4748,6 +4748,14 @@ TypeOfIRGenerator::TypeOfIRGenerator(JSContext* cx, HandleScript script,
                                      HandleValue value)
     : IRGenerator(cx, script, pc, CacheKind::TypeOf, mode), val_(value) {}
 
+void TypeOfIRGenerator::trackAttached(const char* name) {
+#ifdef JS_CACHEIR_SPEW
+  if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
+    sp.valueProperty("val", val_);
+  }
+#endif
+}
+
 bool TypeOfIRGenerator::tryAttachStub() {
   MOZ_ASSERT(cacheKind_ == CacheKind::TypeOf);
 
@@ -4776,7 +4784,7 @@ bool TypeOfIRGenerator::tryAttachPrimitive(ValOperandId valId) {
 
   writer.loadStringResult(TypeName(js::TypeOfValue(val_), cx_->names()));
   writer.returnFromIC();
-
+  trackAttached("Primitive");
   return true;
 }
 
@@ -4788,7 +4796,7 @@ bool TypeOfIRGenerator::tryAttachObject(ValOperandId valId) {
   ObjOperandId objId = writer.guardIsObject(valId);
   writer.loadTypeOfObjectResult(objId);
   writer.returnFromIC();
-
+  trackAttached("Object");
   return true;
 }
 

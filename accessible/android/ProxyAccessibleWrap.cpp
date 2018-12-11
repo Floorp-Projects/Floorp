@@ -80,15 +80,11 @@ void ProxyAccessibleWrap::ScrollTo(uint32_t aHow) const {
   Proxy()->ScrollTo(aHow);
 }
 
-uint8_t
-ProxyAccessibleWrap::ActionCount() const
-{
+uint8_t ProxyAccessibleWrap::ActionCount() const {
   return Proxy()->ActionCount();
 }
 
-bool
-ProxyAccessibleWrap::DoAction(uint8_t aIndex) const
-{
+bool ProxyAccessibleWrap::DoAction(uint8_t aIndex) const {
   return Proxy()->DoAction(aIndex);
 }
 

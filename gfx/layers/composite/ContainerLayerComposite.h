@@ -103,16 +103,10 @@ class ContainerLayerComposite : public ContainerLayer, public LayerComposite {
   // added by Layout. TODO: It would be nice to get rid of both of these
   // post-scales.
   virtual float GetPostXScale() const override {
-    if (mScaleToResolution) {
-      return mSimpleAttrs.GetPostXScale() * mPresShellResolution;
-    }
-    return mSimpleAttrs.GetPostXScale();
+    return mSimpleAttrs.GetPostXScale() * mPresShellResolution;
   }
   virtual float GetPostYScale() const override {
-    if (mScaleToResolution) {
-      return mSimpleAttrs.GetPostYScale() * mPresShellResolution;
-    }
-    return mSimpleAttrs.GetPostYScale();
+    return mSimpleAttrs.GetPostYScale() * mPresShellResolution;
   }
 
   virtual const char* Name() const override {

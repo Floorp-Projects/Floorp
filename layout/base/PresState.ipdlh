@@ -39,7 +39,6 @@ struct PresState {
   nsPoint scrollState;
   bool allowScrollOriginDowngrade;
   float resolution;
-  bool scaleToResolution;
   bool disabledSet;
   bool disabled;
   bool droppedDown;

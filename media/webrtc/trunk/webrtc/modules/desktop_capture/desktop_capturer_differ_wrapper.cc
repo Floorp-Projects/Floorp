@@ -156,10 +156,6 @@ void DesktopCapturerDifferWrapper::Start(DesktopCapturer::Callback* callback) {
   base_capturer_->Start(this);
 }
 
-void DesktopCapturerDifferWrapper::Stop() {
-  base_capturer_->Stop();
-}
-
 void DesktopCapturerDifferWrapper::SetSharedMemoryFactory(
     std::unique_ptr<SharedMemoryFactory> shared_memory_factory) {
   base_capturer_->SetSharedMemoryFactory(std::move(shared_memory_factory));

@@ -78,9 +78,8 @@ class DesktopCapturer {
   virtual ~DesktopCapturer();
 
   // Called at the beginning of a capturing session. |callback| must remain
-  // valid until capturer is destroyed or until Stop() is called
+  // valid until capturer is destroyed.
   virtual void Start(Callback* callback) = 0;
-  virtual void Stop() = 0;
 
   // Sets SharedMemoryFactory that will be used to create buffers for the
   // captured frames. The factory can be invoked on a thread other than the one

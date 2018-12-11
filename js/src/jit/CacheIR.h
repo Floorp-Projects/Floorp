@@ -1907,6 +1907,7 @@ class MOZ_RAII TypeOfIRGenerator : public IRGenerator {
 
   bool tryAttachPrimitive(ValOperandId valId);
   bool tryAttachObject(ValOperandId valId);
+  void trackAttached(const char* name);
 
  public:
   TypeOfIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
