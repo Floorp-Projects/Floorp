@@ -841,7 +841,7 @@ var AddonManagerInternal = {
       LightweightThemeManager.addBuiltInTheme({
         id: DEFAULT_THEME_ID,
         name: extensionsBundle.GetStringFromName("defaultTheme.name"),
-        description: extensionsBundle.GetStringFromName("defaultTheme.description"),
+        description: extensionsBundle.GetStringFromName("defaultTheme.description2"),
         iconURL: "chrome://mozapps/content/extensions/default-theme-icon.svg",
         author,
       });
