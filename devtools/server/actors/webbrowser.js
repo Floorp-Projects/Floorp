@@ -20,6 +20,7 @@ loader.lazyRequireGetter(this, "WorkerTargetActorList", "devtools/server/actors/
 loader.lazyRequireGetter(this, "ServiceWorkerRegistrationActorList", "devtools/server/actors/worker/worker-list", true);
 loader.lazyRequireGetter(this, "ProcessActorList", "devtools/server/actors/process", true);
 loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
+loader.lazyImporter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm");
 
 /**
  * Browser-specific actors.
@@ -143,11 +144,11 @@ exports.createRootActor = function createRootActor(connection) {
  * - Title changes:
  *
  * For tabs living in the child process, we listen for DOMTitleChange message
- * via the top-level window's message manager. Doing this also allows listening
- * for title changes on Fennec.
+ * via the top-level window's message manager.
  * But as these messages aren't sent for tabs loaded in the parent process,
  * we also listen for TabAttrModified event, which is fired only on Firefox
  * desktop.
+ * Also, we listen DOMTitleChange event on Android document.
  */
 function BrowserTabList(connection) {
   this._connection = connection;
@@ -191,6 +192,8 @@ function BrowserTabList(connection) {
 
   /* True if we're testing, and should throw if consistency checks fail. */
   this._testing = false;
+
+  this._onAndroidDocumentEvent = this._onAndroidDocumentEvent.bind(this);
 }
 
 BrowserTabList.prototype.constructor = BrowserTabList;
@@ -453,11 +456,28 @@ BrowserTabList.prototype._checkListening = function() {
 
   /*
    * We also listen for title changed from the child process.
-   * This allows listening for title changes from Fennec and OOP tabs in Fx.
+   * This allows listening for title changes from OOP tabs.
+   * OOP tabs are running browser-child.js frame script which sends DOMTitleChanged
+   * events through the message manager.
    */
   this._listenForMessagesIf(this._onListChanged && this._mustNotify,
                             "_listeningForTitleChange",
                             ["DOMTitleChanged"]);
+
+  /*
+   * We also listen for title changed event on Android document.
+   * Android document events are used for single process Gecko View and Firefox for
+   * Android. They do no execute browser-child.js because of single process, instead
+   * DOMTitleChanged events are emitted on the top level document.
+   * Also, Multi process Gecko View is not covered by here since that receives title
+   * updates via DOMTitleChanged messages.
+   */
+  if (AppConstants.platform === "android") {
+    this._listenForEventsIf(this._onListChanged && this._mustNotify,
+                            "_listeningForAndroidDocument",
+                            ["DOMTitleChanged"],
+                            this._onAndroidDocumentEvent);
+  }
 };
 
 /*
@@ -472,12 +492,12 @@ BrowserTabList.prototype._checkListening = function() {
  *    An array of event names.
  */
 BrowserTabList.prototype._listenForEventsIf =
-  function(shouldListen, guard, eventNames) {
+  function(shouldListen, guard, eventNames, listener = this) {
     if (!shouldListen !== !this[guard]) {
       const op = shouldListen ? "addEventListener" : "removeEventListener";
       for (const win of Services.wm.getEnumerator(DebuggerServer.chromeWindowType)) {
         for (const name of eventNames) {
-          win[op](name, this, false);
+          win[op](name, listener, false);
         }
       }
       this[guard] = shouldListen;
@@ -487,12 +507,12 @@ BrowserTabList.prototype._listenForEventsIf =
 /*
  * Add or remove message listeners for all XUL windows.
  *
- * @param aShouldListen boolean
+ * @param shouldListen boolean
  *    True if we should add message listeners; false if we should remove them.
- * @param aGuard string
+ * @param guard string
  *    The name of a guard property of 'this', indicating whether we're
  *    already listening for those messages.
- * @param aMessageNames array of strings
+ * @param messageNames array of strings
  *    An array of message names.
  */
 BrowserTabList.prototype._listenForMessagesIf =
@@ -508,6 +528,20 @@ BrowserTabList.prototype._listenForMessagesIf =
     }
   };
 
+/*
+ * This function assumes to be used as a event listener for Android document.
+ */
+BrowserTabList.prototype._onAndroidDocumentEvent = function(event) {
+  switch (event.type) {
+    case "DOMTitleChanged": {
+      const win = event.currentTarget.ownerGlobal;
+      const browser = win.BrowserApp.getBrowserForDocument(event.target);
+      this._onDOMTitleChanged(browser);
+      break;
+    }
+  }
+};
+
 /**
  * Implement nsIMessageListener.
  */
@@ -516,13 +550,21 @@ BrowserTabList.prototype.receiveMessage = DevToolsUtils.makeInfallible(
     const browser = message.target;
     switch (message.name) {
       case "DOMTitleChanged": {
-        const actor = this._actorByBrowser.get(browser);
-        if (actor) {
-          this._notifyListChanged();
-          this._checkListening();
-        }
+        this._onDOMTitleChanged(browser);
         break;
       }
+    }
+  });
+
+/**
+ * Handle "DOMTitleChanged" event.
+ */
+BrowserTabList.prototype._onDOMTitleChanged = DevToolsUtils.makeInfallible(
+  function(browser) {
+    const actor = this._actorByBrowser.get(browser);
+    if (actor) {
+      this._notifyListChanged();
+      this._checkListening();
     }
   });
 
