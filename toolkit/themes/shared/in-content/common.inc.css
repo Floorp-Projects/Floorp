@@ -174,7 +174,6 @@ html|*.numberbox-input::-moz-number-spin-down {
   background-color: var(--in-content-button-background);
   font-weight: 400;
   padding: 0 8px;
-  text-align: center;
   text-decoration: none;
   margin: 4px 8px;
   /* Ensure font-size isn't overridden by widget styling (e.g. in forms.css) */
