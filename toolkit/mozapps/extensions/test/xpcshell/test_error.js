@@ -35,7 +35,7 @@ add_task(async function run_test_2() {
 
 // Checks that an empty file shows an error
 add_task(async function run_test_3() {
-  let xpi = await createTempXPIFile({});
+  let xpi = await AddonTestUtils.createTempXPIFile({});
   let install = await AddonManager.getInstallForFile(xpi);
   Assert.notEqual(install, null);
   Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
