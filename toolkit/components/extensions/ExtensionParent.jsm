@@ -1044,15 +1044,16 @@ ParentAPIManager = {
 ParentAPIManager.init();
 
 /**
- * This utility class is used to create hidden XUL windows, which are used to
- * contains the extension pages that are not visible (e.g. the background page and
- * the devtools page), and it is also used by the ExtensionDebuggingUtils to
- * contains the browser elements that are used by the addon debugger to be able
- * to connect to the devtools actors running in the same process of the target
- * extension (and be able to stay connected across the addon reloads).
+ * A hidden window which contains the extension pages that are not visible
+ * (i.e., background pages and devtools pages), and is also used by
+ * ExtensionDebuggingUtils to contain the browser elements used by the
+ * addon debugger to connect to the devtools actors running in the same
+ * process of the target extension (and be able to stay connected across
+ *  the addon reloads).
  */
 class HiddenXULWindow {
-  constructor() {
+  constructor(privateMode) {
+    this.privateMode = privateMode;
     this._windowlessBrowser = null;
     this.waitInitialized = this.initWindowlessBrowser();
   }
@@ -1102,7 +1103,7 @@ class HiddenXULWindow {
     this.chromeShell = this._windowlessBrowser.docShell
                            .QueryInterface(Ci.nsIWebNavigation);
 
-    if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
+    if (this.privateMode) {
       let attrs = this.chromeShell.getOriginAttributes();
       attrs.privateBrowsingId = 1;
       this.chromeShell.setOriginAttributes(attrs);
@@ -1164,6 +1165,16 @@ class HiddenXULWindow {
   }
 }
 
+// private mode (boolean) => HiddenXULWindow
+let _hiddenWindows = new Map();
+
+function getHiddenWindow(privateMode = PrivateBrowsingUtils.permanentPrivateBrowsing) {
+  if (!_hiddenWindows.has(privateMode)) {
+    _hiddenWindows.set(privateMode, new HiddenXULWindow(privateMode));
+  }
+
+  return _hiddenWindows.get(privateMode);
+}
 
 /**
  * This is a base class used by the ext-backgroundPage and ext-devtools API implementations
@@ -1179,13 +1190,12 @@ class HiddenXULWindow {
  *        The viewType of the WebExtension page that is going to be loaded
  *        in the created browser element (e.g. "background" or "devtools_page").
  */
-class HiddenExtensionPage extends HiddenXULWindow {
+class HiddenExtensionPage {
   constructor(extension, viewType) {
     if (!extension || !viewType) {
       throw new Error("extension and viewType parameters are mandatory");
     }
 
-    super();
     this.extension = extension;
     this.viewType = viewType;
     this.browser = null;
@@ -1203,8 +1213,6 @@ class HiddenExtensionPage extends HiddenXULWindow {
       this.browser.remove();
       this.browser = null;
     }
-
-    super.shutdown();
   }
 
   /**
@@ -1218,7 +1226,7 @@ class HiddenExtensionPage extends HiddenXULWindow {
       throw new Error("createBrowserElement called twice");
     }
 
-    this.browser = await super.createBrowserElement({
+    this.browser = await getHiddenWindow().createBrowserElement({
       "webextension-view-type": this.viewType,
       "remote": this.extension.remote ? "true" : null,
       "remoteType": this.extension.remote ?
