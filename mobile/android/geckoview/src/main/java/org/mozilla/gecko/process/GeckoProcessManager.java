@@ -94,26 +94,20 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             }
 
             Log.e(LOGTAG, "Cannot connect to process " + mType);
-            unbind();
+            context.unbindService(this);
             return null;
         }
 
         public synchronized void unbind() {
-            try {
-                if (mChild != null) {
-                    final int pid = getPid();
+            if (mChild != null) {
+                final Context context = GeckoAppShell.getApplicationContext();
+                context.unbindService(this);
+            }
 
-                    final Context context = GeckoAppShell.getApplicationContext();
-                    context.unbindService(this);
-                    mChild = null;
-
-                    if (pid != 0) {
-                        Process.killProcess(pid);
-                        waitForChildLocked();
-                    }
-                }
-            } catch (Exception e) {
-                Log.w(LOGTAG, "Failed to unbind", e);
+            final int pid = getPid();
+            if (pid != 0) {
+                Process.killProcess(pid);
+                waitForChildLocked();
             }
         }
 
