@@ -100,7 +100,7 @@ win64-rust-1.28:
         ]
         toolchain-artifact: public/build/rustc.tar.bz2
 
-win64-rust-1.30:
+win64-rust-1.31:
     description: "rust repack"
     treeherder:
         kind: build
@@ -117,7 +117,7 @@ win64-rust-1.30:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', '1.30.0',
+            '--channel', '1.31.0',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
@@ -191,7 +191,7 @@ win64-node:
         arguments: ['win64']
         toolchain-artifact: public/build/node.tar.bz2
 
-mingw32-rust-1.30:
+mingw32-rust-1.31:
     description: "rust repack"
     treeherder:
         kind: build
@@ -208,7 +208,7 @@ mingw32-rust-1.30:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', '1.30.0',
+            '--channel', '1.31.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'i686-pc-windows-gnu',
