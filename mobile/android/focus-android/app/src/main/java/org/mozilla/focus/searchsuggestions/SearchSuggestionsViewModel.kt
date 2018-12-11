@@ -67,6 +67,7 @@ class SearchSuggestionsViewModel(application: Application) : AndroidViewModel(ap
 
     fun enableSearchSuggestions() {
         preferences.enableSearchSuggestions()
+        fetcher.restartJob()
         updateState()
         setSearchQuery(searchQuery.value ?: "")
     }

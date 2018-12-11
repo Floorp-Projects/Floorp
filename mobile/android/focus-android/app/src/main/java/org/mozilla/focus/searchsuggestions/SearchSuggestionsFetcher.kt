@@ -23,7 +23,7 @@ import org.mozilla.focus.utils.debounce
 import kotlin.coroutines.CoroutineContext
 
 class SearchSuggestionsFetcher(searchEngine: SearchEngine) : CoroutineScope {
-    private val job = Job()
+    private var job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
     // TODO When should we cancel the job?
@@ -88,6 +88,10 @@ class SearchSuggestionsFetcher(searchEngine: SearchEngine) : CoroutineScope {
 
     fun cancelJobs() {
         job.cancel()
+    }
+
+    fun restartJob() {
+        job = Job()
     }
 
     companion object {
