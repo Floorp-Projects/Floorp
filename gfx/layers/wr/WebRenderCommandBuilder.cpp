@@ -206,7 +206,6 @@ struct Grouper {
         mClipManager(aClipManager) {}
 
   int32_t mAppUnitsPerDevPixel;
-  std::vector<nsDisplayItem*> mItemStack;
   nsDisplayListBuilder* mDisplayListBuilder;
   ClipManager& mClipManager;
   Matrix mTransform;
@@ -917,7 +916,6 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
                                  const IntRect& aItemBounds,
                                  nsDisplayList* aChildren, gfxContext* aContext,
                                  WebRenderDrawEventRecorder* aRecorder) {
-  mItemStack.push_back(aItem);
   switch (aItem->GetType()) {
     case DisplayItemType::TYPE_TRANSFORM: {
       DisplayItemClip currentClip = aItem->GetClip();

@@ -26,9 +26,6 @@
 
 class nsHtml5Parser;
 
-#define NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE 1024
-#define NS_HTML5_STREAM_PARSER_SNIFFING_BUFFER_SIZE 1024
-
 enum eParserMode {
   /**
    * Parse a document normally as HTML.
@@ -107,6 +104,10 @@ class nsHtml5StreamParser final : public nsICharsetDetectionObserver {
   template <typename T>
   using NotNull = mozilla::NotNull<T>;
   using Encoding = mozilla::Encoding;
+
+  const uint32_t SNIFFING_BUFFER_SIZE = 1024;
+  const uint32_t READ_BUFFER_SIZE = 1024;
+  const uint32_t LOCAL_FILE_UTF_8_BUFFER_SIZE = 1024*1024*50; // 50 MB
 
   friend class nsHtml5RequestStopper;
   friend class nsHtml5DataAvailable;
@@ -244,6 +245,8 @@ class nsHtml5StreamParser final : public nsICharsetDetectionObserver {
 
   void DoStopRequest();
 
+  void DoDataAvailableBuffer(mozilla::Buffer<uint8_t>&& aBuffer);
+
   void DoDataAvailable(mozilla::Span<const uint8_t> aBuffer);
 
   static nsresult CopySegmentsToParser(nsIInputStream* aInStream,
@@ -311,6 +314,19 @@ class nsHtml5StreamParser final : public nsICharsetDetectionObserver {
    *                            been swallowed)
    */
   nsresult SetupDecodingFromBom(NotNull<const Encoding*> aEncoding);
+
+  /**
+   * When speculatively decoding from file: URL as UTF-8, commit
+   * to UTF-8 as the non-speculative encoding and start processing
+   * the decoded data.
+   */
+  void CommitLocalFileToUTF8();
+
+  /**
+   * When speculatively decoding from file: URL as UTF-8, redecode
+   * using fallback and then continue normally with the fallback.
+   */
+  void ReDecodeLocalFile();
 
   /**
    * Become confident or resolve and encoding name to its preferred form.
@@ -486,6 +502,14 @@ class nsHtml5StreamParser final : public nsICharsetDetectionObserver {
   uint32_t mSpeculationFailureCount;
 
   /**
+   * Number of bytes already buffered into mBufferedLocalFileData.
+   * Never counts above LOCAL_FILE_UTF_8_BUFFER_SIZE.
+   */
+  uint32_t mLocalFileBytesBuffered;
+
+  nsTArray<mozilla::Buffer<uint8_t>> mBufferedLocalFileData;
+
+  /**
    * True to terminate early; protected by mTerminatedMutex
    */
   bool mTerminated;
@@ -517,6 +541,12 @@ class nsHtml5StreamParser final : public nsICharsetDetectionObserver {
   bool mInitialEncodingWasFromParentFrame;
 
   bool mHasHadErrors;
+
+  /**
+   * If true, we are decoding a local file that lacks an encoding
+   * declaration as UTF-8 and we are not tokenizing yet.
+   */
+  bool mDecodingLocalFileAsUTF8;
 
   /**
    * Timer for flushing tree ops once in a while when not speculating.

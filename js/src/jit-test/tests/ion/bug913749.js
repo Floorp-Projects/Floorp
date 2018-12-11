@@ -13,8 +13,8 @@ y = undefined;
 // The exact error message varies nondeterministically. Accept several
 // variations on the theme.
 var variations = [
-    `y is undefined; can't access its "length" property`,
-    `can't access property "length" of undefined` ,
+    `y is undefined`,
+    `can't access property "length" of undefined`,
     `undefined has no properties`,
 ];
 
