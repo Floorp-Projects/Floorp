@@ -8895,8 +8895,8 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   // children are actually clipped to the padding-box, but since the
   // overflow area should include the entire border-box, just set it to
   // the border-box here.
-  NS_ASSERTION((disp->mOverflowY == NS_STYLE_OVERFLOW_CLIP) ==
-                   (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP),
+  NS_ASSERTION((disp->mOverflowY == StyleOverflow::MozHiddenUnscrollable) ==
+                   (disp->mOverflowX == StyleOverflow::MozHiddenUnscrollable),
                "If one overflow is clip, the other should be too");
   if (applyOverflowClipping) {
     // The contents are actually clipped to the padding area
@@ -8917,8 +8917,8 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
     }
   }
 
-  // Note that NS_STYLE_OVERFLOW_CLIP doesn't clip the frame background,
-  // so we add theme background overflow here so it's not clipped.
+  // Note that StyleOverflow::MozHiddenUnscrollable doesn't clip the frame
+  // background, so we add theme background overflow here so it's not clipped.
   if (!::IsXULBoxWrapped(this) && IsThemed(disp)) {
     nsRect r(bounds);
     nsPresContext* presContext = PresContext();

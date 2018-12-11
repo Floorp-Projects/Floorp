@@ -128,6 +128,7 @@ SERIALIZED_PREDEFINED_TYPES = [
     "OverflowClipBox",
     "ScrollSnapType",
     "Float",
+    "Overflow",
 ]
 
 def serialized_by_servo(prop):

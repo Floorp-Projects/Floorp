@@ -407,7 +407,7 @@ void ReflowInput::Init(nsPresContext* aPresContext,
   nsIFrame* parent = mFrame->GetParent();
   if (parent && (parent->GetStateBits() & NS_FRAME_IN_CONSTRAINED_BSIZE) &&
       !(parent->IsScrollFrame() &&
-        parent->StyleDisplay()->mOverflowY != NS_STYLE_OVERFLOW_HIDDEN)) {
+        parent->StyleDisplay()->mOverflowY != StyleOverflow::Hidden)) {
     mFrame->AddStateBits(NS_FRAME_IN_CONSTRAINED_BSIZE);
   } else if (type == LayoutFrameType::SVGForeignObject) {
     // An SVG foreignObject frame is inherently constrained block-size.

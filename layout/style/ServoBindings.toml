@@ -409,6 +409,7 @@ cbindgen-types = [
     { gecko = "StyleFloat", servo = "values::computed::Float" },
     { gecko = "StyleOverscrollBehavior", servo = "values::computed::OverscrollBehavior" },
     { gecko = "StyleTextAlign", servo = "values::computed::TextAlign" },
+    { gecko = "StyleOverflow", servo = "values::computed::Overflow" },
 ]
 
 mapped-generic-types = [

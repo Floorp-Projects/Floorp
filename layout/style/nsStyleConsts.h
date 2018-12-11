@@ -557,15 +557,6 @@ enum class StyleGridTrackBreadth : uint8_t {
 #define NS_STYLE_FRAME_SCROLL 7
 #define NS_STYLE_FRAME_NOSCROLL 8
 
-// See nsStyleDisplay.mOverflow{X,Y}
-#define NS_STYLE_OVERFLOW_VISIBLE 0
-#define NS_STYLE_OVERFLOW_HIDDEN 1
-#define NS_STYLE_OVERFLOW_SCROLL 2
-#define NS_STYLE_OVERFLOW_AUTO 3
-#define NS_STYLE_OVERFLOW_CLIP 4
-#define NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL 5
-#define NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL 6
-
 // See nsStyleList
 #define NS_STYLE_LIST_STYLE_CUSTOM -1  // for @counter-style
 #define NS_STYLE_LIST_STYLE_NONE 0

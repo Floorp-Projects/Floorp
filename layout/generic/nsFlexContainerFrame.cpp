@@ -2036,7 +2036,7 @@ void FlexItem::CheckForMinSizeAuto(const ReflowInput& aFlexItemReflowInput,
   // non-'visible' due to the way the subproperties interact.
   mNeedsMinSizeAutoResolution =
       IsAutoOrEnumOnBSize(mainMinSize, IsInlineAxisMainAxis()) &&
-      disp->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE;
+      disp->mOverflowX == StyleOverflow::Visible;
 }
 
 nscoord FlexItem::GetBaselineOffsetFromOuterCrossEdge(

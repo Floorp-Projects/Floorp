@@ -1613,7 +1613,7 @@ nsIFrame* nsFrameSelection::GetFrameToPageSelect() const {
         continue;
       }
       ScrollStyles scrollStyles = scrollableFrame->GetScrollStyles();
-      if (scrollStyles.mVertical == NS_STYLE_OVERFLOW_HIDDEN) {
+      if (scrollStyles.mVertical == StyleOverflow::Hidden) {
         continue;
       }
       uint32_t directions = scrollableFrame->GetPerceivedScrollingDirections();

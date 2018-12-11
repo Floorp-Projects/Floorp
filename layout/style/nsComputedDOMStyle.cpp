@@ -2515,13 +2515,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetWillChange() {
   return valueList.forget();
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOverflowY() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mOverflowY,
-                                               nsCSSProps::kOverflowSubKTable));
-  return val.forget();
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTouchAction() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 

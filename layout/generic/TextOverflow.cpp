@@ -102,7 +102,7 @@ static bool IsInlineAxisOverflowVisible(nsIFrame* aFrame) {
   auto overflow = aFrame->GetWritingMode().IsVertical()
                       ? f->StyleDisplay()->mOverflowY
                       : f->StyleDisplay()->mOverflowX;
-  return overflow == NS_STYLE_OVERFLOW_VISIBLE;
+  return overflow == StyleOverflow::Visible;
 }
 
 static void ClipMarker(const nsRect& aContentArea, const nsRect& aMarkerRect,
@@ -314,7 +314,7 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
     auto scrollbarStyle = mBlockWM.IsVertical()
                               ? mScrollableFrame->GetScrollStyles().mVertical
                               : mScrollableFrame->GetScrollStyles().mHorizontal;
-    mCanHaveInlineAxisScrollbar = scrollbarStyle != NS_STYLE_OVERFLOW_HIDDEN;
+    mCanHaveInlineAxisScrollbar = scrollbarStyle != StyleOverflow::Hidden;
     if (!mAdjustForPixelSnapping) {
       // Scrolling to the end position can leave some text still overflowing due
       // to pixel snapping behaviour in our scrolling code.
