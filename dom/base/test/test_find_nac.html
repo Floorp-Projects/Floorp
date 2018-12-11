@@ -1,0 +1,13 @@
+<!doctype html>
+<meta charset="utf-8">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<input value="bar">
+<script>
+test(function() {
+  // The exact return value of this first call is tested in
+  // test_find.html.
+  window.find("bar");
+  assert_false(window.find("bar"));
+}, "window.find doesn't get stuck on NAC");
+</script>

@@ -316,19 +316,6 @@ nsWebBrowserFind::SetMatchCase(bool aMatchCase) {
   return NS_OK;
 }
 
-static bool IsInNativeAnonymousSubtree(nsIContent* aContent) {
-  while (aContent) {
-    nsIContent* bindingParent = aContent->GetBindingParent();
-    if (bindingParent == aContent) {
-      return true;
-    }
-
-    aContent = bindingParent;
-  }
-
-  return false;
-}
-
 void nsWebBrowserFind::SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow,
                                              nsRange* aRange) {
   nsCOMPtr<nsIDocument> doc = aWindow->GetDoc();
@@ -355,7 +342,7 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow,
   // <textarea> or text <input>, we need to get the outer frame
   nsITextControlFrame* tcFrame = nullptr;
   for (; content; content = content->GetParent()) {
-    if (!IsInNativeAnonymousSubtree(content)) {
+    if (!content->IsInNativeAnonymousSubtree()) {
       nsIFrame* f = content->GetPrimaryFrame();
       if (!f) {
         return;
