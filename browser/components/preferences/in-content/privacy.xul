@@ -198,7 +198,7 @@
       data-l10n-id="do-not-track-learn-more"></label></label>
       <radiogroup id="doNotTrackRadioGroup" aria-labelledby="doNotTrackDesc" preference="privacy.donottrackheader.enabled">
         <radio value="true" data-l10n-id="do-not-track-option-always"/>
-        <radio value="false" data-l10n-id="do-not-track-option-default-content-blocking"/>
+        <radio value="false" data-l10n-id="do-not-track-option-default-content-blocking-known"/>
       </radiogroup>
     </vbox>
   </vbox>
