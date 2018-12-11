@@ -385,6 +385,56 @@ bool UnscaledFontDWrite::GetWRFontDescriptor(WRFontDescriptorOutput aCb,
     return false;
   }
 
+  // FIXME: Debugging kluge for bug 1455848. Remove once debugged!
+  UINT32 numFiles;
+  hr = mFontFace->GetFiles(&numFiles, nullptr);
+  if (FAILED(hr) || !numFiles) {
+    return false;
+  }
+  std::vector<RefPtr<IDWriteFontFile>> files;
+  files.resize(numFiles);
+  hr = mFontFace->GetFiles(&numFiles, getter_AddRefs(files[0]));
+  if (FAILED(hr)) {
+    return false;
+  }
+  MOZ_ASSERT(familyName.size() >= 1 && familyName.back() == 0);
+  for(auto& file : files) {
+    const void* key;
+    UINT32 keySize;
+    hr = file->GetReferenceKey(&key, &keySize);
+    if (FAILED(hr)) {
+      return false;
+    }
+    RefPtr<IDWriteFontFileLoader> loader;
+    hr = file->GetLoader(getter_AddRefs(loader));
+    if (FAILED(hr)) {
+      return false;
+    }
+    RefPtr<IDWriteLocalFontFileLoader> localLoader;
+    loader->QueryInterface(__uuidof(IDWriteLocalFontFileLoader), (void**)getter_AddRefs(localLoader));
+    if (!localLoader) {
+      return false;
+    }
+    UINT32 pathLen;
+    hr = localLoader->GetFilePathLengthFromKey(key, keySize, &pathLen);
+    if (FAILED(hr)) {
+      return false;
+    }
+    size_t offset = familyName.size();
+    familyName.resize(offset + pathLen + 1);
+    hr = localLoader->GetFilePathFromKey(key, keySize, &familyName[offset], pathLen + 1);
+    if (FAILED(hr)) {
+      return false;
+    }
+    MOZ_ASSERT(familyName.back() == 0);
+    DWORD attribs = GetFileAttributesW(&familyName[offset]);
+    if (attribs == INVALID_FILE_ATTRIBUTES) {
+      gfxCriticalNote << "sending font family \"" << &familyName[0]
+                      << "\" with invalid file \"" << &familyName[offset]
+                      << "\"";
+    }
+  }
+
   // The style information that identifies the font can be encoded easily in
   // less than 32 bits. Since the index is needed for font descriptors, only
   // the family name and style information, pass along the style in the index
@@ -392,7 +442,7 @@ bool UnscaledFontDWrite::GetWRFontDescriptor(WRFontDescriptorOutput aCb,
   // the data payload.
   uint32_t index = weight | (stretch << 16) | (style << 24);
   aCb(reinterpret_cast<const uint8_t*>(familyName.data()),
-      (familyName.size() - 1) * sizeof(WCHAR), index, aBaton);
+      familyName.size() * sizeof(WCHAR), index, aBaton);
   return true;
 }
 

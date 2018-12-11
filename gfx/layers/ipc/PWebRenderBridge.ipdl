@@ -82,6 +82,9 @@ parent:
   async FlushApzRepaints();
   sync GetAPZTestData() returns (APZTestData data);
 
+  // Debugging routine for bug 1455848.
+  async ValidateFontDescriptor(uint8_t[] desc);
+
   async Shutdown();
   sync ShutdownSync();
 child:
