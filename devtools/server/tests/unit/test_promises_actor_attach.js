@@ -27,7 +27,7 @@ add_task(async function() {
 });
 
 async function testAttach(client, parent) {
-  const promises = PromisesFront(client, parent);
+  const promises = new PromisesFront(client, parent);
 
   try {
     await promises.detach();

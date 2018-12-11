@@ -4,24 +4,25 @@
 "use strict";
 
 const {
-  Front,
   FrontClassWithSpec,
+  registerFront,
 } = require("devtools/shared/protocol");
 const { promisesSpec } = require("devtools/shared/specs/promises");
 
 /**
  * PromisesFront, the front for the PromisesActor.
  */
-const PromisesFront = FrontClassWithSpec(promisesSpec, {
-  initialize: function(client, form) {
-    Front.prototype.initialize.call(this, client, form);
+class PromisesFront extends FrontClassWithSpec(promisesSpec) {
+  constructor(client, form) {
+    super(client, form);
     this.actorID = form.promisesActor;
     this.manage(this);
-  },
+  }
 
-  destroy: function() {
-    Front.prototype.destroy.call(this);
-  },
-});
+  destroy() {
+    super.destroy();
+  }
+}
 
 exports.PromisesFront = PromisesFront;
+registerFront(PromisesFront);

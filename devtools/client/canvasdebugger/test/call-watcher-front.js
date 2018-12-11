@@ -11,11 +11,10 @@ const protocol = require("devtools/shared/protocol");
 /**
  * The corresponding Front object for the CallWatcherActor.
  */
-var CallWatcherFront =
-exports.CallWatcherFront =
-protocol.FrontClassWithSpec(callWatcherSpec, {
-  initialize: function(client, { callWatcherActor }) {
-    protocol.Front.prototype.initialize.call(this, client, { actor: callWatcherActor });
+class CallWatcherFront extends protocol.FrontClassWithSpec(callWatcherSpec) {
+  constructor(client, { callWatcherActor }) {
+    super(client, { actor: callWatcherActor });
     this.manage(this);
-  },
-});
+  }
+}
+exports.CallWatcherFront = CallWatcherFront;

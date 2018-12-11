@@ -791,12 +791,13 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
   },
 });
 
-var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSpec, {
-  initialize: function(client, { testActor }, toolbox) {
-    protocol.Front.prototype.initialize.call(this, client, { actor: testActor });
+class TestActorFront extends protocol.FrontClassWithSpec(testSpec) {
+  constructor(client, { testActor }, toolbox) {
+    super(client, { actor: testActor });
+
     this.manage(this);
     this.toolbox = toolbox;
-  },
+  }
 
   /**
    * Zoom the current page to a given level.
@@ -805,19 +806,17 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
    * @return {Promise} The returned promise will only resolve when the
    * highlighter has updated to the new zoom level.
    */
-  zoomPageTo: function(level, actorID = this.toolbox.highlighter.actorID) {
+  zoomPageTo(level, actorID = this.toolbox.highlighter.actorID) {
     return this.changeZoomLevel(level, actorID);
-  },
+  }
 
   /* eslint-disable max-len */
-  changeHighlightedNodeWaitForUpdate: protocol.custom(function(name, value, highlighter) {
+  changeHighlightedNodeWaitForUpdate(name, value, highlighter) {
     /* eslint-enable max-len */
-    return this._changeHighlightedNodeWaitForUpdate(
+    return super.changeHighlightedNodeWaitForUpdate(
       name, value, (highlighter || this.toolbox.highlighter).actorID
     );
-  }, {
-    impl: "_changeHighlightedNodeWaitForUpdate",
-  }),
+  }
 
   /**
    * Get the value of an attribute on one of the highlighter's node.
@@ -826,27 +825,25 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
    * @param {Object} highlighter Optional custom highlither to target
    * @return {String} value
    */
-  getHighlighterNodeAttribute: function(nodeID, name, highlighter) {
+  getHighlighterNodeAttribute(nodeID, name, highlighter) {
     return this.getHighlighterAttribute(
       nodeID, name, (highlighter || this.toolbox.highlighter).actorID
     );
-  },
+  }
 
-  getHighlighterNodeTextContent: protocol.custom(function(nodeID, highlighter) {
-    return this._getHighlighterNodeTextContent(
+  getHighlighterNodeTextContent(nodeID, highlighter) {
+    return super.getHighlighterNodeTextContent(
       nodeID, (highlighter || this.toolbox.highlighter).actorID
     );
-  }, {
-    impl: "_getHighlighterNodeTextContent",
-  }),
+  }
 
   /**
    * Is the highlighter currently visible on the page?
    */
-  isHighlighting: function() {
+  isHighlighting() {
     return this.getHighlighterNodeAttribute("box-model-elements", "hidden")
       .then(value => value === null);
-  },
+  }
 
   /**
    * Assert that the box-model highlighter's current position corresponds to the
@@ -871,7 +868,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
           prefix + boxType + " point " + point + " y coordinate is correct");
       }
     }
-  },
+  }
 
   /**
    * Get the current rect of the border region of the box-model highlighter
@@ -886,7 +883,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
       width: p2.x - p1.x,
       height: p4.y - p1.y,
     };
-  },
+  }
 
   /**
    * Get the current positions and visibility of the various box-model highlighter
@@ -911,7 +908,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
     }
 
     return ret;
-  },
+  }
 
   /**
    * Check that the box-model highlighter is currently highlighting the node matching the
@@ -922,7 +919,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
   async assertHighlightedNode(selector) {
     const rect = await this.getNodeRect(selector);
     return this.isNodeRectHighlighted(rect);
-  },
+  }
 
   /**
    * Check that the box-model highlighter is currently highlighting the text node that can
@@ -935,7 +932,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
   async assertHighlightedTextNode(parentSelector, childNodeIndex) {
     const rect = await this.getTextNodeRect(parentSelector, childNodeIndex);
     return this.isNodeRectHighlighted(rect);
-  },
+  }
 
   /**
    * Check that the box-model highlighter is currently highlighting the given rect.
@@ -966,7 +963,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
            isInside([right, top], points) &&
            isInside([right, bottom], points) &&
            isInside([left, bottom], points);
-  },
+  }
 
   /**
    * Get the coordinate (points attribute) from one of the polygon elements in the
@@ -1002,7 +999,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
         y: parseFloat(points[3][1]),
       },
     };
-  },
+  }
 
   /**
    * Is a given region polygon element of the box-model highlighter currently
@@ -1011,7 +1008,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
   async _isRegionHidden(region) {
     const value = await this.getHighlighterNodeAttribute("box-model-" + region, "hidden");
     return value !== null;
-  },
+  }
 
   async _getGuideStatus(location) {
     const id = "box-model-guide-" + location;
@@ -1029,7 +1026,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
       x2: x2,
       y2: y2,
     };
-  },
+  }
 
   /**
    * Get the coordinates of the rectangle that is defined by the 4 guides displayed
@@ -1053,13 +1050,11 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
       p3: {x: +rGuide.x1 + 1, y: +bGuide.y1 + 1},
       p4: {x: lGuide.x1, y: +bGuide.y1 + 1},
     };
-  },
+  }
 
-  waitForHighlighterEvent: protocol.custom(function(event) {
-    return this._waitForHighlighterEvent(event, this.toolbox.highlighter.actorID);
-  }, {
-    impl: "_waitForHighlighterEvent",
-  }),
+  waitForHighlighterEvent(event) {
+    return super.waitForHighlighterEvent(event, this.toolbox.highlighter.actorID);
+  }
 
   /**
    * Get the "d" attribute value for one of the box-model highlighter's region
@@ -1092,8 +1087,9 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
     }
 
     return {d, points};
-  },
-});
+  }
+}
+exports.TestActorFront = TestActorFront;
 
 /**
  * Check whether a point is included in a polygon.
