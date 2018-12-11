@@ -18,6 +18,8 @@ const TRANSITION_RELOAD = Ci.nsINavHistoryService.TRANSITION_RELOAD;
 
 const TITLE_LENGTH_MAX = 4096;
 
+Cu.importGlobalProperties(["URL"]);
+
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.jsm",

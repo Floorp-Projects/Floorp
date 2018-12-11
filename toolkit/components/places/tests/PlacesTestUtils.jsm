@@ -4,6 +4,8 @@ var EXPORTED_SYMBOLS = [
   "PlacesTestUtils",
 ];
 
+Cu.importGlobalProperties(["URL"]);
+
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",
                                "resource://gre/modules/PlacesUtils.jsm");

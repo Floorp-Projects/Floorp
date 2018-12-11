@@ -1,5 +1,7 @@
 "use strict";
 
+Cu.importGlobalProperties(["URL"]);
+
 const HOSTS = new Set([
   "example.com",
 ]);

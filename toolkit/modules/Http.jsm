@@ -4,6 +4,8 @@
 
 const EXPORTED_SYMBOLS = ["httpRequest", "percentEncode"];
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 // Strictly follow RFC 3986 when encoding URI components.
 // Accepts a unescaped string and returns the URI encoded string for use in
 // an HTTP request.

@@ -50,6 +50,24 @@ const nsIDOMWindow = Ci.nsIDOMWindow;
 
 const nsIPropertyElement = Ci.nsIPropertyElement;
 
+// Testing "'Node' in this" doesn't do the right thing because there are cases
+// when our "this" is not the global even though we're at toplevel.  In those
+// cases, the import could fail because our global is a Window and we in fact
+// have a Node all along.
+//
+// We could get the global via the (function() { return this; })() trick, but
+// that might break any time if people switch us to strict mode.  So let's just
+// test the thing we care about directly: does bareword Node exist?
+let needToImportNode = false;
+try {
+    Node;
+} catch (e) {
+    needToImportNode = true;
+}
+if (needToImportNode) {
+    Cu.importGlobalProperties(["Node"]);
+}
+
 // //////////////////////////////////////////////////////////////////////////////
 // OS detect
 

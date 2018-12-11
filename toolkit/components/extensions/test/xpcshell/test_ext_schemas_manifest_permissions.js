@@ -3,6 +3,8 @@
 ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 const {ExtensionAPI} = ExtensionCommon;
 
+Cu.importGlobalProperties(["Blob", "URL"]);
+
 add_task(async function() {
   const schema = [
     {

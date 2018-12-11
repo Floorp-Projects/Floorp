@@ -24,6 +24,7 @@ var EXPORTED_SYMBOLS = [ "console", "ConsoleAPI" ];
 
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
+Cu.importGlobalProperties(["Element"]);
 
 var gTimerRegistry = new Map();
 

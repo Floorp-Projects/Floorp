@@ -46,6 +46,8 @@ let _NetUtil = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", null).Ne
 
 let _XPCOMUtils = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", null).XPCOMUtils;
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 // Support a common assertion library, Assert.jsm.
 var AssertCls = ChromeUtils.import("resource://testing-common/Assert.jsm", null).Assert;
 // Pass a custom report function for xpcshell-test style reporting.

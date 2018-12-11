@@ -1,5 +1,7 @@
 "use strict";
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 const proxy = createHttpServer();
 
 // accept proxy connections for mozilla.org
