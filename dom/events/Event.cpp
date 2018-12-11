@@ -162,6 +162,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Event)
       default:
         break;
     }
+
+    if (WidgetMouseEvent* mouseEvent = tmp->mEvent->AsMouseEvent()) {
+      mouseEvent->mClickTarget = nullptr;
+    }
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPresContext);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExplicitOriginalTarget);
@@ -193,6 +197,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Event)
         break;
       default:
         break;
+    }
+
+    if (WidgetMouseEvent* mouseEvent = tmp->mEvent->AsMouseEvent()) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->mClickTarget");
+      cb.NoteXPCOMChild(mouseEvent->mClickTarget);
     }
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPresContext)

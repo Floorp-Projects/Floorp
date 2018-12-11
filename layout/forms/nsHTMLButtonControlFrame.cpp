@@ -96,8 +96,10 @@ void nsHTMLButtonControlFrame::BuildDisplayList(
 
   nsDisplayListCollection set(aBuilder);
 
-  // Do not allow the child subtree to receive events.
-  if (!isForEventDelivery || aBuilder->HitTestIsForVisibility()) {
+  // Do not allow the child subtree to receive events,
+  // except in case of <button>.
+  if (!isForEventDelivery || mContent->IsHTMLElement(nsGkAtoms::button) ||
+      aBuilder->HitTestIsForVisibility()) {
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 
     if (ShouldClipPaintingToBorderBox()) {

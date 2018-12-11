@@ -171,11 +171,14 @@ void HTMLButtonElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
   bool outerActivateEvent = ((mouseEvent && mouseEvent->IsLeftClickEvent()) ||
                              (aVisitor.mEvent->mMessage == eLegacyDOMActivate &&
-                              !mInInternalActivate));
+                              !mInInternalActivate &&
+                              aVisitor.mEvent->mOriginalTarget == this));
 
   if (outerActivateEvent) {
     aVisitor.mItemFlags |= NS_OUTER_ACTIVATE_EVENT;
-    if (mType == NS_FORM_BUTTON_SUBMIT && mForm) {
+    if (mType == NS_FORM_BUTTON_SUBMIT && mForm &&
+        !aVisitor.mEvent->mFlags.mMultiplePreActionsPrevented) {
+      aVisitor.mEvent->mFlags.mMultiplePreActionsPrevented = true;
       aVisitor.mItemFlags |= NS_IN_SUBMIT_CLICK;
       // tell the form that we are about to enter a click handler.
       // that means that if there are scripted submissions, the
