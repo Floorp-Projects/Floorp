@@ -41,6 +41,6 @@ function run_test() {
 
     xhr2.onload = function() {
       server.stop(do_test_finished);
-    }
+    };
   };
 }

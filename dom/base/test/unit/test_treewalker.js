@@ -5,17 +5,15 @@
 
 Cu.importGlobalProperties(["NodeFilter"]);
 
-function run_test()
-{
+function run_test() {
   test_treeWalker_currentNode();
 }
 
 // TEST CODE
 
-function test_treeWalker_currentNode()
-{
+function test_treeWalker_currentNode() {
   var XHTMLDocString = '<html xmlns="http://www.w3.org/1999/xhtml">';
-  XHTMLDocString += '<body><input/>input</body></html>';
+  XHTMLDocString += "<body><input/>input</body></html>";
 
   var doc = ParseXML(XHTMLDocString);
 

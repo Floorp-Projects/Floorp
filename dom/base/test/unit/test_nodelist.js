@@ -1,7 +1,6 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-function run_test()
-{
-  
+function run_test() {
+
   test_getElementsByTagName();
   test_getElementsByTagNameNS();
   test_getElementsByAttribute();
@@ -10,19 +9,18 @@ function run_test()
   // What else should we test?
   // XXXbz we need more tests here to test liveness!
 
-}  
+}
 
-function test_getElementsByTagName()
-{
+function test_getElementsByTagName() {
   var doc = ParseFile("nodelist_data_1.xml");
   var root = doc.documentElement;
 
   // Check that getElementsByTagName returns an HTMLCollection.
   Assert.equal(ChromeUtils.getClassName(doc.getElementsByTagName("*")),
-               "HTMLCollection")
+               "HTMLCollection");
   Assert.ok(ChromeUtils.getClassName(root.getElementsByTagName("*")),
             "HTMLCollection");
-  
+
   // Check that getElementsByTagName excludes the element it's called on.
   Assert.equal(doc.getElementsByTagName("*").length,
                root.getElementsByTagName("*").length + 1);
@@ -42,7 +40,7 @@ function test_getElementsByTagName()
   for (var i = 1; i <= numTests; ++i) {
     Assert.ok(Element.isInstance(doc.getElementById("test" + i)));
     Assert.equal(doc.getElementById("test" + i),
-                 doc.getElementsByTagName("test").item(i-1));
+                 doc.getElementsByTagName("test").item(i - 1));
   }
 
   // Check that we handle tagnames containing ':' correctly
@@ -59,8 +57,7 @@ function test_getElementsByTagName()
   Assert.equal(doc.getElementsByTagName("bar:test").length, 4);
 }
 
-function test_getElementsByTagNameNS()
-{
+function test_getElementsByTagNameNS() {
   var doc = ParseFile("nodelist_data_1.xml");
   var root = doc.documentElement;
 
@@ -77,7 +74,7 @@ function test_getElementsByTagNameNS()
   for (var i = 0; i < list1.length; ++i) {
     Assert.equal(list1.item(i), list2.item(i));
   }
-  
+
   // Check that getElementsByTagNameNS excludes the element it's called on.
   Assert.equal(doc.getElementsByTagNameNS("*", "*").length,
                root.getElementsByTagNameNS("*", "*").length + 1);
@@ -98,14 +95,14 @@ function test_getElementsByTagNameNS()
 
   // Check that we get the right things in the right order
 
-     
+
   var numTests = doc.getElementsByTagNameNS("*", "test").length;
   Assert.equal(numTests, 14);
 
   for (var i = 1; i <= numTests; ++i) {
     Assert.ok(Element.isInstance(doc.getElementById("test" + i)));
     Assert.equal(doc.getElementById("test" + i),
-                 doc.getElementsByTagNameNS("*", "test").item(i-1));
+                 doc.getElementsByTagNameNS("*", "test").item(i - 1));
   }
 
   // Check general proper functioning of having a non-wildcard namespace.
@@ -134,14 +131,14 @@ function test_getElementsByTagNameNS()
   Assert.equal(doc.getElementsByTagNameNS("foo", "foo:test").length, 0);
   Assert.equal(doc.getElementsByTagNameNS("bar", "foo:test").length, 0);
   Assert.equal(doc.getElementsByTagNameNS("*", "foo:test").length, 0);
-  
+
   Assert.equal(ChromeUtils.getClassName(doc.getElementsByTagNameNS(null, "foo2:test")),
                "HTMLCollection");
   Assert.equal(doc.getElementsByTagNameNS(null, "foo2:test").length, 0);
   Assert.equal(doc.getElementsByTagNameNS("foo2", "foo2:test").length, 0);
   Assert.equal(doc.getElementsByTagNameNS("bar", "foo2:test").length, 0);
   Assert.equal(doc.getElementsByTagNameNS("*", "foo2:test").length, 0);
-  
+
   Assert.equal(ChromeUtils.getClassName(doc.getElementsByTagNameNS(null, "bar:test")),
                "HTMLCollection");
   Assert.equal(doc.getElementsByTagNameNS(null, "bar:test").length, 0);
@@ -162,12 +159,11 @@ function test_getElementsByTagNameNS()
   doc.documentElement.appendChild(newNode);
   var newNode = doc.createElementNS("random-bogus-namespace2", "foo");
   doc.documentElement.appendChild(newNode);
-  Assert.equal(list1.length, 1);  
-  Assert.equal(list2.length, 1);  
+  Assert.equal(list1.length, 1);
+  Assert.equal(list2.length, 1);
 }
 
-function test_getElementsByAttribute()
-{
+function test_getElementsByAttribute() {
   var doc = ParseFile("nodelist_data_2.xul");
   var root = doc.documentElement;
 
@@ -283,8 +279,7 @@ function test_getElementsByAttribute()
                0);
 }
 
-function test_getElementsByAttributeNS()
-{
+function test_getElementsByAttributeNS() {
   var doc = ParseFile("nodelist_data_2.xul");
   var root = doc.documentElement;
 
@@ -306,7 +301,7 @@ function test_getElementsByAttributeNS()
   Assert.equal(ChromeUtils.getClassName(master2), "XULElement");
   Assert.equal(ChromeUtils.getClassName(master3), "XULElement");
   Assert.equal(ChromeUtils.getClassName(external), "XULElement");
-  
+
   // Test wildcard namespace
   Assert.equal(root.getElementsByAttributeNS("*", "foo", "foo").length,
                38);
@@ -353,7 +348,7 @@ function test_getElementsByAttributeNS()
                master2.getElementsByAttribute("foo", "foo").length);
   Assert.equal(master3.getElementsByAttributeNS("", "foo", "foo").length,
                master3.getElementsByAttribute("foo", "foo").length);
-  
+
   // Test namespace "foo"
   Assert.equal(root.getElementsByAttributeNS("foo", "foo", "foo").length,
                24);

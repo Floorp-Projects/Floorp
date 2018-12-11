@@ -1,4 +1,4 @@
-function run_test () {
+function run_test() {
   for (var i = 0; i < tests.length && tests[i][0]; ++i) {
     if (!tests[i][0].call()) {
       do_throw(tests[i][1]);
@@ -13,7 +13,7 @@ var tests = [
   [ test4, "" ],
   [ test5, "" ],
   [ test6, "" ],
-  [ null ]
+  [ null ],
 ];
 
 function test1() {
@@ -30,19 +30,19 @@ function test3() {
 
 function test4() {
   var doc = ParseXML("<root/>");
-  Assert.equal(doc.documentElement.namespaceURI, null); 
+  Assert.equal(doc.documentElement.namespaceURI, null);
   return true;
 }
 
 function test5() {
   var doc = ParseXML("<root xmlns=''/>");
-  Assert.equal(doc.documentElement.namespaceURI, null); 
+  Assert.equal(doc.documentElement.namespaceURI, null);
   return true;
 }
 
 function test6() {
   var doc = ParseXML("<root xmlns='ns1'/>");
-  Assert.notEqual(doc.documentElement.namespaceURI, null); 
-  Assert.equal(doc.documentElement.namespaceURI, 'ns1'); 
+  Assert.notEqual(doc.documentElement.namespaceURI, null);
+  Assert.equal(doc.documentElement.namespaceURI, "ns1");
   return true;
 }
