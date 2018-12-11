@@ -91,6 +91,10 @@ public class GeckoSystemStateListener
      * Uses `Settings.Global` which was introduced in API version 17.
      */
     private static boolean prefersReducedMotion() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
+          return false;
+        }
+
         ContentResolver contentResolver = sApplicationContext.getContentResolver();
 
         return Settings.Global.getFloat(contentResolver,
