@@ -152,12 +152,12 @@ def docker_worker_toolchain(config, job, taskdesc):
 
     sparse_profile = []
     if run.get('sparse-profile'):
-        sparse_profile = ['--firefox-sparse-profile=build/sparse-profiles/{}'
+        sparse_profile = ['--gecko-sparse-profile=build/sparse-profiles/{}'
                           .format(run['sparse-profile'])]
 
     worker['command'] = [
         '{workdir}/bin/run-task'.format(**run),
-        '--firefox-checkout={}'.format(gecko_path),
+        '--gecko-checkout={}'.format(gecko_path),
     ] + sparse_profile + [
         '--',
         'bash',

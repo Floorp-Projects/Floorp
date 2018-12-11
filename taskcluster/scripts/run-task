@@ -514,14 +514,14 @@ def add_vcs_arguments(parser, project, name):
                         help='Path to sparse profile for %s checkout' % name)
 
 
-def collect_vcs_options(args, project, env_prefix=None):
+def collect_vcs_options(args, project):
     checkout = getattr(args, '%s_checkout' % project)
     sparse_profile = getattr(args, '%s_sparse_profile' % project)
 
     if not checkout:
         return None
 
-    env_prefix = env_prefix or project.upper()
+    env_prefix = project.upper()
 
     base_repo = os.environ.get('%s_BASE_REPOSITORY' % env_prefix)
     head_repo = os.environ.get('%s_HEAD_REPOSITORY' % env_prefix)
@@ -553,9 +553,8 @@ def collect_vcs_options(args, project, env_prefix=None):
     }
 
 
-def vcs_checkout_from_args(args, project, env_prefix=None,
-                           prevent_symbolic_revisions=True):
-    options = collect_vcs_options(args, project, env_prefix=env_prefix)
+def vcs_checkout_from_args(args, project, prevent_symbolic_revisions=True):
+    options = collect_vcs_options(args, project)
 
     if not options:
         return
@@ -590,7 +589,7 @@ def main(args):
     parser.add_argument('--user', default='worker', help='user to run as')
     parser.add_argument('--group', default='worker', help='group to run as')
 
-    add_vcs_arguments(parser, 'firefox', 'Firefox')
+    add_vcs_arguments(parser, 'gecko', 'Firefox')
     add_vcs_arguments(parser, 'comm', 'Comm')
 
     parser.add_argument('--fetch-hgfingerprint', action='store_true',
@@ -728,8 +727,8 @@ def main(args):
         if running_as_root:
             os.chown(store_path, uid, gid)
 
-    prepare_checkout_dir(args.firefox_checkout)
-    if args.firefox_checkout or args.comm_checkout:
+    prepare_checkout_dir(args.gecko_checkout)
+    if args.gecko_checkout or args.comm_checkout:
         prepare_hg_store_path()
 
     if IS_POSIX and running_as_root:
@@ -745,7 +744,7 @@ def main(args):
         os.setresgid(gid, gid, gid)
         os.setresuid(uid, uid, uid)
 
-    vcs_checkout_from_args(args, 'firefox', env_prefix='GECKO')
+    vcs_checkout_from_args(args, 'gecko')
     vcs_checkout_from_args(args, 'comm')
 
     try:
