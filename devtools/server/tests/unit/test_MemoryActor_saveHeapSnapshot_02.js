@@ -9,7 +9,7 @@
 const { OS } = require("resource://gre/modules/osfile.jsm");
 
 add_task(async () => {
-  const { client, memoryFront } = await createTabMemoryFront();
+  const { memoryFront } = await createTabMemoryFront();
 
   const snapshotFilePath = await memoryFront.saveHeapSnapshot({
     forceCopy: true,
@@ -19,7 +19,4 @@ add_task(async () => {
   const snapshot = ChromeUtils.readHeapSnapshot(snapshotFilePath);
   ok(snapshot instanceof HeapSnapshot,
      "And we should be able to read a HeapSnapshot instance from the file");
-
-  await memoryFront.detach();
-  await finishClient(client);
 });

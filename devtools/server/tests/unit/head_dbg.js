@@ -60,40 +60,21 @@ function startupAddonsManager() {
   internalManager.observe(null, "addons-startup", null);
 }
 
-/**
- * Create a MemoryFront for a fake test tab.
- *
- * When the test ends, the front should be detached and we should call
- * `finishClient(client)`.
- */
-async function createTabMemoryFront() {
-  const client = await startTestDebuggerServer("test_MemoryActor");
-
-  // MemoryFront requires the HeadSnapshotActor actor to be available
-  // as a global actor. This isn't registered by startTestDebuggerServer which
-  // only register the target actors and not the browser ones.
-  DebuggerServer.registerActors({ browser: true });
+async function createTargetForFakeTab(title) {
+  const client = await startTestDebuggerServer(title);
 
   const { tabs } = await listTabs(client);
-  const tab = findTab(tabs, "test_MemoryActor");
+  const tab = findTab(tabs, title);
   const options = {
     form: tab,
     client,
     chrome: false,
   };
   const target = await TargetFactory.forRemoteTab(options);
-
-  const memoryFront = await target.getFront("memory");
-  await memoryFront.attach();
-
-  return { client, memoryFront };
+  return target;
 }
 
-/**
- * Same as createTabMemoryFront but attaches the MemoryFront to the MemoryActor
- * scoped to the full runtime rather than to a tab.
- */
-async function createFullRuntimeMemoryFront() {
+async function createTargetForMainProcess() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
   DebuggerServer.allowChromeProcess = true;
@@ -108,11 +89,94 @@ async function createFullRuntimeMemoryFront() {
     chrome: true,
   };
   const target = await TargetFactory.forRemoteTab(options);
+  return target;
+}
+
+/**
+ * Create a MemoryFront for a fake test tab.
+ */
+async function createTabMemoryFront() {
+  const target = await createTargetForFakeTab("test_memory");
+
+  // MemoryFront requires the HeadSnapshotActor actor to be available
+  // as a global actor. This isn't registered by startTestDebuggerServer which
+  // only register the target actors and not the browser ones.
+  DebuggerServer.registerActors({ browser: true });
 
   const memoryFront = await target.getFront("memory");
   await memoryFront.attach();
 
-  return { client, memoryFront };
+  registerCleanupFunction(async () => {
+    await memoryFront.detach();
+
+    // On XPCShell, the target isn't for a local tab and so target.destroy
+    // won't close the client. So do it so here. It will automatically destroy the target.
+    await target.client.close();
+  });
+
+  return { target, memoryFront };
+}
+
+/**
+ * Create a PromisesFront for a fake test tab.
+ */
+async function createTabPromisesFront() {
+  const title = "test_promises";
+  const target = await createTargetForFakeTab(title);
+
+  // Retrieve the debuggee create by createTargetForFakeTab
+  const debuggee = DebuggerServer.getTestGlobal(title);
+
+  const promisesFront = await target.getFront("promises");
+
+  registerCleanupFunction(async () => {
+    // On XPCShell, the target isn't for a local tab and so target.destroy
+    // won't close the client. So do it so here. It will automatically destroy the target.
+    await target.client.close();
+  });
+
+  return { debuggee, client: target.client, promisesFront };
+}
+
+/**
+ * Create a PromisesFront for the main process target actor.
+ */
+async function createMainProcessPromisesFront() {
+  const target = await createTargetForMainProcess();
+
+  const promisesFront = await target.getFront("promises");
+
+  registerCleanupFunction(async () => {
+    // For XPCShell, the main process target actor is ContentProcessTargetActor
+    // which doesn't expose any `detach` method. So that the target actor isn't
+    // destroyed when calling target.destroy.
+    // Close the client to cleanup everything.
+    await target.client.close();
+  });
+
+  return { client: target.client, promisesFront };
+}
+
+/**
+ * Same as createTabMemoryFront but attaches the MemoryFront to the MemoryActor
+ * scoped to the full runtime rather than to a tab.
+ */
+async function createMainProcessMemoryFront() {
+  const target = await createTargetForMainProcess();
+
+  const memoryFront = await target.getFront("memory");
+  await memoryFront.attach();
+
+  registerCleanupFunction(async () => {
+    await memoryFront.detach();
+    // For XPCShell, the main process target actor is ContentProcessTargetActor
+    // which doesn't expose any `detach` method. So that the target actor isn't
+    // destroyed when calling target.destroy.
+    // Close the client to cleanup everything.
+    await target.client.close();
+  });
+
+  return { client: target.client, memoryFront };
 }
 
 function createTestGlobal(name) {
@@ -401,11 +465,6 @@ async function finishClient(client) {
   await client.close();
   DebuggerServer.destroy();
   do_test_finished();
-}
-
-function getParentProcessActors(client, server = DebuggerServer) {
-  server.allowChromeProcess = true;
-  return client.mainRoot.getMainProcess().then(response => response.targetForm);
 }
 
 /**
