@@ -24,9 +24,9 @@ import kotlin.coroutines.CoroutineContext
 
 class SearchSuggestionsFetcher(searchEngine: SearchEngine) : CoroutineScope {
     private var job = Job()
+
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
-    // TODO When should we cancel the job?
 
     data class SuggestionResult(val query: String, val suggestions: List<String>)
 
@@ -84,14 +84,6 @@ class SearchSuggestionsFetcher(searchEngine: SearchEngine) : CoroutineScope {
                 .build()
 
         return httpClient.newCall(request).execute().body()?.string() ?: ""
-    }
-
-    fun cancelJobs() {
-        job.cancel()
-    }
-
-    fun restartJob() {
-        job = Job()
     }
 
     companion object {
