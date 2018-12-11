@@ -152,7 +152,7 @@ def docker_worker_toolchain(config, job, taskdesc):
 
     sparse_profile = []
     if run.get('sparse-profile'):
-        sparse_profile = ['--sparse-profile=build/sparse-profiles/{}'
+        sparse_profile = ['--firefox-sparse-profile=build/sparse-profiles/{}'
                           .format(run['sparse-profile'])]
 
     worker['command'] = [
