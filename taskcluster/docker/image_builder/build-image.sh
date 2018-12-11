@@ -39,7 +39,7 @@ fi
 # Build image
 run-task \
   --firefox-checkout "/builds/worker/checkouts/gecko" \
-  --sparse-profile build/sparse-profiles/docker-image \
+  --firefox-sparse-profile build/sparse-profiles/docker-image \
   -- \
   sh -x -c "$LOAD_COMMAND \
   /builds/worker/checkouts/gecko/mach taskcluster-build-image \
