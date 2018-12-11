@@ -741,7 +741,7 @@ LogicalSize nsRangeFrame::ComputeAutoSize(
 }
 
 nscoord nsRangeFrame::GetMinISize(gfxContext* aRenderingContext) {
-  return nscoord(0);
+  return GetPrefISize(aRenderingContext);
 }
 
 nscoord nsRangeFrame::GetPrefISize(gfxContext* aRenderingContext) {
