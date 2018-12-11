@@ -34,7 +34,7 @@ add_task(async function test_show_error_on_addresschange() {
     info("awaiting the shippingoptionchange event");
     await ContentTask.spawn(browser, {
       eventName: "shippingoptionchange",
-    }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
+    }, PTU.ContentTasks.awaitPaymentEventPromise);
 
     await spawnPaymentDialogTask(frame, expectedText => {
       let errorText = content.document.querySelector("header .page-error");
@@ -56,7 +56,7 @@ add_task(async function test_show_error_on_addresschange() {
     info("awaiting the shippingaddresschange event");
     await ContentTask.spawn(browser, {
       eventName: "shippingaddresschange",
-    }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
+    }, PTU.ContentTasks.awaitPaymentEventPromise);
 
     await spawnPaymentDialogTask(frame, () => {
       let errorText = content.document.querySelector("header .page-error");
@@ -101,7 +101,7 @@ add_task(async function test_show_field_specific_error_on_addresschange() {
     info("awaiting the shippingaddresschange event");
     await ContentTask.spawn(browser, {
       eventName: "shippingaddresschange",
-    }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
+    }, PTU.ContentTasks.awaitPaymentEventPromise);
 
     await spawnPaymentDialogTask(frame, async () => {
       let {

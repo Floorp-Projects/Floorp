@@ -128,7 +128,7 @@ add_task(async function test_show_completePayment2() {
 
     await ContentTask.spawn(browser, {
       eventName: "shippingoptionchange",
-    }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
+    }, PTU.ContentTasks.awaitPaymentEventPromise);
     info("got shippingoptionchange event");
 
     info("select the shipping address");
