@@ -661,9 +661,8 @@ bool HttpChannelParent::DoAsyncOpen(
   MOZ_ASSERT(mPromise.IsEmpty());
   // Wait for HttpBackgrounChannel to continue the async open procedure.
   ++mAsyncOpenBarrier;
-  RefPtr<GenericPromise> promise = WaitForBgParent();
   RefPtr<HttpChannelParent> self = this;
-  promise
+  WaitForBgParent()
       ->Then(GetMainThreadSerialEventTarget(), __func__,
              [self]() {
                self->mRequest.Complete();
@@ -685,7 +684,7 @@ bool HttpChannelParent::DoAsyncOpen(
   return true;
 }
 
-already_AddRefed<GenericPromise> HttpChannelParent::WaitForBgParent() {
+RefPtr<GenericNonExclusivePromise> HttpChannelParent::WaitForBgParent() {
   LOG(("HttpChannelParent::WaitForBgParent [this=%p]\n", this));
   MOZ_ASSERT(!mBgParent);
   MOZ_ASSERT(mChannel);
@@ -696,10 +695,7 @@ already_AddRefed<GenericPromise> HttpChannelParent::WaitForBgParent() {
   registrar->LinkHttpChannel(mChannel->ChannelId(), this);
 
   if (mBgParent) {
-    RefPtr<GenericPromise> promise = mPromise.Ensure(__func__);
-    // resolve promise immediatedly if bg channel is ready.
-    mPromise.Resolve(true, __func__);
-    return promise.forget();
+    return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
   }
 
   return mPromise.Ensure(__func__);
@@ -757,9 +753,8 @@ bool HttpChannelParent::ConnectChannel(const uint32_t& registrarId,
   MOZ_ASSERT(!mBgParent);
   MOZ_ASSERT(mPromise.IsEmpty());
   // Waiting for background channel
-  RefPtr<GenericPromise> promise = WaitForBgParent();
   RefPtr<HttpChannelParent> self = this;
-  promise
+  WaitForBgParent()
       ->Then(GetMainThreadSerialEventTarget(), __func__,
              [self]() { self->mRequest.Complete(); },
              [self](const nsresult& aResult) {
@@ -959,14 +954,14 @@ HttpChannelParent::ContinueVerification(
   MOZ_ASSERT(!mPromise.IsEmpty());
 
   // Otherwise, wait for the background channel.
-  RefPtr<GenericPromise> promise = WaitForBgParent();
   nsCOMPtr<nsIAsyncVerifyRedirectReadyCallback> callback = aCallback;
-  promise->Then(GetMainThreadSerialEventTarget(), __func__,
-                [callback]() { callback->ReadyToVerify(NS_OK); },
-                [callback](const nsresult& aResult) {
-                  NS_ERROR("failed to establish the background channel");
-                  callback->ReadyToVerify(aResult);
-                });
+  WaitForBgParent()->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [callback]() { callback->ReadyToVerify(NS_OK); },
+      [callback](const nsresult& aResult) {
+        NS_ERROR("failed to establish the background channel");
+        callback->ReadyToVerify(aResult);
+      });
   return NS_OK;
 }
 
@@ -1241,9 +1236,8 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvCrossProcessRedirectDone(
     const nsresult& aResult) {
   RefPtr<nsHttpChannel> chan = do_QueryObject(mChannel);
   if (!mBgParent) {
-    RefPtr<GenericPromise> promise = WaitForBgParent();
     RefPtr<HttpChannelParent> self = this;
-    promise->Then(
+    WaitForBgParent()->Then(
         GetMainThreadSerialEventTarget(), __func__,
         [self, chan, aResult]() { FinishCrossProcessRedirect(chan, aResult); },
         [self, chan](const nsresult& aRejectionRv) {
