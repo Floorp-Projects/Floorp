@@ -150,14 +150,14 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
   },
 });
 
-var RootFront = protocol.FrontClassWithSpec(rootSpec, {
-  initialize: function(client) {
+class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
+  constructor(client) {
+    super(client);
     this.actorID = "root";
-    protocol.Front.prototype.initialize.call(this, client);
     // Root owns itself.
     this.manage(this);
-  },
-});
+  }
+}
 
 function run_test() {
   DebuggerServer.createRootActor = (conn => {
@@ -166,10 +166,7 @@ function run_test() {
   DebuggerServer.init();
 
   Assert.throws(() => {
-    const badActor = protocol.ActorClassWithSpec({}, {
-      missing: protocol.preEvent("missing-event", function() {
-      }),
-    });
+    const badActor = protocol.ActorClassWithSpec({}, {});
     void badActor;
   }, /Actor specification must have a typeName member/);
 
@@ -192,7 +189,7 @@ function run_test() {
                          "traits": []});
     Assert.equal(applicationType, "xpcshell-tests");
 
-    rootFront = RootFront(client);
+    rootFront = new RootFront(client);
 
     rootFront.simpleReturn().then(ret => {
       trace.expectSend({"type": "simpleReturn", "to": "<actorid>"});

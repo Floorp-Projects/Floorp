@@ -4,14 +4,13 @@
 "use strict";
 
 const {workerTargetSpec} = require("devtools/shared/specs/targets/worker");
-const protocol = require("devtools/shared/protocol");
-const {custom} = protocol;
+const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
 
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
 
-const WorkerTargetFront = protocol.FrontClassWithSpec(workerTargetSpec, {
-  initialize: function(client) {
-    protocol.Front.prototype.initialize.call(this, client);
+class WorkerTargetFront extends FrontClassWithSpec(workerTargetSpec) {
+  constructor(client) {
+    super(client);
 
     this.thread = null;
     this.traits = {};
@@ -23,7 +22,7 @@ const WorkerTargetFront = protocol.FrontClassWithSpec(workerTargetSpec, {
 
     this.destroy = this.destroy.bind(this);
     this.on("close", this.destroy);
-  },
+  }
 
   form(json) {
     this.actorID = json.actor;
@@ -35,13 +34,13 @@ const WorkerTargetFront = protocol.FrontClassWithSpec(workerTargetSpec, {
     this.type = json.type;
     this.scope = json.scope;
     this.fetch = json.fetch;
-  },
+  }
 
   get isClosed() {
     return this._isClosed;
-  },
+  }
 
-  destroy: function() {
+  destroy() {
     this.off("close", this.destroy);
     this._isClosed = true;
 
@@ -51,11 +50,11 @@ const WorkerTargetFront = protocol.FrontClassWithSpec(workerTargetSpec, {
 
     this.unmanage(this);
 
-    protocol.Front.prototype.destroy.call(this);
-  },
+    super.destroy();
+  }
 
-  attach: custom(async function() {
-    const response = await this._attach();
+  async attach() {
+    const response = await super.attach();
 
     this.url = response.url;
 
@@ -67,33 +66,29 @@ const WorkerTargetFront = protocol.FrontClassWithSpec(workerTargetSpec, {
     this.threadActor = connectResponse.threadActor;
 
     return response;
-  }, {
-    impl: "_attach",
-  }),
+  }
 
-  detach: custom(async function() {
+  async detach() {
     if (this.isClosed) {
       return {};
     }
     let response;
     try {
-      response = await this._detach();
+      response = await super.detach();
     } catch (e) {
       console.warn(`Error while detaching the worker target front: ${e.message}`);
     }
     this.destroy();
     return response;
-  }, {
-    impl: "_detach",
-  }),
+  }
 
-  reconfigure: function() {
+  reconfigure() {
     // Toolbox and options panel are calling this method but Worker Target can't be
     // reconfigured. So we ignore this call here.
     return Promise.resolve();
-  },
+  }
 
-  attachThread: async function(options = {}) {
+  async attachThread(options = {}) {
     if (this.thread) {
       const response = [{
         type: "connected",
@@ -112,8 +107,8 @@ const WorkerTargetFront = protocol.FrontClassWithSpec(workerTargetSpec, {
     this.client.registerClient(this.thread);
 
     return [attachResponse, this.thread];
-  },
-
-});
+  }
+}
 
 exports.WorkerTargetFront = WorkerTargetFront;
+registerFront(WorkerTargetFront);

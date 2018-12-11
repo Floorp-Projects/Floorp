@@ -34,15 +34,16 @@ var ChildActor = protocol.ActorClassWithSpec(childSpec, {
   },
 });
 
-var ChildFront = protocol.FrontClassWithSpec(childSpec, {
-  initialize(client) {
-    protocol.Front.prototype.initialize.call(this, client);
-  },
+class ChildFront extends protocol.FrontClassWithSpec(childSpec) {
+  constructor(client) {
+    super(client);
+  }
 
   form(v, ctx, detail) {
     this.extra = v.extra;
-  },
-});
+  }
+}
+protocol.registerFront(ChildFront);
 
 const rootSpec = protocol.generateActorSpec({
   typeName: "root",
@@ -127,19 +128,19 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
   },
 });
 
-var RootFront = protocol.FrontClassWithSpec(rootSpec, {
-  initialize(client) {
+class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
+  constructor(client) {
+    super(client);
     this.actorID = "root";
-    protocol.Front.prototype.initialize.call(this, client);
 
     // Root owns itself.
     this.manage(this);
-  },
+  }
 
   form(v, ctx, detail) {
     this.lastForm = v;
-  },
-});
+  }
+}
 
 const run_test = Test(async function() {
   DebuggerServer.createRootActor = (conn => {
@@ -158,7 +159,7 @@ const run_test = Test(async function() {
   // So override it again with test one before asserting.
   protocol.types.registeredTypes.get("root").actorSpec = rootSpec;
 
-  const rootFront = RootFront(conn);
+  const rootFront = new RootFront(conn);
 
   // Trigger some methods that return forms.
   let retval = await rootFront.getDefault();

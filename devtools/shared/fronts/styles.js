@@ -4,10 +4,8 @@
 "use strict";
 
 const {
-  Front,
   FrontClassWithSpec,
-  custom,
-  preEvent,
+  registerFront,
 } = require("devtools/shared/protocol");
 const {
   pageStyleSpec,
@@ -21,57 +19,55 @@ loader.lazyRequireGetter(this, "RuleRewriter",
 /**
  * PageStyleFront, the front object for the PageStyleActor
  */
-const PageStyleFront = FrontClassWithSpec(pageStyleSpec, {
-  initialize: function(conn, form, ctx, detail) {
-    Front.prototype.initialize.call(this, conn, form, ctx, detail);
+class PageStyleFront extends FrontClassWithSpec(pageStyleSpec) {
+  constructor(conn, form, ctx, detail) {
+    super(conn, form, ctx, detail);
     this.inspector = this.parent();
-  },
+  }
 
-  form: function(form, detail) {
+  form(form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
       return;
     }
     this._form = form;
-  },
+  }
 
-  destroy: function() {
-    Front.prototype.destroy.call(this);
-  },
+  destroy() {
+    super.destroy();
+  }
 
   get walker() {
     return this.inspector.walker;
-  },
+  }
 
   get supportsAuthoredStyles() {
     return this._form.traits && this._form.traits.authoredStyles;
-  },
+  }
 
   get supportsFontStretchLevel4() {
     return this._form.traits && this._form.traits.fontStretchLevel4;
-  },
+  }
 
   get supportsFontStyleLevel4() {
     return this._form.traits && this._form.traits.fontStyleLevel4;
-  },
+  }
 
   get supportsFontVariations() {
     return this._form.traits && this._form.traits.fontVariations;
-  },
+  }
 
   get supportsFontWeightLevel4() {
     return this._form.traits && this._form.traits.fontWeightLevel4;
-  },
+  }
 
-  getMatchedSelectors: custom(function(node, property, options) {
-    return this._getMatchedSelectors(node, property, options).then(ret => {
+  getMatchedSelectors(node, property, options) {
+    return super.getMatchedSelectors(node, property, options).then(ret => {
       return ret.matched;
     });
-  }, {
-    impl: "_getMatchedSelectors",
-  }),
+  }
 
-  getApplied: custom(async function(node, options = {}) {
+  async getApplied(node, options = {}) {
     // If the getApplied method doesn't recreate the style cache itself, this
     // means a call to cssLogic.highlight is required before trying to access
     // the applied rules. Issue a request to getLayout if this is the case.
@@ -79,42 +75,41 @@ const PageStyleFront = FrontClassWithSpec(pageStyleSpec, {
     if (!this._form.traits || !this._form.traits.getAppliedCreatesStyleCache) {
       await this.getLayout(node);
     }
-    const ret = await this._getApplied(node, options);
+    const ret = await super.getApplied(node, options);
     return ret.entries;
-  }, {
-    impl: "_getApplied",
-  }),
+  }
 
-  addNewRule: custom(function(node, pseudoClasses) {
+  addNewRule(node, pseudoClasses) {
     let addPromise;
     if (this.supportsAuthoredStyles) {
-      addPromise = this._addNewRule(node, pseudoClasses, true);
+      addPromise = super.addNewRule(node, pseudoClasses, true);
     } else {
-      addPromise = this._addNewRule(node, pseudoClasses);
+      addPromise = super.addNewRule(node, pseudoClasses);
     }
     return addPromise.then(ret => {
       return ret.entries[0];
     });
-  }, {
-    impl: "_addNewRule",
-  }),
-});
+  }
+}
 
 exports.PageStyleFront = PageStyleFront;
+registerFront(PageStyleFront);
 
 /**
  * StyleRuleFront, the front for the StyleRule actor.
  */
-const StyleRuleFront = FrontClassWithSpec(styleRuleSpec, {
-  initialize: function(client, form, ctx, detail) {
-    Front.prototype.initialize.call(this, client, form, ctx, detail);
-  },
+class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
+  constructor(client, form, ctx, detail) {
+    super(client, form, ctx, detail);
 
-  destroy: function() {
-    Front.prototype.destroy.call(this);
-  },
+    this.before("location-changed", this._locationChangedPre.bind(this));
+  }
 
-  form: function(form, detail) {
+  destroy() {
+    super.destroy();
+  }
+
+  form(form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
       return;
@@ -124,16 +119,16 @@ const StyleRuleFront = FrontClassWithSpec(styleRuleSpec, {
     if (this._mediaText) {
       this._mediaText = null;
     }
-  },
+  }
 
   /**
    * Ensure _form is updated when location-changed is emitted.
    */
-  _locationChangedPre: preEvent("location-changed", function(line, column) {
+  _locationChangedPre(line, column) {
     this._clearOriginalLocation();
     this._form.line = line;
     this._form.column = column;
-  }),
+  }
 
   /**
    * Return a new RuleModificationList or RuleRewriter for this node.
@@ -145,43 +140,43 @@ const StyleRuleFront = FrontClassWithSpec(styleRuleSpec, {
    *                             This is needed by the RuleRewriter.
    * @return {RuleModificationList}
    */
-  startModifyingProperties: function(cssProperties) {
+  startModifyingProperties(cssProperties) {
     if (this.canSetRuleText) {
       return new RuleRewriter(cssProperties.isKnown, this, this.authoredText);
     }
     return new RuleModificationList(this);
-  },
+  }
 
   get type() {
     return this._form.type;
-  },
+  }
   get line() {
     return this._form.line || -1;
-  },
+  }
   get column() {
     return this._form.column || -1;
-  },
+  }
   get cssText() {
     return this._form.cssText;
-  },
+  }
   get authoredText() {
     return this._form.authoredText || this._form.cssText;
-  },
+  }
   get declarations() {
     return this._form.declarations || [];
-  },
+  }
   get keyText() {
     return this._form.keyText;
-  },
+  }
   get name() {
     return this._form.name;
-  },
+  }
   get selectors() {
     return this._form.selectors;
-  },
+  }
   get media() {
     return this._form.media;
-  },
+  }
   get mediaText() {
     if (!this._form.media) {
       return null;
@@ -191,19 +186,19 @@ const StyleRuleFront = FrontClassWithSpec(styleRuleSpec, {
     }
     this._mediaText = this.media.join(", ");
     return this._mediaText;
-  },
+  }
 
   get parentRule() {
     return this.conn.getActor(this._form.parentRule);
-  },
+  }
 
   get parentStyleSheet() {
     return this.conn.getActor(this._form.parentStyleSheet);
-  },
+  }
 
   get element() {
     return this.conn.getActor(this._form.element);
-  },
+  }
 
   get href() {
     if (this._form.href) {
@@ -211,16 +206,16 @@ const StyleRuleFront = FrontClassWithSpec(styleRuleSpec, {
     }
     const sheet = this.parentStyleSheet;
     return sheet ? sheet.href : "";
-  },
+  }
 
   get nodeHref() {
     const sheet = this.parentStyleSheet;
     return sheet ? sheet.nodeHref : "";
-  },
+  }
 
   get canSetRuleText() {
     return this._form.traits && this._form.traits.canSetRuleText;
-  },
+  }
 
   get location() {
     return {
@@ -229,13 +224,13 @@ const StyleRuleFront = FrontClassWithSpec(styleRuleSpec, {
       line: this.line,
       column: this.column,
     };
-  },
+  }
 
-  _clearOriginalLocation: function() {
+  _clearOriginalLocation() {
     this._originalLocation = null;
-  },
+  }
 
-  getOriginalLocation: function() {
+  getOriginalLocation() {
     if (this._originalLocation) {
       return promise.resolve(this._originalLocation);
     }
@@ -262,33 +257,30 @@ const StyleRuleFront = FrontClassWithSpec(styleRuleSpec, {
         this._originalLocation = location;
         return location;
       });
-  },
+  }
 
-  modifySelector: custom(async function(node, value) {
+  async modifySelector(node, value) {
     let response;
     if (this.canSetRuleText) {
-      response = await this._modifySelector(node, value, true);
+      response = await super.modifySelector(node, value, true);
     } else {
-      response = await this._modifySelector(node, value);
+      response = await super.modifySelector(node, value);
     }
 
     if (response.ruleProps) {
       response.ruleProps = response.ruleProps.entries[0];
     }
     return response;
-  }, {
-    impl: "_modifySelector",
-  }),
+  }
 
-  setRuleText: custom(function(newText, modifications) {
+  setRuleText(newText, modifications) {
     this._form.authoredText = newText;
-    return this._setRuleText(newText, modifications);
-  }, {
-    impl: "_setRuleText",
-  }),
-});
+    return super.setRuleText(newText, modifications);
+  }
+}
 
 exports.StyleRuleFront = StyleRuleFront;
+registerFront(StyleRuleFront);
 
 /**
  * Convenience API for building a list of attribute modifications

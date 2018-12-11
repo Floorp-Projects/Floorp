@@ -8,38 +8,41 @@ const {
   programSpec,
   webGLSpec,
 } = require("devtools/shared/specs/webgl");
-const protocol = require("devtools/shared/protocol");
+const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
 
 /**
  * The corresponding Front object for the ShaderActor.
  */
-const ShaderFront = protocol.FrontClassWithSpec(shaderSpec, {
-  initialize: function(client, form) {
-    protocol.Front.prototype.initialize.call(this, client, form);
-  },
-});
+class ShaderFront extends FrontClassWithSpec(shaderSpec) {
+  constructor(client, form) {
+    super(client, form);
+  }
+}
 
 exports.ShaderFront = ShaderFront;
+registerFront(ShaderFront);
 
 /**
  * The corresponding Front object for the ProgramActor.
  */
-const ProgramFront = protocol.FrontClassWithSpec(programSpec, {
-  initialize: function(client, form) {
-    protocol.Front.prototype.initialize.call(this, client, form);
-  },
-});
+class ProgramFront extends FrontClassWithSpec(programSpec) {
+  constructor(client, form) {
+    super(client, form);
+  }
+}
 
 exports.ProgramFront = ProgramFront;
+registerFront(ProgramFront);
 
 /**
  * The corresponding Front object for the WebGLActor.
  */
-const WebGLFront = protocol.FrontClassWithSpec(webGLSpec, {
-  initialize: function(client, { webglActor }) {
-    protocol.Front.prototype.initialize.call(this, client, { actor: webglActor });
+class WebGLFront extends FrontClassWithSpec(webGLSpec) {
+  constructor(client, { webglActor }) {
+    super(client, { actor: webglActor });
     this.manage(this);
-  },
-});
+  }
+}
 
 exports.WebGLFront = WebGLFront;
+registerFront(WebGLFront);
