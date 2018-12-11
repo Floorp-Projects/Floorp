@@ -8,6 +8,12 @@ EXPORTS.mozilla.dom += [
     'txMozillaXSLTProcessor.h'
 ]
 
+XPIDL_MODULE = 'dom_xslt'
+
+XPIDL_SOURCES += [
+    'txIEXSLTFunctions.idl',
+]
+
 UNIFIED_SOURCES += [
     'txBufferingHandler.cpp',
     'txCurrentFunctionCall.cpp',
