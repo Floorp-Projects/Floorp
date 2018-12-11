@@ -253,13 +253,11 @@ void ClientManagerService::RemoveManager(ClientManagerParent* aManager) {
 
 RefPtr<ClientOpPromise> ClientManagerService::Navigate(
     const ClientNavigateArgs& aArgs) {
-  RefPtr<ClientOpPromise> ref;
 
   ClientSourceParent* source =
       FindSource(aArgs.target().id(), aArgs.target().principalInfo());
   if (!source) {
-    ref = ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-    return ref.forget();
+    return ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
   PClientManagerParent* manager = source->Manager();
@@ -283,12 +281,9 @@ RefPtr<ClientOpPromise> ClientManagerService::Navigate(
       manager->SendPClientNavigateOpConstructor(op, args);
   if (!result) {
     promise->Reject(NS_ERROR_FAILURE, __func__);
-    ref = promise;
-    return ref.forget();
   }
 
-  ref = promise;
-  return ref.forget();
+  return promise.forget();
 }
 
 namespace {
@@ -499,31 +494,25 @@ RefPtr<ClientOpPromise> ClientManagerService::GetInfoAndState(
   ClientSourceParent* source = FindSource(aArgs.id(), aArgs.principalInfo());
 
   if (!source) {
-    RefPtr<ClientOpPromise> ref =
-        ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-    return ref.forget();
+    return ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
   if (!source->ExecutionReady()) {
     RefPtr<ClientManagerService> self = this;
 
     // rejection ultimately converted to `undefined` in Clients::Get
-    RefPtr<ClientOpPromise> ref = source->ExecutionReadyPromise()->Then(
+    return source->ExecutionReadyPromise()->Then(
         GetCurrentThreadSerialEventTarget(), __func__,
         [self, aArgs]() -> RefPtr<ClientOpPromise> {
           ClientSourceParent* source =
               self->FindSource(aArgs.id(), aArgs.principalInfo());
 
           if (!source) {
-            RefPtr<ClientOpPromise> ref =
-                ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-            return ref.forget();
+            return ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
           }
 
           return source->StartOp(aArgs);
         });
-
-    return ref.forget();
   }
 
   return source->StartOp(aArgs);
@@ -611,8 +600,7 @@ RefPtr<ClientOpPromise> ClientManagerService::OpenWindow(
       new OpenWindowRunnable(promise, aArgs, std::move(aSourceProcess));
   MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
 
-  RefPtr<ClientOpPromise> ref = promise;
-  return ref.forget();
+  return promise.forget();
 }
 
 }  // namespace dom
