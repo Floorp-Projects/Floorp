@@ -194,7 +194,7 @@ function processParsedDocument(doc) {
   var splits = doc.getElementsByTagName("split");
   var i;
   for (i = splits.length - 1; i >= 0; i--) {
-    var node = splits.item(i);
+    let node = splits.item(i);
     node.remove();
   }
   splits = null;
@@ -202,7 +202,7 @@ function processParsedDocument(doc) {
   // Replace empty CDATA sections.
   var emptyData = doc.getElementsByTagName("empty-cdata");
   for (i = emptyData.length - 1; i >= 0; i--) {
-    var node = emptyData.item(i);
+    let node = emptyData.item(i);
     var cdata = doc.createCDATASection("");
     node.parentNode.replaceChild(cdata, node);
   }
@@ -302,8 +302,8 @@ function do_extract_test(doc) {
     dump("Delete contents test " + i + "\n\n");
     baseFrag = getFragment(baseSource);
     baseRange = getRange(baseSource, baseFrag);
-    var startContainer = baseRange.startContainer;
-    var endContainer = baseRange.endContainer;
+    startContainer = baseRange.startContainer;
+    endContainer = baseRange.endContainer;
     baseRange.deleteContents();
     Assert.ok(baseFrag.isEqualNode(resultFrag));
 
@@ -351,8 +351,6 @@ function do_miscellaneous_tests(doc) {
   // Let's try some invalid inputs to our DOM range and see what happens.
   var currentTest = tests.item(0);
   var baseSource = currentTest.firstChild;
-  var baseResult = baseSource.nextSibling;
-  var baseExtract = baseResult.nextSibling;
 
   var baseFrag = getFragment(baseSource);
 
@@ -422,9 +420,9 @@ function do_miscellaneous_tests(doc) {
      should collapse to the new container and offset. */
   baseRange = getRange(baseSource, baseFrag);
   startContainer = baseRange.startContainer;
-  var startOffset = baseRange.startOffset;
+  startOffset = baseRange.startOffset;
   endContainer = baseRange.endContainer;
-  var endOffset = baseRange.endOffset;
+  endOffset = baseRange.endOffset;
 
   dump("External fragment test\n\n");
 

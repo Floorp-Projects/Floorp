@@ -5,6 +5,7 @@
 
 ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const nsIDocumentEncoder = Ci.nsIDocumentEncoder;
 const replacementChar = Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER;
@@ -15,10 +16,9 @@ function loadContentFile(aFile, aCharset) {
         aCharset = "UTF-8";
 
     var file = do_get_file(aFile);
-    var ios = Cc["@mozilla.org/network/io-service;1"]
-            .getService(Ci.nsIIOService);
+
     var chann = NetUtil.newChannel({
-      uri: ios.newFileURI(file),
+      uri: Services.io.newFileURI(file),
       loadUsingSystemPrincipal: true,
     });
     chann.contentCharset = aCharset;
