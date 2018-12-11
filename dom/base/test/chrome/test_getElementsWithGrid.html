@@ -20,7 +20,7 @@
 </style>
 
 <script>
-'use strict';
+"use strict";
 
 SimpleTest.waitForExplicitFinish();
 
@@ -58,18 +58,18 @@ function runTests() {
   // Targets are provided in order we expect them to appear.
   // Has to end in a non-todo element in order for testing logic to work.
   let targetsFromRoot = [
-    {id:"root", message:"root with display:grid"},
-    {id:"a", message:"'plain' grid container with display:grid"},
-    {id:"b", message:"display:subgrid inside display:grid (to be fixed in Bug 1240834)", todo:true},
-    {id:"c", message:"'plain' grid container with display:inline-grid"},
-    {id:"d", message:"display:subgrid inside display:inline-grid (to be fixed in Bug 1240834)", todo:true},
-    {id:"e", message:"grid container with visibility:hidden"},
-    {id:"f", message:"grid container inside an element"},
-    {id:"g", message:"overflow:scroll grid container"},
-    {id:"h", message:"button as a grid container"},
-    {id:"i", message:"fieldset as a grid container"},
-    {id:"k1", message:"grid container containing a grid container"},
-    {id:"k2", message:"grid container inside a grid container"},
+    {id: "root", message: "root with display:grid"},
+    {id: "a", message: "'plain' grid container with display:grid"},
+    {id: "b", message: "display:subgrid inside display:grid (to be fixed in Bug 1240834)", todo: true},
+    {id: "c", message: "'plain' grid container with display:inline-grid"},
+    {id: "d", message: "display:subgrid inside display:inline-grid (to be fixed in Bug 1240834)", todo: true},
+    {id: "e", message: "grid container with visibility:hidden"},
+    {id: "f", message: "grid container inside an element"},
+    {id: "g", message: "overflow:scroll grid container"},
+    {id: "h", message: "button as a grid container"},
+    {id: "i", message: "fieldset as a grid container"},
+    {id: "k1", message: "grid container containing a grid container"},
+    {id: "k2", message: "grid container inside a grid container"},
   ];
   is(elementsFromRoot.length, 10, "Found expected number of elements within document root.");
   testTargetsAreInElements(targetsFromRoot, elementsFromRoot);
@@ -79,7 +79,7 @@ function runTests() {
   let elementsFromNonRoot = document.getElementById("a_non_root_element").getElementsWithGrid();
 
   let targetsFromNonRoot = [
-    {id:"f", message:"grid container inside an element (from non-root element)"},
+    {id: "f", message: "grid container inside an element (from non-root element)"},
   ];
   is(elementsFromNonRoot.length, 1, "Found expected number of elements from non-root element.");
   testTargetsAreInElements(targetsFromNonRoot, elementsFromNonRoot);

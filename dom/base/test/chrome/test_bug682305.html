@@ -22,7 +22,7 @@ SimpleTest.waitForExplicitFinish();
 
 /*
  * Register a custom nsIProtocolHandler service
- * in order to be able to implement *and use* an 
+ * in order to be able to implement *and use* an
  * nsIChannel component written in Javascript.
  */
 
@@ -53,47 +53,47 @@ CustomChannel.prototype = {
   loadGroup: null,
   name: null,
   status: Cr.NS_OK,
-  asyncOpen: function(listener, context) {
+  asyncOpen(listener, context) {
     let stream = this.open();
     try {
       listener.onStartRequest(this, context);
-    } catch(e) {}
+    } catch (e) {}
     try {
       listener.onDataAvailable(this, context, stream, 0, stream.available());
-    } catch(e) {}
+    } catch (e) {}
     try {
       listener.onStopRequest(this, context, Cr.NS_OK);
-    } catch(e) {}
+    } catch (e) {}
   },
-  asyncOpen2: function(listener) {
+  asyncOpen2(listener) {
     // throws an error if security checks fail
     var outListener = contentSecManager.performSecurityCheck(this, listener);
     return this.asyncOpen(outListener, null);
   },
-  open: function() {
+  open() {
     let data = "bar";
     let stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
     stream.setData(data, data.length);
     return stream;
   },
-  open2: function() {
+  open2() {
     // throws an error if security checks fail
     contentSecManager.performSecurityCheck(this, null);
     return this.open();
   },
-  isPending: function() {
+  isPending() {
     return false;
   },
-  cancel: function() {
+  cancel() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
-  suspend: function() {
+  suspend() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
-  resume: function() {
+  resume() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIChannel, Ci.nsIRequest])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIChannel, Ci.nsIRequest]),
 };
 
 
@@ -125,11 +125,11 @@ CustomProtocol.prototype = {
   newChannel: function newChannel(URI) {
     return newChannel2(URI);
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIProtocolHandler])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIProtocolHandler]),
 };
 
 var gFactory = {
-  register: function() {
+  register() {
     var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
     var classID = Components.ID("{ed064287-1e76-49ba-a28d-dc74394a8334}");
@@ -143,7 +143,7 @@ var gFactory = {
       registrar.unregisterFactory(classID, factory);
       delete this.unregister;
     };
-  }
+  },
 };
 
 // Register the custom procotol handler
@@ -152,14 +152,14 @@ gFactory.register();
 // Then, checks if XHR works with it
 var xhr = new XMLHttpRequest();
 xhr.open("GET", PROTOCOL_SCHEME + ":foo", true);
-xhr.onload = function () {
+xhr.onload = function() {
   is(xhr.responseText, "bar", "protocol doesn't work");
   gFactory.unregister();
   SimpleTest.finish();
-}
+};
 try {
   xhr.send(null);
-} catch(e) {
+} catch (e) {
   ok(false, e);
 }
 </script>
