@@ -263,7 +263,6 @@ WebConsoleOutputWrapper.prototype = {
         closeSplitConsole: this.closeSplitConsole.bind(this),
         jstermCodeMirror: prefs.jstermCodeMirror
           && !Services.appinfo.accessibilityEnabled,
-        jstermReverseSearch: prefs.jstermReverseSearch,
       });
 
       // Render the root Application component.
