@@ -77,11 +77,6 @@ class SessionLifecycleTest : BaseSessionTest() {
         sessionRule.session.open()
     }
 
-    @Test(expected = IllegalStateException::class)
-    fun setChromeURI_throwOnOpenSession() {
-        GeckoSessionSettings.Builder(sessionRule.session.settings).chromeUri("chrome://invalid/path/to.xul")
-    }
-
     @Test fun readFromParcel() {
         val session = sessionRule.createOpenSession()
 
