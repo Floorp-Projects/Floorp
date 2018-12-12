@@ -652,10 +652,11 @@ bool HTMLInputElement::IsPopupBlocked() const {
 
   // Check if page can open a popup without abuse regardless of allowed events
   if (win->GetPopupControlState() <= openBlocked) {
-    return false;
+    return !nsContentUtils::TryUsePopupOpeningToken();
   }
 
-  return !nsContentUtils::CanShowPopup(OwnerDoc()->NodePrincipal());
+  return !nsContentUtils::CanShowPopupByPermission(
+             OwnerDoc()->NodePrincipal());
 }
 
 nsresult HTMLInputElement::InitColorPicker() {
