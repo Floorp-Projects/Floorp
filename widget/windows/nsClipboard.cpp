@@ -280,16 +280,18 @@ nsresult nsClipboard::GetGlobalData(HGLOBAL aHGBL, void** aData,
                                     uint32_t* aLen) {
   // Allocate a new memory buffer and copy the data from global memory.
   // Recall that win98 allocates to nearest DWORD boundary. As a safety
-  // precaution, allocate an extra 2 bytes (but don't report them!) and
-  // null them out to ensure that all of our strlen calls will succeed.
+  // precaution, allocate an extra 3 bytes (but don't report them in |aLen|!)
+  // and null them out to ensure that all of our NS_strlen calls will succeed.
+  // NS_strlen operates on char16_t, so we need 3 NUL bytes to ensure it finds
+  // a full NUL char16_t when |*aLen| is odd.
   nsresult result = NS_ERROR_FAILURE;
   if (aHGBL != nullptr) {
     LPSTR lpStr = (LPSTR)GlobalLock(aHGBL);
     DWORD allocSize = GlobalSize(aHGBL);
-    char* data = static_cast<char*>(malloc(allocSize + sizeof(char16_t)));
+    char* data = static_cast<char*>(malloc(allocSize + 3));
     if (data) {
       memcpy(data, lpStr, allocSize);
-      data[allocSize] = data[allocSize + 1] =
+      data[allocSize] = data[allocSize + 1] = data[allocSize + 2] =
           '\0';  // null terminate for safety
 
       GlobalUnlock(aHGBL);
