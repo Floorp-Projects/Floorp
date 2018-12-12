@@ -3240,6 +3240,13 @@ void HttpBaseChannel::ReleaseListeners() {
 void HttpBaseChannel::DoNotifyListener() {
   LOG(("HttpBaseChannel::DoNotifyListener this=%p", this));
 
+  // In case nsHttpChannel::OnStartRequest wasn't called (e.g. due to flag
+  // LOAD_ONLY_IF_MODIFIED) we want to set mAfterOnStartRequestBegun to true
+  // before notifying listener.
+  if (!mAfterOnStartRequestBegun) {
+    mAfterOnStartRequestBegun = true;
+  }
+
   if (mListener) {
     MOZ_ASSERT(!mOnStartRequestCalled,
                "We should not call OnStartRequest twice");
