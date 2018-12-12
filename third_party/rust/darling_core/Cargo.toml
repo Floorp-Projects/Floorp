@@ -12,7 +12,7 @@
 
 [package]
 name = "darling_core"
-version = "0.8.0"
+version = "0.8.1"
 authors = ["Ted Driggs <ted.driggs@outlook.com>"]
 description = "Helper crate for proc-macro library for reading attributes into structs when\nimplementing custom derives. Use https://crates.io/crates/darling in your code.\n"
 license = "MIT"
