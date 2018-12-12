@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Service worker push test</title>
+</head>
+<body>
+<script type="text/javascript">
+
+"use strict";
+
+window.pushServiceWorkerRegistration = (async function() {
+  await new Promise(resolve => {
+    const perm = { type: "desktop-notification", allow: true, context: document };
+    SpecialPowers.pushPermissions([perm], resolve);
+  });
+
+  try {
+    const registration = navigator.serviceWorker.register("push-sw.js");
+    dump("Push service worker registered\n");
+    return registration;
+  } catch (e) {
+    dump("Push service worker not registered: " + e + "\n");
+  }
+
+  return null;
+})();
+
+</script>
+</body>
+</html>
