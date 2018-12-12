@@ -39,5 +39,12 @@ module.exports = {
     "env": {
       "mozilla/browser-window": true
     }
+  }, {
+    // TODO: Bug 1513639. Temporarily turn off reject-importGlobalProperties
+    // due to other ESLint enabling happening in DOM.
+    "files": "dom/**",
+    "rules": {
+      "mozilla/reject-importGlobalProperties": "off",
+    }
   }]
 };
