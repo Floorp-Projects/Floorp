@@ -1812,3 +1812,213 @@ add_task(async function test_invalid_guid() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
 });
+
+add_task(async function test_sync_status_mismatches() {
+  let dateAdded = new Date();
+
+  let mergeTelemetryEvents = [];
+  let buf = await openMirror("sync_status_mismatches", {
+    recordTelemetryEvent(object, method, value, extra) {
+      equal(object, "mirror", "Wrong object for telemetry event");
+      if (method == "merge") {
+        mergeTelemetryEvents.push({ value, extra });
+      }
+    },
+  });
+
+  info("Ensure mirror is up-to-date with Places");
+  let initialChangesToUpload = await buf.apply();
+
+  deepEqual(Object.keys(initialChangesToUpload).sort(),
+    ["menu", "mobile", "toolbar", "unfiled"],
+    "Should upload roots on first merge");
+
+  await storeChangesInMirror(buf, initialChangesToUpload);
+
+  deepEqual(await buf.fetchSyncStatusMismatches(), {
+    missingLocal: [],
+    missingRemote: [],
+    wrongSyncStatus: [],
+  }, "Should not report mismatches after first merge");
+
+  info("Make local changes");
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    source: PlacesUtils.bookmarks.SOURCES.SYNC,
+    children: [{
+      // A is NORMAL in Places, but doesn't exist in the mirror.
+      guid: "bookmarkAAAA",
+      url: "http://example.com/a",
+      title: "A",
+      dateAdded,
+    }],
+  });
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.unfiledGuid,
+    children: [{
+      // B is NEW in Places and exists in the mirror.
+      guid: "bookmarkBBBB",
+      url: "http://example.com/b",
+      title: "B",
+      dateAdded,
+    }],
+  });
+
+  info("Make remote changes");
+  await storeRecords(buf, [{
+    id: "unfiled",
+    type: "folder",
+    children: ["bookmarkBBBB"],
+  }, {
+    id: "toolbar",
+    type: "folder",
+    children: ["bookmarkCCCC"],
+  }, {
+    id: "bookmarkBBBB",
+    type: "bookmark",
+    bmkUri: "http://example.com/b",
+    title: "B",
+  }, {
+    // C is flagged as merged in the mirror, but doesn't exist in Places.
+    id: "bookmarkCCCC",
+    type: "bookmark",
+    bmkUri: "http://example.com/c",
+    title: "C",
+  }], { needsMerge: false });
+
+  deepEqual(await buf.fetchSyncStatusMismatches(), {
+    missingLocal: ["bookmarkCCCC"],
+    missingRemote: ["bookmarkAAAA"],
+    wrongSyncStatus: ["bookmarkBBBB"],
+  }, "Should report sync status mismatches");
+
+  info("Apply mirror");
+  let changesToUpload = await buf.apply();
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+
+  let datesAdded = await promiseManyDatesAdded([PlacesUtils.bookmarks.menuGuid,
+    PlacesUtils.bookmarks.unfiledGuid]);
+  deepEqual(changesToUpload, {
+    bookmarkAAAA: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "bookmarkAAAA",
+        type: "bookmark",
+        parentid: "menu",
+        hasDupe: true,
+        parentName: BookmarksMenuTitle,
+        dateAdded: dateAdded.getTime(),
+        bmkUri: "http://example.com/a",
+        title: "A",
+      },
+    },
+    bookmarkBBBB: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "bookmarkBBBB",
+        type: "bookmark",
+        parentid: "unfiled",
+        hasDupe: true,
+        parentName: UnfiledBookmarksTitle,
+        dateAdded: dateAdded.getTime(),
+        bmkUri: "http://example.com/b",
+        title: "B",
+      },
+    },
+    menu: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "menu",
+        type: "folder",
+        parentid: "places",
+        hasDupe: true,
+        parentName: "",
+        dateAdded: datesAdded.get(PlacesUtils.bookmarks.menuGuid),
+        title: BookmarksMenuTitle,
+        children: ["bookmarkAAAA"],
+      },
+    },
+    unfiled: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "unfiled",
+        type: "folder",
+        parentid: "places",
+        hasDupe: true,
+        parentName: "",
+        dateAdded: datesAdded.get(PlacesUtils.bookmarks.unfiledGuid),
+        title: UnfiledBookmarksTitle,
+        children: ["bookmarkBBBB"],
+      },
+    },
+  }, "Should flag (A B) and their parents for upload");
+
+  await assertLocalTree(PlacesUtils.bookmarks.rootGuid, {
+    guid: PlacesUtils.bookmarks.rootGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    index: 0,
+    title: "",
+    children: [{
+      guid: PlacesUtils.bookmarks.menuGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 0,
+      title: BookmarksMenuTitle,
+      children: [{
+        guid: "bookmarkAAAA",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 0,
+        title: "A",
+        url: "http://example.com/a",
+      }],
+    }, {
+      guid: PlacesUtils.bookmarks.toolbarGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 1,
+      title: BookmarksToolbarTitle,
+      children: [{
+        guid: "bookmarkCCCC",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 0,
+        title: "C",
+        url: "http://example.com/c",
+      }],
+    }, {
+      guid: PlacesUtils.bookmarks.unfiledGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 3,
+      title: UnfiledBookmarksTitle,
+      children: [{
+        guid: "bookmarkBBBB",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 0,
+        title: "B",
+        url: "http://example.com/b",
+      }],
+    }, {
+      guid: PlacesUtils.bookmarks.mobileGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 4,
+      title: MobileBookmarksTitle,
+    }],
+  }, "Should parent C correctly");
+
+  await storeChangesInMirror(buf, changesToUpload);
+
+  deepEqual(await buf.fetchSyncStatusMismatches(), {
+    missingLocal: [],
+    missingRemote: [],
+    wrongSyncStatus: [],
+  }, "Applying and storing new changes in mirror should fix inconsistencies");
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
