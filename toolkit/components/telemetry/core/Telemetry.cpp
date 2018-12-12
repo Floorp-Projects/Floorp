@@ -33,6 +33,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/MemoryTelemetry.h"
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/PoisonIOInterposer.h"
@@ -1733,6 +1734,39 @@ TelemetryImpl::SetEventRecordingEnabled(const nsACString& aCategory,
 NS_IMETHODIMP
 TelemetryImpl::FlushBatchedChildTelemetry() {
   TelemetryIPCAccumulator::IPCTimerFired(nullptr, nullptr);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TelemetryImpl::EarlyInit() {
+  Unused << MemoryTelemetry::Get();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TelemetryImpl::DelayedInit() {
+  MemoryTelemetry::Get().DelayedInit();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TelemetryImpl::Shutdown() {
+  MemoryTelemetry::Get().Shutdown();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TelemetryImpl::GatherMemory(JSContext* aCx, Promise** aResult) {
+  ErrorResult rv;
+  RefPtr<Promise> promise = Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
+  if (rv.Failed()) {
+    return rv.StealNSResult();
+  }
+
+  MemoryTelemetry::Get().GatherReports(
+      [promise]() { promise->MaybeResolve(JS::UndefinedHandleValue); });
+
+  promise.forget(aResult);
   return NS_OK;
 }
 

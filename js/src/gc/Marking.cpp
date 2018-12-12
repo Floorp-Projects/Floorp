@@ -314,6 +314,10 @@ static inline bool ShouldMarkCrossCompartment(GCMarker* marker, JSObject* src,
   }
 
   if (color == MarkColor::Black) {
+    // Check our sweep groups are correct: we should never have to
+    // mark something in a zone that we have started sweeping.
+    MOZ_ASSERT_IF(!dst.isMarkedBlack(), !dstZone->isGCSweeping());
+
     /*
      * Having black->gray edges violates our promise to the cycle
      * collector. This can happen if we're collecting a compartment and it
@@ -326,8 +330,12 @@ static inline bool ShouldMarkCrossCompartment(GCMarker* marker, JSObject* src,
       UnmarkGrayGCThing(marker->runtime(),
                         JS::GCCellPtr(&dst, dst.getTraceKind()));
     }
+
     return dstZone->isGCMarking();
   } else {
+    // Check our sweep groups are correct as above.
+    MOZ_ASSERT_IF(!dst.isMarkedAny(), !dstZone->isGCSweeping());
+
     if (dstZone->isGCMarkingBlack()) {
       /*
        * The destination compartment is being not being marked gray now,
@@ -339,6 +347,7 @@ static inline bool ShouldMarkCrossCompartment(GCMarker* marker, JSObject* src,
       }
       return false;
     }
+
     return dstZone->isGCMarkingGray();
   }
 }

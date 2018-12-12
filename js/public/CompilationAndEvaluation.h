@@ -278,6 +278,15 @@ extern JS_PUBLIC_API bool CompileLatin1ForNonSyntacticScope(
     size_t length, MutableHandle<JSScript*> script);
 
 /**
+ * Compile the given UTF-8 data for non-syntactic scope.
+ *
+ * An exception is thrown if the data isn't valid UTF-8.
+ */
+extern JS_PUBLIC_API bool CompileUtf8ForNonSyntacticScope(
+    JSContext* cx, const ReadOnlyCompileOptions& options, const char* bytes,
+    size_t length, MutableHandle<JSScript*> script);
+
+/**
  * Compile a function with envChain plus the global as its scope chain.
  * envChain must contain objects in the current compartment of cx.  The actual
  * scope chain used for the function will consist of With wrappers for those
