@@ -17,7 +17,10 @@ import type { Symbols } from "../reducers/ast";
 import type { QuickOpenType } from "../reducers/quick-open";
 import type { TabList } from "../reducers/tabs";
 import type { Source } from "../types";
-import type { SymbolDeclaration } from "../workers/parser";
+import type {
+  SymbolDeclaration,
+  IdentifierDeclaration
+} from "../workers/parser";
 
 export const MODIFIERS = {
   "@": "functions",
@@ -86,11 +89,12 @@ export type QuickOpenResult = {|
 |};
 
 export type FormattedSymbolDeclarations = {|
-  variables: Array<QuickOpenResult>,
   functions: Array<QuickOpenResult>
 |};
 
-export function formatSymbol(symbol: SymbolDeclaration): QuickOpenResult {
+export function formatSymbol(
+  symbol: SymbolDeclaration | IdentifierDeclaration
+): QuickOpenResult {
   return {
     id: `${symbol.name}:${symbol.location.start.line}`,
     title: symbol.name,

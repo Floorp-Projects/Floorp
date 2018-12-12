@@ -2,14 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import { getSourceFromId } from "../../selectors";
 import * as parser from "../../workers/parser";
 import { isGenerated } from "../../utils/source";
 import { mapPausePoints } from "../../utils/pause/pausePoints";
 import { features } from "../../utils/prefs";
 
-import type { SourceId } from "../types";
-import type { ThunkArgs, Action } from "./types";
+import type { SourceId } from "../../types";
+import type { ThunkArgs, Action } from "../types";
 
 function compressPausePoints(pausePoints) {
   const compressed = {};
