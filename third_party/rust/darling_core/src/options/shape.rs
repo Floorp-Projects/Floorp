@@ -165,7 +165,7 @@ impl ToTokens for DataShape {
         let body = if self.any {
             quote!(::darling::export::Ok(()))
         } else if self.supports_none() {
-            let ty = self.prefix.trim_right_matches("_");
+            let ty = self.prefix.trim_right_matches('_');
             quote!(::darling::export::Err(::darling::Error::unsupported_shape(#ty)))
         } else {
             let unit = match_arm("unit", self.unit);

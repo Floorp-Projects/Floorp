@@ -26,12 +26,12 @@ impl InputField {
             ident: &self.ident,
             name_in_attr: self.attr_name
                 .clone()
-                .unwrap_or(self.ident.to_string()),
+                .unwrap_or_else(|| self.ident.to_string()),
             ty: &self.ty,
             default_expression: self.as_codegen_default(),
             with_path: self.with
                 .clone()
-                .unwrap_or(parse_quote!(::darling::FromMeta::from_meta)),
+                .unwrap_or_else(|| parse_quote!(::darling::FromMeta::from_meta)),
             skip: self.skip,
             map: self.map.as_ref(),
             multiple: self.multiple,
@@ -62,7 +62,7 @@ impl InputField {
     }
 
     pub fn from_field(f: &syn::Field, parent: Option<&Core>) -> Result<Self> {
-        let ident = f.ident.clone().unwrap_or(syn::Ident::new(
+        let ident = f.ident.clone().unwrap_or_else(|| syn::Ident::new(
             "__unnamed",
             ::proc_macro2::Span::call_site(),
         ));
