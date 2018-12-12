@@ -374,8 +374,10 @@ function RawTest(host, port, data, responseCheck) {
  *   an array of RawTests to run, in order
  * @param done
  *   function to call when all tests have run (e.g. to shut down the server)
+ * @param beforeTestCallback
+ *   function to call before each test is run. Gets passed testIndex when called
  */
-function runRawTests(testArray, done) {
+function runRawTests(testArray, done, beforeTestCallback) {
   do_test_pending();
 
   var sts = Cc["@mozilla.org/network/socket-transport-service;1"]
@@ -397,6 +399,11 @@ function runRawTests(testArray, done) {
       return;
     }
 
+    if (beforeTestCallback) {
+      try {
+        beforeTestCallback(testIndex);
+      } catch (e) { /* We don't care if this call fails */ }
+    }
 
     var rawTest = testArray[testIndex];
 
