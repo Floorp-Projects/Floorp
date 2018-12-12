@@ -2340,12 +2340,21 @@ impl<'a> DisplayListFlattener<'a> {
             //           the primitive key, when the common case is that the
             //           hash will match and we won't end up creating a new
             //           primitive template.
-            let glyphs = display_list.get(glyph_range).collect();
+            let prim_offset = prim_info.rect.origin.to_vector() - offset;
+            let glyphs = display_list
+                .get(glyph_range)
+                .map(|glyph| {
+                    GlyphInstance {
+                        index: glyph.index,
+                        point: glyph.point - prim_offset,
+                    }
+                })
+                .collect();
 
             TextRun {
                 glyphs,
                 font,
-                offset: offset.to_au(),
+                offset,
                 shadow: false,
             }
         };
