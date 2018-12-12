@@ -37,6 +37,7 @@
 #include "gc/GC.h"
 #include "irregexp/RegExpCharacters.h"
 #include "util/StringBuffer.h"
+#include "util/Unicode.h"
 #include "vm/ErrorReporting.h"
 
 using namespace js;
@@ -263,7 +264,13 @@ RegExpParser<CharT>::SyntaxError(unsigned errorNumber, ...)
 {
     ErrorMetadata err;
 
-    ts.fillExcludingContext(&err, ts.currentToken().pos.begin);
+    // Ordinarily this indicates whether line-of-context information can be
+    // added, but we entirely ignore that here because we create a
+    // a line of context based on the expression source.
+    uint32_t location = ts.currentToken().pos.begin;
+    if (ts.fillExceptingContext(&err, location)) {
+        ts.lineAndColumnAt(location, &err.lineNumber, &err.columnNumber);
+    }
 
     // For most error reporting, the line of context derives from the token
     // stream.  So when location information doesn't come from the token

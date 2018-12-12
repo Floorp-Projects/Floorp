@@ -1579,6 +1579,7 @@ mozilla::ipc::IPCResult TabParent::RecvSyncMessage(
     nsTArray<StructuredCloneData>* aRetVal) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("TabParent::RecvSyncMessage",
                                              OTHER, aMessage);
+  MMPrinter::Print("TabParent::RecvSyncMessage", aMessage, aData);
 
   StructuredCloneData data;
   ipc::UnpackClonedMessageDataForParent(aData, data);
@@ -1596,6 +1597,7 @@ mozilla::ipc::IPCResult TabParent::RecvRpcMessage(
     nsTArray<StructuredCloneData>* aRetVal) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("TabParent::RecvRpcMessage", OTHER,
                                              aMessage);
+  MMPrinter::Print("TabParent::RecvRpcMessage", aMessage, aData);
 
   StructuredCloneData data;
   ipc::UnpackClonedMessageDataForParent(aData, data);
@@ -1612,6 +1614,7 @@ mozilla::ipc::IPCResult TabParent::RecvAsyncMessage(
     const IPC::Principal& aPrincipal, const ClonedMessageData& aData) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("TabParent::RecvAsyncMessage",
                                              OTHER, aMessage);
+  MMPrinter::Print("TabParent::RecvAsyncMessage", aMessage, aData);
 
   StructuredCloneData data;
   ipc::UnpackClonedMessageDataForParent(aData, data);

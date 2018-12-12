@@ -252,6 +252,10 @@ Hexa<T> hexa(T val) {
   return Hexa<T>(val);
 }
 
+#ifdef WIN32
+void LogWStr(const wchar_t* aStr, std::stringstream& aOut);
+#endif
+
 template <int L, typename Logger = BasicLogger>
 class Log {
  public:
@@ -302,6 +306,14 @@ class Log {
     }
     return *this;
   }
+#ifdef WIN32
+  Log& operator<<(const wchar_t aWStr[]) {
+    if (MOZ_UNLIKELY(LogIt())) {
+      LogWStr(aWStr, mMessage);
+    }
+    return *this;
+  }
+#endif
   Log& operator<<(bool aBool) {
     if (MOZ_UNLIKELY(LogIt())) {
       mMessage << (aBool ? "true" : "false");
