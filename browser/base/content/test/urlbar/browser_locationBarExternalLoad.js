@@ -45,9 +45,12 @@ async function testURL(url, loadFunc, endFunc) {
   let browser = tab.linkedBrowser;
 
   let pagePrincipal = gBrowser.contentPrincipal;
+  // We need to ensure that we set the pageshow event listener before running
+  // loadFunc, otherwise there's a chance that the content process will finish
+  // loading the page and fire pageshow before the event listener gets set.
+  let pageShowPromise = BrowserTestUtils.waitForContentEvent(browser, "pageshow");
   loadFunc(url);
-
-  await BrowserTestUtils.waitForContentEvent(browser, "pageshow");
+  await pageShowPromise;
 
   await ContentTask.spawn(browser, { isRemote: gMultiProcessBrowser },
     async function(arg) {
