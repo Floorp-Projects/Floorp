@@ -707,6 +707,10 @@ class ADBDevice(ADBCommand):
             self._logger.debug("Check chown -R: {}".format(e))
         self._logger.info("Native chown -R support: {}".format(self._chown_R))
 
+        # Do we have pidof?
+        self._have_pidof = self.shell_bool("type pidof", timeout=timeout)
+        self._logger.info("Native pidof support: {}".format(self._have_pidof))
+
         try:
             cleared = self.shell_bool('logcat -P ""', timeout=timeout)
         except ADBError:
@@ -779,6 +783,21 @@ class ADBDevice(ADBCommand):
                     self._logger.info("adbd not restarted as root")
             except ADBError:
                 self._logger.debug("Check for root adbd failed")
+
+    def _pidof(self, appname, timeout=None):
+        if self._have_pidof:
+            try:
+                pid_output = self.shell_output('pidof %s' % appname, timeout=timeout)
+                re_pids = re.compile(r'[0-9]+')
+                pids = re_pids.findall(pid_output)
+            except ADBError:
+                pids = []
+        else:
+            procs = self.get_process_list(timeout=timeout)
+            # limit the comparion to the first 75 characters due to a
+            # limitation in processname length in android.
+            pids = [proc[0] for proc in procs if proc[1] == appname[:75]]
+        return pids
 
     @staticmethod
     def _escape_command_line(cmd):
@@ -2369,10 +2388,8 @@ class ADBDevice(ADBCommand):
                  * ADBRootError
                  * ADBError
         """
-        procs = self.get_process_list(timeout=timeout)
-        # limit the comparion to the first 75 characters due to a
-        # limitation in processname length in android.
-        pids = [proc[0] for proc in procs if proc[1] == appname[:75]]
+        pids = self._pidof(appname, timeout=timeout)
+
         if not pids:
             return
 
@@ -2419,16 +2436,8 @@ class ADBDevice(ADBCommand):
         parts = pieces[0].split('/')
         app = parts[-1]
 
-        proc_list = self.get_process_list(timeout=timeout)
-        if not proc_list:
-            return False
-
-        for proc in proc_list:
-            proc_name = proc[1].split('/')[-1]
-            # limit the comparion to the first 75 characters due to a
-            # limitation in processname length in android.
-            if proc_name == app[:75]:
-                return True
+        if self._pidof(app, timeout=timeout):
+            return True
         return False
 
     def cp(self, source, destination, recursive=False, timeout=None,
