@@ -5,6 +5,7 @@
 
 package mozilla.components.support.utils
 
+import java.net.MalformedURLException
 import java.net.URL
 
 const val WWW_PREFIX_OFFSET = 4
@@ -25,14 +26,15 @@ private fun basicMatch(query: String, urls: Iterable<String>): String? {
         if (rawUrl.startsWith(query)) {
             return rawUrl
         }
-        val url = URL(rawUrl)
-        if (url.host.startsWith(query)) {
+
+        val host = (try { URL(rawUrl) } catch (e: MalformedURLException) { null })?.host ?: ""
+        if (host.startsWith(query)) {
             return rawUrl
         }
-        val strippedHost = if (url.host.startsWith("www.")) {
-            url.host.substring(WWW_PREFIX_OFFSET)
+        val strippedHost = if (host.startsWith("www.")) {
+            host.substring(WWW_PREFIX_OFFSET)
         } else {
-            url.host
+            host
         }
         if (strippedHost.startsWith(query)) {
             return rawUrl

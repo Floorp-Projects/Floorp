@@ -36,5 +36,7 @@ class DomainMatcherTest {
         )
 
         assertNull(segmentAwareDomainMatch("nomatch", urls))
+
+        assertNull(segmentAwareDomainMatch("about:blank", urls))
     }
 }
