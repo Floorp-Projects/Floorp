@@ -491,6 +491,7 @@ static const char* const kBinaryFileExtensions[] = {
     ".dart",        // Mac disk image
     ".dc42",        // Apple DiskCopy Image
     ".deb",         // Linux package
+    ".desktop",     // A shortcut that runs other files
     ".dex",         // Android
     ".dhtml",       // HTML
     ".dhtm",        // HTML
