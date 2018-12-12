@@ -4102,17 +4102,11 @@ class nsIFrame : public nsQueryFrame {
 
   void MarkAbsoluteFramesForDisplayList(nsDisplayListBuilder* aBuilder);
 
-  static void DestroyPaintedPresShellList(nsTArray<nsWeakPtr>* list) {
-    list->Clear();
-    delete list;
-  }
-
   // Stores weak references to all the PresShells that were painted during
   // the last paint event so that we can increment their paint count during
   // empty transactions
-  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(PaintedPresShellsProperty,
-                                      nsTArray<nsWeakPtr>,
-                                      DestroyPaintedPresShellList)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(PaintedPresShellsProperty,
+                                      nsTArray<nsWeakPtr>)
 
   nsTArray<nsWeakPtr>* PaintedPresShellList() {
     nsTArray<nsWeakPtr>* list = GetProperty(PaintedPresShellsProperty());
