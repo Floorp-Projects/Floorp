@@ -208,10 +208,7 @@ add_task(async function test_apply_then_revert() {
     localTimeSeconds,
     remoteTimeSeconds: now,
   });
-  let cleartexts = Object.keys(recordsToUpload).map(recordId =>
-    recordsToUpload[recordId].cleartext);
-  await storeRecords(buf, cleartexts, { needsMerge: false });
-  await PlacesTestUtils.markBookmarksAsSynced();
+  await storeChangesInMirror(buf, recordsToUpload);
   await PlacesUtils.bookmarks.insert({
     guid: "bookmarkEEE1",
     parentGuid: PlacesUtils.bookmarks.menuGuid,

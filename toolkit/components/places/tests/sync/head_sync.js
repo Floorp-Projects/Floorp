@@ -101,6 +101,16 @@ async function storeRecords(buf, records, options) {
   await buf.store(records.map(makeRecord), options);
 }
 
+async function storeChangesInMirror(buf, changesToUpload) {
+  let cleartexts = [];
+  for (let recordId in changesToUpload) {
+    changesToUpload[recordId].synced = true;
+    cleartexts.push(changesToUpload[recordId].cleartext);
+  }
+  await storeRecords(buf, cleartexts, { needsMerge: false });
+  await PlacesSyncUtils.bookmarks.pushChanges(changesToUpload);
+}
+
 function inspectChangeRecords(changeRecords) {
   let results = { updated: [], deleted: [] };
   for (let [id, record] of Object.entries(changeRecords)) {
