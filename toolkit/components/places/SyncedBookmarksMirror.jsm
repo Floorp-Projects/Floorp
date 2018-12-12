@@ -2113,7 +2113,8 @@ async function initializeTempMirrorEntities(db) {
   // Inserts items from the mirror that don't exist locally.
   await db.execute(`
     CREATE TEMP TRIGGER insertNewLocalItems
-    INSTEAD OF DELETE ON itemsToMerge WHEN OLD.localId IS NULL
+    INSTEAD OF DELETE ON itemsToMerge WHEN OLD.useRemote AND
+                                           OLD.localId IS NULL
     BEGIN
       /* Record an item added notification for the new item. */
       INSERT INTO itemsAdded(guid, keywordChanged, level)
@@ -3112,12 +3113,21 @@ class MergedBookmarkNode {
   }
 
   /**
-   * Indicates whether to prefer the remote node when applying the merged tree.
-   * Returns `true` if the remote state should be merged into Places; `false`
-   * if the node only exists locally, or isn't changed remotely.
+   * Indicates whether to prefer the remote side when applying the merged tree.
+   *
+   * @return {Boolean}
    */
   useRemote() {
     switch (this.mergeState.value) {
+      case BookmarkMergeState.TYPE.LOCAL:
+        if (!this.localNode) {
+          // Should never happen. See the comment for
+          // `BookmarkMergeState.local`.
+          throw new TypeError(
+            "Can't have local value state without local node");
+        }
+        return false;
+
       case BookmarkMergeState.TYPE.REMOTE:
         if (!this.remoteNode) {
           // Should never happen. See the comment for
@@ -3125,19 +3135,22 @@ class MergedBookmarkNode {
           throw new TypeError(
             "Can't have remote value state without remote node");
         }
-        return this.remoteNode.needsMerge;
-
-      case BookmarkMergeState.TYPE.LOCAL:
-        return false;
+        if (this.localNode) {
+          // If the item exists locally and remotely, check if the remote node
+          // changed.
+          return this.remoteNode.needsMerge;
+        }
+        // Otherwise, the item only exists remotely, so take the remote state
+        // unconditionally.
+        return true;
     }
     throw new TypeError("Unexpected value state");
   }
 
   /**
    * Indicates whether the merged item should be uploaded to the server.
-   * Returns `true` for locally changed nodes and nodes with a new
-   * structure state; `false` for nodes with a remote merge state, or
-   * nodes that aren't changed locally.
+   *
+   * @return {Boolean}
    */
   shouldUpload() {
     switch (this.mergeState.structure) {
@@ -3148,9 +3161,22 @@ class MergedBookmarkNode {
           throw new TypeError(
             "Can't have local structure state without local node");
         }
-        return this.localNode.needsMerge;
+        if (this.remoteNode) {
+          // If the item exists locally and remotely, check if the local node
+          // changed.
+          return this.localNode.needsMerge;
+        }
+        // Otherwise, the item only exists locally, so upload the local state
+        // unconditionally.
+        return true;
 
       case BookmarkMergeState.TYPE.REMOTE:
+        if (!this.remoteNode) {
+          // Should never happen. See the comment for
+          // `BookmarkMergeState.remote`.
+          throw new TypeError(
+            "Can't have remote structure state without remote node");
+        }
         return false;
 
       case BookmarkMergeState.TYPE.NEW:
@@ -3459,12 +3485,8 @@ class BookmarkMerger {
       return BookmarkMergeState.local;
     }
     if (localNode.needsMerge && remoteNode.needsMerge) {
-      // The item changed locally and remotely. We could query storage to
-      // determine if the value state is the same, as iOS does. However, that's
-      // an expensive check that requires joining `moz_bookmarks`,
-      // `moz_items_annos`, and `moz_places` to the mirror. It's unlikely that
-      // the value state is identical, so we skip the value check and use the
-      // timestamp to decide which node is newer.
+      // The item changed locally and remotely. Use the timestamp to decide
+      // which is newer.
       let valueState = localNode.newerThan(remoteNode) ?
                        BookmarkMergeState.local :
                        BookmarkMergeState.remote;
