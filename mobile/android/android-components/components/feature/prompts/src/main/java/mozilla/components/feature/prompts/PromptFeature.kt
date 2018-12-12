@@ -18,6 +18,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.MULTIPLE_CHOICE_DIALOG_TYPE
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.MENU_CHOICE_DIALOG_TYPE
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.SINGLE_CHOICE_DIALOG_TYPE
+import java.util.Date
 
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
@@ -93,6 +94,12 @@ class PromptFeature(
                     AlertDialogFragment.newInstance(session.id, title, message, hasShownManyDialogs)
                 }
             }
+
+            is PromptRequest.Date -> {
+                with(promptRequest) {
+                    DatePickerDialogFragment.newInstance(session.id, title, initialDate, minimumDate, maximumDate)
+                }
+            }
         }
 
         dialog.feature = this
@@ -156,6 +163,37 @@ class PromptFeature(
         session.promptRequest.consume {
             when (it) {
                 is Alert -> it.onShouldShowNoMoreDialogs(isChecked)
+            }
+            true
+        }
+    }
+
+    /**
+     * Event that is called when the user is requesting to select a date from the date picker dialog.
+     * This consumes the [PromptFeature] value from the [Session] indicated by [sessionId].
+     * @param sessionId that requested to show the dialog.
+     * @param selectedDate the selected date from the dialog.
+     */
+    internal fun onSelect(sessionId: String, selectedDate: Date) {
+        val session = sessionManager.findSessionById(sessionId) ?: return
+        session.promptRequest.consume {
+            when (it) {
+                is PromptRequest.Date -> it.onSelect(selectedDate)
+            }
+            true
+        }
+    }
+
+    /**
+     * Event that is called when the user is requesting to clear the selected value from the dialog.
+     * This consumes the [PromptFeature] value from the [Session] indicated by [sessionId].
+     * @param sessionId that requested to show the dialog.
+     */
+    internal fun onClear(sessionId: String) {
+        val session = sessionManager.findSessionById(sessionId) ?: return
+        session.promptRequest.consume {
+            when (it) {
+                is PromptRequest.Date -> it.onClear()
             }
             true
         }

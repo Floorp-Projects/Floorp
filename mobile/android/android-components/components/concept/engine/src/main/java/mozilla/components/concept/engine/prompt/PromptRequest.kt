@@ -45,4 +45,22 @@ sealed class PromptRequest {
         val onDismiss: () -> Unit,
         val onShouldShowNoMoreDialogs: (Boolean) -> Unit
     ) : PromptRequest()
+
+    /**
+     * Value type that represents a request for a date prompt for picking a year, month, and day.
+     * @property title of the dialog.
+     * @property initialDate date that dialog should be set by default.
+     * @property minimumDate date allow to be selected.
+     * @property maximumDate date allow to be selected.
+     * @property onSelect callback that is called when the date is selected.
+     * @property onClear callback that is called when the user requests the picker to be clear up.
+     */
+    data class Date(
+        val title: String,
+        val initialDate: java.util.Date,
+        val minimumDate: java.util.Date?,
+        val maximumDate: java.util.Date?,
+        val onSelect: (java.util.Date) -> Unit,
+        val onClear: () -> Unit
+    ) : PromptRequest()
 }

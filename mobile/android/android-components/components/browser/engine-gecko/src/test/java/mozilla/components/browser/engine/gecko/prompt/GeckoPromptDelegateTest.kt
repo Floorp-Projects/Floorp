@@ -22,6 +22,17 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_MULTIPLE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_SINGLE
 import org.robolectric.RobolectricTestRunner
+import mozilla.components.support.ktx.kotlin.toDate
+import org.junit.Assert.assertNotNull
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextCallback
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATE
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATETIME_LOCAL
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_MONTH
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_TIME
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_WEEK
+import java.util.Date
+import java.util.Calendar
+import java.util.Calendar.YEAR
 
 typealias GeckoChoice = GeckoSession.PromptDelegate.Choice
 
@@ -209,12 +220,25 @@ class GeckoPromptDelegateTest {
         val mockSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
         val gecko = GeckoPromptDelegate(mockSession)
         gecko.onButtonPrompt(null, "", "", null, null)
-        gecko.onDateTimePrompt(null, "", 0, null, null, null, null)
+        gecko.onDateTimePrompt(null, "", 0, null, null, null, mock())
         gecko.onFilePrompt(null, "", 0, null, null)
         gecko.onColorPrompt(null, "", "", null)
         gecko.onAuthPrompt(null, "", "", null, null)
         gecko.onTextPrompt(null, "", "", null, null)
         gecko.onPopupRequest(null, "")
+        gecko.onDateTimePrompt(null, "", DATETIME_TYPE_TIME, null, "", "", mock())
+        gecko.onDateTimePrompt(null, null, DATETIME_TYPE_DATETIME_LOCAL, "", "", "", mock())
+        gecko.onDateTimePrompt(null, "", DATETIME_TYPE_DATETIME_LOCAL, "", "", "", mock())
+    }
+
+    @Test
+    fun `hitting default values`() {
+        val mockSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
+        val gecko = GeckoPromptDelegate(mockSession)
+        gecko.onDateTimePrompt(null, null, DATETIME_TYPE_DATE, null, null, null, mock())
+        gecko.onDateTimePrompt(null, null, DATETIME_TYPE_WEEK, null, null, null, mock())
+        gecko.onDateTimePrompt(null, null, DATETIME_TYPE_MONTH, null, null, null, mock())
+        gecko.onDateTimePrompt(null, null, DATETIME_TYPE_TIME, null, "", "", mock())
     }
 
     @Test
@@ -224,5 +248,237 @@ class GeckoPromptDelegateTest {
         ids.forEachIndexed { index, item ->
             assertEquals("$index", item)
         }
+    }
+
+    @Test
+    fun `onDateTimePrompt called with DATETIME_TYPE_DATE must provide a date PromptRequest`() {
+        val mockSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
+        var dateRequest: PromptRequest? = null
+        var confirmCalled = false
+        var onClearPicker = false
+
+        val callback = object : TextCallback {
+            override fun dismiss() = Unit
+            override fun getCheckboxValue() = false
+            override fun setCheckboxValue(value: Boolean) = Unit
+            override fun hasCheckbox() = false
+            override fun getCheckboxMessage() = ""
+            override fun confirm(text: String?) {
+                confirmCalled = true
+                if (text!!.isEmpty()) {
+                    onClearPicker = true
+                }
+            }
+        }
+        val promptDelegate = GeckoPromptDelegate(mockSession)
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                dateRequest = promptRequest
+            }
+        })
+        promptDelegate.onDateTimePrompt(null, "title", DATETIME_TYPE_DATE, "", "", "", callback)
+        assertTrue(dateRequest is PromptRequest.Date)
+        (dateRequest as PromptRequest.Date).onSelect(Date())
+        assertTrue(confirmCalled)
+        assertEquals((dateRequest as PromptRequest.Date).title, "title")
+
+        (dateRequest as PromptRequest.Date).onClear()
+        assertTrue(onClearPicker)
+    }
+
+    @Test
+    fun `onDateTimePrompt DATETIME_TYPE_DATE with date parameters must format dates correctly`() {
+        val mockSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
+        var dateRequest: PromptRequest.Date? = null
+        var geckoDate: String? = null
+        val callback = object : TextCallback {
+            override fun dismiss() = Unit
+            override fun getCheckboxValue() = false
+            override fun setCheckboxValue(value: Boolean) = Unit
+            override fun hasCheckbox() = false
+            override fun getCheckboxMessage() = ""
+            override fun confirm(text: String?) {
+                geckoDate = text
+            }
+        }
+        val promptDelegate = GeckoPromptDelegate(mockSession)
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                dateRequest = promptRequest as PromptRequest.Date
+            }
+        })
+        promptDelegate.onDateTimePrompt(
+                null,
+                "title",
+                DATETIME_TYPE_DATE,
+                "2019-11-29",
+                "2019-11-28",
+                "2019-11-30",
+                callback
+        )
+        assertNotNull(dateRequest)
+        with(dateRequest!!) {
+            assertEquals(initialDate, "2019-11-29".toDate("yyyy-MM-dd"))
+            assertEquals(minimumDate, "2019-11-28".toDate("yyyy-MM-dd"))
+            assertEquals(maximumDate, "2019-11-30".toDate("yyyy-MM-dd"))
+        }
+        val selectedDate = "2019-11-28".toDate("yyyy-MM-dd")
+        (dateRequest as PromptRequest.Date).onSelect(selectedDate)
+        assertNotNull(geckoDate?.toDate("yyyy-MM-dd")?.equals(selectedDate))
+        assertEquals((dateRequest as PromptRequest.Date).title, "title")
+    }
+
+    @Test
+    fun `onDateTimePrompt called with DATETIME_TYPE_MONTH must provide a date PromptRequest`() {
+        val mockSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
+        var dateRequest: PromptRequest? = null
+        var confirmCalled = false
+        val callback = object : TextCallback {
+            override fun dismiss() = Unit
+            override fun getCheckboxValue() = false
+            override fun setCheckboxValue(value: Boolean) = Unit
+            override fun hasCheckbox() = false
+            override fun getCheckboxMessage() = ""
+            override fun confirm(text: String?) {
+                confirmCalled = true
+            }
+        }
+        val promptDelegate = GeckoPromptDelegate(mockSession)
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                dateRequest = promptRequest
+            }
+        })
+        promptDelegate.onDateTimePrompt(null, "title", DATETIME_TYPE_MONTH, "", "", "", callback)
+        assertTrue(dateRequest is PromptRequest.Date)
+        (dateRequest as PromptRequest.Date).onSelect(Date())
+        assertTrue(confirmCalled)
+        assertEquals((dateRequest as PromptRequest.Date).title, "title")
+    }
+
+    @Test
+    fun `onDateTimePrompt DATETIME_TYPE_MONTH with date parameters must format dates correctly`() {
+        val mockSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
+        var dateRequest: PromptRequest.Date? = null
+        var geckoDate: String? = null
+        val callback = object : TextCallback {
+            override fun dismiss() = Unit
+            override fun getCheckboxValue() = false
+            override fun setCheckboxValue(value: Boolean) = Unit
+            override fun hasCheckbox() = false
+            override fun getCheckboxMessage() = ""
+            override fun confirm(text: String?) {
+                geckoDate = text
+            }
+        }
+        val promptDelegate = GeckoPromptDelegate(mockSession)
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                dateRequest = promptRequest as PromptRequest.Date
+            }
+        })
+        promptDelegate.onDateTimePrompt(
+                null,
+                "title",
+                DATETIME_TYPE_MONTH,
+                "2019-11",
+                "2019-11",
+                "2019-11",
+                callback
+        )
+        assertNotNull(dateRequest)
+        with(dateRequest!!) {
+            assertEquals(initialDate, "2019-11".toDate("yyyy-MM"))
+            assertEquals(minimumDate, "2019-11".toDate("yyyy-MM"))
+            assertEquals(maximumDate, "2019-11".toDate("yyyy-MM"))
+        }
+        val selectedDate = "2019-11".toDate("yyyy-MM")
+        (dateRequest as PromptRequest.Date).onSelect(selectedDate)
+        assertNotNull(geckoDate?.toDate("yyyy-MM")?.equals(selectedDate))
+        assertEquals((dateRequest as PromptRequest.Date).title, "title")
+    }
+
+    @Test
+    fun `onDateTimePrompt called with DATETIME_TYPE_WEEK must provide a date PromptRequest`() {
+        val mockSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
+        var dateRequest: PromptRequest? = null
+        var confirmCalled = false
+        val callback = object : TextCallback {
+            override fun dismiss() = Unit
+            override fun getCheckboxValue() = false
+            override fun setCheckboxValue(value: Boolean) = Unit
+            override fun hasCheckbox() = false
+            override fun getCheckboxMessage() = ""
+            override fun confirm(text: String?) {
+                confirmCalled = true
+            }
+        }
+        val promptDelegate = GeckoPromptDelegate(mockSession)
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                dateRequest = promptRequest
+            }
+        })
+        promptDelegate.onDateTimePrompt(null, "title", DATETIME_TYPE_WEEK, "", "", "", callback)
+        assertTrue(dateRequest is PromptRequest.Date)
+        (dateRequest as PromptRequest.Date).onSelect(Date())
+        assertTrue(confirmCalled)
+        assertEquals((dateRequest as PromptRequest.Date).title, "title")
+    }
+
+    @Test
+    fun `onDateTimePrompt DATETIME_TYPE_WEEK with date parameters must format dates correctly`() {
+        val mockSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
+        var dateRequest: PromptRequest.Date? = null
+        var geckoDate: String? = null
+        val callback = object : TextCallback {
+            override fun dismiss() = Unit
+            override fun getCheckboxValue() = false
+            override fun setCheckboxValue(value: Boolean) = Unit
+            override fun hasCheckbox() = false
+            override fun getCheckboxMessage() = ""
+            override fun confirm(text: String?) {
+                geckoDate = text
+            }
+        }
+        val promptDelegate = GeckoPromptDelegate(mockSession)
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                dateRequest = promptRequest as PromptRequest.Date
+            }
+        })
+        promptDelegate.onDateTimePrompt(
+                null,
+                "title",
+                DATETIME_TYPE_WEEK,
+                "2018-W18",
+                "2018-W18",
+                "2018-W26",
+                callback
+        )
+        assertNotNull(dateRequest)
+        with(dateRequest!!) {
+            assertEquals(initialDate, "2018-W18".toDate("yyyy-'W'ww"))
+            assertEquals(minimumDate, "2018-W18".toDate("yyyy-'W'ww"))
+            assertEquals(maximumDate, "2018-W26".toDate("yyyy-'W'ww"))
+        }
+        val selectedDate = "2018-W26".toDate("yyyy-'W'ww")
+        (dateRequest as PromptRequest.Date).onSelect(selectedDate)
+        assertNotNull(geckoDate?.toDate("yyyy-'W'ww")?.equals(selectedDate))
+        assertEquals((dateRequest as PromptRequest.Date).title, "title")
+    }
+
+    @Test
+    fun `date to string`() {
+        val date = Date()
+
+        var dateString = date.toString()
+        assertNotNull(dateString.isEmpty())
+
+        dateString = date.toString("yyyy")
+        val calendar = Calendar.getInstance()
+        calendar.time = date
+        val year = calendar[YEAR].toString()
+        assertEquals(dateString, year)
     }
 }

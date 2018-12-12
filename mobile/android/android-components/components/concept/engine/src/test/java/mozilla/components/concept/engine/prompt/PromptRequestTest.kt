@@ -11,6 +11,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.util.Date
 
 class PromptRequestTest {
 
@@ -35,5 +36,13 @@ class PromptRequestTest {
         assertEquals(alert.hasShownManyDialogs, true)
         alert.onDismiss()
         alert.onShouldShowNoMoreDialogs(true)
+
+        val dateRequest = PromptRequest.Date("title", Date(), Date(), Date(), {}) {}
+        assertEquals(dateRequest.title, "title")
+        assertNotNull(dateRequest.initialDate)
+        assertNotNull(dateRequest.minimumDate)
+        assertNotNull(dateRequest.maximumDate)
+        dateRequest.onSelect(Date())
+        dateRequest.onClear()
     }
 }

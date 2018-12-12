@@ -5,11 +5,14 @@
 package mozilla.components.support.ktx.kotlin
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertFalse
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.util.Calendar
+import java.util.Calendar.MILLISECOND
 
 @RunWith(RobolectricTestRunner::class)
 class StringTest {
@@ -64,5 +67,16 @@ class StringTest {
         assertTrue("geo:1,-1 ".isGeoLocation())
         assertTrue("GEO:1,-1".isGeoLocation())
         assertTrue("Geo:1,-1".isGeoLocation())
+    }
+
+    @Test
+    fun toDate() {
+        val calendar = Calendar.getInstance()
+        calendar.set(2019, 10, 29, 0, 0, 0)
+        calendar[MILLISECOND] = 0
+        assertEquals(calendar.time, "2019-11-29".toDate("yyyy-MM-dd"))
+        calendar.set(2019, 10, 28, 0, 0, 0)
+        assertEquals(calendar.time, "2019-11-28".toDate("yyyy-MM-dd"))
+        assertNotNull("".toDate("yyyy-MM-dd"))
     }
 }

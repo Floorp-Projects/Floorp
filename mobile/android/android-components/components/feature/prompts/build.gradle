@@ -33,6 +33,7 @@ dependencies {
     testImplementation Dependencies.testing_mockito
     testImplementation Dependencies.testing_androidx
     testImplementation project(':support-test')
+    testImplementation project(':support-ktx')
 }
 
 apply from: '../../../publish.gradle'

@@ -27,6 +27,10 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import java.util.UUID
+import java.util.Date
+import mozilla.components.concept.engine.prompt.PromptRequest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 
 @RunWith(RobolectricTestRunner::class)
 class PromptFeatureTest {
@@ -274,6 +278,51 @@ class PromptFeatureTest {
 
         assertTrue(session.promptRequest.isConsumed())
         assertTrue(onDismissWasCalled)
+    }
+
+    @Test
+    fun `Selecting a date or calling onClear with unknown sessionId will not consume promptRequest`() {
+        val session = getSelectedSession()
+        var onClearWasCalled = false
+        var selectedDate: Date? = null
+        val promptRequest = PromptRequest.Date("title", Date(), null, null, { date -> selectedDate = date }) {
+            onClearWasCalled = true
+        }
+
+        promptFeature.start()
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onSelect("unknown_sessionId", Date())
+
+        assertFalse(session.promptRequest.isConsumed())
+        assertNull(selectedDate)
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onClear("unknown_sessionId")
+        assertFalse(onClearWasCalled)
+    }
+    @Test
+    fun `selecting a date will consume promptRequest`() {
+        val session = getSelectedSession()
+        var onClearWasCalled = false
+        var selectedDate: Date? = null
+        val promptRequest = PromptRequest.Date("title", Date(), null, null, { date -> selectedDate = date }) {
+            onClearWasCalled = true
+        }
+
+        promptFeature.start()
+        session.promptRequest = Consumable.from(promptRequest)
+
+        val date = Date()
+        promptFeature.onSelect(session.id, Date())
+
+        assertTrue(session.promptRequest.isConsumed())
+        assertEquals(selectedDate, date)
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onClear(session.id)
+        assertTrue(onClearWasCalled)
     }
 
     private fun getSelectedSession(): Session {

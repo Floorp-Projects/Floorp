@@ -30,7 +30,14 @@ permalink: /changelog/
   }
   ```
 * **feature-prompts**
-  * Added support alerts dialogs.
+  * Added support for alerts dialogs.
+  * Added support for date picker dialogs.
+
+* **support-ktx**
+  New extension function `toDate` that converts a string to a Date object from a formatter input.
+  ```Kotlin
+       val date = "2019-11-28".toDate("yyyy-MM-dd")
+  ```
 
 * **concept-engine**, **engine-gecko-nightly**:
   * Add setting to enable testing mode which is used in engine-gecko to set `FULL_ACCESSIBILITY_TREE` to `true`. This allows access to the full DOM tree for testing purposes.
