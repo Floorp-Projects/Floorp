@@ -126,10 +126,6 @@ export function gutterMenu({
 class GutterContextMenuComponent extends Component {
   props: Props;
 
-  constructor() {
-    super();
-  }
-
   shouldComponentUpdate(nextProps) {
     return nextProps.contextMenu.type === "Gutter";
   }

@@ -203,10 +203,6 @@ function getMenuItems(
 class EditorMenu extends Component {
   props: Props;
 
-  constructor() {
-    super();
-  }
-
   shouldComponentUpdate(nextProps) {
     return nextProps.contextMenu.type === "Editor";
   }
