@@ -88,10 +88,10 @@ export type Props = {
   openConditionalPanel: (?number) => void,
   closeConditionalPanel: void => void,
   setContextMenu: (string, any) => void,
-  continueToHere: (?number) => void,
-  toggleBreakpoint: (?number) => void,
-  toggleBreakpointsAtLine: (?number) => void,
-  addOrToggleDisabledBreakpoint: (?number) => void,
+  continueToHere: number => void,
+  toggleBreakpoint: number => void,
+  toggleBreakpointsAtLine: number => void,
+  addOrToggleDisabledBreakpoint: number => void,
   jumpToMappedLocation: any => void,
   traverseResults: (boolean, Object) => void,
   updateViewport: void => void
@@ -263,6 +263,9 @@ class Editor extends PureComponent<Props, State> {
     }
 
     const line = this.getCurrentLine();
+    if (typeof line !== "number") {
+      return;
+    }
 
     if (e.shiftKey) {
       this.toggleConditionalPanel(line);
@@ -278,6 +281,10 @@ class Editor extends PureComponent<Props, State> {
     e.stopPropagation();
     e.preventDefault();
     const line = this.getCurrentLine();
+    if (typeof line !== "number") {
+      return;
+    }
+
     this.toggleConditionalPanel(line);
   };
 
@@ -369,6 +376,9 @@ class Editor extends PureComponent<Props, State> {
     }
 
     const sourceLine = toSourceLine(selectedSource.id, line);
+    if (typeof sourceLine !== "number") {
+      return;
+    }
 
     if (ev.metaKey) {
       return continueToHere(sourceLine);
