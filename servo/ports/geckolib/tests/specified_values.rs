@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use style;
-
 #[cfg(all(test, target_pointer_width = "64"))]
 #[test]
 fn size_of_specified_values() {
+    use style;
     use std::mem::size_of;
+
     let threshold = 24;
 
     let mut bad_properties = vec![];
