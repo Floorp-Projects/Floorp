@@ -947,6 +947,19 @@ class HashTableEntry {
  private:
   using NonConstT = typename RemoveConst<T>::Type;
 
+#ifdef HAVE_64BIT_BUILD
+  static_assert(alignof(NonConstT) <= alignof(void*),
+                "cannot use over-aligned entries in mozilla::HashTable");
+#else
+  // This assertion is safe for 32-bit builds because on both Windows and Linux
+  // (including Android), the minimum alignment for allocations larger than 8
+  // bytes is 8 bytes, and the actual data for entries in our entry store is
+  // guaranteed to have that alignment as well, thanks to the power-of-two
+  // number of cached hash values stored prior to the entry data.
+  static_assert(alignof(NonConstT) <= 2 * alignof(void*),
+                "cannot use over-aligned entries in mozilla::HashTable");
+#endif
+
   static const HashNumber sFreeKey = 0;
   static const HashNumber sRemovedKey = 1;
   static const HashNumber sCollisionBit = 1;
