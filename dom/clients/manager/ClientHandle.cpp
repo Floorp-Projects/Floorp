@@ -134,18 +134,15 @@ RefPtr<ClientStatePromise> ClientHandle::Focus() {
             outerPromise->Reject(aResult.get_nsresult(), __func__);
           });
 
-  RefPtr<ClientStatePromise> ref = outerPromise.get();
-  return ref.forget();
+  return outerPromise.forget();
 }
 
 RefPtr<GenericPromise> ClientHandle::PostMessage(
     StructuredCloneData& aData, const ServiceWorkerDescriptor& aSource) {
-  RefPtr<GenericPromise> ref;
 
   if (IsShutdown()) {
-    ref = GenericPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                          __func__);
-    return ref.forget();
+    return GenericPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                           __func__);
   }
 
   ClientPostMessageArgs args;
@@ -153,9 +150,8 @@ RefPtr<GenericPromise> ClientHandle::PostMessage(
 
   if (!aData.BuildClonedMessageDataForBackgroundChild(
           GetActor()->Manager()->Manager(), args.clonedData())) {
-    ref = GenericPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                          __func__);
-    return ref.forget();
+    return GenericPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                           __func__);
   }
 
   RefPtr<GenericPromise::Private> outerPromise =
@@ -169,8 +165,7 @@ RefPtr<GenericPromise> ClientHandle::PostMessage(
             outerPromise->Reject(aResult.get_nsresult(), __func__);
           });
 
-  ref = outerPromise.get();
-  return ref.forget();
+  return outerPromise.forget();
 }
 
 RefPtr<GenericPromise> ClientHandle::OnDetach() {
@@ -183,8 +178,7 @@ RefPtr<GenericPromise> ClientHandle::OnDetach() {
     }
   }
 
-  RefPtr<GenericPromise> ref(mDetachPromise);
-  return ref;
+  return mDetachPromise;
 }
 
 }  // namespace dom

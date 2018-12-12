@@ -41,22 +41,26 @@
           result: result
         });
 
-      } else if (event.data.type == 'getVersion') {
-        var result = SpecialPowers.Cc['@mozilla.org/xre/app-info;1'].getService(SpecialPowers.Ci.nsIXULAppInfo).version;
-        worker.postMessage({
-          type: 'returnVersion',
-          result: result
-        });
+      } else if (event.data.type == 'getHelperData') {
+        const version = SpecialPowers.Cc["@mozilla.org/xre/app-info;1"].getService(SpecialPowers.Ci.nsIXULAppInfo).version;
+        const isNightly = version.endsWith("a1");
+        const isEarlyBetaOrEarlier = SpecialPowers.EARLY_BETA_OR_EARLIER;
+        const isRelease = !version.includes("a");
+        const isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
+        const isMac = /Mac OS/.test(navigator.oscpu);
+        const isWindows = /Windows/.test(navigator.oscpu);
+        const isAndroid = navigator.userAgent.includes("Android");
+        const isLinux = /Linux/.test(navigator.oscpu) && !isAndroid;
+        const isInsecureContext = !window.isSecureContext;
+        const isFennec = isAndroid && SpecialPowers.Cc["@mozilla.org/android/bridge;1"].getService(SpecialPowers.Ci.nsIAndroidBridge).isFennec;
 
-      } else if (event.data.type == 'getUserAgent') {
+        const result = {
+          version, isNightly, isEarlyBetaOrEarlier, isRelease, isDesktop, isMac,
+          isWindows, isAndroid, isLinux, isInsecureContext, isFennec
+        };
+
         worker.postMessage({
-          type: 'returnUserAgent',
-          result: navigator.userAgent
-        });
-      } else if (event.data.type == 'getOSCPU') {
-        worker.postMessage({
-          type: 'returnOSCPU',
-          result: navigator.oscpu
+          type: 'returnHelperData', result
         });
       }
     }

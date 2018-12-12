@@ -7,8 +7,8 @@
 
 # DBM support in NSS
 # ==============================================================
-@depends(build_project, '--help')
-def dbm_default(build_project, _):
+@depends(build_project)
+def dbm_default(build_project):
     return build_project != 'mobile/android'
 
 option('--enable-dbm', default=dbm_default,

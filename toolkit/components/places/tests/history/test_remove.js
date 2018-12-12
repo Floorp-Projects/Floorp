@@ -5,9 +5,6 @@
 
 "use strict";
 
-Cu.importGlobalProperties(["URL"]);
-
-
 // Test removing a single page
 add_task(async function test_remove_single() {
   await PlacesUtils.history.clear();

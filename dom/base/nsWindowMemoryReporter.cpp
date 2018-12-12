@@ -371,7 +371,7 @@ static void CollectWindowReports(nsGlobalWindowInner* aWindow,
               "Memory used by other parts of style sets within a window.");
 
   REPORT_SIZE("/layout/element-data-objects", mLayoutElementDataObjects,
-              "Memory used for ElementData objects, but not the things"
+              "Memory used for ElementData objects, but not the things "
               "hanging off them.");
 
   REPORT_SIZE("/layout/text-runs", mLayoutTextRunsSize,

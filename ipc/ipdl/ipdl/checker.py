@@ -3,6 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import print_function
+
 import sys
 from ipdl.ast import Visitor, ASYNC
 
@@ -52,7 +54,7 @@ def checkSyncMessage(tu, syncMsgList, errout=sys.stderr):
     tu.accept(checker)
     if len(checker.errors):
         for error in checker.errors:
-            print >>errout, error
+            print(error, file=errout)
         return False
     return True
 
@@ -66,7 +68,7 @@ def checkFixedSyncMessages(config, errout=sys.stderr):
         # Also, ignore platform-specific IPC messages.
         if protocol in SyncMessageChecker.seenProtocols and \
            'platform' not in config.options(item):
-            print >>errout, 'Error: Sync IPC message %s not found, it appears to be fixed.\n' \
-                            'Please remove it from sync-messages.ini.' % item
+            print('Error: Sync IPC message %s not found, it appears to be fixed.\n'
+                  'Please remove it from sync-messages.ini.' % item, file=errout)
             error_free = False
     return error_free

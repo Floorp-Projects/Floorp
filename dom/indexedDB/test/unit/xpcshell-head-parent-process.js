@@ -10,8 +10,6 @@ var { "classes": Cc, "interfaces": Ci, "utils": Cu } = Components;
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-Cu.importGlobalProperties(["Blob"]);
-
 if (!("self" in this)) {
   this.self = this;
 }
@@ -49,7 +47,7 @@ if (!this.runTest) {
       enableExperimental();
     }
 
-    Cu.importGlobalProperties(["indexedDB", "Blob", "File", "FileReader"]);
+    Cu.importGlobalProperties(["indexedDB"]);
 
     do_test_pending();
     testGenerator.next();

@@ -97,7 +97,7 @@ class imgMemoryReporter final : public nsIMemoryReporter {
         [=](layers::SharedSurfacesMemoryReport aReport) {
           self->FinishCollectReports(handleReport, data, aAnonymize, aReport);
         },
-        [=](mozilla::ipc::ResponseRejectReason aReason) {
+        [=](mozilla::ipc::ResponseRejectReason&& aReason) {
           layers::SharedSurfacesMemoryReport sharedSurfaces;
           self->FinishCollectReports(handleReport, data, aAnonymize,
                                      sharedSurfaces);

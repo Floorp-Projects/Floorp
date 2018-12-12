@@ -357,11 +357,10 @@ NS_IMPL_ISUPPORTS(LaunchObserver, nsIObserver);
 
 }  // anonymous namespace
 
-already_AddRefed<ClientOpPromise> ClientOpenWindowInCurrentProcess(
+RefPtr<ClientOpPromise> ClientOpenWindowInCurrentProcess(
     const ClientOpenWindowArgs& aArgs) {
   RefPtr<ClientOpPromise::Private> promise =
       new ClientOpPromise::Private(__func__);
-  RefPtr<ClientOpPromise> ref = promise;
 
 #ifdef MOZ_WIDGET_ANDROID
   // This fires an intent that will start launching Fennec and foreground it,
@@ -387,12 +386,13 @@ already_AddRefed<ClientOpPromise> ClientOpenWindowInCurrentProcess(
           nsresult rv = OpenWindow(aArgs, getter_AddRefs(outerWindow));
           if (NS_WARN_IF(NS_FAILED(rv))) {
             promise->Reject(rv, __func__);
+            return;
           }
 
           WaitForLoad(aArgs, outerWindow, promise);
         },
         [promise](nsresult aResult) { promise->Reject(aResult, __func__); });
-    return ref.forget();
+    return promise.forget();
   }
 
   // If we didn't get the NOT_AVAILABLE error then there is no need
@@ -405,13 +405,13 @@ already_AddRefed<ClientOpPromise> ClientOpenWindowInCurrentProcess(
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->Reject(rv, __func__);
-    return ref.forget();
+    return promise.forget();
   }
 
   MOZ_DIAGNOSTIC_ASSERT(outerWindow);
   WaitForLoad(aArgs, outerWindow, promise);
 
-  return ref.forget();
+  return promise.forget();
 }
 
 }  // namespace dom

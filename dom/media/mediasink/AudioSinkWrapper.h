@@ -15,13 +15,10 @@
 #include "MediaSink.h"
 
 namespace mozilla {
+class AudioSink;
 class MediaData;
 template <class T>
 class MediaQueue;
-
-namespace media {
-
-class AudioSink;
 
 /**
  * A wrapper around AudioSink to provide the interface of MediaSink.
@@ -52,20 +49,19 @@ class AudioSinkWrapper : public MediaSink {
                    const Function& aFunc)
       : mOwnerThread(aOwnerThread),
         mCreator(new CreatorImpl<Function>(aFunc)),
-        mIsStarted(false)
+        mIsStarted(false),
         // Give an invalid value to facilitate debug if used before playback
         // starts.
-        ,
-        mPlayDuration(TimeUnit::Invalid()),
+        mPlayDuration(media::TimeUnit::Invalid()),
         mAudioEnded(true),
         mAudioQueue(aAudioQueue) {}
 
   const PlaybackParams& GetPlaybackParams() const override;
   void SetPlaybackParams(const PlaybackParams& aParams) override;
 
-  RefPtr<GenericPromise> OnEnded(TrackType aType) override;
-  TimeUnit GetEndTime(TrackType aType) const override;
-  TimeUnit GetPosition(TimeStamp* aTimeStamp = nullptr) const override;
+  RefPtr<EndedPromise> OnEnded(TrackType aType) override;
+  media::TimeUnit GetEndTime(TrackType aType) const override;
+  media::TimeUnit GetPosition(TimeStamp* aTimeStamp = nullptr) const override;
   bool HasUnplayedFrames(TrackType aType) const override;
 
   void SetVolume(double aVolume) override;
@@ -73,7 +69,8 @@ class AudioSinkWrapper : public MediaSink {
   void SetPreservesPitch(bool aPreservesPitch) override;
   void SetPlaying(bool aPlaying) override;
 
-  nsresult Start(const TimeUnit& aStartTime, const MediaInfo& aInfo) override;
+  nsresult Start(const media::TimeUnit& aStartTime,
+                 const MediaInfo& aInfo) override;
   void Stop() override;
   bool IsStarted() const override;
   bool IsPlaying() const override;
@@ -99,7 +96,7 @@ class AudioSinkWrapper : public MediaSink {
   UniquePtr<Creator> mCreator;
   UniquePtr<AudioSink> mAudioSink;
   // Will only exist when media has an audio track.
-  RefPtr<GenericPromise> mEndPromise;
+  RefPtr<EndedPromise> mEndedPromise;
 
   bool mIsStarted;
   PlaybackParams mParams;
@@ -108,11 +105,10 @@ class AudioSinkWrapper : public MediaSink {
   TimeUnit mPlayDuration;
 
   bool mAudioEnded;
-  MozPromiseRequestHolder<GenericPromise> mAudioSinkPromise;
+  MozPromiseRequestHolder<EndedPromise> mAudioSinkEndedPromise;
   const MediaQueue<AudioData>& mAudioQueue;
 };
 
-}  // namespace media
 }  // namespace mozilla
 
 #endif  // AudioSinkWrapper_h_

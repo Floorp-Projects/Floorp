@@ -2702,14 +2702,14 @@ TabParent::GetContentBlockingLog(Promise** aPromise) {
 
   auto cblPromise = SendGetContentBlockingLog();
   cblPromise->Then(GetMainThreadSerialEventTarget(), __func__,
-                   [jsPromise](Tuple<nsString, bool> aResult) {
+                   [jsPromise](Tuple<nsString, bool>&& aResult) {
                      if (Get<1>(aResult)) {
-                       jsPromise->MaybeResolve(Get<0>(aResult));
+                       jsPromise->MaybeResolve(std::move(Get<0>(aResult)));
                      } else {
                        jsPromise->MaybeRejectWithUndefined();
                      }
                    },
-                   [jsPromise](ResponseRejectReason aReason) {
+                   [jsPromise](ResponseRejectReason&& aReason) {
                      jsPromise->MaybeRejectWithUndefined();
                    });
 
@@ -2821,7 +2821,7 @@ void TabParent::RequestRootPaint(gfx::CrossProcessPaint* aPaint, IntRect aRect,
                 [paint, tabId](PaintFragment&& aFragment) {
                   paint->ReceiveFragment(tabId, std::move(aFragment));
                 },
-                [paint, tabId](ResponseRejectReason aReason) {
+                [paint, tabId](ResponseRejectReason&& aReason) {
                   paint->LostFragment(tabId);
                 });
 }
@@ -2836,7 +2836,7 @@ void TabParent::RequestSubPaint(gfx::CrossProcessPaint* aPaint, float aScale,
                 [paint, tabId](PaintFragment&& aFragment) {
                   paint->ReceiveFragment(tabId, std::move(aFragment));
                 },
-                [paint, tabId](ResponseRejectReason aReason) {
+                [paint, tabId](ResponseRejectReason&& aReason) {
                   paint->LostFragment(tabId);
                 });
 }

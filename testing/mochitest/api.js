@@ -17,8 +17,6 @@ function loadChromeScripts(win) {
 
 // ///// Android ///////
 
-Cu.importGlobalProperties(["TextDecoder"]);
-
 const windowTracker = {
   init() {
     Services.obs.addObserver(this, "chrome-document-global-created");

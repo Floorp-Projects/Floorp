@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsError.h"
-#include "MediaDecoderStateMachine.h"
 #include "MediaResource.h"
 #ifdef MOZ_AV1
 #include "AOMDecoder.h"
@@ -761,7 +760,7 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
             encrypted = !encrypted;
             lastOffset = partition;
 
-            assert(lastOffset <= length);
+            MOZ_ASSERT(lastOffset <= length);
           }
 
           // Add the data between the last offset and the end of the data.
@@ -788,7 +787,7 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
 
           // Assert that the lengths of the encrypted and plain samples add to
           // the length of the data.
-          assert(
+          MOZ_ASSERT(
               ((size_t)(std::accumulate(writer->mCrypto.mPlainSizes.begin(),
                                         writer->mCrypto.mPlainSizes.end(), 0) +
                         std::accumulate(writer->mCrypto.mEncryptedSizes.begin(),

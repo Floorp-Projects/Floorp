@@ -403,6 +403,7 @@ void ReflowInput::Init(nsPresContext* aPresContext,
   InitConstraints(aPresContext, cbSize, aBorder, aPadding, type);
 
   InitResizeFlags(aPresContext, type);
+  InitDynamicReflowRoot();
 
   nsIFrame* parent = mFrame->GetParent();
   if (parent && (parent->GetStateBits() & NS_FRAME_IN_CONSTRAINED_BSIZE) &&
@@ -792,6 +793,92 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
     // If we're reflowing everything, then we'll find out if we need
     // to re-set this.
     mFrame->RemoveStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
+  }
+}
+
+static inline bool IsIntrinsicKeyword(const nsStyleCoord& aCoord) {
+  if (aCoord.GetUnit() != eStyleUnit_Enumerated) {
+    return false;
+  }
+
+  // All of the keywords except for '-moz-available' depend on intrinsic sizes.
+  return aCoord.GetIntValue() != NS_STYLE_WIDTH_AVAILABLE;
+}
+
+void ReflowInput::InitDynamicReflowRoot() {
+  auto display = mStyleDisplay->mDisplay;
+  if (mFrame->IsFrameOfType(nsIFrame::eLineParticipant) ||
+      nsStyleDisplay::IsRubyDisplayType(display) ||
+      mFrameType == NS_CSS_FRAME_TYPE_INTERNAL_TABLE ||
+      display == StyleDisplay::Table || display == StyleDisplay::TableCaption ||
+      display == StyleDisplay::InlineTable ||
+      (mFrame->GetParent() && mFrame->GetParent()->IsXULBoxFrame())) {
+    // We have a display type where 'width' and 'height' don't actually
+    // set the width or height (i.e., the size depends on content).
+    NS_ASSERTION(!(mFrame->GetStateBits() & NS_FRAME_DYNAMIC_REFLOW_ROOT),
+                 "should not have dynamic reflow root bit");
+    return;
+  }
+
+  bool canBeDynamicReflowRoot = true;
+
+  // We can't do this if our used 'width' and 'height' might be influenced by
+  // content.
+  // FIXME: For display:block, we should probably optimize inline-size
+  // being auto.
+  // FIXME: Other flex and grid cases?
+  const nsStyleCoord& width = mStylePosition->mWidth;
+  const nsStyleCoord& height = mStylePosition->mHeight;
+  if (!width.IsCoordPercentCalcUnit() || width.HasPercent() ||
+      !height.IsCoordPercentCalcUnit() || height.HasPercent() ||
+      IsIntrinsicKeyword(mStylePosition->mMinWidth) ||
+      IsIntrinsicKeyword(mStylePosition->mMaxWidth) ||
+      IsIntrinsicKeyword(mStylePosition->mMinHeight) ||
+      IsIntrinsicKeyword(mStylePosition->mMaxHeight) ||
+      ((mStylePosition->mMinWidth.GetUnit() == eStyleUnit_Auto ||
+        mStylePosition->mMinHeight.GetUnit() == eStyleUnit_Auto) &&
+       mFrame->IsFlexOrGridItem())) {
+    canBeDynamicReflowRoot = false;
+  }
+
+  if (mFrame->IsFlexItem()) {
+    // If our flex-basis is 'auto', it'll defer to 'width' (or 'height') which
+    // we've already checked. Otherwise, it preempts them, so we need to
+    // perform the same "could-this-value-be-influenced-by-content" checks that
+    // we performed for 'width' and 'height' above.
+    const nsStyleCoord& flexBasis = mStylePosition->mFlexBasis;
+    if (flexBasis.GetUnit() != eStyleUnit_Auto &&
+        (!flexBasis.IsCoordPercentCalcUnit() || flexBasis.HasPercent())) {
+      canBeDynamicReflowRoot = false;
+    }
+  }
+
+  if (!mFrame->IsFixedPosContainingBlock()) {
+    // We can't treat this frame as a reflow root, since dynamic changes
+    // to absolutely-positioned frames inside of it require that we
+    // reflow the placeholder before we reflow the absolutely positioned
+    // frame.
+    // FIXME:  Alternatively, we could sort the reflow roots in
+    // PresShell::ProcessReflowCommands by depth in the tree, from
+    // deepest to least deep.  However, for performance (FIXME) we
+    // should really be sorting them in the opposite order!
+    canBeDynamicReflowRoot = false;
+  } else {
+    MOZ_ASSERT(mFrame->IsAbsPosContainingBlock(),
+               "we need the frame to be both an abs-pos and fixed-pos cb");
+  }
+
+  // If we participate in a container's block reflow context, or margins
+  // can collapse through us, we can't be a dynamic reflow root.
+  if (canBeDynamicReflowRoot && mFrame->IsFrameOfType(nsIFrame::eBlockFrame) &&
+      !mFrame->HasAllStateBits(NS_BLOCK_FLOAT_MGR | NS_BLOCK_MARGIN_ROOT)) {
+    canBeDynamicReflowRoot = false;
+  }
+
+  if (canBeDynamicReflowRoot) {
+    mFrame->AddStateBits(NS_FRAME_DYNAMIC_REFLOW_ROOT);
+  } else {
+    mFrame->RemoveStateBits(NS_FRAME_DYNAMIC_REFLOW_ROOT);
   }
 }
 
@@ -2482,7 +2569,8 @@ void SizeComputationInput::InitOffsets(WritingMode aWM, nscoord aPercentBasis,
   } else if (aPadding) {  // padding is an input arg
     ComputedPhysicalPadding() = *aPadding;
     needPaddingProp = mFrame->StylePadding()->IsWidthDependent() ||
-                      (mFrame->GetStateBits() & NS_FRAME_REFLOW_ROOT);
+                      mFrame->HasAnyStateBits(NS_FRAME_REFLOW_ROOT |
+                                              NS_FRAME_DYNAMIC_REFLOW_ROOT);
   } else {
     needPaddingProp = ComputePadding(aWM, aPercentBasis, aFrameType);
   }

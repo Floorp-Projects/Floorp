@@ -42,7 +42,7 @@ class AutoplayPermissionManager final
   // window's origin, the parent process will approve/deny the
   // autoplay request using the stored permission immediately (so the MozPromise
   // rejects in the content process after an IPC round trip).
-  RefPtr<GenericPromise> RequestWithPrompt();
+  RefPtr<GenericNonExclusivePromise> RequestWithPrompt();
 
   // Called by AutoplayPermissionRequest to approve the play request,
   // and resolve the MozPromise returned by RequestWithPrompt().
@@ -56,7 +56,7 @@ class AutoplayPermissionManager final
   ~AutoplayPermissionManager();
 
   nsWeakPtr mWindow;
-  MozPromiseHolder<GenericPromise> mPromiseHolder;
+  MozPromiseHolder<GenericNonExclusivePromise> mPromiseHolder;
   // Tracks whether we've dispatched a request to chrome in the parent process
   // to prompt for user permission to autoplay. This flag ensures we don't
   // request multiple times concurrently.

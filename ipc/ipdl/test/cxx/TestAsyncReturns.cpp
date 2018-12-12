@@ -31,7 +31,7 @@ TestAsyncReturnsParent::Main()
                        [](bool unused) {
                          fail("resolve handler should not be called");
                        },
-                       [](ResponseRejectReason aReason) {
+                       [](ResponseRejectReason&& aReason) {
                          // MozPromise asserts in debug build if the
                          // handler is not called
                          if (aReason != ResponseRejectReason::ChannelClosed) {
@@ -57,11 +57,11 @@ TestAsyncReturnsParent::Main()
                          }
                          Close();
                        },
-                       [](ResponseRejectReason aReason) {
+                       [](ResponseRejectReason&& aReason) {
                          fail("sending Ping");
                        });
                    },
-                   [](ResponseRejectReason aReason) {
+                   [](ResponseRejectReason&& aReason) {
                      fail("sending Ping");
                    });
 }
@@ -107,7 +107,7 @@ TestAsyncReturnsChild::RecvPing(PingResolver&& aResolve)
                      }
                      aResolve(true);
                    },
-                   [](ResponseRejectReason aReason) {
+                   [](ResponseRejectReason&& aReason) {
                      fail("sending Pong");
                    });
   return IPC_OK();

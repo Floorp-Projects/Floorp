@@ -64,8 +64,7 @@ class UrlbarView {
    */
   selectNextItem({reverse = false} = {}) {
     if (!this.isOpen) {
-      this.open();
-      return;
+      throw new Error("UrlbarView: Cannot select an item if the view isn't open.");
     }
 
     // TODO: handle one-off search buttons
@@ -88,24 +87,6 @@ class UrlbarView {
     if (result) {
       this.input.setValueFromResult(result);
     }
-  }
-
-  /**
-   * Opens the autocomplete results popup.
-   */
-  open() {
-    this.panel.removeAttribute("hidden");
-
-    this._alignPanel();
-
-    // TODO: Search one off buttons are a stub right now.
-    //       We'll need to set them up properly.
-    this.oneOffSearchButtons;
-
-    this.panel.openPopup(this.input.textbox.closest("toolbar"), "after_end", 0, -1);
-
-    this._selected = this._rows.firstElementChild;
-    this._selected.toggleAttribute("selected", true);
   }
 
   /**
@@ -136,7 +117,7 @@ class UrlbarView {
     for (let resultIndex in queryContext.results) {
       this._addRow(resultIndex);
     }
-    this.open();
+    this._openPanel();
   }
 
   // Private methods below.
@@ -147,6 +128,25 @@ class UrlbarView {
 
   _createElement(name) {
     return this.document.createElementNS("http://www.w3.org/1999/xhtml", name);
+  }
+
+  _openPanel() {
+    if (this.isOpen) {
+      return;
+    }
+
+    this.panel.removeAttribute("hidden");
+
+    this._alignPanel();
+
+    // TODO: Search one off buttons are a stub right now.
+    //       We'll need to set them up properly.
+    this.oneOffSearchButtons;
+
+    this.panel.openPopup(this.input.textbox.closest("toolbar"), "after_end", 0, -1);
+
+    this._selected = this._rows.firstElementChild;
+    this._selected.toggleAttribute("selected", true);
   }
 
   _alignPanel() {
@@ -219,21 +219,64 @@ class UrlbarView {
 
     let title = this._createElement("span");
     title.className = "urlbarView-title";
-    title.textContent = result.title || result.payload.url;
+    this._addTextContentWithHighlights(
+      title,
+      ...(result.title ?
+          [result.title, result.titleHighlights] :
+          [result.payload.url || "", result.payloadHighlights.url || []])
+    );
     content.appendChild(title);
 
     let secondary = this._createElement("span");
     secondary.className = "urlbarView-secondary";
     if (result.type == UrlbarUtils.MATCH_TYPE.TAB_SWITCH) {
       secondary.classList.add("urlbarView-action");
-      secondary.textContent = "Switch to Tab";
+      this._addTextContentWithHighlights(secondary, "Switch to Tab", []);
     } else {
       secondary.classList.add("urlbarView-url");
-      secondary.textContent = result.payload.url;
+      this._addTextContentWithHighlights(secondary, result.payload.url || "",
+                                         result.payloadHighlights.url || []);
     }
     content.appendChild(secondary);
 
     this._rows.appendChild(item);
+  }
+
+  /**
+   * Adds text content to a node, placing substrings that should be highlighted
+   * inside <em> nodes.
+   *
+   * @param {Node} parentNode
+   *   The text content will be added to this node.
+   * @param {string} textContent
+   *   The text content to give the node.
+   * @param {array} highlights
+   *   The matches to highlight in the text.
+   */
+  _addTextContentWithHighlights(parentNode, textContent, highlights) {
+    if (!textContent) {
+      return;
+    }
+    highlights = (highlights || []).concat([[textContent.length, 0]]);
+    let index = 0;
+    for (let [highlightIndex, highlightLength] of highlights) {
+      if (highlightIndex - index > 0) {
+        parentNode.appendChild(
+          this.document.createTextNode(
+            textContent.substring(index, highlightIndex)
+          )
+        );
+      }
+      if (highlightLength > 0) {
+        let strong = this._createElement("strong");
+        strong.textContent = textContent.substring(
+          highlightIndex,
+          highlightIndex + highlightLength
+        );
+        parentNode.appendChild(strong);
+      }
+      index = highlightIndex + highlightLength;
+    }
   }
 
   /**

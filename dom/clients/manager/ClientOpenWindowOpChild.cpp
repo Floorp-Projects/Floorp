@@ -11,10 +11,9 @@
 namespace mozilla {
 namespace dom {
 
-already_AddRefed<ClientOpPromise> ClientOpenWindowOpChild::DoOpenWindow(
+RefPtr<ClientOpPromise> ClientOpenWindowOpChild::DoOpenWindow(
     const ClientOpenWindowArgs& aArgs) {
-  RefPtr<ClientOpPromise> ref = ClientOpenWindowInCurrentProcess(aArgs);
-  return ref.forget();
+  return ClientOpenWindowInCurrentProcess(aArgs);
 }
 
 void ClientOpenWindowOpChild::ActorDestroy(ActorDestroyReason aReason) {
@@ -22,8 +21,7 @@ void ClientOpenWindowOpChild::ActorDestroy(ActorDestroyReason aReason) {
 }
 
 void ClientOpenWindowOpChild::Init(const ClientOpenWindowArgs& aArgs) {
-  RefPtr<ClientOpPromise> promise = DoOpenWindow(aArgs);
-  promise
+  DoOpenWindow(aArgs)
       ->Then(SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
              [this](const ClientOpResult& aResult) {
                mPromiseRequestHolder.Complete();

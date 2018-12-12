@@ -371,12 +371,12 @@ void InitAudioIPCConnection() {
   auto promise = contentChild->SendCreateAudioIPCConnection();
   promise->Then(
       AbstractThread::MainThread(), __func__,
-      [](ipc::FileDescriptor aFD) {
+      [](ipc::FileDescriptor&& aFD) {
         StaticMutexAutoLock lock(sMutex);
         MOZ_ASSERT(!sIPCConnection);
-        sIPCConnection = new ipc::FileDescriptor(aFD);
+        sIPCConnection = new ipc::FileDescriptor(std::move(aFD));
       },
-      [](mozilla::ipc::ResponseRejectReason aReason) {
+      [](mozilla::ipc::ResponseRejectReason&& aReason) {
         MOZ_LOG(gCubebLog, LogLevel::Error,
                 ("SendCreateAudioIPCConnection failed: %d", int(aReason)));
       });

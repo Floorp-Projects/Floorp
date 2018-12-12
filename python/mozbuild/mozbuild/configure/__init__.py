@@ -822,7 +822,7 @@ class ConfigureSandbox(dict):
         return decorator
 
     def _apply_imports(self, func, glob):
-        for _from, _import, _as in self._imports.get(func, ()):
+        for _from, _import, _as in self._imports.pop(func, ()):
             _from = '%s.' % _from if _from else ''
             if _as:
                 glob[_as] = self._get_one_import('%s%s' % (_from, _import))
@@ -1030,7 +1030,6 @@ class ConfigureSandbox(dict):
         def wrapped(*args, **kwargs):
             if func in self._imports:
                 self._apply_imports(func, glob)
-                del self._imports[func]
             return new_func(*args, **kwargs)
 
         self._prepared_functions.add(wrapped)
