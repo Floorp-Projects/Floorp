@@ -40,12 +40,17 @@ export default class ColumnBreakpoint extends PureComponent<Props> {
 
   addColumnBreakpoint = (nextProps: ?Props) => {
     const { columnBreakpoint, source } = nextProps || this.props;
+
     const sourceId = source.id;
+    const doc = getDocument(sourceId);
+    if (!doc) {
+      return;
+    }
+
     const { line, column } = columnBreakpoint.location;
     const widget = makeBookmark(columnBreakpoint.enabled, {
       onClick: this.toggleBreakpoint
     });
-    const doc = getDocument(sourceId);
     this.bookmark = doc.setBookmark({ line: line - 1, ch: column }, { widget });
   };
 
