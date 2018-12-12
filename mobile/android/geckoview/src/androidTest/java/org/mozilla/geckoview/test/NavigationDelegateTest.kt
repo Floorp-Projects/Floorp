@@ -22,7 +22,6 @@ import org.mozilla.geckoview.test.util.Callbacks
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -190,7 +189,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         })
 
-        sessionRule.session.settings.isUseTrackingProtection = false
+        sessionRule.session.settings.useTrackingProtection = false
 
         sessionRule.session.reload()
         sessionRule.session.waitForPageStop()
@@ -987,13 +986,13 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         // Ensure a non-remote page can open a remote page, as needed by some tests.
         assertThat("Opening session should be non-remote",
-                   mainSession.settings.isUseMultiprocess,
+                   mainSession.settings.useMultiprocess,
                    equalTo(false))
 
         val newSession = delegateNewSession(
-                GeckoSessionSettings(mainSession.settings).apply {
-                    isUseMultiprocess = true
-                })
+                GeckoSessionSettings.Builder(mainSession.settings)
+                .useMultiprocess(true)
+                .build())
         mainSession.evaluateJS("window.open('http://example.com')")
         newSession.waitForPageStop()
 

@@ -223,7 +223,7 @@ public class GeckoSessionTestRule implements TestRule {
                         method.setAccessible(true);
                         try {
                             method.invoke(settings, mKey,
-                                    GeckoSessionSettings.class.getField(value)
+                                    (Integer)GeckoSessionSettings.class.getField(value)
                                             .get(null));
                         }
                         catch (final NoSuchFieldException | IllegalAccessException |
@@ -848,8 +848,7 @@ public class GeckoSessionTestRule implements TestRule {
     protected boolean mIgnoreCrash;
 
     public GeckoSessionTestRule() {
-        mDefaultSettings = new GeckoSessionSettings();
-        mDefaultSettings.setUseMultiprocess(env.isMultiprocess());
+        mDefaultSettings = new GeckoSessionSettings.Builder().useMultiprocess(env.isMultiprocess()).build();
     }
 
     /**
