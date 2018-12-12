@@ -6656,104 +6656,93 @@ class LWasmAtomicBinopHeapForEffect : public LInstructionHelper<0, 3, 5> {
   MWasmAtomicBinopHeap* mir() const { return mir_->toWasmAtomicBinopHeap(); }
 };
 
-class LWasmLoadGlobalVar : public LInstructionHelper<1, 1, 0> {
+class LWasmLoadSlot : public LInstructionHelper<1, 1, 0> {
+  size_t offset_;
+  MIRType type_;
  public:
-  LIR_HEADER(WasmLoadGlobalVar);
-  explicit LWasmLoadGlobalVar(const LAllocation& tlsPtr)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, tlsPtr);
+  LIR_HEADER(WasmLoadSlot);
+  explicit LWasmLoadSlot(const LAllocation& containerRef, size_t offset, MIRType type)
+    : LInstructionHelper(classOpcode), offset_(offset), type_(type) {
+    setOperand(0, containerRef);
   }
-  MWasmLoadGlobalVar* mir() const { return mir_->toWasmLoadGlobalVar(); }
-  const LAllocation* tlsPtr() { return getOperand(0); }
+  const LAllocation* containerRef() { return getOperand(0); }
+  size_t offset() const { return offset_; }
+  MIRType type() const { return type_; }
 };
 
-class LWasmLoadGlobalVarI64 : public LInstructionHelper<INT64_PIECES, 1, 0> {
+class LWasmLoadSlotI64 : public LInstructionHelper<INT64_PIECES, 1, 0> {
+  size_t offset_;
  public:
-  LIR_HEADER(WasmLoadGlobalVarI64);
-  explicit LWasmLoadGlobalVarI64(const LAllocation& tlsPtr)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, tlsPtr);
+  LIR_HEADER(WasmLoadSlotI64);
+  explicit LWasmLoadSlotI64(const LAllocation& containerRef, size_t offset)
+    : LInstructionHelper(classOpcode), offset_(offset) {
+    setOperand(0, containerRef);
   }
-  MWasmLoadGlobalVar* mir() const { return mir_->toWasmLoadGlobalVar(); }
-  const LAllocation* tlsPtr() { return getOperand(0); }
+  const LAllocation* containerRef() { return getOperand(0); }
+  size_t offset() const { return offset_; }
 };
 
-class LWasmLoadGlobalCell : public LInstructionHelper<1, 1, 0> {
+class LWasmStoreSlot : public LInstructionHelper<0, 2, 0> {
+  size_t offset_;
+  MIRType type_;
  public:
-  LIR_HEADER(WasmLoadGlobalCell);
-  explicit LWasmLoadGlobalCell(const LAllocation& cellPtr)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, cellPtr);
-  }
-  MWasmLoadGlobalCell* mir() const { return mir_->toWasmLoadGlobalCell(); }
-  const LAllocation* cellPtr() { return getOperand(0); }
-};
-
-class LWasmLoadGlobalCellI64 : public LInstructionHelper<INT64_PIECES, 1, 0> {
- public:
-  LIR_HEADER(WasmLoadGlobalCellI64);
-  explicit LWasmLoadGlobalCellI64(const LAllocation& cellPtr)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, cellPtr);
-  }
-  MWasmLoadGlobalCell* mir() const { return mir_->toWasmLoadGlobalCell(); }
-  const LAllocation* cellPtr() { return getOperand(0); }
-};
-
-class LWasmStoreGlobalVar : public LInstructionHelper<0, 2, 0> {
- public:
-  LIR_HEADER(WasmStoreGlobalVar);
-  LWasmStoreGlobalVar(const LAllocation& value, const LAllocation& tlsPtr)
-      : LInstructionHelper(classOpcode) {
+  LIR_HEADER(WasmStoreSlot);
+  LWasmStoreSlot(const LAllocation& value, const LAllocation& containerRef,
+                 size_t offset, MIRType type)
+    : LInstructionHelper(classOpcode), offset_(offset), type_(type) {
     setOperand(0, value);
-    setOperand(1, tlsPtr);
+    setOperand(1, containerRef);
   }
-  MWasmStoreGlobalVar* mir() const { return mir_->toWasmStoreGlobalVar(); }
   const LAllocation* value() { return getOperand(0); }
-  const LAllocation* tlsPtr() { return getOperand(1); }
+  const LAllocation* containerRef() { return getOperand(1); }
+  size_t offset() const { return offset_; }
+  MIRType type() const { return type_; }
 };
 
-class LWasmStoreGlobalVarI64
+class LWasmStoreSlotI64
     : public LInstructionHelper<0, INT64_PIECES + 1, 0> {
+  size_t offset_;
  public:
-  LIR_HEADER(WasmStoreGlobalVarI64);
-  LWasmStoreGlobalVarI64(const LInt64Allocation& value,
-                         const LAllocation& tlsPtr)
-      : LInstructionHelper(classOpcode) {
+  LIR_HEADER(WasmStoreSlotI64);
+  LWasmStoreSlotI64(const LInt64Allocation& value,
+                    const LAllocation& containerRef,
+                    size_t offset)
+    : LInstructionHelper(classOpcode), offset_(offset) {
     setInt64Operand(0, value);
-    setOperand(INT64_PIECES, tlsPtr);
+    setOperand(INT64_PIECES, containerRef);
   }
-  MWasmStoreGlobalVar* mir() const { return mir_->toWasmStoreGlobalVar(); }
   const LInt64Allocation value() { return getInt64Operand(0); }
-  const LAllocation* tlsPtr() { return getOperand(INT64_PIECES); }
+  const LAllocation* containerRef() { return getOperand(INT64_PIECES); }
+  size_t offset() const { return offset_; }
 };
 
-class LWasmStoreGlobalCell : public LInstructionHelper<0, 2, 0> {
+class LWasmDerivedPointer : public LInstructionHelper<1, 1, 0> {
  public:
-  LIR_HEADER(WasmStoreGlobalCell);
-  LWasmStoreGlobalCell(const LAllocation& value, const LAllocation& cellPtr)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, value);
-    setOperand(1, cellPtr);
+  LIR_HEADER(WasmDerivedPointer);
+  explicit LWasmDerivedPointer(const LAllocation& base)
+    : LInstructionHelper(classOpcode) {
+    setOperand(0, base);
   }
-  MWasmStoreGlobalCell* mir() const { return mir_->toWasmStoreGlobalCell(); }
-  const LAllocation* value() { return getOperand(0); }
-  const LAllocation* cellPtr() { return getOperand(1); }
+  const LAllocation* base() { return getOperand(0); }
+  size_t offset() { return mirRaw()->toWasmDerivedPointer()->offset(); }
 };
 
-class LWasmStoreGlobalCellI64
-    : public LInstructionHelper<0, INT64_PIECES + 1, 0> {
+class LWasmStoreRef : public LInstructionHelper<0, 3, 1> {
  public:
-  LIR_HEADER(WasmStoreGlobalCellI64);
-  LWasmStoreGlobalCellI64(const LInt64Allocation& value,
-                          const LAllocation& cellPtr)
-      : LInstructionHelper(classOpcode) {
-    setInt64Operand(0, value);
-    setOperand(INT64_PIECES, cellPtr);
+  LIR_HEADER(WasmStoreRef);
+  LWasmStoreRef(const LAllocation& tls, const LAllocation& valueAddr,
+                const LAllocation& value, const LDefinition& temp)
+    : LInstructionHelper(classOpcode) {
+    setOperand(0, tls);
+    setOperand(1, valueAddr);
+    setOperand(2, value);
+    setTemp(0, temp);
   }
-  MWasmStoreGlobalCell* mir() const { return mir_->toWasmStoreGlobalCell(); }
-  const LInt64Allocation value() { return getInt64Operand(0); }
-  const LAllocation* cellPtr() { return getOperand(INT64_PIECES); }
+  MWasmStoreRef* mir() const { return mirRaw()->toWasmStoreRef(); }
+  const LAllocation* tls() { return getOperand(0); }
+  const LAllocation* valueAddr() { return getOperand(1); }
+  const LAllocation* value() { return getOperand(2); }
+  const LDefinition* temp() { return getTemp(0); }
 };
 
 class LWasmParameter : public LInstructionHelper<1, 0, 0> {
