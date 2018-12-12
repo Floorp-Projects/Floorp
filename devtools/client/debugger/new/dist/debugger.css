@@ -1910,12 +1910,6 @@ html .toggle-button.end.vertical svg {
   background-color: white;
 }
 
-.tree:not(.object-inspector)
-  .tree-node[data-expandable="false"]
-  .tree-indent:last-of-type {
-  margin-inline-end: 4px;
-}
-
 /*
   Custom root styles
 */
@@ -2690,11 +2684,11 @@ menuseparator {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.call-site {
+.column-breakpoint {
   display: inline;
 }
 
-.call-site svg {
+.column-breakpoint svg {
   display: inline;
   cursor: pointer;
   height: 12px;
@@ -2702,23 +2696,23 @@ menuseparator {
   vertical-align: top;
 }
 
-.call-site.active svg {
+.column-breakpoint.active svg {
   fill: var(--blue-50);
   stroke: var(--blue-60);
 }
 
-.call-site.disabled svg {
+.column-breakpoint.disabled svg {
   fill: var(--blue-50);
   stroke: var(--blue-40);
   fill-opacity: 0.5;
 }
 
-.theme-dark .call-site.active svg {
+.theme-dark .column-breakpoint.active svg {
   fill: var(--blue-55);
   stroke: var(--blue-40);
 }
 
-.theme-dark .call-site.disabled svg {
+.theme-dark .column-breakpoint.disabled svg {
   fill: var(--blue-50);
   stroke: var(--blue-60);
   fill-opacity: 0.5;
@@ -2973,7 +2967,7 @@ html[dir="rtl"] .editor-mount {
 }
 
 .debug-expression,
-.new-debug-line .call-site {
+.new-debug-line .column-breakpoint {
   background-color: var(--debug-expression-background);
 }
 
