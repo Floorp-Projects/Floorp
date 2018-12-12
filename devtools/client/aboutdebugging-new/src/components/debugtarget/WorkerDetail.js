@@ -83,7 +83,10 @@ class WorkerDetail extends PureComponent {
             $status: status,
           },
           dom.span(
-            { className: `badge ${status === "running" ? "badge--success" : ""}`},
+            {
+              className: `badge js-worker-status ` +
+                `${status === "running" ? "badge--success" : ""}`,
+            },
             status
           )
         ),
