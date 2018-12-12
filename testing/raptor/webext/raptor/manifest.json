@@ -21,6 +21,7 @@
                   "*://*.google.com/*",
                   "*://*.imdb.com/*",
                   "*://*.imgur.com/*",
+                  "*://*.instagram.com/*",
                   "*://*.microsoft.com/*",
                   "*://*.reddit.com/*",
                   "*://*.vice.com/*",

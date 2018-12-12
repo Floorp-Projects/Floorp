@@ -245,6 +245,30 @@ raptor-tp6-6-chrome:
             - --test=raptor-tp6-6
             - --app=chrome
 
+raptor-tp6-7-firefox:
+    description: "Raptor tp6-7 on Firefox"
+    try-name: raptor-tp6-7-firefox
+    treeherder-symbol: Rap(tp6-7)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-7
+
+raptor-tp6-7-chrome:
+    description: "Raptor tp6-7 on Chrome"
+    try-name: raptor-tp6-7-chrome
+    treeherder-symbol: Rap-C(tp6-7)
+    run-on-projects: ['try', 'mozilla-central']
+    tier:
+        by-test-platform:
+            linux64.*: 3
+            default: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-7
+            - --app=chrome
+
 raptor-speedometer-firefox:
     description: "Raptor Speedometer on Firefox"
     try-name: raptor-speedometer-firefox
