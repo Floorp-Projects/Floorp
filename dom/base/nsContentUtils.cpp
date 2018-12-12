@@ -352,6 +352,8 @@ bool nsContentUtils::sAntiTrackingControlCenterUIEnabled = false;
 mozilla::LazyLogModule nsContentUtils::sDOMDumpLog("Dump");
 
 PopupControlState nsContentUtils::sPopupControlState = openAbused;
+uint32_t nsContentUtils::sPopupStatePusherCount = 0;
+bool nsContentUtils::sUnusedPopupToken = false;
 
 int32_t nsContentUtils::sInnerOrOuterWindowCount = 0;
 uint32_t nsContentUtils::sInnerOrOuterWindowSerialCounter = 0;
@@ -10365,7 +10367,8 @@ nsContentUtils::TryGetTabChildGlobal(nsISupports* aFrom) {
   --sInnerOrOuterWindowCount;
 }
 
-/* static */ bool nsContentUtils::CanShowPopup(nsIPrincipal* aPrincipal) {
+/* static */ bool nsContentUtils::CanShowPopupByPermission(
+    nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aPrincipal);
   uint32_t permit;
   nsCOMPtr<nsIPermissionManager> permissionManager =
@@ -10383,6 +10386,17 @@ nsContentUtils::TryGetTabChildGlobal(nsISupports* aFrom) {
   }
 
   return !sDisablePopups;
+}
+
+/* static */ bool nsContentUtils::TryUsePopupOpeningToken() {
+  MOZ_ASSERT(sPopupStatePusherCount);
+
+  if (!sUnusedPopupToken) {
+    sUnusedPopupToken = true;
+    return true;
+  }
+
+  return false;
 }
 
 static bool JSONCreator(const char16_t* aBuf, uint32_t aLen, void* aData) {
@@ -10485,5 +10499,17 @@ static bool JSONCreator(const char16_t* aBuf, uint32_t aLen, void* aData) {
     }
     host = NS_LITERAL_CSTRING("*") +
            nsDependentCSubstring(host, startIndexOfNextLevel);
+  }
+}
+
+/* static */ void nsContentUtils::PopupStatePusherCreated() {
+  ++sPopupStatePusherCount;
+}
+
+/* static */ void nsContentUtils::PopupStatePusherDestroyed() {
+  MOZ_ASSERT(sPopupStatePusherCount);
+
+  if (!--sPopupStatePusherCount) {
+    sUnusedPopupToken = false;
   }
 }

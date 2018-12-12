@@ -212,7 +212,7 @@ add_task(async function test_hiddenNonShippingFieldsPreservedUponEdit() {
 
   Object.assign(expected, PTU.Addresses.TimBR, {
     "given-name": "Timothy-edit",
-    "name": "Timothy-edit João Berners-Lee",
+    "name": "Timothy-edit Jo\u{00E3}o Berners-Lee",
   });
   let actual = await formAutofillStorage.addresses.get(prefilledGuids.address1GUID);
   isnot(actual.email, "", "Check email isn't empty");
@@ -335,7 +335,7 @@ add_task(async function test_hiddenNonBillingAddressFieldsPreservedUponEdit() {
 
   Object.assign(expected, PTU.Addresses.TimBR, {
     "given-name": "Timothy-edit",
-    "name": "Timothy-edit João Berners-Lee",
+    "name": "Timothy-edit Jo\u{00E3}o Berners-Lee",
   });
   let actual = await formAutofillStorage.addresses.get(prefilledGuids.address1GUID);
   // timeLastModified changes and isn't relevant
