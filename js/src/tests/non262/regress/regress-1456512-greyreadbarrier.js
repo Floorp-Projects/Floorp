@@ -1,5 +1,3 @@
-// |reftest| skip-if(!xulRuntime.shell) -- needs grayRoot
-
 var wm = new WeakMap();
 grayRoot().map = wm;
 wm = null;
