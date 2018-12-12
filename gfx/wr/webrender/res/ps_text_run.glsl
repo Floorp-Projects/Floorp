@@ -166,6 +166,8 @@ void main(void) {
     }
 
     Glyph glyph = fetch_glyph(ph.specific_prim_address, glyph_index);
+    glyph.offset += ph.local_rect.p0 - text.offset;
+
     GlyphResource res = fetch_glyph_resource(resource_address);
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
