@@ -6229,7 +6229,7 @@ static bool NukeAllCCWs(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  NukeCrossCompartmentWrappers(cx, AllCompartments(), cx->compartment(),
+  NukeCrossCompartmentWrappers(cx, AllCompartments(), cx->realm(),
                                NukeWindowReferences, NukeAllReferences);
   args.rval().setUndefined();
   return true;
@@ -8490,7 +8490,7 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 
     JS_FN_HELP("nukeAllCCWs", NukeAllCCWs, 0, 0,
 "nukeAllCCWs()",
-"  Like nukeCCW, but for all CrossCompartmentWrappers targeting the current compartment."),
+"  Like nukeCCW, but for all CrossCompartmentWrappers targeting the current realm."),
 
     JS_FN_HELP("recomputeWrappers", RecomputeWrappers, 2, 0,
 "recomputeWrappers([src, [target]])",
