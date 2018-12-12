@@ -169,8 +169,12 @@ devtools/server/tests/unit/xpcshell_debugging_script.js
 dom/abort/**
 dom/animation/**
 dom/asmjscache/**
-dom/base/**
 dom/battery/**
+dom/base/*.*
+dom/base/test/*.*
+dom/base/test/unit/test_serializers_entities*.js
+dom/base/test/unit_ipc/**
+dom/base/test/jsmodules/**
 dom/bindings/**
 dom/broadcastchannel/**
 dom/browser-element/**

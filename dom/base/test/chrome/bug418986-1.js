@@ -1,9 +1,9 @@
+/* globals chromeWindow */
 // The main test function.
 var test = function(isContent) {
   SimpleTest.waitForExplicitFinish();
 
-	SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
-																		  true]]});
+  SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal", true]]});
 
   let { ww } = SpecialPowers.Services;
   window.chromeWindow = ww.activeWindow;
@@ -33,6 +33,7 @@ var test = function(isContent) {
 
   // checkPair: tests if members of pair [a, b] are equal when evaluated.
   let checkPair = function(a, b) {
+    // eslint-disable-next-line no-eval
     is(eval(a), eval(b), a + " should be equal to " + b);
   };
 

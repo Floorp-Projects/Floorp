@@ -1,3 +1,4 @@
+/* globals finishTest */
 class XFoo extends HTMLElement {
   constructor() {
     super();
