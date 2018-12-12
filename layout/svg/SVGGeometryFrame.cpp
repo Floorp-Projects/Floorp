@@ -246,7 +246,9 @@ void SVGGeometryFrame::PaintSVG(gfxContext& aContext,
                                 const gfxMatrix& aTransform,
                                 imgDrawingParams& aImgParams,
                                 const nsIntRect* aDirtyRect) {
-  if (!StyleVisibility()->IsVisible()) return;
+  if (!StyleVisibility()->IsVisible()) {
+    return;
+  }
 
   // Matrix to the geometry's user space:
   gfxMatrix newMatrix =
@@ -335,7 +337,9 @@ nsIFrame* SVGGeometryFrame::GetFrameForPoint(const gfxPoint& aPoint) {
     isHit = path->StrokeContainsPoint(stroke, point, Matrix());
   }
 
-  if (isHit && nsSVGUtils::HitTestClip(this, aPoint)) return this;
+  if (isHit && nsSVGUtils::HitTestClip(this, aPoint)) {
+    return this;
+  }
 
   return nullptr;
 }

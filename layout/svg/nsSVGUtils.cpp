@@ -308,7 +308,9 @@ nsSVGOuterSVGFrame* nsSVGUtils::GetOuterSVGFrame(nsIFrame* aFrame) {
 nsIFrame* nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame,
                                                        nsRect* aRect) {
   nsSVGDisplayableFrame* svg = do_QueryFrame(aFrame);
-  if (!svg) return nullptr;
+  if (!svg) {
+    return nullptr;
+  }
   nsSVGOuterSVGFrame* outer = GetOuterSVGFrame(aFrame);
   if (outer == svg) {
     return nullptr;
@@ -585,7 +587,9 @@ void nsSVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
                "SVG should take this code path");
 
   nsSVGDisplayableFrame* svgFrame = do_QueryFrame(aFrame);
-  if (!svgFrame) return;
+  if (!svgFrame) {
+    return;
+  }
 
   MaskUsage maskUsage;
   DetermineMaskUsage(aFrame, true, maskUsage);
@@ -956,7 +960,9 @@ gfxRect nsSVGUtils::GetClipRectForFrame(nsIFrame* aFrame, float aX, float aY,
 
 void nsSVGUtils::SetClipRect(gfxContext* aContext, const gfxMatrix& aCTM,
                              const gfxRect& aRect) {
-  if (aCTM.IsSingular()) return;
+  if (aCTM.IsSingular()) {
+    return;
+  }
 
   gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(aContext);
   aContext->Multiply(aCTM);
