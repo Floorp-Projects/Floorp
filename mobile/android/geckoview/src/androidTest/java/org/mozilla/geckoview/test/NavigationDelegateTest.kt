@@ -373,7 +373,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         assertThat("User agent should be reported as mobile",
                     userAgent, containsString(mobileSubStr))
 
-        sessionRule.session.settings.setUserAgentMode(GeckoSessionSettings.USER_AGENT_MODE_DESKTOP)
+        sessionRule.session.settings.userAgentMode = GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
 
         sessionRule.session.reload()
         sessionRule.session.waitForPageStop()
@@ -386,7 +386,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         assertThat("User agent should be reported as desktop",
                     userAgent, containsString(desktopSubStr))
 
-        sessionRule.session.settings.setUserAgentMode(GeckoSessionSettings.USER_AGENT_MODE_MOBILE)
+        sessionRule.session.settings.userAgentMode = GeckoSessionSettings.USER_AGENT_MODE_MOBILE
 
         sessionRule.session.reload()
         sessionRule.session.waitForPageStop()
@@ -400,7 +400,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                     userAgent, containsString(mobileSubStr))
 
         val vrSubStr = "Mobile VR"
-        sessionRule.session.settings.setUserAgentMode(GeckoSessionSettings.USER_AGENT_MODE_VR)
+        sessionRule.session.settings.userAgentMode = GeckoSessionSettings.USER_AGENT_MODE_VR
 
         sessionRule.session.reload()
         sessionRule.session.waitForPageStop()
@@ -439,7 +439,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         assertThat("User agent should be reported as override",
                 userAgent, equalTo(overrideUserAgent))
 
-        sessionRule.session.settings.setUserAgentMode(GeckoSessionSettings.USER_AGENT_MODE_VR)
+        sessionRule.session.settings.userAgentMode = GeckoSessionSettings.USER_AGENT_MODE_VR
 
         sessionRule.session.reload()
         sessionRule.session.waitForPageStop()
