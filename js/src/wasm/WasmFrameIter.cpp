@@ -1371,6 +1371,8 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native table.size function";
     case SymbolicAddress::PostBarrier:
       return "call to native GC postbarrier (in wasm)";
+    case SymbolicAddress::PostBarrierFiltering:
+      return "call to native filtering GC postbarrier (in wasm)";
     case SymbolicAddress::StructNew:
       return "call to native struct.new (in wasm)";
     case SymbolicAddress::StructNarrow:
