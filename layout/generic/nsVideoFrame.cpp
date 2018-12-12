@@ -499,7 +499,7 @@ class nsDisplayVideo : public nsDisplayItem {
     LayoutDeviceRect rect(destGFXRect.x, destGFXRect.y, destGFXRect.width,
                           destGFXRect.height);
     aManager->CommandBuilder().PushImage(this, container, aBuilder, aResources,
-                                         aSc, rect);
+                                         aSc, rect, rect);
     return true;
   }
 
