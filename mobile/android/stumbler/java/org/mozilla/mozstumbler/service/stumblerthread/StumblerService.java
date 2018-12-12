@@ -56,6 +56,8 @@ public class StumblerService extends PersistentIntentService
     // Used to guard against attempting to upload too frequently in passive mode.
     private static final long PASSIVE_UPLOAD_FREQ_GUARD_MSEC = 5 * 60 * 1000;
 
+    private static final String BROWSERAPP = "org.mozilla.gecko.BrowserApp";
+
     public StumblerService() {
         this("StumblerService");
     }
@@ -283,5 +285,13 @@ public class StumblerService extends PersistentIntentService
     private PendingIntent createContentIntent() {
         Intent intent = IntentHelper.getPrivacySettingsIntent();
         return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        if (rootIntent != null && rootIntent.getComponent() != null &&
+                BROWSERAPP.equals(rootIntent.getComponent().getClassName())) {
+            stopSelf();
+        }
     }
 }
