@@ -62,8 +62,6 @@ class GetUserMediaWindowListener;
 class MediaManager;
 class SourceListener;
 
-LogModule* GetMediaManagerLog();
-
 class MediaDevice : public nsIMediaDevice {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
