@@ -187,18 +187,9 @@ export function createPendingBreakpoint(bp: Breakpoint) {
 }
 
 export function sortBreakpoints(breakpoints: FormattedBreakpoint[]) {
-  breakpoints = breakpoints.map(bp => ({
-    ...bp,
-    selectedLocation: {
-      ...bp.selectedLocation,
-      // If a breakpoint has an undefined column, we must provide a 0 value
-      // or the breakpoint will display after all explicit column numbers
-      column: bp.selectedLocation.column || 0
-    }
-  }));
-
   return sortBy(breakpoints, [
     "selectedLocation.line",
-    "selectedLocation.column"
+    ({ selectedLocation }) =>
+      selectedLocation.column === undefined || selectedLocation.column
   ]);
 }
