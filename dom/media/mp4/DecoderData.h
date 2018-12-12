@@ -6,7 +6,6 @@
 #define DECODER_DATA_H_
 
 #include "MediaInfo.h"
-#include "MediaResult.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Result.h"
 #include "mozilla/Types.h"
@@ -54,8 +53,8 @@ class MP4AudioInfo : public mozilla::AudioInfo {
  public:
   MP4AudioInfo() = default;
 
-  MediaResult Update(const Mp4parseTrackInfo* track,
-                     const Mp4parseTrackAudioInfo* audio);
+  void Update(const Mp4parseTrackInfo* track,
+              const Mp4parseTrackAudioInfo* audio);
 
   virtual bool IsValid() const override;
 };
@@ -64,8 +63,8 @@ class MP4VideoInfo : public mozilla::VideoInfo {
  public:
   MP4VideoInfo() = default;
 
-  MediaResult Update(const Mp4parseTrackInfo* track,
-                     const Mp4parseTrackVideoInfo* video);
+  void Update(const Mp4parseTrackInfo* track,
+              const Mp4parseTrackVideoInfo* video);
 
   virtual bool IsValid() const override;
 };

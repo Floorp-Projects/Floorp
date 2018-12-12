@@ -40,7 +40,7 @@ macro_rules! box_database {
     }
 }
 
-#[derive(Default, PartialEq, Clone)]
+#[derive(Default, PartialEq)]
 pub struct FourCC {
     pub value: String
 }
@@ -137,7 +137,6 @@ box_database!(
     TrackEncryptionBox                0x74656e63, // "tenc"
     ProtectionSchemeInformationBox    0x73696e66, // "sinf"
     OriginalFormatBox                 0x66726d61, // "frma"
-    SchemeTypeBox                     0x7363686d, // "schm"
     MP3AudioSampleEntry               0x2e6d7033, // ".mp3" - from F4V.
     CompositionOffsetBox              0x63747473, // "ctts"
     LPCMAudioSampleEntry              0x6C70636D, // "lpcm" - quicktime atom
