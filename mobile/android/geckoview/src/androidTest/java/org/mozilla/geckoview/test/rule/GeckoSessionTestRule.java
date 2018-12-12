@@ -838,7 +838,7 @@ public class GeckoSessionTestRule implements TestRule {
 
     public GeckoSessionTestRule() {
         mDefaultSettings = new GeckoSessionSettings();
-        mDefaultSettings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, env.isMultiprocess());
+        mDefaultSettings.setUseMultiprocess(env.isMultiprocess());
     }
 
     /**

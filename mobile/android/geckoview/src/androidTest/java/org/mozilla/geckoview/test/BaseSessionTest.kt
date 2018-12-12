@@ -73,7 +73,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
                     .open(path.removePrefix("/assets/")).readBytes()
 
     val GeckoSession.isRemote
-        get() = this.settings.getBoolean(GeckoSessionSettings.USE_MULTIPROCESS)
+        get() = this.settings.isUseMultiprocess()
 
     fun createTestUrl(path: String) =
             GeckoSessionTestRule.APK_URI_PREFIX + path.removePrefix("/")
