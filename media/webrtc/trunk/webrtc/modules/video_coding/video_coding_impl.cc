@@ -256,7 +256,6 @@ class VideoCodingModuleImpl : public VideoCodingModule {
   }
 
   void TriggerDecoderShutdown() override { receiver_.TriggerDecoderShutdown(); }
-  void Reset() override {receiver_.Reset(); }
 
  private:
   rtc::ThreadChecker construction_thread_;
