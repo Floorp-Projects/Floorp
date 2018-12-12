@@ -136,7 +136,9 @@ nsIFrame* SVGRenderingObserver::GetAndObserveReferencedFrame(
     LayoutFrameType aFrameType, bool* aOK) {
   nsIFrame* frame = GetAndObserveReferencedFrame();
   if (frame) {
-    if (frame->Type() == aFrameType) return frame;
+    if (frame->Type() == aFrameType) {
+      return frame;
+    }
     if (aOK) {
       *aOK = false;
     }
@@ -653,7 +655,9 @@ class SVGFilterObserverListForCSSProp final : public SVGFilterObserverList {
 
 void SVGFilterObserverListForCSSProp::OnRenderingChange() {
   nsIFrame* frame = mFrameReference.Get();
-  if (!frame) return;
+  if (!frame) {
+    return;
+  }
 
   // Repaint asynchronously in case the filter frame is being torn down
   nsChangeHint changeHint = nsChangeHint(nsChangeHint_RepaintFrame);
@@ -992,10 +996,14 @@ template <class T>
 static T* GetEffectProperty(
     URLAndReferrerInfo* aURI, nsIFrame* aFrame,
     const mozilla::FramePropertyDescriptor<T>* aProperty) {
-  if (!aURI) return nullptr;
+  if (!aURI) {
+    return nullptr;
+  }
 
   T* prop = aFrame->GetProperty(aProperty);
-  if (prop) return prop;
+  if (prop) {
+    return prop;
+  }
   prop = new T(aURI, aFrame, false);
   NS_ADDREF(prop);
   aFrame->SetProperty(aProperty, prop);
@@ -1353,7 +1361,9 @@ nsSVGPaintServerFrame* SVGObserverUtils::GetAndObservePaintServer(
   }
 
   const nsStyleSVG* svgStyle = frame->StyleSVG();
-  if ((svgStyle->*aPaint).Type() != eStyleSVGPaintType_Server) return nullptr;
+  if ((svgStyle->*aPaint).Type() != eStyleSVGPaintType_Server) {
+    return nullptr;
+  }
 
   RefPtr<URLAndReferrerInfo> paintServerURL =
       ResolveURLUsingLocalRef(frame, (svgStyle->*aPaint).GetPaintServer());
@@ -1363,15 +1373,20 @@ nsSVGPaintServerFrame* SVGObserverUtils::GetAndObservePaintServer(
       (aPaint == &nsStyleSVG::mFill) ? FillProperty() : StrokeProperty();
   nsSVGPaintingProperty* property =
       GetPaintingProperty(paintServerURL, frame, propDesc);
-  if (!property) return nullptr;
+  if (!property) {
+    return nullptr;
+  }
   nsIFrame* result = property->GetAndObserveReferencedFrame();
-  if (!result) return nullptr;
+  if (!result) {
+    return nullptr;
+  }
 
   LayoutFrameType type = result->Type();
   if (type != LayoutFrameType::SVGLinearGradient &&
       type != LayoutFrameType::SVGRadialGradient &&
-      type != LayoutFrameType::SVGPattern)
+      type != LayoutFrameType::SVGPattern) {
     return nullptr;
+  }
 
   return static_cast<nsSVGPaintServerFrame*>(result);
 }
@@ -1449,7 +1464,9 @@ void SVGObserverUtils::InvalidateRenderingObservers(nsIFrame* aFrame) {
                "aFrame must be first continuation");
 
   nsIContent* content = aFrame->GetContent();
-  if (!content || !content->IsElement()) return;
+  if (!content || !content->IsElement()) {
+    return;
+  }
 
   // If the rendering has changed, the bounds may well have changed too:
   aFrame->DeleteProperty(nsSVGUtils::ObjectBoundingBoxProperty());

@@ -69,7 +69,9 @@ uint16_t nsSVGGradientFrame::GetEnumValue(uint32_t aIndex,
       static_cast<dom::SVGGradientElement*>(GetContent())
           ->mEnumAttributes[aIndex];
 
-  if (thisEnum.IsExplicitlySet()) return thisEnum.GetAnimValue();
+  if (thisEnum.IsExplicitlySet()) {
+    return thisEnum.GetAnimValue();
+  }
 
   // Before we recurse, make sure we'll break reference loops and over long
   // reference chains:
@@ -148,7 +150,9 @@ gfxMatrix nsSVGGradientFrame::GetGradientTransform(
 
   const nsSVGAnimatedTransformList* animTransformList =
       GetGradientTransformList(GetContent());
-  if (!animTransformList) return bboxMatrix;
+  if (!animTransformList) {
+    return bboxMatrix;
+  }
 
   gfxMatrix gradientTransform =
       animTransformList->GetAnimValue().GetConsolidationMatrix();
