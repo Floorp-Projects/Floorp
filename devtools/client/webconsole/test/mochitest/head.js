@@ -981,3 +981,97 @@ async function selectNodeWithPicker(toolbox, testActor, selector) {
   await onPickerStopped;
   await onInspectorUpdated;
 }
+
+/**
+ * Clicks on the arrow of a single object inspector node if it exists.
+ *
+ * @param {HTMLElement} node: Object inspector node (.tree-node)
+ */
+function expandObjectInspectorNode(node) {
+  const arrow = getObjectInspectorNodeArrow(node);
+  if (!arrow) {
+    ok(false, "Node can't be expanded");
+    return;
+  }
+  arrow.click();
+}
+
+/**
+ * Retrieve the arrow of a single object inspector node.
+ *
+ * @param {HTMLElement} node: Object inspector node (.tree-node)
+ * @return {HTMLElement|null} the arrow element
+ */
+function getObjectInspectorNodeArrow(node) {
+  return node.querySelector(".arrow");
+}
+
+/**
+ * Check if a single object inspector node is expandable.
+ *
+ * @param {HTMLElement} node: Object inspector node (.tree-node)
+ * @return {Boolean} true if the node can be expanded
+ */
+function isObjectInspectorNodeExpandable(node) {
+  return !!getObjectInspectorNodeArrow(node);
+}
+
+/**
+ * Retrieve the nodes for a given object inspector element.
+ *
+ * @param {HTMLElement} oi: Object inspector element
+ * @return {NodeList} the object inspector nodes
+ */
+function getObjectInspectorNodes(oi) {
+  return oi.querySelectorAll(".tree-node");
+}
+
+/**
+ * Retrieve the "children" nodes for a given object inspector node.
+ *
+ * @param {HTMLElement} node: Object inspector node (.tree-node)
+ * @return {Array<HTMLElement>} the direct children (i.e. the ones that are one level
+ *                              deeper than the passed node)
+ */
+function getObjectInspectorChildrenNodes(node) {
+  const getLevel = n => parseInt(n.getAttribute("aria-level"), 10);
+  const level = getLevel(node);
+  const childLevel = level + 1;
+  const children = [];
+
+  let currentNode = node;
+  while (currentNode.nextSibling && getLevel(currentNode.nextSibling) === childLevel) {
+    currentNode = currentNode.nextSibling;
+    children.push(currentNode);
+  }
+
+  return children;
+}
+
+/**
+ * Retrieve the invoke getter button for a given object inspector node.
+ *
+ * @param {HTMLElement} node: Object inspector node (.tree-node)
+ * @return {HTMLElement|null} the invoke button element
+ */
+function getObjectInspectorInvokeGetterButton(node) {
+  return node.querySelector(".invoke-getter");
+}
+
+/**
+ * Retrieve the first node that match the passed node label, for a given object inspector
+ * element.
+ *
+ * @param {HTMLElement} oi: Object inspector element
+ * @param {String} nodeLabel: label of the searched node
+ * @return {HTMLElement|null} the Object inspector node with the matching label
+ */
+function findObjectInspectorNode(oi, nodeLabel) {
+  return [...oi.querySelectorAll(".tree-node")].find(node => {
+    const label = node.querySelector(".object-label");
+    if (!label) {
+      return false;
+    }
+    return label.textContent === nodeLabel;
+  });
+}
