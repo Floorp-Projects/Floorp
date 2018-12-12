@@ -107,7 +107,7 @@ class nsHtml5StreamParser final : public nsICharsetDetectionObserver {
 
   const uint32_t SNIFFING_BUFFER_SIZE = 1024;
   const uint32_t READ_BUFFER_SIZE = 1024;
-  const uint32_t LOCAL_FILE_UTF_8_BUFFER_SIZE = 1024*1024*50; // 50 MB
+  const uint32_t LOCAL_FILE_UTF_8_BUFFER_SIZE = 1024*1024*4; // 4 MB
 
   friend class nsHtml5RequestStopper;
   friend class nsHtml5DataAvailable;
