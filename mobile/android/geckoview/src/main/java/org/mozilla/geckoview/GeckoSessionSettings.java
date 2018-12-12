@@ -154,6 +154,30 @@ public final class GeckoSessionSettings implements Parcelable {
         mBundle.putInt(DISPLAY_MODE.name, DISPLAY_MODE_BROWSER);
     }
 
+    public void setUseTrackingProtection(final boolean value) {
+        setBoolean(USE_TRACKING_PROTECTION, value);
+    }
+
+    public void setUsePrivateMode(final boolean value) {
+        setBoolean(USE_PRIVATE_MODE, value);
+    }
+
+    public void setUseMultiprocess(final boolean value) {
+        setBoolean(USE_MULTIPROCESS, value);
+    }
+
+    public void setSuspendMediaWhenInactive(final boolean value) {
+        setBoolean(SUSPEND_MEDIA_WHEN_INACTIVE, value);
+    }
+
+    public void setAllowJavascript(final boolean value) {
+        setBoolean(ALLOW_JAVASCRIPT, value);
+    }
+
+    public void setFullAccessibilityTree(final boolean value) {
+        setBoolean(FULL_ACCESSIBILITY_TREE, value);
+    }
+
     public void setBoolean(final Key<Boolean> key, final boolean value) {
         synchronized (mBundle) {
             if (valueChangedLocked(key, value)) {
@@ -163,10 +187,46 @@ public final class GeckoSessionSettings implements Parcelable {
         }
     }
 
+    public boolean isUseTrackingProtection() {
+        return getBoolean(USE_TRACKING_PROTECTION);
+    }
+
+    public boolean isUsePrivateMode() {
+        return getBoolean(USE_PRIVATE_MODE);
+    }
+
+    public boolean isUseMultiprocess() {
+        return getBoolean(USE_MULTIPROCESS);
+    }
+
+    public boolean isSuspendMediaWhenInactive() {
+        return getBoolean(SUSPEND_MEDIA_WHEN_INACTIVE);
+    }
+
+    public boolean isAllowJavascript() {
+        return getBoolean(ALLOW_JAVASCRIPT);
+    }
+
+    public boolean isFullAccessibilityTree() {
+        return getBoolean(FULL_ACCESSIBILITY_TREE);
+    }
+
     public boolean getBoolean(final Key<Boolean> key) {
         synchronized (mBundle) {
             return mBundle.getBoolean(key.name);
         }
+    }
+
+    public void setScreenId(final int value) {
+        setInt(SCREEN_ID, value);
+    }
+
+    public void setUserAgentMode(final int value) {
+        setInt(USER_AGENT_MODE, value);
+    }
+
+    public void setDisplayMode(final int value) {
+        setInt(DISPLAY_MODE, value);
     }
 
     public void setInt(final Key<Integer> key, final int value) {
@@ -178,10 +238,30 @@ public final class GeckoSessionSettings implements Parcelable {
         }
     }
 
+    public int getScreenId() {
+        return getInt(SCREEN_ID);
+    }
+
+    public int getUseAgentMode() {
+        return getInt(USER_AGENT_MODE);
+    }
+
+    public int getDisplayMode() {
+        return getInt(DISPLAY_MODE);
+    }
+
     public int getInt(final Key<Integer> key) {
         synchronized (mBundle) {
             return mBundle.getInt(key.name);
         }
+    }
+
+    public void setChromeUri(final String value) {
+        setString(CHROME_URI, value);
+    }
+
+    public void setUserAgentOverride(final String value) {
+        setString(USER_AGENT_OVERRIDE, value);
     }
 
     public void setString(final Key<String> key, final String value) {
@@ -191,6 +271,14 @@ public final class GeckoSessionSettings implements Parcelable {
                 dispatchUpdate();
             }
         }
+    }
+
+    public String getChromeUri() {
+        return getString(USER_AGENT_OVERRIDE);
+    }
+
+    public String getUserAgentOverride() {
+        return getString(USER_AGENT_OVERRIDE);
     }
 
     public String getString(final Key<String> key) {

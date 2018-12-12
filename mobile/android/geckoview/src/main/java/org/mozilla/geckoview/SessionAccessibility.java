@@ -113,7 +113,7 @@ public class SessionAccessibility {
         public AccessibilityNodeInfo createAccessibilityNodeInfo(int virtualDescendantId) {
             AccessibilityNodeInfo node = null;
             if (mAttached) {
-                node = mSession.getSettings().getBoolean(GeckoSessionSettings.FULL_ACCESSIBILITY_TREE) ?
+                node = mSession.getSettings().isFullAccessibilityTree() ?
                         getNodeFromGecko(virtualDescendantId) : getNodeFromCache(virtualDescendantId);
                 if (node != null) {
                     node.setAccessibilityFocused(mAccessibilityFocusedNode == virtualDescendantId);
@@ -654,7 +654,7 @@ public class SessionAccessibility {
         }
 
         GeckoBundle cachedBundle = null;
-        if (!mSession.getSettings().getBoolean(GeckoSessionSettings.FULL_ACCESSIBILITY_TREE)) {
+        if (!mSession.getSettings().isFullAccessibilityTree()) {
             cachedBundle = getMostRecentBundle(sourceId);
             // Suppress events from non cached nodes if cache is enabled.
             if (cachedBundle == null && sourceId != View.NO_ID) {
