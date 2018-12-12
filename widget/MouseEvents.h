@@ -261,6 +261,10 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
     return result;
   }
 
+  // If during mouseup handling we detect that click event might need to be
+  // dispatched, this is setup to be the target of the click event.
+  nsCOMPtr<dom::EventTarget> mClickTarget;
+
   // mReason indicates the reason why the event is fired:
   // - Representing mouse operation.
   // - Synthesized for emulating mousemove event when the content under the

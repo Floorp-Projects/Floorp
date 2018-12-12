@@ -670,12 +670,28 @@ ImgDrawResult nsCSSRendering::CreateWebRenderCommandsForBorder(
     const mozilla::layers::StackingContextHelper& aSc,
     mozilla::layers::WebRenderLayerManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
+  const nsStyleBorder* styleBorder = aForFrame->Style()->StyleBorder();
+  return nsCSSRendering::CreateWebRenderCommandsForBorderWithStyleBorder(
+      aItem, aForFrame, aBorderArea, aBuilder, aResources, aSc, aManager,
+      aDisplayListBuilder, *styleBorder);
+}
+
+ImgDrawResult nsCSSRendering::CreateWebRenderCommandsForBorderWithStyleBorder(
+    nsDisplayItem* aItem, nsIFrame* aForFrame, const nsRect& aBorderArea,
+    mozilla::wr::DisplayListBuilder& aBuilder,
+    mozilla::wr::IpcResourceUpdateQueue& aResources,
+    const mozilla::layers::StackingContextHelper& aSc,
+    mozilla::layers::WebRenderLayerManager* aManager,
+    nsDisplayListBuilder* aDisplayListBuilder,
+    const nsStyleBorder& aStyleBorder) {
   // First try to draw a normal border
   {
     bool borderIsEmpty = false;
-    Maybe<nsCSSBorderRenderer> br = nsCSSRendering::CreateBorderRenderer(
-        aForFrame->PresContext(), nullptr, aForFrame, nsRect(), aBorderArea,
-        aForFrame->Style(), &borderIsEmpty, aForFrame->GetSkipSides());
+    Maybe<nsCSSBorderRenderer> br =
+        nsCSSRendering::CreateBorderRendererWithStyleBorder(
+            aForFrame->PresContext(), nullptr, aForFrame, nsRect(), aBorderArea,
+            aStyleBorder, aForFrame->Style(), &borderIsEmpty,
+            aForFrame->GetSkipSides());
     if (borderIsEmpty) {
       return ImgDrawResult::SUCCESS;
     }
@@ -687,8 +703,7 @@ ImgDrawResult nsCSSRendering::CreateWebRenderCommandsForBorder(
   }
 
   // Next try to draw an image border
-  const nsStyleBorder* styleBorder = aForFrame->Style()->StyleBorder();
-  const nsStyleImage* image = &styleBorder->mBorderImageSource;
+  const nsStyleImage* image = &aStyleBorder.mBorderImageSource;
 
   // Filter out unsupported image/border types
   if (!image) {
@@ -704,10 +719,10 @@ ImgDrawResult nsCSSRendering::CreateWebRenderCommandsForBorder(
     return ImgDrawResult::NOT_SUPPORTED;
   }
 
-  if (styleBorder->mBorderImageRepeatH == StyleBorderImageRepeat::Round ||
-      styleBorder->mBorderImageRepeatH == StyleBorderImageRepeat::Space ||
-      styleBorder->mBorderImageRepeatV == StyleBorderImageRepeat::Round ||
-      styleBorder->mBorderImageRepeatV == StyleBorderImageRepeat::Space) {
+  if (aStyleBorder.mBorderImageRepeatH == StyleBorderImageRepeat::Round ||
+      aStyleBorder.mBorderImageRepeatH == StyleBorderImageRepeat::Space ||
+      aStyleBorder.mBorderImageRepeatV == StyleBorderImageRepeat::Round ||
+      aStyleBorder.mBorderImageRepeatV == StyleBorderImageRepeat::Space) {
     return ImgDrawResult::NOT_SUPPORTED;
   }
 
@@ -719,7 +734,7 @@ ImgDrawResult nsCSSRendering::CreateWebRenderCommandsForBorder(
   image::ImgDrawResult result;
   Maybe<nsCSSBorderImageRenderer> bir =
       nsCSSBorderImageRenderer::CreateBorderImageRenderer(
-          aForFrame->PresContext(), aForFrame, aBorderArea, *styleBorder,
+          aForFrame->PresContext(), aForFrame, aBorderArea, aStyleBorder,
           aItem->GetPaintRect(), aForFrame->GetSkipSides(), flags, &result);
 
   if (!bir) {

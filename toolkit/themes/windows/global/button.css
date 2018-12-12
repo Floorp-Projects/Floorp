@@ -53,17 +53,6 @@ button:-moz-focusring {
   }
 }
 
-/* .......... active/open/checked state .......... */
-
-@media (-moz-windows-classic) {
-  button:-moz-any(:hover:active,[open="true"],[checked="true"]):not([disabled="true"]) > .button-box {
-    padding-top: 3px;
-    padding-bottom: 2px;
-    padding-inline-start: 5px;
-    padding-inline-end: 4px;
-  }
-}
-
 /* .......... disabled state .......... */
 
 button[disabled="true"] {
