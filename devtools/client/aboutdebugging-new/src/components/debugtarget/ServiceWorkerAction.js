@@ -44,7 +44,11 @@ class ServiceWorkerAction extends PureComponent {
 
     if (!isRunning) {
       const startLabel = this.props.getString("about-debugging-worker-action-start");
-      return this._renderButton(startLabel, this.start.bind(this));
+      return this._renderButton({
+        className: "default-button",
+        label: startLabel,
+        onClick: this.start.bind(this),
+      });
     }
 
     if (!isActive) {
@@ -54,15 +58,19 @@ class ServiceWorkerAction extends PureComponent {
 
     const pushLabel = this.props.getString("about-debugging-worker-action-push");
     return [
-      this._renderButton(pushLabel, this.push.bind(this)),
+      this._renderButton({
+        className: "default-button js-push-button",
+        label: pushLabel,
+        onClick: this.push.bind(this),
+      }),
       InspectAction({ dispatch, target }),
     ];
   }
 
-  _renderButton(label, onClick) {
+  _renderButton({ className, label, onClick }) {
     return dom.button(
       {
-        className: "default-button",
+        className,
         onClick: e => onClick(),
       },
       label,
