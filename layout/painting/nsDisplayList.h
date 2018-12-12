@@ -5336,6 +5336,8 @@ class nsDisplayOpacity : public nsDisplayWrapList {
 
   float GetOpacity() const { return mOpacity; }
 
+  bool ForEventsAndPluginsOnly() const { return mForEventsAndPluginsOnly; }
+
  private:
   bool ApplyOpacityToChildren(nsDisplayListBuilder* aBuilder);
   bool IsEffectsWrapper() const;
