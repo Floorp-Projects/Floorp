@@ -12674,6 +12674,11 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent, nsIURI* aURI,
     }
   }
 
+  // if the triggeringPrincipal is not passed explicitly, then we
+  // fall back to using doc->NodePrincipal() as the triggeringPrincipal.
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal =
+      aTriggeringPrincipal ? aTriggeringPrincipal : aContent->NodePrincipal();
+
   uint32_t flags = INTERNAL_LOAD_FLAGS_NONE;
   if (IsElementAnchorOrArea(aContent)) {
     MOZ_ASSERT(aContent->IsHTMLElement());
@@ -12711,7 +12716,8 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent, nsIURI* aURI,
     }
 
     if (targetBlank && StaticPrefs::dom_targetBlankNoOpener_enabled() &&
-        !explicitOpenerSet) {
+        !explicitOpenerSet &&
+        !nsContentUtils::IsSystemPrincipal(triggeringPrincipal)) {
       flags |= INTERNAL_LOAD_FLAGS_NO_OPENER;
     }
 
@@ -12766,11 +12772,6 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent, nsIURI* aURI,
     NS_ParseRequestContentType(utf8Hint, type, dummy);
     CopyUTF8toUTF16(type, typeHint);
   }
-
-  // if the triggeringPrincipal is not passed explicitly, then we
-  // fall back to using doc->NodePrincipal() as the triggeringPrincipal.
-  nsCOMPtr<nsIPrincipal> triggeringPrincipal =
-      aTriggeringPrincipal ? aTriggeringPrincipal : aContent->NodePrincipal();
 
   // Link click (or form submission) can be triggered inside an onload handler,
   // and we don't want to add history entry in this case.
