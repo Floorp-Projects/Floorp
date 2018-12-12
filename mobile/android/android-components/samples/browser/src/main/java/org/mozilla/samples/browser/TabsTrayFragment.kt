@@ -45,19 +45,8 @@ class TabsTrayFragment : Fragment(), BackHandler {
             tabsTray,
             components.sessionManager,
             components.tabsUseCases,
-            ::closeTabsTray)
-    }
-
-    override fun onStart() {
-        super.onStart()
-
-        tabsFeature?.start()
-    }
-
-    override fun onStop() {
-        super.onStop()
-
-        tabsFeature?.stop()
+            ::closeTabsTray
+        ).also { lifecycle.addObserver(it) }
     }
 
     override fun onBackPressed(): Boolean {

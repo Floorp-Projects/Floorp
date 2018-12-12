@@ -9,11 +9,12 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.window.WindowRequest
+import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 /**
  * Feature implementation for handling window requests.
  */
-class WindowFeature(private val engine: Engine, private val sessionManager: SessionManager) {
+class WindowFeature(private val engine: Engine, private val sessionManager: SessionManager) : LifecycleAwareFeature {
 
     internal val windowObserver = object : SelectionAwareSessionObserver(sessionManager) {
         override fun onOpenWindowRequested(session: Session, windowRequest: WindowRequest): Boolean {
@@ -35,14 +36,14 @@ class WindowFeature(private val engine: Engine, private val sessionManager: Sess
     /**
      * Starts the feature and a observer to listen for window requests.
      */
-    fun start() {
+    override fun start() {
         windowObserver.observeSelected()
     }
 
     /**
      * Stops the feature and the window request observer.
      */
-    fun stop() {
+    override fun stop() {
         windowObserver.stop()
     }
 }

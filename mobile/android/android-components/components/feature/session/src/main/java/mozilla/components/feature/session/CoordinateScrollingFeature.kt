@@ -14,6 +14,7 @@ import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 /**
  * Feature implementation for connecting an [EngineView] with any View that you want to coordinate scrolling
@@ -26,12 +27,12 @@ class CoordinateScrollingFeature(
     private val engineView: EngineView,
     private val view: View,
     private val scrollFlags: Int = DEFAULT_SCROLL_FLAGS
-) : SelectionAwareSessionObserver(sessionManager) {
+) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature {
 
     /**
      * Start feature: Starts adding scrolling behavior for the indicated view.
      */
-    fun start() {
+    override fun start() {
         observeSelected()
     }
 

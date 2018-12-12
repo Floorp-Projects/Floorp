@@ -9,6 +9,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 /**
  * Feature implementation for connecting a tabs tray implementation with the session module.
@@ -18,7 +19,7 @@ class TabsFeature(
     sessionManager: SessionManager,
     tabsUseCases: TabsUseCases,
     closeTabsTray: () -> Unit
-) {
+) : LifecycleAwareFeature {
     @VisibleForTesting
     internal var presenter = TabsTrayPresenter(
         tabsTray,
@@ -33,12 +34,12 @@ class TabsFeature(
         tabsUseCases.removeTab,
         closeTabsTray)
 
-    fun start() {
+    override fun start() {
         presenter.start()
         interactor.start()
     }
 
-    fun stop() {
+    override fun stop() {
         presenter.stop()
         interactor.stop()
     }

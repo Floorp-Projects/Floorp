@@ -6,6 +6,7 @@ package mozilla.components.feature.session
 
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 /**
  * Feature implementation for connecting the engine module with the session module.
@@ -15,13 +16,13 @@ class SessionFeature(
     private val sessionUseCases: SessionUseCases,
     engineView: EngineView,
     sessionId: String? = null
-) {
+) : LifecycleAwareFeature {
     internal val presenter = EngineViewPresenter(sessionManager, engineView, sessionId)
 
     /**
      * Start feature: App is in the foreground.
      */
-    fun start() {
+    override fun start() {
         presenter.start()
     }
 
@@ -44,7 +45,7 @@ class SessionFeature(
     /**
      * Stop feature: App is in the background.
      */
-    fun stop() {
+    override fun stop() {
         presenter.stop()
     }
 }

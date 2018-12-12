@@ -14,6 +14,7 @@ import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.downloads.DownloadDialogFragment.Companion.FRAGMENT_TAG
+import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 
 typealias OnNeedToRequestPermissions = (session: Session, download: Download) -> Unit
@@ -42,13 +43,13 @@ class DownloadsFeature(
     private val sessionManager: SessionManager,
     private val fragmentManager: FragmentManager? = null,
     private var dialog: DownloadDialogFragment = SimpleDownloadDialogFragment.newInstance()
-) : SelectionAwareSessionObserver(sessionManager) {
+) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature {
 
     /**
      * Starts observing any download on the selected session and send it to the [DownloadManager]
      * to be processed.
      */
-    fun start() {
+    override fun start() {
         super.observeSelected()
 
         findPreviousDialogFragment()?.let {

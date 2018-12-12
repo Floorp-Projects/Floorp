@@ -6,6 +6,8 @@ package org.mozilla.samples.browser
 
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.Intent
+import android.arch.lifecycle.Lifecycle
+import android.arch.lifecycle.LifecycleObserver
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Bundle
 import android.support.v4.app.Fragment
@@ -105,6 +107,17 @@ class BrowserFragment : Fragment(), BackHandler {
         }
 
         windowFeature = WindowFeature(components.engine, components.sessionManager)
+
+        // Observe the lifecycle for supported features
+        lifecycle.addObservers(
+            sessionFeature,
+            toolbarFeature,
+            downloadsFeature,
+            scrollFeature,
+            contextMenuFeature,
+            promptFeature,
+            windowFeature
+        )
     }
 
     private fun showTabs() {
@@ -114,30 +127,6 @@ class BrowserFragment : Fragment(), BackHandler {
             replace(R.id.container, TabsTrayFragment())
             commit()
         }
-    }
-
-    override fun onStart() {
-        super.onStart()
-
-        sessionFeature.start()
-        windowFeature.start()
-        toolbarFeature.start()
-        downloadsFeature.start()
-        scrollFeature.start()
-        contextMenuFeature.start()
-        promptFeature.start()
-    }
-
-    override fun onStop() {
-        super.onStop()
-
-        sessionFeature.stop()
-        windowFeature.stop()
-        toolbarFeature.stop()
-        downloadsFeature.stop()
-        scrollFeature.stop()
-        contextMenuFeature.stop()
-        promptFeature.stop()
     }
 
     override fun onBackPressed(): Boolean {
@@ -181,4 +170,6 @@ class BrowserFragment : Fragment(), BackHandler {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         promptFeature.onActivityResult(requestCode, resultCode, data)
     }
+
+    private fun Lifecycle.addObservers(vararg observers: LifecycleObserver) = observers.forEach { addObserver(it) }
 }

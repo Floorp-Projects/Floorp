@@ -10,6 +10,7 @@ import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal const val FRAGMENT_TAG = "mozac_feature_contextmenu_dialog"
@@ -33,13 +34,13 @@ class ContextMenuFeature(
     private val sessionManager: SessionManager,
     private val candidates: List<ContextMenuCandidate>
 
-) {
+) : LifecycleAwareFeature {
     private val observer = ContextMenuObserver(sessionManager, feature = this)
 
     /**
      * Start observing the selected session and when needed show a context menu.
      */
-    fun start() {
+    override fun start() {
         fragmentManager.findFragmentByTag(FRAGMENT_TAG)?.let { fragment ->
             // There's still a context menu fragment visible from the last time. Re-attach this feature so that the
             // fragment can invoke the callback on this feature once the user makes a selection. This can happen when
@@ -53,7 +54,7 @@ class ContextMenuFeature(
     /**
      * Stop observing the selected session and do not show any context menus anymore.
      */
-    fun stop() {
+    override fun stop() {
         observer.stop()
     }
 

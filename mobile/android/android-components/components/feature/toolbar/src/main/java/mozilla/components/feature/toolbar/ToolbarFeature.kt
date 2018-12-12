@@ -7,6 +7,7 @@ package mozilla.components.feature.toolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 /**
  * A function representing the search use case, accepting
@@ -23,14 +24,14 @@ class ToolbarFeature(
     loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     searchUseCase: SearchUseCase? = null,
     sessionId: String? = null
-) {
+) : LifecycleAwareFeature {
     private val presenter = ToolbarPresenter(toolbar, sessionManager, sessionId)
     private val interactor = ToolbarInteractor(toolbar, loadUrlUseCase, searchUseCase)
 
     /**
      * Start feature: App is in the foreground.
      */
-    fun start() {
+    override fun start() {
         interactor.start()
         presenter.start()
     }
@@ -47,7 +48,7 @@ class ToolbarFeature(
     /**
      * Stop feature: App is in the background.
      */
-    fun stop() {
+    override fun stop() {
         interactor.stop()
         presenter.stop()
     }

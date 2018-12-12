@@ -27,6 +27,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.File
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.MULTIPLE_CHOICE_DIALOG_TYPE
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.MENU_CHOICE_DIALOG_TYPE
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.SINGLE_CHOICE_DIALOG_TYPE
+import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import java.security.InvalidParameterException
 import java.util.Date
@@ -69,7 +70,7 @@ class PromptFeature(
     private val fragmentManager: FragmentManager,
     private val onNeedToRequestPermissions: OnNeedToRequestPermissions
 
-) {
+) : LifecycleAwareFeature {
 
     init {
         if (activity == null && fragment == null) {
@@ -85,7 +86,7 @@ class PromptFeature(
     /**
      * Start observing the selected session and when needed show native dialogs.
      */
-    fun start() {
+    override fun start() {
         observer.observeSelected()
 
         fragmentManager.findFragmentByTag(FRAGMENT_TAG)?.let { fragment ->
@@ -99,7 +100,7 @@ class PromptFeature(
     /**
      * Stop observing the selected session incoming onPromptRequested events.
      */
-    fun stop() {
+    override fun stop() {
         observer.stop()
     }
 
