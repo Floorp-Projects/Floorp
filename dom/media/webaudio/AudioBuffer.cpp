@@ -382,6 +382,13 @@ void AudioBuffer::GetChannelData(JSContext* aJSContext, uint32_t aChannel,
 
 already_AddRefed<ThreadSharedFloatArrayBufferList>
 AudioBuffer::StealJSArrayDataIntoSharedChannels(JSContext* aJSContext) {
+  nsPIDOMWindowInner* global = GetParentObject();
+  if (!global || !global->AsGlobal()->GetGlobalJSObject()) {
+    return nullptr;
+  }
+
+  JSAutoRealm ar(aJSContext, global->AsGlobal()->GetGlobalJSObject());
+
   // "1. If any of the AudioBuffer's ArrayBuffer have been detached, abort
   // these steps, and return a zero-length channel data buffers to the
   // invoker."
