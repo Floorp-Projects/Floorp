@@ -143,7 +143,9 @@ SVGBBox nsSVGMarkerFrame::GetMarkBBoxContribution(
   // If the flag is set when we get here, it means this marker frame
   // has already been used in calculating the current mark bbox, and
   // the document has a marker reference loop.
-  if (mInUse) return bbox;
+  if (mInUse) {
+    return bbox;
+  }
 
   AutoMarkerReferencer markerRef(this, aMarkedFrame);
 
