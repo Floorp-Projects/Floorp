@@ -155,52 +155,7 @@ MP4Metadata::ResultAndTrackCount MP4Metadata::GetNumberTracks(
     if (rv != MP4PARSE_STATUS_OK) {
       continue;
     }
-
-    if (track_info.track_type == MP4PARSE_TRACK_TYPE_AUDIO) {
-      Mp4parseTrackAudioInfo audio;
-      auto rv = mp4parse_get_track_audio_info(mParser.get(), i, &audio);
-      if (rv != MP4PARSE_STATUS_OK) {
-        MOZ_LOG(gMP4MetadataLog, LogLevel::Warning,
-                ("mp4parse_get_track_audio_info returned error %d", rv));
-        continue;
-      }
-      MOZ_DIAGNOSTIC_ASSERT(audio.sample_info_count > 0,
-                            "Must have at least one audio sample info");
-      if (audio.sample_info_count == 0) {
-        return {
-            MediaResult(
-                NS_ERROR_DOM_MEDIA_METADATA_ERR,
-                RESULT_DETAIL(
-                    "Got 0 audio sample info while checking number tracks")),
-            MP4Metadata::NumberTracksError()};
-      }
-      // We assume the codec of the first sample info is representative of the
-      // whole track and skip it if we don't recognize the codec.
-      if (audio.sample_info[0].codec_type == MP4PARSE_CODEC_UNKNOWN) {
-        continue;
-      }
-    } else if (track_info.track_type == MP4PARSE_TRACK_TYPE_VIDEO) {
-      Mp4parseTrackVideoInfo video;
-      auto rv = mp4parse_get_track_video_info(mParser.get(), i, &video);
-      if (rv != MP4PARSE_STATUS_OK) {
-        MOZ_LOG(gMP4MetadataLog, LogLevel::Warning,
-                ("mp4parse_get_track_video_info returned error %d", rv));
-        continue;
-      }
-      MOZ_DIAGNOSTIC_ASSERT(video.sample_info_count > 0,
-                            "Must have at least one video sample info");
-      if (video.sample_info_count == 0) {
-        return {
-            MediaResult(
-                NS_ERROR_DOM_MEDIA_METADATA_ERR,
-                RESULT_DETAIL(
-                    "Got 0 video sample info while checking number tracks")),
-            MP4Metadata::NumberTracksError()};
-      }
-      // We assume the codec of the first sample info is representative of the
-      // whole track and skip it if we don't recognize the codec.
-    } else {
-      // Only audio and video are supported
+    if (track_info.codec == MP4PARSE_CODEC_UNKNOWN) {
       continue;
     }
     if (TrackTypeEqual(aType, track_info.track_type)) {
@@ -264,71 +219,50 @@ MP4Metadata::ResultAndTrackInfo MP4Metadata::GetTrackInfo(
             nullptr};
   }
 #ifdef DEBUG
-  bool haveSampleInfo = false;
-  const char* codecString = "unrecognized";
-  Mp4parseCodec codecType = MP4PARSE_CODEC_UNKNOWN;
-  if (info.track_type == MP4PARSE_TRACK_TYPE_AUDIO) {
-    Mp4parseTrackAudioInfo audio;
-    auto rv = mp4parse_get_track_audio_info(mParser.get(), trackIndex.value(),
-                                            &audio);
-    if (rv == MP4PARSE_STATUS_OK && audio.sample_info_count > 0) {
-      codecType = audio.sample_info[0].codec_type;
-      haveSampleInfo = true;
-    }
-  } else if (info.track_type == MP4PARSE_TRACK_TYPE_VIDEO) {
-    Mp4parseTrackVideoInfo video;
-    auto rv = mp4parse_get_track_video_info(mParser.get(), trackIndex.value(),
-                                            &video);
-    if (rv == MP4PARSE_STATUS_OK && video.sample_info_count > 0) {
-      codecType = video.sample_info[0].codec_type;
-      haveSampleInfo = true;
-    }
-  }
-  if (haveSampleInfo) {
-    switch (codecType) {
-      case MP4PARSE_CODEC_UNKNOWN:
-        codecString = "unknown";
-        break;
-      case MP4PARSE_CODEC_AAC:
-        codecString = "aac";
-        break;
-      case MP4PARSE_CODEC_OPUS:
-        codecString = "opus";
-        break;
-      case MP4PARSE_CODEC_FLAC:
-        codecString = "flac";
-        break;
-      case MP4PARSE_CODEC_ALAC:
-        codecString = "alac";
-        break;
-      case MP4PARSE_CODEC_AVC:
-        codecString = "h.264";
-        break;
-      case MP4PARSE_CODEC_VP9:
-        codecString = "vp9";
-        break;
-      case MP4PARSE_CODEC_AV1:
-        codecString = "av1";
-        break;
-      case MP4PARSE_CODEC_MP3:
-        codecString = "mp3";
-        break;
-      case MP4PARSE_CODEC_MP4V:
-        codecString = "mp4v";
-        break;
-      case MP4PARSE_CODEC_JPEG:
-        codecString = "jpeg";
-        break;
-      case MP4PARSE_CODEC_AC3:
-        codecString = "ac-3";
-        break;
-      case MP4PARSE_CODEC_EC3:
-        codecString = "ec-3";
-        break;
-    }
+  const char* codec_string = "unrecognized";
+  switch (info.codec) {
+    case MP4PARSE_CODEC_UNKNOWN:
+      codec_string = "unknown";
+      break;
+    case MP4PARSE_CODEC_AAC:
+      codec_string = "aac";
+      break;
+    case MP4PARSE_CODEC_OPUS:
+      codec_string = "opus";
+      break;
+    case MP4PARSE_CODEC_FLAC:
+      codec_string = "flac";
+      break;
+    case MP4PARSE_CODEC_ALAC:
+      codec_string = "alac";
+      break;
+    case MP4PARSE_CODEC_AVC:
+      codec_string = "h.264";
+      break;
+    case MP4PARSE_CODEC_VP9:
+      codec_string = "vp9";
+      break;
+    case MP4PARSE_CODEC_AV1:
+      codec_string = "av1";
+      break;
+    case MP4PARSE_CODEC_MP3:
+      codec_string = "mp3";
+      break;
+    case MP4PARSE_CODEC_MP4V:
+      codec_string = "mp4v";
+      break;
+    case MP4PARSE_CODEC_JPEG:
+      codec_string = "jpeg";
+      break;
+    case MP4PARSE_CODEC_AC3:
+      codec_string = "ac-3";
+      break;
+    case MP4PARSE_CODEC_EC3:
+      codec_string = "ec-3";
+      break;
   }
   MOZ_LOG(gMP4MetadataLog, LogLevel::Debug,
-          ("track codec %s (%u)\n", codecString, codecType));
+          ("track codec %s (%u)\n", codec_string, info.codec));
 #endif
 
   // This specialization interface is crazy.
@@ -347,18 +281,7 @@ MP4Metadata::ResultAndTrackInfo MP4Metadata::GetTrackInfo(
                 nullptr};
       }
       auto track = mozilla::MakeUnique<MP4AudioInfo>();
-      MediaResult updateStatus = track->Update(&info, &audio);
-      if (updateStatus != NS_OK) {
-        MOZ_LOG(gMP4MetadataLog, LogLevel::Warning,
-                ("Updating audio track failed with %s",
-                 updateStatus.Message().get()));
-        return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
-                            RESULT_DETAIL(
-                                "Failed to update %s track #%zu with error: %s",
-                                TrackTypeToStr(aType), aTrackNumber,
-                                updateStatus.Message().get())),
-                nullptr};
-      }
+      track->Update(&info, &audio);
       e = std::move(track);
     } break;
     case TrackInfo::TrackType::kVideoTrack: {
@@ -374,18 +297,7 @@ MP4Metadata::ResultAndTrackInfo MP4Metadata::GetTrackInfo(
                 nullptr};
       }
       auto track = mozilla::MakeUnique<MP4VideoInfo>();
-      MediaResult updateStatus = track->Update(&info, &video);
-      if (updateStatus != NS_OK) {
-        MOZ_LOG(gMP4MetadataLog, LogLevel::Warning,
-                ("Updating video track failed with %s",
-                 updateStatus.Message().get()));
-        return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
-                            RESULT_DETAIL(
-                                "Failed to update %s track #%zu with error: %s",
-                                TrackTypeToStr(aType), aTrackNumber,
-                                updateStatus.Message().get())),
-                nullptr};
-      }
+      track->Update(&info, &video);
       e = std::move(track);
     } break;
     default:

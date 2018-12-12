@@ -16,14 +16,6 @@ extern "C" {
 #include <stdbool.h>
 
 typedef enum {
-  MP4_PARSE_ENCRYPTION_SCHEME_TYPE_NONE,
-  MP4_PARSE_ENCRYPTION_SCHEME_TYPE_CENC,
-  MP4_PARSE_ENCRYPTION_SCHEME_TYPE_CBC1,
-  MP4_PARSE_ENCRYPTION_SCHEME_TYPE_CENS,
-  MP4_PARSE_ENCRYPTION_SCHEME_TYPE_CBCS,
-} Mp4ParseEncryptionSchemeType;
-
-typedef enum {
   MP4PARSE_CODEC_UNKNOWN,
   MP4PARSE_CODEC_AAC,
   MP4PARSE_CODEC_FLAC,
@@ -81,17 +73,12 @@ typedef struct {
 } Mp4parsePsshInfo;
 
 typedef struct {
-  Mp4ParseEncryptionSchemeType scheme_type;
-  uint8_t is_encrypted;
+  uint32_t is_encrypted;
   uint8_t iv_size;
   Mp4parseByteData kid;
-  uint8_t crypt_byte_block;
-  uint8_t skip_byte_block;
-  Mp4parseByteData constant_iv;
 } Mp4parseSinfInfo;
 
 typedef struct {
-  Mp4parseCodec codec_type;
   uint16_t channels;
   uint16_t bit_depth;
   uint32_t sample_rate;
@@ -100,34 +87,24 @@ typedef struct {
   Mp4parseByteData codec_specific_config;
   Mp4parseByteData extra_data;
   Mp4parseSinfInfo protected_data;
-} Mp4parseTrackAudioSampleInfo;
-
-typedef struct {
-  uint32_t sample_info_count;
-  const Mp4parseTrackAudioSampleInfo *sample_info;
 } Mp4parseTrackAudioInfo;
 
 typedef struct {
   Mp4parseTrackType track_type;
+  Mp4parseCodec codec;
   uint32_t track_id;
   uint64_t duration;
   int64_t media_time;
 } Mp4parseTrackInfo;
 
 typedef struct {
-  Mp4parseCodec codec_type;
-  uint16_t image_width;
-  uint16_t image_height;
-  Mp4parseByteData extra_data;
-  Mp4parseSinfInfo protected_data;
-} Mp4parseTrackVideoSampleInfo;
-
-typedef struct {
   uint32_t display_width;
   uint32_t display_height;
+  uint16_t image_width;
+  uint16_t image_height;
   uint16_t rotation;
-  uint32_t sample_info_count;
-  const Mp4parseTrackVideoSampleInfo *sample_info;
+  Mp4parseByteData extra_data;
+  Mp4parseSinfInfo protected_data;
 } Mp4parseTrackVideoInfo;
 
 typedef struct {
