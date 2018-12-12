@@ -8,16 +8,179 @@ package org.mozilla.geckoview;
 
 import org.mozilla.gecko.util.GeckoBundle;
 
+import android.app.Service;
+import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
 import java.util.Collection;
 
 public final class GeckoSessionSettings implements Parcelable {
+
+    /**
+     * Settings builder used to construct the settings object.
+     */
+    public static final class Builder {
+        private final GeckoSessionSettings mSettings;
+
+        public Builder() {
+            mSettings = new GeckoSessionSettings();
+        }
+
+        public Builder(final GeckoSessionSettings settings) {
+            mSettings = new GeckoSessionSettings(settings);
+        }
+
+        /**
+         * Finalize and return the settings.
+         *
+         * @return The constructed settings.
+         */
+        public @NonNull GeckoSessionSettings build() {
+            return new GeckoSessionSettings(mSettings);
+        }
+
+        /**
+         * Set the chrome URI.
+         *
+         * @param uri The URI to set the Chrome URI to.
+         * @return This Builder instance.
+
+         */
+        public @NonNull  Builder chromeUri(final String uri) {
+            mSettings.setChromeUri(uri);
+            return this;
+        }
+
+        /**
+         * Set the screen id.
+         *
+         * @param id The screen id.
+         * @return This Builder instance.
+         */
+        public @NonNull Builder screenId(final int id) {
+            mSettings.setScreenId(id);
+            return this;
+        }
+
+        /**
+         * Set the privacy mode for this instance.
+         *
+         * @param flag A flag determining whether Private Mode should be enabled.
+         *             Default is false.
+         * @return This Builder instance.
+         */
+        public @NonNull Builder usePrivateMode(final boolean flag) {
+            mSettings.setUsePrivateMode(flag);
+            return this;
+        }
+
+        /**
+         * Set whether multi-process support should be enabled.
+         *
+         * @param flag A flag determining whether multi-process should be enabled.
+         *             Default is false.
+         * @return This Builder instance.
+         */
+        public @NonNull Builder useMultiprocess(final boolean flag) {
+            mSettings.setUseMultiprocess(flag);
+            return this;
+        }
+
+        /**
+         * Set whether tracking protection should be enabled.
+         *
+         * @param flag A flag determining whether tracking protection should be enabled.
+         *             Default is false.
+         * @return This Builder instance.
+         */
+        public @NonNull Builder useTrackingProtection(final boolean flag) {
+            mSettings.setUseTrackingProtection(flag);
+            return this;
+        }
+
+        /**
+         * Set the user agent mode.
+         *
+         * @param mode The mode to set the user agent to.
+         *             Use one or more of the
+         *             {@link GeckoSessionSettings#USER_AGENT_MODE_MOBILE GeckoSessionSettings.USER_AGENT_MODE_*} flags.
+         * @return This Builder instance.
+         */
+        public @NonNull Builder userAgentMode(final int mode) {
+            mSettings.setUserAgentMode(mode);
+            return this;
+        }
+
+        /**
+         * Override the user agent.
+         *
+         * @param agent The user agent to use.
+         * @return This Builder instance.
+
+         */
+        public @NonNull Builder userAgentOverride(final String agent) {
+            mSettings.setUserAgentOverride(agent);
+            return this;
+        }
+
+        /**
+         * Specify which display-mode to use.
+         *
+         * @param mode The mode to set the display to.
+         *             Use one or more of the
+         *             {@link GeckoSessionSettings#DISPLAY_MODE_BROWSER GeckoSessionSettings.DISPLAY_MODE_*} flags.
+         * @return This Builder instance.
+         */
+        public @NonNull Builder displayMode(final int mode) {
+            mSettings.setDisplayMode(mode);
+            return this;
+        }
+
+        /**
+         * Set whether to suspend the playing of media when the session is inactive.
+         *
+         * @param flag A flag determining whether media should be suspended.
+         *             Default is false.
+         * @return This Builder instance.
+         */
+        public @NonNull Builder suspendMediaWhenInactive(final boolean flag) {
+            mSettings.setSuspendMediaWhenInactive(flag);
+            return this;
+        }
+
+        /**
+         * Set whether JavaScript support should be enabled.
+         *
+         * @param flag A flag determining whether JavaScript should be enabled.
+         *             Default is true.
+         * @return This Builder instance.
+         */
+        public @NonNull Builder allowJavascript(final boolean flag) {
+            mSettings.setAllowJavascript(flag);
+            return this;
+        }
+
+        /**
+         * Set whether the entire accessible tree should be exposed with no caching.
+         *
+         * @param flag A flag determining if the entire accessible tree should be exposed.
+         *             Default is false.
+         * @return This Builder instance.
+         */
+        public @NonNull Builder fullAccessibilityTree(final boolean flag) {
+            mSettings.setFullAccessibilityTree(flag);
+            return this;
+        }
+    }
+
     private static final String LOGTAG = "GeckoSessionSettings";
     private static final boolean DEBUG = false;
 
@@ -154,26 +317,66 @@ public final class GeckoSessionSettings implements Parcelable {
         mBundle.putInt(DISPLAY_MODE.name, DISPLAY_MODE_BROWSER);
     }
 
+
+    /**
+     * Set whether tracking protection should be enabled.
+     *
+     * @param value A flag determining whether tracking protection should be enabled.
+     *             Default is false.
+     */
     public void setUseTrackingProtection(final boolean value) {
         setBoolean(USE_TRACKING_PROTECTION, value);
     }
 
-    public void setUsePrivateMode(final boolean value) {
+    /**
+     * Set the privacy mode for this instance.
+     *
+     * @param value A flag determining whether Private Mode should be enabled.
+     *             Default is false.
+     */
+    private void setUsePrivateMode(final boolean value) {
         setBoolean(USE_PRIVATE_MODE, value);
     }
 
-    public void setUseMultiprocess(final boolean value) {
+
+    /**
+     * Set whether multi-process support should be enabled.
+     *
+     * @param value A flag determining whether multi-process should be enabled.
+     *             Default is false.
+     */
+    private void setUseMultiprocess(final boolean value) {
         setBoolean(USE_MULTIPROCESS, value);
     }
 
+    /**
+     * Set whether to suspend the playing of media when the session is inactive.
+     *
+     * @param value A flag determining whether media should be suspended.
+     *             Default is false.
+     */
     public void setSuspendMediaWhenInactive(final boolean value) {
         setBoolean(SUSPEND_MEDIA_WHEN_INACTIVE, value);
     }
 
+
+    /**
+     * Set whether JavaScript support should be enabled.
+     *
+     * @param value A flag determining whether JavaScript should be enabled.
+     *             Default is true.
+     */
     public void setAllowJavascript(final boolean value) {
         setBoolean(ALLOW_JAVASCRIPT, value);
     }
 
+
+    /**
+     * Set whether the entire accessible tree should be exposed with no caching.
+     *
+     * @param value A flag determining full accessibility tree should be exposed.
+     *             Default is false.
+     */
     public void setFullAccessibilityTree(final boolean value) {
         setBoolean(FULL_ACCESSIBILITY_TREE, value);
     }
@@ -187,27 +390,57 @@ public final class GeckoSessionSettings implements Parcelable {
         }
     }
 
-    public boolean isUseTrackingProtection() {
+    /**
+     * Whether tracking protection is enabled.
+     *
+     * @return true if tracking protection is enabled, false if not.
+     */
+    public boolean getUseTrackingProtection() {
         return getBoolean(USE_TRACKING_PROTECTION);
     }
 
-    public boolean isUsePrivateMode() {
+    /**
+     * Whether private mode is enabled.
+     *
+     * @return true if private mode is enabled, false if not.
+     */
+    public boolean getUsePrivateMode() {
         return getBoolean(USE_PRIVATE_MODE);
     }
 
-    public boolean isUseMultiprocess() {
+    /**
+     * Whether multiprocess is enabled.
+     *
+     * @return true if multiprocess is enabled, false if not.
+     */
+    public boolean getUseMultiprocess() {
         return getBoolean(USE_MULTIPROCESS);
     }
 
-    public boolean isSuspendMediaWhenInactive() {
+    /**
+     * Whether media will be suspended when the session is inactice.
+     *
+     * @return true if media will be suspended, false if not.
+     */
+    public boolean getSuspendMediaWhenInactive() {
         return getBoolean(SUSPEND_MEDIA_WHEN_INACTIVE);
     }
 
-    public boolean isAllowJavascript() {
+    /**
+     * Whether javascript execution is allowed.
+     *
+     * @return true if javascript execution is allowed, false if not.
+     */
+    public boolean getAllowJavascript() {
         return getBoolean(ALLOW_JAVASCRIPT);
     }
 
-    public boolean isFullAccessibilityTree() {
+    /**
+     * Whether entire accessible tree is exposed with no caching.
+     *
+     * @return true if accessibility tree is exposed, false if not.
+     */
+    public boolean getFullAccessibilityTree() {
         return getBoolean(FULL_ACCESSIBILITY_TREE);
     }
 
@@ -217,14 +450,35 @@ public final class GeckoSessionSettings implements Parcelable {
         }
     }
 
-    public void setScreenId(final int value) {
+
+    /**
+     * Set the screen id.
+     *
+     * @param value The screen id.
+     */
+    private void setScreenId(final int value) {
         setInt(SCREEN_ID, value);
     }
 
+
+    /**
+     * Specify which user agent mode we should use
+     *
+     * @param value One or more of the
+     *             {@link GeckoSessionSettings#USER_AGENT_MODE_MOBILE GeckoSessionSettings.USER_AGENT_MODE_*} flags.
+     */
     public void setUserAgentMode(final int value) {
         setInt(USER_AGENT_MODE, value);
     }
 
+
+    /**
+     * Set the display mode.
+     *
+     * @param value The mode to set the display to.
+     *             Use one or more of the
+     *             {@link GeckoSessionSettings#DISPLAY_MODE_BROWSER GeckoSessionSettings.DISPLAY_MODE_*} flags.
+     */
     public void setDisplayMode(final int value) {
         setInt(DISPLAY_MODE, value);
     }
@@ -238,14 +492,31 @@ public final class GeckoSessionSettings implements Parcelable {
         }
     }
 
+    /**
+     * Set the window screen ID.
+     * Read-only once session is open.
+     * Use the {@link Builder} to set on session open.
+     *
+     * @return Key to set the window screen ID. 0 is the default ID.
+     */
     public int getScreenId() {
         return getInt(SCREEN_ID);
     }
 
+    /**
+     * The current user agent Mode
+     * @return One or more of the
+     *      {@link GeckoSessionSettings#USER_AGENT_MODE_MOBILE GeckoSessionSettings.USER_AGENT_MODE_*} flags.
+     */
     public int getUserAgentMode() {
         return getInt(USER_AGENT_MODE);
     }
 
+    /**
+     * The current display mode.
+     * @return )One or more of the
+     *      {@link GeckoSessionSettings#DISPLAY_MODE_BROWSER GeckoSessionSettings.DISPLAY_MODE_*} flags.
+     */
     public int getDisplayMode() {
         return getInt(DISPLAY_MODE);
     }
@@ -256,10 +527,22 @@ public final class GeckoSessionSettings implements Parcelable {
         }
     }
 
-    public void setChromeUri(final String value) {
+    /**
+     * Set the chrome URI.
+     *
+     * @param value The URI to set the Chrome URI to.
+
+     */
+    private void setChromeUri(final String value) {
         setString(CHROME_URI, value);
     }
 
+
+    /**
+     * Specify the user agent override string.
+     * Set value to null to use the user agent specified by USER_AGENT_MODE.
+     * @param value
+     */
     public void setUserAgentOverride(final String value) {
         setString(USER_AGENT_OVERRIDE, value);
     }
@@ -273,10 +556,22 @@ public final class GeckoSessionSettings implements Parcelable {
         }
     }
 
+    /**
+     * Set the chrome window URI.
+     * Read-only once session is open.
+     * Use the {@link Builder} to set on session open.
+     *
+     * @return Key to set the chrome window URI, or null to use default URI.
+     */
     public String getChromeUri() {
         return getString(USER_AGENT_OVERRIDE);
     }
 
+    /**
+     * The user agent override string.
+     * @return The current user agent string or null if the agent is specified by
+     *          {@link GeckoSessionSettings#USER_AGENT_MODE}
+     */
     public String getUserAgentOverride() {
         return getString(USER_AGENT_OVERRIDE);
     }
@@ -287,7 +582,7 @@ public final class GeckoSessionSettings implements Parcelable {
         }
     }
 
-    /* package */ GeckoBundle toBundle() {
+    /* package */ @NonNull GeckoBundle toBundle() {
         return new GeckoBundle(mBundle);
     }
 

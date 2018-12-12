@@ -666,27 +666,23 @@ package org.mozilla.geckoview {
     ctor public GeckoSessionSettings(org.mozilla.geckoview.GeckoSessionSettings);
     method public int describeContents();
     method public boolean equals(java.lang.Object);
+    method public boolean getAllowJavascript();
     method public java.lang.String getChromeUri();
     method public int getDisplayMode();
+    method public boolean getFullAccessibilityTree();
     method public int getScreenId();
+    method public boolean getSuspendMediaWhenInactive();
+    method public boolean getUseMultiprocess();
+    method public boolean getUsePrivateMode();
+    method public boolean getUseTrackingProtection();
     method public int getUserAgentMode();
     method public java.lang.String getUserAgentOverride();
     method public int hashCode();
-    method public boolean isAllowJavascript();
-    method public boolean isFullAccessibilityTree();
-    method public boolean isSuspendMediaWhenInactive();
-    method public boolean isUseMultiprocess();
-    method public boolean isUsePrivateMode();
-    method public boolean isUseTrackingProtection();
     method public void readFromParcel(android.os.Parcel);
     method public void setAllowJavascript(boolean);
-    method public void setChromeUri(java.lang.String);
     method public void setDisplayMode(int);
     method public void setFullAccessibilityTree(boolean);
-    method public void setScreenId(int);
     method public void setSuspendMediaWhenInactive(boolean);
-    method public void setUseMultiprocess(boolean);
-    method public void setUsePrivateMode(boolean);
     method public void setUseTrackingProtection(boolean);
     method public void setUserAgentMode(int);
     method public void setUserAgentOverride(java.lang.String);
@@ -700,6 +696,23 @@ package org.mozilla.geckoview {
     field public static final int USER_AGENT_MODE_DESKTOP = 1;
     field public static final int USER_AGENT_MODE_MOBILE = 0;
     field public static final int USER_AGENT_MODE_VR = 2;
+  }
+
+  public static final class GeckoSessionSettings.Builder {
+    ctor public Builder();
+    ctor public Builder(org.mozilla.geckoview.GeckoSessionSettings);
+    method public org.mozilla.geckoview.GeckoSessionSettings.Builder allowJavascript(boolean);
+    method public org.mozilla.geckoview.GeckoSessionSettings build();
+    method public org.mozilla.geckoview.GeckoSessionSettings.Builder chromeUri(java.lang.String);
+    method public org.mozilla.geckoview.GeckoSessionSettings.Builder displayMode(int);
+    method public org.mozilla.geckoview.GeckoSessionSettings.Builder fullAccessibilityTree(boolean);
+    method public org.mozilla.geckoview.GeckoSessionSettings.Builder screenId(int);
+    method public org.mozilla.geckoview.GeckoSessionSettings.Builder suspendMediaWhenInactive(boolean);
+    method public org.mozilla.geckoview.GeckoSessionSettings.Builder useMultiprocess(boolean);
+    method public org.mozilla.geckoview.GeckoSessionSettings.Builder usePrivateMode(boolean);
+    method public org.mozilla.geckoview.GeckoSessionSettings.Builder useTrackingProtection(boolean);
+    method public org.mozilla.geckoview.GeckoSessionSettings.Builder userAgentMode(int);
+    method public org.mozilla.geckoview.GeckoSessionSettings.Builder userAgentOverride(java.lang.String);
   }
 
   public static class GeckoSessionSettings.Key<T> {

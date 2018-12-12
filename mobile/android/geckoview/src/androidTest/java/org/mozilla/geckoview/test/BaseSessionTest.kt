@@ -8,7 +8,6 @@ package org.mozilla.geckoview.test
 import android.os.Parcel
 import android.support.test.InstrumentationRegistry
 import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 
 import org.hamcrest.Matcher
@@ -73,7 +72,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
                     .open(path.removePrefix("/assets/")).readBytes()
 
     val GeckoSession.isRemote
-        get() = this.settings.isUseMultiprocess()
+        get() = this.settings.getUseMultiprocess()
 
     fun createTestUrl(path: String) =
             GeckoSessionTestRule.APK_URI_PREFIX + path.removePrefix("/")
