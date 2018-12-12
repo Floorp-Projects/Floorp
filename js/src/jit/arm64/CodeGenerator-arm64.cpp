@@ -459,7 +459,47 @@ void CodeGeneratorARM64::modICommon(MMod* mir, Register lhs, Register rhs,
   MOZ_CRASH("CodeGeneratorARM64::modICommon");
 }
 
-void CodeGenerator::visitModI(LModI* ins) { MOZ_CRASH("visitModI"); }
+void CodeGenerator::visitModI(LModI* ins) {
+  if (gen->compilingWasm()) {
+    MOZ_CRASH("visitModI while compilingWasm");
+  }
+
+  MMod* mir = ins->mir();
+  ARMRegister lhs = toWRegister(ins->lhs());
+  ARMRegister rhs = toWRegister(ins->rhs());
+  ARMRegister output = toWRegister(ins->output());
+  Label done;
+
+  if (mir->canBeDivideByZero() && !mir->isTruncated()) {
+    // Non-truncated division by zero produces a non-integer.
+    masm.Cmp(rhs, Operand(0));
+    bailoutIf(Assembler::Equal, ins->snapshot());
+  } else if (mir->canBeDivideByZero()) {
+    // Truncated division by zero yields integer zero.
+    masm.Mov(output, rhs);
+    masm.Cbz(rhs, &done);
+  }
+
+  // Signed division.
+  masm.Sdiv(output, lhs, rhs);
+
+  // Compute the remainder: output = lhs - (output * rhs).
+  masm.Msub(output, output, rhs, lhs);
+
+  if (mir->canBeNegativeDividend() && !mir->isTruncated()) {
+    // If output == 0 and lhs < 0, then the result should be double -0.0.
+    // Note that this guard handles lhs == INT_MIN and rhs == -1:
+    //   output = INT_MIN - (INT_MIN / -1) * -1
+    //          = INT_MIN - INT_MIN
+    //          = 0
+    masm.Cbnz(output, &done);
+    bailoutCmp32(Assembler::LessThan, lhs, Imm32(0), ins->snapshot());
+  }
+
+  if (done.used()) {
+    masm.bind(&done);
+  }
+}
 
 void CodeGenerator::visitModPowTwoI(LModPowTwoI* ins) {
   Register lhs = ToRegister(ins->getOperand(0));
@@ -502,7 +542,97 @@ void CodeGenerator::visitModPowTwoI(LModPowTwoI* ins) {
 }
 
 void CodeGenerator::visitModMaskI(LModMaskI* ins) {
-  MOZ_CRASH("CodeGenerator::visitModMaskI");
+  MMod* mir = ins->mir();
+  int32_t shift = ins->shift();
+
+  const Register src = ToRegister(ins->getOperand(0));
+  const Register dest = ToRegister(ins->getDef(0));
+  const Register hold = ToRegister(ins->getTemp(0));
+  const Register remain = ToRegister(ins->getTemp(1));
+
+  const ARMRegister src32 = ARMRegister(src, 32);
+  const ARMRegister dest32 = ARMRegister(dest, 32);
+  const ARMRegister remain32 = ARMRegister(remain, 32);
+
+  vixl::UseScratchRegisterScope temps(&masm.asVIXL());
+  const ARMRegister scratch32 = temps.AcquireW();
+  const Register scratch = scratch32.asUnsized();
+
+  // We wish to compute x % (1<<y) - 1 for a known constant, y.
+  //
+  // 1. Let b = (1<<y) and C = (1<<y)-1, then think of the 32 bit dividend as
+  // a number in base b, namely c_0*1 + c_1*b + c_2*b^2 ... c_n*b^n
+  //
+  // 2. Since both addition and multiplication commute with modulus:
+  //   x % C == (c_0 + c_1*b + ... + c_n*b^n) % C ==
+  //    (c_0 % C) + (c_1%C) * (b % C) + (c_2 % C) * (b^2 % C)...
+  //
+  // 3. Since b == C + 1, b % C == 1, and b^n % C == 1 the whole thing
+  // simplifies to: c_0 + c_1 + c_2 ... c_n % C
+  //
+  // Each c_n can easily be computed by a shift/bitextract, and the modulus
+  // can be maintained by simply subtracting by C whenever the number gets
+  // over C.
+  int32_t mask = (1 << shift) - 1;
+  Label loop;
+
+  // Register 'hold' holds -1 if the value was negative, 1 otherwise.
+  // The remain reg holds the remaining bits that have not been processed.
+  // The scratch reg serves as a temporary location to store extracted bits.
+  // The dest reg is the accumulator, becoming final result.
+  //
+  // Move the whole value into the remain.
+  masm.Mov(remain32, src32);
+  // Zero out the dest.
+  masm.Mov(dest32, wzr);
+  // Set the hold appropriately.
+  {
+    Label negative;
+    masm.branch32(Assembler::Signed, remain, Imm32(0), &negative);
+    masm.move32(Imm32(1), hold);
+    masm.jump(&loop);
+
+    masm.bind(&negative);
+    masm.move32(Imm32(-1), hold);
+    masm.neg32(remain);
+  }
+
+  // Begin the main loop.
+  masm.bind(&loop);
+  {
+    // Extract the bottom bits into scratch.
+    masm.And(scratch32, remain32, Operand(mask));
+    // Add those bits to the accumulator.
+    masm.Add(dest32, dest32, scratch32);
+    // Do a trial subtraction. This functions as a cmp but remembers the result.
+    masm.Subs(scratch32, dest32, Operand(mask));
+    // If (sum - C) > 0, store sum - C back into sum, thus performing a modulus.
+    {
+      Label sumSigned;
+      masm.branch32(Assembler::Signed, scratch, scratch, &sumSigned);
+      masm.Mov(dest32, scratch32);
+      masm.bind(&sumSigned);
+    }
+    // Get rid of the bits that we extracted before.
+    masm.Lsr(remain32, remain32, shift);
+    // If the shift produced zero, finish, otherwise, continue in the loop.
+    masm.branchTest32(Assembler::NonZero, remain, remain, &loop);
+  }
+
+  // Check the hold to see if we need to negate the result.
+  {
+    Label done;
+
+    // If the hold was non-zero, negate the result to match JS expectations.
+    masm.branchTest32(Assembler::NotSigned, hold, hold, &done);
+    if (mir->canBeNegativeDividend() && !mir->isTruncated()) {
+      // Bail in case of negative zero hold.
+      bailoutTest32(Assembler::Zero, hold, hold, ins->snapshot());
+    }
+
+    masm.neg32(dest);
+    masm.bind(&done);
+  }
 }
 
 void CodeGenerator::visitBitNotI(LBitNotI* ins) {
@@ -1144,7 +1274,41 @@ void CodeGenerator::visitWasmStackArg(LWasmStackArg* ins) {
 
 void CodeGenerator::visitUDiv(LUDiv* ins) { MOZ_CRASH("visitUDiv"); }
 
-void CodeGenerator::visitUMod(LUMod* ins) { MOZ_CRASH("visitUMod"); }
+void CodeGenerator::visitUMod(LUMod* ins) {
+  MMod* mir = ins->mir();
+  ARMRegister lhs = toWRegister(ins->lhs());
+  ARMRegister rhs = toWRegister(ins->rhs());
+  ARMRegister output = toWRegister(ins->output());
+  Label done;
+
+  if (mir->canBeDivideByZero() && !mir->isTruncated()) {
+    // Non-truncated division by zero produces a non-integer.
+    masm.Cmp(rhs, Operand(0));
+    bailoutIf(Assembler::Equal, ins->snapshot());
+  } else if (mir->canBeDivideByZero()) {
+    // Truncated division by zero yields integer zero.
+    masm.Mov(output, rhs);
+    masm.Cbz(rhs, &done);
+  }
+
+  // Unsigned division.
+  masm.Udiv(output, lhs, rhs);
+
+  // Compute the remainder: output = lhs - (output * rhs).
+  masm.Msub(output, output, rhs, lhs);
+
+  if (!mir->isTruncated()) {
+    // Bail if the output would be negative.
+    //
+    // LUMod inputs may be Uint32, so care is taken to ensure the result
+    // is not unexpectedly signed.
+    bailoutCmp32(Assembler::LessThan, output, Imm32(0), ins->snapshot());
+  }
+
+  if (done.used()) {
+    masm.bind(&done);
+  }
+}
 
 void CodeGenerator::visitEffectiveAddress(LEffectiveAddress* ins) {
   const MEffectiveAddress* mir = ins->mir();
@@ -1241,10 +1405,6 @@ void CodeGenerator::visitBitOpI64(LBitOpI64*) { MOZ_CRASH("NYI"); }
 
 void CodeGenerator::visitShiftI64(LShiftI64*) { MOZ_CRASH("NYI"); }
 
-void CodeGenerator::visitSoftDivI(LSoftDivI*) { MOZ_CRASH("NYI"); }
-
-void CodeGenerator::visitSoftModI(LSoftModI*) { MOZ_CRASH("NYI"); }
-
 void CodeGenerator::visitWasmLoad(LWasmLoad*) { MOZ_CRASH("NYI"); }
 
 void CodeGenerator::visitCopySignD(LCopySignD*) { MOZ_CRASH("NYI"); }
@@ -1270,8 +1430,6 @@ void CodeGenerator::visitWasmLoadI64(LWasmLoadI64*) { MOZ_CRASH("NYI"); }
 void CodeGenerator::visitWasmStoreI64(LWasmStoreI64*) { MOZ_CRASH("NYI"); }
 
 void CodeGenerator::visitMemoryBarrier(LMemoryBarrier*) { MOZ_CRASH("NYI"); }
-
-void CodeGenerator::visitSoftUDivOrMod(LSoftUDivOrMod*) { MOZ_CRASH("NYI"); }
 
 void CodeGenerator::visitWasmAddOffset(LWasmAddOffset*) { MOZ_CRASH("NYI"); }
 
