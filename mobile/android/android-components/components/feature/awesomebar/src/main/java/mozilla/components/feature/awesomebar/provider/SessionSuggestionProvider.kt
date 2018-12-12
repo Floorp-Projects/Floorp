@@ -24,8 +24,8 @@ class SessionSuggestionProvider(
         val suggestions = mutableListOf<AwesomeBar.Suggestion>()
 
         sessionManager.sessions.forEach { session ->
-            if (session.url.contains(text, ignoreCase = true) ||
-                session.title.contains(text, ignoreCase = true)
+            if ((session.url.contains(text, ignoreCase = true) ||
+                    session.title.contains(text, ignoreCase = true)) && !session.private
             ) {
                 suggestions.add(
                     AwesomeBar.Suggestion(
