@@ -2241,6 +2241,7 @@ menuseparator {
   user-select: none;
   height: var(--editor-footer-height);
   box-sizing: border-box;
+  justify-content: space-between;
 }
 
 .source-footer .commands {
@@ -2321,6 +2322,7 @@ menuseparator {
 
 .source-footer .cursor-position {
   padding: 5px;
+  white-space: nowrap;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
