@@ -108,26 +108,10 @@ impl Default for Mp4parseCodec {
 }
 
 #[repr(C)]
-#[derive(PartialEq, Debug)]
-pub enum Mp4ParseEncryptionSchemeType {
-    None,
-    Cenc,
-    Cbc1,
-    Cens,
-    Cbcs,
-    // Schemes also have a version component. At the time of writing, this does
-    // not impact handling, so we do not expose it. Note that this may need to
-    // be exposed in future, should the spec change.
-}
-
-impl Default for Mp4ParseEncryptionSchemeType {
-    fn default() -> Self { Mp4ParseEncryptionSchemeType::None }
-}
-
-#[repr(C)]
 #[derive(Default, Debug)]
 pub struct Mp4parseTrackInfo {
     pub track_type: Mp4parseTrackType,
+    pub codec: Mp4parseCodec,
     pub track_id: u32,
     pub duration: u64,
     pub media_time: i64, // wants to be u64? understand how elst adjustment works
@@ -185,22 +169,14 @@ pub struct Mp4parsePsshInfo {
 #[repr(C)]
 #[derive(Default, Debug)]
 pub struct Mp4parseSinfInfo {
-    pub scheme_type: Mp4ParseEncryptionSchemeType,
-    pub is_encrypted: u8,
+    pub is_encrypted: u32,
     pub iv_size: u8,
     pub kid: Mp4parseByteData,
-    // Members for pattern encryption schemes, may be 0 (u8) or empty
-    // (Mp4parseByteData) if pattern encryption is not in use
-    pub crypt_byte_block: u8,
-    pub skip_byte_block: u8,
-    pub constant_iv: Mp4parseByteData,
-    // End pattern encryption scheme members
 }
 
 #[repr(C)]
 #[derive(Default, Debug)]
-pub struct Mp4parseTrackAudioSampleInfo {
-    pub codec_type: Mp4parseCodec,
+pub struct Mp4parseTrackAudioInfo {
     pub channels: u16,
     pub bit_depth: u16,
     pub sample_rate: u32,
@@ -212,51 +188,15 @@ pub struct Mp4parseTrackAudioSampleInfo {
 }
 
 #[repr(C)]
-#[derive(Debug)]
-pub struct Mp4parseTrackAudioInfo {
-    pub sample_info_count: u32,
-    pub sample_info: *const Mp4parseTrackAudioSampleInfo,
-}
-
-impl Default for Mp4parseTrackAudioInfo {
-    fn default() -> Self {
-        Self {
-            sample_info_count: 0,
-            sample_info: std::ptr::null(),
-        }
-    }
-}
-
-#[repr(C)]
 #[derive(Default, Debug)]
-pub struct Mp4parseTrackVideoSampleInfo {
-    pub codec_type: Mp4parseCodec,
-    pub image_width: u16,
-    pub image_height: u16,
-    pub extra_data: Mp4parseByteData,
-    pub protected_data: Mp4parseSinfInfo,
-}
-
-#[repr(C)]
-#[derive(Debug)]
 pub struct Mp4parseTrackVideoInfo {
     pub display_width: u32,
     pub display_height: u32,
+    pub image_width: u16,
+    pub image_height: u16,
     pub rotation: u16,
-    pub sample_info_count: u32,
-    pub sample_info: *const Mp4parseTrackVideoSampleInfo,
-}
-
-impl Default for Mp4parseTrackVideoInfo {
-    fn default() -> Self {
-        Self {
-            display_width: 0,
-            display_height: 0,
-            rotation: 0,
-            sample_info_count: 0,
-            sample_info: std::ptr::null(),
-        }
-    }
+    pub extra_data: Mp4parseByteData,
+    pub protected_data: Mp4parseSinfInfo,
 }
 
 #[repr(C)]
@@ -274,12 +214,6 @@ pub struct Mp4parseParser {
     opus_header: HashMap<u32, Vec<u8>>,
     pssh_data: Vec<u8>,
     sample_table: HashMap<u32, Vec<Mp4parseIndice>>,
-    // Store a mapping from track index (not id) to associated sample
-    // descriptions. Because each track has a variable number of sample
-    // descriptions, and because we need the data to live long enough to be
-    // copied out by callers, we store these on the parser struct.
-    audio_track_sample_descriptions: HashMap<u32, Vec<Mp4parseTrackAudioSampleInfo>>,
-    video_track_sample_descriptions: HashMap<u32, Vec<Mp4parseTrackVideoSampleInfo>>,
 }
 
 impl Mp4parseParser {
@@ -355,8 +289,6 @@ pub unsafe extern fn mp4parse_new(io: *const Mp4parseIo) -> *mut Mp4parseParser 
         opus_header: HashMap::new(),
         pssh_data: Vec::new(),
         sample_table: HashMap::new(),
-        audio_track_sample_descriptions: HashMap::new(),
-        video_track_sample_descriptions: HashMap::new(),
     });
 
     Box::into_raw(parser)
@@ -481,6 +413,37 @@ pub unsafe extern fn mp4parse_get_track_info(parser: *mut Mp4parseParser, track_
         TrackType::Unknown => return Mp4parseStatus::Unsupported,
     };
 
+    // Return UNKNOWN for unsupported format.
+    info.codec = match context.tracks[track_index].data {
+        Some(SampleEntry::Audio(ref audio)) => match audio.codec_specific {
+            AudioCodecSpecific::OpusSpecificBox(_) =>
+                Mp4parseCodec::Opus,
+            AudioCodecSpecific::FLACSpecificBox(_) =>
+                Mp4parseCodec::Flac,
+            AudioCodecSpecific::ES_Descriptor(ref esds) if esds.audio_codec == CodecType::AAC =>
+                Mp4parseCodec::Aac,
+            AudioCodecSpecific::ES_Descriptor(ref esds) if esds.audio_codec == CodecType::MP3 =>
+                Mp4parseCodec::Mp3,
+            AudioCodecSpecific::ES_Descriptor(_) | AudioCodecSpecific::LPCM =>
+                Mp4parseCodec::Unknown,
+            AudioCodecSpecific::MP3 =>
+                Mp4parseCodec::Mp3,
+            AudioCodecSpecific::ALACSpecificBox(_) =>
+                Mp4parseCodec::Alac,
+        },
+        Some(SampleEntry::Video(ref video)) => match video.codec_specific {
+            VideoCodecSpecific::VPxConfig(_) =>
+                Mp4parseCodec::Vp9,
+            VideoCodecSpecific::AV1Config(_) =>
+                Mp4parseCodec::Av1,
+            VideoCodecSpecific::AVCConfig(_) =>
+                Mp4parseCodec::Avc,
+            VideoCodecSpecific::ESDSConfig(_) => // MP4V (14496-2) video is unsupported.
+                Mp4parseCodec::Unknown,
+        },
+        _ => Mp4parseCodec::Unknown,
+    };
+
     let track = &context.tracks[track_index];
 
     if let (Some(track_timescale),
@@ -531,7 +494,7 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut Mp4parseParser, 
     // Initialize fields to default values to ensure all fields are always valid.
     *info = Default::default();
 
-    let context = (*parser).context();
+    let context = (*parser).context_mut();
 
     if track_index as usize >= context.tracks.len() {
         return Mp4parseStatus::BadArg;
@@ -539,160 +502,89 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut Mp4parseParser, 
 
     let track = &context.tracks[track_index as usize];
 
-    if track.track_type != TrackType::Audio {
-        return Mp4parseStatus::Invalid;
-    }
-
-    // Handle track.stsd
-    let stsd = match track.stsd {
-        Some(ref stsd) => stsd,
-        None => return Mp4parseStatus::Invalid, // Stsd should be present
+    match track.track_type {
+        TrackType::Audio => {}
+        _ => return Mp4parseStatus::Invalid,
     };
 
-    if stsd.descriptions.len() == 0 {
-        return Mp4parseStatus::Invalid; // Should have at least 1 description
-    }
+    let audio = match track.data {
+        Some(ref data) => data,
+        None => return Mp4parseStatus::Invalid,
+    };
 
-    let mut audio_sample_infos = Vec:: with_capacity(stsd.descriptions.len());
-    for description in stsd.descriptions.iter() {
-        let mut sample_info = Mp4parseTrackAudioSampleInfo::default();
-        let audio = match description {
-            SampleEntry::Audio(a) => a,
-            _ => return Mp4parseStatus::Invalid,
-        };
+    let audio = match *audio {
+        SampleEntry::Audio(ref x) => x,
+        _ => return Mp4parseStatus::Invalid,
+    };
 
-        // UNKNOWN for unsupported format.
-        sample_info.codec_type = match audio.codec_specific {
-            AudioCodecSpecific::OpusSpecificBox(_) =>
-                Mp4parseCodec::Opus,
-            AudioCodecSpecific::FLACSpecificBox(_) =>
-                Mp4parseCodec::Flac,
-            AudioCodecSpecific::ES_Descriptor(ref esds) if esds.audio_codec == CodecType::AAC =>
-                Mp4parseCodec::Aac,
-            AudioCodecSpecific::ES_Descriptor(ref esds) if esds.audio_codec == CodecType::MP3 =>
-                Mp4parseCodec::Mp3,
-            AudioCodecSpecific::ES_Descriptor(_) | AudioCodecSpecific::LPCM =>
-                Mp4parseCodec::Unknown,
-            AudioCodecSpecific::MP3 =>
-                Mp4parseCodec::Mp3,
-            AudioCodecSpecific::ALACSpecificBox(_) =>
-                Mp4parseCodec::Alac,
-        };
-        sample_info.channels = audio.channelcount as u16;
-        sample_info.bit_depth = audio.samplesize;
-        sample_info.sample_rate = audio.samplerate as u32;
-        // sample_info.profile is handled below on a per case basis
+    (*info).channels = audio.channelcount as u16;
+    (*info).bit_depth = audio.samplesize;
+    (*info).sample_rate = audio.samplerate as u32;
 
-        match audio.codec_specific {
-            AudioCodecSpecific::ES_Descriptor(ref esds) => {
-                if esds.codec_esds.len() > std::u32::MAX as usize {
-                    return Mp4parseStatus::Invalid;
-                }
-                sample_info.extra_data.length = esds.codec_esds.len() as u32;
-                sample_info.extra_data.data = esds.codec_esds.as_ptr();
-                sample_info.codec_specific_config.length = esds.decoder_specific_data.len() as u32;
-                sample_info.codec_specific_config.data = esds.decoder_specific_data.as_ptr();
-                if let Some(rate) = esds.audio_sample_rate {
-                    sample_info.sample_rate = rate;
-                }
-                if let Some(channels) = esds.audio_channel_count {
-                    sample_info.channels = channels;
-                }
-                if let Some(profile) = esds.audio_object_type {
-                    sample_info.profile = profile;
-                }
-                sample_info.extended_profile = match esds.extended_audio_object_type {
-                    Some(extended_profile) => extended_profile,
-                    _ => sample_info.profile
-                };
-            }
-            AudioCodecSpecific::FLACSpecificBox(ref flac) => {
-                // Return the STREAMINFO metadata block in the codec_specific.
-                let streaminfo = &flac.blocks[0];
-                if streaminfo.block_type != 0 || streaminfo.data.len() != 34 {
-                    return Mp4parseStatus::Invalid;
-                }
-                sample_info.codec_specific_config.length = streaminfo.data.len() as u32;
-                sample_info.codec_specific_config.data = streaminfo.data.as_ptr();
-            }
-            AudioCodecSpecific::OpusSpecificBox(ref opus) => {
-                let mut v = Vec::new();
-                match serialize_opus_header(opus, &mut v) {
-                    Err(_) => {
-                        return Mp4parseStatus::Invalid;
-                    }
-                    Ok(_) => {
-                        let header = (*parser).opus_header_mut();
-                        header.insert(track_index, v);
-                        if let Some(v) = header.get(&track_index) {
-                            if v.len() > std::u32::MAX as usize {
-                                return Mp4parseStatus::Invalid;
-                            }
-                            sample_info.codec_specific_config.length = v.len() as u32;
-                            sample_info.codec_specific_config.data = v.as_ptr();
-                        }
-                    }
-                }
-            }
-            AudioCodecSpecific::ALACSpecificBox(ref alac) => {
-                sample_info.codec_specific_config.length = alac.data.len() as u32;
-                sample_info.codec_specific_config.data = alac.data.as_ptr();
-            }
-            AudioCodecSpecific::MP3 | AudioCodecSpecific::LPCM => (),
-        }
-
-        if let Some(p) = audio.protection_info.iter().find(|sinf| sinf.tenc.is_some()) {
-            sample_info.protected_data.scheme_type = match p.scheme_type {
-                Some(ref scheme_type_box) => {
-                    match scheme_type_box.scheme_type.value.as_ref() {
-                        "cenc" => Mp4ParseEncryptionSchemeType::Cenc,
-                        "cbcs" => Mp4ParseEncryptionSchemeType::Cbcs,
-                        // We don't support other schemes, and shouldn't reach
-                        // this case. Try to gracefully handle by treating as
-                        // no encryption case.
-                        _ => Mp4ParseEncryptionSchemeType::None,
-                    }
-                },
-                None => Mp4ParseEncryptionSchemeType::None,
-            };
-            if let Some(ref tenc) = p.tenc {
-                sample_info.protected_data.is_encrypted = tenc.is_encrypted;
-                sample_info.protected_data.iv_size = tenc.iv_size;
-                sample_info.protected_data.kid.set_data(&(tenc.kid));
-                sample_info.protected_data.crypt_byte_block = match tenc.crypt_byte_block_count {
-                    Some(n) => n,
-                    None => 0,
-                };
-                sample_info.protected_data.skip_byte_block = match tenc.skip_byte_block_count {
-                    Some(n) => n,
-                    None => 0,
-                };
-                match tenc.constant_iv {
-                    Some(ref iv_vec) => {
-                        if iv_vec.len() > std::u32::MAX as usize {
-                            return Mp4parseStatus::Invalid;
-                        }
-                        sample_info.protected_data.constant_iv.set_data(iv_vec);
-                    },
-                    None => {}, // Don't need to do anything, defaults are correct
-                };
-            }
-        }
-        audio_sample_infos.push(sample_info);
-    }
-
-    (*parser).audio_track_sample_descriptions.insert(track_index, audio_sample_infos);
-    match (*parser).audio_track_sample_descriptions.get(&track_index) {
-        Some(sample_info) => {
-            if sample_info.len() > std::u32::MAX as usize {
-                // Should never happen due to upper limits on number of sample
-                // descriptions a track can have, but lets be safe.
+    match audio.codec_specific {
+        AudioCodecSpecific::ES_Descriptor(ref v) => {
+            if v.codec_esds.len() > std::u32::MAX as usize {
                 return Mp4parseStatus::Invalid;
             }
-            (*info).sample_info_count = sample_info.len() as u32;
-            (*info).sample_info = sample_info.as_ptr();
-        },
-        None => return Mp4parseStatus::Invalid, // Shouldn't happen, we just inserted the info!
+            (*info).extra_data.length = v.codec_esds.len() as u32;
+            (*info).extra_data.data = v.codec_esds.as_ptr();
+            (*info).codec_specific_config.length = v.decoder_specific_data.len() as u32;
+            (*info).codec_specific_config.data = v.decoder_specific_data.as_ptr();
+            if let Some(rate) = v.audio_sample_rate {
+                (*info).sample_rate = rate;
+            }
+            if let Some(channels) = v.audio_channel_count {
+                (*info).channels = channels;
+            }
+            if let Some(profile) = v.audio_object_type {
+                (*info).profile = profile;
+            }
+            (*info).extended_profile = match v.extended_audio_object_type {
+                Some(extended_profile) => extended_profile,
+                _ =>  (*info).profile
+            };
+        }
+        AudioCodecSpecific::FLACSpecificBox(ref flac) => {
+            // Return the STREAMINFO metadata block in the codec_specific.
+            let streaminfo = &flac.blocks[0];
+            if streaminfo.block_type != 0 || streaminfo.data.len() != 34 {
+                return Mp4parseStatus::Invalid;
+            }
+            (*info).codec_specific_config.length = streaminfo.data.len() as u32;
+            (*info).codec_specific_config.data = streaminfo.data.as_ptr();
+        }
+        AudioCodecSpecific::OpusSpecificBox(ref opus) => {
+            let mut v = Vec::new();
+            match serialize_opus_header(opus, &mut v) {
+                Err(_) => {
+                    return Mp4parseStatus::Invalid;
+                }
+                Ok(_) => {
+                    let header = (*parser).opus_header_mut();
+                    header.insert(track_index, v);
+                    if let Some(v) = header.get(&track_index) {
+                        if v.len() > std::u32::MAX as usize {
+                            return Mp4parseStatus::Invalid;
+                        }
+                        (*info).codec_specific_config.length = v.len() as u32;
+                        (*info).codec_specific_config.data = v.as_ptr();
+                    }
+                }
+            }
+        }
+        AudioCodecSpecific::ALACSpecificBox(ref alac) => {
+            (*info).codec_specific_config.length = alac.data.len() as u32;
+            (*info).codec_specific_config.data = alac.data.as_ptr();
+        }
+        AudioCodecSpecific::MP3 | AudioCodecSpecific::LPCM => (),
+    }
+
+    if let Some(p) = audio.protection_info.iter().find(|sinf| sinf.tenc.is_some()) {
+        if let Some(ref tenc) = p.tenc {
+            (*info).protected_data.is_encrypted = tenc.is_encrypted;
+            (*info).protected_data.iv_size = tenc.iv_size;
+            (*info).protected_data.kid.set_data(&(tenc.kid));
+        }
     }
 
     Mp4parseStatus::Ok
@@ -708,7 +600,7 @@ pub unsafe extern fn mp4parse_get_track_video_info(parser: *mut Mp4parseParser, 
     // Initialize fields to default values to ensure all fields are always valid.
     *info = Default::default();
 
-    let context = (*parser).context();
+    let context = (*parser).context_mut();
 
     if track_index as usize >= context.tracks.len() {
         return Mp4parseStatus::BadArg;
@@ -716,11 +608,21 @@ pub unsafe extern fn mp4parse_get_track_video_info(parser: *mut Mp4parseParser, 
 
     let track = &context.tracks[track_index as usize];
 
-    if track.track_type != TrackType::Video {
-        return Mp4parseStatus::Invalid;
-    }
+    match track.track_type {
+        TrackType::Video => {}
+        _ => return Mp4parseStatus::Invalid,
+    };
 
-    // Handle track.tkhd
+    let video = match track.data {
+        Some(ref data) => data,
+        None => return Mp4parseStatus::Invalid,
+    };
+
+    let video = match *video {
+        SampleEntry::Video(ref x) => x,
+        _ => return Mp4parseStatus::Invalid,
+    };
+
     if let Some(ref tkhd) = track.tkhd {
         (*info).display_width = tkhd.width >> 16; // 16.16 fixed point
         (*info).display_height = tkhd.height >> 16; // 16.16 fixed point
@@ -735,99 +637,24 @@ pub unsafe extern fn mp4parse_get_track_video_info(parser: *mut Mp4parseParser, 
     } else {
         return Mp4parseStatus::Invalid;
     }
+    (*info).image_width = video.width;
+    (*info).image_height = video.height;
 
-    // Handle track.stsd
-    let stsd = match track.stsd {
-        Some(ref stsd) => stsd,
-        None => return Mp4parseStatus::Invalid, // Stsd should be present
-    };
-
-    if stsd.descriptions.len() == 0 {
-        return Mp4parseStatus::Invalid; // Should have at least 1 description
-    }
-
-    let mut video_sample_infos = Vec:: with_capacity(stsd.descriptions.len());
-    for description in stsd.descriptions.iter() {
-        let mut sample_info = Mp4parseTrackVideoSampleInfo::default();
-        let video = match description {
-            SampleEntry::Video(v) => v,
-            _ => return Mp4parseStatus::Invalid,
-        };
-
-        // UNKNOWN for unsupported format.
-        sample_info.codec_type = match video.codec_specific {
-            VideoCodecSpecific::VPxConfig(_) =>
-                Mp4parseCodec::Vp9,
-            VideoCodecSpecific::AV1Config(_) =>
-                Mp4parseCodec::Av1,
-            VideoCodecSpecific::AVCConfig(_) =>
-                Mp4parseCodec::Avc,
-            VideoCodecSpecific::ESDSConfig(_) => // MP4V (14496-2) video is unsupported.
-                Mp4parseCodec::Unknown,
-        };
-        sample_info.image_width = video.width;
-        sample_info.image_height = video.height;
-
-        match video.codec_specific {
-            VideoCodecSpecific::AVCConfig(ref data) | VideoCodecSpecific::ESDSConfig(ref data) => {
-                sample_info.extra_data.set_data(data);
-            },
-            _ => {}
-        }
-
-        if let Some(p) = video.protection_info.iter().find(|sinf| sinf.tenc.is_some()) {
-            sample_info.protected_data.scheme_type = match p.scheme_type {
-                Some(ref scheme_type_box) => {
-                    match scheme_type_box.scheme_type.value.as_ref() {
-                        "cenc" => Mp4ParseEncryptionSchemeType::Cenc,
-                        "cbcs" => Mp4ParseEncryptionSchemeType::Cbcs,
-                        // We don't support other schemes, and shouldn't reach
-                        // this case. Try to gracefully handle by treating as
-                        // no encryption case.
-                        _ => Mp4ParseEncryptionSchemeType::None,
-                    }
-                },
-                None => Mp4ParseEncryptionSchemeType::None,
-            };
-            if let Some(ref tenc) = p.tenc {
-                sample_info.protected_data.is_encrypted = tenc.is_encrypted;
-                sample_info.protected_data.iv_size = tenc.iv_size;
-                sample_info.protected_data.kid.set_data(&(tenc.kid));
-                sample_info.protected_data.crypt_byte_block = match tenc.crypt_byte_block_count {
-                    Some(n) => n,
-                    None => 0,
-                };
-                sample_info.protected_data.skip_byte_block = match tenc.skip_byte_block_count {
-                    Some(n) => n,
-                    None => 0,
-                };
-                match tenc.constant_iv {
-                    Some(ref iv_vec) => {
-                        if iv_vec.len() > std::u32::MAX as usize {
-                            return Mp4parseStatus::Invalid;
-                        }
-                        sample_info.protected_data.constant_iv.set_data(iv_vec);
-                    },
-                    None => {}, // Don't need to do anything, defaults are correct
-                };
-            }
-        }
-        video_sample_infos.push(sample_info);
-    }
-
-    (*parser).video_track_sample_descriptions.insert(track_index, video_sample_infos);
-    match (*parser).video_track_sample_descriptions.get(&track_index) {
-        Some(sample_info) => {
-            if sample_info.len() > std::u32::MAX as usize {
-                // Should never happen due to upper limits on number of sample
-                // descriptions a track can have, but lets be safe.
-                return Mp4parseStatus::Invalid;
-            }
-            (*info).sample_info_count = sample_info.len() as u32;
-            (*info).sample_info = sample_info.as_ptr();
+    match video.codec_specific {
+        VideoCodecSpecific::AVCConfig(ref data) | VideoCodecSpecific::ESDSConfig(ref data) => {
+          (*info).extra_data.set_data(data);
         },
-        None => return Mp4parseStatus::Invalid, // Shouldn't happen, we just inserted the info!
+        _ => {}
     }
+
+    if let Some(p) = video.protection_info.iter().find(|sinf| sinf.tenc.is_some()) {
+        if let Some(ref tenc) = p.tenc {
+            (*info).protected_data.is_encrypted = tenc.is_encrypted;
+            (*info).protected_data.iv_size = tenc.iv_size;
+            (*info).protected_data.kid.set_data(&(tenc.kid));
+        }
+    }
+
     Mp4parseStatus::Ok
 }
 
@@ -1381,6 +1208,7 @@ fn arg_validation() {
 
         let mut dummy_info = Mp4parseTrackInfo {
             track_type: Mp4parseTrackType::Video,
+            codec: Mp4parseCodec::Unknown,
             track_id: 0,
             duration: 0,
             media_time: 0,
@@ -1390,9 +1218,11 @@ fn arg_validation() {
         let mut dummy_video = Mp4parseTrackVideoInfo {
             display_width: 0,
             display_height: 0,
+            image_width: 0,
+            image_height: 0,
             rotation: 0,
-            sample_info_count: 0,
-            sample_info: std::ptr::null(),
+            extra_data: Mp4parseByteData::default(),
+            protected_data: Default::default(),
         };
         assert_eq!(Mp4parseStatus::BadArg, mp4parse_get_track_video_info(std::ptr::null_mut(), 0, &mut dummy_video));
 
@@ -1425,6 +1255,7 @@ fn arg_validation_with_parser() {
 
         let mut dummy_info = Mp4parseTrackInfo {
             track_type: Mp4parseTrackType::Video,
+            codec: Mp4parseCodec::Unknown,
             track_id: 0,
             duration: 0,
             media_time: 0,
@@ -1434,9 +1265,11 @@ fn arg_validation_with_parser() {
         let mut dummy_video = Mp4parseTrackVideoInfo {
             display_width: 0,
             display_height: 0,
+            image_width: 0,
+            image_height: 0,
             rotation: 0,
-            sample_info_count: 0,
-            sample_info: std::ptr::null(),
+            extra_data: Mp4parseByteData::default(),
+            protected_data: Default::default(),
         };
         assert_eq!(Mp4parseStatus::BadArg, mp4parse_get_track_video_info(parser, 0, &mut dummy_video));
 
@@ -1486,61 +1319,81 @@ fn arg_validation_with_data() {
 
         let mut info = Mp4parseTrackInfo {
             track_type: Mp4parseTrackType::Video,
+            codec: Mp4parseCodec::Unknown,
             track_id: 0,
             duration: 0,
             media_time: 0,
         };
         assert_eq!(Mp4parseStatus::Ok, mp4parse_get_track_info(parser, 0, &mut info));
         assert_eq!(info.track_type, Mp4parseTrackType::Video);
+        assert_eq!(info.codec, Mp4parseCodec::Avc);
         assert_eq!(info.track_id, 1);
         assert_eq!(info.duration, 40000);
         assert_eq!(info.media_time, 0);
 
         assert_eq!(Mp4parseStatus::Ok, mp4parse_get_track_info(parser, 1, &mut info));
         assert_eq!(info.track_type, Mp4parseTrackType::Audio);
+        assert_eq!(info.codec, Mp4parseCodec::Aac);
         assert_eq!(info.track_id, 2);
         assert_eq!(info.duration, 61333);
         assert_eq!(info.media_time, 21333);
 
-        let mut video = Mp4parseTrackVideoInfo::default();
+        let mut video = Mp4parseTrackVideoInfo {
+            display_width: 0,
+            display_height: 0,
+            image_width: 0,
+            image_height: 0,
+            rotation: 0,
+            extra_data: Mp4parseByteData::default(),
+            protected_data: Default::default(),
+        };
         assert_eq!(Mp4parseStatus::Ok, mp4parse_get_track_video_info(parser, 0, &mut video));
         assert_eq!(video.display_width, 320);
         assert_eq!(video.display_height, 240);
-        assert_eq!(video.sample_info_count, 1);
+        assert_eq!(video.image_width, 320);
+        assert_eq!(video.image_height, 240);
 
-        assert_eq!((*video.sample_info).image_width, 320);
-        assert_eq!((*video.sample_info).image_height, 240);
-
-        let mut audio = Mp4parseTrackAudioInfo::default();
+        let mut audio = Default::default();
         assert_eq!(Mp4parseStatus::Ok, mp4parse_get_track_audio_info(parser, 1, &mut audio));
-        assert_eq!(audio.sample_info_count, 1);
-
-        assert_eq!((*audio.sample_info).channels, 1);
-        assert_eq!((*audio.sample_info).bit_depth, 16);
-        assert_eq!((*audio.sample_info).sample_rate, 48000);
+        assert_eq!(audio.channels, 1);
+        assert_eq!(audio.bit_depth, 16);
+        assert_eq!(audio.sample_rate, 48000);
 
         // Test with an invalid track number.
         let mut info = Mp4parseTrackInfo {
             track_type: Mp4parseTrackType::Video,
+            codec: Mp4parseCodec::Unknown,
             track_id: 0,
             duration: 0,
             media_time: 0,
         };
         assert_eq!(Mp4parseStatus::BadArg, mp4parse_get_track_info(parser, 3, &mut info));
         assert_eq!(info.track_type, Mp4parseTrackType::Video);
+        assert_eq!(info.codec, Mp4parseCodec::Unknown);
         assert_eq!(info.track_id, 0);
         assert_eq!(info.duration, 0);
         assert_eq!(info.media_time, 0);
 
-        let mut video = Mp4parseTrackVideoInfo::default();
+        let mut video = Mp4parseTrackVideoInfo {
+            display_width: 0,
+            display_height: 0,
+            image_width: 0,
+            image_height: 0,
+            rotation: 0,
+            extra_data: Mp4parseByteData::default(),
+            protected_data: Default::default(),
+        };
         assert_eq!(Mp4parseStatus::BadArg, mp4parse_get_track_video_info(parser, 3, &mut video));
         assert_eq!(video.display_width, 0);
         assert_eq!(video.display_height, 0);
-        assert_eq!(video.sample_info_count, 0);
+        assert_eq!(video.image_width, 0);
+        assert_eq!(video.image_height, 0);
 
         let mut audio = Default::default();
         assert_eq!(Mp4parseStatus::BadArg, mp4parse_get_track_audio_info(parser, 3, &mut audio));
-        assert_eq!(audio.sample_info_count, 0);
+        assert_eq!(audio.channels, 0);
+        assert_eq!(audio.bit_depth, 0);
+        assert_eq!(audio.sample_rate, 0);
 
         mp4parse_free(parser);
     }
