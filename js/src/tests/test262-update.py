@@ -36,13 +36,14 @@ UNSUPPORTED_FEATURES = set([
     "Symbol.matchAll",
     "global",
     "export-star-as-namespace-from-module",
+    "Intl.ListFormat",
+    "Intl.Segmenter",
+    "Intl.NumberFormat-unified",
 ])
 FEATURE_CHECK_NEEDED = {
     "Atomics": "!this.hasOwnProperty('Atomics')",
     "BigInt": "!this.hasOwnProperty('BigInt')",
     "SharedArrayBuffer": "!this.hasOwnProperty('SharedArrayBuffer')",
-    "Intl.ListFormat": "!Intl.hasOwnProperty('ListFormat')",
-    "Intl.Segmenter": "!Intl.hasOwnProperty('Segmenter')",
     "dynamic-import": "!xulRuntime.shell",
 }
 RELEASE_OR_BETA = set()
