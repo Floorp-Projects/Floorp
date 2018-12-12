@@ -224,17 +224,6 @@ bool Compartment::getNonWrapperObjectForCurrentCompartment(
     return true;
   }
 
-  // Disallow creating new wrappers if we nuked the object's realm or the
-  // current compartment.
-  if (!AllowNewWrapper(this, obj)) {
-    JSObject* res = NewDeadProxyObject(cx);
-    if (!res) {
-      return false;
-    }
-    obj.set(res);
-    return true;
-  }
-
   // Invoke the prewrap callback. The prewrap callback is responsible for
   // doing similar reification as above, but can account for any additional
   // embedder requirements.

@@ -446,12 +446,6 @@ class JS::Compartment {
     bool hasEnteredRealm = false;
   } gcState;
 
-  // True if all outgoing wrappers have been nuked. This happens when all realms
-  // have been nuked and NukeCrossCompartmentWrappers is called with the
-  // NukeAllReferences option. This prevents us from creating new wrappers for
-  // the compartment.
-  bool nukedOutgoingWrappers = false;
-
   JS::Zone* zone() { return zone_; }
   const JS::Zone* zone() const { return zone_; }
 

@@ -195,6 +195,7 @@ CompartmentPrivate::CompartmentPrivate(JS::Compartment* c,
       isSandboxCompartment(false),
       universalXPConnectEnabled(false),
       forcePermissiveCOWs(false),
+      wasNuked(false),
       mWrappedJSMap(JSObject2WrappedJSMap::newMap(XPC_JS_MAP_LENGTH)) {
   MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
   mozilla::PodArrayZero(wrapperDenialWarnings);
@@ -589,26 +590,36 @@ nsGlobalWindowInner* CurrentWindowOrNull(JSContext* cx) {
   return glob ? WindowOrNull(glob) : nullptr;
 }
 
-// Nukes all wrappers into or out of the given realm, and prevents new
-// wrappers from being created. Additionally marks the realm as
+// Nukes all wrappers into or out of the given compartment, and prevents new
+// wrappers from being created. Additionally marks the compartment as
 // unscriptable after wrappers have been nuked.
 //
-// Note: This should *only* be called for browser or extension realms.
+// Note: This should *only* be called for browser or extension compartments.
 // Wrappers between web compartments must never be cut in web-observable
 // ways.
-void NukeAllWrappersForRealm(
-    JSContext* cx, JS::Realm* realm,
+void NukeAllWrappersForCompartment(
+    JSContext* cx, JS::Compartment* compartment,
     js::NukeReferencesToWindow nukeReferencesToWindow) {
-  // We do the following:
-  // * Nuke all wrappers into the realm.
-  // * Nuke all wrappers out of the realm's compartment, once we have nuked all
-  //   realms in it.
-  js::NukeCrossCompartmentWrappers(cx, js::AllCompartments(), realm,
+  // First, nuke all wrappers into or out of the target compartment. Once
+  // the compartment is marked as nuked, WrapperFactory will refuse to
+  // create new live wrappers for it, in either direction. This means that
+  // we need to be sure that we don't have any existing cross-compartment
+  // wrappers which may be replaced with dead wrappers during unrelated
+  // wrapper recomputation *before* we set that bit.
+  js::NukeCrossCompartmentWrappers(cx, js::AllCompartments(), compartment,
                                    nukeReferencesToWindow,
                                    js::NukeAllReferences);
 
-  // Mark the realm as unscriptable.
-  xpc::RealmPrivate::Get(realm)->scriptability.Block();
+  // At this point, we should cross-compartment wrappers for the nuked
+  // compartment. Set the wasNuked bit so WrapperFactory will return a
+  // DeadObjectProxy when asked to create a new wrapper for it, and mark as
+  // unscriptable.
+  xpc::CompartmentPrivate::Get(compartment)->wasNuked = true;
+
+  auto blockScriptability = [](JSContext*, void*, Handle<Realm*> realm) {
+    xpc::RealmPrivate::Get(realm)->scriptability.Block();
+  };
+  JS::IterateRealmsInCompartment(cx, compartment, nullptr, blockScriptability);
 }
 
 }  // namespace xpc
