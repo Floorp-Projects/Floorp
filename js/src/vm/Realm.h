@@ -441,11 +441,6 @@ class JS::Realm : public JS::shadow::Realm {
   bool firedOnNewGlobalObject = false;
 #endif
 
-  // True if all incoming wrappers have been nuked. This happens when
-  // NukeCrossCompartmentWrappers is called with the NukeAllReferences option.
-  // This prevents us from creating new wrappers for the compartment.
-  bool nukedIncomingWrappers = false;
-
  private:
   void updateDebuggerObservesFlag(unsigned flag);
 
