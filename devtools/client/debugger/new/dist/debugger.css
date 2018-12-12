@@ -2707,6 +2707,11 @@ menuseparator {
   fill-opacity: 0.5;
 }
 
+.column-breakpoint.has-condition svg {
+  fill: var(--theme-graphs-yellow);
+  stroke: var(--theme-graphs-orange);
+}
+
 .theme-dark .column-breakpoint.active svg {
   fill: var(--blue-55);
   stroke: var(--blue-40);
