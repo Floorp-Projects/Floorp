@@ -847,20 +847,20 @@ nsresult mozJSComponentLoader::ObjectForLocation(
       // don't early return for them here.
       auto buf = map.get<char>();
       if (reuseGlobal) {
-        CompileLatin1ForNonSyntacticScope(cx, options, buf.get(), map.size(),
-                                          &script);
+        CompileUtf8ForNonSyntacticScope(cx, options, buf.get(), map.size(),
+                                        &script);
       } else {
-        CompileLatin1(cx, options, buf.get(), map.size(), &script);
+        CompileUtf8(cx, options, buf.get(), map.size(), &script);
       }
     } else {
       nsCString str;
       MOZ_TRY_VAR(str, ReadScript(aInfo));
 
       if (reuseGlobal) {
-        CompileLatin1ForNonSyntacticScope(cx, options, str.get(), str.Length(),
-                                          &script);
+        CompileUtf8ForNonSyntacticScope(cx, options, str.get(), str.Length(),
+                                        &script);
       } else {
-        CompileLatin1(cx, options, str.get(), str.Length(), &script);
+        CompileUtf8(cx, options, str.get(), str.Length(), &script);
       }
     }
     // Propagate the exception, if one exists. Also, don't leave the stale

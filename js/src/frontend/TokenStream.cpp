@@ -327,13 +327,14 @@ PropertyName* TokenStreamAnyChars::reservedWordToPropertyName(
   return nullptr;
 }
 
-TokenStreamAnyChars::SourceCoords::SourceCoords(JSContext* cx, uint32_t ln,
-                                                uint32_t col,
-                                                uint32_t initialLineOffset)
+TokenStreamAnyChars::SourceCoords::SourceCoords(JSContext* cx,
+                                                uint32_t initialLineNumber,
+                                                uint32_t initialColumnNumber,
+                                                uint32_t initialOffset)
     : lineStartOffsets_(cx),
-      initialLineNum_(ln),
-      initialColumn_(col),
-      lastLineIndex_(0) {
+      initialLineNum_(initialLineNumber),
+      initialColumn_(initialColumnNumber),
+      lastIndex_(0) {
   // This is actually necessary!  Removing it causes compile errors on
   // GCC and clang.  You could try declaring this:
   //
@@ -343,24 +344,24 @@ TokenStreamAnyChars::SourceCoords::SourceCoords(JSContext* cx, uint32_t ln,
   //
   uint32_t maxPtr = MAX_PTR;
 
-  // The first line begins at buffer offset |initialLineOffset|.  MAX_PTR is
-  // the sentinel.  The appends cannot fail because |lineStartOffsets_| has
+  // The first line begins at buffer offset |initialOffset|.  MAX_PTR is the
+  // sentinel.  The appends cannot fail because |lineStartOffsets_| has
   // statically-allocated elements.
   MOZ_ASSERT(lineStartOffsets_.capacity() >= 2);
   MOZ_ALWAYS_TRUE(lineStartOffsets_.reserve(2));
-  lineStartOffsets_.infallibleAppend(initialLineOffset);
+  lineStartOffsets_.infallibleAppend(initialOffset);
   lineStartOffsets_.infallibleAppend(maxPtr);
 }
 
 MOZ_ALWAYS_INLINE bool TokenStreamAnyChars::SourceCoords::add(
     uint32_t lineNum, uint32_t lineStartOffset) {
-  uint32_t lineIndex = lineNumToIndex(lineNum);
+  uint32_t index = indexFromLineNumber(lineNum);
   uint32_t sentinelIndex = lineStartOffsets_.length() - 1;
 
-  MOZ_ASSERT(lineStartOffsets_[0] <= lineStartOffset &&
-             lineStartOffsets_[sentinelIndex] == MAX_PTR);
+  MOZ_ASSERT(lineStartOffsets_[0] <= lineStartOffset);
+  MOZ_ASSERT(lineStartOffsets_[sentinelIndex] == MAX_PTR);
 
-  if (lineIndex == sentinelIndex) {
+  if (index == sentinelIndex) {
     // We haven't seen this newline before.  Update lineStartOffsets_
     // only if lineStartOffsets_.append succeeds, to keep sentinel.
     // Otherwise return false to tell TokenStream about OOM.
@@ -373,13 +374,13 @@ MOZ_ALWAYS_INLINE bool TokenStreamAnyChars::SourceCoords::add(
       return false;
     }
 
-    lineStartOffsets_[lineIndex] = lineStartOffset;
+    lineStartOffsets_[index] = lineStartOffset;
   } else {
     // We have seen this newline before (and ungot it).  Do nothing (other
     // than checking it hasn't mysteriously changed).
-    // This path can be executed after hitting OOM, so check lineIndex.
-    MOZ_ASSERT_IF(lineIndex < sentinelIndex,
-                  lineStartOffsets_[lineIndex] == lineStartOffset);
+    // This path can be executed after hitting OOM, so check index.
+    MOZ_ASSERT_IF(index < sentinelIndex,
+                  lineStartOffsets_[index] == lineStartOffset);
   }
   return true;
 }
@@ -407,33 +408,33 @@ MOZ_ALWAYS_INLINE bool TokenStreamAnyChars::SourceCoords::fill(
 }
 
 MOZ_ALWAYS_INLINE uint32_t
-TokenStreamAnyChars::SourceCoords::lineIndexOf(uint32_t offset) const {
+TokenStreamAnyChars::SourceCoords::indexFromOffset(uint32_t offset) const {
   uint32_t iMin, iMax, iMid;
 
-  if (lineStartOffsets_[lastLineIndex_] <= offset) {
+  if (lineStartOffsets_[lastIndex_] <= offset) {
     // If we reach here, offset is on a line the same as or higher than
     // last time.  Check first for the +0, +1, +2 cases, because they
     // typically cover 85--98% of cases.
-    if (offset < lineStartOffsets_[lastLineIndex_ + 1]) {
-      return lastLineIndex_;  // lineIndex is same as last time
+    if (offset < lineStartOffsets_[lastIndex_ + 1]) {
+      return lastIndex_;  // index is same as last time
     }
 
     // If we reach here, there must be at least one more entry (plus the
     // sentinel).  Try it.
-    lastLineIndex_++;
-    if (offset < lineStartOffsets_[lastLineIndex_ + 1]) {
-      return lastLineIndex_;  // lineIndex is one higher than last time
+    lastIndex_++;
+    if (offset < lineStartOffsets_[lastIndex_ + 1]) {
+      return lastIndex_;  // index is one higher than last time
     }
 
     // The same logic applies here.
-    lastLineIndex_++;
-    if (offset < lineStartOffsets_[lastLineIndex_ + 1]) {
-      return lastLineIndex_;  // lineIndex is two higher than last time
+    lastIndex_++;
+    if (offset < lineStartOffsets_[lastIndex_ + 1]) {
+      return lastIndex_;  // index is two higher than last time
     }
 
     // No luck.  Oh well, we have a better-than-default starting point for
     // the binary search.
-    iMin = lastLineIndex_ + 1;
+    iMin = lastIndex_ + 1;
     MOZ_ASSERT(iMin <
                lineStartOffsets_.length() - 1);  // -1 due to the sentinel
 
@@ -454,27 +455,18 @@ TokenStreamAnyChars::SourceCoords::lineIndexOf(uint32_t offset) const {
       iMax = iMid;  // offset is below or within lineStartOffsets_[iMid]
     }
   }
+
   MOZ_ASSERT(iMax == iMin);
-  MOZ_ASSERT(lineStartOffsets_[iMin] <= offset &&
-             offset < lineStartOffsets_[iMin + 1]);
-  lastLineIndex_ = iMin;
+  MOZ_ASSERT(lineStartOffsets_[iMin] <= offset);
+  MOZ_ASSERT(offset < lineStartOffsets_[iMin + 1]);
+
+  lastIndex_ = iMin;
   return iMin;
 }
 
-uint32_t TokenStreamAnyChars::SourceCoords::lineNum(uint32_t offset) const {
-  uint32_t lineIndex = lineIndexOf(offset);
-  return lineIndexToNum(lineIndex);
-}
-
-uint32_t TokenStreamAnyChars::SourceCoords::columnIndex(uint32_t offset) const {
-  return lineIndexAndOffsetToColumn(lineIndexOf(offset), offset);
-}
-
-void TokenStreamAnyChars::SourceCoords::lineNumAndColumnIndex(
-    uint32_t offset, uint32_t* lineNum, uint32_t* column) const {
-  uint32_t lineIndex = lineIndexOf(offset);
-  *lineNum = lineIndexToNum(lineIndex);
-  *column = lineIndexAndOffsetToColumn(lineIndex, offset);
+TokenStreamAnyChars::SourceCoords::LineToken
+TokenStreamAnyChars::SourceCoords::lineToken(uint32_t offset) const {
+  return LineToken(indexFromOffset(offset), offset);
 }
 
 TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx,
@@ -678,8 +670,8 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
 
     TokenStreamAnyChars& anyChars = anyCharsAccess();
 
-    bool hasLineOfContext = anyChars.fillExcludingContext(&err, offset);
-    if (hasLineOfContext) {
+    bool canAddLineOfContext = fillExceptingContext(&err, offset);
+    if (canAddLineOfContext) {
       if (!internalComputeLineOfContext(&err, offset)) {
         break;
       }
@@ -717,7 +709,7 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
     ptr[-1] = '\0';
 
     uint32_t line, column;
-    anyChars.srcCoords.lineNumAndColumnIndex(offset, &line, &column);
+    computeLineAndColumn(offset, &line, &column);
 
     if (!notes->addNoteASCII(anyChars.cx, anyChars.getFilename(), line, column,
                              GetErrorMessage, nullptr, JSMSG_BAD_CODE_UNITS,
@@ -1318,7 +1310,7 @@ void TokenStreamAnyChars::computeErrorMetadataNoOffset(ErrorMetadata* err) {
   MOZ_ASSERT(err->lineOfContext == nullptr);
 }
 
-bool TokenStreamAnyChars::fillExcludingContext(ErrorMetadata* err,
+bool TokenStreamAnyChars::fillExceptingContext(ErrorMetadata* err,
                                                uint32_t offset) {
   err->isMuted = mutedErrors;
 
@@ -1336,7 +1328,6 @@ bool TokenStreamAnyChars::fillExcludingContext(ErrorMetadata* err,
 
   // Otherwise use this TokenStreamAnyChars's location information.
   err->filename = filename_;
-  srcCoords.lineNumAndColumnIndex(offset, &err->lineNumber, &err->columnNumber);
   return true;
 }
 
@@ -1344,19 +1335,6 @@ template <typename Unit, class AnyCharsAccess>
 bool TokenStreamSpecific<Unit, AnyCharsAccess>::hasTokenizationStarted() const {
   const TokenStreamAnyChars& anyChars = anyCharsAccess();
   return anyChars.isCurrentTokenType(TokenKind::Eof) && !anyChars.isEOF();
-}
-
-void TokenStreamAnyChars::lineAndColumnAt(size_t offset, uint32_t* line,
-                                          uint32_t* column) const {
-  srcCoords.lineNumAndColumnIndex(offset, line, column);
-}
-
-template <typename Unit, class AnyCharsAccess>
-void TokenStreamSpecific<Unit, AnyCharsAccess>::currentLineAndColumn(
-    uint32_t* line, uint32_t* column) const {
-  const TokenStreamAnyChars& anyChars = anyCharsAccess();
-  uint32_t offset = anyChars.currentToken().pos.begin;
-  anyChars.srcCoords.lineNumAndColumnIndex(offset, line, column);
 }
 
 template <>
@@ -1507,15 +1485,15 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::computeErrorMetadata(
   }
 
   // This function's return value isn't a success/failure indication: it
-  // returns true if this TokenStream's location information could be used,
-  // and it returns false when that information can't be used (and so we
-  // can't provide a line of context).
-  if (!anyCharsAccess().fillExcludingContext(err, offset)) {
-    return true;
+  // returns true if this TokenStream can be used to provide a line of
+  // context.
+  if (fillExceptingContext(err, offset)) {
+    // Add a line of context from this TokenStream to help with debugging.
+    return internalComputeLineOfContext(err, offset);
   }
 
-  // Add a line of context from this TokenStream to help with debugging.
-  return internalComputeLineOfContext(err, offset);
+  // We can't fill in any more here.
+  return true;
 }
 
 template <typename Unit, class AnyCharsAccess>
@@ -3509,8 +3487,20 @@ const char* TokenKindToString(TokenKind tt) {
 template class TokenStreamCharsBase<Utf8Unit>;
 template class TokenStreamCharsBase<char16_t>;
 
+template class GeneralTokenStreamChars<char16_t, TokenStreamAnyCharsAccess>;
 template class TokenStreamChars<char16_t, TokenStreamAnyCharsAccess>;
 template class TokenStreamSpecific<char16_t, TokenStreamAnyCharsAccess>;
+
+template class GeneralTokenStreamChars<
+    Utf8Unit, ParserAnyCharsAccess<GeneralParser<FullParseHandler, Utf8Unit>>>;
+template class GeneralTokenStreamChars<
+    Utf8Unit,
+    ParserAnyCharsAccess<GeneralParser<SyntaxParseHandler, Utf8Unit>>>;
+template class GeneralTokenStreamChars<
+    char16_t, ParserAnyCharsAccess<GeneralParser<FullParseHandler, char16_t>>>;
+template class GeneralTokenStreamChars<
+    char16_t,
+    ParserAnyCharsAccess<GeneralParser<SyntaxParseHandler, char16_t>>>;
 
 template class TokenStreamChars<
     Utf8Unit, ParserAnyCharsAccess<GeneralParser<FullParseHandler, Utf8Unit>>>;

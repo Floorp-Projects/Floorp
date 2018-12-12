@@ -52,7 +52,7 @@ isnot(src.indexOf("return 42;"), -1, "encoded subscript should have correct sour
 
 ns = {};
 Services.scriptloader.loadSubScriptWithOptions(resolvedBase + "utf8_subscript.js",
-                                               {target: ns, charset: "UTF-8", ignoreCache: true});
+                                               {target: ns, ignoreCache: true});
 src = ns.f.toSource();
 isnot(src.indexOf("return 42;"), -1, "encoded subscript should have correct source");
 

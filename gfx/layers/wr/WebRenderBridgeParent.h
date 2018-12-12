@@ -123,6 +123,9 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
       nsTArray<WebRenderParentCommand>&& commands) override;
   mozilla::ipc::IPCResult RecvGetSnapshot(PTextureParent* aTexture) override;
 
+  mozilla::ipc::IPCResult RecvValidateFontDescriptor(
+      nsTArray<uint8_t>&& aData) override;
+
   mozilla::ipc::IPCResult RecvSetLayersObserverEpoch(
       const LayersObserverEpoch& aChildEpoch) override;
 

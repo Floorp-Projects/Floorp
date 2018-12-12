@@ -17,6 +17,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/MemoryTelemetry.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcessHangMonitorIPC.h"
@@ -241,6 +242,7 @@
 #include "VRManagerChild.h"
 #include "private/pprio.h"
 #include "nsString.h"
+#include "MMPrinter.h"
 
 #ifdef MOZ_WIDGET_GTK
 #include "nsAppRunner.h"
@@ -2258,6 +2260,7 @@ mozilla::ipc::IPCResult ContentChild::RecvAsyncMessage(
     const IPC::Principal& aPrincipal, const ClonedMessageData& aData) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("ContentChild::RecvAsyncMessage",
                                              OTHER, aMsg);
+  MMPrinter::Print("ContentChild::RecvAsyncMessage", aMsg, aData);
 
   CrossProcessCpowHolder cpows(this, aCpows);
   RefPtr<nsFrameMessageManager> cpm =
@@ -3374,6 +3377,12 @@ mozilla::ipc::IPCResult ContentChild::RecvFlushCodeCoverageCounters(
 #else
   MOZ_CRASH("Shouldn't receive this message in non-code coverage builds!");
 #endif
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvGetMemoryUniqueSetSize(
+    GetMemoryUniqueSetSizeResolver&& aResolver) {
+  MemoryTelemetry::Get().GetUniqueSetSize(std::move(aResolver));
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvSetInputEventQueueEnabled() {

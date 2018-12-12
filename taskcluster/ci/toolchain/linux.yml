@@ -493,7 +493,7 @@ linux64-rust-1.30:
     treeherder:
         kind: build
         platform: toolchains/opt
-        symbol: TL(rust)
+        symbol: TL(rust-1.30)
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
@@ -505,6 +505,29 @@ linux64-rust-1.30:
         script: repack_rust.py
         arguments: [
             '--channel', '1.30.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+        ]
+        toolchain-artifact: public/build/rustc.tar.xz
+
+linux64-rust-1.31:
+    description: "rust repack"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(rust)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 7200
+        env:
+            UPLOAD_DIR: artifacts
+    run:
+        using: toolchain-script
+        script: repack_rust.py
+        arguments: [
+            '--channel', '1.31.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
@@ -535,7 +558,7 @@ linux64-rust-nightly:
         ]
         toolchain-artifact: public/build/rustc.tar.xz
 
-linux64-rust-macos-1.30:
+linux64-rust-macos-1.31:
     description: "rust repack with macos-cross support"
     treeherder:
         kind: build
@@ -551,7 +574,7 @@ linux64-rust-macos-1.30:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', '1.30.0',
+            '--channel', '1.31.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-apple-darwin',
@@ -582,7 +605,7 @@ linux64-rust-nightly-macos:
         ]
         toolchain-artifact: public/build/rustc.tar.xz
 
-linux64-rust-android-1.30:
+linux64-rust-android-1.31:
     description: "rust repack with android-cross support"
     treeherder:
         kind: build
@@ -598,7 +621,7 @@ linux64-rust-android-1.30:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', '1.30.0',
+            '--channel', '1.31.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'armv7-linux-androideabi',

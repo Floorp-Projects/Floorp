@@ -25,6 +25,7 @@
 #include "mozilla/ipc/IPCStreamSource.h"
 #include "mozilla/Unused.h"
 
+#include "MMPrinter.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsPrintfCString.h"
 #include "xpcpublic.h"
@@ -235,6 +236,7 @@ mozilla::ipc::IPCResult nsIContentParent::RecvSyncMessage(
     nsTArray<ipc::StructuredCloneData>* aRetvals) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
       "nsIContentParent::RecvSyncMessage", OTHER, aMsg);
+  MMPrinter::Print("nsIContentParent::RecvSyncMessage", aMsg, aData);
 
   CrossProcessCpowHolder cpows(this, aCpows);
   RefPtr<nsFrameMessageManager> ppm = mMessageManager;
@@ -254,6 +256,7 @@ mozilla::ipc::IPCResult nsIContentParent::RecvRpcMessage(
     nsTArray<ipc::StructuredCloneData>* aRetvals) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("nsIContentParent::RecvRpcMessage",
                                              OTHER, aMsg);
+  MMPrinter::Print("nsIContentParent::RecvRpcMessage", aMsg, aData);
 
   CrossProcessCpowHolder cpows(this, aCpows);
   RefPtr<nsFrameMessageManager> ppm = mMessageManager;
@@ -305,6 +308,7 @@ mozilla::ipc::IPCResult nsIContentParent::RecvAsyncMessage(
     const IPC::Principal& aPrincipal, const ClonedMessageData& aData) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
       "nsIContentParent::RecvAsyncMessage", OTHER, aMsg);
+  MMPrinter::Print("nsIContentParent::RecvAsyncMessage", aMsg, aData);
 
   CrossProcessCpowHolder cpows(this, aCpows);
   RefPtr<nsFrameMessageManager> ppm = mMessageManager;
