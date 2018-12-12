@@ -160,7 +160,6 @@ class Editor extends PureComponent<Props, State> {
     codeMirrorWrapper.addEventListener("keydown", e => this.onKeyDown(e));
     codeMirrorWrapper.addEventListener("click", e => this.onClick(e));
     codeMirrorWrapper.addEventListener("mouseover", onMouseOver(codeMirror));
-    codeMirror.on("scroll", this.onEditorScroll);
 
     const toggleFoldMarkerVisibility = e => {
       if (node instanceof HTMLElement) {
@@ -187,6 +186,9 @@ class Editor extends PureComponent<Props, State> {
       );
     }
 
+    codeMirror.on("scroll", this.onEditorScroll);
+    this.onEditorScroll();
+
     this.setState({ editor });
     return editor;
   }
@@ -212,6 +214,7 @@ class Editor extends PureComponent<Props, State> {
   componentWillUnmount() {
     if (this.state.editor) {
       this.state.editor.destroy();
+      this.state.editor.codeMirror.off("scroll", this.onEditorScroll);
       this.setState({ editor: null });
     }
 
