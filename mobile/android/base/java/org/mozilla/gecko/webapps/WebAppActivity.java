@@ -98,9 +98,8 @@ public class WebAppActivity extends AppCompatActivity
         setContentView(R.layout.webapp_activity);
         mGeckoView = (GeckoView) findViewById(R.id.pwa_gecko_view);
 
-        final GeckoSessionSettings settings = new GeckoSessionSettings.Builder()
-                .useMultiprocess(false)
-                .build();
+        final GeckoSessionSettings settings = new GeckoSessionSettings();
+        settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
         mGeckoSession = new GeckoSession(settings);
         mGeckoView.setSession(mGeckoSession, GeckoApplication.ensureRuntime(this));
 
@@ -320,7 +319,7 @@ public class WebAppActivity extends AppCompatActivity
                 break;
         }
 
-        mGeckoSession.getSettings().setDisplayMode(mode);
+        mGeckoSession.getSettings().setInt(GeckoSessionSettings.DISPLAY_MODE, mode);
     }
 
     @Override // GeckoSession.NavigationDelegate
