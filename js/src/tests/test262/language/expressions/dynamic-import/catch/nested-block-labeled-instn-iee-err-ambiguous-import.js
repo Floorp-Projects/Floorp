@@ -1,3 +1,4 @@
+// |reftest| skip-if(!xulRuntime.shell) -- dynamic-import is not enabled unconditionally
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/instn-iee-err-ambiguous-import.case
 // - src/dynamic-import/catch/nested-block-labeled.template
