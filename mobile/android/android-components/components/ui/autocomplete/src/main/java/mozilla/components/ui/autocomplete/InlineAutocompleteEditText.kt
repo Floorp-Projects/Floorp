@@ -5,9 +5,12 @@
 package mozilla.components.ui.autocomplete
 
 import android.content.Context
+import android.content.Context.INPUT_METHOD_SERVICE
 import android.graphics.Color.parseColor
 import android.graphics.Rect
 import android.os.Build
+import android.provider.Settings.Secure.DEFAULT_INPUT_METHOD
+import android.provider.Settings.Secure.getString
 import android.support.v7.widget.AppCompatEditText
 import android.text.Editable
 import android.text.NoCopySpan
@@ -123,6 +126,8 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         color
     }()
 
+    private val inputMethodManger get() = context.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager?
+
     private val onKeyPreIme = fun (_: View, keyCode: Int, event: KeyEvent): Boolean {
         // We only want to process one event per tap
         if (event.action != KeyEvent.ACTION_DOWN) {
@@ -184,6 +189,9 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         }
     }
 
+    private val isSonyKeyboard: Boolean
+        get() = INPUT_METHOD_SONY == getCurrentInputMethod()
+
     public override fun onAttachedToWindow() {
         super.onAttachedToWindow()
 
@@ -210,10 +218,9 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
 
         removeAutocomplete(text)
 
-        val imm = ctx.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         try {
-            imm.restartInput(this)
-            imm.hideSoftInputFromWindow(windowToken, 0)
+            restartInput()
+            inputMethodManger?.hideSoftInputFromWindow(windowToken, 0)
         } catch (ignored: NullPointerException) {
             // See bug 782096 for details
         }
@@ -469,6 +476,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
                     // If we have autocomplete text, the cursor is at the boundary between
                     // regular and autocomplete text. So regardless of which direction we
                     // are deleting, we should delete the autocomplete text first.
+                    restartInput()
                     return false
                 }
                 return super.deleteSurroundingText(beforeLength, afterLength)
@@ -503,12 +511,24 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
 
             override fun setComposingText(text: CharSequence, newCursorPosition: Int): Boolean {
                 return if (removeAutocompleteOnComposing(text)) {
+                    if (isSonyKeyboard) {
+                        restartInput()
+                    }
                     false
                 } else {
                     super.setComposingText(text, newCursorPosition)
                 }
             }
         }
+    }
+
+    private fun restartInput() {
+        inputMethodManger?.restartInput(this)
+    }
+
+    private fun getCurrentInputMethod(): String {
+        val inputMethod = getString(context.contentResolver, DEFAULT_INPUT_METHOD)
+        return inputMethod ?: ""
     }
 
     private inner class TextChangeListener : TextWatcher {
@@ -611,6 +631,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
     companion object {
         val AUTOCOMPLETE_SPAN = NoCopySpan.Concrete()
         val DEFAULT_AUTOCOMPLETE_BACKGROUND_COLOR = parseColor("#ffb5007f")
+        const val INPUT_METHOD_SONY = "com.sonyericsson.textinput.uxp/.glue.InputMethodServiceGlue"
 
         /**
          * Get the portion of text that is not marked as autocomplete text.
