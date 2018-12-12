@@ -1,8 +1,6 @@
 // custom *.sjs for Bug 1224225
 // Punycode in CSP host sources
 
-Cu.importGlobalProperties(["TextEncoder"]);
-
 const HTML_PART1 =
   "<!DOCTYPE HTML>" +
   "<html><head><meta charset=\"utf-8\">" +
@@ -11,12 +9,7 @@ const HTML_PART1 =
   "<body>" +
   "<script id='script' src='";
 
-function convertToUtf8(str)
-{
-  return String.fromCharCode(...new TextEncoder().encode(str));
-}
-
-const TESTCASE1 = "http://sub2." + convertToUtf8("ä") + "lt.example.org/";
+const TESTCASE1 = "http://sub2.ält.example.org/";
 const TESTCASE2 = "http://sub2.xn--lt-uia.example.org/"
 
 const HTML_PART2 = "tests/dom/security/test/csp/file_punycode_host_src.js'></script>" +

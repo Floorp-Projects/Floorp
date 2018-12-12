@@ -4,8 +4,6 @@
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
-Cu.importGlobalProperties(["TextEncoder"]);
-
 /**
  * Provide search suggestions in the OpenSearch JSON format.
  */
@@ -14,21 +12,10 @@ function handleRequest(request, response) {
   // Get the query parameters from the query string.
   let query = parseQueryString(request.queryString);
 
-  function convertToUtf8(str) {
-    return String.fromCharCode(...new TextEncoder().encode(str));
-  }
-
   function writeSuggestions(query, completions = []) {
     let result = [query, completions];
-    let jsonString = JSON.stringify([query, completions]);
-
-    // This script must be evaluated as UTF-8 for this to write out the bytes of
-    // the string in UTF-8.  If it's evaluated as Latin-1, the written bytes
-    // will be the result of UTF-8-encoding the result-string *twice*, which
-    // will break the "I ❤️" case further down.
-    let stringOfUtf8Bytes = convertToUtf8(jsonString);
-
-    response.write(stringOfUtf8Bytes);
+    response.write(JSON.stringify(result));
+    return result;
   }
 
   response.setStatusLine(request.httpVersion, 200, "OK");
@@ -86,7 +73,7 @@ function parseQueryString(queryString) {
   let query = {};
   queryString.split('&').forEach(function (val) {
     let [name, value] = val.split('=');
-    query[name] = decodeURIComponent(value).replace(/[+]/g, " ");
+    query[name] = unescape(value).replace(/[+]/g, " ");
   });
   return query;
 }
