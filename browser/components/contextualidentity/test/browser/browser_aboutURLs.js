@@ -18,6 +18,7 @@ add_task(async function() {
     "downloads",
     // about:debugging requires specific wait code for internal pending RDP requests.
     "debugging",
+    "debugging-new",
   ];
 
   for (let cid in Cc) {

@@ -1136,12 +1136,13 @@ void nsLayoutUtils::InvalidateForDisplayPortChange(
       return;
     }
 
+    bool found;
     nsRect* rect = frame->GetProperty(
-        nsDisplayListBuilder::DisplayListBuildingDisplayPortRect());
+        nsDisplayListBuilder::DisplayListBuildingDisplayPortRect(), &found);
 
-    if (!rect) {
+    if (!found) {
       rect = new nsRect();
-      frame->SetProperty(
+      frame->AddProperty(
           nsDisplayListBuilder::DisplayListBuildingDisplayPortRect(), rect);
       frame->SetHasOverrideDirtyRegion(true);
 
@@ -1151,6 +1152,8 @@ void nsLayoutUtils::InvalidateForDisplayPortChange(
       RetainedDisplayListData* data =
           GetOrSetRetainedDisplayListData(rootFrame);
       data->Flags(frame) |= RetainedDisplayListData::FrameFlags::HasProps;
+    } else {
+      MOZ_ASSERT(rect, "this property should only store non-null values");
     }
 
     if (aHadDisplayPort) {

@@ -1,0 +1,56 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/* global sendAsyncMessage */
+
+"use strict";
+
+/* import-globals-from head-serviceworker.js */
+Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "head-serviceworker.js", this);
+
+const SERVICE_WORKER = URL_ROOT + "resources/service-workers/push-sw.js";
+const TAB_URL = URL_ROOT + "resources/service-workers/push-sw.html";
+
+// Test that clicking on the Push button next to a Service Worker works as intended.
+// It should trigger a "push" notification in the worker.
+add_task(async function() {
+  await enableServiceWorkerDebugging();
+  const { document, tab } = await openAboutDebugging();
+
+  // Open a tab that registers a push service worker.
+  const swTab = await addTab(TAB_URL);
+
+  info("Forward service worker messages to the test");
+  await forwardServiceWorkerMessage(swTab);
+
+  info("Wait for the service worker to claim the test window before proceeding.");
+  await onTabMessage(swTab, "sw-claimed");
+
+  info("Wait until the service worker appears and is running");
+  await waitUntil(() => {
+    const target = findDebugTargetByText(SERVICE_WORKER, document);
+    const status = target && target.querySelector(".js-worker-status");
+    return status && status.textContent === "Running";
+  });
+
+  // Retrieve the Push button for the worker.
+  const targetElement = findDebugTargetByText(SERVICE_WORKER, document);
+  const pushButton = targetElement.querySelector(".js-push-button");
+  ok(pushButton, "Found its push button");
+
+  info("Click on the Push button and wait for the push notification");
+  const onPushNotification = onTabMessage(swTab, "sw-pushed");
+  pushButton.click();
+  await onPushNotification;
+
+  info("Unregister the service worker");
+  await unregisterServiceWorker(swTab, "pushServiceWorkerRegistration");
+
+  info("Wait until the service worker disappears from about:debugging");
+  await waitUntil(() => !findDebugTargetByText(SERVICE_WORKER, document));
+
+  info("Remove the service worker tab");
+  await removeTab(swTab);
+
+  await removeTab(tab);
+});
