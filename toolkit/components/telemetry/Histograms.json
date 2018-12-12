@@ -1016,14 +1016,15 @@
   },
   "MEMORY_TOTAL": {
     "record_in_processes": ["main"],
-    "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1198209],
+    "alert_emails": ["memshrink-telemetry-alerts@mozilla.com", "erahm@mozilla.com"],
+    "bug_numbers": [1198209, 1511918],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 32768,
     "high": 16777216,
     "n_buckets": 100,
-    "description": "Total Memory Across All Processes (KB)"
+    "description": "Total Memory Across All Processes (KB)",
+    "releaseChannelCollection": "opt-out"
   },
   "MEMORY_DISTRIBUTION_AMONG_CONTENT": {
     "record_in_processes": ["main"],
@@ -6528,13 +6529,14 @@
   },
   "INPUT_EVENT_RESPONSE_MS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1235908],
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com", "chutten@mozilla.com"],
+    "bug_numbers": [1235908, 1511919],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
-    "description": "Time (ms) from the Input event being created to the end of it being handled"
+    "description": "Time (ms) from the Input event being created to the end of it being handled",
+    "releaseChannelCollection": "opt-out"
   },
   "INPUT_EVENT_RESPONSE_COALESCED_MS": {
     "record_in_processes": ["main", "content"],

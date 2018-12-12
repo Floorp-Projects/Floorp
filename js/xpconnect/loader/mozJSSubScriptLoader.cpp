@@ -56,7 +56,7 @@ class MOZ_STACK_CLASS LoadSubScriptOptions : public OptionsBase {
         wantReturnValue(false) {}
 
   virtual bool Parse() override {
-    return ParseObject("target", &target) && ParseString("charset", charset) &&
+    return ParseObject("target", &target) &&
            ParseBoolean("ignoreCache", &ignoreCache) &&
            ParseBoolean("async", &async) &&
            ParseBoolean("wantReturnValue", &wantReturnValue);
@@ -557,6 +557,8 @@ mozJSSubScriptLoader::LoadSubScriptWithOptions(const nsAString& url,
   if (!options.Parse()) {
     return NS_ERROR_INVALID_ARG;
   }
+
+  options.charset.AssignLiteral("UTF-8");
   return DoLoadSubScriptWithOptions(url, options, cx, retval);
 }
 

@@ -45,6 +45,7 @@ BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 
 XPIDL_SOURCES += [
     'core/nsITelemetry.idl',
+    'other/GCTelemetry.idl',
 ]
 
 XPIDL_MODULE = 'telemetry'
@@ -107,7 +108,6 @@ EXTRA_JS_MODULES += [
     'app/TelemetryTimestamps.jsm',
     'app/TelemetryUtils.jsm',
     'other/GCTelemetry.jsm',
-    'other/MemoryTelemetry.jsm',
     'other/UITelemetry.jsm',
     'pings/CoveragePing.jsm',
     'pings/EventPing.jsm',

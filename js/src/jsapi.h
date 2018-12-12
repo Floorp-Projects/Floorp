@@ -4522,43 +4522,30 @@ extern JS_PUBLIC_API void JS_SetParallelParsingEnabled(JSContext* cx,
 extern JS_PUBLIC_API void JS_SetOffthreadIonCompilationEnabled(JSContext* cx,
                                                                bool enabled);
 
-#define JIT_COMPILER_OPTIONS(Register)                                        \
-  Register(BASELINE_WARMUP_TRIGGER, "baseline.warmup.trigger") Register(      \
-      ION_WARMUP_TRIGGER, "ion.warmup.trigger") Register(ION_GVN_ENABLE,      \
-                                                         "ion.gvn.enable")    \
-      Register(ION_FORCE_IC, "ion.forceinlineCaches") Register(               \
-          ION_ENABLE, "ion.enable") Register(ION_CHECK_RANGE_ANALYSIS,        \
-                                             "ion.check-range-analysis")      \
-          Register(ION_FREQUENT_BAILOUT_THRESHOLD,                            \
-                   "ion.frequent-bailout-threshold")                          \
-              Register(BASELINE_ENABLE, "baseline.enable") Register(          \
-                  OFFTHREAD_COMPILATION_ENABLE,                               \
-                  "offthread-compilation.enable") Register(FULL_DEBUG_CHECKS, \
-                                                           "jit.full-debug-"  \
-                                                           "checks")          \
-                  Register(JUMP_THRESHOLD, "jump-threshold") Register(        \
-                      TRACK_OPTIMIZATIONS, "jit.track-optimizations")         \
-                      Register(SIMULATOR_ALWAYS_INTERRUPT,                    \
-                               "simulator.always-interrupt")                  \
-                          Register(SPECTRE_INDEX_MASKING,                     \
-                                   "spectre.index-masking")                   \
-                              Register(SPECTRE_OBJECT_MITIGATIONS_BARRIERS,   \
-                                       "spectre.object-mitigations.barriers") \
-                                  Register(SPECTRE_OBJECT_MITIGATIONS_MISC,   \
-                                           "spectre.object-mitigations.misc") \
-                                      Register(SPECTRE_STRING_MITIGATIONS,    \
-                                               "spectre.string-mitigations")  \
-                                          Register(SPECTRE_VALUE_MASKING,     \
-                                                   "spectre.value-masking")   \
-                                              Register(                       \
-                                                  SPECTRE_JIT_TO_CXX_CALLS,   \
-                                                  "spectre.jit-to-C++-calls") \
-                                                  Register(                   \
-                                                      WASM_FOLD_OFFSETS,      \
-                                                      "wasm.fold-offsets")    \
-                                                      Register(               \
-                                                          WASM_DELAY_TIER2,   \
-                                                          "wasm.delay-tier2")
+// clang-format off
+#define JIT_COMPILER_OPTIONS(Register) \
+  Register(BASELINE_WARMUP_TRIGGER, "baseline.warmup.trigger") \
+  Register(ION_WARMUP_TRIGGER, "ion.warmup.trigger") \
+  Register(ION_GVN_ENABLE, "ion.gvn.enable") \
+  Register(ION_FORCE_IC, "ion.forceinlineCaches") \
+  Register(ION_ENABLE, "ion.enable") \
+  Register(ION_CHECK_RANGE_ANALYSIS, "ion.check-range-analysis") \
+  Register(ION_FREQUENT_BAILOUT_THRESHOLD, "ion.frequent-bailout-threshold") \
+  Register(BASELINE_ENABLE, "baseline.enable") \
+  Register(OFFTHREAD_COMPILATION_ENABLE, "offthread-compilation.enable") \
+  Register(FULL_DEBUG_CHECKS, "jit.full-debug-checks") \
+  Register(JUMP_THRESHOLD, "jump-threshold") \
+  Register(TRACK_OPTIMIZATIONS, "jit.track-optimizations")\
+  Register(SIMULATOR_ALWAYS_INTERRUPT, "simulator.always-interrupt") \
+  Register(SPECTRE_INDEX_MASKING, "spectre.index-masking") \
+  Register(SPECTRE_OBJECT_MITIGATIONS_BARRIERS, "spectre.object-mitigations.barriers") \
+  Register(SPECTRE_OBJECT_MITIGATIONS_MISC, "spectre.object-mitigations.misc") \
+  Register(SPECTRE_STRING_MITIGATIONS, "spectre.string-mitigations") \
+  Register(SPECTRE_VALUE_MASKING, "spectre.value-masking") \
+  Register(SPECTRE_JIT_TO_CXX_CALLS, "spectre.jit-to-C++-calls") \
+  Register(WASM_FOLD_OFFSETS, "wasm.fold-offsets") \
+  Register(WASM_DELAY_TIER2, "wasm.delay-tier2")
+// clang-format on
 
 typedef enum JSJitCompilerOption {
 #define JIT_COMPILER_DECLARE(key, str) JSJITCOMPILER_##key,

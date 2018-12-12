@@ -2559,23 +2559,25 @@ class MOZ_STACK_CLASS FunctionValidator {
       return false;
     }
 
-    TokenStreamAnyChars& anyChars = m().tokenStream().anyCharsAccess();
-    return callSiteLineNums_.append(
-        anyChars.srcCoords.lineNum(pn->pn_pos.begin));
+    return appendCallSiteLineNumber(pn);
   }
   MOZ_MUST_USE bool writeCall(ParseNode* pn, MozOp op) {
     if (!encoder().writeOp(op)) {
       return false;
     }
 
-    TokenStreamAnyChars& anyChars = m().tokenStream().anyCharsAccess();
-    return callSiteLineNums_.append(
-        anyChars.srcCoords.lineNum(pn->pn_pos.begin));
+    return appendCallSiteLineNumber(pn);
   }
   MOZ_MUST_USE bool prepareCall(ParseNode* pn) {
-    TokenStreamAnyChars& anyChars = m().tokenStream().anyCharsAccess();
-    return callSiteLineNums_.append(
-        anyChars.srcCoords.lineNum(pn->pn_pos.begin));
+    return appendCallSiteLineNumber(pn);
+  }
+
+ private:
+  MOZ_MUST_USE bool appendCallSiteLineNumber(ParseNode* node) {
+    const TokenStreamAnyChars& anyChars = m().tokenStream().anyCharsAccess();
+
+    auto lineToken = anyChars.lineToken(node->pn_pos.begin);
+    return callSiteLineNums_.append(anyChars.lineNumber(lineToken));
   }
 };
 
@@ -5838,7 +5840,7 @@ static bool ParseFunction(ModuleValidator& m, CodeNode** funNodeOut,
 
   auto& anyChars = tokenStream.anyCharsAccess();
   uint32_t toStringStart = anyChars.currentToken().pos.begin;
-  *line = anyChars.srcCoords.lineNum(anyChars.currentToken().pos.end);
+  *line = anyChars.lineNumber(anyChars.lineToken(toStringStart));
 
   TokenKind tk;
   if (!tokenStream.getToken(&tk, TokenStreamShared::Operand)) {

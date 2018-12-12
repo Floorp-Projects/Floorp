@@ -603,4 +603,33 @@ interface nsITelemetry : nsISupports
    * Please note that this is only intended to be used by GeckoViewTelemetryController.
    */
   void clearProbes();
+
+  /**
+   * Does early, cheap initialization for native telemetry data providers.
+   * Currently, this includes only MemoryTelemetry.
+   */
+  void earlyInit();
+
+  /**
+   * Does late, expensive initialization for native telemetry data providers.
+   * Currently, this includes only MemoryTelemetry.
+   *
+   * This should only be called after startup has completed and the event loop
+   * is idle.
+   */
+  void delayedInit();
+
+  /**
+   * Shuts down native telemetry providers. Currently, this includes only
+   * MemoryTelemetry.
+   */
+  void shutdown();
+
+  /**
+   * Gathers telemetry data for memory usage and records it to the data store.
+   * Returns a promise which resolves when asynchronous data collection has
+   * completed and all data has been recorded.
+   */
+  [implicit_jscontext]
+  Promise gatherMemory();
 };
