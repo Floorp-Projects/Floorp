@@ -22,7 +22,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "nsIAboutNewTabService");
 
 Object.defineProperty(this, "BROWSER_NEW_TAB_URL", {
-  configurable: true,
   enumerable: true,
   get() {
     if (PrivateBrowsingUtils.isWindowPrivate(window) &&

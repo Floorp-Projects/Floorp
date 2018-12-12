@@ -2,16 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AuHelpers, ColorF, DevicePixelScale, GlyphInstance, LayoutPrimitiveInfo};
-use api::{LayoutRect, LayoutToWorldTransform, LayoutVector2DAu, RasterSpace};
-use api::Shadow;
+use api::{ColorF, DevicePixelScale, GlyphInstance, LayoutPrimitiveInfo};
+use api::{LayoutRect, LayoutToWorldTransform, RasterSpace};
+use api::{LayoutVector2D, Shadow};
 use display_list_flattener::{AsInstanceKind, CreateShadow, IsVisible};
 use frame_builder::{FrameBuildingState, PictureContext};
 use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
 use gpu_cache::GpuCache;
 use intern;
 use prim_store::{PrimitiveOpacity, PrimitiveSceneData,  PrimitiveScratchBuffer};
-use prim_store::{PrimitiveStore, PrimKeyCommonData, PrimTemplateCommonData};
+use prim_store::{PrimitiveStore, PrimKeyCommonData, PrimTemplateCommonData, VectorKey};
 use render_task::{RenderTaskTree};
 use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use resource_cache::{ResourceCache};
@@ -28,7 +28,7 @@ use storage;
 pub struct TextRunKey {
     pub common: PrimKeyCommonData,
     pub font: FontInstance,
-    pub offset: LayoutVector2DAu,
+    pub offset: VectorKey,
     pub glyphs: Vec<GlyphInstance>,
     pub shadow: bool,
 }
@@ -75,7 +75,7 @@ impl AsInstanceKind<TextRunDataHandle> for TextRunKey {
 pub struct TextRunTemplate {
     pub common: PrimTemplateCommonData,
     pub font: FontInstance,
-    pub offset: LayoutVector2DAu,
+    pub offset: LayoutVector2D,
     pub glyphs: Vec<GlyphInstance>,
 }
 
@@ -98,7 +98,7 @@ impl From<TextRunKey> for TextRunTemplate {
         TextRunTemplate {
             common,
             font: item.font,
-            offset: item.offset,
+            offset: item.offset.into(),
             glyphs: item.glyphs,
         }
     }
@@ -127,8 +127,8 @@ impl TextRunTemplate {
             let bg_color = ColorF::from(self.font.bg_color);
             request.push([bg_color.r, bg_color.g, bg_color.b, 1.0]);
             request.push([
-                self.offset.x.to_f32_px(),
-                self.offset.y.to_f32_px(),
+                self.offset.x,
+                self.offset.y,
                 0.0,
                 0.0,
             ]);
@@ -170,7 +170,7 @@ pub type TextRunDataInterner = intern::Interner<TextRunKey, PrimitiveSceneData, 
 
 pub struct TextRun {
     pub font: FontInstance,
-    pub offset: LayoutVector2DAu,
+    pub offset: LayoutVector2D,
     pub glyphs: Vec<GlyphInstance>,
     pub shadow: bool,
 }
@@ -208,7 +208,7 @@ impl CreateShadow for TextRun {
         TextRun {
             font,
             glyphs: self.glyphs.clone(),
-            offset: self.offset + shadow.offset.to_au(),
+            offset: self.offset + shadow.offset,
             shadow: true
         }
     }
@@ -287,6 +287,7 @@ impl TextRunPrimitive {
 
     pub fn prepare_for_render(
         &mut self,
+        prim_offset: LayoutVector2D,
         specified_font: &FontInstance,
         glyphs: &[GlyphInstance],
         device_pixel_scale: DevicePixelScale,
@@ -311,7 +312,8 @@ impl TextRunPrimitive {
 
             self.glyph_keys_range = scratch.glyph_keys.extend(
                 glyphs.iter().map(|src| {
-                    let world_offset = self.used_font.transform.transform(&src.point);
+                    let src_point = src.point + prim_offset;
+                    let world_offset = self.used_font.transform.transform(&src_point);
                     let device_offset = device_pixel_scale.transform_point(&world_offset);
                     GlyphKey::new(src.index, device_offset, subpx_dir)
                 }));

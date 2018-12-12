@@ -41,6 +41,10 @@ function debugTargetListenerMiddleware(store) {
 
         if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.WORKER)) {
           clientWrapper.addListener("workerListChanged", onWorkersUpdated);
+          clientWrapper.onFront("contentProcessTarget", front => {
+            clientWrapper.contentProcessFronts.push(front);
+            front.on("workerListChanged", onWorkersUpdated);
+          });
           clientWrapper.addListener("serviceWorkerRegistrationListChanged",
             onWorkersUpdated);
           clientWrapper.addListener("processListChanged", onWorkersUpdated);
@@ -65,6 +69,12 @@ function debugTargetListenerMiddleware(store) {
           clientWrapper.removeListener("workerListChanged", onWorkersUpdated);
           clientWrapper.removeListener("serviceWorkerRegistrationListChanged",
             onWorkersUpdated);
+
+          for (const front of clientWrapper.contentProcessFronts) {
+            front.off("workerListChanged", onWorkersUpdated);
+          }
+          clientWrapper.contentProcessFronts = [];
+
           clientWrapper.removeListener("processListChanged", onWorkersUpdated);
           clientWrapper.removeListener("registration-changed", onWorkersUpdated);
           clientWrapper.removeListener("push-subscription-modified", onWorkersUpdated);
