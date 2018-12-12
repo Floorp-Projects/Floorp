@@ -277,8 +277,8 @@ struct HandlerBox {
 
 // Sample description box 'stsd'
 #[derive(Debug)]
-struct SampleDescriptionBox {
-    descriptions: Vec<SampleEntry>,
+pub struct SampleDescriptionBox {
+    pub descriptions: Vec<SampleEntry>,
 }
 
 #[derive(Debug, Clone)]
@@ -313,6 +313,7 @@ pub enum AudioCodecSpecific {
 
 #[derive(Debug, Clone)]
 pub struct AudioSampleEntry {
+    pub codec_type: CodecType,
     data_reference_index: u16,
     pub channelcount: u32,
     pub samplesize: u16,
@@ -331,6 +332,7 @@ pub enum VideoCodecSpecific {
 
 #[derive(Debug, Clone)]
 pub struct VideoSampleEntry {
+    pub codec_type: CodecType,
     data_reference_index: u16,
     pub width: u16,
     pub height: u16,
@@ -424,15 +426,27 @@ pub struct ProtectionSystemSpecificHeaderBox {
 }
 
 #[derive(Debug, Default, Clone)]
+pub struct SchemeTypeBox {
+    pub scheme_type: FourCC,
+    pub scheme_version: u32,
+}
+
+#[derive(Debug, Default, Clone)]
 pub struct TrackEncryptionBox {
-    pub is_encrypted: u32,
+    pub is_encrypted: u8,
     pub iv_size: u8,
     pub kid: Vec<u8>,
+    // Members for pattern encryption schemes
+    pub crypt_byte_block_count: Option<u8>,
+    pub skip_byte_block_count: Option<u8>,
+    pub constant_iv: Option<Vec<u8>>,
+    // End pattern encryption scheme members
 }
 
 #[derive(Debug, Default, Clone)]
 pub struct ProtectionSchemeInfoBox {
     pub code_name: String,
+    pub scheme_type: Option<SchemeTypeBox>,
     pub tenc: Option<TrackEncryptionBox>,
 }
 
@@ -521,9 +535,8 @@ pub struct Track {
     pub timescale: Option<TrackTimeScale<u64>>,
     pub duration: Option<TrackScaledTime<u64>>,
     pub track_id: Option<u32>,
-    pub codec_type: CodecType,
-    pub data: Option<SampleEntry>,
     pub tkhd: Option<TrackHeaderBox>, // TODO(kinetik): find a nicer way to export this.
+    pub stsd: Option<SampleDescriptionBox>,
     pub stts: Option<TimeToSampleBox>,
     pub stsc: Option<SampleToChunkBox>,
     pub stsz: Option<SampleSizeBox>,
@@ -962,6 +975,7 @@ fn read_stbl<T: Read>(f: &mut BMFFBox<T>, track: &mut Track) -> Result<()> {
             BoxType::SampleDescriptionBox => {
                 let stsd = read_stsd(&mut b, track)?;
                 debug!("{:?}", stsd);
+                track.stsd = Some(stsd);
             }
             BoxType::TimeToSampleBox => {
                 let stts = read_stts(&mut b)?;
@@ -1722,6 +1736,8 @@ fn read_es_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
 fn read_esds<T: Read>(src: &mut BMFFBox<T>) -> Result<ES_Descriptor> {
     let (_, _) = read_fullbox_extra(src)?;
 
+    // Subtract 4 extra to offset the members of fullbox not accounted for in
+    // head.offset
     let esds_size = src.head.size - src.head.offset - 4;
     let esds_array = read_buf(src, esds_size as usize)?;
 
@@ -1889,7 +1905,7 @@ fn read_hdlr<T: Read>(src: &mut BMFFBox<T>) -> Result<HandlerBox> {
 }
 
 /// Parse an video description inside an stsd box.
-fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, SampleEntry)> {
+fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<SampleEntry> {
     let name = src.get_header().name;
     let codec_type = match name {
         BoxType::AVCSampleEntry | BoxType::AVC3SampleEntry => CodecType::H264,
@@ -1959,6 +1975,8 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
                     return Err(Error::InvalidData("malformed video sample entry"));
                 }
                 let (_, _) = read_fullbox_extra(&mut b.content)?;
+                // Subtract 4 extra to offset the members of fullbox not
+                // accounted for in head.offset
                 let esds_size = b.head.size - b.head.offset - 4;
                 let esds = read_buf(&mut b.content, esds_size as usize)?;
                 codec_specific = Some(VideoCodecSpecific::ESDSConfig(esds));
@@ -1979,14 +1997,15 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
         check_parser_state!(b.content);
     }
 
-    Ok(codec_specific.map_or((CodecType::Unknown, SampleEntry::Unknown),
-        |codec_specific| (codec_type, SampleEntry::Video(VideoSampleEntry {
+    Ok(codec_specific.map_or(SampleEntry::Unknown,
+        |codec_specific| SampleEntry::Video(VideoSampleEntry {
+            codec_type: codec_type,
             data_reference_index: data_reference_index,
             width: width,
             height: height,
             codec_specific: codec_specific,
             protection_info: protection_info,
-        })))
+        }))
     )
 }
 
@@ -2007,7 +2026,7 @@ fn read_qt_wave_atom<T: Read>(src: &mut BMFFBox<T>) -> Result<ES_Descriptor> {
 }
 
 /// Parse an audio description inside an stsd box.
-fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, SampleEntry)> {
+fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<SampleEntry> {
     let name = src.get_header().name;
 
     // Skip uninteresting fields.
@@ -2119,15 +2138,16 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
         check_parser_state!(b.content);
     }
 
-    Ok(codec_specific.map_or((CodecType::Unknown, SampleEntry::Unknown),
-        |codec_specific| (codec_type, SampleEntry::Audio(AudioSampleEntry {
+    Ok(codec_specific.map_or(SampleEntry::Unknown,
+        |codec_specific| SampleEntry::Audio(AudioSampleEntry {
+            codec_type: codec_type,
             data_reference_index: data_reference_index,
             channelcount: channelcount,
             samplesize: samplesize,
             samplerate: samplerate,
             codec_specific: codec_specific,
             protection_info: protection_info,
-        })))
+        }))
     )
 }
 
@@ -2139,7 +2159,6 @@ fn read_stsd<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<SampleD
     let mut descriptions = Vec::new();
 
     {
-        // TODO(kinetik): check if/when more than one desc per track? do we need to support?
         let mut iter = src.box_iter();
         while let Some(mut b) = iter.next_box()? {
             let description = match track.track_type {
@@ -2149,10 +2168,7 @@ fn read_stsd<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<SampleD
                 TrackType::Unknown => Err(Error::Unsupported("unknown track type")),
             };
             let description = match description {
-                Ok((codec_type, desc)) => {
-                    track.codec_type = codec_type;
-                    desc
-                }
+                Ok(desc) => desc,
                 Err(Error::Unsupported(_)) => {
                     // read_{audio,video}_desc may have returned Unsupported
                     // after partially reading the box content, so we can't
@@ -2160,14 +2176,9 @@ fn read_stsd<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<SampleD
                     let to_skip = b.bytes_left();
                     skip(&mut b, to_skip)?;
                     SampleEntry::Unknown
-                }
+                },
                 Err(e) => return Err(e),
             };
-            if track.data.is_none() {
-                track.data = Some(description.clone());
-            } else {
-                debug!("** don't know how to handle multiple descriptions **");
-            }
             vec_push(&mut descriptions, description)?;
             check_parser_state!(b.content);
             if descriptions.len() == description_count as usize {
@@ -2194,6 +2205,9 @@ fn read_sinf<T: Read>(src: &mut BMFFBox<T>) -> Result<ProtectionSchemeInfoBox> {
                 let frma = read_frma(&mut b)?;
                 sinf.code_name = frma;
             },
+            BoxType::SchemeTypeBox => {
+                sinf.scheme_type = Some(read_schm(&mut b)?);
+            }
             BoxType::SchemeInformationBox => {
                 // We only need tenc box in schi box so far.
                 sinf.tenc = read_schi(&mut b)?;
@@ -2225,22 +2239,62 @@ fn read_schi<T: Read>(src: &mut BMFFBox<T>) -> Result<Option<TrackEncryptionBox>
 }
 
 fn read_tenc<T: Read>(src: &mut BMFFBox<T>) -> Result<TrackEncryptionBox> {
-    let (_, _) = read_fullbox_extra(src)?;
+    let (version, _) = read_fullbox_extra(src)?;
 
-    let default_is_encrypted = be_u24(src)?;
+    // reserved byte
+    skip(src, 1)?;
+    // the next byte is used to signal the default pattern in version >= 1
+    let (default_crypt_byte_block, default_skip_byte_block) = match version {
+        0 => {
+            skip(src, 1)?;
+            (None, None)
+        },
+        _ => {
+            let pattern_byte = src.read_u8()?;
+            let crypt_bytes = pattern_byte >> 4;
+            let skip_bytes = pattern_byte & 0x0f;
+            (Some(crypt_bytes), Some(skip_bytes))
+        }
+    };
+    let default_is_encrypted = src.read_u8()?;
     let default_iv_size = src.read_u8()?;
     let default_kid = read_buf(src, 16)?;
+    // If default_is_encrypted == 1 && default_iv_size == 0 we expect a default_constant_iv
+    let default_constant_iv = match (default_is_encrypted, default_iv_size) {
+        (1, 0) => {
+            let default_constant_iv_size = src.read_u8()?;
+            Some(read_buf(src, default_constant_iv_size as usize)?)
+        },
+        _ => None,
+    };
 
     Ok(TrackEncryptionBox {
         is_encrypted: default_is_encrypted,
         iv_size: default_iv_size,
         kid: default_kid,
+        crypt_byte_block_count: default_crypt_byte_block,
+        skip_byte_block_count: default_skip_byte_block,
+        constant_iv: default_constant_iv
     })
 }
 
 fn read_frma<T: Read>(src: &mut BMFFBox<T>) -> Result<String> {
     let code_name = read_buf(src, 4)?;
     String::from_utf8(code_name).map_err(From::from)
+}
+
+fn read_schm<T: Read>(src: &mut BMFFBox<T>) -> Result<SchemeTypeBox> {
+    // Flags can be used to signal presence of URI in the box, but we don't
+    // use the URI so don't bother storing the flags.
+    let (_, _) = read_fullbox_extra(src)?;
+    let scheme_type =  FourCC::from(be_u32(src)?);
+    let scheme_version = be_u32(src)?;
+    // Null terminated scheme URI may follow, but we don't use it right now.
+    skip_box_remain(src)?;
+    Ok(SchemeTypeBox {
+        scheme_type: scheme_type,
+        scheme_version: scheme_version,
+    })
 }
 
 /// Skip a number of bytes that we don't care to parse.

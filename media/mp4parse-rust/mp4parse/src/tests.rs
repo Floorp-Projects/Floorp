@@ -942,9 +942,13 @@ fn read_qt_wave_atom() {
 
     let mut iter = super::BoxIter::new(&mut stream);
     let mut stream = iter.next_box().unwrap().unwrap();
-    let (codec_type, _) = super::read_audio_sample_entry(&mut stream)
+    let sample_entry = super::read_audio_sample_entry(&mut stream)
           .expect("fail to read qt wave atom");
-    assert_eq!(codec_type, super::CodecType::MP3);
+    match sample_entry {
+        super::SampleEntry::Audio(sample_entry) =>
+          assert_eq!(sample_entry.codec_type, super::CodecType::MP3),
+        _ => assert!(false, "fail to read audio sample enctry"),
+    }
 }
 
 #[test]
@@ -969,6 +973,7 @@ fn read_descriptor_80() {
 
     assert_eq!(es.audio_codec, super::CodecType::AAC);
     assert_eq!(es.audio_object_type, Some(2));
+    assert_eq!(es.extended_audio_object_type, None);
     assert_eq!(es.audio_sample_rate, Some(48000));
     assert_eq!(es.audio_channel_count, Some(2));
     assert_eq!(es.codec_esds, aac_esds);
@@ -998,8 +1003,42 @@ fn read_esds() {
 
     assert_eq!(es.audio_codec, super::CodecType::AAC);
     assert_eq!(es.audio_object_type, Some(2));
+    assert_eq!(es.extended_audio_object_type, None);
     assert_eq!(es.audio_sample_rate, Some(24000));
     assert_eq!(es.audio_channel_count, Some(6));
+    assert_eq!(es.codec_esds, aac_esds);
+    assert_eq!(es.decoder_specific_data, aac_dc_descriptor);
+}
+
+#[test]
+fn read_esds_aac_type5() {
+    let aac_esds =
+        vec![
+            0x03, 0x80, 0x80, 0x80,
+            0x2F, 0x00, 0x00, 0x00, 0x04, 0x80, 0x80, 0x80,
+            0x21, 0x40, 0x15, 0x00, 0x15, 0x00, 0x00, 0x03,
+            0xED, 0xAA, 0x00, 0x03, 0x6B, 0x00, 0x05, 0x80,
+            0x80, 0x80, 0x0F, 0x2B, 0x01, 0x88, 0x02, 0xC4,
+            0x04, 0x90, 0x2C, 0x10, 0x8C, 0x80, 0x00, 0x00,
+            0xED, 0x40, 0x06, 0x80, 0x80, 0x80, 0x01, 0x02,
+        ];
+
+    let aac_dc_descriptor = &aac_esds[31 .. 46];
+
+    let mut stream = make_box(BoxSize::Auto, b"esds", |s| {
+        s.B32(0) // reserved
+         .append_bytes(aac_esds.as_slice())
+    });
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+
+    let es = super::read_esds(&mut stream).unwrap();
+
+    assert_eq!(es.audio_codec, super::CodecType::AAC);
+    assert_eq!(es.audio_object_type, Some(2));
+    assert_eq!(es.extended_audio_object_type, Some(5));
+    assert_eq!(es.audio_sample_rate, Some(24000));
+    assert_eq!(es.audio_channel_count, Some(8));
     assert_eq!(es.codec_esds, aac_esds);
     assert_eq!(es.decoder_specific_data, aac_dc_descriptor);
 }
@@ -1033,12 +1072,11 @@ fn read_stsd_mp4v() {
     let mut iter = super::BoxIter::new(&mut stream);
     let mut stream = iter.next_box().unwrap().unwrap();
 
-    let (codec_type, sample_entry) = super::read_video_sample_entry(&mut stream).unwrap();
-
-    assert_eq!(codec_type, super::CodecType::MP4V);
+    let sample_entry = super::read_video_sample_entry(&mut stream).unwrap();
 
     match sample_entry {
         super::SampleEntry::Video(v) => {
+            assert_eq!(v.codec_type, super::CodecType::MP4V);
             assert_eq!(v.width, 720);
             assert_eq!(v.height, 480);
             match v.codec_specific {
@@ -1074,6 +1112,7 @@ fn read_esds_one_byte_extension_descriptor() {
 
     assert_eq!(es.audio_codec, super::CodecType::AAC);
     assert_eq!(es.audio_object_type, Some(2));
+    assert_eq!(es.extended_audio_object_type, None);
     assert_eq!(es.audio_sample_rate, Some(48000));
     assert_eq!(es.audio_channel_count, Some(2));
 }
@@ -1110,9 +1149,13 @@ fn read_f4v_stsd() {
 
     let mut iter = super::BoxIter::new(&mut stream);
     let mut stream = iter.next_box().unwrap().unwrap();
-    let (codec_type, _) = super::read_audio_sample_entry(&mut stream)
+    let sample_entry = super::read_audio_sample_entry(&mut stream)
           .expect("failed to read f4v stsd atom");
-    assert_eq!(codec_type, super::CodecType::MP3);
+    match sample_entry {
+        super::SampleEntry::Audio(sample_entry) =>
+          assert_eq!(sample_entry.codec_type, super::CodecType::MP3),
+        _ => assert!(false, "fail to read audio sample enctry"),
+    }
 }
 
 #[test]
@@ -1152,7 +1195,7 @@ fn unknown_video_sample_entry() {
     let mut iter = super::BoxIter::new(&mut stream);
     let mut stream = iter.next_box().unwrap().unwrap();
     match super::read_video_sample_entry(&mut stream) {
-        Ok((super::CodecType::Unknown, super::SampleEntry::Unknown)) => (),
+        Ok(super::SampleEntry::Unknown) => (),
         _ => panic!("expected a different error result"),
     }
 }
@@ -1177,7 +1220,7 @@ fn unknown_audio_sample_entry() {
     let mut iter = super::BoxIter::new(&mut stream);
     let mut stream = iter.next_box().unwrap().unwrap();
     match super::read_audio_sample_entry(&mut stream) {
-        Ok((super::CodecType::Unknown, super::SampleEntry::Unknown)) => (),
+        Ok(super::SampleEntry::Unknown) => (),
         _ => panic!("expected a different error result"),
     }
 }
@@ -1191,7 +1234,7 @@ fn read_esds_invalid_descriptor() {
             0x00, 0x04, 0x80, 0x80, 0x80, 0x14, 0x40, 0x01,
             0x00, 0x04, 0x00, 0x00, 0x00, 0xfa, 0x00, 0x00,
             0x00, 0xfa, 0x00, 0x05, 0x80, 0x80, 0x80, 0x02,
-            0xe8, 0x35, 0x06, 0xff, 0x7f, 0x00, 0x00, 0x02,
+            0xe8, 0x35, 0x06, 0xff, 0x7f, 0x00, 0x00,
         ];
 
     let mut stream = make_box(BoxSize::Auto, b"esds", |s| {
@@ -1281,12 +1324,11 @@ fn read_stsd_lpcm() {
     let mut iter = super::BoxIter::new(&mut stream);
     let mut stream = iter.next_box().unwrap().unwrap();
 
-    let (codec_type, sample_entry) = super::read_audio_sample_entry(&mut stream).unwrap();
-
-    assert_eq!(codec_type, super::CodecType::LPCM);
+    let sample_entry = super::read_audio_sample_entry(&mut stream).unwrap();
 
     match sample_entry {
         super::SampleEntry::Audio(a) => {
+            assert_eq!(a.codec_type, super::CodecType::LPCM);
             assert_eq!(a.samplerate, 96000.0);
             assert_eq!(a.channelcount, 1);
             match a.codec_specific {
