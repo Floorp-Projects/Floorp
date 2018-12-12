@@ -44,3 +44,8 @@ html|button {
   /* XUL button min-width */
   min-width: 6.3em;
 }
+
+xul|button > xul|*.button-box {
+  padding-right: 0;
+  padding-left: 0;
+}
