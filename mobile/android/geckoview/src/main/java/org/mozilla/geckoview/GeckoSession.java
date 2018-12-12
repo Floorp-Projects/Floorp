@@ -1246,9 +1246,9 @@ public class GeckoSession implements Parcelable {
             throw new IllegalStateException("Session is open");
         }
 
-        final String chromeUri = mSettings.getString(GeckoSessionSettings.CHROME_URI);
-        final int screenId = mSettings.getInt(GeckoSessionSettings.SCREEN_ID);
-        final boolean isPrivate = mSettings.getBoolean(GeckoSessionSettings.USE_PRIVATE_MODE);
+        final String chromeUri = mSettings.getChromeUri();
+        final int screenId =mSettings.getScreenId();
+        final boolean isPrivate = mSettings.isUsePrivateMode();
 
         mWindow = new Window(runtime, this, mNativeQueue);
 

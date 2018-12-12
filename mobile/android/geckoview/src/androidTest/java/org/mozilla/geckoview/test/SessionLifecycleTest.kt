@@ -79,24 +79,23 @@ class SessionLifecycleTest : BaseSessionTest() {
 
     @Test(expected = IllegalStateException::class)
     fun setChromeURI_throwOnOpenSession() {
-        sessionRule.session.settings.setString(GeckoSessionSettings.CHROME_URI, "chrome://invalid/path/to.xul")
+        sessionRule.session.settings.chromeUri = "chrome://invalid/path/to.xul"
     }
 
     @Test(expected = IllegalStateException::class)
     fun setScreenID_throwOnOpenSession() {
-        sessionRule.session.settings.setInt(GeckoSessionSettings.SCREEN_ID, 42)
+        sessionRule.session.settings.screenId = 42
     }
 
     @Test(expected = IllegalStateException::class)
     fun setUsePrivateMode_throwOnOpenSession() {
-        sessionRule.session.settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, true)
+        sessionRule.session.settings.isUsePrivateMode = true
     }
 
     @Test(expected = IllegalStateException::class)
     fun setUseMultiprocess_throwOnOpenSession() {
-        sessionRule.session.settings.setBoolean(
-                GeckoSessionSettings.USE_MULTIPROCESS,
-                !sessionRule.session.settings.getBoolean(GeckoSessionSettings.USE_MULTIPROCESS))
+        sessionRule.session.settings.isUseMultiprocess =
+                !sessionRule.session.settings.isUseMultiprocess
     }
 
     @Test fun readFromParcel() {

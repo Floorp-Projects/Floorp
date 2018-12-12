@@ -32,7 +32,7 @@ class RemoteGeckoService : Service() {
                 }
                 CMD_CRASH_CONTENT_NATIVE -> {
                     val settings = GeckoSessionSettings()
-                    settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, true)
+                    settings.isUseMultiprocess = true
                     val session = GeckoSession(settings)
                     session.open(runtime!!)
                     session.loadUri("about:crashcontent")
