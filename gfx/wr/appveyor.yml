@@ -16,15 +16,5 @@ install:
 build: false
 
 test_script:
-  - cd webrender_api
-  - cargo test --verbose
-  - cd ../webrender
-  - cargo test --verbose
-  - cargo check --verbose --no-default-features --features pathfinder
-  - cd ../wrench
-  - cargo test --verbose
-  - cargo run --release -- --angle reftest
-  - cd ../examples
-  - cargo check --verbose
-  - cd ../direct-composition
-  - cargo check --verbose
+  - cmd.exe /c ci-scripts\windows-tests.cmd
+  - cmd.exe /c ci-scripts\windows-pathfinder.cmd

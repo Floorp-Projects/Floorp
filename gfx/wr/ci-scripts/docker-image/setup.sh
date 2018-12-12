@@ -14,9 +14,12 @@ test "$(whoami)" == 'root'
 # Install stuff we need
 apt-get -y update
 apt-get install -y \
+    bzip2 \
     cmake \
     curl \
+    gcc \
     git \
+    g++ \
     libfontconfig1-dev \
     libgl1-mesa-dev \
     libx11-dev \
@@ -45,4 +48,5 @@ rm -f libfreetype.so.6
 ln -s /usr/local/lib/libfreetype.so.6
 
 # Other stuff we need
+pip install setuptools
 pip install mako voluptuous PyYAML servo-tidy
