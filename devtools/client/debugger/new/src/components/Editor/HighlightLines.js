@@ -16,10 +16,6 @@ type Props = {
 class HighlightLines extends Component<Props> {
   highlightLineRange: Function;
 
-  constructor() {
-    super();
-  }
-
   componentDidMount() {
     this.highlightLineRange();
   }
