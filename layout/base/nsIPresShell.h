@@ -1701,7 +1701,7 @@ class nsIPresShell : public nsStubDocumentObserver {
   mozilla::UniquePtr<mozilla::ServoStyleSet> mStyleSet;
   mozilla::UniquePtr<nsCSSFrameConstructor> mFrameConstructor;
   nsViewManager* mViewManager;  // [WEAK] docViewer owns it so I don't have to
-  nsPresArena mFrameArena;
+  nsPresArena<8192> mFrameArena;
   RefPtr<nsFrameSelection> mSelection;
   // Pointer into mFrameConstructor - this is purely so that GetRootFrame() can
   // be inlined:

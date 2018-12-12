@@ -25,9 +25,10 @@
 
 class nsWindowSizes;
 
+template <size_t ArenaSize>
 class nsPresArena {
  public:
-  nsPresArena();
+  nsPresArena() = default;
   ~nsPresArena();
 
   /**
@@ -68,7 +69,10 @@ class nsPresArena {
    *   the type of object the ArenaRefPtr holds.
    */
   template <typename T>
-  void RegisterArenaRefPtr(mozilla::ArenaRefPtr<T>* aPtr);
+  void RegisterArenaRefPtr(mozilla::ArenaRefPtr<T>* aPtr) {
+    MOZ_ASSERT(!mArenaRefPtrs.Contains(aPtr));
+    mArenaRefPtrs.Put(aPtr, T::ArenaObjectID());
+  }
 
   /**
    * Deregister an ArenaRefPtr that was previously registered with
@@ -124,7 +128,7 @@ class nsPresArena {
   };
 
   FreeList mFreeLists[mozilla::eArenaObjectID_COUNT];
-  mozilla::ArenaAllocator<8192, 8> mPool;
+  mozilla::ArenaAllocator<ArenaSize, 8> mPool;
   nsDataHashtable<nsPtrHashKey<void>, mozilla::ArenaObjectID> mArenaRefPtrs;
 };
 
