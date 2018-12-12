@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) -- dynamic-import is not enabled unconditionally
+// |reftest| 
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/script-code-valid.case
 // - src/dynamic-import/syntax/valid/nested-block-labeled.template
