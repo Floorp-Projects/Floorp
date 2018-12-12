@@ -187,15 +187,6 @@ treechildren::-moz-tree-cell-text(selected, editing) {
   color: inherit;
 }
 
-treechildren::-moz-tree-cell(selected, focus, editing) {
-  background-color: transparent;
-  border: none;
-}
-
-treechildren::-moz-tree-cell-text(selected, editing) {
-  opacity: 0;
-}
-
 .tree-input {
   -moz-appearance: none;
   border: 1px solid Highlight;
