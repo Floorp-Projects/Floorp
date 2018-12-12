@@ -28,5 +28,6 @@
   Changed `ContentDelegate.ContextElement` to non-final class.
 - Update `CrashReporter.sendCrashReport()` to return the crash ID as a
   GeckoResult<String>.
+  - Added methods for each setting in `GeckoSessionSettings`
 
-[api-version]: d6c40ef4886c7818a446fb7b7a1cdbde706025ab
+[api-version]: 0c3293d38c5723b34aeb348a44c8eb47dcc0253a
