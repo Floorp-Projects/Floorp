@@ -677,7 +677,21 @@ nsSimpleURI::GetFilePath(nsACString &aFilePath) {
 }
 
 nsresult nsSimpleURI::SetFilePath(const nsACString &aFilePath) {
-  return NS_ERROR_FAILURE;
+  if (mPath.IsEmpty() || mPath.First() != '/') {
+    // cannot-be-a-base
+    return NS_ERROR_MALFORMED_URI;
+  }
+  const char *current = aFilePath.BeginReading();
+  const char *end = aFilePath.EndReading();
+
+  // Only go up to the first ? or # symbol
+  for (; current < end; ++current) {
+    if (*current == '?' || *current == '#') {
+      break;
+    }
+  }
+  return SetPathQueryRef(
+      nsDependentCSubstring(aFilePath.BeginReading(), current));
 }
 
 NS_IMETHODIMP

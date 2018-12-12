@@ -942,7 +942,9 @@ Maybe<nsCSSBorderRenderer> nsCSSRendering::CreateBorderRendererWithStyleBorder(
 static nsRect GetOutlineInnerRect(nsIFrame* aFrame) {
   nsRect* savedOutlineInnerRect =
       aFrame->GetProperty(nsIFrame::OutlineInnerRectProperty());
-  if (savedOutlineInnerRect) return *savedOutlineInnerRect;
+  if (savedOutlineInnerRect) {
+    return *savedOutlineInnerRect;
+  }
 
   // FIXME bug 1221888
   NS_ERROR("we should have saved a frame property");
