@@ -2788,8 +2788,8 @@ class CompartmentPrivate {
   // True if this compartment is a UA widget compartment.
   bool isUAWidgetCompartment;
 
-  // True if this is a sandbox compartment. See xpc::CreateSandboxObject.
-  bool isSandboxCompartment;
+  // See CompartmentHasExclusiveExpandos.
+  bool hasExclusiveExpandos;
 
   // This is only ever set during mochitest runs when enablePrivilege is called.
   // It's intended as a temporary stopgap measure until we can finish ripping

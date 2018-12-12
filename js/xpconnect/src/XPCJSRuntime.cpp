@@ -192,7 +192,7 @@ CompartmentPrivate::CompartmentPrivate(JS::Compartment* c,
       allowCPOWs(false),
       isContentXBLCompartment(false),
       isUAWidgetCompartment(false),
-      isSandboxCompartment(false),
+      hasExclusiveExpandos(false),
       universalXPConnectEnabled(false),
       forcePermissiveCOWs(false),
       mWrappedJSMap(JSObject2WrappedJSMap::newMap(XPC_JS_MAP_LENGTH)) {
@@ -449,14 +449,6 @@ bool IsUAWidgetScope(JS::Realm* realm) {
 
 bool IsInUAWidgetScope(JSObject* obj) {
   return IsUAWidgetCompartment(js::GetObjectCompartment(obj));
-}
-
-bool IsInSandboxCompartment(JSObject* obj) {
-  JS::Compartment* comp = js::GetObjectCompartment(obj);
-
-  // We always eagerly create compartment privates for sandbox compartments.
-  CompartmentPrivate* priv = CompartmentPrivate::Get(comp);
-  return priv && priv->isSandboxCompartment;
 }
 
 bool CompartmentOriginInfo::MightBeWebContent() const {
