@@ -53,8 +53,9 @@ class TextDrawTarget : public DrawTarget {
                           wr::IpcResourceUpdateQueue& aResources,
                           const layers::StackingContextHelper& aSc,
                           layers::WebRenderLayerManager* aManager,
-                          nsDisplayItem* aItem, nsRect& aBounds)
-      : mBuilder(aBuilder) {
+                          nsDisplayItem* aItem, nsRect& aBounds,
+                          bool aCallerDoesSaveRestore = false)
+      : mCallerDoesSaveRestore(aCallerDoesSaveRestore), mBuilder(aBuilder) {
     Reinitialize(aResources, aSc, aManager, aItem, aBounds);
   }
 
@@ -62,7 +63,7 @@ class TextDrawTarget : public DrawTarget {
   TextDrawTarget(const TextDrawTarget& src) = delete;
   TextDrawTarget& operator=(const TextDrawTarget&) = delete;
 
-  ~TextDrawTarget() {}
+  ~TextDrawTarget() { MOZ_ASSERT(mFinished); }
 
   void Reinitialize(wr::IpcResourceUpdateQueue& aResources,
                     const layers::StackingContextHelper& aSc,
@@ -93,12 +94,26 @@ class TextDrawTarget : public DrawTarget {
 
     mBackfaceVisible = !aItem->BackfaceIsHidden();
 
-    mBuilder.Save();
+    if (!mCallerDoesSaveRestore) {
+      mBuilder.Save();
+    }
   }
 
   void FoundUnsupportedFeature() { mHasUnsupportedFeatures = true; }
+  bool CheckHasUnsupportedFeatures() {
+    MOZ_ASSERT(mCallerDoesSaveRestore);
+#ifdef DEBUG
+    MOZ_ASSERT(!mFinished);
+    mFinished = true;
+#endif
+    return mHasUnsupportedFeatures;
+  }
 
   bool Finish() {
+    MOZ_ASSERT(!mCallerDoesSaveRestore);
+#ifdef DEBUG
+    mFinished = true;
+#endif
     if (mHasUnsupportedFeatures) {
       mBuilder.Restore();
       return false;
@@ -335,6 +350,12 @@ class TextDrawTarget : public DrawTarget {
   // * Text writing-mode
   // * Text stroke
   bool mHasUnsupportedFeatures = false;
+
+  // The caller promises to call Save/Restore on the builder as needed.
+  bool mCallerDoesSaveRestore = false;
+#ifdef DEBUG
+  bool mFinished = false;
+#endif
 
   // Whether PopAllShadows needs to be called
   bool mHasShadows = false;
