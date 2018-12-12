@@ -5617,6 +5617,7 @@ nsresult nsHttpChannel::ContinueProcessRedirection(nsresult rv) {
   } else {
     rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
   }
+  LOG(("  new channel AsyncOpen returned %" PRIX32, static_cast<uint32_t>(rv)));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // close down this channel
