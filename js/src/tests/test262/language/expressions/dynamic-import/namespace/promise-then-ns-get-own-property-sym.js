@@ -1,4 +1,3 @@
-// |reftest| skip-if(!xulRuntime.shell) -- dynamic-import is not enabled unconditionally
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/ns-get-own-property-sym.case
 // - src/dynamic-import/namespace/promise.template

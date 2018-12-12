@@ -38,7 +38,6 @@
   var URL = global.URL;
 
   var document = global.document;
-  var documentAll = global.document.all;
   var documentDocumentElement = global.document.documentElement;
   var DocumentCreateElement = global.document.createElement;
 
@@ -194,15 +193,6 @@
     };
 
     global.detachArrayBuffer = detachArrayBuffer;
-  }
-
-  var createIsHTMLDDA = global.createIsHTMLDDA;
-  if (typeof createIsHTMLDDA !== "function") {
-    createIsHTMLDDA = function() {
-      return documentAll;
-    };
-
-    global.createIsHTMLDDA = createIsHTMLDDA;
   }
 })(this);
 
