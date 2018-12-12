@@ -1325,14 +1325,11 @@ class nsDisplayAltFeedback final : public nsDisplayItem {
       nsDisplayListBuilder* aDisplayListBuilder) override {
     uint32_t flags = imgIContainer::FLAG_ASYNC_NOTIFY;
     nsImageFrame* f = static_cast<nsImageFrame*>(mFrame);
-    DebugOnly<ImgDrawResult> result = f->DisplayAltFeedbackWithoutLayer(
+    ImgDrawResult result = f->DisplayAltFeedbackWithoutLayer(
         this, aBuilder, aResources, aSc, aManager, aDisplayListBuilder,
         ToReferenceFrame(), flags);
 
-    // DisplayAltFeedbackWithoutLayer can only return success.
-    MOZ_ASSERT(result == ImgDrawResult::SUCCESS);
-    Unused << result;
-    return true;
+    return result == ImgDrawResult::SUCCESS;
   }
 
   NS_DISPLAY_DECL_NAME("AltFeedback", TYPE_ALT_FEEDBACK)
@@ -1526,6 +1523,34 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
     return ImgDrawResult::SUCCESS;
   }
 
+  // If the TextDrawTarget requires fallback we need to rollback everything we
+  // may have added to the display list, but we don't find that out until the
+  // end.
+  bool textDrawResult = true;
+  class AutoSaveRestore {
+   public:
+    explicit AutoSaveRestore(mozilla::wr::DisplayListBuilder& aBuilder,
+                             bool& aTextDrawResult)
+        : mBuilder(aBuilder), mTextDrawResult(aTextDrawResult) {
+      mBuilder.Save();
+    }
+    ~AutoSaveRestore() {
+      // If we have to use fallback for the text restore the builder and remove
+      // anything else we added to the display list, we need to use fallback.
+      if (mTextDrawResult) {
+        mBuilder.ClearSave();
+      } else {
+        mBuilder.Restore();
+      }
+    }
+
+   private:
+    mozilla::wr::DisplayListBuilder& mBuilder;
+    bool& mTextDrawResult;
+  };
+
+  AutoSaveRestore autoSaveRestore(aBuilder, textDrawResult);
+
   // Paint the border
   if (!isLoading || gIconLoad->mPrefShowLoadingPlaceholder) {
     nsRecessedBorder recessedBorder(borderEdgeWidth, PresContext());
@@ -1666,21 +1691,22 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
   // Draw text
   if (!inner.IsEmpty()) {
     RefPtr<TextDrawTarget> textDrawer =
-        new TextDrawTarget(aBuilder, aResources, aSc, aManager, aItem, inner);
+        new TextDrawTarget(aBuilder, aResources, aSc, aManager, aItem, inner,
+                           /* aCallerDoesSaveRestore = */ true);
     RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(textDrawer);
 
-    nsIContent* content = GetContent();
-    if (content) {
-      nsAutoString altText;
-      nsCSSFrameConstructor::GetAlternateTextFor(
-          content->AsElement(), content->NodeInfo()->NameAtom(), altText);
-      DisplayAltText(PresContext(), *captureCtx.get(), altText, inner);
-    }
+    nsAutoString altText;
+    nsCSSFrameConstructor::GetAlternateTextFor(
+        mContent->AsElement(), mContent->NodeInfo()->NameAtom(), altText);
+    DisplayAltText(PresContext(), *captureCtx.get(), altText, inner);
+
+    textDrawer->TerminateShadows();
+    textDrawResult = !textDrawer->CheckHasUnsupportedFeatures();
   }
 
-  // Purposely always return success and ignore DrawResult local because we
-  // handled it not being success already.
-  return ImgDrawResult::SUCCESS;
+  // Purposely ignore local DrawResult because we handled it not being success
+  // already.
+  return textDrawResult ? ImgDrawResult::SUCCESS : ImgDrawResult::NOT_READY;
 }
 
 #ifdef DEBUG
