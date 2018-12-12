@@ -782,19 +782,11 @@ button.translate-infobar-element.options-menu-button {
 
 button.translate-infobar-element.options-menu-button > .button-box > .button-menu-dropmarker {
   display: -moz-box;
-  list-style-image: url("chrome://global/skin/icons/glyph-dropdown.png");
+  -moz-context-properties: fill;
+  fill: currentColor;
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
   padding: 0;
   margin: 0;
-}
-
-@media (min-resolution: 2dppx) {
-  button.translate-infobar-element.options-menu-button > .button-box > .button-menu-dropmarker {
-    list-style-image: url("chrome://global/skin/icons/glyph-dropdown@2x.png");
-  }
-
-  button.translate-infobar-element.options-menu-button > .button-box > .button-menu-dropmarker > .dropmarker-icon {
-    width: 8px;
-  }
 }
 
 menulist.translate-infobar-element {
@@ -828,17 +820,7 @@ menulist.translate-infobar-element[open="true"] {
 
 menulist.translate-infobar-element > .menulist-dropmarker {
   display: -moz-box;
-  list-style-image: url("chrome://global/skin/icons/glyph-dropdown.png");
-}
-
-@media (min-resolution: 2dppx) {
-  menulist.translate-infobar-element > .menulist-dropmarker {
-    list-style-image: url("chrome://global/skin/icons/glyph-dropdown@2x.png");
-  }
-
-  menulist.translate-infobar-element > .menulist-dropmarker > .dropmarker-icon {
-    width: 8px;
-  }
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
 }
 
 .popup-notification-body[popupid="addon-progress"],

@@ -20,7 +20,7 @@ impl InputVariant {
             variant_ident: &self.ident,
             name_in_attr: self.attr_name
                 .clone()
-                .unwrap_or(self.ident.to_string()),
+                .unwrap_or_else(|| self.ident.to_string()),
             data: self.data.as_ref().map(InputField::as_codegen_field),
             skip: self.skip,
         }
