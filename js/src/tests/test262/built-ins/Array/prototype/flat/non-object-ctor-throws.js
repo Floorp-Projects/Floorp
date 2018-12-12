@@ -8,6 +8,8 @@ description: >
 features: [Array.prototype.flat]
 ---*/
 
+assert.sameValue(typeof Array.prototype.flat, 'function');
+
 var a = [];
 a.constructor = null;
 assert.throws(TypeError, function() {

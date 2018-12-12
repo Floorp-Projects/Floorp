@@ -11,16 +11,18 @@ info: |
 features: [Intl.RelativeTimeFormat]
 ---*/
 
-const fn = Intl.RelativeTimeFormat.prototype.formatToParts;
+const formatToParts = Intl.RelativeTimeFormat.prototype.formatToParts;
 
-assert.throws(TypeError, () => fn.call(undefined), "undefined");
-assert.throws(TypeError, () => fn.call(null), "null");
-assert.throws(TypeError, () => fn.call(true), "true");
-assert.throws(TypeError, () => fn.call(""), "empty string");
-assert.throws(TypeError, () => fn.call(Symbol()), "symbol");
-assert.throws(TypeError, () => fn.call(1), "1");
-assert.throws(TypeError, () => fn.call({}), "plain object");
-assert.throws(TypeError, () => fn.call(Intl.RelativeTimeFormat), "Intl.RelativeTimeFormat");
-assert.throws(TypeError, () => fn.call(Intl.RelativeTimeFormat.prototype), "Intl.RelativeTimeFormat.prototype");
+assert.sameValue(typeof formatToParts, "function");
+
+assert.throws(TypeError, () => formatToParts.call(undefined), "undefined");
+assert.throws(TypeError, () => formatToParts.call(null), "null");
+assert.throws(TypeError, () => formatToParts.call(true), "true");
+assert.throws(TypeError, () => formatToParts.call(""), "empty string");
+assert.throws(TypeError, () => formatToParts.call(Symbol()), "symbol");
+assert.throws(TypeError, () => formatToParts.call(1), "1");
+assert.throws(TypeError, () => formatToParts.call({}), "plain object");
+assert.throws(TypeError, () => formatToParts.call(Intl.RelativeTimeFormat), "Intl.RelativeTimeFormat");
+assert.throws(TypeError, () => formatToParts.call(Intl.RelativeTimeFormat.prototype), "Intl.RelativeTimeFormat.prototype");
 
 reportCompare(0, 0);

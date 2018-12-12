@@ -20,8 +20,11 @@ features: [Atomics, BigInt, SharedArrayBuffer, TypedArray]
 ---*/
 
 const RUNNING = 1;
-
 const value = "42n";
+
+const i64a = new BigInt64Array(
+  new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 4)
+);
 
 $262.agent.start(`
   $262.agent.receiveBroadcast(function(sab) {
@@ -34,15 +37,11 @@ $262.agent.start(`
   });
 `);
 
-const i64a = new BigInt64Array(
-  new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 4)
-);
-
 // NB: We don't actually explicitly need to wait for the agent to start in this
 // test case, we only do it for consistency with other test cases which do
 // require the main agent to wait and yield control.
 
-$262.agent.broadcast(i64a.buffer);
+$262.agent.safeBroadcast(i64a);
 $262.agent.waitUntil(i64a, RUNNING, 1n);
 
 // Try to yield control to ensure the agent actually started to wait.
