@@ -1873,6 +1873,43 @@ TransactionId WebRenderBridgeParent::FlushTransactionIdsForEpoch(
       }
 #endif
 
+      if (fracLatencyNorm > 200) {
+        aOutputStats->AppendElement(FrameStats(
+            transactionId.mId, aCompositeStartTime, aRenderStartTime, aEndTime,
+            fracLatencyNorm,
+            aStats ? (double(aStats->resource_upload_time) / 1000000.0) : 0.0,
+            aStats ? (double(aStats->gpu_cache_upload_time) / 1000000.0) : 0.0,
+            transactionId.mTxnStartTime, transactionId.mRefreshStartTime,
+            transactionId.mFwdTime, transactionId.mSceneBuiltTime,
+            transactionId.mSkippedComposites, transactionId.mTxnURL));
+      }
+
+      Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME, fracLatencyNorm);
+      if (fracLatencyNorm > 200) {
+        wr::RenderThread::Get()->NotifySlowFrame(mApi->GetId());
+      }
+      if (transactionId.mContainsSVGGroup) {
+        Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME_WITH_SVG,
+                              fracLatencyNorm);
+      }
+
+      if (aStats) {
+        latencyMs -= (double(aStats->resource_upload_time) / 1000000.0);
+        latencyNorm = latencyMs / mVsyncRate.ToMilliseconds();
+        fracLatencyNorm = lround(latencyNorm * 100.0);
+      }
+      Telemetry::Accumulate(
+          Telemetry::CONTENT_FRAME_TIME_WITHOUT_RESOURCE_UPLOAD,
+          fracLatencyNorm);
+
+      if (aStats) {
+        latencyMs -= (double(aStats->gpu_cache_upload_time) / 1000000.0);
+        latencyNorm = latencyMs / mVsyncRate.ToMilliseconds();
+        fracLatencyNorm = lround(latencyNorm * 100.0);
+      }
+      Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME_WITHOUT_UPLOAD,
+                            fracLatencyNorm);
+
       // Record CONTENT_FRAME_TIME_REASON.
       //
       // This uses the refresh start time (CONTENT_FRAME_TIME uses the start of
@@ -1916,43 +1953,6 @@ TransactionId WebRenderBridgeParent::FlushTransactionIdsForEpoch(
               LABELS_CONTENT_FRAME_TIME_REASON::SlowComposite);
         }
       }
-
-      if (fracLatencyNorm > 200) {
-        aOutputStats->AppendElement(FrameStats(
-            transactionId.mId, aCompositeStartTime, aRenderStartTime, aEndTime,
-            fracLatencyNorm,
-            aStats ? (double(aStats->resource_upload_time) / 1000000.0) : 0.0,
-            aStats ? (double(aStats->gpu_cache_upload_time) / 1000000.0) : 0.0,
-            transactionId.mTxnStartTime, transactionId.mRefreshStartTime,
-            transactionId.mFwdTime, transactionId.mSceneBuiltTime,
-            transactionId.mSkippedComposites, transactionId.mTxnURL));
-      }
-
-      Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME, fracLatencyNorm);
-      if (fracLatencyNorm > 200) {
-        wr::RenderThread::Get()->NotifySlowFrame(mApi->GetId());
-      }
-      if (transactionId.mContainsSVGGroup) {
-        Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME_WITH_SVG,
-                              fracLatencyNorm);
-      }
-
-      if (aStats) {
-        latencyMs -= (double(aStats->resource_upload_time) / 1000000.0);
-        latencyNorm = latencyMs / mVsyncRate.ToMilliseconds();
-        fracLatencyNorm = lround(latencyNorm * 100.0);
-      }
-      Telemetry::Accumulate(
-          Telemetry::CONTENT_FRAME_TIME_WITHOUT_RESOURCE_UPLOAD,
-          fracLatencyNorm);
-
-      if (aStats) {
-        latencyMs -= (double(aStats->gpu_cache_upload_time) / 1000000.0);
-        latencyNorm = latencyMs / mVsyncRate.ToMilliseconds();
-        fracLatencyNorm = lround(latencyNorm * 100.0);
-      }
-      Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME_WITHOUT_UPLOAD,
-                            fracLatencyNorm);
     }
 
 #if defined(ENABLE_FRAME_LATENCY_LOG)
