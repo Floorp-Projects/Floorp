@@ -1,4 +1,4 @@
-fuzzy-if((OSX&&!webrender)||(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!gpuProcess&&layersGPUAccelerated),1-1,10000-10000) == background-color-with-opacity.html background-color-with-opacity-ref.html
+pref(gfx.omta.background-color,true) fuzzy-if((OSX&&!webrender)||(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!gpuProcess&&layersGPUAccelerated),1-1,10000-10000) == background-color-with-opacity.html background-color-with-opacity-ref.html
 == transitions-inline-already-wrapped-1.html transitions-inline-ref.html
 == transitions-inline-already-wrapped-2.html transitions-inline-ref.html
 == transitions-inline-rewrap-1.html transitions-inline-ref.html
