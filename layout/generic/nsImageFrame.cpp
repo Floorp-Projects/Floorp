@@ -1550,12 +1550,10 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
     return ImgDrawResult::SUCCESS;
   }
 
-  // Clip so we don't render outside the inner rect
+  // Clip to this rect so we don't render outside the inner rect
   LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
       inner, PresContext()->AppUnitsPerDevPixel());
-  wr::LayoutRect transformedRect = wr::ToRoundedLayoutRect(bounds);
-  auto clipId = aBuilder.DefineClip(Nothing(), transformedRect);
-  aBuilder.PushClip(clipId);
+  auto wrBounds = wr::ToRoundedLayoutRect(bounds);
 
   // Draw image
   ImgDrawResult result = ImgDrawResult::NOT_READY;
@@ -1605,7 +1603,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
           aManager, decodeSize, svgContext, aFlags, getter_AddRefs(container));
       if (container) {
         bool wrResult = aManager->CommandBuilder().PushImage(
-            aItem, container, aBuilder, aResources, aSc, destRect);
+            aItem, container, aBuilder, aResources, aSc, destRect, bounds);
         result &= wrResult ? ImgDrawResult::SUCCESS : ImgDrawResult::NOT_READY;
       } else {
         // We don't use &= here because we want the result to be NOT_READY so
@@ -1631,7 +1629,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
       wr::BorderSide side = {color, wr::BorderStyle::Solid};
       wr::BorderSide sides[4] = {side, side, side, side};
       Range<const wr::BorderSide> sidesRange(sides, 4);
-      aBuilder.PushBorder(dest, dest, isBackfaceVisible, borderWidths,
+      aBuilder.PushBorder(dest, wrBounds, isBackfaceVisible, borderWidths,
                           sidesRange, wr::EmptyBorderRadius());
 
       // filled circle in bottom right quadrant of stroked rect:
@@ -1646,7 +1644,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
       clips.AppendElement(wr::SimpleRadii(dest, dest.size.width / 2));
       auto clipId = aBuilder.DefineClip(Nothing(), dest, &clips, nullptr);
       aBuilder.PushClip(clipId);
-      aBuilder.PushRect(dest, dest, isBackfaceVisible, color);
+      aBuilder.PushRect(dest, wrBounds, isBackfaceVisible, color);
       aBuilder.PopClip();
     }
 
@@ -1680,7 +1678,6 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
     }
   }
 
-  aBuilder.PopClip();
   // Purposely always return success and ignore DrawResult local because we
   // handled it not being success already.
   return ImgDrawResult::SUCCESS;
@@ -1929,7 +1926,7 @@ bool nsDisplayImage::CreateWebRenderCommands(
   // help us. Hence we can ignore the return value from PushImage.
   if (container) {
     aManager->CommandBuilder().PushImage(this, container, aBuilder, aResources,
-                                         aSc, destRect);
+                                         aSc, destRect, destRect);
   }
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, drawResult);
