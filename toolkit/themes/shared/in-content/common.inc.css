@@ -261,12 +261,6 @@ html|input[type="color"] {
   width: 50px;
 }
 
-xul|button > xul|*.button-box,
-xul|menulist > xul|*.menulist-label-box {
-  padding-right: 10px !important;
-  padding-left: 10px !important;
-}
-
 xul|menulist > xul|*.menulist-label-box > xul|*.menulist-icon[src] {
   margin-inline-end: 5px;
 }
