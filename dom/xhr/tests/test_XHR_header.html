@@ -20,8 +20,7 @@ let xhr = new XMLHttpRequest();
 xhr.open('GET', 'file_XHR_header.sjs', true);
 xhr.onreadystatechange = function() {
   if (xhr.readyState == 4) {
-    ok(xhr.getResponseHeader('X-Custom-Header-Bytes') == "\xE2\x80\xA6",
-       "getResponseHeader returns a string of the header's raw bytes");
+    ok(xhr.getResponseHeader('X-Custom-Header-Bytes') == "\xE2\x80\xA6", 'getResponseHeader byte-inflates the output');
     SimpleTest.finish();
   }
 }
