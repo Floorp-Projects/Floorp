@@ -31,6 +31,8 @@ const MAIN_ROOT_EVENTS = [
 class ClientWrapper {
   constructor(client) {
     this.client = client;
+    // Array of contentProcessTarget fronts on which we will listen for worker events.
+    this.contentProcessFronts = [];
   }
 
   addOneTimeListener(evt, listener) {
@@ -55,6 +57,10 @@ class ClientWrapper {
     } else {
       this.client.removeListener(evt, listener);
     }
+  }
+
+  onFront(typeName, listener) {
+    this.client.mainRoot.onFront(typeName, listener);
   }
 
   async getDeviceDescription() {
