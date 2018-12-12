@@ -2368,7 +2368,6 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
       Preferences::GetBool("media.navigator.permission.disabled", false);
   bool isHTTPS = false;
   bool isHandlingUserInput = EventStateManager::IsHandlingUserInput();
-  ;
   docURI->SchemeIs("https", &isHTTPS);
   nsCString host;
   nsresult rv = docURI->GetHost(host);
@@ -2433,7 +2432,6 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
 
   const bool resistFingerprinting =
       nsContentUtils::ResistFingerprinting(aCallerType);
-
   if (resistFingerprinting) {
     ReduceConstraint(c.mVideo);
     ReduceConstraint(c.mAudio);
@@ -2590,7 +2588,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
     AddWindowID(windowID, windowListener);
   }
 
-  RefPtr<SourceListener> sourceListener = new SourceListener();
+  auto sourceListener = MakeRefPtr<SourceListener>();
   windowListener->Register(sourceListener);
 
   if (!privileged) {
@@ -2719,7 +2717,6 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
             LOG(
                 ("GetUserMedia: post enumeration promise success callback "
                  "starting"));
-
             // Ensure that our windowID is still good.
             auto* globalWindow =
                 nsGlobalWindowInner::GetInnerWindowWithId(windowID);
@@ -2733,7 +2730,6 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
                   MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
                   __func__);
             }
-
             // Apply any constraints. This modifies the passed-in list.
             return self->SelectSettings(c, isChrome, aDevices)
                 ->Then(
