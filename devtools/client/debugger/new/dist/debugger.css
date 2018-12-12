@@ -2831,6 +2831,14 @@ html[dir="rtl"] .editor-mount {
   --breakpoint-stroke-disabled: var(--blue-60);
 }
 
+.empty-line .CodeMirror-linenumber {
+  opacity: 0.5;
+}
+
+.theme-dark .empty-line .CodeMirror-linenumber {
+  opacity: 0.6;
+}
+
 :not(.empty-line):not(.new-breakpoint)
   > .CodeMirror-gutter-wrapper:hover
   > .CodeMirror-linenumber {
