@@ -184,6 +184,10 @@
 @RESPATH@/browser/components/devtools-startup.js
 @RESPATH@/browser/components/aboutdebugging-registration.js
 @RESPATH@/browser/components/aboutdebugging.manifest
+#ifdef NIGHTLY_BUILD
+@RESPATH@/browser/components/aboutdebugging-new-registration.js
+@RESPATH@/browser/components/aboutdebugging-new.manifest
+#endif
 @RESPATH@/browser/components/aboutdevtools-registration.js
 @RESPATH@/browser/components/aboutdevtools.manifest
 @RESPATH@/browser/components/aboutdevtoolstoolbox-registration.js
