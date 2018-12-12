@@ -433,9 +433,10 @@ void SetupDevtoolsSandbox() {
 
   ErrorResult er;
   dom::GlobalObject global(cx, *gDevtoolsSandbox);
+  dom::Optional<JS::HandleObject> targetObj(cx, *gDevtoolsSandbox);
   RootedObject obj(cx);
   dom::ChromeUtils::Import(global, NS_LITERAL_STRING(ReplayScriptURL),
-                           dom::Optional<HandleObject>(), &obj, er);
+                           targetObj, &obj, er);
   MOZ_RELEASE_ASSERT(!er.Failed());
 
   gIncludeSystemScripts =
