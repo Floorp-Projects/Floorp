@@ -16,7 +16,7 @@ class ClientNavigateOpChild final : public PClientNavigateOpChild {
   MozPromiseRequestHolder<ClientOpPromise> mPromiseRequestHolder;
   nsCOMPtr<nsISerialEventTarget> mSerialEventTarget;
 
-  already_AddRefed<ClientOpPromise> DoNavigate(
+  MOZ_MUST_USE RefPtr<ClientOpPromise> DoNavigate(
       const ClientNavigateOpConstructorArgs& aArgs);
 
   // PClientNavigateOpChild interface

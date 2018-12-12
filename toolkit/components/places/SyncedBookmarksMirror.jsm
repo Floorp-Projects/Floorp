@@ -650,7 +650,6 @@ class SyncedBookmarksMirror {
           await this.db.execute(`DELETE FROM itemsChanged`);
           await this.db.execute(`DELETE FROM itemsRemoved`);
           await this.db.execute(`DELETE FROM itemsMoved`);
-          await this.db.execute(`DELETE FROM annosChanged`);
         }
       },
       time => this.recordTelemetryEvent("mirror", "apply",
@@ -1462,23 +1461,12 @@ class SyncedBookmarksMirror {
       ${LocalItemsSQLFragment}
       INSERT INTO itemsToUpload(id, guid, syncChangeCounter, parentGuid,
                                 parentTitle, dateAdded, type, title, placeId,
-                                isQuery, url, keyword, feedURL, siteURL,
-                                position, tagFolderName)
+                                isQuery, url, keyword, position, tagFolderName)
       SELECT s.id, s.guid, s.syncChangeCounter, s.parentGuid, s.parentTitle,
              s.dateAdded / 1000, s.type, s.title, s.placeId,
              IFNULL(SUBSTR(h.url, 1, 6) = 'place:', 0) AS isQuery,
              h.url,
              (SELECT keyword FROM moz_keywords WHERE place_id = h.id),
-             (SELECT a.content FROM moz_items_annos a
-              JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
-              WHERE s.type = :folderType AND
-                    a.item_id = s.id AND
-                    n.name = :feedURLAnno),
-             (SELECT a.content FROM moz_items_annos a
-              JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
-              WHERE s.type = :folderType AND
-                    a.item_id = s.id AND
-                    n.name = :siteURLAnno),
              s.position,
              (SELECT get_query_param(substr(url, 7), 'tag')
               WHERE substr(h.url, 1, 6) = 'place:')
@@ -1486,10 +1474,7 @@ class SyncedBookmarksMirror {
       LEFT JOIN moz_places h ON h.id = s.placeId
       LEFT JOIN idsToWeaklyUpload w ON w.id = s.id
       WHERE s.syncChangeCounter >= 1 OR
-            w.id NOT NULL`,
-      { folderType: PlacesUtils.bookmarks.TYPE_FOLDER,
-        feedURLAnno: PlacesUtils.LMANNO_FEEDURI,
-        siteURLAnno: PlacesUtils.LMANNO_SITEURI });
+            w.id NOT NULL`);
 
     // Record the child GUIDs of locally changed folders, which we use to
     // populate the `children` array in the record.
@@ -1557,7 +1542,7 @@ class SyncedBookmarksMirror {
     let itemRows = await this.db.execute(`
       SELECT id, syncChangeCounter, guid, isDeleted, type, isQuery,
              tagFolderName, keyword, url, IFNULL(title, "") AS title,
-             feedURL, siteURL, position, parentGuid,
+             position, parentGuid,
              IFNULL(parentTitle, "") AS parentTitle, dateAdded
       FROM itemsToUpload`);
 
@@ -1937,19 +1922,6 @@ async function createMirrorRoots(db) {
  *        The mirror database connection.
  */
 async function initializeTempMirrorEntities(db) {
-  // Columns in `items` that correspond to annos stored in `moz_items_annos`.
-  // We use this table to build SQL fragments for the `insertNewLocalItems` and
-  // `updateExistingLocalItems` triggers below.
-  const syncedAnnoTriggers = [{
-    annoName: PlacesUtils.LMANNO_FEEDURI,
-    columnName: "newFeedURL",
-    type: PlacesUtils.annotations.TYPE_STRING,
-  }, {
-    annoName: PlacesUtils.LMANNO_SITEURI,
-    columnName: "newSiteURL",
-    type: PlacesUtils.annotations.TYPE_STRING,
-  }];
-
   // Stores the value and structure states of all nodes in the merged tree.
   await db.execute(`CREATE TEMP TABLE mergeStates(
     localGuid TEXT NOT NULL,
@@ -2005,7 +1977,8 @@ async function initializeTempMirrorEntities(db) {
       /* Trigger frecency updates for all affected origins. */
       DELETE FROM moz_updateoriginsupdate_temp;
 
-      /* Remove annos for the deleted items. */
+      /* Remove annos for the deleted items. This can be removed in bug
+         1460577. */
       DELETE FROM moz_items_annos
       WHERE item_id = (SELECT id FROM moz_bookmarks
                        WHERE guid = OLD.guid);
@@ -2046,8 +2019,7 @@ async function initializeTempMirrorEntities(db) {
     CREATE TEMP VIEW itemsToMerge(localId, remoteId, useRemote, shouldUpload,
                                   newLevel, oldGuid, newGuid, newType,
                                   newDateAddedMicroseconds, newTitle,
-                                  oldPlaceId, newPlaceId, newKeyword,
-                                  newFeedURL, newSiteURL) AS
+                                  oldPlaceId, newPlaceId, newKeyword) AS
     SELECT b.id, v.id, r.useRemote, r.shouldUpload,
            r.level, r.localGuid, r.mergedGuid,
            (CASE WHEN v.kind IN (${[
@@ -2066,7 +2038,7 @@ async function initializeTempMirrorEntities(db) {
            v.title, h.id, (SELECT n.id FROM moz_places n
                            WHERE n.url_hash = u.hash AND
                                  n.url = u.url),
-           v.keyword, v.feedURL, v.siteURL
+           v.keyword
     FROM mergeStates r
     LEFT JOIN items v ON v.guid = r.mergedGuid
     LEFT JOIN moz_bookmarks b ON b.guid = r.localGuid
@@ -2110,97 +2082,19 @@ async function initializeTempMirrorEntities(db) {
             id = OLD.remoteId;
     END`);
 
-  // Inserts items from the mirror that don't exist locally.
   await db.execute(`
-    CREATE TEMP TRIGGER insertNewLocalItems
-    INSTEAD OF DELETE ON itemsToMerge WHEN OLD.localId IS NULL
+    CREATE TEMP TRIGGER updateLocalItems
+    INSTEAD OF DELETE ON itemsToMerge WHEN OLD.useRemote
     BEGIN
       /* Record an item added notification for the new item. */
       INSERT INTO itemsAdded(guid, keywordChanged, level)
-      VALUES(OLD.newGuid, OLD.newKeyword NOT NULL OR
+      SELECT OLD.newGuid, OLD.newKeyword NOT NULL OR
                           EXISTS(SELECT 1 FROM moz_keywords
                                  WHERE place_id = OLD.newPlaceId OR
                                        keyword = OLD.newKeyword),
-             OLD.newLevel);
+             OLD.newLevel
+      WHERE OLD.localId IS NULL;
 
-      /* Sync associates keywords with bookmarks, and doesn't sync POST data;
-         Places associates keywords with (URL, POST data) pairs, and multiple
-         bookmarks may have the same URL. For simplicity, we bump the change
-         counter for all local bookmarks with the remote URL (bug 1328737),
-         then remove all local keywords from remote URLs, and the remote keyword
-         from local URLs. We intentionally use "place_id = OLD.newPlaceId"
-         instead of "fk = OLD.newPlaceId OR fk IN (...)" in the WHERE clause
-         because we only want to bump the counter if the URL has keywords. */
-      INSERT OR IGNORE INTO relatedIdsToReupload(id)
-      SELECT b.id FROM moz_bookmarks b
-      JOIN moz_keywords k ON k.place_id = b.fk
-      WHERE k.place_id = OLD.newPlaceId OR
-            k.keyword = OLD.newKeyword;
-
-      /* Remove the new keyword from existing items, and all keywords from the
-         new URL. */
-      DELETE FROM moz_keywords WHERE place_id = OLD.newPlaceId OR
-                                     keyword = OLD.newKeyword;
-
-      /* Remove existing tags for the new URL. */
-      DELETE FROM localTags WHERE placeId = OLD.newPlaceId;
-
-      /* Insert the new item, using "-1" as the placeholder parent and
-         position. We'll update these later, in the "updateLocalStructure"
-         trigger. */
-      INSERT INTO moz_bookmarks(guid, parent, position, type, fk, title,
-                                dateAdded, lastModified, syncStatus,
-                                syncChangeCounter)
-      VALUES(OLD.newGuid, -1, -1, OLD.newType, OLD.newPlaceId, OLD.newTitle,
-             OLD.newDateAddedMicroseconds,
-             STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000,
-             ${PlacesUtils.bookmarks.SYNC_STATUS.NORMAL}, OLD.shouldUpload);
-
-      /* Insert a new keyword for the new URL, if one is set. */
-      INSERT OR IGNORE INTO moz_keywords(keyword, place_id, post_data)
-      SELECT OLD.newKeyword, OLD.newPlaceId, ''
-      WHERE OLD.newKeyword NOT NULL;
-
-      /* Insert new tags for the new URL. */
-      INSERT INTO localTags(tag, placeId)
-      SELECT t.tag, OLD.newPlaceId FROM tags t
-      WHERE t.itemId = OLD.remoteId;
-
-      /* Insert new synced annos. These are almost identical to the statements
-         for updates, except we need an additional subquery to fetch the new
-         item's ID. We can also skip removing existing annos. */
-      INSERT OR IGNORE INTO moz_anno_attributes(name)
-      VALUES ${syncedAnnoTriggers.map(annoTrigger =>
-        `('${annoTrigger.annoName}')`
-      ).join(",")};
-
-      ${syncedAnnoTriggers.map(annoTrigger => `
-        INSERT INTO moz_items_annos(item_id, anno_attribute_id, content, flags,
-                                    expiration, type, lastModified, dateAdded)
-        SELECT (SELECT id FROM moz_bookmarks
-                WHERE guid = OLD.newGuid),
-               (SELECT id FROM moz_anno_attributes
-                WHERE name = '${annoTrigger.annoName}'),
-               OLD.${annoTrigger.columnName}, 0,
-               ${PlacesUtils.annotations.EXPIRE_NEVER}, ${annoTrigger.type},
-               STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000,
-               STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000
-        WHERE OLD.${annoTrigger.columnName} NOT NULL;
-
-        /* Record an anno set notification for the new synced anno. */
-        REPLACE INTO annosChanged(itemId, annoName, wasRemoved)
-        SELECT b.id, '${annoTrigger.annoName}', 0 FROM moz_bookmarks b
-        WHERE b.guid = OLD.newGuid AND
-              OLD.${annoTrigger.columnName} NOT NULL;
-      `).join("")}
-    END`);
-
-  // Updates existing items with new values from the mirror.
-  await db.execute(`
-    CREATE TEMP TRIGGER updateExistingLocalItems
-    INSTEAD OF DELETE ON itemsToMerge WHEN OLD.useRemote AND
-                                           OLD.localId NOT NULL
-    BEGIN
       /* Record an item changed notification for the existing item. */
       INSERT INTO itemsChanged(itemId, oldTitle, oldPlaceId, keywordChanged,
                                level)
@@ -2210,26 +2104,26 @@ async function initializeTempMirrorEntities(db) {
                             keyword = OLD.newKeyword),
              OLD.newLevel
       FROM moz_bookmarks
-      WHERE id = OLD.localId;
+      WHERE OLD.localId NOT NULL AND
+            id = OLD.localId;
 
-      UPDATE moz_bookmarks SET
-        title = OLD.newTitle,
-        dateAdded = OLD.newDateAddedMicroseconds,
-        lastModified = STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000
-      WHERE id = OLD.localId;
-
-      /* Bump the change counter for items with the old URL, new URL, and new
-         keyword. */
+      /* Sync associates keywords with bookmarks, and doesn't sync POST data;
+         Places associates keywords with (URL, POST data) pairs, and multiple
+         bookmarks may have the same URL. For consistency (bug 1328737), we
+         reupload all items with the old URL, new URL, and new keyword. Note
+         that we intentionally use "k.place_id IN (...)" instead of
+         "b.fk = OLD.newPlaceId OR fk IN (...)" in the WHERE clause because we
+         only want to reupload items with keywords. */
       INSERT OR IGNORE INTO relatedIdsToReupload(id)
       SELECT b.id FROM moz_bookmarks b
       JOIN moz_keywords k ON k.place_id = b.fk
-      WHERE b.id <> OLD.localId AND (
+      WHERE (b.id <> OLD.localId OR OLD.localId IS NULL) AND (
               k.place_id IN (OLD.oldPlaceId, OLD.newPlaceId) OR
               k.keyword = OLD.newKeyword
             );
 
-      /* Remove the new keyword from existing items, and all keywords from the
-         old and new URLs. */
+      /* Remove all keywords from the old and new URLs, and remove the new
+         keyword from all existing URLs. */
       DELETE FROM moz_keywords WHERE place_id IN (OLD.oldPlaceId,
                                                   OLD.newPlaceId) OR
                                      keyword = OLD.newKeyword;
@@ -2237,24 +2131,30 @@ async function initializeTempMirrorEntities(db) {
       /* Remove existing tags. */
       DELETE FROM localTags WHERE placeId IN (OLD.oldPlaceId, OLD.newPlaceId);
 
-      /* Update the URL and recalculate frecency. It's important we do this
-         *after* removing old keywords and *before* inserting new ones, so that
-         the above statements select the correct affected items. */
-      UPDATE moz_bookmarks SET
-        fk = OLD.newPlaceId
-      WHERE OLD.oldPlaceId <> OLD.newPlaceId AND
-            id = OLD.localId;
+      /* Insert the new item, using "-1" as the placeholder parent and
+         position. We'll update these later, in the "updateLocalStructure"
+         trigger. */
+      INSERT INTO moz_bookmarks(id, guid, parent, position, type, fk, title,
+                                dateAdded, lastModified, syncStatus,
+                                syncChangeCounter)
+      VALUES(OLD.localId, OLD.newGuid, -1, -1, OLD.newType, OLD.newPlaceId,
+             OLD.newTitle, OLD.newDateAddedMicroseconds,
+             STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000,
+             ${PlacesUtils.bookmarks.SYNC_STATUS.NORMAL}, OLD.shouldUpload)
+      ON CONFLICT(id) DO UPDATE SET
+        title = excluded.title,
+        dateAdded = excluded.dateAdded,
+        lastModified = excluded.lastModified,
+        /* It's important that we update the URL *after* removing old keywords
+           and *before* inserting new ones, so that the above DELETEs select
+           the correct affected items. */
+        fk = excluded.fk;
 
+      /* Recalculate frecency. */
       UPDATE moz_places SET
         frecency = -frecency
       WHERE OLD.oldPlaceId <> OLD.newPlaceId AND
-            id = OLD.oldPlaceId AND
-            frecency > 0;
-
-      UPDATE moz_places SET
-        frecency = -frecency
-      WHERE OLD.oldPlaceId <> OLD.newPlaceId AND
-            id = OLD.newPlaceId AND
+            id IN (OLD.oldPlaceId, OLD.newPlaceId) AND
             frecency > 0;
 
       /* Trigger frecency updates for all affected origins. */
@@ -2269,47 +2169,6 @@ async function initializeTempMirrorEntities(db) {
       INSERT INTO localTags(tag, placeId)
       SELECT t.tag, OLD.newPlaceId FROM tags t
       WHERE t.itemId = OLD.remoteId;
-
-      /* Record anno removed notifications for the synced annos. */
-      REPLACE INTO annosChanged(itemId, annoName, wasRemoved)
-      SELECT a.item_id, n.name, 1 FROM moz_items_annos a
-      JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
-      WHERE item_id = OLD.localId AND
-            anno_attribute_id IN (SELECT id FROM moz_anno_attributes
-                                  WHERE name IN (${syncedAnnoTriggers.map(
-                                    annoTrigger => `'${annoTrigger.annoName}'`
-                                  ).join(",")}));
-
-      /* Remove existing synced annos. */
-      DELETE FROM moz_items_annos
-      WHERE item_id = OLD.localId AND
-            anno_attribute_id IN (SELECT id FROM moz_anno_attributes
-                                  WHERE name IN (${syncedAnnoTriggers.map(
-                                    annoTrigger => `'${annoTrigger.annoName}'`
-                                  ).join(",")}));
-
-      /* Insert new synced annos. */
-      INSERT OR IGNORE INTO moz_anno_attributes(name)
-      VALUES ${syncedAnnoTriggers.map(annoTrigger =>
-        `('${annoTrigger.annoName}')`
-      ).join(",")};
-
-      ${syncedAnnoTriggers.map(annoTrigger => `
-        INSERT INTO moz_items_annos(item_id, anno_attribute_id, content, flags,
-                                    expiration, type, lastModified, dateAdded)
-        SELECT OLD.localId, (SELECT id FROM moz_anno_attributes
-                             WHERE name = '${annoTrigger.annoName}'),
-               OLD.${annoTrigger.columnName}, 0,
-               ${PlacesUtils.annotations.EXPIRE_NEVER}, ${annoTrigger.type},
-               STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000,
-               STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000
-         WHERE OLD.${annoTrigger.columnName} NOT NULL;
-
-         /* Record an anno set notification for the new synced anno. */
-         REPLACE INTO annosChanged(itemId, annoName, wasRemoved)
-         SELECT OLD.localId, '${annoTrigger.annoName}', 0
-         WHERE OLD.${annoTrigger.columnName} NOT NULL;
-      `).join("")}
     END`);
 
   // A view of the structure states for all items in the merged tree. The
@@ -2509,14 +2368,6 @@ async function initializeTempMirrorEntities(db) {
     isUntagging BOOLEAN NOT NULL DEFAULT 0
   ) WITHOUT ROWID`);
 
-  // Stores properties to pass to `onItemChanged` bookmark observers.
-  await db.execute(`CREATE TEMP TABLE annosChanged(
-    itemId INTEGER NOT NULL,
-    annoName TEXT NOT NULL,
-    wasRemoved BOOLEAN NOT NULL,
-    PRIMARY KEY(itemId, annoName, wasRemoved)
-  ) WITHOUT ROWID`);
-
   // Stores local IDs for items to upload even if they're not flagged as changed
   // in Places. These are "weak" because we won't try to reupload the item on
   // the next sync if the upload is interrupted or fails.
@@ -2558,8 +2409,6 @@ async function initializeTempMirrorEntities(db) {
     url TEXT,
     tagFolderName TEXT,
     keyword TEXT,
-    feedURL TEXT,
-    siteURL TEXT,
     position INTEGER
   )`);
 
@@ -3112,12 +2961,21 @@ class MergedBookmarkNode {
   }
 
   /**
-   * Indicates whether to prefer the remote node when applying the merged tree.
-   * Returns `true` if the remote state should be merged into Places; `false`
-   * if the node only exists locally, or isn't changed remotely.
+   * Indicates whether to prefer the remote side when applying the merged tree.
+   *
+   * @return {Boolean}
    */
   useRemote() {
     switch (this.mergeState.value) {
+      case BookmarkMergeState.TYPE.LOCAL:
+        if (!this.localNode) {
+          // Should never happen. See the comment for
+          // `BookmarkMergeState.local`.
+          throw new TypeError(
+            "Can't have local value state without local node");
+        }
+        return false;
+
       case BookmarkMergeState.TYPE.REMOTE:
         if (!this.remoteNode) {
           // Should never happen. See the comment for
@@ -3125,19 +2983,22 @@ class MergedBookmarkNode {
           throw new TypeError(
             "Can't have remote value state without remote node");
         }
-        return this.remoteNode.needsMerge;
-
-      case BookmarkMergeState.TYPE.LOCAL:
-        return false;
+        if (this.localNode) {
+          // If the item exists locally and remotely, check if the remote node
+          // changed.
+          return this.remoteNode.needsMerge;
+        }
+        // Otherwise, the item only exists remotely, so take the remote state
+        // unconditionally.
+        return true;
     }
     throw new TypeError("Unexpected value state");
   }
 
   /**
    * Indicates whether the merged item should be uploaded to the server.
-   * Returns `true` for locally changed nodes and nodes with a new
-   * structure state; `false` for nodes with a remote merge state, or
-   * nodes that aren't changed locally.
+   *
+   * @return {Boolean}
    */
   shouldUpload() {
     switch (this.mergeState.structure) {
@@ -3148,9 +3009,22 @@ class MergedBookmarkNode {
           throw new TypeError(
             "Can't have local structure state without local node");
         }
-        return this.localNode.needsMerge;
+        if (this.remoteNode) {
+          // If the item exists locally and remotely, check if the local node
+          // changed.
+          return this.localNode.needsMerge;
+        }
+        // Otherwise, the item only exists locally, so upload the local state
+        // unconditionally.
+        return true;
 
       case BookmarkMergeState.TYPE.REMOTE:
+        if (!this.remoteNode) {
+          // Should never happen. See the comment for
+          // `BookmarkMergeState.remote`.
+          throw new TypeError(
+            "Can't have remote structure state without remote node");
+        }
         return false;
 
       case BookmarkMergeState.TYPE.NEW:
@@ -3459,12 +3333,8 @@ class BookmarkMerger {
       return BookmarkMergeState.local;
     }
     if (localNode.needsMerge && remoteNode.needsMerge) {
-      // The item changed locally and remotely. We could query storage to
-      // determine if the value state is the same, as iOS does. However, that's
-      // an expensive check that requires joining `moz_bookmarks`,
-      // `moz_items_annos`, and `moz_places` to the mirror. It's unlikely that
-      // the value state is identical, so we skip the value check and use the
-      // timestamp to decide which node is newer.
+      // The item changed locally and remotely. Use the timestamp to decide
+      // which is newer.
       let valueState = localNode.newerThan(remoteNode) ?
                        BookmarkMergeState.local :
                        BookmarkMergeState.remote;
@@ -4508,8 +4378,8 @@ BookmarkMerger.STRUCTURE = {
 };
 
 /**
- * Fires bookmark, annotation, and keyword observer notifications for all
- * changes made during the merge.
+ * Fires bookmark and keyword observer notifications for all changes made during
+ * the merge.
  */
 class BookmarkObserverRecorder {
   constructor(db, { maxFrecenciesToRecalculate }) {
@@ -4682,28 +4552,6 @@ class BookmarkObserverRecorder {
       this.noteItemChanged(info);
     }
 
-    MirrorLog.trace("Recording observer notifications for changed annos");
-    let annoRows = await this.db.execute(`
-      SELECT b.id, b.guid, b.lastModified, b.type, p.id AS parentId,
-             p.guid AS parentGuid, c.annoName, c.wasRemoved
-      FROM annosChanged c
-      JOIN moz_bookmarks b ON b.id = c.itemId
-      JOIN moz_bookmarks p ON p.id = b.parent
-      LEFT JOIN moz_places h ON h.id = b.fk
-      ORDER BY p.id, b.position, c.wasRemoved <> 1`);
-    for await (let row of yieldingIterator(annoRows)) {
-      this.noteAnnoChanged({
-        id: row.getResultByName("id"),
-        name: row.getResultByName("annoName"),
-        wasRemoved: !!row.getResultByName("wasRemoved"),
-        guid: row.getResultByName("guid"),
-        lastModified: row.getResultByName("lastModified"),
-        type: row.getResultByName("type"),
-        parentId: row.getResultByName("parentId"),
-        parentGuid: row.getResultByName("parentGuid"),
-      });
-    }
-
     MirrorLog.trace("Recording notifications for changed keywords");
     let keywordsChangedRows = await this.db.execute(`
       SELECT EXISTS(SELECT 1 FROM itemsAdded WHERE keywordChanged) OR
@@ -4780,21 +4628,6 @@ class BookmarkObserverRecorder {
       isTagging: info.isUntagging,
       args: [info.id, info.parentId, info.position, info.type, uri, info.guid,
         info.parentGuid, PlacesUtils.bookmarks.SOURCES.SYNC],
-    });
-  }
-
-  noteAnnoChanged(info) {
-    if (info.name != PlacesUtils.LMANNO_FEEDURI &&
-        info.name != PlacesUtils.LMANNO_SITEURI) {
-      throw new TypeError("Can't record change for unsupported anno");
-    }
-    this.bookmarkObserverNotifications.push({
-      name: "onItemChanged",
-      isTagging: false,
-      args: [info.id, info.name, /* isAnnotationProperty */ true,
-             /* newValue */ "", info.lastModified, info.type, info.parentId,
-             info.guid, info.parentGuid, /* oldValue */ "",
-             PlacesUtils.bookmarks.SOURCES.SYNC],
     });
   }
 

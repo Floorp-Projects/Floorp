@@ -136,6 +136,8 @@ GeckoViewStartup.prototype = {
         const greSource = new FileSource("toolkit", locales, "resource://gre/localization/{locale}/");
         L10nRegistry.registerSource(greSource);
 
+        ChromeUtils.import("resource://gre/modules/NotificationDB.jsm");
+
         // Listen for global EventDispatcher messages
         EventDispatcher.instance.registerListener(this,
           ["GeckoView:ResetUserPrefs",

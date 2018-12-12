@@ -135,10 +135,6 @@ class UrlbarInput {
     this.view.close();
   }
 
-  openResults() {
-    this.view.open();
-  }
-
   /**
    * Converts an internal URI (e.g. a wyciwyg URI) into one which we can
    * expose to the user.
@@ -329,6 +325,26 @@ class UrlbarInput {
       val = this.window.losslessDecodeURI(uri);
     }
     this.value = val;
+  }
+
+  /**
+   * Starts a query based on the user input.
+   *
+   * @param {string} [options.searchString]
+   *   The string the user entered in autocomplete.
+   * @param {number} [options.lastKey]
+   *   The last key the user entered (as a key code).
+   */
+  startQuery({
+    searchString = "",
+    lastKey = null,
+  } = {}) {
+    this.controller.startQuery(new QueryContext({
+      searchString,
+      lastKey,
+      maxResults: UrlbarPrefs.get("maxRichResults"),
+      isPrivate: this.isPrivate,
+    }));
   }
 
   // Getters and Setters below.
@@ -653,12 +669,10 @@ class UrlbarInput {
     }
 
     // XXX Fill in lastKey, and add anything else we need.
-    this.controller.startQuery(new QueryContext({
+    this.startQuery({
       searchString: value,
-      lastKey: "",
-      maxResults: UrlbarPrefs.get("maxRichResults"),
-      isPrivate: this.isPrivate,
-    }));
+      lastKey: null,
+    });
   }
 
   _on_select(event) {

@@ -134,9 +134,8 @@ NS_IMPL_ISUPPORTS(NavigateLoadListener, nsIWebProgressListener,
 
 }  // anonymous namespace
 
-already_AddRefed<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
+RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
     const ClientNavigateOpConstructorArgs& aArgs) {
-  RefPtr<ClientOpPromise> ref;
   nsCOMPtr<nsPIDOMWindowInner> window;
 
   // Navigating the target client window will result in the original
@@ -151,16 +150,14 @@ already_AddRefed<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
 
     ClientSource* target = targetActor->GetSource();
     if (!target) {
-      ref = ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                             __func__);
-      return ref.forget();
+      return ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                              __func__);
     }
 
     window = target->GetInnerWindow();
     if (!window) {
-      ref = ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                             __func__);
-      return ref.forget();
+      return ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                              __func__);
     }
   }
 
@@ -175,8 +172,7 @@ already_AddRefed<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
   nsCOMPtr<nsIURI> baseURL;
   nsresult rv = NS_NewURI(getter_AddRefs(baseURL), aArgs.baseURL());
   if (NS_FAILED(rv)) {
-    ref = ClientOpPromise::CreateAndReject(rv, __func__);
-    return ref.forget();
+    return ClientOpPromise::CreateAndReject(rv, __func__);
   }
 
   // There is an edge case for view-source url here. According to the wpt test
@@ -197,34 +193,29 @@ already_AddRefed<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
   rv = NS_NewURI(getter_AddRefs(url), aArgs.url(), nullptr,
                  shouldUseBaseURL ? baseURL.get() : nullptr);
   if (NS_FAILED(rv)) {
-    ref = ClientOpPromise::CreateAndReject(rv, __func__);
-    return ref.forget();
+    return ClientOpPromise::CreateAndReject(rv, __func__);
   }
 
   if (url->GetSpecOrDefault().EqualsLiteral("about:blank")) {
-    ref = ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-    return ref.forget();
+    return ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
   nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
   if (!doc || !doc->IsActive()) {
-    ref = ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                           __func__);
-    return ref.forget();
+    return ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                            __func__);
   }
 
   nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
   if (!principal) {
-    ref = ClientOpPromise::CreateAndReject(rv, __func__);
-    return ref.forget();
+    return ClientOpPromise::CreateAndReject(rv, __func__);
   }
 
   nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
   nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
   if (!docShell || !webProgress) {
-    ref = ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                           __func__);
-    return ref.forget();
+    return ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                            __func__);
   }
 
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState();
@@ -238,8 +229,7 @@ already_AddRefed<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
   loadState->SetFirstParty(true);
   rv = docShell->LoadURI(loadState);
   if (NS_FAILED(rv)) {
-    ref = ClientOpPromise::CreateAndReject(rv, __func__);
-    return ref.forget();
+    return ClientOpPromise::CreateAndReject(rv, __func__);
   }
 
   RefPtr<ClientOpPromise::Private> promise =
@@ -252,17 +242,14 @@ already_AddRefed<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
                                         nsIWebProgress::NOTIFY_STATE_DOCUMENT);
   if (NS_FAILED(rv)) {
     promise->Reject(rv, __func__);
-    ref = promise;
-    return ref.forget();
+    return promise.forget();
   }
 
-  ref = promise.get();
-
-  ref->Then(mSerialEventTarget, __func__,
-            [listener](const ClientOpResult& aResult) {},
-            [listener](nsresult aResult) {});
-
-  return ref.forget();
+  return promise->Then(
+      mSerialEventTarget, __func__,
+      [listener](const ClientOpPromise::ResolveOrRejectValue& aValue) {
+        return ClientOpPromise::CreateAndResolveOrReject(aValue, __func__);
+      });
 }
 
 void ClientNavigateOpChild::ActorDestroy(ActorDestroyReason aReason) {

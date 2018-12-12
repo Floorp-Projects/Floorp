@@ -91,6 +91,10 @@ public class GeckoSystemStateListener
      * Uses `Settings.Global` which was introduced in API version 17.
      */
     private static boolean prefersReducedMotion() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
+          return false;
+        }
+
         ContentResolver contentResolver = sApplicationContext.getContentResolver();
 
         return Settings.Global.getFloat(contentResolver,
@@ -105,8 +109,18 @@ public class GeckoSystemStateListener
         contentResolver.notifyChange(animationSetting, null);
     }
 
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
-    private static native void onDeviceChanged();
+    @WrapForJNI(stubName = "OnDeviceChanged", calledFrom = "ui", dispatchTo = "gecko")
+    private static native void nativeOnDeviceChanged();
+
+    private static void onDeviceChanged() {
+        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+            nativeOnDeviceChanged();
+        } else {
+            GeckoThread.queueNativeCallUntil(
+                    GeckoThread.State.PROFILE_READY, GeckoSystemStateListener.class,
+                    "nativeOnDeviceChanged");
+        }
+    }
 
     private void notifyDeviceChanged(int deviceId) {
         InputDevice device = InputDevice.getDevice(deviceId);

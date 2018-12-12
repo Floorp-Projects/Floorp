@@ -27,8 +27,6 @@ const {PlacesUtils} =
 const {LiveBookmarkMigrator} =
   ChromeUtils.import("resource:///modules/LiveBookmarkMigrator.jsm", {});
 
-Cu.importGlobalProperties(["URL"]);
-
 const kTestData = {
   guid: PlacesUtils.bookmarks.toolbarGuid,
   children: [
@@ -164,4 +162,3 @@ add_task(async function check_replace_bookmarks_correctly() {
     }
   }
 });
-

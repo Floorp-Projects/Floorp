@@ -50,6 +50,7 @@ jobs:
     parent: debian7-base
     definition: debian7-build
     packages:
+      - deb7-nasm
       - deb7-valgrind
     args:
       ARCH: amd64

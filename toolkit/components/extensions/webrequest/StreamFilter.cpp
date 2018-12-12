@@ -81,7 +81,7 @@ void StreamFilter::Connect() {
                [=](mozilla::ipc::Endpoint<PStreamFilterChild>&& aEndpoint) {
                  self->FinishConnect(std::move(aEndpoint));
                },
-               [=](mozilla::ipc::ResponseRejectReason aReason) {
+               [=](mozilla::ipc::ResponseRejectReason&& aReason) {
                  self->mActor->RecvInitialized(false);
                });
   } else {

@@ -329,7 +329,7 @@ RefPtr<GenericPromise> ServiceWorkerManager::StartControllingClient(
     bool aControlClientHandle) {
   MOZ_DIAGNOSTIC_ASSERT(aRegistrationInfo->GetActive());
 
-  RefPtr<GenericPromise> ref;
+  RefPtr<GenericPromise> promise;
   RefPtr<ServiceWorkerManager> self(this);
 
   const ServiceWorkerDescriptor& active =
@@ -341,9 +341,9 @@ RefPtr<GenericPromise> ServiceWorkerManager::StartControllingClient(
         entry.Data()->mRegistrationInfo.forget();
 
     if (aControlClientHandle) {
-      ref = entry.Data()->mClientHandle->Control(active);
+      promise = entry.Data()->mClientHandle->Control(active);
     } else {
-      ref = GenericPromise::CreateAndResolve(false, __func__);
+      promise = GenericPromise::CreateAndResolve(false, __func__);
     }
 
     entry.Data()->mRegistrationInfo = aRegistrationInfo;
@@ -357,25 +357,26 @@ RefPtr<GenericPromise> ServiceWorkerManager::StartControllingClient(
 
     // Always check to see if we failed to actually control the client.  In
     // that case removed the client from our list of controlled clients.
-    ref->Then(SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
-              [](bool) {
-                // do nothing on success
-              },
-              [self, aClientInfo](nsresult aRv) {
-                // failed to control, forget about this client
-                self->StopControllingClient(aClientInfo);
-              });
-
-    return ref;
+    return promise->Then(
+        SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
+        [](bool) {
+          // do nothing on success
+          return GenericPromise::CreateAndResolve(true, __func__);
+        },
+        [self, aClientInfo](nsresult aRv) {
+          // failed to control, forget about this client
+          self->StopControllingClient(aClientInfo);
+          return GenericPromise::CreateAndReject(aRv, __func__);
+        });
   }
 
   RefPtr<ClientHandle> clientHandle = ClientManager::CreateHandle(
       aClientInfo, SystemGroup::EventTargetFor(TaskCategory::Other));
 
   if (aControlClientHandle) {
-    ref = clientHandle->Control(active);
+    promise = clientHandle->Control(active);
   } else {
-    ref = GenericPromise::CreateAndResolve(false, __func__);
+    promise = GenericPromise::CreateAndResolve(false, __func__);
   }
 
   aRegistrationInfo->StartControllingClient();
@@ -392,16 +393,17 @@ RefPtr<GenericPromise> ServiceWorkerManager::StartControllingClient(
 
   // Always check to see if we failed to actually control the client.  In
   // that case removed the client from our list of controlled clients.
-  ref->Then(SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
-            [](bool) {
-              // do nothing on success
-            },
-            [self, aClientInfo](nsresult aRv) {
-              // failed to control, forget about this client
-              self->StopControllingClient(aClientInfo);
-            });
-
-  return ref;
+  return promise->Then(
+      SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
+      [](bool) {
+        // do nothing on success
+        return GenericPromise::CreateAndResolve(true, __func__);
+      },
+      [self, aClientInfo](nsresult aRv) {
+        // failed to control, forget about this client
+        self->StopControllingClient(aClientInfo);
+        return GenericPromise::CreateAndReject(aRv, __func__);
+      });
 }
 
 void ServiceWorkerManager::StopControllingClient(
@@ -2349,24 +2351,20 @@ void ServiceWorkerManager::UpdateInternal(
   queue->ScheduleJob(job);
 }
 
-already_AddRefed<GenericPromise> ServiceWorkerManager::MaybeClaimClient(
+RefPtr<GenericPromise> ServiceWorkerManager::MaybeClaimClient(
     const ClientInfo& aClientInfo,
     ServiceWorkerRegistrationInfo* aWorkerRegistration) {
   MOZ_DIAGNOSTIC_ASSERT(aWorkerRegistration);
 
-  RefPtr<GenericPromise> ref;
-
   if (!aWorkerRegistration->GetActive()) {
-    ref = GenericPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                          __func__);
-    return ref.forget();
+    return GenericPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                           __func__);
   }
 
   // Same origin check
   nsCOMPtr<nsIPrincipal> principal(aClientInfo.GetPrincipal());
   if (!aWorkerRegistration->Principal()->Equals(principal)) {
-    ref = GenericPromise::CreateAndReject(NS_ERROR_DOM_SECURITY_ERR, __func__);
-    return ref.forget();
+    return GenericPromise::CreateAndReject(NS_ERROR_DOM_SECURITY_ERR, __func__);
   }
 
   // The registration that should be controlling the client
@@ -2379,23 +2377,18 @@ already_AddRefed<GenericPromise> ServiceWorkerManager::MaybeClaimClient(
 
   if (aWorkerRegistration != matchingRegistration ||
       aWorkerRegistration == controllingRegistration) {
-    ref = GenericPromise::CreateAndResolve(true, __func__);
-    return ref.forget();
+    return GenericPromise::CreateAndResolve(true, __func__);
   }
 
-  ref = StartControllingClient(aClientInfo, aWorkerRegistration);
-  return ref.forget();
+  return StartControllingClient(aClientInfo, aWorkerRegistration);
 }
 
-already_AddRefed<GenericPromise> ServiceWorkerManager::MaybeClaimClient(
+RefPtr<GenericPromise> ServiceWorkerManager::MaybeClaimClient(
     const ClientInfo& aClientInfo,
     const ServiceWorkerDescriptor& aServiceWorker) {
-  RefPtr<GenericPromise> ref;
-
   nsCOMPtr<nsIPrincipal> principal = aServiceWorker.GetPrincipal();
   if (!principal) {
-    ref = GenericPromise::CreateAndResolve(false, __func__);
-    return ref.forget();
+    return GenericPromise::CreateAndResolve(false, __func__);
   }
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
@@ -2407,12 +2400,10 @@ already_AddRefed<GenericPromise> ServiceWorkerManager::MaybeClaimClient(
   // are done.  The fix for this is to move the SWM to the parent process
   // so there are no consistency errors.
   if (NS_WARN_IF(!registration) || NS_WARN_IF(!registration->GetActive())) {
-    ref = GenericPromise::CreateAndResolve(false, __func__);
-    return ref.forget();
+    return GenericPromise::CreateAndResolve(false, __func__);
   }
 
-  ref = MaybeClaimClient(aClientInfo, registration);
-  return ref.forget();
+  return MaybeClaimClient(aClientInfo, registration);
 }
 
 void ServiceWorkerManager::SetSkipWaitingFlag(nsIPrincipal* aPrincipal,

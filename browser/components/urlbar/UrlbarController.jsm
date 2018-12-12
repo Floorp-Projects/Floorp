@@ -37,7 +37,7 @@ class QueryContext {
    *   The maximum number of results that will be displayed for this query.
    * @param {boolean} [options.autoFill]
    *   Whether or not to include autofill results. Optional, as this is normally
-   *   set by the AddressBarController.
+   *   set by the UrlbarController.
    */
   constructor(options = {}) {
     this._checkRequiredOptions(options, [
@@ -224,18 +224,20 @@ class UrlbarController {
         this.input.handleCommand(event);
         return;
       case KeyEvent.DOM_VK_TAB:
-        this.view.selectNextItem({ reverse: event.shiftKey });
-        event.preventDefault();
-        break;
-      case KeyEvent.DOM_VK_DOWN:
-        if (!event.ctrlKey && !event.altKey) {
-          this.view.selectNextItem();
+        if (this.view.isOpen) {
+          this.view.selectNextItem({ reverse: event.shiftKey });
           event.preventDefault();
         }
         break;
+      case KeyEvent.DOM_VK_DOWN:
       case KeyEvent.DOM_VK_UP:
         if (!event.ctrlKey && !event.altKey) {
-          this.view.selectNextItem({ reverse: true });
+          if (this.view.isOpen) {
+            this.view.selectNextItem({
+              reverse: event.keyCode == KeyEvent.DOM_VK_UP });
+          } else {
+            this.input.startQuery();
+          }
           event.preventDefault();
         }
         break;

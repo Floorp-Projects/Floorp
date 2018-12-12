@@ -21,8 +21,6 @@ var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
 var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {});
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
-Cu.importGlobalProperties(["XMLHttpRequest"]);
-
 var gCertDB = Cc["@mozilla.org/security/x509certdb;1"]
                 .getService(Ci.nsIX509CertDB);
 
