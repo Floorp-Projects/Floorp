@@ -126,15 +126,11 @@ export class QuickOpenModal extends Component<Props, State> {
 
   searchSymbols = (query: string) => {
     const {
-      symbols: { functions, identifiers }
+      symbols: { functions }
     } = this.props;
 
     let results = functions;
-    if (this.isVariableQuery()) {
-      results = identifiers;
-    } else {
-      results = results.filter(result => result.title !== "anonymous");
-    }
+    results = results.filter(result => result.title !== "anonymous");
 
     if (query === "@" || query === "#") {
       return this.setState({ results });
@@ -219,22 +215,9 @@ export class QuickOpenModal extends Component<Props, State> {
   };
 
   onSelectResultItem = (item: QuickOpenResult) => {
-    const {
-      selectSpecificLocation,
-      selectedSource,
-      highlightLineRange
-    } = this.props;
+    const { selectedSource, highlightLineRange } = this.props;
     if (!this.isSymbolSearch() || selectedSource == null) {
       return;
-    }
-
-    if (this.isVariableQuery()) {
-      const line =
-        item.location && item.location.start ? item.location.start.line : 0;
-      return selectSpecificLocation({
-        sourceId: selectedSource.id,
-        line
-      });
     }
 
     if (this.isFunctionQuery()) {
@@ -322,8 +305,7 @@ export class QuickOpenModal extends Component<Props, State> {
 
   // Query helpers
   isFunctionQuery = () => this.props.searchType === "functions";
-  isVariableQuery = () => this.props.searchType === "variables";
-  isSymbolSearch = () => this.isFunctionQuery() || this.isVariableQuery();
+  isSymbolSearch = () => this.isFunctionQuery();
   isGotoQuery = () => this.props.searchType === "goto";
   isGotoSourceQuery = () => this.props.searchType === "gotoSource";
   isShortcutQuery = () => this.props.searchType === "shortcuts";
@@ -379,10 +361,7 @@ export class QuickOpenModal extends Component<Props, State> {
     let summaryMsg = "";
     if (this.isGotoQuery()) {
       summaryMsg = L10N.getStr("shortcuts.gotoLine");
-    } else if (
-      (this.isFunctionQuery() || this.isVariableQuery()) &&
-      this.props.symbolsLoading
-    ) {
+    } else if (this.isFunctionQuery() && this.props.symbolsLoading) {
       summaryMsg = L10N.getStr("loadingText");
     }
     return summaryMsg;
