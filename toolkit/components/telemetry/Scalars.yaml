@@ -1735,6 +1735,19 @@ telemetry:
     record_in_processes:
       - 'main'
 
+  about_telemetry_pageload:
+    bug_numbers:
+      - 1512503
+    description: >
+      The number of times about:telemetry was loaded.
+    expires: "70"
+    kind: uint
+    notification_emails:
+      - chutten@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 telemetry.discarded:
   accumulations:
     bug_numbers:
