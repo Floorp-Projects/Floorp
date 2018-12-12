@@ -48,16 +48,16 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     @Setting(key = Setting.Key.USE_TRACKING_PROTECTION, value = "true")
     @Test fun settingsApplied() {
         assertThat("USE_PRIVATE_MODE should be set",
-                   sessionRule.session.settings.isUsePrivateMode,
+                   sessionRule.session.settings.usePrivateMode,
                    equalTo(true))
         assertThat("DISPLAY_MODE should be set",
                    sessionRule.session.settings.displayMode,
                    equalTo(GeckoSessionSettings.DISPLAY_MODE_MINIMAL_UI))
         assertThat("USE_TRACKING_PROTECTION should be set",
-                   sessionRule.session.settings.isUseTrackingProtection,
+                   sessionRule.session.settings.useTrackingProtection,
                    equalTo(true))
         assertThat("ALLOW_JAVASCRIPT should be set",
-                sessionRule.session.settings.isAllowJavascript,
+                sessionRule.session.settings.allowJavascript,
                 equalTo(false))
     }
 
@@ -893,8 +893,9 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @Test fun createOpenSession_withSettings() {
-        val settings = GeckoSessionSettings(sessionRule.session.settings)
-        settings.isUsePrivateMode = true
+        val settings = GeckoSessionSettings.Builder(sessionRule.session.settings)
+                .usePrivateMode(true)
+                .build()
 
         val newSession = sessionRule.createOpenSession(settings)
         assertThat("New session has same settings", newSession.settings, equalTo(settings))
@@ -929,8 +930,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @Test fun createClosedSession_withSettings() {
-        val settings = GeckoSessionSettings(sessionRule.session.settings)
-        settings.isUsePrivateMode = true
+        val settings = GeckoSessionSettings.Builder(sessionRule.session.settings).usePrivateMode(true).build()
 
         val newSession = sessionRule.createClosedSession(settings)
         assertThat("New session has same settings", newSession.settings, equalTo(settings))
