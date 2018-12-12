@@ -17,8 +17,11 @@ permalink: /changelog/
   * Mozilla App Services (FxA: 0.11.5, Sync Logins: 0.11.5, Places: 0.11.5)
   * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
 
+* **browser-errorpages**
+  * Localized strings for de, es, fr, it, ja, ko, zh-rCN, zh-rTW.
+
 * **feature-customtabs**
-  * 
+  *
   * ⚠️ **This is a breaking change** `CustomTabsService` has been renamed to `AbstractCustomTabsService` and is now an abstract class in order to allow apps to inject the `Engine` they are using. An app that wants to support custom tabs will need to create its own class and reference it in the manifest:
 
   ```Kotlin
@@ -27,10 +30,10 @@ permalink: /changelog/
   }
   ```
 
-* **concept-engine**, **engine-gecko-nightly**:  
+* **concept-engine**, **engine-gecko-nightly**:
   * Add setting to enable testing mode which is used in engine-gecko to set `FULL_ACCESSIBILITY_TREE` to `true`. This allows access to the full DOM tree for testing purposes.
 
-  ```Kotlin  
+  ```Kotlin
   // Turn testing mode on by default when the engine is created
   val engine = GeckoEngine(runtime, DefaultSettings(testingModeEnabled=true))
 
@@ -105,13 +108,13 @@ permalink: /changelog/
   promptFeature.stop()
   ```
 
-* **feature-session**, **browser-session**, **concept-engine**, **browser-engine-system**:  
+* **feature-session**, **browser-session**, **concept-engine**, **browser-engine-system**:
   * Added functionality to observe window requests from the browser engine. These requests can be observed on the session directly using `onOpenWindowRequest` and `onCloseWindowRequest`, but we also provide a feature class, which will automatically open and close the corresponding window:
 
   ```Kotlin
   windowFeature = WindowFeature(engine, sessionManager)
 
-  override fun onStart() {    
+  override fun onStart() {
     windowFeature.start()
   }
 
@@ -124,7 +127,7 @@ permalink: /changelog/
   In addition, to observe window requests the new engine setting `supportMultipleWindows` has to be set to true:
 
   ```Kotlin
-  val engine = SystemEngine(context, 
+  val engine = SystemEngine(context,
     DefaultSettings(
       supportMultipleWindows = true
     )
@@ -162,7 +165,7 @@ permalink: /changelog/
 
   ```Kotlin
   // Before
-  Config.custom(CONFIG_URL).await().use { 
+  Config.custom(CONFIG_URL).await().use {
     config -> FirefoxAccount(config, CLIENT_ID, REDIRECT_URL)
   }
 
