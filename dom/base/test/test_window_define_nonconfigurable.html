@@ -18,8 +18,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107443
    */
   var retval = Object.defineProperty(window, "nosuchprop",
                                      { value: 5, configurable: false });
-  is(retval, false,
-     "Should return false when 'failing' to define non-configurable property via Object.defineProperty.")
+  todo_is(retval, false,
+          "Should return false when 'failing' to define non-configurable property via Object.defineProperty.")
   var desc = Object.getOwnPropertyDescriptor(window, "nosuchprop");
   is(typeof(desc), "object", "Should have a property 'nosuchprop' now");
   todo_is(desc.configurable, true,
@@ -48,10 +48,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107443
   is(desc.writable, false, "Property 'nosuchprop3' should be readonly");
   is(desc.value, 7, "Property 'nosuchprop3' should have the right value");
 
+  // XXXbz it's not actually entirely clear what behavior the
+  // Reflect.defineProperty bits should have.  Check it carefully once there's a
+  // spec.
   retval = Reflect.defineProperty(window, "nosuchprop4",
                                   { value: 8, configurable: false });
-  is(retval, false,
-     "Should not be able to Reflect.defineProperty if non-configurable");
+  todo_is(retval, false,
+          "Should not be able to Reflect.defineProperty if non-configurable");
   desc = Object.getOwnPropertyDescriptor(window, "nosuchprop4");
   is(typeof(desc), "object", "Should have a property 'nosuchprop4' now");
   todo_is(desc.configurable, true,
