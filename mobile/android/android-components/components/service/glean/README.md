@@ -61,7 +61,8 @@ class SampleApplication : Application() {
 }
 ```
 
-Once initialized, glean will automatically start collecting and sending its [core metrics](metrics.yaml).
+Once initialized, if collection is enabled, glean will automatically start collecting [baseline metrics](metrics.yaml)
+and sending its [pings](docs/pings.md).
 
 ## License
 
