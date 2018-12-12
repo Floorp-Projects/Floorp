@@ -94,17 +94,25 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             }
 
             Log.e(LOGTAG, "Cannot connect to process " + mType);
-            context.unbindService(this);
+            unbind();
             return null;
         }
 
         public synchronized void unbind() {
+            // This could end up using IPC, so do it before we unbind.
+            final int pid = getPid();
+
             if (mChild != null) {
                 final Context context = GeckoAppShell.getApplicationContext();
-                context.unbindService(this);
+                try {
+                    context.unbindService(this);
+                } catch (IllegalArgumentException e) {
+                    mChild = null;
+                    mPid = 0;
+                    return;
+                }
             }
 
-            final int pid = getPid();
             if (pid != 0) {
                 Process.killProcess(pid);
                 waitForChildLocked();
@@ -152,7 +160,11 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             if (mChild != null) {
                 mChild = null;
                 mPid = 0;
-                GeckoAppShell.getApplicationContext().unbindService(this);
+
+                try {
+                    GeckoAppShell.getApplicationContext().unbindService(this);
+                } catch (IllegalArgumentException e) {
+                }
             }
         }
     }
