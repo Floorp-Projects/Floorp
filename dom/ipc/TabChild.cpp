@@ -123,6 +123,7 @@
 #include "nsDocShellLoadState.h"
 #include "nsWebBrowser.h"
 #include "mozilla/dom/WindowGlobalChild.h"
+#include "MMPrinter.h"
 
 #ifdef XP_WIN
 #include "mozilla/plugins/PluginWidgetChild.h"
@@ -2056,6 +2057,7 @@ mozilla::ipc::IPCResult TabChild::RecvAsyncMessage(
     const IPC::Principal& aPrincipal, const ClonedMessageData& aData) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("TabChild::RecvAsyncMessage",
                                              OTHER, aMessage);
+  MMPrinter::Print("TabChild::RecvAsyncMessage", aMessage, aData);
 
   CrossProcessCpowHolder cpows(Manager(), aCpows);
   if (!mTabChildMessageManager) {

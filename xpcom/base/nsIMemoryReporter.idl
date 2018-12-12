@@ -420,12 +420,6 @@ interface nsIMemoryReporterManager : nsISupports
   [infallible] readonly attribute boolean isDMDRunning;
 
   /*
-   * Asynchronously gets attribute 'heapAllocated'. The value is returned in
-   * the callback argument.
-   */
-  [must_use] void getHeapAllocatedAsync(in nsIHeapAllocatedCallback callback);
-
-  /*
    * Run a series of GC/CC's in an attempt to minimize the application's memory
    * usage.  When we're finished, we invoke the given runnable if it's not
    * null.

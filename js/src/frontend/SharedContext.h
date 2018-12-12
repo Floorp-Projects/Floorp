@@ -527,14 +527,10 @@ class FunctionBox : public ObjectBox, public SharedContext {
   // for validated asm.js.
   bool useAsmOrInsideUseAsm() const { return useAsm; }
 
-  void setStart(const TokenStreamAnyChars& anyChars) {
-    uint32_t offset = anyChars.currentToken().pos.begin;
-    setStart(anyChars, offset);
-  }
-
-  void setStart(const TokenStreamAnyChars& anyChars, uint32_t offset) {
+  void setStart(uint32_t offset, uint32_t line, uint32_t column) {
     bufStart = offset;
-    anyChars.srcCoords.lineNumAndColumnIndex(offset, &startLine, &startColumn);
+    startLine = line;
+    startColumn = column;
   }
 
   void setEnd(const TokenStreamAnyChars& anyChars) {
@@ -548,6 +544,19 @@ class FunctionBox : public ObjectBox, public SharedContext {
 
   void trace(JSTracer* trc) override;
 };
+
+template <typename Unit, class AnyCharsAccess>
+inline void GeneralTokenStreamChars<Unit, AnyCharsAccess>::setFunctionStart(
+    FunctionBox* funbox) const {
+  const TokenStreamAnyChars& anyChars = anyCharsAccess();
+
+  uint32_t bufStart = anyChars.currentToken().pos.begin;
+
+  uint32_t startLine, startColumn;
+  computeLineAndColumn(bufStart, &startLine, &startColumn);
+
+  funbox->setStart(bufStart, startLine, startColumn);
+}
 
 inline FunctionBox* SharedContext::asFunctionBox() {
   MOZ_ASSERT(isFunctionBox());

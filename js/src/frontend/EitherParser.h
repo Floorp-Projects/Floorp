@@ -85,19 +85,19 @@ struct ParserNewObjectBox {
   }
 };
 
+template <class TokenStream>
+struct TokenStreamComputeLineAndColumn {
+  static constexpr auto get() -> decltype(&TokenStream::computeLineAndColumn) {
+    return &TokenStream::computeLineAndColumn;
+  }
+};
+
 // Generic matchers.
 
 struct ParseHandlerMatcher {
   template <class Parser>
   frontend::FullParseHandler& match(Parser* parser) {
     return parser->handler;
-  }
-};
-
-struct AnyCharsMatcher {
-  template <class Parser>
-  frontend::TokenStreamAnyChars& match(Parser* parser) {
-    return parser->anyChars;
   }
 };
 
@@ -162,13 +162,13 @@ class EitherParser : public BCEParserHandle {
     return parser.match(std::move(matcher));
   }
 
-  const TokenStreamAnyChars& anyChars() const {
-    return parser.match(detail::AnyCharsMatcher());
-  }
-
   void computeLineAndColumn(uint32_t offset, uint32_t* line,
                             uint32_t* column) const {
-    return anyChars().lineAndColumnAt(offset, line, column);
+    InvokeMemberFunction<detail::GetTokenStream,
+                         detail::TokenStreamComputeLineAndColumn, uint32_t,
+                         uint32_t*, uint32_t*>
+        matcher{offset, line, column};
+    return parser.match(std::move(matcher));
   }
 };
 
