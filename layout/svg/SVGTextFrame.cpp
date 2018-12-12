@@ -2949,7 +2949,9 @@ void SVGTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
 nsresult SVGTextFrame::AttributeChanged(int32_t aNameSpaceID,
                                         nsAtom* aAttribute, int32_t aModType) {
-  if (aNameSpaceID != kNameSpaceID_None) return NS_OK;
+  if (aNameSpaceID != kNameSpaceID_None) {
+    return NS_OK;
+  }
 
   if (aAttribute == nsGkAtoms::transform) {
     // We don't invalidate for transform changes (the layers code does that).
@@ -4486,7 +4488,9 @@ enum TextAnchorSide { eAnchorLeft, eAnchorMiddle, eAnchorRight };
 static TextAnchorSide ConvertLogicalTextAnchorToPhysical(uint8_t aTextAnchor,
                                                          bool aIsRightToLeft) {
   NS_ASSERTION(aTextAnchor <= 3, "unexpected value for aTextAnchor");
-  if (!aIsRightToLeft) return TextAnchorSide(aTextAnchor);
+  if (!aIsRightToLeft) {
+    return TextAnchorSide(aTextAnchor);
+  }
   return TextAnchorSide(2 - aTextAnchor);
 }
 
@@ -5053,7 +5057,9 @@ void SVGTextFrame::MaybeResolveBidiForAnonymousBlockChild() {
 
 void SVGTextFrame::MaybeReflowAnonymousBlockChild() {
   nsIFrame* kid = PrincipalChildList().FirstChild();
-  if (!kid) return;
+  if (!kid) {
+    return;
+  }
 
   NS_ASSERTION(!(kid->GetStateBits() & NS_FRAME_IN_REFLOW),
                "should not be in reflow when about to reflow again");
@@ -5101,7 +5107,9 @@ void SVGTextFrame::DoReflow() {
 
   nsPresContext* presContext = PresContext();
   nsIFrame* kid = PrincipalChildList().FirstChild();
-  if (!kid) return;
+  if (!kid) {
+    return;
+  }
 
   RefPtr<gfxContext> renderingContext =
       presContext->PresShell()->CreateReferenceRenderingContext();

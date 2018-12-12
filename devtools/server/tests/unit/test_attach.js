@@ -3,34 +3,18 @@
 
 "use strict";
 
-var gClient;
-var gDebuggee;
+const ThreadClient = require("devtools/shared/client/thread-client");
+const { BrowsingContextTargetFront } = require("devtools/shared/fronts/targets/browsing-context");
 
-function run_test() {
-  initTestDebuggerServer();
-  gDebuggee = testGlobal("test-1");
-  DebuggerServer.addTestGlobal(gDebuggee);
-
-  const transport = DebuggerServer.connectPipe();
-  gClient = new DebuggerClient(transport);
-  gClient.connect().then(function([type, traits]) {
-    attachTestTab(gClient, "test-1", function(reply, targetFront) {
-      test_attach(targetFront);
-    });
-  });
-  do_test_pending();
-}
-
-function test_attach(targetFront) {
-  targetFront.attachThread({}).then(function([response, threadClient]) {
-    Assert.equal(threadClient.state, "paused");
-    threadClient.resume(cleanup);
-  });
-}
-
-function cleanup() {
-  gClient.addListener("closed", function(event) {
-    do_test_finished();
-  });
-  gClient.close();
-}
+/**
+ * Very naive test that checks threadClearTest helper.
+ * It ensures that the thread client is correctly attached.
+ */
+add_task(threadClientTest(({ threadClient, debuggee, client, targetFront }) => {
+  ok(true, "Thread actor was able to attach");
+  ok(threadClient instanceof ThreadClient, "Thread client is valid");
+  Assert.equal(threadClient.state, "attached", "Thread client is paused");
+  Assert.equal(String(debuggee), "[object Sandbox]", "Debuggee client is valid");
+  ok(client instanceof DebuggerClient, "Client is valid");
+  ok(targetFront instanceof BrowsingContextTargetFront, "TargetFront is valid");
+}));

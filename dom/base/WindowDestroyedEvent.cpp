@@ -109,21 +109,19 @@ WindowDestroyedEvent::Run() {
         JS::Rooted<JSObject*> obj(cx, currentInner->FastGetGlobalJSObject());
         if (obj && !js::IsSystemRealm(js::GetNonCCWObjectRealm(obj))) {
           JS::Realm* realm = js::GetNonCCWObjectRealm(obj);
-          JS::Compartment* cpt = JS::GetCompartmentForRealm(realm);
-
           nsCOMPtr<nsIPrincipal> pc =
               nsJSPrincipals::get(JS::GetRealmPrincipals(realm));
 
           if (BasePrincipal::Cast(pc)->AddonPolicy()) {
-            // We want to nuke all references to the add-on compartment.
-            xpc::NukeAllWrappersForCompartment(
-                cx, cpt,
-                mIsInnerWindow ? js::DontNukeWindowReferences
-                               : js::NukeWindowReferences);
+            // We want to nuke all references to the add-on realm.
+            xpc::NukeAllWrappersForRealm(cx, realm,
+                                         mIsInnerWindow
+                                             ? js::DontNukeWindowReferences
+                                             : js::NukeWindowReferences);
           } else {
             // We only want to nuke wrappers for the chrome->content case
             js::NukeCrossCompartmentWrappers(
-                cx, BrowserCompartmentMatcher(), cpt,
+                cx, BrowserCompartmentMatcher(), realm,
                 mIsInnerWindow ? js::DontNukeWindowReferences
                                : js::NukeWindowReferences,
                 js::NukeIncomingReferences);

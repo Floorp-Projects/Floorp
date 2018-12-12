@@ -525,10 +525,6 @@ JS_FRIEND_API JSObject* JS_NewDeadWrapper(JSContext* cx, JSObject* origObj) {
   return NewDeadProxyObject(cx, origObj);
 }
 
-JS_FRIEND_API bool JS_IsScriptSourceObject(JSObject* obj) {
-  return obj->is<ScriptSourceObject>();
-}
-
 void js::TraceWeakMaps(WeakMapTracer* trc) {
   WeakMapBase::traceAllMappings(trc);
 }
