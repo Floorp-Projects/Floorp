@@ -23,8 +23,11 @@ var subtests = [
   // Tests that touch-action CSS properties are handled in APZ without waiting
   // on the main-thread, when possible
   {'file': 'helper_touch_action_regions.html', 'prefs': touch_action_prefs},
+  // Tests that touch-action inside zero-opacity items are respected
+  {'file': 'helper_touch_action_zero_opacity_bug1500864.html', 'prefs': touch_action_prefs},
 
-  // Add new subtests to test_group_touch_events-4.html, not this file.
+  // Add new subtests to test_group_touchevents-4.html, not this file (exceptions
+  // may be made for quick-running tests that need the touch-action prefs)
 ];
 
 if (isApzEnabled()) {
