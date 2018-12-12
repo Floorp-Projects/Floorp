@@ -131,22 +131,13 @@ tasks:
             git checkout {{event.head.sha}}
             source $HOME/servotidy-venv/bin/activate
             servo-tidy
-            sccache --stop-server || true
-            mkdir -p ../artifacts
-            RUST_LOG=sccache=trace SCCACHE_ERROR_LOG=$PWD/../artifacts/sccache.log sccache --start-server
             export RUST_BACKTRACE=full
             export RUSTFLAGS='--deny warnings'
             export PKG_CONFIG_PATH="/usr/local/opt/zlib/lib/pkgconfig:$PKG_CONFIG_PATH"
-            export RUSTC_WRAPPER=sccache
             echo 'exec make -j1 "$@"' > $HOME/make # See #2638
             chmod +x $HOME/make
             export MAKE="$HOME/make"
             ci-scripts/macos-release-tests.sh
-            sccache --stop-server || true
-      artifacts:
-        - name: public/sccache.log
-          path: artifacts/sccache.log
-          type: file
     routes:
       - "index.garbage.webrender.ci.{{event.head.user.login}}.{{event.head.repo.branch}}.osx-release"
   - metadata:
@@ -176,21 +167,12 @@ tasks:
             git checkout {{event.head.sha}}
             source $HOME/servotidy-venv/bin/activate
             servo-tidy
-            sccache --stop-server || true
-            mkdir -p ../artifacts
-            RUST_LOG=sccache=trace SCCACHE_ERROR_LOG=$PWD/../artifacts/sccache.log sccache --start-server
             export RUST_BACKTRACE=full
             export RUSTFLAGS='--deny warnings'
             export PKG_CONFIG_PATH="/usr/local/opt/zlib/lib/pkgconfig:$PKG_CONFIG_PATH"
-            export RUSTC_WRAPPER=sccache
             echo 'exec make -j1 "$@"' > $HOME/make # See #2638
             chmod +x $HOME/make
             export MAKE="$HOME/make"
             ci-scripts/macos-debug-tests.sh
-            sccache --stop-server || true
-      artifacts:
-        - name: public/sccache.log
-          path: artifacts/sccache.log
-          type: file
     routes:
       - "index.garbage.webrender.ci.{{event.head.user.login}}.{{event.head.repo.branch}}.osx-debug"
