@@ -20,10 +20,7 @@ const isDebugBuild = Cc["@mozilla.org/xpcom/debug;1"]
                        .getService(Ci.nsIDebug2).isDebugBuild;
 
 // The test EV roots are only enabled in debug builds as a security measure.
-//
-// Bug 1008316: B2G doesn't have EV enabled, so EV is not expected even in debug
-// builds.
-const gEVExpected = isDebugBuild && !("@mozilla.org/b2g-process-global;1" in Cc);
+const gEVExpected = isDebugBuild;
 
 const SSS_STATE_FILE_NAME = "SiteSecurityServiceState.txt";
 const PRELOAD_STATE_FILE_NAME = "SecurityPreloadState.txt";
@@ -496,7 +493,7 @@ function _getBinaryUtil(binaryUtilName) {
     utilBin.append("bin");
     utilBin.append(binaryUtilName + mozinfo.bin_suffix);
   }
-  // But maybe we're on Android or B2G, where binaries are in /data/local/xpcb.
+  // But maybe we're on Android, where binaries are in /data/local/xpcb.
   if (!utilBin.exists()) {
     utilBin.initWithPath("/data/local/xpcb/");
     utilBin.append(binaryUtilName);
