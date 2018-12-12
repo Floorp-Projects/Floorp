@@ -1000,13 +1000,15 @@ static T* GetEffectProperty(
     return nullptr;
   }
 
-  T* prop = aFrame->GetProperty(aProperty);
-  if (prop) {
+  bool found;
+  T* prop = aFrame->GetProperty(aProperty, &found);
+  if (found) {
+    MOZ_ASSERT(prop, "this property should only store non-null values");
     return prop;
   }
   prop = new T(aURI, aFrame, false);
   NS_ADDREF(prop);
-  aFrame->SetProperty(aProperty, prop);
+  aFrame->AddProperty(aProperty, prop);
   return prop;
 }
 
@@ -1063,14 +1065,17 @@ static SVGFilterObserverListForCSSProp* GetOrCreateFilterObserverListForCSS(
   if (!effects->HasFilters()) {
     return nullptr;
   }
+
+  bool found;
   SVGFilterObserverListForCSSProp* observers =
-      aFrame->GetProperty(FilterProperty());
-  if (observers) {
+      aFrame->GetProperty(FilterProperty(), &found);
+  if (found) {
+    MOZ_ASSERT(observers, "this property should only store non-null values");
     return observers;
   }
   observers = new SVGFilterObserverListForCSSProp(effects->mFilters, aFrame);
   NS_ADDREF(observers);
-  aFrame->SetProperty(FilterProperty(), observers);
+  aFrame->AddProperty(FilterProperty(), observers);
   return observers;
 }
 
@@ -1180,13 +1185,15 @@ static SVGMaskObserverList* GetOrCreateMaskObserverList(
 
   MOZ_ASSERT(style->mMask.mImageCount > 0);
 
-  SVGMaskObserverList* prop = aMaskedFrame->GetProperty(MaskProperty());
-  if (prop) {
+  bool found;
+  SVGMaskObserverList* prop = aMaskedFrame->GetProperty(MaskProperty(), &found);
+  if (found) {
+    MOZ_ASSERT(prop, "this property should only store non-null values");
     return prop;
   }
   prop = new SVGMaskObserverList(aMaskedFrame);
   NS_ADDREF(prop);
-  aMaskedFrame->SetProperty(MaskProperty(), prop);
+  aMaskedFrame->AddProperty(MaskProperty(), prop);
   return prop;
 }
 
@@ -1316,11 +1323,14 @@ void SVGObserverUtils::RemoveTemplateObserver(nsIFrame* aFrame) {
 
 Element* SVGObserverUtils::GetAndObserveBackgroundImage(nsIFrame* aFrame,
                                                         const nsAtom* aHref) {
+  bool found;
   URIObserverHashtable* hashtable =
-      aFrame->GetProperty(BackgroundImageProperty());
-  if (!hashtable) {
+      aFrame->GetProperty(BackgroundImageProperty(), &found);
+  if (!found) {
     hashtable = new URIObserverHashtable();
-    aFrame->SetProperty(BackgroundImageProperty(), hashtable);
+    aFrame->AddProperty(BackgroundImageProperty(), hashtable);
+  } else {
+    MOZ_ASSERT(hashtable, "this property should only store non-null values");
   }
 
   nsAutoString elementId =
