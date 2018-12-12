@@ -106,11 +106,6 @@ extern JS_FRIEND_API bool JS_IsDeadWrapper(JSObject* obj);
 extern JS_FRIEND_API JSObject* JS_NewDeadWrapper(
     JSContext* cx, JSObject* origObject = nullptr);
 
-/**
- * Determine whether the given object is a ScriptSourceObject.
- */
-extern JS_FRIEND_API bool JS_IsScriptSourceObject(JSObject* obj);
-
 /*
  * Used by the cycle collector to trace through a shape or object group and
  * all cycle-participating data it reaches, using bounded stack space.
@@ -1184,9 +1179,14 @@ struct CompartmentsWithPrincipals : public CompartmentFilter {
 };
 
 extern JS_FRIEND_API bool NukeCrossCompartmentWrappers(
-    JSContext* cx, const CompartmentFilter& sourceFilter,
-    JS::Compartment* target, NukeReferencesToWindow nukeReferencesToWindow,
+    JSContext* cx, const CompartmentFilter& sourceFilter, JS::Realm* target,
+    NukeReferencesToWindow nukeReferencesToWindow,
     NukeReferencesFromTarget nukeReferencesFromTarget);
+
+extern JS_FRIEND_API bool AllowNewWrapper(JS::Compartment* target,
+                                          JSObject* obj);
+
+extern JS_FRIEND_API bool NukedObjectRealm(JSObject* obj);
 
 /* Specify information about DOMProxy proxies in the DOM, for use by ICs. */
 
