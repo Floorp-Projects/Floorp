@@ -16,6 +16,8 @@ const { RUNTIMES } = require("../constants");
 async function createLocalClient() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
+  DebuggerServer.allowChromeProcess = true;
+
   const client = new DebuggerClient(DebuggerServer.connectPipe());
   await client.connect();
   return new ClientWrapper(client);
