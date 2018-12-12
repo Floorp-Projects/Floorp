@@ -9,7 +9,8 @@ Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "head-mocks.js", this);
 const RUNTIME_ID = "test-runtime-id";
 const RUNTIME_DEVICE_NAME = "test device name";
 
-// Test that USB runtimes appear and disappear from the sidebar.
+// Test that USB runtimes appear and disappear from the sidebar,
+// as well as their connect button.
 add_task(async function() {
   const mocks = new Mocks();
 
