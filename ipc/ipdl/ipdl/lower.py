@@ -148,10 +148,6 @@ def _actorHId(actorhandle):
     return ExprSelect(actorhandle, '.', 'mId')
 
 
-def _actorManager(actor):
-    return ExprCall(ExprSelect(actor, '->', 'Manager'), args=[])
-
-
 def _actorState(actor):
     return ExprSelect(actor, '->', 'mLivenessState')
 
@@ -305,20 +301,6 @@ def _cxxManagedContainerType(basetype, const=0, ref=0):
                 const=const, ref=ref, hasimplicitcopyctor=False)
 
 
-def _callCxxArrayLength(arr):
-    return ExprCall(ExprSelect(arr, '.', 'Length'))
-
-
-def _callCxxArraySetLength(arr, lenexpr, sel='.'):
-    return ExprCall(ExprSelect(arr, sel, 'SetLength'),
-                    args=[lenexpr])
-
-
-def _callCxxSwapArrayElements(arr1, arr2, sel='.'):
-    return ExprCall(ExprSelect(arr1, sel, 'SwapElements'),
-                    args=[arr2])
-
-
 def _callInsertManagedActor(managees, actor):
     return ExprCall(ExprSelect(managees, '.', 'PutEntry'),
                     args=[actor])
@@ -385,31 +367,11 @@ def _logicError(msg):
         ExprCall(ExprVar('mozilla::ipc::LogicError'), args=[ExprLiteral.String(msg)]))
 
 
-def _arrayLengthReadError(elementname):
-    return StmtExpr(
-        ExprCall(ExprVar('mozilla::ipc::ArrayLengthReadError'),
-                 args=[ExprLiteral.String(elementname)]))
-
-
-def _unionTypeReadError(unionname):
-    return StmtExpr(
-        ExprCall(ExprVar('mozilla::ipc::UnionTypeReadError'),
-                 args=[ExprLiteral.String(unionname)]))
-
-
 def _sentinelReadError(classname):
     return StmtExpr(
         ExprCall(ExprVar('mozilla::ipc::SentinelReadError'),
                  args=[ExprLiteral.String(classname)]))
 
-
-def _killProcess(pid):
-    return ExprCall(
-        ExprVar('base::KillProcess'),
-        args=[pid,
-              # XXX this is meaningless on POSIX
-              ExprVar('base::PROCESS_END_KILLED_BY_USER'),
-              ExprLiteral.FALSE])
 
 # Results that IPDL-generated code returns back to *Channel code.
 # Users never see these
@@ -799,12 +761,6 @@ class _StructField(_CompoundTypeComponent):
             return ExprSelect(thisexpr, sel, meth.name)
         return meth
 
-    def initExpr(self, thisexpr):
-        expr = ExprCall(self.getMethod(thisexpr=thisexpr))
-        if self.ipdltype.isIPDL() and self.ipdltype.isActor():
-            expr = ExprCast(expr, self.bareType(), const=1)
-        return expr
-
     def refExpr(self, thisexpr=None):
         ref = self.memberVar()
         if thisexpr is not None:
@@ -867,9 +823,6 @@ IPDL union type."""
 
     def enum(self):
         return 'T' + self.flattypename
-
-    def pqEnum(self):
-        return self.ud.name + '::' + self.enum()
 
     def enumvar(self):
         return ExprVar(self.enum())
@@ -1195,14 +1148,6 @@ class Protocol(ipdl.ast.Protocol):
     def cxxTypedefs(self):
         return self.decl.cxxtypedefs
 
-    def channelSel(self):
-        if self.decl.type.isToplevel():
-            return '.'
-        return '->'
-
-    def channelType(self):
-        return Type('MessageChannel', ptr=not self.decl.type.isToplevel())
-
     def managerInterfaceType(self, ptr=0):
         return Type('mozilla::ipc::IProtocol', ptr=ptr)
 
@@ -1219,15 +1164,6 @@ class Protocol(ipdl.ast.Protocol):
         return Type(_actorName(self._ipdlmgrtype().name(), side),
                     ptr=ptr)
 
-    def registerMethod(self):
-        return ExprVar('Register')
-
-    def registerIDMethod(self):
-        return ExprVar('RegisterID')
-
-    def lookupIDMethod(self):
-        return ExprVar('Lookup')
-
     def unregisterMethod(self, actorThis=None):
         if actorThis is not None:
             return ExprSelect(actorThis, '->', 'Unregister')
@@ -1235,18 +1171,6 @@ class Protocol(ipdl.ast.Protocol):
 
     def removeManageeMethod(self):
         return ExprVar('RemoveManagee')
-
-    def createSharedMemory(self):
-        return ExprVar('CreateSharedMemory')
-
-    def lookupSharedMemory(self):
-        return ExprVar('LookupSharedMemory')
-
-    def isTrackingSharedMemory(self):
-        return ExprVar('IsTrackingSharedMemory')
-
-    def destroySharedMemory(self):
-        return ExprVar('DestroySharedMemory')
 
     def otherPidMethod(self):
         return ExprVar('OtherPid')
@@ -1290,16 +1214,6 @@ class Protocol(ipdl.ast.Protocol):
         assert self.decl.type.isToplevel()
         return ExprVar('ExitedCall')
 
-    def onCxxStackVar(self):
-        assert self.decl.type.isToplevel()
-        return ExprVar('IsOnCxxStack')
-
-    # an actor's C++ private variables
-    def channelVar(self, actorThis=None):
-        if actorThis is not None:
-            return ExprSelect(actorThis, '->', 'mChannel')
-        return ExprVar('mChannel')
-
     def routingId(self, actorThis=None):
         if self.decl.type.isToplevel():
             return ExprVar('MSG_ROUTING_CONTROL')
@@ -1317,10 +1231,6 @@ class Protocol(ipdl.ast.Protocol):
 
     def startState(self):
         return _startState(self.decl.type.hasReentrantDelete)
-
-    def nullState(self):
-        pfx = self.fqStateType().name + '::'
-        return ExprVar(pfx + 'Null')
 
     def deadState(self):
         pfx = self.fqStateType().name + '::'
@@ -1354,10 +1264,6 @@ class Protocol(ipdl.ast.Protocol):
         assert self.decl.type.isManagerOf(actortype)
         return _cxxManagedContainerType(Type(_actorName(actortype.name(), side)),
                                         const=const, ref=ref)
-
-    # XXX this is sucky, fix
-    def usesShmem(self):
-        return _usesShmem(self)
 
     def subtreeUsesShmem(self):
         return _subtreeUsesShmem(self)
