@@ -63,6 +63,19 @@ function getLastNonemptyBucket(buckets) {
   return null;
 }
 
+// Takes something like "matrix(1, 0, 0, 1, 234.024, 528.29023)"" and returns a number array
+function parseTransform(transform) {
+  return /matrix\((.*),(.*),(.*),(.*),(.*),(.*)\)/.exec(transform)
+    .slice(1).map(parseFloat);
+}
+
+function isTransformClose(a, b, name) {
+  is(a.length, b.length, `expected transforms ${a} and ${b} to be the same length`);
+  for (let i = 0; i < a.length; i++) {
+    ok(Math.abs(a[i] - b[i]) < .01, name);
+  }
+}
+
 // Given APZ test data for a single paint on the compositor side,
 // reconstruct the APZC tree structure from the 'parentScrollId'
 // entries that were logged. More specifically, the subset of the

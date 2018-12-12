@@ -7,8 +7,6 @@
 
 "use strict";
 
-Cu.importGlobalProperties(["URL"]);
-
 add_task(async function test_getFieldOverrides() {
   let recipes = new Set([
     { // path doesn't match but otherwise good

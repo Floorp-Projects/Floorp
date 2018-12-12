@@ -440,18 +440,14 @@ RefPtr<ClientOpPromise> ClientSource::Control(
                                       NS_LITERAL_STRING("blob:"));
   }
 
-  RefPtr<ClientOpPromise> ref;
-
   if (NS_WARN_IF(!controlAllowed)) {
-    ref = ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                           __func__);
-    return ref.forget();
+    return ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                            __func__);
   }
 
   SetController(ServiceWorkerDescriptor(aArgs.serviceWorker()));
 
-  ref = ClientOpPromise::CreateAndResolve(NS_OK, __func__);
-  return ref.forget();
+  return ClientOpPromise::CreateAndResolve(NS_OK, __func__);
 }
 
 void ClientSource::InheritController(
@@ -506,12 +502,9 @@ void ClientSource::NoteDOMContentLoaded() {
 RefPtr<ClientOpPromise> ClientSource::Focus(const ClientFocusArgs& aArgs) {
   NS_ASSERT_OWNINGTHREAD(ClientSource);
 
-  RefPtr<ClientOpPromise> ref;
-
   if (mClientInfo.Type() != ClientType::Window) {
-    ref = ClientOpPromise::CreateAndReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                                           __func__);
-    return ref.forget();
+    return ClientOpPromise::CreateAndReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+                                            __func__);
   }
   nsPIDOMWindowOuter* outer = nullptr;
 
@@ -526,28 +519,24 @@ RefPtr<ClientOpPromise> ClientSource::Focus(const ClientFocusArgs& aArgs) {
   }
 
   if (!outer) {
-    ref = ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                           __func__);
-    return ref.forget();
+    return ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                            __func__);
   }
 
   MOZ_ASSERT(NS_IsMainThread());
 
   nsresult rv = nsContentUtils::DispatchFocusChromeEvent(outer);
   if (NS_FAILED(rv)) {
-    ref = ClientOpPromise::CreateAndReject(rv, __func__);
-    return ref.forget();
+    return ClientOpPromise::CreateAndReject(rv, __func__);
   }
 
   ClientState state;
   rv = SnapshotState(&state);
   if (NS_FAILED(rv)) {
-    ref = ClientOpPromise::CreateAndReject(rv, __func__);
-    return ref.forget();
+    return ClientOpPromise::CreateAndReject(rv, __func__);
   }
 
-  ref = ClientOpPromise::CreateAndResolve(state.ToIPC(), __func__);
-  return ref.forget();
+  return ClientOpPromise::CreateAndResolve(state.ToIPC(), __func__);
 }
 
 RefPtr<ClientOpPromise> ClientSource::PostMessage(
@@ -561,11 +550,10 @@ RefPtr<ClientOpPromise> ClientSource::PostMessage(
     const RefPtr<ServiceWorkerContainer> container =
         window->Navigator()->ServiceWorker();
     container->ReceiveMessage(aArgs);
-    return ClientOpPromise::CreateAndResolve(NS_OK, __func__).forget();
+    return ClientOpPromise::CreateAndResolve(NS_OK, __func__);
   }
 
-  return ClientOpPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__)
-      .forget();
+  return ClientOpPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 }
 
 RefPtr<ClientOpPromise> ClientSource::Claim(const ClientClaimArgs& aArgs) {
@@ -574,13 +562,10 @@ RefPtr<ClientOpPromise> ClientSource::Claim(const ClientClaimArgs& aArgs) {
   // In parent-process mode this method should not be called.
   MOZ_DIAGNOSTIC_ASSERT(!ServiceWorkerParentInterceptEnabled());
 
-  RefPtr<ClientOpPromise> ref;
-
   nsIGlobalObject* global = GetGlobal();
   if (NS_WARN_IF(!global)) {
-    ref = ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                           __func__);
-    return ref.forget();
+    return ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                            __func__);
   }
 
   // Note, we cannot just mark the ClientSource controlled.  We must go through
@@ -629,24 +614,20 @@ RefPtr<ClientOpPromise> ClientSource::Claim(const ClientClaimArgs& aArgs) {
              })
       ->Track(*holder);
 
-  ref = outerPromise;
-  return ref.forget();
+  return outerPromise.forget();
 }
 
 RefPtr<ClientOpPromise> ClientSource::GetInfoAndState(
     const ClientGetInfoAndStateArgs& aArgs) {
-  RefPtr<ClientOpPromise> ref;
 
   ClientState state;
   nsresult rv = SnapshotState(&state);
   if (NS_FAILED(rv)) {
-    ref = ClientOpPromise::CreateAndReject(rv, __func__);
-    return ref.forget();
+    return ClientOpPromise::CreateAndReject(rv, __func__);
   }
 
-  ref = ClientOpPromise::CreateAndResolve(
+  return ClientOpPromise::CreateAndResolve(
       ClientInfoAndState(mClientInfo.ToIPC(), state.ToIPC()), __func__);
-  return ref.forget();
 }
 
 nsresult ClientSource::SnapshotState(ClientState* aStateOut) {

@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import print_function
+
 __all__ = ['gencxx', 'genipdl', 'parse', 'typecheck', 'writeifmodified',
            'checkSyncMessage', 'checkFixedSyncMessages']
 
@@ -33,7 +35,7 @@ def parse(specstring, filename='/stdin', includedirs=[], errout=sys.stderr):
     try:
         return Parser(type, name).parse(specstring, os.path.abspath(filename), includedirs)
     except ParseError as p:
-        print >>errout, p
+        print(p, file=errout)
         return None
 
 

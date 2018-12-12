@@ -82,28 +82,24 @@ hardware (via AudioStream).
 #if !defined(MediaDecoderStateMachine_h__)
 #define MediaDecoderStateMachine_h__
 
-#include "mozilla/Attributes.h"
-#include "mozilla/ReentrantMonitor.h"
-#include "mozilla/StateMirroring.h"
-
-#include "nsAutoPtr.h"
-#include "nsThreadUtils.h"
+#include "ImageContainer.h"
 #include "MediaDecoder.h"
 #include "MediaDecoderOwner.h"
 #include "MediaEventSource.h"
 #include "MediaFormatReader.h"
 #include "MediaMetadataManager.h"
 #include "MediaQueue.h"
+#include "MediaSink.h"
 #include "MediaStatistics.h"
 #include "MediaTimer.h"
-#include "ImageContainer.h"
 #include "SeekJob.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/ReentrantMonitor.h"
+#include "mozilla/StateMirroring.h"
+#include "nsAutoPtr.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
-
-namespace media {
-class MediaSink;
-}
 
 class AbstractThread;
 class AudioSegment;
@@ -442,11 +438,11 @@ class MediaDecoderStateMachine
   // Called on the state machine thread.
   void UpdatePlaybackPositionPeriodically();
 
-  media::MediaSink* CreateAudioSink();
+  MediaSink* CreateAudioSink();
 
   // Always create mediasink which contains an AudioSink or StreamSink inside.
   // A manager must be passed in if aAudioCaptured is true.
-  already_AddRefed<media::MediaSink> CreateMediaSink(
+  already_AddRefed<MediaSink> CreateMediaSink(
       bool aAudioCaptured, OutputStreamManager* aManager = nullptr);
 
   // Stops the media sink and shut it down.
@@ -576,7 +572,7 @@ class MediaDecoderStateMachine
   media::TimeUnit mFragmentEndTime = media::TimeUnit::Invalid();
 
   // The media sink resource.  Used on the state machine thread.
-  RefPtr<media::MediaSink> mMediaSink;
+  RefPtr<MediaSink> mMediaSink;
 
   const RefPtr<ReaderProxy> mReader;
 
@@ -694,8 +690,8 @@ class MediaDecoderStateMachine
   VideoDecodeMode mVideoDecodeMode;
 
   // Track the complete & error for audio/video separately
-  MozPromiseRequestHolder<GenericPromise> mMediaSinkAudioPromise;
-  MozPromiseRequestHolder<GenericPromise> mMediaSinkVideoPromise;
+  MozPromiseRequestHolder<MediaSink::EndedPromise> mMediaSinkAudioEndedPromise;
+  MozPromiseRequestHolder<MediaSink::EndedPromise> mMediaSinkVideoEndedPromise;
 
   MediaEventListener mAudioQueueListener;
   MediaEventListener mVideoQueueListener;

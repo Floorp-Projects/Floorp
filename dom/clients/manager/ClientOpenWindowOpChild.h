@@ -15,7 +15,7 @@ namespace dom {
 class ClientOpenWindowOpChild final : public PClientOpenWindowOpChild {
   MozPromiseRequestHolder<ClientOpPromise> mPromiseRequestHolder;
 
-  already_AddRefed<ClientOpPromise> DoOpenWindow(
+  MOZ_MUST_USE RefPtr<ClientOpPromise> DoOpenWindow(
       const ClientOpenWindowArgs& aArgs);
 
   // PClientOpenWindowOpChild interface

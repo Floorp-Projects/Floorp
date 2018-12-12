@@ -58,6 +58,7 @@ this.sessionrestore = class extends ExtensionAPI {
       // Because we're running this part of the test in the parent process, we
       // pull those arguments from the top window directly. This is mainly so
       // that TalosParentProfiler knows where to save the profile.
+      // eslint-disable-next-line mozilla/reject-importGlobalProperties
       Cu.importGlobalProperties(["URL"]);
       let url = new URL(args.queryElementAt(0, Ci.nsISupportsString).data);
       this.TalosParentProfiler.initFromURLQueryParams(url.search);

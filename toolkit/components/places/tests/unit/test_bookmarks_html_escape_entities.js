@@ -7,8 +7,6 @@
 
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 
-Cu.importGlobalProperties(["XMLHttpRequest"]);
-
 add_task(async function() {
   // Removes bookmarks.html if the file already exists.
   let HTMLFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.html");

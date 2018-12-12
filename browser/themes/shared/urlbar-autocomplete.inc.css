@@ -109,6 +109,11 @@
   color: var(--urlbar-popup-url-color);
 }
 
+.urlbarView-title > strong,
+.urlbarView-url > strong {
+  font-weight: 600;
+}
+
 .urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-title::after,
 .urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-secondary {
   color: inherit;

@@ -237,11 +237,11 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
                    const nsString& aLine, uint32_t aLineNumber,
                    uint32_t aColumnNumber, uint32_t aFlags, JSExnType aExnType);
 
-  already_AddRefed<GenericPromise> MaybeClaimClient(
+  MOZ_MUST_USE RefPtr<GenericPromise> MaybeClaimClient(
       const ClientInfo& aClientInfo,
       ServiceWorkerRegistrationInfo* aWorkerRegistration);
 
-  already_AddRefed<GenericPromise> MaybeClaimClient(
+  MOZ_MUST_USE RefPtr<GenericPromise> MaybeClaimClient(
       const ClientInfo& aClientInfo,
       const ServiceWorkerDescriptor& aServiceWorker);
 

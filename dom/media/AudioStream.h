@@ -33,7 +33,6 @@ struct CubebDestroyPolicy {
 class AudioStream;
 class FrameHistory;
 class AudioConfig;
-class AudioConverter;
 
 class AudioClock {
  public:
@@ -188,7 +187,7 @@ class AudioStream final
     virtual void Drained() = 0;
 
    protected:
-    virtual ~DataSource() {}
+    virtual ~DataSource() = default;
   };
 
   explicit AudioStream(DataSource& aSource);

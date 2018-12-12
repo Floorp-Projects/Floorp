@@ -31,6 +31,7 @@ class LintSandbox(ConfigureSandbox):
         environ = environ or {}
         argv = argv or []
         self._wrapped = {}
+        self._has_imports = set()
         self._bool_options = []
         self._bool_func_options = []
         self.LOG = ""
@@ -71,7 +72,7 @@ class LintSandbox(ConfigureSandbox):
         for num, arg in enumerate(all_args):
             if arg not in used_args:
                 dep = obj.dependencies[num]
-                if dep != self._help_option:
+                if dep != self._help_option or not self._need_help_dependency(obj):
                     if isinstance(dep, DependsFunction):
                         dep = dep.name
                     else:
@@ -81,19 +82,18 @@ class LintSandbox(ConfigureSandbox):
                         % (loc, dep)
                     )
 
-    def _missing_help_dependency(self, obj):
+    def _need_help_dependency(self, obj):
         if isinstance(obj, (CombinedDependsFunction, TrivialDependsFunction)):
             return False
         if isinstance(obj, DependsFunction):
-            if (self._help_option in obj.dependencies or
-                obj in (self._always, self._never)):
+            if obj in (self._always, self._never):
                 return False
             func, glob = self.unwrap(obj._func)
             # We allow missing --help dependencies for functions that:
             # - don't use @imports
             # - don't have a closure
             # - don't use global variables
-            if func in self._imports or func.func_closure:
+            if func in self._has_imports or func.func_closure:
                 return True
             for op, arg in disassemble_as_iter(func):
                 if op in ('LOAD_GLOBAL', 'STORE_GLOBAL'):
@@ -106,6 +106,12 @@ class LintSandbox(ConfigureSandbox):
                         continue
                     return True
         return False
+
+    def _missing_help_dependency(self, obj):
+        if (isinstance(obj, DependsFunction) and
+                self._help_option in obj.dependencies):
+            return False
+        return self._need_help_dependency(obj)
 
     @memoize
     def _value_for_depends(self, obj, need_help_dependency=False):
@@ -208,3 +214,10 @@ class LintSandbox(ConfigureSandbox):
             self._wrapped[wrapper] = func
             return wraps(func)(wrapper)
         return do_wraps
+
+    def imports_impl(self, _import, _from=None, _as=None):
+        wrapper = super(LintSandbox, self).imports_impl(_import, _from=_from, _as=_as)
+        def decorator(func):
+            self._has_imports.add(func)
+            return wrapper(func)
+        return decorator

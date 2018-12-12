@@ -3,7 +3,6 @@
 // Tests whether we can redirect to a moz-extension: url.
 ChromeUtils.defineModuleGetter(this, "TestUtils",
                                "resource://testing-common/TestUtils.jsm");
-Cu.importGlobalProperties(["XMLHttpRequest"]);
 
 PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 

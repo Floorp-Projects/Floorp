@@ -805,7 +805,9 @@ class MozPromise : public MozPromiseBase {
                    mMagic3 == sMagic && mMagic4 == &mMutex);
     RefPtr<ThenValueBase> thenValue = aThenValue;
     MutexAutoLock lock(mMutex);
-    MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveRequest);
+    MOZ_DIAGNOSTIC_ASSERT(
+        !IsExclusive || !mHaveRequest,
+        "Using an exclusive promise in a non-exclusive fashion");
     mHaveRequest = true;
     PROMISE_LOG("%s invoking Then() [this=%p, aThenValue=%p, isPending=%d]",
                 aCallSite, this, thenValue.get(), (int)IsPending());
@@ -916,7 +918,9 @@ class MozPromise : public MozPromiseBase {
   void ChainTo(already_AddRefed<Private> aChainedPromise,
                const char* aCallSite) {
     MutexAutoLock lock(mMutex);
-    MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveRequest);
+    MOZ_DIAGNOSTIC_ASSERT(
+        !IsExclusive || !mHaveRequest,
+        "Using an exclusive promise in a non-exclusive fashion");
     mHaveRequest = true;
     RefPtr<Private> chainedPromise = aChainedPromise;
     PROMISE_LOG(
@@ -1081,7 +1085,12 @@ class MozPromise<ResolveValueT, RejectValueT, IsExclusive>::Private
 };
 
 // A generic promise type that does the trick for simple use cases.
-typedef MozPromise<bool, nsresult, /* IsExclusive = */ false> GenericPromise;
+typedef MozPromise<bool, nsresult, /* IsExclusive = */ true> GenericPromise;
+
+// A generic, non-exclusive promise type that does the trick for simple use
+// cases.
+typedef MozPromise<bool, nsresult, /* IsExclusive = */ false>
+    GenericNonExclusivePromise;
 
 /*
  * Class to encapsulate a promise for a particular role. Use this as the member

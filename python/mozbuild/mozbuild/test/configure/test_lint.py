@@ -35,6 +35,10 @@ class TestLint(unittest.TestCase):
                          'moz.configure'): textwrap.dedent(source)
         })
 
+    def test_configure_testcase(self):
+        # Lint python/mozbuild/mozbuild/test/configure/data/moz.configure
+        self.lint_test()
+
     def test_depends_failures(self):
         with self.moz_configure('''
             option('--foo', help='foo')
@@ -43,10 +47,28 @@ class TestLint(unittest.TestCase):
                 return value
 
             @depends('--help', foo)
+            @imports('os')
             def bar(help, foo):
                 return foo
         '''):
             self.lint_test()
+
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                option('--foo', help='foo')
+                @depends('--foo')
+                def foo(value):
+                    return value
+
+                @depends('--help', foo)
+                def bar(help, foo):
+                    return foo
+            '''):
+                self.lint_test()
+
+        self.assertEquals(e.exception.message,
+                          "%s:7: The dependency on `--help` is unused."
+                          % mozpath.join(test_data_path, 'moz.configure'))
 
         with self.assertRaises(ConfigureError) as e:
             with self.moz_configure('''
@@ -57,6 +79,7 @@ class TestLint(unittest.TestCase):
                     return value
 
                 @depends('--help', foo)
+                @imports('os')
                 def bar(help, foo):
                     return foo
             '''):
@@ -79,6 +102,7 @@ class TestLint(unittest.TestCase):
                         return value
 
                     @depends('--help', foo)
+                    @imports('os')
                     def bar(help, foo):
                         return foo
                 tmpl()

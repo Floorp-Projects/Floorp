@@ -2,8 +2,6 @@
 
 PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 
-Cu.importGlobalProperties(["Blob", "URL"]);
-
 ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 const {ExtensionAPI} = ExtensionCommon;
 
