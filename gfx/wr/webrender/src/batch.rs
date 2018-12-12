@@ -1040,7 +1040,7 @@ impl AlphaBatchBuilder {
 
                                         let key = BatchKey::new(
                                             kind,
-                                            non_segmented_blend_mode,
+                                            BlendMode::None,
                                             BatchTextures::color(cache_item.texture_id),
                                         );
 
