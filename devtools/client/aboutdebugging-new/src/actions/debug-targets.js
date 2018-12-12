@@ -97,12 +97,13 @@ function installTemporaryExtension() {
   };
 }
 
-function pushServiceWorker(actor) {
+function pushServiceWorker(id) {
   return async (_, getState) => {
     const clientWrapper = getCurrentClient(getState().runtimes);
 
     try {
-      await clientWrapper.request({ to: actor, type: "push" });
+      const workerActor = await clientWrapper.getServiceWorkerFront({ id });
+      await workerActor.push();
     } catch (e) {
       console.error(e);
     }
