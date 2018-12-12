@@ -495,6 +495,14 @@ class FaviconLoader {
   }
 
   loadIcons() {
+    // If the page is unloaded immediately after the DeferredTask's timer fires
+    // we can still attempt to load icons, which will fail since the content
+    // window is no longer available. Checking if iconInfos has been cleared
+    // allows us to bail out early in this case.
+    if (this.iconInfos.length == 0) {
+      return;
+    }
+
     let preferredWidth = PREFERRED_WIDTH * Math.ceil(this.mm.content.devicePixelRatio);
     let { richIcon, tabIcon } = selectIcons(this.iconInfos, preferredWidth);
     this.iconInfos = [];
