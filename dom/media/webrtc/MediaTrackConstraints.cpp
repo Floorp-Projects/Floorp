@@ -14,8 +14,10 @@
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/MediaManager.h"
 
-extern mozilla::LazyLogModule gMediaManagerLog;
-#define LOG(...) MOZ_LOG(gMediaManagerLog, LogLevel::Debug, (__VA_ARGS__))
+mozilla::LogModule* GetMediaManagerLog();
+#undef LOG
+#define LOG(msg, ...) \
+  MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Debug, (msg, ##__VA_ARGS__))
 
 namespace mozilla {
 
