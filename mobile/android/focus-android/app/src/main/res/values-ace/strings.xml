@@ -61,12 +61,17 @@
   <string name="preference_language_systemdefault">Bawaan sistem</string>
   <string name="preference_category_privacy">Privasi</string>
   <string name="preference_privacy_block_ads">Tham peulacak iklan</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Nyo</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Meurunoë lom</string>
+  <string name="preference_search_remove">Sampôh</string>
   <string name="download_snackbar_open">Peuhah</string>
   <string name="download_dialog_action_cancel">Bateuë</string>
   <string name="dialog_addtohomescreen_action_cancel">Bateuë</string>
   <string name="enable_search_suggestion_subtitle_learnmore">Meurunoë lom</string>
+  <string name="enable_search_suggestions_yes">Nyo</string>
+  <string name="preference_exceptions_menu_remove">Sampôh</string>
+  <string name="preference_exceptions_remove_all_button_label">Sampôh bandum situs</string>
   <string name="tab_crash_report_close_tab_button_label">Tôp Tab</string>
   <string name="fatal_crash_report_close_button_label">Tôp</string>
 </resources>

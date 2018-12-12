@@ -18,6 +18,8 @@
   <string name="menu_help">עזרה</string>
   <string name="menu_rights">הזכויות שלך</string>
   <string name="menu_trackers_blocked_title">רכיבי מעקב חסומים</string>
+  <string name="menu_content_blocking">חסימת תוכן</string>
+  <string name="menu_content_blocking_subtitle">כיבוי תיקוני אתרים</string>
   <string name="menu_custom_tab_branding">מופעל ע״י %1$s</string>
   <string name="share_dialog_title">שיתוף באמצעות</string>
   <string name="notification_erase_text">מחיקת היסטורית גלישה</string>
@@ -25,6 +27,8 @@
   <string name="notification_action_erase_and_open">מחיקה ופתיחה</string>
   <string name="shortcut_erase_short_label">מחיקה</string>
   <string name="shortcut_erase_long_label">מחיקת היסטורית גלישה</string>
+  <string name="shortcut_erase_and_open_short_label">מחיקה ופתיחה</string>
+  <string name="shortcut_erase_and_open_long_label">מחיקה ופתיחה של %1$s</string>
   <string name="text_selection_search_action">חיפוש פרטי</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1492;&#1513;&#1500;&#1497;&#1496;&#1492; &#1495;&#1493;&#1494;&#1512;&#1514; &#1500;&#1497;&#1491;&#1497;&#1498; &#1506;&#1501; %1$s.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1502;&#1497;&#1493;&#1506;&#1491; &#1500;&#1513;&#1497;&#1502;&#1493;&#1513; &#1499;&#1491;&#1508;&#1491;&#1508;&#1503; &#1508;&#1512;&#1496;&#1497;:\n  "<ul>"\n    "<li>&#1504;&#1497;&#1514;&#1503; &#1500;&#1495;&#1508;&#1513; &#1493;&#1500;&#1490;&#1500;&#1493;&#1513; &#1497;&#1513;&#1497;&#1512;&#1493;&#1514; &#1502;&#1492;&#1497;&#1497;&#1513;&#1493;&#1502;&#1493;&#1503;</li>"\n    "<li>&#1495;&#1505;&#1497;&#1502;&#1514; &#1502;&#1504;&#1490;&#1504;&#1493;&#1504;&#1497; &#1502;&#1506;&#1511;&#1489; (&#1488;&#1493; &#1500;&#1513;&#1504;&#1493;&#1514; &#1492;&#1490;&#1491;&#1512;&#1493;&#1514; &#1499;&#1491;&#1497; &#1500;&#1488;&#1508;&#1513;&#1512; &#1488;&#1493;&#1514;&#1501;)</li>"\n    "<li>&#1504;&#1497;&#1514;&#1503; &#1500;&#1488;&#1508;&#1505; &#1499;&#1491;&#1497; &#1500;&#1502;&#1495;&#1493;&#1511; &#1506;&#1493;&#1490;&#1497;&#1493;&#1514; &#1499;&#1502;&#1493; &#1490;&#1501; &#1488;&#1514; &#1492;&#1497;&#1505;&#1496;&#1493;&#1512;&#1497;&#1497;&#1514; &#1492;&#1495;&#1497;&#1508;&#1493;&#1513;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1502;&#1489;&#1497;&#1514; &#1502;&#1493;&#1494;&#1497;&#1500;&#1492; Mozilla. &#1492;&#1502;&#1496;&#1512;&#1492; &#1513;&#1500;&#1504;&#1493; &#1492;&#1497;&#1488; &#1500;&#1496;&#1508;&#1495; &#1488;&#1497;&#1504;&#1496;&#1512;&#1504;&#1496; &#1489;&#1512;&#1497;&#1488; &#1493;&#1508;&#1514;&#1493;&#1495;.<br/>\n<a href="%2$s">&#1502;&#1497;&#1491;&#1506; &#1504;&#1493;&#1505;&#1507;</a></p>]]></string>
   <string name="preference_privacy_and_security_header">אבטחה ופרטיות</string>
@@ -35,17 +39,26 @@
   <string name="preference_category_web_content">תוכן מקוון</string>
   <string name="preference_category_switching_apps">מעבר בין יישומים</string>
   <string name="preference_category_general">כללי</string>
+  <string name="preference_general_summary">דפדפן ברירת מחדל, לשוניות, שפה</string>
   <string name="preference_category_data_collection_use">איסוף ושימוש במידע</string>
   <string name="preference_category_search">חיפוש</string>
   <string name="preference_show_search_suggestions">קבלת הצעות חיפוש</string>
   <string name="preference_show_search_suggestions_summary">‏%1$s ישלח מה שיוקלד בסרגל הכתובת אל מנוע החיפוש שלך</string>
   <string name="preference_search_engine_default">ברירת מחדל</string>
+  <string name="preference_search_engine_label">מנוע חיפוש</string>
   <string name="preference_state_on">פעיל</string>
   <string name="preference_state_off">כבוי</string>
   <string name="preference_subitem_autocomplete">השלמת כתובת אוטומטית</string>
+  <string name="preference_switch_autocomplete_topsites">לאתרים המובילים</string>
+  <string name="preference_autocomplete_topsite_summary">יש להפעיל כדי לקבל השלמה אוטומטית ליותר מ־450 כתובות נפוצות בסרגל הכתובות.</string>
+  <string name="preference_switch_autocomplete_user_list">לאתרים שהוספת</string>
+  <string name="preference_autocomplete_user_list_summary">יש להפעיל כדי לקבל השלמה אוטומטית ליותר מ־450 כתובות נפוצות בסרגל הכתובות.</string>
+  <string name="preference_category_autocomplete_manage_sites">ניהול אתרים</string>
+  <string name="preference_autocomplete_subitem_manage_sites">ניהול אתרים</string>
   <string name="preference_autocomplete_action_add">+ הוספת כתובת מותאמת אישית</string>
   <string name="preference_autocomplete_title_add">הוספת כתובת מותאמת אישית</string>
   <string name="custom_autocomplete_quick_add">הוספת כתובת בהתאמה אישית</string>
+  <string name="add_custom_autocomplete_label">הוספת קישור להשלמה אוטומטית</string>
   <string name="preference_category_cookies">עוגיות ונתוני אתרים</string>
   <string name="preference_category_data_choices">בחירות נתונים</string>
   <string name="preference_autocomplete_title_remove">הסרת כתובות מותאמות אישית</string>
@@ -72,6 +85,7 @@
   <string name="preference_privacy_block_content_summary2">הפעלת התכונה עשויה לגרום לחלק מהאתרים להתנהג שלא כצפוי</string>
   <string name="preference_privacy_category_cookies">חסימת עוגיות</string>
   <string name="preference_privacy_should_block_cookies_no_option">לא</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">חסימת עוגיות מעקב צד־שלישי בלבד</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">חסימת עוגיות צד־שלישי בלבד</string>
   <string name="preference_privacy_should_block_cookies_yes_option">כן</string>
   <string name="preference_security_biometric">שימוש בטביעת אצבע כדי לשחרר את נעילת היישומון</string>
@@ -115,6 +129,7 @@
   <string name="accessibility_announcement_loading">בטעינה</string>
   <string name="accessibility_announcement_loading_finished">האתר נטען</string>
   <string name="content_description_menu">אפשרויות נוספות</string>
+  <string name="indicator_content_description_menu">כפתור אפשרויות נוספות</string>
   <string name="content_description_forward">ניווט קדימה</string>
   <string name="content_description_reload">טעינה מחדש של האתר</string>
   <string name="content_description_back">ניווט אחורה</string>
@@ -151,6 +166,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#1497;&#1497;&#1514;&#1499;&#1503; &#1513;&#1497;&#1513;&#1504;&#1492; &#1489;&#1506;&#1497;&#1492; &#1489;&#1492;&#1490;&#1491;&#1512;&#1493;&#1514; &#1492;&#1513;&#1512;&#1514; &#1488;&#1493; &#1513;&#1490;&#1493;&#1512;&#1501; &#1499;&#1500;&#1513;&#1492;&#1493; &#1502;&#1504;&#1505;&#1492; &#1500;&#1492;&#1514;&#1495;&#1494;&#1493;&#1514; &#1488;&#1500;&#1497;&#1493;.</li>"\n  "<li>&#1489;&#1502;&#1497;&#1491;&#1492; &#1513;&#1492;&#1510;&#1500;&#1495;&#1514; &#1500;&#1492;&#1514;&#1495;&#1489;&#1512; &#1500;&#1488;&#1514;&#1512; &#1499;&#1512;&#1488;&#1493;&#1497; &#1489;&#1506;&#1489;&#1512;, &#1497;&#1497;&#1514;&#1499;&#1503; &#1513;&#1513;&#1490;&#1497;&#1488;&#1492; &#1494;&#1493; &#1492;&#1497;&#1488; &#1494;&#1502;&#1504;&#1497;&#1514; &#1489;&#1500;&#1489;&#1491;, &#1493;&#1488;&#1508;&#1513;&#1512; &#1497;&#1492;&#1497;&#1492; &#1500;&#1504;&#1505;&#1493;&#1514; &#1513;&#1493;&#1489; &#1502;&#1488;&#1493;&#1495;&#1512; &#1497;&#1493;&#1514;&#1512;.</li>\n</ul>]]></string>
   <string name="error_generic_title">אבוי</string>
   <string name="error_generic_message">מסיבה כלשהי לא ניתן לטעון את דף זה.</string>
+  <string name="contextmenu_open_in_app">פתיחה עם יישומון</string>
   <string name="contextmenu_link_share">שיתוף קישור</string>
   <string name="contextmenu_link_copy">העתקת כתובת קישור</string>
   <string name="contextmenu_image_share">שיתוף תמונה</string>
@@ -224,4 +240,25 @@
   <string name="tip_autocomplete_url">השלמת כתובות עבור האתרים הנפוצים שלך\n יש ללחוץ לחיצה ארוכה על כתובת כלשהי בסרגל הכתובת</string>
   <string name="tip_open_in_new_tab">פתיחת קישור בלשונית חדשה\n יש ללחוץ לחיצה ארוכה על כל קישור שהוא בעמוד</string>
   <string name="tip_request_desktop">אפשר להציע לך לצפות באתר לשולחן העבודה?%1$s תפריט &gt; בקשת אתר שולחני</string>
+  <string name="tip_disable_tips2">כיבוי עצות במסך ההתחלה</string>
+  <string name="tip_explain_allowlist">אתר מהימן?\n רשימת היתר משביתה את הגנת המעקב עבור אתרים מוכרים ומהימנים בעיניך.</string>
+  <string name="new_tab_opened_snackbar">לשונית חדשה נפתחה</string>
+  <string name="open_new_tab_snackbar">מעבר</string>
+  <string name="preference_open_new_tab">מעבר לקישור בלשונית החדשה מיידית</string>
+  <string name="preference_category_safe_browsing">גלישה בטוחה</string>
+  <string name="preference_safe_browsing_title">חסימת אתרים המעוררים חשד לסכנה או הונאה</string>
+  <string name="preference_safe_browsing_summary">חסימת אתרי הונאה ומתקפה, אתרי נוזקה ואתרי תכניות בלתי רצויות.</string>
+  <string name="preference_exceptions">חריגות</string>
+  <string name="preference_exceptions_description">ביטלת את חסימת התוכן באתרים אלו.</string>
+  <string name="preference_exceptions_menu_remove">הסרה</string>
+  <string name="preference_exceptions_remove_all_button_label">הסרת כל האתרים</string>
+  <string name="tab_crash_report_title">הלשונית קרסה</string>
+  <string name="tab_crash_report_headline">חווינו תקלה עם הלשונית הזאת. עמך הסליחה.</string>
+  <string name="tab_crash_report_description">בתור דפדפן פרטי, אנו לא יכולים לשמור ולשחזר את הלשונית הזאת.</string>
+  <string name="tab_crash_report_close_tab_button_label">סגירת לשונית</string>
+  <string name="fatal_crash_report_title">קרתה תקלה עם %1$s שהובילה לקריסה. עמך הסליחה.</string>
+  <string name="fatal_crash_report_description">בתור דפדפן פרטי, אנו אף פעם לא שומרים ואין לנו אפשרות לשחזר את הפעלת הגלישה האחרונה שלך.</string>
+  <string name="fatal_crash_report_close_button_label">סגירה</string>
+  <string name="fatal_crash_report_restart_firefox_label">הפעלת %1$s מחדש</string>
+  <string name="crash_report_send_crash_label">שליחת דוח קריסה אל Mozilla</string>
 </resources>

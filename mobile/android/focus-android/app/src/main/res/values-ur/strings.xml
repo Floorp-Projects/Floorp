@@ -26,6 +26,7 @@
   <string name="shortcut_erase_short_label">مٹائيں</string>
   <string name="shortcut_erase_long_label">برائوزنگ سابقات مٹائیں</string>
   <string name="shortcut_erase_and_open_short_label">مٹائیں اور کھولیں</string>
+  <string name="shortcut_erase_and_open_long_label">مٹائیں اور %1$s کھولیں</string>
   <string name="text_selection_search_action">نجی طور پر طلاش کرے</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"%1$s &#1570;&#1662; &#1705;&#1608; &#1705;&#1606;&#1657;&#1585;&#1608;&#1604; &#1583;&#1740;&#1578;&#1740; &#1729;&#1746; "</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" &#1575;&#1587;&#1705;&#1608; &#1606;&#1580;&#1740; &#1576;&#1585;&#1575;&#1574;&#1608;&#1586;&#1585; &#1705;&#1740; &#1591;&#1585;&#1581; &#1575;&#1587;&#1578;&#1593;&#1605;&#1575;&#1604; &#1705;&#1585;&#1740;&#1722;:\n  "<ul>" \n    "<li>" &#1575;&#1662;&#1604;&#1740; &#1705;&#1740;&#1588;&#1606; &#1605;&#1740;&#1722; &#1729;&#1740; &#1578;&#1604;&#1575;&#1588; &#1575;&#1608;&#1585; &#1576;&#1585;&#1575;&#1572;&#1586; &#1705;&#1585;&#1740;&#1722; "</li>"\n    "<li>"&#1657;&#1585;&#1740;&#1705;&#1585;&#1585;&#1648; &#1705;&#1608; &#1576;&#1604;&#1575;&#1705; &#1705;&#1585;&#1740;&#1722; (&#1740;&#1575; &#1587;&#1657;&#1740;&#1606;&#1711;&#1608;&#1722; &#1705;&#1740; &#1578;&#1575;&#1586;&#1729; &#1705;&#1575;&#1585;&#1740; &#1705;&#1585; &#1705;&#1746; &#1657;&#1585;&#1740;&#1705;&#1585;&#1585;&#1648; &#1705;&#1608; &#1575;&#1580;&#1575;&#1586;&#1578; &#1583;&#1740;&#1722;)&#1748; "</li>"\n    "<li>" &#1705;&#1608;&#1705;&#1740;&#1586; &#1705;&#1746; &#1587;&#1575;&#1578;&#1726; &#1578;&#1604;&#1575;&#1588; &#1575;&#1608;&#1585; &#1576;&#1585;&#1575;&#1572;&#1586;&#1606;&#1711; &#1587;&#1575;&#1576;&#1602;&#1575;&#1578; &#1705;&#1608; &#1576;&#1726;&#1740; &#1581;&#1584;&#1601; &#1705;&#1585;&#1606;&#1746; &#1705;&#1740;&#1604;&#1740;&#1746; &#1605;&#1657;&#1575;&#1574;&#1740;&#1722; "</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1705;&#1740; &#1662;&#1740;&#1583;&#1575;&#1608;&#1575;&#1585; &#1729;&#1746;&#1748; &#1726;&#1605;&#1575;&#1585;&#1740; &#1605;&#1729;&#1605; &#1575;&#1740;&#1705; &#1589;&#1581;&#1578; &#1605;&#1606;&#1583; &#1705;&#1726;&#1604;&#1746; &#1575;&#1606;&#1657;&#1585;&#1606;&#1740;&#1657; &#1705;&#1608; &#1601;&#1585;&#1608;&#1593;&#1648; &#1583;&#1740;&#1606;&#1575; &#1729;&#1746;&#1748; Mozilla<br/>\n<a href="%2$s">" &#1605;&#1586;&#1740;&#1583; &#1580;&#1575;&#1606;&#1740;&#1746; "</a></p>]]></string>
   <string name="preference_privacy_and_security_header">رازداری اور سلامتی</string>
@@ -35,6 +36,7 @@
   <string name="preference_category_tracking_protection">سراغ کاری حفاظت</string>
   <string name="preference_category_web_content">ویب مواد</string>
   <string name="preference_category_general">عمومی</string>
+  <string name="preference_general_summary">طے شدہ برائوزر، ٹیبس، زبان</string>
   <string name="preference_category_data_collection_use">کوائف کا مجموعہ اور ان کا استعمال</string>
   <string name="preference_category_search">تلاش کریں</string>
   <string name="preference_show_search_suggestions">تلاش تجاویز حاصل کریں</string>
@@ -43,6 +45,9 @@
   <string name="preference_state_on">چالو</string>
   <string name="preference_state_off">بند</string>
   <string name="preference_subitem_autocomplete">URL خودکار تکميل</string>
+  <string name="preference_switch_autocomplete_topsites">بہترین سائٹس کے لیئے</string>
+  <string name="preference_category_autocomplete_manage_sites">سائٹس بندرست کریں</string>
+  <string name="preference_autocomplete_subitem_manage_sites">سائٹس بندرست کریں</string>
   <string name="preference_autocomplete_action_add">تخصیصی URL کا + اظافہ کریں</string>
   <string name="preference_autocomplete_title_add">تخصیصی URL کا اظافہ کریں</string>
   <string name="custom_autocomplete_quick_add">تخصیصی URL کا اظافہ کریں</string>
@@ -91,6 +96,7 @@
   <string name="preference_search_add2">ایک اور تلاش انجن کا اضافہ کریں</string>
   <string name="preference_search_remove_title">تلاش انجن ہٹائیں</string>
   <string name="preference_search_remove">ہٹائیں</string>
+  <string name="preference_homescreen_tips">ابتدائی صفحہ کی تجاویز دکھائیں</string>
   <string name="action_option_add_search_engine">تلاش انجن اضافہ کریں</string>
   <string name="search_add_manually_name_hint">تلاش انجن کا نام</string>
   <string name="search_add_manually_string">استعمال کرنے کے لیئے اسٹرنگ تلاش کریں</string>
@@ -188,8 +194,11 @@
   <string name="http_auth_dialog_password">پاس ورڈ</string>
   <string name="preference_performance_request_desktop_site">ڈیسک ٹاپ سائٹ کی درخواست کریں</string>
   <string name="custom_tab_copy_url_action">نقل شدہ URL</string>
+  <string name="preference_advanced_summary">تخلیق کار ٹول</string>
   <string name="preference_category_advanced">اعلٰی</string>
   <string name="biometric_auth_new_session">نیا سیشن</string>
+  <string name="biometric_auth_image_description">فنگر پرنٹ آئکن</string>
+  <string name="biometric_auth_not_recognized_error">فنگر پرنٹ کی پہچان نہیں ہو سکی. دوبارہ کوشش کریں۔</string>
   <string name="enable_search_suggestion_title">کیا آپ تلاش تجاویز چالو کرنا چاہیں گے؟</string>
   <string name="enable_search_suggestion_subtitle_learnmore">مزید سیکھیں</string>
   <string name="enable_search_suggestions_no">نہیں</string>
@@ -202,6 +211,8 @@
   <string name="preference_exceptions">استثنیات</string>
   <string name="preference_exceptions_menu_remove">ہٹائیں</string>
   <string name="preference_exceptions_remove_all_button_label">تمام ویب سائٹیں ہٹائیں</string>
+  <string name="tab_crash_report_title">ٹیب تباہ ہوگیا</string>
+  <string name="tab_crash_report_description">ایک نجی براؤزر کے طور پر، ہم کبھی بھی اس ٹیب کو محفوظ یا بحال نہیں کرسکتے ہیں۔</string>
   <string name="tab_crash_report_close_tab_button_label">ٹیب بند کر دیں</string>
   <string name="fatal_crash_report_close_button_label">بند کریں</string>
   <string name="fatal_crash_report_restart_firefox_label">%1$s دوبارہ شروع کریں</string>
