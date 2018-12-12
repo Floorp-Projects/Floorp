@@ -2077,7 +2077,7 @@ nsXPCComponents_Utils::NukeSandbox(HandleValue obj, JSContext* cx) {
   RootedObject sb(cx, UncheckedUnwrap(wrapper));
   NS_ENSURE_TRUE(IsSandbox(sb), NS_ERROR_INVALID_ARG);
 
-  xpc::NukeAllWrappersForCompartment(cx, GetObjectCompartment(sb));
+  xpc::NukeAllWrappersForRealm(cx, GetNonCCWObjectRealm(sb));
 
   return NS_OK;
 }
