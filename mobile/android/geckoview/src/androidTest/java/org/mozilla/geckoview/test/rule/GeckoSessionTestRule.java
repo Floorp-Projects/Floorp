@@ -215,11 +215,17 @@ public class GeckoSessionTestRule implements TestRule {
             public void set(final GeckoSessionSettings settings, final String value) {
                 try {
                     if (boolean.class.equals(mType) || Boolean.class.equals(mType)) {
-                            Method method = GeckoSessionSettings.class.getDeclaredMethod("setBoolean", GeckoSessionSettings.Key.class, boolean.class);
-                            method.setAccessible(true);
-                            method.invoke(settings, mKey, Boolean.valueOf(value));
+                        Method method = GeckoSessionSettings.class
+                                .getDeclaredMethod("setBoolean",
+                                        GeckoSessionSettings.Key.class,
+                                        boolean.class);
+                        method.setAccessible(true);
+                        method.invoke(settings, mKey, Boolean.valueOf(value));
                     } else if (int.class.equals(mType) || Integer.class.equals(mType)) {
-                        Method method = GeckoSessionSettings.class.getDeclaredMethod("setInt", GeckoSessionSettings.Key.class, int.class);
+                        Method method = GeckoSessionSettings.class
+                                .getDeclaredMethod("setInt",
+                                        GeckoSessionSettings.Key.class,
+                                        int.class);
                         method.setAccessible(true);
                         try {
                             method.invoke(settings, mKey,
@@ -232,14 +238,19 @@ public class GeckoSessionTestRule implements TestRule {
                                     Integer.valueOf(value));
                         }
                     } else if (String.class.equals(mType)) {
-                        Method method = GeckoSessionSettings.class.getDeclaredMethod("setString", GeckoSessionSettings.Key.class, String.class);
+                        Method method = GeckoSessionSettings.class
+                                .getDeclaredMethod("setString",
+                                        GeckoSessionSettings.Key.class,
+                                        String.class);
                         method.setAccessible(true);
                         method.invoke(settings, mKey, value);
                     } else {
                         throw new IllegalArgumentException("Unsupported type: " +
                                 mType.getSimpleName());
                     }
-                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                } catch (NoSuchMethodException
+                        | IllegalAccessException
+                        | InvocationTargetException e) {
                     throw new RuntimeException(e);
                 }
             }
@@ -848,7 +859,9 @@ public class GeckoSessionTestRule implements TestRule {
     protected boolean mIgnoreCrash;
 
     public GeckoSessionTestRule() {
-        mDefaultSettings = new GeckoSessionSettings.Builder().useMultiprocess(env.isMultiprocess()).build();
+        mDefaultSettings = new GeckoSessionSettings.Builder()
+                .useMultiprocess(env.isMultiprocess())
+                .build();
     }
 
     /**
