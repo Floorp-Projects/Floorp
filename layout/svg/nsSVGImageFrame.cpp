@@ -505,7 +505,9 @@ nsSVGImageListener::nsSVGImageListener(nsSVGImageFrame* aFrame)
 NS_IMETHODIMP
 nsSVGImageListener::Notify(imgIRequest* aRequest, int32_t aType,
                            const nsIntRect* aData) {
-  if (!mFrame) return NS_ERROR_FAILURE;
+  if (!mFrame) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (aType == imgINotificationObserver::LOAD_COMPLETE) {
     mFrame->InvalidateFrame();

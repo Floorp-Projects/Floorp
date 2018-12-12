@@ -7,10 +7,6 @@
 
 "use strict";
 
-const { PromisesFront } = require("devtools/shared/fronts/promises");
-
-var EventEmitter = require("devtools/shared/event-emitter");
-
 ChromeUtils.defineModuleGetter(this, "Preferences",
                                "resource://gre/modules/Preferences.jsm");
 
@@ -22,37 +18,32 @@ add_task(async function() {
     Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
   });
 
-  const client = await startTestDebuggerServer("promises-object-test");
-  const parentProcessActors = await getParentProcessActors(client);
+  const { promisesFront } = await createMainProcessPromisesFront();
 
   ok(Promise.toString().includes("native code"), "Expect native DOM Promise.");
 
   // We have to attach the chrome target actor before playing with the PromiseActor
-  await testPromiseCreationTimestamp(client, parentProcessActors, v => {
+  await testPromiseCreationTimestamp(promisesFront, v => {
     return new Promise(resolve => resolve(v));
   });
-
-  const response = await listTabs(client);
-  const targetTab = findTab(response.tabs, "promises-object-test");
-  ok(targetTab, "Found our target tab.");
-
-  await testPromiseCreationTimestamp(client, targetTab, v => {
-    const debuggee = DebuggerServer.getTestGlobal("promises-object-test");
-    return debuggee.Promise.resolve(v);
-  });
-
-  await close(client);
 });
 
-async function testPromiseCreationTimestamp(client, form, makePromise) {
-  const front = new PromisesFront(client, form);
+add_task(async function() {
+  const { debuggee, promisesFront } = await createTabPromisesFront();
+
+  await testPromiseCreationTimestamp(promisesFront, v => {
+    return debuggee.Promise.resolve(v);
+  });
+});
+
+async function testPromiseCreationTimestamp(front, makePromise) {
   const resolution = "MyLittleSecret" + Math.random();
 
   await front.attach();
   await front.listPromises();
 
   const onNewPromise = new Promise(resolve => {
-    EventEmitter.on(front, "new-promises", promises => {
+    front.on("new-promises", promises => {
       for (const p of promises) {
         if (p.promiseState.state === "fulfilled" &&
             p.promiseState.value === resolution) {

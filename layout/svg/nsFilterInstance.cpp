@@ -723,7 +723,9 @@ nsRect nsFilterInstance::ComputeSourceNeededRect() {
 
 nsIntRect nsFilterInstance::OutputFilterSpaceBounds() const {
   uint32_t numPrimitives = mFilterDescription.mPrimitives.Length();
-  if (numPrimitives <= 0) return nsIntRect();
+  if (numPrimitives <= 0) {
+    return nsIntRect();
+  }
 
   return mFilterDescription.mPrimitives[numPrimitives - 1].PrimitiveSubregion();
 }

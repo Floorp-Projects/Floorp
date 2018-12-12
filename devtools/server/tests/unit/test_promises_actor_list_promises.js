@@ -8,33 +8,25 @@
 
 "use strict";
 
-const { PromisesFront } = require("devtools/shared/fronts/promises");
 const SECRET = "MyLittleSecret";
 
 add_task(async function() {
-  const client = await startTestDebuggerServer("promises-actor-test");
-  const parentProcessActors = await getParentProcessActors(client);
-
-  // We have to attach the chrome target actor before playing with the PromiseActor
-  await testListPromises(client, parentProcessActors, v =>
-    new Promise(resolve => resolve(v)));
-
-  const response = await listTabs(client);
-  const targetTab = findTab(response.tabs, "promises-actor-test");
-  ok(targetTab, "Found our target tab.");
-
-  await testListPromises(client, targetTab, v => {
-    const debuggee = DebuggerServer.getTestGlobal("promises-actor-test");
-    return debuggee.Promise.resolve(v);
+  const { promisesFront } = await createMainProcessPromisesFront();
+  await testListPromises(promisesFront, v => {
+    return new Promise(resolve => resolve(v));
   });
-
-  await close(client);
 });
 
-async function testListPromises(client, form, makePromise) {
+add_task(async function() {
+  const { debuggee, promisesFront } = await createTabPromisesFront();
+  await testListPromises(promisesFront, v => {
+    return debuggee.Promise.resolve(v);
+  });
+});
+
+async function testListPromises(front, makePromise) {
   const resolution = SECRET + Math.random();
   const promise = makePromise(resolution);
-  const front = new PromisesFront(client, form);
 
   await front.attach();
 

@@ -333,7 +333,9 @@ bool nsSVGClipPathFrame::IsTrivial(nsSVGDisplayableFrame** aSingleChild) {
     if (svgChild) {
       // We consider a non-trivial clipPath to be one containing
       // either more than one svg child and/or a svg container
-      if (foundChild || svgChild->IsDisplayContainer()) return false;
+      if (foundChild || svgChild->IsDisplayContainer()) {
+        return false;
+      }
 
       // or where the child is itself clipped
       if (SVGObserverUtils::GetAndObserveClipPath(kid, nullptr) ==

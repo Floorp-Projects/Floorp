@@ -409,10 +409,9 @@ bool StringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
 nsIPrincipal* GetCompartmentPrincipal(JS::Compartment* compartment);
 nsIPrincipal* GetRealmPrincipal(JS::Realm* realm);
 
-void NukeAllWrappersForCompartment(
-    JSContext* cx, JS::Compartment* compartment,
-    js::NukeReferencesToWindow nukeReferencesToWindow =
-        js::NukeWindowReferences);
+void NukeAllWrappersForRealm(JSContext* cx, JS::Realm* realm,
+                             js::NukeReferencesToWindow nukeReferencesToWindow =
+                                 js::NukeWindowReferences);
 
 void SetLocationForGlobal(JSObject* global, const nsACString& location);
 void SetLocationForGlobal(JSObject* global, nsIURI* locationURI);
