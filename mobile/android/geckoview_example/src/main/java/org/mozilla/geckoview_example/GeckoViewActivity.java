@@ -145,8 +145,8 @@ public class GeckoViewActivity extends AppCompatActivity {
                     mGeckoSession.open(sGeckoRuntime);
                 }
 
-                mUseMultiprocess = mGeckoSession.getSettings().getBoolean(GeckoSessionSettings.USE_MULTIPROCESS);
-                mFullAccessibilityTree = mGeckoSession.getSettings().getBoolean(GeckoSessionSettings.FULL_ACCESSIBILITY_TREE);
+                mUseMultiprocess = mGeckoSession.getSettings().getUseMultiprocess();
+                mFullAccessibilityTree = mGeckoSession.getSettings().getFullAccessibilityTree();
 
                 mGeckoView.setSession(mGeckoSession);
             } else {
@@ -161,13 +161,12 @@ public class GeckoViewActivity extends AppCompatActivity {
     }
 
     private GeckoSession createSession() {
-        GeckoSession session = new GeckoSession();
-        session.getSettings().setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, mUseMultiprocess);
-        session.getSettings().setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, mUsePrivateBrowsing);
-        session.getSettings().setBoolean(
-            GeckoSessionSettings.USE_TRACKING_PROTECTION, mUseTrackingProtection);
-        session.getSettings().setBoolean(
-                GeckoSessionSettings.FULL_ACCESSIBILITY_TREE, mFullAccessibilityTree);
+        GeckoSession session = new GeckoSession(new GeckoSessionSettings.Builder()
+                .useMultiprocess(mUseMultiprocess)
+                .usePrivateMode(mUsePrivateBrowsing)
+                .useTrackingProtection(mUseTrackingProtection)
+                .fullAccessibilityTree(mFullAccessibilityTree)
+                .build());
 
         connectSession(session);
 
@@ -217,8 +216,7 @@ public class GeckoViewActivity extends AppCompatActivity {
     }
 
     private void updateTrackingProtection(GeckoSession session) {
-        session.getSettings().setBoolean(
-            GeckoSessionSettings.USE_TRACKING_PROTECTION, mUseTrackingProtection);
+        session.getSettings().setUseTrackingProtection(mUseTrackingProtection);
     }
 
     @Override
