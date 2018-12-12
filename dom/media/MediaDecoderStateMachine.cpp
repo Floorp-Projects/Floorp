@@ -753,13 +753,15 @@ class MediaDecoderStateMachine::DecodingState
 class MediaDecoderStateMachine::LoopingDecodingState
     : public MediaDecoderStateMachine::DecodingState {
  public:
-  explicit LoopingDecodingState(Master* aPtr) : DecodingState(aPtr) {
+  explicit LoopingDecodingState(Master* aPtr)
+      : DecodingState(aPtr), mIsReachingAudioEOS(!mMaster->IsAudioDecoding()) {
     MOZ_ASSERT(mMaster->mLooping);
   }
 
   void Enter() {
-    if (!mMaster->IsAudioDecoding()) {
+    if (mIsReachingAudioEOS) {
       SLOG("audio has ended, request the data again.");
+      UpdatePlaybackPositionToZeroIfNeeded();
       RequestAudioDataFromStartPosition();
     }
     DecodingState::Enter();
@@ -794,6 +796,7 @@ class MediaDecoderStateMachine::LoopingDecodingState
   }
 
   void HandleEndOfAudio() override {
+    mIsReachingAudioEOS = true;
     // The data time in the audio queue is assumed to be increased linearly,
     // so we need to add the last ending time as the offset to correct the
     // audio data time in the next round when seamless looping is enabled.
@@ -828,6 +831,7 @@ class MediaDecoderStateMachine::LoopingDecodingState
                      ->RequestAudioData()
                      ->Then(OwnerThread(), __func__,
                             [this](RefPtr<AudioData> aAudio) {
+                              mIsReachingAudioEOS = false;
                               mAudioDataRequest.Complete();
                               SLOG(
                                   "got audio decoded sample "
@@ -847,6 +851,23 @@ class MediaDecoderStateMachine::LoopingDecodingState
                  HandleError(aReject.mError);
                })
         ->Track(mAudioSeekRequest);
+  }
+
+  void UpdatePlaybackPositionToZeroIfNeeded() {
+    MOZ_ASSERT(mIsReachingAudioEOS);
+    MOZ_ASSERT(mAudioLoopingOffset == media::TimeUnit::Zero());
+    // If we have already reached EOS before starting media sink, the sink
+    // has not started yet and the current position is larger than last decoded
+    // end time, that means we directly seeked to EOS and playback would start
+    // from the start position soon. Therefore, we should reset the position to
+    // 0s so that when media sink starts we can make it start from 0s, not from
+    // EOS position which would result in wrong estimation of decoded audio
+    // duration because decoded data's time which can't be adjusted as offset is
+    // zero would be always less than media sink time.
+    if (!mMaster->mMediaSink->IsStarted() &&
+        mMaster->mCurrentPosition.Ref() > mMaster->mDecodedAudioEndTime) {
+      mMaster->UpdatePlaybackPositionInternal(TimeUnit::Zero());
+    }
   }
 
   void HandleError(const MediaResult& aError) {
@@ -913,6 +934,7 @@ class MediaDecoderStateMachine::LoopingDecodingState
            ShouldDiscardLoopedAudioData();
   }
 
+  bool mIsReachingAudioEOS;
   media::TimeUnit mAudioLoopingOffset = media::TimeUnit::Zero();
   MozPromiseRequestHolder<MediaFormatReader::SeekPromise> mAudioSeekRequest;
   MozPromiseRequestHolder<AudioDataPromise> mAudioDataRequest;

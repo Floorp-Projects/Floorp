@@ -165,6 +165,13 @@ function findSidebarItemByText(text, document) {
   });
 }
 
+function findSidebarItemLinkByText(text, document) {
+  const links = document.querySelectorAll(".js-sidebar-link");
+  return [...links].find(element => {
+    return element.textContent.includes(text);
+  });
+}
+
 async function connectToRuntime(deviceName, document) {
   info(`Wait until the sidebar item for ${deviceName} appears`);
   await waitUntil(() => findSidebarItemByText(deviceName, document));

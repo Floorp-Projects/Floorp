@@ -3,37 +3,21 @@
 
 "use strict";
 
-var gClient;
-var gDebuggee;
-
-function run_test() {
-  initTestDebuggerServer();
-  gDebuggee = testGlobal("test-1");
-  DebuggerServer.addTestGlobal(gDebuggee);
-
-  const transport = DebuggerServer.connectPipe();
-  gClient = new DebuggerClient(transport);
-  gClient.connect().then(function(type, traits) {
-    attachTestTab(gClient, "test-1", function(reply, targetFront) {
-      test_close(transport);
-    });
+add_task(threadClientTest(({ client }) => {
+  return new Promise(resolve => {
+    // Check that, if we fake a transport shutdown
+    // (like if a device is unplugged)
+    // the client is automatically closed,
+    // and we can still call client.close.
+    const onClosed = function() {
+      client.removeListener("closed", onClosed);
+      ok(true, "Client emitted 'closed' event");
+      client.close().then(function() {
+        ok(true, "client.close() successfully called its callback");
+        resolve();
+      });
+    };
+    client.addListener("closed", onClosed);
+    client.transport.close();
   });
-  do_test_pending();
-}
-
-function test_close(transport) {
-  // Check that, if we fake a transport shutdown
-  // (like if a device is unplugged)
-  // the client is automatically closed,
-  // and we can still call client.close.
-  const onClosed = function() {
-    gClient.removeListener("closed", onClosed);
-    ok(true, "Client emitted 'closed' event");
-    gClient.close().then(function() {
-      ok(true, "client.close() successfully called its callback");
-      do_test_finished();
-    });
-  };
-  gClient.addListener("closed", onClosed);
-  transport.close();
-}
+}));

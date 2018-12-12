@@ -281,7 +281,9 @@ int32_t nsSVGFilterInstance::GetOrCreateSourceAlphaIndex(
     nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs) {
   // If the SourceAlpha index has already been determined or created for this
   // SVG filter, just return it.
-  if (mSourceAlphaAvailable) return mSourceAlphaIndex;
+  if (mSourceAlphaAvailable) {
+    return mSourceAlphaIndex;
+  }
 
   // If this is the first filter in the chain, we can just use the
   // kPrimitiveIndexSourceAlpha keyword to refer to the SourceAlpha of the
