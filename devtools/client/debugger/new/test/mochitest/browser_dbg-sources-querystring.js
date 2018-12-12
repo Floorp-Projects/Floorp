@@ -9,6 +9,11 @@ function getLabel(dbg, index) {
     .replace(/^[\s\u200b]*/g, "");
 }
 
+function assertBreakpointHeading(dbg, label, index) {
+  const breakpointHeading = findElement(dbg, "breakpointItem", index).innerText;
+  is(breakpointHeading, label, `Breakpoint heading is ${label}`);
+}
+
 add_task(async function() {
   const dbg = await initDebugger("doc-sources-querystring.html", "simple1.js?x=1", "simple1.js?x=2");
   const {
@@ -32,13 +37,18 @@ add_task(async function() {
   const tab = findElement(dbg, "activeTab");
   is(tab.innerText, "simple1.js?x=1", "Tab label is simple1.js?x=1");
   await addBreakpoint(dbg, "simple1.js?x=1", 6);
-  const breakpointHeading = findElement(dbg, "breakpointItem", 2).innerText;
-  is(
-    breakpointHeading,
-    "simple1.js?x=1",
-    "Breakpoint heading is simple1.js?x=1"
-  );
+  assertBreakpointHeading(dbg, "simple1.js?x=1", 2);
 
+  // pretty print the source and check the tab text
+  clickElement(dbg, "prettyPrintButton");
+  await waitForSource(dbg, "simple1.js?x=1:formatted");
+
+  const prettyTab = findElement(dbg, "activeTab");
+  is(prettyTab.innerText, "simple1.js?x=1", "Tab label is simple1.js?x=1");
+  ok(prettyTab.querySelector("img.prettyPrint"));
+  assertBreakpointHeading(dbg, "simple1.js?x=1", 2);
+
+  // assert quick open works with queries
   pressKey(dbg, "quickOpen");
   type(dbg, "simple1.js?x");
   ok(findElement(dbg, "resultItems")[0].innerText.includes("simple.js?x=1"));

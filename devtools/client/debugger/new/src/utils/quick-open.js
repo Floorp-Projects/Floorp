@@ -63,7 +63,7 @@ export function formatSourcesForList(source: Source, tabs: TabList) {
   const title = getFilename(source);
   const relativeUrlWithQuery = `${source.relativeUrl}${getSourceQueryString(
     source
-  )}`;
+  ) || ""}`;
   const subtitle = endTruncateStr(relativeUrlWithQuery, 100);
   const value = relativeUrlWithQuery;
   return {
