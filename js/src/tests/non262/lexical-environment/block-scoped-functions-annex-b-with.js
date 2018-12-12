@@ -1,10 +1,13 @@
+// Global functions are configurable in a browser environment.
+var functionDeclarationsConfigurable = typeof document !== "undefined";
+
 var o = { f: "string-f" };
 with (o) {
   var desc = Object.getOwnPropertyDescriptor(this, "f");
   assertEq(desc.value, undefined);
   assertEq(desc.writable, true);
   assertEq(desc.enumerable, true);
-  assertEq(desc.configurable, false);
+  assertEq(desc.configurable, functionDeclarationsConfigurable);
   function f() {
     return "fun-f";
   }

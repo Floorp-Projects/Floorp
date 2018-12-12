@@ -1,3 +1,4 @@
+// |reftest| skip-if(!xulRuntime.shell) -- dynamic-import is not enabled unconditionally
 'use strict';
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/ns-delete-exported-init-strict.case
