@@ -677,16 +677,16 @@ dependencies = [
 
 [[package]]
 name = "darling"
-version = "0.8.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "darling_core 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "darling_macro 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "darling_core 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "darling_macro 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "darling_core"
-version = "0.8.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "fnv 1.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -698,10 +698,10 @@ dependencies = [
 
 [[package]]
 name = "darling_macro"
-version = "0.8.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "darling_core 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "darling_core 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "syn 0.15.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -2409,7 +2409,7 @@ dependencies = [
 name = "style_derive"
 version = "0.0.1"
 dependencies = [
- "darling 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "darling 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "proc-macro2 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "syn 0.15.7 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3173,9 +3173,9 @@ dependencies = [
 "checksum cubeb-backend 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fdcac95519416d9ec814db2dc40e6293e7da25b906023d93f48b87f0587ab138"
 "checksum cubeb-core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "37f7b20f757a4e4b6aa28863236551bff77682dc6db192eba15af615492b5445"
 "checksum cubeb-sys 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "653b9e245d35dbe2a2da7c4586275cee75ff656ddeb02d4a73b4afdfa6d67502"
-"checksum darling 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7f000e7b03a0083a30e1f10b1428a530849c21e72b338fa76869b5dbc4b045bf"
-"checksum darling_core 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "86bc5ce438f4b703755d12f59bbf0a16c642766d4534e922db47569dbdd0b998"
-"checksum darling_macro 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "9973050ba46be2a2935a7b316147f41a808ac604b8f0fef6eba77fd47a89daeb"
+"checksum darling 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "f593353cad5af2df6d54810de2b61aa8acba5b5fbc70b0d75e7cc5bdd80aca73"
+"checksum darling_core 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "168c246e87e727d58575d9b4595491010627f0cdc910e3e6ea3b36db2b9a9d9a"
+"checksum darling_macro 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "99c4eff4bcbeaf6a22578012ff79c95910338668278d1901e528bd34a22f575d"
 "checksum devd-rs 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "e7c9ac481c38baf400d3b732e4a06850dfaa491d1b6379a249d9d40d14c2434c"
 "checksum diff 0.1.11 (registry+https://github.com/rust-lang/crates.io-index)" = "3c2b69f912779fbb121ceb775d74d51e915af17aaebc38d28a592843a2dd0a3a"
 "checksum digest 0.7.6 (registry+https://github.com/rust-lang/crates.io-index)" = "03b072242a8cbaf9c145665af9d250c59af3b958f83ed6824e13533cf76d5b90"
