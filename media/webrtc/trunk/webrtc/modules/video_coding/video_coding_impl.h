@@ -189,7 +189,6 @@ class VideoReceiver : public Module {
   void Process() override;
 
   void TriggerDecoderShutdown();
-  void Reset();
 
  protected:
   int32_t Decode(const webrtc::VCMEncodedFrame& frame)
