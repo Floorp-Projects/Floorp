@@ -764,13 +764,13 @@ static JSObject* MaybeGetDelegate(Cell* cell) {
 
 bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
                                       Cell* value) {
-  Zone* zone = map->zone();
+  DebugOnly<Zone*> zone = map->zone();
 
   JSObject* object = map->memberOf;
   MOZ_ASSERT_IF(object, object->zone() == zone);
 
   // Debugger weak maps can have keys in different zones.
-  DebugOnly<Zone*> keyZone = GetCellZone(key);
+  Zone* keyZone = GetCellZone(key);
   MOZ_ASSERT_IF(!map->allowKeysInOtherZones(),
                 keyZone == zone || keyZone->isAtomsZone());
 
