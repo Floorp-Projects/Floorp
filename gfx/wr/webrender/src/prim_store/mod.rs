@@ -533,6 +533,39 @@ impl SizeKey {
     }
 }
 
+/// A hashable vec for using as a key during primitive interning.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Copy, Debug, Clone, PartialEq)]
+pub struct VectorKey {
+    x: f32,
+    y: f32,
+}
+
+impl Eq for VectorKey {}
+
+impl hash::Hash for VectorKey {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        self.x.to_bits().hash(state);
+        self.y.to_bits().hash(state);
+    }
+}
+
+impl From<VectorKey> for LayoutVector2D {
+    fn from(key: VectorKey) -> LayoutVector2D {
+        LayoutVector2D::new(key.x, key.y)
+    }
+}
+
+impl From<LayoutVector2D> for VectorKey {
+    fn from(vec: LayoutVector2D) -> VectorKey {
+        VectorKey {
+            x: vec.x,
+            y: vec.y,
+        }
+    }
+}
+
 /// A hashable point for using as a key during primitive interning.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -2778,6 +2811,7 @@ impl PrimitiveStore {
 
                 // The transform only makes sense for screen space rasterization
                 let transform = prim_context.spatial_node.world_content_transform.to_transform();
+                let prim_offset = prim_instance.prim_origin.to_vector() - prim_data.offset;
 
                 // TODO(gw): This match is a bit untidy, but it should disappear completely
                 //           once the prepare_prims and batching are unified. When that
@@ -2785,6 +2819,7 @@ impl PrimitiveStore {
                 //           to temporarily store it in the primitive instance.
                 let run = &mut self.text_runs[*run_index];
                 run.prepare_for_render(
+                    prim_offset,
                     &prim_data.font,
                     &prim_data.glyphs,
                     frame_context.device_pixel_scale,
