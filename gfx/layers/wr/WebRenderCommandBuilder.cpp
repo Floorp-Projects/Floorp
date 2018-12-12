@@ -1738,7 +1738,8 @@ bool WebRenderCommandBuilder::PushImage(
     nsDisplayItem* aItem, ImageContainer* aContainer,
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
-    const StackingContextHelper& aSc, const LayoutDeviceRect& aRect) {
+    const StackingContextHelper& aSc, const LayoutDeviceRect& aRect,
+    const LayoutDeviceRect& aClip) {
   mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
       nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame()));
   gfx::IntSize size;
@@ -1755,7 +1756,8 @@ bool WebRenderCommandBuilder::PushImage(
   }
 
   auto r = wr::ToRoundedLayoutRect(aRect);
-  aBuilder.PushImage(r, r, !aItem->BackfaceIsHidden(), rendering, key.value());
+  auto c = wr::ToRoundedLayoutRect(aClip);
+  aBuilder.PushImage(r, c, !aItem->BackfaceIsHidden(), rendering, key.value());
 
   return true;
 }

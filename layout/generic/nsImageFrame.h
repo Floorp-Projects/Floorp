@@ -150,6 +150,13 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
                                    const nsRect& aDirtyRect, nsPoint aPt,
                                    uint32_t aFlags);
 
+  ImgDrawResult DisplayAltFeedbackWithoutLayer(
+      nsDisplayItem* aItem, mozilla::wr::DisplayListBuilder& aBuilder,
+      mozilla::wr::IpcResourceUpdateQueue& aResources,
+      const mozilla::layers::StackingContextHelper& aSc,
+      mozilla::layers::WebRenderLayerManager* aManager,
+      nsDisplayListBuilder* aDisplayListBuilder, nsPoint aPt, uint32_t aFlags);
+
   nsRect GetInnerArea() const;
 
   /**
