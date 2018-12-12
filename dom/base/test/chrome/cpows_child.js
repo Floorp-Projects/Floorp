@@ -1,6 +1,8 @@
+/* eslint-env mozilla/frame-script */
 dump("loaded child cpow test\n");
 
 Cu.importGlobalProperties(["XMLHttpRequest"]);
+var is_remote;
 
 (function start() {
   [is_remote] = sendRpcMessage("cpows:is_remote");
@@ -175,17 +177,16 @@ function compartment_test(finish) {
   function testParentObject(obj) {
     let results = [];
     function is(a, b, msg) { results.push({ result: a === b ? "PASS" : "FAIL", message: msg }); }
-    function ok(x, msg) { results.push({ result: x ? "PASS" : "FAIL", message: msg }); }
-
+    function ok1(x, msg) { results.push({ result: x ? "PASS" : "FAIL", message: msg }); }
     let cpowLocation = Cu.getRealmLocation(obj);
-    ok(/shared JSM global/.test(cpowLocation),
+    ok1(/shared JSM global/.test(cpowLocation),
        "child->parent CPOWs should live in the privileged junk scope: " + cpowLocation);
     is(obj(), 42, "child->parent CPOW is invokable");
     try {
       obj.expando;
-      ok(false, "child->parent CPOW cannot access properties");
+      ok1(false, "child->parent CPOW cannot access properties");
     } catch (e) {
-      ok(true, "child->parent CPOW cannot access properties");
+      ok1(true, "child->parent CPOW cannot access properties");
     }
 
     return results;
@@ -316,7 +317,7 @@ function cancel_test2(finish) {
     req.open("get", "http://example.com", false);
     req.send(null);
 
-    ok(fin == true, "XHR happened");
+    ok(fin === true, "XHR happened");
 
     fin1 = true;
     if (fin1 && fin2) finish();
