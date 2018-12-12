@@ -2189,11 +2189,15 @@ impl PicturePrimitive {
                 match tile_cache.dirty_region {
                     Some(ref dirty_region) => {
                         // Texture cache descriptor for each tile.
+                        // TODO(gw): If / when we start to use tile caches with
+                        //           clip masks and/or transparent backgrounds,
+                        //           we will need to correctly select an opacity
+                        //           here and a blend mode in batch.rs.
                         let descriptor = ImageDescriptor::new(
                             TILE_SIZE_DP,
                             TILE_SIZE_DP,
                             ImageFormat::BGRA8,
-                            false,          // TODO(gw): Detect when background color is opaque!
+                            true,
                             false,
                         );
 
