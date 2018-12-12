@@ -18,7 +18,7 @@ metadata:
 # instances configured and running.
 tasks:
   # For the docker-worker tasks, the Docker image used
-  # (staktrace/webrender-test:debian) was created using the Dockerfile in
+  # (staktrace/webrender-test:debian-v2) was created using the Dockerfile in
   # ci-scripts/docker-image.
   #
   # The docker image may need to be updated over time if the set of required
@@ -44,7 +44,7 @@ tasks:
           - master
     payload:
       maxRunTime: 7200
-      image: 'staktrace/webrender-test:debian'
+      image: 'staktrace/webrender-test:debian-v2'
       env:
         RUST_BACKTRACE: 'full'
         RUSTFLAGS: '--deny warnings'
@@ -78,7 +78,7 @@ tasks:
           - master
     payload:
       maxRunTime: 7200
-      image: 'staktrace/webrender-test:debian'
+      image: 'staktrace/webrender-test:debian-v2'
       env:
         RUST_BACKTRACE: 'full'
         RUSTFLAGS: '--deny warnings'
