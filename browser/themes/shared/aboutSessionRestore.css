@@ -27,6 +27,8 @@
 
 #tabsToggle {
   cursor: pointer;
+  /* Override button background-color and color from common.css */
+  background-color: transparent;
   color: #0a84ff !important;
   -moz-context-properties: fill;
   fill: currentColor;
@@ -53,10 +55,6 @@
 
 #tabsToggle:not(.show-tabs):after {
   transform: scaleY(-1);
-}
-
-#tabsToggle:hover {
-  background-color: transparent;
 }
 
 #tabsToggle.show-tabs > #hideTabs,
