@@ -210,6 +210,22 @@ static void InitBoxMetrics(nsIFrame* aFrame, bool aClear) {
   metrics->mLastSize.SizeTo(0, 0);
 }
 
+// Utility function to set a nsRect-valued property table entry on aFrame,
+// reusing the existing storage if the property happens to be already set.
+template <typename T>
+static void SetOrUpdateRectValuedProperty(
+    nsIFrame* aFrame, FrameProperties::Descriptor<T> aProperty,
+    const nsRect& aNewValue) {
+  bool found;
+  nsRect* rectStorage = aFrame->GetProperty(aProperty, &found);
+  if (!found) {
+    rectStorage = new nsRect(aNewValue);
+    aFrame->AddProperty(aProperty, rectStorage);
+  } else {
+    *rectStorage = aNewValue;
+  }
+}
+
 static bool IsXULBoxWrapped(const nsIFrame* aFrame) {
   return aFrame->GetParent() && aFrame->GetParent()->IsXULBoxFrame() &&
          !aFrame->IsXULBoxFrame();
@@ -6880,7 +6896,8 @@ static nsRect ComputeEffectsRect(nsIFrame* aFrame, const nsRect& aOverflowRect,
     // TODO: We could also take account of clipPath and mask to reduce the
     // visual overflow, but that's not essential.
     if (aFrame->StyleEffects()->HasFilters()) {
-      aFrame->SetProperty(nsIFrame::PreEffectsBBoxProperty(), new nsRect(r));
+      SetOrUpdateRectValuedProperty(aFrame, nsIFrame::PreEffectsBBoxProperty(),
+                                    r);
       r = nsSVGUtils::GetPostFilterVisualOverflowRect(aFrame, aOverflowRect);
     }
     return r;
@@ -6918,7 +6935,8 @@ static nsRect ComputeEffectsRect(nsIFrame* aFrame, const nsRect& aOverflowRect,
   // the frame dies.
 
   if (nsSVGIntegrationUtils::UsingOverflowAffectingEffects(aFrame)) {
-    aFrame->SetProperty(nsIFrame::PreEffectsBBoxProperty(), new nsRect(r));
+    SetOrUpdateRectValuedProperty(aFrame, nsIFrame::PreEffectsBBoxProperty(),
+                                  r);
     r = nsSVGIntegrationUtils::ComputePostEffectsVisualOverflowRect(aFrame, r);
   }
 
@@ -8771,8 +8789,8 @@ static void ComputeAndIncludeOutlineArea(nsIFrame* aFrame,
   }
 
   // Keep this code in sync with GetOutlineInnerRect in nsCSSRendering.cpp.
-  aFrame->SetProperty(nsIFrame::OutlineInnerRectProperty(),
-                      new nsRect(innerRect));
+  SetOrUpdateRectValuedProperty(aFrame, nsIFrame::OutlineInnerRectProperty(),
+                                innerRect);
   const nscoord offset = outline->mOutlineOffset;
   nsRect outerRect(innerRect);
   bool useOutlineAuto = false;
