@@ -1035,9 +1035,7 @@ element.getContainer = function(el) {
     return element.findClosest(el, "datalist,select") || el;
   }
 
-  // Child nodes of button will not be part of the element tree for
-  // elementsFromPoint until bug 1089326 is fixed.
-  return element.findClosest(el, "button") || el;
+  return el;
 };
 
 /**
