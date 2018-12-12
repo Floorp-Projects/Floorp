@@ -29,6 +29,47 @@ description: >
     return r;
   };
 }
+
+/**
+ *
+ * Share a given Int32Array or BigInt64Array to all running agents. Ensure that the
+ * provided TypedArray is a "shared typed array".
+ *
+ * NOTE: Migrating all tests to this API is necessary to prevent tests from hanging
+ * indefinitely when a SAB is sent to a worker but the code in the worker attempts to
+ * create a non-sharable TypedArray (something that is not Int32Array or BigInt64Array).
+ * When that scenario occurs, an exception is thrown and the agent worker can no
+ * longer communicate with any other threads that control the SAB. If the main
+ * thread happens to be spinning in the $262.agent.waitUntil() while loop, it will never
+ * meet its termination condition and the test will hang indefinitely.
+ *
+ * Because we've defined $262.agent.broadcast(SAB) in
+ * https://github.com/tc39/test262/blob/master/INTERPRETING.md, there are host implementations
+ * that assume compatibility, which must be maintained.
+ *
+ *
+ * $262.agent.safeBroadcast(TA) should not be included in
+ * https://github.com/tc39/test262/blob/master/INTERPRETING.md
+ *
+ *
+ * @param {(Int32Array|BigInt64Array)} typedArray An Int32Array or BigInt64Array with a SharedArrayBuffer
+ */
+$262.agent.safeBroadcast = function(typedArray) {
+  let Constructor = Object.getPrototypeOf(typedArray).constructor;
+  let temp = new Constructor(
+    new SharedArrayBuffer(Constructor.BYTES_PER_ELEMENT)
+  );
+  try {
+    // This will never actually wait, but that's fine because we only
+    // want to ensure that this typedArray CAN be waited on and is shareable.
+    Atomics.wait(temp, 0, Constructor === Int32Array ? 1 : BigInt(1));
+  } catch (error) {
+    $ERROR(`${Constructor.name} cannot be used as a shared typed array. (${error})`);
+  }
+
+  $262.agent.broadcast(typedArray.buffer);
+};
+
 /**
  * With a given Int32Array or BigInt64Array, wait until the expected number of agents have
  * reported themselves by calling:
@@ -40,6 +81,7 @@ description: >
  * @param {number} expected The number of agents that are expected to report as active.
  */
 $262.agent.waitUntil = function(typedArray, index, expected) {
+
   var agents = 0;
   while ((agents = Atomics.load(typedArray, index)) !== expected) {
     /* nothing */
@@ -77,7 +119,7 @@ $262.agent.waitUntil = function(typedArray, index, expected) {
  *       $262.agent.leaving();
  *     });
  *   `);
- *   $262.agent.broadcast(i32a.buffer);
+ *   $262.agent.safeBroadcast(i32a.buffer);
  *
  *   // Wait until the agent was started and then try to yield control to increase
  *   // the likelihood the agent has called `Atomics.wait` and is now waiting.
@@ -107,7 +149,7 @@ $262.agent.waitUntil = function(typedArray, index, expected) {
  *       });
  *     `);
  *   }
- *   $262.agent.broadcast(i32a.buffer);
+ *   $262.agent.safeBroadcast(i32a.buffer);
  *
  *   // Wait until the agents were started and then try to yield control to increase
  *   // the likelihood the agents have called `Atomics.wait` and are now waiting.
@@ -152,7 +194,7 @@ $262.agent.waitUntil = function(typedArray, index, expected) {
  *       });
  *     `);
  *   }
- *   $262.agent.broadcast(i32a.buffer);
+ *   $262.agent.safeBroadcast(i32a.buffer);
  *
  *   // Wait until the agents were started and then try to yield control to increase
  *   // the likelihood the agents have called `Atomics.wait` and are now waiting.
@@ -205,7 +247,7 @@ $262.agent.timeouts = {
  *       $262.agent.leaving();
  *     });
  *   `);
- *   $262.agent.broadcast(i32a.buffer);
+ *   $262.agent.safeBroadcast(i32a.buffer);
  *
  *   // Wait until agent was started and then try to yield control.
  *   $262.agent.waitUntil(i32a, RUNNING, 1);

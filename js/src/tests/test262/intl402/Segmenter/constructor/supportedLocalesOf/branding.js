@@ -1,4 +1,4 @@
-// |reftest| skip-if(!Intl.hasOwnProperty('Segmenter')) -- Intl.Segmenter is not enabled unconditionally
+// |reftest| skip -- Intl.Segmenter is not supported
 // Copyright 2018 Igalia, S.L. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -11,7 +11,10 @@ info: |
 features: [Intl.Segmenter]
 ---*/
 
-const fn = Intl.Segmenter.supportedLocalesOf;
+const supportedLocalesOf = Intl.Segmenter.supportedLocalesOf;
+
+assert.sameValue(typeof supportedLocalesOf, "function");
+
 const thisValues = [
   undefined,
   null,
@@ -25,7 +28,7 @@ const thisValues = [
 ];
 
 for (const thisValue of thisValues) {
-  const result = fn.call(thisValue);
+  const result = supportedLocalesOf.call(thisValue);
   assert.sameValue(Array.isArray(result), true);
 }
 

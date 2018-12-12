@@ -27,7 +27,7 @@ info: |
         5. Return namespace.
 ---*/
 
-import('./default-property-not-set-own.js').then(ns => {
+import('./empty_FIXTURE.js').then(ns => {
 
     assert.sameValue(Object.prototype.hasOwnProperty.call(ns, 'default'), false);
 
