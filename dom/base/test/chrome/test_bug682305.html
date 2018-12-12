@@ -27,8 +27,7 @@ SimpleTest.waitForExplicitFinish();
  */
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-var ios = Cc["@mozilla.org/network/io-service;1"]
-            .getService(Ci.nsIIOService);
+
 var contentSecManager = Cc["@mozilla.org/contentsecuritymanager;1"]
                           .getService(Ci.nsIContentSecurityManager);
 
@@ -36,7 +35,7 @@ var PROTOCOL_SCHEME = "jsproto";
 
 
 function CustomChannel(uri, loadInfo) {
-	this.URI = this.originalURI = uri;
+  this.URI = this.originalURI = uri;
   this.loadInfo = loadInfo;
 }
 CustomChannel.prototype = {
@@ -123,7 +122,7 @@ CustomProtocol.prototype = {
     return new CustomChannel(URI, loadInfo);
   },
   newChannel: function newChannel(URI) {
-    return newChannel2(URI);
+    return this.newChannel2(URI);
   },
   QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIProtocolHandler]),
 };

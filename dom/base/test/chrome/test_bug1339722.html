@@ -23,6 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1339722
   ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   const TOPIC = "http-on-useragent-request";
+  let win;
   Services.obs.addObserver({
     observe(subject, topic, data) {
       info("Got " + topic);
@@ -30,13 +31,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1339722
 
       // Query window proxy so it triggers DOMWindowCreated.
       let channel = subject.QueryInterface(Ci.nsIHttpChannel);
-      let win = channel.notificationCallbacks.getInterface(Ci.mozIDOMWindowProxy);
+      win = channel.notificationCallbacks.getInterface(Ci.mozIDOMWindowProxy);
     },
   }, TOPIC);
 
   let docShell = SpecialPowers.wrap(window).docShell;
   docShell.chromeEventHandler.addEventListener("DOMWindowCreated", function handler(e) {
-    docShell.chromeEventHandler.removeEventListener("DOMWindowCreated", handler);
     let iframe = document.getElementById("testFrame");
     is(e.target, iframe.contentDocument, "verify event target");
 
@@ -46,7 +46,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1339722
       ok(!document.getElementById("testFrame"), "verify iframe removed");
       SimpleTest.finish();
     }, 0);
-  });
+  }, {once: true});
 
   SimpleTest.waitForExplicitFinish();
   </script>
