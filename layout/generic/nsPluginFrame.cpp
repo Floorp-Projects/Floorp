@@ -1340,7 +1340,7 @@ bool nsPluginFrame::CreateWebRenderCommands(
   // help us. Hence we can ignore the return value from PushImage.
   LayoutDeviceRect dest(r.x, r.y, size.width, size.height);
   aManager->CommandBuilder().PushImage(aItem, container, aBuilder, aResources,
-                                       aSc, dest);
+                                       aSc, dest, dest);
   return true;
 }
 
