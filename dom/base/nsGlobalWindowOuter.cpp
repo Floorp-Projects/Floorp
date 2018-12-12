@@ -5129,7 +5129,7 @@ bool nsGlobalWindowOuter::CanSetProperty(const char* aPrefName) {
 }
 
 bool nsGlobalWindowOuter::PopupWhitelisted() {
-  if (mDoc && nsContentUtils::CanShowPopup(mDoc->NodePrincipal())) {
+  if (mDoc && nsContentUtils::CanShowPopupByPermission(mDoc->NodePrincipal())) {
     return true;
   }
 
@@ -5183,8 +5183,9 @@ PopupControlState nsGlobalWindowOuter::RevisePopupAbuseLevel(
   // If this popup is allowed, let's block any other for this event, forcing
   // openBlocked state.
   if ((abuse == openAllowed || abuse == openControlled) &&
-      StaticPrefs::dom_block_multiple_popups() && !PopupWhitelisted()) {
-    nsContentUtils::PushPopupControlState(openBlocked, true);
+      StaticPrefs::dom_block_multiple_popups() && !PopupWhitelisted() &&
+      !nsContentUtils::TryUsePopupOpeningToken()) {
+    abuse = openBlocked;
   }
 
   return abuse;
@@ -7390,10 +7391,13 @@ nsPIDOMWindowOuter::~nsPIDOMWindowOuter() {}
 
 nsAutoPopupStatePusherInternal::nsAutoPopupStatePusherInternal(
     PopupControlState aState, bool aForce)
-    : mOldState(nsContentUtils::PushPopupControlState(aState, aForce)) {}
+    : mOldState(nsContentUtils::PushPopupControlState(aState, aForce)) {
+  nsContentUtils::PopupStatePusherCreated();
+}
 
 nsAutoPopupStatePusherInternal::~nsAutoPopupStatePusherInternal() {
   nsContentUtils::PopPopupControlState(mOldState);
+  nsContentUtils::PopupStatePusherDestroyed();
 }
 
 mozilla::dom::BrowsingContext* nsPIDOMWindowOuter::GetBrowsingContext() const {
