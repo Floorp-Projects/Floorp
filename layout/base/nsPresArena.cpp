@@ -22,9 +22,8 @@
 
 using namespace mozilla;
 
-nsPresArena::nsPresArena() {}
-
-nsPresArena::~nsPresArena() {
+template <size_t ArenaSize>
+nsPresArena<ArenaSize>::~nsPresArena<ArenaSize>() {
   ClearArenaRefPtrs();
 
 #if defined(MOZ_HAVE_MEM_CHECKS)
@@ -39,7 +38,8 @@ nsPresArena::~nsPresArena() {
 #endif
 }
 
-/* inline */ void nsPresArena::ClearArenaRefPtrWithoutDeregistering(
+template <size_t ArenaSize>
+/* inline */ void nsPresArena<ArenaSize>::ClearArenaRefPtrWithoutDeregistering(
     void* aPtr, ArenaObjectID aObjectID) {
   switch (aObjectID) {
     // We use ArenaRefPtr<ComputedStyle>, which can be ComputedStyle
@@ -55,7 +55,8 @@ nsPresArena::~nsPresArena() {
   }
 }
 
-void nsPresArena::ClearArenaRefPtrs() {
+template <size_t ArenaSize>
+void nsPresArena<ArenaSize>::ClearArenaRefPtrs() {
   for (auto iter = mArenaRefPtrs.Iter(); !iter.Done(); iter.Next()) {
     void* ptr = iter.Key();
     ArenaObjectID id = iter.UserData();
@@ -64,7 +65,8 @@ void nsPresArena::ClearArenaRefPtrs() {
   mArenaRefPtrs.Clear();
 }
 
-void nsPresArena::ClearArenaRefPtrs(ArenaObjectID aObjectID) {
+template <size_t ArenaSize>
+void nsPresArena<ArenaSize>::ClearArenaRefPtrs(ArenaObjectID aObjectID) {
   for (auto iter = mArenaRefPtrs.Iter(); !iter.Done(); iter.Next()) {
     void* ptr = iter.Key();
     ArenaObjectID id = iter.UserData();
@@ -75,7 +77,8 @@ void nsPresArena::ClearArenaRefPtrs(ArenaObjectID aObjectID) {
   }
 }
 
-void* nsPresArena::Allocate(uint32_t aCode, size_t aSize) {
+template <size_t ArenaSize>
+void* nsPresArena<ArenaSize>::Allocate(uint32_t aCode, size_t aSize) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aSize > 0, "PresArena cannot allocate zero bytes");
   MOZ_ASSERT(aCode < ArrayLength(mFreeLists));
@@ -138,7 +141,8 @@ void* nsPresArena::Allocate(uint32_t aCode, size_t aSize) {
   return mPool.Allocate(aSize);
 }
 
-void nsPresArena::Free(uint32_t aCode, void* aPtr) {
+template <size_t ArenaSize>
+void nsPresArena<ArenaSize>::Free(uint32_t aCode, void* aPtr) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCode < ArrayLength(mFreeLists));
 
@@ -152,7 +156,9 @@ void nsPresArena::Free(uint32_t aCode, void* aPtr) {
   list->mEntries.AppendElement(aPtr);
 }
 
-void nsPresArena::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const {
+template <size_t ArenaSize>
+void nsPresArena<ArenaSize>::AddSizeOfExcludingThis(
+    nsWindowSizes& aSizes) const {
   // We do a complicated dance here because we want to measure the
   // space taken up by the different kinds of objects in the arena,
   // but we don't have pointers to those objects.  And even if we did,
@@ -199,3 +205,8 @@ void nsPresArena::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const {
 
   aSizes.mLayoutPresShellSize += mallocSize - totalSizeInFreeLists;
 }
+
+// Explicitly instantiate templates for the used nsPresArena allocator sizes.
+// This is needed because nsPresArena definition is split across multiple files.
+template class nsPresArena<8192>;
+template class nsPresArena<32768>;
