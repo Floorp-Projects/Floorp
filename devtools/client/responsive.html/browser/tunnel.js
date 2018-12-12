@@ -362,6 +362,8 @@ MessageManagerTunnel.prototype = {
     "PermitUnload",
     // Messages sent from browser.js
     "Browser:Reload",
+    "PageStyle:Disable",
+    "PageStyle:Switch",
     // Messages sent from SelectParentHelper.jsm
     "Forms:DismissedDropDown",
     "Forms:MouseOut",
@@ -380,6 +382,7 @@ MessageManagerTunnel.prototype = {
     "Link:SetFailedIcon",
     "Link:AddFeed",
     "Link:AddSearch",
+    "PageStyle:StyleSheets",
     // Messages sent to RemoteWebProgress.jsm
     "Content:LoadURIResult",
     "Content:LocationChange",
