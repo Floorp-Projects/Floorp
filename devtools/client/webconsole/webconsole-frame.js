@@ -21,7 +21,6 @@ loader.lazyRequireGetter(this, "AppConstants", "resource://gre/modules/AppConsta
 const ZoomKeys = require("devtools/client/shared/zoom-keys");
 
 const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
-const PREF_PERSISTLOG = "devtools.webconsole.persistlog";
 const PREF_SIDEBAR_ENABLED = "devtools.webconsole.sidebarToggle";
 
 /**
@@ -55,19 +54,6 @@ WebConsoleFrame.prototype = {
    */
   get webConsoleClient() {
     return this.proxy ? this.proxy.webConsoleClient : null;
-  },
-
-  /**
-   * Getter for the persistent logging preference.
-   * @type boolean
-   */
-  get persistLog() {
-    // For the browser console, we receive tab navigation
-    // when the original top level window we attached to is closed,
-    // but we don't want to reset console history and just switch to
-    // the next available window.
-    return this.isBrowserConsole ||
-           Services.prefs.getBoolPref(PREF_PERSISTLOG);
   },
 
   /**
@@ -395,14 +381,7 @@ WebConsoleFrame.prototype = {
   },
 
   handleTabWillNavigate: function(packet) {
-    if (this.persistLog) {
-      // Add a _type to hit convertCachedPacket.
-      packet._type = true;
-      this.consoleOutput.dispatchMessageAdd(packet);
-    } else {
-      this.clearOutput(false);
-    }
-
+    this.consoleOutput.dispatchTabWillNavigate(packet);
     if (packet.url) {
       this.onLocationChange(packet.url, packet.title);
     }
