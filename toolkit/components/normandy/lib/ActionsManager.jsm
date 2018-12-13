@@ -6,6 +6,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonStudyAction: "resource://normandy/actions/AddonStudyAction.jsm",
   ConsoleLogAction: "resource://normandy/actions/ConsoleLogAction.jsm",
   NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
+  PreferenceExperimentAction: "resource://normandy/actions/PreferenceExperimentAction.jsm",
   PreferenceRollbackAction: "resource://normandy/actions/PreferenceRollbackAction.jsm",
   PreferenceRolloutAction: "resource://normandy/actions/PreferenceRolloutAction.jsm",
   ShowHeartbeatAction: "resource://normandy/actions/ShowHeartbeatAction.jsm",
@@ -36,6 +37,7 @@ class ActionsManager {
       "addon-study": addonStudyAction,
       "console-log": new ConsoleLogAction(),
       "opt-out-study": addonStudyAction, // Legacy name used for addon-study on Normandy server
+      "preference-experiment": new PreferenceExperimentAction(),
       "preference-rollback": new PreferenceRollbackAction(),
       "preference-rollout": new PreferenceRolloutAction(),
       "show-heartbeat": new ShowHeartbeatAction(),
