@@ -1891,8 +1891,7 @@ def select_linker(linker, c_compiler, developer_options, enable_gold,
     return result
 
 
-set_config('LD_IS_BFD', depends(select_linker.KIND)
-           (lambda x: x == 'bfd' or None))
+set_config('LINKER_KIND', select_linker.KIND)
 add_old_configure_assignment('LINKER_LDFLAGS', select_linker.LINKER_FLAG)
 
 
