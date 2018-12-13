@@ -1,6 +1,7 @@
-commit 2726142bb97e4538703eda748c3b7300183bc66d
-Author: test262-automation <test262-automation@bocoup.com>
-Date:   Wed Nov 14 19:00:37 2018 +0000
+commit 8e3c6d048449a2e47c7748eafa350f49c0b8b7bc
+Author: Leo Balter <leonardo.balter@gmail.com>
+Date:   Mon Dec 10 10:59:09 2018 -0500
 
-    [v8-test262-automation] Updated curation log with latest revision sha's from export and changed files.
-        sourceRevisionAtLastExport: ac250b9b targetRevisionAtLastExport: 6218e682b2
+    Merge pull request #1987 from test262-automation/v8-test262-automation-export-07b313100e
+    
+    Import test changes from V8

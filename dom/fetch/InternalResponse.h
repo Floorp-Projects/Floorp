@@ -26,7 +26,6 @@ class AutoIPCStream;
 namespace dom {
 
 class InternalHeaders;
-class IPCInternalResponse;
 
 class InternalResponse final {
   friend class FetchDriver;
@@ -35,13 +34,6 @@ class InternalResponse final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(InternalResponse)
 
   InternalResponse(uint16_t aStatus, const nsACString& aStatusText);
-
-  static already_AddRefed<InternalResponse> FromIPC(
-      const IPCInternalResponse& aIPCResponse);
-
-  template <typename M>
-  void ToIPC(IPCInternalResponse* aIPCResponse, M* aManager,
-             UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream);
 
   enum CloneType {
     eCloneInputStream,

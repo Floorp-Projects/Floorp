@@ -14,6 +14,7 @@
 #include "gfxPlatform.h"  // for gfxPlatform
 #include "GLReadTexImageHelper.h"
 #include "mozilla/gfx/BaseSize.h"  // for BaseSize
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/BufferTexture.h"
 #include "mozilla/layers/AsyncCanvasRenderer.h"
 #include "mozilla/layers/CompositableForwarder.h"
@@ -236,6 +237,9 @@ class TexClientFactory {
     if (!areRGBAFormatsBroken) {
       gfx::SurfaceFormat format = mHasAlpha ? gfx::SurfaceFormat::R8G8B8A8
                                             : gfx::SurfaceFormat::R8G8B8X8;
+      if (gfxVars::UseWebRender() && format == gfx::SurfaceFormat::R8G8B8X8) {
+        MOZ_CRASH("R8G8B8X8 is not supported on WebRender");
+      }
       ret = Create(format);
     }
 

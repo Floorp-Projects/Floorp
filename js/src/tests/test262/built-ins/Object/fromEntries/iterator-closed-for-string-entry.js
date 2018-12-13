@@ -49,6 +49,7 @@ var iterable = {
   },
 };
 
+assert.sameValue(typeof Object.fromEntries, 'function');
 assert.throws(TypeError, function() {
   Object.fromEntries(iterable);
 });

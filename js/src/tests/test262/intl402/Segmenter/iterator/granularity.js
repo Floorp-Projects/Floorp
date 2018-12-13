@@ -1,4 +1,4 @@
-// |reftest| skip-if(!Intl.hasOwnProperty('Segmenter')) -- Intl.Segmenter is not enabled unconditionally
+// |reftest| skip -- Intl.Segmenter is not supported
 // Copyright 2018 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -15,11 +15,7 @@ for (const granularity of ["grapheme", "word", "sentence", "line"]) {
 
   assert.sameValue(typeof iter.position, "number");
   assert.sameValue(iter.position, 0);
-  if (granularity === "grapheme") {
-    assert.sameValue(iter.breakType, undefined);
-  } else {
-    assert.sameValue(typeof iter.breakType, "string");
-  }
+  assert.sameValue(iter.breakType, undefined);
 }
 
 reportCompare(0, 0);

@@ -17,9 +17,11 @@ info: |
     b. Let exists be ? HasProperty(source, P).
     c. If exists is true, then
       i. Let element be ? Get(source, P).
-features: [Array.prototype.flat]
+features: [Array.prototype.flatMap]
 includes: [compareArray.js]
 ---*/
+
+assert.sameValue(typeof Array.prototype.flatMap, 'function');
 
 const getCalls = [], hasCalls = [];
 const handler = {

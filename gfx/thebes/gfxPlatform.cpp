@@ -1563,10 +1563,12 @@ bool gfxPlatform::AllowOpenGLCanvas() {
   // The compositor backend is only set correctly in the parent process,
   // so we let content process always assume correct compositor backend.
   // The callers have to do the right thing.
+  //
+  // XXX Disable SkiaGL on WebRender, since there is a case that R8G8B8X8
+  // is used, but WebRender does not support R8G8B8X8.
   bool correctBackend =
       !XRE_IsParentProcess() ||
-      ((mCompositorBackend == LayersBackend::LAYERS_OPENGL ||
-        mCompositorBackend == LayersBackend::LAYERS_WR) &&
+      (mCompositorBackend == LayersBackend::LAYERS_OPENGL &&
        (GetContentBackendFor(mCompositorBackend) == BackendType::SKIA));
 
   if (gfxPrefs::CanvasAzureAccelerated() && correctBackend) {
