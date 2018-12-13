@@ -137,7 +137,7 @@ text {
   background: none;
   box-shadow: none;
   border: none;
-  list-style-image: var(--theme-pane-collapse-image);
+  list-style-image: url(chrome://devtools/skin/images/pane-collapse.svg);
 }
 
 #inspector-pane-toggle > .toolbarbutton-icon {
@@ -146,7 +146,7 @@ text {
 }
 
 #inspector-pane-toggle.pane-collapsed {
-  list-style-image: var(--theme-pane-expand-image);
+  list-style-image: url(chrome://devtools/skin/images/pane-expand.svg);
 }
 
 /**

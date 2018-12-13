@@ -5,9 +5,6 @@
 
 /* CSS Variables specific to the devtools toolbar that aren't defined by the themes */
 :root {
-  --magnifying-glass-image: url(chrome://devtools/skin/images/search.svg);
-  --filter-image: url(chrome://devtools/skin/images/filter.svg);
-  --tool-options-image: url(chrome://devtools/skin/images/tool-options.svg);
   --separator-block-margin: 4px;
   --separator-inline-margin: 1px;
 }
