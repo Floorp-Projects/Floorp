@@ -20,14 +20,13 @@ mk_add_options "export LD_LIBRARY_PATH=$topsrcdir/clang/lib"
 # `browser/config/tooltool-manifests/macosx64/cross-releng.manifest`.
 CROSS_SYSROOT=$topsrcdir/MacOSX10.11.sdk
 CROSS_PRIVATE_FRAMEWORKS=$CROSS_SYSROOT/System/Library/PrivateFrameworks
-FLAGS="-isysroot $CROSS_SYSROOT"
 
-export CC="$topsrcdir/clang/bin/clang $FLAGS"
-export CXX="$topsrcdir/clang/bin/clang++ $FLAGS"
-export CPP="$topsrcdir/clang/bin/clang $FLAGS -E"
+export CC="$topsrcdir/clang/bin/clang"
+export CXX="$topsrcdir/clang/bin/clang++"
+export CPP="$topsrcdir/clang/bin/clang -E"
 export LLVMCONFIG=$topsrcdir/clang/bin/llvm-config
 export LDFLAGS="-Wl,-syslibroot,$CROSS_SYSROOT"
-export BINDGEN_CFLAGS="$FLAGS"
+export BINDGEN_CFLAGS="-isysroot $CROSS_SYSROOT"
 export DSYMUTIL=$topsrcdir/build/macosx/llvm-dsymutil
 mk_add_options "export REAL_DSYMUTIL=$topsrcdir/llvm-dsymutil/bin/dsymutil"
 export MKFSHFS=$topsrcdir/hfsplus-tools/newfs_hfs
@@ -42,6 +41,7 @@ export HOST_CXXFLAGS="-g"
 export HOST_LDFLAGS="-g"
 
 ac_add_options --target=x86_64-apple-darwin11
+ac_add_options --with-macos-sdk=$CROSS_SYSROOT
 ac_add_options --with-macos-private-frameworks=$CROSS_PRIVATE_FRAMEWORKS
 
 if [ "x$MOZ_PKG_SPECIAL" != "xasan" -a -z "$MOZ_AUTOMATION_ARTIFACT_BUILDS" ]; then
