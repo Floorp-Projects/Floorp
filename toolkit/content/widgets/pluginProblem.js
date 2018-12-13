@@ -13,7 +13,9 @@ this.PluginProblemWidget = class {
     this.element = shadowRoot.host;
     // ownerGlobal is chrome-only, not accessible to UA Widget script here.
     this.window = this.element.ownerDocument.defaultView; // eslint-disable-line mozilla/use-ownerGlobal
+  }
 
+  onsetup() {
     const parser = new this.window.DOMParser();
     let parserDoc = parser.parseFromString(`
       <!DOCTYPE bindings [

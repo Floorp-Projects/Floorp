@@ -17,14 +17,19 @@ this.DateTimeBoxWidget = class {
     this.element = shadowRoot.host;
     this.document = this.element.ownerDocument;
     this.window = this.document.defaultView;
+  }
 
+  /*
+   * Callback called by UAWidgets right after constructor.
+   */
+  onsetup() {
     this.switchImpl();
   }
 
   /*
    * Callback called by UAWidgets when the "type" property changes.
    */
-  onattributechange() {
+  onchange() {
     this.switchImpl();
   }
 
@@ -52,6 +57,7 @@ this.DateTimeBoxWidget = class {
     }
     if (newImpl) {
       this.impl = new newImpl(this.shadowRoot);
+      this.impl.onsetup();
     } else {
       this.impl = undefined;
     }
@@ -73,12 +79,14 @@ this.DateTimeInputBaseImplWidget = class {
     this.element = shadowRoot.host;
     this.document = this.element.ownerDocument;
     this.window = this.document.defaultView;
+  }
 
+  onsetup() {
     this.generateContent();
 
 
     this.DEBUG = false;
-    this.mDateTimeBoxElement = shadowRoot.firstChild;
+    this.mDateTimeBoxElement = this.shadowRoot.firstChild;
     this.mInputElement = this.element;
     this.mLocales = this.window.getRegionalPrefsLocales();
 
@@ -628,6 +636,10 @@ this.DateTimeInputBaseImplWidget = class {
 this.DateInputImplWidget = class extends DateTimeInputBaseImplWidget {
   constructor(shadowRoot) {
     super(shadowRoot);
+  }
+
+  onsetup() {
+    super.onsetup();
 
     this.mMinMonth = 1;
     this.mMaxMonth = 12;
@@ -966,6 +978,10 @@ this.DateInputImplWidget = class extends DateTimeInputBaseImplWidget {
 this.TimeInputImplWidget = class extends DateTimeInputBaseImplWidget {
   constructor(shadowRoot) {
     super(shadowRoot);
+  }
+
+  onsetup() {
+    super.onsetup();
 
     const kDefaultAMString = "AM";
     const kDefaultPMString = "PM";

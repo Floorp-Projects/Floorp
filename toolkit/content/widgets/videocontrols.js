@@ -4,14 +4,14 @@
 
 "use strict";
 
-// This is a page widget. It runs in per-origin UA widget scope,
+// This is a UA widget. It runs in per-origin UA widget scope,
 // to be loaded by UAWidgetsChild.jsm.
 
 /*
  * This is the class of entry. It will construct the actual implementation
  * according to the value of the "controls" property.
  */
-this.VideoControlsPageWidget = class {
+this.VideoControlsWidget = class {
   constructor(shadowRoot) {
     this.shadowRoot = shadowRoot;
     this.element = shadowRoot.host;
@@ -19,29 +19,34 @@ this.VideoControlsPageWidget = class {
     this.window = this.document.defaultView;
 
     this.isMobile = this.window.navigator.appVersion.includes("Android");
+  }
 
+  /*
+   * Callback called by UAWidgets right after constructor.
+   */
+  onsetup() {
     this.switchImpl();
   }
 
   /*
    * Callback called by UAWidgets when the "controls" property changes.
    */
-  onattributechange() {
+  onchange() {
     this.switchImpl();
   }
 
   /*
    * Actually switch the implementation.
-   * - With "controls" set, the VideoControlsImplPageWidget controls should load.
-   * - Without it, on mobile, the NoControlsImplPageWidget should load, so
+   * - With "controls" set, the VideoControlsImplWidget controls should load.
+   * - Without it, on mobile, the NoControlsImplWidget should load, so
    *   the user could see the click-to-play button when the video/audio is blocked.
    */
   switchImpl() {
     let newImpl;
     if (this.element.controls) {
-      newImpl = VideoControlsImplPageWidget;
+      newImpl = VideoControlsImplWidget;
     } else if (this.isMobile) {
-      newImpl = NoControlsImplPageWidget;
+      newImpl = NoControlsImplWidget;
     }
     // Skip if we are asked to load the same implementation.
     // This can happen if the property is set again w/o value change.
@@ -54,6 +59,7 @@ this.VideoControlsPageWidget = class {
     }
     if (newImpl) {
       this.impl = new newImpl(this.shadowRoot);
+      this.impl.onsetup();
     } else {
       this.impl = undefined;
     }
@@ -69,13 +75,15 @@ this.VideoControlsPageWidget = class {
   }
 };
 
-this.VideoControlsImplPageWidget = class {
+this.VideoControlsImplWidget = class {
   constructor(shadowRoot) {
     this.shadowRoot = shadowRoot;
     this.element = shadowRoot.host;
     this.document = this.element.ownerDocument;
     this.window = this.document.defaultView;
+  }
 
+  onsetup() {
     this.generateContent();
 
     this.Utils = {
@@ -2289,13 +2297,15 @@ this.VideoControlsImplPageWidget = class {
   }
 };
 
-this.NoControlsImplPageWidget = class {
+this.NoControlsImplWidget = class {
   constructor(shadowRoot) {
     this.shadowRoot = shadowRoot;
     this.element = shadowRoot.host;
     this.document = this.element.ownerDocument;
     this.window = this.document.defaultView;
+  }
 
+  onsetup() {
     this.generateContent();
 
     this.Utils = {
