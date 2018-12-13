@@ -1080,9 +1080,7 @@ static bool SetPromiseRejectionTrackerCallback(JSContext* cx, unsigned argc,
 static bool BoundToAsyncStack(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  RootedFunction function(cx, (&GetFunctionNativeReserved(&args.callee(), 0)
-                                    .toObject()
-                                    .as<JSFunction>()));
+  RootedValue function(cx, GetFunctionNativeReserved(&args.callee(), 0));
   RootedObject options(
       cx, &GetFunctionNativeReserved(&args.callee(), 1).toObject());
 

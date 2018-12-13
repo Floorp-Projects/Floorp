@@ -1942,7 +1942,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     if *out_is_reference_frame {
         let ref_frame_id = state.frame_builder
             .dl_builder
-            .push_reference_frame(&prim_info, transform_binding, perspective);
+            .push_reference_frame(&prim_info, transform_style, transform_binding, perspective);
         *out_reference_frame_id = pack_clip_id(ref_frame_id);
 
         prim_info.rect.origin = LayoutPoint::zero();

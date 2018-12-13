@@ -529,6 +529,7 @@ pub struct CacheMarkerDisplayItem {
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ReferenceFrame {
+    pub transform_style: TransformStyle,
     pub transform: Option<PropertyBinding<LayoutTransform>>,
     pub perspective: Option<LayoutTransform>,
     pub id: ClipId,

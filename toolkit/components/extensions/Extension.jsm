@@ -636,6 +636,7 @@ class ExtensionData {
       schemaURLs: null,
       type: this.type,
       webAccessibleResources,
+      privateBrowsingAllowed: manifest.incognito !== "not_allowed",
     };
 
     if (this.type === "extension") {
@@ -1599,6 +1600,14 @@ class Extension extends ExtensionData {
     return this.manifest.optional_permissions;
   }
 
+  get privateBrowsingAllowed() {
+    return this.policy.privateBrowsingAllowed;
+  }
+
+  canAccessWindow(window) {
+    return this.policy.canAccessWindow(window);
+  }
+
   // Representation of the extension to send to content
   // processes. This should include anything the content process might
   // need.
@@ -1615,6 +1624,7 @@ class Extension extends ExtensionData {
       whiteListedHosts: this.whiteListedHosts.patterns.map(pat => pat.pattern),
       permissions: this.permissions,
       optionalPermissions: this.optionalPermissions,
+      privateBrowsingAllowed: this.privateBrowsingAllowed,
     };
   }
 
@@ -1848,6 +1858,12 @@ class Extension extends ExtensionData {
 
       if (this.hasShutdown) {
         return;
+      }
+
+      if (this.addonData && this.addonData.incognitoOverride !== undefined) {
+        this.policy.privateBrowsingAllowed = this.addonData.incognitoOverride !== "not_allowed";
+      } else {
+        this.policy.privateBrowsingAllowed = this.manifest.incognito !== "not_allowed";
       }
 
       GlobalManager.init(this);

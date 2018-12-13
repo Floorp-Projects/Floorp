@@ -89,6 +89,14 @@ class ExtensionGlobal {
         return;
     }
 
+    // SetFrameData does not have a recipient extension, or it would be
+    // an extension process. Anything following this point must have
+    // a recipient extension, so check access to the window.
+    let policy = WebExtensionPolicy.getByID(recipient.extensionId);
+    if (!policy.canAccessWindow(this.global.content)) {
+      throw new Error("Extension cannot access window");
+    }
+
     return ExtensionContent.receiveMessage(this.global, messageName, target, data, recipient);
   }
 }
@@ -144,6 +152,8 @@ ExtensionManager = {
         permissions: extension.permissions,
         allowedOrigins: extension.whiteListedHosts,
         webAccessibleResources: extension.webAccessibleResources,
+
+        privateBrowsingAllowed: extension.privateBrowsingAllowed,
 
         contentSecurityPolicy: extension.contentSecurityPolicy,
 

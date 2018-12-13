@@ -11,7 +11,6 @@ ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://normandy/lib/LogManager.jsm");
 ChromeUtils.import("resource://normandy/lib/Storage.jsm");
-ChromeUtils.import("resource://normandy/lib/Heartbeat.jsm");
 ChromeUtils.import("resource://normandy/lib/ClientEnvironment.jsm");
 ChromeUtils.import("resource://normandy/lib/PreferenceExperiments.jsm");
 
@@ -23,7 +22,6 @@ const {generateUUID} = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUID
 
 var EXPORTED_SYMBOLS = ["NormandyDriver"];
 
-const log = LogManager.getLogger("normandy-driver");
 const actionLog = LogManager.getLogger("normandy-driver.actions");
 
 var NormandyDriver = function(sandboxManager) {
@@ -55,23 +53,6 @@ var NormandyDriver = function(sandboxManager) {
         throw new Error(`Invalid log level "${level}"`);
       }
       actionLog[level](message);
-    },
-
-    showHeartbeat(options) {
-      log.info(`Showing heartbeat prompt "${options.message}"`);
-      const aWindow = Services.wm.getMostRecentWindow("navigator:browser");
-
-      if (!aWindow) {
-        return sandbox.Promise.reject(new sandbox.Error("No window to show heartbeat in"));
-      }
-
-      const internalOptions = Object.assign({}, options, {testing: this.testing});
-      const heartbeat = new Heartbeat(aWindow, sandboxManager, internalOptions);
-      return sandbox.Promise.resolve(heartbeat.eventEmitter.createSandboxedEmitter());
-    },
-
-    saveHeartbeatFlow() {
-      // no-op required by spec
     },
 
     client() {

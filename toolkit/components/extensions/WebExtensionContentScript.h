@@ -18,6 +18,7 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
+#include "nsIDocShell.h"
 #include "nsWrapperCache.h"
 
 class nsILoadInfo;
@@ -65,6 +66,18 @@ class MOZ_STACK_CLASS DocInfo final {
       return mObj.as<LoadInfo>();
     }
     return nullptr;
+  }
+
+  already_AddRefed<nsILoadContext> GetLoadContext() const {
+    nsCOMPtr<nsILoadContext> loadContext;
+    if (nsPIDOMWindowOuter* window = GetWindow()) {
+      nsIDocShell* docShell = window->GetDocShell();
+      loadContext = do_QueryInterface(docShell);
+    } else if (nsILoadInfo* loadInfo = GetLoadInfo()) {
+      nsCOMPtr<nsISupports> requestingContext = loadInfo->GetLoadingContext();
+      loadContext = do_QueryInterface(requestingContext);
+    }
+    return loadContext.forget();
   }
 
  private:
