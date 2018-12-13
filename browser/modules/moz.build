@@ -136,7 +136,6 @@ EXTRA_JS_MODULES += [
     'Discovery.jsm',
     'ExtensionsUI.jsm',
     'FaviconLoader.jsm',
-    'Feeds.jsm',
     'FormValidationHandler.jsm',
     'HomePage.jsm',
     'LaterRun.jsm',

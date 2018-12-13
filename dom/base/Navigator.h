@@ -113,6 +113,9 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   void GetUserAgent(nsAString& aUserAgent, CallerType aCallerType,
                     ErrorResult& aRv) const;
   bool OnLine();
+  void CheckProtocolHandlerAllowed(const nsAString& aScheme,
+                                   nsIURI* aHandlerURI, nsIURI* aDocumentURI,
+                                   ErrorResult& aRv);
   void RegisterProtocolHandler(const nsAString& aScheme, const nsAString& aURL,
                                const nsAString& aTitle, ErrorResult& aRv);
   void RegisterContentHandler(const nsAString& aMIMEType, const nsAString& aURL,

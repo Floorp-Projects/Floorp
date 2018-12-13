@@ -74,6 +74,10 @@
 #include "nsIPresentationService.h"
 #include "nsIScriptError.h"
 
+#include "nsIExternalProtocolHandler.h"
+#include "TabChild.h"
+#include "URIUtils.h"
+
 #include "mozilla/dom/MediaDevices.h"
 #include "MediaManager.h"
 
@@ -821,27 +825,179 @@ void Navigator::RegisterContentHandler(const nsAString& aMIMEType,
                                        const nsAString& aTitle,
                                        ErrorResult& aRv) {}
 
-void Navigator::RegisterProtocolHandler(const nsAString& aProtocol,
-                                        const nsAString& aURI,
-                                        const nsAString& aTitle,
-                                        ErrorResult& aRv) {
-  if (!mWindow || !mWindow->GetOuterWindow() || !mWindow->GetDocShell()) {
+// This list should be kept up-to-date with the spec:
+// https://html.spec.whatwg.org/multipage/system-state.html#custom-handlers
+static const char* const kSafeSchemes[] = {
+    "bitcoin", "geo",  "im",   "irc",         "ircs", "magnet", "mailto",
+    "mms",     "news", "nntp", "openpgp4fpr", "sip",  "sms",    "smsto",
+    "ssh",     "tel",  "urn",  "webcal",      "wtai", "xmpp"};
+
+void Navigator::CheckProtocolHandlerAllowed(const nsAString& aScheme,
+                                            nsIURI* aHandlerURI,
+                                            nsIURI* aDocumentURI,
+                                            ErrorResult& aRv) {
+  auto raisePermissionDeniedHandler = [&] {
+    nsAutoCString spec;
+    aHandlerURI->GetSpec(spec);
+    nsPrintfCString message("Permission denied to add %s as a protocol handler",
+                            spec.get());
+    aRv.ThrowDOMException(NS_ERROR_DOM_SECURITY_ERR, message);
+  };
+
+  auto raisePermissionDeniedScheme = [&] {
+    nsPrintfCString message(
+        "Permission denied to add a protocol handler for %s",
+        NS_ConvertUTF16toUTF8(aScheme).get());
+    aRv.ThrowDOMException(NS_ERROR_DOM_SECURITY_ERR, message);
+  };
+
+  if (!aDocumentURI || !aHandlerURI) {
+    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return;
   }
 
-  if (!mWindow->IsSecureContext() && mWindow->GetDoc()) {
-    mWindow->GetDoc()->WarnOnceAbout(
-        nsIDocument::eRegisterProtocolHandlerInsecure);
+  nsCString spec;
+  aHandlerURI->GetSpec(spec);
+  // If the uri doesn't contain '%s', it won't be a good handler - the %s
+  // gets replaced with the handled URI.
+  if (!FindInReadable(NS_LITERAL_CSTRING("%s"), spec)) {
+    aRv.ThrowDOMException(NS_ERROR_DOM_SYNTAX_ERR);
+    return;
+  }
+
+  // For security reasons we reject non-http(s) urls (see bug 354316),
+  nsAutoCString docScheme;
+  nsAutoCString handlerScheme;
+  aDocumentURI->GetScheme(docScheme);
+  aHandlerURI->GetScheme(handlerScheme);
+  if ((!docScheme.EqualsLiteral("https") && !docScheme.EqualsLiteral("http")) ||
+      (!handlerScheme.EqualsLiteral("https") &&
+       !handlerScheme.EqualsLiteral("http"))) {
+    raisePermissionDeniedHandler();
+    return;
+  }
+
+  // Should be same-origin:
+  nsAutoCString handlerHost;
+  aHandlerURI->GetHostPort(handlerHost);
+  nsAutoCString documentHost;
+  aDocumentURI->GetHostPort(documentHost);
+  if (!handlerHost.Equals(documentHost) || !handlerScheme.Equals(docScheme)) {
+    raisePermissionDeniedHandler();
+    return;
+  }
+
+  // Having checked the handler URI, check the scheme:
+  nsAutoCString scheme;
+  ToLowerCase(NS_ConvertUTF16toUTF8(aScheme), scheme);
+  if (StringBeginsWith(scheme, NS_LITERAL_CSTRING("web+"))) {
+    // Check for non-ascii
+    nsReadingIterator<char> iter;
+    nsReadingIterator<char> iterEnd;
+    auto remainingScheme = Substring(scheme, 4 /* web+ */);
+    remainingScheme.BeginReading(iter);
+    remainingScheme.EndReading(iterEnd);
+    // Scheme suffix must be non-empty
+    if (iter == iterEnd) {
+      raisePermissionDeniedScheme();
+      return;
+    }
+    for (; iter != iterEnd; iter++) {
+      if (*iter < 'a' || *iter > 'z') {
+        raisePermissionDeniedScheme();
+        return;
+      }
+    }
+  } else {
+    bool matches = false;
+    for (const char* safeScheme : kSafeSchemes) {
+      if (scheme.Equals(safeScheme)) {
+        matches = true;
+        break;
+      }
+    }
+    if (!matches) {
+      raisePermissionDeniedScheme();
+      return;
+    }
+  }
+
+  nsCOMPtr<nsIProtocolHandler> handler;
+  nsCOMPtr<nsIIOService> io = services::GetIOService();
+  if (NS_FAILED(
+          io->GetProtocolHandler(scheme.get(), getter_AddRefs(handler)))) {
+    raisePermissionDeniedScheme();
+    return;
+  }
+
+  // Check to make sure this isn't already handled internally (we don't
+  // want to let them take over, say "chrome"). In theory, the checks above
+  // should have already taken care of this.
+  nsCOMPtr<nsIExternalProtocolHandler> externalHandler =
+      do_QueryInterface(handler);
+  MOZ_RELEASE_ASSERT(
+      externalHandler,
+      "We should never allow overriding a builtin protocol handler");
+
+  // check if we have prefs set saying not to add this.
+  bool defaultExternal =
+      Preferences::GetBool("network.protocol-handler.external-default");
+  nsPrintfCString specificPref("network.protocol-handler.external.%s",
+                               scheme.get());
+  if (!Preferences::GetBool(specificPref.get(), defaultExternal)) {
+    raisePermissionDeniedScheme();
+    return;
+  }
+}
+
+void Navigator::RegisterProtocolHandler(const nsAString& aScheme,
+                                        const nsAString& aURI,
+                                        const nsAString& aTitle,
+                                        ErrorResult& aRv) {
+  if (!mWindow || !mWindow->GetOuterWindow() || !mWindow->GetDocShell() ||
+      !mWindow->GetDoc()) {
+    return;
+  }
+  nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(mWindow);
+  if (loadContext->UsePrivateBrowsing()) {
+    // If we're a private window, don't alert the user or webpage. We log to the
+    // console so that web developers have some way to tell what's going wrong.
+    nsContentUtils::ReportToConsole(
+        nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"),
+        mWindow->GetDoc(), nsContentUtils::eDOM_PROPERTIES,
+        "RegisterProtocolHandlerPrivateBrowsingWarning");
+    return;
+  }
+
+  nsCOMPtr<nsIDocument> doc = mWindow->GetDoc();
+  if (!mWindow->IsSecureContext()) {
+    doc->WarnOnceAbout(nsIDocument::eRegisterProtocolHandlerInsecure);
+  }
+
+  // Determine if doc is allowed to assign this handler
+  nsIURI* docURI = doc->GetDocumentURIObject();
+  nsCOMPtr<nsIURI> handlerURI;
+  NS_NewURI(getter_AddRefs(handlerURI), NS_ConvertUTF16toUTF8(aURI),
+            doc->GetDocumentCharacterSet(), docURI);
+  CheckProtocolHandlerAllowed(aScheme, handlerURI, docURI, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (XRE_IsContentProcess()) {
+    nsAutoString scheme(aScheme);
+    nsAutoString title(aTitle);
+    RefPtr<TabChild> tabChild = TabChild::GetFrom(mWindow);
+    tabChild->SendRegisterProtocolHandler(scheme, handlerURI, title, docURI);
+    return;
   }
 
   nsCOMPtr<nsIWebContentHandlerRegistrar> registrar =
       do_GetService(NS_WEBCONTENTHANDLERREGISTRAR_CONTRACTID);
-  if (!registrar) {
-    return;
+  if (registrar) {
+    aRv = registrar->RegisterProtocolHandler(aScheme, handlerURI, aTitle,
+                                             docURI, mWindow->GetOuterWindow());
   }
-
-  aRv = registrar->RegisterProtocolHandler(aProtocol, aURI, aTitle,
-                                           mWindow->GetOuterWindow());
 }
 
 Geolocation* Navigator::GetGeolocation(ErrorResult& aRv) {
