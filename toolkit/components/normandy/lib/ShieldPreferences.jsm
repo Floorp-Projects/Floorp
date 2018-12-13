@@ -10,6 +10,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonStudyAction: "resource://normandy/actions/AddonStudyAction.jsm",
   AddonStudies: "resource://normandy/lib/AddonStudies.jsm",
   CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
+  PreferenceExperiments: "resource://normandy/lib/PreferenceExperiments.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["ShieldPreferences"];
@@ -50,6 +51,16 @@ var ShieldPreferences = {
             if (study.active) {
               try {
                 await action.unenroll(study.recipeId, "general-opt-out");
+              } catch (err) {
+                Cu.reportError(err);
+              }
+            }
+          }
+
+          for (const experiment of await PreferenceExperiments.getAll()) {
+            if (!experiment.expired) {
+              try {
+                await PreferenceExperiments.stop(experiment.name, { reason: "general-opt-out" });
               } catch (err) {
                 Cu.reportError(err);
               }
