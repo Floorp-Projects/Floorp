@@ -251,10 +251,12 @@ this.withPrefEnv = function(inPrefs) {
 this.decorate = function(...args) {
   const funcs = Array.from(args);
   let decorated = funcs.pop();
+  const origName = decorated.name;
   funcs.reverse();
   for (const func of funcs) {
     decorated = func(decorated);
   }
+  Object.defineProperty(decorated, "name", {value: origName});
   return decorated;
 };
 
