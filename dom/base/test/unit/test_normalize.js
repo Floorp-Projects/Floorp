@@ -3,8 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function run_test()
-{
+function run_test() {
   /*
    * NOTE: [i] is not allowed in this test, since it's done via classinfo and
    * we don't have that in xpcshell; the workaround is item(i).  Suck.
@@ -23,13 +22,11 @@ function run_test()
 
 var doc; // cache for use in all tests
 
-function init()
-{
+function init() {
   doc = ParseFile("empty_document.xml");
 }
 
-function test_element()
-{
+function test_element() {
   var x = doc.createElement("funk");
 
   // one empty Text node
@@ -102,8 +99,7 @@ function test_element()
 
 // UTILITY FUNCTIONS
 
-function clearKids(node)
-{
+function clearKids(node) {
   while (node.hasChildNodes())
     node.removeChild(node.childNodes.item(0));
 }

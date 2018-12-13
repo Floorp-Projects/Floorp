@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 async function xmlEncode(aFile, aFlags, aCharset) {
-    if(aFlags == undefined) aFlags = 0;
-    if(aCharset == undefined) aCharset = "UTF-8";
+    if (aFlags == undefined) aFlags = 0;
+    if (aCharset == undefined) aCharset = "UTF-8";
 
     var doc = await do_parse_document(aFile, "text/xml");
 
@@ -83,13 +83,13 @@ add_task(async function() {
 
     encoder.setCharset("UTF-8");
     // it doesn't support this flags
-    encoder.init(doc, "text/xml",  de.OutputLFLineBreak | de.OutputFormatted | de.OutputWrap);
+    encoder.init(doc, "text/xml", de.OutputLFLineBreak | de.OutputFormatted | de.OutputWrap);
     encoder.setWrapColumn(40);
     result = encoder.encodeToString();
     expected = loadContentFile("4_result_5.xml");
     Assert.equal(expected, result);
 
-    encoder.init(doc, "text/xml",  de.OutputLFLineBreak | de.OutputWrap);
+    encoder.init(doc, "text/xml", de.OutputLFLineBreak | de.OutputWrap);
     encoder.setWrapColumn(40);
     result = encoder.encodeToString();
     expected = loadContentFile("4_result_6.xml");

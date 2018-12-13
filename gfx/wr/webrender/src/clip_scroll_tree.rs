@@ -4,7 +4,7 @@
 
 use api::{ExternalScrollId, LayoutPoint, LayoutRect, LayoutVector2D};
 use api::{PipelineId, ScrollClamping, ScrollNodeState, ScrollLocation};
-use api::{LayoutSize, LayoutTransform, PropertyBinding, ScrollSensitivity, WorldPoint};
+use api::{TransformStyle, LayoutSize, LayoutTransform, PropertyBinding, ScrollSensitivity, WorldPoint};
 use gpu_types::TransformPalette;
 use internal_types::{FastHashMap, FastHashSet};
 use print_tree::{PrintTree, PrintTreePrinter};
@@ -343,6 +343,7 @@ impl ClipScrollTree {
     pub fn add_reference_frame(
         &mut self,
         parent_index: Option<SpatialNodeIndex>,
+        transform_style: TransformStyle,
         source_transform: Option<PropertyBinding<LayoutTransform>>,
         source_perspective: Option<LayoutTransform>,
         origin_in_parent_reference_frame: LayoutVector2D,
@@ -350,6 +351,7 @@ impl ClipScrollTree {
     ) -> SpatialNodeIndex {
         let node = SpatialNode::new_reference_frame(
             parent_index,
+            transform_style,
             source_transform,
             source_perspective,
             origin_in_parent_reference_frame,
@@ -495,6 +497,7 @@ fn add_reference_frame(
 ) -> SpatialNodeIndex {
     cst.add_reference_frame(
         parent,
+        TransformStyle::Preserve3D,
         Some(PropertyBinding::Value(transform)),
         None,
         origin_in_parent_reference_frame,

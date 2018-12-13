@@ -14,7 +14,7 @@ let textTests = {
   "foob": "Zm9vYg",
   "fooba": "Zm9vYmE",
   "foobar": "Zm9vYmFy",
-}
+};
 
 // Examples from RFC 4648, section 9.
 let binaryTests = [{

@@ -1124,7 +1124,9 @@ XrayTraits* GetXrayTraits(JSObject* obj) {
 // one such wrapper which can create or access the expando. This allows for
 // faster access to the expando, including through JIT inline caches.
 static inline bool CompartmentHasExclusiveExpandos(JSObject* obj) {
-  return IsInSandboxCompartment(obj);
+  JS::Compartment* comp = js::GetObjectCompartment(obj);
+  CompartmentPrivate* priv = CompartmentPrivate::Get(comp);
+  return priv && priv->hasExclusiveExpandos;
 }
 
 static inline JSObject* GetCachedXrayExpando(JSObject* wrapper);

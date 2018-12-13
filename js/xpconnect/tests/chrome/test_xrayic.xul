@@ -40,8 +40,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1355109
   }
 
   function testSandbox(iterations) {
-    var sandbox = new Cu.Sandbox(window);
-    sandbox.iframes = document.getElementsByTagName('iframe');
+    // Create an expanded principal sandbox to get xrays with exclusive
+    // expandos.
+    var sandbox = new Cu.Sandbox(["http://test1.example.org",
+                                  "http://test2.example.org"]);
+    sandbox.iframeWindows = new sandbox.Array();
+    for (let iframe of document.getElementsByTagName('iframe')) {
+        sandbox.iframeWindows.push(iframe.contentWindow);
+    }
     Cu.evalInSandbox(testClassName.toSource(), sandbox);
     Cu.evalInSandbox(testIC.toSource(), sandbox);
     is(Cu.evalInSandbox("testIC(" + iterations + ");", sandbox), true, "sandbox test");
@@ -55,8 +61,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1355109
   }
 
   function testIC(iterations) {
-    for (var i = 0; i < this.iframes.length; i++) {
-      var win = this.iframes[i].contentWindow;
+    for (var i = 0; i < this.iframeWindows.length; i++) {
+      var win = this.iframeWindows[i];
       var spans = win.document.getElementsByTagName('span');
       for (var j = 0; j < spans.length; j++) {
         var span = spans[j];

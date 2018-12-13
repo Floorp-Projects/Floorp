@@ -95,6 +95,23 @@ interface WebExtensionPolicy {
   static readonly attribute boolean isExtensionProcess;
 
   /**
+   * Set based on the manifest.incognito value:
+   * If "spanning" or "split" will be true.
+   * If "not_allowed" will be false.
+   */
+  [Pure]
+  attribute boolean privateBrowsingAllowed;
+
+  /**
+   * Returns true if the extension can access a window.  Access is
+   * determined by matching the windows private browsing context
+   * with privateBrowsingMode.  This does not, and is not meant to
+   * handle specific differences between spanning and split mode.
+   */
+  [Affects=Nothing]
+  boolean canAccessWindow(WindowProxy window);
+
+  /**
    * Returns true if the extension has cross-origin access to the given URI.
    */
   boolean canAccessURI(URI uri, optional boolean explicit = false);
@@ -193,4 +210,6 @@ dictionary WebExtensionInit {
   DOMString? contentSecurityPolicy = null;
 
   sequence<DOMString>? backgroundScripts = null;
+
+  boolean privateBrowsingAllowed = true;
 };

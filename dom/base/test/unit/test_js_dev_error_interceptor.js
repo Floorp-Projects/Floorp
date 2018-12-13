@@ -19,8 +19,8 @@ function errors() {
         // The following errors MUST be captured.
         new TypeError("This is a TypeError: " + Math.random()),
         new SyntaxError("This is a SyntaxError: " + Math.random()),
-        new ReferenceError("This is a ReferenceError: " + Math.random())
-    ]
+        new ReferenceError("This is a ReferenceError: " + Math.random()),
+    ];
 }
 
 function isDeveloperError(e) {
@@ -52,5 +52,5 @@ function run_test() {
         ChromeUtils.clearRecentJSDevError();
         Assert.equal(ChromeUtils.recentJSDevError, undefined);
     }
-};
+}
 
