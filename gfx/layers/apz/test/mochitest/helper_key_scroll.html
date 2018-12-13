@@ -107,7 +107,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1383365
       }
     }
 
-    waitUntilApzStable().then(runTests);
+    waitUntilApzStable().then(forceLayerTreeToCompositor).then(runTests);
   </script>
 </head>
 <body style="height: 500px; overflow: scroll">
