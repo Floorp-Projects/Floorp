@@ -14,6 +14,17 @@ function getPrefName(prefRow) {
   return prefRow.getAttribute("aria-label");
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+  if (!Preferences.get("browser.aboutConfig.showWarning")) {
+    loadPrefs();
+  }
+}, { once: true });
+
+function alterWarningState() {
+  Services.prefs.setBoolPref("browser.aboutConfig.showWarning",
+    document.getElementById("showWarningNextTime").checked);
+}
+
 function loadPrefs() {
   [...document.styleSheets].find(s => s.title == "infop").disabled = true;
 
