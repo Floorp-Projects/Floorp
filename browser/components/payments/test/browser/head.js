@@ -666,9 +666,14 @@ async function fillInCardForm(frame, aCard, aOptions = {}) {
       // of this should be investigated further.
       await ContentTaskUtils.waitForCondition(() => field == content.document.activeElement,
                                               `Waiting for field #${key} to get focus`);
-      // cc-exp-* fields are numbers so convert to strings and pad left with 0
-      let fillValue = val.toString().padStart(2, "0");
-      EventUtils.synthesizeKey(fillValue, {}, Cu.waiveXrays(content.window));
+      if (key == "billingAddressGUID") {
+        // Can't type the value in, press Down until the value is found
+        content.fillField(field, val);
+      } else {
+        // cc-exp-* fields are numbers so convert to strings and pad left with 0
+        let fillValue = val.toString().padStart(2, "0");
+        EventUtils.synthesizeKey(fillValue, {}, Cu.waiveXrays(content.window));
+      }
       // cc-exp-* field values are not padded, so compare with unpadded string.
       is(field.value, val.toString(), `${key} value is correct after sendString`);
     }
