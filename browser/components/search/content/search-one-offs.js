@@ -1219,6 +1219,7 @@ class SearchOneOffs {
     let target = event.originalTarget;
     // Prevent the context menu from appearing except on the one off buttons.
     if (!target.classList.contains("searchbar-engine-one-off-item") ||
+        target.classList.contains("search-setting-button-compact") ||
         target.classList.contains("dummy")) {
       event.preventDefault();
       return;
