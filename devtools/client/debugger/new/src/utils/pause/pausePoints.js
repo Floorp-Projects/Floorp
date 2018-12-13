@@ -47,13 +47,14 @@ export async function mapPausePoints<T>(
   iteratee: PausePoint => T
 ) {
   const results = await Promise.all(convertToList(pausePoints).map(iteratee));
+  let index = 0;
 
   const newPausePoints = {};
   for (const line in pausePoints) {
     const linePoints = pausePoints[line];
     const newLinePoints = (newPausePoints[line] = {});
     for (const column in linePoints) {
-      newLinePoints[column] = results.shift();
+      newLinePoints[column] = results[index++];
     }
   }
 
