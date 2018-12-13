@@ -6511,11 +6511,12 @@ void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info) {
       if (screen) {
         int32_t x, y, width, height;
         screen->GetRectDisplayPix(&x, &y, &width, &height);
+        double scale = GetDesktopToDeviceScale().scale;
 
-        info->x = x;
-        info->y = y;
-        info->cx = width;
-        info->cy = height;
+        info->x = NSToIntRound(x * scale);
+        info->y = NSToIntRound(y * scale);
+        info->cx = NSToIntRound(width * scale);
+        info->cy = NSToIntRound(height * scale);
       }
     }
   }
