@@ -2,10 +2,33 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import { buildMenu, showMenu } from "devtools-contextmenu";
 
-export default function showContextMenu(props) {
+import actions from "../../../actions";
+import type { Breakpoint } from "../../../types";
+import type { FormattedBreakpoint } from "../../../selectors/breakpointSources";
+
+type Props = {
+  breakpoint: FormattedBreakpoint,
+  breakpoints: Breakpoint[],
+  removeBreakpoint: typeof actions.removeBreakpoint,
+  removeBreakpoints: typeof actions.removeBreakpoints,
+  removeAllBreakpoints: typeof actions.removeAllBreakpoints,
+  toggleBreakpoints: typeof actions.toggleBreakpoints,
+  toggleAllBreakpoints: typeof actions.toggleAllBreakpoints,
+  toggleDisabledBreakpoint: typeof actions.toggleDisabledBreakpoint,
+  selectSpecificLocation: typeof actions.selectSpecificLocation,
+  setBreakpointCondition: typeof actions.setBreakpointCondition,
+  openConditionalPanel: typeof actions.openConditionalPanel,
+  contextMenuEvent: SyntheticEvent<HTMLElement>
+};
+
+export default function showContextMenu(props: Props) {
   const {
+    breakpoint,
+    breakpoints,
     removeBreakpoint,
     removeBreakpoints,
     removeAllBreakpoints,
@@ -15,8 +38,6 @@ export default function showContextMenu(props) {
     selectSpecificLocation,
     setBreakpointCondition,
     openConditionalPanel,
-    breakpoints,
-    breakpoint,
     contextMenuEvent
   } = props;
 
@@ -169,7 +190,7 @@ export default function showContextMenu(props) {
     accesskey: addConditionKey,
     click: () => {
       selectSpecificLocation(breakpoint.selectedLocation);
-      openConditionalPanel(breakpoint.selectedLocation.line);
+      openConditionalPanel(breakpoint.selectedLocation);
     }
   };
 
@@ -179,7 +200,7 @@ export default function showContextMenu(props) {
     accesskey: editConditionKey,
     click: () => {
       selectSpecificLocation(breakpoint.selectedLocation);
-      openConditionalPanel(breakpoint.selectedLocation.line);
+      openConditionalPanel(breakpoint.selectedLocation);
     }
   };
 

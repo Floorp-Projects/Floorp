@@ -1,13 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function findBreakpoint(dbg, url, line) {
+function findBreakpoint(dbg, url, line, column = 0) {
   const {
     selectors: { getBreakpoint },
     getState
   } = dbg;
   const source = findSource(dbg, url);
-  return getBreakpoint(getState(), { sourceId: source.id, line });
+  const location = { sourceId: source.id, line, column };
+  return getBreakpoint(getState(), location);
 }
 
 function getLineEl(dbg, line) {
@@ -63,6 +64,7 @@ add_task(async function() {
 
   await setConditionalBreakpoint(dbg, 5, "1");
   await waitForDispatch(dbg, "ADD_BREAKPOINT");
+  
   let bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.condition, "1", "breakpoint is created with the condition");
   assertEditorBreakpoint(dbg, 5, true);
