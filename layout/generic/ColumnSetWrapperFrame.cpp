@@ -120,9 +120,10 @@ void ColumnSetWrapperFrame::RemoveFrame(ChildListID aListID,
     const nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame->IsColumnSpan(), "aFrame is not column-span?");
 
-  if (!aFrame->Style()->IsAnonBox()) {
-    // aFrame is the primary frame of the element having "column-span: all".
-    // Traverse no further.
+  if (!nsLayoutUtils::GetStyleFrame(const_cast<nsIFrame*>(aFrame))
+           ->Style()
+           ->IsAnonBox()) {
+    // aFrame's style frame has "column-span: all". Traverse no further.
     return;
   }
 
