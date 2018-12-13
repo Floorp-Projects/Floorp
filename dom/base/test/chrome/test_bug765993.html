@@ -28,26 +28,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=765993
 ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
 
-window.onload = function () {
+window.onload = function() {
     SimpleTest.waitForExplicitFinish();
 
     var iframe = document.createElement("iframe");
     iframe.src = "http://mochi.test:8888/tests/dom/base/test/chrome/nochrome_bug765993.html";
-    iframe.onload = function () {
+    iframe.onload = function() {
         var script = iframe.contentWindow.document.createElement("script");
         script.src = "http://mochi.test:8888/tests/dom/base/test/chrome/nochrome_bug765993.js";
-        script.onload = function () {
+        script.onload = function() {
             var dbg = new Debugger(iframe.contentWindow);
             ok(dbg, "Should be able to create debugger");
 
             var scripts = dbg.findScripts({
-                url: "http://mochi.test:8888/tests/dom/base/test/chrome/nochrome_bug765993.js"
+                url: "http://mochi.test:8888/tests/dom/base/test/chrome/nochrome_bug765993.js",
             });
             ok(scripts.length > 0, "Should be able to find script");
 
             is(scripts[0].source.sourceMapURL, "foo.js.map");
             SimpleTest.finish();
-        }
+        };
 
         iframe.contentWindow.document.body.appendChild(script);
     };

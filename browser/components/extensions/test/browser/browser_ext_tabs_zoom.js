@@ -4,12 +4,17 @@
 
 const SITE_SPECIFIC_PREF = "browser.zoom.siteSpecific";
 
-add_task(async function() {
-  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
-  let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
+// A single monitor for the tests.  If it receives any
+// incognito data in event listeners it will fail.
+let monitor;
+add_task(async function startup() {
+  monitor = await startIncognitoMonitorExtension();
+});
+registerCleanupFunction(async function finish() {
+  await monitor.unload();
+});
 
-  gBrowser.selectedTab = tab1;
-
+add_task(async function test_zoom_api() {
   async function background() {
     function promiseUpdated(tabId, attr) {
       return new Promise(resolve => {
@@ -101,10 +106,10 @@ add_task(async function() {
     };
 
     try {
-      let tabs = await browser.tabs.query({lastFocusedWindow: true});
-      browser.test.assertEq(tabs.length, 3, "We have three tabs");
+      let tabs = await browser.tabs.query({});
+      browser.test.assertEq(tabs.length, 4, "We have 4 tabs");
 
-      let tabIds = [tabs[1].id, tabs[2].id];
+      let tabIds = tabs.splice(1).map(tab => tab.id);
       await checkZoom(tabIds[0], 1);
 
       await browser.tabs.setZoom(tabIds[0], 2);
@@ -132,6 +137,9 @@ add_task(async function() {
       await browser.tabs.setZoom(tabIds[1], 1.5);
       await checkZoom(tabIds[1], 1.5, 2);
 
+      browser.test.log(`Switch to tab 3, expect zoom to affect private window`);
+      await browser.tabs.setZoom(tabIds[2], 3);
+      await checkZoom(tabIds[2], 3, 1);
 
       browser.test.log(`Switch to tab 1, expect asynchronous zoom change just after the switch`);
       await Promise.all([
@@ -153,10 +161,12 @@ add_task(async function() {
       await Promise.all([
         browser.tabs.setZoom(tabIds[0], 0),
         browser.tabs.setZoom(tabIds[1], 0),
+        browser.tabs.setZoom(tabIds[2], 0),
       ]);
       await Promise.all([
         checkZoom(tabIds[0], 1, 1.1),
         checkZoom(tabIds[1], 1, 1.5),
+        checkZoom(tabIds[2], 1, 3),
       ]);
 
 
@@ -211,12 +221,24 @@ add_task(async function() {
     extension.sendMessage("msg-done", id, resp);
   });
 
+  let url = "http://example.com/";
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
+
+  let privateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let selectedBrowser = privateWindow.getBrowser().selectedBrowser;
+  BrowserTestUtils.loadURI(selectedBrowser, url);
+  await BrowserTestUtils.browserLoaded(selectedBrowser, false, url);
+
+  gBrowser.selectedTab = tab1;
+
   await extension.startup();
 
   await extension.awaitFinish("tab-zoom");
 
   await extension.unload();
 
+  privateWindow.close();
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
 });

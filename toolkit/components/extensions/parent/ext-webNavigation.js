@@ -145,7 +145,7 @@ class WebNavigationEventManager extends EventManager {
         fire.async(data2);
       };
 
-      WebNavigation[eventName].addListener(listener, filters);
+      WebNavigation[eventName].addListener(listener, filters, context);
       return () => {
         WebNavigation[eventName].removeListener(listener);
       };

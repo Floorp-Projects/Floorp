@@ -1657,6 +1657,31 @@ add_task(async function transient() {
   otherAction.remove();
 });
 
+add_task(async function action_disablePrivateBrowsing() {
+  let id = "testWidget";
+  let action = PageActions.addAction(new PageActions.Action({
+    id,
+    disablePrivateBrowsing: true,
+    title: "title",
+    disabled: false,
+    pinnedToUrlbar: true,
+  }));
+  // Open an actionable page so that the main page action button appears.
+  let url = "http://example.com/";
+  let privateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  await BrowserTestUtils.openNewForegroundTab(privateWindow.gBrowser, url, true, true);
+
+  Assert.ok(action.canShowInWindow(window), "should show in default window");
+  Assert.ok(!action.canShowInWindow(privateWindow), "should not show in private browser");
+  Assert.ok(action.shouldShowInUrlbar(window), "should show in default urlbar");
+  Assert.ok(!action.shouldShowInUrlbar(privateWindow), "should not show in default urlbar");
+  Assert.ok(action.shouldShowInPanel(window), "should show in default urlbar");
+  Assert.ok(!action.shouldShowInPanel(privateWindow), "should not show in default urlbar");
+
+  action.remove();
+
+  privateWindow.close();
+});
 
 function assertActivatedPageActionPanelHidden() {
   Assert.ok(!document.getElementById(BrowserPageActions._activatedActionPanelID));

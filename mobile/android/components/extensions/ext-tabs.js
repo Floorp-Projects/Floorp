@@ -85,6 +85,10 @@ this.tabs = class extends ExtensionAPI {
       } else {
         tab = tabManager.getWrapper(tabTracker.activeTab);
       }
+      if (!tab) {
+        throw new ExtensionError(tabId == null ?
+          "Cannot access activeTab" : `Invalid tab ID: ${tabId}`);
+      }
 
       await tabListener.awaitTabReady(tab.nativeTab);
 
