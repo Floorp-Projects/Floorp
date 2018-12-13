@@ -64,6 +64,11 @@ JSObject* SymbolObject::initClass(JSContext* cx, Handle<GlobalObject*> global,
     unsigned attrs = JSPROP_READONLY | JSPROP_PERMANENT;
     WellKnownSymbols* wks = cx->runtime()->wellKnownSymbols;
     for (size_t i = 0; i < JS::WellKnownSymbolLimit; i++) {
+#ifndef NIGHTLY_BUILD
+      if (i == SymbolCode::matchAll) {
+        continue;
+      }
+#endif
       value.setSymbol(wks->get(i));
       if (!NativeDefineDataProperty(cx, ctor, names[i], value, attrs)) {
         return nullptr;
