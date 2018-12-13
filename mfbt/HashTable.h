@@ -80,6 +80,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
@@ -1078,6 +1079,71 @@ class HashTableEntry {
   }
 };
 
+// A slot represents a cached hash value and its associated entry stored
+// in the hash table. While these two things currently belong to the same
+// object, HashTableEntry, above, they do not necessarily need to be
+// contiguous in memory and this abstraction helps enforce the separation
+// between the two.
+template <class T>
+class EntrySlot {
+  using NonConstT = typename RemoveConst<T>::Type;
+
+  using Entry = HashTableEntry<T>;
+
+  Entry* mEntry;
+
+ public:
+  EntrySlot(Entry* aEntry) : mEntry(aEntry) {}
+
+  EntrySlot(const EntrySlot&) = default;
+  EntrySlot(EntrySlot&& aOther) = default;
+
+  EntrySlot& operator=(const EntrySlot&) = default;
+  EntrySlot& operator=(EntrySlot&&) = default;
+
+  bool operator==(const EntrySlot& aRhs) const { return mEntry == aRhs.mEntry; }
+
+  bool operator<(const EntrySlot& aRhs) const { return mEntry < aRhs.mEntry; }
+
+  EntrySlot& operator++() {
+    ++mEntry;
+    return *this;
+  }
+
+  void destroy() { mEntry->destroy(); }
+
+  void swap(EntrySlot& aOther) { mEntry->swap(aOther.mEntry); }
+
+  T& get() const { return mEntry->get(); }
+
+  NonConstT& getMutable() { return mEntry->getMutable(); }
+
+  bool isFree() const { return mEntry->isFree(); }
+
+  void clearLive() { mEntry->clearLive(); }
+
+  void clear() { mEntry->clear(); }
+
+  bool isRemoved() const { return mEntry->isRemoved(); }
+
+  void removeLive() { mEntry->removeLive(); }
+
+  bool isLive() const { return mEntry->isLive(); }
+
+  void setCollision() { mEntry->setCollision(); }
+  void unsetCollision() { mEntry->unsetCollision(); }
+  bool hasCollision() const { return mEntry->hasCollision(); }
+  bool matchHash(HashNumber hn) { return mEntry->matchHash(hn); }
+  HashNumber getKeyHash() const { return mEntry->getKeyHash(); }
+
+  template <typename... Args>
+  void setLive(HashNumber aHashNumber, Args&&... aArgs) {
+    mEntry->setLive(aHashNumber, std::forward<Args>(aArgs)...);
+  }
+
+  Entry* toEntry() const { return mEntry; }
+};
+
 template <class T, class HashPolicy, class AllocPolicy>
 class HashTable : private AllocPolicy {
   friend class mozilla::ReentrancyGuard;
@@ -1088,6 +1154,16 @@ class HashTable : private AllocPolicy {
 
  public:
   using Entry = HashTableEntry<T>;
+  using Slot = EntrySlot<T>;
+
+  template <typename F>
+  static void forEachSlot(Entry* aEntries, uint32_t aCapacity, F&& f) {
+    Entry* end = aEntries + aCapacity;
+    for (Entry* start = aEntries; start < end; ++start) {
+      Slot slot(start);
+      f(slot);
+    }
+  }
 
   // A nullable pointer to a hash table element. A Ptr |p| can be tested
   // either explicitly |if (p.found()) p->...| or using boolean conversion
@@ -1096,15 +1172,15 @@ class HashTable : private AllocPolicy {
   class Ptr {
     friend class HashTable;
 
-    Entry* mEntry;
+    Slot mSlot;
 #ifdef DEBUG
     const HashTable* mTable;
     Generation mGeneration;
 #endif
 
    protected:
-    Ptr(Entry& aEntry, const HashTable& aTable)
-        : mEntry(&aEntry)
+    Ptr(Slot aSlot, const HashTable& aTable)
+        : mSlot(aSlot)
 #ifdef DEBUG
           ,
           mTable(&aTable),
@@ -1115,7 +1191,7 @@ class HashTable : private AllocPolicy {
 
     // This constructor is used only by AddPtr() within lookupForAdd().
     explicit Ptr(const HashTable& aTable)
-        : mEntry(nullptr)
+        : mSlot(nullptr)
 #ifdef DEBUG
           ,
           mTable(&aTable),
@@ -1124,11 +1200,11 @@ class HashTable : private AllocPolicy {
     {
     }
 
-    bool isValid() const { return !!mEntry; }
+    bool isValid() const { return !!mSlot.toEntry(); }
 
    public:
     Ptr()
-        : mEntry(nullptr)
+        : mSlot(nullptr)
 #ifdef DEBUG
           ,
           mTable(nullptr),
@@ -1144,14 +1220,14 @@ class HashTable : private AllocPolicy {
 #ifdef DEBUG
       MOZ_ASSERT(mGeneration == mTable->generation());
 #endif
-      return mEntry->isLive();
+      return mSlot.isLive();
     }
 
     explicit operator bool() const { return found(); }
 
     bool operator==(const Ptr& aRhs) const {
       MOZ_ASSERT(found() && aRhs.found());
-      return mEntry == aRhs.mEntry;
+      return mSlot == aRhs.mSlot;
     }
 
     bool operator!=(const Ptr& aRhs) const {
@@ -1166,7 +1242,7 @@ class HashTable : private AllocPolicy {
       MOZ_ASSERT(found());
       MOZ_ASSERT(mGeneration == mTable->generation());
 #endif
-      return mEntry->get();
+      return mSlot.get();
     }
 
     T* operator->() const {
@@ -1174,7 +1250,7 @@ class HashTable : private AllocPolicy {
       MOZ_ASSERT(found());
       MOZ_ASSERT(mGeneration == mTable->generation());
 #endif
-      return &mEntry->get();
+      return &mSlot.get();
     }
   };
 
@@ -1187,8 +1263,8 @@ class HashTable : private AllocPolicy {
     uint64_t mMutationCount;
 #endif
 
-    AddPtr(Entry& aEntry, const HashTable& aTable, HashNumber aHashNumber)
-        : Ptr(aEntry, aTable),
+    AddPtr(Slot aSlot, const HashTable& aTable, HashNumber aHashNumber)
+        : Ptr(aSlot, aTable),
           mKeyHash(aHashNumber)
 #ifdef DEBUG
           ,
@@ -1198,7 +1274,7 @@ class HashTable : private AllocPolicy {
     }
 
     // This constructor is used when lookupForAdd() is performed on a table
-    // lacking entry storage; it leaves mEntry null but initializes everything
+    // lacking entry storage; it leaves mSlot null but initializes everything
     // else.
     AddPtr(const HashTable& aTable, HashNumber aHashNumber)
         : Ptr(aTable),
@@ -1225,8 +1301,8 @@ class HashTable : private AllocPolicy {
     friend class HashTable;
 
     explicit Iterator(const HashTable& aTable)
-        : mCur(aTable.mTable),
-          mEnd(aTable.mTable + aTable.capacity())
+        : mCur(aTable.slotForIndex(0)),
+          mEnd(aTable.slotForIndex(aTable.capacity()))
 #ifdef DEBUG
           ,
           mTable(aTable),
@@ -1235,13 +1311,13 @@ class HashTable : private AllocPolicy {
           mValidEntry(true)
 #endif
     {
-      while (mCur < mEnd && !mCur->isLive()) {
+      while (mCur < mEnd && !mCur.isLive()) {
         ++mCur;
       }
     }
 
-    Entry* mCur;
-    Entry* mEnd;
+    Slot mCur;
+    Slot mEnd;
 #ifdef DEBUG
     const HashTable& mTable;
     uint64_t mMutationCount;
@@ -1265,7 +1341,7 @@ class HashTable : private AllocPolicy {
       MOZ_ASSERT(mGeneration == mTable.generation());
       MOZ_ASSERT(mMutationCount == mTable.mMutationCount);
 #endif
-      return mCur->get();
+      return mCur.get();
     }
 
     void next() {
@@ -1274,7 +1350,7 @@ class HashTable : private AllocPolicy {
       MOZ_ASSERT(mGeneration == mTable.generation());
       MOZ_ASSERT(mMutationCount == mTable.mMutationCount);
 #endif
-      while (++mCur < mEnd && !mCur->isLive()) {
+      while (++mCur < mEnd && !mCur.isLive()) {
         continue;
       }
 #ifdef DEBUG
@@ -1316,7 +1392,7 @@ class HashTable : private AllocPolicy {
     // Removes the current element from the table, leaving |get()|
     // invalid until the next call to |next()|.
     void remove() {
-      mTable.remove(*this->mCur);
+      mTable.remove(this->mCur);
       mRemoved = true;
 #ifdef DEBUG
       this->mValidEntry = false;
@@ -1331,15 +1407,15 @@ class HashTable : private AllocPolicy {
       MOZ_ASSERT(this->mGeneration == this->Iterator::mTable.generation());
       MOZ_ASSERT(this->mMutationCount == this->Iterator::mTable.mMutationCount);
 #endif
-      return this->mCur->getMutable();
+      return this->mCur.getMutable();
     }
 
     // Removes the current element and re-inserts it into the table with
     // a new key at the new Lookup position.  |get()| is invalid after
     // this operation until the next call to |next()|.
     void rekey(const Lookup& l, const Key& k) {
-      MOZ_ASSERT(&k != &HashPolicy::getKey(this->mCur->get()));
-      Ptr p(*this->mCur, mTable);
+      MOZ_ASSERT(&k != &HashPolicy::getKey(this->mCur.get()));
+      Ptr p(this->mCur, mTable);
       mTable.rekeyWithoutRehash(p, l, k);
       mRekeyed = true;
 #ifdef DEBUG
@@ -1514,19 +1590,17 @@ class HashTable : private AllocPolicy {
             ? aAllocPolicy.template pod_malloc<Entry>(aCapacity)
             : aAllocPolicy.template maybe_pod_malloc<Entry>(aCapacity);
     if (table) {
-      for (uint32_t i = 0; i < aCapacity; i++) {
-        new (KnownNotNull, &table[i]) Entry();
-      }
+      forEachSlot(table, aCapacity, [&](const Slot& slot) {
+        new (KnownNotNull, slot.toEntry()) Entry();
+      });
     }
     return table;
   }
 
   static void destroyTable(AllocPolicy& aAllocPolicy, Entry* aOldTable,
                            uint32_t aCapacity) {
-    Entry* end = aOldTable + aCapacity;
-    for (Entry* e = aOldTable; e < end; ++e) {
-      e->~Entry();
-    }
+    forEachSlot(aOldTable, aCapacity,
+                [&](const Slot& slot) { slot.toEntry()->~Entry(); });
     aAllocPolicy.free_(aOldTable, aCapacity);
   }
 
@@ -1575,59 +1649,61 @@ class HashTable : private AllocPolicy {
     return (aHash1 - aDoubleHash.mHash2) & aDoubleHash.mSizeMask;
   }
 
-  static MOZ_ALWAYS_INLINE bool match(Entry& aEntry, const Lookup& aLookup) {
-    return HashPolicy::match(HashPolicy::getKey(aEntry.get()), aLookup);
+  static MOZ_ALWAYS_INLINE bool match(T& aEntry, const Lookup& aLookup) {
+    return HashPolicy::match(HashPolicy::getKey(aEntry), aLookup);
   }
 
   enum LookupReason { ForNonAdd, ForAdd };
 
+  Slot slotForIndex(HashNumber aIndex) const { return Slot(&mTable[aIndex]); }
+
   // Warning: in order for readonlyThreadsafeLookup() to be safe this
   // function must not modify the table in any way when Reason==ForNonAdd.
   template <LookupReason Reason>
-  MOZ_ALWAYS_INLINE Entry& lookup(const Lookup& aLookup,
-                                  HashNumber aKeyHash) const {
+  MOZ_ALWAYS_INLINE Slot lookup(const Lookup& aLookup,
+                                HashNumber aKeyHash) const {
     MOZ_ASSERT(isLiveHash(aKeyHash));
     MOZ_ASSERT(!(aKeyHash & sCollisionBit));
     MOZ_ASSERT(mTable);
 
     // Compute the primary hash address.
     HashNumber h1 = hash1(aKeyHash);
-    Entry* entry = &mTable[h1];
+    Slot slot = slotForIndex(h1);
 
     // Miss: return space for a new entry.
-    if (entry->isFree()) {
-      return *entry;
+    if (slot.isFree()) {
+      return slot;
     }
 
     // Hit: return entry.
-    if (entry->matchHash(aKeyHash) && match(*entry, aLookup)) {
-      return *entry;
+    if (slot.matchHash(aKeyHash) && match(slot.get(), aLookup)) {
+      return slot;
     }
 
     // Collision: double hash.
     DoubleHash dh = hash2(aKeyHash);
 
     // Save the first removed entry pointer so we can recycle later.
-    Entry* firstRemoved = nullptr;
+    Maybe<Slot> firstRemoved;
 
     while (true) {
       if (Reason == ForAdd && !firstRemoved) {
-        if (MOZ_UNLIKELY(entry->isRemoved())) {
-          firstRemoved = entry;
+        if (MOZ_UNLIKELY(slot.isRemoved())) {
+          firstRemoved.emplace(slot);
         } else {
-          entry->setCollision();
+          slot.setCollision();
         }
       }
 
       h1 = applyDoubleHash(h1, dh);
 
-      entry = &mTable[h1];
-      if (entry->isFree()) {
-        return firstRemoved ? *firstRemoved : *entry;
+      slot = slotForIndex(h1);
+      if (slot.isFree()) {
+        return firstRemoved.refOr(slot);
       }
 
-      if (entry->matchHash(aKeyHash) && match(*entry, aLookup)) {
-        return *entry;
+      if (slot.matchHash(aKeyHash) && match(slot.get(), aLookup)) {
+        return slot;
       }
     }
   }
@@ -1635,7 +1711,7 @@ class HashTable : private AllocPolicy {
   // This is a copy of lookup() hardcoded to the assumptions:
   //   1. the lookup is for an add;
   //   2. the key, whose |keyHash| has been passed, is not in the table.
-  Entry& findNonLiveEntry(HashNumber aKeyHash) {
+  Slot findNonLiveSlot(HashNumber aKeyHash) {
     MOZ_ASSERT(!(aKeyHash & sCollisionBit));
     MOZ_ASSERT(mTable);
 
@@ -1643,24 +1719,24 @@ class HashTable : private AllocPolicy {
 
     // Compute the primary hash address.
     HashNumber h1 = hash1(aKeyHash);
-    Entry* entry = &mTable[h1];
+    Slot slot = slotForIndex(h1);
 
     // Miss: return space for a new entry.
-    if (!entry->isLive()) {
-      return *entry;
+    if (!slot.isLive()) {
+      return slot;
     }
 
     // Collision: double hash.
     DoubleHash dh = hash2(aKeyHash);
 
     while (true) {
-      entry->setCollision();
+      slot.setCollision();
 
       h1 = applyDoubleHash(h1, dh);
 
-      entry = &mTable[h1];
-      if (!entry->isLive()) {
-        return *entry;
+      slot = slotForIndex(h1);
+      if (!slot.isLive()) {
+        return slot;
       }
     }
   }
@@ -1696,16 +1772,15 @@ class HashTable : private AllocPolicy {
     mTable = newTable;
 
     // Copy only live entries, leaving removed ones behind.
-    Entry* end = oldTable + oldCapacity;
-    for (Entry* src = oldTable; src < end; ++src) {
-      if (src->isLive()) {
-        HashNumber hn = src->getKeyHash();
-        findNonLiveEntry(hn).setLive(
-            hn, std::move(const_cast<typename Entry::NonConstT&>(src->get())));
+    forEachSlot(oldTable, oldCapacity, [&](Slot& slot) {
+      if (slot.isLive()) {
+        HashNumber hn = slot.getKeyHash();
+        findNonLiveSlot(hn).setLive(
+            hn, std::move(const_cast<typename Entry::NonConstT&>(slot.get())));
       }
 
-      src->~Entry();
-    }
+      slot.clear();
+    });
 
     // All entries have been destroyed, no need to destroyTable.
     this->free_(oldTable, oldCapacity);
@@ -1741,19 +1816,24 @@ class HashTable : private AllocPolicy {
     }
   }
 
-  void remove(Entry& aEntry) {
+  void remove(Slot& aSlot) {
     MOZ_ASSERT(mTable);
 
-    if (aEntry.hasCollision()) {
-      aEntry.removeLive();
+    if (aSlot.hasCollision()) {
+      aSlot.removeLive();
       mRemovedCount++;
     } else {
-      aEntry.clearLive();
+      aSlot.clearLive();
     }
     mEntryCount--;
 #ifdef DEBUG
     mMutationCount++;
 #endif
+  }
+
+  void remove(Entry& aEntry) {
+    Slot slot(&aEntry);
+    remove(slot);
   }
 
   void shrinkIfUnderloaded() {
@@ -1776,30 +1856,28 @@ class HashTable : private AllocPolicy {
   void rehashTableInPlace() {
     mRemovedCount = 0;
     mGen++;
-    for (uint32_t i = 0; i < capacity(); ++i) {
-      mTable[i].unsetCollision();
-    }
+    forEachSlot(mTable, capacity(), [&](Slot& slot) { slot.unsetCollision(); });
     for (uint32_t i = 0; i < capacity();) {
-      Entry* src = &mTable[i];
+      Slot src = slotForIndex(i);
 
-      if (!src->isLive() || src->hasCollision()) {
+      if (!src.isLive() || src.hasCollision()) {
         ++i;
         continue;
       }
 
-      HashNumber keyHash = src->getKeyHash();
+      HashNumber keyHash = src.getKeyHash();
       HashNumber h1 = hash1(keyHash);
       DoubleHash dh = hash2(keyHash);
-      Entry* tgt = &mTable[h1];
+      Slot tgt = slotForIndex(h1);
       while (true) {
-        if (!tgt->hasCollision()) {
-          src->swap(tgt);
-          tgt->setCollision();
+        if (!tgt.hasCollision()) {
+          src.swap(tgt);
+          tgt.setCollision();
           break;
         }
 
         h1 = applyDoubleHash(h1, dh);
-        tgt = &mTable[h1];
+        tgt = slotForIndex(h1);
       }
     }
 
@@ -1820,15 +1898,14 @@ class HashTable : private AllocPolicy {
     MOZ_ASSERT(mTable);
 
     HashNumber keyHash = prepareHash(aLookup);
-    Entry* entry = &findNonLiveEntry(keyHash);
-    MOZ_ASSERT(entry);
+    Slot slot = findNonLiveSlot(keyHash);
 
-    if (entry->isRemoved()) {
+    if (slot.isRemoved()) {
       mRemovedCount--;
       keyHash |= sCollisionBit;
     }
 
-    entry->setLive(keyHash, std::forward<Args>(aArgs)...);
+    slot.setLive(keyHash, std::forward<Args>(aArgs)...);
     mEntryCount++;
 #ifdef DEBUG
     mMutationCount++;
@@ -1837,10 +1914,7 @@ class HashTable : private AllocPolicy {
 
  public:
   void clear() {
-    Entry* end = mTable + capacity();
-    for (Entry* e = mTable; e < end; ++e) {
-      e->clear();
-    }
+    forEachSlot(mTable, capacity(), [&](Slot& slot) { slot.clear(); });
     mRemovedCount = 0;
     mEntryCount = 0;
 #ifdef DEBUG
@@ -1971,9 +2045,9 @@ class HashTable : private AllocPolicy {
       if (status == RehashFailed) {
         return false;
       }
-      aPtr.mEntry = &findNonLiveEntry(aPtr.mKeyHash);
+      aPtr.mSlot = findNonLiveSlot(aPtr.mKeyHash);
 
-    } else if (aPtr.mEntry->isRemoved()) {
+    } else if (aPtr.mSlot.isRemoved()) {
       // Changing an entry from removed to live does not affect whether we are
       // overloaded and can be handled separately.
       if (!this->checkSimulatedOOM()) {
@@ -1983,7 +2057,7 @@ class HashTable : private AllocPolicy {
       aPtr.mKeyHash |= sCollisionBit;
 
     } else {
-      // Preserve the validity of |aPtr.mEntry|.
+      // Preserve the validity of |aPtr.mSlot|.
       RebuildStatus status = rehashIfOverloaded();
       if (status == RehashFailed) {
         return false;
@@ -1992,11 +2066,11 @@ class HashTable : private AllocPolicy {
         return false;
       }
       if (status == Rehashed) {
-        aPtr.mEntry = &findNonLiveEntry(aPtr.mKeyHash);
+        aPtr.mSlot = findNonLiveSlot(aPtr.mKeyHash);
       }
     }
 
-    aPtr.mEntry->setLive(aPtr.mKeyHash, std::forward<Args>(aArgs)...);
+    aPtr.mSlot.setLive(aPtr.mKeyHash, std::forward<Args>(aArgs)...);
     mEntryCount++;
 #ifdef DEBUG
     mMutationCount++;
@@ -2049,14 +2123,14 @@ class HashTable : private AllocPolicy {
       ReentrancyGuard g(*this);
       // Check that aLookup has not been destroyed.
       MOZ_ASSERT(prepareHash(aLookup) == aPtr.mKeyHash);
-      aPtr.mEntry = &lookup<ForAdd>(aLookup, aPtr.mKeyHash);
+      aPtr.mSlot = lookup<ForAdd>(aLookup, aPtr.mKeyHash);
       if (aPtr.found()) {
         return true;
       }
     } else {
       // Clear aPtr so it's invalid; add() will allocate storage and redo the
       // lookup.
-      aPtr.mEntry = nullptr;
+      aPtr.mSlot = Slot(nullptr);
     }
     return add(aPtr, std::forward<Args>(aArgs)...);
   }
@@ -2066,7 +2140,7 @@ class HashTable : private AllocPolicy {
     ReentrancyGuard g(*this);
     MOZ_ASSERT(aPtr.found());
     MOZ_ASSERT(aPtr.mGeneration == generation());
-    remove(*aPtr.mEntry);
+    remove(aPtr.mSlot);
     shrinkIfUnderloaded();
   }
 
@@ -2077,7 +2151,7 @@ class HashTable : private AllocPolicy {
     MOZ_ASSERT(aPtr.mGeneration == generation());
     typename HashTableEntry<T>::NonConstT t(std::move(*aPtr));
     HashPolicy::setKey(t, const_cast<Key&>(aKey));
-    remove(*aPtr.mEntry);
+    remove(aPtr.mSlot);
     putNewInfallibleInternal(aLookup, std::move(t));
   }
 
