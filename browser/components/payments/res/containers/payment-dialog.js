@@ -156,16 +156,16 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
 
   /**
    * Called when the selectedPaymentCard or its relevant properties or billingAddress are changed.
-   * @param {string} selectedPaymentCardGUID
+   * @param {string} selectedPaymentCardBillingAddressGUID
    */
-  changePaymentMethod(selectedPaymentCardGUID) {
+  changePaymentMethod(selectedPaymentCardBillingAddressGUID) {
     // Clear paymentMethod merchant errors when the paymentMethod or billingAddress changes.
     let request = Object.assign({}, this.requestStore.getState().request);
     request.paymentDetails = Object.assign({}, request.paymentDetails);
     request.paymentDetails.paymentMethodErrors = null;
     this.requestStore.setState({request});
 
-    // TODO: Bug 1477113 - Dispatch paymentmethodchange
+    paymentRequest.changePaymentMethod({selectedPaymentCardBillingAddressGUID});
   }
 
   /**
@@ -304,12 +304,10 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
       }
     }
 
-    // Ensure `selectedPaymentCard` never refers to a deleted payment card and refers
-    // to a payment card if one exists.
-    if (!basicCards[selectedPaymentCard]) {
-      // Determining the initial selection is tracked in bug 1455789
+    // Ensure `selectedPaymentCard` never refers to a deleted payment card.
+    if (selectedPaymentCard && !basicCards[selectedPaymentCard]) {
       this.requestStore.setState({
-        selectedPaymentCard: Object.keys(basicCards)[0] || null,
+        selectedPaymentCard: null,
         selectedPaymentCardSecurityCode: null,
       });
     }
@@ -432,8 +430,14 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
       }
     }
 
-    if (state.selectedPaymentCard != this._cachedState.selectedPaymentCard) {
-      this.changePaymentMethod(state.selectedPaymentCard);
+    let selectedPaymentCard = state.selectedPaymentCard;
+    let basicCards = paymentRequest.getBasicCards(state);
+    let billingAddressGUID = (basicCards[selectedPaymentCard] || {}).billingAddressGUID;
+    if (selectedPaymentCard != this._cachedState.selectedPaymentCard &&
+        billingAddressGUID) {
+      // Update _cachedState to prevent an infinite loop when changePaymentMethod updates state.
+      this._cachedState.selectedPaymentCard = state.selectedPaymentCard;
+      this.changePaymentMethod(billingAddressGUID);
     }
 
     if (this._isPayerRequested(state.request.paymentOptions)) {
@@ -444,7 +448,6 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
 
     this._cachedState.selectedShippingAddress = state.selectedShippingAddress;
     this._cachedState.selectedShippingOption = state.selectedShippingOption;
-    this._cachedState.selectedPaymentCard = state.selectedPaymentCard;
     this._cachedState.selectedPayerAddress = state.selectedPayerAddress;
   }
 
