@@ -520,6 +520,42 @@ where T: Copy + Clone +
         self.post_mul(&TypedTransform3D::create_translation(v.x, v.y, v.z))
     }
 
+    /// Returns a projection of this transform in 2d space.
+    pub fn project_to_2d(&self) -> Self {
+        let (_0, _1): (T, T) = (Zero::zero(), One::one());
+
+        let mut result = self.clone();
+
+        result.m31 = _0;
+        result.m32 = _0;
+        result.m13 = _0;
+        result.m23 = _0;
+        result.m33 = _1;
+        result.m43 = _0;
+        result.m34 = _0;
+
+        // Try to normalize perspective when possible to convert to a 2d matrix.
+        // Some matrices, such as those derived from perspective transforms, can
+        // modify m44 from 1, while leaving the rest of the fourth column
+        // (m14, m24) at 0. In this case, after resetting the third row and
+        // third column above, the value of m44 functions only to scale the
+        // coordinate transform divide by W. The matrix can be converted to
+        // a true 2D matrix by normalizing out the scaling effect of m44 on
+        // the remaining components ahead of time.
+        if self.m14 == _0 && self.m24 == _0 && self.m44 != _0 && self.m44 != _1 {
+           let scale = _1 / self.m44;
+           result.m11 = result.m11 * scale;
+           result.m12 = result.m12 * scale;
+           result.m21 = result.m21 * scale;
+           result.m22 = result.m22 * scale;
+           result.m41 = result.m41 * scale;
+           result.m42 = result.m42 * scale;
+           result.m44 = _1;
+        }
+
+        result
+    }
+
     /// Create a 3d scale transform
     pub fn create_scale(x: T, y: T, z: T) -> Self {
         let (_0, _1): (T, T) = (Zero::zero(), One::one());
