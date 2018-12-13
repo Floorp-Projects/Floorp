@@ -10,6 +10,7 @@
 
 <script type="application/javascript">
 "use strict";
+/* eslint-env mozilla/frame-script */
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.addPermission("browser", true, document);
@@ -46,9 +47,6 @@ SpecialPowers.pushPrefEnv({"set": [
   });
   // Inject a frame script in the child process:
   mm.loadFrameScript("data:,new " + function ContentScriptScope() {
-    var processType = Cc["@mozilla.org/xre/runtime;1"]
-                        .getService(Ci.nsIXULRuntime)
-                        .processType;
     var chromeEventHandler = docShell.chromeEventHandler;
     sendAsyncMessage("chromeEventHandler", {
       processType: Services.appinfo.processType,
