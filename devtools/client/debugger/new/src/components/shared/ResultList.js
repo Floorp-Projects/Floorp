@@ -28,10 +28,6 @@ export default class ResultList extends Component<Props> {
     role: "listbox"
   };
 
-  constructor(props: Props) {
-    super(props);
-  }
-
   renderListItem = (item: any, index: number) => {
     if (item.value === "/" && item.title === "") {
       item.title = "(index)";

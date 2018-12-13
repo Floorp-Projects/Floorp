@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+Cu.importGlobalProperties(["TextEncoder"]);
+
 function gzipCompressString(string, obs) {
 
   let scs = Cc["@mozilla.org/streamConverters;1"]
@@ -71,7 +73,19 @@ function handleRequest(request, response) {
         response.setStatusLine(request.httpVersion, status, "DA DA DA");
         response.setHeader("Content-Type", "text/plain", false);
         setCacheHeaders();
-        response.write("Братан, ты вообще качаешься?");
+
+        function convertToUtf8(str) {
+          return String.fromCharCode(...new TextEncoder().encode(str));
+        }
+
+        // This script must be evaluated as UTF-8 for this to write out the
+        // bytes of the string in UTF-8.  If it's evaluated as Latin-1, the
+        // written bytes will be the result of UTF-8-encoding this string
+        // *twice*.
+        let data = "Братан, ты вообще качаешься?";
+        let stringOfUtf8Bytes = convertToUtf8(data);
+        response.write(stringOfUtf8Bytes);
+
         response.finish();
         break;
       }

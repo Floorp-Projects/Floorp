@@ -36,7 +36,7 @@ import type { Breakpoint, SourceLocation, XHRBreakpoint } from "../../types";
 
 import { recordEvent } from "../../utils/telemetry";
 
-type addBreakpointOptions = {
+export type addBreakpointOptions = {
   condition?: string,
   hidden?: boolean
 };
@@ -264,12 +264,12 @@ export function setBreakpointCondition(
   };
 }
 
-export function toggleBreakpoint(line: ?number, column?: number) {
+export function toggleBreakpoint(line: number, column?: number) {
   return ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     const state = getState();
     const selectedSource = getSelectedSource(state);
 
-    if (!line || !selectedSource) {
+    if (!selectedSource) {
       return;
     }
 
@@ -307,7 +307,7 @@ export function toggleBreakpointsAtLine(line: number, column?: number) {
     const state = getState();
     const selectedSource = getSelectedSource(state);
 
-    if (!line || !selectedSource) {
+    if (!selectedSource) {
       return;
     }
 
@@ -329,11 +329,11 @@ export function toggleBreakpointsAtLine(line: number, column?: number) {
   };
 }
 
-export function addOrToggleDisabledBreakpoint(line: ?number, column?: number) {
+export function addOrToggleDisabledBreakpoint(line: number, column?: number) {
   return ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     const selectedSource = getSelectedSource(getState());
 
-    if (!line || !selectedSource) {
+    if (!selectedSource) {
       return;
     }
 
