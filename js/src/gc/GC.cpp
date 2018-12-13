@@ -1266,6 +1266,17 @@ bool GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes) {
     if (!nursery().init(maxNurseryBytes, lock)) {
       return false;
     }
+
+    const char* pretenureThresholdStr = getenv("JSGC_PRETENURE_THRESHOLD");
+    if (pretenureThresholdStr && pretenureThresholdStr[0]) {
+      char* last;
+      long pretenureThreshold = strtol(pretenureThresholdStr, &last, 10);
+      if (last[0] || !tunables.setParameter(JSGC_PRETENURE_THRESHOLD,
+                                            pretenureThreshold, lock)) {
+        fprintf(stderr, "Invalid value for JSGC_PRETENURE_THRESHOLD: %s\n",
+                pretenureThresholdStr);
+      }
+    }
   }
 
 #ifdef JS_GC_ZEAL
