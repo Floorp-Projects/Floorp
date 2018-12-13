@@ -124,7 +124,7 @@ class ServoTestharnessExecutor(ProcessTestExecutor):
                     self.proc.wait()
                 else:
                     self.proc.kill()
-        except:
+        except:  # noqa
             self.proc.kill()
             raise
 
