@@ -357,6 +357,14 @@ class StringIteratorObject : public NativeObject {
 StringIteratorObject* NewStringIteratorObject(
     JSContext* cx, NewObjectKind newKind = GenericObject);
 
+class RegExpStringIteratorObject : public NativeObject {
+ public:
+  static const Class class_;
+};
+
+RegExpStringIteratorObject* NewRegExpStringIteratorObject(
+    JSContext* cx, NewObjectKind newKind = GenericObject);
+
 JSObject* GetIterator(JSContext* cx, HandleObject obj);
 
 PropertyIteratorObject* LookupInIteratorCache(JSContext* cx, HandleObject obj);

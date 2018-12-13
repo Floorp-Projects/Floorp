@@ -76,6 +76,7 @@ class GlobalObject : public NativeObject {
     ITERATOR_PROTO,
     ARRAY_ITERATOR_PROTO,
     STRING_ITERATOR_PROTO,
+    REGEXP_STRING_ITERATOR_PROTO,
     GENERATOR_OBJECT_PROTO,
     GENERATOR_FUNCTION_PROTO,
     GENERATOR_FUNCTION,
@@ -627,6 +628,13 @@ class GlobalObject : public NativeObject {
         cx, global, STRING_ITERATOR_PROTO, initStringIteratorProto));
   }
 
+  static NativeObject* getOrCreateRegExpStringIteratorPrototype(
+      JSContext* cx, Handle<GlobalObject*> global) {
+    return MaybeNativeObject(getOrCreateObject(cx, global,
+                                               REGEXP_STRING_ITERATOR_PROTO,
+                                               initRegExpStringIteratorProto));
+  }
+
   static NativeObject* getOrCreateGeneratorObjectPrototype(
       JSContext* cx, Handle<GlobalObject*> global) {
     return MaybeNativeObject(
@@ -817,6 +825,8 @@ class GlobalObject : public NativeObject {
                                      Handle<GlobalObject*> global);
   static bool initStringIteratorProto(JSContext* cx,
                                       Handle<GlobalObject*> global);
+  static bool initRegExpStringIteratorProto(JSContext* cx,
+                                            Handle<GlobalObject*> global);
 
   // Implemented in vm/GeneratorObject.cpp.
   static bool initGenerators(JSContext* cx, Handle<GlobalObject*> global);

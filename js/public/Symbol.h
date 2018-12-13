@@ -62,7 +62,8 @@ extern JS_PUBLIC_API JSString* GetSymbolDescription(Handle<Symbol*> symbol);
   MACRO(toPrimitive)                         \
   MACRO(toStringTag)                         \
   MACRO(unscopables)                         \
-  MACRO(asyncIterator)
+  MACRO(asyncIterator)                       \
+  MACRO(matchAll)
 
 enum class SymbolCode : uint32_t {
 // There is one SymbolCode for each well-known symbol.
