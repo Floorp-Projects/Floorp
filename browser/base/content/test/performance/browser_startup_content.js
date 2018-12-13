@@ -20,7 +20,6 @@ const kDumpAllStacks = false;
 const whitelist = {
   components: new Set([
     "ContentProcessSingleton.js",
-    "extension-process-script.js",
   ]),
   modules: new Set([
     "chrome://mochikit/content/ShutdownLeaksCollector.jsm",
@@ -68,6 +67,7 @@ const whitelist = {
     "resource://gre/modules/TelemetryUtils.jsm", // bug 1470339
 
     // Extensions
+    "resource://gre/modules/ExtensionProcessScript.jsm",
     "resource://gre/modules/ExtensionUtils.jsm",
     "resource://gre/modules/MessageChannel.jsm",
   ]),

@@ -359,7 +359,6 @@
 
 ; [Extensions]
 @RESPATH@/components/extensions-toolkit.manifest
-@RESPATH@/components/extension-process-script.js
 @RESPATH@/browser/components/extensions-browser.manifest
 
 ; [Normandy]

@@ -79,7 +79,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
 // since it needs to be able to track things like new frameLoader globals that
 // are created before other framework code has been initialized.
 Services.ppmm.loadProcessScript(
-  "data:,Components.classes['@mozilla.org/webextensions/extension-process-script;1'].getService()",
+  "data:,ChromeUtils.import('resource://gre/modules/ExtensionProcessScript.jsm')",
   true);
 
 const INTEGER = /^[1-9]\d*$/;
