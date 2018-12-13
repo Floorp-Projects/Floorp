@@ -209,11 +209,17 @@ with Files("tests/credential-management/**"):
 with Files("tests/css/**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
+with Files("tests/css/css-animations/**"):
+    BUG_COMPONENT = ("Core", "CSS Transitions and Animations")
+
 with Files("tests/css/css-backgrounds/**"):
     BUG_COMPONENT = ("Core", "Layout")
 
 with Files("tests/css/css-cascade/**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/css-easing/**"):
+    BUG_COMPONENT = ("Core", "DOM: Animation")
 
 with Files("tests/css/css-font-loading/**"):
     BUG_COMPONENT = ("Core", "Layout: Text and Fonts")
@@ -227,8 +233,8 @@ with Files("tests/css/css-paint-api/**"):
 with Files("tests/css/css-scoping/**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
-with Files("tests/css/css-easing/**"):
-    BUG_COMPONENT = ("Core", "Layout")
+with Files("tests/css/css-transitions/**"):
+    BUG_COMPONENT = ("Core", "CSS Transitions and Animations")
 
 with Files("tests/css/css-typed-om/**"):
     BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
