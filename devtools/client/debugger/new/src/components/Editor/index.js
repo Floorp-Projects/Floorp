@@ -20,7 +20,7 @@ import {
   getActiveSearch,
   getSelectedLocation,
   getSelectedSource,
-  getConditionalPanelLine,
+  getConditionalPanelLocation,
   getSymbols
 } from "../../selectors";
 
@@ -81,17 +81,17 @@ export type Props = {
   horizontal: boolean,
   startPanelSize: number,
   endPanelSize: number,
-  conditionalPanelLine: number,
+  conditionalPanelLocation: SourceLocation,
   symbols: SymbolDeclarations,
 
   // Actions
-  openConditionalPanel: (?number) => void,
+  openConditionalPanel: (?SourceLocation) => void,
   closeConditionalPanel: void => void,
   setContextMenu: (string, any) => void,
-  continueToHere: (?number) => void,
-  toggleBreakpoint: (?number) => void,
-  toggleBreakpointsAtLine: (?number) => void,
-  addOrToggleDisabledBreakpoint: (?number) => void,
+  continueToHere: number => void,
+  toggleBreakpoint: number => void,
+  toggleBreakpointsAtLine: number => void,
+  addOrToggleDisabledBreakpoint: number => void,
   jumpToMappedLocation: any => void,
   traverseResults: (boolean, Object) => void,
   updateViewport: void => void
@@ -256,17 +256,20 @@ class Editor extends PureComponent<Props, State> {
   onToggleBreakpoint = (key, e: KeyboardEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const { selectedSource, conditionalPanelLine } = this.props;
+    const { selectedSource, conditionalPanelLocation } = this.props;
 
     if (!selectedSource) {
       return;
     }
 
     const line = this.getCurrentLine();
+    if (typeof line !== "number") {
+      return;
+    }
 
     if (e.shiftKey) {
       this.toggleConditionalPanel(line);
-    } else if (!conditionalPanelLine) {
+    } else if (!conditionalPanelLocation) {
       this.props.toggleBreakpoint(line);
     } else {
       this.toggleConditionalPanel(line);
@@ -278,6 +281,10 @@ class Editor extends PureComponent<Props, State> {
     e.stopPropagation();
     e.preventDefault();
     const line = this.getCurrentLine();
+    if (typeof line !== "number") {
+      return;
+    }
+
     this.toggleConditionalPanel(line);
   };
 
@@ -343,7 +350,7 @@ class Editor extends PureComponent<Props, State> {
   ) => {
     const {
       selectedSource,
-      conditionalPanelLine,
+      conditionalPanelLocation,
       closeConditionalPanel,
       addOrToggleDisabledBreakpoint,
       toggleBreakpointsAtLine,
@@ -360,7 +367,7 @@ class Editor extends PureComponent<Props, State> {
       return;
     }
 
-    if (conditionalPanelLine) {
+    if (conditionalPanelLocation) {
       return closeConditionalPanel();
     }
 
@@ -369,6 +376,9 @@ class Editor extends PureComponent<Props, State> {
     }
 
     const sourceLine = toSourceLine(selectedSource.id, line);
+    if (typeof sourceLine !== "number") {
+      return;
+    }
 
     if (ev.metaKey) {
       return continueToHere(sourceLine);
@@ -402,16 +412,16 @@ class Editor extends PureComponent<Props, State> {
 
   toggleConditionalPanel = line => {
     const {
-      conditionalPanelLine,
+      conditionalPanelLocation,
       closeConditionalPanel,
       openConditionalPanel
     } = this.props;
 
-    if (conditionalPanelLine) {
+    if (conditionalPanelLocation) {
       return closeConditionalPanel();
     }
 
-    return openConditionalPanel(line);
+    return openConditionalPanel(conditionalPanelLocation);
   };
 
   closeConditionalPanel = () => {
@@ -535,7 +545,7 @@ class Editor extends PureComponent<Props, State> {
   }
 
   renderItems() {
-    const { horizontal, selectedSource } = this.props;
+    const { horizontal, selectedSource, conditionalPanelLocation } = this.props;
     const { editor } = this.state;
 
     if (!editor || !selectedSource) {
@@ -553,7 +563,7 @@ class Editor extends PureComponent<Props, State> {
         <HighlightLines editor={editor} />
         <EditorMenu editor={editor} />
         <GutterMenu editor={editor} />
-        <ConditionalPanel editor={editor} />
+        {conditionalPanelLocation ? <ConditionalPanel editor={editor} /> : null}
         {features.columnBreakpoints ? (
           <ColumnBreakpoints editor={editor} />
         ) : null}
@@ -599,7 +609,7 @@ const mapStateToProps = state => {
     selectedLocation: getSelectedLocation(state),
     selectedSource,
     searchOn: getActiveSearch(state) === "file",
-    conditionalPanelLine: getConditionalPanelLine(state),
+    conditionalPanelLocation: getConditionalPanelLocation(state),
     symbols: getSymbols(state, selectedSource)
   };
 };

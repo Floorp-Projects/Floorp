@@ -65,7 +65,7 @@ class Breakpoint extends PureComponent<Props> {
   onDoubleClick = () => {
     const { breakpoint, openConditionalPanel } = this.props;
     if (breakpoint.condition) {
-      openConditionalPanel(breakpoint.selectedLocation.line);
+      openConditionalPanel(breakpoint.selectedLocation);
     }
   };
 
