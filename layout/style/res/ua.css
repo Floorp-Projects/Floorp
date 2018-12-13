@@ -55,6 +55,7 @@
   grid-row-start: inherit;
   grid-row-end: inherit;
   order: inherit;
+  column-span: inherit; /* needed if <table> has "column-span:all" */
 }
 
 *|*::-moz-table-row {
