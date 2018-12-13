@@ -14,13 +14,12 @@
 
   // Non-existent policy test
   test(t => {
-    let policy = window.TrustedTypes.createPolicy('SomeOtherName', { createHTML: s => s } );
     assert_equals(window.TrustedTypes.getExposedPolicy('JustAName'), null);
   }, "Null is returned when policy is non-existent.");
 
   // Exposed policy test
   test(t => {
-    let policy = window.TrustedTypes.createPolicy('EvenSomeOtherName', { createHTML: s => s }, true );
-    assert_equals(window.TrustedTypes.getExposedPolicy('EvenSomeOtherName'), policy);
+    let policy = window.TrustedTypes.createPolicy('SomeOtherName', { createHTML: s => s }, true );
+    assert_equals(window.TrustedTypes.getExposedPolicy('SomeOtherName'), policy);
   }, "Policy is returned when exposed == true.");
 </script>
