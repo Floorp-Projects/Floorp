@@ -93,7 +93,6 @@ function WebConsoleActor(connection, parentActor) {
   }
 
   this.traits = {
-    evaluateJSAsync: true,
     transferredResponseSize: true,
     selectedObjectActor: true, // 44+
     fetchCacheDescriptor: true,
