@@ -128,7 +128,6 @@ dependencies {
     implementation project(':feature-intent')
     implementation project(':feature-search')
     implementation project(':feature-session')
-    implementation project(':feature-storage')
     implementation project(':feature-toolbar')
     implementation project(':feature-tabs')
     implementation project(':feature-prompts')

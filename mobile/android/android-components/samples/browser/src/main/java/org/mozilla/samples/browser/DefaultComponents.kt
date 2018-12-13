@@ -25,19 +25,25 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.samples.browser.request.SampleRequestInterceptor
 import java.util.concurrent.TimeUnit
 
 open class DefaultComponents(private val applicationContext: Context) {
 
+    // Engine Settings
+    val engineSettings by lazy {
+        DefaultSettings().apply {
+            historyTrackingDelegate = HistoryDelegate(historyStorage)
+            requestInterceptor = SampleRequestInterceptor(applicationContext)
+            supportMultipleWindows = true
+        }
+    }
+
     // Engine
     open val engine: Engine by lazy {
-        val settings = DefaultSettings(
-            requestInterceptor = SampleRequestInterceptor(applicationContext),
-            supportMultipleWindows = true
-        )
-        SystemEngine(applicationContext, settings)
+        SystemEngine(applicationContext, engineSettings)
     }
 
     // Storage

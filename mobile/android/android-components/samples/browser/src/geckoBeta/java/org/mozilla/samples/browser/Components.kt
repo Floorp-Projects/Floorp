@@ -6,18 +6,13 @@ package org.mozilla.samples.browser
 
 import android.content.Context
 import mozilla.components.browser.engine.gecko.GeckoEngine
-import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
-import org.mozilla.samples.browser.request.SampleRequestInterceptor
 
 /**
  * Helper class for lazily instantiating components needed by the application.
  */
 class Components(applicationContext: Context) : DefaultComponents(applicationContext) {
     override val engine: Engine by lazy {
-        val defaultSettings = DefaultSettings().apply {
-            requestInterceptor = SampleRequestInterceptor(applicationContext)
-        }
-        GeckoEngine(applicationContext, defaultSettings)
+        GeckoEngine(applicationContext, engineSettings)
     }
 }

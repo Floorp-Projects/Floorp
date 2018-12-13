@@ -23,6 +23,7 @@ android {
 
 dependencies {
     implementation project(':browser-session')
+    implementation project(':concept-storage')
     implementation project(':concept-engine')
     implementation project(':support-utils')
     implementation project(':support-ktx')
@@ -34,6 +35,8 @@ dependencies {
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
+
+    testImplementation Dependencies.kotlin_coroutines
 
     testImplementation Dependencies.support_customtabs
 }

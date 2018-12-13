@@ -20,7 +20,6 @@ import mozilla.components.feature.session.CoordinateScrollingFeature
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.WindowFeature
-import mozilla.components.feature.storage.HistoryTrackingFeature
 import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
@@ -33,7 +32,6 @@ class BrowserFragment : Fragment(), BackHandler {
     private lateinit var toolbarAutocompleteFeature: ToolbarAutocompleteFeature
     private lateinit var tabsToolbarFeature: TabsToolbarFeature
     private lateinit var downloadsFeature: DownloadsFeature
-    private lateinit var historyTrackingFeature: HistoryTrackingFeature
     private lateinit var scrollFeature: CoordinateScrollingFeature
     private lateinit var contextMenuFeature: ContextMenuFeature
     private lateinit var promptFeature: PromptFeature
@@ -49,11 +47,6 @@ class BrowserFragment : Fragment(), BackHandler {
         toolbar.setMenuBuilder(components.menuBuilder)
 
         val sessionId = arguments?.getString(SESSION_ID)
-
-        historyTrackingFeature = HistoryTrackingFeature(
-                components.engine,
-                components.historyStorage
-        )
 
         sessionFeature = SessionFeature(
                 components.sessionManager,

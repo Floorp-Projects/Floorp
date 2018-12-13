@@ -22,7 +22,7 @@ import mozilla.components.concept.engine.history.HistoryTrackingDelegate
  */
 class SystemEngine(
     context: Context,
-    private val defaultSettings: DefaultSettings = DefaultSettings()
+    private val defaultSettings: Settings = DefaultSettings()
 ) : Engine {
 
     init {

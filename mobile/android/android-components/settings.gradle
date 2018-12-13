@@ -45,7 +45,6 @@ setupProject(':feature-customtabs', 'components/feature/customtabs', 'Component 
 setupProject(':feature-intent', 'components/feature/intent', 'Combining various feature components for intent processing.')
 setupProject(':feature-search', 'components/feature/search', 'Feature implementation connecting an engine implementation with the search module.')
 setupProject(':feature-session', 'components/feature/session', 'Feature implementation connecting an engine implementation with the session module.')
-setupProject(':feature-storage', 'components/feature/storage', 'Feature implementation connecting a storage implementation with various consumers (like an engine implementation).')
 setupProject(':feature-sync', 'components/feature/sync', 'Feature implementation that enables syncing of syncable components.')
 setupProject(':feature-tabs', 'components/feature/tabs', 'Feature implementation connecting a tabs tray implementation with the session and toolbar modules.')
 setupProject(':feature-toolbar', 'components/feature/toolbar', 'Feature implementation connecting a toolbar implementation with the session module.')

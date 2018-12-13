@@ -2,11 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.storage
+package mozilla.components.feature.session
 
 import kotlinx.coroutines.runBlocking
-import mozilla.components.concept.engine.DefaultSettings
-import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
@@ -14,27 +12,13 @@ import mozilla.components.concept.storage.SearchResult
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
 import org.junit.Assert.fail
 import org.junit.Test
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 
-class HistoryTrackingFeatureTest {
-    @Test
-    fun `feature sets a history delegate on the engine`() {
-        val engine: Engine = mock()
-        val settings = DefaultSettings()
-        `when`(engine.settings).thenReturn(settings)
-
-        assertNull(settings.historyTrackingDelegate)
-        HistoryTrackingFeature(engine, mock())
-        assertNotNull(settings.historyTrackingDelegate)
-    }
-
+class HistoryDelegateTest {
     @Test
     fun `history delegate passes through onVisited calls`() = runBlocking {
         val storage: HistoryStorage = mock()
