@@ -167,6 +167,12 @@ void LayerManager::PayloadPresented() {
         profiler_add_marker(marker.get());
       }
 #endif
+
+      if (payload.mType == CompositionPayloadType::eKeyPress) {
+        Telemetry::AccumulateTimeDelta(
+            mozilla::Telemetry::KEYPRESS_PRESENT_LATENCY, payload.mTimeStamp,
+            presented);
+      }
     }
   }
 }
