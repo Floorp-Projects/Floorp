@@ -16,3 +16,9 @@ add_old_configure_assignment(
     '_COMPILATION_HOST_CFLAGS', compilation_flags.host_cflags)
 add_old_configure_assignment(
     '_COMPILATION_HOST_CXXFLAGS', compilation_flags.host_cxxflags)
+
+@depends(rust_compile_flags, rust_warning_flags)
+def rust_flags(compile_flags, warning_flags):
+    return compile_flags + warning_flags
+
+set_config('MOZ_RUST_DEFAULT_FLAGS', rust_flags)
