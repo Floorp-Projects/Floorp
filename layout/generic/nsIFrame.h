@@ -3024,7 +3024,7 @@ class nsIFrame : public nsQueryFrame {
    * frame's outline, and descendant frames' outline, but does not include
    * areas clipped out by the CSS "overflow" and "clip" properties.
    *
-   * HasOverflowRects() (below) will return true when this overflow
+   * HasOverflowAreas() (below) will return true when this overflow
    * rect has been explicitly set, even if it matches mRect.
    * XXX Note: because of a space optimization using the formula above,
    * during reflow this function does not give accurate data if
@@ -3052,7 +3052,7 @@ class nsIFrame : public nsQueryFrame {
    * It does not include areas clipped out by the CSS "overflow" and
    * "clip" properties.
    *
-   * HasOverflowRects() (below) will return true when this overflow
+   * HasOverflowAreas() (below) will return true when this overflow
    * rect has been explicitly set, even if it matches mRect.
    * XXX Note: because of a space optimization using the formula above,
    * during reflow this function does not give accurate data if
