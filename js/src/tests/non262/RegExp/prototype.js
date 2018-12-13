@@ -1,10 +1,13 @@
 const t = RegExp.prototype;
 
-const properties = "toSource,toString,compile,exec,test," +
-                   "flags,global,ignoreCase,multiline,source,sticky,unicode," +
-                   "constructor," +
-                   "Symbol(Symbol.match),Symbol(Symbol.replace),Symbol(Symbol.search),Symbol(Symbol.split)";
-assertEq(Reflect.ownKeys(t).map(String).toString(), properties);
+let properties = "toSource,toString,compile,exec,test," +
+                 "flags,global,ignoreCase,multiline,source,sticky,unicode," +
+                 "constructor," +
+                 "Symbol(Symbol.match),Symbol(Symbol.replace),Symbol(Symbol.search),Symbol(Symbol.split)";
+if (Symbol.matchAll) {
+    properties += ",Symbol(Symbol.matchAll)";
+}
+assertEqArray(Reflect.ownKeys(t).map(String).sort(), properties.split(",").sort());
 
 
 // Invoking getters on the prototype should not throw
