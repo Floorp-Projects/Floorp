@@ -18,18 +18,18 @@ SimpleTest.waitForExplicitFinish();
 function expectProcessCreated() {
   return new Promise(resolve => {
     function parentExpectProcessCreated() {
-      ChromeUtils.import('resource://gre/modules/Services.jsm');
+      ChromeUtils.import("resource://gre/modules/Services.jsm");
       let topic = "ipc:content-initializing";
-      let obs = { observe: function() {
+      let obs = { observe() {
         Services.obs.removeObserver(obs, topic);
-        sendAsyncMessage('process-created');
-      }}
+        sendAsyncMessage("process-created");
+      }};
       Services.obs.addObserver(obs, topic);
     }
 
     let helper = SpecialPowers.loadChromeScript(parentExpectProcessCreated);
-    SimpleTest.registerCleanupFunction(function() { helper.destroy() });
-    helper.addMessageListener('process-created', resolve);
+    SimpleTest.registerCleanupFunction(function() { helper.destroy(); });
+    helper.addMessageListener("process-created", resolve);
   });
 }
 
@@ -39,11 +39,11 @@ expectProcessCreated().then(() => {
 });
 
 // Kill existing preallocated process.
-SpecialPowers.pushPrefEnv({'set':[["dom.ipc.processPrelaunch.enabled", false]]}).then(() => {
+SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processPrelaunch.enabled", false]]}).then(() => {
   // Make sure we have the capacity to launch preallocated process.
-  SpecialPowers.pushPrefEnv({'set':[["dom.ipc.processCount", 100]]}).then(() => {
+  SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processCount", 100]]}).then(() => {
     // Enable preallocated process and run the test.
-    SpecialPowers.pushPrefEnv({'set':[["dom.ipc.processPrelaunch.enabled", true]]});
+    SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processPrelaunch.enabled", true]]});
   });
 });
 </script>

@@ -21,15 +21,15 @@ function childFrameScript() {
   const sliceText = "an";
 
   function info(msg) {
-    sendAsyncMessage(messageName, { op: "info", msg: msg });
+    sendAsyncMessage(messageName, { op: "info", msg });
   }
 
   function ok(condition, name, diag) {
     sendAsyncMessage(messageName,
                      { op: "ok",
-                       condition: condition,
-                       name: name,
-                       diag: diag });
+                       condition,
+                       name,
+                       diag });
   }
 
   function is(a, b, name) {
@@ -39,7 +39,7 @@ function childFrameScript() {
   }
 
   function finish(result) {
-    sendAsyncMessage(messageName, { op: "done", result: result });
+    sendAsyncMessage(messageName, { op: "done", result });
   }
 
   function grabAndContinue(arg) {
@@ -190,7 +190,7 @@ function setup() {
           iframe.addEventListener("mozbrowserloadend", function() {
             info("Starting tests");
 
-            let mm = SpecialPowers.getBrowserFrameMessageManager(iframe)
+            let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
             parentFrameScript(mm);
           });
 

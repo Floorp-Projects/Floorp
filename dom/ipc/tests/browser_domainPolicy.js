@@ -20,7 +20,7 @@ async function test_domainPolicy() {
     {set: [["dom.ipc.browser_frames.oop_by_default", false],
           ["browser.pagethumbnails.capturing_disabled", false],
           ["dom.mozBrowserFramesEnabled", false]]},
-    () => { return deferred.resolve()});
+    () => { return deferred.resolve(); });
   await currentTask;
 
   // Create tab
@@ -38,10 +38,10 @@ async function test_domainPolicy() {
         let listener = (event) => {
           removeEventListener("DOMDocElementInserted", listener, true);
           let listener2 = (event) => {
-            content.removeEventListener('load', listener2);
+            content.removeEventListener("load", listener2);
             deferred.resolve();
-          }
-          content.addEventListener('load', listener2);
+          };
+          content.addEventListener("load", listener2);
         };
         addEventListener("DOMDocElementInserted", listener, true);
         return deferred.promise;
@@ -60,26 +60,26 @@ async function test_domainPolicy() {
   function initUtils(obj) {
     obj.checkScriptEnabled = function(win, expectEnabled) {
       win.wrappedJSObject.gFiredOnclick = false;
-      win.document.body.dispatchEvent(new win.Event('click'));
+      win.document.body.dispatchEvent(new win.Event("click"));
       return { passed: win.wrappedJSObject.gFiredOnclick == expectEnabled,
                msg: `Checking script-enabled for ${win.name} (${win.location})`};
-    }
+    };
 
     obj.navigateFrame = function(ifr, src) {
       let deferred = PromiseUtils.defer();
       function onload() {
-        ifr.removeEventListener('load', onload);
+        ifr.removeEventListener("load", onload);
         deferred.resolve();
       }
-      ifr.addEventListener('load', onload);
-      ifr.setAttribute('src', src);
+      ifr.addEventListener("load", onload);
+      ifr.setAttribute("src", src);
       return deferred.promise;
-    }
-  };
+    };
+  }
 
   function runTest(test) {
     return ContentTask.spawn(tab.linkedBrowser,
-      'ipcArgs = ' + JSON.stringify(ipcArgs) + '; (' + initUtils.toSource() + ')(utils)', test);
+      "ipcArgs = " + JSON.stringify(ipcArgs) + "; (" + initUtils.toSource() + ")(utils)", test);
   }
 
   function checkAndCleanup(result) {
@@ -99,14 +99,14 @@ async function test_domainPolicy() {
       var utils = {};
       eval(aUtils);
 
-      let path = '/browser/dom/ipc/tests/file_disableScript.html';
+      let path = "/browser/dom/ipc/tests/file_disableScript.html";
       let deferred = PromiseUtils.defer();
-      var rootFrame = content.document.getElementById('root');
+      var rootFrame = content.document.getElementById("root");
       utils.navigateFrame(rootFrame, ipcArgs.domain + path).then(() => {
         deferred.resolve(utils.checkScriptEnabled(rootFrame.contentWindow, false));
       });
       return deferred.promise;
-    }
+    };
   }
 
   info("Testing simple blocklist policy");
@@ -116,14 +116,14 @@ async function test_domainPolicy() {
   await currentTask;
   activateDomainPolicy();
   var bl = policy.blocklist;
-  bl.add(Services.io.newURI('http://example.com'));
+  bl.add(Services.io.newURI("http://example.com"));
   currentTask = runTest(testDomain("http://example.com"));
   checkAndCleanup(await currentTask);
 
   info("Activating domainPolicy first, creating child process after");
   activateDomainPolicy();
   var bl = policy.blocklist;
-  bl.add(Services.io.newURI('http://example.com'));
+  bl.add(Services.io.newURI("http://example.com"));
   currentTask = initProcess();
   await currentTask;
   currentTask = runTest(testDomain("http://example.com"));
@@ -142,9 +142,9 @@ async function test_domainPolicy() {
       var testListInternal = function(expectEnabled, list, idx) {
         idx = idx || 0;
         let deferred = PromiseUtils.defer();
-        let path = '/browser/dom/ipc/tests/file_disableScript.html';
+        let path = "/browser/dom/ipc/tests/file_disableScript.html";
         let target = list[idx] + path;
-        var rootFrame = content.document.getElementById('root');
+        var rootFrame = content.document.getElementById("root");
         utils.navigateFrame(rootFrame, target).then(function() {
           results.push(utils.checkScriptEnabled(rootFrame.contentWindow, expectEnabled));
           if (idx == list.length - 1)
@@ -153,20 +153,20 @@ async function test_domainPolicy() {
             testListInternal(expectEnabled, list, idx + 1).then(function(retArg) { deferred.resolve(retArg); });
         });
         return deferred.promise;
-      }
+      };
       return testListInternal(ipcArgs.expectEnabled, ipcArgs.list);
-    }
+    };
   }
 
   let testPolicy = {
-     exceptions: ['http://test1.example.com', 'http://example.com'],
-     superExceptions: ['http://test2.example.org', 'https://test1.example.com'],
-     exempt: ['http://test1.example.com', 'http://example.com',
-              'http://test2.example.org', 'http://sub1.test2.example.org',
-              'https://sub1.test1.example.com'],
-     notExempt: ['http://test2.example.com', 'http://sub1.test1.example.com',
-                 'http://www.example.com', 'https://test2.example.com',
-                 'https://example.com', 'http://test1.example.org'],
+     exceptions: ["http://test1.example.com", "http://example.com"],
+     superExceptions: ["http://test2.example.org", "https://test1.example.com"],
+     exempt: ["http://test1.example.com", "http://example.com",
+              "http://test2.example.org", "http://sub1.test2.example.org",
+              "https://sub1.test1.example.com"],
+     notExempt: ["http://test2.example.com", "http://sub1.test1.example.com",
+                 "http://www.example.com", "https://test2.example.com",
+                 "https://example.com", "http://test1.example.org"],
   };
 
   function activate(isBlock, exceptions, superExceptions) {
@@ -177,7 +177,7 @@ async function test_domainPolicy() {
 							set.add(makeURI(e));
 						for (var e of superExceptions)
 							superSet.add(makeURI(e));
-					};
+					}
 
 					info("Testing Blocklist-style Domain Policy");
 					info("Activating domainPolicy first, creating child process after");
@@ -205,7 +205,7 @@ async function test_domainPolicy() {
 					info("Testing Allowlist-style Domain Policy");
   deferred = Promise.defer();
   currentTask = deferred.promise;
-  SpecialPowers.pushPrefEnv({set:[["javascript.enabled", false]]}, () => { return deferred.resolve()});
+  SpecialPowers.pushPrefEnv({set: [["javascript.enabled", false]]}, () => { return deferred.resolve(); });
   await currentTask;
 
   info("Activating domainPolicy first, creating child process after");
@@ -235,6 +235,6 @@ async function test_domainPolicy() {
 
 add_task(test_domainPolicy);
 
-registerCleanupFunction(()=>{
+registerCleanupFunction(() => {
   deactivateDomainPolicy();
-})
+});
