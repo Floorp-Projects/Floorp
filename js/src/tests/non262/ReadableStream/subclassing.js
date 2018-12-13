@@ -1,3 +1,5 @@
+// |reftest| skip-if(!xulRuntime.shell) -- needs drainJobQueue
+
 // Spot-check subclassing of stream constructors.
 
 // ReadableStream can be subclassed.

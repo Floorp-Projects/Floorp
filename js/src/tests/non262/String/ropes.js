@@ -1,5 +1,12 @@
 print("Stress test of ropes");
 
+if (typeof newRope === "undefined") {
+    var newRope = SpecialPowers.Cu.getJSTestingFunctions().newRope;
+}
+if (typeof ensureFlatString === "undefined") {
+    var ensureFlatString = SpecialPowers.Cu.getJSTestingFunctions().ensureFlatString;
+}
+
 function createRopes() {
     const ropes = {};
 
