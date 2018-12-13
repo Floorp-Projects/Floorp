@@ -16,9 +16,6 @@ data class Visit(val timestamp: Long, val type: VisitType)
 
 const val AUTOCOMPLETE_SOURCE_NAME = "memoryHistory"
 
-private const val URL_MATCH_WEIGHT = 10
-private const val TITLE_MATCH_WEIGHT = 5
-
 /**
  * An in-memory implementation of [mozilla.components.concept.storage.HistoryStorage].
  */
@@ -96,6 +93,15 @@ class InMemoryHistoryStorage : HistoryStorage {
     private fun levenshteinDistance(a: String, b: String): Int {
         val lhsLength = a.length
         val rhsLength = b.length
+
+        // Levenshtein distance upper bound is at most the length of the longer string.
+        // However, for our use case we want distance from an empty string to a non-empty string to
+        // be arbitrarily high; otherwise, an empty string will be of varying distances from strings
+        // of varying lengths. This is the correct result for Levenshtein distance, but an incorrect
+        // outcome for our domain. In other words, Levenshtein distance isn't exactly what we need.
+        if (lhsLength == 0 || rhsLength == 0) {
+            return Int.MAX_VALUE
+        }
 
         var cost = Array(lhsLength) { it }
         var newCost = Array(lhsLength) { 0 }

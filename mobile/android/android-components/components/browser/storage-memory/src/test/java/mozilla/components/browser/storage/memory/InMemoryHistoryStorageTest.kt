@@ -133,12 +133,13 @@ class InMemoryHistoryStorageTest {
         history.recordObservation("http://www.mozilla.org", PageObservation("Mozilla"))
         history.recordObservation("http://www.firefox.com", PageObservation("Mozilla Firefox"))
         history.recordObservation("http://www.moscow.ru", PageObservation("Moscow City"))
+        history.recordObservation("http://www.moscow.ru/notitle", PageObservation(""))
 
         // Empty search.
-        assertEquals(4, history.getSuggestions("", 100).size)
+        assertEquals(5, history.getSuggestions("", 100).size)
 
         val search2 = history.getSuggestions("Mozilla", 100)
-        assertEquals(4, search2.size)
+        assertEquals(5, search2.size)
         assertEquals("http://www.mozilla.org", search2[0].id)
         assertEquals("http://www.mozilla.org", search2[0].url)
         assertEquals("Mozilla", search2[0].title)
