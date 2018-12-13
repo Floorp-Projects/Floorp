@@ -109,53 +109,6 @@ WebConsoleOutputWrapper.prototype = {
 
           return debuggerClient.release(actor);
         },
-
-        getWebConsoleClient: () => {
-          return hud.webConsoleClient;
-        },
-
-        /**
-         * Retrieve the FrameActor ID given a frame depth, or the selected one if no
-         * frame depth given.
-         *
-         * @param {Number} frame: optional frame depth.
-         * @return {String|null}: The FrameActor ID for the given frame depth (or the
-         *                        selected frame if it exists).
-         */
-        getFrameActor: (frame = null) => {
-          const state = this.owner.getDebuggerFrames();
-          if (!state) {
-            return null;
-          }
-
-          const grip = Number.isInteger(frame)
-            ? state.frames[frame]
-            : state.frames[state.selected];
-          return grip ? grip.actor : null;
-        },
-
-        inputHasSelection: () => {
-          const {editor, inputNode} = hud.jsterm || {};
-          return editor
-            ? !!editor.getSelection()
-            : (inputNode && inputNode.selectionStart !== inputNode.selectionEnd);
-        },
-
-        getInputValue: () => {
-          return hud.jsterm && hud.jsterm.getInputValue();
-        },
-
-        getInputCursor: () => {
-          return hud.jsterm && hud.jsterm.getSelectionStart();
-        },
-
-        getSelectedNodeActor: () => {
-          const inspectorSelection = this.owner.getInspectorSelection();
-          if (inspectorSelection && inspectorSelection.nodeFront) {
-            return inspectorSelection.nodeFront.actorID;
-          }
-          return null;
-        },
       };
 
       // Set `openContextMenu` this way so, `serviceContainer` variable
