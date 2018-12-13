@@ -6,6 +6,12 @@
 
 /* Wrapper object for reflecting native xpcom objects into JavaScript. */
 
+#if(__GNUC__ && __linux__ && __PPC64__ && _LITTLE_ENDIAN)
+// Stack protection generates incorrect code currently with gcc on ppc64le
+// (bug 1512162).
+#pragma GCC optimize("no-stack-protector")
+#endif
+
 #include "xpcprivate.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsWrapperCacheInlines.h"
