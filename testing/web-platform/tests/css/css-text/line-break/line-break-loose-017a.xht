@@ -2,13 +2,14 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
-		<title>CSS Text Test: line-break - normal and postfixes</title>
+		<title>CSS Text Test: line-break - loose and postfixes</title>
 		<!-- postfixes -->
 		<link rel="author" title="Taka Oshiyama" href="mailto:takaoshiyama@gmail.com" />
-		<link rel="help" title="5.2. Breaking Rules for Punctuation: the 'line-break' property" href="http://www.w3.org/TR/css-text-3/#line-break" />
-		<link rel="match" href="reference/line-break-normal-024a-ref.xht" />
+		<link rel="author" title="Shinyu Murakami" href="mailto:murakami@vivliostyle.org" />
+		<link rel="help" title="5.3. Line Breaking Rules: the 'line-break' property" href="https://drafts.csswg.org/css-text-3/#line-break-property" />
+		<link rel="match" href="reference/line-break-loose-017a-ref.xht" />
 		<meta http-equiv="content-language" content="en, ja" />
-		<meta name="assert" content="This test verifies that 'line-break: normal' does not allow line breaking before postfixes such as PERCENT SIGN (U+0025) and CENT SIGN (U+00A2)." />
+		<meta name="assert" content="This test verifies that 'line-break: loose' allows line breaking before postfixes." />
 		<style type="text/css">
 			@font-face
 			{
@@ -20,13 +21,13 @@
 				*/
 			}
 			.test span {
-				line-break: normal;						// The property to be tested
+				line-break: loose;						/* The property to be tested */
 			}
 			p.test, p.control {
 				border: 1px solid gray;
 				color: blue;
 				font-family: "mplus-1p-regular";
-				width: 10em;
+				width: 10.2em;		/* added extra .2em for some symbols wider than 1em */
 			}
 			span.target {
 				background-color: aqua;
@@ -44,30 +45,12 @@
 			Test passes if the highlighted characters in each pair of rectangles are at the exact same horizontal position.
 		</p>
 		<div class="wrapper">
-			<!-- postfixes PERCENT SIGN -->
-			<p class="test" lang="ja">
-				<span>サンプル文サンプル文<span class="target">&#x0025;</span>サンプル文</span>
-			</p>
-			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x0025;</span>サンプル文</span>
-			</p>
-		</div>
-		<div class="wrapper">
-			<!-- postfixes CENT SIGN -->
-			<p class="test" lang="ja">
-				<span>サンプル文サンプル文<span class="target">&#x00a2;</span>サンプル文</span>
-			</p>
-			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x00a2;</span>サンプル文</span>
-			</p>
-		</div>
-		<div class="wrapper">
 			<!-- postfixes DEGREE SIGN -->
 			<p class="test" lang="ja">
 				<span>サンプル文サンプル文<span class="target">&#x00b0;</span>サンプル文</span>
 			</p>
 			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x00b0;</span>サンプル文</span>
+				<span>サンプル文サンプル文<br /><span class="target">&#x00b0;</span>サンプル文</span>
 			</p>
 		</div>
 		<div class="wrapper">
@@ -76,7 +59,7 @@
 				<span>サンプル文サンプル文<span class="target">&#x2030;</span>サンプル文</span>
 			</p>
 			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x2030;</span>サンプル文</span>
+				<span>サンプル文サンプル文<br /><span class="target">&#x2030;</span>サンプル文</span>
 			</p>
 		</div>
 		<div class="wrapper">
@@ -85,7 +68,7 @@
 				<span>サンプル文サンプル文<span class="target">&#x2032;</span>サンプル文</span>
 			</p>
 			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x2032;</span>サンプル文</span>
+				<span>サンプル文サンプル文<br /><span class="target">&#x2032;</span>サンプル文</span>
 			</p>
 		</div>
 		<div class="wrapper">
@@ -94,7 +77,7 @@
 				<span>サンプル文サンプル文<span class="target">&#x2033;</span>サンプル文</span>
 			</p>
 			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x2033;</span>サンプル文</span>
+				<span>サンプル文サンプル文<br /><span class="target">&#x2033;</span>サンプル文</span>
 			</p>
 		</div>
 	</body>

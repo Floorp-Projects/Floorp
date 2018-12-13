@@ -2,13 +2,14 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
-		<title>CSS Text Test: line-break - normal and centered punctuation marks</title>
+		<title>CSS Text Test: line-break - loose and centered punctuation marks</title>
 		<!-- centered punctuation marks -->
 		<link rel="author" title="Taka Oshiyama" href="mailto:takaoshiyama@gmail.com" />
-		<link rel="help" title="5.2. Breaking Rules for Punctuation: the 'line-break' property" href="http://www.w3.org/TR/css-text-3/#line-break" />
-		<link rel="match" href="reference/line-break-normal-023b-ref.xht" />
+		<link rel="author" title="Shinyu Murakami" href="mailto:murakami@vivliostyle.org" />
+		<link rel="help" title="5.3. Line Breaking Rules: the 'line-break' property" href="https://drafts.csswg.org/css-text-3/#line-break-property" />
+		<link rel="match" href="reference/line-break-loose-016b-ref.xht" />
 		<meta http-equiv="content-language" content="en, ja" />
-		<meta name="assert" content="This test verifies that 'line-break: normal' does not allow line breaking before centered punctuation marks such as COLON (U+003A) and SEMICOLON (U+003B)." />
+		<meta name="assert" content="This test verifies that 'line-break: loose' allows line breaking before centered punctuation marks." />
 		<style type="text/css">
 			@font-face
 			{
@@ -20,13 +21,13 @@
 				*/
 			}
 			.test span {
-				line-break: normal;						// The property to be tested
+				line-break: loose;						/* The property to be tested */
 			}
 			p.test, p.control {
 				border: 1px solid gray;
 				color: blue;
 				font-family: "mplus-1p-regular";
-				width: 10em;
+				width: 10.2em;		/* added extra .2em for some symbols wider than 1em */
 			}
 			span.target {
 				background-color: aqua;
@@ -49,7 +50,7 @@
 				<span>サンプル文サンプル文<span class="target">&#x203c;</span>サンプル文</span>
 			</p>
 			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x203c;</span>サンプル文</span>
+				<span>サンプル文サンプル文<br /><span class="target">&#x203c;</span>サンプル文</span>
 			</p>
 		</div>
 		<div class="wrapper">
@@ -58,7 +59,7 @@
 				<span>サンプル文サンプル文<span class="target">&#x2047;</span>サンプル文</span>
 			</p>
 			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x2047;</span>サンプル文</span>
+				<span>サンプル文サンプル文<br /><span class="target">&#x2047;</span>サンプル文</span>
 			</p>
 		</div>
 		<div class="wrapper">
@@ -67,7 +68,7 @@
 				<span>サンプル文サンプル文<span class="target">&#x2048;</span>サンプル文</span>
 			</p>
 			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x2048;</span>サンプル文</span>
+				<span>サンプル文サンプル文<br /><span class="target">&#x2048;</span>サンプル文</span>
 			</p>
 		</div>
 		<div class="wrapper">
@@ -76,7 +77,7 @@
 				<span>サンプル文サンプル文<span class="target">&#x2049;</span>サンプル文</span>
 			</p>
 			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x2049;</span>サンプル文</span>
+				<span>サンプル文サンプル文<br /><span class="target">&#x2049;</span>サンプル文</span>
 			</p>
 		</div>
 		<div class="wrapper">
@@ -85,7 +86,7 @@
 				<span>サンプル文サンプル文<span class="target">&#xff01;</span>サンプル文</span>
 			</p>
 			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#xff01;</span>サンプル文</span>
+				<span>サンプル文サンプル文<br /><span class="target">&#xff01;</span>サンプル文</span>
 			</p>
 		</div>
 		<div class="wrapper">
@@ -94,7 +95,7 @@
 				<span>サンプル文サンプル文<span class="target">&#xff1f;</span>サンプル文</span>
 			</p>
 			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#xff1f;</span>サンプル文</span>
+				<span>サンプル文サンプル文<br /><span class="target">&#xff1f;</span>サンプル文</span>
 			</p>
 		</div>
 	</body>

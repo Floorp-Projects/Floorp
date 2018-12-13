@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<title>CSS Reftest Reference</title>
-		<!-- reftest for line-break-strict-014.xht -->
+		<!-- reftest for line-break-loose-016a.xht -->
 		<link rel="author" title="Taka Oshiyama" href="mailto:takaoshiyama@gmail.com" />
 		<link rel="author" title="Shinyu Murakami" href="mailto:murakami@vivliostyle.org" />
 		<meta http-equiv="content-language" content="en, ja" />
@@ -29,8 +29,8 @@
 			div.wrapper {
 				display: inline-block;
 				border: 1px solid;
-				margin: 10px;
-				padding: 10px;
+				margin: 5px;
+				padding: 5px;
 			}
 		</style>
 	</head>
@@ -38,53 +38,40 @@
 		<p>
 			Test passes if the highlighted characters in each pair of rectangles are at the exact same horizontal position.
 		</p>
-		<!-- iteration marks -->
 		<div class="wrapper">
+			<!-- centered punctuation marks KATAKANA MIDDLE DOT -->
 			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x3005;</span>サンプル文</span>
+				<span>サンプル文サンプル文<br /><span class="target">&#x30fb;</span>サンプル文</span>
 			</p>
 			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x3005;</span>サンプル文</span>
+				<span>サンプル文サンプル文<br /><span class="target">&#x30fb;</span>サンプル文</span>
 			</p>
 		</div>
 		<div class="wrapper">
+			<!-- centered punctuation marks FULLWIDTH COLON -->
 			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x303b;</span>サンプル文</span>
+				<span>サンプル文サンプル文<br /><span class="target">&#xff1a;</span>サンプル文</span>
 			</p>
 			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x303b;</span>サンプル文</span>
-			</p>
-		</div>
-		<div class="wrapper">
-			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x309d;</span>サンプル文</span>
-			</p>
-			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x309d;</span>サンプル文</span>
+				<span>サンプル文サンプル文<br /><span class="target">&#xff1a;</span>サンプル文</span>
 			</p>
 		</div>
 		<div class="wrapper">
+			<!-- centered punctuation marks FULLWIDTH SEMICOLON -->
 			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x309e;</span>サンプル文</span>
+				<span>サンプル文サンプル文<br /><span class="target">&#xff1b;</span>サンプル文</span>
 			</p>
 			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x309e;</span>サンプル文</span>
-			</p>
-		</div>
-		<div class="wrapper">
-			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x30fd;</span>サンプル文</span>
-			</p>
-			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x30fd;</span>サンプル文</span>
+				<span>サンプル文サンプル文<br /><span class="target">&#xff1b;</span>サンプル文</span>
 			</p>
 		</div>
 		<div class="wrapper">
+			<!-- centered punctuation marks HALFWIDTH KATAKANA MIDDLE DOT -->
 			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x30fe;</span>サンプル文</span>
+				<span>サンプル文サンプル文<br /><span class="target">&#xff65;</span>サンプル文</span>
 			</p>
 			<p class="control" lang="ja">
-				<span>サンプル文サンプル<br />文<span class="target">&#x30fe;</span>サンプル文</span>
+				<span>サンプル文サンプル文<br /><span class="target">&#xff65;</span>サンプル文</span>
 			</p>
 		</div>
 	</body>
