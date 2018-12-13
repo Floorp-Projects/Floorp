@@ -27,7 +27,12 @@ private fun basicMatch(query: String, urls: Iterable<String>): String? {
             return rawUrl
         }
 
-        val host = (try { URL(rawUrl) } catch (e: MalformedURLException) { null })?.host ?: ""
+        val host = try {
+            URL(rawUrl)
+        } catch (e: MalformedURLException) {
+            null
+        }?.host ?: ""
+
         if (host.startsWith(query)) {
             return rawUrl
         }

@@ -13,7 +13,7 @@ class DomainMatcherTest {
     fun `should perform basic domain matching for a given query`() {
         assertNull(segmentAwareDomainMatch("moz", listOf()))
 
-        val urls = listOf("http://www.mozilla.org", "http://firefox.com", "https://en.wikipedia.org/wiki/Mozilla")
+        val urls = listOf("http://www.mozilla.org", "http://firefox.com", "https://en.wikipedia.org/wiki/Mozilla", "about:config")
         assertEquals(
                 DomainMatch("http://www.mozilla.org", "mozilla.org"),
                 segmentAwareDomainMatch("moz", urls)
@@ -36,7 +36,5 @@ class DomainMatcherTest {
         )
 
         assertNull(segmentAwareDomainMatch("nomatch", urls))
-
-        assertNull(segmentAwareDomainMatch("about:blank", urls))
     }
 }
