@@ -28,11 +28,11 @@ add_task(async function test_memory_distribution() {
   // There is no good way to make sure that the parent received the histogram entries from the child processes.
   // Let's stick to the ugly, spinning the event loop until we have a good approach (Bug 1357509).
   await BrowserTestUtils.waitForCondition(() => {
-    let s = Services.telemetry.getSnapshotForKeyedHistograms("main", false).content["FX_TAB_REMOTE_NAVIGATION_DELAY_MS"];
+    let s = Services.telemetry.getSnapshotForKeyedHistograms("main", false).content.FX_TAB_REMOTE_NAVIGATION_DELAY_MS;
     return s && "WebNavigation:LoadURI" in s && "SessionStore:restoreTabContent" in s;
   });
 
-  let s = Services.telemetry.getSnapshotForKeyedHistograms("main", false).content["FX_TAB_REMOTE_NAVIGATION_DELAY_MS"];
+  let s = Services.telemetry.getSnapshotForKeyedHistograms("main", false).content.FX_TAB_REMOTE_NAVIGATION_DELAY_MS;
   let restoreTabSnapshot = s["SessionStore:restoreTabContent"];
   ok(restoreTabSnapshot.sum > 0, "Zero delay for the restoreTabContent case is unlikely.");
   ok(restoreTabSnapshot.sum < 10000, "More than 10 seconds delay for the restoreTabContent case is unlikely.");

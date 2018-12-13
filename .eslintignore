@@ -190,7 +190,6 @@ dom/file/**
 dom/flex/**
 dom/grid/**
 dom/html/**
-dom/ipc/**
 dom/jsurl/**
 dom/localstorage/**
 dom/manifest/**

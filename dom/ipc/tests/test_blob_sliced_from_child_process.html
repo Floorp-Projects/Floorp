@@ -35,8 +35,8 @@ function childFrameScript() {
 
   slice = slice.slice(secondSliceStart, secondSliceEnd, blobType);
 
-  sendAsyncMessage(messageName, { blob: blob });
-  sendAsyncMessage(messageName, { slice: slice });
+  sendAsyncMessage(messageName, { blob });
+  sendAsyncMessage(messageName, { slice });
 }
 
 function parentFrameScript(mm) {
@@ -168,7 +168,7 @@ function setup() {
           iframe.addEventListener("mozbrowserloadend", function() {
             info("Starting tests");
 
-            let mm = SpecialPowers.getBrowserFrameMessageManager(iframe)
+            let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
             parentFrameScript(mm);
           });
 

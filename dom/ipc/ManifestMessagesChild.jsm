@@ -113,7 +113,7 @@ function serializeError(aError) {
     "columnNumber": aError.columnNumber,
     "stack": aError.stack,
     "message": aError.message,
-    "name": aError.name
+    "name": aError.name,
   };
   return clone;
 }
@@ -122,6 +122,6 @@ function makeMsgResponse(aId) {
   return {
     id: aId,
     success: false,
-    result: undefined
+    result: undefined,
   };
 }

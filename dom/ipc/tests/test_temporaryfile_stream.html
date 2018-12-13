@@ -46,7 +46,7 @@ function startTest() {
     info("Got 'stop' event");
     ok(blob, "Should have gotten a data blob");
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'blob_verify.sjs', true);
+    xhr.open("POST", "blob_verify.sjs", true);
     xhr.onload = () => {
       var video = document.createElement("video");
       video.id = "recorded-video";
@@ -59,13 +59,13 @@ function startTest() {
       document.getElementById("content").appendChild(video);
       helper.pixelMustBecome(video, helper.red, {
         threshold: 128,
-        infoString: "Should become red"
+        infoString: "Should become red",
       }).then(SimpleTest.finish);
     };
     xhr.onerror = () => {
       ok(false, "XHR error");
       SimpleTest.finish();
-    }
+    };
     xhr.responseType = "blob";
     xhr.send(blob);
   };
@@ -75,7 +75,7 @@ function startTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({set:[["media.recorder.max_memory", 1]]}, startTest);
+SpecialPowers.pushPrefEnv({set: [["media.recorder.max_memory", 1]]}, startTest);
 </script>
 </pre>
 </body>
