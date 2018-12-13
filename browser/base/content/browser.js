@@ -164,18 +164,7 @@ XPCOMUtils.defineLazyGetter(this, "RTL_UI", () => {
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings.createBundle("chrome://browser/locale/browser.properties");
 });
-XPCOMUtils.defineLazyGetter(this, "gNavigatorBundle", function() {
-  // This is a stringbundle-like interface to gBrowserBundle, formerly a getter for
-  // the "bundle_browser" element.
-  return {
-    getString(key) {
-      return gBrowserBundle.GetStringFromName(key);
-    },
-    getFormattedString(key, array) {
-      return gBrowserBundle.formatStringFromName(key, array, array.length);
-    },
-  };
-});
+
 XPCOMUtils.defineLazyGetter(this, "gTabBrowserBundle", function() {
   return Services.strings.createBundle("chrome://browser/locale/tabbrowser.properties");
 });
@@ -359,6 +348,17 @@ function isInitialPage(url) {
 function browserWindows() {
   return Services.wm.getEnumerator("navigator:browser");
 }
+
+// This is a stringbundle-like interface to gBrowserBundle, formerly a getter for
+// the "bundle_browser" element.
+var gNavigatorBundle = {
+  getString(key) {
+    return gBrowserBundle.GetStringFromName(key);
+  },
+  getFormattedString(key, array) {
+    return gBrowserBundle.formatStringFromName(key, array, array.length);
+  },
+};
 
 function UpdateBackForwardCommands(aWebNavigation) {
   var backCommand = document.getElementById("Browser:Back");
