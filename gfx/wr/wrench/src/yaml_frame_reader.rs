@@ -1555,6 +1555,10 @@ impl YamlFrameReader {
 
         info.rect = bounds;
 
+        let transform_style = yaml["transform-style"]
+            .as_transform_style()
+            .unwrap_or(TransformStyle::Flat);
+
         let transform_origin = yaml["transform-origin"]
             .as_point()
             .unwrap_or(default_transform_origin);
@@ -1575,7 +1579,12 @@ impl YamlFrameReader {
             _ => yaml["perspective"].as_matrix4d(),
         };
 
-        let reference_frame_id = dl.push_reference_frame(info, transform.into(), perspective);
+        let reference_frame_id = dl.push_reference_frame(
+            info,
+            transform_style,
+            transform.into(),
+            perspective,
+        );
 
         let numeric_id = yaml["id"].as_i64();
         if let Some(numeric_id) = numeric_id {
