@@ -11,16 +11,18 @@ info: |
 features: [Intl.RelativeTimeFormat]
 ---*/
 
-const fn = Intl.RelativeTimeFormat.prototype.resolvedOptions;
+const resolvedOptions = Intl.RelativeTimeFormat.prototype.resolvedOptions;
 
-assert.throws(TypeError, () => fn.call(undefined), "undefined");
-assert.throws(TypeError, () => fn.call(null), "null");
-assert.throws(TypeError, () => fn.call(true), "true");
-assert.throws(TypeError, () => fn.call(""), "empty string");
-assert.throws(TypeError, () => fn.call(Symbol()), "symbol");
-assert.throws(TypeError, () => fn.call(1), "1");
-assert.throws(TypeError, () => fn.call({}), "plain object");
-assert.throws(TypeError, () => fn.call(Intl.RelativeTimeFormat), "Intl.RelativeTimeFormat");
-assert.throws(TypeError, () => fn.call(Intl.RelativeTimeFormat.prototype), "Intl.RelativeTimeFormat.prototype");
+assert.sameValue(typeof resolvedOptions, "function");
+
+assert.throws(TypeError, () => resolvedOptions.call(undefined), "undefined");
+assert.throws(TypeError, () => resolvedOptions.call(null), "null");
+assert.throws(TypeError, () => resolvedOptions.call(true), "true");
+assert.throws(TypeError, () => resolvedOptions.call(""), "empty string");
+assert.throws(TypeError, () => resolvedOptions.call(Symbol()), "symbol");
+assert.throws(TypeError, () => resolvedOptions.call(1), "1");
+assert.throws(TypeError, () => resolvedOptions.call({}), "plain object");
+assert.throws(TypeError, () => resolvedOptions.call(Intl.RelativeTimeFormat), "Intl.RelativeTimeFormat");
+assert.throws(TypeError, () => resolvedOptions.call(Intl.RelativeTimeFormat.prototype), "Intl.RelativeTimeFormat.prototype");
 
 reportCompare(0, 0);

@@ -1,4 +1,4 @@
-// |reftest| skip-if(!Intl.hasOwnProperty('ListFormat')) -- Intl.ListFormat is not enabled unconditionally
+// |reftest| skip -- Intl.ListFormat is not supported
 // Copyright 2018 Igalia, S.L. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -13,16 +13,18 @@ info: |
 features: [Intl.ListFormat]
 ---*/
 
-const fn = Intl.ListFormat.prototype.format;
+const format = Intl.ListFormat.prototype.format;
 
-assert.throws(TypeError, () => fn.call(undefined), "undefined");
-assert.throws(TypeError, () => fn.call(null), "null");
-assert.throws(TypeError, () => fn.call(true), "true");
-assert.throws(TypeError, () => fn.call(""), "empty string");
-assert.throws(TypeError, () => fn.call(Symbol()), "symbol");
-assert.throws(TypeError, () => fn.call(1), "1");
-assert.throws(TypeError, () => fn.call({}), "plain object");
-assert.throws(TypeError, () => fn.call(Intl.ListFormat), "Intl.ListFormat");
-assert.throws(TypeError, () => fn.call(Intl.ListFormat.prototype), "Intl.ListFormat.prototype");
+assert.sameValue(typeof format, "function");
+
+assert.throws(TypeError, () => format.call(undefined), "undefined");
+assert.throws(TypeError, () => format.call(null), "null");
+assert.throws(TypeError, () => format.call(true), "true");
+assert.throws(TypeError, () => format.call(""), "empty string");
+assert.throws(TypeError, () => format.call(Symbol()), "symbol");
+assert.throws(TypeError, () => format.call(1), "1");
+assert.throws(TypeError, () => format.call({}), "plain object");
+assert.throws(TypeError, () => format.call(Intl.ListFormat), "Intl.ListFormat");
+assert.throws(TypeError, () => format.call(Intl.ListFormat.prototype), "Intl.ListFormat.prototype");
 
 reportCompare(0, 0);

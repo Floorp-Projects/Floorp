@@ -1,4 +1,4 @@
-// |reftest| skip-if(!Intl.hasOwnProperty('Segmenter')) -- Intl.Segmenter is not enabled unconditionally
+// |reftest| skip -- Intl.Segmenter is not supported
 // Copyright 2018 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -24,13 +24,12 @@ const tests = [
 ];
 
 for (const [input, position] of tests) {
-  assert.sameValue(iter.preceding(0 | input), false);
+  assert.sameValue(iter.preceding(input), false);
   assert.sameValue(iter.position, position, String(input));
 }
 
 assert.throws(RangeError, () => iter.preceding("ABC"));
 assert.throws(RangeError, () => iter.preceding(null));
-assert.throws(RangeError, () => iter.preceding(1.4));
 assert.throws(RangeError, () => iter.preceding(-3));
 
 // 1.5.3.3 %SegmentIteratorPrototype%.preceding( [ from ] )

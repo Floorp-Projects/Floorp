@@ -171,42 +171,7 @@ InternalRequest::InternalRequest(const InternalRequest& aOther)
   // NOTE: does not copy body stream... use the fallible Clone() for that
 }
 
-InternalRequest::InternalRequest(const IPCInternalRequest& aIPCRequest)
-    : mMethod(aIPCRequest.method()),
-      mURLList(aIPCRequest.urls()),
-      mHeaders(new InternalHeaders(aIPCRequest.headers(),
-                                   aIPCRequest.headersGuard())),
-      mBodyLength(InternalResponse::UNKNOWN_BODY_SIZE),
-      mContentPolicyType(aIPCRequest.contentPolicyType()),
-      mReferrer(aIPCRequest.referrer()),
-      mReferrerPolicy(aIPCRequest.referrerPolicy()),
-      mEnvironmentReferrerPolicy(net::RP_Unset),
-      mMode(aIPCRequest.mode()),
-      mCredentialsMode(aIPCRequest.credentials()),
-      mCacheMode(aIPCRequest.requestCache()),
-      mRedirectMode(aIPCRequest.requestRedirect()),
-      mMozErrors(false) {
-  MOZ_ASSERT(!mURLList.IsEmpty());
-}
-
 InternalRequest::~InternalRequest() {}
-
-void InternalRequest::ToIPC(IPCInternalRequest* aIPCRequest) {
-  MOZ_ASSERT(aIPCRequest);
-  MOZ_ASSERT(!mURLList.IsEmpty());
-  aIPCRequest->urls() = mURLList;
-  aIPCRequest->method() = mMethod;
-
-  mHeaders->ToIPC(aIPCRequest->headers(), aIPCRequest->headersGuard());
-
-  aIPCRequest->referrer() = mReferrer;
-  aIPCRequest->referrerPolicy() = mReferrerPolicy;
-  aIPCRequest->mode() = mMode;
-  aIPCRequest->credentials() = mCredentialsMode;
-  aIPCRequest->contentPolicyType() = mContentPolicyType;
-  aIPCRequest->requestCache() = mCacheMode;
-  aIPCRequest->requestRedirect() = mRedirectMode;
-}
 
 void InternalRequest::SetContentPolicyType(
     nsContentPolicyType aContentPolicyType) {

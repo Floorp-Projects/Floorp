@@ -29,6 +29,8 @@ add_task(async function test_load_settings() {
     gBrowser,
     url: PAGE_URL,
   }, browser => {
+    content.document.querySelector("button").click();
+
     return ContentTask.spawn(browser, null, () => {
       ChromeUtils.import("resource://gre/modules/Services.jsm");
 

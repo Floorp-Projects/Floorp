@@ -4495,12 +4495,6 @@ nsresult XREMain::XRE_mainRun() {
     // We intentionally leak the string here since it is required by PR_SetEnv.
     PR_SetEnv(saved.release());
   }
-
-#if defined(MOZ_SANDBOX)
-  // Call SandboxBroker to initialize things that depend on Gecko machinery like
-  // the directory provider.
-  SandboxBroker::GeckoDependentInitialize();
-#endif
 #endif
 
   SaveStateForAppInitiatedRestart();

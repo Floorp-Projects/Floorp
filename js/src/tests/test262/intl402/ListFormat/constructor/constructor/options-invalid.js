@@ -1,4 +1,4 @@
-// |reftest| skip-if(!Intl.hasOwnProperty('ListFormat')) -- Intl.ListFormat is not enabled unconditionally
+// |reftest| skip -- Intl.ListFormat is not supported
 // Copyright 2018 Igalia, S.L. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -12,6 +12,9 @@ info: |
 features: [Intl.ListFormat]
 ---*/
 
-assert.throws(TypeError, function() { new Intl.ListFormat([], null) })
+assert.sameValue(typeof Intl.ListFormat, "function");
+assert.throws(TypeError, function() {
+  new Intl.ListFormat([], null);
+});
 
 reportCompare(0, 0);

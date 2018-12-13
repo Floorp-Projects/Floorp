@@ -14,7 +14,30 @@ function getPrefName(prefRow) {
   return prefRow.getAttribute("aria-label");
 }
 
-function onLoad() {
+document.addEventListener("DOMContentLoaded", () => {
+  if (!Preferences.get("browser.aboutConfig.showWarning")) {
+    loadPrefs();
+  }
+}, { once: true });
+
+function alterWarningState() {
+  Services.prefs.setBoolPref("browser.aboutConfig.showWarning",
+    document.getElementById("showWarningNextTime").checked);
+}
+
+function loadPrefs() {
+  [...document.styleSheets].find(s => s.title == "infop").disabled = true;
+
+  document.body.textContent = "";
+  let search = document.createElement("input");
+  search.type = "text";
+  search.id = "search";
+  document.l10n.setAttributes(search, "about-config-search");
+  document.body.appendChild(search);
+  let prefs = document.createElement("table");
+  prefs.id = "prefs";
+  document.body.appendChild(prefs);
+
   gPrefArray = Services.prefs.getChildList("").map(function(name) {
     let hasUserValue = Services.prefs.prefHasUserValue(name);
     let pref = {
@@ -40,13 +63,13 @@ function onLoad() {
 
   gPrefArray.sort((a, b) => a.name > b.name);
 
-  document.getElementById("search").addEventListener("keypress", function(e) {
+  search.addEventListener("keypress", e => {
     if (e.key == "Enter") {
       filterPrefs();
     }
   });
 
-  document.getElementById("prefs").addEventListener("click", (event) => {
+  prefs.addEventListener("click", event => {
     if (event.target.localName != "button") {
       return;
     }
@@ -69,11 +92,11 @@ function onLoad() {
     } else if (button.classList.contains("add-false")) {
       addNewPref(prefRow.firstChild.innerHTML, false);
     } else if (button.classList.contains("add-Number") ||
-               button.classList.contains("add-String")) {
+      button.classList.contains("add-String")) {
       addNewPref(prefRow.firstChild.innerHTML,
-                 button.classList.contains("add-Number") ? 0 : "");
-      prefRow = [...document.getElementById("prefs").getElementsByTagName("tr")]
-                .find(row => row.querySelector("td").textContent == prefName);
+        button.classList.contains("add-Number") ? 0 : "");
+      prefRow = [...prefs.getElementsByTagName("tr")]
+        .find(row => row.querySelector("td").textContent == prefName);
       startEditingPref(prefRow, gPrefArray.find(p => p.name == prefName));
       prefRow.querySelector("td.cell-value").firstChild.firstChild.focus();
     } else if (button.classList.contains("button-toggle")) {
