@@ -28,8 +28,14 @@
         <p data-l10n-id="about-config-warning-text"></p>
       </div>
 
+      <div class="toggle-container-with-text">
+        <input type="checkbox" id="showWarningNextTime" checked>
+        <label for="showWarningNextTime"
+               data-l10n-id="about-config-warning-checkbox"></label>
+      </div>
+
       <div class="button-container">
-        <button class="primary" onclick="loadPrefs();"
+        <button class="primary" onclick="alterWarningState(); loadPrefs();"
                 data-l10n-id="about-config-warning-button"></button>
       </div>
     </div>
