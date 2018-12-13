@@ -310,8 +310,8 @@ class Namespace(Block):
 
 
 class Type(Node):
-    def __init__(self, name, const=0,
-                 ptr=0, ptrconst=0, ptrptr=0, ptrconstptr=0,
+    def __init__(self, name, const=False,
+                 ptr=False, ptrconst=False, ptrptr=False, ptrconstptr=False,
                  ref=0,
                  hasimplicitcopyctor=True,
                  T=None,
@@ -329,9 +329,16 @@ of pointer types that can be be constructed.
   ptrconstptr    => T* const*
 
 Any type, naked or pointer, can be const (const T) or ref (T&).
+
+ref is an integer, indicating how many "levels" of references exist. So ref=2
+indicates T&&.
 """
         assert isinstance(name, str)
-        assert not isinstance(const, str)
+        assert isinstance(const, bool)
+        assert isinstance(ptr, bool)
+        assert isinstance(ptrconst, bool)
+        assert isinstance(ptrptr, bool)
+        assert isinstance(ptrconstptr, bool)
         assert not isinstance(T, str)
 
         Node.__init__(self)
@@ -364,10 +371,10 @@ Type.INT32 = Type('int32_t')
 Type.INTPTR = Type('intptr_t')
 Type.NSRESULT = Type('nsresult')
 Type.UINT32 = Type('uint32_t')
-Type.UINT32PTR = Type('uint32_t', ptr=1)
+Type.UINT32PTR = Type('uint32_t', ptr=True)
 Type.SIZE = Type('size_t')
 Type.VOID = Type('void')
-Type.VOIDPTR = Type('void', ptr=1)
+Type.VOIDPTR = Type('void', ptr=True)
 Type.AUTO = Type('auto')
 
 
@@ -520,14 +527,16 @@ MethodSpec = make_enum('MethodSpec', 'NONE VIRTUAL PURE OVERRIDE STATIC')
 
 class MethodDecl(Node):
     def __init__(self, name, params=[], ret=Type('void'),
-                 methodspec=MethodSpec.NONE, const=0, warn_unused=0,
-                 force_inline=0, typeop=None, T=None, cls=None):
+                 methodspec=MethodSpec.NONE, const=False, warn_unused=0,
+                 force_inline=False, typeop=None, T=None, cls=None):
         assert not (name and typeop)
         assert name is None or isinstance(name, str)
         assert not isinstance(ret, list)
         for decl in params:
             assert not isinstance(decl, str)
         assert not isinstance(T, int)
+        assert isinstance(const, bool)
+        assert isinstance(force_inline, bool)
 
         if typeop is not None:
             assert methodspec == MethodSpec.NONE
@@ -540,7 +549,7 @@ class MethodDecl(Node):
         self.methodspec = methodspec    # enum
         self.const = const              # bool
         self.warn_unused = warn_unused  # bool
-        self.force_inline = (force_inline or T)  # bool
+        self.force_inline = (force_inline or bool(T))  # bool
         self.typeop = typeop            # Type or None
         self.T = T                      # Type or None
         self.cls = cls                  # Class or None
@@ -568,7 +577,7 @@ class MethodDefn(Block):
 class FunctionDecl(MethodDecl):
     def __init__(self, name, params=[], ret=Type('void'),
                  methodspec=MethodSpec.NONE, warn_unused=0,
-                 force_inline=0, T=None):
+                 force_inline=False, T=None):
         assert methodspec == MethodSpec.NONE or methodspec == MethodSpec.STATIC
         MethodDecl.__init__(self, name, params=params, ret=ret,
                             methodspec=methodspec, warn_unused=warn_unused,
@@ -581,7 +590,7 @@ class FunctionDefn(MethodDefn):
 
 
 class ConstructorDecl(MethodDecl):
-    def __init__(self, name, params=[], explicit=0, force_inline=0):
+    def __init__(self, name, params=[], explicit=0, force_inline=False):
         MethodDecl.__init__(self, name, params=params, ret=None,
                             force_inline=force_inline)
         self.explicit = explicit
@@ -599,7 +608,7 @@ class ConstructorDefn(MethodDefn):
 
 
 class DestructorDecl(MethodDecl):
-    def __init__(self, name, methodspec=MethodSpec.NONE, force_inline=0):
+    def __init__(self, name, methodspec=MethodSpec.NONE, force_inline=False):
         # C++ allows pure or override destructors, but ipdl cgen does not.
         assert methodspec == MethodSpec.NONE or methodspec == MethodSpec.VIRTUAL
         MethodDecl.__init__(self, name, params=[], ret=None,
@@ -680,8 +689,9 @@ class ExprDeref(ExprPrefixUnop):
 
 class ExprCast(Node):
     def __init__(self, expr, type,
-                 dynamic=0, static=0, reinterpret=0, const=0, C=0):
-        assert 1 == reduce(lambda a, x: a+x, [dynamic, static, reinterpret, const, C])
+                 dynamic=0, static=0, reinterpret=0, const=False, C=0):
+        assert 1 == sum([dynamic, static, reinterpret, const, C])
+        assert isinstance(const, bool)
 
         Node.__init__(self)
         self.expr = expr
