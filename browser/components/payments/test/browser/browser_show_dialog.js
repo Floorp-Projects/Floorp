@@ -71,6 +71,12 @@ add_task(async function test_show_completePayment() {
     info("select the shipping address");
     await selectPaymentDialogShippingAddressByCountry(frame, "US");
 
+    await spawnPaymentDialogTask(frame, async ({card1GUID: cardGuid}) => {
+      let paymentMethodPicker = content.document.querySelector("payment-method-picker");
+      content.fillField(Cu.waiveXrays(paymentMethodPicker).dropdown.popupBox,
+                        cardGuid);
+    }, {card1GUID});
+
     info("entering CSC");
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
       securityCode: "999",
@@ -133,6 +139,12 @@ add_task(async function test_show_completePayment2() {
 
     info("select the shipping address");
     await selectPaymentDialogShippingAddressByCountry(frame, "US");
+
+    await spawnPaymentDialogTask(frame, async () => {
+      let paymentMethodPicker = content.document.querySelector("payment-method-picker");
+      content.fillField(Cu.waiveXrays(paymentMethodPicker).dropdown.popupBox,
+                        Cu.waiveXrays(paymentMethodPicker).dropdown.popupBox.options[0].value);
+    });
 
     info("entering CSC");
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
