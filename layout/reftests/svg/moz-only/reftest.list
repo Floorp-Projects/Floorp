@@ -3,14 +3,14 @@
 == xbl-basic-02.svg                             pass.svg
 == xbl-basic-03.svg                             pass.svg
 == xbl-grad-ref--grad-in-binding-01.svg         pass.svg
-== xbl-grad-ref--grad-in-binding-02.svg         pass.svg
+fails == xbl-grad-ref--grad-in-binding-02.svg   pass.svg
 == xbl-grad-ref--grad-in-bound-01.svg           pass.svg
 fails == xbl-grad-ref--grad-in-bound-02.svg     pass-black.svg
 fails == xbl-grad-ref--grad-in-resources-01.svg pass.svg
 fails == xbl-grad-ref--grad-in-resources-02.svg pass.svg
 == xbl-grad-ref--grad-in-binding-03.svg         pass.svg
 == xbl-grad-ref--grad-in-bound-03.svg           pass.svg
-== xbl-grad-ref--grad-in-binding-04.svg         pass.svg
+fails == xbl-grad-ref--grad-in-binding-04.svg   pass.svg
 == xbl-grad-ref--grad-in-bound-04.svg           pass.svg
 
 # Tests for zooming with the full page zoom UI
