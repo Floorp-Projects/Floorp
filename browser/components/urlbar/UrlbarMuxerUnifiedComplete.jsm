@@ -74,7 +74,7 @@ class MuxerUnifiedComplete {
         } else if (group == MATCH_TYPE_TO_GROUP.get(match.type)) {
           sortedMatches.push(match);
           count--;
-        } else {
+        } else if (!MATCH_TYPE_TO_GROUP.has(match.type)) {
           let errorMsg = `Match type ${match.type} is not mapped to a match group.`;
           logger.error(errorMsg);
           Cu.reportError(errorMsg);
