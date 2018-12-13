@@ -1187,10 +1187,27 @@ static const Class RegExpStringIteratorPrototypeClass = {
     "RegExp String Iterator", 0};
 
 enum {
+  // The regular expression used for iteration. May hold the original RegExp
+  // object when it is reused instead of a new RegExp object.
   RegExpStringIteratorSlotRegExp,
+
+  // The String value being iterated upon.
   RegExpStringIteratorSlotString,
+
+  // The source string of the original RegExp object. Used to validate we can
+  // reuse the original RegExp object for matching.
+  RegExpStringIteratorSlotSource,
+
+  // The flags of the original RegExp object.
   RegExpStringIteratorSlotFlags,
-  RegExpStringIteratorSlotDone,
+
+  // When non-negative, this slot holds the current lastIndex position when
+  // reusing the original RegExp object for matching. When set to |-1|, the
+  // iterator has finished. When set to any other negative value, the
+  // iterator is not yet exhausted and we're not on the fast path and we're
+  // not reusing the input RegExp object.
+  RegExpStringIteratorSlotLastIndex,
+
   RegExpStringIteratorSlotCount
 };
 
@@ -1202,13 +1219,18 @@ static_assert(RegExpStringIteratorSlotString ==
                   REGEXP_STRING_ITERATOR_STRING_SLOT,
               "RegExpStringIteratorSlotString must match self-hosting define "
               "for string slot.");
+static_assert(RegExpStringIteratorSlotSource ==
+                  REGEXP_STRING_ITERATOR_SOURCE_SLOT,
+              "RegExpStringIteratorSlotString must match self-hosting define "
+              "for source slot.");
 static_assert(RegExpStringIteratorSlotFlags ==
                   REGEXP_STRING_ITERATOR_FLAGS_SLOT,
               "RegExpStringIteratorSlotFlags must match self-hosting define "
               "for flags slot.");
-static_assert(RegExpStringIteratorSlotDone == REGEXP_STRING_ITERATOR_DONE_SLOT,
-              "RegExpStringIteratorSlotDone must match self-hosting define for "
-              "done slot.");
+static_assert(RegExpStringIteratorSlotLastIndex ==
+                  REGEXP_STRING_ITERATOR_LASTINDEX_SLOT,
+              "RegExpStringIteratorSlotLastIndex must match self-hosting "
+              "define for lastIndex slot.");
 
 const Class RegExpStringIteratorObject::class_ = {
     "RegExp String Iterator",
