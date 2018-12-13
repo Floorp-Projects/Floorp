@@ -62,9 +62,9 @@ registration are lost
   */
   async_test(function(t) {
       on_event(window, 'load', () => {
-        clickAndBlockMain('button').then(wait).then(() => {
+        clickAndBlockMain('button').then(() => {
           startObserver(t);
-          clickAndBlockMain('button');
+          clickAndBlockMain('button').then(wait);
           processingStartMin = performance.now();
         });
       });
