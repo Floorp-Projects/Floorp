@@ -27,6 +27,7 @@ WIN_LIBS=                                       \
 #include <unknwn.h>
 #include <commdlg.h>
 
+#include "mozilla/BackgroundHangMonitor.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsString.h"
 #include "nsIServiceManager.h"
@@ -635,6 +636,7 @@ static nsresult ShowNativePrintDialog(HWND aHWnd,
   BOOL result;
   {
     mozilla::widget::WinUtils::AutoSystemDpiAware dpiAwareness;
+    mozilla::BackgroundHangMonitor().NotifyWait();
     result = ::PrintDlgW(&prntdlg);
   }
 

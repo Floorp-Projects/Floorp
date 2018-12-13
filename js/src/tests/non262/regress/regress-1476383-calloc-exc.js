@@ -1,7 +1,4 @@
-if (!this.oomTest) {
-    this.reportCompare && reportCompare(true, true);
-    quit(0);
-}
+// |reftest| skip-if(!this.hasOwnProperty("oomTest"))
 
 let lfPreamble = `
 `;

@@ -52,9 +52,6 @@ skip-if(!this.hasOwnProperty("Intl")) include test262/intl402/jstests.list
 skip-if(!this.hasOwnProperty("Atomics")) include test262/built-ins/Atomics/jstests.list
 skip-if(!this.hasOwnProperty("SharedArrayBuffer")) include test262/built-ins/SharedArrayBuffer/jstests.list
 
-# Skip Intl.RelativeTimeFormat tests when the addIntlExtras helper isn't available.
-skip-if(!this.hasOwnProperty('addIntlExtras')) include test262/intl402/RelativeTimeFormat/jstests.list
-
 
 #####################################
 # Test262 tests disabled on browser #
@@ -88,6 +85,28 @@ skip-if(!xulRuntime.shell) script test262/language/global-code/script-decl-func.
 skip-if(!xulRuntime.shell) script test262/language/global-code/script-decl-func-err-non-extensible.js
 skip-if(!xulRuntime.shell) script test262/language/global-code/script-decl-lex.js
 skip-if(!xulRuntime.shell) script test262/language/global-code/script-decl-var-err.js
+
+# Global var-bindings are configurable in a browser environment.
+skip-if(!xulRuntime.shell) script test262/annexB/language/global-code/block-decl-global-existing-global-init.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/global-code/block-decl-global-init.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/global-code/if-decl-else-decl-a-global-existing-global-init.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/global-code/if-decl-else-decl-a-global-init.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/global-code/if-decl-else-decl-b-global-existing-global-init.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/global-code/if-decl-else-decl-b-global-init.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/global-code/if-decl-else-stmt-global-existing-global-init.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/global-code/if-decl-else-stmt-global-init.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/global-code/if-decl-no-else-global-existing-global-init.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/global-code/if-decl-no-else-global-init.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/global-code/if-stmt-else-decl-global-existing-global-init.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/global-code/if-stmt-else-decl-global-init.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/global-code/switch-case-global-existing-global-init.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/global-code/switch-case-global-init.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/global-code/switch-dflt-global-existing-global-init.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/global-code/switch-dflt-global-init.js
+skip-if(!xulRuntime.shell) script test262/language/eval-code/direct/var-env-var-init-global-exstng.js
+skip-if(!xulRuntime.shell) script test262/language/eval-code/indirect/var-env-var-init-global-exstng.js
+skip-if(!xulRuntime.shell) script test262/language/global-code/decl-func.js
+skip-if(!xulRuntime.shell) script test262/language/global-code/decl-var.js
 
 
 ##################################################
@@ -504,3 +523,6 @@ skip script test262/harness/detachArrayBuffer.js
 # Tests disabled due to invalid test expectations  #
 ####################################################
 
+# https://github.com/tc39/test262/pull/1965
+skip script test262/language/expressions/dynamic-import/indirect-resolution.js
+skip script test262/language/expressions/dynamic-import/namespace/default-property-not-set-own.js

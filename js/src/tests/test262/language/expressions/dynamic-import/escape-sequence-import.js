@@ -1,4 +1,4 @@
-// |reftest| error:SyntaxError
+// |reftest| skip-if(!xulRuntime.shell) error:SyntaxError -- dynamic-import is not enabled unconditionally
 // Copyright (C) 2018 André Bargull. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

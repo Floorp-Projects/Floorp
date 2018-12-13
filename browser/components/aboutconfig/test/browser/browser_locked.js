@@ -25,6 +25,8 @@ add_task(async function test_locked() {
     gBrowser,
     url: PAGE_URL,
   }, async browser => {
+    await content.document.querySelector("button").click();
+
     await ContentTask.spawn(browser, null, () => {
       let list = [...content.document.getElementById("prefs")
         .getElementsByTagName("tr")];
