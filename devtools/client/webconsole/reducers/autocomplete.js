@@ -8,6 +8,7 @@ const {
   AUTOCOMPLETE_DATA_RECEIVE,
   AUTOCOMPLETE_PENDING_REQUEST,
   AUTOCOMPLETE_RETRIEVE_FROM_CACHE,
+  WILL_NAVIGATE,
 } = require("devtools/client/webconsole/constants");
 
 function getDefaultState() {
@@ -23,6 +24,7 @@ function getDefaultState() {
 function autocomplete(state = getDefaultState(), action) {
   switch (action.type) {
     case AUTOCOMPLETE_CLEAR:
+    case WILL_NAVIGATE:
       return getDefaultState();
     case AUTOCOMPLETE_RETRIEVE_FROM_CACHE:
       return autoCompleteRetrieveFromCache(state, action);
