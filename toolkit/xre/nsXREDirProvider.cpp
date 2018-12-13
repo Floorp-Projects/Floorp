@@ -1444,6 +1444,14 @@ nsresult nsXREDirProvider::GetSysUserExtensionsDirectory(nsIFile** aFile) {
   rv = EnsureDirectoryExists(localDir);
   NS_ENSURE_SUCCESS(rv, rv);
 
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+  // This is used in sandbox rules, so we need to make sure it doesn't contain
+  // any junction points or symlinks or the sandbox will reject those rules.
+  if (!mozilla::widget::WinUtils::ResolveJunctionPointsAndSymLinks(localDir)) {
+    NS_WARNING("Failed to resolve sys user extensions directory.");
+  }
+#endif
+
   localDir.forget(aFile);
   return NS_OK;
 }
@@ -1458,6 +1466,14 @@ nsresult nsXREDirProvider::GetSysUserExtensionsDevDirectory(nsIFile** aFile) {
 
   rv = EnsureDirectoryExists(localDir);
   NS_ENSURE_SUCCESS(rv, rv);
+
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+  // This is used in sandbox rules, so we need to make sure it doesn't contain
+  // any junction points or symlinks or the sandbox will reject those rules.
+  if (!mozilla::widget::WinUtils::ResolveJunctionPointsAndSymLinks(localDir)) {
+    NS_WARNING("Failed to resolve sys user extensions dev directory.");
+  }
+#endif
 
   localDir.forget(aFile);
   return NS_OK;
