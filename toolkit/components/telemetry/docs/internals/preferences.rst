@@ -272,3 +272,7 @@ The following prefs are for testing purpose only.
 ``toolkit.telemetry.healthping.enabled``
 
   If false, sending health pings is disabled. Defaults to true.
+
+``toolkit.telemetry.testing.disableFuzzingDelay``
+
+  If true, ping sending is not delayed when sending between 0am and 1am local time.
