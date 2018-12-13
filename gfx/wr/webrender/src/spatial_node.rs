@@ -5,7 +5,7 @@
 
 use api::{ExternalScrollId, LayoutPixel, LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
 use api::{LayoutVector2D, PipelineId, PropertyBinding, ScrollClamping, ScrollLocation};
-use api::{ScrollSensitivity, StickyOffsetBounds};
+use api::{TransformStyle, ScrollSensitivity, StickyOffsetBounds};
 use clip_scroll_tree::{CoordinateSystem, CoordinateSystemId, SpatialNodeIndex, TransformUpdateState};
 use euclid::SideOffsets2D;
 use gpu_types::TransformPalette;
@@ -115,6 +115,7 @@ impl SpatialNode {
 
     pub fn new_reference_frame(
         parent_index: Option<SpatialNodeIndex>,
+        transform_style: TransformStyle,
         source_transform: Option<PropertyBinding<LayoutTransform>>,
         source_perspective: Option<LayoutTransform>,
         origin_in_parent_reference_frame: LayoutVector2D,
@@ -124,6 +125,7 @@ impl SpatialNode {
         let source_perspective = source_perspective.map_or_else(
             LayoutFastTransform::identity, |perspective| perspective.into());
         let info = ReferenceFrameInfo {
+            transform_style,
             source_transform: source_transform.unwrap_or(PropertyBinding::Value(identity)),
             source_perspective,
             origin_in_parent_reference_frame,
@@ -256,6 +258,7 @@ impl SpatialNode {
             SpatialNodeType::ReferenceFrame(ref mut info) => {
                 // Resolve the transform against any property bindings.
                 let source_transform = scene_properties.resolve_layout_transform(&info.source_transform);
+
                 // Do a change-basis operation on the perspective matrix using
                 // the scroll offset.
                 let scrolled_perspective = info.source_perspective
@@ -274,6 +277,7 @@ impl SpatialNode {
                     .post_translate(state.parent_accumulated_scroll_offset)
                     .to_transform()
                     .with_destination::<LayoutPixel>();
+
                 self.world_viewport_transform =
                     state.parent_reference_frame_transform.pre_mul(&relative_transform.into());
                 self.world_content_transform = self.world_viewport_transform;
@@ -485,6 +489,15 @@ impl SpatialNode {
             }
             SpatialNodeType::ReferenceFrame(ref info) => {
                 state.parent_reference_frame_transform = self.world_viewport_transform;
+
+                let should_flatten =
+                    info.transform_style == TransformStyle::Flat &&
+                    info.source_perspective.is_identity();
+
+                if should_flatten {
+                    state.parent_reference_frame_transform = state.parent_reference_frame_transform.project_to_2d();
+                }
+
                 state.parent_accumulated_scroll_offset = LayoutVector2D::zero();
                 state.coordinate_system_relative_scale_offset = self.coordinate_system_relative_scale_offset;
                 let translation = -info.origin_in_parent_reference_frame;
@@ -644,6 +657,7 @@ pub struct ReferenceFrameInfo {
     /// here so that we can resolve the animated transform and update the tree each
     /// frame.
     pub source_transform: PropertyBinding<LayoutTransform>,
+    pub transform_style: TransformStyle,
     pub source_perspective: LayoutFastTransform,
 
     /// The original, not including the transform and relative to the parent reference frame,
