@@ -4,14 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebVTTListener.h"
+#include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/dom/HTMLTrackElement.h"
 #include "mozilla/dom/TextTrackCue.h"
 #include "mozilla/dom/TextTrackRegion.h"
 #include "mozilla/dom/VTTRegionBinding.h"
-#include "mozilla/dom/HTMLTrackElement.h"
-#include "nsIInputStream.h"
-#include "nsIWebVTTParserWrapper.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
+#include "nsIInputStream.h"
+#include "nsIWebVTTParserWrapper.h"
 
 namespace mozilla {
 namespace dom {
@@ -33,9 +34,21 @@ LazyLogModule gTextTrackLog("TextTrack");
 #define VTT_LOG(...) MOZ_LOG(gTextTrackLog, LogLevel::Debug, (__VA_ARGS__))
 
 WebVTTListener::WebVTTListener(HTMLTrackElement* aElement)
-    : mElement(aElement) {
+    : mElement(aElement), mParserWrapperError(NS_OK) {
   MOZ_ASSERT(mElement, "Must pass an element to the callback");
   VTT_LOG("WebVTTListener created.");
+  MOZ_DIAGNOSTIC_ASSERT(
+      CycleCollectedJSContext::Get() &&
+      !CycleCollectedJSContext::Get()->IsInStableOrMetaStableState());
+  mParserWrapper = do_CreateInstance(NS_WEBVTTPARSERWRAPPER_CONTRACTID,
+                                     &mParserWrapperError);
+  if (NS_SUCCEEDED(mParserWrapperError)) {
+    nsPIDOMWindowInner* window = mElement->OwnerDoc()->GetInnerWindow();
+    mParserWrapperError = mParserWrapper->LoadParser(window);
+  }
+  if (NS_SUCCEEDED(mParserWrapperError)) {
+    mParserWrapperError = mParserWrapper->Watch(this);
+  }
 }
 
 WebVTTListener::~WebVTTListener() { VTT_LOG("WebVTTListener destroyed."); }
@@ -46,16 +59,8 @@ WebVTTListener::GetInterface(const nsIID& aIID, void** aResult) {
 }
 
 nsresult WebVTTListener::LoadResource() {
-  nsresult rv;
-  mParserWrapper = do_CreateInstance(NS_WEBVTTPARSERWRAPPER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsPIDOMWindowInner* window = mElement->OwnerDoc()->GetInnerWindow();
-  rv = mParserWrapper->LoadParser(window);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mParserWrapper->Watch(this);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Exit if we failed to create the WebVTTParserWrapper (vtt.jsm)
+  NS_ENSURE_SUCCESS(mParserWrapperError, mParserWrapperError);
 
   mElement->SetReadyState(TextTrackReadyState::Loading);
   return NS_OK;
