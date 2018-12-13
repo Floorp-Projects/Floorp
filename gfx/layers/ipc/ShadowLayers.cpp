@@ -532,7 +532,7 @@ bool ShadowLayerForwarder::EndTransaction(
     const mozilla::TimeStamp& aVsyncStart,
     const mozilla::TimeStamp& aRefreshStart,
     const mozilla::TimeStamp& aTransactionStart, const nsCString& aURL,
-    bool* aSent) {
+    bool* aSent, const InfallibleTArray<CompositionPayload>& aPayload) {
   *aSent = false;
 
   TransactionInfo info;
@@ -680,6 +680,7 @@ bool ShadowLayerForwarder::EndTransaction(
 #if defined(ENABLE_FRAME_LATENCY_LOG)
   info.fwdTime() = TimeStamp::Now();
 #endif
+  info.payload() = aPayload;
 
   TargetConfig targetConfig(mTxn->mTargetBounds, mTxn->mTargetRotation,
                             mTxn->mTargetOrientation, aRegionToClear);
