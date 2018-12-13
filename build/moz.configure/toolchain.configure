@@ -387,8 +387,8 @@ def toolchain_prefix(value, target, cross_compiling):
 def first_toolchain_prefix(toolchain_prefix, target):
     # Pass TOOLCHAIN_PREFIX down to the build system if it was given from the
     # command line/environment (in which case there's only one value in the tuple),
-    # or when cross-compiling for Android.
-    if toolchain_prefix and (target.os == 'Android' or len(toolchain_prefix) == 1):
+    # or when cross-compiling for Android or OSX.
+    if toolchain_prefix and (target.os in ('Android', 'OSX') or len(toolchain_prefix) == 1):
         return toolchain_prefix[0]
 
 
