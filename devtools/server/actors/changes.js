@@ -26,7 +26,7 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
     this.targetActor = targetActor;
 
     this.onTrackChange = this.pushChange.bind(this);
-    this.onWillNavigate = this.clearChanges.bind(this);
+    this.onWillNavigate = this.onWillNavigate.bind(this);
 
     TrackChangeEmitter.on("track-change", this.onTrackChange);
     this.targetActor.on("will-navigate", this.onWillNavigate);
@@ -72,6 +72,28 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
      */
     this._changesHaveBeenRequested = true;
     return this.changes.slice();
+  },
+
+  /**
+   * Handler for "will-navigate" event from the browsing context. The event is fired for
+   * the host page and any nested resources, like iframes. The list of changes should be
+   * cleared only when the host page navigates, ignoring any of its iframes.
+   *
+   * TODO: Clear changes made within sources in iframes when they navigate. Bug 1513940
+   *
+   * @param {Object} eventData
+   *        Event data with these properties:
+   *        {
+   *          window: Object      // Window DOM object of the event source page
+   *          isTopLevel: Boolean // true if the host page will navigate
+   *          newURI: String      // URI towards which the page will navigate
+   *          request: Object     // Request data.
+   *        }
+   */
+  onWillNavigate: function(eventData) {
+    if (eventData.isTopLevel) {
+      this.clearChanges();
+    }
   },
 
   pushChange: function(change) {
