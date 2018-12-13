@@ -3381,6 +3381,11 @@ static bool GetTemplateObjectForNative(JSContext* cx, HandleFunction target,
     return !!res;
   }
 
+  if (native == js::intrinsic_NewRegExpStringIterator) {
+    res.set(NewRegExpStringIteratorObject(cx, TenuredObject));
+    return !!res;
+  }
+
   return true;
 }
 
