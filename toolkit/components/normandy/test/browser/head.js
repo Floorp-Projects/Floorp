@@ -299,7 +299,7 @@ this.addonStudyFactory = function(attrs) {
 let _preferenceStudyFactoryId = 0;
 this.preferenceStudyFactory = function(attrs) {
   return Object.assign({
-    name: "Test study",
+    name: `Test study ${_preferenceStudyFactoryId++}`,
     branch: "control",
     expired: false,
     lastSeen: new Date().toJSON(),
