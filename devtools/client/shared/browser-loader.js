@@ -4,10 +4,17 @@
 "use strict";
 
 const loaders = ChromeUtils.import("resource://devtools/shared/base-loader.js", {});
-const { devtools } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const {
+  devtools,
+  loader,
+} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const flags = devtools.require("devtools/shared/flags");
 const { joinURI } = devtools.require("devtools/shared/path");
 const { assert } = devtools.require("devtools/shared/DevToolsUtils");
 const { AppConstants } = devtools.require("resource://gre/modules/AppConstants.jsm");
+
+loader.lazyRequireGetter(this, "getMockedModule",
+  "devtools/client/shared/browser-loader-mocks", {});
 
 const BROWSER_BASED_DIRS = [
   "resource://devtools/client/inspector/boxmodel",
@@ -127,6 +134,13 @@ function BrowserLoaderBuilder({ baseURI, window, useOnlyShared, commonLibRequire
       }
 
       const uri = require.resolve(id);
+
+      // The mocks can be set from tests using browser-loader-mocks.js setMockedModule().
+      // If there is an entry for a given uri in the `mocks` object, return it instead of
+      // requiring the module.
+      if (flags.testing && getMockedModule(uri)) {
+        return getMockedModule(uri);
+      }
 
       if (commonLibRequire && COMMON_LIBRARY_DIRS.some(dir => uri.startsWith(dir))) {
         return commonLibRequire(uri);

@@ -29,5 +29,3 @@ function refreshUSBRuntimes() {
   return adb.updateRuntimes();
 }
 exports.refreshUSBRuntimes = refreshUSBRuntimes;
-
-require("./test-helper").enableMocks(module, "modules/usb-runtimes");
