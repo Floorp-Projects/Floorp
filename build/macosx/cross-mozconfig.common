@@ -6,13 +6,12 @@ MOZ_AUTOMATION_L10N_CHECK=0
 
 . "$topsrcdir/build/mozconfig.common"
 
-# Rust requires dsymutil into PATH
-mk_add_options "export PATH=$topsrcdir/llvm-dsymutil/bin:$PATH"
+# cctools for ld, ar, and other related tools ; dsymutil for rust.
+mk_add_options "export PATH=$topsrcdir/cctools/bin:$topsrcdir/llvm-dsymutil/bin:$PATH"
 
 # ld needs libLTO.so from llvm
 mk_add_options "export LD_LIBRARY_PATH=$topsrcdir/clang/lib"
 
-CROSS_CCTOOLS_PATH=$topsrcdir/cctools
 # This SDK was copied from a local XCode install and uploaded to tooltool.
 # Generate the tarball by running this command with the proper SDK version:
 #   sdk_path=$(xcrun --sdk macosx10.12 --show-sdk-path)
@@ -21,7 +20,7 @@ CROSS_CCTOOLS_PATH=$topsrcdir/cctools
 # `browser/config/tooltool-manifests/macosx64/cross-releng.manifest`.
 CROSS_SYSROOT=$topsrcdir/MacOSX10.11.sdk
 CROSS_PRIVATE_FRAMEWORKS=$CROSS_SYSROOT/System/Library/PrivateFrameworks
-FLAGS="-B $CROSS_CCTOOLS_PATH/bin -isysroot $CROSS_SYSROOT"
+FLAGS="-isysroot $CROSS_SYSROOT"
 
 export CC="$topsrcdir/clang/bin/clang $FLAGS"
 export CXX="$topsrcdir/clang/bin/clang++ $FLAGS"
@@ -29,7 +28,6 @@ export CPP="$topsrcdir/clang/bin/clang $FLAGS -E"
 export LLVMCONFIG=$topsrcdir/clang/bin/llvm-config
 export LDFLAGS="-Wl,-syslibroot,$CROSS_SYSROOT"
 export BINDGEN_CFLAGS="$FLAGS"
-export TOOLCHAIN_PREFIX=$CROSS_CCTOOLS_PATH/bin/x86_64-darwin11-
 export DSYMUTIL=$topsrcdir/build/macosx/llvm-dsymutil
 mk_add_options "export REAL_DSYMUTIL=$topsrcdir/llvm-dsymutil/bin/dsymutil"
 export MKFSHFS=$topsrcdir/hfsplus-tools/newfs_hfs
