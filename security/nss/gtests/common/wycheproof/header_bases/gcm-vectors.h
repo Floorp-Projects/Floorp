@@ -1,0 +1,197 @@
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* This file is generated from sources in nss/gtests/common/wycheproof
+ * automatically and should not be touched manually.
+ * Generation is trigged by calling ./mach wycheproof */
+
+#ifndef gcm_vectors_h__
+#define gcm_vectors_h__
+
+#include <string>
+
+typedef struct gcm_kat_str {
+  uint32_t test_id;
+  std::string key;
+  std::string plaintext;
+  std::string additional_data;
+  std::string iv;
+  std::string hash_key;
+  std::string ghash;
+  std::string result;
+  bool invalid_ct;
+  bool invalid_iv;
+} gcm_kat_value;
+
+/*
+ * http://csrc.nist.gov/groups/ST/toolkit/BCM/documents/proposedmodes/gcm/gcm-revised-spec.pdf
+ */
+const gcm_kat_value kGcmKatValues[] = {
+    {1, "00000000000000000000000000000000", "", "", "000000000000000000000000",
+     "66e94bd4ef8a2c3b884cfa59ca342b2e", "00000000000000000000000000000000",
+     "58e2fccefa7e3061367f1d57a4e7455a", false, false},
+
+    {2, "00000000000000000000000000000000", "00000000000000000000000000000000",
+     "", "000000000000000000000000", "66e94bd4ef8a2c3b884cfa59ca342b2e",
+     "f38cbb1ad69223dcc3457ae5b6b0f885",
+     "0388dace60b6a392f328c2b971b2fe78ab6e47d42cec13bdf53a67b21257bddf", false,
+     false},
+
+    {3, "feffe9928665731c6d6a8f9467308308",
+     "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c959"
+     "56809532fcf0e2449a6b525b16aedf5aa0de657ba637b391aafd255",
+     "", "cafebabefacedbaddecaf888", "b83b533708bf535d0aa6e52980d53b78",
+     "7f1b32b81b820d02614f8895ac1d4eac",
+     "42831ec2217774244b7221b784d0d49ce3aa212f2c02a4e035c17e2329aca12e21d514b25"
+     "466931c7d8f6a5aac84aa051ba30b396a0aac973d58e091473f59854d5c2af327cd64a62c"
+     "f35abd2ba6fab4",
+     false, false},
+
+    {4, "feffe9928665731c6d6a8f9467308308",
+     "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c959"
+     "56809532fcf0e2449a6b525b16aedf5aa0de657ba637b39",
+     "feedfacedeadbeeffeedfacedeadbeefabaddad2", "cafebabefacedbaddecaf888",
+     "b83b533708bf535d0aa6e52980d53b78", "698e57f70e6ecc7fd9463b7260a9ae5f",
+     "42831ec2217774244b7221b784d0d49ce3aa212f2c02a4e035c17e2329aca12e21d514b25"
+     "466931c7d8f6a5aac84aa051ba30b396a0aac973d58e0915bc94fbc3221a5db94fae95ae7"
+     "121a47",
+     false, false},
+
+    {5, "feffe9928665731c6d6a8f9467308308",
+     "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c959"
+     "56809532fcf0e2449a6b525b16aedf5aa0de657ba637b39",
+     "feedfacedeadbeeffeedfacedeadbeefabaddad2", "cafebabefacedbad",
+     "b83b533708bf535d0aa6e52980d53b78", "df586bb4c249b92cb6922877e444d37b",
+     "61353b4c2806934a777ff51fa22a4755699b2a714fcdc6f83766e5f97b6c742373806900e"
+     "49f24b22b097544d4896b424989b5e1ebac0f07c23f45983612d2e79e3b0785561be14aac"
+     "a2fccb",
+     false, false},
+
+    {6, "feffe9928665731c6d6a8f9467308308",
+     "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c959"
+     "56809532fcf0e2449a6b525b16aedf5aa0de657ba637b39",
+     "feedfacedeadbeeffeedfacedeadbeefabaddad2",
+     "9313225df88406e555909c5aff5269aa6a7a9538534f7da1e4c303d2a318a728c3c0c9515"
+     "6809539fcf0e2429a6b525416aedbf5a0de6a57a637b39b",
+     "b83b533708bf535d0aa6e52980d53b78", "1c5afe9760d3932f3c9a878aac3dc3de",
+     "8ce24998625615b603a033aca13fb894be9112a5c3a211a8ba262a3cca7e2ca701e4a9a4f"
+     "ba43c90ccdcb281d48c7c6fd62875d2aca417034c34aee5619cc5aefffe0bfa462af43c16"
+     "99d050",
+     false, false},
+
+    {7, "000000000000000000000000000000000000000000000000", "", "",
+     "000000000000000000000000", "aae06992acbf52a3e8f4a96ec9300bd7",
+     "00000000000000000000000000000000", "cd33b28ac773f74ba00ed1f312572435",
+     false, false},
+
+    {8, "000000000000000000000000000000000000000000000000",
+     "00000000000000000000000000000000", "", "000000000000000000000000",
+     "aae06992acbf52a3e8f4a96ec9300bd7", "e2c63f0ac44ad0e02efa05ab6743d4ce",
+     "98e7247c07f0fe411c267e4384b0f6002ff58d80033927ab8ef4d4587514f0fb", false,
+     false},
+
+    {9, "feffe9928665731c6d6a8f9467308308feffe9928665731c",
+     "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c959"
+     "56809532fcf0e2449a6b525b16aedf5aa0de657ba637b391aafd255",
+     "", "cafebabefacedbaddecaf888", "466923ec9ae682214f2c082badb39249",
+     "51110d40f6c8fff0eb1ae33445a889f0",
+     "3980ca0b3c00e841eb06fac4872a2757859e1ceaa6efd984628593b40ca1e19c7d773d00c"
+     "144c525ac619d18c84a3f4718e2448b2fe324d9ccda2710acade2569924a7c8587336bfb1"
+     "18024db8674a14",
+     false, false},
+
+    {10, "feffe9928665731c6d6a8f9467308308feffe9928665731c",
+     "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c959"
+     "56809532fcf0e2449a6b525b16aedf5aa0de657ba637b39",
+     "feedfacedeadbeeffeedfacedeadbeefabaddad2", "cafebabefacedbaddecaf888",
+     "466923ec9ae682214f2c082badb39249", "ed2ce3062e4a8ec06db8b4c490e8a268",
+     "3980ca0b3c00e841eb06fac4872a2757859e1ceaa6efd984628593b40ca1e19c7d773d00c"
+     "144c525ac619d18c84a3f4718e2448b2fe324d9ccda27102519498e80f1478f37ba55bd6d"
+     "27618c",
+     false, false},
+
+    {11, "feffe9928665731c6d6a8f9467308308feffe9928665731c",
+     "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c959"
+     "56809532fcf0e2449a6b525b16aedf5aa0de657ba637b39",
+     "feedfacedeadbeeffeedfacedeadbeefabaddad2", "cafebabefacedbad",
+     "466923ec9ae682214f2c082badb39249", "1e6a133806607858ee80eaf237064089",
+     "0f10f599ae14a154ed24b36e25324db8c566632ef2bbb34f8347280fc4507057fddc29df9"
+     "a471f75c66541d4d4dad1c9e93a19a58e8b473fa0f062f765dcc57fcf623a24094fcca40d"
+     "3533f8",
+     false, false},
+
+    {12, "feffe9928665731c6d6a8f9467308308feffe9928665731c",
+     "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c959"
+     "56809532fcf0e2449a6b525b16aedf5aa0de657ba637b39",
+     "feedfacedeadbeeffeedfacedeadbeefabaddad2",
+     "9313225df88406e555909c5aff5269aa6a7a9538534f7da1e4c303d2a318a728c3c0c9515"
+     "6809539fcf0e2429a6b525416aedbf5a0de6a57a637b39b",
+     "466923ec9ae682214f2c082badb39249", "82567fb0b4cc371801eadec005968e94",
+     "d27e88681ce3243c4830165a8fdcf9ff1de9a1d8e6b447ef6ef7b79828666e4581e79012a"
+     "f34ddd9e2f037589b292db3e67c036745fa22e7e9b7373bdcf566ff291c25bbb8568fc3d3"
+     "76a6d9",
+     false, false},
+
+    {13, "0000000000000000000000000000000000000000000000000000000000000000", "",
+     "", "000000000000000000000000", "dc95c078a2408989ad48a21492842087",
+     "00000000000000000000000000000000", "530f8afbc74536b9a963b4f1c4cb738b",
+     false, false},
+
+    {14, "0000000000000000000000000000000000000000000000000000000000000000",
+     "00000000000000000000000000000000", "", "000000000000000000000000",
+     "dc95c078a2408989ad48a21492842087", "83de425c5edc5d498f382c441041ca92",
+     "cea7403d4d606b6e074ec5d3baf39d18d0d1c8a799996bf0265b98b5d48ab919", false,
+     false},
+
+    {15, "feffe9928665731c6d6a8f9467308308feffe9928665731c6d6a8f9467308308",
+     "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c959"
+     "56809532fcf0e2449a6b525b16aedf5aa0de657ba637b391aafd255",
+     "", "cafebabefacedbaddecaf888", "acbef20579b4b8ebce889bac8732dad7",
+     "4db870d37cb75fcb46097c36230d1612",
+     "522dc1f099567d07f47f37a32a84427d643a8cdcbfe5c0c97598a2bd2555d1aa8cb08e485"
+     "90dbb3da7b08b1056828838c5f61e6393ba7a0abcc9f662898015adb094dac5d93471bdec"
+     "1a502270e3cc6c",
+     false, false},
+
+    {16, "feffe9928665731c6d6a8f9467308308feffe9928665731c6d6a8f9467308308",
+     "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c959"
+     "56809532fcf0e2449a6b525b16aedf5aa0de657ba637b39",
+     "feedfacedeadbeeffeedfacedeadbeefabaddad2", "cafebabefacedbaddecaf888",
+     "acbef20579b4b8ebce889bac8732dad7", "8bd0c4d8aacd391e67cca447e8c38f65",
+     "522dc1f099567d07f47f37a32a84427d643a8cdcbfe5c0c97598a2bd2555d1aa8cb08e485"
+     "90dbb3da7b08b1056828838c5f61e6393ba7a0abcc9f66276fc6ece0f4e1768cddf8853bb"
+     "2d551b",
+     false, false},
+
+    {17, "feffe9928665731c6d6a8f9467308308feffe9928665731c6d6a8f9467308308",
+     "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c959"
+     "56809532fcf0e2449a6b525b16aedf5aa0de657ba637b39",
+     "feedfacedeadbeeffeedfacedeadbeefabaddad2", "cafebabefacedbad",
+     "acbef20579b4b8ebce889bac8732dad7", "75a34288b8c68f811c52b2e9a2f97f63",
+     "c3762df1ca787d32ae47c13bf19844cbaf1ae14d0b976afac52ff7d79bba9de0feb582d33"
+     "934a4f0954cc2363bc73f7862ac430e64abe499f47c9b1f3a337dbf46a792c45e454913fe"
+     "2ea8f2",
+     false, false},
+
+    {18, "feffe9928665731c6d6a8f9467308308feffe9928665731c6d6a8f9467308308",
+     "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c959"
+     "56809532fcf0e2449a6b525b16aedf5aa0de657ba637b39",
+     "feedfacedeadbeeffeedfacedeadbeefabaddad2",
+     "9313225df88406e555909c5aff5269aa6a7a9538534f7da1e4c303d2a318a728c3c0c9515"
+     "6809539fcf0e2429a6b525416aedbf5a0de6a57a637b39b",
+     "acbef20579b4b8ebce889bac8732dad7", "d5ffcf6fc5ac4d69722187421a7f170b",
+     "5a8def2f0c9e53f1f75d7853659e2a20eeb2b22aafde6419a058ab4f6f746bf40fc0c3b78"
+     "0f244452da3ebf1c5d82cdea2418997200ef82e44ae7e3fa44a8266ee1c8eb0c8b5d4cf5a"
+     "e9f19a",
+     false, false},
+
+    /* Extra, non-NIST, test case to test 64-bit binary multiplication carry
+     * correctness. This is a GHASH-only test. */
+    {19, "", "", "", "", "0000000000000000fcefef64ffc4766c",
+     "3561e34e52d8b598f9937982512fff27",
+     "0000000000000000ffcef9ebbffdbd8b00000000000000000000000000000000", false,
+     false}};
+
+#endif  // gcm_vectors_h__
