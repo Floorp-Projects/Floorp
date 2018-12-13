@@ -67,15 +67,11 @@ export default class PaymentMethodPicker extends RichPicker {
 
     // Update selectedness after the options are updated
     let selectedPaymentCardGUID = state[this.selectedStateKey];
-    if (selectedPaymentCardGUID) {
-      this.dropdown.value = selectedPaymentCardGUID;
+    this.dropdown.value = selectedPaymentCardGUID;
 
-      if (selectedPaymentCardGUID !== this.dropdown.value) {
-        throw new Error(`The option ${selectedPaymentCardGUID} ` +
-                        `does not exist in the payment method picker`);
-      }
-    } else {
-      this.dropdown.value = "";
+    if (selectedPaymentCardGUID && selectedPaymentCardGUID !== this.dropdown.value) {
+      throw new Error(`The option ${selectedPaymentCardGUID} ` +
+                      `does not exist in the payment method picker`);
     }
 
     let securityCodeState = state[this.selectedStateKey + "SecurityCode"];
