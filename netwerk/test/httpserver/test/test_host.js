@@ -9,14 +9,16 @@
  * and used in HTTP requests and responses.
  */
 
+"use strict";
+
 const PORT = 4444;
 const FAKE_PORT_ONE = 8888;
 const FAKE_PORT_TWO = 8889;
 
-var srv, id;
+let srv, id;
 
-function run_test() {
-  dumpn("*** run_test");
+add_task(async function run_test1() {
+  dump("*** run_test1");
 
   srv = createServer();
 
@@ -76,21 +78,12 @@ function run_test() {
   // Okay, now that we've exercised that behavior, shut down the server and
   // restart it on the correct port, to exercise port-changing behaviors at
   // server start and stop.
-  do_test_pending();
-  srv.stop(function() {
-    try {
-      do_test_pending();
-      run_test_2();
-    } finally {
-      do_test_finished();
-    }
-  });
-}
 
-function run_test_2() {
-  dumpn("*** run_test_2");
+  await new Promise(resolve => srv.stop(resolve));
+});
 
-  do_test_finished();
+add_task(async function run_test_2() {
+  dump("*** run_test_2");
 
   // Our primary location is gone because it was dependent on the port on which
   // the server was running.
@@ -134,21 +127,11 @@ function run_test_2() {
   Assert.ok(!id.has("http", "localhost", FAKE_PORT_ONE));
   Assert.ok(!id.has("http", "127.0.0.1", FAKE_PORT_ONE));
 
-  do_test_pending();
-  srv.stop(function() {
-    try {
-      do_test_pending();
-      run_test_3();
-    } finally {
-      do_test_finished();
-    }
-  });
-}
+  await new Promise(resolve => srv.stop(resolve));
+});
 
-function run_test_3() {
-  dumpn("*** run_test_3");
-
-  do_test_finished();
+add_task(async function run_test_3() {
+  dump("*** run_test_3");
 
   // Only the default added location disappears; any others stay around,
   // possibly as the primary location.  We may have removed the default primary
@@ -197,8 +180,8 @@ function run_test_3() {
 
   // Okay, finally done with identity testing.  Our primary location is the one
   // we want it to be, so we're off!
-  runRawTests(tests, testComplete(srv));
-}
+  runRawTests(tests, () => { srv.stop(); }, (idx) => dump(`running test no ${idx}`));
+});
 
 
 /** *******************
@@ -213,7 +196,7 @@ function run_test_3() {
  *   the server identity to test
  */
 function checkPrimariesThrow(aId) {
-  var threw = false;
+  let threw = false;
   try {
     aId.primaryScheme;
   } catch (e) {
@@ -242,10 +225,10 @@ function checkPrimariesThrow(aId) {
  * Utility function to check for a 400 response.
  */
 function check400(aData) {
-  var iter = LineIterator(aData);
+  let iter = LineIterator(aData);
 
   // Status-Line
-  var { value: firstLine } = iter.next();
+  let { value: firstLine } = iter.next();
   Assert.equal(firstLine.substring(0, HTTP_400_LEADER_LENGTH), HTTP_400_LEADER);
 }
 
@@ -269,7 +252,7 @@ function http10Request(request, response) {
 data = "GET /http/1.0-request HTTP/1.0\r\n" +
        "\r\n";
 function check10(aData) {
-  var iter = LineIterator(aData);
+  let iter = LineIterator(aData);
 
   // Status-Line
   Assert.equal(iter.next().value, "HTTP/1.0 200 TEST PASSED");
@@ -277,7 +260,7 @@ function check10(aData) {
   skipHeaders(iter);
 
   // Okay, next line must be the data we expected to be written
-  var body =
+  let body =
     [
      "Method:  GET",
      "Path:    /http/1.0-request",
@@ -366,7 +349,7 @@ data = "GET /http/1.1-good-host HTTP/1.1\r\n" +
        "Host: localhost:4444\r\n" +
        "\r\n";
 function check11goodHost(aData) {
-  var iter = LineIterator(aData);
+  let iter = LineIterator(aData);
 
   // Status-Line
   Assert.equal(iter.next().value, "HTTP/1.1 200 TEST PASSED");
@@ -374,7 +357,7 @@ function check11goodHost(aData) {
   skipHeaders(iter);
 
   // Okay, next line must be the data we expected to be written
-  var body =
+  let body =
     [
      "Method:  GET",
      "Path:    /http/1.1-good-host",
@@ -401,7 +384,7 @@ data = "GET /http/1.1-ip-host HTTP/1.1\r\n" +
        "Host: 127.0.0.1:4444\r\n" +
        "\r\n";
 function check11ipHost(aData) {
-  var iter = LineIterator(aData);
+  let iter = LineIterator(aData);
 
   // Status-Line
   Assert.equal(iter.next().value, "HTTP/1.1 200 TEST PASSED");
@@ -409,7 +392,7 @@ function check11ipHost(aData) {
   skipHeaders(iter);
 
   // Okay, next line must be the data we expected to be written
-  var body =
+  let body =
     [
      "Method:  GET",
      "Path:    /http/1.1-ip-host",
@@ -484,7 +467,7 @@ data = "GET /http/1.0-request HTTP/1.0\r\n" +
        "Host: not-localhost:4444\r\n" +
        "\r\n";
 function check10ip(aData) {
-  var iter = LineIterator(aData);
+  let iter = LineIterator(aData);
 
   // Status-Line
   Assert.equal(iter.next().value, "HTTP/1.0 200 TEST PASSED");
@@ -492,7 +475,7 @@ function check10ip(aData) {
   skipHeaders(iter);
 
   // Okay, next line must be the data we expected to be written
-  var body =
+  let body =
     [
      "Method:  GET",
      "Path:    /http/1.0-request",
@@ -519,7 +502,7 @@ data = "GET /http/1.1-good-host-wacky-port HTTP/1.1\r\n" +
        "Host: localhost\r\n" +
        "\r\n";
 function check11goodHostWackyPort(aData) {
-  var iter = LineIterator(aData);
+  let iter = LineIterator(aData);
 
   // Status-Line
   Assert.equal(iter.next().value, "HTTP/1.1 200 TEST PASSED");
@@ -527,7 +510,7 @@ function check11goodHostWackyPort(aData) {
   skipHeaders(iter);
 
   // Okay, next line must be the data we expected to be written
-  var body =
+  let body =
     [
      "Method:  GET",
      "Path:    /http/1.1-good-host-wacky-port",

@@ -9,6 +9,7 @@
   <body onload="setup();">
     <script type="application/javascript">
 "use strict";
+/* eslint-env mozilla/frame-script */
 
 function childFrameScript() {
   "use strict";
@@ -17,13 +18,9 @@ function childFrameScript() {
 
   const messageName = "test:blob-slice-test";
   const blobData = ["So", " ", "many", " ", "blobs!"];
-  const blobText = blobData.join("");
   const blobType = "text/plain";
 
   let blob = new Blob(blobData, { type: blobType });
-
-  let sliceText = blobData[2][1] + blobData[2][2];
-  let sliceIndex = blobText.indexOf(sliceText);
 
   let firstSliceStart = blobData[0].length + blobData[1].length;
   let firstSliceEnd = firstSliceStart + blobData[2].length;
@@ -35,8 +32,8 @@ function childFrameScript() {
 
   slice = slice.slice(secondSliceStart, secondSliceEnd, blobType);
 
-  sendAsyncMessage(messageName, { blob: blob });
-  sendAsyncMessage(messageName, { slice: slice });
+  sendAsyncMessage(messageName, { blob });
+  sendAsyncMessage(messageName, { slice });
 }
 
 function parentFrameScript(mm) {
@@ -168,7 +165,7 @@ function setup() {
           iframe.addEventListener("mozbrowserloadend", function() {
             info("Starting tests");
 
-            let mm = SpecialPowers.getBrowserFrameMessageManager(iframe)
+            let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
             parentFrameScript(mm);
           });
 

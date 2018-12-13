@@ -31,10 +31,4 @@ void ArenaRefPtr<T>::AssertValidType() {
 
 }  // namespace mozilla
 
-template <typename T>
-void nsPresArena::RegisterArenaRefPtr(mozilla::ArenaRefPtr<T>* aPtr) {
-  MOZ_ASSERT(!mArenaRefPtrs.Contains(aPtr));
-  mArenaRefPtrs.Put(aPtr, T::ArenaObjectID());
-}
-
 #endif

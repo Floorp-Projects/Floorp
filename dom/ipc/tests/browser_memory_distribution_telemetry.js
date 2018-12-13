@@ -36,10 +36,10 @@ add_task(async function test_memory_distribution() {
   let tab3 = await BrowserTestUtils.openNewForegroundTab(gBrowser, DUMMY_PAGE_DATA_URI);
 
   let finishedGathering = new Promise(resolve => {
-    let obs = function () {
+    let obs = function() {
       Services.obs.removeObserver(obs, "gather-memory-telemetry-finished");
       resolve();
-    }
+    };
     Services.obs.addObserver(obs, "gather-memory-telemetry-finished");
   });
 
@@ -48,7 +48,7 @@ add_task(async function test_memory_distribution() {
   await finishedGathering;
 
   let s = histogram.snapshot();
-  ok("0 - 10 tabs" in s, "We should have some samples by now in this bucket.")
+  ok("0 - 10 tabs" in s, "We should have some samples by now in this bucket.");
   for (var key in s) {
     is(key, "0 - 10 tabs");
     let fewTabsSnapshot = s[key];

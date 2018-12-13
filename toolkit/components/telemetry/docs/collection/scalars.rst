@@ -173,7 +173,7 @@ Optional Fields
   - ``geckoview``
   - ``all`` (record on all products)
 
-- ``record_into_store``: A list of stores this scalar should be recorded into. It defaults to ``[main]`` (*Note: This field is not yet ready to use*).
+- ``record_into_store``: A list of stores this scalar should be recorded into. It defaults to ``[main]``.
 
 String type restrictions
 ------------------------

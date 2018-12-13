@@ -238,10 +238,6 @@ If this field is left out it defaults to ``all``.
 ``record_into_store``
 ---------------------
 
-.. note::
-
-   This field is not yet ready for use.
-
 Optional. This field is a list of stores this histogram should be recorded into.
 If this field is left out it defaults to ``[main]``.
 
