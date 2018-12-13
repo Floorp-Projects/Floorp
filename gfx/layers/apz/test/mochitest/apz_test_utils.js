@@ -381,6 +381,8 @@ async function waitUntilApzStable() {
 // that the root layer tree is pointing to the content layer tree, but does
 // not guarantee the subsequent paint; this function does that job.
 async function forceLayerTreeToCompositor() {
+  // Modify a style property to force a layout flush
+  document.body.style.left = "1px";
   var utils = SpecialPowers.getDOMWindowUtils(window);
   if (!utils.isMozAfterPaintPending) {
     dump("Forcing a paint since none was pending already...\n");
