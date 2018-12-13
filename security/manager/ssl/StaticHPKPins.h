@@ -736,7 +736,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "cr.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
   { "crash-reports-xpsp2.mozilla.com", false, false, true, 11, &kPinset_mozilla_services },
   { "crash-reports.mozilla.com", false, false, true, 10, &kPinset_mozilla_services },
-  { "crash-stats.mozilla.com", false, false, true, 12, &kPinset_mozilla_services },
+  { "crash-stats.mozilla.org", false, false, true, 12, &kPinset_mozilla_services },
   { "crbug.com", true, false, false, -1, &kPinset_google_root_pems },
   { "crosbug.com", true, false, false, -1, &kPinset_google_root_pems },
   { "crrev.com", true, false, false, -1, &kPinset_google_root_pems },
