@@ -13,17 +13,6 @@ add_old_configure_assignment(
     depends('--enable-warnings-as-errors')(lambda x: bool(x)))
 
 
-@depends('--enable-warnings-as-errors')
-def rust_warning_flags(warnings_as_errors):
-    flags = []
-
-    # Note that cargo passes --cap-lints warn to rustc for third-party code, so
-    # we don't need a very complicated setup.
-    if warnings_as_errors:
-        flags.append('-Dwarnings')
-
-    return flags
-
 # GCC/Clang warnings:
 # https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
 # https://clang.llvm.org/docs/DiagnosticsReference.html
