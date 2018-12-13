@@ -344,11 +344,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsRange)
 
   tmp->Reset();
 
-  // This needs to be unlinked after Reset() is called, as it controls
-  // the result of IsInSelection() which is used by tmp->Reset().
   MOZ_DIAGNOSTIC_ASSERT(!tmp->isInList(),
                         "Shouldn't be registered now that we're unlinking");
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelection);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsRange)
@@ -356,7 +353,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsRange)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStart)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEnd)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRoot)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelection)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsRange)
@@ -896,7 +892,7 @@ void nsRange::NotifySelectionListenersAfterRangeSet() {
     mCalledByJS = false;
     // Be aware, this range may be modified or stop being a range for selection
     // after this call.  Additionally, the selection instance may have gone.
-    RefPtr<Selection> selection = mSelection;
+    RefPtr<Selection> selection = mSelection.get();
     selection->NotifySelectionListeners(calledByJSRestorer.SavedValue());
   }
 }
