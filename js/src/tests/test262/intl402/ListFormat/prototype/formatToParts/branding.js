@@ -1,4 +1,4 @@
-// |reftest| skip-if(!Intl.hasOwnProperty('ListFormat')) -- Intl.ListFormat is not enabled unconditionally
+// |reftest| skip -- Intl.ListFormat is not supported
 // Copyright 2018 Igalia, S.L. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -13,16 +13,17 @@ info: |
 features: [Intl.ListFormat]
 ---*/
 
-const fn = Intl.ListFormat.prototype.formatToParts;
+const formatToParts = Intl.ListFormat.prototype.formatToParts;
 
-assert.throws(TypeError, () => fn.call(undefined), "undefined");
-assert.throws(TypeError, () => fn.call(null), "null");
-assert.throws(TypeError, () => fn.call(true), "true");
-assert.throws(TypeError, () => fn.call(""), "empty string");
-assert.throws(TypeError, () => fn.call(Symbol()), "symbol");
-assert.throws(TypeError, () => fn.call(1), "1");
-assert.throws(TypeError, () => fn.call({}), "plain object");
-assert.throws(TypeError, () => fn.call(Intl.ListFormat), "Intl.ListFormat");
-assert.throws(TypeError, () => fn.call(Intl.ListFormat.prototype), "Intl.ListFormat.prototype");
+assert.sameValue(typeof formatToParts, "function");
+assert.throws(TypeError, () => formatToParts.call(undefined), "undefined");
+assert.throws(TypeError, () => formatToParts.call(null), "null");
+assert.throws(TypeError, () => formatToParts.call(true), "true");
+assert.throws(TypeError, () => formatToParts.call(""), "empty string");
+assert.throws(TypeError, () => formatToParts.call(Symbol()), "symbol");
+assert.throws(TypeError, () => formatToParts.call(1), "1");
+assert.throws(TypeError, () => formatToParts.call({}), "plain object");
+assert.throws(TypeError, () => formatToParts.call(Intl.ListFormat), "Intl.ListFormat");
+assert.throws(TypeError, () => formatToParts.call(Intl.ListFormat.prototype), "Intl.ListFormat.prototype");
 
 reportCompare(0, 0);

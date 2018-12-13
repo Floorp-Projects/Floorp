@@ -1,4 +1,4 @@
-// |reftest| skip-if(!Intl.hasOwnProperty('Segmenter')) -- Intl.Segmenter is not enabled unconditionally
+// |reftest| skip -- Intl.Segmenter is not supported
 // Copyright 2018 Igalia, S.L. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -12,16 +12,18 @@ info: |
 features: [Intl.Segmenter]
 ---*/
 
-const fn = Intl.Segmenter.prototype.segment;
+const segment = Intl.Segmenter.prototype.segment;
 
-assert.throws(TypeError, () => fn.call(undefined), "undefined");
-assert.throws(TypeError, () => fn.call(null), "null");
-assert.throws(TypeError, () => fn.call(true), "true");
-assert.throws(TypeError, () => fn.call(""), "empty string");
-assert.throws(TypeError, () => fn.call(Symbol()), "symbol");
-assert.throws(TypeError, () => fn.call(1), "1");
-assert.throws(TypeError, () => fn.call({}), "plain object");
-assert.throws(TypeError, () => fn.call(Intl.Segmenter), "Intl.Segmenter");
-assert.throws(TypeError, () => fn.call(Intl.Segmenter.prototype), "Intl.Segmenter.prototype");
+assert.sameValue(typeof segment, "function");
+
+assert.throws(TypeError, () => segment.call(undefined), "undefined");
+assert.throws(TypeError, () => segment.call(null), "null");
+assert.throws(TypeError, () => segment.call(true), "true");
+assert.throws(TypeError, () => segment.call(""), "empty string");
+assert.throws(TypeError, () => segment.call(Symbol()), "symbol");
+assert.throws(TypeError, () => segment.call(1), "1");
+assert.throws(TypeError, () => segment.call({}), "plain object");
+assert.throws(TypeError, () => segment.call(Intl.Segmenter), "Intl.Segmenter");
+assert.throws(TypeError, () => segment.call(Intl.Segmenter.prototype), "Intl.Segmenter.prototype");
 
 reportCompare(0, 0);

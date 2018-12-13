@@ -415,6 +415,14 @@ nsresult MemoryTelemetry::TotalMemoryGatherer::MaybeFinish() {
     }
     mean /= mChildSizes.Length();
 
+    // For some users, for unknown reasons (though most likely because they're
+    // in a sandbox without procfs mounted), we wind up with 0 here, which
+    // triggers a floating point exception if we try to calculate values using
+    // it.
+    if (!mean) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
     // Absolute error of USS for each content process, normalized by the mean
     // (*100 to get it in percentage). 20% means for a content process that it
     // is using 20% more or 20% less than the mean.

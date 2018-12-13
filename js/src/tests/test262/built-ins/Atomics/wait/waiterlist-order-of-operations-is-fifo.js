@@ -55,7 +55,7 @@ const i32a = new Int32Array(
   new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)
 );
 
-$262.agent.broadcast(i32a.buffer);
+$262.agent.safeBroadcast(i32a);
 
 // Wait until all agents started.
 $262.agent.waitUntil(i32a, RUNNING, NUMAGENT);

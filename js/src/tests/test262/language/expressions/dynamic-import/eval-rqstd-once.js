@@ -1,3 +1,4 @@
+// |reftest| skip-if(!xulRuntime.shell) -- dynamic-import is not enabled unconditionally
 // Copyright (C) 2018 Rick Waldron. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

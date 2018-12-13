@@ -17,11 +17,14 @@ includes: [atomicsHelper.js]
 features: [Atomics, BigInt, SharedArrayBuffer, TypedArray]
 ---*/
 
-var NUMAGENT = 3;
-
 var WAIT_INDEX = 0;
 var RUNNING = 1;
 var LOCK_INDEX = 2;
+var NUMAGENT = 3;
+
+const i64a = new BigInt64Array(
+  new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 4)
+);
 
 for (var i = 0; i < NUMAGENT; i++) {
   var agentNum = i;
@@ -51,11 +54,7 @@ for (var i = 0; i < NUMAGENT; i++) {
   `);
 }
 
-const i64a = new BigInt64Array(
-  new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 4)
-);
-
-$262.agent.broadcast(i64a.buffer);
+$262.agent.safeBroadcast(i64a);
 
 // Wait until all agents started.
 $262.agent.waitUntil(i64a, RUNNING, BigInt(NUMAGENT));
