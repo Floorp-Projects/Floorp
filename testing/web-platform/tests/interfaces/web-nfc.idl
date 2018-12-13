@@ -33,7 +33,6 @@ typedef (DOMString or ArrayBuffer or NFCMessage) NFCPushMessage;
 [SecureContext]
 interface NFC {
   Promise<void> push(NFCPushMessage message, optional NFCPushOptions options);
-  Promise<void> cancelPush(optional NFCPushTarget target = "any");
   Promise<long> watch(MessageCallback callback, optional NFCWatchOptions options);
 };
 
@@ -43,6 +42,7 @@ dictionary NFCPushOptions {
   NFCPushTarget target = "any";
   unrestricted double timeout = Infinity;
   boolean ignoreRead = true;
+  AbortSignal? signal;
 };
 
 enum NFCPushTarget {
