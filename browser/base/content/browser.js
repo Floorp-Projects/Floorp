@@ -5609,10 +5609,9 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
   if (toolbarItem && toolbarItem.localName == "toolbarpaletteitem") {
     toolbarItem = toolbarItem.firstElementChild;
   } else if (toolbarItem && toolbarItem.localName != "toolbar") {
-    while (toolbarItem && toolbarItem.parentNode) {
-      let parent = toolbarItem.parentNode;
-      if (parent.nodeType !== Node.ELEMENT_NODE ||
-          (parent.classList && parent.classList.contains("customization-target")) ||
+    while (toolbarItem && toolbarItem.parentElement) {
+      let parent = toolbarItem.parentElement;
+      if ((parent.classList && parent.classList.contains("customization-target")) ||
           parent.getAttribute("overflowfortoolbar") || // Needs to work in the overflow list as well.
           parent.localName == "toolbarpaletteitem" ||
           parent.localName == "toolbar")
@@ -5644,14 +5643,11 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
     return;
   }
 
-  // In some cases, we will exit the above loop with toolbarItem being the
-  // xul:document. That has no parentNode, and we should disable the items in
-  // this case.
-  let movable = toolbarItem && toolbarItem.parentNode &&
+  let movable = toolbarItem &&
+                toolbarItem.id &&
                 CustomizableUI.isWidgetRemovable(toolbarItem);
-  let isSpecial = toolbarItem && CustomizableUI.isSpecialWidget(toolbarItem.id);
   if (movable) {
-    if (isSpecial) {
+    if (CustomizableUI.isSpecialWidget(toolbarItem.id)) {
       moveToPanel.setAttribute("disabled", true);
     } else {
       moveToPanel.removeAttribute("disabled");
