@@ -12,7 +12,12 @@ this.MarqueeWidget = class {
   constructor(shadowRoot) {
     this.shadowRoot = shadowRoot;
     this.element = shadowRoot.host;
+  }
 
+  /*
+   * Callback called by UAWidgets right after constructor.
+   */
+  onsetup() {
     this.switchImpl();
   }
 
@@ -20,7 +25,7 @@ this.MarqueeWidget = class {
    * Callback called by UAWidgetsChild wheen the direction property
    * changes.
    */
-  onattributechange() {
+  onchange() {
     this.switchImpl();
   }
 
@@ -45,6 +50,7 @@ this.MarqueeWidget = class {
     this.destructor();
     if (newImpl) {
       this.impl = new newImpl(this.shadowRoot);
+      this.impl.onsetup();
     }
   }
 
@@ -64,7 +70,9 @@ this.MarqueeBaseImplWidget = class {
     this.element = shadowRoot.host;
     this.document = this.element.ownerDocument;
     this.window = this.document.defaultView;
+  }
 
+  onsetup() {
     this.generateContent();
 
     // Set up state.
