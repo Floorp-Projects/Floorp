@@ -7,13 +7,12 @@
 import { getSymbols } from "../../workers/parser";
 import { findClosestFunction } from "../ast";
 
-import type { SymbolDeclarations } from "../../workers/parser";
-
 import type { SourceLocation, Source, ASTLocation } from "../../types";
+import type { Symbols } from "../../reducers/ast";
 
 export function getASTLocation(
   source: Source,
-  symbols: SymbolDeclarations,
+  symbols: ?Symbols,
   location: SourceLocation
 ): ASTLocation {
   if (source.isWasm || !symbols || symbols.loading) {

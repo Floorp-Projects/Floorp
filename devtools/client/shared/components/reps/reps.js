@@ -7133,10 +7133,10 @@ class ObjectInspectorItem extends Component {
       onClick: onLabelClick ? event => {
         event.stopPropagation();
 
-        // If the user selected text, bail out.
-        if (Utils.selection.documentHasSelection()) {
-          return;
-        }
+const objectProperty = /([\w\d\$]+)$/;
+const arrayProperty = /\[(.*?)\]$/;
+const functionProperty = /([\w\d]+)[\/\.<]*?$/;
+const annonymousProperty = /([\w\d]+)\(\^\)$/;
 
         onLabelClick(item, {
           depth,
