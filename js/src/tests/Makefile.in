@@ -16,6 +16,7 @@ TEST_FILES = \
   shell/ \
   test/ \
   test262/ \
+  whatwg/ \
   $(NULL)
 
 PKG_STAGE = $(DIST)/test-stage
