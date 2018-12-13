@@ -108,7 +108,7 @@ class TabsUseCases(
          * @param private pass true if only private tabs should be removed otherwise normal tabs will be removed
          */
 
-        fun invoke(private: Boolean) {  
+        fun invoke(private: Boolean) {
             sessionManager.all.filter { it.private == private }.forEach {
 
                 sessionManager.remove(it)
