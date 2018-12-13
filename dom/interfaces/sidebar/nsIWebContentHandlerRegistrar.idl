@@ -6,6 +6,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIURI;
+
 /**
  * nsIWebContentHandlerRegistrar
  * 
@@ -26,8 +28,9 @@ interface nsIWebContentHandlerRegistrar : nsISupports
    * content window from which the method has been called.
    */
    void registerProtocolHandler(in AString protocol,
-                                in AString uri,
+                                in nsIURI uri,
                                 in AString title,
+                                in nsIURI documentURI,
                                 in nsISupports windowOrBrowser);
   /**
    * Removes a registered protocol handler
