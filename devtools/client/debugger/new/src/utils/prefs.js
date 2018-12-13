@@ -115,7 +115,7 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   mapAwaitExpression: ["Bool", "map-await-expression"],
   componentPane: ["Bool", "component-pane"],
   xhrBreakpoints: ["Bool", "xhr-breakpoints"],
-  originalBlackbox: ["Bool", "origial-blackbox"],
+  originalBlackbox: ["Bool", "origial-blackbox"]
 });
 
 export const asyncStore = asyncStoreHelper("debugger", {

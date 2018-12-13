@@ -9,7 +9,11 @@ const HTML_PART1 =
   "<body>" +
   "<script id='script' src='";
 
-const TESTCASE1 = "http://sub2.ält.example.org/";
+// U+00E4 LATIN SMALL LETTER A WITH DIAERESIS, encoded as UTF-8 code units.
+// response.write() writes out the provided string characters truncated to
+// bytes, so "ä" literally would write a literal \xE4 byte, not the desired
+// two-byte UTF-8 sequence.
+const TESTCASE1 = "http://sub2.\xC3\xA4lt.example.org/";
 const TESTCASE2 = "http://sub2.xn--lt-uia.example.org/"
 
 const HTML_PART2 = "tests/dom/security/test/csp/file_punycode_host_src.js'></script>" +

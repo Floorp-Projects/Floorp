@@ -13,6 +13,7 @@
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/SimpleEnumerator.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/Telemetry.h"
@@ -228,6 +229,12 @@ static inline void HandleMemoryReport(Telemetry::HistogramID aId,
 
 nsresult MemoryTelemetry::GatherReports(
     const std::function<void()>& aCompletionCallback) {
+  auto cleanup = MakeScopeExit([&]() {
+    if (aCompletionCallback) {
+      aCompletionCallback();
+    }
+  });
+
   RefPtr<nsMemoryReporterManager> mgr = nsMemoryReporterManager::GetOrCreate();
   MOZ_DIAGNOSTIC_ASSERT(mgr);
   NS_ENSURE_TRUE(mgr, NS_ERROR_FAILURE);
@@ -315,7 +322,9 @@ nsresult MemoryTelemetry::GatherReports(
 #undef RECORD
 
   nsresult rv = mThreadPool->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  if (!NS_WARN_IF(NS_FAILED(rv))) {
+    cleanup.release();
+  }
 
   // If we're running in the parent process, collect data from all processes for
   // the MEMORY_TOTAL histogram.
