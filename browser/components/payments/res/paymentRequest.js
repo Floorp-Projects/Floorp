@@ -192,10 +192,6 @@ var paymentRequest = {
     this.sendMessageToChrome("closeDialog");
   },
 
-  changePaymentMethod(data) {
-    this.sendMessageToChrome("changePaymentMethod", data);
-  },
-
   changeShippingAddress(data) {
     this.sendMessageToChrome("changeShippingAddress", data);
   },

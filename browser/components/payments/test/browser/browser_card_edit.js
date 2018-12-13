@@ -215,17 +215,7 @@ async function add_link(aOptions = {}) {
       ok(!button.disabled, "Save button should be enabled with valid CSC");
     });
 
-    ContentTask.spawn(browser, {
-      eventName: "paymentmethodchange",
-    }, PTU.ContentTasks.promisePaymentRequestEvent);
-    info("added paymentmethodchange handler");
-
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.clickPrimaryButton);
-
-    info("waiting for paymentmethodchange event");
-    await ContentTask.spawn(browser, {
-      eventName: "paymentmethodchange",
-    }, PTU.ContentTasks.awaitPaymentEventPromise);
 
     await spawnPaymentDialogTask(frame, async function waitForSummaryPage(testArgs = {}) {
       let {
@@ -427,8 +417,7 @@ add_task(async function test_edit_link() {
   {
     let card = Object.assign({}, PTU.BasicCards.JohnDoe,
                              { billingAddressGUID: prefilledGuids.address1GUID });
-    let guid = await addCardRecord(card);
-    prefilledGuids.card1GUID = guid;
+    await addCardRecord(card);
   }
 
   const args = {
@@ -443,12 +432,7 @@ add_task(async function test_edit_link() {
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-      let paymentMethodPicker = content.document.querySelector("payment-method-picker");
-      let editLink = paymentMethodPicker.querySelector(".edit-link");
-
-      content.fillField(Cu.waiveXrays(paymentMethodPicker).dropdown.popupBox,
-                        prefilledGuids.card1GUID);
-
+      let editLink = content.document.querySelector("payment-method-picker .edit-link");
       is(editLink.textContent, "Edit", "Edit link text");
 
       editLink.click();
@@ -629,73 +613,64 @@ add_task(async function test_invalid_network_card_edit() {
                              { billingAddressGUID: prefilledGuids.address1GUID });
     // create a record with an unknown network id
     card["cc-type"] = "asiv";
-    let guid = await addCardRecord(card);
-    prefilledGuids.card1GUID = guid;
+    await addCardRecord(card);
   }
 
   const args = {
     methodData: [PTU.MethodData.basicCard],
     details: PTU.Details.total60USD,
-    prefilledGuids,
   };
-  await spawnInDialogForMerchantTask(
-    PTU.ContentTasks.createAndShowRequest,
-    async function check({prefilledGuids}) {
-      let {
-        PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+  await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, async function check() {
+    let {
+      PaymentTestUtils: PTU,
+    } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-      let paymentMethodPicker = content.document.querySelector("payment-method-picker");
-      let editLink = paymentMethodPicker.querySelector(".edit-link");
+    let editLink = content.document.querySelector("payment-method-picker .edit-link");
+    is(editLink.textContent, "Edit", "Edit link text");
 
-      content.fillField(Cu.waiveXrays(paymentMethodPicker).dropdown.popupBox,
-                        prefilledGuids.card1GUID);
+    editLink.click();
 
-      is(editLink.textContent, "Edit", "Edit link text");
+    let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+      return state.page.id == "basic-card-page" && state["basic-card-page"].guid;
+    }, "Check edit page state");
 
-      editLink.click();
+    state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+      return Object.keys(state.savedBasicCards).length == 1 &&
+             Object.keys(state.savedAddresses).length == 1;
+    }, "Check card and address present at beginning of test");
 
-      let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "basic-card-page" && state["basic-card-page"].guid;
-      }, "Check edit page state");
+    let networkSelector = content.document.querySelector("basic-card-form #cc-type");
+    is(Cu.waiveXrays(networkSelector).selectedIndex, -1,
+       "An invalid cc-type should result in no selection");
+    is(Cu.waiveXrays(networkSelector).value, "",
+       "An invalid cc-type should result in an empty string as value");
 
-      state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return Object.keys(state.savedBasicCards).length == 1 &&
-               Object.keys(state.savedAddresses).length == 1;
-      }, "Check card and address present at beginning of test");
+    ok(content.document.querySelector("basic-card-form button.save-button").disabled,
+       "Save button should be disabled due to a missing cc-type");
 
-      let networkSelector = content.document.querySelector("basic-card-form #cc-type");
-      is(Cu.waiveXrays(networkSelector).selectedIndex, -1,
-         "An invalid cc-type should result in no selection");
-      is(Cu.waiveXrays(networkSelector).value, "",
-         "An invalid cc-type should result in an empty string as value");
+    content.fillField(Cu.waiveXrays(networkSelector), "visa");
 
-      ok(content.document.querySelector("basic-card-form button.save-button").disabled,
-         "Save button should be disabled due to a missing cc-type");
+    ok(!content.document.querySelector("basic-card-form button.save-button").disabled,
+       "Save button should be enabled after fixing cc-type");
+    content.document.querySelector("basic-card-form button.save-button").click();
 
-      content.fillField(Cu.waiveXrays(networkSelector), "visa");
+    // We expect that saving a card with a fixed network will result in the
+    // cc-type property being changed to the new value.
+    state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+      let cards = Object.entries(state.savedBasicCards);
+      return cards.length == 1 &&
+             cards[0][1]["cc-type"] == "visa";
+    }, "Check card was edited");
 
-      ok(!content.document.querySelector("basic-card-form button.save-button").disabled,
-         "Save button should be enabled after fixing cc-type");
-      content.document.querySelector("basic-card-form button.save-button").click();
+    let cardGUIDs = Object.keys(state.savedBasicCards);
+    is(cardGUIDs.length, 1, "Check there is still one card");
+    let savedCard = state.savedBasicCards[cardGUIDs[0]];
+    is(savedCard["cc-type"], "visa", "We expect the cc-type value to be updated");
 
-      // We expect that saving a card with a fixed network will result in the
-      // cc-type property being changed to the new value.
-      state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-        let cards = Object.entries(state.savedBasicCards);
-        return cards.length == 1 &&
-               cards[0][1]["cc-type"] == "visa";
-      }, "Check card was edited");
-
-      let cardGUIDs = Object.keys(state.savedBasicCards);
-      is(cardGUIDs.length, 1, "Check there is still one card");
-      let savedCard = state.savedBasicCards[cardGUIDs[0]];
-      is(savedCard["cc-type"], "visa", "We expect the cc-type value to be updated");
-
-      state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "payment-summary";
-      }, "Switched back to payment-summary");
-    }, args);
+    state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+      return state.page.id == "payment-summary";
+    }, "Switched back to payment-summary");
+  }, args);
 });
 
 add_task(async function test_private_card_adding() {
