@@ -546,11 +546,17 @@ var SendScheduler = {
    * @return Number The next time (ms from UNIX epoch) when we can send pings.
    */
   _getNextPingSendTime(now) {
-    // 1. First we check if the time is between 0am and 1am. If it's not, we send
+    // 1. First we check if the pref is set to skip any delay and send immediately.
+    // 2. Next we check if the time is between 0am and 1am. If it's not, we send
     // immediately.
-    // 2. If we confirmed the time is indeed between 0am and 1am in step 1, we disallow
+    // 3. If we confirmed the time is indeed between 0am and 1am in step 1, we disallow
     // sending before (midnight + fuzzing delay), which is a random time between 0am-1am
     // (decided at startup).
+
+    let disableFuzzingDelay = Services.prefs.getBoolPref(TelemetryUtils.Preferences.DisableFuzzingDelay, false);
+    if (disableFuzzingDelay) {
+      return now.getTime();
+    }
 
     const midnight = Utils.truncateToDays(now);
     // Don't delay pings if we are not within the fuzzing interval.
