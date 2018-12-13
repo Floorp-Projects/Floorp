@@ -106,11 +106,13 @@
   <string name="accessibility_announcement_loading">వస్తోంది</string>
   <string name="accessibility_announcement_loading_finished">వెబ్‌సైటు లోడయింది</string>
   <string name="content_description_menu">మరిన్ని ఎంపికలు</string>
+  <string name="indicator_content_description_menu">మరిన్ని ఎంపికల బొత్తం</string>
   <string name="content_description_forward">ముందుకు వెళ్ళు</string>
   <string name="content_description_reload">వెబ్‌సైటుని మళ్ళీ లోడుచేయి</string>
   <string name="content_description_back">వెనక్కి వెళ్ళు</string>
   <string name="content_description_stop">వెబ్‌సైటు లోడుచేయడం ఆపివేయి</string>
   <string name="content_description_customtab_exit">మునుపటి అనువర్తనానికి తిరిగి వెళ్ళు</string>
+  <string name="content_description_trackers_blocked">నిరోధించిన ట్రాకర్ల సంఖ్య</string>
   <string name="content_description_blocking_switch">ట్రాకర్లను నిరోధించండి</string>
   <string name="your_rights">మీ హక్కులు</string>
   <string name="external_app_prompt_title">ఈ లంకెని మరొక అనువర్తనంలో తెరువు</string>
@@ -183,6 +185,8 @@
   <string name="custom_tab_copy_url_action">URL కాపీ అయ్యింది</string>
   <string name="preference_advanced_summary">డెవలపర్ల పనిముట్లు</string>
   <string name="preference_category_advanced">ఉన్నతం</string>
+  <string name="biometric_auth_new_session">కొత్త సెషన్</string>
+  <string name="biometric_auth_image_description">వేలిముద్ర చిహ్నం</string>
   <string name="enable_search_suggestion_subtitle_learnmore">ఇంకా తెలుసుకోండి</string>
   <string name="enable_search_suggestions_no">వద్దు</string>
   <string name="enable_search_suggestions_yes">అవును</string>
