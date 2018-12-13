@@ -61,6 +61,12 @@ permalink: /changelog/
   val telemetry = Telemetry(configuration, storage, client, scheduler)
   ```
 
+* **ui-autocomplete**
+  * Fixing bug [#1489](https://github.com/mozilla-mobile/android-components/issues/1489).
+
+* **feature-customtabs**
+  * Fixed a bug where a third-party app (like Gmail or Slack) could crash when calling warmup().
+
 # 0.36.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.36.0...v0.36.1)
