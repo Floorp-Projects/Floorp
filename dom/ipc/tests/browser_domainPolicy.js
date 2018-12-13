@@ -14,13 +14,13 @@ function deactivateDomainPolicy() {
 async function test_domainPolicy() {
 
   ChromeUtils.defineModuleGetter(this, "Promise", "resource://gre/modules/Promise.jsm");
-  let deferred = Promise.defer();
-  let currentTask = deferred.promise;
+  let outerDeferred = Promise.defer();
+  let currentTask = outerDeferred.promise;
   SpecialPowers.pushPrefEnv(
     {set: [["dom.ipc.browser_frames.oop_by_default", false],
           ["browser.pagethumbnails.capturing_disabled", false],
           ["dom.mozBrowserFramesEnabled", false]]},
-    () => { return deferred.resolve(); });
+    () => { return outerDeferred.resolve(); });
   await currentTask;
 
   // Create tab
@@ -37,7 +37,7 @@ async function test_domainPolicy() {
         let deferred = PromiseUtils.defer();
         let listener = (event) => {
           removeEventListener("DOMDocElementInserted", listener, true);
-          let listener2 = (event) => {
+          let listener2 = (event2) => {
             content.removeEventListener("load", listener2);
             deferred.resolve();
           };
@@ -95,8 +95,10 @@ async function test_domainPolicy() {
     ipcArgs.domain = domain;
     return (aUtils) => {
       ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+      // eslint-disable-next-line no-shadow
       var ipcArgs;
       var utils = {};
+      // eslint-disable-next-line no-eval
       eval(aUtils);
 
       let path = "/browser/dom/ipc/tests/file_disableScript.html";
@@ -122,7 +124,7 @@ async function test_domainPolicy() {
 
   info("Activating domainPolicy first, creating child process after");
   activateDomainPolicy();
-  var bl = policy.blocklist;
+  bl = policy.blocklist;
   bl.add(Services.io.newURI("http://example.com"));
   currentTask = initProcess();
   await currentTask;
@@ -134,23 +136,25 @@ async function test_domainPolicy() {
     ipcArgs.list = list;
     return (aUtils) => {
       ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+      // eslint-disable-next-line no-shadow
       var ipcArgs;
       var utils = {};
+      // eslint-disable-next-line no-eval
       eval(aUtils);
 
       var results = [];
-      var testListInternal = function(expectEnabled, list, idx) {
+      var testListInternal = function(internalExpectEnabled, internalList, idx) {
         idx = idx || 0;
         let deferred = PromiseUtils.defer();
         let path = "/browser/dom/ipc/tests/file_disableScript.html";
-        let target = list[idx] + path;
+        let target = internalList[idx] + path;
         var rootFrame = content.document.getElementById("root");
         utils.navigateFrame(rootFrame, target).then(function() {
-          results.push(utils.checkScriptEnabled(rootFrame.contentWindow, expectEnabled));
-          if (idx == list.length - 1)
+          results.push(utils.checkScriptEnabled(rootFrame.contentWindow, internalExpectEnabled));
+          if (idx == internalList.length - 1)
             deferred.resolve(results);
           else
-            testListInternal(expectEnabled, list, idx + 1).then(function(retArg) { deferred.resolve(retArg); });
+            testListInternal(internalExpectEnabled, internalList, idx + 1).then(function(retArg) { deferred.resolve(retArg); });
         });
         return deferred.promise;
       };
@@ -171,39 +175,39 @@ async function test_domainPolicy() {
 
   function activate(isBlock, exceptions, superExceptions) {
     activateDomainPolicy();
-						let set = isBlock ? policy.blocklist : policy.allowlist;
-						let superSet = isBlock ? policy.superBlocklist : policy.superAllowlist;
-						for (var e of exceptions)
-							set.add(makeURI(e));
-						for (var e of superExceptions)
-							superSet.add(makeURI(e));
-					}
+    let set = isBlock ? policy.blocklist : policy.allowlist;
+    let superSet = isBlock ? policy.superBlocklist : policy.superAllowlist;
+    for (let e of exceptions)
+      set.add(makeURI(e));
+    for (let e of superExceptions)
+      superSet.add(makeURI(e));
+  }
 
-					info("Testing Blocklist-style Domain Policy");
-					info("Activating domainPolicy first, creating child process after");
-					activate(true, testPolicy.exceptions, testPolicy.superExceptions);
-					currentTask = initProcess();
-					await currentTask;
-					let results = [];
-					currentTask = runTest(testList(true, testPolicy.notExempt));
-					results = results.concat(await currentTask);
-					currentTask = runTest(testList(false, testPolicy.exempt));
-					results = results.concat(await currentTask);
-					checkAndCleanup(results);
+  info("Testing Blocklist-style Domain Policy");
+  info("Activating domainPolicy first, creating child process after");
+  activate(true, testPolicy.exceptions, testPolicy.superExceptions);
+  currentTask = initProcess();
+  await currentTask;
+  let results = [];
+  currentTask = runTest(testList(true, testPolicy.notExempt));
+  results = results.concat(await currentTask);
+  currentTask = runTest(testList(false, testPolicy.exempt));
+  results = results.concat(await currentTask);
+  checkAndCleanup(results);
 
-					info("Creating child process first, activating domainPolicy after");
-					currentTask = initProcess();
-					await currentTask;
-					activate(true, testPolicy.exceptions, testPolicy.superExceptions);
-					results = [];
-					currentTask = runTest(testList(true, testPolicy.notExempt));
-					results = results.concat(await currentTask);
-					currentTask = runTest(testList(false, testPolicy.exempt));
-					results = results.concat(await currentTask);
-					checkAndCleanup(results);
+  info("Creating child process first, activating domainPolicy after");
+  currentTask = initProcess();
+  await currentTask;
+  activate(true, testPolicy.exceptions, testPolicy.superExceptions);
+  results = [];
+  currentTask = runTest(testList(true, testPolicy.notExempt));
+  results = results.concat(await currentTask);
+  currentTask = runTest(testList(false, testPolicy.exempt));
+  results = results.concat(await currentTask);
+  checkAndCleanup(results);
 
-					info("Testing Allowlist-style Domain Policy");
-  deferred = Promise.defer();
+  info("Testing Allowlist-style Domain Policy");
+  let deferred = Promise.defer();
   currentTask = deferred.promise;
   SpecialPowers.pushPrefEnv({set: [["javascript.enabled", false]]}, () => { return deferred.resolve(); });
   await currentTask;

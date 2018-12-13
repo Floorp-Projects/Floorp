@@ -9,6 +9,7 @@
   <body onload="setup();">
     <script type="application/javascript">
 "use strict";
+/* eslint-env mozilla/frame-script */
 
 function childFrameScript() {
   "use strict";
@@ -105,7 +106,6 @@ function childFrameScript() {
 function parentFrameScript(mm) {
   const messageName = "test:blob-slice-test";
   const blobData = ["So", " ", "many", " ", "blobs!"];
-  const blobText = blobData.join("");
   const blobType = "text/plain";
 
   const sliceText = "an";

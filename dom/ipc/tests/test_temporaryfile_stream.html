@@ -16,6 +16,8 @@ function startTest() {
   canvas.width = canvas.height = 100;
   document.getElementById("content").appendChild(canvas);
 
+
+  // eslint-disable-next-line no-undef
   var helper = new CaptureStreamTestHelper2D(100, 100);
   helper.drawColor(canvas, helper.red);
 
@@ -23,7 +25,7 @@ function startTest() {
 
   var blob;
 
-  mediaRecorder = new MediaRecorder(stream);
+  let mediaRecorder = new MediaRecorder(stream);
   is(mediaRecorder.stream, stream,
      "Media recorder stream = canvas stream at the start of recording");
 
