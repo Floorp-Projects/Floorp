@@ -10,6 +10,7 @@
 #include <shlwapi.h>
 #include <cderr.h>
 
+#include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/mscom/EnsureMTA.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
@@ -334,6 +335,7 @@ bool nsFilePicker::ShowFolderPicker(const nsString &aInitialDir) {
                           : nullptr));
 
   // display
+  mozilla::BackgroundHangMonitor().NotifyWait();
   RefPtr<IShellItem> item;
   if (FAILED(dialog->Show(adtw.get())) ||
       FAILED(dialog->GetResult(getter_AddRefs(item))) || !item) {
@@ -476,6 +478,7 @@ bool nsFilePicker::ShowFilePicker(const nsString &aInitialDir) {
                                  "nsFilePicker::PickerCallbackTimerFunc");
     AutoWidgetPickerState awps(mParentWidget);
 
+    mozilla::BackgroundHangMonitor().NotifyWait();
     if (FAILED(dialog->Show(adtw.get()))) {
       dialog->Unadvise(mFDECookie);
       return false;
