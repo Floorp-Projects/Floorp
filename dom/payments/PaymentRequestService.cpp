@@ -461,6 +461,22 @@ PaymentRequestService::ChangeShippingOption(const nsAString& aRequestId,
   if (request->GetState() != payments::PaymentRequest::eInteractive) {
     return NS_ERROR_FAILURE;
   }
+
+  // if the selected shippingOption equals to the changed one, unlock UI by
+  // launching UI action directly.
+  nsAutoString selectedShippingOption;
+  rv = request->GetShippingOption(selectedShippingOption);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_FAILURE;
+  }
+  if (selectedShippingOption.Equals(aOption)) {
+    rv = LaunchUIAction(aRequestId,
+                        IPCPaymentActionRequest::TIPCPaymentUpdateActionRequest);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
+  }
   if (!request->GetIPC()) {
     return NS_ERROR_FAILURE;
   }
