@@ -26,7 +26,11 @@ class Pkcs11AesGcmTest : public ::testing::TestWithParam<gcm_kat_value> {
     std::vector<uint8_t> plaintext = hex_string_to_bytes(val.plaintext);
     std::vector<uint8_t> aad = hex_string_to_bytes(val.additional_data);
     std::vector<uint8_t> result = hex_string_to_bytes(val.result);
-
+    bool invalid_ct = val.invalid_ct;
+    bool invalid_iv = val.invalid_iv;
+    std::stringstream s;
+    s << "Test #" << val.test_id << " failed.";
+    std::string msg = s.str();
     // Ignore GHASH-only vectors.
     if (key.empty()) {
       return;
@@ -50,7 +54,7 @@ class Pkcs11AesGcmTest : public ::testing::TestWithParam<gcm_kat_value> {
     // Import key.
     ScopedPK11SymKey symKey(PK11_ImportSymKey(
         slot.get(), mech, PK11_OriginUnwrap, CKA_ENCRYPT, &keyItem, nullptr));
-    EXPECT_TRUE(!!symKey);
+    ASSERT_TRUE(!!symKey) << msg;
 
     // Encrypt.
     unsigned int outputLen = 0;
@@ -58,11 +62,21 @@ class Pkcs11AesGcmTest : public ::testing::TestWithParam<gcm_kat_value> {
     SECStatus rv =
         PK11_Encrypt(symKey.get(), mech, &params, output.data(), &outputLen,
                      output.size(), plaintext.data(), plaintext.size());
-    EXPECT_EQ(rv, SECSuccess);
-    ASSERT_EQ(outputLen, output.size());
+    if (invalid_iv) {
+      EXPECT_EQ(rv, SECFailure) << msg;
+      return;
+    } else {
+      EXPECT_EQ(rv, SECSuccess) << msg;
+    }
+
+    ASSERT_EQ(outputLen, output.size()) << msg;
 
     // Check ciphertext and tag.
-    EXPECT_EQ(result, output);
+    if (invalid_ct) {
+      EXPECT_NE(result, output) << msg;
+    } else {
+      EXPECT_EQ(result, output) << msg;
+    }
 
     // Decrypt.
     unsigned int decryptedLen = 0;
@@ -72,13 +86,13 @@ class Pkcs11AesGcmTest : public ::testing::TestWithParam<gcm_kat_value> {
     rv =
         PK11_Decrypt(symKey.get(), mech, &params, decrypted.data(),
                      &decryptedLen, decrypted.size(), output.data(), outputLen);
-    EXPECT_EQ(rv, SECSuccess);
-    ASSERT_EQ(decryptedLen, plaintext.size());
+    EXPECT_EQ(rv, SECSuccess) << msg;
+    ASSERT_EQ(decryptedLen, plaintext.size()) << msg;
 
     // Check the plaintext.
-    EXPECT_EQ(plaintext,
-              std::vector<uint8_t>(decrypted.begin(),
-                                   decrypted.begin() + decryptedLen));
+    EXPECT_EQ(plaintext, std::vector<uint8_t>(decrypted.begin(),
+                                              decrypted.begin() + decryptedLen))
+        << msg;
   }
 
   SECStatus EncryptWithIV(std::vector<uint8_t>& iv) {
@@ -116,6 +130,9 @@ TEST_P(Pkcs11AesGcmTest, TestVectors) { RunTest(GetParam()); }
 
 INSTANTIATE_TEST_CASE_P(NISTTestVector, Pkcs11AesGcmTest,
                         ::testing::ValuesIn(kGcmKatValues));
+
+INSTANTIATE_TEST_CASE_P(WycheproofTestVector, Pkcs11AesGcmTest,
+                        ::testing::ValuesIn(kGcmWycheproofVectors));
 
 TEST_F(Pkcs11AesGcmTest, ZeroLengthIV) {
   std::vector<uint8_t> iv(0);

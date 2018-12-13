@@ -17,6 +17,7 @@ import platform
 import tempfile
 
 from hashlib import sha256
+from gtests.common.wycheproof.genTestVectors import generate_test_vectors
 
 DEVNULL = open(os.devnull, 'wb')
 cwd = os.path.dirname(os.path.abspath(__file__))
@@ -212,6 +213,22 @@ class commandsAction(argparse.Action):
         for c in commandsAction.commands:
             print(c)
 
+class wycheproofAction(argparse.Action):
+    tests = ['aes_gcm_test.json', 'chacha20_poly1305_test.json']
+
+    def __call__(self, parser, args, values, option_string=None):
+        self.update_tests()
+        generate_test_vectors()
+        clangFormat = cfAction(None, None, None)
+        clangFormat(None, args, None)
+
+    def update_tests(self):
+        remote = "https://raw.githubusercontent.com/google/wycheproof/master/testvectors/"
+        for test in self.tests:
+            subprocess.check_call(['wget', remote+test, '-O',
+                                   'gtests/common/wycheproof/testvectors/'+test,
+                                   '--no-check-certificate'])
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
@@ -269,6 +286,18 @@ def parse_arguments():
         'mach-commands',
         nargs='*',
         action=commandsAction)
+
+    parser_wycheproof = subparsers.add_parser(
+        'wycheproof',
+        help="generate wycheproof test headers")
+    parser_wycheproof.add_argument(
+        '--noroot',
+        help='On linux, suppress the use of \'sudo\' for running docker.',
+        action='store_true')
+    parser_wycheproof.add_argument(
+        'wycheproof',
+        nargs='*',
+        action=wycheproofAction)
 
     commandsAction.commands = [c for c in subparsers.choices]
     return parser.parse_args()
