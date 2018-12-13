@@ -635,6 +635,15 @@ void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     }
   }
 
+  if (disp->IsContainLayout() && disp->IsContainSize() &&
+      // All frames that support contain:layout also support contain:size.
+      IsFrameOfType(eSupportsContainLayoutAndPaint)) {
+    // Frames that have contain:layout+size can be reflow roots.
+    // Changes to `contain` force frame reconstructions, so this bit can be set
+    // for the whole lifetime of this frame.
+    AddStateBits(NS_FRAME_REFLOW_ROOT);
+  }
+
   if (nsLayoutUtils::FontSizeInflationEnabled(PresContext()) ||
       !GetParent()
 #ifdef DEBUG
