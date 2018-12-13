@@ -9,23 +9,23 @@
 interface nsIURI;
 
 /**
- * nsIWebContentHandlerRegistrar
+ * nsIWebProtocolHandlerRegistrar
  * 
- * Applications wishing to use web content handlers need to implement this
+ * Applications wishing to use web protocol handlers need to implement this
  * interface. Typically they will prompt the user to confirm adding an entry
  * to the local list. 
  *
- * The component must have the contract id defined below so that nsNavigator
- * can invoke it. 
+ * The component must have the contract id defined below so that the Navigator
+ * implementation can invoke it. 
  */
 
-[scriptable, uuid(65a3fafd-0e4a-4b06-8b4e-6a611da63d98)]
-interface nsIWebContentHandlerRegistrar : nsISupports
+[scriptable, uuid(1ce9ef8d-f462-49ca-b8e9-c946c4f37d6e)]
+interface nsIWebProtocolHandlerRegistrar : nsISupports
 {
   /**
    * See documentation in Navigator.webidl
    * The additional contentWindow param for this method represents the dom
-   * content window from which the method has been called.
+   * content window from which the method has been called, or its browser window.
    */
    void registerProtocolHandler(in AString protocol,
                                 in nsIURI uri,
@@ -47,5 +47,5 @@ interface nsIWebContentHandlerRegistrar : nsISupports
 
 %{ C++
 
-#define NS_WEBCONTENTHANDLERREGISTRAR_CONTRACTID "@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"
+#define NS_WEBPROTOCOLHANDLERREGISTRAR_CONTRACTID "@mozilla.org/embeddor.implemented/web-protocol-handler-registrar;1"
 %}

@@ -6,18 +6,16 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const WCCR_CLASSID = Components.ID("{792a7e82-06a0-437c-af63-b2d12e808acc}");
-
 const STRING_BUNDLE_URI = "chrome://browser/locale/feeds/subscribe.properties";
 
-function WebContentConverterRegistrar() {
+function WebProtocolHandlerRegistrar() {
 }
 
-WebContentConverterRegistrar.prototype = {
+WebProtocolHandlerRegistrar.prototype = {
   get stringBundle() {
     let sb = Services.strings.createBundle(STRING_BUNDLE_URI);
-    delete WebContentConverterRegistrar.prototype.stringBundle;
-    return WebContentConverterRegistrar.prototype.stringBundle = sb;
+    delete WebProtocolHandlerRegistrar.prototype.stringBundle;
+    return WebProtocolHandlerRegistrar.prototype.stringBundle = sb;
   },
 
   _getFormattedString(key, params) {
@@ -29,7 +27,7 @@ WebContentConverterRegistrar.prototype = {
   },
 
   /**
-   * See nsIWebContentHandlerRegistrar
+   * See nsIWebProtocolHandlerRegistrar
    */
   removeProtocolHandler(aProtocol, aURITemplate) {
     let eps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].
@@ -76,7 +74,7 @@ WebContentConverterRegistrar.prototype = {
   },
 
   /**
-   * See nsIWebContentHandlerRegistrar
+   * See nsIWebProtocolHandlerRegistrar
    */
   registerProtocolHandler(aProtocol, aURI, aTitle, aDocumentURI, aBrowserOrWindow) {
     aProtocol = (aProtocol || "").toLowerCase();
@@ -148,13 +146,13 @@ WebContentConverterRegistrar.prototype = {
                                        [addButton]);
   },
 
-  classID: WCCR_CLASSID,
+  classID: Components.ID("{efbd7b87-9b15-4684-abf0-dc2679daadb1}"),
 
   /**
    * See nsISupports
    */
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebContentHandlerRegistrar]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProtocolHandlerRegistrar]),
 };
 
 this.NSGetFactory =
-  XPCOMUtils.generateNSGetFactory([WebContentConverterRegistrar]);
+  XPCOMUtils.generateNSGetFactory([WebProtocolHandlerRegistrar]);

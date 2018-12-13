@@ -63,7 +63,7 @@
 #include "nsIURI.h"
 #include "nsIWindowWatcher.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIWebContentHandlerRegistrar.h"
+#include "nsIWebProtocolHandlerRegistrar.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsIXULWindow.h"
 #include "nsViewManager.h"
@@ -2103,8 +2103,8 @@ mozilla::ipc::IPCResult TabParent::RecvSetHasBeforeUnload(
 mozilla::ipc::IPCResult TabParent::RecvRegisterProtocolHandler(
     const nsString& aScheme, nsIURI* aHandlerURI, const nsString& aTitle,
     nsIURI* aDocURI) {
-  nsCOMPtr<nsIWebContentHandlerRegistrar> registrar =
-      do_GetService(NS_WEBCONTENTHANDLERREGISTRAR_CONTRACTID);
+  nsCOMPtr<nsIWebProtocolHandlerRegistrar> registrar =
+      do_GetService(NS_WEBPROTOCOLHANDLERREGISTRAR_CONTRACTID);
   if (registrar) {
     registrar->RegisterProtocolHandler(aScheme, aHandlerURI, aTitle, aDocURI,
                                        mFrameElement);

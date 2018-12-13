@@ -37,3 +37,7 @@ contract @mozilla.org/browser/browserglue;1 {eab9012e-5f74-4cbc-b2b5-a590235513c
 category app-startup nsBrowserGlue service,@mozilla.org/browser/browserglue;1 application={ec8030f7-c20a-464f-9b0e-13a3a9e97384} application={aa3c5121-dab2-40e2-81ca-7ea25febc110}
 component {d8903bf6-68d5-4e97-bcd1-e4d3012f721a} nsBrowserGlue.js
 contract @mozilla.org/content-permission/prompt;1 {d8903bf6-68d5-4e97-bcd1-e4d3012f721a}
+
+# RegisterProtocolHandler support
+component {efbd7b87-9b15-4684-abf0-dc2679daadb1} WebProtocolHandlerRegistrar.js process=main
+contract @mozilla.org/embeddor.implemented/web-protocol-handler-registrar;1 {efbd7b87-9b15-4684-abf0-dc2679daadb1} process=main

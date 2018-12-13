@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM")
 
 XPIDL_SOURCES += [
-    'nsIWebContentHandlerRegistrar.idl',
+    'nsIWebProtocolHandlerRegistrar.idl',
 ]
 
 XPIDL_MODULE = 'dom_sidebar'

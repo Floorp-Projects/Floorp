@@ -24,7 +24,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsISupportsPriority.h"
 #include "nsICachingChannel.h"
-#include "nsIWebContentHandlerRegistrar.h"
+#include "nsIWebProtocolHandlerRegistrar.h"
 #include "nsICookiePermission.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsCharSeparatedTokenizer.h"
@@ -992,8 +992,8 @@ void Navigator::RegisterProtocolHandler(const nsAString& aScheme,
     return;
   }
 
-  nsCOMPtr<nsIWebContentHandlerRegistrar> registrar =
-      do_GetService(NS_WEBCONTENTHANDLERREGISTRAR_CONTRACTID);
+  nsCOMPtr<nsIWebProtocolHandlerRegistrar> registrar =
+      do_GetService(NS_WEBPROTOCOLHANDLERREGISTRAR_CONTRACTID);
   if (registrar) {
     aRv = registrar->RegisterProtocolHandler(aScheme, handlerURI, aTitle,
                                              docURI, mWindow->GetOuterWindow());
