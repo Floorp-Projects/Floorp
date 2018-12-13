@@ -806,8 +806,15 @@ static inline bool IsIntrinsicKeyword(const nsStyleCoord& aCoord) {
 }
 
 static bool AreDynamicReflowRootsEnabled() {
-  // XXXdholbert Implemented in next patch.
-  return true;
+  static bool sAreDynamicReflowRootsEnabled;
+  static bool sIsPrefCached = false;
+
+  if (!sIsPrefCached) {
+    sIsPrefCached = true;
+    Preferences::AddBoolVarCache(&sAreDynamicReflowRootsEnabled,
+                                 "layout.dynamic-reflow-roots.enabled");
+  }
+  return sAreDynamicReflowRootsEnabled;
 }
 
 void ReflowInput::InitDynamicReflowRoot() {
