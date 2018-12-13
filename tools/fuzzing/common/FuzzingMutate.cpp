@@ -16,7 +16,7 @@ namespace fuzzing {
 /* static */
 void FuzzingMutate::ChangeBit(uint8_t* aData, size_t aLength) {
   size_t offset = RandomIntegerRange<size_t>(0, aLength);
-  aData[offset] ^= (1 << RandomIntegerRange<unsigned char>(0, 8));
+  aData[offset] ^= (1 << FuzzingTraits::Random(9));
 }
 
 /**
