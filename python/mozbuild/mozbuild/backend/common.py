@@ -42,6 +42,7 @@ from mozbuild.frontend.data import (
     StaticLibrary,
     UnifiedSources,
     XPIDLModule,
+    XPCOMComponentManifests,
     WebIDLCollection,
 )
 from mozbuild.jar import (
@@ -147,6 +148,9 @@ class CommonBackend(BuildBackend):
                                       list(sorted(obj.all_preprocessed_sources())),
                                       list(sorted(obj.all_regular_sources())),
                                       obj.unified_source_mapping)
+
+        elif isinstance(obj, XPCOMComponentManifests):
+            self._handle_xpcom_collection(obj)
 
         elif isinstance(obj, UnifiedSources):
             # Unified sources aren't relevant to artifact builds.
@@ -368,6 +372,20 @@ class CommonBackend(BuildBackend):
                                   webidls,
                                   manager.expected_build_output_files(),
                                   manager.GLOBAL_DEFINE_FILES)
+
+    def _handle_xpcom_collection(self, manifests):
+        components_dir = mozpath.join(manifests.topobjdir,
+                                      'xpcom', 'components')
+
+        # The code generators read their configuration from this file, so it
+        # needs to be written early.
+        o = dict(
+            manifests=sorted(manifests.all_sources()),
+        )
+
+        conf_file = mozpath.join(components_dir, 'manifest-lists.json')
+        with self._write_file(conf_file) as fh:
+            json.dump(o, fh, sort_keys=True, indent=2)
 
     def _write_unified_file(self, unified_file, source_filenames,
                             output_directory, poison_windows_h=False):
