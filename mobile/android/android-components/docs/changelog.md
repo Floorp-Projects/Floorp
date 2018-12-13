@@ -52,6 +52,15 @@ permalink: /changelog/
 
   * The existing `userAgentString` setting is now supported by `engine-gecko-nightly`.
 
+* **feature-session**
+  * Added a `HistoryTrackingDelegate` implementation, which previously lived in **feature-storage**.
+
+* **feature-storage**
+  * Removed! See **feature-session** instead.
+
+* **sample-browser**
+  * Added in-memory browsing history as one of the AwesomeBar data providers.
+
 # 0.34.2
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.34.1...v0.34.2)

@@ -1,6 +1,8 @@
 # [Android Components](../../../README.md) > Feature > Session
 
 A component that connects an (concept) engine implementation with the browser session module.
+A HistoryTrackingDelegate implementation is also provided, which allows tying together
+an engine implementation with a storage module.
 
 ## Usage
 

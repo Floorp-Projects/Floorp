@@ -108,9 +108,7 @@ _Combined components to implement feature-specific use cases._
 
 * 🔴 [**Search**](components/feature/search/README.md) - A component that connects an (concept) engine implementation with the browser search module.
 
-* ⚪ [**Session**](components/feature/session/README.md) - A component that connects an (concept) engine implementation with the browser session module.
-
-* 🔴 [**Storage**](components/feature/storage/README.md) -A component that connects a (concept) storage implementation with its various consumers, like a (concept) engine implementation for history tracking.
+* ⚪ [**Session**](components/feature/session/README.md) - A component that connects an (concept) engine implementation with the browser session and storage modules.
 
 * 🔴 [**Sync**](components/feature/sync/README.md) -A component that provides synchronization orchestration for groups of (concept) SyncableStore objects.
 
