@@ -144,7 +144,7 @@ class TabsUseCasesTest {
 
         assertEquals(2, sessionManager.size)
 
-        useCases.removeAllTabsOfTypeUseCase.invoke(private = false)
+        useCases.removeAllTabsOfType.invoke(private = false)
 
         assertEquals(1, sessionManager.all.size)
 
@@ -154,7 +154,7 @@ class TabsUseCasesTest {
 
         assertEquals(4, sessionManager.size)
 
-        useCases.removeAllTabsOfTypeUseCase.invoke(private = true)
+        useCases.removeAllTabsOfType.invoke(private = true)
 
         assertEquals(2, sessionManager.size)
     }

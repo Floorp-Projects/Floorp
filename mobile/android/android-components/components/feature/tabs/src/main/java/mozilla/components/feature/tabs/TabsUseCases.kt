@@ -96,7 +96,6 @@ class TabsUseCases(
     class RemoveAllTabsUseCase internal constructor(
         private val sessionManager: SessionManager
     ) {
-
         fun invoke() {
             sessionManager.removeAll()
         }
@@ -109,7 +108,7 @@ class TabsUseCases(
          * @param private pass true if only private tabs should be removed otherwise normal tabs will be removed
          */
 
-        fun invoke(private: Boolean) {
+        fun invoke(private: Boolean) {  
             sessionManager.all.filter { it.private == private }.forEach {
 
                 sessionManager.remove(it)
@@ -122,7 +121,7 @@ class TabsUseCases(
     val addTab: AddNewTabUseCase by lazy { AddNewTabUseCase(sessionManager) }
     val addPrivateTab: AddNewPrivateTabUseCase by lazy { AddNewPrivateTabUseCase(sessionManager) }
     val removeAllTabs: RemoveAllTabsUseCase by lazy { RemoveAllTabsUseCase(sessionManager) }
-    val removeAllTabsOfTypeUseCase: RemoveAllTabsOfTypeUseCase by lazy {
+    val removeAllTabsOfType: RemoveAllTabsOfTypeUseCase by lazy {
         RemoveAllTabsOfTypeUseCase(
             sessionManager
         )
