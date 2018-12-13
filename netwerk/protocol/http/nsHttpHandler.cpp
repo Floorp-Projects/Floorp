@@ -389,11 +389,18 @@ void nsHttpHandler::EnsureUAOverridesInit() {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
+  static bool initDone = false;
+
+  if (initDone) {
+    return;
+  }
+
   nsresult rv;
   nsCOMPtr<nsISupports> bootstrapper =
       do_GetService("@mozilla.org/network/ua-overrides-bootstrapper;1", &rv);
   MOZ_ASSERT(bootstrapper);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
+  initDone = true;
 }
 
 nsHttpHandler::~nsHttpHandler() {
