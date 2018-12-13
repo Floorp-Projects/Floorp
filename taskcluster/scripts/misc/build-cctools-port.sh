@@ -42,15 +42,15 @@ export CC=$CLANG_DIR/bin/clang
 export CXX=$CLANG_DIR/bin/clang++
 export LDFLAGS="-lpthread -Wl,-rpath-link,$CLANG_DIR/lib"
 ./autogen.sh
-./configure --prefix=$CROSSTOOLS_BUILD_DIR --target=x86_64-apple-darwin11 --with-llvm-config=$CLANG_DIR/bin/llvm-config
+./configure --prefix=$CROSSTOOLS_BUILD_DIR --target=x86_64-darwin11 --with-llvm-config=$CLANG_DIR/bin/llvm-config
 
 # Build cctools
 make -j `nproc --all` install
 strip $CROSSTOOLS_BUILD_DIR/bin/*
 # cctools-port doesn't include dsymutil but clang will need to find it.
-cp $CLANG_DIR/bin/dsymutil $CROSSTOOLS_BUILD_DIR/bin/x86_64-apple-darwin11-dsymutil
+cp $CLANG_DIR/bin/dsymutil $CROSSTOOLS_BUILD_DIR/bin/x86_64-darwin11-dsymutil
 # various build scripts based on cmake want to find `lipo` without a prefix
-cp $CROSSTOOLS_BUILD_DIR/bin/x86_64-apple-darwin11-lipo $CROSSTOOLS_BUILD_DIR/bin/lipo
+cp $CROSSTOOLS_BUILD_DIR/bin/x86_64-darwin11-lipo $CROSSTOOLS_BUILD_DIR/bin/lipo
 
 # Put a tarball in the artifacts dir
 mkdir -p $UPLOAD_DIR

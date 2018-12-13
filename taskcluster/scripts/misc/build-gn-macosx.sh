@@ -14,7 +14,7 @@ export LD_LIBRARY_PATH=$WORKSPACE/build/src/clang/lib
 export CC=$WORKSPACE/build/src/clang/bin/clang
 export CXX=$WORKSPACE/build/src/clang/bin/clang++
 export AR=$WORKSPACE/build/src/clang/bin/clang
-export CFLAGS="-target x86_64-apple-darwin11 -mlinker-version=137 -B ${CROSS_CCTOOLS_PATH}/bin -isysroot ${CROSS_SYSROOT} -I${CROSS_SYSROOT}/usr/include -iframework ${CROSS_SYSROOT}/System/Library/Frameworks"
+export CFLAGS="-target x86_64-darwin11 -mlinker-version=137 -B ${CROSS_CCTOOLS_PATH}/bin -isysroot ${CROSS_SYSROOT} -I${CROSS_SYSROOT}/usr/include -iframework ${CROSS_SYSROOT}/System/Library/Frameworks"
 export CXXFLAGS="-stdlib=libc++ ${CFLAGS}"
 export LDFLAGS="${CXXFLAGS} -Wl,-syslibroot,${CROSS_SYSROOT} -Wl,-dead_strip"
 
@@ -34,7 +34,7 @@ cd $WORKSPACE/build/src
 
 # The ninja templates used to bootstrap gn have hard-coded references to
 # 'libtool', make sure we find the right one.
-ln -s $CROSS_CCTOOLS_PATH/bin/x86_64-apple-darwin11-libtool $CROSS_CCTOOLS_PATH/bin/libtool
+ln -s $CROSS_CCTOOLS_PATH/bin/x86_64-darwin11-libtool $CROSS_CCTOOLS_PATH/bin/libtool
 export PATH=$CROSS_CCTOOLS_PATH/bin:$PATH
 
 . taskcluster/scripts/misc/build-gn-common.sh
