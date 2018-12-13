@@ -2230,6 +2230,7 @@ class MNewIterator : public MUnaryInstruction, public NoTypePolicy::Data {
   enum Type {
     ArrayIterator,
     StringIterator,
+    RegExpStringIterator,
   };
 
  private:
