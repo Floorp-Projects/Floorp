@@ -19,3 +19,9 @@ interface mozIExtensionProcessScript : nsISupports
   void initExtensionDocument(in nsISupports extension, in Document doc,
                              in bool privileged);
 };
+
+[scriptable,uuid(9f2a6434-f0ef-4063-ae33-368d929805d2)]
+interface mozIExtensionProcessScriptJSM : nsISupports
+{
+  readonly attribute mozIExtensionProcessScript ExtensionProcessScript;
+};
