@@ -35,7 +35,7 @@ impl FreeListBin {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct FreeRectSlice(pub u32);
@@ -215,6 +215,13 @@ fn random_fill(count: usize, texture_size: i32) -> f32 {
     );
     let mut rng = thread_rng();
     let mut allocator = ArrayAllocationTracker::new();
+
+    // check for empty allocation
+    assert_eq!(
+        allocator.allocate(&DeviceIntSize::new(0, 12)),
+        Some((FreeRectSlice(0), DeviceIntPoint::zero())),
+    );
+
     let mut slices: Vec<Vec<DeviceIntRect>> = Vec::new();
     let mut requested_area = 0f32;
     // fill up the allocator
