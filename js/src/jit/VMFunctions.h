@@ -428,6 +428,10 @@ struct TypeToDataType<StringIteratorObject*> {
   static const DataType result = Type_Object;
 };
 template <>
+struct TypeToDataType<RegExpStringIteratorObject*> {
+  static const DataType result = Type_Object;
+};
+template <>
 struct TypeToDataType<JSString*> {
   static const DataType result = Type_Object;
 };
