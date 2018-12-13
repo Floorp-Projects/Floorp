@@ -62,6 +62,44 @@ class CountersStorageEngineTest {
     }
 
     @Test
+    fun `counter serializer should correctly serialize counters`() {
+        run {
+            val storageEngine = CountersStorageEngineImplementation()
+            storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
+
+            val metric = CounterMetricType(
+                disabled = false,
+                category = "telemetry",
+                lifetime = Lifetime.User,
+                name = "counter_metric",
+                sendInPings = listOf("store1")
+            )
+
+            // Record the counter in the store
+            storageEngine.record(
+                metric,
+                amount = 1
+            )
+
+            // Get the snapshot from "store1" and clear it.
+            val snapshot = storageEngine.getSnapshotAsJSON(storeName = "store1", clearStore = true)
+            // Check that this serializes to the expected JSON format.
+            assertEquals("{\"telemetry.counter_metric\":1}", snapshot.toString())
+        }
+
+        // Re-instantiate storage engine to validate serialization from storage rather than cache
+        run {
+            val storageEngine = CountersStorageEngineImplementation()
+            storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
+
+            // Get the snapshot from "store1" and clear it.
+            val snapshot = storageEngine.getSnapshotAsJSON(storeName = "store1", clearStore = true)
+            // Check that this serializes to the expected JSON format.
+            assertEquals("{\"telemetry.counter_metric\":1}", snapshot.toString())
+        }
+    }
+
+    @Test
     fun `setValue() properly sets the value in all stores`() {
         val storeNames = listOf("store1", "store2")
 

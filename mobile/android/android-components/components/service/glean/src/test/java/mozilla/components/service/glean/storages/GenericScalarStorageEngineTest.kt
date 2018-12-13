@@ -35,6 +35,10 @@ class GenericScalarStorageEngineTest {
             return value as? Int?
         }
 
+        override fun serializeSingleMetric(userPreferences: SharedPreferences.Editor?, storeName: String, value: Int) {
+            userPreferences?.putInt(storeName, value)
+        }
+
         fun record(
             metricData: CommonMetricData,
             value: Int

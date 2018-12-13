@@ -31,5 +31,10 @@ open class MainActivity : AppCompatActivity() {
         buttonSendPing.setOnClickListener {
             Glean.handleEvent(Glean.PingEvent.Background)
         }
+
+        GleanMetrics.Test.testStringList.add("Hello")
+        GleanMetrics.Test.testStringList.add("World")
+
+        GleanMetrics.Test.testCounter.add()
     }
 }

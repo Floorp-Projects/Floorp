@@ -5,6 +5,7 @@
 package mozilla.components.service.glean.storages
 
 import android.annotation.SuppressLint
+import android.content.SharedPreferences
 import mozilla.components.service.glean.CommonMetricData
 import mozilla.components.support.base.log.logger.Logger
 
@@ -28,6 +29,14 @@ internal open class CountersStorageEngineImplementation(
         return (value as? Int)?.let {
             return@let if (it < 0) null else it
         }
+    }
+
+    override fun serializeSingleMetric(
+        userPreferences: SharedPreferences.Editor?,
+        storeName: String,
+        value: Int
+    ) {
+        userPreferences?.putInt(storeName, value)
     }
 
     /**

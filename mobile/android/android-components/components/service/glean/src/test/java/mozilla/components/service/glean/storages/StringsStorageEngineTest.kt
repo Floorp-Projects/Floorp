@@ -60,6 +60,49 @@ class StringsStorageEngineTest {
     }
 
     @Test
+    fun `string serializer should correctly serialize strings`() {
+        run {
+            val storageEngine = StringsStorageEngineImplementation()
+            storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
+
+            val metric = StringMetricType(
+                disabled = false,
+                category = "telemetry",
+                lifetime = Lifetime.User,
+                name = "string_metric",
+                sendInPings = listOf("store1")
+            )
+
+            // Record the string in the store, without providing optional arguments.
+            storageEngine.record(
+                metric,
+                value = "test_string_value"
+            )
+
+            // Get the snapshot from "store1"
+            val snapshot = storageEngine.getSnapshotAsJSON(storeName = "store1",
+                clearStore = true)
+            // Check that this serializes to the expected JSON format.
+            assertEquals("{\"telemetry.string_metric\":\"test_string_value\"}",
+                snapshot.toString())
+        }
+
+        // Create a new instance of storage engine to verify serialization to storage rather than
+        // to the cache
+        run {
+            val storageEngine = StringsStorageEngineImplementation()
+            storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
+
+            // Get the snapshot from "store1"
+            val snapshot = storageEngine.getSnapshotAsJSON(storeName = "store1",
+                clearStore = true)
+            // Check that this serializes to the expected JSON format.
+            assertEquals("{\"telemetry.string_metric\":\"test_string_value\"}",
+                snapshot.toString())
+        }
+    }
+
+    @Test
     fun `setValue() properly sets the value in all stores`() {
         val storeNames = listOf("store1", "store2")
 
@@ -88,7 +131,7 @@ class StringsStorageEngineTest {
     @Test
     fun `getSnapshot() returns null if nothing is recorded in the store`() {
         assertNull("The engine must report 'null' on empty or unknown stores",
-                StringsStorageEngine.getSnapshot(storeName = "unknownStore", clearStore = false))
+            StringsStorageEngine.getSnapshot(storeName = "unknownStore", clearStore = false))
     }
 
     @Test
@@ -113,7 +156,7 @@ class StringsStorageEngineTest {
         val snapshot = StringsStorageEngine.getSnapshot(storeName = "store1", clearStore = true)
         // Check that getting a new snapshot for "store1" returns an empty store.
         assertNull("The engine must report 'null' on empty stores",
-                StringsStorageEngine.getSnapshot(storeName = "store1", clearStore = false))
+            StringsStorageEngine.getSnapshot(storeName = "store1", clearStore = false))
 
         // Check that we get the right data from both the stores. Clearing "store1" must
         // not clear "store2" as well.

@@ -52,7 +52,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
 
     /**
      * Implementor's provided function to convert deserialized 'user' lifetime
-     * data to the destination ScalarType.
+     * data to the destination [ScalarType].
      *
      * @param value loaded from the storage as [Any]
      *
@@ -61,16 +61,18 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
     protected abstract fun deserializeSingleMetric(value: Any?): ScalarType?
 
     /**
-     * Implementor's provided function to serialized 'user' lifetime
-     * data to [String].
+     * Implementor's provided function to serialize 'user' lifetime data as needed by the data type.
      *
-     * @param value loaded from the storage as [ScalarType]
-     *
-     * @return data as [String] or null if serialization failed
+     * @param userPreferences [SharedPreference.Editor] for writing preferences as needed by type.
+     * @param storeName The metric store name where the data is stored in [SharedPreferences].
+     * @param value The value to be stored, passed as a [ScalarType] to be handled correctly by the
+     *              implementor.
      */
-    protected fun serializeSingleMetric(value: ScalarType): String? {
-        return value.toString()
-    }
+    protected abstract fun serializeSingleMetric(
+        userPreferences: SharedPreferences.Editor?,
+        storeName: String,
+        value: ScalarType
+    )
 
     /**
      * Helper function to return the name of the stored metric.
@@ -91,7 +93,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
      * This will be called the first time a metric is used or before a snapshot is
      * taken.
      *
-     * @return A [SharedPreferences] reference that will be used to inititialize [userLifetimeStorage]
+     * @return A [SharedPreferences] reference that will be used to initialize [userLifetimeStorage]
      */
     @Suppress("TooGenericExceptionCaught")
     open fun deserializeUserLifetime(): SharedPreferences {
@@ -227,7 +229,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
             storeData[entryName] = combinedValue
             // Persist data with "user" lifetime
             if (metricData.lifetime == Lifetime.User) {
-                userPrefs?.putString("$it#$entryName", serializeSingleMetric(combinedValue))
+                serializeSingleMetric(userPrefs, "$it#$entryName", combinedValue)
             }
         }
         userPrefs?.apply()

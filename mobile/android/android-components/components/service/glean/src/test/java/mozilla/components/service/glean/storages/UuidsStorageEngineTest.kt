@@ -62,6 +62,49 @@ class UuidsStorageEngineTest {
     }
 
     @Test
+    fun `UUID serializer correctly serializes UUID's`() {
+        run {
+            val storageEngine = UuidsStorageEngineImplementation()
+            storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
+
+            val testUUID = "ce2adeb8-843a-4232-87a5-a099ed1e7bb3"
+
+            val metric = UuidMetricType(
+                disabled = false,
+                category = "telemetry",
+                lifetime = Lifetime.User,
+                name = "uuid_metric",
+                sendInPings = listOf("store1")
+            )
+
+            // Record the string in the store, without providing optional arguments.
+            storageEngine.record(
+                metric,
+                value = UUID.fromString(testUUID)
+            )
+
+            // Get the snapshot from "store1"
+            val snapshot = storageEngine.getSnapshotAsJSON(storeName = "store1", clearStore = true)
+            assertEquals("{\"telemetry.uuid_metric\":\"$testUUID\"}",
+                snapshot.toString())
+        }
+
+        // Create a new instance of storage engine to verify serialization to storage rather than
+        // to the cache
+        run {
+            val storageEngine = UuidsStorageEngineImplementation()
+            storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
+
+            val testUUID = "ce2adeb8-843a-4232-87a5-a099ed1e7bb3"
+
+            // Get the snapshot from "store1"
+            val snapshot = storageEngine.getSnapshotAsJSON(storeName = "store1", clearStore = true)
+            assertEquals("{\"telemetry.uuid_metric\":\"$testUUID\"}",
+                snapshot.toString())
+        }
+    }
+
+    @Test
     fun `setValue() properly sets the value in all stores`() {
         val storeNames = listOf("store1", "store2")
         val uuid = UUID.fromString("ce2adeb8-843a-4232-87a5-a099ed1e7bb3")
@@ -91,7 +134,7 @@ class UuidsStorageEngineTest {
     @Test
     fun `getSnapshot() returns null if nothing is recorded in the store`() {
         assertNull("The engine must report 'null' on empty or unknown stores",
-                UuidsStorageEngine.getSnapshot(storeName = "unknownStore", clearStore = false))
+            UuidsStorageEngine.getSnapshot(storeName = "unknownStore", clearStore = false))
     }
 
     @Test
@@ -118,7 +161,7 @@ class UuidsStorageEngineTest {
         val snapshot = UuidsStorageEngine.getSnapshot(storeName = "store1", clearStore = true)
         // Check that getting a new snapshot for "store1" returns an empty store.
         assertNull("The engine must report 'null' on empty stores",
-                UuidsStorageEngine.getSnapshot(storeName = "store1", clearStore = false))
+            UuidsStorageEngine.getSnapshot(storeName = "store1", clearStore = false))
 
         // Check that we get the right data from both the stores. Clearing "store1" must
         // not clear "store2" as well.

@@ -29,3 +29,28 @@ basic:
       - 123456789
     notification_emails:
       - telemetry-client-dev@mozilla.com
+
+test:
+  test_string_list:
+    type: string_list
+    description: >
+      Testing StringList ping
+    send_in_pings:
+      - test_string_list
+    lifetime: user
+    bugs:
+      - 1234567890
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+
+  test_counter:
+    type: counter
+    description: >
+      Testing counter
+    send_in_pings:
+      - test_string_list
+    lifetime: user
+    bugs:
+      - 1234567890
+    notification_emails:
+      - telemetry-client-dev@mozilla.com

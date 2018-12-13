@@ -17,6 +17,7 @@ internal class StorageEngineManager(
         "counter" to CountersStorageEngine,
         "events" to EventsStorageEngine,
         "string" to StringsStorageEngine,
+        "string_list" to StringListsStorageEngine,
         "uuid" to UuidsStorageEngine
     ),
     applicationContext: Context
