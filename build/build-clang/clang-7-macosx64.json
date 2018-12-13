@@ -16,9 +16,9 @@
     "cc": "/builds/worker/workspace/build/src/clang/bin/clang",
     "cxx": "/builds/worker/workspace/build/src/clang/bin/clang++",
     "as": "/builds/worker/workspace/build/src/clang/bin/clang",
-    "ar": "/builds/worker/workspace/build/src/cctools/bin/x86_64-apple-darwin11-ar",
-    "ranlib": "/builds/worker/workspace/build/src/cctools/bin/x86_64-apple-darwin11-ranlib",
-    "libtool": "/builds/worker/workspace/build/src/cctools/bin/x86_64-apple-darwin11-libtool",
+    "ar": "/builds/worker/workspace/build/src/cctools/bin/x86_64-darwin11-ar",
+    "ranlib": "/builds/worker/workspace/build/src/cctools/bin/x86_64-darwin11-ranlib",
+    "libtool": "/builds/worker/workspace/build/src/cctools/bin/x86_64-darwin11-libtool",
     "ld": "/builds/worker/workspace/build/src/clang/bin/clang",
     "patches": [
       "static-llvm-symbolizer.patch",

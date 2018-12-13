@@ -23,7 +23,7 @@ CLANG_DIR=$WORKSPACE/build/src/clang
 CCTOOLS_DIR=$WORKSPACE/build/src/cctools
 MACOSX_SDK_DIR=$WORKSPACE/build/src/MacOSX10.11.sdk
 
-TARGET_TRIPLE=x86_64-apple-darwin11
+TARGET_TRIPLE=x86_64-darwin11
 
 # Create our directories
 mkdir -p $CROSSTOOLS_BUILD_DIR
