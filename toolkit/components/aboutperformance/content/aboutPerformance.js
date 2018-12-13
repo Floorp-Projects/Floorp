@@ -1023,8 +1023,12 @@ var View = {
   },
 
   _fragment: document.createDocumentFragment(),
-  commit() {
+  async commit() {
     let tbody = document.getElementById("dispatch-tbody");
+
+    // Force translation to happen before we insert the new content in the DOM
+    // to avoid flicker when resizing.
+    await document.l10n.translateFragment(this._fragment);
 
     while (tbody.firstChild)
       tbody.firstChild.remove();
@@ -1229,6 +1233,8 @@ var Control = {
 
       // Make sure that we do not keep obsolete stuff around.
       View.DOMCache.trimTo(state.deltas);
+
+      await wait(0);
     } else {
       // If the mouse has been moved recently, update the data displayed
       // without moving any item to avoid the risk of users clicking an action
@@ -1318,10 +1324,8 @@ var Control = {
           this._showChildren(row);
       }
 
-      View.commit();
+      await View.commit();
     }
-
-    await wait(0);
 
     // Inform watchers
     Services.obs.notifyObservers(null, UPDATE_COMPLETE_TOPIC, mode);
