@@ -253,12 +253,16 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
 
         if not (self.verify_enabled or self.per_test_coverage):
             test_paths = json.loads(os.environ.get('MOZHARNESS_TEST_PATHS', '""'))
-            if test_paths and 'web-platform-tests' in test_paths:
-                relpaths = [os.path.relpath(p, 'testing/web-platform')
-                            for p in test_paths['web-platform-tests']]
-                paths = [os.path.join(dirs["abs_wpttest_dir"], relpath)
-                         for relpath in relpaths]
-                cmd.extend(paths)
+            if test_paths:
+                keys = (['web-platform-tests-%s' % test_type for test_type in test_types] +
+                        ['web-platform-tests'])
+                for key in keys:
+                    if key in test_paths:
+                        relpaths = [os.path.relpath(p, 'testing/web-platform')
+                                    for p in test_paths.get(key, [])]
+                        paths = [os.path.join(dirs["abs_wpttest_dir"], relpath)
+                                 for relpath in relpaths]
+                        cmd.extend(paths)
             else:
                 for opt in ["total_chunks", "this_chunk"]:
                     val = c.get(opt)
