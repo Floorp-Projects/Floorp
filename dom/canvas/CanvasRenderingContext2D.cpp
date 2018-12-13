@@ -1262,9 +1262,11 @@ bool CanvasRenderingContext2D::AllowOpenGLCanvas() const {
   // canvas creation, but in that case the
   // HTMLCanvasElement::GetCompositorBackendType would return LAYERS_NONE
   // as well, so it wouldn't help much.
+  //
+  // XXX Disable SkiaGL on WebRender, since there is a case that R8G8B8X8
+  // is used, but WebRender does not support R8G8B8X8.
 
-  return (mCompositorBackend == LayersBackend::LAYERS_OPENGL ||
-          mCompositorBackend == LayersBackend::LAYERS_WR) &&
+  return (mCompositorBackend == LayersBackend::LAYERS_OPENGL) &&
          gfxPlatform::GetPlatform()->AllowOpenGLCanvas();
 }
 

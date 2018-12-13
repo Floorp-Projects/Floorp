@@ -1023,8 +1023,12 @@ var View = {
   },
 
   _fragment: document.createDocumentFragment(),
-  commit() {
+  async commit() {
     let tbody = document.getElementById("dispatch-tbody");
+
+    // Force translation to happen before we insert the new content in the DOM
+    // to avoid flicker when resizing.
+    await document.l10n.translateFragment(this._fragment);
 
     while (tbody.firstChild)
       tbody.firstChild.remove();
@@ -1202,13 +1206,18 @@ var Control = {
     tbody.addEventListener("mousemove", () => {
       this._updateLastMouseEvent();
     });
+
+    window.addEventListener("visibilitychange", event => {
+      if (!document.hidden) {
+        this._updateDisplay(true);
+      }
+    });
   },
   _lastMouseEvent: 0,
   _updateLastMouseEvent() {
     this._lastMouseEvent = Date.now();
   },
   async update() {
-    let mode = this._displayMode;
     if (this._autoRefreshInterval || !State._buffer[0]) {
       // Update the state only if we are not on pause.
       await State.update();
@@ -1216,7 +1225,17 @@ var Control = {
         return;
     }
     await wait(0);
+
+    await this._updateDisplay();
+
+    // Inform watchers
+    Services.obs.notifyObservers(null, UPDATE_COMPLETE_TOPIC, this._displayMode);
+  },
+  // The force parameter can force a full update even when the mouse has been
+  // moved recently.
+  async _updateDisplay(force = false) {
     if (!performanceCountersEnabled()) {
+      let mode = this._displayMode;
       let state = await (mode == MODE_GLOBAL ?
         State.promiseDeltaSinceStartOfTime() :
         State.promiseDeltaSinceStartOfBuffer());
@@ -1229,13 +1248,15 @@ var Control = {
 
       // Make sure that we do not keep obsolete stuff around.
       View.DOMCache.trimTo(state.deltas);
+
+      await wait(0);
     } else {
       // If the mouse has been moved recently, update the data displayed
       // without moving any item to avoid the risk of users clicking an action
       // button for the wrong item.
       // Memory use is unlikely to change dramatically within a few seconds, so
       // it's probably fine to not update the Memory column in this case.
-      if (Date.now() - this._lastMouseEvent < TIME_BEFORE_SORTING_AGAIN) {
+      if (!force && Date.now() - this._lastMouseEvent < TIME_BEFORE_SORTING_AGAIN) {
         let energyImpactPerId = new Map();
         for (let {id, dispatchesSincePrevious,
                   durationSincePrevious} of State.getCounters()) {
@@ -1318,13 +1339,8 @@ var Control = {
           this._showChildren(row);
       }
 
-      View.commit();
+      await View.commit();
     }
-
-    await wait(0);
-
-    // Inform watchers
-    Services.obs.notifyObservers(null, UPDATE_COMPLETE_TOPIC, mode);
   },
   _showChildren(row) {
     let children = row._children;

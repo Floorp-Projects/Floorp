@@ -765,6 +765,7 @@ static JSObject* MaybeGetDelegate(Cell* cell) {
 bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
                                       Cell* value) {
   DebugOnly<Zone*> zone = map->zone();
+  MOZ_ASSERT(zone->isGCMarking());
 
   JSObject* object = map->memberOf;
   MOZ_ASSERT_IF(object, object->zone() == zone);
@@ -782,7 +783,8 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
   CellColor mapColor = object ? GetCellColor(object) : CellColor::Gray;
 
   CellColor keyColor = GetCellColor(key);
-  CellColor valueColor = GetCellColor(value);
+  CellColor valueColor = valueZone->isGCMarking() ? GetCellColor(value)
+                                                  : CellColor::Black;
 
   if (valueColor < Min(mapColor, keyColor)) {
     fprintf(stderr, "WeakMap value is less marked than map and key\n");

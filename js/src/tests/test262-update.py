@@ -26,7 +26,6 @@ UNSUPPORTED_FEATURES = set([
     "class-static-fields-private",
     "class-methods-private",
     "class-static-methods-private",
-    "dynamic-import",
     "regexp-dotall",
     "regexp-lookbehind",
     "regexp-named-groups",
@@ -37,13 +36,15 @@ UNSUPPORTED_FEATURES = set([
     "Symbol.matchAll",
     "global",
     "export-star-as-namespace-from-module",
+    "Intl.ListFormat",
+    "Intl.Segmenter",
+    "Intl.NumberFormat-unified",
 ])
 FEATURE_CHECK_NEEDED = {
     "Atomics": "!this.hasOwnProperty('Atomics')",
     "BigInt": "!this.hasOwnProperty('BigInt')",
     "SharedArrayBuffer": "!this.hasOwnProperty('SharedArrayBuffer')",
-    "Intl.ListFormat": "!Intl.hasOwnProperty('ListFormat')",
-    "Intl.Segmenter": "!Intl.hasOwnProperty('Segmenter')",
+    "dynamic-import": "!xulRuntime.shell",
 }
 RELEASE_OR_BETA = set()
 

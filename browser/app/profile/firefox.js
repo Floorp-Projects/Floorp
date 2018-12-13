@@ -1789,3 +1789,8 @@ pref("browser.discovery.containers.enabled", true);
 pref("browser.discovery.sites", "addons.mozilla.org");
 
 pref("browser.engagement.recent_visited_origins.expiry", 86400); // 24 * 60 * 60 (24 hours in seconds)
+
+// Show the warning page for the new about config. Will replace general.warnOnAboutConfig.
+#ifdef NIGHTLY_BUILD
+pref("browser.aboutConfig.showWarning", true);
+#endif
