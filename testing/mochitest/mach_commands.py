@@ -68,7 +68,7 @@ test path(s):
 Please check spelling and make sure the named tests exist.
 '''.lstrip()
 
-SUPPORTED_APPS = ['firefox', 'android']
+SUPPORTED_APPS = ['firefox', 'android', 'thunderbird']
 
 parser = None
 

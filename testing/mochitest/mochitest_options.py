@@ -53,7 +53,7 @@ ALL_FLAVORS = {
     'browser-chrome': {
         'suite': 'browser',
         'aliases': ('browser', 'browser-chrome', 'mochitest-browser-chrome', 'bc'),
-        'enabled_apps': ('firefox',),
+        'enabled_apps': ('firefox', 'thunderbird'),
         'extra_args': {
             'flavor': 'browser',
         }
