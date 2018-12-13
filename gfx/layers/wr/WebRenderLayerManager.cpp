@@ -522,6 +522,9 @@ void WebRenderLayerManager::DidComposite(
   // the end of the method invocation.
   RefPtr<WebRenderLayerManager> selfRef = this;
 
+  // XXX - Currently we don't track this. Make sure it doesn't just grow though.
+  mPayload.Clear();
+
   // |aTransactionId| will be > 0 if the compositor is acknowledging a shadow
   // layers transaction.
   if (aTransactionId.IsValid()) {
