@@ -53,6 +53,7 @@ class WebVTTListener final : public nsIWebVTTListener,
 
   RefPtr<HTMLTrackElement> mElement;
   nsCOMPtr<nsIWebVTTParserWrapper> mParserWrapper;
+  nsresult mParserWrapperError;
 };
 
 }  // namespace dom
