@@ -371,6 +371,10 @@ def get_signing_cert_scope_per_platform(build_platform, is_nightly, config):
         return add_scope_prefix(config, 'signing:cert:dep-signing')
 
 
+def get_autograph_format_scope(config):
+    return add_scope_prefix(config, 'signing:format:autograph_hash_only_mar384')
+
+
 def get_worker_type_for_scope(config, scope):
     """Get the scriptworker type that will accept the given scope.
 
