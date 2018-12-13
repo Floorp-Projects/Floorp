@@ -863,9 +863,6 @@ void ReflowInput::InitDynamicReflowRoot() {
     // deepest to least deep.  However, for performance (FIXME) we
     // should really be sorting them in the opposite order!
     canBeDynamicReflowRoot = false;
-  } else {
-    MOZ_ASSERT(mFrame->IsAbsPosContainingBlock(),
-               "we need the frame to be both an abs-pos and fixed-pos cb");
   }
 
   // If we participate in a container's block reflow context, or margins
