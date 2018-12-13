@@ -11,6 +11,7 @@
 
   <script type="application/javascript">
     "use strict";
+    /* eslint-env mozilla/frame-script */
 
     SimpleTest.waitForExplicitFinish();
 
@@ -99,8 +100,8 @@
           ["dom.ipc.browser_frames.oop_by_default", true],
           ["dom.mozBrowserFramesEnabled", true],
           ["network.disable.ipc.security", true],
-          ["browser.pagethumbnails.capturing_disabled", true]
-        ]
+          ["browser.pagethumbnails.capturing_disabled", true],
+        ],
       }, runTests);
     });
   </script>

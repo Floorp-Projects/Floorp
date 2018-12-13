@@ -69,8 +69,8 @@ function hideAutocompletePopup(jsterm) {
 
 function setJsTermValueForCompletion(jsterm, value) {
   // setInputValue does not trigger the autocompletion;
-  // we need to call `fetchAutocompletionProperties` in order to display the popup.
+  // we need to call the `autocompleteUpdate` action in order to display the popup.
   jsterm.setInputValue(value);
-  jsterm.fetchAutocompletionProperties();
+  jsterm.props.autocompleteUpdate();
 }
 

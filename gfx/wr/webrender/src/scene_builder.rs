@@ -75,8 +75,13 @@ impl Transaction {
 
     fn rasterize_blobs(&mut self, is_low_priority: bool) {
         if let Some((ref mut rasterizer, _)) = self.blob_rasterizer {
-            let rasterized_blobs = rasterizer.rasterize(&self.blob_requests, is_low_priority);
-            self.rasterized_blobs.extend(rasterized_blobs);
+            let mut rasterized_blobs = rasterizer.rasterize(&self.blob_requests, is_low_priority);
+            // try using the existing allocation if our current list is empty
+            if self.rasterized_blobs.is_empty() {
+                self.rasterized_blobs = rasterized_blobs;
+            } else {
+                self.rasterized_blobs.append(&mut rasterized_blobs);
+            }
         }
     }
 }

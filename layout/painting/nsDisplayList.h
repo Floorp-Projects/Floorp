@@ -1859,7 +1859,7 @@ class nsDisplayListBuilder {
 
   nsIFrame* const mReferenceFrame;
   nsIFrame* mIgnoreScrollFrame;
-  nsPresArena mPool;
+  nsPresArena<32768> mPool;
 
   AutoTArray<PresShellState, 8> mPresShellStates;
   AutoTArray<nsIFrame*, 400> mFramesMarkedForDisplay;

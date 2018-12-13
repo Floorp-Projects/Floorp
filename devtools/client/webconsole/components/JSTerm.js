@@ -102,8 +102,6 @@ class JSTerm extends Component {
     this.onContextMenu = this.onContextMenu.bind(this);
     this.imperativeUpdate = this.imperativeUpdate.bind(this);
 
-    this.SELECTED_FRAME = -1;
-
     /**
      * Last input value.
      * @type string
@@ -350,7 +348,7 @@ class JSTerm extends Component {
 
             "Ctrl-Space": () => {
               if (!this.autocompletePopup.isOpen) {
-                this.fetchAutocompletionProperties(true);
+                this.props.autocompleteUpdate(true);
                 return null;
               }
 
@@ -578,7 +576,6 @@ class JSTerm extends Component {
     executeString = mappedExpressionRes ? mappedExpressionRes.expression : executeString;
 
     const options = {
-      frame: this.SELECTED_FRAME,
       selectedNodeActor,
       mapped: mappedExpressionRes ? mappedExpressionRes.mapped : null,
     };
@@ -602,12 +599,6 @@ class JSTerm extends Component {
    *        the evaluation. The Debugger.Object of the OA will be bound to
    *        |_self| during evaluation, such that it's usable in the string you
    *        execute.
-   *        - frame: tells the stackframe depth to evaluate the string in. If
-   *        the jsdebugger is paused, you can pick the stackframe to be used for
-   *        evaluation. Use |this.SELECTED_FRAME| to always pick th;
-   *        user-selected stackframe.
-   *        If you do not provide a |frame| the string will be evaluated in the
-   *        global content window.
    *        - selectedNodeActor: tells the NodeActor ID of the current selection
    *        in the Inspector, if such a selection exists. This is used by
    *        helper functions that can evaluate on the current selection.
@@ -624,13 +615,8 @@ class JSTerm extends Component {
       "lines": str.split(/\n/).length,
     });
 
-    let frameActor = null;
-    if ("frame" in options) {
-      frameActor = this.getFrameActor(options.frame);
-    }
-
     return this.webConsoleClient.evaluateJSAsync(str, null, {
-      frameActor,
+      frameActor: this.props.serviceContainer.getFrameActor(options.frame),
       ...options,
     });
   }
@@ -648,30 +634,6 @@ class JSTerm extends Component {
   copyObject(evalString, evalOptions) {
     return this.webConsoleClient.evaluateJSAsync(`copy(${evalString})`,
       null, evalOptions);
-  }
-
-  /**
-   * Retrieve the FrameActor ID given a frame depth.
-   *
-   * @param number frame
-   *        Frame depth.
-   * @return string|null
-   *         The FrameActor ID for the given frame depth.
-   */
-  getFrameActor(frame) {
-    const state = this.hud.owner.getDebuggerFrames();
-    if (!state) {
-      return null;
-    }
-
-    let grip;
-    if (frame == this.SELECTED_FRAME) {
-      grip = state.frames[state.selected];
-    } else {
-      grip = state.frames[frame];
-    }
-
-    return grip ? grip.actor : null;
   }
 
   /**
@@ -786,7 +748,7 @@ class JSTerm extends Component {
     const value = this.getInputValue();
     if (this.lastInputValue !== value) {
       this.resizeInput();
-      this.fetchAutocompletionProperties();
+      this.props.autocompleteUpdate();
       this.lastInputValue = value;
     }
   }
@@ -873,7 +835,7 @@ class JSTerm extends Component {
 
       if (event.key === " " && !this.autocompletePopup.isOpen) {
         // Open the autocompletion popup on Ctrl-Space (if it wasn't displayed).
-        this.fetchAutocompletionProperties(true);
+        this.props.autocompleteUpdate(true);
         event.preventDefault();
       }
 
@@ -1127,47 +1089,6 @@ class JSTerm extends Component {
   }
 
   /**
-   * Retrieves properties maching the current input for the selected frame, either from
-   * the server or from a cache if possible.
-   * Will bail-out if there's some text selection in the input.
-   *
-   * @param {Boolean} force: True to not perform any check before trying to show the
-   *                         autocompletion popup. Defaults to false.
-   * @fires autocomplete-updated
-   * @returns void
-   */
-  async fetchAutocompletionProperties(force = false) {
-    const inputValue = this.getInputValue();
-    const frameActorId = this.getFrameActor(this.SELECTED_FRAME);
-    const cursor = this.getSelectionStart();
-
-    const {editor, inputNode} = this;
-    if (
-      (inputNode && inputNode.selectionStart != inputNode.selectionEnd) ||
-      (editor && editor.getSelection())
-    ) {
-      this.clearCompletion();
-      this.emit("autocomplete-updated");
-      return;
-    }
-
-    let selectedNodeActor = null;
-    const inspectorSelection = this.hud.owner.getInspectorSelection();
-    if (inspectorSelection && inspectorSelection.nodeFront) {
-      selectedNodeActor = inspectorSelection.nodeFront.actorID;
-    }
-
-    this.props.autocompleteUpdate({
-      inputValue,
-      cursor,
-      frameActorId,
-      force,
-      client: this.webConsoleClient,
-      selectedNodeActor,
-    });
-  }
-
-  /**
    * Takes the data returned by the server and update the autocomplete popup state (i.e.
    * its visibility and items).
    *
@@ -1321,6 +1242,7 @@ class JSTerm extends Component {
         this.autocompletePopup.hidePopup();
       }
     }
+    this.emit("autocomplete-updated");
   }
 
   /**
@@ -1636,14 +1558,11 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-
     appendToHistory: (expr) => dispatch(historyActions.appendToHistory(expr)),
     clearHistory: () => dispatch(historyActions.clearHistory()),
     updateHistoryPosition: (direction, expression) =>
       dispatch(historyActions.updateHistoryPosition(direction, expression)),
-    autocompleteUpdate: options => dispatch(
-      autocompleteActions.autocompleteUpdate(options)
-    ),
+    autocompleteUpdate: force => dispatch(autocompleteActions.autocompleteUpdate(force)),
     autocompleteBailOut: () => dispatch(autocompleteActions.autocompleteBailOut()),
   };
 }

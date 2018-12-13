@@ -13,6 +13,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "timerManager",
                                    "nsIUpdateTimerManager");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  RemoteSettings: "resource://services-settings/remote-settings.js",
   Storage: "resource://normandy/lib/Storage.jsm",
   FilterExpressions: "resource://gre/modules/components-utils/FilterExpressions.jsm",
   NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
@@ -26,6 +27,7 @@ var EXPORTED_SYMBOLS = ["RecipeRunner"];
 
 const log = LogManager.getLogger("recipe-runner");
 const TIMER_NAME = "recipe-client-addon-run";
+const REMOTE_SETTINGS_COLLECTION = "normandy-recipes";
 const PREF_CHANGED_TOPIC = "nsPref:changed";
 
 const TELEMETRY_ENABLED_PREF = "datareporting.healthreport.uploadEnabled";
@@ -37,6 +39,7 @@ const SHIELD_ENABLED_PREF = `${PREF_PREFIX}.enabled`;
 const DEV_MODE_PREF = `${PREF_PREFIX}.dev_mode`;
 const API_URL_PREF = `${PREF_PREFIX}.api_url`;
 const LAZY_CLASSIFY_PREF = `${PREF_PREFIX}.experiments.lazy_classify`;
+const REMOTE_SETTINGS_ENABLED_PREF = `${PREF_PREFIX}.remotesettings.enabled`;
 
 const PREFS_TO_WATCH = [
   RUN_INTERVAL_PREF,
@@ -44,6 +47,12 @@ const PREFS_TO_WATCH = [
   SHIELD_ENABLED_PREF,
   API_URL_PREF,
 ];
+
+XPCOMUtils.defineLazyGetter(this, "gRemoteSettingsClient", () => {
+  return RemoteSettings(REMOTE_SETTINGS_COLLECTION, {
+    filterFunc: async recipe => RecipeRunner.checkFilter(recipe) ? recipe : null,
+  });
+});
 
 /**
  * cacheProxy returns an object Proxy that will memoize properties of the target.
@@ -202,39 +211,17 @@ var RecipeRunner = {
     }
 
     // Fetch recipes before execution in case we fail and exit early.
-    let recipes;
+    let recipesToRun;
     try {
-      recipes = await NormandyApi.fetchRecipes({enabled: true});
-      log.debug(
-        `Fetched ${recipes.length} recipes from the server: ` +
-        recipes.map(r => r.name).join(", ")
-      );
-
+      recipesToRun = await this.loadRecipes();
     } catch (e) {
-      const apiUrl = Services.prefs.getCharPref(API_URL_PREF);
-      log.error(`Could not fetch recipes from ${apiUrl}: "${e}"`);
-
-      let status = Uptake.RUNNER_SERVER_ERROR;
-      if (/NetworkError/.test(e)) {
-        status = Uptake.RUNNER_NETWORK_ERROR;
-      } else if (e instanceof NormandyApi.InvalidSignatureError) {
-        status = Uptake.RUNNER_INVALID_SIGNATURE;
-      }
-      Uptake.reportRunner(status);
+      // The legacy call to `Normandy.fetchRecipes()` can throw.
       return;
     }
 
     const actions = new ActionsManager();
     await actions.fetchRemoteActions();
     await actions.preExecution();
-
-    // Evaluate recipe filters
-    const recipesToRun = [];
-    for (const recipe of recipes) {
-      if (await this.checkFilter(recipe)) {
-        recipesToRun.push(recipe);
-      }
-    }
 
     // Execute recipes, if we have any.
     if (recipesToRun.length === 0) {
@@ -248,6 +235,46 @@ var RecipeRunner = {
     await actions.finalize();
 
     Uptake.reportRunner(Uptake.RUNNER_SUCCESS);
+  },
+
+  /**
+   * Return the list of recipes to run, filtered for the current environment.
+   */
+  async loadRecipes() {
+    // If RemoteSettings is enabled, we read the list of recipes from there.
+    // The JEXL filtering is done via the provided callback.
+    if (Services.prefs.getBoolPref(REMOTE_SETTINGS_ENABLED_PREF, false)) {
+      return gRemoteSettingsClient.get();
+    }
+    // Obtain the recipes from the Normandy server (legacy).
+    let recipes;
+    try {
+      recipes = await NormandyApi.fetchRecipes({enabled: true});
+      log.debug(
+        `Fetched ${recipes.length} recipes from the server: ` +
+        recipes.map(r => r.name).join(", ")
+      );
+    } catch (e) {
+      const apiUrl = Services.prefs.getCharPref(API_URL_PREF);
+      log.error(`Could not fetch recipes from ${apiUrl}: "${e}"`);
+
+      let status = Uptake.RUNNER_SERVER_ERROR;
+      if (/NetworkError/.test(e)) {
+        status = Uptake.RUNNER_NETWORK_ERROR;
+      } else if (e instanceof NormandyApi.InvalidSignatureError) {
+        status = Uptake.RUNNER_INVALID_SIGNATURE;
+      }
+      Uptake.reportRunner(status);
+      throw e;
+    }
+    // Evaluate recipe filters
+    const recipesToRun = [];
+    for (const recipe of recipes) {
+      if (await this.checkFilter(recipe)) {
+        recipesToRun.push(recipe);
+      }
+    }
+    return recipesToRun;
   },
 
   getFilterContext(recipe) {

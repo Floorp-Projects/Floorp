@@ -22,6 +22,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const App = createFactory(require("devtools/client/webconsole/components/App"));
 const ObjectClient = require("devtools/shared/client/object-client");
 const LongStringClient = require("devtools/shared/client/long-string-client");
+loader.lazyRequireGetter(this, "Constants", "devtools/client/webconsole/constants");
 
 let store = null;
 
@@ -107,6 +108,53 @@ WebConsoleOutputWrapper.prototype = {
           }
 
           return debuggerClient.release(actor);
+        },
+
+        getWebConsoleClient: () => {
+          return hud.webConsoleClient;
+        },
+
+        /**
+         * Retrieve the FrameActor ID given a frame depth, or the selected one if no
+         * frame depth given.
+         *
+         * @param {Number} frame: optional frame depth.
+         * @return {String|null}: The FrameActor ID for the given frame depth (or the
+         *                        selected frame if it exists).
+         */
+        getFrameActor: (frame = null) => {
+          const state = this.owner.getDebuggerFrames();
+          if (!state) {
+            return null;
+          }
+
+          const grip = Number.isInteger(frame)
+            ? state.frames[frame]
+            : state.frames[state.selected];
+          return grip ? grip.actor : null;
+        },
+
+        inputHasSelection: () => {
+          const {editor, inputNode} = hud.jsterm || {};
+          return editor
+            ? !!editor.getSelection()
+            : (inputNode && inputNode.selectionStart !== inputNode.selectionEnd);
+        },
+
+        getInputValue: () => {
+          return hud.jsterm && hud.jsterm.getInputValue();
+        },
+
+        getInputCursor: () => {
+          return hud.jsterm && hud.jsterm.getSelectionStart();
+        },
+
+        getSelectedNodeActor: () => {
+          const inspectorSelection = this.owner.getInspectorSelection();
+          if (inspectorSelection && inspectorSelection.nodeFront) {
+            return inspectorSelection.nodeFront.actorID;
+          }
+          return null;
         },
       };
 
@@ -319,6 +367,7 @@ WebConsoleOutputWrapper.prototype = {
     this.queuedMessageUpdates = [];
     this.queuedRequestUpdates = [];
     store.dispatch(actions.messagesClear());
+    this.hud.emit("messages-cleared");
   },
 
   dispatchPrivateMessagesClear: function() {
@@ -415,6 +464,26 @@ WebConsoleOutputWrapper.prototype = {
   dispatchSplitConsoleCloseButtonToggle: function() {
     store.dispatch(actions.splitConsoleCloseButtonToggle(
       this.toolbox && this.toolbox.currentToolId !== "webconsole"));
+  },
+
+  dispatchTabWillNavigate: function(packet) {
+    const { ui } = store.getState();
+
+    // For the browser console, we receive tab navigation
+    // when the original top level window we attached to is closed,
+    // but we don't want to reset console history and just switch to
+    // the next available window.
+    if (ui.persistLogs || this.hud.isBrowserConsole) {
+      // Add a _type to hit convertCachedPacket.
+      packet._type = true;
+      this.dispatchMessageAdd(packet);
+    } else {
+      this.hud.webConsoleClient.clearNetworkRequests();
+      this.dispatchMessagesClear();
+      store.dispatch({
+        type: Constants.WILL_NAVIGATE,
+      });
+    }
   },
 
   batchedMessageUpdates: function(info) {

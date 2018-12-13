@@ -156,6 +156,10 @@ class TabParent final : public PBrowserParent,
   virtual mozilla::ipc::IPCResult RecvSetHasBeforeUnload(
       const bool& aHasBeforeUnload) override;
 
+  virtual mozilla::ipc::IPCResult RecvRegisterProtocolHandler(
+      const nsString& aScheme, nsIURI* aHandlerURI, const nsString& aTitle,
+      nsIURI* aDocURI) override;
+
   virtual mozilla::ipc::IPCResult RecvBrowserFrameOpenWindow(
       PBrowserParent* aOpener, const nsString& aURL, const nsString& aName,
       const nsString& aFeatures,

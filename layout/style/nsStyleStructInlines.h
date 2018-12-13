@@ -169,7 +169,12 @@ bool nsStyleDisplay::IsFixedPosContainingBlock(
        !aContextFrame->IsFrameOfType(nsIFrame::eSupportsCSSTransforms))) {
     return false;
   }
-  return !nsSVGUtils::IsInSVGTextSubtree(aContextFrame);
+  if (nsSVGUtils::IsInSVGTextSubtree(aContextFrame)) {
+    return false;
+  }
+  MOZ_ASSERT(IsAbsPosContainingBlock(aContextFrame),
+             "Any fixed-pos CB should also be an abs-pos CB");
+  return true;
 }
 
 bool nsStyleDisplay::IsAbsPosContainingBlockForNonSVGTextFrames() const {

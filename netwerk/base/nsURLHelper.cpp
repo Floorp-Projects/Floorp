@@ -21,6 +21,7 @@
 #include "prnetdb.h"
 #include "mozilla/Tokenizer.h"
 #include "nsEscape.h"
+#include "rust-helper/src/helper.h"
 
 using namespace mozilla;
 
@@ -964,39 +965,8 @@ bool net_IsValidHostName(const nsACString &host) {
   return PR_StringToNetAddr(strhost.get(), &addr) == PR_SUCCESS;
 }
 
-bool net_IsValidIPv4Addr(const char *addr, int32_t addrLen) {
-  RangedPtr<const char> p(addr, addrLen);
-
-  int32_t octet = -1;    // means no digit yet
-  int32_t dotCount = 0;  // number of dots in the address
-
-  for (; addrLen; ++p, --addrLen) {
-    if (*p == '.') {
-      dotCount++;
-      if (octet == -1) {
-        // invalid octet
-        return false;
-      }
-      octet = -1;
-    } else if (*p >= '0' && *p <= '9') {
-      if (octet == 0) {
-        // leading 0 is not allowed
-        return false;
-      }
-      if (octet == -1) {
-        octet = *p - '0';
-      } else {
-        octet *= 10;
-        octet += *p - '0';
-        if (octet > 255) return false;
-      }
-    } else {
-      // invalid character
-      return false;
-    }
-  }
-
-  return (dotCount == 3 && octet != -1);
+bool net_IsValidIPv4Addr(const nsACString &aAddr) {
+  return rust_net_is_valid_ipv4_addr(aAddr);
 }
 
 bool net_IsValidIPv6Addr(const char *addr, int32_t addrLen) {
@@ -1032,8 +1002,10 @@ bool net_IsValidIPv6Addr(const char *addr, int32_t addrLen) {
       digits++;
     } else if (*p == '.') {
       // check valid IPv4 from the beginning of the last block
-      if (!net_IsValidIPv4Addr(p.get() - digits, addrLen + digits))
+      if (!net_IsValidIPv4Addr(
+              Substring(p.get() - digits, p.get() + addrLen))) {
         return false;
+      }
       return (haveZeros && blocks < 6) || (!haveZeros && blocks == 6);
     } else {
       // invalid character

@@ -9,10 +9,24 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/TypeTraits.h"
+#include <cmath>
 #include <random>
 
 namespace mozilla {
 namespace fuzzing {
+
+class FuzzingTraits {
+ public:
+  static unsigned int Random(unsigned int aMax);
+  static bool Sometimes(unsigned int aProbability);
+  /**
+   * Frequency() defines how many mutations of a kind shall be applied to a
+   * target buffer by using a user definable factor. The higher the factor,
+   * the less mutations are being made.
+   */
+  static size_t Frequency(const size_t aSize, const uint64_t aFactor);
+  static std::mt19937_64 rng;
+};
 
 /**
  * RandomNumericLimit returns either the min or max limit of an arithmetic
@@ -22,8 +36,8 @@ template <typename T>
 T RandomNumericLimit() {
   static_assert(mozilla::IsArithmetic<T>::value == true,
                 "T must be an arithmetic type");
-  return random() % 2 == 0 ? std::numeric_limits<T>::min()
-                           : std::numeric_limits<T>::max();
+  return FuzzingTraits::Sometimes(2) ? std::numeric_limits<T>::min()
+                                     : std::numeric_limits<T>::max();
 }
 
 /**
@@ -33,9 +47,10 @@ template <typename T>
 T RandomInteger() {
   static_assert(mozilla::IsIntegral<T>::value == true,
                 "T must be an integral type");
-  double r = static_cast<double>(random() % ((sizeof(T) * CHAR_BIT) + 1));
+  double r =
+      static_cast<double>(FuzzingTraits::Random((sizeof(T) * CHAR_BIT) + 1));
   T x = static_cast<T>(pow(2.0, r)) - 1;
-  if (std::numeric_limits<T>::is_signed && random() % 2 == 0) {
+  if (std::numeric_limits<T>::is_signed && FuzzingTraits::Sometimes(2)) {
     return (x * -1) - 1;
   }
   return x;
@@ -49,7 +64,24 @@ T RandomIntegerRange(T min, T max) {
   static_assert(mozilla::IsIntegral<T>::value == true,
                 "T must be an integral type");
   MOZ_ASSERT(min < max);
-  return static_cast<T>(random() % (max - min) + min);
+  std::uniform_int_distribution<T> d(min, max);
+  return d(FuzzingTraits::rng);
+}
+/**
+ * uniform_int_distribution is undefined for char/uchar. Need to handle them
+ * separately.
+ */
+template <>
+inline unsigned char RandomIntegerRange(unsigned char min, unsigned char max) {
+  MOZ_ASSERT(min < max);
+  std::uniform_int_distribution<unsigned short> d(min, max);
+  return static_cast<unsigned char>(d(FuzzingTraits::rng));
+}
+template <>
+inline char RandomIntegerRange(char min, char max) {
+  MOZ_ASSERT(min < max);
+  std::uniform_int_distribution<short> d(min, max);
+  return static_cast<char>(d(FuzzingTraits::rng));
 }
 
 /**
@@ -61,8 +93,9 @@ T RandomFloatingPointRange(T min, T max) {
   static_assert(mozilla::IsFloatingPoint<T>::value == true,
                 "T must be a floating point type");
   MOZ_ASSERT(min < max);
-  T x = static_cast<T>(random()) / static_cast<T>(RAND_MAX);
-  return min + x * (max - min);
+  std::uniform_real_distribution<T> d(
+      min, std::nextafter(max, std::numeric_limits<T>::max()));
+  return d(FuzzingTraits::rng);
 }
 
 /**
@@ -78,18 +111,6 @@ T RandomFloatingPoint() {
   T x = static_cast<T>(pow(2.0, static_cast<double>(radix)));
   return x * RandomFloatingPointRange<T>(-1.0, 1.0);
 }
-
-class FuzzingTraits {
- public:
-  static unsigned int Random(unsigned int aMax);
-  static bool Sometimes(unsigned int aProbability);
-  /**
-   * Frequency() defines how many mutations of a kind shall be applied to a
-   * target buffer by using a user definable factor. The higher the factor,
-   * the less mutations are being made.
-   */
-  static size_t Frequency(const size_t aSize, const uint64_t aFactor);
-};
 
 }  // namespace fuzzing
 }  // namespace mozilla
