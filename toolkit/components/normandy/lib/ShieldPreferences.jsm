@@ -47,25 +47,22 @@ var ShieldPreferences = {
         prefValue = Services.prefs.getBoolPref(PREF_OPT_OUT_STUDIES_ENABLED);
         if (!prefValue) {
           const action = new AddonStudyAction();
-          for (const study of await AddonStudies.getAll()) {
-            if (study.active) {
-              try {
-                await action.unenroll(study.recipeId, "general-opt-out");
-              } catch (err) {
-                Cu.reportError(err);
-              }
+          const studyPromises = (await AddonStudies.getAll()).map(study => {
+            if (!study.active) {
+              return null;
             }
-          }
+            return action.unenroll(study.recipeId, "general-opt-out");
+          });
 
-          for (const experiment of await PreferenceExperiments.getAll()) {
-            if (!experiment.expired) {
-              try {
-                await PreferenceExperiments.stop(experiment.name, { reason: "general-opt-out" });
-              } catch (err) {
-                Cu.reportError(err);
-              }
+          const experimentPromises = (await PreferenceExperiments.getAll()).map(experiment => {
+            if (experiment.expired) {
+              return null;
             }
-          }
+            return PreferenceExperiments.stop(experiment.name, { reason: "general-opt-out" });
+          });
+
+          const allPromises = studyPromises.concat(experimentPromises).map(p => p && p.catch(err => Cu.reportError(err)));
+          await Promise.all(allPromises);
         }
         break;
       }
