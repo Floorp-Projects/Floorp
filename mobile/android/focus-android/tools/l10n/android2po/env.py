@@ -205,6 +205,12 @@ MISSING_LOCALES = {
         'local_name': 'Corsu',
         'plural_rule': 'pt',
         'team': 'anp <LL@li.org>\n'
+    },
+    'sn': {
+        'name': 'Shona',
+        'local_name': 'ChiShona',
+        'plural_rule': 'az',
+        'team': 'anp <LL@li.org>\n'
     }
 }
 
