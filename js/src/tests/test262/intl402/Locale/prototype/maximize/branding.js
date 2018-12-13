@@ -14,7 +14,10 @@ info: |
 features: [Intl.Locale]
 ---*/
 
-const fn = Intl.Locale.prototype.maximize;
+const maximize = Intl.Locale.prototype.maximize;
+
+assert.sameValue(typeof maximize, "function");
+
 const invalidValues = [
   undefined,
   null,
@@ -27,7 +30,7 @@ const invalidValues = [
 ];
 
 for (const invalidValue of invalidValues) {
-  assert.throws(TypeError, () => fn.call(invalidValue));
+  assert.throws(TypeError, () => maximize.call(invalidValue));
 }
 
 reportCompare(0, 0);

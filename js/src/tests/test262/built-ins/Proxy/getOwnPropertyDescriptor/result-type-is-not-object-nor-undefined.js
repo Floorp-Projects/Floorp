@@ -18,8 +18,7 @@ var target = {
   number: 1,
   symbol: Symbol(),
   string: '',
-  boolean: true,
-  fn: function() {}
+  boolean: true
 };
 var p = new Proxy(target, {
   getOwnPropertyDescriptor: function(t, prop) {
@@ -41,10 +40,6 @@ assert.throws(TypeError, function() {
 
 assert.throws(TypeError, function() {
   Object.getOwnPropertyDescriptor(p, "boolean");
-});
-
-assert.throws(TypeError, function() {
-  Object.getOwnPropertyDescriptor(p, "fn");
 });
 
 reportCompare(0, 0);

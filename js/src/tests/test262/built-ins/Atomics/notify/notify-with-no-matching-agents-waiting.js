@@ -11,7 +11,7 @@ includes: [atomicsHelper.js]
 features: [Atomics, SharedArrayBuffer, TypedArray]
 ---*/
 
-const RUNNING = 1;
+const RUNNING = 0;
 
 $262.agent.start(`
   $262.agent.receiveBroadcast(function(sab) {
@@ -25,7 +25,7 @@ const i32a = new Int32Array(
   new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 2)
 );
 
-$262.agent.broadcast(i32a.buffer);
+$262.agent.safeBroadcast(i32a);
 $262.agent.waitUntil(i32a, RUNNING, 1);
 
 // There are ZERO matching agents waiting on index 1

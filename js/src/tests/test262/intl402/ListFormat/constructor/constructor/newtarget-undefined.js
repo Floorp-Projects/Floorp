@@ -1,4 +1,4 @@
-// |reftest| skip-if(!Intl.hasOwnProperty('ListFormat')) -- Intl.ListFormat is not enabled unconditionally
+// |reftest| skip -- Intl.ListFormat is not supported
 // Copyright 2018 Igalia, S.L. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -12,6 +12,8 @@ info: |
     1. If NewTarget is undefined, throw a TypeError exception.
 features: [Intl.ListFormat]
 ---*/
+
+assert.sameValue(typeof Intl.ListFormat, "function");
 
 assert.throws(TypeError, function() {
   Intl.ListFormat();

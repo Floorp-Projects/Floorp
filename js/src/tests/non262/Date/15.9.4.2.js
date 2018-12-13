@@ -39,16 +39,17 @@ function TZAtDate(d){
   return d.getTimezoneOffset() * 60000;
 }
 
-function TZInMonth(month){
-  return TZAtDate(new Date(dd(2009,month,1,0,0,0,0)));
+function TZInMonth(month, year){
+  return TZAtDate(new Date(dd(year,month,1,0,0,0,0)));
 }
 
 function test()
 {
   printBugNumber(BUGNUMBER);
  
-  JanTZ = TZInMonth(1);
-  JulTZ = TZInMonth(7);
+  Jan1970TZ = TZInMonth(1, 1970);
+  Jan2009TZ = TZInMonth(1, 2009);
+  Jul2009TZ = TZInMonth(7, 2009);
   CurrTZ = TZAtDate(new Date());
 
   // formats with explicit timezone
@@ -69,21 +70,21 @@ function test()
   check("T19:53+12:00",                  dd(1970,1,1,7,53,0,0));
 
   // formats without timezone uses the timezone as at that date
-  check("2009-07-23T19:53:21.001",       dd(2009,7,23,19,53,21,1)+JulTZ);
-  check("2009-07-23T19:53:21",           dd(2009,7,23,19,53,21,0)+JulTZ);
-  check("2009-07-23T19:53",              dd(2009,7,23,19,53,0,0)+JulTZ);
+  check("2009-07-23T19:53:21.001",       dd(2009,7,23,19,53,21,1)+Jul2009TZ);
+  check("2009-07-23T19:53:21",           dd(2009,7,23,19,53,21,0)+Jul2009TZ);
+  check("2009-07-23T19:53",              dd(2009,7,23,19,53,0,0)+Jul2009TZ);
 
-  check("2009-07T19:53:21.001",          dd(2009,7,1,19,53,21,1)+JulTZ);
-  check("2009-07T19:53:21",              dd(2009,7,1,19,53,21,0)+JulTZ);
-  check("2009-07T19:53",                 dd(2009,7,1,19,53,0,0)+JulTZ);
+  check("2009-07T19:53:21.001",          dd(2009,7,1,19,53,21,1)+Jul2009TZ);
+  check("2009-07T19:53:21",              dd(2009,7,1,19,53,21,0)+Jul2009TZ);
+  check("2009-07T19:53",                 dd(2009,7,1,19,53,0,0)+Jul2009TZ);
 
-  check("2009T19:53:21.001",             dd(2009,1,1,19,53,21,1)+JanTZ);
-  check("2009T19:53:21",                 dd(2009,1,1,19,53,21,0)+JanTZ);
-  check("2009T19:53",                    dd(2009,1,1,19,53,0,0)+JanTZ);
+  check("2009T19:53:21.001",             dd(2009,1,1,19,53,21,1)+Jan2009TZ);
+  check("2009T19:53:21",                 dd(2009,1,1,19,53,21,0)+Jan2009TZ);
+  check("2009T19:53",                    dd(2009,1,1,19,53,0,0)+Jan2009TZ);
 
-  check("T19:53:21.001",                 dd(1970,1,1,19,53,21,1)+JanTZ);
-  check("T19:53:21",                     dd(1970,1,1,19,53,21,0)+JanTZ);
-  check("T19:53",                        dd(1970,1,1,19,53,0,0)+JanTZ);
+  check("T19:53:21.001",                 dd(1970,1,1,19,53,21,1)+Jan1970TZ);
+  check("T19:53:21",                     dd(1970,1,1,19,53,21,0)+Jan1970TZ);
+  check("T19:53",                        dd(1970,1,1,19,53,0,0)+Jan1970TZ);
 
   // with no time at all assume UTC
   check("2009-07-23",                    dd(2009,7,23,0,0,0,0));

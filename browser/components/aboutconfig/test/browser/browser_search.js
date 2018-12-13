@@ -21,6 +21,7 @@ add_task(async function test_search() {
     url: PAGE_URL,
   }, async browser => {
     let prefArray = Services.prefs.getChildList("");
+    await content.document.querySelector("button").click();
 
     // Test page loaded with correct number of prefs.
     await ContentTask.spawn(browser, prefArray, aPrefArray => {
