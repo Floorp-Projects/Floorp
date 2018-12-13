@@ -592,11 +592,6 @@ struct PacedPacketInfo {
   int probe_cluster_min_bytes = -1;
 };
 
-inline bool IsNewerOrSameTimestamp(uint32_t timestamp, uint32_t prev_timestamp) {
-  return timestamp == prev_timestamp ||
-      static_cast<uint32_t>(timestamp - prev_timestamp) < 0x80000000;
-}
-
 }  // namespace webrtc
 
 #endif  // MODULES_INCLUDE_MODULE_COMMON_TYPES_H_
