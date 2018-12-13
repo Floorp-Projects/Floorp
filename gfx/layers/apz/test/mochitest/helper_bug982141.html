@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
     // -------------------------------------------------------------------
     var SimpleTest = window.opener.SimpleTest;
 
-    waitUntilApzStable().then(testBug982141);
+    waitUntilApzStable().then(forceLayerTreeToCompositor).then(testBug982141);
 
     // --------------------------------------------------------------------
     // The actual logic for testing bug 982141.
