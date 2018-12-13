@@ -267,10 +267,10 @@ decorate_task(
   async function testOptOut(sendEventStub, mockPreferences) {
     mockPreferences.set("app.shield.optoutstudies.enabled", false);
     const action = new AddonStudyAction();
-    is(action.state, AddonStudyAction.STATE_DISABLED, "the action should be disabled");
     const enrollSpy = sinon.spy(action, "enroll");
     const recipe = addonStudyRecipeFactory();
     await action.runRecipe(recipe);
+    is(action.state, AddonStudyAction.STATE_DISABLED, "the action should be disabled");
     await action.finalize();
     is(action.state, AddonStudyAction.STATE_FINALIZED, "the action should be finalized");
     is(action.lastError, null, "lastError should be null");
