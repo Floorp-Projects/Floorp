@@ -805,6 +805,11 @@ static inline bool IsIntrinsicKeyword(const nsStyleCoord& aCoord) {
   return aCoord.GetIntValue() != NS_STYLE_WIDTH_AVAILABLE;
 }
 
+static bool AreDynamicReflowRootsEnabled() {
+  // XXXdholbert Implemented in next patch.
+  return true;
+}
+
 void ReflowInput::InitDynamicReflowRoot() {
   auto display = mStyleDisplay->mDisplay;
   if (mFrame->IsFrameOfType(nsIFrame::eLineParticipant) ||
@@ -820,7 +825,7 @@ void ReflowInput::InitDynamicReflowRoot() {
     return;
   }
 
-  bool canBeDynamicReflowRoot = true;
+  bool canBeDynamicReflowRoot = AreDynamicReflowRootsEnabled();
 
   // We can't do this if our used 'width' and 'height' might be influenced by
   // content.
@@ -829,19 +834,20 @@ void ReflowInput::InitDynamicReflowRoot() {
   // FIXME: Other flex and grid cases?
   const nsStyleCoord& width = mStylePosition->mWidth;
   const nsStyleCoord& height = mStylePosition->mHeight;
-  if (!width.IsCoordPercentCalcUnit() || width.HasPercent() ||
-      !height.IsCoordPercentCalcUnit() || height.HasPercent() ||
-      IsIntrinsicKeyword(mStylePosition->mMinWidth) ||
-      IsIntrinsicKeyword(mStylePosition->mMaxWidth) ||
-      IsIntrinsicKeyword(mStylePosition->mMinHeight) ||
-      IsIntrinsicKeyword(mStylePosition->mMaxHeight) ||
-      ((mStylePosition->mMinWidth.GetUnit() == eStyleUnit_Auto ||
-        mStylePosition->mMinHeight.GetUnit() == eStyleUnit_Auto) &&
-       mFrame->IsFlexOrGridItem())) {
+  if (canBeDynamicReflowRoot &&
+      (!width.IsCoordPercentCalcUnit() || width.HasPercent() ||
+       !height.IsCoordPercentCalcUnit() || height.HasPercent() ||
+       IsIntrinsicKeyword(mStylePosition->mMinWidth) ||
+       IsIntrinsicKeyword(mStylePosition->mMaxWidth) ||
+       IsIntrinsicKeyword(mStylePosition->mMinHeight) ||
+       IsIntrinsicKeyword(mStylePosition->mMaxHeight) ||
+       ((mStylePosition->mMinWidth.GetUnit() == eStyleUnit_Auto ||
+         mStylePosition->mMinHeight.GetUnit() == eStyleUnit_Auto) &&
+        mFrame->IsFlexOrGridItem()))) {
     canBeDynamicReflowRoot = false;
   }
 
-  if (mFrame->IsFlexItem()) {
+  if (canBeDynamicReflowRoot && mFrame->IsFlexItem()) {
     // If our flex-basis is 'auto', it'll defer to 'width' (or 'height') which
     // we've already checked. Otherwise, it preempts them, so we need to
     // perform the same "could-this-value-be-influenced-by-content" checks that
@@ -853,7 +859,7 @@ void ReflowInput::InitDynamicReflowRoot() {
     }
   }
 
-  if (!mFrame->IsFixedPosContainingBlock()) {
+  if (canBeDynamicReflowRoot && !mFrame->IsFixedPosContainingBlock()) {
     // We can't treat this frame as a reflow root, since dynamic changes
     // to absolutely-positioned frames inside of it require that we
     // reflow the placeholder before we reflow the absolutely positioned
