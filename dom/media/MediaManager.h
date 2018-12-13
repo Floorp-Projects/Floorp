@@ -62,8 +62,6 @@ class GetUserMediaWindowListener;
 class MediaManager;
 class SourceListener;
 
-LogModule* GetMediaManagerLog();
-
 class MediaDevice : public nsIMediaDevice {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -218,8 +216,10 @@ class MediaManager final : public nsIMediaManagerService,
   typedef MozPromise<RefPtr<DOMMediaStream>, RefPtr<MediaMgrError>, true>
       StreamPromise;
   typedef MozPromise<RefPtr<MediaDeviceSetRefCnt>, RefPtr<MediaMgrError>, true>
-      MediaDeviceSetPromise;
-  typedef MozPromise<const char*, nsresult, false> BadConstraintsPromise;
+      DevicesPromise;
+  typedef MozPromise<bool, RefPtr<MediaMgrError>, true> MgrPromise;
+  typedef MozPromise<const char*, RefPtr<MediaMgrError>, true>
+      BadConstraintsPromise;
 
   RefPtr<StreamPromise> GetUserMedia(
       nsPIDOMWindowInner* aWindow,
@@ -231,8 +231,8 @@ class MediaManager final : public nsIMediaManagerService,
       const dom::MediaStreamConstraints& aConstraints,
       dom::MozGetUserMediaDevicesSuccessCallback& aOnSuccess,
       uint64_t aInnerWindowID = 0, const nsAString& aCallID = nsString());
-  RefPtr<MediaDeviceSetPromise> EnumerateDevices(nsPIDOMWindowInner* aWindow,
-                                                 dom::CallerType aCallerType);
+  RefPtr<DevicesPromise> EnumerateDevices(nsPIDOMWindowInner* aWindow,
+                                          dom::CallerType aCallerType);
 
   nsresult EnumerateDevices(nsPIDOMWindowInner* aWindow,
                             dom::Promise& aPromise);
@@ -282,18 +282,19 @@ class MediaManager final : public nsIMediaManagerService,
              addition to normal devices) */
   };
 
-  RefPtr<MediaDeviceSetPromise> EnumerateRawDevices(
-      uint64_t aWindowId, dom::MediaSourceEnum aVideoInputType,
-      dom::MediaSourceEnum aAudioInputType, MediaSinkEnum aAudioOutputType,
-      DeviceEnumerationType aVideoInputEnumType = DeviceEnumerationType::Normal,
-      DeviceEnumerationType aAudioInputEnumType =
-          DeviceEnumerationType::Normal);
-
-  RefPtr<MediaDeviceSetPromise> EnumerateDevicesImpl(
+  RefPtr<MgrPromise> EnumerateRawDevices(
       uint64_t aWindowId, dom::MediaSourceEnum aVideoInputType,
       dom::MediaSourceEnum aAudioInputType, MediaSinkEnum aAudioOutputType,
       DeviceEnumerationType aVideoInputEnumType,
-      DeviceEnumerationType aAudioInputEnumType);
+      DeviceEnumerationType aAudioInputEnumType,
+      const RefPtr<MediaDeviceSetRefCnt>& aOutDevices);
+
+  RefPtr<MgrPromise> EnumerateDevicesImpl(
+      uint64_t aWindowId, dom::MediaSourceEnum aVideoInputType,
+      dom::MediaSourceEnum aAudioInputType, MediaSinkEnum aAudioOutputType,
+      DeviceEnumerationType aVideoInputEnumType,
+      DeviceEnumerationType aAudioInputEnumType,
+      const RefPtr<MediaDeviceSetRefCnt>& aOutDevices);
 
   RefPtr<BadConstraintsPromise> SelectSettings(
       const dom::MediaStreamConstraints& aConstraints, bool aIsChrome,

@@ -399,6 +399,13 @@ impl<T, U> TypedRect<T, U> {
     }
 }
 
+impl<T: Copy + Clone + Mul<T, Output = T>, U> TypedRect<T, U> {
+    #[inline]
+    pub fn area(&self) -> T {
+        self.size.area()
+    }
+}
+
 impl<T: Copy + PartialEq + Zero, U> TypedRect<T, U> {
     /// Constructor, setting all sides to zero.
     pub fn zero() -> Self {

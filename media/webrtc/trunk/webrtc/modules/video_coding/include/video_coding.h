@@ -414,8 +414,6 @@ class VideoCodingModule : public Module {
       EncodedImageCallback* post_encode_callback) = 0;
   // Releases pending decode calls, permitting faster thread shutdown.
   virtual void TriggerDecoderShutdown() = 0;
-  // resets underlying objects
-  virtual void Reset() = 0;
 };
 
 }  // namespace webrtc

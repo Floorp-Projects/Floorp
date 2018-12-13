@@ -218,10 +218,6 @@ partial interface HTMLMediaElement {
 
   [Pref="media.test.video-suspend"]
   boolean hasSuspendTaint();
-
-  [ChromeOnly]
-  // This one is used for testing only
-  readonly attribute boolean isVideoDecodingSuspended;
 };
 
 /* Audio Output Devices API */

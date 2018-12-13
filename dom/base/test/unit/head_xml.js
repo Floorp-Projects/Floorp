@@ -37,7 +37,7 @@ function ParseFile(file) {
   var fileStr = C["@mozilla.org/network/file-input-stream;1"]
                  .createInstance(nsIFileInputStream);
   // Init for readonly reading
-  fileStr.init(file,  0x01, 0o400, nsIFileInputStream.CLOSE_ON_EOF);
+  fileStr.init(file, 0x01, 0o400, nsIFileInputStream.CLOSE_ON_EOF);
   return ParseXML(fileStr);
 }
 
@@ -47,7 +47,7 @@ function ParseXML(data) {
   }
 
   Assert.equal(data instanceof nsIInputStream, true);
-  
+
   return getParser().parseFromStream(data, "UTF-8", data.available(),
                                      "application/xml");
 }

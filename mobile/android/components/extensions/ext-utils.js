@@ -732,6 +732,11 @@ class TabManager extends TabManagerBase {
     return super.revokeActiveTabPermission(nativeTab);
   }
 
+  canAccessTab(nativeTab) {
+    return this.extension.privateBrowsingAllowed ||
+           !PrivateBrowsingUtils.isBrowserPrivate(nativeTab.browser);
+  }
+
   wrapTab(nativeTab) {
     return new Tab(this.extension, nativeTab, nativeTab.id);
   }

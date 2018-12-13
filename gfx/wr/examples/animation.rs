@@ -48,6 +48,7 @@ impl App {
 
         let reference_frame_id = builder.push_reference_frame(
             &LayoutPrimitiveInfo::new(LayoutRect::new(bounds.origin, LayoutSize::zero())),
+            TransformStyle::Flat,
             Some(PropertyBinding::Binding(property_key, LayoutTransform::identity())),
             None,
         );

@@ -1,12 +1,10 @@
-function run_test()
-{
+function run_test() {
   test_generate_xpath();
 }
 
 // TEST CODE
 
-function test_generate_xpath()
-{
+function test_generate_xpath() {
   let docString = `
     <html>
     <body>

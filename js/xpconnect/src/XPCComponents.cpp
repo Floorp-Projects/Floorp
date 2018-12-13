@@ -1589,8 +1589,13 @@ nsXPCComponents_Utils::Unload(const nsACString& registryLocation) {
 NS_IMETHODIMP
 nsXPCComponents_Utils::ImportGlobalProperties(HandleValue aPropertyList,
                                               JSContext* cx) {
-  RootedObject global(cx, CurrentGlobalOrNull(cx));
+  // Ensure we're working in the scripted caller's realm. This is not guaranteed
+  // to be the current realm because we switch realms when calling cross-realm
+  // functions.
+  RootedObject global(cx, JS::GetScriptedCallerGlobal(cx));
   MOZ_ASSERT(global);
+  js::AssertSameCompartment(cx, global);
+  JSAutoRealm ar(cx, global);
 
   // Don't allow doing this if the global is a Window
   nsGlobalWindowInner* win;

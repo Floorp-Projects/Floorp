@@ -1,6 +1,8 @@
-dump('loaded child cpow test\n');
+/* eslint-env mozilla/frame-script */
+dump("loaded child cpow test\n");
 
 Cu.importGlobalProperties(["XMLHttpRequest"]);
+var is_remote;
 
 (function start() {
   [is_remote] = sendRpcMessage("cpows:is_remote");
@@ -41,28 +43,27 @@ Cu.importGlobalProperties(["XMLHttpRequest"]);
 })();
 
 function ok(condition, message) {
-  dump('condition: ' + condition  + ', ' + message + '\n');
+  dump("condition: " + condition + ", " + message + "\n");
   if (!condition) {
-    sendAsyncMessage("cpows:fail", { message: message });
+    sendAsyncMessage("cpows:fail", { message });
   }
 }
 
 var sync_obj;
 var async_obj;
 
-function make_object()
-{
+function make_object() {
   let o = { };
   o.i = 5;
   o.b = true;
   o.s = "hello";
   o.x = { i: 10 };
-  o.f = function () { return 99; };
-  o.ctor = function() { this.a = 3; }
+  o.f = function() { return 99; };
+  o.ctor = function() { this.a = 3; };
 
   // Doing anything with this Proxy will throw.
   var throwing = new Proxy({}, new Proxy({}, {
-      get: function (trap) { throw trap; }
+      get(trap) { throw trap; },
     }));
 
   let array = [1, 2, 3];
@@ -81,17 +82,15 @@ function make_object()
            "array": array,
            "for_json": for_json,
            "with_proto": with_proto,
-           "with_null_proto": with_null_proto
+           "with_null_proto": with_null_proto,
          };
 }
 
-function make_json()
-{
+function make_json() {
   return { check: "ok" };
 }
 
-function parent_test(finish)
-{
+function parent_test(finish) {
   function f(check_func) {
     // Make sure this doesn't crash.
     let array = new Uint32Array(10);
@@ -116,9 +115,9 @@ function parent_test(finish)
     // is callable from unprivileged content. Greasemonkey uses this
     // functionality.
     let func = msg.objects.func;
-    let sb = Cu.Sandbox('http://www.example.com', {});
+    let sb = Cu.Sandbox("http://www.example.com", {});
     sb.func = func;
-    ok(sb.eval('func()') == 101, "can call parent's function in child");
+    ok(sb.eval("func()") == 101, "can call parent's function in child");
 
     finish();
   });
@@ -130,30 +129,27 @@ function error_reporting_test(finish) {
   finish();
 }
 
-function dom_test(finish)
-{
+function dom_test(finish) {
   let element = content.document.createElement("div");
   element.id = "it_works";
   content.document.body.appendChild(element);
 
-  sendRpcMessage("cpows:dom_test", {}, {element: element});
+  sendRpcMessage("cpows:dom_test", {}, {element});
   Cu.schedulePreciseGC(function() {
     sendRpcMessage("cpows:dom_test_after_gc");
     finish();
   });
 }
 
-function xray_test(finish)
-{
+function xray_test(finish) {
   let element = content.document.createElement("div");
   element.wrappedJSObject.foo = "hello";
 
-  sendRpcMessage("cpows:xray_test", {}, {element: element});
+  sendRpcMessage("cpows:xray_test", {}, {element});
   finish();
 }
 
-function symbol_test(finish)
-{
+function symbol_test(finish) {
   let iterator = Symbol.iterator;
   let named = Symbol.for("cpow-test");
 
@@ -161,15 +157,14 @@ function symbol_test(finish)
     [iterator]: iterator,
     [named]: named,
   };
-  let test = ['a'];
-  sendRpcMessage("cpows:symbol_test", {}, {object: object, test: test});
+  let test = ["a"];
+  sendRpcMessage("cpows:symbol_test", {}, {object, test});
   finish();
 }
 
 // Parent->Child references should go X->parent.privilegedJunkScope->child.privilegedJunkScope->Y
 // Child->Parent references should go X->child.privilegedJunkScope->parent.unprivilegedJunkScope->Y
-function compartment_test(finish)
-{
+function compartment_test(finish) {
   // This test primarily checks various compartment invariants for CPOWs, and
   // doesn't make sense to run in-process.
   if (!is_remote) {
@@ -177,46 +172,42 @@ function compartment_test(finish)
     return;
   }
 
-  let sb = Cu.Sandbox('http://www.example.com', { wantGlobalProperties: ['XMLHttpRequest'] });
-  sb.eval('function getUnprivilegedObject() { var xhr = new XMLHttpRequest(); xhr.expando = 42; return xhr; }');
+  let sb = Cu.Sandbox("http://www.example.com", { wantGlobalProperties: ["XMLHttpRequest"] });
+  sb.eval("function getUnprivilegedObject() { var xhr = new XMLHttpRequest(); xhr.expando = 42; return xhr; }");
   function testParentObject(obj) {
     let results = [];
-    function is(a, b, msg) { results.push({ result: a === b ? "PASS" : "FAIL", message: msg }) };
-    function ok(x, msg) { results.push({ result: x ? "PASS" : "FAIL", message: msg }) };
-
+    function is(a, b, msg) { results.push({ result: a === b ? "PASS" : "FAIL", message: msg }); }
+    function ok1(x, msg) { results.push({ result: x ? "PASS" : "FAIL", message: msg }); }
     let cpowLocation = Cu.getRealmLocation(obj);
-    ok(/shared JSM global/.test(cpowLocation),
+    ok1(/shared JSM global/.test(cpowLocation),
        "child->parent CPOWs should live in the privileged junk scope: " + cpowLocation);
     is(obj(), 42, "child->parent CPOW is invokable");
     try {
       obj.expando;
-      ok(false, "child->parent CPOW cannot access properties");
+      ok1(false, "child->parent CPOW cannot access properties");
     } catch (e) {
-      ok(true, "child->parent CPOW cannot access properties");
+      ok1(true, "child->parent CPOW cannot access properties");
     }
 
     return results;
   }
   sendRpcMessage("cpows:compartment_test", {}, { getUnprivilegedObject: sb.getUnprivilegedObject,
-                                                 testParentObject: testParentObject });
+                                                 testParentObject });
   finish();
 }
 
-function regexp_test(finish)
-{
+function regexp_test(finish) {
   sendRpcMessage("cpows:regexp_test", {}, { regexp: /myRegExp/g });
   finish();
 }
 
-function postmessage_test(finish)
-{
+function postmessage_test(finish) {
   sendRpcMessage("cpows:postmessage_test", {}, { win: content.window });
   finish();
 }
 
-function sync_test(finish)
-{
-  dump('beginning cpow sync test\n');
+function sync_test(finish) {
+  dump("beginning cpow sync test\n");
   sync_obj = make_object();
   sendRpcMessage("cpows:sync",
     make_json(),
@@ -224,9 +215,8 @@ function sync_test(finish)
   finish();
 }
 
-function async_test(finish)
-{
-  dump('beginning cpow async test\n');
+function async_test(finish) {
+  dump("beginning cpow async test\n");
   async_obj = make_object();
   sendAsyncMessage("cpows:async",
     make_json(),
@@ -237,22 +227,20 @@ function async_test(finish)
 
 var rpc_obj;
 
-function rpc_test(finish)
-{
-  dump('beginning cpow rpc test\n');
+function rpc_test(finish) {
+  dump("beginning cpow rpc test\n");
   rpc_obj = make_object();
-  rpc_obj.data.reenter = function  () {
+  rpc_obj.data.reenter = function() {
     sendRpcMessage("cpows:reenter", { }, { data: { valid: true } });
     return "ok";
-  }
+  };
   sendRpcMessage("cpows:rpc",
     make_json(),
     rpc_obj);
   finish();
 }
 
-function lifetime_test(finish)
-{
+function lifetime_test(finish) {
   if (!is_remote) {
     // Only run this test when running out-of-process. Otherwise it
     // will fail, since local CPOWs don't follow the same ownership
@@ -263,7 +251,7 @@ function lifetime_test(finish)
 
   dump("beginning lifetime test\n");
   var obj = {"will_die": {"f": 1}};
-  let [result] = sendRpcMessage("cpows:lifetime_test_1", {}, {obj: obj});
+  let [result] = sendRpcMessage("cpows:lifetime_test_1", {}, {obj});
   ok(result == 10, "got sync result");
   ok(obj.wont_die.f == undefined, "got reverse CPOW");
   obj.will_die = null;
@@ -276,8 +264,7 @@ function lifetime_test(finish)
   });
 }
 
-function cancel_test(finish)
-{
+function cancel_test(finish) {
   if (!is_remote) {
     // No point in doing this in single-process mode.
     finish();
@@ -296,15 +283,14 @@ function cancel_test(finish)
     if (fin1 && fin2) finish();
   }
 
-  sendAsyncMessage("cpows:cancel_test", null, {f: f});
+  sendAsyncMessage("cpows:cancel_test", null, {f});
   addMessageListener("cpows:cancel_test_done", msg => {
     fin2 = true;
     if (fin1 && fin2) finish();
   });
 }
 
-function cancel_test2(finish)
-{
+function cancel_test2(finish) {
   if (!is_remote) {
     // No point in doing this in single-process mode.
     finish();
@@ -331,21 +317,20 @@ function cancel_test2(finish)
     req.open("get", "http://example.com", false);
     req.send(null);
 
-    ok(fin == true, "XHR happened");
+    ok(fin === true, "XHR happened");
 
     fin1 = true;
     if (fin1 && fin2) finish();
   }
 
-  sendAsyncMessage("cpows:cancel_test2", null, {f: f});
+  sendAsyncMessage("cpows:cancel_test2", null, {f});
   addMessageListener("cpows:cancel_test2_done", msg => {
     fin2 = true;
     if (fin1 && fin2) finish();
   });
 }
 
-function unsafe_test(finish)
-{
+function unsafe_test(finish) {
   if (!is_remote) {
     // Only run this test when running out-of-process.
     finish();
@@ -361,8 +346,7 @@ function unsafe_test(finish)
   });
 }
 
-function dead_test(finish)
-{
+function dead_test(finish) {
   if (!is_remote) {
     // Only run this test when running out-of-process.
     finish();
@@ -372,7 +356,7 @@ function dead_test(finish)
   let gcTrigger = function() {
     // Force the GC to dead-ify the thing.
     content.windowUtils.garbageCollect();
-  }
+  };
 
   {
     let thing = { value: "Gonna croak" };

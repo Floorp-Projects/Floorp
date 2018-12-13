@@ -84,6 +84,7 @@ static LazyLogModule gJSCLLog("JSComponentLoader");
 
 // Components.utils.import error messages
 #define ERROR_SCOPE_OBJ "%s - Second argument must be an object."
+#define ERROR_NO_TARGET_OBJECT "%s - Couldn't find target object for import."
 #define ERROR_NOT_PRESENT "%s - EXPORTED_SYMBOLS is not present."
 #define ERROR_NOT_AN_ARRAY "%s - EXPORTED_SYMBOLS is not an array."
 #define ERROR_GETTING_ARRAY_LENGTH \
@@ -521,7 +522,13 @@ void mozJSComponentLoader::FindTargetObject(JSContext* aCx,
   // script, since it the FrameScript NSVO will have been found.
   if (!aTargetObject ||
       !IsLoaderGlobal(JS::GetNonCCWObjectGlobal(aTargetObject))) {
-    aTargetObject.set(CurrentGlobalOrNull(aCx));
+    aTargetObject.set(JS::GetScriptedCallerGlobal(aCx));
+
+    // Return nullptr if the scripted caller is in a different compartment.
+    if (js::GetObjectCompartment(aTargetObject) !=
+        js::GetContextCompartment(aCx)) {
+      aTargetObject.set(nullptr);
+    }
   }
 }
 
@@ -993,6 +1000,10 @@ nsresult mozJSComponentLoader::ImportInto(const nsACString& registryLocation,
     }
   } else {
     FindTargetObject(cx, &targetObject);
+    if (!targetObject) {
+      return ReportOnCallerUTF8(cx, ERROR_NO_TARGET_OBJECT,
+                                PromiseFlatCString(registryLocation).get());
+    }
   }
 
   js::AssertSameCompartment(cx, targetObject);

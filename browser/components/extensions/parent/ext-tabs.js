@@ -178,7 +178,11 @@ class TabsUpdateFilterEventManager extends EventManager {
 
       function getWindowID(windowId) {
         if (windowId === Window.WINDOW_ID_CURRENT) {
-          return windowTracker.getId(windowTracker.topWindow);
+          let window = windowTracker.getTopWindow(context);
+          if (!window) {
+            return undefined;
+          }
+          return windowTracker.getId(window);
         }
         return windowId;
       }
@@ -201,7 +205,8 @@ class TabsUpdateFilterEventManager extends EventManager {
       }
 
       let fireForTab = (tab, changed) => {
-        if (!matchFilters(tab, changed)) {
+        // Tab may be null if private and not_allowed.
+        if (!tab || !matchFilters(tab, changed)) {
           return;
         }
 
@@ -212,6 +217,9 @@ class TabsUpdateFilterEventManager extends EventManager {
       };
 
       let listener = event => {
+        if (!context.canAccessWindow(event.originalTarget.ownerGlobal)) {
+          return;
+        }
         let needed = [];
         if (event.type == "TabAttrModified") {
           let changed = event.detail.changed;
@@ -266,6 +274,10 @@ class TabsUpdateFilterEventManager extends EventManager {
         let {gBrowser} = browser.ownerGlobal;
         let tabElem = gBrowser.getTabForBrowser(browser);
         if (tabElem) {
+          if (!context.canAccessWindow(tabElem.ownerGlobal)) {
+            return;
+          }
+
           let changed = {status};
           if (url) {
             changed.url = url;
@@ -279,7 +291,7 @@ class TabsUpdateFilterEventManager extends EventManager {
         let {gBrowser} = message.target.ownerGlobal;
         let nativeTab = gBrowser.getTabForBrowser(message.target);
 
-        if (nativeTab) {
+        if (nativeTab && context.canAccessWindow(nativeTab.ownerGlobal)) {
           let tab = tabManager.getWrapper(nativeTab);
           fireForTab(tab, {isArticle: message.data.isArticle});
         }
@@ -342,6 +354,29 @@ class TabsUpdateFilterEventManager extends EventManager {
   }
 }
 
+function TabEventManager({context, name, event, listener}) {
+  let register = fire => {
+    let listener2 = (eventName, eventData, ...args) => {
+      if (!("isPrivate" in eventData)) {
+        throw new Error(`isPrivate property missing in tabTracker event "${eventName}"`);
+      }
+
+      if (eventData.isPrivate && !context.privateBrowsingAllowed) {
+        return;
+      }
+
+      listener(fire, eventData, ...args);
+    };
+
+    tabTracker.on(event, listener2);
+    return () => {
+      tabTracker.off(event, listener2);
+    };
+  };
+
+  return new EventManager({context, name, register}).api();
+}
+
 this.tabs = class extends ExtensionAPI {
   static onUpdate(id, manifest) {
     if (!manifest.permissions || !manifest.permissions.includes("tabHide")) {
@@ -364,10 +399,25 @@ this.tabs = class extends ExtensionAPI {
     let {tabManager, windowManager} = extension;
 
     function getTabOrActive(tabId) {
-      if (tabId !== null) {
-        return tabTracker.getTab(tabId);
+      let tab = tabId !== null ? tabTracker.getTab(tabId) : tabTracker.activeTab;
+      if (!context.canAccessWindow(tab.ownerGlobal)) {
+        throw new ExtensionError(tabId === null ? "Cannot access activeTab" :
+                                                  `Invalid tab ID: ${tabId}`);
       }
-      return tabTracker.activeTab;
+      return tab;
+    }
+
+    function getNativeTabsFromIDArray(tabIds) {
+      if (!Array.isArray(tabIds)) {
+        tabIds = [tabIds];
+      }
+      return tabIds.map(tabId => {
+        let tab = tabTracker.getTab(tabId);
+        if (!context.canAccessWindow(tab.ownerGlobal)) {
+          throw new ExtensionError(`Invalid tab ID: ${tabId}`);
+        }
+        return tab;
+      });
     }
 
     async function promiseTabWhenReady(tabId) {
@@ -377,6 +427,10 @@ this.tabs = class extends ExtensionAPI {
       } else {
         tab = tabManager.getWrapper(tabTracker.activeTab);
       }
+      if (!tab) {
+        throw new ExtensionError(tabId == null ?
+          "Cannot access activeTab" : `Invalid tab ID: ${tabId}`);
+      }
 
       await tabListener.awaitTabReady(tab.nativeTab);
 
@@ -385,95 +439,63 @@ this.tabs = class extends ExtensionAPI {
 
     let self = {
       tabs: {
-        onActivated: new EventManager({
+        onActivated: TabEventManager({
           context,
           name: "tabs.onActivated",
-          register: fire => {
-            let listener = (eventName, event) => {
-              fire.async(event);
-            };
-
-            tabTracker.on("tab-activated", listener);
-            return () => {
-              tabTracker.off("tab-activated", listener);
-            };
+          event: "tab-activated",
+          listener: (fire, event) => {
+            let {tabId, windowId, previousTabId, previousTabIsPrivate} = event;
+            if (previousTabIsPrivate && !context.privateBrowsingAllowed) {
+              previousTabId = undefined;
+            }
+            fire.async({tabId, previousTabId, windowId});
           },
-        }).api(),
+        }),
 
-        onCreated: new EventManager({
+        onCreated: TabEventManager({
           context,
           name: "tabs.onCreated",
-          register: fire => {
-            let listener = (eventName, event) => {
-              fire.async(tabManager.convert(event.nativeTab, event.currentTabSize));
-            };
-
-            tabTracker.on("tab-created", listener);
-            return () => {
-              tabTracker.off("tab-created", listener);
-            };
+          event: "tab-created",
+          listener: (fire, event) => {
+            fire.async(tabManager.convert(event.nativeTab, event.currentTabSize));
           },
-        }).api(),
+        }),
 
-        onHighlighted: new EventManager({
+        onHighlighted: TabEventManager({
           context,
           name: "tabs.onHighlighted",
-          register: fire => {
-            let listener = (eventName, event) => {
-              fire.async(event);
-            };
-
-            tabTracker.on("tabs-highlighted", listener);
-            return () => {
-              tabTracker.off("tabs-highlighted", listener);
-            };
+          event: "tabs-highlighted",
+          listener: (fire, event) => {
+            fire.async({tabIds: event.tabIds, windowId: event.windowId});
           },
-        }).api(),
+        }),
 
-        onAttached: new EventManager({
+        onAttached: TabEventManager({
           context,
           name: "tabs.onAttached",
-          register: fire => {
-            let listener = (eventName, event) => {
-              fire.async(event.tabId, {newWindowId: event.newWindowId, newPosition: event.newPosition});
-            };
-
-            tabTracker.on("tab-attached", listener);
-            return () => {
-              tabTracker.off("tab-attached", listener);
-            };
+          event: "tab-attached",
+          listener: (fire, event) => {
+            fire.async(event.tabId, {newWindowId: event.newWindowId, newPosition: event.newPosition});
           },
-        }).api(),
+        }),
 
-        onDetached: new EventManager({
+        onDetached: TabEventManager({
           context,
           name: "tabs.onDetached",
-          register: fire => {
-            let listener = (eventName, event) => {
-              fire.async(event.tabId, {oldWindowId: event.oldWindowId, oldPosition: event.oldPosition});
-            };
-
-            tabTracker.on("tab-detached", listener);
-            return () => {
-              tabTracker.off("tab-detached", listener);
-            };
+          event: "tab-detached",
+          listener: (fire, event) => {
+            fire.async(event.tabId, {oldWindowId: event.oldWindowId, oldPosition: event.oldPosition});
           },
-        }).api(),
+        }),
 
-        onRemoved: new EventManager({
+        onRemoved: TabEventManager({
           context,
           name: "tabs.onRemoved",
-          register: fire => {
-            let listener = (eventName, event) => {
-              fire.async(event.tabId, {windowId: event.windowId, isWindowClosing: event.isWindowClosing});
-            };
-
-            tabTracker.on("tab-removed", listener);
-            return () => {
-              tabTracker.off("tab-removed", listener);
-            };
+          event: "tab-removed",
+          listener: (fire, event) => {
+            fire.async(event.tabId, {windowId: event.windowId, isWindowClosing: event.isWindowClosing});
           },
-        }).api(),
+        }),
 
         onReplaced: new EventManager({
           context,
@@ -489,11 +511,13 @@ this.tabs = class extends ExtensionAPI {
           register: fire => {
             let moveListener = event => {
               let nativeTab = event.originalTarget;
-              fire.async(tabTracker.getId(nativeTab), {
-                windowId: windowTracker.getId(nativeTab.ownerGlobal),
-                fromIndex: event.detail,
-                toIndex: nativeTab._tPos,
-              });
+              if (context.canAccessWindow(nativeTab.ownerGlobal)) {
+                fire.async(tabTracker.getId(nativeTab), {
+                  windowId: windowTracker.getId(nativeTab.ownerGlobal),
+                  fromIndex: event.detail,
+                  toIndex: nativeTab._tPos,
+                });
+              }
             };
 
             windowTracker.addListener("TabMove", moveListener);
@@ -509,8 +533,10 @@ this.tabs = class extends ExtensionAPI {
           return new Promise((resolve, reject) => {
             let window = createProperties.windowId !== null ?
               windowTracker.getWindow(createProperties.windowId, context) :
-              windowTracker.topNormalWindow;
-
+              windowTracker.getTopNormalWindow(context);
+            if (!window || !context.canAccessWindow(window)) {
+              throw new Error("Not allowed to create tabs on the target window");
+            }
             if (!window.gBrowser) {
               let obs = (finishedWindow, topic, data) => {
                 if (finishedWindow != window) {
@@ -642,25 +668,15 @@ this.tabs = class extends ExtensionAPI {
           });
         },
 
-        async remove(tabs) {
-          if (!Array.isArray(tabs)) {
-            tabs = [tabs];
-          }
-
-          for (let tabId of tabs) {
-            let nativeTab = tabTracker.getTab(tabId);
+        async remove(tabIds) {
+          for (let nativeTab of getNativeTabsFromIDArray(tabIds)) {
             nativeTab.ownerGlobal.gBrowser.removeTab(nativeTab);
           }
         },
 
         async discard(tabIds) {
-          if (!Array.isArray(tabIds)) {
-            tabIds = [tabIds];
-          }
-          let tabs = tabIds.map(tabId => tabTracker.getTab(tabId));
-
-          for (let tab of tabs) {
-            tab.ownerGlobal.gBrowser.discardBrowser(tab.linkedBrowser);
+          for (let nativeTab of getNativeTabsFromIDArray(tabIds)) {
+            nativeTab.ownerGlobal.gBrowser.discardBrowser(nativeTab.linkedBrowser);
           }
         },
 
@@ -736,6 +752,7 @@ this.tabs = class extends ExtensionAPI {
               if (!successor) {
                 throw new ExtensionError("Invalid successorTabId");
               }
+              // This also ensures "privateness" matches.
               if (successor.ownerDocument !== nativeTab.ownerDocument) {
                 throw new ExtensionError("Successor tab must be in the same window as the tab being updated");
               }
@@ -798,7 +815,7 @@ this.tabs = class extends ExtensionAPI {
 
         async captureVisibleTab(windowId, options) {
           let window = windowId == null ?
-            windowTracker.topWindow :
+            windowTracker.getTopWindow(context) :
             windowTracker.getWindow(windowId, context);
 
           let tab = tabManager.wrapTab(window.gBrowser.selectedTab);
@@ -809,25 +826,21 @@ this.tabs = class extends ExtensionAPI {
 
         async detectLanguage(tabId) {
           let tab = await promiseTabWhenReady(tabId);
-
           return tab.sendMessage(context, "Extension:DetectLanguage");
         },
 
         async executeScript(tabId, details) {
           let tab = await promiseTabWhenReady(tabId);
-
           return tab.executeScript(context, details);
         },
 
         async insertCSS(tabId, details) {
           let tab = await promiseTabWhenReady(tabId);
-
           return tab.insertCSS(context, details);
         },
 
         async removeCSS(tabId, details) {
           let tab = await promiseTabWhenReady(tabId);
-
           return tab.removeCSS(context, details);
         },
 
@@ -839,7 +852,7 @@ this.tabs = class extends ExtensionAPI {
 
           let destinationWindow = null;
           if (moveProperties.windowId !== null) {
-            destinationWindow = windowTracker.getWindow(moveProperties.windowId);
+            destinationWindow = windowTracker.getWindow(moveProperties.windowId, context);
             // Fail on an invalid window.
             if (!destinationWindow) {
               return Promise.reject({message: `Invalid window ID: ${moveProperties.windowId}`});
@@ -856,8 +869,7 @@ this.tabs = class extends ExtensionAPI {
           let indexMap = new Map();
           let lastInsertion = new Map();
 
-          let tabs = tabIds.map(tabId => tabTracker.getTab(tabId));
-          for (let nativeTab of tabs) {
+          for (let nativeTab of getNativeTabsFromIDArray(tabIds)) {
             // If the window is not specified, use the window from the tab.
             let window = destinationWindow || nativeTab.ownerGlobal;
             let gBrowser = window.gBrowser;
@@ -911,7 +923,8 @@ this.tabs = class extends ExtensionAPI {
         },
 
         duplicate(tabId) {
-          let nativeTab = tabTracker.getTab(tabId);
+          // Schema requires tab id.
+          let nativeTab = getTabOrActive(tabId);
 
           let gBrowser = nativeTab.ownerGlobal.gBrowser;
           let newTab = gBrowser.duplicateTab(nativeTab);
@@ -1011,6 +1024,9 @@ this.tabs = class extends ExtensionAPI {
 
             // Store the zoom level for all existing tabs.
             for (let window of windowTracker.browserWindows()) {
+              if (!context.canAccessWindow(window)) {
+                continue;
+              }
               for (let nativeTab of window.gBrowser.tabs) {
                 let browser = nativeTab.linkedBrowser;
                 zoomLevels.set(browser, getZoomLevel(browser));
@@ -1019,7 +1035,9 @@ this.tabs = class extends ExtensionAPI {
 
             let tabCreated = (eventName, event) => {
               let browser = event.nativeTab.linkedBrowser;
-              zoomLevels.set(browser, getZoomLevel(browser));
+              if (!event.isPrivate || context.privateBrowsingAllowed) {
+                zoomLevels.set(browser, getZoomLevel(browser));
+              }
             };
 
 
@@ -1030,6 +1048,10 @@ this.tabs = class extends ExtensionAPI {
               // rather than on the <browser>.  But either way we have a node here.
               if (browser.nodeType == browser.DOCUMENT_NODE) {
                 browser = browser.docShell.chromeEventHandler;
+              }
+
+              if (!context.canAccessWindow(browser.ownerGlobal)) {
+                return;
               }
 
               let {gBrowser} = browser.ownerGlobal;
@@ -1249,9 +1271,8 @@ this.tabs = class extends ExtensionAPI {
           if (!tab.isInReaderMode && !tab.isArticle) {
             throw new ExtensionError("The specified tab cannot be placed into reader mode.");
           }
-          tab = getTabOrActive(tabId);
-
-          tab.linkedBrowser.messageManager.sendAsyncMessage("Reader:ToggleReaderMode");
+          let nativeTab = getTabOrActive(tabId);
+          nativeTab.linkedBrowser.messageManager.sendAsyncMessage("Reader:ToggleReaderMode");
         },
 
         moveInSuccession(tabIds, tabId, options) {
@@ -1266,6 +1287,9 @@ this.tabs = class extends ExtensionAPI {
 
           const referenceTab = tabTracker.getTab(tabId, null);
           let referenceWindow = referenceTab && referenceTab.ownerGlobal;
+          if (referenceWindow && !context.canAccessWindow(referenceWindow)) {
+            throw new ExtensionError(`Invalid tab ID: ${tabId}`);
+          }
           let previousTab, lastSuccessor;
           if (append) {
             previousTab = referenceTab;
@@ -1279,6 +1303,9 @@ this.tabs = class extends ExtensionAPI {
             const tab = tabTracker.getTab(tabId, null);
             if (tab === null) {
               continue;
+            }
+            if (!context.canAccessWindow(tab.ownerGlobal)) {
+              throw new ExtensionError(`Invalid tab ID: ${tabId}`);
             }
             if (referenceWindow === null) {
               referenceWindow = tab.ownerGlobal;
@@ -1310,12 +1337,7 @@ this.tabs = class extends ExtensionAPI {
             throw new ExtensionError(`tabs.show is currently experimental and must be enabled with the ${TABHIDE_PREFNAME} preference.`);
           }
 
-          if (!Array.isArray(tabIds)) {
-            tabIds = [tabIds];
-          }
-
-          for (let tabId of tabIds) {
-            let tab = tabTracker.getTab(tabId);
+          for (let tab of getNativeTabsFromIDArray(tabIds)) {
             if (tab.ownerGlobal) {
               tab.ownerGlobal.gBrowser.showTab(tab);
             }
@@ -1327,13 +1349,8 @@ this.tabs = class extends ExtensionAPI {
             throw new ExtensionError(`tabs.hide is currently experimental and must be enabled with the ${TABHIDE_PREFNAME} preference.`);
           }
 
-          if (!Array.isArray(tabIds)) {
-            tabIds = [tabIds];
-          }
-
           let hidden = [];
-          let tabs = tabIds.map(tabId => tabTracker.getTab(tabId));
-          for (let tab of tabs) {
+          for (let tab of getNativeTabsFromIDArray(tabIds)) {
             if (tab.ownerGlobal && !tab.hidden) {
               tab.ownerGlobal.gBrowser.hideTab(tab, extension.id);
               if (tab.hidden) {
@@ -1357,6 +1374,10 @@ this.tabs = class extends ExtensionAPI {
             windowId = Window.WINDOW_ID_CURRENT;
           }
           let window = windowTracker.getWindow(windowId, context);
+          if (!context.canAccessWindow(window)) {
+            throw new ExtensionError(`Invalid window ID: ${windowId}`);
+          }
+
           if (!Array.isArray(tabs)) {
             tabs = [tabs];
           } else if (tabs.length == 0) {
