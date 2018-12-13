@@ -679,11 +679,12 @@ nsresult txEXSLTRegExFunctionCall::evaluate(txIEvalContext* aContext,
   JSAutoRealm ar(cx, sandbox);
   ErrorResult er;
   GlobalObject global(cx, sandbox);
+  Optional<JS::HandleObject> targetObj(cx, sandbox);
   JS::RootedObject obj(cx);
   ChromeUtils::Import(
       global,
       NS_LITERAL_STRING("resource://gre/modules/txEXSLTRegExFunctions.jsm"),
-      Optional<JS::HandleObject>(), &obj, er);
+      targetObj, &obj, er);
   MOZ_ALWAYS_TRUE(!er.Failed());
 
   JS::RootedString str(

@@ -1,3 +1,4 @@
+/* globals finishTest */
 class XFoo extends HTMLElement {
   constructor() {
     super();
@@ -7,7 +8,7 @@ class XFoo extends HTMLElement {
   connectedCallback() {
     finishTest(this.magicNumber === 42);
   }
-};
+}
 customElements.define("x-foo", XFoo);
 
 document.firstChild.appendChild(document.createElement("x-foo"));

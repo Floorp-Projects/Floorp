@@ -21,7 +21,8 @@ ChromeUtils.defineModuleGetter(this, "AsyncShutdown",
   "resource://gre/modules/AsyncShutdown.jsm");
 ChromeUtils.defineModuleGetter(this, "BinarySearch",
   "resource://gre/modules/BinarySearch.jsm");
-
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 const ACTION_ID_BOOKMARK = "bookmark";
 const ACTION_ID_BOOKMARK_SEPARATOR = "bookmarkSeparator";
@@ -523,6 +524,8 @@ var PageActions = {
  *        clicked.
  * @param wantsSubview (bool, optional)
  *        Pass true to make an action that shows a panel subview when clicked.
+ * @param disablePrivateBrowsing (bool, optional)
+ *        Pass true to prevent the action from showing in a private browsing window.
  */
 function Action(options) {
   setProperties(this, options, {
@@ -550,6 +553,7 @@ function Action(options) {
     urlbarIDOverride: false,
     wantsIframe: false,
     wantsSubview: false,
+    disablePrivateBrowsing: false,
 
     // private
 
@@ -616,6 +620,25 @@ Action.prototype = {
    */
   get id() {
     return this._id;
+  },
+
+  get disablePrivateBrowsing() {
+    return !!this._disablePrivateBrowsing;
+  },
+
+  /**
+   * Verifies that the action can be shown in a private window.  For
+   * extensions, verifies the extension has access to the window.
+   */
+  canShowInWindow(browserWindow) {
+    if (this._extensionID) {
+      let policy = WebExtensionPolicy.getByID(this._extensionID);
+      if (!policy.canAccessWindow(browserWindow)) {
+        return false;
+      }
+    }
+    return !(this.disablePrivateBrowsing &&
+             PrivateBrowsingUtils.isWindowPrivate(browserWindow));
   },
 
   /**
@@ -1021,7 +1044,8 @@ Action.prototype = {
    *         disabled.
    */
   shouldShowInPanel(browserWindow) {
-    return !this.__transient || !this.getDisabled(browserWindow);
+    return (!this.__transient || !this.getDisabled(browserWindow)) &&
+            this.canShowInWindow(browserWindow);
   },
 
   /**
@@ -1033,7 +1057,8 @@ Action.prototype = {
    *         should be shown if it's both pinned and not disabled.
    */
   shouldShowInUrlbar(browserWindow) {
-    return this.pinnedToUrlbar && !this.getDisabled(browserWindow);
+    return (this.pinnedToUrlbar && !this.getDisabled(browserWindow)) &&
+            this.canShowInWindow(browserWindow);
   },
 
   get _isBuiltIn() {

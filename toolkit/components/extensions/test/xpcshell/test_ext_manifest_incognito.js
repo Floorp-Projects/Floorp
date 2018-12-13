@@ -15,13 +15,24 @@ add_task(async function test_manifest_incognito() {
         "Should have the expected incognito string");
 
   normalized = await ExtensionTestUtils.normalizeManifest({
+    "incognito": "not_allowed",
+  });
+
+  equal(normalized.error,
+        'Error processing incognito: Invalid enumeration value "not_allowed"',
+        "Should have an error");
+  Assert.deepEqual(normalized.errors, [], "Should not have a warning");
+  equal(normalized.value, undefined,
+        "Invalid incognito string should be undefined");
+
+  normalized = await ExtensionTestUtils.normalizeManifest({
     "incognito": "split",
   });
 
-  equal(normalized.error, undefined, "Should not have an error");
-  Assert.deepEqual(normalized.errors,
-                   ['Error processing incognito: Invalid enumeration value "split"'],
-                   "Should have the expected warning");
-  equal(normalized.value.incognito, null,
-        "Invalid incognito string should be omitted");
+  equal(normalized.error,
+        'Error processing incognito: Invalid enumeration value "split"',
+        "Should have an error");
+  Assert.deepEqual(normalized.errors, [], "Should not have a warning");
+  equal(normalized.value, undefined,
+        "Invalid incognito string should be undefined");
 });

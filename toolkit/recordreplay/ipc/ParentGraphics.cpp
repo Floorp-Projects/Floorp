@@ -93,11 +93,12 @@ static void InitGraphicsSandbox() {
 
   ErrorResult er;
   dom::GlobalObject global(cx, *gGraphicsSandbox);
+  dom::Optional<JS::HandleObject> targetObj(cx, *gGraphicsSandbox);
   RootedObject obj(cx);
   dom::ChromeUtils::Import(
       global,
       NS_LITERAL_STRING("resource://devtools/server/actors/replay/graphics.js"),
-      dom::Optional<HandleObject>(), &obj, er);
+      targetObj, &obj, er);
   MOZ_RELEASE_ASSERT(!er.Failed());
 }
 

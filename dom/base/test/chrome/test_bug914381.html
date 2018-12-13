@@ -16,15 +16,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650776
 </div>
 <pre id="test">
 <script type="application/javascript">
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function createFileWithData(fileData) {
-  var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-  var testFile = dirSvc.get("ProfD", Ci.nsIFile);
+  var testFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
   testFile.append("testBug914381");
 
   var outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
   outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
-                 0666, 0);
+                 0o666, 0);
   outStream.write(fileData, fileData.length);
   outStream.close();
 
