@@ -35,6 +35,7 @@
 #include "MediaManager.h"
 #include "MediaMetadataManager.h"
 #include "MediaResource.h"
+#include "MediaShutdownManager.h"
 #include "MediaSourceDecoder.h"
 #include "MediaStreamError.h"
 #include "MediaStreamGraph.h"
@@ -3451,6 +3452,12 @@ HTMLMediaElement::HTMLMediaElement(
 
   RegisterActivityObserver();
   NotifyOwnerDocumentActivityChanged();
+
+  // We initialize the MediaShutdownManager as the HTMLMediaElement is always
+  // constructed on the main thread, and not during stable state.
+  // (MediaShutdownManager make use of nsIAsyncShutdownClient which is written
+  // in JS)
+  MediaShutdownManager::InitStatics();
 
   mShutdownObserver->Subscribe(this);
 }
