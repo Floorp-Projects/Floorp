@@ -1225,22 +1225,22 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   }
 
   CodeOffsetJump jumpWithPatch(RepatchLabel* label) {
+    // jumpWithPatch() is only used by IonCacheIRCompiler::emitReturnFromIC().
+    // The RepatchLabel is unbound and unused.
+    MOZ_ASSERT(!label->used());
+    MOZ_ASSERT(!label->bound());
+
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch64 = temps.AcquireX();
+
     ARMBuffer::PoolEntry pe;
     BufferOffset load_bo;
 
-    // Does not overwrite condition codes from the caller.
-    {
-      vixl::UseScratchRegisterScope temps(this);
-      const ARMRegister scratch64 = temps.AcquireX();
-      load_bo = immPool64(scratch64, (uint64_t)label, &pe);
-    }
-
-    MOZ_ASSERT(!label->bound());
-
-    nop();
+    // FIXME: This load is currently unused.
+    load_bo = immPool64(scratch64, (uint64_t)label, &pe);
     BufferOffset branch_bo = b(-1, LabelDoc());
-    label->use(branch_bo.getOffset());
 
+    label->use(branch_bo.getOffset());
     return CodeOffsetJump(load_bo.getOffset(), pe.index());
   }
 
