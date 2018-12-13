@@ -305,11 +305,6 @@ WebConsoleClient.prototype = {
    * See evaluateJS for parameter and response information.
    */
   evaluateJSAsync: function(string, onResponse, options = {}) {
-    // Pre-37 servers don't support async evaluation.
-    if (!this.traits.evaluateJSAsync) {
-      return this.evaluateJS(string, onResponse, options);
-    }
-
     const packet = {
       to: this._actor,
       type: "evaluateJSAsync",

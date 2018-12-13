@@ -16,7 +16,6 @@
 var EXPORTED_SYMBOLS = ["ManifestMessagesChild"];
 
 ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "ManifestObtainer",
                                "resource://gre/modules/ManifestObtainer.jsm");
@@ -113,7 +112,7 @@ function serializeError(aError) {
     "columnNumber": aError.columnNumber,
     "stack": aError.stack,
     "message": aError.message,
-    "name": aError.name
+    "name": aError.name,
   };
   return clone;
 }
@@ -122,6 +121,6 @@ function makeMsgResponse(aId) {
   return {
     id: aId,
     success: false,
-    result: undefined
+    result: undefined,
   };
 }

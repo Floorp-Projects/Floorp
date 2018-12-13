@@ -51,8 +51,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=402788
     is(testRegisterHandler(true, "fweb+oo", "http://remotehost:8888/%s", "Foo handler"), false, "registering a web+foo protocol handler with a different host should not work");
 
     // restriction to http(s) for the uri of the handler (bug 401343)
-    // https should work (http already tested in the generic case)
-    is(testRegisterHandler(true, "web+foo", "https://mochi.test:8888/%s", "Foo handler"), true, "registering a web+foo protocol handler with https scheme should work");
+    // http is already tested in the generic case
     // ftp should not work
     is(testRegisterHandler(true, "web+foo", "ftp://mochi.test:8888/%s", "Foo handler"), false, "registering a web+foo protocol handler with ftp scheme should not work");
     // chrome should not work

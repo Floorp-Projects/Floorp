@@ -243,6 +243,11 @@ impl<T: RenderTarget> RenderTargetList<T> {
             }
         };
 
+        if alloc_size.is_empty_or_negative() && self.targets.is_empty() {
+            // push an unused target here, only if we don't have any
+            self.targets.push(T::new(self.screen_size));
+        }
+
         self.targets[free_rect_slice.0 as usize]
             .add_used(DeviceIntRect::new(origin, alloc_size));
 

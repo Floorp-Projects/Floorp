@@ -370,13 +370,6 @@ class MochitestArguments(ArgumentContainer):
           "default": False,
           "help": "Delay execution between tests.",
           }],
-        [["--metro-immersive"],
-         {"action": "store_true",
-          "dest": "immersiveMode",
-          "default": False,
-          "help": "Launches tests in an immersive browser.",
-          "suppress": True,
-          }],
         [["--httpd-path"],
          {"dest": "httpdPath",
           "default": None,
@@ -793,15 +786,6 @@ class MochitestArguments(ArgumentContainer):
                 '/')
             if options.testingModulesDir[-1] != '/':
                 options.testingModulesDir += '/'
-
-        if options.immersiveMode:
-            if not mozinfo.isWin:
-                parser.error("immersive is only supported on Windows 8 and up.")
-            options.immersiveHelperPath = os.path.join(
-                options.utilityPath, "metrotestharness.exe")
-            if not os.path.exists(options.immersiveHelperPath):
-                parser.error("%s not found, cannot launch immersive tests." %
-                             options.immersiveHelperPath)
 
         if options.runUntilFailure:
             if not options.repeat:

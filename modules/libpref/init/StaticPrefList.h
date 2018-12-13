@@ -860,6 +860,13 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Are dynamic reflow roots enabled?
+VARCACHE_PREF(
+   "layout.dynamic-reflow-roots.enabled",
+   layout_dynamic_reflow_roots_enabled,
+  bool, true
+)
+
 //---------------------------------------------------------------------------
 // JavaScript prefs
 //---------------------------------------------------------------------------

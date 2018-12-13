@@ -139,3 +139,59 @@ fn canonicalize_language_tag(token: &mut [u8]) {
         };
     }
 }
+
+#[no_mangle]
+#[allow(non_snake_case)]
+pub extern "C" fn rust_net_is_valid_ipv4_addr<'a>(addr: &'a nsACString) -> bool {
+    is_valid_ipv4_addr(addr)
+}
+
+#[inline]
+fn try_apply_digit(current_octet: u8, digit_to_apply: u8) -> Option<u8> {
+    current_octet.checked_mul(10)?.checked_add(digit_to_apply)
+}
+
+pub fn is_valid_ipv4_addr<'a>(addr: &'a [u8]) -> bool {
+    let mut current_octet: Option<u8> = None;
+    let mut dots: u8 = 0;
+    for c in addr {
+        let c = *c as char;
+        match c {
+            '.' => {
+                match current_octet {
+                    None => {
+                        // starting an octet with a . is not allowed
+                        return false;
+                    }
+                    Some(_) => {
+                        dots = dots + 1;
+                        current_octet = None;
+                    }
+                }
+            }
+            // The character is not a digit
+            no_digit if no_digit.to_digit(10).is_none() => { return false; }
+            digit => {
+                match current_octet {
+                    None => {
+                        // Unwrap is sound because it has been checked in the previous arm
+                        current_octet = Some(digit.to_digit(10).unwrap() as u8);
+                    }
+                    Some(octet) => {
+                        if let Some(0) = current_octet {
+                            // Leading 0 is not allowed
+                            return false;
+                        }
+                        if let Some(applied) = try_apply_digit(octet, digit.to_digit(10).unwrap() as u8) {
+                            current_octet = Some(applied);
+                        } else {
+                            // Multiplication or Addition overflowed
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    dots == 3 && current_octet.is_some()
+}

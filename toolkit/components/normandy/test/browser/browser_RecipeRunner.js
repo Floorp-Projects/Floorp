@@ -10,6 +10,8 @@ ChromeUtils.import("resource://normandy/lib/ActionsManager.jsm", this);
 ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm", this);
 ChromeUtils.import("resource://normandy/lib/Uptake.jsm", this);
 
+const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
+
 add_task(async function getFilterContext() {
   const recipe = {id: 17, arguments: {foo: "bar"}, unrelated: false};
   const context = RecipeRunner.getFilterContext(recipe);
@@ -167,6 +169,41 @@ decorate_task(
       reportRunnerStub.args,
       [[Uptake.RUNNER_SUCCESS]],
       "RecipeRunner should report uptake telemetry",
+    );
+  }
+);
+
+decorate_task(
+  withPrefEnv({
+    set: [
+      ["app.normandy.remotesettings.enabled", true],
+    ],
+  }),
+  withStub(ActionsManager.prototype, "runRecipe"),
+  withStub(ActionsManager.prototype, "fetchRemoteActions"),
+  withStub(ActionsManager.prototype, "finalize"),
+  async function testReadFromRemoteSettings(
+    runRecipeStub,
+    fetchRemoteActionsStub,
+    finalizeStub,
+  ) {
+    const matchRecipe = { id: "match", action: "matchAction", filter_expression: "true", _status: "synced", enabled: true };
+    const noMatchRecipe = { id: "noMatch", action: "noMatchAction", filter_expression: "false", _status: "synced", enabled: true };
+    const missingRecipe = { id: "missing", action: "missingAction", filter_expression: "true", _status: "synced", enabled: true };
+
+    const rsCollection = await RemoteSettings("normandy-recipes").openCollection();
+    await rsCollection.create(matchRecipe, { synced: true });
+    await rsCollection.create(noMatchRecipe, { synced: true });
+    await rsCollection.create(missingRecipe, { synced: true });
+    await rsCollection.db.saveLastModified(42);
+    rsCollection.db.close();
+
+    await RecipeRunner.run();
+
+    Assert.deepEqual(
+      runRecipeStub.args,
+      [[matchRecipe], [missingRecipe]],
+      "recipe with matching filters should be executed",
     );
   }
 );
