@@ -945,30 +945,39 @@
                 selectedTab = selectedTab.getBoundingClientRect();
                 selectedTab = {left: selectedTab.left, right: selectedTab.right};
               }
-              delete this._lastTabToScrollIntoView;
-              delete this._backgroundTabScrollPromise;
               return [
+                this._lastTabToScrollIntoView,
                 this.arrowScrollbox.scrollClientRect,
                 {left: lastTabRect.left, right: lastTabRect.right},
                 selectedTab,
               ];
-            }).then(([scrollRect, tab, selected]) => {
+            }).then(([tabUsed, scrollRect, tabRect, selectedRect]) => {
+              // First off, remove the promise so we can re-enter if necessary.
+              delete this._backgroundTabScrollPromise;
+              // Then, if the layout info isn't for the last-scrolled-to-tab, re-run
+              // the code above to get layout info for *that* tab, and don't do
+              // anything here, as we really just want to run this for the last-opened tab.
+              if (this._lastTabToScrollIntoView != tabUsed) {
+                this._notifyBackgroundTab(this._lastTabToScrollIntoView);
+                return;
+              }
+              delete this._lastTabToScrollIntoView;
               // Is the new tab already completely visible?
-              if (scrollRect.left <= tab.left && tab.right <= scrollRect.right)
+              if (scrollRect.left <= tabRect.left && tabRect.right <= scrollRect.right)
                 return;
 
               if (this.arrowScrollbox.smoothScroll) {
                 // Can we make both the new tab and the selected tab completely visible?
-                if (!selected ||
-                    Math.max(tab.right - selected.left, selected.right - tab.left) <=
+                if (!selectedRect ||
+                    Math.max(tabRect.right - selectedRect.left, selectedRect.right - tabRect.left) <=
                       scrollRect.width) {
                   this.arrowScrollbox.ensureElementIsVisible(aTab);
                   return;
                 }
 
                 this.arrowScrollbox.scrollByPixels(RTL_UI ?
-                                                     selected.right - scrollRect.right :
-                                                     selected.left - scrollRect.left);
+                                                     selectedRect.right - scrollRect.right :
+                                                     selectedRect.left - scrollRect.left);
               }
 
               if (!this._animateElement.hasAttribute("highlight")) {
