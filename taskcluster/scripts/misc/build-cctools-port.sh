@@ -49,6 +49,8 @@ make -j `nproc --all` install
 strip $CROSSTOOLS_BUILD_DIR/bin/*
 # cctools-port doesn't include dsymutil but clang will need to find it.
 cp $CLANG_DIR/bin/dsymutil $CROSSTOOLS_BUILD_DIR/bin/x86_64-apple-darwin11-dsymutil
+# various build scripts based on cmake want to find `lipo` without a prefix
+cp $CROSSTOOLS_BUILD_DIR/bin/x86_64-apple-darwin11-lipo $CROSSTOOLS_BUILD_DIR/bin/lipo
 
 # Put a tarball in the artifacts dir
 mkdir -p $UPLOAD_DIR
