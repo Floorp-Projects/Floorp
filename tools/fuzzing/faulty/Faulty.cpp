@@ -9,7 +9,12 @@
 #include <cmath>
 #include <fstream>
 #include <prinrval.h>
+#ifdef _WINDOWS
+#include <process.h>
+#define getpid _getpid
+#else
 #include <unistd.h>
+#endif
 #include "base/string_util.h"
 #include "FuzzingMutate.h"
 #include "FuzzingTraits.h"
@@ -32,6 +37,11 @@
 #include "nsXULAppAPI.h"
 #include "prenv.h"
 
+#ifdef IsLoggingEnabled
+// This is defined in the Windows SDK urlmon.h
+#undef IsLoggingEnabled
+#endif
+
 namespace mozilla {
 namespace ipc {
 
@@ -41,80 +51,16 @@ const unsigned int Faulty::sDefaultProbability = Faulty::DefaultProbability();
 const bool Faulty::sIsLoggingEnabled = Faulty::Logging();
 
 /**
- * RandomNumericValue generates negative and positive integrals.
- */
-template <typename T>
-T RandomIntegral() {
-  static_assert(mozilla::IsIntegral<T>::value == true,
-                "T must be an integral type");
-  double r = static_cast<double>(random() % ((sizeof(T) * CHAR_BIT) + 1));
-  T x = static_cast<T>(pow(2.0, r)) - 1;
-  if (std::numeric_limits<T>::is_signed && random() % 2 == 0) {
-    return (x * -1) - 1;
-  }
-  return x;
-}
-
-/**
- * RandomNumericLimit returns either the min or max limit of an arithmetic
- * data type.
- */
-template <typename T>
-T RandomNumericLimit() {
-  static_assert(mozilla::IsArithmetic<T>::value == true,
-                "T must be an arithmetic type");
-  return random() % 2 == 0 ? std::numeric_limits<T>::min()
-                           : std::numeric_limits<T>::max();
-}
-
-/**
- * RandomIntegerRange returns a random integral within a user defined range.
- */
-template <typename T>
-T RandomIntegerRange(T min, T max) {
-  static_assert(mozilla::IsIntegral<T>::value == true,
-                "T must be an integral type");
-  MOZ_ASSERT(min < max);
-  return static_cast<T>((random() % (max - min + 1)) + min);
-}
-
-/**
- * RandomFloatingPointRange returns a random floating-point number within a
- * user defined range.
- */
-template <typename T>
-T RandomFloatingPointRange(T min, T max) {
-  static_assert(mozilla::IsFloatingPoint<T>::value == true,
-                "T must be a floating point type");
-  MOZ_ASSERT(min < max);
-  T x = static_cast<T>(random()) / static_cast<T>(RAND_MAX);
-  return min + x * (max - min);
-}
-
-/**
- * RandomFloatingPoint returns a random floating-point number.
- */
-template <typename T>
-T RandomFloatingPoint() {
-  static_assert(mozilla::IsFloatingPoint<T>::value == true,
-                "T must be a floating point type");
-  int radix = RandomIntegerRange<int>(std::numeric_limits<T>::min_exponent,
-                                      std::numeric_limits<T>::max_exponent);
-  T x = static_cast<T>(pow(2.0, static_cast<double>(radix)));
-  return x * RandomFloatingPointRange<T>(0.0, 10.0);
-}
-
-/**
  * FuzzIntegralType mutates an incercepted integral type of a pickled message.
  */
 template <typename T>
 void FuzzIntegralType(T* v, bool largeValues) {
   static_assert(mozilla::IsIntegral<T>::value == true,
                 "T must be an integral type");
-  switch (random() % 6) {
+  switch (FuzzingTraits::Random(6)) {
     case 0:
       if (largeValues) {
-        (*v) = RandomIntegral<T>();
+        (*v) = RandomInteger<T>();
         break;
       }
       MOZ_FALLTHROUGH;
@@ -132,7 +78,7 @@ void FuzzIntegralType(T* v, bool largeValues) {
       }
       MOZ_FALLTHROUGH;
     default:
-      switch (random() % 2) {
+      switch (FuzzingTraits::Random(2)) {
         case 0:
           // Prevent underflow
           if (*v != std::numeric_limits<T>::min()) {
@@ -158,7 +104,7 @@ template <typename T>
 void FuzzFloatingPointType(T* v, bool largeValues) {
   static_assert(mozilla::IsFloatingPoint<T>::value == true,
                 "T must be a floating point type");
-  switch (random() % 6) {
+  switch (FuzzingTraits::Random(6)) {
     case 0:
       if (largeValues) {
         (*v) = RandomNumericLimit<T>();
@@ -182,7 +128,7 @@ void FuzzFloatingPointType(T* v, bool largeValues) {
  */
 template <typename T>
 void FuzzStringType(T& v, const T& literal1, const T& literal2) {
-  switch (random() % 5) {
+  switch (FuzzingTraits::Random(5)) {
     case 4:
       v = v + v;
       MOZ_FALLTHROUGH;
@@ -233,7 +179,7 @@ Faulty::Faulty()
         randomSeed = static_cast<unsigned long>(n);
       }
     }
-    srandom(randomSeed);
+    FuzzingTraits::rng.seed(randomSeed);
 
     /* Setup directory for dumping messages. */
     mMessagePath = PR_GetEnv("FAULTY_MESSAGE_PATH");
@@ -348,6 +294,7 @@ Faulty& Faulty::instance() {
 //
 
 void Faulty::MaybeCollectAndClosePipe(int aPipe, unsigned int aProbability) {
+#ifndef _WINDOWS
   if (!mFuzzPipes) {
     return;
   }
@@ -369,6 +316,7 @@ void Faulty::MaybeCollectAndClosePipe(int aPipe, unsigned int aProbability) {
     FAULTY_LOG("Pipe status after attempt to close: %d", errno);
     mFds.erase(it);
   }
+#endif
 }
 
 //
@@ -726,12 +674,14 @@ std::vector<uint8_t> Faulty::GetDataFromIPCMessage(IPC::Message* aMsg) {
 
 // static
 void Faulty::CopyFDs(IPC::Message* aDstMsg, IPC::Message* aSrcMsg) {
+#ifndef _WINDOWS
   FileDescriptorSet* dstFdSet = aDstMsg->file_descriptor_set();
   FileDescriptorSet* srcFdSet = aSrcMsg->file_descriptor_set();
   for (size_t i = 0; i < srcFdSet->size(); i++) {
     int fd = srcFdSet->GetDescriptorAt(i);
     dstFdSet->Add(fd);
   }
+#endif
 }
 
 IPC::Message* Faulty::MutateIPCMessage(const char* aChannel, IPC::Message* aMsg,
@@ -785,10 +735,13 @@ IPC::Message* Faulty::MutateIPCMessage(const char* aChannel, IPC::Message* aMsg,
         data.at(pos) = RandomIntegerRange<uint8_t>(0, 1);
         break;
       case 2:
-        data.at(pos) ^= (1 << RandomIntegerRange<uint8_t>(0, 8));
+        data.at(pos) ^= (1 << FuzzingTraits::Random(9));
+        break;
+      case 3:
+        data.at(pos) = RandomIntegerRange<uint8_t>(254, 255);
         break;
       default:
-        data.at(pos) = RandomIntegerRange<uint8_t>(255, 255);
+        data.at(pos) = RandomIntegerRange<uint8_t>(0, 255);
     }
   }
 
