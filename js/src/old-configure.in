@@ -556,8 +556,6 @@ case "$host" in
     ;;
 esac
 
-MOZ_DOING_LTO(lto_is_enabled)
-
 dnl ========================================================
 dnl Add optional and non-optional hardening flags from toolchain.configure
 dnl ========================================================
@@ -593,11 +591,9 @@ case "$target" in
     fi
     LDFLAGS=$_SAVE_LDFLAGS
 
-    if test "x$lto_is_enabled" = "xyes"; then
-        echo "Skipping -dead_strip because lto is enabled."
     dnl DTrace and -dead_strip don't interact well. See bug 403132.
     dnl ===================================================================
-    elif test "x$enable_dtrace" = "xyes"; then
+    if test "x$enable_dtrace" = "xyes"; then
         echo "Skipping -dead_strip because DTrace is enabled. See bug 403132."
     else
         dnl check for the presence of the -dead_strip linker flag
