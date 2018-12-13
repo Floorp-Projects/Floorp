@@ -14,6 +14,7 @@ const STARTUP_MODULES = [
   // Otherwise the data comes from the startup cache. We should test for
   // this.
   "resource://gre/modules/ExtensionPermissions.jsm",
+  "resource://gre/modules/ExtensionProcessScript.jsm",
   "resource://gre/modules/ExtensionUtils.jsm",
   "resource://gre/modules/ExtensionTelemetry.jsm",
 ];
