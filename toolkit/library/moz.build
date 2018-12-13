@@ -65,7 +65,8 @@ def Libxul(name, output_category=None):
     # the linker script is given after crtbegin.o, and even past that, replaces
     # the default section rules with those from the script instead of
     # supplementing them. Which leads to a lib with a huge load of sections.
-    if CONFIG['OS_TARGET'] not in ('OpenBSD', 'WINNT') and CONFIG['LD_IS_BFD']:
+    if CONFIG['OS_TARGET'] not in ('OpenBSD', 'WINNT') and \
+            CONFIG['LINKER_KIND'] == 'bfd':
         LDFLAGS += [TOPSRCDIR + '/toolkit/library/StaticXULComponents.ld']
 
     Libxul_defines()
