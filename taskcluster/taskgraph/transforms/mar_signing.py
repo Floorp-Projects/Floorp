@@ -13,6 +13,7 @@ from taskgraph.util.attributes import copy_attributes_from_dependent_job, sorted
 from taskgraph.util.scriptworker import (
     get_signing_cert_scope_per_platform,
     get_worker_type_for_scope,
+    get_autograph_format_scope,
 )
 from taskgraph.util.partials import get_balrog_platform_name, get_partials_artifacts
 from taskgraph.util.taskcluster import get_artifact_prefix
@@ -130,8 +131,9 @@ def make_task_description(config, jobs):
         signing_cert_scope = get_signing_cert_scope_per_platform(
             build_platform, is_nightly, config
         )
+        autograph_hash_format_scope = get_autograph_format_scope(config)
 
-        scopes = [signing_cert_scope, 'project:releng:signing:format:autograph_hash_only_mar384']
+        scopes = [signing_cert_scope, autograph_hash_format_scope]
         if any("mar" in upstream_details["formats"] for upstream_details in upstream_artifacts):
             scopes.append('project:releng:signing:format:mar')
 
