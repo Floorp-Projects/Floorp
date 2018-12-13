@@ -388,3 +388,15 @@ this.recipeFactory = function(overrides = {}) {
     arguments: overrides.arguments || {},
   }, overrides);
 };
+
+function mockLogger() {
+  const logStub = sinon.stub();
+  logStub.fatal = sinon.stub();
+  logStub.error = sinon.stub();
+  logStub.warn = sinon.stub();
+  logStub.info = sinon.stub();
+  logStub.config = sinon.stub();
+  logStub.debug = sinon.stub();
+  logStub.trace = sinon.stub();
+  return logStub;
+}
