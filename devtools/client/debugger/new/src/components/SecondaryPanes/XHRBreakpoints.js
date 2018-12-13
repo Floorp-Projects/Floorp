@@ -38,6 +38,12 @@ type State = {
   focused: boolean
 };
 
+// At present, the "Pause on any URL" checkbox creates an xhrBreakpoint
+// of "ANY" with no path, so we can remove that before creating the list
+function getExplicitXHRBreakpoints(xhrBreakpoints) {
+  return xhrBreakpoints.filter(bp => bp.path !== "");
+}
+
 class XHRBreakpoints extends Component<Props, State> {
   _input: ?HTMLInputElement;
 
@@ -207,10 +213,7 @@ class XHRBreakpoints extends Component<Props, State> {
 
   renderBreakpoints = () => {
     const { showInput, xhrBreakpoints } = this.props;
-
-    // At present, the "Pause on any URL" checkbox creates an xhrBreakpoint
-    // of "ANY" with no path, so we can remove that before creating the list
-    const explicitXhrBreakpoints = xhrBreakpoints.filter(bp => bp.path !== "");
+    const explicitXhrBreakpoints = getExplicitXHRBreakpoints(xhrBreakpoints);
 
     return (
       <ul className="pane expressions-list">
@@ -223,11 +226,12 @@ class XHRBreakpoints extends Component<Props, State> {
 
   renderCheckbox = () => {
     const { shouldPauseOnAny, togglePauseOnAny, xhrBreakpoints } = this.props;
+    const explicitXhrBreakpoints = getExplicitXHRBreakpoints(xhrBreakpoints);
 
     return (
       <div
         className={classnames("breakpoints-exceptions-options", {
-          empty: xhrBreakpoints.size === 0
+          empty: explicitXhrBreakpoints.size === 0
         })}
       >
         <ExceptionOption

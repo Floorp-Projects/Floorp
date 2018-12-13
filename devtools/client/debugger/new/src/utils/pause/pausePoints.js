@@ -42,15 +42,20 @@ export function formatPausePoints(text: string, pausePoints: PausePoints) {
   return lines.join("\n");
 }
 
-export async function mapPausePoints(pausePoints, iteratee) {
+export async function mapPausePoints<T>(
+  pausePoints: PausePoints,
+  iteratee: PausePoint => T
+) {
   const results = await Promise.all(convertToList(pausePoints).map(iteratee));
 
+  const newPausePoints = {};
   for (const line in pausePoints) {
     const linePoints = pausePoints[line];
+    const newLinePoints = (newPausePoints[line] = {});
     for (const column in linePoints) {
-      linePoints[column] = results.shift();
+      newLinePoints[column] = results.shift();
     }
   }
 
-  return pausePoints;
+  return newPausePoints;
 }

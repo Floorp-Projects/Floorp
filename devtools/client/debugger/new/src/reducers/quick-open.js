@@ -12,12 +12,7 @@ import { parseQuickOpenQuery } from "../utils/quick-open";
 import type { Action } from "../actions/types";
 import type { Record } from "../utils/makeRecord";
 
-export type QuickOpenType =
-  | "sources"
-  | "functions"
-  | "variables"
-  | "goto"
-  | "gotoSource";
+export type QuickOpenType = "sources" | "functions" | "goto" | "gotoSource";
 
 type QuickOpenState = {
   enabled: boolean,

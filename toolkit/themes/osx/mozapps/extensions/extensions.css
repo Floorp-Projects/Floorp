@@ -19,7 +19,7 @@
 }
 
 #header-utils-btn > .toolbarbutton-menu-dropmarker {
-  list-style-image: url("chrome://mozapps/skin/extensions/toolbarbutton-dropmarker.png");
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
   padding: 0;
   margin-inline-start: 2px;
 }
