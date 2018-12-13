@@ -179,7 +179,7 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
-// Whehter Mozilla specific "text" event should be dispatched only in the
+// Whether Mozilla specific "text" event should be dispatched only in the
 // system group or not in content.
 VARCACHE_PREF(
   "dom.compositionevent.text.dispatch_only_system_group_in_content",
