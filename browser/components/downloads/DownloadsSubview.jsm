@@ -365,11 +365,11 @@ DownloadsSubview.Button = class extends DownloadsViewUI.DownloadElementShell {
     super();
     this.download = download;
 
-    this.element = document.createElement("toolbarbutton");
+    this.element = document.createElement("hbox");
     this.element._shell = this;
 
-    this.element.classList.add("subviewbutton", "subviewbutton-iconic", "download",
-      "download-state");
+    this.element.classList.add("subviewbutton", "subviewbutton-iconic",
+      "download", "download-state", "navigable");
 
     let hover = event => {
       if (event.originalTarget.classList.contains("action-button")) {
