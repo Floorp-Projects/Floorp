@@ -975,6 +975,8 @@ void LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   mProfilerScreenshotGrabber.MaybeProcessQueue();
 
   RecordFrame();
+  // Our payload has now been presented.
+  mPayload.Clear();
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
