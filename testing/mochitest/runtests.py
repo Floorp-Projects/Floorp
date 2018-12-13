@@ -1039,8 +1039,6 @@ class MochitestDesktop(object):
         if options.flavor != 'plain':
             self.testRoot = options.flavor
 
-            if options.flavor == 'browser' and options.immersiveMode:
-                self.testRoot = 'metro'
         else:
             self.testRoot = self.TEST_PATH
         self.testRootAbs = os.path.join(SCRIPT_DIR, self.testRoot)
@@ -2695,10 +2693,6 @@ toolbar#nav-bar {
         try:
             self.startServers(options, debuggerInfo)
 
-            if options.immersiveMode:
-                options.browserArgs.extend(('-firefoxpath', options.app))
-                options.app = self.immersiveHelperPath
-
             if options.jsdebugger:
                 options.browserArgs.extend(['-jsdebugger', '-wait-for-jsdebugger'])
 
@@ -2907,13 +2901,7 @@ toolbar#nav-bar {
             self.shutdownLeaks = shutdownLeaks
             self.lsanLeaks = lsanLeaks
             self.bisectChunk = bisectChunk
-
-            # With metro browser runs this script launches the metro test harness which launches
-            # the browser. The metro test harness hands back the real browser process id via log
-            # output which we need to pick up on and parse out. This variable tracks the real
-            # browser process id if we find it.
             self.browserProcessId = None
-
             self.stackFixerFunction = self.stackFixer()
 
         def processOutputLine(self, line):
