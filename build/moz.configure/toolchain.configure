@@ -1892,7 +1892,21 @@ def select_linker(linker, c_compiler, developer_options, enable_gold,
 
 
 set_config('LINKER_KIND', select_linker.KIND)
-add_old_configure_assignment('LINKER_LDFLAGS', select_linker.LINKER_FLAG)
+
+
+@depends_if(select_linker, macos_sdk)
+def linker_ldflags(linker, macos_sdk):
+    flags = list(linker.LINKER_FLAG or [])
+    if macos_sdk:
+        if linker.KIND == 'ld64':
+            flags.append('-Wl,-syslibroot,%s' % macos_sdk)
+        else:
+            flags.append('-Wl,--sysroot=%s' % macos_sdk)
+
+    return flags
+
+
+add_old_configure_assignment('LINKER_LDFLAGS', linker_ldflags)
 
 
 # There's a wrinkle with MinGW: linker configuration is not enabled, so
