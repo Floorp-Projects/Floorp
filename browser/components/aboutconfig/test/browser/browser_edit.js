@@ -26,6 +26,8 @@ add_task(async function test_add_user_pref() {
     gBrowser,
     url: PAGE_URL,
   }, async browser => {
+    await content.document.querySelector("button").click();
+
     await ContentTask.spawn(browser, null, () => {
       Assert.ok(!Services.prefs.getChildList("").find(pref => pref == "testPref"));
       let search = content.document.getElementById("search");
@@ -63,6 +65,8 @@ add_task(async function test_delete_user_pref() {
     gBrowser,
     url: PAGE_URL,
   }, async browser => {
+    await content.document.querySelector("button").click();
+
     await ContentTask.spawn(browser, null, () => {
       let list = [...content.document.getElementById("prefs")
         .getElementsByTagName("tr")];
@@ -100,6 +104,8 @@ add_task(async function test_reset_user_pref() {
     gBrowser,
     url: PAGE_URL,
   }, async browser => {
+    await content.document.querySelector("button").click();
+
     await ContentTask.spawn(browser, null, () => {
       ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
@@ -153,6 +159,8 @@ add_task(async function test_modify() {
     gBrowser,
     url: PAGE_URL,
   }, browser => {
+    content.document.querySelector("button").click();
+
     return ContentTask.spawn(browser, null, () => {
       ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
