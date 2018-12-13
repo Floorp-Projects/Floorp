@@ -8,6 +8,8 @@
     <meta charset="utf-8">
     <link rel="stylesheet" media="screen, projection" type="text/css"
           href="chrome://global/skin/in-content/common.css">
+    <link rel="stylesheet" media="screen, projection" type="text/css"
+          href="chrome://global/skin/in-content/info-pages.css" title="infop">
     <link rel="stylesheet" type="text/css"
           href="chrome://browser/content/aboutconfig/aboutconfig.css">
     <link rel="localization" href="browser/aboutConfig.ftl">
@@ -15,8 +17,21 @@
             src="chrome://browser/content/aboutconfig/aboutconfig.js"></script>
     <title data-l10n-id="about-config-title"></title>
   </head>
-  <body onload="onLoad();">
-    <input type="text" id="search" data-l10n-id="about-config-search">
-    <table id="prefs"></table>
+  <body>
+    <div class="container">
+
+      <div class="title">
+        <h1 class="title-text" data-l10n-id="about-config-warning-title"></h1>
+      </div>
+
+      <div class="description">
+        <p data-l10n-id="about-config-warning-text"></p>
+      </div>
+
+      <div class="button-container">
+        <button class="primary" onclick="loadPrefs();"
+                data-l10n-id="about-config-warning-button"></button>
+      </div>
+    </div>
   </body>
 </html>
