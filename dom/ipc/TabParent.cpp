@@ -63,6 +63,7 @@
 #include "nsIURI.h"
 #include "nsIWindowWatcher.h"
 #include "nsIWebBrowserChrome.h"
+#include "nsIWebContentHandlerRegistrar.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsIXULWindow.h"
 #include "nsViewManager.h"
@@ -2096,6 +2097,19 @@ mozilla::ipc::IPCResult TabParent::RecvAccessKeyNotHandled(
 mozilla::ipc::IPCResult TabParent::RecvSetHasBeforeUnload(
     const bool& aHasBeforeUnload) {
   mHasBeforeUnload = aHasBeforeUnload;
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult TabParent::RecvRegisterProtocolHandler(
+    const nsString& aScheme, nsIURI* aHandlerURI, const nsString& aTitle,
+    nsIURI* aDocURI) {
+  nsCOMPtr<nsIWebContentHandlerRegistrar> registrar =
+      do_GetService(NS_WEBCONTENTHANDLERREGISTRAR_CONTRACTID);
+  if (registrar) {
+    registrar->RegisterProtocolHandler(aScheme, aHandlerURI, aTitle, aDocURI,
+                                       mFrameElement);
+  }
+
   return IPC_OK();
 }
 

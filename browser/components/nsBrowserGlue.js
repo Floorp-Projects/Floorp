@@ -403,7 +403,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   DateTimePickerParent: "resource://gre/modules/DateTimePickerParent.jsm",
   Discovery: "resource:///modules/Discovery.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
-  Feeds: "resource:///modules/Feeds.jsm",
   FileSource: "resource://gre/modules/L10nRegistry.jsm",
   FormValidationHandler: "resource:///modules/FormValidationHandler.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
@@ -532,7 +531,6 @@ const listeners = {
     "RemoteLogins:removeLogin": ["LoginManagerParent"],
     "RemoteLogins:insecureLoginFormPresent": ["LoginManagerParent"],
     // PLEASE KEEP THIS LIST IN SYNC WITH THE MOBILE LISTENERS IN BrowserCLH.js
-    "WCCR:registerProtocolHandler": ["Feeds"],
     "rtcpeer:CancelRequest": ["webrtcUI"],
     "rtcpeer:Request": ["webrtcUI"],
     "webrtc:CancelRequest": ["webrtcUI"],
