@@ -59,6 +59,11 @@ class AddonStudyAction extends BaseAction {
     return ActionSchemas["addon-study"];
   }
 
+  constructor() {
+    super();
+    this.seenRecipeIds = new Set();
+  }
+
   /**
    * This hook is executed once before any recipes have been processed, it is
    * responsible for:
@@ -72,8 +77,6 @@ class AddonStudyAction extends BaseAction {
       this.log.info("User has opted-out of opt-out experiments, disabling action.");
       this.disable();
     }
-
-    this.seenRecipeIds = new Set();
   }
 
   /**
