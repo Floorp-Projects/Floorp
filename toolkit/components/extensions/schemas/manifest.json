@@ -102,8 +102,8 @@
           "incognito": {
             "type": "string",
             "enum": ["spanning"],
-            "optional": true,
-            "onError": "warn"
+            "default": "spanning",
+            "optional": true
           },
 
           "background": {

@@ -1250,12 +1250,14 @@ impl DisplayListBuilder {
     pub fn push_reference_frame(
         &mut self,
         info: &LayoutPrimitiveInfo,
+        transform_style: TransformStyle,
         transform: Option<PropertyBinding<LayoutTransform>>,
         perspective: Option<LayoutTransform>,
     ) -> ClipId {
         let id = self.generate_spatial_index();
         let item = SpecificDisplayItem::PushReferenceFrame(PushReferenceFrameDisplayListItem {
             reference_frame: ReferenceFrame {
+                transform_style,
                 transform,
                 perspective,
                 id,

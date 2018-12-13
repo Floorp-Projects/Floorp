@@ -221,7 +221,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
                 "--log-errorsummary=%s" % os.path.join(dirs["abs_blob_upload_dir"],
                                                        "wpt_errorsummary.log"),
                 "--binary=%s" % self.binary_path,
-                "--symbols-path=%s" % self.query_symbols_url(),
+                "--symbols-path=%s" % self.symbols_path,
                 "--stackwalk-binary=%s" % self.query_minidump_stackwalk(),
                 "--stackfix-dir=%s" % os.path.join(dirs["abs_test_install_dir"], "bin"),
                 "--run-by-dir=%i" % (3 if not mozinfo.info["asan"] else 0),

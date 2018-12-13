@@ -445,7 +445,19 @@ class BaseContext {
     return this.cloneScopePromise || this.cloneScope.Promise;
   }
 
+  get privateBrowsingAllowed() {
+    return this.extension.privateBrowsingAllowed;
+  }
+
+  canAccessWindow(window) {
+    return this.extension.canAccessWindow(window);
+  }
+
   setContentWindow(contentWindow) {
+    if (!this.canAccessWindow(contentWindow)) {
+      throw new Error("BaseContext attempted to load when extension is not allowed due to incognito settings.");
+    }
+
     this.innerWindowID = getInnerWindowID(contentWindow);
     this.messageManager = contentWindow.docShell.messageManager;
 

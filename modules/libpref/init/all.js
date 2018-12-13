@@ -642,7 +642,11 @@ pref("media.cubeb.sandbox", false);
 #endif
 
 #ifdef MOZ_AV1
+#if defined(XP_WIN)
+pref("media.av1.enabled", true);
+#else
 pref("media.av1.enabled", false);
+#endif
 // Use libdav1d instead of libaom
 pref("media.av1.use-dav1d", false);
 #endif

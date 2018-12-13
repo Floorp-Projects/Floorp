@@ -138,9 +138,13 @@ const checkSetCookiePermissions = (extension, uri, cookie) => {
   return true;
 };
 
+/**
+ * Query the cookie store for matching cookies.
+ * @param {Object} detailsIn
+ * @param {Array} props          Properties the extension is interested in matching against.
+ * @param {BaseContext} context  The context making the query.
+ */
 const query = function* (detailsIn, props, context) {
-  // Different callers want to filter on different properties. |props|
-  // tells us which ones they're interested in.
   let details = {};
   props.forEach(property => {
     if (detailsIn[property] !== null) {
@@ -177,6 +181,9 @@ const query = function* (detailsIn, props, context) {
     storeId = PRIVATE_STORE;
   } else if ("storeId" in details) {
     storeId = details.storeId;
+  }
+  if (storeId == PRIVATE_STORE && !context.privateBrowsingAllowed) {
+    throw new ExtensionError("Extension disallowed access to the private cookies storeId.");
   }
 
   // We can use getCookiesFromHost for faster searching.
@@ -360,6 +367,9 @@ this.cookies = class extends ExtensionAPI {
           if (isDefaultCookieStoreId(details.storeId)) {
             isPrivate = false;
           } else if (isPrivateCookieStoreId(details.storeId)) {
+            if (!context.privateBrowsingAllowed) {
+              return Promise.reject({message: "Extension disallowed access to the private cookies storeId."});
+            }
             isPrivate = true;
           } else if (isContainerCookieStoreId(details.storeId)) {
             let containerId = getContainerForCookieStoreId(details.storeId);
@@ -399,6 +409,10 @@ this.cookies = class extends ExtensionAPI {
 
           let allowed = ["url", "name", "storeId", "firstPartyDomain"];
           for (let {cookie, storeId} of query(details, allowed, context)) {
+            if (isPrivateCookieStoreId(details.storeId) &&
+                !context.privateBrowsingAllowed) {
+              return Promise.reject({message: "Unknown storeId"});
+            }
             Services.cookies.remove(cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
 
             // TODO Bug 1387957: could there be multiple per subdomain?
@@ -469,10 +483,14 @@ this.cookies = class extends ExtensionAPI {
             };
 
             Services.obs.addObserver(observer, "cookie-changed");
-            Services.obs.addObserver(observer, "private-cookie-changed");
+            if (context.privateBrowsingAllowed) {
+              Services.obs.addObserver(observer, "private-cookie-changed");
+            }
             return () => {
               Services.obs.removeObserver(observer, "cookie-changed");
-              Services.obs.removeObserver(observer, "private-cookie-changed");
+              if (context.privateBrowsingAllowed) {
+                Services.obs.removeObserver(observer, "private-cookie-changed");
+              }
             };
           },
         }).api(),
