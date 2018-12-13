@@ -1,4 +1,4 @@
-// |reftest| skip -- String.prototype.matchAll is not supported
+// |reftest| skip-if(!String.prototype.hasOwnProperty('matchAll')) -- String.prototype.matchAll is not enabled unconditionally
 // Copyright (C) 2018 Jordan Harband. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
