@@ -198,26 +198,65 @@ def compiling_android(compile_env, build_project):
 
 include('android-ndk.configure', when=compiling_android)
 
-# MacOS deployment target version
-# ==============================================================
-# This needs to happen before any compilation test is done.
+with only_when(target_is_osx):
+    # MacOS deployment target version
+    # ==============================================================
+    # This needs to happen before any compilation test is done.
 
-option('--enable-macos-target', env='MACOSX_DEPLOYMENT_TARGET', nargs=1,
-       default='10.9', help='Set the minimum MacOS version needed at runtime',
-       when=target_is_osx)
+    option('--enable-macos-target', env='MACOSX_DEPLOYMENT_TARGET', nargs=1,
+           default='10.9', help='Set the minimum MacOS version needed at runtime')
 
 
-@depends('--enable-macos-target', when=target_is_osx)
-@imports(_from='os', _import='environ')
-def macos_target(value):
-    if value:
-        # Ensure every compiler process we spawn uses this value.
-        environ['MACOSX_DEPLOYMENT_TARGET'] = value[0]
+    @depends('--enable-macos-target')
+    @imports(_from='os', _import='environ')
+    def macos_target(value):
+        if value:
+            # Ensure every compiler process we spawn uses this value.
+            environ['MACOSX_DEPLOYMENT_TARGET'] = value[0]
+            return value[0]
+
+
+    set_config('MACOSX_DEPLOYMENT_TARGET', macos_target)
+    add_old_configure_assignment('MACOSX_DEPLOYMENT_TARGET', macos_target)
+
+    # MacOS SDK
+    # =========
+
+    option('--with-macos-sdk', nargs=1, help='Location of platform SDK to use')
+
+    @depends_if('--with-macos-sdk')
+    @imports(_from='os.path', _import='isdir')
+    def macos_sdk(value):
+        if not isdir(value[0]):
+            die('SDK not found in %s. When using --with-macos-sdk, you must specify a '
+                'valid SDK. SDKs are installed when the optional cross-development '
+                'tools are selected during the Xcode/Developer Tools installation.'
+                % value[0])
         return value[0]
 
+    set_config('MACOS_SDK_DIR', macos_sdk)
 
-set_config('MACOSX_DEPLOYMENT_TARGET', macos_target)
-add_old_configure_assignment('MACOSX_DEPLOYMENT_TARGET', macos_target)
+    with only_when(cross_compiling):
+        option('--with-macos-private-frameworks', nargs=1,
+               help='Location of private frameworks to use')
+
+        @depends_if('--with-macos-private-frameworks')
+        @imports(_from='os.path', _import='isdir')
+        def macos_private_frameworks(value):
+            if value and not isdir(value[0]):
+                die('PrivateFrameworks not found not found in %s. When using '
+                    '--with-macos-private-frameworks, you must specify a valid '
+                    'directory', value[0])
+            return value[0]
+
+    @depends(macos_private_frameworks)
+    def macos_private_frameworks(value):
+        if value:
+            return value
+        return '/System/Library/PrivateFrameworks'
+
+    set_config('MACOS_PRIVATE_FRAMEWORKS_DIR', macos_private_frameworks)
+
 
 # Xcode state
 # ===========
@@ -937,11 +976,11 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
                           input=provided_compiler.program,
                           paths=toolchain_search_path)
 
-    @depends(compiler, provided_compiler, compiler_wrapper, host_or_target)
+    @depends(compiler, provided_compiler, compiler_wrapper, host_or_target, macos_sdk)
     @checking('whether %s can be used' % what, lambda x: bool(x))
     @imports(_from='mozbuild.shellutil', _import='quote')
     def valid_compiler(compiler, provided_compiler, compiler_wrapper,
-                       host_or_target):
+                       host_or_target, macos_sdk):
         wrapper = list(compiler_wrapper or ())
         if provided_compiler:
             provided_wrapper = list(provided_compiler.wrapper)
@@ -954,6 +993,9 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
             flags = provided_compiler.flags
         else:
             flags = []
+
+        if not flags and macos_sdk and host_or_target.os == 'OSX':
+            flags = ['-isysroot', macos_sdk]
 
         # Ideally, we'd always use the absolute path, but unfortunately, on
         # Windows, the compiler is very often in a directory containing spaces.
