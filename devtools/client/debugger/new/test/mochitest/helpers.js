@@ -1032,6 +1032,7 @@ const selectors = {
     `.expressions-list .expression-container:nth-child(${i}) .close`,
   expressionInput: ".expressions-list  input.input-expression",
   expressionNodes: ".expressions-list .tree-node",
+  expressionPlus: ".watch-expressions-pane button.plus",
   scopesHeader: ".scopes-pane ._header",
   breakpointItem: i => `.breakpoints-list div:nth-of-type(${i})`,
   breakpointItems: `.breakpoints-list .breakpoint`,
@@ -1387,4 +1388,29 @@ async function assertNodeIsFocused(dbg, index) {
   await waitForNodeToGainFocus(dbg, index);
   const node = findElement(dbg, "sourceNode", index);
   ok(node.classList.contains("focused"), `node ${index} is focused`);
+}
+
+async function addExpression(dbg, input) {
+  info("Adding an expression");
+
+  const plusIcon = findElementWithSelector(dbg, selectors.expressionPlus);
+  if (plusIcon) {
+    plusIcon.click();
+  }
+  findElementWithSelector(dbg, selectors.expressionInput).focus();
+  type(dbg, input);
+  pressKey(dbg, "Enter");
+
+  await waitForDispatch(dbg, "EVALUATE_EXPRESSION");
+}
+
+async function editExpression(dbg, input) {
+  info("Updating the expression");
+  dblClickElement(dbg, "expressionNode", 1);
+  // Position cursor reliably at the end of the text.
+  pressKey(dbg, "End");
+  type(dbg, input);
+  const evaluated = waitForDispatch(dbg, "EVALUATE_EXPRESSIONS");
+  pressKey(dbg, "Enter");
+  await evaluated;
 }
