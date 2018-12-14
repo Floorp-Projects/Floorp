@@ -11,8 +11,9 @@ from abc import ABCMeta, abstractmethod
 class Playback(object):
     __metaclass__ = ABCMeta
 
-    def __init__(self, config):
+    def __init__(self, config, android_device=None):
         self.config = config
+        self.android_device = android_device
 
     @abstractmethod
     def download(self):
