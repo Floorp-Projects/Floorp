@@ -333,9 +333,9 @@ void nsDOMNavigationTiming::TTITimeout(nsITimer* aTimer) {
                            int(elapsedLongTask.ToMilliseconds()), spec.get());
 
     DECLARE_DOCSHELL_AND_HISTORY_ID(mDocShell);
-    profiler_add_marker("TTI", MakeUnique<UserTimingMarkerPayload>(
-                                   NS_ConvertASCIItoUTF16(marker), mTTFI,
-                                   docShellId, docShellHistoryId));
+    profiler_add_marker(
+        "TTI", MakeUnique<TextMarkerPayload>(marker, mNavigationStart, mTTFI,
+                                             docShellId, docShellHistoryId));
   }
 #endif
   return;
