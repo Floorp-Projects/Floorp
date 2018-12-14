@@ -149,7 +149,15 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
                 // Make sure that the start up code has had a chance to update sessionstore.old as necessary.
                 GeckoProfile.get(context).waitForOldSessionDataProcessing();
 
-                final String jsonString = GeckoProfile.get(context).readPreviousSessionFile();
+                final String jsonString;
+                try {
+                    jsonString = GeckoProfile.get(context).readPreviousSessionFile();
+                } catch (OutOfMemoryError oom) {
+                    // The file is too large, give up.
+                    // TODO: A streaming JSON parser might help by having to read only one tab at a
+                    // time.
+                    return;
+                }
                 if (jsonString == null) {
                     // No previous session data.
                     return;
@@ -167,7 +175,13 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
                             return;
                         }
 
-                        parsedTabs.add(new ClosedTab(url, tab.getTitle(), tab.getTabObject().toString()));
+                        try {
+                            parsedTabs.add(new ClosedTab(url, tab.getTitle(), tab.getTabObject().toString()));
+                        } catch (OutOfMemoryError oom) {
+                            // Stringifying may fail if the tab data is too large - let's hope that
+                            // this tab was an exception and that the next one will be smaller and
+                            // possibly succeed.
+                        }
                     }
                 }.parse(jsonString);
 
