@@ -366,7 +366,7 @@ class AsmFlags(BaseCompileFlags):
         debug_flags = []
         if (self._context.config.substs.get('MOZ_DEBUG') or
             self._context.config.substs.get('MOZ_DEBUG_SYMBOLS')):
-            if self._context.get('USE_NASM') or (self._context.get('USE_YASM') and self._context.config.substs.get('NASM')):
+            if self._context.get('USE_NASM'):
                 if (self._context.config.substs.get('OS_ARCH') == 'WINNT' and
                     not self._context.config.substs.get('GNU_CC')):
                     debug_flags += ['-F', 'cv8']

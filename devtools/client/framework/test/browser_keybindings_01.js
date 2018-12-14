@@ -80,12 +80,6 @@ add_task(async function() {
   await webconsoleShouldBeSelected();
 
   onSelectTool = gDevTools.once("select-tool-command");
-  const jsdebugger = allKeys.filter(({ toolId }) => toolId === "jsdebugger")[0];
-  jsdebugger.synthesizeKey();
-  await onSelectTool;
-  await jsdebuggerShouldBeSelected();
-
-  onSelectTool = gDevTools.once("select-tool-command");
   const netmonitor = allKeys.filter(({ toolId }) => toolId === "netmonitor")[0];
   netmonitor.synthesizeKey();
   await onSelectTool;
@@ -115,10 +109,6 @@ add_task(async function() {
 
   function webconsoleShouldBeSelected() {
     is(toolbox.currentToolId, "webconsole", "webconsole should be selected.");
-  }
-
-  function jsdebuggerShouldBeSelected() {
-    is(toolbox.currentToolId, "jsdebugger", "jsdebugger should be selected.");
   }
 
   function netmonitorShouldBeSelected() {

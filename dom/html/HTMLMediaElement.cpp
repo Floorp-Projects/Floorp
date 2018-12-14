@@ -35,6 +35,7 @@
 #include "MediaManager.h"
 #include "MediaMetadataManager.h"
 #include "MediaResource.h"
+#include "MediaShutdownManager.h"
 #include "MediaSourceDecoder.h"
 #include "MediaStreamError.h"
 #include "MediaStreamGraph.h"
@@ -48,6 +49,7 @@
 #include "jsapi.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/AutoplayPermissionManager.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
@@ -60,7 +62,6 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/AudioTrack.h"
 #include "mozilla/dom/AudioTrackList.h"
-#include "mozilla/AutoplayPermissionManager.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/HTMLAudioElement.h"
@@ -3451,6 +3452,12 @@ HTMLMediaElement::HTMLMediaElement(
 
   RegisterActivityObserver();
   NotifyOwnerDocumentActivityChanged();
+
+  // We initialize the MediaShutdownManager as the HTMLMediaElement is always
+  // constructed on the main thread, and not during stable state.
+  // (MediaShutdownManager make use of nsIAsyncShutdownClient which is written
+  // in JS)
+  MediaShutdownManager::InitStatics();
 
   mShutdownObserver->Subscribe(this);
 }

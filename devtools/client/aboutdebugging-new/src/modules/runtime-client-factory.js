@@ -55,5 +55,3 @@ async function createClientForRuntime(runtime) {
 }
 
 exports.createClientForRuntime = createClientForRuntime;
-
-require("./test-helper").enableMocks(module, "modules/runtime-client-factory");

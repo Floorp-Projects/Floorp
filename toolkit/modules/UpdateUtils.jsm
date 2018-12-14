@@ -381,6 +381,9 @@ XPCOMUtils.defineLazyGetter(this, "gWinCPUArch", function aus_gWinCPUArch() {
 
       GetNativeSystemInfo(winSystemInfo.address());
       switch (winSystemInfo.wProcessorArchitecture) {
+        case 12:
+          arch = "aarch64";
+          break;
         case 9:
           arch = "x64";
           break;

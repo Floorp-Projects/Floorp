@@ -213,6 +213,13 @@ struct CachedImageInfo {
     manual_eviction: bool,
 }
 
+impl CachedImageInfo {
+    fn mark_unused(&mut self, texture_cache: &mut TextureCache) {
+        texture_cache.mark_unused(&self.texture_cache_handle);
+        self.manual_eviction = false;
+    }
+}
+
 #[cfg(debug_assertions)]
 impl Drop for CachedImageInfo {
     fn drop(&mut self) {
@@ -354,13 +361,11 @@ impl ImageResult {
     fn drop_from_cache(&mut self, texture_cache: &mut TextureCache) {
         match *self {
             ImageResult::UntiledAuto(ref mut entry) => {
-                texture_cache.mark_unused(&entry.texture_cache_handle);
-                entry.manual_eviction = false;
+                entry.mark_unused(texture_cache);
             },
             ImageResult::Multi(ref mut entries) => {
                 for (_, entry) in &mut entries.resources {
-                    texture_cache.mark_unused(&entry.texture_cache_handle);
-                    entry.manual_eviction = false;
+                    entry.mark_unused(texture_cache);
                 }
             },
             ImageResult::Err(_) => {},
@@ -1277,7 +1282,7 @@ impl ResourceCache {
                     if key.tile.is_none() || tile_range.contains(&key.tile.unwrap()) {
                         return true;
                     }
-                    texture_cache.mark_unused(&entry.texture_cache_handle);
+                    entry.mark_unused(texture_cache);
                     return false;
                 });
             }

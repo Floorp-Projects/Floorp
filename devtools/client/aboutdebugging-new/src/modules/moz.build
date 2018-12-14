@@ -11,6 +11,5 @@ DevToolsModules(
     'network-locations.js',
     'runtime-client-factory.js',
     'runtimes-state-helper.js',
-    'test-helper.js',
     'usb-runtimes.js',
 )
