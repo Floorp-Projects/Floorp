@@ -8,7 +8,7 @@
 
 const Services = require("Services");
 const { Cr, Ci } = require("chrome");
-const { ActorPool, GeneratedLocation, OriginalLocation } = require("devtools/server/actors/common");
+const { ActorPool } = require("devtools/server/actors/common");
 const { createValueGrip } = require("devtools/server/actors/object/utils");
 const { longStringGrip } = require("devtools/server/actors/object/long-string");
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
@@ -534,10 +534,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     const result = function(completion) {
       // onPop is called with 'this' set to the current frame.
       const generatedLocation = thread.sources.getFrameLocation(this);
-      const originalLocation = OriginalLocation.fromGeneratedLocation(generatedLocation);
 
-      const { originalSourceActor } = originalLocation;
-      const url = originalSourceActor.url;
+      const { generatedSourceActor } = generatedLocation;
+      const url = generatedSourceActor.url;
 
       if (thread.sources.isBlackBoxed(url)) {
         return undefined;
@@ -554,14 +553,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
           // replaying, as we can't use its contents after resuming.
           const ncompletion = thread.dbg.replaying ? null : completion;
           const { onStep, onPop } = thread._makeSteppingHooks(
-            originalLocation, "next", false, ncompletion
+            generatedLocation, "next", false, ncompletion
           );
           if (thread.dbg.replaying) {
             const parentGeneratedLocation = thread.sources.getFrameLocation(parentFrame);
-            const parentOriginalLocation =
-            OriginalLocation.fromGeneratedLocation(parentGeneratedLocation);
             const offsets =
-              thread._findReplayingStepOffsets(parentOriginalLocation, parentFrame,
+              thread._findReplayingStepOffsets(parentGeneratedLocation, parentFrame,
                                                /* rewinding = */ false);
             parentFrame.setReplayingOnStep(onStep, offsets);
           } else {
@@ -589,12 +586,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     // When stepping out, we don't want to stop at a breakpoint that
     // happened to be set exactly at the spot where we stepped out.
-    // See bug 970469.  We record the original location here and check
+    // See bug 970469.  We record the generated location here and check
     // it when a breakpoint is hit.  Furthermore we store this on the
     // function because, while we could store it directly on the
     // frame, if we did we'd also have to find the appropriate spot to
     // clear it.
-    result.originalLocation = startLocation;
+    result.generatedLocation = startLocation;
 
     return result;
   },
@@ -616,16 +613,16 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // 3. The source does not have pause points and we change lines.
 
     const generatedLocation = this.sources.getScriptOffsetLocation(script, offset);
-    const newLocation = OriginalLocation.fromGeneratedLocation(generatedLocation);
 
     // Case 1.
-    if (startLocation.originalUrl !== newLocation.originalUrl) {
+    if (startLocation.generatedUrl !== generatedLocation.generatedUrl) {
       return true;
     }
 
-    const pausePoints = newLocation.originalSourceActor.pausePoints;
-    const lineChanged = startLocation.originalLine !== newLocation.originalLine;
-    const columnChanged = startLocation.originalColumn !== newLocation.originalColumn;
+    const pausePoints = generatedLocation.generatedSourceActor.pausePoints;
+    const lineChanged = startLocation.generatedLine !== generatedLocation.generatedLine;
+    const columnChanged =
+      startLocation.generatedColumn !== generatedLocation.generatedColumn;
 
     if (!pausePoints) {
       // Case 3.
@@ -639,7 +636,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     // When pause points are specified for the source,
     // we should pause when we are at a stepOver pause point
-    const pausePoint = findPausePointForLocation(pausePoints, newLocation);
+    const pausePoint = findPausePointForLocation(pausePoints, generatedLocation);
 
     if (pausePoint) {
       return pausePoint.step;
@@ -662,15 +659,14 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // onStep is called with 'this' set to the current frame.
 
       const generatedLocation = thread.sources.getFrameLocation(this);
-      const newLocation = OriginalLocation.fromGeneratedLocation(generatedLocation);
 
       // Always continue execution if either:
       //
       // 1. We are in a source mapped region, but inside a null mapping
-      //    (doesn't correlate to any region of original source)
+      //    (doesn't correlate to any region of generated source)
       // 2. The source we are in is black boxed.
-      if (newLocation.originalUrl == null
-          || thread.sources.isBlackBoxed(newLocation.originalUrl)) {
+      if (generatedLocation.generatedUrl == null
+          || thread.sources.isBlackBoxed(generatedLocation.generatedUrl)) {
         return undefined;
       }
 
@@ -797,9 +793,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
 
     const generatedLocation = this.sources.getFrameLocation(this.youngestFrame);
-    const originalLocation = OriginalLocation.fromGeneratedLocation(generatedLocation);
     const { onEnterFrame, onPop, onStep } = this._makeSteppingHooks(
-      originalLocation,
+      generatedLocation,
       steppingType,
       rewinding
     );
@@ -821,7 +816,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
           if (stepFrame.script) {
             if (this.dbg.replaying) {
               const offsets =
-                this._findReplayingStepOffsets(originalLocation, stepFrame, rewinding);
+                this._findReplayingStepOffsets(generatedLocation, stepFrame, rewinding);
               stepFrame.setReplayingOnStep(onStep, offsets);
             } else {
               stepFrame.onStep = onStep;
@@ -1954,10 +1949,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // function when source maps are disabled.
     for (const actor of bpActors) {
       if (actor.isPending) {
-        actor.originalLocation.originalSourceActor._setBreakpoint(actor);
+        actor.generatedLocation.generatedSourceActor._setBreakpoint(actor);
       } else {
-        actor.originalLocation.originalSourceActor._setBreakpointAtGeneratedLocation(
-          actor, GeneratedLocation.fromOriginalLocation(actor.originalLocation)
+        actor.generatedLocation.generatedSourceActor._setBreakpointAtGeneratedLocation(
+          actor, actor.generatedLocation
         );
       }
     }
@@ -2132,7 +2127,7 @@ function findEntryPointsForLine(scripts, line) {
 }
 
 function findPausePointForLocation(pausePoints, location) {
-  const { originalLine: line, originalColumn: column } = location;
+  const { generatedLine: line, generatedColumn: column } = location;
   return pausePoints[line] && pausePoints[line][column];
 }
 
