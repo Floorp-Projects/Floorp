@@ -286,7 +286,7 @@ class GCMarker : public JSTracer {
 
   bool isDrained() { return isMarkStackEmpty() && !unmarkedArenaStackTop; }
 
-  MOZ_MUST_USE bool markUntilBudgetExhaused(SliceBudget& budget);
+  MOZ_MUST_USE bool markUntilBudgetExhausted(SliceBudget& budget);
 
   void setGCMode(JSGCMode mode) { stack.setGCMode(mode); }
 
