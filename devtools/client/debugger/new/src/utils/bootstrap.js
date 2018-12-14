@@ -116,6 +116,6 @@ function updatePrefs(state: any) {
   }
 
   if (currentXHRBreakpoints !== previousXHRBreakpoints) {
-    asyncStore.xhrBreakpoints = currentXHRBreakpoints.toJS();
+    asyncStore.xhrBreakpoints = currentXHRBreakpoints;
   }
 }
