@@ -200,9 +200,9 @@ for (const csu of inheritors) {
             continue;
         const paramDesc = 'template-param-' + param;
         const why = '(inherited annotations from ' + param + ')';
-        if (typeInfo.GCThings.indexOf(core_type) != -1)
+        if (core_type in gcTypes)
             markGCType(csu, paramDesc, why, ptrdness, 0, "");
-        if (typeInfo.GCPointers.indexOf(core_type) != -1)
+        if (core_type in gcPointers)
             markGCType(csu, paramDesc, why, ptrdness + 1, 0, "");
     }
 }
