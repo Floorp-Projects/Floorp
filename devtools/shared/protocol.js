@@ -1320,6 +1320,7 @@ Front.prototype = extend(Pool.prototype, {
       deferred.reject(new Error(msg));
     }
     Pool.prototype.destroy.call(this);
+    this.clearEvents();
     this.actorID = null;
     this._frontListeners = null;
     this._beforeListeners = null;
