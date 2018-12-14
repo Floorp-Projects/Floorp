@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#![cfg_attr(feature = "cargo-clippy", allow(needless_lifetimes))]
+
 extern crate std;
 
 use rand::{thread_rng, Rng};
@@ -194,7 +196,7 @@ fn send_apdu<T>(dev: &mut T, cmd: u8, p1: u8, send: &[u8]) -> io::Result<(Vec<u8
 where
     T: U2FDevice + Read + Write,
 {
-    let apdu = U2FAPDUHeader::to_bytes(cmd, p1, send)?;
+    let apdu = U2FAPDUHeader::serialize(cmd, p1, send)?;
     let mut data = sendrecv(dev, U2FHID_MSG, &apdu)?;
 
     if data.len() < 2 {
@@ -245,7 +247,7 @@ mod tests {
                 // Make sure we start with a 0, for HID record index
                 write[0] = 0;
                 // Clone packet data in at 1, since front is padded with HID record index
-                write[1..packet.len() + 1].clone_from_slice(packet);
+                write[1..=packet.len()].clone_from_slice(packet);
                 self.writes.push(write);
             }
 
@@ -260,7 +262,7 @@ mod tests {
             fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
                 // Pop a vector from the expected writes, check for quality
                 // against bytes array.
-                assert!(self.writes.len() > 0, "Ran out of expected write values!");
+                assert!(!self.writes.is_empty(), "Ran out of expected write values!");
                 let check = self.writes.remove(0);
                 assert_eq!(check.len(), bytes.len());
                 assert_eq!(&check[..], bytes);
@@ -275,7 +277,7 @@ mod tests {
 
         impl Read for TestDevice {
             fn read(&mut self, bytes: &mut [u8]) -> io::Result<usize> {
-                assert!(self.reads.len() > 0, "Ran out of read values!");
+                assert!(!self.reads.is_empty(), "Ran out of read values!");
                 let check = self.reads.remove(0);
                 assert_eq!(check.len(), bytes.len());
                 bytes.clone_from_slice(&check[..]);
@@ -285,8 +287,8 @@ mod tests {
 
         impl Drop for TestDevice {
             fn drop(&mut self) {
-                assert_eq!(self.reads.len(), 0);
-                assert_eq!(self.writes.len(), 0);
+                assert!(self.reads.is_empty());
+                assert!(self.writes.is_empty());
             }
         }
 
@@ -332,7 +334,7 @@ mod tests {
     fn test_sendrecv_multiple() {
         let mut device = platform::TestDevice::new();
         let cid = [0x01, 0x02, 0x03, 0x04];
-        device.set_cid(cid.clone());
+        device.set_cid(cid);
 
         // init packet
         let mut msg = cid.to_vec();
@@ -374,7 +376,7 @@ mod tests {
         let cid = [0x01, 0x02, 0x03, 0x04];
         let data = [0x01, 0x02, 0x03, 0x04, 0x05];
         let mut device = platform::TestDevice::new();
-        device.set_cid(cid.clone());
+        device.set_cid(cid);
 
         let mut msg = cid.to_vec();
         // sendrecv header

@@ -23,7 +23,8 @@ before_install:
 
 install:
   - rustup install nightly
-  - rustup component add --toolchain nightly rustfmt-preview
+  - rustup component add rustfmt-preview
+  - rustup component add clippy-preview
 
 script:
 - |
@@ -31,6 +32,9 @@ script:
     export ASAN_OPTIONS="detect_odr_violation=1:leak_check_at_exit=0:detect_leaks=0"
     export RUSTFLAGS="-Z sanitizer=address"
   fi
-- cargo +nightly fmt --all -- --check
-- cargo build
+- |
+  if [ "$TRAVIS_RUST_VERSION" == "stable" ] ; then
+    cargo fmt --all -- --check
+    cargo clippy --all-targets -- -A renamed_and_removed_lints -A new-ret-no-self -D warnings
+  fi
 - cargo test

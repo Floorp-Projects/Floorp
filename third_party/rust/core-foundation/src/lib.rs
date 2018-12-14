@@ -53,16 +53,13 @@ macro_rules! impl_TCFType {
 
             #[inline]
             unsafe fn wrap_under_get_rule(reference: $ty_ref) -> Self {
-                use std::mem;
-                let reference = mem::transmute($crate::base::CFRetain(mem::transmute(reference)));
+                let reference = $crate::base::CFRetain(reference as *const ::std::os::raw::c_void) as $ty_ref;
                 $crate::base::TCFType::wrap_under_create_rule(reference)
             }
 
             #[inline]
             fn as_CFTypeRef(&self) -> $crate::base::CFTypeRef {
-                unsafe {
-                    ::std::mem::transmute(self.as_concrete_TypeRef())
-                }
+                self.as_concrete_TypeRef() as $crate::base::CFTypeRef
             }
 
             #[inline]
@@ -100,21 +97,21 @@ macro_rules! impl_TCFType {
 
         unsafe impl<'a> $crate::base::ToVoid<$ty> for &'a $ty {
             fn to_void(&self) -> *const ::std::os::raw::c_void {
-            use $crate::base::TCFTypeRef;
+                use $crate::base::TCFTypeRef;
                 self.as_concrete_TypeRef().as_void_ptr()
             }
         }
 
         unsafe impl $crate::base::ToVoid<$ty> for $ty {
             fn to_void(&self) -> *const ::std::os::raw::c_void {
-            use $crate::base::TCFTypeRef;
+                use $crate::base::TCFTypeRef;
                 self.as_concrete_TypeRef().as_void_ptr()
             }
         }
 
         unsafe impl $crate::base::ToVoid<$ty> for $ty_ref {
             fn to_void(&self) -> *const ::std::os::raw::c_void {
-            use $crate::base::TCFTypeRef;
+                use $crate::base::TCFTypeRef;
                 self.as_void_ptr()
             }
         }
@@ -162,6 +159,7 @@ macro_rules! impl_CFComparison {
 }
 
 pub mod array;
+pub mod attributed_string;
 pub mod base;
 pub mod boolean;
 pub mod data;
