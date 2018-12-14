@@ -462,7 +462,8 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   inline static bool DoNotRender3xxBody(nsresult rv) {
     return rv == NS_ERROR_REDIRECT_LOOP || rv == NS_ERROR_CORRUPTED_CONTENT ||
-           rv == NS_ERROR_UNKNOWN_PROTOCOL || rv == NS_ERROR_MALFORMED_URI;
+           rv == NS_ERROR_UNKNOWN_PROTOCOL || rv == NS_ERROR_MALFORMED_URI ||
+           rv == NS_ERROR_PORT_ACCESS_NOT_ALLOWED;
   }
 
   // Report net vs cache time telemetry
