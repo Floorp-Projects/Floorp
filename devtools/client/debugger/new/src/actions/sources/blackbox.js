@@ -27,9 +27,9 @@ export function toggleBlackBox(source: Source) {
 
     let promise;
     if (features.originalBlackbox && isOriginalId(id)) {
-      promise = Promise.resolve({isBlackBoxed: !isBlackBoxed})
+      promise = Promise.resolve({ isBlackBoxed: !isBlackBoxed });
     } else {
-      promise = client.blackBox(id, isBlackBoxed)
+      promise = client.blackBox(id, isBlackBoxed);
     }
 
     return dispatch({
