@@ -2937,16 +2937,6 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
         s.mPacketsReceived.Construct(mp.RtpPacketsReceived());
         s.mBytesReceived.Construct(mp.RtpBytesReceived());
 
-        if (query->internalStats && isAudio) {
-          int32_t jitterBufferDelay;
-          int32_t playoutBufferDelay;
-          int32_t avSyncDelta;
-          if (mp.Conduit()->GetAVStats(&jitterBufferDelay, &playoutBufferDelay,
-                                       &avSyncDelta)) {
-            s.mMozJitterBufferDelay.Construct(jitterBufferDelay);
-            s.mMozAvSyncDelay.Construct(avSyncDelta);
-          }
-        }
         // Fill in packet type statistics
         webrtc::RtcpPacketTypeCounter counters;
         if (mp.Conduit()->GetRecvPacketTypeStats(&counters)) {
