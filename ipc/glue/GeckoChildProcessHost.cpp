@@ -38,7 +38,6 @@
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/ipc/EnvironmentMap.h"
 #include "mozilla/Omnijar.h"
-#include "mozilla/Scoped.h"
 #include "mozilla/Telemetry.h"
 #include "ProtocolUtils.h"
 #include <sys/stat.h>
@@ -68,13 +67,6 @@
 
 using mozilla::MonitorAutoLock;
 using mozilla::ipc::GeckoChildProcessHost;
-
-namespace mozilla {
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPRFileDesc, PRFileDesc,
-                                          PR_Close)
-}
-
-using mozilla::ScopedPRFileDesc;
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
@@ -608,10 +600,10 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
   const char* const childProcessType =
       XRE_ChildProcessTypeToString(mProcessType);
 
-  ScopedPRFileDesc crashAnnotationReadPipe;
-  ScopedPRFileDesc crashAnnotationWritePipe;
-  if (PR_CreatePipe(&crashAnnotationReadPipe.rwget(),
-                    &crashAnnotationWritePipe.rwget()) != PR_SUCCESS) {
+  PRFileDesc* crashAnnotationReadPipe;
+  PRFileDesc* crashAnnotationWritePipe;
+  if (PR_CreatePipe(&crashAnnotationReadPipe, &crashAnnotationWritePipe) !=
+      PR_SUCCESS) {
     return false;
   }
 
@@ -1114,7 +1106,7 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
   CrashReporter::RegisterChildCrashAnnotationFileDescriptor(
       process, crashAnnotationReadPipe);
 #endif
-  crashAnnotationReadPipe = nullptr;
+  PR_Close(crashAnnotationWritePipe);
 
   MonitorAutoLock lock(mMonitor);
   mProcessState = PROCESS_CREATED;
