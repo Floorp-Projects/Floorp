@@ -142,7 +142,7 @@ TestTargetActor.prototype = {
   },
 
   onReload: function(request) {
-    this.sources.reset({ sourceMaps: true });
+    this.sources.reset();
     this.threadActor.clearDebuggees();
     this.threadActor.dbg.addDebuggees();
     return {};
