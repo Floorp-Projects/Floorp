@@ -13619,17 +13619,11 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
   bool profilingEnabled = isProfilerInstrumentationEnabled();
   WasmInstanceObject* instObj = lir->mir()->instanceObject();
 
-  bool wasmGcEnabled = false;
-#ifdef ENABLE_WASM_GC
-  wasmGcEnabled = gen->options.wasmGcEnabled();
-#endif
-
   Register scratch = ToRegister(lir->temp());
 
   uint32_t callOffset;
   GenerateDirectCallFromJit(masm, funcExport, instObj->instance(), stackArgs,
-                            profilingEnabled, wasmGcEnabled, scratch,
-                            &callOffset);
+                            profilingEnabled, scratch, &callOffset);
 
   // Add the instance object to the constant pool, so it is transferred to
   // the owning IonScript and so that it gets traced as long as the IonScript
