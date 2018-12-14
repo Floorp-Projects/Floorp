@@ -431,10 +431,11 @@ already_AddRefed<nsStringBuffer> nsCSSValue::BufferFromString(
     }
     aResult.AppendLiteral(" ");
   }
-  // Don't serialize the 'unsafe' keyword; it's the default.
   auto overflowPos = aValue & (NS_STYLE_ALIGN_SAFE | NS_STYLE_ALIGN_UNSAFE);
-  if (MOZ_UNLIKELY(overflowPos == NS_STYLE_ALIGN_SAFE)) {
+  if (overflowPos == NS_STYLE_ALIGN_SAFE) {
     aResult.AppendLiteral("safe ");
+  } else if (overflowPos == NS_STYLE_ALIGN_UNSAFE) {
+    aResult.AppendLiteral("unsafe ");
   }
   aValue &= ~overflowPos;
   MOZ_ASSERT(!(aValue & NS_STYLE_ALIGN_FLAG_BITS),
