@@ -1780,7 +1780,7 @@ PeerConnectionWrapper.prototype = {
   checkStats : function(stats, twoMachines) {
     // Allow for clock drift observed on Windows 7. (Bug 979649)
     const isWin7 = navigator.userAgent.includes("Windows NT 6.1");
-    const clockDriftAllowance = isWin7 ? 1000 : 0;
+    const clockDriftAllowanceMs = isWin7 ? 1000 : 250;
 
     // Use spec way of enumerating stats
     var counters = {};
@@ -1788,24 +1788,18 @@ PeerConnectionWrapper.prototype = {
       info("Checking stats for " + key + " : " + res);
       // validate stats
       ok(res.id == key, "Coherent stats id");
-      var nowish = Date.now() + clockDriftAllowance;
-      var minimum = this.whenCreated;
+      // Bug 1430255: WebRTC uses a different timebase than JS ATM
+      // so there can be differences between timestamp and Date.now().
+      const nowish = Date.now() + clockDriftAllowanceMs;
+      const minimum = this.whenCreated - clockDriftAllowanceMs;
+      const type = res.isRemote ? "rtcp" : "rtp";
       if (!twoMachines) {
-        // Bug 1225729: On android, sometimes the first RTCP of the first
-        // test run gets this value, likely because no RTP has been sent yet.
-        if (false) {
-          ok(res.timestamp >= minimum,
-             "Valid " + (res.isRemote? "rtcp" : "rtp") + " timestamp " +
-                 res.timestamp + " >= " + minimum + " (" +
-                 (res.timestamp - minimum) + " ms)");
-        } else {
-          info("FIXME bug 1495446: uncomment the timestamp test case " +
-               "above after RTCP epoch bug 1495446 is fixed.");
-        }
+        ok(res.timestamp >= minimum,
+           `Valid ${type} timestamp ${res.timestamp} >= ${minimum} (
+              ${res.timestamp - minimum} ms)`);
         ok(res.timestamp <= nowish,
-           "Valid " + (res.isRemote? "rtcp" : "rtp") + " timestamp " +
-               res.timestamp + " <= " + nowish + " (" +
-               (res.timestamp - nowish) + " ms)");
+           `Valid ${type} timestamp ${res.timestamp} <= ${nowish} (
+              ${res.timestamp - nowish} ms)`);
       }
       if (res.isRemote) {
         continue;

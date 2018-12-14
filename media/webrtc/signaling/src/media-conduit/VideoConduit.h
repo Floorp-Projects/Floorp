@@ -266,11 +266,10 @@ class WebrtcVideoConduit
                   int32_t* avSyncOffsetMs) override;
   bool GetRTPStats(unsigned int* jitterMs,
                    unsigned int* cumulativeLost) override;
-  bool GetRTCPReceiverReport(DOMHighResTimeStamp* timestamp, uint32_t* jitterMs,
-                             uint32_t* packetsReceived, uint64_t* bytesReceived,
-                             uint32_t* cumulativeLost, int32_t* rttMs) override;
-  bool GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
-                           unsigned int* packetsSent,
+  bool GetRTCPReceiverReport(uint32_t* jitterMs, uint32_t* packetsReceived,
+                             uint64_t* bytesReceived, uint32_t* cumulativeLost,
+                             int32_t* rttMs) override;
+  bool GetRTCPSenderReport(unsigned int* packetsSent,
                            uint64_t* bytesSent) override;
   uint64_t MozVideoLatencyAvg();
 
