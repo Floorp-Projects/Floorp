@@ -36,6 +36,11 @@ class UrlClassifierCommon final {
   static bool ShouldEnableTrackingProtectionOrAnnotation(
       nsIChannel* aChannel,
       AntiTrackingCommon::ContentBlockingAllowListPurpose aBlockingPurpose);
+
+  static nsresult SetBlockedContent(nsIChannel* channel, nsresult aErrorCode,
+                                    const nsACString& aList,
+                                    const nsACString& aProvider,
+                                    const nsACString& aFullHash);
 };
 
 }  // namespace net

@@ -103,5 +103,32 @@ UrlClassifierFeatureTrackingProtection::MaybeCreate(nsIChannel* aChannel) {
   return self.forget();
 }
 
+NS_IMETHODIMP
+UrlClassifierFeatureTrackingProtection::ProcessChannel(nsIChannel* aChannel,
+                                                       const nsACString& aList,
+                                                       bool* aShouldContinue) {
+  NS_ENSURE_ARG_POINTER(aChannel);
+  NS_ENSURE_ARG_POINTER(aShouldContinue);
+
+  // This is a blocking feature.
+  *aShouldContinue = false;
+
+  UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_TRACKING_URI, aList,
+                                         EmptyCString(), EmptyCString());
+
+  UC_LOG(
+      ("UrlClassifierFeatureTrackingProtection::ProcessChannel, cancelling "
+       "channel[%p]",
+       aChannel));
+  nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
+  if (httpChannel) {
+    Unused << httpChannel->CancelForTrackingProtection();
+  } else {
+    Unused << aChannel->Cancel(NS_ERROR_TRACKING_URI);
+  }
+
+  return NS_OK;
+}
+
 }  // namespace net
 }  // namespace mozilla

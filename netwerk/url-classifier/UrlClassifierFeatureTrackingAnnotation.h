@@ -24,6 +24,9 @@ class UrlClassifierFeatureTrackingAnnotation final
   static already_AddRefed<UrlClassifierFeatureTrackingAnnotation> MaybeCreate(
       nsIChannel* aChannel);
 
+  NS_IMETHOD ProcessChannel(nsIChannel* aChannel, const nsACString& aList,
+                            bool* aShouldContinue) override;
+
  private:
   UrlClassifierFeatureTrackingAnnotation();
 };
