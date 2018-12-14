@@ -560,10 +560,12 @@ class ContentParent final : public PContentParent,
 
   // PURLClassifierLocalParent.
   virtual PURLClassifierLocalParent* AllocPURLClassifierLocalParent(
-      const URIParams& aURI, const nsCString& aTables) override;
+      const URIParams& aURI,
+      const nsTArray<IPCURLClassifierFeature>& aFeatures) override;
+
   virtual mozilla::ipc::IPCResult RecvPURLClassifierLocalConstructor(
       PURLClassifierLocalParent* aActor, const URIParams& aURI,
-      const nsCString& aTables) override;
+      nsTArray<IPCURLClassifierFeature>&& aFeatures) override;
 
   virtual PLoginReputationParent* AllocPLoginReputationParent(
       const URIParams& aURI) override;

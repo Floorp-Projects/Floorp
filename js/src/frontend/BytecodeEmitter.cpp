@@ -16,6 +16,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ReverseIterator.h"
+#include "mozilla/Sprintf.h"
 
 #include <string.h>
 

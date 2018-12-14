@@ -7,7 +7,9 @@
 #include "nsUrlClassifierDBService.h"
 
 #include "mozilla/SyncRunnable.h"
+#include "Classifier.h"
 
+using namespace mozilla;
 using namespace mozilla::safebrowsing;
 using mozilla::NewRunnableMethod;
 
@@ -102,12 +104,12 @@ UrlClassifierDBServiceWorkerProxy::FinishStream() {
 
 NS_IMETHODIMP
 UrlClassifierDBServiceWorkerProxy::DoLocalLookupRunnable::Run() {
-  mTarget->DoLocalLookup(mSpec, mTables, mResults);
+  mTarget->DoLocalLookupWithURI(mSpec, mTables, mResults);
   return NS_OK;
 }
 
-nsresult UrlClassifierDBServiceWorkerProxy::DoLocalLookup(
-    const nsACString& spec, const nsACString& tables,
+nsresult UrlClassifierDBServiceWorkerProxy::DoLocalLookupWithURI(
+    const nsACString& spec, const nsTArray<nsCString>& tables,
     LookupResultArray& results) const
 
 {
