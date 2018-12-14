@@ -42,7 +42,7 @@ is(+contentBuildID, LEGACY_BUILD_ID,
 let chromeScript = SpecialPowers.loadChromeScript(() => {
   ChromeUtils.import("resource://gre/modules/Services.jsm");
   addMessageListener("test:getBuildID", nav => {
-    let browser = Services.wm.getMostRecentWindow('navigator:browser');
+    const browser = Services.wm.getMostRecentBrowserWindow();
     return browser.navigator.buildID;
   });
 });
