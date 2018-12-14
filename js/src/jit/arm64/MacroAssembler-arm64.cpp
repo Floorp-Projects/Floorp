@@ -583,12 +583,12 @@ void MacroAssembler::call(ImmPtr imm) {
   Blr(vixl::ip0);
 }
 
-void MacroAssembler::call(wasm::SymbolicAddress imm) {
+CodeOffset MacroAssembler::call(wasm::SymbolicAddress imm) {
   vixl::UseScratchRegisterScope temps(this);
   const Register scratch = temps.AcquireX().asUnsized();
   syncStackPtr();
   movePtr(imm, scratch);
-  call(scratch);
+  return call(scratch);
 }
 
 void MacroAssembler::call(const Address& addr) {

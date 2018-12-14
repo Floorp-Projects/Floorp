@@ -540,6 +540,13 @@ JS::Realm* JitFrameIter::realm() const {
   return asJSJit().script()->realm();
 }
 
+uint8_t* JitFrameIter::returnAddressToFp() const {
+  if (isWasm()) {
+    return asWasm().returnAddressToFp();
+  }
+  return asJSJit().returnAddressToFp();
+}
+
 bool JitFrameIter::done() const {
   if (!isSome()) {
     return true;

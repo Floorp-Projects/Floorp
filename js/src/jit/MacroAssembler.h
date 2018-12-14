@@ -421,22 +421,26 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // ===============================================================
   // Simple call functions.
 
+  // The returned CodeOffset is the assembler offset for the instruction
+  // immediately following the call; that is, for the return point.
   CodeOffset call(Register reg) PER_SHARED_ARCH;
   CodeOffset call(Label* label) PER_SHARED_ARCH;
+
   void call(const Address& addr) PER_SHARED_ARCH;
   void call(ImmWord imm) PER_SHARED_ARCH;
   // Call a target native function, which is neither traceable nor movable.
   void call(ImmPtr imm) PER_SHARED_ARCH;
-  void call(wasm::SymbolicAddress imm) PER_SHARED_ARCH;
-  inline void call(const wasm::CallSiteDesc& desc, wasm::SymbolicAddress imm);
+  CodeOffset call(wasm::SymbolicAddress imm) PER_SHARED_ARCH;
+  inline CodeOffset call(const wasm::CallSiteDesc& desc,
+                         wasm::SymbolicAddress imm);
 
   // Call a target JitCode, which must be traceable, and may be movable.
   void call(JitCode* c) PER_SHARED_ARCH;
 
   inline void call(TrampolinePtr code);
 
-  inline void call(const wasm::CallSiteDesc& desc, const Register reg);
-  inline void call(const wasm::CallSiteDesc& desc, uint32_t funcDefIndex);
+  inline CodeOffset call(const wasm::CallSiteDesc& desc, const Register reg);
+  inline CodeOffset call(const wasm::CallSiteDesc& desc, uint32_t funcDefIndex);
   inline void call(const wasm::CallSiteDesc& desc, wasm::Trap trap);
 
   CodeOffset callWithPatch() PER_SHARED_ARCH;
@@ -582,8 +586,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void callWithABI(const Address& fun,
                           MoveOp::Type result = MoveOp::GENERAL);
 
-  void callWithABI(wasm::BytecodeOffset offset, wasm::SymbolicAddress fun,
-                   MoveOp::Type result = MoveOp::GENERAL);
+  CodeOffset callWithABI(wasm::BytecodeOffset offset, wasm::SymbolicAddress fun,
+                         MoveOp::Type result = MoveOp::GENERAL);
 
  private:
   // Reinitialize the variables which have to be cleared before making a call
@@ -1863,19 +1867,20 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // This function takes care of loading the callee's TLS and pinned regs but
   // it is the caller's responsibility to save/restore TLS or pinned regs.
-  void wasmCallImport(const wasm::CallSiteDesc& desc,
-                      const wasm::CalleeDesc& callee);
+  CodeOffset wasmCallImport(const wasm::CallSiteDesc& desc,
+                            const wasm::CalleeDesc& callee);
 
   // WasmTableCallIndexReg must contain the index of the indirect call.
-  void wasmCallIndirect(const wasm::CallSiteDesc& desc,
-                        const wasm::CalleeDesc& callee, bool needsBoundsCheck);
+  CodeOffset wasmCallIndirect(const wasm::CallSiteDesc& desc,
+                              const wasm::CalleeDesc& callee,
+                              bool needsBoundsCheck);
 
   // This function takes care of loading the pointer to the current instance
   // as the implicit first argument. It preserves TLS and pinned registers.
   // (TLS & pinned regs are non-volatile registers in the system ABI).
-  void wasmCallBuiltinInstanceMethod(const wasm::CallSiteDesc& desc,
-                                     const ABIArg& instanceArg,
-                                     wasm::SymbolicAddress builtin);
+  CodeOffset wasmCallBuiltinInstanceMethod(const wasm::CallSiteDesc& desc,
+                                           const ABIArg& instanceArg,
+                                           wasm::SymbolicAddress builtin);
 
   // As enterFakeExitFrame(), but using register conventions appropriate for
   // wasm stubs.
