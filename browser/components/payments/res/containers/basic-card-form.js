@@ -421,12 +421,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
         continue;
       }
       span.setAttribute("fieldRequiredSymbol", this.dataset.fieldRequiredSymbol);
-      let required = field.required && !field.disabled;
-      if (required) {
-        container.setAttribute("required", "true");
-      } else {
-        container.removeAttribute("required");
-      }
+      container.toggleAttribute("required", field.required && !field.disabled);
     }
   }
 
