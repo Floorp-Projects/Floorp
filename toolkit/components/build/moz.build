@@ -21,7 +21,6 @@ LOCAL_INCLUDES += [
     '../../xre',
     '../alerts',
     '../downloads',
-    '../feeds',
     '../find',
     '../perfmonitoring',
     '../protobuf',
