@@ -339,6 +339,7 @@ var Debug = {
   // url-classifier NSPR Log modules.
   modules: ["UrlClassifierDbService",
             "nsChannelClassifier",
+            "UrlClassifier",
             "UrlClassifierProtocolParser",
             "UrlClassifierStreamUpdater",
             "UrlClassifierPrefixSet",

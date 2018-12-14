@@ -5,6 +5,8 @@
 #ifndef nsUrlClassifierUtils_h_
 #define nsUrlClassifierUtils_h_
 
+#include "mozilla/Mutex.h"
+#include "mozilla/Base64.h"
 #include "nsIUrlClassifierUtils.h"
 #include "nsClassHashtable.h"
 #include "nsIObserver.h"

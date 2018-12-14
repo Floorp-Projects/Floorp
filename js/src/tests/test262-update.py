@@ -32,8 +32,6 @@ UNSUPPORTED_FEATURES = set([
     "regexp-unicode-property-escapes",
     "numeric-separator-literal",
     "Intl.Locale",
-    "String.prototype.matchAll",
-    "Symbol.matchAll",
     "global",
     "export-star-as-namespace-from-module",
     "Intl.ListFormat",
@@ -45,6 +43,8 @@ FEATURE_CHECK_NEEDED = {
     "BigInt": "!this.hasOwnProperty('BigInt')",
     "SharedArrayBuffer": "!this.hasOwnProperty('SharedArrayBuffer')",
     "dynamic-import": "!xulRuntime.shell",
+    "String.prototype.matchAll": "!String.prototype.hasOwnProperty('matchAll')",
+    "Symbol.matchAll": "!Symbol.hasOwnProperty('matchAll')",
 }
 RELEASE_OR_BETA = set()
 

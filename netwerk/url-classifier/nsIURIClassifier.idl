@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsIUrlClassifierFeature.idl"
 
 %{C++
 #include "nsStringFwd.h"
@@ -14,6 +15,7 @@ interface nsIChannel;
 interface nsIEventTarget;
 interface nsIPrincipal;
 interface nsIURI;
+interface nsIUrlClassifierFeatureCallback;
 
 /**
  * Callback function for nsIURIClassifier lookups.
@@ -85,6 +87,7 @@ interface nsIURIClassifier : nsISupports
    * The result is an array of table names that match.
    */
   [noscript] StringArrayRef classifyLocalWithTables(in nsIURI aURI, in ACString aTables);
+
   /**
    * Asynchronously classify a URI with a comma-separated string
    * containing the given tables. This does not make network requests.
@@ -98,6 +101,16 @@ interface nsIURIClassifier : nsISupports
                                     in Array<ACString> aExtraTablesByPrefs,
                                     in Array<ACString> aExtraEntriesByPrefs,
                                     in nsIURIClassifierCallback aCallback);
+
+  /**
+   * Asynchronously classify a URI with list of features. This does not make
+   * network requests.
+   */
+  void asyncClassifyLocalWithFeatures(in nsIURI aURI,
+                                      in Array<nsIUrlClassifierFeature> aFeatures,
+                                      in nsIUrlClassifierFeature_listType aListType,
+                                      in nsIUrlClassifierFeatureCallback aCallback);
+
   /**
    * Same as above, but returns a comma separated list of table names.
    * This is an internal interface used only for testing purposes.

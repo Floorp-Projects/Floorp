@@ -82,7 +82,13 @@ nsresult nsDataChannel::OpenContentStream(bool async, nsIInputStream** result,
   if (lBase64) {
     nsAutoCString decodedData;
     rv = Base64Decode(data, decodedData);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      // Returning this error code instead of what Base64Decode returns
+      // (NS_ERROR_ILLEGAL_VALUE) will prevent rendering of redirect response
+      // content by HTTP channels.  It's also more logical error to return.
+      // Here we know the URL is actually corrupted.
+      return NS_ERROR_MALFORMED_URI;
+    }
 
     contentLen = decodedData.Length();
     rv = NS_NewCStringInputStream(getter_AddRefs(bufInStream), decodedData);

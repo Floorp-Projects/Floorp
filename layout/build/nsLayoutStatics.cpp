@@ -115,6 +115,7 @@
 #include "mozilla/dom/RemoteWorkerService.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/ReportingHeader.h"
+#include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "nsThreadManager.h"
 #include "mozilla/css/ImageLoader.h"
 
@@ -292,6 +293,8 @@ nsresult nsLayoutStatics::Initialize() {
   // Reporting API.
   ReportingHeader::Initialize();
 
+  mozilla::net::UrlClassifierFeatureFactory::Initialize();
+
   return NS_OK;
 }
 
@@ -397,4 +400,6 @@ void nsLayoutStatics::Shutdown() {
   BlobURLProtocolHandler::RemoveDataEntries();
 
   css::ImageLoader::Shutdown();
+
+  mozilla::net::UrlClassifierFeatureFactory::Shutdown();
 }

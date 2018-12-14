@@ -10,43 +10,16 @@
 #include "mozilla/dom/PURLClassifierParent.h"
 #include "mozilla/dom/PURLClassifierLocalParent.h"
 #include "nsIURIClassifier.h"
+#include "nsIUrlClassifierFeature.h"
 
 namespace mozilla {
 namespace dom {
 
-template <typename BaseProtocol>
-class URLClassifierParentBase : public nsIURIClassifierCallback,
-                                public BaseProtocol {
- public:
-  // nsIURIClassifierCallback.
-  NS_IMETHOD OnClassifyComplete(nsresult aErrorCode, const nsACString& aList,
-                                const nsACString& aProvider,
-                                const nsACString& aFullHash) override {
-    if (mIPCOpen) {
-      ClassifierInfo info = ClassifierInfo(
-          nsCString(aList), nsCString(aProvider), nsCString(aFullHash));
-      Unused << BaseProtocol::Send__delete__(this, info, aErrorCode);
-    }
-    return NS_OK;
-  }
-
-  // Custom.
-  void ClassificationFailed() {
-    if (mIPCOpen) {
-      Unused << BaseProtocol::Send__delete__(this, void_t(), NS_ERROR_FAILURE);
-    }
-  }
-
- protected:
-  ~URLClassifierParentBase() = default;
-  bool mIPCOpen = true;
-};
-
 //////////////////////////////////////////////////////////////
 // URLClassifierParent
 
-class URLClassifierParent
-    : public URLClassifierParentBase<PURLClassifierParent> {
+class URLClassifierParent : public nsIURIClassifierCallback,
+                            public PURLClassifierParent {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -54,30 +27,58 @@ class URLClassifierParent
                                         bool aUseTrackingProtection,
                                         bool* aSuccess);
 
+  // nsIURIClassifierCallback.
+  NS_IMETHOD OnClassifyComplete(nsresult aErrorCode, const nsACString& aList,
+                                const nsACString& aProvider,
+                                const nsACString& aFullHash) override {
+    if (mIPCOpen) {
+      ClassifierInfo info = ClassifierInfo(
+          nsCString(aList), nsCString(aProvider), nsCString(aFullHash));
+      Unused << Send__delete__(this, info, aErrorCode);
+    }
+    return NS_OK;
+  }
+
+  // Custom.
+  void ClassificationFailed() {
+    if (mIPCOpen) {
+      Unused << Send__delete__(this, void_t(), NS_ERROR_FAILURE);
+    }
+  }
+
  private:
   ~URLClassifierParent() = default;
 
   // Override PURLClassifierParent::ActorDestroy. We seem to unable to
   // override from the base template class.
-  void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override { mIPCOpen = false; }
+
+  bool mIPCOpen = true;
 };
 
 //////////////////////////////////////////////////////////////
 // URLClassifierLocalParent
 
-class URLClassifierLocalParent
-    : public URLClassifierParentBase<PURLClassifierLocalParent> {
+class URLClassifierLocalParent : public nsIUrlClassifierFeatureCallback,
+                                 public PURLClassifierLocalParent {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  mozilla::ipc::IPCResult StartClassify(nsIURI* aURI,
-                                        const nsACString& aTables);
+  mozilla::ipc::IPCResult StartClassify(
+      nsIURI* aURI, const nsTArray<IPCURLClassifierFeature>& aFeatureNames);
+
+  // nsIUrlClassifierFeatureCallback.
+  NS_IMETHOD
+  OnClassifyComplete(
+      const nsTArray<RefPtr<nsIUrlClassifierFeatureResult>>& aResults) override;
 
  private:
   ~URLClassifierLocalParent() = default;
 
-  // Override PURLClassifierParent::ActorDestroy.
-  void ActorDestroy(ActorDestroyReason aWhy) override;
+  // Override PURLClassifierLocalParent::ActorDestroy.
+  void ActorDestroy(ActorDestroyReason aWhy) override { mIPCOpen = false; }
+
+  bool mIPCOpen = true;
 };
 
 }  // namespace dom

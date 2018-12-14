@@ -1075,3 +1075,236 @@ function RegExpSpecies() {
     return this;
 }
 _SetCanonicalName(RegExpSpecies, "get [Symbol.species]");
+
+function IsRegExpMatchAllOptimizable(rx, C) {
+    if (!IsRegExpObject(rx))
+        return false;
+
+    var RegExpCtor = GetBuiltinConstructor("RegExp");
+    if (C !== RegExpCtor)
+        return false;
+
+    var RegExpProto = RegExpCtor.prototype;
+    return RegExpPrototypeOptimizable(RegExpProto) &&
+           RegExpInstanceOptimizable(rx, RegExpProto);
+}
+
+// String.prototype.matchAll proposal.
+//
+// RegExp.prototype [ @@matchAll ] ( string )
+function RegExpMatchAll(string) {
+    // Step 1.
+    var rx = this;
+
+    // Step 2.
+    if (!IsObject(rx))
+        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, rx === null ? "null" : typeof rx);
+
+    // Step 3.
+    var str = ToString(string);
+
+    // Step 4.
+    var C = SpeciesConstructor(rx, GetBuiltinConstructor("RegExp"));
+
+    var source, flags, matcher, lastIndex;
+    if (IsRegExpMatchAllOptimizable(rx, C)) {
+        // Step 5, 9-12.
+        source = UnsafeGetStringFromReservedSlot(rx, REGEXP_SOURCE_SLOT);
+        flags = UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT);
+
+        // Step 6.
+        matcher = rx;
+
+        // Step 7.
+        lastIndex = ToLength(rx.lastIndex);
+
+        // Step 8 (not applicable for the optimized path).
+    } else {
+        // Step 5.
+        source = "";
+        flags = ToString(rx.flags);
+
+        // Step 6.
+        matcher = new C(rx, flags);
+
+        // Steps 7-8.
+        matcher.lastIndex = ToLength(rx.lastIndex);
+
+        // Steps 9-12.
+        flags = (callFunction(std_String_includes, flags, "g") ? REGEXP_GLOBAL_FLAG : 0) |
+                (callFunction(std_String_includes, flags, "u") ? REGEXP_UNICODE_FLAG : 0);
+
+        // Take the non-optimized path.
+        lastIndex = REGEXP_STRING_ITERATOR_LASTINDEX_SLOW;
+    }
+
+    // Step 13.
+    return CreateRegExpStringIterator(matcher, str, source, flags, lastIndex);
+}
+
+// String.prototype.matchAll proposal.
+//
+// CreateRegExpStringIterator ( R, S, global, fullUnicode )
+function CreateRegExpStringIterator(regexp, string, source, flags, lastIndex) {
+    // Step 1.
+    assert(typeof string === "string", "|string| is a string value");
+
+    // Steps 2-3.
+    assert(typeof flags === "number", "|flags| is a number value");
+
+    assert(typeof source === "string", "|source| is a string value");
+    assert(typeof lastIndex === "number", "|lastIndex| is a number value");
+
+    // Steps 4-9.
+    var iterator = NewRegExpStringIterator();
+    UnsafeSetReservedSlot(iterator, REGEXP_STRING_ITERATOR_REGEXP_SLOT, regexp);
+    UnsafeSetReservedSlot(iterator, REGEXP_STRING_ITERATOR_STRING_SLOT, string);
+    UnsafeSetReservedSlot(iterator, REGEXP_STRING_ITERATOR_SOURCE_SLOT, source);
+    UnsafeSetReservedSlot(iterator, REGEXP_STRING_ITERATOR_FLAGS_SLOT, flags | 0);
+    UnsafeSetReservedSlot(iterator, REGEXP_STRING_ITERATOR_LASTINDEX_SLOT, lastIndex);
+
+    // Step 10.
+    return iterator;
+}
+
+function IsRegExpStringIteratorNextOptimizable() {
+    var RegExpProto = GetBuiltinPrototype("RegExp");
+    // If RegExpPrototypeOptimizable succeeds, `RegExpProto.exec` is
+    // guaranteed to be a data property.
+    return RegExpPrototypeOptimizable(RegExpProto) &&
+           RegExpProto.exec === RegExp_prototype_Exec;
+}
+
+// String.prototype.matchAll proposal.
+//
+// %RegExpStringIteratorPrototype%.next ( )
+function RegExpStringIteratorNext() {
+    // Steps 1-3.
+    var obj;
+    if (!IsObject(this) || (obj = GuardToRegExpStringIterator(this)) === null) {
+        return callFunction(CallRegExpStringIteratorMethodIfWrapped, this,
+                            "RegExpStringIteratorNext");
+    }
+
+    var result = { value: undefined, done: false };
+
+    // Step 4.
+    var lastIndex = UnsafeGetReservedSlot(obj, REGEXP_STRING_ITERATOR_LASTINDEX_SLOT);
+    if (lastIndex === REGEXP_STRING_ITERATOR_LASTINDEX_DONE) {
+        result.done = true;
+        return result;
+    }
+
+    // Step 5.
+    var regexp = UnsafeGetObjectFromReservedSlot(obj, REGEXP_STRING_ITERATOR_REGEXP_SLOT);
+
+    // Step 6.
+    var string = UnsafeGetStringFromReservedSlot(obj, REGEXP_STRING_ITERATOR_STRING_SLOT);
+
+    // Steps 7-8.
+    var flags = UnsafeGetInt32FromReservedSlot(obj, REGEXP_STRING_ITERATOR_FLAGS_SLOT);
+    var global = !!(flags & REGEXP_GLOBAL_FLAG);
+    var fullUnicode = !!(flags & REGEXP_UNICODE_FLAG);
+
+    if (lastIndex >= 0) {
+        assert(IsRegExpObject(regexp), "|regexp| is a RegExp object");
+
+        var source = UnsafeGetStringFromReservedSlot(obj, REGEXP_STRING_ITERATOR_SOURCE_SLOT);
+        if (IsRegExpStringIteratorNextOptimizable() &&
+            UnsafeGetStringFromReservedSlot(regexp, REGEXP_SOURCE_SLOT) === source &&
+            UnsafeGetInt32FromReservedSlot(regexp, REGEXP_FLAGS_SLOT) === flags)
+        {
+            // Step 9 (Inlined RegExpBuiltinExec).
+            var globalOrSticky = !!(flags & (REGEXP_GLOBAL_FLAG | REGEXP_STICKY_FLAG));
+            if (!globalOrSticky)
+                lastIndex = 0;
+
+            var match = (lastIndex <= string.length)
+                        ? RegExpMatcher(regexp, string, lastIndex)
+                        : null;
+
+            // Step 10.
+            if (match === null) {
+                // Step 10.a.
+                UnsafeSetReservedSlot(obj, REGEXP_STRING_ITERATOR_LASTINDEX_SLOT,
+                                      REGEXP_STRING_ITERATOR_LASTINDEX_DONE);
+
+                // Step 10.b.
+                result.done = true;
+                return result;
+            }
+
+            // Step 11.a.
+            if (global) {
+                // Step 11.a.i.
+                var matchLength = match[0].length;
+                lastIndex = match.index + matchLength;
+
+                // Step 11.a.ii.
+                if (matchLength === 0) {
+                    // Steps 11.a.ii.1-3.
+                    lastIndex = fullUnicode ? AdvanceStringIndex(string, lastIndex) : lastIndex + 1;
+                }
+
+                UnsafeSetReservedSlot(obj, REGEXP_STRING_ITERATOR_LASTINDEX_SLOT, lastIndex);
+            } else {
+                // Step 11.b.i.
+                UnsafeSetReservedSlot(obj, REGEXP_STRING_ITERATOR_LASTINDEX_SLOT,
+                                      REGEXP_STRING_ITERATOR_LASTINDEX_DONE);
+            }
+
+            // Steps 11.a.iii and 11.b.ii.
+            result.value = match;
+            return result;
+        }
+
+        // Reify the RegExp object.
+        regexp = regexp_construct_raw_flags(source, flags);
+        regexp.lastIndex = lastIndex;
+        UnsafeSetReservedSlot(obj, REGEXP_STRING_ITERATOR_REGEXP_SLOT, regexp);
+
+        // Mark the iterator as no longer optimizable.
+        UnsafeSetReservedSlot(obj, REGEXP_STRING_ITERATOR_LASTINDEX_SLOT,
+                              REGEXP_STRING_ITERATOR_LASTINDEX_SLOW);
+    }
+
+    // Step 9.
+    var match = RegExpExec(regexp, string, false);
+
+    // Step 10.
+    if (match === null) {
+        // Step 10.a.
+        UnsafeSetReservedSlot(obj, REGEXP_STRING_ITERATOR_LASTINDEX_SLOT,
+                              REGEXP_STRING_ITERATOR_LASTINDEX_DONE);
+
+        // Step 10.b.
+        result.done = true;
+        return result;
+    }
+
+    // Step 11.a.
+    if (global) {
+        // Step 11.a.i.
+        var matchStr = ToString(match[0]);
+
+        // Step 11.a.ii.
+        if (matchStr.length === 0) {
+            // Step 11.a.ii.1.
+            var thisIndex = ToLength(regexp.lastIndex);
+
+            // Step 11.a.ii.2.
+            var nextIndex = fullUnicode ? AdvanceStringIndex(string, thisIndex) : thisIndex + 1;
+
+            // Step 11.a.ii.3.
+            regexp.lastIndex = nextIndex;
+        }
+    } else {
+        // Step 11.b.i.
+        UnsafeSetReservedSlot(obj, REGEXP_STRING_ITERATOR_LASTINDEX_SLOT,
+                              REGEXP_STRING_ITERATOR_LASTINDEX_DONE);
+    }
+
+    // Steps 11.a.iii and 11.b.ii.
+    result.value = match;
+    return result;
+}

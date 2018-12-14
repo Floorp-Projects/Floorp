@@ -153,6 +153,13 @@ class nsUrlClassifierDBService final : public nsIUrlClassifierDBService,
 
   nsresult ReadTablesFromPrefs();
 
+  // This method checks if the classification can be done just using
+  // preferences. It returns true if the operation has been completed.
+  bool AsyncClassifyLocalWithFeaturesUsingPreferences(
+      nsIURI* aURI, const nsTArray<RefPtr<nsIUrlClassifierFeature>>& aFeatures,
+      nsIUrlClassifierFeature::listType aListType,
+      nsIUrlClassifierFeatureCallback* aCallback);
+
   RefPtr<nsUrlClassifierDBServiceWorker> mWorker;
   RefPtr<UrlClassifierDBServiceWorkerProxy> mWorkerProxy;
 
@@ -214,10 +221,14 @@ class nsUrlClassifierDBServiceWorker final : public nsIUrlClassifierDBService {
   // update operations to prevent lookups from blocking for too long.
   nsresult HandlePendingLookups();
 
-  // Perform a blocking classifier lookup for a given url. Can be called on
-  // either the main thread or the worker thread.
-  nsresult DoLocalLookup(const nsACString& spec, const nsACString& tables,
-                         LookupResultArray& results);
+  // Perform a blocking classifier lookup for a given url fragments set.
+  // Can be called on either the main thread or the worker thread.
+  nsresult DoSingleLocalLookupWithURIFragments(
+      const nsTArray<nsCString>& aSpecFragments, const nsACString& aTable,
+      LookupResultArray& aResults);
+  nsresult DoLocalLookupWithURI(const nsACString& aSpec,
+                                const nsTArray<nsCString>& aTables,
+                                LookupResultArray& aResults);
 
   // Open the DB connection
   nsresult GCC_MANGLING_WORKAROUND OpenDb();
