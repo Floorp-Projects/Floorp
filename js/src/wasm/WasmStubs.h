@@ -136,7 +136,7 @@ using JitCallStackArgVector = Vector<JitCallStackArg, 4, SystemAllocPolicy>;
 extern void GenerateDirectCallFromJit(
     jit::MacroAssembler& masm, const FuncExport& fe, const Instance& inst,
     const JitCallStackArgVector& stackArgs, bool profilingEnabled,
-    bool wasmGcEnabled, jit::Register scratch, uint32_t* callOffset);
+    jit::Register scratch, uint32_t* callOffset);
 
 }  // namespace wasm
 }  // namespace js

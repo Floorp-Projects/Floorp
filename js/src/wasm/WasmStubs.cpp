@@ -271,16 +271,6 @@ static void MoveSPForJitABI(MacroAssembler& masm) {
 #endif
 }
 
-#ifdef ENABLE_WASM_GC
-static void SuppressGC(MacroAssembler& masm, int32_t increment,
-                       Register scratch) {
-  // masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, cx)), scratch);
-  // masm.add32(Imm32(increment),
-  //           Address(scratch, offsetof(JSContext, suppressGC) +
-  //                                js::ThreadData<int32_t>::offsetOfValue()));
-}
-#endif
-
 static void CallFuncExport(MacroAssembler& masm, const FuncExport& fe,
                            const Maybe<ImmPtr>& funcPtr) {
   MOZ_ASSERT(fe.hasEagerStubs() == !funcPtr);
@@ -358,9 +348,6 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
 
 #ifdef ENABLE_WASM_GC
   WasmPush(masm, WasmTlsReg);
-  if (gcTypesConfigured == HasGcTypes::True) {
-    SuppressGC(masm, 1, scratch);
-  }
 #endif
 
   // Save 'argv' on the stack so that we can recover it after the call.
@@ -418,9 +405,6 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
 
 #ifdef ENABLE_WASM_GC
   WasmPop(masm, WasmTlsReg);
-  if (gcTypesConfigured == HasGcTypes::True) {
-    SuppressGC(masm, -1, WasmTlsReg);
-  }
 #endif
 
   // Store the return value in argv[0].
@@ -539,16 +523,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
   // left):
   // <-- retAddr | descriptor | callee | argc | this | arg1..N
 
-#ifdef ENABLE_WASM_GC
-  // Save WasmTlsReg in the uppermost part of the reserved area, because we
-  // need it directly after the call.
-  unsigned savedTlsSize = AlignBytes(sizeof(void*), WasmStackAlignment);
-#else
-  unsigned savedTlsSize = 0;
-#endif
-
-  unsigned normalBytesNeeded =
-      StackArgBytes(fe.funcType().args()) + savedTlsSize;
+  unsigned normalBytesNeeded = StackArgBytes(fe.funcType().args());
 
   MIRTypeVector coerceArgTypes;
   MOZ_ALWAYS_TRUE(coerceArgTypes.append(MIRType::Int32));
@@ -562,10 +537,6 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
   // instruction.
   unsigned frameSize = StackDecrementForCall(WasmStackAlignment,
                                              masm.framePushed(), bytesNeeded);
-
-#ifdef ENABLE_WASM_GC
-  unsigned savedTlsOffset = frameSize - sizeof(void*);
-#endif
 
   // Reserve stack space for wasm ABI arguments, set up like this:
   // <-- ABI args | padding
@@ -742,25 +713,11 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
   // Setup wasm register state.
   masm.loadWasmPinnedRegsFromTls();
 
-#ifdef ENABLE_WASM_GC
-  if (gcTypesConfigured == HasGcTypes::True) {
-    masm.storePtr(WasmTlsReg, Address(sp, savedTlsOffset));
-    SuppressGC(masm, 1, ScratchIonEntry);
-  }
-#endif
-
   // Call into the real function. Note that, due to the throw stub, fp, tls
   // and pinned registers may be clobbered.
   masm.assertStackAlignment(WasmStackAlignment);
   CallFuncExport(masm, fe, funcPtr);
   masm.assertStackAlignment(WasmStackAlignment);
-
-#ifdef ENABLE_WASM_GC
-  if (gcTypesConfigured == HasGcTypes::True) {
-    masm.loadPtr(Address(sp, savedTlsOffset), WasmTlsReg);
-    SuppressGC(masm, -1, WasmTlsReg);
-  }
-#endif
 
   // If fp is equal to the FailFP magic value (set by the throw stub), then
   // report the exception to the JIT caller by jumping into the exception
@@ -868,8 +825,8 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
 void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
                                      const Instance& inst,
                                      const JitCallStackArgVector& stackArgs,
-                                     bool profilingEnabled, bool wasmGcEnabled,
-                                     Register scratch, uint32_t* callOffset) {
+                                     bool profilingEnabled, Register scratch,
+                                     uint32_t* callOffset) {
   MOZ_ASSERT(!IsCompilingWasm());
 
   size_t framePushedAtStart = masm.framePushed();
@@ -970,12 +927,6 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
   masm.movePtr(ImmPtr(inst.tlsData()), WasmTlsReg);
   masm.loadWasmPinnedRegsFromTls();
 
-#ifdef ENABLE_WASM_GC
-  if (wasmGcEnabled) {
-    SuppressGC(masm, 1, ABINonArgReg0);
-  }
-#endif
-
   // Actual call.
   const CodeTier& codeTier = inst.code().codeTier(inst.code().bestTier());
   const MetadataTier& metadata = codeTier.metadata();
@@ -985,12 +936,6 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
   masm.assertStackAlignment(WasmStackAlignment);
   masm.callJit(ImmPtr(callee));
   masm.assertStackAlignment(WasmStackAlignment);
-
-#ifdef ENABLE_WASM_GC
-  if (wasmGcEnabled) {
-    SuppressGC(masm, -1, WasmTlsReg);
-  }
-#endif
 
   masm.branchPtr(Assembler::Equal, FramePointer, Imm32(wasm::FailFP),
                  masm.exceptionLabel());

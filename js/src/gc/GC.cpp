@@ -1041,10 +1041,6 @@ static const mozilla::EnumSet<ZealMode> IncrementalSliceZealModes = {
 void GCRuntime::setZeal(uint8_t zeal, uint32_t frequency) {
   MOZ_ASSERT(zeal <= unsigned(ZealMode::Limit));
 
-  if (temporaryAbortIfWasmGc(rt->mainContextFromOwnThread())) {
-    return;
-  }
-
   if (verifyPreData) {
     VerifyBarriers(rt, PreBarrierVerifier);
   }
@@ -1086,10 +1082,6 @@ void GCRuntime::setZeal(uint8_t zeal, uint32_t frequency) {
 void GCRuntime::unsetZeal(uint8_t zeal) {
   MOZ_ASSERT(zeal <= unsigned(ZealMode::Limit));
   ZealMode zealMode = ZealMode(zeal);
-
-  if (temporaryAbortIfWasmGc(rt->mainContextFromOwnThread())) {
-    return;
-  }
 
   if (!hasZealMode(zealMode)) {
     return;
@@ -8198,12 +8190,6 @@ void GCRuntime::clearSelectedForMarking() {
 void GCRuntime::setDeterministic(bool enabled) {
   MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
   deterministicOnly = enabled;
-}
-#endif
-
-#ifdef ENABLE_WASM_GC
-/* static */ bool GCRuntime::temporaryAbortIfWasmGc(JSContext* cx) {
-  return cx->options().wasmGc() && cx->suppressGC;
 }
 #endif
 
