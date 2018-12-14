@@ -618,8 +618,8 @@ class GCRuntime {
   void traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark);
   void maybeDoCycleCollection();
   void markCompartments();
-  IncrementalProgress markUntilBudgetExhaused(SliceBudget& sliceBudget,
-                                              gcstats::PhaseKind phase);
+  IncrementalProgress markUntilBudgetExhausted(SliceBudget& sliceBudget,
+                                               gcstats::PhaseKind phase);
   void drainMarkStack();
   template <class ZoneIterT>
   void markWeakReferences(gcstats::PhaseKind phase);
