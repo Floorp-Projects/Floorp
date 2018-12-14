@@ -160,7 +160,9 @@ impl<'a> From<&'a LayoutToWorldTransform> for FontTransform {
     }
 }
 
-pub const FONT_SIZE_LIMIT: f64 = 1024.0;
+// Some platforms (i.e. Windows) may have trouble rasterizing glyphs above this size.
+// Ensure glyph sizes are reasonably limited to avoid that scenario.
+pub const FONT_SIZE_LIMIT: f64 = 512.0;
 
 #[derive(Clone, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
 #[cfg_attr(feature = "capture", derive(Serialize))]

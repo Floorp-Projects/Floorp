@@ -10,7 +10,7 @@ playback_cls = {
 }
 
 
-def get_playback(config):
+def get_playback(config, android_device=None):
     tool_name = config.get('playback_tool', None)
     if tool_name is None:
         LOG.critical("playback_tool name not found in config")
@@ -20,4 +20,4 @@ def get_playback(config):
         return None
 
     cls = playback_cls.get(tool_name)
-    return cls(config)
+    return cls(config, android_device)

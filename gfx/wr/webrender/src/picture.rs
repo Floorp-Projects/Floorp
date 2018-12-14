@@ -20,7 +20,7 @@ use gpu_types::{TransformPalette, TransformPaletteId, UvRectKind};
 use internal_types::FastHashSet;
 use plane_split::{Clipper, Polygon, Splitter};
 use prim_store::{PictureIndex, PrimitiveInstance, SpaceMapper, VisibleFace, PrimitiveInstanceKind};
-use prim_store::{get_raster_rects, CoordinateSpaceMapping};
+use prim_store::{get_raster_rects, CoordinateSpaceMapping, PointKey};
 use prim_store::{OpacityBindingStorage, PrimitiveTemplateKind, ImageInstanceStorage, OpacityBindingIndex, SizeKey};
 use render_backend::FrameResources;
 use render_task::{ClearMode, RenderTask, RenderTaskCacheEntryHandle, TileBlit};
@@ -78,7 +78,8 @@ pub type TileRect = TypedRect<i32, TileCoordinate>;
 /// The size in device pixels of a cached tile. The currently chosen
 /// size is arbitrary. We should do some profiling to find the best
 /// size for real world pages.
-pub const TILE_SIZE_DP: i32 = 512;
+pub const TILE_SIZE_WIDTH: i32 = 1024;
+pub const TILE_SIZE_HEIGHT: i32 = 256;
 
 /// Information about the state of a transform dependency.
 #[derive(Debug)]
@@ -247,13 +248,27 @@ impl Tile {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub struct TileTransformIndex(u32);
 
+/// Defines a key that uniquely identifies a primitive instance.
+#[derive(Debug, Eq, PartialEq, Hash)]
+pub struct PrimitiveDescriptor {
+    /// Uniquely identifies the content of the primitive template.
+    prim_uid: ItemUid,
+    /// The origin in local space of this primitive.
+    origin: PointKey,
+    /// The first clip in the clip_uids array of clips that affect this tile.
+    first_clip: u16,
+    /// The number of clips that affect this primitive instance.
+    clip_count: u16,
+}
+
 /// Uniquely describes the content of this tile, in a way that can be
 /// (reasonably) efficiently hashed and compared.
 #[derive(Debug, Eq, PartialEq, Hash)]
 pub struct TileDescriptor {
-    /// List of primitive unique identifiers. The uid is guaranteed
-    /// to uniquely describe the content of the primitive.
-    pub prim_uids: Vec<ItemUid>,
+    /// List of primitive instance unique identifiers. The uid is guaranteed
+    /// to uniquely describe the content of the primitive template, while
+    /// the other parameters describe the clip chain and instance params.
+    pub prims: Vec<PrimitiveDescriptor>,
 
     /// List of clip node unique identifiers. The uid is guaranteed
     /// to uniquely describe the content of the clip node.
@@ -288,7 +303,7 @@ impl TileDescriptor {
         raster_transform: TransformKey,
     ) -> Self {
         TileDescriptor {
-            prim_uids: Vec::new(),
+            prims: Vec::new(),
             clip_uids: Vec::new(),
             transform_ids: Vec::new(),
             opacity_bindings: Vec::new(),
@@ -302,7 +317,7 @@ impl TileDescriptor {
     /// Clear the dependency information for a tile, when the dependencies
     /// are being rebuilt.
     fn clear(&mut self) {
-        self.prim_uids.clear();
+        self.prims.clear();
         self.clip_uids.clear();
         self.transform_ids.clear();
         self.transforms.clear();
@@ -416,8 +431,8 @@ impl TileCache {
         let world_tile_rect = WorldRect::from_floats(
             0.0,
             0.0,
-            TILE_SIZE_DP as f32 / frame_context.device_pixel_scale.0,
-            TILE_SIZE_DP as f32 / frame_context.device_pixel_scale.0,
+            TILE_SIZE_WIDTH as f32 / frame_context.device_pixel_scale.0,
+            TILE_SIZE_HEIGHT as f32 / frame_context.device_pixel_scale.0,
         );
         let local_tile_rect = world_mapper
             .unmap(&world_tile_rect)
@@ -556,15 +571,32 @@ impl TileCache {
 
         // Get the tile coordinates in the picture space.
         let pic_rect = TypedRect::from_untyped(&pic_rect.to_untyped());
-        let local_pic_rect = pic_rect.translate(&-self.local_origin.to_vector());
-
-        let x0 = (local_pic_rect.origin.x / self.local_tile_size.width).floor() as i32;
-        let y0 = (local_pic_rect.origin.y / self.local_tile_size.height).floor() as i32;
-        let x1 = ((local_pic_rect.origin.x + local_pic_rect.size.width) / self.local_tile_size.width).ceil() as i32;
-        let y1 = ((local_pic_rect.origin.y + local_pic_rect.size.height) / self.local_tile_size.height).ceil() as i32;
+        let (p0, p1) = self.get_tile_coords_for_rect(&pic_rect);
 
         // Update the tile array allocation if needed.
-        self.reconfigure_tiles_if_required(x0, y0, x1, y1);
+        self.reconfigure_tiles_if_required(p0.x, p0.y, p1.x, p1.y);
+    }
+
+    /// Get the tile coordinates for a given rectangle.
+    fn get_tile_coords_for_rect(
+        &self,
+        rect: &LayoutRect,
+    ) -> (TileOffset, TileOffset) {
+        // Translate the rectangle into the virtual tile space
+        let origin = rect.origin - self.local_origin;
+
+        // Get the tile coordinates in the picture space.
+        let p0 = TileOffset::new(
+            (origin.x / self.local_tile_size.width).floor() as i32,
+            (origin.y / self.local_tile_size.height).floor() as i32,
+        );
+
+        let p1 = TileOffset::new(
+            ((origin.x + rect.size.width) / self.local_tile_size.width).ceil() as i32,
+            ((origin.y + rect.size.height) / self.local_tile_size.height).ceil() as i32,
+        );
+
+        (p0, p1)
     }
 
     /// Resize the 2D tiles array if needed in order to fit dependencies
@@ -692,14 +724,8 @@ impl TileCache {
             return;
         }
 
-        // Translate the rectangle into the virtual tile space
-        let origin = rect.origin - self.local_origin;
-
         // Get the tile coordinates in the picture space.
-        let x0 = (origin.x / self.local_tile_size.width).floor() as i32;
-        let y0 = (origin.y / self.local_tile_size.height).floor() as i32;
-        let x1 = ((origin.x + rect.size.width) / self.local_tile_size.width).ceil() as i32;
-        let y1 = ((origin.y + rect.size.height) / self.local_tile_size.height).ceil() as i32;
+        let (p0, p1) = self.get_tile_coords_for_rect(&rect);
 
         // Build the list of resources that this primitive has dependencies on.
         let mut opacity_bindings: SmallVec<[PropertyBindingId; 4]> = SmallVec::new();
@@ -795,8 +821,8 @@ impl TileCache {
 
         // Normalize the tile coordinates before adding to tile dependencies.
         // For each affected tile, mark any of the primitive dependencies.
-        for y in y0 - self.tile_rect.origin.y .. y1 - self.tile_rect.origin.y {
-            for x in x0 - self.tile_rect.origin.x .. x1 - self.tile_rect.origin.x {
+        for y in p0.y - self.tile_rect.origin.y .. p1.y - self.tile_rect.origin.y {
+            for x in p0.x - self.tile_rect.origin.x .. p1.x - self.tile_rect.origin.x {
                 let index = (y * self.tile_rect.size.width + x) as usize;
                 let tile = &mut self.tiles[index];
 
@@ -835,7 +861,12 @@ impl TileCache {
                 }
 
                 // Update the tile descriptor, used for tile comparison during scene swaps.
-                tile.descriptor.prim_uids.push(prim_instance.uid());
+                tile.descriptor.prims.push(PrimitiveDescriptor {
+                    prim_uid: prim_instance.uid(),
+                    origin: prim_instance.prim_origin.into(),
+                    first_clip: tile.descriptor.clip_uids.len() as u16,
+                    clip_count: clip_chain_uids.len() as u16,
+                });
                 tile.descriptor.clip_uids.extend_from_slice(&clip_chain_uids);
             }
         }
@@ -2184,8 +2215,8 @@ impl PicturePrimitive {
                         //           we will need to correctly select an opacity
                         //           here and a blend mode in batch.rs.
                         let descriptor = ImageDescriptor::new(
-                            TILE_SIZE_DP,
-                            TILE_SIZE_DP,
+                            TILE_SIZE_WIDTH,
+                            TILE_SIZE_HEIGHT,
                             ImageFormat::BGRA8,
                             true,
                             false,
@@ -2235,8 +2266,8 @@ impl PicturePrimitive {
                                     // Set up the blit command now that we know where the dest
                                     // rect is in the texture cache.
                                     let offset = DeviceIntPoint::new(
-                                        (x - dirty_region.tile_offset.x) * TILE_SIZE_DP,
-                                        (y - dirty_region.tile_offset.y) * TILE_SIZE_DP,
+                                        (x - dirty_region.tile_offset.x) * TILE_SIZE_WIDTH,
+                                        (y - dirty_region.tile_offset.y) * TILE_SIZE_HEIGHT,
                                     );
 
                                     blits.push(TileBlit {

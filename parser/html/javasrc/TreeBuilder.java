@@ -3298,17 +3298,19 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                     }
             }
         }
-        String charset = null;
         if (start != -1) {
             if (end == -1) {
+              if (charsetState == CHARSET_UNQUOTED) {
                 end = buffer.length;
+              } else {
+                return null;
+              }
             }
-            charset = Portability.newStringFromBuffer(buffer, start, end
-                    - start
+            return Portability.newStringFromBuffer(buffer, start, end - start
                 // CPPONLY: , tb, false
             );
         }
-        return charset;
+        return null;
     }
 
     private void checkMetaCharset(HtmlAttributes attributes)
