@@ -1159,14 +1159,6 @@ bool WebrtcVideoConduit::GetVideoDecoderStats(double* framerateMean,
   return true;
 }
 
-bool WebrtcVideoConduit::GetAVStats(int32_t* jitterBufferDelayMs,
-                                    int32_t* playoutBufferDelayMs,
-                                    int32_t* avSyncOffsetMs) {
-  ASSERT_ON_THREAD(mStsThread);
-
-  return false;
-}
-
 bool WebrtcVideoConduit::GetRTPStats(uint32_t* jitterMs,
                                      uint32_t* packetsLost) {
   ASSERT_ON_THREAD(mStsThread);
