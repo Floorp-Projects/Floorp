@@ -579,8 +579,6 @@ this.worker = new WorkerDebuggerLoader({
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
     "promise": "resource://gre/modules/Promise-backend.js",
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-    "source-map": "resource://devtools/shared/sourcemap/source-map.js",
-    // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
     "xpcshell-test": "resource://test",
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
   },
