@@ -215,7 +215,16 @@ class SourceFooter extends PureComponent<Props, State> {
       cursorPosition.line + 1,
       cursorPosition.column + 1
     );
-    return <span className="cursor-position">{text}</span>;
+    const title = L10N.getFormatStr(
+      "sourceFooter.currentCursorPosition.tooltip",
+      cursorPosition.line + 1,
+      cursorPosition.column + 1
+    );
+    return (
+      <span className="cursor-position" title={title}>
+        {text}
+      </span>
+    );
   }
 
   render() {
