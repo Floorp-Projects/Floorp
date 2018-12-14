@@ -40,6 +40,31 @@ allprojects {
             url "file://${gradle.mozconfig.topsrcdir}/mobile/android/gradle/m2repo"
         }
     }
+
+    task downloadDependencies() {
+        description 'Download all dependencies to the Gradle cache'
+        doLast {
+            configurations.each { configuration ->
+                if (configuration.canBeResolved) {
+                    configuration.allDependencies.each { dependency ->
+                        try {
+                            configuration.files(dependency)
+                        } catch(e) {
+                            println("Could not resolve ${configuration.name} -> ${dependency.name}")
+                            println(" > ${e.message}")
+                            if (e.cause) {
+                                println(" >> ${e.cause}")
+                                if (e.cause.cause) {
+                                    println(" >> ${e.cause.cause}")
+                                }
+                            }
+                            println("")
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 buildDir "${topobjdir}/gradle/build"
