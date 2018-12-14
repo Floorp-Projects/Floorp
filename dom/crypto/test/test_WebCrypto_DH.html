@@ -19,7 +19,7 @@
 <!-- General testing framework -->
 <script src="./test-array.js"></script>
 
-<script>/*<![CDATA[*/
+<script>/* <![CDATA[*/
 "use strict";
 
 // -----------------------------------------------------------------------------
@@ -30,7 +30,7 @@ TestArray.addTest(
     var alg = {
       name: "DH",
       prime: tv.dh.prime,
-      generator: new Uint8Array([0x02])
+      generator: new Uint8Array([0x02]),
     };
     crypto.subtle.generateKey(alg, false, ["deriveKey", "deriveBits"]).then(
       complete(that, function(x) {
@@ -64,20 +64,20 @@ TestArray.addTest(
     var alg = {
       name: "DH",
       prime: tv.dh.prime,
-      generator: new Uint8Array([0x02])
+      generator: new Uint8Array([0x02]),
     };
 
     function doDerive(x) {
       var alg = {
         name: "DH",
-        public: x.publicKey
+        public: x.publicKey,
       };
       return crypto.subtle.deriveBits(alg, x.privateKey, 128);
     }
 
     crypto.subtle.generateKey(alg, false, ["deriveBits"])
       .then(doDerive, error(that))
-      .then(complete(that, function (x) {
+      .then(complete(that, function(x) {
         return x.byteLength == 16;
       }), error(that));
   }
@@ -96,7 +96,7 @@ TestArray.addTest(
       var alg = {
         name: "DH",
         prime: tv.dh.prime,
-        generator: new Uint8Array([0x02])
+        generator: new Uint8Array([0x02]),
       };
       return crypto.subtle.generateKey(alg, false, ["deriveBits"]);
     }
@@ -106,9 +106,9 @@ TestArray.addTest(
         name: "RSA-OAEP",
         hash: "SHA-256",
         modulusLength: 2048,
-        publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+        publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
       };
-      return crypto.subtle.generateKey(alg, false, ["encrypt"])
+      return crypto.subtle.generateKey(alg, false, ["encrypt"]);
     }
 
     function doDerive() {
@@ -138,7 +138,7 @@ TestArray.addTest(
       var alg = {
         name: "DH",
         prime: tv.dh.prime,
-        generator: new Uint8Array([0x02])
+        generator: new Uint8Array([0x02]),
       };
       return crypto.subtle.generateKey(alg, false, ["deriveBits"]);
     }
@@ -147,7 +147,7 @@ TestArray.addTest(
       var alg = {
         name: "DH",
         prime: tv.dh.prime2,
-        generator: new Uint8Array([0x02])
+        generator: new Uint8Array([0x02]),
       };
       return crypto.subtle.generateKey(alg, false, ["deriveBits"]);
     }
@@ -156,7 +156,7 @@ TestArray.addTest(
       var alg = {
         name: "DH",
         prime: tv.dh.prime,
-        generator: new Uint8Array([0x03])
+        generator: new Uint8Array([0x03]),
       };
       return crypto.subtle.generateKey(alg, false, ["deriveBits"]);
     }
@@ -181,12 +181,12 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "Raw import/export of a public DH key",
-  function () {
+  function() {
     var that = this;
     var alg = {
       name: "DH",
       prime: tv.dh_nist.prime,
-      generator: tv.dh_nist.gen
+      generator: tv.dh_nist.gen,
     };
 
     function doExport(x) {
@@ -207,7 +207,7 @@ TestArray.addTest(
     var alg = {
       name: "DH",
       prime: tv.dh_nist.prime,
-      generator: tv.dh_nist.gen
+      generator: tv.dh_nist.gen,
     };
 
     var privKey;
@@ -226,7 +226,7 @@ TestArray.addTest(
       .then(setPriv, error(that))
       .then(doImport, error(that))
       .then(doDerive, error(that))
-      .then(complete(that, function (x) {
+      .then(complete(that, function(x) {
         return x.byteLength == 16;
       }), error(that));
   }
@@ -247,7 +247,7 @@ TestArray.addTest(
       .then(memcmp_complete(that, tv.dh_nist.spki), error(that));
   }
 );
-/*]]>*/</script>
+/* ]]>*/</script>
 </head>
 
 <body>
