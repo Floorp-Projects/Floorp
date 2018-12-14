@@ -65,7 +65,7 @@ with Files("LaterRun.jsm"):
     BUG_COMPONENT = ("Firefox", "Tours")
 
 with Files("LiveBookmarkMigrator.jsm"):
-    BUG_COMPONENT = ("Firefox", "RSS Discovery and Preview")
+    BUG_COMPONENT = ("Firefox", "General")
 
 with Files("OpenInTabsUtils.jsm"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
