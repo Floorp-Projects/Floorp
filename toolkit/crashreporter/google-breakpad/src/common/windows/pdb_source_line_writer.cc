@@ -1024,24 +1024,40 @@ bool PDBSourceLineWriter::FindPEFile() {
   return false;
 }
 
+static const DWORD kUndecorateOptions =
+    UNDNAME_NO_MS_KEYWORDS | UNDNAME_NO_FUNCTION_RETURNS |
+    UNDNAME_NO_ALLOCATION_MODEL | UNDNAME_NO_ALLOCATION_LANGUAGE |
+    UNDNAME_NO_THISTYPE | UNDNAME_NO_ACCESS_SPECIFIERS |
+    UNDNAME_NO_THROW_SIGNATURES | UNDNAME_NO_MEMBER_TYPE |
+    UNDNAME_NO_RETURN_UDT_MODEL | UNDNAME_NO_ECSU;
+
+static void FixupLlvmUniqueSymbol(BSTR *name) {
+  wchar_t *suffix = wcsstr(*name, L".llvm.");
+
+  if (suffix != nullptr) {
+    *suffix = L'\0';
+
+    const size_t undecorated_len = 1024;
+    wchar_t undecorated[undecorated_len] = {};
+    DWORD res = UnDecorateSymbolNameW(*name, undecorated, undecorated_len,
+                                      kUndecorateOptions);
+    if (res == 0) {
+      fprintf(stderr, "failed to undecorate symbol %S\n", *name);
+    } else {
+      SysFreeString(*name);
+      *name = SysAllocString(undecorated);
+    }
+  }
+}
+
 // static
 bool PDBSourceLineWriter::GetSymbolFunctionName(IDiaSymbol *function,
                                                 BSTR *name,
                                                 int *stack_param_size) {
   *stack_param_size = -1;
-  const DWORD undecorate_options = UNDNAME_NO_MS_KEYWORDS |
-                                   UNDNAME_NO_FUNCTION_RETURNS |
-                                   UNDNAME_NO_ALLOCATION_MODEL |
-                                   UNDNAME_NO_ALLOCATION_LANGUAGE |
-                                   UNDNAME_NO_THISTYPE |
-                                   UNDNAME_NO_ACCESS_SPECIFIERS |
-                                   UNDNAME_NO_THROW_SIGNATURES |
-                                   UNDNAME_NO_MEMBER_TYPE |
-                                   UNDNAME_NO_RETURN_UDT_MODEL |
-                                   UNDNAME_NO_ECSU;
 
   // Use get_undecoratedNameEx to get readable C++ names with arguments.
-  if (function->get_undecoratedNameEx(undecorate_options, name) != S_OK) {
+  if (function->get_undecoratedNameEx(kUndecorateOptions, name) != S_OK) {
     if (function->get_name(name) != S_OK) {
       fprintf(stderr, "failed to get function name\n");
       return false;
@@ -1065,6 +1081,8 @@ bool PDBSourceLineWriter::GetSymbolFunctionName(IDiaSymbol *function,
     // all of the parameter and return type information may not be included in
     // the name string.
   } else {
+    FixupLlvmUniqueSymbol(name);
+
     // C++ uses a bogus "void" argument for functions and methods that don't
     // take any parameters.  Take it out of the undecorated name because it's
     // ugly and unnecessary.
