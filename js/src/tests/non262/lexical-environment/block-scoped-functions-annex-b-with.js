@@ -1,5 +1,6 @@
-// Global functions are configurable in a browser environment.
-var functionDeclarationsConfigurable = typeof document !== "undefined";
+// Global functions are configurable in a browser environment on nightly.
+var functionDeclarationsConfigurable = typeof document !== "undefined" &&
+                                       !getBuildConfiguration().release_or_beta;
 
 var o = { f: "string-f" };
 with (o) {
