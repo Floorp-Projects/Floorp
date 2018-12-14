@@ -252,6 +252,42 @@ const MERGE_TESTCASES = [
       country: "US",
     },
   },
+  {
+    description: "Merge an address with superfluous external and internal whitespace in the street-address",
+    addressInStorage: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue\nLine2\nLine3",
+      "tel": "+16509030800",
+    },
+    addressToMerge: {
+      "street-address": "  331 E. Evelyn\n  Avenue Line2\n  Line3  ",
+      country: "US",
+    },
+    expectedAddress: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue\nLine2\nLine3",
+      "tel": "+16509030800",
+      country: "US",
+    },
+  },
+  {
+    description: "Merge an address with collapsed whitespace",
+    addressInStorage: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue",
+      "tel": "+16509030800",
+    },
+    addressToMerge: {
+      "street-address": "331 E.Evelyn Avenue",
+      country: "US",
+    },
+    expectedAddress: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue",
+      "tel": "+16509030800",
+      country: "US",
+    },
+  },
 ];
 
 ChromeUtils.defineModuleGetter(this, "Preferences",
