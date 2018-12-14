@@ -1,0 +1,165 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.google.android.apps.common.testing.accessibility.framework</groupId>
+  <artifactId>accessibility-test-framework</artifactId>
+  <version>2.1</version>
+  <packaging>jar</packaging>
+
+  <name>Accessibility Test Framework</name>
+  <description>Library used to test for common accessibility issues.</description>
+  <url>https://github.com/google/Accessibility-Test-Framework-for-Android</url>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Phil Weaver</name>
+      <email>pweaver@google.com</email>
+      <organization>Google, Inc</organization>
+      <organizationUrl>http://www.google.com</organizationUrl>
+    </developer>
+    <developer>
+      <name>Casey Burkhardt</name>
+      <email>caseyburkhardt@google.com</email>
+      <organization>Google, Inc</organization>
+      <organizationUrl>http://www.google.com</organizationUrl>
+    </developer>
+    <developer>
+      <name>Samuel Rush</name>
+      <email>sjrush@google.com</email>
+      <organization>Google, Inc</organization>
+      <organizationUrl>http://www.google.com</organizationUrl>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git@github.com:google/Accessibility-Test-Framework-for-Android.git</connection>
+    <developerConnection>scm:git:git@github.com:google/Accessibility-Test-Framework-for-Android.git</developerConnection>
+    <url>https://github.com/google/Accessibility-Test-Framework-for-Android</url>
+  </scm>
+
+  <dependencies>
+    <dependency>
+      <groupId>android.support</groupId>
+      <artifactId>compatibility-v4</artifactId>
+      <version>23.0.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>android</groupId>
+      <artifactId>android</artifactId>
+      <version>5.1.1_r2</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-core</artifactId>
+      <version>1.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-library</artifactId>
+      <version>1.3</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+      <version>2.6.1</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>${project.artifactId}</finalName>
+    <sourceDirectory>src</sourceDirectory>
+    <pluginManagement>
+     <plugins>
+      <plugin>
+       <groupId>com.jayway.maven.plugins.android.generation2</groupId>
+       <artifactId>android-maven-plugin</artifactId>
+       <version>3.1.1</version>
+       <extensions>true</extensions>
+      </plugin>
+     </plugins>
+    </pluginManagement>
+    <plugins>
+     <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.3</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+     <plugin>
+      <groupId>com.jayway.maven.plugins.android.generation2</groupId>
+      <artifactId>android-maven-plugin</artifactId>
+      <configuration>
+       <sdk>
+        <platform>21</platform>
+       </sdk>
+      </configuration>
+     </plugin>
+     <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-source-plugin</artifactId>
+      <version>2.4</version>
+      <executions>
+       <execution>
+        <id>attach-sources</id>
+        <goals>
+         <goal>jar</goal>
+        </goals>
+        </execution>
+       </executions>
+     </plugin>
+     <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-javadoc-plugin</artifactId>
+      <version>2.10.3</version>
+      <configuration>
+       <sourcepath>src</sourcepath>
+       <additionalparam>-Xdoclint:none</additionalparam>
+      </configuration>
+      <executions>
+       <execution>
+        <id>attach-javadocs</id>
+        <goals>
+         <goal>jar</goal>
+        </goals>
+       </execution>
+      </executions>
+     </plugin>
+     <plugin>
+      <groupId>com.github.os72</groupId>
+      <artifactId>protoc-jar-maven-plugin</artifactId>
+      <version>3.0.0-a3</version>
+      <executions>
+       <execution>
+        <phase>generate-sources</phase>
+        <goals>
+         <goal>run</goal>
+        </goals>
+        <configuration>
+         <protocVersion>2.4.1</protocVersion>
+         <includeDirectories>
+          <include>src/main</include>
+         </includeDirectories>
+         <inputDirectories>
+          <include>src/main/java/com/google/android/apps/common/testing/accessibility/framework/proto</include>
+         </inputDirectories>
+        </configuration>
+       </execution>
+      </executions>
+     </plugin>
+    </plugins>
+   </build>
+</project>
