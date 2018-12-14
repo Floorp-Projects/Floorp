@@ -221,11 +221,7 @@ class Channel
 
   // Audio+Video Sync.
   uint32_t GetDelayEstimate() const;
-  void GetDelayEstimates(int* jitter_buffer_delay_ms,
-                         int* playout_buffer_delay_ms,
-                         int* avsync_offset_ms) const;
   int SetMinimumPlayoutDelay(int delayMs);
-  void SetCurrentSyncOffset(int offsetMs) { _current_sync_offset = offsetMs; }
   int GetPlayoutTimestamp(unsigned int& timestamp);
   int GetRtpRtcp(RtpRtcp** rtpRtcpModule, RtpReceiver** rtp_receiver) const;
 
@@ -427,7 +423,6 @@ class Channel
   rtc::CriticalSection video_sync_lock_;
   uint32_t playout_timestamp_rtp_ RTC_GUARDED_BY(video_sync_lock_);
   uint32_t playout_delay_ms_ RTC_GUARDED_BY(video_sync_lock_);
-  int _current_sync_offset;
   uint16_t send_sequence_number_;
 
   rtc::CriticalSection ts_stats_lock_;

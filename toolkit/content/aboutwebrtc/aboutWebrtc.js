@@ -517,19 +517,6 @@ RTPStats.prototype = {
     this._stats = rtpStats;
   },
 
-  renderAvStats(stats) {
-    let statsString = "";
-
-    if (stats.mozAvSyncDelay) {
-      statsString += `${getString("av_sync_label")}: ${stats.mozAvSyncDelay} ms `;
-    }
-    if (stats.mozJitterBufferDelay) {
-      statsString += `${getString("jitter_buffer_delay_label")}: ${stats.mozJitterBufferDelay} ms`;
-    }
-
-    return renderElement("p", statsString);
-  },
-
   renderCoderStats(stats) {
     let statsString = "";
     let label;
@@ -592,10 +579,6 @@ RTPStats.prototype = {
   renderRTPStatSet(stats) {
     let div = document.createElement("div");
     div.appendChild(renderElement("h5", stats.id));
-
-    if (stats.MozAvSyncDelay || stats.mozJitterBufferDelay) {
-      div.appendChild(this.renderAvStats(stats));
-    }
 
     div.appendChild(this.renderCoderStats(stats));
     div.appendChild(this.renderTransportStats(stats, getString("typeLocal")));

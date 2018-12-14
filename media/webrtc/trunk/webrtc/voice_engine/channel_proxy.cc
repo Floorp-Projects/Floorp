@@ -252,17 +252,6 @@ uint32_t ChannelProxy::GetDelayEstimate() const {
   return channel()->GetDelayEstimate();
 }
 
-void ChannelProxy::GetDelayEstimates(int* jitter_buffer_delay_ms,
-                                     int* playout_buffer_delay_ms,
-                                     int* avsync_offset_ms) const {
-  //Called from AudioIPC thread
-  //RTC_DCHECK(worker_thread_checker_.CalledOnValidThread() ||
-  //           module_process_thread_checker_.CalledOnValidThread());
-  return channel()->GetDelayEstimates(jitter_buffer_delay_ms,
-                                      playout_buffer_delay_ms,
-                                      avsync_offset_ms);
-}
-
 bool ChannelProxy::SetSendTelephoneEventPayloadType(int payload_type,
                                                     int payload_frequency) {
   RTC_DCHECK(worker_thread_checker_.CalledOnValidThread());
