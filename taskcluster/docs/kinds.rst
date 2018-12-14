@@ -527,6 +527,10 @@ addon
 -----
 Tasks used to build/package add-ons.
 
+openh264-plugin
+-----
+Tasks used to build the openh264 plugin.
+
 webrender
 ---------
 Tasks used to do testing of WebRender standalone (without gecko). The
