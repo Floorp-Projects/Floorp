@@ -10,8 +10,6 @@
   --table-zebra-background: rgba(255,255,255,0.05);
   --sidemenu-selected-arrow: url(images/item-arrow-dark-ltr.svg);
   --sidemenu-selected-arrow-rtl: url(images/item-arrow-dark-rtl.svg);
-  --delete-icon: url(chrome://devtools/skin/images/vview-delete.png);
-  --delete-icon-2x: url(chrome://devtools/skin/images/vview-delete@2x.png);
 }
 
 .theme-light {
@@ -19,8 +17,6 @@
   --table-zebra-background: rgba(0,0,0,0.05);
   --sidemenu-selected-arrow: url(images/item-arrow-ltr.svg);
   --sidemenu-selected-arrow-rtl: url(images/item-arrow-rtl.svg);
-  --delete-icon: url(chrome://devtools/skin/images/vview-delete.png);
-  --delete-icon-2x: url(chrome://devtools/skin/images/vview-delete@2x.png);
 }
 
 /* Generic pane helpers */
@@ -492,13 +488,7 @@
 }
 
 .variables-view-delete {
-  background-image: var(--delete-icon);
-}
-
-@media (min-resolution: 1.1dppx) {
-  .variables-view-delete {
-    background-image: var(--delete-icon-2x);
-  }
+  background-image: url("chrome://devtools/skin/images/vview-delete.svg");
 }
 
 .variables-view-edit {

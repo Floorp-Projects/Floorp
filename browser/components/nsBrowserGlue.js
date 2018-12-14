@@ -1831,13 +1831,13 @@ BrowserGlue.prototype = {
       let tabSubstring = gTabbrowserBundle.GetStringFromName("tabs.closeWarningMultipleWindowsTabSnippet");
       tabSubstring = PluralForm.get(pagecount, tabSubstring).replace(/#1/, pagecount);
 
-      let stringID = sessionWillBeRestored ? "tabs.closeWarningMultipleWindowsSessionRestore"
+      let stringID = sessionWillBeRestored ? "tabs.closeWarningMultipleWindowsSessionRestore2"
                                            : "tabs.closeWarningMultipleWindows";
       let windowString = gTabbrowserBundle.GetStringFromName(stringID);
       windowString = PluralForm.get(windowcount, windowString).replace(/#1/, windowcount);
       warningMessage = windowString.replace(/%(?:1\$)?S/i, tabSubstring);
     } else {
-      let stringID = sessionWillBeRestored ? "tabs.closeWarningMultipleSessionRestore"
+      let stringID = sessionWillBeRestored ? "tabs.closeWarningMultipleSessionRestore2"
                                            : "tabs.closeWarningMultiple";
       warningMessage = gTabbrowserBundle.GetStringFromName(stringID);
       warningMessage = PluralForm.get(pagecount, warningMessage).replace("#1", pagecount);

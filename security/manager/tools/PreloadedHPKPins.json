@@ -210,7 +210,7 @@
       "pins": "mozilla_services", "test_mode": false, "id": 10 },
     { "name": "crash-reports-xpsp2.mozilla.com", "include_subdomains": false,
       "pins": "mozilla_services", "test_mode": false, "id": 11 },
-    { "name": "crash-stats.mozilla.com", "include_subdomains": false,
+    { "name": "crash-stats.mozilla.org", "include_subdomains": false,
       "pins": "mozilla_services", "test_mode": false, "id": 12 },
     { "name": "include-subdomains.pinning.example.com",
       "include_subdomains": true, "pins": "mozilla_test",

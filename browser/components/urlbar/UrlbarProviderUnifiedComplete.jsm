@@ -85,6 +85,7 @@ class ProviderUnifiedComplete {
     //  * "private-window": the search is taking place in a private window.
     //  * "user-context-id:#": the userContextId to use.
     let params = ["enable-actions"];
+    params.push(`max-results:${queryContext.maxResults}`);
     if (queryContext.isPrivate) {
       params.push("private-window");
       if (!PrivateBrowsingUtils.permanentPrivateBrowsing) {

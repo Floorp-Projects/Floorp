@@ -22,8 +22,9 @@ HOST_CXXFLAGS += [
 ]
 
 HOST_OS_LIBS += [
+    'dbghelp',
     'diaguids',
-    'imagehlp'
+    'imagehlp',
 ]
 
 LOCAL_INCLUDES += [

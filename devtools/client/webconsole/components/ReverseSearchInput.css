@@ -27,7 +27,7 @@
   padding-inline-start: var(--console-inline-start-gutter);
   background: transparent;
   color: currentColor;
-  background-image: var(--magnifying-glass-image);
+  background-image: url(chrome://devtools/skin/images/search.svg);
   background-repeat: no-repeat;
   background-size: 12px 12px;
   background-position: 10px 2px;

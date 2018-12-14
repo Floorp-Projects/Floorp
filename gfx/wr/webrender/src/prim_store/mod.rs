@@ -25,9 +25,8 @@ use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest, ToGpu
 use gpu_types::BrushFlags;
 use image::{self, Repetition};
 use intern;
-use internal_types::FastHashMap;
-use picture::{PictureCompositeMode, PicturePrimitive, PictureUpdateState};
-use picture::{ClusterRange, PrimitiveList, SurfaceIndex, TileDescriptor};
+use picture::{PictureCompositeMode, PicturePrimitive, PictureUpdateState, TileCacheUpdateState};
+use picture::{ClusterRange, PrimitiveList, SurfaceIndex, SurfaceInfo, RetainedTiles};
 use prim_store::gradient::{LinearGradientDataHandle, RadialGradientDataHandle};
 use prim_store::text_run::{TextRunDataHandle, TextRunPrimitive};
 #[cfg(debug_assertions)]
@@ -39,11 +38,10 @@ use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use resource_cache::{ImageProperties, ImageRequest, ResourceCache};
 use scene::SceneProperties;
 use segment::SegmentBuilder;
-use std::{cmp, fmt, hash, ops, u32, usize};
+use std::{cmp, fmt, hash, ops, u32, usize, mem};
 #[cfg(debug_assertions)]
 use std::sync::atomic::{AtomicUsize, Ordering};
 use storage;
-use texture_cache::TextureCacheHandle;
 use util::{ScaleOffset, MatrixHelpers, MaxRect, recycle_vec};
 use util::{pack_as_float, project_rect, raster_rect_to_device_pixels};
 use smallvec::SmallVec;
@@ -2126,7 +2124,7 @@ impl PrimitiveStore {
     /// a primitive store is replaced with a newly built scene.
     pub fn destroy(
         self,
-        retained_tiles: &mut FastHashMap<TileDescriptor, TextureCacheHandle>,
+        retained_tiles: &mut RetainedTiles,
     ) {
         for pic in self.pictures {
             pic.destroy(
@@ -2151,11 +2149,9 @@ impl PrimitiveStore {
         pic_index: PictureIndex,
         state: &mut PictureUpdateState,
         frame_context: &FrameBuildingContext,
-        resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         resources: &FrameResources,
         clip_store: &ClipStore,
-        retained_tiles: &mut FastHashMap<TileDescriptor, TextureCacheHandle>,
     ) {
         if let Some(children) = self.pictures[pic_index.0].pre_update(
             state,
@@ -2166,16 +2162,65 @@ impl PrimitiveStore {
                     *child_pic_index,
                     state,
                     frame_context,
-                    resource_cache,
                     gpu_cache,
                     resources,
                     clip_store,
-                    retained_tiles,
                 );
             }
 
-            self.pictures[pic_index.0].update_prim_dependencies(
+            self.pictures[pic_index.0].post_update(
+                children,
                 state,
+                frame_context,
+                gpu_cache,
+            );
+        }
+    }
+
+    /// Update any picture tile caches for a subset of the picture tree.
+    /// This is often a no-op that exits very quickly, unless a new scene
+    /// has arrived, or the relative transforms have changed.
+    pub fn update_tile_cache(
+        &mut self,
+        pic_index: PictureIndex,
+        state: &mut TileCacheUpdateState,
+        frame_context: &FrameBuildingContext,
+        resource_cache: &mut ResourceCache,
+        resources: &FrameResources,
+        clip_store: &ClipStore,
+        surfaces: &[SurfaceInfo],
+        gpu_cache: &mut GpuCache,
+        retained_tiles: &mut RetainedTiles,
+    ) {
+        let children = {
+            let pic = &mut self.pictures[pic_index.0];
+            if let Some(PictureCompositeMode::TileCache { .. }) = pic.requested_composite_mode {
+                debug_assert!(state.tile_cache.is_none());
+                let mut tile_cache = pic.tile_cache.take().unwrap();
+
+                let surface_index = pic.raster_config.as_ref().unwrap().surface_index;
+                let surface = &surfaces[surface_index.0];
+
+                // If we have a tile cache for this picture, see if any of the
+                // relative transforms have changed, which means we need to
+                // re-map the dependencies of any child primitives.
+                tile_cache.update_transforms(
+                    surface.surface_spatial_node_index,
+                    surface.raster_spatial_node_index,
+                    pic.requested_raster_space,
+                    frame_context,
+                    pic.local_rect,
+                );
+
+                state.tile_cache = Some((tile_cache, pic.spatial_node_index));
+            }
+            mem::replace(&mut pic.prim_list.pictures, SmallVec::new())
+        };
+
+        if let Some((ref mut tile_cache, surface_spatial_node_index)) = state.tile_cache {
+            self.pictures[pic_index.0].update_prim_dependencies(
+                tile_cache,
+                surface_spatial_node_index,
                 frame_context,
                 resource_cache,
                 resources,
@@ -2184,16 +2229,38 @@ impl PrimitiveStore {
                 &self.opacity_bindings,
                 &self.images,
             );
+        }
 
-            self.pictures[pic_index.0].post_update(
-                children,
+        for child_pic_index in &children {
+            self.update_tile_cache(
+                *child_pic_index,
                 state,
+                frame_context,
+                resource_cache,
+                resources,
+                clip_store,
+                surfaces,
+                gpu_cache,
+                retained_tiles,
+            );
+        }
+
+        let pic = &mut self.pictures[pic_index.0];
+        if let Some(PictureCompositeMode::TileCache { .. }) = pic.requested_composite_mode {
+            let mut tile_cache = state.tile_cache.take().unwrap().0;
+
+            // Build the dirty region(s) for this tile cache.
+            tile_cache.build_dirty_regions(
+                pic.spatial_node_index,
                 frame_context,
                 resource_cache,
                 gpu_cache,
                 retained_tiles,
             );
+
+            pic.tile_cache = Some(tile_cache);
         }
+        pic.prim_list.pictures = children;
     }
 
     pub fn get_opacity_binding(

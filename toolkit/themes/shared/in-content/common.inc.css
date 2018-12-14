@@ -623,7 +623,7 @@ xul|*.radio-label-box {
 *|*#categories > *|*.category[selected],
 *|*#categories > *|*.category.selected {
   color: var(--in-content-category-text-selected);
-  background: none;
+  background-color: transparent;
 }
 
 *|*#categories > *|*.category[selected]:hover,

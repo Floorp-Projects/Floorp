@@ -290,7 +290,7 @@
 
 /* Custom styles for <select> elements within the font editor. */
 .font-value-select {
-  background-image: var(--select-arrow-image);
+  background-image: url(chrome://devtools/skin/images/select-arrow.svg);
   background-repeat: no-repeat;
   background-position: right 4px center;
   fill: var(--theme-toolbar-photon-icon-color);
