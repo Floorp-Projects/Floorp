@@ -694,7 +694,7 @@ inline void js::Nursery::endProfile(ProfileKey key) {
 
 bool js::Nursery::needIdleTimeCollection() const {
   uint32_t threshold =
-      runtime()->gc.tunables.nurseryFreeThresholdForIdleCollection();
+      tunables().nurseryFreeThresholdForIdleCollection();
   return minorGCRequested() || freeSpace() < threshold;
 }
 
@@ -822,7 +822,7 @@ void js::Nursery::collect(JS::gcreason::Reason reason) {
   // We ignore gcMaxBytes when allocating for minor collection. However, if we
   // overflowed, we disable the nursery. The next time we allocate, we'll fail
   // because gcBytes >= gcMaxBytes.
-  if (rt->gc.usage.gcBytes() >= rt->gc.tunables.gcMaxBytes()) {
+  if (rt->gc.usage.gcBytes() >= tunables().gcMaxBytes()) {
     disable();
   }
   // Disable the nursery if the user changed the configuration setting.  The
@@ -1178,8 +1178,7 @@ void js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason) {
   }
 #endif
 
-  newMaxNurseryChunks =
-      runtime()->gc.tunables.gcMaxNurseryBytes() >> ChunkShift;
+  newMaxNurseryChunks = tunables().gcMaxNurseryBytes() >> ChunkShift;
   if (newMaxNurseryChunks != chunkCountLimit_) {
     chunkCountLimit_ = newMaxNurseryChunks;
     /* The configured maximum nursery size is changing */
@@ -1258,6 +1257,10 @@ uintptr_t js::Nursery::currentEnd() const {
 
 gcstats::Statistics& js::Nursery::stats() const {
   return runtime()->gc.stats();
+}
+
+MOZ_ALWAYS_INLINE const js::gc::GCSchedulingTunables& js::Nursery::tunables() const {
+  return runtime()->gc.tunables;
 }
 
 void js::Nursery::sweepDictionaryModeObjects() {
