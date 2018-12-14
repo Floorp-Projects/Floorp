@@ -5085,6 +5085,13 @@ impl Renderer {
                         .expect(&format!("Unable to create {}", short_path))
                         .write_all(&bytes)
                         .unwrap();
+                    #[cfg(feature = "png")]
+                    CaptureConfig::save_png(
+                        config.root.join(&short_path).with_extension("png"),
+                        def.descriptor.size,
+                        ReadPixelsFormat::Standard(def.descriptor.format),
+                        &bytes,
+                    );
                 }
                 let plain = PlainExternalImage {
                     data: short_path,
