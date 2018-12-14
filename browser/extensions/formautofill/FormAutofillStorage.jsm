@@ -1557,7 +1557,7 @@ class Addresses extends AutofillRecords {
           // Treat "street-address" as mergeable if their single-line versions
           // match each other.
           if (field == "street-address" &&
-              FormAutofillUtils.toOneLineAddress(existingField) == FormAutofillUtils.toOneLineAddress(incomingField)) {
+              FormAutofillUtils.compareStreetAddress(existingField, incomingField)) {
             // Keep the value in storage if its amount of lines is greater than
             // or equal to the incoming one.
             if (existingField.split("\n").length >= incomingField.split("\n").length) {

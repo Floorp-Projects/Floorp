@@ -307,16 +307,46 @@ this.FormAutofillUtils = {
     return parts.join(", ");
   },
 
-  toOneLineAddress(address, delimiter = "\n") {
+  /**
+   * Internal method to split an address to multiple parts per the provided delimiter,
+   * removing blank parts.
+   * @param {string} address The address the split
+   * @param {string} delimiter The separator that is used between lines in the address
+   * @returns {string[]}
+   */
+  _toStreetAddressParts(address, delimiter = "\n") {
     let array = typeof address == "string" ? address.split(delimiter) : address;
 
     if (!Array.isArray(array)) {
-      return "";
+      return [];
     }
     return array
       .map(s => s ? s.trim() : "")
-      .filter(s => s)
-      .join(this.getAddressSeparator());
+      .filter(s => s);
+  },
+
+  /**
+   * Converts a street address to a single line, removing linebreaks marked by the delimiter
+   * @param {string} address The address the convert
+   * @param {string} delimiter The separator that is used between lines in the address
+   * @returns {string}
+   */
+  toOneLineAddress(address, delimiter = "\n") {
+    let addressParts = this._toStreetAddressParts(address, delimiter);
+    return addressParts.join(this.getAddressSeparator());
+  },
+
+  /**
+   * Compares two addresses, removing internal whitespace
+   * @param {string} a The first address to compare
+   * @param {string} b The second address to compare
+   * @param {string} delimiter The separator that is used between lines in the address
+   * @returns {boolean} True if the addresses are equal, false otherwise
+   */
+  compareStreetAddress(a, b, delimiter = "\n") {
+    let oneLineA = this._toStreetAddressParts(a, delimiter).map(p => p.replace(/\s/g, "")).join("");
+    let oneLineB = this._toStreetAddressParts(b, delimiter).map(p => p.replace(/\s/g, "")).join("");
+    return oneLineA == oneLineB;
   },
 
   /**
