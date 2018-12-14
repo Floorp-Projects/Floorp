@@ -323,6 +323,7 @@
   MACRO(RegExpFlagsGetter, RegExpFlagsGetter, "RegExpFlagsGetter")             \
   MACRO(RegExpMatcher, RegExpMatcher, "RegExpMatcher")                         \
   MACRO(RegExpSearcher, RegExpSearcher, "RegExpSearcher")                      \
+  MACRO(RegExpStringIterator, RegExpStringIterator, "RegExp String Iterator")  \
   MACRO(RegExpTester, RegExpTester, "RegExpTester")                            \
   MACRO(RegExp_prototype_Exec, RegExp_prototype_Exec, "RegExp_prototype_Exec") \
   MACRO(Reify, Reify, "Reify")                                                 \

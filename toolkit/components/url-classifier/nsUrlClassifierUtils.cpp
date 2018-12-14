@@ -20,8 +20,27 @@
 #include "mozIThirdPartyUtil.h"
 #include "nsIDocShell.h"
 #include "mozilla/TextUtils.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
+#include "mozilla/Telemetry.h"
+#include "nsNetUtil.h"
+#include "nsIHttpChannel.h"
+#include "nsIObserverService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+#include "nsMemory.h"
+#include "nsPIDOMWindow.h"
+#include "nsServiceManagerUtils.h"
+#include "nsThreadManager.h"
+#include "Classifier.h"
+#include "Entries.h"
+#include "prprf.h"
+#include "prtime.h"
 
 #define DEFAULT_PROTOCOL_VERSION "2.2"
+
+using namespace mozilla;
+using namespace mozilla::safebrowsing;
 
 static char int_to_hex_digit(int32_t i) {
   NS_ASSERTION((i >= 0) && (i <= 15), "int too big in int_to_hex_digit");
@@ -184,7 +203,7 @@ nsresult nsUrlClassifierUtils::Init() {
   if (!observerService) return NS_ERROR_FAILURE;
 
   observerService->AddObserver(this, "xpcom-shutdown-threads", false);
-  Preferences::AddStrongObserver(this, "browser.safebrowsing");
+  mozilla::Preferences::AddStrongObserver(this, "browser.safebrowsing");
 
   return NS_OK;
 }

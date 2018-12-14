@@ -5353,7 +5353,7 @@ bool ContentParent::DeallocPURLClassifierParent(PURLClassifierParent* aActor) {
 // PURLClassifierLocalParent
 
 PURLClassifierLocalParent* ContentParent::AllocPURLClassifierLocalParent(
-    const URIParams& aURI, const nsCString& aTables) {
+    const URIParams& aURI, const nsTArray<IPCURLClassifierFeature>& aFeatures) {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<URLClassifierLocalParent> actor = new URLClassifierLocalParent();
@@ -5362,9 +5362,11 @@ PURLClassifierLocalParent* ContentParent::AllocPURLClassifierLocalParent(
 
 mozilla::ipc::IPCResult ContentParent::RecvPURLClassifierLocalConstructor(
     PURLClassifierLocalParent* aActor, const URIParams& aURI,
-    const nsCString& aTables) {
+    nsTArray<IPCURLClassifierFeature>&& aFeatures) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aActor);
+
+  nsTArray<IPCURLClassifierFeature> features = std::move(aFeatures);
 
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (!uri) {
@@ -5373,7 +5375,7 @@ mozilla::ipc::IPCResult ContentParent::RecvPURLClassifierLocalConstructor(
   }
 
   auto* actor = static_cast<URLClassifierLocalParent*>(aActor);
-  return actor->StartClassify(uri, aTables);
+  return actor->StartClassify(uri, features);
 }
 
 bool ContentParent::DeallocPURLClassifierLocalParent(

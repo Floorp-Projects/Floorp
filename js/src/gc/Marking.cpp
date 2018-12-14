@@ -1571,7 +1571,7 @@ static void VisitTraceList(F f, const int32_t* traceList, uint8_t* memory,
 
 /*** Mark-stack Marking *****************************************************/
 
-bool GCMarker::markUntilBudgetExhaused(SliceBudget& budget) {
+bool GCMarker::markUntilBudgetExhausted(SliceBudget& budget) {
 #ifdef DEBUG
   MOZ_ASSERT(!strictCompartmentChecking);
   strictCompartmentChecking = true;

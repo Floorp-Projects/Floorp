@@ -644,7 +644,8 @@ class ContentChild final : public PContentChild,
 
   // PURLClassifierLocalChild
   virtual PURLClassifierLocalChild* AllocPURLClassifierLocalChild(
-      const URIParams& aUri, const nsCString& aTables) override;
+      const URIParams& aUri,
+      const nsTArray<IPCURLClassifierFeature>& aFeatures) override;
   virtual bool DeallocPURLClassifierLocalChild(
       PURLClassifierLocalChild* aActor) override;
 
