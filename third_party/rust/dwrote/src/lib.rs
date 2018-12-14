@@ -65,6 +65,7 @@ pub use winapi::um::dwrite::{DWRITE_RENDERING_MODE};
 pub use winapi::um::dwrite::{DWRITE_TEXTURE_TYPE};
 pub use winapi::um::dwrite_3::{DWRITE_FONT_AXIS_VALUE};
 pub use winapi::um::dcommon::{DWRITE_MEASURING_MODE};
+pub use winapi::shared::windef::RECT;
 use winapi::um::libloaderapi::{GetProcAddress, LoadLibraryW};
 
 #[macro_use] mod com_helpers;
