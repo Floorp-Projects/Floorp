@@ -98,9 +98,17 @@ class EventEmitter {
         events.delete(type);
       }
     } else if (length === 1) {
-      // With only the `target` given, we're removing all the isteners from the object.
+      // With only the `target` given, we're removing all the listeners from the object.
       events.clear();
     }
+  }
+
+  static clearEvents(target) {
+    const events = target[eventListeners];
+    if (!events) {
+      return;
+    }
+    events.clear();
   }
 
   /**
@@ -245,6 +253,10 @@ class EventEmitter {
 
   off(...args) {
     EventEmitter.off(this, ...args);
+  }
+
+  clearEvents() {
+    EventEmitter.clearEvents(this);
   }
 
   once(...args) {
