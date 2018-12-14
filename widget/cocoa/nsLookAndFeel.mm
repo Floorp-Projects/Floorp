@@ -154,7 +154,15 @@ nsLookAndFeel::ProcessSelectionBackground(nscolor aColor)
   NS_RGB2HSV(resultColor, hue, sat, value, alpha);
   int factor = 2;
   alpha = alpha / factor;
-  sat = sat * factor;
+  if (sat > 0) {
+    // The color is not a shade of grey, restore the saturation taken away by
+    // the transparency.
+    sat = sat * factor;
+  } else {
+    // The color is a shade of grey, find the value that looks equivalent
+    // on a white background with the given opacity.
+    value = 255 - (255 - value) * factor;
+  }
   NS_HSV2RGB(resultColor, hue, sat, value, alpha);
   return resultColor;
 }
