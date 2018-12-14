@@ -205,11 +205,7 @@ add_task(async function test_saveButton() {
   fillField(form.form.querySelector("#country"), "CA");
   ok(form.saveButton.disabled, "Save button is disabled after changing the country to Canada");
   fillField(form.form.querySelector("#country"), "US");
-  ok(form.saveButton.disabled,
-     "Save button is disabled after changing the country back to US since address-level1 " +
-     "got cleared when changing countries");
-  fillField(form.form.querySelector("#address-level1"), "CA");
-  ok(!form.saveButton.disabled, "Save button is enabled after re-entering address-level1");
+  ok(!form.saveButton.disabled, "Save button is enabled after changing the country to US");
 
   let messagePromise = promiseContentToChromeMessage("updateAutofillRecord");
   is(form.saveButton.textContent, "Next", "Check label");
@@ -448,25 +444,25 @@ add_task(async function test_field_validation() {
   sendStringAndCheckValidity(addressLevel1Input, "MI", true);
   sendStringAndCheckValidity(addressLevel1Input, "", false);
   sendStringAndCheckValidity(postalCodeInput, "B4N4N4", false);
-  sendStringAndCheckValidity(addressLevel1Input, "NS", false);
+  sendStringAndCheckValidity(addressLevel1Input, "Nova Scotia", true);
   sendStringAndCheckValidity(postalCodeInput, "R3J 3C7", false);
   sendStringAndCheckValidity(addressLevel1Input, "", false);
   sendStringAndCheckValidity(postalCodeInput, "11109", true);
-  sendStringAndCheckValidity(addressLevel1Input, "NS", false);
+  sendStringAndCheckValidity(addressLevel1Input, "Nova Scotia", true);
   sendStringAndCheckValidity(postalCodeInput, "06390-0001", true);
 
   fillField(countrySelect, "CA");
 
   sendStringAndCheckValidity(postalCodeInput, "00001", false);
-  sendStringAndCheckValidity(addressLevel1Input, "CA", false);
+  sendStringAndCheckValidity(addressLevel1Input, "CA", true);
   sendStringAndCheckValidity(postalCodeInput, "94043", false);
   sendStringAndCheckValidity(addressLevel1Input, "", false);
   sendStringAndCheckValidity(postalCodeInput, "B4N4N4", true);
-  sendStringAndCheckValidity(addressLevel1Input, "MI", false);
+  sendStringAndCheckValidity(addressLevel1Input, "MI", true);
   sendStringAndCheckValidity(postalCodeInput, "R3J 3C7", true);
   sendStringAndCheckValidity(addressLevel1Input, "", false);
   sendStringAndCheckValidity(postalCodeInput, "11109", false);
-  sendStringAndCheckValidity(addressLevel1Input, "NS", true);
+  sendStringAndCheckValidity(addressLevel1Input, "Nova Scotia", true);
   sendStringAndCheckValidity(postalCodeInput, "06390-0001", false);
 
   form.remove();
