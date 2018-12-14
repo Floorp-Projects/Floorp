@@ -2960,13 +2960,6 @@ if test -n "$MOZ_TSAN" -o -n "$MOZ_ASAN"; then
     esac
 fi
 
-case "$OS_TARGET:$CPU_ARCH" in
-WINNT:aarch64)
-    # No sandbox support on AArch64 Windows.
-    MOZ_SANDBOX=
-    ;;
-esac
-
 MOZ_ARG_DISABLE_BOOL(sandbox,
 [  --disable-sandbox        Disable sandboxing support],
     MOZ_SANDBOX=,
