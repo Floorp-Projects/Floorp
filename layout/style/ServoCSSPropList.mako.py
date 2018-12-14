@@ -67,6 +67,9 @@ def method(prop):
 # but other non-trivial dependence like scrollbar colors.
 SERIALIZED_PREDEFINED_TYPES = [
     "Appearance",
+    "AlignContent",
+    "AlignItems",
+    "AlignSelf",
     "BackgroundRepeat",
     "BackgroundSize",
     "BorderImageRepeat",
@@ -98,6 +101,9 @@ SERIALIZED_PREDEFINED_TYPES = [
     "FontWeight",
     "Integer",
     "ImageLayer",
+    "JustifyContent",
+    "JustifyItems",
+    "JustifySelf",
     "Length",
     "LengthOrPercentage",
     "NonNegativeLength",
