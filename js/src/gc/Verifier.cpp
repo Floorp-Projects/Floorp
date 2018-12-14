@@ -758,7 +758,7 @@ static JSObject* MaybeGetDelegate(Cell* cell) {
     return nullptr;
   }
 
-  JS::AutoSuppressGCAnalysis nogc; // Calling the delegate op cannot GC.
+  JS::AutoSuppressGCAnalysis nogc;  // Calling the delegate op cannot GC.
   return op(object);
 }
 
@@ -783,8 +783,8 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
   CellColor mapColor = object ? GetCellColor(object) : CellColor::Gray;
 
   CellColor keyColor = GetCellColor(key);
-  CellColor valueColor = valueZone->isGCMarking() ? GetCellColor(value)
-                                                  : CellColor::Black;
+  CellColor valueColor =
+      valueZone->isGCMarking() ? GetCellColor(value) : CellColor::Black;
 
   if (valueColor < Min(mapColor, keyColor)) {
     fprintf(stderr, "WeakMap value is less marked than map and key\n");
