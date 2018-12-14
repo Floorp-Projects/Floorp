@@ -221,11 +221,6 @@
   /* The photon animation curve */
   --animation-curve: cubic-bezier(.07,.95,0,1);
 
-  /* Images */
-  --select-arrow-image: url(chrome://devtools/skin/images/select-arrow.svg);
-  --theme-pane-collapse-image: url(chrome://devtools/skin/images/pane-collapse.svg);
-  --theme-pane-expand-image: url(chrome://devtools/skin/images/pane-expand.svg);
-
   /* Firefox Colors CSS Variables v1.0.3
    * Colors are taken from: https://github.com/FirefoxUX/design-tokens
    * Some intermediate colors were added (names ending in '5').

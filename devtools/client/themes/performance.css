@@ -85,7 +85,7 @@
 /* Recording buttons */
 
 #clear-button::before {
-  background-image: var(--clear-icon-url);
+  background-image: url("chrome://devtools/skin/images/clear.svg");
 }
 
 #main-record-button::before {

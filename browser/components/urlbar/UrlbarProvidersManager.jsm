@@ -316,6 +316,9 @@ class Query {
         delete this._chunkTimer;
       }
       this.muxer.sort(this.context);
+      // Crop results to the requested number.
+      logger.debug(`Cropping ${this.context.results.length} matches to ${this.context.maxResults.length}`);
+      this.context.results = this.context.results.slice(0, this.context.maxResults);
       this.controller.receiveResults(this.context);
     };
 

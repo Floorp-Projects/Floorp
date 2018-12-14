@@ -850,7 +850,6 @@ body {
   --object-inspector-hover-background: transparent;
   --attachment-margin-block-end: 3px;
   --primary-toolbar-height: 29px;
-  --close-button-image: url(chrome://devtools/skin/images/close.svg);
   display: grid;
   grid-template-columns: minmax(200px, 1fr) auto;
   max-height: 100vh !important;
@@ -1039,7 +1038,7 @@ body {
 
 .sidebar-close-button::before {
   fill: var(--theme-toolbar-photon-icon-color);
-  background-image: var(--close-button-image);
+  background-image: url(chrome://devtools/skin/images/close.svg);
 }
 
 .sidebar-contents .object-inspector {
@@ -1048,5 +1047,5 @@ body {
 
 #split-console-close-button::before {
   fill: var(--theme-toolbar-photon-icon-color);
-  background-image: var(--close-button-image);
+  background-image: url(chrome://devtools/skin/images/close.svg);
 }
