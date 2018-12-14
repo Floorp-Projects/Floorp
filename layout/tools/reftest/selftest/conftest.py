@@ -37,7 +37,6 @@ def runtests(setup_test_harness, binary, parser):
         'focusFilterMode': 'non-needs-focus',
         'log_raw': [buf],
         'suite': 'reftest',
-        'specialPowersExtensionPath': os.path.join(harness_root, 'specialpowers'),
     })
 
     if not os.path.isdir(build.bindir):
@@ -47,6 +46,7 @@ def runtests(setup_test_harness, binary, parser):
             'reftestExtensionPath': os.path.join(harness_root, 'reftest'),
             'sandboxReadWhitelist': [here, os.environ['PYTHON_TEST_TMP']],
             'utilityPath': os.path.join(package_root, 'bin'),
+            'specialPowersExtensionPath': os.path.join(harness_root, 'specialpowers'),
         })
 
         if 'MOZ_FETCHES_DIR' in os.environ:
@@ -55,6 +55,8 @@ def runtests(setup_test_harness, binary, parser):
         options.update({
             'extraProfileFiles': [os.path.join(build.topobjdir, 'dist', 'plugins')],
             'sandboxReadWhitelist': [build.topobjdir, build.topsrcdir],
+            'specialPowersExtensionPath': os.path.join(
+                build.distdir, 'xpi-stage', 'specialpowers'),
         })
 
     def normalize(test):
