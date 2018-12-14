@@ -209,7 +209,7 @@
 
 /* Override OSX-specific toolkit findbar button styles */
 .findbar-button {
-  background: none !important;
+  background-image: none !important;
   box-shadow: none !important;
   border: none;
 }
