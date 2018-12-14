@@ -2289,15 +2289,18 @@ nsHtml5String nsHtml5TreeBuilder::extractCharsetFromContent(
     }
   }
 charsetloop_end:;
-  nsHtml5String charset = nullptr;
   if (start != -1) {
     if (end == -1) {
-      end = buffer.length;
+      if (charsetState == CHARSET_UNQUOTED) {
+        end = buffer.length;
+      } else {
+        return nullptr;
+      }
     }
-    charset = nsHtml5Portability::newStringFromBuffer(buffer, start,
-                                                      end - start, tb, false);
+    return nsHtml5Portability::newStringFromBuffer(buffer, start, end - start,
+                                                   tb, false);
   }
-  return charset;
+  return nullptr;
 }
 
 void nsHtml5TreeBuilder::checkMetaCharset(nsHtml5HtmlAttributes* attributes) {

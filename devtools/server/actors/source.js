@@ -563,8 +563,8 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
    *          A promise that resolves to a JSON object representing the
    *          response.
    */
-  setBreakpoint: function(line, column, condition, noSliding) {
-    if (this.threadActor.state !== "paused") {
+  setBreakpoint: function(line, column, condition, noSliding, inNestedLoop) {
+    if (!inNestedLoop && this.threadActor.state !== "paused") {
       const errorObject = {
         error: "wrongState",
         message: "Cannot set breakpoint while debuggee is running.",

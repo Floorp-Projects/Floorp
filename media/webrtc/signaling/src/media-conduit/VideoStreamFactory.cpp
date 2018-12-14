@@ -243,6 +243,8 @@ std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
     }
     streams.push_back(video_stream);
   }
+
+  MOZ_RELEASE_ASSERT(streams.size(), "Should configure at least one stream");
   return streams;
 }
 

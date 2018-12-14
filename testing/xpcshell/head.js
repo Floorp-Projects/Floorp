@@ -397,7 +397,6 @@ function _setupDebuggerServer(breakpointFiles, callback) {
                     "See also https://bugzil.la/1215378.");
   }
   let { DebuggerServer } = require("devtools/server/main");
-  let { OriginalLocation } = require("devtools/server/actors/common");
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
   let { createRootActor } = require("resource://testing-common/dbg-actors.js");
@@ -406,29 +405,14 @@ function _setupDebuggerServer(breakpointFiles, callback) {
 
   // An observer notification that tells us when we can "resume" script
   // execution.
-  const TOPICS = ["devtools-thread-resumed", "xpcshell-test-devtools-shutdown"];
+  const TOPICS = ["devtools-thread-instantiated", "devtools-thread-resumed", "xpcshell-test-devtools-shutdown"];
   let observe = function(subject, topic, data) {
-    switch (topic) {
-      case "devtools-thread-resumed":
-        // Exceptions in here aren't reported and block the debugger from
-        // resuming, so...
-        try {
-          // Add a breakpoint for the first line in our test files.
-          let threadActor = subject.wrappedJSObject;
-          for (let file of breakpointFiles) {
-            // Pass an empty `source` object to workaround `source` function assertion
-            let sourceActor = threadActor.sources.source({originalUrl: file, source: {}});
-            sourceActor._getOrCreateBreakpointActor(new OriginalLocation(sourceActor, 1));
-          }
-        } catch (ex) {
-          info("Failed to initialize breakpoints: " + ex + "\n" + ex.stack);
-        }
-        break;
-      case "xpcshell-test-devtools-shutdown":
-        // the debugger has shutdown before we got a resume event - nothing
-        // special to do here.
-        break;
+    if (topic === "devtools-thread-instantiated") {
+      const threadActor = subject.wrappedJSObject;
+      threadActor.setBreakpointOnLoad(breakpointFiles);
+      return;
     }
+
     for (let topicToRemove of TOPICS) {
       _Services.obs.removeObserver(observe, topicToRemove);
     }
