@@ -11,13 +11,13 @@ from fluent.syntax import ast as ftl
 from fluent.syntax.serializer import serialize_comment
 from .base import (
     CAN_SKIP,
-    EntityBase, Entity, Comment, Junk, Whitespace,
+    Entry, Entity, Comment, Junk, Whitespace,
     LiteralEntity,
     Parser
 )
 
 
-class FluentAttribute(EntityBase):
+class FluentAttribute(Entry):
     ignored_fields = ['span']
 
     def __init__(self, entity, attr_node):
@@ -44,7 +44,13 @@ class FluentEntity(Entity):
         self.ctx = ctx
         self.span = (start, end)
 
-        self.key_span = (entry.id.span.start, entry.id.span.end)
+        if isinstance(entry, ftl.Term):
+            # Terms don't have their '-' as part of the id, use the prior
+            # character
+            self.key_span = (entry.id.span.start - 1, entry.id.span.end)
+        else:
+            # Message
+            self.key_span = (entry.id.span.start, entry.id.span.end)
 
         if entry.value is not None:
             self.val_span = (entry.value.span.start, entry.value.span.end)
@@ -53,7 +59,7 @@ class FluentEntity(Entity):
 
         self.entry = entry
 
-        # EntityBase instances are expected to have pre_comment. It's used by
+        # Entry instances are expected to have pre_comment. It's used by
         # other formats to associate a Comment with an Entity. FluentEntities
         # don't need it because message comments are part of the entry AST and
         # are not separate Comment instances.
