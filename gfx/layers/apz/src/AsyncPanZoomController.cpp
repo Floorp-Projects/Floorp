@@ -3978,8 +3978,8 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncViewportTransform(
   // when zooming, so the async transform of the layout viewport does not
   // have an async zoom component. (The translation still needs to be
   // multiplied by the non-async zoom, to get it into the correct coordinates.)
-  CSSToParentLayerScale2D effectiveZoom = Metrics().LayersPixelsPerCSSPixel()
-      * LayerToParentLayerScale(1.0f);
+  CSSToParentLayerScale2D effectiveZoom =
+      Metrics().LayersPixelsPerCSSPixel() * LayerToParentLayerScale(1.0f);
   ParentLayerPoint translation =
       (currentViewportOffset - lastPaintViewport.TopLeft()) * effectiveZoom;
   LayerToParentLayerScale compositedAsyncZoom;
