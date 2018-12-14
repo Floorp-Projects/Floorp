@@ -100,9 +100,6 @@ class CachedPrefs final {
   static CachedPrefs* GetInstance();
 
   void Init();
-  bool IsAllowListExample() { return sAllowListExample; }
-  bool IsLowerNetworkPriority() { return sLowerNetworkPriority; }
-  bool IsAnnotateChannelEnabled() { return sAnnotateChannelEnabled; }
 
   nsCString GetSkipHostnames() const { return mSkipHostnames; }
   nsCString GetSkipTrackingAnnotationURLs() const {
@@ -163,14 +160,6 @@ class CachedPrefs final {
 
   static void OnPrefsChange(const char* aPrefName, CachedPrefs*);
 
-  // Whether channels should be annotated as being on the tracking protection
-  // list.
-  static bool sAnnotateChannelEnabled;
-  // Whether the priority of the channels annotated as being on the tracking
-  // protection list should be lowered.
-  static bool sLowerNetworkPriority;
-  static bool sAllowListExample;
-
   nsCString mSkipHostnames;
   nsCString mSkipTrackingAnnotationURLs;
   nsCString mAnnotationBlacklist;
@@ -184,10 +173,6 @@ class CachedPrefs final {
 
   static StaticAutoPtr<CachedPrefs> sInstance;
 };
-
-bool CachedPrefs::sAllowListExample = false;
-bool CachedPrefs::sLowerNetworkPriority = false;
-bool CachedPrefs::sAnnotateChannelEnabled = false;
 
 StaticAutoPtr<CachedPrefs> CachedPrefs::sInstance;
 
@@ -247,13 +232,6 @@ void CachedPrefs::OnPrefsChange(const char* aPref, CachedPrefs* aPrefs) {
 }
 
 void CachedPrefs::Init() {
-  Preferences::AddBoolVarCache(&sAnnotateChannelEnabled,
-                               "privacy.trackingprotection.annotate_channels");
-  Preferences::AddBoolVarCache(
-      &sLowerNetworkPriority,
-      "privacy.trackingprotection.lower_network_priority");
-  Preferences::AddBoolVarCache(&sAllowListExample,
-                               "channelclassifier.allowlist_example");
   Preferences::RegisterCallbackAndCall(CachedPrefs::OnPrefsChange,
                                        URLCLASSIFIER_SKIP_HOSTNAMES, this);
   Preferences::RegisterCallbackAndCall(
@@ -433,7 +411,7 @@ bool nsChannelClassifier::ShouldEnableTrackingAnnotation() {
 
   mTrackingAnnotationEnabled = Some(false);
 
-  if (!CachedPrefs::GetInstance()->IsAnnotateChannelEnabled()) {
+  if (!StaticPrefs::privacy_trackingprotection_annotate_channels()) {
     return mTrackingAnnotationEnabled.value();
   }
 
@@ -493,7 +471,7 @@ nsresult nsChannelClassifier::ShouldEnableTrackingProtectionInternal(
     return rv;
   }
 
-  if (!topWinURI && CachedPrefs::GetInstance()->IsAllowListExample()) {
+  if (!topWinURI && StaticPrefs::channelclassifier_allowlist_example()) {
     LOG(("nsChannelClassifier[%p]: Allowlisting test domain\n", this));
     rv = ios->NewURI(NS_LITERAL_CSTRING("http://allowlisted.example.com"),
                      nullptr, nullptr, getter_AddRefs(topWinURI));
@@ -1244,7 +1222,7 @@ void TrackingURICallback::OnTrackerFound(nsresult aErrorCode) {
       // depending on whether TP is enabled or disabled.
       mChannelClassifier->NotifyTrackingProtectionDisabled(channel);
 
-      if (CachedPrefs::GetInstance()->IsLowerNetworkPriority()) {
+      if (StaticPrefs::privacy_trackingprotection_lower_network_priority()) {
         LowerPriorityHelper(channel);
       }
     }

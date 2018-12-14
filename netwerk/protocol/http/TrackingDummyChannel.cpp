@@ -61,7 +61,7 @@ TrackingDummyChannel::StorageAllowed(
   nsCOMPtr<nsIURI> uri;
   aChannel->GetURI(getter_AddRefs(uri));
 
-  if (ChannelNeedsToBeAnnotated()) {
+  if (StaticPrefs::privacy_trackingprotection_annotate_channels()) {
     ContentChild* cc = static_cast<ContentChild*>(gNeckoChild->Manager());
     if (cc->IsShuttingDown()) {
       return eStorageDenied;
