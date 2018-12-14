@@ -67,7 +67,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._observingNetwork = false;
 
     this._options = {
-      useSourceMaps: false,
       autoBlackBox: false,
     };
 
@@ -1955,7 +1954,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // ExtensionContent.jsm and ThreadActor would ignore them on a page reload
     // because it finds them in the _debuggerSourcesSeen WeakSet,
     // and so we also need to be sure that there is still a source actor for the source.
-    let sourceActor;
     if (this._debuggerSourcesSeen.has(source) && this.sources.hasSourceActor(source)) {
       // When replaying, fall through and try to setup breakpoints, even for
       // sources we have seen before. When replaying, we can have actors for
@@ -1966,72 +1964,31 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       if (!this.dbg.replaying) {
         return false;
       }
-      sourceActor = this.sources.getSourceActor(source);
     } else {
-      sourceActor = this.sources.createNonSourceMappedActor(source);
+      this.sources.createNonSourceMappedActor(source);
     }
 
     const bpActors = [...this.breakpointActorMap.findActors()];
 
-    if (this._options.useSourceMaps) {
-      const promises = [];
-
-      // Go ahead and establish the source actors for this script, which
-      // fetches sourcemaps if available and sends onNewSource
-      // notifications.
-      const sourceActorsCreated = this.sources._createSourceMappedActors(source);
-
-      if (bpActors.length) {
-        // We need to use unsafeSynchronize here because if the page is being reloaded,
-        // this call will replace the previous set of source actors for this source
-        // with a new one. If the source actors have not been replaced by the time
-        // we try to reset the breakpoints below, their location objects will still
-        // point to the old set of source actors, which point to different
-        // scripts.
-        this.unsafeSynchronize(sourceActorsCreated);
-      }
-
-      for (const actor of bpActors) {
-        if (actor.isPending) {
-          promises.push(actor.originalLocation.originalSourceActor._setBreakpoint(actor));
-        } else {
-          promises.push(
-            this.sources.getAllGeneratedLocations(actor.originalLocation).then(
-              (generatedLocations) => {
-                if (generatedLocations.length > 0 &&
-                    generatedLocations[0].generatedSourceActor
-                                         .actorID === sourceActor.actorID) {
-                  sourceActor._setBreakpointAtAllGeneratedLocations(
-                    actor, generatedLocations);
-                }
-              }));
-        }
-      }
-
-      if (promises.length > 0) {
-        this.unsafeSynchronize(Promise.all(promises));
-      }
-    } else {
-      // Bug 1225160: If addSource is called in response to a new script
-      // notification, and this notification was triggered by loading a JSM from
-      // chrome code, calling unsafeSynchronize could cause a debuggee timer to
-      // fire. If this causes the JSM to be loaded a second time, the browser
-      // will crash, because loading JSMS is not reentrant, and the first load
-      // has not completed yet.
-      //
-      // The root of the problem is that unsafeSynchronize can cause debuggee
-      // code to run. Unfortunately, fixing that is prohibitively difficult. The
-      // best we can do at the moment is disable source maps for the browser
-      // debugger, and carefully avoid the use of unsafeSynchronize in this
-      // function when source maps are disabled.
-      for (const actor of bpActors) {
-        if (actor.isPending) {
-          actor.originalLocation.originalSourceActor._setBreakpoint(actor);
-        } else {
-          actor.originalLocation.originalSourceActor._setBreakpointAtGeneratedLocation(
-            actor, GeneratedLocation.fromOriginalLocation(actor.originalLocation)
-          );
-        }
+    // Bug 1225160: If addSource is called in response to a new script
+    // notification, and this notification was triggered by loading a JSM from
+    // chrome code, calling unsafeSynchronize could cause a debuggee timer to
+    // fire. If this causes the JSM to be loaded a second time, the browser
+    // will crash, because loading JSMS is not reentrant, and the first load
+    // has not completed yet.
+    //
+    // The root of the problem is that unsafeSynchronize can cause debuggee
+    // code to run. Unfortunately, fixing that is prohibitively difficult. The
+    // best we can do at the moment is disable source maps for the browser
+    // debugger, and carefully avoid the use of unsafeSynchronize in this
+    // function when source maps are disabled.
+    for (const actor of bpActors) {
+      if (actor.isPending) {
+        actor.originalLocation.originalSourceActor._setBreakpoint(actor);
+      } else {
+        actor.originalLocation.originalSourceActor._setBreakpointAtGeneratedLocation(
+          actor, GeneratedLocation.fromOriginalLocation(actor.originalLocation)
+        );
       }
     }
 
