@@ -19,7 +19,7 @@
 <!-- General testing framework -->
 <script src="./test-array.js"></script>
 
-<script>/*<![CDATA[*/
+<script>/* <![CDATA[*/
 "use strict";
 
 // Generating 2048-bit keys takes some time.
@@ -28,13 +28,13 @@ SimpleTest.requestLongerTimeout(2);
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "RSA-PSS key generation (SHA-1, 1024-bit)",
-  function () {
+  function() {
     var that = this;
     var alg = {
       name: "RSA-PSS",
       hash: "SHA-1",
       modulusLength: 1024,
-      publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
     };
 
     crypto.subtle.generateKey(alg, false, ["sign", "verify"])
@@ -45,13 +45,13 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "RSA-PSS key generation and sign/verify round-trip (SHA-256, 2048-bit)",
-  function () {
+  function() {
     var that = this;
     var alg = {
       name: "RSA-PSS",
       hash: "SHA-256",
       modulusLength: 2048,
-      publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
     };
 
     var privKey, pubKey;
@@ -70,14 +70,14 @@ TestArray.addTest(
       .then(setKey, error(that))
       .then(doSign, error(that))
       .then(doVerify, error(that))
-      .then(complete(that, x => x), error(that))
+      .then(complete(that, x => x), error(that));
   }
 );
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "RSA-PSS verify known signature (SHA-1, 1024-bit)",
-  function () {
+  function() {
     var that = this;
     var alg = {name: "RSA-PSS", hash: "SHA-1"};
     var vec = tv.rsapss;
@@ -96,7 +96,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "Test invalid RSA-PSS signatures",
-  function () {
+  function() {
     var that = this;
     var alg = {name: "RSA-PSS", hash: "SHA-1"};
     var vec = tv.rsapss;
@@ -126,7 +126,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "RSA-PSS verify known signature (SHA-1, 1024-bit, JWK)",
-  function () {
+  function() {
     var that = this;
     var alg = {name: "RSA-PSS", hash: "SHA-1"};
 
@@ -144,7 +144,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "RSA-PSS verify known signatures (SHA-1 to SHA-512, 1024-bit)",
-  function () {
+  function() {
     var that = this;
 
     function verifyCase(hash, tv) {
@@ -165,7 +165,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "RSA-PSS import SPKI/PKCS#8 keys and sign/verify (SHA-1, 1024-bit)",
-  function () {
+  function() {
     var that = this;
     var alg = {name: "RSA-PSS", hash: "SHA-1"};
 
@@ -196,7 +196,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "RSA-PSS import JWK keys and sign/verify (SHA-1, 1024-bit)",
-  function () {
+  function() {
     var that = this;
     var alg = {name: "RSA-PSS", hash: "SHA-1"};
 
@@ -227,7 +227,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "RSA-PSS SPKI import/export (SHA-1, 1024-bit)",
-  function () {
+  function() {
     var that = this;
     var alg = {name: "RSA-PSS", hash: "SHA-1"};
 
@@ -244,7 +244,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "RSA-PSS PKCS#8 import/export (SHA-1, 1024-bit)",
-  function () {
+  function() {
     var that = this;
     var alg = {name: "RSA-PSS", hash: "SHA-1"};
 
@@ -261,7 +261,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "RSA-PSS JWK export a public key",
-  function () {
+  function() {
     var that = this;
     var alg = {name: "RSA-PSS", hash: "SHA-1"};
     var jwk = tv.rsapss.jwk_pub;
@@ -291,7 +291,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "RSA-PSS JWK export a private key",
-  function () {
+  function() {
     var that = this;
     var alg = {name: "RSA-PSS", hash: "SHA-1"};
     var jwk = tv.rsapss.jwk_priv;
@@ -327,13 +327,13 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "Deterministic RSA-PSS signatures with saltLength=0 (SHA-256, 2048-bit)",
-  function () {
+  function() {
     var that = this;
     var alg = {
       name: "RSA-PSS",
       hash: "SHA-256",
       modulusLength: 2048,
-      publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
     };
 
     var privKey, pubKey;
@@ -344,7 +344,7 @@ TestArray.addTest(
       var alg = {name: "RSA-PSS", saltLength: 0};
       return Promise.all([
         crypto.subtle.sign(alg, privKey, data),
-        crypto.subtle.sign(alg, privKey, data)
+        crypto.subtle.sign(alg, privKey, data),
       ]);
     }
 
@@ -364,10 +364,10 @@ TestArray.addTest(
         return sig1;
       }, error(that))
       .then(doVerify, error(that))
-      .then(complete(that, x => x), error(that))
+      .then(complete(that, x => x), error(that));
   }
 );
-/*]]>*/</script>
+/* ]]>*/</script>
 </head>
 
 <body>

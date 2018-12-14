@@ -19,7 +19,7 @@
 <!-- General testing framework -->
 <script src="./test-array.js"></script>
 
-<script>/*<![CDATA[*/
+<script>/* <![CDATA[*/
 "use strict";
 
 // -----------------------------------------------------------------------------
@@ -51,7 +51,7 @@ TestArray.addTest(
     var alg = {
       get name() {
         throw "Oh no, no name!";
-      }
+      },
     };
 
     crypto.subtle.importKey("raw", tv.raw, alg, true, ["encrypt"])
@@ -60,7 +60,7 @@ TestArray.addTest(
         complete(that, function(x) { return true; })
       );
   }
-)
+);
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
@@ -77,7 +77,7 @@ TestArray.addTest(
         (x.type != "secret") ||
         (!x.extractable) ||
         (x.usages.length != 1) ||
-        (x.usages[0] != 'encrypt')){
+        (x.usages[0] != "encrypt")) {
         throw "Invalid key: incorrect key data";
       }
       return crypto.subtle.exportKey("raw", x);
@@ -116,7 +116,7 @@ TestArray.addTest(
                              0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
                              0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f]);
     var u32 = new Uint32Array(u8.buffer, 8, 4);
-    var out = u8.subarray(8, 24)
+    var out = u8.subarray(8, 24);
 
     function doExport(x) {
       return crypto.subtle.exportKey("raw", x);
@@ -145,7 +145,7 @@ TestArray.addTest(
         (x.type != "private") ||
         (!x.extractable) ||
         (x.usages.length != 1) ||
-        (x.usages[0] != 'sign')){
+        (x.usages[0] != "sign")) {
         throw "Invalid key: incorrect key data";
       }
       return crypto.subtle.exportKey("pkcs8", x);
@@ -179,7 +179,7 @@ TestArray.addTest(
     var that = this;
     var alg = {
       name: "RSASSA-PKCS1-v1_5",
-      hash: "SHA-256"
+      hash: "SHA-256",
     };
 
     function doExport(x) {
@@ -191,7 +191,7 @@ TestArray.addTest(
         (x.type != "public") ||
         (!x.extractable) ||
         (x.usages.length != 1) ||
-        (x.usages[0] != 'verify')){
+        (x.usages[0] != "verify")) {
         throw "Invalid key: incorrect key data";
       }
       return crypto.subtle.exportKey("spki", x);
@@ -213,7 +213,7 @@ TestArray.addTest(
     var that = this;
     var alg = {
       name: "RSASSA-PKCS1-v1_5",
-      hash: "SHA-256"
+      hash: "SHA-256",
     };
 
     crypto.subtle.importKey("spki", tv.negative_spki, alg, true, ["encrypt"])
@@ -267,7 +267,7 @@ TestArray.addTest(
       req.onupgradeneeded = function(e) {
         db = e.target.result;
         db.createObjectStore(dbstore, {keyPath: "id"});
-      }
+      };
 
       req.onsuccess = doPut;
     }
@@ -291,7 +291,7 @@ TestArray.addTest(
       });
     }
 
-    crypto.subtle.importKey("raw", tv.raw, alg, false, ['encrypt'])
+    crypto.subtle.importKey("raw", tv.raw, alg, false, ["encrypt"])
       .then(doIndexedDB, error(that));
   }
 );
@@ -391,7 +391,7 @@ TestArray.addTest(
       name: "RSASSA-PKCS1-v1_5",
       hash: "SHA-256",
       modulusLength: 1024,
-      publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
     };
     crypto.subtle.generateKey(alg, false, ["sign", "verify"]).then(
       complete(that, function(x) {
@@ -424,7 +424,7 @@ TestArray.addTest(
       name: "RSASSA-PKCS1-v1_5",
       hash: "SHA-256",
       modulusLength: 2299, // NSS does not like this key length
-      publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
     };
 
     crypto.subtle.generateKey(alg, false, ["sign"])
@@ -459,7 +459,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "AES-CBC encrypt",
-  function () {
+  function() {
     var that = this;
 
     function doEncrypt(x) {
@@ -468,7 +468,7 @@ TestArray.addTest(
         x, tv.aes_cbc_enc.data);
     }
 
-    crypto.subtle.importKey("raw", tv.aes_cbc_enc.key, "AES-CBC", false, ['encrypt'])
+    crypto.subtle.importKey("raw", tv.aes_cbc_enc.key, "AES-CBC", false, ["encrypt"])
       .then(doEncrypt)
       .then(
         memcmp_complete(that, tv.aes_cbc_enc.result),
@@ -480,21 +480,21 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "AES-CBC encrypt with wrong IV size",
-  function () {
+  function() {
     var that = this;
 
     function encrypt(x, iv) {
       return crypto.subtle.encrypt(
-        { name: "AES-CBC", iv: iv },
+        { name: "AES-CBC", iv },
         x, tv.aes_cbc_enc.data);
     }
 
     function doEncrypt(x) {
       return encrypt(x, new Uint8Array(15))
-        .catch(function () { return encrypt(new Uint8Array(17)); });
+        .catch(function() { return encrypt(new Uint8Array(17)); });
     }
 
-    crypto.subtle.importKey("raw", tv.aes_cbc_enc.key, "AES-CBC", false, ['encrypt'])
+    crypto.subtle.importKey("raw", tv.aes_cbc_enc.key, "AES-CBC", false, ["encrypt"])
       .then(doEncrypt)
       .then(
         error(that),
@@ -506,7 +506,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "AES-CBC decrypt",
-  function () {
+  function() {
     var that = this;
 
     function doDecrypt(x) {
@@ -515,7 +515,7 @@ TestArray.addTest(
         x, tv.aes_cbc_dec.data);
     }
 
-    crypto.subtle.importKey("raw", tv.aes_cbc_dec.key, "AES-CBC", false, ['decrypt'])
+    crypto.subtle.importKey("raw", tv.aes_cbc_dec.key, "AES-CBC", false, ["decrypt"])
       .then(doDecrypt)
       .then(
         memcmp_complete(that, tv.aes_cbc_dec.result),
@@ -527,21 +527,21 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "AES-CBC decrypt with wrong IV size",
-  function () {
+  function() {
     var that = this;
 
     function decrypt(x, iv) {
       return crypto.subtle.decrypt(
-        { name: "AES-CBC", iv: iv },
+        { name: "AES-CBC", iv },
         x, tv.aes_cbc_dec.data);
     }
 
     function doDecrypt(x) {
       return decrypt(x, new Uint8Array(15))
-        .catch(function () { return decrypt(x, new Uint8Array(17)); });
+        .catch(function() { return decrypt(x, new Uint8Array(17)); });
     }
 
-    crypto.subtle.importKey("raw", tv.aes_cbc_dec.key, "AES-CBC", false, ['decrypt'])
+    crypto.subtle.importKey("raw", tv.aes_cbc_dec.key, "AES-CBC", false, ["decrypt"])
       .then(doDecrypt)
       .then(
         error(that),
@@ -553,7 +553,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "AES-CTR encryption",
-  function () {
+  function() {
     var that = this;
 
     function doEncrypt(x) {
@@ -562,7 +562,7 @@ TestArray.addTest(
         x, tv.aes_ctr_enc.data);
     }
 
-    crypto.subtle.importKey("raw", tv.aes_ctr_enc.key, "AES-CTR", false, ['encrypt'])
+    crypto.subtle.importKey("raw", tv.aes_ctr_enc.key, "AES-CTR", false, ["encrypt"])
       .then(doEncrypt)
       .then(
         memcmp_complete(that, tv.aes_ctr_enc.result),
@@ -574,7 +574,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "AES-CTR encryption with wrong IV size",
-  function () {
+  function() {
     var that = this;
 
     function encrypt(x, iv) {
@@ -585,10 +585,10 @@ TestArray.addTest(
 
     function doEncrypt(x) {
       return encrypt(x, new Uint8Array(15))
-        .catch(function () { return encrypt(x, new Uint8Array(17)); });
+        .catch(function() { return encrypt(x, new Uint8Array(17)); });
     }
 
-    crypto.subtle.importKey("raw", tv.aes_ctr_enc.key, "AES-CTR", false, ['encrypt'])
+    crypto.subtle.importKey("raw", tv.aes_ctr_enc.key, "AES-CTR", false, ["encrypt"])
       .then(doEncrypt)
       .then(
         error(that),
@@ -600,7 +600,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "AES-CTR decryption",
-  function () {
+  function() {
     var that = this;
 
     function doDecrypt(x) {
@@ -609,7 +609,7 @@ TestArray.addTest(
         x, tv.aes_ctr_dec.data);
     }
 
-    crypto.subtle.importKey("raw", tv.aes_ctr_dec.key, "AES-CTR", false, ['decrypt'])
+    crypto.subtle.importKey("raw", tv.aes_ctr_dec.key, "AES-CTR", false, ["decrypt"])
       .then(doDecrypt)
       .then(
         memcmp_complete(that, tv.aes_ctr_dec.result),
@@ -621,7 +621,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "AES-CTR decryption with wrong IV size",
-  function () {
+  function() {
     var that = this;
 
     function doDecrypt(x, iv) {
@@ -632,10 +632,10 @@ TestArray.addTest(
 
     function decrypt(x) {
       return decrypt(x, new Uint8Array(15))
-        .catch(function () { return decrypt(x, new Uint8Array(17)); });
+        .catch(function() { return decrypt(x, new Uint8Array(17)); });
     }
 
-    crypto.subtle.importKey("raw", tv.aes_ctr_dec.key, "AES-CTR", false, ['decrypt'])
+    crypto.subtle.importKey("raw", tv.aes_ctr_dec.key, "AES-CTR", false, ["decrypt"])
       .then(doDecrypt)
       .then(
         error(that),
@@ -647,7 +647,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "AES-GCM encryption",
-  function () {
+  function() {
     var that = this;
 
     function doEncrypt(x) {
@@ -656,12 +656,12 @@ TestArray.addTest(
           name: "AES-GCM",
           iv: tv.aes_gcm_enc.iv,
           additionalData: tv.aes_gcm_enc.adata,
-          tagLength: 128
+          tagLength: 128,
         },
         x, tv.aes_gcm_enc.data);
     }
 
-    crypto.subtle.importKey("raw", tv.aes_gcm_enc.key, "AES-GCM", false, ['encrypt'])
+    crypto.subtle.importKey("raw", tv.aes_gcm_enc.key, "AES-GCM", false, ["encrypt"])
       .then(doEncrypt)
       .then(
         memcmp_complete(that, tv.aes_gcm_enc.result),
@@ -673,7 +673,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "AES-GCM decryption",
-  function () {
+  function() {
     var that = this;
 
     function doDecrypt(x) {
@@ -682,12 +682,12 @@ TestArray.addTest(
           name: "AES-GCM",
           iv: tv.aes_gcm_dec.iv,
           additionalData: tv.aes_gcm_dec.adata,
-          tagLength: 128
+          tagLength: 128,
         },
         x, tv.aes_gcm_dec.data);
     }
 
-    crypto.subtle.importKey("raw", tv.aes_gcm_dec.key, "AES-GCM", false, ['decrypt'])
+    crypto.subtle.importKey("raw", tv.aes_gcm_dec.key, "AES-GCM", false, ["decrypt"])
       .then(doDecrypt)
       .then(
         memcmp_complete(that, tv.aes_gcm_dec.result),
@@ -699,7 +699,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "AES-GCM decryption, failing authentication check",
-  function () {
+  function() {
     var that = this;
 
     function doDecrypt(x) {
@@ -708,12 +708,12 @@ TestArray.addTest(
           name: "AES-GCM",
           iv: tv.aes_gcm_dec_fail.iv,
           additionalData: tv.aes_gcm_dec_fail.adata,
-          tagLength: 128
+          tagLength: 128,
         },
         x, tv.aes_gcm_dec_fail.data);
     }
 
-    crypto.subtle.importKey("raw", tv.aes_gcm_dec_fail.key, "AES-GCM", false, ['decrypt'])
+    crypto.subtle.importKey("raw", tv.aes_gcm_dec_fail.key, "AES-GCM", false, ["decrypt"])
       .then(doDecrypt)
       .then(
         error(that),
@@ -725,20 +725,20 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "AES-GCM encryption, fail with a zero-length IV",
-  function () {
+  function() {
     var that = this;
     var alg = {
       name: "AES-GCM",
       iv: new Uint8Array(),
       additionalData: tv.aes_gcm_enc.adata,
-      tagLength: 128
+      tagLength: 128,
     };
 
     function doEncrypt(x) {
       return crypto.subtle.encrypt(alg, x, tv.aes_gcm_enc.data);
     }
 
-    crypto.subtle.importKey("raw", tv.aes_gcm_enc.key, "AES-GCM", false, ['encrypt'])
+    crypto.subtle.importKey("raw", tv.aes_gcm_enc.key, "AES-GCM", false, ["encrypt"])
       .then(doEncrypt)
       .then(error(that), complete(that));
   }
@@ -747,20 +747,20 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "AES-GCM encryption, accept an all-zero IV (1 byte)",
-  function () {
+  function() {
     var that = this;
     var alg = {
       name: "AES-GCM",
       iv: new Uint8Array(1),
       additionalData: tv.aes_gcm_enc.adata,
-      tagLength: 128
+      tagLength: 128,
     };
 
     function doEncrypt(x) {
       return crypto.subtle.encrypt(alg, x, tv.aes_gcm_enc.data);
     }
 
-    crypto.subtle.importKey("raw", tv.aes_gcm_enc.key, "AES-GCM", false, ['encrypt'])
+    crypto.subtle.importKey("raw", tv.aes_gcm_enc.key, "AES-GCM", false, ["encrypt"])
       .then(doEncrypt)
       .then(complete(that), error(that));
   }
@@ -769,20 +769,20 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "AES-GCM encryption, accept an all-zero IV (12 bytes)",
-  function () {
+  function() {
     var that = this;
     var alg = {
       name: "AES-GCM",
       iv: new Uint8Array(12),
       additionalData: tv.aes_gcm_enc.adata,
-      tagLength: 128
+      tagLength: 128,
     };
 
     function doEncrypt(x) {
       return crypto.subtle.encrypt(alg, x, tv.aes_gcm_enc.data);
     }
 
-    crypto.subtle.importKey("raw", tv.aes_gcm_enc.key, "AES-GCM", false, ['encrypt'])
+    crypto.subtle.importKey("raw", tv.aes_gcm_enc.key, "AES-GCM", false, ["encrypt"])
       .then(doEncrypt)
       .then(complete(that), error(that));
   }
@@ -791,20 +791,20 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "AES-GCM encryption, accept an all-zero IV (16 bytes)",
-  function () {
+  function() {
     var that = this;
     var alg = {
       name: "AES-GCM",
       iv: new Uint8Array(16),
       additionalData: tv.aes_gcm_enc.adata,
-      tagLength: 128
+      tagLength: 128,
     };
 
     function doEncrypt(x) {
       return crypto.subtle.encrypt(alg, x, tv.aes_gcm_enc.data);
     }
 
-    crypto.subtle.importKey("raw", tv.aes_gcm_enc.key, "AES-GCM", false, ['encrypt'])
+    crypto.subtle.importKey("raw", tv.aes_gcm_enc.key, "AES-GCM", false, ["encrypt"])
       .then(doEncrypt)
       .then(complete(that), error(that));
   }
@@ -817,14 +817,14 @@ TestArray.addTest(
     var that = this;
     var alg = {
       name: "HMAC",
-      hash: "SHA-256"
-    }
+      hash: "SHA-256",
+    };
 
     function doSign(x) {
       return crypto.subtle.sign("HMAC", x, tv.hmac_sign.data);
     }
 
-    crypto.subtle.importKey("raw", tv.hmac_sign.key, alg, false, ['sign'])
+    crypto.subtle.importKey("raw", tv.hmac_sign.key, alg, false, ["sign"])
       .then(doSign)
       .then(
         memcmp_complete(that, tv.hmac_sign.result),
@@ -840,14 +840,14 @@ TestArray.addTest(
     var that = this;
     var alg = {
       name: "HMAC",
-      hash: "SHA-256"
-    }
+      hash: "SHA-256",
+    };
 
     function doVerify(x) {
       return crypto.subtle.verify("HMAC", x, tv.hmac_verify.sig, tv.hmac_verify.data);
     }
 
-    crypto.subtle.importKey("raw", tv.hmac_verify.key, alg, false, ['verify'])
+    crypto.subtle.importKey("raw", tv.hmac_verify.key, alg, false, ["verify"])
       .then(doVerify)
       .then(
         complete(that, function(x) { return !!x; }),
@@ -863,15 +863,15 @@ TestArray.addTest(
     var that = this;
     var alg = {
       name: "HMAC",
-      hash: "SHA-256"
-    }
+      hash: "SHA-256",
+    };
 
     function doVerify(x) {
       return crypto.subtle.verify("HMAC", x, tv.hmac_verify.sig_fail,
                                              tv.hmac_verify.data);
     }
 
-    crypto.subtle.importKey("raw", tv.hmac_verify.key, alg, false, ['verify'])
+    crypto.subtle.importKey("raw", tv.hmac_verify.key, alg, false, ["verify"])
       .then(doVerify)
       .then(
         complete(that, function(x) { return !x; }),
@@ -887,15 +887,15 @@ TestArray.addTest(
     var that = this;
     var alg = {
       name: "HMAC",
-      hash: "SHA-256"
-    }
+      hash: "SHA-256",
+    };
 
     function doVerify(x) {
       return crypto.subtle.verify("HMAC", x, tv.hmac_verify.sig,
                                              tv.hmac_verify.data);
     }
 
-    crypto.subtle.importKey("raw", tv.hmac_verify.key, alg, false, ['encrypt'])
+    crypto.subtle.importKey("raw", tv.hmac_verify.key, alg, false, ["encrypt"])
       .then(doVerify)
       .then(
         error(that),
@@ -907,7 +907,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "RSASSA/SHA-1 signature",
-  function () {
+  function() {
     var that = this;
     var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-1" };
 
@@ -915,7 +915,7 @@ TestArray.addTest(
       return crypto.subtle.sign(alg.name, x, tv.rsassa.data);
     }
 
-    crypto.subtle.importKey("pkcs8", tv.rsassa.pkcs8, alg, false, ['sign'])
+    crypto.subtle.importKey("pkcs8", tv.rsassa.pkcs8, alg, false, ["sign"])
       .then( doSign )
       .then( memcmp_complete(that, tv.rsassa.sig1), error(that) );
   }
@@ -924,7 +924,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "RSASSA verification (SHA-1)",
-  function () {
+  function() {
     var that = this;
     var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-1" };
 
@@ -932,7 +932,7 @@ TestArray.addTest(
       return crypto.subtle.verify(alg.name, x, tv.rsassa.sig1, tv.rsassa.data);
     }
 
-    crypto.subtle.importKey("spki", tv.rsassa.spki, alg, false, ['verify'])
+    crypto.subtle.importKey("spki", tv.rsassa.spki, alg, false, ["verify"])
       .then( doVerify )
       .then(
         complete(that, function(x) { return x; }),
@@ -944,7 +944,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "RSASSA verification (SHA-1), failing verification",
-  function () {
+  function() {
     var that = this;
     var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-1" };
 
@@ -952,7 +952,7 @@ TestArray.addTest(
       return crypto.subtle.verify(alg.name, x, tv.rsassa.sig_fail, tv.rsassa.data);
     }
 
-    crypto.subtle.importKey("spki", tv.rsassa.spki, alg, false, ['verify'])
+    crypto.subtle.importKey("spki", tv.rsassa.spki, alg, false, ["verify"])
       .then( doVerify )
       .then(
         complete(that, function(x) { return !x; }),
@@ -964,7 +964,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "RSASSA/SHA-256 signature",
-  function () {
+  function() {
     var that = this;
     var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
 
@@ -972,7 +972,7 @@ TestArray.addTest(
       return crypto.subtle.sign(alg.name, x, tv.rsassa.data);
     }
 
-    crypto.subtle.importKey("pkcs8", tv.rsassa.pkcs8, alg, false, ['sign'])
+    crypto.subtle.importKey("pkcs8", tv.rsassa.pkcs8, alg, false, ["sign"])
       .then( doSign )
       .then( memcmp_complete(that, tv.rsassa.sig256), error(that) );
   }
@@ -981,7 +981,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "RSASSA verification (SHA-256)",
-  function () {
+  function() {
     var that = this;
     var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
 
@@ -989,7 +989,7 @@ TestArray.addTest(
       return crypto.subtle.verify(alg.name, x, tv.rsassa.sig256, tv.rsassa.data);
     }
 
-    crypto.subtle.importKey("spki", tv.rsassa.spki, alg, false, ['verify'])
+    crypto.subtle.importKey("spki", tv.rsassa.spki, alg, false, ["verify"])
       .then( doVerify )
       .then(
         complete(that, function(x) { return x; }),
@@ -1001,16 +1001,16 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "RSASSA verification (SHA-256), failing verification",
-  function () {
+  function() {
     var that = this;
     var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
-    var use = ['sign', 'verify'];
+    var use = ["sign", "verify"];
 
     function doVerify(x) {
       return crypto.subtle.verify(alg.name, x, tv.rsassa.sig_fail, tv.rsassa.data);
     }
 
-    crypto.subtle.importKey("spki", tv.rsassa.spki, alg, false, ['verify'])
+    crypto.subtle.importKey("spki", tv.rsassa.spki, alg, false, ["verify"])
       .then( doVerify )
       .then(
         complete(that, function(x) { return !x; }),
@@ -1026,7 +1026,7 @@ TestArray.addTest(
     var that = this;
 
     crypto.subtle.digest("SHA-256", tv.sha256.data)
-      .then(complete(that, function (x) {
+      .then(complete(that, function(x) {
         return x instanceof ArrayBuffer;
       }), error(that));
   }
@@ -1035,7 +1035,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "Ensure that importing an invalid key doesn't crash",
-  function () {
+  function() {
     var that = this;
     // TODO Change the algorithm to "DH" once we support it.
     var alg = {name: "RSA-OAEP", hash: "SHA-1"};
@@ -1082,12 +1082,12 @@ TestArray.addTest(
       name: "RSA-PSS",
       hash: "SHA-1",
       modulusLength: 1024,
-      publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
     };
 
     function checkPrototypes(obj, type) {
       return obj.__proto__ != window[type].prototype &&
-             obj.__proto__ == frames[0][type].prototype
+             obj.__proto__ == frames[0][type].prototype;
     }
 
     var p1 = crypto.subtle.importKey.call(
@@ -1115,7 +1115,7 @@ TestArray.addTest(
     }), error(that));
   }
 );
-/*]]>*/</script>
+/* ]]>*/</script>
 </head>
 
 <body>

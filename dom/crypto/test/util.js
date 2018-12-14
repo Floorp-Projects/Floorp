@@ -11,7 +11,7 @@ var util = {
     var yb = new Uint8Array(y);
     if (x.byteLength !== y.byteLength) { return false; }
 
-    for (var i=0; i<xb.byteLength; ++i) {
+    for (var i = 0; i < xb.byteLength; ++i) {
       if (xb[i] !== yb[i]) {
         return false;
       }
@@ -23,7 +23,7 @@ var util = {
   abv2hex: function util_abv2hex(abv) {
     var b = new Uint8Array(abv);
     var hex = "";
-    for (var i=0; i <b.length; ++i) {
+    for (var i = 0; i < b.length; ++i) {
       var zeropad = (b[i] < 0x10) ? "0" : "";
       hex += zeropad + b[i].toString(16);
     }
@@ -37,13 +37,13 @@ var util = {
     }
 
     var abv = new Uint8Array(hex.length / 2);
-    for (var i=0; i<abv.length; ++i) {
-      abv[i] = parseInt(hex.substr(2*i, 2), 16);
+    for (var i = 0; i < abv.length; ++i) {
+      abv[i] = parseInt(hex.substr(2 * i, 2), 16);
     }
     return abv;
   },
 
-  clone: function (obj) {
+  clone(obj) {
     return new Promise(resolve => {
       let {port1, port2} = new MessageChannel();
 
@@ -55,7 +55,7 @@ var util = {
     });
   },
 
-  cloneExportCompareKeys: function (key) {
+  cloneExportCompareKeys(key) {
     return util.clone(key).then(clone => {
       var exports = [];
 
@@ -79,7 +79,7 @@ var util = {
         return clone;
       });
     });
-  }
+  },
 };
 
 function exists(x) {
@@ -89,7 +89,7 @@ function exists(x) {
 function hasFields(object, fields) {
   return fields
           .map(x => exists(object[x]))
-          .reduce((x,y) => (x && y));
+          .reduce((x, y) => (x && y));
 }
 
 function hasKeyFields(x) {

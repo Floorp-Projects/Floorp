@@ -47,12 +47,12 @@
       });
     }
 
-    addEventListener("load", function () {
+    addEventListener("load", function() {
       SpecialPowers.addPermission("browser", true, document);
       SpecialPowers.pushPrefEnv({set: [
         ["dom.ipc.browser_frames.oop_by_default", true],
         ["dom.mozBrowserFramesEnabled", true],
-        ["network.disable.ipc.security", true]
+        ["network.disable.ipc.security", true],
       ]}, runTest);
     });
   </script>
