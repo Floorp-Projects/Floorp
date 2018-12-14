@@ -5,5 +5,13 @@
     "digest": "d705fb149fd7ec6a0833000224f802bd8cbb0f3ecf96efa558010e63db691ff03a95180d9525229e7055e8810c528bf3d7f1a1ab97aecadab3c7c7de8668ab30",
     "algorithm": "sha512",
     "filename": "dump_syms"
+  },
+  {
+    "size": 34094283,
+    "visibility": "internal",
+    "digest": "8811050fe375bcc566c8b85173d86b8a87aa2148edfed93023735c2de44b66a5a28cbaa1cfd396032447fd803e03f308ed941a200c0e2a1ad9fbe16b5606ee7c",
+    "algorithm": "sha512",
+    "unpack": true,
+    "filename": "MacOSX10.11.sdk.tar.xz"
   }
 ]

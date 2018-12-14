@@ -34,25 +34,22 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
         'build',
         'test',
         'package',
-        'dump-symbols',
-        'upload',
+        'dump-symbols'
     ]
 
     default_actions = [
         'get-tooltool',
         'checkout-sources',
         'build',
-        'test',
         'package',
-        'dump-symbols',
-        'upload',
+        'dump-symbols'
     ]
 
     config_options = [
         [["--repo"], {
             "dest": "repo",
             "help": "OpenH264 repository to use",
-            "default": "https://github.com/cisco/openh264.git"
+            "default": "https://github.com/dminor/openh264.git"
         }],
         [["--rev"], {
             "dest": "revision",
@@ -83,7 +80,19 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
             "help": "Pass HAVE_AVX2='false' through to Make to support older nasm",
             "action": "store_true",
             "default": False,
-        }]
+        }],
+        [["--scm-level"], {
+            "dest": "scm_level",
+            "help": "dummy option",
+        }],
+        [["--branch"], {
+            "dest": "branch",
+            "help": "dummy option",
+        }],
+        [["--build-pool"], {
+            "dest": "build_pool",
+            "help": "dummy option",
+        }],
     ]
 
     def __init__(self, require_config_file=False, config={},
@@ -125,15 +134,15 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
             return
         dirs = self.query_abs_dirs()
         self.mkdir_p(dirs['abs_work_dir'])
-        manifest = os.path.join(dirs['base_work_dir'],
-                                'scripts', 'configs',
-                                'openh264', 'tooltool-manifests',
+        manifest = os.path.join(dirs['abs_work_dir'], 'src', 'testing',
+                                'mozharness', 'configs', 'openh264',
+                                'tooltool-manifests',
                                 c['tooltool_manifest_file'])
         self.info("Getting tooltool files from manifest (%s)" % manifest)
         try:
             self.tooltool_fetch(
                 manifest=manifest,
-                output_dir=dirs['abs_work_dir'],
+                output_dir=os.path.join(dirs['abs_work_dir'], 'src'),
                 cache=c.get('tooltool_cache')
             )
         except KeyError:
@@ -150,6 +159,9 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
             if self.config.get('operating_system') == 'android':
                 return 'openh264-android-{arch}-{version}.zip'.format(
                     version=version, arch=self.config['arch'])
+            elif self.config.get('operating_system') == 'darwin':
+                return 'openh264-macosx{bits}-{version}.zip'.format(
+                    version=version, bits=bits)
             else:
                 return 'openh264-linux{bits}-{version}.zip'.format(version=version, bits=bits)
         elif sys.platform == 'darwin':
@@ -183,10 +195,26 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
                     retval.append("ARCH=arm")
                 retval.append('TARGET=invalid')
                 retval.append('NDKLEVEL=%s' % self.config['min_sdk'])
-                retval.append('NDKROOT=%s/android-ndk-r11c' % dirs['abs_work_dir'])
+                retval.append('NDKROOT=%s/src/android-ndk' % dirs['abs_work_dir'])
+                retval.append('NDK_TOOLCHAIN_VERSION=clang')
+            if self.config["operating_system"] == "darwin":
+                retval.append('OS=darwin')
 
         if self.config['use_yasm']:
             retval.append('ASM=yasm')
+
+        if self._is_windows():
+            retval.append('OS=msvc')
+            retval.append('CC=clang-cl')
+            retval.append('CXX=clang-cl')
+            if self.config['arch'] == 'x86':
+                retval.append("ARCH=x86")
+                retval.append("CFLAGS=-m32")
+            else:
+                retval.append("ARCH=x86_64")
+        else:
+            retval.append('CC=clang')
+            retval.append('CXX=clang++')
 
         return retval
 
@@ -205,7 +233,7 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
     def run_make(self, target, capture_output=False):
         cmd = ['make', target] + self.query_make_params()
         dirs = self.query_abs_dirs()
-        repo_dir = os.path.join(dirs['abs_work_dir'], 'src')
+        repo_dir = os.path.join(dirs['abs_work_dir'], 'openh264')
         env = None
         if self.config.get('partial_env'):
             env = self.query_env(self.config['partial_env'])
@@ -220,7 +248,22 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
         rev = self.config['revision']
 
         dirs = self.query_abs_dirs()
-        repo_dir = os.path.join(dirs['abs_work_dir'], 'src')
+        repo_dir = os.path.join(dirs['abs_work_dir'], 'openh264')
+
+        if self._is_windows():
+            # We don't have git on our windows builders, so download a zip
+            # package instead.
+            path = repo.replace('.git', '/archive/') + rev + '.zip'
+            self.download_file(path)
+            self.unzip(rev + '.zip', dirs['abs_work_dir'])
+            self.move(os.path.join(dirs['abs_work_dir'], 'openh264-' + rev),
+                      os.path.join(dirs['abs_work_dir'], 'openh264'))
+
+            # Retrieve in-tree version of gmp-api
+            self.copytree(os.path.join(dirs['abs_work_dir'], 'src', 'dom',
+                                       'media', 'gmp', 'gmp-api'),
+                          os.path.join(repo_dir, 'gmp-api'))
+            return 0
 
         repos = [
             {'vcs': 'gittool', 'repo': repo, 'dest': repo_dir, 'revision': rev},
@@ -261,7 +304,7 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
 
     def package(self):
         dirs = self.query_abs_dirs()
-        srcdir = os.path.join(dirs['abs_work_dir'], 'src')
+        srcdir = os.path.join(dirs['abs_work_dir'], 'openh264')
         package_name = self.query_package_name()
         package_file = os.path.join(dirs['abs_work_dir'], package_name)
         if os.path.exists(package_file):
@@ -281,12 +324,20 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
         retval = self.run_command(cmd, cwd=srcdir)
         if retval != 0:
             self.fatal("couldn't make package")
-        self.copy_to_upload_dir(package_file)
+        self.copy_to_upload_dir(package_file,
+                                dest=os.path.join(srcdir, 'artifacts',
+                                                  package_name))
+
+        # Taskcluster expects this path to exist, but we don't use it
+        # because our builds are private.
+        path = os.path.join(self.query_abs_dirs()['abs_work_dir'],
+                            '..', 'public', 'build')
+        self.mkdir_p(path)
 
     def dump_symbols(self):
         dirs = self.query_abs_dirs()
         c = self.config
-        srcdir = os.path.join(dirs['abs_work_dir'], 'src')
+        srcdir = os.path.join(dirs['abs_work_dir'], 'openh264')
         package_name = self.run_make('echo-plugin-name', capture_output=True)
         if not package_name:
             self.fatal("failure running make")
@@ -294,13 +345,13 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
         if not zip_package_name[-4:] == ".zip":
             self.fatal("Unexpected zip_package_name")
         symbol_package_name = "{base}.symbols.zip".format(base=zip_package_name[:-4])
-        symbol_zip_path = os.path.join(dirs['abs_upload_dir'], symbol_package_name)
-        repo_dir = os.path.join(dirs['abs_work_dir'], 'src')
+        symbol_zip_path = os.path.join(srcdir, 'artifacts', symbol_package_name)
+        repo_dir = os.path.join(dirs['abs_work_dir'], 'openh264')
         env = None
         if self.config.get('partial_env'):
             env = self.query_env(self.config['partial_env'])
         kwargs = dict(cwd=repo_dir, env=env)
-        dump_syms = os.path.join(dirs['abs_work_dir'], c['dump_syms_binary'])
+        dump_syms = os.path.join(dirs['abs_work_dir'], 'src', c['dump_syms_binary'])
         self.chmod(dump_syms, 0755)
         python = self.query_exe('python2.7')
         cmd = [python, os.path.join(external_tools_path, 'packagesymbols.py'),
@@ -308,25 +359,13 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
                dump_syms, os.path.join(srcdir, package_name)]
         self.run_command(cmd, **kwargs)
 
-    def upload(self):
-        dirs = self.query_abs_dirs()
-        self.scp_upload_directory(
-            dirs['abs_upload_dir'],
-            self.query_upload_ssh_key(),
-            self.query_upload_ssh_user(),
-            self.query_upload_ssh_host(),
-            self.query_upload_ssh_path(),
-        )
-
     def test(self):
         retval = self.run_make('test')
         if retval != 0:
             self.fatal("test failures")
 
-    def copy_to_upload_dir(self, target, dest=None, short_desc="unknown",
-                           long_desc="unknown", log_level=DEBUG,
-                           error_level=ERROR, max_backups=None,
-                           compress=False, upload_dir=None):
+    def copy_to_upload_dir(self, target, dest=None, log_level=DEBUG,
+                           error_level=ERROR, compress=False, upload_dir=None):
         """Copy target file to upload_dir/dest.
 
         Potentially update a manifest in the future if we go that route.
@@ -334,9 +373,6 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
         Currently only copies a single file; would be nice to allow for
         recursive copying; that would probably done by creating a helper
         _copy_file_to_upload_dir().
-
-        short_desc and long_desc are placeholders for if/when we add
-        upload_dir manifests.
         """
         dest_filename_given = dest is not None
         if upload_dir is None:
@@ -357,34 +393,6 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
             self.log("%s doesn't exist!" % target, level=error_level)
             return None
         self.mkdir_p(dest_dir)
-        if os.path.exists(dest):
-            if os.path.isdir(dest):
-                self.log("%s exists and is a directory!" % dest, level=error_level)
-                return -1
-            if max_backups:
-                # Probably a better way to do this
-                oldest_backup = 0
-                backup_regex = re.compile("^%s\.(\d+)$" % dest_file)
-                for filename in os.listdir(dest_dir):
-                    r = backup_regex.match(filename)
-                    if r and int(r.groups()[0]) > oldest_backup:
-                        oldest_backup = int(r.groups()[0])
-                for backup_num in range(oldest_backup, 0, -1):
-                    # TODO more error checking?
-                    if backup_num >= max_backups:
-                        self.rmtree(os.path.join(dest_dir, "%s.%d" % (dest_file, backup_num)),
-                                    log_level=log_level)
-                    else:
-                        self.move(os.path.join(dest_dir, "%s.%d" % (dest_file, backup_num)),
-                                  os.path.join(dest_dir, "%s.%d" % (dest_file, backup_num + 1)),
-                                  log_level=log_level)
-                if self.move(dest, "%s.1" % dest, log_level=log_level):
-                    self.log("Unable to move %s!" % dest, level=error_level)
-                    return -1
-            else:
-                if self.rmtree(dest, log_level=log_level):
-                    self.log("Unable to remove %s!" % dest, level=error_level)
-                    return -1
         self.copyfile(target, dest, log_level=log_level, compress=compress)
         if os.path.exists(dest):
             return dest
