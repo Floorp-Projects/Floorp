@@ -333,7 +333,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DoGetDisplay();
   already_AddRefed<CSSValue> DoGetContain();
   already_AddRefed<CSSValue> DoGetWillChange();
-  already_AddRefed<CSSValue> DoGetOverflowY();
   already_AddRefed<CSSValue> DoGetTouchAction();
   already_AddRefed<CSSValue> DoGetTransform();
   already_AddRefed<CSSValue> DoGetTransformOrigin();
@@ -369,15 +368,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DoGetFlexGrow();
   already_AddRefed<CSSValue> DoGetFlexShrink();
 
-  /* CSS Flexbox/Grid properties */
-
   /* CSS Box Alignment properties */
-  already_AddRefed<CSSValue> DoGetAlignContent();
-  already_AddRefed<CSSValue> DoGetAlignItems();
-  already_AddRefed<CSSValue> DoGetAlignSelf();
-  already_AddRefed<CSSValue> DoGetJustifyContent();
-  already_AddRefed<CSSValue> DoGetJustifyItems();
-  already_AddRefed<CSSValue> DoGetJustifySelf();
   already_AddRefed<CSSValue> DoGetColumnGap();
   already_AddRefed<CSSValue> DoGetRowGap();
 
