@@ -1,5 +1,5 @@
-commit 6a8e28db3cbff837570f93881e6e4f7ff4d5fb25
+commit 6e82c7c389888603f0de84ffe5c60f43f11ee844
 Author: Yoshito Umaoka <yoshito_umaoka@us.ibm.com>
-Date:   Tue Oct 30 08:52:31 2018 -0400
+Date:   Wed Nov 7 19:23:35 2018 -0500
 
-    ICU-20245: tzdata2018g updates. Also added tzdata2018f release files missed previously.
+    ICU-20260 Fix CR/LF issue
