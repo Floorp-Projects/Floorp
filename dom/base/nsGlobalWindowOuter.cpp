@@ -5085,7 +5085,17 @@ void nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
     state &= ~aState;
   }
 
-  if (state == oldState) {
+  if (state == oldState
+#ifdef ANDROID
+      // GeckoView always needs to notify about blocked trackers, since the
+      // GeckoView API always needs to report the URI and type of any blocked
+      // tracker.
+      // We use a platform-dependent code path here because reporting this
+      // notification on desktop platforms isn't necessary and doing so can have
+      // a big performance cost.
+      && aState != nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT
+#endif
+  ) {
     // Avoid dispatching repeated notifications when nothing has changed
     return;
   }
