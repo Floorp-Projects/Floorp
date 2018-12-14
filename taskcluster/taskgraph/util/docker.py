@@ -209,6 +209,8 @@ def stream_context_tar(topsrcdir, context_dir, out_file, prefix, args=None):
     archive_files = {}
     replace = []
 
+    context_dir = os.path.join(topsrcdir, context_dir)
+
     for root, dirs, files in os.walk(context_dir):
         for f in files:
             source_path = os.path.join(root, f)
