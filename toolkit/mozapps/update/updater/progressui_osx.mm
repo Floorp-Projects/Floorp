@@ -107,19 +107,22 @@ ShowProgressUI(bool indeterminate)
   // ShowProgressUI is called sProgress is less than 70.
   usleep(500000);
 
-  if (sQuit || sProgressVal > 70.0f)
+  if (sQuit || sProgressVal > 70.0f) {
     return 0;
+  }
 
   char path[PATH_MAX];
   SprintfLiteral(path, "%s/updater.ini", sUpdatePath);
-  if (ReadStrings(path, &sLabels) != OK)
+  if (ReadStrings(path, &sLabels) != OK) {
     return -1;
+  }
 
   // Continue the update without showing the Progress UI if any of the supplied
   // strings are larger than MAX_TEXT_LEN (Bug 628829).
   if (!(strlen(sLabels.title) < MAX_TEXT_LEN - 1 &&
-        strlen(sLabels.info) < MAX_TEXT_LEN - 1))
+        strlen(sLabels.info) < MAX_TEXT_LEN - 1)) {
     return -1;
+  }
 
   sIndeterminate = indeterminate;
   [NSApplication sharedApplication];
