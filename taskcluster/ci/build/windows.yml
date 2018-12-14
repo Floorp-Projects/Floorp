@@ -1002,6 +1002,8 @@ win64-aarch64-msvc/debug:
     index:
         product: firefox
         job-name: win64-aarch64-msvc-debug
+    attributes:
+        enable-full-crashsymbols: true
     treeherder:
         platform: windows2012-aarch64/debug
         symbol: Bmsvc
@@ -1037,6 +1039,8 @@ win64-aarch64-msvc/opt:
     index:
         product: firefox
         job-name: win64-aarch64-msvc-opt
+    attributes:
+        enable-full-crashsymbols: true
     treeherder:
         platform: windows2012-aarch64/opt
         symbol: Bmsvc

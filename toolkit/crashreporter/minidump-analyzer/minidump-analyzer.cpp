@@ -39,7 +39,7 @@
 
 #include "MinidumpAnalyzerUtils.h"
 
-#if XP_WIN && HAVE_64BIT_BUILD
+#if XP_WIN && HAVE_64BIT_BUILD && defined(_M_X64)
 #include "MozStackFrameSymbolizer.h"
 #endif
 
@@ -329,7 +329,7 @@ static void ConvertProcessStateToJSON(const ProcessState& aProcessState,
 static bool ProcessMinidump(Json::Value& aStackTraces,
                             Json::Value& aCertSubjects, const string& aDumpFile,
                             const bool aFullStacks) {
-#if XP_WIN && HAVE_64BIT_BUILD
+#if XP_WIN && HAVE_64BIT_BUILD && defined(_M_X64)
   MozStackFrameSymbolizer symbolizer;
   MinidumpProcessor minidumpProcessor(&symbolizer, false);
 #else
