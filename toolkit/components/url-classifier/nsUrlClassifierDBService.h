@@ -221,11 +221,14 @@ class nsUrlClassifierDBServiceWorker final : public nsIUrlClassifierDBService {
   // update operations to prevent lookups from blocking for too long.
   nsresult HandlePendingLookups();
 
-  // Perform a blocking classifier lookup for a given url. Can be called on
-  // either the main thread or the worker thread.
-  nsresult DoLocalLookup(const nsACString& spec,
-                         const nsTArray<nsCString>& tables,
-                         LookupResultArray& results);
+  // Perform a blocking classifier lookup for a given url fragments set.
+  // Can be called on either the main thread or the worker thread.
+  nsresult DoSingleLocalLookupWithURIFragments(
+      const nsTArray<nsCString>& aSpecFragments, const nsACString& aTable,
+      LookupResultArray& aResults);
+  nsresult DoLocalLookupWithURI(const nsACString& aSpec,
+                                const nsTArray<nsCString>& aTables,
+                                LookupResultArray& aResults);
 
   // Open the DB connection
   nsresult GCC_MANGLING_WORKAROUND OpenDb();

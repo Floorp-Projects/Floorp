@@ -135,7 +135,8 @@ class UrlClassifierDBServiceWorkerProxy final
   class DoLocalLookupRunnable : public mozilla::Runnable {
    public:
     DoLocalLookupRunnable(nsUrlClassifierDBServiceWorker* aTarget,
-                          const nsACString& spec, const nsACString& tables,
+                          const nsACString& spec,
+                          const nsTArray<nsCString>& tables,
                           mozilla::safebrowsing::LookupResultArray& results)
         : mozilla::Runnable(
               "UrlClassifierDBServiceWorkerProxy::DoLocalLookupRunnable"),
@@ -148,7 +149,7 @@ class UrlClassifierDBServiceWorkerProxy final
    private:
     const RefPtr<nsUrlClassifierDBServiceWorker> mTarget;
     const nsCString mSpec;
-    const nsCString mTables;
+    const nsTArray<nsCString> mTables;
     mozilla::safebrowsing::LookupResultArray& mResults;
   };
 
@@ -204,8 +205,8 @@ class UrlClassifierDBServiceWorkerProxy final
   };
 
  public:
-  nsresult DoLocalLookup(
-      const nsACString& spec, const nsACString& tables,
+  nsresult DoLocalLookupWithURI(
+      const nsACString& spec, const nsTArray<nsCString>& tables,
       mozilla::safebrowsing::LookupResultArray& results) const;
 
   nsresult OpenDb() const;

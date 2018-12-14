@@ -104,10 +104,26 @@ class FeatureHolder final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FeatureHolder);
 
+  // In order to avoid multiple lookup for the same table, we have a special
+  // array for tables and their results. The Features are stored in a separate
+  // array together with the references to their tables.
+
+  class TableData {
+   public:
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TableData);
+
+    explicit TableData(const nsACString& aTable) : mTable(aTable) {}
+
+    nsCString mTable;
+    LookupResultArray mResults;
+
+   private:
+    ~TableData() = default;
+  };
+
   struct FeatureData {
     RefPtr<nsIUrlClassifierFeature> mFeature;
-    nsTArray<nsCString> mTables;
-    LookupResultArray mResults;
+    nsTArray<RefPtr<TableData>> mTables;
   };
 
   static already_AddRefed<FeatureHolder> Create(
@@ -116,14 +132,23 @@ class FeatureHolder final {
     MOZ_ASSERT(NS_IsMainThread());
 
     RefPtr<FeatureHolder> holder = new FeatureHolder();
-    for (nsIUrlClassifierFeature* feature : aFeatures) {
-      FeatureData* data = holder->mData.AppendElement();
-      MOZ_ASSERT(data);
 
-      data->mFeature = feature;
-      nsresult rv = feature->GetTables(aListType, data->mTables);
+    for (nsIUrlClassifierFeature* feature : aFeatures) {
+      FeatureData* featureData = holder->mFeatureData.AppendElement();
+      MOZ_ASSERT(featureData);
+
+      featureData->mFeature = feature;
+      nsTArray<nsCString> tables;
+      nsresult rv = feature->GetTables(aListType, tables);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return nullptr;
+      }
+
+      for (const nsCString& table : tables) {
+        TableData* tableData = holder->GetOrCreateTableData(table);
+        MOZ_ASSERT(tableData);
+
+        featureData->mTables.AppendElement(tableData);
       }
     }
 
@@ -135,8 +160,16 @@ class FeatureHolder final {
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(aWorker);
 
-    for (FeatureData& data : mData) {
-      nsresult rv = aWorker->DoLocalLookup(aSpec, data.mTables, data.mResults);
+    // Get the set of fragments based on the url. This is necessary because we
+    // only look up at most 5 URLs per aSpec, even if aSpec has more than 5
+    // components.
+    nsTArray<nsCString> fragments;
+    nsresult rv = LookupCache::GetLookupFragments(aSpec, &fragments);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    for (TableData* tableData : mTableData) {
+      nsresult rv = aWorker->DoSingleLocalLookupWithURIFragments(
+          fragments, tableData->mTable, tableData->mResults);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -145,24 +178,32 @@ class FeatureHolder final {
     return NS_OK;
   }
 
+  // This method is used to convert the LookupResultArray from
+  // ::DoSingleLocalLookupWithURIFragments to nsIUrlClassifierFeatureResult
   void GetResults(nsTArray<RefPtr<nsIUrlClassifierFeatureResult>>& aResults) {
     MOZ_ASSERT(NS_IsMainThread());
 
-    for (FeatureData& data : mData) {
-      if (data.mResults.IsEmpty()) {
+    // For each table, we must concatenate the results of the corresponding
+    // tables.
+
+    for (FeatureData& featureData : mFeatureData) {
+      nsAutoCString list;
+      for (TableData* tableData : featureData.mTables) {
+        for (uint32_t i = 0; i < tableData->mResults.Length(); ++i) {
+          if (!list.IsEmpty()) {
+            list.AppendLiteral(",");
+          }
+          list.Append(tableData->mResults[i]->mTableName);
+        }
+      }
+
+      if (list.IsEmpty()) {
         continue;
       }
 
-      nsAutoCString list;
-      for (uint32_t i = 0; i < data.mResults.Length(); ++i) {
-        if (!list.IsEmpty()) {
-          list.AppendLiteral(",");
-        }
-        list.Append(data.mResults[i]->mTableName);
-      }
-
       RefPtr<mozilla::net::UrlClassifierFeatureResult> result =
-          new mozilla::net::UrlClassifierFeatureResult(data.mFeature, list);
+          new mozilla::net::UrlClassifierFeatureResult(featureData.mFeature,
+                                                       list);
       aResults.AppendElement(result);
     }
   }
@@ -171,13 +212,26 @@ class FeatureHolder final {
   FeatureHolder() { MOZ_ASSERT(NS_IsMainThread()); }
 
   ~FeatureHolder() {
-    for (FeatureData& data : mData) {
-      NS_ReleaseOnMainThreadSystemGroup("FeatureHolder:mData",
-                                        data.mFeature.forget());
+    for (FeatureData& featureData : mFeatureData) {
+      NS_ReleaseOnMainThreadSystemGroup("FeatureHolder:mFeatureData",
+                                        featureData.mFeature.forget());
     }
   }
 
-  nsTArray<FeatureData> mData;
+  TableData* GetOrCreateTableData(const nsACString& aTable) {
+    for (TableData* tableData : mTableData) {
+      if (tableData->mTable == aTable) {
+        return tableData;
+      }
+    }
+
+    RefPtr<TableData> tableData = new TableData(aTable);
+    mTableData.AppendElement(tableData);
+    return tableData;
+  }
+
+  nsTArray<FeatureData> mFeatureData;
+  nsTArray<RefPtr<TableData>> mTableData;
 };
 
 // Simple feature which wraps preferences and tables received by
@@ -373,25 +427,54 @@ nsresult nsUrlClassifierDBServiceWorker::QueueLookup(
   return NS_OK;
 }
 
-nsresult nsUrlClassifierDBServiceWorker::DoLocalLookup(
-    const nsACString& spec, const nsTArray<nsCString>& tables,
-    LookupResultArray& results) {
+nsresult nsUrlClassifierDBServiceWorker::DoSingleLocalLookupWithURIFragments(
+    const nsTArray<nsCString>& aSpecFragments, const nsACString& aTable,
+    LookupResultArray& aResults) {
   if (gShuttingDownThread) {
     return NS_ERROR_ABORT;
   }
 
-  MOZ_ASSERT(!NS_IsMainThread(), "DoLocalLookup must be on background thread");
+  MOZ_ASSERT(
+      !NS_IsMainThread(),
+      "DoSingleLocalLookupWithURIFragments must be on background thread");
 
   // Bail if we haven't been initialized on the background thread.
   if (!mClassifier) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // We ignore failures from Check because we'd rather return the
-  // results that were found than fail.
-  mClassifier->Check(spec, tables, results);
+  nsresult rv =
+      mClassifier->CheckURIFragments(aSpecFragments, aTable, aResults);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  LOG(("Found %zu results.", results.Length()));
+  LOG(("Found %zu results.", aResults.Length()));
+  return NS_OK;
+}
+
+nsresult nsUrlClassifierDBServiceWorker::DoLocalLookupWithURI(
+    const nsACString& aSpec, const nsTArray<nsCString>& aTables,
+    LookupResultArray& aResults) {
+  if (gShuttingDownThread) {
+    return NS_ERROR_ABORT;
+  }
+
+  MOZ_ASSERT(
+      !NS_IsMainThread(),
+      "DoSingleLocalLookupWithURIFragments must be on background thread");
+
+  // Bail if we haven't been initialized on the background thread.
+  if (!mClassifier) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsresult rv = mClassifier->CheckURI(aSpec, aTables, aResults);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  LOG(("Found %zu results.", aResults.Length()));
   return NS_OK;
 }
 
@@ -441,10 +524,11 @@ nsresult nsUrlClassifierDBServiceWorker::DoLookup(
   nsTArray<nsCString> tableArray;
   Classifier::SplitTables(tables, tableArray);
 
-  nsresult rv = DoLocalLookup(spec, tableArray, *results);
+  nsresult rv = DoLocalLookupWithURI(spec, tableArray, *results);
   if (NS_FAILED(rv)) {
-    MOZ_ASSERT(results->IsEmpty(),
-               "DoLocalLookup() should not return any results if it fails.");
+    MOZ_ASSERT(
+        results->IsEmpty(),
+        "DoLocalLookupWithURI() should not return any results if it fails.");
     c->LookupComplete(nullptr);
     return rv;
   }
@@ -2022,14 +2106,17 @@ nsUrlClassifierDBService::ClassifyLocalWithTables(
   rv = utilsService->GetKeyForURI(uri, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  LookupResultArray results;
+  nsTArray<nsCString> tables;
+  Classifier::SplitTables(aTables, tables);
 
+  LookupResultArray results;
+  rv = mWorkerProxy->DoLocalLookupWithURI(key, tables, results);
   // In unittests, we may not have been initalized, so don't crash.
-  rv = mWorkerProxy->DoLocalLookup(key, aTables, results);
   if (NS_SUCCEEDED(rv)) {
     rv = ProcessLookupResults(results, aTableResults);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
   return NS_OK;
 }
 
