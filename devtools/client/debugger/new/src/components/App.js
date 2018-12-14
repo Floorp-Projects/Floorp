@@ -68,7 +68,8 @@ type Props = {
   closeProjectSearch: () => void,
   openQuickOpen: (query?: string) => void,
   closeQuickOpen: () => void,
-  setOrientation: OrientationType => void
+  setOrientation: OrientationType => void,
+  canRewind: boolean
 };
 
 type State = {
