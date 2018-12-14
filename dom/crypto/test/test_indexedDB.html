@@ -39,9 +39,9 @@
         frame.remove();
 
         // Load the test app again to retrieve stored keys.
-        createMozBrowserFrame((frame, result) => {
-          is(result, "ok", "retrieved keys successfully");
-          frame.remove();
+        createMozBrowserFrame((recFrame, recResult) => {
+          is(recResult, "ok", "retrieved keys successfully");
+          recFrame.remove();
           SimpleTest.finish();
         });
       });

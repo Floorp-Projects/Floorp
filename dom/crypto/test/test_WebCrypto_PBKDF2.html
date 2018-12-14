@@ -76,13 +76,13 @@ TestArray.addTest(
         throw "Invalid key; missing field(s)";
       }
 
-      var alg = {
+      var algo = {
         name: "PBKDF2",
         hash: "SHA-1",
         salt: tv.pbkdf2_sha1.salt,
         iterations: tv.pbkdf2_sha1.iterations,
       };
-      return crypto.subtle.deriveBits(alg, x, tv.pbkdf2_sha1.length);
+      return crypto.subtle.deriveBits(algo, x, tv.pbkdf2_sha1.length);
     }
     function fail(x) { console.log("failing"); error(that)(x); }
 
@@ -104,13 +104,13 @@ TestArray.addTest(
         throw "Invalid key; missing field(s)";
       }
 
-      var alg = {
+      var algo = {
         name: "PBKDF2",
         hash: "SHA-1",
         salt: tv.pbkdf2_sha1.salt,
         iterations: tv.pbkdf2_sha1.iterations,
       };
-      return crypto.subtle.deriveBits(alg, x, tv.pbkdf2_sha1.length);
+      return crypto.subtle.deriveBits(algo, x, tv.pbkdf2_sha1.length);
     }
     function fail(x) { console.log("failing"); error(that)(x); }
 
@@ -133,7 +133,7 @@ TestArray.addTest(
         throw "Invalid key; missing field(s)";
       }
 
-      var alg = {
+      var algo = {
         name: "PBKDF2",
         hash: "SHA-1",
         salt: tv.pbkdf2_sha1.salt,
@@ -145,17 +145,17 @@ TestArray.addTest(
         hash: {name: "SHA-1"},
       };
 
-      return crypto.subtle.deriveKey(alg, x, algDerived, false, ["sign", "verify"])
-        .then(function(x) {
-          if (!hasKeyFields(x)) {
+      return crypto.subtle.deriveKey(algo, x, algDerived, false, ["sign", "verify"])
+        .then(function(y) {
+          if (!hasKeyFields(y)) {
             throw "Invalid key; missing field(s)";
           }
 
-          if (x.algorithm.length != 512) {
+          if (y.algorithm.length != 512) {
             throw "Invalid key; incorrect length";
           }
 
-          return x;
+          return y;
         });
     }
 
@@ -217,13 +217,13 @@ TestArray.addTest(
         throw "Invalid key; missing field(s)";
       }
 
-      var alg = {
+      var algo = {
         name: "PBKDF2",
         hash: "SHA-256",
         salt: tv.pbkdf2_sha256.salt,
         iterations: tv.pbkdf2_sha256.iterations,
       };
-      return crypto.subtle.deriveBits(alg, x, tv.pbkdf2_sha256.length);
+      return crypto.subtle.deriveBits(algo, x, tv.pbkdf2_sha256.length);
     }
     function fail(x) { console.log("failing"); error(that)(x); }
 
@@ -246,13 +246,13 @@ TestArray.addTest(
         throw "Invalid key; missing field(s)";
       }
 
-      var alg = {
+      var algo = {
         name: "PBKDF2",
         hash: "SHA-256",
         salt: tv.pbkdf2_sha256_no_pwd.salt,
         iterations: tv.pbkdf2_sha256_no_pwd.iterations,
       };
-      return crypto.subtle.deriveBits(alg, x, tv.pbkdf2_sha256_no_pwd.length);
+      return crypto.subtle.deriveBits(algo, x, tv.pbkdf2_sha256_no_pwd.length);
     }
     function fail(x) { console.log("failing"); error(that)(x); }
 

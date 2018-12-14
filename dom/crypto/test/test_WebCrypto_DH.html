@@ -21,7 +21,6 @@
 
 <script>/* <![CDATA[*/
 "use strict";
-
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "Generate a DH key",
@@ -68,11 +67,7 @@ TestArray.addTest(
     };
 
     function doDerive(x) {
-      var alg = {
-        name: "DH",
-        public: x.publicKey,
-      };
-      return crypto.subtle.deriveBits(alg, x.privateKey, 128);
+      return crypto.subtle.deriveBits({ name: "DH", public: x.publicKey }, x.privateKey, 128);
     }
 
     crypto.subtle.generateKey(alg, false, ["deriveBits"])
@@ -218,8 +213,7 @@ TestArray.addTest(
     }
 
     function doDerive(pubKey) {
-      var alg = {name: "DH", public: pubKey};
-      return crypto.subtle.deriveBits(alg, privKey, 128);
+      return crypto.subtle.deriveBits({name: "DH", public: pubKey}, privKey, 128);
     }
 
     crypto.subtle.generateKey(alg, false, ["deriveBits"])

@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env worker */
+
+// This file expects utils.js to be included in its scope
+/* import-globals-from ./util.js */
 importScripts("util.js");
 importScripts("test-vectors.js");
 
@@ -34,6 +38,7 @@ function error(test) {
 }
 
 onmessage = function(msg) {
+  // eslint-disable-next-line no-eval
   var test = eval("(" + msg.data + ")");
 
   try {
