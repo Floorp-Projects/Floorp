@@ -57,6 +57,7 @@ var PaymentDialogUtils = {
         addressLevel3Label: "suburb",
         addressLevel2Label: "city",
         addressLevel1Label: "province",
+        addressLevel1Options: null,
         postalCodeLabel: "postalCode",
         fieldsOrder: [
           {
@@ -79,6 +80,21 @@ var PaymentDialogUtils = {
       };
     }
 
+    let addressLevel1Options = null;
+    if (country == "US") {
+      addressLevel1Options = new Map([
+        ["CA", "California"],
+        ["MA", "Massachusetts"],
+        ["MI", "Michigan"],
+      ]);
+    } else if (country == "CA") {
+      addressLevel1Options = new Map([
+        ["NS", "Nova Scotia"],
+        ["ON", "Ontario"],
+        ["YT", "Yukon"],
+      ]);
+    }
+
     let fieldsOrder = [
       {fieldId: "name", newLine: true},
       {fieldId: "street-address", newLine: true},
@@ -95,6 +111,7 @@ var PaymentDialogUtils = {
       addressLevel3Label: "suburb",
       addressLevel2Label: "city",
       addressLevel1Label: country == "US" ? "state" : "province",
+      addressLevel1Options,
       postalCodeLabel: country == "US" ? "zip" : "postalCode",
       fieldsOrder,
       // The following values come from addressReferences.js and should not be changed.
@@ -104,6 +121,9 @@ var PaymentDialogUtils = {
         ["street-address", "address-level2", "address-level1", "postal-code"] :
         ["street-address", "address-level2", "postal-code"],
     };
+  },
+  findAddressSelectOption(selectEl, address, fieldName) {
+    return null;
   },
   getDefaultPreferences() {
     let prefValues = {

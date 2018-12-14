@@ -98,6 +98,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
       }, record, {
         DEFAULT_REGION: PaymentDialogUtils.DEFAULT_REGION,
         getFormFormat: PaymentDialogUtils.getFormFormat,
+        findAddressSelectOption: PaymentDialogUtils.findAddressSelectOption,
         countries: PaymentDialogUtils.countries,
       });
 
