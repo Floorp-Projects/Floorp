@@ -689,18 +689,15 @@ class ExprDeref(ExprPrefixUnop):
 
 class ExprCast(Node):
     def __init__(self, expr, type,
-                 dynamic=0, static=0, reinterpret=0, const=False, C=0):
-        assert 1 == sum([dynamic, static, reinterpret, const, C])
-        assert isinstance(const, bool)
+                 static=False, const=False):
+        # Exactly one of these should be set
+        assert static ^ const
 
         Node.__init__(self)
         self.expr = expr
         self.type = type
-        self.dynamic = dynamic
         self.static = static
-        self.reinterpret = reinterpret
         self.const = const
-        self.C = C
 
 
 class ExprBinary(Node):
