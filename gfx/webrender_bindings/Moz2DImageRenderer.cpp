@@ -408,6 +408,9 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
   while (reader.pos < reader.len) {
     size_t end = reader.ReadSize();
     size_t extra_end = reader.ReadSize();
+    MOZ_RELEASE_ASSERT(extra_end >= end);
+    MOZ_RELEASE_ASSERT(extra_end < aBlob.length());
+
     auto combinedBounds = absBounds.Intersect(reader.ReadBounds());
     if (combinedBounds.IsEmpty()) {
       offset = extra_end;
@@ -415,9 +418,6 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     }
 
     layers::WebRenderTranslator translator(dt);
-
-    MOZ_RELEASE_ASSERT(extra_end >= end);
-    MOZ_RELEASE_ASSERT(extra_end < aBlob.length());
     Reader fontReader(aBlob.begin().get() + end, extra_end - end);
     size_t count = fontReader.ReadSize();
     for (size_t i = 0; i < count; i++) {
