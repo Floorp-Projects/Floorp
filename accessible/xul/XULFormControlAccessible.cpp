@@ -366,9 +366,11 @@ bool XULToolbarButtonAccessible::IsAcceptableChild(nsIContent* aEl) const {
   // In general XUL button has not accessible children. Nevertheless menu
   // buttons can have popup accessibles (@type="menu" or columnpicker).
   // Also: Toolbar buttons can have labels as children.
+  // But only if the label attribute is not present.
   return aEl->IsXULElement(nsGkAtoms::menupopup) ||
          aEl->IsXULElement(nsGkAtoms::popup) ||
-         aEl->IsXULElement(nsGkAtoms::label);
+         (aEl->IsXULElement(nsGkAtoms::label) &&
+          !mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::label));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
