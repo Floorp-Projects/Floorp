@@ -403,7 +403,6 @@ async function attachTestTab(client, title) {
 async function attachTestThread(client, title, callback = () => {}) {
   const targetFront = await attachTestTab(client, title);
   const [response, threadClient] = await targetFront.attachThread({
-    useSourceMaps: true,
     autoBlackBox: true,
   });
   Assert.equal(threadClient.state, "paused", "Thread client is paused");
