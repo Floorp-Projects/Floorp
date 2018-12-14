@@ -40,7 +40,7 @@ jobs:
                staging: false
          rollout-percentage:
             by-release-type:
-               # XXX Please make sure to change PUSH_APK_GOOGLE_PLAY_TRACT to
+               # XXX Please make sure to change google-play-track above to
                # 'rollout' if you add a new supported project
                release: 10
                release-rc: 5
