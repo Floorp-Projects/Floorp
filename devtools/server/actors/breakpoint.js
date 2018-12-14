@@ -139,14 +139,12 @@ const BreakpointActor = ActorClassWithSpec(breakpointSpec, {
   hit: function(frame) {
     // Don't pause if we are currently stepping (in or over) or the frame is
     // black-boxed.
-    const generatedLocation = this.threadActor.sources.getFrameLocation(frame);
     const {
-      originalSourceActor,
-      originalLine,
-      originalColumn,
-    } = this.threadActor.unsafeSynchronize(
-      this.threadActor.sources.getOriginalLocation(generatedLocation));
-    const url = originalSourceActor.url;
+      generatedSourceActor,
+      generatedLine,
+      generatedColumn,
+    } = this.threadActor.sources.getFrameLocation(frame);
+    const url = generatedSourceActor.url;
 
     if (this.threadActor.sources.isBlackBoxed(url)
         || this.threadActor.skipBreakpoints
@@ -158,8 +156,8 @@ const BreakpointActor = ActorClassWithSpec(breakpointSpec, {
     // the spot at which popping started, ignore it.  See bug 970469.
     const locationAtFinish = frame.onPop && frame.onPop.originalLocation;
     if (locationAtFinish &&
-        locationAtFinish.originalLine === originalLine &&
-        locationAtFinish.originalColumn === originalColumn) {
+        locationAtFinish.originalLine === generatedLine &&
+        locationAtFinish.originalColumn === generatedColumn) {
       return undefined;
     }
 

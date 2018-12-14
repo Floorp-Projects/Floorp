@@ -66,11 +66,11 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
     this._promisesSettled = [];
 
     this.dbg.findScripts().forEach(s => {
-      this.parentActor.sources.createSourceActors(s.source);
+      this.parentActor.sources.createSourceActor(s.source);
     });
 
     this.dbg.onNewScript = s => {
-      this.parentActor.sources.createSourceActors(s.source);
+      this.parentActor.sources.createSourceActor(s.source);
     };
 
     EventEmitter.on(this.parentActor, "window-ready", this._onWindowReady);
