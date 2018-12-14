@@ -48,7 +48,9 @@
 #include "nsIMutableArray.h"
 #include "nsArrayEnumerator.h"
 #include "nsStringEnumerator.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/FileUtils.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/URLPreloader.h"
 #include "mozilla/UniquePtr.h"
 #include "nsDataHashtable.h"
@@ -1155,6 +1157,104 @@ PRThread* nsComponentManagerImpl::GetPendingServiceThread(
   return nullptr;
 }
 
+nsresult
+nsComponentManagerImpl::GetServiceLocked(MutexLock& aLock, nsFactoryEntry& aEntry,
+                                         const nsIID& aIID, void** aResult) {
+  if (aEntry.mServiceObject) {
+    aLock.Unlock();
+    return aEntry.mServiceObject->QueryInterface(aIID, aResult);
+  }
+
+  PRThread* currentPRThread = PR_GetCurrentThread();
+  MOZ_ASSERT(currentPRThread, "This should never be null!");
+
+  // Needed to optimize the event loop below.
+  nsIThread* currentThread = nullptr;
+
+  PRThread* pendingPRThread;
+  while ((pendingPRThread = GetPendingServiceThread(*aEntry.mCIDEntry->cid))) {
+    if (pendingPRThread == currentPRThread) {
+      NS_ERROR("Recursive GetService!");
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    SafeMutexAutoUnlock unlockPending(mLock);
+
+    // If the current thread doesn't have an associated nsThread, then it's a
+    // thread that doesn't have an event loop to process, so we'll just try
+    // to yield to another thread in an attempt to make progress.
+    if (!nsThreadManager::get().IsNSThread()) {
+      PR_Sleep(PR_INTERVAL_NO_WAIT);
+      continue;
+    }
+
+    if (!currentThread) {
+      currentThread = NS_GetCurrentThread();
+      MOZ_ASSERT(currentThread, "This should never be null!");
+    }
+
+    // This will process a single event or yield the thread if no event is
+    // pending.
+    if (!NS_ProcessNextEvent(currentThread, false)) {
+      PR_Sleep(PR_INTERVAL_NO_WAIT);
+    }
+  }
+
+  // It's still possible that the other thread failed to create the
+  // service so we're not guaranteed to have an entry or service yet.
+  if (aEntry.mServiceObject) {
+    aLock.Unlock();
+    return aEntry.mServiceObject->QueryInterface(aIID, aResult);
+  }
+
+  DebugOnly<PendingServiceInfo*> newInfo =
+      AddPendingService(*aEntry.mCIDEntry->cid, currentPRThread);
+  NS_ASSERTION(newInfo, "Failed to add info to the array!");
+
+  // We need to not be holding the service manager's lock while calling
+  // CreateInstance, because it invokes user code which could try to re-enter
+  // the service manager:
+
+  nsCOMPtr<nsISupports> service;
+  auto cleanup = MakeScopeExit([&]() {
+    // `service` must be released after the lock is released, so if we fail and
+    // still have a reference, release the lock before relasing it.
+    if (service) {
+      aLock.Unlock();
+      service = nullptr;
+    }
+  });
+
+  nsresult rv;
+  {
+    SafeMutexAutoUnlock unlock(mLock);
+    rv = CreateInstance(*aEntry.mCIDEntry->cid, nullptr, aIID, getter_AddRefs(service));
+  }
+  if (NS_SUCCEEDED(rv) && !service) {
+    NS_ERROR("Factory did not return an object but returned success");
+    return NS_ERROR_SERVICE_NOT_AVAILABLE;
+  }
+
+#ifdef DEBUG
+  pendingPRThread = GetPendingServiceThread(*aEntry.mCIDEntry->cid);
+  MOZ_ASSERT(pendingPRThread == currentPRThread,
+             "Pending service array has been changed!");
+#endif
+  RemovePendingService(*aEntry.mCIDEntry->cid);
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  NS_ASSERTION(!aEntry.mServiceObject, "Created two instances of a service!");
+
+  aEntry.mServiceObject = service.forget();
+
+  aLock.Unlock();
+  *aResult = do_AddRef(aEntry.mServiceObject).take();
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsComponentManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
                                    void** aResult) {
@@ -1175,9 +1275,6 @@ nsComponentManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
     return NS_ERROR_UNEXPECTED;
   }
 
-  // `service` must be released after the lock is released, so it must be
-  // declared before the lock in this C++ block.
-  nsCOMPtr<nsISupports> service;
   MutexLock lock(mLock);
 
   nsFactoryEntry* entry = mFactories.Get(&aClass);
@@ -1185,86 +1282,7 @@ nsComponentManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
     return NS_ERROR_FACTORY_NOT_REGISTERED;
   }
 
-  if (entry->mServiceObject) {
-    lock.Unlock();
-    return entry->mServiceObject->QueryInterface(aIID, aResult);
-  }
-
-  PRThread* currentPRThread = PR_GetCurrentThread();
-  MOZ_ASSERT(currentPRThread, "This should never be null!");
-
-  // Needed to optimize the event loop below.
-  nsIThread* currentThread = nullptr;
-
-  PRThread* pendingPRThread;
-  while ((pendingPRThread = GetPendingServiceThread(aClass))) {
-    if (pendingPRThread == currentPRThread) {
-      NS_ERROR("Recursive GetService!");
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    SafeMutexAutoUnlock unlockPending(mLock);
-
-    if (!currentThread) {
-      currentThread = NS_GetCurrentThread();
-      MOZ_ASSERT(currentThread, "This should never be null!");
-    }
-
-    // This will process a single event or yield the thread if no event is
-    // pending.
-    if (!NS_ProcessNextEvent(currentThread, false)) {
-      PR_Sleep(PR_INTERVAL_NO_WAIT);
-    }
-  }
-
-  // It's still possible that the other thread failed to create the
-  // service so we're not guaranteed to have an entry or service yet.
-  if (entry->mServiceObject) {
-    lock.Unlock();
-    return entry->mServiceObject->QueryInterface(aIID, aResult);
-  }
-
-#ifdef DEBUG
-  PendingServiceInfo* newInfo =
-#endif
-      AddPendingService(aClass, currentPRThread);
-  NS_ASSERTION(newInfo, "Failed to add info to the array!");
-
-  // We need to not be holding the service manager's lock while calling
-  // CreateInstance, because it invokes user code which could try to re-enter
-  // the service manager:
-
-  nsresult rv;
-  {
-    SafeMutexAutoUnlock unlock(mLock);
-    rv = CreateInstance(aClass, nullptr, aIID, getter_AddRefs(service));
-  }
-  if (NS_SUCCEEDED(rv) && !service) {
-    NS_ERROR("Factory did not return an object but returned success");
-    return NS_ERROR_SERVICE_NOT_AVAILABLE;
-  }
-
-#ifdef DEBUG
-  pendingPRThread = GetPendingServiceThread(aClass);
-  MOZ_ASSERT(pendingPRThread == currentPRThread,
-             "Pending service array has been changed!");
-#endif
-  RemovePendingService(aClass);
-
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  NS_ASSERTION(!entry->mServiceObject, "Created two instances of a service!");
-
-  entry->mServiceObject = service.forget();
-
-  lock.Unlock();
-  nsISupports** sresult = reinterpret_cast<nsISupports**>(aResult);
-  *sresult = entry->mServiceObject;
-  (*sresult)->AddRef();
-
-  return NS_OK;
+  return GetServiceLocked(lock, *entry, aIID, aResult);
 }
 
 NS_IMETHODIMP
@@ -1369,9 +1387,6 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
     return NS_ERROR_UNEXPECTED;
   }
 
-  // `service` must be released after the lock is released, so it must be
-  // declared before the lock in this C++ block.
-  nsCOMPtr<nsISupports> service;
   MutexLock lock(mLock);
 
   nsFactoryEntry* entry = mContractIDs.Get(nsDependentCString(aContractID));
@@ -1379,102 +1394,7 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
     return NS_ERROR_FACTORY_NOT_REGISTERED;
   }
 
-  if (entry->mServiceObject) {
-    // We need to not be holding the service manager's monitor while calling
-    // QueryInterface, because it invokes user code which could try to re-enter
-    // the service manager, or try to grab some other lock/monitor/condvar
-    // and deadlock, e.g. bug 282743.
-    // `entry` is valid until XPCOM shutdown, so we can safely use it after
-    // exiting the lock.
-    lock.Unlock();
-    return entry->mServiceObject->QueryInterface(aIID, aResult);
-  }
-
-  PRThread* currentPRThread = PR_GetCurrentThread();
-  MOZ_ASSERT(currentPRThread, "This should never be null!");
-
-  // Needed to optimize the event loop below.
-  nsIThread* currentThread = nullptr;
-
-  PRThread* pendingPRThread;
-  while ((pendingPRThread = GetPendingServiceThread(*entry->mCIDEntry->cid))) {
-    if (pendingPRThread == currentPRThread) {
-      NS_ERROR("Recursive GetService!");
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    SafeMutexAutoUnlock unlockPending(mLock);
-
-    // If the current thread doesn't have an associated nsThread, then it's a
-    // thread that doesn't have an event loop to process, so we'll just try
-    // to yield to another thread in an attempt to make progress.
-    if (!nsThreadManager::get().IsNSThread()) {
-      PR_Sleep(PR_INTERVAL_NO_WAIT);
-      continue;
-    }
-
-    if (!currentThread) {
-      currentThread = NS_GetCurrentThread();
-      MOZ_ASSERT(currentThread, "This should never be null!");
-    }
-
-    // This will process a single event or yield the thread if no event is
-    // pending.
-    if (!NS_ProcessNextEvent(currentThread, false)) {
-      PR_Sleep(PR_INTERVAL_NO_WAIT);
-    }
-  }
-
-  if (currentThread && entry->mServiceObject) {
-    // If we have a currentThread then we must have waited on another thread
-    // to create the service. Grab it now if that succeeded.
-    lock.Unlock();
-    return entry->mServiceObject->QueryInterface(aIID, aResult);
-  }
-
-#ifdef DEBUG
-  PendingServiceInfo* newInfo =
-#endif
-      AddPendingService(*entry->mCIDEntry->cid, currentPRThread);
-  NS_ASSERTION(newInfo, "Failed to add info to the array!");
-
-  // We need to not be holding the service manager's lock while calling
-  // CreateInstance, because it invokes user code which could try to re-enter
-  // the service manager:
-
-  nsresult rv;
-  {
-    SafeMutexAutoUnlock unlock(mLock);
-    rv = CreateInstanceByContractID(aContractID, nullptr, aIID,
-                                    getter_AddRefs(service));
-  }
-  if (NS_SUCCEEDED(rv) && !service) {
-    NS_ERROR("Factory did not return an object but returned success");
-    return NS_ERROR_SERVICE_NOT_AVAILABLE;
-  }
-
-#ifdef DEBUG
-  pendingPRThread = GetPendingServiceThread(*entry->mCIDEntry->cid);
-  MOZ_ASSERT(pendingPRThread == currentPRThread,
-             "Pending service array has been changed!");
-#endif
-  RemovePendingService(*entry->mCIDEntry->cid);
-
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  NS_ASSERTION(!entry->mServiceObject, "Created two instances of a service!");
-
-  entry->mServiceObject = service.forget();
-
-  lock.Unlock();
-
-  nsISupports** sresult = reinterpret_cast<nsISupports**>(aResult);
-  *sresult = entry->mServiceObject;
-  (*sresult)->AddRef();
-
-  return NS_OK;
+  return GetServiceLocked(lock, *entry, aIID, aResult);
 }
 
 NS_IMETHODIMP
