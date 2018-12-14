@@ -664,6 +664,11 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   static int GetDefaultFrameRate();
 
   /**
+   * Update the frame rate (called e.g. after pref changes).
+   */
+  static void ReInitFrameRate();
+
+  /**
    * Used to test which input types are handled via APZ.
    */
   virtual bool SupportsApzWheelInput() const { return false; }
