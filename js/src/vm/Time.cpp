@@ -160,12 +160,7 @@ static int64_t PRMJ_NowImpl() {
     // Windows 8 has a new API function that does all the work.
     FILETIME ft;
     pGetSystemTimePreciseAsFileTime(&ft);
-    int64_t now = int64_t(FileTimeToUnixMicroseconds(ft));
-    // We check the FuzzyFox clock in case it was recently disabled, to prevent
-    // time from going backwards.
-    return mozilla::TimeStamp::NowFuzzyTime() > now
-               ? mozilla::TimeStamp::NowFuzzyTime()
-               : now;
+    return int64_t(FileTimeToUnixMicroseconds(ft));
   }
 
   bool calibrated = false;
