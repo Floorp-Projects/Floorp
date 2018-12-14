@@ -53,9 +53,6 @@
       <span class="label-text"/>
     </label>
     <label id="address-level1-container" class="container">
-      <!-- The address-level1 input will get replaced by a select dropdown
-           by autofillEditForms.js when the selected country has provided
-           specific options. -->
       <input id="address-level1" type="text"/>
       <span class="label-text"/>
     </label>
@@ -92,7 +89,6 @@
     } = FormAutofill;
     let {
       getFormFormat,
-      findAddressSelectOption,
     } = FormAutofillUtils;
     let args = window.arguments || [];
     let {
@@ -106,7 +102,6 @@
     }, record, {
       DEFAULT_REGION,
       getFormFormat: getFormFormat.bind(FormAutofillUtils),
-      findAddressSelectOption: findAddressSelectOption.bind(FormAutofillUtils),
       countries,
       noValidate,
     });
