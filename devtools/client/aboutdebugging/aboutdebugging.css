@@ -26,10 +26,16 @@ button {
 }
 
 .category {
-  border: 0 solid transparent;
+  align-items: center;
+  /* Override a `background-color` set on all buttons by common.inc.css */
+  background-color: transparent;
   display: flex;
   flex-direction: row;
-  align-items: center;
+}
+
+.category.selected {
+  /* Override a `color: inherit !important` forced on all buttons by common.inc.css */
+  color: var(--in-content-category-text-selected) !important;
 }
 
 .category-name {

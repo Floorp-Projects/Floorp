@@ -24,6 +24,7 @@ EXTRA_JS_MODULES += [
 DIRS += ['schemas']
 
 BROWSER_CHROME_MANIFESTS += [
+    'test/browser/browser-private.ini',
     'test/browser/browser-remote.ini',
     'test/browser/browser.ini',
 ]

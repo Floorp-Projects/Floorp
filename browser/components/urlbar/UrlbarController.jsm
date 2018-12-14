@@ -47,6 +47,10 @@ class QueryContext {
       "isPrivate",
     ]);
 
+    if (isNaN(parseInt(options.maxResults))) {
+      throw new Error(`Invalid maxResults property provided to QueryContext`);
+    }
+
     this.autoFill = !!options.autoFill;
   }
 

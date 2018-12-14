@@ -107,6 +107,7 @@ static gc::AllocKind GetProxyGCObjectKind(const Class* clasp,
 
   proxy->data.handler = handler;
   if (IsCrossCompartmentWrapper(proxy)) {
+    MOZ_ASSERT(cx->realm() == cx->compartment()->realmForNewCCW());
     proxy->setCrossCompartmentPrivate(priv);
   } else {
     proxy->setSameCompartmentPrivate(priv);

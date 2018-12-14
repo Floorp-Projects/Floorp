@@ -9,12 +9,12 @@
 
 .sidebar-toggle::before,
 .sidebar-toggle.pane-collapsed:dir(rtl)::before {
-  background-image: var(--theme-pane-collapse-image);
+  background-image: url(chrome://devtools/skin/images/pane-collapse.svg);
 }
 
 .sidebar-toggle.pane-collapsed::before,
 .sidebar-toggle:dir(rtl)::before {
-  background-image: var(--theme-pane-expand-image);
+  background-image: url(chrome://devtools/skin/images/pane-expand.svg);
 }
 
 /* Rotate button icon 90deg if the toolbox container is

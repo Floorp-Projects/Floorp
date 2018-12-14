@@ -54,3 +54,17 @@ function testNewObjectCache() {
     assertEq(objectGlobal(o2), this);
 }
 testNewObjectCache();
+
+function testCCWs() {
+    // CCWs are allocated in the first realm.
+    var g1 = newGlobal();
+    var g2 = newGlobal({sameCompartmentAs: g1});
+    g1.o1 = {x: 1};
+    g2.o2 = {x: 2};
+    g1 = null;
+    gc();
+    g2.o3 = {x: 3};
+    assertEq(g2.o2.x, 2);
+    assertEq(g2.o3.x, 3);
+}
+testCCWs();

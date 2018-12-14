@@ -2,9 +2,14 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+add_task(async function test_background_incognito() {
+  info("Test background page incognito value with permanent private browsing enabled");
 
-async function testBackgroundPage(expected) {
+  Services.prefs.setBoolPref("browser.privatebrowsing.autostart", true);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("browser.privatebrowsing.autostart");
+  });
+
   let extension = ExtensionTestUtils.loadExtension({
     async background() {
       browser.test.assertEq(window, browser.extension.getBackgroundPage(),
@@ -12,29 +17,14 @@ async function testBackgroundPage(expected) {
       browser.test.assertEq(window, await browser.runtime.getBackgroundPage(),
                             "Caller should be able to access itself as a background page");
 
-      browser.test.sendMessage("incognito", browser.extension.inIncognitoContext);
+      browser.test.assertEq(browser.extension.inIncognitoContext, true,
+                            "inIncognitoContext is true for permanent private browsing");
+
+      browser.test.notifyPass("incognito");
     },
   });
 
   await extension.startup();
-
-  let incognito = await extension.awaitMessage("incognito");
-  equal(incognito, expected.incognito, "Expected incognito value");
-
+  await extension.awaitFinish("incognito");
   await extension.unload();
-}
-
-add_task(async function test_background_incognito() {
-  info("Test background page incognito value with permanent private browsing disabled");
-
-  await testBackgroundPage({incognito: false});
-
-  info("Test background page incognito value with permanent private browsing enabled");
-
-  Preferences.set("browser.privatebrowsing.autostart", true);
-  registerCleanupFunction(() => {
-    Preferences.reset("browser.privatebrowsing.autostart");
-  });
-
-  await testBackgroundPage({incognito: true});
 });

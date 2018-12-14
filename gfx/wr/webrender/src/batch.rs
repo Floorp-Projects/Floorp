@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntPoint, DeviceIntSize};
-use api::{ExternalImageType, FilterOp, ImageRendering, LayoutRect, LayoutSize};
+use api::{ExternalImageType, FilterOp, ImageRendering, LayoutRect};
 use api::{YuvColorSpace, YuvFormat, PictureRect, ColorDepth, LayoutPoint};
 use clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItem, ClipStore};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
@@ -1001,16 +1001,7 @@ impl AlphaBatchBuilder {
                                         }
 
                                         // Get the local rect of the tile.
-                                        let tile_rect = LayoutRect::new(
-                                            LayoutPoint::new(
-                                                (tile_cache.tile_rect.origin.x + x) as f32 * tile_cache.local_tile_size.width,
-                                                (tile_cache.tile_rect.origin.y + y) as f32 * tile_cache.local_tile_size.height,
-                                            ),
-                                            LayoutSize::new(
-                                                tile_cache.local_tile_size.width,
-                                                tile_cache.local_tile_size.height,
-                                            ),
-                                        );
+                                        let tile_rect = tile_cache.get_tile_rect(x, y);
 
                                         // Construct a local clip rect that ensures we only draw pixels where
                                         // the local bounds of the picture extend to within the edge tiles.
