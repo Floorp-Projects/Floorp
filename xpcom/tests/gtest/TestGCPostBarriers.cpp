@@ -22,11 +22,9 @@
 using namespace JS;
 using namespace mozilla;
 
-template<class ArrayT>
-static void
-TraceArray(JSTracer* trc, void* data)
-{
-  ArrayT* array = static_cast<ArrayT *>(data);
+template <class ArrayT>
+static void TraceArray(JSTracer* trc, void* data) {
+  ArrayT* array = static_cast<ArrayT*>(data);
   for (unsigned i = 0; i < array->Length(); ++i)
     JS::TraceEdge(trc, &array->ElementAt(i), "array-element");
 }
@@ -38,10 +36,8 @@ TraceArray(JSTracer* trc, void* data)
 const size_t ElementCount = 100;
 const size_t InitialElements = ElementCount / 10;
 
-template<class ArrayT>
-static void
-RunTest(JSContext* cx, ArrayT* array)
-{
+template <class ArrayT>
+static void RunTest(JSContext* cx, ArrayT* array) {
   JS_GC(cx);
 
   ASSERT_TRUE(array != nullptr);
@@ -81,23 +77,26 @@ RunTest(JSContext* cx, ArrayT* array)
   JS_RemoveExtraGCRootsTracer(cx, TraceArray<ArrayT>, array);
 }
 
-static void
-CreateGlobalAndRunTest(JSContext* cx)
-{
-  static const JSClassOps GlobalClassOps = {
-    nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, JS_GlobalObjectTraceHook
-  };
+static void CreateGlobalAndRunTest(JSContext* cx) {
+  static const JSClassOps GlobalClassOps = {nullptr,
+                                            nullptr,
+                                            nullptr,
+                                            nullptr,
+                                            nullptr,
+                                            nullptr,
+                                            nullptr,
+                                            nullptr,
+                                            nullptr,
+                                            nullptr,
+                                            JS_GlobalObjectTraceHook};
 
-  static const JSClass GlobalClass = {
-    "global", JSCLASS_GLOBAL_FLAGS,
-    &GlobalClassOps
-  };
+  static const JSClass GlobalClass = {"global", JSCLASS_GLOBAL_FLAGS,
+                                      &GlobalClassOps};
 
   JS::RealmOptions options;
   JS::PersistentRootedObject global(cx);
-  global = JS_NewGlobalObject(cx, &GlobalClass, nullptr, JS::FireOnNewGlobalHook, options);
+  global = JS_NewGlobalObject(cx, &GlobalClass, nullptr,
+                              JS::FireOnNewGlobalHook, options);
   ASSERT_TRUE(global != nullptr);
 
   JS::Realm* oldRealm = JS::EnterRealm(cx, global);
@@ -111,7 +110,8 @@ CreateGlobalAndRunTest(JSContext* cx)
   }
 
   {
-    FallibleTArray<ElementT>* array = new FallibleTArray<ElementT>(InitialElements);
+    FallibleTArray<ElementT>* array =
+        new FallibleTArray<ElementT>(InitialElements);
     RunTest(cx, array);
     delete array;
   }

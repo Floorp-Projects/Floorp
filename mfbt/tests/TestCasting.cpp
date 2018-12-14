@@ -11,34 +11,27 @@
 using mozilla::BitwiseCast;
 using mozilla::detail::IsInBounds;
 
-template<typename Uint, typename Ulong, bool = (sizeof(Uint) == sizeof(Ulong))>
+template <typename Uint, typename Ulong, bool = (sizeof(Uint) == sizeof(Ulong))>
 struct UintUlongBitwiseCast;
 
-template<typename Uint, typename Ulong>
-struct UintUlongBitwiseCast<Uint, Ulong, true>
-{
-  static void test()
-  {
+template <typename Uint, typename Ulong>
+struct UintUlongBitwiseCast<Uint, Ulong, true> {
+  static void test() {
     MOZ_RELEASE_ASSERT(BitwiseCast<Ulong>(Uint(8675309)) == Ulong(8675309));
   }
 };
 
-template<typename Uint, typename Ulong>
-struct UintUlongBitwiseCast<Uint, Ulong, false>
-{
-  static void test() { }
+template <typename Uint, typename Ulong>
+struct UintUlongBitwiseCast<Uint, Ulong, false> {
+  static void test() {}
 };
 
-static void
-TestBitwiseCast()
-{
+static void TestBitwiseCast() {
   MOZ_RELEASE_ASSERT(BitwiseCast<int>(int(8675309)) == int(8675309));
   UintUlongBitwiseCast<unsigned int, unsigned long>::test();
 }
 
-static void
-TestSameSize()
-{
+static void TestSameSize() {
   MOZ_RELEASE_ASSERT((IsInBounds<int16_t, int16_t>(int16_t(0))));
   MOZ_RELEASE_ASSERT((IsInBounds<int16_t, int16_t>(int16_t(INT16_MIN))));
   MOZ_RELEASE_ASSERT((IsInBounds<int16_t, int16_t>(int16_t(INT16_MAX))));
@@ -52,9 +45,7 @@ TestSameSize()
   MOZ_RELEASE_ASSERT((!IsInBounds<int32_t, uint32_t>(int32_t(INT32_MIN))));
 }
 
-static void
-TestToBiggerSize()
-{
+static void TestToBiggerSize() {
   MOZ_RELEASE_ASSERT((IsInBounds<int16_t, int32_t>(int16_t(0))));
   MOZ_RELEASE_ASSERT((IsInBounds<int16_t, int32_t>(int16_t(INT16_MIN))));
   MOZ_RELEASE_ASSERT((IsInBounds<int16_t, int32_t>(int16_t(INT16_MAX))));
@@ -68,9 +59,7 @@ TestToBiggerSize()
   MOZ_RELEASE_ASSERT((!IsInBounds<int32_t, uint64_t>(int32_t(INT32_MIN))));
 }
 
-static void
-TestToSmallerSize()
-{
+static void TestToSmallerSize() {
   MOZ_RELEASE_ASSERT((IsInBounds<int16_t, int8_t>(int16_t(0))));
   MOZ_RELEASE_ASSERT((!IsInBounds<int16_t, int8_t>(int16_t(INT16_MIN))));
   MOZ_RELEASE_ASSERT((!IsInBounds<int16_t, int8_t>(int16_t(INT16_MAX))));
@@ -99,9 +88,7 @@ TestToSmallerSize()
   MOZ_RELEASE_ASSERT((!IsInBounds<int64_t, uint32_t>(int64_t(UINT32_MAX) + 1)));
 }
 
-int
-main()
-{
+int main() {
   TestBitwiseCast();
 
   TestSameSize();

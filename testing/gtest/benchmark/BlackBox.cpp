@@ -18,9 +18,7 @@
 
 namespace mozilla {
 
-char volatile* UseCharPointer(char volatile* aPtr) {
-  return aPtr;
-}
+char volatile* UseCharPointer(char volatile* aPtr) { return aPtr; }
 
 }  // namespace mozilla
 

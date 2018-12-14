@@ -31,17 +31,15 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-static already_AddRefed<SourceSurface>
-CheckDecoderState(const ImageTestCase& aTestCase, Decoder* aDecoder)
-{
+static already_AddRefed<SourceSurface> CheckDecoderState(
+    const ImageTestCase& aTestCase, Decoder* aDecoder) {
   // Decoder should match what we asked for in the MIME type.
   EXPECT_NE(aDecoder->GetType(), DecoderType::UNKNOWN);
   EXPECT_EQ(aDecoder->GetType(),
             DecoderFactory::GetDecoderType(aTestCase.mMimeType));
 
   EXPECT_TRUE(aDecoder->GetDecodeDone());
-  EXPECT_EQ(bool(aTestCase.mFlags & TEST_CASE_HAS_ERROR),
-            aDecoder->HasError());
+  EXPECT_EQ(bool(aTestCase.mFlags & TEST_CASE_HAS_ERROR), aDecoder->HasError());
 
   // Verify that the decoder made the expected progress.
   Progress progress = aDecoder->TakeProgress();
@@ -79,9 +77,8 @@ CheckDecoderState(const ImageTestCase& aTestCase, Decoder* aDecoder)
   return surface.forget();
 }
 
-static void
-CheckDecoderResults(const ImageTestCase& aTestCase, Decoder* aDecoder)
-{
+static void CheckDecoderResults(const ImageTestCase& aTestCase,
+                                Decoder* aDecoder) {
   RefPtr<SourceSurface> surface = CheckDecoderState(aTestCase, aDecoder);
   if (!surface) {
     return;
@@ -99,8 +96,7 @@ CheckDecoderResults(const ImageTestCase& aTestCase, Decoder* aDecoder)
 template <typename Func>
 void WithSingleChunkDecode(const ImageTestCase& aTestCase,
                            const Maybe<IntSize>& aOutputSize,
-                           Func aResultChecker)
-{
+                           Func aResultChecker) {
   nsCOMPtr<nsIInputStream> inputStream = LoadFile(aTestCase.mPath);
   ASSERT_TRUE(inputStream != nullptr);
 
@@ -117,15 +113,13 @@ void WithSingleChunkDecode(const ImageTestCase& aTestCase,
   sourceBuffer->Complete(NS_OK);
 
   // Create a decoder.
-  DecoderType decoderType =
-    DecoderFactory::GetDecoderType(aTestCase.mMimeType);
-  RefPtr<Decoder> decoder =
-    DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, aOutputSize,
-                                           DecoderFlags::FIRST_FRAME_ONLY,
-                                           DefaultSurfaceFlags());
+  DecoderType decoderType = DecoderFactory::GetDecoderType(aTestCase.mMimeType);
+  RefPtr<Decoder> decoder = DecoderFactory::CreateAnonymousDecoder(
+      decoderType, sourceBuffer, aOutputSize, DecoderFlags::FIRST_FRAME_ONLY,
+      DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
   RefPtr<IDecodingTask> task =
-    new AnonymousDecodingTask(WrapNotNull(decoder), /* aResumable */ false);
+      new AnonymousDecodingTask(WrapNotNull(decoder), /* aResumable */ false);
 
   // Run the full decoder synchronously.
   task->Run();
@@ -134,9 +128,7 @@ void WithSingleChunkDecode(const ImageTestCase& aTestCase,
   aResultChecker(decoder);
 }
 
-static void
-CheckDecoderSingleChunk(const ImageTestCase& aTestCase)
-{
+static void CheckDecoderSingleChunk(const ImageTestCase& aTestCase) {
   WithSingleChunkDecode(aTestCase, Nothing(), [&](Decoder* aDecoder) {
     CheckDecoderResults(aTestCase, aDecoder);
   });
@@ -144,9 +136,8 @@ CheckDecoderSingleChunk(const ImageTestCase& aTestCase)
 
 template <typename Func>
 void WithDelayedChunkDecode(const ImageTestCase& aTestCase,
-                           const Maybe<IntSize>& aOutputSize,
-                           Func aResultChecker)
-{
+                            const Maybe<IntSize>& aOutputSize,
+                            Func aResultChecker) {
   nsCOMPtr<nsIInputStream> inputStream = LoadFile(aTestCase.mPath);
   ASSERT_TRUE(inputStream != nullptr);
 
@@ -159,15 +150,13 @@ void WithDelayedChunkDecode(const ImageTestCase& aTestCase,
   auto sourceBuffer = MakeNotNull<RefPtr<SourceBuffer>>();
 
   // Create a decoder.
-  DecoderType decoderType =
-    DecoderFactory::GetDecoderType(aTestCase.mMimeType);
-  RefPtr<Decoder> decoder =
-    DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, aOutputSize,
-                                           DecoderFlags::FIRST_FRAME_ONLY,
-                                           DefaultSurfaceFlags());
+  DecoderType decoderType = DecoderFactory::GetDecoderType(aTestCase.mMimeType);
+  RefPtr<Decoder> decoder = DecoderFactory::CreateAnonymousDecoder(
+      decoderType, sourceBuffer, aOutputSize, DecoderFlags::FIRST_FRAME_ONLY,
+      DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
   RefPtr<IDecodingTask> task =
-    new AnonymousDecodingTask(WrapNotNull(decoder), /* aResumable */ true);
+      new AnonymousDecodingTask(WrapNotNull(decoder), /* aResumable */ true);
 
   // Run the full decoder synchronously. It should now be waiting on
   // the iterator to yield some data since we haven't written anything yet.
@@ -186,17 +175,14 @@ void WithDelayedChunkDecode(const ImageTestCase& aTestCase,
   aResultChecker(decoder);
 }
 
-static void
-CheckDecoderDelayedChunk(const ImageTestCase& aTestCase)
-{
+static void CheckDecoderDelayedChunk(const ImageTestCase& aTestCase) {
   WithDelayedChunkDecode(aTestCase, Nothing(), [&](Decoder* aDecoder) {
     CheckDecoderResults(aTestCase, aDecoder);
   });
 }
 
-static void
-CheckDecoderMultiChunk(const ImageTestCase& aTestCase, uint64_t aChunkSize = 1)
-{
+static void CheckDecoderMultiChunk(const ImageTestCase& aTestCase,
+                                   uint64_t aChunkSize = 1) {
   nsCOMPtr<nsIInputStream> inputStream = LoadFile(aTestCase.mPath);
   ASSERT_TRUE(inputStream != nullptr);
 
@@ -208,15 +194,13 @@ CheckDecoderMultiChunk(const ImageTestCase& aTestCase, uint64_t aChunkSize = 1)
   // Create a SourceBuffer and a decoder.
   auto sourceBuffer = MakeNotNull<RefPtr<SourceBuffer>>();
   sourceBuffer->ExpectLength(length);
-  DecoderType decoderType =
-    DecoderFactory::GetDecoderType(aTestCase.mMimeType);
-  RefPtr<Decoder> decoder =
-    DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, Nothing(),
-                                           DecoderFlags::FIRST_FRAME_ONLY,
-                                           DefaultSurfaceFlags());
+  DecoderType decoderType = DecoderFactory::GetDecoderType(aTestCase.mMimeType);
+  RefPtr<Decoder> decoder = DecoderFactory::CreateAnonymousDecoder(
+      decoderType, sourceBuffer, Nothing(), DecoderFlags::FIRST_FRAME_ONLY,
+      DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
   RefPtr<IDecodingTask> task =
-    new AnonymousDecodingTask(WrapNotNull(decoder), /* aResumable */ true);
+      new AnonymousDecodingTask(WrapNotNull(decoder), /* aResumable */ true);
 
   // Run the full decoder synchronously. It should now be waiting on
   // the iterator to yield some data since we haven't written anything yet.
@@ -245,9 +229,7 @@ CheckDecoderMultiChunk(const ImageTestCase& aTestCase, uint64_t aChunkSize = 1)
   CheckDecoderResults(aTestCase, decoder);
 }
 
-static void
-CheckDownscaleDuringDecode(const ImageTestCase& aTestCase)
-{
+static void CheckDownscaleDuringDecode(const ImageTestCase& aTestCase) {
   // This function expects that |aTestCase| consists of 25 lines of green,
   // followed by 25 lines of red, followed by 25 lines of green, followed by 25
   // more lines of red. We'll downscale it from 100x100 to 20x20.
@@ -268,21 +250,22 @@ CheckDownscaleDuringDecode(const ImageTestCase& aTestCase)
     // the transitions between colors, since the downscaler does not produce a
     // sharp boundary at these points. Even some of the rows we test need a
     // small amount of fuzz; this is just the nature of Lanczos downscaling.
-    EXPECT_TRUE(RowsAreSolidColor(surface, 0, 4, BGRAColor::Green(), /* aFuzz = */ 47));
-    EXPECT_TRUE(RowsAreSolidColor(surface, 6, 3, BGRAColor::Red(), /* aFuzz = */ 27));
-    EXPECT_TRUE(RowsAreSolidColor(surface, 11, 3, BGRAColor::Green(), /* aFuzz = */ 47));
-    EXPECT_TRUE(RowsAreSolidColor(surface, 16, 4, BGRAColor::Red(), /* aFuzz = */ 27));
+    EXPECT_TRUE(
+        RowsAreSolidColor(surface, 0, 4, BGRAColor::Green(), /* aFuzz = */ 47));
+    EXPECT_TRUE(
+        RowsAreSolidColor(surface, 6, 3, BGRAColor::Red(), /* aFuzz = */ 27));
+    EXPECT_TRUE(RowsAreSolidColor(surface, 11, 3, BGRAColor::Green(),
+                                  /* aFuzz = */ 47));
+    EXPECT_TRUE(
+        RowsAreSolidColor(surface, 16, 4, BGRAColor::Red(), /* aFuzz = */ 27));
   });
 }
 
-static void
-CheckAnimationDecoderResults(const ImageTestCase& aTestCase,
-                             AnimationSurfaceProvider* aProvider,
-                             Decoder* aDecoder)
-{
+static void CheckAnimationDecoderResults(const ImageTestCase& aTestCase,
+                                         AnimationSurfaceProvider* aProvider,
+                                         Decoder* aDecoder) {
   EXPECT_TRUE(aDecoder->GetDecodeDone());
-  EXPECT_EQ(bool(aTestCase.mFlags & TEST_CASE_HAS_ERROR),
-            aDecoder->HasError());
+  EXPECT_EQ(bool(aTestCase.mFlags & TEST_CASE_HAS_ERROR), aDecoder->HasError());
 
   if (aTestCase.mFlags & TEST_CASE_HAS_ERROR) {
     return;  // That's all we can check for bad images.
@@ -326,17 +309,15 @@ CheckAnimationDecoderResults(const ImageTestCase& aTestCase,
 }
 
 template <typename Func>
-static void
-WithSingleChunkAnimationDecode(const ImageTestCase& aTestCase,
-                               Func aResultChecker)
-{
+static void WithSingleChunkAnimationDecode(const ImageTestCase& aTestCase,
+                                           Func aResultChecker) {
   // Create an image.
-  RefPtr<Image> image =
-    ImageFactory::CreateAnonymousImage(nsDependentCString(aTestCase.mMimeType));
+  RefPtr<Image> image = ImageFactory::CreateAnonymousImage(
+      nsDependentCString(aTestCase.mMimeType));
   ASSERT_TRUE(!image->HasError());
 
   NotNull<RefPtr<RasterImage>> rasterImage =
-    WrapNotNull(static_cast<RasterImage*>(image.get()));
+      WrapNotNull(static_cast<RasterImage*>(image.get()));
 
   nsCOMPtr<nsIInputStream> inputStream = LoadFile(aTestCase.mPath);
   ASSERT_TRUE(inputStream != nullptr);
@@ -355,10 +336,9 @@ WithSingleChunkAnimationDecode(const ImageTestCase& aTestCase,
 
   // Create a metadata decoder first, because otherwise RasterImage will get
   // unhappy about finding out the image is animated during a full decode.
-  DecoderType decoderType =
-    DecoderFactory::GetDecoderType(aTestCase.mMimeType);
-  RefPtr<IDecodingTask> task =
-    DecoderFactory::CreateMetadataDecoder(decoderType, rasterImage, sourceBuffer);
+  DecoderType decoderType = DecoderFactory::GetDecoderType(aTestCase.mMimeType);
+  RefPtr<IDecodingTask> task = DecoderFactory::CreateMetadataDecoder(
+      decoderType, rasterImage, sourceBuffer);
   ASSERT_TRUE(task != nullptr);
 
   // Run the metadata decoder synchronously.
@@ -367,20 +347,17 @@ WithSingleChunkAnimationDecode(const ImageTestCase& aTestCase,
   // Create a decoder.
   DecoderFlags decoderFlags = DecoderFlags::BLEND_ANIMATION;
   SurfaceFlags surfaceFlags = DefaultSurfaceFlags();
-  RefPtr<Decoder> decoder =
-    DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, Nothing(),
-                                           decoderFlags, surfaceFlags);
+  RefPtr<Decoder> decoder = DecoderFactory::CreateAnonymousDecoder(
+      decoderType, sourceBuffer, Nothing(), decoderFlags, surfaceFlags);
   ASSERT_TRUE(decoder != nullptr);
 
   // Create an AnimationSurfaceProvider which will manage the decoding process
   // and make this decoder's output available in the surface cache.
-  SurfaceKey surfaceKey =
-    RasterSurfaceKey(aTestCase.mOutputSize, surfaceFlags, PlaybackType::eAnimated);
-  RefPtr<AnimationSurfaceProvider> provider =
-    new AnimationSurfaceProvider(rasterImage,
-                                 surfaceKey,
-                                 WrapNotNull(decoder),
-                                 /* aCurrentFrame */ 0);
+  SurfaceKey surfaceKey = RasterSurfaceKey(aTestCase.mOutputSize, surfaceFlags,
+                                           PlaybackType::eAnimated);
+  RefPtr<AnimationSurfaceProvider> provider = new AnimationSurfaceProvider(
+      rasterImage, surfaceKey, WrapNotNull(decoder),
+      /* aCurrentFrame */ 0);
 
   // Run the full decoder synchronously.
   provider->Run();
@@ -389,25 +366,22 @@ WithSingleChunkAnimationDecode(const ImageTestCase& aTestCase,
   aResultChecker(provider, decoder);
 }
 
-static void
-CheckAnimationDecoderSingleChunk(const ImageTestCase& aTestCase)
-{
-  WithSingleChunkAnimationDecode(aTestCase, [&](AnimationSurfaceProvider* aProvider, Decoder* aDecoder) {
-    CheckAnimationDecoderResults(aTestCase, aProvider, aDecoder);
-  });
+static void CheckAnimationDecoderSingleChunk(const ImageTestCase& aTestCase) {
+  WithSingleChunkAnimationDecode(
+      aTestCase, [&](AnimationSurfaceProvider* aProvider, Decoder* aDecoder) {
+        CheckAnimationDecoderResults(aTestCase, aProvider, aDecoder);
+      });
 }
 
-static void
-CheckDecoderFrameFirst(const ImageTestCase& aTestCase)
-{
+static void CheckDecoderFrameFirst(const ImageTestCase& aTestCase) {
   // Verify that we can decode this test case and retrieve the first frame using
   // imgIContainer::FRAME_FIRST. This ensures that we correctly trigger a
   // single-frame decode rather than an animated decode when
   // imgIContainer::FRAME_FIRST is requested.
 
   // Create an image.
-  RefPtr<Image> image =
-    ImageFactory::CreateAnonymousImage(nsDependentCString(aTestCase.mMimeType));
+  RefPtr<Image> image = ImageFactory::CreateAnonymousImage(
+      nsDependentCString(aTestCase.mMimeType));
   ASSERT_TRUE(!image->HasError());
 
   nsCOMPtr<nsIInputStream> inputStream = LoadFile(aTestCase.mPath);
@@ -433,15 +407,12 @@ CheckDecoderFrameFirst(const ImageTestCase& aTestCase)
   // Lock the image so its surfaces don't disappear during the test.
   image->LockImage();
 
-  auto unlock = mozilla::MakeScopeExit([&] {
-    image->UnlockImage();
-  });
+  auto unlock = mozilla::MakeScopeExit([&] { image->UnlockImage(); });
 
   // Use GetFrame() to force a sync decode of the image, specifying FRAME_FIRST
   // to ensure that we don't get an animated decode.
-  RefPtr<SourceSurface> surface =
-    image->GetFrame(imgIContainer::FRAME_FIRST,
-                    imgIContainer::FLAG_SYNC_DECODE);
+  RefPtr<SourceSurface> surface = image->GetFrame(
+      imgIContainer::FRAME_FIRST, imgIContainer::FLAG_SYNC_DECODE);
 
   // Ensure that the image's metadata meets our expectations.
   IntSize imageSize(0, 0);
@@ -461,11 +432,10 @@ CheckDecoderFrameFirst(const ImageTestCase& aTestCase)
   // Ensure that we decoded the static version of the image.
   {
     LookupResult result =
-      SurfaceCache::Lookup(ImageKey(image.get()),
-                           RasterSurfaceKey(imageSize,
-                                            DefaultSurfaceFlags(),
-                                            PlaybackType::eStatic),
-                           /* aMarkUsed = */ false);
+        SurfaceCache::Lookup(ImageKey(image.get()),
+                             RasterSurfaceKey(imageSize, DefaultSurfaceFlags(),
+                                              PlaybackType::eStatic),
+                             /* aMarkUsed = */ false);
     ASSERT_EQ(MatchType::EXACT, result.Type());
     EXPECT_TRUE(bool(result.Surface()));
   }
@@ -473,28 +443,25 @@ CheckDecoderFrameFirst(const ImageTestCase& aTestCase)
   // Ensure that we didn't decode the animated version of the image.
   {
     LookupResult result =
-      SurfaceCache::Lookup(ImageKey(image.get()),
-                           RasterSurfaceKey(imageSize,
-                                            DefaultSurfaceFlags(),
-                                            PlaybackType::eAnimated),
-                           /* aMarkUsed = */ false);
+        SurfaceCache::Lookup(ImageKey(image.get()),
+                             RasterSurfaceKey(imageSize, DefaultSurfaceFlags(),
+                                              PlaybackType::eAnimated),
+                             /* aMarkUsed = */ false);
     ASSERT_EQ(MatchType::NOT_FOUND, result.Type());
   }
 
   // Use GetFrame() to force a sync decode of the image, this time specifying
   // FRAME_CURRENT to ensure that we get an animated decode.
-  RefPtr<SourceSurface> animatedSurface =
-    image->GetFrame(imgIContainer::FRAME_CURRENT,
-                    imgIContainer::FLAG_SYNC_DECODE);
+  RefPtr<SourceSurface> animatedSurface = image->GetFrame(
+      imgIContainer::FRAME_CURRENT, imgIContainer::FLAG_SYNC_DECODE);
 
   // Ensure that we decoded both frames of the animated version of the image.
   {
     LookupResult result =
-      SurfaceCache::Lookup(ImageKey(image.get()),
-                           RasterSurfaceKey(imageSize,
-                                            DefaultSurfaceFlags(),
-                                            PlaybackType::eAnimated),
-                           /* aMarkUsed = */ true);
+        SurfaceCache::Lookup(ImageKey(image.get()),
+                             RasterSurfaceKey(imageSize, DefaultSurfaceFlags(),
+                                              PlaybackType::eAnimated),
+                             /* aMarkUsed = */ true);
     ASSERT_EQ(MatchType::EXACT, result.Type());
 
     EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(0)));
@@ -507,27 +474,24 @@ CheckDecoderFrameFirst(const ImageTestCase& aTestCase)
   // Ensure that the static version is still around.
   {
     LookupResult result =
-      SurfaceCache::Lookup(ImageKey(image.get()),
-                           RasterSurfaceKey(imageSize,
-                                            DefaultSurfaceFlags(),
-                                            PlaybackType::eStatic),
-                           /* aMarkUsed = */ true);
+        SurfaceCache::Lookup(ImageKey(image.get()),
+                             RasterSurfaceKey(imageSize, DefaultSurfaceFlags(),
+                                              PlaybackType::eStatic),
+                             /* aMarkUsed = */ true);
     ASSERT_EQ(MatchType::EXACT, result.Type());
     EXPECT_TRUE(bool(result.Surface()));
   }
 }
 
-static void
-CheckDecoderFrameCurrent(const ImageTestCase& aTestCase)
-{
+static void CheckDecoderFrameCurrent(const ImageTestCase& aTestCase) {
   // Verify that we can decode this test case and retrieve the entire sequence
   // of frames using imgIContainer::FRAME_CURRENT. This ensures that we
   // correctly trigger an animated decode rather than a single-frame decode when
   // imgIContainer::FRAME_CURRENT is requested.
 
   // Create an image.
-  RefPtr<Image> image =
-    ImageFactory::CreateAnonymousImage(nsDependentCString(aTestCase.mMimeType));
+  RefPtr<Image> image = ImageFactory::CreateAnonymousImage(
+      nsDependentCString(aTestCase.mMimeType));
   ASSERT_TRUE(!image->HasError());
 
   nsCOMPtr<nsIInputStream> inputStream = LoadFile(aTestCase.mPath);
@@ -555,9 +519,8 @@ CheckDecoderFrameCurrent(const ImageTestCase& aTestCase)
 
   // Use GetFrame() to force a sync decode of the image, specifying
   // FRAME_CURRENT to ensure we get an animated decode.
-  RefPtr<SourceSurface> surface =
-    image->GetFrame(imgIContainer::FRAME_CURRENT,
-                    imgIContainer::FLAG_SYNC_DECODE);
+  RefPtr<SourceSurface> surface = image->GetFrame(
+      imgIContainer::FRAME_CURRENT, imgIContainer::FLAG_SYNC_DECODE);
 
   // Ensure that the image's metadata meets our expectations.
   IntSize imageSize(0, 0);
@@ -577,11 +540,10 @@ CheckDecoderFrameCurrent(const ImageTestCase& aTestCase)
   // Ensure that we decoded both frames of the animated version of the image.
   {
     LookupResult result =
-      SurfaceCache::Lookup(ImageKey(image.get()),
-                           RasterSurfaceKey(imageSize,
-                                            DefaultSurfaceFlags(),
-                                            PlaybackType::eAnimated),
-                           /* aMarkUsed = */ true);
+        SurfaceCache::Lookup(ImageKey(image.get()),
+                             RasterSurfaceKey(imageSize, DefaultSurfaceFlags(),
+                                              PlaybackType::eAnimated),
+                             /* aMarkUsed = */ true);
     ASSERT_EQ(MatchType::EXACT, result.Type());
 
     EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(0)));
@@ -594,28 +556,25 @@ CheckDecoderFrameCurrent(const ImageTestCase& aTestCase)
   // Ensure that we didn't decode the static version of the image.
   {
     LookupResult result =
-      SurfaceCache::Lookup(ImageKey(image.get()),
-                           RasterSurfaceKey(imageSize,
-                                            DefaultSurfaceFlags(),
-                                            PlaybackType::eStatic),
-                           /* aMarkUsed = */ false);
+        SurfaceCache::Lookup(ImageKey(image.get()),
+                             RasterSurfaceKey(imageSize, DefaultSurfaceFlags(),
+                                              PlaybackType::eStatic),
+                             /* aMarkUsed = */ false);
     ASSERT_EQ(MatchType::NOT_FOUND, result.Type());
   }
 
   // Use GetFrame() to force a sync decode of the image, this time specifying
   // FRAME_FIRST to ensure that we get a single-frame decode.
-  RefPtr<SourceSurface> animatedSurface =
-    image->GetFrame(imgIContainer::FRAME_FIRST,
-                    imgIContainer::FLAG_SYNC_DECODE);
+  RefPtr<SourceSurface> animatedSurface = image->GetFrame(
+      imgIContainer::FRAME_FIRST, imgIContainer::FLAG_SYNC_DECODE);
 
   // Ensure that we decoded the static version of the image.
   {
     LookupResult result =
-      SurfaceCache::Lookup(ImageKey(image.get()),
-                           RasterSurfaceKey(imageSize,
-                                            DefaultSurfaceFlags(),
-                                            PlaybackType::eStatic),
-                           /* aMarkUsed = */ true);
+        SurfaceCache::Lookup(ImageKey(image.get()),
+                             RasterSurfaceKey(imageSize, DefaultSurfaceFlags(),
+                                              PlaybackType::eStatic),
+                             /* aMarkUsed = */ true);
     ASSERT_EQ(MatchType::EXACT, result.Type());
     EXPECT_TRUE(bool(result.Surface()));
   }
@@ -623,11 +582,10 @@ CheckDecoderFrameCurrent(const ImageTestCase& aTestCase)
   // Ensure that both frames of the animated version are still around.
   {
     LookupResult result =
-      SurfaceCache::Lookup(ImageKey(image.get()),
-                           RasterSurfaceKey(imageSize,
-                                            DefaultSurfaceFlags(),
-                                            PlaybackType::eAnimated),
-                           /* aMarkUsed = */ true);
+        SurfaceCache::Lookup(ImageKey(image.get()),
+                             RasterSurfaceKey(imageSize, DefaultSurfaceFlags(),
+                                              PlaybackType::eAnimated),
+                             /* aMarkUsed = */ true);
     ASSERT_EQ(MatchType::EXACT, result.Type());
 
     EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(0)));
@@ -638,269 +596,216 @@ CheckDecoderFrameCurrent(const ImageTestCase& aTestCase)
   }
 }
 
-class ImageDecoders : public ::testing::Test
-{
-protected:
+class ImageDecoders : public ::testing::Test {
+ protected:
   AutoInitializeImageLib mInit;
 };
 
-TEST_F(ImageDecoders, PNGSingleChunk)
-{
+TEST_F(ImageDecoders, PNGSingleChunk) {
   CheckDecoderSingleChunk(GreenPNGTestCase());
 }
 
-TEST_F(ImageDecoders, PNGDelayedChunk)
-{
+TEST_F(ImageDecoders, PNGDelayedChunk) {
   CheckDecoderDelayedChunk(GreenPNGTestCase());
 }
 
-TEST_F(ImageDecoders, PNGMultiChunk)
-{
+TEST_F(ImageDecoders, PNGMultiChunk) {
   CheckDecoderMultiChunk(GreenPNGTestCase());
 }
 
-TEST_F(ImageDecoders, PNGDownscaleDuringDecode)
-{
+TEST_F(ImageDecoders, PNGDownscaleDuringDecode) {
   CheckDownscaleDuringDecode(DownscaledPNGTestCase());
 }
 
-TEST_F(ImageDecoders, GIFSingleChunk)
-{
+TEST_F(ImageDecoders, GIFSingleChunk) {
   CheckDecoderSingleChunk(GreenGIFTestCase());
 }
 
-TEST_F(ImageDecoders, GIFDelayedChunk)
-{
+TEST_F(ImageDecoders, GIFDelayedChunk) {
   CheckDecoderDelayedChunk(GreenGIFTestCase());
 }
 
-TEST_F(ImageDecoders, GIFMultiChunk)
-{
+TEST_F(ImageDecoders, GIFMultiChunk) {
   CheckDecoderMultiChunk(GreenGIFTestCase());
 }
 
-TEST_F(ImageDecoders, GIFDownscaleDuringDecode)
-{
+TEST_F(ImageDecoders, GIFDownscaleDuringDecode) {
   CheckDownscaleDuringDecode(DownscaledGIFTestCase());
 }
 
-TEST_F(ImageDecoders, JPGSingleChunk)
-{
+TEST_F(ImageDecoders, JPGSingleChunk) {
   CheckDecoderSingleChunk(GreenJPGTestCase());
 }
 
-TEST_F(ImageDecoders, JPGDelayedChunk)
-{
+TEST_F(ImageDecoders, JPGDelayedChunk) {
   CheckDecoderDelayedChunk(GreenJPGTestCase());
 }
 
-TEST_F(ImageDecoders, JPGMultiChunk)
-{
+TEST_F(ImageDecoders, JPGMultiChunk) {
   CheckDecoderMultiChunk(GreenJPGTestCase());
 }
 
-TEST_F(ImageDecoders, JPGDownscaleDuringDecode)
-{
+TEST_F(ImageDecoders, JPGDownscaleDuringDecode) {
   CheckDownscaleDuringDecode(DownscaledJPGTestCase());
 }
 
-TEST_F(ImageDecoders, BMPSingleChunk)
-{
+TEST_F(ImageDecoders, BMPSingleChunk) {
   CheckDecoderSingleChunk(GreenBMPTestCase());
 }
 
-TEST_F(ImageDecoders, BMPDelayedChunk)
-{
+TEST_F(ImageDecoders, BMPDelayedChunk) {
   CheckDecoderDelayedChunk(GreenBMPTestCase());
 }
 
-TEST_F(ImageDecoders, BMPMultiChunk)
-{
+TEST_F(ImageDecoders, BMPMultiChunk) {
   CheckDecoderMultiChunk(GreenBMPTestCase());
 }
 
-TEST_F(ImageDecoders, BMPDownscaleDuringDecode)
-{
+TEST_F(ImageDecoders, BMPDownscaleDuringDecode) {
   CheckDownscaleDuringDecode(DownscaledBMPTestCase());
 }
 
-TEST_F(ImageDecoders, ICOSingleChunk)
-{
+TEST_F(ImageDecoders, ICOSingleChunk) {
   CheckDecoderSingleChunk(GreenICOTestCase());
 }
 
-TEST_F(ImageDecoders, ICODelayedChunk)
-{
+TEST_F(ImageDecoders, ICODelayedChunk) {
   CheckDecoderDelayedChunk(GreenICOTestCase());
 }
 
-TEST_F(ImageDecoders, ICOMultiChunk)
-{
+TEST_F(ImageDecoders, ICOMultiChunk) {
   CheckDecoderMultiChunk(GreenICOTestCase());
 }
 
-TEST_F(ImageDecoders, ICODownscaleDuringDecode)
-{
+TEST_F(ImageDecoders, ICODownscaleDuringDecode) {
   CheckDownscaleDuringDecode(DownscaledICOTestCase());
 }
 
-TEST_F(ImageDecoders, ICOWithANDMaskDownscaleDuringDecode)
-{
+TEST_F(ImageDecoders, ICOWithANDMaskDownscaleDuringDecode) {
   CheckDownscaleDuringDecode(DownscaledTransparentICOWithANDMaskTestCase());
 }
 
-TEST_F(ImageDecoders, IconSingleChunk)
-{
+TEST_F(ImageDecoders, IconSingleChunk) {
   CheckDecoderSingleChunk(GreenIconTestCase());
 }
 
-TEST_F(ImageDecoders, IconDelayedChunk)
-{
+TEST_F(ImageDecoders, IconDelayedChunk) {
   CheckDecoderDelayedChunk(GreenIconTestCase());
 }
 
-TEST_F(ImageDecoders, IconMultiChunk)
-{
+TEST_F(ImageDecoders, IconMultiChunk) {
   CheckDecoderMultiChunk(GreenIconTestCase());
 }
 
-TEST_F(ImageDecoders, IconDownscaleDuringDecode)
-{
+TEST_F(ImageDecoders, IconDownscaleDuringDecode) {
   CheckDownscaleDuringDecode(DownscaledIconTestCase());
 }
 
-TEST_F(ImageDecoders, WebPSingleChunk)
-{
+TEST_F(ImageDecoders, WebPSingleChunk) {
   CheckDecoderSingleChunk(GreenWebPTestCase());
 }
 
-TEST_F(ImageDecoders, WebPDelayedChunk)
-{
+TEST_F(ImageDecoders, WebPDelayedChunk) {
   CheckDecoderDelayedChunk(GreenWebPTestCase());
 }
 
-TEST_F(ImageDecoders, WebPMultiChunk)
-{
+TEST_F(ImageDecoders, WebPMultiChunk) {
   CheckDecoderMultiChunk(GreenWebPTestCase());
 }
 
-TEST_F(ImageDecoders, WebPLargeMultiChunk)
-{
+TEST_F(ImageDecoders, WebPLargeMultiChunk) {
   CheckDecoderMultiChunk(LargeWebPTestCase(), /* aChunkSize */ 64);
 }
 
-TEST_F(ImageDecoders, WebPDownscaleDuringDecode)
-{
+TEST_F(ImageDecoders, WebPDownscaleDuringDecode) {
   CheckDownscaleDuringDecode(DownscaledWebPTestCase());
 }
 
-TEST_F(ImageDecoders, WebPIccSrgbMultiChunk)
-{
+TEST_F(ImageDecoders, WebPIccSrgbMultiChunk) {
   CheckDecoderMultiChunk(GreenWebPIccSrgbTestCase());
 }
 
-TEST_F(ImageDecoders, AnimatedGIFSingleChunk)
-{
+TEST_F(ImageDecoders, AnimatedGIFSingleChunk) {
   CheckDecoderSingleChunk(GreenFirstFrameAnimatedGIFTestCase());
 }
 
-TEST_F(ImageDecoders, AnimatedGIFMultiChunk)
-{
+TEST_F(ImageDecoders, AnimatedGIFMultiChunk) {
   CheckDecoderMultiChunk(GreenFirstFrameAnimatedGIFTestCase());
 }
 
-TEST_F(ImageDecoders, AnimatedGIFWithBlendedFrames)
-{
+TEST_F(ImageDecoders, AnimatedGIFWithBlendedFrames) {
   CheckAnimationDecoderSingleChunk(GreenFirstFrameAnimatedGIFTestCase());
 }
 
-TEST_F(ImageDecoders, AnimatedPNGSingleChunk)
-{
+TEST_F(ImageDecoders, AnimatedPNGSingleChunk) {
   CheckDecoderSingleChunk(GreenFirstFrameAnimatedPNGTestCase());
 }
 
-TEST_F(ImageDecoders, AnimatedPNGMultiChunk)
-{
+TEST_F(ImageDecoders, AnimatedPNGMultiChunk) {
   CheckDecoderMultiChunk(GreenFirstFrameAnimatedPNGTestCase());
 }
 
-TEST_F(ImageDecoders, AnimatedPNGWithBlendedFrames)
-{
+TEST_F(ImageDecoders, AnimatedPNGWithBlendedFrames) {
   CheckAnimationDecoderSingleChunk(GreenFirstFrameAnimatedPNGTestCase());
 }
 
-TEST_F(ImageDecoders, AnimatedWebPSingleChunk)
-{
+TEST_F(ImageDecoders, AnimatedWebPSingleChunk) {
   CheckDecoderSingleChunk(GreenFirstFrameAnimatedWebPTestCase());
 }
 
-TEST_F(ImageDecoders, AnimatedWebPMultiChunk)
-{
+TEST_F(ImageDecoders, AnimatedWebPMultiChunk) {
   CheckDecoderMultiChunk(GreenFirstFrameAnimatedWebPTestCase());
 }
 
-TEST_F(ImageDecoders, AnimatedWebPWithBlendedFrames)
-{
+TEST_F(ImageDecoders, AnimatedWebPWithBlendedFrames) {
   CheckAnimationDecoderSingleChunk(GreenFirstFrameAnimatedWebPTestCase());
 }
 
-TEST_F(ImageDecoders, CorruptSingleChunk)
-{
+TEST_F(ImageDecoders, CorruptSingleChunk) {
   CheckDecoderSingleChunk(CorruptTestCase());
 }
 
-TEST_F(ImageDecoders, CorruptMultiChunk)
-{
+TEST_F(ImageDecoders, CorruptMultiChunk) {
   CheckDecoderMultiChunk(CorruptTestCase());
 }
 
-TEST_F(ImageDecoders, CorruptBMPWithTruncatedHeaderSingleChunk)
-{
+TEST_F(ImageDecoders, CorruptBMPWithTruncatedHeaderSingleChunk) {
   CheckDecoderSingleChunk(CorruptBMPWithTruncatedHeader());
 }
 
-TEST_F(ImageDecoders, CorruptBMPWithTruncatedHeaderMultiChunk)
-{
+TEST_F(ImageDecoders, CorruptBMPWithTruncatedHeaderMultiChunk) {
   CheckDecoderMultiChunk(CorruptBMPWithTruncatedHeader());
 }
 
-TEST_F(ImageDecoders, CorruptICOWithBadBMPWidthSingleChunk)
-{
+TEST_F(ImageDecoders, CorruptICOWithBadBMPWidthSingleChunk) {
   CheckDecoderSingleChunk(CorruptICOWithBadBMPWidthTestCase());
 }
 
-TEST_F(ImageDecoders, CorruptICOWithBadBMPWidthMultiChunk)
-{
+TEST_F(ImageDecoders, CorruptICOWithBadBMPWidthMultiChunk) {
   CheckDecoderMultiChunk(CorruptICOWithBadBMPWidthTestCase());
 }
 
-TEST_F(ImageDecoders, CorruptICOWithBadBMPHeightSingleChunk)
-{
+TEST_F(ImageDecoders, CorruptICOWithBadBMPHeightSingleChunk) {
   CheckDecoderSingleChunk(CorruptICOWithBadBMPHeightTestCase());
 }
 
-TEST_F(ImageDecoders, CorruptICOWithBadBMPHeightMultiChunk)
-{
+TEST_F(ImageDecoders, CorruptICOWithBadBMPHeightMultiChunk) {
   CheckDecoderMultiChunk(CorruptICOWithBadBMPHeightTestCase());
 }
 
-TEST_F(ImageDecoders, CorruptICOWithBadBppSingleChunk)
-{
+TEST_F(ImageDecoders, CorruptICOWithBadBppSingleChunk) {
   CheckDecoderSingleChunk(CorruptICOWithBadBppTestCase());
 }
 
-TEST_F(ImageDecoders, AnimatedGIFWithFRAME_FIRST)
-{
+TEST_F(ImageDecoders, AnimatedGIFWithFRAME_FIRST) {
   CheckDecoderFrameFirst(GreenFirstFrameAnimatedGIFTestCase());
 }
 
-TEST_F(ImageDecoders, AnimatedGIFWithFRAME_CURRENT)
-{
+TEST_F(ImageDecoders, AnimatedGIFWithFRAME_CURRENT) {
   CheckDecoderFrameCurrent(GreenFirstFrameAnimatedGIFTestCase());
 }
 
-TEST_F(ImageDecoders, AnimatedGIFWithExtraImageSubBlocks)
-{
+TEST_F(ImageDecoders, AnimatedGIFWithExtraImageSubBlocks) {
   ImageTestCase testCase = ExtraImageSubBlocksAnimatedGIFTestCase();
 
   // Verify that we can decode this test case and get two frames, even though
@@ -908,8 +813,8 @@ TEST_F(ImageDecoders, AnimatedGIFWithExtraImageSubBlocks)
   // extra data shouldn't confuse the decoder or cause the decode to fail.
 
   // Create an image.
-  RefPtr<Image> image =
-    ImageFactory::CreateAnonymousImage(nsDependentCString(testCase.mMimeType));
+  RefPtr<Image> image = ImageFactory::CreateAnonymousImage(
+      nsDependentCString(testCase.mMimeType));
   ASSERT_TRUE(!image->HasError());
 
   nsCOMPtr<nsIInputStream> inputStream = LoadFile(testCase.mPath);
@@ -933,9 +838,8 @@ TEST_F(ImageDecoders, AnimatedGIFWithExtraImageSubBlocks)
   tracker->SyncNotifyProgress(FLAG_LOAD_COMPLETE);
 
   // Use GetFrame() to force a sync decode of the image.
-  RefPtr<SourceSurface> surface =
-    image->GetFrame(imgIContainer::FRAME_CURRENT,
-                    imgIContainer::FLAG_SYNC_DECODE);
+  RefPtr<SourceSurface> surface = image->GetFrame(
+      imgIContainer::FRAME_CURRENT, imgIContainer::FLAG_SYNC_DECODE);
 
   // Ensure that the image's metadata meets our expectations.
   IntSize imageSize(0, 0);
@@ -954,11 +858,10 @@ TEST_F(ImageDecoders, AnimatedGIFWithExtraImageSubBlocks)
 
   // Ensure that we decoded both frames of the image.
   LookupResult result =
-    SurfaceCache::Lookup(ImageKey(image.get()),
-                         RasterSurfaceKey(imageSize,
-                                          DefaultSurfaceFlags(),
-                                          PlaybackType::eAnimated),
-                         /* aMarkUsed = */ true);
+      SurfaceCache::Lookup(ImageKey(image.get()),
+                           RasterSurfaceKey(imageSize, DefaultSurfaceFlags(),
+                                            PlaybackType::eAnimated),
+                           /* aMarkUsed = */ true);
   ASSERT_EQ(MatchType::EXACT, result.Type());
 
   EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(0)));
@@ -968,48 +871,40 @@ TEST_F(ImageDecoders, AnimatedGIFWithExtraImageSubBlocks)
   EXPECT_TRUE(bool(partialFrame));
 }
 
-TEST_F(ImageDecoders, AnimatedWebPWithFRAME_FIRST)
-{
+TEST_F(ImageDecoders, AnimatedWebPWithFRAME_FIRST) {
   CheckDecoderFrameFirst(GreenFirstFrameAnimatedWebPTestCase());
 }
 
-TEST_F(ImageDecoders, AnimatedWebPWithFRAME_CURRENT)
-{
+TEST_F(ImageDecoders, AnimatedWebPWithFRAME_CURRENT) {
   CheckDecoderFrameCurrent(GreenFirstFrameAnimatedWebPTestCase());
 }
 
-TEST_F(ImageDecoders, TruncatedSmallGIFSingleChunk)
-{
+TEST_F(ImageDecoders, TruncatedSmallGIFSingleChunk) {
   CheckDecoderSingleChunk(TruncatedSmallGIFTestCase());
 }
 
-TEST_F(ImageDecoders, LargeICOWithBMPSingleChunk)
-{
+TEST_F(ImageDecoders, LargeICOWithBMPSingleChunk) {
   CheckDecoderSingleChunk(LargeICOWithBMPTestCase());
 }
 
-TEST_F(ImageDecoders, LargeICOWithBMPMultiChunk)
-{
+TEST_F(ImageDecoders, LargeICOWithBMPMultiChunk) {
   CheckDecoderMultiChunk(LargeICOWithBMPTestCase(), /* aChunkSize */ 64);
 }
 
-TEST_F(ImageDecoders, LargeICOWithPNGSingleChunk)
-{
+TEST_F(ImageDecoders, LargeICOWithPNGSingleChunk) {
   CheckDecoderSingleChunk(LargeICOWithPNGTestCase());
 }
 
-TEST_F(ImageDecoders, LargeICOWithPNGMultiChunk)
-{
+TEST_F(ImageDecoders, LargeICOWithPNGMultiChunk) {
   CheckDecoderMultiChunk(LargeICOWithPNGTestCase());
 }
 
-TEST_F(ImageDecoders, MultipleSizesICOSingleChunk)
-{
+TEST_F(ImageDecoders, MultipleSizesICOSingleChunk) {
   ImageTestCase testCase = GreenMultipleSizesICOTestCase();
 
   // Create an image.
-  RefPtr<Image> image =
-    ImageFactory::CreateAnonymousImage(nsDependentCString(testCase.mMimeType));
+  RefPtr<Image> image = ImageFactory::CreateAnonymousImage(
+      nsDependentCString(testCase.mMimeType));
   ASSERT_TRUE(!image->HasError());
 
   nsCOMPtr<nsIInputStream> inputStream = LoadFile(testCase.mPath);
@@ -1033,9 +928,8 @@ TEST_F(ImageDecoders, MultipleSizesICOSingleChunk)
   tracker->SyncNotifyProgress(FLAG_LOAD_COMPLETE);
 
   // Use GetFrame() to force a sync decode of the image.
-  RefPtr<SourceSurface> surface =
-    image->GetFrame(imgIContainer::FRAME_CURRENT,
-                    imgIContainer::FLAG_SYNC_DECODE);
+  RefPtr<SourceSurface> surface = image->GetFrame(
+      imgIContainer::FRAME_CURRENT, imgIContainer::FLAG_SYNC_DECODE);
 
   // Ensure that the image's metadata meets our expectations.
   IntSize imageSize(0, 0);
@@ -1052,21 +946,16 @@ TEST_F(ImageDecoders, MultipleSizesICOSingleChunk)
   EXPECT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_EQ(6u, nativeSizes.Length());
 
-  IntSize expectedSizes[] = {
-    IntSize(16, 16),
-    IntSize(32, 32),
-    IntSize(64, 64),
-    IntSize(128, 128),
-    IntSize(256, 256),
-    IntSize(256, 128)
-  };
+  IntSize expectedSizes[] = {IntSize(16, 16),   IntSize(32, 32),
+                             IntSize(64, 64),   IntSize(128, 128),
+                             IntSize(256, 256), IntSize(256, 128)};
 
   for (int i = 0; i < 6; ++i) {
     EXPECT_EQ(expectedSizes[i], nativeSizes[i]);
   }
 
   RefPtr<Image> image90 =
-    ImageOps::Orient(image, Orientation(Angle::D90, Flip::Unflipped));
+      ImageOps::Orient(image, Orientation(Angle::D90, Flip::Unflipped));
   rv = image90->GetNativeSizes(nativeSizes);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_EQ(6u, nativeSizes.Length());
@@ -1077,7 +966,7 @@ TEST_F(ImageDecoders, MultipleSizesICOSingleChunk)
   EXPECT_EQ(IntSize(128, 256), nativeSizes[5]);
 
   RefPtr<Image> image180 =
-    ImageOps::Orient(image, Orientation(Angle::D180, Flip::Unflipped));
+      ImageOps::Orient(image, Orientation(Angle::D180, Flip::Unflipped));
   rv = image180->GetNativeSizes(nativeSizes);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_EQ(6u, nativeSizes.Length());

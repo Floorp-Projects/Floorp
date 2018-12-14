@@ -20,29 +20,29 @@ struct Foo {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Foo)
   void Notify() { mNotified = true; }
   bool mNotified = false;
-private:
+
+ private:
   ~Foo() {}
 };
 
-TEST(WatchManager, Shutdown)
-{
-  RefPtr<TaskQueue> queue = new TaskQueue(
-    GetMediaThreadPool(MediaThreadType::PLAYBACK));
+TEST(WatchManager, Shutdown) {
+  RefPtr<TaskQueue> queue =
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK));
 
   RefPtr<Foo> p = new Foo;
   WatchManager<Foo> manager(p, queue);
   Watchable<bool> notifier(false, "notifier");
 
   Unused << queue->Dispatch(NS_NewRunnableFunction(
-    "TestStateWatching::WatchManager_Shutdown_Test::TestBody", [&]() {
-      manager.Watch(notifier, &Foo::Notify);
-      notifier = true;    // Trigger the call to Foo::Notify().
-      manager.Shutdown(); // Shutdown() should cancel the call.
-    }));
+      "TestStateWatching::WatchManager_Shutdown_Test::TestBody", [&]() {
+        manager.Watch(notifier, &Foo::Notify);
+        notifier = true;     // Trigger the call to Foo::Notify().
+        manager.Shutdown();  // Shutdown() should cancel the call.
+      }));
 
   queue->BeginShutdown();
   queue->AwaitShutdownAndIdle();
   EXPECT_FALSE(p->mNotified);
 }
 
-} // namespace TestStateWatching
+}  // namespace TestStateWatching

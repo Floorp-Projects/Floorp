@@ -9,11 +9,10 @@
 #include <stdlib.h>
 #include "gtest/gtest.h"
 
-template<class T, class Compare>
-void
-CheckPopSequence(const nsTPriorityQueue<T, Compare>& aQueue,
-                 const T* aExpectedSequence, const uint32_t aSequenceLength)
-{
+template <class T, class Compare>
+void CheckPopSequence(const nsTPriorityQueue<T, Compare>& aQueue,
+                      const T* aExpectedSequence,
+                      const uint32_t aSequenceLength) {
   nsTPriorityQueue<T, Compare> copy(aQueue);
 
   for (uint32_t i = 0; i < aSequenceLength; i++) {
@@ -26,16 +25,13 @@ CheckPopSequence(const nsTPriorityQueue<T, Compare>& aQueue,
   EXPECT_TRUE(copy.IsEmpty());
 }
 
-template<class A>
+template <class A>
 class MaxCompare {
-public:
-  bool LessThan(const A& a, const A& b) {
-    return a > b;
-  }
+ public:
+  bool LessThan(const A& a, const A& b) { return a > b; }
 };
 
-TEST(PriorityQueue, Main)
-{
+TEST(PriorityQueue, Main) {
   nsTPriorityQueue<int> queue;
 
   EXPECT_TRUE(queue.IsEmpty());
@@ -49,7 +45,7 @@ TEST(PriorityQueue, Main)
   EXPECT_EQ(queue.Top(), 2);
   EXPECT_EQ(queue.Length(), 6u);
   EXPECT_FALSE(queue.IsEmpty());
-  int expected[] = { 2, 4, 6, 6, 8, 10 };
+  int expected[] = {2, 4, 6, 6, 8, 10};
   CheckPopSequence(queue, expected, sizeof(expected) / sizeof(expected[0]));
 
   // copy ctor is tested by using CheckPopSequence, but check default assignment
@@ -70,7 +66,7 @@ TEST(PriorityQueue, Main)
   max_queue.Push(10);
   max_queue.Push(6);
   EXPECT_EQ(max_queue.Top(), 10);
-  int expected_max[] = { 10, 8, 6, 6, 4, 2 };
+  int expected_max[] = {10, 8, 6, 6, 4, 2};
   CheckPopSequence(max_queue, expected_max,
-      sizeof(expected_max) / sizeof(expected_max[0]));
+                   sizeof(expected_max) / sizeof(expected_max[0]));
 }

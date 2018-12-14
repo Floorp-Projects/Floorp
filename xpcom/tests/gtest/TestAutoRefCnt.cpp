@@ -13,13 +13,11 @@
 
 using namespace mozilla;
 
-class nsThreadSafeAutoRefCntRunner final : public nsIRunnable
-{
-public:
+class nsThreadSafeAutoRefCntRunner final : public nsIRunnable {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  NS_IMETHOD Run() final
-  {
+  NS_IMETHOD Run() final {
     for (int i = 0; i < 10000; i++) {
       if (++sRefCnt == 1) {
         sIncToOne++;
@@ -35,7 +33,7 @@ public:
   static Atomic<uint32_t, Relaxed> sIncToOne;
   static Atomic<uint32_t, Relaxed> sDecToZero;
 
-private:
+ private:
   ~nsThreadSafeAutoRefCntRunner() {}
 };
 
@@ -49,8 +47,7 @@ Atomic<uint32_t, Relaxed> nsThreadSafeAutoRefCntRunner::sDecToZero(0);
 // want to release the object after last reference gets released. In
 // this pattern, the cache may rely on the balance of increment to one
 // and decrement to zero, so that it can maintain a counter for GC.
-TEST(AutoRefCnt, ThreadSafeAutoRefCntBalance)
-{
+TEST(AutoRefCnt, ThreadSafeAutoRefCntBalance) {
   static const size_t kThreadCount = 4;
   nsCOMPtr<nsIThread> threads[kThreadCount];
   for (size_t i = 0; i < kThreadCount; i++) {

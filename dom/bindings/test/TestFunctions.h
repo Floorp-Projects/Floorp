@@ -20,19 +20,16 @@ class PromiseReturner;
 class WrapperCachedNonISupportsTestInterface;
 
 class TestFunctions : public NonRefcountedDOMObject {
-public:
+ public:
   static TestFunctions* Constructor(GlobalObject& aGlobal, ErrorResult& aRv);
 
-  static void
-  ThrowUncatchableException(GlobalObject& aGlobal, ErrorResult& aRv);
+  static void ThrowUncatchableException(GlobalObject& aGlobal,
+                                        ErrorResult& aRv);
 
-  static Promise*
-  PassThroughPromise(GlobalObject& aGlobal, Promise& aPromise);
+  static Promise* PassThroughPromise(GlobalObject& aGlobal, Promise& aPromise);
 
-  static already_AddRefed<Promise>
-  PassThroughCallbackPromise(GlobalObject& aGlobal,
-                             PromiseReturner& aCallback,
-                             ErrorResult& aRv);
+  static already_AddRefed<Promise> PassThroughCallbackPromise(
+      GlobalObject& aGlobal, PromiseReturner& aCallback, ErrorResult& aRv);
 
   void SetStringData(const nsAString& aString);
 
@@ -43,9 +40,8 @@ public:
 
   void TestThrowNsresult(ErrorResult& aError);
   void TestThrowNsresultFromNative(ErrorResult& aError);
-  static already_AddRefed<Promise>
-  ThrowToRejectPromise(GlobalObject& aGlobal,
-                       ErrorResult& aError);
+  static already_AddRefed<Promise> ThrowToRejectPromise(GlobalObject& aGlobal,
+                                                        ErrorResult& aError);
 
   int32_t One() const;
   int32_t Two() const;
@@ -56,12 +52,14 @@ public:
 
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aWrapper);
-private:
+
+ private:
   nsString mStringData;
-  RefPtr<WrapperCachedNonISupportsTestInterface> mWrapperCachedNonISupportsTestInterface;
+  RefPtr<WrapperCachedNonISupportsTestInterface>
+      mWrapperCachedNonISupportsTestInterface;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_TestFunctions_h
+#endif  // mozilla_dom_TestFunctions_h

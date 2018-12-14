@@ -5,7 +5,7 @@
 
 #include <stdlib.h>
 
-#include "IPDLUnitTests.h"      // fail etc.
+#include "IPDLUnitTests.h"  // fail etc.
 #if defined(OS_POSIX)
 #include <sys/time.h>
 #include <unistd.h>
@@ -26,9 +26,7 @@ static LazyLogModule sLogModule("demon");
 static int gStackHeight = 0;
 static bool gFlushStack = false;
 
-static int
-Choose(int count)
-{
+static int Choose(int count) {
 #if defined(OS_POSIX)
   return random() % count;
 #else
@@ -39,22 +37,13 @@ Choose(int count)
 //-----------------------------------------------------------------------------
 // parent
 
-TestDemonParent::TestDemonParent()
- : mDone(false),
-   mIncoming(),
-   mOutgoing()
-{
+TestDemonParent::TestDemonParent() : mDone(false), mIncoming(), mOutgoing() {
   MOZ_COUNT_CTOR(TestDemonParent);
 }
 
-TestDemonParent::~TestDemonParent()
-{
-  MOZ_COUNT_DTOR(TestDemonParent);
-}
+TestDemonParent::~TestDemonParent() { MOZ_COUNT_DTOR(TestDemonParent); }
 
-void
-TestDemonParent::Main()
-{
+void TestDemonParent::Main() {
   if (!getenv("MOZ_TEST_IPC_DEMON")) {
     QuitParent();
     return;
@@ -67,28 +56,19 @@ TestDemonParent::Main()
 
   DEMON_LOG("Start demon");
 
-  if (!SendStart())
-	fail("sending Start");
+  if (!SendStart()) fail("sending Start");
 
   RunUnlimitedSequence();
 }
 
 #ifdef DEBUG
-bool
-TestDemonParent::ShouldContinueFromReplyTimeout()
-{
+bool TestDemonParent::ShouldContinueFromReplyTimeout() {
   return Choose(2) == 0;
 }
 
-bool
-TestDemonParent::ArtificialTimeout()
-{
-  return Choose(5) == 0;
-}
+bool TestDemonParent::ArtificialTimeout() { return Choose(5) == 0; }
 
-void
-TestDemonParent::ArtificialSleep()
-{
+void TestDemonParent::ArtificialSleep() {
   if (Choose(2) == 0) {
     // Sleep for anywhere from 0 to 100 milliseconds.
     unsigned micros = Choose(100) * 1000;
@@ -101,9 +81,7 @@ TestDemonParent::ArtificialSleep()
 }
 #endif
 
-mozilla::ipc::IPCResult
-TestDemonParent::RecvAsyncMessage(const int& n)
-{
+mozilla::ipc::IPCResult TestDemonParent::RecvAsyncMessage(const int& n) {
   DEMON_LOG("Start RecvAsync [%d]", n);
 
   MOZ_ASSERT(n == mIncoming[0]);
@@ -115,18 +93,14 @@ TestDemonParent::RecvAsyncMessage(const int& n)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TestDemonParent::RecvHiPrioSyncMessage()
-{
+mozilla::ipc::IPCResult TestDemonParent::RecvHiPrioSyncMessage() {
   DEMON_LOG("Start RecvHiPrioSyncMessage");
   RunLimitedSequence();
   DEMON_LOG("End RecvHiPrioSyncMessage");
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TestDemonParent::RecvSyncMessage(const int& n)
-{
+mozilla::ipc::IPCResult TestDemonParent::RecvSyncMessage(const int& n) {
   DEMON_LOG("Start RecvSync [%d]", n);
 
   MOZ_ASSERT(n == mIncoming[0]);
@@ -138,9 +112,7 @@ TestDemonParent::RecvSyncMessage(const int& n)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TestDemonParent::RecvUrgentAsyncMessage(const int& n)
-{
+mozilla::ipc::IPCResult TestDemonParent::RecvUrgentAsyncMessage(const int& n) {
   DEMON_LOG("Start RecvUrgentAsyncMessage [%d]", n);
 
   MOZ_ASSERT(n == mIncoming[2]);
@@ -152,9 +124,7 @@ TestDemonParent::RecvUrgentAsyncMessage(const int& n)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TestDemonParent::RecvUrgentSyncMessage(const int& n)
-{
+mozilla::ipc::IPCResult TestDemonParent::RecvUrgentSyncMessage(const int& n) {
   DEMON_LOG("Start RecvUrgentSyncMessage [%d]", n);
 
   MOZ_ASSERT(n == mIncoming[2]);
@@ -166,9 +136,7 @@ TestDemonParent::RecvUrgentSyncMessage(const int& n)
   return IPC_OK();
 }
 
-void
-TestDemonParent::RunUnlimitedSequence()
-{
+void TestDemonParent::RunUnlimitedSequence() {
   if (mDone) {
     return;
   }
@@ -177,14 +145,11 @@ TestDemonParent::RunUnlimitedSequence()
   DoAction();
 
   MessageLoop::current()->PostTask(NewNonOwningRunnableMethod(
-    "_ipdltest::TestDemonParent::RunUnlimitedSequence",
-    this,
-    &TestDemonParent::RunUnlimitedSequence));
+      "_ipdltest::TestDemonParent::RunUnlimitedSequence", this,
+      &TestDemonParent::RunUnlimitedSequence));
 }
 
-void
-TestDemonParent::RunLimitedSequence(int flags)
-{
+void TestDemonParent::RunLimitedSequence(int flags) {
   if (gStackHeight >= kMaxStackHeight) {
     return;
   }
@@ -192,7 +157,7 @@ TestDemonParent::RunLimitedSequence(int flags)
 
   int count = Choose(20);
   for (int i = 0; i < count; i++) {
-	if (!DoAction(flags)) {
+    if (!DoAction(flags)) {
       gFlushStack = true;
     }
     if (gFlushStack) {
@@ -204,15 +169,11 @@ TestDemonParent::RunLimitedSequence(int flags)
   gStackHeight--;
 }
 
-static bool
-AllowAsync(int outgoing, int incoming)
-{
+static bool AllowAsync(int outgoing, int incoming) {
   return incoming >= outgoing - 5;
 }
 
-bool
-TestDemonParent::DoAction(int flags)
-{
+bool TestDemonParent::DoAction(int flags) {
   if (flags & ASYNC_ONLY) {
     if (AllowAsync(mOutgoing[0], mIncoming[0])) {
       DEMON_LOG("SendAsyncMessage [%d]", mOutgoing[0]);
@@ -221,27 +182,27 @@ TestDemonParent::DoAction(int flags)
       return true;
     }
   } else {
-	switch (Choose(3)) {
-     case 0:
-      if (AllowAsync(mOutgoing[0], mIncoming[0])) {
-        DEMON_LOG("SendAsyncMessage [%d]", mOutgoing[0]);
-        return SendAsyncMessage(mOutgoing[0]++);
-      } else {
-        return true;
+    switch (Choose(3)) {
+      case 0:
+        if (AllowAsync(mOutgoing[0], mIncoming[0])) {
+          DEMON_LOG("SendAsyncMessage [%d]", mOutgoing[0]);
+          return SendAsyncMessage(mOutgoing[0]++);
+        } else {
+          return true;
+        }
+
+      case 1: {
+        DEMON_LOG("Start SendHiPrioSyncMessage");
+        bool r = SendHiPrioSyncMessage();
+        DEMON_LOG("End SendHiPrioSyncMessage result=%d", r);
+        return r;
       }
 
-     case 1: {
-       DEMON_LOG("Start SendHiPrioSyncMessage");
-       bool r = SendHiPrioSyncMessage();
-       DEMON_LOG("End SendHiPrioSyncMessage result=%d", r);
-       return r;
-     }
-
-     case 2:
-      DEMON_LOG("Cancel");
-      GetIPCChannel()->CancelCurrentTransaction();
-      return true;
-	}
+      case 2:
+        DEMON_LOG("Cancel");
+        GetIPCChannel()->CancelCurrentTransaction();
+        return true;
+    }
   }
   MOZ_CRASH();
   return false;
@@ -250,22 +211,13 @@ TestDemonParent::DoAction(int flags)
 //-----------------------------------------------------------------------------
 // child
 
-
-TestDemonChild::TestDemonChild()
- : mIncoming(),
-   mOutgoing()
-{
+TestDemonChild::TestDemonChild() : mIncoming(), mOutgoing() {
   MOZ_COUNT_CTOR(TestDemonChild);
 }
 
-TestDemonChild::~TestDemonChild()
-{
-  MOZ_COUNT_DTOR(TestDemonChild);
-}
+TestDemonChild::~TestDemonChild() { MOZ_COUNT_DTOR(TestDemonChild); }
 
-mozilla::ipc::IPCResult
-TestDemonChild::RecvStart()
-{
+mozilla::ipc::IPCResult TestDemonChild::RecvStart() {
 #ifdef OS_POSIX
   srandom(time(nullptr));
 #else
@@ -279,9 +231,7 @@ TestDemonChild::RecvStart()
 }
 
 #ifdef DEBUG
-void
-TestDemonChild::ArtificialSleep()
-{
+void TestDemonChild::ArtificialSleep() {
   if (Choose(2) == 0) {
     // Sleep for anywhere from 0 to 100 milliseconds.
     unsigned micros = Choose(100) * 1000;
@@ -294,9 +244,7 @@ TestDemonChild::ArtificialSleep()
 }
 #endif
 
-mozilla::ipc::IPCResult
-TestDemonChild::RecvAsyncMessage(const int& n)
-{
+mozilla::ipc::IPCResult TestDemonChild::RecvAsyncMessage(const int& n) {
   DEMON_LOG("Start RecvAsyncMessage [%d]", n);
 
   MOZ_ASSERT(n == mIncoming[0]);
@@ -308,30 +256,23 @@ TestDemonChild::RecvAsyncMessage(const int& n)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TestDemonChild::RecvHiPrioSyncMessage()
-{
+mozilla::ipc::IPCResult TestDemonChild::RecvHiPrioSyncMessage() {
   DEMON_LOG("Start RecvHiPrioSyncMessage");
   RunLimitedSequence();
   DEMON_LOG("End RecvHiPrioSyncMessage");
   return IPC_OK();
 }
 
-void
-TestDemonChild::RunUnlimitedSequence()
-{
+void TestDemonChild::RunUnlimitedSequence() {
   gFlushStack = false;
   DoAction();
 
   MessageLoop::current()->PostTask(NewNonOwningRunnableMethod(
-    "_ipdltest::TestDemonChild::RunUnlimitedSequence",
-    this,
-    &TestDemonChild::RunUnlimitedSequence));
+      "_ipdltest::TestDemonChild::RunUnlimitedSequence", this,
+      &TestDemonChild::RunUnlimitedSequence));
 }
 
-void
-TestDemonChild::RunLimitedSequence()
-{
+void TestDemonChild::RunLimitedSequence() {
   if (gStackHeight >= kMaxStackHeight) {
     return;
   }
@@ -351,73 +292,71 @@ TestDemonChild::RunLimitedSequence()
   gStackHeight--;
 }
 
-bool
-TestDemonChild::DoAction()
-{
+bool TestDemonChild::DoAction() {
   switch (Choose(6)) {
-   case 0:
-    if (AllowAsync(mOutgoing[0], mIncoming[0])) {
-      DEMON_LOG("SendAsyncMessage [%d]", mOutgoing[0]);
-      return SendAsyncMessage(mOutgoing[0]++);
-    } else {
-      return true;
+    case 0:
+      if (AllowAsync(mOutgoing[0], mIncoming[0])) {
+        DEMON_LOG("SendAsyncMessage [%d]", mOutgoing[0]);
+        return SendAsyncMessage(mOutgoing[0]++);
+      } else {
+        return true;
+      }
+
+    case 1: {
+      DEMON_LOG("Start SendHiPrioSyncMessage");
+      bool r = SendHiPrioSyncMessage();
+      DEMON_LOG("End SendHiPrioSyncMessage result=%d", r);
+      return r;
     }
 
-   case 1: {
-     DEMON_LOG("Start SendHiPrioSyncMessage");
-     bool r = SendHiPrioSyncMessage();
-     DEMON_LOG("End SendHiPrioSyncMessage result=%d", r);
-     return r;
-   }
+    case 2: {
+      DEMON_LOG("Start SendSyncMessage [%d]", mOutgoing[0]);
+      bool r = SendSyncMessage(mOutgoing[0]++);
+      switch (GetIPCChannel()->LastSendError()) {
+        case SyncSendError::PreviousTimeout:
+        case SyncSendError::SendingCPOWWhileDispatchingSync:
+        case SyncSendError::SendingCPOWWhileDispatchingUrgent:
+        case SyncSendError::NotConnectedBeforeSend:
+        case SyncSendError::CancelledBeforeSend:
+          mOutgoing[0]--;
+          break;
+        default:
+          break;
+      }
+      DEMON_LOG("End SendSyncMessage result=%d", r);
+      return r;
+    }
 
-   case 2: {
-     DEMON_LOG("Start SendSyncMessage [%d]", mOutgoing[0]);
-     bool r = SendSyncMessage(mOutgoing[0]++);
-     switch (GetIPCChannel()->LastSendError()) {
-       case SyncSendError::PreviousTimeout:
-       case SyncSendError::SendingCPOWWhileDispatchingSync:
-       case SyncSendError::SendingCPOWWhileDispatchingUrgent:
-       case SyncSendError::NotConnectedBeforeSend:
-       case SyncSendError::CancelledBeforeSend:
-         mOutgoing[0]--;
-         break;
-       default:
-         break;
-     }
-     DEMON_LOG("End SendSyncMessage result=%d", r);
-     return r;
-   }
+    case 3:
+      DEMON_LOG("SendUrgentAsyncMessage [%d]", mOutgoing[2]);
+      return SendUrgentAsyncMessage(mOutgoing[2]++);
 
-   case 3:
-	DEMON_LOG("SendUrgentAsyncMessage [%d]", mOutgoing[2]);
-	return SendUrgentAsyncMessage(mOutgoing[2]++);
+    case 4: {
+      DEMON_LOG("Start SendUrgentSyncMessage [%d]", mOutgoing[2]);
+      bool r = SendUrgentSyncMessage(mOutgoing[2]++);
+      switch (GetIPCChannel()->LastSendError()) {
+        case SyncSendError::PreviousTimeout:
+        case SyncSendError::SendingCPOWWhileDispatchingSync:
+        case SyncSendError::SendingCPOWWhileDispatchingUrgent:
+        case SyncSendError::NotConnectedBeforeSend:
+        case SyncSendError::CancelledBeforeSend:
+          mOutgoing[2]--;
+          break;
+        default:
+          break;
+      }
+      DEMON_LOG("End SendUrgentSyncMessage result=%d", r);
+      return r;
+    }
 
-   case 4: {
-     DEMON_LOG("Start SendUrgentSyncMessage [%d]", mOutgoing[2]);
-     bool r = SendUrgentSyncMessage(mOutgoing[2]++);
-     switch (GetIPCChannel()->LastSendError()) {
-       case SyncSendError::PreviousTimeout:
-       case SyncSendError::SendingCPOWWhileDispatchingSync:
-       case SyncSendError::SendingCPOWWhileDispatchingUrgent:
-       case SyncSendError::NotConnectedBeforeSend:
-       case SyncSendError::CancelledBeforeSend:
-         mOutgoing[2]--;
-         break;
-       default:
-         break;
-     }
-     DEMON_LOG("End SendUrgentSyncMessage result=%d", r);
-     return r;
-   }
-
-   case 5:
-	DEMON_LOG("Cancel");
-	GetIPCChannel()->CancelCurrentTransaction();
-	return true;
+    case 5:
+      DEMON_LOG("Cancel");
+      GetIPCChannel()->CancelCurrentTransaction();
+      return true;
   }
   MOZ_CRASH();
   return false;
 }
 
-} // namespace _ipdltest
-} // namespace mozilla
+}  // namespace _ipdltest
+}  // namespace mozilla

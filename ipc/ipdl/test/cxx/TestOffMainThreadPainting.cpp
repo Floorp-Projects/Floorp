@@ -1,6 +1,6 @@
 #include "TestOffMainThreadPainting.h"
 
-#include "IPDLUnitTests.h"      // fail etc.
+#include "IPDLUnitTests.h"  // fail etc.
 #include "mozilla/Unused.h"
 #include <prinrval.h>
 #include <prthread.h>
@@ -9,25 +9,15 @@ namespace mozilla {
 namespace _ipdltest {
 
 TestOffMainThreadPaintingParent::TestOffMainThreadPaintingParent()
- : mAsyncMessages(0),
-   mSyncMessages(0)
-{
-}
+    : mAsyncMessages(0), mSyncMessages(0) {}
 
-TestOffMainThreadPaintingParent::~TestOffMainThreadPaintingParent()
-{
-}
+TestOffMainThreadPaintingParent::~TestOffMainThreadPaintingParent() {}
 
-void
-TestOffMainThreadPaintingParent::Main()
-{
+void TestOffMainThreadPaintingParent::Main() {
   ipc::Endpoint<PTestPaintThreadParent> parentPipe;
   ipc::Endpoint<PTestPaintThreadChild> childPipe;
   nsresult rv = PTestPaintThread::CreateEndpoints(
-    base::GetCurrentProcId(),
-    OtherPid(),
-    &parentPipe,
-    &childPipe);
+      base::GetCurrentProcId(), OtherPid(), &parentPipe, &childPipe);
   if (NS_FAILED(rv)) {
     fail("create pipes");
   }
@@ -42,9 +32,8 @@ TestOffMainThreadPaintingParent::Main()
   }
 }
 
-ipc::IPCResult
-TestOffMainThreadPaintingParent::RecvFinishedLayout(const uint64_t& aTxnId)
-{
+ipc::IPCResult TestOffMainThreadPaintingParent::RecvFinishedLayout(
+    const uint64_t& aTxnId) {
   if (!mPaintedTxn || mPaintedTxn.value() != aTxnId) {
     fail("received transaction before receiving paint");
   }
@@ -53,9 +42,8 @@ TestOffMainThreadPaintingParent::RecvFinishedLayout(const uint64_t& aTxnId)
   return IPC_OK();
 }
 
-void
-TestOffMainThreadPaintingParent::NotifyFinishedPaint(const uint64_t& aTxnId)
-{
+void TestOffMainThreadPaintingParent::NotifyFinishedPaint(
+    const uint64_t& aTxnId) {
   if (mCompletedTxn && mCompletedTxn.value() >= aTxnId) {
     fail("received paint after receiving transaction");
   }
@@ -65,9 +53,8 @@ TestOffMainThreadPaintingParent::NotifyFinishedPaint(const uint64_t& aTxnId)
   mPaintedTxn = Some(aTxnId);
 }
 
-ipc::IPCResult
-TestOffMainThreadPaintingParent::RecvAsyncMessage(const uint64_t& aTxnId)
-{
+ipc::IPCResult TestOffMainThreadPaintingParent::RecvAsyncMessage(
+    const uint64_t& aTxnId) {
   if (!mCompletedTxn || mCompletedTxn.value() != aTxnId) {
     fail("sync message received out of order");
     return IPC_FAIL_NO_REASON(this);
@@ -76,9 +63,8 @@ TestOffMainThreadPaintingParent::RecvAsyncMessage(const uint64_t& aTxnId)
   return IPC_OK();
 }
 
-ipc::IPCResult
-TestOffMainThreadPaintingParent::RecvSyncMessage(const uint64_t& aTxnId)
-{
+ipc::IPCResult TestOffMainThreadPaintingParent::RecvSyncMessage(
+    const uint64_t& aTxnId) {
   if (!mCompletedTxn || mCompletedTxn.value() != aTxnId) {
     fail("sync message received out of order");
     return IPC_FAIL_NO_REASON(this);
@@ -91,9 +77,7 @@ TestOffMainThreadPaintingParent::RecvSyncMessage(const uint64_t& aTxnId)
   return IPC_OK();
 }
 
-ipc::IPCResult
-TestOffMainThreadPaintingParent::RecvEndTest()
-{
+ipc::IPCResult TestOffMainThreadPaintingParent::RecvEndTest() {
   if (!mCompletedTxn || mCompletedTxn.value() != 1) {
     fail("expected to complete a transaction");
   }
@@ -111,9 +95,7 @@ TestOffMainThreadPaintingParent::RecvEndTest()
   return IPC_OK();
 }
 
-void
-TestOffMainThreadPaintingParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void TestOffMainThreadPaintingParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (aWhy != NormalShutdown) {
     fail("child process aborted");
   }
@@ -125,58 +107,51 @@ TestOffMainThreadPaintingParent::ActorDestroy(ActorDestroyReason aWhy)
  **************************/
 
 TestOffMainThreadPaintingChild::TestOffMainThreadPaintingChild()
- : mNextTxnId(1)
-{
-}
+    : mNextTxnId(1) {}
 
-TestOffMainThreadPaintingChild::~TestOffMainThreadPaintingChild()
-{
-}
+TestOffMainThreadPaintingChild::~TestOffMainThreadPaintingChild() {}
 
-ipc::IPCResult
-TestOffMainThreadPaintingChild::RecvStartTest(ipc::Endpoint<PTestPaintThreadChild>&& aEndpoint)
-{
+ipc::IPCResult TestOffMainThreadPaintingChild::RecvStartTest(
+    ipc::Endpoint<PTestPaintThreadChild>&& aEndpoint) {
   mPaintThread = MakeUnique<base::Thread>("PaintThread");
   if (!mPaintThread->Start()) {
     return IPC_FAIL_NO_REASON(this);
   }
 
   mPaintActor = new TestPaintThreadChild(GetIPCChannel());
-  RefPtr<Runnable> task = NewRunnableMethod<ipc::Endpoint<PTestPaintThreadChild>&&>(
-    "TestPaintthreadChild::Bind", mPaintActor, &TestPaintThreadChild::Bind, std::move(aEndpoint));
+  RefPtr<Runnable> task =
+      NewRunnableMethod<ipc::Endpoint<PTestPaintThreadChild>&&>(
+          "TestPaintthreadChild::Bind", mPaintActor,
+          &TestPaintThreadChild::Bind, std::move(aEndpoint));
   mPaintThread->message_loop()->PostTask(task.forget());
 
   IssueTransaction();
   return IPC_OK();
 }
 
-void
-TestOffMainThreadPaintingChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void TestOffMainThreadPaintingChild::ActorDestroy(ActorDestroyReason aWhy) {
   RefPtr<Runnable> task = NewRunnableMethod(
-    "TestPaintThreadChild::Close", mPaintActor, &TestPaintThreadChild::Close);
+      "TestPaintThreadChild::Close", mPaintActor, &TestPaintThreadChild::Close);
   mPaintThread->message_loop()->PostTask(task.forget());
   mPaintThread = nullptr;
 
   QuitChild();
 }
 
-void
-TestOffMainThreadPaintingChild::ProcessingError(Result aCode, const char* aReason)
-{
+void TestOffMainThreadPaintingChild::ProcessingError(Result aCode,
+                                                     const char* aReason) {
   MOZ_CRASH("Aborting child due to IPC error");
 }
 
-void
-TestOffMainThreadPaintingChild::IssueTransaction()
-{
+void TestOffMainThreadPaintingChild::IssueTransaction() {
   GetIPCChannel()->BeginPostponingSends();
 
   uint64_t txnId = mNextTxnId++;
 
   // Start painting before we send the message.
   RefPtr<Runnable> task = NewRunnableMethod<uint64_t>(
-    "TestPaintThreadChild::BeginPaintingForTxn", mPaintActor, &TestPaintThreadChild::BeginPaintingForTxn, txnId);
+      "TestPaintThreadChild::BeginPaintingForTxn", mPaintActor,
+      &TestPaintThreadChild::BeginPaintingForTxn, txnId);
   mPaintThread->message_loop()->PostTask(task.forget());
 
   // Simulate some gecko main thread stuff.
@@ -190,18 +165,14 @@ TestOffMainThreadPaintingChild::IssueTransaction()
  * PTestPaintThreadParent *
  **************************/
 
-TestPaintThreadParent::TestPaintThreadParent(TestOffMainThreadPaintingParent* aMainBridge)
- : mMainBridge(aMainBridge)
-{
-}
+TestPaintThreadParent::TestPaintThreadParent(
+    TestOffMainThreadPaintingParent* aMainBridge)
+    : mMainBridge(aMainBridge) {}
 
-TestPaintThreadParent::~TestPaintThreadParent()
-{
-}
+TestPaintThreadParent::~TestPaintThreadParent() {}
 
-bool
-TestPaintThreadParent::Bind(ipc::Endpoint<PTestPaintThreadParent>&& aEndpoint)
-{
+bool TestPaintThreadParent::Bind(
+    ipc::Endpoint<PTestPaintThreadParent>&& aEndpoint) {
   if (!aEndpoint.Bind(this)) {
     return false;
   }
@@ -210,41 +181,27 @@ TestPaintThreadParent::Bind(ipc::Endpoint<PTestPaintThreadParent>&& aEndpoint)
   return true;
 }
 
-ipc::IPCResult
-TestPaintThreadParent::RecvFinishedPaint(const uint64_t& aTxnId)
-{
+ipc::IPCResult TestPaintThreadParent::RecvFinishedPaint(
+    const uint64_t& aTxnId) {
   mMainBridge->NotifyFinishedPaint(aTxnId);
   return IPC_OK();
 }
 
-void
-TestPaintThreadParent::ActorDestroy(ActorDestroyReason aWhy)
-{
-}
+void TestPaintThreadParent::ActorDestroy(ActorDestroyReason aWhy) {}
 
-void
-TestPaintThreadParent::DeallocPTestPaintThreadParent()
-{
-  Release();
-}
+void TestPaintThreadParent::DeallocPTestPaintThreadParent() { Release(); }
 
 /*************************
  * PTestPaintThreadChild *
  *************************/
 
 TestPaintThreadChild::TestPaintThreadChild(MessageChannel* aMainChannel)
- : mCanSend(false),
-   mMainChannel(aMainChannel)
-{
-}
+    : mCanSend(false), mMainChannel(aMainChannel) {}
 
-TestPaintThreadChild::~TestPaintThreadChild()
-{
-}
+TestPaintThreadChild::~TestPaintThreadChild() {}
 
-void
-TestPaintThreadChild::Bind(ipc::Endpoint<PTestPaintThreadChild>&& aEndpoint)
-{
+void TestPaintThreadChild::Bind(
+    ipc::Endpoint<PTestPaintThreadChild>&& aEndpoint) {
   if (!aEndpoint.Bind(this)) {
     MOZ_CRASH("could not bind paint child endpoint");
   }
@@ -252,9 +209,7 @@ TestPaintThreadChild::Bind(ipc::Endpoint<PTestPaintThreadChild>&& aEndpoint)
   mCanSend = true;
 }
 
-void
-TestPaintThreadChild::BeginPaintingForTxn(uint64_t aTxnId)
-{
+void TestPaintThreadChild::BeginPaintingForTxn(uint64_t aTxnId) {
   MOZ_RELEASE_ASSERT(!NS_IsMainThread());
 
   // Sleep for some time to simulate painting being slow.
@@ -264,15 +219,11 @@ TestPaintThreadChild::BeginPaintingForTxn(uint64_t aTxnId)
   mMainChannel->StopPostponingSends();
 }
 
-void
-TestPaintThreadChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void TestPaintThreadChild::ActorDestroy(ActorDestroyReason aWhy) {
   mCanSend = false;
 }
 
-void
-TestPaintThreadChild::Close()
-{
+void TestPaintThreadChild::Close() {
   MOZ_RELEASE_ASSERT(!NS_IsMainThread());
 
   if (mCanSend) {
@@ -280,11 +231,7 @@ TestPaintThreadChild::Close()
   }
 }
 
-void
-TestPaintThreadChild::DeallocPTestPaintThreadChild()
-{
-  Release();
-}
+void TestPaintThreadChild::DeallocPTestPaintThreadChild() { Release(); }
 
-} // namespace _ipdltest
-} // namespace mozilla
+}  // namespace _ipdltest
+}  // namespace mozilla

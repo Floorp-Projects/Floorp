@@ -15,57 +15,45 @@
 namespace mozilla {
 namespace dom {
 
-/* static */ TestFunctions*
-TestFunctions::Constructor(GlobalObject& aGlobal, ErrorResult& aRv)
-{
+/* static */ TestFunctions* TestFunctions::Constructor(GlobalObject& aGlobal,
+                                                       ErrorResult& aRv) {
   return new TestFunctions;
 }
 
-/* static */ void
-TestFunctions::ThrowUncatchableException(GlobalObject& aGlobal,
-                                         ErrorResult& aRv)
-{
+/* static */ void TestFunctions::ThrowUncatchableException(
+    GlobalObject& aGlobal, ErrorResult& aRv) {
   aRv.ThrowUncatchableException();
 }
 
-/* static */ Promise*
-TestFunctions::PassThroughPromise(GlobalObject& aGlobal, Promise& aPromise)
-{
+/* static */ Promise* TestFunctions::PassThroughPromise(GlobalObject& aGlobal,
+                                                        Promise& aPromise) {
   return &aPromise;
 }
 
 /* static */ already_AddRefed<Promise>
 TestFunctions::PassThroughCallbackPromise(GlobalObject& aGlobal,
                                           PromiseReturner& aCallback,
-                                          ErrorResult& aRv)
-{
+                                          ErrorResult& aRv) {
   return aCallback.Call(aRv);
 }
 
-void
-TestFunctions::SetStringData(const nsAString& aString)
-{
+void TestFunctions::SetStringData(const nsAString& aString) {
   mStringData = aString;
 }
 
-void
-TestFunctions::GetStringDataAsAString(nsAString& aString)
-{
+void TestFunctions::GetStringDataAsAString(nsAString& aString) {
   aString = mStringData;
 }
 
-void
-TestFunctions::GetStringDataAsAString(uint32_t aLength, nsAString& aString)
-{
+void TestFunctions::GetStringDataAsAString(uint32_t aLength,
+                                           nsAString& aString) {
   MOZ_RELEASE_ASSERT(aLength <= mStringData.Length(),
                      "Bogus test passing in a too-big length");
   aString.Assign(mStringData.BeginReading(), aLength);
 }
 
-void
-TestFunctions::GetStringDataAsDOMString(const Optional<uint32_t>& aLength,
-                                        DOMString& aString)
-{
+void TestFunctions::GetStringDataAsDOMString(const Optional<uint32_t>& aLength,
+                                             DOMString& aString) {
   uint32_t length;
   if (aLength.WasPassed()) {
     length = aLength.Value();
@@ -87,44 +75,29 @@ TestFunctions::GetStringDataAsDOMString(const Optional<uint32_t>& aLength,
   // No need to do anything here; aString is already empty.
 }
 
-void
-TestFunctions::TestThrowNsresult(ErrorResult& aError)
-{
+void TestFunctions::TestThrowNsresult(ErrorResult& aError) {
   nsCOMPtr<mozITestInterfaceJS> impl =
-    do_CreateInstance("@mozilla.org/dom/test-interface-js;1");
+      do_CreateInstance("@mozilla.org/dom/test-interface-js;1");
   aError = impl->TestThrowNsresult();
 }
 
-void
-TestFunctions::TestThrowNsresultFromNative(ErrorResult& aError)
-{
+void TestFunctions::TestThrowNsresultFromNative(ErrorResult& aError) {
   nsCOMPtr<mozITestInterfaceJS> impl =
-    do_CreateInstance("@mozilla.org/dom/test-interface-js;1");
+      do_CreateInstance("@mozilla.org/dom/test-interface-js;1");
   aError = impl->TestThrowNsresultFromNative();
 }
 
-already_AddRefed<Promise>
-TestFunctions::ThrowToRejectPromise(GlobalObject& aGlobal, ErrorResult& aError)
-{
+already_AddRefed<Promise> TestFunctions::ThrowToRejectPromise(
+    GlobalObject& aGlobal, ErrorResult& aError) {
   aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
   return nullptr;
 }
 
-int32_t
-TestFunctions::One() const
-{
-  return 1;
-}
+int32_t TestFunctions::One() const { return 1; }
 
-int32_t
-TestFunctions::Two() const
-{
-  return 2;
-}
+int32_t TestFunctions::Two() const { return 2; }
 
-bool
-TestFunctions::ObjectFromAboutBlank(JSContext* aCx, JSObject* aObj)
-{
+bool TestFunctions::ObjectFromAboutBlank(JSContext* aCx, JSObject* aObj) {
   // We purposefully don't use WindowOrNull here, because we want to
   // demonstrate the incorrect behavior we get, not just fail some asserts.
   RefPtr<nsGlobalWindowInner> win;
@@ -142,20 +115,19 @@ TestFunctions::ObjectFromAboutBlank(JSContext* aCx, JSObject* aObj)
 }
 
 WrapperCachedNonISupportsTestInterface*
-TestFunctions::WrapperCachedNonISupportsObject()
-{
+TestFunctions::WrapperCachedNonISupportsObject() {
   if (!mWrapperCachedNonISupportsTestInterface) {
-    mWrapperCachedNonISupportsTestInterface = new WrapperCachedNonISupportsTestInterface();
+    mWrapperCachedNonISupportsTestInterface =
+        new WrapperCachedNonISupportsTestInterface();
   }
   return mWrapperCachedNonISupportsTestInterface;
 }
 
-bool
-TestFunctions::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
-                          JS::MutableHandle<JSObject*> aWrapper)
-{
+bool TestFunctions::WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto,
+                               JS::MutableHandle<JSObject*> aWrapper) {
   return TestFunctions_Binding::Wrap(aCx, this, aGivenProto, aWrapper);
 }
 
-}
-}
+}  // namespace dom
+}  // namespace mozilla

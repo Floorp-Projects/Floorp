@@ -6,8 +6,7 @@
 
 #include "mozilla/Array.h"
 
-void TestInitialValueByConstructor()
-{
+void TestInitialValueByConstructor() {
   using namespace mozilla;
   // Style 1
   Array<int32_t, 3> arr1(1, 2, 3);
@@ -26,9 +25,7 @@ void TestInitialValueByConstructor()
   MOZ_RELEASE_ASSERT(arr3[2] == 10);
 }
 
-int
-main()
-{
+int main() {
   TestInitialValueByConstructor();
   return 0;
 }

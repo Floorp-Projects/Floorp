@@ -12,23 +12,15 @@
 
 using namespace mozilla;
 
-static PRThread*
-spawn(void (*run)(void*), void* arg)
-{
-  return PR_CreateThread(PR_SYSTEM_THREAD,
-                         run,
-                         arg,
-                         PR_PRIORITY_NORMAL,
-                         PR_GLOBAL_THREAD,
-                         PR_JOINABLE_THREAD,
-                         0);
+static PRThread* spawn(void (*run)(void*), void* arg) {
+  return PR_CreateThread(PR_SYSTEM_THREAD, run, arg, PR_PRIORITY_NORMAL,
+                         PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
 }
 
 //-----------------------------------------------------------------------------
 // Sanity check: tests that can be done on a single thread
 //
-TEST(Synchronization, Sanity)
-{
+TEST(Synchronization, Sanity) {
   Mutex lock("sanity::lock");
   lock.Lock();
   lock.AssertCurrentThreadOwns();
@@ -41,9 +33,7 @@ TEST(Synchronization, Sanity)
 
   lock.Lock();
   lock.AssertCurrentThreadOwns();
-  {
-    MutexAutoUnlock autounlock(lock);
-  }
+  { MutexAutoUnlock autounlock(lock); }
   lock.AssertCurrentThreadOwns();
   lock.Unlock();
 
@@ -67,9 +57,7 @@ TEST(Synchronization, Sanity)
 //
 static Mutex* gLock1;
 
-static void
-MutexContention_thread(void* /*arg*/)
-{
+static void MutexContention_thread(void* /*arg*/) {
   for (int i = 0; i < 100000; ++i) {
     gLock1->Lock();
     gLock1->AssertCurrentThreadOwns();
@@ -77,8 +65,7 @@ MutexContention_thread(void* /*arg*/)
   }
 }
 
-TEST(Synchronization, MutexContention)
-{
+TEST(Synchronization, MutexContention) {
   gLock1 = new Mutex("lock1");
   // PURPOSELY not checking for OOM.  YAY!
 
@@ -98,9 +85,7 @@ TEST(Synchronization, MutexContention)
 //
 static Monitor* gMon1;
 
-static void
-MonitorContention_thread(void* /*arg*/)
-{
+static void MonitorContention_thread(void* /*arg*/) {
   for (int i = 0; i < 100000; ++i) {
     gMon1->Lock();
     gMon1->AssertCurrentThreadOwns();
@@ -108,8 +93,7 @@ MonitorContention_thread(void* /*arg*/)
   }
 }
 
-TEST(Synchronization, MonitorContention)
-{
+TEST(Synchronization, MonitorContention) {
   gMon1 = new Monitor("mon1");
 
   PRThread* t1 = spawn(MonitorContention_thread, nullptr);
@@ -123,12 +107,9 @@ TEST(Synchronization, MonitorContention)
   delete gMon1;
 }
 
-
 static ReentrantMonitor* gMon2;
 
-static void
-MonitorContention2_thread(void* /*arg*/)
-{
+static void MonitorContention2_thread(void* /*arg*/) {
   for (int i = 0; i < 100000; ++i) {
     gMon2->Enter();
     gMon2->AssertCurrentThreadIn();
@@ -142,8 +123,7 @@ MonitorContention2_thread(void* /*arg*/)
   }
 }
 
-TEST(Synchronization, MonitorContention2)
-{
+TEST(Synchronization, MonitorContention2) {
   gMon2 = new ReentrantMonitor("mon1");
 
   PRThread* t1 = spawn(MonitorContention2_thread, nullptr);
@@ -157,13 +137,10 @@ TEST(Synchronization, MonitorContention2)
   delete gMon2;
 }
 
-
 static ReentrantMonitor* gMon3;
 static int32_t gMonFirst;
 
-static void
-MonitorSyncSanity_thread(void* /*arg*/)
-{
+static void MonitorSyncSanity_thread(void* /*arg*/) {
   gMon3->Enter();
   gMon3->AssertCurrentThreadIn();
   if (gMonFirst) {
@@ -180,8 +157,7 @@ MonitorSyncSanity_thread(void* /*arg*/)
   gMon3->Exit();
 }
 
-TEST(Synchronization, MonitorSyncSanity)
-{
+TEST(Synchronization, MonitorSyncSanity) {
   gMon3 = new ReentrantMonitor("monitor::syncsanity");
 
   for (int32_t i = 0; i < 10000; ++i) {
@@ -202,9 +178,7 @@ static Mutex* gCvlock1;
 static CondVar* gCv1;
 static int32_t gCvFirst;
 
-static void
-CondVarSanity_thread(void* /*arg*/)
-{
+static void CondVarSanity_thread(void* /*arg*/) {
   gCvlock1->Lock();
   gCvlock1->AssertCurrentThreadOwns();
   if (gCvFirst) {
@@ -217,8 +191,7 @@ CondVarSanity_thread(void* /*arg*/)
   gCvlock1->Unlock();
 }
 
-TEST(Synchronization, CondVarSanity)
-{
+TEST(Synchronization, CondVarSanity) {
   gCvlock1 = new Mutex("cvlock1");
   gCv1 = new CondVar(*gCvlock1, "cvlock1");
 
@@ -237,8 +210,7 @@ TEST(Synchronization, CondVarSanity)
 //-----------------------------------------------------------------------------
 // AutoLock tests
 //
-TEST(Synchronization, AutoLock)
-{
+TEST(Synchronization, AutoLock) {
   Mutex l1("autolock");
   MutexAutoLock autol1(l1);
 
@@ -258,8 +230,7 @@ TEST(Synchronization, AutoLock)
 //-----------------------------------------------------------------------------
 // AutoUnlock tests
 //
-TEST(Synchronization, AutoUnlock)
-{
+TEST(Synchronization, AutoUnlock) {
   Mutex l1("autounlock");
   Mutex l2("autounlock2");
 
@@ -285,8 +256,7 @@ TEST(Synchronization, AutoUnlock)
 //-----------------------------------------------------------------------------
 // AutoMonitor tests
 //
-TEST(Synchronization, AutoMonitor)
-{
+TEST(Synchronization, AutoMonitor) {
   ReentrantMonitor m1("automonitor");
   ReentrantMonitor m2("automonitor2");
 

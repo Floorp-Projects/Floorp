@@ -18,21 +18,18 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(TestInterfaceMaplike)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TestInterfaceMaplike)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TestInterfaceMaplike)
-NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 TestInterfaceMaplike::TestInterfaceMaplike(nsPIDOMWindowInner* aParent)
-: mParent(aParent)
-{
-}
+    : mParent(aParent) {}
 
-//static
-already_AddRefed<TestInterfaceMaplike>
-TestInterfaceMaplike::Constructor(const GlobalObject& aGlobal,
-                                  ErrorResult& aRv)
-{
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
+// static
+already_AddRefed<TestInterfaceMaplike> TestInterfaceMaplike::Constructor(
+    const GlobalObject& aGlobal, ErrorResult& aRv) {
+  nsCOMPtr<nsPIDOMWindowInner> window =
+      do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -42,45 +39,34 @@ TestInterfaceMaplike::Constructor(const GlobalObject& aGlobal,
   return r.forget();
 }
 
-JSObject*
-TestInterfaceMaplike::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* TestInterfaceMaplike::WrapObject(JSContext* aCx,
+                                           JS::Handle<JSObject*> aGivenProto) {
   return TestInterfaceMaplike_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsPIDOMWindowInner*
-TestInterfaceMaplike::GetParentObject() const
-{
+nsPIDOMWindowInner* TestInterfaceMaplike::GetParentObject() const {
   return mParent;
 }
 
-void
-TestInterfaceMaplike::SetInternal(const nsAString& aKey, int32_t aValue)
-{
+void TestInterfaceMaplike::SetInternal(const nsAString& aKey, int32_t aValue) {
   ErrorResult rv;
   TestInterfaceMaplike_Binding::MaplikeHelpers::Set(this, aKey, aValue, rv);
 }
 
-void
-TestInterfaceMaplike::ClearInternal()
-{
+void TestInterfaceMaplike::ClearInternal() {
   ErrorResult rv;
   TestInterfaceMaplike_Binding::MaplikeHelpers::Clear(this, rv);
 }
 
-bool
-TestInterfaceMaplike::DeleteInternal(const nsAString& aKey)
-{
+bool TestInterfaceMaplike::DeleteInternal(const nsAString& aKey) {
   ErrorResult rv;
   return TestInterfaceMaplike_Binding::MaplikeHelpers::Delete(this, aKey, rv);
 }
 
-bool
-TestInterfaceMaplike::HasInternal(const nsAString& aKey)
-{
+bool TestInterfaceMaplike::HasInternal(const nsAString& aKey) {
   ErrorResult rv;
   return TestInterfaceMaplike_Binding::MaplikeHelpers::Has(this, aKey, rv);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

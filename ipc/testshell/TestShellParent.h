@@ -21,25 +21,20 @@ namespace ipc {
 
 class TestShellCommandParent;
 
-class TestShellParent : public PTestShellParent
-{
-public:
+class TestShellParent : public PTestShellParent {
+ public:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  PTestShellCommandParent*
-  AllocPTestShellCommandParent(const nsString& aCommand) override;
+  PTestShellCommandParent* AllocPTestShellCommandParent(
+      const nsString& aCommand) override;
 
-  bool
-  DeallocPTestShellCommandParent(PTestShellCommandParent* aActor) override;
+  bool DeallocPTestShellCommandParent(PTestShellCommandParent* aActor) override;
 
-  bool
-  CommandDone(TestShellCommandParent* aActor, const nsString& aResponse);
+  bool CommandDone(TestShellCommandParent* aActor, const nsString& aResponse);
 };
 
-
-class TestShellCommandParent : public PTestShellCommandParent
-{
-public:
+class TestShellCommandParent : public PTestShellCommandParent {
+ public:
   TestShellCommandParent() {}
 
   bool SetCallback(JSContext* aCx, const JS::Value& aCallback);
@@ -48,7 +43,7 @@ public:
 
   void ReleaseCallback();
 
-protected:
+ protected:
   bool ExecuteCallback(const nsString& aResponse);
 
   void ActorDestroy(ActorDestroyReason why) override;
@@ -60,7 +55,7 @@ protected:
     return IPC_OK();
   }
 
-private:
+ private:
   JS::PersistentRooted<JS::Value> mCallback;
 };
 

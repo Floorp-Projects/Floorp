@@ -11,22 +11,19 @@
 namespace mozilla {
 namespace _ipdltest {
 
-class IPDLUnitTestProcessChild : public mozilla::ipc::ProcessChild
-{
+class IPDLUnitTestProcessChild : public mozilla::ipc::ProcessChild {
   typedef mozilla::ipc::ProcessChild ProcessChild;
 
-public:
-  explicit IPDLUnitTestProcessChild(ProcessId aParentPid) :
-    ProcessChild(aParentPid)
-  { }
+ public:
+  explicit IPDLUnitTestProcessChild(ProcessId aParentPid)
+      : ProcessChild(aParentPid) {}
 
-  ~IPDLUnitTestProcessChild()
-  { }
+  ~IPDLUnitTestProcessChild() {}
 
   virtual bool Init(int aArgc, char* aArgv[]) override;
 };
 
-} // namespace _ipdltest
-} // namespace mozilla
+}  // namespace _ipdltest
+}  // namespace mozilla
 
-#endif // ifndef mozilla__ipdltest_IPDLUnitTestThreadChild_h
+#endif  // ifndef mozilla__ipdltest_IPDLUnitTestThreadChild_h

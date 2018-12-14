@@ -10,14 +10,10 @@ using mozilla::ipc::GeckoChildProcessHost;
 namespace mozilla {
 namespace _ipdltest {
 
-IPDLUnitTestSubprocess::IPDLUnitTestSubprocess() :
-    GeckoChildProcessHost(GeckoProcessType_IPDLUnitTest)
-{
-}
+IPDLUnitTestSubprocess::IPDLUnitTestSubprocess()
+    : GeckoChildProcessHost(GeckoProcessType_IPDLUnitTest) {}
 
-IPDLUnitTestSubprocess::~IPDLUnitTestSubprocess()
-{
-}
+IPDLUnitTestSubprocess::~IPDLUnitTestSubprocess() {}
 
-} // namespace _ipdltest
-} // namespace mozilla
+}  // namespace _ipdltest
+}  // namespace mozilla

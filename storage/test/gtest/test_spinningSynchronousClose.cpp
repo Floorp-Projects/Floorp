@@ -17,17 +17,12 @@
  * violated if our runnables end up in different queues thanks to Quantum
  * changes, so this test may need to be updated if the close dispatch changes.
  */
-class CompletionRunnable final : public Runnable
-{
-public:
+class CompletionRunnable final : public Runnable {
+ public:
   explicit CompletionRunnable()
-    : Runnable("CompletionRunnable")
-    , mDone(false)
-  {
-  }
+      : Runnable("CompletionRunnable"), mDone(false) {}
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     mDone = true;
     return NS_OK;
   }
@@ -37,15 +32,13 @@ public:
 
 // Can only run in optimized builds, or it would assert.
 #ifndef DEBUG
-TEST(storage_spinningSynchronousClose, CloseOnAsync)
-{
+TEST(storage_spinningSynchronousClose, CloseOnAsync) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
   // Run an async statement.
   nsCOMPtr<mozIStorageAsyncStatement> stmt;
   do_check_success(db->CreateAsyncStatement(
-    NS_LITERAL_CSTRING("CREATE TABLE test (id INTEGER PRIMARY KEY)"),
-    getter_AddRefs(stmt)
-  ));
+      NS_LITERAL_CSTRING("CREATE TABLE test (id INTEGER PRIMARY KEY)"),
+      getter_AddRefs(stmt)));
   nsCOMPtr<mozIStoragePendingStatement> p;
   do_check_success(stmt->ExecuteAsync(nullptr, getter_AddRefs(p)));
   do_check_success(stmt->Finalize());
@@ -58,15 +51,13 @@ TEST(storage_spinningSynchronousClose, CloseOnAsync)
 }
 #endif
 
-TEST(storage_spinningSynchronousClose, spinningSynchronousCloseOnAsync)
-{
+TEST(storage_spinningSynchronousClose, spinningSynchronousCloseOnAsync) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
   // Run an async statement.
   nsCOMPtr<mozIStorageAsyncStatement> stmt;
   do_check_success(db->CreateAsyncStatement(
-    NS_LITERAL_CSTRING("CREATE TABLE test (id INTEGER PRIMARY KEY)"),
-    getter_AddRefs(stmt)
-  ));
+      NS_LITERAL_CSTRING("CREATE TABLE test (id INTEGER PRIMARY KEY)"),
+      getter_AddRefs(stmt)));
   nsCOMPtr<mozIStoragePendingStatement> p;
   do_check_success(stmt->ExecuteAsync(nullptr, getter_AddRefs(p)));
   do_check_success(stmt->Finalize());

@@ -18,18 +18,14 @@ using namespace mozilla::image;
 
 using std::min;
 
-void
-ExpectChunkAndByteCount(const SourceBufferIterator& aIterator,
-                        uint32_t aChunks,
-                        size_t aBytes)
-{
+void ExpectChunkAndByteCount(const SourceBufferIterator& aIterator,
+                             uint32_t aChunks, size_t aBytes) {
   EXPECT_EQ(aChunks, aIterator.ChunkCount());
   EXPECT_EQ(aBytes, aIterator.ByteCount());
 }
 
-void
-ExpectRemainingBytes(const SourceBufferIterator& aIterator, size_t aBytes)
-{
+void ExpectRemainingBytes(const SourceBufferIterator& aIterator,
+                          size_t aBytes) {
   EXPECT_TRUE(aIterator.RemainingBytesIsNoMoreThan(aBytes));
   EXPECT_TRUE(aIterator.RemainingBytesIsNoMoreThan(aBytes + 1));
 
@@ -39,67 +35,50 @@ ExpectRemainingBytes(const SourceBufferIterator& aIterator, size_t aBytes)
   }
 }
 
-char
-GenerateByte(size_t aIndex)
-{
+char GenerateByte(size_t aIndex) {
   uint8_t byte = aIndex % 256;
   return *reinterpret_cast<char*>(&byte);
 }
 
-void
-GenerateData(char* aOutput, size_t aOffset, size_t aLength)
-{
+void GenerateData(char* aOutput, size_t aOffset, size_t aLength) {
   for (size_t i = 0; i < aLength; ++i) {
     aOutput[i] = GenerateByte(aOffset + i);
   }
 }
 
-void
-GenerateData(char* aOutput, size_t aLength)
-{
+void GenerateData(char* aOutput, size_t aLength) {
   GenerateData(aOutput, 0, aLength);
 }
 
-void
-CheckData(const char* aData, size_t aOffset, size_t aLength)
-{
+void CheckData(const char* aData, size_t aOffset, size_t aLength) {
   for (size_t i = 0; i < aLength; ++i) {
     ASSERT_EQ(GenerateByte(aOffset + i), aData[i]);
   }
 }
 
-enum class AdvanceMode
-{
-  eAdvanceAsMuchAsPossible,
-  eAdvanceByLengthExactly
-};
+enum class AdvanceMode { eAdvanceAsMuchAsPossible, eAdvanceByLengthExactly };
 
-class ImageSourceBuffer : public ::testing::Test
-{
-public:
+class ImageSourceBuffer : public ::testing::Test {
+ public:
   ImageSourceBuffer()
-    : mSourceBuffer(new SourceBuffer)
-    , mExpectNoResume(new ExpectNoResume)
-    , mCountResumes(new CountResumes)
-  {
+      : mSourceBuffer(new SourceBuffer),
+        mExpectNoResume(new ExpectNoResume),
+        mCountResumes(new CountResumes) {
     GenerateData(mData, sizeof(mData));
     EXPECT_FALSE(mSourceBuffer->IsComplete());
   }
 
-protected:
-  void CheckedAppendToBuffer(const char* aData, size_t aLength)
-  {
+ protected:
+  void CheckedAppendToBuffer(const char* aData, size_t aLength) {
     EXPECT_TRUE(NS_SUCCEEDED(mSourceBuffer->Append(aData, aLength)));
   }
 
-  void CheckedAppendToBufferLastByteForLength(size_t aLength)
-  {
+  void CheckedAppendToBufferLastByteForLength(size_t aLength) {
     const char lastByte = GenerateByte(aLength);
     CheckedAppendToBuffer(&lastByte, 1);
   }
 
-  void CheckedAppendToBufferInChunks(size_t aChunkLength, size_t aTotalLength)
-  {
+  void CheckedAppendToBufferInChunks(size_t aChunkLength, size_t aTotalLength) {
     char* data = new char[aChunkLength];
 
     size_t bytesWritten = 0;
@@ -113,30 +92,24 @@ protected:
     delete[] data;
   }
 
-  void CheckedCompleteBuffer(nsresult aCompletionStatus = NS_OK)
-  {
+  void CheckedCompleteBuffer(nsresult aCompletionStatus = NS_OK) {
     mSourceBuffer->Complete(aCompletionStatus);
     EXPECT_TRUE(mSourceBuffer->IsComplete());
   }
 
-  void CheckedCompleteBuffer(SourceBufferIterator& aIterator,
-                             size_t aLength,
-                             nsresult aCompletionStatus = NS_OK)
-  {
+  void CheckedCompleteBuffer(SourceBufferIterator& aIterator, size_t aLength,
+                             nsresult aCompletionStatus = NS_OK) {
     CheckedCompleteBuffer(aCompletionStatus);
     ExpectRemainingBytes(aIterator, aLength);
   }
 
-  void CheckedAdvanceIteratorStateOnly(SourceBufferIterator& aIterator,
-                                       size_t aLength,
-                                       uint32_t aChunks,
-                                       size_t aTotalLength,
-                                       AdvanceMode aAdvanceMode
-                                         = AdvanceMode::eAdvanceAsMuchAsPossible)
-  {
-    const size_t advanceBy = aAdvanceMode == AdvanceMode::eAdvanceAsMuchAsPossible
-                           ? SIZE_MAX
-                           : aLength;
+  void CheckedAdvanceIteratorStateOnly(
+      SourceBufferIterator& aIterator, size_t aLength, uint32_t aChunks,
+      size_t aTotalLength,
+      AdvanceMode aAdvanceMode = AdvanceMode::eAdvanceAsMuchAsPossible) {
+    const size_t advanceBy =
+        aAdvanceMode == AdvanceMode::eAdvanceAsMuchAsPossible ? SIZE_MAX
+                                                              : aLength;
 
     auto state = aIterator.AdvanceOrScheduleResume(advanceBy, mExpectNoResume);
     ASSERT_EQ(SourceBufferIterator::READY, state);
@@ -147,21 +120,17 @@ protected:
   }
 
   void CheckedAdvanceIteratorStateOnly(SourceBufferIterator& aIterator,
-                                       size_t aLength)
-  {
+                                       size_t aLength) {
     CheckedAdvanceIteratorStateOnly(aIterator, aLength, 1, aLength);
   }
 
-  void CheckedAdvanceIterator(SourceBufferIterator& aIterator,
-                              size_t aLength,
-                              uint32_t aChunks,
-                              size_t aTotalLength,
-                              AdvanceMode aAdvanceMode
-                                = AdvanceMode::eAdvanceAsMuchAsPossible)
-  {
+  void CheckedAdvanceIterator(
+      SourceBufferIterator& aIterator, size_t aLength, uint32_t aChunks,
+      size_t aTotalLength,
+      AdvanceMode aAdvanceMode = AdvanceMode::eAdvanceAsMuchAsPossible) {
     // Check that the iterator is in the expected state.
-    CheckedAdvanceIteratorStateOnly(aIterator, aLength, aChunks,
-                                    aTotalLength, aAdvanceMode);
+    CheckedAdvanceIteratorStateOnly(aIterator, aLength, aChunks, aTotalLength,
+                                    aAdvanceMode);
 
     // Check that we read the expected data. To do this, we need to compute our
     // offset in the SourceBuffer, but fortunately that's pretty easy: it's the
@@ -171,23 +140,19 @@ protected:
     CheckData(aIterator.Data(), offset, aIterator.Length());
   }
 
-  void CheckedAdvanceIterator(SourceBufferIterator& aIterator, size_t aLength)
-  {
+  void CheckedAdvanceIterator(SourceBufferIterator& aIterator, size_t aLength) {
     CheckedAdvanceIterator(aIterator, aLength, 1, aLength);
   }
 
   void CheckIteratorMustWait(SourceBufferIterator& aIterator,
-                             IResumable* aOnResume)
-  {
+                             IResumable* aOnResume) {
     auto state = aIterator.AdvanceOrScheduleResume(1, aOnResume);
     EXPECT_EQ(SourceBufferIterator::WAITING, state);
   }
 
   void CheckIteratorIsComplete(SourceBufferIterator& aIterator,
-                               uint32_t aChunks,
-                               size_t aTotalLength,
-                               nsresult aCompletionStatus = NS_OK)
-  {
+                               uint32_t aChunks, size_t aTotalLength,
+                               nsresult aCompletionStatus = NS_OK) {
     ASSERT_TRUE(mSourceBuffer->IsComplete());
     auto state = aIterator.AdvanceOrScheduleResume(1, mExpectNoResume);
     ASSERT_EQ(SourceBufferIterator::COMPLETE, state);
@@ -197,8 +162,7 @@ protected:
   }
 
   void CheckIteratorIsComplete(SourceBufferIterator& aIterator,
-                               size_t aTotalLength)
-  {
+                               size_t aTotalLength) {
     CheckIteratorIsComplete(aIterator, 1, aTotalLength);
   }
 
@@ -209,8 +173,7 @@ protected:
   RefPtr<CountResumes> mCountResumes;
 };
 
-TEST_F(ImageSourceBuffer, InitialState)
-{
+TEST_F(ImageSourceBuffer, InitialState) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // RemainingBytesIsNoMoreThan() should always return false in the initial
@@ -227,8 +190,7 @@ TEST_F(ImageSourceBuffer, InitialState)
   CheckIteratorMustWait(iterator, mExpectNoResume);
 }
 
-TEST_F(ImageSourceBuffer, ZeroLengthBufferAlwaysFails)
-{
+TEST_F(ImageSourceBuffer, ZeroLengthBufferAlwaysFails) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Complete the buffer without writing to it, providing a successful
@@ -241,8 +203,7 @@ TEST_F(ImageSourceBuffer, ZeroLengthBufferAlwaysFails)
   CheckIteratorIsComplete(iterator, 0, 0, NS_ERROR_FAILURE);
 }
 
-TEST_F(ImageSourceBuffer, CompleteSuccess)
-{
+TEST_F(ImageSourceBuffer, CompleteSuccess) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Write a single byte to the buffer and complete the buffer. (We have to
@@ -257,8 +218,7 @@ TEST_F(ImageSourceBuffer, CompleteSuccess)
   CheckIteratorIsComplete(iterator, 1);
 }
 
-TEST_F(ImageSourceBuffer, CompleteFailure)
-{
+TEST_F(ImageSourceBuffer, CompleteFailure) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Write a single byte to the buffer and complete the buffer. (We have to
@@ -273,8 +233,7 @@ TEST_F(ImageSourceBuffer, CompleteFailure)
   CheckIteratorIsComplete(iterator, 0, 0, NS_ERROR_FAILURE);
 }
 
-TEST_F(ImageSourceBuffer, Append)
-{
+TEST_F(ImageSourceBuffer, Append) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Write test data to the buffer.
@@ -288,8 +247,7 @@ TEST_F(ImageSourceBuffer, Append)
   CheckIteratorIsComplete(iterator, sizeof(mData));
 }
 
-TEST_F(ImageSourceBuffer, HugeAppendFails)
-{
+TEST_F(ImageSourceBuffer, HugeAppendFails) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // We should fail to append anything bigger than what the SurfaceCache can
@@ -306,8 +264,7 @@ TEST_F(ImageSourceBuffer, HugeAppendFails)
   CheckIteratorIsComplete(iterator, 0, 0, NS_ERROR_OUT_OF_MEMORY);
 }
 
-TEST_F(ImageSourceBuffer, AppendFromInputStream)
-{
+TEST_F(ImageSourceBuffer, AppendFromInputStream) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Construct an input stream with some arbitrary data. (We use test data from
@@ -320,8 +277,8 @@ TEST_F(ImageSourceBuffer, AppendFromInputStream)
   ASSERT_TRUE(NS_SUCCEEDED(inputStream->Available(&length)));
 
   // Write test data to the buffer.
-  EXPECT_TRUE(NS_SUCCEEDED(mSourceBuffer->AppendFromInputStream(inputStream,
-                                                                length)));
+  EXPECT_TRUE(
+      NS_SUCCEEDED(mSourceBuffer->AppendFromInputStream(inputStream, length)));
   CheckedCompleteBuffer(iterator, length);
 
   // Verify that the iterator sees the appropriate amount of data.
@@ -329,8 +286,7 @@ TEST_F(ImageSourceBuffer, AppendFromInputStream)
   CheckIteratorIsComplete(iterator, length);
 }
 
-TEST_F(ImageSourceBuffer, AppendAfterComplete)
-{
+TEST_F(ImageSourceBuffer, AppendAfterComplete) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Write test data to the buffer.
@@ -352,8 +308,7 @@ TEST_F(ImageSourceBuffer, AppendAfterComplete)
   CheckIteratorIsComplete(iterator2, sizeof(mData));
 }
 
-TEST_F(ImageSourceBuffer, MinChunkCapacity)
-{
+TEST_F(ImageSourceBuffer, MinChunkCapacity) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Write test data to the buffer using many small appends. Since
@@ -375,8 +330,7 @@ TEST_F(ImageSourceBuffer, MinChunkCapacity)
   CheckIteratorIsComplete(iterator, 2, SourceBuffer::MIN_CHUNK_CAPACITY + 1);
 }
 
-TEST_F(ImageSourceBuffer, ExpectLengthAllocatesRequestedCapacity)
-{
+TEST_F(ImageSourceBuffer, ExpectLengthAllocatesRequestedCapacity) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Write SourceBuffer::MIN_CHUNK_CAPACITY bytes of test data to the buffer,
@@ -392,12 +346,11 @@ TEST_F(ImageSourceBuffer, ExpectLengthAllocatesRequestedCapacity)
   // with the remaining data.
   CheckedAdvanceIterator(iterator, 1, 1, 1);
   CheckedAdvanceIterator(iterator, SourceBuffer::MIN_CHUNK_CAPACITY - 1, 2,
-		                   SourceBuffer::MIN_CHUNK_CAPACITY);
+                         SourceBuffer::MIN_CHUNK_CAPACITY);
   CheckIteratorIsComplete(iterator, 2, SourceBuffer::MIN_CHUNK_CAPACITY);
 }
 
-TEST_F(ImageSourceBuffer, ExpectLengthGrowsAboveMinCapacity)
-{
+TEST_F(ImageSourceBuffer, ExpectLengthGrowsAboveMinCapacity) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Write two times SourceBuffer::MIN_CHUNK_CAPACITY bytes of test data to the
@@ -421,8 +374,7 @@ TEST_F(ImageSourceBuffer, ExpectLengthGrowsAboveMinCapacity)
   CheckIteratorIsComplete(iterator, 2, length + 1);
 }
 
-TEST_F(ImageSourceBuffer, HugeExpectLengthFails)
-{
+TEST_F(ImageSourceBuffer, HugeExpectLengthFails) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // ExpectLength() should fail if the length is bigger than what the
@@ -440,8 +392,7 @@ TEST_F(ImageSourceBuffer, HugeExpectLengthFails)
   CheckIteratorIsComplete(iterator, 0, 0, NS_ERROR_INVALID_ARG);
 }
 
-TEST_F(ImageSourceBuffer, LargeAppendsAllocateOnlyOneChunk)
-{
+TEST_F(ImageSourceBuffer, LargeAppendsAllocateOnlyOneChunk) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Write two times SourceBuffer::MIN_CHUNK_CAPACITY bytes of test data to the
@@ -466,8 +417,7 @@ TEST_F(ImageSourceBuffer, LargeAppendsAllocateOnlyOneChunk)
   CheckIteratorIsComplete(iterator, 2, length + 1);
 }
 
-TEST_F(ImageSourceBuffer, LargeAppendsAllocateAtMostOneChunk)
-{
+TEST_F(ImageSourceBuffer, LargeAppendsAllocateAtMostOneChunk) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Allocate some data we'll use below.
@@ -481,9 +431,9 @@ TEST_F(ImageSourceBuffer, LargeAppendsAllocateAtMostOneChunk)
   // buffer in a single Append() call. This should fill half of the first chunk.
   CheckedAppendToBuffer(data, firstWriteLength);
 
-  // Write three times SourceBuffer::MIN_CHUNK_CAPACITY bytes of test data to the
-  // buffer in a single Append() call. We expect this to result in the first of
-  // the first chunk being filled and a new chunk being allocated for the
+  // Write three times SourceBuffer::MIN_CHUNK_CAPACITY bytes of test data to
+  // the buffer in a single Append() call. We expect this to result in the first
+  // of the first chunk being filled and a new chunk being allocated for the
   // remainder.
   CheckedAppendToBuffer(data + firstWriteLength, secondWriteLength);
 
@@ -492,7 +442,7 @@ TEST_F(ImageSourceBuffer, LargeAppendsAllocateAtMostOneChunk)
 
   // Verify that the iterator sees a second chunk of the length we expect.
   const size_t expectedSecondChunkLength =
-    totalLength - SourceBuffer::MIN_CHUNK_CAPACITY;
+      totalLength - SourceBuffer::MIN_CHUNK_CAPACITY;
   CheckedAdvanceIterator(iterator, expectedSecondChunkLength, 2, totalLength);
 
   // Write one more byte; we expect to see that it triggers an allocation.
@@ -505,8 +455,7 @@ TEST_F(ImageSourceBuffer, LargeAppendsAllocateAtMostOneChunk)
   CheckIteratorIsComplete(iterator, 3, totalLength + 1);
 }
 
-TEST_F(ImageSourceBuffer, OversizedAppendsAllocateAtMostOneChunk)
-{
+TEST_F(ImageSourceBuffer, OversizedAppendsAllocateAtMostOneChunk) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Allocate some data we'll use below.
@@ -524,8 +473,7 @@ TEST_F(ImageSourceBuffer, OversizedAppendsAllocateAtMostOneChunk)
   CheckIteratorIsComplete(iterator, 1, writeLength);
 }
 
-TEST_F(ImageSourceBuffer, CompactionHappensWhenBufferIsComplete)
-{
+TEST_F(ImageSourceBuffer, CompactionHappensWhenBufferIsComplete) {
   constexpr size_t chunkLength = SourceBuffer::MIN_CHUNK_CAPACITY;
   constexpr size_t totalLength = 2 * chunkLength;
 
@@ -552,8 +500,7 @@ TEST_F(ImageSourceBuffer, CompactionHappensWhenBufferIsComplete)
   }
 }
 
-TEST_F(ImageSourceBuffer, CompactionIsDelayedWhileIteratorsExist)
-{
+TEST_F(ImageSourceBuffer, CompactionIsDelayedWhileIteratorsExist) {
   constexpr size_t chunkLength = SourceBuffer::MIN_CHUNK_CAPACITY;
   constexpr size_t totalLength = 2 * chunkLength;
 
@@ -594,8 +541,7 @@ TEST_F(ImageSourceBuffer, CompactionIsDelayedWhileIteratorsExist)
   }
 }
 
-TEST_F(ImageSourceBuffer, SourceBufferIteratorsCanBeMoved)
-{
+TEST_F(ImageSourceBuffer, SourceBufferIteratorsCanBeMoved) {
   constexpr size_t chunkLength = SourceBuffer::MIN_CHUNK_CAPACITY;
   constexpr size_t totalLength = 2 * chunkLength;
 
@@ -605,7 +551,7 @@ TEST_F(ImageSourceBuffer, SourceBufferIteratorsCanBeMoved)
   CheckedAppendToBufferInChunks(chunkLength, totalLength);
   CheckedCompleteBuffer(iterator, totalLength);
 
-  auto GetIterator = [&]{
+  auto GetIterator = [&] {
     SourceBufferIterator lambdaIterator = mSourceBuffer->Iterator();
     CheckedAdvanceIterator(lambdaIterator, chunkLength);
     return lambdaIterator;
@@ -640,8 +586,7 @@ TEST_F(ImageSourceBuffer, SourceBufferIteratorsCanBeMoved)
   CheckIteratorIsComplete(movedIterator, 2, totalLength);
 }
 
-TEST_F(ImageSourceBuffer, SubchunkAdvance)
-{
+TEST_F(ImageSourceBuffer, SubchunkAdvance) {
   constexpr size_t chunkLength = SourceBuffer::MIN_CHUNK_CAPACITY;
   constexpr size_t totalLength = 2 * chunkLength;
 
@@ -682,8 +627,7 @@ TEST_F(ImageSourceBuffer, SubchunkAdvance)
   CheckIteratorIsComplete(iterator, 2, totalLength);
 }
 
-TEST_F(ImageSourceBuffer, SubchunkZeroByteAdvance)
-{
+TEST_F(ImageSourceBuffer, SubchunkZeroByteAdvance) {
   constexpr size_t chunkLength = SourceBuffer::MIN_CHUNK_CAPACITY;
   constexpr size_t totalLength = 2 * chunkLength;
 
@@ -737,8 +681,7 @@ TEST_F(ImageSourceBuffer, SubchunkZeroByteAdvance)
   CheckIteratorIsComplete(iterator, 2, totalLength);
 }
 
-TEST_F(ImageSourceBuffer, SubchunkZeroByteAdvanceWithNoData)
-{
+TEST_F(ImageSourceBuffer, SubchunkZeroByteAdvanceWithNoData) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Check that advancing by zero bytes still makes us enter the WAITING state.
@@ -753,8 +696,7 @@ TEST_F(ImageSourceBuffer, SubchunkZeroByteAdvanceWithNoData)
   EXPECT_EQ(1u, mCountResumes->Count());
 }
 
-TEST_F(ImageSourceBuffer, NullIResumable)
-{
+TEST_F(ImageSourceBuffer, NullIResumable) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Check that we can't advance.
@@ -766,8 +708,7 @@ TEST_F(ImageSourceBuffer, NullIResumable)
   CheckedCompleteBuffer(iterator, sizeof(mData));
 }
 
-TEST_F(ImageSourceBuffer, AppendTriggersResume)
-{
+TEST_F(ImageSourceBuffer, AppendTriggersResume) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Check that we can't advance.
@@ -778,8 +719,7 @@ TEST_F(ImageSourceBuffer, AppendTriggersResume)
   EXPECT_EQ(1u, mCountResumes->Count());
 }
 
-TEST_F(ImageSourceBuffer, OnlyOneResumeTriggeredPerAppend)
-{
+TEST_F(ImageSourceBuffer, OnlyOneResumeTriggeredPerAppend) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Check that we can't advance.
@@ -802,17 +742,16 @@ TEST_F(ImageSourceBuffer, OnlyOneResumeTriggeredPerAppend)
   CheckedAdvanceIterator(iterator, firstWriteLength);
   CheckIteratorMustWait(iterator, mCountResumes);
 
-  // Write three times SourceBuffer::MIN_CHUNK_CAPACITY bytes of test data to the
-  // buffer in a single Append() call. We expect this to result in the first of
-  // the first chunk being filled and a new chunk being allocated for the
+  // Write three times SourceBuffer::MIN_CHUNK_CAPACITY bytes of test data to
+  // the buffer in a single Append() call. We expect this to result in the first
+  // of the first chunk being filled and a new chunk being allocated for the
   // remainder. Even though two chunks are getting written to here, only *one*
   // resume should get triggered, for a total of two in this test.
   CheckedAppendToBuffer(data + firstWriteLength, secondWriteLength);
   EXPECT_EQ(2u, mCountResumes->Count());
 }
 
-TEST_F(ImageSourceBuffer, CompleteTriggersResume)
-{
+TEST_F(ImageSourceBuffer, CompleteTriggersResume) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Check that we can't advance.
@@ -823,8 +762,7 @@ TEST_F(ImageSourceBuffer, CompleteTriggersResume)
   EXPECT_EQ(1u, mCountResumes->Count());
 }
 
-TEST_F(ImageSourceBuffer, ExpectLengthDoesNotTriggerResume)
-{
+TEST_F(ImageSourceBuffer, ExpectLengthDoesNotTriggerResume) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Check that we can't advance.
@@ -835,8 +773,7 @@ TEST_F(ImageSourceBuffer, ExpectLengthDoesNotTriggerResume)
   mSourceBuffer->ExpectLength(1000);
 }
 
-TEST_F(ImageSourceBuffer, CompleteSuccessWithSameReadLength)
-{
+TEST_F(ImageSourceBuffer, CompleteSuccessWithSameReadLength) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator(1);
 
   // Write a single byte to the buffer and complete the buffer. (We have to
@@ -851,8 +788,7 @@ TEST_F(ImageSourceBuffer, CompleteSuccessWithSameReadLength)
   CheckIteratorIsComplete(iterator, 1);
 }
 
-TEST_F(ImageSourceBuffer, CompleteSuccessWithSmallerReadLength)
-{
+TEST_F(ImageSourceBuffer, CompleteSuccessWithSmallerReadLength) {
   // Create an iterator limited to one byte.
   SourceBufferIterator iterator = mSourceBuffer->Iterator(1);
 
@@ -869,8 +805,7 @@ TEST_F(ImageSourceBuffer, CompleteSuccessWithSmallerReadLength)
   CheckIteratorIsComplete(iterator, 1);
 }
 
-TEST_F(ImageSourceBuffer, CompleteSuccessWithGreaterReadLength)
-{
+TEST_F(ImageSourceBuffer, CompleteSuccessWithGreaterReadLength) {
   // Create an iterator limited to one byte.
   SourceBufferIterator iterator = mSourceBuffer->Iterator(2);
 

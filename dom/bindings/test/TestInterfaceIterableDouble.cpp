@@ -18,13 +18,13 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(TestInterfaceIterableDouble)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TestInterfaceIterableDouble)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TestInterfaceIterableDouble)
-NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-TestInterfaceIterableDouble::TestInterfaceIterableDouble(nsPIDOMWindowInner* aParent)
-  : mParent(aParent)
-{
+TestInterfaceIterableDouble::TestInterfaceIterableDouble(
+    nsPIDOMWindowInner* aParent)
+    : mParent(aParent) {
   mValues.AppendElement(std::pair<nsString, nsString>(NS_LITERAL_STRING("a"),
                                                       NS_LITERAL_STRING("b")));
   mValues.AppendElement(std::pair<nsString, nsString>(NS_LITERAL_STRING("c"),
@@ -33,52 +33,44 @@ TestInterfaceIterableDouble::TestInterfaceIterableDouble(nsPIDOMWindowInner* aPa
                                                       NS_LITERAL_STRING("f")));
 }
 
-//static
+// static
 already_AddRefed<TestInterfaceIterableDouble>
 TestInterfaceIterableDouble::Constructor(const GlobalObject& aGlobal,
-                                         ErrorResult& aRv)
-{
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
+                                         ErrorResult& aRv) {
+  nsCOMPtr<nsPIDOMWindowInner> window =
+      do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  RefPtr<TestInterfaceIterableDouble> r = new TestInterfaceIterableDouble(window);
+  RefPtr<TestInterfaceIterableDouble> r =
+      new TestInterfaceIterableDouble(window);
   return r.forget();
 }
 
-JSObject*
-TestInterfaceIterableDouble::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* TestInterfaceIterableDouble::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return TestInterfaceIterableDouble_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsPIDOMWindowInner*
-TestInterfaceIterableDouble::GetParentObject() const
-{
+nsPIDOMWindowInner* TestInterfaceIterableDouble::GetParentObject() const {
   return mParent;
 }
 
-size_t
-TestInterfaceIterableDouble::GetIterableLength()
-{
+size_t TestInterfaceIterableDouble::GetIterableLength() {
   return mValues.Length();
 }
 
-nsAString&
-TestInterfaceIterableDouble::GetKeyAtIndex(uint32_t aIndex)
-{
+nsAString& TestInterfaceIterableDouble::GetKeyAtIndex(uint32_t aIndex) {
   MOZ_ASSERT(aIndex < mValues.Length());
   return mValues.ElementAt(aIndex).first;
 }
 
-nsAString&
-TestInterfaceIterableDouble::GetValueAtIndex(uint32_t aIndex)
-{
+nsAString& TestInterfaceIterableDouble::GetValueAtIndex(uint32_t aIndex) {
   MOZ_ASSERT(aIndex < mValues.Length());
   return mValues.ElementAt(aIndex).second;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

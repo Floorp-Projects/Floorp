@@ -59,54 +59,52 @@ extern "C" {
 }
 
 // Wait up to timeout seconds for expression to be true
-#define WAIT(expression, timeout) \
-  do { \
-    for (PRIntervalTime start = PR_IntervalNow(); !(expression) && \
-           ! ((PR_IntervalNow() - start) > PR_MillisecondsToInterval(timeout));) { \
-      PR_Sleep(10); \
-    } \
-  } while(0)
+#define WAIT(expression, timeout)                                   \
+  do {                                                              \
+    for (PRIntervalTime start = PR_IntervalNow();                   \
+         !(expression) && !((PR_IntervalNow() - start) >            \
+                            PR_MillisecondsToInterval(timeout));) { \
+      PR_Sleep(10);                                                 \
+    }                                                               \
+  } while (0)
 
 // Same as GTEST_WAIT, but stores the result in res. Used when
 // you also want the result of expression but wish to avoid
 // double evaluation.
-#define WAIT_(expression, timeout, res) \
-  do { \
-    for (PRIntervalTime start = PR_IntervalNow(); !(res = (expression)) && \
-           ! ((PR_IntervalNow() - start) > PR_MillisecondsToInterval(timeout));) { \
-      PR_Sleep(10); \
-    } \
-  } while(0)
+#define WAIT_(expression, timeout, res)                                     \
+  do {                                                                      \
+    for (PRIntervalTime start = PR_IntervalNow();                           \
+         !(res = (expression)) && !((PR_IntervalNow() - start) >            \
+                                    PR_MillisecondsToInterval(timeout));) { \
+      PR_Sleep(10);                                                         \
+    }                                                                       \
+  } while (0)
 
 #define ASSERT_TRUE_WAIT(expression, timeout) \
-  do { \
-    bool res; \
-    WAIT_(expression, timeout, res); \
-    ASSERT_TRUE(res); \
-  } while(0)
+  do {                                        \
+    bool res;                                 \
+    WAIT_(expression, timeout, res);          \
+    ASSERT_TRUE(res);                         \
+  } while (0)
 
 #define EXPECT_TRUE_WAIT(expression, timeout) \
-  do { \
-    bool res; \
-    WAIT_(expression, timeout, res); \
-    EXPECT_TRUE(res); \
-  } while(0)
+  do {                                        \
+    bool res;                                 \
+    WAIT_(expression, timeout, res);          \
+    EXPECT_TRUE(res);                         \
+  } while (0)
 
 #define ASSERT_EQ_WAIT(expected, actual, timeout) \
-  do { \
-    WAIT(expected == actual, timeout); \
-    ASSERT_EQ(expected, actual); \
-  } while(0)
+  do {                                            \
+    WAIT(expected == actual, timeout);            \
+    ASSERT_EQ(expected, actual);                  \
+  } while (0)
 
 using test::RingbufferDumper;
 
 class MtransportTest : public ::testing::Test {
-public:
-  MtransportTest()
-    : test_utils_(nullptr)
-    , dumper_(nullptr)
-  {
-  }
+ public:
+  MtransportTest() : test_utils_(nullptr), dumper_(nullptr) {}
 
   void SetUp() override {
     test_utils_ = new MtransportTestUtils();
@@ -130,8 +128,8 @@ public:
     if ((!disable_non_local.empty() && disable_non_local != "0") ||
         !upload_dir.empty()) {
       // We're assuming that MOZ_UPLOAD_DIR is only set on tbpl;
-      // MOZ_DISABLE_NONLOCAL_CONNECTIONS probably should be set when running the
-      // cpp unit-tests, but is not presently.
+      // MOZ_DISABLE_NONLOCAL_CONNECTIONS probably should be set when running
+      // the cpp unit-tests, but is not presently.
       stun_server_address_ = "";
       stun_server_hostname_ = "";
       turn_server_ = "";
@@ -168,22 +166,22 @@ public:
 
   bool WarnIfTurnNotConfigured() const {
     bool configured =
-        !turn_server_.empty() &&
-        !turn_user_.empty() &&
-        !turn_password_.empty();
+        !turn_server_.empty() && !turn_user_.empty() && !turn_password_.empty();
 
     if (configured) {
       nr_transport_addr addr;
-      if (nr_str_port_to_transport_addr(turn_server_.c_str(), 3478,
-                                        IPPROTO_UDP, &addr)) {
-        printf("Invalid TURN_SERVER_ADDRESS \"%s\". Only IP numbers supported.\n",
-               turn_server_.c_str());
+      if (nr_str_port_to_transport_addr(turn_server_.c_str(), 3478, IPPROTO_UDP,
+                                        &addr)) {
+        printf(
+            "Invalid TURN_SERVER_ADDRESS \"%s\". Only IP numbers supported.\n",
+            turn_server_.c_str());
         configured = false;
       }
     } else {
       printf(
-        "Set TURN_SERVER_ADDRESS, TURN_SERVER_USER, and TURN_SERVER_PASSWORD\n"
-        "environment variables to run this test\n");
+          "Set TURN_SERVER_ADDRESS, TURN_SERVER_USER, and "
+          "TURN_SERVER_PASSWORD\n"
+          "environment variables to run this test\n");
     }
 
     return !configured;
