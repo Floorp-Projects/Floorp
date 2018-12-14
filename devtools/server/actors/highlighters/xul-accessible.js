@@ -41,7 +41,6 @@ const ACCESSIBLE_BOUNDS_SHEET = "data:text/css;charset=utf-8," + encodeURICompon
     position: relative;
     left: -50%;
     background-color: var(--highlighter-bubble-background-color);
-    min-width: 75px;
     border: 1px solid var(--highlighter-bubble-border-color);
     border-radius: 3px;
     padding: 5px;
@@ -69,16 +68,34 @@ const ACCESSIBLE_BOUNDS_SHEET = "data:text/css;charset=utf-8," + encodeURICompon
   }
 
   .accessible-infobar-text {
+    display: grid;
+    grid-template-areas:
+      "role name"
+      "audit audit";
+    grid-template-columns: min-content 1fr;
     overflow: hidden;
     white-space: nowrap;
-    display: flex;
     justify-content: center;
+  }
+
+  .accessible-infobar-role {
+    color: #9CDCFE;
+    grid-area: role;
+  }
+
+  .accessible-infobar-name {
+    grid-area: name;
+  }
+
+  .accessible-infobar-audit {
+    grid-area: audit;
+    padding-top: 5px;
+    padding-bottom: 2px;
   }
 
   .accessible-infobar-name,
   .accessible-infobar-audit {
     color: hsl(210, 30%, 85%);
-    max-width: 90%;
   }
 
   .accessible-infobar-audit .accessible-contrast-ratio:not(:empty):before {
@@ -126,15 +143,10 @@ const ACCESSIBLE_BOUNDS_SHEET = "data:text/css;charset=utf-8," + encodeURICompon
     margin-inline-start: 3px;
   }
 
-  .accessible-infobar-name:not(:empty),
-  .accessible-infobar-audit:not(:empty) {
+  .accessible-infobar-name:not(:empty) {
     border-inline-start: 1px solid #5a6169;
     margin-inline-start: 6px;
     padding-inline-start: 6px;
-  }
-
-  .accessible-infobar-role {
-    color: #9CDCFE;
   }`);
 
 /**
