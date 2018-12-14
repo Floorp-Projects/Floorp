@@ -291,6 +291,7 @@ class SearchBar extends Component<Props, State> {
 
     return (
       <div className="search-modifiers">
+        <span className="pipe-divider" />
         <span className="search-type-name">
           {L10N.getStr("symbolSearch.searchModifier.modifiersLabel")}
         </span>
