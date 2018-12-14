@@ -55,7 +55,8 @@ def serialize(filename, reference, old_l10n, new_data):
             'Unsupported file format ({}).'.format(filename))
     # create template, whitespace and all
     placeholders = [
-        placeholder(entry) for entry in reference
+        placeholder(entry)
+        for entry in reference
         if not isinstance(entry, Junk)
     ]
     ref_mapping = {

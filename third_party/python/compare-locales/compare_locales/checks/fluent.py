@@ -29,8 +29,8 @@ class FluentChecker(Checker):
                 # will be used to pinpoint the error.
                 refs[node.id.name] = node
             if isinstance(node, ftl.TermReference):
-                # Same for terms
-                refs[node.id.name] = node
+                # Same for terms, store them as -term.id
+                refs['-' + node.id.name] = node
             # BaseNode.traverse expects this function to return the node.
             return node
 

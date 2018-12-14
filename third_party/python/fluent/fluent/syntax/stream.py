@@ -66,46 +66,48 @@ SPECIAL_LINE_START_CHARS = ('}', '.', '[', '*')
 class FluentParserStream(ParserStream):
     last_comment_zero_four_syntax = False
 
-    def skip_blank_inline(self):
-        while self.current_char == ' ':
-            self.next()
-
     def peek_blank_inline(self):
+        start = self.index + self.peek_offset
         while self.current_peek == ' ':
             self.peek()
+        return self.string[start:self.index + self.peek_offset]
 
-    def skip_blank_block(self):
-        line_count = 0
-        while True:
-            self.peek_blank_inline()
-
-            if self.current_peek == EOL:
-                self.skip_to_peek()
-                self.next()
-                line_count += 1
-            else:
-                self.reset_peek()
-                return line_count
+    def skip_blank_inline(self):
+        blank = self.peek_blank_inline()
+        self.skip_to_peek()
+        return blank
 
     def peek_blank_block(self):
+        blank = ""
         while True:
             line_start = self.peek_offset
-
             self.peek_blank_inline()
 
             if self.current_peek == EOL:
+                blank += EOL
                 self.peek()
-            else:
-                self.reset_peek(line_start)
-                break
+                continue
 
-    def skip_blank(self):
-        while self.current_char in (" ", EOL):
-            self.next()
+            if self.current_peek is EOF:
+                # Treat the blank line at EOF as a blank block.
+                return blank
+
+            # Any other char; reset to column 1 on this line.
+            self.reset_peek(line_start)
+            return blank
+
+    def skip_blank_block(self):
+        blank = self.peek_blank_block()
+        self.skip_to_peek()
+        return blank
 
     def peek_blank(self):
         while self.current_peek in (" ", EOL):
             self.peek()
+
+    def skip_blank(self):
+        self.peek_blank()
+        self.skip_to_peek()
 
     def expect_char(self, ch):
         if self.current_char == ch:
@@ -163,24 +165,28 @@ class FluentParserStream(ParserStream):
 
         return ch not in SPECIAL_LINE_START_CHARS
 
-    def is_value_start(self, skip):
-        if skip is False:
-            raise NotImplementedError()
-
-        self.peek_blank_inline()
-        ch = self.current_peek
-
+    def is_value_start(self):
         # Inline Patterns may start with any char.
-        if ch is not EOF and ch != EOL:
-            self.skip_to_peek()
+        return self.current_peek is not EOF and self.current_peek != EOL
+
+    def is_value_continuation(self):
+        column1 = self.peek_offset
+        self.peek_blank_inline()
+
+        if self.current_peek == '{':
+            self.reset_peek(column1)
             return True
 
-        return self.is_next_line_value(skip)
+        if self.peek_offset - column1 == 0:
+            return False
 
-    def is_next_line_zero_four_comment(self, skip):
-        if skip is True:
-            raise NotImplementedError()
+        if self.is_char_pattern_continuation(self.current_peek):
+            self.reset_peek(column1)
+            return True
 
+        return False
+
+    def is_next_line_zero_four_comment(self):
         if self.current_peek != EOL:
             return False
 
@@ -192,10 +198,7 @@ class FluentParserStream(ParserStream):
     #  0 - comment
     #  1 - group comment
     #  2 - resource comment
-    def is_next_line_comment(self, skip, level=-1):
-        if skip is True:
-            raise NotImplementedError()
-
+    def is_next_line_comment(self, level=-1):
         if self.current_peek != EOL:
             return False
 
@@ -217,63 +220,19 @@ class FluentParserStream(ParserStream):
         self.reset_peek()
         return False
 
-    def is_next_line_variant_start(self, skip):
-        if skip is True:
-            raise NotImplementedError()
-
-        if self.current_peek != EOL:
-            return False
-
-        self.peek_blank()
-
+    def is_variant_start(self):
+        current_peek_offset = self.peek_offset
         if self.current_peek == '*':
             self.peek()
-
         if self.current_peek == '[' and self.peek() != '[':
-            self.reset_peek()
+            self.reset_peek(current_peek_offset)
             return True
 
-        self.reset_peek()
+        self.reset_peek(current_peek_offset)
         return False
 
-    def is_next_line_attribute_start(self, skip):
-        if skip is False:
-            raise NotImplementedError()
-
-        self.peek_blank()
-
-        if self.current_peek == '.':
-            self.skip_to_peek()
-            return True
-
-        self.reset_peek()
-        return False
-
-    def is_next_line_value(self, skip):
-        if self.current_peek != EOL:
-            return False
-
-        self.peek_blank_block()
-
-        ptr = self.peek_offset
-
-        self.peek_blank_inline()
-
-        if self.current_peek != "{":
-            if (self.peek_offset - ptr == 0):
-                self.reset_peek()
-                return False
-
-            if not self.is_char_pattern_continuation(self.current_peek):
-                self.reset_peek()
-                return False
-
-        if skip:
-            self.skip_to_peek()
-        else:
-            self.reset_peek()
-
-        return True
+    def is_attribute_start(self):
+        return self.current_peek == '.'
 
     def skip_to_next_entry_start(self, junk_start):
         last_newline = self.string.rfind(EOL, 0, self.index)

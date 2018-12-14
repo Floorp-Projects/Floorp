@@ -43,7 +43,7 @@ class FluentSerializer(object):
         if isinstance(entry, ast.Message):
             return serialize_message(entry)
         if isinstance(entry, ast.Term):
-            return serialize_message(entry)
+            return serialize_term(entry)
         if isinstance(entry, ast.Comment):
             if state & self.HAS_ENTRIES:
                 return "\n{}\n".format(serialize_comment(entry, "#"))
@@ -83,8 +83,7 @@ def serialize_message(message):
     if message.comment:
         parts.append(serialize_comment(message.comment))
 
-    parts.append(serialize_identifier(message.id))
-    parts.append(" =")
+    parts.append("{} =".format(message.id.name))
 
     if message.value:
         parts.append(serialize_value(message.value))
@@ -94,13 +93,29 @@ def serialize_message(message):
             parts.append(serialize_attribute(attribute))
 
     parts.append("\n")
+    return ''.join(parts)
 
+
+def serialize_term(term):
+    parts = []
+
+    if term.comment:
+        parts.append(serialize_comment(term.comment))
+
+    parts.append("-{} =".format(term.id.name))
+    parts.append(serialize_value(term.value))
+
+    if term.attributes:
+        for attribute in term.attributes:
+            parts.append(serialize_attribute(attribute))
+
+    parts.append("\n")
     return ''.join(parts)
 
 
 def serialize_attribute(attribute):
     return "\n    .{} ={}".format(
-        serialize_identifier(attribute.id),
+        attribute.id.name,
         indent(serialize_value(attribute.value))
     )
 
@@ -143,14 +158,10 @@ def serialize_variant(variant):
 
 def serialize_element(element):
     if isinstance(element, ast.TextElement):
-        return serialize_text_element(element)
+        return element.value
     if isinstance(element, ast.Placeable):
         return serialize_placeable(element)
     raise Exception('Unknown element type: {}'.format(type(element)))
-
-
-def serialize_text_element(text):
-    return text.value
 
 
 def serialize_placeable(placeable):
@@ -168,15 +179,17 @@ def serialize_placeable(placeable):
 
 def serialize_expression(expression):
     if isinstance(expression, ast.StringLiteral):
-        return serialize_string_literal(expression)
+        return '"{}"'.format(expression.raw)
     if isinstance(expression, ast.NumberLiteral):
-        return serialize_number_literal(expression)
+        return expression.value
     if isinstance(expression, ast.MessageReference):
-        return serialize_message_reference(expression)
+        return expression.id.name
+    if isinstance(expression, ast.FunctionReference):
+        return expression.id.name
     if isinstance(expression, ast.TermReference):
-        return serialize_message_reference(expression)
+        return '-{}'.format(expression.id.name)
     if isinstance(expression, ast.VariableReference):
-        return serialize_variable_reference(expression)
+        return '${}'.format(expression.id.name)
     if isinstance(expression, ast.AttributeExpression):
         return serialize_attribute_expression(expression)
     if isinstance(expression, ast.VariantExpression):
@@ -188,22 +201,6 @@ def serialize_expression(expression):
     if isinstance(expression, ast.Placeable):
         return serialize_placeable(expression)
     raise Exception('Unknown expression type: {}'.format(type(expression)))
-
-
-def serialize_string_literal(expr):
-    return "\"{}\"".format(expr.value)
-
-
-def serialize_number_literal(expr):
-    return expr.value
-
-
-def serialize_message_reference(expr):
-    return serialize_identifier(expr.id)
-
-
-def serialize_variable_reference(expr):
-    return "${}".format(serialize_identifier(expr.id))
 
 
 def serialize_select_expression(expr):
@@ -223,7 +220,7 @@ def serialize_select_expression(expr):
 def serialize_attribute_expression(expr):
     return "{}.{}".format(
         serialize_expression(expr.ref),
-        serialize_identifier(expr.name),
+        expr.name.name,
     )
 
 
@@ -235,53 +232,25 @@ def serialize_variant_expression(expr):
 
 
 def serialize_call_expression(expr):
-    fun = serialize_function(expr.callee)
+    callee = serialize_expression(expr.callee)
     positional = ", ".join(
         serialize_expression(arg) for arg in expr.positional)
     named = ", ".join(
         serialize_named_argument(arg) for arg in expr.named)
     if len(expr.positional) > 0 and len(expr.named) > 0:
-        return '{}({}, {})'.format(fun, positional, named)
-    return '{}({})'.format(fun, positional or named)
-
-
-def serialize_call_argument(arg):
-    if isinstance(arg, ast.Expression):
-        return serialize_expression(arg)
-    if isinstance(arg, ast.NamedArgument):
-        return serialize_named_argument(arg)
+        return '{}({}, {})'.format(callee, positional, named)
+    return '{}({})'.format(callee, positional or named)
 
 
 def serialize_named_argument(arg):
     return "{}: {}".format(
-        serialize_identifier(arg.name),
-        serialize_argument_value(arg.value)
+        arg.name.name,
+        serialize_expression(arg.value)
     )
-
-
-def serialize_argument_value(argval):
-    if isinstance(argval, ast.StringLiteral):
-        return serialize_string_literal(argval)
-    if isinstance(argval, ast.NumberLiteral):
-        return serialize_number_literal(argval)
-    raise Exception('Unknown argument type: {}'.format(type(argval)))
-
-
-def serialize_identifier(identifier):
-    return identifier.name
-
-
-def serialize_variant_name(symbol):
-    return symbol.name
 
 
 def serialize_variant_key(key):
     if isinstance(key, ast.Identifier):
-        return serialize_identifier(key)
-    if isinstance(key, ast.NumberLiteral):
-        return serialize_number_literal(key)
-    raise Exception('Unknown variant key type: {}'.format(type(key)))
-
-
-def serialize_function(function):
-    return function.name
+        return key.name
+    else:
+        return serialize_expression(key)
