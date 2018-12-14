@@ -10,9 +10,31 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
 });
 
+XPCOMUtils.defineLazyGetter(
+  this, "MOBILE_USER_AGENT",
+  function() {
+    return Cc["@mozilla.org/network/protocol;1?name=http"]
+           .getService(Ci.nsIHttpProtocolHandler).userAgent;
+  });
+
+XPCOMUtils.defineLazyGetter(
+  this, "DESKTOP_USER_AGENT",
+  function() {
+    return MOBILE_USER_AGENT
+           .replace(/Android \d.+?; [a-zA-Z]+/, "X11; Linux x86_64")
+           .replace(/Gecko\/[0-9\.]+/, "Gecko/20100101");
+  });
+
+XPCOMUtils.defineLazyGetter(
+  this, "VR_USER_AGENT",
+  function() {
+    return MOBILE_USER_AGENT.replace(/Mobile/, "Mobile VR");
+  });
+
 // This needs to match GeckoSessionSettings.java
 const USER_AGENT_MODE_MOBILE = 0;
 const USER_AGENT_MODE_DESKTOP = 1;
+const USER_AGENT_MODE_VR = 2;
 
 // Handles GeckoView content settings including:
 // * tracking protection
@@ -42,6 +64,19 @@ class GeckoViewSettingsChild extends GeckoViewChildModule {
     docShell.useTrackingProtection = aUse;
   }
 
+  get userAgent() {
+    if (this.userAgentOverride !== null) {
+      return this.userAgentOverride;
+    }
+    if (this.userAgentMode === USER_AGENT_MODE_DESKTOP) {
+      return DESKTOP_USER_AGENT;
+    }
+    if (this.userAgentMode === USER_AGENT_MODE_VR) {
+      return VR_USER_AGENT;
+    }
+    return null;
+  }
+
   get userAgentMode() {
     return this._userAgentMode;
   }
@@ -51,6 +86,12 @@ class GeckoViewSettingsChild extends GeckoViewChildModule {
       return;
     }
     this._userAgentMode = aMode;
+    const docShell = content && GeckoViewUtils.getRootDocShell(content);
+    if (docShell) {
+      docShell.customUserAgent = this.userAgent;
+    } else {
+      warn `Failed to set custom user agent. Doc shell not found`;
+    }
     if (this._userAgentOverride !== null) {
       return;
     }
@@ -67,6 +108,12 @@ class GeckoViewSettingsChild extends GeckoViewChildModule {
       return;
     }
     this._userAgentOverride = aUserAgent;
+    const docShell = content && GeckoViewUtils.getRootDocShell(content);
+    if (docShell) {
+      docShell.customUserAgent = this.userAgent;
+    } else {
+      warn `Failed to set custom user agent. Doc shell not found`;
+    }
     const utils = content.windowUtils;
     if (aUserAgent === null) {
       utils.setDesktopModeViewport(this._userAgentMode === USER_AGENT_MODE_DESKTOP);
