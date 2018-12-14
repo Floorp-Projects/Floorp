@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-tv = {
+// This file expects utils.js to be included in its scope
+/* import-globals-from ./util.js */
+let tv = {
   raw: util.hex2abv("f3095c4fe5e299477643c2310b44f0aa"),
 
   // this key had an inappropriate length (18 octets)

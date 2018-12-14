@@ -26,7 +26,6 @@
 TestArray.addTest(
   "Test for presence of WebCrypto API methods",
   function() {
-    var that = this;
     this.complete(
       exists(window.crypto.subtle) &&
       exists(window.crypto.subtle.encrypt) &&
@@ -630,11 +629,6 @@ TestArray.addTest(
         x, tv.aes_ctr_dec.data);
     }
 
-    function decrypt(x) {
-      return decrypt(x, new Uint8Array(15))
-        .catch(function() { return decrypt(x, new Uint8Array(17)); });
-    }
-
     crypto.subtle.importKey("raw", tv.aes_ctr_dec.key, "AES-CTR", false, ["decrypt"])
       .then(doDecrypt)
       .then(
@@ -1004,7 +998,6 @@ TestArray.addTest(
   function() {
     var that = this;
     var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
-    var use = ["sign", "verify"];
 
     function doVerify(x) {
       return crypto.subtle.verify(alg.name, x, tv.rsassa.sig_fail, tv.rsassa.data);
@@ -1103,7 +1096,7 @@ TestArray.addTest(
       error(that)();
     }
 
-    Promise.all([p1, p2, p3]).then(complete(that, keys => {
+    return Promise.all([p1, p2, p3]).then(complete(that, keys => {
       return keys.every(key => {
         if (key instanceof CryptoKey) {
           return checkPrototypes(key, "CryptoKey");

@@ -135,10 +135,6 @@ TestArray.addTest(
     var that = this;
     var alg = { name: "ECDSA", namedCurve: "P-256", hash: "SHA-256" };
 
-    function doVerify(x) {
-      return crypto.subtle.verify(alg, x, tv.ecdsa_verify.sig, tv.ecdsa_verify.data);
-    }
-
     crypto.subtle.importKey("jwk", tv.ecdsa_bad.pub_jwk, alg, true, ["verify"])
       .then(error(that), complete(that));
   }

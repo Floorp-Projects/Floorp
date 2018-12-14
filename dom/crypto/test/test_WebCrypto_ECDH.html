@@ -62,8 +62,7 @@ TestArray.addTest(
 
     function doDerive(n) {
       return function(x) {
-        var alg = { name: "ECDH", public: pair.publicKey };
-        return crypto.subtle.deriveBits(alg, pair.privateKey, n * 8);
+        return crypto.subtle.deriveBits({ name: "ECDH", public: pair.publicKey }, pair.privateKey, n * 8);
       };
     }
 
@@ -165,8 +164,7 @@ TestArray.addTest(
     function setPriv(x) { privKey = x; }
 
     function doDerive() {
-      var alg = { name: "ECDH", public: pubKey };
-      return crypto.subtle.deriveBits(alg, privKey, tv.ecdh_p256.secret.byteLength * 8);
+      return crypto.subtle.deriveBits({ name: "ECDH", public: pubKey }, privKey, tv.ecdh_p256.secret.byteLength * 8);
     }
 
     Promise.all([
@@ -191,8 +189,7 @@ TestArray.addTest(
     function setPriv(x) { privKey = x; }
 
     function doDerive() {
-      var alg = { name: "ECDH", public: pubKey };
-      return crypto.subtle.deriveBits(alg, privKey, tv.ecdh_p384.secret.byteLength * 8);
+      return crypto.subtle.deriveBits({ name: "ECDH", public: pubKey }, privKey, tv.ecdh_p384.secret.byteLength * 8);
     }
 
     Promise.all([
@@ -217,8 +214,7 @@ TestArray.addTest(
     function setPriv(x) { privKey = x; }
 
     function doDerive() {
-      var alg = { name: "ECDH", public: pubKey };
-      return crypto.subtle.deriveBits(alg, privKey, tv.ecdh_p521.secret.byteLength * 8);
+      return crypto.subtle.deriveBits({ name: "ECDH", public: pubKey }, privKey, tv.ecdh_p521.secret.byteLength * 8);
     }
 
     Promise.all([
@@ -342,8 +338,7 @@ TestArray.addTest(
     function setPriv(x) { privKey = x; }
 
     function doDerive() {
-      var alg = { name: "ECDH", public: pubKey };
-      return crypto.subtle.deriveKey(alg, privKey, algDerived, false, ["sign", "verify"])
+      return crypto.subtle.deriveKey({ name: "ECDH", public: pubKey }, privKey, algDerived, false, ["sign", "verify"])
         .then(function(x) {
           if (!hasKeyFields(x)) {
             throw "Invalid key; missing field(s)";
@@ -406,6 +401,7 @@ TestArray.addTest(
         if (keys.length) {
           return nextKey();
         }
+        return Promise.resolve();
       });
     }
 
@@ -425,8 +421,7 @@ TestArray.addTest(
     function setPriv(x) { privKey = x; }
 
     function doDerive() {
-      var alg = { name: "ECDH", public: pubKey };
-      return crypto.subtle.deriveBits(alg, privKey, tv.ecdh_p256.secret.byteLength * 8);
+      return crypto.subtle.deriveBits({ name: "ECDH", public: pubKey }, privKey, tv.ecdh_p256.secret.byteLength * 8);
     }
 
     Promise.all([
@@ -462,7 +457,6 @@ TestArray.addTest(
   function() {
     var that = this;
     var alg = { name: "ECDH", namedCurve: "P-256" };
-    var tvs = tv.ecdh_p256_negative.raw_bad;
 
     crypto.subtle.importKey("raw", tv, alg, false, ["deriveBits"])
       .then(error(that), complete(that));
@@ -475,7 +469,6 @@ TestArray.addTest(
   function() {
     var that = this;
     var alg = { name: "ECDH", namedCurve: "P-256" };
-    var tvs = tv.ecdh_p256.raw;
 
     crypto.subtle.importKey("unknown", tv, alg, false, ["deriveBits"])
       .then(error(that), complete(that));
@@ -488,7 +481,6 @@ TestArray.addTest(
   function() {
     var that = this;
     var alg = { name: "ECDH", namedCurve: "P-256" };
-    var tvs = tv.ecdh_p256_negative.raw_short;
 
     crypto.subtle.importKey("raw", tv, alg, false, ["deriveBits"])
       .then(error(that), complete(that));
@@ -501,7 +493,6 @@ TestArray.addTest(
   function() {
     var that = this;
     var alg = { name: "ECDH", namedCurve: "P-256" };
-    var tvs = tv.ecdh_p256_negative.raw_long;
 
     crypto.subtle.importKey("raw", tv, alg, false, ["deriveBits"])
       .then(error(that), complete(that));
@@ -514,7 +505,6 @@ TestArray.addTest(
   function() {
     var that = this;
     var alg = { name: "ECDH", namedCurve: "P-256" };
-    var tvs = tv.ecdh_p256_negative.raw_compressed;
 
     crypto.subtle.importKey("raw", tv, alg, false, ["deriveBits"])
       .then(error(that), complete(that));
@@ -533,8 +523,7 @@ TestArray.addTest(
     function setPriv(x) { privKey = x; }
 
     function doDerive() {
-      var alg = { name: "ECDH", public: pubKey };
-      return crypto.subtle.deriveBits(alg, privKey, tv.ecdh_p256.secret.byteLength * 8);
+      return crypto.subtle.deriveBits({ name: "ECDH", public: pubKey }, privKey, tv.ecdh_p256.secret.byteLength * 8);
     }
 
     Promise.all([

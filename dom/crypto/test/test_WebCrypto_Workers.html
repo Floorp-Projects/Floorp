@@ -42,8 +42,7 @@ TestArray.addTest(
     crypto.subtle.generateKey(alg, false, ["encrypt", "decrypt"]).then(key => {
       // Wait for ciphertext, check and decrypt.
       worker.addEventListener("message", ({data: ciphertext}) => {
-        var alg = { name: "AES-GCM", iv: nonce };
-        crypto.subtle.decrypt(alg, key, ciphertext)
+        crypto.subtle.decrypt({ name: "AES-GCM", iv: nonce }, key, ciphertext)
           .then(memcmp_complete(that, data), error(that));
       });
 
