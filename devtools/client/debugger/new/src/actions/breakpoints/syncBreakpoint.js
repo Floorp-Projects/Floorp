@@ -31,11 +31,11 @@ type BreakpointSyncData = {
 };
 
 async function makeScopedLocation(
-  { name, offset }: ASTLocation,
+  { name, offset, index }: ASTLocation,
   location: SourceLocation,
   source
 ) {
-  const scope = await findScopeByName(source, name);
+  const scope = await findScopeByName(source, name, index);
   // fallback onto the location line, if the scope is not found
   // note: we may at some point want to delete the breakpoint if the scope
   // disappears
