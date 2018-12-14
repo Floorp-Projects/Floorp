@@ -146,23 +146,27 @@ TestArray.addTest(
   function() {
     var that = this;
     var tests = tv.hkdf.slice();
+    if (!tests.length) {
+      error(that)("No tests found");
+      return;
+    }
 
     function next() {
       if (!tests.length) {
-        return;
+        return Promise.resolve();
       }
 
       var test = tests.shift();
-      var {key, data} = test;
+      var {key} = test;
 
       return crypto.subtle.importKey("raw", key, "HKDF", false, ["deriveBits"])
-        .then(function(key) {
+        .then(function(baseKey) {
           return crypto.subtle.deriveBits({
             name: "HKDF",
             hash: test.prf,
             salt: test.salt,
             info: test.info,
-          }, key, test.data.byteLength * 8);
+          }, baseKey, test.data.byteLength * 8);
         })
         .then(function(data) {
           if (!util.memcmp(data, test.data)) {

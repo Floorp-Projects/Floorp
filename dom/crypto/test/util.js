@@ -105,7 +105,7 @@ function shallowArrayEquals(x, y) {
     return false;
   }
 
-  for (i in x) {
+  for (let i in x) {
     if (x[i] != y[i]) {
       return false;
     }

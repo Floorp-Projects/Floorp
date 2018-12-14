@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// This file expects utils.js to be included in its scope
+/* import-globals-from ./util.js */
 var MOCHITEST = false;
 
 function Test(name, test) {
@@ -34,7 +36,9 @@ function Test(name, test) {
   };
 
   this.complete = function(result) {
-    if (MOCHITEST) { ok(result, this.name); }
+    if (MOCHITEST) {
+      ok(result, this.name);
+    }
 
     // Note the end time
     this.endTime = new Date();
@@ -60,28 +64,30 @@ function Test(name, test) {
 
     // Print the name of the test
     if (this.name) {
-      this.row[0].innerHTML = this.name;
+      this.row[0].textContent = this.name;
       var that = this;
-      this.row[0].onclick = function() { that.run(); };
+      this.row[0].onclick = function() {
+        that.run();
+      };
     } else {
       this.row[0] = "";
     }
 
     // Print the result of the test
-    if (this.result == true) {
+    if (this.result === true) {
       this.row[1].className = "pass";
       this.row[1].innerHTML = "PASS";
-    } else if (this.result == false) {
+    } else if (this.result === false) {
       this.row[1].className = "fail";
       this.row[1].innerHTML = "FAIL";
     } else {
       // this.row[1].innerHTML = "";
-      this.row[1].innerHTML = this.result;
+      this.row[1].textContent = this.result;
     }
 
     // Print the elapsed time, if known
     if (this.startTime && this.endTime) {
-      this.row[2].innerHTML = (this.endTime - this.startTime) + " ms";
+      this.row[2].textContent = (this.endTime - this.startTime) + " ms";
     } else {
       this.row[2].innerHTML = "";
     }
@@ -143,13 +149,13 @@ var TestArray = {
   updateSummary() {
     this.pass = this.fail = this.pending = 0;
     for (var i = 0; i < this.tests.length; ++i) {
-      if (this.tests[i].result == true) this.pass++;
-      if (this.tests[i].result == false) this.fail++;
+      if (this.tests[i].result === true) this.pass++;
+      if (this.tests[i].result === false) this.fail++;
       if (this.tests[i].result == null) this.pending++;
     }
-    this.passSpan.innerHTML = this.pass;
-    this.failSpan.innerHTML = this.fail;
-    this.pendingSpan.innerHTML = this.pending;
+    this.passSpan.textContent = this.pass;
+    this.failSpan.textContent = this.fail;
+    this.pendingSpan.textContent = this.pending;
   },
 
   load() {
@@ -182,7 +188,9 @@ var TestArray = {
     this.updateSummary();
     var i = this.currTest++;
     if (i >= this.tests.length) {
-      if (MOCHITEST) { SimpleTest.finish(); }
+      if (MOCHITEST) {
+        SimpleTest.finish();
+      }
       return;
     }
 
@@ -195,16 +203,20 @@ var TestArray = {
 };
 
 if (window.addEventListener) {
-  window.addEventListener("load", function() { TestArray.load(); } );
+  window.addEventListener("load", function() {
+    TestArray.load();
+  });
 } else {
-  window.attachEvent("onload", function() { TestArray.load(); } );
+  window.attachEvent("onload", function() {
+    TestArray.load();
+  });
 }
 
 function start() {
   TestArray.run();
 }
 
-MOCHITEST = ("SimpleTest" in window);
+MOCHITEST = "SimpleTest" in window;
 if (MOCHITEST) {
   SimpleTest.waitForExplicitFinish();
   SimpleTest.requestLongerTimeout(2);

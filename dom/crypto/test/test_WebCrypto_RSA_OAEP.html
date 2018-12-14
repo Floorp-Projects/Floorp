@@ -33,7 +33,6 @@ TestArray.addTest(
     var privKey, pubKey;
     var alg = {name: "RSA-OAEP", hash: "SHA-1"};
 
-    var privKey, pubKey;
     function setPriv(x) { privKey = x; }
     function setPub(x) { pubKey = x; }
     function doEncrypt() {
@@ -112,7 +111,7 @@ TestArray.addTest(
   "RSA-OAEP input data length checks (2048-bit key)",
   function() {
     var that = this;
-    var privKey, pubKey;
+    var pubKey;
     var alg = {
       name: "RSA-OAEP",
       hash: "SHA-1",
@@ -120,8 +119,7 @@ TestArray.addTest(
       publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
     };
 
-    var privKey, pubKey;
-    function setKey(x) { pubKey = x.publicKey; privKey = x.privateKey; }
+    function setKey(x) { pubKey = x.publicKey; }
     function doEncrypt(n) {
       console.log("entered encrypt(" + n + ")");
       return function() {
