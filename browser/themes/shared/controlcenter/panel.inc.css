@@ -739,7 +739,8 @@ description#identity-popup-content-verifier,
   min-width: 0;
   padding: 2px;
   background-color: transparent;
-  color: inherit;
+  /* !important overrides :hover and :active colors from button.css */
+  color: inherit !important;
   opacity: 0.6;
   margin-inline-start: 2px;
 }
