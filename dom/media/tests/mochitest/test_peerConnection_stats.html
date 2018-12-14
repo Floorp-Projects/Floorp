@@ -146,7 +146,11 @@ var pedanticChecks = report => {
 
     // timestamp
     ok(stat.timestamp >= 0, stat.type + ".timestamp is not less than 0");
-
+    // If the timebase for the timestamp is not properly set the timestamp will
+    // appear relative to the year 1970; Bug 1495446
+    const date = new Date(stat.timestamp);
+    ok(date.getFullYear() > 1970,
+       `${stat.type}.timestamp is relative to current time, date=${date}`);
     //
     // RTCStreamStats attributes with common behavior
     //
