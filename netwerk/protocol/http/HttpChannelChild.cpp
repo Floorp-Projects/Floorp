@@ -22,6 +22,7 @@
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/HttpChannelChild.h"
+#include "mozilla/net/UrlClassifierCommon.h"
 
 #include "AltDataOutputStreamChild.h"
 #include "CookieServiceChild.h"
@@ -1809,9 +1810,9 @@ void HttpChannelChild::ProcessNotifyTrackingProtectionDisabled() {
   nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
   neckoTarget->Dispatch(
       NS_NewRunnableFunction(
-          "nsChannelClassifier::NotifyTrackingProtectionDisabled",
+          "UrlClassifierCommon::NotifyTrackingProtectionDisabled",
           [self]() {
-            nsChannelClassifier::NotifyTrackingProtectionDisabled(self);
+            UrlClassifierCommon::NotifyTrackingProtectionDisabled(self);
           }),
       NS_DISPATCH_NORMAL);
 }
@@ -1824,7 +1825,7 @@ void HttpChannelChild::ProcessNotifyCookieAllowed() {
   nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
   neckoTarget->Dispatch(
       NS_NewRunnableFunction(
-          "nsChannelClassifier::NotifyBlockingDecision",
+          "UrlClassifierCommon::NotifyBlockingDecision",
           [self]() {
             AntiTrackingCommon::NotifyBlockingDecision(
                 self, AntiTrackingCommon::BlockingDecision::eAllow, 0);
@@ -1841,7 +1842,7 @@ void HttpChannelChild::ProcessNotifyTrackingCookieBlocked(
   RefPtr<HttpChannelChild> self = this;
   nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
   neckoTarget->Dispatch(
-      NS_NewRunnableFunction("nsChannelClassifier::NotifyTrackingCookieBlocked",
+      NS_NewRunnableFunction("AntiTrackingCommon::NotifyBlockingDecision",
                              [self, aRejectedReason]() {
                                AntiTrackingCommon::NotifyBlockingDecision(
                                    self,

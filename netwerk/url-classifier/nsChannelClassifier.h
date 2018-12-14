@@ -89,16 +89,12 @@ class nsChannelClassifier final : public nsIURIClassifierCallback,
                                                   bool aAnnotationsOnly,
                                                   bool* result);
 
-  bool AddonMayLoad(nsIChannel* aChannel, nsIURI* aUri);
   void AddShutdownObserver();
   void RemoveShutdownObserver();
   static nsresult SendThreatHitReport(nsIChannel* aChannel,
                                       const nsACString& aProvider,
                                       const nsACString& aList,
                                       const nsACString& aFullHash);
-
-  static void NotifyChannelBlocked(nsIChannel* aChannel,
-                                   unsigned aBlockedReason);
 
  public:
   // If we are blocking content, update the corresponding flag in the respective
@@ -107,7 +103,6 @@ class nsChannelClassifier final : public nsIURIClassifierCallback,
                                     const nsACString& aList,
                                     const nsACString& aProvider,
                                     const nsACString& aFullHash);
-  static nsresult NotifyTrackingProtectionDisabled(nsIChannel* aChannel);
 };
 
 }  // namespace net

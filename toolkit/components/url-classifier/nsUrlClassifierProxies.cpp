@@ -8,6 +8,7 @@
 
 #include "mozilla/SyncRunnable.h"
 
+using namespace mozilla;
 using namespace mozilla::safebrowsing;
 using mozilla::NewRunnableMethod;
 
