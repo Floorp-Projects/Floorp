@@ -268,6 +268,7 @@ xmlns="http://www.w3.org/1999/xhtml"
            noautofocus="true"
            hidden="true"
            flip="none"
+           norolluponanchor="true"
            level="parent">
       <html:div class="urlbarView-body-outer">
         <html:div class="urlbarView-body-inner">
