@@ -696,6 +696,11 @@ impl ClipStore {
         })
     }
 
+    pub fn clear_old_instances(&mut self) {
+        self.clip_node_instances.clear();
+    }
+
+
     /// Walk the clip chain of a primitive, and calculate a minimal
     /// local clip rect for the primitive.
     #[allow(dead_code)]
