@@ -6,6 +6,7 @@
 
 #include "URLClassifierParent.h"
 #include "nsComponentManagerUtils.h"
+#include "mozilla/net/UrlClassifierFeatureResult.h"
 #include "mozilla/Unused.h"
 
 using namespace mozilla;
@@ -41,37 +42,122 @@ mozilla::ipc::IPCResult URLClassifierParent::StartClassify(
   return IPC_OK();
 }
 
-void URLClassifierParent::ActorDestroy(ActorDestroyReason aWhy) {
-  mIPCOpen = false;
-}
-
 /////////////////////////////////////////////////////////////////////
 // URLClassifierLocalParent.
 
-NS_IMPL_ISUPPORTS(URLClassifierLocalParent, nsIURIClassifierCallback)
+namespace {
+
+// This class implements a nsIUrlClassifierFeature on the parent side, starting
+// from an IPC data struct.
+class IPCFeature final : public nsIUrlClassifierFeature {
+ public:
+  NS_DECL_ISUPPORTS
+
+  explicit IPCFeature(const IPCURLClassifierFeature& aFeature)
+      : mIPCFeature(aFeature) {}
+
+  NS_IMETHOD
+  GetName(nsACString& aName) override {
+    aName = mIPCFeature.featureName();
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  GetTables(nsIUrlClassifierFeature::listType,
+            nsTArray<nsCString>& aTables) override {
+    aTables.AppendElements(mIPCFeature.tables());
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  HasTable(const nsACString& aTable, nsIUrlClassifierFeature::listType,
+           bool* aResult) override {
+    NS_ENSURE_ARG_POINTER(aResult);
+    *aResult = mIPCFeature.tables().Contains(aTable);
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  HasHostInPreferences(const nsACString& aHost,
+                       nsIUrlClassifierFeature::listType,
+                       nsACString& aTableName, bool* aResult) override {
+    NS_ENSURE_ARG_POINTER(aResult);
+    *aResult = false;
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  GetSkipHostList(nsACString& aList) override {
+    aList = mIPCFeature.skipHostList();
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  ProcessChannel(nsIChannel* aChannel, const nsACString& aList,
+                 bool* aShouldContinue) override {
+    NS_ENSURE_ARG_POINTER(aShouldContinue);
+    *aShouldContinue = true;
+
+    // Nothing to do here.
+    return NS_OK;
+  }
+
+ private:
+  ~IPCFeature() = default;
+
+  IPCURLClassifierFeature mIPCFeature;
+};
+
+NS_IMPL_ISUPPORTS(IPCFeature, nsIUrlClassifierFeature)
+
+}  // namespace
+
+NS_IMPL_ISUPPORTS(URLClassifierLocalParent, nsIUrlClassifierFeatureCallback)
 
 mozilla::ipc::IPCResult URLClassifierLocalParent::StartClassify(
-    nsIURI* aURI, const nsACString& aTables) {
+    nsIURI* aURI, const nsTArray<IPCURLClassifierFeature>& aFeatures) {
+  MOZ_ASSERT(aURI);
+
   nsresult rv = NS_OK;
   // Note that in safe mode, the URL classifier service isn't available, so we
   // should handle the service not being present gracefully.
   nsCOMPtr<nsIURIClassifier> uriClassifier =
       do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    MOZ_ASSERT(aURI);
-    rv = uriClassifier->AsyncClassifyLocalWithTables(
-        aURI, aTables, nsTArray<nsCString>(), nsTArray<nsCString>(), this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    OnClassifyComplete(nsTArray<RefPtr<nsIUrlClassifierFeatureResult>>());
+    return IPC_OK();
   }
-  if (NS_FAILED(rv)) {
-    // Cannot do ClassificationFailed() because the child side
-    // is expecting a callback. Only the second parameter will
-    // be used, which is the "matched list". We treat "unable
-    // to classify" as "not on any list".
-    OnClassifyComplete(NS_OK, EmptyCString(), EmptyCString(), EmptyCString());
+
+  nsTArray<RefPtr<nsIUrlClassifierFeature>> features;
+  for (const IPCURLClassifierFeature& feature : aFeatures) {
+    features.AppendElement(new IPCFeature(feature));
   }
+
+  // Doesn't matter if we pass blacklist, whitelist or any other list.
+  // IPCFeature returns always the same values.
+  rv = uriClassifier->AsyncClassifyLocalWithFeatures(
+      aURI, features, nsIUrlClassifierFeature::blacklist, this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    OnClassifyComplete(nsTArray<RefPtr<nsIUrlClassifierFeatureResult>>());
+    return IPC_OK();
+  }
+
   return IPC_OK();
 }
 
-void URLClassifierLocalParent::ActorDestroy(ActorDestroyReason aWhy) {
-  mIPCOpen = false;
+NS_IMETHODIMP
+URLClassifierLocalParent::OnClassifyComplete(
+    const nsTArray<RefPtr<nsIUrlClassifierFeatureResult>>& aResults) {
+  nsTArray<URLClassifierLocalResult> ipcResults;
+  for (nsIUrlClassifierFeatureResult* result : aResults) {
+    URLClassifierLocalResult* ipcResult = ipcResults.AppendElement();
+
+    net::UrlClassifierFeatureResult* r =
+        static_cast<net::UrlClassifierFeatureResult*>(result);
+    r->Feature()->GetName(ipcResult->featureName());
+    ipcResult->matchingList() = r->List();
+  }
+
+  Unused << Send__delete__(this, ipcResults);
+  return NS_OK;
 }

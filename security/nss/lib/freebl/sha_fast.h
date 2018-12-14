@@ -99,6 +99,7 @@ swap4b(PRUint32 value)
       defined(__ARM_ARCH_7__) ||   \
       defined(__ARM_ARCH_7A__) ||  \
       defined(__ARM_ARCH_7R__)))
+#if defined(IS_LITTLE_ENDIAN)
 static __inline__ PRUint32
 swap4b(PRUint32 value)
 {
@@ -109,6 +110,7 @@ swap4b(PRUint32 value)
     return ret;
 }
 #define SHA_HTONL(x) swap4b(x)
+#endif
 
 #endif /* x86 family */
 

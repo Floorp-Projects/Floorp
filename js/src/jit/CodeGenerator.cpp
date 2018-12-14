@@ -6212,6 +6212,13 @@ static const VMFunction NewStringIteratorObjectInfo =
     FunctionInfo<NewStringIteratorObjectFn>(NewStringIteratorObject,
                                             "NewStringIteratorObject");
 
+typedef RegExpStringIteratorObject* (*NewRegExpStringIteratorObjectFn)(
+    JSContext*, NewObjectKind);
+
+static const VMFunction NewRegExpStringIteratorObjectInfo =
+    FunctionInfo<NewRegExpStringIteratorObjectFn>(
+        NewRegExpStringIteratorObject, "NewRegExpStringIteratorObject");
+
 void CodeGenerator::visitNewIterator(LNewIterator* lir) {
   Register objReg = ToRegister(lir->output());
   Register tempReg = ToRegister(lir->temp());
@@ -6224,6 +6231,10 @@ void CodeGenerator::visitNewIterator(LNewIterator* lir) {
       break;
     case MNewIterator::StringIterator:
       ool = oolCallVM(NewStringIteratorObjectInfo, lir,
+                      ArgList(Imm32(GenericObject)), StoreRegisterTo(objReg));
+      break;
+    case MNewIterator::RegExpStringIterator:
+      ool = oolCallVM(NewRegExpStringIteratorObjectInfo, lir,
                       ArgList(Imm32(GenericObject)), StoreRegisterTo(objReg));
       break;
     default:

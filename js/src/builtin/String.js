@@ -64,6 +64,33 @@ function String_generic_match(thisValue, regexp) {
     return callFunction(String_match, thisValue, regexp);
 }
 
+// String.prototype.matchAll proposal.
+//
+// String.prototype.matchAll ( regexp )
+function String_matchAll(regexp) {
+    // Step 1.
+    RequireObjectCoercible(this);
+
+    // Step 2.
+    if (regexp !== undefined && regexp !== null) {
+        // Step 2.a.
+        var matcher = GetMethod(regexp, std_matchAll);
+
+        // Step 2.b.
+        if (matcher !== undefined)
+            return callContentFunction(matcher, regexp, this);
+    }
+
+    // Step 3.
+    var string = ToString(this);
+
+    // Step 4.
+    var rx = RegExpCreate(regexp, "g");
+
+    // Step 5.
+    return callContentFunction(GetMethod(rx, std_matchAll), rx, string);
+}
+
 /**
  * A helper function implementing the logic for both String.prototype.padStart
  * and String.prototype.padEnd as described in ES7 Draft March 29, 2016

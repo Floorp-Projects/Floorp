@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TrackingDummyChannelParent.h"
+#include "mozilla/net/AsyncUrlChannelClassifier.h"
 #include "mozilla/Unused.h"
-#include "nsChannelClassifier.h"
 #include "nsIChannel.h"
 #include "nsIPrincipal.h"
 #include "nsNetUtil.h"
@@ -34,16 +34,12 @@ void TrackingDummyChannelParent::Init(nsIURI* aURI, nsIURI* aTopWindowURI,
   RefPtr<TrackingDummyChannel> channel = new TrackingDummyChannel(
       aURI, aTopWindowURI, aTopWindowURIResult, aLoadInfo);
 
-  RefPtr<nsChannelClassifier> channelClassifier =
-      new nsChannelClassifier(channel);
-
-  bool willCallback =
-      NS_SUCCEEDED(channelClassifier->CheckIsTrackerWithLocalTable(
-          [self = std::move(self), channel]() {
-            if (self->mIPCActive) {
-              Unused << Send__delete__(self, channel->IsTrackingResource());
-            }
-          }));
+  bool willCallback = NS_SUCCEEDED(AsyncUrlChannelClassifier::CheckChannel(
+      channel, [self = std::move(self), channel]() {
+        if (self->mIPCActive) {
+          Unused << Send__delete__(self, channel->IsTrackingResource());
+        }
+      }));
 
   if (willCallback) {
     onExit.release();

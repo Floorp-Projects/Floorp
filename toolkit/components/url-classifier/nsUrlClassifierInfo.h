@@ -6,7 +6,11 @@
 #define nsUrlClassifierInfo_h_
 
 #include "nsIUrlClassifierInfo.h"
+#include "nsComponentManagerUtils.h"
+#include "nsCOMPtr.h"
+#include "nsIMutableArray.h"
 #include "nsString.h"
+#include "nsTArray.h"
 
 class nsUrlClassifierPositiveCacheEntry final
     : public nsIUrlClassifierPositiveCacheEntry {
