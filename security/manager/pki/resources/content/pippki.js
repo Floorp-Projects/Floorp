@@ -102,8 +102,13 @@ function certToFilename(cert) {
 
 async function exportToFile(parent, cert) {
   var bundle = document.getElementById("pippki_bundle");
+  if (!bundle) {
+    bundle = document.createElement("stringbundle");
+    bundle.setAttribute("src", "chrome://pippki/locale/pippki.properties");
+    document.documentElement.appendChild(bundle);
+  }
   if (!cert) {
-    return undefined;
+    return;
   }
 
   let results = await asyncDetermineUsages(cert);
@@ -122,77 +127,76 @@ async function exportToFile(parent, cert) {
   fp.appendFilter(bundle.getString("CertFormatPKCS7"), "*.p7c");
   fp.appendFilter(bundle.getString("CertFormatPKCS7Chain"), "*.p7c");
   fp.appendFilters(Ci.nsIFilePicker.filterAll);
-  return new Promise(resolve => {
-    fp.open(res => {
-      resolve(fpCallback(res));
-    });
+  let filePickerResult = await new Promise(resolve => {
+    fp.open(resolve);
   });
 
-  function fpCallback(res) {
-    if (res != Ci.nsIFilePicker.returnOK &&
-        res != Ci.nsIFilePicker.returnReplace) {
-      return;
-    }
+  if (filePickerResult != Ci.nsIFilePicker.returnOK &&
+      filePickerResult != Ci.nsIFilePicker.returnReplace) {
+    return;
+  }
 
-    var content = "";
-    switch (fp.filterIndex) {
-      case 1:
-        content = getPEMString(cert);
-        for (let i = 1; i < chain.length; i++) {
-          content += getPEMString(chain[i]);
-        }
+  var content = "";
+  switch (fp.filterIndex) {
+    case 1:
+      content = getPEMString(cert);
+      for (let i = 1; i < chain.length; i++) {
+        content += getPEMString(chain[i]);
+      }
+      break;
+    case 2:
+      content = getDERString(cert);
+      break;
+    case 3:
+      content = getPKCS7String([cert]);
+      break;
+    case 4:
+      content = getPKCS7String(chain);
+      break;
+    case 0:
+    default:
+      content = getPEMString(cert);
+      break;
+  }
+  var msg;
+  var written = 0;
+  try {
+    var file = Cc["@mozilla.org/file/local;1"].
+               createInstance(Ci.nsIFile);
+    file.initWithPath(fp.file.path);
+    var fos = Cc["@mozilla.org/network/file-output-stream;1"].
+              createInstance(Ci.nsIFileOutputStream);
+    // flags: PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
+    fos.init(file, 0x02 | 0x08 | 0x20, 0o0644, 0);
+    written = fos.write(content, content.length);
+    fos.close();
+  } catch (e) {
+    switch (e.result) {
+      case Cr.NS_ERROR_FILE_ACCESS_DENIED:
+        msg = bundle.getString("writeFileAccessDenied");
         break;
-      case 2:
-        content = getDERString(cert);
+      case Cr.NS_ERROR_FILE_IS_LOCKED:
+        msg = bundle.getString("writeFileIsLocked");
         break;
-      case 3:
-        content = getPKCS7String([cert]);
+      case Cr.NS_ERROR_FILE_NO_DEVICE_SPACE:
+      case Cr.NS_ERROR_FILE_DISK_FULL:
+        msg = bundle.getString("writeFileNoDeviceSpace");
         break;
-      case 4:
-        content = getPKCS7String(chain);
-        break;
-      case 0:
       default:
-        content = getPEMString(cert);
+        msg = e.message;
         break;
     }
-    var msg;
-    var written = 0;
-    try {
-      var file = Cc["@mozilla.org/file/local;1"].
-                 createInstance(Ci.nsIFile);
-      file.initWithPath(fp.file.path);
-      var fos = Cc["@mozilla.org/network/file-output-stream;1"].
-                createInstance(Ci.nsIFileOutputStream);
-      // flags: PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
-      fos.init(file, 0x02 | 0x08 | 0x20, 0o0644, 0);
-      written = fos.write(content, content.length);
-      fos.close();
-    } catch (e) {
-      switch (e.result) {
-        case Cr.NS_ERROR_FILE_ACCESS_DENIED:
-          msg = bundle.getString("writeFileAccessDenied");
-          break;
-        case Cr.NS_ERROR_FILE_IS_LOCKED:
-          msg = bundle.getString("writeFileIsLocked");
-          break;
-        case Cr.NS_ERROR_FILE_NO_DEVICE_SPACE:
-        case Cr.NS_ERROR_FILE_DISK_FULL:
-          msg = bundle.getString("writeFileNoDeviceSpace");
-          break;
-        default:
-          msg = e.message;
-          break;
-      }
+  }
+  if (written != content.length) {
+    if (msg.length == 0) {
+      msg = bundle.getString("writeFileUnknownError");
     }
-    if (written != content.length) {
-      if (msg.length == 0) {
-        msg = bundle.getString("writeFileUnknownError");
-      }
-      alertPromptService(bundle.getString("writeFileFailure"),
-                         bundle.getFormattedString("writeFileFailed",
-                         [fp.file.path, msg]));
-    }
+    alertPromptService(bundle.getString("writeFileFailure"),
+                       bundle.getFormattedString("writeFileFailed",
+                       [fp.file.path, msg]));
+  }
+  if (Cu.isInAutomation) {
+    Services.obs.notifyObservers(null, "cert-export-finished");
   }
 }
 
