@@ -5,10 +5,9 @@
 // @flow
 import { connect } from "react-redux";
 import React, { Component } from "react";
-
 import Breakpoint from "./Breakpoint";
 
-import { getSelectedSource, getVisibleBreakpoints } from "../../selectors";
+import { getSelectedSource, getFirstVisibleBreakpoints } from "../../selectors";
 import { makeLocationId } from "../../utils/breakpoint";
 import { isLoaded } from "../../utils/source";
 
@@ -54,6 +53,8 @@ class Breakpoints extends Component<Props> {
 }
 
 export default connect(state => ({
-  breakpoints: getVisibleBreakpoints(state),
+  // Retrieves only the first breakpoint per line so that the
+  // breakpoint marker represents only the first breakpoint
+  breakpoints: getFirstVisibleBreakpoints(state),
   selectedSource: getSelectedSource(state)
 }))(Breakpoints);
