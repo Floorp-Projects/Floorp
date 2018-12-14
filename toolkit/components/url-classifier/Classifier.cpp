@@ -406,9 +406,9 @@ void Classifier::TableRequest(nsACString& aResult) {
   mIsTableRequestResultOutdated = false;
 }
 
-nsresult Classifier::Check(const nsACString& aSpec,
-                           const nsTArray<nsCString>& aTables,
-                           LookupResultArray& aResults) {
+nsresult Classifier::CheckURI(const nsACString& aSpec,
+                              const nsTArray<nsCString>& aTables,
+                              LookupResultArray& aResults) {
   Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_CL_CHECK_TIME> timer;
 
   // Get the set of fragments based on the url. This is necessary because we
@@ -420,48 +420,59 @@ nsresult Classifier::Check(const nsACString& aSpec,
 
   LookupCacheArray cacheArray;
   for (const nsCString& table : aTables) {
-    LOG(("Checking table %s", table.get()));
-    RefPtr<LookupCache> cache = GetLookupCache(table);
-    if (cache) {
-      cacheArray.AppendElement(cache);
-    } else {
-      return NS_ERROR_FAILURE;
-    }
+    LookupResultArray results;
+    rv = CheckURIFragments(fragments, table, results);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aResults.AppendElements(results);
+  }
+
+  return NS_OK;
+}
+
+nsresult Classifier::CheckURIFragments(
+    const nsTArray<nsCString>& aSpecFragments, const nsACString& aTable,
+    LookupResultArray& aResults) {
+  // A URL can form up to 30 different fragments
+  MOZ_ASSERT(aSpecFragments.Length() <=
+             (MAX_HOST_COMPONENTS * (MAX_PATH_COMPONENTS + 2)));
+
+  LOG(("Checking table %s", aTable.BeginReading()));
+  RefPtr<LookupCache> cache = GetLookupCache(aTable);
+  if (NS_WARN_IF(!cache)) {
+    return NS_ERROR_FAILURE;
   }
 
   // Now check each lookup fragment against the entries in the DB.
-  for (uint32_t i = 0; i < fragments.Length(); i++) {
+  for (uint32_t i = 0; i < aSpecFragments.Length(); i++) {
     Completion lookupHash;
-    lookupHash.FromPlaintext(fragments[i]);
+    lookupHash.FromPlaintext(aSpecFragments[i]);
 
     if (LOG_ENABLED()) {
       nsAutoCString checking;
       lookupHash.ToHexString(checking);
-      LOG(("Checking fragment %s, hash %s (%X)", fragments[i].get(),
+      LOG(("Checking fragment %s, hash %s (%X)", aSpecFragments[i].get(),
            checking.get(), lookupHash.ToUint32()));
     }
 
-    for (uint32_t i = 0; i < cacheArray.Length(); i++) {
-      RefPtr<LookupCache> cache = cacheArray[i];
-      bool has, confirmed;
-      uint32_t matchLength;
+    bool has, confirmed;
+    uint32_t matchLength;
 
-      rv = cache->Has(lookupHash, &has, &matchLength, &confirmed);
-      NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv = cache->Has(lookupHash, &has, &matchLength, &confirmed);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      if (has) {
-        RefPtr<LookupResult> result = new LookupResult;
-        aResults.AppendElement(result);
+    if (has) {
+      RefPtr<LookupResult> result = new LookupResult;
+      aResults.AppendElement(result);
 
-        LOG(("Found a result in %s: %s", cache->TableName().get(),
-             confirmed ? "confirmed." : "Not confirmed."));
+      LOG(("Found a result in %s: %s", cache->TableName().get(),
+           confirmed ? "confirmed." : "Not confirmed."));
 
-        result->hash.complete = lookupHash;
-        result->mConfirmed = confirmed;
-        result->mTableName.Assign(cache->TableName());
-        result->mPartialHashLength = confirmed ? COMPLETE_SIZE : matchLength;
-        result->mProtocolV2 = LookupCache::Cast<LookupCacheV2>(cache);
-      }
+      result->hash.complete = lookupHash;
+      result->mConfirmed = confirmed;
+      result->mTableName.Assign(cache->TableName());
+      result->mPartialHashLength = confirmed ? COMPLETE_SIZE : matchLength;
+      result->mProtocolV2 = LookupCache::Cast<LookupCacheV2>(cache);
     }
   }
 
