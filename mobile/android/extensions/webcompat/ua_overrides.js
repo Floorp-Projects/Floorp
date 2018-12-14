@@ -16,12 +16,25 @@ const UAOverrides = {
     {
       matches: ["*://webcompat-addon-testcases.schub.io/*"],
       uaTransformer: (originalUA) => {
-        let prefix = originalUA.substr(0, originalUA.indexOf(")") + 1);
-        return `${prefix} AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36`;
+        return UAHelpers.getPrefix(originalUA) + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36";
       },
     },
   ],
-  desktop: [],
+  desktop: [
+    /*
+     * Bug 1464106 - directvnow.com - Create a UA override for Directvnow.com for playback on desktop
+     * WebCompat issue #3846 - https://webcompat.com/issues/3846
+     *
+     * directvnow.com is blocking Firefox via UA sniffing. Outreach is still going
+     * on, and playback works fine if we spoof as Chrome.
+     */
+    {
+      matches: ["*://*.directvnow.com/*"],
+      uaTransformer: (originalUA) => {
+        return UAHelpers.getPrefix(originalUA) + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36";
+      },
+    },
+  ],
   android: [
     /*
      * Bug 1480710 - m.imgur.com - Build UA override
@@ -34,8 +47,7 @@ const UAOverrides = {
     {
       matches: ["*://m.imgur.com/*"],
       uaTransformer: (originalUA) => {
-        let prefix = originalUA.substr(0, originalUA.indexOf(")") + 1);
-        return prefix + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.85 Mobile Safari/537.36";
+        return UAHelpers.getPrefix(originalUA) + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.85 Mobile Safari/537.36";
       },
     },
 
@@ -67,10 +79,224 @@ const UAOverrides = {
         return originalUA + " AppleWebKit/537.36 (KHTML, like Gecko)";
       },
     },
+
+    /*
+     * Bug 1177298 - Write UA overrides for top Japanese Sites
+     * (Imported from ua-update.json.in)
+     *
+     * To receive the proper mobile version instead of the desktop version or
+     * a lower grade mobile experience, the UA is spoofed.
+     */
+    {
+      matches: ["*://weather.yahoo.co.jp/*"],
+      uaTransformer: (_) => {
+        return "Mozilla/5.0 (Linux; Android 5.0.2; Galaxy Nexus Build/IMM76B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.93 Mobile Safari/537.36";
+      },
+    },
+
+    /*
+     * Bug 1177298 - Write UA overrides for top Japanese Sites
+     * (Imported from ua-update.json.in)
+     *
+     * To receive the proper mobile version instead of the desktop version or
+     * a lower grade mobile experience, the UA is spoofed.
+     */
+    {
+      matches: ["*://*.lohaco.jp/*"],
+      uaTransformer: (_) => {
+        return "Mozilla/5.0 (Linux; Android 5.0.2; Galaxy Nexus Build/IMM76B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.93 Mobile Safari/537.36";
+      },
+    },
+
+    /*
+     * Bug 1177298 - Write UA overrides for top Japanese Sites
+     * (Imported from ua-update.json.in)
+     *
+     * To receive the proper mobile version instead of the desktop version or
+     * a lower grade mobile experience, the UA is spoofed.
+     */
+    {
+      matches: ["*://*.nhk.or.jp/*"],
+      uaTransformer: (originalUA) => {
+        return originalUA + " AppleWebKit";
+      },
+    },
+
+    /*
+     * Bug 1177298 - Write UA overrides for top Japanese Sites
+     * (Imported from ua-update.json.in)
+     *
+     * To receive the proper mobile version instead of the desktop version or
+     * a lower grade mobile experience, the UA is spoofed.
+     */
+    {
+      matches: ["*://*.uniqlo.com/*"],
+      uaTransformer: (originalUA) => {
+        return originalUA + " Mobile Safari";
+      },
+    },
+
+    /*
+     * Bug 1338260 - Add UA override for directTV
+     * (Imported from ua-update.json.in)
+     *
+     * DirectTV has issues with scrolling and cut-off images. Pretending to be
+     * Chrome for Android fixes those issues.
+     */
+    {
+      matches: ["*://*.directv.com/*"],
+      uaTransformer: (_) => {
+        return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
+      },
+    },
+
+    /*
+     * Bug 1385206 - Create UA override for rakuten.co.jp on Firefox Android
+     * (Imported from ua-update.json.in)
+     *
+     * rakuten.co.jp serves a Desktop version if Firefox is included in the UA.
+     */
+    {
+      matches: ["*://*.rakuten.co.jp/*"],
+      uaTransformer: (originalUA) => {
+        return originalUA.replace(/Firefox.+$/, "");
+      },
+    },
+
+    /*
+     * Bug 1483233 - Add a mobile UA override for ebay
+     * (Imported from ua-update.json.in)
+     *
+     * eBay's systems have an issue where Fennec gets sent into an endless
+     * redirect, rendering it completely unusable.
+     */
+    {
+      matches: [
+        "*://*.ebay.at/*", "*://*.ebay.be/*", "*://*.ebay.ca/*", "*://*.ebay.ch/*",
+        "*://*.ebay.cn/*", "*://*.ebay.co.th/*", "*://*.ebay.co.uk/*", "*://*.ebay.com.au/*",
+        "*://*.ebay.com.hk/*", "*://*.ebay.com.my/*", "*://*.ebay.com.sg/*", "*://*.ebay.com.tw/*",
+        "*://*.ebay.com/*", "*://*.ebay.de/*", "*://*.ebay.es/*", "*://*.ebay.fr/*",
+        "*://*.ebay.ie/*", "*://*.ebay.in/*", "*://*.ebay.it/*", "*://*.ebay.nl/*",
+        "*://*.ebay.ph/*", "*://*.ebay.pl/*", "*://*.ebay.vn/*",
+      ],
+      uaTransformer: (_) => {
+        return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
+      },
+    },
+
+    /*
+     * Bug 969844 - mobile.de sends desktop site to Firefox on Android
+     *
+     * mobile.de sends the desktop site to Fennec. Spooing as Chrome works fine.
+     */
+    {
+      matches: ["*://*.mobile.de/*"],
+      uaTransformer: (_) => {
+        return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
+      },
+    },
+
+    /*
+     * Bug 1476436 - mobile.bet365.com - add UA override for fennec
+     * WebCompat issue #17010 - https://webcompat.com/issues/17010
+     *
+     * mobile.bet365.com serves fennec an alternative version with less interactive
+     * elements, although they work just fine. Spoofing as Chrome makes the
+     * interactive elements appear.
+     */
+    {
+      matches: ["*://mobile.bet365.com/*"],
+      uaTransformer: (_) => {
+        return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
+      },
+    },
+
+    /*
+     * Bug 1509831 - cc.com - Add UA override for CC.com
+     * WebCompat issue #329 - https://webcompat.com/issues/329
+     *
+     * ComedyCentral blocks Firefox for not being able to play HLS, which was
+     * true in previous versions, but no longer is. With a spoofed Chrome UA,
+     * the site works just fine.
+     */
+    {
+      matches: ["*://*.cc.com/*"],
+      uaTransformer: (_) => {
+        return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
+      },
+    },
+
+    /*
+     * Bug 1508564 - cnbc.com - Add UA override for videos on www.cnbc.com
+     * WebCompat issue #8410 - https://webcompat.com/issues/8410
+     *
+     * The video framework loaded in via pdk.theplatform.com fails to
+     * acknowledge that Firefox does support HLS, so it fails to find a
+     * supported video format and shows the loading bar forever. Spoofing as
+     * Chrome works.
+     */
+    {
+      matches: ["*://*.cnbc.com/*"],
+      uaTransformer: (_) => {
+        return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
+      },
+    },
+
+    /*
+     * Bug 1508516 - cineflix.com.br - Add UA override for cineflix.com.br/m/
+     * WebCompat issue #21553 - https://webcompat.com/issues/21553
+     *
+     * The site renders a blank page with any Firefox snipped in the UA as it
+     * is running into an exception. Spoofing as Chrome makes the site work
+     * fine.
+     */
+    {
+      matches: ["*://*.cineflix.com.br/m/*"],
+      uaTransformer: (originalUA) => {
+        return UAHelpers.getPrefix(originalUA) + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
+      },
+    },
+
+    /*
+     * Bug 1509852 - redbull.com - Add UA override for redbull.com
+     * WebCompat issue #21439 - https://webcompat.com/issues/21439
+     *
+     * Redbull.com blocks some features, for example the live video player, for
+     * Fennec. Spoofing as Chrome results in us rendering the video just fine,
+     * and everything else works as well.
+     */
+    {
+      matches: ["*://*.redbull.com/*"],
+      uaTransformer: (originalUA) => {
+        return UAHelpers.getPrefix(originalUA) + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
+      },
+    },
+
+    /*
+     * Bug 1509873 - zmags.com - Add UA override for secure.viewer.zmags.com
+     * WebCompat issue #21576 - https://webcompat.com/issues/21576
+     *
+     * The zmags viewer locks out Fennec with a "Browser unsupported" message,
+     * but tests showed that it works just fine with a Chrome UA. Outreach
+     * attempts were unsuccessful, and as the site has a relatively high rank,
+     * we alter the UA.
+     */
+    {
+      matches: ["*://*.viewer.zmags.com/*"],
+      uaTransformer: (originalUA) => {
+        return UAHelpers.getPrefix(originalUA) + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
+      },
+    },
   ],
 };
 
 /* globals browser */
+
+const UAHelpers = {
+  getPrefix(originalUA) {
+    return originalUA.substr(0, originalUA.indexOf(")") + 1);
+  },
+};
 
 let activeListeners = [];
 function buildAndRegisterListener(matches, transformer) {

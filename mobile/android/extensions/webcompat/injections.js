@@ -20,7 +20,7 @@ const contentScripts = {
       runAt: "document_start",
     },
     {
-      matches: ["http://histography.io/*"],
+      matches: ["*://histography.io/*"],
       js: [{file: "injections/js/bug1457335-histography.io-ua-change.js"}],
       runAt: "document_start",
     },
