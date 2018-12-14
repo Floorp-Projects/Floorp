@@ -1451,14 +1451,6 @@ def is_windows(target, host):
 
 include('windows.configure', when=is_windows)
 
-# Shader Compiler for Windows (and MinGW Cross Compile)
-# ==============================================================
-
-fxc = check_prog('FXC', ('fxc.exe', 'fxc2.exe'), when=depends(target)
-                 (lambda t: t.kernel == 'WINNT'))
-wine = check_prog('WINE', ['wine'], when=depends(target, host)
-                  (lambda t, h: t.kernel == 'WINNT' and h.kernel == 'Linux'))
-
 # LTO
 # ==============================================================
 
