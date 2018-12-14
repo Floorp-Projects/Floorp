@@ -92,6 +92,16 @@ class IPCFeature final : public nsIUrlClassifierFeature {
     return NS_OK;
   }
 
+  NS_IMETHOD
+  ProcessChannel(nsIChannel* aChannel, const nsACString& aList,
+                 bool* aShouldContinue) override {
+    NS_ENSURE_ARG_POINTER(aShouldContinue);
+    *aShouldContinue = true;
+
+    // Nothing to do here.
+    return NS_OK;
+  }
+
  private:
   ~IPCFeature() = default;
 

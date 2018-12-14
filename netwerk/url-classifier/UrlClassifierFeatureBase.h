@@ -17,7 +17,25 @@ namespace net {
 class UrlClassifierFeatureBase : public nsIUrlClassifierFeature {
  public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIURLCLASSIFIERFEATURE
+
+  NS_IMETHOD
+  GetName(nsACString& aName) override;
+
+  NS_IMETHOD
+  GetTables(nsIUrlClassifierFeature::listType aListType,
+            nsTArray<nsCString>& aResult) override;
+
+  NS_IMETHOD
+  HasTable(const nsACString& aTable,
+           nsIUrlClassifierFeature::listType aListType, bool* aResult) override;
+
+  NS_IMETHOD
+  HasHostInPreferences(const nsACString& aHost,
+                       nsIUrlClassifierFeature::listType aListType,
+                       nsACString& aPrefTableName, bool* aResult) override;
+
+  NS_IMETHOD
+  GetSkipHostList(nsACString& aList) override;
 
  protected:
   UrlClassifierFeatureBase(const nsACString& aName,

@@ -9,12 +9,15 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozIThirdPartyUtil.h"
+#include "nsContentUtils.h"
 #include "nsIChannel.h"
+#include "nsIClassifiedChannel.h"
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIParentChannel.h"
+#include "nsIScriptError.h"
 #include "nsIWebProgressListener.h"
 #include "nsNetUtil.h"
 
@@ -171,6 +174,74 @@ UrlClassifierCommon::ShouldEnableTrackingProtectionOrAnnotation(
   }
 
   return true;
+}
+
+/* static */ nsresult UrlClassifierCommon::SetBlockedContent(
+    nsIChannel* channel, nsresult aErrorCode, const nsACString& aList,
+    const nsACString& aProvider, const nsACString& aFullHash) {
+  NS_ENSURE_ARG(!aList.IsEmpty());
+
+  // Can be called in EITHER the parent or child process.
+  nsCOMPtr<nsIParentChannel> parentChannel;
+  NS_QueryNotificationCallbacks(channel, parentChannel);
+  if (parentChannel) {
+    // This channel is a parent-process proxy for a child process request.
+    // Tell the child process channel to do this instead.
+    parentChannel->SetClassifierMatchedInfo(aList, aProvider, aFullHash);
+    return NS_OK;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
+      do_QueryInterface(channel, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (classifiedChannel) {
+    classifiedChannel->SetMatchedInfo(aList, aProvider, aFullHash);
+  }
+
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
+  if (NS_WARN_IF(!thirdPartyUtil)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<mozIDOMWindowProxy> win;
+  rv = thirdPartyUtil->GetTopWindowForChannel(channel, getter_AddRefs(win));
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+  auto* pwin = nsPIDOMWindowOuter::From(win);
+  nsCOMPtr<nsIDocShell> docShell = pwin->GetDocShell();
+  if (!docShell) {
+    return NS_OK;
+  }
+  nsCOMPtr<nsIDocument> doc = docShell->GetDocument();
+  NS_ENSURE_TRUE(doc, NS_OK);
+
+  unsigned state;
+  if (aErrorCode == NS_ERROR_TRACKING_URI) {
+    state = nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT;
+  } else {
+    state = nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
+  }
+
+  UrlClassifierCommon::NotifyChannelBlocked(channel, state);
+
+  // Log a warning to the web console.
+  nsCOMPtr<nsIURI> uri;
+  channel->GetURI(getter_AddRefs(uri));
+  NS_ConvertUTF8toUTF16 spec(uri->GetSpecOrDefault());
+  const char16_t* params[] = {spec.get()};
+  const char* message = (aErrorCode == NS_ERROR_TRACKING_URI)
+                            ? "TrackerUriBlocked"
+                            : "UnsafeUriBlocked";
+  nsCString category = (aErrorCode == NS_ERROR_TRACKING_URI)
+                           ? NS_LITERAL_CSTRING("Tracking Protection")
+                           : NS_LITERAL_CSTRING("Safe Browsing");
+
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, category, doc,
+                                  nsContentUtils::eNECKO_PROPERTIES, message,
+                                  params, ArrayLength(params));
+
+  return NS_OK;
 }
 
 }  // namespace net
