@@ -87,10 +87,6 @@ var EXPORTED_SYMBOLS = [
 
 // Globals
 
-// For now, we're worried about add-ons using Tasks with CPOWs, so we'll
-// permit them in this scope, but this support will go away soon.
-Cu.permitCPOWsInScope(this);
-
 // The following error types are considered programmer errors, which should be
 // reported (possibly redundantly) so as to let programmers fix their code.
 const ERRORS_TO_REPORT = ["EvalError", "RangeError", "ReferenceError", "TypeError"];
