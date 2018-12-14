@@ -359,4 +359,38 @@ class LongTaskMarkerPayload : public ProfilerMarkerPayload {
   DECL_STREAM_PAYLOAD
 };
 
+class TextMarkerPayload : public ProfilerMarkerPayload {
+ public:
+  TextMarkerPayload(const nsACString& aText,
+                    const mozilla::TimeStamp& aStartTime)
+      : ProfilerMarkerPayload(aStartTime, aStartTime), mText(aText) {}
+
+  TextMarkerPayload(const nsACString& aText,
+                    const mozilla::TimeStamp& aStartTime,
+                    const mozilla::TimeStamp& aEndTime)
+      : ProfilerMarkerPayload(aStartTime, aEndTime), mText(aText) {}
+
+  TextMarkerPayload(const nsACString& aText,
+                    const mozilla::TimeStamp& aStartTime,
+                    const mozilla::Maybe<nsID>& aDocShellId,
+                    const mozilla::Maybe<uint32_t>& aDocShellHistoryId)
+      : ProfilerMarkerPayload(aStartTime, aStartTime, aDocShellId,
+                              aDocShellHistoryId),
+        mText(aText) {}
+
+  TextMarkerPayload(const nsACString& aText,
+                    const mozilla::TimeStamp& aStartTime,
+                    const mozilla::TimeStamp& aEndTime,
+                    const mozilla::Maybe<nsID>& aDocShellId,
+                    const mozilla::Maybe<uint32_t>& aDocShellHistoryId)
+      : ProfilerMarkerPayload(aStartTime, aEndTime, aDocShellId,
+                              aDocShellHistoryId),
+        mText(aText) {}
+
+  DECL_STREAM_PAYLOAD
+
+ private:
+  nsCString mText;
+};
+
 #endif  // ProfilerMarkerPayload_h
