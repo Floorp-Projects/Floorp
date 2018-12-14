@@ -22,18 +22,18 @@ function complete(test, valid) {
 }
 
 function memcmp_complete(test, value) {
-  return function (x) {
+  return function(x) {
     finish(util.memcmp(x, value));
   };
 }
 
 function error(test) {
-  return function (x) {
+  return function(x) {
     throw x;
   };
 }
 
-onmessage = function (msg) {
+onmessage = function(msg) {
   var test = eval("(" + msg.data + ")");
 
   try {

@@ -19,7 +19,7 @@
 <!-- General testing framework -->
 <script src="./test-array.js"></script>
 
-<script>/*<![CDATA[*/
+<script>/* <![CDATA[*/
 "use strict";
 
 TestArray.addTest(
@@ -38,7 +38,7 @@ TestArray.addTest(
         name: "rsa-OAEP",
         hash: "sha-1",
         modulusLength: 2048,
-        publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+        publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
       };
       return crypto.subtle.generateKey(alg, false, ["encrypt", "decrypt"]);
     }
@@ -56,7 +56,7 @@ TestArray.addTest(
   }
 );
 
-/*]]>*/</script>
+/* ]]>*/</script>
 </head>
 
 <body>

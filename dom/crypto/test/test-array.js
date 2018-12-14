@@ -62,7 +62,7 @@ function Test(name, test) {
     if (this.name) {
       this.row[0].innerHTML = this.name;
       var that = this;
-      this.row[0].onclick = function() { that.run(); }
+      this.row[0].onclick = function() { that.run(); };
     } else {
       this.row[0] = "";
     }
@@ -75,12 +75,12 @@ function Test(name, test) {
       this.row[1].className = "fail";
       this.row[1].innerHTML = "FAIL";
     } else {
-      //this.row[1].innerHTML = "";
+      // this.row[1].innerHTML = "";
       this.row[1].innerHTML = this.result;
     }
 
     // Print the elapsed time, if known
-    if (this.startTime &&  this.endTime) {
+    if (this.startTime && this.endTime) {
       this.row[2].innerHTML = (this.endTime - this.startTime) + " ms";
     } else {
       this.row[2].innerHTML = "";
@@ -128,7 +128,7 @@ var TestArray = {
   currTest: 0,
   worker: new Worker("test-worker.js"),
 
-  addTest: function(name, testFn) {
+  addTest(name, testFn) {
     // Give it a reference to the array
     var test = new Test(name, testFn);
     test.ta = this;
@@ -140,19 +140,19 @@ var TestArray = {
     this.tests.push(new WorkerTest(this.worker, name, testFn));
   },
 
-  updateSummary: function() {
+  updateSummary() {
     this.pass = this.fail = this.pending = 0;
-    for (var i=0; i<this.tests.length; ++i) {
-      if (this.tests[i].result == true)  this.pass++;
+    for (var i = 0; i < this.tests.length; ++i) {
+      if (this.tests[i].result == true) this.pass++;
       if (this.tests[i].result == false) this.fail++;
-      if (this.tests[i].result == null)  this.pending++;
+      if (this.tests[i].result == null) this.pending++;
     }
     this.passSpan.innerHTML = this.pass;
     this.failSpan.innerHTML = this.fail;
     this.pendingSpan.innerHTML = this.pending;
   },
 
-  load: function() {
+  load() {
     // Grab reference to table and summary numbers
     this.table = document.getElementById("results");
     this.passSpan = document.getElementById("passN");
@@ -161,7 +161,7 @@ var TestArray = {
 
     // Populate everything initially
     this.updateSummary();
-    for (var i=0; i<this.tests.length; ++i) {
+    for (var i = 0; i < this.tests.length; ++i) {
       var tr = document.createElement("tr");
       tr.id = "test" + i;
       tr.appendChild(document.createElement("td"));
@@ -173,12 +173,12 @@ var TestArray = {
     }
   },
 
-  run: function() {
+  run() {
     this.currTest = 0;
     this.runNextTest();
   },
 
-  runNextTest: function() {
+  runNextTest() {
     this.updateSummary();
     var i = this.currTest++;
     if (i >= this.tests.length) {
@@ -189,10 +189,10 @@ var TestArray = {
     var self = this;
     this.tests[i].oncomplete = function() {
       self.runNextTest();
-    }
+    };
     this.tests[i].run();
-  }
-}
+  },
+};
 
 if (window.addEventListener) {
   window.addEventListener("load", function() { TestArray.load(); } );
@@ -218,25 +218,25 @@ function error(test) {
     console.log("ERROR :: " + x);
     test.complete(false);
     throw x;
-  }
+  };
 }
 
 function complete(test, valid) {
   return function(x) {
-    console.log("COMPLETE")
+    console.log("COMPLETE");
     console.log(x);
     if (valid) {
       test.complete(valid(x));
     } else {
       test.complete(true);
     }
-  }
+  };
 }
 
 function memcmp_complete(test, value) {
   return function(x) {
-    console.log("COMPLETE")
+    console.log("COMPLETE");
     console.log(x);
     test.memcmp_complete(value, x);
-  }
+  };
 }
