@@ -16,20 +16,17 @@
 
 namespace {
 
-void
-WriteData(nsIOutputStream* aOut, nsTArray<char>& aData, uint32_t aNumBytes,
-          nsACString& aDataWritten)
-{
+void WriteData(nsIOutputStream* aOut, nsTArray<char>& aData, uint32_t aNumBytes,
+               nsACString& aDataWritten) {
   uint32_t n;
   nsresult rv = aOut->Write(aData.Elements(), aNumBytes, &n);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
   aDataWritten.Append(aData.Elements(), aNumBytes);
 }
 
-} // namespace
+}  // namespace
 
-TEST(StorageStreams, Main)
-{
+TEST(StorageStreams, Main) {
   // generate some test data we will write in 4k chunks to the stream
   nsTArray<char> kData;
   testing::CreateData(4096, kData);
@@ -93,8 +90,7 @@ TEST(StorageStreams, Main)
   in = nullptr;
 }
 
-TEST(StorageStreams, EarlyInputStream)
-{
+TEST(StorageStreams, EarlyInputStream) {
   // generate some test data we will write in 4k chunks to the stream
   nsTArray<char> kData;
   testing::CreateData(4096, kData);

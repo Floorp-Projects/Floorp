@@ -9,39 +9,35 @@
 
 using namespace mozilla;
 
-class AudioGenerator
-{
-public:
+class AudioGenerator {
+ public:
   AudioGenerator(int32_t aChannels, int32_t aSampleRate)
-    : mGenerator(aSampleRate, 1000)
-    , mChannels(aChannels)
-  {}
+      : mGenerator(aSampleRate, 1000), mChannels(aChannels) {}
 
-  void Generate(AudioSegment& aSegment, const int32_t& aSamples)
-  {
-    RefPtr<SharedBuffer> buffer = SharedBuffer::Create(aSamples * sizeof(int16_t));
+  void Generate(AudioSegment& aSegment, const int32_t& aSamples) {
+    RefPtr<SharedBuffer> buffer =
+        SharedBuffer::Create(aSamples * sizeof(int16_t));
     int16_t* dest = static_cast<int16_t*>(buffer->Data());
     mGenerator.generate(dest, aSamples);
     AutoTArray<const int16_t*, 1> channels;
     for (int32_t i = 0; i < mChannels; i++) {
       channels.AppendElement(dest);
     }
-    aSegment.AppendFrames(buffer.forget(), channels, aSamples, PRINCIPAL_HANDLE_NONE);
+    aSegment.AppendFrames(buffer.forget(), channels, aSamples,
+                          PRINCIPAL_HANDLE_NONE);
   }
 
-private:
+ private:
   SineWaveGenerator mGenerator;
   const int32_t mChannels;
 };
 
-class TestOpusTrackEncoder : public OpusTrackEncoder
-{
-public:
+class TestOpusTrackEncoder : public OpusTrackEncoder {
+ public:
   TestOpusTrackEncoder() : OpusTrackEncoder(90000) {}
 
   // Return true if it has successfully initialized the Opus encoder.
-  bool TestOpusRawCreation(int aChannels, int aSamplingRate)
-  {
+  bool TestOpusRawCreation(int aChannels, int aSamplingRate) {
     if (Init(aChannels, aSamplingRate) == NS_OK) {
       if (IsInitialized()) {
         return true;
@@ -53,21 +49,17 @@ public:
   // Return the sample rate of data to be fed to the Opus encoder, could be
   // re-sampled if it was not one of the Opus supported sampling rates.
   // Init() is expected to be called first.
-  int TestGetOutputSampleRate()
-  {
+  int TestGetOutputSampleRate() {
     return mInitialized ? GetOutputSampleRate() : 0;
   }
 };
 
-static bool
-TestOpusInit(int aChannels, int aSamplingRate)
-{
+static bool TestOpusInit(int aChannels, int aSamplingRate) {
   TestOpusTrackEncoder encoder;
   return encoder.TestOpusRawCreation(aChannels, aSamplingRate);
 }
 
-TEST(OpusAudioTrackEncoder, InitRaw)
-{
+TEST(OpusAudioTrackEncoder, InitRaw) {
   // Expect false with 0 or negative channels of input signal.
   EXPECT_FALSE(TestOpusInit(0, 16000));
   EXPECT_FALSE(TestOpusInit(-1, 16000));
@@ -97,8 +89,7 @@ TEST(OpusAudioTrackEncoder, InitRaw)
   EXPECT_FALSE(TestOpusInit(2, 200000));
 }
 
-TEST(OpusAudioTrackEncoder, Init)
-{
+TEST(OpusAudioTrackEncoder, Init) {
   {
     // The encoder does not normally recieve enough info from null data to
     // init. However, multiple attempts to do so, with sufficiently long
@@ -178,16 +169,13 @@ TEST(OpusAudioTrackEncoder, Init)
   }
 }
 
-static int
-TestOpusResampler(int aChannels, int aSamplingRate)
-{
+static int TestOpusResampler(int aChannels, int aSamplingRate) {
   TestOpusTrackEncoder encoder;
   EXPECT_TRUE(encoder.TestOpusRawCreation(aChannels, aSamplingRate));
   return encoder.TestGetOutputSampleRate();
 }
 
-TEST(OpusAudioTrackEncoder, Resample)
-{
+TEST(OpusAudioTrackEncoder, Resample) {
   // Sampling rates of data to be fed to Opus encoder, should remain unchanged
   // if it is one of Opus supported rates (8000, 12000, 16000, 24000 and 48000
   // (kHz)) at initialization.
@@ -202,8 +190,7 @@ TEST(OpusAudioTrackEncoder, Resample)
   EXPECT_TRUE(TestOpusResampler(1, 44100) == 48000);
 }
 
-TEST(OpusAudioTrackEncoder, FetchMetadata)
-{
+TEST(OpusAudioTrackEncoder, FetchMetadata) {
   const int32_t channels = 1;
   const int32_t sampleRate = 44100;
   TestOpusTrackEncoder encoder;
@@ -212,14 +199,12 @@ TEST(OpusAudioTrackEncoder, FetchMetadata)
   RefPtr<TrackMetadataBase> metadata = encoder.GetMetadata();
   ASSERT_EQ(TrackMetadataBase::METADATA_OPUS, metadata->GetKind());
 
-  RefPtr<OpusMetadata> opusMeta =
-    static_cast<OpusMetadata*>(metadata.get());
+  RefPtr<OpusMetadata> opusMeta = static_cast<OpusMetadata*>(metadata.get());
   EXPECT_EQ(channels, opusMeta->mChannels);
   EXPECT_EQ(sampleRate, opusMeta->mSamplingFrequency);
 }
 
-TEST(OpusAudioTrackEncoder, FrameEncode)
-{
+TEST(OpusAudioTrackEncoder, FrameEncode) {
   const int32_t channels = 1;
   const int32_t sampleRate = 44100;
   TestOpusTrackEncoder encoder;

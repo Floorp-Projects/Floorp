@@ -18,12 +18,9 @@
 
 class MtransportTestUtils {
  public:
-  MtransportTestUtils() {
-      InitServices();
-  }
+  MtransportTestUtils() { InitServices(); }
 
-  ~MtransportTestUtils() {
-  }
+  ~MtransportTestUtils() {}
 
   void InitServices() {
     nsresult rv;
@@ -40,13 +37,11 @@ class MtransportTestUtils {
   nsCOMPtr<nsPISocketTransportService> sts_;
 };
 
-
-#define CHECK_ENVIRONMENT_FLAG(envname) \
-  char *test_flag = getenv(envname); \
-  if (!test_flag || strcmp(test_flag, "1")) { \
+#define CHECK_ENVIRONMENT_FLAG(envname)                                 \
+  char* test_flag = getenv(envname);                                    \
+  if (!test_flag || strcmp(test_flag, "1")) {                           \
     printf("To run this test set %s=1 in your environment\n", envname); \
-    exit(0); \
-  } \
-
+    exit(0);                                                            \
+  }
 
 #endif

@@ -10,12 +10,11 @@
 
 using namespace mozilla;
 
-TEST(BitWriter, BitWriter)
-{
+TEST(BitWriter, BitWriter) {
   RefPtr<MediaByteBuffer> test = new MediaByteBuffer();
   BitWriter b(test);
   b.WriteBit(false);
-  b.WriteBits(~1ULL, 1); // ensure that extra bits don't modify byte buffer.
+  b.WriteBits(~1ULL, 1);  // ensure that extra bits don't modify byte buffer.
   b.WriteBits(3, 1);
   b.WriteUE(1280 / 16 - 1);
   b.WriteUE(720 / 16 - 1);
@@ -50,13 +49,12 @@ TEST(BitWriter, BitWriter)
   EXPECT_EQ(length, BitReader::GetBitLength(test));
 }
 
-TEST(BitWriter, SPS)
-{
-  uint8_t sps_pps[] = { 0x01, 0x4d, 0x40, 0x0c, 0xff, 0xe1, 0x00, 0x1b, 0x67,
-                        0x4d, 0x40, 0x0c, 0xe8, 0x80, 0x80, 0x9d, 0x80, 0xb5,
-                        0x01, 0x01, 0x01, 0x40, 0x00, 0x00, 0x03, 0x00, 0x40,
-                        0x00, 0x00, 0x0f, 0x03, 0xc5, 0x0a, 0x44, 0x80, 0x01,
-                        0x00, 0x04, 0x68, 0xeb, 0xef, 0x20 };
+TEST(BitWriter, SPS) {
+  uint8_t sps_pps[] = {0x01, 0x4d, 0x40, 0x0c, 0xff, 0xe1, 0x00, 0x1b, 0x67,
+                       0x4d, 0x40, 0x0c, 0xe8, 0x80, 0x80, 0x9d, 0x80, 0xb5,
+                       0x01, 0x01, 0x01, 0x40, 0x00, 0x00, 0x03, 0x00, 0x40,
+                       0x00, 0x00, 0x0f, 0x03, 0xc5, 0x0a, 0x44, 0x80, 0x01,
+                       0x00, 0x04, 0x68, 0xeb, 0xef, 0x20};
 
   RefPtr<MediaByteBuffer> extraData = new MediaByteBuffer();
   extraData->AppendElements(sps_pps, sizeof(sps_pps));
@@ -65,7 +63,7 @@ TEST(BitWriter, SPS)
   EXPECT_EQ(success, true);
 
   RefPtr<MediaByteBuffer> extraData2 =
-    H264::CreateExtraData(0x42, 0xc0, 0x1e, { 1280, 720 });
+      H264::CreateExtraData(0x42, 0xc0, 0x1e, {1280, 720});
   SPSData spsdata2;
   success = H264::DecodeSPSFromExtraData(extraData2, spsdata2);
   EXPECT_EQ(success, true);

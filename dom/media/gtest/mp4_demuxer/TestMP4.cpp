@@ -12,9 +12,7 @@
 #include <algorithm>
 #include <vector>
 
-static intptr_t
-error_reader(uint8_t* buffer, uintptr_t size, void* userdata)
-{
+static intptr_t error_reader(uint8_t* buffer, uintptr_t size, void* userdata) {
   return -1;
 }
 
@@ -26,24 +24,18 @@ struct read_vector {
   std::vector<uint8_t> buffer;
 };
 
-read_vector::read_vector(FILE* file, size_t length)
- : location(0)
-{
+read_vector::read_vector(FILE* file, size_t length) : location(0) {
   buffer.resize(length);
   size_t read = fread(buffer.data(), sizeof(decltype(buffer)::value_type),
-      buffer.size(), file);
+                      buffer.size(), file);
   buffer.resize(read);
 }
 
-read_vector::read_vector(size_t length)
-  : location(0)
-{
+read_vector::read_vector(size_t length) : location(0) {
   buffer.resize(length, 0);
 }
 
-static intptr_t
-vector_reader(uint8_t* buffer, uintptr_t size, void* userdata)
-{
+static intptr_t vector_reader(uint8_t* buffer, uintptr_t size, void* userdata) {
   if (!buffer || !userdata) {
     return -1;
   }
@@ -59,8 +51,7 @@ vector_reader(uint8_t* buffer, uintptr_t size, void* userdata)
   return length;
 }
 
-TEST(rust, MP4MetadataEmpty)
-{
+TEST(rust, MP4MetadataEmpty) {
   Mp4parseStatus rv;
   Mp4parseIo io;
 
@@ -69,21 +60,21 @@ TEST(rust, MP4MetadataEmpty)
   EXPECT_EQ(rv, MP4PARSE_STATUS_BAD_ARG);
 
   // Shouldn't be able to wrap an Mp4parseIo with null members.
-  io = { nullptr, nullptr };
+  io = {nullptr, nullptr};
   Mp4parseParser* context = mp4parse_new(&io);
   EXPECT_EQ(context, nullptr);
 
-  io = { nullptr, &io };
+  io = {nullptr, &io};
   context = mp4parse_new(&io);
   EXPECT_EQ(context, nullptr);
 
   // FIXME: this should probably be accepted.
-  io = { error_reader, nullptr };
+  io = {error_reader, nullptr};
   context = mp4parse_new(&io);
   EXPECT_EQ(context, nullptr);
 
   // Read method errors should propagate.
-  io = { error_reader, &io };
+  io = {error_reader, &io};
   context = mp4parse_new(&io);
   ASSERT_NE(context, nullptr);
   rv = mp4parse_read(context);
@@ -92,7 +83,7 @@ TEST(rust, MP4MetadataEmpty)
 
   // Short buffers should fail.
   read_vector buf(0);
-  io = { vector_reader, &buf };
+  io = {vector_reader, &buf};
   context = mp4parse_new(&io);
   ASSERT_NE(context, nullptr);
   rv = mp4parse_read(context);
@@ -114,19 +105,18 @@ TEST(rust, MP4MetadataEmpty)
   mp4parse_free(context);
 }
 
-TEST(rust, MP4Metadata)
-{
+TEST(rust, MP4Metadata) {
   FILE* f = fopen("street.mp4", "rb");
   ASSERT_TRUE(f != nullptr);
   // Read just the moov header to work around the parser
   // treating mid-box eof as an error.
-  //read_vector reader = read_vector(f, 1061);
+  // read_vector reader = read_vector(f, 1061);
   struct stat s;
   ASSERT_EQ(0, fstat(fileno(f), &s));
   read_vector reader = read_vector(f, s.st_size);
   fclose(f);
 
-  Mp4parseIo io = { vector_reader, &reader };
+  Mp4parseIo io = {vector_reader, &reader};
   Mp4parseParser* context = mp4parse_new(&io);
   ASSERT_NE(nullptr, context);
 

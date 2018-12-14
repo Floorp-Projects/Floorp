@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-   /* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -64,7 +64,6 @@ struct TestClass {
   static_assert(sTestEnum4Count == 3, "Incorrect enumerator count");
 };
 
-
 // Test that MOZ_DEFINE_ENUM doesn't allow giving enumerators initializers.
 
 #ifdef CONFIRM_COMPILATION_ERRORS
@@ -73,9 +72,7 @@ MOZ_DEFINE_ENUM_CLASS(EnumWithInitializer2, (A = 1, B, C))
 MOZ_DEFINE_ENUM_CLASS(EnumWithInitializer3, (A, B = 6, C))
 #endif
 
-int
-main()
-{
+int main() {
   // Nothing to do here, all tests are static_asserts.
   return 0;
 }

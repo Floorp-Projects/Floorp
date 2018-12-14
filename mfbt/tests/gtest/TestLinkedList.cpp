@@ -13,81 +13,64 @@ using mozilla::AutoCleanLinkedList;
 using mozilla::LinkedList;
 using mozilla::LinkedListElement;
 
-class PtrClass : public LinkedListElement<PtrClass>
-{
-public:
+class PtrClass : public LinkedListElement<PtrClass> {
+ public:
   bool* mResult;
 
-  explicit PtrClass(bool* result)
-    : mResult(result)
-  {
-    EXPECT_TRUE(!*mResult);
-  }
+  explicit PtrClass(bool* result) : mResult(result) { EXPECT_TRUE(!*mResult); }
 
-  virtual ~PtrClass() {
-    *mResult = true;
-  }
+  virtual ~PtrClass() { *mResult = true; }
 };
 
 class InheritedPtrClass : public PtrClass {
-public:
+ public:
   bool* mInheritedResult;
 
   InheritedPtrClass(bool* result, bool* inheritedResult)
-    : PtrClass(result)
-    , mInheritedResult(inheritedResult)
-    {
-      EXPECT_TRUE(!*mInheritedResult);
-    }
-
-  virtual ~InheritedPtrClass() {
-    *mInheritedResult = true;
+      : PtrClass(result), mInheritedResult(inheritedResult) {
+    EXPECT_TRUE(!*mInheritedResult);
   }
+
+  virtual ~InheritedPtrClass() { *mInheritedResult = true; }
 };
 
-TEST(LinkedList, AutoCleanLinkedList)
-{
-    bool rv1 = false;
-    bool rv2 = false;
-    bool rv3 = false;
-    {
-        AutoCleanLinkedList<PtrClass> list;
-        list.insertBack(new PtrClass(&rv1));
-        list.insertBack(new InheritedPtrClass(&rv2, &rv3));
-    }
+TEST(LinkedList, AutoCleanLinkedList) {
+  bool rv1 = false;
+  bool rv2 = false;
+  bool rv3 = false;
+  {
+    AutoCleanLinkedList<PtrClass> list;
+    list.insertBack(new PtrClass(&rv1));
+    list.insertBack(new InheritedPtrClass(&rv2, &rv3));
+  }
 
-    EXPECT_TRUE(rv1);
-    EXPECT_TRUE(rv2);
-    EXPECT_TRUE(rv3);
+  EXPECT_TRUE(rv1);
+  EXPECT_TRUE(rv2);
+  EXPECT_TRUE(rv3);
 }
 
-class CountedClass final : public LinkedListElement<RefPtr<CountedClass>>
-{
-public:
+class CountedClass final : public LinkedListElement<RefPtr<CountedClass>> {
+ public:
   int mCount;
   void AddRef() { mCount++; }
   void Release() { mCount--; }
 
-  CountedClass()
-    : mCount(0)
-    {
-    }
+  CountedClass() : mCount(0) {}
   ~CountedClass() { EXPECT_TRUE(mCount == 0); }
 };
 
-TEST(LinkedList, AutoCleanLinkedListRefPtr)
-{
-    RefPtr<CountedClass> elt1 = new CountedClass;
-    CountedClass* elt2 = new CountedClass;
-    {
-        AutoCleanLinkedList<RefPtr<CountedClass>> list;
-        list.insertBack(elt1);
-        list.insertBack(elt2);
+TEST(LinkedList, AutoCleanLinkedListRefPtr) {
+  RefPtr<CountedClass> elt1 = new CountedClass;
+  CountedClass* elt2 = new CountedClass;
+  {
+    AutoCleanLinkedList<RefPtr<CountedClass>> list;
+    list.insertBack(elt1);
+    list.insertBack(elt2);
 
-        EXPECT_TRUE(elt1->mCount == 2);
-        EXPECT_TRUE(elt2->mCount == 1);
-    }
+    EXPECT_TRUE(elt1->mCount == 2);
+    EXPECT_TRUE(elt2->mCount == 1);
+  }
 
-    EXPECT_TRUE(elt1->mCount == 1);
-    EXPECT_TRUE(elt2->mCount == 0);
+  EXPECT_TRUE(elt1->mCount == 1);
+  EXPECT_TRUE(elt2->mCount == 0);
 }

@@ -19,7 +19,6 @@ typedef struct nr_stun_server_ctx_ nr_stun_server_ctx;
 typedef struct nr_socket_ nr_socket;
 typedef struct nr_local_addr_ nr_local_addr;
 
-
 namespace mozilla {
 
 class TestStunServer {
@@ -39,20 +38,20 @@ class TestStunServer {
   void SetActive(bool active);
   void SetDelay(uint32_t delay_ms);
   void SetDropInitialPackets(uint32_t count);
-  const std::string& addr() const { return listen_addr_; }
+  const std::string &addr() const { return listen_addr_; }
   uint16_t port() const { return listen_port_; }
 
   // These should only be called from the same thread as the initial
   // |GetInstance| call.
   nsresult SetResponseAddr(nr_transport_addr *addr);
-  nsresult SetResponseAddr(const std::string& addr, uint16_t port);
+  nsresult SetResponseAddr(const std::string &addr, uint16_t port);
 
   void Reset();
 
   static const size_t max_stun_message_size = 4096;
 
-  virtual nr_socket* GetReceivingSocket(NR_SOCKET s);
-  virtual nr_socket* GetSendingSocket(nr_socket *sock);
+  virtual nr_socket *GetReceivingSocket(NR_SOCKET s);
+  virtual nr_socket *GetSendingSocket(nr_socket *sock);
 
  protected:
   TestStunServer()
@@ -72,7 +71,8 @@ class TestStunServer {
   static void readable_cb(NR_SOCKET sock, int how, void *cb_arg);
 
  private:
-  void Process(const uint8_t *msg, size_t len, nr_transport_addr *addr_in, nr_socket *sock);
+  void Process(const uint8_t *msg, size_t len, nr_transport_addr *addr_in,
+               nr_socket *sock);
   virtual int TryOpenListenSocket(nr_local_addr *addr, uint16_t port);
   static void process_cb(NR_SOCKET sock, int how, void *cb_arg);
 
@@ -82,6 +82,7 @@ class TestStunServer {
   nr_socket *listen_sock_;
   nr_socket *send_sock_;
   nr_stun_server_ctx *stun_server_;
+
  private:
   bool active_;
   uint32_t delay_ms_;
@@ -95,15 +96,15 @@ class TestStunServer {
   static uint16_t instance_port;
 };
 
-class TestStunTcpServer: public TestStunServer {
+class TestStunTcpServer : public TestStunServer {
  public:
   static TestStunTcpServer *GetInstance(int address_family);
   static void ShutdownInstance();
   static void ConfigurePort(uint16_t port);
   virtual ~TestStunTcpServer();
 
-  virtual nr_socket* GetReceivingSocket(NR_SOCKET s);
-  virtual nr_socket* GetSendingSocket(nr_socket *sock);
+  virtual nr_socket *GetReceivingSocket(NR_SOCKET s);
+  virtual nr_socket *GetSendingSocket(nr_socket *sock);
 
  protected:
   TestStunTcpServer() {}
@@ -117,7 +118,7 @@ class TestStunTcpServer: public TestStunServer {
   static TestStunTcpServer *instance6;
   static uint16_t instance_port;
 
-  std::map<NR_SOCKET, nr_socket*> connections_;
+  std::map<NR_SOCKET, nr_socket *> connections_;
 };
-} // End of namespace mozilla
+}  // End of namespace mozilla
 #endif

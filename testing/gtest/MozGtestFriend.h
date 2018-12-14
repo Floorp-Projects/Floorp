@@ -12,4 +12,4 @@
 #define FRIEND_TEST(a, b)
 #endif
 
-#endif // GTEST_MOZGTESTFRIEND_H
+#endif  // GTEST_MOZGTESTFRIEND_H

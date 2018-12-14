@@ -10,32 +10,26 @@ using namespace mozilla;
 
 /* Feature check for EnumTypeFitsWithin. */
 
-#define MAKE_FIXED_EMUM_FOR_TYPE(IntType)                               \
-  enum FixedEnumFor_##IntType : IntType {                               \
-    A_##IntType,                                                        \
-    B_##IntType,                                                        \
-    C_##IntType,                                                        \
+#define MAKE_FIXED_EMUM_FOR_TYPE(IntType) \
+  enum FixedEnumFor_##IntType : IntType{  \
+      A_##IntType,                        \
+      B_##IntType,                        \
+      C_##IntType,                        \
   };
 
-template<typename EnumType, typename IntType>
-static void
-TestShouldFit()
-{
+template <typename EnumType, typename IntType>
+static void TestShouldFit() {
   static_assert(EnumTypeFitsWithin<EnumType, IntType>::value,
                 "Should fit within exact/promoted integral type");
 }
 
-template<typename EnumType, typename IntType>
-static void
-TestShouldNotFit()
-{
+template <typename EnumType, typename IntType>
+static void TestShouldNotFit() {
   static_assert(!EnumTypeFitsWithin<EnumType, IntType>::value,
                 "Should not fit within");
 }
 
-int
-main()
-{
+int main() {
   // check for int8_t
   MAKE_FIXED_EMUM_FOR_TYPE(int8_t);
   TestShouldFit<FixedEnumFor_int8_t, int8_t>();

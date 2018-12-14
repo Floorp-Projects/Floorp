@@ -34,8 +34,7 @@ inline bool operator<(const nsCOMPtr<T>& lhs, const nsCOMPtr<T>& rhs) {
 //----
 
 template <class ElementType>
-static bool test_basic_array(ElementType *data,
-                             size_t dataLen,
+static bool test_basic_array(ElementType* data, size_t dataLen,
                              const ElementType& extra) {
   nsTArray<ElementType> ary;
   const nsTArray<ElementType>& cary = ary;
@@ -49,12 +48,10 @@ static bool test_basic_array(ElementType *data,
   }
   size_t i;
   for (i = 0; i < ary.Length(); ++i) {
-    if (ary[i] != data[i])
-      return false;
+    if (ary[i] != data[i]) return false;
   }
   for (i = 0; i < ary.Length(); ++i) {
-    if (ary.SafeElementAt(i, extra) != data[i])
-      return false;
+    if (ary.SafeElementAt(i, extra) != data[i]) return false;
   }
   if (ary.SafeElementAt(ary.Length(), extra) != extra ||
       ary.SafeElementAt(ary.Length() * 10, extra) != extra)
@@ -62,96 +59,68 @@ static bool test_basic_array(ElementType *data,
   // ensure sort results in ascending order
   ary.Sort();
   size_t j = 0, k = ary.IndexOfFirstElementGt(extra);
-  if (k != 0 && ary[k-1] == extra)
-    return false;
+  if (k != 0 && ary[k - 1] == extra) return false;
   for (i = 0; i < ary.Length(); ++i) {
     k = ary.IndexOfFirstElementGt(ary[i]);
-    if (k == 0 || ary[k-1] != ary[i])
-      return false;
-    if (k < j)
-      return false;
+    if (k == 0 || ary[k - 1] != ary[i]) return false;
+    if (k < j) return false;
     j = k;
   }
-  for (i = ary.Length(); --i; ) {
-    if (ary[i] < ary[i - 1])
-      return false;
-    if (ary[i] == ary[i - 1])
-      ary.RemoveElementAt(i);
+  for (i = ary.Length(); --i;) {
+    if (ary[i] < ary[i - 1]) return false;
+    if (ary[i] == ary[i - 1]) ary.RemoveElementAt(i);
   }
   if (!(ary == ary)) {
     return false;
   }
   for (i = 0; i < ary.Length(); ++i) {
-    if (ary.BinaryIndexOf(ary[i]) != i)
-      return false;
+    if (ary.BinaryIndexOf(ary[i]) != i) return false;
   }
-  if (ary.BinaryIndexOf(extra) != ary.NoIndex)
-    return false;
+  if (ary.BinaryIndexOf(extra) != ary.NoIndex) return false;
   size_t oldLen = ary.Length();
   ary.RemoveElement(data[dataLen / 2]);
-  if (ary.Length() != (oldLen - 1))
-    return false;
-  if (!(ary == ary))
-    return false;
+  if (ary.Length() != (oldLen - 1)) return false;
+  if (!(ary == ary)) return false;
 
-  if (ary.ApplyIf(extra,
-                  []() { return true; },
-                  []() { return false; }))
+  if (ary.ApplyIf(extra, []() { return true; }, []() { return false; }))
     return false;
-  if (ary.ApplyIf(extra,
-                  [](size_t) { return true; },
-                  []() { return false; }))
+  if (ary.ApplyIf(extra, [](size_t) { return true; }, []() { return false; }))
     return false;
   // On a non-const array, ApplyIf's first lambda may use either const or non-
   // const element types.
-  if (ary.ApplyIf(extra,
-                  [](ElementType&) { return true; },
+  if (ary.ApplyIf(extra, [](ElementType&) { return true; },
                   []() { return false; }))
     return false;
-  if (ary.ApplyIf(extra,
-                  [](const ElementType&) { return true; },
+  if (ary.ApplyIf(extra, [](const ElementType&) { return true; },
                   []() { return false; }))
     return false;
-  if (ary.ApplyIf(extra,
-                  [](size_t, ElementType&) { return true; },
+  if (ary.ApplyIf(extra, [](size_t, ElementType&) { return true; },
                   []() { return false; }))
     return false;
-  if (ary.ApplyIf(extra,
-                  [](size_t, const ElementType&) { return true; },
+  if (ary.ApplyIf(extra, [](size_t, const ElementType&) { return true; },
                   []() { return false; }))
     return false;
 
-  if (cary.ApplyIf(extra,
-                   []() { return true; },
-                   []() { return false; }))
-  if (cary.ApplyIf(extra,
-                   [](size_t) { return true; },
-                   []() { return false; }))
-  // On a const array, ApplyIf's first lambda must only use const element types.
-  if (cary.ApplyIf(extra,
-                   [](const ElementType&) { return true; },
-                   []() { return false; }))
-  if (cary.ApplyIf(extra,
-                   [](size_t, const ElementType&) { return true; },
-                   []() { return false; }))
-    return false;
+  if (cary.ApplyIf(extra, []() { return true; }, []() { return false; }))
+    if (cary.ApplyIf(extra, [](size_t) { return true; },
+                     []() { return false; }))
+      // On a const array, ApplyIf's first lambda must only use const element
+      // types.
+      if (cary.ApplyIf(extra, [](const ElementType&) { return true; },
+                       []() { return false; }))
+        if (cary.ApplyIf(extra, [](size_t, const ElementType&) { return true; },
+                         []() { return false; }))
+          return false;
 
   size_t index = ary.Length() / 2;
-  if (!ary.InsertElementAt(index, extra))
-    return false;
-  if (!(ary == ary))
-    return false;
-  if (ary[index] != extra)
-    return false;
-  if (ary.IndexOf(extra) == ary.NoIndex)
-    return false;
-  if (ary.LastIndexOf(extra) == ary.NoIndex)
-    return false;
+  if (!ary.InsertElementAt(index, extra)) return false;
+  if (!(ary == ary)) return false;
+  if (ary[index] != extra) return false;
+  if (ary.IndexOf(extra) == ary.NoIndex) return false;
+  if (ary.LastIndexOf(extra) == ary.NoIndex) return false;
   // ensure proper searching
-  if (ary.IndexOf(extra) > ary.LastIndexOf(extra))
-    return false;
-  if (ary.IndexOf(extra, index) != ary.LastIndexOf(extra, index))
-    return false;
+  if (ary.IndexOf(extra) > ary.LastIndexOf(extra)) return false;
+  if (ary.IndexOf(extra, index) != ary.LastIndexOf(extra, index)) return false;
   if (!ary.ApplyIf(extra,
                    [&](size_t i, const ElementType& e) {
                      return i == index && e == extra;
@@ -166,66 +135,48 @@ static bool test_basic_array(ElementType *data,
     return false;
 
   nsTArray<ElementType> copy(ary);
-  if (!(ary == copy))
-    return false;
+  if (!(ary == copy)) return false;
   for (i = 0; i < copy.Length(); ++i) {
-    if (ary[i] != copy[i])
-      return false;
+    if (ary[i] != copy[i]) return false;
   }
-  if (!ary.AppendElements(copy))
-    return false;
+  if (!ary.AppendElements(copy)) return false;
   size_t cap = ary.Capacity();
   ary.RemoveElementsAt(copy.Length(), copy.Length());
   ary.Compact();
-  if (ary.Capacity() == cap)
+  if (ary.Capacity() == cap) return false;
+
+  ary.Clear();
+  if (ary.IndexOf(extra) != ary.NoIndex) return false;
+  if (ary.LastIndexOf(extra) != ary.NoIndex) return false;
+  if (ary.ApplyIf(extra, []() { return true; }, []() { return false; }))
+    return false;
+  if (cary.ApplyIf(extra, []() { return true; }, []() { return false; }))
     return false;
 
   ary.Clear();
-  if (ary.IndexOf(extra) != ary.NoIndex)
-    return false;
-  if (ary.LastIndexOf(extra) != ary.NoIndex)
-    return false;
-  if (ary.ApplyIf(extra,
-                  []() { return true; },
-                  []() { return false; }))
-    return false;
-  if (cary.ApplyIf(extra,
-                   []() { return true; },
-                   []() { return false; }))
-    return false;
-
-  ary.Clear();
-  if (!ary.IsEmpty() || ary.Elements() == nullptr)
-    return false;
-  if (!(ary == nsTArray<ElementType>()))
-    return false;
-  if (ary == copy)
-    return false;
+  if (!ary.IsEmpty() || ary.Elements() == nullptr) return false;
+  if (!(ary == nsTArray<ElementType>())) return false;
+  if (ary == copy) return false;
   if (ary.SafeElementAt(0, extra) != extra ||
       ary.SafeElementAt(10, extra) != extra)
     return false;
 
   ary = copy;
-  if (!(ary == copy))
-    return false;
+  if (!(ary == copy)) return false;
   for (i = 0; i < copy.Length(); ++i) {
-    if (ary[i] != copy[i])
-      return false;
+    if (ary[i] != copy[i]) return false;
   }
 
-  if (!ary.InsertElementsAt(0, copy))
-    return false;
-  if (ary == copy)
-    return false;
+  if (!ary.InsertElementsAt(0, copy)) return false;
+  if (ary == copy) return false;
   ary.RemoveElementsAt(0, copy.Length());
   for (i = 0; i < copy.Length(); ++i) {
-    if (ary[i] != copy[i])
-      return false;
+    if (ary[i] != copy[i]) return false;
   }
 
   // These shouldn't crash!
   nsTArray<ElementType> empty;
-  ary.AppendElements(reinterpret_cast<ElementType *>(0), 0);
+  ary.AppendElements(reinterpret_cast<ElementType*>(0), 0);
   ary.AppendElements(empty);
 
   // See bug 324981
@@ -236,58 +187,55 @@ static bool test_basic_array(ElementType *data,
 }
 
 TEST(TArray, test_int_array) {
-  int data[] = {4,6,8,2,4,1,5,7,3};
+  int data[] = {4, 6, 8, 2, 4, 1, 5, 7, 3};
   ASSERT_TRUE(test_basic_array(data, ArrayLength(data), int(14)));
 }
 
 TEST(TArray, test_int64_array) {
-  int64_t data[] = {4,6,8,2,4,1,5,7,3};
+  int64_t data[] = {4, 6, 8, 2, 4, 1, 5, 7, 3};
   ASSERT_TRUE(test_basic_array(data, ArrayLength(data), int64_t(14)));
 }
 
 TEST(TArray, test_char_array) {
-  char data[] = {4,6,8,2,4,1,5,7,3};
+  char data[] = {4, 6, 8, 2, 4, 1, 5, 7, 3};
   ASSERT_TRUE(test_basic_array(data, ArrayLength(data), char(14)));
 }
 
 TEST(TArray, test_uint32_array) {
-  uint32_t data[] = {4,6,8,2,4,1,5,7,3};
+  uint32_t data[] = {4, 6, 8, 2, 4, 1, 5, 7, 3};
   ASSERT_TRUE(test_basic_array(data, ArrayLength(data), uint32_t(14)));
 }
 
 //----
 
 class Object {
-  public:
-    Object() : mNum(0) {
-    }
-    Object(const char *str, uint32_t num) : mStr(str), mNum(num) {
-    }
-    Object(const Object& other) : mStr(other.mStr), mNum(other.mNum) {
-    }
-    ~Object() {}
+ public:
+  Object() : mNum(0) {}
+  Object(const char* str, uint32_t num) : mStr(str), mNum(num) {}
+  Object(const Object& other) : mStr(other.mStr), mNum(other.mNum) {}
+  ~Object() {}
 
-    Object& operator=(const Object& other) {
-      mStr = other.mStr;
-      mNum = other.mNum;
-      return *this;
-    }
+  Object& operator=(const Object& other) {
+    mStr = other.mStr;
+    mNum = other.mNum;
+    return *this;
+  }
 
-    bool operator==(const Object& other) const {
-      return mStr == other.mStr && mNum == other.mNum;
-    }
+  bool operator==(const Object& other) const {
+    return mStr == other.mStr && mNum == other.mNum;
+  }
 
-    bool operator<(const Object& other) const {
-      // sort based on mStr only
-      return mStr.Compare(other.mStr.get()) < 0;
-    }
+  bool operator<(const Object& other) const {
+    // sort based on mStr only
+    return mStr.Compare(other.mStr.get()) < 0;
+  }
 
-    const char *Str() const { return mStr.get(); }
-    uint32_t Num() const { return mNum; }
+  const char* Str() const { return mStr.get(); }
+  uint32_t Num() const { return mNum; }
 
-  private:
-    nsCString mStr;
-    uint32_t  mNum;
+ private:
+  nsCString mStr;
+  uint32_t mNum;
 };
 
 TEST(TArray, test_object_array) {
@@ -295,7 +243,7 @@ TEST(TArray, test_object_array) {
   const char kdata[] = "hello world";
   size_t i;
   for (i = 0; i < ArrayLength(kdata); ++i) {
-    char x[] = {kdata[i],'\0'};
+    char x[] = {kdata[i], '\0'};
     ASSERT_TRUE(objArray.AppendElement(Object(x, i)));
   }
   for (i = 0; i < ArrayLength(kdata); ++i) {
@@ -304,7 +252,7 @@ TEST(TArray, test_object_array) {
   }
   objArray.Sort();
   const char ksorted[] = "\0 dehllloorw";
-  for (i = 0; i < ArrayLength(kdata)-1; ++i) {
+  for (i = 0; i < ArrayLength(kdata) - 1; ++i) {
     ASSERT_EQ(objArray[i].Str()[0], ksorted[i]);
   }
 }
@@ -312,40 +260,27 @@ TEST(TArray, test_object_array) {
 class Countable {
   static int sCount;
 
-  public:
-    Countable()
-    {
-      sCount++;
-    }
+ public:
+  Countable() { sCount++; }
 
-    Countable(const Countable& aOther)
-    {
-      sCount++;
-    }
+  Countable(const Countable& aOther) { sCount++; }
 
-    static int Count() { return sCount; }
+  static int Count() { return sCount; }
 };
 
 class Moveable {
   static int sCount;
 
-  public:
-    Moveable()
-    {
-      sCount++;
-    }
+ public:
+  Moveable() { sCount++; }
 
-    Moveable(const Moveable& aOther)
-    {
-      sCount++;
-    }
+  Moveable(const Moveable& aOther) { sCount++; }
 
-    Moveable(Moveable&& aOther)
-    {
-      // Do not increment sCount
-    }
+  Moveable(Moveable&& aOther) {
+    // Do not increment sCount
+  }
 
-    static int Count() { return sCount; }
+  static int Count() { return sCount; }
 };
 
 /* static */ int Countable::sCount = 0;
@@ -358,7 +293,7 @@ static nsTArray<int> returns_by_value() {
 
 TEST(TArray, test_return_by_value) {
   nsTArray<int> result = returns_by_value();
-  ASSERT_TRUE(true); // This is just a compilation test.
+  ASSERT_TRUE(true);  // This is just a compilation test.
 }
 
 TEST(TArray, test_move_array) {
@@ -379,7 +314,7 @@ TEST(TArray, test_move_array) {
   ASSERT_EQ(Countable::Count(), 12);
 
   nsTArray<Countable>&& moveRefCountableArray = std::move(countableArray);
-  moveRefCountableArray.Length(); // Make compilers happy.
+  moveRefCountableArray.Length();  // Make compilers happy.
 
   ASSERT_EQ(Countable::Count(), 12);
 
@@ -388,19 +323,23 @@ TEST(TArray, test_move_array) {
   ASSERT_EQ(Countable::Count(), 12);
 
   // Test ctor
-  FallibleTArray<Countable> differentAllocatorCountableArray(std::move(copyCountableArray));
+  FallibleTArray<Countable> differentAllocatorCountableArray(
+      std::move(copyCountableArray));
   // operator=
   copyCountableArray = std::move(differentAllocatorCountableArray);
   differentAllocatorCountableArray = std::move(copyCountableArray);
   // And the other ctor
-  nsTArray<Countable> copyCountableArray2(std::move(differentAllocatorCountableArray));
+  nsTArray<Countable> copyCountableArray2(
+      std::move(differentAllocatorCountableArray));
   // with auto
   AutoTArray<Countable, 3> autoCountableArray(std::move(copyCountableArray2));
   // operator=
   copyCountableArray2 = std::move(autoCountableArray);
   // Mix with FallibleTArray
-  FallibleTArray<Countable> differentAllocatorCountableArray2(std::move(copyCountableArray2));
-  AutoTArray<Countable, 4> autoCountableArray2(std::move(differentAllocatorCountableArray2));
+  FallibleTArray<Countable> differentAllocatorCountableArray2(
+      std::move(copyCountableArray2));
+  AutoTArray<Countable, 4> autoCountableArray2(
+      std::move(differentAllocatorCountableArray2));
   differentAllocatorCountableArray2 = std::move(autoCountableArray2);
 
   ASSERT_EQ(Countable::Count(), 12);
@@ -421,7 +360,7 @@ TEST(TArray, test_move_array) {
   ASSERT_EQ(Moveable::Count(), 8);
 
   nsTArray<Moveable>&& moveRefMoveableArray = std::move(moveableArray);
-  moveRefMoveableArray.Length(); // Make compilers happy.
+  moveRefMoveableArray.Length();  // Make compilers happy.
 
   ASSERT_EQ(Moveable::Count(), 8);
 
@@ -430,19 +369,23 @@ TEST(TArray, test_move_array) {
   ASSERT_EQ(Moveable::Count(), 8);
 
   // Test ctor
-  FallibleTArray<Moveable> differentAllocatorMoveableArray(std::move(copyMoveableArray));
+  FallibleTArray<Moveable> differentAllocatorMoveableArray(
+      std::move(copyMoveableArray));
   // operator=
   copyMoveableArray = std::move(differentAllocatorMoveableArray);
   differentAllocatorMoveableArray = std::move(copyMoveableArray);
   // And the other ctor
-  nsTArray<Moveable> copyMoveableArray2(std::move(differentAllocatorMoveableArray));
+  nsTArray<Moveable> copyMoveableArray2(
+      std::move(differentAllocatorMoveableArray));
   // with auto
   AutoTArray<Moveable, 3> autoMoveableArray(std::move(copyMoveableArray2));
   // operator=
   copyMoveableArray2 = std::move(autoMoveableArray);
   // Mix with FallibleTArray
-  FallibleTArray<Moveable> differentAllocatorMoveableArray2(std::move(copyMoveableArray2));
-  AutoTArray<Moveable, 4> autoMoveableArray2(std::move(differentAllocatorMoveableArray2));
+  FallibleTArray<Moveable> differentAllocatorMoveableArray2(
+      std::move(copyMoveableArray2));
+  AutoTArray<Moveable, 4> autoMoveableArray2(
+      std::move(differentAllocatorMoveableArray2));
   differentAllocatorMoveableArray2 = std::move(autoMoveableArray2);
 
   ASSERT_EQ(Moveable::Count(), 8);
@@ -489,31 +432,28 @@ TEST(TArray, test_string_array) {
   ASSERT_EQ(oldLen, strArray.Length());
 
   ASSERT_EQ(strArray.IndexOf("e"), size_t(1));
-  ASSERT_TRUE(strArray.ApplyIf("e",
-                               [](size_t i, nsCString& s) {
-                                 return i == 1 && s == "e";
-                               },
-                               []() { return false; }));
+  ASSERT_TRUE(strArray.ApplyIf(
+      "e", [](size_t i, nsCString& s) { return i == 1 && s == "e"; },
+      []() { return false; }));
 
   strArray.Sort();
   const char ksorted[] = "\0 dehllloorw";
-  for (i = ArrayLength(kdata); i--; ) {
+  for (i = ArrayLength(kdata); i--;) {
     ASSERT_EQ(strArray[i].CharAt(0), ksorted[i]);
-    if (i > 0 && strArray[i] == strArray[i - 1])
-      strArray.RemoveElementAt(i);
+    if (i > 0 && strArray[i] == strArray[i - 1]) strArray.RemoveElementAt(i);
   }
   for (i = 0; i < strArray.Length(); ++i) {
     ASSERT_EQ(strArray.BinaryIndexOf(strArray[i]), i);
   }
-  auto no_index = strArray.NoIndex; // Fixes gtest compilation error
+  auto no_index = strArray.NoIndex;  // Fixes gtest compilation error
   ASSERT_EQ(strArray.BinaryIndexOf(EmptyCString()), no_index);
 
   nsCString rawArray[MOZ_ARRAY_LENGTH(kdata) - 1];
   for (i = 0; i < ArrayLength(rawArray); ++i)
     rawArray[i].Assign(kdata + i);  // substrings of kdata
 
-  ASSERT_TRUE(test_basic_array(rawArray, ArrayLength(rawArray),
-                               nsCString("foopy")));
+  ASSERT_TRUE(
+      test_basic_array(rawArray, ArrayLength(rawArray), nsCString("foopy")));
 }
 
 //----
@@ -521,21 +461,19 @@ TEST(TArray, test_string_array) {
 typedef nsCOMPtr<nsIFile> FilePointer;
 
 class nsFileNameComparator {
-  public:
-    bool Equals(const FilePointer &a, const char *b) const {
-      nsAutoCString name;
-      a->GetNativeLeafName(name);
-      return name.Equals(b);
-    }
+ public:
+  bool Equals(const FilePointer& a, const char* b) const {
+    nsAutoCString name;
+    a->GetNativeLeafName(name);
+    return name.Equals(b);
+  }
 };
 
 TEST(TArray, test_comptr_array) {
   FilePointer tmpDir;
   NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpDir));
   ASSERT_TRUE(tmpDir);
-  const char *kNames[] = {
-    "foo.txt", "bar.html", "baz.gif"
-  };
+  const char* kNames[] = {"foo.txt", "bar.html", "baz.gif"};
   nsTArray<FilePointer> fileArray;
   size_t i;
   for (i = 0; i < ArrayLength(kNames); ++i) {
@@ -552,44 +490,44 @@ TEST(TArray, test_comptr_array) {
                                 []() { return false; }));
 
   // It's unclear what 'operator<' means for nsCOMPtr, but whatever...
-  ASSERT_TRUE(test_basic_array(fileArray.Elements(), fileArray.Length(),
-                               tmpDir));
+  ASSERT_TRUE(
+      test_basic_array(fileArray.Elements(), fileArray.Length(), tmpDir));
 }
 
 //----
 
 class RefcountedObject {
-  public:
-    RefcountedObject() : rc(0) {}
-    void AddRef() {
-      ++rc;
-    }
-    void Release() {
-      if (--rc == 0)
-        delete this;
-    }
-    ~RefcountedObject() {}
-  private:
-    int32_t rc;
+ public:
+  RefcountedObject() : rc(0) {}
+  void AddRef() { ++rc; }
+  void Release() {
+    if (--rc == 0) delete this;
+  }
+  ~RefcountedObject() {}
+
+ private:
+  int32_t rc;
 };
 
 TEST(TArray, test_refptr_array) {
-  nsTArray< RefPtr<RefcountedObject> > objArray;
+  nsTArray<RefPtr<RefcountedObject> > objArray;
 
-  RefcountedObject *a = new RefcountedObject(); a->AddRef();
-  RefcountedObject *b = new RefcountedObject(); b->AddRef();
-  RefcountedObject *c = new RefcountedObject(); c->AddRef();
+  RefcountedObject* a = new RefcountedObject();
+  a->AddRef();
+  RefcountedObject* b = new RefcountedObject();
+  b->AddRef();
+  RefcountedObject* c = new RefcountedObject();
+  c->AddRef();
 
   objArray.AppendElement(a);
   objArray.AppendElement(b);
   objArray.AppendElement(c);
 
   ASSERT_EQ(objArray.IndexOf(b), size_t(1));
-  ASSERT_TRUE(objArray.ApplyIf(b,
-                               [&](size_t i, RefPtr<RefcountedObject>& r) {
-                                 return i == 1 && r == b;
-                               },
-                               []() { return false; }));
+  ASSERT_TRUE(objArray.ApplyIf(
+      b,
+      [&](size_t i, RefPtr<RefcountedObject>& r) { return i == 1 && r == b; },
+      []() { return false; }));
 
   a->Release();
   b->Release();
@@ -627,12 +565,13 @@ TEST(TArray, test_ptrarray) {
 // useful in non-debug builds.
 #ifdef DEBUG
 TEST(TArray, test_autoarray) {
-  uint32_t data[] = {4,6,8,2,4,1,5,7,3};
+  uint32_t data[] = {4, 6, 8, 2, 4, 1, 5, 7, 3};
   AutoTArray<uint32_t, MOZ_ARRAY_LENGTH(data)> array;
 
   void* hdr = array.DebugGetHeader();
   ASSERT_NE(hdr, nsTArray<uint32_t>().DebugGetHeader());
-  ASSERT_NE(hdr, (AutoTArray<uint32_t, MOZ_ARRAY_LENGTH(data)>().DebugGetHeader()));
+  ASSERT_NE(hdr,
+            (AutoTArray<uint32_t, MOZ_ARRAY_LENGTH(data)>().DebugGetHeader()));
 
   array.AppendElement(1u);
   ASSERT_EQ(hdr, array.DebugGetHeader());
@@ -688,11 +627,10 @@ TEST(TArray, test_indexof) {
   array.AppendElement(5);
   array.RemoveElementAt(1);
   // we should not find the 5!
-  auto no_index = array.NoIndex; // Fixes gtest compilation error.
+  auto no_index = array.NoIndex;  // Fixes gtest compilation error.
   ASSERT_EQ(array.IndexOf(5, 1), no_index);
-  ASSERT_FALSE(array.ApplyIf(5, 1,
-                             []() { return true; },
-                             []() { return false; }));
+  ASSERT_FALSE(
+      array.ApplyIf(5, 1, []() { return true; }, []() { return false; }));
 }
 
 //----
@@ -701,8 +639,7 @@ template <class Array>
 static bool is_heap(const Array& ary, size_t len) {
   size_t index = 1;
   while (index < len) {
-    if (ary[index] > ary[(index - 1) >> 1])
-      return false;
+    if (ary[index] > ary[(index - 1) >> 1]) return false;
     index++;
   }
   return true;
@@ -713,38 +650,38 @@ static bool is_heap(const Array& ary, size_t len) {
 // An array |arr| is using its auto buffer if |&arr < arr.Elements()| and
 // |arr.Elements() - &arr| is small.
 
-#define IS_USING_AUTO(arr) \
-  ((uintptr_t) &(arr) < (uintptr_t) arr.Elements() && \
+#define IS_USING_AUTO(arr)                            \
+  ((uintptr_t) & (arr) < (uintptr_t)arr.Elements() && \
    ((ptrdiff_t)arr.Elements() - (ptrdiff_t)&arr) <= 16)
 
-#define CHECK_IS_USING_AUTO(arr) \
-  do {                                                    \
-    ASSERT_TRUE(IS_USING_AUTO(arr));                      \
-  } while(0)
+#define CHECK_IS_USING_AUTO(arr)     \
+  do {                               \
+    ASSERT_TRUE(IS_USING_AUTO(arr)); \
+  } while (0)
 
-#define CHECK_NOT_USING_AUTO(arr) \
-  do {                                                    \
-    ASSERT_FALSE(IS_USING_AUTO(arr));                     \
-  } while(0)
+#define CHECK_NOT_USING_AUTO(arr)     \
+  do {                                \
+    ASSERT_FALSE(IS_USING_AUTO(arr)); \
+  } while (0)
 
-#define CHECK_USES_SHARED_EMPTY_HDR(arr) \
-  do {                                                    \
-    nsTArray<int> _empty;                                 \
-    ASSERT_EQ(_empty.Elements(), arr.Elements());         \
-  } while(0)
+#define CHECK_USES_SHARED_EMPTY_HDR(arr)          \
+  do {                                            \
+    nsTArray<int> _empty;                         \
+    ASSERT_EQ(_empty.Elements(), arr.Elements()); \
+  } while (0)
 
 #define CHECK_EQ_INT(actual, expected) \
-  do {                                                                       \
-    ASSERT_EQ((actual), (expected));                                         \
-  } while(0)
+  do {                                 \
+    ASSERT_EQ((actual), (expected));   \
+  } while (0)
 
-#define CHECK_ARRAY(arr, data) \
-  do {                                                          \
-    CHECK_EQ_INT((arr).Length(), (size_t)ArrayLength(data));  \
-    for (size_t _i = 0; _i < ArrayLength(data); _i++) {       \
-      CHECK_EQ_INT((arr)[_i], (data)[_i]);                      \
-    }                                                           \
-  } while(0)
+#define CHECK_ARRAY(arr, data)                               \
+  do {                                                       \
+    CHECK_EQ_INT((arr).Length(), (size_t)ArrayLength(data)); \
+    for (size_t _i = 0; _i < ArrayLength(data); _i++) {      \
+      CHECK_EQ_INT((arr)[_i], (data)[_i]);                   \
+    }                                                        \
+  } while (0)
 
 TEST(TArray, test_swap) {
   // Test nsTArray::SwapElements.  Unfortunately there are many cases.
@@ -972,8 +909,7 @@ TEST(TArray, test_swap) {
 
 // Bug 1171296: Disabled on andoid due to crashes.
 #if !defined(ANDROID)
-TEST(TArray, test_fallible)
-{
+TEST(TArray, test_fallible) {
   // Test that FallibleTArray works properly; that is, it never OOMs, but
   // instead eventually returns false.
   //
@@ -1010,7 +946,8 @@ TEST(TArray, test_fallible)
 #else
       const size_t kOOMIterations = 8;
 #endif
-      ASSERT_GE(i, kOOMIterations) << "Got OOM on iteration " << i << ". Too early!";
+      ASSERT_GE(i, kOOMIterations)
+          << "Got OOM on iteration " << i << ". Too early!";
     }
   }
 
@@ -1031,24 +968,24 @@ TEST(TArray, test_conversion_operator) {
   AutoTArray<int, 8> tauto;
   const AutoTArray<int, 8> tautoconst;
 
-#define CHECK_ARRAY_CAST(type)                        \
-  do {                                                \
-    const type<int>& z1 = f;                          \
-    ASSERT_EQ((void*)&z1, (void*)&f);                 \
-    const type<int>& z2 = fconst;                     \
-    ASSERT_EQ((void*)&z2, (void*)&fconst);            \
-    const type<int>& z5 = i;                          \
-    ASSERT_EQ((void*)&z5, (void*)&i);                 \
-    const type<int>& z6 = iconst;                     \
-    ASSERT_EQ((void*)&z6, (void*)&iconst);            \
-    const type<int>& z9 = t;                          \
-    ASSERT_EQ((void*)&z9, (void*)&t);                 \
-    const type<int>& z10 = tconst;                    \
-    ASSERT_EQ((void*)&z10, (void*)&tconst);           \
-    const type<int>& z11 = tauto;                     \
-    ASSERT_EQ((void*)&z11, (void*)&tauto);            \
-    const type<int>& z12 = tautoconst;                \
-    ASSERT_EQ((void*)&z12, (void*)&tautoconst);       \
+#define CHECK_ARRAY_CAST(type)                  \
+  do {                                          \
+    const type<int>& z1 = f;                    \
+    ASSERT_EQ((void*)&z1, (void*)&f);           \
+    const type<int>& z2 = fconst;               \
+    ASSERT_EQ((void*)&z2, (void*)&fconst);      \
+    const type<int>& z5 = i;                    \
+    ASSERT_EQ((void*)&z5, (void*)&i);           \
+    const type<int>& z6 = iconst;               \
+    ASSERT_EQ((void*)&z6, (void*)&iconst);      \
+    const type<int>& z9 = t;                    \
+    ASSERT_EQ((void*)&z9, (void*)&t);           \
+    const type<int>& z10 = tconst;              \
+    ASSERT_EQ((void*)&z10, (void*)&tconst);     \
+    const type<int>& z11 = tauto;               \
+    ASSERT_EQ((void*)&z11, (void*)&tauto);      \
+    const type<int>& z12 = tautoconst;          \
+    ASSERT_EQ((void*)&z12, (void*)&tautoconst); \
   } while (0)
 
   CHECK_ARRAY_CAST(FallibleTArray);
@@ -1058,9 +995,8 @@ TEST(TArray, test_conversion_operator) {
 #undef CHECK_ARRAY_CAST
 }
 
-template<class T>
-struct BufAccessor : public T
-{
+template <class T>
+struct BufAccessor : public T {
   void* GetHdr() { return T::mHdr; }
 };
 
@@ -1076,27 +1012,25 @@ TEST(TArray, test_SetLengthAndRetainStorage_no_ctor) {
 
 #define LPAREN (
 #define RPAREN )
-#define FOR_EACH(pre, post)                                    \
-  do {                                                         \
-    pre f post;                                                \
-    pre i post;                                                \
-    pre t post;                                                \
-    pre tauto post;                                            \
+#define FOR_EACH(pre, post) \
+  do {                      \
+    pre f post;             \
+    pre i post;             \
+    pre t post;             \
+    pre tauto post;         \
   } while (0)
 
   // Setup test arrays.
-  FOR_EACH(; Unused << , .SetLength(N, fallible));
+  FOR_EACH(; Unused <<, .SetLength(N, fallible));
   for (int n = 0; n < N; ++n) {
     FOR_EACH(;, [n] = n);
   }
 
   void* initial_Hdrs[] = {
-    static_cast<BufAccessor<FallibleTArray<int> >&>(f).GetHdr(),
-    static_cast<BufAccessor<InfallibleTArray<int> >&>(i).GetHdr(),
-    static_cast<BufAccessor<nsTArray<int> >&>(t).GetHdr(),
-    static_cast<BufAccessor<AutoTArray<int, N> >&>(tauto).GetHdr(),
-    nullptr
-  };
+      static_cast<BufAccessor<FallibleTArray<int> >&>(f).GetHdr(),
+      static_cast<BufAccessor<InfallibleTArray<int> >&>(i).GetHdr(),
+      static_cast<BufAccessor<nsTArray<int> >&>(t).GetHdr(),
+      static_cast<BufAccessor<AutoTArray<int, N> >&>(tauto).GetHdr(), nullptr};
 
   // SetLengthAndRetainStorage(n), should NOT overwrite memory when T hasn't
   // a default constructor.
@@ -1118,12 +1052,10 @@ TEST(TArray, test_SetLengthAndRetainStorage_no_ctor) {
   }
 
   void* current_Hdrs[] = {
-    static_cast<BufAccessor<FallibleTArray<int> >&>(f).GetHdr(),
-    static_cast<BufAccessor<InfallibleTArray<int> >&>(i).GetHdr(),
-    static_cast<BufAccessor<nsTArray<int> >&>(t).GetHdr(),
-    static_cast<BufAccessor<AutoTArray<int, N> >&>(tauto).GetHdr(),
-    nullptr
-  };
+      static_cast<BufAccessor<FallibleTArray<int> >&>(f).GetHdr(),
+      static_cast<BufAccessor<InfallibleTArray<int> >&>(i).GetHdr(),
+      static_cast<BufAccessor<nsTArray<int> >&>(t).GetHdr(),
+      static_cast<BufAccessor<AutoTArray<int, N> >&>(tauto).GetHdr(), nullptr};
 
   // SetLengthAndRetainStorage(n) should NOT have reallocated the internal
   // memory.
@@ -1132,21 +1064,18 @@ TEST(TArray, test_SetLengthAndRetainStorage_no_ctor) {
     ASSERT_EQ(current_Hdrs[n], initial_Hdrs[n]);
   }
 
-
 #undef FOR_EACH
 #undef LPAREN
 #undef RPAREN
 }
 
 template <typename Comparator>
-bool
-TestCompareMethods(const Comparator& aComp)
-{
+bool TestCompareMethods(const Comparator& aComp) {
   nsTArray<int> ary({57, 4, 16, 17, 3, 5, 96, 12});
 
   ary.Sort(aComp);
 
-  const int sorted[] = {3, 4, 5, 12, 16, 17, 57, 96 };
+  const int sorted[] = {3, 4, 5, 12, 16, 17, 57, 96};
   for (size_t i = 0; i < MOZ_ARRAY_LENGTH(sorted); i++) {
     if (sorted[i] != ary[i]) {
       return false;
@@ -1167,26 +1096,19 @@ TestCompareMethods(const Comparator& aComp)
   return true;
 }
 
-struct IntComparator
-{
-  bool Equals(int aLeft, int aRight) const
-  {
-    return aLeft == aRight;
-  }
+struct IntComparator {
+  bool Equals(int aLeft, int aRight) const { return aLeft == aRight; }
 
-  bool LessThan(int aLeft, int aRight) const
-  {
-    return aLeft < aRight;
-  }
+  bool LessThan(int aLeft, int aRight) const { return aLeft < aRight; }
 };
 
 TEST(TArray, test_comparator_objects) {
   ASSERT_TRUE(TestCompareMethods(IntComparator()));
-  ASSERT_TRUE(TestCompareMethods([] (int aLeft, int aRight) { return aLeft - aRight; }));
+  ASSERT_TRUE(
+      TestCompareMethods([](int aLeft, int aRight) { return aLeft - aRight; }));
 }
 
-struct Big
-{
+struct Big {
   uint64_t size[40] = {};
 };
 
@@ -1210,4 +1132,4 @@ TEST(TArray, test_AutoTArray_SwapElements) {
   ASSERT_EQ(another[0].size[10], 1u);
 }
 
-} // namespace TestTArray
+}  // namespace TestTArray

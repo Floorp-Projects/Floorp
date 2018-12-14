@@ -8,26 +8,27 @@
 
 #include "mozilla/Unused.h"
 
-#define NS_IFOO_IID \
-{ 0x6f7652e0,  0xee43, 0x11d1, \
-  { 0x9c, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } }
+#define NS_IFOO_IID                                  \
+  {                                                  \
+    0x6f7652e0, 0xee43, 0x11d1, {                    \
+      0x9c, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 \
+    }                                                \
+  }
 
-namespace TestCOMPtr
-{
+namespace TestCOMPtr {
 
-class IFoo : public nsISupports
-{
-public:
+class IFoo : public nsISupports {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFOO_IID)
 
-public:
+ public:
   IFoo();
   // virtual dtor because IBar uses our Release()
   virtual ~IFoo();
 
   NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
   NS_IMETHOD_(MozExternalRefCountType) Release() override;
-  NS_IMETHOD QueryInterface( const nsIID&, void** ) override;
+  NS_IMETHOD QueryInterface(const nsIID&, void**) override;
 
   unsigned int refcount_;
 
@@ -42,51 +43,36 @@ int IFoo::total_constructions_;
 int IFoo::total_destructions_;
 int IFoo::total_queries_;
 
-IFoo::IFoo()
-  : refcount_(0)
-{
-  ++total_constructions_;
-}
+IFoo::IFoo() : refcount_(0) { ++total_constructions_; }
 
-IFoo::~IFoo()
-{
-  ++total_destructions_;
-}
+IFoo::~IFoo() { ++total_destructions_; }
 
-MozExternalRefCountType
-IFoo::AddRef()
-{
+MozExternalRefCountType IFoo::AddRef() {
   ++refcount_;
   return refcount_;
 }
 
-MozExternalRefCountType
-IFoo::Release()
-{
+MozExternalRefCountType IFoo::Release() {
   int newcount = --refcount_;
 
-  if ( newcount == 0 )
-  {
+  if (newcount == 0) {
     delete this;
   }
 
   return newcount;
 }
 
-nsresult
-IFoo::QueryInterface( const nsIID& aIID, void** aResult )
-{
+nsresult IFoo::QueryInterface(const nsIID& aIID, void** aResult) {
   total_queries_++;
 
   nsISupports* rawPtr = 0;
   nsresult status = NS_OK;
 
-  if ( aIID.Equals(NS_GET_IID(IFoo)) )
+  if (aIID.Equals(NS_GET_IID(IFoo)))
     rawPtr = this;
-  else
-  {
+  else {
     nsID iid_of_ISupports = NS_ISUPPORTS_IID;
-    if ( aIID.Equals(iid_of_ISupports) )
+    if (aIID.Equals(iid_of_ISupports))
       rawPtr = static_cast<nsISupports*>(this);
     else
       status = NS_ERROR_NO_INTERFACE;
@@ -98,8 +84,7 @@ IFoo::QueryInterface( const nsIID& aIID, void** aResult )
   return status;
 }
 
-nsresult
-CreateIFoo( void** result )
+nsresult CreateIFoo(void** result)
 // a typical factory function (that calls AddRef)
 {
   auto* foop = new IFoo;
@@ -110,36 +95,34 @@ CreateIFoo( void** result )
   return NS_OK;
 }
 
-void
-set_a_IFoo( nsCOMPtr<IFoo>* result )
-{
+void set_a_IFoo(nsCOMPtr<IFoo>* result) {
   // Various places in this file do a static_cast to nsISupports* in order to
   // make the QI non-trivial, to avoid hitting a static assert.
   nsCOMPtr<IFoo> foop(do_QueryInterface(static_cast<nsISupports*>(new IFoo)));
   *result = foop;
 }
 
-nsCOMPtr<IFoo>
-return_a_IFoo()
-{
+nsCOMPtr<IFoo> return_a_IFoo() {
   nsCOMPtr<IFoo> foop(do_QueryInterface(static_cast<nsISupports*>(new IFoo)));
   return foop;
 }
 
-#define NS_IBAR_IID \
-{ 0x6f7652e1,  0xee43, 0x11d1, \
-  { 0x9c, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } }
+#define NS_IBAR_IID                                  \
+  {                                                  \
+    0x6f7652e1, 0xee43, 0x11d1, {                    \
+      0x9c, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 \
+    }                                                \
+  }
 
-class IBar : public IFoo
-{
-public:
+class IBar : public IFoo {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IBAR_IID)
 
-public:
+ public:
   IBar();
   ~IBar() override;
 
-  NS_IMETHOD QueryInterface( const nsIID&, void** ) override;
+  NS_IMETHOD QueryInterface(const nsIID&, void**) override;
 
   static int total_destructions_;
   static int total_queries_;
@@ -150,31 +133,23 @@ NS_DEFINE_STATIC_IID_ACCESSOR(IBar, NS_IBAR_IID)
 int IBar::total_destructions_;
 int IBar::total_queries_;
 
-IBar::IBar()
-{
-}
+IBar::IBar() {}
 
-IBar::~IBar()
-{
-  total_destructions_++;
-}
+IBar::~IBar() { total_destructions_++; }
 
-nsresult
-IBar::QueryInterface( const nsID& aIID, void** aResult )
-{
+nsresult IBar::QueryInterface(const nsID& aIID, void** aResult) {
   total_queries_++;
 
   nsISupports* rawPtr = 0;
   nsresult status = NS_OK;
 
-  if ( aIID.Equals(NS_GET_IID(IBar)) )
+  if (aIID.Equals(NS_GET_IID(IBar)))
     rawPtr = this;
-  else if ( aIID.Equals(NS_GET_IID(IFoo)) )
+  else if (aIID.Equals(NS_GET_IID(IFoo)))
     rawPtr = static_cast<IFoo*>(this);
-  else
-  {
+  else {
     nsID iid_of_ISupports = NS_ISUPPORTS_IID;
-    if ( aIID.Equals(iid_of_ISupports) )
+    if (aIID.Equals(iid_of_ISupports))
       rawPtr = static_cast<nsISupports*>(this);
     else
       status = NS_ERROR_NO_INTERFACE;
@@ -186,11 +161,8 @@ IBar::QueryInterface( const nsID& aIID, void** aResult )
   return status;
 }
 
-
-
-nsresult
-CreateIBar( void** result )
-  // a typical factory function (that calls AddRef)
+nsresult CreateIBar(void** result)
+// a typical factory function (that calls AddRef)
 {
   auto* barp = new IBar;
 
@@ -200,27 +172,17 @@ CreateIBar( void** result )
   return NS_OK;
 }
 
-void
-AnIFooPtrPtrContext( IFoo** )
-{
-}
+void AnIFooPtrPtrContext(IFoo**) {}
 
-void
-AVoidPtrPtrContext( void** )
-{
-}
+void AVoidPtrPtrContext(void**) {}
 
-void
-AnISupportsPtrPtrContext( nsISupports** )
-{
-}
+void AnISupportsPtrPtrContext(nsISupports**) {}
 
-} // namespace TestCOMPtr
+}  // namespace TestCOMPtr
 
 using namespace TestCOMPtr;
 
-TEST(COMPtr, Bloat_Raw_Unsafe)
-{
+TEST(COMPtr, Bloat_Raw_Unsafe) {
   // ER: I'm not sure what this is testing...
   IBar* barP = 0;
   nsresult rv = CreateIBar(reinterpret_cast<void**>(&barP));
@@ -236,11 +198,10 @@ TEST(COMPtr, Bloat_Raw_Unsafe)
   NS_RELEASE(barP);
 }
 
-TEST(COMPtr, Bloat_Smart)
-{
+TEST(COMPtr, Bloat_Smart) {
   // ER: I'm not sure what this is testing...
   nsCOMPtr<IBar> barP;
-  nsresult rv = CreateIBar( getter_AddRefs(barP) );
+  nsresult rv = CreateIBar(getter_AddRefs(barP));
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(barP);
 
@@ -249,8 +210,7 @@ TEST(COMPtr, Bloat_Smart)
   ASSERT_TRUE(fooP);
 }
 
-TEST(COMPtr, AddRefAndRelease)
-{
+TEST(COMPtr, AddRefAndRelease) {
   IFoo::total_constructions_ = 0;
   IFoo::total_destructions_ = 0;
   IBar::total_destructions_ = 0;
@@ -266,14 +226,17 @@ TEST(COMPtr, AddRefAndRelease)
     ASSERT_EQ(IFoo::total_constructions_, 2);
     ASSERT_EQ(IFoo::total_destructions_, 1);
 
-    // [Shouldn't compile] Is it a compile time error to try to |AddRef| by hand?
-    //foop->AddRef();
+    // [Shouldn't compile] Is it a compile time error to try to |AddRef| by
+    // hand?
+    // foop->AddRef();
 
-    // [Shouldn't compile] Is it a compile time error to try to |Release| be hand?
-    //foop->Release();
+    // [Shouldn't compile] Is it a compile time error to try to |Release| be
+    // hand?
+    // foop->Release();
 
-    // [Shouldn't compile] Is it a compile time error to try to |delete| an |nsCOMPtr|?
-    //delete foop;
+    // [Shouldn't compile] Is it a compile time error to try to |delete| an
+    // |nsCOMPtr|?
+    // delete foop;
 
     static_cast<IFoo*>(foop)->AddRef();
     ASSERT_EQ(foop->refcount_, (unsigned int)2);
@@ -297,14 +260,15 @@ TEST(COMPtr, AddRefAndRelease)
   ASSERT_EQ(IBar::total_destructions_, 1);
 }
 
-void Comparison()
-{
+void Comparison() {
   IFoo::total_constructions_ = 0;
   IFoo::total_destructions_ = 0;
 
   {
-    nsCOMPtr<IFoo> foo1p(do_QueryInterface(static_cast<nsISupports*>(new IFoo)));
-    nsCOMPtr<IFoo> foo2p(do_QueryInterface(static_cast<nsISupports*>(new IFoo)));
+    nsCOMPtr<IFoo> foo1p(
+        do_QueryInterface(static_cast<nsISupports*>(new IFoo)));
+    nsCOMPtr<IFoo> foo2p(
+        do_QueryInterface(static_cast<nsISupports*>(new IFoo)));
 
     ASSERT_EQ(IFoo::total_constructions_, 2);
 
@@ -331,8 +295,7 @@ void Comparison()
   ASSERT_EQ(IFoo::total_destructions_, 2);
 }
 
-void DontAddRef()
-{
+void DontAddRef() {
   {
     auto* raw_foo1p = new IFoo;
     raw_foo1p->AddRef();
@@ -340,7 +303,7 @@ void DontAddRef()
     auto* raw_foo2p = new IFoo;
     raw_foo2p->AddRef();
 
-    nsCOMPtr<IFoo> foo1p( dont_AddRef(raw_foo1p) );
+    nsCOMPtr<IFoo> foo1p(dont_AddRef(raw_foo1p));
     ASSERT_EQ(raw_foo1p, foo1p);
     ASSERT_EQ(foo1p->refcount_, (unsigned int)1);
 
@@ -351,15 +314,14 @@ void DontAddRef()
   }
 }
 
-TEST(COMPtr, AssignmentHelpers)
-{
+TEST(COMPtr, AssignmentHelpers) {
   IFoo::total_constructions_ = 0;
   IFoo::total_destructions_ = 0;
 
   {
     nsCOMPtr<IFoo> foop;
     ASSERT_FALSE(foop);
-    CreateIFoo( nsGetterAddRefs<IFoo>(foop) );
+    CreateIFoo(nsGetterAddRefs<IFoo>(foop));
     ASSERT_TRUE(foop);
   }
 
@@ -369,7 +331,7 @@ TEST(COMPtr, AssignmentHelpers)
   {
     nsCOMPtr<IFoo> foop;
     ASSERT_FALSE(foop);
-    CreateIFoo( getter_AddRefs(foop) );
+    CreateIFoo(getter_AddRefs(foop));
     ASSERT_TRUE(foop);
   }
 
@@ -402,7 +364,7 @@ TEST(COMPtr, AssignmentHelpers)
     ASSERT_EQ(IFoo::total_constructions_, 5);
     ASSERT_EQ(IFoo::total_destructions_, 4);
 
-    nsCOMPtr<IFoo> fooP2( fooP.forget() );
+    nsCOMPtr<IFoo> fooP2(fooP.forget());
     ASSERT_TRUE(fooP2);
 
     ASSERT_EQ(IFoo::total_constructions_, 5);
@@ -413,8 +375,7 @@ TEST(COMPtr, AssignmentHelpers)
   ASSERT_EQ(IFoo::total_destructions_, 5);
 }
 
-TEST(COMPtr, QueryInterface)
-{
+TEST(COMPtr, QueryInterface) {
   IFoo::total_queries_ = 0;
   IBar::total_queries_ = 0;
 
@@ -446,23 +407,21 @@ TEST(COMPtr, QueryInterface)
   }
 }
 
-TEST(COMPtr, GetterConversions)
-{
+TEST(COMPtr, GetterConversions) {
   // This is just a compilation test. We add a few asserts to keep gtest happy.
   {
     nsCOMPtr<IFoo> fooP;
     ASSERT_FALSE(fooP);
 
-    AnIFooPtrPtrContext( getter_AddRefs(fooP) );
-    AVoidPtrPtrContext( getter_AddRefs(fooP) );
+    AnIFooPtrPtrContext(getter_AddRefs(fooP));
+    AVoidPtrPtrContext(getter_AddRefs(fooP));
   }
-
 
   {
     nsCOMPtr<nsISupports> supportsP;
     ASSERT_FALSE(supportsP);
 
-    AVoidPtrPtrContext( getter_AddRefs(supportsP) );
-    AnISupportsPtrPtrContext( getter_AddRefs(supportsP) );
+    AVoidPtrPtrContext(getter_AddRefs(supportsP));
+    AnISupportsPtrPtrContext(getter_AddRefs(supportsP));
   }
 }

@@ -25,29 +25,25 @@ using namespace mozilla;
 
 /* f93f6bdc-88af-42d7-9d64-1b43c649a3e5 */
 #define FACTORY_CID1                                 \
-{                                                    \
-  0xf93f6bdc,                                        \
-  0x88af,                                            \
-  0x42d7,                                            \
-  { 0x9d, 0x64, 0x1b, 0x43, 0xc6, 0x49, 0xa3, 0xe5 } \
-}
+  {                                                  \
+    0xf93f6bdc, 0x88af, 0x42d7, {                    \
+      0x9d, 0x64, 0x1b, 0x43, 0xc6, 0x49, 0xa3, 0xe5 \
+    }                                                \
+  }
 NS_DEFINE_CID(kFactoryCID1, FACTORY_CID1);
 
 /* ef38ad65-6595-49f0-8048-e819f81d15e2 */
 #define FACTORY_CID2                                 \
-{                                                    \
-  0xef38ad65,                                        \
-  0x6595,                                            \
-  0x49f0,                                            \
-  { 0x80, 0x48, 0xe8, 0x19, 0xf8, 0x1d, 0x15, 0xe2 } \
-}
+  {                                                  \
+    0xef38ad65, 0x6595, 0x49f0, {                    \
+      0x80, 0x48, 0xe8, 0x19, 0xf8, 0x1d, 0x15, 0xe2 \
+    }                                                \
+  }
 NS_DEFINE_CID(kFactoryCID2, FACTORY_CID2);
 
-#define FACTORY_CONTRACTID                           \
-  "TestRacingThreadManager/factory;1"
+#define FACTORY_CONTRACTID "TestRacingThreadManager/factory;1"
 
-namespace TestRacingServiceManager
-{
+namespace TestRacingServiceManager {
 int32_t gComponent1Count = 0;
 int32_t gComponent2Count = 0;
 
@@ -56,13 +52,13 @@ ReentrantMonitor* gReentrantMonitor = nullptr;
 bool gCreateInstanceCalled = false;
 bool gMainThreadWaiting = false;
 
-class AutoCreateAndDestroyReentrantMonitor
-{
-public:
-  explicit AutoCreateAndDestroyReentrantMonitor(ReentrantMonitor** aReentrantMonitorPtr)
-  : mReentrantMonitorPtr(aReentrantMonitorPtr) {
+class AutoCreateAndDestroyReentrantMonitor {
+ public:
+  explicit AutoCreateAndDestroyReentrantMonitor(
+      ReentrantMonitor** aReentrantMonitorPtr)
+      : mReentrantMonitorPtr(aReentrantMonitorPtr) {
     *aReentrantMonitorPtr =
-      new ReentrantMonitor("TestRacingServiceManager::AutoMon");
+        new ReentrantMonitor("TestRacingServiceManager::AutoMon");
     MOZ_RELEASE_ASSERT(*aReentrantMonitorPtr, "Out of memory!");
   }
 
@@ -73,37 +69,32 @@ public:
     }
   }
 
-private:
+ private:
   ReentrantMonitor** mReentrantMonitorPtr;
 };
 
-class Factory final : public nsIFactory
-{
+class Factory final : public nsIFactory {
   ~Factory() {}
 
-public:
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  Factory() : mFirstComponentCreated(false) { }
+  Factory() : mFirstComponentCreated(false) {}
 
-  NS_IMETHOD CreateInstance(nsISupports* aDelegate,
-                            const nsIID& aIID,
+  NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID,
                             void** aResult) override;
 
-  NS_IMETHOD LockFactory(bool aLock) override {
-    return NS_OK;
-  }
+  NS_IMETHOD LockFactory(bool aLock) override { return NS_OK; }
 
   bool mFirstComponentCreated;
 };
 
 NS_IMPL_ISUPPORTS(Factory, nsIFactory)
 
-class Component1 final : public nsISupports
-{
+class Component1 final : public nsISupports {
   ~Component1() {}
 
-public:
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   Component1() {
@@ -120,11 +111,10 @@ NS_INTERFACE_MAP_BEGIN(Component1)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-class Component2 final : public nsISupports
-{
+class Component2 final : public nsISupports {
   ~Component2() {}
 
-public:
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   Component2() {
@@ -142,10 +132,8 @@ NS_INTERFACE_MAP_BEGIN(Component2)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
-Factory::CreateInstance(nsISupports* aDelegate,
-                        const nsIID& aIID,
-                        void** aResult)
-{
+Factory::CreateInstance(nsISupports* aDelegate, const nsIID& aIID,
+                        void** aResult) {
   // Make sure that the second thread beat the main thread to the getService
   // call.
   MOZ_RELEASE_ASSERT(!NS_IsMainThread(), "Wrong thread!");
@@ -166,8 +154,7 @@ Factory::CreateInstance(nsISupports* aDelegate,
 
   if (!mFirstComponentCreated) {
     instance = new Component1();
-  }
-  else {
+  } else {
     instance = new Component2();
   }
   NS_ENSURE_TRUE(instance, NS_ERROR_OUT_OF_MEMORY);
@@ -178,23 +165,19 @@ Factory::CreateInstance(nsISupports* aDelegate,
   return NS_OK;
 }
 
-class TestRunnable : public Runnable
-{
-public:
+class TestRunnable : public Runnable {
+ public:
   NS_DECL_NSIRUNNABLE
 
   TestRunnable()
-    : mozilla::Runnable("TestRacingServiceManager::TestRunnable")
-    , mFirstRunnableDone(false)
-  {
-  }
+      : mozilla::Runnable("TestRacingServiceManager::TestRunnable"),
+        mFirstRunnableDone(false) {}
 
   bool mFirstRunnableDone;
 };
 
 NS_IMETHODIMP
-TestRunnable::Run()
-{
+TestRunnable::Run() {
   {
     ReentrantMonitorAutoEnter mon(*gReentrantMonitor);
 
@@ -208,8 +191,7 @@ TestRunnable::Run()
 
   if (!mFirstRunnableDone) {
     component = do_GetService(kFactoryCID1, &rv);
-  }
-  else {
+  } else {
     component = do_GetService(FACTORY_CONTRACTID, &rv);
   }
   EXPECT_TRUE(NS_SUCCEEDED(rv)) << "GetService failed!";
@@ -219,36 +201,28 @@ TestRunnable::Run()
 
 static Factory* gFactory;
 
-static already_AddRefed<nsIFactory>
-CreateFactory(const mozilla::Module& module, const mozilla::Module::CIDEntry& entry)
-{
-    if (!gFactory) {
-        gFactory = new Factory();
-        NS_ADDREF(gFactory);
-    }
-    nsCOMPtr<nsIFactory> ret = gFactory;
-    return ret.forget();
+static already_AddRefed<nsIFactory> CreateFactory(
+    const mozilla::Module& module, const mozilla::Module::CIDEntry& entry) {
+  if (!gFactory) {
+    gFactory = new Factory();
+    NS_ADDREF(gFactory);
+  }
+  nsCOMPtr<nsIFactory> ret = gFactory;
+  return ret.forget();
 }
 
 static const mozilla::Module::CIDEntry kLocalCIDs[] = {
-    { &kFactoryCID1, false, CreateFactory, nullptr },
-    { &kFactoryCID2, false, CreateFactory, nullptr },
-    { nullptr }
-};
+    {&kFactoryCID1, false, CreateFactory, nullptr},
+    {&kFactoryCID2, false, CreateFactory, nullptr},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kLocalContracts[] = {
-    { FACTORY_CONTRACTID, &kFactoryCID2 },
-    { nullptr }
-};
+    {FACTORY_CONTRACTID, &kFactoryCID2}, {nullptr}};
 
-static const mozilla::Module kLocalModule = {
-    mozilla::Module::kVersion,
-    kLocalCIDs,
-    kLocalContracts
-};
+static const mozilla::Module kLocalModule = {mozilla::Module::kVersion,
+                                             kLocalCIDs, kLocalContracts};
 
-TEST(RacingServiceManager, Test)
-{
+TEST(RacingServiceManager, Test) {
   nsresult rv;
   XRE_AddStaticComponent(&kLocalModule);
 
@@ -301,4 +275,4 @@ TEST(RacingServiceManager, Test)
   NS_RELEASE(gFactory);
 }
 
-} // namespace TestRacingServiceManager
+}  // namespace TestRacingServiceManager

@@ -16,55 +16,41 @@ using mozilla::detail::Saturate;
 
 static const unsigned long sNumOps = 32;
 
-template<typename T>
-static T
-StartValue()
-{
+template <typename T>
+static T StartValue() {
   // Specialize |StartValue| for the given type.
   A(false);
 }
 
-template<>
-int8_t
-StartValue<int8_t>()
-{
+template <>
+int8_t StartValue<int8_t>() {
   return 0;
 }
 
-template<>
-int16_t
-StartValue<int16_t>()
-{
+template <>
+int16_t StartValue<int16_t>() {
   return 0;
 }
 
-template<>
-int32_t
-StartValue<int32_t>()
-{
+template <>
+int32_t StartValue<int32_t>() {
   return 0;
 }
 
-template<>
-uint8_t
-StartValue<uint8_t>()
-{
+template <>
+uint8_t StartValue<uint8_t>() {
   // Picking a value near middle of uint8_t's range.
   return static_cast<uint8_t>(std::numeric_limits<int8_t>::max());
 }
 
-template<>
-uint16_t
-StartValue<uint16_t>()
-{
+template <>
+uint16_t StartValue<uint16_t>() {
   // Picking a value near middle of uint16_t's range.
   return static_cast<uint8_t>(std::numeric_limits<int16_t>::max());
 }
 
-template<>
-uint32_t
-StartValue<uint32_t>()
-{
+template <>
+uint32_t StartValue<uint32_t>() {
   // Picking a value near middle of uint32_t's range.
   return static_cast<uint8_t>(std::numeric_limits<int32_t>::max());
 }
@@ -72,10 +58,8 @@ StartValue<uint32_t>()
 // Add
 //
 
-template<typename T>
-static void
-TestPrefixIncr()
-{
+template <typename T>
+static void TestPrefixIncr() {
   T value = StartValue<T>();
   Saturate<T> satValue(value);
 
@@ -84,10 +68,8 @@ TestPrefixIncr()
   }
 }
 
-template<typename T>
-static void
-TestPostfixIncr()
-{
+template <typename T>
+static void TestPostfixIncr() {
   T value = StartValue<T>();
   Saturate<T> satValue(value);
 
@@ -96,10 +78,8 @@ TestPostfixIncr()
   }
 }
 
-template<typename T>
-static void
-TestAdd()
-{
+template <typename T>
+static void TestAdd() {
   T value = StartValue<T>();
   Saturate<T> satValue(value);
 
@@ -111,10 +91,8 @@ TestAdd()
 // Subtract
 //
 
-template<typename T>
-static void
-TestPrefixDecr()
-{
+template <typename T>
+static void TestPrefixDecr() {
   T value = StartValue<T>();
   Saturate<T> satValue(value);
 
@@ -123,10 +101,8 @@ TestPrefixDecr()
   }
 }
 
-template<typename T>
-static void
-TestPostfixDecr()
-{
+template <typename T>
+static void TestPostfixDecr() {
   T value = StartValue<T>();
   Saturate<T> satValue(value);
 
@@ -135,10 +111,8 @@ TestPostfixDecr()
   }
 }
 
-template<typename T>
-static void
-TestSub()
-{
+template <typename T>
+static void TestSub() {
   T value = StartValue<T>();
   Saturate<T> satValue(value);
 
@@ -150,41 +124,35 @@ TestSub()
 // Corner cases near bounds
 //
 
-template<typename T>
-static void
-TestUpperBound()
-{
+template <typename T>
+static void TestUpperBound() {
   Saturate<T> satValue(std::numeric_limits<T>::max());
 
   A(--satValue == (std::numeric_limits<T>::max() - 1));
   A(++satValue == (std::numeric_limits<T>::max()));
-  A(++satValue == (std::numeric_limits<T>::max())); // don't overflow here
-  A(++satValue == (std::numeric_limits<T>::max())); // don't overflow here
-  A(--satValue == (std::numeric_limits<T>::max() - 1)); // back at (max - 1)
+  A(++satValue == (std::numeric_limits<T>::max()));      // don't overflow here
+  A(++satValue == (std::numeric_limits<T>::max()));      // don't overflow here
+  A(--satValue == (std::numeric_limits<T>::max() - 1));  // back at (max - 1)
   A(--satValue == (std::numeric_limits<T>::max() - 2));
 }
 
-template<typename T>
-static void
-TestLowerBound()
-{
+template <typename T>
+static void TestLowerBound() {
   Saturate<T> satValue(std::numeric_limits<T>::min());
 
   A(++satValue == (std::numeric_limits<T>::min() + 1));
   A(--satValue == (std::numeric_limits<T>::min()));
-  A(--satValue == (std::numeric_limits<T>::min())); // don't overflow here
-  A(--satValue == (std::numeric_limits<T>::min())); // don't overflow here
-  A(++satValue == (std::numeric_limits<T>::min() + 1)); // back at (max + 1)
+  A(--satValue == (std::numeric_limits<T>::min()));      // don't overflow here
+  A(--satValue == (std::numeric_limits<T>::min()));      // don't overflow here
+  A(++satValue == (std::numeric_limits<T>::min() + 1));  // back at (max + 1)
   A(++satValue == (std::numeric_limits<T>::min() + 2));
 }
 
 // Framework
 //
 
-template<typename T>
-static void
-TestAll()
-{
+template <typename T>
+static void TestAll() {
   // Assert that we don't accidently hit type's range limits in tests.
   const T value = StartValue<T>();
   A(std::numeric_limits<T>::min() + static_cast<T>(sNumOps) <= value);
@@ -202,9 +170,7 @@ TestAll()
   TestLowerBound<T>();
 }
 
-int
-main()
-{
+int main() {
   TestAll<int8_t>();
   TestAll<int16_t>();
   TestAll<int32_t>();

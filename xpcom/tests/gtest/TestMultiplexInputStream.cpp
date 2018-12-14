@@ -14,8 +14,7 @@
 #include "nsThreadUtils.h"
 #include "Helpers.h"
 
-TEST(MultiplexInputStream, Seek_SET)
-{
+TEST(MultiplexInputStream, Seek_SET) {
   nsCString buf1;
   nsCString buf2;
   nsCString buf3;
@@ -34,7 +33,7 @@ TEST(MultiplexInputStream, Seek_SET)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
-    do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
+      do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
   ASSERT_TRUE(multiplexStream);
   nsCOMPtr<nsIInputStream> stream(do_QueryInterface(multiplexStream));
   ASSERT_TRUE(stream);
@@ -104,11 +103,9 @@ TEST(MultiplexInputStream, Seek_SET)
   ASSERT_EQ(0, strncmp(readBuf, "The qu", count));
 }
 
-already_AddRefed<nsIInputStream>
-CreateStreamHelper()
-{
+already_AddRefed<nsIInputStream> CreateStreamHelper() {
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
-    do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
+      do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
 
   nsCString buf1;
   buf1.AssignLiteral("Hello");
@@ -139,8 +136,7 @@ TEST(TestMultiplexInputStream, AsyncWait_withoutEventTarget) {
   nsCOMPtr<nsIAsyncInputStream> ais = do_QueryInterface(is);
   ASSERT_TRUE(!!ais);
 
-  RefPtr<testing::InputStreamCallback> cb =
-    new testing::InputStreamCallback();
+  RefPtr<testing::InputStreamCallback> cb = new testing::InputStreamCallback();
 
   ASSERT_EQ(NS_OK, ais->AsyncWait(cb, 0, 0, nullptr));
   ASSERT_TRUE(cb->Called());
@@ -153,8 +149,7 @@ TEST(TestMultiplexInputStream, AsyncWait_withEventTarget) {
   nsCOMPtr<nsIAsyncInputStream> ais = do_QueryInterface(is);
   ASSERT_TRUE(!!ais);
 
-  RefPtr<testing::InputStreamCallback> cb =
-    new testing::InputStreamCallback();
+  RefPtr<testing::InputStreamCallback> cb = new testing::InputStreamCallback();
   nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
 
   ASSERT_EQ(NS_OK, ais->AsyncWait(cb, 0, 0, thread));
@@ -173,11 +168,10 @@ TEST(TestMultiplexInputStream, AsyncWait_withoutEventTarget_closureOnly) {
   nsCOMPtr<nsIAsyncInputStream> ais = do_QueryInterface(is);
   ASSERT_TRUE(!!ais);
 
-  RefPtr<testing::InputStreamCallback> cb =
-    new testing::InputStreamCallback();
+  RefPtr<testing::InputStreamCallback> cb = new testing::InputStreamCallback();
 
-  ASSERT_EQ(NS_OK, ais->AsyncWait(cb, nsIAsyncInputStream::WAIT_CLOSURE_ONLY,
-                                  0, nullptr));
+  ASSERT_EQ(NS_OK, ais->AsyncWait(cb, nsIAsyncInputStream::WAIT_CLOSURE_ONLY, 0,
+                                  nullptr));
   ASSERT_FALSE(cb->Called());
 
   ais->CloseWithStatus(NS_ERROR_FAILURE);
@@ -191,12 +185,11 @@ TEST(TestMultiplexInputStream, AsyncWait_withEventTarget_closureOnly) {
   nsCOMPtr<nsIAsyncInputStream> ais = do_QueryInterface(is);
   ASSERT_TRUE(!!ais);
 
-  RefPtr<testing::InputStreamCallback> cb =
-    new testing::InputStreamCallback();
+  RefPtr<testing::InputStreamCallback> cb = new testing::InputStreamCallback();
   nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
 
-  ASSERT_EQ(NS_OK, ais->AsyncWait(cb, nsIAsyncInputStream::WAIT_CLOSURE_ONLY,
-                                  0, thread));
+  ASSERT_EQ(NS_OK, ais->AsyncWait(cb, nsIAsyncInputStream::WAIT_CLOSURE_ONLY, 0,
+                                  thread));
 
   ASSERT_FALSE(cb->Called());
   ais->CloseWithStatus(NS_ERROR_FAILURE);
@@ -207,30 +200,24 @@ TEST(TestMultiplexInputStream, AsyncWait_withEventTarget_closureOnly) {
   ASSERT_TRUE(cb->Called());
 }
 
-class ClosedStream final : public nsIInputStream
-{
-public:
+class ClosedStream final : public nsIInputStream {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   ClosedStream() {}
 
   NS_IMETHOD
-  Available(uint64_t* aLength) override
-  {
-    return NS_BASE_STREAM_CLOSED;
-  }
+  Available(uint64_t* aLength) override { return NS_BASE_STREAM_CLOSED; }
 
   NS_IMETHOD
-  Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount) override
-  {
+  Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount) override {
     MOZ_CRASH("This should not be called!");
     return NS_OK;
   }
 
   NS_IMETHOD
-  ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
-               uint32_t aCount, uint32_t *aResult) override
-  {
+  ReadSegments(nsWriteSegmentFun aWriter, void* aClosure, uint32_t aCount,
+               uint32_t* aResult) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -238,89 +225,69 @@ public:
   Close() override { return NS_OK; }
 
   NS_IMETHOD
-  IsNonBlocking(bool* aNonBlocking) override
-  {
+  IsNonBlocking(bool* aNonBlocking) override {
     *aNonBlocking = true;
     return NS_OK;
   }
 
-private:
+ private:
   ~ClosedStream() = default;
 };
 
 NS_IMPL_ISUPPORTS(ClosedStream, nsIInputStream)
 
-class AsyncStream final : public nsIAsyncInputStream
-{
-public:
+class AsyncStream final : public nsIAsyncInputStream {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   explicit AsyncStream(int64_t aSize) : mState(eBlocked), mSize(aSize) {}
 
-  void
-  Unblock()
-  {
-    mState = eUnblocked;
+  void Unblock() { mState = eUnblocked; }
+
+  NS_IMETHOD
+  Available(uint64_t* aLength) override {
+    *aLength = mState == eBlocked ? 0 : mSize;
+    return mState == eClosed ? NS_BASE_STREAM_CLOSED : NS_OK;
   }
 
   NS_IMETHOD
-  Available(uint64_t* aLength) override
-  {
-   *aLength = mState == eBlocked ? 0 : mSize;
-   return mState == eClosed ? NS_BASE_STREAM_CLOSED : NS_OK;
-  }
-
-  NS_IMETHOD
-  Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount) override
-  {
+  Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount) override {
     MOZ_CRASH("This should not be called!");
     return NS_OK;
   }
 
   NS_IMETHOD
-  ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
-               uint32_t aCount, uint32_t *aResult) override
-  {
+  ReadSegments(nsWriteSegmentFun aWriter, void* aClosure, uint32_t aCount,
+               uint32_t* aResult) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   NS_IMETHOD
-  Close() override
-  {
+  Close() override {
     mState = eClosed;
     return NS_OK;
   }
 
   NS_IMETHOD
-  IsNonBlocking(bool* aNonBlocking) override
-  {
+  IsNonBlocking(bool* aNonBlocking) override {
     *aNonBlocking = true;
     return NS_OK;
   }
 
   NS_IMETHOD
-  AsyncWait(nsIInputStreamCallback* aCallback,
-            uint32_t aFlags, uint32_t aRequestedCount,
-            nsIEventTarget* aEventTarget) override
-  {
+  AsyncWait(nsIInputStreamCallback* aCallback, uint32_t aFlags,
+            uint32_t aRequestedCount, nsIEventTarget* aEventTarget) override {
     MOZ_CRASH("This should not be called!");
     return NS_OK;
   }
 
   NS_IMETHOD
-  CloseWithStatus(nsresult aStatus) override
-  {
-    return NS_OK;
-  }
+  CloseWithStatus(nsresult aStatus) override { return NS_OK; }
 
-private:
+ private:
   ~AsyncStream() = default;
 
-  enum {
-    eBlocked,
-    eUnblocked,
-    eClosed
-  } mState;
+  enum { eBlocked, eUnblocked, eClosed } mState;
 
   uint64_t mSize;
 };
@@ -329,7 +296,7 @@ NS_IMPL_ISUPPORTS(AsyncStream, nsIInputStream, nsIAsyncInputStream)
 
 TEST(TestMultiplexInputStream, Available) {
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
-    do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
+      do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
 
   nsCOMPtr<nsIInputStream> s = do_QueryInterface(multiplexStream);
   ASSERT_TRUE(!!s);
@@ -386,50 +353,39 @@ TEST(TestMultiplexInputStream, Available) {
   ASSERT_EQ(buffer.Length(), length);
 }
 
-class NonBufferableStringStream final : public nsIInputStream
-{
+class NonBufferableStringStream final : public nsIInputStream {
   nsCOMPtr<nsIInputStream> mStream;
 
-public:
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  explicit NonBufferableStringStream(const nsACString& aBuffer)
-  {
+  explicit NonBufferableStringStream(const nsACString& aBuffer) {
     NS_NewCStringInputStream(getter_AddRefs(mStream), aBuffer);
   }
 
   NS_IMETHOD
-  Available(uint64_t* aLength) override
-  {
-    return mStream->Available(aLength);
-  }
+  Available(uint64_t* aLength) override { return mStream->Available(aLength); }
 
   NS_IMETHOD
-  Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount) override
-  {
+  Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount) override {
     return mStream->Read(aBuffer, aCount, aReadCount);
   }
 
   NS_IMETHOD
-  ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
-               uint32_t aCount, uint32_t *aResult) override
-  {
+  ReadSegments(nsWriteSegmentFun aWriter, void* aClosure, uint32_t aCount,
+               uint32_t* aResult) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   NS_IMETHOD
-  Close() override
-  {
-    return mStream->Close();
-  }
+  Close() override { return mStream->Close(); }
 
   NS_IMETHOD
-  IsNonBlocking(bool* aNonBlocking) override
-  {
+  IsNonBlocking(bool* aNonBlocking) override {
     return mStream->IsNonBlocking(aNonBlocking);
   }
 
-private:
+ private:
   ~NonBufferableStringStream() = default;
 };
 
@@ -437,7 +393,7 @@ NS_IMPL_ISUPPORTS(NonBufferableStringStream, nsIInputStream)
 
 TEST(TestMultiplexInputStream, Bufferable) {
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
-    do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
+      do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
 
   nsCOMPtr<nsIInputStream> s = do_QueryInterface(multiplexStream);
   ASSERT_TRUE(!!s);
@@ -475,7 +431,7 @@ TEST(TestMultiplexInputStream, QILengthInputStream) {
   buf.AssignLiteral("Hello world");
 
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
-    do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
+      do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
 
   // nsMultiplexInputStream doesn't expose nsIInputStreamLength if there are
   // no nsIInputStreamLength sub streams.
@@ -490,7 +446,8 @@ TEST(TestMultiplexInputStream, QILengthInputStream) {
     nsCOMPtr<nsIInputStreamLength> fsis = do_QueryInterface(multiplexStream);
     ASSERT_TRUE(!fsis);
 
-    nsCOMPtr<nsIAsyncInputStreamLength> afsis = do_QueryInterface(multiplexStream);
+    nsCOMPtr<nsIAsyncInputStreamLength> afsis =
+        do_QueryInterface(multiplexStream);
     ASSERT_TRUE(!afsis);
   }
 
@@ -498,7 +455,7 @@ TEST(TestMultiplexInputStream, QILengthInputStream) {
   // more nsIInputStreamLength sub streams.
   {
     RefPtr<testing::LengthInputStream> inputStream =
-      new testing::LengthInputStream(buf, true, false);
+        new testing::LengthInputStream(buf, true, false);
 
     nsresult rv = multiplexStream->AppendStream(inputStream);
     ASSERT_TRUE(NS_SUCCEEDED(rv));
@@ -506,7 +463,8 @@ TEST(TestMultiplexInputStream, QILengthInputStream) {
     nsCOMPtr<nsIInputStreamLength> fsis = do_QueryInterface(multiplexStream);
     ASSERT_TRUE(!!fsis);
 
-    nsCOMPtr<nsIAsyncInputStreamLength> afsis = do_QueryInterface(multiplexStream);
+    nsCOMPtr<nsIAsyncInputStreamLength> afsis =
+        do_QueryInterface(multiplexStream);
     ASSERT_TRUE(!afsis);
   }
 
@@ -514,7 +472,7 @@ TEST(TestMultiplexInputStream, QILengthInputStream) {
   // or more nsIAsyncInputStreamLength sub streams.
   {
     RefPtr<testing::LengthInputStream> inputStream =
-      new testing::LengthInputStream(buf, true, true);
+        new testing::LengthInputStream(buf, true, true);
 
     nsresult rv = multiplexStream->AppendStream(inputStream);
     ASSERT_TRUE(NS_SUCCEEDED(rv));
@@ -522,14 +480,15 @@ TEST(TestMultiplexInputStream, QILengthInputStream) {
     nsCOMPtr<nsIInputStreamLength> fsis = do_QueryInterface(multiplexStream);
     ASSERT_TRUE(!!fsis);
 
-    nsCOMPtr<nsIAsyncInputStreamLength> afsis = do_QueryInterface(multiplexStream);
+    nsCOMPtr<nsIAsyncInputStreamLength> afsis =
+        do_QueryInterface(multiplexStream);
     ASSERT_TRUE(!!afsis);
   }
 }
 
 TEST(TestMultiplexInputStream, LengthInputStream) {
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
-    do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
+      do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
 
   // First stream is a a simple one.
   nsCString buf;
@@ -544,7 +503,7 @@ TEST(TestMultiplexInputStream, LengthInputStream) {
 
   // A LengthInputStream, non-async.
   RefPtr<testing::LengthInputStream> lengthStream =
-    new testing::LengthInputStream(buf, true, false);
+      new testing::LengthInputStream(buf, true, false);
 
   rv = multiplexStream->AppendStream(lengthStream);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
@@ -560,12 +519,14 @@ TEST(TestMultiplexInputStream, LengthInputStream) {
 
   // An async LengthInputStream.
   RefPtr<testing::LengthInputStream> asyncLengthStream =
-    new testing::LengthInputStream(buf, true, true, NS_BASE_STREAM_WOULD_BLOCK);
+      new testing::LengthInputStream(buf, true, true,
+                                     NS_BASE_STREAM_WOULD_BLOCK);
 
   rv = multiplexStream->AppendStream(asyncLengthStream);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
-  nsCOMPtr<nsIAsyncInputStreamLength> afsis = do_QueryInterface(multiplexStream);
+  nsCOMPtr<nsIAsyncInputStreamLength> afsis =
+      do_QueryInterface(multiplexStream);
   ASSERT_TRUE(!!afsis);
 
   // Now it would block.
@@ -581,8 +542,7 @@ TEST(TestMultiplexInputStream, LengthInputStream) {
   ASSERT_EQ(buf.Length() * 3, callback->Size());
 
   // Now a negative stream
-  lengthStream =
-    new testing::LengthInputStream(buf, true, false, NS_OK, true);
+  lengthStream = new testing::LengthInputStream(buf, true, false, NS_OK, true);
 
   rv = multiplexStream->AppendStream(lengthStream);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
@@ -592,8 +552,8 @@ TEST(TestMultiplexInputStream, LengthInputStream) {
   ASSERT_EQ(-1, length);
 
   // Another async LengthInputStream.
-  asyncLengthStream =
-    new testing::LengthInputStream(buf, true, true, NS_BASE_STREAM_WOULD_BLOCK);
+  asyncLengthStream = new testing::LengthInputStream(
+      buf, true, true, NS_BASE_STREAM_WOULD_BLOCK);
 
   rv = multiplexStream->AppendStream(asyncLengthStream);
   ASSERT_TRUE(NS_SUCCEEDED(rv));

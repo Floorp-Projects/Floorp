@@ -27,8 +27,7 @@ using namespace mozilla;
 // One hour... because test boxes can be slow!
 #define IDLE_THREAD_TIMEOUT 3600000
 
-namespace TestThreadPoolListener
-{
+namespace TestThreadPoolListener {
 static nsIThread** gCreatedThreadList = nullptr;
 static nsIThread** gShutDownThreadList = nullptr;
 
@@ -38,11 +37,10 @@ static bool gAllRunnablesPosted = false;
 static bool gAllThreadsCreated = false;
 static bool gAllThreadsShutDown = false;
 
-class Listener final : public nsIThreadPoolListener
-{
+class Listener final : public nsIThreadPoolListener {
   ~Listener() {}
 
-public:
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITHREADPOOLLISTENER
 };
@@ -50,8 +48,7 @@ public:
 NS_IMPL_ISUPPORTS(Listener, nsIThreadPoolListener)
 
 NS_IMETHODIMP
-Listener::OnThreadCreated()
-{
+Listener::OnThreadCreated() {
   nsCOMPtr<nsIThread> current(do_GetCurrentThread());
   EXPECT_TRUE(current) << "Couldn't get current thread!";
 
@@ -80,8 +77,7 @@ Listener::OnThreadCreated()
 }
 
 NS_IMETHODIMP
-Listener::OnThreadShuttingDown()
-{
+Listener::OnThreadShuttingDown() {
   nsCOMPtr<nsIThread> current(do_GetCurrentThread());
   EXPECT_TRUE(current) << "Couldn't get current thread!";
 
@@ -105,12 +101,13 @@ Listener::OnThreadShuttingDown()
   return NS_ERROR_FAILURE;
 }
 
-class AutoCreateAndDestroyReentrantMonitor
-{
-public:
-  explicit AutoCreateAndDestroyReentrantMonitor(ReentrantMonitor** aReentrantMonitorPtr)
-  : mReentrantMonitorPtr(aReentrantMonitorPtr) {
-    *aReentrantMonitorPtr = new ReentrantMonitor("TestThreadPoolListener::AutoMon");
+class AutoCreateAndDestroyReentrantMonitor {
+ public:
+  explicit AutoCreateAndDestroyReentrantMonitor(
+      ReentrantMonitor** aReentrantMonitorPtr)
+      : mReentrantMonitorPtr(aReentrantMonitorPtr) {
+    *aReentrantMonitorPtr =
+        new ReentrantMonitor("TestThreadPoolListener::AutoMon");
     MOZ_RELEASE_ASSERT(*aReentrantMonitorPtr, "Out of memory!");
   }
 
@@ -119,16 +116,15 @@ public:
     *mReentrantMonitorPtr = nullptr;
   }
 
-private:
+ private:
   ReentrantMonitor** mReentrantMonitorPtr;
 };
 
-TEST(ThreadPoolListener, Test)
-{
-  nsIThread* createdThreadList[NUMBER_OF_THREADS] = { nullptr };
+TEST(ThreadPoolListener, Test) {
+  nsIThread* createdThreadList[NUMBER_OF_THREADS] = {nullptr};
   gCreatedThreadList = createdThreadList;
 
-  nsIThread* shutDownThreadList[NUMBER_OF_THREADS] = { nullptr };
+  nsIThread* shutDownThreadList[NUMBER_OF_THREADS] = {nullptr};
   gShutDownThreadList = shutDownThreadList;
 
   AutoCreateAndDestroyReentrantMonitor newMon(&gReentrantMonitor);
@@ -204,4 +200,4 @@ TEST(ThreadPoolListener, Test)
   }
 }
 
-} // namespace TestThreadPoolListener
+}  // namespace TestThreadPoolListener

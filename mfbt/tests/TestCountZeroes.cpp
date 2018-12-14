@@ -11,9 +11,7 @@ using mozilla::CountLeadingZeroes64;
 using mozilla::CountTrailingZeroes32;
 using mozilla::CountTrailingZeroes64;
 
-static void
-TestLeadingZeroes32()
-{
+static void TestLeadingZeroes32() {
   MOZ_RELEASE_ASSERT(CountLeadingZeroes32(0xF0FF1000) == 0);
   MOZ_RELEASE_ASSERT(CountLeadingZeroes32(0x7F8F0001) == 1);
   MOZ_RELEASE_ASSERT(CountLeadingZeroes32(0x3FFF0100) == 2);
@@ -27,9 +25,7 @@ TestLeadingZeroes32()
   MOZ_RELEASE_ASSERT(CountLeadingZeroes32(0x00000001) == 31);
 }
 
-static void
-TestLeadingZeroes64()
-{
+static void TestLeadingZeroes64() {
   MOZ_RELEASE_ASSERT(CountLeadingZeroes64(0xF000F0F010000000) == 0);
   MOZ_RELEASE_ASSERT(CountLeadingZeroes64(0x70F080F000000001) == 1);
   MOZ_RELEASE_ASSERT(CountLeadingZeroes64(0x30F0F0F000100000) == 2);
@@ -51,9 +47,7 @@ TestLeadingZeroes64()
   MOZ_RELEASE_ASSERT(CountLeadingZeroes64(0x0000000000000001) == 63);
 }
 
-static void
-TestTrailingZeroes32()
-{
+static void TestTrailingZeroes32() {
   MOZ_RELEASE_ASSERT(CountTrailingZeroes32(0x0100FFFF) == 0);
   MOZ_RELEASE_ASSERT(CountTrailingZeroes32(0x7000FFFE) == 1);
   MOZ_RELEASE_ASSERT(CountTrailingZeroes32(0x0080FFFC) == 2);
@@ -67,9 +61,7 @@ TestTrailingZeroes32()
   MOZ_RELEASE_ASSERT(CountTrailingZeroes32(0x80000000) == 31);
 }
 
-static void
-TestTrailingZeroes64()
-{
+static void TestTrailingZeroes64() {
   MOZ_RELEASE_ASSERT(CountTrailingZeroes64(0x000100000F0F0F0F) == 0);
   MOZ_RELEASE_ASSERT(CountTrailingZeroes64(0x070000000F0F0F0E) == 1);
   MOZ_RELEASE_ASSERT(CountTrailingZeroes64(0x000008000F0F0F0C) == 2);
@@ -91,9 +83,7 @@ TestTrailingZeroes64()
   MOZ_RELEASE_ASSERT(CountTrailingZeroes64(0x8000000000000000) == 63);
 }
 
-int
-main()
-{
+int main() {
   TestLeadingZeroes32();
   TestLeadingZeroes64();
   TestTrailingZeroes32();

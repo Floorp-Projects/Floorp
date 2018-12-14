@@ -16,38 +16,38 @@
 
 using namespace mozilla;
 
-class BenchmarkRunner
-{
-public:
-  explicit BenchmarkRunner(Benchmark* aBenchmark)
-    : mBenchmark(aBenchmark) {}
+class BenchmarkRunner {
+ public:
+  explicit BenchmarkRunner(Benchmark* aBenchmark) : mBenchmark(aBenchmark) {}
 
-  uint32_t Run()
-  {
+  uint32_t Run() {
     bool done = false;
     uint32_t result = 0;
 
     mBenchmark->Init();
     mBenchmark->Run()->Then(
-      // Non DocGroup-version of AbstractThread::MainThread() is fine for testing.
-      AbstractThread::MainThread(), __func__,
-      [&](uint32_t aDecodeFps) { result = aDecodeFps; done = true; },
-      [&]() { done = true; });
+        // Non DocGroup-version of AbstractThread::MainThread() is fine for
+        // testing.
+        AbstractThread::MainThread(), __func__,
+        [&](uint32_t aDecodeFps) {
+          result = aDecodeFps;
+          done = true;
+        },
+        [&]() { done = true; });
 
     // Wait until benchmark completes.
     SpinEventLoopUntil([&]() { return done; });
     return result;
   }
 
-private:
+ private:
   RefPtr<Benchmark> mBenchmark;
 };
 
-TEST(MediaDataDecoder, H264)
-{
+TEST(MediaDataDecoder, H264) {
   if (!DecoderTraits::IsMP4SupportedType(
-         MediaContainerType(MEDIAMIMETYPE(VIDEO_MP4)),
-         /* DecoderDoctorDiagnostics* */ nullptr)) {
+          MediaContainerType(MEDIAMIMETYPE(VIDEO_MP4)),
+          /* DecoderDoctorDiagnostics* */ nullptr)) {
     EXPECT_TRUE(true);
   } else {
     RefPtr<MockMediaResource> resource = new MockMediaResource("gizmo.mp4");
@@ -59,9 +59,9 @@ TEST(MediaDataDecoder, H264)
   }
 }
 
-TEST(MediaDataDecoder, VP9)
-{
-  if (!WebMDecoder::IsSupportedType(MediaContainerType(MEDIAMIMETYPE(VIDEO_WEBM)))) {
+TEST(MediaDataDecoder, VP9) {
+  if (!WebMDecoder::IsSupportedType(
+          MediaContainerType(MEDIAMIMETYPE(VIDEO_WEBM)))) {
     EXPECT_TRUE(true);
   } else {
     RefPtr<MockMediaResource> resource = new MockMediaResource("vp9cake.webm");

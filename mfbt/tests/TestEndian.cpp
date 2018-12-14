@@ -13,10 +13,8 @@ using mozilla::BigEndian;
 using mozilla::LittleEndian;
 using mozilla::NativeEndian;
 
-template<typename T>
-void
-TestSingleSwap(T aValue, T aSwappedValue)
-{
+template <typename T>
+void TestSingleSwap(T aValue, T aSwappedValue) {
 #if MOZ_LITTLE_ENDIAN
   MOZ_RELEASE_ASSERT(NativeEndian::swapToBigEndian(aValue) == aSwappedValue);
   MOZ_RELEASE_ASSERT(NativeEndian::swapFromBigEndian(aValue) == aSwappedValue);
@@ -30,10 +28,8 @@ TestSingleSwap(T aValue, T aSwappedValue)
 #endif
 }
 
-template<typename T>
-void
-TestSingleNoSwap(T aValue, T aUnswappedValue)
-{
+template <typename T>
+void TestSingleNoSwap(T aValue, T aUnswappedValue) {
 #if MOZ_LITTLE_ENDIAN
   MOZ_RELEASE_ASSERT(NativeEndian::swapToLittleEndian(aValue) ==
                      aUnswappedValue);
@@ -41,7 +37,8 @@ TestSingleNoSwap(T aValue, T aUnswappedValue)
                      aUnswappedValue);
 #else
   MOZ_RELEASE_ASSERT(NativeEndian::swapToBigEndian(aValue) == aUnswappedValue);
-  MOZ_RELEASE_ASSERT(NativeEndian::swapFromBigEndian(aValue) == aUnswappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapFromBigEndian(aValue) ==
+                     aUnswappedValue);
   MOZ_RELEASE_ASSERT(NativeEndian::swapToNetworkOrder(aValue) ==
                      aUnswappedValue);
   MOZ_RELEASE_ASSERT(NativeEndian::swapFromNetworkOrder(aValue) ==
@@ -56,36 +53,30 @@ TestSingleNoSwap(T aValue, T aUnswappedValue)
 // For your own enlightenment, you may wish to peruse:
 // http://gcc.gnu.org/bugzilla/show_bug.cgi?id=56152 and subsequently
 // http://j.mp/XosS6S .
-#define WRAP_COPYTO(NAME)                                       \
-  template<typename T>                                          \
-  void                                                          \
-  NAME(void* aDst, const T* aSrc, size_t aCount)                \
-  {                                                             \
-    NativeEndian::NAME<T>(aDst, aSrc, aCount);                  \
+#define WRAP_COPYTO(NAME)                               \
+  template <typename T>                                 \
+  void NAME(void* aDst, const T* aSrc, size_t aCount) { \
+    NativeEndian::NAME<T>(aDst, aSrc, aCount);          \
   }
 
 WRAP_COPYTO(copyAndSwapToLittleEndian)
 WRAP_COPYTO(copyAndSwapToBigEndian)
 WRAP_COPYTO(copyAndSwapToNetworkOrder)
 
-#define WRAP_COPYFROM(NAME)                                     \
-  template<typename T>                                          \
-  void                                                          \
-  NAME(T* aDst, const void* aSrc, size_t aCount)                \
-  {                                                             \
-    NativeEndian::NAME<T>(aDst, aSrc, aCount);                  \
+#define WRAP_COPYFROM(NAME)                             \
+  template <typename T>                                 \
+  void NAME(T* aDst, const void* aSrc, size_t aCount) { \
+    NativeEndian::NAME<T>(aDst, aSrc, aCount);          \
   }
 
 WRAP_COPYFROM(copyAndSwapFromLittleEndian)
 WRAP_COPYFROM(copyAndSwapFromBigEndian)
 WRAP_COPYFROM(copyAndSwapFromNetworkOrder)
 
-#define WRAP_IN_PLACE(NAME)                                     \
-  template<typename T>                                          \
-  void                                                          \
-  NAME(T* aP, size_t aCount)                                    \
-  {                                                             \
-    NativeEndian::NAME<T>(aP, aCount);                          \
+#define WRAP_IN_PLACE(NAME)            \
+  template <typename T>                \
+  void NAME(T* aP, size_t aCount) {    \
+    NativeEndian::NAME<T>(aP, aCount); \
   }
 WRAP_IN_PLACE(swapToLittleEndianInPlace)
 WRAP_IN_PLACE(swapFromLittleEndianInPlace)
@@ -94,19 +85,13 @@ WRAP_IN_PLACE(swapFromBigEndianInPlace)
 WRAP_IN_PLACE(swapToNetworkOrderInPlace)
 WRAP_IN_PLACE(swapFromNetworkOrderInPlace)
 
-enum SwapExpectation
-{
-  Swap,
-  NoSwap
-};
+enum SwapExpectation { Swap, NoSwap };
 
-template<typename T, size_t Count>
-void
-TestBulkSwapToSub(enum SwapExpectation aExpectSwap,
-                  const T (&aValues)[Count],
-                  void (*aSwapperFunc)(void*, const T*, size_t),
-                  T (*aReaderFunc)(const void*))
-{
+template <typename T, size_t Count>
+void TestBulkSwapToSub(enum SwapExpectation aExpectSwap,
+                       const T (&aValues)[Count],
+                       void (*aSwapperFunc)(void*, const T*, size_t),
+                       T (*aReaderFunc)(const void*)) {
   const size_t arraySize = 2 * Count;
   const size_t bufferSize = arraySize * sizeof(T);
   static uint8_t buffer[bufferSize];
@@ -125,27 +110,25 @@ TestBulkSwapToSub(enum SwapExpectation aExpectSwap,
       MOZ_RELEASE_ASSERT(memcmp(buffer, checkBuffer, startPosition) == 0);
       size_t valuesEndPosition = startPosition + sizeof(T) * nValues;
       MOZ_RELEASE_ASSERT(memcmp(buffer + valuesEndPosition,
-                         checkBuffer + valuesEndPosition,
-                         bufferSize - valuesEndPosition) == 0);
+                                checkBuffer + valuesEndPosition,
+                                bufferSize - valuesEndPosition) == 0);
       if (aExpectSwap == NoSwap) {
-        MOZ_RELEASE_ASSERT(memcmp(buffer + startPosition, aValues,
-                           nValues * sizeof(T)) == 0);
+        MOZ_RELEASE_ASSERT(
+            memcmp(buffer + startPosition, aValues, nValues * sizeof(T)) == 0);
       }
       for (size_t i = 0; i < nValues; ++i) {
         MOZ_RELEASE_ASSERT(
-          aReaderFunc(buffer + startPosition + sizeof(T) * i) == aValues[i]);
+            aReaderFunc(buffer + startPosition + sizeof(T) * i) == aValues[i]);
       }
     }
   }
 }
 
-template<typename T, size_t Count>
-void
-TestBulkSwapFromSub(enum SwapExpectation aExpectSwap,
-                    const T (&aValues)[Count],
-                    void (*aSwapperFunc)(T*, const void*, size_t),
-                    T (*aReaderFunc)(const void*))
-{
+template <typename T, size_t Count>
+void TestBulkSwapFromSub(enum SwapExpectation aExpectSwap,
+                         const T (&aValues)[Count],
+                         void (*aSwapperFunc)(T*, const void*, size_t),
+                         T (*aReaderFunc)(const void*)) {
   const size_t arraySize = 2 * Count;
   const size_t bufferSize = arraySize * sizeof(T);
   static T buffer[arraySize];
@@ -160,30 +143,28 @@ TestBulkSwapFromSub(enum SwapExpectation aExpectSwap,
       aSwapperFunc(buffer + startPosition, aValues, nValues);
 
       MOZ_RELEASE_ASSERT(
-        memcmp(buffer, checkBuffer, startPosition * sizeof(T)) == 0);
+          memcmp(buffer, checkBuffer, startPosition * sizeof(T)) == 0);
       size_t valuesEndPosition = startPosition + nValues;
-      MOZ_RELEASE_ASSERT(memcmp(buffer + valuesEndPosition,
-                        checkBuffer + valuesEndPosition,
-                        (arraySize - valuesEndPosition) * sizeof(T)) == 0);
+      MOZ_RELEASE_ASSERT(
+          memcmp(buffer + valuesEndPosition, checkBuffer + valuesEndPosition,
+                 (arraySize - valuesEndPosition) * sizeof(T)) == 0);
       if (aExpectSwap == NoSwap) {
-        MOZ_RELEASE_ASSERT(memcmp(buffer + startPosition, aValues,
-                          nValues * sizeof(T)) == 0);
+        MOZ_RELEASE_ASSERT(
+            memcmp(buffer + startPosition, aValues, nValues * sizeof(T)) == 0);
       }
       for (size_t i = 0; i < nValues; ++i) {
-        MOZ_RELEASE_ASSERT(aReaderFunc(buffer + startPosition + i) == aValues[i]);
+        MOZ_RELEASE_ASSERT(aReaderFunc(buffer + startPosition + i) ==
+                           aValues[i]);
       }
     }
   }
 }
 
-
-template<typename T, size_t Count>
-void
-TestBulkInPlaceSub(enum SwapExpectation aExpectSwap,
-                   const T (&aValues)[Count],
-                   void (*aSwapperFunc)(T*, size_t),
-                   T (*aReaderFunc)(const void*))
-{
+template <typename T, size_t Count>
+void TestBulkInPlaceSub(enum SwapExpectation aExpectSwap,
+                        const T (&aValues)[Count],
+                        void (*aSwapperFunc)(T*, size_t),
+                        T (*aReaderFunc)(const void*)) {
   const size_t bufferCount = 4 * Count;
   const size_t bufferSize = bufferCount * sizeof(T);
   static T buffer[bufferCount];
@@ -201,33 +182,31 @@ TestBulkInPlaceSub(enum SwapExpectation aExpectSwap,
       aSwapperFunc(buffer + startPosition, nValues);
 
       MOZ_RELEASE_ASSERT(
-        memcmp(buffer, checkBuffer, startPosition * sizeof(T)) == 0);
+          memcmp(buffer, checkBuffer, startPosition * sizeof(T)) == 0);
       size_t valuesEndPosition = startPosition + nValues;
-      MOZ_RELEASE_ASSERT(memcmp(buffer + valuesEndPosition,
-                         checkBuffer + valuesEndPosition,
-                         bufferSize - valuesEndPosition * sizeof(T)) == 0);
+      MOZ_RELEASE_ASSERT(
+          memcmp(buffer + valuesEndPosition, checkBuffer + valuesEndPosition,
+                 bufferSize - valuesEndPosition * sizeof(T)) == 0);
       if (aExpectSwap == NoSwap) {
-        MOZ_RELEASE_ASSERT(memcmp(buffer + startPosition, aValues,
-                           nValues * sizeof(T)) == 0);
+        MOZ_RELEASE_ASSERT(
+            memcmp(buffer + startPosition, aValues, nValues * sizeof(T)) == 0);
       }
       for (size_t i = 0; i < nValues; ++i) {
-        MOZ_RELEASE_ASSERT(aReaderFunc(buffer + startPosition + i) == aValues[i]);
+        MOZ_RELEASE_ASSERT(aReaderFunc(buffer + startPosition + i) ==
+                           aValues[i]);
       }
     }
   }
 }
 
-template<typename T>
-struct Reader
-{
-};
+template <typename T>
+struct Reader {};
 
-#define SPECIALIZE_READER(TYPE, READ_FUNC)                                    \
-  template<>                                                                  \
-  struct Reader<TYPE>                                                         \
-  {                                                                           \
-    static TYPE readLE(const void* aP) { return LittleEndian::READ_FUNC(aP); }\
-    static TYPE readBE(const void* aP) { return BigEndian::READ_FUNC(aP); }   \
+#define SPECIALIZE_READER(TYPE, READ_FUNC)                                     \
+  template <>                                                                  \
+  struct Reader<TYPE> {                                                        \
+    static TYPE readLE(const void* aP) { return LittleEndian::READ_FUNC(aP); } \
+    static TYPE readBE(const void* aP) { return BigEndian::READ_FUNC(aP); }    \
   };
 
 SPECIALIZE_READER(uint16_t, readUint16)
@@ -237,13 +216,10 @@ SPECIALIZE_READER(int16_t, readInt16)
 SPECIALIZE_READER(int32_t, readInt32)
 SPECIALIZE_READER(int64_t, readInt64)
 
-template<typename T, size_t Count>
-void
-TestBulkSwap(const T (&aBytes)[Count])
-{
+template <typename T, size_t Count>
+void TestBulkSwap(const T (&aBytes)[Count]) {
 #if MOZ_LITTLE_ENDIAN
-  TestBulkSwapToSub(Swap, aBytes, copyAndSwapToBigEndian<T>,
-                    Reader<T>::readBE);
+  TestBulkSwapToSub(Swap, aBytes, copyAndSwapToBigEndian<T>, Reader<T>::readBE);
   TestBulkSwapFromSub(Swap, aBytes, copyAndSwapFromBigEndian<T>,
                       Reader<T>::readBE);
   TestBulkSwapToSub(Swap, aBytes, copyAndSwapToNetworkOrder<T>,
@@ -258,10 +234,8 @@ TestBulkSwap(const T (&aBytes)[Count])
 #endif
 }
 
-template<typename T, size_t Count>
-void
-TestBulkNoSwap(const T (&aBytes)[Count])
-{
+template <typename T, size_t Count>
+void TestBulkNoSwap(const T (&aBytes)[Count]) {
 #if MOZ_LITTLE_ENDIAN
   TestBulkSwapToSub(NoSwap, aBytes, copyAndSwapToLittleEndian<T>,
                     Reader<T>::readLE);
@@ -279,10 +253,8 @@ TestBulkNoSwap(const T (&aBytes)[Count])
 #endif
 }
 
-template<typename T, size_t Count>
-void
-TestBulkInPlaceSwap(const T (&aBytes)[Count])
-{
+template <typename T, size_t Count>
+void TestBulkInPlaceSwap(const T (&aBytes)[Count]) {
 #if MOZ_LITTLE_ENDIAN
   TestBulkInPlaceSub(Swap, aBytes, swapToBigEndianInPlace<T>,
                      Reader<T>::readBE);
@@ -300,10 +272,8 @@ TestBulkInPlaceSwap(const T (&aBytes)[Count])
 #endif
 }
 
-template<typename T, size_t Count>
-void
-TestBulkInPlaceNoSwap(const T (&aBytes)[Count])
-{
+template <typename T, size_t Count>
+void TestBulkInPlaceNoSwap(const T (&aBytes)[Count]) {
 #if MOZ_LITTLE_ENDIAN
   TestBulkInPlaceSub(NoSwap, aBytes, swapToLittleEndianInPlace<T>,
                      Reader<T>::readLE);
@@ -321,51 +291,40 @@ TestBulkInPlaceNoSwap(const T (&aBytes)[Count])
 #endif
 }
 
-int
-main()
-{
-  static const uint8_t unsigned_bytes[16] = {
-    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08
-  };
+int main() {
+  static const uint8_t unsigned_bytes[16] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+                                             0x07, 0x08, 0x01, 0x02, 0x03, 0x04,
+                                             0x05, 0x06, 0x07, 0x08};
   static const int8_t signed_bytes[16] = {
-    -0x0f, -0x0e, -0x0d, -0x0c, -0x0b, -0x0a, -0x09, -0x08,
-    -0x0f, -0x0e, -0x0d, -0x0c, -0x0b, -0x0a, -0x09, -0x08
-  };
-  static const uint16_t uint16_values[8] = {
-    0x0102, 0x0304, 0x0506, 0x0708, 0x0102, 0x0304, 0x0506, 0x0708
-  };
+      -0x0f, -0x0e, -0x0d, -0x0c, -0x0b, -0x0a, -0x09, -0x08,
+      -0x0f, -0x0e, -0x0d, -0x0c, -0x0b, -0x0a, -0x09, -0x08};
+  static const uint16_t uint16_values[8] = {0x0102, 0x0304, 0x0506, 0x0708,
+                                            0x0102, 0x0304, 0x0506, 0x0708};
   static const int16_t int16_values[8] = {
-    int16_t(0xf1f2), int16_t(0xf3f4), int16_t(0xf5f6), int16_t(0xf7f8),
-    int16_t(0xf1f2), int16_t(0xf3f4), int16_t(0xf5f6), int16_t(0xf7f8)
-  };
-  static const uint32_t uint32_values[4] = {
-    0x01020304, 0x05060708, 0x01020304, 0x05060708
-  };
+      int16_t(0xf1f2), int16_t(0xf3f4), int16_t(0xf5f6), int16_t(0xf7f8),
+      int16_t(0xf1f2), int16_t(0xf3f4), int16_t(0xf5f6), int16_t(0xf7f8)};
+  static const uint32_t uint32_values[4] = {0x01020304, 0x05060708, 0x01020304,
+                                            0x05060708};
   static const int32_t int32_values[4] = {
-    int32_t(0xf1f2f3f4), int32_t(0xf5f6f7f8),
-    int32_t(0xf1f2f3f4), int32_t(0xf5f6f7f8)
-  };
-  static const uint64_t uint64_values[2] = {
-    0x0102030405060708, 0x0102030405060708
-  };
-  static const int64_t int64_values[2] = {
-    int64_t(0xf1f2f3f4f5f6f7f8), int64_t(0xf1f2f3f4f5f6f7f8)
-  };
+      int32_t(0xf1f2f3f4), int32_t(0xf5f6f7f8), int32_t(0xf1f2f3f4),
+      int32_t(0xf5f6f7f8)};
+  static const uint64_t uint64_values[2] = {0x0102030405060708,
+                                            0x0102030405060708};
+  static const int64_t int64_values[2] = {int64_t(0xf1f2f3f4f5f6f7f8),
+                                          int64_t(0xf1f2f3f4f5f6f7f8)};
   uint8_t buffer[8];
 
   MOZ_RELEASE_ASSERT(LittleEndian::readUint16(&unsigned_bytes[0]) == 0x0201);
   MOZ_RELEASE_ASSERT(BigEndian::readUint16(&unsigned_bytes[0]) == 0x0102);
 
-  MOZ_RELEASE_ASSERT(
-    LittleEndian::readUint32(&unsigned_bytes[0]) == 0x04030201U);
-  MOZ_RELEASE_ASSERT(
-    BigEndian::readUint32(&unsigned_bytes[0]) == 0x01020304U);
+  MOZ_RELEASE_ASSERT(LittleEndian::readUint32(&unsigned_bytes[0]) ==
+                     0x04030201U);
+  MOZ_RELEASE_ASSERT(BigEndian::readUint32(&unsigned_bytes[0]) == 0x01020304U);
 
-  MOZ_RELEASE_ASSERT(
-    LittleEndian::readUint64(&unsigned_bytes[0]) == 0x0807060504030201ULL);
-  MOZ_RELEASE_ASSERT(
-    BigEndian::readUint64(&unsigned_bytes[0]) == 0x0102030405060708ULL);
+  MOZ_RELEASE_ASSERT(LittleEndian::readUint64(&unsigned_bytes[0]) ==
+                     0x0807060504030201ULL);
+  MOZ_RELEASE_ASSERT(BigEndian::readUint64(&unsigned_bytes[0]) ==
+                     0x0102030405060708ULL);
 
   if (sizeof(uintptr_t) == 8) {
     // MSVC warning C4309 is "'static_cast': truncation of constant value" and
@@ -373,53 +332,50 @@ main()
     // because only the other arm of this |if| runs.  Turn off the warning for
     // these two uses in dead code.
 #ifdef _MSC_VER
-#  pragma warning(push)
-#  pragma warning(disable: 4309)
+#pragma warning(push)
+#pragma warning(disable : 4309)
 #endif
-    MOZ_RELEASE_ASSERT(
-      LittleEndian::readUintptr(&unsigned_bytes[0]) ==
-      static_cast<uintptr_t>(0x0807060504030201ULL));
-    MOZ_RELEASE_ASSERT(
-      BigEndian::readUintptr(&unsigned_bytes[0]) ==
-      static_cast<uintptr_t>(0x0102030405060708ULL));
+    MOZ_RELEASE_ASSERT(LittleEndian::readUintptr(&unsigned_bytes[0]) ==
+                       static_cast<uintptr_t>(0x0807060504030201ULL));
+    MOZ_RELEASE_ASSERT(BigEndian::readUintptr(&unsigned_bytes[0]) ==
+                       static_cast<uintptr_t>(0x0102030405060708ULL));
 #ifdef _MSC_VER
-#  pragma warning(pop)
+#pragma warning(pop)
 #endif
   } else {
-    MOZ_RELEASE_ASSERT(
-      LittleEndian::readUintptr(&unsigned_bytes[0]) == 0x04030201U);
-    MOZ_RELEASE_ASSERT(
-      BigEndian::readUintptr(&unsigned_bytes[0]) == 0x01020304U);
+    MOZ_RELEASE_ASSERT(LittleEndian::readUintptr(&unsigned_bytes[0]) ==
+                       0x04030201U);
+    MOZ_RELEASE_ASSERT(BigEndian::readUintptr(&unsigned_bytes[0]) ==
+                       0x01020304U);
   }
 
   LittleEndian::writeUint16(&buffer[0], 0x0201);
-  MOZ_RELEASE_ASSERT(
-    memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint16_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint16_t)) ==
+                     0);
   BigEndian::writeUint16(&buffer[0], 0x0102);
-  MOZ_RELEASE_ASSERT(
-    memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint16_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint16_t)) ==
+                     0);
 
   LittleEndian::writeUint32(&buffer[0], 0x04030201U);
-  MOZ_RELEASE_ASSERT(
-    memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint32_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint32_t)) ==
+                     0);
   BigEndian::writeUint32(&buffer[0], 0x01020304U);
-  MOZ_RELEASE_ASSERT(
-    memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint32_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint32_t)) ==
+                     0);
 
   LittleEndian::writeUint64(&buffer[0], 0x0807060504030201ULL);
-  MOZ_RELEASE_ASSERT(
-    memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint64_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint64_t)) ==
+                     0);
   BigEndian::writeUint64(&buffer[0], 0x0102030405060708ULL);
-  MOZ_RELEASE_ASSERT(
-    memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint64_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint64_t)) ==
+                     0);
 
   memset(&buffer[0], 0xff, sizeof(buffer));
   LittleEndian::writeUintptr(&buffer[0], uintptr_t(0x0807060504030201ULL));
   MOZ_RELEASE_ASSERT(
-    memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uintptr_t)) == 0);
+      memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uintptr_t)) == 0);
   if (sizeof(uintptr_t) == 4) {
-    MOZ_RELEASE_ASSERT(
-      LittleEndian::readUint32(&buffer[4]) == 0xffffffffU);
+    MOZ_RELEASE_ASSERT(LittleEndian::readUint32(&buffer[4]) == 0xffffffffU);
   }
 
   memset(&buffer[0], 0xff, sizeof(buffer));
@@ -427,67 +383,64 @@ main()
     BigEndian::writeUintptr(&buffer[0], uintptr_t(0x0102030405060708ULL));
   } else {
     BigEndian::writeUintptr(&buffer[0], uintptr_t(0x01020304U));
-    MOZ_RELEASE_ASSERT(
-      LittleEndian::readUint32(&buffer[4]) == 0xffffffffU);
+    MOZ_RELEASE_ASSERT(LittleEndian::readUint32(&buffer[4]) == 0xffffffffU);
   }
   MOZ_RELEASE_ASSERT(
-    memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uintptr_t)) == 0);
+      memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uintptr_t)) == 0);
 
-  MOZ_RELEASE_ASSERT(
-    LittleEndian::readInt16(&signed_bytes[0]) == int16_t(0xf2f1));
-  MOZ_RELEASE_ASSERT(
-    BigEndian::readInt16(&signed_bytes[0]) == int16_t(0xf1f2));
+  MOZ_RELEASE_ASSERT(LittleEndian::readInt16(&signed_bytes[0]) ==
+                     int16_t(0xf2f1));
+  MOZ_RELEASE_ASSERT(BigEndian::readInt16(&signed_bytes[0]) == int16_t(0xf1f2));
 
-  MOZ_RELEASE_ASSERT(
-    LittleEndian::readInt32(&signed_bytes[0]) == int32_t(0xf4f3f2f1));
-  MOZ_RELEASE_ASSERT(
-    BigEndian::readInt32(&signed_bytes[0]) == int32_t(0xf1f2f3f4));
+  MOZ_RELEASE_ASSERT(LittleEndian::readInt32(&signed_bytes[0]) ==
+                     int32_t(0xf4f3f2f1));
+  MOZ_RELEASE_ASSERT(BigEndian::readInt32(&signed_bytes[0]) ==
+                     int32_t(0xf1f2f3f4));
 
-  MOZ_RELEASE_ASSERT(
-    LittleEndian::readInt64(&signed_bytes[0]) == int64_t(0xf8f7f6f5f4f3f2f1LL));
-  MOZ_RELEASE_ASSERT(
-    BigEndian::readInt64(&signed_bytes[0]) == int64_t(0xf1f2f3f4f5f6f7f8LL));
+  MOZ_RELEASE_ASSERT(LittleEndian::readInt64(&signed_bytes[0]) ==
+                     int64_t(0xf8f7f6f5f4f3f2f1LL));
+  MOZ_RELEASE_ASSERT(BigEndian::readInt64(&signed_bytes[0]) ==
+                     int64_t(0xf1f2f3f4f5f6f7f8LL));
 
   if (sizeof(uintptr_t) == 8) {
-    MOZ_RELEASE_ASSERT(
-      LittleEndian::readIntptr(&signed_bytes[0]) == intptr_t(0xf8f7f6f5f4f3f2f1LL));
-    MOZ_RELEASE_ASSERT(
-      BigEndian::readIntptr(&signed_bytes[0]) == intptr_t(0xf1f2f3f4f5f6f7f8LL));
+    MOZ_RELEASE_ASSERT(LittleEndian::readIntptr(&signed_bytes[0]) ==
+                       intptr_t(0xf8f7f6f5f4f3f2f1LL));
+    MOZ_RELEASE_ASSERT(BigEndian::readIntptr(&signed_bytes[0]) ==
+                       intptr_t(0xf1f2f3f4f5f6f7f8LL));
   } else {
-    MOZ_RELEASE_ASSERT(
-      LittleEndian::readIntptr(&signed_bytes[0]) == intptr_t(0xf4f3f2f1));
-    MOZ_RELEASE_ASSERT(
-      BigEndian::readIntptr(&signed_bytes[0]) == intptr_t(0xf1f2f3f4));
+    MOZ_RELEASE_ASSERT(LittleEndian::readIntptr(&signed_bytes[0]) ==
+                       intptr_t(0xf4f3f2f1));
+    MOZ_RELEASE_ASSERT(BigEndian::readIntptr(&signed_bytes[0]) ==
+                       intptr_t(0xf1f2f3f4));
   }
 
   LittleEndian::writeInt16(&buffer[0], int16_t(0xf2f1));
-  MOZ_RELEASE_ASSERT(
-    memcmp(&signed_bytes[0], &buffer[0], sizeof(int16_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int16_t)) ==
+                     0);
   BigEndian::writeInt16(&buffer[0], int16_t(0xf1f2));
-  MOZ_RELEASE_ASSERT(
-    memcmp(&signed_bytes[0], &buffer[0], sizeof(int16_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int16_t)) ==
+                     0);
 
   LittleEndian::writeInt32(&buffer[0], 0xf4f3f2f1);
-  MOZ_RELEASE_ASSERT(
-    memcmp(&signed_bytes[0], &buffer[0], sizeof(int32_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int32_t)) ==
+                     0);
   BigEndian::writeInt32(&buffer[0], 0xf1f2f3f4);
-  MOZ_RELEASE_ASSERT(
-    memcmp(&signed_bytes[0], &buffer[0], sizeof(int32_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int32_t)) ==
+                     0);
 
   LittleEndian::writeInt64(&buffer[0], 0xf8f7f6f5f4f3f2f1LL);
-  MOZ_RELEASE_ASSERT(
-    memcmp(&signed_bytes[0], &buffer[0], sizeof(int64_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int64_t)) ==
+                     0);
   BigEndian::writeInt64(&buffer[0], 0xf1f2f3f4f5f6f7f8LL);
-  MOZ_RELEASE_ASSERT(
-    memcmp(&signed_bytes[0], &buffer[0], sizeof(int64_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int64_t)) ==
+                     0);
 
   memset(&buffer[0], 0xff, sizeof(buffer));
   LittleEndian::writeIntptr(&buffer[0], intptr_t(0xf8f7f6f5f4f3f2f1LL));
-  MOZ_RELEASE_ASSERT(
-    memcmp(&signed_bytes[0], &buffer[0], sizeof(intptr_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(intptr_t)) ==
+                     0);
   if (sizeof(intptr_t) == 4) {
-    MOZ_RELEASE_ASSERT(
-      LittleEndian::readUint32(&buffer[4]) == 0xffffffffU);
+    MOZ_RELEASE_ASSERT(LittleEndian::readUint32(&buffer[4]) == 0xffffffffU);
   }
 
   memset(&buffer[0], 0xff, sizeof(buffer));
@@ -495,11 +448,10 @@ main()
     BigEndian::writeIntptr(&buffer[0], intptr_t(0xf1f2f3f4f5f6f7f8LL));
   } else {
     BigEndian::writeIntptr(&buffer[0], intptr_t(0xf1f2f3f4));
-    MOZ_RELEASE_ASSERT(
-      LittleEndian::readUint32(&buffer[4]) == 0xffffffffU);
+    MOZ_RELEASE_ASSERT(LittleEndian::readUint32(&buffer[4]) == 0xffffffffU);
   }
-  MOZ_RELEASE_ASSERT(
-    memcmp(&signed_bytes[0], &buffer[0], sizeof(intptr_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(intptr_t)) ==
+                     0);
 
   TestSingleSwap(uint16_t(0xf2f1), uint16_t(0xf1f2));
   TestSingleSwap(uint32_t(0xf4f3f2f1), uint32_t(0xf1f2f3f4));

@@ -20,33 +20,28 @@ using namespace mozilla::image;
 namespace mozilla {
 namespace image {
 
-class TestSurfacePipeFactory
-{
-public:
-  static SurfacePipe SimpleSurfacePipe()
-  {
+class TestSurfacePipeFactory {
+ public:
+  static SurfacePipe SimpleSurfacePipe() {
     SurfacePipe pipe;
     return pipe;
   }
 
   template <typename T>
-  static SurfacePipe SurfacePipeFromPipeline(T&& aPipeline)
-  {
-    return SurfacePipe { std::move(aPipeline) };
+  static SurfacePipe SurfacePipeFromPipeline(T&& aPipeline) {
+    return SurfacePipe{std::move(aPipeline)};
   }
 
-private:
-  TestSurfacePipeFactory() { }
+ private:
+  TestSurfacePipeFactory() {}
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-void
-CheckSurfacePipeMethodResults(SurfacePipe* aPipe,
-                              Decoder* aDecoder,
-                              const IntRect& aRect = IntRect(0, 0, 100, 100))
-{
+void CheckSurfacePipeMethodResults(SurfacePipe* aPipe, Decoder* aDecoder,
+                                   const IntRect& aRect = IntRect(0, 0, 100,
+                                                                  100)) {
   // Check that the pipeline ended up in the state we expect.  Note that we're
   // explicitly testing the SurfacePipe versions of these methods, so we don't
   // want to use AssertCorrectPipelineFinalState() here.
@@ -85,12 +80,9 @@ CheckSurfacePipeMethodResults(SurfacePipe* aPipe,
   EXPECT_TRUE(invalidRect.isNothing());
 }
 
-void
-CheckPalettedSurfacePipeMethodResults(SurfacePipe* aPipe,
-                                      Decoder* aDecoder,
-                                      const IntRect& aRect
-                                        = IntRect(0, 0, 100, 100))
-{
+void CheckPalettedSurfacePipeMethodResults(
+    SurfacePipe* aPipe, Decoder* aDecoder,
+    const IntRect& aRect = IntRect(0, 0, 100, 100)) {
   // Check that the pipeline ended up in the state we expect.  Note that we're
   // explicitly testing the SurfacePipe versions of these methods, so we don't
   // want to use AssertCorrectPipelineFinalState() here.
@@ -129,14 +121,12 @@ CheckPalettedSurfacePipeMethodResults(SurfacePipe* aPipe,
   EXPECT_TRUE(invalidRect.isNothing());
 }
 
-class ImageSurfacePipeIntegration : public ::testing::Test
-{
-protected:
+class ImageSurfacePipeIntegration : public ::testing::Test {
+ protected:
   AutoInitializeImageLib mInit;
 };
 
-TEST_F(ImageSurfacePipeIntegration, SurfacePipe)
-{
+TEST_F(ImageSurfacePipeIntegration, SurfacePipe) {
   // Test that SurfacePipe objects can be initialized and move constructed.
   SurfacePipe pipe = TestSurfacePipeFactory::SimpleSurfacePipe();
 
@@ -148,9 +138,8 @@ TEST_F(ImageSurfacePipeIntegration, SurfacePipe)
   ASSERT_TRUE(decoder != nullptr);
 
   auto sink = MakeUnique<SurfaceSink>();
-  nsresult rv =
-    sink->Configure(SurfaceConfig { decoder, IntSize(100, 100),
-                                    SurfaceFormat::B8G8R8A8, false });
+  nsresult rv = sink->Configure(SurfaceConfig{decoder, IntSize(100, 100),
+                                              SurfaceFormat::B8G8R8A8, false});
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   pipe = TestSurfacePipeFactory::SurfacePipeFromPipeline(sink);
@@ -201,16 +190,17 @@ TEST_F(ImageSurfacePipeIntegration, SurfacePipe)
     CheckSurfacePipeMethodResults(&pipe, decoder);
   }
 
-  // Test that WritePixelBlocks() gets passed through to the underlying pipeline.
+  // Test that WritePixelBlocks() gets passed through to the underlying
+  // pipeline.
   {
     uint32_t count = 0;
-    WriteState result = pipe.WritePixelBlocks<uint32_t>([&](uint32_t* aBlockStart,
-                                                            int32_t aLength) {
-      ++count;
-      EXPECT_EQ(int32_t(100), aLength);
-      memcpy(aBlockStart, buffer, 100 * sizeof(uint32_t));
-      return MakeTuple(int32_t(100), Maybe<WriteState>());
-    });
+    WriteState result = pipe.WritePixelBlocks<uint32_t>(
+        [&](uint32_t* aBlockStart, int32_t aLength) {
+          ++count;
+          EXPECT_EQ(int32_t(100), aLength);
+          memcpy(aBlockStart, buffer, 100 * sizeof(uint32_t));
+          return MakeTuple(int32_t(100), Maybe<WriteState>());
+        });
 
     EXPECT_EQ(WriteState::FINISHED, result);
     EXPECT_EQ(100u, count);
@@ -235,18 +225,15 @@ TEST_F(ImageSurfacePipeIntegration, SurfacePipe)
   currentFrame->Finish();
 }
 
-TEST_F(ImageSurfacePipeIntegration, PalettedSurfacePipe)
-{
+TEST_F(ImageSurfacePipeIntegration, PalettedSurfacePipe) {
   // Create a SurfacePipe containing a PalettedSurfaceSink.
   RefPtr<Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
   auto sink = MakeUnique<PalettedSurfaceSink>();
-  nsresult rv =
-    sink->Configure(PalettedSurfaceConfig { decoder, IntSize(100, 100),
-                                            IntRect(0, 0, 100, 100),
-                                            SurfaceFormat::B8G8R8A8,
-                                            8, false });
+  nsresult rv = sink->Configure(
+      PalettedSurfaceConfig{decoder, IntSize(100, 100), IntRect(0, 0, 100, 100),
+                            SurfaceFormat::B8G8R8A8, 8, false});
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   SurfacePipe pipe = TestSurfacePipeFactory::SurfacePipeFromPipeline(sink);
@@ -297,16 +284,17 @@ TEST_F(ImageSurfacePipeIntegration, PalettedSurfacePipe)
     CheckPalettedSurfacePipeMethodResults(&pipe, decoder);
   }
 
-  // Test that WritePixelBlocks() gets passed through to the underlying pipeline.
+  // Test that WritePixelBlocks() gets passed through to the underlying
+  // pipeline.
   {
     uint32_t count = 0;
-    WriteState result = pipe.WritePixelBlocks<uint8_t>([&](uint8_t* aBlockStart,
-                                                           int32_t aLength) {
-      ++count;
-      EXPECT_EQ(int32_t(100), aLength);
-      memcpy(aBlockStart, buffer, 100 * sizeof(uint8_t));
-      return MakeTuple(int32_t(100), Maybe<WriteState>());
-    });
+    WriteState result = pipe.WritePixelBlocks<uint8_t>(
+        [&](uint8_t* aBlockStart, int32_t aLength) {
+          ++count;
+          EXPECT_EQ(int32_t(100), aLength);
+          memcpy(aBlockStart, buffer, 100 * sizeof(uint8_t));
+          return MakeTuple(int32_t(100), Maybe<WriteState>());
+        });
 
     EXPECT_EQ(WriteState::FINISHED, result);
     EXPECT_EQ(100u, count);
@@ -331,8 +319,7 @@ TEST_F(ImageSurfacePipeIntegration, PalettedSurfacePipe)
   currentFrame->Finish();
 }
 
-TEST_F(ImageSurfacePipeIntegration, DeinterlaceDownscaleWritePixels)
-{
+TEST_F(ImageSurfacePipeIntegration, DeinterlaceDownscaleWritePixels) {
   RefPtr<Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
@@ -341,16 +328,15 @@ TEST_F(ImageSurfacePipeIntegration, DeinterlaceDownscaleWritePixels)
                      /* aOutputRect = */ Some(IntRect(0, 0, 25, 25)));
   };
 
-  WithFilterPipeline(decoder, test,
-                     DeinterlacingConfig<uint32_t> { /* mProgressiveDisplay = */ true },
-                     DownscalingConfig { IntSize(100, 100),
-                                         SurfaceFormat::B8G8R8A8 },
-                     SurfaceConfig { decoder, IntSize(25, 25),
-                                     SurfaceFormat::B8G8R8A8, false });
+  WithFilterPipeline(
+      decoder, test,
+      DeinterlacingConfig<uint32_t>{/* mProgressiveDisplay = */ true},
+      DownscalingConfig{IntSize(100, 100), SurfaceFormat::B8G8R8A8},
+      SurfaceConfig{decoder, IntSize(25, 25), SurfaceFormat::B8G8R8A8, false});
 }
 
-TEST_F(ImageSurfacePipeIntegration, RemoveFrameRectBottomRightDownscaleWritePixels)
-{
+TEST_F(ImageSurfacePipeIntegration,
+       RemoveFrameRectBottomRightDownscaleWritePixels) {
   // This test case uses a frame rect that extends beyond the borders of the
   // image to the bottom and to the right. It looks roughly like this (with the
   // box made of '#'s representing the frame rect):
@@ -386,7 +372,8 @@ TEST_F(ImageSurfacePipeIntegration, RemoveFrameRectBottomRightDownscaleWritePixe
   // (3) The surface owned by SurfaceSink logically has only a 10x10 region
   //     region in it that's non-blank; this is the downscaled version of the
   //     50x50 region discussed in (1). (aOutputWriteRect captures this fact.)
-  //     Some fuzz, as usual, is necessary when dealing with Lanczos downscaling.
+  //     Some fuzz, as usual, is necessary when dealing with Lanczos
+  //     downscaling.
 
   auto test = [](Decoder* aDecoder, SurfaceFilter* aFilter) {
     CheckWritePixels(aDecoder, aFilter,
@@ -397,16 +384,14 @@ TEST_F(ImageSurfacePipeIntegration, RemoveFrameRectBottomRightDownscaleWritePixe
                      /* aFuzz = */ 0x33);
   };
 
-  WithFilterPipeline(decoder, test,
-                     RemoveFrameRectConfig { IntRect(50, 50, 100, 100) },
-                     DownscalingConfig { IntSize(100, 100),
-                                         SurfaceFormat::B8G8R8A8 },
-                     SurfaceConfig { decoder, IntSize(20, 20),
-                                     SurfaceFormat::B8G8R8A8, false });
+  WithFilterPipeline(
+      decoder, test, RemoveFrameRectConfig{IntRect(50, 50, 100, 100)},
+      DownscalingConfig{IntSize(100, 100), SurfaceFormat::B8G8R8A8},
+      SurfaceConfig{decoder, IntSize(20, 20), SurfaceFormat::B8G8R8A8, false});
 }
 
-TEST_F(ImageSurfacePipeIntegration, RemoveFrameRectTopLeftDownscaleWritePixels)
-{
+TEST_F(ImageSurfacePipeIntegration,
+       RemoveFrameRectTopLeftDownscaleWritePixels) {
   // This test case uses a frame rect that extends beyond the borders of the
   // image to the top and to the left. It looks roughly like this (with the
   // box made of '#'s representing the frame rect):
@@ -431,16 +416,13 @@ TEST_F(ImageSurfacePipeIntegration, RemoveFrameRectTopLeftDownscaleWritePixels)
                      /* aFuzz = */ 0x21);
   };
 
-  WithFilterPipeline(decoder, test,
-                     RemoveFrameRectConfig { IntRect(-50, -50, 100, 100) },
-                     DownscalingConfig { IntSize(100, 100),
-                                         SurfaceFormat::B8G8R8A8 },
-                     SurfaceConfig { decoder, IntSize(20, 20),
-                                     SurfaceFormat::B8G8R8A8, false });
+  WithFilterPipeline(
+      decoder, test, RemoveFrameRectConfig{IntRect(-50, -50, 100, 100)},
+      DownscalingConfig{IntSize(100, 100), SurfaceFormat::B8G8R8A8},
+      SurfaceConfig{decoder, IntSize(20, 20), SurfaceFormat::B8G8R8A8, false});
 }
 
-TEST_F(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectWritePixels)
-{
+TEST_F(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectWritePixels) {
   RefPtr<Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
@@ -456,15 +438,16 @@ TEST_F(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectWritePixels)
                      /* aOutputWriteRect = */ Some(IntRect(50, 50, 50, 50)));
   };
 
-  WithFilterPipeline(decoder, test,
-                     DeinterlacingConfig<uint32_t> { /* mProgressiveDisplay = */ true },
-                     RemoveFrameRectConfig { IntRect(50, 50, 100, 100) },
-                     SurfaceConfig { decoder, IntSize(100, 100),
-                                     SurfaceFormat::B8G8R8A8, false });
+  WithFilterPipeline(
+      decoder, test,
+      DeinterlacingConfig<uint32_t>{/* mProgressiveDisplay = */ true},
+      RemoveFrameRectConfig{IntRect(50, 50, 100, 100)},
+      SurfaceConfig{decoder, IntSize(100, 100), SurfaceFormat::B8G8R8A8,
+                    false});
 }
 
-TEST_F(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectDownscaleWritePixels)
-{
+TEST_F(ImageSurfacePipeIntegration,
+       DeinterlaceRemoveFrameRectDownscaleWritePixels) {
   RefPtr<Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
@@ -477,51 +460,43 @@ TEST_F(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectDownscaleWritePixe
                      /* aFuzz = */ 33);
   };
 
-  WithFilterPipeline(decoder, test,
-                     DeinterlacingConfig<uint32_t> { /* mProgressiveDisplay = */ true },
-                     RemoveFrameRectConfig { IntRect(50, 50, 100, 100) },
-                     DownscalingConfig { IntSize(100, 100),
-                                         SurfaceFormat::B8G8R8A8 },
-                     SurfaceConfig { decoder, IntSize(20, 20),
-                                     SurfaceFormat::B8G8R8A8, false });
+  WithFilterPipeline(
+      decoder, test,
+      DeinterlacingConfig<uint32_t>{/* mProgressiveDisplay = */ true},
+      RemoveFrameRectConfig{IntRect(50, 50, 100, 100)},
+      DownscalingConfig{IntSize(100, 100), SurfaceFormat::B8G8R8A8},
+      SurfaceConfig{decoder, IntSize(20, 20), SurfaceFormat::B8G8R8A8, false});
 }
 
-TEST_F(ImageSurfacePipeIntegration, ConfiguringPalettedRemoveFrameRectDownscaleFails)
-{
+TEST_F(ImageSurfacePipeIntegration,
+       ConfiguringPalettedRemoveFrameRectDownscaleFails) {
   RefPtr<Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
   // This is an invalid pipeline for paletted images, so configuration should
   // fail.
-  AssertConfiguringPipelineFails(decoder,
-                                 RemoveFrameRectConfig { IntRect(0, 0, 50, 50) },
-                                 DownscalingConfig { IntSize(100, 100),
-                                                     SurfaceFormat::B8G8R8A8 },
-                                 PalettedSurfaceConfig { decoder, IntSize(100, 100),
-                                                         IntRect(0, 0, 50, 50),
-                                                         SurfaceFormat::B8G8R8A8, 8,
-                                                         false });
+  AssertConfiguringPipelineFails(
+      decoder, RemoveFrameRectConfig{IntRect(0, 0, 50, 50)},
+      DownscalingConfig{IntSize(100, 100), SurfaceFormat::B8G8R8A8},
+      PalettedSurfaceConfig{decoder, IntSize(100, 100), IntRect(0, 0, 50, 50),
+                            SurfaceFormat::B8G8R8A8, 8, false});
 }
 
-TEST_F(ImageSurfacePipeIntegration, ConfiguringPalettedDeinterlaceDownscaleFails)
-{
+TEST_F(ImageSurfacePipeIntegration,
+       ConfiguringPalettedDeinterlaceDownscaleFails) {
   RefPtr<Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
   // This is an invalid pipeline for paletted images, so configuration should
   // fail.
-  AssertConfiguringPipelineFails(decoder,
-                                 DeinterlacingConfig<uint8_t> { /* mProgressiveDisplay = */ true},
-                                 DownscalingConfig { IntSize(100, 100),
-                                                     SurfaceFormat::B8G8R8A8 },
-                                 PalettedSurfaceConfig { decoder, IntSize(100, 100),
-                                                         IntRect(0, 0, 20, 20),
-                                                         SurfaceFormat::B8G8R8A8, 8,
-                                                         false });
+  AssertConfiguringPipelineFails(
+      decoder, DeinterlacingConfig<uint8_t>{/* mProgressiveDisplay = */ true},
+      DownscalingConfig{IntSize(100, 100), SurfaceFormat::B8G8R8A8},
+      PalettedSurfaceConfig{decoder, IntSize(100, 100), IntRect(0, 0, 20, 20),
+                            SurfaceFormat::B8G8R8A8, 8, false});
 }
 
-TEST_F(ImageSurfacePipeIntegration, ConfiguringHugeDeinterlacingBufferFails)
-{
+TEST_F(ImageSurfacePipeIntegration, ConfiguringHugeDeinterlacingBufferFails) {
   RefPtr<Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
@@ -531,10 +506,9 @@ TEST_F(ImageSurfacePipeIntegration, ConfiguringHugeDeinterlacingBufferFails)
   // DeinterlacingFilter needs to allocate a buffer as large as the size of the
   // input. This can cause OOMs on operating systems that allow overcommit. This
   // test makes sure that we reject such allocations.
-  AssertConfiguringPipelineFails(decoder,
-                                 DeinterlacingConfig<uint32_t> { /* mProgressiveDisplay = */ true},
-                                 DownscalingConfig { IntSize(60000, 60000),
-                                                     SurfaceFormat::B8G8R8A8 },
-                                 SurfaceConfig { decoder, IntSize(600, 600),
-                                                 SurfaceFormat::B8G8R8A8, false });
+  AssertConfiguringPipelineFails(
+      decoder, DeinterlacingConfig<uint32_t>{/* mProgressiveDisplay = */ true},
+      DownscalingConfig{IntSize(60000, 60000), SurfaceFormat::B8G8R8A8},
+      SurfaceConfig{decoder, IntSize(600, 600), SurfaceFormat::B8G8R8A8,
+                    false});
 }

@@ -7,18 +7,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-namespace mozilla
-{
+namespace mozilla {
 
 MockMediaResource::MockMediaResource(const char* aFileName)
-  : mFileHandle(nullptr)
-  , mFileName(aFileName)
-{
-}
+    : mFileHandle(nullptr), mFileName(aFileName) {}
 
-nsresult
-MockMediaResource::Open()
-{
+nsresult MockMediaResource::Open() {
   mFileHandle = fopen(mFileName, "rb");
   if (mFileHandle == nullptr) {
     printf_stderr("Can't open %s\n", mFileName);
@@ -27,17 +21,14 @@ MockMediaResource::Open()
   return NS_OK;
 }
 
-MockMediaResource::~MockMediaResource()
-{
+MockMediaResource::~MockMediaResource() {
   if (mFileHandle != nullptr) {
     fclose(mFileHandle);
   }
 }
 
-nsresult
-MockMediaResource::ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
-                          uint32_t* aBytes)
-{
+nsresult MockMediaResource::ReadAt(int64_t aOffset, char* aBuffer,
+                                   uint32_t aCount, uint32_t* aBytes) {
   if (mFileHandle == nullptr) {
     return NS_ERROR_FAILURE;
   }
@@ -56,9 +47,7 @@ MockMediaResource::ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
   return ferror(mFileHandle) ? NS_ERROR_FAILURE : NS_OK;
 }
 
-int64_t
-MockMediaResource::GetLength()
-{
+int64_t MockMediaResource::GetLength() {
   if (mFileHandle == nullptr) {
     return -1;
   }
@@ -66,21 +55,13 @@ MockMediaResource::GetLength()
   return ftell(mFileHandle);
 }
 
-void
-MockMediaResource::MockClearBufferedRanges()
-{
-  mRanges.Clear();
-}
+void MockMediaResource::MockClearBufferedRanges() { mRanges.Clear(); }
 
-void
-MockMediaResource::MockAddBufferedRange(int64_t aStart, int64_t aEnd)
-{
+void MockMediaResource::MockAddBufferedRange(int64_t aStart, int64_t aEnd) {
   mRanges += MediaByteRange(aStart, aEnd);
 }
 
-int64_t
-MockMediaResource::GetNextCachedData(int64_t aOffset)
-{
+int64_t MockMediaResource::GetNextCachedData(int64_t aOffset) {
   if (!aOffset) {
     return mRanges.Length() ? mRanges[0].mStart : -1;
   }
@@ -93,9 +74,7 @@ MockMediaResource::GetNextCachedData(int64_t aOffset)
   return -1;
 }
 
-int64_t
-MockMediaResource::GetCachedDataEnd(int64_t aOffset)
-{
+int64_t MockMediaResource::GetCachedDataEnd(int64_t aOffset) {
   for (size_t i = 0; i < mRanges.Length(); i++) {
     if (aOffset == mRanges[i].mStart) {
       return mRanges[i].mEnd;
@@ -104,11 +83,9 @@ MockMediaResource::GetCachedDataEnd(int64_t aOffset)
   return aOffset;
 }
 
-nsresult
-MockMediaResource::GetCachedRanges(MediaByteRangeSet& aRanges)
-{
+nsresult MockMediaResource::GetCachedRanges(MediaByteRangeSet& aRanges) {
   aRanges = mRanges;
   return NS_OK;
 }
 
-} // namespace mozilla
+}  // namespace mozilla
