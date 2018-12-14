@@ -609,10 +609,6 @@ xul|*.radio-label-box {
   transition: background-color 150ms;
 }
 
-*|*#categories > *|button.category {
-  background-color: transparent;
-}
-
 *|*#categories > *|*.category:hover {
   background-color: var(--in-content-category-background-hover);
   border-radius: 2px;
