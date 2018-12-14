@@ -22,6 +22,7 @@ extern crate malloc_size_of;
 extern crate num_traits;
 extern crate selectors;
 extern crate smallvec;
+#[cfg(target_pointer_width = "64")]
 #[macro_use]
 extern crate size_of_test;
 #[macro_use]
