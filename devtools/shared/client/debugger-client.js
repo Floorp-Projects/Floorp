@@ -423,6 +423,7 @@ DebuggerClient.prototype = {
    *        The actor ID for the thread to attach.
    * @param object options
    *        Configuration options.
+   *        - useSourceMaps: whether to use source maps or not.
    */
   attachThread: function(threadActor, options = {}) {
     if (this._clients.has(threadActor)) {

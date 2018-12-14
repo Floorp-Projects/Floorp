@@ -38,10 +38,11 @@ function handleThreadState(toolbox, event, packet) {
 function attachThread(toolbox) {
   const target = toolbox.target;
 
+  const useSourceMaps = false;
   const autoBlackBox = false;
   const ignoreFrameEnvironment = true;
 
-  const threadOptions = { autoBlackBox, ignoreFrameEnvironment };
+  const threadOptions = { useSourceMaps, autoBlackBox, ignoreFrameEnvironment };
 
   return new Promise((resolve, reject) => {
     const handleResponse = ([res, threadClient]) => {

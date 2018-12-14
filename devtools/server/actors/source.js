@@ -281,118 +281,192 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     }
   },
 
-  _reportLoadSourceError: function(error) {
+  _reportLoadSourceError: function(error, map = null) {
     try {
       DevToolsUtils.reportException("SourceActor", error);
 
       JSON.stringify(this.form(), null, 4).split(/\n/g)
         .forEach(line => console.error("\t", line));
+
+      if (!map) {
+        return;
+      }
+
+      console.error("\t", "source map's sourceRoot =", map.sourceRoot);
+
+      console.error("\t", "source map's sources =");
+      map.sources.forEach(s => {
+        const hasSourceContent = map.sourceContentFor(s, true);
+        console.error("\t\t", s, "\t",
+                      hasSourceContent ? "has source content" : "no source content");
+      });
+
+      console.error("\t", "source map's sourcesContent =");
+      map.sourcesContent.forEach(c => {
+        if (c.length > 80) {
+          c = c.slice(0, 77) + "...";
+        }
+        c = c.replace(/\n/g, "\\n");
+        console.error("\t\t", c);
+      });
     } catch (e) {
       // ignore
     }
   },
 
-  _getSourceText: async function() {
+  _getSourceText: function() {
     const toResolvedContent = t => ({
       content: t,
       contentType: this._contentType,
     });
     const isWasm = this.source && this.source.introductionType === "wasm";
 
-    if (isWasm) {
-      const wasm = this.source.binary;
-      const buffer = wasm.buffer;
-      assert(
-        wasm.byteOffset === 0 && wasm.byteLength === buffer.byteLength,
-        "Typed array from wasm source binary must cover entire buffer"
-      );
-      return toResolvedContent(buffer);
-    }
-
-    // If we are replaying then we can only use source saved during the
-    // original recording. If we try to fetch it now it may have changed or
-    // may no longer exist.
-    if (this.dbg.replaying) {
-      assert(!this._contentType);
-      return this.dbg.replayingContent(this.url);
-    }
-
-    // Use `source.text` if it exists, is not the "no source" string, and
-    // the content type of the source is JavaScript or it is synthesized
-    // wasm. It will be "no source" if the Debugger API wasn't able to load
-    // the source because sources were discarded
-    // (javascript.options.discardSystemSource == true). Re-fetch non-JS
-    // sources to get the contentType from the headers.
-    if (this.source &&
-        this.source.text !== "[no source]" &&
-        this._contentType &&
-        (this._contentType.includes("javascript") ||
-          this._contentType === "text/wasm")) {
-      return toResolvedContent(this.source.text);
-    }
-
-    // Only load the HTML page source from cache (which exists when
-    // there are inline sources). Otherwise, we can't trust the
-    // cache because we are most likely here because we are
-    // fetching the original text for sourcemapped code, and the
-    // page hasn't requested it before (if it has, it was a
-    // previous debugging session).
-    // Additionally, we should only try the cache if it is currently enabled
-    // for the document.  Without this check, the cache may return stale data
-    // that doesn't match the document shown in the browser.
-    const loadFromCache = this.isInlineSource && this.isCacheEnabled;
-
-    // Fetch the sources with the same principal as the original document
-    const win = this.threadActor._parent.window;
-    let principal, cacheKey;
-    // On xpcshell, we don't have a window but a Sandbox
-    if (!isWorker && win instanceof Ci.nsIDOMWindow) {
-      const docShell = win.docShell;
-      const channel = docShell.currentDocumentChannel;
-      principal = channel.loadInfo.loadingPrincipal;
-
-      // Retrieve the cacheKey in order to load POST requests from cache
-      // Note that chrome:// URLs don't support this interface.
-      if (loadFromCache &&
-        docShell.currentDocumentChannel instanceof Ci.nsICacheInfoChannel) {
-        cacheKey = docShell.currentDocumentChannel.cacheKey;
+    const genSource = this.generatedSource || this.source;
+    return this.threadActor.sources.fetchSourceMap(genSource).then(map => {
+      if (map) {
+        try {
+          const sourceContent = map.sourceContentFor(this.url);
+          if (sourceContent) {
+            return toResolvedContent(sourceContent);
+          }
+        } catch (error) {
+          this._reportLoadSourceError(error, map);
+          throw error;
+        }
       }
-    }
 
-    const sourceFetched = fetch(this.url, {
-      principal,
-      cacheKey,
-      loadFromCache,
-    });
+      if (isWasm) {
+        const wasm = this.source.binary;
+        const buffer = wasm.buffer;
+        assert(
+          wasm.byteOffset === 0 && wasm.byteLength === buffer.byteLength,
+          "Typed array from wasm source binary must cover entire buffer"
+        );
+        return toResolvedContent(buffer);
+      }
 
-    // Record the contentType we just learned during fetching
-    return sourceFetched
-      .then(result => {
-        this._contentType = result.contentType;
-        return result;
-      }, error => {
-        this._reportLoadSourceError(error);
-        throw error;
+      // If we are replaying then we can only use source saved during the
+      // original recording. If we try to fetch it now it may have changed or
+      // may no longer exist.
+      if (this.dbg.replaying) {
+        assert(!this._contentType);
+        return this.dbg.replayingContent(this.url);
+      }
+
+      // Use `source.text` if it exists, is not the "no source" string, and
+      // the content type of the source is JavaScript or it is synthesized
+      // wasm. It will be "no source" if the Debugger API wasn't able to load
+      // the source because sources were discarded
+      // (javascript.options.discardSystemSource == true). Re-fetch non-JS
+      // sources to get the contentType from the headers.
+      if (this.source &&
+          this.source.text !== "[no source]" &&
+          this._contentType &&
+          (this._contentType.includes("javascript") ||
+           this._contentType === "text/wasm")) {
+        return toResolvedContent(this.source.text);
+      }
+
+      // Only load the HTML page source from cache (which exists when
+      // there are inline sources). Otherwise, we can't trust the
+      // cache because we are most likely here because we are
+      // fetching the original text for sourcemapped code, and the
+      // page hasn't requested it before (if it has, it was a
+      // previous debugging session).
+      // Additionally, we should only try the cache if it is currently enabled
+      // for the document.  Without this check, the cache may return stale data
+      // that doesn't match the document shown in the browser.
+      const loadFromCache = this.isInlineSource && this.isCacheEnabled;
+
+      // Fetch the sources with the same principal as the original document
+      const win = this.threadActor._parent.window;
+      let principal, cacheKey;
+      // On xpcshell, we don't have a window but a Sandbox
+      if (!isWorker && win instanceof Ci.nsIDOMWindow) {
+        const docShell = win.docShell;
+        const channel = docShell.currentDocumentChannel;
+        principal = channel.loadInfo.loadingPrincipal;
+
+        // Retrieve the cacheKey in order to load POST requests from cache
+        // Note that chrome:// URLs don't support this interface.
+        if (loadFromCache &&
+          docShell.currentDocumentChannel instanceof Ci.nsICacheInfoChannel) {
+          cacheKey = docShell.currentDocumentChannel.cacheKey;
+        }
+      }
+
+      const sourceFetched = fetch(this.url, {
+        principal,
+        cacheKey,
+        loadFromCache,
       });
+
+      // Record the contentType we just learned during fetching
+      return sourceFetched
+        .then(result => {
+          this._contentType = result.contentType;
+          return result;
+        }, error => {
+          this._reportLoadSourceError(error, map);
+          throw error;
+        });
+    });
   },
 
   /**
    * Get all executable lines from the current source
    * @return Array - Executable lines of the current script
-   */
-  getExecutableLines: async function() {
-    const offsetsLines = new Set();
-    for (const s of this.dbg.findScripts({ source: this.source })) {
+   **/
+  getExecutableLines: function() {
+    function sortLines(lines) {
+      // Converting the Set into an array
+      lines = [...lines];
+      lines.sort((a, b) => {
+        return a - b;
+      });
+      return lines;
+    }
+
+    if (this.generatedSource) {
+      return this.threadActor.sources.getSourceMap(this.generatedSource).then(sm => {
+        const lines = new Set();
+
+        // Position of executable lines in the generated source
+        const offsets = this.getExecutableOffsets(this.generatedSource, false);
+        for (const offset of offsets) {
+          const {line, source: sourceUrl} = sm.originalPositionFor({
+            line: offset.lineNumber,
+            column: offset.columnNumber,
+          });
+
+          if (sourceUrl === this.url) {
+            lines.add(line);
+          }
+        }
+
+        return sortLines(lines);
+      });
+    }
+
+    const lines = this.getExecutableOffsets(this.source, true);
+    return sortLines(lines);
+  },
+
+  /**
+   * Extract all executable offsets from the given script
+   * @param String url - extract offsets of the script with this url
+   * @param Boolean onlyLine - will return only the line number
+   * @return Set - Executable offsets/lines of the script
+   **/
+  getExecutableOffsets: function(source, onlyLine) {
+    const offsets = new Set();
+    for (const s of this.dbg.findScripts({ source })) {
       for (const offset of s.getAllColumnOffsets()) {
-        offsetsLines.add(offset.lineNumber);
+        offsets.add(onlyLine ? offset.lineNumber : offset);
       }
     }
 
-    const lines = [...offsetsLines];
-    lines.sort((a, b) => {
-      return a - b;
-    });
-    return lines;
+    return offsets;
   },
 
   /**
