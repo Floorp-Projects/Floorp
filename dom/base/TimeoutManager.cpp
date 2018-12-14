@@ -40,7 +40,6 @@ static int32_t gMinBackgroundTimeoutValue = 0;
 static int32_t gMinTrackingTimeoutValue = 0;
 static int32_t gMinTrackingBackgroundTimeoutValue = 0;
 static int32_t gTimeoutThrottlingDelay = 0;
-static bool gAnnotateTrackingChannels = false;
 
 #define DEFAULT_BACKGROUND_BUDGET_REGENERATION_FACTOR 100  // 1ms per 100ms
 #define DEFAULT_FOREGROUND_BUDGET_REGENERATION_FACTOR 1    // 1ms per 1ms
@@ -398,7 +397,9 @@ TimeoutManager::TimeoutManager(nsGlobalWindowInner& aWindow)
       mBudgetThrottleTimeouts(false) {
   MOZ_LOG(gLog, LogLevel::Debug,
           ("TimeoutManager %p created, tracking bucketing %s\n", this,
-           gAnnotateTrackingChannels ? "enabled" : "disabled"));
+           StaticPrefs::privacy_trackingprotection_annotate_channels()
+               ? "enabled"
+               : "disabled"));
 }
 
 TimeoutManager::~TimeoutManager() {
@@ -426,10 +427,6 @@ void TimeoutManager::Initialize() {
   Preferences::AddIntVarCache(&gTimeoutThrottlingDelay,
                               "dom.timeout.throttling_delay",
                               DEFAULT_TIMEOUT_THROTTLING_DELAY);
-
-  Preferences::AddBoolVarCache(&gAnnotateTrackingChannels,
-                               "privacy.trackingprotection.annotate_channels",
-                               false);
 
   Preferences::AddUintVarCache(&gMaxConsecutiveCallbacksMilliseconds,
                                "dom.timeout.max_consecutive_callbacks_ms",
