@@ -251,10 +251,12 @@ this.withPrefEnv = function(inPrefs) {
 this.decorate = function(...args) {
   const funcs = Array.from(args);
   let decorated = funcs.pop();
+  const origName = decorated.name;
   funcs.reverse();
   for (const func of funcs) {
     decorated = func(decorated);
   }
+  Object.defineProperty(decorated, "name", {value: origName});
   return decorated;
 };
 
@@ -297,7 +299,7 @@ this.addonStudyFactory = function(attrs) {
 let _preferenceStudyFactoryId = 0;
 this.preferenceStudyFactory = function(attrs) {
   return Object.assign({
-    name: "Test study",
+    name: `Test study ${_preferenceStudyFactoryId++}`,
     branch: "control",
     expired: false,
     lastSeen: new Date().toJSON(),
@@ -386,3 +388,15 @@ this.recipeFactory = function(overrides = {}) {
     arguments: overrides.arguments || {},
   }, overrides);
 };
+
+function mockLogger() {
+  const logStub = sinon.stub();
+  logStub.fatal = sinon.stub();
+  logStub.error = sinon.stub();
+  logStub.warn = sinon.stub();
+  logStub.info = sinon.stub();
+  logStub.config = sinon.stub();
+  logStub.debug = sinon.stub();
+  logStub.trace = sinon.stub();
+  return logStub;
+}

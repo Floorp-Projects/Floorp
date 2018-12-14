@@ -24,12 +24,12 @@ async function setup() {
   return prefilledGuids;
 }
 
-add_task(async function test_retry_with_shipppingAddressErrors() {
+add_task(async function test_retry_with_shippingAddressErrors() {
   if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
     todo(false, "Cannot test OS key store login on official builds.");
     return;
   }
-  await setup();
+  let prefilledGuids = await setup();
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: BLANK_PAGE_URL,
@@ -42,6 +42,12 @@ add_task(async function test_retry_with_shipppingAddressErrors() {
     });
 
     await selectPaymentDialogShippingAddressByCountry(frame, "DE");
+
+    await spawnPaymentDialogTask(frame, async ({prefilledGuids: guids}) => {
+      let paymentMethodPicker = content.document.querySelector("payment-method-picker");
+      content.fillField(Cu.waiveXrays(paymentMethodPicker).dropdown.popupBox,
+                        guids.card2GUID);
+    }, {prefilledGuids});
 
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
       securityCode: "123",
@@ -188,6 +194,12 @@ add_task(async function test_retry_with_payerErrors() {
       options: PTU.Options.requestPayerNameEmailAndPhone,
       merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
     });
+
+    await spawnPaymentDialogTask(frame, async ({prefilledGuids: guids}) => {
+      let paymentMethodPicker = content.document.querySelector("payment-method-picker");
+      content.fillField(Cu.waiveXrays(paymentMethodPicker).dropdown.popupBox,
+                        guids.card2GUID);
+    }, {prefilledGuids});
 
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
       securityCode: "123",
@@ -356,6 +368,12 @@ add_task(async function test_retry_with_paymentMethodErrors() {
       details: PTU.Details.total60USD,
       merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
     });
+
+    await spawnPaymentDialogTask(frame, async ({prefilledGuids: guids}) => {
+      let paymentMethodPicker = content.document.querySelector("payment-method-picker");
+      content.fillField(Cu.waiveXrays(paymentMethodPicker).dropdown.popupBox,
+                        guids.card1GUID);
+    }, {prefilledGuids});
 
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
       securityCode: "123",

@@ -38,8 +38,12 @@ class UAWidgetsChild extends ActorChild {
       this.setupWidget(aElement);
       return;
     }
-    if (typeof widget.wrappedJSObject.onattributechange == "function") {
-      widget.wrappedJSObject.onattributechange();
+    if (typeof widget.wrappedJSObject.onchange == "function") {
+      try {
+        widget.wrappedJSObject.onchange();
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
     }
   }
 
@@ -50,7 +54,7 @@ class UAWidgetsChild extends ActorChild {
       case "video":
       case "audio":
         uri = "chrome://global/content/elements/videocontrols.js";
-        widgetName = "VideoControlsPageWidget";
+        widgetName = "VideoControlsWidget";
         break;
       case "input":
         uri = "chrome://global/content/elements/datetimebox.js";
@@ -72,24 +76,30 @@ class UAWidgetsChild extends ActorChild {
     }
 
     let shadowRoot = aElement.openOrClosedShadowRoot;
-    let sandbox = aElement.nodePrincipal.isSystemPrincipal ?
+    if (!shadowRoot) {
+      Cu.reportError("Getting a UAWidgetBindToTree/UAWidgetAttributeChanged event without the Shadow Root.");
+      return;
+    }
+
+    let isSystemPrincipal = aElement.nodePrincipal.isSystemPrincipal;
+    let sandbox = isSystemPrincipal ?
       Object.create(null) : Cu.getUAWidgetScope(aElement.nodePrincipal);
 
     if (!sandbox[widgetName]) {
       Services.scriptloader.loadSubScript(uri, sandbox, "UTF-8");
     }
 
-    let widget;
-    try {
-      widget = new sandbox[widgetName](shadowRoot);
-    } catch (ex) {
-      // The widget may have thrown during construction.
-      // Report the failure and recover by clearing the Shadow DOM.
-      shadowRoot.innerHTML = "";
-      Cu.reportError(ex);
-      return;
-    }
+    let widget = new sandbox[widgetName](shadowRoot);
     this.widgets.set(aElement, widget);
+    try {
+      if (!isSystemPrincipal) {
+        widget.wrappedJSObject.onsetup();
+      } else {
+        widget.onsetup();
+      }
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
   }
 
   teardownWidget(aElement) {
@@ -101,9 +111,6 @@ class UAWidgetsChild extends ActorChild {
       try {
         widget.wrappedJSObject.destructor();
       } catch (ex) {
-        // The widget may have thrown during destruction.
-        // Report the failure and recover by clearing the Shadow DOM.
-        aElement.openOrClosedShadowRoot.innerHTML = "";
         Cu.reportError(ex);
       }
     }

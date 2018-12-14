@@ -73,13 +73,13 @@ struct CycleCollectorResults {
 
 class MicroTaskRunnable {
  public:
-  MicroTaskRunnable() {}
+  MicroTaskRunnable() = default;
   NS_INLINE_DECL_REFCOUNTING(MicroTaskRunnable)
   virtual void Run(AutoSlowOperation& aAso) = 0;
   virtual bool Suppressed() { return false; }
 
  protected:
-  virtual ~MicroTaskRunnable() {}
+  virtual ~MicroTaskRunnable() = default;
 };
 
 class CycleCollectedJSContext
@@ -169,9 +169,9 @@ class CycleCollectedJSContext
   virtual void AfterProcessTask(uint32_t aRecursionDepth);
 
   // Check whether we need an idle GC task.
-  void IsIdleGCTaskNeeded();
+  void IsIdleGCTaskNeeded() const;
 
-  uint32_t RecursionDepth();
+  uint32_t RecursionDepth() const;
 
   // Run in stable state (call through nsContentUtils)
   void RunInStableState(already_AddRefed<nsIRunnable>&& aRunnable);
@@ -201,9 +201,9 @@ class CycleCollectedJSContext
     }
   }
 
-  bool IsInMicroTask() { return mMicroTaskLevel != 0; }
+  bool IsInMicroTask() const { return mMicroTaskLevel != 0; }
 
-  uint32_t MicroTaskLevel() { return mMicroTaskLevel; }
+  uint32_t MicroTaskLevel() const { return mMicroTaskLevel; }
 
   void SetMicroTaskLevel(uint32_t aLevel) { mMicroTaskLevel = aLevel; }
 
@@ -211,7 +211,7 @@ class CycleCollectedJSContext
 
   void PerformDebuggerMicroTaskCheckpoint();
 
-  bool IsInStableOrMetaStableState() { return mDoingStableStates; }
+  bool IsInStableOrMetaStableState() const { return mDoingStableStates; }
 
   // Storage for watching rejected promises waiting for some client to
   // consume their rejection.

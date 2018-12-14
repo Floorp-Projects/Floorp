@@ -97,6 +97,29 @@ linux64-clang-trunk-mingw-x64:
     toolchains:
         - linux64-gcc-4.9
 
+linux64-clang-7-android-cross:
+    description: "Clang 7 toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(clang7-android)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux-xlarge
+    worker:
+        max-run-time: 7200
+    run:
+        using: toolchain-script
+        script: build-clang-7-android.sh
+        resources:
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-7-android.json'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-alias: linux64-clang-android-cross
+        toolchain-artifact: public/build/clang.tar.xz
+    toolchains:
+        - linux64-gcc-4.9
+        - linux64-android-ndk-linux-repack
+
 linux64-clang-7-macosx-cross:
     description: "Clang 7 toolchain build with MacOS Compiler RT libs"
     treeherder:

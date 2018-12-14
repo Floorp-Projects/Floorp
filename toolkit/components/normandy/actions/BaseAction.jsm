@@ -23,6 +23,18 @@ class BaseAction {
     this.state = BaseAction.STATE_PREPARING;
     this.log = LogManager.getLogger(`action.${this.name}`);
     this.lastError = null;
+  }
+
+  /**
+   * Be sure to run the _preExecution() hook once during its
+   * lifecycle.
+   *
+   * This is not intended for overriding by subclasses.
+   */
+  _ensurePreExecution() {
+    if (this.state !== BaseAction.STATE_PREPARING) {
+      return;
+    }
 
     try {
       this._preExecution();
@@ -94,6 +106,8 @@ class BaseAction {
    * @throws If this action has already been finalized.
    */
   async runRecipe(recipe) {
+    this._ensurePreExecution();
+
     if (this.state === BaseAction.STATE_FINALIZED) {
       throw new Error("Action has already been finalized");
     }
@@ -138,6 +152,11 @@ class BaseAction {
    * recipes will be assumed to have been seen.
    */
   async finalize() {
+    // It's possible that no recipes matched us, so runRecipe() was
+    // never called. In that case, we should ensure that we call
+    // _preExecute() here.
+    this._ensurePreExecution();
+
     let status;
     switch (this.state) {
       case BaseAction.STATE_FINALIZED: {

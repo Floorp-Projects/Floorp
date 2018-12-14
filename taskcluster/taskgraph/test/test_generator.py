@@ -60,7 +60,7 @@ class WithFakeKind(TaskGraphGenerator):
 
 
 def fake_load_graph_config(root_dir):
-    return {}
+    return {'trust-domain': 'test-domain'}
 
 
 class FakeParameters(dict):

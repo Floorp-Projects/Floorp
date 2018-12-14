@@ -17,16 +17,18 @@
  *        - removeUSBRuntimesObserver(listener)
  */
 function enableUsbRuntimesMock(mock) {
-  const { setMockedModule } = require("devtools/client/aboutdebugging-new/src/modules/test-helper");
-  setMockedModule(mock, "modules/usb-runtimes");
+  const { setMockedModule } = require("devtools/client/shared/browser-loader-mocks");
+  setMockedModule(mock,
+    "devtools/client/aboutdebugging-new/src/modules/usb-runtimes");
 }
 
 /**
  * Update the loader to clear the mock entry for the usb-runtimes module.
  */
 function disableUsbRuntimesMock() {
-  const { removeMockedModule } = require("devtools/client/aboutdebugging-new/src/modules/test-helper");
-  removeMockedModule("modules/usb-runtimes");
+  const { removeMockedModule } = require("devtools/client/shared/browser-loader-mocks");
+  removeMockedModule(
+    "devtools/client/aboutdebugging-new/src/modules/usb-runtimes");
 }
 
 /**
