@@ -246,7 +246,8 @@ static void AssertExpectedSP(const MacroAssembler& masm) {
 template <class Operand>
 static void WasmPush(MacroAssembler& masm, const Operand& op) {
 #ifdef JS_CODEGEN_ARM64
-  // Allocate a pad word so that SP can remain properly aligned.
+  // Allocate a pad word so that SP can remain properly aligned.  |op| will be
+  // written at the lower-addressed of the two words pushed here.
   masm.reserveStack(WasmPushSize);
   masm.storePtr(op, Address(masm.getStackPointer(), 0));
 #else
@@ -273,10 +274,10 @@ static void MoveSPForJitABI(MacroAssembler& masm) {
 #ifdef ENABLE_WASM_GC
 static void SuppressGC(MacroAssembler& masm, int32_t increment,
                        Register scratch) {
-  masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, cx)), scratch);
-  masm.add32(Imm32(increment),
-             Address(scratch, offsetof(JSContext, suppressGC) +
-                                  js::ThreadData<int32_t>::offsetOfValue()));
+  // masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, cx)), scratch);
+  // masm.add32(Imm32(increment),
+  //           Address(scratch, offsetof(JSContext, suppressGC) +
+  //                                js::ThreadData<int32_t>::offsetOfValue()));
 }
 #endif
 
@@ -1778,6 +1779,25 @@ static_assert(!SupportsSimd,
               "high lanes of SIMD registers need to be saved too");
 #endif
 
+// Generate a MachineState which describes the locations of the GPRs as saved
+// by GenerateTrapExit.  FP registers are ignored.  Note that the values
+// stored in the MachineState are offsets in words downwards from the top of
+// the save area.  That is, a higher value implies a lower address.
+void wasm::GenerateTrapExitMachineState(MachineState* machine,
+                                        size_t* numWords) {
+  // This is the number of words pushed by the initial WasmPush().
+  *numWords = WasmPushSize / sizeof(void*);
+  MOZ_ASSERT(*numWords == TrapExitDummyValueOffsetFromTop + 1);
+
+  // And these correspond to the PushRegsInMask() that immediately follows.
+  for (GeneralRegisterBackwardIterator iter(RegsToPreserve.gprs()); iter.more();
+       ++iter) {
+    machine->setRegisterLocation(*iter,
+                                 reinterpret_cast<uintptr_t*>(*numWords));
+    (*numWords)++;
+  }
+}
+
 // Generate a stub which calls WasmReportTrap() and can be executed by having
 // the signal handler redirect PC from any trapping instruction.
 static bool GenerateTrapExit(MacroAssembler& masm, Label* throwLabel,
@@ -1794,7 +1814,7 @@ static bool GenerateTrapExit(MacroAssembler& masm, Label* throwLabel,
   // that registers are not clobbered, we need to preserve all registers in
   // the trap exit. One simplifying assumption is that flags may be clobbered.
   // Push a dummy word to use as return address below.
-  WasmPush(masm, ImmWord(0));
+  WasmPush(masm, ImmWord(TrapExitDummyValue));
   unsigned framePushedBeforePreserve = masm.framePushed();
   masm.PushRegsInMask(RegsToPreserve);
   unsigned offsetOfReturnWord = masm.framePushed() - framePushedBeforePreserve;

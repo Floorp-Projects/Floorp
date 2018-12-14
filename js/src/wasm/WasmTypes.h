@@ -22,6 +22,7 @@
 #include "mozilla/Alignment.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/BinarySearch.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
@@ -1709,6 +1710,212 @@ class CallSiteTarget {
 
 typedef Vector<CallSiteTarget, 0, SystemAllocPolicy> CallSiteTargetVector;
 
+typedef Vector<bool, 32, SystemAllocPolicy> ExitStubMapVector;
+
+struct StackMap final {
+  // A StackMap is a bit-array containing numMappedWords bits, one bit per
+  // word of stack.  Bit index zero is for the lowest addressed word in the
+  // range.
+  //
+  // This is a variable-length structure whose size must be known at creation
+  // time.
+  //
+  // Users of the map will know the address of the wasm::Frame that is covered
+  // by this map.  In order that they can calculate the exact address range
+  // covered by the map, the map also stores the offset, from the highest
+  // addressed word of the map, of the embedded wasm::Frame.  This is an
+  // offset down from the highest address, rather than up from the lowest, so
+  // as to limit its range to 11 bits, where
+  // 11 == ceil(log2(MaxParams * sizeof-biggest-param-type-in-words))
+  //
+  // The map may also cover a ref-typed DebugFrame.  If so that can be noted,
+  // since users of the map need to trace pointers in such a DebugFrame.
+  //
+  // Finally, for sanity checking only, for stack maps associated with a wasm
+  // trap exit stub, the number of words used by the trap exit stub save area
+  // is also noted.  This is used in Instance::traceFrame to check that the
+  // TrapExitDummyValue is in the expected place in the frame.
+
+  // The total number of stack words covered by the map ..
+  uint32_t numMappedWords : 30;
+
+  // .. of which this many are "exit stub" extras
+  uint32_t numExitStubWords : 6;
+
+  // Where is Frame* relative to the top?  This is an offset in words.
+  uint32_t frameOffsetFromTop : 11;
+
+  // Notes the presence of a ref-typed DebugFrame.
+  uint32_t hasRefTypedDebugFrame : 1;
+
+ private:
+  static constexpr uint32_t maxMappedWords = (1 << 30) - 1;
+  static constexpr uint32_t maxExitStubWords = (1 << 6) - 1;
+  static constexpr uint32_t maxFrameOffsetFromTop = (1 << 11) - 1;
+
+  uint32_t bitmap[1];
+
+  explicit StackMap(uint32_t numMappedWords)
+      : numMappedWords(numMappedWords),
+        numExitStubWords(0),
+        frameOffsetFromTop(0),
+        hasRefTypedDebugFrame(0) {
+    const uint32_t nBitmap = calcNBitmap(numMappedWords);
+    memset(bitmap, 0, nBitmap * sizeof(bitmap[0]));
+  }
+
+ public:
+  static StackMap* create(uint32_t numMappedWords) {
+    uint32_t nBitmap = calcNBitmap(numMappedWords);
+    char* buf =
+        (char*)js_malloc(sizeof(StackMap) + (nBitmap - 1) * sizeof(bitmap[0]));
+    if (!buf) {
+      return nullptr;
+    }
+    return ::new (buf) StackMap(numMappedWords);
+  }
+
+  void destroy() { js_free((char*)this); }
+
+  // Record the number of words in the map used as a wasm trap exit stub
+  // save area.  See comment above.
+  void setExitStubWords(uint32_t nWords) {
+    MOZ_ASSERT(numExitStubWords == 0);
+    MOZ_RELEASE_ASSERT(nWords <= maxExitStubWords);
+    MOZ_ASSERT(nWords <= numMappedWords);
+    numExitStubWords = nWords;
+  }
+
+  // Record the offset from the highest-addressed word of the map, that the
+  // wasm::Frame lives at.  See comment above.
+  void setFrameOffsetFromTop(uint32_t nWords) {
+    MOZ_ASSERT(frameOffsetFromTop == 0);
+    MOZ_RELEASE_ASSERT(nWords <= maxFrameOffsetFromTop);
+    MOZ_ASSERT(frameOffsetFromTop < numMappedWords);
+    frameOffsetFromTop = nWords;
+  }
+
+  // If the frame described by this StackMap includes a DebugFrame for a
+  // ref-typed return value, call here to record that fact.
+  void setHasRefTypedDebugFrame() {
+    MOZ_ASSERT(hasRefTypedDebugFrame == 0);
+    hasRefTypedDebugFrame = 1;
+  }
+
+  inline void setBit(uint32_t bitIndex) {
+    MOZ_ASSERT(bitIndex < numMappedWords);
+    uint32_t wordIndex = bitIndex / wordsPerBitmapElem;
+    uint32_t wordOffset = bitIndex % wordsPerBitmapElem;
+    bitmap[wordIndex] |= (1 << wordOffset);
+  }
+
+  inline uint32_t getBit(uint32_t bitIndex) const {
+    MOZ_ASSERT(bitIndex < numMappedWords);
+    uint32_t wordIndex = bitIndex / wordsPerBitmapElem;
+    uint32_t wordOffset = bitIndex % wordsPerBitmapElem;
+    return (bitmap[wordIndex] >> wordOffset) & 1;
+  }
+
+ private:
+  static constexpr uint32_t wordsPerBitmapElem = sizeof(bitmap[0]) * 8;
+
+  static uint32_t calcNBitmap(uint32_t numMappedWords) {
+    MOZ_RELEASE_ASSERT(numMappedWords <= maxMappedWords);
+    uint32_t nBitmap =
+        (numMappedWords + wordsPerBitmapElem - 1) / wordsPerBitmapElem;
+    return nBitmap == 0 ? 1 : nBitmap;
+  }
+};
+
+// This is the expected size for a map that covers 32 or fewer words.
+static_assert(sizeof(StackMap) == 12, "wasm::StackMap has unexpected size");
+
+class StackMaps {
+ public:
+  // A Maplet holds a single code-address-to-map binding.  Note that the
+  // code address is the lowest address of the instruction immediately
+  // following the instruction of interest, not of the instruction of
+  // interest itself.  In practice (at least for the Wasm Baseline compiler)
+  // this means that |nextInsnAddr| points either immediately after a call
+  // instruction, after a trap instruction or after a no-op.
+  struct Maplet {
+    uint8_t* nextInsnAddr;
+    StackMap* map;
+    Maplet(uint8_t* nextInsnAddr, StackMap* map)
+        : nextInsnAddr(nextInsnAddr), map(map) {}
+    void offsetBy(uintptr_t delta) { nextInsnAddr += delta; }
+    bool operator<(const Maplet& other) const {
+      return uintptr_t(nextInsnAddr) < uintptr_t(other.nextInsnAddr);
+    }
+  };
+
+ private:
+  bool sorted_;
+  Vector<Maplet, 0, SystemAllocPolicy> mapping_;
+
+ public:
+  StackMaps() : sorted_(false) {}
+  ~StackMaps() {
+    for (size_t i = 0; i < mapping_.length(); i++) {
+      mapping_[i].map->destroy();
+      mapping_[i].map = nullptr;
+    }
+  }
+  MOZ_MUST_USE bool add(uint8_t* nextInsnAddr, StackMap* map) {
+    MOZ_ASSERT(!sorted_);
+    return mapping_.append(Maplet(nextInsnAddr, map));
+  }
+  MOZ_MUST_USE bool add(const Maplet& maplet) {
+    return add(maplet.nextInsnAddr, maplet.map);
+  }
+  void clear() {
+    for (size_t i = 0; i < mapping_.length(); i++) {
+      mapping_[i].nextInsnAddr = nullptr;
+      mapping_[i].map = nullptr;
+    }
+    mapping_.clear();
+  }
+  bool empty() const { return mapping_.empty(); }
+  size_t length() const { return mapping_.length(); }
+  Maplet get(size_t i) const { return mapping_[i]; }
+  Maplet move(size_t i) {
+    Maplet m = mapping_[i];
+    mapping_[i].map = nullptr;
+    return m;
+  }
+  void offsetBy(uintptr_t delta) {
+    for (size_t i = 0; i < mapping_.length(); i++) mapping_[i].offsetBy(delta);
+  }
+  void sort() {
+    MOZ_ASSERT(!sorted_);
+    std::sort(mapping_.begin(), mapping_.end());
+    sorted_ = true;
+  }
+  const StackMap* findMap(uint8_t* nextInsnAddr) const {
+    struct Comparator {
+      int operator()(Maplet aVal) const {
+        if (uintptr_t(mTarget) < uintptr_t(aVal.nextInsnAddr)) {
+          return -1;
+        }
+        if (uintptr_t(mTarget) > uintptr_t(aVal.nextInsnAddr)) {
+          return 1;
+        }
+        return 0;
+      }
+      explicit Comparator(uint8_t* aTarget) : mTarget(aTarget) {}
+      const uint8_t* mTarget;
+    };
+
+    size_t result;
+    if (BinarySearchIf(mapping_, 0, mapping_.length(), Comparator(nextInsnAddr),
+                       &result)) {
+      return mapping_[result].map;
+    }
+
+    return nullptr;
+  }
+};
+
 // A wasm::SymbolicAddress represents a pointer to a well-known function that is
 // embedded in wasm code. Since wasm code is serialized and later deserialized
 // into a different address space, symbolic addresses must be used for *all*
@@ -2253,6 +2460,7 @@ class DebugFrame {
   // results union into cachedReturnJSValue_ by updateReturnJSValue() before
   // returnValue() can return a Handle to it.
 
+  bool hasCachedReturnJSValue() const { return hasCachedReturnJSValue_; }
   void updateReturnJSValue();
   HandleValue returnValue() const;
   void clearReturnJSValue();
@@ -2290,6 +2498,9 @@ class DebugFrame {
 
   static constexpr size_t offsetOfResults() {
     return offsetof(DebugFrame, resultI32_);
+  }
+  static constexpr size_t offsetOfCachedReturnJSValue() {
+    return offsetof(DebugFrame, cachedReturnJSValue_);
   }
   static constexpr size_t offsetOfFlagsWord() {
     return offsetof(DebugFrame, flagsWord_);
