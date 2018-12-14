@@ -84,6 +84,17 @@ class Instance {
             const ElemSegmentVector& elemSegments);
   void trace(JSTracer* trc);
 
+  // Trace any GC roots on the stack, for the frame associated with |wfi|,
+  // whose next instruction to execute is |nextPC|.
+  //
+  // For consistency checking of StackMap sizes in debug builds, this also
+  // takes |highestByteVisitedInPrevFrame|, which is the address of the
+  // highest byte scanned in the frame below this one on the stack, and in
+  // turn it returns the address of the highest byte scanned in this frame.
+  uintptr_t traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
+                       uint8_t* nextPC,
+                       uintptr_t highestByteVisitedInPrevFrame);
+
   JS::Realm* realm() const { return realm_; }
   const Code& code() const { return *code_; }
   const CodeTier& code(Tier t) const { return code_->codeTier(t); }

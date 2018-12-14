@@ -44,6 +44,23 @@ extern bool GenerateEntryStubs(jit::MacroAssembler& masm,
                                HasGcTypes gcTypesConfigured,
                                CodeRangeVector* codeRanges);
 
+extern void GenerateTrapExitMachineState(jit::MachineState* machine,
+                                         size_t* numWords);
+
+// A value that is written into the trap exit frame, which is useful for
+// cross-checking during garbage collection.
+static constexpr uintptr_t TrapExitDummyValue = 1337;
+
+// And its offset, in words, down from the highest-addressed word of the trap
+// exit frame.  The value is written into the frame using WasmPush.  In the
+// case where WasmPush allocates more than one word, the value will therefore
+// be written at the lowest-addressed word.
+#ifdef JS_CODEGEN_ARM64
+static constexpr size_t TrapExitDummyValueOffsetFromTop = 1;
+#else
+static constexpr size_t TrapExitDummyValueOffsetFromTop = 0;
+#endif
+
 // An argument that will end up on the stack according to the system ABI, to be
 // passed to GenerateDirectCallFromJit. Since the direct JIT call creates its
 // own frame, it is its responsibility to put stack arguments to their expected

@@ -411,6 +411,7 @@ struct MetadataTier {
   TrapSiteVectorArray trapSites;
   FuncImportVector funcImports;
   FuncExportVector funcExports;
+  StackMaps stackMaps;
 
   // Debug information, not serialized.
   Uint32Vector debugTrapFarJumpOffsets;
@@ -699,6 +700,7 @@ class Code : public ShareableBase<Code> {
 
   const CallSite* lookupCallSite(void* returnAddress) const;
   const CodeRange* lookupFuncRange(void* pc) const;
+  const StackMap* lookupStackMap(uint8_t* nextPC) const;
   bool containsCodePC(const void* pc) const;
   bool lookupTrap(void* pc, Trap* trap, BytecodeOffset* bytecode) const;
 

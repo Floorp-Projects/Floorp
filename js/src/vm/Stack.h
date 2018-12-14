@@ -1883,6 +1883,10 @@ class JitFrameIter {
 
   JS::Realm* realm() const;
 
+  // Returns the return address of the frame above this one (that is, the
+  // return address that returns back to the current frame).
+  uint8_t* returnAddressToFp() const;
+
   // Operations which have an effect only on JIT frames.
   void skipNonScriptedJSFrames();
 

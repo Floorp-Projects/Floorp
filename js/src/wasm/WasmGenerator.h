@@ -65,6 +65,7 @@ struct CompiledCode {
   CallFarJumpVector callFarJumps;
   SymbolicAccessVector symbolicAccesses;
   jit::CodeLabelVector codeLabels;
+  StackMaps stackMaps;
 
   MOZ_MUST_USE bool swap(jit::MacroAssembler& masm);
 
@@ -77,6 +78,7 @@ struct CompiledCode {
     callFarJumps.clear();
     symbolicAccesses.clear();
     codeLabels.clear();
+    stackMaps.clear();
     MOZ_ASSERT(empty());
   }
 
@@ -84,7 +86,7 @@ struct CompiledCode {
     return bytes.empty() && codeRanges.empty() && callSites.empty() &&
            callSiteTargets.empty() && trapSites.empty() &&
            callFarJumps.empty() && symbolicAccesses.empty() &&
-           codeLabels.empty();
+           codeLabels.empty() && stackMaps.empty();
   }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
@@ -183,7 +185,7 @@ class MOZ_STACK_CLASS ModuleGenerator {
   const CodeRange& funcCodeRange(uint32_t funcIndex) const;
   bool linkCallSites();
   void noteCodeRange(uint32_t codeRangeIndex, const CodeRange& codeRange);
-  bool linkCompiledCode(const CompiledCode& code);
+  bool linkCompiledCode(CompiledCode& code);
   bool locallyCompileCurrentTask();
   bool finishTask(CompileTask* task);
   bool launchBatchCompile();
