@@ -8,12 +8,12 @@ import re
 
 from .base import (
     CAN_COPY,
-    EntityBase, OffsetComment, Junk, Whitespace,
+    Entry, OffsetComment, Junk, Whitespace,
     Parser
 )
 
 
-class DefinesInstruction(EntityBase):
+class DefinesInstruction(Entry):
     '''Entity-like object representing processing instructions in inc files
     '''
     def __init__(self, ctx, span, val_span):

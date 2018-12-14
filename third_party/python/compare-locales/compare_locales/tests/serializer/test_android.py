@@ -180,3 +180,39 @@ class TestAndroidDuplicateComment(Helper, unittest.TestCase):
   </resources>
 """
         )
+
+
+class TestAndroidTools(Helper, unittest.TestCase):
+    name = 'strings.xml'
+    reference_content = (
+        """\
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_tagline">Take your passwords everywhere.</string>
+    <string name="search_your_entries" tools:ignore="ExtraTranslation">"""
+        "search your entries"
+        """</string>
+</resources>
+""")
+
+    def test_namespaced_document(self):
+        self._test(
+            """\
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_tagline">Localized tag line</string>
+  </resources>
+""",
+            {
+                "search_your_entries": "Looking for Entries"
+            },
+            (
+                """\
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_tagline">Localized tag line</string>
+    <string name="search_your_entries" tools:ignore="ExtraTranslation">"""
+                "Looking for Entries"
+                """</string>
+</resources>
+""")
+        )

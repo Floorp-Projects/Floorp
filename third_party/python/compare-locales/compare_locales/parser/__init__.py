@@ -8,7 +8,7 @@ import re
 
 from .base import (
     CAN_NONE, CAN_COPY, CAN_SKIP, CAN_MERGE,
-    EntityBase, Entity, Comment, OffsetComment, Junk, Whitespace,
+    Entry, Entity, Comment, OffsetComment, Junk, Whitespace,
     BadEntity, Parser,
 )
 from .android import (
@@ -35,7 +35,7 @@ from .properties import (
 
 __all__ = [
     "CAN_NONE", "CAN_COPY", "CAN_SKIP", "CAN_MERGE",
-    "Junk", "EntityBase", "Entity", "Whitespace", "Comment", "OffsetComment",
+    "Junk", "Entry", "Entity", "Whitespace", "Comment", "OffsetComment",
     "BadEntity", "Parser",
     "AndroidParser",
     "DefinesParser", "DefinesInstruction",

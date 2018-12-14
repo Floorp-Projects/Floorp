@@ -19,8 +19,8 @@ from xml.dom.minidom import Node
 
 from .base import (
     CAN_SKIP,
-    EntityBase, Entity, Comment, Junk, Whitespace,
-    LiteralEntity,
+    Entity, Comment, Junk, Whitespace,
+    StickyEntry, LiteralEntity,
     Parser
 )
 
@@ -114,10 +114,17 @@ class XMLComment(NodeMixin, Comment):
         return None
 
 
-class DocumentWrapper(NodeMixin, EntityBase):
-    def __init__(self, all):
+# DocumentWrapper is sticky in serialization.
+# Always keep the one from the reference document.
+class DocumentWrapper(NodeMixin, StickyEntry):
+    def __init__(self, key, all):
         self._all_literal = all
         self._val_literal = all
+        self._key_literal = key
+
+    @property
+    def key(self):
+        return self._key_literal
 
 
 class XMLJunk(Junk):
@@ -176,8 +183,16 @@ class AndroidParser(Parser):
             return
         root_children = doc.documentElement.childNodes
         if not only_localizable:
+            attributes = ''.join(
+                ' {}="{}"'.format(attr_name, attr_value)
+                for attr_name, attr_value in
+                doc.documentElement.attributes.items()
+            )
             yield DocumentWrapper(
-                '<?xml version="1.0" encoding="utf-8"?>\n<resources>'
+                '<?xml?><resources>',
+                '<?xml version="1.0" encoding="utf-8"?>\n<resources{}>'.format(
+                    attributes
+                )
             )
         child_num = 0
         while child_num < len(root_children):
@@ -227,7 +242,7 @@ class AndroidParser(Parser):
                         yield white_space
             child_num += 1
         if not only_localizable:
-            yield DocumentWrapper('</resources>\n')
+            yield DocumentWrapper('</resources>', '</resources>\n')
 
     def handleElement(self, element, current_comment, white_space):
         if element.nodeName == 'string' and element.hasAttribute('name'):
