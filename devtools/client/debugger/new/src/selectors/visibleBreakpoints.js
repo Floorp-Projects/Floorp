@@ -4,11 +4,15 @@
 
 // @flow
 
-import { getBreakpointsList } from "../reducers/breakpoints";
-import { getSelectedSource } from "../reducers/sources";
 import { isGeneratedId } from "devtools-source-map";
 import { createSelector } from "reselect";
+import { uniqBy } from "lodash";
+
+import { getBreakpointsList } from "../reducers/breakpoints";
+import { getSelectedSource } from "../reducers/sources";
+
 import memoize from "../utils/memoize";
+import { sortBreakpoints } from "../utils/breakpoint";
 
 import type { Breakpoint, Source } from "../types";
 
@@ -54,5 +58,19 @@ export const getVisibleBreakpoints = createSelector(
     return breakpoints
       .filter(bp => isVisible(bp, selectedSource))
       .map(bp => formatBreakpoint(bp, selectedSource));
+  }
+);
+
+/*
+ * Finds the first breakpoint per line, which appear in the selected source.
+  */
+export const getFirstVisibleBreakpoints = createSelector(
+  getVisibleBreakpoints,
+  breakpoints => {
+    if (!breakpoints) {
+      return null;
+    }
+
+    return uniqBy(sortBreakpoints(breakpoints), bp => bp.location.line);
   }
 );

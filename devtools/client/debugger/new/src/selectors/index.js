@@ -27,7 +27,10 @@ export {
   getBreakpointAtLocation,
   getBreakpointsAtLine
 } from "./breakpointAtLocation";
-export { getVisibleBreakpoints } from "./visibleBreakpoints";
+export {
+  getVisibleBreakpoints,
+  getFirstVisibleBreakpoints
+} from "./visibleBreakpoints";
 export { inComponent } from "./inComponent";
 export { isSelectedFrameVisible } from "./isSelectedFrameVisible";
 export { getCallStackFrames } from "./getCallStackFrames";
