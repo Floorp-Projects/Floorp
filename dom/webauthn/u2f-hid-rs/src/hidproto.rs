@@ -4,20 +4,22 @@
 
 // Shared code for platforms that use raw HID access (Linux, FreeBSD, etc.)
 
+#![cfg_attr(feature = "cargo-clippy", allow(cast_lossless, needless_lifetimes))]
+
 use std::mem;
 
 use consts::{FIDO_USAGE_PAGE, FIDO_USAGE_U2FHID};
 
 // The 4 MSBs (the tag) are set when it's a long item.
-const HID_MASK_LONG_ITEM_TAG: u8 = 0b11110000;
+const HID_MASK_LONG_ITEM_TAG: u8 = 0b1111_0000;
 // The 2 LSBs denote the size of a short item.
-const HID_MASK_SHORT_ITEM_SIZE: u8 = 0b00000011;
+const HID_MASK_SHORT_ITEM_SIZE: u8 = 0b0000_0011;
 // The 6 MSBs denote the tag (4) and type (2).
-const HID_MASK_ITEM_TAGTYPE: u8 = 0b11111100;
+const HID_MASK_ITEM_TAGTYPE: u8 = 0b1111_1100;
 // tag=0000, type=10 (local)
-const HID_ITEM_TAGTYPE_USAGE: u8 = 0b00001000;
+const HID_ITEM_TAGTYPE_USAGE: u8 = 0b0000_1000;
 // tag=0000, type=01 (global)
-const HID_ITEM_TAGTYPE_USAGE_PAGE: u8 = 0b00000100;
+const HID_ITEM_TAGTYPE_USAGE_PAGE: u8 = 0b0000_0100;
 
 pub struct ReportDescriptor {
     pub value: Vec<u8>,
@@ -128,14 +130,16 @@ fn get_hid_short_item<'a>(buf: &'a [u8]) -> Option<(u8, usize, &'a [u8])> {
     Some((
         buf[0] & HID_MASK_ITEM_TAGTYPE,
         1, /* key length */
-        &buf[1..1 + len],
+        &buf[1..=len],
     ))
 }
 
 fn read_uint_le(buf: &[u8]) -> u32 {
     assert!(buf.len() <= 4);
     // Parse the number in little endian byte order.
-    buf.iter().rev().fold(0, |num, b| (num << 8) | (*b as u32))
+    buf.iter()
+        .rev()
+        .fold(0, |num, b| (num << 8) | (u32::from(*b)))
 }
 
 pub fn has_fido_usage(desc: ReportDescriptor) -> bool {
@@ -150,7 +154,8 @@ pub fn has_fido_usage(desc: ReportDescriptor) -> bool {
 
         // Check the values we found.
         if let (Some(usage_page), Some(usage)) = (usage_page, usage) {
-            return usage_page == FIDO_USAGE_PAGE as u32 && usage == FIDO_USAGE_U2FHID as u32;
+            return usage_page == u32::from(FIDO_USAGE_PAGE)
+                && usage == u32::from(FIDO_USAGE_U2FHID);
         }
     }
 

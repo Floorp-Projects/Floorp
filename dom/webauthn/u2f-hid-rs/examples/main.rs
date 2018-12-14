@@ -24,7 +24,7 @@ macro_rules! try_or {
     };
 }
 
-fn u2f_get_key_handle_from_register_response(register_response: &Vec<u8>) -> io::Result<Vec<u8>> {
+fn u2f_get_key_handle_from_register_response(register_response: &[u8]) -> io::Result<Vec<u8>> {
     if register_response[0] != 0x05 {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
@@ -33,7 +33,7 @@ fn u2f_get_key_handle_from_register_response(register_response: &Vec<u8>) -> io:
     }
 
     let key_handle_len = register_response[66] as usize;
-    let mut public_key = register_response.clone();
+    let mut public_key = register_response.to_owned();
     let mut key_handle = public_key.split_off(67);
     let _attestation = key_handle.split_off(key_handle_len);
 
@@ -44,9 +44,11 @@ fn main() {
     env_logger::init();
 
     println!("Asking a security key to register now...");
-    let challenge_str = format!("{}{}",
+    let challenge_str = format!(
+        "{}{}",
         r#"{"challenge": "1vQ9mxionq0ngCnjD-wTsv1zUSrGRtFqG2xP09SbZ70","#,
-        r#" "version": "U2F_V2", "appId": "http://demo.yubico.com"}"#);
+        r#" "version": "U2F_V2", "appId": "http://demo.yubico.com"}"#
+    );
     let mut challenge = Sha256::default();
     challenge.input(challenge_str.as_bytes());
     let chall_bytes = challenge.result().to_vec();
