@@ -1,0 +1,33 @@
+{
+    "llvm_revision": "342383",
+    "stages": "2",
+    "build_libcxx": true,
+    "build_type": "Release",
+    "assertions": false,
+    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_700/final",
+    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_700/final",
+    "lld_repo": "https://llvm.org/svn/llvm-project/lld/tags/RELEASE_700/final",
+    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/tags/RELEASE_700/final",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_700/final",
+    "libcxxabi_repo": "https://llvm.org/svn/llvm-project/libcxxabi/tags/RELEASE_700/final",
+    "python_path": "/usr/bin/python2.7",
+    "gcc_dir": "/builds/worker/workspace/build/src/gcc",
+    "cc": "/builds/worker/workspace/build/src/gcc/bin/gcc",
+    "cxx": "/builds/worker/workspace/build/src/gcc/bin/g++",
+    "as": "/builds/worker/workspace/build/src/gcc/bin/gcc",
+    "android_targets": {
+      "armv7-linux-android": {
+        "ndk_toolchain": "/builds/worker/workspace/build/src/android-ndk/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64",
+        "ndk_sysroot": "/builds/worker/workspace/build/src/android-ndk/platforms/android-16/arch-arm",
+        "ndk_includes": [
+          "/builds/worker/workspace/build/src/android-ndk/sysroot/usr/include/arm-linux-androideabi",
+          "/builds/worker/workspace/build/src/android-ndk/sysroot/usr/include"
+        ]
+      }
+    },
+    "patches": [
+      "static-llvm-symbolizer.patch",
+      "find_symbolizer_linux.patch",
+      "rename_gcov_flush_.patch"
+    ]
+}

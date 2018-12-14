@@ -176,9 +176,9 @@ def have_nasm(value):
         return True
 
 
-@depends(nasm_asflags, yasm_asflags)
-def have_yasm(nasm_asflags, yasm_asflags):
-    if nasm_asflags or yasm_asflags:
+@depends(yasm_asflags)
+def have_yasm(yasm_asflags):
+    if yasm_asflags:
         return True
 
 set_config('HAVE_NASM', have_nasm)

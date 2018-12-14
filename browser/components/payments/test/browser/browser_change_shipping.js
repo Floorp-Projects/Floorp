@@ -8,6 +8,8 @@ async function setup() {
   await formAutofillStorage.creditCards.update(prefilledGuids.card1GUID, {
     billingAddressGUID: prefilledGuids.address1GUID,
   }, true);
+
+  return prefilledGuids;
 }
 
 add_task(async function test_change_shipping() {
@@ -15,7 +17,7 @@ add_task(async function test_change_shipping() {
     todo(false, "Cannot test OS key store login on official builds.");
     return;
   }
-  await setup();
+  let prefilledGuids = await setup();
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: BLANK_PAGE_URL,
@@ -28,6 +30,12 @@ add_task(async function test_change_shipping() {
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
       }
     );
+
+    await spawnPaymentDialogTask(frame, async ({prefilledGuids: guids}) => {
+      let paymentMethodPicker = content.document.querySelector("payment-method-picker");
+      content.fillField(Cu.waiveXrays(paymentMethodPicker).dropdown.popupBox,
+                        guids.card1GUID);
+    }, {prefilledGuids});
 
     let shippingOptions =
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingOptions);
@@ -257,7 +265,7 @@ add_task(async function test_no_shippingchange_without_shipping() {
     todo(false, "Cannot test OS key store login on official builds.");
     return;
   }
-  await setup();
+  let prefilledGuids = await setup();
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: BLANK_PAGE_URL,
@@ -269,6 +277,12 @@ add_task(async function test_no_shippingchange_without_shipping() {
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
       }
     );
+
+    await spawnPaymentDialogTask(frame, async ({prefilledGuids: guids}) => {
+      let paymentMethodPicker = content.document.querySelector("payment-method-picker");
+      content.fillField(Cu.waiveXrays(paymentMethodPicker).dropdown.popupBox,
+                        guids.card1GUID);
+    }, {prefilledGuids});
 
     ContentTask.spawn(browser, {
       eventName: "shippingaddresschange",

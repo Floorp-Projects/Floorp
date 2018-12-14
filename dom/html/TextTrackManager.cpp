@@ -5,21 +5,22 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/TextTrackManager.h"
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLTrackElement.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/TextTrack.h"
 #include "mozilla/dom/TextTrackCue.h"
-#include "mozilla/dom/Event.h"
-#include "mozilla/ClearOnShutdown.h"
-#include "mozilla/Telemetry.h"
 #include "nsComponentManagerUtils.h"
 #include "nsGlobalWindow.h"
+#include "nsIFrame.h"
+#include "nsIWebVTTParserWrapper.h"
+#include "nsTArrayHelpers.h"
 #include "nsVariant.h"
 #include "nsVideoFrame.h"
-#include "nsIFrame.h"
-#include "nsTArrayHelpers.h"
-#include "nsIWebVTTParserWrapper.h"
 
 static mozilla::LazyLogModule gTextTrackLog("TextTrackManager");
 #define WEBVTT_LOG(...) MOZ_LOG(gTextTrackLog, LogLevel::Debug, (__VA_ARGS__))
@@ -613,6 +614,17 @@ void TextTrackManager::DispatchTimeMarchesOn() {
 // https://html.spec.whatwg.org/multipage/embedded-content.html#time-marches-on
 void TextTrackManager::TimeMarchesOn() {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  CycleCollectedJSContext* context = CycleCollectedJSContext::Get();
+  if (context && context->IsInStableOrMetaStableState()) {
+    // FireTimeUpdate can be called while at stable state following a
+    // current position change which triggered a state watcher in MediaDecoder
+    // (see bug 1443429).
+    // TimeMarchesOn() will modify JS attributes which is forbidden while in
+    // stable state. So we dispatch a task to perform such operation later
+    // instead.
+    DispatchTimeMarchesOn();
+    return;
+  }
   WEBVTT_LOG("TimeMarchesOn");
   mTimeMarchesOnDispatched = false;
 

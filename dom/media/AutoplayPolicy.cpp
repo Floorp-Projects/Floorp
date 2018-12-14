@@ -144,8 +144,9 @@ static uint32_t DefaultAutoplayBehaviour() {
 }
 
 static bool IsMediaElementAllowedToPlay(const HTMLMediaElement& aElement) {
-  if ((aElement.Volume() == 0.0 || aElement.Muted()) &&
-      Preferences::GetBool("media.autoplay.allow-muted", true)) {
+  const bool isAllowedMuted =
+      Preferences::GetBool("media.autoplay.allow-muted", true);
+  if ((aElement.Volume() == 0.0 || aElement.Muted()) && isAllowedMuted) {
     AUTOPLAY_LOG("Allow muted media %p to autoplay.", &aElement);
     return true;
   }
@@ -164,7 +165,8 @@ static bool IsMediaElementAllowedToPlay(const HTMLMediaElement& aElement) {
   }
 
   if (!aElement.HasAudio() &&
-      aElement.ReadyState() >= HTMLMediaElement_Binding::HAVE_METADATA) {
+      aElement.ReadyState() >= HTMLMediaElement_Binding::HAVE_METADATA &&
+      isAllowedMuted) {
     AUTOPLAY_LOG("Allow media %p without audio track to autoplay", &aElement);
     return true;
   }
