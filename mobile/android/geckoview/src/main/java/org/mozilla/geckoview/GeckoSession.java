@@ -12,13 +12,11 @@ import java.lang.ref.WeakReference;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEditableChild;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.mozglue.JNIObject;
@@ -109,7 +107,7 @@ public class GeckoSession implements Parcelable {
     private boolean mShouldPinOnScreen;
 
     // All fields are accessed on UI thread only.
-    private PanZoomController mNPZC;
+    private PanZoomController mPanZoomController = new PanZoomController(this);
     private OverscrollEdgeEffect mOverscroll;
     private DynamicToolbarAnimator mToolbar;
     private CompositorController mController;
@@ -3547,13 +3545,7 @@ public class GeckoSession implements Parcelable {
     public PanZoomController getPanZoomController() {
         ThreadUtils.assertOnUiThread();
 
-        if (mNPZC == null) {
-            mNPZC = new PanZoomController(this);
-            if (mAttachedCompositor) {
-                mCompositor.attachNPZC(mNPZC);
-            }
-        }
-        return mNPZC;
+        return mPanZoomController;
     }
 
     /**
@@ -4218,10 +4210,7 @@ public class GeckoSession implements Parcelable {
         }
 
         mAttachedCompositor = true;
-
-        if (mNPZC != null) {
-            mCompositor.attachNPZC(mNPZC);
-        }
+        mCompositor.attachNPZC(mPanZoomController);
 
         if (mSurface != null) {
             // If we have a valid surface, create the compositor now that we're attached.
