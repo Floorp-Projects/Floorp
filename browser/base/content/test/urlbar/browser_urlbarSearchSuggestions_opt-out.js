@@ -1,3 +1,5 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 // The order of the tests here matters!
 
@@ -7,6 +9,7 @@ const CHOICE_PREF = "browser.urlbar.userMadeSearchSuggestionsChoice";
 const TIMES_PREF = "browser.urlbar.timesBeforeHidingSuggestionsHint";
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 const ONEOFF_PREF = "browser.urlbar.oneOffSearches";
+const NO_RESULTS_TIMEOUT_MS = 500;
 
 add_task(async function prepare() {
   let engine = await SearchTestUtils.promiseNewSearchEngine(
@@ -43,6 +46,8 @@ add_task(async function focus() {
   focusAndSelectUrlBar(true);
   await popupPromise;
   Assert.ok(gURLBar.popup.popupOpen, "popup should be open");
+  // There are no results, so wait a bit for *nothing* to appear.
+  await new Promise(resolve => setTimeout(resolve, NO_RESULTS_TIMEOUT_MS));
   assertVisible(true);
   assertFooterVisible(false);
   Assert.equal(gURLBar.popup.matchCount, 0, "popup should have no results");
@@ -50,6 +55,7 @@ add_task(async function focus() {
   // Start searching.
   EventUtils.sendString("rnd");
   await promiseSearchComplete();
+  await waitForAutocompleteResultAt(0);
   Assert.ok(suggestionsPresent());
   assertVisible(true);
   assertFooterVisible(true);
@@ -78,8 +84,9 @@ add_task(async function click_on_focused() {
   let popupPromise = promisePopupShown(gURLBar.popup);
   EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
   await popupPromise;
-
   Assert.ok(gURLBar.popup.popupOpen, "popup should be open");
+  // There are no results, so wait a bit for *nothing* to appear.
+  await new Promise(resolve => setTimeout(resolve, NO_RESULTS_TIMEOUT_MS));
   assertVisible(true);
   assertFooterVisible(false);
   Assert.equal(gURLBar.popup.matchCount, 0, "popup should have no results");
@@ -94,7 +101,7 @@ add_task(async function new_tab() {
   gURLBar.blur();
   // openNewForegroundTab doesn't focus the urlbar.
   await BrowserTestUtils.synthesizeKey("t", { accelKey: true }, gBrowser.selectedBrowser);
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise(resolve => setTimeout(resolve, NO_RESULTS_TIMEOUT_MS));
   Assert.ok(!gURLBar.popup.popupOpen, "popup should be closed");
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
@@ -105,6 +112,8 @@ add_task(async function privateWindow() {
   setupVisibleHint();
   let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   await promiseAutocompleteResultPopup("foo", win);
+  // There are no results, so wait a bit for *nothing* to appear.
+  await new Promise(resolve => setTimeout(resolve, NO_RESULTS_TIMEOUT_MS));
   assertVisible(false, win);
   assertFooterVisible(true, win);
   win.gURLBar.blur();
@@ -117,6 +126,7 @@ add_task(async function enableOutsideNotification() {
   setupVisibleHint();
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, false);
   await promiseAutocompleteResultPopup("foo");
+  await waitForAutocompleteResultAt(0);
   assertVisible(false);
   assertFooterVisible(true);
 });
@@ -126,6 +136,7 @@ add_task(async function userMadeChoice() {
   setupVisibleHint();
   Services.prefs.setBoolPref(CHOICE_PREF, true);
   await promiseAutocompleteResultPopup("foo");
+  await waitForAutocompleteResultAt(0);
   assertVisible(false);
   assertFooterVisible(true);
 });

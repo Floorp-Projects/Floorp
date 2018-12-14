@@ -11,6 +11,10 @@ function repeat(limit, func) {
 
 function is_selected(index) {
   is(gURLBar.popup.richlistbox.selectedIndex, index, `Item ${index + 1} should be selected`);
+  // Also check the "selected" attribute, to ensure it is not a "fake" selection
+  // due to binding misbehaviors.
+  ok(gURLBar.popup.richlistbox.selectedItem.hasAttribute("selected"),
+     `Item ${index + 1} should have the "selected" attribute`);
 
   // This is true because although both the listbox and the one-offs can have
   // selections, the test doesn't check that.
