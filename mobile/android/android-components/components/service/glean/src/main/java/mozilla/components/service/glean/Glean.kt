@@ -33,7 +33,7 @@ open class GleanInternalAPI {
     // Include our singletons of StorageEngineManager and PingMaker
     private lateinit var storageEngineManager: StorageEngineManager
     private lateinit var pingMaker: PingMaker
-    private lateinit var configuration: Configuration
+    internal lateinit var configuration: Configuration
     // `internal` so this can be modified for testing
     internal lateinit var httpPingUploader: HttpPingUploader
 
@@ -54,7 +54,7 @@ open class GleanInternalAPI {
      * @param configuration A Glean [Configuration] object with global settings.
      * @raises Exception if called more than once
      */
-    fun initialize(applicationContext: Context, configuration: Configuration = Configuration()) {
+    fun initialize(applicationContext: Context, configuration: Configuration) {
         if (isInitialized()) {
             throw IllegalStateException("Glean may not be initialized multiple times")
         }
@@ -132,7 +132,7 @@ open class GleanInternalAPI {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun makePath(docType: String, uuid: UUID): String {
-        return "/submit/glean/$docType/${Glean.SCHEMA_VERSION}/$uuid"
+        return "/submit/${configuration.applicationId}/$docType/${Glean.SCHEMA_VERSION}/$uuid"
     }
 
     /**

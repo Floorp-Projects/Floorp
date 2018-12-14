@@ -56,10 +56,13 @@ class SampleApplication : Application() {
 
         // Initialize the Glean library. Ideally, this is the first thing that
         // must be done right after enabling logging.
-        Glean.initialize(applicationContext)
+        Glean.initialize(applicationContext, Configuration(applicationId = "YOUR_APPLICATION_NAME_HERE"))
     }
 }
 ```
+
+**Important:** the `applicationId` will be used to properly route data in the pipeline, so it must be unique.
+The `glean` value is reserved for testing.
 
 Once initialized, if collection is enabled, glean will automatically start collecting [baseline metrics](metrics.yaml)
 and sending its [pings](docs/pings.md).

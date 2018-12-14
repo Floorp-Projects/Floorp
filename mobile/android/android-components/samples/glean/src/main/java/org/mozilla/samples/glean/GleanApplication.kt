@@ -20,7 +20,7 @@ class GleanApplication : Application() {
 
         // Initialize the Glean library. Ideally, this is the first thing that
         // must be done right after enabling logging.
-        Glean.initialize(applicationContext, Configuration())
+        Glean.initialize(applicationContext, Configuration(applicationId = "glean"))
 
         // Set a sample value for a metric.
         GleanMetrics.Basic.os.set("Android")

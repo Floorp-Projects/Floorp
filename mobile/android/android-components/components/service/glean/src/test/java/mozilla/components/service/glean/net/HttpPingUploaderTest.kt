@@ -32,7 +32,7 @@ import java.net.MalformedURLException
 class HttpPingUploaderTest {
     private val testPath: String = "/some/random/path/not/important"
     private val testPing: String = "{ 'ping': 'test' }"
-    private val testDefaultConfig = Configuration().copy(
+    private val testDefaultConfig = Configuration(applicationId = "test").copy(
         userAgent = "Glean/Test 25.0.2",
         connectionTimeout = 3050,
         readTimeout = 7050

@@ -9,6 +9,7 @@ import mozilla.components.service.glean.BuildConfig
 /**
  * The Configuration class describes how to configure the Glean.
  *
+ * @property applicationId a unique identifier for the application (e.g. "reference-browser")
  * @property serverEndpoint the server pings are sent to
  * @property userAgent the user agent used when sending pings
  * @property connectionTimeout the timeout, in milliseconds, to use when connecting to
@@ -17,6 +18,7 @@ import mozilla.components.service.glean.BuildConfig
  *           the [serverEndpoint]
  */
 data class Configuration(
+    val applicationId: String,
     val serverEndpoint: String = "https://incoming.telemetry.mozilla.org",
     val userAgent: String = "Glean/${BuildConfig.LIBRARY_VERSION} (Android)",
     val connectionTimeout: Int = 10000,
