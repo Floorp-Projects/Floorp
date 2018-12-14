@@ -23,7 +23,7 @@ of the main `build.gradle` file.
 
 ```Groovy
 plugins {
-    id "com.jetbrains.python.envs" version "0.0.25"
+    id "com.jetbrains.python.envs" version "0.0.26"
 }
 ```
 

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 plugins {
-    id "com.jetbrains.python.envs" version "0.0.25"
+    id "com.jetbrains.python.envs" version "0.0.26"
 }
 
 apply plugin: 'com.android.library'

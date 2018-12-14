@@ -53,24 +53,6 @@ envs {
     conda "Miniconda3", "Miniconda3-latest", "64", ["glean_parser==${GLEAN_PARSER_VERSION}"]
 }
 
-// Setup the python environment before the build starts.
-
-task createBuildDir {
-    description = "Make sure the build dir exists before creating the Python Environments"
-    onlyIf {
-        !file(buildDir).exists()
-    }
-    doLast {
-        println "Creating build directory:" + buildDir.getPath()
-        buildDir.mkdir()
-    }
-}
-
-// Make sure that a build directory exists before attempting to download
-// the Python environment in the preBuild step. This will fail if the directory
-// doesn't exist. This is an issue with the gradle-python-envs plugin:
-// https://github.com/JetBrains/gradle-python-envs/issues/26
-preBuild.dependsOn(createBuildDir)
 preBuild.finalizedBy("build_envs")
 
 // Generate the Metrics API
