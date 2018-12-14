@@ -58,22 +58,18 @@ export function endOperation() {
   codeMirror.endOperation();
 }
 
-export function shouldShowPrettyPrint(selectedSource) {
-  if (!selectedSource) {
-    return false;
-  }
-
-  return shouldPrettyPrint(selectedSource);
+export function shouldShowPrettyPrint(source) {
+  return shouldPrettyPrint(source);
 }
 
-export function shouldShowFooter(selectedSource, horizontal) {
+export function shouldShowFooter(source, horizontal) {
   if (!horizontal) {
     return true;
   }
-  if (!selectedSource) {
+  if (!source) {
     return false;
   }
-  return shouldShowPrettyPrint(selectedSource) || isOriginal(selectedSource);
+  return shouldShowPrettyPrint(source) || isOriginal(source);
 }
 
 export function traverseResults(e, ctx, query, dir, modifiers) {

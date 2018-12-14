@@ -18,13 +18,14 @@ import type { Source } from "../../types";
 import actions from "../../actions";
 
 import {
+  getDisplayPath,
   getFileURL,
   getRawSourceURL,
+  getSourceQueryString,
   getTruncatedFileName,
-  getDisplayPath,
-  isPretty,
-  getSourceQueryString
+  isPretty
 } from "../../utils/source";
+import { shouldShowPrettyPrint } from "../../utils/editor";
 import { copyToTheClipboard } from "../../utils/clipboard";
 import { getTabMenuItems } from "../../utils/tabs";
 
@@ -65,7 +66,8 @@ class Tab extends PureComponent<Props> {
       tabSources,
       showSource,
       togglePrettyPrint,
-      selectedSource
+      selectedSource,
+      source
     } = this.props;
 
     const tabCount = tabSources.length;
@@ -78,7 +80,6 @@ class Tab extends PureComponent<Props> {
       return;
     }
 
-    const isPrettySource = isPretty(sourceTab);
     const tabMenuItems = getTabMenuItems();
     const items = [
       {
@@ -133,14 +134,13 @@ class Tab extends PureComponent<Props> {
       }
     ];
 
-    if (!isPrettySource) {
-      items.push({
-        item: {
-          ...tabMenuItems.prettyPrint,
-          click: () => togglePrettyPrint(tab)
-        }
-      });
-    }
+    items.push({
+      item: {
+        ...tabMenuItems.prettyPrint,
+        click: () => togglePrettyPrint(tab),
+        disabled: !shouldShowPrettyPrint(source)
+      }
+    });
 
     showMenu(e, buildMenu(items));
   }
