@@ -135,8 +135,6 @@ class EditAddress extends EditAutofillForm {
    * @param {object} config
    * @param {string[]} config.DEFAULT_REGION
    * @param {function} config.getFormFormat Function to return form layout info for a given country.
-   * @param {function} config.findAddressSelectOption Finds the matching select option for a given
-                                                      select element, address, and fieldName.
    * @param {string[]} config.countries
    * @param {boolean} [config.noValidate=undefined] Whether to validate the form
    */
@@ -169,12 +167,7 @@ class EditAddress extends EditAutofillForm {
         country: this.DEFAULT_REGION,
       };
     }
-
-    let {addressLevel1Options} = this.getFormFormat(record.country);
-    this.populateAddressLevel1(addressLevel1Options, record.country);
-
     super.loadRecord(record);
-    this.loadAddressLevel1(record["address-level1"], record.country);
     this.formatForm(record.country);
   }
 
@@ -235,7 +228,6 @@ class EditAddress extends EditAutofillForm {
       addressLevel3Label,
       addressLevel2Label,
       addressLevel1Label,
-      addressLevel1Options,
       postalCodeLabel,
       fieldsOrder: mailingFieldsOrder,
       postalCodePattern,
@@ -256,7 +248,6 @@ class EditAddress extends EditAutofillForm {
     }
     this.arrangeFields(fieldClasses, requiredFields);
     this.updatePostalCodeValidation(postalCodePattern);
-    this.populateAddressLevel1(addressLevel1Options, country);
   }
 
   /**
@@ -325,85 +316,6 @@ class EditAddress extends EditAutofillForm {
     } else {
       postalCodeInput.removeAttribute("pattern");
     }
-  }
-
-  /**
-   * Set the address-level1 value on the form field (input or select, whichever is present).
-   *
-   * @param {string} addressLevel1Value Value of the address-level1 from the autofill record
-   * @param {string} country The corresponding country
-   */
-  loadAddressLevel1(addressLevel1Value, country) {
-    let field = this._elements.form.querySelector("#address-level1");
-
-    if (field.localName == "input") {
-      field.value = addressLevel1Value || "";
-      return;
-    }
-
-    let matchedSelectOption = this.findAddressSelectOption(field, {
-      country,
-      "address-level1": addressLevel1Value,
-    }, "address-level1");
-    if (matchedSelectOption && !matchedSelectOption.selected) {
-      field.value = matchedSelectOption.value;
-      field.dispatchEvent(new Event("input", {bubbles: true}));
-      field.dispatchEvent(new Event("change", {bubbles: true}));
-    } else if (addressLevel1Value) {
-      // If the option wasn't found, insert an option at the beginning of
-      // the select that matches the stored value.
-      field.insertBefore(new Option(addressLevel1Value, addressLevel1Value, true, true), field.firstChild);
-    }
-  }
-
-  /**
-   * Replace the text input for address-level1 with a select dropdown if
-   * a fixed set of names exists. Otherwise show a text input.
-   *
-   * @param {Map?} options Map of options with regionCode -> name mappings
-   * @param {string} country The corresponding country
-   */
-  populateAddressLevel1(options, country) {
-    let field = this._elements.form.querySelector("#address-level1");
-
-    if (field.dataset.country == country) {
-      return;
-    }
-
-    if (!options) {
-      if (field.localName == "input") {
-        return;
-      }
-
-      let input = document.createElement("input");
-      input.setAttribute("type", "text");
-      input.id = "address-level1";
-      input.required = field.required;
-      input.disabled = field.disabled;
-      input.tabIndex = field.tabIndex;
-      field.replaceWith(input);
-      return;
-    }
-
-    if (field.localName == "input") {
-      let select = document.createElement("select");
-      select.id = "address-level1";
-      select.required = field.required;
-      select.disabled = field.disabled;
-      select.tabIndex = field.tabIndex;
-      field.replaceWith(select);
-      field = select;
-    }
-
-    field.textContent = "";
-    field.dataset.country = country;
-    let fragment = document.createDocumentFragment();
-    fragment.appendChild(new Option(undefined, undefined, true, true));
-    for (let [regionCode, regionName] of options) {
-      let option = new Option(regionName, regionCode);
-      fragment.appendChild(option);
-    }
-    field.appendChild(fragment);
   }
 
   populateCountries() {
