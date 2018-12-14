@@ -89,7 +89,7 @@ class XHRBreakpoints extends Component<Props, State> {
 
     const { editIndex, inputValue, inputMethod } = this.state;
     const { xhrBreakpoints } = this.props;
-    const { path, method } = xhrBreakpoints.get(editIndex);
+    const { path, method } = xhrBreakpoints[editIndex];
 
     if (path !== inputValue || method != inputMethod) {
       this.props.updateXHRBreakpoint(editIndex, inputValue, inputMethod);
@@ -120,7 +120,7 @@ class XHRBreakpoints extends Component<Props, State> {
 
   editExpression = index => {
     const { xhrBreakpoints } = this.props;
-    const { path, method } = xhrBreakpoints.get(index);
+    const { path, method } = xhrBreakpoints[index];
     this.setState({
       inputValue: path,
       inputMethod: method,
@@ -162,7 +162,7 @@ class XHRBreakpoints extends Component<Props, State> {
       enableXHRBreakpoint,
       disableXHRBreakpoint
     } = this.props;
-    const breakpoint = xhrBreakpoints.get(index);
+    const breakpoint = xhrBreakpoints[index];
     if (breakpoint.disabled) {
       enableXHRBreakpoint(index);
     } else {
@@ -218,7 +218,7 @@ class XHRBreakpoints extends Component<Props, State> {
     return (
       <ul className="pane expressions-list">
         {explicitXhrBreakpoints.map(this.renderBreakpoint)}
-        {(showInput || explicitXhrBreakpoints.size === 0) &&
+        {(showInput || explicitXhrBreakpoints.length === 0) &&
           this.renderXHRInput(this.handleNewSubmit)}
       </ul>
     );
@@ -231,7 +231,7 @@ class XHRBreakpoints extends Component<Props, State> {
     return (
       <div
         className={classnames("breakpoints-exceptions-options", {
-          empty: explicitXhrBreakpoints.size === 0
+          empty: explicitXhrBreakpoints.length === 0
         })}
       >
         <ExceptionOption
