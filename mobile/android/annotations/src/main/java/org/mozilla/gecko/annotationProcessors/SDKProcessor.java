@@ -322,7 +322,7 @@ public class SDKProcessor {
 
     private static int getAPIVersion(Class<?> cls, Member m) {
         if (m instanceof Method || m instanceof Constructor) {
-            return sApiLookup.getCallVersion(
+            return sApiLookup.getMethodVersion(
                     cls.getName().replace('.', '/'),
                     Utils.getMemberName(m),
                     Utils.getSignature(m));
