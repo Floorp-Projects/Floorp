@@ -29,6 +29,7 @@ class StringListMetricTypeTest {
 
     @Before
     fun setUp() {
+        Glean.initialized = true
         StringListsStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
         // Clear the stored "user" preferences between tests.
         ApplicationProvider.getApplicationContext<Context>()
@@ -130,7 +131,7 @@ class StringListMetricTypeTest {
             disabled = false,
             category = "telemetry",
             lifetime = Lifetime.Application,
-            name = "string_metric",
+            name = "string_list_metric",
             sendInPings = listOf("store1")
         )
 
@@ -140,20 +141,20 @@ class StringListMetricTypeTest {
         stringListMetric.add(longString)
         var snapshot = StringListsStorageEngine.getSnapshot("store1", false)
         assertEquals(1, snapshot!!.size)
-        assertEquals(true, snapshot.containsKey("telemetry.string_metric"))
+        assertEquals(true, snapshot.containsKey("telemetry.string_list_metric"))
         assertEquals(
             longString.take(MAX_STRING_LENGTH),
-            snapshot["telemetry.string_metric"]?.get(0)
+            snapshot["telemetry.string_list_metric"]?.get(0)
         )
 
         // Check that data was truncated via set() method.
         stringListMetric.set(listOf(longString))
         snapshot = StringListsStorageEngine.getSnapshot("store1", false)
         assertEquals(1, snapshot!!.size)
-        assertEquals(true, snapshot.containsKey("telemetry.string_metric"))
+        assertEquals(true, snapshot.containsKey("telemetry.string_list_metric"))
         assertEquals(
             longString.take(MAX_STRING_LENGTH),
-            snapshot["telemetry.string_metric"]?.get(0)
+            snapshot["telemetry.string_list_metric"]?.get(0)
         )
     }
 
