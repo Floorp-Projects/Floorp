@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.mozglue.JNIObject;
 
 /* package */ final class GeckoSurfaceTexture extends SurfaceTexture {
     private static final String LOGTAG = "GeckoSurfaceTexture";
@@ -35,6 +36,8 @@ import org.mozilla.gecko.annotation.WrapForJNI;
     private GeckoSurfaceTexture.Callbacks mListener;
     private AtomicInteger mUseCount;
     private boolean mFinalized;
+
+    private NativeGLBlitHelper mBlitter;
 
     private GeckoSurfaceTexture(int handle) {
         super(0);
@@ -122,6 +125,9 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 
     @Override
     public synchronized void release() {
+        if (mBlitter != null) {
+            mBlitter.disposeNative();
+        }
         try {
             super.release();
             synchronized (sSurfaceTextures) {
@@ -276,8 +282,28 @@ import org.mozilla.gecko.annotation.WrapForJNI;
         }
     }
 
+    /* package */ synchronized void configureSnapshot(GeckoSurface target, int width, int height) {
+        mBlitter = NativeGLBlitHelper.create(mHandle, target, width, height);
+    }
+
+    /* package */ synchronized void takeSnapshot() {
+        mBlitter.blit();
+    }
+
     public interface Callbacks {
         void onUpdateTexImage();
         void onReleaseTexImage();
+    }
+
+    @WrapForJNI
+    public static class NativeGLBlitHelper extends JNIObject {
+        public native static NativeGLBlitHelper create(int textureHandle,
+                                                       GeckoSurface targetSurface,
+                                                       int width,
+                                                       int height);
+        public native void blit();
+
+        @Override
+        protected native void disposeNative();
     }
 }
