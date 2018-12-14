@@ -407,6 +407,7 @@ impl FrameBuilder {
             scene_properties,
             Some(&mut transform_palette),
         );
+        self.clip_store.clear_old_instances();
 
         let mut render_tasks = RenderTaskTree::new(stamp.frame_id());
         let mut surfaces = Vec::new();
