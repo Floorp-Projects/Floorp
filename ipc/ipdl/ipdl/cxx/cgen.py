@@ -329,17 +329,11 @@ class CxxCodeGen(CodePrinter, Visitor):
         self.write(')')
 
     def visitExprCast(self, c):
-        pfx, sfx = '', ''
-        if c.dynamic:
-            pfx, sfx = 'dynamic_cast<', '>'
-        elif c.static:
+        if c.static:
             pfx, sfx = 'static_cast<', '>'
-        elif c.reinterpret:
-            pfx, sfx = 'reinterpret_cast<', '>'
-        elif c.const:
+        else:
+            assert c.const
             pfx, sfx = 'const_cast<', '>'
-        elif c.C:
-            pfx, sfx = '(', ')'
         self.write(pfx)
         c.type.accept(self)
         self.write(sfx + '(')
