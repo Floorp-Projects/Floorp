@@ -253,7 +253,7 @@ impl FontContext {
         size: f32,
         transform: Option<dwrote::DWRITE_MATRIX>,
         bitmaps: bool,
-    ) -> dwrote::GlyphRunAnalysis {
+    ) -> (dwrote::GlyphRunAnalysis, dwrote::DWRITE_TEXTURE_TYPE, dwrote::RECT) {
         let face = self.get_font_face(font);
         let glyph = key.index() as u16;
         let advance = 0.0f32;
@@ -282,7 +282,7 @@ impl FontContext {
             bitmaps,
         );
 
-        dwrote::GlyphRunAnalysis::create(
+        let analysis = dwrote::GlyphRunAnalysis::create(
             &glyph_run,
             1.0,
             transform,
@@ -290,7 +290,28 @@ impl FontContext {
             dwrite_measure_mode,
             0.0,
             0.0,
-        )
+        );
+        let texture_type = dwrite_texture_type(font.render_mode);
+        let bounds = analysis.get_alpha_texture_bounds(texture_type);
+        // If the bounds are empty, then we might not be able to render the glyph with cleartype.
+        // Try again with aliased rendering to check if that works instead.
+        if font.render_mode != FontRenderMode::Mono &&
+           (bounds.left == bounds.right || bounds.top == bounds.bottom) {
+            let analysis2 = dwrote::GlyphRunAnalysis::create(
+                &glyph_run,
+                1.0,
+                transform,
+                dwrote::DWRITE_RENDERING_MODE_ALIASED,
+                dwrite_measure_mode,
+                0.0,
+                0.0,
+            );
+            let bounds2 = analysis2.get_alpha_texture_bounds(dwrote::DWRITE_TEXTURE_ALIASED_1x1);
+            if bounds2.left != bounds2.right && bounds2.top != bounds2.bottom {
+                return (analysis2, dwrote::DWRITE_TEXTURE_ALIASED_1x1, bounds2);
+            }
+        }
+        (analysis, texture_type, bounds)
     }
 
     pub fn get_glyph_index(&mut self, font_key: FontKey, ch: char) -> Option<u32> {
@@ -334,11 +355,7 @@ impl FontContext {
         } else {
             None
         };
-        let analysis = self.create_glyph_analysis(font, key, size, transform, bitmaps);
-
-        let texture_type = dwrite_texture_type(font.render_mode);
-
-        let bounds = analysis.get_alpha_texture_bounds(texture_type);
+        let (_, _, bounds) = self.create_glyph_analysis(font, key, size, transform, bitmaps);
 
         let width = (bounds.right - bounds.left) as i32;
         let height = (bounds.bottom - bounds.top) as i32;
@@ -373,11 +390,12 @@ impl FontContext {
     fn convert_to_bgra(
         &self,
         pixels: &[u8],
+        texture_type: dwrote::DWRITE_TEXTURE_TYPE,
         render_mode: FontRenderMode,
         bitmaps: bool,
     ) -> Vec<u8> {
-        match (render_mode, bitmaps) {
-            (FontRenderMode::Mono, _) => {
+        match (texture_type, render_mode, bitmaps) {
+            (dwrote::DWRITE_TEXTURE_ALIASED_1x1, _, _) => {
                 let mut bgra_pixels: Vec<u8> = vec![0; pixels.len() * 4];
                 for i in 0 .. pixels.len() {
                     let alpha = pixels[i];
@@ -388,7 +406,18 @@ impl FontContext {
                 }
                 bgra_pixels
             }
-            (FontRenderMode::Alpha, _) | (_, true) => {
+            (_, FontRenderMode::Subpixel, false) => {
+                let length = pixels.len() / 3;
+                let mut bgra_pixels: Vec<u8> = vec![0; length * 4];
+                for i in 0 .. length {
+                    bgra_pixels[i * 4 + 0] = pixels[i * 3 + 2];
+                    bgra_pixels[i * 4 + 1] = pixels[i * 3 + 1];
+                    bgra_pixels[i * 4 + 2] = pixels[i * 3 + 0];
+                    bgra_pixels[i * 4 + 3] = 0xff;
+                }
+                bgra_pixels
+            }
+            _ => {
                 let length = pixels.len() / 3;
                 let mut bgra_pixels: Vec<u8> = vec![0; length * 4];
                 for i in 0 .. length {
@@ -398,17 +427,6 @@ impl FontContext {
                     bgra_pixels[i * 4 + 1] = alpha;
                     bgra_pixels[i * 4 + 2] = alpha;
                     bgra_pixels[i * 4 + 3] = alpha;
-                }
-                bgra_pixels
-            }
-            (FontRenderMode::Subpixel, false) => {
-                let length = pixels.len() / 3;
-                let mut bgra_pixels: Vec<u8> = vec![0; length * 4];
-                for i in 0 .. length {
-                    bgra_pixels[i * 4 + 0] = pixels[i * 3 + 2];
-                    bgra_pixels[i * 4 + 1] = pixels[i * 3 + 1];
-                    bgra_pixels[i * 4 + 2] = pixels[i * 3 + 0];
-                    bgra_pixels[i * 4 + 3] = 0xff;
                 }
                 bgra_pixels
             }
@@ -468,13 +486,10 @@ impl FontContext {
             None
         };
 
-        let analysis = self.create_glyph_analysis(font, key, size, transform, bitmaps);
-        let texture_type = dwrite_texture_type(font.render_mode);
+        let (analysis, texture_type, bounds) = self.create_glyph_analysis(font, key, size, transform, bitmaps);
 
-        let bounds = analysis.get_alpha_texture_bounds(texture_type);
         let width = (bounds.right - bounds.left) as i32;
         let height = (bounds.bottom - bounds.top) as i32;
-
         // Alpha texture bounds can sometimes return an empty rect
         // Such as for spaces
         if width == 0 || height == 0 {
@@ -482,7 +497,7 @@ impl FontContext {
         }
 
         let pixels = analysis.create_alpha_texture(texture_type, bounds);
-        let mut bgra_pixels = self.convert_to_bgra(&pixels, font.render_mode, bitmaps);
+        let mut bgra_pixels = self.convert_to_bgra(&pixels, texture_type, font.render_mode, bitmaps);
 
         // These are the default values we use in Gecko.
         // We use a gamma value of 2.3 for gdi fonts
@@ -509,13 +524,21 @@ impl FontContext {
                 ));
         gamma_lut.preblend(&mut bgra_pixels, font.color);
 
+        let format = if bitmaps {
+            GlyphFormat::Bitmap
+        } else if texture_type == dwrote::DWRITE_TEXTURE_ALIASED_1x1 {
+            font.get_alpha_glyph_format()
+        } else {
+            font.get_glyph_format()
+        };
+
         GlyphRasterResult::Bitmap(RasterizedGlyph {
             left: bounds.left as f32,
             top: -bounds.top as f32,
             width,
             height,
             scale: (if bitmaps { scale / y_scale } else { scale }) as f32,
-            format: if bitmaps { GlyphFormat::Bitmap } else { font.get_glyph_format() },
+            format,
             bytes: bgra_pixels,
         })
     }

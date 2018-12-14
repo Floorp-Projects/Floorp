@@ -74,7 +74,7 @@ rand = "0.4"
 freetype = { version = "0.4", default-features = false }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-dwrote = "0.6.2"
+dwrote = "0.6.3"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.6"
