@@ -1161,7 +1161,7 @@ public abstract class GeckoApp extends GeckoActivity
                         // history). This JSON data is then sent to Gecko so session
                         // history can be restored for each tab.
                         restoreMessage = restoreSessionTabs(isExternalURL, false);
-                    } catch (SessionRestoreException e) {
+                    } catch (SessionRestoreException | OutOfMemoryError e) {
                         // If mShouldRestore was set to false in restoreSessionTabs(), this means
                         // either that we intentionally skipped all tabs read from the session file,
                         // or else that the file was syntactically valid, but didn't contain any
@@ -1174,13 +1174,13 @@ public abstract class GeckoApp extends GeckoActivity
                             // Since we will also hit this situation regularly during first run though,
                             // we'll only report it in telemetry if we failed to restore despite the
                             // file existing, which means it's very probably damaged.
-                            if (getProfile().sessionFileExists()) {
+                            if (getProfile().sessionFileExists() && !(e instanceof OutOfMemoryError)) {
                                 Telemetry.addToHistogram("FENNEC_SESSIONSTORE_DAMAGED_SESSION_FILE", 1);
                             }
                             try {
                                 restoreMessage = restoreSessionTabs(isExternalURL, true);
                                 Telemetry.addToHistogram("FENNEC_SESSIONSTORE_RESTORING_FROM_BACKUP", 1);
-                            } catch (SessionRestoreException ex) {
+                            } catch (SessionRestoreException | OutOfMemoryError ex) {
                                 if (!mShouldRestore) {
                                     // Restoring only "failed" because the backup copy was deliberately empty, too.
                                     Telemetry.addToHistogram("FENNEC_SESSIONSTORE_RESTORING_FROM_BACKUP", 1);
@@ -1190,7 +1190,8 @@ public abstract class GeckoApp extends GeckoActivity
                                     mShouldRestore = false;
 
                                     if (!getSharedPreferencesForProfile().
-                                            getBoolean(PREFS_IS_FIRST_RUN, true)) {
+                                            getBoolean(PREFS_IS_FIRST_RUN, true) &&
+                                            !(ex instanceof OutOfMemoryError)) {
                                         // Except when starting with a fresh profile, we should normally
                                         // always have a session file available, even if it might only
                                         // contain an empty window.
