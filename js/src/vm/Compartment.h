@@ -466,6 +466,13 @@ class JS::Compartment {
 
   RealmVector& realms() { return realms_; }
 
+  // Cross-compartment wrappers are shared by all realms in the compartment, but
+  // they still have a per-realm ObjectGroup etc. To prevent us from having
+  // multiple realms, each with some cross-compartment wrappers potentially
+  // keeping the realm alive longer than necessary, we always allocate CCWs in
+  // the first realm.
+  Realm* realmForNewCCW() const { return realms_[0]; }
+
   void assertNoCrossCompartmentWrappers() {
     MOZ_ASSERT(crossCompartmentWrappers.empty());
   }
