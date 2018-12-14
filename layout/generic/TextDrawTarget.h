@@ -330,16 +330,20 @@ class TextDrawTarget : public DrawTarget {
     return Nothing();
   }
 
-  void PushImage(wr::ImageKey aKey, const wr::LayoutRect& aBounds,
-                 const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
-                 const wr::ColorF& aColor) {
-    mBuilder.PushImage(aBounds, aClip, true, aFilter, aKey, true, aColor);
+  void PushImage(wr::ImageKey aKey, const Rect& aBounds, const Rect& aClip,
+                 wr::ImageRendering aFilter, const wr::ColorF& aColor) {
+    if (!aClip.Intersects(GeckoClipRect().ToUnknownRect())) {
+      return;
+    }
+    mBuilder.PushImage(wr::ToLayoutRect(aBounds), wr::ToLayoutRect(aClip), true,
+                       aFilter, aKey, true, aColor);
   }
 
  private:
   wr::LayoutRect ClipRect() {
     return wr::ToRoundedLayoutRect(mClipStack.LastElement());
   }
+  LayoutDeviceRect GeckoClipRect() { return mClipStack.LastElement(); }
   // Whether anything unsupported was encountered. Currently:
   //
   // * Synthetic bold/italics
@@ -438,6 +442,9 @@ class TextDrawTarget : public DrawTarget {
                 const DrawOptions& aOptions = DrawOptions()) override {
     MOZ_RELEASE_ASSERT(aPattern.GetType() == PatternType::COLOR);
 
+    if (!aRect.Intersects(GeckoClipRect().ToUnknownRect())) {
+      return;
+    }
     auto rect =
         wr::ToRoundedLayoutRect(LayoutDeviceRect::FromUnknownRect(aRect));
     auto color =
@@ -461,10 +468,12 @@ class TextDrawTarget : public DrawTarget {
                                {color, wr::BorderStyle::Solid},
                                {color, wr::BorderStyle::Solid}};
     wr::BorderRadius radius = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
-    Rect rect(aRect);
+    LayoutDeviceRect rect = LayoutDeviceRect::FromUnknownRect(aRect);
     rect.Inflate(aStrokeOptions.mLineWidth / 2);
-    wr::LayoutRect bounds =
-        wr::ToRoundedLayoutRect(LayoutDeviceRect::FromUnknownRect(rect));
+    if (!rect.Intersects(GeckoClipRect())) {
+      return;
+    }
+    wr::LayoutRect bounds = wr::ToRoundedLayoutRect(rect);
     mBuilder.PushBorder(bounds, ClipRect(), true, widths,
                         Range<const wr::BorderSide>(sides, 4), radius);
   }

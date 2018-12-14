@@ -4954,8 +4954,13 @@ bool nsDisplayText::CreateWebRenderCommands(
       LayoutDevicePoint::FromAppUnits(mBounds.TopLeft(), appUnitsPerDevPixel)
           .ToUnknownPoint();
 
+  nsRect visible = GetPaintRect();
+  visible.Inflate(3 * appUnitsPerDevPixel);
+
+  visible = visible.Intersect(mBounds);
+
   RefPtr<gfxContext> textDrawer = aBuilder.GetTextContext(
-      aResources, aSc, aManager, this, mBounds, deviceOffset);
+      aResources, aSc, aManager, this, visible, deviceOffset);
 
   RenderToContext(textDrawer, aDisplayListBuilder, true);
 
