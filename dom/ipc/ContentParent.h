@@ -364,6 +364,7 @@ class ContentParent final : public PContentParent,
     return mLifecycleState == LifecycleState::LAUNCHING;
   }
   bool IsAlive() const override;
+  bool IsDead() const { return mLifecycleState == LifecycleState::DEAD; }
 
   virtual bool IsForBrowser() const override { return mIsForBrowser; }
   virtual bool IsForJSPlugin() const override {
@@ -1321,6 +1322,11 @@ class ContentParent final : public PContentParent,
   nsTArray<nsCString> mBlobURLs;
 
   UniquePtr<mozilla::ipc::CrashReporterHost> mCrashReporter;
+
+  // Collects any pref changes that occur during process launch (after
+  // the initial map is passed in command-line arguments) to be sent
+  // when the process can receive IPC messages.
+  nsTArray<Pref> mQueuedPrefs;
 
   static uint64_t sNextTabParentId;
   static nsDataHashtable<nsUint64HashKey, TabParent*> sNextTabParents;
