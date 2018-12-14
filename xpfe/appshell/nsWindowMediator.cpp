@@ -237,6 +237,21 @@ nsWindowMediator::GetMostRecentWindow(const char16_t* inType,
 }
 
 NS_IMETHODIMP
+nsWindowMediator::GetMostRecentBrowserWindow(mozIDOMWindowProxy** outWindow) {
+  nsresult rv = GetMostRecentWindow(u"navigator:browser", outWindow);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef MOZ_WIDGET_ANDROID
+  if (!*outWindow) {
+    rv = GetMostRecentWindow(u"navigator:geckoview", outWindow);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+#endif
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWindowMediator::GetMostRecentNonPBWindow(const char16_t* aType,
                                            mozIDOMWindowProxy** aWindow) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
