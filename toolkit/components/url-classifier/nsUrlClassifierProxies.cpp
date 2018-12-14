@@ -104,15 +104,12 @@ UrlClassifierDBServiceWorkerProxy::FinishStream() {
 
 NS_IMETHODIMP
 UrlClassifierDBServiceWorkerProxy::DoLocalLookupRunnable::Run() {
-  nsTArray<nsCString> tables;
-  Classifier::SplitTables(mTables, tables);
-
-  mTarget->DoLocalLookup(mSpec, tables, mResults);
+  mTarget->DoLocalLookupWithURI(mSpec, mTables, mResults);
   return NS_OK;
 }
 
-nsresult UrlClassifierDBServiceWorkerProxy::DoLocalLookup(
-    const nsACString& spec, const nsACString& tables,
+nsresult UrlClassifierDBServiceWorkerProxy::DoLocalLookupWithURI(
+    const nsACString& spec, const nsTArray<nsCString>& tables,
     LookupResultArray& results) const
 
 {
