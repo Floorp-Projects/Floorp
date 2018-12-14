@@ -135,6 +135,7 @@ LOCAL_INCLUDES += [
     '/extensions/auth',
     '/netwerk/base',
     '/netwerk/cookie',
+    '/netwerk/url-classifier',
 ]
 
 EXTRA_COMPONENTS += [

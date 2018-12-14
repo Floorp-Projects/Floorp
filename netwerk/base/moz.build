@@ -302,6 +302,7 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/netwerk/protocol/http',
     '/netwerk/socket',
+    '/netwerk/url-classifier',
 ]
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):

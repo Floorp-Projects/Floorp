@@ -10,6 +10,8 @@
 %}
 [ref] native StringArrayRef(nsTArray<nsCString>);
 
+interface nsIChannel;
+
 /**
  * A single URLClassifier feature.
  */
@@ -49,6 +51,17 @@ interface nsIUrlClassifierFeature : nsISupports
    * Returns true if this host has to be ignored also if blacklisted.
    */
   readonly attribute ACString skipHostList;
+
+  /**
+   * When this feature matches the channel, this method is executed to do
+   * 'something' on the channel. For instance, a tracking-annotation feature
+   * would mark the channel as tracker, a tracking-protection feature would
+   * cancel the channel.
+   * Returns if we should process other feature results or not. For instance,
+   * tracking-protection cancel the channel, and after that we should stop
+   * processing other features.
+   */
+  [noscript] boolean processChannel(in nsIChannel aChannel, in ACString aList);
 };
 
 /**

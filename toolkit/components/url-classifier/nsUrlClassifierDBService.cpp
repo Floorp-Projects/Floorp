@@ -49,6 +49,7 @@
 #include "mozilla/dom/URLClassifierChild.h"
 #include "mozilla/net/UrlClassifierFeatureResult.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "mozilla/SyncRunnable.h"
 #include "nsProxyRelease.h"
 #include "UrlClassifierTelemetryUtils.h"
 #include "nsIURLFormatter.h"
@@ -231,6 +232,16 @@ class DummyFeature final : public nsIUrlClassifierFeature {
 
   NS_IMETHOD
   GetSkipHostList(nsACString& aList) override {
+    // Nothing to do here.
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  ProcessChannel(nsIChannel* aChannel, const nsACString& aList,
+                 bool* aShouldContinue) override {
+    NS_ENSURE_ARG_POINTER(aShouldContinue);
+    *aShouldContinue = true;
+
     // Nothing to do here.
     return NS_OK;
   }

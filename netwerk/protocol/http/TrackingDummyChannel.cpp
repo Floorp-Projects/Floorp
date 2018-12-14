@@ -17,26 +17,6 @@
 namespace mozilla {
 namespace net {
 
-namespace {
-
-// We need TrackingDummyChannel any time
-// privacy.trackingprotection.annotate_channels prefs is set to true.
-bool ChannelNeedsToBeAnnotated() {
-  static bool sChannelAnnotationNeededInited = false;
-  static bool sChannelAnnotationNeeded = false;
-
-  if (!sChannelAnnotationNeededInited) {
-    sChannelAnnotationNeededInited = true;
-    Preferences::AddBoolVarCache(
-        &sChannelAnnotationNeeded,
-        "privacy.trackingprotection.annotate_channels");
-  }
-
-  return sChannelAnnotationNeeded;
-}
-
-}  // namespace
-
 /* static */ TrackingDummyChannel::StorageAllowedState
 TrackingDummyChannel::StorageAllowed(
     nsIChannel* aChannel, const std::function<void(bool)>& aCallback) {

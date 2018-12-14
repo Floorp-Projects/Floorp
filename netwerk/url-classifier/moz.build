@@ -18,6 +18,7 @@ DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
 DEFINES['GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER'] = True
 
 UNIFIED_SOURCES += [
+    'AsyncUrlChannelClassifier.cpp',
     'nsChannelClassifier.cpp',
     'UrlClassifierCommon.cpp',
     'UrlClassifierFeatureBase.cpp',
@@ -28,6 +29,7 @@ UNIFIED_SOURCES += [
 ]
 
 EXPORTS.mozilla.net += [
+    'AsyncUrlChannelClassifier.h',
     'UrlClassifierCommon.h',
     'UrlClassifierFeatureFactory.h',
     'UrlClassifierFeatureResult.h',

@@ -29,7 +29,6 @@
 #include "HttpBackgroundChannelChild.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsPrimitives.h"
-#include "nsChannelClassifier.h"
 #include "nsContentPolicyUtils.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsGlobalWindow.h"
@@ -1203,7 +1202,7 @@ void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
     rv = GetMatchedFullHash(fullhash);
     NS_ENSURE_SUCCESS_VOID(rv);
 
-    nsChannelClassifier::SetBlockedContent(this, aChannelStatus, list, provider,
+    UrlClassifierCommon::SetBlockedContent(this, aChannelStatus, list, provider,
                                            fullhash);
   }
 
