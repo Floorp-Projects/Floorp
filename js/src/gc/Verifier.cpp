@@ -180,9 +180,6 @@ void gc::GCRuntime::startVerifyPreBarriers() {
   }
 
   JSContext* cx = rt->mainContextFromOwnThread();
-  if (temporaryAbortIfWasmGc(cx)) {
-    return;
-  }
 
   if (IsIncrementalGCUnsafe(rt) != AbortReason::None ||
       rt->hasHelperThreadZones()) {
@@ -408,9 +405,6 @@ void gc::GCRuntime::verifyPreBarriers() {
 }
 
 void gc::VerifyBarriers(JSRuntime* rt, VerifierType type) {
-  if (GCRuntime::temporaryAbortIfWasmGc(rt->mainContextFromOwnThread())) {
-    return;
-  }
   if (type == PreBarrierVerifier) {
     rt->gc.verifyPreBarriers();
   }

@@ -298,16 +298,6 @@ class GCRuntime {
   void setDeterministic(bool enable);
 #endif
 
-#ifdef ENABLE_WASM_GC
-  // If we run with wasm-gc enabled and there's wasm frames on the stack,
-  // then GCs are suppressed and many APIs should not be available.
-  // TODO (bug 1456824) This is temporary and should be removed once proper
-  // GC support is implemented.
-  static bool temporaryAbortIfWasmGc(JSContext* cx);
-#else
-  static bool temporaryAbortIfWasmGc(JSContext* cx) { return false; }
-#endif
-
   uint64_t nextCellUniqueId() {
     MOZ_ASSERT(nextCellUniqueId_ > 0);
     uint64_t uid = ++nextCellUniqueId_;
