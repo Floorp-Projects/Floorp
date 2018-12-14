@@ -26,6 +26,7 @@ DIRS += [
     'qrcode',
     'screenshot',
     'security',
+    'sourcemap',
     'sprintfjs',
     'specs',
     'transport',
@@ -74,6 +75,7 @@ DevToolsModules(
     'task.js',
     'ThreadSafeDevToolsUtils.js',
     'throttle.js',
+    'wasm-source-map.js',
 )
 
 with Files('**'):
