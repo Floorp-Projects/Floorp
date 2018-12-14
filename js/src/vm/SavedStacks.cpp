@@ -1690,15 +1690,18 @@ void SavedStacks::chooseSamplingProbability(Realm* realm) {
   mozilla::DebugOnly<bool> foundAnyDebuggers = false;
 
   double probability = 0;
-  for (auto dbgp = dbgs->begin(); dbgp < dbgs->end(); dbgp++) {
+  for (auto p = dbgs->begin(); p < dbgs->end(); p++) {
     // The set of debuggers had better not change while we're iterating,
     // such that the vector gets reallocated.
     MOZ_ASSERT(dbgs->begin() == begin);
+    // Use unbarrieredGet() to prevent triggering read barrier while collecting,
+    // this is safe as long as dbgp does not escape.
+    Debugger* dbgp = p->unbarrieredGet();
 
-    if ((*dbgp)->trackingAllocationSites && (*dbgp)->enabled) {
+    if (dbgp->trackingAllocationSites && dbgp->enabled) {
       foundAnyDebuggers = true;
       probability =
-          std::max((*dbgp)->allocationSamplingProbability, probability);
+          std::max(dbgp->allocationSamplingProbability, probability);
     }
   }
   MOZ_ASSERT(foundAnyDebuggers);
