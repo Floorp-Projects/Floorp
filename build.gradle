@@ -32,6 +32,13 @@ allprojects {
                 url repository
             }
         }
+        // For in tree dependencies.
+        // TODO: remove this once
+        // https://issuetracker.google.com/issues/120951637 is resolved. See
+        // also Bug 1514374.
+        maven {
+            url "file://${gradle.mozconfig.topsrcdir}/mobile/android/gradle/m2repo"
+        }
     }
 }
 
