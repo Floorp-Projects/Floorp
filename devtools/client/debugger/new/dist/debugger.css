@@ -1938,6 +1938,10 @@ html .toggle-button.end.vertical svg {
   > .tree-node[data-expandable="false"][aria-level="0"] {
   padding-inline-start: 4px;
 }
+
+.sources-list .tree-node[data-expandable="false"] .tree-indent:last-of-type {
+  margin-inline-end: 0;
+}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
