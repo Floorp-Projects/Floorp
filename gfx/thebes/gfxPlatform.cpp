@@ -2943,6 +2943,11 @@ bool gfxPlatform::ContentUsesTiling() const {
           contentUsesPOMTP);
 }
 
+/* static */ bool gfxPlatform::ShouldAdjustForLowEndMachine() {
+  return gfxPrefs::AdjustToMachine() && !gfxPrefs::ResistFingerprinting() &&
+         gfxPrefs::IsLowEndMachineDoNotUseDirectly();
+}
+
 /***
  * The preference "layout.frame_rate" has 3 meanings depending on the value:
  *
@@ -2967,7 +2972,7 @@ gfxPlatform::CreateHardwareVsyncSource() {
 }
 
 /* static */ bool gfxPlatform::ForceSoftwareVsync() {
-  return gfxPrefs::LayoutFrameRate() > 0 ||
+  return ShouldAdjustForLowEndMachine() || gfxPrefs::LayoutFrameRate() > 0 ||
          recordreplay::IsRecordingOrReplaying();
 }
 
@@ -2979,7 +2984,9 @@ gfxPlatform::CreateHardwareVsyncSource() {
   return preferenceRate;
 }
 
-/* static */ int gfxPlatform::GetDefaultFrameRate() { return 60; }
+/* static */ int gfxPlatform::GetDefaultFrameRate() {
+  return ShouldAdjustForLowEndMachine() ? 30 : 60;
+}
 
 void gfxPlatform::GetAzureBackendInfo(mozilla::widget::InfoObject& aObj) {
   if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {

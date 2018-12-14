@@ -956,6 +956,14 @@ pref("gfx.webrender.dl.dump-parent", false);
 pref("gfx.webrender.dl.dump-content", false);
 pref("gfx.webrender.picture-caching", false);
 
+#ifdef EARLY_BETA_OR_EARLIER
+pref("performance.adjust_to_machine", true);
+#else
+pref("performance.adjust_to_machine", false);
+#endif
+
+pref("performance.low_end_machine", false);
+
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
 
