@@ -22,6 +22,7 @@ UNIFIED_SOURCES += [
     'UrlClassifierCommon.cpp',
     'UrlClassifierFeatureBase.cpp',
     'UrlClassifierFeatureFactory.cpp',
+    'UrlClassifierFeatureResult.cpp',
     'UrlClassifierFeatureTrackingAnnotation.cpp',
     'UrlClassifierFeatureTrackingProtection.cpp',
 ]
@@ -29,6 +30,7 @@ UNIFIED_SOURCES += [
 EXPORTS.mozilla.net += [
     'UrlClassifierCommon.h',
     'UrlClassifierFeatureFactory.h',
+    'UrlClassifierFeatureResult.h',
 ]
 
 LOCAL_INCLUDES += [

@@ -153,6 +153,13 @@ class nsUrlClassifierDBService final : public nsIUrlClassifierDBService,
 
   nsresult ReadTablesFromPrefs();
 
+  // This method checks if the classification can be done just using
+  // preferences. It returns true if the operation has been completed.
+  bool AsyncClassifyLocalWithFeaturesUsingPreferences(
+      nsIURI* aURI, const nsTArray<RefPtr<nsIUrlClassifierFeature>>& aFeatures,
+      nsIUrlClassifierFeature::listType aListType,
+      nsIUrlClassifierFeatureCallback* aCallback);
+
   RefPtr<nsUrlClassifierDBServiceWorker> mWorker;
   RefPtr<UrlClassifierDBServiceWorkerProxy> mWorkerProxy;
 
@@ -216,7 +223,8 @@ class nsUrlClassifierDBServiceWorker final : public nsIUrlClassifierDBService {
 
   // Perform a blocking classifier lookup for a given url. Can be called on
   // either the main thread or the worker thread.
-  nsresult DoLocalLookup(const nsACString& spec, const nsACString& tables,
+  nsresult DoLocalLookup(const nsACString& spec,
+                         const nsTArray<nsCString>& tables,
                          LookupResultArray& results);
 
   // Open the DB connection

@@ -297,6 +297,13 @@ struct StringBundleDescriptor
     uint32_t mapSize;
 };
 
+struct IPCURLClassifierFeature
+{
+    nsCString featureName;
+    nsCString[] tables;
+    nsCString skipHostList;
+};
+
 /**
  * The PContent protocol is a top-level protocol between the UI process
  * and a content process. There is exactly one PContentParent/PContentChild pair
@@ -803,10 +810,12 @@ parent:
 
     sync PURLClassifier(Principal principal, bool useTrackingProtection)
         returns (bool success);
+
     sync ClassifyLocal(URIParams uri, nsCString tables)
         returns (nsresult rv, nsCString[] results);
+
     // The async version of ClassifyLocal.
-    async PURLClassifierLocal(URIParams uri, nsCString tables);
+    async PURLClassifierLocal(URIParams uri, IPCURLClassifierFeature[] features);
 
     async PLoginReputation(URIParams formURI);
 
