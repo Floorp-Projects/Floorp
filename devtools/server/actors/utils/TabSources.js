@@ -7,7 +7,7 @@
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert } = DevToolsUtils;
 const EventEmitter = require("devtools/shared/event-emitter");
-const { OriginalLocation, GeneratedLocation } = require("devtools/server/actors/common");
+const { GeneratedLocation } = require("devtools/server/actors/common");
 
 loader.lazyRequireGetter(this, "SourceActor", "devtools/server/actors/source", true);
 loader.lazyRequireGetter(this, "isEvalSource", "devtools/server/actors/source", true);
@@ -211,15 +211,13 @@ TabSources.prototype = {
   },
 
   /**
-   * Create a source actor representing this source. This ignores
-   * source mapping and always returns an actor representing this real
-   * source. Use `createSourceActors` if you want to respect source maps.
+   * Create a source actor representing this source.
    *
    * @param Debugger.Source source
    *        The source instance to create an actor for.
    * @returns SourceActor
    */
-  createNonSourceMappedActor: function(source) {
+  createSourceActor: function(source) {
     // Don't use getSourceURL because we don't want to consider the
     // displayURL property if it's an eval source. We only want to
     // consider real URLs, otherwise if there is a URL but it's
@@ -289,21 +287,6 @@ TabSources.prototype = {
   },
 
   /**
-   * Creates the source actors representing the appropriate sources
-   * of `source`. If sourcemapped, returns actors for all of the original
-   * sources, otherwise returns a 1-element array with the actor for
-   * `source`.
-   *
-   * @param Debugger.Source source
-   *        The source instance to create actors for.
-   * @param Promise of an array of source actors
-   */
-  createSourceActors: async function(source) {
-    const actor = this.createNonSourceMappedActor(source);
-    return actor ? [actor] : [];
-  },
-
-  /**
    * Return the non-source-mapped location of an offset in a script.
    *
    * @param Debugger.Script script
@@ -316,7 +299,7 @@ TabSources.prototype = {
   getScriptOffsetLocation: function(script, offset) {
     const {lineNumber, columnNumber} = script.getOffsetLocation(offset);
     return new GeneratedLocation(
-      this.createNonSourceMappedActor(script.source),
+      this.createSourceActor(script.source),
       lineNumber,
       columnNumber
     );
@@ -336,21 +319,6 @@ TabSources.prototype = {
       return new GeneratedLocation();
     }
     return this.getScriptOffsetLocation(frame.script, frame.offset);
-  },
-
-  /**
-   * Returns a promise of the location in the original source if the source is
-   * source mapped, otherwise a promise of the same location. This can
-   * be called with a source from *any* Debugger instance and we make
-   * sure to that it works properly, reusing source maps if already
-   * fetched. Use this from any actor that needs sourcemapping.
-   */
-  getOriginalLocation: async function(generatedLocation) {
-    return OriginalLocation.fromGeneratedLocation(generatedLocation);
-  },
-
-  getAllGeneratedLocations: async function(originalLocation) {
-    return [GeneratedLocation.fromOriginalLocation(originalLocation)];
   },
 
   /**
