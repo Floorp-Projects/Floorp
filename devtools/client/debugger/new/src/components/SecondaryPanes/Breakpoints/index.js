@@ -15,7 +15,10 @@ import BreakpointHeading from "./BreakpointHeading";
 
 import actions from "../../../actions";
 import { getDisplayPath } from "../../../utils/source";
-import { makeLocationId, sortBreakpoints } from "../../../utils/breakpoint";
+import {
+  makeLocationId,
+  sortFormattedBreakpoints
+} from "../../../utils/breakpoint";
 
 import { getSelectedSource, getBreakpointSources } from "../../../selectors";
 
@@ -79,7 +82,7 @@ class Breakpoints extends Component<Props> {
     return [
       ...breakpointSources.map(({ source, breakpoints, i }) => {
         const path = getDisplayPath(source, sources);
-        const sortedBreakpoints = sortBreakpoints(breakpoints);
+        const sortedBreakpoints = sortFormattedBreakpoints(breakpoints);
 
         return [
           <BreakpointHeading
