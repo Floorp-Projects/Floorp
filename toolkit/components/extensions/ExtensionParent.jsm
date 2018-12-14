@@ -1044,12 +1044,12 @@ ParentAPIManager = {
 ParentAPIManager.init();
 
 /**
- * This utility class is used to create hidden XUL windows, which are used to
- * contains the extension pages that are not visible (e.g. the background page and
- * the devtools page), and it is also used by the ExtensionDebuggingUtils to
- * contains the browser elements that are used by the addon debugger to be able
- * to connect to the devtools actors running in the same process of the target
- * extension (and be able to stay connected across the addon reloads).
+ * A hidden window which contains the extension pages that are not visible
+ * (i.e., background pages and devtools pages), and is also used by
+ * ExtensionDebuggingUtils to contain the browser elements used by the
+ * addon debugger to connect to the devtools actors running in the same
+ * process of the target extension (and be able to stay connected across
+ *  the addon reloads).
  */
 class HiddenXULWindow {
   constructor() {
@@ -1164,6 +1164,35 @@ class HiddenXULWindow {
   }
 }
 
+const SharedWindow = {
+  _window: null,
+  _count: 0,
+
+  acquire() {
+    if (this._window == null) {
+      if (this._count != 0) {
+        throw new Error(`Shared window already exists with count ${this._count}`);
+      }
+
+      this._window = new HiddenXULWindow();
+    }
+
+    this._count++;
+    return this._window;
+  },
+
+  release() {
+    if (this._count < 1) {
+      throw new Error(`Releasing shared window with count ${this._count}`);
+    }
+
+    this._count--;
+    if (this._count == 0) {
+      this._window.shutdown();
+      this._window = null;
+    }
+  },
+};
 
 /**
  * This is a base class used by the ext-backgroundPage and ext-devtools API implementations
@@ -1179,13 +1208,12 @@ class HiddenXULWindow {
  *        The viewType of the WebExtension page that is going to be loaded
  *        in the created browser element (e.g. "background" or "devtools_page").
  */
-class HiddenExtensionPage extends HiddenXULWindow {
+class HiddenExtensionPage {
   constructor(extension, viewType) {
     if (!extension || !viewType) {
       throw new Error("extension and viewType parameters are mandatory");
     }
 
-    super();
     this.extension = extension;
     this.viewType = viewType;
     this.browser = null;
@@ -1202,9 +1230,8 @@ class HiddenExtensionPage extends HiddenXULWindow {
     if (this.browser) {
       this.browser.remove();
       this.browser = null;
+      SharedWindow.release();
     }
-
-    super.shutdown();
   }
 
   /**
@@ -1218,7 +1245,8 @@ class HiddenExtensionPage extends HiddenXULWindow {
       throw new Error("createBrowserElement called twice");
     }
 
-    this.browser = await super.createBrowserElement({
+    let window = SharedWindow.acquire();
+    this.browser = await window.createBrowserElement({
       "webextension-view-type": this.viewType,
       "remote": this.extension.remote ? "true" : null,
       "remoteType": this.extension.remote ?
