@@ -8,7 +8,6 @@
 //! computed values and need yet another intermediate representation. This
 //! module's raison d'être is to ultimately contain all these types.
 
-use app_units::Au;
 use crate::properties::PropertyId;
 use crate::values::computed::length::CalcLengthOrPercentage;
 use crate::values::computed::url::ComputedUrl;
@@ -16,6 +15,7 @@ use crate::values::computed::Angle as ComputedAngle;
 use crate::values::computed::Image;
 use crate::values::CSSFloat;
 use crate::values::specified::SVGPathData;
+use app_units::Au;
 use euclid::{Point2D, Size2D};
 use smallvec::SmallVec;
 use std::cmp;
