@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { OriginalLocation } = require("devtools/server/actors/common");
+const { GeneratedLocation } = require("devtools/server/actors/common");
 
 /**
  * A BreakpointActorMap is a map from locations to instances of BreakpointActor.
@@ -31,10 +31,10 @@ BreakpointActorMap.prototype = {
    * Generate all BreakpointActors that match the given location in
    * this BreakpointActorMap.
    *
-   * @param OriginalLocation location
+   * @param GeneratedLocation location
    *        The location for which matching BreakpointActors should be generated.
    */
-  findActors: function* (location = new OriginalLocation()) {
+  findActors: function* (location = new GeneratedLocation()) {
     // Fast shortcut for when we know we won't find any actors. Surprisingly
     // enough, this speeds up refreshing when there are no breakpoints set by
     // about 2x!
@@ -55,21 +55,23 @@ BreakpointActorMap.prototype = {
     }
 
     const query = {
-      sourceActorID: location.originalSourceActor
-                     ? location.originalSourceActor.actorID
+      sourceActorID: location.generatedSourceActor
+                     ? location.generatedSourceActor.actorID
                      : undefined,
-      line: location.originalLine,
+      line: location.generatedLine,
     };
 
     // If location contains a line, assume we are searching for a whole line
     // breakpoint, and set begin/endColumn accordingly. Otherwise, we are
     // searching for all breakpoints, so begin/endColumn should be left unset.
-    if (location.originalLine) {
-      query.beginColumn = location.originalColumn ? location.originalColumn : 0;
-      query.endColumn = location.originalColumn ? location.originalColumn + 1 : Infinity;
+    if (location.generatedLine) {
+      query.beginColumn = location.generatedColumn ? location.generatedColumn : 0;
+      query.endColumn = location.generatedColumn
+        ? location.generatedColumn + 1
+        : Infinity;
     } else {
-      query.beginColumn = location.originalColumn ? query.originalColumn : undefined;
-      query.endColumn = location.originalColumn ? query.originalColumn + 1 : undefined;
+      query.beginColumn = location.generatedColumn ? query.generatedColumn : undefined;
+      query.endColumn = location.generatedColumn ? query.generatedColumn + 1 : undefined;
     }
 
     for (const sourceActorID of findKeys(this._actors, query.sourceActorID)) {
@@ -89,14 +91,14 @@ BreakpointActorMap.prototype = {
    * Return the BreakpointActor at the given location in this
    * BreakpointActorMap.
    *
-   * @param OriginalLocation location
+   * @param GeneratedLocation location
    *        The location for which the BreakpointActor should be returned.
    *
    * @returns BreakpointActor actor
    *          The BreakpointActor at the given location.
    */
-  getActor: function(originalLocation) {
-    for (const actor of this.findActors(originalLocation)) {
+  getActor: function(generatedLocation) {
+    for (const actor of this.findActors(generatedLocation)) {
       return actor;
     }
 
@@ -107,19 +109,19 @@ BreakpointActorMap.prototype = {
    * Set the given BreakpointActor to the given location in this
    * BreakpointActorMap.
    *
-   * @param OriginalLocation location
+   * @param GeneratedLocation location
    *        The location to which the given BreakpointActor should be set.
    *
    * @param BreakpointActor actor
    *        The BreakpointActor to be set to the given location.
    */
   setActor: function(location, actor) {
-    const { originalSourceActor, originalLine, originalColumn } = location;
+    const { generatedSourceActor, generatedLine, generatedColumn } = location;
 
-    const sourceActorID = originalSourceActor.actorID;
-    const line = originalLine;
-    const beginColumn = originalColumn ? originalColumn : 0;
-    const endColumn = originalColumn ? originalColumn + 1 : Infinity;
+    const sourceActorID = generatedSourceActor.actorID;
+    const line = generatedLine;
+    const beginColumn = generatedColumn ? generatedColumn : 0;
+    const endColumn = generatedColumn ? generatedColumn + 1 : Infinity;
 
     if (!this._actors[sourceActorID]) {
       this._actors[sourceActorID] = [];
@@ -140,16 +142,16 @@ BreakpointActorMap.prototype = {
    * Delete the BreakpointActor from the given location in this
    * BreakpointActorMap.
    *
-   * @param OriginalLocation location
+   * @param GeneratedLocation location
    *        The location from which the BreakpointActor should be deleted.
    */
   deleteActor: function(location) {
-    const { originalSourceActor, originalLine, originalColumn } = location;
+    const { generatedSourceActor, generatedLine, generatedColumn } = location;
 
-    const sourceActorID = originalSourceActor.actorID;
-    const line = originalLine;
-    const beginColumn = originalColumn ? originalColumn : 0;
-    const endColumn = originalColumn ? originalColumn + 1 : Infinity;
+    const sourceActorID = generatedSourceActor.actorID;
+    const line = generatedLine;
+    const beginColumn = generatedColumn ? generatedColumn : 0;
+    const endColumn = generatedColumn ? generatedColumn + 1 : Infinity;
 
     if (this._actors[sourceActorID]) {
       if (this._actors[sourceActorID][line]) {

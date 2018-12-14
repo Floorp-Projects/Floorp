@@ -9,7 +9,7 @@
 const { Cc, Ci } = require("chrome");
 const Services = require("Services");
 const { BreakpointActor, setBreakpointAtEntryPoints } = require("devtools/server/actors/breakpoint");
-const { OriginalLocation, GeneratedLocation } = require("devtools/server/actors/common");
+const { GeneratedLocation } = require("devtools/server/actors/common");
 const { createValueGrip } = require("devtools/server/actors/object/utils");
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
@@ -471,7 +471,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
    *          response.
    */
   setBreakpoint: function(line, column, condition, noSliding) {
-    const location = new OriginalLocation(this, line, column);
+    const location = new GeneratedLocation(this, line, column);
     const actor = this._getOrCreateBreakpointActor(
       location,
       condition,
@@ -483,7 +483,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       isPending: actor.isPending,
     };
 
-    const actualLocation = actor.originalLocation;
+    const actualLocation = actor.generatedLocation;
     if (!actualLocation.equals(location)) {
       response.actualLocation = actualLocation.toJSON();
     }
@@ -492,13 +492,13 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
   },
 
   /**
-   * Get or create a BreakpointActor for the given location in the original
+   * Get or create a BreakpointActor for the given location in the generated
    * source, and ensure it is set as a breakpoint handler on all scripts that
    * match the given location.
    *
-   * @param OriginalLocation originalLocation
-   *        An OriginalLocation representing the location of the breakpoint in
-   *        the original source.
+   * @param GeneratedLocation generatedLocation
+   *        A GeneratedLocation representing the location of the breakpoint in
+   *        the generated source.
    * @param String condition
    *        A string that is evaluated whenever the breakpoint is hit. If the
    *        string evaluates to false, the breakpoint is ignored.
@@ -508,12 +508,12 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
    * @returns BreakpointActor
    *          A BreakpointActor representing the breakpoint.
    */
-  _getOrCreateBreakpointActor: function(originalLocation, condition, noSliding) {
-    let actor = this.breakpointActorMap.getActor(originalLocation);
+  _getOrCreateBreakpointActor: function(generatedLocation, condition, noSliding) {
+    let actor = this.breakpointActorMap.getActor(generatedLocation);
     if (!actor) {
-      actor = new BreakpointActor(this.threadActor, originalLocation);
+      actor = new BreakpointActor(this.threadActor, generatedLocation);
       this.threadActor.threadLifetimePool.addActor(actor);
-      this.breakpointActorMap.setActor(originalLocation, actor);
+      this.breakpointActorMap.setActor(generatedLocation, actor);
     }
 
     actor.condition = condition;
@@ -523,7 +523,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
 
   /*
    * Ensure the given BreakpointActor is set as a breakpoint handler on all
-   * scripts that match its location in the original source.
+   * scripts that match its location in the generated source.
    *
    * If there are no scripts that match the location of the BreakpointActor,
    * we slide its location to the next closest line (for line breakpoints) or
@@ -544,15 +544,14 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
    * @returns A Promise that resolves to the given BreakpointActor.
    */
   _setBreakpoint: function(actor, noSliding) {
-    const { originalLocation } = actor;
-    const { originalLine, originalSourceActor } = originalLocation;
+    const { generatedLocation } = actor;
+    const { generatedLine, generatedSourceActor } = generatedLocation;
 
-    const generatedLocation = GeneratedLocation.fromOriginalLocation(originalLocation);
     const isWasm = this.source && this.source.introductionType === "wasm";
     if (!this._setBreakpointAtGeneratedLocation(actor, generatedLocation) &&
         !noSliding &&
         !isWasm) {
-      const query = { line: originalLine };
+      const query = { line: generatedLine };
       // For most cases, we have a real source to query for. The
       // only time we don't is for HTML pages. In that case we want
       // to query for scripts in an HTML page based on its URL, as
@@ -582,7 +581,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       // script gets GCed, that means that all parents scripts are
       // GCed as well, and no scripts will exist on those lines
       // anymore. We will never slide through a GCed script.
-      if (originalLocation.originalColumn || scripts.length === 0) {
+      if (generatedLocation.generatedColumn || scripts.length === 0) {
         return actor;
       }
 
@@ -596,7 +595,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       });
       const maxLine = largestScript.startLine + largestScript.lineCount - 1;
 
-      let actualLine = originalLine;
+      let actualLine = generatedLine;
       for (; actualLine <= maxLine; actualLine++) {
         const loc = new GeneratedLocation(this, actualLine);
         if (this._setBreakpointAtGeneratedLocation(actor, loc)) {
@@ -621,14 +620,14 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
 
       // Update the actor to use the new location (reusing a
       // previous breakpoint if it already exists on that line).
-      const actualLocation = new OriginalLocation(originalSourceActor, actualLine);
+      const actualLocation = new GeneratedLocation(generatedSourceActor, actualLine);
       const existingActor = this.breakpointActorMap.getActor(actualLocation);
-      this.breakpointActorMap.deleteActor(originalLocation);
+      this.breakpointActorMap.deleteActor(generatedLocation);
       if (existingActor) {
         actor.delete();
         actor = existingActor;
       } else {
-        actor.originalLocation = actualLocation;
+        actor.generatedLocation = actualLocation;
         this.breakpointActorMap.setActor(actualLocation, actor);
       }
     }
