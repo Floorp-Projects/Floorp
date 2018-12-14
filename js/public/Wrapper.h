@@ -151,6 +151,10 @@ class JS_FRIEND_API Wrapper : public ForwardingProxyHandler {
 
   unsigned flags() const { return mFlags; }
 
+  bool isCrossCompartmentWrapper() const {
+    return !!(mFlags & CROSS_COMPARTMENT);
+  }
+
   static const char family;
   static const Wrapper singleton;
   static const Wrapper singletonWithPrototype;
