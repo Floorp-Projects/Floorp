@@ -237,6 +237,8 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
       return inlineRegExpInstanceOptimizable(callInfo);
     case InlinableNative::GetFirstDollarIndex:
       return inlineGetFirstDollarIndex(callInfo);
+    case InlinableNative::IntrinsicNewRegExpStringIterator:
+      return inlineNewIterator(callInfo, MNewIterator::RegExpStringIterator);
 
     // String natives.
     case InlinableNative::String:
@@ -321,6 +323,8 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
       return inlineGuardToClass(callInfo, &SetIteratorObject::class_);
     case InlinableNative::IntrinsicGuardToStringIterator:
       return inlineGuardToClass(callInfo, &StringIteratorObject::class_);
+    case InlinableNative::IntrinsicGuardToRegExpStringIterator:
+      return inlineGuardToClass(callInfo, &RegExpStringIteratorObject::class_);
     case InlinableNative::IntrinsicObjectHasPrototype:
       return inlineObjectHasPrototype(callInfo);
     case InlinableNative::IntrinsicFinishBoundFunctionInit:
@@ -1077,6 +1081,12 @@ IonBuilder::InliningResult IonBuilder::inlineNewIterator(
       templateObject = inspector->getTemplateObjectForNative(
           pc, js::intrinsic_NewStringIterator);
       MOZ_ASSERT_IF(templateObject, templateObject->is<StringIteratorObject>());
+      break;
+    case MNewIterator::RegExpStringIterator:
+      templateObject = inspector->getTemplateObjectForNative(
+          pc, js::intrinsic_NewRegExpStringIterator);
+      MOZ_ASSERT_IF(templateObject,
+                    templateObject->is<RegExpStringIteratorObject>());
       break;
   }
 

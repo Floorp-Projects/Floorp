@@ -122,6 +122,7 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
+#include "mozilla/net/AsyncUrlChannelClassifier.h"
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
@@ -5617,6 +5618,7 @@ nsresult nsHttpChannel::ContinueProcessRedirection(nsresult rv) {
   } else {
     rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
   }
+  LOG(("  new channel AsyncOpen returned %" PRIX32, static_cast<uint32_t>(rv)));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // close down this channel
@@ -6350,15 +6352,13 @@ nsresult nsHttpChannel::BeginConnect() {
     return ContinueBeginConnectWithResult();
   }
 
-  // We are about to do a sync lookup to check if the URI is a
+  // We are about to do an async lookup to check if the URI is a
   // tracker. If yes, this channel will be canceled by channel classifier.
   // Chances are the lookup is not needed so CheckIsTrackerWithLocalTable()
   // will return an error and then we can BeginConnectActual() right away.
-  RefPtr<nsChannelClassifier> channelClassifier =
-      GetOrCreateChannelClassifier();
   RefPtr<nsHttpChannel> self = this;
   bool willCallback = NS_SUCCEEDED(
-      channelClassifier->CheckIsTrackerWithLocalTable([self]() -> void {
+      AsyncUrlChannelClassifier::CheckChannel(this, [self]() -> void {
         nsresult rv = self->BeginConnectActual();
         if (NS_FAILED(rv)) {
           // Since this error is thrown asynchronously so that the caller

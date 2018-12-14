@@ -9,16 +9,15 @@
 
 #include "mozilla/dom/PURLClassifierChild.h"
 #include "mozilla/dom/PURLClassifierLocalChild.h"
+#include "mozilla/net/UrlClassifierFeatureResult.h"
 #include "nsIURIClassifier.h"
+#include "nsIUrlClassifierFeature.h"
 
 namespace mozilla {
 namespace dom {
 
-template <typename BaseProtocol>
-class URLClassifierChildBase : public BaseProtocol {
+class URLClassifierChild : public PURLClassifierChild {
  public:
-  URLClassifierChildBase() = default;
-
   void SetCallback(nsIURIClassifierCallback* aCallback) {
     mCallback = aCallback;
   }
@@ -35,14 +34,50 @@ class URLClassifierChildBase : public BaseProtocol {
   }
 
  private:
-  ~URLClassifierChildBase() = default;
-
   nsCOMPtr<nsIURIClassifierCallback> mCallback;
 };
 
-using URLClassifierChild = URLClassifierChildBase<PURLClassifierChild>;
-using URLClassifierLocalChild =
-    URLClassifierChildBase<PURLClassifierLocalChild>;
+class URLClassifierLocalChild : public PURLClassifierLocalChild {
+ public:
+  void SetFeaturesAndCallback(
+      const nsTArray<RefPtr<nsIUrlClassifierFeature>>& aFeatures,
+      nsIUrlClassifierFeatureCallback* aCallback) {
+    mCallback = aCallback;
+    mFeatures = aFeatures;
+  }
+
+  mozilla::ipc::IPCResult Recv__delete__(
+      nsTArray<URLClassifierLocalResult>&& aResults) override {
+    nsTArray<RefPtr<nsIUrlClassifierFeatureResult>> finalResults;
+
+    nsTArray<URLClassifierLocalResult> results = std::move(aResults);
+    for (URLClassifierLocalResult& result : results) {
+      for (nsIUrlClassifierFeature* feature : mFeatures) {
+        nsAutoCString name;
+        nsresult rv = feature->GetName(name);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          continue;
+        }
+
+        if (result.featureName() != name) {
+          continue;
+        }
+
+        RefPtr<net::UrlClassifierFeatureResult> r =
+            new net::UrlClassifierFeatureResult(feature, result.matchingList());
+        finalResults.AppendElement(r);
+        break;
+      }
+    }
+
+    mCallback->OnClassifyComplete(finalResults);
+    return IPC_OK();
+  }
+
+ private:
+  nsCOMPtr<nsIUrlClassifierFeatureCallback> mCallback;
+  nsTArray<RefPtr<nsIUrlClassifierFeature>> mFeatures;
+};
 
 }  // namespace dom
 }  // namespace mozilla

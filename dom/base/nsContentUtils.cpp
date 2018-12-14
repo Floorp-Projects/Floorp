@@ -317,7 +317,6 @@ bool nsContentUtils::sAnimationsAPICoreEnabled = false;
 bool nsContentUtils::sGetBoxQuadsEnabled = false;
 bool nsContentUtils::sSkipCursorMoveForSameValueSet = false;
 bool nsContentUtils::sRequestIdleCallbackEnabled = false;
-bool nsContentUtils::sLowerNetworkPriority = false;
 bool nsContentUtils::sTailingEnabled = false;
 bool nsContentUtils::sShowInputPlaceholderOnFocus = true;
 bool nsContentUtils::sAutoFocusEnabled = true;
@@ -691,10 +690,6 @@ nsresult nsContentUtils::Init() {
 #ifndef RELEASE_OR_BETA
   sBypassCSSOMOriginCheck = getenv("MOZ_BYPASS_CSSOM_ORIGIN_CHECK");
 #endif
-
-  Preferences::AddBoolVarCache(
-      &sLowerNetworkPriority,
-      "privacy.trackingprotection.lower_network_priority", false);
 
   Preferences::AddBoolVarCache(&sTailingEnabled, "network.http.tailing.enabled",
                                true);

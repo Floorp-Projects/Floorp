@@ -684,7 +684,8 @@ nsresult FetchDriver::HttpFetch(
                        nsIClassOfService::Tail);
   }
 
-  if (mIsTrackingFetch && nsContentUtils::IsLowerNetworkPriority()) {
+  if (mIsTrackingFetch &&
+      StaticPrefs::privacy_trackingprotection_lower_network_priority()) {
     nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(chan);
     if (p) {
       p->SetPriority(nsISupportsPriority::PRIORITY_LOWEST);

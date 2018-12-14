@@ -2613,7 +2613,7 @@ nsresult XMLHttpRequestMainThread::InitiateFetch(
 
   // Check if this XHR is created from a tracking script.
   // If yes, lower the channel's priority.
-  if (nsContentUtils::IsLowerNetworkPriority()) {
+  if (StaticPrefs::privacy_trackingprotection_lower_network_priority()) {
     MaybeLowerChannelPriority();
   }
 

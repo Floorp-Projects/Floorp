@@ -5805,7 +5805,7 @@ bool ArenaLists::foregroundFinalize(FreeOp* fop, AllocKind thingKind,
   return true;
 }
 
-IncrementalProgress GCRuntime::markUntilBudgetExhaused(
+IncrementalProgress GCRuntime::markUntilBudgetExhausted(
     SliceBudget& sliceBudget, gcstats::PhaseKind phase) {
   // Marked GC things may vary between recording and replaying, so marking
   // and sweeping should not perform any recorded events.
@@ -5813,12 +5813,12 @@ IncrementalProgress GCRuntime::markUntilBudgetExhaused(
 
   /* Run a marking slice and return whether the stack is now empty. */
   gcstats::AutoPhase ap(stats(), phase);
-  return marker.markUntilBudgetExhaused(sliceBudget) ? Finished : NotFinished;
+  return marker.markUntilBudgetExhausted(sliceBudget) ? Finished : NotFinished;
 }
 
 void GCRuntime::drainMarkStack() {
   auto unlimited = SliceBudget::unlimited();
-  MOZ_RELEASE_ASSERT(marker.markUntilBudgetExhaused(unlimited));
+  MOZ_RELEASE_ASSERT(marker.markUntilBudgetExhausted(unlimited));
 }
 
 static void SweepThing(Shape* shape) {
@@ -6482,7 +6482,7 @@ IncrementalProgress GCRuntime::performSweepActions(SliceBudget& budget) {
   if (initialState != State::Sweep) {
     MOZ_ASSERT(marker.isDrained());
   } else {
-    if (markUntilBudgetExhaused(budget, gcstats::PhaseKind::SWEEP_MARK) ==
+    if (markUntilBudgetExhausted(budget, gcstats::PhaseKind::SWEEP_MARK) ==
         NotFinished) {
       return NotFinished;
     }
@@ -6957,7 +6957,7 @@ void GCRuntime::incrementalSlice(
     case State::Mark:
       AutoGCRooter::traceAllWrappers(rt->mainContextFromOwnThread(), &marker);
 
-      if (markUntilBudgetExhaused(budget, gcstats::PhaseKind::MARK) ==
+      if (markUntilBudgetExhausted(budget, gcstats::PhaseKind::MARK) ==
           NotFinished) {
         break;
       }

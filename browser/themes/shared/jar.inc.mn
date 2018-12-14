@@ -55,7 +55,6 @@
   skin/classic/browser/identity-icon.svg                       (../shared/identity-block/identity-icon.svg)
   skin/classic/browser/identity-icon-notice.svg                (../shared/identity-block/identity-icon-notice.svg)
   skin/classic/browser/info.svg                                (../shared/info.svg)
-  skin/classic/browser/searchReset.css                         (../shared/searchReset.css)
 
   skin/classic/browser/illustrations/error-session-restore.svg (../shared/illustrations/error-session-restore.svg)
 
@@ -224,8 +223,6 @@
   skin/classic/browser/cert-error-new.svg                      (../shared/incontent-icons/cert-error-new.svg)
   skin/classic/browser/wifi.svg                                (../shared/incontent-icons/wifi.svg)
   skin/classic/browser/tab-crashed.svg                         (../shared/incontent-icons/tab-crashed.svg)
-  skin/classic/browser/favicon-search-16.svg                   (../shared/favicon-search-16.svg)
-  skin/classic/browser/icon-search-64.svg                      (../shared/incontent-icons/icon-search-64.svg)
   skin/classic/browser/welcome-back.svg                        (../shared/incontent-icons/welcome-back.svg)
   skin/classic/browser/readerMode.svg                          (../shared/reader/readerMode.svg)
   skin/classic/browser/panic-panel/header.png                  (../shared/panic-panel/header.png)
