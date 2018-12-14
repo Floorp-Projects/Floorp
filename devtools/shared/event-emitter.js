@@ -167,14 +167,14 @@ class EventEmitter {
       // in emit.
       const listenersForType = new Set(target[eventListeners].get(type));
 
+      const events = target[eventListeners];
+      const listeners = events.get(type);
+
       for (const listener of listenersForType) {
         // If the object was destroyed during event emission, stop emitting.
         if (!(eventListeners in target)) {
           break;
         }
-
-        const events = target[eventListeners];
-        const listeners = events.get(type);
 
         // If listeners were removed during emission, make sure the
         // event handler we're going to fire wasn't removed.
