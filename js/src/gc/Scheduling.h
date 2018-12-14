@@ -433,6 +433,24 @@ class GCSchedulingTunables {
    */
   UnprotectedData<uint32_t> nurseryFreeThresholdForIdleCollection_;
 
+  /*
+   * JSGC_PRETENURE_THRESHOLD
+   *
+   * Fraction of objects tenured to trigger pretenuring (between 0 and 1). If
+   * this fraction is met, the GC proceeds to calculate which objects will be
+   * tenured. If this is 1.0f (actually if it is not < 1.0f) then pretenuring
+   * is disabled.
+   */
+  UnprotectedData<float> pretenureThreshold_;
+
+  /*
+   * JSGC_PRETENURE_GROUP_THRESHOLD
+   *
+   * During a single nursery collection, if this many objects from the same
+   * object group are tenured, then that group will be pretenured.
+   */
+  UnprotectedData<uint32_t> pretenureGroupThreshold_;
+
  public:
   GCSchedulingTunables();
 
@@ -470,6 +488,10 @@ class GCSchedulingTunables {
   uint32_t nurseryFreeThresholdForIdleCollection() const {
     return nurseryFreeThresholdForIdleCollection_;
   }
+
+  bool attemptPretenuring() const { return pretenureThreshold_ < 1.0f; }
+  float pretenureThreshold() const { return pretenureThreshold_; }
+  uint32_t pretenureGroupThreshold() const { return pretenureGroupThreshold_; }
 
   MOZ_MUST_USE bool setParameter(JSGCParamKey key, uint32_t value,
                                  const AutoLockGC& lock);

@@ -768,13 +768,15 @@ void js::Nursery::collect(JS::gcreason::Reason reason) {
   bool validPromotionRate;
   const float promotionRate = calcPromotionRate(&validPromotionRate);
   uint32_t pretenureCount = 0;
-  bool shouldPretenure = (validPromotionRate && promotionRate > 0.6) ||
-                         IsFullStoreBufferReason(reason);
+  bool shouldPretenure = tunables().attemptPretenuring() &&
+                         ((validPromotionRate &&
+                          promotionRate > tunables().pretenureThreshold()) ||
+                         IsFullStoreBufferReason(reason));
 
   if (shouldPretenure) {
     JSContext* cx = rt->mainContextFromOwnThread();
     for (auto& entry : tenureCounts.entries) {
-      if (entry.count >= 3000) {
+      if (entry.count >= tunables().pretenureGroupThreshold()) {
         ObjectGroup* group = entry.group;
         AutoRealm ar(cx, group);
         AutoSweepObjectGroup sweep(group);
