@@ -9,55 +9,45 @@
 namespace mozilla {
 namespace _ipdltest {
 
+class TestSanityParent : public PTestSanityParent {
+ public:
+  TestSanityParent();
+  virtual ~TestSanityParent();
 
-class TestSanityParent :
-    public PTestSanityParent
-{
-public:
-    TestSanityParent();
-    virtual ~TestSanityParent();
+  static bool RunTestInProcesses() { return true; }
+  static bool RunTestInThreads() { return true; }
 
-    static bool RunTestInProcesses() { return true; }
-    static bool RunTestInThreads() { return true; }
+  void Main();
 
-    void Main();
+ protected:
+  virtual mozilla::ipc::IPCResult RecvPong(const int& one,
+                                           const float& zeroPtTwoFive,
+                                           const uint8_t& dummy) override;
 
-protected:
-    virtual mozilla::ipc::IPCResult RecvPong(const int& one, const float& zeroPtTwoFive,
-                          const uint8_t& dummy) override;
-
-    virtual void ActorDestroy(ActorDestroyReason why) override
-    {
-        if (NormalShutdown != why)
-            fail("unexpected destruction!");
-        passed("ok");
-        QuitParent();
-    }
+  virtual void ActorDestroy(ActorDestroyReason why) override {
+    if (NormalShutdown != why) fail("unexpected destruction!");
+    passed("ok");
+    QuitParent();
+  }
 };
 
+class TestSanityChild : public PTestSanityChild {
+ public:
+  TestSanityChild();
+  virtual ~TestSanityChild();
 
-class TestSanityChild :
-    public PTestSanityChild
-{
-public:
-    TestSanityChild();
-    virtual ~TestSanityChild();
+ protected:
+  virtual mozilla::ipc::IPCResult RecvPing(const int& zero,
+                                           const float& zeroPtFive,
+                                           const int8_t& dummy) override;
 
-protected:
-    virtual mozilla::ipc::IPCResult RecvPing(const int& zero, const float& zeroPtFive,
-                          const int8_t& dummy) override;
-
-    virtual void ActorDestroy(ActorDestroyReason why) override
-    {
-        if (NormalShutdown != why)
-            fail("unexpected destruction!");
-        QuitChild();
-    }
+  virtual void ActorDestroy(ActorDestroyReason why) override {
+    if (NormalShutdown != why) fail("unexpected destruction!");
+    QuitChild();
+  }
 };
 
+}  // namespace _ipdltest
+}  // namespace mozilla
 
-} // namespace _ipdltest
-} // namespace mozilla
-
-
-#endif // ifndef mozilla__ipdltest_TestSanity_h
+#endif  // ifndef mozilla__ipdltest_TestSanity_h

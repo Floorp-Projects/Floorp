@@ -4,18 +4,15 @@
 
 #include "TestShellChild.h"
 
-using mozilla::ipc::TestShellChild;
 using mozilla::ipc::PTestShellCommandChild;
+using mozilla::ipc::TestShellChild;
 using mozilla::ipc::XPCShellEnvironment;
 
 TestShellChild::TestShellChild()
-: mXPCShell(XPCShellEnvironment::CreateEnvironment())
-{
-}
+    : mXPCShell(XPCShellEnvironment::CreateEnvironment()) {}
 
-mozilla::ipc::IPCResult
-TestShellChild::RecvExecuteCommand(const nsString& aCommand)
-{
+mozilla::ipc::IPCResult TestShellChild::RecvExecuteCommand(
+    const nsString& aCommand) {
   if (mXPCShell->IsQuitting()) {
     NS_WARNING("Commands sent after quit command issued!");
     return IPC_FAIL_NO_REASON(this);
@@ -27,23 +24,19 @@ TestShellChild::RecvExecuteCommand(const nsString& aCommand)
   return IPC_OK();
 }
 
-PTestShellCommandChild*
-TestShellChild::AllocPTestShellCommandChild(const nsString& aCommand)
-{
+PTestShellCommandChild* TestShellChild::AllocPTestShellCommandChild(
+    const nsString& aCommand) {
   return new PTestShellCommandChild();
 }
 
-bool
-TestShellChild::DeallocPTestShellCommandChild(PTestShellCommandChild* aCommand)
-{
+bool TestShellChild::DeallocPTestShellCommandChild(
+    PTestShellCommandChild* aCommand) {
   delete aCommand;
   return true;
 }
 
-mozilla::ipc::IPCResult
-TestShellChild::RecvPTestShellCommandConstructor(PTestShellCommandChild* aActor,
-                                                 const nsString& aCommand)
-{
+mozilla::ipc::IPCResult TestShellChild::RecvPTestShellCommandConstructor(
+    PTestShellCommandChild* aActor, const nsString& aCommand) {
   if (mXPCShell->IsQuitting()) {
     NS_WARNING("Commands sent after quit command issued!");
     return IPC_FAIL_NO_REASON(this);
@@ -59,4 +52,3 @@ TestShellChild::RecvPTestShellCommandConstructor(PTestShellCommandChild* aActor,
   }
   return IPC_OK();
 }
-

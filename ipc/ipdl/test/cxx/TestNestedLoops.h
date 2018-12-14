@@ -9,59 +9,47 @@
 namespace mozilla {
 namespace _ipdltest {
 
+class TestNestedLoopsParent : public PTestNestedLoopsParent {
+ public:
+  TestNestedLoopsParent();
+  virtual ~TestNestedLoopsParent();
 
-class TestNestedLoopsParent :
-    public PTestNestedLoopsParent
-{
-public:
-    TestNestedLoopsParent();
-    virtual ~TestNestedLoopsParent();
+  static bool RunTestInProcesses() { return true; }
+  static bool RunTestInThreads() { return true; }
 
-    static bool RunTestInProcesses() { return true; }
-    static bool RunTestInThreads() { return true; }
+  void Main();
 
-    void Main();
+ protected:
+  virtual mozilla::ipc::IPCResult RecvNonce() override;
 
-protected:
-    virtual mozilla::ipc::IPCResult RecvNonce() override;
+  void BreakNestedLoop();
 
-    void BreakNestedLoop();
+  virtual void ActorDestroy(ActorDestroyReason why) override {
+    if (NormalShutdown != why) fail("unexpected destruction!");
+    passed("ok");
+    QuitParent();
+  }
 
-    virtual void ActorDestroy(ActorDestroyReason why) override
-    {
-        if (NormalShutdown != why)
-            fail("unexpected destruction!");
-        passed("ok");
-        QuitParent();
-    }
-
-    bool mBreakNestedLoop;
+  bool mBreakNestedLoop;
 };
 
+class TestNestedLoopsChild : public PTestNestedLoopsChild {
+ public:
+  TestNestedLoopsChild();
+  virtual ~TestNestedLoopsChild();
 
-class TestNestedLoopsChild :
-    public PTestNestedLoopsChild
-{
-public:
-    TestNestedLoopsChild();
-    virtual ~TestNestedLoopsChild();
+ protected:
+  virtual mozilla::ipc::IPCResult RecvStart() override;
 
-protected:
-    virtual mozilla::ipc::IPCResult RecvStart() override;
+  virtual mozilla::ipc::IPCResult AnswerR() override;
 
-    virtual mozilla::ipc::IPCResult AnswerR() override;
-
-    virtual void ActorDestroy(ActorDestroyReason why) override
-    {
-        if (NormalShutdown != why)
-            fail("unexpected destruction!");
-        QuitChild();
-    }
+  virtual void ActorDestroy(ActorDestroyReason why) override {
+    if (NormalShutdown != why) fail("unexpected destruction!");
+    QuitChild();
+  }
 };
 
+}  // namespace _ipdltest
+}  // namespace mozilla
 
-} // namespace _ipdltest
-} // namespace mozilla
-
-
-#endif // ifndef mozilla__ipdltest_TestNestedLoops_h
+#endif  // ifndef mozilla__ipdltest_TestNestedLoops_h

@@ -10,16 +10,18 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WrapperCachedNonISupportsTestInterface, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WrapperCachedNonISupportsTestInterface, Release)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WrapperCachedNonISupportsTestInterface,
+                                     AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WrapperCachedNonISupportsTestInterface,
+                                       Release)
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WrapperCachedNonISupportsTestInterface)
 
-JSObject*
-WrapperCachedNonISupportsTestInterface::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
-  return WrapperCachedNonISupportsTestInterface_Binding::Wrap(aCx, this, aGivenProto);
+JSObject* WrapperCachedNonISupportsTestInterface::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
+  return WrapperCachedNonISupportsTestInterface_Binding::Wrap(aCx, this,
+                                                              aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

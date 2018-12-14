@@ -39,7 +39,7 @@
 #define ALLOCATION_ASSERT(b) (void)(b)
 #endif
 
-#define ASSERT_ALLOCATION_HAPPENED(lambda)      \
+#define ASSERT_ALLOCATION_HAPPENED(lambda) \
   ALLOCATION_ASSERT(ValidateHookedAllocation(lambda, free));
 
 // We do run the risk of OOM'ing when we allocate something...all we can
@@ -58,12 +58,10 @@ const size_t kAllocAmount = 16;
 // and the optimizer can delete the calls to malloc and free entirely,
 // which would make checking that the jemalloc heap had never changed
 // difficult.
-static MOZ_NEVER_INLINE bool
-ValidateHookedAllocation(void* (*aAllocator)(void),
-                         void (*aFreeFunction)(void*))
-{
+static MOZ_NEVER_INLINE bool ValidateHookedAllocation(
+    void* (*aAllocator)(void), void (*aFreeFunction)(void*)) {
   nsCOMPtr<nsIMemoryReporterManager> manager =
-    do_GetService("@mozilla.org/memory-reporter-manager;1");
+      do_GetService("@mozilla.org/memory-reporter-manager;1");
 
   int64_t before = 0;
   nsresult rv = manager->GetHeapAllocated(&before);
@@ -111,35 +109,26 @@ ValidateHookedAllocation(void* (*aAllocator)(void),
 // other tests might spawn threads that interfere with heap memory
 // measurements.
 //
-// See <https://github.com/google/googletest/blob/master/googletest/docs/AdvancedGuide.md#death-tests>
+// See
+// <https://github.com/google/googletest/blob/master/googletest/docs/AdvancedGuide.md#death-tests>
 // for more information about death tests in the GTest framework.
-TEST(AllocReplacementDeathTest, malloc_check)
-{
-  ASSERT_ALLOCATION_HAPPENED([] {
-    return malloc(kAllocAmount);
-  });
+TEST(AllocReplacementDeathTest, malloc_check) {
+  ASSERT_ALLOCATION_HAPPENED([] { return malloc(kAllocAmount); });
 }
 
 // See above for an explanation of the "*DeathTest" suffix used here.
-TEST(AllocReplacementDeathTest, calloc_check)
-{
-  ASSERT_ALLOCATION_HAPPENED([] {
-    return calloc(1, kAllocAmount);
-  });
+TEST(AllocReplacementDeathTest, calloc_check) {
+  ASSERT_ALLOCATION_HAPPENED([] { return calloc(1, kAllocAmount); });
 }
 
 // See above for an explanation of the "*DeathTest" suffix used here.
-TEST(AllocReplacementDeathTest, realloc_check)
-{
-  ASSERT_ALLOCATION_HAPPENED([] {
-    return realloc(nullptr, kAllocAmount);
-  });
+TEST(AllocReplacementDeathTest, realloc_check) {
+  ASSERT_ALLOCATION_HAPPENED([] { return realloc(nullptr, kAllocAmount); });
 }
 
 #if defined(HAVE_POSIX_MEMALIGN)
 // See above for an explanation of the "*DeathTest" suffix used here.
-TEST(AllocReplacementDeathTest, posix_memalign_check)
-{
+TEST(AllocReplacementDeathTest, posix_memalign_check) {
   ASSERT_ALLOCATION_HAPPENED([] {
     void* p = nullptr;
     int result = posix_memalign(&p, sizeof(void*), kAllocAmount);
@@ -155,14 +144,12 @@ TEST(AllocReplacementDeathTest, posix_memalign_check)
 #include <windows.h>
 
 #undef ASSERT_ALLOCATION_HAPPENED
-#define ASSERT_ALLOCATION_HAPPENED(lambda)      \
-  ALLOCATION_ASSERT(ValidateHookedAllocation(lambda, [](void* p) { \
-    HeapFree(GetProcessHeap(), 0, p); \
-  }));
+#define ASSERT_ALLOCATION_HAPPENED(lambda)    \
+  ALLOCATION_ASSERT(ValidateHookedAllocation( \
+      lambda, [](void* p) { HeapFree(GetProcessHeap(), 0, p); }));
 
 // See above for an explanation of the "*DeathTest" suffix used here.
-TEST(AllocReplacementDeathTest, HeapAlloc_check)
-{
+TEST(AllocReplacementDeathTest, HeapAlloc_check) {
   ASSERT_ALLOCATION_HAPPENED([] {
     HANDLE h = GetProcessHeap();
     return HeapAlloc(h, 0, kAllocAmount);
@@ -170,11 +157,10 @@ TEST(AllocReplacementDeathTest, HeapAlloc_check)
 }
 
 // See above for an explanation of the "*DeathTest" suffix used here.
-TEST(AllocReplacementDeathTest, HeapReAlloc_check)
-{
+TEST(AllocReplacementDeathTest, HeapReAlloc_check) {
   ASSERT_ALLOCATION_HAPPENED([] {
     HANDLE h = GetProcessHeap();
-    void *p = HeapAlloc(h, 0, kAllocAmount / 2);
+    void* p = HeapAlloc(h, 0, kAllocAmount / 2);
 
     if (!p) {
       return static_cast<void*>(nullptr);

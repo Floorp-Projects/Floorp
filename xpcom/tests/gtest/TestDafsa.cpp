@@ -12,16 +12,12 @@
 using mozilla::Dafsa;
 
 namespace dafsa_test_1 {
-#include "dafsa_test_1.inc" // kDafsa
+#include "dafsa_test_1.inc"  // kDafsa
 }
 
-TEST(Dafsa, Constructor)
-{
-  Dafsa d(dafsa_test_1::kDafsa);
-}
+TEST(Dafsa, Constructor) { Dafsa d(dafsa_test_1::kDafsa); }
 
-TEST(Dafsa, StringsFound)
-{
+TEST(Dafsa, StringsFound) {
   Dafsa d(dafsa_test_1::kDafsa);
 
   int tag = d.Lookup(NS_LITERAL_CSTRING("foo.bar.baz"));
@@ -37,8 +33,7 @@ TEST(Dafsa, StringsFound)
   EXPECT_EQ(tag, 4);
 }
 
-TEST(Dafsa, StringsNotFound)
-{
+TEST(Dafsa, StringsNotFound) {
   Dafsa d(dafsa_test_1::kDafsa);
 
   // Matches all but last letter.
@@ -62,24 +57,22 @@ TEST(Dafsa, StringsNotFound)
   EXPECT_EQ(tag, Dafsa::kKeyNotFound);
 }
 
-TEST(Dafsa, HugeString)
-{
+TEST(Dafsa, HugeString) {
   Dafsa d(dafsa_test_1::kDafsa);
 
   int tag = d.Lookup(NS_LITERAL_CSTRING(
-        "This is a very long string that is larger than the dafsa itself. "
-        "This is a very long string that is larger than the dafsa itself. "
-        "This is a very long string that is larger than the dafsa itself. "
-        "This is a very long string that is larger than the dafsa itself. "
-        "This is a very long string that is larger than the dafsa itself. "
-        "This is a very long string that is larger than the dafsa itself. "
-        "This is a very long string that is larger than the dafsa itself. "
-        "This is a very long string that is larger than the dafsa itself. "
-        "This is a very long string that is larger than the dafsa itself. "
-        "This is a very long string that is larger than the dafsa itself. "
-        "This is a very long string that is larger than the dafsa itself. "
-        "This is a very long string that is larger than the dafsa itself. "
-        "This is a very long string that is larger than the dafsa itself. "
-        ));
+      "This is a very long string that is larger than the dafsa itself. "
+      "This is a very long string that is larger than the dafsa itself. "
+      "This is a very long string that is larger than the dafsa itself. "
+      "This is a very long string that is larger than the dafsa itself. "
+      "This is a very long string that is larger than the dafsa itself. "
+      "This is a very long string that is larger than the dafsa itself. "
+      "This is a very long string that is larger than the dafsa itself. "
+      "This is a very long string that is larger than the dafsa itself. "
+      "This is a very long string that is larger than the dafsa itself. "
+      "This is a very long string that is larger than the dafsa itself. "
+      "This is a very long string that is larger than the dafsa itself. "
+      "This is a very long string that is larger than the dafsa itself. "
+      "This is a very long string that is larger than the dafsa itself. "));
   EXPECT_EQ(tag, Dafsa::kKeyNotFound);
 }

@@ -13,8 +13,7 @@
  * we request they be
  */
 
-TEST(storage_file_perms, Test)
-{
+TEST(storage_file_perms, Test) {
   nsCOMPtr<mozIStorageConnection> db(getDatabase());
   nsCOMPtr<nsIFile> dbFile;
   do_check_success(db->GetDatabaseFile(getter_AddRefs(dbFile)));
@@ -27,9 +26,9 @@ TEST(storage_file_perms, Test)
 #ifdef ANDROID
   do_check_true(perms == (PR_IRUSR | PR_IWUSR));
 #elif defined(XP_WIN)
-  do_check_true(perms == (PR_IRUSR | PR_IWUSR | PR_IRGRP | PR_IWGRP | PR_IROTH | PR_IWOTH));
+  do_check_true(perms == (PR_IRUSR | PR_IWUSR | PR_IRGRP | PR_IWGRP | PR_IROTH |
+                          PR_IWOTH));
 #else
   do_check_true(perms == (PR_IRUSR | PR_IWUSR | PR_IRGRP | PR_IROTH));
 #endif
 }
-

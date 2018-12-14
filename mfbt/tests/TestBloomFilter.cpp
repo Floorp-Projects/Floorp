@@ -12,20 +12,17 @@
 
 using mozilla::BloomFilter;
 
-class FilterChecker
-{
-public:
-  explicit FilterChecker(uint32_t aHash) : mHash(aHash) { }
+class FilterChecker {
+ public:
+  explicit FilterChecker(uint32_t aHash) : mHash(aHash) {}
 
   uint32_t hash() const { return mHash; }
 
-private:
+ private:
   uint32_t mHash;
 };
 
-int
-main()
-{
+int main() {
   BloomFilter<12, FilterChecker>* filter = new BloomFilter<12, FilterChecker>();
   MOZ_RELEASE_ASSERT(filter);
 
@@ -35,69 +32,75 @@ main()
   FilterChecker multiple(0x20001);
 
   filter->add(&one);
-  MOZ_RELEASE_ASSERT(filter->mightContain(&one),
-             "Filter should contain 'one'");
+  MOZ_RELEASE_ASSERT(filter->mightContain(&one), "Filter should contain 'one'");
 
   MOZ_RELEASE_ASSERT(!filter->mightContain(&multiple),
-             "Filter claims to contain 'multiple' when it should not");
+                     "Filter claims to contain 'multiple' when it should not");
 
   MOZ_RELEASE_ASSERT(filter->mightContain(&many),
-             "Filter should contain 'many' (false positive)");
+                     "Filter should contain 'many' (false positive)");
 
   filter->add(&two);
   MOZ_RELEASE_ASSERT(filter->mightContain(&multiple),
-             "Filter should contain 'multiple' (false positive)");
+                     "Filter should contain 'multiple' (false positive)");
 
   // Test basic removals
   filter->remove(&two);
-  MOZ_RELEASE_ASSERT(!filter->mightContain(&multiple),
-             "Filter claims to contain 'multiple' when it should not after two "
-             "was removed");
+  MOZ_RELEASE_ASSERT(
+      !filter->mightContain(&multiple),
+      "Filter claims to contain 'multiple' when it should not after two "
+      "was removed");
 
   // Test multiple addition/removal
   const size_t FILTER_SIZE = 255;
   for (size_t i = 0; i < FILTER_SIZE - 1; ++i) {
     filter->add(&two);
   }
-  MOZ_RELEASE_ASSERT(filter->mightContain(&multiple),
-             "Filter should contain 'multiple' after 'two' added lots of times "
-             "(false positive)");
+  MOZ_RELEASE_ASSERT(
+      filter->mightContain(&multiple),
+      "Filter should contain 'multiple' after 'two' added lots of times "
+      "(false positive)");
 
   for (size_t i = 0; i < FILTER_SIZE - 1; ++i) {
     filter->remove(&two);
   }
-  MOZ_RELEASE_ASSERT(!filter->mightContain(&multiple),
-             "Filter claims to contain 'multiple' when it should not after two "
-             "was removed lots of times");
+  MOZ_RELEASE_ASSERT(
+      !filter->mightContain(&multiple),
+      "Filter claims to contain 'multiple' when it should not after two "
+      "was removed lots of times");
 
   // Test overflowing the filter buckets
   for (size_t i = 0; i < FILTER_SIZE + 1; ++i) {
     filter->add(&two);
   }
-  MOZ_RELEASE_ASSERT(filter->mightContain(&multiple),
-             "Filter should contain 'multiple' after 'two' added lots more "
-             "times (false positive)");
+  MOZ_RELEASE_ASSERT(
+      filter->mightContain(&multiple),
+      "Filter should contain 'multiple' after 'two' added lots more "
+      "times (false positive)");
 
   for (size_t i = 0; i < FILTER_SIZE + 1; ++i) {
     filter->remove(&two);
   }
-  MOZ_RELEASE_ASSERT(filter->mightContain(&multiple),
-             "Filter claims to not contain 'multiple' even though we should "
-             "have run out of space in the buckets (false positive)");
-  MOZ_RELEASE_ASSERT(filter->mightContain(&two),
-             "Filter claims to not contain 'two' even though we should have "
-             "run out of space in the buckets (false positive)");
+  MOZ_RELEASE_ASSERT(
+      filter->mightContain(&multiple),
+      "Filter claims to not contain 'multiple' even though we should "
+      "have run out of space in the buckets (false positive)");
+  MOZ_RELEASE_ASSERT(
+      filter->mightContain(&two),
+      "Filter claims to not contain 'two' even though we should have "
+      "run out of space in the buckets (false positive)");
 
   filter->remove(&one);
 
-  MOZ_RELEASE_ASSERT(!filter->mightContain(&one),
-             "Filter should not contain 'one', because we didn't overflow its "
-             "bucket");
+  MOZ_RELEASE_ASSERT(
+      !filter->mightContain(&one),
+      "Filter should not contain 'one', because we didn't overflow its "
+      "bucket");
 
   filter->clear();
 
   MOZ_RELEASE_ASSERT(!filter->mightContain(&multiple),
-             "clear() failed to work");
+                     "clear() failed to work");
 
   return 0;
 }

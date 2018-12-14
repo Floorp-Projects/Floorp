@@ -14,16 +14,14 @@
 #include "nsStringStream.h"
 #include "nsComponentManagerUtils.h"
 
-TEST(CloneInputStream, InvalidInput)
-{
+TEST(CloneInputStream, InvalidInput) {
   nsCOMPtr<nsIInputStream> clone;
   nsresult rv = NS_CloneInputStream(nullptr, getter_AddRefs(clone));
   ASSERT_TRUE(NS_FAILED(rv));
   ASSERT_FALSE(clone);
 }
 
-TEST(CloneInputStream, CloneableInput)
-{
+TEST(CloneInputStream, CloneableInput) {
   nsTArray<char> inputData;
   testing::CreateData(4 * 1024, inputData);
   nsDependentCSubstring inputString(inputData.Elements(), inputData.Length());
@@ -40,47 +38,37 @@ TEST(CloneInputStream, CloneableInput)
   testing::ConsumeAndValidateStream(clone, inputString);
 }
 
-class NonCloneableInputStream final : public nsIInputStream
-{
-public:
+class NonCloneableInputStream final : public nsIInputStream {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  explicit NonCloneableInputStream(already_AddRefed<nsIInputStream> aInputStream)
-    : mStream(aInputStream)
-  {}
+  explicit NonCloneableInputStream(
+      already_AddRefed<nsIInputStream> aInputStream)
+      : mStream(aInputStream) {}
 
   NS_IMETHOD
-  Available(uint64_t* aLength) override
-  {
-    return mStream->Available(aLength);
-  }
+  Available(uint64_t* aLength) override { return mStream->Available(aLength); }
 
   NS_IMETHOD
-  Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount) override
-  {
+  Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount) override {
     return mStream->Read(aBuffer, aCount, aReadCount);
   }
 
   NS_IMETHOD
-  ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
-               uint32_t aCount, uint32_t *aResult) override
-  {
+  ReadSegments(nsWriteSegmentFun aWriter, void* aClosure, uint32_t aCount,
+               uint32_t* aResult) override {
     return mStream->ReadSegments(aWriter, aClosure, aCount, aResult);
   }
 
   NS_IMETHOD
-  Close() override
-  {
-    return mStream->Close();
-  }
+  Close() override { return mStream->Close(); }
 
   NS_IMETHOD
-  IsNonBlocking(bool* aNonBlocking) override
-  {
+  IsNonBlocking(bool* aNonBlocking) override {
     return mStream->IsNonBlocking(aNonBlocking);
   }
 
-private:
+ private:
   ~NonCloneableInputStream() = default;
 
   nsCOMPtr<nsIInputStream> mStream;
@@ -88,8 +76,7 @@ private:
 
 NS_IMPL_ISUPPORTS(NonCloneableInputStream, nsIInputStream)
 
-TEST(CloneInputStream, NonCloneableInput_NoFallback)
-{
+TEST(CloneInputStream, NonCloneableInput_NoFallback) {
   nsTArray<char> inputData;
   testing::CreateData(4 * 1024, inputData);
   nsDependentCSubstring inputString(inputData.Elements(), inputData.Length());
@@ -111,8 +98,7 @@ TEST(CloneInputStream, NonCloneableInput_NoFallback)
   testing::ConsumeAndValidateStream(stream, inputString);
 }
 
-TEST(CloneInputStream, NonCloneableInput_Fallback)
-{
+TEST(CloneInputStream, NonCloneableInput_Fallback) {
   nsTArray<char> inputData;
   testing::CreateData(4 * 1024, inputData);
   nsDependentCSubstring inputString(inputData.Elements(), inputData.Length());
@@ -146,16 +132,15 @@ TEST(CloneInputStream, NonCloneableInput_Fallback)
     mozilla::Unused << PR_Sleep(PR_INTERVAL_NO_WAIT);
     rv = stream->Available(&available);
     ASSERT_TRUE(NS_SUCCEEDED(rv));
-  } while(available < inputString.Length());
+  } while (available < inputString.Length());
 
   testing::ConsumeAndValidateStream(stream, inputString);
   testing::ConsumeAndValidateStream(clone, inputString);
 }
 
-TEST(CloneInputStream, CloneMultiplexStream)
-{
+TEST(CloneInputStream, CloneMultiplexStream) {
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
-    do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
+      do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
   ASSERT_TRUE(multiplexStream);
   nsCOMPtr<nsIInputStream> stream(do_QueryInterface(multiplexStream));
   ASSERT_TRUE(stream);
@@ -194,10 +179,9 @@ TEST(CloneInputStream, CloneMultiplexStream)
   ASSERT_TRUE(NS_FAILED(rv));
 }
 
-TEST(CloneInputStream, CloneMultiplexStreamPartial)
-{
+TEST(CloneInputStream, CloneMultiplexStreamPartial) {
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
-    do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
+      do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
   ASSERT_TRUE(multiplexStream);
   nsCOMPtr<nsIInputStream> stream(do_QueryInterface(multiplexStream));
   ASSERT_TRUE(stream);

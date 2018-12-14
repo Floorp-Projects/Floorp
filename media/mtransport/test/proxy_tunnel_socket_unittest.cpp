@@ -29,13 +29,13 @@ typedef mozilla::dom::PBrowserOrId PBrowserOrId;
 class NrSocketProxyTest : public MtransportTest {
  public:
   NrSocketProxyTest()
-    : mSProxy(nullptr)
-    , nr_socket_(nullptr)
-    , mEmptyArray(0)
-    , mReadChunkSize(0)
-    , mReadChunkSizeIncrement(1)
-    , mReadAllowance(-1)
-    , mConnected(false) {}
+      : mSProxy(nullptr),
+        nr_socket_(nullptr),
+        mEmptyArray(0),
+        mReadChunkSize(0),
+        mReadChunkSizeIncrement(1),
+        mReadAllowance(-1),
+        mConnected(false) {}
 
   void SetUp() override {
     nsCString alpn = NS_LITERAL_CSTRING("webrtc");
@@ -43,8 +43,7 @@ class NrSocketProxyTest : public MtransportTest {
     config.reset(new NrSocketProxyConfig(PBrowserOrId(), alpn));
     // config is never used but must be non-null
     mSProxy = new NrSocketProxy(config);
-    int r = nr_socket_create_int((void*)mSProxy.get(),
-                                 mSProxy->vtbl(),
+    int r = nr_socket_create_int((void *)mSProxy.get(), mSProxy->vtbl(),
                                  &nr_socket_);
     ASSERT_EQ(0, r);
 
@@ -52,21 +51,16 @@ class NrSocketProxyTest : public MtransportTest {
     mSProxy->AssignChannel_DoNotUse(new WebrtcProxyChannelWrapper(nullptr));
   }
 
-  void TearDown() override {
-    mSProxy->close();
-  }
+  void TearDown() override { mSProxy->close(); }
 
   static void readable_cb(NR_SOCKET s, int how, void *cb_arg) {
-    NrSocketProxyTest* test = (NrSocketProxyTest*) cb_arg;
+    NrSocketProxyTest *test = (NrSocketProxyTest *)cb_arg;
     size_t capacity = std::min(test->mReadChunkSize, test->mReadAllowance);
     nsTArray<uint8_t> array(capacity);
     size_t read;
 
-    nr_socket_read(test->nr_socket_,
-                   (char*)array.Elements(),
-                   array.Capacity(),
-                   &read,
-                   0);
+    nr_socket_read(test->nr_socket_, (char *)array.Elements(), array.Capacity(),
+                   &read, 0);
 
     ASSERT_TRUE(read <= array.Capacity());
     ASSERT_TRUE(test->mReadAllowance >= read);
@@ -85,12 +79,12 @@ class NrSocketProxyTest : public MtransportTest {
   }
 
   static void writable_cb(NR_SOCKET s, int how, void *cb_arg) {
-    NrSocketProxyTest* test = (NrSocketProxyTest*) cb_arg;
+    NrSocketProxyTest *test = (NrSocketProxyTest *)cb_arg;
     test->mConnected = true;
   }
 
   const std::string DataString() {
-    return std::string((char*)mData.Elements(), mData.Length());
+    return std::string((char *)mData.Elements(), mData.Length());
   }
 
  protected:
@@ -107,15 +101,12 @@ class NrSocketProxyTest : public MtransportTest {
   bool mConnected;
 };
 
-TEST_F(NrSocketProxyTest, TestCreate) {
-}
+TEST_F(NrSocketProxyTest, TestCreate) {}
 
 TEST_F(NrSocketProxyTest, TestConnected) {
   ASSERT_TRUE(!mConnected);
 
-  NR_ASYNC_WAIT(mSProxy,
-                NR_ASYNC_WAIT_WRITE,
-                &NrSocketProxyTest::writable_cb,
+  NR_ASYNC_WAIT(mSProxy, NR_ASYNC_WAIT_WRITE, &NrSocketProxyTest::writable_cb,
                 this);
 
   // still not connected just registered for writes...
@@ -130,9 +121,7 @@ TEST_F(NrSocketProxyTest, TestRead) {
   nsTArray<uint8_t> array;
   array.AppendElements(kHelloMessage.c_str(), kHelloMessage.length());
 
-  NR_ASYNC_WAIT(mSProxy,
-                NR_ASYNC_WAIT_READ,
-                &NrSocketProxyTest::readable_cb,
+  NR_ASYNC_WAIT(mSProxy, NR_ASYNC_WAIT_READ, &NrSocketProxyTest::readable_cb,
                 this);
   // this will read 0 bytes here
   mSProxy->OnRead(std::move(array));
@@ -155,12 +144,12 @@ TEST_F(NrSocketProxyTest, TestReadConstantConsumeSize) {
 
   //  ~17kb
   // triangle number formula n*(n+1)/2
-  for(int i = 0; i < kCount * (kCount + 1) / 2; ++i) {
+  for (int i = 0; i < kCount * (kCount + 1) / 2; ++i) {
     data += kHelloMessage;
   }
 
   // decreasing buffer sizes
-  for(int i = 0, start = 0; i < kCount; ++i) {
+  for (int i = 0, start = 0; i < kCount; ++i) {
     int length = (kCount - i) * kHelloMessage.length();
 
     nsTArray<uint8_t> array;
@@ -175,9 +164,7 @@ TEST_F(NrSocketProxyTest, TestReadConstantConsumeSize) {
   // read same amount each callback
   mReadChunkSize = 128;
   mReadChunkSizeIncrement = 0;
-  NR_ASYNC_WAIT(mSProxy,
-                NR_ASYNC_WAIT_READ,
-                &NrSocketProxyTest::readable_cb,
+  NR_ASYNC_WAIT(mSProxy, NR_ASYNC_WAIT_READ, &NrSocketProxyTest::readable_cb,
                 this);
 
   ASSERT_EQ(data.length(), mSProxy->CountUnreadBytes());
@@ -216,22 +203,23 @@ TEST_F(NrSocketProxyTest, TestReadMultipleSizes) {
   // 515 * kHelloMessage.length() == 17510
   const size_t kCount = 515;
   // randomly generated numbers, sums to 17510, 20 numbers
-  vector<int> varyingSizes = { 404, 622, 1463, 1597, 1676, 389, 389, 1272, 781,
-    81, 1030, 1450, 256, 812, 1571, 29, 1045, 911, 643, 1089 };
+  vector<int> varyingSizes = {404,  622, 1463, 1597, 1676, 389, 389,
+                              1272, 781, 81,   1030, 1450, 256, 812,
+                              1571, 29,  1045, 911,  643,  1089};
 
   // changing varyingSizes or the test message breaks this so check here
   ASSERT_EQ(kCount, 17510 / kHelloMessage.length());
   ASSERT_EQ(17510, accumulate(varyingSizes.begin(), varyingSizes.end(), 0));
 
   // ~17kb
-  for(size_t i = 0; i < kCount; ++i) {
+  for (size_t i = 0; i < kCount; ++i) {
     data += kHelloMessage;
   }
 
   nsTArray<uint8_t> array;
   array.AppendElements(data.c_str(), data.length());
 
-  for(int amountToRead : varyingSizes) {
+  for (int amountToRead : varyingSizes) {
     nsTArray<uint8_t> buffer;
     buffer.AppendElements(array.Elements(), amountToRead);
     array.RemoveElementsAt(0, amountToRead);
@@ -242,9 +230,7 @@ TEST_F(NrSocketProxyTest, TestReadMultipleSizes) {
 
   // don't need to read 0 on the first read, so start at 1 and keep going
   mReadChunkSize = 1;
-  NR_ASYNC_WAIT(mSProxy,
-                NR_ASYNC_WAIT_READ,
-                &NrSocketProxyTest::readable_cb,
+  NR_ASYNC_WAIT(mSProxy, NR_ASYNC_WAIT_READ, &NrSocketProxyTest::readable_cb,
                 this);
   // start callbacks
   mSProxy->OnRead(std::move(mEmptyArray));
@@ -261,7 +247,7 @@ TEST_F(NrSocketProxyTest, TestReadConsumeReadDrain) {
   // there's some division by 2 here so check that kCount is even
   ASSERT_EQ(0, kCount % 2);
 
-  for(int i = 0; i < kCount; ++i) {
+  for (int i = 0; i < kCount; ++i) {
     data += kHelloMessage;
     nsTArray<uint8_t> array;
     array.AppendElements(kHelloMessage.c_str(), kHelloMessage.length());
@@ -272,9 +258,7 @@ TEST_F(NrSocketProxyTest, TestReadConsumeReadDrain) {
   mReadAllowance = kCount / 2 * kHelloMessage.length();
   // start by reading 1 byte
   mReadChunkSize = 1;
-  NR_ASYNC_WAIT(mSProxy,
-                NR_ASYNC_WAIT_READ,
-                &NrSocketProxyTest::readable_cb,
+  NR_ASYNC_WAIT(mSProxy, NR_ASYNC_WAIT_READ, &NrSocketProxyTest::readable_cb,
                 this);
   mSProxy->OnRead(std::move(mEmptyArray));
 
@@ -282,7 +266,7 @@ TEST_F(NrSocketProxyTest, TestReadConsumeReadDrain) {
   ASSERT_EQ(data.length() / 2, mData.Length());
 
   // fill read buffer back up
-  for(int i = 0; i < kCount / 2; ++i) {
+  for (int i = 0; i < kCount / 2; ++i) {
     data += kHelloMessage;
     nsTArray<uint8_t> array;
     array.AppendElements(kHelloMessage.c_str(), kHelloMessage.length());
@@ -292,9 +276,7 @@ TEST_F(NrSocketProxyTest, TestReadConsumeReadDrain) {
   // remove read limit
   mReadAllowance = -1;
   // used entire read allowance so we need to setup a new await
-  NR_ASYNC_WAIT(mSProxy,
-                NR_ASYNC_WAIT_READ,
-                &NrSocketProxyTest::readable_cb,
+  NR_ASYNC_WAIT(mSProxy, NR_ASYNC_WAIT_READ, &NrSocketProxyTest::readable_cb,
                 this);
   // start callbacks
   mSProxy->OnRead(std::move(mEmptyArray));

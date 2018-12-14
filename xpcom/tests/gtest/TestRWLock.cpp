@@ -20,16 +20,15 @@ static const size_t sWriteLockIteration = 10;
 // test of correctness, but more of a "does this work at all" sort of test.
 
 class RWLockRunnable : public mozilla::Runnable {
-public:
+ public:
   RWLockRunnable(RWLock* aRWLock, mozilla::Atomic<size_t>* aSharedData)
-    : mozilla::Runnable("RWLockRunnable")
-    , mRWLock(aRWLock)
-    , mSharedData(aSharedData)
-  {}
+      : mozilla::Runnable("RWLockRunnable"),
+        mRWLock(aRWLock),
+        mSharedData(aSharedData) {}
 
   NS_DECL_NSIRUNNABLE
 
-private:
+ private:
   ~RWLockRunnable() = default;
 
   RWLock* mRWLock;
@@ -37,8 +36,7 @@ private:
 };
 
 NS_IMETHODIMP
-RWLockRunnable::Run()
-{
+RWLockRunnable::Run() {
   for (size_t i = 0; i < sOuterIterations; ++i) {
     if (i % sWriteLockIteration == 0) {
       mozilla::AutoWriteLock lock(*mRWLock);
@@ -62,8 +60,7 @@ RWLockRunnable::Run()
   return NS_OK;
 }
 
-TEST(RWLock, SmokeTest)
-{
+TEST(RWLock, SmokeTest) {
   nsCOMPtr<nsIThread> threads[sNumThreads];
   RWLock rwlock("test lock");
   mozilla::Atomic<size_t> data(0);

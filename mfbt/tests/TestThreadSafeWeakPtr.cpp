@@ -10,31 +10,27 @@
 using mozilla::SupportsThreadSafeWeakPtr;
 using mozilla::ThreadSafeWeakPtr;
 
-// To have a class C support weak pointers, inherit from SupportsThreadSafeWeakPtr<C>.
-class C : public SupportsThreadSafeWeakPtr<C>
-{
-public:
+// To have a class C support weak pointers, inherit from
+// SupportsThreadSafeWeakPtr<C>.
+class C : public SupportsThreadSafeWeakPtr<C> {
+ public:
   MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(C)
   MOZ_DECLARE_REFCOUNTED_TYPENAME(C)
 
   int mNum;
 
-  C()
-    : mNum(0)
-  {}
+  C() : mNum(0) {}
 
-  ~C()
-  {
-    // Setting mNum in the destructor allows us to test against use-after-free below
+  ~C() {
+    // Setting mNum in the destructor allows us to test against use-after-free
+    // below
     mNum = 0xDEAD;
   }
 
   void act() {}
 };
 
-int
-main()
-{
+int main() {
   RefPtr<C> c1 = new C;
   MOZ_RELEASE_ASSERT(c1->mNum == 0);
 
@@ -62,26 +58,29 @@ main()
     MOZ_RELEASE_ASSERT(s2->mNum == 1);
   }
 
-  // Test that when a ThreadSafeWeakPtr is destroyed, it does not destroy the object that it points to,
-  // and it does not affect other ThreadSafeWeakPtrs pointing to the same object (e.g. it does not
-  // destroy the ThreadSafeWeakReference object).
+  // Test that when a ThreadSafeWeakPtr is destroyed, it does not destroy the
+  // object that it points to, and it does not affect other ThreadSafeWeakPtrs
+  // pointing to the same object (e.g. it does not destroy the
+  // ThreadSafeWeakReference object).
   {
     ThreadSafeWeakPtr<C> w4local(c1);
     MOZ_RELEASE_ASSERT(w4local == c1);
   }
-  // Now w4local has gone out of scope. If that had destroyed c1, then the following would fail
-  // for sure (see C::~C()).
+  // Now w4local has gone out of scope. If that had destroyed c1, then the
+  // following would fail for sure (see C::~C()).
   MOZ_RELEASE_ASSERT(c1->mNum == 1);
-  // Check that w4local going out of scope hasn't affected other ThreadSafeWeakPtr's pointing to c1
+  // Check that w4local going out of scope hasn't affected other
+  // ThreadSafeWeakPtr's pointing to c1
   MOZ_RELEASE_ASSERT(w1 == c1);
   MOZ_RELEASE_ASSERT(w2 == c1);
 
-  // Now construct another C object and test changing what object a ThreadSafeWeakPtr points to
+  // Now construct another C object and test changing what object a
+  // ThreadSafeWeakPtr points to
   RefPtr<C> c2 = new C;
   c2->mNum = 2;
   {
     RefPtr<C> s2(w2);
-    MOZ_RELEASE_ASSERT(s2->mNum == 1); // w2 was pointing to c1
+    MOZ_RELEASE_ASSERT(s2->mNum == 1);  // w2 was pointing to c1
   }
   w2 = c2;
   {
@@ -96,9 +95,13 @@ main()
   // Destroying the underlying object clears weak pointers to it.
   // It should not affect pointers that are not currently pointing to it.
   c1 = nullptr;
-  MOZ_RELEASE_ASSERT(!bool(w1), "Deleting an object should clear ThreadSafeWeakPtr's to it.");
-  MOZ_RELEASE_ASSERT(bool(w2), "Deleting an object should not clear ThreadSafeWeakPtr that are not pointing to it.");
+  MOZ_RELEASE_ASSERT(
+      !bool(w1), "Deleting an object should clear ThreadSafeWeakPtr's to it.");
+  MOZ_RELEASE_ASSERT(bool(w2),
+                     "Deleting an object should not clear ThreadSafeWeakPtr "
+                     "that are not pointing to it.");
 
   c2 = nullptr;
-  MOZ_RELEASE_ASSERT(!bool(w2), "Deleting an object should clear ThreadSafeWeakPtr's to it.");
+  MOZ_RELEASE_ASSERT(
+      !bool(w2), "Deleting an object should clear ThreadSafeWeakPtr's to it.");
 }

@@ -11,186 +11,176 @@
 #include <stdio.h>
 #include <functional>
 
-using mozilla::IsSame;
 using mozilla::DeclVal;
+using mozilla::IsSame;
 
 /**************************************************************
   Now define the token deallocator class...
  **************************************************************/
 namespace TestNsDeque {
 
-  class _Dealloc: public nsDequeFunctor
-  {
-    virtual void operator()(void* aObject) {}
-  };
+class _Dealloc : public nsDequeFunctor {
+  virtual void operator()(void* aObject) {}
+};
 
-  static bool VerifyContents(const nsDeque& aDeque, const int* aContents, size_t aLength)
-  {
-    for (size_t i=0; i<aLength; ++i) {
-      if (*(int*)aDeque.ObjectAt(i) != aContents[i]) {
-        return false;
-      }
+static bool VerifyContents(const nsDeque& aDeque, const int* aContents,
+                           size_t aLength) {
+  for (size_t i = 0; i < aLength; ++i) {
+    if (*(int*)aDeque.ObjectAt(i) != aContents[i]) {
+      return false;
     }
-    return true;
+  }
+  return true;
+}
+
+class Deallocator : public nsDequeFunctor {
+  virtual void operator()(void* aObject) {
+    if (aObject) {
+      // Set value to -1, to use in test function.
+      *((int*)aObject) = -1;
+    }
+  }
+};
+
+class ForEachAdder : public nsDequeFunctor {
+  virtual void operator()(void* aObject) {
+    if (aObject) {
+      sum += *(int*)aObject;
+    }
   }
 
-  class Deallocator: public nsDequeFunctor
-  {
-    virtual void operator()(void* aObject)
-    {
-      if (aObject)
-      {
-        // Set value to -1, to use in test function.
-        *((int*)aObject) = -1;
-      }
-    }
-  };
+ private:
+  int sum = 0;
 
-  class ForEachAdder: public nsDequeFunctor
-  {
-    virtual void operator()(void* aObject)
-    {
-      if (aObject)
-      {
-        sum += *(int*)aObject;
-      }
-    }
-
-    private:
-     int sum = 0;
-
-    public:
-     int GetSum() { return sum; }
-
-  };
-}
+ public:
+  int GetSum() { return sum; }
+};
+}  // namespace TestNsDeque
 
 using namespace TestNsDeque;
 
-TEST(NsDeque, OriginalTest)
-{
+TEST(NsDeque, OriginalTest) {
   const size_t size = 200;
   int ints[size];
-  size_t i=0;
+  size_t i = 0;
   int temp;
-  nsDeque theDeque(new _Dealloc); //construct a simple one...
+  nsDeque theDeque(new _Dealloc);  // construct a simple one...
 
   // ints = [0...199]
-  for (i=0;i<size;i++) { //initialize'em
-    ints[i]=static_cast<int>(i);
+  for (i = 0; i < size; i++) {  // initialize'em
+    ints[i] = static_cast<int>(i);
   }
   // queue = [0...69]
-  for (i=0;i<70;i++) {
+  for (i = 0; i < 70; i++) {
     theDeque.Push(&ints[i]);
-    temp=*(int*)theDeque.Peek();
+    temp = *(int*)theDeque.Peek();
     EXPECT_EQ(static_cast<int>(i), temp) << "Verify end after push #1";
     EXPECT_EQ(i + 1, theDeque.GetSize()) << "Verify size after push #1";
   }
 
-  EXPECT_EQ(70u,theDeque.GetSize()) << "Verify overall size after pushes #1";
+  EXPECT_EQ(70u, theDeque.GetSize()) << "Verify overall size after pushes #1";
 
   // queue = [0...14]
-  for (i=1;i<=55;i++) {
-    temp=*(int*)theDeque.Pop();
-    EXPECT_EQ(70-static_cast<int>(i),temp) << "Verify end after pop # 1";
-    EXPECT_EQ(70u - i,theDeque.GetSize()) << "Verify size after pop # 1";
+  for (i = 1; i <= 55; i++) {
+    temp = *(int*)theDeque.Pop();
+    EXPECT_EQ(70 - static_cast<int>(i), temp) << "Verify end after pop # 1";
+    EXPECT_EQ(70u - i, theDeque.GetSize()) << "Verify size after pop # 1";
   }
-  EXPECT_EQ(15u,theDeque.GetSize()) << "Verify overall size after pops";
+  EXPECT_EQ(15u, theDeque.GetSize()) << "Verify overall size after pops";
 
   // queue = [0...14,0...54]
-  for (i=0;i<55;i++) {
-    theDeque.Push(&ints[i]);
-    temp=*(int*)theDeque.Peek();
-    EXPECT_EQ(static_cast<int>(i),temp) << "Verify end after push #2";
-    EXPECT_EQ(i + 15u + 1,theDeque.GetSize()) << "Verify size after push # 2";
-  }
-  EXPECT_EQ(70u,theDeque.GetSize()) << "Verify size after end of all pushes #2";
-
-  // queue = [0...14,0...19]
-  for (i=1;i<=35;i++) {
-    temp=*(int*)theDeque.Pop();
-    EXPECT_EQ(55-static_cast<int>(i),temp ) << "Verify end after pop # 2";
-    EXPECT_EQ(70u - i,theDeque.GetSize()) << "Verify size after pop #2";
-  }
-  EXPECT_EQ(35u,theDeque.GetSize()) << "Verify overall size after end of all pops #2";
-
-  // queue = [0...14,0...19,0...34]
-  for (i=0;i<35;i++) {
+  for (i = 0; i < 55; i++) {
     theDeque.Push(&ints[i]);
     temp = *(int*)theDeque.Peek();
-    EXPECT_EQ(static_cast<int>(i),temp) << "Verify end after push # 3";
-    EXPECT_EQ(35u + 1u + i,theDeque.GetSize()) << "Verify size after push #3";
+    EXPECT_EQ(static_cast<int>(i), temp) << "Verify end after push #2";
+    EXPECT_EQ(i + 15u + 1, theDeque.GetSize()) << "Verify size after push # 2";
+  }
+  EXPECT_EQ(70u, theDeque.GetSize())
+      << "Verify size after end of all pushes #2";
+
+  // queue = [0...14,0...19]
+  for (i = 1; i <= 35; i++) {
+    temp = *(int*)theDeque.Pop();
+    EXPECT_EQ(55 - static_cast<int>(i), temp) << "Verify end after pop # 2";
+    EXPECT_EQ(70u - i, theDeque.GetSize()) << "Verify size after pop #2";
+  }
+  EXPECT_EQ(35u, theDeque.GetSize())
+      << "Verify overall size after end of all pops #2";
+
+  // queue = [0...14,0...19,0...34]
+  for (i = 0; i < 35; i++) {
+    theDeque.Push(&ints[i]);
+    temp = *(int*)theDeque.Peek();
+    EXPECT_EQ(static_cast<int>(i), temp) << "Verify end after push # 3";
+    EXPECT_EQ(35u + 1u + i, theDeque.GetSize()) << "Verify size after push #3";
   }
 
   // queue = [0...14,0...19]
-  for (i=0;i<35;i++) {
-    temp=*(int*)theDeque.Pop();
+  for (i = 0; i < 35; i++) {
+    temp = *(int*)theDeque.Pop();
     EXPECT_EQ(34 - static_cast<int>(i), temp) << "Verify end after pop # 3";
   }
 
   // queue = [0...14]
-  for (i=0;i<20;i++) {
-    temp=*(int*)theDeque.Pop();
-    EXPECT_EQ(19 - static_cast<int>(i),temp) << "Verify end after pop # 4";
+  for (i = 0; i < 20; i++) {
+    temp = *(int*)theDeque.Pop();
+    EXPECT_EQ(19 - static_cast<int>(i), temp) << "Verify end after pop # 4";
   }
 
   // queue = []
-  for (i=0;i<15;i++) {
-    temp=*(int*)theDeque.Pop();
-    EXPECT_EQ(14 - static_cast<int>(i),temp) << "Verify end after pop # 5";
+  for (i = 0; i < 15; i++) {
+    temp = *(int*)theDeque.Pop();
+    EXPECT_EQ(14 - static_cast<int>(i), temp) << "Verify end after pop # 5";
   }
 
-  EXPECT_EQ(0u,theDeque.GetSize()) << "Deque should finish empty.";
+  EXPECT_EQ(0u, theDeque.GetSize()) << "Deque should finish empty.";
 }
 
-TEST(NsDeque, OriginalFlaw)
-{
+TEST(NsDeque, OriginalFlaw) {
   int ints[200];
-  int i=0;
+  int i = 0;
   int temp;
   nsDeque d(new _Dealloc);
   /**
    * Test 1. Origin near end, semi full, call Peek().
    * you start, mCapacity is 8
    */
-  for (i=0; i<30; i++)
-    ints[i]=i;
+  for (i = 0; i < 30; i++) ints[i] = i;
 
-  for (i=0; i<6; i++) {
+  for (i = 0; i < 6; i++) {
     d.Push(&ints[i]);
     temp = *(int*)d.Peek();
     EXPECT_EQ(i, temp) << "OriginalFlaw push #1";
   }
   EXPECT_EQ(6u, d.GetSize()) << "OriginalFlaw size check #1";
 
-  for (i=0; i<4; i++) {
-    temp=*(int*)d.PopFront();
+  for (i = 0; i < 4; i++) {
+    temp = *(int*)d.PopFront();
     EXPECT_EQ(i, temp) << "PopFront test";
   }
   // d = [4,5]
   EXPECT_EQ(2u, d.GetSize()) << "OriginalFlaw size check #2";
 
-  for (i=0; i<4; i++) {
+  for (i = 0; i < 4; i++) {
     d.Push(&ints[6 + i]);
   }
 
   // d = [4...9]
-  for (i=4; i<=9; i++) {
-    temp=*(int*)d.PopFront();
+  for (i = 4; i <= 9; i++) {
+    temp = *(int*)d.PopFront();
     EXPECT_EQ(i, temp) << "OriginalFlaw empty check";
   }
 }
 
-TEST(NsDeque, TestObjectAt)
-{
+TEST(NsDeque, TestObjectAt) {
   nsDeque d;
   const int count = 10;
   int ints[count];
-  for (int i=0; i<count; i++) {
+  for (int i = 0; i < count; i++) {
     ints[i] = i;
   }
 
-  for (int i=0; i<6; i++) {
+  for (int i = 0; i < 6; i++) {
     d.Push(&ints[i]);
   }
   // d = [0...5]
@@ -198,15 +188,15 @@ TEST(NsDeque, TestObjectAt)
   d.PopFront();
 
   // d = [2..5]
-  for (size_t i=2; i<=5; i++) {
-    int t = *(int*)d.ObjectAt(i-2);
-    EXPECT_EQ(static_cast<int>(i),t) << "Verify ObjectAt()";
+  for (size_t i = 2; i <= 5; i++) {
+    int t = *(int*)d.ObjectAt(i - 2);
+    EXPECT_EQ(static_cast<int>(i), t) << "Verify ObjectAt()";
   }
 }
 
-TEST(NsDeque, TestPushFront)
-{
-  // PushFront has some interesting corner cases, primarily we're interested in whether:
+TEST(NsDeque, TestPushFront) {
+  // PushFront has some interesting corner cases, primarily we're interested in
+  // whether:
   // - wrapping around works properly
   // - growing works properly
 
@@ -226,36 +216,39 @@ TEST(NsDeque, TestPushFront)
 
   EXPECT_EQ(kMaxSizeBeforeGrowth, d.GetSize()) << "verify size";
 
-  static const int t1[] = {7,6,5,4,3,2,1,0};
-  EXPECT_TRUE(VerifyContents(d, t1, kMaxSizeBeforeGrowth)) << "verify pushfront 1";
+  static const int t1[] = {7, 6, 5, 4, 3, 2, 1, 0};
+  EXPECT_TRUE(VerifyContents(d, t1, kMaxSizeBeforeGrowth))
+      << "verify pushfront 1";
 
   // Now push one more so it grows
   d.PushFront(pool + kMaxSizeBeforeGrowth);
   EXPECT_EQ(kMaxSizeBeforeGrowth + 1, d.GetSize()) << "verify size";
 
-  static const int t2[] = {8,7,6,5,4,3,2,1,0};
-  EXPECT_TRUE(VerifyContents(d, t2, kMaxSizeBeforeGrowth + 1)) << "verify pushfront 2";
+  static const int t2[] = {8, 7, 6, 5, 4, 3, 2, 1, 0};
+  EXPECT_TRUE(VerifyContents(d, t2, kMaxSizeBeforeGrowth + 1))
+      << "verify pushfront 2";
 
   // And one more so that it wraps again
   d.PushFront(pool + kMaxSizeBeforeGrowth + 1);
   EXPECT_EQ(kMaxSizeBeforeGrowth + 2, d.GetSize()) << "verify size";
 
-  static const int t3[] = {9,8,7,6,5,4,3,2,1,0};
-  EXPECT_TRUE(VerifyContents(d, t3, kMaxSizeBeforeGrowth + 2)) <<"verify pushfront 3";
+  static const int t3[] = {9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+  EXPECT_TRUE(VerifyContents(d, t3, kMaxSizeBeforeGrowth + 2))
+      << "verify pushfront 3";
 }
 
-void CheckIfQueueEmpty(nsDeque& d)
-{
-  EXPECT_EQ(0u, d.GetSize())         << "Size should be 0";
-  EXPECT_EQ(nullptr, d.Pop())       <<  "Invalid operation should return nullptr";
-  EXPECT_EQ(nullptr, d.PopFront())  <<  "Invalid operation should return nullptr";
-  EXPECT_EQ(nullptr, d.Peek())      <<  "Invalid operation should return nullptr";
-  EXPECT_EQ(nullptr, d.PeekFront()) <<  "Invalid operation should return nullptr";
-  EXPECT_EQ(nullptr, d.ObjectAt(0u)) <<  "Invalid operation should return nullptr";
+void CheckIfQueueEmpty(nsDeque& d) {
+  EXPECT_EQ(0u, d.GetSize()) << "Size should be 0";
+  EXPECT_EQ(nullptr, d.Pop()) << "Invalid operation should return nullptr";
+  EXPECT_EQ(nullptr, d.PopFront()) << "Invalid operation should return nullptr";
+  EXPECT_EQ(nullptr, d.Peek()) << "Invalid operation should return nullptr";
+  EXPECT_EQ(nullptr, d.PeekFront())
+      << "Invalid operation should return nullptr";
+  EXPECT_EQ(nullptr, d.ObjectAt(0u))
+      << "Invalid operation should return nullptr";
 }
 
-TEST(NsDeque,TestEmpty)
-{
+TEST(NsDeque, TestEmpty) {
   // Make sure nsDeque gives sane results if it's empty.
   nsDeque d;
   size_t numberOfEntries = 8;
@@ -277,8 +270,7 @@ TEST(NsDeque,TestEmpty)
   CheckIfQueueEmpty(d);
 }
 
-TEST(NsDeque,TestEraseMethod)
-{
+TEST(NsDeque, TestEraseMethod) {
   nsDeque d;
   const size_t numberOfEntries = 8;
 
@@ -294,14 +286,12 @@ TEST(NsDeque,TestEraseMethod)
   CheckIfQueueEmpty(d);
 }
 
-TEST(NsDeque,TestEraseShouldCallDeallocator)
-{
+TEST(NsDeque, TestEraseShouldCallDeallocator) {
   nsDeque d(new Deallocator());
   const size_t NumTestValues = 8;
 
   int* testArray[NumTestValues];
-  for (size_t i=0; i < NumTestValues; i++)
-  {
+  for (size_t i = 0; i < NumTestValues; i++) {
     testArray[i] = new int();
     *(testArray[i]) = i;
     d.Push((void*)testArray[i]);
@@ -312,21 +302,19 @@ TEST(NsDeque,TestEraseShouldCallDeallocator)
   // Now check it again.
   CheckIfQueueEmpty(d);
 
-  for (size_t i=0; i < NumTestValues; i++)
-  {
-    EXPECT_EQ(-1, *(testArray[i])) << "Erase should call deallocator: " << *(testArray[i]);
+  for (size_t i = 0; i < NumTestValues; i++) {
+    EXPECT_EQ(-1, *(testArray[i]))
+        << "Erase should call deallocator: " << *(testArray[i]);
   }
 }
 
-TEST(NsDeque, TestForEach)
-{
+TEST(NsDeque, TestForEach) {
   nsDeque d(new Deallocator());
   const size_t NumTestValues = 8;
   int sum = 0;
 
   int* testArray[NumTestValues];
-  for (size_t i=0; i < NumTestValues; i++)
-  {
+  for (size_t i = 0; i < NumTestValues; i++) {
     testArray[i] = new int();
     *(testArray[i]) = i;
     sum += i;
@@ -340,13 +328,11 @@ TEST(NsDeque, TestForEach)
   d.Erase();
 }
 
-TEST(NsDeque, TestConstRangeFor)
-{
+TEST(NsDeque, TestConstRangeFor) {
   nsDeque d(new Deallocator());
 
   const size_t NumTestValues = 3;
-  for (size_t i = 0; i < NumTestValues; ++i)
-  {
+  for (size_t i = 0; i < NumTestValues; ++i) {
     d.Push(new int(i + 1));
   }
 
@@ -361,15 +347,12 @@ TEST(NsDeque, TestConstRangeFor)
   for (void* ob : const_cast<const nsDeque&>(d)) {
     sum += *static_cast<int*>(ob);
   }
-  EXPECT_EQ(1+2+3, sum)
-    << "Const-range-for should iterate over values";
+  EXPECT_EQ(1 + 2 + 3, sum) << "Const-range-for should iterate over values";
 }
 
-TEST(NsDeque, TestRangeFor)
-{
+TEST(NsDeque, TestRangeFor) {
   const size_t NumTestValues = 3;
-  struct Test
-  {
+  struct Test {
     size_t runAfterLoopCount;
     std::function<void(nsDeque&)> function;
     int expectedSum;
@@ -377,63 +360,84 @@ TEST(NsDeque, TestRangeFor)
   };
   // Note: All tests start with a deque containing 3 pointers to ints 1, 2, 3.
   Test tests[] = {
-    { 0, [](nsDeque& d){}, 1+2+3, "no changes" },
+      {0, [](nsDeque& d) {}, 1 + 2 + 3, "no changes"},
 
-    { 1, [](nsDeque& d) { d.Pop(); }, 1+2, "Pop after 1st loop" },
-    { 2, [](nsDeque& d) { d.Pop(); }, 1+2, "Pop after 2nd loop" },
-    { 3, [](nsDeque& d) { d.Pop(); }, 1+2+3, "Pop after 3rd loop" },
+      {1, [](nsDeque& d) { d.Pop(); }, 1 + 2, "Pop after 1st loop"},
+      {2, [](nsDeque& d) { d.Pop(); }, 1 + 2, "Pop after 2nd loop"},
+      {3, [](nsDeque& d) { d.Pop(); }, 1 + 2 + 3, "Pop after 3rd loop"},
 
-    { 1, [](nsDeque& d) { d.PopFront(); }, 1+3, "PopFront after 1st loop" },
-    { 2, [](nsDeque& d) { d.PopFront(); }, 1+2, "PopFront after 2nd loop" },
-    { 3, [](nsDeque& d) { d.PopFront(); }, 1+2+3, "PopFront after 3rd loop" },
+      {1, [](nsDeque& d) { d.PopFront(); }, 1 + 3, "PopFront after 1st loop"},
+      {2, [](nsDeque& d) { d.PopFront(); }, 1 + 2, "PopFront after 2nd loop"},
+      {3, [](nsDeque& d) { d.PopFront(); }, 1 + 2 + 3,
+       "PopFront after 3rd loop"},
 
-    { 1, [](nsDeque& d) { d.Push(new int(4)); },
-      1+2+3+4, "Push after 1st loop" },
-    { 2, [](nsDeque& d) { d.Push(new int(4)); },
-      1+2+3+4, "Push after 2nd loop" },
-    { 3, [](nsDeque& d) { d.Push(new int(4)); },
-      1+2+3+4, "Push after 3rd loop" },
-    { 4, [](nsDeque& d) { d.Push(new int(4)); },
-      1+2+3, "Push after would-be-4th loop" },
+      {1, [](nsDeque& d) { d.Push(new int(4)); }, 1 + 2 + 3 + 4,
+       "Push after 1st loop"},
+      {2, [](nsDeque& d) { d.Push(new int(4)); }, 1 + 2 + 3 + 4,
+       "Push after 2nd loop"},
+      {3, [](nsDeque& d) { d.Push(new int(4)); }, 1 + 2 + 3 + 4,
+       "Push after 3rd loop"},
+      {4, [](nsDeque& d) { d.Push(new int(4)); }, 1 + 2 + 3,
+       "Push after would-be-4th loop"},
 
-    { 1, [](nsDeque& d) { d.PushFront(new int(4)); },
-      1+1+2+3, "PushFront after 1st loop" },
-    { 2, [](nsDeque& d) { d.PushFront(new int(4)); },
-      1+2+2+3, "PushFront after 2nd loop" },
-    { 3, [](nsDeque& d) { d.PushFront(new int(4)); },
-      1+2+3+3, "PushFront after 3rd loop" },
-    { 4, [](nsDeque& d) { d.PushFront(new int(4)); },
-      1+2+3, "PushFront after would-be-4th loop" },
+      {1, [](nsDeque& d) { d.PushFront(new int(4)); }, 1 + 1 + 2 + 3,
+       "PushFront after 1st loop"},
+      {2, [](nsDeque& d) { d.PushFront(new int(4)); }, 1 + 2 + 2 + 3,
+       "PushFront after 2nd loop"},
+      {3, [](nsDeque& d) { d.PushFront(new int(4)); }, 1 + 2 + 3 + 3,
+       "PushFront after 3rd loop"},
+      {4, [](nsDeque& d) { d.PushFront(new int(4)); }, 1 + 2 + 3,
+       "PushFront after would-be-4th loop"},
 
-    { 1, [](nsDeque& d) { d.Erase(); }, 1, "Erase after 1st loop" },
-    { 2, [](nsDeque& d) { d.Erase(); }, 1+2, "Erase after 2nd loop" },
-    { 3, [](nsDeque& d) { d.Erase(); }, 1+2+3, "Erase after 3rd loop" },
+      {1, [](nsDeque& d) { d.Erase(); }, 1, "Erase after 1st loop"},
+      {2, [](nsDeque& d) { d.Erase(); }, 1 + 2, "Erase after 2nd loop"},
+      {3, [](nsDeque& d) { d.Erase(); }, 1 + 2 + 3, "Erase after 3rd loop"},
 
-    { 1, [](nsDeque& d) { d.Erase(); d.Push(new int(4)); },
-      1, "Erase after 1st loop, Push 4" },
-    { 1, [](nsDeque& d) { d.Erase(); d.Push(new int(4)); d.Push(new int(5)); },
-      1+5, "Erase after 1st loop, Push 4,5" },
-    { 2, [](nsDeque& d) { d.Erase(); d.Push(new int(4)); },
-      1+2, "Erase after 2nd loop, Push 4" },
-    { 2, [](nsDeque& d) { d.Erase(); d.Push(new int(4)); d.Push(new int(5)); },
-      1+2, "Erase after 2nd loop, Push 4,5" },
-    { 2, [](nsDeque& d) { d.Erase(); d.Push(new int(4)); d.Push(new int(5)); d.Push(new int(6)); },
-      1+2+6, "Erase after 2nd loop, Push 4,5,6" }
-  };
+      {1,
+       [](nsDeque& d) {
+         d.Erase();
+         d.Push(new int(4));
+       },
+       1, "Erase after 1st loop, Push 4"},
+      {1,
+       [](nsDeque& d) {
+         d.Erase();
+         d.Push(new int(4));
+         d.Push(new int(5));
+       },
+       1 + 5, "Erase after 1st loop, Push 4,5"},
+      {2,
+       [](nsDeque& d) {
+         d.Erase();
+         d.Push(new int(4));
+       },
+       1 + 2, "Erase after 2nd loop, Push 4"},
+      {2,
+       [](nsDeque& d) {
+         d.Erase();
+         d.Push(new int(4));
+         d.Push(new int(5));
+       },
+       1 + 2, "Erase after 2nd loop, Push 4,5"},
+      {2,
+       [](nsDeque& d) {
+         d.Erase();
+         d.Push(new int(4));
+         d.Push(new int(5));
+         d.Push(new int(6));
+       },
+       1 + 2 + 6, "Erase after 2nd loop, Push 4,5,6"}};
 
   for (const Test& test : tests) {
     nsDeque d(new Deallocator());
 
-    for (size_t i = 0; i < NumTestValues; ++i)
-    {
+    for (size_t i = 0; i < NumTestValues; ++i) {
       d.Push(new int(i + 1));
     }
 
-    static_assert(IsSame<nsDeque::ConstIterator,
-                        decltype(d.begin())>::value,
+    static_assert(IsSame<nsDeque::ConstIterator, decltype(d.begin())>::value,
                   "(non-const nsDeque).begin() should return ConstIterator");
-    static_assert(IsSame<nsDeque::ConstIterator,
-                        decltype(d.end())>::value,
+    static_assert(IsSame<nsDeque::ConstIterator, decltype(d.end())>::value,
                   "(non-const nsDeque).end() should return ConstIterator");
 
     int sum = 0;
@@ -445,8 +449,7 @@ TEST(NsDeque, TestRangeFor)
       }
     }
     EXPECT_EQ(test.expectedSum, sum)
-      << "Range-for should iterate over values in test '"
-      << test.description
-      << "'";
+        << "Range-for should iterate over values in test '" << test.description
+        << "'";
   }
 }

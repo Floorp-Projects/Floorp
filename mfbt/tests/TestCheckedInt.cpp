@@ -15,10 +15,8 @@ int gIntegerTypesTested = 0;
 int gTestsPassed = 0;
 int gTestsFailed = 0;
 
-void verifyImplFunction(bool aX, bool aExpected,
-                        const char* aFile, int aLine,
-                        int aSize, bool aIsTSigned)
-{
+void verifyImplFunction(bool aX, bool aExpected, const char* aFile, int aLine,
+                        int aSize, bool aIsTSigned) {
   if (aX == aExpected) {
     gTestsPassed++;
   } else {
@@ -34,47 +32,37 @@ void verifyImplFunction(bool aX, bool aExpected,
   }
 }
 
-#define VERIFY_IMPL(x, expected) \
-    verifyImplFunction((x), \
-    (expected), \
-    __FILE__, \
-    __LINE__, \
-    sizeof(T), \
-    IsSigned<T>::value)
+#define VERIFY_IMPL(x, expected)                                     \
+  verifyImplFunction((x), (expected), __FILE__, __LINE__, sizeof(T), \
+                     IsSigned<T>::value)
 
-#define VERIFY(x)            VERIFY_IMPL(x, true)
-#define VERIFY_IS_FALSE(x)   VERIFY_IMPL(x, false)
-#define VERIFY_IS_VALID(x)   VERIFY_IMPL((x).isValid(), true)
+#define VERIFY(x) VERIFY_IMPL(x, true)
+#define VERIFY_IS_FALSE(x) VERIFY_IMPL(x, false)
+#define VERIFY_IS_VALID(x) VERIFY_IMPL((x).isValid(), true)
 #define VERIFY_IS_INVALID(x) VERIFY_IMPL((x).isValid(), false)
-#define VERIFY_IS_VALID_IF(x,condition) VERIFY_IMPL((x).isValid(), (condition))
+#define VERIFY_IS_VALID_IF(x, condition) VERIFY_IMPL((x).isValid(), (condition))
 
-template<typename T, size_t Size = sizeof(T)>
-struct testTwiceBiggerType
-{
-  static void run()
-  {
-    VERIFY(detail::IsSupported<typename detail::TwiceBiggerType<T>::Type>::value);
+template <typename T, size_t Size = sizeof(T)>
+struct testTwiceBiggerType {
+  static void run() {
+    VERIFY(
+        detail::IsSupported<typename detail::TwiceBiggerType<T>::Type>::value);
     VERIFY(sizeof(typename detail::TwiceBiggerType<T>::Type) == 2 * sizeof(T));
     VERIFY(bool(IsSigned<typename detail::TwiceBiggerType<T>::Type>::value) ==
            bool(IsSigned<T>::value));
   }
 };
 
-template<typename T>
-struct testTwiceBiggerType<T, 8>
-{
-  static void run()
-  {
-    VERIFY_IS_FALSE(detail::IsSupported<
-                      typename detail::TwiceBiggerType<T>::Type
-                    >::value);
+template <typename T>
+struct testTwiceBiggerType<T, 8> {
+  static void run() {
+    VERIFY_IS_FALSE(
+        detail::IsSupported<typename detail::TwiceBiggerType<T>::Type>::value);
   }
 };
 
-
-template<typename T>
-void test()
-{
+template <typename T>
+void test() {
   static bool alreadyRun = false;
   // Integer types from different families may just be typedefs for types from
   // other families. E.g. int32_t might be just a typedef for int. No point
@@ -122,7 +110,7 @@ void test()
 
   VERIFY_IS_VALID(zero + zero);
   VERIFY(zero + zero == zero);
-  VERIFY_IS_FALSE(zero + zero == one); // Check == doesn't always return true
+  VERIFY_IS_FALSE(zero + zero == one);  // Check == doesn't always return true
   VERIFY_IS_VALID(zero + one);
   VERIFY(zero + one == one);
   VERIFY_IS_VALID(one + one);
@@ -252,7 +240,7 @@ void test()
   VERIFY_IS_INVALID(maxOverTwo * max);
   VERIFY_IS_INVALID(maxOverTwo * maxOverTwo);
 
-  const CheckedInt<T> maxApproxSqrt(T(T(1) << (CHAR_BIT*sizeof(T)/2)));
+  const CheckedInt<T> maxApproxSqrt(T(T(1) << (CHAR_BIT * sizeof(T) / 2)));
 
   VERIFY_IS_VALID(maxApproxSqrt);
   VERIFY_IS_VALID(maxApproxSqrt * two);
@@ -329,7 +317,7 @@ void test()
   VERIFY(three / three == one);
   VERIFY_IS_VALID(four / two);
   VERIFY(four / two == two);
-  VERIFY((four*three)/four == three);
+  VERIFY((four * three) / four == three);
 
   // Check that div by zero is invalid
   VERIFY_IS_INVALID(zero / zero);
@@ -501,28 +489,32 @@ void test()
   // Check that construction of CheckedInt from an integer value of a
   // mismatched type is checked Also check casting between all types.
 
-  #define VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE2(U,V,PostVExpr) \
-  { \
-    bool isUSigned = IsSigned<U>::value; \
-    VERIFY_IS_VALID(CheckedInt<T>(V(  0)PostVExpr)); \
-    VERIFY_IS_VALID(CheckedInt<T>(V(  1)PostVExpr)); \
-    VERIFY_IS_VALID(CheckedInt<T>(V(100)PostVExpr)); \
-    if (isUSigned) { \
-      VERIFY_IS_VALID_IF(CheckedInt<T>(V(-1)PostVExpr), isTSigned); \
-    } \
-    if (sizeof(U) > sizeof(T)) { \
-      VERIFY_IS_INVALID(CheckedInt<T>(V(MaxValue<T>::value)PostVExpr + one.value())); \
-    } \
-    VERIFY_IS_VALID_IF(CheckedInt<T>(MaxValue<U>::value), \
-      (sizeof(T) > sizeof(U) || ((sizeof(T) == sizeof(U)) && (isUSigned || !isTSigned)))); \
-    VERIFY_IS_VALID_IF(CheckedInt<T>(MinValue<U>::value), \
-      isUSigned == false ? 1 \
-                         : bool(isTSigned) == false ? 0 \
-                                                    : sizeof(T) >= sizeof(U)); \
+#define VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE2(U, V, PostVExpr)          \
+  {                                                                      \
+    bool isUSigned = IsSigned<U>::value;                                 \
+    VERIFY_IS_VALID(CheckedInt<T>(V(0) PostVExpr));                      \
+    VERIFY_IS_VALID(CheckedInt<T>(V(1) PostVExpr));                      \
+    VERIFY_IS_VALID(CheckedInt<T>(V(100) PostVExpr));                    \
+    if (isUSigned) {                                                     \
+      VERIFY_IS_VALID_IF(CheckedInt<T>(V(-1) PostVExpr), isTSigned);     \
+    }                                                                    \
+    if (sizeof(U) > sizeof(T)) {                                         \
+      VERIFY_IS_INVALID(                                                 \
+          CheckedInt<T>(V(MaxValue<T>::value) PostVExpr + one.value())); \
+    }                                                                    \
+    VERIFY_IS_VALID_IF(                                                  \
+        CheckedInt<T>(MaxValue<U>::value),                               \
+        (sizeof(T) > sizeof(U) ||                                        \
+         ((sizeof(T) == sizeof(U)) && (isUSigned || !isTSigned))));      \
+    VERIFY_IS_VALID_IF(                                                  \
+        CheckedInt<T>(MinValue<U>::value),                               \
+        isUSigned == false                                               \
+            ? 1                                                          \
+            : bool(isTSigned) == false ? 0 : sizeof(T) >= sizeof(U));    \
   }
-  #define VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(U) \
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE2(U,U,+zero) \
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE2(U,CheckedInt<U>,.toChecked<T>())
+#define VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(U)      \
+  VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE2(U, U, +zero) \
+  VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE2(U, CheckedInt<U>, .toChecked<T>())
 
   VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(int8_t)
   VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(uint8_t)
@@ -536,7 +528,7 @@ void test()
   typedef signed char signedChar;
   typedef unsigned char unsignedChar;
   typedef unsigned short unsignedShort;
-  typedef unsigned int  unsignedInt;
+  typedef unsigned int unsignedInt;
   typedef unsigned long unsignedLong;
   typedef long long longLong;
   typedef unsigned long long unsignedLongLong;
@@ -584,9 +576,7 @@ void test()
   gIntegerTypesTested++;
 }
 
-int
-main()
-{
+int main() {
   test<int8_t>();
   test<uint8_t>();
   test<int16_t>();
@@ -616,9 +606,8 @@ main()
     gTestsFailed++;
   }
 
-  std::cerr << gTestsFailed << " tests failed, "
-            << gTestsPassed << " tests passed out of "
-            << gTestsFailed + gTestsPassed
+  std::cerr << gTestsFailed << " tests failed, " << gTestsPassed
+            << " tests passed out of " << gTestsFailed + gTestsPassed
             << " tests, covering " << gIntegerTypesTested
             << " distinct integer types." << std::endl;
 

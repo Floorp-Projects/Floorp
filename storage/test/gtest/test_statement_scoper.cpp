@@ -12,19 +12,16 @@
  * This file test our statement scoper in mozStorageHelper.h.
  */
 
-TEST(storage_statement_scoper, automatic_reset)
-{
+TEST(storage_statement_scoper, automatic_reset) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // Need to create a table to populate sqlite_master with an entry.
-  (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE test (id INTEGER PRIMARY KEY)"
-  ));
+  (void)db->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE TABLE test (id INTEGER PRIMARY KEY)"));
 
   nsCOMPtr<mozIStorageStatement> stmt;
-  (void)db->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT * FROM sqlite_master"
-  ), getter_AddRefs(stmt));
+  (void)db->CreateStatement(NS_LITERAL_CSTRING("SELECT * FROM sqlite_master"),
+                            getter_AddRefs(stmt));
 
   // Reality check - make sure we start off in the right state.
   int32_t state = -1;
@@ -50,19 +47,16 @@ TEST(storage_statement_scoper, automatic_reset)
   do_check_true(state == mozIStorageStatement::MOZ_STORAGE_STATEMENT_READY);
 }
 
-TEST(storage_statement_scoper, Abandon)
-{
+TEST(storage_statement_scoper, Abandon) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // Need to create a table to populate sqlite_master with an entry.
-  (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE test (id INTEGER PRIMARY KEY)"
-  ));
+  (void)db->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE TABLE test (id INTEGER PRIMARY KEY)"));
 
   nsCOMPtr<mozIStorageStatement> stmt;
-  (void)db->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT * FROM sqlite_master"
-  ), getter_AddRefs(stmt));
+  (void)db->CreateStatement(NS_LITERAL_CSTRING("SELECT * FROM sqlite_master"),
+                            getter_AddRefs(stmt));
 
   // Reality check - make sure we start off in the right state.
   int32_t state = -1;

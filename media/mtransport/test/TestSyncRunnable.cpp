@@ -13,11 +13,10 @@ using namespace mozilla;
 nsIThread *gThread = nullptr;
 
 class TestRunnable : public Runnable {
-public:
+ public:
   TestRunnable() : Runnable("TestRunnable"), ran_(false) {}
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     ran_ = true;
 
     return NS_OK;
@@ -25,27 +24,23 @@ public:
 
   bool ran() const { return ran_; }
 
-private:
+ private:
   bool ran_;
 };
 
 class TestSyncRunnable : public ::testing::Test {
-public:
-  static void SetUpTestCase()
-  {
+ public:
+  static void SetUpTestCase() {
     nsresult rv = NS_NewNamedThread("thread", &gThread);
     ASSERT_TRUE(NS_SUCCEEDED(rv));
   }
 
-  static void TearDownTestCase()
-  {
-    if (gThread)
-      gThread->Shutdown();
+  static void TearDownTestCase() {
+    if (gThread) gThread->Shutdown();
   }
 };
 
-TEST_F(TestSyncRunnable, TestDispatch)
-{
+TEST_F(TestSyncRunnable, TestDispatch) {
   RefPtr<TestRunnable> r(new TestRunnable());
   RefPtr<SyncRunnable> s(new SyncRunnable(r));
   s->DispatchToThread(gThread);
@@ -53,8 +48,7 @@ TEST_F(TestSyncRunnable, TestDispatch)
   ASSERT_TRUE(r->ran());
 }
 
-TEST_F(TestSyncRunnable, TestDispatchStatic)
-{
+TEST_F(TestSyncRunnable, TestDispatchStatic) {
   RefPtr<TestRunnable> r(new TestRunnable());
   SyncRunnable::DispatchToThread(gThread, r);
   ASSERT_TRUE(r->ran());

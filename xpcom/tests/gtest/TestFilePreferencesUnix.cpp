@@ -10,15 +10,14 @@
 
 using namespace mozilla;
 
-TEST(TestFilePreferencesUnix, Parsing)
-{
-  #define kBlacklisted "/tmp/blacklisted"
-  #define kBlacklistedDir "/tmp/blacklisted/"
-  #define kBlacklistedFile "/tmp/blacklisted/file"
-  #define kOther "/tmp/other"
-  #define kOtherDir "/tmp/other/"
-  #define kOtherFile "/tmp/other/file"
-  #define kAllowed "/tmp/allowed"
+TEST(TestFilePreferencesUnix, Parsing) {
+#define kBlacklisted "/tmp/blacklisted"
+#define kBlacklistedDir "/tmp/blacklisted/"
+#define kBlacklistedFile "/tmp/blacklisted/file"
+#define kOther "/tmp/other"
+#define kOtherDir "/tmp/other/"
+#define kOtherFile "/tmp/other/file"
+#define kAllowed "/tmp/allowed"
 
   // This is run on exit of this function to make sure we clear the pref
   // and that behaviour with the pref cleared is correct.
@@ -26,39 +25,54 @@ TEST(TestFilePreferencesUnix, Parsing)
     nsresult rv = Preferences::ClearUser("network.file.path_blacklist");
     ASSERT_EQ(rv, NS_OK);
     FilePreferences::InitPrefs();
-    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kBlacklisted)), true);
-    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kBlacklistedDir)), true);
-    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kBlacklistedFile)), true);
-    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kAllowed)), true);
+    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kBlacklisted)),
+              true);
+    ASSERT_EQ(
+        FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kBlacklistedDir)),
+        true);
+    ASSERT_EQ(
+        FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kBlacklistedFile)),
+        true);
+    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kAllowed)),
+              true);
   });
 
-  auto CheckPrefs = [](const nsACString& aPaths)
-  {
+  auto CheckPrefs = [](const nsACString& aPaths) {
     nsresult rv;
     rv = Preferences::SetCString("network.file.path_blacklist", aPaths);
     ASSERT_EQ(rv, NS_OK);
     FilePreferences::InitPrefs();
-    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kBlacklistedDir)), false);
-    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kBlacklistedDir)), false);
-    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kBlacklistedFile)), false);
-    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kBlacklisted)), false);
-    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kAllowed)), true);
+    ASSERT_EQ(
+        FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kBlacklistedDir)),
+        false);
+    ASSERT_EQ(
+        FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kBlacklistedDir)),
+        false);
+    ASSERT_EQ(
+        FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kBlacklistedFile)),
+        false);
+    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kBlacklisted)),
+              false);
+    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kAllowed)),
+              true);
   };
 
   CheckPrefs(NS_LITERAL_CSTRING(kBlacklisted));
   CheckPrefs(NS_LITERAL_CSTRING(kBlacklisted "," kOther));
-  ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kOtherFile)), false);
+  ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kOtherFile)),
+            false);
   CheckPrefs(NS_LITERAL_CSTRING(kBlacklisted "," kOther ","));
-  ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kOtherFile)), false);
+  ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kOtherFile)),
+            false);
 }
 
-TEST(TestFilePreferencesUnix, Simple)
-{
+TEST(TestFilePreferencesUnix, Simple) {
   nsAutoCString tempPath;
 
   // This is the directory we will blacklist
   nsCOMPtr<nsIFile> blacklistedDir;
-  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(blacklistedDir));
+  nsresult rv =
+      NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(blacklistedDir));
   ASSERT_EQ(rv, NS_OK);
   rv = blacklistedDir->GetNativePath(tempPath);
   ASSERT_EQ(rv, NS_OK);
@@ -131,7 +145,8 @@ TEST(TestFilePreferencesUnix, Simple)
   // Check that ./ does not bypass the filter
   rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(newPath));
   ASSERT_EQ(rv, NS_OK);
-  rv = newPath->AppendRelativeNativePath(NS_LITERAL_CSTRING("./blacklisted_dir/file"));
+  rv = newPath->AppendRelativeNativePath(
+      NS_LITERAL_CSTRING("./blacklisted_dir/file"));
   ASSERT_EQ(rv, NS_OK);
   rv = newPath->Exists(&exists);
   ASSERT_EQ(rv, NS_ERROR_FILE_ACCESS_DENIED);
@@ -139,7 +154,8 @@ TEST(TestFilePreferencesUnix, Simple)
   // Check that ..  does not bypass the filter
   rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(newPath));
   ASSERT_EQ(rv, NS_OK);
-  rv = newPath->AppendRelativeNativePath(NS_LITERAL_CSTRING("allowed/../blacklisted_dir/file"));
+  rv = newPath->AppendRelativeNativePath(
+      NS_LITERAL_CSTRING("allowed/../blacklisted_dir/file"));
   ASSERT_EQ(rv, NS_OK);
   rv = newPath->Exists(&exists);
   ASSERT_EQ(rv, NS_ERROR_FILE_ACCESS_DENIED);

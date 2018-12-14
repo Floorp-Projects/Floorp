@@ -4,119 +4,117 @@
 #include "nsIFile.h"
 #include "nsXPCOMCID.h"
 
-TEST(FilePreferencesWin, Normalization)
-{
+TEST(FilePreferencesWin, Normalization) {
   nsAutoString normalized;
 
-  mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("foo"), normalized);
+  mozilla::FilePreferences::testing::NormalizePath(NS_LITERAL_STRING("foo"),
+                                                   normalized);
   ASSERT_TRUE(normalized == NS_LITERAL_STRING("foo"));
 
-  mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\foo"), normalized);
+  mozilla::FilePreferences::testing::NormalizePath(NS_LITERAL_STRING("\\foo"),
+                                                   normalized);
   ASSERT_TRUE(normalized == NS_LITERAL_STRING("\\foo"));
 
-  mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\foo"), normalized);
+  mozilla::FilePreferences::testing::NormalizePath(NS_LITERAL_STRING("\\\\foo"),
+                                                   normalized);
   ASSERT_TRUE(normalized == NS_LITERAL_STRING("\\\\foo"));
 
   mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("foo\\some"), normalized);
+      NS_LITERAL_STRING("foo\\some"), normalized);
   ASSERT_TRUE(normalized == NS_LITERAL_STRING("foo\\some"));
 
   mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\.\\foo"), normalized);
+      NS_LITERAL_STRING("\\\\.\\foo"), normalized);
   ASSERT_TRUE(normalized == NS_LITERAL_STRING("\\\\foo"));
 
-  mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\."), normalized);
+  mozilla::FilePreferences::testing::NormalizePath(NS_LITERAL_STRING("\\\\."),
+                                                   normalized);
+  ASSERT_TRUE(normalized == NS_LITERAL_STRING("\\\\"));
+
+  mozilla::FilePreferences::testing::NormalizePath(NS_LITERAL_STRING("\\\\.\\"),
+                                                   normalized);
   ASSERT_TRUE(normalized == NS_LITERAL_STRING("\\\\"));
 
   mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\.\\"), normalized);
+      NS_LITERAL_STRING("\\\\.\\."), normalized);
   ASSERT_TRUE(normalized == NS_LITERAL_STRING("\\\\"));
 
   mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\.\\."), normalized);
-  ASSERT_TRUE(normalized == NS_LITERAL_STRING("\\\\"));
-
-  mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\foo\\bar"), normalized);
+      NS_LITERAL_STRING("\\\\foo\\bar"), normalized);
   ASSERT_TRUE(normalized == NS_LITERAL_STRING("\\\\foo\\bar"));
 
   mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\foo\\bar\\"), normalized);
+      NS_LITERAL_STRING("\\\\foo\\bar\\"), normalized);
   ASSERT_TRUE(normalized == NS_LITERAL_STRING("\\\\foo\\bar\\"));
 
   mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\foo\\bar\\."), normalized);
+      NS_LITERAL_STRING("\\\\foo\\bar\\."), normalized);
   ASSERT_TRUE(normalized == NS_LITERAL_STRING("\\\\foo\\bar\\"));
 
   mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\foo\\bar\\.\\"), normalized);
+      NS_LITERAL_STRING("\\\\foo\\bar\\.\\"), normalized);
   ASSERT_TRUE(normalized == NS_LITERAL_STRING("\\\\foo\\bar\\"));
 
   mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\foo\\bar\\..\\"), normalized);
+      NS_LITERAL_STRING("\\\\foo\\bar\\..\\"), normalized);
   ASSERT_TRUE(normalized == NS_LITERAL_STRING("\\\\foo\\"));
 
   mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\foo\\bar\\.."), normalized);
+      NS_LITERAL_STRING("\\\\foo\\bar\\.."), normalized);
   ASSERT_TRUE(normalized == NS_LITERAL_STRING("\\\\foo\\"));
 
   mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\foo\\..\\bar\\..\\"), normalized);
+      NS_LITERAL_STRING("\\\\foo\\..\\bar\\..\\"), normalized);
   ASSERT_TRUE(normalized == NS_LITERAL_STRING("\\\\"));
 
   mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\foo\\..\\bar"), normalized);
+      NS_LITERAL_STRING("\\\\foo\\..\\bar"), normalized);
   ASSERT_TRUE(normalized == NS_LITERAL_STRING("\\\\bar"));
 
   mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\foo\\bar\\..\\..\\"), normalized);
+      NS_LITERAL_STRING("\\\\foo\\bar\\..\\..\\"), normalized);
   ASSERT_TRUE(normalized == NS_LITERAL_STRING("\\\\"));
 
   mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\foo\\bar\\.\\..\\.\\..\\"), normalized);
+      NS_LITERAL_STRING("\\\\foo\\bar\\.\\..\\.\\..\\"), normalized);
   ASSERT_TRUE(normalized == NS_LITERAL_STRING("\\\\"));
 
   bool result;
 
   result = mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\.."), normalized);
+      NS_LITERAL_STRING("\\\\.."), normalized);
   ASSERT_FALSE(result);
 
   result = mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\..\\"), normalized);
+      NS_LITERAL_STRING("\\\\..\\"), normalized);
   ASSERT_FALSE(result);
 
   result = mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\.\\..\\"), normalized);
+      NS_LITERAL_STRING("\\\\.\\..\\"), normalized);
   ASSERT_FALSE(result);
 
   result = mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\foo\\\\bar"), normalized);
+      NS_LITERAL_STRING("\\\\foo\\\\bar"), normalized);
   ASSERT_FALSE(result);
 
   result = mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\foo\\bar\\..\\..\\..\\..\\"), normalized);
+      NS_LITERAL_STRING("\\\\foo\\bar\\..\\..\\..\\..\\"), normalized);
   ASSERT_FALSE(result);
 
   result = mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\\\"), normalized);
+      NS_LITERAL_STRING("\\\\\\"), normalized);
   ASSERT_FALSE(result);
 
   result = mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\.\\\\"), normalized);
+      NS_LITERAL_STRING("\\\\.\\\\"), normalized);
   ASSERT_FALSE(result);
 
   result = mozilla::FilePreferences::testing::NormalizePath(
-    NS_LITERAL_STRING("\\\\..\\\\"), normalized);
+      NS_LITERAL_STRING("\\\\..\\\\"), normalized);
   ASSERT_FALSE(result);
 }
 
-TEST(FilePreferencesWin, AccessUNC)
-{
+TEST(FilePreferencesWin, AccessUNC) {
   nsCOMPtr<nsIFile> lf = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
 
   nsresult rv;
@@ -131,7 +129,8 @@ TEST(FilePreferencesWin, AccessUNC)
   rv = lf->InitWithPath(NS_LITERAL_STRING("\\\\nice\\..\\evil\\share"));
   ASSERT_EQ(rv, NS_ERROR_FILE_ACCESS_DENIED);
 
-  mozilla::FilePreferences::testing::AddDirectoryToWhitelist(NS_LITERAL_STRING("\\\\nice"));
+  mozilla::FilePreferences::testing::AddDirectoryToWhitelist(
+      NS_LITERAL_STRING("\\\\nice"));
 
   rv = lf->InitWithPath(NS_LITERAL_STRING("\\\\nice\\share"));
   ASSERT_EQ(rv, NS_OK);

@@ -8,19 +8,15 @@
 #include "MediaDecoderOwner.h"
 #include "mozilla/AbstractThread.h"
 
-namespace mozilla
-{
+namespace mozilla {
 
-class MockMediaDecoderOwner : public MediaDecoderOwner
-{
-public:
+class MockMediaDecoderOwner : public MediaDecoderOwner {
+ public:
   void DispatchAsyncEvent(const nsAString& aName) override {}
   void FireTimeUpdate(bool aPeriodic) override {}
   bool GetPaused() override { return false; }
   void MetadataLoaded(const MediaInfo* aInfo,
-                      UniquePtr<const MetadataTags> aTags) override
-  {
-  }
+                      UniquePtr<const MetadataTags> aTags) override {}
   void NetworkError() override {}
   void DecodeError(const MediaResult& aError) override {}
   bool HasError() const override { return false; }
@@ -39,8 +35,7 @@ public:
   void NotifyDecoderPrincipalChanged() override {}
   void SetAudibleState(bool aAudible) override {}
   void NotifyXPCOMShutdown() override {}
-  AbstractThread* AbstractMainThread() const override
-  {
+  AbstractThread* AbstractMainThread() const override {
     // Non-DocGroup version for Mock.
     return AbstractThread::MainThread();
   }
@@ -49,6 +44,6 @@ public:
   void AsyncResolveSeekDOMPromiseIfExists() override {}
   void AsyncRejectSeekDOMPromiseIfExists() override {}
 };
-}
+}  // namespace mozilla
 
 #endif

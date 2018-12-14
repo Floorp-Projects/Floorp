@@ -33,33 +33,24 @@
 
 #include "sqlite3.h"
 
-#define do_check_true(aCondition) \
-  EXPECT_TRUE(aCondition)
+#define do_check_true(aCondition) EXPECT_TRUE(aCondition)
 
-#define do_check_false(aCondition) \
-  EXPECT_FALSE(aCondition)
+#define do_check_false(aCondition) EXPECT_FALSE(aCondition)
 
-#define do_check_success(aResult) \
-  do_check_true(NS_SUCCEEDED(aResult))
+#define do_check_success(aResult) do_check_true(NS_SUCCEEDED(aResult))
 
-#define do_check_eq(aExpected, aActual) \
-  do_check_true(aExpected == aActual)
+#define do_check_eq(aExpected, aActual) do_check_true(aExpected == aActual)
 
-#define do_check_ok(aInvoc) \
-  do_check_true((aInvoc) == SQLITE_OK)
+#define do_check_ok(aInvoc) do_check_true((aInvoc) == SQLITE_OK)
 
-already_AddRefed<mozIStorageService>
-getService()
-{
+already_AddRefed<mozIStorageService> getService() {
   nsCOMPtr<mozIStorageService> ss =
-    do_CreateInstance("@mozilla.org/storage/service;1");
+      do_CreateInstance("@mozilla.org/storage/service;1");
   do_check_true(ss);
   return ss.forget();
 }
 
-already_AddRefed<mozIStorageConnection>
-getMemoryDatabase()
-{
+already_AddRefed<mozIStorageConnection> getMemoryDatabase() {
   nsCOMPtr<mozIStorageService> ss = getService();
   nsCOMPtr<mozIStorageConnection> conn;
   nsresult rv = ss->OpenSpecialDatabase("memory", getter_AddRefs(conn));
@@ -67,9 +58,7 @@ getMemoryDatabase()
   return conn.forget();
 }
 
-already_AddRefed<mozIStorageConnection>
-getDatabase()
-{
+already_AddRefed<mozIStorageConnection> getDatabase() {
   nsCOMPtr<nsIFile> dbFile;
   (void)NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                getter_AddRefs(dbFile));
@@ -85,11 +74,9 @@ getDatabase()
   return conn.forget();
 }
 
-
-class AsyncStatementSpinner : public mozIStorageStatementCallback
-                            , public mozIStorageCompletionCallback
-{
-public:
+class AsyncStatementSpinner : public mozIStorageStatementCallback,
+                              public mozIStorageCompletionCallback {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_MOZISTORAGESTATEMENTCALLBACK
   NS_DECL_MOZISTORAGECOMPLETIONCALLBACK
@@ -100,30 +87,24 @@ public:
 
   uint16_t completionReason;
 
-protected:
+ protected:
   virtual ~AsyncStatementSpinner() {}
   volatile bool mCompleted;
 };
 
-NS_IMPL_ISUPPORTS(AsyncStatementSpinner,
-                  mozIStorageStatementCallback,
+NS_IMPL_ISUPPORTS(AsyncStatementSpinner, mozIStorageStatementCallback,
                   mozIStorageCompletionCallback)
 
 AsyncStatementSpinner::AsyncStatementSpinner()
-: completionReason(0)
-, mCompleted(false)
-{
-}
+    : completionReason(0), mCompleted(false) {}
 
 NS_IMETHODIMP
-AsyncStatementSpinner::HandleResult(mozIStorageResultSet *aResultSet)
-{
+AsyncStatementSpinner::HandleResult(mozIStorageResultSet *aResultSet) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AsyncStatementSpinner::HandleError(mozIStorageError *aError)
-{
+AsyncStatementSpinner::HandleError(mozIStorageError *aError) {
   int32_t result;
   nsresult rv = aError->GetResult(&result);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -132,7 +113,8 @@ AsyncStatementSpinner::HandleError(mozIStorageError *aError)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString warnMsg;
-  warnMsg.AppendLiteral("An error occurred while executing an async statement: ");
+  warnMsg.AppendLiteral(
+      "An error occurred while executing an async statement: ");
   warnMsg.AppendInt(result);
   warnMsg.Append(' ');
   warnMsg.Append(message);
@@ -142,22 +124,19 @@ AsyncStatementSpinner::HandleError(mozIStorageError *aError)
 }
 
 NS_IMETHODIMP
-AsyncStatementSpinner::HandleCompletion(uint16_t aReason)
-{
+AsyncStatementSpinner::HandleCompletion(uint16_t aReason) {
   completionReason = aReason;
   mCompleted = true;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AsyncStatementSpinner::Complete(nsresult, nsISupports*)
-{
+AsyncStatementSpinner::Complete(nsresult, nsISupports *) {
   mCompleted = true;
   return NS_OK;
 }
 
-void AsyncStatementSpinner::SpinUntilCompleted()
-{
+void AsyncStatementSpinner::SpinUntilCompleted() {
   nsCOMPtr<nsIThread> thread(::do_GetCurrentThread());
   nsresult rv = NS_OK;
   bool processed = true;
@@ -176,9 +155,7 @@ void AsyncStatementSpinner::SpinUntilCompleted()
  * Execute an async statement, blocking the main thread until we get the
  * callback completion notification.
  */
-void
-blocking_async_execute(mozIStorageBaseStatement *stmt)
-{
+void blocking_async_execute(mozIStorageBaseStatement *stmt) {
   RefPtr<AsyncStatementSpinner> spinner(new AsyncStatementSpinner());
 
   nsCOMPtr<mozIStoragePendingStatement> pendy;
@@ -190,9 +167,7 @@ blocking_async_execute(mozIStorageBaseStatement *stmt)
  * Invoke AsyncClose on the given connection, blocking the main thread until we
  * get the completion notification.
  */
-void
-blocking_async_close(mozIStorageConnection *db)
-{
+void blocking_async_close(mozIStorageConnection *db) {
   RefPtr<AsyncStatementSpinner> spinner(new AsyncStatementSpinner());
 
   db->AsyncClose(spinner);
@@ -225,14 +200,13 @@ PRThread *watched_thread = nullptr;
  * When the thread a mutex is invoked on isn't watched_thread we save it to this
  * variable.
  */
-nsIThread* last_non_watched_thread = nullptr;
+nsIThread *last_non_watched_thread = nullptr;
 
 /**
  * Set a flag if the mutex is used on the thread we are watching, but always
  * call the real mutex function.
  */
-extern "C" void wrapped_MutexEnter(sqlite3_mutex *mutex)
-{
+extern "C" void wrapped_MutexEnter(sqlite3_mutex *mutex) {
   if (PR_GetCurrentThread() == watched_thread)
     mutex_used_on_watched_thread = true;
   else
@@ -240,31 +214,28 @@ extern "C" void wrapped_MutexEnter(sqlite3_mutex *mutex)
   orig_mutex_methods.xMutexEnter(mutex);
 }
 
-extern "C" int wrapped_MutexTry(sqlite3_mutex *mutex)
-{
+extern "C" int wrapped_MutexTry(sqlite3_mutex *mutex) {
   if (::PR_GetCurrentThread() == watched_thread)
     mutex_used_on_watched_thread = true;
   return orig_mutex_methods.xMutexTry(mutex);
 }
 
-class HookSqliteMutex
-{
-public:
-  HookSqliteMutex()
-  {
+class HookSqliteMutex {
+ public:
+  HookSqliteMutex() {
     // We need to initialize and teardown SQLite to get it to set up the
     // default mutex handlers for us so we can steal them and wrap them.
     do_check_ok(sqlite3_initialize());
     do_check_ok(sqlite3_shutdown());
     do_check_ok(::sqlite3_config(SQLITE_CONFIG_GETMUTEX, &orig_mutex_methods));
-    do_check_ok(::sqlite3_config(SQLITE_CONFIG_GETMUTEX, &wrapped_mutex_methods));
+    do_check_ok(
+        ::sqlite3_config(SQLITE_CONFIG_GETMUTEX, &wrapped_mutex_methods));
     wrapped_mutex_methods.xMutexEnter = wrapped_MutexEnter;
     wrapped_mutex_methods.xMutexTry = wrapped_MutexTry;
     do_check_ok(::sqlite3_config(SQLITE_CONFIG_MUTEX, &wrapped_mutex_methods));
   }
 
-  ~HookSqliteMutex()
-  {
+  ~HookSqliteMutex() {
     do_check_ok(sqlite3_shutdown());
     do_check_ok(::sqlite3_config(SQLITE_CONFIG_MUTEX, &orig_mutex_methods));
     do_check_ok(sqlite3_initialize());
@@ -278,12 +249,10 @@ public:
  * this method was last called.  Since we're talking about the current thread,
  * there are no race issues to be concerned about
  */
-void watch_for_mutex_use_on_this_thread()
-{
+void watch_for_mutex_use_on_this_thread() {
   watched_thread = ::PR_GetCurrentThread();
   mutex_used_on_watched_thread = false;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Thread Wedgers
@@ -295,35 +264,30 @@ void watch_for_mutex_use_on_this_thread()
  *
  * The wedger is self-dispatching, just construct it with its target.
  */
-class ThreadWedger : public mozilla::Runnable
-{
-public:
-  explicit ThreadWedger(nsIEventTarget* aTarget)
-    : mozilla::Runnable("ThreadWedger")
-    , mReentrantMonitor("thread wedger")
-    , unwedged(false)
-  {
+class ThreadWedger : public mozilla::Runnable {
+ public:
+  explicit ThreadWedger(nsIEventTarget *aTarget)
+      : mozilla::Runnable("ThreadWedger"),
+        mReentrantMonitor("thread wedger"),
+        unwedged(false) {
     aTarget->Dispatch(this, aTarget->NS_DISPATCH_NORMAL);
   }
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     mozilla::ReentrantMonitorAutoEnter automon(mReentrantMonitor);
 
-    if (!unwedged)
-      automon.Wait();
+    if (!unwedged) automon.Wait();
 
     return NS_OK;
   }
 
-  void unwedge()
-  {
+  void unwedge() {
     mozilla::ReentrantMonitorAutoEnter automon(mReentrantMonitor);
     unwedged = true;
     automon.Notify();
   }
 
-private:
+ private:
   mozilla::ReentrantMonitor mReentrantMonitor;
   bool unwedged;
 };
@@ -336,17 +300,14 @@ private:
  * creating a statement and async dispatching we can tell from the mutex who
  * is the async thread, PRThread style.  Then we map that to an nsIThread.
  */
-already_AddRefed<nsIThread>
-get_conn_async_thread(mozIStorageConnection *db)
-{
+already_AddRefed<nsIThread> get_conn_async_thread(mozIStorageConnection *db) {
   // Make sure we are tracking the current thread as the watched thread
   watch_for_mutex_use_on_this_thread();
 
   // - statement with nothing to bind
   nsCOMPtr<mozIStorageAsyncStatement> stmt;
-  db->CreateAsyncStatement(
-    NS_LITERAL_CSTRING("SELECT 1"),
-    getter_AddRefs(stmt));
+  db->CreateAsyncStatement(NS_LITERAL_CSTRING("SELECT 1"),
+                           getter_AddRefs(stmt));
   blocking_async_execute(stmt);
   stmt->Finalize();
 
@@ -360,5 +321,4 @@ get_conn_async_thread(mozIStorageConnection *db)
   return asyncThread.forget();
 }
 
-#endif // storage_test_harness_h__
-
+#endif  // storage_test_harness_h__

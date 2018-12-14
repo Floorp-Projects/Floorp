@@ -11,8 +11,7 @@
 using namespace mozilla;
 using namespace mozilla::image;
 
-enum class TestState
-{
+enum class TestState {
   ONE,
   TWO,
   THREE,
@@ -21,12 +20,8 @@ enum class TestState
   TRUNCATED_FAILURE
 };
 
-void
-CheckLexedData(const char* aData,
-               size_t aLength,
-               size_t aOffset,
-               size_t aExpectedLength)
-{
+void CheckLexedData(const char* aData, size_t aLength, size_t aOffset,
+                    size_t aExpectedLength) {
   EXPECT_TRUE(aLength == aExpectedLength);
 
   for (size_t i = 0; i < aLength; ++i) {
@@ -34,9 +29,8 @@ CheckLexedData(const char* aData,
   }
 }
 
-LexerTransition<TestState>
-DoLex(TestState aState, const char* aData, size_t aLength)
-{
+LexerTransition<TestState> DoLex(TestState aState, const char* aData,
+                                 size_t aLength) {
   switch (aState) {
     case TestState::ONE:
       CheckLexedData(aData, aLength, 0, 3);
@@ -56,16 +50,16 @@ DoLex(TestState aState, const char* aData, size_t aLength)
   }
 }
 
-LexerTransition<TestState>
-DoLexWithUnbuffered(TestState aState, const char* aData, size_t aLength,
-                    Vector<char>& aUnbufferedVector)
-{
+LexerTransition<TestState> DoLexWithUnbuffered(
+    TestState aState, const char* aData, size_t aLength,
+    Vector<char>& aUnbufferedVector) {
   switch (aState) {
     case TestState::ONE:
       CheckLexedData(aData, aLength, 0, 3);
       return Transition::ToUnbuffered(TestState::TWO, TestState::UNBUFFERED, 3);
     case TestState::TWO:
-      CheckLexedData(aUnbufferedVector.begin(), aUnbufferedVector.length(), 3, 3);
+      CheckLexedData(aUnbufferedVector.begin(), aUnbufferedVector.length(), 3,
+                     3);
       return Transition::To(TestState::THREE, 3);
     case TestState::THREE:
       CheckLexedData(aData, aLength, 6, 3);
@@ -79,9 +73,9 @@ DoLexWithUnbuffered(TestState aState, const char* aData, size_t aLength,
   }
 }
 
-LexerTransition<TestState>
-DoLexWithUnbufferedTerminate(TestState aState, const char* aData, size_t aLength)
-{
+LexerTransition<TestState> DoLexWithUnbufferedTerminate(TestState aState,
+                                                        const char* aData,
+                                                        size_t aLength) {
   switch (aState) {
     case TestState::ONE:
       CheckLexedData(aData, aLength, 0, 3);
@@ -93,9 +87,8 @@ DoLexWithUnbufferedTerminate(TestState aState, const char* aData, size_t aLength
   }
 }
 
-LexerTransition<TestState>
-DoLexWithYield(TestState aState, const char* aData, size_t aLength)
-{
+LexerTransition<TestState> DoLexWithYield(TestState aState, const char* aData,
+                                          size_t aLength) {
   switch (aState) {
     case TestState::ONE:
       CheckLexedData(aData, aLength, 0, 3);
@@ -111,9 +104,9 @@ DoLexWithYield(TestState aState, const char* aData, size_t aLength)
   }
 }
 
-LexerTransition<TestState>
-DoLexWithTerminateAfterYield(TestState aState, const char* aData, size_t aLength)
-{
+LexerTransition<TestState> DoLexWithTerminateAfterYield(TestState aState,
+                                                        const char* aData,
+                                                        size_t aLength) {
   switch (aState) {
     case TestState::ONE:
       CheckLexedData(aData, aLength, 0, 3);
@@ -125,9 +118,9 @@ DoLexWithTerminateAfterYield(TestState aState, const char* aData, size_t aLength
   }
 }
 
-LexerTransition<TestState>
-DoLexWithZeroLengthStates(TestState aState, const char* aData, size_t aLength)
-{
+LexerTransition<TestState> DoLexWithZeroLengthStates(TestState aState,
+                                                     const char* aData,
+                                                     size_t aLength) {
   switch (aState) {
     case TestState::ONE:
       EXPECT_TRUE(aLength == 0);
@@ -143,9 +136,9 @@ DoLexWithZeroLengthStates(TestState aState, const char* aData, size_t aLength)
   }
 }
 
-LexerTransition<TestState>
-DoLexWithZeroLengthStatesAtEnd(TestState aState, const char* aData, size_t aLength)
-{
+LexerTransition<TestState> DoLexWithZeroLengthStatesAtEnd(TestState aState,
+                                                          const char* aData,
+                                                          size_t aLength) {
   switch (aState) {
     case TestState::ONE:
       CheckLexedData(aData, aLength, 0, 9);
@@ -161,9 +154,9 @@ DoLexWithZeroLengthStatesAtEnd(TestState aState, const char* aData, size_t aLeng
   }
 }
 
-LexerTransition<TestState>
-DoLexWithZeroLengthYield(TestState aState, const char* aData, size_t aLength)
-{
+LexerTransition<TestState> DoLexWithZeroLengthYield(TestState aState,
+                                                    const char* aData,
+                                                    size_t aLength) {
   switch (aState) {
     case TestState::ONE:
       EXPECT_EQ(0u, aLength);
@@ -179,11 +172,8 @@ DoLexWithZeroLengthYield(TestState aState, const char* aData, size_t aLength)
   }
 }
 
-LexerTransition<TestState>
-DoLexWithZeroLengthStatesUnbuffered(TestState aState,
-                                    const char* aData,
-                                    size_t aLength)
-{
+LexerTransition<TestState> DoLexWithZeroLengthStatesUnbuffered(
+    TestState aState, const char* aData, size_t aLength) {
   switch (aState) {
     case TestState::ONE:
       EXPECT_TRUE(aLength == 0);
@@ -202,11 +192,8 @@ DoLexWithZeroLengthStatesUnbuffered(TestState aState,
   }
 }
 
-LexerTransition<TestState>
-DoLexWithZeroLengthStatesAfterUnbuffered(TestState aState,
-                                         const char* aData,
-                                         size_t aLength)
-{
+LexerTransition<TestState> DoLexWithZeroLengthStatesAfterUnbuffered(
+    TestState aState, const char* aData, size_t aLength) {
   switch (aState) {
     case TestState::ONE:
       EXPECT_TRUE(aLength == 0);
@@ -225,26 +212,24 @@ DoLexWithZeroLengthStatesAfterUnbuffered(TestState aState,
   }
 }
 
-class ImageStreamingLexer : public ::testing::Test
-{
-public:
+class ImageStreamingLexer : public ::testing::Test {
+ public:
   // Note that mLexer is configured to enter TerminalState::FAILURE immediately
   // if the input data is truncated. We don't expect that to happen in most
   // tests, so we want to detect that issue. If a test needs a different
   // behavior, we create a special StreamingLexer just for that test.
   ImageStreamingLexer()
-    : mLexer(Transition::To(TestState::ONE, 3), Transition::TerminateFailure())
-    , mSourceBuffer(new SourceBuffer)
-    , mIterator(mSourceBuffer->Iterator())
-    , mExpectNoResume(new ExpectNoResume)
-    , mCountResumes(new CountResumes)
-  { }
+      : mLexer(Transition::To(TestState::ONE, 3),
+               Transition::TerminateFailure()),
+        mSourceBuffer(new SourceBuffer),
+        mIterator(mSourceBuffer->Iterator()),
+        mExpectNoResume(new ExpectNoResume),
+        mCountResumes(new CountResumes) {}
 
-protected:
+ protected:
   void CheckTruncatedState(StreamingLexer<TestState>& aLexer,
                            TerminalState aExpectedTerminalState,
-                           nsresult aCompletionStatus = NS_OK)
-  {
+                           nsresult aCompletionStatus = NS_OK) {
     for (unsigned i = 0; i < 9; ++i) {
       if (i < 2) {
         mSourceBuffer->Append(mData + i, 1);
@@ -267,7 +252,7 @@ protected:
   }
 
   AutoInitializeImageLib mInit;
-  const char mData[9] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+  const char mData[9]{1, 2, 3, 4, 5, 6, 7, 8, 9};
   StreamingLexer<TestState> mLexer;
   RefPtr<SourceBuffer> mSourceBuffer;
   SourceBufferIterator mIterator;
@@ -275,8 +260,7 @@ protected:
   RefPtr<CountResumes> mCountResumes;
 };
 
-TEST_F(ImageStreamingLexer, ZeroLengthData)
-{
+TEST_F(ImageStreamingLexer, ZeroLengthData) {
   // Test a zero-length input.
   mSourceBuffer->Complete(NS_OK);
 
@@ -286,25 +270,23 @@ TEST_F(ImageStreamingLexer, ZeroLengthData)
   EXPECT_EQ(TerminalState::FAILURE, result.as<TerminalState>());
 }
 
-TEST_F(ImageStreamingLexer, ZeroLengthDataUnbuffered)
-{
+TEST_F(ImageStreamingLexer, ZeroLengthDataUnbuffered) {
   // Test a zero-length input.
   mSourceBuffer->Complete(NS_OK);
 
   // Create a special StreamingLexer for this test because we want the first
   // state to be unbuffered.
-  StreamingLexer<TestState> lexer(Transition::ToUnbuffered(TestState::ONE,
-                                                           TestState::UNBUFFERED,
-                                                           sizeof(mData)),
-                                  Transition::TerminateFailure());
+  StreamingLexer<TestState> lexer(
+      Transition::ToUnbuffered(TestState::ONE, TestState::UNBUFFERED,
+                               sizeof(mData)),
+      Transition::TerminateFailure());
 
   LexerResult result = lexer.Lex(mIterator, mExpectNoResume, DoLex);
   EXPECT_TRUE(result.is<TerminalState>());
   EXPECT_EQ(TerminalState::FAILURE, result.as<TerminalState>());
 }
 
-TEST_F(ImageStreamingLexer, StartWithTerminal)
-{
+TEST_F(ImageStreamingLexer, StartWithTerminal) {
   // Create a special StreamingLexer for this test because we want the first
   // state to be a terminal state. This doesn't really make sense, but we should
   // handle it.
@@ -317,8 +299,7 @@ TEST_F(ImageStreamingLexer, StartWithTerminal)
   mSourceBuffer->Complete(NS_OK);
 }
 
-TEST_F(ImageStreamingLexer, SingleChunk)
-{
+TEST_F(ImageStreamingLexer, SingleChunk) {
   // Test delivering all the data at once.
   mSourceBuffer->Append(mData, sizeof(mData));
   mSourceBuffer->Complete(NS_OK);
@@ -329,26 +310,24 @@ TEST_F(ImageStreamingLexer, SingleChunk)
   EXPECT_EQ(TerminalState::SUCCESS, result.as<TerminalState>());
 }
 
-TEST_F(ImageStreamingLexer, SingleChunkWithUnbuffered)
-{
+TEST_F(ImageStreamingLexer, SingleChunkWithUnbuffered) {
   Vector<char> unbufferedVector;
 
   // Test delivering all the data at once.
   mSourceBuffer->Append(mData, sizeof(mData));
   mSourceBuffer->Complete(NS_OK);
 
-  LexerResult result =
-    mLexer.Lex(mIterator, mExpectNoResume,
-               [&](TestState aState, const char* aData, size_t aLength) {
-      return DoLexWithUnbuffered(aState, aData, aLength, unbufferedVector);
-  });
+  LexerResult result = mLexer.Lex(
+      mIterator, mExpectNoResume,
+      [&](TestState aState, const char* aData, size_t aLength) {
+        return DoLexWithUnbuffered(aState, aData, aLength, unbufferedVector);
+      });
 
   EXPECT_TRUE(result.is<TerminalState>());
   EXPECT_EQ(TerminalState::SUCCESS, result.as<TerminalState>());
 }
 
-TEST_F(ImageStreamingLexer, SingleChunkWithYield)
-{
+TEST_F(ImageStreamingLexer, SingleChunkWithYield) {
   // Test delivering all the data at once.
   mSourceBuffer->Append(mData, sizeof(mData));
   mSourceBuffer->Complete(NS_OK);
@@ -362,8 +341,7 @@ TEST_F(ImageStreamingLexer, SingleChunkWithYield)
   EXPECT_EQ(TerminalState::SUCCESS, result.as<TerminalState>());
 }
 
-TEST_F(ImageStreamingLexer, ChunkPerState)
-{
+TEST_F(ImageStreamingLexer, ChunkPerState) {
   // Test delivering in perfectly-sized chunks, one per state.
   for (unsigned i = 0; i < 3; ++i) {
     mSourceBuffer->Append(mData + 3 * i, 3);
@@ -382,18 +360,17 @@ TEST_F(ImageStreamingLexer, ChunkPerState)
   mSourceBuffer->Complete(NS_OK);
 }
 
-TEST_F(ImageStreamingLexer, ChunkPerStateWithUnbuffered)
-{
+TEST_F(ImageStreamingLexer, ChunkPerStateWithUnbuffered) {
   Vector<char> unbufferedVector;
 
   // Test delivering in perfectly-sized chunks, one per state.
   for (unsigned i = 0; i < 3; ++i) {
     mSourceBuffer->Append(mData + 3 * i, 3);
-    LexerResult result =
-      mLexer.Lex(mIterator, mCountResumes,
-                 [&](TestState aState, const char* aData, size_t aLength) {
-        return DoLexWithUnbuffered(aState, aData, aLength, unbufferedVector);
-    });
+    LexerResult result = mLexer.Lex(
+        mIterator, mCountResumes,
+        [&](TestState aState, const char* aData, size_t aLength) {
+          return DoLexWithUnbuffered(aState, aData, aLength, unbufferedVector);
+        });
 
     if (i == 2) {
       EXPECT_TRUE(result.is<TerminalState>());
@@ -408,8 +385,7 @@ TEST_F(ImageStreamingLexer, ChunkPerStateWithUnbuffered)
   mSourceBuffer->Complete(NS_OK);
 }
 
-TEST_F(ImageStreamingLexer, ChunkPerStateWithYield)
-{
+TEST_F(ImageStreamingLexer, ChunkPerStateWithYield) {
   // Test delivering in perfectly-sized chunks, one per state.
   mSourceBuffer->Append(mData, 3);
   LexerResult result = mLexer.Lex(mIterator, mCountResumes, DoLexWithYield);
@@ -429,18 +405,19 @@ TEST_F(ImageStreamingLexer, ChunkPerStateWithYield)
   mSourceBuffer->Complete(NS_OK);
 }
 
-TEST_F(ImageStreamingLexer, ChunkPerStateWithUnbufferedYield)
-{
+TEST_F(ImageStreamingLexer, ChunkPerStateWithUnbufferedYield) {
   size_t unbufferedCallCount = 0;
   Vector<char> unbufferedVector;
-  auto lexerFunc = [&](TestState aState, const char* aData, size_t aLength)
-                     -> LexerTransition<TestState> {
+  auto lexerFunc = [&](TestState aState, const char* aData,
+                       size_t aLength) -> LexerTransition<TestState> {
     switch (aState) {
       case TestState::ONE:
         CheckLexedData(aData, aLength, 0, 3);
-        return Transition::ToUnbuffered(TestState::TWO, TestState::UNBUFFERED, 3);
+        return Transition::ToUnbuffered(TestState::TWO, TestState::UNBUFFERED,
+                                        3);
       case TestState::TWO:
-        CheckLexedData(unbufferedVector.begin(), unbufferedVector.length(), 3, 3);
+        CheckLexedData(unbufferedVector.begin(), unbufferedVector.length(), 3,
+                       3);
         return Transition::To(TestState::THREE, 3);
       case TestState::THREE:
         CheckLexedData(aData, aLength, 6, 3);
@@ -453,7 +430,8 @@ TEST_F(ImageStreamingLexer, ChunkPerStateWithUnbufferedYield)
             unbufferedCallCount++;
 
             // Continue after yield, telling StreamingLexer we consumed 2 bytes.
-            return Transition::ContinueUnbufferedAfterYield(TestState::UNBUFFERED, 2);
+            return Transition::ContinueUnbufferedAfterYield(
+                TestState::UNBUFFERED, 2);
 
           case 1:
             CheckLexedData(aData, aLength, 5, 1);
@@ -509,8 +487,7 @@ TEST_F(ImageStreamingLexer, ChunkPerStateWithUnbufferedYield)
   EXPECT_EQ(TerminalState::SUCCESS, result.as<TerminalState>());
 }
 
-TEST_F(ImageStreamingLexer, OneByteChunks)
-{
+TEST_F(ImageStreamingLexer, OneByteChunks) {
   // Test delivering in one byte chunks.
   for (unsigned i = 0; i < 9; ++i) {
     mSourceBuffer->Append(mData + i, 1);
@@ -529,18 +506,17 @@ TEST_F(ImageStreamingLexer, OneByteChunks)
   mSourceBuffer->Complete(NS_OK);
 }
 
-TEST_F(ImageStreamingLexer, OneByteChunksWithUnbuffered)
-{
+TEST_F(ImageStreamingLexer, OneByteChunksWithUnbuffered) {
   Vector<char> unbufferedVector;
 
   // Test delivering in one byte chunks.
   for (unsigned i = 0; i < 9; ++i) {
     mSourceBuffer->Append(mData + i, 1);
-    LexerResult result =
-      mLexer.Lex(mIterator, mCountResumes,
-                 [&](TestState aState, const char* aData, size_t aLength) {
-        return DoLexWithUnbuffered(aState, aData, aLength, unbufferedVector);
-    });
+    LexerResult result = mLexer.Lex(
+        mIterator, mCountResumes,
+        [&](TestState aState, const char* aData, size_t aLength) {
+          return DoLexWithUnbuffered(aState, aData, aLength, unbufferedVector);
+        });
 
     if (i == 8) {
       EXPECT_TRUE(result.is<TerminalState>());
@@ -555,8 +531,7 @@ TEST_F(ImageStreamingLexer, OneByteChunksWithUnbuffered)
   mSourceBuffer->Complete(NS_OK);
 }
 
-TEST_F(ImageStreamingLexer, OneByteChunksWithYield)
-{
+TEST_F(ImageStreamingLexer, OneByteChunksWithYield) {
   // Test delivering in one byte chunks.
   for (unsigned i = 0; i < 9; ++i) {
     mSourceBuffer->Append(mData + i, 1);
@@ -588,8 +563,7 @@ TEST_F(ImageStreamingLexer, OneByteChunksWithYield)
   mSourceBuffer->Complete(NS_OK);
 }
 
-TEST_F(ImageStreamingLexer, ZeroLengthState)
-{
+TEST_F(ImageStreamingLexer, ZeroLengthState) {
   mSourceBuffer->Append(mData, sizeof(mData));
   mSourceBuffer->Complete(NS_OK);
 
@@ -599,14 +573,13 @@ TEST_F(ImageStreamingLexer, ZeroLengthState)
                                   Transition::TerminateFailure());
 
   LexerResult result =
-    lexer.Lex(mIterator, mExpectNoResume, DoLexWithZeroLengthStates);
+      lexer.Lex(mIterator, mExpectNoResume, DoLexWithZeroLengthStates);
 
   EXPECT_TRUE(result.is<TerminalState>());
   EXPECT_EQ(TerminalState::SUCCESS, result.as<TerminalState>());
 }
 
-TEST_F(ImageStreamingLexer, ZeroLengthStatesAtEnd)
-{
+TEST_F(ImageStreamingLexer, ZeroLengthStatesAtEnd) {
   mSourceBuffer->Append(mData, sizeof(mData));
   mSourceBuffer->Complete(NS_OK);
 
@@ -616,14 +589,13 @@ TEST_F(ImageStreamingLexer, ZeroLengthStatesAtEnd)
                                   Transition::TerminateFailure());
 
   LexerResult result =
-    lexer.Lex(mIterator, mExpectNoResume, DoLexWithZeroLengthStatesAtEnd);
+      lexer.Lex(mIterator, mExpectNoResume, DoLexWithZeroLengthStatesAtEnd);
 
   EXPECT_TRUE(result.is<TerminalState>());
   EXPECT_EQ(TerminalState::SUCCESS, result.as<TerminalState>());
 }
 
-TEST_F(ImageStreamingLexer, ZeroLengthStateWithYield)
-{
+TEST_F(ImageStreamingLexer, ZeroLengthStateWithYield) {
   // Create a special StreamingLexer for this test because we want the first
   // state to be zero length.
   StreamingLexer<TestState> lexer(Transition::To(TestState::ONE, 0),
@@ -631,7 +603,7 @@ TEST_F(ImageStreamingLexer, ZeroLengthStateWithYield)
 
   mSourceBuffer->Append(mData, 3);
   LexerResult result =
-    lexer.Lex(mIterator, mExpectNoResume, DoLexWithZeroLengthYield);
+      lexer.Lex(mIterator, mExpectNoResume, DoLexWithZeroLengthYield);
   ASSERT_TRUE(result.is<Yield>());
   EXPECT_EQ(Yield::OUTPUT_AVAILABLE, result.as<Yield>());
 
@@ -647,27 +619,24 @@ TEST_F(ImageStreamingLexer, ZeroLengthStateWithYield)
   EXPECT_EQ(1u, mCountResumes->Count());
 }
 
-TEST_F(ImageStreamingLexer, ZeroLengthStateWithUnbuffered)
-{
+TEST_F(ImageStreamingLexer, ZeroLengthStateWithUnbuffered) {
   mSourceBuffer->Append(mData, sizeof(mData));
   mSourceBuffer->Complete(NS_OK);
 
   // Create a special StreamingLexer for this test because we want the first
   // state to be both zero length and unbuffered.
-  StreamingLexer<TestState> lexer(Transition::ToUnbuffered(TestState::ONE,
-                                                           TestState::UNBUFFERED,
-                                                           0),
-                                  Transition::TerminateFailure());
+  StreamingLexer<TestState> lexer(
+      Transition::ToUnbuffered(TestState::ONE, TestState::UNBUFFERED, 0),
+      Transition::TerminateFailure());
 
-  LexerResult result =
-    lexer.Lex(mIterator, mExpectNoResume, DoLexWithZeroLengthStatesUnbuffered);
+  LexerResult result = lexer.Lex(mIterator, mExpectNoResume,
+                                 DoLexWithZeroLengthStatesUnbuffered);
 
   EXPECT_TRUE(result.is<TerminalState>());
   EXPECT_EQ(TerminalState::SUCCESS, result.as<TerminalState>());
 }
 
-TEST_F(ImageStreamingLexer, ZeroLengthStateAfterUnbuffered)
-{
+TEST_F(ImageStreamingLexer, ZeroLengthStateAfterUnbuffered) {
   mSourceBuffer->Append(mData, sizeof(mData));
   mSourceBuffer->Complete(NS_OK);
 
@@ -676,18 +645,17 @@ TEST_F(ImageStreamingLexer, ZeroLengthStateAfterUnbuffered)
   StreamingLexer<TestState> lexer(Transition::To(TestState::ONE, 0),
                                   Transition::TerminateFailure());
 
-  LexerResult result =
-    lexer.Lex(mIterator, mExpectNoResume, DoLexWithZeroLengthStatesAfterUnbuffered);
+  LexerResult result = lexer.Lex(mIterator, mExpectNoResume,
+                                 DoLexWithZeroLengthStatesAfterUnbuffered);
 
   EXPECT_TRUE(result.is<TerminalState>());
   EXPECT_EQ(TerminalState::SUCCESS, result.as<TerminalState>());
 }
 
-TEST_F(ImageStreamingLexer, ZeroLengthStateWithUnbufferedYield)
-{
+TEST_F(ImageStreamingLexer, ZeroLengthStateWithUnbufferedYield) {
   size_t unbufferedCallCount = 0;
-  auto lexerFunc = [&](TestState aState, const char* aData, size_t aLength)
-                     -> LexerTransition<TestState> {
+  auto lexerFunc = [&](TestState aState, const char* aData,
+                       size_t aLength) -> LexerTransition<TestState> {
     switch (aState) {
       case TestState::ONE:
         EXPECT_EQ(0u, aLength);
@@ -700,14 +668,16 @@ TEST_F(ImageStreamingLexer, ZeroLengthStateWithUnbufferedYield)
             unbufferedCallCount++;
 
             // Continue after yield, telling StreamingLexer we consumed 0 bytes.
-            return Transition::ContinueUnbufferedAfterYield(TestState::UNBUFFERED, 0);
+            return Transition::ContinueUnbufferedAfterYield(
+                TestState::UNBUFFERED, 0);
 
           case 1:
             CheckLexedData(aData, aLength, 0, 3);
             unbufferedCallCount++;
 
             // Continue after yield, telling StreamingLexer we consumed 2 bytes.
-            return Transition::ContinueUnbufferedAfterYield(TestState::UNBUFFERED, 2);
+            return Transition::ContinueUnbufferedAfterYield(
+                TestState::UNBUFFERED, 2);
 
           case 2:
             EXPECT_EQ(1u, aLength);
@@ -715,7 +685,8 @@ TEST_F(ImageStreamingLexer, ZeroLengthStateWithUnbufferedYield)
             unbufferedCallCount++;
 
             // Continue after yield, telling StreamingLexer we consumed 1 bytes.
-            return Transition::ContinueUnbufferedAfterYield(TestState::UNBUFFERED, 1);
+            return Transition::ContinueUnbufferedAfterYield(
+                TestState::UNBUFFERED, 1);
 
           case 3:
             CheckLexedData(aData, aLength, 3, 6);
@@ -724,7 +695,8 @@ TEST_F(ImageStreamingLexer, ZeroLengthStateWithUnbufferedYield)
             // Continue after yield, telling StreamingLexer we consumed 6 bytes.
             // We should transition to TestState::ONE when we return from the
             // yield.
-            return Transition::ContinueUnbufferedAfterYield(TestState::UNBUFFERED, 6);
+            return Transition::ContinueUnbufferedAfterYield(
+                TestState::UNBUFFERED, 6);
         }
 
         ADD_FAILURE() << "Too many invocations of TestState::UNBUFFERED";
@@ -737,10 +709,10 @@ TEST_F(ImageStreamingLexer, ZeroLengthStateWithUnbufferedYield)
 
   // Create a special StreamingLexer for this test because we want the first
   // state to be unbuffered.
-  StreamingLexer<TestState> lexer(Transition::ToUnbuffered(TestState::ONE,
-                                                           TestState::UNBUFFERED,
-                                                           sizeof(mData)),
-                                  Transition::TerminateFailure());
+  StreamingLexer<TestState> lexer(
+      Transition::ToUnbuffered(TestState::ONE, TestState::UNBUFFERED,
+                               sizeof(mData)),
+      Transition::TerminateFailure());
 
   mSourceBuffer->Append(mData, 3);
   LexerResult result = lexer.Lex(mIterator, mExpectNoResume, lexerFunc);
@@ -776,67 +748,62 @@ TEST_F(ImageStreamingLexer, ZeroLengthStateWithUnbufferedYield)
   EXPECT_EQ(TerminalState::SUCCESS, result.as<TerminalState>());
 }
 
-TEST_F(ImageStreamingLexer, TerminateSuccess)
-{
+TEST_F(ImageStreamingLexer, TerminateSuccess) {
   mSourceBuffer->Append(mData, sizeof(mData));
   mSourceBuffer->Complete(NS_OK);
 
   // Test that Terminate is "sticky".
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
   LexerResult result =
-    mLexer.Lex(iterator, mExpectNoResume,
-               [&](TestState aState, const char* aData, size_t aLength) {
-      EXPECT_TRUE(aState == TestState::ONE);
-      return Transition::TerminateSuccess();
-  });
+      mLexer.Lex(iterator, mExpectNoResume,
+                 [&](TestState aState, const char* aData, size_t aLength) {
+                   EXPECT_TRUE(aState == TestState::ONE);
+                   return Transition::TerminateSuccess();
+                 });
   EXPECT_TRUE(result.is<TerminalState>());
   EXPECT_EQ(TerminalState::SUCCESS, result.as<TerminalState>());
 
   SourceBufferIterator iterator2 = mSourceBuffer->Iterator();
-  result =
-    mLexer.Lex(iterator2, mExpectNoResume,
-               [&](TestState aState, const char* aData, size_t aLength) {
-      EXPECT_TRUE(false);  // Shouldn't get here.
-      return Transition::TerminateFailure();
-  });
+  result = mLexer.Lex(iterator2, mExpectNoResume,
+                      [&](TestState aState, const char* aData, size_t aLength) {
+                        EXPECT_TRUE(false);  // Shouldn't get here.
+                        return Transition::TerminateFailure();
+                      });
   EXPECT_TRUE(result.is<TerminalState>());
   EXPECT_EQ(TerminalState::SUCCESS, result.as<TerminalState>());
 }
 
-TEST_F(ImageStreamingLexer, TerminateFailure)
-{
+TEST_F(ImageStreamingLexer, TerminateFailure) {
   mSourceBuffer->Append(mData, sizeof(mData));
   mSourceBuffer->Complete(NS_OK);
 
   // Test that Terminate is "sticky".
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
   LexerResult result =
-    mLexer.Lex(iterator, mExpectNoResume,
-               [&](TestState aState, const char* aData, size_t aLength) {
-      EXPECT_TRUE(aState == TestState::ONE);
-      return Transition::TerminateFailure();
-  });
+      mLexer.Lex(iterator, mExpectNoResume,
+                 [&](TestState aState, const char* aData, size_t aLength) {
+                   EXPECT_TRUE(aState == TestState::ONE);
+                   return Transition::TerminateFailure();
+                 });
   EXPECT_TRUE(result.is<TerminalState>());
   EXPECT_EQ(TerminalState::FAILURE, result.as<TerminalState>());
 
   SourceBufferIterator iterator2 = mSourceBuffer->Iterator();
-  result =
-    mLexer.Lex(iterator2, mExpectNoResume,
-               [&](TestState aState, const char* aData, size_t aLength) {
-      EXPECT_TRUE(false);  // Shouldn't get here.
-      return Transition::TerminateFailure();
-  });
+  result = mLexer.Lex(iterator2, mExpectNoResume,
+                      [&](TestState aState, const char* aData, size_t aLength) {
+                        EXPECT_TRUE(false);  // Shouldn't get here.
+                        return Transition::TerminateFailure();
+                      });
   EXPECT_TRUE(result.is<TerminalState>());
   EXPECT_EQ(TerminalState::FAILURE, result.as<TerminalState>());
 }
 
-TEST_F(ImageStreamingLexer, TerminateUnbuffered)
-{
+TEST_F(ImageStreamingLexer, TerminateUnbuffered) {
   // Test that Terminate works during an unbuffered read.
   for (unsigned i = 0; i < 9; ++i) {
     mSourceBuffer->Append(mData + i, 1);
     LexerResult result =
-      mLexer.Lex(mIterator, mCountResumes, DoLexWithUnbufferedTerminate);
+        mLexer.Lex(mIterator, mCountResumes, DoLexWithUnbufferedTerminate);
 
     if (i > 2) {
       EXPECT_TRUE(result.is<TerminalState>());
@@ -856,13 +823,12 @@ TEST_F(ImageStreamingLexer, TerminateUnbuffered)
   mSourceBuffer->Complete(NS_OK);
 }
 
-TEST_F(ImageStreamingLexer, TerminateAfterYield)
-{
+TEST_F(ImageStreamingLexer, TerminateAfterYield) {
   // Test that Terminate works after yielding.
   for (unsigned i = 0; i < 9; ++i) {
     mSourceBuffer->Append(mData + i, 1);
     LexerResult result =
-      mLexer.Lex(mIterator, mCountResumes, DoLexWithTerminateAfterYield);
+        mLexer.Lex(mIterator, mCountResumes, DoLexWithTerminateAfterYield);
 
     if (i > 2) {
       EXPECT_TRUE(result.is<TerminalState>());
@@ -885,8 +851,7 @@ TEST_F(ImageStreamingLexer, TerminateAfterYield)
   mSourceBuffer->Complete(NS_OK);
 }
 
-TEST_F(ImageStreamingLexer, SourceBufferImmediateComplete)
-{
+TEST_F(ImageStreamingLexer, SourceBufferImmediateComplete) {
   // Test calling SourceBuffer::Complete() without appending any data. This
   // causes the SourceBuffer to automatically have a failing completion status,
   // no matter what you pass, so we expect TerminalState::FAILURE below.
@@ -898,8 +863,7 @@ TEST_F(ImageStreamingLexer, SourceBufferImmediateComplete)
   EXPECT_EQ(TerminalState::FAILURE, result.as<TerminalState>());
 }
 
-TEST_F(ImageStreamingLexer, SourceBufferTruncatedTerminalStateSuccess)
-{
+TEST_F(ImageStreamingLexer, SourceBufferTruncatedTerminalStateSuccess) {
   // Test that using a terminal state (in this case TerminalState::SUCCESS) as a
   // truncated state works.
   StreamingLexer<TestState> lexer(Transition::To(TestState::ONE, 3),
@@ -908,8 +872,7 @@ TEST_F(ImageStreamingLexer, SourceBufferTruncatedTerminalStateSuccess)
   CheckTruncatedState(lexer, TerminalState::SUCCESS);
 }
 
-TEST_F(ImageStreamingLexer, SourceBufferTruncatedTerminalStateFailure)
-{
+TEST_F(ImageStreamingLexer, SourceBufferTruncatedTerminalStateFailure) {
   // Test that using a terminal state (in this case TerminalState::FAILURE) as a
   // truncated state works.
   StreamingLexer<TestState> lexer(Transition::To(TestState::ONE, 3),
@@ -918,32 +881,31 @@ TEST_F(ImageStreamingLexer, SourceBufferTruncatedTerminalStateFailure)
   CheckTruncatedState(lexer, TerminalState::FAILURE);
 }
 
-TEST_F(ImageStreamingLexer, SourceBufferTruncatedStateReturningSuccess)
-{
+TEST_F(ImageStreamingLexer, SourceBufferTruncatedStateReturningSuccess) {
   // Test that a truncated state that returns TerminalState::SUCCESS works. When
   // |lexer| discovers that the data is truncated, it invokes the
   // TRUNCATED_SUCCESS state, which returns TerminalState::SUCCESS.
   // CheckTruncatedState() verifies that this happens.
-  StreamingLexer<TestState> lexer(Transition::To(TestState::ONE, 3),
-                                  Transition::To(TestState::TRUNCATED_SUCCESS, 0));
+  StreamingLexer<TestState> lexer(
+      Transition::To(TestState::ONE, 3),
+      Transition::To(TestState::TRUNCATED_SUCCESS, 0));
 
   CheckTruncatedState(lexer, TerminalState::SUCCESS);
 }
 
-TEST_F(ImageStreamingLexer, SourceBufferTruncatedStateReturningFailure)
-{
+TEST_F(ImageStreamingLexer, SourceBufferTruncatedStateReturningFailure) {
   // Test that a truncated state that returns TerminalState::FAILURE works. When
   // |lexer| discovers that the data is truncated, it invokes the
   // TRUNCATED_FAILURE state, which returns TerminalState::FAILURE.
   // CheckTruncatedState() verifies that this happens.
-  StreamingLexer<TestState> lexer(Transition::To(TestState::ONE, 3),
-                                  Transition::To(TestState::TRUNCATED_FAILURE, 0));
+  StreamingLexer<TestState> lexer(
+      Transition::To(TestState::ONE, 3),
+      Transition::To(TestState::TRUNCATED_FAILURE, 0));
 
   CheckTruncatedState(lexer, TerminalState::FAILURE);
 }
 
-TEST_F(ImageStreamingLexer, SourceBufferTruncatedFailingCompleteStatus)
-{
+TEST_F(ImageStreamingLexer, SourceBufferTruncatedFailingCompleteStatus) {
   // Test that calling SourceBuffer::Complete() with a failing status results in
   // an immediate TerminalState::FAILURE result. (Note that |lexer|'s truncated
   // state is TerminalState::SUCCESS, so if we ignore the failing status, the
@@ -954,8 +916,7 @@ TEST_F(ImageStreamingLexer, SourceBufferTruncatedFailingCompleteStatus)
   CheckTruncatedState(lexer, TerminalState::FAILURE, NS_ERROR_FAILURE);
 }
 
-TEST_F(ImageStreamingLexer, NoSourceBufferResumable)
-{
+TEST_F(ImageStreamingLexer, NoSourceBufferResumable) {
   // Test delivering in one byte chunks with no IResumable.
   for (unsigned i = 0; i < 9; ++i) {
     mSourceBuffer->Append(mData + i, 1);
