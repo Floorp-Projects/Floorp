@@ -150,7 +150,7 @@ Fragment brush_fs() {
 
     // Un-premultiply the input.
     float alpha = Cs.a;
-    vec3 color = Cs.rgb / Cs.a;
+    vec3 color = alpha != 0.0 ? Cs.rgb / alpha : Cs.rgb;
 
     switch (vOp) {
         case 0:
