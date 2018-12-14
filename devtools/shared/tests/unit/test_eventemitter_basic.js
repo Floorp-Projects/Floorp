@@ -219,6 +219,29 @@ const TESTS = {
     emitter.emit("*");
     equal(received.length, 3, "the listener was not called anymore");
   },
+
+  testClearEvents() {
+    const emitter = getEventEmitter();
+
+    const received = [];
+    const listener = (...args) => received.push(args);
+
+    emitter.on("a", listener);
+    emitter.on("b", listener);
+    emitter.on("c", listener);
+
+    emitter.emit("a", 1);
+    emitter.emit("b", 1);
+    emitter.emit("c", 1);
+
+    equal(received.length, 3, "the listener was triggered three times");
+
+    emitter.clearEvents();
+    emitter.emit("a", 1);
+    emitter.emit("b", 1);
+    emitter.emit("c", 1);
+    equal(received.length, 3, "the listener was not called after clearEvents");
+  },
 };
 
 /**
