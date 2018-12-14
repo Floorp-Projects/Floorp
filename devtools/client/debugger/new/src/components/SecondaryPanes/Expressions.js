@@ -22,7 +22,7 @@ import { CloseButton } from "../shared/Button";
 import { debounce } from "lodash";
 
 import type { List } from "immutable";
-import type { Expression } from "../../types";
+import type { Expression, Grip } from "../../types";
 
 import "./Expressions.css";
 
@@ -48,7 +48,8 @@ type Props = {
   evaluateExpressions: () => void,
   updateExpression: (input: string, expression: Expression) => void,
   deleteExpression: (expression: Expression) => void,
-  openLink: (url: string) => void
+  openLink: (url: string) => void,
+  openElementInInspector: (grip: Grip) => void
 };
 
 class Expressions extends Component<Props, State> {
@@ -206,7 +207,7 @@ class Expressions extends Component<Props, State> {
   };
 
   renderExpression = (expression: Expression, index: number) => {
-    const { expressionError, openLink } = this.props;
+    const { expressionError, openLink, openElementInInspector } = this.props;
     const { editing, editIndex } = this.state;
     const { input, updating } = expression;
     const isEditingExpr = editing && editIndex === index;
@@ -243,6 +244,8 @@ class Expressions extends Component<Props, State> {
             focusable={false}
             openLink={openLink}
             createObjectClient={grip => createObjectClient(grip)}
+            onDOMNodeClick={grip => openElementInInspector(grip)}
+            onInspectIconClick={grip => openElementInInspector(grip)}
           />
           <div className="expression-container__close-btn">
             <CloseButton
@@ -374,6 +377,7 @@ export default connect(
     evaluateExpressions: actions.evaluateExpressions,
     updateExpression: actions.updateExpression,
     deleteExpression: actions.deleteExpression,
-    openLink: actions.openLink
+    openLink: actions.openLink,
+    openElementInInspector: actions.openElementInInspectorCommand
   }
 )(Expressions);

@@ -13,7 +13,7 @@ import { getSelectedFrame, getAllPopupObjectProperties } from "../../selectors";
 import { objectInspector } from "devtools-reps";
 import { isReactComponent } from "../../utils/preview";
 
-import type { Frame } from "../../types";
+import type { Frame, Grip } from "../../types";
 
 const {
   component: ObjectInspector,
@@ -27,7 +27,8 @@ const {
 type Props = {
   selectedFrame: Frame,
   popupObjectProperties: Object,
-  setPopupObjectProperties: (Object, Object) => void
+  setPopupObjectProperties: (Object, Object) => void,
+  openElementInInspector: (grip: Grip) => void
 };
 
 class FrameworkComponent extends PureComponent<Props> {
@@ -44,7 +45,11 @@ class FrameworkComponent extends PureComponent<Props> {
   }
 
   renderReactComponent() {
-    const { selectedFrame, popupObjectProperties } = this.props;
+    const {
+      selectedFrame,
+      popupObjectProperties,
+      openElementInInspector
+    } = this.props;
     const expression = "this;";
     const value = selectedFrame.this;
     const root = {
@@ -75,6 +80,8 @@ class FrameworkComponent extends PureComponent<Props> {
           focusable={false}
           dimTopLevelWindow={true}
           createObjectClient={grip => createObjectClient(grip)}
+          onDOMNodeClick={grip => openElementInInspector(grip)}
+          onInspectIconClick={grip => openElementInInspector(grip)}
         />
       </div>
     );
@@ -92,7 +99,8 @@ class FrameworkComponent extends PureComponent<Props> {
 
 const mapStateToProps = state => ({
   selectedFrame: getSelectedFrame(state),
-  popupObjectProperties: getAllPopupObjectProperties(state)
+  popupObjectProperties: getAllPopupObjectProperties(state),
+  openElementInInspector: actions.openElementInInspectorCommand
 });
 
 export default connect(
