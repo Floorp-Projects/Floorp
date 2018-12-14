@@ -1647,7 +1647,7 @@ def rustc_opt_level(opt_level_option, moz_optimize):
 
 
 @depends(rustc_opt_level, debug_rust, '--enable-debug-symbols')
-def rust_compiler_flags(opt_level, debug_rust, debug_symbols):
+def rust_compile_flags(opt_level, debug_rust, debug_symbols):
     # Cargo currently supports only two interesting profiles for building:
     # development and release. Those map (roughly) to --enable-debug and
     # --disable-debug in Gecko, respectively.
@@ -1687,8 +1687,6 @@ def rust_compiler_flags(opt_level, debug_rust, debug_symbols):
 
     return flags
 
-
-set_config('MOZ_RUST_DEFAULT_FLAGS', rust_compiler_flags)
 
 # Rust incremental compilation
 # ==============================================================
