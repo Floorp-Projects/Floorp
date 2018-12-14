@@ -2558,3 +2558,12 @@ nsIThread* nsUrlClassifierDBService::BackgroundThread() {
 bool nsUrlClassifierDBService::ShutdownHasStarted() {
   return gShuttingDownThread;
 }
+
+NS_IMETHODIMP
+nsUrlClassifierDBService::AsyncClassifyLocalWithFeatures(
+    nsIURI* aURI, const nsTArray<RefPtr<nsIUrlClassifierFeature>>& aFeatures,
+    nsIUrlClassifierFeature::listType aListType,
+    nsIUrlClassifierFeatureCallback* aCallback) {
+  // TODO
+  return NS_OK;
+}

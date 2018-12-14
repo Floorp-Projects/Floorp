@@ -1,0 +1,84 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#include "nsStringFwd.h"
+#include "nsTArrayForwardDeclare.h"
+%}
+[ref] native StringArrayRef(nsTArray<nsCString>);
+
+/**
+ * A single URLClassifier feature.
+ */
+[builtinclass, scriptable, uuid(a6c9b24e-b4f1-426e-af58-2c976c3943a8)]
+interface nsIUrlClassifierFeature : nsISupports
+{
+  cenum listType: 8 {
+    blacklist = 0,
+    whitelist = 1,
+  };
+
+  /**
+   * The feature name
+   */
+  readonly attribute ACString name;
+
+  /**
+   * Returns the tables for one of the possible lists.
+   */
+  [noscript] StringArrayRef getTables(in nsIUrlClassifierFeature_listType aListType);
+
+  /**
+   * Returns true if |aTable| is part of the tables of |aListType| type.
+   */
+  [noscript] boolean hasTable(in ACString aTable,
+                              in nsIUrlClassifierFeature_listType aListType);
+
+  /**
+   * Returns true if |aHost| is contained in the preference of |aListType| type.
+   * |aPrefTableName| will be set to the table name to use.
+   */
+  [noscript] boolean hasHostInPreferences(in ACString aHost,
+                                          in nsIUrlClassifierFeature_listType aListType,
+                                          out ACString aPrefTableName);
+
+  /**
+   * Returns true if this host has to be ignored also if blacklisted.
+   */
+  readonly attribute ACString skipHostList;
+};
+
+/**
+ * The result of the classifier operation is this interface.
+ * See asyncClassifyLocalWithFeatures() in nsIURIClassifier.idl.
+ */
+[builtinclass, scriptable, uuid(ccb88140-5d66-4873-9815-a1b98d6cdc92)]
+interface nsIUrlClassifierFeatureResult : nsISupports
+{
+  readonly attribute nsIUrlClassifierFeature feature;
+
+  // Comma separate tables or preferences.
+  readonly attribute ACString list;
+};
+
+/**
+ * Callback function for nsIURIClassifier lookups.
+ * See asyncClassifyLocalWithFeatures() in nsIURIClassifier.idl.
+ */
+[scriptable, function, uuid(2ea83c26-dfc9-44ed-9cfc-171d4753d78e)]
+interface nsIUrlClassifierFeatureCallback : nsISupports
+{
+  /**
+   * Called by the URI classifier service when it is done checking a URI.
+   *
+   * Clients are responsible for associating callback objects with classify()
+   * calls.
+   *
+   * @param aResults
+   *        List of nsIUrlClassifierFeatureResult objects.
+   */
+  void onClassifyComplete(in Array<nsIUrlClassifierFeatureResult> aResults);
+};
