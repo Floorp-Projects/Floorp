@@ -59,6 +59,7 @@ namespace gc {
 class AutoMaybeStartBackgroundAllocation;
 class AutoTraceSession;
 struct Cell;
+class GCSchedulingTunables;
 class MinorCollectionTracer;
 class RelocationOverlay;
 struct TenureCountCache;
@@ -547,6 +548,8 @@ class Nursery {
 
   JSRuntime* runtime() const { return runtime_; }
   gcstats::Statistics& stats() const;
+
+  const js::gc::GCSchedulingTunables& tunables() const;
 
   /* Common internal allocator function. */
   void* allocate(size_t size);
