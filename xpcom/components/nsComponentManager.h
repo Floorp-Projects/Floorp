@@ -52,6 +52,10 @@ struct PRThread;
 
 extern const mozilla::Module kXPCOMModule;
 
+namespace {
+  class MutexLock;
+}
+
 /**
  * This is a wrapper around mozilla::Mutex which provides runtime
  * checking for a deadlock where the same thread tries to lock a mutex while
@@ -262,6 +266,9 @@ class nsComponentManagerImpl final : public nsIComponentManager,
 
  private:
   ~nsComponentManagerImpl();
+
+  nsresult GetServiceLocked(MutexLock& aLock, nsFactoryEntry& aEntry,
+                            const nsIID& aIID, void** aResult);
 };
 
 #define NS_MAX_FILENAME_LEN 1024
