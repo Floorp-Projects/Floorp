@@ -35,7 +35,7 @@
 
 U_NAMESPACE_BEGIN
 
-// The value of MAX_TIMEZONE_ID_LENGTH is 128, which is defined in DYNAMIC_TIME_ZONE_INFORMATION
+// The max size of TimeZoneKeyName is 128, defined in DYNAMIC_TIME_ZONE_INFORMATION
 #define MAX_TIMEZONE_ID_LENGTH 128
 
 /**
@@ -44,7 +44,7 @@ U_NAMESPACE_BEGIN
 * Note: We use the Win32 API GetDynamicTimeZoneInformation to get the current time zone info.
 * This API returns a non-localized time zone name, which we can then map to an ICU time zone name.
 */
-U_CFUNC const char* U_EXPORT2
+U_INTERNAL const char* U_EXPORT2
 uprv_detectWindowsTimeZone()
 {
     UErrorCode status = U_ZERO_ERROR;
@@ -79,7 +79,7 @@ uprv_detectWindowsTimeZone()
 
     // convert from wchar_t* (UTF-16 on Windows) to char* (UTF-8).
     u_strToUTF8(dynamicTZKeyName, UPRV_LENGTHOF(dynamicTZKeyName), nullptr,
-        reinterpret_cast<const UChar*>(dynamicTZI.TimeZoneKeyName), UPRV_LENGTHOF(dynamicTZI.TimeZoneKeyName), &status);
+        reinterpret_cast<const UChar*>(dynamicTZI.TimeZoneKeyName), -1, &status);
 
     if (U_FAILURE(status)) {
         return nullptr;
