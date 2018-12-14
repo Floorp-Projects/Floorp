@@ -15,6 +15,7 @@ use core_foundation_sys::base::{CFTypeRef, CFRelease, kCFAllocatorDefault};
 use std::mem;
 use std::marker::PhantomData;
 use std::os::raw::c_void;
+use std::ptr;
 use ConcreteCFType;
 
 use base::{CFIndexConvertible, TCFType, CFRange};
@@ -61,6 +62,17 @@ impl_CFTypeDescription!(CFArray);
 unsafe impl ConcreteCFType for CFArray<*const c_void> {}
 
 impl<T> CFArray<T> {
+    /// Creates a new `CFArray` with the given elements, which must implement `Copy`.
+    pub fn from_copyable(elems: &[T]) -> CFArray<T> where T: Copy {
+        unsafe {
+            let array_ref = CFArrayCreate(kCFAllocatorDefault,
+                                          mem::transmute(elems.as_ptr()),
+                                          elems.len().to_CFIndex(),
+                                          ptr::null());
+            TCFType::wrap_under_create_rule(array_ref)
+        }
+    }
+
     /// Creates a new `CFArray` with the given elements, which must be `CFType` objects.
     pub fn from_CFTypes(elems: &[T]) -> CFArray<T> where T: TCFType {
         unsafe {
