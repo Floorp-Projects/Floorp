@@ -11,12 +11,18 @@ include PURLClassifierInfo;
 namespace mozilla {
 namespace dom {
 
+struct URLClassifierLocalResult
+{
+  nsCString featureName;
+  nsCString matchingList;
+};
+
 protocol PURLClassifierLocal
 {
   manager PContent;
 
 child:
-  async __delete__(MaybeInfo info, nsresult errorCode);
+  async __delete__(URLClassifierLocalResult[] results);
 };
 
 } // namespace dom

@@ -406,7 +406,8 @@ void Classifier::TableRequest(nsACString& aResult) {
   mIsTableRequestResultOutdated = false;
 }
 
-nsresult Classifier::Check(const nsACString& aSpec, const nsACString& aTables,
+nsresult Classifier::Check(const nsACString& aSpec,
+                           const nsTArray<nsCString>& aTables,
                            LookupResultArray& aResults) {
   Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_CL_CHECK_TIME> timer;
 
@@ -417,13 +418,10 @@ nsresult Classifier::Check(const nsACString& aSpec, const nsACString& aTables,
   nsresult rv = LookupCache::GetLookupFragments(aSpec, &fragments);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsTArray<nsCString> activeTables;
-  SplitTables(aTables, activeTables);
-
   LookupCacheArray cacheArray;
-  for (uint32_t i = 0; i < activeTables.Length(); i++) {
-    LOG(("Checking table %s", activeTables[i].get()));
-    RefPtr<LookupCache> cache = GetLookupCache(activeTables[i]);
+  for (const nsCString& table : aTables) {
+    LOG(("Checking table %s", table.get()));
+    RefPtr<LookupCache> cache = GetLookupCache(table);
     if (cache) {
       cacheArray.AppendElement(cache);
     } else {
