@@ -115,6 +115,8 @@ impl Example for App {
     }
 
     fn on_event(&mut self, win_event: winit::WindowEvent, api: &RenderApi, document_id: DocumentId) -> bool {
+        let mut rebuild_display_list = false;
+
         match win_event {
             winit::WindowEvent::KeyboardInput {
                 input: winit::KeyboardInput {
@@ -129,6 +131,10 @@ impl Example for App {
                     winit::VirtualKeyCode::Up => (0.0, 0.1),
                     winit::VirtualKeyCode::Right => (1.0, 0.0),
                     winit::VirtualKeyCode::Left => (-1.0, 0.0),
+                    winit::VirtualKeyCode::R => {
+                        rebuild_display_list = true;
+                        (0.0, 0.0)
+                    }
                     _ => return false,
                 };
                 // Update the transform based on the keyboard input and push it to
@@ -172,7 +178,7 @@ impl Example for App {
             _ => (),
         }
 
-        false
+        rebuild_display_list
     }
 }
 
