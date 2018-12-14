@@ -1,0 +1,238 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - toolchain
+
+transforms:
+    - taskgraph.transforms.use_toolchains:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    description: "Build OpenH264 plugin"
+    treeherder:
+        kind: build
+        symbol: h264
+        tier: 2
+    run-on-projects: []
+    run:
+        options: ['repo=https://github.com/cisco/openh264.git',
+                  'rev=2e1774ab6dc6c43debb0b5b628bdf122a391d521']
+
+jobs:
+    linux32/opt:
+        attributes:
+            build_platform: linux32
+            build_type: opt
+        treeherder:
+            platform: linux32/opt
+        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker:
+            max-run-time: 1800
+            artifacts:
+                - name: private/openh264
+                  path: /builds/worker/workspace/build/openh264/artifacts
+                  type: directory
+        run:
+            using: mozharness
+            script: mozharness/scripts/openh264_build.py
+            config:
+                - openh264/linux32.py
+            tooltool-downloads: public
+        toolchains:
+            - linux64-clang
+    linux64/opt:
+        attributes:
+            build_platform: linux64
+            build_type: opt
+        treeherder:
+            platform: linux64/opt
+        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker:
+            max-run-time: 1800
+            artifacts:
+                - name: private/openh264
+                  path: /builds/worker/workspace/build/openh264/artifacts
+                  type: directory
+        run:
+            using: mozharness
+            script: mozharness/scripts/openh264_build.py
+            config:
+                - openh264/linux64.py
+            tooltool-downloads: public
+        toolchains:
+            - linux64-clang
+    macosx64/opt:
+        attributes:
+            build_platform: macosx64
+            build_type: opt
+        treeherder:
+            platform: macosx64/opt
+        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker:
+            max-run-time: 1800
+            artifacts:
+                - name: private/openh264
+                  path: /builds/worker/workspace/build/openh264/artifacts
+                  type: directory
+        run:
+            using: mozharness
+            script: mozharness/scripts/openh264_build.py
+            config:
+                - openh264/macosx64.py
+            tooltool-downloads: internal
+        toolchains:
+            - linux64-cctools-port
+            - linux64-clang
+    win32/opt:
+        attributes:
+            build_platform: win32
+            build_type: opt
+        treeherder:
+            platform: win32/opt
+        worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+        worker:
+            max-run-time: 1800
+            artifacts:
+                - name: private/openh264
+                  path: build/openh264/artifacts
+                  type: directory
+        run:
+            using: mozharness
+            script: mozharness/scripts/openh264_build.py
+            config:
+                - openh264/win32.py
+        toolchains:
+            - win64-clang-cl
+    win64/opt:
+        attributes:
+            build_platform: win64
+            build_type: opt
+        treeherder:
+            platform: win64/opt
+        worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+        worker:
+            max-run-time: 1800
+            artifacts:
+                - name: private/openh264
+                  path: build/openh264/artifacts
+                  type: directory
+        run:
+            using: mozharness
+            script: mozharness/scripts/openh264_build.py
+            config:
+                - openh264/win64.py
+        toolchains:
+            - win64-clang-cl
+    android-api-16/opt:
+        attributes:
+            build_platform: android
+            build_type: opt
+        treeherder:
+            platform: android-api-16/opt
+        worker-type: aws-provisioner-v1/gecko-{level}-b-android
+        worker:
+            max-run-time: 1800
+            artifacts:
+                - name: private/openh264
+                  path: /builds/worker/workspace/build/openh264/artifacts
+                  type: directory
+        run:
+            using: mozharness
+            script: mozharness/scripts/openh264_build.py
+            config:
+                - openh264/android-arm.py
+            # This rev includes Android Makefile fixes from after
+            # the 1.8.1 release
+            options: ['repo=https://github.com/dminor/openh264.git',
+                      'rev=42954cf0fe8a2bdc97fdc180462a3eaefceb035f']
+            tooltool-downloads: internal
+        toolchains:
+            - android-ndk-linux
+            - android-sdk-linux
+            - linux64-clang
+    android-aarch64/opt:
+        attributes:
+            build_platform: android
+            build_type: opt
+        treeherder:
+            platform: android-5-0-aarch64/opt
+        worker-type: aws-provisioner-v1/gecko-{level}-b-android
+        worker:
+            max-run-time: 1800
+            artifacts:
+                - name: private/openh264
+                  path: /builds/worker/workspace/build/openh264/artifacts
+                  type: directory
+        run:
+            using: mozharness
+            script: mozharness/scripts/openh264_build.py
+            config:
+                - openh264/android-aarch64.py
+            # This rev includes Android Makefile fixes from after
+            # the 1.8.1 release
+            options: ['repo=https://github.com/dminor/openh264.git',
+                      'rev=42954cf0fe8a2bdc97fdc180462a3eaefceb035f']
+            tooltool-downloads: internal
+        toolchains:
+            - android-ndk-linux
+            - android-sdk-linux
+            - linux64-clang
+    android-x86/opt:
+        attributes:
+            build_platform: android
+            build_type: opt
+        treeherder:
+            platform: android-4-2-x86/opt
+        worker-type: aws-provisioner-v1/gecko-{level}-b-android
+        worker:
+            max-run-time: 1800
+            artifacts:
+                - name: private/openh264
+                  path: /builds/worker/workspace/build/openh264/artifacts
+                  type: directory
+        run:
+            using: mozharness
+            script: mozharness/scripts/openh264_build.py
+            config:
+                - openh264/android-x86.py
+            # This rev includes Android Makefile fixes from after
+            # the 1.8.1 release
+            options: ['repo=https://github.com/dminor/openh264.git',
+                      'rev=42954cf0fe8a2bdc97fdc180462a3eaefceb035f']
+            tooltool-downloads: internal
+        toolchains:
+            - android-ndk-linux
+            - android-sdk-linux
+            - linux64-clang
+    android-x86_64/opt:
+        attributes:
+            build_platform: android
+            build_type: opt
+        treeherder:
+            platform: android-5-0-x86_64/opt
+        worker-type: aws-provisioner-v1/gecko-{level}-b-android
+        worker:
+            max-run-time: 1800
+            artifacts:
+                - name: private/openh264
+                  path: /builds/worker/workspace/build/openh264/artifacts
+                  type: directory
+        run:
+            using: mozharness
+            script: mozharness/scripts/openh264_build.py
+            config:
+                - openh264/android-x86_64.py
+            # This rev includes Android Makefile fixes from after
+            # the 1.8.1 release
+            options: ['repo=https://github.com/dminor/openh264.git',
+                      'rev=42954cf0fe8a2bdc97fdc180462a3eaefceb035f']
+            tooltool-downloads: internal
+        toolchains:
+            - android-ndk-linux
+            - android-sdk-linux
+            - linux64-clang
