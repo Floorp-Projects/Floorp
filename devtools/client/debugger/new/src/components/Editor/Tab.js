@@ -92,7 +92,7 @@ class Tab extends PureComponent<Props> {
         item: {
           ...tabMenuItems.closeOtherTabs,
           click: () => closeTabs(otherTabURLs),
-          disabled: () => tabCount === 1
+          disabled: otherTabURLs.length === 0
         }
       },
       {
@@ -102,7 +102,7 @@ class Tab extends PureComponent<Props> {
             const tabIndex = tabSources.findIndex(t => t.id == tab);
             closeTabs(tabURLs.filter((t, i) => i > tabIndex));
           },
-          disabled: () =>
+          disabled:
             tabCount === 1 ||
             tabSources.some((t, i) => t === tab && tabCount - 1 === i)
         }
