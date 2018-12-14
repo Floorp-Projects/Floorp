@@ -438,16 +438,59 @@ NS_IMPL_ISUPPORTS(nsScriptSecurityManager, nsIScriptSecurityManager)
 
 ///////////////// Security Checks /////////////////
 
+#if defined(DEBUG) && !defined(ANDROID)
+static void AssertEvalNotUsingSystemPrincipal(nsIPrincipal* subjectPrincipal,
+                                              JSContext* cx) {
+  if (!nsContentUtils::IsSystemPrincipal(subjectPrincipal)) {
+    return;
+  }
+
+  if (Preferences::GetBool("security.allow_eval_with_system_principal")) {
+    return;
+  }
+
+  static StaticAutoPtr<nsTArray<nsCString>> sUrisAllowEval;
+  JS::AutoFilename scriptFilename;
+  if (JS::DescribeScriptedCaller(cx, &scriptFilename)) {
+    if (!sUrisAllowEval) {
+      sUrisAllowEval = new nsTArray<nsCString>();
+      nsAutoCString urisAllowEval;
+      Preferences::GetCString("security.uris_using_eval_with_system_principal",
+                              urisAllowEval);
+      for (const nsACString& filenameString : urisAllowEval.Split(',')) {
+        sUrisAllowEval->AppendElement(filenameString);
+      }
+      ClearOnShutdown(&sUrisAllowEval);
+    }
+
+    nsAutoCString fileName;
+    fileName = nsAutoCString(scriptFilename.get());
+    // Extract file name alone if scriptFilename contains line number
+    // separated by multiple space delimiters in few cases.
+    int32_t fileNameIndex = fileName.FindChar(' ');
+    if (fileNameIndex != -1) {
+      fileName = Substring(fileName, 0, fileNameIndex);
+    }
+    ToLowerCase(fileName);
+
+    for (auto& uriEntry : *sUrisAllowEval) {
+      if (StringEndsWith(fileName, uriEntry)) {
+        return;
+      }
+    }
+  }
+
+  MOZ_ASSERT(false, "do not use eval with system privileges");
+}
+#endif
+
 bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
     JSContext* cx, JS::HandleValue aValue) {
   MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
   nsCOMPtr<nsIPrincipal> subjectPrincipal = nsContentUtils::SubjectPrincipal();
 
 #if defined(DEBUG) && !defined(ANDROID)
-  if (!(Preferences::GetBool("security.allow_eval_with_system_principal"))) {
-    MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(subjectPrincipal),
-               "do not use eval with system privileges");
-  }
+  AssertEvalNotUsingSystemPrincipal(subjectPrincipal, cx);
 #endif
 
   nsCOMPtr<nsIContentSecurityPolicy> csp;

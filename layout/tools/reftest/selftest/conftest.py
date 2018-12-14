@@ -16,6 +16,20 @@ here = os.path.abspath(os.path.dirname(__file__))
 setup_args = [False, 'reftest', 'reftest']
 
 
+@pytest.fixture(scope='module')
+def normalize():
+    """A function that can take a relative path and append it to the 'files'
+    directory which contains the data necessary to run these tests.
+    """
+
+    def inner(path):
+        if os.path.isabs(path):
+            return path
+        return os.path.join(here, 'files', path)
+
+    return inner
+
+
 @pytest.fixture  # noqa: F811
 def parser(setup_test_harness):
     setup_test_harness(*setup_args)
@@ -24,20 +38,17 @@ def parser(setup_test_harness):
 
 
 @pytest.fixture  # noqa: F811
-def runtests(setup_test_harness, binary, parser):
+def get_reftest(setup_test_harness, binary, parser):
     setup_test_harness(*setup_args)
     runreftest = pytest.importorskip('runreftest')
     harness_root = runreftest.SCRIPT_DIRECTORY
 
-    buf = StringIO()
     build = parser.build_obj
     options = vars(parser.parse_args([]))
     options.update({
         'app': binary,
         'focusFilterMode': 'non-needs-focus',
-        'log_raw': [buf],
         'suite': 'reftest',
-        'specialPowersExtensionPath': os.path.join(harness_root, 'specialpowers'),
     })
 
     if not os.path.isdir(build.bindir):
@@ -47,6 +58,7 @@ def runtests(setup_test_harness, binary, parser):
             'reftestExtensionPath': os.path.join(harness_root, 'reftest'),
             'sandboxReadWhitelist': [here, os.environ['PYTHON_TEST_TMP']],
             'utilityPath': os.path.join(package_root, 'bin'),
+            'specialPowersExtensionPath': os.path.join(harness_root, 'specialpowers'),
         })
 
         if 'MOZ_FETCHES_DIR' in os.environ:
@@ -55,21 +67,43 @@ def runtests(setup_test_harness, binary, parser):
         options.update({
             'extraProfileFiles': [os.path.join(build.topobjdir, 'dist', 'plugins')],
             'sandboxReadWhitelist': [build.topobjdir, build.topsrcdir],
+            'specialPowersExtensionPath': os.path.join(
+                build.distdir, 'xpi-stage', 'specialpowers'),
         })
 
-    def normalize(test):
-        if os.path.isabs(test):
-            return test
-        return os.path.join(here, 'files', test)
+    def inner(**opts):
+        options.update(opts)
+        config = Namespace(**options)
+
+        # This is pulled from `runreftest.run_test_harness` minus some error
+        # checking that isn't necessary in this context. It should stay roughly
+        # in sync.
+        reftest = runreftest.RefTest(config.suite)
+        parser.validate(config, reftest)
+
+        config.app = reftest.getFullPath(config.app)
+        assert os.path.exists(config.app)
+
+        if config.xrePath is None:
+            config.xrePath = os.path.dirname(config.app)
+
+        return reftest, config
+    return inner
+
+
+@pytest.fixture  # noqa: F811
+def runtests(get_reftest, normalize):
 
     def inner(*tests, **opts):
         assert len(tests) > 0
-        tests = map(normalize, tests)
+        opts['tests'] = map(normalize, tests)
 
-        options['tests'] = tests
-        options.update(opts)
+        buf = StringIO()
+        opts['log_raw'] = [buf]
 
-        result = runreftest.run_test_harness(parser, Namespace(**options))
+        reftest, options = get_reftest(**opts)
+        result = reftest.runTests(options.tests, options)
+
         out = json.loads('[' + ','.join(buf.getvalue().splitlines()) + ']')
         buf.close()
         return result, out

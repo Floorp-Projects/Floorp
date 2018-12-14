@@ -80,6 +80,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // server.
     this._hiddenBreakpoints = new Map();
 
+    // A Set of URLs string to watch for when new sources are found by
+    // the debugger instance.
+    this._onLoadBreakpointURLs = new Set();
+
     this.global = global;
 
     this._allEventsListener = this._allEventsListener.bind(this);
@@ -96,9 +100,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._onOpeningRequest = this._onOpeningRequest.bind(this);
     EventEmitter.on(this._parent, "window-ready", this._onWindowReady);
 
-    // Set a wrappedJSObject property so |this| can be sent via the observer svc
-    // for the xpcshell harness.
-    this.wrappedJSObject = this;
+    if (Services.obs) {
+      // Set a wrappedJSObject property so |this| can be sent via the observer svc
+      // for the xpcshell harness.
+      this.wrappedJSObject = this;
+      Services.obs.notifyObservers(this, "devtools-thread-instantiated");
+    }
   },
 
   // Used by the ObjectActor to keep track of the depth of grip() calls.
@@ -304,6 +311,17 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       reportError(e);
       return { error: "notAttached", message: e.toString() };
     }
+  },
+
+  /**
+   * Tell the thread to automatically add a breakpoint on the first line of
+   * a given file, when it is first loaded.
+   *
+   * This is currently only used by the xpcshell test harness, and unless
+   * we decide to expand the scope of this feature, we should keep it that way.
+   */
+  setBreakpointOnLoad(urls) {
+    this._onLoadBreakpointURLs = new Set(urls);
   },
 
   _findXHRBreakpointIndex(p, m) {
@@ -2015,6 +2033,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
           );
         }
       }
+    }
+
+    if (this._onLoadBreakpointURLs.has(source.url)) {
+      this.unsafeSynchronize(
+        sourceActor.setBreakpoint(1, undefined, undefined, undefined, true)
+      );
     }
 
     this._debuggerSourcesSeen.add(source);

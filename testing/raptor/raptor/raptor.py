@@ -28,8 +28,6 @@ else:
     mozharness_dir = os.path.join(here, '../../../mozharness')
 sys.path.insert(0, mozharness_dir)
 
-from mozharness.mozilla.firefox.autoconfig import _cfg_file_path, _autoconfig_path
-
 webext_dir = os.path.join(os.path.dirname(here), 'webext')
 sys.path.insert(0, here)
 
@@ -48,16 +46,6 @@ from manifest import get_raptor_test_list
 from playback import get_playback
 from results import RaptorResultsHandler
 from gecko_profile import GeckoProfile
-
-
-def remove_autoconfig(binary):
-    bindir = os.path.dirname(binary)
-    mozillacfg = _cfg_file_path(bindir)
-    if os.path.isfile(mozillacfg):
-        os.unlink(mozillacfg)
-    autoconfig = _autoconfig_path(bindir)
-    if os.path.isfile(autoconfig):
-        os.unlink(autoconfig)
 
 
 class Raptor(object):
@@ -86,6 +74,7 @@ class Raptor(object):
         self.benchmark = None
         self.gecko_profiler = None
         self.post_startup_delay = 30000
+        self.device = None
 
         # debug mode is currently only supported when running locally
         self.debug_mode = debug_mode if self.config['run_local'] else False
@@ -101,9 +90,6 @@ class Raptor(object):
             self.profile = create_profile('firefox')
         else:
             self.profile = create_profile(self.config['app'])
-            # Clear any existing mozilla.cfg file to prevent earlier
-            # runs using mitmproxy from interfering with settings.
-            remove_autoconfig(binary)
 
         # Merge in base profiles
         with open(os.path.join(self.profile_data_dir, 'profiles.json'), 'r') as fh:
@@ -113,6 +99,9 @@ class Raptor(object):
             path = os.path.join(self.profile_data_dir, name)
             self.log.info("Merging profile: {}".format(path))
             self.profile.merge(path)
+
+        # add profile dir to our config
+        self.config['local_profile_dir'] = self.profile.profile
 
         # create results holder
         self.results_handler = RaptorResultsHandler()
@@ -177,6 +166,13 @@ class Raptor(object):
         if test.get('type') == "benchmark":
             self.benchmark = Benchmark(self.config, test)
             benchmark_port = int(self.benchmark.port)
+
+            # for android we must make the benchmarks server available to the device
+            if self.config['app'] == "geckoview" and self.config['host'] \
+                    in ('localhost', '127.0.0.1'):
+                self.log.info("making the raptor benchmarks server port available to device")
+                _tcp_port = "tcp:%s" % benchmark_port
+                self.device.create_socket_connection('reverse', _tcp_port, _tcp_port)
         else:
             benchmark_port = 0
 
@@ -187,12 +183,6 @@ class Raptor(object):
                         host=self.config['host'],
                         b_port=benchmark_port,
                         debug_mode=1 if self.debug_mode else 0)
-
-        # for android we must make the benchmarks server available to the device
-        if self.config['app'] == "geckoview" and self.config['host'] in ('localhost', '127.0.0.1'):
-            self.log.info("making the raptor benchmarks server port available to device")
-            _tcp_port = "tcp:%s" % benchmark_port
-            self.device.create_socket_connection('reverse', _tcp_port, _tcp_port)
 
         # must intall raptor addon each time because we dynamically update some content
         # note: for chrome the addon is just a list of paths that ultimately are added
@@ -213,11 +203,30 @@ class Raptor(object):
         if self.config['app'] in ["firefox", "geckoview"]:
             webext_id = self.profile.addons.addon_details(raptor_webext)['id']
 
+        # for android/geckoview, create a top-level raptor folder on the device
+        # sdcard; if it already exists remove it so we start fresh each time
+        if self.config['app'] == "geckoview":
+            self.device_raptor_dir = "/sdcard/raptor"
+            self.config['device_raptor_dir'] = self.device_raptor_dir
+            if self.device.is_dir(self.device_raptor_dir):
+                self.log.info("deleting existing device raptor dir: %s" % self.device_raptor_dir)
+                self.device.rm(self.device_raptor_dir, recursive=True)
+            self.log.info("creating raptor folder on sdcard: %s" % self.device_raptor_dir)
+            self.device.mkdir(self.device_raptor_dir)
+            self.device.chmod(self.device_raptor_dir, recursive=True)
+
         # some tests require tools to playback the test pages
         if test.get('playback', None) is not None:
             self.get_playback_config(test)
             # startup the playback tool
-            self.playback = get_playback(self.config)
+            self.playback = get_playback(self.config, self.device)
+
+            # for android we must make the playback server available to the device
+            if self.config['app'] == "geckoview" and self.config['host'] \
+                    in ('localhost', '127.0.0.1'):
+                self.log.info("making the raptor playback server port available to device")
+                _tcp_port = "tcp:8080"
+                self.device.create_socket_connection('reverse', _tcp_port, _tcp_port)
 
         if self.config['app'] in ("geckoview", "firefox") and \
            self.config['host'] not in ('localhost', '127.0.0.1'):
@@ -230,19 +239,36 @@ class Raptor(object):
             with open(userjspath, 'w') as userjsfile:
                 userjsfile.writelines(prefs)
 
-        # for geckoview we must copy the profile onto the device and set perms
+        # for geckoview/android pageload playback we can't use a policy to turn on the
+        # proxy; we need to set prefs instead; note that the 'host' may be different
+        # than '127.0.0.1' so we must set the prefs accordingly
+        if self.config['app'] == "geckoview" and test.get('playback', None) is not None:
+            self.log.info("setting profile prefs to turn on the geckoview browser proxy")
+            no_proxies_on = "localhost, 127.0.0.1, %s" % self.config['host']
+            proxy_prefs = {}
+            proxy_prefs["network.proxy.type"] = 1
+            proxy_prefs["network.proxy.http"] = self.config['host']
+            proxy_prefs["network.proxy.http_port"] = 8080
+            proxy_prefs["network.proxy.ssl"] = self.config['host']
+            proxy_prefs["network.proxy.ssl_port"] = 8080
+            proxy_prefs["network.proxy.no_proxies_on"] = no_proxies_on
+            self.profile.set_preferences(proxy_prefs)
+
+        # now some final settings, and then startup of the browser under test
         if self.config['app'] == "geckoview":
+            # for android/geckoview we must copy the profile onto the device and set perms
             if not self.device.is_app_installed(self.config['binary']):
                 raise Exception('%s is not installed' % self.config['binary'])
-
-            self.log.info("copying firefox profile onto the android device")
-            self.device_profile = "/sdcard/raptor-profile"
+            self.device_profile = os.path.join(self.device_raptor_dir, "profile")
             if self.device.is_dir(self.device_profile):
+                self.log.info("deleting existing device profile folder: %s" % self.device_profile)
                 self.device.rm(self.device_profile, recursive=True)
+            self.log.info("creating profile folder on device: %s" % self.device_profile)
             self.device.mkdir(self.device_profile)
+            self.log.info("copying firefox profile onto the device")
+            self.log.info("note: the profile folder being copied is: %s" % self.profile.profile)
+            self.log.info('the adb push cmd copies that profile dir to a new temp dir before copy')
             self.device.push(self.profile.profile, self.device_profile)
-
-            self.log.info("setting permisions to profile dir on the device")
             self.device.chmod(self.device_profile, recursive=True)
 
             # now start the geckoview app
@@ -425,7 +451,6 @@ class Raptor(object):
             self.device.remove_socket_connections('reverse')
         else:
             pass
-        remove_autoconfig(self.config['binary'])
         self.log.info("finished")
 
 

@@ -16,7 +16,7 @@
 == decorations.yaml decorations-ref.yaml
 fuzzy(1,173) == decorations-suite.yaml decorations-suite.png
 == 1658.yaml 1658-ref.yaml
-== split-batch.yaml split-batch-ref.yaml
+fuzzy(1,5) == split-batch.yaml split-batch-ref.yaml
 == shadow-red.yaml shadow-red-ref.yaml
 fuzzy(1,735) == shadow-grey.yaml shadow-grey-ref.yaml
 fuzzy(1,663) == shadow-grey-transparent.yaml shadow-grey-ref.yaml
