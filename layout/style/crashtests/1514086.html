@@ -1,0 +1,13 @@
+<script>
+let o = [];
+window.onload = function(){
+  o[0] = document.createElement("font");
+  document.body.appendChild(o[0]);
+  o[1] = document.createElement("embed");
+  o[0].appendChild(o[1]);
+  o[2] = document.createElement("dialog");
+  o[1].appendChild(o[2]);
+  o[2].appendChild(document.createElement("s"));
+  o[2].animate([{"all": "unset"}, {}], 3);
+}
+</script>
