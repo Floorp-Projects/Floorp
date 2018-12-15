@@ -15,41 +15,118 @@
 #include "mozilla/Unused.h"
 #include "nsTArray.h"
 #include "gtest/gtest.h"
-#include "gtest/MozGTestBench.h" // For MOZ_GTEST_BENCH
+#include "gtest/MozGTestBench.h"  // For MOZ_GTEST_BENCH
 #include "gtest/BlackBox.h"
 #include "nsBidiUtils.h"
 
 #define CONVERSION_ITERATIONS 50000
 
-#define CONVERSION_BENCH(name, func, src, dstType) \
-MOZ_GTEST_BENCH_F(Strings, name, [this] { \
+#define CONVERSION_BENCH(name, func, src, dstType)    \
+  MOZ_GTEST_BENCH_F(Strings, name, [this] {           \
     for (int i = 0; i < CONVERSION_ITERATIONS; i++) { \
-      dstType dst; \
-      func(*BlackBox(&src), *BlackBox(&dst)); \
-    } \
-}); \
+      dstType dst;                                    \
+      func(*BlackBox(&src), *BlackBox(&dst));         \
+    }                                                 \
+  });
 
 namespace TestStrings {
 
-using mozilla::fallible;
 using mozilla::BlackBox;
+using mozilla::fallible;
 
-#define TestExample1 "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium,\n totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi\r architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur\n aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui\r\n\r dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?"
+#define TestExample1                                                           \
+  "Sed ut perspiciatis unde omnis iste natus error sit voluptatem "            \
+  "accusantium doloremque laudantium,\n totam rem aperiam, eaque ipsa quae "   \
+  "ab illo inventore veritatis et quasi\r architecto beatae vitae dicta sunt " \
+  "explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur\n aut "  \
+  "odit aut fugit, sed quia consequuntur magni dolores eos qui ratione "       \
+  "voluptatem sequi nesciunt. Neque porro quisquam est, qui\r\n\r dolorem "    \
+  "ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non "      \
+  "numquam eius modi tempora incidunt ut labore et dolore magnam aliquam "     \
+  "quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem " \
+  "ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi "         \
+  "consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate "    \
+  "velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum "    \
+  "fugiat quo voluptas nulla pariatur?"
 
-#define TestExample2 "At vero eos et accusamus et iusto odio dignissimos ducimus\n\n qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt\r\r  \n mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda       est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat."
+#define TestExample2                                                           \
+  "At vero eos et accusamus et iusto odio dignissimos ducimus\n\n qui "        \
+  "blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et " \
+  "quas molestias excepturi sint occaecati cupiditate non provident, "         \
+  "similique sunt in culpa qui officia deserunt\r\r  \n mollitia animi, id "   \
+  "est laborum et dolorum fuga. Et harum quidem rerum facilis est et "         \
+  "expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi "    \
+  "optio cumque nihil impedit quo minus id quod maxime placeat facere "        \
+  "possimus, omnis voluptas assumenda       est, omnis dolor repellendus. "    \
+  "Temporibus autem quibusdam et aut officiis debitis aut rerum "              \
+  "necessitatibus saepe eveniet ut et voluptates repudiandae sint et "         \
+  "molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente "       \
+  "delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut "    \
+  "perferendis doloribus asperiores repellat."
 
-#define TestExample3 " Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis ac tellus eget velit viverra viverra id sit amet neque. Sed id consectetur mi, vestibulum aliquet arcu. Curabitur sagittis accumsan convallis. Sed eu condimentum ipsum, a laoreet tortor. Orci varius natoque penatibus et magnis dis    \r\r\n\n parturient montes, nascetur ridiculus mus. Sed non tellus nec ante sodales placerat a nec risus. Cras vel bibendum sapien, nec ullamcorper felis. Pellentesque congue eget nisi sit amet vehicula. Morbi pulvinar turpis justo, in commodo dolor vulputate id. Curabitur in dui urna. Vestibulum placerat dui in sem congue, ut faucibus nibh rutrum. Duis mattis turpis facilisis ullamcorper tincidunt. Vestibulum pharetra tortor at enim sagittis, dapibus consectetur ex blandit. Curabitur ac fringilla quam. In ornare lectus ut ipsum mattis venenatis. Etiam in mollis lectus, sed luctus risus.\nCras dapibus\f\t  \n finibus justo sit amet dictum. Aliquam non elit diam. Fusce magna nulla, bibendum in massa a, commodo finibus lectus. Sed rutrum a augue id imperdiet. Aliquam sagittis sodales felis, a tristique ligula. Aliquam erat volutpat. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Duis volutpat interdum lorem et congue. Phasellus porttitor posuere justo eget euismod. Nam a condimentum turpis, sit amet gravida lacus. Vestibulum dolor diam, lobortis ac metus et, convallis dapibus tellus. Ut nec metus in velit malesuada tincidunt et eget justo. Curabitur ut libero bibendum, porttitor diam vitae, aliquet justo. "
+#define TestExample3                                                           \
+  " Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis ac tellus "  \
+  "eget velit viverra viverra id sit amet neque. Sed id consectetur mi, "      \
+  "vestibulum aliquet arcu. Curabitur sagittis accumsan convallis. Sed eu "    \
+  "condimentum ipsum, a laoreet tortor. Orci varius natoque penatibus et "     \
+  "magnis dis    \r\r\n\n parturient montes, nascetur ridiculus mus. Sed non " \
+  "tellus nec ante sodales placerat a nec risus. Cras vel bibendum sapien, "   \
+  "nec ullamcorper felis. Pellentesque congue eget nisi sit amet vehicula. "   \
+  "Morbi pulvinar turpis justo, in commodo dolor vulputate id. Curabitur in "  \
+  "dui urna. Vestibulum placerat dui in sem congue, ut faucibus nibh rutrum. " \
+  "Duis mattis turpis facilisis ullamcorper tincidunt. Vestibulum pharetra "   \
+  "tortor at enim sagittis, dapibus consectetur ex blandit. Curabitur ac "     \
+  "fringilla quam. In ornare lectus ut ipsum mattis venenatis. Etiam in "      \
+  "mollis lectus, sed luctus risus.\nCras dapibus\f\t  \n finibus justo sit "  \
+  "amet dictum. Aliquam non elit diam. Fusce magna nulla, bibendum in massa "  \
+  "a, commodo finibus lectus. Sed rutrum a augue id imperdiet. Aliquam "       \
+  "sagittis sodales felis, a tristique ligula. Aliquam erat volutpat. "        \
+  "Pellentesque habitant morbi tristique senectus et netus et malesuada "      \
+  "fames ac turpis egestas. Duis volutpat interdum lorem et congue. "          \
+  "Phasellus porttitor posuere justo eget euismod. Nam a condimentum turpis, " \
+  "sit amet gravida lacus. Vestibulum dolor diam, lobortis ac metus et, "      \
+  "convallis dapibus tellus. Ut nec metus in velit malesuada tincidunt et "    \
+  "eget justo. Curabitur ut libero bibendum, porttitor diam vitae, aliquet "   \
+  "justo. "
 
-#define TestExample4 " Donec feugiat volutpat massa. Cras ornare lacinia porta. Fusce in feugiat nunc. Praesent non felis varius diam feugiat ultrices ultricies a risus. Donec maximus nisi nisl, non consectetur nulla eleifend in. Nulla in massa interdum, eleifend orci a, vestibulum est. Mauris aliquet, massa et convallis mollis, felis augue vestibulum augue, in lobortis metus eros a quam. Nam              ac diam ornare, vestibulum elit sit amet, consectetur ante. Praesent massa mauris, pulvinar sit amet sapien vel, tempus gravida neque. Praesent id quam sit amet est maximus molestie eget at turpis. Nunc sit amet orci id arcu dapibus fermentum non eu erat.\f\tSuspendisse commodo nunc sem, eu congue eros condimentum vel. Nullam sit amet posuere arcu. Nulla facilisi. Mauris dapibus iaculis massa sed gravida. Nullam vitae urna at tortor feugiat auctor ut sit amet dolor. Proin rutrum at nunc et faucibus. Quisque suscipit id nibh a aliquet. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aliquam a dapibus erat, id imperdiet mauris. Nulla blandit libero non magna dapibus tristique. Integer hendrerit imperdiet lorem, quis facilisis lacus semper ut. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae Nullam dignissim elit in congue ultricies. Quisque erat odio, maximus mollis laoreet id, iaculis at turpis. "
+#define TestExample4                                                           \
+  " Donec feugiat volutpat massa. Cras ornare lacinia porta. Fusce in "        \
+  "feugiat nunc. Praesent non felis varius diam feugiat ultrices ultricies a " \
+  "risus. Donec maximus nisi nisl, non consectetur nulla eleifend in. Nulla "  \
+  "in massa interdum, eleifend orci a, vestibulum est. Mauris aliquet, massa " \
+  "et convallis mollis, felis augue vestibulum augue, in lobortis metus eros " \
+  "a quam. Nam              ac diam ornare, vestibulum elit sit amet, "        \
+  "consectetur ante. Praesent massa mauris, pulvinar sit amet sapien vel, "    \
+  "tempus gravida neque. Praesent id quam sit amet est maximus molestie eget " \
+  "at turpis. Nunc sit amet orci id arcu dapibus fermentum non eu "            \
+  "erat.\f\tSuspendisse commodo nunc sem, eu congue eros condimentum vel. "    \
+  "Nullam sit amet posuere arcu. Nulla facilisi. Mauris dapibus iaculis "      \
+  "massa sed gravida. Nullam vitae urna at tortor feugiat auctor ut sit amet " \
+  "dolor. Proin rutrum at nunc et faucibus. Quisque suscipit id nibh a "       \
+  "aliquet. Pellentesque habitant morbi tristique senectus et netus et "       \
+  "malesuada fames ac turpis egestas. Aliquam a dapibus erat, id imperdiet "   \
+  "mauris. Nulla blandit libero non magna dapibus tristique. Integer "         \
+  "hendrerit imperdiet lorem, quis facilisis lacus semper ut. Vestibulum "     \
+  "ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia "     \
+  "Curae Nullam dignissim elit in congue ultricies. Quisque erat odio, "       \
+  "maximus mollis laoreet id, iaculis at turpis. "
 
-#define TestExample5 "Donec id risus urna. Nunc consequat lacinia urna id bibendum. Nulla faucibus faucibus enim. Cras ex risus, ultrices id semper vitae, luctus ut nulla. Sed vehicula tellus sed purus imperdiet efficitur. Suspendisse feugiat\n\n\n     imperdiet odio, sed porta lorem feugiat nec. Curabitur laoreet massa venenatis\r\n risus ornare\r\n, vitae feugiat tortor accumsan. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas id scelerisque mauris, eget facilisis erat. Ut nec pulvinar risus, sed iaculis ante. Mauris tincidunt, risus et pretium elementum, leo nisi consectetur ligula, tincidunt suscipit erat velit eget libero. Sed ac est tempus, consequat dolor mattis, mattis mi. "
+#define TestExample5                                                          \
+  "Donec id risus urna. Nunc consequat lacinia urna id bibendum. Nulla "      \
+  "faucibus faucibus enim. Cras ex risus, ultrices id semper vitae, luctus "  \
+  "ut nulla. Sed vehicula tellus sed purus imperdiet efficitur. Suspendisse " \
+  "feugiat\n\n\n     imperdiet odio, sed porta lorem feugiat nec. Curabitur " \
+  "laoreet massa venenatis\r\n risus ornare\r\n, vitae feugiat tortor "       \
+  "accumsan. Lorem ipsum dolor sit amet, consectetur adipiscing elit. "       \
+  "Maecenas id scelerisque mauris, eget facilisis erat. Ut nec pulvinar "     \
+  "risus, sed iaculis ante. Mauris tincidunt, risus et pretium elementum, "   \
+  "leo nisi consectetur ligula, tincidunt suscipit erat velit eget libero. "  \
+  "Sed ac est tempus, consequat dolor mattis, mattis mi. "
 
 // Originally ReadVPXFile in TestVPXDecoding.cpp
-static void
-ReadFile(const char* aPath, nsACString& aBuffer)
-{
+static void ReadFile(const char* aPath, nsACString& aBuffer) {
   FILE* f = fopen(aPath, "rb");
-  ASSERT_NE(f, (FILE *) nullptr);
+  ASSERT_NE(f, (FILE*)nullptr);
 
   int r = fseek(f, 0, SEEK_END);
   ASSERT_EQ(r, 0);
@@ -69,7 +146,7 @@ ReadFile(const char* aPath, nsACString& aBuffer)
 }
 
 class Strings : public ::testing::Test {
-protected:
+ protected:
   void SetUp() override {
     // Intentionally AssignASCII and not AssignLiteral
     // to simulate the usual heap case.
@@ -230,7 +307,8 @@ protected:
     CopyUTF16toUTF8(mTrThousandUtf16, mTrThousandUtf8);
     CopyUTF16toUTF8(mViThousandUtf16, mViThousandUtf8);
   }
-public:
+
+ public:
   nsCString mAsciiOneUtf8;
   nsCString mAsciiThreeUtf8;
   nsCString mAsciiFifteenUtf8;
@@ -382,34 +460,38 @@ public:
   nsCString mKoThousandUtf8;
   nsCString mTrThousandUtf8;
   nsCString mViThousandUtf8;
-
 };
 
-void test_assign_helper(const nsACString& in, nsACString &_retval)
-{
+void test_assign_helper(const nsACString& in, nsACString& _retval) {
   _retval = in;
 }
 
 // Simple helper struct to test if conditionally enabled string functions are
 // working.
 template <typename T>
-struct EnableTest
-{
+struct EnableTest {
   template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
-  bool IsChar16() { return true; }
+  bool IsChar16() {
+    return true;
+  }
 
   template <typename Q = T, typename EnableIfChar = mozilla::CharOnlyT<Q>>
-  bool IsChar16(int dummy = 42) { return false; }
+  bool IsChar16(int dummy = 42) {
+    return false;
+  }
 
   template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
-  bool IsChar() { return false; }
+  bool IsChar() {
+    return false;
+  }
 
   template <typename Q = T, typename EnableIfChar = mozilla::CharOnlyT<Q>>
-  bool IsChar(int dummy = 42) { return true; }
+  bool IsChar(int dummy = 42) {
+    return true;
+  }
 };
 
-TEST_F(Strings, IsChar)
-{
+TEST_F(Strings, IsChar) {
   EnableTest<char> charTest;
   EXPECT_TRUE(charTest.IsChar());
   EXPECT_FALSE(charTest.IsChar16());
@@ -430,8 +512,7 @@ TEST_F(Strings, IsChar)
 #endif
 }
 
-TEST_F(Strings, DependentStrings)
-{
+TEST_F(Strings, DependentStrings) {
   // A few tests that make sure copying nsTDependentStrings behaves properly.
   using DataFlags = mozilla::detail::StringDataFlags;
 
@@ -476,21 +557,19 @@ TEST_F(Strings, DependentStrings)
   }
 }
 
-TEST_F(Strings, assign)
-{
+TEST_F(Strings, assign) {
   nsCString result;
   test_assign_helper(NS_LITERAL_CSTRING("a") + NS_LITERAL_CSTRING("b"), result);
   EXPECT_STREQ(result.get(), "ab");
 }
 
-TEST_F(Strings, assign_c)
-{
-  nsCString c; c.Assign('c');
+TEST_F(Strings, assign_c) {
+  nsCString c;
+  c.Assign('c');
   EXPECT_STREQ(c.get(), "c");
 }
 
-TEST_F(Strings, test1)
-{
+TEST_F(Strings, test1) {
   NS_NAMED_LITERAL_STRING(empty, "");
   const nsAString& aStr = empty;
 
@@ -507,8 +586,7 @@ TEST_F(Strings, test1)
   EXPECT_EQ(n, kNotFound);
 }
 
-TEST_F(Strings, test2)
-{
+TEST_F(Strings, test2) {
   nsCString data("hello world");
   const nsACString& aStr = data;
 
@@ -518,16 +596,14 @@ TEST_F(Strings, test2)
   EXPECT_STREQ(temp.get(), "world");
 }
 
-TEST_F(Strings, find)
-{
+TEST_F(Strings, find) {
   nsCString src("<!DOCTYPE blah blah blah>");
 
   int32_t i = src.Find("DOCTYPE", true, 2, 1);
   EXPECT_EQ(i, 2);
 }
 
-TEST_F(Strings, rfind)
-{
+TEST_F(Strings, rfind) {
   const char text[] = "<!DOCTYPE blah blah blah>";
   const char term[] = "bLaH";
   nsCString src(text);
@@ -546,43 +622,40 @@ TEST_F(Strings, rfind)
   EXPECT_EQ(i, 20);
 }
 
-TEST_F(Strings, rfind_2)
-{
+TEST_F(Strings, rfind_2) {
   const char text[] = "<!DOCTYPE blah blah blah>";
   nsCString src(text);
   int32_t i = src.RFind("TYPE", false, 5, -1);
   EXPECT_EQ(i, 5);
 }
 
-TEST_F(Strings, rfind_3)
-{
+TEST_F(Strings, rfind_3) {
   const char text[] = "urn:mozilla:locale:en-US:necko";
   nsAutoCString value(text);
   int32_t i = value.RFind(":");
   EXPECT_EQ(i, 24);
 }
 
-TEST_F(Strings, rfind_4)
-{
+TEST_F(Strings, rfind_4) {
   nsCString value("a.msf");
   int32_t i = value.RFind(".msf");
   EXPECT_EQ(i, 1);
 }
 
-TEST_F(Strings, findinreadable)
-{
-  const char text[] = "jar:jar:file:///c:/software/mozilla/mozilla_2006_02_21.jar!/browser/chrome/classic.jar!/";
+TEST_F(Strings, findinreadable) {
+  const char text[] =
+      "jar:jar:file:///c:/software/mozilla/mozilla_2006_02_21.jar!/browser/"
+      "chrome/classic.jar!/";
   nsAutoCString value(text);
 
   nsACString::const_iterator begin, end;
   value.BeginReading(begin);
   value.EndReading(end);
-  nsACString::const_iterator delim_begin (begin),
-                             delim_end   (end);
+  nsACString::const_iterator delim_begin(begin), delim_end(end);
 
   // Search for last !/ at the end of the string
   EXPECT_TRUE(FindInReadable(NS_LITERAL_CSTRING("!/"), delim_begin, delim_end));
-  char *r = ToNewCString(Substring(delim_begin, delim_end));
+  char* r = ToNewCString(Substring(delim_begin, delim_end));
   // Should match the first "!/" but not the last
   EXPECT_NE(delim_end, end);
   EXPECT_STREQ(r, "!/");
@@ -592,7 +665,8 @@ TEST_F(Strings, findinreadable)
   delim_end = end;
 
   // Search for first jar:
-  EXPECT_TRUE(FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
+  EXPECT_TRUE(
+      FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
 
   r = ToNewCString(Substring(delim_begin, delim_end));
   // Should not match the first jar:, but the second one
@@ -601,9 +675,11 @@ TEST_F(Strings, findinreadable)
   free(r);
 
   // Search for jar: in a Substring
-  delim_begin = begin; delim_begin++;
+  delim_begin = begin;
+  delim_begin++;
   delim_end = end;
-  EXPECT_TRUE(FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
+  EXPECT_TRUE(
+      FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
 
   r = ToNewCString(Substring(delim_begin, delim_end));
   // Should not match the first jar:, but the second one
@@ -612,42 +688,48 @@ TEST_F(Strings, findinreadable)
   free(r);
 
   // Should not find a match
-  EXPECT_FALSE(FindInReadable(NS_LITERAL_CSTRING("gecko"), delim_begin, delim_end));
-
-  // When no match is found, range should be empty
-  EXPECT_EQ(delim_begin, delim_end);
-
-  // Should not find a match (search not beyond Substring)
-  delim_begin = begin; for (int i=0;i<6;i++) delim_begin++;
-  delim_end = end;
-  EXPECT_FALSE(FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
+  EXPECT_FALSE(
+      FindInReadable(NS_LITERAL_CSTRING("gecko"), delim_begin, delim_end));
 
   // When no match is found, range should be empty
   EXPECT_EQ(delim_begin, delim_end);
 
   // Should not find a match (search not beyond Substring)
   delim_begin = begin;
-  delim_end = end; for (int i=0;i<7;i++) delim_end--;
-  EXPECT_FALSE(FindInReadable(NS_LITERAL_CSTRING("classic"), delim_begin, delim_end));
+  for (int i = 0; i < 6; i++) delim_begin++;
+  delim_end = end;
+  EXPECT_FALSE(
+      FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
+
+  // When no match is found, range should be empty
+  EXPECT_EQ(delim_begin, delim_end);
+
+  // Should not find a match (search not beyond Substring)
+  delim_begin = begin;
+  delim_end = end;
+  for (int i = 0; i < 7; i++) delim_end--;
+  EXPECT_FALSE(
+      FindInReadable(NS_LITERAL_CSTRING("classic"), delim_begin, delim_end));
 
   // When no match is found, range should be empty
   EXPECT_EQ(delim_begin, delim_end);
 }
 
-TEST_F(Strings, rfindinreadable)
-{
-  const char text[] = "jar:jar:file:///c:/software/mozilla/mozilla_2006_02_21.jar!/browser/chrome/classic.jar!/";
+TEST_F(Strings, rfindinreadable) {
+  const char text[] =
+      "jar:jar:file:///c:/software/mozilla/mozilla_2006_02_21.jar!/browser/"
+      "chrome/classic.jar!/";
   nsAutoCString value(text);
 
   nsACString::const_iterator begin, end;
   value.BeginReading(begin);
   value.EndReading(end);
-  nsACString::const_iterator delim_begin (begin),
-                             delim_end   (end);
+  nsACString::const_iterator delim_begin(begin), delim_end(end);
 
   // Search for last !/ at the end of the string
-  EXPECT_TRUE(RFindInReadable(NS_LITERAL_CSTRING("!/"), delim_begin, delim_end));
-  char *r = ToNewCString(Substring(delim_begin, delim_end));
+  EXPECT_TRUE(
+      RFindInReadable(NS_LITERAL_CSTRING("!/"), delim_begin, delim_end));
+  char* r = ToNewCString(Substring(delim_begin, delim_end));
   // Should match the last "!/"
   EXPECT_EQ(delim_end, end);
   EXPECT_STREQ(r, "!/");
@@ -657,7 +739,8 @@ TEST_F(Strings, rfindinreadable)
   delim_end = end;
 
   // Search for last jar: but not the first one...
-  EXPECT_TRUE(RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
+  EXPECT_TRUE(
+      RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
 
   r = ToNewCString(Substring(delim_begin, delim_end));
   // Should not match the first jar:, but the second one
@@ -667,8 +750,10 @@ TEST_F(Strings, rfindinreadable)
 
   // Search for jar: in a Substring
   delim_begin = begin;
-  delim_end = begin; for (int i=0;i<6;i++) delim_end++;
-  EXPECT_TRUE(RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
+  delim_end = begin;
+  for (int i = 0; i < 6; i++) delim_end++;
+  EXPECT_TRUE(
+      RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
 
   r = ToNewCString(Substring(delim_begin, delim_end));
   // Should not match the first jar:, but the second one
@@ -679,30 +764,34 @@ TEST_F(Strings, rfindinreadable)
   // Should not find a match
   delim_begin = begin;
   delim_end = end;
-  EXPECT_FALSE(RFindInReadable(NS_LITERAL_CSTRING("gecko"), delim_begin, delim_end));
+  EXPECT_FALSE(
+      RFindInReadable(NS_LITERAL_CSTRING("gecko"), delim_begin, delim_end));
 
   // When no match is found, range should be empty
   EXPECT_EQ(delim_begin, delim_end);
 
   // Should not find a match (search not before Substring)
-  delim_begin = begin; for (int i=0;i<6;i++) delim_begin++;
+  delim_begin = begin;
+  for (int i = 0; i < 6; i++) delim_begin++;
   delim_end = end;
-  EXPECT_FALSE(RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
+  EXPECT_FALSE(
+      RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
 
   // When no match is found, range should be empty
   EXPECT_EQ(delim_begin, delim_end);
 
   // Should not find a match (search not beyond Substring)
   delim_begin = begin;
-  delim_end = end; for (int i=0;i<7;i++) delim_end--;
-  EXPECT_FALSE(RFindInReadable(NS_LITERAL_CSTRING("classic"), delim_begin, delim_end));
+  delim_end = end;
+  for (int i = 0; i < 7; i++) delim_end--;
+  EXPECT_FALSE(
+      RFindInReadable(NS_LITERAL_CSTRING("classic"), delim_begin, delim_end));
 
   // When no match is found, range should be empty
   EXPECT_EQ(delim_begin, delim_end);
 }
 
-TEST_F(Strings, distance)
-{
+TEST_F(Strings, distance) {
   const char text[] = "abc-xyz";
   nsCString s(text);
   nsCString::const_iterator begin, end;
@@ -712,16 +801,14 @@ TEST_F(Strings, distance)
   EXPECT_EQ(d, sizeof(text) - 1);
 }
 
-TEST_F(Strings, length)
-{
+TEST_F(Strings, length) {
   const char text[] = "abc-xyz";
   nsCString s(text);
   size_t d = s.Length();
   EXPECT_EQ(d, sizeof(text) - 1);
 }
 
-TEST_F(Strings, trim)
-{
+TEST_F(Strings, trim) {
   const char text[] = " a\t    $   ";
   const char set[] = " \t$";
 
@@ -746,8 +833,7 @@ TEST_F(Strings, trim)
   EXPECT_STREQ(s.get(), "");
 }
 
-TEST_F(Strings, replace_substr)
-{
+TEST_F(Strings, replace_substr) {
   const char text[] = "abc-ppp-qqq-ppp-xyz";
   nsCString s(text);
   s.ReplaceSubstring("ppp", "www");
@@ -767,10 +853,10 @@ TEST_F(Strings, replace_substr)
   EXPECT_STREQ(s.get(), "fofoofooo");
 }
 
-TEST_F(Strings, replace_substr_2)
-{
-  const char *newName = "user";
-  nsString acctName; acctName.AssignLiteral("forums.foo.com");
+TEST_F(Strings, replace_substr_2) {
+  const char* newName = "user";
+  nsString acctName;
+  acctName.AssignLiteral("forums.foo.com");
   nsAutoString newAcctName, oldVal, newVal;
   CopyASCIItoUTF16(mozilla::MakeStringSpan(newName), newVal);
   newAcctName.Assign(acctName);
@@ -783,8 +869,7 @@ TEST_F(Strings, replace_substr_2)
   EXPECT_TRUE(newAcctName.Equals(acctName));
 }
 
-TEST_F(Strings, replace_substr_3)
-{
+TEST_F(Strings, replace_substr_3) {
   nsCString s;
   s.AssignLiteral("abcabcabc");
   s.ReplaceSubstring("ca", "X");
@@ -851,54 +936,42 @@ TEST_F(Strings, replace_substr_3)
   EXPECT_STREQ(s.get(), "abcdabcdabcd");
 }
 
-TEST_F(Strings, strip_ws)
-{
-  const char* texts[] = {"",
-                         " a    $   ",
-                         "Some\fother\t thing\r\n",
+TEST_F(Strings, strip_ws) {
+  const char* texts[] = {"", " a    $   ", "Some\fother\t thing\r\n",
                          "And   \f\t\r\n even\nmore\r \f"};
-  const char* results[] = {"",
-                           "a$",
-                           "Someotherthing",
-                           "Andevenmore"};
-  for (size_t i=0; i<sizeof(texts)/sizeof(texts[0]); i++) {
+  const char* results[] = {"", "a$", "Someotherthing", "Andevenmore"};
+  for (size_t i = 0; i < sizeof(texts) / sizeof(texts[0]); i++) {
     nsCString s(texts[i]);
     s.StripWhitespace();
     EXPECT_STREQ(s.get(), results[i]);
   }
 }
 
-TEST_F(Strings, equals_ic)
-{
+TEST_F(Strings, equals_ic) {
   nsCString s;
   EXPECT_FALSE(s.LowerCaseEqualsLiteral("view-source"));
 }
 
-TEST_F(Strings, concat)
-{
+TEST_F(Strings, concat) {
   nsCString bar("bar");
   const nsACString& barRef = bar;
 
-  const nsPromiseFlatCString& result =
-      PromiseFlatCString(NS_LITERAL_CSTRING("foo") +
-                         NS_LITERAL_CSTRING(",") +
-                         barRef);
+  const nsPromiseFlatCString& result = PromiseFlatCString(
+      NS_LITERAL_CSTRING("foo") + NS_LITERAL_CSTRING(",") + barRef);
   EXPECT_STREQ(result.get(), "foo,bar");
 }
 
-TEST_F(Strings, concat_2)
-{
+TEST_F(Strings, concat_2) {
   nsCString fieldTextStr("xyz");
   nsCString text("text");
   const nsACString& aText = text;
 
-  nsAutoCString result( fieldTextStr + aText );
+  nsAutoCString result(fieldTextStr + aText);
 
   EXPECT_STREQ(result.get(), "xyztext");
 }
 
-TEST_F(Strings, concat_3)
-{
+TEST_F(Strings, concat_3) {
   nsCString result;
   nsCString ab("ab"), c("c");
 
@@ -906,8 +979,7 @@ TEST_F(Strings, concat_3)
   EXPECT_STREQ(result.get(), "abc");
 }
 
-TEST_F(Strings, empty_assign)
-{
+TEST_F(Strings, empty_assign) {
   nsCString a;
   a.AssignLiteral("");
 
@@ -917,18 +989,16 @@ TEST_F(Strings, empty_assign)
   b.SetCapacity(0);
 }
 
-TEST_F(Strings, set_length)
-{
+TEST_F(Strings, set_length) {
   const char kText[] = "Default Plugin";
   nsCString buf;
-  buf.SetCapacity(sizeof(kText)-1);
+  buf.SetCapacity(sizeof(kText) - 1);
   buf.Assign(kText);
-  buf.SetLength(sizeof(kText)-1);
+  buf.SetLength(sizeof(kText) - 1);
   EXPECT_STREQ(buf.get(), kText);
 }
 
-TEST_F(Strings, substring)
-{
+TEST_F(Strings, substring) {
   nsCString super("hello world"), sub("hello");
 
   // this tests that |super| starts with |sub|,
@@ -941,53 +1011,51 @@ TEST_F(Strings, substring)
 }
 
 #define test_append_expect(str, int, suffix, expect) \
-  str.Truncate(); \
-  str.AppendInt(suffix = int); \
+  str.Truncate();                                    \
+  str.AppendInt(suffix = int);                       \
   EXPECT_TRUE(str.EqualsLiteral(expect));
 
 #define test_appends_expect(int, suffix, expect) \
-  test_append_expect(str, int, suffix, expect) \
-  test_append_expect(cstr, int, suffix, expect)
+  test_append_expect(str, int, suffix, expect)   \
+      test_append_expect(cstr, int, suffix, expect)
 
 #define test_appendbase(str, prefix, int, suffix, base) \
-  str.Truncate(); \
-  str.AppendInt(suffix = prefix ## int ## suffix, base); \
+  str.Truncate();                                       \
+  str.AppendInt(suffix = prefix##int##suffix, base);    \
   EXPECT_TRUE(str.EqualsLiteral(#int));
 
 #define test_appendbases(prefix, int, suffix, base) \
-  test_appendbase(str, prefix, int, suffix, base) \
-  test_appendbase(cstr, prefix, int, suffix, base)
+  test_appendbase(str, prefix, int, suffix, base)   \
+      test_appendbase(cstr, prefix, int, suffix, base)
 
-TEST_F(Strings, appendint)
-{
+TEST_F(Strings, appendint) {
   nsString str;
   nsCString cstr;
   int32_t L;
   uint32_t UL;
   int64_t LL;
   uint64_t ULL;
-  test_appends_expect(INT32_MAX, L, "2147483647")
-  test_appends_expect(INT32_MIN, L, "-2147483648")
-  test_appends_expect(UINT32_MAX, UL, "4294967295")
-  test_appends_expect(INT64_MAX, LL, "9223372036854775807")
-  test_appends_expect(INT64_MIN, LL, "-9223372036854775808")
-  test_appends_expect(UINT64_MAX, ULL, "18446744073709551615")
-  test_appendbases(0, 17777777777, L, 8)
-  test_appendbases(0, 20000000000, L, 8)
-  test_appendbases(0, 37777777777, UL, 8)
-  test_appendbases(0, 777777777777777777777, LL, 8)
-  test_appendbases(0, 1000000000000000000000, LL, 8)
-  test_appendbases(0, 1777777777777777777777, ULL, 8)
-  test_appendbases(0x, 7fffffff, L, 16)
-  test_appendbases(0x, 80000000, L, 16)
-  test_appendbases(0x, ffffffff, UL, 16)
-  test_appendbases(0x, 7fffffffffffffff, LL, 16)
-  test_appendbases(0x, 8000000000000000, LL, 16)
-  test_appendbases(0x, ffffffffffffffff, ULL, 16)
+  test_appends_expect(INT32_MAX, L, "2147483647");
+  test_appends_expect(INT32_MIN, L, "-2147483648");
+  test_appends_expect(UINT32_MAX, UL, "4294967295");
+  test_appends_expect(INT64_MAX, LL, "9223372036854775807");
+  test_appends_expect(INT64_MIN, LL, "-9223372036854775808");
+  test_appends_expect(UINT64_MAX, ULL, "18446744073709551615");
+  test_appendbases(0, 17777777777, L, 8);
+  test_appendbases(0, 20000000000, L, 8);
+  test_appendbases(0, 37777777777, UL, 8);
+  test_appendbases(0, 777777777777777777777, LL, 8);
+  test_appendbases(0, 1000000000000000000000, LL, 8);
+  test_appendbases(0, 1777777777777777777777, ULL, 8);
+  test_appendbases(0x, 7fffffff, L, 16);
+  test_appendbases(0x, 80000000, L, 16);
+  test_appendbases(0x, ffffffff, UL, 16);
+  test_appendbases(0x, 7fffffffffffffff, LL, 16);
+  test_appendbases(0x, 8000000000000000, LL, 16);
+  test_appendbases(0x, ffffffffffffffff, ULL, 16);
 }
 
-TEST_F(Strings, appendint64)
-{
+TEST_F(Strings, appendint64) {
   nsCString str;
 
   int64_t max = INT64_MAX;
@@ -1010,7 +1078,6 @@ TEST_F(Strings, appendint64)
   str.AppendInt(min, 8);
   EXPECT_TRUE(str.Equals(min_expected_oct));
 
-
   str.Truncate();
   str.AppendInt(maxint_plus1);
   EXPECT_TRUE(str.Equals(maxint_plus1_expected));
@@ -1019,8 +1086,7 @@ TEST_F(Strings, appendint64)
   EXPECT_TRUE(str.Equals(maxint_plus1_expected_x));
 }
 
-TEST_F(Strings, appendfloat)
-{
+TEST_F(Strings, appendfloat) {
   nsCString str;
   double bigdouble = 11223344556.66;
   static const char double_expected[] = "11223344556.66";
@@ -1028,17 +1094,16 @@ TEST_F(Strings, appendfloat)
 
   // AppendFloat is used to append doubles, therefore the precision must be
   // large enough (see bug 327719)
-  str.AppendFloat( bigdouble );
+  str.AppendFloat(bigdouble);
   EXPECT_TRUE(str.Equals(double_expected));
 
   str.Truncate();
   // AppendFloat is used to append floats (bug 327719 #27)
-  str.AppendFloat( 0.1f * 0.1f );
+  str.AppendFloat(0.1f * 0.1f);
   EXPECT_TRUE(str.Equals(float_expected));
 }
 
-TEST_F(Strings, findcharinset)
-{
+TEST_F(Strings, findcharinset) {
   nsCString buf("hello, how are you?");
 
   int32_t index = buf.FindCharInSet(",?", 5);
@@ -1048,11 +1113,10 @@ TEST_F(Strings, findcharinset)
   EXPECT_EQ(index, 0);
 
   index = buf.FindCharInSet("z?", 6);
-  EXPECT_EQ(index, (int32_t) buf.Length() - 1);
+  EXPECT_EQ(index, (int32_t)buf.Length() - 1);
 }
 
-TEST_F(Strings, rfindcharinset)
-{
+TEST_F(Strings, rfindcharinset) {
   nsCString buf("hello, how are you?");
 
   int32_t index = buf.RFindCharInSet(",?", 5);
@@ -1088,8 +1152,7 @@ TEST_F(Strings, rfindcharinset)
   EXPECT_EQ(index, 7);
 }
 
-TEST_F(Strings, stringbuffer)
-{
+TEST_F(Strings, stringbuffer) {
   const char kData[] = "hello world";
 
   RefPtr<nsStringBuffer> buf;
@@ -1099,20 +1162,19 @@ TEST_F(Strings, stringbuffer)
 
   buf = nsStringBuffer::Alloc(sizeof(kData));
   EXPECT_TRUE(!!buf);
-  char *data = (char *) buf->Data();
+  char* data = (char*)buf->Data();
   memcpy(data, kData, sizeof(kData));
 
   nsCString str;
-  buf->ToString(sizeof(kData)-1, str);
+  buf->ToString(sizeof(kData) - 1, str);
 
-  nsStringBuffer *buf2;
+  nsStringBuffer* buf2;
   buf2 = nsStringBuffer::FromString(str);
 
   EXPECT_EQ(buf, buf2);
 }
 
-TEST_F(Strings, voided)
-{
+TEST_F(Strings, voided) {
   const char kData[] = "hello world";
 
   nsCString str;
@@ -1151,8 +1213,7 @@ TEST_F(Strings, voided)
   EXPECT_STREQ(str.get(), "");
 }
 
-TEST_F(Strings, voided_autostr)
-{
+TEST_F(Strings, voided_autostr) {
   const char kData[] = "hello world";
 
   nsAutoCString str;
@@ -1172,8 +1233,7 @@ TEST_F(Strings, voided_autostr)
   EXPECT_STREQ(str.get(), kData);
 }
 
-TEST_F(Strings, voided_assignment)
-{
+TEST_F(Strings, voided_assignment) {
   nsCString a, b;
   b.SetIsVoid(true);
   a = b;
@@ -1181,30 +1241,26 @@ TEST_F(Strings, voided_assignment)
   EXPECT_EQ(a.get(), b.get());
 }
 
-TEST_F(Strings, empty_assignment)
-{
+TEST_F(Strings, empty_assignment) {
   nsCString a, b;
   a = b;
   EXPECT_EQ(a.get(), b.get());
 }
 
-struct ToIntegerTest
-{
-  const char *str;
+struct ToIntegerTest {
+  const char* str;
   uint32_t radix;
   int32_t result;
   nsresult rv;
 };
 
 static const ToIntegerTest kToIntegerTests[] = {
-  { "123", 10, 123, NS_OK },
-  { "7b", 16, 123, NS_OK },
-  { "90194313659", 10, 0, NS_ERROR_ILLEGAL_VALUE },
-  { nullptr, 0, 0, NS_OK }
-};
+    {"123", 10, 123, NS_OK},
+    {"7b", 16, 123, NS_OK},
+    {"90194313659", 10, 0, NS_ERROR_ILLEGAL_VALUE},
+    {nullptr, 0, 0, NS_OK}};
 
-TEST_F(Strings, string_tointeger)
-{
+TEST_F(Strings, string_tointeger) {
   nsresult rv;
   for (const ToIntegerTest* t = kToIntegerTests; t->str; ++t) {
     int32_t result = nsAutoCString(t->str).ToInteger(&rv, t->radix);
@@ -1217,35 +1273,32 @@ TEST_F(Strings, string_tointeger)
 }
 
 static void test_parse_string_helper(const char* str, char separator, int len,
-                                       const char* s1, const char* s2)
-{
+                                     const char* s1, const char* s2) {
   nsCString data(str);
   nsTArray<nsCString> results;
   EXPECT_TRUE(ParseString(data, separator, results));
   EXPECT_EQ(int(results.Length()), len);
-  const char* strings[] = { s1, s2 };
+  const char* strings[] = {s1, s2};
   for (int i = 0; i < len; ++i) {
     EXPECT_TRUE(results[i].Equals(strings[i]));
   }
 }
 
-static void test_parse_string_helper0(const char* str, char separator)
-{
+static void test_parse_string_helper0(const char* str, char separator) {
   test_parse_string_helper(str, separator, 0, nullptr, nullptr);
 }
 
-static void test_parse_string_helper1(const char* str, char separator, const char* s1)
-{
+static void test_parse_string_helper1(const char* str, char separator,
+                                      const char* s1) {
   test_parse_string_helper(str, separator, 1, s1, nullptr);
 }
 
-static void test_parse_string_helper2(const char* str, char separator, const char* s1, const char* s2)
-{
+static void test_parse_string_helper2(const char* str, char separator,
+                                      const char* s1, const char* s2) {
   test_parse_string_helper(str, separator, 2, s1, s2);
 }
 
-TEST(String, parse_string)
-{
+TEST(String, parse_string) {
   test_parse_string_helper1("foo, bar", '_', "foo, bar");
   test_parse_string_helper2("foo, bar", ',', "foo", " bar");
   test_parse_string_helper2("foo, bar ", ' ', "foo,", "bar");
@@ -1256,37 +1309,24 @@ TEST(String, parse_string)
   test_parse_string_helper1("  foo", ' ', "foo");
 }
 
-static void test_strip_chars_helper(const char16_t* str, const char16_t* strip, const nsAString& result)
-{
+static void test_strip_chars_helper(const char16_t* str, const char16_t* strip,
+                                    const nsAString& result) {
   nsAutoString data(str);
   data.StripChars(strip);
   EXPECT_TRUE(data.Equals(result));
 }
 
-TEST(String, strip_chars)
-{
-  test_strip_chars_helper(u"foo \r \nbar",
-                          u" \n\r",
+TEST(String, strip_chars) {
+  test_strip_chars_helper(u"foo \r \nbar", u" \n\r",
                           NS_LITERAL_STRING("foobar"));
-  test_strip_chars_helper(u"\r\nfoo\r\n",
-                          u" \n\r",
-                          NS_LITERAL_STRING("foo"));
-  test_strip_chars_helper(u"foo",
-                          u" \n\r",
-                          NS_LITERAL_STRING("foo"));
-  test_strip_chars_helper(u"foo",
-                          u"fo",
-                          NS_LITERAL_STRING(""));
-  test_strip_chars_helper(u"foo",
-                          u"foo",
-                          NS_LITERAL_STRING(""));
-  test_strip_chars_helper(u" foo",
-                          u" ",
-                          NS_LITERAL_STRING("foo"));
+  test_strip_chars_helper(u"\r\nfoo\r\n", u" \n\r", NS_LITERAL_STRING("foo"));
+  test_strip_chars_helper(u"foo", u" \n\r", NS_LITERAL_STRING("foo"));
+  test_strip_chars_helper(u"foo", u"fo", NS_LITERAL_STRING(""));
+  test_strip_chars_helper(u"foo", u"foo", NS_LITERAL_STRING(""));
+  test_strip_chars_helper(u" foo", u" ", NS_LITERAL_STRING("foo"));
 }
 
-TEST_F(Strings, append_with_capacity)
-{
+TEST_F(Strings, append_with_capacity) {
   nsAutoString s;
   const char16_t* origPtr = s.BeginReading();
   s.SetCapacity(8000);
@@ -1299,8 +1339,7 @@ TEST_F(Strings, append_with_capacity)
   }
 }
 
-TEST_F(Strings, append_string_with_capacity)
-{
+TEST_F(Strings, append_string_with_capacity) {
   nsAutoString aa;
   aa.Append(u'a');
   aa.Append(u'a');
@@ -1319,8 +1358,7 @@ TEST_F(Strings, append_string_with_capacity)
   }
 }
 
-TEST_F(Strings, append_literal_with_capacity)
-{
+TEST_F(Strings, append_literal_with_capacity) {
   nsAutoString s;
   const char16_t* origPtr = s.BeginReading();
   s.SetCapacity(8000);
@@ -1338,8 +1376,7 @@ TEST_F(Strings, append_literal_with_capacity)
 // The following test is intentionally not memory
 // checking-clean.
 #if !(defined(MOZ_HAVE_MEM_CHECKS) || defined(MOZ_MSAN))
-TEST_F(Strings, legacy_set_length_semantics)
-{
+TEST_F(Strings, legacy_set_length_semantics) {
   const char* foobar = "foobar";
   nsCString s;
   s.SetCapacity(2048);
@@ -1349,8 +1386,7 @@ TEST_F(Strings, legacy_set_length_semantics)
 }
 #endif
 
-TEST_F(Strings, bulk_write)
-{
+TEST_F(Strings, bulk_write) {
   nsresult rv;
   nsCString s;
   const char* ptrTwoThousand;
@@ -1358,12 +1394,12 @@ TEST_F(Strings, bulk_write)
     auto handle = s.BulkWrite(500, 0, true, rv);
     EXPECT_EQ(rv, NS_OK);
     auto span = handle.AsSpan();
-    for (auto&& c: span) {
+    for (auto&& c : span) {
       c = 'a';
     }
     mozilla::Unused << handle.RestartBulkWrite(2000, 500, false);
     span = handle.AsSpan().From(500);
-    for (auto&& c: span) {
+    for (auto&& c : span) {
       c = 'b';
     }
     ptrTwoThousand = handle.Elements();
@@ -1380,8 +1416,7 @@ TEST_F(Strings, bulk_write)
   }
 }
 
-TEST_F(Strings, bulk_write_fail)
-{
+TEST_F(Strings, bulk_write_fail) {
   nsresult rv;
   nsCString s;
   {
@@ -1392,8 +1427,7 @@ TEST_F(Strings, bulk_write_fail)
   EXPECT_TRUE(s.Equals(u8"\uFFFD"));
 }
 
-TEST_F(Strings, huge_capacity)
-{
+TEST_F(Strings, huge_capacity) {
   nsString a, b, c, d, e, f, g, h, i, j, k, l, m, n;
   nsCString n1;
 
@@ -1401,43 +1435,43 @@ TEST_F(Strings, huge_capacity)
   // some of the allocations above will exhaust the address space.
   if (sizeof(void*) >= 8) {
     EXPECT_TRUE(a.SetCapacity(1, fallible));
-    EXPECT_FALSE(a.SetCapacity(nsString::size_type(-1)/2, fallible));
+    EXPECT_FALSE(a.SetCapacity(nsString::size_type(-1) / 2, fallible));
     a.Truncate();  // free the allocated memory
 
     EXPECT_TRUE(b.SetCapacity(1, fallible));
-    EXPECT_FALSE(b.SetCapacity(nsString::size_type(-1)/2 - 1, fallible));
+    EXPECT_FALSE(b.SetCapacity(nsString::size_type(-1) / 2 - 1, fallible));
     b.Truncate();
 
     EXPECT_TRUE(c.SetCapacity(1, fallible));
-    EXPECT_FALSE(c.SetCapacity(nsString::size_type(-1)/2, fallible));
+    EXPECT_FALSE(c.SetCapacity(nsString::size_type(-1) / 2, fallible));
     c.Truncate();
 
-    EXPECT_FALSE(d.SetCapacity(nsString::size_type(-1)/2 - 1, fallible));
-    EXPECT_FALSE(d.SetCapacity(nsString::size_type(-1)/2, fallible));
+    EXPECT_FALSE(d.SetCapacity(nsString::size_type(-1) / 2 - 1, fallible));
+    EXPECT_FALSE(d.SetCapacity(nsString::size_type(-1) / 2, fallible));
     d.Truncate();
 
-    EXPECT_FALSE(e.SetCapacity(nsString::size_type(-1)/4, fallible));
-    EXPECT_FALSE(e.SetCapacity(nsString::size_type(-1)/4 + 1, fallible));
+    EXPECT_FALSE(e.SetCapacity(nsString::size_type(-1) / 4, fallible));
+    EXPECT_FALSE(e.SetCapacity(nsString::size_type(-1) / 4 + 1, fallible));
     e.Truncate();
 
-    EXPECT_FALSE(f.SetCapacity(nsString::size_type(-1)/2, fallible));
+    EXPECT_FALSE(f.SetCapacity(nsString::size_type(-1) / 2, fallible));
     f.Truncate();
 
-    EXPECT_FALSE(g.SetCapacity(nsString::size_type(-1)/4 + 1000, fallible));
-    EXPECT_FALSE(g.SetCapacity(nsString::size_type(-1)/4 + 1001, fallible));
+    EXPECT_FALSE(g.SetCapacity(nsString::size_type(-1) / 4 + 1000, fallible));
+    EXPECT_FALSE(g.SetCapacity(nsString::size_type(-1) / 4 + 1001, fallible));
     g.Truncate();
 
-    EXPECT_FALSE(h.SetCapacity(nsString::size_type(-1)/4+1, fallible));
-    EXPECT_FALSE(h.SetCapacity(nsString::size_type(-1)/2, fallible));
+    EXPECT_FALSE(h.SetCapacity(nsString::size_type(-1) / 4 + 1, fallible));
+    EXPECT_FALSE(h.SetCapacity(nsString::size_type(-1) / 2, fallible));
     h.Truncate();
 
     EXPECT_TRUE(i.SetCapacity(1, fallible));
-    EXPECT_TRUE(i.SetCapacity(nsString::size_type(-1)/4 - 1000, fallible));
-    EXPECT_FALSE(i.SetCapacity(nsString::size_type(-1)/4 + 1, fallible));
+    EXPECT_TRUE(i.SetCapacity(nsString::size_type(-1) / 4 - 1000, fallible));
+    EXPECT_FALSE(i.SetCapacity(nsString::size_type(-1) / 4 + 1, fallible));
     i.Truncate();
 
-    EXPECT_TRUE(j.SetCapacity(nsString::size_type(-1)/4 - 1000, fallible));
-    EXPECT_FALSE(j.SetCapacity(nsString::size_type(-1)/4 + 1, fallible));
+    EXPECT_TRUE(j.SetCapacity(nsString::size_type(-1) / 4 - 1000, fallible));
+    EXPECT_FALSE(j.SetCapacity(nsString::size_type(-1) / 4 + 1, fallible));
     j.Truncate();
 
 // Disabled due to intermittent failures.
@@ -1450,34 +1484,42 @@ TEST_F(Strings, huge_capacity)
     k.Truncate();
 #endif
 
-    EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1)/8, fallible));
-    EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1)/8 + 1, fallible));
-    EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1)/8 + 2, fallible));
+    EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1) / 8, fallible));
+    EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1) / 8 + 1, fallible));
+    EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1) / 8 + 2, fallible));
     l.Truncate();
 
-    EXPECT_TRUE(m.SetCapacity(nsString::size_type(-1)/8 + 1000, fallible));
-    EXPECT_TRUE(m.SetCapacity(nsString::size_type(-1)/8 + 1001, fallible));
+    EXPECT_TRUE(m.SetCapacity(nsString::size_type(-1) / 8 + 1000, fallible));
+    EXPECT_TRUE(m.SetCapacity(nsString::size_type(-1) / 8 + 1001, fallible));
     m.Truncate();
 
-    EXPECT_TRUE(n.SetCapacity(nsString::size_type(-1)/8+1, fallible));
-    EXPECT_FALSE(n.SetCapacity(nsString::size_type(-1)/4, fallible));
+    EXPECT_TRUE(n.SetCapacity(nsString::size_type(-1) / 8 + 1, fallible));
+    EXPECT_FALSE(n.SetCapacity(nsString::size_type(-1) / 4, fallible));
     n.Truncate();
 
     n.Truncate();
-    EXPECT_TRUE(n.SetCapacity((nsString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 2 - 2, fallible));
+    EXPECT_TRUE(n.SetCapacity(
+        (nsString::size_type(-1) / 2 - sizeof(nsStringBuffer)) / 2 - 2,
+        fallible));
     n.Truncate();
-    EXPECT_FALSE(n.SetCapacity((nsString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 2 - 1, fallible));
+    EXPECT_FALSE(n.SetCapacity(
+        (nsString::size_type(-1) / 2 - sizeof(nsStringBuffer)) / 2 - 1,
+        fallible));
     n.Truncate();
     n1.Truncate();
-    EXPECT_TRUE(n1.SetCapacity((nsCString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 1 - 2, fallible));
+    EXPECT_TRUE(n1.SetCapacity(
+        (nsCString::size_type(-1) / 2 - sizeof(nsStringBuffer)) / 1 - 2,
+        fallible));
     n1.Truncate();
-    EXPECT_FALSE(n1.SetCapacity((nsCString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 1 - 1, fallible));
+    EXPECT_FALSE(n1.SetCapacity(
+        (nsCString::size_type(-1) / 2 - sizeof(nsStringBuffer)) / 1 - 1,
+        fallible));
     n1.Truncate();
   }
 }
 
-static void test_tofloat_helper(const nsString& aStr, float aExpected, bool aSuccess)
-{
+static void test_tofloat_helper(const nsString& aStr, float aExpected,
+                                bool aSuccess) {
   nsresult result;
   EXPECT_EQ(aStr.ToFloat(&result), aExpected);
   if (aSuccess) {
@@ -1487,15 +1529,15 @@ static void test_tofloat_helper(const nsString& aStr, float aExpected, bool aSuc
   }
 }
 
-TEST_F(Strings, tofloat)
-{
+TEST_F(Strings, tofloat) {
   test_tofloat_helper(NS_LITERAL_STRING("42"), 42.f, true);
   test_tofloat_helper(NS_LITERAL_STRING("42.0"), 42.f, true);
   test_tofloat_helper(NS_LITERAL_STRING("-42"), -42.f, true);
   test_tofloat_helper(NS_LITERAL_STRING("+42"), 42, true);
   test_tofloat_helper(NS_LITERAL_STRING("13.37"), 13.37f, true);
   test_tofloat_helper(NS_LITERAL_STRING("1.23456789"), 1.23456789f, true);
-  test_tofloat_helper(NS_LITERAL_STRING("1.98765432123456"), 1.98765432123456f, true);
+  test_tofloat_helper(NS_LITERAL_STRING("1.98765432123456"), 1.98765432123456f,
+                      true);
   test_tofloat_helper(NS_LITERAL_STRING("0"), 0.f, true);
   test_tofloat_helper(NS_LITERAL_STRING("1.e5"), 100000, true);
   test_tofloat_helper(NS_LITERAL_STRING(""), 0.f, false);
@@ -1503,8 +1545,8 @@ TEST_F(Strings, tofloat)
   test_tofloat_helper(NS_LITERAL_STRING("foo"), 0.f, false);
 }
 
-static void test_todouble_helper(const nsString& aStr, double aExpected, bool aSuccess)
-{
+static void test_todouble_helper(const nsString& aStr, double aExpected,
+                                 bool aSuccess) {
   nsresult result;
   EXPECT_EQ(aStr.ToDouble(&result), aExpected);
   if (aSuccess) {
@@ -1514,16 +1556,17 @@ static void test_todouble_helper(const nsString& aStr, double aExpected, bool aS
   }
 }
 
-TEST_F(Strings, todouble)
-{
+TEST_F(Strings, todouble) {
   test_todouble_helper(NS_LITERAL_STRING("42"), 42, true);
   test_todouble_helper(NS_LITERAL_STRING("42.0"), 42, true);
   test_todouble_helper(NS_LITERAL_STRING("-42"), -42, true);
   test_todouble_helper(NS_LITERAL_STRING("+42"), 42, true);
   test_todouble_helper(NS_LITERAL_STRING("13.37"), 13.37, true);
   test_todouble_helper(NS_LITERAL_STRING("1.23456789"), 1.23456789, true);
-  test_todouble_helper(NS_LITERAL_STRING("1.98765432123456"), 1.98765432123456, true);
-  test_todouble_helper(NS_LITERAL_STRING("123456789.98765432123456"), 123456789.98765432123456, true);
+  test_todouble_helper(NS_LITERAL_STRING("1.98765432123456"), 1.98765432123456,
+                       true);
+  test_todouble_helper(NS_LITERAL_STRING("123456789.98765432123456"),
+                       123456789.98765432123456, true);
   test_todouble_helper(NS_LITERAL_STRING("0"), 0, true);
   test_todouble_helper(NS_LITERAL_STRING("1.e5"), 100000, true);
   test_todouble_helper(NS_LITERAL_STRING(""), 0, false);
@@ -1531,14 +1574,9 @@ TEST_F(Strings, todouble)
   test_todouble_helper(NS_LITERAL_STRING("foo"), 0, false);
 }
 
-TEST_F(Strings, Split)
-{
-   nsCString one("one"),
-             two("one;two"),
-             three("one--three"),
-             empty(""),
-             delimStart("-two"),
-             delimEnd("one-");
+TEST_F(Strings, Split) {
+  nsCString one("one"), two("one;two"), three("one--three"), empty(""),
+      delimStart("-two"), delimEnd("one-");
 
   nsString wide(u"hello world");
 
@@ -1614,13 +1652,11 @@ TEST_F(Strings, Split)
   EXPECT_EQ(counter, (size_t)2);
 }
 
-constexpr bool TestSomeChars(char c)
-{
-  return c == 'a' || c == 'c' || c == 'e' || c == '7' ||
-         c == 'G' || c == 'Z' || c == '\b' || c == '?';
+constexpr bool TestSomeChars(char c) {
+  return c == 'a' || c == 'c' || c == 'e' || c == '7' || c == 'G' || c == 'Z' ||
+         c == '\b' || c == '?';
 }
-TEST_F(Strings,ASCIIMask)
-{
+TEST_F(Strings, ASCIIMask) {
   const ASCIIMaskArray& maskCRLF = mozilla::ASCIIMask::MaskCRLF();
   EXPECT_TRUE(maskCRLF['\n'] && mozilla::ASCIIMask::IsMasked(maskCRLF, '\n'));
   EXPECT_TRUE(maskCRLF['\r'] && mozilla::ASCIIMask::IsMasked(maskCRLF, '\r'));
@@ -1660,9 +1696,8 @@ TEST_F(Strings,ASCIIMask)
   EXPECT_FALSE(mozilla::ASCIIMask::IsMasked(maskCRLF, 14324));
 }
 
-template <typename T> void
-CompressWhitespaceHelper()
-{
+template <typename T>
+void CompressWhitespaceHelper() {
   T s;
   s.AssignLiteral("abcabcabc");
   s.CompressWhitespace(true, true);
@@ -1733,13 +1768,9 @@ CompressWhitespaceHelper()
   EXPECT_TRUE(s.EqualsLiteral(""));
 }
 
-TEST_F(Strings, CompressWhitespace)
-{
-  CompressWhitespaceHelper<nsCString>();
-}
+TEST_F(Strings, CompressWhitespace) { CompressWhitespaceHelper<nsCString>(); }
 
-TEST_F(Strings, CompressWhitespaceW)
-{
+TEST_F(Strings, CompressWhitespaceW) {
   CompressWhitespaceHelper<nsString>();
 
   nsString str, result;
@@ -1749,9 +1780,8 @@ TEST_F(Strings, CompressWhitespaceW)
   EXPECT_TRUE(str == result);
 }
 
-template <typename T> void
-StripCRLFHelper()
-{
+template <typename T>
+void StripCRLFHelper() {
   T s;
   s.AssignLiteral("abcabcabc");
   s.StripCRLF();
@@ -1794,13 +1824,9 @@ StripCRLFHelper()
   EXPECT_TRUE(s.EqualsLiteral(""));
 }
 
-TEST_F(Strings, StripCRLF)
-{
-  StripCRLFHelper<nsCString>();
-}
+TEST_F(Strings, StripCRLF) { StripCRLFHelper<nsCString>(); }
 
-TEST_F(Strings, StripCRLFW)
-{
+TEST_F(Strings, StripCRLFW) {
   StripCRLFHelper<nsString>();
 
   nsString str, result;
@@ -1812,393 +1838,503 @@ TEST_F(Strings, StripCRLFW)
 
 // Note the five calls in the loop, so divide by 100k
 MOZ_GTEST_BENCH_F(Strings, PerfStripWhitespace, [this] {
-    nsCString test1(mExample1Utf8);
-    nsCString test2(mExample2Utf8);
-    nsCString test3(mExample3Utf8);
-    nsCString test4(mExample4Utf8);
-    nsCString test5(mExample5Utf8);
-    for (int i = 0; i < 20000; i++) {
-      test1.StripWhitespace();
-      test2.StripWhitespace();
-      test3.StripWhitespace();
-      test4.StripWhitespace();
-      test5.StripWhitespace();
-    }
+  nsCString test1(mExample1Utf8);
+  nsCString test2(mExample2Utf8);
+  nsCString test3(mExample3Utf8);
+  nsCString test4(mExample4Utf8);
+  nsCString test5(mExample5Utf8);
+  for (int i = 0; i < 20000; i++) {
+    test1.StripWhitespace();
+    test2.StripWhitespace();
+    test3.StripWhitespace();
+    test4.StripWhitespace();
+    test5.StripWhitespace();
+  }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfStripCharsWhitespace, [this] {
-    // This is the unoptimized (original) version of
-    // StripWhitespace using StripChars.
-    nsCString test1(mExample1Utf8);
-    nsCString test2(mExample2Utf8);
-    nsCString test3(mExample3Utf8);
-    nsCString test4(mExample4Utf8);
-    nsCString test5(mExample5Utf8);
-    for (int i = 0; i < 20000; i++) {
-      test1.StripChars("\f\t\r\n ");
-      test2.StripChars("\f\t\r\n ");
-      test3.StripChars("\f\t\r\n ");
-      test4.StripChars("\f\t\r\n ");
-      test5.StripChars("\f\t\r\n ");
-    }
+  // This is the unoptimized (original) version of
+  // StripWhitespace using StripChars.
+  nsCString test1(mExample1Utf8);
+  nsCString test2(mExample2Utf8);
+  nsCString test3(mExample3Utf8);
+  nsCString test4(mExample4Utf8);
+  nsCString test5(mExample5Utf8);
+  for (int i = 0; i < 20000; i++) {
+    test1.StripChars("\f\t\r\n ");
+    test2.StripChars("\f\t\r\n ");
+    test3.StripChars("\f\t\r\n ");
+    test4.StripChars("\f\t\r\n ");
+    test5.StripChars("\f\t\r\n ");
+  }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfCompressWhitespace, [this] {
-    nsCString test1(mExample1Utf8);
-    nsCString test2(mExample2Utf8);
-    nsCString test3(mExample3Utf8);
-    nsCString test4(mExample4Utf8);
-    nsCString test5(mExample5Utf8);
-    for (int i = 0; i < 20000; i++) {
-      test1.CompressWhitespace();
-      test2.CompressWhitespace();
-      test3.CompressWhitespace();
-      test4.CompressWhitespace();
-      test5.CompressWhitespace();
-    }
+  nsCString test1(mExample1Utf8);
+  nsCString test2(mExample2Utf8);
+  nsCString test3(mExample3Utf8);
+  nsCString test4(mExample4Utf8);
+  nsCString test5(mExample5Utf8);
+  for (int i = 0; i < 20000; i++) {
+    test1.CompressWhitespace();
+    test2.CompressWhitespace();
+    test3.CompressWhitespace();
+    test4.CompressWhitespace();
+    test5.CompressWhitespace();
+  }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfStripCRLF, [this] {
-    nsCString test1(mExample1Utf8);
-    nsCString test2(mExample2Utf8);
-    nsCString test3(mExample3Utf8);
-    nsCString test4(mExample4Utf8);
-    nsCString test5(mExample5Utf8);
-    for (int i = 0; i < 20000; i++) {
-      test1.StripCRLF();
-      test2.StripCRLF();
-      test3.StripCRLF();
-      test4.StripCRLF();
-      test5.StripCRLF();
-    }
+  nsCString test1(mExample1Utf8);
+  nsCString test2(mExample2Utf8);
+  nsCString test3(mExample3Utf8);
+  nsCString test4(mExample4Utf8);
+  nsCString test5(mExample5Utf8);
+  for (int i = 0; i < 20000; i++) {
+    test1.StripCRLF();
+    test2.StripCRLF();
+    test3.StripCRLF();
+    test4.StripCRLF();
+    test5.StripCRLF();
+  }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfStripCharsCRLF, [this] {
-    // This is the unoptimized (original) version of
-    // stripping \r\n using StripChars.
-    nsCString test1(mExample1Utf8);
-    nsCString test2(mExample2Utf8);
-    nsCString test3(mExample3Utf8);
-    nsCString test4(mExample4Utf8);
-    nsCString test5(mExample5Utf8);
-    for (int i = 0; i < 20000; i++) {
-      test1.StripChars("\r\n");
-      test2.StripChars("\r\n");
-      test3.StripChars("\r\n");
-      test4.StripChars("\r\n");
-      test5.StripChars("\r\n");
-    }
+  // This is the unoptimized (original) version of
+  // stripping \r\n using StripChars.
+  nsCString test1(mExample1Utf8);
+  nsCString test2(mExample2Utf8);
+  nsCString test3(mExample3Utf8);
+  nsCString test4(mExample4Utf8);
+  nsCString test5(mExample5Utf8);
+  for (int i = 0; i < 20000; i++) {
+    test1.StripChars("\r\n");
+    test2.StripChars("\r\n");
+    test3.StripChars("\r\n");
+    test4.StripChars("\r\n");
+    test5.StripChars("\r\n");
+  }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsUTF8One, [this] {
-    for (int i = 0; i < 200000; i++) {
-      bool b = IsUTF8(*BlackBox(&mAsciiOneUtf8));
-      BlackBox(&b);
-    }
+  for (int i = 0; i < 200000; i++) {
+    bool b = IsUTF8(*BlackBox(&mAsciiOneUtf8));
+    BlackBox(&b);
+  }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsUTF8Fifteen, [this] {
-    for (int i = 0; i < 200000; i++) {
-      bool b = IsUTF8(*BlackBox(&mAsciiFifteenUtf8));
-      BlackBox(&b);
-    }
+  for (int i = 0; i < 200000; i++) {
+    bool b = IsUTF8(*BlackBox(&mAsciiFifteenUtf8));
+    BlackBox(&b);
+  }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsUTF8Hundred, [this] {
-    for (int i = 0; i < 200000; i++) {
-      bool b = IsUTF8(*BlackBox(&mAsciiHundredUtf8));
-      BlackBox(&b);
-    }
+  for (int i = 0; i < 200000; i++) {
+    bool b = IsUTF8(*BlackBox(&mAsciiHundredUtf8));
+    BlackBox(&b);
+  }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsUTF8Example3, [this] {
-    for (int i = 0; i < 100000; i++) {
-      bool b = IsUTF8(*BlackBox(&mExample3Utf8));
-      BlackBox(&b);
-    }
+  for (int i = 0; i < 100000; i++) {
+    bool b = IsUTF8(*BlackBox(&mExample3Utf8));
+    BlackBox(&b);
+  }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsASCII8One, [this] {
-    for (int i = 0; i < 200000; i++) {
-      bool b = IsASCII(*BlackBox(&mAsciiOneUtf8));
-      BlackBox(&b);
-    }
+  for (int i = 0; i < 200000; i++) {
+    bool b = IsASCII(*BlackBox(&mAsciiOneUtf8));
+    BlackBox(&b);
+  }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsASCIIFifteen, [this] {
-    for (int i = 0; i < 200000; i++) {
-      bool b = IsASCII(*BlackBox(&mAsciiFifteenUtf8));
-      BlackBox(&b);
-    }
+  for (int i = 0; i < 200000; i++) {
+    bool b = IsASCII(*BlackBox(&mAsciiFifteenUtf8));
+    BlackBox(&b);
+  }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsASCIIHundred, [this] {
-    for (int i = 0; i < 200000; i++) {
-      bool b = IsASCII(*BlackBox(&mAsciiHundredUtf8));
-      BlackBox(&b);
-    }
+  for (int i = 0; i < 200000; i++) {
+    bool b = IsASCII(*BlackBox(&mAsciiHundredUtf8));
+    BlackBox(&b);
+  }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsASCIIExample3, [this] {
-    for (int i = 0; i < 100000; i++) {
-      bool b = IsASCII(*BlackBox(&mExample3Utf8));
-      BlackBox(&b);
-    }
+  for (int i = 0; i < 100000; i++) {
+    bool b = IsASCII(*BlackBox(&mExample3Utf8));
+    BlackBox(&b);
+  }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfHasRTLCharsExample3, [this] {
-    for (int i = 0; i < 5000; i++) {
-      bool b = HasRTLChars(*BlackBox(&mExample3Utf16));
-      BlackBox(&b);
-    }
+  for (int i = 0; i < 5000; i++) {
+    bool b = HasRTLChars(*BlackBox(&mExample3Utf16));
+    BlackBox(&b);
+  }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfHasRTLCharsDE, [this] {
-    for (int i = 0; i < 5000; i++) {
-      bool b = HasRTLChars(*BlackBox(&mDeUtf16));
-      BlackBox(&b);
-    }
+  for (int i = 0; i < 5000; i++) {
+    bool b = HasRTLChars(*BlackBox(&mDeUtf16));
+    BlackBox(&b);
+  }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfHasRTLCharsRU, [this] {
-    for (int i = 0; i < 5000; i++) {
-      bool b = HasRTLChars(*BlackBox(&mRuUtf16));
-      BlackBox(&b);
-    }
+  for (int i = 0; i < 5000; i++) {
+    bool b = HasRTLChars(*BlackBox(&mRuUtf16));
+    BlackBox(&b);
+  }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfHasRTLCharsTH, [this] {
-    for (int i = 0; i < 5000; i++) {
-      bool b = HasRTLChars(*BlackBox(&mThUtf16));
-      BlackBox(&b);
-    }
+  for (int i = 0; i < 5000; i++) {
+    bool b = HasRTLChars(*BlackBox(&mThUtf16));
+    BlackBox(&b);
+  }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfHasRTLCharsJA, [this] {
-    for (int i = 0; i < 5000; i++) {
-      bool b = HasRTLChars(*BlackBox(&mJaUtf16));
-      BlackBox(&b);
-    }
+  for (int i = 0; i < 5000; i++) {
+    bool b = HasRTLChars(*BlackBox(&mJaUtf16));
+    BlackBox(&b);
+  }
 });
 
-CONVERSION_BENCH(PerfUTF16toLatin1ASCIIOne, LossyCopyUTF16toASCII, mAsciiOneUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toLatin1ASCIIOne, LossyCopyUTF16toASCII,
+                 mAsciiOneUtf16, nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toLatin1ASCIIThree, LossyCopyUTF16toASCII, mAsciiThreeUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toLatin1ASCIIThree, LossyCopyUTF16toASCII,
+                 mAsciiThreeUtf16, nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toLatin1ASCIIFifteen, LossyCopyUTF16toASCII, mAsciiFifteenUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toLatin1ASCIIFifteen, LossyCopyUTF16toASCII,
+                 mAsciiFifteenUtf16, nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toLatin1ASCIIHundred, LossyCopyUTF16toASCII, mAsciiHundredUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toLatin1ASCIIHundred, LossyCopyUTF16toASCII,
+                 mAsciiHundredUtf16, nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toLatin1ASCIIThousand, LossyCopyUTF16toASCII, mAsciiThousandUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toLatin1ASCIIThousand, LossyCopyUTF16toASCII,
+                 mAsciiThousandUtf16, nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toLatin1DEOne, LossyCopyUTF16toASCII, mDeEditOneUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toLatin1DEOne, LossyCopyUTF16toASCII, mDeEditOneUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toLatin1DEThree, LossyCopyUTF16toASCII, mDeEditThreeUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toLatin1DEThree, LossyCopyUTF16toASCII,
+                 mDeEditThreeUtf16, nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toLatin1DEFifteen, LossyCopyUTF16toASCII, mDeEditFifteenUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toLatin1DEFifteen, LossyCopyUTF16toASCII,
+                 mDeEditFifteenUtf16, nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toLatin1DEHundred, LossyCopyUTF16toASCII, mDeEditHundredUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toLatin1DEHundred, LossyCopyUTF16toASCII,
+                 mDeEditHundredUtf16, nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toLatin1DEThousand, LossyCopyUTF16toASCII, mDeEditThousandUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toLatin1DEThousand, LossyCopyUTF16toASCII,
+                 mDeEditThousandUtf16, nsAutoCString);
 
-CONVERSION_BENCH(PerfLatin1toUTF16AsciiOne, CopyASCIItoUTF16, mAsciiOneUtf8, nsAutoString);
+CONVERSION_BENCH(PerfLatin1toUTF16AsciiOne, CopyASCIItoUTF16, mAsciiOneUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfLatin1toUTF16AsciiThree, CopyASCIItoUTF16, mAsciiThreeUtf8, nsAutoString);
+CONVERSION_BENCH(PerfLatin1toUTF16AsciiThree, CopyASCIItoUTF16, mAsciiThreeUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfLatin1toUTF16AsciiFifteen, CopyASCIItoUTF16, mAsciiFifteenUtf8, nsAutoString);
+CONVERSION_BENCH(PerfLatin1toUTF16AsciiFifteen, CopyASCIItoUTF16,
+                 mAsciiFifteenUtf8, nsAutoString);
 
-CONVERSION_BENCH(PerfLatin1toUTF16AsciiHundred, CopyASCIItoUTF16, mAsciiHundredUtf8, nsAutoString);
+CONVERSION_BENCH(PerfLatin1toUTF16AsciiHundred, CopyASCIItoUTF16,
+                 mAsciiHundredUtf8, nsAutoString);
 
-CONVERSION_BENCH(PerfLatin1toUTF16AsciiThousand, CopyASCIItoUTF16, mAsciiThousandUtf8, nsAutoString);
+CONVERSION_BENCH(PerfLatin1toUTF16AsciiThousand, CopyASCIItoUTF16,
+                 mAsciiThousandUtf8, nsAutoString);
 
-CONVERSION_BENCH(PerfLatin1toUTF16DEOne, CopyASCIItoUTF16, mDeEditOneLatin1, nsAutoString);
+CONVERSION_BENCH(PerfLatin1toUTF16DEOne, CopyASCIItoUTF16, mDeEditOneLatin1,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfLatin1toUTF16DEThree, CopyASCIItoUTF16, mDeEditThreeLatin1, nsAutoString);
+CONVERSION_BENCH(PerfLatin1toUTF16DEThree, CopyASCIItoUTF16, mDeEditThreeLatin1,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfLatin1toUTF16DEFifteen, CopyASCIItoUTF16, mDeEditFifteenLatin1, nsAutoString);
+CONVERSION_BENCH(PerfLatin1toUTF16DEFifteen, CopyASCIItoUTF16,
+                 mDeEditFifteenLatin1, nsAutoString);
 
-CONVERSION_BENCH(PerfLatin1toUTF16DEHundred, CopyASCIItoUTF16, mDeEditHundredLatin1, nsAutoString);
+CONVERSION_BENCH(PerfLatin1toUTF16DEHundred, CopyASCIItoUTF16,
+                 mDeEditHundredLatin1, nsAutoString);
 
-CONVERSION_BENCH(PerfLatin1toUTF16DEThousand, CopyASCIItoUTF16, mDeEditThousandLatin1, nsAutoString);
+CONVERSION_BENCH(PerfLatin1toUTF16DEThousand, CopyASCIItoUTF16,
+                 mDeEditThousandLatin1, nsAutoString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8AsciiOne, CopyUTF16toUTF8, mAsciiOneUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8AsciiOne, CopyUTF16toUTF8, mAsciiOneUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8AsciiThree, CopyUTF16toUTF8, mAsciiThreeUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8AsciiThree, CopyUTF16toUTF8, mAsciiThreeUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8AsciiFifteen, CopyUTF16toUTF8, mAsciiFifteenUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8AsciiFifteen, CopyUTF16toUTF8,
+                 mAsciiFifteenUtf16, nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8AsciiHundred, CopyUTF16toUTF8, mAsciiHundredUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8AsciiHundred, CopyUTF16toUTF8,
+                 mAsciiHundredUtf16, nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8AsciiThousand, CopyUTF16toUTF8, mAsciiThousandUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8AsciiThousand, CopyUTF16toUTF8,
+                 mAsciiThousandUtf16, nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16AsciiOne, CopyUTF8toUTF16, mAsciiOneUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16AsciiOne, CopyUTF8toUTF16, mAsciiOneUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16AsciiThree, CopyUTF8toUTF16, mAsciiThreeUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16AsciiThree, CopyUTF8toUTF16, mAsciiThreeUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16AsciiFifteen, CopyUTF8toUTF16, mAsciiFifteenUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16AsciiFifteen, CopyUTF8toUTF16,
+                 mAsciiFifteenUtf8, nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16AsciiHundred, CopyUTF8toUTF16, mAsciiHundredUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16AsciiHundred, CopyUTF8toUTF16,
+                 mAsciiHundredUtf8, nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16AsciiThousand, CopyUTF8toUTF16, mAsciiThousandUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16AsciiThousand, CopyUTF8toUTF16,
+                 mAsciiThousandUtf8, nsAutoString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8AROne, CopyUTF16toUTF8, mArOneUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8AROne, CopyUTF16toUTF8, mArOneUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8ARThree, CopyUTF16toUTF8, mArThreeUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8ARThree, CopyUTF16toUTF8, mArThreeUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8ARFifteen, CopyUTF16toUTF8, mArFifteenUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8ARFifteen, CopyUTF16toUTF8, mArFifteenUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8ARHundred, CopyUTF16toUTF8, mArHundredUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8ARHundred, CopyUTF16toUTF8, mArHundredUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8ARThousand, CopyUTF16toUTF8, mArThousandUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8ARThousand, CopyUTF16toUTF8, mArThousandUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16AROne, CopyUTF8toUTF16, mArOneUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16AROne, CopyUTF8toUTF16, mArOneUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16ARThree, CopyUTF8toUTF16, mArThreeUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16ARThree, CopyUTF8toUTF16, mArThreeUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16ARFifteen, CopyUTF8toUTF16, mArFifteenUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16ARFifteen, CopyUTF8toUTF16, mArFifteenUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16ARHundred, CopyUTF8toUTF16, mArHundredUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16ARHundred, CopyUTF8toUTF16, mArHundredUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16ARThousand, CopyUTF8toUTF16, mArThousandUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16ARThousand, CopyUTF8toUTF16, mArThousandUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8DEOne, CopyUTF16toUTF8, mDeOneUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8DEOne, CopyUTF16toUTF8, mDeOneUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8DEThree, CopyUTF16toUTF8, mDeThreeUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8DEThree, CopyUTF16toUTF8, mDeThreeUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8DEFifteen, CopyUTF16toUTF8, mDeFifteenUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8DEFifteen, CopyUTF16toUTF8, mDeFifteenUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8DEHundred, CopyUTF16toUTF8, mDeHundredUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8DEHundred, CopyUTF16toUTF8, mDeHundredUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8DEThousand, CopyUTF16toUTF8, mDeThousandUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8DEThousand, CopyUTF16toUTF8, mDeThousandUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16DEOne, CopyUTF8toUTF16, mDeOneUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16DEOne, CopyUTF8toUTF16, mDeOneUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16DEThree, CopyUTF8toUTF16, mDeThreeUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16DEThree, CopyUTF8toUTF16, mDeThreeUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16DEFifteen, CopyUTF8toUTF16, mDeFifteenUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16DEFifteen, CopyUTF8toUTF16, mDeFifteenUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16DEHundred, CopyUTF8toUTF16, mDeHundredUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16DEHundred, CopyUTF8toUTF16, mDeHundredUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16DEThousand, CopyUTF8toUTF16, mDeThousandUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16DEThousand, CopyUTF8toUTF16, mDeThousandUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8RUOne, CopyUTF16toUTF8, mRuOneUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8RUOne, CopyUTF16toUTF8, mRuOneUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8RUThree, CopyUTF16toUTF8, mRuThreeUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8RUThree, CopyUTF16toUTF8, mRuThreeUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8RUFifteen, CopyUTF16toUTF8, mRuFifteenUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8RUFifteen, CopyUTF16toUTF8, mRuFifteenUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8RUHundred, CopyUTF16toUTF8, mRuHundredUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8RUHundred, CopyUTF16toUTF8, mRuHundredUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8RUThousand, CopyUTF16toUTF8, mRuThousandUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8RUThousand, CopyUTF16toUTF8, mRuThousandUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16RUOne, CopyUTF8toUTF16, mRuOneUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16RUOne, CopyUTF8toUTF16, mRuOneUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16RUThree, CopyUTF8toUTF16, mRuThreeUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16RUThree, CopyUTF8toUTF16, mRuThreeUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16RUFifteen, CopyUTF8toUTF16, mRuFifteenUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16RUFifteen, CopyUTF8toUTF16, mRuFifteenUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16RUHundred, CopyUTF8toUTF16, mRuHundredUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16RUHundred, CopyUTF8toUTF16, mRuHundredUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16RUThousand, CopyUTF8toUTF16, mRuThousandUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16RUThousand, CopyUTF8toUTF16, mRuThousandUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8THOne, CopyUTF16toUTF8, mThOneUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8THOne, CopyUTF16toUTF8, mThOneUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8THThree, CopyUTF16toUTF8, mThThreeUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8THThree, CopyUTF16toUTF8, mThThreeUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8THFifteen, CopyUTF16toUTF8, mThFifteenUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8THFifteen, CopyUTF16toUTF8, mThFifteenUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8THHundred, CopyUTF16toUTF8, mThHundredUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8THHundred, CopyUTF16toUTF8, mThHundredUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8THThousand, CopyUTF16toUTF8, mThThousandUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8THThousand, CopyUTF16toUTF8, mThThousandUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16THOne, CopyUTF8toUTF16, mThOneUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16THOne, CopyUTF8toUTF16, mThOneUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16THThree, CopyUTF8toUTF16, mThThreeUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16THThree, CopyUTF8toUTF16, mThThreeUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16THFifteen, CopyUTF8toUTF16, mThFifteenUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16THFifteen, CopyUTF8toUTF16, mThFifteenUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16THHundred, CopyUTF8toUTF16, mThHundredUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16THHundred, CopyUTF8toUTF16, mThHundredUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16THThousand, CopyUTF8toUTF16, mThThousandUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16THThousand, CopyUTF8toUTF16, mThThousandUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8JAOne, CopyUTF16toUTF8, mJaOneUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8JAOne, CopyUTF16toUTF8, mJaOneUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8JAThree, CopyUTF16toUTF8, mJaThreeUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8JAThree, CopyUTF16toUTF8, mJaThreeUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8JAFifteen, CopyUTF16toUTF8, mJaFifteenUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8JAFifteen, CopyUTF16toUTF8, mJaFifteenUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8JAHundred, CopyUTF16toUTF8, mJaHundredUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8JAHundred, CopyUTF16toUTF8, mJaHundredUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8JAThousand, CopyUTF16toUTF8, mJaThousandUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8JAThousand, CopyUTF16toUTF8, mJaThousandUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16JAOne, CopyUTF8toUTF16, mJaOneUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16JAOne, CopyUTF8toUTF16, mJaOneUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16JAThree, CopyUTF8toUTF16, mJaThreeUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16JAThree, CopyUTF8toUTF16, mJaThreeUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16JAFifteen, CopyUTF8toUTF16, mJaFifteenUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16JAFifteen, CopyUTF8toUTF16, mJaFifteenUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16JAHundred, CopyUTF8toUTF16, mJaHundredUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16JAHundred, CopyUTF8toUTF16, mJaHundredUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16JAThousand, CopyUTF8toUTF16, mJaThousandUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16JAThousand, CopyUTF8toUTF16, mJaThousandUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8KOOne, CopyUTF16toUTF8, mKoOneUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8KOOne, CopyUTF16toUTF8, mKoOneUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8KOThree, CopyUTF16toUTF8, mKoThreeUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8KOThree, CopyUTF16toUTF8, mKoThreeUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8KOFifteen, CopyUTF16toUTF8, mKoFifteenUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8KOFifteen, CopyUTF16toUTF8, mKoFifteenUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8KOHundred, CopyUTF16toUTF8, mKoHundredUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8KOHundred, CopyUTF16toUTF8, mKoHundredUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8KOThousand, CopyUTF16toUTF8, mKoThousandUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8KOThousand, CopyUTF16toUTF8, mKoThousandUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16KOOne, CopyUTF8toUTF16, mKoOneUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16KOOne, CopyUTF8toUTF16, mKoOneUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16KOThree, CopyUTF8toUTF16, mKoThreeUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16KOThree, CopyUTF8toUTF16, mKoThreeUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16KOFifteen, CopyUTF8toUTF16, mKoFifteenUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16KOFifteen, CopyUTF8toUTF16, mKoFifteenUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16KOHundred, CopyUTF8toUTF16, mKoHundredUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16KOHundred, CopyUTF8toUTF16, mKoHundredUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16KOThousand, CopyUTF8toUTF16, mKoThousandUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16KOThousand, CopyUTF8toUTF16, mKoThousandUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8TROne, CopyUTF16toUTF8, mTrOneUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8TROne, CopyUTF16toUTF8, mTrOneUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8TRThree, CopyUTF16toUTF8, mTrThreeUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8TRThree, CopyUTF16toUTF8, mTrThreeUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8TRFifteen, CopyUTF16toUTF8, mTrFifteenUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8TRFifteen, CopyUTF16toUTF8, mTrFifteenUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8TRHundred, CopyUTF16toUTF8, mTrHundredUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8TRHundred, CopyUTF16toUTF8, mTrHundredUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8TRThousand, CopyUTF16toUTF8, mTrThousandUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8TRThousand, CopyUTF16toUTF8, mTrThousandUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16TROne, CopyUTF8toUTF16, mTrOneUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16TROne, CopyUTF8toUTF16, mTrOneUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16TRThree, CopyUTF8toUTF16, mTrThreeUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16TRThree, CopyUTF8toUTF16, mTrThreeUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16TRFifteen, CopyUTF8toUTF16, mTrFifteenUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16TRFifteen, CopyUTF8toUTF16, mTrFifteenUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16TRHundred, CopyUTF8toUTF16, mTrHundredUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16TRHundred, CopyUTF8toUTF16, mTrHundredUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16TRThousand, CopyUTF8toUTF16, mTrThousandUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16TRThousand, CopyUTF8toUTF16, mTrThousandUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8VIOne, CopyUTF16toUTF8, mViOneUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8VIOne, CopyUTF16toUTF8, mViOneUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8VIThree, CopyUTF16toUTF8, mViThreeUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8VIThree, CopyUTF16toUTF8, mViThreeUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8VIFifteen, CopyUTF16toUTF8, mViFifteenUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8VIFifteen, CopyUTF16toUTF8, mViFifteenUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8VIHundred, CopyUTF16toUTF8, mViHundredUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8VIHundred, CopyUTF16toUTF8, mViHundredUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF16toUTF8VIThousand, CopyUTF16toUTF8, mViThousandUtf16, nsAutoCString);
+CONVERSION_BENCH(PerfUTF16toUTF8VIThousand, CopyUTF16toUTF8, mViThousandUtf16,
+                 nsAutoCString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16VIOne, CopyUTF8toUTF16, mViOneUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16VIOne, CopyUTF8toUTF16, mViOneUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16VIThree, CopyUTF8toUTF16, mViThreeUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16VIThree, CopyUTF8toUTF16, mViThreeUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16VIFifteen, CopyUTF8toUTF16, mViFifteenUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16VIFifteen, CopyUTF8toUTF16, mViFifteenUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16VIHundred, CopyUTF8toUTF16, mViHundredUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16VIHundred, CopyUTF8toUTF16, mViHundredUtf8,
+                 nsAutoString);
 
-CONVERSION_BENCH(PerfUTF8toUTF16VIThousand, CopyUTF8toUTF16, mViThousandUtf8, nsAutoString);
+CONVERSION_BENCH(PerfUTF8toUTF16VIThousand, CopyUTF8toUTF16, mViThousandUtf8,
+                 nsAutoString);
 
-} // namespace TestStrings
+}  // namespace TestStrings

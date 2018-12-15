@@ -21,61 +21,55 @@
 using namespace mozilla;
 using mozilla::Runnable;
 
-
-class MockSchedulerGroup: public SchedulerGroup
-{
-public:
+class MockSchedulerGroup : public SchedulerGroup {
+ public:
   explicit MockSchedulerGroup(mozilla::dom::DocGroup* aDocGroup)
       : mDocGroup(aDocGroup) {}
   NS_INLINE_DECL_REFCOUNTING(MockSchedulerGroup);
 
   MOCK_METHOD1(SetValidatingAccess, void(ValidationType aType));
-  mozilla::dom::DocGroup* DocGroup() {
-    return mDocGroup;
-  }
-protected:
-  virtual ~MockSchedulerGroup() = default;
-private:
+  mozilla::dom::DocGroup* DocGroup() { return mDocGroup; }
 
+ protected:
+  virtual ~MockSchedulerGroup() = default;
+
+ private:
   mozilla::dom::DocGroup* mDocGroup;
 };
-
 
 typedef testing::NiceMock<MockSchedulerGroup> MSchedulerGroup;
 
 /* Timed runnable which simulates some execution time
  * and can run a nested runnable.
  */
-class TimedRunnable final : public Runnable
-{
-public:
+class TimedRunnable final : public Runnable {
+ public:
   explicit TimedRunnable(uint32_t aExecutionTime1, uint32_t aExecutionTime2,
                          uint32_t aSubExecutionTime)
-    : Runnable("TimedRunnable")
-    , mExecutionTime1(aExecutionTime1)
-    , mExecutionTime2(aExecutionTime2)
-    , mSubExecutionTime(aSubExecutionTime)
-  {
-  }
-  NS_IMETHODIMP Run()
-  {
+      : Runnable("TimedRunnable"),
+        mExecutionTime1(aExecutionTime1),
+        mExecutionTime2(aExecutionTime2),
+        mSubExecutionTime(aSubExecutionTime) {}
+  NS_IMETHODIMP Run() {
     PR_Sleep(PR_MillisecondsToInterval(mExecutionTime1 + 5));
     if (mSubExecutionTime > 0) {
-      // Dispatch another runnable so nsThread::ProcessNextEvent is called recursively
+      // Dispatch another runnable so nsThread::ProcessNextEvent is called
+      // recursively
       nsCOMPtr<nsIThread> thread = do_GetMainThread();
-      nsCOMPtr<nsIRunnable> runnable = new TimedRunnable(mSubExecutionTime, 0, 0);
+      nsCOMPtr<nsIRunnable> runnable =
+          new TimedRunnable(mSubExecutionTime, 0, 0);
       thread->Dispatch(runnable, NS_DISPATCH_NORMAL);
       (void)NS_ProcessNextEvent(thread, false);
     }
     PR_Sleep(PR_MillisecondsToInterval(mExecutionTime2 + 5));
     return NS_OK;
   }
-private:
+
+ private:
   uint32_t mExecutionTime1;
   uint32_t mExecutionTime2;
   uint32_t mSubExecutionTime;
 };
-
 
 /* test class used for all metrics tests
  *
@@ -85,12 +79,11 @@ private:
 
 static const char prefKey[] = "dom.performance.enable_scheduler_timing";
 
-class ThreadMetrics: public ::testing::Test
-{
-public:
+class ThreadMetrics : public ::testing::Test {
+ public:
   explicit ThreadMetrics() = default;
 
-protected:
+ protected:
   virtual void SetUp() {
     mOldPref = Preferences::GetBool(prefKey);
     Preferences::SetBool(prefKey, true);
@@ -115,24 +108,19 @@ protected:
   }
 
   // this is used to get rid of transient events
-  void initScheduler() {
-    ProcessAllEvents();
-  }
+  void initScheduler() { ProcessAllEvents(); }
 
   nsresult Dispatch(uint32_t aExecutionTime1, uint32_t aExecutionTime2,
                     uint32_t aSubExecutionTime) {
     ProcessAllEvents();
-    nsCOMPtr<nsIRunnable> runnable = new TimedRunnable(aExecutionTime1,
-                                                       aExecutionTime2,
-                                                       aSubExecutionTime);
-    runnable = new SchedulerGroup::Runnable(runnable.forget(),
-                                            mSchedulerGroup, mDocGroup);
+    nsCOMPtr<nsIRunnable> runnable =
+        new TimedRunnable(aExecutionTime1, aExecutionTime2, aSubExecutionTime);
+    runnable = new SchedulerGroup::Runnable(runnable.forget(), mSchedulerGroup,
+                                            mDocGroup);
     return mDocGroup->Dispatch(TaskCategory::Other, runnable.forget());
   }
 
-  void ProcessAllEvents() {
-    mThreadMgr->SpinEventLoopUntilEmpty();
-  }
+  void ProcessAllEvents() { mThreadMgr->SpinEventLoopUntilEmpty(); }
 
   uint32_t mOther;
   bool mOldPref;
@@ -143,9 +131,7 @@ protected:
   uint32_t mDispatchCount;
 };
 
-
-TEST_F(ThreadMetrics, CollectMetrics)
-{
+TEST_F(ThreadMetrics, CollectMetrics) {
   nsresult rv;
   initScheduler();
 
@@ -162,7 +148,7 @@ TEST_F(ThreadMetrics, CollectMetrics)
   // other counters should stay empty
   for (uint32_t i = 0; i < mDispatchCount; i++) {
     if (i != mOther) {
-        ASSERT_EQ(mCounter->GetDispatchCounter()[i], 0u);
+      ASSERT_EQ(mCounter->GetDispatchCounter()[i], 0u);
     }
   }
 
@@ -172,9 +158,7 @@ TEST_F(ThreadMetrics, CollectMetrics)
   ASSERT_LT(duration, 200000u);
 }
 
-
-TEST_F(ThreadMetrics, CollectRecursiveMetrics)
-{
+TEST_F(ThreadMetrics, CollectRecursiveMetrics) {
   nsresult rv;
 
   initScheduler();
@@ -193,7 +177,7 @@ TEST_F(ThreadMetrics, CollectRecursiveMetrics)
   // other counters should stay empty
   for (uint32_t i = 0; i < mDispatchCount; i++) {
     if (i != mOther) {
-        ASSERT_EQ(mCounter->GetDispatchCounter()[i], 0u);
+      ASSERT_EQ(mCounter->GetDispatchCounter()[i], 0u);
     }
   }
 

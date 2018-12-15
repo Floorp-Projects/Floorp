@@ -9,71 +9,56 @@
 namespace mozilla {
 namespace _ipdltest {
 
+class TestUrgentHangsParent : public PTestUrgentHangsParent {
+ public:
+  TestUrgentHangsParent();
+  virtual ~TestUrgentHangsParent();
 
-class TestUrgentHangsParent :
-    public PTestUrgentHangsParent
-{
-public:
-    TestUrgentHangsParent();
-    virtual ~TestUrgentHangsParent();
+  static bool RunTestInProcesses() { return true; }
+  static bool RunTestInThreads() { return false; }
 
-    static bool RunTestInProcesses() { return true; }
-    static bool RunTestInThreads() { return false; }
+  void Main();
+  void SecondStage();
+  void ThirdStage();
 
-    void Main();
-    void SecondStage();
-    void ThirdStage();
+  mozilla::ipc::IPCResult RecvTest1_2() override;
+  mozilla::ipc::IPCResult RecvTestInner() override;
+  mozilla::ipc::IPCResult RecvTestInnerUrgent() override;
 
-    mozilla::ipc::IPCResult RecvTest1_2() override;
-    mozilla::ipc::IPCResult RecvTestInner() override;
-    mozilla::ipc::IPCResult RecvTestInnerUrgent() override;
-
-    bool ShouldContinueFromReplyTimeout() override
-    {
-      return false;
+  bool ShouldContinueFromReplyTimeout() override { return false; }
+  virtual void ActorDestroy(ActorDestroyReason why) override {
+    if (mInnerCount != 1) {
+      fail("wrong mInnerCount");
     }
-    virtual void ActorDestroy(ActorDestroyReason why) override
-    {
-	if (mInnerCount != 1) {
-	    fail("wrong mInnerCount");
-	}
-	if (mInnerUrgentCount != 2) {
-	    fail("wrong mInnerUrgentCount");
-	}
-        passed("ok");
-        QuitParent();
+    if (mInnerUrgentCount != 2) {
+      fail("wrong mInnerUrgentCount");
     }
+    passed("ok");
+    QuitParent();
+  }
 
-private:
-    size_t mInnerCount, mInnerUrgentCount;
+ private:
+  size_t mInnerCount, mInnerUrgentCount;
 };
 
+class TestUrgentHangsChild : public PTestUrgentHangsChild {
+ public:
+  TestUrgentHangsChild();
+  virtual ~TestUrgentHangsChild();
 
-class TestUrgentHangsChild :
-    public PTestUrgentHangsChild
-{
-public:
-    TestUrgentHangsChild();
-    virtual ~TestUrgentHangsChild();
+  mozilla::ipc::IPCResult RecvTest1_1() override;
+  mozilla::ipc::IPCResult RecvTest1_3() override;
+  mozilla::ipc::IPCResult RecvTest2() override;
+  mozilla::ipc::IPCResult RecvTest3() override;
+  mozilla::ipc::IPCResult RecvTest4() override;
+  mozilla::ipc::IPCResult RecvTest4_1() override;
+  mozilla::ipc::IPCResult RecvTest5() override;
+  mozilla::ipc::IPCResult RecvTest5_1() override;
 
-    mozilla::ipc::IPCResult RecvTest1_1() override;
-    mozilla::ipc::IPCResult RecvTest1_3() override;
-    mozilla::ipc::IPCResult RecvTest2() override;
-    mozilla::ipc::IPCResult RecvTest3() override;
-    mozilla::ipc::IPCResult RecvTest4() override;
-    mozilla::ipc::IPCResult RecvTest4_1() override;
-    mozilla::ipc::IPCResult RecvTest5() override;
-    mozilla::ipc::IPCResult RecvTest5_1() override;
-
-    virtual void ActorDestroy(ActorDestroyReason why) override
-    {
-        QuitChild();
-    }
+  virtual void ActorDestroy(ActorDestroyReason why) override { QuitChild(); }
 };
 
+}  // namespace _ipdltest
+}  // namespace mozilla
 
-} // namespace _ipdltest
-} // namespace mozilla
-
-
-#endif // ifndef mozilla__ipdltest_TestUrgentHangs_h
+#endif  // ifndef mozilla__ipdltest_TestUrgentHangs_h

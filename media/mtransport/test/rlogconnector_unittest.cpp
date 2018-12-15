@@ -26,35 +26,27 @@ using mozilla::RLogConnector;
 int NR_LOG_TEST = 0;
 
 class RLogConnectorTest : public ::testing::Test {
-  public:
-    RLogConnectorTest() {
-      Init();
-    }
+ public:
+  RLogConnectorTest() { Init(); }
 
-    ~RLogConnectorTest() {
-      Free();
-    }
+  ~RLogConnectorTest() { Free(); }
 
-    static void SetUpTestCase() {
-      NR_reg_init(NR_REG_MODE_LOCAL);
-      r_log_init();
-      /* Would be nice to be able to unregister in the fixture */
-      const char* facility = "rlogconnector_test";
-      r_log_register(const_cast<char*>(facility), &NR_LOG_TEST);
-    }
+  static void SetUpTestCase() {
+    NR_reg_init(NR_REG_MODE_LOCAL);
+    r_log_init();
+    /* Would be nice to be able to unregister in the fixture */
+    const char* facility = "rlogconnector_test";
+    r_log_register(const_cast<char*>(facility), &NR_LOG_TEST);
+  }
 
-    void Init() {
-      RLogConnector::CreateInstance();
-    }
+  void Init() { RLogConnector::CreateInstance(); }
 
-    void Free() {
-      RLogConnector::DestroyInstance();
-    }
+  void Free() { RLogConnector::DestroyInstance(); }
 
-    void ReInit() {
-      Free();
-      Init();
-    }
+  void ReInit() {
+    Free();
+    Init();
+  }
 };
 
 TEST_F(RLogConnectorTest, TestGetFree) {

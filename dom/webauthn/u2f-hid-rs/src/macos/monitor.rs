@@ -5,9 +5,8 @@
 extern crate libc;
 extern crate log;
 
-use core_foundation::base::TCFType;
-use core_foundation_sys::base::*;
-use core_foundation_sys::runloop::*;
+use core_foundation::base::*;
+use core_foundation::runloop::*;
 use platform::iokit::*;
 use runloop::RunLoop;
 use std::collections::HashMap;
@@ -90,15 +89,15 @@ where
         // Remove all devices.
         while !self.map.is_empty() {
             let device_ref = *self.map.keys().next().unwrap();
-            self.remove_device(&device_ref);
+            self.remove_device(device_ref);
         }
 
         // Close the manager and its devices.
         unsafe { IOHIDManagerClose(self.manager, kIOHIDManagerOptionNone) };
     }
 
-    fn remove_device(&mut self, device_ref: &IOHIDDeviceRef) {
-        if let Some(DeviceData { tx, runloop }) = self.map.remove(device_ref) {
+    fn remove_device(&mut self, device_ref: IOHIDDeviceRef) {
+        if let Some(DeviceData { tx, runloop }) = self.map.remove(&device_ref) {
             // Dropping `tx` will make Device::read() fail eventually.
             drop(tx);
 
@@ -127,7 +126,7 @@ where
 
         // Remove the device if sending fails.
         if send_failed {
-            this.remove_device(&device_ref);
+            this.remove_device(device_ref);
         }
     }
 
@@ -162,7 +161,7 @@ where
         device_ref: IOHIDDeviceRef,
     ) {
         let this = unsafe { &mut *(context as *mut Self) };
-        this.remove_device(&device_ref);
+        this.remove_device(device_ref);
     }
 }
 

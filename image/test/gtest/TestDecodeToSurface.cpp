@@ -22,45 +22,37 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-class DecodeToSurfaceRunnable : public Runnable
-{
-public:
+class DecodeToSurfaceRunnable : public Runnable {
+ public:
   DecodeToSurfaceRunnable(RefPtr<SourceSurface>& aSurface,
                           nsIInputStream* aInputStream,
                           ImageOps::ImageBuffer* aImageBuffer,
                           const ImageTestCase& aTestCase)
-    : mozilla::Runnable("DecodeToSurfaceRunnable")
-    , mSurface(aSurface)
-    , mInputStream(aInputStream)
-    , mImageBuffer(aImageBuffer)
-    , mTestCase(aTestCase)
-  { }
+      : mozilla::Runnable("DecodeToSurfaceRunnable"),
+        mSurface(aSurface),
+        mInputStream(aInputStream),
+        mImageBuffer(aImageBuffer),
+        mTestCase(aTestCase) {}
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     Go();
     return NS_OK;
   }
 
-  void Go()
-  {
+  void Go() {
     Maybe<IntSize> outputSize;
     if (mTestCase.mOutputSize != mTestCase.mSize) {
       outputSize.emplace(mTestCase.mOutputSize);
     }
 
     if (mImageBuffer) {
-      mSurface =
-        ImageOps::DecodeToSurface(mImageBuffer,
-                                  nsDependentCString(mTestCase.mMimeType),
-                                  imgIContainer::DECODE_FLAGS_DEFAULT,
-                                  outputSize);
+      mSurface = ImageOps::DecodeToSurface(
+          mImageBuffer, nsDependentCString(mTestCase.mMimeType),
+          imgIContainer::DECODE_FLAGS_DEFAULT, outputSize);
     } else {
-      mSurface =
-        ImageOps::DecodeToSurface(mInputStream.forget(),
-                                  nsDependentCString(mTestCase.mMimeType),
-                                  imgIContainer::DECODE_FLAGS_DEFAULT,
-                                  outputSize);
+      mSurface = ImageOps::DecodeToSurface(
+          mInputStream.forget(), nsDependentCString(mTestCase.mMimeType),
+          imgIContainer::DECODE_FLAGS_DEFAULT, outputSize);
     }
     ASSERT_TRUE(mSurface != nullptr);
 
@@ -78,17 +70,15 @@ public:
                              mTestCase.mFlags & TEST_CASE_IS_FUZZY ? 1 : 0));
   }
 
-private:
+ private:
   RefPtr<SourceSurface>& mSurface;
   nsCOMPtr<nsIInputStream> mInputStream;
   RefPtr<ImageOps::ImageBuffer> mImageBuffer;
   ImageTestCase mTestCase;
 };
 
-static void
-RunDecodeToSurface(const ImageTestCase& aTestCase,
-                   ImageOps::ImageBuffer* aImageBuffer = nullptr)
-{
+static void RunDecodeToSurface(const ImageTestCase& aTestCase,
+                               ImageOps::ImageBuffer* aImageBuffer = nullptr) {
   nsCOMPtr<nsIInputStream> inputStream;
   if (!aImageBuffer) {
     inputStream = LoadFile(aTestCase.mPath);
@@ -97,14 +87,14 @@ RunDecodeToSurface(const ImageTestCase& aTestCase,
 
   nsCOMPtr<nsIThread> thread;
   nsresult rv =
-    NS_NewNamedThread("DecodeToSurface", getter_AddRefs(thread), nullptr);
+      NS_NewNamedThread("DecodeToSurface", getter_AddRefs(thread), nullptr);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   // We run the DecodeToSurface tests off-main-thread to ensure that
   // DecodeToSurface doesn't require any main-thread-only code.
   RefPtr<SourceSurface> surface;
-  nsCOMPtr<nsIRunnable> runnable =
-    new DecodeToSurfaceRunnable(surface, inputStream, aImageBuffer, aTestCase);
+  nsCOMPtr<nsIRunnable> runnable = new DecodeToSurfaceRunnable(
+      surface, inputStream, aImageBuffer, aTestCase);
   thread->Dispatch(runnable, nsIThread::DISPATCH_SYNC);
 
   thread->Shutdown();
@@ -113,9 +103,8 @@ RunDecodeToSurface(const ImageTestCase& aTestCase,
   surface = nullptr;
 }
 
-class ImageDecodeToSurface : public ::testing::Test
-{
-protected:
+class ImageDecodeToSurface : public ::testing::Test {
+ protected:
   AutoInitializeImageLib mInit;
 };
 
@@ -127,45 +116,39 @@ TEST_F(ImageDecodeToSurface, ICO) { RunDecodeToSurface(GreenICOTestCase()); }
 TEST_F(ImageDecodeToSurface, Icon) { RunDecodeToSurface(GreenIconTestCase()); }
 TEST_F(ImageDecodeToSurface, WebP) { RunDecodeToSurface(GreenWebPTestCase()); }
 
-TEST_F(ImageDecodeToSurface, AnimatedGIF)
-{
+TEST_F(ImageDecodeToSurface, AnimatedGIF) {
   RunDecodeToSurface(GreenFirstFrameAnimatedGIFTestCase());
 }
 
-TEST_F(ImageDecodeToSurface, AnimatedPNG)
-{
+TEST_F(ImageDecodeToSurface, AnimatedPNG) {
   RunDecodeToSurface(GreenFirstFrameAnimatedPNGTestCase());
 }
 
-TEST_F(ImageDecodeToSurface, Corrupt)
-{
+TEST_F(ImageDecodeToSurface, Corrupt) {
   ImageTestCase testCase = CorruptTestCase();
 
   nsCOMPtr<nsIInputStream> inputStream = LoadFile(testCase.mPath);
   ASSERT_TRUE(inputStream != nullptr);
 
-  RefPtr<SourceSurface> surface =
-    ImageOps::DecodeToSurface(inputStream.forget(),
-                              nsDependentCString(testCase.mMimeType),
-                              imgIContainer::DECODE_FLAGS_DEFAULT);
+  RefPtr<SourceSurface> surface = ImageOps::DecodeToSurface(
+      inputStream.forget(), nsDependentCString(testCase.mMimeType),
+      imgIContainer::DECODE_FLAGS_DEFAULT);
   EXPECT_TRUE(surface == nullptr);
 }
 
-TEST_F(ImageDecodeToSurface, ICOMultipleSizes)
-{
+TEST_F(ImageDecodeToSurface, ICOMultipleSizes) {
   ImageTestCase testCase = GreenMultipleSizesICOTestCase();
 
   nsCOMPtr<nsIInputStream> inputStream = LoadFile(testCase.mPath);
   ASSERT_TRUE(inputStream != nullptr);
 
   RefPtr<ImageOps::ImageBuffer> buffer =
-    ImageOps::CreateImageBuffer(inputStream.forget());
+      ImageOps::CreateImageBuffer(inputStream.forget());
   ASSERT_TRUE(buffer != nullptr);
 
   ImageMetadata metadata;
-  nsresult rv = ImageOps::DecodeMetadata(buffer,
-                                         nsDependentCString(testCase.mMimeType),
-                                         metadata);
+  nsresult rv = ImageOps::DecodeMetadata(
+      buffer, nsDependentCString(testCase.mMimeType), metadata);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(metadata.HasSize());
   EXPECT_EQ(testCase.mSize, metadata.GetSize());
@@ -174,12 +157,8 @@ TEST_F(ImageDecodeToSurface, ICOMultipleSizes)
   ASSERT_EQ(6u, nativeSizes.Length());
 
   IntSize expectedSizes[] = {
-    IntSize(16, 16),
-    IntSize(32, 32),
-    IntSize(64, 64),
-    IntSize(128, 128),
-    IntSize(256, 256),
-    IntSize(256, 128),
+      IntSize(16, 16),   IntSize(32, 32),   IntSize(64, 64),
+      IntSize(128, 128), IntSize(256, 256), IntSize(256, 128),
   };
 
   for (int i = 0; i < 6; ++i) {

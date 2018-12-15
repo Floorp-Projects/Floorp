@@ -3,13 +3,13 @@ import sys
 import json
 
 
-def to_json(value):
+def to_json(value, fn=None):
     if isinstance(value, BaseNode):
-        return value.to_json()
+        return value.to_json(fn)
     if isinstance(value, list):
-        return list(map(to_json, value))
+        return list(to_json(item, fn) for item in value)
     if isinstance(value, tuple):
-        return list(map(to_json, value))
+        return list(to_json(item, fn) for item in value)
     else:
         return value
 
@@ -119,15 +119,15 @@ class BaseNode(object):
 
         return True
 
-    def to_json(self):
+    def to_json(self, fn=None):
         obj = {
-            name: to_json(value)
+            name: to_json(value, fn)
             for name, value in vars(self).items()
         }
         obj.update(
             {'type': self.__class__.__name__}
         )
-        return obj
+        return fn(obj) if fn else obj
 
     def __str__(self):
         return json.dumps(self.to_json())
@@ -207,8 +207,9 @@ class Expression(SyntaxNode):
 
 
 class StringLiteral(Expression):
-    def __init__(self, value, **kwargs):
+    def __init__(self, raw, value, **kwargs):
         super(StringLiteral, self).__init__(**kwargs)
+        self.raw = raw
         self.value = value
 
 
@@ -233,6 +234,12 @@ class TermReference(Expression):
 class VariableReference(Expression):
     def __init__(self, id, **kwargs):
         super(VariableReference, self).__init__(**kwargs)
+        self.id = id
+
+
+class FunctionReference(Expression):
+    def __init__(self, id, **kwargs):
+        super(FunctionReference, self).__init__(**kwargs)
         self.id = id
 
 
@@ -322,11 +329,6 @@ class GroupComment(BaseComment):
 class ResourceComment(BaseComment):
     def __init__(self, content=None, **kwargs):
         super(ResourceComment, self).__init__(content, **kwargs)
-
-
-class Function(Identifier):
-    def __init__(self, name, **kwargs):
-        super(Function, self).__init__(name, **kwargs)
 
 
 class Junk(SyntaxNode):

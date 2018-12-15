@@ -25,13 +25,16 @@ namespace TestExpirationTracker {
 
 struct Object {
   Object() : mExpired(false) { Touch(); }
-  void Touch() { mLastUsed = PR_IntervalNow(); mExpired = false; }
+  void Touch() {
+    mLastUsed = PR_IntervalNow();
+    mExpired = false;
+  }
 
   nsExpirationState mExpiration;
   nsExpirationState* GetExpirationState() { return &mExpiration; }
 
   PRIntervalTime mLastUsed;
-  bool           mExpired;
+  bool mExpired;
 };
 
 static bool error;
@@ -40,11 +43,12 @@ static uint32_t ops = 1000;
 static uint32_t iterations = 2;
 static bool logging = 0;
 static uint32_t sleepPeriodMS = 50;
-static uint32_t slackMS = 30; // allow this much error
+static uint32_t slackMS = 30;  // allow this much error
 
-template <uint32_t K> class Tracker : public nsExpirationTracker<Object,K> {
-public:
-  Tracker() : nsExpirationTracker<Object,K>(periodMS, "Tracker") {
+template <uint32_t K>
+class Tracker : public nsExpirationTracker<Object, K> {
+ public:
+  Tracker() : nsExpirationTracker<Object, K>(periodMS, "Tracker") {
     Object* obj = new Object();
     mUniverse.AppendElement(obj);
     LogAction(obj, "Created");
@@ -54,8 +58,8 @@ public:
 
   void LogAction(Object* aObj, const char* aAction) {
     if (logging) {
-      printf("%d %p(%d): %s\n", PR_IntervalNow(),
-             static_cast<void*>(aObj), aObj->mLastUsed, aAction);
+      printf("%d %p(%d): %s\n", PR_IntervalNow(), static_cast<void*>(aObj),
+             aObj->mLastUsed, aAction);
     }
   }
 
@@ -64,64 +68,67 @@ public:
 
     Object* obj;
     switch (rand() & 0x7) {
-    case 0: {
-      if (mUniverse.Length() < 50) {
-        obj = new Object();
-        mUniverse.AppendElement(obj);
-        nsExpirationTracker<Object,K>::AddObject(obj);
-        LogAction(obj, "Created and added");
+      case 0: {
+        if (mUniverse.Length() < 50) {
+          obj = new Object();
+          mUniverse.AppendElement(obj);
+          nsExpirationTracker<Object, K>::AddObject(obj);
+          LogAction(obj, "Created and added");
+        }
+        break;
       }
-      break;
-    }
-    case 4: {
-      if (mUniverse.Length() < 50) {
-        obj = new Object();
-        mUniverse.AppendElement(obj);
-        LogAction(obj, "Created");
+      case 4: {
+        if (mUniverse.Length() < 50) {
+          obj = new Object();
+          mUniverse.AppendElement(obj);
+          LogAction(obj, "Created");
+        }
+        break;
       }
-      break;
-    }
-    case 1: {
-      UniquePtr<Object>& objref = mUniverse[uint32_t(rand())%mUniverse.Length()];
-      if (objref->mExpiration.IsTracked()) {
-        nsExpirationTracker<Object,K>::RemoveObject(objref.get());
-        LogAction(objref.get(), "Removed");
+      case 1: {
+        UniquePtr<Object>& objref =
+            mUniverse[uint32_t(rand()) % mUniverse.Length()];
+        if (objref->mExpiration.IsTracked()) {
+          nsExpirationTracker<Object, K>::RemoveObject(objref.get());
+          LogAction(objref.get(), "Removed");
+        }
+        break;
       }
-      break;
-    }
-    case 2: {
-      UniquePtr<Object>& objref = mUniverse[uint32_t(rand())%mUniverse.Length()];
-      if (!objref->mExpiration.IsTracked()) {
-        objref->Touch();
-        nsExpirationTracker<Object,K>::AddObject(objref.get());
-        LogAction(objref.get(), "Added");
+      case 2: {
+        UniquePtr<Object>& objref =
+            mUniverse[uint32_t(rand()) % mUniverse.Length()];
+        if (!objref->mExpiration.IsTracked()) {
+          objref->Touch();
+          nsExpirationTracker<Object, K>::AddObject(objref.get());
+          LogAction(objref.get(), "Added");
+        }
+        break;
       }
-      break;
-    }
-    case 3: {
-      UniquePtr<Object>& objref = mUniverse[uint32_t(rand())%mUniverse.Length()];
-      if (objref->mExpiration.IsTracked()) {
-        objref->Touch();
-        nsExpirationTracker<Object,K>::MarkUsed(objref.get());
-        LogAction(objref.get(), "Marked used");
+      case 3: {
+        UniquePtr<Object>& objref =
+            mUniverse[uint32_t(rand()) % mUniverse.Length()];
+        if (objref->mExpiration.IsTracked()) {
+          objref->Touch();
+          nsExpirationTracker<Object, K>::MarkUsed(objref.get());
+          LogAction(objref.get(), "Marked used");
+        }
+        break;
       }
-      break;
-    }
     }
   }
 
-protected:
+ protected:
   void NotifyExpired(Object* aObj) override {
     LogAction(aObj, "Expired");
     PRIntervalTime now = PR_IntervalNow();
-    uint32_t timeDiffMS = (now - aObj->mLastUsed)*1000/PR_TicksPerSecond();
+    uint32_t timeDiffMS = (now - aObj->mLastUsed) * 1000 / PR_TicksPerSecond();
     // See the comment for NotifyExpired in nsExpirationTracker.h for these
     // bounds
-    uint32_t lowerBoundMS = (K-1)*periodMS - slackMS;
-    uint32_t upperBoundMS = K*(periodMS + sleepPeriodMS) + slackMS;
+    uint32_t lowerBoundMS = (K - 1) * periodMS - slackMS;
+    uint32_t upperBoundMS = K * (periodMS + sleepPeriodMS) + slackMS;
     if (logging) {
-      printf("Checking: %d-%d = %d [%d,%d]\n",
-             now, aObj->mLastUsed, timeDiffMS, lowerBoundMS, upperBoundMS);
+      printf("Checking: %d-%d = %d [%d,%d]\n", now, aObj->mLastUsed, timeDiffMS,
+             lowerBoundMS, upperBoundMS);
     }
     if (timeDiffMS < lowerBoundMS || timeDiffMS > upperBoundMS) {
       EXPECT_TRUE(timeDiffMS < periodMS && aObj->mExpired);
@@ -134,7 +141,8 @@ protected:
   }
 };
 
-template <uint32_t K> static bool test_random() {
+template <uint32_t K>
+static bool test_random() {
   srand(K);
   error = false;
 
@@ -164,24 +172,21 @@ static bool test_random4() { return test_random<4>(); }
 static bool test_random8() { return test_random<8>(); }
 
 typedef bool (*TestFunc)();
-#define DECL_TEST(name) { #name, name }
+#define DECL_TEST(name) \
+  { #name, name }
 
 static const struct Test {
   const char* name;
-  TestFunc    func;
-} tests[] = {
-  DECL_TEST(test_random3),
-  DECL_TEST(test_random4),
-  DECL_TEST(test_random8),
-  { nullptr, nullptr }
-};
+  TestFunc func;
+} tests[] = {DECL_TEST(test_random3),
+             DECL_TEST(test_random4),
+             DECL_TEST(test_random8),
+             {nullptr, nullptr}};
 
-TEST(ExpirationTracker, main)
-{
-  for (const TestExpirationTracker::Test* t = tests;
-       t->name != nullptr; ++t) {
+TEST(ExpirationTracker, main) {
+  for (const TestExpirationTracker::Test* t = tests; t->name != nullptr; ++t) {
     EXPECT_TRUE(t->func());
   }
 }
 
-} // namespace TestExpirationTracker
+}  // namespace TestExpirationTracker

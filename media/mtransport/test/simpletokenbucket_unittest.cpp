@@ -15,23 +15,20 @@
 using mozilla::SimpleTokenBucket;
 
 class TestSimpleTokenBucket : public SimpleTokenBucket {
-  public:
-    TestSimpleTokenBucket(size_t bucketSize, size_t tokensPerSecond) :
-      SimpleTokenBucket(bucketSize, tokensPerSecond) {
-    }
+ public:
+  TestSimpleTokenBucket(size_t bucketSize, size_t tokensPerSecond)
+      : SimpleTokenBucket(bucketSize, tokensPerSecond) {}
 
-    void fastForward(int32_t timeMilliSeconds) {
-      if (timeMilliSeconds >= 0) {
-        last_time_tokens_added_ -= PR_MillisecondsToInterval(timeMilliSeconds);
-      } else {
-        last_time_tokens_added_ += PR_MillisecondsToInterval(-timeMilliSeconds);
-      }
+  void fastForward(int32_t timeMilliSeconds) {
+    if (timeMilliSeconds >= 0) {
+      last_time_tokens_added_ -= PR_MillisecondsToInterval(timeMilliSeconds);
+    } else {
+      last_time_tokens_added_ += PR_MillisecondsToInterval(-timeMilliSeconds);
     }
+  }
 };
 
-TEST(SimpleTokenBucketTest, TestConstruct) {
-  TestSimpleTokenBucket b(10, 1);
-}
+TEST(SimpleTokenBucketTest, TestConstruct) { TestSimpleTokenBucket b(10, 1); }
 
 TEST(SimpleTokenBucketTest, TestGet) {
   TestSimpleTokenBucket b(10, 1);

@@ -20,24 +20,18 @@ static bool test_consume_stream() {
 
   nsCOMPtr<nsIInputStream> input;
   nsCOMPtr<nsIOutputStream> output;
-  NS_NewPipe(getter_AddRefs(input),
-             getter_AddRefs(output),
-             10, UINT32_MAX);
-  if (!input || !output)
-    return false;
+  NS_NewPipe(getter_AddRefs(input), getter_AddRefs(output), 10, UINT32_MAX);
+  if (!input || !output) return false;
 
   uint32_t n = 0;
   output->Write(kData, sizeof(kData) - 1, &n);
-  if (n != (sizeof(kData) - 1))
-    return false;
+  if (n != (sizeof(kData) - 1)) return false;
   output = nullptr;  // close output
 
   nsCString buf;
-  if (NS_FAILED(NS_ConsumeStream(input, UINT32_MAX, buf)))
-    return false;
+  if (NS_FAILED(NS_ConsumeStream(input, UINT32_MAX, buf))) return false;
 
-  if (!buf.Equals(kData))
-    return false;
+  if (!buf.Equals(kData)) return false;
 
   return true;
 }
@@ -45,23 +39,19 @@ static bool test_consume_stream() {
 //----
 
 typedef bool (*TestFunc)();
-#define DECL_TEST(name) { #name, name }
+#define DECL_TEST(name) \
+  { #name, name }
 
 static const struct Test {
   const char* name;
-  TestFunc    func;
-} tests[] = {
-  DECL_TEST(test_consume_stream),
-  { nullptr, nullptr }
-};
+  TestFunc func;
+} tests[] = {DECL_TEST(test_consume_stream), {nullptr, nullptr}};
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   int count = 1;
-  if (argc > 1)
-    count = atoi(argv[1]);
+  if (argc > 1) count = atoi(argv[1]);
 
-  if (NS_FAILED(NS_InitXPCOM2(nullptr, nullptr, nullptr)))
-    return -1;
+  if (NS_FAILED(NS_InitXPCOM2(nullptr, nullptr, nullptr))) return -1;
 
   while (count--) {
     for (const Test* t = tests; t->name != nullptr; ++t) {

@@ -9,8 +9,7 @@
 using namespace mozilla;
 using namespace mozilla::image;
 
-struct ValueStats
-{
+struct ValueStats {
   int32_t mCopies = 0;
   int32_t mFrees = 0;
   int32_t mCalls = 0;
@@ -18,19 +17,14 @@ struct ValueStats
   int32_t mSerial = 0;
 };
 
-struct Value
-{
+struct Value {
   NS_INLINE_DECL_REFCOUNTING(Value)
 
   explicit Value(ValueStats& aStats)
-    : mStats(aStats)
-    , mSerial(mStats.mSerial++)
-  { }
+      : mStats(aStats), mSerial(mStats.mSerial++) {}
 
   Value(const Value& aOther)
-    : mStats(aOther.mStats)
-    , mSerial(mStats.mSerial++)
-  {
+      : mStats(aOther.mStats), mSerial(mStats.mSerial++) {
     mStats.mCopies++;
   }
 
@@ -39,16 +33,15 @@ struct Value
 
   int32_t Serial() const { return mSerial; }
 
-protected:
+ protected:
   ~Value() { mStats.mFrees++; }
 
-private:
+ private:
   ValueStats& mStats;
   int32_t mSerial;
 };
 
-TEST(ImageCopyOnWrite, Read)
-{
+TEST(ImageCopyOnWrite, Read) {
   ValueStats stats;
 
   {
@@ -81,8 +74,7 @@ TEST(ImageCopyOnWrite, Read)
   EXPECT_EQ(1, stats.mFrees);
 }
 
-TEST(ImageCopyOnWrite, RecursiveRead)
-{
+TEST(ImageCopyOnWrite, RecursiveRead) {
   ValueStats stats;
 
   {
@@ -100,21 +92,23 @@ TEST(ImageCopyOnWrite, RecursiveRead)
       EXPECT_TRUE(cow.CanWrite());
 
       // Make sure that Read() inside a Read() succeeds.
-      cow.Read([&](const Value* aValue) {
-        EXPECT_EQ(0, stats.mCopies);
-        EXPECT_EQ(0, stats.mFrees);
-        EXPECT_EQ(0, aValue->Serial());
-        EXPECT_TRUE(cow.CanRead());
-        EXPECT_TRUE(cow.CanWrite());
+      cow.Read(
+          [&](const Value* aValue) {
+            EXPECT_EQ(0, stats.mCopies);
+            EXPECT_EQ(0, stats.mFrees);
+            EXPECT_EQ(0, aValue->Serial());
+            EXPECT_TRUE(cow.CanRead());
+            EXPECT_TRUE(cow.CanWrite());
 
-        aValue->Go();
+            aValue->Go();
 
-        EXPECT_EQ(0, stats.mCalls);
-        EXPECT_EQ(1, stats.mConstCalls);
-      }, []() {
-        // This gets called if we can't read. We shouldn't get here.
-        EXPECT_TRUE(false);
-      });
+            EXPECT_EQ(0, stats.mCalls);
+            EXPECT_EQ(1, stats.mConstCalls);
+          },
+          []() {
+            // This gets called if we can't read. We shouldn't get here.
+            EXPECT_TRUE(false);
+          });
     });
 
     EXPECT_EQ(0, stats.mCopies);
@@ -127,8 +121,7 @@ TEST(ImageCopyOnWrite, RecursiveRead)
   EXPECT_EQ(1, stats.mFrees);
 }
 
-TEST(ImageCopyOnWrite, Write)
-{
+TEST(ImageCopyOnWrite, Write) {
   ValueStats stats;
 
   {
@@ -162,8 +155,7 @@ TEST(ImageCopyOnWrite, Write)
   EXPECT_EQ(1, stats.mFrees);
 }
 
-TEST(ImageCopyOnWrite, WriteRecursive)
-{
+TEST(ImageCopyOnWrite, WriteRecursive) {
   ValueStats stats;
 
   {
@@ -182,39 +174,45 @@ TEST(ImageCopyOnWrite, WriteRecursive)
       EXPECT_TRUE(cow.CanWrite());
 
       // Make sure Write() inside a Read() succeeds.
-      cow.Write([&](Value* aValue) {
-        EXPECT_EQ(1, stats.mCopies);
-        EXPECT_EQ(0, stats.mFrees);
-        EXPECT_EQ(1, aValue->Serial());
-        EXPECT_TRUE(!cow.CanRead());
-        EXPECT_TRUE(!cow.CanWrite());
+      cow.Write(
+          [&](Value* aValue) {
+            EXPECT_EQ(1, stats.mCopies);
+            EXPECT_EQ(0, stats.mFrees);
+            EXPECT_EQ(1, aValue->Serial());
+            EXPECT_TRUE(!cow.CanRead());
+            EXPECT_TRUE(!cow.CanWrite());
 
-        aValue->Go();
+            aValue->Go();
 
-        EXPECT_EQ(1, stats.mCalls);
-        EXPECT_EQ(0, stats.mConstCalls);
+            EXPECT_EQ(1, stats.mCalls);
+            EXPECT_EQ(0, stats.mConstCalls);
 
-        // Make sure Read() inside a Write() fails.
-        cow.Read([](const Value* aValue) {
-          // This gets called if we can read. We shouldn't get here.
-          EXPECT_TRUE(false);
-        }, []() {
-          // This gets called if we can't read. We *should* get here.
-          EXPECT_TRUE(true);
-        });
+            // Make sure Read() inside a Write() fails.
+            cow.Read(
+                [](const Value* aValue) {
+                  // This gets called if we can read. We shouldn't get here.
+                  EXPECT_TRUE(false);
+                },
+                []() {
+                  // This gets called if we can't read. We *should* get here.
+                  EXPECT_TRUE(true);
+                });
 
-        // Make sure Write() inside a Write() fails.
-        cow.Write([](Value* aValue) {
-          // This gets called if we can write. We shouldn't get here.
-          EXPECT_TRUE(false);
-        }, []() {
-          // This gets called if we can't write. We *should* get here.
-          EXPECT_TRUE(true);
-        });
-      }, []() {
-        // This gets called if we can't write. We shouldn't get here.
-        EXPECT_TRUE(false);
-      });
+            // Make sure Write() inside a Write() fails.
+            cow.Write(
+                [](Value* aValue) {
+                  // This gets called if we can write. We shouldn't get here.
+                  EXPECT_TRUE(false);
+                },
+                []() {
+                  // This gets called if we can't write. We *should* get here.
+                  EXPECT_TRUE(true);
+                });
+          },
+          []() {
+            // This gets called if we can't write. We shouldn't get here.
+            EXPECT_TRUE(false);
+          });
 
       aValue->Go();
 

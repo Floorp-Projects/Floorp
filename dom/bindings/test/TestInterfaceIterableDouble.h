@@ -24,9 +24,8 @@ class GlobalObject;
 // Implementation of test binding for webidl iterable interfaces, using
 // primitives for value type
 class TestInterfaceIterableDouble final : public nsISupports,
-                                          public nsWrapperCache
-{
-public:
+                                          public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TestInterfaceIterableDouble)
 
@@ -34,19 +33,20 @@ public:
   nsPIDOMWindowInner* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
-  static already_AddRefed<TestInterfaceIterableDouble>
-    Constructor(const GlobalObject& aGlobal, ErrorResult& rv);
+  static already_AddRefed<TestInterfaceIterableDouble> Constructor(
+      const GlobalObject& aGlobal, ErrorResult& rv);
 
   size_t GetIterableLength();
   nsAString& GetKeyAtIndex(uint32_t aIndex);
   nsAString& GetValueAtIndex(uint32_t aIndex);
-private:
+
+ private:
   virtual ~TestInterfaceIterableDouble() {}
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   nsTArray<std::pair<nsString, nsString>> mValues;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_TestInterfaceIterableDouble_h
+#endif  // mozilla_dom_TestInterfaceIterableDouble_h

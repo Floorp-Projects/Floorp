@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
 #include "mozilla/ArrayUtils.h"
@@ -11,11 +11,9 @@
 
 using namespace mozilla;
 
-static void
-ReadVPXFile(const char* aPath, nsTArray<uint8_t>& aBuffer)
-{
+static void ReadVPXFile(const char* aPath, nsTArray<uint8_t>& aBuffer) {
   FILE* f = fopen(aPath, "rb");
-  ASSERT_NE(f, (FILE *) nullptr);
+  ASSERT_NE(f, (FILE*)nullptr);
 
   int r = fseek(f, 0, SEEK_END);
   ASSERT_EQ(r, 0);
@@ -34,10 +32,8 @@ ReadVPXFile(const char* aPath, nsTArray<uint8_t>& aBuffer)
   ASSERT_EQ(r, 0);
 }
 
-static
-vpx_codec_iface_t*
-ParseIVFConfig(nsTArray<uint8_t>& data, vpx_codec_dec_cfg_t& config)
-{
+static vpx_codec_iface_t* ParseIVFConfig(nsTArray<uint8_t>& data,
+                                         vpx_codec_dec_cfg_t& config) {
   if (data.Length() < 32 + 12) {
     // Not enough data for file & first frame headers.
     return nullptr;
@@ -57,9 +53,8 @@ ParseIVFConfig(nsTArray<uint8_t>& data, vpx_codec_dec_cfg_t& config)
   }
   config.w = uint32_t(data[12]) || (uint32_t(data[13]) << 8);
   config.h = uint32_t(data[14]) || (uint32_t(data[15]) << 8);
-  vpx_codec_iface_t* codec = (data[10] == '8')
-                             ? vpx_codec_vp8_dx()
-                             : vpx_codec_vp9_dx();
+  vpx_codec_iface_t* codec =
+      (data[10] == '8') ? vpx_codec_vp8_dx() : vpx_codec_vp9_dx();
   // Remove headers, to just leave raw VPx data to be decoded.
   data.RemoveElementsAt(0, 32 + 12);
   return codec;
@@ -70,13 +65,11 @@ struct TestFileData {
   vpx_codec_err_t mDecodeResult;
 };
 static const TestFileData testFiles[] = {
-  { "test_case_1224361.vp8.ivf", VPX_CODEC_OK },
-  { "test_case_1224363.vp8.ivf", VPX_CODEC_CORRUPT_FRAME },
-  { "test_case_1224369.vp8.ivf", VPX_CODEC_CORRUPT_FRAME }
-};
+    {"test_case_1224361.vp8.ivf", VPX_CODEC_OK},
+    {"test_case_1224363.vp8.ivf", VPX_CODEC_CORRUPT_FRAME},
+    {"test_case_1224369.vp8.ivf", VPX_CODEC_CORRUPT_FRAME}};
 
-TEST(libvpx, test_cases)
-{
+TEST(libvpx, test_cases) {
   for (size_t test = 0; test < ArrayLength(testFiles); ++test) {
     nsTArray<uint8_t> data;
     ReadVPXFile(testFiles[test].mFilename, data);

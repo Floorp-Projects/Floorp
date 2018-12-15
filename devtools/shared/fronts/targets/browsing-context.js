@@ -33,7 +33,6 @@ class BrowsingContextTargetFront extends FrontClassWithSpec(browsingContextTarge
    *
    * @param object options
    *        Configuration options.
-   *        - useSourceMaps: whether to use source maps or not.
    */
   attachThread(options = {}) {
     if (this.thread) {

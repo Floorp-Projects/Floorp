@@ -16,55 +16,47 @@
 using namespace mozilla;
 
 /* Generate a monotonically increasing sequence of numbers. */
-template<typename T>
-class SequenceGenerator
-{
-public:
-  SequenceGenerator()
-  { }
-  void Get(T * aElements, size_t aCount)
-  {
+template <typename T>
+class SequenceGenerator {
+ public:
+  SequenceGenerator() {}
+  void Get(T* aElements, size_t aCount) {
     for (size_t i = 0; i < aCount; i++) {
       aElements[i] = static_cast<T>(mIndex);
       mIndex++;
     }
   }
-  void Rewind(size_t aCount)
-  {
-    mIndex -= aCount;
-  }
-private:
+  void Rewind(size_t aCount) { mIndex -= aCount; }
+
+ private:
   size_t mIndex = 0;
 };
 
 /* Checks that a sequence is monotonically increasing. */
-template<typename T>
-class SequenceVerifier
-{
-public:
-  SequenceVerifier()
-  { }
-  void Check(T * aElements, size_t aCount)
-  {
+template <typename T>
+class SequenceVerifier {
+ public:
+  SequenceVerifier() {}
+  void Check(T* aElements, size_t aCount) {
     for (size_t i = 0; i < aCount; i++) {
       if (aElements[i] != static_cast<T>(mIndex)) {
         std::cerr << "Element " << i << " is different. Expected "
-          << static_cast<T>(mIndex) << ", got " << aElements[i]
-          << "." << std::endl;
+                  << static_cast<T>(mIndex) << ", got " << aElements[i] << "."
+                  << std::endl;
         MOZ_RELEASE_ASSERT(false);
       }
       mIndex++;
     }
   }
-private:
+
+ private:
   size_t mIndex = 0;
 };
 
 const int BLOCK_SIZE = 127;
 
-template<typename T>
-void TestRing(int capacity)
-{
+template <typename T>
+void TestRing(int capacity) {
   SPSCQueue<T> buf(capacity);
   std::unique_ptr<T[]> seq(new T[capacity]);
   SequenceGenerator<T> gen;
@@ -72,7 +64,7 @@ void TestRing(int capacity)
 
   int iterations = 1002;
 
-  while(iterations--) {
+  while (iterations--) {
     gen.Get(seq.get(), BLOCK_SIZE);
     int rv = buf.Enqueue(seq.get(), BLOCK_SIZE);
     MOZ_RELEASE_ASSERT(rv == BLOCK_SIZE);
@@ -83,9 +75,8 @@ void TestRing(int capacity)
   }
 }
 
-template<typename T>
-void TestRingMultiThread(int capacity)
-{
+template <typename T>
+void TestRingMultiThread(int capacity) {
   SPSCQueue<T> buf(capacity);
   SequenceVerifier<T> checker;
   std::unique_ptr<T[]> outBuffer(new T[capacity]);
@@ -95,7 +86,7 @@ void TestRingMultiThread(int capacity)
     std::unique_ptr<T[]> inBuffer(new T[capacity]);
     SequenceGenerator<T> gen;
 
-    while(iterations--) {
+    while (iterations--) {
       std::this_thread::sleep_for(std::chrono::microseconds(10));
       gen.Get(inBuffer.get(), BLOCK_SIZE);
       int rv = buf.Enqueue(inBuffer.get(), BLOCK_SIZE);
@@ -108,7 +99,7 @@ void TestRingMultiThread(int capacity)
 
   int remaining = 1002;
 
-  while(remaining--) {
+  while (remaining--) {
     std::this_thread::sleep_for(std::chrono::microseconds(10));
     int rv = buf.Dequeue(outBuffer.get(), BLOCK_SIZE);
     MOZ_RELEASE_ASSERT(rv <= BLOCK_SIZE);
@@ -118,9 +109,8 @@ void TestRingMultiThread(int capacity)
   t.join();
 }
 
-template<typename T>
-void BasicAPITest(T& ring)
-{
+template <typename T>
+void BasicAPITest(T& ring) {
   MOZ_RELEASE_ASSERT(ring.Capacity() == 128);
 
   MOZ_RELEASE_ASSERT(ring.AvailableRead() == 0);
@@ -175,25 +165,16 @@ void TestResetAPI() {
   t2.join();
 }
 
-void
-TestMove()
-{
+void TestMove() {
   const size_t ELEMENT_COUNT = 16;
   struct Thing {
-    Thing()
-      : mStr("")
-    { }
-    explicit
-    Thing(const std::string& aStr)
-      :mStr(aStr)
-    { }
-    Thing(Thing&& aOtherThing)
-    {
+    Thing() : mStr("") {}
+    explicit Thing(const std::string& aStr) : mStr(aStr) {}
+    Thing(Thing&& aOtherThing) {
       mStr = std::move(aOtherThing.mStr);
       // aOtherThing.mStr.clear();
     }
-    Thing& operator=(Thing&& aOtherThing)
-    {
+    Thing& operator=(Thing&& aOtherThing) {
       mStr = std::move(aOtherThing.mStr);
       return *this;
     }
@@ -226,8 +207,7 @@ TestMove()
   }
 }
 
-int main()
-{
+int main() {
   const int minCapacity = 199;
   const int maxCapacity = 1277;
   const int capacityIncrement = 27;
@@ -237,7 +217,7 @@ int main()
   SPSCQueue<char> q2(128);
   BasicAPITest(q2);
 
-  for (uint32_t i = minCapacity; i < maxCapacity; i+=capacityIncrement) {
+  for (uint32_t i = minCapacity; i < maxCapacity; i += capacityIncrement) {
     TestRing<uint32_t>(i);
     TestRingMultiThread<uint32_t>(i);
     TestRing<float>(i);

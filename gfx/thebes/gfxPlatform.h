@@ -622,6 +622,15 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   bool HasEnoughTotalSystemMemoryForSkiaGL();
 
   /**
+   * Whether we want to adjust gfx parameters (currently just
+   * the framerate and whether we use software vs. hardware vsync)
+   * down because we've determined we're on a low-end machine.
+   * This will return false if the user has turned on fingerprinting
+   * resistance (to ensure consistent behavior across devices).
+   */
+  static bool ShouldAdjustForLowEndMachine();
+
+  /**
    * Get the hardware vsync source for each platform.
    * Should only exist and be valid on the parent process
    */
@@ -640,19 +649,24 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   static bool IsInLayoutAsapMode();
 
   /**
-   * Returns the software vsync rate to use.
-   */
-  static int GetSoftwareVsyncRate();
-
-  /**
    * Returns whether or not a custom vsync rate is set.
    */
   static bool ForceSoftwareVsync();
 
   /**
+   * Returns the software vsync rate to use.
+   */
+  static int GetSoftwareVsyncRate();
+
+  /**
    * Returns the default frame rate for the refresh driver / software vsync.
    */
   static int GetDefaultFrameRate();
+
+  /**
+   * Update the frame rate (called e.g. after pref changes).
+   */
+  static void ReInitFrameRate();
 
   /**
    * Used to test which input types are handled via APZ.

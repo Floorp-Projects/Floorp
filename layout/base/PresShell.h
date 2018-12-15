@@ -195,8 +195,7 @@ class PresShell final : public nsIPresShell,
 
   void SetIgnoreViewportScrolling(bool aIgnore) override;
 
-  nsresult SetResolutionAndScaleTo(float aResolution,
-                                   nsAtom* aOrigin) override;
+  nsresult SetResolutionAndScaleTo(float aResolution, nsAtom* aOrigin) override;
   bool IsResolutionUpdated() const override { return mResolutionUpdated; }
   void SetResolutionUpdated(bool aUpdated) override {
     mResolutionUpdated = aUpdated;

@@ -1274,7 +1274,7 @@ const browsingContextTargetPrototype = {
     // window-ready
     const threadActor = this.threadActor;
     if (isTopLevel && threadActor.state != "detached") {
-      this.sources.reset({ sourceMaps: true });
+      this.sources.reset();
       threadActor.clearDebuggees();
       threadActor.dbg.enabled = true;
       threadActor.maybePauseOnExceptions();

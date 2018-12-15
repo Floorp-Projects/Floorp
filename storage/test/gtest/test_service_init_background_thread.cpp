@@ -16,15 +16,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Helpers
 
-class ServiceInitializer : public mozilla::Runnable
-{
-public:
+class ServiceInitializer : public mozilla::Runnable {
+ public:
   ServiceInitializer() : mozilla::Runnable("ServiceInitializer") {}
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     // Use an explicit do_GetService instead of getService so that the check in
     // getService doesn't blow up.
-    nsCOMPtr<mozIStorageService> service = do_GetService("@mozilla.org/storage/service;1");
+    nsCOMPtr<mozIStorageService> service =
+        do_GetService("@mozilla.org/storage/service;1");
     do_check_false(service);
     return NS_OK;
   }
@@ -41,8 +40,7 @@ public:
 // all non-death tests. By merely using a "DeathTest" suffix here this becomes
 // a death test -- even though it doesn't use any of the normal death test
 // features -- which ensures this is the first storage test to run.
-TEST(storage_service_init_background_thread_DeathTest, Test)
-{
+TEST(storage_service_init_background_thread_DeathTest, Test) {
   nsCOMPtr<nsIRunnable> event = new ServiceInitializer();
   do_check_true(event);
 

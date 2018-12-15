@@ -40,8 +40,9 @@ class Destructor {
     std::cerr << "Destructor called" << std::endl;
     *destroyed_ = true;
   }
+
  public:
-  explicit Destructor(bool* destroyed) : destroyed_(destroyed) {}
+  explicit Destructor(bool *destroyed) : destroyed_(destroyed) {}
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Destructor)
 
@@ -71,28 +72,25 @@ class TargetClass {
     std::cerr << __FUNCTION__ << std::endl;
     return x;
   }
-  void destructor_target(Destructor*) {
-  }
+  void destructor_target(Destructor *) {}
 
-  void destructor_target_ref(RefPtr<Destructor> destructor) {
-  }
+  void destructor_target_ref(RefPtr<Destructor> destructor) {}
 
   int *ran_;
 };
 
-
 class RunnableArgsTest : public MtransportTest {
  public:
-  RunnableArgsTest() : MtransportTest(), ran_(0), cl_(&ran_){}
+  RunnableArgsTest() : MtransportTest(), ran_(0), cl_(&ran_) {}
 
   void Test1Arg() {
-    Runnable * r = WrapRunnable(&cl_, &TargetClass::m1, 1);
+    Runnable *r = WrapRunnable(&cl_, &TargetClass::m1, 1);
     r->Run();
     ASSERT_EQ(1, ran_);
   }
 
   void Test2Args() {
-    Runnable* r = WrapRunnable(&cl_, &TargetClass::m2, 1, 2);
+    Runnable *r = WrapRunnable(&cl_, &TargetClass::m2, 1, 2);
     r->Run();
     ASSERT_EQ(2, ran_);
   }
@@ -115,13 +113,13 @@ class DispatchTest : public MtransportTest {
   }
 
   void Test1Arg() {
-    Runnable* r = WrapRunnable(&cl_, &TargetClass::m1, 1);
+    Runnable *r = WrapRunnable(&cl_, &TargetClass::m1, 1);
     target_->Dispatch(r, NS_DISPATCH_SYNC);
     ASSERT_EQ(1, ran_);
   }
 
   void Test2Args() {
-    Runnable* r = WrapRunnable(&cl_, &TargetClass::m2, 1, 2);
+    Runnable *r = WrapRunnable(&cl_, &TargetClass::m2, 1, 2);
     target_->Dispatch(r, NS_DISPATCH_SYNC);
     ASSERT_EQ(2, ran_);
   }
@@ -148,34 +146,19 @@ class DispatchTest : public MtransportTest {
   nsCOMPtr<nsIEventTarget> target_;
 };
 
+TEST_F(RunnableArgsTest, OneArgument) { Test1Arg(); }
 
-TEST_F(RunnableArgsTest, OneArgument) {
-  Test1Arg();
-}
+TEST_F(RunnableArgsTest, TwoArguments) { Test2Args(); }
 
-TEST_F(RunnableArgsTest, TwoArguments) {
-  Test2Args();
-}
+TEST_F(DispatchTest, OneArgument) { Test1Arg(); }
 
-TEST_F(DispatchTest, OneArgument) {
-  Test1Arg();
-}
+TEST_F(DispatchTest, TwoArguments) { Test2Args(); }
 
-TEST_F(DispatchTest, TwoArguments) {
-  Test2Args();
-}
+TEST_F(DispatchTest, Test1Set) { Test1Set(); }
 
-TEST_F(DispatchTest, Test1Set) {
-  Test1Set();
-}
+TEST_F(DispatchTest, TestRet) { TestRet(); }
 
-TEST_F(DispatchTest, TestRet) {
-  TestRet();
-}
-
-void SetNonMethod(TargetClass *cl, int x) {
-  cl->m1(x);
-}
+void SetNonMethod(TargetClass *cl, int x) { cl->m1(x); }
 
 int SetNonMethodRet(TargetClass *cl, int x) {
   cl->m1(x);
@@ -184,8 +167,8 @@ int SetNonMethodRet(TargetClass *cl, int x) {
 }
 
 TEST_F(DispatchTest, TestNonMethod) {
-  test_utils_->sts_target()->Dispatch(
-      WrapRunnableNM(SetNonMethod, &cl_, 10), NS_DISPATCH_SYNC);
+  test_utils_->sts_target()->Dispatch(WrapRunnableNM(SetNonMethod, &cl_, 10),
+                                      NS_DISPATCH_SYNC);
 
   ASSERT_EQ(1, ran_);
 }
@@ -203,9 +186,9 @@ TEST_F(DispatchTest, TestNonMethodRet) {
 TEST_F(DispatchTest, TestDestructor) {
   bool destroyed = false;
   RefPtr<Destructor> destructor = new Destructor(&destroyed);
-  target_->Dispatch(WrapRunnable(&cl_, &TargetClass::destructor_target,
-                                 destructor),
-                    NS_DISPATCH_SYNC);
+  target_->Dispatch(
+      WrapRunnable(&cl_, &TargetClass::destructor_target, destructor),
+      NS_DISPATCH_SYNC);
   ASSERT_FALSE(destroyed);
   destructor = nullptr;
   ASSERT_TRUE(destroyed);
@@ -214,13 +197,12 @@ TEST_F(DispatchTest, TestDestructor) {
 TEST_F(DispatchTest, TestDestructorRef) {
   bool destroyed = false;
   RefPtr<Destructor> destructor = new Destructor(&destroyed);
-  target_->Dispatch(WrapRunnable(&cl_, &TargetClass::destructor_target_ref,
-                                 destructor),
-                    NS_DISPATCH_SYNC);
+  target_->Dispatch(
+      WrapRunnable(&cl_, &TargetClass::destructor_target_ref, destructor),
+      NS_DISPATCH_SYNC);
   ASSERT_FALSE(destroyed);
   destructor = nullptr;
   ASSERT_TRUE(destroyed);
 }
 
-
-} // end of namespace
+}  // end of namespace

@@ -14,8 +14,7 @@
 
 namespace {
 
-static void TestStringStream(uint32_t aNumBytes)
-{
+static void TestStringStream(uint32_t aNumBytes) {
   nsTArray<char> inputData;
   testing::CreateData(aNumBytes, inputData);
   nsDependentCSubstring inputString(inputData.Elements(), inputData.Length());
@@ -27,8 +26,7 @@ static void TestStringStream(uint32_t aNumBytes)
   testing::ConsumeAndValidateStream(stream, inputString);
 }
 
-static void TestStringStreamClone(uint32_t aNumBytes)
-{
+static void TestStringStreamClone(uint32_t aNumBytes) {
   nsTArray<char> inputData;
   testing::CreateData(aNumBytes, inputData);
   nsDependentCSubstring inputString(inputData.Elements(), inputData.Length());
@@ -52,14 +50,8 @@ static void TestStringStreamClone(uint32_t aNumBytes)
   testing::ConsumeAndValidateStream(clone, inputString);
 }
 
-} // namespace
+}  // namespace
 
-TEST(StringStream, Simple_4k)
-{
-  TestStringStream(1024 * 4);
-}
+TEST(StringStream, Simple_4k) { TestStringStream(1024 * 4); }
 
-TEST(StringStream, Clone_4k)
-{
-  TestStringStreamClone(1024 * 4);
-}
+TEST(StringStream, Clone_4k) { TestStringStreamClone(1024 * 4); }

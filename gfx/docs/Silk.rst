@@ -75,11 +75,14 @@ active ``RefreshDrivers`` to tick.
 All ``Display`` objects are encapsulated in a ``VsyncSource`` object.
 The ``VsyncSource`` object lives in ``gfxPlatform`` and is instantiated
 only on the parent process when ``gfxPlatform`` is created. The
-``VsyncSource`` is destroyed when ``gfxPlatform`` is destroyed. There is
-only one ``VsyncSource`` object throughout the entire lifetime of
-Firefox. Each platform is expected to implement their own
-``VsyncSource`` to manage vsync events. On Firefox OS, this is through
-the ``HwcComposer2D``. On OS X, this is through ``CVDisplayLinkRef``. On
+``VsyncSource`` is destroyed when ``gfxPlatform`` is destroyed. It can
+also be destroyed when the layout frame rate pref (or other prefs that
+influence frame rate) are changed. This may mean we switch from hardware
+to software vsync (or vice versa) at runtime. During the switch, there
+may briefly be 2 vsync sources. Otherwise, there is only one
+``VsyncSource`` object throughout the entire lifetime of Firefox. Each
+platform is expected to implement their own ``VsyncSource`` to manage
+vsync events. On OS X, this is through ``CVDisplayLinkRef``. On
 Windows, it should be through ``DwmGetCompositionTimingInfo``.
 
 Compositor

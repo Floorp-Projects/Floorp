@@ -59,8 +59,7 @@ class TimerTest : public MtransportTest {
   int ArmCancelTimer_w(int timeout) {
     int r;
     r = ArmTimer_w(timeout);
-    if (r)
-      return r;
+    if (r) return r;
 
     return CancelTimer_w();
   }
@@ -75,16 +74,13 @@ class TimerTest : public MtransportTest {
     return ret;
   }
 
-  int CancelTimer_w() {
-    return NR_async_timer_cancel(handle_);
-  }
+  int CancelTimer_w() { return NR_async_timer_cancel(handle_); }
 
   int Schedule() {
     int ret;
 
     test_utils_->sts_target()->Dispatch(
-        WrapRunnableRet(&ret, this, &TimerTest::Schedule_w),
-        NS_DISPATCH_SYNC);
+        WrapRunnableRet(&ret, this, &TimerTest::Schedule_w), NS_DISPATCH_SYNC);
 
     return ret;
   }
@@ -94,7 +90,6 @@ class TimerTest : public MtransportTest {
 
     return 0;
   }
-
 
   static void cb(NR_SOCKET r, int how, void *arg) {
     std::cerr << "Timer fired " << std::endl;
@@ -108,7 +103,7 @@ class TimerTest : public MtransportTest {
   void *handle_;
   bool fired_;
 };
-}
+}  // namespace
 
 TEST_F(TimerTest, SimpleTimer) {
   ArmTimer(100);

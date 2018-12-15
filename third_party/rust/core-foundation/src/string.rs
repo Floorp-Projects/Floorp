@@ -15,6 +15,7 @@ use base::{CFIndexConvertible, TCFType};
 
 use core_foundation_sys::base::{Boolean, CFIndex, CFRange};
 use core_foundation_sys::base::{kCFAllocatorDefault, kCFAllocatorNull};
+use std::borrow::Cow;
 use std::fmt;
 use std::str::{self, FromStr};
 use std::ptr;
@@ -44,20 +45,20 @@ impl<'a> From<&'a str> for CFString {
     }
 }
 
-impl fmt::Display for CFString {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+impl<'a> From<&'a CFString> for Cow<'a, str> {
+    fn from(cf_str: &'a CFString) -> Cow<'a, str> {
         unsafe {
             // Do this without allocating if we can get away with it
-            let c_string = CFStringGetCStringPtr(self.0, kCFStringEncodingUTF8);
+            let c_string = CFStringGetCStringPtr(cf_str.0, kCFStringEncodingUTF8);
             if c_string != ptr::null() {
                 let c_str = CStr::from_ptr(c_string);
-                fmt.write_str(str::from_utf8_unchecked(c_str.to_bytes()))
+                Cow::Borrowed(str::from_utf8_unchecked(c_str.to_bytes()))
             } else {
-                let char_len = self.char_len();
+                let char_len = cf_str.char_len();
 
                 // First, ask how big the buffer ought to be.
                 let mut bytes_required: CFIndex = 0;
-                CFStringGetBytes(self.0,
+                CFStringGetBytes(cf_str.0,
                                  CFRange { location: 0, length: char_len },
                                  kCFStringEncodingUTF8,
                                  0,
@@ -70,22 +71,28 @@ impl fmt::Display for CFString {
                 let mut buffer = vec![b'\x00'; bytes_required as usize];
 
                 let mut bytes_used: CFIndex = 0;
-                let chars_written = CFStringGetBytes(self.0,
+                let chars_written = CFStringGetBytes(cf_str.0,
                                                      CFRange { location: 0, length: char_len },
                                                      kCFStringEncodingUTF8,
                                                      0,
                                                      false as Boolean,
                                                      buffer.as_mut_ptr(),
                                                      buffer.len().to_CFIndex(),
-                                                     &mut bytes_used) as usize;
-                assert!(chars_written.to_CFIndex() == char_len);
+                                                     &mut bytes_used);
+                assert!(chars_written == char_len);
 
                 // This is dangerous; we over-allocate and null-terminate the string (during
                 // initialization).
                 assert!(bytes_used == buffer.len().to_CFIndex());
-                fmt.write_str(str::from_utf8_unchecked(&buffer))
+                Cow::Owned(String::from_utf8_unchecked(buffer))
             }
         }
+    }
+}
+
+impl fmt::Display for CFString {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.write_str(&Cow::from(self))
     }
 }
 

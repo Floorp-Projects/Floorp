@@ -1769,13 +1769,9 @@ CreateReadableStreamDefaultReader(JSContext* cx,
   }
 
   // Step 3: Perform ! ReadableStreamReaderGenericInitialize(this, stream).
+  // Step 4: Set this.[[readRequests]] to a new empty List.
   if (!ReadableStreamReaderGenericInitialize(cx, reader, unwrappedStream,
                                              forAuthorCode)) {
-    return nullptr;
-  }
-
-  // Step 4: Set this.[[readRequests]] to a new empty List.
-  if (!SetNewList(cx, reader, ReadableStreamReader::Slot_Requests)) {
     return nullptr;
   }
 
@@ -2023,15 +2019,7 @@ static MOZ_MUST_USE bool ReadableStreamReaderGenericInitialize(
     reader->setStream(readerCompartmentStream);
   }
 
-  // Step 2: Set stream.[[reader]] to reader.
-  {
-    AutoRealm ar(cx, unwrappedStream);
-    RootedObject streamCompartmentReader(cx, reader);
-    if (!cx->compartment()->wrap(cx, &streamCompartmentReader)) {
-      return false;
-    }
-    unwrappedStream->setReader(streamCompartmentReader);
-  }
+  // Step 2 is moved to the end.
 
   // Step 3: If stream.[[state]] is "readable",
   RootedObject promise(cx);
@@ -2067,6 +2055,25 @@ static MOZ_MUST_USE bool ReadableStreamReaderGenericInitialize(
   // Extra step not in the standard. See the comment on
   // `ReadableStreamReader::forAuthorCode()`.
   reader->setForAuthorCode(forAuthorCode);
+
+  // Step 4 of caller 3.5.3. new ReadableStreamDefaultReader(stream):
+  // Step 5 of caller 3.6.3. new ReadableStreamBYOBReader(stream):
+  //     Set this.[[read{Into}Requests]] to a new empty List.
+  if (!SetNewList(cx, reader, ReadableStreamReader::Slot_Requests)) {
+    return false;
+  }
+
+  // Step 2: Set stream.[[reader]] to reader.
+  // Doing this last prevents a partially-initialized reader from being
+  // attached to the stream (and possibly left there on OOM).
+  {
+    AutoRealm ar(cx, unwrappedStream);
+    RootedObject streamCompartmentReader(cx, reader);
+    if (!cx->compartment()->wrap(cx, &streamCompartmentReader)) {
+      return false;
+    }
+    unwrappedStream->setReader(streamCompartmentReader);
+  }
 
   return true;
 }

@@ -1954,8 +1954,7 @@ void ContainerLayer::PrintInfo(std::stringstream& aStream,
     aStream
         << nsPrintfCString(" [preScale=%g, %g]", mPreXScale, mPreYScale).get();
   }
-  aStream << nsPrintfCString(" [presShellResolution=%g]",
-                             mPresShellResolution)
+  aStream << nsPrintfCString(" [presShellResolution=%g]", mPresShellResolution)
                  .get();
 }
 

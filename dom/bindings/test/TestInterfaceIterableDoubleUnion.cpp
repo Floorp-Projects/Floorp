@@ -18,68 +18,61 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(TestInterfaceIterableDoubleUnion)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TestInterfaceIterableDoubleUnion)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TestInterfaceIterableDoubleUnion)
-NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-TestInterfaceIterableDoubleUnion::TestInterfaceIterableDoubleUnion(nsPIDOMWindowInner* aParent)
-  : mParent(aParent)
-{
+TestInterfaceIterableDoubleUnion::TestInterfaceIterableDoubleUnion(
+    nsPIDOMWindowInner* aParent)
+    : mParent(aParent) {
   OwningStringOrLong a;
   a.SetAsLong() = 1;
-  mValues.AppendElement(std::pair<nsString, OwningStringOrLong>(NS_LITERAL_STRING("long"),
-                                                                a));
+  mValues.AppendElement(
+      std::pair<nsString, OwningStringOrLong>(NS_LITERAL_STRING("long"), a));
   a.SetAsString() = NS_LITERAL_STRING("a");
-  mValues.AppendElement(std::pair<nsString, OwningStringOrLong>(NS_LITERAL_STRING("string"),
-                                                                a));
+  mValues.AppendElement(
+      std::pair<nsString, OwningStringOrLong>(NS_LITERAL_STRING("string"), a));
 }
 
-//static
+// static
 already_AddRefed<TestInterfaceIterableDoubleUnion>
 TestInterfaceIterableDoubleUnion::Constructor(const GlobalObject& aGlobal,
-                                              ErrorResult& aRv)
-{
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
+                                              ErrorResult& aRv) {
+  nsCOMPtr<nsPIDOMWindowInner> window =
+      do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  RefPtr<TestInterfaceIterableDoubleUnion> r = new TestInterfaceIterableDoubleUnion(window);
+  RefPtr<TestInterfaceIterableDoubleUnion> r =
+      new TestInterfaceIterableDoubleUnion(window);
   return r.forget();
 }
 
-JSObject*
-TestInterfaceIterableDoubleUnion::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* TestInterfaceIterableDoubleUnion::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return TestInterfaceIterableDoubleUnion_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsPIDOMWindowInner*
-TestInterfaceIterableDoubleUnion::GetParentObject() const
-{
+nsPIDOMWindowInner* TestInterfaceIterableDoubleUnion::GetParentObject() const {
   return mParent;
 }
 
-size_t
-TestInterfaceIterableDoubleUnion::GetIterableLength()
-{
+size_t TestInterfaceIterableDoubleUnion::GetIterableLength() {
   return mValues.Length();
 }
 
-nsAString&
-TestInterfaceIterableDoubleUnion::GetKeyAtIndex(uint32_t aIndex)
-{
+nsAString& TestInterfaceIterableDoubleUnion::GetKeyAtIndex(uint32_t aIndex) {
   MOZ_ASSERT(aIndex < mValues.Length());
   return mValues.ElementAt(aIndex).first;
 }
 
-OwningStringOrLong&
-TestInterfaceIterableDoubleUnion::GetValueAtIndex(uint32_t aIndex)
-{
+OwningStringOrLong& TestInterfaceIterableDoubleUnion::GetValueAtIndex(
+    uint32_t aIndex) {
   MOZ_ASSERT(aIndex < mValues.Length());
   return mValues.ElementAt(aIndex).second;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

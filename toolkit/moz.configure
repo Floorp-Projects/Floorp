@@ -1268,3 +1268,12 @@ option('--enable-layout-debugger',
        help='{Enable|Disable} layout debugger')
 
 set_config('MOZ_LAYOUT_DEBUGGER', depends_if('--enable-layout-debugger')(lambda _: True))
+
+
+# Shader Compiler for Windows (and MinGW Cross Compile)
+# ==============================================================
+
+fxc = check_prog('FXC', ('fxc.exe', 'fxc2.exe'), when=depends(target)
+                 (lambda t: t.kernel == 'WINNT'))
+wine = check_prog('WINE', ['wine'], when=depends(target, host)
+                  (lambda t, h: t.kernel == 'WINNT' and h.kernel == 'Linux'))

@@ -24,7 +24,8 @@ extern "C" {
 
 namespace mozilla {
 
-static UniquePtr<MediaPacket> merge(UniquePtr<MediaPacket> a, UniquePtr<MediaPacket> b) {
+static UniquePtr<MediaPacket> merge(UniquePtr<MediaPacket> a,
+                                    UniquePtr<MediaPacket> b) {
   if (a && a->len() && b && b->len()) {
     UniquePtr<uint8_t[]> data(new uint8_t[a->len() + b->len()]);
     memcpy(data.get(), a->data(), a->len());
@@ -58,18 +59,15 @@ class DummySocket : public NrSocketBase {
         self_(nullptr) {}
 
   // the nr_socket APIs
-  virtual int create(nr_transport_addr *addr) override {
-    return 0;
-  }
+  virtual int create(nr_transport_addr *addr) override { return 0; }
 
-  virtual int sendto(const void *msg, size_t len,
-                     int flags, nr_transport_addr *to) override {
+  virtual int sendto(const void *msg, size_t len, int flags,
+                     nr_transport_addr *to) override {
     MOZ_CRASH();
     return 0;
   }
 
-  virtual int recvfrom(void * buf, size_t maxlen,
-                       size_t *len, int flags,
+  virtual int recvfrom(void *buf, size_t maxlen, size_t *len, int flags,
                        nr_transport_addr *from) override {
     MOZ_CRASH();
     return 0;
@@ -80,17 +78,14 @@ class DummySocket : public NrSocketBase {
     return 0;
   }
 
-  virtual void close() override {
-  }
+  virtual void close() override {}
 
   virtual int connect(nr_transport_addr *addr) override {
     nr_transport_addr_copy(&connect_addr_, addr);
     return 0;
   }
 
-  virtual int listen(int backlog) override {
-    return 0;
-  }
+  virtual int listen(int backlog) override { return 0; }
 
   virtual int accept(nr_transport_addr *addrp, nr_socket **sockp) override {
     return 0;
@@ -110,19 +105,18 @@ class DummySocket : public NrSocketBase {
     return 0;
   }
 
-  virtual int read(void* buf, size_t maxlen, size_t *len) override {
+  virtual int read(void *buf, size_t maxlen, size_t *len) override {
     if (!read_buffer_.get()) {
       return R_WOULDBLOCK;
     }
 
-    size_t to_read = std::min(read_buffer_->len(),
-                              std::min(maxlen, readable_));
+    size_t to_read = std::min(read_buffer_->len(), std::min(maxlen, readable_));
 
     memcpy(buf, read_buffer_->data(), to_read);
     *len = to_read;
 
     if (to_read < read_buffer_->len()) {
-      MediaPacket* newPacket = new MediaPacket;
+      MediaPacket *newPacket = new MediaPacket;
       newPacket->Copy(read_buffer_->data() + to_read,
                       read_buffer_->len() - to_read);
       read_buffer_.reset(newPacket);
@@ -136,8 +130,8 @@ class DummySocket : public NrSocketBase {
   // Implementations of the async_event APIs.
   // These are no-ops because we handle scheduling manually
   // for test purposes.
-  virtual int async_wait(int how, NR_async_cb cb, void *cb_arg,
-                         char *function, int line) override {
+  virtual int async_wait(int how, NR_async_cb cb, void *cb_arg, char *function,
+                         int line) override {
     EXPECT_EQ(nullptr, cb_);
     cb_ = cb;
     cb_arg_ = cb_arg;
@@ -163,13 +157,9 @@ class DummySocket : public NrSocketBase {
     }
   }
 
-  void ClearWriteBuffer() {
-    write_buffer_.reset();
-  }
+  void ClearWriteBuffer() { write_buffer_.reset(); }
 
-  void SetWritable(size_t val) {
-    writable_ = val;
-  }
+  void SetWritable(size_t val) { writable_ = val; }
 
   void FireWritableCb() {
     NR_async_cb cb = cb_;
@@ -187,28 +177,21 @@ class DummySocket : public NrSocketBase {
     read_buffer_->Copy(data, len);
   }
 
-  void ClearReadBuffer() {
-    read_buffer_.reset();
-  }
+  void ClearReadBuffer() { read_buffer_.reset(); }
 
-  void SetReadable(size_t val) {
-    readable_ = val;
-  }
+  void SetReadable(size_t val) { readable_ = val; }
 
   nr_socket *get_nr_socket() {
     if (!self_) {
       int r = nr_socket_create_int(this, vtbl(), &self_);
       AddRef();
-      if (r)
-        return nullptr;
+      if (r) return nullptr;
     }
 
     return self_;
   }
 
-  nr_transport_addr *get_connect_addr() {
-    return &connect_addr_;
-  }
+  nr_transport_addr *get_connect_addr() { return &connect_addr_; }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DummySocket, override);
 
@@ -219,7 +202,7 @@ class DummySocket : public NrSocketBase {
 
   size_t writable_;  // Amount we allow someone to write.
   UniquePtr<MediaPacket> write_buffer_;
-  size_t readable_;   // Amount we allow someone to read.
+  size_t readable_;  // Amount we allow someone to read.
   UniquePtr<MediaPacket> read_buffer_;
 
   NR_async_cb cb_;
@@ -229,6 +212,6 @@ class DummySocket : public NrSocketBase {
   nr_transport_addr connect_addr_;
 };
 
-} //namespace mozilla
+}  // namespace mozilla
 
 #endif

@@ -385,6 +385,7 @@ def load_wpt_tests(xul_tester, requested_paths, excluded_paths):
                                    manifest_filters=[path_filter])
 
     extra_helper_paths = [
+        os.path.join(here, "web-platform-test-shims.js"),
         os.path.join(wpt, "resources", "testharness.js"),
         os.path.join(here, "testharnessreport.js"),
     ]

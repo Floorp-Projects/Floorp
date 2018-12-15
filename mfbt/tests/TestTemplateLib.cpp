@@ -8,12 +8,9 @@
 
 using mozilla::tl::And;
 
-static_assert(And<>::value == true,
-              "And<>::value should be true");
-static_assert(And<true>::value == true,
-              "And<true>::value should be true");
-static_assert(And<false>::value == false,
-              "And<false>::value should be false");
+static_assert(And<>::value == true, "And<>::value should be true");
+static_assert(And<true>::value == true, "And<true>::value should be true");
+static_assert(And<false>::value == false, "And<false>::value should be false");
 static_assert(And<false, true>::value == false,
               "And<false, true>::value should be false");
 static_assert(And<false, false>::value == false,
@@ -27,9 +24,7 @@ static_assert(And<true, true, true>::value == true,
 static_assert(And<true, false, true>::value == false,
               "And<true, false, true>::value should be false");
 
-int
-main()
-{
+int main() {
   // Nothing to do here.
   return 0;
 }

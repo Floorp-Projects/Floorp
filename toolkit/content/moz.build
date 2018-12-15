@@ -124,7 +124,7 @@ with Files('tests/chrome/*331215*'):
     BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
 with Files('tests/chrome/*360220*'):
-    BUG_COMPONENT = ('Firefox', 'RSS Discovery and Preview')
+    BUG_COMPONENT = ('Core', 'XUL')
 
 with Files('tests/chrome/*360437*'):
     BUG_COMPONENT = ('Toolkit', 'Find Toolbar')

@@ -11,19 +11,16 @@
 using namespace mozilla;
 using namespace mozilla::image;
 
-static already_AddRefed<imgFrame>
-CreateEmptyFrame(const IntSize& aSize = IntSize(1, 1),
-                 const IntRect& aFrameRect = IntRect(0, 0, 1, 1),
-                 bool aCanRecycle = true)
-{
+static already_AddRefed<imgFrame> CreateEmptyFrame(
+    const IntSize& aSize = IntSize(1, 1),
+    const IntRect& aFrameRect = IntRect(0, 0, 1, 1), bool aCanRecycle = true) {
   RefPtr<imgFrame> frame = new imgFrame();
-  AnimationParams animParams { aFrameRect, FrameTimeout::Forever(),
-                               /* aFrameNum */ 1, BlendMethod::OVER,
-                               DisposalMethod::NOT_SPECIFIED };
-  nsresult rv =
-    frame->InitForDecoder(aSize, IntRect(IntPoint(0, 0), aSize),
-                          SurfaceFormat::B8G8R8A8, 0, false,
-                          Some(animParams), true, aCanRecycle);
+  AnimationParams animParams{aFrameRect, FrameTimeout::Forever(),
+                             /* aFrameNum */ 1, BlendMethod::OVER,
+                             DisposalMethod::NOT_SPECIFIED};
+  nsresult rv = frame->InitForDecoder(aSize, IntRect(IntPoint(0, 0), aSize),
+                                      SurfaceFormat::B8G8R8A8, 0, false,
+                                      Some(animParams), true, aCanRecycle);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
   RawAccessFrameRef frameRef = frame->RawAccessRef();
   frame->SetRawAccessOnly();
@@ -34,14 +31,11 @@ CreateEmptyFrame(const IntSize& aSize = IntSize(1, 1),
   return frame.forget();
 }
 
-static void
-PrepareForDiscardingQueue(AnimationFrameRetainedBuffer& aQueue)
-{
+static void PrepareForDiscardingQueue(AnimationFrameRetainedBuffer& aQueue) {
   ASSERT_EQ(size_t(0), aQueue.Size());
   ASSERT_LT(size_t(1), aQueue.Batch());
 
-  AnimationFrameBuffer::InsertStatus status =
-    aQueue.Insert(CreateEmptyFrame());
+  AnimationFrameBuffer::InsertStatus status = aQueue.Insert(CreateEmptyFrame());
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::CONTINUE, status);
 
   while (true) {
@@ -58,24 +52,21 @@ PrepareForDiscardingQueue(AnimationFrameRetainedBuffer& aQueue)
   EXPECT_EQ(aQueue.Threshold(), aQueue.Size());
 }
 
-static void
-VerifyDiscardingQueueContents(AnimationFrameDiscardingQueue& aQueue)
-{
+static void VerifyDiscardingQueueContents(
+    AnimationFrameDiscardingQueue& aQueue) {
   auto frames = aQueue.Display();
   for (auto i : frames) {
     EXPECT_TRUE(i != nullptr);
   }
 }
 
-static void
-VerifyInsertInternal(AnimationFrameBuffer& aQueue,
-                     imgFrame* aFrame)
-{
+static void VerifyInsertInternal(AnimationFrameBuffer& aQueue,
+                                 imgFrame* aFrame) {
   // Determine the frame index where we just inserted the frame.
   size_t frameIndex;
   if (aQueue.MayDiscard()) {
     const AnimationFrameDiscardingQueue& queue =
-      *static_cast<AnimationFrameDiscardingQueue*>(&aQueue);
+        *static_cast<AnimationFrameDiscardingQueue*>(&aQueue);
     frameIndex = queue.PendingInsert() == 0 ? queue.Size() - 1
                                             : queue.PendingInsert() - 1;
   } else {
@@ -88,16 +79,13 @@ VerifyInsertInternal(AnimationFrameBuffer& aQueue,
   EXPECT_EQ(aFrame, frame.get());
 }
 
-static void
-VerifyAdvance(AnimationFrameBuffer& aQueue,
-              size_t aExpectedFrame,
-              bool aExpectedRestartDecoder)
-{
+static void VerifyAdvance(AnimationFrameBuffer& aQueue, size_t aExpectedFrame,
+                          bool aExpectedRestartDecoder) {
   RefPtr<imgFrame> oldFrame;
   size_t totalRecycled;
   if (aQueue.IsRecycling()) {
     AnimationFrameRecyclingQueue& queue =
-      *static_cast<AnimationFrameRecyclingQueue*>(&aQueue);
+        *static_cast<AnimationFrameRecyclingQueue*>(&aQueue);
     oldFrame = queue.Get(queue.Displayed(), false);
     totalRecycled = queue.Recycle().size();
   }
@@ -107,9 +95,10 @@ VerifyAdvance(AnimationFrameBuffer& aQueue,
 
   if (aQueue.IsRecycling()) {
     const AnimationFrameRecyclingQueue& queue =
-      *static_cast<AnimationFrameRecyclingQueue*>(&aQueue);
+        *static_cast<AnimationFrameRecyclingQueue*>(&aQueue);
     EXPECT_FALSE(queue.Recycle().back().mDirtyRect.IsEmpty());
-    EXPECT_TRUE(queue.Recycle().back().mDirtyRect.Contains(oldFrame->GetDirtyRect()));
+    EXPECT_TRUE(
+        queue.Recycle().back().mDirtyRect.Contains(oldFrame->GetDirtyRect()));
     EXPECT_EQ(totalRecycled + 1, queue.Recycle().size());
     if (oldFrame->ShouldRecycle()) {
       EXPECT_EQ(oldFrame.get(), queue.Recycle().back().mFrame.get());
@@ -119,35 +108,31 @@ VerifyAdvance(AnimationFrameBuffer& aQueue,
   }
 }
 
-static void
-VerifyInsertAndAdvance(AnimationFrameBuffer& aQueue,
-                       size_t aExpectedFrame,
-                       AnimationFrameBuffer::InsertStatus aExpectedStatus)
-{
+static void VerifyInsertAndAdvance(
+    AnimationFrameBuffer& aQueue, size_t aExpectedFrame,
+    AnimationFrameBuffer::InsertStatus aExpectedStatus) {
   // Insert the decoded frame.
   RefPtr<imgFrame> frame = CreateEmptyFrame();
   AnimationFrameBuffer::InsertStatus status =
-    aQueue.Insert(RefPtr<imgFrame>(frame));
+      aQueue.Insert(RefPtr<imgFrame>(frame));
   EXPECT_EQ(aExpectedStatus, status);
   EXPECT_TRUE(aQueue.IsLastInsertedFrame(frame));
   VerifyInsertInternal(aQueue, frame);
 
   // Advance the display frame.
   bool expectedRestartDecoder =
-    aExpectedStatus == AnimationFrameBuffer::InsertStatus::YIELD;
+      aExpectedStatus == AnimationFrameBuffer::InsertStatus::YIELD;
   VerifyAdvance(aQueue, aExpectedFrame, expectedRestartDecoder);
 }
 
-static void
-VerifyMarkComplete(AnimationFrameBuffer& aQueue,
-                   bool aExpectedContinue,
-                   const IntRect& aRefreshArea = IntRect(0, 0, 1, 1))
-{
+static void VerifyMarkComplete(AnimationFrameBuffer& aQueue,
+                               bool aExpectedContinue,
+                               const IntRect& aRefreshArea = IntRect(0, 0, 1,
+                                                                     1)) {
   if (aQueue.IsRecycling() && !aQueue.SizeKnown()) {
     const AnimationFrameRecyclingQueue& queue =
-      *static_cast<AnimationFrameRecyclingQueue*>(&aQueue);
-    EXPECT_EQ(queue.FirstFrame()->GetRect(),
-              queue.FirstFrameRefreshArea());
+        *static_cast<AnimationFrameRecyclingQueue*>(&aQueue);
+    EXPECT_EQ(queue.FirstFrame()->GetRect(), queue.FirstFrameRefreshArea());
   }
 
   bool keepDecoding = aQueue.MarkComplete(aRefreshArea);
@@ -155,28 +140,23 @@ VerifyMarkComplete(AnimationFrameBuffer& aQueue,
 
   if (aQueue.IsRecycling()) {
     const AnimationFrameRecyclingQueue& queue =
-      *static_cast<AnimationFrameRecyclingQueue*>(&aQueue);
+        *static_cast<AnimationFrameRecyclingQueue*>(&aQueue);
     EXPECT_EQ(aRefreshArea, queue.FirstFrameRefreshArea());
   }
 }
 
-static void
-VerifyInsert(AnimationFrameBuffer& aQueue,
-             AnimationFrameBuffer::InsertStatus aExpectedStatus)
-{
+static void VerifyInsert(AnimationFrameBuffer& aQueue,
+                         AnimationFrameBuffer::InsertStatus aExpectedStatus) {
   RefPtr<imgFrame> frame = CreateEmptyFrame();
   AnimationFrameBuffer::InsertStatus status =
-    aQueue.Insert(RefPtr<imgFrame>(frame));
+      aQueue.Insert(RefPtr<imgFrame>(frame));
   EXPECT_EQ(aExpectedStatus, status);
   EXPECT_TRUE(aQueue.IsLastInsertedFrame(frame));
   VerifyInsertInternal(aQueue, frame);
 }
 
-static void
-VerifyReset(AnimationFrameBuffer& aQueue,
-            bool aExpectedContinue,
-            const imgFrame* aFirstFrame)
-{
+static void VerifyReset(AnimationFrameBuffer& aQueue, bool aExpectedContinue,
+                        const imgFrame* aFirstFrame) {
   bool keepDecoding = aQueue.Reset();
   EXPECT_EQ(aExpectedContinue, keepDecoding);
   EXPECT_EQ(aQueue.Batch() * 2, aQueue.PendingDecode());
@@ -184,12 +164,12 @@ VerifyReset(AnimationFrameBuffer& aQueue,
 
   if (!aQueue.MayDiscard()) {
     const AnimationFrameRetainedBuffer& queue =
-      *static_cast<AnimationFrameRetainedBuffer*>(&aQueue);
+        *static_cast<AnimationFrameRetainedBuffer*>(&aQueue);
     EXPECT_EQ(aFirstFrame, queue.Frames()[0].get());
     EXPECT_EQ(aFirstFrame, aQueue.Get(0, false));
   } else {
     const AnimationFrameDiscardingQueue& queue =
-      *static_cast<AnimationFrameDiscardingQueue*>(&aQueue);
+        *static_cast<AnimationFrameDiscardingQueue*>(&aQueue);
     EXPECT_EQ(size_t(0), queue.PendingInsert());
     EXPECT_EQ(size_t(0), queue.Display().size());
     EXPECT_EQ(aFirstFrame, queue.FirstFrame());
@@ -197,18 +177,15 @@ VerifyReset(AnimationFrameBuffer& aQueue,
   }
 }
 
-class ImageAnimationFrameBuffer : public ::testing::Test
-{
-public:
-  ImageAnimationFrameBuffer()
-  { }
+class ImageAnimationFrameBuffer : public ::testing::Test {
+ public:
+  ImageAnimationFrameBuffer() {}
 
-private:
+ private:
   AutoInitializeImageLib mInit;
 };
 
-TEST_F(ImageAnimationFrameBuffer, RetainedInitialState)
-{
+TEST_F(ImageAnimationFrameBuffer, RetainedInitialState) {
   const size_t kThreshold = 800;
   const size_t kBatch = 100;
   AnimationFrameRetainedBuffer buffer(kThreshold, kBatch, 0);
@@ -223,8 +200,7 @@ TEST_F(ImageAnimationFrameBuffer, RetainedInitialState)
   EXPECT_EQ(size_t(0), buffer.Size());
 }
 
-TEST_F(ImageAnimationFrameBuffer, ThresholdTooSmall)
-{
+TEST_F(ImageAnimationFrameBuffer, ThresholdTooSmall) {
   const size_t kThreshold = 0;
   const size_t kBatch = 10;
   AnimationFrameRetainedBuffer buffer(kThreshold, kBatch, 0);
@@ -235,8 +211,7 @@ TEST_F(ImageAnimationFrameBuffer, ThresholdTooSmall)
   EXPECT_EQ(size_t(0), buffer.PendingAdvance());
 }
 
-TEST_F(ImageAnimationFrameBuffer, BatchTooSmall)
-{
+TEST_F(ImageAnimationFrameBuffer, BatchTooSmall) {
   const size_t kThreshold = 10;
   const size_t kBatch = 0;
   AnimationFrameRetainedBuffer buffer(kThreshold, kBatch, 0);
@@ -247,21 +222,19 @@ TEST_F(ImageAnimationFrameBuffer, BatchTooSmall)
   EXPECT_EQ(size_t(0), buffer.PendingAdvance());
 }
 
-TEST_F(ImageAnimationFrameBuffer, BatchTooBig)
-{
+TEST_F(ImageAnimationFrameBuffer, BatchTooBig) {
   const size_t kThreshold = 50;
   const size_t kBatch = SIZE_MAX;
   AnimationFrameRetainedBuffer buffer(kThreshold, kBatch, 0);
 
   // The rounding is important here (e.g. SIZE_MAX/4 * 2 != SIZE_MAX/2).
-  EXPECT_EQ(SIZE_MAX/4, buffer.Batch());
+  EXPECT_EQ(SIZE_MAX / 4, buffer.Batch());
   EXPECT_EQ(buffer.Batch() * 2 + 1, buffer.Threshold());
   EXPECT_EQ(buffer.Batch() * 2, buffer.PendingDecode());
   EXPECT_EQ(size_t(0), buffer.PendingAdvance());
 }
 
-TEST_F(ImageAnimationFrameBuffer, FinishUnderBatchAndThreshold)
-{
+TEST_F(ImageAnimationFrameBuffer, FinishUnderBatchAndThreshold) {
   const size_t kThreshold = 30;
   const size_t kBatch = 10;
   AnimationFrameRetainedBuffer buffer(kThreshold, kBatch, 0);
@@ -316,8 +289,7 @@ TEST_F(ImageAnimationFrameBuffer, FinishUnderBatchAndThreshold)
   }
 }
 
-TEST_F(ImageAnimationFrameBuffer, FinishMultipleBatchesUnderThreshold)
-{
+TEST_F(ImageAnimationFrameBuffer, FinishMultipleBatchesUnderThreshold) {
   const size_t kThreshold = 30;
   const size_t kBatch = 2;
   AnimationFrameRetainedBuffer buffer(kThreshold, kBatch, 0);
@@ -362,7 +334,7 @@ TEST_F(ImageAnimationFrameBuffer, FinishMultipleBatchesUnderThreshold)
   EXPECT_FALSE(buffer.HasRedecodeError());
 
   // Finish progressing through the animation.
-  for ( ; i < frames.Length(); ++i) {
+  for (; i < frames.Length(); ++i) {
     EXPECT_TRUE(buffer.Get(i, false) != nullptr);
     restartDecoder = buffer.AdvanceTo(i);
     EXPECT_FALSE(restartDecoder);
@@ -394,8 +366,7 @@ TEST_F(ImageAnimationFrameBuffer, FinishMultipleBatchesUnderThreshold)
   EXPECT_EQ(size_t(0), buffer.Displayed());
 }
 
-TEST_F(ImageAnimationFrameBuffer, StartAfterBeginning)
-{
+TEST_F(ImageAnimationFrameBuffer, StartAfterBeginning) {
   const size_t kThreshold = 30;
   const size_t kBatch = 2;
   const size_t kStartFrame = 7;
@@ -428,8 +399,7 @@ TEST_F(ImageAnimationFrameBuffer, StartAfterBeginning)
   EXPECT_EQ(size_t(10), buffer.Size());
 }
 
-TEST_F(ImageAnimationFrameBuffer, StartAfterBeginningAndReset)
-{
+TEST_F(ImageAnimationFrameBuffer, StartAfterBeginningAndReset) {
   const size_t kThreshold = 30;
   const size_t kBatch = 2;
   const size_t kStartFrame = 7;
@@ -441,7 +411,7 @@ TEST_F(ImageAnimationFrameBuffer, StartAfterBeginningAndReset)
   // because it auto-advances until its displayed frame is kStartFrame.
   for (size_t i = 0; i < 5; ++i) {
     AnimationFrameBuffer::InsertStatus status =
-      buffer.Insert(CreateEmptyFrame());
+        buffer.Insert(CreateEmptyFrame());
     EXPECT_EQ(status, AnimationFrameBuffer::InsertStatus::CONTINUE);
     EXPECT_FALSE(buffer.SizeKnown());
     EXPECT_FALSE(buffer.MayDiscard());
@@ -463,10 +433,8 @@ TEST_F(ImageAnimationFrameBuffer, StartAfterBeginningAndReset)
 
 static void TestDiscardingQueueLoop(AnimationFrameDiscardingQueue& aQueue,
                                     const imgFrame* aFirstFrame,
-                                    size_t aThreshold,
-                                    size_t aBatch,
-                                    size_t aStartFrame)
-{
+                                    size_t aThreshold, size_t aBatch,
+                                    size_t aStartFrame) {
   // We should be advanced right up to the last decoded frame.
   EXPECT_TRUE(aQueue.MayDiscard());
   EXPECT_FALSE(aQueue.SizeKnown());
@@ -479,18 +447,22 @@ static void TestDiscardingQueueLoop(AnimationFrameDiscardingQueue& aQueue,
   VerifyDiscardingQueueContents(aQueue);
 
   // Make sure frames get removed as we advance.
-  VerifyInsertAndAdvance(aQueue, 5, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsertAndAdvance(aQueue, 5,
+                         AnimationFrameBuffer::InsertStatus::CONTINUE);
   EXPECT_EQ(size_t(1), aQueue.Display().size());
-  VerifyInsertAndAdvance(aQueue, 6, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsertAndAdvance(aQueue, 6,
+                         AnimationFrameBuffer::InsertStatus::CONTINUE);
   EXPECT_EQ(size_t(1), aQueue.Display().size());
 
   // We actually will yield if we are recycling instead of continuing because
   // the pending calculation is slightly different. We will actually request one
   // less frame than we have to recycle.
   if (aQueue.IsRecycling()) {
-    VerifyInsertAndAdvance(aQueue, 7, AnimationFrameBuffer::InsertStatus::YIELD);
+    VerifyInsertAndAdvance(aQueue, 7,
+                           AnimationFrameBuffer::InsertStatus::YIELD);
   } else {
-    VerifyInsertAndAdvance(aQueue, 7, AnimationFrameBuffer::InsertStatus::CONTINUE);
+    VerifyInsertAndAdvance(aQueue, 7,
+                           AnimationFrameBuffer::InsertStatus::CONTINUE);
   }
   EXPECT_EQ(size_t(1), aQueue.Display().size());
 
@@ -531,26 +503,31 @@ static void TestDiscardingQueueLoop(AnimationFrameDiscardingQueue& aQueue,
   EXPECT_EQ(aQueue.FirstFrame(), aQueue.Get(0, true));
 
   // Reiterate one more time and make it loops back.
-  VerifyInsertAndAdvance(aQueue, 1, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsertAndAdvance(aQueue, 1,
+                         AnimationFrameBuffer::InsertStatus::CONTINUE);
   VerifyInsertAndAdvance(aQueue, 2, AnimationFrameBuffer::InsertStatus::YIELD);
-  VerifyInsertAndAdvance(aQueue, 3, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsertAndAdvance(aQueue, 3,
+                         AnimationFrameBuffer::InsertStatus::CONTINUE);
   VerifyInsertAndAdvance(aQueue, 4, AnimationFrameBuffer::InsertStatus::YIELD);
-  VerifyInsertAndAdvance(aQueue, 5, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsertAndAdvance(aQueue, 5,
+                         AnimationFrameBuffer::InsertStatus::CONTINUE);
   VerifyInsertAndAdvance(aQueue, 6, AnimationFrameBuffer::InsertStatus::YIELD);
-  VerifyInsertAndAdvance(aQueue, 7, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsertAndAdvance(aQueue, 7,
+                         AnimationFrameBuffer::InsertStatus::CONTINUE);
   VerifyInsertAndAdvance(aQueue, 8, AnimationFrameBuffer::InsertStatus::YIELD);
 
   EXPECT_EQ(size_t(10), aQueue.PendingInsert());
   VerifyMarkComplete(aQueue, true);
   EXPECT_EQ(size_t(0), aQueue.PendingInsert());
 
-  VerifyInsertAndAdvance(aQueue, 9, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsertAndAdvance(aQueue, 9,
+                         AnimationFrameBuffer::InsertStatus::CONTINUE);
   VerifyInsertAndAdvance(aQueue, 0, AnimationFrameBuffer::InsertStatus::YIELD);
-  VerifyInsertAndAdvance(aQueue, 1, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsertAndAdvance(aQueue, 1,
+                         AnimationFrameBuffer::InsertStatus::CONTINUE);
 }
 
-TEST_F(ImageAnimationFrameBuffer, DiscardingLoop)
-{
+TEST_F(ImageAnimationFrameBuffer, DiscardingLoop) {
   const size_t kThreshold = 5;
   const size_t kBatch = 2;
   const size_t kStartFrame = 0;
@@ -561,8 +538,7 @@ TEST_F(ImageAnimationFrameBuffer, DiscardingLoop)
   TestDiscardingQueueLoop(buffer, firstFrame, kThreshold, kBatch, kStartFrame);
 }
 
-TEST_F(ImageAnimationFrameBuffer, RecyclingLoop)
-{
+TEST_F(ImageAnimationFrameBuffer, RecyclingLoop) {
   const size_t kThreshold = 5;
   const size_t kBatch = 2;
   const size_t kStartFrame = 0;
@@ -599,10 +575,8 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingLoop)
 
 static void TestDiscardingQueueReset(AnimationFrameDiscardingQueue& aQueue,
                                      const imgFrame* aFirstFrame,
-                                     size_t aThreshold,
-                                     size_t aBatch,
-                                     size_t aStartFrame)
-{
+                                     size_t aThreshold, size_t aBatch,
+                                     size_t aStartFrame) {
   // We should be advanced right up to the last decoded frame.
   EXPECT_TRUE(aQueue.MayDiscard());
   EXPECT_FALSE(aQueue.SizeKnown());
@@ -618,8 +592,7 @@ static void TestDiscardingQueueReset(AnimationFrameDiscardingQueue& aQueue,
   VerifyReset(aQueue, false, aFirstFrame);
 }
 
-TEST_F(ImageAnimationFrameBuffer, DiscardingReset)
-{
+TEST_F(ImageAnimationFrameBuffer, DiscardingReset) {
   const size_t kThreshold = 8;
   const size_t kBatch = 3;
   const size_t kStartFrame = 0;
@@ -630,8 +603,7 @@ TEST_F(ImageAnimationFrameBuffer, DiscardingReset)
   TestDiscardingQueueReset(buffer, firstFrame, kThreshold, kBatch, kStartFrame);
 }
 
-TEST_F(ImageAnimationFrameBuffer, ResetBeforeDiscardingThreshold)
-{
+TEST_F(ImageAnimationFrameBuffer, ResetBeforeDiscardingThreshold) {
   const size_t kThreshold = 3;
   const size_t kBatch = 1;
   const size_t kStartFrame = 0;
@@ -641,7 +613,8 @@ TEST_F(ImageAnimationFrameBuffer, ResetBeforeDiscardingThreshold)
   // first frame, and insert the last frame to cross the threshold.
   AnimationFrameRetainedBuffer retained(kThreshold, kBatch, kStartFrame);
   VerifyInsert(retained, AnimationFrameBuffer::InsertStatus::CONTINUE);
-  VerifyInsertAndAdvance(retained, 1, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsertAndAdvance(retained, 1,
+                         AnimationFrameBuffer::InsertStatus::YIELD);
   bool restartDecoder = retained.Reset();
   EXPECT_FALSE(restartDecoder);
   VerifyInsert(retained, AnimationFrameBuffer::InsertStatus::DISCARD_YIELD);
@@ -655,8 +628,7 @@ TEST_F(ImageAnimationFrameBuffer, ResetBeforeDiscardingThreshold)
   EXPECT_EQ(firstFrame, advanceFirstFrame);
 }
 
-TEST_F(ImageAnimationFrameBuffer, DiscardingTooFewFrames)
-{
+TEST_F(ImageAnimationFrameBuffer, DiscardingTooFewFrames) {
   const size_t kThreshold = 3;
   const size_t kBatch = 1;
   const size_t kStartFrame = 0;
@@ -664,7 +636,8 @@ TEST_F(ImageAnimationFrameBuffer, DiscardingTooFewFrames)
   // First get us to a discarding buffer state.
   AnimationFrameRetainedBuffer retained(kThreshold, kBatch, kStartFrame);
   VerifyInsert(retained, AnimationFrameBuffer::InsertStatus::CONTINUE);
-  VerifyInsertAndAdvance(retained, 1, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsertAndAdvance(retained, 1,
+                         AnimationFrameBuffer::InsertStatus::YIELD);
   VerifyInsert(retained, AnimationFrameBuffer::InsertStatus::DISCARD_YIELD);
 
   // Insert one more frame.
@@ -690,8 +663,7 @@ TEST_F(ImageAnimationFrameBuffer, DiscardingTooFewFrames)
   EXPECT_EQ(size_t(4), buffer.Size());
 }
 
-TEST_F(ImageAnimationFrameBuffer, DiscardingTooManyFrames)
-{
+TEST_F(ImageAnimationFrameBuffer, DiscardingTooManyFrames) {
   const size_t kThreshold = 3;
   const size_t kBatch = 1;
   const size_t kStartFrame = 0;
@@ -699,7 +671,8 @@ TEST_F(ImageAnimationFrameBuffer, DiscardingTooManyFrames)
   // First get us to a discarding buffer state.
   AnimationFrameRetainedBuffer retained(kThreshold, kBatch, kStartFrame);
   VerifyInsert(retained, AnimationFrameBuffer::InsertStatus::CONTINUE);
-  VerifyInsertAndAdvance(retained, 1, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsertAndAdvance(retained, 1,
+                         AnimationFrameBuffer::InsertStatus::YIELD);
   VerifyInsert(retained, AnimationFrameBuffer::InsertStatus::DISCARD_YIELD);
 
   // Insert one more frame.
@@ -728,8 +701,7 @@ TEST_F(ImageAnimationFrameBuffer, DiscardingTooManyFrames)
   EXPECT_EQ(size_t(4), buffer.Size());
 }
 
-TEST_F(ImageAnimationFrameBuffer, RecyclingReset)
-{
+TEST_F(ImageAnimationFrameBuffer, RecyclingReset) {
   const size_t kThreshold = 8;
   const size_t kBatch = 3;
   const size_t kStartFrame = 0;
@@ -740,8 +712,7 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingReset)
   TestDiscardingQueueReset(buffer, firstFrame, kThreshold, kBatch, kStartFrame);
 }
 
-TEST_F(ImageAnimationFrameBuffer, RecyclingResetBeforeComplete)
-{
+TEST_F(ImageAnimationFrameBuffer, RecyclingResetBeforeComplete) {
   const size_t kThreshold = 3;
   const size_t kBatch = 1;
   const size_t kStartFrame = 0;
@@ -757,13 +728,15 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingResetBeforeComplete)
   AnimationFrameBuffer::InsertStatus status = retained.Insert(std::move(frame));
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::CONTINUE, status);
 
-  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(10, 10), IntSize(1, 1)), false);
+  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(10, 10), IntSize(1, 1)),
+                           false);
   status = retained.Insert(std::move(frame));
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
 
   VerifyAdvance(retained, 1, true);
 
-  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(20, 10), IntSize(1, 1)), false);
+  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(20, 10), IntSize(1, 1)),
+                           false);
   status = retained.Insert(std::move(frame));
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::DISCARD_YIELD, status);
 
@@ -779,7 +752,8 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingResetBeforeComplete)
   status = buffer.Insert(std::move(frame));
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::CONTINUE, status);
 
-  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(10, 10), IntSize(1, 1)), true);
+  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(10, 10), IntSize(1, 1)),
+                           true);
   status = buffer.Insert(std::move(frame));
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
 
@@ -794,8 +768,7 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingResetBeforeComplete)
   }
 }
 
-TEST_F(ImageAnimationFrameBuffer, RecyclingRect)
-{
+TEST_F(ImageAnimationFrameBuffer, RecyclingRect) {
   const size_t kThreshold = 5;
   const size_t kBatch = 2;
   const size_t kStartFrame = 0;
@@ -805,19 +778,23 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingRect)
   // Let's get to the recycling state while marking all of the frames as not
   // recyclable, just like AnimationFrameBuffer / the decoders would do.
   RefPtr<imgFrame> frame;
-  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(0, 0), kImageSize), false);
+  frame =
+      CreateEmptyFrame(kImageSize, IntRect(IntPoint(0, 0), kImageSize), false);
   AnimationFrameBuffer::InsertStatus status = retained.Insert(std::move(frame));
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::CONTINUE, status);
 
-  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(0, 0), kImageSize), false);
+  frame =
+      CreateEmptyFrame(kImageSize, IntRect(IntPoint(0, 0), kImageSize), false);
   status = retained.Insert(std::move(frame));
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::CONTINUE, status);
 
-  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(0, 0), kImageSize), false);
+  frame =
+      CreateEmptyFrame(kImageSize, IntRect(IntPoint(0, 0), kImageSize), false);
   status = retained.Insert(std::move(frame));
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::CONTINUE, status);
 
-  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(0, 0), kImageSize), false);
+  frame =
+      CreateEmptyFrame(kImageSize, IntRect(IntPoint(0, 0), kImageSize), false);
   status = retained.Insert(std::move(frame));
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
 
@@ -825,7 +802,8 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingRect)
   VerifyAdvance(retained, 2, true);
   VerifyAdvance(retained, 3, false);
 
-  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(0, 0), kImageSize), false);
+  frame =
+      CreateEmptyFrame(kImageSize, IntRect(IntPoint(0, 0), kImageSize), false);
   status = retained.Insert(std::move(frame));
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::DISCARD_CONTINUE, status);
 
@@ -888,7 +866,8 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingRect)
   // Now let's reinsert the first frame. The recycle rect should still be the
   // first frame refresh area instead of the dirty rect of the first frame (e.g.
   // the full frame).
-  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(0, 0), kImageSize), false);
+  frame =
+      CreateEmptyFrame(kImageSize, IntRect(IntPoint(0, 0), kImageSize), false);
   status = buffer.Insert(std::move(frame));
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
 

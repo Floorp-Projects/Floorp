@@ -18,17 +18,17 @@ using mozilla::DefaultDelete;
 using mozilla::IsSame;
 using mozilla::MakeUnique;
 using mozilla::Swap;
-using mozilla::UniquePtr;
 using mozilla::UniqueFreePtr;
+using mozilla::UniquePtr;
 using mozilla::Vector;
 
-#define CHECK(c) \
-  do { \
-    bool cond = !!(c); \
+#define CHECK(c)                               \
+  do {                                         \
+    bool cond = !!(c);                         \
     MOZ_ASSERT(cond, "Failed assertion: " #c); \
-    if (!cond) { \
-      return false; \
-    } \
+    if (!cond) {                               \
+      return false;                            \
+    }                                          \
   } while (false)
 
 typedef UniquePtr<int> NewInt;
@@ -36,9 +36,8 @@ static_assert(sizeof(NewInt) == sizeof(int*), "stored most efficiently");
 
 static size_t gADestructorCalls = 0;
 
-struct A
-{
-public:
+struct A {
+ public:
   A() : mX(0) {}
   virtual ~A() { gADestructorCalls++; }
 
@@ -47,9 +46,8 @@ public:
 
 static size_t gBDestructorCalls = 0;
 
-struct B : public A
-{
-public:
+struct B : public A {
+ public:
   B() : mY(1) {}
   ~B() { gBDestructorCalls++; }
 
@@ -57,7 +55,7 @@ public:
 };
 
 typedef UniquePtr<A> UniqueA;
-typedef UniquePtr<B, UniqueA::DeleterType> UniqueB; // permit interconversion
+typedef UniquePtr<B, UniqueA::DeleterType> UniqueB;  // permit interconversion
 
 static_assert(sizeof(UniqueA) == sizeof(A*), "stored most efficiently");
 static_assert(sizeof(UniqueB) == sizeof(B*), "stored most efficiently");
@@ -67,37 +65,25 @@ struct DeleterSubclass : UniqueA::DeleterType {};
 typedef UniquePtr<B, DeleterSubclass> UniqueC;
 static_assert(sizeof(UniqueC) == sizeof(B*), "stored most efficiently");
 
-static UniqueA
-ReturnUniqueA()
-{
-  return UniqueA(new B);
-}
+static UniqueA ReturnUniqueA() { return UniqueA(new B); }
 
-static UniqueA
-ReturnLocalA()
-{
+static UniqueA ReturnLocalA() {
   UniqueA a(new A);
   return a;
 }
 
-static void
-TestDeleterType()
-{
+static void TestDeleterType() {
   // Make sure UniquePtr will use its deleter's pointer type if it defines one.
   typedef int* Ptr;
   struct Deleter {
     typedef Ptr pointer;
     Deleter() {}
-    void operator()(int*p) {
-      delete p;
-    }
+    void operator()(int* p) { delete p; }
   };
   UniquePtr<Ptr, Deleter> u(new int, Deleter());
 }
 
-static bool
-TestDefaultFreeGuts()
-{
+static bool TestDefaultFreeGuts() {
   static_assert(IsSame<NewInt::DeleterType, DefaultDelete<int> >::value,
                 "weird deleter?");
 
@@ -219,9 +205,7 @@ TestDefaultFreeGuts()
   return true;
 }
 
-static bool
-TestDefaultFree()
-{
+static bool TestDefaultFree() {
   CHECK(TestDefaultFreeGuts());
   CHECK(gADestructorCalls == 12);
   CHECK(gBDestructorCalls == 8);
@@ -230,25 +214,20 @@ TestDefaultFree()
 
 static size_t FreeClassCounter = 0;
 
-struct FreeClass
-{
-public:
+struct FreeClass {
+ public:
   FreeClass() {}
 
-  void operator()(int* aPtr)
-  {
+  void operator()(int* aPtr) {
     FreeClassCounter++;
     delete aPtr;
   }
 };
 
 typedef UniquePtr<int, FreeClass> NewIntCustom;
-static_assert(sizeof(NewIntCustom) == sizeof(int*),
-              "stored most efficiently");
+static_assert(sizeof(NewIntCustom) == sizeof(int*), "stored most efficiently");
 
-static bool
-TestFreeClass()
-{
+static bool TestFreeClass() {
   CHECK(FreeClassCounter == 0);
   {
     NewIntCustom n1(new int);
@@ -300,9 +279,7 @@ static_assert(sizeof(ADeleterRef) > sizeof(A*),
 static_assert(sizeof(BDeleterRef) > sizeof(int*),
               "has to be heavier than a B* to store the reference");
 
-static bool
-TestReferenceDeleterGuts()
-{
+static bool TestReferenceDeleterGuts() {
   DefaultDelete<int> delInt;
   IntDeleterRef id1(new int, delInt);
 
@@ -329,9 +306,7 @@ TestReferenceDeleterGuts()
   return true;
 }
 
-static bool
-TestReferenceDeleter()
-{
+static bool TestReferenceDeleter() {
   gADestructorCalls = 0;
   gBDestructorCalls = 0;
 
@@ -349,32 +324,24 @@ typedef void (&FreeSignature)(void*);
 
 static size_t DeleteIntFunctionCallCount = 0;
 
-static void
-DeleteIntFunction(void* aPtr)
-{
+static void DeleteIntFunction(void* aPtr) {
   DeleteIntFunctionCallCount++;
   delete static_cast<int*>(aPtr);
 }
 
-static void
-SetMallocedInt(UniquePtr<int, FreeSignature>& aPtr, int aI)
-{
+static void SetMallocedInt(UniquePtr<int, FreeSignature>& aPtr, int aI) {
   int* newPtr = static_cast<int*>(malloc(sizeof(int)));
   *newPtr = aI;
   aPtr.reset(newPtr);
 }
 
-static UniquePtr<int, FreeSignature>
-MallocedInt(int aI)
-{
-  UniquePtr<int, FreeSignature>
-    ptr(static_cast<int*>(malloc(sizeof(int))), free);
+static UniquePtr<int, FreeSignature> MallocedInt(int aI) {
+  UniquePtr<int, FreeSignature> ptr(static_cast<int*>(malloc(sizeof(int))),
+                                    free);
   *ptr = aI;
   return ptr;
 }
-static bool
-TestFunctionReferenceDeleter()
-{
+static bool TestFunctionReferenceDeleter() {
   // Look for allocator mismatches and leaks to verify these bits
   UniquePtr<int, FreeSignature> i1(MallocedInt(17));
   CHECK(*i1 == 17);
@@ -385,7 +352,7 @@ TestFunctionReferenceDeleter()
   // These bits use a custom deleter so we can instrument deletion.
   {
     UniquePtr<int, FreeSignature> i2 =
-      UniquePtr<int, FreeSignature>(new int(42), DeleteIntFunction);
+        UniquePtr<int, FreeSignature>(new int(42), DeleteIntFunction);
     CHECK(DeleteIntFunctionCallCount == 0);
 
     i2.reset(new int(76));
@@ -397,13 +364,11 @@ TestFunctionReferenceDeleter()
   return true;
 }
 
-template<typename T>
-struct AppendNullptrTwice
-{
+template <typename T>
+struct AppendNullptrTwice {
   AppendNullptrTwice() {}
 
-  bool operator()(Vector<T>& vec)
-  {
+  bool operator()(Vector<T>& vec) {
     CHECK(vec.append(nullptr));
     CHECK(vec.append(nullptr));
     return true;
@@ -413,9 +378,7 @@ struct AppendNullptrTwice
 static size_t AAfter;
 static size_t BAfter;
 
-static bool
-TestVectorGuts()
-{
+static bool TestVectorGuts() {
   Vector<UniqueA> vec;
   CHECK(vec.append(new B));
   CHECK(vec.append(new A));
@@ -441,9 +404,7 @@ TestVectorGuts()
   return true;
 }
 
-static bool
-TestVector()
-{
+static bool TestVector() {
   gADestructorCalls = 0;
   gBDestructorCalls = 0;
 
@@ -455,12 +416,9 @@ TestVector()
 }
 
 typedef UniquePtr<int[]> IntArray;
-static_assert(sizeof(IntArray) == sizeof(int*),
-              "stored most efficiently");
+static_assert(sizeof(IntArray) == sizeof(int*), "stored most efficiently");
 
-static bool
-TestArray()
-{
+static bool TestArray() {
   static_assert(IsSame<IntArray::DeleterType, DefaultDelete<int[]> >::value,
                 "weird deleter?");
 
@@ -509,8 +467,7 @@ TestArray()
   CHECK(n1.get() == nullptr);
 
   UniquePtr<A[]> a1(new A[17]);
-  static_assert(sizeof(a1) == sizeof(A*),
-                "stored most efficiently");
+  static_assert(sizeof(a1) == sizeof(A*), "stored most efficiently");
 
   UniquePtr<A[]> a2(new A[5], DefaultDelete<A[]>());
   a2.reset(nullptr);
@@ -523,14 +480,13 @@ TestArray()
   return true;
 }
 
-struct Q
-{
+struct Q {
   Q() {}
   Q(const Q&) {}
 
   Q(Q&, char) {}
 
-  template<typename T>
+  template <typename T>
   Q(Q, T&&, int) {}
 
   Q(int, long, double, void*) {}
@@ -538,9 +494,7 @@ struct Q
 
 static int randomInt() { return 4; }
 
-static bool
-TestMakeUnique()
-{
+static bool TestMakeUnique() {
   UniquePtr<int> a1(MakeUnique<int>());
   UniquePtr<long> a2(MakeUnique<long>(4));
 
@@ -564,9 +518,7 @@ TestMakeUnique()
   return true;
 }
 
-static bool
-TestVoid()
-{
+static bool TestVoid() {
   // UniquePtr<void> supports all operations except operator*() and
   // operator->().
   UniqueFreePtr<void> p1(malloc(1));
@@ -594,9 +546,7 @@ TestVoid()
   return true;
 }
 
-int
-main()
-{
+int main() {
   TestDeleterType();
 
   if (!TestDefaultFree()) {

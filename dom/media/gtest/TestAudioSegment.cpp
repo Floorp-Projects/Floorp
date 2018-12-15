@@ -13,51 +13,49 @@ namespace audio_segment {
 
 /* Helper function to give us the maximum and minimum value that don't clip,
  * for a given sample format (integer or floating-point). */
-template<typename T>
+template <typename T>
 T GetLowValue();
 
-template<typename T>
+template <typename T>
 T GetHighValue();
 
-template<typename T>
+template <typename T>
 T GetSilentValue();
 
-template<>
+template <>
 float GetLowValue<float>() {
   return -1.0;
 }
 
-template<>
+template <>
 int16_t GetLowValue<short>() {
   return -INT16_MAX;
 }
 
-template<>
+template <>
 float GetHighValue<float>() {
   return 1.0;
 }
 
-template<>
+template <>
 int16_t GetHighValue<short>() {
   return INT16_MAX;
 }
 
-template<>
+template <>
 float GetSilentValue() {
   return 0.0;
 }
 
-template<>
+template <>
 int16_t GetSilentValue() {
   return 0;
 }
 
-
 // Get an array of planar audio buffers that has the inverse of the index of the
 // channel (1-indexed) as samples.
-template<typename T>
-const T* const* GetPlanarChannelArray(size_t aChannels, size_t aSize)
-{
+template <typename T>
+const T* const* GetPlanarChannelArray(size_t aChannels, size_t aSize) {
   T** channels = new T*[aChannels];
   for (size_t c = 0; c < aChannels; c++) {
     channels[c] = new T[aSize];
@@ -68,18 +66,16 @@ const T* const* GetPlanarChannelArray(size_t aChannels, size_t aSize)
   return channels;
 }
 
-template<typename T>
-void DeletePlanarChannelsArray(const T* const* aArrays, size_t aChannels)
-{
+template <typename T>
+void DeletePlanarChannelsArray(const T* const* aArrays, size_t aChannels) {
   for (size_t channel = 0; channel < aChannels; channel++) {
-    delete [] aArrays[channel];
+    delete[] aArrays[channel];
   }
-  delete [] aArrays;
+  delete[] aArrays;
 }
 
-template<typename T>
-T** GetPlanarArray(size_t aChannels, size_t aSize)
-{
+template <typename T>
+T** GetPlanarArray(size_t aChannels, size_t aSize) {
   T** channels = new T*[aChannels];
   for (size_t c = 0; c < aChannels; c++) {
     channels[c] = new T[aSize];
@@ -90,20 +86,18 @@ T** GetPlanarArray(size_t aChannels, size_t aSize)
   return channels;
 }
 
-template<typename T>
-void DeletePlanarArray(T** aArrays, size_t aChannels)
-{
+template <typename T>
+void DeletePlanarArray(T** aArrays, size_t aChannels) {
   for (size_t channel = 0; channel < aChannels; channel++) {
-    delete [] aArrays[channel];
+    delete[] aArrays[channel];
   }
-  delete [] aArrays;
+  delete[] aArrays;
 }
 
 // Get an array of audio samples that have the inverse of the index of the
 // channel (1-indexed) as samples.
-template<typename T>
-const T* GetInterleavedChannelArray(size_t aChannels, size_t aSize)
-{
+template <typename T>
+const T* GetInterleavedChannelArray(size_t aChannels, size_t aSize) {
   size_t sampleCount = aChannels * aSize;
   T* samples = new T[sampleCount];
   for (size_t i = 0; i < sampleCount; i++) {
@@ -113,21 +107,17 @@ const T* GetInterleavedChannelArray(size_t aChannels, size_t aSize)
   return samples;
 }
 
-template<typename T>
-void DeleteInterleavedChannelArray(const T* aArray)
-{
-  delete [] aArray;
+template <typename T>
+void DeleteInterleavedChannelArray(const T* aArray) {
+  delete[] aArray;
 }
 
-bool FuzzyEqual(float aLhs, float aRhs) {
-  return std::abs(aLhs - aRhs) < 0.01;
-}
+bool FuzzyEqual(float aLhs, float aRhs) { return std::abs(aLhs - aRhs) < 0.01; }
 
-template<typename SrcT, typename DstT>
-void TestInterleaveAndConvert()
-{
+template <typename SrcT, typename DstT>
+void TestInterleaveAndConvert() {
   size_t arraySize = 1024;
-  size_t maxChannels = 8; // 7.1
+  size_t maxChannels = 8;  // 7.1
   for (uint32_t channels = 1; channels < maxChannels; channels++) {
     const SrcT* const* src = GetPlanarChannelArray<SrcT>(channels, arraySize);
     DstT* dst = new DstT[channels * arraySize];
@@ -136,22 +126,21 @@ void TestInterleaveAndConvert()
 
     uint32_t channelIndex = 0;
     for (size_t i = 0; i < arraySize * channels; i++) {
-      ASSERT_TRUE(FuzzyEqual(dst[i],
-                  FloatToAudioSample<DstT>(1. / (channelIndex + 1))));
+      ASSERT_TRUE(FuzzyEqual(
+          dst[i], FloatToAudioSample<DstT>(1. / (channelIndex + 1))));
       channelIndex++;
       channelIndex %= channels;
     }
 
     DeletePlanarChannelsArray(src, channels);
-    delete [] dst;
+    delete[] dst;
   }
 }
 
-template<typename SrcT, typename DstT>
-void TestDeinterleaveAndConvert()
-{
+template <typename SrcT, typename DstT>
+void TestDeinterleaveAndConvert() {
   size_t arraySize = 1024;
-  size_t maxChannels = 8; // 7.1
+  size_t maxChannels = 8;  // 7.1
   for (uint32_t channels = 1; channels < maxChannels; channels++) {
     const SrcT* src = GetInterleavedChannelArray<SrcT>(channels, arraySize);
     DstT** dst = GetPlanarArray<DstT>(channels, arraySize);
@@ -161,7 +150,7 @@ void TestDeinterleaveAndConvert()
     for (size_t channel = 0; channel < channels; channel++) {
       for (size_t i = 0; i < arraySize; i++) {
         ASSERT_TRUE(FuzzyEqual(dst[channel][i],
-                    FloatToAudioSample<DstT>(1. / (channel + 1))));
+                               FloatToAudioSample<DstT>(1. / (channel + 1))));
       }
     }
 
@@ -172,15 +161,13 @@ void TestDeinterleaveAndConvert()
 
 uint8_t gSilence[4096] = {0};
 
-template<typename T>
-T* SilentChannel()
-{
+template <typename T>
+T* SilentChannel() {
   return reinterpret_cast<T*>(gSilence);
 }
 
-template<typename T>
-void TestUpmixStereo()
-{
+template <typename T>
+void TestUpmixStereo() {
   size_t arraySize = 1024;
   nsTArray<T*> channels;
   nsTArray<const T*> channelsptr;
@@ -202,12 +189,11 @@ void TestUpmixStereo()
       ASSERT_TRUE(channelsptr[channel][i] == GetHighValue<T>());
     }
   }
-  delete [] channels[0];
+  delete[] channels[0];
 }
 
-template<typename T>
-void TestDownmixStereo()
-{
+template <typename T>
+void TestDownmixStereo() {
   const size_t arraySize = 1024;
   nsTArray<const T*> inputptr;
   nsTArray<T*> input;
@@ -234,12 +220,11 @@ void TestDownmixStereo()
     ASSERT_TRUE(output[0][i] == GetSilentValue<T>());
   }
 
-  delete [] output[0];
-  delete [] output;
+  delete[] output[0];
+  delete[] output;
 }
 
-TEST(AudioSegment, Test)
-{
+TEST(AudioSegment, Test) {
   TestInterleaveAndConvert<float, float>();
   TestInterleaveAndConvert<float, int16_t>();
   TestInterleaveAndConvert<int16_t, float>();
@@ -254,4 +239,4 @@ TEST(AudioSegment, Test)
   TestDownmixStereo<int16_t>();
 }
 
-} // namespace audio_segment
+}  // namespace audio_segment
