@@ -11,7 +11,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(
@@ -80,22 +79,6 @@ class GeckoViewSettings extends GeckoViewModule {
     return this.browser.isRemoteBrowser;
   }
 
-  observe(aSubject, aTopic, aData) {
-    debug `observer`;
-
-    let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
-
-    if (this.browser.outerWindowID !== channel.topLevelOuterContentWindowId) {
-      return;
-    }
-
-    if (this.userAgentOverride !== null ||
-        this.userAgentMode === USER_AGENT_MODE_DESKTOP ||
-        this.userAgentMode === USER_AGENT_MODE_VR) {
-      channel.setRequestHeader("User-Agent", this.userAgent, false);
-    }
-  }
-
   get userAgent() {
     if (this.userAgentOverride !== null) {
       return this.userAgentOverride;
@@ -117,7 +100,6 @@ class GeckoViewSettings extends GeckoViewModule {
     if (this.userAgentMode === aMode) {
       return;
     }
-    this.updateUserAgentObserver(this._userAgentOverride, aMode);
     this._userAgentMode = aMode;
   }
 
@@ -126,23 +108,7 @@ class GeckoViewSettings extends GeckoViewModule {
   }
 
   set userAgentOverride(aUserAgent) {
-    this.updateUserAgentObserver(aUserAgent, this._userAgentMode);
     this._userAgentOverride = aUserAgent;
-  }
-
-  updateUserAgentObserver(aUserAgent, aMode) {
-    const wasAdded = this.userAgentOverride !== null || this.userAgentMode !== USER_AGENT_MODE_MOBILE;
-    const shouldAdd = aUserAgent !== null || aMode !== USER_AGENT_MODE_MOBILE;
-
-    try {
-      if (wasAdded && !shouldAdd) {
-        Services.obs.removeObserver(this, "http-on-useragent-request");
-      } else if (!wasAdded && shouldAdd) {
-        Services.obs.addObserver(this, "http-on-useragent-request");
-      }
-    } catch (e) {
-      warn `Caught exception while adding/removing "http-on-useragent-request" observer: ${e.message}`;
-    }
   }
 
   get displayMode() {

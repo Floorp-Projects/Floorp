@@ -18,41 +18,30 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Helpers
 
-enum State {
-  STARTING,
-  WRITE_LOCK,
-  READ_LOCK,
-  TEST_DONE
-};
+enum State { STARTING, WRITE_LOCK, READ_LOCK, TEST_DONE };
 
-class DatabaseLocker : public mozilla::Runnable
-{
-public:
+class DatabaseLocker : public mozilla::Runnable {
+ public:
   explicit DatabaseLocker(const char* aSQL)
-    : mozilla::Runnable("DatabaseLocker")
-    , monitor("DatabaseLocker::monitor")
-    , mSQL(aSQL)
-    , mState(STARTING)
-  {
-  }
+      : mozilla::Runnable("DatabaseLocker"),
+        monitor("DatabaseLocker::monitor"),
+        mSQL(aSQL),
+        mState(STARTING) {}
 
-  void RunInBackground()
-  {
+  void RunInBackground() {
     (void)NS_NewNamedThread("DatabaseLocker", getter_AddRefs(mThread));
     do_check_true(mThread);
 
     do_check_success(mThread->Dispatch(this, NS_DISPATCH_NORMAL));
   }
 
-  void Shutdown()
-  {
+  void Shutdown() {
     if (mThread) {
       mThread->Shutdown();
     }
   }
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     mozilla::ReentrantMonitorAutoEnter lock(monitor);
 
     nsCOMPtr<mozIStorageConnection> db(getDatabase());
@@ -70,16 +59,14 @@ public:
     return NS_OK;
   }
 
-  void WaitFor(State aState)
-  {
+  void WaitFor(State aState) {
     monitor.AssertCurrentThreadIn();
     while (mState != aState) {
       do_check_success(monitor.Wait());
     }
   }
 
-  void Notify(State aState)
-  {
+  void Notify(State aState) {
     monitor.AssertCurrentThreadIn();
     mState = aState;
     do_check_success(monitor.Notify());
@@ -87,24 +74,18 @@ public:
 
   mozilla::ReentrantMonitor monitor;
 
-protected:
+ protected:
   nsCOMPtr<nsIThread> mThread;
-  const char *const mSQL;
+  const char* const mSQL;
   State mState;
 };
 
-class DatabaseTester : public DatabaseLocker
-{
-public:
-  DatabaseTester(mozIStorageConnection *aConnection,
-                 const char* aSQL)
-  : DatabaseLocker(aSQL)
-  , mConnection(aConnection)
-  {
-  }
+class DatabaseTester : public DatabaseLocker {
+ public:
+  DatabaseTester(mozIStorageConnection* aConnection, const char* aSQL)
+      : DatabaseLocker(aSQL), mConnection(aConnection) {}
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     mozilla::ReentrantMonitorAutoEnter lock(monitor);
     WaitFor(READ_LOCK);
 
@@ -127,48 +108,40 @@ public:
     return NS_OK;
   }
 
-private:
+ private:
   nsCOMPtr<mozIStorageConnection> mConnection;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Functions
 
-void
-setup()
-{
+void setup() {
   nsCOMPtr<mozIStorageConnection> db(getDatabase());
 
   // Create and populate a dummy table.
   nsresult rv = db->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE test (id INTEGER PRIMARY KEY, data STRING)"
-  ));
+      "CREATE TABLE test (id INTEGER PRIMARY KEY, data STRING)"));
   do_check_success(rv);
-  rv = db->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "INSERT INTO test (data) VALUES ('foo')"
-  ));
+  rv = db->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("INSERT INTO test (data) VALUES ('foo')"));
   do_check_success(rv);
-  rv = db->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "INSERT INTO test (data) VALUES ('bar')"
-  ));
+  rv = db->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("INSERT INTO test (data) VALUES ('bar')"));
   do_check_success(rv);
-  rv = db->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE UNIQUE INDEX unique_data ON test (data)"
-  ));
+  rv = db->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE UNIQUE INDEX unique_data ON test (data)"));
   do_check_success(rv);
 }
 
-void
-test_step_locked_does_not_block_main_thread()
-{
+void test_step_locked_does_not_block_main_thread() {
   nsCOMPtr<mozIStorageConnection> db(getDatabase());
 
   // Need to prepare our statement ahead of time so we make sure to only test
   // step and not prepare.
   nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = db->CreateStatement(NS_LITERAL_CSTRING(
-    "INSERT INTO test (data) VALUES ('test1')"
-  ), getter_AddRefs(stmt));
+  nsresult rv = db->CreateStatement(
+      NS_LITERAL_CSTRING("INSERT INTO test (data) VALUES ('test1')"),
+      getter_AddRefs(stmt));
   do_check_success(rv);
 
   RefPtr<DatabaseLocker> locker(new DatabaseLocker("SELECT * FROM test"));
@@ -177,7 +150,8 @@ test_step_locked_does_not_block_main_thread()
     mozilla::ReentrantMonitorAutoEnter lock(locker->monitor);
     locker->RunInBackground();
 
-    // Wait for the locker to notify us that it has locked the database properly.
+    // Wait for the locker to notify us that it has locked the database
+    // properly.
     locker->WaitFor(WRITE_LOCK);
 
     bool hasResult;
@@ -189,21 +163,18 @@ test_step_locked_does_not_block_main_thread()
   locker->Shutdown();
 }
 
-void
-test_drop_index_does_not_loop()
-{
+void test_drop_index_does_not_loop() {
   nsCOMPtr<mozIStorageConnection> db(getDatabase());
 
   // Need to prepare our statement ahead of time so we make sure to only test
   // step and not prepare.
   nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = db->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT * FROM test"
-  ), getter_AddRefs(stmt));
+  nsresult rv = db->CreateStatement(NS_LITERAL_CSTRING("SELECT * FROM test"),
+                                    getter_AddRefs(stmt));
   do_check_success(rv);
 
   RefPtr<DatabaseTester> tester =
-    new DatabaseTester(db, "DROP INDEX unique_data");
+      new DatabaseTester(db, "DROP INDEX unique_data");
   do_check_true(tester);
   {
     mozilla::ReentrantMonitorAutoEnter lock(tester->monitor);
@@ -222,17 +193,14 @@ test_drop_index_does_not_loop()
   tester->Shutdown();
 }
 
-void
-test_drop_table_does_not_loop()
-{
+void test_drop_table_does_not_loop() {
   nsCOMPtr<mozIStorageConnection> db(getDatabase());
 
   // Need to prepare our statement ahead of time so we make sure to only test
   // step and not prepare.
   nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = db->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT * FROM test"
-  ), getter_AddRefs(stmt));
+  nsresult rv = db->CreateStatement(NS_LITERAL_CSTRING("SELECT * FROM test"),
+                                    getter_AddRefs(stmt));
   do_check_success(rv);
 
   RefPtr<DatabaseTester> tester(new DatabaseTester(db, "DROP TABLE test"));
@@ -254,8 +222,7 @@ test_drop_table_does_not_loop()
   tester->Shutdown();
 }
 
-TEST(storage_unlock_notify, Test)
-{
+TEST(storage_unlock_notify, Test) {
   // These must execute in order.
   setup();
   test_step_locked_does_not_block_main_thread();

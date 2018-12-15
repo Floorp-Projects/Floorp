@@ -21,6 +21,7 @@ import six
 
 
 from compare_locales import parser as cl
+from compare_locales.parser.base import StickyEntry
 from compare_locales.compare.utils import AddRemove
 
 
@@ -91,22 +92,9 @@ def merge_two(newer, older, keep_newer=True):
     diff.set_left(newer.keys())
     diff.set_right(older.keys())
 
-    def get_entity(key):
-        if keep_newer:
-            default, backup = newer, older
-        else:
-            default, backup = older, newer
-
-        entity = default.get(key, None)
-
-        # Always prefer the newer version.
-        if entity is not None:
-            return entity
-
-        return backup.get(key)
-
     # Create a flat sequence of all entities in order reported by AddRemove.
-    contents = [(key, get_entity(key)) for _, key in diff]
+    get_entity = get_newer_entity if keep_newer else get_older_entity
+    contents = [(key, get_entity(newer, older, key)) for _, key in diff]
 
     def prune(acc, cur):
         _, entity = cur
@@ -128,6 +116,27 @@ def merge_two(newer, older, keep_newer=True):
 
     pruned = six.moves.reduce(prune, contents, [])
     return OrderedDict(pruned)
+
+
+def get_newer_entity(newer, older, key):
+    entity = newer.get(key, None)
+
+    # Always prefer the newer version.
+    if entity is not None:
+        return entity
+
+    return older.get(key)
+
+
+def get_older_entity(newer, older, key):
+    entity = older.get(key, None)
+
+    # If we don't have an older version, or it's a StickyEntry,
+    # get a newer version
+    if entity is None or isinstance(entity, StickyEntry):
+        return newer.get(key)
+
+    return entity
 
 
 def serialize_legacy_resource(entities):

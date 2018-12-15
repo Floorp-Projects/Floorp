@@ -15,8 +15,8 @@ fn is_valid_transport(transports: ::AuthenticatorTransports) -> bool {
 }
 
 fn find_valid_key_handles<'a, F>(
-    app_ids: &'a Vec<::AppId>,
-    key_handles: &'a Vec<::KeyHandle>,
+    app_ids: &'a [::AppId],
+    key_handles: &'a [::KeyHandle],
     mut is_valid: F,
 ) -> (&'a ::AppId, Vec<&'a ::KeyHandle>)
 where
@@ -31,12 +31,12 @@ where
             .collect::<Vec<_>>();
 
         // If there's at least one, stop.
-        if valid_handles.len() > 0 {
+        if !valid_handles.is_empty() {
             return (app_id, valid_handles);
         }
     }
 
-    return (&app_ids[0], vec![]);
+    (&app_ids[0], vec![])
 }
 
 #[derive(Default)]
@@ -101,15 +101,13 @@ impl StateMachine {
             while alive() {
                 if excluded {
                     let blank = vec![0u8; PARAMETER_SIZE];
-                    if let Ok(_) = u2f_register(dev, &blank, &blank) {
+                    if u2f_register(dev, &blank, &blank).is_ok() {
                         callback.call(Err(::Error::InvalidState));
                         break;
                     }
-                } else {
-                    if let Ok(bytes) = u2f_register(dev, &challenge, &application) {
-                        callback.call(Ok(bytes));
-                        break;
-                    }
+                } else if let Ok(bytes) = u2f_register(dev, &challenge, &application) {
+                    callback.call(Ok(bytes));
+                    break;
                 }
 
                 // Sleep a bit before trying again.
@@ -181,7 +179,7 @@ impl StateMachine {
                 // then just make it blink with bogus data.
                 if valid_handles.is_empty() {
                     let blank = vec![0u8; PARAMETER_SIZE];
-                    if let Ok(_) = u2f_register(dev, &blank, &blank) {
+                    if u2f_register(dev, &blank, &blank).is_ok() {
                         callback.call(Err(::Error::InvalidState));
                         break;
                     }

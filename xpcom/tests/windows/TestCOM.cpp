@@ -15,13 +15,15 @@
 #include "gtest/gtest.h"
 
 // {5846BA30-B856-11d1-A98A-00805F8A7AC4}
-#define NS_ITEST_COM_IID \
-{ 0x5846ba30, 0xb856, 0x11d1, \
-  { 0xa9, 0x8a, 0x0, 0x80, 0x5f, 0x8a, 0x7a, 0xc4 } }
+#define NS_ITEST_COM_IID                            \
+  {                                                 \
+    0x5846ba30, 0xb856, 0x11d1, {                   \
+      0xa9, 0x8a, 0x0, 0x80, 0x5f, 0x8a, 0x7a, 0xc4 \
+    }                                               \
+  }
 
-class nsITestCom: public nsISupports
-{
-public:
+class nsITestCom : public nsISupports {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITEST_COM_IID)
   NS_IMETHOD Test() = 0;
 };
@@ -35,35 +37,28 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsITestCom, NS_ITEST_COM_IID)
 class nsTestCom final : public nsITestCom {
   NS_DECL_ISUPPORTS
 
-public:
-  nsTestCom() {
-  }
+ public:
+  nsTestCom() {}
 
-  NS_IMETHOD Test() override {
-    return NS_OK;
-  }
+  NS_IMETHOD Test() override { return NS_OK; }
 
   static int sDestructions;
 
-private:
-  ~nsTestCom() {
-    sDestructions++;
-  }
+ private:
+  ~nsTestCom() { sDestructions++; }
 };
 
 int nsTestCom::sDestructions;
 
 NS_IMPL_QUERY_INTERFACE(nsTestCom, nsITestCom)
 
-MozExternalRefCountType nsTestCom::AddRef()
-{
+MozExternalRefCountType nsTestCom::AddRef() {
   nsrefcnt res = ++mRefCnt;
   NS_LOG_ADDREF(this, mRefCnt, "nsTestCom", sizeof(*this));
   return res;
 }
 
-MozExternalRefCountType nsTestCom::Release()
-{
+MozExternalRefCountType nsTestCom::Release() {
   nsrefcnt res = --mRefCnt;
   NS_LOG_RELEASE(this, mRefCnt, "nsTestCom");
   if (res == 0) {
@@ -75,17 +70,13 @@ MozExternalRefCountType nsTestCom::Release()
 class nsTestComFactory final : public nsIFactory {
   ~nsTestComFactory() { sDestructions++; }
   NS_DECL_ISUPPORTS
-public:
-  nsTestComFactory() {
-  }
+ public:
+  nsTestComFactory() {}
 
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                            const nsIID &aIID,
+  NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID,
                             void **aResult);
 
-  NS_IMETHOD LockFactory(bool aLock) override {
-    return NS_OK;
-  }
+  NS_IMETHOD LockFactory(bool aLock) override { return NS_OK; }
 
   static int sDestructions;
 };
@@ -95,9 +86,7 @@ int nsTestComFactory::sDestructions;
 NS_IMPL_ISUPPORTS(nsTestComFactory, nsIFactory)
 
 nsresult nsTestComFactory::CreateInstance(nsISupports *aOuter,
-					  const nsIID &aIID,
-					  void **aResult)
-{
+                                          const nsIID &aIID, void **aResult) {
   if (aOuter != nullptr) {
     return NS_ERROR_NO_AGGREGATION;
   }
@@ -115,14 +104,13 @@ nsresult nsTestComFactory::CreateInstance(nsISupports *aOuter,
   return res;
 }
 
-TEST(TestCOM, WindowsInterop)
-{
+TEST(TestCOM, WindowsInterop) {
   nsTestComFactory *inst = new nsTestComFactory();
 
   // Test we can QI nsIFactory to an IClassFactory.
   IClassFactory *iFactory = nullptr;
-  nsresult rv = inst->QueryInterface(NS_GET_IID(nsIFactory),
-                                      (void **) &iFactory);
+  nsresult rv =
+      inst->QueryInterface(NS_GET_IID(nsIFactory), (void **)&iFactory);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(iFactory);
 
@@ -131,7 +119,7 @@ TEST(TestCOM, WindowsInterop)
 
   HRESULT hr = iFactory->LockServer(TRUE);
   ASSERT_TRUE(SUCCEEDED(hr));
-  hr = iFactory->CreateInstance(nullptr, IID_IUnknown, (void **) &iUnknown);
+  hr = iFactory->CreateInstance(nullptr, IID_IUnknown, (void **)&iUnknown);
   ASSERT_TRUE(SUCCEEDED(hr));
   ASSERT_TRUE(iUnknown);
   hr = iFactory->LockServer(FALSE);
@@ -140,8 +128,7 @@ TEST(TestCOM, WindowsInterop)
   // Test we can QI an IUnknown to nsITestCom.
   nsITestCom *iTestCom = nullptr;
   GUID testGUID = NS_ITEST_COM_IID;
-  hr = iUnknown->QueryInterface(testGUID,
-				 (void **) &iTestCom);
+  hr = iUnknown->QueryInterface(testGUID, (void **)&iTestCom);
   ASSERT_TRUE(SUCCEEDED(hr));
   ASSERT_TRUE(iTestCom);
 

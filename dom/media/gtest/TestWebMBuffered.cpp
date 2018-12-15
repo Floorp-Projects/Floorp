@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
 #include "mozilla/ArrayUtils.h"
@@ -15,11 +15,11 @@ using namespace mozilla;
 // because they occur after a block with timecode 160000000 and the parser
 // expects in-order timecodes per the WebM spec.  The remaining 6
 // SimpleBlocks have the following attributes:
-static const uint64_t gTimecodes[] = { 66000000, 160000000, 166000000, 200000000, 233000000, 320000000 };
-static const int64_t gEndOffsets[] = { 501, 772, 1244, 1380, 1543, 2015 };
+static const uint64_t gTimecodes[] = {66000000,  160000000, 166000000,
+                                      200000000, 233000000, 320000000};
+static const int64_t gEndOffsets[] = {501, 772, 1244, 1380, 1543, 2015};
 
-TEST(WebMBuffered, BasicTests)
-{
+TEST(WebMBuffered, BasicTests) {
   ReentrantMonitor dummy("dummy");
   WebMBufferedParser parser(0);
 
@@ -29,18 +29,16 @@ TEST(WebMBuffered, BasicTests)
   EXPECT_EQ(parser.mStartOffset, 0);
   EXPECT_EQ(parser.mCurrentOffset, 0);
 
-  unsigned char buf[] = { 0x1a, 0x45, 0xdf, 0xa3 };
+  unsigned char buf[] = {0x1a, 0x45, 0xdf, 0xa3};
   parser.Append(buf, ArrayLength(buf), mapping, dummy);
   EXPECT_TRUE(mapping.IsEmpty());
   EXPECT_EQ(parser.mStartOffset, 0);
   EXPECT_EQ(parser.mCurrentOffset, 4);
 }
 
-static void
-ReadFile(const char* aPath, nsTArray<uint8_t>& aBuffer)
-{
+static void ReadFile(const char* aPath, nsTArray<uint8_t>& aBuffer) {
   FILE* f = fopen(aPath, "rb");
-  ASSERT_NE(f, (FILE *) nullptr);
+  ASSERT_NE(f, (FILE*)nullptr);
 
   int r = fseek(f, 0, SEEK_END);
   ASSERT_EQ(r, 0);
@@ -59,8 +57,7 @@ ReadFile(const char* aPath, nsTArray<uint8_t>& aBuffer)
   ASSERT_EQ(r, 0);
 }
 
-TEST(WebMBuffered, RealData)
-{
+TEST(WebMBuffered, RealData) {
   ReentrantMonitor dummy("dummy");
   WebMBufferedParser parser(0);
 
@@ -81,8 +78,7 @@ TEST(WebMBuffered, RealData)
   }
 }
 
-TEST(WebMBuffered, RealDataAppend)
-{
+TEST(WebMBuffered, RealDataAppend) {
   ReentrantMonitor dummy("dummy");
   WebMBufferedParser parser(0);
   nsTArray<WebMTimeDataOffset> mapping;

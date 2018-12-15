@@ -13,44 +13,36 @@
 #include "xpcpublic.h"
 
 using namespace mozilla;
-using mozilla::ipc::TestShellParent;
-using mozilla::ipc::TestShellCommandParent;
 using mozilla::ipc::PTestShellCommandParent;
+using mozilla::ipc::TestShellCommandParent;
+using mozilla::ipc::TestShellParent;
 
-void
-TestShellParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void TestShellParent::ActorDestroy(ActorDestroyReason aWhy) {
   // Implement me! Bug 1005177
 }
 
-PTestShellCommandParent*
-TestShellParent::AllocPTestShellCommandParent(const nsString& aCommand)
-{
+PTestShellCommandParent* TestShellParent::AllocPTestShellCommandParent(
+    const nsString& aCommand) {
   return new TestShellCommandParent();
 }
 
-bool
-TestShellParent::DeallocPTestShellCommandParent(PTestShellCommandParent* aActor)
-{
+bool TestShellParent::DeallocPTestShellCommandParent(
+    PTestShellCommandParent* aActor) {
   delete aActor;
   return true;
 }
 
-bool
-TestShellParent::CommandDone(TestShellCommandParent* command,
-                             const nsString& aResponse)
-{
+bool TestShellParent::CommandDone(TestShellCommandParent* command,
+                                  const nsString& aResponse) {
   // XXX what should happen if the callback fails?
-  /*bool ok = */command->RunCallback(aResponse);
+  /*bool ok = */ command->RunCallback(aResponse);
   command->ReleaseCallback();
 
   return true;
 }
 
-bool
-TestShellCommandParent::SetCallback(JSContext* aCx,
-                                    const JS::Value& aCallback)
-{
+bool TestShellCommandParent::SetCallback(JSContext* aCx,
+                                         const JS::Value& aCallback) {
   if (!mCallback.initialized()) {
     mCallback.init(aCx, aCallback);
     return true;
@@ -61,9 +53,7 @@ TestShellCommandParent::SetCallback(JSContext* aCx,
   return true;
 }
 
-bool
-TestShellCommandParent::RunCallback(const nsString& aResponse)
-{
+bool TestShellCommandParent::RunCallback(const nsString& aResponse) {
   NS_ENSURE_TRUE(mCallback.isObject(), false);
 
   MOZ_RELEASE_ASSERT(js::IsFunctionObject(&mCallback.toObject()));
@@ -81,28 +71,20 @@ TestShellCommandParent::RunCallback(const nsString& aResponse)
 
   JS::Rooted<JS::Value> rval(cx);
   JS::Rooted<JS::Value> callback(cx, mCallback);
-  bool ok = JS_CallFunctionValue(cx, global, callback, JS::HandleValueArray(strVal), &rval);
+  bool ok = JS_CallFunctionValue(cx, global, callback,
+                                 JS::HandleValueArray(strVal), &rval);
   NS_ENSURE_TRUE(ok, false);
 
   return true;
 }
 
-void
-TestShellCommandParent::ReleaseCallback()
-{
-  mCallback.reset();
+void TestShellCommandParent::ReleaseCallback() { mCallback.reset(); }
+
+bool TestShellCommandParent::ExecuteCallback(const nsString& aResponse) {
+  return static_cast<TestShellParent*>(Manager())->CommandDone(this, aResponse);
 }
 
-bool
-TestShellCommandParent::ExecuteCallback(const nsString& aResponse)
-{
-  return static_cast<TestShellParent*>(Manager())->CommandDone(
-      this, aResponse);
-}
-
-void
-TestShellCommandParent::ActorDestroy(ActorDestroyReason why)
-{
+void TestShellCommandParent::ActorDestroy(ActorDestroyReason why) {
   if (why == AbnormalShutdown) {
     ExecuteCallback(EmptyString());
   }

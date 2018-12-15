@@ -23,7 +23,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
-
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
 #include "gtest_utils.h"
@@ -33,18 +32,16 @@ using namespace mozilla;
 namespace {
 class SocketTransportServiceTest : public MtransportTest {
  public:
-  SocketTransportServiceTest() : MtransportTest(),
-                                 received_(0),
-                                 readpipe_(nullptr),
-                                 writepipe_(nullptr),
-                                 registered_(false) {
-  }
+  SocketTransportServiceTest()
+      : MtransportTest(),
+        received_(0),
+        readpipe_(nullptr),
+        writepipe_(nullptr),
+        registered_(false) {}
 
   ~SocketTransportServiceTest() {
-    if (readpipe_)
-      PR_Close(readpipe_);
-    if (writepipe_)
-      PR_Close(writepipe_);
+    if (readpipe_) PR_Close(readpipe_);
+    if (writepipe_) PR_Close(writepipe_);
   }
 
   void SetUp();
@@ -52,17 +49,11 @@ class SocketTransportServiceTest : public MtransportTest {
   void SendEvent();
   void SendPacket();
 
-  void ReceivePacket() {
-    ++received_;
-  }
+  void ReceivePacket() { ++received_; }
 
-  void ReceiveEvent() {
-    ++received_;
-  }
+  void ReceiveEvent() { ++received_; }
 
-  size_t Received() {
-    return received_;
-  }
+  size_t Received() { return received_; }
 
  private:
   nsCOMPtr<nsISocketTransportService> stservice_;
@@ -73,12 +64,11 @@ class SocketTransportServiceTest : public MtransportTest {
   bool registered_;
 };
 
-
 // Received an event.
 class EventReceived : public Runnable {
-public:
-  explicit EventReceived(SocketTransportServiceTest *test) :
-      Runnable("EventReceived"), test_(test) {}
+ public:
+  explicit EventReceived(SocketTransportServiceTest *test)
+      : Runnable("EventReceived"), test_(test) {}
 
   NS_IMETHOD Run() override {
     test_->ReceiveEvent();
@@ -88,12 +78,11 @@ public:
   SocketTransportServiceTest *test_;
 };
 
-
 // Register our listener on the socket
 class RegisterEvent : public Runnable {
-public:
-  explicit RegisterEvent(SocketTransportServiceTest *test) :
-      Runnable("RegisterEvent"), test_(test) {}
+ public:
+  explicit RegisterEvent(SocketTransportServiceTest *test)
+      : Runnable("RegisterEvent"), test_(test) {}
 
   NS_IMETHOD Run() override {
     test_->RegisterHandler();
@@ -103,11 +92,9 @@ public:
   SocketTransportServiceTest *test_;
 };
 
-
 class SocketHandler : public nsASocketHandler {
  public:
-  explicit SocketHandler(SocketTransportServiceTest *test) : test_(test) {
-  }
+  explicit SocketHandler(SocketTransportServiceTest *test) : test_(test) {}
 
   void OnSocketReady(PRFileDesc *fd, int16_t outflags) override {
     unsigned char buf[1600];
@@ -163,7 +150,6 @@ void SocketTransportServiceTest::SetUp() {
   rv = target_->Dispatch(new RegisterEvent(this), 0);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE_WAIT(registered_, 10000);
-
 }
 
 void SocketTransportServiceTest::RegisterHandler() {
@@ -192,16 +178,9 @@ void SocketTransportServiceTest::SendPacket() {
   ASSERT_EQ(sizeof(buffer), size);
 }
 
-
-
 // The unit tests themselves
-TEST_F(SocketTransportServiceTest, SendEvent) {
-  SendEvent();
-}
+TEST_F(SocketTransportServiceTest, SendEvent) { SendEvent(); }
 
-TEST_F(SocketTransportServiceTest, SendPacket) {
-  SendPacket();
-}
-
+TEST_F(SocketTransportServiceTest, SendPacket) { SendPacket(); }
 
 }  // end namespace

@@ -775,8 +775,8 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
   MOZ_ASSERT_IF(object, GetCellColor(object) == mapColor);
 
   CellColor keyColor = GetCellColor(key);
-  CellColor valueColor = valueZone->isGCMarking() ? GetCellColor(value)
-                                                  : CellColor::Black;
+  CellColor valueColor =
+      valueZone->isGCMarking() ? GetCellColor(value) : CellColor::Black;
 
   if (valueColor < Min(mapColor, keyColor)) {
     fprintf(stderr, "WeakMap value is less marked than map and key\n");

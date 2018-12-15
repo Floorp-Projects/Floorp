@@ -9,68 +9,55 @@
 namespace mozilla {
 namespace _ipdltest {
 
-class TestRaceDeferralParent :
-    public PTestRaceDeferralParent
-{
-public:
-    TestRaceDeferralParent();
-    virtual ~TestRaceDeferralParent();
+class TestRaceDeferralParent : public PTestRaceDeferralParent {
+ public:
+  TestRaceDeferralParent();
+  virtual ~TestRaceDeferralParent();
 
-    static bool RunTestInProcesses() { return true; }
-    static bool RunTestInThreads() { return true; }
+  static bool RunTestInProcesses() { return true; }
+  static bool RunTestInThreads() { return true; }
 
-    void Main();
+  void Main();
 
-protected:
-    void Test1();
+ protected:
+  void Test1();
 
-    virtual mozilla::ipc::IPCResult AnswerLose() override;
+  virtual mozilla::ipc::IPCResult AnswerLose() override;
 
-    virtual mozilla::ipc::RacyInterruptPolicy
-    MediateInterruptRace(const MessageInfo& parent,
-                         const MessageInfo& child) override;
+  virtual mozilla::ipc::RacyInterruptPolicy MediateInterruptRace(
+      const MessageInfo& parent, const MessageInfo& child) override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) override
-    {
-        if (NormalShutdown != why)
-            fail("unexpected destruction!");
-        passed("ok");
-        QuitParent();
-    }
+  virtual void ActorDestroy(ActorDestroyReason why) override {
+    if (NormalShutdown != why) fail("unexpected destruction!");
+    passed("ok");
+    QuitParent();
+  }
 
-    bool mProcessedLose;
+  bool mProcessedLose;
 };
 
+class TestRaceDeferralChild : public PTestRaceDeferralChild {
+ public:
+  TestRaceDeferralChild();
+  virtual ~TestRaceDeferralChild();
 
-class TestRaceDeferralChild :
-    public PTestRaceDeferralChild
-{
-public:
-    TestRaceDeferralChild();
-    virtual ~TestRaceDeferralChild();
+ protected:
+  virtual mozilla::ipc::IPCResult RecvStartRace() override;
 
-protected:
-    virtual mozilla::ipc::IPCResult RecvStartRace() override;
+  virtual mozilla::ipc::IPCResult AnswerWin() override;
 
-    virtual mozilla::ipc::IPCResult AnswerWin() override;
+  virtual mozilla::ipc::IPCResult AnswerRpc() override;
 
-    virtual mozilla::ipc::IPCResult AnswerRpc() override;
+  virtual mozilla::ipc::RacyInterruptPolicy MediateInterruptRace(
+      const MessageInfo& parent, const MessageInfo& child) override;
 
-    virtual mozilla::ipc::RacyInterruptPolicy
-    MediateInterruptRace(const MessageInfo& parent,
-                         const MessageInfo& child) override;
-
-    virtual void ActorDestroy(ActorDestroyReason why) override
-    {
-        if (NormalShutdown != why)
-            fail("unexpected destruction!");
-        QuitChild();
-    }
+  virtual void ActorDestroy(ActorDestroyReason why) override {
+    if (NormalShutdown != why) fail("unexpected destruction!");
+    QuitChild();
+  }
 };
 
+}  // namespace _ipdltest
+}  // namespace mozilla
 
-} // namespace _ipdltest
-} // namespace mozilla
-
-
-#endif // ifndef mozilla__ipdltest_TestRaceDeferral_h
+#endif  // ifndef mozilla__ipdltest_TestRaceDeferral_h

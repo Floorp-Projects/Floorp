@@ -13,7 +13,7 @@ from ..parser.android import textContent
 
 
 class AndroidChecker(Checker):
-    pattern = re.compile('(.*/)?strings.*\\.xml$')
+    pattern = re.compile('(.*)?strings.*\\.xml$')
 
     def check(self, refEnt, l10nEnt):
         '''Given the reference and localized Entities, performs checks.

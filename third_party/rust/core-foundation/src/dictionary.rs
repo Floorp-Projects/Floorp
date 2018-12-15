@@ -19,6 +19,7 @@ use std::marker::PhantomData;
 
 use base::{ItemRef, FromVoid, ToVoid};
 use base::{CFIndexConvertible, TCFType};
+use ConcreteCFType;
 
 // consume the type parameters with PhantomDatas
 pub struct CFDictionary<K = *const c_void, V = *const c_void>(CFDictionaryRef, PhantomData<K>, PhantomData<V>);
@@ -31,6 +32,8 @@ impl<K, V> Drop for CFDictionary<K, V> {
 
 impl_TCFType!(CFDictionary<K, V>, CFDictionaryRef, CFDictionaryGetTypeID);
 impl_CFTypeDescription!(CFDictionary);
+
+unsafe impl ConcreteCFType for CFDictionary<*const c_void, *const c_void> {}
 
 impl<K, V> CFDictionary<K, V> {
     pub fn from_CFType_pairs(pairs: &[(K, V)]) -> CFDictionary<K, V> where K: TCFType, V: TCFType {
@@ -48,6 +51,20 @@ impl<K, V> CFDictionary<K, V> {
                                                     &kCFTypeDictionaryValueCallBacks);
             TCFType::wrap_under_create_rule(dictionary_ref)
         }
+    }
+
+    #[inline]
+    pub fn to_untyped(&self) -> CFDictionary {
+        unsafe { CFDictionary::wrap_under_get_rule(self.0) }
+    }
+
+    /// Returns the same dictionary, but with the types reset to void pointers.
+    /// Equal to `to_untyped`, but is faster since it does not increment the retain count.
+    #[inline]
+    pub fn into_untyped(self) -> CFDictionary {
+        let reference = self.0;
+        mem::forget(self);
+        unsafe { CFDictionary::wrap_under_create_rule(reference) }
     }
 
     #[inline]
@@ -146,6 +163,26 @@ impl<K, V> CFMutableDictionary<K, V> {
         result
     }
 
+    #[inline]
+    pub fn to_untyped(&self) -> CFMutableDictionary {
+        unsafe { CFMutableDictionary::wrap_under_get_rule(self.0) }
+    }
+
+    /// Returns the same dictionary, but with the types reset to void pointers.
+    /// Equal to `to_untyped`, but is faster since it does not increment the retain count.
+    #[inline]
+    pub fn into_untyped(self) -> CFMutableDictionary {
+        let reference = self.0;
+        mem::forget(self);
+        unsafe { CFMutableDictionary::wrap_under_create_rule(reference) }
+    }
+
+    /// Returns a `CFDictionary` pointing to the same underlying dictionary as this mutable one.
+    #[inline]
+    pub fn to_immutable(&self) -> CFDictionary<K, V> {
+        unsafe { CFDictionary::wrap_under_get_rule(self.0) }
+    }
+
     // Immutable interface
 
     #[inline]
@@ -235,6 +272,17 @@ impl<K, V> CFMutableDictionary<K, V> {
     }
 }
 
+impl<'a, K, V> From<&'a CFDictionary<K, V>> for CFMutableDictionary<K, V> {
+    /// Creates a new mutable dictionary with the key-value pairs from another dictionary.
+    /// The capacity of the new mutable dictionary is not limited.
+    fn from(dict: &'a CFDictionary<K, V>) -> Self {
+        unsafe {
+            let mut_dict_ref = CFDictionaryCreateMutableCopy(kCFAllocatorDefault, 0, dict.0);
+            TCFType::wrap_under_create_rule(mut_dict_ref)
+        }
+    }
+}
+
 
 #[cfg(test)]
 pub mod test {
@@ -312,5 +360,37 @@ pub mod test {
         let value = dict.find(&key).unwrap().clone();
         assert_eq!(value, CFBoolean::true_value());
         assert_eq!(dict.find(&invalid_key), None);
+    }
+
+    #[test]
+    fn convert_immutable_to_mutable_dict() {
+        let dict: CFDictionary<CFString, CFBoolean> = CFDictionary::from_CFType_pairs(&[
+            (CFString::from_static_string("Foo"), CFBoolean::true_value()),
+        ]);
+        let mut mut_dict = CFMutableDictionary::from(&dict);
+        assert_eq!(dict.retain_count(), 1);
+        assert_eq!(mut_dict.retain_count(), 1);
+
+        assert_eq!(mut_dict.len(), 1);
+        assert_eq!(*mut_dict.get(&CFString::from_static_string("Foo")), CFBoolean::true_value());
+
+        mut_dict.add(&CFString::from_static_string("Bar"), &CFBoolean::false_value());
+        assert_eq!(dict.len(), 1);
+        assert_eq!(mut_dict.len(), 2);
+    }
+
+    #[test]
+    fn mutable_dictionary_as_immutable() {
+        let mut mut_dict: CFMutableDictionary<CFString, CFBoolean> = CFMutableDictionary::new();
+        mut_dict.add(&CFString::from_static_string("Bar"), &CFBoolean::false_value());
+        assert_eq!(mut_dict.retain_count(), 1);
+
+        let dict = mut_dict.to_immutable();
+        assert_eq!(mut_dict.retain_count(), 2);
+        assert_eq!(dict.retain_count(), 2);
+        assert_eq!(*dict.get(&CFString::from_static_string("Bar")), CFBoolean::false_value());
+
+        mem::drop(dict);
+        assert_eq!(mut_dict.retain_count(), 1);
     }
 }

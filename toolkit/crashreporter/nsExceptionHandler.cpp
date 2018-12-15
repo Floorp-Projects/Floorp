@@ -365,7 +365,7 @@ static LPTOP_LEVEL_EXCEPTION_FILTER WINAPI patched_SetUnhandledExceptionFilter(
   return nullptr;
 }
 
-#ifdef _WIN64
+#if defined(HAVE_64BIT_BUILD) && defined(_M_X64)
 static LPTOP_LEVEL_EXCEPTION_FILTER sUnhandledExceptionFilter = nullptr;
 
 static long JitExceptionHandler(void* exceptionRecord, void* context) {
@@ -1403,16 +1403,18 @@ static nsresult LocateExecutable(nsIFile* aXREDirectory,
 nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
   if (gExceptionHandler) return NS_ERROR_ALREADY_INITIALIZED;
 
-#if !defined(DEBUG)
-  // In non-debug builds, enable the crash reporter by default, and allow
+#if defined(DEBUG) || defined(_M_ARM64)
+  // In debug builds, disable the crash reporter by default, and allow to
+  // enable it with the MOZ_CRASHREPORTER environment variable.
+  // Likewise for Windows arm64 builds, where the crashreporter doesn't
+  // work properly yet.
+  const char* envvar = PR_GetEnv("MOZ_CRASHREPORTER");
+  if ((!envvar || !*envvar) && !force) return NS_OK;
+#else
+  // In other builds, enable the crash reporter by default, and allow
   // disabling it with the MOZ_CRASHREPORTER_DISABLE environment variable.
   const char* envvar = PR_GetEnv("MOZ_CRASHREPORTER_DISABLE");
   if (envvar && *envvar && !force) return NS_OK;
-#else
-  // In debug builds, disable the crash reporter by default, and allow to
-  // enable it with the MOZ_CRASHREPORTER environment variable.
-  const char* envvar = PR_GetEnv("MOZ_CRASHREPORTER");
-  if ((!envvar || !*envvar) && !force) return NS_OK;
 #endif
 
 #if defined(XP_WIN)
@@ -1568,7 +1570,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
   // Initially set sIncludeContextHeap to true for debugging startup crashes
   // even if the controlling pref value is false.
   SetIncludeContextHeap(true);
-#ifdef _WIN64
+#if defined(HAVE_64BIT_BUILD) && defined(_M_X64)
   // Tell JS about the new filter before we disable SetUnhandledExceptionFilter
   SetJitExceptionHandler();
 #endif
@@ -3291,7 +3293,7 @@ bool SetRemoteExceptionHandler(const nsACString& crashPipe,
       NS_ConvertASCIItoUTF16(crashPipe).get(), nullptr);
   gExceptionHandler->set_handle_debug_exceptions(true);
 
-#ifdef _WIN64
+#if defined(HAVE_64BIT_BUILD) && defined(_M_X64)
   SetJitExceptionHandler();
 #endif
 

@@ -12,8 +12,7 @@
 static constexpr bool even(int32_t n) { return !(n & 1); }
 static constexpr bool odd(int32_t n) { return (n & 1); }
 
-void TestAllOf()
-{
+void TestAllOf() {
   using namespace mozilla;
   using namespace std;
 
@@ -36,9 +35,7 @@ void TestAllOf()
   static_assert(!AllOf(arr3, arr3 + ArrayLength(arr3), odd), "3-2");
 }
 
-int
-main()
-{
+int main() {
   TestAllOf();
   return 0;
 }

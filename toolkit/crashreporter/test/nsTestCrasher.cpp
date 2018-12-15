@@ -41,7 +41,7 @@ void PureVirtualCall() {
 }
 
 extern "C" {
-#if XP_WIN && HAVE_64BIT_BUILD && !defined(__MINGW32__)
+#if XP_WIN && HAVE_64BIT_BUILD && defined(_M_X64) && !defined(__MINGW32__)
 // Implementation in win64unwindInfoTests.asm
 uint64_t x64CrashCFITest_NO_MANS_LAND(uint64_t returnpfn, void*);
 uint64_t x64CrashCFITest_Launcher(uint64_t returnpfn, void* testProc);
@@ -78,7 +78,7 @@ const int16_t CRASH_X64CFI_SAVE_XMM128_FAR = 18;
 const int16_t CRASH_X64CFI_EPILOG = 19;
 const int16_t CRASH_X64CFI_EOF = 20;
 
-#if XP_WIN && HAVE_64BIT_BUILD && !defined(__MINGW32__)
+#if XP_WIN && HAVE_64BIT_BUILD && defined(_M_X64) && !defined(__MINGW32__)
 
 typedef decltype(&x64CrashCFITest_UnknownOpcode) win64CFITestFnPtr_t;
 
@@ -149,7 +149,7 @@ extern "C" NS_EXPORT void Crash(int16_t how) {
       ThrowException();
       break;
     }
-#if XP_WIN && HAVE_64BIT_BUILD && !defined(__MINGW32__)
+#if XP_WIN && HAVE_64BIT_BUILD && defined(_M_X64) && !defined(__MINGW32__)
     case CRASH_X64CFI_UNKNOWN_OPCODE:
     case CRASH_X64CFI_PUSH_NONVOL:
     case CRASH_X64CFI_ALLOC_SMALL:
@@ -200,7 +200,7 @@ extern "C" NS_EXPORT void TryOverrideExceptionHandler() {
 #endif
 
 extern "C" NS_EXPORT uint32_t GetWin64CFITestFnAddrOffset(int16_t fnid) {
-#if XP_WIN && HAVE_64BIT_BUILD && !defined(__MINGW32__)
+#if XP_WIN && HAVE_64BIT_BUILD && defined(_M_X64) && !defined(__MINGW32__)
   // fnid uses the same constants as Crash().
   // Returns the RVA of the requested function.
   // Returns 0 on failure.

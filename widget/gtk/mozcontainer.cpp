@@ -32,7 +32,8 @@ static void moz_container_init(MozContainer *container);
 /* widget class methods */
 static void moz_container_map(GtkWidget *widget);
 #if defined(MOZ_WAYLAND)
-static gboolean moz_container_map_wayland(GtkWidget *widget, GdkEventAny *event);
+static gboolean moz_container_map_wayland(GtkWidget *widget,
+                                          GdkEventAny *event);
 #endif
 static void moz_container_unmap(GtkWidget *widget);
 static void moz_container_realize(GtkWidget *widget);
@@ -133,9 +134,9 @@ void moz_container_class_init(MozContainerClass *klass) {
 
   widget_class->map = moz_container_map;
 #if defined(MOZ_WAYLAND)
-    if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
-      widget_class->map_event = moz_container_map_wayland;
-    }
+  if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+    widget_class->map_event = moz_container_map_wayland;
+  }
 #endif
   widget_class->unmap = moz_container_unmap;
   widget_class->realize = moz_container_realize;
@@ -182,8 +183,9 @@ static void frame_callback_handler(void *data, struct wl_callback *callback,
 static const struct wl_callback_listener frame_listener = {
     frame_callback_handler};
 
-static gboolean moz_container_map_wayland(GtkWidget *widget, GdkEventAny *event) {
-  MozContainer* container = MOZ_CONTAINER(widget);
+static gboolean moz_container_map_wayland(GtkWidget *widget,
+                                          GdkEventAny *event) {
+  MozContainer *container = MOZ_CONTAINER(widget);
 
   if (container->ready_to_draw || container->frame_callback_handler) {
     return FALSE;

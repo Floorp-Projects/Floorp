@@ -7,12 +7,12 @@ from __future__ import unicode_literals
 import re
 
 from .base import (
-    EntityBase, OffsetComment,
+    Entry, OffsetComment,
     Parser
 )
 
 
-class IniSection(EntityBase):
+class IniSection(Entry):
     '''Entity-like object representing sections in ini files
     '''
     def __init__(self, ctx, span, val_span):

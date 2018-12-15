@@ -15,15 +15,13 @@ using mozilla::Vector;
 
 #define A(a) MOZ_RELEASE_ASSERT(a)
 
-struct Person
-{
+struct Person {
   int mAge;
   int mId;
   Person(int aAge, int aId) : mAge(aAge), mId(aId) {}
 };
 
-struct GetAge
-{
+struct GetAge {
   Vector<Person>& mV;
   explicit GetAge(Vector<Person>& aV) : mV(aV) {}
   int operator[](size_t index) const { return mV[index].mAge; }
@@ -39,9 +37,7 @@ struct RangeFinder {
   }
 };
 
-static void
-TestBinarySearch()
-{
+static void TestBinarySearch() {
   size_t m;
 
   Vector<int> v1;
@@ -51,21 +47,21 @@ TestBinarySearch()
   MOZ_RELEASE_ASSERT(v1.append(8));
 
   MOZ_RELEASE_ASSERT(!BinarySearch(v1, 0, v1.length(), 1, &m) && m == 0);
-  MOZ_RELEASE_ASSERT( BinarySearch(v1, 0, v1.length(), 2, &m) && m == 0);
+  MOZ_RELEASE_ASSERT(BinarySearch(v1, 0, v1.length(), 2, &m) && m == 0);
   MOZ_RELEASE_ASSERT(!BinarySearch(v1, 0, v1.length(), 3, &m) && m == 1);
-  MOZ_RELEASE_ASSERT( BinarySearch(v1, 0, v1.length(), 4, &m) && m == 1);
+  MOZ_RELEASE_ASSERT(BinarySearch(v1, 0, v1.length(), 4, &m) && m == 1);
   MOZ_RELEASE_ASSERT(!BinarySearch(v1, 0, v1.length(), 5, &m) && m == 2);
-  MOZ_RELEASE_ASSERT( BinarySearch(v1, 0, v1.length(), 6, &m) && m == 2);
+  MOZ_RELEASE_ASSERT(BinarySearch(v1, 0, v1.length(), 6, &m) && m == 2);
   MOZ_RELEASE_ASSERT(!BinarySearch(v1, 0, v1.length(), 7, &m) && m == 3);
-  MOZ_RELEASE_ASSERT( BinarySearch(v1, 0, v1.length(), 8, &m) && m == 3);
+  MOZ_RELEASE_ASSERT(BinarySearch(v1, 0, v1.length(), 8, &m) && m == 3);
   MOZ_RELEASE_ASSERT(!BinarySearch(v1, 0, v1.length(), 9, &m) && m == 4);
 
   MOZ_RELEASE_ASSERT(!BinarySearch(v1, 1, 3, 1, &m) && m == 1);
   MOZ_RELEASE_ASSERT(!BinarySearch(v1, 1, 3, 2, &m) && m == 1);
   MOZ_RELEASE_ASSERT(!BinarySearch(v1, 1, 3, 3, &m) && m == 1);
-  MOZ_RELEASE_ASSERT( BinarySearch(v1, 1, 3, 4, &m) && m == 1);
+  MOZ_RELEASE_ASSERT(BinarySearch(v1, 1, 3, 4, &m) && m == 1);
   MOZ_RELEASE_ASSERT(!BinarySearch(v1, 1, 3, 5, &m) && m == 2);
-  MOZ_RELEASE_ASSERT( BinarySearch(v1, 1, 3, 6, &m) && m == 2);
+  MOZ_RELEASE_ASSERT(BinarySearch(v1, 1, 3, 6, &m) && m == 2);
   MOZ_RELEASE_ASSERT(!BinarySearch(v1, 1, 3, 7, &m) && m == 3);
   MOZ_RELEASE_ASSERT(!BinarySearch(v1, 1, 3, 8, &m) && m == 3);
   MOZ_RELEASE_ASSERT(!BinarySearch(v1, 1, 3, 9, &m) && m == 3);
@@ -83,30 +79,26 @@ TestBinarySearch()
   MOZ_RELEASE_ASSERT(v3.append(Person(6, 360)));
 
   A(!BinarySearch(GetAge(v3), 0, v3.length(), 1, &m) && m == 0);
-  A( BinarySearch(GetAge(v3), 0, v3.length(), 2, &m) && m == 0);
+  A(BinarySearch(GetAge(v3), 0, v3.length(), 2, &m) && m == 0);
   A(!BinarySearch(GetAge(v3), 0, v3.length(), 3, &m) && m == 1);
-  A( BinarySearch(GetAge(v3), 0, v3.length(), 4, &m) && m == 1);
+  A(BinarySearch(GetAge(v3), 0, v3.length(), 4, &m) && m == 1);
   A(!BinarySearch(GetAge(v3), 0, v3.length(), 5, &m) && m == 2);
-  A( BinarySearch(GetAge(v3), 0, v3.length(), 6, &m) && m == 2);
+  A(BinarySearch(GetAge(v3), 0, v3.length(), 6, &m) && m == 2);
   A(!BinarySearch(GetAge(v3), 0, v3.length(), 7, &m) && m == 3);
 }
 
-static void
-TestBinarySearchIf()
-{
-  const int v1[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+static void TestBinarySearchIf() {
+  const int v1[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
   const size_t len = ArrayLength(v1);
   size_t m;
 
-  A( BinarySearchIf(v1, 0, len, RangeFinder( 2,  3), &m) && m == 2);
+  A(BinarySearchIf(v1, 0, len, RangeFinder(2, 3), &m) && m == 2);
   A(!BinarySearchIf(v1, 0, len, RangeFinder(-5, -2), &m) && m == 0);
-  A( BinarySearchIf(v1, 0, len, RangeFinder( 3,  5), &m) && m >= 3 && m < 5);
+  A(BinarySearchIf(v1, 0, len, RangeFinder(3, 5), &m) && m >= 3 && m < 5);
   A(!BinarySearchIf(v1, 0, len, RangeFinder(10, 12), &m) && m == 10);
 }
 
-int
-main()
-{
+int main() {
   TestBinarySearch();
   TestBinarySearchIf();
   return 0;

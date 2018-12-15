@@ -9,11 +9,8 @@
 namespace mozilla {
 namespace _ipdltest {
 
-
-class TestAsyncReturnsParent :
-    public PTestAsyncReturnsParent
-{
-public:
+class TestAsyncReturnsParent : public PTestAsyncReturnsParent {
+ public:
   TestAsyncReturnsParent();
   virtual ~TestAsyncReturnsParent();
 
@@ -22,41 +19,32 @@ public:
 
   void Main();
 
-protected:
+ protected:
   mozilla::ipc::IPCResult RecvPong(PongResolver&& aResolve) override;
 
-  virtual void ActorDestroy(ActorDestroyReason why) override
-  {
-    if (NormalShutdown != why)
-      fail("unexpected destruction!");
+  virtual void ActorDestroy(ActorDestroyReason why) override {
+    if (NormalShutdown != why) fail("unexpected destruction!");
     passed("ok");
     QuitParent();
   }
 };
 
-
-class TestAsyncReturnsChild :
-    public PTestAsyncReturnsChild
-{
-public:
+class TestAsyncReturnsChild : public PTestAsyncReturnsChild {
+ public:
   TestAsyncReturnsChild();
   virtual ~TestAsyncReturnsChild();
 
-protected:
+ protected:
   mozilla::ipc::IPCResult RecvPing(PingResolver&& aResolve) override;
   mozilla::ipc::IPCResult RecvNoReturn(NoReturnResolver&& aResolve) override;
 
-  virtual void ActorDestroy(ActorDestroyReason why) override
-  {
-    if (NormalShutdown != why)
-      fail("unexpected destruction!");
+  virtual void ActorDestroy(ActorDestroyReason why) override {
+    if (NormalShutdown != why) fail("unexpected destruction!");
     QuitChild();
   }
 };
 
+}  // namespace _ipdltest
+}  // namespace mozilla
 
-} // namespace _ipdltest
-} // namespace mozilla
-
-
-#endif // ifndef mozilla__ipdltest_TestAsyncReturns_h
+#endif  // ifndef mozilla__ipdltest_TestAsyncReturns_h

@@ -1,7 +1,7 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TestUniquePtrIPC.h"
 
@@ -12,9 +12,7 @@ namespace _ipdltest {
 // PARENT PROCESS
 // ---------------------------------------------------------------------------
 
-void
-TestUniquePtrIPCParent::Main()
-{
+void TestUniquePtrIPCParent::Main() {
   UniquePtr<int> a1 = MakeUnique<int>(1);
   UniquePtr<DummyStruct> a2 = MakeUnique<DummyStruct>(2);
   DummyStruct a3(3);
@@ -47,12 +45,9 @@ TestUniquePtrIPCParent::Main()
 // CHILD PROCESS
 // ---------------------------------------------------------------------------
 
-mozilla::ipc::IPCResult
-TestUniquePtrIPCChild::RecvTestMessage(UniquePtr<int>&& aA1,
-                                       UniquePtr<DummyStruct>&& aA2,
-                                       const DummyStruct& aA3,
-                                       UniquePtr<int>&& aA4)
-{
+mozilla::ipc::IPCResult TestUniquePtrIPCChild::RecvTestMessage(
+    UniquePtr<int>&& aA1, UniquePtr<DummyStruct>&& aA2, const DummyStruct& aA3,
+    UniquePtr<int>&& aA4) {
   if ((!aA1) || (!aA2)) {
     fail("TestMessage received NULL items in child");
   }
@@ -68,9 +63,8 @@ TestUniquePtrIPCChild::RecvTestMessage(UniquePtr<int>&& aA1,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TestUniquePtrIPCChild::RecvTestSendReference(UniquePtr<DummyStruct>&& aA)
-{
+mozilla::ipc::IPCResult TestUniquePtrIPCChild::RecvTestSendReference(
+    UniquePtr<DummyStruct>&& aA) {
   if (!aA) {
     fail("TestSendReference received NULL item in child");
   }
@@ -83,6 +77,5 @@ TestUniquePtrIPCChild::RecvTestSendReference(UniquePtr<DummyStruct>&& aA)
   return IPC_OK();
 }
 
-
-} // namespace _ipdltest
-} // namespace mozilla
+}  // namespace _ipdltest
+}  // namespace mozilla

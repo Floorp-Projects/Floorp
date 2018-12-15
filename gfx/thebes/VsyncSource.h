@@ -59,6 +59,7 @@ class VsyncSource {
         CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
     void RemoveCompositorVsyncDispatcher(
         CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
+    void MoveListenersToNewSource(VsyncSource::Display& aNewDisplay);
     void NotifyRefreshTimerVsyncStatus(bool aEnable);
     virtual TimeDuration GetVsyncRate();
 
@@ -82,6 +83,8 @@ class VsyncSource {
       CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
   void RemoveCompositorVsyncDispatcher(
       CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
+
+  void MoveListenersToNewSource(VsyncSource* aNewSource);
 
   RefPtr<RefreshTimerVsyncDispatcher> GetRefreshTimerVsyncDispatcher();
   virtual Display& GetGlobalDisplay() = 0;  // Works across all displays

@@ -420,41 +420,6 @@ already_AddRefed<nsStringBuffer> nsCSSValue::BufferFromString(
   return buffer.forget();
 }
 
-/* static */ void nsCSSValue::AppendAlignJustifyValueToString(
-    int32_t aValue, nsAString& aResult) {
-  auto legacy = aValue & NS_STYLE_ALIGN_LEGACY;
-  if (legacy) {
-    aValue &= ~legacy;
-    aResult.AppendLiteral("legacy");
-    if (!aValue) {
-      return;
-    }
-    aResult.AppendLiteral(" ");
-  }
-  // Don't serialize the 'unsafe' keyword; it's the default.
-  auto overflowPos = aValue & (NS_STYLE_ALIGN_SAFE | NS_STYLE_ALIGN_UNSAFE);
-  if (MOZ_UNLIKELY(overflowPos == NS_STYLE_ALIGN_SAFE)) {
-    aResult.AppendLiteral("safe ");
-  }
-  aValue &= ~overflowPos;
-  MOZ_ASSERT(!(aValue & NS_STYLE_ALIGN_FLAG_BITS),
-             "unknown bits in align/justify value");
-  MOZ_ASSERT(
-      (aValue != NS_STYLE_ALIGN_AUTO && aValue != NS_STYLE_ALIGN_NORMAL &&
-       aValue != NS_STYLE_ALIGN_BASELINE &&
-       aValue != NS_STYLE_ALIGN_LAST_BASELINE) ||
-          (!legacy && !overflowPos),
-      "auto/normal/baseline/'last baseline' never have any flags");
-  MOZ_ASSERT(legacy == 0 || overflowPos == 0,
-             "'legacy' together with <overflow-position>");
-  if (aValue == NS_STYLE_ALIGN_LAST_BASELINE) {
-    aResult.AppendLiteral("last ");
-    aValue = NS_STYLE_ALIGN_BASELINE;
-  }
-  const auto& kwtable(nsCSSProps::kAlignAllKeywords);
-  AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(aValue, kwtable), aResult);
-}
-
 size_t nsCSSValue::SizeOfExcludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) const {
   size_t n = 0;

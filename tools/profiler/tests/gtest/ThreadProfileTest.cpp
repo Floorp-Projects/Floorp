@@ -52,4 +52,3 @@ TEST(ThreadProfile, InsertEntriesWrap) {
     readPos++;
   }
 }
-

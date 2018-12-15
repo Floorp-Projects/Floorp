@@ -14,16 +14,12 @@ using mozilla::Variant;
 
 struct Destroyer {
   static int destroyedCount;
-  ~Destroyer() {
-    destroyedCount++;
-  }
+  ~Destroyer() { destroyedCount++; }
 };
 
 int Destroyer::destroyedCount = 0;
 
-static void
-testDetails()
-{
+static void testDetails() {
   printf("testDetails\n");
 
   using mozilla::detail::Nth;
@@ -54,187 +50,185 @@ testDetails()
                 "SelectVariantType<int, int>::count should be 1");
 
   // - type to const type
-  static_assert(
-    IsSame<typename SelectVariantType<int, const int>::Type, const int>::value,
-    "SelectVariantType<int, const int>::Type should be const int");
+  static_assert(IsSame<typename SelectVariantType<int, const int>::Type,
+                       const int>::value,
+                "SelectVariantType<int, const int>::Type should be const int");
   static_assert(SelectVariantType<int, const int>::count == 1,
                 "SelectVariantType<int, const int>::count should be 1");
 
   // - type to const type&
   static_assert(
-    IsSame<typename SelectVariantType<int, const int&>::Type,
-           const int&>::value,
-    "SelectVariantType<int, const int&>::Type should be const int&");
+      IsSame<typename SelectVariantType<int, const int&>::Type,
+             const int&>::value,
+      "SelectVariantType<int, const int&>::Type should be const int&");
   static_assert(SelectVariantType<int, const int&>::count == 1,
                 "SelectVariantType<int, const int&>::count should be 1");
 
   // - type to type&&
   static_assert(
-    IsSame<typename SelectVariantType<int, int&&>::Type, int&&>::value,
-    "SelectVariantType<int, int&&>::Type should be int&&");
+      IsSame<typename SelectVariantType<int, int&&>::Type, int&&>::value,
+      "SelectVariantType<int, int&&>::Type should be int&&");
   static_assert(SelectVariantType<int, int&&>::count == 1,
                 "SelectVariantType<int, int&&>::count should be 1");
 
   // - const type to type
   static_assert(
-    IsSame<typename SelectVariantType<const int, int>::Type, int>::value,
-    "SelectVariantType<const int, int>::Type should be int");
+      IsSame<typename SelectVariantType<const int, int>::Type, int>::value,
+      "SelectVariantType<const int, int>::Type should be int");
   static_assert(SelectVariantType<const int, int>::count == 1,
                 "SelectVariantType<const int, int>::count should be 1");
 
   // - const type to const type
   static_assert(
-    IsSame<typename SelectVariantType<const int, const int>::Type,
-           const int>::value,
-    "SelectVariantType<const int, const int>::Type should be const int");
+      IsSame<typename SelectVariantType<const int, const int>::Type,
+             const int>::value,
+      "SelectVariantType<const int, const int>::Type should be const int");
   static_assert(SelectVariantType<const int, const int>::count == 1,
                 "SelectVariantType<const int, const int>::count should be 1");
 
   // - const type to const type&
   static_assert(
-    IsSame<typename SelectVariantType<const int, const int&>::Type,
-           const int&>::value,
-    "SelectVariantType<const int, const int&>::Type should be const int&");
+      IsSame<typename SelectVariantType<const int, const int&>::Type,
+             const int&>::value,
+      "SelectVariantType<const int, const int&>::Type should be const int&");
   static_assert(SelectVariantType<const int, const int&>::count == 1,
                 "SelectVariantType<const int, const int&>::count should be 1");
 
   // - const type to type&&
   static_assert(
-    IsSame<typename SelectVariantType<const int, int&&>::Type, int&&>::value,
-    "SelectVariantType<const int, int&&>::Type should be int&&");
+      IsSame<typename SelectVariantType<const int, int&&>::Type, int&&>::value,
+      "SelectVariantType<const int, int&&>::Type should be int&&");
   static_assert(SelectVariantType<const int, int&&>::count == 1,
                 "SelectVariantType<const int, int&&>::count should be 1");
 
   // - const type& to type
   static_assert(
-    IsSame<typename SelectVariantType<const int&, int>::Type, int>::value,
-    "SelectVariantType<const int&, int>::Type should be int");
+      IsSame<typename SelectVariantType<const int&, int>::Type, int>::value,
+      "SelectVariantType<const int&, int>::Type should be int");
   static_assert(SelectVariantType<const int&, int>::count == 1,
                 "SelectVariantType<const int&, int>::count should be 1");
 
   // - const type& to const type
   static_assert(
-    IsSame<typename SelectVariantType<const int&, const int>::Type,
-           const int>::value,
-    "SelectVariantType<const int&, const int>::Type should be const int");
+      IsSame<typename SelectVariantType<const int&, const int>::Type,
+             const int>::value,
+      "SelectVariantType<const int&, const int>::Type should be const int");
   static_assert(SelectVariantType<const int&, const int>::count == 1,
                 "SelectVariantType<const int&, const int>::count should be 1");
 
   // - const type& to const type&
   static_assert(
-    IsSame<typename SelectVariantType<const int&, const int&>::Type,
-           const int&>::value,
-    "SelectVariantType<const int&, const int&>::Type should be const int&");
+      IsSame<typename SelectVariantType<const int&, const int&>::Type,
+             const int&>::value,
+      "SelectVariantType<const int&, const int&>::Type should be const int&");
   static_assert(SelectVariantType<const int&, const int&>::count == 1,
                 "SelectVariantType<const int&, const int&>::count should be 1");
 
   // - const type& to type&&
   static_assert(
-    IsSame<typename SelectVariantType<const int&, int&&>::Type, int&&>::value,
-    "SelectVariantType<const int&, int&&>::Type should be int&&");
+      IsSame<typename SelectVariantType<const int&, int&&>::Type, int&&>::value,
+      "SelectVariantType<const int&, int&&>::Type should be int&&");
   static_assert(SelectVariantType<const int&, int&&>::count == 1,
                 "SelectVariantType<const int&, int&&>::count should be 1");
 
   // - type&& to type
   static_assert(
-    IsSame<typename SelectVariantType<int&&, int>::Type, int>::value,
-    "SelectVariantType<int&&, int>::Type should be int");
+      IsSame<typename SelectVariantType<int&&, int>::Type, int>::value,
+      "SelectVariantType<int&&, int>::Type should be int");
   static_assert(SelectVariantType<int&&, int>::count == 1,
                 "SelectVariantType<int&&, int>::count should be 1");
 
   // - type&& to const type
   static_assert(
-    IsSame<typename SelectVariantType<int&&, const int>::Type,
-           const int>::value,
-    "SelectVariantType<int&&, const int>::Type should be const int");
+      IsSame<typename SelectVariantType<int&&, const int>::Type,
+             const int>::value,
+      "SelectVariantType<int&&, const int>::Type should be const int");
   static_assert(SelectVariantType<int&&, const int>::count == 1,
                 "SelectVariantType<int&&, const int>::count should be 1");
 
   // - type&& to const type&
   static_assert(
-    IsSame<typename SelectVariantType<int&&, const int&>::Type,
-           const int&>::value,
-    "SelectVariantType<int&&, const int&>::Type should be const int&");
+      IsSame<typename SelectVariantType<int&&, const int&>::Type,
+             const int&>::value,
+      "SelectVariantType<int&&, const int&>::Type should be const int&");
   static_assert(SelectVariantType<int&&, const int&>::count == 1,
                 "SelectVariantType<int&&, const int&>::count should be 1");
 
   // - type&& to type&&
   static_assert(
-    IsSame<typename SelectVariantType<int&&, int&&>::Type, int&&>::value,
-    "SelectVariantType<int&&, int&&>::Type should be int&&");
+      IsSame<typename SelectVariantType<int&&, int&&>::Type, int&&>::value,
+      "SelectVariantType<int&&, int&&>::Type should be int&&");
   static_assert(SelectVariantType<int&&, int&&>::count == 1,
                 "SelectVariantType<int&&, int&&>::count should be 1");
 
   // SelectVariantType for two different types.
   // (Don't test all combinations, trust that the above tests are sufficient.)
   static_assert(
-    IsSame<typename SelectVariantType<int, int, char>::Type, int>::value,
-    "SelectVariantType<int, int, char>::Type should be int");
+      IsSame<typename SelectVariantType<int, int, char>::Type, int>::value,
+      "SelectVariantType<int, int, char>::Type should be int");
   static_assert(SelectVariantType<int, int, char>::count == 1,
                 "SelectVariantType<int, int, char>::count should be 1");
   static_assert(
-    IsSame<typename SelectVariantType<char, int, char>::Type, char>::value,
-    "SelectVariantType<char, int, char>::Type should be char");
+      IsSame<typename SelectVariantType<char, int, char>::Type, char>::value,
+      "SelectVariantType<char, int, char>::Type should be char");
   static_assert(SelectVariantType<char, int, char>::count == 1,
                 "SelectVariantType<char, int, char>::count should be 1");
 
   // SelectVariantType for two identical types.
   static_assert(
-    IsSame<typename SelectVariantType<int, int, int>::Type, int>::value,
-    "SelectVariantType<int, int, int>::Type should be int");
+      IsSame<typename SelectVariantType<int, int, int>::Type, int>::value,
+      "SelectVariantType<int, int, int>::Type should be int");
   static_assert(SelectVariantType<int, int, int>::count == 2,
                 "SelectVariantType<int, int, int>::count should be 2");
 
   // SelectVariantType for two identical types, with others around.
   static_assert(
-    IsSame<typename SelectVariantType<int, char, int, int>::Type, int>::value,
-    "SelectVariantType<int, char, int, int>::Type should be int");
+      IsSame<typename SelectVariantType<int, char, int, int>::Type, int>::value,
+      "SelectVariantType<int, char, int, int>::Type should be int");
   static_assert(SelectVariantType<int, char, int, int>::count == 2,
                 "SelectVariantType<int, char, int, int>::count should be 2");
 
   static_assert(
-    IsSame<typename SelectVariantType<int, int, char, int>::Type, int>::value,
-    "SelectVariantType<int, int, char, int>::Type should be int");
+      IsSame<typename SelectVariantType<int, int, char, int>::Type, int>::value,
+      "SelectVariantType<int, int, char, int>::Type should be int");
   static_assert(SelectVariantType<int, int, char, int>::count == 2,
                 "SelectVariantType<int, int, char, int>::count should be 2");
 
   static_assert(
-    IsSame<typename SelectVariantType<int, int, int, char>::Type, int>::value,
-    "SelectVariantType<int, int, int, char>::Type should be int");
+      IsSame<typename SelectVariantType<int, int, int, char>::Type, int>::value,
+      "SelectVariantType<int, int, int, char>::Type should be int");
   static_assert(SelectVariantType<int, int, int, char>::count == 2,
                 "SelectVariantType<int, int, int, char>::count should be 2");
 
   static_assert(
-    IsSame<typename SelectVariantType<int, char, int, char, int, char>::Type,
-           int>::value,
-    "SelectVariantType<int, char, int, char, int, char>::Type should be int");
+      IsSame<typename SelectVariantType<int, char, int, char, int, char>::Type,
+             int>::value,
+      "SelectVariantType<int, char, int, char, int, char>::Type should be int");
   static_assert(
-    SelectVariantType<int, char, int, char, int, char>::count == 2,
-    "SelectVariantType<int, char, int, char, int, char>::count should be 2");
+      SelectVariantType<int, char, int, char, int, char>::count == 2,
+      "SelectVariantType<int, char, int, char, int, char>::count should be 2");
 
   // SelectVariantType for two identically-selectable types (first one wins!).
   static_assert(
-    IsSame<typename SelectVariantType<int, int, const int>::Type, int>::value,
-    "SelectVariantType<int, int, const int>::Type should be int");
+      IsSame<typename SelectVariantType<int, int, const int>::Type, int>::value,
+      "SelectVariantType<int, int, const int>::Type should be int");
   static_assert(SelectVariantType<int, int, const int>::count == 2,
                 "SelectVariantType<int, int, const int>::count should be 2");
   static_assert(
-    IsSame<typename SelectVariantType<int, const int, int>::Type,
-           const int>::value,
-    "SelectVariantType<int, const int, int>::Type should be const int");
+      IsSame<typename SelectVariantType<int, const int, int>::Type,
+             const int>::value,
+      "SelectVariantType<int, const int, int>::Type should be const int");
   static_assert(SelectVariantType<int, const int, int>::count == 2,
                 "SelectVariantType<int, const int, int>::count should be 2");
   static_assert(
-    IsSame<typename SelectVariantType<int, const int, int&&>::Type,
-           const int>::value,
-    "SelectVariantType<int, const int, int&&>::Type should be const int");
+      IsSame<typename SelectVariantType<int, const int, int&&>::Type,
+             const int>::value,
+      "SelectVariantType<int, const int, int&&>::Type should be const int");
   static_assert(SelectVariantType<int, const int, int&&>::count == 2,
                 "SelectVariantType<int, const int, int&&>::count should be 2");
 }
 
-static void
-testSimple()
-{
+static void testSimple() {
   printf("testSimple\n");
   Variant<uint32_t, uint64_t> v(uint64_t(1));
   MOZ_RELEASE_ASSERT(v.is<uint64_t>());
@@ -248,9 +242,7 @@ testSimple()
   MOZ_RELEASE_ASSERT(v.as<1>() == 1);
 }
 
-static void
-testDuplicate()
-{
+static void testDuplicate() {
   printf("testDuplicate\n");
   Variant<uint32_t, uint64_t, uint32_t> v(uint64_t(1));
   MOZ_RELEASE_ASSERT(v.is<uint64_t>());
@@ -270,18 +262,14 @@ testDuplicate()
   MOZ_RELEASE_ASSERT(v.extract<1>() == 1);
 }
 
-static void
-testConstructionWithVariantType()
-{
+static void testConstructionWithVariantType() {
   Variant<uint32_t, uint64_t, uint32_t> v(mozilla::VariantType<uint64_t>{}, 3);
   MOZ_RELEASE_ASSERT(v.is<uint64_t>());
-  //MOZ_RELEASE_ASSERT(!v.is<uint32_t>()); // uint32_t is not unique!
+  // MOZ_RELEASE_ASSERT(!v.is<uint32_t>()); // uint32_t is not unique!
   MOZ_RELEASE_ASSERT(v.as<uint64_t>() == 3);
 }
 
-static void
-testConstructionWithVariantIndex()
-{
+static void testConstructionWithVariantIndex() {
   Variant<uint32_t, uint64_t, uint32_t> v(mozilla::VariantIndex<2>{}, 2);
   MOZ_RELEASE_ASSERT(!v.is<uint64_t>());
   // Note: uint32_t is not unique, so `v.is<uint32_t>()` is not allowed.
@@ -293,9 +281,7 @@ testConstructionWithVariantIndex()
   MOZ_RELEASE_ASSERT(v.extract<2>() == 2);
 }
 
-static void
-testCopy()
-{
+static void testCopy() {
   printf("testCopy\n");
   Variant<uint32_t, uint64_t> v1(uint64_t(1));
   Variant<uint32_t, uint64_t> v2(v1);
@@ -309,9 +295,7 @@ testCopy()
   MOZ_RELEASE_ASSERT(v3.as<uint64_t>() == 1);
 }
 
-static void
-testMove()
-{
+static void testMove() {
   printf("testMove\n");
   Variant<UniquePtr<int>, char> v1(MakeUnique<int>(5));
   Variant<UniquePtr<int>, char> v2(std::move(v1));
@@ -336,9 +320,7 @@ testMove()
   MOZ_RELEASE_ASSERT(Destroyer::destroyedCount == 1);
 }
 
-static void
-testDestructor()
-{
+static void testDestructor() {
   printf("testDestructor\n");
   Destroyer::destroyedCount = 0;
 
@@ -347,18 +329,17 @@ testDestructor()
 
     {
       Variant<char, UniquePtr<char[]>, Destroyer> v(d);
-      MOZ_RELEASE_ASSERT(Destroyer::destroyedCount == 0); // None detroyed yet.
+      MOZ_RELEASE_ASSERT(Destroyer::destroyedCount == 0);  // None detroyed yet.
     }
 
-    MOZ_RELEASE_ASSERT(Destroyer::destroyedCount == 1); // v's copy of d is destroyed.
+    MOZ_RELEASE_ASSERT(Destroyer::destroyedCount ==
+                       1);  // v's copy of d is destroyed.
   }
 
-  MOZ_RELEASE_ASSERT(Destroyer::destroyedCount == 2); // d is destroyed.
+  MOZ_RELEASE_ASSERT(Destroyer::destroyedCount == 2);  // d is destroyed.
 }
 
-static void
-testEquality()
-{
+static void testEquality() {
   printf("testEquality\n");
   using V = Variant<char, int>;
 
@@ -386,8 +367,7 @@ testEquality()
   MOZ_RELEASE_ASSERT(v6 == v6);
 }
 
-struct Describer
-{
+struct Describer {
   static const char* little;
   static const char* medium;
   static const char* big;
@@ -401,9 +381,7 @@ const char* Describer::little = "little";
 const char* Describer::medium = "medium";
 const char* Describer::big = "big";
 
-static void
-testMatching()
-{
+static void testMatching() {
   printf("testMatching\n");
   using V = Variant<uint8_t, uint32_t, uint64_t>;
 
@@ -426,18 +404,14 @@ testMatching()
   MOZ_RELEASE_ASSERT(constRef3.match(desc) == Describer::big);
 }
 
-static void
-testRvalueMatcher()
-{
+static void testRvalueMatcher() {
   printf("testRvalueMatcher\n");
   using V = Variant<uint8_t, uint32_t, uint64_t>;
   V v(uint8_t(1));
   MOZ_RELEASE_ASSERT(v.match(Describer()) == Describer::little);
 }
 
-int
-main()
-{
+int main() {
   testDetails();
   testSimple();
   testDuplicate();

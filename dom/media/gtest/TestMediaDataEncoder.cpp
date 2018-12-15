@@ -12,43 +12,35 @@
 #include "AnnexB.h"
 
 #include "mozilla/AbstractThread.h"
-#include "mozilla/media/MediaUtils.h" // For media::Await
+#include "mozilla/media/MediaUtils.h"  // For media::Await
 
 #include <algorithm>
 
 #include <fstream>
 
-#define SKIP_IF_NOT_SUPPORTED(mimeType) \
-do { \
-  RefPtr<PEMFactory> f(new PEMFactory()); \
-  if (!f->SupportsMimeType(NS_LITERAL_CSTRING(mimeType))) { \
-    return; \
-  } \
-} while (0)
+#define SKIP_IF_NOT_SUPPORTED(mimeType)                       \
+  do {                                                        \
+    RefPtr<PEMFactory> f(new PEMFactory());                   \
+    if (!f->SupportsMimeType(NS_LITERAL_CSTRING(mimeType))) { \
+      return;                                                 \
+    }                                                         \
+  } while (0)
 
 using namespace mozilla;
 
 static gfx::IntSize kImageSize(640, 480);
 
-class MediaDataEncoderTest : public testing::Test
-{
-protected:
-  void SetUp() override
-  {
-    InitData(kImageSize);
-  }
+class MediaDataEncoderTest : public testing::Test {
+ protected:
+  void SetUp() override { InitData(kImageSize); }
 
-  void TearDown() override
-  {
-    DeinitData();
-  }
+  void TearDown() override { DeinitData(); }
 
   layers::PlanarYCbCrData mData;
   UniquePtr<uint8_t[]> mBackBuffer;
 
-private:
-  void InitData(const gfx::IntSize& aSize)
-  {
+ private:
+  void InitData(const gfx::IntSize& aSize) {
     mData.mPicSize = aSize;
     mData.mYStride = aSize.width;
     mData.mYSize = aSize;
@@ -62,19 +54,15 @@ private:
     mData.mYChannel = mBackBuffer.get();
     mData.mCbChannel = mData.mYChannel + mData.mYStride * mData.mYSize.height;
     mData.mCrChannel =
-      mData.mCbChannel + mData.mCbCrStride * mData.mCbCrSize.height;
+        mData.mCbChannel + mData.mCbCrStride * mData.mCbCrSize.height;
   }
 
-  void DeinitData()
-  {
-    mBackBuffer.reset();
-  }
+  void DeinitData() { mBackBuffer.reset(); }
 };
 
-static already_AddRefed<MediaDataEncoder>
-CreateH264Encoder(MediaDataEncoder::Usage aUsage,
-                  MediaDataEncoder::PixelFormat aPixelFormat)
-{
+static already_AddRefed<MediaDataEncoder> CreateH264Encoder(
+    MediaDataEncoder::Usage aUsage,
+    MediaDataEncoder::PixelFormat aPixelFormat) {
   RefPtr<PEMFactory> f(new PEMFactory());
 
   if (!f->SupportsMimeType(NS_LITERAL_CSTRING(VIDEO_MP4))) {
@@ -84,25 +72,20 @@ CreateH264Encoder(MediaDataEncoder::Usage aUsage,
   VideoInfo videoInfo(1280, 720);
   videoInfo.mMimeType = NS_LITERAL_CSTRING(VIDEO_MP4);
   const RefPtr<TaskQueue> taskQueue(
-    new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK)));
-  CreateEncoderParams c(videoInfo /* track info */,
-                        aUsage,
-                        taskQueue,
-                        aPixelFormat,
-                        30 /* FPS */,
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK)));
+  CreateEncoderParams c(videoInfo /* track info */, aUsage, taskQueue,
+                        aPixelFormat, 30 /* FPS */,
                         10 * 1024 * 1024 /* bitrate */);
   return f->CreateEncoder(c);
 }
 
-void
-WaitForShutdown(RefPtr<MediaDataEncoder> aEncoder)
-{
+void WaitForShutdown(RefPtr<MediaDataEncoder> aEncoder) {
   MOZ_ASSERT(aEncoder);
 
   Maybe<bool> result;
-  // media::Await() supports exclusive promises only, but ShutdownPromise is not.
-  aEncoder->Shutdown()->Then(AbstractThread::MainThread(),
-                             __func__,
+  // media::Await() supports exclusive promises only, but ShutdownPromise is
+  // not.
+  aEncoder->Shutdown()->Then(AbstractThread::MainThread(), __func__,
                              [&result](bool rv) {
                                EXPECT_TRUE(rv);
                                result = Some(true);
@@ -114,30 +97,26 @@ WaitForShutdown(RefPtr<MediaDataEncoder> aEncoder)
   SpinEventLoopUntil([&result]() { return result; });
 }
 
-TEST_F(MediaDataEncoderTest, H264Create)
-{
+TEST_F(MediaDataEncoderTest, H264Create) {
   SKIP_IF_NOT_SUPPORTED(VIDEO_MP4);
 
-  RefPtr<MediaDataEncoder> e = CreateH264Encoder(
-    MediaDataEncoder::Usage::Realtime, MediaDataEncoder::PixelFormat::YUV420P);
+  RefPtr<MediaDataEncoder> e =
+      CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
+                        MediaDataEncoder::PixelFormat::YUV420P);
 
   EXPECT_TRUE(e);
 
   WaitForShutdown(e);
 }
 
-static bool
-EnsureInit(RefPtr<MediaDataEncoder> aEncoder)
-{
+static bool EnsureInit(RefPtr<MediaDataEncoder> aEncoder) {
   if (!aEncoder) {
     return false;
   }
 
   bool succeeded;
-  media::Await(GetMediaThreadPool(MediaThreadType::PLAYBACK),
-               aEncoder->Init(),
-               [&succeeded](TrackInfo::TrackType t)
-               {
+  media::Await(GetMediaThreadPool(MediaThreadType::PLAYBACK), aEncoder->Init(),
+               [&succeeded](TrackInfo::TrackType t) {
                  EXPECT_EQ(TrackInfo::TrackType::kVideoTrack, t);
                  succeeded = true;
                },
@@ -145,41 +124,34 @@ EnsureInit(RefPtr<MediaDataEncoder> aEncoder)
   return succeeded;
 }
 
-TEST_F(MediaDataEncoderTest, H264Init)
-{
+TEST_F(MediaDataEncoderTest, H264Init) {
   SKIP_IF_NOT_SUPPORTED(VIDEO_MP4);
 
-  RefPtr<MediaDataEncoder> e = CreateH264Encoder(
-    MediaDataEncoder::Usage::Realtime, MediaDataEncoder::PixelFormat::YUV420P);
+  RefPtr<MediaDataEncoder> e =
+      CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
+                        MediaDataEncoder::PixelFormat::YUV420P);
 
   EXPECT_TRUE(EnsureInit(e));
 
   WaitForShutdown(e);
 }
 
-static MediaDataEncoder::EncodedData
-Encode(const RefPtr<MediaDataEncoder> aEncoder,
-       const size_t aNumFrames,
-       const layers::PlanarYCbCrData& aYCbCrData)
-{
+static MediaDataEncoder::EncodedData Encode(
+    const RefPtr<MediaDataEncoder> aEncoder, const size_t aNumFrames,
+    const layers::PlanarYCbCrData& aYCbCrData) {
   MediaDataEncoder::EncodedData output;
   bool succeeded;
   for (size_t i = 0; i < aNumFrames; i++) {
     RefPtr<layers::PlanarYCbCrImage> img =
-      new layers::RecyclingPlanarYCbCrImage(new layers::BufferRecycleBin());
+        new layers::RecyclingPlanarYCbCrImage(new layers::BufferRecycleBin());
     img->AdoptData(aYCbCrData);
-    RefPtr<MediaData> frame =
-      VideoData::CreateFromImage(kImageSize,
-                                0,
-                                TimeUnit::FromMicroseconds(i * 30000),
-                                TimeUnit::FromMicroseconds(30000),
-                                img,
-                                (i & 0xF) == 0,
-                                TimeUnit::FromMicroseconds(i * 30000));
+    RefPtr<MediaData> frame = VideoData::CreateFromImage(
+        kImageSize, 0, TimeUnit::FromMicroseconds(i * 30000),
+        TimeUnit::FromMicroseconds(30000), img, (i & 0xF) == 0,
+        TimeUnit::FromMicroseconds(i * 30000));
     media::Await(GetMediaThreadPool(MediaThreadType::PLAYBACK),
                  aEncoder->Encode(frame),
-                 [&output, &succeeded](MediaDataEncoder::EncodedData encoded)
-                 {
+                 [&output, &succeeded](MediaDataEncoder::EncodedData encoded) {
                    output.AppendElements(std::move(encoded));
                    succeeded = true;
                  },
@@ -191,15 +163,14 @@ Encode(const RefPtr<MediaDataEncoder> aEncoder,
   }
 
   size_t pending = 0;
-  media::Await(GetMediaThreadPool(MediaThreadType::PLAYBACK),
-               aEncoder->Drain(),
-               [&pending, &output, &succeeded](MediaDataEncoder::EncodedData encoded)
-               {
-                 pending = encoded.Length();
-                 output.AppendElements(std::move(encoded));
-                 succeeded = true;
-               },
-               [&succeeded](MediaResult r) { succeeded = false; });
+  media::Await(
+      GetMediaThreadPool(MediaThreadType::PLAYBACK), aEncoder->Drain(),
+      [&pending, &output, &succeeded](MediaDataEncoder::EncodedData encoded) {
+        pending = encoded.Length();
+        output.AppendElements(std::move(encoded));
+        succeeded = true;
+      },
+      [&succeeded](MediaResult r) { succeeded = false; });
   EXPECT_TRUE(succeeded);
   if (!succeeded) {
     return output;
@@ -208,8 +179,7 @@ Encode(const RefPtr<MediaDataEncoder> aEncoder,
   if (pending > 0) {
     media::Await(GetMediaThreadPool(MediaThreadType::PLAYBACK),
                  aEncoder->Drain(),
-                 [&succeeded](MediaDataEncoder::EncodedData encoded)
-                 {
+                 [&succeeded](MediaDataEncoder::EncodedData encoded) {
                    EXPECT_EQ(encoded.Length(), 0UL);
                    succeeded = true;
                  },
@@ -220,12 +190,12 @@ Encode(const RefPtr<MediaDataEncoder> aEncoder,
   return output;
 }
 
-TEST_F(MediaDataEncoderTest, H264EncodeOneFrameAsAnnexB)
-{
+TEST_F(MediaDataEncoderTest, H264EncodeOneFrameAsAnnexB) {
   SKIP_IF_NOT_SUPPORTED(VIDEO_MP4);
 
-  RefPtr<MediaDataEncoder> e = CreateH264Encoder(
-    MediaDataEncoder::Usage::Realtime, MediaDataEncoder::PixelFormat::YUV420P);
+  RefPtr<MediaDataEncoder> e =
+      CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
+                        MediaDataEncoder::PixelFormat::YUV420P);
   EnsureInit(e);
 
   MediaDataEncoder::EncodedData output = Encode(e, 1UL, mData);
@@ -235,12 +205,12 @@ TEST_F(MediaDataEncoderTest, H264EncodeOneFrameAsAnnexB)
   WaitForShutdown(e);
 }
 
-TEST_F(MediaDataEncoderTest, EncodeMultipleFramesAsAnnexB)
-{
+TEST_F(MediaDataEncoderTest, EncodeMultipleFramesAsAnnexB) {
   SKIP_IF_NOT_SUPPORTED(VIDEO_MP4);
 
-  RefPtr<MediaDataEncoder> e = CreateH264Encoder(
-    MediaDataEncoder::Usage::Realtime, MediaDataEncoder::PixelFormat::YUV420P);
+  RefPtr<MediaDataEncoder> e =
+      CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
+                        MediaDataEncoder::PixelFormat::YUV420P);
   EnsureInit(e);
 
   MediaDataEncoder::EncodedData output = Encode(e, 30UL, mData);
@@ -252,17 +222,16 @@ TEST_F(MediaDataEncoderTest, EncodeMultipleFramesAsAnnexB)
   WaitForShutdown(e);
 }
 
-TEST_F(MediaDataEncoderTest, EncodeMultipleFramesAsAVCC)
-{
+TEST_F(MediaDataEncoderTest, EncodeMultipleFramesAsAVCC) {
   SKIP_IF_NOT_SUPPORTED(VIDEO_MP4);
 
   RefPtr<MediaDataEncoder> e = CreateH264Encoder(
-    MediaDataEncoder::Usage::Record, MediaDataEncoder::PixelFormat::YUV420P);
+      MediaDataEncoder::Usage::Record, MediaDataEncoder::PixelFormat::YUV420P);
   EnsureInit(e);
 
   MediaDataEncoder::EncodedData output = Encode(e, 30UL, mData);
   EXPECT_EQ(output.Length(), 30UL);
-  AnnexB::IsAVCC(output[0]); // Only 1st frame has extra data.
+  AnnexB::IsAVCC(output[0]);  // Only 1st frame has extra data.
   for (auto frame : output) {
     EXPECT_FALSE(AnnexB::IsAnnexB(frame));
   }

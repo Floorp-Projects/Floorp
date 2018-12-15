@@ -18,9 +18,7 @@ struct SomeClass : public DoublyLinkedListElement<SomeClass> {
 };
 
 template <typename ListType, size_t N>
-static void
-CheckListValues(ListType& list, unsigned int (&values)[N])
-{
+static void CheckListValues(ListType& list, unsigned int (&values)[N]) {
   size_t count = 0;
   for (auto& x : list) {
     MOZ_RELEASE_ASSERT(x.mValue == values[count]);
@@ -29,9 +27,7 @@ CheckListValues(ListType& list, unsigned int (&values)[N])
   MOZ_RELEASE_ASSERT(count == N);
 }
 
-static void
-TestDoublyLinkedList()
-{
+static void TestDoublyLinkedList() {
   DoublyLinkedList<SomeClass> list;
 
   SomeClass one(1), two(2), three(3);
@@ -46,7 +42,10 @@ TestDoublyLinkedList()
   }
 
   list.pushFront(&one);
-  { unsigned int check[] { 1 }; CheckListValues(list, check); }
+  {
+    unsigned int check[]{1};
+    CheckListValues(list, check);
+  }
 
   MOZ_RELEASE_ASSERT(list.contains(one));
   MOZ_RELEASE_ASSERT(!list.contains(two));
@@ -57,56 +56,98 @@ TestDoublyLinkedList()
   MOZ_RELEASE_ASSERT(!list.end());
 
   list.pushFront(&two);
-  { unsigned int check[] { 2, 1 }; CheckListValues(list, check); }
+  {
+    unsigned int check[]{2, 1};
+    CheckListValues(list, check);
+  }
 
   MOZ_RELEASE_ASSERT(list.begin()->mValue == 2);
   MOZ_RELEASE_ASSERT(!list.end());
   MOZ_RELEASE_ASSERT(!list.contains(three));
 
   list.pushBack(&three);
-  { unsigned int check[] { 2, 1, 3 }; CheckListValues(list, check); }
+  {
+    unsigned int check[]{2, 1, 3};
+    CheckListValues(list, check);
+  }
 
   MOZ_RELEASE_ASSERT(list.begin()->mValue == 2);
   MOZ_RELEASE_ASSERT(!list.end());
 
   list.remove(&one);
-  { unsigned int check[] { 2, 3 }; CheckListValues(list, check); }
+  {
+    unsigned int check[]{2, 3};
+    CheckListValues(list, check);
+  }
 
   list.insertBefore(list.find(three), &one);
-  { unsigned int check[] { 2, 1, 3 }; CheckListValues(list, check); }
+  {
+    unsigned int check[]{2, 1, 3};
+    CheckListValues(list, check);
+  }
 
   list.remove(&three);
-  { unsigned int check[] { 2, 1 }; CheckListValues(list, check); }
+  {
+    unsigned int check[]{2, 1};
+    CheckListValues(list, check);
+  }
 
   list.insertBefore(list.find(two), &three);
-  { unsigned int check[] { 3, 2, 1 }; CheckListValues(list, check); }
+  {
+    unsigned int check[]{3, 2, 1};
+    CheckListValues(list, check);
+  }
 
   list.remove(&three);
-  { unsigned int check[] { 2, 1 }; CheckListValues(list, check); }
+  {
+    unsigned int check[]{2, 1};
+    CheckListValues(list, check);
+  }
 
   list.insertBefore(++list.find(two), &three);
-  { unsigned int check[] { 2, 3, 1 }; CheckListValues(list, check); }
+  {
+    unsigned int check[]{2, 3, 1};
+    CheckListValues(list, check);
+  }
 
   list.remove(&one);
-  { unsigned int check[] { 2, 3 }; CheckListValues(list, check); }
+  {
+    unsigned int check[]{2, 3};
+    CheckListValues(list, check);
+  }
 
   list.remove(&two);
-  { unsigned int check[] { 3 }; CheckListValues(list, check); }
+  {
+    unsigned int check[]{3};
+    CheckListValues(list, check);
+  }
 
   list.insertBefore(list.find(three), &two);
-  { unsigned int check[] { 2, 3 }; CheckListValues(list, check); }
+  {
+    unsigned int check[]{2, 3};
+    CheckListValues(list, check);
+  }
 
   list.remove(&three);
-  { unsigned int check[] { 2 }; CheckListValues(list, check); }
+  {
+    unsigned int check[]{2};
+    CheckListValues(list, check);
+  }
 
   list.remove(&two);
   MOZ_RELEASE_ASSERT(list.isEmpty());
 
   list.pushBack(&three);
-  { unsigned int check[] { 3 }; CheckListValues(list, check); }
+  {
+    unsigned int check[]{3};
+    CheckListValues(list, check);
+  }
 
   list.pushFront(&two);
-  { unsigned int check[] { 2, 3 }; CheckListValues(list, check); }
+  {
+    unsigned int check[]{2, 3};
+    CheckListValues(list, check);
+  }
 
   // This should modify the values of |two| and |three| as pointers to them are
   // stored in the list, not copies.
@@ -128,22 +169,24 @@ struct InTwoLists {
   unsigned int mValue;
 
   struct GetListOneTrait {
-    static DoublyLinkedListElement<InTwoLists>& Get(InTwoLists *aThis) { return aThis->mListOne; }
+    static DoublyLinkedListElement<InTwoLists>& Get(InTwoLists* aThis) {
+      return aThis->mListOne;
+    }
   };
 };
 
 namespace mozilla {
 
-template<>
+template <>
 struct GetDoublyLinkedListElement<InTwoLists> {
-  static DoublyLinkedListElement<InTwoLists>& Get(InTwoLists* aThis) { return aThis->mListTwo; }
+  static DoublyLinkedListElement<InTwoLists>& Get(InTwoLists* aThis) {
+    return aThis->mListTwo;
+  }
 };
 
-}
+}  // namespace mozilla
 
-static void
-TestCustomAccessor()
-{
+static void TestCustomAccessor() {
   DoublyLinkedList<InTwoLists, InTwoLists::GetListOneTrait> listOne;
   DoublyLinkedList<InTwoLists> listTwo;
 
@@ -152,25 +195,44 @@ TestCustomAccessor()
 
   listOne.pushBack(&one);
   listOne.pushBack(&two);
-  { unsigned int check[] { 1, 2 }; CheckListValues(listOne, check); }
+  {
+    unsigned int check[]{1, 2};
+    CheckListValues(listOne, check);
+  }
 
   listTwo.pushBack(&one);
   listTwo.pushBack(&two);
-  { unsigned int check[] { 1, 2 }; CheckListValues(listOne, check); }
-  { unsigned int check[] { 1, 2 }; CheckListValues(listTwo, check); }
+  {
+    unsigned int check[]{1, 2};
+    CheckListValues(listOne, check);
+  }
+  {
+    unsigned int check[]{1, 2};
+    CheckListValues(listTwo, check);
+  }
 
   (void)listTwo.popBack();
-  { unsigned int check[] { 1, 2 }; CheckListValues(listOne, check); }
-  { unsigned int check[] { 1 }; CheckListValues(listTwo, check); }
+  {
+    unsigned int check[]{1, 2};
+    CheckListValues(listOne, check);
+  }
+  {
+    unsigned int check[]{1};
+    CheckListValues(listTwo, check);
+  }
 
   (void)listOne.popBack();
-  { unsigned int check[] { 1 }; CheckListValues(listOne, check); }
-  { unsigned int check[] { 1 }; CheckListValues(listTwo, check); }
+  {
+    unsigned int check[]{1};
+    CheckListValues(listOne, check);
+  }
+  {
+    unsigned int check[]{1};
+    CheckListValues(listTwo, check);
+  }
 }
 
-int
-main()
-{
+int main() {
   TestDoublyLinkedList();
   TestCustomAccessor();
   return 0;

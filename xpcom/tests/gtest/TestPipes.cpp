@@ -29,373 +29,355 @@
 
 using namespace mozilla;
 
-#define ITERATIONS      33333
+#define ITERATIONS 33333
 char kTestPattern[] = "My hovercraft is full of eels.\n";
 
 bool gTrace = false;
 
-static nsresult
-WriteAll(nsIOutputStream *os, const char *buf, uint32_t bufLen, uint32_t *lenWritten)
-{
-    const char *p = buf;
-    *lenWritten = 0;
-    while (bufLen) {
-        uint32_t n;
-        nsresult rv = os->Write(p, bufLen, &n);
-        if (NS_FAILED(rv)) return rv;
-        p += n;
-        bufLen -= n;
-        *lenWritten += n;
-    }
-    return NS_OK;
+static nsresult WriteAll(nsIOutputStream* os, const char* buf, uint32_t bufLen,
+                         uint32_t* lenWritten) {
+  const char* p = buf;
+  *lenWritten = 0;
+  while (bufLen) {
+    uint32_t n;
+    nsresult rv = os->Write(p, bufLen, &n);
+    if (NS_FAILED(rv)) return rv;
+    p += n;
+    bufLen -= n;
+    *lenWritten += n;
+  }
+  return NS_OK;
 }
 
 class nsReceiver final : public nsIRunnable {
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
 
-    NS_IMETHOD Run() override {
-        nsresult rv;
-        char buf[101];
-        uint32_t count;
-        PRIntervalTime start = PR_IntervalNow();
-        while (true) {
-            rv = mIn->Read(buf, 100, &count);
-            if (NS_FAILED(rv)) {
-                printf("read failed\n");
-                break;
-            }
-            if (count == 0) {
-//                printf("EOF count = %d\n", mCount);
-                break;
-            }
+  NS_IMETHOD Run() override {
+    nsresult rv;
+    char buf[101];
+    uint32_t count;
+    PRIntervalTime start = PR_IntervalNow();
+    while (true) {
+      rv = mIn->Read(buf, 100, &count);
+      if (NS_FAILED(rv)) {
+        printf("read failed\n");
+        break;
+      }
+      if (count == 0) {
+        //                printf("EOF count = %d\n", mCount);
+        break;
+      }
 
-            if (gTrace) {
-                buf[count] = '\0';
-                printf("read: %s\n", buf);
-            }
-            mCount += count;
-        }
-        PRIntervalTime end = PR_IntervalNow();
-        printf("read  %d bytes, time = %dms\n", mCount,
-               PR_IntervalToMilliseconds(end - start));
-        return rv;
+      if (gTrace) {
+        buf[count] = '\0';
+        printf("read: %s\n", buf);
+      }
+      mCount += count;
     }
+    PRIntervalTime end = PR_IntervalNow();
+    printf("read  %d bytes, time = %dms\n", mCount,
+           PR_IntervalToMilliseconds(end - start));
+    return rv;
+  }
 
-    explicit nsReceiver(nsIInputStream* in) : mIn(in), mCount(0) {
-    }
+  explicit nsReceiver(nsIInputStream* in) : mIn(in), mCount(0) {}
 
-    uint32_t GetBytesRead() { return mCount; }
+  uint32_t GetBytesRead() { return mCount; }
 
-private:
-    ~nsReceiver() {}
+ private:
+  ~nsReceiver() {}
 
-protected:
-    nsCOMPtr<nsIInputStream> mIn;
-    uint32_t            mCount;
+ protected:
+  nsCOMPtr<nsIInputStream> mIn;
+  uint32_t mCount;
 };
 
 NS_IMPL_ISUPPORTS(nsReceiver, nsIRunnable)
 
-nsresult
-TestPipe(nsIInputStream* in, nsIOutputStream* out)
-{
-    RefPtr<nsReceiver> receiver = new nsReceiver(in);
-    if (!receiver)
-        return NS_ERROR_OUT_OF_MEMORY;
+nsresult TestPipe(nsIInputStream* in, nsIOutputStream* out) {
+  RefPtr<nsReceiver> receiver = new nsReceiver(in);
+  if (!receiver) return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv;
+  nsresult rv;
 
-    nsCOMPtr<nsIThread> thread;
-    rv = NS_NewNamedThread("TestPipe", getter_AddRefs(thread), receiver);
-    if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIThread> thread;
+  rv = NS_NewNamedThread("TestPipe", getter_AddRefs(thread), receiver);
+  if (NS_FAILED(rv)) return rv;
 
-    uint32_t total = 0;
-    PRIntervalTime start = PR_IntervalNow();
-    for (uint32_t i = 0; i < ITERATIONS; i++) {
-        uint32_t writeCount;
-        SmprintfPointer buf = mozilla::Smprintf("%d %s", i, kTestPattern);
-        uint32_t len = strlen(buf.get());
-        rv = WriteAll(out, buf.get(), len, &writeCount);
-        if (gTrace) {
-            printf("wrote: ");
-            for (uint32_t j = 0; j < writeCount; j++) {
-              putc(buf.get()[j], stdout);
-            }
-            printf("\n");
-        }
-        if (NS_FAILED(rv)) return rv;
-        total += writeCount;
+  uint32_t total = 0;
+  PRIntervalTime start = PR_IntervalNow();
+  for (uint32_t i = 0; i < ITERATIONS; i++) {
+    uint32_t writeCount;
+    SmprintfPointer buf = mozilla::Smprintf("%d %s", i, kTestPattern);
+    uint32_t len = strlen(buf.get());
+    rv = WriteAll(out, buf.get(), len, &writeCount);
+    if (gTrace) {
+      printf("wrote: ");
+      for (uint32_t j = 0; j < writeCount; j++) {
+        putc(buf.get()[j], stdout);
+      }
+      printf("\n");
     }
-    rv = out->Close();
     if (NS_FAILED(rv)) return rv;
+    total += writeCount;
+  }
+  rv = out->Close();
+  if (NS_FAILED(rv)) return rv;
 
-    PRIntervalTime end = PR_IntervalNow();
+  PRIntervalTime end = PR_IntervalNow();
 
-    thread->Shutdown();
+  thread->Shutdown();
 
-    printf("wrote %d bytes, time = %dms\n", total,
-           PR_IntervalToMilliseconds(end - start));
-    EXPECT_EQ(receiver->GetBytesRead(), total);
+  printf("wrote %d bytes, time = %dms\n", total,
+         PR_IntervalToMilliseconds(end - start));
+  EXPECT_EQ(receiver->GetBytesRead(), total);
 
-    return NS_OK;
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsShortReader final : public nsIRunnable {
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
 
-    NS_IMETHOD Run() override {
-        nsresult rv;
-        char buf[101];
-        uint32_t count;
-        uint32_t total = 0;
-        while (true) {
-            //if (gTrace)
-            //    printf("calling Read\n");
-            rv = mIn->Read(buf, 100, &count);
-            if (NS_FAILED(rv)) {
-                printf("read failed\n");
-                break;
-            }
-            if (count == 0) {
-                break;
-            }
+  NS_IMETHOD Run() override {
+    nsresult rv;
+    char buf[101];
+    uint32_t count;
+    uint32_t total = 0;
+    while (true) {
+      // if (gTrace)
+      //    printf("calling Read\n");
+      rv = mIn->Read(buf, 100, &count);
+      if (NS_FAILED(rv)) {
+        printf("read failed\n");
+        break;
+      }
+      if (count == 0) {
+        break;
+      }
 
-            if (gTrace) {
-                // For next |printf()| call and possible others elsewhere.
-                buf[count] = '\0';
+      if (gTrace) {
+        // For next |printf()| call and possible others elsewhere.
+        buf[count] = '\0';
 
-                printf("read %d bytes: %s\n", count, buf);
-            }
+        printf("read %d bytes: %s\n", count, buf);
+      }
 
-            Received(count);
-            total += count;
-        }
-        printf("read  %d bytes\n", total);
-        return rv;
+      Received(count);
+      total += count;
+    }
+    printf("read  %d bytes\n", total);
+    return rv;
+  }
+
+  explicit nsShortReader(nsIInputStream* in) : mIn(in), mReceived(0) {
+    mMon = new ReentrantMonitor("nsShortReader");
+  }
+
+  void Received(uint32_t count) {
+    ReentrantMonitorAutoEnter mon(*mMon);
+    mReceived += count;
+    mon.Notify();
+  }
+
+  uint32_t WaitForReceipt(const uint32_t aWriteCount) {
+    ReentrantMonitorAutoEnter mon(*mMon);
+    uint32_t result = mReceived;
+
+    while (result < aWriteCount) {
+      mon.Wait();
+
+      EXPECT_TRUE(mReceived > result);
+      result = mReceived;
     }
 
-    explicit nsShortReader(nsIInputStream* in) : mIn(in), mReceived(0) {
-        mMon = new ReentrantMonitor("nsShortReader");
-    }
+    mReceived = 0;
+    return result;
+  }
 
-    void Received(uint32_t count) {
-        ReentrantMonitorAutoEnter mon(*mMon);
-        mReceived += count;
-        mon.Notify();
-    }
+ private:
+  ~nsShortReader() {}
 
-    uint32_t WaitForReceipt(const uint32_t aWriteCount) {
-        ReentrantMonitorAutoEnter mon(*mMon);
-        uint32_t result = mReceived;
-
-        while (result < aWriteCount) {
-            mon.Wait();
-
-            EXPECT_TRUE(mReceived > result);
-            result = mReceived;
-        }
-
-        mReceived = 0;
-        return result;
-    }
-
-private:
-    ~nsShortReader() {}
-
-protected:
-    nsCOMPtr<nsIInputStream> mIn;
-    uint32_t                 mReceived;
-    ReentrantMonitor*        mMon;
+ protected:
+  nsCOMPtr<nsIInputStream> mIn;
+  uint32_t mReceived;
+  ReentrantMonitor* mMon;
 };
 
 NS_IMPL_ISUPPORTS(nsShortReader, nsIRunnable)
 
-nsresult
-TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
-{
-    RefPtr<nsShortReader> receiver = new nsShortReader(in);
-    if (!receiver)
-        return NS_ERROR_OUT_OF_MEMORY;
+nsresult TestShortWrites(nsIInputStream* in, nsIOutputStream* out) {
+  RefPtr<nsShortReader> receiver = new nsShortReader(in);
+  if (!receiver) return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv;
+  nsresult rv;
 
-    nsCOMPtr<nsIThread> thread;
-    rv = NS_NewNamedThread("TestShortWrites", getter_AddRefs(thread),
-                           receiver);
+  nsCOMPtr<nsIThread> thread;
+  rv = NS_NewNamedThread("TestShortWrites", getter_AddRefs(thread), receiver);
+  if (NS_FAILED(rv)) return rv;
+
+  uint32_t total = 0;
+  for (uint32_t i = 0; i < ITERATIONS; i++) {
+    uint32_t writeCount;
+    SmprintfPointer buf = mozilla::Smprintf("%d %s", i, kTestPattern);
+    uint32_t len = strlen(buf.get());
+    len = len * rand() / RAND_MAX;
+    len = std::min(1u, len);
+    rv = WriteAll(out, buf.get(), len, &writeCount);
     if (NS_FAILED(rv)) return rv;
+    EXPECT_EQ(writeCount, len);
+    total += writeCount;
 
-    uint32_t total = 0;
-    for (uint32_t i = 0; i < ITERATIONS; i++) {
-        uint32_t writeCount;
-        SmprintfPointer buf = mozilla::Smprintf("%d %s", i, kTestPattern);
-        uint32_t len = strlen(buf.get());
-        len = len * rand() / RAND_MAX;
-        len = std::min(1u, len);
-        rv = WriteAll(out, buf.get(), len, &writeCount);
-        if (NS_FAILED(rv)) return rv;
-        EXPECT_EQ(writeCount, len);
-        total += writeCount;
-
-        if (gTrace)
-          printf("wrote %d bytes: %s\n", writeCount, buf.get());
-        //printf("calling Flush\n");
-        out->Flush();
-        //printf("calling WaitForReceipt\n");
+    if (gTrace) printf("wrote %d bytes: %s\n", writeCount, buf.get());
+    // printf("calling Flush\n");
+    out->Flush();
+    // printf("calling WaitForReceipt\n");
 
 #ifdef DEBUG
-        const uint32_t received =
-          receiver->WaitForReceipt(writeCount);
-        EXPECT_EQ(received, writeCount);
+    const uint32_t received = receiver->WaitForReceipt(writeCount);
+    EXPECT_EQ(received, writeCount);
 #endif
-    }
-    rv = out->Close();
-    if (NS_FAILED(rv)) return rv;
+  }
+  rv = out->Close();
+  if (NS_FAILED(rv)) return rv;
 
-    thread->Shutdown();
+  thread->Shutdown();
 
-    printf("wrote %d bytes\n", total);
+  printf("wrote %d bytes\n", total);
 
-    return NS_OK;
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsPump final : public nsIRunnable
-{
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
+class nsPump final : public nsIRunnable {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
 
-    NS_IMETHOD Run() override {
-        nsresult rv;
-        uint32_t count;
-        while (true) {
-            rv = mOut->WriteFrom(mIn, ~0U, &count);
-            if (NS_FAILED(rv)) {
-                printf("Write failed\n");
-                break;
-            }
-            if (count == 0) {
-                printf("EOF count = %d\n", mCount);
-                break;
-            }
+  NS_IMETHOD Run() override {
+    nsresult rv;
+    uint32_t count;
+    while (true) {
+      rv = mOut->WriteFrom(mIn, ~0U, &count);
+      if (NS_FAILED(rv)) {
+        printf("Write failed\n");
+        break;
+      }
+      if (count == 0) {
+        printf("EOF count = %d\n", mCount);
+        break;
+      }
 
-            if (gTrace) {
-                printf("Wrote: %d\n", count);
-            }
-            mCount += count;
-        }
-        mOut->Close();
-        return rv;
+      if (gTrace) {
+        printf("Wrote: %d\n", count);
+      }
+      mCount += count;
     }
+    mOut->Close();
+    return rv;
+  }
 
-    nsPump(nsIInputStream* in,
-           nsIOutputStream* out)
-        : mIn(in), mOut(out), mCount(0) {
-    }
+  nsPump(nsIInputStream* in, nsIOutputStream* out)
+      : mIn(in), mOut(out), mCount(0) {}
 
-private:
-    ~nsPump() {}
+ private:
+  ~nsPump() {}
 
-protected:
-    nsCOMPtr<nsIInputStream>      mIn;
-    nsCOMPtr<nsIOutputStream>     mOut;
-    uint32_t                            mCount;
+ protected:
+  nsCOMPtr<nsIInputStream> mIn;
+  nsCOMPtr<nsIOutputStream> mOut;
+  uint32_t mCount;
 };
 
 NS_IMPL_ISUPPORTS(nsPump, nsIRunnable)
 
-TEST(Pipes, ChainedPipes)
-{
-    nsresult rv;
-    if (gTrace) {
-        printf("TestChainedPipes\n");
-    }
+TEST(Pipes, ChainedPipes) {
+  nsresult rv;
+  if (gTrace) {
+    printf("TestChainedPipes\n");
+  }
 
-    nsCOMPtr<nsIInputStream> in1;
-    nsCOMPtr<nsIOutputStream> out1;
-    rv = NS_NewPipe(getter_AddRefs(in1), getter_AddRefs(out1), 20, 1999);
+  nsCOMPtr<nsIInputStream> in1;
+  nsCOMPtr<nsIOutputStream> out1;
+  rv = NS_NewPipe(getter_AddRefs(in1), getter_AddRefs(out1), 20, 1999);
+  if (NS_FAILED(rv)) return;
+
+  nsCOMPtr<nsIInputStream> in2;
+  nsCOMPtr<nsIOutputStream> out2;
+  rv = NS_NewPipe(getter_AddRefs(in2), getter_AddRefs(out2), 200, 401);
+  if (NS_FAILED(rv)) return;
+
+  RefPtr<nsPump> pump = new nsPump(in1, out2);
+  if (pump == nullptr) return;
+
+  nsCOMPtr<nsIThread> thread;
+  rv = NS_NewNamedThread("ChainedPipePump", getter_AddRefs(thread), pump);
+  if (NS_FAILED(rv)) return;
+
+  RefPtr<nsReceiver> receiver = new nsReceiver(in2);
+  if (receiver == nullptr) return;
+
+  nsCOMPtr<nsIThread> receiverThread;
+  rv = NS_NewNamedThread("ChainedPipeRecv", getter_AddRefs(receiverThread),
+                         receiver);
+  if (NS_FAILED(rv)) return;
+
+  uint32_t total = 0;
+  for (uint32_t i = 0; i < ITERATIONS; i++) {
+    uint32_t writeCount;
+    SmprintfPointer buf = mozilla::Smprintf("%d %s", i, kTestPattern);
+    uint32_t len = strlen(buf.get());
+    len = len * rand() / RAND_MAX;
+    len = std::max(1u, len);
+    rv = WriteAll(out1, buf.get(), len, &writeCount);
     if (NS_FAILED(rv)) return;
+    EXPECT_EQ(writeCount, len);
+    total += writeCount;
 
-    nsCOMPtr<nsIInputStream> in2;
-    nsCOMPtr<nsIOutputStream> out2;
-    rv = NS_NewPipe(getter_AddRefs(in2), getter_AddRefs(out2), 200, 401);
-    if (NS_FAILED(rv)) return;
+    if (gTrace) printf("wrote %d bytes: %s\n", writeCount, buf.get());
+  }
+  if (gTrace) {
+    printf("wrote total of %d bytes\n", total);
+  }
+  rv = out1->Close();
+  if (NS_FAILED(rv)) return;
 
-    RefPtr<nsPump> pump = new nsPump(in1, out2);
-    if (pump == nullptr) return;
-
-    nsCOMPtr<nsIThread> thread;
-    rv = NS_NewNamedThread("ChainedPipePump", getter_AddRefs(thread), pump);
-    if (NS_FAILED(rv)) return;
-
-    RefPtr<nsReceiver> receiver = new nsReceiver(in2);
-    if (receiver == nullptr) return;
-
-    nsCOMPtr<nsIThread> receiverThread;
-    rv = NS_NewNamedThread("ChainedPipeRecv", getter_AddRefs(receiverThread),
-                           receiver);
-    if (NS_FAILED(rv)) return;
-
-    uint32_t total = 0;
-    for (uint32_t i = 0; i < ITERATIONS; i++) {
-        uint32_t writeCount;
-        SmprintfPointer buf = mozilla::Smprintf("%d %s", i, kTestPattern);
-        uint32_t len = strlen(buf.get());
-        len = len * rand() / RAND_MAX;
-        len = std::max(1u, len);
-        rv = WriteAll(out1, buf.get(), len, &writeCount);
-        if (NS_FAILED(rv)) return;
-        EXPECT_EQ(writeCount, len);
-        total += writeCount;
-
-        if (gTrace)
-            printf("wrote %d bytes: %s\n", writeCount, buf.get());
-    }
-    if (gTrace) {
-        printf("wrote total of %d bytes\n", total);
-    }
-    rv = out1->Close();
-    if (NS_FAILED(rv)) return;
-
-    thread->Shutdown();
-    receiverThread->Shutdown();
+  thread->Shutdown();
+  receiverThread->Shutdown();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void
-RunTests(uint32_t segSize, uint32_t segCount)
-{
-    nsresult rv;
-    nsCOMPtr<nsIInputStream> in;
-    nsCOMPtr<nsIOutputStream> out;
-    uint32_t bufSize = segSize * segCount;
-    if (gTrace) {
-        printf("Testing New Pipes: segment size %d buffer size %d\n", segSize, bufSize);
-        printf("Testing long writes...\n");
-    }
-    rv = NS_NewPipe(getter_AddRefs(in), getter_AddRefs(out), segSize, bufSize);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
-    rv = TestPipe(in, out);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+void RunTests(uint32_t segSize, uint32_t segCount) {
+  nsresult rv;
+  nsCOMPtr<nsIInputStream> in;
+  nsCOMPtr<nsIOutputStream> out;
+  uint32_t bufSize = segSize * segCount;
+  if (gTrace) {
+    printf("Testing New Pipes: segment size %d buffer size %d\n", segSize,
+           bufSize);
+    printf("Testing long writes...\n");
+  }
+  rv = NS_NewPipe(getter_AddRefs(in), getter_AddRefs(out), segSize, bufSize);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  rv = TestPipe(in, out);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
 
-    if (gTrace) {
-        printf("Testing short writes...\n");
-    }
-    rv = NS_NewPipe(getter_AddRefs(in), getter_AddRefs(out), segSize, bufSize);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
-    rv = TestShortWrites(in, out);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+  if (gTrace) {
+    printf("Testing short writes...\n");
+  }
+  rv = NS_NewPipe(getter_AddRefs(in), getter_AddRefs(out), segSize, bufSize);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  rv = TestShortWrites(in, out);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
 }
 
-TEST(Pipes, Main)
-{
-    RunTests(16, 1);
-    RunTests(4096, 16);
+TEST(Pipes, Main) {
+  RunTests(16, 1);
+  RunTests(4096, 16);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -407,8 +389,7 @@ static const uint32_t DEFAULT_SEGMENT_SIZE = 4 * 1024;
 // An alternate pipe testing routing that uses NS_ConsumeStream() instead of
 // manual read loop.
 static void TestPipe2(uint32_t aNumBytes,
-                      uint32_t aSegmentSize = DEFAULT_SEGMENT_SIZE)
-{
+                      uint32_t aSegmentSize = DEFAULT_SEGMENT_SIZE) {
   nsCOMPtr<nsIInputStream> reader;
   nsCOMPtr<nsIOutputStream> writer;
 
@@ -424,22 +405,13 @@ static void TestPipe2(uint32_t aNumBytes,
   testing::ConsumeAndValidateStream(reader, inputData);
 }
 
-} // namespace
+}  // namespace
 
-TEST(Pipes, Blocking_32k)
-{
-  TestPipe2(32 * 1024);
-}
+TEST(Pipes, Blocking_32k) { TestPipe2(32 * 1024); }
 
-TEST(Pipes, Blocking_64k)
-{
-  TestPipe2(64 * 1024);
-}
+TEST(Pipes, Blocking_64k) { TestPipe2(64 * 1024); }
 
-TEST(Pipes, Blocking_128k)
-{
-  TestPipe2(128 * 1024);
-}
+TEST(Pipes, Blocking_128k) { TestPipe2(128 * 1024); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -462,14 +434,12 @@ namespace {
 // aNumStreamToReadPerWrite How many streams to read fully after each write.
 //                          This tests reading cloned streams at different rates
 //                          while the pipe is being written to.
-static void TestPipeClone(uint32_t aTotalBytes,
-                          uint32_t aNumWrites,
+static void TestPipeClone(uint32_t aTotalBytes, uint32_t aNumWrites,
                           uint32_t aNumInitialClones,
                           uint32_t aNumToCloseAfterWrite,
                           uint32_t aNumToCloneAfterWrite,
                           uint32_t aNumStreamsToReadPerWrite,
-                          uint32_t aSegmentSize = DEFAULT_SEGMENT_SIZE)
-{
+                          uint32_t aSegmentSize = DEFAULT_SEGMENT_SIZE) {
   nsCOMPtr<nsIInputStream> reader;
   nsCOMPtr<nsIOutputStream> writer;
 
@@ -477,9 +447,9 @@ static void TestPipeClone(uint32_t aTotalBytes,
 
   // Use async input streams so we can NS_ConsumeStream() the current data
   // while the pipe is still being written to.
-  nsresult rv = NS_NewPipe(getter_AddRefs(reader), getter_AddRefs(writer),
-                           aSegmentSize, maxSize,
-                           true, false); // non-blocking - reader, writer
+  nsresult rv =
+      NS_NewPipe(getter_AddRefs(reader), getter_AddRefs(writer), aSegmentSize,
+                 maxSize, true, false);  // non-blocking - reader, writer
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   nsCOMPtr<nsICloneableInputStream> cloneable = do_QueryInterface(reader);
@@ -508,7 +478,7 @@ static void TestPipeClone(uint32_t aTotalBytes,
   nsTArray<char> inputData;
   testing::CreateData(aTotalBytes, inputData);
 
-  const uint32_t bytesPerWrite = ((aTotalBytes - 1)/ aNumWrites) + 1;
+  const uint32_t bytesPerWrite = ((aTotalBytes - 1) / aNumWrites) + 1;
   uint32_t offset = 0;
   uint32_t remaining = aTotalBytes;
   uint32_t nextStreamToRead = 0;
@@ -521,9 +491,8 @@ static void TestPipeClone(uint32_t aTotalBytes,
 
     // Close the specified number of streams.  This allows us to
     // test that one closed clone does not break other open clones.
-    for (uint32_t i = 0; i < aNumToCloseAfterWrite &&
-                         streamList.Length() > 1; ++i) {
-
+    for (uint32_t i = 0; i < aNumToCloseAfterWrite && streamList.Length() > 1;
+         ++i) {
       uint32_t lastIndex = streamList.Length() - 1;
       streamList[lastIndex]->Close();
       streamList.RemoveElementAt(lastIndex);
@@ -603,68 +572,62 @@ static void TestPipeClone(uint32_t aTotalBytes,
   }
 }
 
-} // namespace
+}  // namespace
 
-TEST(Pipes, Clone_BeforeWrite_ReadAtEnd)
-{
-  TestPipeClone(32 * 1024, // total bytes
-                16,        // num writes
-                3,         // num initial clones
-                0,         // num streams to close after each write
-                0,         // num clones to add after each write
-                0);        // num streams to read after each write
+TEST(Pipes, Clone_BeforeWrite_ReadAtEnd) {
+  TestPipeClone(32 * 1024,  // total bytes
+                16,         // num writes
+                3,          // num initial clones
+                0,          // num streams to close after each write
+                0,          // num clones to add after each write
+                0);         // num streams to read after each write
 }
 
-TEST(Pipes, Clone_BeforeWrite_ReadDuringWrite)
-{
+TEST(Pipes, Clone_BeforeWrite_ReadDuringWrite) {
   // Since this reads all streams on every write, it should trigger the
   // pipe cursor roll back optimization.  Currently we can only verify
   // this with logging.
 
-  TestPipeClone(32 * 1024, // total bytes
-                16,        // num writes
-                3,         // num initial clones
-                0,         // num streams to close after each write
-                0,         // num clones to add after each write
-                4);        // num streams to read after each write
+  TestPipeClone(32 * 1024,  // total bytes
+                16,         // num writes
+                3,          // num initial clones
+                0,          // num streams to close after each write
+                0,          // num clones to add after each write
+                4);         // num streams to read after each write
 }
 
-TEST(Pipes, Clone_DuringWrite_ReadAtEnd)
-{
-  TestPipeClone(32 * 1024, // total bytes
-                16,        // num writes
-                0,         // num initial clones
-                0,         // num streams to close after each write
-                1,         // num clones to add after each write
-                0);        // num streams to read after each write
+TEST(Pipes, Clone_DuringWrite_ReadAtEnd) {
+  TestPipeClone(32 * 1024,  // total bytes
+                16,         // num writes
+                0,          // num initial clones
+                0,          // num streams to close after each write
+                1,          // num clones to add after each write
+                0);         // num streams to read after each write
 }
 
-TEST(Pipes, Clone_DuringWrite_ReadDuringWrite)
-{
-  TestPipeClone(32 * 1024, // total bytes
-                16,        // num writes
-                0,         // num initial clones
-                0,         // num streams to close after each write
-                1,         // num clones to add after each write
-                1);        // num streams to read after each write
+TEST(Pipes, Clone_DuringWrite_ReadDuringWrite) {
+  TestPipeClone(32 * 1024,  // total bytes
+                16,         // num writes
+                0,          // num initial clones
+                0,          // num streams to close after each write
+                1,          // num clones to add after each write
+                1);         // num streams to read after each write
 }
 
-TEST(Pipes, Clone_DuringWrite_ReadDuringWrite_CloseDuringWrite)
-{
+TEST(Pipes, Clone_DuringWrite_ReadDuringWrite_CloseDuringWrite) {
   // Since this reads streams faster than we clone new ones, it should
   // trigger pipe segment deletion periodically.  Currently we can
   // only verify this with logging.
 
-  TestPipeClone(32 * 1024, // total bytes
-                16,        // num writes
-                1,         // num initial clones
-                1,         // num streams to close after each write
-                2,         // num clones to add after each write
-                3);        // num streams to read after each write
+  TestPipeClone(32 * 1024,  // total bytes
+                16,         // num writes
+                1,          // num initial clones
+                1,          // num streams to close after each write
+                2,          // num clones to add after each write
+                3);         // num streams to read after each write
 }
 
-TEST(Pipes, Write_AsyncWait)
-{
+TEST(Pipes, Write_AsyncWait) {
   nsCOMPtr<nsIAsyncInputStream> reader;
   nsCOMPtr<nsIAsyncOutputStream> writer;
 
@@ -687,7 +650,7 @@ TEST(Pipes, Write_AsyncWait)
   ASSERT_EQ(NS_BASE_STREAM_WOULD_BLOCK, rv);
 
   RefPtr<testing::OutputStreamCallback> cb =
-    new testing::OutputStreamCallback();
+      new testing::OutputStreamCallback();
 
   rv = writer->AsyncWait(cb, 0, 0, nullptr);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
@@ -699,8 +662,7 @@ TEST(Pipes, Write_AsyncWait)
   ASSERT_TRUE(cb->Called());
 }
 
-TEST(Pipes, Write_AsyncWait_Clone)
-{
+TEST(Pipes, Write_AsyncWait_Clone) {
   nsCOMPtr<nsIAsyncInputStream> reader;
   nsCOMPtr<nsIAsyncOutputStream> writer;
 
@@ -729,7 +691,7 @@ TEST(Pipes, Write_AsyncWait_Clone)
   ASSERT_EQ(NS_BASE_STREAM_WOULD_BLOCK, rv);
 
   RefPtr<testing::OutputStreamCallback> cb =
-    new testing::OutputStreamCallback();
+      new testing::OutputStreamCallback();
 
   rv = writer->AsyncWait(cb, 0, 0, nullptr);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
@@ -782,8 +744,7 @@ TEST(Pipes, Write_AsyncWait_Clone)
   testing::ConsumeAndValidateStream(reader, inputData);
 }
 
-TEST(Pipes, Write_AsyncWait_Clone_CloseOriginal)
-{
+TEST(Pipes, Write_AsyncWait_Clone_CloseOriginal) {
   nsCOMPtr<nsIAsyncInputStream> reader;
   nsCOMPtr<nsIAsyncOutputStream> writer;
 
@@ -812,7 +773,7 @@ TEST(Pipes, Write_AsyncWait_Clone_CloseOriginal)
   ASSERT_EQ(NS_BASE_STREAM_WOULD_BLOCK, rv);
 
   RefPtr<testing::OutputStreamCallback> cb =
-    new testing::OutputStreamCallback();
+      new testing::OutputStreamCallback();
 
   rv = writer->AsyncWait(cb, 0, 0, nullptr);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
@@ -875,8 +836,8 @@ TEST(Pipes, Write_AsyncWait_Clone_CloseOriginal)
   // the cloned stream.
   testing::ConsumeAndValidateStream(clone, expectedCloneData);
 
-  // The pipe should now be writable because we have two open streams, one of which
-  // is completely drained.
+  // The pipe should now be writable because we have two open streams, one of
+  // which is completely drained.
   ASSERT_TRUE(cb->Called());
 
   // Write again to reach our limit again.
@@ -907,8 +868,7 @@ TEST(Pipes, Write_AsyncWait_Clone_CloseOriginal)
   ASSERT_TRUE(cb->Called());
 }
 
-TEST(Pipes, Read_AsyncWait)
-{
+TEST(Pipes, Read_AsyncWait) {
   nsCOMPtr<nsIAsyncInputStream> reader;
   nsCOMPtr<nsIAsyncOutputStream> writer;
 
@@ -923,8 +883,7 @@ TEST(Pipes, Read_AsyncWait)
   nsTArray<char> inputData;
   testing::CreateData(segmentSize, inputData);
 
-  RefPtr<testing::InputStreamCallback> cb =
-    new testing::InputStreamCallback();
+  RefPtr<testing::InputStreamCallback> cb = new testing::InputStreamCallback();
 
   rv = reader->AsyncWait(cb, 0, 0, nullptr);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
@@ -940,8 +899,7 @@ TEST(Pipes, Read_AsyncWait)
   testing::ConsumeAndValidateStream(reader, inputData);
 }
 
-TEST(Pipes, Read_AsyncWait_Clone)
-{
+TEST(Pipes, Read_AsyncWait_Clone) {
   nsCOMPtr<nsIAsyncInputStream> reader;
   nsCOMPtr<nsIAsyncOutputStream> writer;
 
@@ -963,11 +921,9 @@ TEST(Pipes, Read_AsyncWait_Clone)
   nsTArray<char> inputData;
   testing::CreateData(segmentSize, inputData);
 
-  RefPtr<testing::InputStreamCallback> cb =
-    new testing::InputStreamCallback();
+  RefPtr<testing::InputStreamCallback> cb = new testing::InputStreamCallback();
 
-  RefPtr<testing::InputStreamCallback> cb2 =
-    new testing::InputStreamCallback();
+  RefPtr<testing::InputStreamCallback> cb2 = new testing::InputStreamCallback();
 
   rv = reader->AsyncWait(cb, 0, 0, nullptr);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
@@ -991,14 +947,9 @@ TEST(Pipes, Read_AsyncWait_Clone)
 
 namespace {
 
-nsresult
-CloseDuringReadFunc(nsIInputStream *aReader,
-                    void* aClosure,
-                    const char* aFromSegment,
-                    uint32_t aToOffset,
-                    uint32_t aCount,
-                    uint32_t* aWriteCountOut)
-{
+nsresult CloseDuringReadFunc(nsIInputStream* aReader, void* aClosure,
+                             const char* aFromSegment, uint32_t aToOffset,
+                             uint32_t aCount, uint32_t* aWriteCountOut) {
   MOZ_RELEASE_ASSERT(aReader);
   MOZ_RELEASE_ASSERT(aClosure);
   MOZ_RELEASE_ASSERT(aFromSegment);
@@ -1020,9 +971,7 @@ CloseDuringReadFunc(nsIInputStream *aReader,
   return NS_OK;
 }
 
-void
-TestCloseDuringRead(uint32_t aSegmentSize, uint32_t aDataSize)
-{
+void TestCloseDuringRead(uint32_t aSegmentSize, uint32_t aDataSize) {
   nsCOMPtr<nsIInputStream> reader;
   nsCOMPtr<nsIOutputStream> writer;
 
@@ -1055,20 +1004,15 @@ TestCloseDuringRead(uint32_t aSegmentSize, uint32_t aDataSize)
   ASSERT_EQ(NS_BASE_STREAM_CLOSED, rv);
 }
 
-} // namespace
+}  // namespace
 
-TEST(Pipes, Close_During_Read_Partial_Segment)
-{
+TEST(Pipes, Close_During_Read_Partial_Segment) {
   TestCloseDuringRead(1024, 512);
 }
 
-TEST(Pipes, Close_During_Read_Full_Segment)
-{
-  TestCloseDuringRead(1024, 1024);
-}
+TEST(Pipes, Close_During_Read_Full_Segment) { TestCloseDuringRead(1024, 1024); }
 
-TEST(Pipes, Interfaces)
-{
+TEST(Pipes, Interfaces) {
   nsCOMPtr<nsIInputStream> reader;
   nsCOMPtr<nsIOutputStream> writer;
 

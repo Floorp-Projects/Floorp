@@ -162,6 +162,8 @@ using namespace mozilla::gfx;
 gfxPlatform* gPlatform = nullptr;
 static bool gEverInitialized = false;
 
+static int32_t gLastUsedFrameRate = -1;
+
 const ContentDeviceData* gContentDeviceInitData = nullptr;
 
 static Mutex* gGfxPlatformPrefsLock = nullptr;
@@ -927,14 +929,21 @@ void gfxPlatform::Init() {
     }
   }
 
-  if (XRE_IsParentProcess() || recordreplay::IsRecordingOrReplaying()) {
-    if (gfxPlatform::ForceSoftwareVsync()) {
-      gPlatform->mVsyncSource =
-          (gPlatform)->gfxPlatform::CreateHardwareVsyncSource();
-    } else {
-      gPlatform->mVsyncSource = gPlatform->CreateHardwareVsyncSource();
+  gLastUsedFrameRate = ForceSoftwareVsync() ? GetSoftwareVsyncRate() : -1;
+  auto updateFrameRateCallback = [](const GfxPrefValue& aValue) -> void {
+    int32_t newRate = ForceSoftwareVsync() ? GetSoftwareVsyncRate() : -1;
+    if (newRate != gLastUsedFrameRate) {
+      gLastUsedFrameRate = newRate;
+      ReInitFrameRate();
     }
-  }
+  };
+  gfxPrefs::SetLayoutFrameRateChangeCallback(updateFrameRateCallback);
+  gfxPrefs::SetIsLowEndMachineDoNotUseDirectlyChangeCallback(
+      updateFrameRateCallback);
+  gfxPrefs::SetAdjustToMachineChangeCallback(updateFrameRateCallback);
+  gfxPrefs::SetResistFingerprintingChangeCallback(updateFrameRateCallback);
+  // Set up the vsync source for the parent process.
+  ReInitFrameRate();
 
 #ifdef USE_SKIA
   SkGraphics::Init();
@@ -2943,6 +2952,11 @@ bool gfxPlatform::ContentUsesTiling() const {
           contentUsesPOMTP);
 }
 
+/* static */ bool gfxPlatform::ShouldAdjustForLowEndMachine() {
+  return gfxPrefs::AdjustToMachine() && !gfxPrefs::ResistFingerprinting() &&
+         gfxPrefs::IsLowEndMachineDoNotUseDirectly();
+}
+
 /***
  * The preference "layout.frame_rate" has 3 meanings depending on the value:
  *
@@ -2967,7 +2981,7 @@ gfxPlatform::CreateHardwareVsyncSource() {
 }
 
 /* static */ bool gfxPlatform::ForceSoftwareVsync() {
-  return gfxPrefs::LayoutFrameRate() > 0 ||
+  return ShouldAdjustForLowEndMachine() || gfxPrefs::LayoutFrameRate() > 0 ||
          recordreplay::IsRecordingOrReplaying();
 }
 
@@ -2979,7 +2993,28 @@ gfxPlatform::CreateHardwareVsyncSource() {
   return preferenceRate;
 }
 
-/* static */ int gfxPlatform::GetDefaultFrameRate() { return 60; }
+/* static */ int gfxPlatform::GetDefaultFrameRate() {
+  return ShouldAdjustForLowEndMachine() ? 30 : 60;
+}
+
+/* static */ void gfxPlatform::ReInitFrameRate() {
+  if (XRE_IsParentProcess() || recordreplay::IsRecordingOrReplaying()) {
+    RefPtr<VsyncSource> oldSource = gPlatform->mVsyncSource;
+
+    // Start a new one:
+    if (gfxPlatform::ForceSoftwareVsync()) {
+      gPlatform->mVsyncSource =
+          (gPlatform)->gfxPlatform::CreateHardwareVsyncSource();
+    } else {
+      gPlatform->mVsyncSource = gPlatform->CreateHardwareVsyncSource();
+    }
+    // Tidy up old vsync source.
+    if (oldSource) {
+      oldSource->MoveListenersToNewSource(gPlatform->mVsyncSource);
+      oldSource->Shutdown();
+    }
+  }
+}
 
 void gfxPlatform::GetAzureBackendInfo(mozilla::widget::InfoObject& aObj) {
   if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {

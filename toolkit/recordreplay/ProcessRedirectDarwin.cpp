@@ -2545,13 +2545,12 @@ static PreambleResult Preamble_PLDHashTable(CallArguments* aArguments) {
   {#aAddress, nullptr, nullptr, nullptr, aPreamble},
 
 static Redirection gDiagnosticRedirections[] = {
-  // clang-format off
+    // clang-format off
   FOR_EACH_DIAGNOSTIC_REDIRECTION(MAKE_DIAGNOSTIC_ENTRY)
   FOR_EACH_DIAGNOSTIC_MEMBER_PTR_WITH_TYPE_REDIRECTION(MAKE_DIAGNOSTIC_ENTRY_WITH_TYPE)
   FOR_EACH_DIAGNOSTIC_MEMBER_PTR_REDIRECTION(MAKE_DIAGNOSTIC_ENTRY)
-  // clang-format on
+    // clang-format on
 };
-
 
 #undef MAKE_DIAGNOSTIC_ENTRY_WITH_TYPE
 #undef MAKE_DIAGNOSTIC_ENTRY

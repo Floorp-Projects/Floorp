@@ -2306,13 +2306,6 @@ if test -n "$MOZ_SYSTEM_LIBVPX"; then
 
     AC_CHECK_LIB(vpx, vpx_codec_dec_init_ver, [],
      [AC_MSG_ERROR([--with-system-libvpx requested but symbol vpx_codec_dec_init_ver not found])])
-
-    MOZ_CHECK_HEADER([vpx_mem/vpx_mem.h],
-     [AC_CHECK_FUNC(vpx_mem_set_functions)])
-    if test "$ac_cv_header_vpx_mem_vpx_mem_h" = no -o \
-            "$ac_cv_func_vpx_mem_set_functions" = no; then
-        AC_DEFINE(MOZ_VPX_NO_MEM_REPORTING)
-    fi
 fi
 CFLAGS=$_SAVE_CFLAGS
 LIBS=$_SAVE_LIBS
@@ -2408,9 +2401,6 @@ if test -z "$MOZ_SYSTEM_LIBVPX"; then
     else
       AC_MSG_WARN([No assembler or assembly support for libvpx. Using unoptimized C routines.])
     fi
-
-    dnl native libvpx no longer has vpx_mem_set_functions
-    AC_DEFINE(MOZ_VPX_NO_MEM_REPORTING)
 fi
 
 dnl ========================================================
