@@ -23,6 +23,7 @@ UNIFIED_SOURCES += [
     'UrlClassifierCommon.cpp',
     'UrlClassifierFeatureBase.cpp',
     'UrlClassifierFeatureFactory.cpp',
+    'UrlClassifierFeatureLoginReputation.cpp',
     'UrlClassifierFeatureResult.cpp',
     'UrlClassifierFeatureTrackingAnnotation.cpp',
     'UrlClassifierFeatureTrackingProtection.cpp',
