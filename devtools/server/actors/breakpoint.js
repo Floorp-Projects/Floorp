@@ -42,16 +42,16 @@ const BreakpointActor = ActorClassWithSpec(breakpointSpec, {
    *
    * @param ThreadActor threadActor
    *        The parent thread actor that contains this breakpoint.
-   * @param OriginalLocation originalLocation
-   *        The original location of the breakpoint.
+   * @param GeneratedLocation generatedLocation
+   *        The generated location of the breakpoint.
    */
-  initialize: function(threadActor, originalLocation) {
+  initialize: function(threadActor, generatedLocation) {
     // The set of Debugger.Script instances that this breakpoint has been set
     // upon.
     this.scripts = new Set();
 
     this.threadActor = threadActor;
-    this.originalLocation = originalLocation;
+    this.generatedLocation = generatedLocation;
     this.condition = null;
     this.isPending = true;
   },
@@ -139,14 +139,12 @@ const BreakpointActor = ActorClassWithSpec(breakpointSpec, {
   hit: function(frame) {
     // Don't pause if we are currently stepping (in or over) or the frame is
     // black-boxed.
-    const generatedLocation = this.threadActor.sources.getFrameLocation(frame);
     const {
-      originalSourceActor,
-      originalLine,
-      originalColumn,
-    } = this.threadActor.unsafeSynchronize(
-      this.threadActor.sources.getOriginalLocation(generatedLocation));
-    const url = originalSourceActor.url;
+      generatedSourceActor,
+      generatedLine,
+      generatedColumn,
+    } = this.threadActor.sources.getFrameLocation(frame);
+    const url = generatedSourceActor.url;
 
     if (this.threadActor.sources.isBlackBoxed(url)
         || this.threadActor.skipBreakpoints
@@ -156,10 +154,10 @@ const BreakpointActor = ActorClassWithSpec(breakpointSpec, {
 
     // If we're trying to pop this frame, and we see a breakpoint at
     // the spot at which popping started, ignore it.  See bug 970469.
-    const locationAtFinish = frame.onPop && frame.onPop.originalLocation;
+    const locationAtFinish = frame.onPop && frame.onPop.generatedLocation;
     if (locationAtFinish &&
-        locationAtFinish.originalLine === originalLine &&
-        locationAtFinish.originalColumn === originalColumn) {
+        locationAtFinish.generatedLine === generatedLine &&
+        locationAtFinish.generatedColumn === generatedColumn) {
       return undefined;
     }
 
@@ -194,8 +192,8 @@ const BreakpointActor = ActorClassWithSpec(breakpointSpec, {
    */
   delete: function() {
     // Remove from the breakpoint store.
-    if (this.originalLocation) {
-      this.threadActor.breakpointActorMap.deleteActor(this.originalLocation);
+    if (this.generatedLocation) {
+      this.threadActor.breakpointActorMap.deleteActor(this.generatedLocation);
     }
     this.threadActor.threadLifetimePool.removeActor(this);
     // Remove the actual breakpoint from the associated scripts.

@@ -11,17 +11,17 @@ UA Widget lifecycle
 
 UA Widgets are generally constructed when the element is appended to the document and destroyed when the element is removed from the tree. Yet, in order to be fast, specialization was made to each of the widgets.
 
-When the element is appended to the tree, a chrome-only ``UAWidgetBindToTree`` event is dispatched and is caught by a frame script, namely UAWidgetsChild.
+When the element is appended to the tree, a chrome-only ``UAWidgetSetupOrChange`` event is dispatched and is caught by a frame script, namely UAWidgetsChild.
 
 UAWidgetsChild then grabs the sandbox for that origin (lazily creating it as needed), loads the script as needed, and initializes an instance by calling the JS constructor with a reference to the UA Widget Shadow Root created by the DOM. We will discuss the sandbox in the latter section.
 
 The ``onsetup`` method is called right after the instance is constructed. The call to constructor must not throw, or UAWidgetsChild will be confused since an instance of the widget will not be returned, but the widget is already half-initalized. If the ``onsetup`` method call throws, UAWidgetsChild will still be able to hold the reference of the widget and call the destructor later on.
 
-When the element is removed from the tree, ``UAWidgetUnbindFromTree`` is dispatched so UAWidgetsChild can destroy the widget, if it exists. If so, the UAWidgetsChild calls the ``destructor()`` method on the widget, causing the widget to destruct itself.
+When the element is removed from the tree, ``UAWidgetTeardown`` is dispatched so UAWidgetsChild can destroy the widget, if it exists. If so, the UAWidgetsChild calls the ``destructor()`` method on the widget, causing the widget to destruct itself.
 
 When a UA Widget initializes, it should create its own DOM inside the passed UA Widget Shadow Root, including the ``<link>`` element necessary to load the stylesheet, add event listeners, etc. When destroyed (i.e. the destructor method is called), it should do the opposite.
 
-**Specialization**: for video controls, we do not want to do the work if the control is not needed (i.e. when the ``<video>`` or ``<audio>`` element has no "controls" attribute set), so we forgo dispatching the event from HTMLMediaElement in the BindToTree method. Instead, another ``UAWidgetAttributeChanged`` event will cause the sandbox and the widget instance to construct when the attribute is set to true. The same event is also responsible for triggering the ``onchange()`` method on UA Widgets if the widget is already initialized.
+**Specialization**: for video controls, we do not want to do the work if the control is not needed (i.e. when the ``<video>`` or ``<audio>`` element has no "controls" attribute set), so we forgo dispatching the event from HTMLMediaElement in the BindToTree method. Instead, another ``UAWidgetSetupOrChange`` event will cause the sandbox and the widget instance to construct when the attribute is set to true. The same event is also responsible for triggering the ``onchange()`` method on UA Widgets if the widget is already initialized.
 
 Likewise, the datetime box widget is only loaded when the ``type`` attribute of an ``<input>`` is either `date` or `time`.
 
