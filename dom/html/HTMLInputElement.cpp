@@ -4331,10 +4331,7 @@ nsresult HTMLInputElement::BindToTree(nsIDocument* aDocument,
       nsContentUtils::IsUAWidgetEnabled() && IsInComposedDoc()) {
     // Construct Shadow Root so web content can be hidden in the DOM.
     AttachAndSetUAShadowRoot();
-    AsyncEventDispatcher* dispatcher =
-        new AsyncEventDispatcher(this, NS_LITERAL_STRING("UAWidgetBindToTree"),
-                                 CanBubble::eYes, ChromeOnlyDispatch::eYes);
-    dispatcher->RunDOMEventWhenSafe();
+    NotifyUAWidgetSetupOrChange();
   }
 
   if (mType == NS_FORM_INPUT_PASSWORD) {
@@ -4363,16 +4360,9 @@ void HTMLInputElement::UnbindFromTree(bool aDeep, bool aNullParent) {
     WillRemoveFromRadioGroup();
   }
 
-  if (GetShadowRoot() && IsInComposedDoc()) {
-    nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
-        "HTMLInputElement::UnbindFromTree::UAWidgetUnbindFromTree",
-        [self = RefPtr<Element>(this)]() {
-          nsContentUtils::DispatchChromeEvent(
-              self->OwnerDoc(), self,
-              NS_LITERAL_STRING("UAWidgetUnbindFromTree"), CanBubble::eYes,
-              Cancelable::eNo);
-          self->UnattachShadow();
-        }));
+  if ((mType == NS_FORM_INPUT_TIME || mType == NS_FORM_INPUT_DATE) &&
+      nsContentUtils::IsUAWidgetEnabled() && IsInComposedDoc()) {
+    NotifyUAWidgetTeardown();
   }
 
   nsImageLoadingContent::UnbindFromTree(aDeep, aNullParent);
@@ -4551,30 +4541,15 @@ void HTMLInputElement::HandleTypeChange(uint8_t aNewType, bool aNotify) {
     if (oldType == NS_FORM_INPUT_TIME || oldType == NS_FORM_INPUT_DATE) {
       if (mType != NS_FORM_INPUT_TIME && mType != NS_FORM_INPUT_DATE) {
         // Switch away from date/time type.
-        RefPtr<Element> self = this;
-        nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
-            "HTMLInputElement::UnbindFromTree::UAWidgetUnbindFromTree",
-            [self]() {
-              nsContentUtils::DispatchChromeEvent(
-                  self->OwnerDoc(), self,
-                  NS_LITERAL_STRING("UAWidgetUnbindFromTree"), CanBubble::eYes,
-                  Cancelable::eNo);
-              self->UnattachShadow();
-            }));
+        NotifyUAWidgetTeardown();
       } else {
         // Switch between date and time.
-        AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
-            this, NS_LITERAL_STRING("UAWidgetAttributeChanged"),
-            CanBubble::eYes, ChromeOnlyDispatch::eYes);
-        dispatcher->RunDOMEventWhenSafe();
+        NotifyUAWidgetSetupOrChange();
       }
     } else if (mType == NS_FORM_INPUT_TIME || mType == NS_FORM_INPUT_DATE) {
       // Switch to date/time type.
       AttachAndSetUAShadowRoot();
-      AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
-          this, NS_LITERAL_STRING("UAWidgetBindToTree"), CanBubble::eYes,
-          ChromeOnlyDispatch::eYes);
-      dispatcher->RunDOMEventWhenSafe();
+      NotifyUAWidgetSetupOrChange();
     }
   }
 }

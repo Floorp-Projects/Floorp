@@ -1203,6 +1203,23 @@ class Element : public FragmentOrElement {
 
   already_AddRefed<ShadowRoot> AttachShadowWithoutNameChecks(
       ShadowRootMode aMode);
+
+  // Attach UA Shadow Root if it is not attached.
+  void AttachAndSetUAShadowRoot();
+
+  // Dispatch an event to UAWidgetsChild, triggering construction
+  // or onattributechange callback on the existing widget.
+  void NotifyUAWidgetSetupOrChange();
+
+  enum class UnattachShadowRoot {
+    No,
+    Yes,
+  };
+
+  // Dispatch an event to UAWidgetsChild, triggering UA Widget destruction.
+  // and optionally remove the shadow root.
+  void NotifyUAWidgetTeardown(UnattachShadowRoot = UnattachShadowRoot::Yes);
+
   void UnattachShadow();
 
   ShadowRoot* GetShadowRootByMode() const;

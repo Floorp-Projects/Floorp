@@ -598,16 +598,8 @@ void nsObjectLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent) {
   }
 
   // Unattach plugin problem UIWidget if any.
-  if (thisElement->IsInComposedDoc() && thisElement->GetShadowRoot()) {
-    nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
-        "nsObjectLoadingContent::UnbindFromTree::UAWidgetUnbindFromTree",
-        [thisElement]() {
-          nsContentUtils::DispatchChromeEvent(
-              thisElement->OwnerDoc(), thisElement,
-              NS_LITERAL_STRING("UAWidgetUnbindFromTree"), CanBubble::eYes,
-              Cancelable::eNo);
-          thisElement->UnattachShadow();
-        }));
+  if (thisElement->IsInComposedDoc() && nsContentUtils::IsUAWidgetEnabled()) {
+    thisElement->NotifyUAWidgetTeardown();
   }
 
   if (mType == eType_Plugin) {
@@ -2591,22 +2583,10 @@ void nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
       bool hasProblemState = !(newState & pluginProblemState).IsEmpty();
 
       if (hadProblemState && !hasProblemState) {
-        nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
-            "nsObjectLoadingContent::UnbindFromTree::UAWidgetUnbindFromTree",
-            [thisEl]() {
-              nsContentUtils::DispatchChromeEvent(
-                  thisEl->OwnerDoc(), thisEl,
-                  NS_LITERAL_STRING("UAWidgetUnbindFromTree"), CanBubble::eYes,
-                  Cancelable::eNo);
-              thisEl->UnattachShadow();
-            }));
+        thisEl->NotifyUAWidgetTeardown();
       } else if (!hadProblemState && hasProblemState) {
-        nsGenericHTMLElement::FromNode(thisEl)->AttachAndSetUAShadowRoot();
-
-        AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
-            thisEl, NS_LITERAL_STRING("UAWidgetBindToTree"), CanBubble::eYes,
-            ChromeOnlyDispatch::eYes);
-        dispatcher->RunDOMEventWhenSafe();
+        thisEl->AttachAndSetUAShadowRoot();
+        thisEl->NotifyUAWidgetSetupOrChange();
       }
     }
   } else if (aOldType != mType) {

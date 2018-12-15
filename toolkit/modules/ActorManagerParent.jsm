@@ -267,9 +267,8 @@ let ACTORS = {
     child: {
       module: "resource://gre/actors/UAWidgetsChild.jsm",
       events: {
-        "UAWidgetBindToTree": {},
-        "UAWidgetAttributeChanged": {},
-        "UAWidgetUnbindFromTree": {},
+        "UAWidgetSetupOrChange": {},
+        "UAWidgetTeardown": {},
       },
     },
   },
