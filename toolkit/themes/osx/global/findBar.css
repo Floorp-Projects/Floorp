@@ -40,7 +40,7 @@ label.findbar-find-fast:-moz-lwtheme {
   border-style: @roundButtonBorderStyle@;
   border-color: @roundButtonBorderColor@;
   color: @roundButtonColor@;
-  background-image: @roundButtonBackground@;
+  background-image: @roundButtonBackgroundImage@;
 }
 
 .findbar-button {
@@ -60,7 +60,7 @@ label.findbar-find-fast:-moz-lwtheme {
 .findbar-find-previous:not(:-moz-lwtheme):not([disabled]):hover:active,
 .findbar-button:not([disabled]):hover:active,
 .findbar-button:not([disabled])[checked="true"] {
-  background-image: @roundButtonPressedBackground@;
+  background-image: @roundButtonPressedBackgroundImage@;
   box-shadow: @roundButtonPressedShadow@;
 }
 
