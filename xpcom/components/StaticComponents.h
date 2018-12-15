@@ -78,6 +78,7 @@ struct StringOffset final {
  */
 struct StaticModule {
   nsID mCID;
+  StringOffset mContractID;
   Module::ProcessSelector mProcessSelector;
 
   const nsID& CID() const { return mCID; }
@@ -88,6 +89,22 @@ struct StaticModule {
    * Returns this entry's index in the gStaticModules array.
    */
   size_t Idx() const { return size_t(ID()); }
+
+  /**
+   * Returns true if this component's corresponding contract ID is expected to
+   * be overridden at runtime. If so, it should always be looked up by its
+   * ContractID() when retrieving its service instance.
+   */
+  bool Overridable() const;
+
+  /**
+   * If this entry is overridable, returns its associated contract ID string.
+   * The component should always be looked up by this contract ID when
+   * retrieving its service instance.
+   *
+   * Note: This may *only* be called if Overridable() returns true.
+   */
+  nsCString ContractID() const;
 
   /**
    * Returns true if this entry is active. Typically this will only return false

@@ -1444,6 +1444,46 @@ nsComponentManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
   return GetServiceLocked(lock, *entry, aIID, aResult);
 }
 
+nsresult
+nsComponentManagerImpl::GetService(ModuleID aId, const nsIID& aIID,
+                                   void** aResult) {
+  const auto& entry = gStaticModules[size_t(aId)];
+
+  // test this first, since there's no point in returning a service during
+  // shutdown -- whether it's available or not would depend on the order it
+  // occurs in the list
+  if (gXPCOMShuttingDown) {
+    // When processing shutdown, don't process new GetService() requests
+#ifdef SHOW_DENIED_ON_SHUTDOWN
+    fprintf(stderr,
+            "Getting service on shutdown. Denied.\n"
+            "         CID: %s\n         IID: %s\n",
+            AutoIDString(entry.CID()).get(),
+            AutoIDString(aIID).get());
+#endif /* SHOW_DENIED_ON_SHUTDOWN */
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  MutexLock lock(mLock);
+
+  if (!entry.Active()) {
+    return NS_ERROR_FACTORY_NOT_REGISTERED;
+  }
+
+  Maybe<EntryWrapper> wrapper;
+  if (entry.Overridable()) {
+    // If we expect this service to be overridden by test code, we need to look
+    // it up by contract ID every time.
+    wrapper = LookupByContractID(lock, entry.ContractID());
+    if (!wrapper) {
+      return NS_ERROR_FACTORY_NOT_REGISTERED;
+    }
+  } else {
+    wrapper.emplace(&entry);
+  }
+  return GetServiceLocked(lock, *wrapper, aIID, aResult);
+}
+
 NS_IMETHODIMP
 nsComponentManagerImpl::IsServiceInstantiated(const nsCID& aClass,
                                               const nsIID& aIID,
