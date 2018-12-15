@@ -109,9 +109,9 @@ namespace test_assembler {
 // Sections that refer to it.
 class Label {
  public:
-  Label();                               // An undefined label.
-  explicit Label(uint64_t value);        // A label with a fixed value
-  Label(const Label &value);             // A label equal to another.
+  Label();                         // An undefined label.
+  explicit Label(uint64_t value);  // A label with a fixed value
+  Label(const Label &value);       // A label equal to another.
   ~Label();
 
   Label &operator=(uint64_t value);
@@ -225,9 +225,9 @@ class Label {
 
 // Conventions for representing larger numbers as sequences of bytes.
 enum Endianness {
-  kBigEndian,        // Big-endian: the most significant byte comes first.
-  kLittleEndian,     // Little-endian: the least significant byte comes first.
-  kUnsetEndian,      // used internally
+  kBigEndian,     // Big-endian: the most significant byte comes first.
+  kLittleEndian,  // Little-endian: the least significant byte comes first.
+  kUnsetEndian,   // used internally
 };
 
 // A section is a sequence of bytes, constructed by appending bytes
@@ -256,11 +256,11 @@ enum Endianness {
 class Section {
  public:
   explicit Section(Endianness endianness = kUnsetEndian)
-      : endianness_(endianness) { };
+      : endianness_(endianness){};
 
   // A base class destructor should be either public and virtual,
   // or protected and nonvirtual.
-  virtual ~Section() { };
+  virtual ~Section(){};
 
   // Return the default endianness of this section.
   Endianness endianness() const { return endianness_; }
@@ -275,7 +275,7 @@ class Section {
   // Append SIZE copies of BYTE to the end of this section. Return a
   // reference to this section.
   Section &Append(size_t size, uint8_t byte) {
-    contents_.append(size, (char) byte);
+    contents_.append(size, (char)byte);
     return *this;
   }
 
@@ -318,18 +318,27 @@ class Section {
   // the compiler will properly sign-extend a signed value before
   // passing it to the function, at which point the function's
   // behavior is the same either way.
-  Section &L8(uint8_t value) { contents_ += value; return *this; }
-  Section &B8(uint8_t value) { contents_ += value; return *this; }
-  Section &D8(uint8_t value) { contents_ += value; return *this; }
-  Section &L16(uint16_t), &L32(uint32_t), &L64(uint64_t),
-          &B16(uint16_t), &B32(uint32_t), &B64(uint64_t),
-          &D16(uint16_t), &D32(uint32_t), &D64(uint64_t);
-  Section &L8(const Label &label),  &L16(const Label &label),
-          &L32(const Label &label), &L64(const Label &label),
-          &B8(const Label &label),  &B16(const Label &label),
-          &B32(const Label &label), &B64(const Label &label),
-          &D8(const Label &label),  &D16(const Label &label),
-          &D32(const Label &label), &D64(const Label &label);
+  Section &L8(uint8_t value) {
+    contents_ += value;
+    return *this;
+  }
+  Section &B8(uint8_t value) {
+    contents_ += value;
+    return *this;
+  }
+  Section &D8(uint8_t value) {
+    contents_ += value;
+    return *this;
+  }
+  Section &L16(uint16_t), &L32(uint32_t), &L64(uint64_t), &B16(uint16_t),
+      &B32(uint32_t), &B64(uint64_t), &D16(uint16_t), &D32(uint32_t),
+      &D64(uint64_t);
+  Section &L8(const Label &label), &L16(const Label &label),
+      &L32(const Label &label), &L64(const Label &label),
+      &B8(const Label &label), &B16(const Label &label),
+      &B32(const Label &label), &B64(const Label &label),
+      &D8(const Label &label), &D16(const Label &label),
+      &D32(const Label &label), &D64(const Label &label);
 
   // Append VALUE in a signed LEB128 (Little-Endian Base 128) form.
   //
@@ -399,7 +408,10 @@ class Section {
   Label Here() const { return start_ + Size(); }
 
   // Set *LABEL to Here, and return a reference to this section.
-  Section &Mark(Label *label) { *label = Here(); return *this; }
+  Section &Mark(Label *label) {
+    *label = Here();
+    return *this;
+  }
 
   // If there are no undefined label references left in this
   // section, set CONTENTS to the contents of this section, as a
@@ -410,10 +422,12 @@ class Section {
  private:
   // Used internally. A reference to a label's value.
   struct Reference {
-    Reference(size_t set_offset, Endianness set_endianness,  size_t set_size,
+    Reference(size_t set_offset, Endianness set_endianness, size_t set_size,
               const Label &set_label)
-        : offset(set_offset), endianness(set_endianness), size(set_size),
-          label(set_label) { }
+        : offset(set_offset),
+          endianness(set_endianness),
+          size(set_size),
+          label(set_label) {}
 
     // The offset of the reference within the section.
     size_t offset;
@@ -444,7 +458,6 @@ class Section {
 }  // namespace test_assembler
 }  // namespace lul_test
 
-
 namespace lul_test {
 
 using lul::DwarfPointerEncoding;
@@ -452,9 +465,8 @@ using lul_test::test_assembler::Endianness;
 using lul_test::test_assembler::Label;
 using lul_test::test_assembler::Section;
 
-class CFISection: public Section {
+class CFISection : public Section {
  public:
-
   // CFI augmentation strings beginning with 'z', defined by the
   // Linux/IA-64 C++ ABI, can specify interesting encodings for
   // addresses appearing in FDE headers and call frame instructions (and
@@ -476,7 +488,7 @@ class CFISection: public Section {
   // addresses it should use; you can establish a default for all encoded
   // pointers appended to this section with SetEncodedPointerBases.
   struct EncodedPointerBases {
-    EncodedPointerBases() : cfi(), text(), data() { }
+    EncodedPointerBases() : cfi(), text(), data() {}
 
     // The starting address of this CFI section in memory, for
     // DW_EH_PE_pcrel. DW_EH_PE_pcrel pointers may only be used in data
@@ -496,11 +508,14 @@ class CFISection: public Section {
   // true, use the .eh_frame format, as described by the Linux
   // Standards Base Core Specification, instead of the DWARF CFI
   // format.
-  CFISection(Endianness endianness, size_t address_size,
-             bool eh_frame = false)
-      : Section(endianness), address_size_(address_size), eh_frame_(eh_frame),
+  CFISection(Endianness endianness, size_t address_size, bool eh_frame = false)
+      : Section(endianness),
+        address_size_(address_size),
+        eh_frame_(eh_frame),
         pointer_encoding_(lul::DW_EH_PE_absptr),
-        encoded_pointer_bases_(), entry_length_(NULL), in_fde_(false) {
+        encoded_pointer_bases_(),
+        entry_length_(NULL),
+        in_fde_(false) {
     // The 'start', 'Here', and 'Mark' members of a CFISection all refer
     // to section offsets.
     start() = 0;
@@ -536,10 +551,8 @@ class CFISection: public Section {
   // CIE's position in the section.
   CFISection &CIEHeader(uint64_t code_alignment_factor,
                         int data_alignment_factor,
-                        unsigned return_address_register,
-                        uint8_t version = 3,
-                        const string &augmentation = "",
-                        bool dwarf64 = false);
+                        unsigned return_address_register, uint8_t version = 3,
+                        const string &augmentation = "", bool dwarf64 = false);
 
   // Append a Frame Description Entry header to this section with the
   // given values. If dwarf64 is true, use the 64-bit DWARF initial
@@ -551,10 +564,8 @@ class CFISection: public Section {
   // 0xffffff00 bytes. (The "initial length" is always a 32-bit
   // value.) Nor does it support .debug_frame sections longer than
   // 0xffffff00 bytes.
-  CFISection &FDEHeader(Label cie_pointer,
-                        uint64_t initial_location,
-                        uint64_t address_range,
-                        bool dwarf64 = false);
+  CFISection &FDEHeader(Label cie_pointer, uint64_t initial_location,
+                        uint64_t address_range, bool dwarf64 = false);
 
   // Note the current position as the end of the last CIE or FDE we
   // started, after padding with DW_CFA_nops for alignment. This
@@ -596,16 +607,46 @@ class CFISection: public Section {
                              const EncodedPointerBases &bases);
 
   // Restate some member functions, to keep chaining working nicely.
-  CFISection &Mark(Label *label)   { Section::Mark(label); return *this; }
-  CFISection &D8(uint8_t v)       { Section::D8(v);       return *this; }
-  CFISection &D16(uint16_t v)     { Section::D16(v);      return *this; }
-  CFISection &D16(Label v)         { Section::D16(v);      return *this; }
-  CFISection &D32(uint32_t v)     { Section::D32(v);      return *this; }
-  CFISection &D32(const Label &v)  { Section::D32(v);      return *this; }
-  CFISection &D64(uint64_t v)     { Section::D64(v);      return *this; }
-  CFISection &D64(const Label &v)  { Section::D64(v);      return *this; }
-  CFISection &LEB128(long long v)  { Section::LEB128(v);   return *this; }
-  CFISection &ULEB128(uint64_t v) { Section::ULEB128(v);  return *this; }
+  CFISection &Mark(Label *label) {
+    Section::Mark(label);
+    return *this;
+  }
+  CFISection &D8(uint8_t v) {
+    Section::D8(v);
+    return *this;
+  }
+  CFISection &D16(uint16_t v) {
+    Section::D16(v);
+    return *this;
+  }
+  CFISection &D16(Label v) {
+    Section::D16(v);
+    return *this;
+  }
+  CFISection &D32(uint32_t v) {
+    Section::D32(v);
+    return *this;
+  }
+  CFISection &D32(const Label &v) {
+    Section::D32(v);
+    return *this;
+  }
+  CFISection &D64(uint64_t v) {
+    Section::D64(v);
+    return *this;
+  }
+  CFISection &D64(const Label &v) {
+    Section::D64(v);
+    return *this;
+  }
+  CFISection &LEB128(long long v) {
+    Section::LEB128(v);
+    return *this;
+  }
+  CFISection &ULEB128(uint64_t v) {
+    Section::ULEB128(v);
+    return *this;
+  }
 
  private:
   // A length value that we've appended to the section, but is not yet
@@ -663,4 +704,4 @@ class CFISection: public Section {
 
 }  // namespace lul_test
 
-#endif // LUL_TEST_INFRASTRUCTURE_H
+#endif  // LUL_TEST_INFRASTRUCTURE_H

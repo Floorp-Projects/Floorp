@@ -91,19 +91,15 @@ class TurnClient : public MtransportTest {
         turn_ctx_(nullptr),
         allocated_(false),
         received_(0),
-        protocol_(IPPROTO_UDP) {
-  }
+        protocol_(IPPROTO_UDP) {}
 
-  ~TurnClient() {
-  }
+  ~TurnClient() {}
 
   static void SetUpTestCase() {
     NrIceCtx::InitializeGlobals(false, false, false);
   }
 
-  void SetTcp() {
-    protocol_ = IPPROTO_TCP;
-  }
+  void SetTcp() { protocol_ = IPPROTO_TCP; }
 
   void Init_s() {
     int r;
@@ -115,34 +111,31 @@ class TurnClient : public MtransportTest {
     ASSERT_EQ(0, r);
 
     if (protocol_ == IPPROTO_TCP) {
-      int r =
-          nr_socket_buffered_stun_create(real_socket_, 100000, TURN_TCP_FRAMING,
-                                         &buffered_socket_);
+      int r = nr_socket_buffered_stun_create(
+          real_socket_, 100000, TURN_TCP_FRAMING, &buffered_socket_);
       ASSERT_EQ(0, r);
       net_socket_ = buffered_socket_;
     } else {
       net_socket_ = real_socket_;
     }
 
-    r = nr_str_port_to_transport_addr(turn_server_.c_str(), 3478,
-      protocol_, &addr);
+    r = nr_str_port_to_transport_addr(turn_server_.c_str(), 3478, protocol_,
+                                      &addr);
     ASSERT_EQ(0, r);
 
-    std::vector<unsigned char> password_vec(
-        turn_password_.begin(), turn_password_.end());
+    std::vector<unsigned char> password_vec(turn_password_.begin(),
+                                            turn_password_.end());
     Data password;
     INIT_DATA(password, &password_vec[0], password_vec.size());
-    r = nr_turn_client_ctx_create("test", net_socket_,
-                                  turn_user_.c_str(),
-                                  &password,
-                                  &addr, &turn_ctx_);
+    r = nr_turn_client_ctx_create("test", net_socket_, turn_user_.c_str(),
+                                  &password, &addr, &turn_ctx_);
     ASSERT_EQ(0, r);
 
     r = nr_socket_getfd(net_socket_, &net_fd_);
     ASSERT_EQ(0, r);
 
     NR_ASYNC_WAIT(net_fd_, NR_ASYNC_WAIT_READ, socket_readable_cb,
-        (void *)this);
+                  (void *)this);
   }
 
   void TearDown_s() {
@@ -164,28 +157,25 @@ class TurnClient : public MtransportTest {
     Init_s();
     ASSERT_TRUE(turn_ctx_);
 
-    int r = nr_turn_client_allocate(turn_ctx_,
-                                    allocate_success_cb,
-                                    this);
+    int r = nr_turn_client_allocate(turn_ctx_, allocate_success_cb, this);
     ASSERT_EQ(0, r);
   }
 
-  void Allocate(bool expect_success=true) {
+  void Allocate(bool expect_success = true) {
     RUN_ON_THREAD(test_utils_->sts_target(),
                   WrapRunnable(this, &TurnClient::Allocate_s),
                   NS_DISPATCH_SYNC);
 
     if (expect_success) {
       ASSERT_TRUE_WAIT(allocated_, 5000);
-    }
-    else {
+    } else {
       PR_Sleep(10000);
       ASSERT_FALSE(allocated_);
     }
   }
 
   void Allocated() {
-    if (turn_ctx_->state!=NR_TURN_CLIENT_STATE_ALLOCATED) {
+    if (turn_ctx_->state != NR_TURN_CLIENT_STATE_ALLOCATED) {
       std::cerr << "Allocation failed" << std::endl;
       return;
     }
@@ -216,7 +206,7 @@ class TurnClient : public MtransportTest {
                   NS_DISPATCH_SYNC);
   }
 
-  void RequestPermission_s(const std::string& target) {
+  void RequestPermission_s(const std::string &target) {
     nr_transport_addr addr;
     int r;
 
@@ -229,21 +219,18 @@ class TurnClient : public MtransportTest {
     std::string host = target.substr(4, offset - 4);
     std::string port = target.substr(offset + 1);
 
-    r = nr_str_port_to_transport_addr(host.c_str(),
-                                      atoi(port.c_str()),
-                                      IPPROTO_UDP,
-                                      &addr);
+    r = nr_str_port_to_transport_addr(host.c_str(), atoi(port.c_str()),
+                                      IPPROTO_UDP, &addr);
     ASSERT_EQ(0, r);
 
     r = nr_turn_client_ensure_perm(turn_ctx_, &addr);
     ASSERT_EQ(0, r);
   }
 
-  void RequestPermission(const std::string& target) {
+  void RequestPermission(const std::string &target) {
     RUN_ON_THREAD(test_utils_->sts_target(),
                   WrapRunnable(this, &TurnClient::RequestPermission_s, target),
                   NS_DISPATCH_SYNC);
-
   }
 
   void Readable(NR_SOCKET s, int how, void *arg) {
@@ -279,21 +266,18 @@ class TurnClient : public MtransportTest {
       size_t datal;
       nr_transport_addr remote_addr;
 
-      r = nr_turn_client_parse_data_indication(turn_ctx_, &addr,
-                                               buf, len,
-                                               data, &datal, sizeof(data),
-                                               &remote_addr);
+      r = nr_turn_client_parse_data_indication(
+          turn_ctx_, &addr, buf, len, data, &datal, sizeof(data), &remote_addr);
       ASSERT_EQ(0, r);
       std::cerr << "Received " << datal << " bytes from "
                 << remote_addr.as_string << std::endl;
 
       received_ += datal;
 
-      for (size_t i=0; i < datal; i++) {
+      for (size_t i = 0; i < datal; i++) {
         ASSERT_EQ(i & 0xff, data[i]);
       }
-    }
-    else {
+    } else {
       if (nr_is_stun_message(buf, len)) {
         std::cerr << "STUN message of unexpected type" << std::endl;
       } else {
@@ -303,7 +287,7 @@ class TurnClient : public MtransportTest {
     }
   }
 
-  void SendTo_s(const std::string& target, int expect_return) {
+  void SendTo_s(const std::string &target, int expect_return) {
     nr_transport_addr addr;
     int r;
 
@@ -316,32 +300,28 @@ class TurnClient : public MtransportTest {
     std::string host = target.substr(4, offset - 4);
     std::string port = target.substr(offset + 1);
 
-    r = nr_str_port_to_transport_addr(host.c_str(),
-                                      atoi(port.c_str()),
-                                      IPPROTO_UDP,
-                                      &addr);
+    r = nr_str_port_to_transport_addr(host.c_str(), atoi(port.c_str()),
+                                      IPPROTO_UDP, &addr);
     ASSERT_EQ(0, r);
 
     unsigned char test[100];
-    for (size_t i=0; i<sizeof(test); i++) {
+    for (size_t i = 0; i < sizeof(test); i++) {
       test[i] = i & 0xff;
     }
 
     std::cerr << "Sending test message to " << target << " ..." << std::endl;
 
-    r = nr_turn_client_send_indication(turn_ctx_,
-                                            test, sizeof(test), 0,
-                                            &addr);
+    r = nr_turn_client_send_indication(turn_ctx_, test, sizeof(test), 0, &addr);
     if (expect_return >= 0) {
       ASSERT_EQ(expect_return, r);
     }
   }
 
-  void SendTo(const std::string& target, int expect_return=0) {
-    RUN_ON_THREAD(test_utils_->sts_target(),
-                  WrapRunnable(this, &TurnClient::SendTo_s, target,
-                               expect_return),
-                  NS_DISPATCH_SYNC);
+  void SendTo(const std::string &target, int expect_return = 0) {
+    RUN_ON_THREAD(
+        test_utils_->sts_target(),
+        WrapRunnable(this, &TurnClient::SendTo_s, target, expect_return),
+        NS_DISPATCH_SYNC);
   }
 
   int received() const { return received_; }
@@ -350,7 +330,7 @@ class TurnClient : public MtransportTest {
     static_cast<TurnClient *>(arg)->Readable(s, how, arg);
   }
 
-  static void allocate_success_cb(NR_SOCKET s, int how, void *arg){
+  static void allocate_success_cb(NR_SOCKET s, int how, void *arg) {
     static_cast<TurnClient *>(arg)->Allocated();
   }
 
@@ -368,23 +348,20 @@ class TurnClient : public MtransportTest {
 };
 
 TEST_F(TurnClient, Allocate) {
-  if (WarnIfTurnNotConfigured())
-    return;
+  if (WarnIfTurnNotConfigured()) return;
 
   Allocate();
 }
 
 TEST_F(TurnClient, AllocateTcp) {
-  if (WarnIfTurnNotConfigured())
-    return;
+  if (WarnIfTurnNotConfigured()) return;
 
   SetTcp();
   Allocate();
 }
 
 TEST_F(TurnClient, AllocateAndHold) {
-  if (WarnIfTurnNotConfigured())
-    return;
+  if (WarnIfTurnNotConfigured()) return;
 
   Allocate();
   PR_Sleep(20000);
@@ -392,8 +369,7 @@ TEST_F(TurnClient, AllocateAndHold) {
 }
 
 TEST_F(TurnClient, SendToSelf) {
-  if (WarnIfTurnNotConfigured())
-    return;
+  if (WarnIfTurnNotConfigured()) return;
 
   Allocate();
   SendTo(relay_addr_);
@@ -402,10 +378,8 @@ TEST_F(TurnClient, SendToSelf) {
   ASSERT_TRUE_WAIT(received() == 200, 1000);
 }
 
-
 TEST_F(TurnClient, SendToSelfTcp) {
-  if (WarnIfTurnNotConfigured())
-    return;
+  if (WarnIfTurnNotConfigured()) return;
 
   SetTcp();
   Allocate();
@@ -416,8 +390,7 @@ TEST_F(TurnClient, SendToSelfTcp) {
 }
 
 TEST_F(TurnClient, PermissionDenied) {
-  if (WarnIfTurnNotConfigured())
-    return;
+  if (WarnIfTurnNotConfigured()) return;
 
   Allocate();
   RequestPermission(relay_addr_);
@@ -436,14 +409,13 @@ TEST_F(TurnClient, PermissionDenied) {
   SendTo(relay_addr_, R_NOT_PERMITTED);
   ASSERT_TRUE(received() == 0);
 
-  //TODO: We should check if we can still send to a second destination, but
+  // TODO: We should check if we can still send to a second destination, but
   //      we would need a second TURN client as one client can only handle one
   //      allocation (maybe as part of bug 1128128 ?).
 }
 
 TEST_F(TurnClient, DeallocateReceiveFailure) {
-  if (WarnIfTurnNotConfigured())
-    return;
+  if (WarnIfTurnNotConfigured()) return;
 
   Allocate();
   SendTo(relay_addr_);
@@ -456,8 +428,7 @@ TEST_F(TurnClient, DeallocateReceiveFailure) {
 }
 
 TEST_F(TurnClient, DeallocateReceiveFailureTcp) {
-  if (WarnIfTurnNotConfigured())
-    return;
+  if (WarnIfTurnNotConfigured()) return;
 
   SetTcp();
   Allocate();
@@ -475,8 +446,7 @@ TEST_F(TurnClient, DeallocateReceiveFailureTcp) {
 }
 
 TEST_F(TurnClient, AllocateDummyServer) {
-  if (WarnIfTurnNotConfigured())
-    return;
+  if (WarnIfTurnNotConfigured()) return;
 
   turn_server_ = kDummyTurnServer;
   Allocate(false);

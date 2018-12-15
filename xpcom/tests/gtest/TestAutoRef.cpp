@@ -8,22 +8,18 @@
 #include "gtest/gtest.h"
 
 struct TestObjectA {
-public:
-  TestObjectA() : mRefCnt(0) {
-  }
+ public:
+  TestObjectA() : mRefCnt(0) {}
 
-  ~TestObjectA() {
-    EXPECT_EQ(mRefCnt, 0);
-  }
+  ~TestObjectA() { EXPECT_EQ(mRefCnt, 0); }
 
-public:
+ public:
   int mRefCnt;
 };
 
 template <>
-class nsAutoRefTraits<TestObjectA> : public nsPointerRefTraits<TestObjectA>
-{
-public:
+class nsAutoRefTraits<TestObjectA> : public nsPointerRefTraits<TestObjectA> {
+ public:
   static int mTotalRefsCnt;
 
   static void Release(TestObjectA *ptr) {
@@ -33,15 +29,12 @@ public:
     }
   }
 
-  static void AddRef(TestObjectA *ptr) {
-    ptr->mRefCnt++;
-  }
+  static void AddRef(TestObjectA *ptr) { ptr->mRefCnt++; }
 };
 
 int nsAutoRefTraits<TestObjectA>::mTotalRefsCnt = 0;
 
-TEST(AutoRef, Assignment)
-{
+TEST(AutoRef, Assignment) {
   {
     nsCountedRef<TestObjectA> a(new TestObjectA());
     ASSERT_EQ(a->mRefCnt, 1);

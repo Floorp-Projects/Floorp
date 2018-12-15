@@ -12,7 +12,7 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::mem;
 use std::mem::ManuallyDrop;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use std::os::raw::c_void;
 
 pub use core_foundation_sys::base::*;
@@ -64,6 +64,21 @@ impl CFType {
     /// assert!(cf_type.downcast::<CFBoolean>().is_none());
     /// ```
     ///
+    /// ```compile_fail
+    /// # use core_foundation::array::CFArray;
+    /// # use core_foundation::base::TCFType;
+    /// # use core_foundation::boolean::CFBoolean;
+    /// # use core_foundation::string::CFString;
+    /// #
+    /// let boolean_array = CFArray::from_CFTypes(&[CFBoolean::true_value()]).into_CFType();
+    ///
+    /// // This downcast is not allowed and causes compiler error, since it would cause undefined
+    /// // behavior to access the elements of the array as a CFString:
+    /// let invalid_string_array = boolean_array
+    ///     .downcast_into::<CFArray<CFString>>()
+    ///     .unwrap();
+    /// ```
+    ///
     /// [`Box::downcast`]: https://doc.rust-lang.org/std/boxed/struct.Box.html#method.downcast
     /// [`CFPropertyList::downcast`]: ../propertylist/struct.CFPropertyList.html#method.downcast
     #[inline]
@@ -82,7 +97,7 @@ impl CFType {
     ///
     /// [`downcast`]: #method.downcast
     #[inline]
-    pub fn downcast_into<T: TCFType>(self) -> Option<T> {
+    pub fn downcast_into<T: ConcreteCFType>(self) -> Option<T> {
         if self.instance_of::<T>() {
             unsafe {
                 let reference = T::Ref::from_void_ptr(self.0);
@@ -262,6 +277,58 @@ impl<'a, T: fmt::Debug> fmt::Debug for ItemRef<'a, T> {
 impl<'a, T: PartialEq> PartialEq for ItemRef<'a, T> {
     fn eq(&self, other: &Self) -> bool {
         self.0.eq(&other.0)
+    }
+}
+
+/// A reference to a mutable element inside a container
+pub struct ItemMutRef<'a, T: 'a>(ManuallyDrop<T>, PhantomData<&'a T>);
+
+impl<'a, T> Deref for ItemMutRef<'a, T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        &self.0
+    }
+}
+
+impl<'a, T> DerefMut for ItemMutRef<'a, T> {
+    fn deref_mut(&mut self) -> &mut T {
+        &mut self.0
+    }
+}
+
+impl<'a, T: fmt::Debug> fmt::Debug for ItemMutRef<'a, T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        self.0.fmt(f)
+    }
+}
+
+impl<'a, T: PartialEq> PartialEq for ItemMutRef<'a, T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.eq(&other.0)
+    }
+}
+
+/// A trait describing how to convert from the stored *mut c_void to the desired T
+pub unsafe trait FromMutVoid {
+    unsafe fn from_mut_void<'a>(x: *mut c_void) -> ItemMutRef<'a, Self> where Self: std::marker::Sized;
+}
+
+unsafe impl FromMutVoid for u32 {
+    unsafe fn from_mut_void<'a>(x: *mut c_void) -> ItemMutRef<'a, Self> {
+        ItemMutRef(ManuallyDrop::new(x as u32), PhantomData)
+    }
+}
+
+unsafe impl FromMutVoid for *const c_void {
+    unsafe fn from_mut_void<'a>(x: *mut c_void) -> ItemMutRef<'a, Self> {
+        ItemMutRef(ManuallyDrop::new(x), PhantomData)
+    }
+}
+
+unsafe impl<T: TCFType> FromMutVoid for T {
+    unsafe fn from_mut_void<'a>(x: *mut c_void) -> ItemMutRef<'a, Self> {
+        ItemMutRef(ManuallyDrop::new(TCFType::wrap_under_create_rule(T::Ref::from_void_ptr(x))), PhantomData)
     }
 }
 

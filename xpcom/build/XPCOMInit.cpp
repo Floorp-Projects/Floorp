@@ -132,15 +132,6 @@ extern nsresult nsStringInputStreamConstructor(nsISupports*, REFNSIID, void**);
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
 #include "ogg/ogg.h"
-#if defined(MOZ_VPX) && !defined(MOZ_VPX_NO_MEM_REPORTING)
-#if defined(HAVE_STDINT_H)
-// mozilla-config.h defines HAVE_STDINT_H, and then it's defined *again* in
-// vpx_config.h (which we include via vpx_mem.h, below). This redefinition
-// triggers a build warning on MSVC, so we have to #undef it first.
-#undef HAVE_STDINT_H
-#endif
-#include "vpx_mem/vpx_mem.h"
-#endif
 
 #include "GeckoProfiler.h"
 
@@ -393,32 +384,6 @@ NS_IMPL_ISUPPORTS(OggReporter, nsIMemoryReporter)
 CountingAllocatorBase<OggReporter>::AmountType
     CountingAllocatorBase<OggReporter>::sAmount(0);
 
-#ifdef MOZ_VPX
-class VPXReporter final : public nsIMemoryReporter,
-                          public CountingAllocatorBase<VPXReporter> {
- public:
-  NS_DECL_ISUPPORTS
-
- private:
-  NS_IMETHOD
-  CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                 bool aAnonymize) override {
-    MOZ_COLLECT_REPORT("explicit/media/libvpx", KIND_HEAP, UNITS_BYTES,
-                       MemoryAllocated(),
-                       "Memory allocated through libvpx for WebM media files.");
-
-    return NS_OK;
-  }
-
-  ~VPXReporter() {}
-};
-
-NS_IMPL_ISUPPORTS(VPXReporter, nsIMemoryReporter)
-
-/* static */ template <>
-Atomic<size_t> CountingAllocatorBase<VPXReporter>::sAmount(0);
-#endif /* MOZ_VPX */
-
 #ifdef ENABLE_BIGINT
 class GMPReporter final : public nsIMemoryReporter,
                           public CountingAllocatorBase<GMPReporter> {
@@ -645,14 +610,6 @@ NS_InitXPCOM2(nsIServiceManager** aResult, nsIFile* aBinDirectory,
       OggReporter::CountingMalloc, OggReporter::CountingCalloc,
       OggReporter::CountingRealloc, OggReporter::CountingFree);
 
-#if defined(MOZ_VPX) && !defined(MOZ_VPX_NO_MEM_REPORTING)
-  // And for VPX.
-  vpx_mem_set_functions(VPXReporter::CountingMalloc,
-                        VPXReporter::CountingCalloc,
-                        VPXReporter::CountingRealloc, VPXReporter::CountingFree,
-                        memcpy, memset, memmove);
-#endif
-
 #ifdef ENABLE_BIGINT
   // And for libgmp.
   mozilla::SetGMPMemoryFunctions();
@@ -697,9 +654,6 @@ NS_InitXPCOM2(nsIServiceManager** aResult, nsIFile* aBinDirectory,
   // The memory reporter manager is up and running -- register our reporters.
   RegisterStrongMemoryReporter(new ICUReporter());
   RegisterStrongMemoryReporter(new OggReporter());
-#ifdef MOZ_VPX
-  RegisterStrongMemoryReporter(new VPXReporter());
-#endif
 
   mozilla::Telemetry::Init();
 

@@ -10,13 +10,15 @@
 #include "gtest/gtest.h"
 
 // {9e70a320-be02-11d1-8031-006008159b5a}
-#define NS_IFOO_IID \
-  {0x9e70a320, 0xbe02, 0x11d1,    \
-    {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+#define NS_IFOO_IID                                  \
+  {                                                  \
+    0x9e70a320, 0xbe02, 0x11d1, {                    \
+      0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a \
+    }                                                \
+  }
 
 class IFoo : public nsISupports {
-public:
-
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFOO_IID)
 
   NS_IMETHOD_(MozExternalRefCountType) RefCnt() = 0;
@@ -28,8 +30,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(IFoo, NS_IFOO_IID)
 class Foo final : public IFoo {
   ~Foo();
 
-public:
-
+ public:
   explicit Foo(int32_t aID);
 
   // nsISupports implementation
@@ -46,36 +47,32 @@ public:
 
 int32_t Foo::gCount = 0;
 
-Foo::Foo(int32_t aID)
-{
+Foo::Foo(int32_t aID) {
   mID = aID;
   ++gCount;
 }
 
-Foo::~Foo()
-{
-  --gCount;
-}
+Foo::~Foo() { --gCount; }
 
 NS_IMPL_ISUPPORTS(Foo, IFoo)
 
-
 // {0e70a320-be02-11d1-8031-006008159b5a}
-#define NS_IBAR_IID \
-  {0x0e70a320, 0xbe02, 0x11d1,    \
-    {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+#define NS_IBAR_IID                                  \
+  {                                                  \
+    0x0e70a320, 0xbe02, 0x11d1, {                    \
+      0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a \
+    }                                                \
+  }
 
 class IBar : public nsISupports {
-public:
-
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IBAR_IID)
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(IBar, NS_IBAR_IID)
 
 class Bar final : public IBar {
-public:
-
+ public:
   explicit Bar(nsCOMArray<IBar>& aArray);
 
   // nsISupports implementation
@@ -83,7 +80,7 @@ public:
 
   static int32_t sReleaseCalled;
 
-private:
+ private:
   ~Bar();
 
   nsCOMArray<IBar>& mArray;
@@ -93,22 +90,15 @@ int32_t Bar::sReleaseCalled = 0;
 
 typedef nsCOMArray<IBar> Array2;
 
-Bar::Bar(Array2& aArray)
-  : mArray(aArray)
-{
-}
+Bar::Bar(Array2& aArray) : mArray(aArray) {}
 
-Bar::~Bar()
-{
-  EXPECT_FALSE(mArray.RemoveObject(this));
-}
+Bar::~Bar() { EXPECT_FALSE(mArray.RemoveObject(this)); }
 
 NS_IMPL_ADDREF(Bar)
 NS_IMPL_QUERY_INTERFACE(Bar, IBar)
 
 NS_IMETHODIMP_(MozExternalRefCountType)
-Bar::Release(void)
-{
+Bar::Release(void) {
   ++Bar::sReleaseCalled;
   EXPECT_GT(int(mRefCnt), 0);
   NS_ASSERT_OWNINGTHREAD(_class);
@@ -122,8 +112,7 @@ Bar::Release(void)
   return mRefCnt;
 }
 
-TEST(COMArray, Sizing)
-{
+TEST(COMArray, Sizing) {
   nsCOMArray<IFoo> arr;
 
   for (int32_t i = 0; i < 20; ++i) {
@@ -145,35 +134,36 @@ TEST(COMArray, Sizing)
   ASSERT_EQ(Foo::gCount, int32_t(10));
 
   for (int32_t i = 0; i < 10; ++i) {
-	ASSERT_NE(arr[i], nullptr);
+    ASSERT_NE(arr[i], nullptr);
   }
 
   for (int32_t i = 10; i < 30; ++i) {
-	ASSERT_EQ(arr[i], nullptr);
+    ASSERT_EQ(arr[i], nullptr);
   }
 }
 
-TEST(COMArray, ObjectFunctions)
-{
+TEST(COMArray, ObjectFunctions) {
   int32_t base;
   {
     nsCOMArray<IBar> arr2;
 
-    IBar *thirdObject = nullptr,
-         *fourthObject = nullptr,
-         *fifthObject = nullptr,
-         *ninthObject = nullptr;
+    IBar *thirdObject = nullptr, *fourthObject = nullptr,
+         *fifthObject = nullptr, *ninthObject = nullptr;
     for (int32_t i = 0; i < 20; ++i) {
       nsCOMPtr<IBar> bar = new Bar(arr2);
       switch (i) {
-      case 2:
-        thirdObject = bar; break;
-      case 3:
-        fourthObject = bar; break;
-      case 4:
-        fifthObject = bar; break;
-      case 8:
-        ninthObject = bar; break;
+        case 2:
+          thirdObject = bar;
+          break;
+        case 3:
+          fourthObject = bar;
+          break;
+        case 4:
+          fifthObject = bar;
+          break;
+        case 8:
+          ninthObject = bar;
+          break;
       }
       arr2.AppendObject(bar);
     }
@@ -210,27 +200,28 @@ TEST(COMArray, ObjectFunctions)
   }
 }
 
-TEST(COMArray, ElementFunctions)
-{
+TEST(COMArray, ElementFunctions) {
   int32_t base;
   {
     nsCOMArray<IBar> arr2;
 
-    IBar *thirdElement = nullptr,
-         *fourthElement = nullptr,
-         *fifthElement = nullptr,
-         *ninthElement = nullptr;
+    IBar *thirdElement = nullptr, *fourthElement = nullptr,
+         *fifthElement = nullptr, *ninthElement = nullptr;
     for (int32_t i = 0; i < 20; ++i) {
       nsCOMPtr<IBar> bar = new Bar(arr2);
       switch (i) {
-      case 2:
-        thirdElement = bar; break;
-      case 3:
-        fourthElement = bar; break;
-      case 4:
-        fifthElement = bar; break;
-      case 8:
-        ninthElement = bar; break;
+        case 2:
+          thirdElement = bar;
+          break;
+        case 3:
+          fourthElement = bar;
+          break;
+        case 4:
+          fifthElement = bar;
+          break;
+        case 8:
+          ninthElement = bar;
+          break;
       }
       arr2.AppendElement(bar);
     }
@@ -267,8 +258,7 @@ TEST(COMArray, ElementFunctions)
   }
 }
 
-TEST(COMArray, Destructor)
-{
+TEST(COMArray, Destructor) {
   int32_t base;
   Bar::sReleaseCalled = 0;
 
@@ -276,7 +266,7 @@ TEST(COMArray, Destructor)
     nsCOMArray<IBar> arr2;
 
     for (int32_t i = 0; i < 20; ++i) {
-      nsCOMPtr<IBar> bar  = new Bar(arr2);
+      nsCOMPtr<IBar> bar = new Bar(arr2);
       arr2.AppendObject(bar);
     }
 

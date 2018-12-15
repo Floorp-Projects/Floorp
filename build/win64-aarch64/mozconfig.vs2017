@@ -15,7 +15,7 @@ if [ -d "${VSPATH}" ]; then
     # Need to run x86-64 host binaries.
     export PATH="${VSPATH}/VC/bin/Hostx64/x64:${VSPATH}/SDK/bin/${win_sdk_version}/x64:${VSPATH}/VC/redist/x64/Microsoft.VC141.CRT:${VSPATH}/SDK/Redist/ucrt/DLLs/x64:${WIN_DIA_SDK_BIN_DIR}:${PATH}"
 
-    export INCLUDE="${VSPATH}/VC/include:${VSPATH}/VC/atlmfc/include:${VSPATH}/SDK/Include/${win_sdk_version}/ucrt:${VSPATH}/SDK/Include/${win_sdk_version}/shared:${VSPATH}/SDK/Include/${win_sdk_version}/um:${VSPATH}/SDK/Include/${win_sdk_version}/winrt"
+    export INCLUDE="${VSPATH}/VC/include:${VSPATH}/VC/atlmfc/include:${VSPATH}/SDK/Include/${win_sdk_version}/ucrt:${VSPATH}/SDK/Include/${win_sdk_version}/shared:${VSPATH}/SDK/Include/${win_sdk_version}/um:${VSPATH}/SDK/Include/${win_sdk_version}/winrt:${VSPATH}/DIA SDK/include"
     export LIB="${VSPATH}/VC/lib/arm64:${VSPATH}/VC/atlmfc/lib/arm64:${VSPATH}/SDK/Lib/${win_sdk_version}/ucrt/arm64:${VSPATH}/SDK/Lib/${win_sdk_version}/um/arm64:${VSPATH}/DIA SDK/lib/amd64"
 
     # We need to declare host and target tools separately.

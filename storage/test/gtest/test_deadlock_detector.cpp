@@ -21,33 +21,23 @@ using namespace mozilla;
 /**
  * Helper class to allocate a sqlite3_mutex for our SQLiteMutex.
  */
-class TestMutex : public mozilla::storage::SQLiteMutex
-{
-public:
-    explicit TestMutex(const char* aName)
-    : mozilla::storage::SQLiteMutex(aName)
-    , mInner(sqlite3_mutex_alloc(SQLITE_MUTEX_FAST))
-    {
-        NS_ASSERTION(mInner, "could not allocate a sqlite3_mutex");
-        initWithMutex(mInner);
-    }
+class TestMutex : public mozilla::storage::SQLiteMutex {
+ public:
+  explicit TestMutex(const char* aName)
+      : mozilla::storage::SQLiteMutex(aName),
+        mInner(sqlite3_mutex_alloc(SQLITE_MUTEX_FAST)) {
+    NS_ASSERTION(mInner, "could not allocate a sqlite3_mutex");
+    initWithMutex(mInner);
+  }
 
-    ~TestMutex()
-    {
-        sqlite3_mutex_free(mInner);
-    }
+  ~TestMutex() { sqlite3_mutex_free(mInner); }
 
-    void Lock()
-    {
-        lock();
-    }
+  void Lock() { lock(); }
 
-    void Unlock()
-    {
-        unlock();
-    }
-private:
-  sqlite3_mutex *mInner;
+  void Unlock() { unlock(); }
+
+ private:
+  sqlite3_mutex* mInner;
 };
 
 // This global variable is defined in toolkit/xre/nsSigHandlers.cpp.
@@ -59,7 +49,8 @@ extern unsigned int _gdb_sleep_duration;
 #define MUTEX TestMutex
 #define TESTNAME(name) storage_##name
 
-// Bug 1473531: the test storage_DeadlockDetectorTest.storage_Sanity5DeathTest times out on macosx ccov builds
+// Bug 1473531: the test storage_DeadlockDetectorTest.storage_Sanity5DeathTest
+// times out on macosx ccov builds
 #if defined(XP_MACOSX) && defined(MOZ_CODE_COVERAGE)
 #define DISABLE_STORAGE_SANITY5_DEATH_TEST
 #endif
@@ -69,4 +60,3 @@ extern unsigned int _gdb_sleep_duration;
 namespace storage {
 #include "../../../xpcom/tests/gtest/TestDeadlockDetector.cpp"
 }
-

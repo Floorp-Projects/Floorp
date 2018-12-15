@@ -17,35 +17,25 @@ using namespace mozilla::storage;
 ////////////////////////////////////////////////////////////////////////////////
 //// Helpers
 
-class SyncCache : public StatementCache<mozIStorageStatement>
-{
-public:
+class SyncCache : public StatementCache<mozIStorageStatement> {
+ public:
   explicit SyncCache(nsCOMPtr<mozIStorageConnection>& aConnection)
-  : StatementCache<mozIStorageStatement>(aConnection)
-  {
-  }
+      : StatementCache<mozIStorageStatement>(aConnection) {}
 };
 
-class AsyncCache : public StatementCache<mozIStorageAsyncStatement>
-{
-public:
+class AsyncCache : public StatementCache<mozIStorageAsyncStatement> {
+ public:
   explicit AsyncCache(nsCOMPtr<mozIStorageConnection>& aConnection)
-  : StatementCache<mozIStorageAsyncStatement>(aConnection)
-  {
-  }
+      : StatementCache<mozIStorageAsyncStatement>(aConnection) {}
 };
 
 /**
  * Wraps nsCString so we can not implement the same functions twice for each
  * type.
  */
-class StringWrapper : public nsCString
-{
-public:
-  MOZ_IMPLICIT StringWrapper(const char* aOther)
-  {
-    this->Assign(aOther);
-  }
+class StringWrapper : public nsCString {
+ public:
+  MOZ_IMPLICIT StringWrapper(const char* aOther) { this->Assign(aOther); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,8 +48,7 @@ class storage_StatementCache : public ::testing::Test {};
 typedef ::testing::Types<const char[], StringWrapper> TwoStringTypes;
 
 TYPED_TEST_CASE(storage_StatementCache, TwoStringTypes);
-TYPED_TEST(storage_StatementCache, GetCachedStatement)
-{
+TYPED_TEST(storage_StatementCache, GetCachedStatement) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
   SyncCache cache(db);
 
@@ -79,8 +68,7 @@ TYPED_TEST(storage_StatementCache, GetCachedStatement)
 }
 
 TYPED_TEST_CASE(storage_StatementCache, TwoStringTypes);
-TYPED_TEST(storage_StatementCache, FinalizeStatements)
-{
+TYPED_TEST(storage_StatementCache, FinalizeStatements) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
   SyncCache cache(db);
 
@@ -102,8 +90,7 @@ TYPED_TEST(storage_StatementCache, FinalizeStatements)
 }
 
 TYPED_TEST_CASE(storage_StatementCache, TwoStringTypes);
-TYPED_TEST(storage_StatementCache, GetCachedAsyncStatement)
-{
+TYPED_TEST(storage_StatementCache, GetCachedAsyncStatement) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
   AsyncCache cache(db);
 
@@ -123,8 +110,7 @@ TYPED_TEST(storage_StatementCache, GetCachedAsyncStatement)
 }
 
 TYPED_TEST_CASE(storage_StatementCache, TwoStringTypes);
-TYPED_TEST(storage_StatementCache, FinalizeAsyncStatements)
-{
+TYPED_TEST(storage_StatementCache, FinalizeAsyncStatements) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
   AsyncCache cache(db);
 
@@ -144,4 +130,3 @@ TYPED_TEST(storage_StatementCache, FinalizeAsyncStatements)
   // Should be able to close the database now too.
   do_check_success(db->AsyncClose(nullptr));
 }
-

@@ -7,7 +7,7 @@
 #include "mozilla/RandomNum.h"
 
 /*
- 
+
  * We're going to check that random number generation is sane on a basic
  * level - That is, we want to check that the function returns success
  * and doesn't just keep returning the same number.
@@ -16,9 +16,9 @@
  * a PRNG we'd probably need to generate a large set of randoms and
  * perform statistical analysis on them. Maybe that's worth doing eventually?
  *
- * For now we should be fine just performing a dumb test of generating 5 
- * numbers and making sure they're all unique. In theory, it is possible for 
- * this test to report a false negative, but with 5 numbers the probability 
+ * For now we should be fine just performing a dumb test of generating 5
+ * numbers and making sure they're all unique. In theory, it is possible for
+ * this test to report a false negative, but with 5 numbers the probability
  * is less than one-in-a-trillion.
  *
  */
@@ -28,33 +28,29 @@
 using mozilla::Maybe;
 using mozilla::RandomUint64;
 
-static uint64_t getRandomUint64OrDie()
-{
+static uint64_t getRandomUint64OrDie() {
   Maybe<uint64_t> maybeRandomNum = RandomUint64();
-    
+
   MOZ_RELEASE_ASSERT(maybeRandomNum.isSome());
-  
+
   return maybeRandomNum.value();
 }
 
-static void TestRandomUint64()
-{ 
+static void TestRandomUint64() {
   uint64_t randomsList[NUM_RANDOMS_TO_GENERATE];
-  
-  for(uint8_t i = 0; i < NUM_RANDOMS_TO_GENERATE; ++i) {
+
+  for (uint8_t i = 0; i < NUM_RANDOMS_TO_GENERATE; ++i) {
     uint64_t randomNum = getRandomUint64OrDie();
-    
-    for(uint8_t j = 0; j < i; ++j) {
+
+    for (uint8_t j = 0; j < i; ++j) {
       MOZ_RELEASE_ASSERT(randomNum != randomsList[j]);
     }
-    
+
     randomsList[i] = randomNum;
   }
 }
 
-int
-main()
-{
+int main() {
   TestRandomUint64();
   return 0;
 }

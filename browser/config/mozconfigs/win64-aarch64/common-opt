@@ -24,6 +24,3 @@ export MOZ_TELEMETRY_REPORTING=1
 
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
-
-# Crashreporter does peculiar things.
-ac_add_options --disable-crashreporter

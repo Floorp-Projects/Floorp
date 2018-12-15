@@ -44,8 +44,8 @@ namespace test_assembler {
 
 using std::back_insert_iterator;
 
-Label::Label() : value_(new Binding()) { }
-Label::Label(uint64_t value) : value_(new Binding(value)) { }
+Label::Label() : value_(new Binding()) {}
+Label::Label(uint64_t value) : value_(new Binding(value)) {}
 Label::Label(const Label &label) {
   value_ = label.value_;
   value_->Acquire();
@@ -104,8 +104,7 @@ bool Label::IsKnownConstant(uint64_t *value_p) const {
   return true;
 }
 
-bool Label::IsKnownOffsetFrom(const Label &label, uint64_t *offset_p) const
-{
+bool Label::IsKnownOffsetFrom(const Label &label, uint64_t *offset_p) const {
   Binding *label_base, *this_base;
   uint64_t label_addend, this_addend;
   label.value_->Get(&label_base, &label_addend);
@@ -118,15 +117,14 @@ bool Label::IsKnownOffsetFrom(const Label &label, uint64_t *offset_p) const
   return true;
 }
 
-Label::Binding::Binding() : base_(this), addend_(), reference_count_(1) { }
+Label::Binding::Binding() : base_(this), addend_(), reference_count_(1) {}
 
 Label::Binding::Binding(uint64_t addend)
-    : base_(NULL), addend_(addend), reference_count_(1) { }
+    : base_(NULL), addend_(addend), reference_count_(1) {}
 
 Label::Binding::~Binding() {
   assert(reference_count_ == 0);
-  if (base_ && base_ != this && base_->Release())
-    delete base_;
+  if (base_ && base_ != this && base_->Release()) delete base_;
 }
 
 void Label::Binding::Set(Binding *binding, uint64_t addend) {
@@ -195,20 +193,20 @@ void Label::Binding::Get(Binding **base, uint64_t *addend) {
   *addend = addend_;
 }
 
-template<typename Inserter>
+template <typename Inserter>
 static inline void InsertEndian(test_assembler::Endianness endianness,
                                 size_t size, uint64_t number, Inserter dest) {
   assert(size > 0);
   if (endianness == kLittleEndian) {
     for (size_t i = 0; i < size; i++) {
-      *dest++ = (char) (number & 0xff);
+      *dest++ = (char)(number & 0xff);
       number >>= 8;
     }
   } else {
     assert(endianness == kBigEndian);
     // The loop condition is odd, but it's correct for size_t.
     for (size_t i = size - 1; i < size; i--)
-      *dest++ = (char) ((number >> (i * 8)) & 0xff);
+      *dest++ = (char)((number >> (i * 8)) & 0xff);
   }
 }
 
@@ -223,8 +221,7 @@ Section &Section::Append(Endianness endianness, size_t size,
   // If this label's value is known, there's no reason to waste an
   // entry in references_ on it.
   uint64_t value;
-  if (label.IsKnownConstant(&value))
-    return Append(endianness, size, value);
+  if (label.IsKnownConstant(&value)) return Append(endianness, size, value);
 
   // This will get caught when the references are resolved, but it's
   // nicer to find out earlier.
@@ -237,23 +234,23 @@ Section &Section::Append(Endianness endianness, size_t size,
 
 #define ENDIANNESS_L kLittleEndian
 #define ENDIANNESS_B kBigEndian
-#define ENDIANNESS(e) ENDIANNESS_ ## e
+#define ENDIANNESS(e) ENDIANNESS_##e
 
-#define DEFINE_SHORT_APPEND_NUMBER_ENDIAN(e, bits)                      \
-  Section &Section::e ## bits(uint ## bits ## _t v) {                  \
-    InsertEndian(ENDIANNESS(e), bits / 8, v,                            \
-                 back_insert_iterator<string>(contents_));              \
-    return *this;                                                       \
+#define DEFINE_SHORT_APPEND_NUMBER_ENDIAN(e, bits)         \
+  Section &Section::e##bits(uint##bits##_t v) {            \
+    InsertEndian(ENDIANNESS(e), bits / 8, v,               \
+                 back_insert_iterator<string>(contents_)); \
+    return *this;                                          \
   }
 
-#define DEFINE_SHORT_APPEND_LABEL_ENDIAN(e, bits)                       \
-  Section &Section::e ## bits(const Label &v) {                         \
-    return Append(ENDIANNESS(e), bits / 8, v);                          \
+#define DEFINE_SHORT_APPEND_LABEL_ENDIAN(e, bits) \
+  Section &Section::e##bits(const Label &v) {     \
+    return Append(ENDIANNESS(e), bits / 8, v);    \
   }
 
 // Define L16, B32, and friends.
-#define DEFINE_SHORT_APPEND_ENDIAN(e, bits)                             \
-  DEFINE_SHORT_APPEND_NUMBER_ENDIAN(e, bits)                            \
+#define DEFINE_SHORT_APPEND_ENDIAN(e, bits)  \
+  DEFINE_SHORT_APPEND_NUMBER_ENDIAN(e, bits) \
   DEFINE_SHORT_APPEND_LABEL_ENDIAN(e, bits)
 
 DEFINE_SHORT_APPEND_LABEL_ENDIAN(L, 8);
@@ -265,18 +262,18 @@ DEFINE_SHORT_APPEND_ENDIAN(B, 16);
 DEFINE_SHORT_APPEND_ENDIAN(B, 32);
 DEFINE_SHORT_APPEND_ENDIAN(B, 64);
 
-#define DEFINE_SHORT_APPEND_NUMBER_DEFAULT(bits)                        \
-  Section &Section::D ## bits(uint ## bits ## _t v) {                  \
-    InsertEndian(endianness_, bits / 8, v,                              \
-                 back_insert_iterator<string>(contents_));              \
-    return *this;                                                       \
+#define DEFINE_SHORT_APPEND_NUMBER_DEFAULT(bits)           \
+  Section &Section::D##bits(uint##bits##_t v) {            \
+    InsertEndian(endianness_, bits / 8, v,                 \
+                 back_insert_iterator<string>(contents_)); \
+    return *this;                                          \
   }
-#define DEFINE_SHORT_APPEND_LABEL_DEFAULT(bits)                         \
-  Section &Section::D ## bits(const Label &v) {                         \
-    return Append(endianness_, bits / 8, v);                            \
+#define DEFINE_SHORT_APPEND_LABEL_DEFAULT(bits) \
+  Section &Section::D##bits(const Label &v) {   \
+    return Append(endianness_, bits / 8, v);    \
   }
-#define DEFINE_SHORT_APPEND_DEFAULT(bits)                               \
-  DEFINE_SHORT_APPEND_NUMBER_DEFAULT(bits)                              \
+#define DEFINE_SHORT_APPEND_DEFAULT(bits)  \
+  DEFINE_SHORT_APPEND_NUMBER_DEFAULT(bits) \
   DEFINE_SHORT_APPEND_LABEL_DEFAULT(bits)
 
 DEFINE_SHORT_APPEND_LABEL_DEFAULT(8)
@@ -288,7 +285,7 @@ Section &Section::LEB128(long long value) {
   while (value < -0x40 || 0x3f < value) {
     contents_ += (value & 0x7f) | 0x80;
     if (value < 0)
-      value = (value >> 7) | ~(((unsigned long long) -1) >> 7);
+      value = (value >> 7) | ~(((unsigned long long)-1) >> 7);
     else
       value = (value >> 7);
   }
@@ -337,14 +334,12 @@ bool Section::GetContents(string *contents) {
 }  // namespace test_assembler
 }  // namespace lul_test
 
-
 namespace lul_test {
 
 CFISection &CFISection::CIEHeader(uint64_t code_alignment_factor,
                                   int data_alignment_factor,
                                   unsigned return_address_register,
-                                  uint8_t version,
-                                  const string &augmentation,
+                                  uint8_t version, const string &augmentation,
                                   bool dwarf64) {
   assert(!entry_length_);
   entry_length_ = new PendingLength();
@@ -371,10 +366,8 @@ CFISection &CFISection::CIEHeader(uint64_t code_alignment_factor,
   return *this;
 }
 
-CFISection &CFISection::FDEHeader(Label cie_pointer,
-                                  uint64_t initial_location,
-                                  uint64_t address_range,
-                                  bool dwarf64) {
+CFISection &CFISection::FDEHeader(Label cie_pointer, uint64_t initial_location,
+                                  uint64_t address_range, bool dwarf64) {
   assert(!entry_length_);
   entry_length_ = new PendingLength();
   in_fde_ = true;
@@ -401,8 +394,7 @@ CFISection &CFISection::FDEHeader(Label cie_pointer,
   // initial location, but ignores the base address (selected by the upper
   // nybble of the encoding), as it's a length, not an address that can be
   // made relative.
-  EncodedPointer(address_range,
-                 DwarfPointerEncoding(pointer_encoding_ & 0x0f));
+  EncodedPointer(address_range, DwarfPointerEncoding(pointer_encoding_ & 0x0f));
   return *this;
 }
 
@@ -420,8 +412,7 @@ CFISection &CFISection::EncodedPointer(uint64_t address,
                                        DwarfPointerEncoding encoding,
                                        const EncodedPointerBases &bases) {
   // Omitted data is extremely easy to emit.
-  if (encoding == lul::DW_EH_PE_omit)
-    return *this;
+  if (encoding == lul::DW_EH_PE_omit) return *this;
 
   // If (encoding & lul::DW_EH_PE_indirect) != 0, then we assume
   // that ADDRESS is the address at which the pointer is stored --- in
@@ -432,13 +423,26 @@ CFISection &CFISection::EncodedPointer(uint64_t address,
   // nybble of the encoding specifies this.
   uint64_t base;
   switch (encoding & 0xf0) {
-    case lul::DW_EH_PE_absptr:  base = 0;                  break;
-    case lul::DW_EH_PE_pcrel:   base = bases.cfi + Size(); break;
-    case lul::DW_EH_PE_textrel: base = bases.text;         break;
-    case lul::DW_EH_PE_datarel: base = bases.data;         break;
-    case lul::DW_EH_PE_funcrel: base = fde_start_address_; break;
-    case lul::DW_EH_PE_aligned: base = 0;                  break;
-    default: abort();
+    case lul::DW_EH_PE_absptr:
+      base = 0;
+      break;
+    case lul::DW_EH_PE_pcrel:
+      base = bases.cfi + Size();
+      break;
+    case lul::DW_EH_PE_textrel:
+      base = bases.text;
+      break;
+    case lul::DW_EH_PE_datarel:
+      base = bases.data;
+      break;
+    case lul::DW_EH_PE_funcrel:
+      base = fde_start_address_;
+      break;
+    case lul::DW_EH_PE_aligned:
+      base = 0;
+      break;
+    default:
+      abort();
   };
 
   // Make ADDRESS relative. Yes, this is appropriate even for "absptr"
@@ -446,8 +450,7 @@ CFISection &CFISection::EncodedPointer(uint64_t address,
   address -= base;
 
   // Align the pointer, if required.
-  if ((encoding & 0xf0) == lul::DW_EH_PE_aligned)
-    Align(AddressSize());
+  if ((encoding & 0xf0) == lul::DW_EH_PE_aligned) Align(AddressSize());
 
   // Append ADDRESS to this section in the appropriate form. For the
   // fixed-width forms, we don't need to differentiate between signed and
@@ -488,4 +491,4 @@ CFISection &CFISection::EncodedPointer(uint64_t address,
   return *this;
 };
 
-} // namespace lul_test
+}  // namespace lul_test

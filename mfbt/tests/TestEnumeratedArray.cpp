@@ -6,16 +6,9 @@
 
 #include "mozilla/EnumeratedArray.h"
 
-enum class AnimalSpecies
-{
-  Cow,
-  Sheep,
-  Pig,
-  Count
-};
+enum class AnimalSpecies { Cow, Sheep, Pig, Count };
 
-void TestInitialValueByConstructor()
-{
+void TestInitialValueByConstructor() {
   using namespace mozilla;
   // Style 1
   EnumeratedArray<AnimalSpecies, AnimalSpecies::Count, int> headCount(1, 2, 3);
@@ -28,15 +21,14 @@ void TestInitialValueByConstructor()
   MOZ_RELEASE_ASSERT(headCount2[AnimalSpecies::Sheep] == 6);
   MOZ_RELEASE_ASSERT(headCount2[AnimalSpecies::Pig] == 7);
   // Style 3
-  EnumeratedArray<AnimalSpecies, AnimalSpecies::Count, int> headCount3({8, 9, 10});
+  EnumeratedArray<AnimalSpecies, AnimalSpecies::Count, int> headCount3(
+      {8, 9, 10});
   MOZ_RELEASE_ASSERT(headCount3[AnimalSpecies::Cow] == 8);
   MOZ_RELEASE_ASSERT(headCount3[AnimalSpecies::Sheep] == 9);
   MOZ_RELEASE_ASSERT(headCount3[AnimalSpecies::Pig] == 10);
 }
 
-int
-main()
-{
+int main() {
   TestInitialValueByConstructor();
   return 0;
 }

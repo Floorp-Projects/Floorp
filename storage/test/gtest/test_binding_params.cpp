@@ -15,23 +15,20 @@ using namespace mozilla;
  * mozIStorageStatement API.
  */
 
-TEST(storage_binding_params, ASCIIString)
-{
+TEST(storage_binding_params, ASCIIString) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // Create table with a single string column.
-  (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE test (str STRING)"
-  ));
+  (void)db->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE TABLE test (str STRING)"));
 
   // Create statements to INSERT and SELECT the string.
   nsCOMPtr<mozIStorageStatement> insert, select;
-  (void)db->CreateStatement(NS_LITERAL_CSTRING(
-    "INSERT INTO test (str) VALUES (?1)"
-  ), getter_AddRefs(insert));
-  (void)db->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT str FROM test"
-  ), getter_AddRefs(select));
+  (void)db->CreateStatement(
+      NS_LITERAL_CSTRING("INSERT INTO test (str) VALUES (?1)"),
+      getter_AddRefs(insert));
+  (void)db->CreateStatement(NS_LITERAL_CSTRING("SELECT str FROM test"),
+                            getter_AddRefs(select));
 
   // Roundtrip a string through the table, and ensure it comes out as expected.
   nsAutoCString inserted("I'm an ASCII string");
@@ -57,27 +54,24 @@ TEST(storage_binding_params, ASCIIString)
   (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM test"));
 }
 
-TEST(storage_binding_params, CString)
-{
+TEST(storage_binding_params, CString) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // Create table with a single string column.
-  (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE test (str STRING)"
-  ));
+  (void)db->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE TABLE test (str STRING)"));
 
   // Create statements to INSERT and SELECT the string.
   nsCOMPtr<mozIStorageStatement> insert, select;
-  (void)db->CreateStatement(NS_LITERAL_CSTRING(
-    "INSERT INTO test (str) VALUES (?1)"
-  ), getter_AddRefs(insert));
-  (void)db->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT str FROM test"
-  ), getter_AddRefs(select));
+  (void)db->CreateStatement(
+      NS_LITERAL_CSTRING("INSERT INTO test (str) VALUES (?1)"),
+      getter_AddRefs(insert));
+  (void)db->CreateStatement(NS_LITERAL_CSTRING("SELECT str FROM test"),
+                            getter_AddRefs(select));
 
   // Roundtrip a string through the table, and ensure it comes out as expected.
   static const char sCharArray[] =
-    "I'm not a \xff\x00\xac\xde\xbb ASCII string!";
+      "I'm not a \xff\x00\xac\xde\xbb ASCII string!";
   nsAutoCString inserted(sCharArray, ArrayLength(sCharArray) - 1);
   do_check_true(inserted.Length() == ArrayLength(sCharArray) - 1);
   {
@@ -103,27 +97,23 @@ TEST(storage_binding_params, CString)
   (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM test"));
 }
 
-TEST(storage_binding_params, UTFStrings)
-{
+TEST(storage_binding_params, UTFStrings) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // Create table with a single string column.
-  (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE test (str STRING)"
-  ));
+  (void)db->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE TABLE test (str STRING)"));
 
   // Create statements to INSERT and SELECT the string.
   nsCOMPtr<mozIStorageStatement> insert, select;
-  (void)db->CreateStatement(NS_LITERAL_CSTRING(
-    "INSERT INTO test (str) VALUES (?1)"
-  ), getter_AddRefs(insert));
-  (void)db->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT str FROM test"
-  ), getter_AddRefs(select));
+  (void)db->CreateStatement(
+      NS_LITERAL_CSTRING("INSERT INTO test (str) VALUES (?1)"),
+      getter_AddRefs(insert));
+  (void)db->CreateStatement(NS_LITERAL_CSTRING("SELECT str FROM test"),
+                            getter_AddRefs(select));
 
   // Roundtrip a UTF8 string through the table, using UTF8 input and output.
-  static const char sCharArray[] =
-    R"(I'm a ûüâäç UTF8 string!)";
+  static const char sCharArray[] = R"(I'm a ûüâäç UTF8 string!)";
   nsAutoCString insertedUTF8(sCharArray, ArrayLength(sCharArray) - 1);
   do_check_true(insertedUTF8.Length() == ArrayLength(sCharArray) - 1);
   NS_ConvertUTF8toUTF16 insertedUTF16(insertedUTF8);
@@ -199,4 +189,3 @@ TEST(storage_binding_params, UTFStrings)
 
   (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM test"));
 }
-

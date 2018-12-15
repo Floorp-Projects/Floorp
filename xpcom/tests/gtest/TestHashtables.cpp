@@ -19,69 +19,56 @@
 
 namespace TestHashtables {
 
-class TestUniChar // for nsClassHashtable
+class TestUniChar  // for nsClassHashtable
 {
-public:
-  explicit TestUniChar(uint32_t aWord)
-  {
-    mWord = aWord;
-  }
+ public:
+  explicit TestUniChar(uint32_t aWord) { mWord = aWord; }
 
   ~TestUniChar() = default;
 
   uint32_t GetChar() const { return mWord; }
 
-private:
+ private:
   uint32_t mWord;
 };
 
 struct EntityNode {
-  const char*   mStr; // never owns buffer
-  uint32_t       mUnicode;
+  const char* mStr;  // never owns buffer
+  uint32_t mUnicode;
 };
 
 EntityNode gEntities[] = {
-  {"nbsp",160},
-  {"iexcl",161},
-  {"cent",162},
-  {"pound",163},
-  {"curren",164},
-  {"yen",165},
-  {"brvbar",166},
-  {"sect",167},
-  {"uml",168},
-  {"copy",169},
-  {"ordf",170},
-  {"laquo",171},
-  {"not",172},
-  {"shy",173},
-  {"reg",174},
-  {"macr",175}
-};
+    {"nbsp", 160},   {"iexcl", 161}, {"cent", 162},   {"pound", 163},
+    {"curren", 164}, {"yen", 165},   {"brvbar", 166}, {"sect", 167},
+    {"uml", 168},    {"copy", 169},  {"ordf", 170},   {"laquo", 171},
+    {"not", 172},    {"shy", 173},   {"reg", 174},    {"macr", 175}};
 
-#define ENTITY_COUNT (unsigned(sizeof(gEntities)/sizeof(EntityNode)))
+#define ENTITY_COUNT (unsigned(sizeof(gEntities) / sizeof(EntityNode)))
 
-class EntityToUnicodeEntry : public PLDHashEntryHdr
-{
-public:
+class EntityToUnicodeEntry : public PLDHashEntryHdr {
+ public:
   typedef const char* KeyType;
   typedef const char* KeyTypePointer;
 
   explicit EntityToUnicodeEntry(const char* aKey) { mNode = nullptr; }
-  EntityToUnicodeEntry(const EntityToUnicodeEntry& aEntry) { mNode = aEntry.mNode; }
+  EntityToUnicodeEntry(const EntityToUnicodeEntry& aEntry) {
+    mNode = aEntry.mNode;
+  }
   ~EntityToUnicodeEntry() = default;
 
-  bool KeyEquals(const char* aEntity) const { return !strcmp(mNode->mStr, aEntity); }
+  bool KeyEquals(const char* aEntity) const {
+    return !strcmp(mNode->mStr, aEntity);
+  }
   static const char* KeyToPointer(const char* aEntity) { return aEntity; }
-  static PLDHashNumber HashKey(const char* aEntity) { return mozilla::HashString(aEntity); }
+  static PLDHashNumber HashKey(const char* aEntity) {
+    return mozilla::HashString(aEntity);
+  }
   enum { ALLOW_MEMMOVE = true };
 
   const EntityNode* mNode;
 };
 
-static uint32_t
-nsTIterPrint(nsTHashtable<EntityToUnicodeEntry>& hash)
-{
+static uint32_t nsTIterPrint(nsTHashtable<EntityToUnicodeEntry>& hash) {
   uint32_t n = 0;
   for (auto iter = hash.Iter(); !iter.Done(); iter.Next()) {
     n++;
@@ -89,9 +76,7 @@ nsTIterPrint(nsTHashtable<EntityToUnicodeEntry>& hash)
   return n;
 }
 
-static uint32_t
-nsTIterPrintRemove(nsTHashtable<EntityToUnicodeEntry>& hash)
-{
+static uint32_t nsTIterPrintRemove(nsTHashtable<EntityToUnicodeEntry>& hash) {
   uint32_t n = 0;
   for (auto iter = hash.Iter(); !iter.Done(); iter.Next()) {
     iter.Remove();
@@ -100,12 +85,11 @@ nsTIterPrintRemove(nsTHashtable<EntityToUnicodeEntry>& hash)
   return n;
 }
 
-void
-testTHashtable(nsTHashtable<EntityToUnicodeEntry>& hash, uint32_t numEntries) {
+void testTHashtable(nsTHashtable<EntityToUnicodeEntry>& hash,
+                    uint32_t numEntries) {
   uint32_t i;
   for (i = 0; i < numEntries; ++i) {
-    EntityToUnicodeEntry* entry =
-      hash.PutEntry(gEntities[i].mStr);
+    EntityToUnicodeEntry* entry = hash.PutEntry(gEntities[i].mStr);
 
     EXPECT_TRUE(entry);
 
@@ -114,14 +98,12 @@ testTHashtable(nsTHashtable<EntityToUnicodeEntry>& hash, uint32_t numEntries) {
   }
 
   for (i = 0; i < numEntries; ++i) {
-    EntityToUnicodeEntry* entry =
-      hash.GetEntry(gEntities[i].mStr);
+    EntityToUnicodeEntry* entry = hash.GetEntry(gEntities[i].mStr);
 
     EXPECT_TRUE(entry);
   }
 
-  EntityToUnicodeEntry* entry =
-    hash.GetEntry("xxxy");
+  EntityToUnicodeEntry* entry = hash.GetEntry("xxxy");
 
   EXPECT_FALSE(entry);
 
@@ -133,131 +115,109 @@ testTHashtable(nsTHashtable<EntityToUnicodeEntry>& hash, uint32_t numEntries) {
 // all this nsIFoo stuff was copied wholesale from TestCOMPtr.cpp
 //
 
-#define NS_IFOO_IID \
-{ 0x6f7652e0,  0xee43, 0x11d1, \
- { 0x9c, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } }
+#define NS_IFOO_IID                                  \
+  {                                                  \
+    0x6f7652e0, 0xee43, 0x11d1, {                    \
+      0x9c, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 \
+    }                                                \
+  }
 
-class IFoo final : public nsISupports
-  {
-    public:
-      NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFOO_IID)
+class IFoo final : public nsISupports {
+ public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFOO_IID)
 
-      IFoo();
+  IFoo();
 
-      NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
-      NS_IMETHOD_(MozExternalRefCountType) Release() override;
-      NS_IMETHOD QueryInterface( const nsIID&, void** ) override;
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
+  NS_IMETHOD_(MozExternalRefCountType) Release() override;
+  NS_IMETHOD QueryInterface(const nsIID&, void**) override;
 
-      NS_IMETHOD SetString(const nsACString& /*in*/ aString);
-      NS_IMETHOD GetString(nsACString& /*out*/ aString);
+  NS_IMETHOD SetString(const nsACString& /*in*/ aString);
+  NS_IMETHOD GetString(nsACString& /*out*/ aString);
 
-      static void print_totals();
+  static void print_totals();
 
-    private:
-      ~IFoo();
+ private:
+  ~IFoo();
 
-      unsigned int refcount_;
+  unsigned int refcount_;
 
-      static unsigned int total_constructions_;
-      static unsigned int total_destructions_;
-      nsCString mString;
-  };
+  static unsigned int total_constructions_;
+  static unsigned int total_destructions_;
+  nsCString mString;
+};
 
 NS_DEFINE_STATIC_IID_ACCESSOR(IFoo, NS_IFOO_IID)
 
 unsigned int IFoo::total_constructions_;
 unsigned int IFoo::total_destructions_;
 
-void
-IFoo::print_totals()
-  {
+void IFoo::print_totals() {}
+
+IFoo::IFoo() : refcount_(0) { ++total_constructions_; }
+
+IFoo::~IFoo() { ++total_destructions_; }
+
+MozExternalRefCountType IFoo::AddRef() {
+  ++refcount_;
+  return refcount_;
+}
+
+MozExternalRefCountType IFoo::Release() {
+  int newcount = --refcount_;
+  if (newcount == 0) {
+    delete this;
   }
 
-IFoo::IFoo()
-    : refcount_(0)
-  {
-    ++total_constructions_;
-  }
+  return newcount;
+}
 
-IFoo::~IFoo()
-  {
-    ++total_destructions_;
-  }
+nsresult IFoo::QueryInterface(const nsIID& aIID, void** aResult) {
+  nsISupports* rawPtr = 0;
+  nsresult status = NS_OK;
 
-MozExternalRefCountType
-IFoo::AddRef()
-  {
-    ++refcount_;
-    return refcount_;
-  }
-
-MozExternalRefCountType
-IFoo::Release()
-  {
-    int newcount = --refcount_;
-    if ( newcount == 0 )
-      {
-        delete this;
-      }
-
-    return newcount;
-  }
-
-nsresult
-IFoo::QueryInterface( const nsIID& aIID, void** aResult )
-  {
-    nsISupports* rawPtr = 0;
-    nsresult status = NS_OK;
-
-    if ( aIID.Equals(NS_GET_IID(IFoo)) )
-      rawPtr = this;
+  if (aIID.Equals(NS_GET_IID(IFoo)))
+    rawPtr = this;
+  else {
+    nsID iid_of_ISupports = NS_ISUPPORTS_IID;
+    if (aIID.Equals(iid_of_ISupports))
+      rawPtr = static_cast<nsISupports*>(this);
     else
-      {
-        nsID iid_of_ISupports = NS_ISUPPORTS_IID;
-        if ( aIID.Equals(iid_of_ISupports) )
-          rawPtr = static_cast<nsISupports*>(this);
-        else
-          status = NS_ERROR_NO_INTERFACE;
-      }
-
-    NS_IF_ADDREF(rawPtr);
-    *aResult = rawPtr;
-
-    return status;
+      status = NS_ERROR_NO_INTERFACE;
   }
 
-nsresult
-IFoo::SetString(const nsACString& aString)
-{
+  NS_IF_ADDREF(rawPtr);
+  *aResult = rawPtr;
+
+  return status;
+}
+
+nsresult IFoo::SetString(const nsACString& aString) {
   mString = aString;
   return NS_OK;
 }
 
-nsresult
-IFoo::GetString(nsACString& aString)
-{
+nsresult IFoo::GetString(nsACString& aString) {
   aString = mString;
   return NS_OK;
 }
 
-nsresult
-CreateIFoo( IFoo** result )
-    // a typical factory function (that calls AddRef)
-  {
-    auto* foop = new IFoo();
+nsresult CreateIFoo(IFoo** result)
+// a typical factory function (that calls AddRef)
+{
+  auto* foop = new IFoo();
 
-    foop->AddRef();
-    *result = foop;
+  foop->AddRef();
+  *result = foop;
 
-    return NS_OK;
-  }
+  return NS_OK;
+}
 
-} // namespace TestHashtables
+}  // namespace TestHashtables
 
 using namespace TestHashtables;
 
-TEST(Hashtable, THashtable)
-{
+TEST(Hashtable, THashtable) {
   // check an nsTHashtable
   nsTHashtable<EntityToUnicodeEntry> EntityToUnicode(ENTITY_COUNT);
 
@@ -277,8 +237,7 @@ TEST(Hashtable, THashtable)
   ASSERT_EQ(count, uint32_t(0));
 }
 
-TEST(Hashtable, Move)
-{
+TEST(Hashtable, Move) {
   const void* kPtr = reinterpret_cast<void*>(static_cast<uintptr_t>(0xbadc0de));
 
   nsTHashtable<nsPtrHashKey<const void>> table;
@@ -292,10 +251,9 @@ TEST(Hashtable, Move)
   EXPECT_FALSE(table.Contains(kPtr));
 }
 
-TEST(Hashtables, DataHashtable)
-{
+TEST(Hashtables, DataHashtable) {
   // check a data-hashtable
-  nsDataHashtable<nsUint32HashKey,const char*> UniToEntity(ENTITY_COUNT);
+  nsDataHashtable<nsUint32HashKey, const char*> UniToEntity(ENTITY_COUNT);
 
   for (auto& entity : gEntities) {
     UniToEntity.Put(entity.mUnicode, entity.mStr);
@@ -325,10 +283,9 @@ TEST(Hashtables, DataHashtable)
   ASSERT_EQ(count, uint32_t(0));
 }
 
-TEST(Hashtables, ClassHashtable)
-{
+TEST(Hashtables, ClassHashtable) {
   // check a class-hashtable
-  nsClassHashtable<nsCStringHashKey,TestUniChar> EntToUniClass(ENTITY_COUNT);
+  nsClassHashtable<nsCStringHashKey, TestUniChar> EntToUniClass(ENTITY_COUNT);
 
   for (auto& entity : gEntities) {
     auto* temp = new TestUniChar(entity.mUnicode);
@@ -358,10 +315,9 @@ TEST(Hashtables, ClassHashtable)
   ASSERT_EQ(count, uint32_t(0));
 }
 
-TEST(Hashtables, DataHashtableWithInterfaceKey)
-{
+TEST(Hashtables, DataHashtableWithInterfaceKey) {
   // check a data-hashtable with an interface key
-  nsDataHashtable<nsISupportsHashKey,uint32_t> EntToUniClass2(ENTITY_COUNT);
+  nsDataHashtable<nsISupportsHashKey, uint32_t> EntToUniClass2(ENTITY_COUNT);
 
   nsCOMArray<IFoo> fooArray;
 
@@ -381,7 +337,7 @@ TEST(Hashtables, DataHashtableWithInterfaceKey)
     ASSERT_TRUE(EntToUniClass2.Get(fooArray[i], &myChar2));
   }
 
-  ASSERT_FALSE(EntToUniClass2.Get((nsISupports*) 0x55443316, &myChar2));
+  ASSERT_FALSE(EntToUniClass2.Get((nsISupports*)0x55443316, &myChar2));
 
   uint32_t count = 0;
   for (auto iter = EntToUniClass2.Iter(); !iter.Done(); iter.Next()) {
@@ -404,10 +360,9 @@ TEST(Hashtables, DataHashtableWithInterfaceKey)
   ASSERT_EQ(count, uint32_t(0));
 }
 
-TEST(Hashtables, InterfaceHashtable)
-{
+TEST(Hashtables, InterfaceHashtable) {
   // check an interface-hashtable with an uint32_t key
-  nsInterfaceHashtable<nsUint32HashKey,IFoo> UniToEntClass2(ENTITY_COUNT);
+  nsInterfaceHashtable<nsUint32HashKey, IFoo> UniToEntClass2(ENTITY_COUNT);
 
   for (auto& entity : gEntities) {
     nsCOMPtr<IFoo> foo;
@@ -447,14 +402,13 @@ TEST(Hashtables, InterfaceHashtable)
   ASSERT_EQ(count, uint32_t(0));
 }
 
-TEST(Hashtables, DataHashtable_LookupForAdd)
-{
+TEST(Hashtables, DataHashtable_LookupForAdd) {
   // check LookupForAdd/OrInsert
-  nsDataHashtable<nsUint32HashKey,const char*> UniToEntity(ENTITY_COUNT);
+  nsDataHashtable<nsUint32HashKey, const char*> UniToEntity(ENTITY_COUNT);
 
   for (auto& entity : gEntities) {
     auto entry = UniToEntity.LookupForAdd(entity.mUnicode);
-    const char* val = entry.OrInsert([&entity] () { return entity.mStr; });
+    const char* val = entry.OrInsert([&entity]() { return entity.mStr; });
     ASSERT_FALSE(entry);
     ASSERT_TRUE(val == entity.mStr);
     ASSERT_TRUE(entry.Data() == entity.mStr);
@@ -501,7 +455,7 @@ TEST(Hashtables, DataHashtable_LookupForAdd)
   // Remove existing entries via OrRemove.
   for (auto& entity : gEntities) {
     auto entry = UniToEntity.LookupForAdd(entity.mUnicode);
-    const char* val = entry.OrInsert([&entity] () { return entity.mStr; });
+    const char* val = entry.OrInsert([&entity]() { return entity.mStr; });
     ASSERT_FALSE(entry);
     ASSERT_TRUE(val == entity.mStr);
     ASSERT_TRUE(entry.Data() == entity.mStr);
@@ -513,14 +467,13 @@ TEST(Hashtables, DataHashtable_LookupForAdd)
   ASSERT_TRUE(0 == UniToEntity.Count());
 }
 
-TEST(Hashtables, ClassHashtable_LookupForAdd)
-{
+TEST(Hashtables, ClassHashtable_LookupForAdd) {
   // check a class-hashtable LookupForAdd with null values
-  nsClassHashtable<nsCStringHashKey,TestUniChar> EntToUniClass(ENTITY_COUNT);
+  nsClassHashtable<nsCStringHashKey, TestUniChar> EntToUniClass(ENTITY_COUNT);
 
   for (auto& entity : gEntities) {
     auto entry = EntToUniClass.LookupForAdd(nsDependentCString(entity.mStr));
-    const TestUniChar* val = entry.OrInsert([] () { return nullptr; });
+    const TestUniChar* val = entry.OrInsert([]() { return nullptr; });
     ASSERT_FALSE(entry);
     ASSERT_TRUE(val == nullptr);
     ASSERT_TRUE(entry.Data() == nullptr);
@@ -528,7 +481,9 @@ TEST(Hashtables, ClassHashtable_LookupForAdd)
 
   for (auto& entity : gEntities) {
     ASSERT_TRUE(EntToUniClass.LookupForAdd(nsDependentCString(entity.mStr)));
-    ASSERT_TRUE(EntToUniClass.LookupForAdd(nsDependentCString(entity.mStr)).Data() == nullptr);
+    ASSERT_TRUE(
+        EntToUniClass.LookupForAdd(nsDependentCString(entity.mStr)).Data() ==
+        nullptr);
   }
 
   // "" should not be found
@@ -568,7 +523,7 @@ TEST(Hashtables, ClassHashtable_LookupForAdd)
   // Remove existing entries via OrRemove.
   for (auto& entity : gEntities) {
     auto entry = EntToUniClass.LookupForAdd(nsDependentCString(entity.mStr));
-    const TestUniChar* val = entry.OrInsert([] () { return nullptr; });
+    const TestUniChar* val = entry.OrInsert([]() { return nullptr; });
     ASSERT_FALSE(entry);
     ASSERT_TRUE(val == nullptr);
     ASSERT_TRUE(entry.Data() == nullptr);

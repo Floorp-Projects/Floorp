@@ -32,6 +32,38 @@ allprojects {
                 url repository
             }
         }
+        // For in tree dependencies.
+        // TODO: remove this once
+        // https://issuetracker.google.com/issues/120951637 is resolved. See
+        // also Bug 1514374.
+        maven {
+            url "file://${gradle.mozconfig.topsrcdir}/mobile/android/gradle/m2repo"
+        }
+    }
+
+    task downloadDependencies() {
+        description 'Download all dependencies to the Gradle cache'
+        doLast {
+            configurations.each { configuration ->
+                if (configuration.canBeResolved) {
+                    configuration.allDependencies.each { dependency ->
+                        try {
+                            configuration.files(dependency)
+                        } catch(e) {
+                            println("Could not resolve ${configuration.name} -> ${dependency.name}")
+                            println(" > ${e.message}")
+                            if (e.cause) {
+                                println(" >> ${e.cause}")
+                                if (e.cause.cause) {
+                                    println(" >> ${e.cause.cause}")
+                                }
+                            }
+                            println("")
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

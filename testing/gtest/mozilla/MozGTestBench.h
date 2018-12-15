@@ -10,18 +10,15 @@
 
 namespace mozilla {
 
-void GTestBench(const char* aSuite, const char* aName, const std::function<void()>& aTest);
+void GTestBench(const char* aSuite, const char* aName,
+                const std::function<void()>& aTest);
 
-} //mozilla
+}  // namespace mozilla
 
 #define MOZ_GTEST_BENCH(suite, test, lambdaOrFunc) \
-TEST(suite, test) { \
-  mozilla::GTestBench(#suite, #test, lambdaOrFunc); \
-}
+  TEST(suite, test) { mozilla::GTestBench(#suite, #test, lambdaOrFunc); }
 
 #define MOZ_GTEST_BENCH_F(suite, test, lambdaOrFunc) \
-TEST_F(suite, test) { \
-  mozilla::GTestBench(#suite, #test, lambdaOrFunc); \
-}
+  TEST_F(suite, test) { mozilla::GTestBench(#suite, #test, lambdaOrFunc); }
 
-#endif // GTEST_MOZGTESTBENCH_H
+#endif  // GTEST_MOZGTESTBENCH_H

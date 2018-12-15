@@ -15,41 +15,35 @@
 
 static bool gUnreg = false;
 
-void print_err(nsresult err)
-{
+void print_err(nsresult err) {
   switch (err) {
-  case NS_ERROR_FACTORY_NOT_LOADED:
-    cerr << "Factory not loaded";
-    break;
-  case NS_NOINTERFACE:
-    cerr << "No Interface";
-    break;
-  case NS_ERROR_NULL_POINTER:
-    cerr << "Null pointer";
-    break;
-  case NS_ERROR_OUT_OF_MEMORY:
-    cerr << "Out of memory";
-    break;
-  default:
-    cerr << hex << err << dec;
+    case NS_ERROR_FACTORY_NOT_LOADED:
+      cerr << "Factory not loaded";
+      break;
+    case NS_NOINTERFACE:
+      cerr << "No Interface";
+      break;
+    case NS_ERROR_NULL_POINTER:
+      cerr << "Null pointer";
+      break;
+    case NS_ERROR_OUT_OF_MEMORY:
+      cerr << "Out of memory";
+      break;
+    default:
+      cerr << hex << err << dec;
   }
 }
 
-nsresult Register(nsIComponentRegistrar* registrar, const char *path)
-{
+nsresult Register(nsIComponentRegistrar *registrar, const char *path) {
   nsCOMPtr<nsIFile> file;
   nsresult rv =
-    NS_NewLocalFile(
-      NS_ConvertUTF8toUTF16(path),
-      true,
-      getter_AddRefs(file));
+      NS_NewLocalFile(NS_ConvertUTF8toUTF16(path), true, getter_AddRefs(file));
   if (NS_FAILED(rv)) return rv;
   rv = registrar->AutoRegister(file);
   return rv;
 }
 
-nsresult Unregister(const char *path)
-{
+nsresult Unregister(const char *path) {
   /* NEEDS IMPLEMENTATION */
 #if 0
     nsresult res = nsComponentManager::AutoUnregisterComponent(path);
@@ -59,8 +53,7 @@ nsresult Unregister(const char *path)
 #endif
 }
 
-int ProcessArgs(nsIComponentRegistrar* registrar, int argc, char *argv[])
-{
+int ProcessArgs(nsIComponentRegistrar *registrar, int argc, char *argv[]) {
   int i = 1;
   nsresult res;
 
@@ -69,11 +62,11 @@ int ProcessArgs(nsIComponentRegistrar* registrar, int argc, char *argv[])
       int j;
       for (j = 1; argv[i][j] != '\0'; j++) {
         switch (argv[i][j]) {
-        case 'u':
-          gUnreg = true;
-          break;
-        default:
-          cerr << "Unknown option '" << argv[i][j] << "'\n";
+          case 'u':
+            gUnreg = true;
+            break;
+          default:
+            cerr << "Unknown option '" << argv[i][j] << "'\n";
         }
       }
       i++;
@@ -103,8 +96,7 @@ int ProcessArgs(nsIComponentRegistrar* registrar, int argc, char *argv[])
   return 0;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   int ret = 0;
   nsresult rv;
   {
@@ -115,14 +107,12 @@ int main(int argc, char *argv[])
     NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
 
     /* With no arguments, RegFactory will autoregister */
-    if (argc <= 1)
-    {
+    if (argc <= 1) {
       rv = registrar->AutoRegister(nullptr);
       ret = (NS_FAILED(rv)) ? -1 : 0;
-    }
-    else
+    } else
       ret = ProcessArgs(registrar, argc, argv);
-  } // this scopes the nsCOMPtrs
+  }  // this scopes the nsCOMPtrs
   // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
   rv = NS_ShutdownXPCOM(nullptr);
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");

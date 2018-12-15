@@ -11,11 +11,10 @@
 
 #include "gtest/gtest.h"
 
-using mozilla::TimeStamp;
 using mozilla::TimeDuration;
+using mozilla::TimeStamp;
 
-TEST(TimeStamp, Main)
-{
+TEST(TimeStamp, Main) {
   TimeDuration td;
   EXPECT_TRUE(td.ToSeconds() == 0.0);
   EXPECT_TRUE(TimeDuration::FromSeconds(5).ToSeconds() == 5.0);

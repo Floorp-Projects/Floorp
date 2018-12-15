@@ -294,17 +294,6 @@ class nsCSSProps {
   // "layout.css.*.enabled" prefs changes:
   static KTableEntry kDisplayKTable[];
   // clang-format off
-  // -- tables for parsing the {align,justify}-{content,items,self} properties --
-  static const KTableEntry kAlignAllKeywords[];
-  static const KTableEntry kAlignOverflowPosition[];  // <overflow-position>
-  static const KTableEntry kAlignSelfPosition[];      // <self-position>
-  static const KTableEntry kAlignLegacy[];            // 'legacy'
-  static const KTableEntry kAlignLegacyPosition[];    // 'left/right/center'
-  static const KTableEntry kAlignAutoNormalStretchBaseline[];  // 'auto/normal/stretch/baseline'
-  static const KTableEntry kAlignNormalStretchBaseline[];  // 'normal/stretch/baseline'
-  static const KTableEntry kAlignNormalBaseline[];  // 'normal/baseline'
-  static const KTableEntry kAlignContentDistribution[];  // <content-distribution>
-  static const KTableEntry kAlignContentPosition[];  // <content-position>
   // -- tables for auto-completion of the {align,justify}-{content,items,self} properties --
   static const KTableEntry kAutoCompletionAlignJustifySelf[];
   static const KTableEntry kAutoCompletionAlignItems[];

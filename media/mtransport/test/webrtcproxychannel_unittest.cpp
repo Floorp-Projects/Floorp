@@ -20,8 +20,8 @@
 static const uint32_t kDefaultTestTimeout = 2000;
 static const char kReadData[] = "Hello, World!";
 static const size_t kReadDataLength = sizeof(kReadData) - 1;
-static const std::string kReadDataString = std::string(kReadData,
-                                                       kReadDataLength);
+static const std::string kReadDataString =
+    std::string(kReadData, kReadDataLength);
 static int kDataLargeOuterLoopCount = 128;
 static int kDataLargeInnerLoopCount = 1024;
 
@@ -32,81 +32,202 @@ using namespace testing;
 
 class WebrtcProxyChannelTestCallback;
 
-class FakeSocketTransportProvider : public nsISocketTransport
-{
-public:
+class FakeSocketTransportProvider : public nsISocketTransport {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   // nsISocketTransport
-  NS_IMETHOD GetHost(nsACString & aHost) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD GetPort(int32_t *aPort) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD GetScriptableOriginAttributes(JSContext* cx, JS::MutableHandleValue aOriginAttributes) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD SetScriptableOriginAttributes(JSContext* cx, JS::HandleValue aOriginAttributes) override { MOZ_ASSERT(false); return NS_OK; }
-  virtual nsresult GetOriginAttributes(mozilla::OriginAttributes *_retval) override { MOZ_ASSERT(false); return NS_OK; }
-  virtual nsresult SetOriginAttributes(const mozilla::OriginAttributes & aOriginAttrs) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD GetPeerAddr(mozilla::net::NetAddr *_retval) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD GetSelfAddr(mozilla::net::NetAddr *_retval) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD Bind(mozilla::net::NetAddr *aLocalAddr) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD GetScriptablePeerAddr(nsINetAddr * *_retval) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD GetScriptableSelfAddr(nsINetAddr * *_retval) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD GetSecurityCallbacks(nsIInterfaceRequestor * *aSecurityCallbacks) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD SetSecurityCallbacks(nsIInterfaceRequestor *aSecurityCallbacks) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD IsAlive(bool *_retval) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD GetTimeout(uint32_t aType, uint32_t *_retval) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD SetTimeout(uint32_t aType, uint32_t aValue) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD SetReuseAddrPort(bool reuseAddrPort) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD GetConnectionFlags(uint32_t *aConnectionFlags) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD SetConnectionFlags(uint32_t aConnectionFlags) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD GetTlsFlags(uint32_t *aTlsFlags) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD SetTlsFlags(uint32_t aTlsFlags) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD GetQoSBits(uint8_t *aQoSBits) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD SetQoSBits(uint8_t aQoSBits) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD GetRecvBufferSize(uint32_t *aRecvBufferSize) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD GetSendBufferSize(uint32_t *aSendBufferSize) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD GetKeepaliveEnabled(bool *aKeepaliveEnabled) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD SetKeepaliveEnabled(bool aKeepaliveEnabled) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD SetKeepaliveVals(int32_t keepaliveIdleTime, int32_t keepaliveRetryInterval) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD SetFastOpenCallback(mozilla::net::TCPFastOpen *aFastOpen) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD GetFirstRetryError(nsresult *aFirstRetryError) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD GetResetIPFamilyPreference(bool *aResetIPFamilyPreference) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD GetEsniUsed(bool *aEsniUsed) override { MOZ_ASSERT(false); return NS_OK; }
+  NS_IMETHOD GetHost(nsACString &aHost) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD GetPort(int32_t *aPort) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD GetScriptableOriginAttributes(
+      JSContext *cx, JS::MutableHandleValue aOriginAttributes) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD SetScriptableOriginAttributes(
+      JSContext *cx, JS::HandleValue aOriginAttributes) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  virtual nsresult GetOriginAttributes(
+      mozilla::OriginAttributes *_retval) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  virtual nsresult SetOriginAttributes(
+      const mozilla::OriginAttributes &aOriginAttrs) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD GetPeerAddr(mozilla::net::NetAddr *_retval) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD GetSelfAddr(mozilla::net::NetAddr *_retval) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD Bind(mozilla::net::NetAddr *aLocalAddr) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD GetScriptablePeerAddr(nsINetAddr **_retval) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD GetScriptableSelfAddr(nsINetAddr **_retval) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD GetSecurityCallbacks(
+      nsIInterfaceRequestor **aSecurityCallbacks) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD SetSecurityCallbacks(
+      nsIInterfaceRequestor *aSecurityCallbacks) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD IsAlive(bool *_retval) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD GetTimeout(uint32_t aType, uint32_t *_retval) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD SetTimeout(uint32_t aType, uint32_t aValue) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD SetReuseAddrPort(bool reuseAddrPort) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD GetConnectionFlags(uint32_t *aConnectionFlags) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD SetConnectionFlags(uint32_t aConnectionFlags) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD GetTlsFlags(uint32_t *aTlsFlags) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD SetTlsFlags(uint32_t aTlsFlags) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD GetQoSBits(uint8_t *aQoSBits) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD SetQoSBits(uint8_t aQoSBits) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD GetRecvBufferSize(uint32_t *aRecvBufferSize) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD GetSendBufferSize(uint32_t *aSendBufferSize) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD GetKeepaliveEnabled(bool *aKeepaliveEnabled) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD SetKeepaliveEnabled(bool aKeepaliveEnabled) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD SetKeepaliveVals(int32_t keepaliveIdleTime,
+                              int32_t keepaliveRetryInterval) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD SetFastOpenCallback(
+      mozilla::net::TCPFastOpen *aFastOpen) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD GetFirstRetryError(nsresult *aFirstRetryError) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD GetResetIPFamilyPreference(
+      bool *aResetIPFamilyPreference) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD GetEsniUsed(bool *aEsniUsed) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
 
   // nsITransport
-  NS_IMETHOD OpenInputStream(uint32_t aFlags, uint32_t aSegmentSize, uint32_t aSegmentCount, nsIInputStream * *_retval) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD OpenOutputStream(uint32_t aFlags, uint32_t aSegmentSize, uint32_t aSegmentCount, nsIOutputStream * *_retval) override { MOZ_ASSERT(false); return NS_OK; }
-  NS_IMETHOD SetEventSink(nsITransportEventSink *aSink, nsIEventTarget *aEventTarget) override { MOZ_ASSERT(false); return NS_OK; }
+  NS_IMETHOD OpenInputStream(uint32_t aFlags, uint32_t aSegmentSize,
+                             uint32_t aSegmentCount,
+                             nsIInputStream **_retval) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD OpenOutputStream(uint32_t aFlags, uint32_t aSegmentSize,
+                              uint32_t aSegmentCount,
+                              nsIOutputStream **_retval) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD SetEventSink(nsITransportEventSink *aSink,
+                          nsIEventTarget *aEventTarget) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
 
   // fake except for these methods which are OK to call
   // nsISocketTransport
-  NS_IMETHOD SetRecvBufferSize(uint32_t aRecvBufferSize) override
-    { return NS_OK; }
-  NS_IMETHOD SetSendBufferSize(uint32_t aSendBufferSize) override
-    { return NS_OK; }
+  NS_IMETHOD SetRecvBufferSize(uint32_t aRecvBufferSize) override {
+    return NS_OK;
+  }
+  NS_IMETHOD SetSendBufferSize(uint32_t aSendBufferSize) override {
+    return NS_OK;
+  }
   // nsITransport
   NS_IMETHOD Close(nsresult aReason) override { return NS_OK; }
 
-protected:
+ protected:
   virtual ~FakeSocketTransportProvider() = default;
 };
 
-NS_IMPL_ISUPPORTS(FakeSocketTransportProvider,
-                  nsISocketTransport,
-                  nsITransport)
+NS_IMPL_ISUPPORTS(FakeSocketTransportProvider, nsISocketTransport, nsITransport)
 
 // Implements some common elements to WebrtcProxyChannelTestOutputStream and
 // WebrtcProxyChannelTestInputStream.
-class WebrtcProxyChannelTestStream
-{
-public:
+class WebrtcProxyChannelTestStream {
+ public:
   WebrtcProxyChannelTestStream();
 
   void Fail() { mMustFail = true; }
 
   size_t DataLength();
-  template <typename T> void AppendElements(const T* aBuffer, size_t aLength);
+  template <typename T>
+  void AppendElements(const T *aBuffer, size_t aLength);
 
-protected:
+ protected:
   virtual ~WebrtcProxyChannelTestStream() = default;
 
   nsTArray<uint8_t> mData;
@@ -116,61 +237,52 @@ protected:
 };
 
 WebrtcProxyChannelTestStream::WebrtcProxyChannelTestStream()
-  : mMustFail(false) {}
+    : mMustFail(false) {}
 
 template <typename T>
-void
-WebrtcProxyChannelTestStream::AppendElements(const T* aBuffer, size_t aLength)
-{
+void WebrtcProxyChannelTestStream::AppendElements(const T *aBuffer,
+                                                  size_t aLength) {
   std::lock_guard<std::mutex> guard(mDataMutex);
   mData.AppendElements(aBuffer, aLength);
 }
 
-size_t
-WebrtcProxyChannelTestStream::DataLength()
-{
+size_t WebrtcProxyChannelTestStream::DataLength() {
   std::lock_guard<std::mutex> guard(mDataMutex);
   return mData.Length();
 }
 
 class WebrtcProxyChannelTestInputStream : public nsIAsyncInputStream,
-                                          public WebrtcProxyChannelTestStream
-{
-public:
+                                          public WebrtcProxyChannelTestStream {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIASYNCINPUTSTREAM
   NS_DECL_NSIINPUTSTREAM
 
   WebrtcProxyChannelTestInputStream()
-    : mMaxReadSize(1024 * 1024)
-    , mAllowCallbacks(false) {}
+      : mMaxReadSize(1024 * 1024), mAllowCallbacks(false) {}
 
   void DoCallback();
-  void CallCallback(const nsCOMPtr<nsIInputStreamCallback>& aCallback);
+  void CallCallback(const nsCOMPtr<nsIInputStreamCallback> &aCallback);
   void AllowCallbacks() { mAllowCallbacks = true; }
 
   size_t mMaxReadSize;
 
-protected:
+ protected:
   virtual ~WebrtcProxyChannelTestInputStream() = default;
 
-private:
+ private:
   nsCOMPtr<nsIInputStreamCallback> mCallback;
   nsCOMPtr<nsIEventTarget> mCallbackTarget;
 
   bool mAllowCallbacks;
 };
 
-NS_IMPL_ISUPPORTS(WebrtcProxyChannelTestInputStream,
-                  nsIAsyncInputStream,
+NS_IMPL_ISUPPORTS(WebrtcProxyChannelTestInputStream, nsIAsyncInputStream,
                   nsIInputStream)
 
-nsresult
-WebrtcProxyChannelTestInputStream::AsyncWait(nsIInputStreamCallback *aCallback,
-                                             uint32_t aFlags,
-                                             uint32_t aRequestedCount,
-                                             nsIEventTarget *aEventTarget)
-{
+nsresult WebrtcProxyChannelTestInputStream::AsyncWait(
+    nsIInputStreamCallback *aCallback, uint32_t aFlags,
+    uint32_t aRequestedCount, nsIEventTarget *aEventTarget) {
   MOZ_ASSERT(!aEventTarget, "no event target should be set");
 
   mCallback = aCallback;
@@ -183,116 +295,89 @@ WebrtcProxyChannelTestInputStream::AsyncWait(nsIInputStreamCallback *aCallback,
   return NS_OK;
 }
 
-nsresult
-WebrtcProxyChannelTestInputStream::CloseWithStatus(nsresult aStatus)
-{
+nsresult WebrtcProxyChannelTestInputStream::CloseWithStatus(nsresult aStatus) {
   return Close();
 }
 
-nsresult
-WebrtcProxyChannelTestInputStream::Close()
-{
-  return NS_OK;
-}
+nsresult WebrtcProxyChannelTestInputStream::Close() { return NS_OK; }
 
-nsresult
-WebrtcProxyChannelTestInputStream::Available(uint64_t* aAvailable)
-{
+nsresult WebrtcProxyChannelTestInputStream::Available(uint64_t *aAvailable) {
   *aAvailable = DataLength();
   return NS_OK;
 }
 
-nsresult
-WebrtcProxyChannelTestInputStream::Read(char* aBuffer,
-                                        uint32_t aCount,
-                                        uint32_t* aRead)
-{
+nsresult WebrtcProxyChannelTestInputStream::Read(char *aBuffer, uint32_t aCount,
+                                                 uint32_t *aRead) {
   std::lock_guard<std::mutex> guard(mDataMutex);
   if (mMustFail) {
     return NS_ERROR_FAILURE;
   }
-  *aRead = std::min({ (size_t)aCount, mData.Length(), mMaxReadSize });
+  *aRead = std::min({(size_t)aCount, mData.Length(), mMaxReadSize});
   memcpy(aBuffer, mData.Elements(), *aRead);
   mData.RemoveElementsAt(0, *aRead);
   return *aRead > 0 ? NS_OK : NS_BASE_STREAM_WOULD_BLOCK;
 }
 
-nsresult
-WebrtcProxyChannelTestInputStream::ReadSegments(nsWriteSegmentFun aWriter,
-                                                void *aClosure,
-                                                uint32_t aCount,
-                                                uint32_t *_retval)
-{
+nsresult WebrtcProxyChannelTestInputStream::ReadSegments(
+    nsWriteSegmentFun aWriter, void *aClosure, uint32_t aCount,
+    uint32_t *_retval) {
   MOZ_ASSERT(false);
   return NS_OK;
 }
 
-nsresult
-WebrtcProxyChannelTestInputStream::IsNonBlocking(bool* aIsNonBlocking)
-{
+nsresult WebrtcProxyChannelTestInputStream::IsNonBlocking(
+    bool *aIsNonBlocking) {
   *aIsNonBlocking = true;
   return NS_OK;
 }
 
-void
-WebrtcProxyChannelTestInputStream::CallCallback(
-  const nsCOMPtr<nsIInputStreamCallback>& aCallback)
-{
+void WebrtcProxyChannelTestInputStream::CallCallback(
+    const nsCOMPtr<nsIInputStreamCallback> &aCallback) {
   aCallback->OnInputStreamReady(this);
 }
 
-void
-WebrtcProxyChannelTestInputStream::DoCallback()
-{
+void WebrtcProxyChannelTestInputStream::DoCallback() {
   if (mCallback) {
     mCallbackTarget->Dispatch(
-      NewRunnableMethod<const nsCOMPtr<nsIInputStreamCallback>&>(
-        "WebrtcProxyChannelTestInputStream::DoCallback",
-        this,
-        &WebrtcProxyChannelTestInputStream::CallCallback,
-        std::move(mCallback)));
+        NewRunnableMethod<const nsCOMPtr<nsIInputStreamCallback> &>(
+            "WebrtcProxyChannelTestInputStream::DoCallback", this,
+            &WebrtcProxyChannelTestInputStream::CallCallback,
+            std::move(mCallback)));
 
     mCallbackTarget = nullptr;
   }
 }
 
 class WebrtcProxyChannelTestOutputStream : public nsIAsyncOutputStream,
-                                           public WebrtcProxyChannelTestStream
-{
-public:
+                                           public WebrtcProxyChannelTestStream {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIASYNCOUTPUTSTREAM
   NS_DECL_NSIOUTPUTSTREAM
 
-  WebrtcProxyChannelTestOutputStream()
-    : mMaxWriteSize(1024 * 1024) {}
+  WebrtcProxyChannelTestOutputStream() : mMaxWriteSize(1024 * 1024) {}
 
   void DoCallback();
-  void CallCallback(const nsCOMPtr<nsIOutputStreamCallback>& aCallback);
+  void CallCallback(const nsCOMPtr<nsIOutputStreamCallback> &aCallback);
 
   const std::string DataString();
 
   uint32_t mMaxWriteSize;
 
-protected:
+ protected:
   virtual ~WebrtcProxyChannelTestOutputStream() = default;
 
-private:
+ private:
   nsCOMPtr<nsIOutputStreamCallback> mCallback;
   nsCOMPtr<nsIEventTarget> mCallbackTarget;
 };
 
-NS_IMPL_ISUPPORTS(WebrtcProxyChannelTestOutputStream,
-                  nsIAsyncOutputStream,
+NS_IMPL_ISUPPORTS(WebrtcProxyChannelTestOutputStream, nsIAsyncOutputStream,
                   nsIOutputStream)
 
-nsresult
-WebrtcProxyChannelTestOutputStream::AsyncWait(
-  nsIOutputStreamCallback *aCallback,
-  uint32_t aFlags,
-  uint32_t aRequestedCount,
-  nsIEventTarget *aEventTarget)
-{
+nsresult WebrtcProxyChannelTestOutputStream::AsyncWait(
+    nsIOutputStreamCallback *aCallback, uint32_t aFlags,
+    uint32_t aRequestedCount, nsIEventTarget *aEventTarget) {
   MOZ_ASSERT(!aEventTarget, "no event target should be set");
 
   mCallback = aCallback;
@@ -301,29 +386,17 @@ WebrtcProxyChannelTestOutputStream::AsyncWait(
   return NS_OK;
 }
 
-nsresult
-WebrtcProxyChannelTestOutputStream::CloseWithStatus(nsresult aStatus)
-{
+nsresult WebrtcProxyChannelTestOutputStream::CloseWithStatus(nsresult aStatus) {
   return Close();
 }
 
-nsresult
-WebrtcProxyChannelTestOutputStream::Close()
-{
-  return NS_OK;
-}
+nsresult WebrtcProxyChannelTestOutputStream::Close() { return NS_OK; }
 
-nsresult
-WebrtcProxyChannelTestOutputStream::Flush()
-{
-  return NS_OK;
-}
+nsresult WebrtcProxyChannelTestOutputStream::Flush() { return NS_OK; }
 
-nsresult
-WebrtcProxyChannelTestOutputStream::Write(const char* aBuffer,
-                                          uint32_t aCount,
-                                          uint32_t* aWrote)
-{
+nsresult WebrtcProxyChannelTestOutputStream::Write(const char *aBuffer,
+                                                   uint32_t aCount,
+                                                   uint32_t *aWrote) {
   if (mMustFail) {
     return NS_ERROR_FAILURE;
   }
@@ -332,113 +405,90 @@ WebrtcProxyChannelTestOutputStream::Write(const char* aBuffer,
   return NS_OK;
 }
 
-nsresult
-WebrtcProxyChannelTestOutputStream::WriteSegments(nsReadSegmentFun aReader,
-                                                  void *aClosure,
-                                                  uint32_t aCount,
-                                                  uint32_t *_retval)
-{
+nsresult WebrtcProxyChannelTestOutputStream::WriteSegments(
+    nsReadSegmentFun aReader, void *aClosure, uint32_t aCount,
+    uint32_t *_retval) {
   MOZ_ASSERT(false);
   return NS_OK;
 }
 
-nsresult
-WebrtcProxyChannelTestOutputStream::WriteFrom(
-  nsIInputStream *aFromStream,
-  uint32_t aCount,
-  uint32_t *_retval)
-{
+nsresult WebrtcProxyChannelTestOutputStream::WriteFrom(
+    nsIInputStream *aFromStream, uint32_t aCount, uint32_t *_retval) {
   MOZ_ASSERT(false);
   return NS_OK;
 }
 
-nsresult
-WebrtcProxyChannelTestOutputStream::IsNonBlocking(bool* aIsNonBlocking)
-{
+nsresult WebrtcProxyChannelTestOutputStream::IsNonBlocking(
+    bool *aIsNonBlocking) {
   *aIsNonBlocking = true;
   return NS_OK;
 }
 
-void
-WebrtcProxyChannelTestOutputStream::CallCallback(
-  const nsCOMPtr<nsIOutputStreamCallback>& aCallback)
-{
+void WebrtcProxyChannelTestOutputStream::CallCallback(
+    const nsCOMPtr<nsIOutputStreamCallback> &aCallback) {
   aCallback->OnOutputStreamReady(this);
 }
 
-void
-WebrtcProxyChannelTestOutputStream::DoCallback()
-{
+void WebrtcProxyChannelTestOutputStream::DoCallback() {
   if (mCallback) {
     mCallbackTarget->Dispatch(
-      NewRunnableMethod<const nsCOMPtr<nsIOutputStreamCallback>&>(
-        "WebrtcProxyChannelTestOutputStream::CallCallback",
-        this,
-        &WebrtcProxyChannelTestOutputStream::CallCallback,
-        std::move(mCallback)));
+        NewRunnableMethod<const nsCOMPtr<nsIOutputStreamCallback> &>(
+            "WebrtcProxyChannelTestOutputStream::CallCallback", this,
+            &WebrtcProxyChannelTestOutputStream::CallCallback,
+            std::move(mCallback)));
 
     mCallbackTarget = nullptr;
   }
 }
 
-const std::string
-WebrtcProxyChannelTestOutputStream::DataString()
-{
+const std::string WebrtcProxyChannelTestOutputStream::DataString() {
   std::lock_guard<std::mutex> guard(mDataMutex);
-  return std::string((char*)mData.Elements(), mData.Length());
+  return std::string((char *)mData.Elements(), mData.Length());
 }
 
 // Fake as in not the real WebrtcProxyChannel but real enough
-class FakeWebrtcProxyChannel : public WebrtcProxyChannel
-{
-public:
-  explicit FakeWebrtcProxyChannel(WebrtcProxyChannelCallback* aCallback)
-    : WebrtcProxyChannel(nullptr, aCallback) {}
+class FakeWebrtcProxyChannel : public WebrtcProxyChannel {
+ public:
+  explicit FakeWebrtcProxyChannel(WebrtcProxyChannelCallback *aCallback)
+      : WebrtcProxyChannel(nullptr, aCallback) {}
 
-protected:
+ protected:
   virtual ~FakeWebrtcProxyChannel() = default;
 
   void InvokeOnClose(nsresult aReason) override;
   void InvokeOnConnected() override;
-  void InvokeOnRead(nsTArray<uint8_t>&& aReadData) override;
+  void InvokeOnRead(nsTArray<uint8_t> &&aReadData) override;
 };
 
-void
-FakeWebrtcProxyChannel::InvokeOnClose(nsresult aReason)
-{
+void FakeWebrtcProxyChannel::InvokeOnClose(nsresult aReason) {
   mProxyCallbacks->OnClose(aReason);
 }
 
-void
-FakeWebrtcProxyChannel::InvokeOnConnected()
-{
+void FakeWebrtcProxyChannel::InvokeOnConnected() {
   mProxyCallbacks->OnConnected();
 }
 
-void
-FakeWebrtcProxyChannel::InvokeOnRead(nsTArray<uint8_t>&& aReadData)
-{
+void FakeWebrtcProxyChannel::InvokeOnRead(nsTArray<uint8_t> &&aReadData) {
   mProxyCallbacks->OnRead(std::move(aReadData));
 }
 
-class WebrtcProxyChannelTest : public MtransportTest
-{
-public:
+class WebrtcProxyChannelTest : public MtransportTest {
+ public:
   WebrtcProxyChannelTest()
-    : MtransportTest()
-    , mSocketThread(nullptr)
-    , mSocketTransport(nullptr)
-    , mInputStream(nullptr)
-    , mOutputStream(nullptr)
-    , mChannel(nullptr)
-    , mCallback(nullptr)
-    , mOnCloseCalled(false)
-    , mOnConnectedCalled(false) {}
+      : MtransportTest(),
+        mSocketThread(nullptr),
+        mSocketTransport(nullptr),
+        mInputStream(nullptr),
+        mOutputStream(nullptr),
+        mChannel(nullptr),
+        mCallback(nullptr),
+        mOnCloseCalled(false),
+        mOnConnectedCalled(false) {}
 
   // WebrtcProxyChannelCallback forwards from mCallback
   void OnClose(nsresult aReason);
   void OnConnected();
-  void OnRead(nsTArray<uint8_t>&& aReadData);
+  void OnRead(nsTArray<uint8_t> &&aReadData);
 
   void SetUp() override;
   void TearDown() override;
@@ -450,47 +500,45 @@ public:
 
   nsCOMPtr<nsIEventTarget> mSocketThread;
 
-  nsCOMPtr<nsISocketTransport>               mSocketTransport;
-  RefPtr<WebrtcProxyChannelTestInputStream>  mInputStream;
+  nsCOMPtr<nsISocketTransport> mSocketTransport;
+  RefPtr<WebrtcProxyChannelTestInputStream> mInputStream;
   RefPtr<WebrtcProxyChannelTestOutputStream> mOutputStream;
-  RefPtr<FakeWebrtcProxyChannel>             mChannel;
-  RefPtr<WebrtcProxyChannelTestCallback>     mCallback;
+  RefPtr<FakeWebrtcProxyChannel> mChannel;
+  RefPtr<WebrtcProxyChannelTestCallback> mCallback;
 
   bool mOnCloseCalled;
   bool mOnConnectedCalled;
 
   size_t ReadDataLength();
-  template<typename T> void AppendReadData(const T* aBuffer, size_t aLength);
+  template <typename T>
+  void AppendReadData(const T *aBuffer, size_t aLength);
 
-private:
+ private:
   nsTArray<uint8_t> mReadData;
   std::mutex mReadDataMutex;
 };
 
-class WebrtcProxyChannelTestCallback : public WebrtcProxyChannelCallback
-{
-public:
+class WebrtcProxyChannelTestCallback : public WebrtcProxyChannelCallback {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcProxyChannelTestCallback,
                                         override)
 
-  explicit WebrtcProxyChannelTestCallback(WebrtcProxyChannelTest* aTest)
-    : mTest(aTest) {}
+  explicit WebrtcProxyChannelTestCallback(WebrtcProxyChannelTest *aTest)
+      : mTest(aTest) {}
 
   // WebrtcProxyChannelCallback
   void OnClose(nsresult aReason) override;
   void OnConnected() override;
-  void OnRead(nsTArray<uint8_t>&& aReadData) override;
+  void OnRead(nsTArray<uint8_t> &&aReadData) override;
 
-protected:
+ protected:
   virtual ~WebrtcProxyChannelTestCallback() = default;
 
-private:
-  WebrtcProxyChannelTest* mTest;
+ private:
+  WebrtcProxyChannelTest *mTest;
 };
 
-void
-WebrtcProxyChannelTest::SetUp()
-{
+void WebrtcProxyChannelTest::SetUp() {
   nsresult rv;
   // WebrtcProxyChannel's threading model is the same as mtransport
   // all socket operations are done on the socket thread
@@ -505,41 +553,25 @@ WebrtcProxyChannelTest::SetUp()
   mChannel = new FakeWebrtcProxyChannel(mCallback.get());
 }
 
-void
-WebrtcProxyChannelTest::TearDown()
-{
-}
+void WebrtcProxyChannelTest::TearDown() {}
 
 // WebrtcProxyChannelCallback
-void
-WebrtcProxyChannelTest::OnRead(nsTArray<uint8_t>&& aReadData)
-{
+void WebrtcProxyChannelTest::OnRead(nsTArray<uint8_t> &&aReadData) {
   AppendReadData(aReadData.Elements(), aReadData.Length());
 }
 
-void
-WebrtcProxyChannelTest::OnConnected()
-{
-  mOnConnectedCalled = true;
-}
+void WebrtcProxyChannelTest::OnConnected() { mOnConnectedCalled = true; }
 
-void
-WebrtcProxyChannelTest::OnClose(nsresult aReason)
-{
+void WebrtcProxyChannelTest::OnClose(nsresult aReason) {
   mOnCloseCalled = true;
 }
 
-void
-WebrtcProxyChannelTest::DoTransportAvailable()
-{
+void WebrtcProxyChannelTest::DoTransportAvailable() {
   if (!mSocketThread->IsOnCurrentThread()) {
     mSocketThread->Dispatch(
-      NS_NewRunnableFunction(
-        "DoTransportAvailable",
-        [this]() -> void {
+        NS_NewRunnableFunction("DoTransportAvailable", [this]() -> void {
           nsresult rv;
-          rv = mChannel->OnTransportAvailable(mSocketTransport,
-                                              mInputStream,
+          rv = mChannel->OnTransportAvailable(mSocketTransport, mInputStream,
                                               mOutputStream);
           ASSERT_EQ(NS_OK, rv);
         }));
@@ -549,57 +581,42 @@ WebrtcProxyChannelTest::DoTransportAvailable()
   }
 }
 
-const std::string
-WebrtcProxyChannelTest::ReadDataAsString()
-{
+const std::string WebrtcProxyChannelTest::ReadDataAsString() {
   std::lock_guard<std::mutex> guard(mReadDataMutex);
-  return std::string((char*)mReadData.Elements(), mReadData.Length());
+  return std::string((char *)mReadData.Elements(), mReadData.Length());
 }
 
-const std::string
-WebrtcProxyChannelTest::GetDataLarge()
-{
+const std::string WebrtcProxyChannelTest::GetDataLarge() {
   std::string data;
-  for(int i = 0; i < kDataLargeOuterLoopCount * kDataLargeInnerLoopCount; ++i) {
+  for (int i = 0; i < kDataLargeOuterLoopCount * kDataLargeInnerLoopCount;
+       ++i) {
     data += kReadData;
   }
   return data;
 }
 
-template<typename T>
-void
-WebrtcProxyChannelTest::AppendReadData(const T* aBuffer, size_t aLength)
-{
+template <typename T>
+void WebrtcProxyChannelTest::AppendReadData(const T *aBuffer, size_t aLength) {
   std::lock_guard<std::mutex> guard(mReadDataMutex);
   mReadData.AppendElements(aBuffer, aLength);
 }
 
-size_t
-WebrtcProxyChannelTest::ReadDataLength()
-{
+size_t WebrtcProxyChannelTest::ReadDataLength() {
   std::lock_guard<std::mutex> guard(mReadDataMutex);
   return mReadData.Length();
 }
 
-void
-WebrtcProxyChannelTestCallback::OnClose(nsresult aReason)
-{
+void WebrtcProxyChannelTestCallback::OnClose(nsresult aReason) {
   mTest->OnClose(aReason);
 }
 
-void
-WebrtcProxyChannelTestCallback::OnConnected()
-{
-  mTest->OnConnected();
-}
+void WebrtcProxyChannelTestCallback::OnConnected() { mTest->OnConnected(); }
 
-void
-WebrtcProxyChannelTestCallback::OnRead(nsTArray<uint8_t>&& aReadData)
-{
+void WebrtcProxyChannelTestCallback::OnRead(nsTArray<uint8_t> &&aReadData) {
   mTest->OnRead(std::move(aReadData));
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
 typedef mozilla::WebrtcProxyChannelTest WebrtcProxyChannelTest;
 
@@ -688,7 +705,7 @@ TEST_F(WebrtcProxyChannelTest, WriteLarge) {
 
   const std::string data = GetDataLarge();
 
-  for(int i = 0; i < kDataLargeOuterLoopCount; ++i) {
+  for (int i = 0; i < kDataLargeOuterLoopCount; ++i) {
     nsTArray<uint8_t> array;
     int chunkSize = kReadDataString.length() * kDataLargeInnerLoopCount;
     int offset = i * chunkSize;

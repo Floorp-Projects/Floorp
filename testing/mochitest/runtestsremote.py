@@ -102,6 +102,7 @@ class MochiRemote(MochitestDesktop):
             "Android sdk version '%s'; will use this to filter manifests" %
             str(self.device.version))
         mozinfo.info['android_version'] = str(self.device.version)
+        mozinfo.info['isFennec'] = not ('geckoview' in options.app)
 
     def cleanup(self, options, final=False):
         if final:

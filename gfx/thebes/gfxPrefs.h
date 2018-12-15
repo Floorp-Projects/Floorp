@@ -716,7 +716,7 @@ class gfxPrefs final {
   DECL_GFX_PREF(Live, "layout.display-list.show-rebuild-area", LayoutDisplayListShowArea, bool, false);
   DECL_GFX_PREF(Live, "layout.display-list.flatten-transform", LayoutFlattenTransform, bool, true);
 
-  DECL_GFX_PREF(Once, "layout.frame_rate",                     LayoutFrameRate, int32_t, -1);
+  DECL_GFX_PREF(Live, "layout.frame_rate",                     LayoutFrameRate, int32_t, -1);
   DECL_GFX_PREF(Live, "layout.min-active-layer-size",          LayoutMinActiveLayerSize, int, 64);
   DECL_GFX_PREF(Once, "layout.paint_rects_separately",         LayoutPaintRectsSeparately, bool, true);
 
@@ -757,7 +757,14 @@ class gfxPrefs final {
 
   DECL_GFX_PREF(Live, "nglayout.debug.widget_update_flashing", WidgetUpdateFlashing, bool, false);
 
+  DECL_GFX_PREF(Live, "performance.adjust_to_machine",         AdjustToMachine, bool, false);
+  // Use gfxPlatform::ShouldAdjustForLowEndMachine() to determine if you should use low-end
+  // machine code-paths, rather than checking this pref directly.
+  DECL_GFX_PREF(Live, "performance.low_end_machine",           IsLowEndMachineDoNotUseDirectly, bool, false);
+
   DECL_GFX_PREF(Live, "print.font-variations-as-paths",        PrintFontVariationsAsPaths, bool, true);
+
+  DECL_GFX_PREF(Live, "privacy.resistFingerprinting",          ResistFingerprinting, bool, false);
 
   DECL_GFX_PREF(Once, "slider.snapMultiplier",                 SliderSnapMultiplier, int32_t, 0);
 

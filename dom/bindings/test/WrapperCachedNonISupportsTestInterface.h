@@ -14,31 +14,30 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
-
 namespace mozilla {
 namespace dom {
 
-class WrapperCachedNonISupportsTestInterface final : public nsWrapperCache
-{
-public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WrapperCachedNonISupportsTestInterface)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WrapperCachedNonISupportsTestInterface)
+class WrapperCachedNonISupportsTestInterface final : public nsWrapperCache {
+ public:
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(
+      WrapperCachedNonISupportsTestInterface)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(
+      WrapperCachedNonISupportsTestInterface)
 
-public:
+ public:
   WrapperCachedNonISupportsTestInterface() {}
 
-protected:
+ protected:
   ~WrapperCachedNonISupportsTestInterface() {}
 
-public:
-  nsISupports* GetParentObject() const {
-    return nullptr;
-  }
+ public:
+  nsISupports* GetParentObject() const { return nullptr; }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_WrapperCachedNonISupportsTestInterface_h
+#endif  // mozilla_dom_WrapperCachedNonISupportsTestInterface_h

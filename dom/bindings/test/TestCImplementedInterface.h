@@ -13,22 +13,17 @@
 namespace mozilla {
 namespace dom {
 
-class TestCImplementedInterface : public TestJSImplInterface
-{
-public:
+class TestCImplementedInterface : public TestJSImplInterface {
+ public:
   TestCImplementedInterface(JS::Handle<JSObject*> aJSImpl,
                             JS::Handle<JSObject*> aJSImplGlobal,
                             nsIGlobalObject* aParent)
-    : TestJSImplInterface(aJSImpl, aJSImplGlobal, aParent)
-  {}
+      : TestJSImplInterface(aJSImpl, aJSImplGlobal, aParent) {}
 };
 
-class TestCImplementedInterface2 : public nsISupports,
-                                   public nsWrapperCache
-{
-public:
-  explicit TestCImplementedInterface2(nsIGlobalObject* aParent)
-  {}
+class TestCImplementedInterface2 : public nsISupports, public nsWrapperCache {
+ public:
+  explicit TestCImplementedInterface2(nsIGlobalObject* aParent) {}
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TestCImplementedInterface2)
 
@@ -36,9 +31,7 @@ public:
   nsISupports* GetParentObject();
 };
 
+}  // namespace dom
+}  // namespace mozilla
 
-
-} // namespace dom
-} // namespace mozilla
-
-#endif // TestCImplementedInterface_h
+#endif  // TestCImplementedInterface_h
