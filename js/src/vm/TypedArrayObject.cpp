@@ -1905,7 +1905,6 @@ static const ClassOps TypedArrayClassOps = {
 };
 
 static const ClassExtension TypedArrayClassExtension = {
-    nullptr,
     TypedArrayObject::objectMoved,
 };
 

@@ -144,7 +144,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'win/SandboxInitialization.cpp',
     ]
 
-    if CONFIG['CPU_ARCH'] == 'x86_64':
+    if CONFIG['CPU_ARCH'] in ('x86_64', 'aarch64'):
         SOURCES += [
             'chromium/sandbox/win/src/interceptors_64.cc',
             'chromium/sandbox/win/src/resolver_64.cc',

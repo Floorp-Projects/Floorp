@@ -298,16 +298,6 @@ class GCRuntime {
   void setDeterministic(bool enable);
 #endif
 
-#ifdef ENABLE_WASM_GC
-  // If we run with wasm-gc enabled and there's wasm frames on the stack,
-  // then GCs are suppressed and many APIs should not be available.
-  // TODO (bug 1456824) This is temporary and should be removed once proper
-  // GC support is implemented.
-  static bool temporaryAbortIfWasmGc(JSContext* cx);
-#else
-  static bool temporaryAbortIfWasmGc(JSContext* cx) { return false; }
-#endif
-
   uint64_t nextCellUniqueId() {
     MOZ_ASSERT(nextCellUniqueId_ > 0);
     uint64_t uid = ++nextCellUniqueId_;
@@ -625,9 +615,8 @@ class GCRuntime {
   void markWeakReferences(gcstats::PhaseKind phase);
   void markWeakReferencesInCurrentGroup(gcstats::PhaseKind phase);
   template <class ZoneIterT>
-  void markGrayReferences(gcstats::PhaseKind phase);
+  void markGrayRoots(gcstats::PhaseKind phase);
   void markBufferedGrayRoots(JS::Zone* zone);
-  void markGrayReferencesInCurrentGroup(gcstats::PhaseKind phase);
   void markAllWeakReferences(gcstats::PhaseKind phase);
   void markAllGrayReferences(gcstats::PhaseKind phase);
 
@@ -635,6 +624,8 @@ class GCRuntime {
   void groupZonesForSweeping(JS::gcreason::Reason reason);
   MOZ_MUST_USE bool findInterZoneEdges();
   void getNextSweepGroup();
+  IncrementalProgress markGrayReferencesInCurrentGroup(FreeOp* fop,
+                                                       SliceBudget& budget);
   IncrementalProgress endMarkingSweepGroup(FreeOp* fop, SliceBudget& budget);
   void markIncomingCrossCompartmentPointers(MarkColor color);
   IncrementalProgress beginSweepingSweepGroup(FreeOp* fop, SliceBudget& budget);
@@ -892,7 +883,17 @@ class GCRuntime {
   MainThreadOrGCTaskData<JS::Zone*> sweepZone;
   MainThreadData<mozilla::Maybe<AtomsTable::SweepIterator>> maybeAtomsToSweep;
   MainThreadOrGCTaskData<JS::detail::WeakCacheBase*> sweepCache;
+  MainThreadData<bool> hasMarkedGrayRoots;
   MainThreadData<bool> abortSweepAfterCurrentGroup;
+
+#ifdef DEBUG
+  // During gray marking, delay AssertCellIsNotGray checks by
+  // recording the cell pointers here and checking after marking has
+  // finished.
+  MainThreadData<Vector<const Cell*, 0, SystemAllocPolicy>>
+      cellsToAssertNotGray;
+  friend void js::gc::detail::AssertCellIsNotGray(const Cell*);
+#endif
 
   friend class SweepGroupsIter;
   friend class WeakCacheSweepIterator;
@@ -1103,7 +1104,8 @@ inline bool GCRuntime::hasIncrementalTwoSliceZealMode() {
          hasZealMode(ZealMode::YieldBeforeSweepingTypes) ||
          hasZealMode(ZealMode::YieldBeforeSweepingObjects) ||
          hasZealMode(ZealMode::YieldBeforeSweepingNonObjects) ||
-         hasZealMode(ZealMode::YieldBeforeSweepingShapeTrees);
+         hasZealMode(ZealMode::YieldBeforeSweepingShapeTrees) ||
+         hasZealMode(ZealMode::YieldWhileGrayMarking);
 }
 
 #else

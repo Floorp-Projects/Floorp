@@ -648,7 +648,9 @@ Selection::Selection(nsFrameSelection* aList)
       mCalledByJS(false),
       mNotifyAutoCopy(false) {}
 
-Selection::~Selection() {
+Selection::~Selection() { Disconnect(); }
+
+void Selection::Disconnect() {
   SetAnchorFocusRange(-1);
 
   uint32_t count = mRanges.Length();
@@ -725,7 +727,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Selection)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_ADDREF(Selection)
-NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE(Selection)
+NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(
+    Selection, Disconnect())
 
 const RangeBoundary& Selection::AnchorRef() const {
   if (!mAnchorFocusRange) {

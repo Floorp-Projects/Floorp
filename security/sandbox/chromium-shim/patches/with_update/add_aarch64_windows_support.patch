@@ -1,0 +1,349 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1544459474 0
+#      Mon Dec 10 16:31:14 2018 +0000
+# Node ID 9f96df3ffc7d338b227e3bc94c2f615bd8bdea38
+# Parent  3386ff76878d83496bb822d09115c77472808b53
+Bug 1481518 part 1: Add aarch64 Windows support to the chromium sandbox code.
+
+This patch includes the changes that Microsoft landed for the sandbox along
+with other changes to the supporting base files that they depend upon.
+
+diff --git a/security/sandbox/chromium/base/atomicops.h b/security/sandbox/chromium/base/atomicops.h
+--- a/security/sandbox/chromium/base/atomicops.h
++++ b/security/sandbox/chromium/base/atomicops.h
+@@ -139,17 +139,17 @@ void Release_Store(volatile Atomic64* pt
+ Atomic64 NoBarrier_Load(volatile const Atomic64* ptr);
+ Atomic64 Acquire_Load(volatile const Atomic64* ptr);
+ Atomic64 Release_Load(volatile const Atomic64* ptr);
+ #endif  // ARCH_CPU_64_BITS
+ 
+ }  // namespace subtle
+ }  // namespace base
+ 
+-#if defined(OS_WIN)
++#if defined(OS_WIN) && defined(ARCH_CPU_X86_FAMILY)
+ // TODO(jfb): The MSVC header includes windows.h, which other files end up
+ //            relying on. Fix this as part of crbug.com/559247.
+ #  include "base/atomicops_internals_x86_msvc.h"
+ #else
+ #  include "base/atomicops_internals_portable.h"
+ #endif
+ 
+ // On some platforms we need additional declarations to make
+diff --git a/security/sandbox/chromium/base/bind_internal.h b/security/sandbox/chromium/base/bind_internal.h
+--- a/security/sandbox/chromium/base/bind_internal.h
++++ b/security/sandbox/chromium/base/bind_internal.h
+@@ -147,17 +147,17 @@ struct FunctorTraits<R (*)(Args...)> {
+   static constexpr bool is_nullable = true;
+ 
+   template <typename... RunArgs>
+   static R Invoke(R (*function)(Args...), RunArgs&&... args) {
+     return function(std::forward<RunArgs>(args)...);
+   }
+ };
+ 
+-#if defined(OS_WIN) && !defined(ARCH_CPU_X86_64)
++#if defined(OS_WIN) && !defined(ARCH_CPU_64_BITS)
+ 
+ // For functions.
+ template <typename R, typename... Args>
+ struct FunctorTraits<R(__stdcall*)(Args...)> {
+   using RunType = R(Args...);
+   static constexpr bool is_method = false;
+   static constexpr bool is_nullable = true;
+ 
+@@ -175,17 +175,17 @@ struct FunctorTraits<R(__fastcall*)(Args
+   static constexpr bool is_nullable = true;
+ 
+   template <typename... RunArgs>
+   static R Invoke(R(__fastcall* function)(Args...), RunArgs&&... args) {
+     return function(std::forward<RunArgs>(args)...);
+   }
+ };
+ 
+-#endif  // defined(OS_WIN) && !defined(ARCH_CPU_X86_64)
++#endif  // defined(OS_WIN) && !defined(ARCH_CPU_64_BITS)
+ 
+ // For methods.
+ template <typename R, typename Receiver, typename... Args>
+ struct FunctorTraits<R (Receiver::*)(Args...)> {
+   using RunType = R(Receiver*, Args...);
+   static constexpr bool is_method = true;
+   static constexpr bool is_nullable = true;
+ 
+diff --git a/security/sandbox/chromium/base/time/time_win.cc b/security/sandbox/chromium/base/time/time_win.cc
+--- a/security/sandbox/chromium/base/time/time_win.cc
++++ b/security/sandbox/chromium/base/time/time_win.cc
+@@ -643,16 +643,22 @@ bool ThreadTicks::IsSupportedWin() {
+ }
+ 
+ // static
+ void ThreadTicks::WaitUntilInitializedWin() {
+   while (TSCTicksPerSecond() == 0)
+     ::Sleep(10);
+ }
+ 
++#if defined(_M_ARM64)
++#define ReadCycleCounter() _ReadStatusReg(ARM64_PMCCNTR_EL0)
++#else
++#define ReadCycleCounter() __rdtsc()
++#endif
++
+ double ThreadTicks::TSCTicksPerSecond() {
+   DCHECK(IsSupported());
+ 
+   // The value returned by QueryPerformanceFrequency() cannot be used as the TSC
+   // frequency, because there is no guarantee that the TSC frequency is equal to
+   // the performance counter frequency.
+ 
+   // The TSC frequency is cached in a static variable because it takes some time
+@@ -663,22 +669,22 @@ double ThreadTicks::TSCTicksPerSecond() 
+ 
+   // Increase the thread priority to reduces the chances of having a context
+   // switch during a reading of the TSC and the performance counter.
+   int previous_priority = ::GetThreadPriority(::GetCurrentThread());
+   ::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+ 
+   // The first time that this function is called, make an initial reading of the
+   // TSC and the performance counter.
+-  static const uint64_t tsc_initial = __rdtsc();
++  static const uint64_t tsc_initial = ReadCycleCounter();
+   static const uint64_t perf_counter_initial = QPCNowRaw();
+ 
+   // Make a another reading of the TSC and the performance counter every time
+   // that this function is called.
+-  uint64_t tsc_now = __rdtsc();
++  uint64_t tsc_now = ReadCycleCounter();
+   uint64_t perf_counter_now = QPCNowRaw();
+ 
+   // Reset the thread priority.
+   ::SetThreadPriority(::GetCurrentThread(), previous_priority);
+ 
+   // Make sure that at least 50 ms elapsed between the 2 readings. The first
+   // time that this function is called, we don't expect this to be the case.
+   // Note: The longer the elapsed time between the 2 readings is, the more
+@@ -702,16 +708,18 @@ double ThreadTicks::TSCTicksPerSecond() 
+   // Compute the frequency of the TSC.
+   DCHECK_GE(tsc_now, tsc_initial);
+   uint64_t tsc_ticks = tsc_now - tsc_initial;
+   tsc_ticks_per_second = tsc_ticks / elapsed_time_seconds;
+ 
+   return tsc_ticks_per_second;
+ }
+ 
++#undef ReadCycleCounter
++
+ // static
+ TimeTicks TimeTicks::FromQPCValue(LONGLONG qpc_value) {
+   return TimeTicks() + QPCValueToTimeDelta(qpc_value);
+ }
+ 
+ // TimeDelta ------------------------------------------------------------------
+ 
+ // static
+diff --git a/security/sandbox/chromium/build/build_config.h b/security/sandbox/chromium/build/build_config.h
+--- a/security/sandbox/chromium/build/build_config.h
++++ b/security/sandbox/chromium/build/build_config.h
+@@ -137,17 +137,17 @@
+ #define ARCH_CPU_PPC64 1
+ #define ARCH_CPU_64_BITS 1
+ #define ARCH_CPU_LITTLE_ENDIAN 1
+ #elif defined(__ARMEL__)
+ #define ARCH_CPU_ARM_FAMILY 1
+ #define ARCH_CPU_ARMEL 1
+ #define ARCH_CPU_32_BITS 1
+ #define ARCH_CPU_LITTLE_ENDIAN 1
+-#elif defined(__aarch64__)
++#elif defined(__aarch64__) || defined(_M_ARM64)
+ #define ARCH_CPU_ARM_FAMILY 1
+ #define ARCH_CPU_ARM64 1
+ #define ARCH_CPU_64_BITS 1
+ #define ARCH_CPU_LITTLE_ENDIAN 1
+ #elif defined(__pnacl__)
+ #define ARCH_CPU_32_BITS 1
+ #define ARCH_CPU_LITTLE_ENDIAN 1
+ #elif defined(__MIPSEL__)
+diff --git a/security/sandbox/chromium/sandbox/win/src/resolver_64.cc b/security/sandbox/chromium/sandbox/win/src/resolver_64.cc
+--- a/security/sandbox/chromium/sandbox/win/src/resolver_64.cc
++++ b/security/sandbox/chromium/sandbox/win/src/resolver_64.cc
+@@ -9,16 +9,18 @@
+ // For placement new. This file must not depend on the CRT at runtime, but
+ // placement operator new is inline.
+ #include <new>
+ 
+ #include "sandbox/win/src/sandbox_nt_util.h"
+ 
+ namespace {
+ 
++#if defined(_M_X64)
++
+ const USHORT kMovRax = 0xB848;
+ const USHORT kJmpRax = 0xe0ff;
+ 
+ #pragma pack(push, 1)
+ struct InternalThunk {
+   // This struct contains roughly the following code:
+   // 01 48b8f0debc9a78563412  mov   rax,123456789ABCDEF0h
+   // ff e0                    jmp   rax
+@@ -31,16 +33,42 @@ struct InternalThunk {
+     interceptor_function = 0;
+   };
+   USHORT mov_rax;       // = 48 B8
+   ULONG_PTR interceptor_function;
+   USHORT jmp_rax;  // = ff e0
+ };
+ #pragma pack(pop)
+ 
++#elif defined(_M_ARM64)
++
++const ULONG kLdrX16Pc4 = 0x58000050;
++const ULONG kBrX16 = 0xD61F0200;
++
++#pragma pack(push, 4)
++struct InternalThunk {
++  // This struct contains roughly the following code:
++  // 00 58000050 ldr x16, pc+4
++  // 04 D61F0200 br x16
++  // 08 123456789ABCDEF0H
++
++  InternalThunk() {
++    ldr_x16_pc4 = kLdrX16Pc4;
++    br_x16 = kBrX16;
++    interceptor_function = 0;
++  };
++  ULONG ldr_x16_pc4;
++  ULONG br_x16;
++  ULONG_PTR interceptor_function;
++};
++#pragma pack(pop)
++#else
++#error "Unsupported Windows 64-bit Arch"
++#endif
++
+ } // namespace.
+ 
+ namespace sandbox {
+ 
+ size_t ResolverThunk::GetInternalThunkSize() const {
+   return sizeof(InternalThunk);
+ }
+ 
+diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_nt_util.h b/security/sandbox/chromium/sandbox/win/src/sandbox_nt_util.h
+--- a/security/sandbox/chromium/sandbox/win/src/sandbox_nt_util.h
++++ b/security/sandbox/chromium/sandbox/win/src/sandbox_nt_util.h
+@@ -50,17 +50,17 @@ void __cdecl operator delete(void* memor
+ #endif
+ 
+ #define CHECK_NT(condition) { (condition) ? (void)0 : __debugbreak(); }
+ 
+ #define NOTREACHED_NT() DCHECK_NT(false)
+ 
+ namespace sandbox {
+ 
+-#if defined(_M_X64)
++#if defined(_M_X64) || defined(_M_ARM64)
+ #pragma intrinsic(_InterlockedCompareExchange)
+ #pragma intrinsic(_InterlockedCompareExchangePointer)
+ 
+ #elif defined(_M_IX86)
+ extern "C" long _InterlockedCompareExchange(long volatile* destination,
+                                             long exchange, long comperand);
+ 
+ #pragma intrinsic(_InterlockedCompareExchange)
+diff --git a/security/sandbox/chromium/sandbox/win/src/service_resolver_64.cc b/security/sandbox/chromium/sandbox/win/src/service_resolver_64.cc
+--- a/security/sandbox/chromium/sandbox/win/src/service_resolver_64.cc
++++ b/security/sandbox/chromium/sandbox/win/src/service_resolver_64.cc
+@@ -7,16 +7,17 @@
+ #include <stddef.h>
+ 
+ #include <memory>
+ 
+ #include "sandbox/win/src/sandbox_nt_util.h"
+ #include "sandbox/win/src/win_utils.h"
+ 
+ namespace {
++#if defined(_M_X64)
+ #pragma pack(push, 1)
+ 
+ const ULONG kMmovR10EcxMovEax = 0xB8D18B4C;
+ const USHORT kSyscall = 0x050F;
+ const BYTE kRetNp = 0xC3;
+ const ULONG64 kMov1 = 0x54894808244C8948;
+ const ULONG64 kMov2 = 0x4C182444894C1024;
+ const ULONG kMov3 = 0x20244C89;
+@@ -125,16 +126,54 @@ bool IsServiceWithInt2E(const void* sour
+       reinterpret_cast<const ServiceEntryWithInt2E*>(source);
+ 
+   return (kMmovR10EcxMovEax == service->mov_r10_rcx_mov_eax &&
+           kTestByte == service->test_byte && kPtr == service->ptr &&
+           kJne == service->jne_over_syscall && kSyscall == service->syscall &&
+           kRet == service->ret && kRet == service->ret2);
+ }
+ 
++bool IsAnyService(const void* source) {
++  return IsService(source) || IsServiceW8(source) || IsServiceWithInt2E(source);
++}
++
++#elif defined(_M_ARM64)
++#pragma pack(push, 4)
++
++const ULONG kSvc = 0xD4000001;
++const ULONG kRetNp = 0xD65F03C0;
++const ULONG kServiceIdMask = 0x001FFFE0;
++
++struct ServiceEntry {
++  ULONG svc;
++  ULONG ret;
++  ULONG64 unused;
++};
++
++struct ServiceFullThunk {
++  ServiceEntry original;
++};
++
++#pragma pack(pop)
++
++bool IsService(const void* source) {
++  const ServiceEntry* service = reinterpret_cast<const ServiceEntry*>(source);
++
++  return (kSvc == (service->svc & ~kServiceIdMask) && kRetNp == service->ret &&
++          0 == service->unused);
++}
++
++bool IsAnyService(const void* source) {
++  return IsService(source);
++}
++
++#else
++#error "Unsupported Windows 64-bit Arch"
++#endif
++
+ };  // namespace
+ 
+ namespace sandbox {
+ 
+ NTSTATUS ServiceResolverThunk::Setup(const void* target_module,
+                                      const void* interceptor_module,
+                                      const char* target_name,
+                                      const char* interceptor_name,
+@@ -197,18 +236,17 @@ bool ServiceResolverThunk::IsFunctionASe
+   SIZE_T read;
+   if (!::ReadProcessMemory(process_, target_, &function_code,
+                            sizeof(function_code), &read))
+     return false;
+ 
+   if (sizeof(function_code) != read)
+     return false;
+ 
+-  if (!IsService(&function_code) && !IsServiceW8(&function_code) &&
+-      !IsServiceWithInt2E(&function_code))
++  if (!IsAnyService(&function_code))
+     return false;
+ 
+   // Save the verified code.
+   memcpy(local_thunk, &function_code, sizeof(function_code));
+ 
+   return true;
+ }
+ 

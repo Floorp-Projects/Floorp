@@ -246,7 +246,8 @@ static void AssertExpectedSP(const MacroAssembler& masm) {
 template <class Operand>
 static void WasmPush(MacroAssembler& masm, const Operand& op) {
 #ifdef JS_CODEGEN_ARM64
-  // Allocate a pad word so that SP can remain properly aligned.
+  // Allocate a pad word so that SP can remain properly aligned.  |op| will be
+  // written at the lower-addressed of the two words pushed here.
   masm.reserveStack(WasmPushSize);
   masm.storePtr(op, Address(masm.getStackPointer(), 0));
 #else
@@ -269,16 +270,6 @@ static void MoveSPForJitABI(MacroAssembler& masm) {
   masm.moveStackPtrTo(PseudoStackPointer);
 #endif
 }
-
-#ifdef ENABLE_WASM_GC
-static void SuppressGC(MacroAssembler& masm, int32_t increment,
-                       Register scratch) {
-  masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, cx)), scratch);
-  masm.add32(Imm32(increment),
-             Address(scratch, offsetof(JSContext, suppressGC) +
-                                  js::ThreadData<int32_t>::offsetOfValue()));
-}
-#endif
 
 static void CallFuncExport(MacroAssembler& masm, const FuncExport& fe,
                            const Maybe<ImmPtr>& funcPtr) {
@@ -357,9 +348,6 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
 
 #ifdef ENABLE_WASM_GC
   WasmPush(masm, WasmTlsReg);
-  if (gcTypesConfigured == HasGcTypes::True) {
-    SuppressGC(masm, 1, scratch);
-  }
 #endif
 
   // Save 'argv' on the stack so that we can recover it after the call.
@@ -417,9 +405,6 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
 
 #ifdef ENABLE_WASM_GC
   WasmPop(masm, WasmTlsReg);
-  if (gcTypesConfigured == HasGcTypes::True) {
-    SuppressGC(masm, -1, WasmTlsReg);
-  }
 #endif
 
   // Store the return value in argv[0].
@@ -538,16 +523,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
   // left):
   // <-- retAddr | descriptor | callee | argc | this | arg1..N
 
-#ifdef ENABLE_WASM_GC
-  // Save WasmTlsReg in the uppermost part of the reserved area, because we
-  // need it directly after the call.
-  unsigned savedTlsSize = AlignBytes(sizeof(void*), WasmStackAlignment);
-#else
-  unsigned savedTlsSize = 0;
-#endif
-
-  unsigned normalBytesNeeded =
-      StackArgBytes(fe.funcType().args()) + savedTlsSize;
+  unsigned normalBytesNeeded = StackArgBytes(fe.funcType().args());
 
   MIRTypeVector coerceArgTypes;
   MOZ_ALWAYS_TRUE(coerceArgTypes.append(MIRType::Int32));
@@ -561,10 +537,6 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
   // instruction.
   unsigned frameSize = StackDecrementForCall(WasmStackAlignment,
                                              masm.framePushed(), bytesNeeded);
-
-#ifdef ENABLE_WASM_GC
-  unsigned savedTlsOffset = frameSize - sizeof(void*);
-#endif
 
   // Reserve stack space for wasm ABI arguments, set up like this:
   // <-- ABI args | padding
@@ -741,25 +713,11 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
   // Setup wasm register state.
   masm.loadWasmPinnedRegsFromTls();
 
-#ifdef ENABLE_WASM_GC
-  if (gcTypesConfigured == HasGcTypes::True) {
-    masm.storePtr(WasmTlsReg, Address(sp, savedTlsOffset));
-    SuppressGC(masm, 1, ScratchIonEntry);
-  }
-#endif
-
   // Call into the real function. Note that, due to the throw stub, fp, tls
   // and pinned registers may be clobbered.
   masm.assertStackAlignment(WasmStackAlignment);
   CallFuncExport(masm, fe, funcPtr);
   masm.assertStackAlignment(WasmStackAlignment);
-
-#ifdef ENABLE_WASM_GC
-  if (gcTypesConfigured == HasGcTypes::True) {
-    masm.loadPtr(Address(sp, savedTlsOffset), WasmTlsReg);
-    SuppressGC(masm, -1, WasmTlsReg);
-  }
-#endif
 
   // If fp is equal to the FailFP magic value (set by the throw stub), then
   // report the exception to the JIT caller by jumping into the exception
@@ -867,8 +825,8 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
 void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
                                      const Instance& inst,
                                      const JitCallStackArgVector& stackArgs,
-                                     bool profilingEnabled, bool wasmGcEnabled,
-                                     Register scratch, uint32_t* callOffset) {
+                                     bool profilingEnabled, Register scratch,
+                                     uint32_t* callOffset) {
   MOZ_ASSERT(!IsCompilingWasm());
 
   size_t framePushedAtStart = masm.framePushed();
@@ -969,12 +927,6 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
   masm.movePtr(ImmPtr(inst.tlsData()), WasmTlsReg);
   masm.loadWasmPinnedRegsFromTls();
 
-#ifdef ENABLE_WASM_GC
-  if (wasmGcEnabled) {
-    SuppressGC(masm, 1, ABINonArgReg0);
-  }
-#endif
-
   // Actual call.
   const CodeTier& codeTier = inst.code().codeTier(inst.code().bestTier());
   const MetadataTier& metadata = codeTier.metadata();
@@ -984,12 +936,6 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
   masm.assertStackAlignment(WasmStackAlignment);
   masm.callJit(ImmPtr(callee));
   masm.assertStackAlignment(WasmStackAlignment);
-
-#ifdef ENABLE_WASM_GC
-  if (wasmGcEnabled) {
-    SuppressGC(masm, -1, WasmTlsReg);
-  }
-#endif
 
   masm.branchPtr(Assembler::Equal, FramePointer, Imm32(wasm::FailFP),
                  masm.exceptionLabel());
@@ -1778,6 +1724,25 @@ static_assert(!SupportsSimd,
               "high lanes of SIMD registers need to be saved too");
 #endif
 
+// Generate a MachineState which describes the locations of the GPRs as saved
+// by GenerateTrapExit.  FP registers are ignored.  Note that the values
+// stored in the MachineState are offsets in words downwards from the top of
+// the save area.  That is, a higher value implies a lower address.
+void wasm::GenerateTrapExitMachineState(MachineState* machine,
+                                        size_t* numWords) {
+  // This is the number of words pushed by the initial WasmPush().
+  *numWords = WasmPushSize / sizeof(void*);
+  MOZ_ASSERT(*numWords == TrapExitDummyValueOffsetFromTop + 1);
+
+  // And these correspond to the PushRegsInMask() that immediately follows.
+  for (GeneralRegisterBackwardIterator iter(RegsToPreserve.gprs()); iter.more();
+       ++iter) {
+    machine->setRegisterLocation(*iter,
+                                 reinterpret_cast<uintptr_t*>(*numWords));
+    (*numWords)++;
+  }
+}
+
 // Generate a stub which calls WasmReportTrap() and can be executed by having
 // the signal handler redirect PC from any trapping instruction.
 static bool GenerateTrapExit(MacroAssembler& masm, Label* throwLabel,
@@ -1794,7 +1759,7 @@ static bool GenerateTrapExit(MacroAssembler& masm, Label* throwLabel,
   // that registers are not clobbered, we need to preserve all registers in
   // the trap exit. One simplifying assumption is that flags may be clobbered.
   // Push a dummy word to use as return address below.
-  WasmPush(masm, ImmWord(0));
+  WasmPush(masm, ImmWord(TrapExitDummyValue));
   unsigned framePushedBeforePreserve = masm.framePushed();
   masm.PushRegsInMask(RegsToPreserve);
   unsigned offsetOfReturnWord = masm.framePushed() - framePushedBeforePreserve;

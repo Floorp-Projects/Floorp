@@ -141,7 +141,6 @@ static const ClassOps MapIteratorObjectClassOps = {nullptr, /* addProperty */
                                                    MapIteratorObject::finalize};
 
 static const ClassExtension MapIteratorObjectClassExtension = {
-    nullptr, /* weakmapKeyDelegateOp */
     MapIteratorObject::objectMoved};
 
 const Class MapIteratorObject::class_ = {
@@ -912,7 +911,6 @@ static const ClassOps SetIteratorObjectClassOps = {nullptr, /* addProperty */
                                                    SetIteratorObject::finalize};
 
 static const ClassExtension SetIteratorObjectClassExtension = {
-    nullptr, /* weakmapKeyDelegateOp */
     SetIteratorObject::objectMoved};
 
 const Class SetIteratorObject::class_ = {

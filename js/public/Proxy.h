@@ -373,8 +373,6 @@ class JS_FRIEND_API BaseProxyHandler {
   virtual bool getElements(JSContext* cx, HandleObject proxy, uint32_t begin,
                            uint32_t end, ElementAdder* adder) const;
 
-  /* See comment for weakmapKeyDelegateOp in js/Class.h. */
-  virtual JSObject* weakmapKeyDelegate(JSObject* proxy) const;
   virtual bool isScripted() const { return false; }
 };
 
@@ -524,14 +522,21 @@ inline void SetProxyHandler(JSObject* obj, const BaseProxyHandler* handler) {
 }
 
 inline void SetProxyReservedSlot(JSObject* obj, size_t n, const Value& extra) {
-  MOZ_ASSERT_IF(gc::detail::ObjectIsMarkedBlack(obj),
-                JS::ValueIsNotGray(extra));
+#ifdef DEBUG
+  if (gc::detail::ObjectIsMarkedBlack(obj)) {
+    JS::AssertValueIsNotGray(extra);
+  }
+#endif
+
   detail::SetProxyReservedSlotUnchecked(obj, n, extra);
 }
 
 inline void SetProxyPrivate(JSObject* obj, const Value& value) {
-  MOZ_ASSERT_IF(gc::detail::ObjectIsMarkedBlack(obj),
-                JS::ValueIsNotGray(value));
+#ifdef DEBUG
+  if (gc::detail::ObjectIsMarkedBlack(obj)) {
+    JS::AssertValueIsNotGray(value);
+  }
+#endif
 
   Value* vp = &detail::GetProxyDataLayout(obj)->values()->privateSlot;
 

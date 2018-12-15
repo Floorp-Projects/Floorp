@@ -929,6 +929,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       sweepGroups(nullptr),
       currentSweepGroup(nullptr),
       sweepZone(nullptr),
+      hasMarkedGrayRoots(false),
       abortSweepAfterCurrentGroup(false),
       startedCompacting(false),
       relocatedArenasToRelease(nullptr),
@@ -1020,7 +1021,9 @@ const char gc::ZealModeHelpText[] =
     "yields\n"
     "        before sweeping shape trees\n"
     "    24: (CheckWeakMapMarking) Check weak map marking invariants after "
-    "every GC\n";
+    "every GC\n"
+    "    25: (YieldWhileGrayMarking) Incremental GC in two slices that yields\n"
+    "        during gray marking\n";
 
 // The set of zeal modes that control incremental slices. These modes are
 // mutually exclusive.
@@ -1037,10 +1040,6 @@ static const mozilla::EnumSet<ZealMode> IncrementalSliceZealModes = {
 
 void GCRuntime::setZeal(uint8_t zeal, uint32_t frequency) {
   MOZ_ASSERT(zeal <= unsigned(ZealMode::Limit));
-
-  if (temporaryAbortIfWasmGc(rt->mainContextFromOwnThread())) {
-    return;
-  }
 
   if (verifyPreData) {
     VerifyBarriers(rt, PreBarrierVerifier);
@@ -1083,10 +1082,6 @@ void GCRuntime::setZeal(uint8_t zeal, uint32_t frequency) {
 void GCRuntime::unsetZeal(uint8_t zeal) {
   MOZ_ASSERT(zeal <= unsigned(ZealMode::Limit));
   ZealMode zealMode = ZealMode(zeal);
-
-  if (temporaryAbortIfWasmGc(rt->mainContextFromOwnThread())) {
-    return;
-  }
 
   if (!hasZealMode(zealMode)) {
     return;
@@ -4135,7 +4130,7 @@ bool GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason,
     if (ShouldCollectZone(zone, reason)) {
       MOZ_ASSERT(zone->canCollect());
       any = true;
-      zone->changeGCState(Zone::NoGC, Zone::Mark);
+      zone->changeGCState(Zone::NoGC, Zone::MarkBlackOnly);
     } else {
       *isFullOut = false;
     }
@@ -4184,7 +4179,7 @@ bool GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason,
 }
 
 static void DiscardJITCodeForGC(JSRuntime* rt) {
-  js::CancelOffThreadIonCompile(rt, JS::Zone::Mark);
+  js::CancelOffThreadIonCompile(rt, JS::Zone::MarkBlackOnly);
   for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
     gcstats::AutoPhase ap(rt->gc.stats(),
                           gcstats::PhaseKind::MARK_DISCARD_CODE);
@@ -4263,6 +4258,7 @@ bool GCRuntime::beginMarkPhase(JS::gcreason::Reason reason,
 
   marker.start();
   GCMarker* gcmarker = &marker;
+  gcmarker->clearMarkCount();
 
   {
     gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::PREPARE);
@@ -4460,7 +4456,9 @@ void GCRuntime::markWeakReferencesInCurrentGroup(gcstats::PhaseKind phase) {
 }
 
 template <class ZoneIterT>
-void GCRuntime::markGrayReferences(gcstats::PhaseKind phase) {
+void GCRuntime::markGrayRoots(gcstats::PhaseKind phase) {
+  MOZ_ASSERT(marker.markColor() == MarkColor::Gray);
+
   gcstats::AutoPhase ap(stats(), phase);
   if (hasValidGrayRootsBuffer()) {
     for (ZoneIterT zone(rt); !zone.done(); zone.next()) {
@@ -4472,11 +4470,6 @@ void GCRuntime::markGrayReferences(gcstats::PhaseKind phase) {
       (*op)(&marker, grayRootTracer.data);
     }
   }
-  drainMarkStack();
-}
-
-void GCRuntime::markGrayReferencesInCurrentGroup(gcstats::PhaseKind phase) {
-  markGrayReferences<SweepGroupZonesIter>(phase);
 }
 
 void GCRuntime::markAllWeakReferences(gcstats::PhaseKind phase) {
@@ -4484,7 +4477,8 @@ void GCRuntime::markAllWeakReferences(gcstats::PhaseKind phase) {
 }
 
 void GCRuntime::markAllGrayReferences(gcstats::PhaseKind phase) {
-  markGrayReferences<GCZonesIter>(phase);
+  markGrayRoots<GCZonesIter>(phase);
+  drainMarkStack();
 }
 
 #ifdef JS_GC_ZEAL
@@ -4647,7 +4641,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
 
     /* Update zone state for gray marking. */
     for (GCZonesIter zone(runtime); !zone.done(); zone.next()) {
-      zone->changeGCState(Zone::Mark, Zone::MarkGray);
+      zone->changeGCState(Zone::MarkBlackOnly, Zone::MarkBlackAndGray);
     }
 
     AutoSetMarkColor setColorGray(gc->marker, MarkColor::Gray);
@@ -4657,7 +4651,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
 
     /* Restore zone state. */
     for (GCZonesIter zone(runtime); !zone.done(); zone.next()) {
-      zone->changeGCState(Zone::MarkGray, Zone::Mark);
+      zone->changeGCState(Zone::MarkBlackAndGray, Zone::MarkBlackOnly);
     }
     MOZ_ASSERT(gc->marker.isDrained());
   }
@@ -4819,26 +4813,21 @@ static void DropStringWrappers(JSRuntime* rt) {
  */
 namespace {
 struct AddOutgoingEdgeFunctor {
-  bool needsEdge_;
   ZoneComponentFinder& finder_;
 
-  AddOutgoingEdgeFunctor(bool needsEdge, ZoneComponentFinder& finder)
-      : needsEdge_(needsEdge), finder_(finder) {}
+  explicit AddOutgoingEdgeFunctor(ZoneComponentFinder& finder)
+      : finder_(finder) {}
 
   template <typename T>
   void operator()(T tp) {
-    TenuredCell& other = (*tp)->asTenured();
-
     /*
      * Add edge to wrapped object compartment if wrapped object is not
      * marked black to indicate that wrapper compartment not be swept
      * after wrapped compartment.
      */
-    if (needsEdge_) {
-      JS::Zone* zone = other.zone();
-      if (zone->isGCMarking()) {
-        finder_.addEdgeTo(zone);
-      }
+    JS::Zone* zone = (*tp)->asTenured().zone();
+    if (zone->isGCMarking()) {
+      finder_.addEdgeTo(zone);
     }
   }
 };
@@ -4849,12 +4838,13 @@ void Compartment::findOutgoingEdges(ZoneComponentFinder& finder) {
        e.popFront()) {
     CrossCompartmentKey& key = e.front().mutableKey();
     MOZ_ASSERT(!key.is<JSString*>());
-    bool needsEdge = true;
-    if (key.is<JSObject*>()) {
-      TenuredCell& other = key.as<JSObject*>()->asTenured();
-      needsEdge = !other.isMarkedBlack();
+    if (key.is<JSObject*>() &&
+        key.as<JSObject*>()->asTenured().isMarkedBlack()) {
+      // CCW target is already marked, so we don't need to watch out for
+      // later marking of the CCW.
+      continue;
     }
-    key.applyToWrapped(AddOutgoingEdgeFunctor(needsEdge, finder));
+    key.applyToWrapped(AddOutgoingEdgeFunctor(finder));
   }
 }
 
@@ -4929,7 +4919,7 @@ void GCRuntime::groupZonesForSweeping(JS::gcreason::Reason reason) {
   }
   sweepGroups = finder.getResultsList();
   currentSweepGroup = sweepGroups;
-  sweepGroupIndex = 0;
+  sweepGroupIndex = 1;
 
   for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
     zone->gcSweepGroupEdges().clear();
@@ -4965,7 +4955,7 @@ void GCRuntime::getNextSweepGroup() {
   }
 
   for (Zone* zone = currentSweepGroup; zone; zone = zone->nextNodeInGroup()) {
-    MOZ_ASSERT(zone->isGCMarking());
+    MOZ_ASSERT(zone->isGCMarkingBlackOnly());
     MOZ_ASSERT(!zone->isQueuedForBackgroundSweep());
   }
 
@@ -4973,7 +4963,7 @@ void GCRuntime::getNextSweepGroup() {
     for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
       MOZ_ASSERT(!zone->gcNextGraphComponent);
       zone->setNeedsIncrementalBarrier(false);
-      zone->changeGCState(Zone::Mark, Zone::NoGC);
+      zone->changeGCState(Zone::MarkBlackOnly, Zone::NoGC);
       zone->arenas.unmarkPreMarkedFreeCells();
       zone->gcGrayRoots().clearAndFree();
     }
@@ -4985,6 +4975,8 @@ void GCRuntime::getNextSweepGroup() {
     abortSweepAfterCurrentGroup = false;
     currentSweepGroup = nullptr;
   }
+
+  hasMarkedGrayRoots = false;
 }
 
 /*
@@ -5108,8 +5100,9 @@ void GCRuntime::markIncomingCrossCompartmentPointers(MarkColor color) {
   bool unlinkList = color == MarkColor::Gray;
 
   for (SweepGroupCompartmentsIter c(rt); !c.done(); c.next()) {
-    MOZ_ASSERT_IF(color == MarkColor::Gray, c->zone()->isGCMarkingGray());
-    MOZ_ASSERT_IF(color == MarkColor::Black, c->zone()->isGCMarkingBlack());
+    MOZ_ASSERT(c->zone()->isGCMarking());
+    MOZ_ASSERT_IF(color == MarkColor::Gray,
+                  c->zone()->isGCMarkingBlackAndGray());
     MOZ_ASSERT_IF(c->gcIncomingGrayPointers,
                   IsGrayListObject(c->gcIncomingGrayPointers));
 
@@ -5135,8 +5128,6 @@ void GCRuntime::markIncomingCrossCompartmentPointers(MarkColor color) {
       c->gcIncomingGrayPointers = nullptr;
     }
   }
-
-  drainMarkStack();
 }
 
 static bool RemoveFromGrayList(JSObject* wrapper) {
@@ -5182,6 +5173,18 @@ static void ResetGrayList(Compartment* comp) {
   }
   comp->gcIncomingGrayPointers = nullptr;
 }
+
+#ifdef DEBUG
+static bool HasIncomingCrossCompartmentPointers(JSRuntime* rt) {
+  for (SweepGroupCompartmentsIter c(rt); !c.done(); c.next()) {
+    if (c->gcIncomingGrayPointers) {
+      return true;
+    }
+  }
+
+  return false;
+}
+#endif
 
 void js::NotifyGCNukeWrapper(JSObject* obj) {
   /*
@@ -5238,22 +5241,30 @@ static inline void MaybeCheckWeakMapMarking(GCRuntime* gc) {
 #endif
 }
 
-IncrementalProgress GCRuntime::endMarkingSweepGroup(FreeOp* fop,
-                                                    SliceBudget& budget) {
+IncrementalProgress GCRuntime::markGrayReferencesInCurrentGroup(
+    FreeOp* fop, SliceBudget& budget) {
+  MOZ_ASSERT(marker.markColor() == MarkColor::Black);
+
+  if (hasMarkedGrayRoots) {
+    return Finished;
+  }
+
+  MOZ_ASSERT(cellsToAssertNotGray.ref().empty());
+
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_MARK);
 
-  // Mark any incoming black pointers from previously swept compartments
-  // whose referents are not marked. This can occur when gray cells become
-  // black by the action of UnmarkGray.
+  // Mark any incoming gray pointers from previously swept compartments that
+  // have subsequently been marked black. This can occur when gray cells
+  // become black by the action of UnmarkGray.
   markIncomingCrossCompartmentPointers(MarkColor::Black);
-  markWeakReferencesInCurrentGroup(gcstats::PhaseKind::SWEEP_MARK_WEAK);
+  drainMarkStack();
 
   // Change state of current group to MarkGray to restrict marking to this
   // group.  Note that there may be pointers to the atoms zone, and
   // these will be marked through, as they are not marked with
   // TraceCrossCompartmentEdge.
   for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
-    zone->changeGCState(Zone::Mark, Zone::MarkGray);
+    zone->changeGCState(Zone::MarkBlackOnly, Zone::MarkBlackAndGray);
   }
 
   AutoSetMarkColor setColorGray(marker, MarkColor::Gray);
@@ -5261,15 +5272,33 @@ IncrementalProgress GCRuntime::endMarkingSweepGroup(FreeOp* fop,
   // Mark incoming gray pointers from previously swept compartments.
   markIncomingCrossCompartmentPointers(MarkColor::Gray);
 
-  // Mark gray roots and mark transitively inside the current compartment
-  // group.
-  markGrayReferencesInCurrentGroup(gcstats::PhaseKind::SWEEP_MARK_GRAY);
+  markGrayRoots<SweepGroupZonesIter>(gcstats::PhaseKind::SWEEP_MARK_GRAY);
+
+  hasMarkedGrayRoots = true;
+
+#ifdef JS_GC_ZEAL
+  if (shouldYieldForZeal(ZealMode::YieldWhileGrayMarking)) {
+    return NotFinished;
+  }
+#endif
+
+  return marker.markUntilBudgetExhausted(budget) ? Finished : NotFinished;
+}
+
+IncrementalProgress GCRuntime::endMarkingSweepGroup(FreeOp* fop,
+                                                    SliceBudget& budget) {
+  MOZ_ASSERT(marker.markColor() == MarkColor::Black);
+  MOZ_ASSERT(!HasIncomingCrossCompartmentPointers(rt));
+
+  gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_MARK);
+
+  markWeakReferencesInCurrentGroup(gcstats::PhaseKind::SWEEP_MARK_WEAK);
+
+  AutoSetMarkColor setColorGray(marker, MarkColor::Gray);
+
+  // Mark transitively inside the current compartment group.
   markWeakReferencesInCurrentGroup(gcstats::PhaseKind::SWEEP_MARK_GRAY_WEAK);
 
-  // Restore marking state.
-  for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
-    zone->changeGCState(Zone::MarkGray, Zone::Mark);
-  }
   MOZ_ASSERT(marker.isDrained());
 
   // We must not yield after this point before we start sweeping the group.
@@ -5574,7 +5603,7 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(FreeOp* fop,
   bool sweepingAtoms = false;
   for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
     /* Set the GC state to sweeping. */
-    zone->changeGCState(Zone::Mark, Zone::Sweep);
+    zone->changeGCState(Zone::MarkBlackAndGray, Zone::Sweep);
 
     /* Purge the ArenaLists before sweeping. */
     zone->arenas.unmarkPreMarkedFreeCells();
@@ -5590,6 +5619,13 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(FreeOp* fop,
   }
 
   validateIncrementalMarking();
+
+#ifdef DEBUG
+  for (auto cell : cellsToAssertNotGray.ref()) {
+    JS::AssertCellIsNotGray(cell);
+  }
+  cellsToAssertNotGray.ref().clearAndFree();
+#endif
 
   {
     AutoPhase ap(stats(), PhaseKind::FINALIZE_START);
@@ -5759,16 +5795,14 @@ void GCRuntime::beginSweepPhase(JS::gcreason::Reason reason,
   sweepOnBackgroundThread = reason != JS::gcreason::DESTROY_RUNTIME &&
                             !gcTracer.traceEnabled() && CanUseExtraThreads();
 
+  hasMarkedGrayRoots = false;
+
   AssertNoWrappersInGrayList(rt);
   DropStringWrappers(rt);
 
   groupZonesForSweeping(reason);
 
   sweepActions->assertFinished();
-
-  // We must not yield after this point until we start sweeping the first sweep
-  // group.
-  safeToYield = false;
 }
 
 bool ArenaLists::foregroundFinalize(FreeOp* fop, AllocKind thingKind,
@@ -6439,6 +6473,7 @@ bool GCRuntime::initSweepActions() {
   sweepActions.ref() = RepeatForSweepGroup(
       rt,
       Sequence(
+          Call(&GCRuntime::markGrayReferencesInCurrentGroup),
           Call(&GCRuntime::endMarkingSweepGroup),
           Call(&GCRuntime::beginSweepingSweepGroup),
           MaybeYield(ZealMode::IncrementalMultipleSlices),
@@ -6669,6 +6704,7 @@ void GCRuntime::finishCollection() {
   }
 
   MOZ_ASSERT(zonesToMaybeCompact.ref().isEmpty());
+  MOZ_ASSERT(cellsToAssertNotGray.ref().empty());
 
   lastGCTime = currentTime;
 }
@@ -6742,7 +6778,7 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
 
       for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
         zone->setNeedsIncrementalBarrier(false);
-        zone->changeGCState(Zone::Mark, Zone::NoGC);
+        zone->changeGCState(Zone::MarkBlackOnly, Zone::NoGC);
         zone->arenas.unmarkPreMarkedFreeCells();
       }
 
@@ -6761,8 +6797,6 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
 
     case State::Sweep: {
       // Finish sweeping the current sweep group, then abort.
-      marker.reset();
-
       for (CompartmentsIter c(rt); !c.done(); c.next()) {
         c->gcState.scheduledForDestruction = false;
       }
@@ -7094,6 +7128,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
   }
 
   MOZ_ASSERT(safeToYield);
+  MOZ_ASSERT(marker.markColor() == MarkColor::Black);
 }
 
 gc::AbortReason gc::IsIncrementalGCUnsafe(JSRuntime* rt) {
@@ -8152,12 +8187,6 @@ void GCRuntime::setDeterministic(bool enabled) {
 }
 #endif
 
-#ifdef ENABLE_WASM_GC
-/* static */ bool GCRuntime::temporaryAbortIfWasmGc(JSContext* cx) {
-  return cx->options().wasmGc() && cx->suppressGC;
-}
-#endif
-
 #ifdef DEBUG
 
 /* Should only be called manually under gdb */
@@ -8898,7 +8927,7 @@ JS_PUBLIC_API bool js::gc::detail::CellIsMarkedGrayIfKnown(const Cell* cell) {
 
 #ifdef DEBUG
 
-JS_PUBLIC_API bool js::gc::detail::CellIsNotGray(const Cell* cell) {
+JS_PUBLIC_API void js::gc::detail::AssertCellIsNotGray(const Cell* cell) {
   // Check that a cell is not marked gray.
   //
   // Since this is a debug-only check, take account of the eventual mark state
@@ -8906,7 +8935,7 @@ JS_PUBLIC_API bool js::gc::detail::CellIsNotGray(const Cell* cell) {
   // GC. For performance reasons we don't do this in CellIsMarkedGrayIfKnown.
 
   if (!CanCheckGrayBits(cell)) {
-    return true;
+    return;
   }
 
   // TODO: I'd like to AssertHeapIsIdle() here, but this ends up getting
@@ -8914,7 +8943,19 @@ JS_PUBLIC_API bool js::gc::detail::CellIsNotGray(const Cell* cell) {
   MOZ_ASSERT(!JS::RuntimeHeapIsCycleCollecting());
 
   auto tc = &cell->asTenured();
-  return !detail::CellIsMarkedGray(tc);
+  if (tc->zone()->isGCMarkingBlackAndGray()) {
+    // We are doing gray marking in the cell's zone. Even if the cell is
+    // currently marked gray it may eventually be marked black. Delay the check
+    // until we finish gray marking.
+    JSRuntime* rt = tc->zone()->runtimeFromMainThread();
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    if (!rt->gc.cellsToAssertNotGray.ref().append(cell)) {
+      oomUnsafe.crash("Can't append to delayed gray checks list");
+    }
+    return;
+  }
+
+  MOZ_ASSERT(!detail::CellIsMarkedGray(tc));
 }
 
 extern JS_PUBLIC_API bool js::gc::detail::ObjectIsMarkedBlack(

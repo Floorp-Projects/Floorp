@@ -490,7 +490,7 @@ class nsRange final : public nsStubMutationObserver,
   // IsInSelection().  It's kept alive via mStartContainer/mEndContainer,
   // because we update it any time those could become disconnected from it.
   nsINode* MOZ_NON_OWNING_REF mRegisteredCommonAncestor;
-  RefPtr<mozilla::dom::Selection> mSelection;
+  mozilla::WeakPtr<mozilla::dom::Selection> mSelection;
 
   // These raw pointers are used to remember a child that is about
   // to be inserted between a CharacterData call and a subsequent
