@@ -161,7 +161,7 @@ nsLookAndFeel::ProcessSelectionBackground(nscolor aColor)
   } else {
     // The color is a shade of grey, find the value that looks equivalent
     // on a white background with the given opacity.
-    value = 255 - (255 - value) * factor;
+    value = mozilla::clamped(255 - (255 - value) * factor, 0, 255);
   }
   NS_HSV2RGB(resultColor, hue, sat, value, alpha);
   return resultColor;
