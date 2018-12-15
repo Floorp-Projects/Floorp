@@ -288,6 +288,59 @@ const MERGE_TESTCASES = [
       country: "US",
     },
   },
+  {
+    description: "Merge an address with punctuation and mIxEd-cAsE",
+    addressInStorage: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue",
+      "tel": "+16509030800",
+    },
+    addressToMerge: {
+      "street-address": "331.e.EVELYN AVENUE",
+      country: "US",
+    },
+    expectedAddress: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue",
+      "tel": "+16509030800",
+      country: "US",
+    },
+  },
+  {
+    description: "Merge an address with accent characters",
+    addressInStorage: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Straße",
+      "tel": "+16509030800",
+    },
+    addressToMerge: {
+      "street-address": "331.e.EVELYN Strasse",
+      country: "US",
+    },
+    expectedAddress: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Straße",
+      "tel": "+16509030800",
+      country: "US",
+    },
+  },
+  {
+    description: "Merge an address with a mIxEd-cAsE name",
+    addressInStorage: {
+      "given-name": "Timothy",
+      "tel": "+16509030800",
+    },
+    addressToMerge: {
+      "given-name": "TIMOTHY",
+      "tel": "+16509030800",
+      country: "US",
+    },
+    expectedAddress: {
+      "given-name": "Timothy",
+      "tel": "+16509030800",
+      country: "US",
+    },
+  },
 ];
 
 ChromeUtils.defineModuleGetter(this, "Preferences",
