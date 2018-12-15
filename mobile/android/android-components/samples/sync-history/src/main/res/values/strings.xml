@@ -6,6 +6,7 @@
     <string name="app_name">Firefox Sync History Demo</string>
     <string name="sign_in">FxA sign in</string>
     <string name="signed_in">Signed in: %1$s</string>
+    <string name="sync_idle">Sync is idle</string>
     <string name="syncing">Syncing&#8230;</string>
     <string name="sync_error">Sync error: %1$s</string>
     <plurals name="visited_url_count">

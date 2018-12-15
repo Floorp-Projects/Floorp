@@ -4,15 +4,31 @@
 
 package mozilla.components.feature.sync
 
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import mozilla.components.concept.storage.SyncError
 import mozilla.components.concept.storage.SyncableStore
 import mozilla.components.service.fxa.FirefoxAccountShaped
 import mozilla.components.support.base.log.logger.Logger
-import kotlin.coroutines.CoroutineContext
+import mozilla.components.support.base.observer.Observable
+import mozilla.components.support.base.observer.ObserverRegistry
+
+/**
+ * An interface for consumers that wish to observer "sync lifecycle" events.
+ */
+interface SyncStatusObserver {
+    /**
+     * Gets called at the start of a sync, before any configured syncable is synchronized.
+     */
+    fun onStarted()
+
+    /**
+     * Gets called at the end of a sync, after every configured syncable has been synchronized.
+     */
+    fun onIdle()
+}
+
+val registry = ObserverRegistry<SyncStatusObserver>()
 
 /**
  * A feature implementation which orchestrates data synchronization of a set of [SyncableStore] which
@@ -24,51 +40,57 @@ import kotlin.coroutines.CoroutineContext
  * (e.g. places and logins depend on native libraries), and we do not want to force a consumer which
  * only cares about syncing logins to have to import a places native library.
  *
- * @param coroutineContext A [CoroutineContext] that will be used to perform synchronization work.
  * @param reifyAuth A conversion method which reifies a generic [FxaAuthInfo] into an object of
  * type [AuthType].
  */
 class FirefoxSyncFeature<AuthType>(
-    private val coroutineContext: CoroutineContext,
+    private val syncableStores: Map<String, SyncableStore<AuthType>>,
     private val reifyAuth: suspend (authInfo: FxaAuthInfo) -> AuthType
-) {
+) : Observable<SyncStatusObserver> by registry {
     private val logger = Logger("feature-sync")
-    private val scope by lazy { CoroutineScope(coroutineContext) }
-
-    private val syncableStores = mutableMapOf<String, SyncableStore<AuthType>>()
 
     /**
-     * Adds a [SyncableStore] instance to a set of those that will be synchronized via [sync].
-     *
-     * @param name Name of the store; used for status reporting as part of [SyncResult].
-     * @param store An instance of a [SyncableStore].
+     * Sync operation exposed by this feature is guarded by a mutex, ensuring that only one Sync
+     * may be running at any given time.
      */
-    fun addSyncable(name: String, store: SyncableStore<AuthType>) = synchronized(syncableStores) {
-        syncableStores[name] = store
+    private var syncMutex = Mutex()
+
+    /**
+     * @return A [Boolean] indicating if any sync operations are currently running.
+     */
+    fun syncRunning(): Boolean {
+        return syncMutex.isLocked
     }
 
     /**
-     * Performs a sync of configured [SyncableStore] history instance.
+     * Performs a sync of configured [SyncableStore] history instance. This method guarantees that
+     * only one sync may be running at any given time.
      *
      * @param account [FirefoxAccountShaped] for which to perform a sync.
-     * @return a deferred [SyncResult] indicating result of synchronization of configured stores.
+     * @return a [SyncResult] indicating result of synchronization of configured stores.
      */
-    fun sync(account: FirefoxAccountShaped): Deferred<SyncResult> = synchronized(syncableStores) {
+    suspend fun sync(account: FirefoxAccountShaped): SyncResult = syncMutex.withLock { withListeners {
+        if (syncableStores.isEmpty()) {
+            return@withListeners mapOf()
+        }
+
         val results = mutableMapOf<String, StoreSyncStatus>()
 
-        if (syncableStores.isEmpty()) {
-            return CompletableDeferred(results)
-        }
-
-        return scope.async {
-            val reifiedAuthInfo = reifyAuth(account.authInfo())
-
+        val reifiedAuthInfo = try {
+            reifyAuth(account.authInfo())
+        } catch (e: AuthException) {
             syncableStores.keys.forEach { storeName ->
-                results[storeName] = syncStore(syncableStores[storeName]!!, storeName, reifiedAuthInfo)
+                results[storeName] = StoreSyncStatus(SyncError(e))
             }
-            results
+            return@withListeners results
         }
-    }
+
+        syncableStores.keys.forEach { storeName ->
+            results[storeName] = syncStore(syncableStores[storeName]!!, storeName, reifiedAuthInfo)
+        }
+
+        return@withListeners results
+    } }
 
     private suspend fun syncStore(
         store: SyncableStore<AuthType>,
@@ -82,5 +104,12 @@ class FirefoxSyncFeature<AuthType>(
                 logger.info("Synchronized $storeName store.")
             }
         })
+    }
+
+    private suspend fun withListeners(block: suspend () -> SyncResult): SyncResult {
+        notifyObservers { onStarted() }
+        val result = block()
+        notifyObservers { onIdle() }
+        return result
     }
 }

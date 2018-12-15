@@ -20,7 +20,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.storage.SyncError
-import mozilla.components.feature.sync.AuthException
 import mozilla.components.feature.sync.FirefoxSyncFeature
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.FirefoxAccount
@@ -45,17 +44,13 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     }
 
     private val featureSync by lazy {
-        val context = Dispatchers.IO + job
-
-        FirefoxSyncFeature(context) { authInfo ->
+        FirefoxSyncFeature(mapOf(Pair(loginsStoreName, loginsStore))) { authInfo ->
             SyncUnlockInfo(
                 fxaAccessToken = authInfo.fxaAccessToken,
                 kid = authInfo.kid,
                 syncKey = authInfo.syncKey,
                 tokenserverURL = authInfo.tokenServerUrl
             )
-        }.also {
-            it.addSyncable(loginsStoreName, loginsStore)
         }
     }
 
@@ -143,16 +138,9 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     }
 
     private suspend fun syncLogins(account: FirefoxAccount) {
-        val syncResult = try {
-            featureSync.sync(account).await()
-        } catch (e: AuthException) {
-            Toast.makeText(
-                    this@MainActivity,
-                    "Logins sync auth error: " + e.localizedMessage,
-                    Toast.LENGTH_SHORT
-            ).show()
-            return
-        }
+        val syncResult = CoroutineScope(Dispatchers.IO + job).async {
+            featureSync.sync(account)
+        }.await()
 
         check(loginsStoreName in syncResult) { "Expected to synchronize a logins store" }
 

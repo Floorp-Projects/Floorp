@@ -61,6 +61,14 @@ permalink: /changelog/
 * **sample-browser**
   * Added in-memory browsing history as one of the AwesomeBar data providers.
 
+* **feature-sync**
+  * Simplified error handling. Errors are wrapped in a SyncResult, exceptions are no longer thrown.
+  * `FirefoxSyncFeature`'s constructor now takes a map of `Syncable` instances. That is, the internal list of `Syncables` is no longer mutable.
+  * `sync` is now a `suspend` function. Callers are expected to manage scoping themselves.
+  * Ability to observe "sync is running" and "sync is idle" events vs `SyncStatusObserver` interface.
+  * Ability to query for current sync state (running or idle).
+  * See included `sample-sync-history` application for example usage of these observers.
+
 # 0.34.2
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.34.1...v0.34.2)

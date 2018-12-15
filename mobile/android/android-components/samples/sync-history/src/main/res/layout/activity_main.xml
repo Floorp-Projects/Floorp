@@ -48,10 +48,18 @@
         android:text="" />
 
     <TextView
-        android:id="@+id/historySyncResult"
+        android:id="@+id/historySyncStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/fxaStatusView"
+        android:layout_gravity="center"
+        android:text="" />
+
+    <TextView
+        android:id="@+id/historySyncResult"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/historySyncStatus"
         android:layout_gravity="center"
         android:text="" />
 
