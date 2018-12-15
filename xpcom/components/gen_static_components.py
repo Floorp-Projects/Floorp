@@ -11,6 +11,8 @@ from perfecthash import PerfectHash
 import buildconfig
 
 
+NO_CONTRACT_ID = 0xffffffff
+
 PHF_SIZE = 512
 
 ENDIAN = '<' if buildconfig.substs['TARGET_ENDIANNESS'] == 'little' else '>'
@@ -219,6 +221,7 @@ class ModuleEntry(object):
         self.external = data.get('external', not (self.headers or
                                                   self.legacy_constructor))
         self.singleton = data.get('singleton', False)
+        self.overridable = data.get('overridable', False)
 
         if 'name' in data:
             self.anonymous = False
@@ -248,6 +251,10 @@ class ModuleEntry(object):
             error("The 'constructor' and 'legacy_constructor' properties "
                   "are mutually exclusive")
 
+        if self.overridable and not self.contract_ids:
+            error("Overridable components must specify at least one contract "
+                  "ID")
+
     @property
     def contract_id(self):
         return self.contract_ids[0]
@@ -255,13 +262,19 @@ class ModuleEntry(object):
     # Generates the C++ code for a StaticModule struct initializer
     # representing this component.
     def to_cxx(self):
+        contract_id = (strings.entry_to_cxx(self.contract_id)
+                       if self.overridable
+                       else '{ 0x%x }' % NO_CONTRACT_ID)
+
         return """
         /* {name} */ {{
           /* {{{cid_string}}} */
           {cid},
+          {contract_id},
           {processes},
         }}""".format(name=self.name, cid=self.cid.to_cxx(),
                      cid_string=str(self.cid),
+                     contract_id=contract_id,
                      processes=lower_processes(self.processes))
 
     # Generates the C++ code necessary to construct an instance of this
@@ -319,6 +332,42 @@ class ModuleEntry(object):
                 res += '      MOZ_TRY(inst->%s());\n' % self.init_method
 
         res += '      return inst->QueryInterface(aIID, aResult);\n'
+
+        return res
+
+    # Generates the C++ code for the `mozilla::components::<name>` entry
+    # corresponding to this component. This may not be called for modules
+    # without an explicit `name` (in which cases, `self.anonymous` will be
+    # true).
+    def lower_getters(self):
+        assert not self.anonymous
+
+        substs = {
+            'name': self.name,
+            'id': '::mozilla::xpcom::ModuleID::%s' % self.name,
+        }
+
+        res = """
+namespace %(name)s {
+static inline const nsID& CID() {
+  return ::mozilla::xpcom::Components::GetCID(%(id)s);
+}
+
+static inline ::mozilla::xpcom::GetServiceHelper Service(nsresult* aRv = nullptr) {
+  return {%(id)s, aRv};
+}
+""" % substs
+
+        if not self.singleton:
+            res += """
+static inline ::mozilla::xpcom::CreateInstanceHelper Create(nsresult* aRv = nullptr) {
+  return {%(id)s, aRv};
+}
+""" % substs
+
+        res += """\
+}  // namespace %(name)s
+""" % substs
 
         return res
 
@@ -442,6 +491,17 @@ def gen_constructors(entries):
     return ''.join(constructors)
 
 
+# Generates the getter code for each named component entry in the
+# `mozilla::components::` namespace.
+def gen_getters(entries):
+    entries = list(entries)
+    entries.sort(key=lambda e: e.name)
+
+    return ''.join(entry.lower_getters()
+                   for entry in entries
+                   if not entry.anonymous)
+
+
 def gen_includes(substs, all_headers):
     headers = set()
     absolute_headers = set()
@@ -534,6 +594,8 @@ def gen_substs(manifests):
     substs['decls'] = gen_decls(types)
 
     substs['constructors'] = gen_constructors(cid_phf.entries)
+
+    substs['component_getters'] = gen_getters(cid_phf.entries)
 
     substs['module_cid_table'] = cid_phf.cxx_codegen(
         name='ModuleByCID',
@@ -666,7 +728,51 @@ enum class ModuleID : uint16_t {
 %(module_ids)s
 };
 
+class MOZ_STACK_CLASS StaticModuleHelper : public nsCOMPtr_helper {
+ public:
+  StaticModuleHelper(ModuleID aId, nsresult* aErrorPtr)
+      : mId(aId), mErrorPtr(aErrorPtr) {}
+
+ protected:
+  nsresult SetResult(nsresult aRv) const {
+    if (mErrorPtr) {
+      *mErrorPtr = aRv;
+    }
+    return aRv;
+  }
+
+  ModuleID mId;
+  nsresult* mErrorPtr;
+};
+
+class MOZ_STACK_CLASS GetServiceHelper final : public StaticModuleHelper {
+ public:
+  using StaticModuleHelper::StaticModuleHelper;
+
+  nsresult NS_FASTCALL operator()(const nsIID& aIID,
+                                  void** aResult) const override;
+};
+
+class MOZ_STACK_CLASS CreateInstanceHelper final : public StaticModuleHelper {
+ public:
+  using StaticModuleHelper::StaticModuleHelper;
+
+  nsresult NS_FASTCALL operator()(const nsIID& aIID,
+                                  void** aResult) const override;
+};
+
+class Components final {
+ public:
+  static const nsID& GetCID(ModuleID aID);
+};
+
 }  // namespace xpcom
+
+namespace components {
+%(component_getters)s
+}  // namespace components
+
+}  // namespace mozilla
 
 #endif
 """ % substs)
