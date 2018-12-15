@@ -45,13 +45,17 @@ async function fetchAllRecordIds() {
   return recordIds;
 }
 
-async function cleanup(engine, server) {
+async function cleanupEngine(engine) {
+  await engine._tracker.stop();
   await engine._store.wipe();
   await engine.resetClient();
   Svc.Prefs.resetBranch("");
   Service.recordManager.clearCache();
+}
+
+async function cleanup(engine, server) {
   await promiseStopServer(server);
-  await engine._tracker.stop();
+  await cleanupEngine(engine);
 }
 
 add_task(async function setup() {
@@ -569,6 +573,7 @@ add_task(async function test_mismatched_types() {
       /no item found for the given GUID/, "Should not apply Livemark");
   } finally {
     await cleanup(engine, server);
+    await engine.finalize();
   }
 });
 
@@ -637,8 +642,8 @@ add_task(async function test_bookmark_guidMap_fail() {
   });
 
   PlacesUtils.promiseBookmarksTree = pbt;
-  await PlacesSyncUtils.bookmarks.reset();
-  await promiseStopServer(server);
+  await cleanup(engine, server);
+  await engine.finalize();
 });
 
 add_task(async function test_bookmark_tag_but_no_uri() {
@@ -685,6 +690,9 @@ add_task(async function test_bookmark_tag_but_no_uri() {
   await store.create(record);
   record.tags = ["bar"];
   await store.update(record);
+
+  await cleanupEngine(engine);
+  await engine.finalize();
 });
 
 add_bookmark_test(async function test_misreconciled_root(engine) {
@@ -939,6 +947,7 @@ add_task(async function test_buffer_hasDupe() {
     await sync_engine_and_validate_telem(engine, false);
   } finally {
     await cleanup(engine, server);
+    await engine.finalize();
   }
 });
 
@@ -996,6 +1005,7 @@ add_task(async function test_sync_imap_URLs() {
       "Local bookmark B with IMAP URL should exist remotely");
   } finally {
     await cleanup(engine, server);
+    await engine.finalize();
   }
 });
 
@@ -1090,6 +1100,7 @@ add_task(async function test_resume_buffer() {
 
   } finally {
     await cleanup(engine, server);
+    await engine.finalize();
   }
 });
 
@@ -1130,7 +1141,8 @@ add_task(async function test_legacy_migrate_sync_metadata() {
   strictEqual(Svc.Prefs.get(`${legacyEngine.name}.lastSync`), "0",
     "Changing legacy engine sync ID should clear last sync pref");
 
-  await legacyEngine.wipeClient();
+  await cleanupEngine(legacyEngine);
+  await legacyEngine.finalize();
 });
 
 add_task(async function test_buffered_migate_sync_metadata() {
@@ -1170,7 +1182,8 @@ add_task(async function test_buffered_migate_sync_metadata() {
   strictEqual(Svc.Prefs.get(`${bufferedEngine.name}.lastSync`), "0",
     "Changing buffered engine sync ID should clear last sync pref");
 
-  await bufferedEngine.wipeClient();
+  await cleanupEngine(bufferedEngine);
+  await bufferedEngine.finalize();
 });
 
 // The buffered engine stores the sync ID and last sync time in three places:
@@ -1271,7 +1284,8 @@ add_task(async function test_mirror_syncID() {
   strictEqual(await buf.getCollectionHighWaterMark(), 0,
     "Should reset high water mark on sync ID change in Places");
 
-  await bufferedEngine.wipeClient();
+  await cleanupEngine(bufferedEngine);
+  await bufferedEngine.finalize();
 });
 
 add_bookmark_test(async function test_livemarks(engine) {
@@ -1357,7 +1371,7 @@ add_bookmark_test(async function test_livemarks(engine) {
     }), now / 1000);
 
     _("Bump last sync time to ignore A");
-    await engine.setLastSync(Date.now() / 1000 - 60);
+    await engine.setLastSync(now / 1000 - 60);
 
     _("Sync");
     await sync_engine_and_validate_telem(engine, false);
