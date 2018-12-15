@@ -24,7 +24,7 @@ var content = document.getElementById('content');
 for (var eName of subjectForConstraintValidation) {
   var e = document.createElement(eName);
   content.appendChild(e);
-  e.setAttribute("x-moz-errormessage", "foo");
+  e.setCustomValidity("foo");
   if ("required" in e) {
     e.required = true;
   } else {
