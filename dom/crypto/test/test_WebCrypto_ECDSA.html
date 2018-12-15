@@ -19,7 +19,7 @@
 <!-- General testing framework -->
 <script src="./test-array.js"></script>
 
-<script>/*<![CDATA[*/
+<script>/* <![CDATA[*/
 "use strict";
 
 // -----------------------------------------------------------------------------
@@ -43,7 +43,7 @@ TestArray.addTest(
                (x.privateKey.type == "private") &&
                !x.privateKey.extractable &&
                (x.privateKey.usages.length == 1) &&
-               (x.privateKey.usages[0] == "sign")
+               (x.privateKey.usages[0] == "sign");
       }),
       error(that)
     );
@@ -63,7 +63,7 @@ TestArray.addTest(
 
     crypto.subtle.importKey("jwk", tv.ecdsa_verify.pub_jwk, alg, true, ["verify"])
       .then(doVerify)
-      .then(complete(that, x => x), error(that))
+      .then(complete(that, x => x), error(that));
   }
 );
 
@@ -79,10 +79,10 @@ TestArray.addTest(
       .then(pair => Promise.all([
           crypto.subtle.sign(alg, pair.privateKey, msg),
           crypto.subtle.exportKey("spki", pair.publicKey)
-            .then(spki => crypto.subtle.importKey("spki", spki, alg, false, ["verify"]))
+            .then(spki => crypto.subtle.importKey("spki", spki, alg, false, ["verify"])),
       ]))
       .then(sigAndKey => crypto.subtle.verify(alg, sigAndKey[1], sigAndKey[0], msg))
-      .then(complete(that, x => x), error(that))
+      .then(complete(that, x => x), error(that));
   }
 );
 
@@ -100,7 +100,7 @@ TestArray.addTest(
 
     crypto.subtle.importKey("jwk", tv.ecdsa_verify.pub_jwk, alg, true, ["verify"])
       .then(doVerify)
-      .then(complete(that, x => !x), error(that))
+      .then(complete(that, x => !x), error(that));
   }
 );
 
@@ -124,7 +124,7 @@ TestArray.addTest(
     crypto.subtle.generateKey(alg, true, ["sign", "verify"])
       .then(doSign)
       .then(doVerify)
-      .then(complete(that, x => x), error(that))
+      .then(complete(that, x => x), error(that));
   }
 );
 
@@ -135,19 +135,15 @@ TestArray.addTest(
     var that = this;
     var alg = { name: "ECDSA", namedCurve: "P-256", hash: "SHA-256" };
 
-    function doVerify(x) {
-      return crypto.subtle.verify(alg, x, tv.ecdsa_verify.sig, tv.ecdsa_verify.data);
-    }
-
     crypto.subtle.importKey("jwk", tv.ecdsa_bad.pub_jwk, alg, true, ["verify"])
-      .then(error(that), complete(that))
+      .then(error(that), complete(that));
   }
 );
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "Raw import/export of a public ECDSA key (P-521)",
-  function () {
+  function() {
     var that = this;
     var alg = { name: "ECDSA", namedCurve: "P-521", hash: "SHA-512" };
 
@@ -174,11 +170,11 @@ TestArray.addTest(
 
     crypto.subtle.importKey("raw", tv.ecdsa_verify.raw, alg, true, ["verify"])
       .then(doVerify)
-      .then(complete(that, x => x), error(that))
+      .then(complete(that, x => x), error(that));
   }
 );
 
-/*]]>*/</script>
+/* ]]>*/</script>
 </head>
 
 <body>

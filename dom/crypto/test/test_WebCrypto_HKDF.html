@@ -19,7 +19,7 @@
 <!-- General testing framework -->
 <script src="./test-array.js"></script>
 
-<script>/*<![CDATA[*/
+<script>/* <![CDATA[*/
 "use strict";
 
 // -----------------------------------------------------------------------------
@@ -33,7 +33,7 @@ TestArray.addTest(
       name: "HKDF",
       hash: "SHA-256",
       salt: new Uint8Array(),
-      info: new Uint8Array()
+      info: new Uint8Array(),
     };
 
     crypto.subtle.importKey("raw", key, "HKDF", false, ["deriveBits"])
@@ -53,7 +53,7 @@ TestArray.addTest(
       name: "HKDF",
       hash: "SHA-256",
       salt: new Uint8Array(),
-      info: new Uint8Array()
+      info: new Uint8Array(),
     };
 
     crypto.subtle.importKey("raw", key, "HKDF", false, ["deriveBits"])
@@ -75,7 +75,7 @@ TestArray.addTest(
       name: "HKDF",
       hash: "SHA-256",
       salt: new Uint8Array(),
-      info: new Uint8Array()
+      info: new Uint8Array(),
     };
 
     function deriveBits(x) {
@@ -103,7 +103,7 @@ TestArray.addTest(
       name: "HKDF",
       hash: "HMAC",
       salt: new Uint8Array(),
-      info: new Uint8Array()
+      info: new Uint8Array(),
     };
 
     function deriveBits(x) {
@@ -126,7 +126,7 @@ TestArray.addTest(
       name: "HKDF",
       hash: "HMAC",
       salt: new Uint8Array(),
-      info: new Uint8Array()
+      info: new Uint8Array(),
     };
 
     function deriveBits(x) {
@@ -146,25 +146,29 @@ TestArray.addTest(
   function() {
     var that = this;
     var tests = tv.hkdf.slice();
+    if (!tests.length) {
+      error(that)("No tests found");
+      return;
+    }
 
     function next() {
       if (!tests.length) {
-        return;
+        return Promise.resolve();
       }
 
       var test = tests.shift();
-      var {key, data} = test;
+      var {key} = test;
 
       return crypto.subtle.importKey("raw", key, "HKDF", false, ["deriveBits"])
-        .then(function (key) {
+        .then(function(baseKey) {
           return crypto.subtle.deriveBits({
             name: "HKDF",
             hash: test.prf,
             salt: test.salt,
-            info: test.info
-          }, key, test.data.byteLength * 8);
+            info: test.info,
+          }, baseKey, test.data.byteLength * 8);
         })
-        .then(function (data) {
+        .then(function(data) {
           if (!util.memcmp(data, test.data)) {
             throw new Error("derived bits don't match expected value");
           }
@@ -188,7 +192,7 @@ TestArray.addTest(
       name: "HKDF",
       hash: test.prf,
       salt: test.salt,
-      info: test.info
+      info: test.info,
     };
 
     crypto.subtle.importKey("jwk", test.jwk, "HKDF", false, ["deriveBits"])
@@ -219,7 +223,7 @@ TestArray.addTest(
             name: "HKDF",
             hash: "SHA-256",
             salt: new Uint8Array(),
-            info: new Uint8Array()
+            info: new Uint8Array(),
           }, rawKey, 4);
         })
         .then(derivedBits => {
@@ -276,7 +280,7 @@ TestArray.addTest(
       name: "HKDF",
       hash: "SHA-256",
       salt: new Uint8Array(),
-      info: new Uint8Array()
+      info: new Uint8Array(),
     };
 
     function deriveKey(x) {
@@ -286,7 +290,7 @@ TestArray.addTest(
 
     crypto.subtle.importKey("raw", key, "HKDF", false, ["deriveKey"])
       .then(deriveKey)
-      .then(complete(that), error(that))
+      .then(complete(that), error(that));
   }
 );
 
@@ -301,7 +305,7 @@ TestArray.addTest(
       name: "HKDF",
       hash: "SHA-256",
       salt: new Uint8Array(),
-      info: new Uint8Array()
+      info: new Uint8Array(),
     };
 
     function deriveKey(x) {
@@ -310,11 +314,11 @@ TestArray.addTest(
 
     crypto.subtle.importKey("raw", key, "HKDF", false, ["deriveKey"])
       .then(deriveKey)
-      .then(error(that), complete(that))
+      .then(error(that), complete(that));
   }
 );
 
-/*]]>*/</script>
+/* ]]>*/</script>
 </head>
 
 <body>

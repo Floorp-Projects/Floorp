@@ -19,13 +19,13 @@
 <!-- General testing framework -->
 <script src="./test-array.js"></script>
 
-<script>/*<![CDATA[*/
+<script>/* <![CDATA[*/
 "use strict";
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "Send a CryptoKey to a Worker and use it to encrypt data",
-  function () {
+  function() {
     var worker = new Worker(`data:text/plain,
       onmessage = ({data: {key, data, nonce}}) => {
         var alg = { name: "AES-GCM", iv: nonce };
@@ -42,8 +42,7 @@ TestArray.addTest(
     crypto.subtle.generateKey(alg, false, ["encrypt", "decrypt"]).then(key => {
       // Wait for ciphertext, check and decrypt.
       worker.addEventListener("message", ({data: ciphertext}) => {
-        var alg = { name: "AES-GCM", iv: nonce };
-        crypto.subtle.decrypt(alg, key, ciphertext)
+        crypto.subtle.decrypt({ name: "AES-GCM", iv: nonce }, key, ciphertext)
           .then(memcmp_complete(that, data), error(that));
       });
 
@@ -56,7 +55,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "Get a CryptoKey from a Worker and encrypt/decrypt data",
-  function () {
+  function() {
     var worker = new Worker(`data:text/plain,
       var alg = { name: "AES-GCM", length: 128 };
       crypto.subtle.generateKey(alg, false, ["encrypt", "decrypt"])
@@ -83,7 +82,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "Web crypto in terminating Worker",
-  function () {
+  function() {
     var worker = new Worker(`data:text/plain,
       function infiniteEncrypt(key, data, nonce) {
         var alg = { name: "AES-GCM", iv: nonce };
@@ -122,7 +121,7 @@ TestArray.addTest(
     });
   }
 );
-/*]]>*/</script>
+/* ]]>*/</script>
 </head>
 
 <body>

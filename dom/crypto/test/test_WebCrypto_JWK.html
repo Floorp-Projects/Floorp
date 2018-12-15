@@ -19,13 +19,13 @@
 <!-- General testing framework -->
 <script src="./test-array.js"></script>
 
-<script>/*<![CDATA[*/
+<script>/* <![CDATA[*/
 "use strict";
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "JWK import and use of an AES-GCM key",
-  function () {
+  function() {
     var that = this;
 
     function doEncrypt(x) {
@@ -34,12 +34,12 @@ TestArray.addTest(
           name: "AES-GCM",
           iv: tv.aes_gcm_enc.iv,
           additionalData: tv.aes_gcm_enc.adata,
-          tagLength: 128
+          tagLength: 128,
         },
         x, tv.aes_gcm_enc.data);
     }
 
-    crypto.subtle.importKey("jwk", tv.aes_gcm_enc.key_jwk, "AES-GCM", false, ['encrypt'])
+    crypto.subtle.importKey("jwk", tv.aes_gcm_enc.key_jwk, "AES-GCM", false, ["encrypt"])
       .then(doEncrypt)
       .then(
         memcmp_complete(that, tv.aes_gcm_enc.result),
@@ -51,7 +51,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "JWK import and use of an RSASSA-PKCS1-v1_5 private key",
-  function () {
+  function() {
     var that = this;
     var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
 
@@ -60,7 +60,7 @@ TestArray.addTest(
     }
     function fail(x) { console.log(x); error(that); }
 
-    crypto.subtle.importKey("jwk", tv.rsassa.jwk_priv, alg, false, ['sign'])
+    crypto.subtle.importKey("jwk", tv.rsassa.jwk_priv, alg, false, ["sign"])
       .then( doSign, fail )
       .then( memcmp_complete(that, tv.rsassa.sig256), fail );
   }
@@ -69,7 +69,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "JWK import and use of an RSASSA-PKCS1-v1_5 public key",
-  function () {
+  function() {
     var that = this;
     var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
 
@@ -78,7 +78,7 @@ TestArray.addTest(
     }
     function fail(x) { error(that); }
 
-    crypto.subtle.importKey("jwk", tv.rsassa.jwk_pub, alg, false, ['verify'])
+    crypto.subtle.importKey("jwk", tv.rsassa.jwk_pub, alg, false, ["verify"])
       .then( doVerify, fail )
       .then(
         complete(that, function(x) { return x; }),
@@ -89,7 +89,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "JWK import failure on incomplete RSA private key (missing 'qi')",
-  function () {
+  function() {
     var that = this;
     var alg = { name: "RSA-OAEP", hash: "SHA-256" };
     var jwk = {
@@ -103,7 +103,7 @@ TestArray.addTest(
       dq: tv.rsassa.jwk_priv.dq,
     };
 
-    crypto.subtle.importKey("jwk", jwk, alg, true, ['encrypt', 'decrypt'])
+    crypto.subtle.importKey("jwk", jwk, alg, true, ["encrypt", "decrypt"])
       .then( error(that), complete(that) );
   }
 );
@@ -111,12 +111,12 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "JWK import failure on algorithm mismatch",
-  function () {
+  function() {
     var that = this;
     var alg = "AES-GCM";
     var jwk = { k: "c2l4dGVlbiBieXRlIGtleQ", alg: "A256GCM" };
 
-    crypto.subtle.importKey("jwk", jwk, alg, true, ['encrypt', 'decrypt'])
+    crypto.subtle.importKey("jwk", jwk, alg, true, ["encrypt", "decrypt"])
       .then( error(that), complete(that) );
   }
 );
@@ -124,12 +124,12 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "JWK import failure on usages mismatch",
-  function () {
+  function() {
     var that = this;
     var alg = "AES-GCM";
-    var jwk = { k: "c2l4dGVlbiBieXRlIGtleQ", key_ops: ['encrypt'] };
+    var jwk = { k: "c2l4dGVlbiBieXRlIGtleQ", key_ops: ["encrypt"] };
 
-    crypto.subtle.importKey("jwk", jwk, alg, true, ['encrypt', 'decrypt'])
+    crypto.subtle.importKey("jwk", jwk, alg, true, ["encrypt", "decrypt"])
       .then( error(that), complete(that) );
   }
 );
@@ -137,12 +137,12 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "JWK import failure on extractable mismatch",
-  function () {
+  function() {
     var that = this;
     var alg = "AES-GCM";
     var jwk = { k: "c2l4dGVlbiBieXRlIGtleQ", ext: false };
 
-    crypto.subtle.importKey("jwk", jwk, alg, true, ['encrypt'])
+    crypto.subtle.importKey("jwk", jwk, alg, true, ["encrypt"])
       .then( error(that), complete(that) );
   }
 );
@@ -150,7 +150,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "JWK export of a symmetric key",
-  function () {
+  function() {
     var that = this;
     var alg = "AES-GCM";
     var jwk = { k: "c2l4dGVlbiBieXRlIGtleQ", kty: "oct" };
@@ -159,17 +159,17 @@ TestArray.addTest(
       return crypto.subtle.exportKey("jwk", k);
     }
 
-    crypto.subtle.importKey("jwk", jwk, alg, true, ['encrypt', 'decrypt'])
+    crypto.subtle.importKey("jwk", jwk, alg, true, ["encrypt", "decrypt"])
       .then(doExport)
       .then(
         complete(that, function(x) {
           return hasBaseJwkFields(x) &&
-                 hasFields(x, ['k']) &&
-                 x.kty == 'oct' &&
-                 x.alg == 'A128GCM' &&
+                 hasFields(x, ["k"]) &&
+                 x.kty == "oct" &&
+                 x.alg == "A128GCM" &&
                  x.ext &&
-                 shallowArrayEquals(x.key_ops, ['encrypt','decrypt']) &&
-                 x.k == jwk.k
+                 shallowArrayEquals(x.key_ops, ["encrypt", "decrypt"]) &&
+                 x.k == jwk.k;
         }),
         error(that)
       );
@@ -179,7 +179,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "JWK import/export of an RSA private key",
-  function () {
+  function() {
     var jwk = tv.rsassa.jwk_priv;
 
     var that = this;
@@ -189,21 +189,21 @@ TestArray.addTest(
       return crypto.subtle.exportKey("jwk", k);
     }
 
-    crypto.subtle.importKey("jwk", jwk, alg, true, ['sign'])
+    crypto.subtle.importKey("jwk", jwk, alg, true, ["sign"])
       .then(doExport)
       .then(
         complete(that, function(x) {
           return hasBaseJwkFields(x) &&
-                 hasFields(x, ['n', 'e', 'd', 'p', 'q', 'dp', 'dq', 'qi']) &&
-                 x.kty == 'RSA' &&
-                 x.alg == 'RS256' &&
+                 hasFields(x, ["n", "e", "d", "p", "q", "dp", "dq", "qi"]) &&
+                 x.kty == "RSA" &&
+                 x.alg == "RS256" &&
                  x.ext &&
-                 shallowArrayEquals(x.key_ops, ['sign']) &&
-                 x.n  == jwk.n  &&
-                 x.e  == jwk.e  &&
-                 x.d  == jwk.d  &&
-                 x.p  == jwk.p  &&
-                 x.q  == jwk.q  &&
+                 shallowArrayEquals(x.key_ops, ["sign"]) &&
+                 x.n == jwk.n &&
+                 x.e == jwk.e &&
+                 x.d == jwk.d &&
+                 x.p == jwk.p &&
+                 x.q == jwk.q &&
                  x.dp == jwk.dp &&
                  x.dq == jwk.dq &&
                  x.qi == jwk.qi;
@@ -216,7 +216,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "JWK import/export of an RSA private key where p < q",
-  function () {
+  function() {
     var jwk = tv.rsassa.jwk_priv_pLTq;
 
     var that = this;
@@ -226,21 +226,21 @@ TestArray.addTest(
       return crypto.subtle.exportKey("jwk", k);
     }
 
-    crypto.subtle.importKey("jwk", jwk, alg, true, ['sign'])
+    crypto.subtle.importKey("jwk", jwk, alg, true, ["sign"])
       .then(doExport)
       .then(
         complete(that, function(x) {
           return hasBaseJwkFields(x) &&
-                 hasFields(x, ['n', 'e', 'd', 'p', 'q', 'dp', 'dq', 'qi']) &&
-                 x.kty == 'RSA' &&
-                 x.alg == 'RS256' &&
+                 hasFields(x, ["n", "e", "d", "p", "q", "dp", "dq", "qi"]) &&
+                 x.kty == "RSA" &&
+                 x.alg == "RS256" &&
                  x.ext &&
-                 shallowArrayEquals(x.key_ops, ['sign']) &&
-                 x.n  == jwk.n  &&
-                 x.e  == jwk.e  &&
-                 x.d  == jwk.d  &&
-                 x.p  == jwk.p  &&
-                 x.q  == jwk.q  &&
+                 shallowArrayEquals(x.key_ops, ["sign"]) &&
+                 x.n == jwk.n &&
+                 x.e == jwk.e &&
+                 x.d == jwk.d &&
+                 x.p == jwk.p &&
+                 x.q == jwk.q &&
                  x.dp == jwk.dp &&
                  x.dq == jwk.dq &&
                  x.qi == jwk.qi;
@@ -253,7 +253,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "JWK export of an RSA public key",
-  function () {
+  function() {
     var that = this;
     var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
     var jwk = tv.rsassa.jwk_pub;
@@ -262,19 +262,19 @@ TestArray.addTest(
       return crypto.subtle.exportKey("jwk", k);
     }
 
-    crypto.subtle.importKey("jwk", jwk, alg, true, ['verify'])
+    crypto.subtle.importKey("jwk", jwk, alg, true, ["verify"])
       .then(doExport)
       .then(
         complete(that, function(x) {
           window.jwk_pub = x;
           return hasBaseJwkFields(x) &&
-                 hasFields(x, ['n', 'e']) &&
-                 x.kty == 'RSA' &&
-                 x.alg == 'RS256' &&
+                 hasFields(x, ["n", "e"]) &&
+                 x.kty == "RSA" &&
+                 x.alg == "RS256" &&
                  x.ext &&
-                 shallowArrayEquals(x.key_ops, ['verify']) &&
-                 x.n  == jwk.n  &&
-                 x.e  == jwk.e;
+                 shallowArrayEquals(x.key_ops, ["verify"]) &&
+                 x.n == jwk.n &&
+                 x.e == jwk.e;
           }),
         error(that)
       );
@@ -285,30 +285,30 @@ TestArray.addTest(
 TestArray.addTest(
   "Check JWK parameters on generated ECDSA key pair",
   function() {
-    crypto.subtle.generateKey({name: 'ECDSA', namedCurve: 'P-256'}, true, ['sign', 'verify'])
+    crypto.subtle.generateKey({name: "ECDSA", namedCurve: "P-256"}, true, ["sign", "verify"])
       .then(pair => Promise.all([
-         crypto.subtle.exportKey('jwk', pair.privateKey),
-         crypto.subtle.exportKey('jwk', pair.publicKey)
+         crypto.subtle.exportKey("jwk", pair.privateKey),
+         crypto.subtle.exportKey("jwk", pair.publicKey),
       ]))
       .then(
         complete(this, function(x) {
           var priv = x[0];
           var pub = x[1];
           var pubIsSubsetOfPriv = Object.keys(pub)
-            .filter(k => k !== 'key_ops') // key_ops is the only complex attr
+            .filter(k => k !== "key_ops") // key_ops is the only complex attr
             .reduce((all, k) => all && pub[k] === priv[k], true);
           // Can't use hasBaseJwkFields() because EC keys don't get "alg":
           // "alg" matches curve to hash, but WebCrypto keys are more flexible.
-          return hasFields(pub, ['kty', 'crv', 'key_ops', 'ext']) &&
-            pub.kty === 'EC' &&
-            pub.crv === 'P-256' &&
+          return hasFields(pub, ["kty", "crv", "key_ops", "ext"]) &&
+            pub.kty === "EC" &&
+            pub.crv === "P-256" &&
             pub.ext &&
-            typeof(pub.x) === 'string' &&
-            typeof(pub.y) === 'string' &&
-            shallowArrayEquals(pub.key_ops, ['verify']) &&
+            typeof(pub.x) === "string" &&
+            typeof(pub.y) === "string" &&
+            shallowArrayEquals(pub.key_ops, ["verify"]) &&
             pubIsSubsetOfPriv &&
-            shallowArrayEquals(priv.key_ops, ['sign']) &&
-            typeof(priv.d) === 'string';
+            shallowArrayEquals(priv.key_ops, ["sign"]) &&
+            typeof(priv.d) === "string";
         }),
         error(this));
   }
@@ -319,20 +319,20 @@ TestArray.addTest(
   "Check key_ops parameter on an unusable RSA public key",
   function() {
     var parameters = {
-      name: 'RSASSA-PKCS1-v1_5',
+      name: "RSASSA-PKCS1-v1_5",
       modulusLength: 1024,
       publicExponent: new Uint8Array([1, 0, 1]),
-      hash: 'SHA-256'
+      hash: "SHA-256",
     };
     // The public key generated here will have no usages and will therefore
     // have an empty key_ops list.
-    crypto.subtle.generateKey(parameters, true, ['sign'])
-      .then(pair => crypto.subtle.exportKey('jwk', pair.publicKey))
+    crypto.subtle.generateKey(parameters, true, ["sign"])
+      .then(pair => crypto.subtle.exportKey("jwk", pair.publicKey))
       .then(complete(this, x => x.key_ops.length === 0),
             error(this));
   }
 );
-/*]]>*/</script>
+/* ]]>*/</script>
 </head>
 
 <body>

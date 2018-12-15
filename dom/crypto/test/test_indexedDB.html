@@ -39,20 +39,20 @@
         frame.remove();
 
         // Load the test app again to retrieve stored keys.
-        createMozBrowserFrame((frame, result) => {
-          is(result, "ok", "retrieved keys successfully");
-          frame.remove();
+        createMozBrowserFrame((recFrame, recResult) => {
+          is(recResult, "ok", "retrieved keys successfully");
+          recFrame.remove();
           SimpleTest.finish();
         });
       });
     }
 
-    addEventListener("load", function () {
+    addEventListener("load", function() {
       SpecialPowers.addPermission("browser", true, document);
       SpecialPowers.pushPrefEnv({set: [
         ["dom.ipc.browser_frames.oop_by_default", true],
         ["dom.mozBrowserFramesEnabled", true],
-        ["network.disable.ipc.security", true]
+        ["network.disable.ipc.security", true],
       ]}, runTest);
     });
   </script>
