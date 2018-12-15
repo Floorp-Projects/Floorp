@@ -1689,7 +1689,6 @@ void nsCSSFrameConstructor::CreateGeneratedContentItem(
                        aParentFrame->IsDateTimeControlFrame())) {
     // Video frames and date time control frames may not be leafs when backed by
     // an UA widget, but we still don't want to expose generated content.
-    MOZ_ASSERT(aOriginatingElement.GetShadowRoot()->IsUAWidget());
     return;
   }
 

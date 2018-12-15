@@ -18,11 +18,10 @@ class UAWidgetsChild extends ActorChild {
 
   handleEvent(aEvent) {
     switch (aEvent.type) {
-      case "UAWidgetBindToTree":
-      case "UAWidgetAttributeChanged":
+      case "UAWidgetSetupOrChange":
         this.setupOrNotifyWidget(aEvent.target);
         break;
-      case "UAWidgetUnbindFromTree":
+      case "UAWidgetTeardown":
         this.teardownWidget(aEvent.target);
         break;
     }
@@ -72,12 +71,13 @@ class UAWidgetsChild extends ActorChild {
     }
 
     if (!uri || !widgetName) {
+      Cu.reportError("Getting a UAWidgetSetupOrChange event on undefined element.");
       return;
     }
 
     let shadowRoot = aElement.openOrClosedShadowRoot;
     if (!shadowRoot) {
-      Cu.reportError("Getting a UAWidgetBindToTree/UAWidgetAttributeChanged event without the Shadow Root.");
+      Cu.reportError("Getting a UAWidgetSetupOrChange event without the Shadow Root.");
       return;
     }
 
