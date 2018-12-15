@@ -1010,6 +1010,20 @@ this.VideoControlsImplWidget = class {
         }
       },
       HIDE_CONTROLS_TIMEOUT_MS: 2000,
+
+      // By "Video" we actually mean the video controls container,
+      // because we don't want to consider the padding of <video> added
+      // by the web content.
+      isMouseOverVideo(event) {
+        // XXX: this triggers reflow too, but the layout should only be dirty
+        // if the web content touches it while the mouse is moving.
+        let el = this.shadowRoot.elementFromPoint(event.clientX, event.clientY);
+
+        // As long as this is not null, the cursor is over something within our
+        // Shadow DOM.
+        return !!el;
+      },
+
       isMouseOverControlBar(event) {
         // XXX: this triggers reflow too, but the layout should only be dirty
         // if the web content touches it while the mouse is moving.
@@ -1022,6 +1036,7 @@ this.VideoControlsImplWidget = class {
         }
         return false;
       },
+
       onMouseMove(event) {
         // If the controls are static, don't change anything.
         if (!this.dynamicControls) {
@@ -1067,27 +1082,17 @@ this.VideoControlsImplWidget = class {
 
         this.window.clearTimeout(this._hideControlsTimeout);
 
-        // Ignore events caused by transitions between child nodes.
-        // Note that the videocontrols element is the same
-        // size as the *content area* of the video element,
-        // but this is not the same as the video element's
-        // border area if the video has border or padding.
-        if (this.checkEventWithin(event, this.videocontrols)) {
-          return;
-        }
-
-        var isMouseOver = (event.type == "mouseover");
-        var isMouseInControls = this.isMouseOverControlBar(event);
+        let isMouseOverVideo = this.isMouseOverVideo(event);
 
         // Suppress fading out the controls until the video has rendered
         // its first frame. But since autoplay videos start off with no
         // controls, let them fade-out so the controls don't get stuck on.
-        if (!this.firstFrameShown && !isMouseOver &&
+        if (!this.firstFrameShown && !isMouseOverVideo &&
             !this.video.autoplay) {
           return;
         }
 
-        if (!isMouseOver && !isMouseInControls) {
+        if (!isMouseOverVideo && !this.isMouseOverControlBar(event)) {
           this.adjustControlSize();
 
           // Keep the controls visible if the click-to-play is visible.
@@ -1727,19 +1732,6 @@ this.VideoControlsImplWidget = class {
         }
 
         this.setClosedCaptionButtonState();
-      },
-
-      checkEventWithin(event, parent1, parent2) {
-        function isDescendant(node) {
-          while (node) {
-            if (node == parent1 || node == parent2) {
-              return true;
-            }
-            node = node.parentNode;
-          }
-          return false;
-        }
-        return isDescendant(event.target) && isDescendant(event.relatedTarget);
       },
 
       log(msg) {
