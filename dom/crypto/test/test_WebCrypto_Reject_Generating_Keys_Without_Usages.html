@@ -19,7 +19,7 @@
 <!-- General testing framework -->
 <script src="./test-array.js"></script>
 
-<script>/*<![CDATA[*/
+<script>/* <![CDATA[*/
 "use strict";
 
 // Generating 2048-bit keys takes some time.
@@ -33,23 +33,23 @@ TestArray.addTest(
       name: "RSA-OAEP",
       hash: "SHA-256",
       modulusLength: 2048,
-      publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
     };
 
     function generateKey(usages) {
       return crypto.subtle.generateKey(alg, false, usages);
     }
 
-    generateKey(["encrypt", "decrypt"]).then(function () {
+    generateKey(["encrypt", "decrypt"]).then(function() {
       return generateKey(["encrypt"]);
-    }).then(function () {
+    }).then(function() {
       return generateKey(["decrypt"]);
-    }).then(function () {
-      return generateKey(["sign"])
+    }).then(function() {
+      return generateKey(["sign"]);
     }, error(that)).then(error(that), complete(that));
   }
 );
-/*]]>*/</script>
+/* ]]>*/</script>
 </head>
 
 <body>

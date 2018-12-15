@@ -19,25 +19,25 @@
 <!-- General testing framework -->
 <script src="./test-array.js"></script>
 
-<script>/*<![CDATA[*/
+<script>/* <![CDATA[*/
 "use strict";
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "Key wrap known answer, using AES-GCM",
-  function () {
+  function() {
     var that = this;
     var alg = {
       name: "AES-GCM",
       iv: tv.key_wrap_known_answer.wrapping_iv,
-      tagLength: 128
+      tagLength: 128,
     };
     var key, wrappingKey;
 
     function doImport(k) {
       wrappingKey = k;
       return crypto.subtle.importKey("raw", tv.key_wrap_known_answer.key,
-                                     alg, true, ['encrypt', 'decrypt']);
+                                     alg, true, ["encrypt", "decrypt"]);
     }
     function doWrap(k) {
       key = k;
@@ -45,7 +45,7 @@ TestArray.addTest(
     }
 
     crypto.subtle.importKey("raw", tv.key_wrap_known_answer.wrapping_key,
-                            alg, false, ['wrapKey'])
+                            alg, false, ["wrapKey"])
       .then(doImport, error(that))
       .then(doWrap, error(that))
       .then(
@@ -58,19 +58,19 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "Key wrap failing on non-extractable key",
-  function () {
+  function() {
     var that = this;
     var alg = {
       name: "AES-GCM",
       iv: tv.key_wrap_known_answer.wrapping_iv,
-      tagLength: 128
+      tagLength: 128,
     };
     var key, wrappingKey;
 
     function doImport(k) {
       wrappingKey = k;
       return crypto.subtle.importKey("raw", tv.key_wrap_known_answer.key,
-                                     alg, false, ['encrypt', 'decrypt']);
+                                     alg, false, ["encrypt", "decrypt"]);
     }
     function doWrap(k) {
       key = k;
@@ -78,7 +78,7 @@ TestArray.addTest(
     }
 
     crypto.subtle.importKey("raw", tv.key_wrap_known_answer.wrapping_key,
-                            alg, false, ['wrapKey'])
+                            alg, false, ["wrapKey"])
       .then(doImport, error(that))
       .then(doWrap, error(that))
       .then(
@@ -91,21 +91,21 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "Key unwrap known answer, using AES-GCM",
-  function () {
+  function() {
     var that = this;
     var alg = {
       name: "AES-GCM",
       iv: tv.key_wrap_known_answer.wrapping_iv,
-      tagLength: 128
+      tagLength: 128,
     };
-    var key, wrappingKey;
+    var wrappingKey;
 
     function doUnwrap(k) {
       wrappingKey = k;
       return crypto.subtle.unwrapKey(
                 "raw", tv.key_wrap_known_answer.wrapped_key,
                 wrappingKey, alg,
-                "AES-GCM", true, ['encrypt', 'decrypt']
+                "AES-GCM", true, ["encrypt", "decrypt"]
              );
     }
     function doExport(k) {
@@ -113,7 +113,7 @@ TestArray.addTest(
     }
 
     crypto.subtle.importKey("raw", tv.key_wrap_known_answer.wrapping_key,
-                            alg, false, ['unwrapKey'])
+                            alg, false, ["unwrapKey"])
       .then(doUnwrap, error(that))
       .then(doExport, error(that))
       .then(
@@ -126,17 +126,17 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "Key wrap/unwrap round-trip, using RSA-OAEP",
-  function () {
+  function() {
     var that = this;
     var oaep = {
       name: "RSA-OAEP",
-      hash: "SHA-256"
+      hash: "SHA-256",
     };
     var gcm = {
       name: "AES-GCM",
       iv: tv.aes_gcm_enc.iv,
       additionalData: tv.aes_gcm_enc.adata,
-      tagLength: 128
+      tagLength: 128,
     };
     var unwrapKey;
 
@@ -148,7 +148,7 @@ TestArray.addTest(
     }
     function doUnwrap(wrappedKey) {
       return crypto.subtle.unwrapKey("raw", wrappedKey, unwrapKey, oaep,
-                                     gcm, false, ['encrypt']);
+                                     gcm, false, ["encrypt"]);
     }
     function doEncrypt(aesKey) {
       return crypto.subtle.encrypt(gcm, aesKey, tv.aes_gcm_enc.data);
@@ -163,9 +163,9 @@ TestArray.addTest(
     // 4. Compute HMAC
     // 5. Check HMAC value
     Promise.all([
-      crypto.subtle.importKey("raw", tv.aes_gcm_enc.key, gcm, true, ['encrypt']),
-      crypto.subtle.importKey("spki", tv.rsaoaep.spki, oaep, true, ['wrapKey']),
-      crypto.subtle.importKey("pkcs8", tv.rsaoaep.pkcs8, oaep, false, ['unwrapKey'])
+      crypto.subtle.importKey("raw", tv.aes_gcm_enc.key, gcm, true, ["encrypt"]),
+      crypto.subtle.importKey("spki", tv.rsaoaep.spki, oaep, true, ["wrapKey"]),
+      crypto.subtle.importKey("pkcs8", tv.rsaoaep.pkcs8, oaep, false, ["unwrapKey"]),
     ])
       .then(doWrap, error(that))
       .then(doUnwrap, error(that))
@@ -180,7 +180,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "JWK wrap/unwrap round-trip, with AES-GCM",
-  function () {
+  function() {
     var that = this;
     var genAlg = { name: "HMAC", hash: "SHA-384", length: 512 };
     var wrapAlg = { name: "AES-GCM", iv: tv.aes_gcm_enc.iv };
@@ -195,17 +195,17 @@ TestArray.addTest(
     function doUnwrap(wrappedKey) {
       return crypto.subtle.unwrapKey("jwk", wrappedKey, wrapKey, wrapAlg,
                                      { name: "HMAC", hash: "SHA-384"},
-                                     true, ['sign', 'verify']);
+                                     true, ["sign", "verify"]);
     }
 
     Promise.all([
       crypto.subtle.importKey("jwk", tv.aes_gcm_enc.key_jwk,
-                              "AES-GCM", false, ['wrapKey','unwrapKey'])
+                              "AES-GCM", false, ["wrapKey", "unwrapKey"])
         .then(function(x) { wrapKey = x; }),
-      crypto.subtle.generateKey(genAlg, true, ['sign', 'verify'])
+      crypto.subtle.generateKey(genAlg, true, ["sign", "verify"])
         .then(function(x) { originalKey = x; return x; })
         .then(doExport)
-        .then(function(x) { originalKeyJwk = x; })
+        .then(function(x) { originalKeyJwk = x; }),
     ])
       .then(doWrap)
       .then(doUnwrap)
@@ -222,7 +222,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "AES-KW known answer",
-  function () {
+  function() {
     var that = this;
 
     function doWrap(keys) {
@@ -233,9 +233,9 @@ TestArray.addTest(
 
     Promise.all([
       crypto.subtle.importKey("jwk", tv.aes_kw.wrapping_key,
-                              "AES-KW", false, ['wrapKey']),
+                              "AES-KW", false, ["wrapKey"]),
       crypto.subtle.importKey("jwk", tv.aes_kw.key,
-                              "AES-GCM", true, ['encrypt'])
+                              "AES-GCM", true, ["encrypt"]),
     ])
       .then(doWrap)
       .then(
@@ -249,7 +249,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "AES-KW unwrap failure on tampered key data",
-  function () {
+  function() {
     var that = this;
     var tamperedWrappedKey = new Uint8Array(tv.aes_kw.wrapped_key);
     tamperedWrappedKey[5] ^= 0xFF;
@@ -257,11 +257,11 @@ TestArray.addTest(
     function doUnwrap(wrapKey) {
       return crypto.subtle.unwrapKey("raw", tamperedWrappedKey, wrapKey,
                                      "AES-KW", "AES-GCM",
-                                     true, ['encrypt', 'decrypt']);
+                                     true, ["encrypt", "decrypt"]);
     }
 
     crypto.subtle.importKey("jwk", tv.aes_kw.wrapping_key,
-                              "AES-KW", false, ['unwrapKey'])
+                              "AES-KW", false, ["unwrapKey"])
       .then(doUnwrap)
       .then(error(that), complete(that));
   }
@@ -270,7 +270,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "AES-KW wrap/unwrap round-trip",
-  function () {
+  function() {
     var that = this;
     var genAlg = { name: "HMAC", hash: "SHA-384", length: 512 };
     var wrapKey, originalKey, originalKeyJwk;
@@ -284,17 +284,17 @@ TestArray.addTest(
     function doUnwrap(wrappedKey) {
       return crypto.subtle.unwrapKey("raw", wrappedKey, wrapKey,
                                      "AES-KW", { name: "HMAC", hash: "SHA-384"},
-                                     true, ['sign', 'verify']);
+                                     true, ["sign", "verify"]);
     }
 
     Promise.all([
       crypto.subtle.importKey("jwk", tv.aes_kw.wrapping_key,
-                              "AES-KW", false, ['wrapKey','unwrapKey'])
+                              "AES-KW", false, ["wrapKey", "unwrapKey"])
         .then(function(x) { wrapKey = x; }),
-      crypto.subtle.generateKey(genAlg, true, ['sign'])
+      crypto.subtle.generateKey(genAlg, true, ["sign"])
         .then(function(x) { originalKey = x; return x; })
         .then(doExport)
-        .then(function(x) { originalKeyJwk = x; })
+        .then(function(x) { originalKeyJwk = x; }),
     ])
       .then(doWrap)
       .then(doUnwrap)
@@ -311,7 +311,7 @@ TestArray.addTest(
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "JWK unwrap attempt on bogus data should error out",
-  function () {
+  function() {
     // Largely cribbed from the "JWK wrap/unwrap round-trip, with AES-GCM" test
     var that = this;
     var wrapAlg = { name: "AES-GCM", iv: tv.aes_gcm_enc.iv };
@@ -324,11 +324,11 @@ TestArray.addTest(
     function doUnwrap(wrappedKey) {
       return crypto.subtle.unwrapKey("jwk", wrappedKey, wrapKey, wrapAlg,
                                      {name: "HMAC", hash: "SHA-384"},
-                                     true, ['sign', 'verify']);
+                                     true, ["sign", "verify"]);
     }
 
     crypto.subtle.importKey("jwk", tv.aes_gcm_enc.key_jwk,
-                            "AES-GCM", false, ['encrypt','unwrapKey'])
+                            "AES-GCM", false, ["encrypt", "unwrapKey"])
       .then(function(x) { wrapKey = x; })
       .then(doBogusWrap, error(that))
       .then(doUnwrap, error(that))
@@ -339,7 +339,7 @@ TestArray.addTest(
   }
 );
 
-/*]]>*/</script>
+/* ]]>*/</script>
 </head>
 
 <body>
