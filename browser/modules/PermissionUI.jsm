@@ -1041,7 +1041,7 @@ StorageAccessPermissionPrompt.prototype = {
     // session (but not to exceed 24 hours), or the value of the
     // dom.storage_access.max_concurrent_auto_grants preference, whichever is
     // higher.
-    return Math.max(Math.max(Math.floor(URICountListener.uniqueDomainsVisitedInPast24Hours / 100),
+    return Math.max(Math.max(Math.floor(URICountListener.uniqueOriginsVisitedInPast24Hours / 100),
                              this._maxConcurrentAutoGrants), 0);
   },
 
