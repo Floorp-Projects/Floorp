@@ -61,21 +61,17 @@ nsresult HTMLMarqueeElement::BindToTree(nsIDocument* aDocument,
 
   if (nsContentUtils::IsUAWidgetEnabled() && IsInComposedDoc()) {
     AttachAndSetUAShadowRoot();
-    AsyncEventDispatcher* dispatcher =
-        new AsyncEventDispatcher(this, NS_LITERAL_STRING("UAWidgetBindToTree"),
-                                 CanBubble::eYes, ChromeOnlyDispatch::eYes);
-    dispatcher->RunDOMEventWhenSafe();
+    NotifyUAWidgetSetupOrChange();
   }
 
   return rv;
 }
 
 void HTMLMarqueeElement::UnbindFromTree(bool aDeep, bool aNullParent) {
-  if (GetShadowRoot() && IsInComposedDoc()) {
-    AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
-        this, NS_LITERAL_STRING("UAWidgetUnbindFromTree"), CanBubble::eYes,
-        ChromeOnlyDispatch::eYes);
-    dispatcher->RunDOMEventWhenSafe();
+  if (nsContentUtils::IsUAWidgetEnabled() && IsInComposedDoc()) {
+    // We don't want to unattach the shadow root because it used to
+    // contain a <slot>.
+    NotifyUAWidgetTeardown(UnattachShadowRoot::No);
   }
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
@@ -140,10 +136,7 @@ nsresult HTMLMarqueeElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                           bool aNotify) {
   if (nsContentUtils::IsUAWidgetEnabled() && IsInComposedDoc() &&
       aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::direction) {
-    AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
-        this, NS_LITERAL_STRING("UAWidgetAttributeChanged"), CanBubble::eYes,
-        ChromeOnlyDispatch::eYes);
-    dispatcher->RunDOMEventWhenSafe();
+    NotifyUAWidgetSetupOrChange();
   }
   return nsGenericHTMLElement::AfterSetAttr(
       aNameSpaceID, aName, aValue, aOldValue, aMaybeScriptedPrincipal, aNotify);
