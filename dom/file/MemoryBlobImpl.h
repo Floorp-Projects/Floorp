@@ -26,14 +26,16 @@ class MemoryBlobImpl final : public BaseBlobImpl {
 
   MemoryBlobImpl(void* aMemoryBuffer, uint64_t aLength, const nsAString& aName,
                  const nsAString& aContentType, int64_t aLastModifiedDate)
-      : BaseBlobImpl(aName, aContentType, aLength, aLastModifiedDate),
+      : BaseBlobImpl(NS_LITERAL_STRING("MemoryBlobImpl"), aName, aContentType,
+                     aLength, aLastModifiedDate),
         mDataOwner(new DataOwner(aMemoryBuffer, aLength)) {
     MOZ_ASSERT(mDataOwner && mDataOwner->mData, "must have data");
   }
 
   MemoryBlobImpl(void* aMemoryBuffer, uint64_t aLength,
                  const nsAString& aContentType)
-      : BaseBlobImpl(aContentType, aLength),
+      : BaseBlobImpl(NS_LITERAL_STRING("MemoryBlobImpl"), aContentType,
+                     aLength),
         mDataOwner(new DataOwner(aMemoryBuffer, aLength)) {
     MOZ_ASSERT(mDataOwner && mDataOwner->mData, "must have data");
   }
@@ -142,7 +144,8 @@ class MemoryBlobImpl final : public BaseBlobImpl {
   // Create slice
   MemoryBlobImpl(const MemoryBlobImpl* aOther, uint64_t aStart,
                  uint64_t aLength, const nsAString& aContentType)
-      : BaseBlobImpl(aContentType, aOther->mStart + aStart, aLength),
+      : BaseBlobImpl(NS_LITERAL_STRING("MemoryBlobImpl"), aContentType,
+                     aOther->mStart + aStart, aLength),
         mDataOwner(aOther->mDataOwner) {
     MOZ_ASSERT(mDataOwner && mDataOwner->mData, "must have data");
     mImmutable = aOther->mImmutable;
