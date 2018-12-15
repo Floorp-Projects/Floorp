@@ -458,8 +458,6 @@ nsresult nsZipArchive::ExtractFile(nsZipItem *item, nsIFile *outFile,
     uint32_t count = 0;
     uint8_t *buf = cursor.Read(&count);
     if (!buf) {
-      nsZipArchive::sFileCorruptedReason =
-          "nsZipArchive: Read() failed to return a buffer";
       rv = NS_ERROR_FILE_CORRUPTED;
       break;
     }
@@ -620,7 +618,6 @@ nsresult nsZipArchive::BuildFileList(PRFileDesc *aFd) {
   }
 
   if (!centralOffset) {
-    nsZipArchive::sFileCorruptedReason = "nsZipArchive: no central offset";
     return NS_ERROR_FILE_CORRUPTED;
   }
 
@@ -628,8 +625,6 @@ nsresult nsZipArchive::BuildFileList(PRFileDesc *aFd) {
 
   // avoid overflow of startp + centralOffset.
   if (buf < startp) {
-    nsZipArchive::sFileCorruptedReason =
-        "nsZipArchive: overflow looking for central directory";
     return NS_ERROR_FILE_CORRUPTED;
   }
 
@@ -640,8 +635,6 @@ nsresult nsZipArchive::BuildFileList(PRFileDesc *aFd) {
          ((sig = xtolong(buf)) == CENTRALSIG)) {
     // Make sure there is enough data available.
     if ((buf > endp) || (endp - buf < ZIPCENTRAL_SIZE)) {
-      nsZipArchive::sFileCorruptedReason =
-          "nsZipArchive: central directory too small";
       return NS_ERROR_FILE_CORRUPTED;
     }
 
@@ -656,13 +649,10 @@ nsresult nsZipArchive::BuildFileList(PRFileDesc *aFd) {
     // Sanity check variable sizes and refuse to deal with
     // anything too big: it's likely a corrupt archive.
     if (namelen < 1 || namelen > kMaxNameLength) {
-      nsZipArchive::sFileCorruptedReason = "nsZipArchive: namelen out of range";
       return NS_ERROR_FILE_CORRUPTED;
     }
     if (buf >= buf + diff ||  // No overflow
         buf >= endp - diff) {
-      nsZipArchive::sFileCorruptedReason =
-          "nsZipArchive: overflow looking for next item";
       return NS_ERROR_FILE_CORRUPTED;
     }
 
@@ -685,7 +675,6 @@ nsresult nsZipArchive::BuildFileList(PRFileDesc *aFd) {
   } /* while reading central directory records */
 
   if (sig != ENDSIG) {
-    nsZipArchive::sFileCorruptedReason = "nsZipArchive: unexpected sig";
     return NS_ERROR_FILE_CORRUPTED;
   }
 
@@ -1175,5 +1164,3 @@ nsZipItemPtr_base::nsZipItemPtr_base(nsZipArchive *aZip, const char *aEntryName,
     return;
   }
 }
-
-/* static */ const char *nsZipArchive::sFileCorruptedReason = nullptr;
