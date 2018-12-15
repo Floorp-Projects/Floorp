@@ -223,7 +223,7 @@ class ContentParent final : public PContentParent,
 
     ContentParentIterator begin() {
       // Move the cursor to the first element that matches the policy.
-      while (mPolicy != eAll && mCurrent && !mCurrent->mIsAlive) {
+      while (mPolicy != eAll && mCurrent && !mCurrent->IsAlive()) {
         mCurrent = mCurrent->LinkedListElement<ContentParent>::getNext();
       }
 
@@ -237,7 +237,7 @@ class ContentParent final : public PContentParent,
       MOZ_ASSERT(mCurrent);
       do {
         mCurrent = mCurrent->LinkedListElement<ContentParent>::getNext();
-      } while (mPolicy != eAll && mCurrent && !mCurrent->mIsAlive);
+      } while (mPolicy != eAll && mCurrent && !mCurrent->IsAlive());
 
       return *this;
     }
@@ -360,7 +360,9 @@ class ContentParent final : public PContentParent,
 
   void UpdateCookieStatus(nsIChannel* aChannel);
 
-  bool IsAvailable() const { return mIsAvailable; }
+  bool IsLaunching() const {
+    return mLifecycleState == LifecycleState::LAUNCHING;
+  }
   bool IsAlive() const override;
 
   virtual bool IsForBrowser() const override { return mIsForBrowser; }
@@ -1240,13 +1242,19 @@ class ContentParent final : public PContentParent,
   // sequence.  Precisely, how many TabParents have called
   // NotifyTabDestroying() but not called NotifyTabDestroyed().
   int32_t mNumDestroyingTabs;
-  // True only while this process is in "good health" and may be used for
-  // new remote tabs.
-  bool mIsAvailable;
-  // True only while remote content is being actively used from this process.
-  // After mIsAlive goes to false, some previously scheduled IPC traffic may
-  // still pass through.
-  bool mIsAlive;
+
+  // The process starts in the LAUNCHING state, and transitions to
+  // ALIVE once it can accept IPC messages.  It remains ALIVE only
+  // while remote content is being actively used from this process.
+  // After the state becaomes DEAD, some previously scheduled IPC
+  // traffic may still pass through.
+  enum class LifecycleState : uint8_t {
+    LAUNCHING,
+    ALIVE,
+    DEAD,
+  };
+
+  LifecycleState mLifecycleState;
 
   bool mShuttingDown;
   bool mIsForBrowser;
