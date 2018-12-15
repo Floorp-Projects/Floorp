@@ -29,6 +29,8 @@
 namespace mozilla {
 namespace xpcom {
 
+static constexpr uint32_t kNoContractID = 0xffffffff;
+
 namespace {
 // Template helpers for constructor function sanity checks.
 template <typename T>
@@ -165,6 +167,15 @@ bool StaticModule::Active() const {
   return FastProcessSelectorMatches(mProcessSelector);
 }
 
+bool StaticModule::Overridable() const {
+  return mContractID.mOffset != kNoContractID;
+}
+
+nsCString StaticModule::ContractID() const {
+  MOZ_ASSERT(Overridable());
+  return GetString(mContractID);
+}
+
 nsresult StaticModule::CreateInstance(nsISupports* aOuter, const nsIID& aIID,
                                       void** aResult) const {
   return CreateInstanceImpl(ID(), aOuter, aIID, aResult);
@@ -222,6 +233,27 @@ nsCString StaticCategory::Name() const {
 
 /* static */ void StaticComponents::Shutdown() {
   CallUnloadFuncs();
+}
+
+/* static */ const nsID& Components::GetCID(ModuleID aID) {
+  return gStaticModules[size_t(aID)].CID();
+}
+
+nsresult GetServiceHelper::operator()(const nsIID& aIID, void** aResult) const {
+  nsresult rv =
+      nsComponentManagerImpl::gComponentManager->GetService(mId, aIID, aResult);
+  return SetResult(rv);
+}
+
+nsresult CreateInstanceHelper::operator()(const nsIID& aIID,
+                                          void** aResult) const {
+  const auto& entry = gStaticModules[size_t(mId)];
+  if (!entry.Active()) {
+    return SetResult(NS_ERROR_FACTORY_NOT_REGISTERED);
+  }
+
+  nsresult rv = entry.CreateInstance(nullptr, aIID, aResult);
+  return SetResult(rv);
 }
 
 }  // namespace xpcom
