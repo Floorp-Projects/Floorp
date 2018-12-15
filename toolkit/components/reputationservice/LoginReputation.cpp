@@ -7,19 +7,19 @@
 #include "nsThreadUtils.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/Logging.h"
+#include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "nsIUrlClassifierFeature.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
 #define PREF_PP_ENABLED "browser.safebrowsing.passwords.enabled"
-#define PREF_PASSWORD_ALLOW_TABLE "urlclassifier.passwordAllowTable"
-
-static bool sPasswordProtectionEnabled = false;
 
 // MOZ_LOG=LoginReputation:5
 LazyLogModule gLoginReputationLogModule("LoginReputation");
@@ -29,11 +29,6 @@ LazyLogModule gLoginReputationLogModule("LoginReputation");
   MOZ_LOG_TEST(gLoginReputationLogModule, mozilla::LogLevel::Debug)
 
 static Atomic<bool> gShuttingDown(false);
-
-static const char* kObservedPrefs[] = {
-    PREF_PASSWORD_ALLOW_TABLE,
-    nullptr,
-};
 
 // -------------------------------------------------------------------------
 // ReputationQueryParam
@@ -67,39 +62,29 @@ ReputationQueryParam::GetFormURI(nsIURI** aURI) {
 // This class is a wrapper that encapsulate asynchronous callback API provided
 // by DBService into a MozPromise callback.
 //
-class LoginWhitelist final : public nsIURIClassifierCallback {
+class LoginWhitelist final : public nsIUrlClassifierFeatureCallback {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIURICLASSIFIERCALLBACK
+  NS_DECL_NSIURLCLASSIFIERFEATURECALLBACK
 
   RefPtr<ReputationPromise> QueryLoginWhitelist(
       nsILoginReputationQuery* aParam);
 
   LoginWhitelist() = default;
 
-  nsresult Init();
-  nsresult Uninit();
-
-  void UpdateWhitelistTables();
+  nsresult Shutdown();
 
  private:
   ~LoginWhitelist() = default;
 
-  nsCString mTables;
-
-  // Queries that are waiting for callback from ::AsyncClassifyLocalWithTables.
+  // Queries that are waiting for callback from
+  // ::AsyncClassifyLocalWithFeatures.
   nsTArray<UniquePtr<MozPromiseHolder<ReputationPromise>>> mQueryPromises;
 };
 
-NS_IMPL_ISUPPORTS(LoginWhitelist, nsIURIClassifierCallback)
+NS_IMPL_ISUPPORTS(LoginWhitelist, nsIUrlClassifierFeatureCallback)
 
-nsresult LoginWhitelist::Init() {
-  UpdateWhitelistTables();
-
-  return NS_OK;
-}
-
-nsresult LoginWhitelist::Uninit() {
+nsresult LoginWhitelist::Shutdown() {
   // Reject all query promise before releasing.
   for (uint8_t i = 0; i < mQueryPromises.Length(); i++) {
     mQueryPromises[i]->Reject(NS_ERROR_ABORT, __func__);
@@ -136,8 +121,18 @@ RefPtr<ReputationPromise> LoginWhitelist::QueryLoginWhitelist(
   // AsyncClassifyLocalWithTables API won't trigger a gethash request on
   // a full-length match, so this API call should only include local operation.
   // We don't support prefs overwrite for this classification.
-  rv = uriClassifier->AsyncClassifyLocalWithTables(
-      uri, mTables, nsTArray<nsCString>(), nsTArray<nsCString>(), this);
+
+  nsCOMPtr<nsIUrlClassifierFeature> feature =
+      mozilla::net::UrlClassifierFeatureFactory::GetFeatureLoginReputation();
+  if (NS_WARN_IF(!feature)) {
+    return p;
+  }
+
+  nsTArray<RefPtr<nsIUrlClassifierFeature>> features;
+  features.AppendElement(feature);
+
+  rv = uriClassifier->AsyncClassifyLocalWithFeatures(
+      uri, features, nsIUrlClassifierFeature::whitelist, this);
   if (NS_FAILED(rv)) {
     return p;
   }
@@ -147,27 +142,22 @@ RefPtr<ReputationPromise> LoginWhitelist::QueryLoginWhitelist(
   return p;
 }
 
-nsresult LoginWhitelist::OnClassifyComplete(nsresult aErrorCode,
-                                            const nsACString& aLists,
-                                            const nsACString& aProvider,
-                                            const nsACString& aFullHash) {
+nsresult LoginWhitelist::OnClassifyComplete(
+    const nsTArray<RefPtr<nsIUrlClassifierFeatureResult>>& aResults) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (gShuttingDown) {
     return NS_OK;
   }
 
-  LR_LOG(("OnClassifyComplete : list = %s", aLists.BeginReading()));
+  LR_LOG(("OnClassifyComplete : %s",
+          aResults.IsEmpty() ? "blacklisted" : "whitelisted"));
 
   UniquePtr<MozPromiseHolder<ReputationPromise>> holder =
       std::move(mQueryPromises.ElementAt(0));
   mQueryPromises.RemoveElementAt(0);
 
-  if (NS_FAILED(aErrorCode)) {
-    // This should not happen
-    MOZ_ASSERT_UNREACHABLE("unexpected error received in OnClassifyComplete");
-    holder->Reject(aErrorCode, __func__);
-  } else if (aLists.IsEmpty()) {
+  if (aResults.IsEmpty()) {
     // Reject if we can not find url in white list.
     holder->Reject(NS_OK, __func__);
   } else {
@@ -175,10 +165,6 @@ nsresult LoginWhitelist::OnClassifyComplete(nsresult aErrorCode,
   }
 
   return NS_OK;
-}
-
-void LoginWhitelist::UpdateWhitelistTables() {
-  Preferences::GetCString(PREF_PASSWORD_ALLOW_TABLE, mTables);
 }
 
 // -------------------------------------------------------------------------
@@ -215,9 +201,6 @@ NS_IMETHODIMP
 LoginReputationService::Init() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  Preferences::AddBoolVarCache(&sPasswordProtectionEnabled, PREF_PP_ENABLED,
-                               true);
-
   switch (XRE_GetProcessType()) {
     case GeckoProcessType_Default:
       LR_LOG(("Init login reputation service in parent"));
@@ -240,7 +223,7 @@ LoginReputationService::Init() {
 
   mLoginWhitelist = new LoginWhitelist();
 
-  if (sPasswordProtectionEnabled) {
+  if (StaticPrefs::browser_safebrowsing_passwords_enabled()) {
     Enable();
   }
 
@@ -249,14 +232,9 @@ LoginReputationService::Init() {
 
 nsresult LoginReputationService::Enable() {
   MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(sPasswordProtectionEnabled);
+  MOZ_ASSERT(StaticPrefs::browser_safebrowsing_passwords_enabled());
 
   LR_LOG(("Enable login reputation service"));
-
-  nsresult rv = mLoginWhitelist->Init();
-  Unused << NS_WARN_IF(NS_FAILED(rv));
-
-  Preferences::AddStrongObservers(this, kObservedPrefs);
 
   return NS_OK;
 }
@@ -266,15 +244,10 @@ nsresult LoginReputationService::Disable() {
 
   LR_LOG(("Disable login reputation service"));
 
-  nsresult rv = mLoginWhitelist->Uninit();
+  nsresult rv = mLoginWhitelist->Shutdown();
   Unused << NS_WARN_IF(NS_FAILED(rv));
 
   mQueryRequests.Clear();
-
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    Preferences::RemoveObservers(this, kObservedPrefs);
-  }
 
   return NS_OK;
 }
@@ -308,7 +281,7 @@ LoginReputationService::QueryReputationAsync(
 
   LR_LOG(("QueryReputationAsync() [this=%p]", this));
 
-  if (!sPasswordProtectionEnabled) {
+  if (!StaticPrefs::browser_safebrowsing_passwords_enabled()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -351,7 +324,7 @@ LoginReputationService::QueryReputation(
 
   LR_LOG(("QueryReputation() [this=%p]", this));
 
-  if (gShuttingDown || !sPasswordProtectionEnabled) {
+  if (gShuttingDown || !StaticPrefs::browser_safebrowsing_passwords_enabled()) {
     LR_LOG(("QueryReputation() abort [this=%p]", this));
     aCallback->OnComplete(NS_ERROR_ABORT,
                           nsILoginReputationVerdictType::UNSPECIFIED);
@@ -479,10 +452,8 @@ LoginReputationService::Observe(nsISupports* aSubject, const char* aTopic,
     nsDependentString data(aData);
 
     if (data.EqualsLiteral(PREF_PP_ENABLED)) {
-      nsresult rv = sPasswordProtectionEnabled ? Enable() : Disable();
+      nsresult rv = StaticPrefs::browser_safebrowsing_passwords_enabled() ?  Enable() : Disable();
       Unused << NS_WARN_IF(NS_FAILED(rv));
-    } else if (data.EqualsLiteral(PREF_PASSWORD_ALLOW_TABLE)) {
-      mLoginWhitelist->UpdateWhitelistTables();
     }
   } else if (!strcmp(aTopic, "quit-application")) {
     // Prepare to shutdown, won't allow any query request after 'gShuttingDown'

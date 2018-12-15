@@ -886,6 +886,13 @@ class MachCommandConditions(object):
         return False
 
     @staticmethod
+    def is_thunderbird(cls):
+        """Must have a Thunderbird build."""
+        if hasattr(cls, 'substs'):
+            return cls.substs.get('MOZ_BUILD_APP') == 'comm/mail'
+        return False
+
+    @staticmethod
     def is_android(cls):
         """Must have an Android build."""
         if hasattr(cls, 'substs'):

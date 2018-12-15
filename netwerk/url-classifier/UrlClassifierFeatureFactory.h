@@ -25,6 +25,8 @@ class UrlClassifierFeatureFactory final {
   static void GetFeaturesFromChannel(
       nsIChannel* aChannel,
       nsTArray<nsCOMPtr<nsIUrlClassifierFeature>>& aFeatures);
+
+  static nsIUrlClassifierFeature* GetFeatureLoginReputation();
 };
 
 }  // namespace net

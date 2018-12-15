@@ -1812,6 +1812,13 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+// Password protection
+VARCACHE_PREF(
+  "browser.safebrowsing.passwords.enabled",
+   browser_safebrowsing_passwords_enabled,
+  bool, false
+)
+
 //---------------------------------------------------------------------------
 // ChannelClassifier prefs
 //---------------------------------------------------------------------------
