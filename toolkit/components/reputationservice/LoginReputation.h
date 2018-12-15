@@ -6,11 +6,12 @@
 #ifndef LoginReputation_h__
 #define LoginReputation_h__
 
-#include "nsILoginReputation.h"
-#include "nsIURIClassifier.h"
-#include "nsIObserver.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MozPromise.h"
+#include "nsILoginReputation.h"
+#include "nsIObserver.h"
+#include "nsISupportsImpl.h"
+#include "nsIURIClassifier.h"
 
 class LoginWhitelist;
 
