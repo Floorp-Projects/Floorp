@@ -431,6 +431,17 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   border-inline-end: 1px solid var(--panel-separator-color);
 }
 
+.customization-uidensity-menuitem > .menu-iconic-left > .menu-iconic-icon:-moz-locale-dir(rtl),
+.customization-lwtheme-menu-theme > .toolbarbutton-icon:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
+#customization-uidensity-button > .box-inherit > .box-inherit > .button-icon:-moz-locale-dir(rtl),
+#customization-lwtheme-button > .box-inherit > .box-inherit > .button-icon:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
+
 #customization-panelWrapper > .panel-arrowcontent {
   color: var(--arrowpanel-color);
   background: var(--arrowpanel-background);
