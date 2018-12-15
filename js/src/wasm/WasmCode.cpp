@@ -1261,6 +1261,16 @@ const CodeRange* Code::lookupFuncRange(void* pc) const {
   return nullptr;
 }
 
+const StackMap* Code::lookupStackMap(uint8_t* nextPC) const {
+  for (Tier t : tiers()) {
+    const StackMap* result = metadata(t).stackMaps.findMap(nextPC);
+    if (result) {
+      return result;
+    }
+  }
+  return nullptr;
+}
+
 struct TrapSitePCOffset {
   const TrapSiteVector& trapSites;
   explicit TrapSitePCOffset(const TrapSiteVector& trapSites)

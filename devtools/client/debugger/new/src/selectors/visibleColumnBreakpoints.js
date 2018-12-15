@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { groupBy, hasIn, sortedUniqBy } from "lodash";
+import { groupBy, get, sortedUniqBy } from "lodash";
 import { createSelector } from "reselect";
 
 import { getViewport } from "../selectors";
@@ -14,7 +14,8 @@ import type { SourceLocation } from "../types";
 
 export type ColumnBreakpoint = {|
   +location: SourceLocation,
-  +enabled: boolean
+  +enabled: boolean,
+  +condition: ?string
 |};
 
 function contains(location, range) {
@@ -35,9 +36,13 @@ function groupBreakpoints(breakpoints) {
   return map;
 }
 
-function isEnabled(location, breakpointMap) {
+function findBreakpoint(location, breakpointMap) {
   const { line, column } = location;
-  return hasIn(breakpointMap, [line, column]);
+  const breakpoints = get(breakpointMap, [line, column]);
+
+  if (breakpoints) {
+    return breakpoints[0];
+  }
 }
 
 function getLineCount(columnBreakpoints) {
@@ -101,10 +106,16 @@ export function getColumnBreakpoints(pausePoints, breakpoints, viewport) {
     ({ location: { line } }) => lineCount[line] > 1
   );
 
-  return columnBreakpoints.map(({ location }) => ({
-    location,
-    enabled: isEnabled(location, breakpointMap)
-  }));
+  return columnBreakpoints.map(({ location }) => {
+    // Find the breakpoint so if we know it's enabled and has condition
+    const foundBreakpoint = findBreakpoint(location, breakpointMap);
+
+    return {
+      location,
+      enabled: !!foundBreakpoint,
+      condition: foundBreakpoint ? foundBreakpoint.condition : null
+    };
+  });
 }
 
 export const visibleColumnBreakpoints = createSelector(

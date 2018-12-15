@@ -550,7 +550,7 @@ inline void BufferGrayRootsTracer::bufferRoot(T* thing) {
 
 void GCRuntime::markBufferedGrayRoots(JS::Zone* zone) {
   MOZ_ASSERT(grayBufferState == GrayBufferState::Okay);
-  MOZ_ASSERT(zone->isGCMarkingGray() || zone->isGCCompacting());
+  MOZ_ASSERT(zone->isGCMarkingBlackAndGray() || zone->isGCCompacting());
 
   auto& roots = zone->gcGrayRoots();
   if (roots.empty()) {

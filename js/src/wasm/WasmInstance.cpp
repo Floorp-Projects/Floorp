@@ -27,6 +27,7 @@
 #include "util/Text.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmModule.h"
+#include "wasm/WasmStubs.h"
 
 #include "gc/StoreBuffer-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
@@ -1120,6 +1121,80 @@ void Instance::trace(JSTracer* trc) {
   // WasmInstanceObject will call Instance::tracePrivate at which point we
   // can mark the rest of the children.
   TraceEdge(trc, &object_, "wasm instance object");
+}
+
+uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
+                               uint8_t* nextPC,
+                               uintptr_t highestByteVisitedInPrevFrame) {
+  const StackMap* map = code().lookupStackMap(nextPC);
+  if (!map) {
+    return 0;
+  }
+
+  Frame* frame = wfi.frame();
+
+  // |frame| points somewhere in the middle of the area described by |map|.
+  // We have to calculate |scanStart|, the lowest address that is described by
+  // |map|, by consulting |map->frameOffsetFromTop|.
+
+  const size_t numMappedBytes = map->numMappedWords * sizeof(void*);
+  const uintptr_t scanStart = uintptr_t(frame) +
+                              (map->frameOffsetFromTop * sizeof(void*)) -
+                              numMappedBytes;
+  MOZ_ASSERT(0 == scanStart % sizeof(void*));
+
+  // Do what we can to assert that, for consecutive wasm frames, their stack
+  // maps also abut exactly.  This is a useful sanity check on the sizing of
+  // stack maps.
+  MOZ_ASSERT_IF(highestByteVisitedInPrevFrame != 0,
+                highestByteVisitedInPrevFrame + 1 == scanStart);
+
+  uintptr_t* stackWords = (uintptr_t*)scanStart;
+
+  // If we have some exit stub words, this means the map also covers an area
+  // created by a exit stub, and so the highest word of that should be a
+  // constant created by (code created by) GenerateTrapExit.
+  MOZ_ASSERT_IF(
+      map->numExitStubWords > 0,
+      stackWords[map->numExitStubWords - 1 - TrapExitDummyValueOffsetFromTop] ==
+          TrapExitDummyValue);
+
+  // And actually hand them off to the GC.
+  for (uint32_t i = 0; i < map->numMappedWords; i++) {
+    if (map->getBit(i) == 0) {
+      continue;
+    }
+
+    // This assertion seems at least moderately effective in detecting
+    // discrepancies or misalignments between the map and reality.
+    MOZ_ASSERT(js::gc::IsCellPointerValidOrNull((const void*)stackWords[i]));
+
+    if (stackWords[i]) {
+      TraceRoot(trc, (JSObject**)&stackWords[i],
+                "Instance::traceWasmFrame: normal word");
+    }
+  }
+
+  // Finally, deal with a ref-typed DebugFrame if it is present.
+  if (map->hasRefTypedDebugFrame) {
+    DebugFrame* debugFrame = DebugFrame::from(frame);
+    char* debugFrameP = (char*)debugFrame;
+
+    char* resultRefP = debugFrameP + DebugFrame::offsetOfResults();
+    if (*(intptr_t*)resultRefP) {
+      TraceRoot(trc, (JSObject**)resultRefP,
+                "Instance::traceWasmFrame: DebugFrame::resultRef_");
+    }
+
+    if (debugFrame->hasCachedReturnJSValue()) {
+      char* cachedReturnJSValueP =
+          debugFrameP + DebugFrame::offsetOfCachedReturnJSValue();
+      TraceRoot(trc, (js::Value*)cachedReturnJSValueP,
+                "Instance::traceWasmFrame: DebugFrame::cachedReturnJSValue_");
+    }
+  }
+
+  return scanStart + numMappedBytes - 1;
 }
 
 WasmMemoryObject* Instance::memory() const { return memory_; }

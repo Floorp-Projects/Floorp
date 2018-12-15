@@ -17,7 +17,6 @@ type Bookmark = {
 };
 
 type Props = {
-  callSite: Object,
   editor: Object,
   source: Object,
   enabled: boolean,
@@ -27,30 +26,51 @@ type Props = {
 
 const breakpointImg = document.createElement("div");
 ReactDOM.render(<Svg name={"column-marker"} />, breakpointImg);
-function makeBookmark(isActive, { onClick }) {
+function makeBookmark(isActive, condition, { onClick }) {
   const bp = breakpointImg.cloneNode(true);
   const className = isActive ? "active" : "disabled";
-  bp.className = classnames("call-site", className);
+
+  bp.className = classnames(
+    "column-breakpoint",
+    {
+      "has-condition": condition
+    },
+    className
+  );
+  if (condition) {
+    bp.setAttribute("title", condition);
+  }
   bp.onclick = onClick;
+
   return bp;
 }
 
-export default class CallSite extends PureComponent<Props> {
-  addCallSite: Function;
+export default class ColumnBreakpoint extends PureComponent<Props> {
+  addColumnBreakpoint: Function;
   bookmark: ?Bookmark;
 
-  addCallSite = (nextProps: ?Props) => {
+  addColumnBreakpoint = (nextProps: ?Props) => {
     const { columnBreakpoint, source } = nextProps || this.props;
+
     const sourceId = source.id;
-    const { line, column } = columnBreakpoint.location;
-    const widget = makeBookmark(columnBreakpoint.enabled, {
-      onClick: this.toggleBreakpoint
-    });
     const doc = getDocument(sourceId);
+    if (!doc) {
+      return;
+    }
+
+    const { line, column } = columnBreakpoint.location;
+    const widget = makeBookmark(
+      columnBreakpoint.enabled,
+      columnBreakpoint.condition,
+      {
+        onClick: this.toggleBreakpoint
+      }
+    );
+
     this.bookmark = doc.setBookmark({ line: line - 1, ch: column }, { widget });
   };
 
-  clearCallSite = () => {
+  clearColumnBreakpoint = () => {
     if (this.bookmark) {
       this.bookmark.clear();
       this.bookmark = null;
@@ -64,16 +84,16 @@ export default class CallSite extends PureComponent<Props> {
   };
 
   componentDidMount() {
-    this.addCallSite();
+    this.addColumnBreakpoint();
   }
 
   componentWillUnmount() {
-    this.clearCallSite();
+    this.clearColumnBreakpoint();
   }
 
   componentDidUpdate() {
-    this.clearCallSite();
-    this.addCallSite();
+    this.clearColumnBreakpoint();
+    this.addColumnBreakpoint();
   }
 
   render() {

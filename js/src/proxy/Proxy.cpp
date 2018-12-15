@@ -745,11 +745,6 @@ static bool proxy_DeleteProperty(JSContext* cx, HandleObject obj, HandleId id,
   Proxy::trace(trc, obj);
 }
 
-static JSObject* proxy_WeakmapKeyDelegate(JSObject* obj) {
-  MOZ_ASSERT(obj->is<ProxyObject>());
-  return obj->as<ProxyObject>().handler()->weakmapKeyDelegate(obj);
-}
-
 static void proxy_Finalize(FreeOp* fop, JSObject* obj) {
   // Suppress a bogus warning about finalize().
   JS::AutoSuppressGCAnalysis nogc;
@@ -789,8 +784,7 @@ const ClassOps js::ProxyClassOps = {
     ProxyObject::trace, /* trace       */
 };
 
-const ClassExtension js::ProxyClassExtension = {proxy_WeakmapKeyDelegate,
-                                                proxy_ObjectMoved};
+const ClassExtension js::ProxyClassExtension = {proxy_ObjectMoved};
 
 const ObjectOps js::ProxyObjectOps = {
     proxy_LookupProperty, Proxy::defineProperty,

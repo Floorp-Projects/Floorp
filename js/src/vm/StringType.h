@@ -594,7 +594,7 @@ class JSString : public js::gc::Cell {
   static constexpr size_t offsetOfLength() {
     return offsetof(JSString, d.length_);
   }
-#elif defined(MOZ_LITTLE_ENDIAN)
+#elif MOZ_LITTLE_ENDIAN
   static constexpr size_t offsetOfFlags() {
     return offsetof(JSString, d.flags_);
   }

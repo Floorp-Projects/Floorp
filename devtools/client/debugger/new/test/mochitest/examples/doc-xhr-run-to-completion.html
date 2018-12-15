@@ -1,0 +1,41 @@
+ <!-- This Source Code Form is subject to the terms of the Mozilla Public
+    - License, v. 2.0. If a copy of the MPL was not distributed with this
+    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+<meta charset=UTF-8>
+<script>
+const cpmm = SpecialPowers.Services.cpmm;
+var result;
+
+function newXHR() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'doc-xhr-run-to-completion.html', true);
+    xhr.onload = done;
+    xhr.onerror = done;
+    xhr.onreadystatechange = done;
+    xhr.ontimeout = done;
+    xhr.send();
+}
+
+function singleRequest() {
+    result = "test failed";
+    newXHR();
+    debugger;
+    result = "test passed";
+}
+
+function multipleRequests() {
+    result = "test failed";
+    newXHR();
+    newXHR();
+    debugger;
+    newXHR();
+    debugger;
+    debugger;
+    result = "test passed";
+}
+
+function done() {
+    cpmm.sendAsyncMessage(result);
+}
+</script>

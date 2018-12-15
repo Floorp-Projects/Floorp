@@ -3152,9 +3152,9 @@ void MacroAssembler::callWithABINoProfiler(void* fun, MoveOp::Type result,
 #endif
 }
 
-void MacroAssembler::callWithABI(wasm::BytecodeOffset bytecode,
-                                 wasm::SymbolicAddress imm,
-                                 MoveOp::Type result) {
+CodeOffset MacroAssembler::callWithABI(wasm::BytecodeOffset bytecode,
+                                       wasm::SymbolicAddress imm,
+                                       MoveOp::Type result) {
   MOZ_ASSERT(wasm::NeedsBuiltinThunk(imm));
 
   // We clobber WasmTlsReg below in the loadWasmTlsRegFromFrame(), but Ion
@@ -3169,10 +3169,14 @@ void MacroAssembler::callWithABI(wasm::BytecodeOffset bytecode,
   // points when placing arguments.
   loadWasmTlsRegFromFrame();
 
-  call(wasm::CallSiteDesc(bytecode.offset(), wasm::CallSite::Symbolic), imm);
+  CodeOffset raOffset = call(
+      wasm::CallSiteDesc(bytecode.offset(), wasm::CallSite::Symbolic), imm);
+
   callWithABIPost(stackAdjust, result, /* callFromWasm = */ true);
 
   Pop(WasmTlsReg);
+
+  return raOffset;
 }
 
 // ===============================================================
@@ -3394,8 +3398,8 @@ void MacroAssembler::wasmReserveStackChecked(uint32_t amount,
   }
 }
 
-void MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,
-                                    const wasm::CalleeDesc& callee) {
+CodeOffset MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,
+                                          const wasm::CalleeDesc& callee) {
   // Load the callee, before the caller's registers are clobbered.
   uint32_t globalDataOffset = callee.importGlobalDataOffset();
   loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, code),
@@ -3416,10 +3420,10 @@ void MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,
                     WasmTlsReg);
   loadWasmPinnedRegsFromTls();
 
-  call(desc, ABINonArgReg0);
+  return call(desc, ABINonArgReg0);
 }
 
-void MacroAssembler::wasmCallBuiltinInstanceMethod(
+CodeOffset MacroAssembler::wasmCallBuiltinInstanceMethod(
     const wasm::CallSiteDesc& desc, const ABIArg& instanceArg,
     wasm::SymbolicAddress builtin) {
   MOZ_ASSERT(instanceArg != ABIArg());
@@ -3437,12 +3441,12 @@ void MacroAssembler::wasmCallBuiltinInstanceMethod(
     MOZ_CRASH("Unknown abi passing style for pointer");
   }
 
-  call(desc, builtin);
+  return call(desc, builtin);
 }
 
-void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
-                                      const wasm::CalleeDesc& callee,
-                                      bool needsBoundsCheck) {
+CodeOffset MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
+                                            const wasm::CalleeDesc& callee,
+                                            bool needsBoundsCheck) {
   Register scratch = WasmTableCallScratchReg0;
   Register index = WasmTableCallIndexReg;
 
@@ -3465,8 +3469,7 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
       addPtr(index, scratch);
     }
     loadPtr(Address(scratch, offsetof(wasm::FunctionTableElem, code)), scratch);
-    call(desc, scratch);
-    return;
+    return call(desc, scratch);
   }
 
   MOZ_ASSERT(callee.which() == wasm::CalleeDesc::WasmTable);
@@ -3519,7 +3522,7 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
 
   loadPtr(Address(scratch, offsetof(wasm::FunctionTableElem, code)), scratch);
 
-  call(desc, scratch);
+  return call(desc, scratch);
 }
 
 void MacroAssembler::emitPreBarrierFastPath(JSRuntime* rt, MIRType type,

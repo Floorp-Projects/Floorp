@@ -100,6 +100,10 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   static bool checkMarkingForZone(JS::Zone* zone);
 #endif
 
+  static JSObject* getDelegate(JSObject* key);
+  static JSObject* getDelegate(JSScript* script);
+  static JSObject* getDelegate(LazyScript* script);
+
  protected:
   // Instance member functions called by the above. Instantiations of WeakMap
   // override these with definitions appropriate for their Key and Value types.
@@ -129,8 +133,10 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   // Zone containing this weak map.
   JS::Zone* zone_;
 
-  // Whether this object has been traced during garbage collection.
+  // Whether this object has been marked during garbage collection and which
+  // color it was marked.
   bool marked;
+  gc::MarkColor markColor;
 };
 
 template <class Key, class Value>
@@ -181,10 +187,15 @@ class WeakMap
 
   bool markIteratively(GCMarker* marker) override;
 
-  JSObject* getDelegate(JSObject* key) const;
-  JSObject* getDelegate(JSScript* script) const;
-  JSObject* getDelegate(LazyScript* script) const;
-
+  /**
+   * If a wrapper is used as a key in a weakmap, the garbage collector should
+   * keep that object around longer than it otherwise would. We want to avoid
+   * collecting the wrapper (and removing the weakmap entry) as long as the
+   * wrapped object is alive (because the object can be rewrapped and looked up
+   * again). As long as the wrapper is used as a weakmap key, it will not be
+   * collected (and remain in the weakmap) until the wrapped object is
+   * collected.
+   */
  private:
   void exposeGCThingToActiveJS(const JS::Value& v) const {
     JS::ExposeValueToActiveJS(v);
@@ -193,9 +204,9 @@ class WeakMap
     JS::ExposeObjectToActiveJS(obj);
   }
 
-  bool keyNeedsMark(JSObject* key) const;
-  bool keyNeedsMark(JSScript* script) const;
-  bool keyNeedsMark(LazyScript* script) const;
+  bool keyNeedsMark(GCMarker* marker, JSObject* key) const;
+  bool keyNeedsMark(GCMarker* marker, JSScript* script) const;
+  bool keyNeedsMark(GCMarker* marker, LazyScript* script) const;
 
   bool findZoneEdges() override {
     // This is overridden by ObjectValueMap.

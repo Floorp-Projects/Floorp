@@ -47,11 +47,9 @@ static MOZ_ALWAYS_INLINE bool WeakCollectionPutEntryInternal(
     return false;
   }
 
-  if (JSWeakmapKeyDelegateOp op = key->getClass()->extWeakmapKeyDelegateOp()) {
-    RootedObject delegate(cx, op(key));
-    if (delegate && !TryPreserveReflector(cx, delegate)) {
-      return false;
-    }
+  RootedObject delegate(cx, UncheckedUnwrapWithoutExpose(key));
+  if (delegate && !TryPreserveReflector(cx, delegate)) {
+    return false;
   }
 
   MOZ_ASSERT(key->compartment() == obj->compartment());

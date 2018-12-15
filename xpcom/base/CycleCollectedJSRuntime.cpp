@@ -205,7 +205,7 @@ void NoteWeakMapsTracer::trace(JSObject* aMap, JS::GCCellPtr aKey,
 
   JSObject* kdelegate = nullptr;
   if (aKey.is<JSObject>()) {
-    kdelegate = js::GetWeakmapKeyDelegate(&aKey.as<JSObject>());
+    kdelegate = js::UncheckedUnwrapWithoutExpose(&aKey.as<JSObject>());
   }
 
   if (JS::IsCCTraceKind(aValue.kind())) {
@@ -251,7 +251,7 @@ static void ShouldWeakMappingEntryBeBlack(JSObject* aMap, JS::GCCellPtr aKey,
   }
 
   if (keyMightNeedMarking && aKey.is<JSObject>()) {
-    JSObject* kdelegate = js::GetWeakmapKeyDelegate(&aKey.as<JSObject>());
+    JSObject* kdelegate = js::UncheckedUnwrapWithoutExpose(&aKey.as<JSObject>());
     if (kdelegate && !JS::ObjectIsMarkedGray(kdelegate) &&
         (!aMap || !JS::ObjectIsMarkedGray(aMap))) {
       *aKeyShouldBeBlack = true;

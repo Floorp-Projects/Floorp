@@ -1295,6 +1295,10 @@ static void TraceJitActivation(JSTracer* trc, JitActivation* activation) {
   activation->traceRematerializedFrames(trc);
   activation->traceIonRecovery(trc);
 
+  // This is used for sanity checking continuity of the sequence of wasm stack
+  // maps as we unwind.  It has no functional purpose.
+  uintptr_t highestByteVisitedInPrevWasmFrame = 0;
+
   for (JitFrameIter frames(activation); !frames.done(); ++frames) {
     if (frames.isJSJit()) {
       const JSJitFrameIter& jitFrame = frames.asJSJit();
@@ -1331,9 +1335,16 @@ static void TraceJitActivation(JSTracer* trc, JitActivation* activation) {
         default:
           MOZ_CRASH("unexpected frame type");
       }
+      highestByteVisitedInPrevWasmFrame = 0; /* "unknown" */
     } else {
       MOZ_ASSERT(frames.isWasm());
-      frames.asWasm().instance()->trace(trc);
+      uint8_t* nextPC = frames.returnAddressToFp();
+      MOZ_ASSERT(nextPC != 0);
+      wasm::WasmFrameIter& wasmFrameIter = frames.asWasm();
+      wasm::Instance* instance = wasmFrameIter.instance();
+      instance->trace(trc);
+      highestByteVisitedInPrevWasmFrame = instance->traceFrame(
+          trc, wasmFrameIter, nextPC, highestByteVisitedInPrevWasmFrame);
     }
   }
 }
