@@ -15,6 +15,7 @@ function test_simple() {
 
   xhr.onloadend = function() {
     ok(xhr.response instanceof Blob, "We have a blob!");
+    ok(!(xhr.response instanceof File), "Our blob is not a file!");
     is(xhr.response.size, data.length, "Data length matches");
 
     var fr = new FileReader();
@@ -49,6 +50,7 @@ function test_reuse() {
   var count = 0;
   xhr.onloadend = function() {
     ok(xhr.response instanceof Blob, "We have a blob!");
+    ok(!(xhr.response instanceof File), "Our blob is not a file!");
     is(xhr.response.size, data.length, "Data length matches");
 
     var fr = new FileReader();
