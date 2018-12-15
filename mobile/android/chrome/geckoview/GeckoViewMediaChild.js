@@ -28,7 +28,7 @@ class GeckoViewMediaChild extends GeckoViewChildModule {
 
   onEnable() {
     debug `onEnable`;
-    addEventListener("UAWidgetBindToTree", this, false);
+    addEventListener("UAWidgetSetupOrChange", this, false);
     addEventListener("MozDOMFullscreen:Entered", this, false);
     addEventListener("MozDOMFullscreen:Exited", this, false);
     addEventListener("pagehide", this, false);
@@ -46,7 +46,7 @@ class GeckoViewMediaChild extends GeckoViewChildModule {
   onDisable() {
     debug `onDisable`;
 
-    removeEventListener("UAWidgetBindToTree", this);
+    removeEventListener("UAWidgetSetupOrChange", this);
     removeEventListener("MozDOMFullscreen:Entered", this);
     removeEventListener("MozDOMFullscreen:Exited", this);
     removeEventListener("pagehide", this);
@@ -103,7 +103,7 @@ class GeckoViewMediaChild extends GeckoViewChildModule {
     debug `handleEvent: ${aEvent.type}`;
 
     switch (aEvent.type) {
-      case "UAWidgetBindToTree":
+      case "UAWidgetSetupOrChange":
         this.handleNewMedia(aEvent.composedTarget);
         break;
       case "MozDOMFullscreen:Entered":
