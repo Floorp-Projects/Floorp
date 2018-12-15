@@ -11,6 +11,9 @@ const url = __webDriverArguments[0].testUrl;
 let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
           .getService(Ci.nsIWindowMediator);
 let win = wm.getMostRecentWindow("navigator:browser");
+if (!win) {
+  win = wm.getMostRecentWindow("mail:3pane");
+}
 
 // mochikit's bootstrap.js has set up a listener for this event. It's
 // used so bootstrap.js knows which flavor and url to load.
