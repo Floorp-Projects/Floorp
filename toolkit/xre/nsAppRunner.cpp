@@ -5120,12 +5120,17 @@ extern "C" void GeckoCrashOOL(const char* aFilename, int aLine,
 
 // From toolkit/library/rust/shared/lib.rs
 extern "C" void install_rust_panic_hook();
+extern "C" void install_rust_oom_hook();
 
-struct InstallRustPanicHook {
-  InstallRustPanicHook() { install_rust_panic_hook(); }
+
+struct InstallRustHooks {
+  InstallRustHooks() {
+    install_rust_panic_hook();
+    install_rust_oom_hook();
+  }
 };
 
-InstallRustPanicHook sInstallRustPanicHook;
+InstallRustHooks sInstallRustHooks;
 
 #ifdef MOZ_ASAN_REPORTER
 void setASanReporterPath(nsIFile* aDir) {
