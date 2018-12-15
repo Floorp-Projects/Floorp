@@ -1509,14 +1509,9 @@ void ContentParent::RemoveFromList() {
   }
 }
 
-void ContentParent::MarkAsTroubled() {
-  RemoveFromList();
-  mIsAvailable = false;
-}
-
 void ContentParent::MarkAsDead() {
-  MarkAsTroubled();
-  mIsAlive = false;
+  RemoveFromList();
+  mLifecycleState = LifecycleState::DEAD;
 }
 
 void ContentParent::OnChannelError() {
@@ -1733,7 +1728,7 @@ bool ContentParent::TryToRecycle() {
   // This life time check should be replaced by a memory health check (memory
   // usage + fragmentation).
   const double kMaxLifeSpan = 5;
-  if (mShutdownPending || mCalledKillHard || !IsAvailable() ||
+  if (mShutdownPending || mCalledKillHard || !IsAlive() ||
       !mRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE) ||
       (TimeStamp::Now() - mActivateTS).ToSeconds() > kMaxLifeSpan ||
       !PreallocatedProcessManager::Provide(this)) {
@@ -1760,8 +1755,8 @@ bool ContentParent::ShouldKeepProcessAlive() const {
     return false;
   }
 
-  // If we have already been marked as troubled/dead, don't prevent shutdown.
-  if (!IsAvailable()) {
+  // If we have already been marked as dead, don't prevent shutdown.
+  if (!IsAlive()) {
     return false;
   }
 
@@ -2244,7 +2239,7 @@ void ContentParent::LaunchSubprocessInternal(
         CodeCoverageHandler::Get()->GetMutexHandle(procId));
 #endif
 
-    mIsAlive = true;
+    mLifecycleState = LifecycleState::ALIVE;
     InitInternal(aInitialPriority);
 
     ContentProcessManager::GetSingleton()->AddContentProcess(this);
@@ -2335,8 +2330,7 @@ ContentParent::ContentParent(ContentParent* aOpener,
       mJSPluginID(aJSPluginID),
       mRemoteWorkerActors(0),
       mNumDestroyingTabs(0),
-      mIsAvailable(true),
-      mIsAlive(false),
+      mLifecycleState(LifecycleState::LAUNCHING),
       mIsForBrowser(!mRemoteType.IsEmpty()),
       mRecordReplayState(aRecordReplayState),
       mRecordingFile(aRecordingFile),
@@ -2736,7 +2730,9 @@ void ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   MaybeEnableRemoteInputEventQueue();
 }
 
-bool ContentParent::IsAlive() const { return mIsAlive; }
+bool ContentParent::IsAlive() const {
+  return mLifecycleState == LifecycleState::ALIVE;
+}
 
 int32_t ContentParent::Pid() const {
   if (!mSubprocess || !mSubprocess->GetChildProcessHandle()) {
@@ -3045,7 +3041,7 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
     NS_ASSERTION(!mSubprocess, "Close should have nulled mSubprocess");
   }
 
-  if (!mIsAlive || !mSubprocess) return NS_OK;
+  if (!IsAlive() || !mSubprocess) return NS_OK;
 
   // listening for memory pressure event
   if (!strcmp(aTopic, "memory-pressure")) {
