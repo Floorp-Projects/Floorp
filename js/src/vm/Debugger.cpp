@@ -4866,11 +4866,6 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
                                         Value* vp) {
   THIS_DEBUGGER(cx, argc, vp, "findScripts", args, dbg);
 
-  if (gc::GCRuntime::temporaryAbortIfWasmGc(cx)) {
-    JS_ReportErrorASCII(cx, "API temporarily unavailable under wasm gc");
-    return false;
-  }
-
   ScriptQuery query(cx, dbg);
 
   if (args.length() >= 1) {
@@ -5057,11 +5052,6 @@ static inline DebuggerSourceReferent AsSourceReferent(JSObject* obj) {
 /* static */ bool Debugger::findSources(JSContext* cx, unsigned argc,
                                         Value* vp) {
   THIS_DEBUGGER(cx, argc, vp, "findSources", args, dbg);
-
-  if (gc::GCRuntime::temporaryAbortIfWasmGc(cx)) {
-    JS_ReportErrorASCII(cx, "API temporarily unavailable under wasm gc");
-    return false;
-  }
 
   SourceQuery query(cx, dbg);
   if (!query.findSources()) {

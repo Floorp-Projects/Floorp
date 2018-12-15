@@ -2301,8 +2301,7 @@ const ObjectOps TypedObject::objectOps_ = {
       Trace,                                                               \
   };                                                                       \
   static const ClassExtension Name##ClassExt = {                           \
-      nullptr, /* weakmapKeyDelegateOp */                                  \
-      Moved    /* objectMovedOp */                                         \
+      Moved /* objectMovedOp */                                            \
   };                                                                       \
   const Class Name::class_ = {                                             \
       #Name,           Class::NON_NATIVE | JSCLASS_DELAY_METADATA_BUILDER, \

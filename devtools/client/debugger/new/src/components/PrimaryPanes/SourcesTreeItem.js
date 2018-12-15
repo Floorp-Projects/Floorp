@@ -183,7 +183,11 @@ class SourceTreeItem extends Component<Props, State> {
       <span className="suffix">{L10N.getStr("sourceFooter.mappedSuffix")}</span>
     ) : null;
 
-    const querystring = getSourceQueryString(source);
+    let querystring;
+    if (hasSiblingOfSameName) {
+      querystring = getSourceQueryString(source);
+    }
+
     const query =
       hasSiblingOfSameName && querystring ? (
         <span className="query">{querystring}</span>

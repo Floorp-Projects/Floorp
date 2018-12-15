@@ -45,10 +45,14 @@ static BOOL sIndeterminate = FALSE;
 static StringTable sUIStrings;
 
 static BOOL GetStringsFile(WCHAR filename[MAX_PATH]) {
-  if (!GetModuleFileNameW(nullptr, filename, MAX_PATH)) return FALSE;
+  if (!GetModuleFileNameW(nullptr, filename, MAX_PATH)) {
+    return FALSE;
+  }
 
   WCHAR *dot = wcsrchr(filename, '.');
-  if (!dot || wcsicmp(dot + 1, L"exe")) return FALSE;
+  if (!dot || wcsicmp(dot + 1, L"exe")) {
+    return FALSE;
+  }
 
   wcscpy(dot + 1, L"ini");
   return TRUE;
@@ -103,7 +107,9 @@ static void InitDialog(HWND hDlg) {
 
   // Set dialog icon
   HICON hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_DIALOG));
-  if (hIcon) SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+  if (hIcon) {
+    SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+  }
 
   HWND hWndPro = GetDlgItem(hDlg, IDC_PROGRESS);
   SendMessage(hWndPro, PBM_SETRANGE, 0, MAKELPARAM(0, 100));
@@ -122,7 +128,9 @@ static void InitDialog(HWND hDlg) {
   HFONT hInfoFont, hOldFont = NULL;
   hInfoFont = (HFONT)SendMessage(hWndInfo, WM_GETFONT, 0, 0);
 
-  if (hInfoFont) hOldFont = (HFONT)SelectObject(hDCInfo, hInfoFont);
+  if (hInfoFont) {
+    hOldFont = (HFONT)SelectObject(hDCInfo, hInfoFont);
+  }
 
   // Measure the space needed for the text on a single line. DT_CALCRECT means
   // nothing is drawn.
@@ -137,8 +145,12 @@ static void InitDialog(HWND hDlg) {
         (textSize.right - textSize.left) - (infoSize.right - infoSize.left);
     extra.cy =
         (textSize.bottom - textSize.top) - (infoSize.bottom - infoSize.top);
-    if (extra.cx < 0) extra.cx = 0;
-    if (extra.cy < 0) extra.cy = 0;
+    if (extra.cx < 0) {
+      extra.cx = 0;
+    }
+    if (extra.cy < 0) {
+      extra.cy = 0;
+    }
     if ((extra.cx > 0) || (extra.cy > 0)) {
       RESIZE_WINDOW(hDlg, extra.cx, extra.cy);
       RESIZE_WINDOW(hWndInfo, extra.cx, extra.cy);
@@ -147,7 +159,9 @@ static void InitDialog(HWND hDlg) {
     }
   }
 
-  if (hOldFont) SelectObject(hDCInfo, hOldFont);
+  if (hOldFont) {
+    SelectObject(hDCInfo, hOldFont);
+  }
 
   ReleaseDC(hWndInfo, hDCInfo);
 
@@ -213,7 +227,9 @@ int ShowProgressUI(bool indeterminate, bool initUIStrings) {
     // ShowProgressUI is called sProgress is less than 70.
     Sleep(500);
 
-    if (sQuit || sProgress > 70.0f) return 0;
+    if (sQuit || sProgress > 70.0f) {
+      return 0;
+    }
   }
 
   // Don't load the UI if there's an <exe_name>.Local directory for redirection.

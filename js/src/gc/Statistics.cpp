@@ -981,7 +981,11 @@ void Statistics::endGC() {
                         !zoneStats.isFullCollection());
   TimeDuration markTotal = SumPhase(PhaseKind::MARK, phaseTimes);
   TimeDuration markRootsTotal = SumPhase(PhaseKind::MARK_ROOTS, phaseTimes);
-  runtime->addTelemetry(JS_TELEMETRY_GC_MARK_MS, t(markTotal));
+  double markTime = t(markTotal);
+  size_t markCount = runtime->gc.marker.getMarkCount();
+  double markRate = markCount / markTime;
+  runtime->addTelemetry(JS_TELEMETRY_GC_MARK_MS, markTime);
+  runtime->addTelemetry(JS_TELEMETRY_GC_MARK_RATE, markRate);
   runtime->addTelemetry(JS_TELEMETRY_GC_SWEEP_MS, t(phaseTimes[Phase::SWEEP]));
   if (runtime->gc.isCompactingGc()) {
     runtime->addTelemetry(JS_TELEMETRY_GC_COMPACT_MS,

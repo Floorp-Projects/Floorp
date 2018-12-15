@@ -286,6 +286,7 @@
 #include "nsHTMLTags.h"
 #include "NodeUbiReporting.h"
 #include "nsICookieService.h"
+#include "mozilla/net/ChannelEventQueue.h"
 #include "mozilla/net/RequestContextService.h"
 #include "StorageAccessPermissionRequest.h"
 
@@ -8580,6 +8581,22 @@ void nsIDocument::UnsuppressEventHandlingAndFireEvents(bool aFireEvents) {
   } else {
     FireOrClearDelayedEvents(documents, false);
   }
+
+  if (!EventHandlingSuppressed()) {
+    MOZ_ASSERT(NS_IsMainThread());
+    nsTArray<RefPtr<net::ChannelEventQueue>> queues;
+    mSuspendedQueues.SwapElements(queues);
+    for (net::ChannelEventQueue* queue : queues) {
+      queue->Resume();
+    }
+  }
+}
+
+void nsIDocument::AddSuspendedChannelEventQueue(
+    net::ChannelEventQueue* aQueue) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(EventHandlingSuppressed());
+  mSuspendedQueues.AppendElement(aQueue);
 }
 
 nsISupports* nsIDocument::GetCurrentContentSink() {

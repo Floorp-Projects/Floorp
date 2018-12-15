@@ -133,7 +133,6 @@ class JS_FRIEND_API Wrapper : public ForwardingProxyHandler {
         mFlags(aFlags) {}
 
   virtual bool finalizeInBackground(const Value& priv) const override;
-  virtual JSObject* weakmapKeyDelegate(JSObject* proxy) const override;
 
   using BaseProxyHandler::Action;
 

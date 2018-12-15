@@ -1064,11 +1064,6 @@ static bool ScheduleGC(JSContext* cx, unsigned argc, Value* vp) {
 static bool SelectForGC(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (gc::GCRuntime::temporaryAbortIfWasmGc(cx)) {
-    JS_ReportErrorASCII(cx, "API temporarily unavailable under wasm gc");
-    return false;
-  }
-
   /*
    * The selectedForMarking set is intended to be manually marked at slice
    * start to detect missing pre-barriers. It is invalid for nursery things

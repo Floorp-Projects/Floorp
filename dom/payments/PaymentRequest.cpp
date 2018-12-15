@@ -645,6 +645,11 @@ PaymentRequest::PaymentRequest(nsPIDOMWindowInner* aWindow,
 }
 
 already_AddRefed<Promise> PaymentRequest::CanMakePayment(ErrorResult& aRv) {
+  if (!InFullyActiveDocument()) {
+    aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
+    return nullptr;
+  }
+
   if (mState != eCreated) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
@@ -683,9 +688,13 @@ void PaymentRequest::RespondCanMakePayment(bool aResult) {
 
 already_AddRefed<Promise> PaymentRequest::Show(
     const Optional<OwningNonNull<Promise>>& aDetailsPromise, ErrorResult& aRv) {
+  if (!InFullyActiveDocument()) {
+    aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
+    return nullptr;
+  }
+
   nsIGlobalObject* global = GetOwnerGlobal();
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(global);
-  MOZ_ASSERT(win);
   nsIDocument* doc = win->GetExtantDoc();
 
   if (!EventStateManager::IsHandlingUserInput()) {
@@ -697,11 +706,6 @@ already_AddRefed<Promise> PaymentRequest::Show(
       aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
       return nullptr;
     }
-  }
-
-  if (!doc || !doc->IsCurrentActiveDocument()) {
-    aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
-    return nullptr;
   }
 
   if (mState != eCreated) {
@@ -792,6 +796,11 @@ void PaymentRequest::RespondComplete() {
 }
 
 already_AddRefed<Promise> PaymentRequest::Abort(ErrorResult& aRv) {
+  if (!InFullyActiveDocument()) {
+    aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
+    return nullptr;
+  }
+
   if (mState != eInteractive) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
@@ -872,6 +881,11 @@ nsresult PaymentRequest::UpdatePayment(JSContext* aCx,
 }
 
 void PaymentRequest::AbortUpdate(nsresult aRv) {
+  // perfect ignoring when the document is not fully active.
+  if (!InFullyActiveDocument()) {
+    return;
+  }
+
   MOZ_ASSERT(NS_FAILED(aRv));
 
   if (mState != eInteractive) {
@@ -1055,6 +1069,10 @@ void PaymentRequest::SetOptions(const PaymentOptions& aOptions) {
 
 void PaymentRequest::ResolvedCallback(JSContext* aCx,
                                       JS::Handle<JS::Value> aValue) {
+  if (!InFullyActiveDocument()) {
+    return;
+  }
+
   MOZ_ASSERT(aCx);
   mUpdating = false;
   if (NS_WARN_IF(!aValue.isObject())) {
@@ -1084,8 +1102,36 @@ void PaymentRequest::ResolvedCallback(JSContext* aCx,
 
 void PaymentRequest::RejectedCallback(JSContext* aCx,
                                       JS::Handle<JS::Value> aValue) {
+  if (!InFullyActiveDocument()) {
+    return;
+  }
+
   mUpdating = false;
   AbortUpdate(NS_ERROR_DOM_ABORT_ERR);
+}
+
+bool PaymentRequest::InFullyActiveDocument() {
+  nsIGlobalObject* global = GetOwnerGlobal();
+  if (!global) {
+    return false;
+  }
+
+  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(global);
+  nsIDocument* doc = win->GetExtantDoc();
+  if (!doc || !doc->IsCurrentActiveDocument()) {
+    return false;
+  }
+
+  // According to the definition of the fully active document, recursive
+  // checking the parent document are all IsCurrentActiveDocument
+  nsIDocument* parentDoc = doc->GetParentDocument();
+  while (parentDoc) {
+    if (parentDoc && !parentDoc->IsCurrentActiveDocument()) {
+      return false;
+    }
+    parentDoc = parentDoc->GetParentDocument();
+  }
+  return true;
 }
 
 void PaymentRequest::RegisterActivityObserver() {
@@ -1114,7 +1160,26 @@ void PaymentRequest::NotifyOwnerDocumentActivityChanged() {
   nsIDocument* doc = window->GetExtantDoc();
   NS_ENSURE_TRUE_VOID(doc);
 
-  if (!doc->IsCurrentActiveDocument()) {
+  if (!InFullyActiveDocument()) {
+    if (mState == eInteractive) {
+      if (mAcceptPromise) {
+        mAcceptPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+        mAcceptPromise = nullptr;
+      }
+      if (mResponse) {
+        mResponse->RejectRetry(NS_ERROR_DOM_ABORT_ERR);
+      }
+      if (mAbortPromise) {
+        mAbortPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+        mAbortPromise = nullptr;
+      }
+    }
+    if (mState == eCreated) {
+      if (mResultPromise) {
+        mResultPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+        mResultPromise = nullptr;
+      }
+    }
     RefPtr<PaymentRequestManager> mgr = PaymentRequestManager::GetSingleton();
     mgr->ClosePayment(this);
   }

@@ -1,8 +1,5 @@
 import os
-import signal
-import sys
 import tempfile
-import traceback
 
 import moznetwork
 from mozprocess import ProcessHandler

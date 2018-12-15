@@ -502,6 +502,7 @@ html[dir="rtl"] .tree-node button.arrow {
   padding: 15px;
   column-width: 250px;
   cursor: default;
+  user-select: none;
 }
 
 .shortcuts-content h2 {
@@ -1910,12 +1911,6 @@ html .toggle-button.end.vertical svg {
   background-color: white;
 }
 
-.tree:not(.object-inspector)
-  .tree-node[data-expandable="false"]
-  .tree-indent:last-of-type {
-  margin-inline-end: 4px;
-}
-
 /*
   Custom root styles
 */
@@ -2247,6 +2242,7 @@ menuseparator {
   user-select: none;
   height: var(--editor-footer-height);
   box-sizing: border-box;
+  justify-content: space-between;
 }
 
 .source-footer .commands {
@@ -2327,6 +2323,7 @@ menuseparator {
 
 .source-footer .cursor-position {
   padding: 5px;
+  white-space: nowrap;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -2690,11 +2687,11 @@ menuseparator {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.call-site {
+.column-breakpoint {
   display: inline;
 }
 
-.call-site svg {
+.column-breakpoint svg {
   display: inline;
   cursor: pointer;
   height: 12px;
@@ -2702,23 +2699,28 @@ menuseparator {
   vertical-align: top;
 }
 
-.call-site.active svg {
+.column-breakpoint.active svg {
   fill: var(--blue-50);
   stroke: var(--blue-60);
 }
 
-.call-site.disabled svg {
+.column-breakpoint.disabled svg {
   fill: var(--blue-50);
   stroke: var(--blue-40);
   fill-opacity: 0.5;
 }
 
-.theme-dark .call-site.active svg {
+.column-breakpoint.has-condition svg {
+  fill: var(--theme-graphs-yellow);
+  stroke: var(--theme-graphs-orange);
+}
+
+.theme-dark .column-breakpoint.active svg {
   fill: var(--blue-55);
   stroke: var(--blue-40);
 }
 
-.theme-dark .call-site.disabled svg {
+.theme-dark .column-breakpoint.disabled svg {
   fill: var(--blue-50);
   stroke: var(--blue-60);
   fill-opacity: 0.5;
@@ -2827,6 +2829,14 @@ html[dir="rtl"] .editor-mount {
   --breakpoint-stroke: var(--blue-40);
   --breakpoint-fill-disabled: var(--blue-50);
   --breakpoint-stroke-disabled: var(--blue-60);
+}
+
+.empty-line .CodeMirror-linenumber {
+  opacity: 0.5;
+}
+
+.theme-dark .empty-line .CodeMirror-linenumber {
+  opacity: 0.6;
 }
 
 :not(.empty-line):not(.new-breakpoint)
@@ -2973,7 +2983,7 @@ html[dir="rtl"] .editor-mount {
 }
 
 .debug-expression,
-.new-debug-line .call-site {
+.new-debug-line .column-breakpoint {
   background-color: var(--debug-expression-background);
 }
 
@@ -3123,6 +3133,7 @@ debug-expression-error {
 .breakpoints-exceptions {
   padding-bottom: 0.5em;
   padding-top: 0.5em;
+  user-select: none;
 }
 
 .breakpoints-list .breakpoint {
@@ -3504,6 +3515,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   font-weight: 300;
   cursor: default;
   min-height: 24px;
+  white-space: normal;
 }
 
 .why-paused > div {
