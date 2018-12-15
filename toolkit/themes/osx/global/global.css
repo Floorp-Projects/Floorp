@@ -228,13 +228,13 @@ notification > hbox > button {
   border: @roundButtonBorderWidth@ @roundButtonBorderStyle@ @roundButtonBorderColor@;
   text-shadow: @loweredShadow@;
   color: @roundButtonColor@;
-  background: @roundButtonBackground@;
+  background: @roundButtonBackgroundImage@;
   box-shadow: @roundButtonShadow@;
 }
 
 notification > hbox > button:active:hover {
   color: @roundButtonColor@;
-  background: @roundButtonPressedBackground@;
+  background: @roundButtonPressedBackgroundImage@;
   box-shadow: @roundButtonPressedShadow@;
 }
 
