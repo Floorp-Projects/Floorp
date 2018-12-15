@@ -4202,15 +4202,20 @@ TSFTextStore::RetrieveRequestedAttrs(ULONG ulCount, TS_ATTRVAL* paAttrVals,
           Selection& selectionForTSF = SelectionForTSFRef();
           paAttrVals[count].varValue.vt = VT_BOOL;
           paAttrVals[count].varValue.boolVal =
-              selectionForTSF.GetWritingMode().IsVertical() ? VARIANT_TRUE
-                                                            : VARIANT_FALSE;
+              !selectionForTSF.IsDirty() &&
+                      selectionForTSF.GetWritingMode().IsVertical()
+                  ? VARIANT_TRUE
+                  : VARIANT_FALSE;
           break;
         }
         case eTextOrientation: {
           Selection& selectionForTSF = SelectionForTSFRef();
           paAttrVals[count].varValue.vt = VT_I4;
           paAttrVals[count].varValue.lVal =
-              selectionForTSF.GetWritingMode().IsVertical() ? 2700 : 0;
+              !selectionForTSF.IsDirty() &&
+                      selectionForTSF.GetWritingMode().IsVertical()
+                  ? 2700
+                  : 0;
           break;
         }
         default:
@@ -7280,8 +7285,10 @@ void TSFTextStore::Content::StartComposition(
   if (!aPreserveSelection) {
     // XXX Do we need to set a new writing-mode here when setting a new
     // selection? Currently, we just preserve the existing value.
+    WritingMode writingMode =
+        mSelection.IsDirty() ? WritingMode() : mSelection.GetWritingMode();
     mSelection.SetSelection(mComposition.mStart, mComposition.mString.Length(),
-                            false, mSelection.GetWritingMode());
+                            false, writingMode);
   }
 }
 
