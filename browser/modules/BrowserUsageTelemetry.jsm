@@ -136,7 +136,7 @@ let URICountListener = {
   // A set containing the visited domains, see bug 1271310.
   _domainSet: new Set(),
   // A set containing the visited origins during the last 24 hours (similar to domains, but not quite the same)
-  _domain24hrSet: new Set(),
+  _origin24hrSet: new Set(),
   // A map to keep track of the URIs loaded from the restored tabs.
   _restoredURIsMap: new WeakMap(),
 
@@ -235,6 +235,11 @@ let URICountListener = {
     // Update tab count
     BrowserUsageTelemetry._recordTabCount();
 
+    // We only want to count the unique domains up to MAX_UNIQUE_VISITED_DOMAINS.
+    if (this._domainSet.size == MAX_UNIQUE_VISITED_DOMAINS) {
+      return;
+    }
+
     // Unique domains should be aggregated by (eTLD + 1): x.test.com and y.test.com
     // are counted once as test.com.
     let baseDomain;
@@ -243,22 +248,23 @@ let URICountListener = {
       // due to the URI containing invalid characters or the domain actually being
       // an ipv4 or ipv6 address.
       baseDomain = Services.eTLD.getBaseDomain(uri);
-    } catch (e) {
-      return;
-    }
-
-    // We only want to count the unique domains up to MAX_UNIQUE_VISITED_DOMAINS.
-    if (this._domainSet.size < MAX_UNIQUE_VISITED_DOMAINS) {
       this._domainSet.add(baseDomain);
-      Services.telemetry.scalarSet(UNIQUE_DOMAINS_COUNT_SCALAR_NAME, this._domainSet.size);
+    } catch (e) {
+      baseDomain = uri.host;
     }
 
-    this._domain24hrSet.add(baseDomain);
+    // Record the origin, but with the base domain (eTLD + 1).
+    let baseDomainURI = uri.mutate()
+                           .setHost(baseDomain)
+                           .finalize();
+    this._origin24hrSet.add(baseDomainURI.prePath);
     if (gRecentVisitedOriginsExpiry) {
       setTimeout(() => {
-        this._domain24hrSet.delete(baseDomain);
+        this._origin24hrSet.delete(baseDomainURI.prePath);
       }, gRecentVisitedOriginsExpiry * 1000);
     }
+
+    Services.telemetry.scalarSet(UNIQUE_DOMAINS_COUNT_SCALAR_NAME, this._domainSet.size);
   },
 
   /**
@@ -269,18 +275,18 @@ let URICountListener = {
   },
 
   /**
-   * Returns the number of unique domains visited in this session during the
+   * Returns the number of unique origins visited in this session during the
    * last 24 hours.
    */
-  get uniqueDomainsVisitedInPast24Hours() {
-    return this._domain24hrSet.size;
+  get uniqueOriginsVisitedInPast24Hours() {
+    return this._origin24hrSet.size;
   },
 
   /**
-   * Resets the number of unique domains visited in this session.
+   * Resets the number of unique origins visited in this session.
    */
-  resetUniqueDomainsVisitedInPast24Hours() {
-    this._domain24hrSet.clear();
+  resetUniqueOriginsVisitedInPast24Hours() {
+    this._origin24hrSet.clear();
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
