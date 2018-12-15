@@ -203,6 +203,8 @@ class PaymentRequest final : public DOMEventTargetHelper,
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
+  bool InFullyActiveDocument();
+
   IMPL_EVENT_HANDLER(merchantvalidation);
   IMPL_EVENT_HANDLER(shippingaddresschange);
   IMPL_EVENT_HANDLER(shippingoptionchange);

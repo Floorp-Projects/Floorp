@@ -8,6 +8,7 @@
 #include "gc/Heap.h"
 #include "gc/WeakMap.h"
 #include "gc/Zone.h"
+#include "js/Proxy.h"
 #include "jsapi-tests/tests.h"
 
 using namespace js;
@@ -227,7 +228,7 @@ bool TestWeakMaps() {
   // Test that a weakmap key is marked gray if it has a gray delegate and the
   // map is either gray or black.
 
-  JSObject* delegate = AllocDelegateForKey(key);
+  JSObject* delegate = UncheckedUnwrapWithoutExpose(key);
   blackRoot1 = weakMap;
   blackRoot2 = nullptr;
   grayRoots.grayRoot1 = delegate;
@@ -307,7 +308,6 @@ bool TestWeakMaps() {
   CHECK(IsMarkedBlack(weakMap));
   CHECK(IsMarkedBlack(value));
 
-  CHECK(AllocDelegateForKey(key));
   blackRoot1 = nullptr;
   blackRoot2 = nullptr;
   grayRoots.grayRoot1 = weakMap;
@@ -371,7 +371,7 @@ bool TestUnassociatedWeakMaps() {
 
   // Test that a weakmap key is marked gray if it has a gray delegate.
 
-  JSObject* delegate = AllocDelegateForKey(key);
+  JSObject* delegate = UncheckedUnwrapWithoutExpose(key);
   blackRoot = nullptr;
   grayRoots.grayRoot1 = delegate;
   grayRoots.grayRoot2 = nullptr;
@@ -409,7 +409,6 @@ bool TestUnassociatedWeakMaps() {
   CHECK(IsMarkedBlack(key));
   CHECK(IsMarkedBlack(value));
 
-  CHECK(AllocDelegateForKey(key));
   blackRoot = nullptr;
   grayRoots.grayRoot1 = key;
   grayRoots.grayRoot2 = nullptr;
@@ -460,7 +459,7 @@ bool TestCCWs() {
   CHECK(JS::IsIncrementalGCInProgress(cx));
 
   CHECK(!IsMarkedBlack(wrapper));
-  CHECK(wrapper->zone()->isGCMarkingBlack());
+  CHECK(wrapper->zone()->isGCMarkingBlackOnly());
 
   CHECK(GetCrossCompartmentWrapper(target) == wrapper);
   CHECK(IsMarkedBlack(wrapper));
@@ -484,21 +483,21 @@ bool TestCCWs() {
   budget = js::SliceBudget(js::WorkBudget(1));
   cx->runtime()->gc.startDebugGC(GC_NORMAL, budget);
   CHECK(JS::IsIncrementalGCInProgress(cx));
-  CHECK(wrapper->zone()->isGCMarkingBlack());
+  CHECK(wrapper->zone()->isGCMarkingBlackOnly());
   CHECK(!target->zone()->wasGCStarted());
   CHECK(!IsMarkedBlack(wrapper));
   CHECK(!IsMarkedGray(wrapper));
   CHECK(IsMarkedGray(target));
 
-  // Betweeen GC slices: source marked black by barrier, target is still
-  // gray. Target will be marked gray eventually. ObjectIsMarkedGray() is
-  // conservative and reports that target is not marked gray; ObjectIsNotGray
-  // reports the actual state.
+  // Betweeen GC slices: source marked black by barrier, target is
+  // still gray. Target will be marked gray
+  // eventually. ObjectIsMarkedGray() is conservative and reports
+  // that target is not marked gray; AssertObjectIsNotGray() will
+  // assert.
   grayRoots.grayRoot1.get();
   CHECK(IsMarkedBlack(wrapper));
   CHECK(IsMarkedGray(target));
   CHECK(!JS::ObjectIsMarkedGray(target));
-  MOZ_ASSERT(!JS::ObjectIsNotGray(target));
 
   // Final state: source and target are black.
   JS::FinishIncrementalGC(cx, JS::gcreason::API);
@@ -652,32 +651,16 @@ JSObject* GetCrossCompartmentWrapper(JSObject* target) {
   return obj;
 }
 
-static JSObject* GetKeyDelegate(JSObject* obj) {
-  return static_cast<JSObject*>(obj->as<NativeObject>().getPrivate());
-}
-
 JSObject* AllocWeakmapKeyObject() {
-  static const js::ClassExtension KeyClassExtension = {GetKeyDelegate};
-
-  static const js::Class KeyClass = {"keyWithDelegate",  JSCLASS_HAS_PRIVATE,
-                                     JS_NULL_CLASS_OPS,  JS_NULL_CLASS_SPEC,
-                                     &KeyClassExtension, JS_NULL_OBJECT_OPS};
-
-  JS::RootedObject key(cx, JS_NewObject(cx, Jsvalify(&KeyClass)));
-  if (!key) {
+  JS::RootedObject delegate(cx, JS_NewPlainObject(cx));
+  if (!delegate) {
     return nullptr;
   }
 
+  JS::RootedObject key(cx, js::Wrapper::New(cx, delegate, &js::Wrapper::singleton));
+
   EvictNursery();
   return key;
-}
-
-JSObject* AllocDelegateForKey(JSObject* key) {
-  JS::RootedObject obj(cx, JS_NewPlainObject(cx));
-  EvictNursery();
-
-  key->as<NativeObject>().setPrivate(obj);
-  return obj;
 }
 
 JSObject* AllocObjectChain(size_t length) {

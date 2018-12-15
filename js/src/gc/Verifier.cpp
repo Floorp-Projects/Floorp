@@ -180,9 +180,6 @@ void gc::GCRuntime::startVerifyPreBarriers() {
   }
 
   JSContext* cx = rt->mainContextFromOwnThread();
-  if (temporaryAbortIfWasmGc(cx)) {
-    return;
-  }
 
   if (IsIncrementalGCUnsafe(rt) != AbortReason::None ||
       rt->hasHelperThreadZones()) {
@@ -408,9 +405,6 @@ void gc::GCRuntime::verifyPreBarriers() {
 }
 
 void gc::VerifyBarriers(JSRuntime* rt, VerifierType type) {
-  if (GCRuntime::temporaryAbortIfWasmGc(rt->mainContextFromOwnThread())) {
-    return;
-  }
   if (type == PreBarrierVerifier) {
     rt->gc.verifyPreBarriers();
   }
@@ -709,8 +703,12 @@ void CheckGrayMarkingTracer::checkCell(Cell* cell) {
     dumpCellPath();
 
 #ifdef DEBUG
+    if (parent->is<JSObject>()) {
+      fprintf(stderr, "\nSource: ");
+      DumpObject(parent->as<JSObject>(), stderr);
+    }
     if (cell->is<JSObject>()) {
-      fprintf(stderr, "\n");
+      fprintf(stderr, "\nTarget: ");
       DumpObject(cell->as<JSObject>(), stderr);
     }
 #endif
@@ -753,13 +751,7 @@ static JSObject* MaybeGetDelegate(Cell* cell) {
   }
 
   JSObject* object = cell->as<JSObject>();
-  JSWeakmapKeyDelegateOp op = object->getClass()->extWeakmapKeyDelegateOp();
-  if (!op) {
-    return nullptr;
-  }
-
-  JS::AutoSuppressGCAnalysis nogc;  // Calling the delegate op cannot GC.
-  return op(object);
+  return js::UncheckedUnwrapWithoutExpose(object);
 }
 
 bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
@@ -775,12 +767,12 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
   MOZ_ASSERT_IF(!map->allowKeysInOtherZones(),
                 keyZone == zone || keyZone->isAtomsZone());
 
-  DebugOnly<Zone*> valueZone = GetCellZone(value);
+  Zone* valueZone = GetCellZone(value);
   MOZ_ASSERT(valueZone == zone || valueZone->isAtomsZone());
 
-  // We may not know the color of the map, but we know that it's
-  // alive so it must at least be marked gray.
-  CellColor mapColor = object ? GetCellColor(object) : CellColor::Gray;
+  CellColor mapColor = map->markColor == MarkColor::Black ? CellColor::Black
+                                                          : CellColor::Gray;
+  MOZ_ASSERT_IF(object, GetCellColor(object) == mapColor);
 
   CellColor keyColor = GetCellColor(key);
   CellColor valueColor =

@@ -8,10 +8,10 @@ const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm
 const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"].getService(Ci.nsIPaymentRequestService);
 
 function emitTestFail(message) {
-  sendAsyncMessage("test-fail", message);
+  sendAsyncMessage("test-fail", `${DummyUIService.testName}: ${message}`);
 }
 function emitTestPass(message) {
-  sendAsyncMessage("test-pass", message);
+  sendAsyncMessage("test-pass", `${DummyUIService.testName}: ${message}`);
 }
 
 addMessageListener("close-check", function() {
@@ -56,7 +56,10 @@ addMessageListener("payment-num-check", function(expectedNumPayments) {
   sendAsyncMessage("payment-num-check-complete");
 });
 
-var respondRequestId;
+addMessageListener("test-setup", (testName) => {
+  DummyUIService.testName = testName;
+  sendAsyncMessage("test-setup-complete");
+});
 
 addMessageListener("reject-payment", (expectedError) => {
   try {
@@ -65,7 +68,7 @@ addMessageListener("reject-payment", (expectedError) => {
     responseData.initData({});
     const showResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"].
                             createInstance(Ci.nsIPaymentShowActionResponse);
-    showResponse.init(respondRequestId,
+    showResponse.init(DummyUIService.respondRequestId,
                       Ci.nsIPaymentActionResponse.PAYMENT_REJECTED,
                       "",                 // payment method
                       responseData,       // payment method data
@@ -90,7 +93,7 @@ addMessageListener("reject-payment", (expectedError) => {
 
 addMessageListener("update-payment", () => {
   try {
-    paymentSrv.changeShippingOption(respondRequestId, "");
+    paymentSrv.changeShippingOption(DummyUIService.respondRequestId, "");
     emitTestPass("Change shippingOption succefully");
   } catch (error) {
     emitTestFail("Unexpected error '" + error.name +
@@ -100,16 +103,17 @@ addMessageListener("update-payment", () => {
 });
 
 const DummyUIService = {
-  showPayment: (requestId => {respondRequestId = requestId}),
-  abortPayment: (requestId) => {respondRequestId = requestId},
-  completePayment: (requestId) => {respondRequestId = requestId},
-  updatePayment: (requestId) => {respondRequestId = requestId},
-  closePayment: (requestId) => {respondRequestId = requestId},
+  testName: "",
+  respondRequestId: "",
+  showPayment: (requestId) => {DummyUIService.respondRequestId = requestId},
+  abortPayment: (requestId) => {DummyUIService.respondRequestId = requestId},
+  completePayment: (requestId) => {DummyUIService.respondRequestId = requestId},
+  updatePayment: (requestId) => {DummyUIService.respondRequestId = requestId},
+  closePayment: (requestId) => {this.respondRequestId = requestId},
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 
 paymentSrv.setTestingUIService(DummyUIService.QueryInterface(Ci.nsIPaymentUIService));
-
 
 addMessageListener("teardown", function() {
   paymentSrv.setTestingUIService(null);

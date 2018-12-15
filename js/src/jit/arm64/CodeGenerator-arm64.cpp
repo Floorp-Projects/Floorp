@@ -967,7 +967,7 @@ void CodeGenerator::visitUnbox(LUnbox* unbox) {
     ValueOperand input = ToValue(unbox, LUnbox::Input);
     ScratchTagScope scratch(masm, input);
     masm.splitTagForTest(input, scratch);
-    masm.branchTest32(Assembler::Condition::Equal, scratch, Imm32(tag), &ok);
+    masm.branch32(Assembler::Condition::Equal, scratch, Imm32(tag), &ok);
     masm.assumeUnreachable("Infallible unbox type mismatch");
     masm.bind(&ok);
 #endif

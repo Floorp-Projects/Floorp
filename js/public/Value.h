@@ -1370,16 +1370,14 @@ static inline JS::Value PoisonedObjectValue(uintptr_t poison) {
 #ifdef DEBUG
 namespace JS {
 
-MOZ_ALWAYS_INLINE bool ValueIsNotGray(const Value& value) {
-  if (!value.isGCThing()) {
-    return true;
+MOZ_ALWAYS_INLINE void AssertValueIsNotGray(const Value& value) {
+  if (value.isGCThing()) {
+    AssertCellIsNotGray(value.toGCThing());
   }
-
-  return CellIsNotGray(value.toGCThing());
 }
 
-MOZ_ALWAYS_INLINE bool ValueIsNotGray(const Heap<Value>& value) {
-  return ValueIsNotGray(value.unbarrieredGet());
+MOZ_ALWAYS_INLINE void AssertValueIsNotGray(const Heap<Value>& value) {
+  AssertValueIsNotGray(value.unbarrieredGet());
 }
 
 }  // namespace JS

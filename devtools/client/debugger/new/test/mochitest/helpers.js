@@ -601,6 +601,10 @@ async function closeTab(dbg, url) {
   await dbg.actions.closeTab(findSource(dbg, url));
 }
 
+function countTabs(dbg) {
+  return findElement(dbg, "sourceTabs").children.length;
+}
+
 /**
  * Steps over.
  *
@@ -918,6 +922,7 @@ const startKey = isMac
   : { code: "VK_HOME" };
 
 const keyMappings = {
+  close: { code: "w", modifiers: cmdOrCtrl },
   debugger: { code: "s", modifiers: shiftOrAlt },
   inspector: { code: "c", modifiers: shiftOrAlt },
   quickOpen: { code: "p", modifiers: cmdOrCtrl },

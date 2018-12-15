@@ -94,7 +94,6 @@ struct ProxyTraps {
 
   // getElements
 
-  // weakmapKeyDelegate
   // isScripted
 };
 

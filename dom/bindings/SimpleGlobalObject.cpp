@@ -74,7 +74,7 @@ static const js::ClassOps SimpleGlobalClassOps = {
 };
 
 static const js::ClassExtension SimpleGlobalClassExtension = {
-    nullptr, SimpleGlobal_moved};
+    SimpleGlobal_moved};
 
 const js::Class SimpleGlobalClass = {
     "",

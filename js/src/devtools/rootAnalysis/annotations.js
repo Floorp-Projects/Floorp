@@ -31,9 +31,6 @@ function indirectCallCannotGC(fullCaller, fullVariable)
     if (name == "params" && caller == "PR_ExplodeTime")
         return true;
 
-    if (name == "op" && /GetWeakmapKeyDelegate/.test(caller))
-        return true;
-
     // hook called during script finalization which cannot GC.
     if (/CallDestroyScriptHook/.test(caller))
         return true;
@@ -168,7 +165,6 @@ var ignoreFunctions = {
     "PR_ExplodeTime" : true,
     "PR_ErrorInstallTable" : true,
     "PR_SetThreadPrivate" : true,
-    "JSObject* js::GetWeakmapKeyDelegate(JSObject*)" : true, // FIXME: mark with AutoSuppressGCAnalysis instead
     "uint8 NS_IsMainThread()" : true,
 
     // Has an indirect call under it by the name "__f", which seemed too

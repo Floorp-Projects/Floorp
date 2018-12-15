@@ -4177,9 +4177,9 @@ void MacroAssembler::call(ImmPtr imm) {
   ma_call(imm);
 }
 
-void MacroAssembler::call(wasm::SymbolicAddress imm) {
+CodeOffset MacroAssembler::call(wasm::SymbolicAddress imm) {
   movePtr(imm, CallReg);
-  call(CallReg);
+  return call(CallReg);
 }
 
 void MacroAssembler::call(const Address& addr) {

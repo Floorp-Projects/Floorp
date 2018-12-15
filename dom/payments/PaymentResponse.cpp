@@ -176,6 +176,12 @@ already_AddRefed<PaymentAddress> PaymentResponse::GetShippingAddress() const {
 
 already_AddRefed<Promise> PaymentResponse::Complete(PaymentComplete result,
                                                     ErrorResult& aRv) {
+  MOZ_ASSERT(mRequest);
+  if (!mRequest->InFullyActiveDocument()) {
+    aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
+    return nullptr;
+  }
+
   if (mCompleteCalled) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
@@ -226,6 +232,12 @@ void PaymentResponse::RespondComplete() {
 
 already_AddRefed<Promise> PaymentResponse::Retry(
     JSContext* aCx, const PaymentValidationErrors& aErrors, ErrorResult& aRv) {
+  MOZ_ASSERT(mRequest);
+  if (!mRequest->InFullyActiveDocument()) {
+    aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
+    return nullptr;
+  }
+
   nsIGlobalObject* global = GetOwner()->AsGlobal();
   ErrorResult errResult;
   RefPtr<Promise> promise = Promise::Create(global, errResult);
@@ -237,17 +249,6 @@ already_AddRefed<Promise> PaymentResponse::Retry(
   if (mTimer) {
     mTimer->Cancel();
     mTimer = nullptr;
-  }
-
-  if (NS_WARN_IF(!GetOwner())) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsIDocument* doc = GetOwner()->GetExtantDoc();
-  if (!doc || !doc->IsCurrentActiveDocument()) {
-    promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-    return promise.forget();
   }
 
   if (mCompleteCalled || mRetryPromise) {
@@ -413,6 +414,11 @@ nsresult PaymentResponse::ValidatePaymentValidationErrors(
 NS_IMETHODIMP
 PaymentResponse::Notify(nsITimer* timer) {
   mTimer = nullptr;
+
+  if (!mRequest->InFullyActiveDocument()) {
+    return NS_OK;
+  }
+
   if (mCompleteCalled) {
     return NS_OK;
   }

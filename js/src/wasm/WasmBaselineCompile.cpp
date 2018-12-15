@@ -142,6 +142,7 @@
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmOpIter.h"
 #include "wasm/WasmSignalHandlers.h"
+#include "wasm/WasmStubs.h"
 #include "wasm/WasmValidate.h"
 
 #include "jit/MacroAssembler-inl.h"
@@ -1582,10 +1583,10 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
     masm.storeFloat32(src, Address(sp_, localOffset(dest)));
   }
 
- private:
   // Offset off of sp_ for `local`.
   int32_t localOffset(const Local& local) { return localOffset(local.offs); }
 
+ private:
   // Offset off of sp_ for a local with offset `offset` from Frame.
   int32_t localOffset(int32_t offset) { return masm.framePushed() - offset; }
 
@@ -1827,6 +1828,552 @@ void BaseStackFrame::zeroLocals(BaseRegAlloc* ra) {
   ra->freeI32(zero);
 }
 
+// Value stack: stack elements
+
+struct Stk {
+ private:
+  Stk() : kind_(Unknown), i64val_(0) {}
+
+ public:
+  enum Kind {
+    // The Mem opcodes are all clustered at the beginning to
+    // allow for a quick test within sync().
+    MemI32,  // 32-bit integer stack value ("offs")
+    MemI64,  // 64-bit integer stack value ("offs")
+    MemF32,  // 32-bit floating stack value ("offs")
+    MemF64,  // 64-bit floating stack value ("offs")
+    MemRef,  // reftype (pointer wide) stack value ("offs")
+
+    // The Local opcodes follow the Mem opcodes for a similar
+    // quick test within hasLocal().
+    LocalI32,  // Local int32 var ("slot")
+    LocalI64,  // Local int64 var ("slot")
+    LocalF32,  // Local float32 var ("slot")
+    LocalF64,  // Local double var ("slot")
+    LocalRef,  // Local reftype (pointer wide) var ("slot")
+
+    RegisterI32,  // 32-bit integer register ("i32reg")
+    RegisterI64,  // 64-bit integer register ("i64reg")
+    RegisterF32,  // 32-bit floating register ("f32reg")
+    RegisterF64,  // 64-bit floating register ("f64reg")
+    RegisterRef,  // reftype (pointer wide) register ("refReg")
+
+    ConstI32,  // 32-bit integer constant ("i32val")
+    ConstI64,  // 64-bit integer constant ("i64val")
+    ConstF32,  // 32-bit floating constant ("f32val")
+    ConstF64,  // 64-bit floating constant ("f64val")
+    ConstRef,  // reftype (pointer wide) constant ("refval")
+
+    Unknown,
+  };
+
+  Kind kind_;
+
+  static const Kind MemLast = MemRef;
+  static const Kind LocalLast = LocalRef;
+
+  union {
+    RegI32 i32reg_;
+    RegI64 i64reg_;
+    RegPtr refReg_;
+    RegF32 f32reg_;
+    RegF64 f64reg_;
+    int32_t i32val_;
+    int64_t i64val_;
+    intptr_t refval_;
+    float f32val_;
+    double f64val_;
+    uint32_t slot_;
+    uint32_t offs_;
+  };
+
+  explicit Stk(RegI32 r) : kind_(RegisterI32), i32reg_(r) {}
+  explicit Stk(RegI64 r) : kind_(RegisterI64), i64reg_(r) {}
+  explicit Stk(RegPtr r) : kind_(RegisterRef), refReg_(r) {}
+  explicit Stk(RegF32 r) : kind_(RegisterF32), f32reg_(r) {}
+  explicit Stk(RegF64 r) : kind_(RegisterF64), f64reg_(r) {}
+  explicit Stk(int32_t v) : kind_(ConstI32), i32val_(v) {}
+  explicit Stk(int64_t v) : kind_(ConstI64), i64val_(v) {}
+  explicit Stk(float v) : kind_(ConstF32), f32val_(v) {}
+  explicit Stk(double v) : kind_(ConstF64), f64val_(v) {}
+  explicit Stk(Kind k, uint32_t v) : kind_(k), slot_(v) {
+    MOZ_ASSERT(k > MemLast && k <= LocalLast);
+  }
+  static Stk StkRef(intptr_t v) {
+    Stk s;
+    s.kind_ = ConstRef;
+    s.refval_ = v;
+    return s;
+  }
+
+  void setOffs(Kind k, uint32_t v) {
+    MOZ_ASSERT(k <= MemLast);
+    kind_ = k;
+    offs_ = v;
+  }
+
+  Kind kind() const { return kind_; }
+  bool isMem() const { return kind_ <= MemLast; }
+
+  RegI32 i32reg() const {
+    MOZ_ASSERT(kind_ == RegisterI32);
+    return i32reg_;
+  }
+  RegI64 i64reg() const {
+    MOZ_ASSERT(kind_ == RegisterI64);
+    return i64reg_;
+  }
+  RegPtr refReg() const {
+    MOZ_ASSERT(kind_ == RegisterRef);
+    return refReg_;
+  }
+  RegF32 f32reg() const {
+    MOZ_ASSERT(kind_ == RegisterF32);
+    return f32reg_;
+  }
+  RegF64 f64reg() const {
+    MOZ_ASSERT(kind_ == RegisterF64);
+    return f64reg_;
+  }
+
+  int32_t i32val() const {
+    MOZ_ASSERT(kind_ == ConstI32);
+    return i32val_;
+  }
+  int64_t i64val() const {
+    MOZ_ASSERT(kind_ == ConstI64);
+    return i64val_;
+  }
+  intptr_t refval() const {
+    MOZ_ASSERT(kind_ == ConstRef);
+    return refval_;
+  }
+
+  // For these two, use an out-param instead of simply returning, to
+  // use the normal stack and not the x87 FP stack (which has effect on
+  // NaNs with the signaling bit set).
+
+  void f32val(float* out) const {
+    MOZ_ASSERT(kind_ == ConstF32);
+    *out = f32val_;
+  }
+  void f64val(double* out) const {
+    MOZ_ASSERT(kind_ == ConstF64);
+    *out = f64val_;
+  }
+
+  uint32_t slot() const {
+    MOZ_ASSERT(kind_ > MemLast && kind_ <= LocalLast);
+    return slot_;
+  }
+  uint32_t offs() const {
+    MOZ_ASSERT(isMem());
+    return offs_;
+  }
+};
+
+typedef Vector<Stk, 8, SystemAllocPolicy> StkVector;
+
+// MachineStackTracker, used for stack-slot pointerness tracking.
+
+class MachineStackTracker {
+  // Simulates the machine's stack, with one bool per word.  Index zero in
+  // this vector corresponds to the highest address in the machine stack.  The
+  // last entry corresponds to what SP currently points at.  This all assumes
+  // a grow-down stack.
+  //
+  // numPtrs_ contains the number of "true" values in vec_, and is therefore
+  // redundant.  But it serves as a constant-time way to detect the common
+  // case where vec_ holds no "true" values.
+  size_t numPtrs_;
+  Vector<bool, 64, SystemAllocPolicy> vec_;
+
+ public:
+  MachineStackTracker() : numPtrs_(0) {}
+
+  ~MachineStackTracker() {
+#ifdef DEBUG
+    size_t n = 0;
+    for (bool b : vec_) {
+      n += (b ? 1 : 0);
+    }
+    MOZ_ASSERT(n == numPtrs_);
+#endif
+  }
+
+  // Clone this MachineStackTracker, writing the result at |dst|.
+  MOZ_MUST_USE bool cloneTo(MachineStackTracker* dst) {
+    MOZ_ASSERT(dst->vec_.empty());
+    if (!dst->vec_.appendAll(vec_)) {
+      return false;
+    }
+    dst->numPtrs_ = numPtrs_;
+    return true;
+  }
+
+  // Notionally push |n| non-pointers on the stack.
+  MOZ_MUST_USE bool pushNonGCPointers(size_t n) {
+    return vec_.appendN(false, n);
+  }
+
+  // Mark the stack slot |offsetFromSP| up from the bottom as holding a
+  // pointer.
+  void setGCPointer(size_t offsetFromSP) {
+    // Offset 0 is the most recently pushed, offset 1 is the second most
+    // recently pushed item, etc.
+    MOZ_ASSERT(offsetFromSP < vec_.length());
+
+    size_t offsetFromTop = vec_.length() - 1 - offsetFromSP;
+    numPtrs_ = numPtrs_ + 1 - (vec_[offsetFromTop] ? 1 : 0);
+    vec_[offsetFromTop] = true;
+  }
+
+  // Query the pointerness of the slot |offsetFromSP| up from the bottom.
+  bool isGCPointer(size_t offsetFromSP) {
+    MOZ_ASSERT(offsetFromSP < vec_.length());
+    return vec_[offsetFromSP];
+  }
+
+  // Return the number of words tracked by this MachineStackTracker.
+  size_t length() { return vec_.length(); }
+
+  // Return the number of pointer-typed words tracked by this
+  // MachineStackTracker.
+  size_t numPtrs() {
+    MOZ_ASSERT(numPtrs_ <= length());
+    return numPtrs_;
+  }
+};
+
+// StackMapGenerator, which carries all state needed to create stack maps.
+
+enum class HasRefTypedDebugFrame { No, Yes };
+
+struct StackMapGenerator {
+ private:
+  // --- These are constant for the life of the function's compilation ---
+
+  // For generating stack maps, we'll need to know the offsets of registers
+  // as saved by the trap exit stub.
+  const MachineState& trapExitLayout_;
+  const size_t trapExitLayoutNumWords_;
+
+  // Completed stackmaps are added here
+  StackMaps* stackMaps_;
+
+  // So as to be able to get current offset when creating stack maps
+  const MacroAssembler& masm_;
+
+ public:
+  // --- These are constant once we've completed beginFunction() ---
+
+  // The number of words of arguments passed to this function in memory.
+  size_t numStackArgWords_;
+
+  MachineStackTracker mst_;  // tracks machine stack pointerness
+
+  // This holds masm.framePushed at entry to the function's body.  It is a
+  // Maybe because createStackMap needs to know whether or not we're still
+  // in the prologue.  It makes a Nothing-to-Some transition just once per
+  // function.
+  Maybe<uint32_t> framePushedAtEntryToBody_;
+
+  // --- These can change at any point ---
+
+  // This holds masm.framePushed immediately before we move the stack
+  // pointer down so as to reserve space, in a function call, for arguments
+  // passed in memory.  To be more precise: this holds the value
+  // masm.framePushed would have had after moving the stack pointer over any
+  // alignment padding pushed before the arguments proper, but before the
+  // downward movement of the stack pointer that allocates space for the
+  // arguments proper.
+  //
+  // When not inside a function call setup/teardown sequence, it is Nothing.
+  // It can make Nothing-to/from-Some transitions arbitrarily as we progress
+  // through the function body.
+  Maybe<uint32_t> framePushedBeforePushingCallArgs_;
+
+  // The number of memory-resident, ref-typed entries on the containing
+  // BaseCompiler::stk_.
+  size_t memRefsOnStk_;
+
+  StackMapGenerator(StackMaps* stackMaps, const MachineState& trapExitLayout,
+                    const size_t trapExitLayoutNumWords,
+                    const MacroAssembler& masm)
+      : trapExitLayout_(trapExitLayout),
+        trapExitLayoutNumWords_(trapExitLayoutNumWords),
+        stackMaps_(stackMaps),
+        masm_(masm),
+        memRefsOnStk_(0) {}
+
+  // At the beginning of a function, we may have live roots in registers (as
+  // arguments) at the point where we perform a stack overflow check.  This
+  // method generates the "extra" stackmap entries to describe that, in the
+  // case that the check fails and we wind up calling into the wasm exit
+  // stub, as generated by GenerateTrapExit().
+  //
+  // The resulting map must correspond precisely with the stack layout
+  // created for the integer registers as saved by (code generated by)
+  // GenerateTrapExit().  To do that we use trapExitLayout_ and
+  // trapExitLayoutNumWords_, which together comprise a description of the
+  // layout and are created by GenerateTrapExitMachineState().
+  MOZ_MUST_USE bool generateStackmapEntriesForTrapExit(
+      const ValTypeVector& args, ExitStubMapVector& extras) {
+    MOZ_ASSERT(extras.empty());
+
+    // If this doesn't hold, we can't distinguish saved and not-saved
+    // registers in the MachineState.  See MachineState::MachineState().
+    MOZ_ASSERT(trapExitLayoutNumWords_ < 0x100);
+
+    if (!extras.appendN(false, trapExitLayoutNumWords_)) {
+      return false;
+    }
+
+    for (ABIArgIter<const ValTypeVector> i(args); !i.done(); i++) {
+      if (!i->argInRegister() || i.mirType() != MIRType::Pointer) {
+        continue;
+      }
+
+      size_t offsetFromTop =
+          reinterpret_cast<size_t>(trapExitLayout_.address(i->gpr()));
+
+      // If this doesn't hold, the associated register wasn't saved by
+      // the trap exit stub.  Better to crash now than much later, in
+      // some obscure place, and possibly with security consequences.
+      MOZ_RELEASE_ASSERT(offsetFromTop < trapExitLayoutNumWords_);
+
+      // offsetFromTop is an offset in words down from the highest
+      // address in the exit stub save area.  Switch it around to be an
+      // offset up from the bottom of the (integer register) save area.
+      size_t offsetFromBottom = trapExitLayoutNumWords_ - 1 - offsetFromTop;
+
+      extras[offsetFromBottom] = true;
+    }
+
+    return true;
+  }
+
+  // Creates a stackmap associated with the instruction denoted by
+  // |assemblerOffset|, incorporating pointers from the current operand
+  // stack |stk|, incorporating possible extra pointers in |extra| at the
+  // lower addressed end, and possibly with the associated frame having a
+  // ref-typed DebugFrame as indicated by |refDebugFrame|.
+  MOZ_MUST_USE bool createStackMap(const char* who,
+                                   const ExitStubMapVector& extras,
+                                   uint32_t assemblerOffset,
+                                   HasRefTypedDebugFrame refDebugFrame,
+                                   const StkVector& stk) {
+    size_t countedPointers = mst_.numPtrs() + memRefsOnStk_;
+#ifndef DEBUG
+    // An important optimization.  If there are obviously no pointers, as
+    // we expect in the majority of cases, exit quickly.
+    if (countedPointers == 0 && extras.empty() &&
+        refDebugFrame == HasRefTypedDebugFrame::No) {
+      return true;
+    }
+#else
+    // In the debug case, create the stack map regardless, and cross-check
+    // the pointer-counting below.  We expect the final map to have
+    // |countedPointers| in total.  This doesn't include those in the
+    // DebugFrame, but they do not appear in the map's bitmap.  Note that
+    // |countedPointers| is debug-only from this point onwards.
+    for (bool b : extras) {
+      countedPointers += (b ? 1 : 0);
+    }
+#endif
+
+    // Start with the frame-setup map, and add operand-stack information
+    // to that.
+    MachineStackTracker augmentedMst;
+    if (!mst_.cloneTo(&augmentedMst)) {
+      return false;
+    }
+
+    // At this point, augmentedMst only contains entries covering the
+    // incoming argument area (if any) and for the area allocated by this
+    // function's prologue.  We now need to calculate how far the machine's
+    // stack pointer is below where it was at the start of the body.  But we
+    // must take care not to include any words pushed as arguments to an
+    // upcoming function call, since those words "belong" to the stackmap of
+    // the callee, not to the stackmap of this function.  Note however that
+    // any alignment padding pushed prior to pushing the args *does* belong to
+    // this function.  That padding is taken into account at the point where
+    // framePushedBeforePushingCallArgs_ is set.
+    Maybe<uint32_t> framePushedExcludingArgs;
+    if (framePushedAtEntryToBody_.isNothing()) {
+      // Still in the prologue.  framePushedExcludingArgs remains Nothing.
+      MOZ_ASSERT(framePushedBeforePushingCallArgs_.isNothing());
+    } else {
+      // In the body.
+      MOZ_ASSERT(masm_.framePushed() >= framePushedAtEntryToBody_.value());
+      if (framePushedBeforePushingCallArgs_.isSome()) {
+        // In the body, and we've potentially pushed some args onto the stack.
+        // We must ignore them when sizing the stackmap.
+        MOZ_ASSERT(masm_.framePushed() >=
+                   framePushedBeforePushingCallArgs_.value());
+        MOZ_ASSERT(framePushedBeforePushingCallArgs_.value() >=
+                   framePushedAtEntryToBody_.value());
+        framePushedExcludingArgs =
+            Some(framePushedBeforePushingCallArgs_.value());
+      } else {
+        // In the body, but not with call args on the stack.  The stackmap
+        // must be sized so as to extend all the way "down" to
+        // masm_.framePushed().
+        framePushedExcludingArgs = Some(masm_.framePushed());
+      }
+    }
+
+    if (framePushedExcludingArgs.isSome()) {
+      uint32_t bodyPushedBytes =
+          framePushedExcludingArgs.value() - framePushedAtEntryToBody_.value();
+      MOZ_ASSERT(0 == bodyPushedBytes % sizeof(void*));
+      if (!augmentedMst.pushNonGCPointers(bodyPushedBytes / sizeof(void*))) {
+        return false;
+      }
+    }
+
+    // Scan the operand stack, marking pointers in the just-added new
+    // section.
+    MOZ_ASSERT_IF(framePushedAtEntryToBody_.isNothing(), stk.empty());
+    MOZ_ASSERT_IF(framePushedExcludingArgs.isNothing(), stk.empty());
+
+    for (const Stk& v : stk) {
+#ifndef DEBUG
+      // We don't track roots in registers, per rationale below, so if this
+      // doesn't hold, something is seriously wrong, and we're likely to get a
+      // GC-related crash.
+      MOZ_RELEASE_ASSERT(v.kind() != Stk::RegisterRef);
+      if (v.kind() != Stk::MemRef) {
+        continue;
+      }
+#else
+      // Take the opportunity to check everything we reasonably can about
+      // operand stack elements.
+      switch (v.kind()) {
+        case Stk::MemI32:
+        case Stk::MemI64:
+        case Stk::MemF32:
+        case Stk::MemF64:
+        case Stk::ConstI32:
+        case Stk::ConstI64:
+        case Stk::ConstF32:
+        case Stk::ConstF64:
+          // All of these have uninteresting type.
+          continue;
+        case Stk::LocalI32:
+        case Stk::LocalI64:
+        case Stk::LocalF32:
+        case Stk::LocalF64:
+          // These also have uninteresting type.  Check that they live in the
+          // section of stack set up by beginFunction().  The unguarded use of
+          // |value()| here is safe due to the assertion above this loop.
+          MOZ_ASSERT(v.offs() <= framePushedAtEntryToBody_.value());
+          continue;
+        case Stk::RegisterI32:
+        case Stk::RegisterI64:
+        case Stk::RegisterF32:
+        case Stk::RegisterF64:
+          // These also have uninteresting type, but more to the point: all
+          // registers holding live values should have been flushed to the
+          // machine stack immediately prior to the instruction to which this
+          // stackmap pertains.  So these can't happen.
+          MOZ_CRASH("createStackMap: operand stack has Register-non-Ref");
+        case Stk::MemRef:
+          // This is the only case we care about.  We'll handle it after the
+          // switch.
+          break;
+        case Stk::LocalRef:
+          // We need the stackmap to mention this pointer, but it should
+          // already be in the mst_ section created by beginFunction().
+          MOZ_ASSERT(v.offs() <= framePushedAtEntryToBody_.value());
+          continue;
+        case Stk::ConstRef:
+          // This can currently only be a null pointer.
+          MOZ_ASSERT(v.refval() == 0);
+          continue;
+        case Stk::RegisterRef:
+          // This can't happen, per rationale above.
+          MOZ_CRASH("createStackMap: operand stack contains RegisterRef");
+        default:
+          MOZ_CRASH("createStackMap: unknown operand stack element");
+      }
+#endif
+      // v.offs() holds masm.framePushed() at the point immediately after it
+      // was pushed on the stack.  Since it's still on the stack,
+      // masm.framePushed() can't be less.
+      MOZ_ASSERT(v.offs() <= framePushedExcludingArgs.value());
+      uint32_t offsFromMapLowest = framePushedExcludingArgs.value() - v.offs();
+      MOZ_ASSERT(0 == offsFromMapLowest % sizeof(void*));
+      augmentedMst.setGCPointer(offsFromMapLowest / sizeof(void*));
+    }
+
+    // Create the final StackMap.  The initial map is zeroed out, so there's
+    // no need to write zero bits in it.
+    const uint32_t extraWords = extras.length();
+    const uint32_t augmentedMstWords = augmentedMst.length();
+    const uint32_t numMappedWords = extraWords + augmentedMstWords;
+    StackMap* stackMap = StackMap::create(numMappedWords);
+    if (!stackMap) {
+      return false;
+    }
+
+    {
+      // First the exit stub extra words, if any.
+      uint32_t i = 0;
+      for (bool b : extras) {
+        if (b) {
+          stackMap->setBit(i);
+        }
+        i++;
+      }
+    }
+    // Followed by the "main" part of the map.
+    for (uint32_t i = 0; i < augmentedMstWords; i++) {
+      if (augmentedMst.isGCPointer(i)) {
+        stackMap->setBit(numMappedWords - 1 - i);
+      }
+    }
+
+    stackMap->setExitStubWords(extraWords);
+
+    // Record in the map, how far down from the highest address the Frame* is.
+    // Take the opportunity to check that we haven't marked any part of the
+    // Frame itself as a pointer.
+    stackMap->setFrameOffsetFromTop(numStackArgWords_ +
+                                    sizeof(Frame) / sizeof(void*));
+#ifdef DEBUG
+    for (uint32_t i = 0; i < sizeof(Frame) / sizeof(void*); i++) {
+      MOZ_ASSERT(stackMap->getBit(stackMap->numMappedWords -
+                                  stackMap->frameOffsetFromTop + i) == 0);
+    }
+#endif
+
+    // Note the presence of a ref-typed DebugFrame, if any.
+    if (refDebugFrame == HasRefTypedDebugFrame::Yes) {
+      stackMap->setHasRefTypedDebugFrame();
+    }
+
+    // Add the completed map to the running collection thereof.
+    if (!stackMaps_->add((uint8_t*)(uintptr_t)assemblerOffset, stackMap)) {
+      return false;
+    }
+
+#ifdef DEBUG
+    {
+      // Crosscheck the map pointer counting.
+      uint32_t nw = stackMap->numMappedWords;
+      uint32_t np = 0;
+      for (uint32_t i = 0; i < nw; i++) {
+        np += stackMap->getBit(i);
+      }
+      MOZ_ASSERT(size_t(np) == countedPointers);
+    }
+#endif
+
+    return true;
+  }
+};
+
 // The baseline compiler proper.
 
 class BaseCompiler final : public BaseCompilerInterface {
@@ -1979,6 +2526,8 @@ class BaseCompiler final : public BaseCompilerInterface {
   BaseRegAlloc ra;       // Ditto
   BaseStackFrame fr;
 
+  StackMapGenerator smgen_;
+
   BaseStackFrame::LocalVector localInfo_;
   Vector<OutOfLineCode*, 8, SystemAllocPolicy> outOfLine_;
 
@@ -2000,9 +2549,10 @@ class BaseCompiler final : public BaseCompilerInterface {
 
  public:
   BaseCompiler(const ModuleEnvironment& env, const FuncCompileInput& input,
-               const ValTypeVector& locals, Decoder& decoder,
+               const ValTypeVector& locals, const MachineState& trapExitLayout,
+               size_t trapExitLayoutNumWords, Decoder& decoder,
                ExclusiveDeferredValidationState& dvs, TempAllocator* alloc,
-               MacroAssembler* masm);
+               MacroAssembler* masm, StackMaps* stackMaps);
 
   MOZ_MUST_USE bool init();
 
@@ -2301,153 +2851,25 @@ class BaseCompiler final : public BaseCompilerInterface {
   // to avoid problems with control flow and messy register usage
   // patterns.
 
-  struct Stk {
-   private:
-    Stk() : kind_(Unknown), i64val_(0) {}
+  StkVector stk_;
 
-   public:
-    enum Kind {
-      // The Mem opcodes are all clustered at the beginning to
-      // allow for a quick test within sync().
-      MemI32,  // 32-bit integer stack value ("offs")
-      MemI64,  // 64-bit integer stack value ("offs")
-      MemF32,  // 32-bit floating stack value ("offs")
-      MemF64,  // 64-bit floating stack value ("offs")
-      MemRef,  // reftype (pointer wide) stack value ("offs")
-
-      // The Local opcodes follow the Mem opcodes for a similar
-      // quick test within hasLocal().
-      LocalI32,  // Local int32 var ("slot")
-      LocalI64,  // Local int64 var ("slot")
-      LocalF32,  // Local float32 var ("slot")
-      LocalF64,  // Local double var ("slot")
-      LocalRef,  // Local reftype (pointer wide) var ("slot")
-
-      RegisterI32,  // 32-bit integer register ("i32reg")
-      RegisterI64,  // 64-bit integer register ("i64reg")
-      RegisterF32,  // 32-bit floating register ("f32reg")
-      RegisterF64,  // 64-bit floating register ("f64reg")
-      RegisterRef,  // reftype (pointer wide) register ("refReg")
-
-      ConstI32,  // 32-bit integer constant ("i32val")
-      ConstI64,  // 64-bit integer constant ("i64val")
-      ConstF32,  // 32-bit floating constant ("f32val")
-      ConstF64,  // 64-bit floating constant ("f64val")
-      ConstRef,  // reftype (pointer wide) constant ("refval")
-
-      Unknown,
-    };
-
-    Kind kind_;
-
-    static const Kind MemLast = MemRef;
-    static const Kind LocalLast = LocalRef;
-
-    union {
-      RegI32 i32reg_;
-      RegI64 i64reg_;
-      RegPtr refReg_;
-      RegF32 f32reg_;
-      RegF64 f64reg_;
-      int32_t i32val_;
-      int64_t i64val_;
-      intptr_t refval_;
-      float f32val_;
-      double f64val_;
-      uint32_t slot_;
-      uint32_t offs_;
-    };
-
-    explicit Stk(RegI32 r) : kind_(RegisterI32), i32reg_(r) {}
-    explicit Stk(RegI64 r) : kind_(RegisterI64), i64reg_(r) {}
-    explicit Stk(RegPtr r) : kind_(RegisterRef), refReg_(r) {}
-    explicit Stk(RegF32 r) : kind_(RegisterF32), f32reg_(r) {}
-    explicit Stk(RegF64 r) : kind_(RegisterF64), f64reg_(r) {}
-    explicit Stk(int32_t v) : kind_(ConstI32), i32val_(v) {}
-    explicit Stk(int64_t v) : kind_(ConstI64), i64val_(v) {}
-    explicit Stk(float v) : kind_(ConstF32), f32val_(v) {}
-    explicit Stk(double v) : kind_(ConstF64), f64val_(v) {}
-    explicit Stk(Kind k, uint32_t v) : kind_(k), slot_(v) {
-      MOZ_ASSERT(k > MemLast && k <= LocalLast);
+#ifdef DEBUG
+  size_t countMemRefsOnStk() {
+    size_t nRefs = 0;
+    for (Stk& v : stk_) {
+      if (v.kind() == Stk::MemRef) {
+        nRefs++;
+      }
     }
-    static Stk StkRef(intptr_t v) {
-      Stk s;
-      s.kind_ = ConstRef;
-      s.refval_ = v;
-      return s;
-    }
+    return nRefs;
+  }
+#endif
 
-    void setOffs(Kind k, uint32_t v) {
-      MOZ_ASSERT(k <= MemLast);
-      kind_ = k;
-      offs_ = v;
-    }
-
-    Kind kind() const { return kind_; }
-    bool isMem() const { return kind_ <= MemLast; }
-
-    RegI32 i32reg() const {
-      MOZ_ASSERT(kind_ == RegisterI32);
-      return i32reg_;
-    }
-    RegI64 i64reg() const {
-      MOZ_ASSERT(kind_ == RegisterI64);
-      return i64reg_;
-    }
-    RegPtr refReg() const {
-      MOZ_ASSERT(kind_ == RegisterRef);
-      return refReg_;
-    }
-    RegF32 f32reg() const {
-      MOZ_ASSERT(kind_ == RegisterF32);
-      return f32reg_;
-    }
-    RegF64 f64reg() const {
-      MOZ_ASSERT(kind_ == RegisterF64);
-      return f64reg_;
-    }
-
-    int32_t i32val() const {
-      MOZ_ASSERT(kind_ == ConstI32);
-      return i32val_;
-    }
-    int64_t i64val() const {
-      MOZ_ASSERT(kind_ == ConstI64);
-      return i64val_;
-    }
-    intptr_t refval() const {
-      MOZ_ASSERT(kind_ == ConstRef);
-      return refval_;
-    }
-
-    // For these two, use an out-param instead of simply returning, to
-    // use the normal stack and not the x87 FP stack (which has effect on
-    // NaNs with the signaling bit set).
-
-    void f32val(float* out) const {
-      MOZ_ASSERT(kind_ == ConstF32);
-      *out = f32val_;
-    }
-    void f64val(double* out) const {
-      MOZ_ASSERT(kind_ == ConstF64);
-      *out = f64val_;
-    }
-
-    uint32_t slot() const {
-      MOZ_ASSERT(kind_ > MemLast && kind_ <= LocalLast);
-      return slot_;
-    }
-    uint32_t offs() const {
-      MOZ_ASSERT(isMem());
-      return offs_;
-    }
-  };
-
-  Vector<Stk, 8, SystemAllocPolicy> stk_;
-
-  template <typename... Args>
-  void push(Args&&... args) {
-    stk_.infallibleEmplaceBack(Stk(std::forward<Args>(args)...));
+  template <typename T>
+  void push(T item) {
+    // None of the single-arg Stk constructors create a Stk::MemRef, so
+    // there's no need to increment smgen_.memRefsOnStk_ here.
+    stk_.infallibleEmplaceBack(Stk(item));
   }
 
   void pushConstRef(intptr_t v) { stk_.infallibleEmplaceBack(Stk::StkRef(v)); }
@@ -2779,17 +3201,59 @@ class BaseCompiler final : public BaseCompilerInterface {
           loadLocalRef(v, scratch);
           uint32_t offs = fr.pushPtr(scratch);
           v.setOffs(Stk::MemRef, offs);
+          smgen_.memRefsOnStk_++;
           break;
         }
         case Stk::RegisterRef: {
           uint32_t offs = fr.pushPtr(v.refReg());
           freeRef(v.refReg());
           v.setOffs(Stk::MemRef, offs);
+          smgen_.memRefsOnStk_++;
           break;
         }
         default: { break; }
       }
     }
+  }
+
+  // Various methods for creating a stack map.  Stack maps are indexed by the
+  // lowest address of the instruction immediately *after* the instruction of
+  // interest.  In practice that means either: the return point of a call, the
+  // instruction immediately after a trap instruction (the "resume"
+  // instruction), or the instruction immediately following a no-op (when
+  // debugging is enabled).
+
+  // Create a vanilla stack map.
+  MOZ_MUST_USE bool createStackMap(const char* who) {
+    const ExitStubMapVector noExtras;
+    return smgen_.createStackMap(who, noExtras, masm.currentOffset(),
+                                 HasRefTypedDebugFrame::No, stk_);
+  }
+
+  // Create a stack map as vanilla, but for a custom assembler offset.
+  MOZ_MUST_USE bool createStackMap(const char* who,
+                                   CodeOffset assemblerOffset) {
+    const ExitStubMapVector noExtras;
+    return smgen_.createStackMap(who, noExtras, assemblerOffset.offset(),
+                                 HasRefTypedDebugFrame::No, stk_);
+  }
+
+  // Create a stack map as vanilla, and note the presence of a ref-typed
+  // DebugFrame on the stack.
+  MOZ_MUST_USE bool createStackMap(const char* who,
+                                   HasRefTypedDebugFrame refDebugFrame) {
+    const ExitStubMapVector noExtras;
+    return smgen_.createStackMap(who, noExtras, masm.currentOffset(),
+                                 refDebugFrame, stk_);
+  }
+
+  // The most general stack map construction.
+  MOZ_MUST_USE bool createStackMap(const char* who,
+                                   const ExitStubMapVector& extras,
+                                   uint32_t assemblerOffset,
+                                   HasRefTypedDebugFrame refDebugFrame) {
+    return smgen_.createStackMap(who, extras, assemblerOffset, refDebugFrame,
+                                 stk_);
   }
 
   // This is an optimization used to avoid calling sync() for
@@ -2824,54 +3288,64 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   void pushI32(RegI32 r) {
     MOZ_ASSERT(!isAvailableI32(r));
-    push(r);
+    push(Stk(r));
   }
 
   void pushI64(RegI64 r) {
     MOZ_ASSERT(!isAvailableI64(r));
-    push(r);
+    push(Stk(r));
   }
 
   void pushRef(RegPtr r) {
     MOZ_ASSERT(!isAvailableRef(r));
-    push(r);
+    push(Stk(r));
   }
 
   void pushF64(RegF64 r) {
     MOZ_ASSERT(!isAvailableF64(r));
-    push(r);
+    push(Stk(r));
   }
 
   void pushF32(RegF32 r) {
     MOZ_ASSERT(!isAvailableF32(r));
-    push(r);
+    push(Stk(r));
   }
 
   // Push the value onto the stack.
 
-  void pushI32(int32_t v) { push(v); }
+  void pushI32(int32_t v) { push(Stk(v)); }
 
-  void pushI64(int64_t v) { push(v); }
+  void pushI64(int64_t v) { push(Stk(v)); }
 
   void pushRef(intptr_t v) { pushConstRef(v); }
 
-  void pushF64(double v) { push(v); }
+  void pushF64(double v) { push(Stk(v)); }
 
-  void pushF32(float v) { push(v); }
+  void pushF32(float v) { push(Stk(v)); }
 
   // Push the local slot onto the stack.  The slot will not be read
   // here; it will be read when it is consumed, or when a side
   // effect to the slot forces its value to be saved.
 
-  void pushLocalI32(uint32_t slot) { push(Stk::LocalI32, slot); }
+  void pushLocalI32(uint32_t slot) {
+    stk_.infallibleEmplaceBack(Stk(Stk::LocalI32, slot));
+  }
 
-  void pushLocalI64(uint32_t slot) { push(Stk::LocalI64, slot); }
+  void pushLocalI64(uint32_t slot) {
+    stk_.infallibleEmplaceBack(Stk(Stk::LocalI64, slot));
+  }
 
-  void pushLocalRef(uint32_t slot) { push(Stk::LocalRef, slot); }
+  void pushLocalRef(uint32_t slot) {
+    stk_.infallibleEmplaceBack(Stk(Stk::LocalRef, slot));
+  }
 
-  void pushLocalF64(uint32_t slot) { push(Stk::LocalF64, slot); }
+  void pushLocalF64(uint32_t slot) {
+    stk_.infallibleEmplaceBack(Stk(Stk::LocalF64, slot));
+  }
 
-  void pushLocalF32(uint32_t slot) { push(Stk::LocalF32, slot); }
+  void pushLocalF32(uint32_t slot) {
+    stk_.infallibleEmplaceBack(Stk(Stk::LocalF32, slot));
+  }
 
   // Call only from other popI32() variants.
   // v must be the stack top.  May pop the CPU stack.
@@ -3018,6 +3492,9 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
 
     stk_.popBack();
+    if (v.kind() == Stk::MemRef) {
+      smgen_.memRefsOnStk_--;
+    }
     return specific;
   }
 
@@ -3030,6 +3507,9 @@ class BaseCompiler final : public BaseCompilerInterface {
       popRef(v, (r = needRef()));
     }
     stk_.popBack();
+    if (v.kind() == Stk::MemRef) {
+      smgen_.memRefsOnStk_--;
+    }
     return r;
   }
 
@@ -3405,6 +3885,9 @@ class BaseCompiler final : public BaseCompilerInterface {
         case Stk::RegisterRef:
           freeRef(v.refReg());
           break;
+        case Stk::MemRef:
+          smgen_.memRefsOnStk_--;
+          break;
         default:
           break;
       }
@@ -3527,13 +4010,53 @@ class BaseCompiler final : public BaseCompilerInterface {
   //
   // Function prologue and epilogue.
 
-  void beginFunction() {
+  MOZ_MUST_USE bool beginFunction() {
+    JitSpew(JitSpew_Codegen, "# ========================================");
     JitSpew(JitSpew_Codegen, "# Emitting wasm baseline code");
+    JitSpew(JitSpew_Codegen,
+            "# beginFunction: start of function prologue for index %d",
+            (int)func_.index);
+
+    // Make a start on the stack map for this function.  Inspect the args so
+    // as to determine which of them are both in-memory and pointer-typed, and
+    // add entries to mst_ as appropriate.
+
+    const ValTypeVector& argTys = env_.funcTypes[func_.index]->args();
+
+    size_t nStackArgBytes = stackArgAreaSize(argTys);
+    MOZ_ASSERT(nStackArgBytes % sizeof(void*) == 0);
+    smgen_.numStackArgWords_ = nStackArgBytes / sizeof(void*);
+
+    MOZ_ASSERT(smgen_.mst_.length() == 0);
+    if (!smgen_.mst_.pushNonGCPointers(smgen_.numStackArgWords_)) {
+      return false;
+    }
+
+    for (ABIArgIter<const ValTypeVector> i(argTys); !i.done(); i++) {
+      ABIArg argLoc = *i;
+      if (argLoc.kind() != ABIArg::Stack) {
+        continue;
+      }
+      const ValType& ty = argTys[i.index()];
+      if (!ty.isReference()) {
+        continue;
+      }
+      uint32_t offset = argLoc.offsetFromArgBase();
+      MOZ_ASSERT(offset < nStackArgBytes);
+      MOZ_ASSERT(offset % sizeof(void*) == 0);
+      smgen_.mst_.setGCPointer(offset / sizeof(void*));
+    }
 
     GenerateFunctionPrologue(
         masm, env_.funcTypes[func_.index]->id,
         env_.mode() == CompileMode::Tier1 ? Some(func_.index) : Nothing(),
         &offsets_);
+
+    // GenerateFunctionPrologue pushes exactly one wasm::Frame's worth of
+    // stuff, and none of the values are GC pointers.  Hence:
+    if (!smgen_.mst_.pushNonGCPointers(sizeof(Frame) / sizeof(void*))) {
+      return false;
+    }
 
     // Initialize DebugFrame fields before the stack overflow trap so that
     // we have the invariant that all observable Frames in a debugEnabled
@@ -3544,21 +4067,53 @@ class BaseCompiler final : public BaseCompilerInterface {
                     "aligned");
 #endif
       masm.reserveStack(DebugFrame::offsetOfFrame());
+      if (!smgen_.mst_.pushNonGCPointers(DebugFrame::offsetOfFrame() /
+                                         sizeof(void*))) {
+        return false;
+      }
+
       masm.store32(
           Imm32(func_.index),
           Address(masm.getStackPointer(), DebugFrame::offsetOfFuncIndex()));
       masm.storePtr(ImmWord(0), Address(masm.getStackPointer(),
                                         DebugFrame::offsetOfFlagsWord()));
+      // Zero out DebugFrame::cachedReturnJSValue_ and ::resultRef_ for
+      // safety, since it's not easy to establish whether they will always be
+      // defined before a GC.
+      masm.storePtr(ImmWord(0), Address(masm.getStackPointer(),
+                                        DebugFrame::offsetOfResults()));
+      for (size_t i = 0; i < sizeof(js::Value) / sizeof(void*); i++) {
+        masm.storePtr(ImmWord(0),
+                      Address(masm.getStackPointer(),
+                              DebugFrame::offsetOfCachedReturnJSValue() +
+                                  i * sizeof(void*)));
+      }
     }
 
-    fr.checkStack(ABINonArgReg0, BytecodeOffset(func_.lineOrBytecode));
-    masm.reserveStack(fr.fixedSize() - masm.framePushed());
-    fr.onFixedStackAllocated();
+    // Generate a stack-overflow check and its associated stack map.
 
-    // Copy arguments from registers to stack.
+    fr.checkStack(ABINonArgReg0, BytecodeOffset(func_.lineOrBytecode));
 
     const ValTypeVector& args = funcType().args();
+    ExitStubMapVector extras;
+    if (!smgen_.generateStackmapEntriesForTrapExit(args, extras)) {
+      return false;
+    }
+    if (!createStackMap("stack check", extras, masm.currentOffset(),
+                        HasRefTypedDebugFrame::No)) {
+      return false;
+    }
 
+    size_t reservedBytes = fr.fixedSize() - masm.framePushed();
+    MOZ_ASSERT(0 == (reservedBytes % sizeof(void*)));
+
+    masm.reserveStack(reservedBytes);
+    fr.onFixedStackAllocated();
+    if (!smgen_.mst_.pushNonGCPointers(reservedBytes / sizeof(void*))) {
+      return false;
+    }
+
+    // Copy arguments from registers to stack.
     for (ABIArgIter<const ValTypeVector> i(args); !i.done(); i++) {
       if (!i->argInRegister()) {
         continue;
@@ -3571,9 +4126,13 @@ class BaseCompiler final : public BaseCompilerInterface {
         case MIRType::Int64:
           fr.storeLocalI64(RegI64(i->gpr64()), l);
           break;
-        case MIRType::Pointer:
+        case MIRType::Pointer: {
+          uint32_t offs = fr.localOffset(l);
+          MOZ_ASSERT(0 == (offs % sizeof(void*)));
           fr.storeLocalPtr(RegPtr(i->gpr()), l);
+          smgen_.mst_.setGCPointer(offs / sizeof(void*));
           break;
+        }
         case MIRType::Double:
           fr.storeLocalF64(RegF64(i->fpu()), l);
           break;
@@ -3589,7 +4148,18 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     if (env_.debugEnabled()) {
       insertBreakablePoint(CallSiteDesc::EnterFrame);
+      if (!createStackMap("debug: breakable point")) {
+        return false;
+      }
     }
+
+    JitSpew(JitSpew_Codegen,
+            "# beginFunction: enter body with masm.framePushed = %u",
+            masm.framePushed());
+    MOZ_ASSERT(smgen_.framePushedAtEntryToBody_.isNothing());
+    smgen_.framePushedAtEntryToBody_.emplace(masm.framePushed());
+
+    return true;
   }
 
   void saveResult() {
@@ -3652,7 +4222,9 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
   }
 
-  bool endFunction() {
+  MOZ_MUST_USE bool endFunction() {
+    JitSpew(JitSpew_Codegen, "# endFunction: start of function epilogue");
+
     // Always branch to returnLabel_.
     masm.breakpoint();
 
@@ -3670,11 +4242,26 @@ class BaseCompiler final : public BaseCompilerInterface {
     masm.bind(&returnLabel_);
 
     if (env_.debugEnabled()) {
+      // If the return type is a ref, we need to note that in the stack maps
+      // generated here.  Note that this assumes that DebugFrame::result* and
+      // DebugFrame::cachedReturnJSValue_ are either both ref-typed or they
+      // are both not ref-typed.  It can't represent the situation where one
+      // is and the other isn't.
+      HasRefTypedDebugFrame refDebugFrame = funcType().ret().isReference()
+                                                ? HasRefTypedDebugFrame::Yes
+                                                : HasRefTypedDebugFrame::No;
+
       // Store and reload the return value from DebugFrame::return so that
       // it can be clobbered, and/or modified by the debug trap.
       saveResult();
       insertBreakablePoint(CallSiteDesc::Breakpoint);
+      if (!createStackMap("debug: breakpoint", refDebugFrame)) {
+        return false;
+      }
       insertBreakablePoint(CallSiteDesc::LeaveFrame);
+      if (!createStackMap("debug: leave frame", refDebugFrame)) {
+        return false;
+      }
       restoreResult();
     }
 
@@ -3687,6 +4274,8 @@ class BaseCompiler final : public BaseCompilerInterface {
     // gen->perfSpewer().noteEndInlineCode(masm);
 #endif
 
+    JitSpew(JitSpew_Codegen, "# endFunction: end of function epilogue");
+    JitSpew(JitSpew_Codegen, "# endFunction: start of OOL code");
     if (!generateOutOfLineCode()) {
       return false;
     }
@@ -3697,6 +4286,8 @@ class BaseCompiler final : public BaseCompilerInterface {
       return false;
     }
 
+    JitSpew(JitSpew_Codegen, "# endFunction: end of OOL code for index %d",
+            (int)func_.index);
     return !masm.oom();
   }
 
@@ -3759,6 +4350,9 @@ class BaseCompiler final : public BaseCompilerInterface {
     size_t adjustment = call.stackArgAreaSize + call.frameAlignAdjustment;
     fr.freeArgAreaAndPopBytes(adjustment, stackSpace);
 
+    MOZ_ASSERT(smgen_.framePushedBeforePushingCallArgs_.isSome());
+    smgen_.framePushedBeforePushingCallArgs_.reset();
+
     if (call.isInterModule) {
       masm.loadWasmTlsRegFromFrame();
       masm.loadWasmPinnedRegsFromTls();
@@ -3790,6 +4384,14 @@ class BaseCompiler final : public BaseCompilerInterface {
   }
 
   void startCallArgs(size_t stackArgAreaSize, FunctionCall* call) {
+    // Record the masm.framePushed() value at this point, before we push args
+    // for the call, but including the alignment space placed above the args.
+    // This defines the lower limit of the stackmap that will be created for
+    // this call.
+    MOZ_ASSERT(smgen_.framePushedBeforePushingCallArgs_.isNothing());
+    smgen_.framePushedBeforePushingCallArgs_.emplace(
+        masm.framePushed() + call->frameAlignAdjustment);
+
     call->stackArgAreaSize = stackArgAreaSize;
 
     size_t adjustment = call->stackArgAreaSize + call->frameAlignAdjustment;
@@ -3947,20 +4549,20 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
   }
 
-  void callDefinition(uint32_t funcIndex, const FunctionCall& call) {
+  CodeOffset callDefinition(uint32_t funcIndex, const FunctionCall& call) {
     CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Func);
-    masm.call(desc, funcIndex);
+    return masm.call(desc, funcIndex);
   }
 
-  void callSymbolic(SymbolicAddress callee, const FunctionCall& call) {
+  CodeOffset callSymbolic(SymbolicAddress callee, const FunctionCall& call) {
     CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Symbolic);
-    masm.call(desc, callee);
+    return masm.call(desc, callee);
   }
 
   // Precondition: sync()
 
-  void callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
-                    const Stk& indexVal, const FunctionCall& call) {
+  CodeOffset callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
+                          const Stk& indexVal, const FunctionCall& call) {
     const FuncTypeWithId& funcType = env_.types[funcTypeIndex].funcType();
     MOZ_ASSERT(funcType.id.kind() != FuncTypeIdDescKind::None);
 
@@ -3970,29 +4572,29 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Dynamic);
     CalleeDesc callee = CalleeDesc::wasmTable(table, funcType.id);
-    masm.wasmCallIndirect(desc, callee, NeedsBoundsCheck(true));
+    return masm.wasmCallIndirect(desc, callee, NeedsBoundsCheck(true));
   }
 
   // Precondition: sync()
 
-  void callImport(unsigned globalDataOffset, const FunctionCall& call) {
+  CodeOffset callImport(unsigned globalDataOffset, const FunctionCall& call) {
     CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Dynamic);
     CalleeDesc callee = CalleeDesc::import(globalDataOffset);
-    masm.wasmCallImport(desc, callee);
+    return masm.wasmCallImport(desc, callee);
   }
 
-  void builtinCall(SymbolicAddress builtin, const FunctionCall& call) {
-    callSymbolic(builtin, call);
+  CodeOffset builtinCall(SymbolicAddress builtin, const FunctionCall& call) {
+    return callSymbolic(builtin, call);
   }
 
-  void builtinInstanceMethodCall(SymbolicAddress builtin,
-                                 const ABIArg& instanceArg,
-                                 const FunctionCall& call) {
+  CodeOffset builtinInstanceMethodCall(SymbolicAddress builtin,
+                                       const ABIArg& instanceArg,
+                                       const FunctionCall& call) {
     // Builtin method calls assume the TLS register has been set.
     masm.loadWasmTlsRegFromFrame();
 
     CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Symbolic);
-    masm.wasmCallBuiltinInstanceMethod(desc, instanceArg, builtin);
+    return masm.wasmCallBuiltinInstanceMethod(desc, instanceArg, builtin);
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -4013,10 +4615,11 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   void moveImmF64(double d, RegF64 dest) { masm.loadConstantDouble(d, dest); }
 
-  void addInterruptCheck() {
+  MOZ_MUST_USE bool addInterruptCheck() {
     ScratchI32 tmp(*this);
     masm.loadWasmTlsRegFromFrame(tmp);
     masm.wasmInterruptCheck(tmp, bytecodeOffset());
+    return createStackMap("addInterruptCheck");
   }
 
   void jumpTable(const LabelVector& labels, Label* theTable) {
@@ -5872,7 +6475,7 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   // This frees the register `valueAddr`.
 
-  void emitPostBarrier(RegPtr valueAddr) {
+  MOZ_MUST_USE bool emitPostBarrier(RegPtr valueAddr) {
     uint32_t bytecodeOffset = iter_.lastOpcodeOffset();
 
     // The `valueAddr` is a raw pointer to the cell within some GC object or
@@ -5880,17 +6483,22 @@ class BaseCompiler final : public BaseCompilerInterface {
     // postbarrier call is active, so push a uintptr_t value.
 #ifdef JS_64BIT
     pushI64(RegI64(Register64(valueAddr)));
-    emitInstanceCall(bytecodeOffset, SigPL_, ExprType::Void,
-                     SymbolicAddress::PostBarrier);
+    if (!emitInstanceCall(bytecodeOffset, SigPL_, ExprType::Void,
+                          SymbolicAddress::PostBarrier)) {
+      return false;
+    }
 #else
     pushI32(RegI32(valueAddr));
-    emitInstanceCall(bytecodeOffset, SigPI_, ExprType::Void,
-                     SymbolicAddress::PostBarrier);
+    if (!emitInstanceCall(bytecodeOffset, SigPI_, ExprType::Void,
+                          SymbolicAddress::PostBarrier)) {
+      return false;
+    }
 #endif
+    return true;
   }
 
-  void emitBarrieredStore(const Maybe<RegPtr>& object, RegPtr valueAddr,
-                          RegPtr value) {
+  MOZ_MUST_USE bool emitBarrieredStore(const Maybe<RegPtr>& object,
+                                       RegPtr valueAddr, RegPtr value) {
     emitPreBarrier(valueAddr);  // Preserves valueAddr
     masm.storePtr(value, Address(valueAddr, 0));
 
@@ -5901,8 +6509,11 @@ class BaseCompiler final : public BaseCompilerInterface {
     emitPostBarrierGuard(object, otherScratch, value, &skipBarrier);
     freeRef(otherScratch);
 
-    emitPostBarrier(valueAddr);
+    if (!emitPostBarrier(valueAddr)) {
+      return false;
+    }
     masm.bind(&skipBarrier);
+    return true;
   }
 
   ////////////////////////////////////////////////////////////
@@ -6121,7 +6732,8 @@ class BaseCompiler final : public BaseCompilerInterface {
   void emitRemainderI32();
   void emitRemainderU32();
 #ifdef RABALDR_INT_DIV_I64_CALLOUT
-  void emitDivOrModI64BuiltinCall(SymbolicAddress callee, ValType operandType);
+  MOZ_MUST_USE bool emitDivOrModI64BuiltinCall(SymbolicAddress callee,
+                                               ValType operandType);
 #else
   void emitQuotientI64();
   void emitQuotientU64();
@@ -6209,8 +6821,9 @@ class BaseCompiler final : public BaseCompilerInterface {
   void emitReinterpretI32AsF32();
   void emitReinterpretI64AsF64();
   void emitRound(RoundingMode roundingMode, ValType operandType);
-  void emitInstanceCall(uint32_t lineOrBytecode, const MIRTypeVector& sig,
-                        ExprType retType, SymbolicAddress builtin);
+  MOZ_MUST_USE bool emitInstanceCall(uint32_t lineOrBytecode,
+                                     const MIRTypeVector& sig, ExprType retType,
+                                     SymbolicAddress builtin);
   MOZ_MUST_USE bool emitGrowMemory();
   MOZ_MUST_USE bool emitCurrentMemory();
 
@@ -7531,7 +8144,9 @@ bool BaseCompiler::emitLoop() {
   if (!deadCode_) {
     masm.nopAlign(CodeAlignment);
     masm.bind(&controlItem(0).label);
-    addInterruptCheck();
+    if (!addInterruptCheck()) {
+      return false;
+    }
   }
 
   return true;
@@ -8031,10 +8646,16 @@ bool BaseCompiler::emitCall() {
     return false;
   }
 
+  CodeOffset raOffset;
   if (import) {
-    callImport(env_.funcImportGlobalDataOffsets[funcIndex], baselineCall);
+    raOffset =
+        callImport(env_.funcImportGlobalDataOffsets[funcIndex], baselineCall);
   } else {
-    callDefinition(funcIndex, baselineCall);
+    raOffset = callDefinition(funcIndex, baselineCall);
+  }
+
+  if (!createStackMap("emitCall", raOffset)) {
+    return false;
   }
 
   endCall(baselineCall, stackSpace);
@@ -8083,7 +8704,11 @@ bool BaseCompiler::emitCallIndirect() {
     return false;
   }
 
-  callIndirect(funcTypeIndex, tableIndex, callee, baselineCall);
+  CodeOffset raOffset =
+      callIndirect(funcTypeIndex, tableIndex, callee, baselineCall);
+  if (!createStackMap("emitCallIndirect", raOffset)) {
+    return false;
+  }
 
   endCall(baselineCall, stackSpace);
 
@@ -8143,7 +8768,10 @@ bool BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee,
     return false;
   }
 
-  builtinCall(callee, baselineCall);
+  CodeOffset raOffset = builtinCall(callee, baselineCall);
+  if (!createStackMap("emitUnaryMathBuiltin[..]", raOffset)) {
+    return false;
+  }
 
   endCall(baselineCall, stackSpace);
 
@@ -8155,7 +8783,7 @@ bool BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee,
 }
 
 #ifdef RABALDR_INT_DIV_I64_CALLOUT
-void BaseCompiler::emitDivOrModI64BuiltinCall(SymbolicAddress callee,
+bool BaseCompiler::emitDivOrModI64BuiltinCall(SymbolicAddress callee,
                                               ValType operandType) {
   MOZ_ASSERT(operandType == ValType::I64);
   MOZ_ASSERT(!deadCode_);
@@ -8182,12 +8810,16 @@ void BaseCompiler::emitDivOrModI64BuiltinCall(SymbolicAddress callee,
   masm.passABIArg(srcDest.low);
   masm.passABIArg(rhs.high);
   masm.passABIArg(rhs.low);
-  masm.callWithABI(bytecodeOffset(), callee);
+  CodeOffset raOffset = masm.callWithABI(bytecodeOffset(), callee);
+  if (!createStackMap("emitDivOrModI64Bui[..]", raOffset)) {
+    return false;
+  }
 
   masm.bind(&done);
 
   freeI64(rhs);
   pushI64(srcDest);
+  return true;
 }
 #endif  // RABALDR_INT_DIV_I64_CALLOUT
 
@@ -8208,9 +8840,12 @@ bool BaseCompiler::emitConvertInt64ToFloatingCallout(SymbolicAddress callee,
   masm.passABIArg(input.high);
   masm.passABIArg(input.low);
 #endif
-  masm.callWithABI(
+  CodeOffset raOffset = masm.callWithABI(
       bytecodeOffset(), callee,
       resultType == ValType::F32 ? MoveOp::FLOAT32 : MoveOp::DOUBLE);
+  if (!createStackMap("emitConvertInt64To[..]", raOffset)) {
+    return false;
+  }
 
   freeI64(input);
 
@@ -8250,7 +8885,10 @@ bool BaseCompiler::emitConvertFloatingToInt64Callout(SymbolicAddress callee,
 
   masm.setupWasmABICall();
   masm.passABIArg(doubleInput, MoveOp::DOUBLE);
-  masm.callWithABI(bytecodeOffset(), callee);
+  CodeOffset raOffset = masm.callWithABI(bytecodeOffset(), callee);
+  if (!createStackMap("emitConvertFloatin[..]", raOffset)) {
+    return false;
+  }
 
   freeF64(doubleInput);
 
@@ -8556,7 +9194,10 @@ bool BaseCompiler::emitSetGlobal() {
                                      valueAddr);
       }
       RegPtr rv = popRef();
-      emitBarrieredStore(Nothing(), valueAddr, rv);  // Consumes valueAddr
+      if (!emitBarrieredStore(Nothing(), valueAddr,
+                              rv)) {  // Consumes valueAddr
+        return false;
+      }
       freeRef(rv);
       break;
     }
@@ -9061,7 +9702,7 @@ void BaseCompiler::emitCompareRef(Assembler::Condition compareOp,
   pushI32(rd);
 }
 
-void BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
+bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
                                     const MIRTypeVector& sig, ExprType retType,
                                     SymbolicAddress builtin) {
   MOZ_ASSERT(sig[0] == MIRType::Pointer);
@@ -9094,7 +9735,12 @@ void BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
     }
     passArg(t, peek(numArgs - i), &baselineCall);
   }
-  builtinInstanceMethodCall(builtin, instanceArg, baselineCall);
+  CodeOffset raOffset =
+      builtinInstanceMethodCall(builtin, instanceArg, baselineCall);
+  if (!createStackMap("emitInstanceCall", raOffset)) {
+    return false;
+  }
+
   endCall(baselineCall, stackSpace);
 
   popValueStackBy(numArgs);
@@ -9110,6 +9756,7 @@ void BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
   // implemented as callouts.
 
   pushReturnedIfNonVoid(baselineCall, retType);
+  return true;
 }
 
 bool BaseCompiler::emitGrowMemory() {
@@ -9124,10 +9771,8 @@ bool BaseCompiler::emitGrowMemory() {
     return true;
   }
 
-  // infallible
-  emitInstanceCall(lineOrBytecode, SigPI_, ExprType::I32,
-                   SymbolicAddress::GrowMemory);
-  return true;
+  return emitInstanceCall(lineOrBytecode, SigPI_, ExprType::I32,
+                          SymbolicAddress::GrowMemory);
 }
 
 bool BaseCompiler::emitCurrentMemory() {
@@ -9141,10 +9786,8 @@ bool BaseCompiler::emitCurrentMemory() {
     return true;
   }
 
-  // infallible
-  emitInstanceCall(lineOrBytecode, SigP_, ExprType::I32,
-                   SymbolicAddress::CurrentMemory);
-  return true;
+  return emitInstanceCall(lineOrBytecode, SigP_, ExprType::I32,
+                          SymbolicAddress::CurrentMemory);
 }
 
 bool BaseCompiler::emitRefNull() {
@@ -9458,12 +10101,16 @@ bool BaseCompiler::emitWait(ValType type, uint32_t byteSize) {
   // Returns -1 on trap, otherwise nonnegative result.
   switch (type.code()) {
     case ValType::I32:
-      emitInstanceCall(lineOrBytecode, SigPIIL_, ExprType::I32,
-                       SymbolicAddress::WaitI32);
+      if (!emitInstanceCall(lineOrBytecode, SigPIIL_, ExprType::I32,
+                            SymbolicAddress::WaitI32)) {
+        return false;
+      }
       break;
     case ValType::I64:
-      emitInstanceCall(lineOrBytecode, SigPILL_, ExprType::I32,
-                       SymbolicAddress::WaitI64);
+      if (!emitInstanceCall(lineOrBytecode, SigPILL_, ExprType::I32,
+                            SymbolicAddress::WaitI64)) {
+        return false;
+      }
       break;
     default:
       MOZ_CRASH();
@@ -9491,8 +10138,10 @@ bool BaseCompiler::emitWake() {
   }
 
   // Returns -1 on trap, otherwise nonnegative result.
-  emitInstanceCall(lineOrBytecode, SigPII_, ExprType::I32,
-                   SymbolicAddress::Wake);
+  if (!emitInstanceCall(lineOrBytecode, SigPII_, ExprType::I32,
+                        SymbolicAddress::Wake)) {
+    return false;
+  }
 
   Label ok;
   masm.branchTest32(Assembler::NotSigned, ReturnReg, ReturnReg, &ok);
@@ -9522,13 +10171,17 @@ bool BaseCompiler::emitMemOrTableCopy(bool isMem) {
   if (isMem) {
     MOZ_ASSERT(srcMemOrTableIndex == 0);
     MOZ_ASSERT(dstMemOrTableIndex == 0);
-    emitInstanceCall(lineOrBytecode, SigPIII_, ExprType::Void,
-                     SymbolicAddress::MemCopy);
+    if (!emitInstanceCall(lineOrBytecode, SigPIII_, ExprType::Void,
+                          SymbolicAddress::MemCopy)) {
+      return false;
+    }
   } else {
     pushI32(dstMemOrTableIndex);
     pushI32(srcMemOrTableIndex);
-    emitInstanceCall(lineOrBytecode, SigPIIIII_, ExprType::Void,
-                     SymbolicAddress::TableCopy);
+    if (!emitInstanceCall(lineOrBytecode, SigPIIIII_, ExprType::Void,
+                          SymbolicAddress::TableCopy)) {
+      return false;
+    }
   }
 
   Label ok;
@@ -9557,7 +10210,9 @@ bool BaseCompiler::emitMemOrTableDrop(bool isMem) {
   pushI32(int32_t(segIndex));
   SymbolicAddress callee =
       isMem ? SymbolicAddress::MemDrop : SymbolicAddress::TableDrop;
-  emitInstanceCall(lineOrBytecode, SigPI_, ExprType::Void, callee);
+  if (!emitInstanceCall(lineOrBytecode, SigPI_, ExprType::Void, callee)) {
+    return false;
+  }
 
   Label ok;
   masm.branchTest32(Assembler::NotSigned, ReturnReg, ReturnReg, &ok);
@@ -9580,8 +10235,10 @@ bool BaseCompiler::emitMemFill() {
   }
 
   // Returns -1 on trap, otherwise 0.
-  emitInstanceCall(lineOrBytecode, SigPIII_, ExprType::Void,
-                   SymbolicAddress::MemFill);
+  if (!emitInstanceCall(lineOrBytecode, SigPIII_, ExprType::Void,
+                        SymbolicAddress::MemFill)) {
+    return false;
+  }
 
   Label ok;
   masm.branchTest32(Assembler::NotSigned, ReturnReg, ReturnReg, &ok);
@@ -9609,12 +10266,16 @@ bool BaseCompiler::emitMemOrTableInit(bool isMem) {
   // Returns -1 on trap, otherwise 0.
   pushI32(int32_t(segIndex));
   if (isMem) {
-    emitInstanceCall(lineOrBytecode, SigPIIII_, ExprType::Void,
-                     SymbolicAddress::MemInit);
+    if (!emitInstanceCall(lineOrBytecode, SigPIIII_, ExprType::Void,
+                          SymbolicAddress::MemInit)) {
+      return false;
+    }
   } else {
     pushI32(dstTableIndex);
-    emitInstanceCall(lineOrBytecode, SigPIIIII_, ExprType::Void,
-                     SymbolicAddress::TableInit);
+    if (!emitInstanceCall(lineOrBytecode, SigPIIIII_, ExprType::Void,
+                          SymbolicAddress::TableInit)) {
+      return false;
+    }
   }
 
   Label ok;
@@ -9642,8 +10303,10 @@ bool BaseCompiler::emitTableGet() {
   // Returns (void*)-1 for error, this will not be confused with a real ref
   // value.
   pushI32(tableIndex);
-  emitInstanceCall(lineOrBytecode, SigPII_, ExprType::AnyRef,
-                   SymbolicAddress::TableGet);
+  if (!emitInstanceCall(lineOrBytecode, SigPII_, ExprType::AnyRef,
+                        SymbolicAddress::TableGet)) {
+    return false;
+  }
   Label noTrap;
   masm.branchPtr(Assembler::NotEqual, ReturnReg, Imm32(-1), &noTrap);
   trap(Trap::ThrowReported);
@@ -9668,10 +10331,8 @@ bool BaseCompiler::emitTableGrow() {
   //
   // infallible.
   pushI32(tableIndex);
-  emitInstanceCall(lineOrBytecode, SigPIPI_, ExprType::I32,
-                   SymbolicAddress::TableGrow);
-
-  return true;
+  return emitInstanceCall(lineOrBytecode, SigPIPI_, ExprType::I32,
+                          SymbolicAddress::TableGrow);
 }
 
 MOZ_MUST_USE
@@ -9689,8 +10350,10 @@ bool BaseCompiler::emitTableSet() {
   //
   // Returns -1 on range error, otherwise 0 (which is then ignored).
   pushI32(tableIndex);
-  emitInstanceCall(lineOrBytecode, SigPIPI_, ExprType::Void,
-                   SymbolicAddress::TableSet);
+  if (!emitInstanceCall(lineOrBytecode, SigPIPI_, ExprType::Void,
+                        SymbolicAddress::TableSet)) {
+    return false;
+  }
   Label noTrap;
   masm.branchTest32(Assembler::NotSigned, ReturnReg, ReturnReg, &noTrap);
   trap(Trap::ThrowReported);
@@ -9712,9 +10375,8 @@ bool BaseCompiler::emitTableSize() {
   //
   // infallible.
   pushI32(tableIndex);
-  emitInstanceCall(lineOrBytecode, SigPI_, ExprType::I32,
-                   SymbolicAddress::TableSize);
-  return true;
+  return emitInstanceCall(lineOrBytecode, SigPI_, ExprType::I32,
+                          SymbolicAddress::TableSize);
 }
 
 bool BaseCompiler::emitStructNew() {
@@ -9738,8 +10400,10 @@ bool BaseCompiler::emitStructNew() {
   const StructType& structType = env_.types[typeIndex].structType();
 
   pushI32(structType.moduleIndex_);
-  emitInstanceCall(lineOrBytecode, SigPI_, ExprType::AnyRef,
-                   SymbolicAddress::StructNew);
+  if (!emitInstanceCall(lineOrBytecode, SigPI_, ExprType::AnyRef,
+                        SymbolicAddress::StructNew)) {
+    return false;
+  }
 
   // Null pointer check.
 
@@ -9831,8 +10495,10 @@ bool BaseCompiler::emitStructNew() {
         pushRef(rp);  // Save rp across the call
         RegPtr valueAddr = needRef();
         masm.computeEffectiveAddress(Address(rdata, offs), valueAddr);
-        emitPostBarrier(valueAddr);  // Consumes valueAddr
-        popRef(rp);                  // Restore rp
+        if (!emitPostBarrier(valueAddr)) {  // Consumes valueAddr
+          return false;
+        }
+        popRef(rp);  // Restore rp
         if (!structType.isInline_) {
           masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfData()), rdata);
         }
@@ -10011,7 +10677,9 @@ bool BaseCompiler::emitStructSet() {
     case ValType::Ref:
     case ValType::AnyRef: {
       masm.computeEffectiveAddress(Address(rp, offs), valueAddr);
-      emitBarrieredStore(Some(rp), valueAddr, rr);  // Consumes valueAddr
+      if (!emitBarrieredStore(Some(rp), valueAddr, rr)) {  // Consumes valueAddr
+        return false;
+      }
       freeRef(rr);
       break;
     }
@@ -10060,13 +10728,13 @@ bool BaseCompiler::emitStructNarrow() {
   pushI32(mustUnboxAnyref);
   pushI32(outputStruct.moduleIndex_);
   pushRef(rp);
-  emitInstanceCall(lineOrBytecode, SigPIIP_, ExprType::AnyRef,
-                   SymbolicAddress::StructNarrow);
-
-  return true;
+  return emitInstanceCall(lineOrBytecode, SigPIIP_, ExprType::AnyRef,
+                          SymbolicAddress::StructNarrow);
 }
 
 bool BaseCompiler::emitBody() {
+  MOZ_ASSERT(smgen_.framePushedAtEntryToBody_.isSome());
+
   if (!iter_.readFunctionStart(funcType().ret())) {
     return false;
   }
@@ -10107,14 +10775,34 @@ bool BaseCompiler::emitBody() {
 
 #define emitIntDivCallout(doEmit, symbol, type)   \
   iter_.readBinary(type, &unused_a, &unused_b) && \
-      (deadCode_ || (doEmit(symbol, type), true))
+      (deadCode_ || doEmit(symbol, type))
+
+#ifdef DEBUG
+    // Check that the number of ref-typed entries in the operand stack matches
+    // reality.
+#define CHECK_POINTER_COUNT                                  \
+  do {                                                       \
+    MOZ_ASSERT(countMemRefsOnStk() == smgen_.memRefsOnStk_); \
+  } while (0)
+#else
+#define CHECK_POINTER_COUNT \
+  do {                      \
+  } while (0)
+#endif
 
 #define CHECK(E) \
   if (!(E)) return false
-#define NEXT() continue
+#define NEXT()           \
+  {                      \
+    CHECK_POINTER_COUNT; \
+    continue;            \
+  }
 #define CHECK_NEXT(E)     \
   if (!(E)) return false; \
-  continue
+  {                       \
+    CHECK_POINTER_COUNT;  \
+    continue;             \
+  }
 
     // TODO / EVALUATE (bug 1316845): Not obvious that this attempt at
     // reducing overhead is really paying off relative to making the check
@@ -10147,7 +10835,18 @@ bool BaseCompiler::emitBody() {
       sync();
 
       insertBreakablePoint(CallSiteDesc::Breakpoint);
+      if (!createStackMap("debug: per insn")) {
+        return false;
+      }
     }
+
+    // Going below framePushedAtEntryToBody_ would imply that we've
+    // popped off the machine stack, part of the frame created by
+    // beginFunction().
+    MOZ_ASSERT(masm.framePushed() >= smgen_.framePushedAtEntryToBody_.value());
+
+    // At this point we're definitely not generating code for a function call.
+    MOZ_ASSERT(smgen_.framePushedBeforePushingCallArgs_.isNothing());
 
     switch (op.b0) {
       case uint16_t(Op::End):
@@ -11039,6 +11738,7 @@ bool BaseCompiler::emitBody() {
 #undef CHECK
 #undef NEXT
 #undef CHECK_NEXT
+#undef CHECK_POINTER_COUNT
 #undef emitBinary
 #undef emitUnary
 #undef emitComparison
@@ -11053,7 +11753,9 @@ bool BaseCompiler::emitBody() {
 }
 
 bool BaseCompiler::emitFunction() {
-  beginFunction();
+  if (!beginFunction()) {
+    return false;
+  }
 
   if (!emitBody()) {
     return false;
@@ -11068,9 +11770,12 @@ bool BaseCompiler::emitFunction() {
 
 BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
                            const FuncCompileInput& func,
-                           const ValTypeVector& locals, Decoder& decoder,
+                           const ValTypeVector& locals,
+                           const MachineState& trapExitLayout,
+                           size_t trapExitLayoutNumWords, Decoder& decoder,
                            ExclusiveDeferredValidationState& dvs,
-                           TempAllocator* alloc, MacroAssembler* masm)
+                           TempAllocator* alloc, MacroAssembler* masm,
+                           StackMaps* stackMaps)
     : env_(env),
       iter_(env, decoder, dvs),
       func_(func),
@@ -11086,6 +11791,7 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
       masm(*masm),
       ra(*this),
       fr(*masm),
+      smgen_(stackMaps, trapExitLayout, trapExitLayoutNumWords, *masm),
       joinRegI32_(RegI32(ReturnReg)),
       joinRegI64_(RegI64(ReturnReg64)),
       joinRegPtr_(RegPtr(ReturnReg)),
@@ -11158,6 +11864,9 @@ FuncOffsets BaseCompiler::finish() {
   MOZ_ASSERT(done(), "all bytes must be consumed");
   MOZ_ASSERT(func_.callSiteLineNums.length() == lastReadCallSite_);
 
+  MOZ_ASSERT(stk_.empty());
+  MOZ_ASSERT(smgen_.memRefsOnStk_ == 0);
+
   masm.flushBuffer();
 
   return offsets_;
@@ -11210,6 +11919,11 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env,
     return false;
   }
 
+  // Create a description of the stack layout created by GenerateTrapExit().
+  MachineState trapExitLayout;
+  size_t trapExitLayoutNumWords;
+  GenerateTrapExitMachineState(&trapExitLayout, &trapExitLayoutNumWords);
+
   for (const FuncCompileInput& func : inputs) {
     Decoder d(func.begin, func.end, func.lineOrBytecode, error);
 
@@ -11226,7 +11940,8 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env,
 
     // One-pass baseline compilation.
 
-    BaseCompiler f(env, func, locals, d, dvs, &alloc, &masm);
+    BaseCompiler f(env, func, locals, trapExitLayout, trapExitLayoutNumWords, d,
+                   dvs, &alloc, &masm, &code->stackMaps);
     if (!f.init()) {
       return false;
     }
@@ -11246,6 +11961,44 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env,
 
   return code->swap(masm);
 }
+
+#ifdef DEBUG
+bool js::wasm::IsValidStackMapKey(bool debugEnabled, const uint8_t* nextPC) {
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
+  const uint8_t* insn = nextPC;
+  return (insn[-2] == 0x0F && insn[-1] == 0x0B) ||  // ud2
+         (insn[-2] == 0xFF && insn[-1] == 0xD0) ||  // call *%{rax,eax}
+         insn[-5] == 0xE8 ||                        // call simm32
+         (debugEnabled && insn[-5] == 0x0F && insn[-4] == 0x1F &&
+          insn[-3] == 0x44 && insn[-2] == 0x00 &&
+          insn[-1] == 0x00);  // nop_five
+
+#elif defined(JS_CODEGEN_ARM)
+  const uint32_t* insn = (const uint32_t*)nextPC;
+  return ((uintptr_t(insn) & 3) == 0) &&              // must be ARM, not Thumb
+         (insn[-1] == 0xe7f000f0 ||                   // udf
+          (insn[-1] & 0xfffffff0) == 0xe12fff30 ||    // blx reg (ARM, enc A1)
+          (insn[-1] & 0xff000000) == 0xeb000000 ||    // bl simm24 (ARM, enc A1)
+          (debugEnabled && insn[-1] == 0xe320f000));  // "as_nop"
+
+#elif defined(JS_CODEGEN_ARM64)
+#ifdef JS_SIMULATOR_ARM64
+  const uint32_t hltInsn = 0xd45bd600;
+#else
+  const uint32_t hltInsn = 0xd4a00000;
+#endif
+  const uint32_t* insn = (const uint32_t*)nextPC;
+  return ((uintptr_t(insn) & 3) == 0) &&
+         (insn[-1] == hltInsn ||                      // hlt
+          (insn[-1] & 0xfffffc1f) == 0xd63f0000 ||    // blr reg
+          (insn[-1] & 0xfc000000) == 0x94000000 ||    // bl simm26
+          (debugEnabled && insn[-1] == 0xd503201f));  // nop
+
+#else
+  MOZ_CRASH("IsValidStackMapKey: requires implementation on this platform");
+#endif
+}
+#endif
 
 #undef RABALDR_INT_DIV_I64_CALLOUT
 #undef RABALDR_I64_TO_FLOAT_CALLOUT
