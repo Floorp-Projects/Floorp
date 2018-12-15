@@ -642,12 +642,6 @@ ServerURL:
     URL used to post the crash report.
   type: string
 
-SheetLoadFailure:
-  description: >
-    Set when failing to load a built-in style sheet. This can contain a
-    potentially very large amount of diagnostic information.
-  type: string
-
 ShutdownProgress:
   description: >
    Shutdown step at which the browser crashed, can be set to "quit-application",
