@@ -671,7 +671,6 @@ STATIC_ATOMS = [
     Atom("mozTableRemoveColumn", "mozTableRemoveColumn"),
     Atom("moz_opaque", "moz-opaque"),
     Atom("moz_action_hint", "mozactionhint"),
-    Atom("x_moz_errormessage", "x-moz-errormessage"),
     Atom("multicol", "multicol"),
     Atom("multiple", "multiple"),
     Atom("muted", "muted"),

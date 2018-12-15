@@ -39,13 +39,8 @@ for (var i=0; i<75; ++i) {
 input.setCustomValidity(msg);
 checkMessage(input, msg, false);
 
-// The input is still invalid but x-moz-errormessage will be used as the message.
-input.setAttribute("x-moz-errormessage", msg);
-checkMessage(input, msg, false);
-
 // Cleaning.
 input.setCustomValidity("");
-input.removeAttribute("x-moz-errormessage");
 
 // Testing with pattern and titl.
 input.pattern = "[0-9]*";
