@@ -441,7 +441,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   }
   static void writeBarrierPost(Debugger** vp, Debugger* prev, Debugger* next) {}
 #ifdef DEBUG
-  static bool thingIsNotGray(Debugger* dbg) { return true; }
+  static void assertThingIsNotGray(Debugger* dbg) { return; }
 #endif
 
  private:

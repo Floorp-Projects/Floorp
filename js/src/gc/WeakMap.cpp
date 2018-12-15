@@ -23,7 +23,7 @@ using namespace js;
 using namespace js::gc;
 
 WeakMapBase::WeakMapBase(JSObject* memOf, Zone* zone)
-    : memberOf(memOf), zone_(zone), marked(false) {
+    : memberOf(memOf), zone_(zone), marked(false), markColor(MarkColor::Black) {
   MOZ_ASSERT_IF(memberOf, memberOf->compartment()->zone() == zone);
 }
 

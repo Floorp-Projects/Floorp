@@ -12,6 +12,7 @@
 #include "sandbox/win/src/win_utils.h"
 
 namespace {
+#if defined(_M_X64)
 #pragma pack(push, 1)
 
 const ULONG kMmovR10EcxMovEax = 0xB8D18B4C;
@@ -130,6 +131,44 @@ bool IsServiceWithInt2E(const void* source) {
           kRet == service->ret && kRet == service->ret2);
 }
 
+bool IsAnyService(const void* source) {
+  return IsService(source) || IsServiceW8(source) || IsServiceWithInt2E(source);
+}
+
+#elif defined(_M_ARM64)
+#pragma pack(push, 4)
+
+const ULONG kSvc = 0xD4000001;
+const ULONG kRetNp = 0xD65F03C0;
+const ULONG kServiceIdMask = 0x001FFFE0;
+
+struct ServiceEntry {
+  ULONG svc;
+  ULONG ret;
+  ULONG64 unused;
+};
+
+struct ServiceFullThunk {
+  ServiceEntry original;
+};
+
+#pragma pack(pop)
+
+bool IsService(const void* source) {
+  const ServiceEntry* service = reinterpret_cast<const ServiceEntry*>(source);
+
+  return (kSvc == (service->svc & ~kServiceIdMask) && kRetNp == service->ret &&
+          0 == service->unused);
+}
+
+bool IsAnyService(const void* source) {
+  return IsService(source);
+}
+
+#else
+#error "Unsupported Windows 64-bit Arch"
+#endif
+
 };  // namespace
 
 namespace sandbox {
@@ -202,8 +241,7 @@ bool ServiceResolverThunk::IsFunctionAService(void* local_thunk) const {
   if (sizeof(function_code) != read)
     return false;
 
-  if (!IsService(&function_code) && !IsServiceW8(&function_code) &&
-      !IsServiceWithInt2E(&function_code))
+  if (!IsAnyService(&function_code))
     return false;
 
   // Save the verified code.

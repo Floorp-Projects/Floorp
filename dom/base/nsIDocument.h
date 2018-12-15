@@ -210,6 +210,12 @@ enum class CallerType : uint32_t;
 }  // namespace dom
 }  // namespace mozilla
 
+namespace mozilla {
+namespace net {
+class ChannelEventQueue;
+} // namespace net
+} // namespace mozilla
+
 // Must be kept in sync with xpcom/rust/xpcom/src/interfaces/nonidl.rs
 #define NS_IDOCUMENT_IID                             \
   {                                                  \
@@ -2443,6 +2449,14 @@ class nsIDocument : public nsINode,
   }
 
   /**
+   * Note a ChannelEventQueue which has been suspended on the document's behalf
+   * to prevent XHRs from running content scripts while event handling is
+   * suppressed. The document is responsible for resuming the queue after
+   * event handling is unsuppressed.
+   */
+  void AddSuspendedChannelEventQueue(mozilla::net::ChannelEventQueue* aQueue);
+
+  /**
    * Increment https://html.spec.whatwg.org/#ignore-destructive-writes-counter
    */
   void IncrementIgnoreDestructiveWritesCounter() {
@@ -4024,6 +4038,10 @@ class nsIDocument : public nsINode,
   nsCOMPtr<nsIDocument> mDisplayDocument;
 
   uint32_t mEventsSuppressed;
+
+  // Any XHR ChannelEventQueues that were suspended on this document while
+  // events were suppressed.
+  nsTArray<RefPtr<mozilla::net::ChannelEventQueue>> mSuspendedQueues;
 
   /**
    * https://html.spec.whatwg.org/#ignore-destructive-writes-counter

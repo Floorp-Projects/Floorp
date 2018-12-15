@@ -291,16 +291,25 @@ void Assembler::bind(Label* label, BufferOffset targetOffset) {
 }
 
 void Assembler::bind(RepatchLabel* label) {
+  BufferOffset next = nextOffset();
+
   // Nothing has seen the label yet: just mark the location.
   // If we've run out of memory, don't attempt to modify the buffer which may
   // not be there. Just mark the label as bound to nextOffset().
   if (!label->used() || oom()) {
-    label->bind(nextOffset().getOffset());
+    label->bind(next.getOffset());
     return;
   }
   int branchOffset = label->offset();
-  Instruction* inst = getInstructionAt(BufferOffset(branchOffset));
-  inst->SetImmPCOffsetTarget(inst + nextOffset().getOffset() - branchOffset);
+  Instruction* branch = getInstructionAt(BufferOffset(branchOffset));
+  MOZ_ASSERT(branch->IsUncondB());
+
+  // The branch must be able to reach the label.
+  ptrdiff_t relativeByteOffset = next.getOffset() - branchOffset;
+  MOZ_ASSERT(branch->IsTargetReachable(branch + relativeByteOffset));
+  branch->SetImmPCOffsetTarget(branch + relativeByteOffset);
+
+  label->bind(next.getOffset());
 }
 
 void Assembler::addJumpRelocation(BufferOffset src, RelocationKind reloc) {
@@ -346,8 +355,26 @@ size_t Assembler::addPatchableJump(BufferOffset src, RelocationKind reloc) {
   return extendedTableIndex;
 }
 
+// PatchJump() is only used by the IonCacheIRCompiler.
+//
+// The CodeLocationJump is the jump to be patched.
+// The code for the jump is emitted by jumpWithPatch().
 void PatchJump(CodeLocationJump& jump_, CodeLocationLabel label) {
-  MOZ_CRASH("PatchJump");
+  MOZ_ASSERT(label.isSet());
+
+  Instruction* load = (Instruction*)jump_.raw();
+  MOZ_ASSERT(load->IsLDR());
+
+  Instruction* branch = (Instruction*)load->NextInstruction()->skipPool();
+  MOZ_ASSERT(branch->IsUncondB());
+
+  // FIXME: For the moment, just assume that the load isn't needed.
+  // FIXME: That assumption implies that the branch target is always in-range.
+  if (branch->IsTargetReachable((Instruction*)label.raw())) {
+    branch->SetImmPCOffsetTarget((Instruction*)label.raw());
+  } else {
+    MOZ_CRASH("PatchJump target not reachable");
+  }
 }
 
 void Assembler::PatchDataWithValueCheck(CodeLocationLabel label,

@@ -263,6 +263,9 @@ class MachineState {
   void write(Register reg, uintptr_t value) const {
     regs_[reg.code()]->r = value;
   }
+  const Registers::RegisterContent* address(Register reg) const {
+    return regs_[reg.code()];
+  }
   const FloatRegisters::RegisterContent* address(FloatRegister reg) const {
     return fpregs_[reg.code()];
   }

@@ -116,7 +116,7 @@ bool Instruction::IsBranchLinkImm() const {
 }
 
 
-bool Instruction::IsTargetReachable(Instruction* target) const {
+bool Instruction::IsTargetReachable(const Instruction* target) const {
     VIXL_ASSERT(((target - this) & 3) == 0);
     int offset = (target - this) >> kInstructionSizeLog2;
     switch (BranchType()) {

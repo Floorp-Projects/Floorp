@@ -982,7 +982,6 @@ const ClassOps MappedArgumentsObject::classOps_ = {
     ArgumentsObject::trace};
 
 const js::ClassExtension MappedArgumentsObject::classExt_ = {
-    nullptr,                     /* weakmapKeyDelegateOp */
     ArgumentsObject::objectMoved /* objectMovedOp */
 };
 
@@ -1019,7 +1018,6 @@ const ClassOps UnmappedArgumentsObject::classOps_ = {
     ArgumentsObject::trace};
 
 const js::ClassExtension UnmappedArgumentsObject::classExt_ = {
-    nullptr,                     /* weakmapKeyDelegateOp */
     ArgumentsObject::objectMoved /* objectMovedOp */
 };
 

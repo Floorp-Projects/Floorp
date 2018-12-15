@@ -599,9 +599,9 @@ void MacroAssembler::call(const Address& addr) {
   Assembler::call(Operand(addr.base, addr.offset));
 }
 
-void MacroAssembler::call(wasm::SymbolicAddress target) {
+CodeOffset MacroAssembler::call(wasm::SymbolicAddress target) {
   mov(target, eax);
-  Assembler::call(eax);
+  return Assembler::call(eax);
 }
 
 void MacroAssembler::call(ImmWord target) { Assembler::call(target); }

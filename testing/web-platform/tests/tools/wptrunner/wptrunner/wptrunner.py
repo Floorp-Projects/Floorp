@@ -285,7 +285,7 @@ def run_tests(config, test_paths, product, **kwargs):
                 if repeat_until_unexpected and unexpected_total > 0:
                     break
                 if len(test_loader.test_ids) == skipped_tests:
-                    break;
+                    break
 
     if test_total == 0:
         if skipped_tests > 0:
