@@ -51,14 +51,18 @@ CodeOffset MacroAssembler::PushWithPatch(ImmPtr imm) {
 
 void MacroAssembler::call(TrampolinePtr code) { call(ImmPtr(code.value)); }
 
-void MacroAssembler::call(const wasm::CallSiteDesc& desc, const Register reg) {
+CodeOffset MacroAssembler::call(const wasm::CallSiteDesc& desc,
+                                const Register reg) {
   CodeOffset l = call(reg);
   append(desc, l);
+  return l;
 }
 
-void MacroAssembler::call(const wasm::CallSiteDesc& desc, uint32_t funcIndex) {
+CodeOffset MacroAssembler::call(const wasm::CallSiteDesc& desc,
+                                uint32_t funcIndex) {
   CodeOffset l = callWithPatch();
   append(desc, l, funcIndex);
+  return l;
 }
 
 void MacroAssembler::call(const wasm::CallSiteDesc& desc, wasm::Trap trap) {
@@ -66,12 +70,13 @@ void MacroAssembler::call(const wasm::CallSiteDesc& desc, wasm::Trap trap) {
   append(desc, l, trap);
 }
 
-void MacroAssembler::call(const wasm::CallSiteDesc& desc,
-                          wasm::SymbolicAddress imm) {
+CodeOffset MacroAssembler::call(const wasm::CallSiteDesc& desc,
+                                wasm::SymbolicAddress imm) {
   MOZ_ASSERT(wasm::NeedsBuiltinThunk(imm),
              "only for functions which may appear in profiler");
-  call(imm);
-  append(desc, CodeOffset(currentOffset()));
+  CodeOffset raOffset = call(imm);
+  append(desc, raOffset);
+  return raOffset;
 }
 
 // ===============================================================

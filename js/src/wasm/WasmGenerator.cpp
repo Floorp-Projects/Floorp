@@ -619,7 +619,7 @@ static bool AppendForEach(Vec* dstVec, const Vec& srcVec, Op op) {
   return true;
 }
 
-bool ModuleGenerator::linkCompiledCode(const CompiledCode& code) {
+bool ModuleGenerator::linkCompiledCode(CompiledCode& code) {
   // All code offsets in 'code' must be incremented by their position in the
   // overall module when the code was appended.
 
@@ -681,6 +681,17 @@ bool ModuleGenerator::linkCompiledCode(const CompiledCode& code) {
     link.mode = codeLabel.linkMode();
 #endif
     if (!linkData_->internalLinks.append(link)) {
+      return false;
+    }
+  }
+
+  for (size_t i = 0; i < code.stackMaps.length(); i++) {
+    StackMaps::Maplet maplet = code.stackMaps.move(i);
+    maplet.offsetBy(offsetInModule);
+    if (!metadataTier_->stackMaps.add(maplet)) {
+      // This function is now the only owner of maplet.map, so we'd better
+      // free it right now.
+      maplet.map->destroy();
       return false;
     }
   }
@@ -910,8 +921,22 @@ bool ModuleGenerator::finishCodegen() {
 }
 
 bool ModuleGenerator::finishMetadataTier() {
-  // Assert all sorted metadata is sorted.
+  // The stack maps aren't yet sorted.  Do so now, since we'll need to
+  // binary-search them at GC time.
+  metadataTier_->stackMaps.sort();
+
 #ifdef DEBUG
+  // Check that the stack map contains no duplicates, since that could lead to
+  // ambiguities about stack slot pointerness.
+  uint8_t* previousNextInsnAddr = nullptr;
+  for (size_t i = 0; i < metadataTier_->stackMaps.length(); i++) {
+    const StackMaps::Maplet& maplet = metadataTier_->stackMaps.get(i);
+    MOZ_ASSERT_IF(i > 0, uintptr_t(maplet.nextInsnAddr) >
+                             uintptr_t(previousNextInsnAddr));
+    previousNextInsnAddr = maplet.nextInsnAddr;
+  }
+
+  // Assert all sorted metadata is sorted.
   uint32_t last = 0;
   for (const CodeRange& codeRange : metadataTier_->codeRanges) {
     MOZ_ASSERT(codeRange.begin() >= last);
@@ -1008,6 +1033,17 @@ UniqueCodeTier ModuleGenerator::finishCodeTier() {
   if (!segment) {
     return nullptr;
   }
+
+  metadataTier_->stackMaps.offsetBy(uintptr_t(segment->base()));
+
+#ifdef DEBUG
+  // Check that each stack map is associated with a plausible instruction.
+  for (size_t i = 0; i < metadataTier_->stackMaps.length(); i++) {
+    MOZ_ASSERT(IsValidStackMapKey(env_->debugEnabled(),
+                                  metadataTier_->stackMaps.get(i).nextInsnAddr),
+               "wasm stack map does not reference a valid insn");
+  }
+#endif
 
   return js::MakeUnique<CodeTier>(std::move(metadataTier_), std::move(segment));
 }

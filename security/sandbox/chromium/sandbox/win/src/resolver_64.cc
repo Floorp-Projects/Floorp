@@ -14,6 +14,8 @@
 
 namespace {
 
+#if defined(_M_X64)
+
 const USHORT kMovRax = 0xB848;
 const USHORT kJmpRax = 0xe0ff;
 
@@ -35,6 +37,32 @@ struct InternalThunk {
   USHORT jmp_rax;  // = ff e0
 };
 #pragma pack(pop)
+
+#elif defined(_M_ARM64)
+
+const ULONG kLdrX16Pc4 = 0x58000050;
+const ULONG kBrX16 = 0xD61F0200;
+
+#pragma pack(push, 4)
+struct InternalThunk {
+  // This struct contains roughly the following code:
+  // 00 58000050 ldr x16, pc+4
+  // 04 D61F0200 br x16
+  // 08 123456789ABCDEF0H
+
+  InternalThunk() {
+    ldr_x16_pc4 = kLdrX16Pc4;
+    br_x16 = kBrX16;
+    interceptor_function = 0;
+  };
+  ULONG ldr_x16_pc4;
+  ULONG br_x16;
+  ULONG_PTR interceptor_function;
+};
+#pragma pack(pop)
+#else
+#error "Unsupported Windows 64-bit Arch"
+#endif
 
 } // namespace.
 

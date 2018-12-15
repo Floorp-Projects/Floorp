@@ -307,7 +307,7 @@ def set_try_config(parameters, task_config_file):
         elif task_config_version == 2:
             validate_schema(
                 try_task_config_schema_v2, task_config,
-                "Invalid v1 `try_task_config.json`.",
+                "Invalid v2 `try_task_config.json`.",
             )
             parameters.update(task_config['parameters'])
             return

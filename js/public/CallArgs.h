@@ -307,10 +307,10 @@ class MOZ_STACK_CLASS CallArgs
     args.constructing_ = constructing;
     args.ignoresReturnValue_ = ignoresReturnValue;
 #ifdef DEBUG
-    MOZ_ASSERT(ValueIsNotGray(args.thisv()));
-    MOZ_ASSERT(ValueIsNotGray(args.calleev()));
+    AssertValueIsNotGray(args.thisv());
+    AssertValueIsNotGray(args.calleev());
     for (unsigned i = 0; i < argc; ++i) {
-      MOZ_ASSERT(ValueIsNotGray(argv[i]));
+      AssertValueIsNotGray(argv[i]);
     }
 #endif
     return args;

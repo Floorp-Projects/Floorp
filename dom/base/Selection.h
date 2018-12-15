@@ -670,6 +670,8 @@ class Selection final : public nsSupportsWeakReference,
    */
   Element* GetCommonEditingHostForAllRanges();
 
+  void Disconnect();
+
   // These are the ranges inside this selection. They are kept sorted in order
   // of DOM start position.
   //

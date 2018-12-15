@@ -27,6 +27,30 @@ jobs:
     name: test_jobs
     displayName: 'Run ./wpt test-jobs'
 
+# Note: the affected tests jobs could depend on test_jobs.stability, but are
+# unconditional for speed, as most PRs have one or more affected tests:
+# https://github.com/web-platform-tests/wpt/issues/13936
+
+- job: affected_macOS
+  displayName: 'affected tests (Safari Technology Preview)'
+  pool:
+    vmImage: 'macOS-10.13'
+  steps:
+  - template: tools/ci/azure/affected_tests.yml
+    parameters:
+      artifactName: 'results'
+
+- job: affected_without_changes_macOS
+  displayName: 'affected tests without changes (Safari Technology Preview)'
+  pool:
+    vmImage: 'macOS-10.13'
+  steps:
+  - template: tools/ci/azure/affected_tests.yml
+    parameters:
+      checkoutCommit: 'HEAD^1'
+      affectedRange: 'HEAD@{1}'
+      artifactName: 'results-without-changes'
+
 - job: infrastructure_macOS
   displayName: 'infrastructure/ tests (macOS)'
   dependsOn: root
@@ -45,11 +69,11 @@ jobs:
   - template: tools/ci/azure/install_safari.yml
   - template: tools/ci/azure/update_hosts.yml
   - template: tools/ci/azure/update_manifest.yml
-  - script: no_proxy='*' ./wpt run --yes --no-manifest-update --manifest MANIFEST.json --metadata infrastructure/metadata/ --channel=dev chrome infrastructure/
+  - script: no_proxy='*' ./wpt run --yes --no-manifest-update --manifest MANIFEST.json --metadata infrastructure/metadata/ --channel dev chrome infrastructure/
     displayName: 'Run tests (Chrome Dev)'
-  - script: no_proxy='*' ./wpt run --yes --no-manifest-update --manifest MANIFEST.json --metadata infrastructure/metadata/ --channel=nightly firefox infrastructure/
+  - script: no_proxy='*' ./wpt run --yes --no-manifest-update --manifest MANIFEST.json --metadata infrastructure/metadata/ --channel nightly firefox infrastructure/
     displayName: 'Run tests (Firefox Nightly)'
-  - script: no_proxy='*' ./wpt run --yes --no-manifest-update --manifest MANIFEST.json --metadata infrastructure/metadata/ --channel=preview safari infrastructure/
+  - script: no_proxy='*' ./wpt run --yes --no-manifest-update --manifest MANIFEST.json --metadata infrastructure/metadata/ --channel preview safari infrastructure/
     displayName: 'Run tests (Safari Technology Preview)'
 
 - job: tools_unittest_macOS
