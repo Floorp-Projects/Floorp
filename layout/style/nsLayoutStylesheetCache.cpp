@@ -8,7 +8,6 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Omnijar.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -17,24 +16,15 @@
 #include "mozilla/dom/SRIMetadata.h"
 #include "MainThreadUtils.h"
 #include "nsColor.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsDirectoryService.h"
-#include "nsExceptionHandler.h"
-#include "nsIChromeRegistry.h"
 #include "nsIConsoleService.h"
 #include "nsIFile.h"
 #include "nsIObserverService.h"
-#include "nsISimpleEnumerator.h"
-#include "nsISubstitutingProtocolHandler.h"
 #include "nsIXULRuntime.h"
 #include "nsNetUtil.h"
 #include "nsPresContext.h"
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
 #include "nsXULAppAPI.h"
-#include "nsZipArchive.h"
-
-#include "zlib.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -271,269 +261,6 @@ void nsLayoutStylesheetCache::LoadSheetFile(nsIFile* aFile,
   LoadSheet(uri, aSheet, aParsingMode, aFailureAction);
 }
 
-static inline nsresult ComputeCRC32(nsIFile* aFile, uint32_t* aResult) {
-  PRFileDesc* fd;
-  nsresult rv = aFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  uint32_t crc = crc32(0, nullptr, 0);
-
-  unsigned char buf[512];
-  int32_t n;
-  while ((n = PR_Read(fd, buf, sizeof(buf))) > 0) {
-    crc = crc32(crc, buf, n);
-  }
-  PR_Close(fd);
-
-  if (n < 0) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *aResult = crc;
-  return NS_OK;
-}
-
-static void ListInterestingFiles(
-    nsString& aAnnotation, nsIFile* aFile,
-    const nsTArray<nsString>& aInterestingFilenames) {
-  nsString filename;
-  aFile->GetLeafName(filename);
-  for (const nsString& interestingFilename : aInterestingFilenames) {
-    if (interestingFilename == filename) {
-      nsString path;
-      aFile->GetPath(path);
-      aAnnotation.AppendLiteral("  ");
-      aAnnotation.Append(path);
-      aAnnotation.AppendLiteral(" (");
-      int64_t size;
-      if (NS_SUCCEEDED(aFile->GetFileSize(&size))) {
-        aAnnotation.AppendPrintf("%" PRId64, size);
-      } else {
-        aAnnotation.AppendLiteral("???");
-      }
-      aAnnotation.AppendLiteral(" bytes, crc32 = ");
-      uint32_t crc;
-      nsresult rv = ComputeCRC32(aFile, &crc);
-      if (NS_SUCCEEDED(rv)) {
-        aAnnotation.AppendPrintf("0x%08x)\n", crc);
-      } else {
-        aAnnotation.AppendPrintf("error 0x%08x)\n", uint32_t(rv));
-      }
-      return;
-    }
-  }
-
-  bool isDir = false;
-  aFile->IsDirectory(&isDir);
-
-  if (!isDir) {
-    return;
-  }
-
-  nsCOMPtr<nsIDirectoryEnumerator> entries;
-  if (NS_FAILED(aFile->GetDirectoryEntries(getter_AddRefs(entries)))) {
-    aAnnotation.AppendLiteral("  (failed to enumerated directory)\n");
-    return;
-  }
-
-  for (;;) {
-    nsCOMPtr<nsIFile> file;
-    if (NS_FAILED(entries->GetNextFile(getter_AddRefs(file)))) {
-      aAnnotation.AppendLiteral("  (failed during directory enumeration)\n");
-      return;
-    }
-    if (!file) {
-      break;
-    }
-    ListInterestingFiles(aAnnotation, file, aInterestingFilenames);
-  }
-}
-
-// Generate a crash report annotation to help debug issues with style
-// sheets failing to load (bug 1194856).
-static void AnnotateCrashReport(nsIURI* aURI) {
-  nsAutoCString spec;
-  nsAutoCString scheme;
-  nsDependentCSubstring filename;
-  if (aURI) {
-    spec = aURI->GetSpecOrDefault();
-    aURI->GetScheme(scheme);
-    int32_t i = spec.RFindChar('/');
-    if (i != -1) {
-      filename.Rebind(spec, i + 1);
-    }
-  }
-
-  nsString annotation;
-
-  // The URL of the sheet that failed to load.
-  annotation.AppendLiteral("Error loading sheet: ");
-  annotation.Append(NS_ConvertUTF8toUTF16(spec).get());
-  annotation.Append('\n');
-
-  annotation.AppendLiteral("NS_ERROR_FILE_CORRUPTION reason: ");
-  if (nsZipArchive::sFileCorruptedReason) {
-    annotation.Append(
-        NS_ConvertUTF8toUTF16(nsZipArchive::sFileCorruptedReason).get());
-    annotation.Append('\n');
-  } else {
-    annotation.AppendLiteral("(none)\n");
-  }
-
-  // The jar: or file: URL that the sheet's resource: or chrome: URL
-  // resolves to.
-  if (scheme.EqualsLiteral("resource")) {
-    annotation.AppendLiteral("Real location: ");
-    nsCOMPtr<nsISubstitutingProtocolHandler> handler;
-    nsCOMPtr<nsIIOService> io(do_GetIOService());
-    if (io) {
-      nsCOMPtr<nsIProtocolHandler> ph;
-      io->GetProtocolHandler(scheme.get(), getter_AddRefs(ph));
-      if (ph) {
-        handler = do_QueryInterface(ph);
-      }
-    }
-    if (!handler) {
-      annotation.AppendLiteral("(ResolveURI failed)\n");
-    } else {
-      nsAutoCString resolvedSpec;
-      nsresult rv = handler->ResolveURI(aURI, resolvedSpec);
-      if (NS_FAILED(rv)) {
-        annotation.AppendPrintf("(ResolveURI failed with 0x%08" PRIx32 ")\n",
-                                static_cast<uint32_t>(rv));
-      }
-      annotation.Append(NS_ConvertUTF8toUTF16(resolvedSpec));
-      annotation.Append('\n');
-    }
-  } else if (scheme.EqualsLiteral("chrome")) {
-    annotation.AppendLiteral("Real location: ");
-    nsCOMPtr<nsIChromeRegistry> reg =
-        mozilla::services::GetChromeRegistryService();
-    if (!reg) {
-      annotation.AppendLiteral("(no chrome registry)\n");
-    } else {
-      nsCOMPtr<nsIURI> resolvedURI;
-      reg->ConvertChromeURL(aURI, getter_AddRefs(resolvedURI));
-      if (!resolvedURI) {
-        annotation.AppendLiteral("(ConvertChromeURL failed)\n");
-      } else {
-        annotation.Append(
-            NS_ConvertUTF8toUTF16(resolvedURI->GetSpecOrDefault()));
-        annotation.Append('\n');
-      }
-    }
-  }
-
-  nsTArray<nsString> interestingFiles;
-  interestingFiles.AppendElement(NS_LITERAL_STRING("chrome.manifest"));
-  interestingFiles.AppendElement(NS_LITERAL_STRING("omni.ja"));
-  interestingFiles.AppendElement(NS_ConvertUTF8toUTF16(filename));
-
-  annotation.AppendLiteral("GRE directory: ");
-  nsCOMPtr<nsIFile> file;
-  nsDirectoryService::gService->Get(NS_GRE_DIR, NS_GET_IID(nsIFile),
-                                    getter_AddRefs(file));
-  if (file) {
-    // The Firefox installation directory.
-    nsString path;
-    file->GetPath(path);
-    annotation.Append(path);
-    annotation.Append('\n');
-
-    // List interesting files -- any chrome.manifest or omni.ja file or any file
-    // whose name is the sheet's filename -- under the Firefox installation
-    // directory.
-    annotation.AppendLiteral("Interesting files in the GRE directory:\n");
-    ListInterestingFiles(annotation, file, interestingFiles);
-
-    // If the Firefox installation directory has a chrome.manifest file, let's
-    // see what's in it.
-    file->Append(NS_LITERAL_STRING("chrome.manifest"));
-    bool exists = false;
-    file->Exists(&exists);
-    if (exists) {
-      annotation.AppendLiteral("Contents of chrome.manifest:\n[[[\n");
-      PRFileDesc* fd;
-      if (NS_SUCCEEDED(file->OpenNSPRFileDesc(PR_RDONLY, 0, &fd))) {
-        nsCString contents;
-        char buf[512];
-        int32_t n;
-        while ((n = PR_Read(fd, buf, sizeof(buf))) > 0) {
-          contents.Append(buf, n);
-        }
-        if (n < 0) {
-          annotation.AppendLiteral("  (error while reading)\n");
-        } else {
-          annotation.Append(NS_ConvertUTF8toUTF16(contents));
-        }
-        PR_Close(fd);
-      }
-      annotation.AppendLiteral("]]]\n");
-    }
-  } else {
-    annotation.AppendLiteral("(none)\n");
-  }
-
-  // The jar: or file: URL prefix that chrome: and resource: URLs get translated
-  // to.
-  annotation.AppendLiteral("GRE omnijar URI string: ");
-  nsCString uri;
-  nsresult rv = Omnijar::GetURIString(Omnijar::GRE, uri);
-  if (NS_FAILED(rv)) {
-    annotation.AppendLiteral("(failed)\n");
-  } else {
-    annotation.Append(NS_ConvertUTF8toUTF16(uri));
-    annotation.Append('\n');
-  }
-
-  RefPtr<nsZipArchive> zip = Omnijar::GetReader(Omnijar::GRE);
-  if (zip) {
-    // List interesting files in the GRE omnijar.
-    annotation.AppendLiteral("Interesting files in the GRE omnijar:\n");
-    nsZipFind* find;
-    rv = zip->FindInit(nullptr, &find);
-    if (NS_FAILED(rv)) {
-      annotation.AppendPrintf("  (FindInit failed with 0x%08" PRIx32 ")\n",
-                              static_cast<uint32_t>(rv));
-    } else if (!find) {
-      annotation.AppendLiteral("  (FindInit returned null)\n");
-    } else {
-      const char* result;
-      uint16_t len;
-      while (NS_SUCCEEDED(find->FindNext(&result, &len))) {
-        nsCString itemPathname;
-        nsString itemFilename;
-        itemPathname.Append(result, len);
-        int32_t i = itemPathname.RFindChar('/');
-        if (i != -1) {
-          itemFilename = NS_ConvertUTF8toUTF16(Substring(itemPathname, i + 1));
-        }
-        for (const nsString& interestingFile : interestingFiles) {
-          if (interestingFile == itemFilename) {
-            annotation.AppendLiteral("  ");
-            annotation.Append(NS_ConvertUTF8toUTF16(itemPathname));
-            nsZipItem* item = zip->GetItem(itemPathname.get());
-            if (!item) {
-              annotation.AppendLiteral(" (GetItem failed)\n");
-            } else {
-              annotation.AppendPrintf(" (%d bytes, crc32 = 0x%08x)\n",
-                                      item->RealSize(), item->CRC32());
-            }
-            break;
-          }
-        }
-      }
-      delete find;
-    }
-  } else {
-    annotation.AppendLiteral("No GRE omnijar\n");
-  }
-
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::SheetLoadFailure,
-      NS_ConvertUTF16toUTF8(annotation));
-}
-
 static void ErrorLoadingSheet(nsIURI* aURI, const char* aMsg,
                               FailureAction aFailureAction) {
   nsPrintfCString errorMessage("%s loading built-in stylesheet '%s'", aMsg,
@@ -547,7 +274,6 @@ static void ErrorLoadingSheet(nsIURI* aURI, const char* aMsg,
     }
   }
 
-  AnnotateCrashReport(aURI);
   MOZ_CRASH_UNSAFE_OOL(errorMessage.get());
 }
 
@@ -567,8 +293,6 @@ void nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
       return;
     }
   }
-
-  nsZipArchive::sFileCorruptedReason = nullptr;
 
   // Note: The parallel parsing code assume that UA sheets are always loaded
   // synchronously like they are here, and thus that we'll never attempt
