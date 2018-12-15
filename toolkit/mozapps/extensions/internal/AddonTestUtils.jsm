@@ -23,11 +23,10 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm", {});
 const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
-
 ChromeUtils.defineModuleGetter(this, "AMTelemetry",
                                "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "Extension",
-                               "resource://gre/modules/Extension.jsm");
+ChromeUtils.defineModuleGetter(this, "ExtensionTestCommon",
+                               "resource://testing-common/ExtensionTestCommon.jsm");
 XPCOMUtils.defineLazyGetter(this, "Management", () => {
   let {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
   return Management;
@@ -1132,11 +1131,11 @@ var AddonTestUtils = {
    *
    * @param {Object} data
    *        The object holding data about the add-on, as expected by
-   *        |Extension.generateXPI|.
+   *        |ExtensionTestCommon.generateXPI|.
    * @return {nsIFile} A file pointing to the created XPI file
    */
   createTempWebExtensionFile(data) {
-    let file = Extension.generateXPI(data);
+    let file = ExtensionTestCommon.generateXPI(data);
     this.tempXPIs.push(file);
     return file;
   },
