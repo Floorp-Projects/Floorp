@@ -105,88 +105,6 @@ ActorPool.prototype = {
 exports.ActorPool = ActorPool;
 
 /**
- * An OriginalLocation represents a location in an original source.
- *
- * @param SourceActor actor
- *        A SourceActor representing an original source.
- * @param Number line
- *        A line within the given source.
- * @param Number column
- *        A column within the given line.
- * @param String name
- *        The name of the symbol corresponding to this OriginalLocation.
- */
-function OriginalLocation(actor, line, column, name) {
-  this._connection = actor ? actor.conn : null;
-  this._actorID = actor ? actor.actorID : undefined;
-  this._line = line;
-  this._column = column;
-  this._name = name;
-}
-
-OriginalLocation.fromGeneratedLocation = function(generatedLocation) {
-  return new OriginalLocation(
-    generatedLocation.generatedSourceActor,
-    generatedLocation.generatedLine,
-    generatedLocation.generatedColumn
-  );
-};
-
-OriginalLocation.prototype = {
-  get originalSourceActor() {
-    return this._connection ? this._connection.getActor(this._actorID) : null;
-  },
-
-  get originalUrl() {
-    const actor = this.originalSourceActor;
-    const source = actor.source;
-    return source ? source.url : actor._originalUrl;
-  },
-
-  get originalLine() {
-    return this._line;
-  },
-
-  get originalColumn() {
-    return this._column;
-  },
-
-  get originalName() {
-    return this._name;
-  },
-
-  get generatedSourceActor() {
-    throw new Error("Shouldn't  access generatedSourceActor from an OriginalLocation");
-  },
-
-  get generatedLine() {
-    throw new Error("Shouldn't access generatedLine from an OriginalLocation");
-  },
-
-  get generatedColumn() {
-    throw new Error("Shouldn't access generatedColumn from an Originallocation");
-  },
-
-  equals: function(other) {
-    return this.originalSourceActor.url == other.originalSourceActor.url &&
-           this.originalLine === other.originalLine &&
-           (this.originalColumn === undefined ||
-            other.originalColumn === undefined ||
-            this.originalColumn === other.originalColumn);
-  },
-
-  toJSON: function() {
-    return {
-      source: this.originalSourceActor.form(),
-      line: this.originalLine,
-      column: this.originalColumn,
-    };
-  },
-};
-
-exports.OriginalLocation = OriginalLocation;
-
-/**
  * A GeneratedLocation represents a location in a generated source.
  *
  * @param SourceActor actor
@@ -203,14 +121,6 @@ function GeneratedLocation(actor, line, column, lastColumn) {
   this._column = column;
   this._lastColumn = (lastColumn !== undefined) ? lastColumn : column + 1;
 }
-
-GeneratedLocation.fromOriginalLocation = function(originalLocation) {
-  return new GeneratedLocation(
-    originalLocation.originalSourceActor,
-    originalLocation.originalLine,
-    originalLocation.originalColumn
-  );
-};
 
 GeneratedLocation.prototype = {
   get originalSourceActor() {
@@ -235,6 +145,12 @@ GeneratedLocation.prototype = {
 
   get generatedSourceActor() {
     return this._connection ? this._connection.getActor(this._actorID) : null;
+  },
+
+  get generatedUrl() {
+    const actor = this.generatedSourceActor;
+    const source = actor.source;
+    return source ? source.url : actor._originalUrl;
   },
 
   get generatedLine() {

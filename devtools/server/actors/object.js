@@ -7,7 +7,6 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const { GeneratedLocation } = require("devtools/server/actors/common");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert } = DevToolsUtils;
 
@@ -212,17 +211,11 @@ const proto = {
       return this.throwError("noScript", this.actorID + " has no Debugger.Script");
     }
 
-    return this.hooks.sources().getOriginalLocation(new GeneratedLocation(
-      this.hooks.sources().createNonSourceMappedActor(this.obj.script.source),
-      this.obj.script.startLine,
-      0 // TODO bug 901138: use Debugger.Script.prototype.startColumn
-    )).then((originalLocation) => {
-      return {
-        source: originalLocation.originalSourceActor,
-        line: originalLocation.originalLine,
-        column: originalLocation.originalColumn,
-      };
-    });
+    return {
+      source: this.hooks.sources().createSourceActor(this.obj.script.source),
+      line: this.obj.script.startLine,
+      column: 0, // TODO bug 901138: use Debugger.Script.prototype.startColumn
+    };
   },
 
   /**
@@ -840,18 +833,12 @@ const proto = {
       return null;
     }
 
-    return this.hooks.sources().getOriginalLocation(new GeneratedLocation(
+    return {
       source,
-      stack.line,
-      stack.column
-    )).then((originalLocation) => {
-      return {
-        source: originalLocation.originalSourceActor,
-        line: originalLocation.originalLine,
-        column: originalLocation.originalColumn,
-        functionDisplayName: stack.functionDisplayName,
-      };
-    });
+      line: stack.line,
+      column: stack.column,
+      functionDisplayName: stack.functionDisplayName,
+    };
   },
 
   /**
