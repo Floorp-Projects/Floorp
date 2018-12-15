@@ -12,6 +12,8 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+
 function setText(id, value) {
   let element = document.getElementById(id);
   if (!element) {
@@ -101,12 +103,6 @@ function certToFilename(cert) {
 }
 
 async function exportToFile(parent, cert) {
-  var bundle = document.getElementById("pippki_bundle");
-  if (!bundle) {
-    bundle = document.createElement("stringbundle");
-    bundle.setAttribute("src", "chrome://pippki/locale/pippki.properties");
-    document.documentElement.appendChild(bundle);
-  }
   if (!cert) {
     return;
   }
@@ -117,15 +113,26 @@ async function exportToFile(parent, cert) {
     chain = [cert];
   }
 
+  let formats = {
+    "base64": "*.crt; *.pem",
+    "base64-chain": "*.crt; *.pem",
+    "der": "*.der",
+    "pkcs7": "*.p7c",
+    "pkcs7-chain": "*.p7c",
+  };
+  let [saveCertAs, ...formatLabels] =
+    await document.l10n.formatValues([
+      "save-cert-as",
+      ...Object.keys(formats).map(f => "cert-format-" + f),
+    ].map(id => ({id})));
+
   var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-  fp.init(parent, bundle.getString("SaveCertAs"), Ci.nsIFilePicker.modeSave);
+  fp.init(parent, saveCertAs, Ci.nsIFilePicker.modeSave);
   fp.defaultString = certToFilename(cert);
   fp.defaultExtension = DEFAULT_CERT_EXTENSION;
-  fp.appendFilter(bundle.getString("CertFormatBase64"), "*.crt; *.pem");
-  fp.appendFilter(bundle.getString("CertFormatBase64Chain"), "*.crt; *.pem");
-  fp.appendFilter(bundle.getString("CertFormatDER"), "*.der");
-  fp.appendFilter(bundle.getString("CertFormatPKCS7"), "*.p7c");
-  fp.appendFilter(bundle.getString("CertFormatPKCS7Chain"), "*.p7c");
+  for (let format of Object.values(formats)) {
+    fp.appendFilter(formatLabels.shift(), format);
+  }
   fp.appendFilters(Ci.nsIFilePicker.filterAll);
   let filePickerResult = await new Promise(resolve => {
     fp.open(resolve);
@@ -158,42 +165,11 @@ async function exportToFile(parent, cert) {
       content = getPEMString(cert);
       break;
   }
-  var msg;
-  var written = 0;
   try {
-    var file = Cc["@mozilla.org/file/local;1"].
-               createInstance(Ci.nsIFile);
-    file.initWithPath(fp.file.path);
-    var fos = Cc["@mozilla.org/network/file-output-stream;1"].
-              createInstance(Ci.nsIFileOutputStream);
-    // flags: PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
-    fos.init(file, 0x02 | 0x08 | 0x20, 0o0644, 0);
-    written = fos.write(content, content.length);
-    fos.close();
-  } catch (e) {
-    switch (e.result) {
-      case Cr.NS_ERROR_FILE_ACCESS_DENIED:
-        msg = bundle.getString("writeFileAccessDenied");
-        break;
-      case Cr.NS_ERROR_FILE_IS_LOCKED:
-        msg = bundle.getString("writeFileIsLocked");
-        break;
-      case Cr.NS_ERROR_FILE_NO_DEVICE_SPACE:
-      case Cr.NS_ERROR_FILE_DISK_FULL:
-        msg = bundle.getString("writeFileNoDeviceSpace");
-        break;
-      default:
-        msg = e.message;
-        break;
-    }
-  }
-  if (written != content.length) {
-    if (msg.length == 0) {
-      msg = bundle.getString("writeFileUnknownError");
-    }
-    alertPromptService(bundle.getString("writeFileFailure"),
-                       bundle.getFormattedString("writeFileFailed",
-                       [fp.file.path, msg]));
+    await OS.File.writeAtomic(fp.file.path, content);
+  } catch (ex) {
+    let title = await document.l10n.formatValue("write-file-failure");
+    alertPromptService(title, ex.toString());
   }
   if (Cu.isInAutomation) {
     Services.obs.notifyObservers(null, "cert-export-finished");

@@ -298,3 +298,11 @@ add-exception-checking-long = Attempting to identify this site…
 add-exception-no-cert-short = No Information Available
 add-exception-no-cert-long = Unable to obtain identification status for this site.
 
+## Certificate export "Save as" and error dialogs
+save-cert-as = Save Certificate To File
+cert-format-base64 = X.509 Certificate (PEM)
+cert-format-base64-chain = X.509 Certificate with chain (PEM)
+cert-format-der = X.509 Certificate (DER)
+cert-format-pkcs7 = X.509 Certificate (PKCS#7)
+cert-format-pkcs7-chain = X.509 Certificate with chain (PKCS#7)
+write-file-failure = File Error
