@@ -503,6 +503,8 @@ Tester.prototype = {
       "Application",
       "__SS_tabsToRestore", "__SSi",
       "webConsoleCommandController",
+      // Thunderbird
+      "MailMigrator", "SearchIntegration",
     ];
 
     this.PerTestCoverageUtils.beforeTestSync();
@@ -522,7 +524,7 @@ Tester.prototype = {
   },
 
   async promiseMainWindowReady() {
-    if (!gBrowserInit.idleTasksFinished) {
+    if (window.gBrowserInit && !gBrowserInit.idleTasksFinished) {
       await this.TestUtils.topicObserved("browser-idle-startup-tasks-finished",
                                          subject => subject === window);
     }
@@ -584,6 +586,9 @@ Tester.prototype = {
         case "navigator:browser":
           type = "browser window";
           break;
+        case "mail:3pane":
+          type = "mail window";
+          break;
         case null:
           type = "unknown window with document URI: " + win.document.documentURI +
                  " and title: " + win.document.title;
@@ -629,7 +634,7 @@ Tester.prototype = {
     this.structuredLogger.info("TEST-START | Shutdown");
 
     if (this.tests.length) {
-      let e10sMode = gMultiProcessBrowser ? "e10s" : "non-e10s";
+      let e10sMode = window.gMultiProcessBrowser ? "e10s" : "non-e10s";
       this.structuredLogger.info("Browser Chrome Test Summary");
       this.structuredLogger.info("Passed:  " + passCount);
       this.structuredLogger.info("Failed:  " + failCount);
@@ -907,9 +912,11 @@ Tester.prototype = {
             // to touch the sidebar. They will thus not be blamed for leaking
             // a document.
             let sidebar = document.getElementById("sidebar");
-            sidebar.setAttribute("src", "data:text/html;charset=utf-8,");
-            sidebar.docShell.createAboutBlankContentViewer(null);
-            sidebar.setAttribute("src", "about:blank");
+            if (sidebar) {
+              sidebar.setAttribute("src", "data:text/html;charset=utf-8,");
+              sidebar.docShell.createAboutBlankContentViewer(null);
+              sidebar.setAttribute("src", "about:blank");
+            }
           }
 
           // Destroy BackgroundPageThumbs resources.
@@ -917,7 +924,9 @@ Tester.prototype = {
             ChromeUtils.import("resource://gre/modules/BackgroundPageThumbs.jsm", {});
           BackgroundPageThumbs._destroy();
 
-          gBrowser.removePreloadedBrowser();
+          if (window.gBrowser) {
+            gBrowser.removePreloadedBrowser();
+          }
         }
 
         // Schedule GC and CC runs before finishing in order to detect

@@ -356,27 +356,6 @@ add_task(async function() {
 });
 
 /**
- * In this test, we check that the author defined error message is shown.
- */
-add_task(async function() {
-  incrementTest();
-  let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input x-moz-errormessage='foo' required id='i'><input id='s' type='submit'></form>" + getDocFooter();
-  let browser = await openNewTab(uri);
-
-  let popupShownPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popupshown");
-  await clickChildElement(browser);
-  await popupShownPromise;
-
-  checkPopupShow();
-  await checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
-
-  is(gInvalidFormPopup.firstElementChild.textContent, "foo",
-     "The panel should show the author defined error message");
-
-  gBrowser.removeCurrentTab();
-});
-
-/**
  * In this test, we check that the message is correctly updated when it changes.
  */
 add_task(async function() {
