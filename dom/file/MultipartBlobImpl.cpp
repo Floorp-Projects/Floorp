@@ -430,3 +430,20 @@ size_t MultipartBlobImpl::GetAllocationSize(
 
   return total;
 }
+
+void MultipartBlobImpl::GetBlobImplType(nsAString& aBlobImplType) const {
+  aBlobImplType.AssignLiteral("MultipartBlobImpl[");
+
+  for (uint32_t i = 0; i < mBlobImpls.Length(); ++i) {
+    if (i != 0) {
+      aBlobImplType.AppendLiteral(", ");
+    }
+
+    nsAutoString blobImplType;
+    mBlobImpls[i]->GetBlobImplType(blobImplType);
+
+    aBlobImplType.Append(blobImplType);
+  }
+
+  aBlobImplType.AppendLiteral("]");
+}
