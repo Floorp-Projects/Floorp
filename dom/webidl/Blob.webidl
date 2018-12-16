@@ -36,3 +36,10 @@ dictionary BlobPropertyBag {
   DOMString type = "";
   EndingTypes endings = "transparent";
 };
+
+partial interface Blob {
+  // This returns the type of BlobImpl used for this Blob.
+  [ChromeOnly]
+  readonly attribute DOMString blobImplType;
+};
+
