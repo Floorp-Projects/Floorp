@@ -109,7 +109,7 @@ HTMLFormElement::HTMLFormElement(
       mFirstSubmitNotInElements(nullptr),
       mImageNameLookupTable(FORM_CONTROL_LIST_HASHTABLE_LENGTH),
       mPastNameLookupTable(FORM_CONTROL_LIST_HASHTABLE_LENGTH),
-      mSubmitPopupState(openAbused),
+      mSubmitPopupState(PopupBlocker::openAbused),
       mInvalidElementsCount(0),
       mGeneratingSubmit(false),
       mGeneratingReset(false),
@@ -568,11 +568,10 @@ nsresult HTMLFormElement::DoSubmit(WidgetEvent* aEvent) {
   // XXXbz if the script global is that for an sXBL/XBL2 doc, it won't
   // be a window...
   nsPIDOMWindowOuter* window = OwnerDoc()->GetWindow();
-
   if (window) {
-    mSubmitPopupState = window->GetPopupControlState();
+    mSubmitPopupState = PopupBlocker::GetPopupControlState();
   } else {
-    mSubmitPopupState = openAbused;
+    mSubmitPopupState = PopupBlocker::openAbused;
   }
 
   mSubmitInitiatedFromUserInput = EventStateManager::IsHandlingUserInput();

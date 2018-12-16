@@ -573,7 +573,7 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   nsInterfaceHashtable<nsStringHashKey, nsISupports> mPastNameLookupTable;
 
   /** Keep track of what the popup state was when the submit was initiated */
-  PopupControlState mSubmitPopupState;
+  PopupBlocker::PopupControlState mSubmitPopupState;
 
   /**
    * Number of invalid and candidate for constraint validation elements in the

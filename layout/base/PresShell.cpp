@@ -43,8 +43,8 @@
 #include "nsIContentIterator.h"
 #include "nsIPresShellInlines.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/Event.h"  // for Event::GetEventPopupControlState()
 #include "mozilla/dom/PointerEventHandler.h"
+#include "mozilla/dom/PopupBlocker.h"
 #include "nsIDocument.h"
 #include "nsAnimationManager.h"
 #include "nsNameSpaceManager.h"  // for Pref-related rule management (bugs 22963,20760,31816)
@@ -7265,7 +7265,7 @@ nsresult PresShell::HandleEventInternal(WidgetEvent* aEvent,
     }
 
     nsAutoPopupStatePusher popupStatePusher(
-        Event::GetEventPopupControlState(aEvent));
+        PopupBlocker::GetEventPopupControlState(aEvent));
 
     // FIXME. If the event was reused, we need to clear the old target,
     // bug 329430

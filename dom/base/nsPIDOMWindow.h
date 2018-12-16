@@ -74,19 +74,6 @@ enum class CallerType : uint32_t;
 }  // namespace dom
 }  // namespace mozilla
 
-// Popup control state enum. The values in this enum must go from most
-// permissive to least permissive so that it's safe to push state in
-// all situations. Pushing popup state onto the stack never makes the
-// current popup state less permissive (see
-// nsGlobalWindow::PushPopupControlState()).
-enum PopupControlState {
-  openAllowed = 0,  // open that window without worries
-  openControlled,   // it's a popup, but allow it
-  openBlocked,      // it's a popup, but not from an allowed event
-  openAbused,       // it's a popup. disallow it, but allow domain override.
-  openOverridden    // disallow window open
-};
-
 enum UIStateChangeType {
   UIStateChangeType_NoChange,
   UIStateChangeType_Set,
@@ -382,8 +369,6 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   mozilla::dom::WindowGlobalChild* GetWindowGlobalChild() {
     return mWindowGlobalChild;
   }
-
-  virtual PopupControlState GetPopupControlState() const = 0;
 
   // Determine if the window is suspended or frozen.  Outer windows
   // will forward this call to the inner window for convenience.  If
@@ -875,11 +860,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   // principal.
   virtual void SetInitialPrincipalToSubject() = 0;
 
-  virtual PopupControlState PushPopupControlState(PopupControlState aState,
-                                                  bool aForce) const = 0;
-  virtual void PopPopupControlState(PopupControlState state) const = 0;
-  virtual PopupControlState GetPopupControlState() const = 0;
-
   // Returns an object containing the window's state.  This also suspends
   // all running timeouts in the window.
   virtual already_AddRefed<nsISupports> SaveWindowState() = 0;
@@ -1209,53 +1189,5 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowOuter, NS_PIDOMWINDOWOUTER_IID)
 
 #include "nsPIDOMWindowInlines.h"
-
-#ifdef MOZILLA_INTERNAL_API
-#define NS_AUTO_POPUP_STATE_PUSHER nsAutoPopupStatePusherInternal
-#else
-#define NS_AUTO_POPUP_STATE_PUSHER nsAutoPopupStatePusherExternal
-#endif
-
-// Helper class that helps with pushing and popping popup control
-// state. Note that this class looks different from within code that's
-// part of the layout library than it does in code outside the layout
-// library.  We give the two object layouts different names so the symbols
-// don't conflict, but code should always use the name
-// |nsAutoPopupStatePusher|.
-class NS_AUTO_POPUP_STATE_PUSHER {
- public:
-#ifdef MOZILLA_INTERNAL_API
-  explicit NS_AUTO_POPUP_STATE_PUSHER(PopupControlState aState,
-                                      bool aForce = false);
-  ~NS_AUTO_POPUP_STATE_PUSHER();
-#else
-  NS_AUTO_POPUP_STATE_PUSHER(nsPIDOMWindowOuter* aWindow,
-                             PopupControlState aState)
-      : mWindow(aWindow), mOldState(openAbused) {
-    if (aWindow) {
-      mOldState = aWindow->PushPopupControlState(aState, false);
-    }
-  }
-
-  ~NS_AUTO_POPUP_STATE_PUSHER() {
-    if (mWindow) {
-      mWindow->PopPopupControlState(mOldState);
-    }
-  }
-#endif
-
- protected:
-#ifndef MOZILLA_INTERNAL_API
-  nsCOMPtr<nsPIDOMWindowOuter> mWindow;
-#endif
-  PopupControlState mOldState;
-
- private:
-  // Hide so that this class can only be stack-allocated
-  static void* operator new(size_t /*size*/) CPP_THROW_NEW { return nullptr; }
-  static void operator delete(void* /*memory*/) {}
-};
-
-#define nsAutoPopupStatePusher NS_AUTO_POPUP_STATE_PUSHER
 
 #endif  // nsPIDOMWindow_h__

@@ -16,6 +16,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/EventBinding.h"
+#include "mozilla/dom/PopupBlocker.h"
 #include "nsIScriptGlobalObject.h"
 #include "Units.h"
 #include "js/TypeDecls.h"
@@ -140,13 +141,6 @@ class Event : public nsISupports, public nsWrapperCache {
 
   // Returns true if the event should be trusted.
   bool Init(EventTarget* aGlobal);
-
-  static PopupControlState GetEventPopupControlState(
-      WidgetEvent* aEvent, Event* aDOMEvent = nullptr);
-
-  static void PopupAllowedEventsChanged();
-
-  static void Shutdown();
 
   static const char* GetEventName(EventMessage aEventType);
   static CSSIntPoint GetClientCoords(nsPresContext* aPresContext,
@@ -284,6 +278,7 @@ class Event : public nsISupports, public nsWrapperCache {
   already_AddRefed<nsIContent> GetTargetFromFrame();
 
   friend class EventMessageAutoOverride;
+  friend class PopupBlocker;
   friend class WantsPopupControlCheck;
   void SetWantsPopupControlCheck(bool aCheck) {
     mWantsPopupControlCheck = aCheck;
