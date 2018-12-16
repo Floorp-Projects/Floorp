@@ -37,6 +37,8 @@
 #include "jsapi.h"
 
 #define TOPIC_CANVAS_PERMISSIONS_PROMPT "canvas-permissions-prompt"
+#define TOPIC_CANVAS_PERMISSIONS_PROMPT_HIDE_DOORHANGER \
+  "canvas-permissions-prompt-hide-doorhanger"
 #define PERMISSION_CANVAS_EXTRACT_DATA "canvas"
 
 using namespace mozilla::gfx;
@@ -145,9 +147,12 @@ bool IsImageExtractionAllowed(nsIDocument* aDocument, JSContext* aCx,
   // (nsIPermissionManager::UNKNOWN_ACTION).
 
   // Check if the request is in response to user input
-  if (StaticPrefs::
+  bool isAutoBlockCanvas =
+      StaticPrefs::
           privacy_resistFingerprinting_autoDeclineNoUserInputCanvasPrompts() &&
-      !EventStateManager::IsHandlingUserInput()) {
+      !EventStateManager::IsHandlingUserInput();
+
+  if (isAutoBlockCanvas) {
     nsAutoCString message;
     message.AppendPrintf(
         "Blocked %s in page %s from extracting canvas data because no user "
@@ -157,32 +162,34 @@ bool IsImageExtractionAllowed(nsIDocument* aDocument, JSContext* aCx,
       message.AppendPrintf(" %s:%u.", scriptFile.get(), scriptLine);
     }
     nsContentUtils::LogMessageToConsole(message.get());
-
-    return false;
+  } else {
+    // It was in response to user input, so log and display the prompt.
+    nsAutoCString message;
+    message.AppendPrintf(
+        "Blocked %s in page %s from extracting canvas data, but prompting the "
+        "user.",
+        docURISpec.get(), topLevelDocURISpec.get());
+    if (isScriptKnown) {
+      message.AppendPrintf(" %s:%u.", scriptFile.get(), scriptLine);
+    }
+    nsContentUtils::LogMessageToConsole(message.get());
   }
-
-  // It was in response to user input, so log and display the prompt.
-  nsAutoCString message;
-  message.AppendPrintf(
-      "Blocked %s in page %s from extracting canvas data, but prompting the "
-      "user.",
-      docURISpec.get(), topLevelDocURISpec.get());
-  if (isScriptKnown) {
-    message.AppendPrintf(" %s:%u.", scriptFile.get(), scriptLine);
-  }
-  nsContentUtils::LogMessageToConsole(message.get());
 
   // Prompt the user (asynchronous).
   nsPIDOMWindowOuter* win = aDocument->GetWindow();
   if (XRE_IsContentProcess()) {
     TabChild* tabChild = TabChild::GetFrom(win);
     if (tabChild) {
-      tabChild->SendShowCanvasPermissionPrompt(topLevelDocURISpec);
+      tabChild->SendShowCanvasPermissionPrompt(topLevelDocURISpec,
+                                               isAutoBlockCanvas);
     }
   } else {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
-      obs->NotifyObservers(win, TOPIC_CANVAS_PERMISSIONS_PROMPT,
+      obs->NotifyObservers(win,
+                           isAutoBlockCanvas
+                               ? TOPIC_CANVAS_PERMISSIONS_PROMPT_HIDE_DOORHANGER
+                               : TOPIC_CANVAS_PERMISSIONS_PROMPT,
                            NS_ConvertUTF8toUTF16(topLevelDocURISpec).get());
     }
   }
