@@ -137,13 +137,8 @@ public:
 
   virtual void MacroExpands(const Token &Tok, const MacroDefinition &Md,
                             SourceRange Range, const MacroArgs *Ma) override;
-#if CLANG_VERSION_MAJOR >= 5
   virtual void MacroUndefined(const Token &Tok, const MacroDefinition &Md,
                               const MacroDirective *Undef) override;
-#else
-  virtual void MacroUndefined(const Token &Tok,
-                              const MacroDefinition &Md) override;
-#endif
   virtual void Defined(const Token &Tok, const MacroDefinition &Md,
                        SourceRange Range) override;
   virtual void Ifdef(SourceLocation Loc, const Token &Tok,
@@ -282,18 +277,8 @@ private:
           std::string Backing;
           llvm::raw_string_ostream Stream(Backing);
           const TemplateArgumentList &TemplateArgs = Spec->getTemplateArgs();
-#if CLANG_VERSION_MAJOR > 5
           printTemplateArgumentList(
               Stream, TemplateArgs.asArray(), PrintingPolicy(CI.getLangOpts()));
-#elif CLANG_VERSION_MAJOR > 3 ||                                                 \
-    (CLANG_VERSION_MAJOR == 3 && CLANG_VERSION_MINOR >= 9)
-          TemplateSpecializationType::PrintTemplateArgumentList(
-              Stream, TemplateArgs.asArray(), PrintingPolicy(CI.getLangOpts()));
-#else
-          TemplateSpecializationType::PrintTemplateArgumentList(
-              stream, templateArgs.data(), templateArgs.size(),
-              PrintingPolicy(CI.getLangOpts()));
-#endif
           Result += Stream.str();
         }
       } else if (const auto *Nd = dyn_cast<NamespaceDecl>(DC)) {
@@ -1491,14 +1476,9 @@ void PreprocessorHook::MacroExpands(const Token &Tok, const MacroDefinition &Md,
   Indexer->macroUsed(Tok, Md.getMacroInfo());
 }
 
-#if CLANG_VERSION_MAJOR >= 5
 void PreprocessorHook::MacroUndefined(const Token &Tok,
                                       const MacroDefinition &Md,
                                       const MacroDirective *Undef)
-#else
-void PreprocessorHook::MacroUndefined(const Token &Tok,
-                                      const MacroDefinition &Md)
-#endif
 {
   Indexer->macroUsed(Tok, Md.getMacroInfo());
 }
