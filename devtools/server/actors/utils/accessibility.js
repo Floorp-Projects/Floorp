@@ -196,18 +196,27 @@ function getContrastRatioFor(node, options = {}) {
   if (rgba.value) {
     return {
       value: colorUtils.calculateContrastRatio(rgba.value, color),
+      color,
+      backgroundColor: rgba.value,
       isLargeText,
     };
   }
 
-  // calculateContrastRatio modifies the array, since we need to use color array twice,
-  // pass its copy to the method.
-  const min = colorUtils.calculateContrastRatio(rgba.min, Array.from(color));
-  const max = colorUtils.calculateContrastRatio(rgba.max, Array.from(color));
+  let min = colorUtils.calculateContrastRatio(rgba.min, color);
+  let max = colorUtils.calculateContrastRatio(rgba.max, color);
+
+  // Flip minimum and maximum contrast ratios if necessary.
+  if (min > max) {
+    [min, max] = [max, min];
+    [rgba.min, rgba.max] = [rgba.max, rgba.min];
+  }
 
   return {
-    min: min < max ? min : max,
-    max: min < max ? max : min,
+    min,
+    max,
+    color,
+    backgroundColorMin: rgba.min,
+    backgroundColorMax: rgba.max,
     isLargeText,
   };
 }

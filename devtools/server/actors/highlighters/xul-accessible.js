@@ -18,6 +18,8 @@ const ACCESSIBLE_BOUNDS_SHEET = "data:text/css;charset=utf-8," + encodeURICompon
     --highlighter-bubble-background-color: hsl(214, 13%, 24%);
     --highlighter-bubble-border-color: rgba(255, 255, 255, 0.2);
     --highlighter-bubble-arrow-size: 8px;
+
+    --grey-40: #b1b1b3;
   }
 
   .accessible-bounds {
@@ -79,6 +81,19 @@ const ACCESSIBLE_BOUNDS_SHEET = "data:text/css;charset=utf-8," + encodeURICompon
     max-width: 90%;
   }
 
+  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty):before {
+    content: "";
+    height: 8px;
+    width: 8px;
+    display: inline-flex;
+    background-color: var(--accessibility-highlighter-contrast-ratio-color);
+    box-shadow: 0 0 0 1px var(--grey-40),
+                4px 3px var(--accessibility-highlighter-contrast-ratio-bg),
+                4px 3px 0 1px var(--grey-40);
+    margin-inline-start: 3px;
+    margin-inline-end: 9px;
+  }
+
   .accessible-infobar-audit .accessible-contrast-ratio:not(:empty):after {
     margin-inline-start: 2px;
   }
@@ -102,16 +117,13 @@ const ACCESSIBLE_BOUNDS_SHEET = "data:text/css;charset=utf-8," + encodeURICompon
   }
 
   .accessible-infobar-audit .accessible-contrast-ratio-label,
-  .accessible-infobar-audit #accessible-contrast-ratio-max:not(:empty):before {
+  .accessible-infobar-audit .accessible-contrast-ratio-separator:before {
     margin-inline-end: 3px;
   }
 
-  .accessible-infobar-audit #accessible-contrast-ratio-max {
-    margin-inline-start: 3px;
-  }
-
-  .accessible-infobar-audit #accessible-contrast-ratio-max:not(:empty):before {
+  .accessible-infobar-audit .accessible-contrast-ratio-separator:before {
     content: "-";
+    margin-inline-start: 3px;
   }
 
   .accessible-infobar-name:not(:empty),
