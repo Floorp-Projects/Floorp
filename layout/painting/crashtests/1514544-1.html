@@ -1,0 +1,15 @@
+<html class="reftest-wait">
+<script>
+setTimeout(function() {
+  a.appendChild(b);
+  document.documentElement.className = "";
+}, 100)
+</script>
+<style>
+:root { opacity: 0 }
+</style>
+A
+<textarea id="a" hidden=""></textarea>
+<object id="b" >
+A
+</html>
