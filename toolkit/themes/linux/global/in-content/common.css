@@ -48,10 +48,7 @@ xul|*.numberbox-input-box {
   border-width: 0;
 }
 
-xul|menulist:-moz-focusring > xul|*.menulist-label-box {
-  outline: none;
-}
-
+xul|menulist:-moz-focusring > xul|*.menulist-label-box,
 html|input[type="checkbox"]:-moz-focusring + html|label:before {
   outline: 1px dotted;
 }

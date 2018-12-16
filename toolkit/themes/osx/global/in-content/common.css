@@ -57,6 +57,7 @@ xul|*.text-link:-moz-focusring {
   box-shadow: none;
 }
 
+xul|menulist:-moz-focusring,
 xul|checkbox:-moz-focusring > .checkbox-check,
 html|input[type="checkbox"]:-moz-focusring + html|label:before,
 xul|radio[focused="true"] > .radio-check,
