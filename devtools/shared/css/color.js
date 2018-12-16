@@ -1197,6 +1197,10 @@ function blendColors(foregroundColor, backgroundColor = [ 255, 255, 255, 1 ]) {
  * @return {Number} The calculated luminance.
  */
 function calculateContrastRatio(backgroundColor, textColor) {
+  // Do not modify given colors.
+  backgroundColor = Array.from(backgroundColor);
+  textColor = Array.from(textColor);
+
   backgroundColor = blendColors(backgroundColor);
   textColor = blendColors(textColor, backgroundColor);
 
