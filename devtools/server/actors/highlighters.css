@@ -644,6 +644,33 @@
 
 /* Accessible highlighter */
 
+:-moz-native-anonymous .accessible-infobar {
+  min-width: unset;
+}
+
+:-moz-native-anonymous .accessible-infobar-text {
+  display: grid;
+  grid-template-areas:
+    "role name"
+    "audit audit";
+  grid-template-columns: min-content 1fr;
+}
+
+:-moz-native-anonymous .accessible-infobar-role {
+  grid-area: role;
+  color: #9CDCFE;
+}
+
+:-moz-native-anonymous .accessible-infobar-name {
+  grid-area: name;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit {
+  grid-area: audit;
+  padding-top: 5px;
+  padding-bottom: 2px;
+}
+
 :-moz-native-anonymous .accessible-bounds {
   opacity: 0.6;
   fill: #6a5acd;
@@ -652,7 +679,6 @@
 :-moz-native-anonymous .accessible-infobar-name,
 :-moz-native-anonymous .accessible-infobar-audit {
   color: var(--highlighter-infobar-color);
-  max-width: 90%;
 }
 
 :-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty):before {
@@ -698,13 +724,8 @@
   margin-inline-start: 3px;
 }
 
-:-moz-native-anonymous .accessible-infobar-name:not(:empty),
-:-moz-native-anonymous .accessible-infobar-audit:not(:empty) {
+:-moz-native-anonymous .accessible-infobar-name:not(:empty) {
   border-inline-start: 1px solid #5a6169;
   margin-inline-start: 6px;
   padding-inline-start: 6px;
-}
-
-:-moz-native-anonymous .accessible-infobar-role {
-  color: #9CDCFE;
 }
