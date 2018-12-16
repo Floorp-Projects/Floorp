@@ -479,13 +479,14 @@ class ContrastRatio extends AuditReport {
         "id": "contrast-ratio-label",
       },
       prefix: this.prefix,
+      text: L10N.getStr("accessibility.contrast.ratio.label"),
     });
 
     createNode(this.win, {
       nodeType: "span",
       parent: root,
       attributes: {
-        "class": "contrast-ratio-error",
+        "class": "contrast-ratio",
         "id": "contrast-ratio-error",
       },
       prefix: this.prefix,
@@ -506,16 +507,6 @@ class ContrastRatio extends AuditReport {
       nodeType: "span",
       parent: root,
       attributes: {
-        "class": "contrast-ratio-separator",
-        "id": "contrast-ratio-separator",
-      },
-      prefix: this.prefix,
-    });
-
-    createNode(this.win, {
-      nodeType: "span",
-      parent: root,
-      attributes: {
         "class": "contrast-ratio",
         "id": "contrast-ratio-max",
       },
@@ -523,14 +514,11 @@ class ContrastRatio extends AuditReport {
     });
   }
 
-  _fillAndStyleContrastValue(el, { value, isLargeText, color, backgroundColor }) {
+  _fillAndStyleContrastValue(el, value, isLargeText, stringName) {
     value = value.toFixed(2);
     const style = getContrastRatioScoreStyle(value, isLargeText);
-    this.setTextContent(el, value);
+    this.setTextContent(el, stringName ? L10N.getFormatStr(stringName, value) : value);
     el.classList.add(style);
-    el.setAttribute("style",
-      `--accessibility-highlighter-contrast-ratio-color: rgba(${color});` +
-      `--accessibility-highlighter-contrast-ratio-bg: rgba(${backgroundColor});`);
     el.removeAttribute("hidden");
   }
 
@@ -544,7 +532,7 @@ class ContrastRatio extends AuditReport {
    */
   update({ contrastRatio }) {
     const els = {};
-    for (const key of ["label", "min", "max", "error", "separator"]) {
+    for (const key of ["label", "min", "max", "error"]) {
       const el = els[key] = this.getElement(`contrast-ratio-${key}`);
       if (["min", "max"].includes(key)) {
         ["fail", "AA", "AAA"].forEach(className => el.classList.remove(className));
@@ -552,7 +540,6 @@ class ContrastRatio extends AuditReport {
       }
 
       el.setAttribute("hidden", true);
-      el.removeAttribute("style");
     }
 
     if (!contrastRatio) {
@@ -560,9 +547,6 @@ class ContrastRatio extends AuditReport {
     }
 
     const { isLargeText, error } = contrastRatio;
-    this.setTextContent(els.label,
-      L10N.getFormatStr("accessibility.contrast.ratio.label2",
-        isLargeText ? L10N.getStr("accessibility.contrast.ratio.large") : ""));
     els.label.removeAttribute("hidden");
     if (error) {
       els.error.removeAttribute("hidden");
@@ -570,18 +554,12 @@ class ContrastRatio extends AuditReport {
     }
 
     if (contrastRatio.value) {
-      const { value, color, backgroundColor } = contrastRatio;
-      this._fillAndStyleContrastValue(els.min,
-        { value, isLargeText, color, backgroundColor });
+      this._fillAndStyleContrastValue(els.min, contrastRatio.value, isLargeText);
       return true;
     }
 
-    const { min, max, color, backgroundColorMin, backgroundColorMax } = contrastRatio;
-    this._fillAndStyleContrastValue(els.min,
-      { value: min, isLargeText, color, backgroundColor: backgroundColorMin });
-    els.separator.removeAttribute("hidden");
-    this._fillAndStyleContrastValue(els.max,
-      { value: max, isLargeText, color, backgroundColor: backgroundColorMax });
+    this._fillAndStyleContrastValue(els.min, contrastRatio.min, isLargeText);
+    this._fillAndStyleContrastValue(els.max, contrastRatio.max, isLargeText);
 
     return true;
   }
