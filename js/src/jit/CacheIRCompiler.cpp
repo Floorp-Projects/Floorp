@@ -1477,7 +1477,6 @@ bool CacheIRCompiler::emitGuardIsInt32() {
     return false;
   }
 
-  Label notInt32, done;
   masm.branchTestInt32(Assembler::NotEqual, input, failure->label());
   masm.unboxInt32(input, output);
   return true;
