@@ -536,9 +536,9 @@ JS_FRIEND_API bool js::NukeCrossCompartmentWrappers(
         continue;
       }
 
-      // We never nuke script source objects, since only ever used internally by
-      // the JS engine, and are expected to remain valid throughout a scripts
-      // lifetime.
+      // We never nuke ScriptSourceObjects, since they are only ever used
+      // internally by the JS engine, and are expected to remain valid
+      // throughout a script's lifetime.
       if (MOZ_UNLIKELY(wrapped->is<ScriptSourceObject>())) {
         continue;
       }
