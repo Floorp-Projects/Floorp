@@ -96,26 +96,20 @@ void nsHTMLButtonControlFrame::BuildDisplayList(
 
   nsDisplayListCollection set(aBuilder);
 
-  // Do not allow the child subtree to receive events,
-  // except in case of <button>.
-  if (!isForEventDelivery || mContent->IsHTMLElement(nsGkAtoms::button) ||
-      aBuilder->HitTestIsForVisibility()) {
-    DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+  DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 
-    if (ShouldClipPaintingToBorderBox()) {
-      nsMargin border = StyleBorder()->GetComputedBorder();
-      nsRect rect(aBuilder->ToReferenceFrame(this), GetSize());
-      rect.Deflate(border);
-      nscoord radii[8];
-      bool hasRadii = GetPaddingBoxBorderRadii(radii);
-      clipState.ClipContainingBlockDescendants(rect,
-                                               hasRadii ? radii : nullptr);
-    }
-
-    BuildDisplayListForChild(aBuilder, mFrames.FirstChild(), set,
-                             DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
-    // That should put the display items in set.Content()
+  if (ShouldClipPaintingToBorderBox()) {
+    nsMargin border = StyleBorder()->GetComputedBorder();
+    nsRect rect(aBuilder->ToReferenceFrame(this), GetSize());
+    rect.Deflate(border);
+    nscoord radii[8];
+    bool hasRadii = GetPaddingBoxBorderRadii(radii);
+    clipState.ClipContainingBlockDescendants(rect,
+                                             hasRadii ? radii : nullptr);
   }
+
+  BuildDisplayListForChild(aBuilder, mFrames.FirstChild(), set,
+                           DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
 
   // Put the foreground outline and focus rects on top of the children
   set.Content()->AppendToTop(&onTop);
