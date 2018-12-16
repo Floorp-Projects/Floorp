@@ -229,6 +229,7 @@
 #include "mozilla/dom/HashChangeEvent.h"
 #include "mozilla/dom/IntlUtils.h"
 #include "mozilla/dom/PopStateEvent.h"
+#include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/PopupBlockedEvent.h"
 #include "mozilla/dom/PrimitiveConversions.h"
 #include "mozilla/dom/WindowBinding.h"
@@ -1594,10 +1595,6 @@ void nsGlobalWindowInner::TraceGlobalJSObject(JSTracer* aTrc) {
   TraceWrapper(aTrc, "active window global");
 }
 
-PopupControlState nsGlobalWindowInner::GetPopupControlState() const {
-  return nsContentUtils::GetPopupControlState();
-}
-
 nsresult nsGlobalWindowInner::SetNewDocument(nsIDocument* aDocument,
                                              nsISupports* aState,
                                              bool aForceReuseInnerWindow) {
@@ -1937,7 +1934,7 @@ bool nsGlobalWindowInner::DialogsAreBeingAbused() {
                           DEFAULT_SUCCESSIVE_DIALOG_TIME_LIMIT)) {
     mDialogAbuseCount++;
 
-    return GetPopupControlState() > openAllowed ||
+    return PopupBlocker::GetPopupControlState() > PopupBlocker::openAllowed ||
            mDialogAbuseCount > MAX_SUCCESSIVE_DIALOG_COUNT;
   }
 
@@ -5953,7 +5950,7 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
 
   // Clear the timeout's popup state, if any, to prevent interval
   // timeouts from repeatedly opening poups.
-  timeout->mPopupState = openAbused;
+  timeout->mPopupState = PopupBlocker::openAbused;
 
   bool trackNestingLevel = !timeout->mIsInterval;
   uint32_t nestingLevel;

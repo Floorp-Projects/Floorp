@@ -296,7 +296,6 @@ EventStateManager::~EventStateManager() {
       gUserInteractionTimer->Cancel();
       NS_RELEASE(gUserInteractionTimer);
     }
-    Prefs::Shutdown();
     WheelPrefs::Shutdown();
     DeltaAccumulator::Shutdown();
   }
@@ -6073,19 +6072,14 @@ bool EventStateManager::Prefs::sClickHoldContextMenu = false;
 
 // static
 void EventStateManager::Prefs::Init() {
-  DebugOnly<nsresult> rv =
-      Preferences::RegisterCallback(OnChange, "dom.popup_allowed_events");
-  MOZ_ASSERT(NS_SUCCEEDED(rv),
-             "Failed to observe \"dom.popup_allowed_events\"");
-
   static bool sPrefsAlreadyCached = false;
   if (sPrefsAlreadyCached) {
     return;
   }
 
-  rv = Preferences::AddBoolVarCache(&sKeyCausesActivation,
-                                    "accessibility.accesskeycausesactivation",
-                                    sKeyCausesActivation);
+  DebugOnly<nsresult> rv = Preferences::AddBoolVarCache(
+      &sKeyCausesActivation, "accessibility.accesskeycausesactivation",
+      sKeyCausesActivation);
   MOZ_ASSERT(NS_SUCCEEDED(rv),
              "Failed to observe \"accessibility.accesskeycausesactivation\"");
   rv = Preferences::AddBoolVarCache(&sClickHoldContextMenu,
@@ -6094,19 +6088,6 @@ void EventStateManager::Prefs::Init() {
   MOZ_ASSERT(NS_SUCCEEDED(rv),
              "Failed to observe \"ui.click_hold_context_menus\"");
   sPrefsAlreadyCached = true;
-}
-
-// static
-void EventStateManager::Prefs::OnChange(const char* aPrefName, void*) {
-  nsDependentCString prefName(aPrefName);
-  if (prefName.EqualsLiteral("dom.popup_allowed_events")) {
-    Event::PopupAllowedEventsChanged();
-  }
-}
-
-// static
-void EventStateManager::Prefs::Shutdown() {
-  Preferences::UnregisterCallback(OnChange, "dom.popup_allowed_events");
 }
 
 /******************************************************************/

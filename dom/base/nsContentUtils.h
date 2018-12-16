@@ -3280,26 +3280,6 @@ class nsContentUtils {
   static already_AddRefed<mozilla::dom::ContentFrameMessageManager>
   TryGetTabChildGlobal(nsISupports* aFrom);
 
-  static PopupControlState PushPopupControlState(PopupControlState aState,
-                                                 bool aForce) {
-    MOZ_ASSERT(NS_IsMainThread());
-    PopupControlState old = sPopupControlState;
-    if (aState < old || aForce) {
-      sPopupControlState = aState;
-    }
-    return old;
-  }
-
-  static void PopPopupControlState(PopupControlState aState) {
-    MOZ_ASSERT(NS_IsMainThread());
-    sPopupControlState = aState;
-  }
-
-  static PopupControlState GetPopupControlState() { return sPopupControlState; }
-
-  static void PopupStatePusherCreated();
-  static void PopupStatePusherDestroyed();
-
   // Get a serial number for a newly created inner or outer window.
   static uint32_t InnerOrOuterWindowCreated();
   // Record that an inner or outer window has been destroyed.
@@ -3308,15 +3288,6 @@ class nsContentUtils {
   static int32_t GetCurrentInnerOrOuterWindowCount() {
     return sInnerOrOuterWindowCount;
   }
-
-  // This method checks if the principal is allowed by open popups by user
-  // permissions. In this case, the caller should not block popups.
-  static bool CanShowPopupByPermission(nsIPrincipal* aPrincipal);
-
-  // This method returns true if the caller is allowed to show a popup, and it
-  // consumes the popup token for the current event. There is just 1 popup
-  // allowed per event.
-  static bool TryUsePopupOpeningToken();
 
   /**
    * Serializes a JSON-like JS::Value into a string.
@@ -3448,7 +3419,6 @@ class nsContentUtils {
 
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
-  static bool sDisablePopups;
   static bool sIsFullscreenApiEnabled;
   static bool sIsUnprefixedFullscreenApiEnabled;
   static bool sTrustedFullscreenOnly;
@@ -3507,13 +3477,6 @@ class nsContentUtils {
 
   static bool sDoNotTrackEnabled;
   static mozilla::LazyLogModule sDOMDumpLog;
-
-  static PopupControlState sPopupControlState;
-  static uint32_t sPopupStatePusherCount;
-
-  // This token is by default set to false. When a popup/filePicker is shown, it
-  // is set to true.
-  static bool sUnusedPopupToken;
 
   static int32_t sInnerOrOuterWindowCount;
   static uint32_t sInnerOrOuterWindowSerialCounter;

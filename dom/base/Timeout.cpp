@@ -7,6 +7,7 @@
 #include "Timeout.h"
 
 #include "mozilla/dom/TimeoutManager.h"
+#include "nsGlobalWindowInner.h"
 
 namespace mozilla {
 namespace dom {
@@ -14,7 +15,7 @@ namespace dom {
 Timeout::Timeout()
     : mTimeoutId(0),
       mFiringId(TimeoutManager::InvalidFiringId),
-      mPopupState(openAllowed),
+      mPopupState(PopupBlocker::openAllowed),
       mReason(Reason::eTimeoutOrInterval),
       mNestingLevel(0),
       mCleared(false),

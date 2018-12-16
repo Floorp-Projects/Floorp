@@ -18,6 +18,7 @@
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewerPrint.h"
 #include "mozilla/dom/BeforeUnloadEvent.h"
+#include "mozilla/dom/PopupBlocker.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -1241,7 +1242,7 @@ nsresult nsDocumentViewer::PermitUnloadInternal(uint32_t* aPermitUnloadFlags,
   {
     // Never permit popups from the beforeunload handler, no matter
     // how we get here.
-    nsAutoPopupStatePusher popupStatePusher(openAbused, true);
+    nsAutoPopupStatePusher popupStatePusher(PopupBlocker::openAbused, true);
 
     // Never permit dialogs from the beforeunload handler
     nsGlobalWindowOuter* globalWindow = nsGlobalWindowOuter::Cast(window);
@@ -1449,7 +1450,7 @@ nsDocumentViewer::PageHide(bool aIsUnload) {
 
     // Never permit popups from the unload handler, no matter how we get
     // here.
-    nsAutoPopupStatePusher popupStatePusher(openAbused, true);
+    nsAutoPopupStatePusher popupStatePusher(PopupBlocker::openAbused, true);
 
     nsIDocument::PageUnloadingEventTimeStamp timestamp(mDocument);
 

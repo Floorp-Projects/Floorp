@@ -468,6 +468,12 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+VARCACHE_PREF(
+  "dom.disable_open_during_load",
+   dom_disable_open_during_load,
+  bool, false
+)
+
 //---------------------------------------------------------------------------
 // Clear-Site-Data prefs
 //---------------------------------------------------------------------------
