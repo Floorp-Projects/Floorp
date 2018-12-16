@@ -118,8 +118,8 @@ async function withNewTabNoInput(grantPermission, browser) {
 }
 
 async function doTestNoInput(grantPermission) {
-  Services.perms.removeFromPrincipal(kPrincipal, kPermission);
   await BrowserTestUtils.withNewTab(kUrl, withNewTabNoInput.bind(null, grantPermission));
+  Services.perms.removeFromPrincipal(kPrincipal, kPermission);
 }
 
 // With auto-declining disabled (not the default)
@@ -129,8 +129,39 @@ add_task(doTestNoInput.bind(null, false));
 // Tests clicking "Allow" button of the permission prompt.
 add_task(doTestNoInput.bind(null, true));
 
-// I don't know how to write a test for "Make sure a prompt is not shown"...
-// But ideally we would have one of those...
+async function withNewTabAutoBlockNoInput(browser) {
+  await ContentTask.spawn(browser, null, initTab);
+  await enableResistFingerprinting(true);
+
+  let noShowHandler = () => {
+    ok(false, "The popup notification should not show in this case.");
+  };
+  PopupNotifications.panel.addEventListener("popupshown",
+                                            noShowHandler, {once: true});
+
+  let promisePopupObserver =
+    TestUtils.topicObserved("PopupNotifications-updateNotShowing");
+
+  // Try to extract canvas data without user inputs.
+  await ContentTask.spawn(browser, null, extractCanvasData);
+
+  await promisePopupObserver;
+  info("There should be no popup shown on the panel.");
+
+  // Check that the icon of canvas permission is shown.
+  let canvasNotification =
+    PopupNotifications.getNotification("canvas-permissions-prompt", browser);
+
+  is(canvasNotification.anchorElement.getAttribute("showing"), "true",
+    "The canvas permission icon is correctly shown.");
+  PopupNotifications.panel.removeEventListener("popupshown", noShowHandler);
+
+  await SpecialPowers.popPrefEnv();
+}
+
+add_task(async function doTestAutoBlockNoInput() {
+  await BrowserTestUtils.withNewTab(kUrl, withNewTabAutoBlockNoInput);
+});
 
 function extractCanvasDataUserInput(grantPermission) {
   let contentWindow = content.wrappedJSObject;
@@ -174,8 +205,8 @@ async function withNewTabInput(grantPermission, browser) {
 }
 
 async function doTestInput(grantPermission, autoDeclineNoInput) {
-  Services.perms.removeFromPrincipal(kPrincipal, kPermission);
   await BrowserTestUtils.withNewTab(kUrl, withNewTabInput.bind(null, grantPermission));
+  Services.perms.removeFromPrincipal(kPrincipal, kPermission);
 }
 
 // With auto-declining enabled (the default)
