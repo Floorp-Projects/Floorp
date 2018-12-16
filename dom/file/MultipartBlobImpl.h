@@ -31,11 +31,15 @@ class MultipartBlobImpl final : public BaseBlobImpl {
 
   // Create as a file to be later initialized
   explicit MultipartBlobImpl(const nsAString& aName)
-      : BaseBlobImpl(aName, EmptyString(), UINT64_MAX), mIsFromNsIFile(false) {}
+      : BaseBlobImpl(NS_LITERAL_STRING("MultipartBlobImpl"), aName,
+                     EmptyString(), UINT64_MAX),
+        mIsFromNsIFile(false) {}
 
   // Create as a blob to be later initialized
   MultipartBlobImpl()
-      : BaseBlobImpl(EmptyString(), UINT64_MAX), mIsFromNsIFile(false) {}
+      : BaseBlobImpl(NS_LITERAL_STRING("MultipartBlobImpl"), EmptyString(),
+                     UINT64_MAX),
+        mIsFromNsIFile(false) {}
 
   void InitializeBlob(ErrorResult& aRv);
 
@@ -75,16 +79,20 @@ class MultipartBlobImpl final : public BaseBlobImpl {
   size_t GetAllocationSize(
       FallibleTArray<BlobImpl*>& aVisitedBlobImpls) const override;
 
+  void GetBlobImplType(nsAString& aBlobImplType) const override;
+
  protected:
   MultipartBlobImpl(nsTArray<RefPtr<BlobImpl>>&& aBlobImpls,
                     const nsAString& aName, const nsAString& aContentType)
-      : BaseBlobImpl(aName, aContentType, UINT64_MAX),
+      : BaseBlobImpl(NS_LITERAL_STRING("MultipartBlobImpl"), aName,
+                     aContentType, UINT64_MAX),
         mBlobImpls(std::move(aBlobImpls)),
         mIsFromNsIFile(false) {}
 
   MultipartBlobImpl(nsTArray<RefPtr<BlobImpl>>&& aBlobImpls,
                     const nsAString& aContentType)
-      : BaseBlobImpl(aContentType, UINT64_MAX),
+      : BaseBlobImpl(NS_LITERAL_STRING("MultipartBlobImpl"), aContentType,
+                     UINT64_MAX),
         mBlobImpls(std::move(aBlobImpls)),
         mIsFromNsIFile(false) {}
 

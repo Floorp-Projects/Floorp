@@ -108,6 +108,8 @@ class Blob : public nsIMutable,
 
   void GetType(nsAString& aType);
 
+  void GetBlobImplType(nsAString& aBlobImplType);
+
   already_AddRefed<Blob> Slice(const Optional<int64_t>& aStart,
                                const Optional<int64_t>& aEnd,
                                const Optional<nsAString>& aContentType,

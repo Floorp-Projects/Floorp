@@ -54,6 +54,8 @@ class BlobImpl : public nsISupports {
 
   virtual void GetType(nsAString& aType) = 0;
 
+  virtual void GetBlobImplType(nsAString& aBlobImplType) const = 0;
+
   virtual size_t GetAllocationSize() const = 0;
   virtual size_t GetAllocationSize(
       FallibleTArray<BlobImpl*>& aVisitedBlobImpls) const = 0;
