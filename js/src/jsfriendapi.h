@@ -177,7 +177,7 @@ typedef void (*JSSetUseCounterCallback)(JSObject* obj, JSUseCounter counter);
 extern JS_FRIEND_API void JS_SetSetUseCounterCallback(
     JSContext* cx, JSSetUseCounterCallback callback);
 
-extern JS_FRIEND_API JSPrincipals* JS_GetCompartmentPrincipals(
+extern JS_FRIEND_API JSPrincipals* JS_DeprecatedGetCompartmentPrincipals(
     JS::Compartment* compartment);
 
 extern JS_FRIEND_API JSPrincipals* JS_GetScriptPrincipals(JSScript* script);
@@ -1167,14 +1167,6 @@ struct SingleCompartment : public CompartmentFilter {
   JS::Compartment* ours;
   explicit SingleCompartment(JS::Compartment* c) : ours(c) {}
   virtual bool match(JS::Compartment* c) const override { return c == ours; }
-};
-
-struct CompartmentsWithPrincipals : public CompartmentFilter {
-  JSPrincipals* principals;
-  explicit CompartmentsWithPrincipals(JSPrincipals* p) : principals(p) {}
-  virtual bool match(JS::Compartment* c) const override {
-    return JS_GetCompartmentPrincipals(c) == principals;
-  }
 };
 
 extern JS_FRIEND_API bool NukeCrossCompartmentWrappers(
