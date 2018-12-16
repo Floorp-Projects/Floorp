@@ -95,7 +95,8 @@ RetainedDisplayListData* GetOrSetRetainedDisplayListData(nsIFrame* aRootFrame);
 struct RetainedDisplayListBuilder {
   RetainedDisplayListBuilder(nsIFrame* aReferenceFrame,
                              nsDisplayListBuilderMode aMode, bool aBuildCaret)
-      : mBuilder(aReferenceFrame, aMode, aBuildCaret, true) {}
+      : mBuilder(aReferenceFrame, aMode, aBuildCaret, true),
+        mCurrentSubtreeIsForEventsAndPluginsOnly(false) {}
   ~RetainedDisplayListBuilder() { mList.DeleteAll(&mBuilder); }
 
   nsDisplayListBuilder* Builder() { return &mBuilder; }
@@ -122,11 +123,20 @@ struct RetainedDisplayListBuilder {
                              AnimatedGeometryRoot* aAGR,
                              uint32_t aCallerKey = 0,
                              uint32_t aNestingDepth = 0);
+
+  /**
+   * Merges items from aNewList into non-invalidated items from aOldList and
+   * stores the result in aOutList.
+   *
+   * aOuterItem is a pointer to an item that owns one of the lists, if
+   * available. If both lists are populated, then both outer items must not be
+   * invalidated, and identical, so either can be passed here.
+   */
   bool MergeDisplayLists(
       nsDisplayList* aNewList, RetainedDisplayList* aOldList,
       RetainedDisplayList* aOutList,
       mozilla::Maybe<const mozilla::ActiveScrolledRoot*>& aOutContainerASR,
-      uint32_t aOuterKey = 0);
+      nsDisplayItem* aOuterItem = nullptr);
 
   bool ComputeRebuildRegion(nsTArray<nsIFrame*>& aModifiedFrames,
                             nsRect* aOutDirty,
@@ -145,6 +155,10 @@ struct RetainedDisplayListBuilder {
   nsDisplayListBuilder mBuilder;
   RetainedDisplayList mList;
   WeakFrame mPreviousCaret;
+
+  // True if we're currently within an opacity:0 container, and only
+  // plugin and hit test items should be considered.
+  bool mCurrentSubtreeIsForEventsAndPluginsOnly;
 };
 
 #endif  // RETAINEDDISPLAYLISTBUILDER_H_
