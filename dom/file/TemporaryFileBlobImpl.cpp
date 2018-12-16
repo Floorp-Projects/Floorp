@@ -94,6 +94,9 @@ TemporaryFileBlobImpl::TemporaryFileBlobImpl(nsIFile* aFile,
 #endif
 {
   MOZ_ASSERT(XRE_IsParentProcess());
+
+  // This must be considered a blob.
+  mIsFile = false;
 }
 
 TemporaryFileBlobImpl::~TemporaryFileBlobImpl() {

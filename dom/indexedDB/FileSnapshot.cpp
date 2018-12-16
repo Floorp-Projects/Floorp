@@ -202,6 +202,16 @@ BlobImpl* BlobImplSnapshot::GetBlobImpl() const {
   return mBlobImpl;
 }
 
+void BlobImplSnapshot::GetBlobImplType(nsAString& aBlobImplType) const {
+  aBlobImplType.AssignLiteral("BlobImplSnapshot[");
+
+  nsAutoString blobImplType;
+  mBlobImpl->GetBlobImplType(blobImplType);
+  aBlobImplType.Append(blobImplType);
+
+  aBlobImplType.AppendLiteral("]");
+}
+
 StreamWrapper::~StreamWrapper() {
   AssertIsOnOwningThread();
 
