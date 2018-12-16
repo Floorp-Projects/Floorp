@@ -806,7 +806,7 @@ void ModuleObject::init(HandleScript script) {
   initReservedSlot(ScriptSlot, PrivateGCThingValue(script));
   initReservedSlot(StatusSlot, Int32Value(MODULE_STATUS_UNINSTANTIATED));
   initReservedSlot(ScriptSourceObjectSlot,
-                   ObjectValue(script->scriptSourceUnwrap()));
+                   ObjectValue(*script->sourceObject()));
 }
 
 void ModuleObject::setInitialEnvironment(

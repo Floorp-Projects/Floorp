@@ -3740,16 +3740,16 @@ JS_PUBLIC_API void JS::SetModulePrivate(JSObject* module,
 }
 
 JS_PUBLIC_API JS::Value JS::GetModulePrivate(JSObject* module) {
-  return module->as<ModuleObject>().scriptSourceObject()->getPrivate();
+  return module->as<ModuleObject>().scriptSourceObject()->unwrappedPrivate();
 }
 
 JS_PUBLIC_API void JS::SetScriptPrivate(JSScript* script,
                                         const JS::Value& value) {
-  script->scriptSourceUnwrap().setPrivate(value);
+  script->sourceObject()->setPrivate(value);
 }
 
 JS_PUBLIC_API JS::Value JS::GetScriptPrivate(JSScript* script) {
-  return script->scriptSourceUnwrap().getPrivate();
+  return script->sourceObject()->unwrappedPrivate();
 }
 
 JS_PUBLIC_API bool JS::ModuleInstantiate(JSContext* cx,
