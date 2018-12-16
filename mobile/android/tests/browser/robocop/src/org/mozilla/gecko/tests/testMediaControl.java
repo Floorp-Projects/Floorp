@@ -15,8 +15,8 @@ public class testMediaControl extends MediaPlaybackTest {
         info("- ensure the test is running on correct Android version -");
         checkAndroidVersionForMediaControlTest();
 
-        info("- wait for gecko ready -");
-        blockForGeckoReady();
+        info("- wait for AudioFocusAgent ready -");
+        blockForAudioFocusAgentReady();
 
         info("- run test : testBasicBehaviors -");
         testBasicBehaviors();
