@@ -22,6 +22,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTargetBinding.h"
+#include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/TimelineConsumers.h"
@@ -155,8 +156,6 @@ void EventListenerManager::RemoveAllListeners() {
   mListeners.Clear();
   mClearingListeners = false;
 }
-
-void EventListenerManager::Shutdown() { Event::Shutdown(); }
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(EventListenerManager, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(EventListenerManager, Release)
@@ -1147,7 +1146,7 @@ void EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
   Maybe<nsAutoPopupStatePusher> popupStatePusher;
   if (mIsMainThreadELM) {
     popupStatePusher.emplace(
-        Event::GetEventPopupControlState(aEvent, *aDOMEvent));
+        PopupBlocker::GetEventPopupControlState(aEvent, *aDOMEvent));
   }
 
   bool hasListener = false;

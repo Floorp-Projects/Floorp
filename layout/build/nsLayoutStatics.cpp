@@ -25,7 +25,7 @@
 #include "nsCSSRendering.h"
 #include "nsGenericHTMLFrameElement.h"
 #include "mozilla/dom/Attr.h"
-#include "mozilla/EventListenerManager.h"
+#include "mozilla/dom/PopupBlocker.h"
 #include "nsFrame.h"
 #include "nsFrameState.h"
 #include "nsGlobalWindow.h"
@@ -193,6 +193,8 @@ nsresult nsLayoutStatics::Initialize() {
 #endif
   Attr::Initialize();
 
+  PopupBlocker::Initialize();
+
   rv = txMozillaXSLTProcessor::Startup();
   if (NS_FAILED(rv)) {
     NS_ERROR("Could not initialize txMozillaXSLTProcessor");
@@ -315,7 +317,7 @@ void nsLayoutStatics::Shutdown() {
   StorageObserver::Shutdown();
   txMozillaXSLTProcessor::Shutdown();
   Attr::Shutdown();
-  EventListenerManager::Shutdown();
+  PopupBlocker::Shutdown();
   IMEStateManager::Shutdown();
   nsMediaFeatures::Shutdown();
   nsHTMLDNSPrefetch::Shutdown();

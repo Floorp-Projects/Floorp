@@ -139,11 +139,7 @@ nsresult nsNPAPIPluginInstance::Stop() {
 
   // Make sure the plugin didn't leave popups enabled.
   if (mPopupStates.Length() > 0) {
-    nsCOMPtr<nsPIDOMWindowOuter> window = GetDOMWindow();
-
-    if (window) {
-      window->PopPopupControlState(openAbused);
-    }
+    PopupBlocker::PopPopupControlState(PopupBlocker::openAbused);
   }
 
   if (RUNNING != mRunning) {
@@ -774,12 +770,14 @@ nsresult nsNPAPIPluginInstance::PushPopupsEnabledState(bool aEnabled) {
   nsCOMPtr<nsPIDOMWindowOuter> window = GetDOMWindow();
   if (!window) return NS_ERROR_FAILURE;
 
-  PopupControlState oldState =
-      window->PushPopupControlState(aEnabled ? openAllowed : openAbused, true);
+  PopupBlocker::PopupControlState oldState =
+      PopupBlocker::PushPopupControlState(
+          aEnabled ? PopupBlocker::openAllowed : PopupBlocker::openAbused,
+          true);
 
   if (!mPopupStates.AppendElement(oldState)) {
     // Appending to our state stack failed, pop what we just pushed.
-    window->PopPopupControlState(oldState);
+    PopupBlocker::PopPopupControlState(oldState);
     return NS_ERROR_FAILURE;
   }
 
@@ -797,9 +795,9 @@ nsresult nsNPAPIPluginInstance::PopPopupsEnabledState() {
   nsCOMPtr<nsPIDOMWindowOuter> window = GetDOMWindow();
   if (!window) return NS_ERROR_FAILURE;
 
-  PopupControlState& oldState = mPopupStates[last];
+  PopupBlocker::PopupControlState& oldState = mPopupStates[last];
 
-  window->PopPopupControlState(oldState);
+  PopupBlocker::PopPopupControlState(oldState);
 
   mPopupStates.RemoveElementAt(last);
 
