@@ -2807,6 +2807,9 @@ class CompartmentPrivate {
   // Using it in production is inherently unsafe.
   bool forcePermissiveCOWs;
 
+  // Whether SystemIsBeingShutDown has been called on this compartment.
+  bool wasShutdown;
+
   // Whether we've emitted a warning about a property that was filtered out
   // by a security wrapper. See XrayWrapper.cpp.
   bool wrapperDenialWarnings[WrapperDenialTypeCount];
