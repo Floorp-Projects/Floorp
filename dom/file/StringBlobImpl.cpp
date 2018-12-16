@@ -21,7 +21,9 @@ NS_IMPL_ISUPPORTS_INHERITED(StringBlobImpl, BlobImpl, nsIMemoryReporter)
 
 StringBlobImpl::StringBlobImpl(const nsACString& aData,
                                const nsAString& aContentType)
-    : BaseBlobImpl(aContentType, aData.Length()), mData(aData) {}
+    : BaseBlobImpl(NS_LITERAL_STRING("StringBlobImpl"), aContentType,
+                   aData.Length()),
+      mData(aData) {}
 
 StringBlobImpl::~StringBlobImpl() { UnregisterWeakMemoryReporter(this); }
 

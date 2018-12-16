@@ -296,15 +296,19 @@ static bool FunctionForwarder(JSContext* cx, unsigned argc, Value* vp) {
     // here, because certain function wrappers (notably content->nsEP) are
     // not callable.
     JSAutoRealm ar(cx, unwrappedFun);
-    if (!CheckSameOriginArg(cx, options, thisVal) ||
-        !JS_WrapValue(cx, &thisVal)) {
-      return false;
-    }
-
-    for (size_t n = 0; n < args.length(); ++n) {
-      if (!CheckSameOriginArg(cx, options, args[n]) ||
-          !JS_WrapValue(cx, args[n])) {
+    bool crossCompartment = js::GetObjectCompartment(unwrappedFun) !=
+                            js::GetObjectCompartment(&args.callee());
+    if (crossCompartment) {
+      if (!CheckSameOriginArg(cx, options, thisVal) ||
+          !JS_WrapValue(cx, &thisVal)) {
         return false;
+      }
+
+      for (size_t n = 0; n < args.length(); ++n) {
+        if (!CheckSameOriginArg(cx, options, args[n]) ||
+            !JS_WrapValue(cx, args[n])) {
+          return false;
+        }
       }
     }
 

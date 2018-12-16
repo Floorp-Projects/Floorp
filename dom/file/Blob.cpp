@@ -147,6 +147,10 @@ uint64_t Blob::GetSize(ErrorResult& aRv) { return mImpl->GetSize(aRv); }
 
 void Blob::GetType(nsAString& aType) { mImpl->GetType(aType); }
 
+void Blob::GetBlobImplType(nsAString& aBlobImplType) {
+  mImpl->GetBlobImplType(aBlobImplType);
+}
+
 already_AddRefed<Blob> Blob::Slice(const Optional<int64_t>& aStart,
                                    const Optional<int64_t>& aEnd,
                                    const Optional<nsAString>& aContentType,

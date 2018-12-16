@@ -19,7 +19,8 @@ namespace mozilla {
 namespace dom {
 
 FileBlobImpl::FileBlobImpl(nsIFile* aFile)
-    : BaseBlobImpl(EmptyString(), EmptyString(), UINT64_MAX, INT64_MAX),
+    : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), EmptyString(),
+                   EmptyString(), UINT64_MAX, INT64_MAX),
       mFile(aFile),
       mWholeFile(true),
       mFileId(-1) {
@@ -33,7 +34,8 @@ FileBlobImpl::FileBlobImpl(nsIFile* aFile)
 FileBlobImpl::FileBlobImpl(const nsAString& aName,
                            const nsAString& aContentType, uint64_t aLength,
                            nsIFile* aFile)
-    : BaseBlobImpl(aName, aContentType, aLength, UINT64_MAX),
+    : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), aName, aContentType,
+                   aLength, UINT64_MAX),
       mFile(aFile),
       mWholeFile(true),
       mFileId(-1) {
@@ -44,7 +46,8 @@ FileBlobImpl::FileBlobImpl(const nsAString& aName,
 FileBlobImpl::FileBlobImpl(const nsAString& aName,
                            const nsAString& aContentType, uint64_t aLength,
                            nsIFile* aFile, int64_t aLastModificationDate)
-    : BaseBlobImpl(aName, aContentType, aLength, aLastModificationDate),
+    : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), aName, aContentType,
+                   aLength, aLastModificationDate),
       mFile(aFile),
       mWholeFile(true),
       mFileId(-1) {
@@ -54,7 +57,8 @@ FileBlobImpl::FileBlobImpl(const nsAString& aName,
 
 FileBlobImpl::FileBlobImpl(nsIFile* aFile, const nsAString& aName,
                            const nsAString& aContentType)
-    : BaseBlobImpl(aName, aContentType, UINT64_MAX, INT64_MAX),
+    : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), aName, aContentType,
+                   UINT64_MAX, INT64_MAX),
       mFile(aFile),
       mWholeFile(true),
       mFileId(-1) {
@@ -68,7 +72,8 @@ FileBlobImpl::FileBlobImpl(nsIFile* aFile, const nsAString& aName,
 
 FileBlobImpl::FileBlobImpl(const FileBlobImpl* aOther, uint64_t aStart,
                            uint64_t aLength, const nsAString& aContentType)
-    : BaseBlobImpl(aContentType, aOther->mStart + aStart, aLength),
+    : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), aContentType,
+                   aOther->mStart + aStart, aLength),
       mFile(aOther->mFile),
       mWholeFile(false),
       mFileId(-1) {

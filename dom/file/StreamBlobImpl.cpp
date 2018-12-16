@@ -42,7 +42,7 @@ NS_IMPL_ISUPPORTS_INHERITED(StreamBlobImpl, BlobImpl, nsIMemoryReporter)
 
 StreamBlobImpl::StreamBlobImpl(already_AddRefed<nsIInputStream> aInputStream,
                                const nsAString& aContentType, uint64_t aLength)
-    : BaseBlobImpl(aContentType, aLength),
+    : BaseBlobImpl(NS_LITERAL_STRING("StreamBlobImpl"), aContentType, aLength),
       mInputStream(std::move(aInputStream)),
       mIsDirectory(false),
       mFileId(-1) {
@@ -53,7 +53,8 @@ StreamBlobImpl::StreamBlobImpl(already_AddRefed<nsIInputStream> aInputStream,
                                const nsAString& aName,
                                const nsAString& aContentType,
                                int64_t aLastModifiedDate, uint64_t aLength)
-    : BaseBlobImpl(aName, aContentType, aLength, aLastModifiedDate),
+    : BaseBlobImpl(NS_LITERAL_STRING("StreamBlobImpl"), aName, aContentType,
+                   aLength, aLastModifiedDate),
       mInputStream(std::move(aInputStream)),
       mIsDirectory(false),
       mFileId(-1) {
