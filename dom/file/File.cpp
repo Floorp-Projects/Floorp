@@ -37,8 +37,8 @@ File::~File() {}
                                                  uint64_t aLength,
                                                  int64_t aLastModifiedDate) {
   RefPtr<File> file = new File(
-      aParent,
-      new BaseBlobImpl(aName, aContentType, aLength, aLastModifiedDate));
+      aParent, new BaseBlobImpl(NS_LITERAL_STRING("BaseBlobImpl"), aName,
+                                aContentType, aLength, aLastModifiedDate));
   return file.forget();
 }
 

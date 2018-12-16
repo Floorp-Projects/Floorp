@@ -87,6 +87,8 @@ class BlobImplSnapshot final : public BlobImpl, public PIBlobImplSnapshot {
 
   virtual void GetType(nsAString& aType) override { mBlobImpl->GetType(aType); }
 
+  virtual void GetBlobImplType(nsAString& aBlobImplType) const override;
+
   size_t GetAllocationSize() const override {
     return mBlobImpl->GetAllocationSize();
   }

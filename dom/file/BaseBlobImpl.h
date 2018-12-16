@@ -14,9 +14,11 @@ namespace dom {
 
 class BaseBlobImpl : public BlobImpl {
  public:
-  BaseBlobImpl(const nsAString& aName, const nsAString& aContentType,
-               uint64_t aLength, int64_t aLastModifiedDate)
-      : mIsFile(true),
+  BaseBlobImpl(const nsAString& aBlobImplType, const nsAString& aName,
+               const nsAString& aContentType, uint64_t aLength,
+               int64_t aLastModifiedDate)
+      : mBlobImplType(aBlobImplType),
+        mIsFile(true),
         mImmutable(false),
         mContentType(aContentType),
         mName(aName),
@@ -28,9 +30,10 @@ class BaseBlobImpl : public BlobImpl {
     mContentType.SetIsVoid(false);
   }
 
-  BaseBlobImpl(const nsAString& aName, const nsAString& aContentType,
-               uint64_t aLength)
-      : mIsFile(true),
+  BaseBlobImpl(const nsAString& aBlobImplType, const nsAString& aName,
+               const nsAString& aContentType, uint64_t aLength)
+      : mBlobImplType(aBlobImplType),
+        mIsFile(true),
         mImmutable(false),
         mContentType(aContentType),
         mName(aName),
@@ -42,8 +45,10 @@ class BaseBlobImpl : public BlobImpl {
     mContentType.SetIsVoid(false);
   }
 
-  BaseBlobImpl(const nsAString& aContentType, uint64_t aLength)
-      : mIsFile(false),
+  BaseBlobImpl(const nsAString& aBlobImplType, const nsAString& aContentType,
+               uint64_t aLength)
+      : mBlobImplType(aBlobImplType),
+        mIsFile(false),
         mImmutable(false),
         mContentType(aContentType),
         mStart(0),
@@ -54,8 +59,10 @@ class BaseBlobImpl : public BlobImpl {
     mContentType.SetIsVoid(false);
   }
 
-  BaseBlobImpl(const nsAString& aContentType, uint64_t aStart, uint64_t aLength)
-      : mIsFile(false),
+  BaseBlobImpl(const nsAString& aBlobImplType, const nsAString& aContentType,
+               uint64_t aStart, uint64_t aLength)
+      : mBlobImplType(aBlobImplType),
+        mIsFile(false),
         mImmutable(false),
         mContentType(aContentType),
         mStart(aStart),
@@ -143,6 +150,10 @@ class BaseBlobImpl : public BlobImpl {
 
   virtual bool IsSizeUnknown() const override { return mLength == UINT64_MAX; }
 
+  virtual void GetBlobImplType(nsAString& aBlobImplType) const override {
+    aBlobImplType = mBlobImplType;
+  }
+
  protected:
   virtual ~BaseBlobImpl() {}
 
@@ -152,6 +163,8 @@ class BaseBlobImpl : public BlobImpl {
    * The implementation is thread safe.
    */
   static uint64_t NextSerialNumber();
+
+  const nsString mBlobImplType;
 
   bool mIsFile;
   bool mImmutable;
