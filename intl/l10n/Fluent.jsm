@@ -16,7 +16,7 @@
  */
 
 
-/* fluent@0.10.0 */
+/* fluent@fa25466f (October 12, 2018) */
 
 /* global Intl */
 
@@ -195,7 +195,20 @@ const FSI = "\u2068";
 const PDI = "\u2069";
 
 
-// Helper: match a variant key to the given selector.
+/**
+ * Helper for matching a variant key to the given selector.
+ *
+ * Used in SelectExpressions and VariantExpressions.
+ *
+ * @param   {FluentBundle} bundle
+ *    Resolver environment object.
+ * @param   {FluentType} key
+ *    The key of the currently considered variant.
+ * @param   {FluentType} selector
+ *    The selector based om which the correct variant should be chosen.
+ * @returns {FluentType}
+ * @private
+ */
 function match(bundle, selector, key) {
   if (key === selector) {
     // Both are strings.
@@ -220,10 +233,23 @@ function match(bundle, selector, key) {
   return false;
 }
 
-// Helper: resolve the default variant from a list of variants.
-function getDefault(env, variants, star) {
-  if (variants[star]) {
-    return Type(env, variants[star]);
+/**
+ * Helper for choosing the default value from a set of members.
+ *
+ * Used in SelectExpressions and Type.
+ *
+ * @param   {Object} env
+ *    Resolver environment object.
+ * @param   {Object} members
+ *    Hash map of variants from which the default value is to be selected.
+ * @param   {Number} star
+ *    The index of the default variant.
+ * @returns {FluentType}
+ * @private
+ */
+function DefaultMember(env, members, star) {
+  if (members[star]) {
+    return members[star];
   }
 
   const { errors } = env;
@@ -231,34 +257,176 @@ function getDefault(env, variants, star) {
   return new FluentNone();
 }
 
-// Helper: resolve arguments to a call expression.
-function getArguments(env, args) {
-  const positional = [];
-  const named = {};
 
-  if (args) {
-    for (const arg of args) {
-      if (arg.type === "narg") {
-        named[arg.name] = Type(env, arg.value);
-      } else {
-        positional.push(Type(env, arg));
+/**
+ * Resolve a reference to another message.
+ *
+ * @param   {Object} env
+ *    Resolver environment object.
+ * @param   {Object} id
+ *    The identifier of the message to be resolved.
+ * @param   {String} id.name
+ *    The name of the identifier.
+ * @returns {FluentType}
+ * @private
+ */
+function MessageReference(env, {name}) {
+  const { bundle, errors } = env;
+  const message = name.startsWith("-")
+    ? bundle._terms.get(name)
+    : bundle._messages.get(name);
+
+  if (!message) {
+    const err = name.startsWith("-")
+      ? new ReferenceError(`Unknown term: ${name}`)
+      : new ReferenceError(`Unknown message: ${name}`);
+    errors.push(err);
+    return new FluentNone(name);
+  }
+
+  return message;
+}
+
+/**
+ * Resolve a variant expression to the variant object.
+ *
+ * @param   {Object} env
+ *    Resolver environment object.
+ * @param   {Object} expr
+ *    An expression to be resolved.
+ * @param   {Object} expr.ref
+ *    An Identifier of a message for which the variant is resolved.
+ * @param   {Object} expr.id.name
+ *    Name a message for which the variant is resolved.
+ * @param   {Object} expr.key
+ *    Variant key to be resolved.
+ * @returns {FluentType}
+ * @private
+ */
+function VariantExpression(env, {ref, selector}) {
+  const message = MessageReference(env, ref);
+  if (message instanceof FluentNone) {
+    return message;
+  }
+
+  const { bundle, errors } = env;
+  const sel = Type(env, selector);
+  const value = message.value || message;
+
+  function isVariantList(node) {
+    return Array.isArray(node) &&
+      node[0].type === "select" &&
+      node[0].selector === null;
+  }
+
+  if (isVariantList(value)) {
+    // Match the specified key against keys of each variant, in order.
+    for (const variant of value[0].variants) {
+      const key = Type(env, variant.key);
+      if (match(env.bundle, sel, key)) {
+        return variant;
       }
     }
   }
 
-  return [positional, named];
+  errors.push(
+    new ReferenceError(`Unknown variant: ${sel.toString(bundle)}`));
+  return Type(env, message);
 }
 
-// Resolve an expression to a Fluent type.
+
+/**
+ * Resolve an attribute expression to the attribute object.
+ *
+ * @param   {Object} env
+ *    Resolver environment object.
+ * @param   {Object} expr
+ *    An expression to be resolved.
+ * @param   {String} expr.ref
+ *    An ID of a message for which the attribute is resolved.
+ * @param   {String} expr.name
+ *    Name of the attribute to be resolved.
+ * @returns {FluentType}
+ * @private
+ */
+function AttributeExpression(env, {ref, name}) {
+  const message = MessageReference(env, ref);
+  if (message instanceof FluentNone) {
+    return message;
+  }
+
+  if (message.attrs) {
+    // Match the specified name against keys of each attribute.
+    for (const attrName in message.attrs) {
+      if (name === attrName) {
+        return message.attrs[name];
+      }
+    }
+  }
+
+  const { errors } = env;
+  errors.push(new ReferenceError(`Unknown attribute: ${name}`));
+  return Type(env, message);
+}
+
+/**
+ * Resolve a select expression to the member object.
+ *
+ * @param   {Object} env
+ *    Resolver environment object.
+ * @param   {Object} expr
+ *    An expression to be resolved.
+ * @param   {String} expr.selector
+ *    Selector expression
+ * @param   {Array} expr.variants
+ *    List of variants for the select expression.
+ * @param   {Number} expr.star
+ *    Index of the default variant.
+ * @returns {FluentType}
+ * @private
+ */
+function SelectExpression(env, {selector, variants, star}) {
+  if (selector === null) {
+    return DefaultMember(env, variants, star);
+  }
+
+  let sel = Type(env, selector);
+  if (sel instanceof FluentNone) {
+    return DefaultMember(env, variants, star);
+  }
+
+  // Match the selector against keys of each variant, in order.
+  for (const variant of variants) {
+    const key = Type(env, variant.key);
+    if (match(env.bundle, sel, key)) {
+      return variant;
+    }
+  }
+
+  return DefaultMember(env, variants, star);
+}
+
+
+/**
+ * Resolve expression to a Fluent type.
+ *
+ * JavaScript strings are a special case.  Since they natively have the
+ * `toString` method they can be used as if they were a Fluent type without
+ * paying the cost of creating a instance of one.
+ *
+ * @param   {Object} env
+ *    Resolver environment object.
+ * @param   {Object} expr
+ *    An expression object to be resolved into a Fluent type.
+ * @returns {FluentType}
+ * @private
+ */
 function Type(env, expr) {
-  // A fast-path for strings which are the most common case. Since they
-  // natively have the `toString` method they can be used as if they were
-  // a FluentType instance without incurring the cost of creating one.
+  // A fast-path for strings which are the most common case, and for
+  // `FluentNone` which doesn't require any additional logic.
   if (typeof expr === "string") {
     return env.bundle._transform(expr);
   }
-
-  // A fast-path for `FluentNone` which doesn't require any additional logic.
   if (expr instanceof FluentNone) {
     return expr;
   }
@@ -269,21 +437,32 @@ function Type(env, expr) {
     return Pattern(env, expr);
   }
 
+
   switch (expr.type) {
-    case "str":
-      return expr.value;
     case "num":
       return new FluentNumber(expr.value);
     case "var":
       return VariableReference(env, expr);
-    case "term":
-      return TermReference({...env, args: {}}, expr);
-    case "ref":
-      return expr.args
-        ? FunctionReference(env, expr)
-        : MessageReference(env, expr);
-    case "select":
-      return SelectExpression(env, expr);
+    case "func":
+      return FunctionReference(env, expr);
+    case "call":
+      return CallExpression(env, expr);
+    case "ref": {
+      const message = MessageReference(env, expr);
+      return Type(env, message);
+    }
+    case "getattr": {
+      const attr = AttributeExpression(env, expr);
+      return Type(env, attr);
+    }
+    case "getvar": {
+      const variant = VariantExpression(env, expr);
+      return Type(env, variant);
+    }
+    case "select": {
+      const member = SelectExpression(env, expr);
+      return Type(env, member);
+    }
     case undefined: {
       // If it's a node with a value, resolve the value.
       if (expr.value !== null && expr.value !== undefined) {
@@ -299,13 +478,24 @@ function Type(env, expr) {
   }
 }
 
-// Resolve a reference to a variable.
+/**
+ * Resolve a reference to a variable.
+ *
+ * @param   {Object} env
+ *    Resolver environment object.
+ * @param   {Object} expr
+ *    An expression to be resolved.
+ * @param   {String} expr.name
+ *    Name of an argument to be returned.
+ * @returns {FluentType}
+ * @private
+ */
 function VariableReference(env, {name}) {
   const { args, errors } = env;
 
   if (!args || !args.hasOwnProperty(name)) {
     errors.push(new ReferenceError(`Unknown variable: ${name}`));
-    return new FluentNone(`$${name}`);
+    return new FluentNone(name);
   }
 
   const arg = args[name];
@@ -329,80 +519,26 @@ function VariableReference(env, {name}) {
       errors.push(
         new TypeError(`Unsupported variable type: ${name}, ${typeof arg}`)
       );
-      return new FluentNone(`$${name}`);
+      return new FluentNone(name);
   }
 }
 
-// Resolve a reference to another message.
-function MessageReference(env, {name, attr}) {
-  const {bundle, errors} = env;
-  const message = bundle._messages.get(name);
-  if (!message) {
-    const err = new ReferenceError(`Unknown message: ${name}`);
-    errors.push(err);
-    return new FluentNone(name);
-  }
-
-  if (attr) {
-    const attribute = message.attrs && message.attrs[attr];
-    if (attribute) {
-      return Type(env, attribute);
-    }
-    errors.push(new ReferenceError(`Unknown attribute: ${attr}`));
-    return Type(env, message);
-  }
-
-  return Type(env, message);
-}
-
-// Resolve a call to a Term with key-value arguments.
-function TermReference(env, {name, attr, selector, args}) {
-  const {bundle, errors} = env;
-
-  const id = `-${name}`;
-  const term = bundle._terms.get(id);
-  if (!term) {
-    const err = new ReferenceError(`Unknown term: ${id}`);
-    errors.push(err);
-    return new FluentNone(id);
-  }
-
-  // Every TermReference has its own args.
-  const [, keyargs] = getArguments(env, args);
-  const local = {...env, args: keyargs};
-
-  if (attr) {
-    const attribute = term.attrs && term.attrs[attr];
-    if (attribute) {
-      return Type(local, attribute);
-    }
-    errors.push(new ReferenceError(`Unknown attribute: ${attr}`));
-    return Type(local, term);
-  }
-
-  const variantList = getVariantList(term);
-  if (selector && variantList) {
-    return SelectExpression(local, {...variantList, selector});
-  }
-
-  return Type(local, term);
-}
-
-// Helper: convert a value into a variant list, if possible.
-function getVariantList(term) {
-  const value = term.value || term;
-  return Array.isArray(value)
-    && value[0].type === "select"
-    && value[0].selector === null
-    ? value[0]
-    : null;
-}
-
-// Resolve a call to a Function with positional and key-value arguments.
-function FunctionReference(env, {name, args}) {
-  // Some functions are built-in. Others may be provided by the runtime via
+/**
+ * Resolve a reference to a function.
+ *
+ * @param   {Object}  env
+ *    Resolver environment object.
+ * @param   {Object} expr
+ *    An expression to be resolved.
+ * @param   {String} expr.name
+ *    Name of the function to be returned.
+ * @returns {Function}
+ * @private
+ */
+function FunctionReference(env, {name}) {
+  // Some functions are built-in.  Others may be provided by the runtime via
   // the `FluentBundle` constructor.
-  const {bundle: {_functions}, errors} = env;
+  const { bundle: { _functions }, errors } = env;
   const func = _functions[name] || builtins[name];
 
   if (!func) {
@@ -415,39 +551,59 @@ function FunctionReference(env, {name, args}) {
     return new FluentNone(`${name}()`);
   }
 
+  return func;
+}
+
+/**
+ * Resolve a call to a Function with positional and key-value arguments.
+ *
+ * @param   {Object} env
+ *    Resolver environment object.
+ * @param   {Object} expr
+ *    An expression to be resolved.
+ * @param   {Object} expr.callee
+ *    FTL Function object.
+ * @param   {Array} expr.args
+ *    FTL Function argument list.
+ * @returns {FluentType}
+ * @private
+ */
+function CallExpression(env, {callee, args}) {
+  const func = FunctionReference(env, callee);
+
+  if (func instanceof FluentNone) {
+    return func;
+  }
+
+  const posargs = [];
+  const keyargs = {};
+
+  for (const arg of args) {
+    if (arg.type === "narg") {
+      keyargs[arg.name] = Type(env, arg.value);
+    } else {
+      posargs.push(Type(env, arg));
+    }
+  }
+
   try {
-    return func(...getArguments(env, args));
+    return func(posargs, keyargs);
   } catch (e) {
     // XXX Report errors.
     return new FluentNone();
   }
 }
 
-// Resolve a select expression to the member object.
-function SelectExpression(env, {selector, variants, star}) {
-  if (selector === null) {
-    return getDefault(env, variants, star);
-  }
-
-  let sel = Type(env, selector);
-  if (sel instanceof FluentNone) {
-    const variant = getDefault(env, variants, star);
-    return Type(env, variant);
-  }
-
-  // Match the selector against keys of each variant, in order.
-  for (const variant of variants) {
-    const key = Type(env, variant.key);
-    if (match(env.bundle, sel, key)) {
-      return Type(env, variant);
-    }
-  }
-
-  const variant = getDefault(env, variants, star);
-  return Type(env, variant);
-}
-
-// Resolve a pattern (a complex string with placeables).
+/**
+ * Resolve a pattern (a complex string with placeables).
+ *
+ * @param   {Object} env
+ *    Resolver environment object.
+ * @param   {Array} ptn
+ *    Array of pattern elements.
+ * @returns {Array}
+ * @private
+ */
 function Pattern(env, ptn) {
   const { bundle, dirty, errors } = env;
 
@@ -523,44 +679,45 @@ class FluentError extends Error {}
 
 // This regex is used to iterate through the beginnings of messages and terms.
 // With the /m flag, the ^ matches at the beginning of every line.
-const RE_MESSAGE_START = /^(-?[a-zA-Z][\w-]*) *= */mg;
+const RE_MESSAGE_START = /^(-?[a-zA-Z][a-zA-Z0-9_-]*) *= */mg;
 
 // Both Attributes and Variants are parsed in while loops. These regexes are
 // used to break out of them.
-const RE_ATTRIBUTE_START = /\.([a-zA-Z][\w-]*) *= */y;
-const RE_VARIANT_START = /\*?\[/y;
+const RE_ATTRIBUTE_START = /\.([a-zA-Z][a-zA-Z0-9_-]*) *= */y;
+// [^] matches all characters, including newlines.
+// XXX Use /s (dotall) when it's widely supported.
+const RE_VARIANT_START = /\*?\[[^]*?] */y;
 
+const RE_IDENTIFIER = /(-?[a-zA-Z][a-zA-Z0-9_-]*)/y;
 const RE_NUMBER_LITERAL = /(-?[0-9]+(\.[0-9]+)?)/y;
-const RE_IDENTIFIER = /([a-zA-Z][\w-]*)/y;
-const RE_REFERENCE = /([$-])?([a-zA-Z][\w-]*)(?:\.([a-zA-Z][\w-]*))?/y;
 
 // A "run" is a sequence of text or string literal characters which don't
-// require any special handling. For TextElements such special characters are: {
-// (starts a placeable), and line breaks which require additional logic to check
-// if the next line is indented. For StringLiterals they are: \ (starts an
-// escape sequence), " (ends the literal), and line breaks which are not allowed
-// in StringLiterals. Note that string runs may be empty; text runs may not.
-const RE_TEXT_RUN = /([^{}\n\r]+)/y;
+// require any special handling. For TextElements such special characters are:
+// { (starts a placeable), \ (starts an escape sequence), and line breaks which
+// require additional logic to check if the next line is indented. For
+// StringLiterals they are: \ (starts an escape sequence), " (ends the
+// literal), and line breaks which are not allowed in StringLiterals. Also note
+// that string runs may be empty, but text runs may not.
+const RE_TEXT_RUN = /([^\\{\n\r]+)/y;
 const RE_STRING_RUN = /([^\\"\n\r]*)/y;
 
 // Escape sequences.
+const RE_UNICODE_ESCAPE = /\\u([a-fA-F0-9]{4})/y;
 const RE_STRING_ESCAPE = /\\([\\"])/y;
-const RE_UNICODE_ESCAPE = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{6})/y;
+const RE_TEXT_ESCAPE = /\\([\\{])/y;
 
-// Used for trimming TextElements and indents.
-const RE_LEADING_NEWLINES = /^\n+/;
-const RE_TRAILING_SPACES = / +$/;
-// Used in makeIndent to strip spaces from blank lines and normalize CRLF to LF.
-const RE_BLANK_LINES = / *\r?\n/g;
-// Used in makeIndent to measure the indentation.
-const RE_INDENT = /( *)$/;
+// Used for trimming TextElements and indents. With the /m flag, the $ matches
+// the end of every line.
+const RE_TRAILING_SPACES = / +$/mg;
+// CRLFs are normalized to LF.
+const RE_CRLF = /\r\n/g;
 
 // Common tokens.
 const TOKEN_BRACE_OPEN = /{\s*/y;
 const TOKEN_BRACE_CLOSE = /\s*}/y;
 const TOKEN_BRACKET_OPEN = /\[\s*/y;
-const TOKEN_BRACKET_CLOSE = /\s*] */y;
-const TOKEN_PAREN_OPEN = /\s*\(\s*/y;
+const TOKEN_BRACKET_CLOSE = /\s*]/y;
+const TOKEN_PAREN_OPEN = /\(\s*/y;
 const TOKEN_ARROW = /\s*->\s*/y;
 const TOKEN_COLON = /\s*:\s*/y;
 // Note the optional comma. As a deviation from the Fluent EBNF, the parser
@@ -654,7 +811,7 @@ class FluentResource extends Map {
       return false;
     }
 
-    // Execute a regex, advance the cursor, and return all capture groups.
+    // Execute a regex, advance the cursor, and return the capture group.
     function match(re) {
       re.lastIndex = cursor;
       let result = re.exec(source);
@@ -662,12 +819,7 @@ class FluentResource extends Map {
         throw new FluentError(`Expected ${re.toString()}`);
       }
       cursor = re.lastIndex;
-      return result;
-    }
-
-    // Execute a regex, advance the cursor, and return the capture group.
-    function match1(re) {
-      return match(re)[1];
+      return result[1];
     }
 
     function parseMessage() {
@@ -675,9 +827,6 @@ class FluentResource extends Map {
       let attrs = parseAttributes();
 
       if (attrs === null) {
-        if (value === null) {
-          throw new FluentError("Expected message value or attributes");
-        }
         return value;
       }
 
@@ -686,62 +835,67 @@ class FluentResource extends Map {
 
     function parseAttributes() {
       let attrs = {};
+      let hasAttributes = false;
 
       while (test(RE_ATTRIBUTE_START)) {
-        let name = match1(RE_ATTRIBUTE_START);
-        let value = parsePattern();
-        if (value === null) {
-          throw new FluentError("Expected attribute value");
+        if (!hasAttributes) {
+          hasAttributes = true;
         }
-        attrs[name] = value;
+
+        let name = match(RE_ATTRIBUTE_START);
+        attrs[name] = parsePattern();
       }
 
-      return Object.keys(attrs).length > 0 ? attrs : null;
+      return hasAttributes ? attrs : null;
     }
 
     function parsePattern() {
       // First try to parse any simple text on the same line as the id.
       if (test(RE_TEXT_RUN)) {
-        var first = match1(RE_TEXT_RUN);
+        var first = match(RE_TEXT_RUN);
       }
 
-      // If there's a placeable on the first line, parse a complex pattern.
-      if (source[cursor] === "{" || source[cursor] === "}") {
-        // Re-use the text parsed above, if possible.
-        return parsePatternElements(first ? [first] : [], Infinity);
+      // If there's a backslash escape or a placeable on the first line, fall
+      // back to parsing a complex pattern.
+      switch (source[cursor]) {
+        case "{":
+        case "\\":
+          return first
+            // Re-use the text parsed above, if possible.
+            ? parsePatternElements(first)
+            : parsePatternElements();
       }
 
       // RE_TEXT_VALUE stops at newlines. Only continue parsing the pattern if
       // what comes after the newline is indented.
       let indent = parseIndent();
       if (indent) {
-        if (first) {
+        return first
           // If there's text on the first line, the blank block is part of the
-          // translation content in its entirety.
-          return parsePatternElements([first, indent], indent.length);
-        }
-        // Otherwise, we're dealing with a block pattern, i.e. a pattern which
-        // starts on a new line. Discrad the leading newlines but keep the
-        // inline indent; it will be used by the dedentation logic.
-        indent.value = trim(indent.value, RE_LEADING_NEWLINES);
-        return parsePatternElements([indent], indent.length);
+          // translation content.
+          ? parsePatternElements(first, trim(indent))
+          // Otherwise, we're dealing with a block pattern. The blank block is
+          // the leading whitespace; discard it.
+          : parsePatternElements();
       }
 
       if (first) {
         // It was just a simple inline text after all.
-        return trim(first, RE_TRAILING_SPACES);
+        return trim(first);
       }
 
       return null;
     }
 
     // Parse a complex pattern as an array of elements.
-    function parsePatternElements(elements = [], commonIndent) {
+    function parsePatternElements(...elements) {
       let placeableCount = 0;
+      let needsTrimming = false;
 
       while (true) {
         if (test(RE_TEXT_RUN)) {
-          elements.push(match1(RE_TEXT_RUN));
+          elements.push(match(RE_TEXT_RUN));
+          needsTrimming = true;
           continue;
         }
 
@@ -750,43 +904,35 @@ class FluentResource extends Map {
             throw new FluentError("Too many placeables");
           }
           elements.push(parsePlaceable());
+          needsTrimming = false;
           continue;
-        }
-
-        if (source[cursor] === "}") {
-          throw new FluentError("Unbalanced closing brace");
         }
 
         let indent = parseIndent();
         if (indent) {
-          elements.push(indent);
-          commonIndent = Math.min(commonIndent, indent.length);
+          elements.push(trim(indent));
+          needsTrimming = false;
+          continue;
+        }
+
+        if (source[cursor] === "\\") {
+          elements.push(parseEscapeSequence(RE_TEXT_ESCAPE));
+          needsTrimming = false;
           continue;
         }
 
         break;
       }
 
-      let lastIndex = elements.length - 1;
-      // Trim the trailing spaces in the last element if it's a TextElement.
-      if (typeof elements[lastIndex] === "string") {
-        elements[lastIndex] = trim(elements[lastIndex], RE_TRAILING_SPACES);
+      if (needsTrimming) {
+        // Trim the trailing whitespace of the last element if it's a
+        // TextElement. Use a flag rather than a typeof check to tell
+        // TextElements and StringLiterals apart (both are strings).
+        let lastIndex = elements.length - 1;
+        elements[lastIndex] = trim(elements[lastIndex]);
       }
 
-      let baked = [];
-      for (let element of elements) {
-        if (element.type === "indent") {
-          // Dedent indented lines by the maximum common indent.
-          element = element.value.slice(0, element.value.length - commonIndent);
-        } else if (element.type === "str") {
-          // Optimize StringLiterals into their value.
-          element = element.value;
-        }
-        if (element) {
-          baked.push(element);
-        }
-      }
-      return baked;
+      return elements;
     }
 
     function parsePlaceable() {
@@ -819,20 +965,28 @@ class FluentResource extends Map {
         return parsePlaceable();
       }
 
-      if (test(RE_REFERENCE)) {
-        let [, sigil, name, attr = null] = match(RE_REFERENCE);
-        let type = {"$": "var", "-": "term"}[sigil] || "ref";
+      if (consumeChar("$")) {
+        return {type: "var", name: match(RE_IDENTIFIER)};
+      }
+
+      if (test(RE_IDENTIFIER)) {
+        let ref = {type: "ref", name: match(RE_IDENTIFIER)};
+
+        if (consumeChar(".")) {
+          let name = match(RE_IDENTIFIER);
+          return {type: "getattr", ref, name};
+        }
 
         if (source[cursor] === "[") {
-          // DEPRECATED VariantExpressions will be removed before 1.0.
-          return {type, name, selector: parseVariantKey()};
+          return {type: "getvar", ref, selector: parseVariantKey()};
         }
 
         if (consumeToken(TOKEN_PAREN_OPEN)) {
-          return {type, name, attr, args: parseArguments()};
+          let callee = {...ref, type: "func"};
+          return {type: "call", callee, args: parseArguments()};
         }
 
-        return {type, name, attr, args: null};
+        return ref;
       }
 
       return parseLiteral();
@@ -881,29 +1035,18 @@ class FluentResource extends Map {
         }
 
         let key = parseVariantKey();
-        let value = parsePattern();
-        if (value === null) {
-          throw new FluentError("Expected variant value");
-        }
-        variants[count++] = {key, value};
+        cursor = RE_VARIANT_START.lastIndex;
+        variants[count++] = {key, value: parsePattern()};
       }
 
-      if (count === 0) {
-        return null;
-      }
-
-      if (star === undefined) {
-        throw new FluentError("Expected default variant");
-      }
-
-      return {variants, star};
+      return count > 0 ? {variants, star} : null;
     }
 
     function parseVariantKey() {
       consumeToken(TOKEN_BRACKET_OPEN, FluentError);
       let key = test(RE_NUMBER_LITERAL)
         ? parseNumberLiteral()
-        : match1(RE_IDENTIFIER);
+        : match(RE_IDENTIFIER);
       consumeToken(TOKEN_BRACKET_CLOSE, FluentError);
       return key;
     }
@@ -921,22 +1064,22 @@ class FluentResource extends Map {
     }
 
     function parseNumberLiteral() {
-      return {type: "num", value: match1(RE_NUMBER_LITERAL)};
+      return {type: "num", value: match(RE_NUMBER_LITERAL)};
     }
 
     function parseStringLiteral() {
       consumeChar("\"", FluentError);
       let value = "";
       while (true) {
-        value += match1(RE_STRING_RUN);
+        value += match(RE_STRING_RUN);
 
         if (source[cursor] === "\\") {
-          value += parseEscapeSequence();
+          value += parseEscapeSequence(RE_STRING_ESCAPE);
           continue;
         }
 
         if (consumeChar("\"")) {
-          return {type: "str", value};
+          return value;
         }
 
         // We've reached an EOL of EOF.
@@ -945,20 +1088,14 @@ class FluentResource extends Map {
     }
 
     // Unescape known escape sequences.
-    function parseEscapeSequence() {
-      if (test(RE_STRING_ESCAPE)) {
-        return match1(RE_STRING_ESCAPE);
+    function parseEscapeSequence(reSpecialized) {
+      if (test(RE_UNICODE_ESCAPE)) {
+        let sequence = match(RE_UNICODE_ESCAPE);
+        return String.fromCodePoint(parseInt(sequence, 16));
       }
 
-      if (test(RE_UNICODE_ESCAPE)) {
-        let [, codepoint4, codepoint6] = match(RE_UNICODE_ESCAPE);
-        let codepoint = parseInt(codepoint4 || codepoint6, 16);
-        return codepoint <= 0xD7FF || 0xE000 <= codepoint
-          // It's a Unicode scalar value.
-          ? String.fromCodePoint(codepoint)
-          // Lonely surrogates can cause trouble when the parsing result is
-          // saved using UTF-8. Use U+FFFD REPLACEMENT CHARACTER instead.
-          : "�";
+      if (test(reSpecialized)) {
+        return match(reSpecialized);
       }
 
       throw new FluentError("Unknown escape sequence");
@@ -982,7 +1119,7 @@ class FluentResource extends Map {
         case "{":
           // Placeables don't require indentation (in EBNF: block-placeable).
           // Continue the Pattern.
-          return makeIndent(source.slice(start, cursor));
+          return source.slice(start, cursor).replace(RE_CRLF, "\n");
       }
 
       // If the first character on the line is not one of the special characters
@@ -991,7 +1128,7 @@ class FluentResource extends Map {
       if (source[cursor - 1] === " ") {
         // It's an indented text character (in EBNF: indented-char). Continue
         // the Pattern.
-        return makeIndent(source.slice(start, cursor));
+        return source.slice(start, cursor).replace(RE_CRLF, "\n");
       }
 
       // A not-indented text character is likely the identifier of the next
@@ -999,16 +1136,9 @@ class FluentResource extends Map {
       return false;
     }
 
-    // Trim blanks in text according to the given regex.
-    function trim(text, re) {
-      return text.replace(re, "");
-    }
-
-    // Normalize a blank block and extract the indent details.
-    function makeIndent(blank) {
-      let value = blank.replace(RE_BLANK_LINES, "\n");
-      let length = RE_INDENT.exec(blank)[1].length;
-      return {type: "indent", value, length};
+    // Trim spaces trailing on every line of text.
+    function trim(text) {
+      return text.replace(RE_TRAILING_SPACES, "");
     }
   }
 }
