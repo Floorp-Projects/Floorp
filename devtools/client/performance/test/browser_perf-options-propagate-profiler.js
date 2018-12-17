@@ -22,7 +22,8 @@ add_task(async function() {
   Services.prefs.setIntPref(PROFILER_SAMPLE_RATE_PREF, 2000);
 
   await startRecording(panel);
-  const { entries, interval } = await toolbox.performance.getConfiguration();
+  const performanceFront = await toolbox.target.getFront("performance");
+  const { entries, interval } = await performanceFront.getConfiguration();
   await stopRecording(panel);
 
   is(entries, 1000, "profiler entries option is set on profiler");
