@@ -8310,7 +8310,9 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
     FireOnLocationChange(this, failedChannel, failedURI,
                          LOCATION_CHANGE_ERROR_PAGE);
   } else if (onLocationChangeNeeded) {
-    FireOnLocationChange(this, aRequest, mCurrentURI, 0);
+    uint32_t locationFlags =
+        (mLoadType & LOAD_CMD_RELOAD) ? uint32_t(LOCATION_CHANGE_RELOAD) : 0;
+    FireOnLocationChange(this, aRequest, mCurrentURI, locationFlags);
   }
 
   return NS_OK;

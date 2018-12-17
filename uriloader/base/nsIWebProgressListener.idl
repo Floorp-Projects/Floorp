@@ -412,9 +412,14 @@ interface nsIWebProgressListener : nsISupports
    *
    *   |aWebProgress| does NOT set this flag when it did not try to load a new
    *   document. In this case, it should set LOCATION_CHANGE_SAME_DOCUMENT.
+   *
+   * LOCATION_CHANGE_RELOAD
+   *   This flag is on when reloading the current page, either from
+   *   location.reload() or the browser UI.
    */
   const unsigned long LOCATION_CHANGE_SAME_DOCUMENT   = 0x00000001;
   const unsigned long LOCATION_CHANGE_ERROR_PAGE      = 0x00000002;
+  const unsigned long LOCATION_CHANGE_RELOAD          = 0x00000004;
 
   /**
    * Called when the location of the window being watched changes.  This is not
