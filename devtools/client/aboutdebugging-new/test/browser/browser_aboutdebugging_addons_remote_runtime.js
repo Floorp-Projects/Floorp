@@ -78,7 +78,7 @@ async function testAddonsOnMockedRemoteClient(remoteClient, firefoxClient, docum
   // when the new tab was processed.
   info("Wait until the tab target for 'http://some.random/url.com' appears");
   const testTab = { outerWindowID: 0, url: "http://some.random/url.com" };
-  remoteClient.listTabs = () => ({ tabs: [testTab] });
+  remoteClient.listTabs = () => [testTab];
   remoteClient._eventEmitter.emit("tabListChanged");
   await waitUntil(() => findDebugTargetByText("http://some.random/url.com", document));
 

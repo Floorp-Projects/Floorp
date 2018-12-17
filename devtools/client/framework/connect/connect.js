@@ -103,9 +103,9 @@ var onConnectionReady = async function([aType, aTraits]) {
   parent = document.getElementById("tabTargetActors");
 
   // Add one entry for each open tab.
-  const response = await gClient.mainRoot.listTabs();
-  for (let i = 0; i < response.tabs.length; i++) {
-    buildTabLink(response.tabs[i], parent, i == response.selected);
+  const tabs = await gClient.mainRoot.listTabs();
+  for (let i = 0; i < tabs.length; i++) {
+    buildTabLink(tabs[i], parent);
   }
 
   const gParent = document.getElementById("globalActors");
@@ -166,7 +166,7 @@ function buildAddonLink(addon, parent) {
 /**
  * Build one button for a tab.
  */
-function buildTabLink(tab, parent, selected) {
+function buildTabLink(tab, parent) {
   const a = document.createElement("a");
   a.onclick = function() {
     openToolbox(tab);
@@ -179,7 +179,7 @@ function buildTabLink(tab, parent, selected) {
   }
   a.href = "#";
 
-  if (selected) {
+  if (tab.selected) {
     a.classList.add("selected");
   }
 

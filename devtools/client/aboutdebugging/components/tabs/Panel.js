@@ -52,10 +52,7 @@ class TabsPanel extends Component {
   }
 
   async update() {
-    let { tabs } = await this.props.client.mainRoot.listTabs({ favicons: true });
-
-    // Filter out closed tabs (represented as `null`).
-    tabs = tabs.filter(tab => !!tab);
+    const tabs = await this.props.client.mainRoot.listTabs({ favicons: true });
 
     for (const tab of tabs) {
       if (tab.favicon) {

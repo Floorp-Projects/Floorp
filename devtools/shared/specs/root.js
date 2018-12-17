@@ -17,6 +17,10 @@ types.addDictType("root.listServiceWorkerRegistrations", {
 types.addDictType("root.listProcesses", {
   processes: "array:json",
 });
+types.addDictType("root.listTabs", {
+  tabs: "array:browsingContextTarget",
+  selected: "number",
+});
 
 const rootSpecPrototype = {
   typeName: "root",
@@ -31,7 +35,7 @@ const rootSpecPrototype = {
       request: {
         favicons: Option(0, "boolean"),
       },
-      response: RetVal("json"),
+      response: RetVal("root.listTabs"),
     },
 
     getTab: {
