@@ -140,7 +140,7 @@ function requestTabs() {
     const clientWrapper = getCurrentClient(getState().runtimes);
 
     try {
-      const { tabs } = await clientWrapper.listTabs({ favicons: true });
+      const tabs = await clientWrapper.listTabs({ favicons: true });
 
       dispatch({ type: REQUEST_TABS_SUCCESS, tabs });
     } catch (e) {

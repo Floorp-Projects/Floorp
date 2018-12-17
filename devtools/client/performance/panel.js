@@ -37,7 +37,7 @@ PerformancePanel.prototype = {
     // the same front, and the toolbox will also initialize the front,
     // but redo it here so we can hook into the same event to prevent race conditions
     // in the case of the front still being in the process of opening.
-    const front = await this.panelWin.gToolbox.initPerformance();
+    const front = await this.target.getFront("performance");
 
     // This should only happen if this is completely unsupported (when profiler
     // does not exist), and in that case, the tool shouldn't be available,

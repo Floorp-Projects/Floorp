@@ -13,7 +13,7 @@ function run_test() {
 }
 
 function connectClient(client) {
-  return client.connect(() => client.listTabs());
+  return client.connect();
 }
 
 add_task(async function() {

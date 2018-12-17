@@ -11,7 +11,6 @@
 add_task(async function() {
   const target = await addTabTarget(MAIN_DOMAIN + "doc_perf.html");
   const front = await target.getFront("performance");
-  await front.connect();
 
   const rec = await front.startRecording(
     { withMarkers: true, withTicks: true, withMemory: true });
@@ -64,7 +63,6 @@ add_task(async function() {
   checkSystemInfo(importedModel, "Host");
   checkSystemInfo(importedModel, "Client");
 
-  await front.destroy();
   await target.destroy();
   gBrowser.removeCurrentTab();
 });

@@ -20,12 +20,35 @@ class BrowsingContextTargetFront extends FrontClassWithSpec(browsingContextTarge
       javascriptEnabled: null,
     };
 
+    // RootFront.listTabs is going to update this state via `setIsSelected`  method
+    this._selected = false;
+
     // TODO: remove once ThreadClient becomes a front
     this.client = client;
+  }
 
-    // Save the full form for Target class usage
+  form(json) {
+    this.actorID = json.actor;
+
+    // Save the full form for Target class usage.
     // Do not use `form` name to avoid colliding with protocol.js's `form` method
-    this.targetForm = form;
+    this.targetForm = json;
+
+    this.outerWindowID = json.outerWindowID;
+    this.favicon = json.favicon;
+    this.title = json.title;
+    this.url = json.url;
+  }
+
+  // Reports if the related tab is selected. Only applies to BrowsingContextTarget
+  // issued from RootFront.listTabs.
+  get selected() {
+    return this._selected;
+  }
+
+  // This is called by RootFront.listTabs, to update the currently selected tab.
+  setIsSelected(selected) {
+    this._selected = selected;
   }
 
   /**

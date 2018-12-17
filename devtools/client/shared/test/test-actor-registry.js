@@ -41,8 +41,8 @@
   // Ensure fetching a live target actor form
   // (helps fetching the test actor registered dynamically)
   const getUpdatedForm = function(client, tab) {
-    return client.getTab({tab: tab})
-                 .then(response => response.tab);
+    return client.mainRoot.getTab({tab: tab})
+                 .then(front => front.targetForm);
   };
 
   // Spawn an instance of the test actor for the given toolbox

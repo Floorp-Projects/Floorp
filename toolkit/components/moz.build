@@ -40,7 +40,6 @@ DIRS += [
     'jsoncpp/src/lib_json',
     'lz4',
     'mediasniffer',
-    'microformats',
     'mozintl',
     'mozprotocol',
     'osfile',

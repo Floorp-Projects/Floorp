@@ -24,7 +24,8 @@ add_task(async function() {
   Services.prefs.setIntPref(MEMORY_MAX_LOG_LEN_PREF, 777777);
 
   await startRecording(panel);
-  const { probability, maxLogLength } = await toolbox.performance.getConfiguration();
+  const performanceFront = await toolbox.target.getFront("performance");
+  const { probability, maxLogLength } = await performanceFront.getConfiguration();
   await stopRecording(panel);
 
   is(probability, 0.213,

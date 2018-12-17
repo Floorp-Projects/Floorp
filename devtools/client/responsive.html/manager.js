@@ -472,8 +472,8 @@ ResponsiveUI.prototype = {
     DebuggerServer.registerAllActors();
     this.client = new DebuggerClient(DebuggerServer.connectPipe());
     await this.client.connect();
-    const { tab } = await this.client.getTab();
-    this.emulationFront = new EmulationFront(this.client, tab);
+    const targetFront = await this.client.mainRoot.getTab();
+    this.emulationFront = new EmulationFront(this.client, targetFront.targetForm);
   },
 
   /**

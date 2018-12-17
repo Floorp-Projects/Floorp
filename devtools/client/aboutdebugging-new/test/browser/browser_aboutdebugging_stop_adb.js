@@ -4,7 +4,6 @@
 "use strict";
 
 const { adbAddon } = require("devtools/shared/adb/adb-addon");
-const { adbProcess } = require("devtools/shared/adb/adb-process");
 const { check } = require("devtools/shared/adb/adb-running-checker");
 
 /**
@@ -59,21 +58,3 @@ add_task(async function() {
   await removeTab(thirdTab);
   await waitForAdbStop();
 });
-
-async function waitForAdbStart() {
-  info("Wait for ADB to start");
-  return asyncWaitUntil(async () => {
-    const isProcessReady = adbProcess.ready;
-    const isRunning = await check();
-    return isProcessReady && isRunning;
-  });
-}
-
-async function waitForAdbStop() {
-  info("Wait for ADB to stop");
-  return asyncWaitUntil(async () => {
-    const isProcessReady = adbProcess.ready;
-    const isRunning = await check();
-    return !isProcessReady && !isRunning;
-  });
-}

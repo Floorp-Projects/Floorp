@@ -10,9 +10,8 @@ add_task(async function test_maxResults() {
                                  UrlbarUtils.MATCH_SOURCE.TABS,
                                  { url: `http://mozilla.org/foo/${i}` }));
   }
-  registerBasicTestProvider(matches);
-
-  let context = createContext();
+  let providerName = registerBasicTestProvider(matches);
+  let context = createContext(undefined, {providers: [providerName]});
   let controller = new UrlbarController({
     browserWindow: {
       location: {

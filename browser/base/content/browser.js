@@ -6775,20 +6775,24 @@ var IndexedDBPromptHelper = {
 
 var CanvasPermissionPromptHelper = {
   _permissionsPrompt: "canvas-permissions-prompt",
+  _permissionsPromptHideDoorHanger: "canvas-permissions-prompt-hide-doorhanger",
   _notificationIcon: "canvas-notification-icon",
 
   init() {
     Services.obs.addObserver(this, this._permissionsPrompt);
+    Services.obs.addObserver(this, this._permissionsPromptHideDoorHanger);
   },
 
   uninit() {
     Services.obs.removeObserver(this, this._permissionsPrompt);
+    Services.obs.removeObserver(this, this._permissionsPromptHideDoorHanger);
   },
 
   // aSubject is an nsIBrowser (e10s) or an nsIDOMWindow (non-e10s).
   // aData is an URL string.
   observe(aSubject, aTopic, aData) {
-    if (aTopic != this._permissionsPrompt) {
+    if (aTopic != this._permissionsPrompt &&
+        aTopic != this._permissionsPromptHideDoorHanger) {
       return;
     }
 
@@ -6845,9 +6849,11 @@ var CanvasPermissionPromptHelper = {
       checkbox,
       name: uri.asciiHost,
       learnMoreURL: Services.urlFormatter.formatURLPref("app.support.baseURL") + "fingerprint-permission",
+      dismissed: aTopic == this._permissionsPromptHideDoorHanger,
     };
-    PopupNotifications.show(browser, aTopic, message, this._notificationIcon,
-                            mainAction, secondaryActions, options);
+    PopupNotifications.show(browser, this._permissionsPrompt, message,
+                            this._notificationIcon, mainAction,
+                            secondaryActions, options);
   },
 };
 
