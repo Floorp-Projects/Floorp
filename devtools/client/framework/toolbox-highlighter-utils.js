@@ -189,10 +189,6 @@ exports.getHighlighterUtils = function(toolbox) {
         `creating highlighters by types or ${typeName} is unknown`);
   });
 
-  exported.getKnownHighlighter = function(typeName) {
-    return toolbox.inspector && toolbox.inspector.getKnownHighlighter(typeName);
-  };
-
   // Return the public API
   return exported;
 };
