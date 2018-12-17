@@ -512,7 +512,7 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::checkPositionalParameterIndices(
   uint32_t i = 0;
   const bool hasRest = parseContext_->functionBox()->hasRest();
   for (ParseNode* param : params->contents()) {
-    if (param->isKind(ParseNodeKind::Assign)) {
+    if (param->isKind(ParseNodeKind::AssignExpr)) {
       param = param->as<AssignmentNode>().left();
     }
 
@@ -562,8 +562,8 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::checkPositionalParameterIndices(
     } else {
       // Destructuring parameter.
 
-      MOZ_ASSERT(param->isKind(ParseNodeKind::Object) ||
-                 param->isKind(ParseNodeKind::Array));
+      MOZ_ASSERT(param->isKind(ParseNodeKind::ObjectExpr) ||
+                 param->isKind(ParseNodeKind::ArrayExpr));
 
       // Step 3.
       if (i >= positionalParams.get().length()) {
