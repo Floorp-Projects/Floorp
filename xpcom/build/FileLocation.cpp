@@ -201,8 +201,6 @@ nsresult FileLocation::Data::Copy(char* aBuf, uint32_t aLen) {
     uint32_t readLen;
     cursor.Copy(&readLen);
     if (readLen != aLen) {
-      nsZipArchive::sFileCorruptedReason =
-          "FileLocation::Data: insufficient data";
       return NS_ERROR_FILE_CORRUPTED;
     }
     return NS_OK;
