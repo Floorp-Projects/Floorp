@@ -36,8 +36,7 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
     for f in SOURCES:
       if f.endswith('neon.c'):
         SOURCES[f].flags += CONFIG['NEON_FLAGS']
-elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['OS_ARCH'] != 'WINNT':
-    # Bug 1504017 tracks re-enabling this for Windows.
+elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['CC_TYPE'] != 'msvc':
     SOURCES += [
         'alpha_processing_neon.c',
         'dec_neon.c',
