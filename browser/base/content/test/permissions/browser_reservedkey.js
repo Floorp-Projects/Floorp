@@ -117,3 +117,29 @@ if (!navigator.platform.includes("Mac")) {
     BrowserTestUtils.removeTab(tab1);
   });
 }
+
+// There is a <key> element for Backspace with reserved="false", so make sure that it is not
+// treated as a blocked shortcut key.
+add_task(async function test_backspace() {
+  await new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": [["permissions.default.shortcuts", 2]]}, resolve);
+  });
+
+  // The input field is autofocused. If this test fails, backspace can go back
+  // in history so cancel the beforeunload event and adjust the field to make the test fail.
+  const uri = "data:text/html,<body onbeforeunload='document.getElementById('field').value = 'failed'; event.preventDefault();'>" +
+              "<input id='field' value='something' autofocus></body>";
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri);
+
+  // Move the caret so backspace will go delete the first character.
+  EventUtils.synthesizeKey("KEY_ArrowRight", {});
+  EventUtils.synthesizeKey("KEY_Backspace", {});
+
+  let fieldValue = await ContentTask.spawn(tab.linkedBrowser, { }, async function() {
+    return content.document.getElementById("field").value;
+  });
+  is(fieldValue, "omething", "backspace not prevented");
+
+  BrowserTestUtils.removeTab(tab);
+});
+
