@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean.storages
 
+import mozilla.components.service.glean.Glean
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.SystemClock
@@ -70,6 +71,9 @@ internal object EventsStorageEngine : StorageEngine {
             for (storeName in stores) {
                 val storeData = eventStores.getOrPut(storeName) { mutableListOf() }
                 storeData.add(event.copy())
+                if (storeData.size == Glean.configuration.maxEvents) {
+                    Glean.sendPing(storeName, "events")
+                }
             }
         }
     }

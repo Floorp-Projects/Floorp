@@ -9,7 +9,6 @@ import android.content.Context
 import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 import java.util.UUID
@@ -138,15 +137,13 @@ open class GleanInternalAPI {
     /**
      * Collect and assemble the ping. Asynchronously submits the assembled
      * payload to the designated server using [httpPingUploader].
-     *
-     * @return The [Job] created by the ping submission.
      */
-    internal fun sendPing(store: String, docType: String): Job {
+    internal fun sendPing(store: String, docType: String) {
         val pingContent = pingMaker.collect(store)
         val uuid = UUID.randomUUID()
         val path = makePath(docType, uuid)
         // Asynchronously perform the HTTP upload off the main thread.
-        return GlobalScope.launch(Dispatchers.IO) {
+        GlobalScope.launch(Dispatchers.IO) {
             httpPingUploader.upload(path = path, data = pingContent)
         }
     }
@@ -189,18 +186,18 @@ open class GleanInternalAPI {
      *   - Default: Event that triggers the default pings.
      *
      * @param pingEvent The type of the event.
-     *
-     * @return A [Job], **only** to be used when testing, which allows to wait on
-     *         the ping submission.
      */
-    fun handleEvent(pingEvent: Glean.PingEvent): Job {
+    fun handleEvent(pingEvent: Glean.PingEvent) {
         if (!isInitialized()) {
             logger.error("Glean must be initialized before handling events.")
-            return Job()
+            return
         }
 
-        return when (pingEvent) {
-            Glean.PingEvent.Background -> sendPing("baseline", "baseline")
+        when (pingEvent) {
+            Glean.PingEvent.Background -> {
+                sendPing("baseline", "baseline")
+                sendPing("events", "events")
+            }
             Glean.PingEvent.Default -> sendPing("metrics", "metrics")
         }
     }

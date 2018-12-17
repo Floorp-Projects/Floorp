@@ -4,18 +4,39 @@
 package mozilla.components.service.glean.storages
 
 import android.os.SystemClock
+import androidx.test.core.app.ApplicationProvider
+import mozilla.components.service.glean.checkPingSchema
+import mozilla.components.service.glean.config.Configuration
+import mozilla.components.service.glean.FakeDispatchersInTest
+import mozilla.components.service.glean.Glean
+import mozilla.components.service.glean.EventMetricType
+import mozilla.components.service.glean.Lifetime
+import mozilla.components.service.glean.net.HttpPingUploader
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class EventsStorageEngineTest {
 
+    @get:Rule
+    val fakeDispatchers = FakeDispatchersInTest()
+
     @Before
     fun setUp() {
+        Glean.initialized = false
+        Glean.initialize(
+            applicationContext = ApplicationProvider.getApplicationContext(),
+            configuration = Configuration(applicationId = "test")
+        )
+        assert(Glean.initialized)
         EventsStorageEngine.clearAllStores()
     }
 
@@ -153,5 +174,55 @@ class EventsStorageEngineTest {
         // Check that this serializes to the expected JSON format.
         assertEquals("[[0,\"telemetry\",\"test_event_clear\",\"test_event_object\",null,null]]",
             snapshot.toString())
+    }
+
+    @Test
+    fun `test sending of event ping when it fills up`() {
+        val server = MockWebServer()
+        server.enqueue(MockResponse().setBody("OK"))
+
+        EventsStorageEngine.clearAllStores()
+        val click = EventMetricType(
+            disabled = false,
+            category = "ui",
+            lifetime = Lifetime.Ping,
+            name = "click",
+            sendInPings = listOf("default"),
+            objects = listOf("buttonA")
+        )
+
+        val realClient = Glean.httpPingUploader
+        val testConfig = Glean.configuration.copy(
+            serverEndpoint = "http://" + server.hostName + ":" + server.port
+        )
+        Glean.httpPingUploader = HttpPingUploader(testConfig)
+
+        try {
+            // We send 510 events.  We expect to get the first 500 in the ping, and 10 remaining afterward
+            for (i in 0..509) {
+                click.record("buttonA", "$i")
+            }
+
+            val request = server.takeRequest()
+            assert(request.path.startsWith("/submit/test/events/${Glean.SCHEMA_VERSION}/"))
+            val eventsJsonData = request.body.readUtf8()
+            val eventsJson = JSONObject(eventsJsonData)
+            val eventsArray = eventsJson.getJSONArray("events")!!
+            checkPingSchema(eventsJson)
+            assertEquals(500, eventsArray.length())
+
+            for (i in 0..499) {
+                assertEquals("$i", eventsArray.getJSONArray(i).getString(4))
+            }
+        } finally {
+            Glean.httpPingUploader = realClient
+            server.shutdown()
+        }
+
+        val remaining = EventsStorageEngine.getSnapshot("events", false)!!
+        assertEquals(10, remaining.size)
+        for (i in 0..9) {
+            assertEquals("${i + 500}", remaining[i].value)
+        }
     }
 }
