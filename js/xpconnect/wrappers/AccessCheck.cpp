@@ -31,7 +31,15 @@ using namespace js;
 namespace xpc {
 
 nsIPrincipal* GetCompartmentPrincipal(JS::Compartment* compartment) {
-  return nsJSPrincipals::get(JS_GetCompartmentPrincipals(compartment));
+  // System compartments may contain multiple system realms, but we can't call
+  // JS_DeprecatedGetCompartmentPrincipals on compartments with more than one
+  // realm so we special-case this here.
+  if (js::IsSystemCompartment(compartment)) {
+    return nsXPConnect::SystemPrincipal();
+  }
+
+  JSPrincipals* p = JS_DeprecatedGetCompartmentPrincipals(compartment);
+  return nsJSPrincipals::get(p);
 }
 
 nsIPrincipal* GetRealmPrincipal(JS::Realm* realm) {

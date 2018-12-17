@@ -919,8 +919,9 @@ function threadClientTest(test, options = {}) {
     initTestDebuggerServer(server);
 
     // Create a custom debuggee and register it to the server.
-    // We are using a custom Sandbox as debuggee.
-    const debuggee = Cu.Sandbox(principal);
+    // We are using a custom Sandbox as debuggee. Create a new zone because
+    // debugger and debuggee must be in different compartments.
+    const debuggee = Cu.Sandbox(principal, {freshZone: true});
     const scriptName = "debuggee.js";
     debuggee.__name = scriptName;
     server.addTestGlobal(debuggee);
