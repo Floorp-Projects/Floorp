@@ -332,7 +332,6 @@ nsAtom* nsIContent::GetLang() const {
 already_AddRefed<nsIURI> nsIContent::GetBaseURI(
     bool aTryUseXHRDocBaseURI) const {
   if (SVGUseElement* use = GetContainingSVGUseShadowHost()) {
-    // XXX Ignore xml:base as we are removing it.
     if (URLExtraData* data = use->GetContentURLData()) {
       return do_AddRef(data->BaseURI());
     }
@@ -341,60 +340,6 @@ already_AddRefed<nsIURI> nsIContent::GetBaseURI(
   nsIDocument* doc = OwnerDoc();
   // Start with document base
   nsCOMPtr<nsIURI> base = doc->GetBaseURI(aTryUseXHRDocBaseURI);
-
-  // Collect array of xml:base attribute values up the parent chain. This
-  // is slightly slower for the case when there are xml:base attributes, but
-  // faster for the far more common case of there not being any such
-  // attributes.
-  // Also check for SVG elements which require special handling
-  AutoTArray<nsString, 5> baseAttrs;
-  nsString attr;
-  const nsIContent* elem = this;
-  do {
-    // First check for SVG specialness (why is this SVG specific?)
-    if (elem->IsSVGElement()) {
-      nsIContent* bindingParent = elem->GetBindingParent();
-      if (bindingParent) {
-        nsXBLBinding* binding = bindingParent->GetXBLBinding();
-        if (binding) {
-          // XXX sXBL/XBL2 issue
-          // If this is an anonymous XBL element use the binding
-          // document for the base URI.
-          // XXX Will fail with xml:base
-          base = binding->PrototypeBinding()->DocURI();
-          break;
-        }
-      }
-    }
-
-    // Otherwise check for xml:base attribute
-    if (elem->IsElement()) {
-      elem->AsElement()->GetAttr(kNameSpaceID_XML, nsGkAtoms::base, attr);
-      if (!attr.IsEmpty()) {
-        baseAttrs.AppendElement(attr);
-      }
-    }
-    elem = elem->GetParent();
-  } while (elem);
-
-  if (!baseAttrs.IsEmpty()) {
-    doc->WarnOnceAbout(nsIDocument::eXMLBaseAttribute);
-    // Now resolve against all xml:base attrs
-    for (uint32_t i = baseAttrs.Length() - 1; i != uint32_t(-1); --i) {
-      nsCOMPtr<nsIURI> newBase;
-      nsresult rv = NS_NewURI(getter_AddRefs(newBase), baseAttrs[i],
-                              doc->GetDocumentCharacterSet(), base);
-      // Do a security check, almost the same as nsDocument::SetBaseURL()
-      // Only need to do this on the final uri
-      if (NS_SUCCEEDED(rv) && i == 0) {
-        rv = nsContentUtils::GetSecurityManager()->CheckLoadURIWithPrincipal(
-            NodePrincipal(), newBase, nsIScriptSecurityManager::STANDARD);
-      }
-      if (NS_SUCCEEDED(rv)) {
-        base.swap(newBase);
-      }
-    }
-  }
 
   return base.forget();
 }

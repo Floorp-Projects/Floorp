@@ -19,7 +19,7 @@ use frame_builder::{ChasePrimitive, FrameBuilder, FrameBuilderConfig};
 use glyph_rasterizer::FontInstance;
 use hit_test::{HitTestingItem, HitTestingRun};
 use image::simplify_repeated_primitive;
-use intern::{Handle, Internable};
+use intern::{Handle, Internable, InternDebug};
 use internal_types::{FastHashMap, FastHashSet};
 use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PrimitiveList};
 use prim_store::{PrimitiveInstance, PrimitiveKeyKind};
@@ -273,7 +273,7 @@ impl<'a> DisplayListFlattener<'a> {
                 main_scroll_root = Some(scroll_root);
                 true
             }
-        }).unwrap_or(primitives.len());
+        });
 
         let main_scroll_root = match main_scroll_root {
             Some(main_scroll_root) => main_scroll_root,
@@ -286,20 +286,38 @@ impl<'a> DisplayListFlattener<'a> {
             Vec::new(),
         );
 
-        // Split off the preceding primtives.
-        let mut remaining_prims = old_prim_list.split_off(first_index);
+        // In the simple case, there are no preceding or trailing primitives,
+        // because everything is anchored to the root scroll node. Handle
+        // this case specially to avoid underflow error in the Some(..)
+        // path below.
 
-        // Find the first primitive in reverse order that is not the root scroll node.
-        let last_index = remaining_prims.iter().rposition(|instance| {
-            let scroll_root = self.find_scroll_root(
-                instance.spatial_node_index,
-            );
+        let preceding_prims;
+        let mut remaining_prims;
+        let trailing_prims;
 
-            scroll_root != ROOT_SPATIAL_NODE_INDEX
-        }).unwrap_or(remaining_prims.len() - 1);
+        match first_index {
+            Some(first_index) => {
+                // Split off the preceding primtives.
+                remaining_prims = old_prim_list.split_off(first_index);
 
-        let preceding_prims = old_prim_list;
-        let trailing_prims = remaining_prims.split_off(last_index + 1);
+                // Find the first primitive in reverse order that is not the root scroll node.
+                let last_index = remaining_prims.iter().rposition(|instance| {
+                    let scroll_root = self.find_scroll_root(
+                        instance.spatial_node_index,
+                    );
+
+                    scroll_root != ROOT_SPATIAL_NODE_INDEX
+                }).unwrap_or(remaining_prims.len() - 1);
+
+                preceding_prims = old_prim_list;
+                trailing_prims = remaining_prims.split_off(last_index + 1);
+            }
+            None => {
+                preceding_prims = Vec::new();
+                remaining_prims = old_prim_list;
+                trailing_prims = Vec::new();
+            }
+        }
 
         let prim_list = PrimitiveList::new(
             remaining_prims,
@@ -1027,7 +1045,7 @@ impl<'a> DisplayListFlattener<'a> {
     ) -> PrimitiveInstance
     where
         P: Internable<InternData=PrimitiveSceneData>,
-        P::Source: AsInstanceKind<Handle<P::Marker>>,
+        P::Source: AsInstanceKind<Handle<P::Marker>> + InternDebug,
         DocumentResources: InternerMut<P>,
     {
         let offset = info.rect.origin.to_vector();
@@ -1107,7 +1125,7 @@ impl<'a> DisplayListFlattener<'a> {
     )
     where
         P: Internable<InternData = PrimitiveSceneData> + IsVisible,
-        P::Source: AsInstanceKind<Handle<P::Marker>>,
+        P::Source: AsInstanceKind<Handle<P::Marker>> + InternDebug,
         DocumentResources: InternerMut<P>,
     {
         if prim.is_visible() {
@@ -1134,7 +1152,7 @@ impl<'a> DisplayListFlattener<'a> {
     )
     where
         P: Internable<InternData = PrimitiveSceneData> + IsVisible,
-        P::Source: AsInstanceKind<Handle<P::Marker>>,
+        P::Source: AsInstanceKind<Handle<P::Marker>> + InternDebug,
         DocumentResources: InternerMut<P>,
         ShadowItem: From<PendingPrimitive<P>>
     {
@@ -1164,7 +1182,7 @@ impl<'a> DisplayListFlattener<'a> {
     )
     where
         P: Internable<InternData = PrimitiveSceneData>,
-        P::Source: AsInstanceKind<Handle<P::Marker>>,
+        P::Source: AsInstanceKind<Handle<P::Marker>> + InternDebug,
         DocumentResources: InternerMut<P>,
     {
         let prim_instance = self.create_primitive(
@@ -1899,7 +1917,7 @@ impl<'a> DisplayListFlattener<'a> {
     )
     where
         P: Internable<InternData=PrimitiveSceneData> + CreateShadow,
-        P::Source: AsInstanceKind<Handle<P::Marker>>,
+        P::Source: AsInstanceKind<Handle<P::Marker>> + InternDebug,
         DocumentResources: InternerMut<P>,
     {
         // Offset the local rect and clip rect by the shadow offset.
@@ -1924,7 +1942,7 @@ impl<'a> DisplayListFlattener<'a> {
     fn add_shadow_prim_to_draw_list<P>(&mut self, pending_primitive: PendingPrimitive<P>)
     where
         P: Internable<InternData = PrimitiveSceneData> + IsVisible,
-        P::Source: AsInstanceKind<Handle<P::Marker>>,
+        P::Source: AsInstanceKind<Handle<P::Marker>> + InternDebug,
         DocumentResources: InternerMut<P>,
     {
         // For a normal primitive, if it has alpha > 0, then we add this
@@ -2558,7 +2576,7 @@ impl FlattenedStackingContext {
             return false;
         }
 
-        // If different clipp chains
+        // If different clip chains
         if self.clip_chain_id != parent.clip_chain_id {
             return false;
         }

@@ -13,12 +13,8 @@
 
 #include "nsCOMPtr.h"
 
-// needed for JPEG library
-#include <stdio.h>
-
-extern "C" {
-#include "jpeglib.h"
-}
+struct jpeg_compress_struct;
+struct jpeg_common_struct;
 
 #define NS_JPEGENCODER_CID                           \
   {                                                  \
@@ -30,8 +26,10 @@ extern "C" {
 
 // Provides JPEG encoding functionality. Use InitFromData() to do the
 // encoding. See that function definition for encoding options.
+class nsJPEGEncoderInternal;
 
 class nsJPEGEncoder final : public imgIEncoder {
+  friend class nsJPEGEncoderInternal;
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
 
  public:
@@ -50,12 +48,6 @@ class nsJPEGEncoder final : public imgIEncoder {
                           uint32_t aPixelWidth);
   void ConvertRGBARow(const uint8_t* aSrc, uint8_t* aDest,
                       uint32_t aPixelWidth);
-
-  static void initDestination(jpeg_compress_struct* cinfo);
-  static boolean emptyOutputBuffer(jpeg_compress_struct* cinfo);
-  static void termDestination(jpeg_compress_struct* cinfo);
-
-  static void errorExit(jpeg_common_struct* cinfo);
 
   void NotifyListener();
 

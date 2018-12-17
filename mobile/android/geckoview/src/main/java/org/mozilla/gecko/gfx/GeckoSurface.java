@@ -10,21 +10,22 @@ import android.graphics.SurfaceTexture;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.view.Surface;
-import android.util.Log;
-
-import java.util.HashMap;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 
+import static org.mozilla.geckoview.BuildConfig.DEBUG_BUILD;
+
 public final class GeckoSurface extends Surface {
     private static final String LOGTAG = "GeckoSurface";
-
-    private static final HashMap<Integer, GeckoSurfaceTexture> sSurfaceTextures = new HashMap<Integer, GeckoSurfaceTexture>();
 
     private int mHandle;
     private boolean mIsSingleBuffer;
     private volatile boolean mIsAvailable;
     private boolean mOwned = true;
+
+    private int mMyPid;
+    // Locally allocated surface/texture. Do not pass it over IPC.
+    private GeckoSurface mSyncSurface;
 
     @WrapForJNI(exceptionMode = "nsresult")
     public GeckoSurface(GeckoSurfaceTexture gst) {
@@ -32,6 +33,7 @@ public final class GeckoSurface extends Surface {
         mHandle = gst.getHandle();
         mIsSingleBuffer = gst.isSingleBuffer();
         mIsAvailable = true;
+        mMyPid = android.os.Process.myPid();
     }
 
     public GeckoSurface(Parcel p, SurfaceTexture dummy) {
@@ -44,6 +46,7 @@ public final class GeckoSurface extends Surface {
         mHandle = p.readInt();
         mIsSingleBuffer = p.readByte() == 1 ? true : false;
         mIsAvailable = (p.readByte() == 1 ? true : false);
+        mMyPid = p.readInt();
 
         dummy.release();
     }
@@ -64,12 +67,22 @@ public final class GeckoSurface extends Surface {
         out.writeInt(mHandle);
         out.writeByte((byte) (mIsSingleBuffer ? 1 : 0));
         out.writeByte((byte) (mIsAvailable ? 1 : 0));
+        out.writeInt(mMyPid);
 
         mOwned = false;
     }
 
     @Override
     public void release() {
+        if (mSyncSurface != null) {
+            mSyncSurface.release();
+            GeckoSurfaceTexture gst = GeckoSurfaceTexture.lookup(mSyncSurface.getHandle());
+            if (gst != null) {
+                gst.decrementUse();
+            }
+            mSyncSurface = null;
+        }
+
         if (mOwned) {
             super.release();
         }
@@ -88,5 +101,26 @@ public final class GeckoSurface extends Surface {
     @WrapForJNI
     public void setAvailable(boolean available) {
         mIsAvailable = available;
+    }
+
+    /* package */ boolean inProcess() {
+        return android.os.Process.myPid() == mMyPid;
+    }
+
+    /* package */ SyncConfig initSyncSurface(int width, int height) {
+        if (DEBUG_BUILD) {
+            if (inProcess()) {
+                throw new AssertionError("no need for sync when allocated in process");
+            }
+        }
+        if (GeckoSurfaceTexture.lookup(mHandle) != null) {
+            throw new AssertionError("texture#" + mHandle + " already in use.");
+        }
+        GeckoSurfaceTexture texture = GeckoSurfaceTexture.acquire(false, mHandle);
+        texture.setDefaultBufferSize(width, height);
+        texture.track(mHandle);
+        mSyncSurface = new GeckoSurface(texture);
+
+        return new SyncConfig(mHandle, mSyncSurface, width, height);
     }
 }

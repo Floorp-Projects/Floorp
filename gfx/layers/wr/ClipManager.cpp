@@ -422,7 +422,6 @@ bool ClipManager::ItemClips::HasSameInputs(const ItemClips& aOther) {
 void ClipManager::ItemClips::CopyOutputsFrom(const ItemClips& aOther) {
   mScrollId = aOther.mScrollId;
   mClipChainId = aOther.mClipChainId;
-  mSeparateLeaf = aOther.mSeparateLeaf;
 }
 
 }  // namespace layers

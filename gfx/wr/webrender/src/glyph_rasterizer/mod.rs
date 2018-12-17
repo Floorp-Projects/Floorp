@@ -352,11 +352,10 @@ impl SubpixelOffset {
         let apos = ((pos - pos.floor()) * 8.0) as i32;
 
         match apos {
-            0 | 7 => SubpixelOffset::Zero,
             1...2 => SubpixelOffset::Quarter,
             3...4 => SubpixelOffset::Half,
             5...6 => SubpixelOffset::ThreeQuarters,
-            _ => unreachable!("bug: unexpected quantized result"),
+            _ => SubpixelOffset::Zero,
         }
     }
 }

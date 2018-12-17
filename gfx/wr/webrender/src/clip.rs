@@ -527,7 +527,7 @@ impl ClipStore {
         resource_cache: &mut ResourceCache,
         device_pixel_scale: DevicePixelScale,
         world_rect: &WorldRect,
-        clip_node_collector: &Option<ClipNodeCollector>,
+        clip_node_collector: Option<&ClipNodeCollector>,
         clip_data_store: &mut ClipDataStore,
     ) -> Option<ClipChainInstance> {
         let mut local_clip_rect = local_prim_clip_rect;
@@ -897,6 +897,8 @@ impl ClipItemKey {
         )
     }
 }
+
+impl intern::InternDebug for ClipItemKey {}
 
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
