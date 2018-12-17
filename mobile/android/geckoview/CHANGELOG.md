@@ -29,4 +29,4 @@
 - Update `CrashReporter.sendCrashReport()` to return the crash ID as a
   GeckoResult<String>.
 
-[api-version]: d6c40ef4886c7818a446fb7b7a1cdbde706025ab
+[api-version]: 8dd1c9e76471e6a1ee520e6c607ed6d3f9156fc2
