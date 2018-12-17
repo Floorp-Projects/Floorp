@@ -110,6 +110,7 @@ pub trait RenderTarget {
     );
 
     fn needs_depth(&self) -> bool;
+    fn must_be_drawn(&self) -> bool;
 
     fn used_rect(&self) -> DeviceIntRect;
     fn add_used(&mut self, rect: DeviceIntRect);
@@ -256,6 +257,10 @@ impl<T: RenderTarget> RenderTargetList<T> {
 
     pub fn needs_depth(&self) -> bool {
         self.targets.iter().any(|target| target.needs_depth())
+    }
+
+    pub fn must_be_drawn(&self) -> bool {
+        self.targets.iter().any(|target| target.must_be_drawn())
     }
 
     pub fn check_ready(&self, t: &Texture) {
@@ -544,6 +549,10 @@ impl RenderTarget for ColorRenderTarget {
         }
     }
 
+    fn must_be_drawn(&self) -> bool {
+        !self.tile_blits.is_empty()
+    }
+
     fn needs_depth(&self) -> bool {
         self.alpha_batch_containers.iter().any(|ab| {
             !ab.opaque_batches.is_empty()
@@ -671,6 +680,10 @@ impl RenderTarget for AlphaRenderTarget {
     }
 
     fn needs_depth(&self) -> bool {
+        false
+    }
+
+    fn must_be_drawn(&self) -> bool {
         false
     }
 
