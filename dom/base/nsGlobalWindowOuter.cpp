@@ -153,10 +153,6 @@
 #include "nsCSSProps.h"
 #include "nsIURIFixup.h"
 #include "nsIURIMutator.h"
-#ifndef DEBUG
-#  include "nsIAppStartup.h"
-#  include "nsToolkitCompsCID.h"
-#endif
 #include "nsCDefaultURIFixup.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"

@@ -15,27 +15,15 @@ SOURCES += [
     'nsToolkitCompsModule.cpp',
 ]
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    '../../xre',
-    '../alerts',
-    '../downloads',
-    '../find',
-    '../perfmonitoring',
-    '../protobuf',
-    '../reputationservice',
-    '../startup',
-    '../statusfilter',
-    '../telemetry',
-    '../typeaheadfind',
     '../url-classifier',
 ]
-
-if not CONFIG['MOZ_DISABLE_PARENTAL_CONTROLS']:
-    LOCAL_INCLUDES += [
-        '../parentalcontrols',
-    ]
 
 if CONFIG['CC_TYPE'] == 'clang-cl':
     AllowCompilerWarnings()  # workaround for bug 1090497
