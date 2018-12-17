@@ -2043,6 +2043,13 @@ class MachineStackTracker {
     MOZ_ASSERT(numPtrs_ <= length());
     return numPtrs_;
   }
+
+  // Discard all contents, but (per mozilla::Vector::clear semantics) don't
+  // free or reallocate any dynamic storage associated with |vec_|.
+  void clear() {
+    vec_.clear();
+    numPtrs_ = 0;
+  }
 };
 
 // StackMapGenerator, which carries all state needed to create stack maps.
@@ -2096,6 +2103,11 @@ struct StackMapGenerator {
   // The number of memory-resident, ref-typed entries on the containing
   // BaseCompiler::stk_.
   size_t memRefsOnStk_;
+
+  // This is a copy of mst_ that is used only within individual calls to
+  // createStackMap.  It is here only to avoid possible heap allocation costs
+  // resulting from making it local to createStackMap().
+  MachineStackTracker augmentedMst_;
 
   StackMapGenerator(StackMaps* stackMaps, const MachineState& trapExitLayout,
                     const size_t trapExitLayoutNumWords,
@@ -2182,10 +2194,11 @@ struct StackMapGenerator {
     }
 #endif
 
-    // Start with the frame-setup map, and add operand-stack information
-    // to that.
-    MachineStackTracker augmentedMst;
-    if (!mst_.cloneTo(&augmentedMst)) {
+    // Start with the frame-setup map, and add operand-stack information to
+    // that.  augmentedMst_ holds live data only within individual calls to
+    // createStackMap.
+    augmentedMst_.clear();
+    if (!mst_.cloneTo(&augmentedMst_)) {
       return false;
     }
 
@@ -2227,7 +2240,7 @@ struct StackMapGenerator {
       uint32_t bodyPushedBytes =
           framePushedExcludingArgs.value() - framePushedAtEntryToBody_.value();
       MOZ_ASSERT(0 == bodyPushedBytes % sizeof(void*));
-      if (!augmentedMst.pushNonGCPointers(bodyPushedBytes / sizeof(void*))) {
+      if (!augmentedMst_.pushNonGCPointers(bodyPushedBytes / sizeof(void*))) {
         return false;
       }
     }
@@ -2304,13 +2317,13 @@ struct StackMapGenerator {
       MOZ_ASSERT(v.offs() <= framePushedExcludingArgs.value());
       uint32_t offsFromMapLowest = framePushedExcludingArgs.value() - v.offs();
       MOZ_ASSERT(0 == offsFromMapLowest % sizeof(void*));
-      augmentedMst.setGCPointer(offsFromMapLowest / sizeof(void*));
+      augmentedMst_.setGCPointer(offsFromMapLowest / sizeof(void*));
     }
 
     // Create the final StackMap.  The initial map is zeroed out, so there's
     // no need to write zero bits in it.
     const uint32_t extraWords = extras.length();
-    const uint32_t augmentedMstWords = augmentedMst.length();
+    const uint32_t augmentedMstWords = augmentedMst_.length();
     const uint32_t numMappedWords = extraWords + augmentedMstWords;
     StackMap* stackMap = StackMap::create(numMappedWords);
     if (!stackMap) {
@@ -2329,7 +2342,7 @@ struct StackMapGenerator {
     }
     // Followed by the "main" part of the map.
     for (uint32_t i = 0; i < augmentedMstWords; i++) {
-      if (augmentedMst.isGCPointer(i)) {
+      if (augmentedMst_.isGCPointer(i)) {
         stackMap->setBit(numMappedWords - 1 - i);
       }
     }
