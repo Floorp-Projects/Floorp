@@ -9,7 +9,6 @@
 #include "OfflineCacheUpdateGlue.h"
 #include "nsOfflineCacheUpdate.h"
 
-#include "nsCPrefetchService.h"
 #include "nsCURILoader.h"
 #include "nsIApplicationCacheContainer.h"
 #include "nsIApplicationCacheChannel.h"
@@ -28,12 +27,14 @@
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
 #include "mozilla/Logging.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
+#include "mozilla/Components.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Unused.h"
@@ -285,7 +286,8 @@ nsOfflineCacheUpdateService *nsOfflineCacheUpdateService::EnsureService() {
   if (!gOfflineCacheUpdateService) {
     // Make the service manager hold a long-lived reference to the service
     nsCOMPtr<nsIOfflineCacheUpdateService> service =
-        do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID);
+        components::OfflineCacheUpdate::Service();
+    Unused << service;
   }
 
   return gOfflineCacheUpdateService;
