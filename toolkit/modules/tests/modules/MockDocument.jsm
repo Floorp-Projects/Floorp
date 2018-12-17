@@ -9,6 +9,7 @@ var EXPORTED_SYMBOLS = ["MockDocument"];
 Cu.importGlobalProperties(["DOMParser", "URL"]);
 
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
 const MockDocument = {
   /**
@@ -63,6 +64,13 @@ const MockDocument = {
         Event,
       },
       configurable: true,
+    });
+  },
+
+  mockNodePrincipalProperty(aElement, aURL) {
+    Object.defineProperty(aElement, "nodePrincipal", {
+      value: Services.scriptSecurityManager.createCodebasePrincipal(
+               Services.io.newURI(aURL), {}),
     });
   },
 
