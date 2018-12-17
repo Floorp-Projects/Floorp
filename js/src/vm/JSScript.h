@@ -1103,15 +1103,40 @@ class ScriptSourceHolder {
   ScriptSource* get() const { return ss; }
 };
 
+// [SMDOC] ScriptSourceObject
+//
+// ScriptSourceObject stores the ScriptSource and GC pointers related to it.
+//
+// ScriptSourceObjects can be cloned when we clone the JSScript (in order to
+// execute the script in a different realm/compartment). In this case we create
+// a new SSO that stores (a wrapper for) the original SSO in its "canonical
+// slot". The canonical SSO is always used for the private, introductionScript,
+// element, elementAttributeName slots. This means their accessors may return an
+// object in a different compartment, hence the "unwrapped" prefix.
+//
+// We need ScriptSourceObject (instead of storing these GC pointers in the
+// ScriptSource itself) to properly account for cross-zone pointers: the
+// canonical SSO will be stored in the wrapper map if necessary so GC will do
+// the right thing.
 class ScriptSourceObject : public NativeObject {
   static const ClassOps classOps_;
+
+  static ScriptSourceObject* createInternal(JSContext* cx, ScriptSource* source,
+                                            HandleObject canonical);
+
+  bool isCanonical() const {
+    return &getReservedSlot(CANONICAL_SLOT).toObject() == this;
+  }
+  ScriptSourceObject* unwrappedCanonical() const;
 
  public:
   static const Class class_;
 
   static void trace(JSTracer* trc, JSObject* obj);
   static void finalize(FreeOp* fop, JSObject* obj);
+
   static ScriptSourceObject* create(JSContext* cx, ScriptSource* source);
+  static ScriptSourceObject* clone(JSContext* cx, HandleScriptSourceObject sso);
 
   // Initialize those properties of this ScriptSourceObject whose values
   // are provided by |options|, re-wrapping as necessary.
@@ -1127,27 +1152,38 @@ class ScriptSourceObject : public NativeObject {
   ScriptSource* source() const {
     return static_cast<ScriptSource*>(getReservedSlot(SOURCE_SLOT).toPrivate());
   }
-  JSObject* element() const {
-    return getReservedSlot(ELEMENT_SLOT).toObjectOrNull();
+
+  JSObject* unwrappedElement() const {
+    return unwrappedCanonical()->getReservedSlot(ELEMENT_SLOT).toObjectOrNull();
   }
-  const Value& elementAttributeName() const {
-    MOZ_ASSERT(!getReservedSlot(ELEMENT_PROPERTY_SLOT).isMagic());
-    return getReservedSlot(ELEMENT_PROPERTY_SLOT);
+  const Value& unwrappedElementAttributeName() const {
+    const Value& v =
+        unwrappedCanonical()->getReservedSlot(ELEMENT_PROPERTY_SLOT);
+    MOZ_ASSERT(!v.isMagic());
+    return v;
   }
-  JSScript* introductionScript() const {
-    Value value = getReservedSlot(INTRODUCTION_SCRIPT_SLOT);
+  JSScript* unwrappedIntroductionScript() const {
+    Value value =
+        unwrappedCanonical()->getReservedSlot(INTRODUCTION_SCRIPT_SLOT);
     if (value.isUndefined()) {
       return nullptr;
     }
     return value.toGCThing()->as<JSScript>();
   }
 
-  void setPrivate(const Value& value) { setReservedSlot(PRIVATE_SLOT, value); }
-  Value getPrivate() const { return getReservedSlot(PRIVATE_SLOT); }
+  void setPrivate(const Value& value) {
+    MOZ_ASSERT(isCanonical());
+    setReservedSlot(PRIVATE_SLOT, value);
+  }
+
+  Value unwrappedPrivate() const {
+    return unwrappedCanonical()->getReservedSlot(PRIVATE_SLOT);
+  }
 
  private:
   enum {
     SOURCE_SLOT = 0,
+    CANONICAL_SLOT,
     ELEMENT_SLOT,
     ELEMENT_PROPERTY_SLOT,
     INTRODUCTION_SCRIPT_SLOT,
@@ -1480,11 +1516,8 @@ class JSScript : public js::gc::TenuredCell {
   /* Persistent type information retained across GCs. */
   js::TypeScript* types_ = nullptr;
 
-  // This script's ScriptSourceObject, or a CCW thereof.
-  //
-  // (When we clone a JSScript into a new compartment, we don't clone its
-  // source object. Instead, the clone refers to a wrapper.)
-  js::GCPtrObject sourceObject_ = {};
+  // This script's ScriptSourceObject.
+  js::GCPtr<js::ScriptSourceObject*> sourceObject_ = {};
 
   /*
    * Information attached by Ion. Nexto a valid IonScript this could be
@@ -1740,20 +1773,20 @@ class JSScript : public js::gc::TenuredCell {
       js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
 
  private:
-  JSScript(JS::Realm* realm, uint8_t* stubEntry, js::HandleObject sourceObject,
-           uint32_t sourceStart, uint32_t sourceEnd, uint32_t toStringStart,
-           uint32_t toStringend);
+  JSScript(JS::Realm* realm, uint8_t* stubEntry,
+           js::HandleScriptSourceObject sourceObject, uint32_t sourceStart,
+           uint32_t sourceEnd, uint32_t toStringStart, uint32_t toStringend);
 
-  static JSScript* New(JSContext* cx, js::HandleObject sourceObject,
+  static JSScript* New(JSContext* cx, js::HandleScriptSourceObject sourceObject,
                        uint32_t sourceStart, uint32_t sourceEnd,
                        uint32_t toStringStart, uint32_t toStringEnd);
 
  public:
   static JSScript* Create(JSContext* cx,
                           const JS::ReadOnlyCompileOptions& options,
-                          js::HandleObject sourceObject, uint32_t sourceStart,
-                          uint32_t sourceEnd, uint32_t toStringStart,
-                          uint32_t toStringEnd);
+                          js::HandleScriptSourceObject sourceObject,
+                          uint32_t sourceStart, uint32_t sourceEnd,
+                          uint32_t toStringStart, uint32_t toStringEnd);
 
   // NOTE: If you use createPrivateScriptData directly instead of via
   // fullyInitFromEmitter, you are responsible for notifying the debugger
@@ -2281,15 +2314,14 @@ class JSScript : public js::gc::TenuredCell {
 
   static bool loadSource(JSContext* cx, js::ScriptSource* ss, bool* worked);
 
-  void setSourceObject(JSObject* object);
-  JSObject* sourceObject() const { return sourceObject_; }
-  js::ScriptSourceObject& scriptSourceUnwrap() const;
+  void setSourceObject(js::ScriptSourceObject* object);
+  js::ScriptSourceObject* sourceObject() const { return sourceObject_; }
   js::ScriptSource* scriptSource() const;
   js::ScriptSource* maybeForwardedScriptSource() const;
 
-  void setDefaultClassConstructorSpan(JSObject* sourceObject, uint32_t start,
-                                      uint32_t end, unsigned line,
-                                      unsigned column);
+  void setDefaultClassConstructorSpan(js::ScriptSourceObject* sourceObject,
+                                      uint32_t start, uint32_t end,
+                                      unsigned line, unsigned column);
 
   bool mutedErrors() const { return scriptSource()->mutedErrors(); }
   const char* filename() const { return scriptSource()->filename(); }
@@ -2787,9 +2819,8 @@ class LazyScript : public gc::TenuredCell {
   GCPtr<TenuredCell*> enclosingLazyScriptOrScope_;
 
   // ScriptSourceObject. We leave this set to nullptr until we generate
-  // bytecode for our immediate parent. This is never a CCW; we don't clone
-  // LazyScripts into other compartments.
-  GCPtrObject sourceObject_;
+  // bytecode for our immediate parent.
+  GCPtr<ScriptSourceObject*> sourceObject_;
 
   // Heap allocated table with any free variables or inner functions.
   void* table_;

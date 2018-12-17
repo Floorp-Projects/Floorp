@@ -86,12 +86,14 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(
 
   nsIPrincipal* principal = GetPrincipal();
 
-  // Create the compartment private.
+  // Create the compartment private if needed.
   JS::Compartment* c = js::GetObjectCompartment(aGlobal);
-  MOZ_ASSERT(!JS_GetCompartmentPrivate(c));
-  CompartmentPrivate* priv =
-      new CompartmentPrivate(c, BasePrincipal::Cast(principal), aSite);
-  JS_SetCompartmentPrivate(c, priv);
+  if (CompartmentPrivate* priv = CompartmentPrivate::Get(c)) {
+    MOZ_ASSERT(priv->originInfo.IsSameOrigin(principal));
+  } else {
+    priv = new CompartmentPrivate(c, BasePrincipal::Cast(principal), aSite);
+    JS_SetCompartmentPrivate(c, priv);
+  }
 
   // Attach ourselves to the realm private.
   Realm* realm = JS::GetObjectRealmOrNull(aGlobal);

@@ -748,6 +748,10 @@ static PlainObject* MakeReplacementTemplateObject(JSContext* cx,
   const UnboxedLayout& layout = obj->as<UnboxedPlainObject>().layout();
   UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando();
 
+  // Ensure we're working in the object's realm, so we don't have to worry about
+  // creating groups or templates in the wrong realm.
+  AutoRealm ar(cx, obj);
+
   if (!layout.nativeGroup()) {
     if (!UnboxedLayout::makeNativeGroup(cx, obj->group())) {
       return nullptr;
