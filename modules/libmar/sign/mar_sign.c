@@ -578,7 +578,7 @@ failure:
  * @param  sigIndex      The index of the signature to import
  * @param  base64SigFile A file which contains the signature to import
  * @param  dest          The path of the destination MAR file with replaced
- *         signature
+ *                       signature
  * @return 0 on success
  *         -1 on error
  */
