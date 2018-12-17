@@ -99,7 +99,7 @@ class ClientWrapper {
   }
 
   async listTabs(options) {
-    return this.client.listTabs(options);
+    return this.client.mainRoot.listTabs(options);
   }
 
   async listAddons() {
