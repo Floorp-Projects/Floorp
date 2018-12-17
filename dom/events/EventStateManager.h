@@ -377,8 +377,6 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
     static bool ClickHoldContextMenu() { return sClickHoldContextMenu; }
 
     static void Init();
-    static void OnChange(const char* aPrefName, void*);
-    static void Shutdown();
 
    private:
     static bool sKeyCausesActivation;
