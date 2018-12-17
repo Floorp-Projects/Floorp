@@ -26,16 +26,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1435157
   gScript.addMessageListener("test-fail", testFailHandler);
   gScript.addMessageListener("test-pass", testPassHandler);
 
-  async function requestChromeAction(action, params) {
-    await new Promise(resolve => {
-      gScript.addMessageListener(`${action}-complete`, function completeListener() {
-        gScript.removeMessageListener(`${action}-complete`, completeListener);
-        resolve();
-      });
-      gScript.sendAsyncMessage(action, params);
-    });
-  }
-
   const addressErrors = {
     addressLine: "addressLine error",
     city: "city error",
@@ -64,104 +54,37 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1435157
         value: "1.00",
       },
     },
-    error: "shipping address error",
+    erros: "shipping address error",
     shippingAddressErrors: addressErrors,
     payerErrors: payErrors,
   }
 
   // testing functions
-  async function testUpdateErrors() {
-    const testName = "testUpdateErrors";
-    await requestChromeAction("setup-update-with-errors", testName);
-    return new Promise(async (resolve) => {
-      const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
-      await request.addEventListener("shippingaddresschange", event => {
+  function testUpdateErrors() {
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      payRequest.addEventListener("shippingaddresschange", event => {
         event.updateWith(updateDetails);
       });
-      await request.addEventListener("shippingoptionchange", event => {
-        event.updateWith(updateDetails);
+      payRequest.addEventListener("shippingoptionchange", event => {
+        event.updateWith(updatedDetails);
       });
       const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-      try {
-        const response = await request.show();
-        ok(false, `${testName}: expected 'AbortError', but got resolved.`);
-      } catch (error) {
-        is(error.name, "AbortError", `${testName}: expected 'AbortError'.`);
-      }
-      await handler.destruct();
-      resolve();
-    });
-  }
-
-  async function testNoEventHandler(testName, eventName) {
-    await requestChromeAction(`setup-no-${eventName}`, testName);
-    return new Promise(async (resolve) => {
-      const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
-      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-      try {
-        const response = await request.show();
-        ok(false, `${testName}: expected 'AbortError', but got resolved.`);
-      } catch (error) {
-        is(error.name, "AbortError", `${testName}: expected 'AbortError'.`);
-      }
-      await handler.destruct();
-      resolve();
-    });
-  }
-
-  async function testNoOnshippingaddresschange() {
-    const testName = "testNoOnshippingaddresschange";
-    return testNoEventHandler(testName, "onshippingaddresschange");
-  }
-
-  async function testNoOnshippingoptionchange() {
-    const testName = "testNoOnshippingoptionchange";
-    return testNoEventHandler(testName, "onshippingoptionchange");
-  }
-
-  async function pendingPromise() {
-    return new Promise((resolve) => {
-    });
-  }
-
-  async function testShowWithPendingPromise() {
-    const testName = "testShowWithPendingPromise";
-    await requestChromeAction("setup-show-wiht-pending-promise", testName);
-    return new Promise(async (resolve) => {
-      const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
-      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-      try {
-        const response = await request.show(pendingPromise());
-        ok(false, `${testName}: expected 'AbortError', but got resolved.`);
-      } catch (error) {
-        is(error.name, "AbortError", `${testName}: expected 'AbortError'.`);
-      }
-      await handler.destruct();
-      resolve();
-    });
-  }
-
-  async function testEventHandlingTimeout() {
-    const testName = "testEventHandlingTimeout";
-    await requestChromeAction("setup-timeout-handling", testName);
-    return new Promise(async (resolve) => {
-      const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
-      request.addEventListener("shippingaddresschange", (event) => {});
-      request.addEventListener("shippingoptoinchange", (event) => {});
-      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-      try {
-        const response = await request.show();
-        ok(false, `${testName}: expected 'AbortError', but got resolved.`);
-      } catch (error) {
-        is(error.name, "AbortError", `${testName}: expected 'AbortError'.`);
-      }
-      await handler.destruct();
-      resolve();
+      payRequest.show().then(response => {
+        ok(false, "Expected AbortError, but got pass");
+        resolve();
+      }, error => {
+        is(error.name, "AbortError", "Expect AbortError, but got " + error.name);
+	resolve();
+      }).catch( e => {
+        ok(false, "Unexpected error: " + e.name);
+        resolve();
+      }).finally(handler.destruct);
     });
   }
 
   // teardown function
-  async function teardown() {
+  function teardown() {
     gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
       gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
       gScript.removeMessageListener("test-fail", testFailHandler);
@@ -173,25 +96,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1435157
   }
 
   // test main body
-  async function runTests() {
-    try {
-      await testUpdateErrors();
-      await testNoOnshippingaddresschange();
-      await testNoOnshippingoptionchange();
-      await testShowWithPendingPromise();
-      await testEventHandlingTimeout();
-      await teardown();
-    } catch (error) {
-      ok(false, `test_update_errors: unexpected error ${error.name}`);
+  function runTests() {
+    testUpdateErrors()
+    .then(teardown)
+    .catch( e => {
+      ok(false, "Unexpected error: " + e.name);
       SimpleTest.finish();
-    }
+    });
   }
 
   window.addEventListener('load', function() {
     SpecialPowers.pushPrefEnv({
       'set': [
         ['dom.payments.request.enabled', true],
-        ['dom.payments.response.timeout', 1000],
       ]
     }, runTests);
   });
