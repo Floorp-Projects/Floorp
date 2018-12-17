@@ -11,6 +11,7 @@ import android.media.AudioManager.OnAudioFocusChangeListener;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -23,6 +24,10 @@ import static org.mozilla.gecko.AppConstants.Versions;
 
 public class AudioFocusAgent implements Tabs.OnTabsChangedListener {
     private static final String LOGTAG = "AudioFocusAgent";
+    /**
+     * Event dispatched when the initialization process is done.
+     */
+    public static final String READY = "AudioFocusAgent:Ready";
 
     // We're referencing the *application* context, so this is in fact okay.
     @SuppressLint("StaticFieldLeak")
@@ -107,6 +112,8 @@ public class AudioFocusAgent implements Tabs.OnTabsChangedListener {
                 }
             }
         };
+
+        EventDispatcher.getInstance().dispatch(READY, null);
     }
 
     @RobocopTarget
