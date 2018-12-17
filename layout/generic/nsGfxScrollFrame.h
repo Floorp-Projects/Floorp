@@ -395,9 +395,9 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // adjust the scrollbar rectangle aRect to account for any visible resizer.
   // aHasResizer specifies if there is a content resizer, however this method
   // will also check if a widget resizer is present as well.
-  void AdjustScrollbarRectForResizer(nsIFrame* aFrame,
-                                     nsPresContext* aPresContext, nsRect& aRect,
-                                     bool aHasResizer, bool aVertical);
+  void AdjustScrollbarRectForResizer(
+      nsIFrame* aFrame, nsPresContext* aPresContext, nsRect& aRect,
+      bool aHasResizer, mozilla::layers::ScrollDirection aDirection);
   // returns true if a resizer should be visible
   bool HasResizer() { return mResizerBox && !mCollapsedResizer; }
   void LayoutScrollbars(nsBoxLayoutState& aState, const nsRect& aContentArea,
