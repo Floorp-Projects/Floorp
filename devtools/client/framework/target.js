@@ -391,7 +391,7 @@ Target.prototype = {
 
   // Get a Front for a target-scoped actor.
   // i.e. an actor served by RootActor.listTabs or RootActorActor.getTab requests
-  getFront(typeName) {
+  async getFront(typeName) {
     let front = this.fronts.get(typeName);
     // the front might have been destroyed and no longer have an actor ID
     if (front && front.actorID || front && typeof front.then === "function") {
