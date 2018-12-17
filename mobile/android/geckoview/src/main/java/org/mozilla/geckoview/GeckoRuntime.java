@@ -302,6 +302,7 @@ public final class GeckoRuntime implements Parcelable {
          * This is called when the runtime shuts down. Any GeckoSession instances that were
          * opened with this instance are now considered closed.
          **/
+        @UiThread
         void onShutdown();
     }
 
