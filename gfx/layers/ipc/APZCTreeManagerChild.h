@@ -59,6 +59,10 @@ class APZCTreeManagerChild : public IAPZCTreeManager,
 
   APZInputBridge* InputBridge() override;
 
+  void AddIPDLReference();
+  void ReleaseIPDLReference();
+  void ActorDestroy(ActorDestroyReason aWhy) override;
+
  protected:
   mozilla::ipc::IPCResult RecvHandleTap(const TapType& aType,
                                         const LayoutDevicePoint& aPoint,
@@ -79,6 +83,7 @@ class APZCTreeManagerChild : public IAPZCTreeManager,
  private:
   MOZ_NON_OWNING_REF RemoteCompositorSession* mCompositorSession;
   RefPtr<APZInputBridgeChild> mInputBridge;
+  bool mIPCOpen;
 };
 
 }  // namespace layers

@@ -953,7 +953,7 @@ bool CompositorBridgeChild::DeallocPCompositorWidgetChild(
 PAPZCTreeManagerChild* CompositorBridgeChild::AllocPAPZCTreeManagerChild(
     const LayersId& aLayersId) {
   APZCTreeManagerChild* child = new APZCTreeManagerChild();
-  child->AddRef();
+  child->AddIPDLReference();
   if (aLayersId.IsValid()) {
     TabChild* tabChild = TabChild::GetFrom(aLayersId);
     if (tabChild) {
@@ -979,8 +979,8 @@ bool CompositorBridgeChild::DeallocPAPZChild(PAPZChild* aActor) {
 
 bool CompositorBridgeChild::DeallocPAPZCTreeManagerChild(
     PAPZCTreeManagerChild* aActor) {
-  APZCTreeManagerChild* parent = static_cast<APZCTreeManagerChild*>(aActor);
-  parent->Release();
+  APZCTreeManagerChild* child = static_cast<APZCTreeManagerChild*>(aActor);
+  child->ReleaseIPDLReference();
   return true;
 }
 
