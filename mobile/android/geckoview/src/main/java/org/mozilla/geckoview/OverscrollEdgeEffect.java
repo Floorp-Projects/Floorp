@@ -14,11 +14,13 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.os.Build;
+import android.support.annotation.UiThread;
 import android.view.View;
 import android.widget.EdgeEffect;
 
 import java.lang.reflect.Field;
 
+@UiThread
 public final class OverscrollEdgeEffect {
     // Used to index particular edges in the edges array
     private static final int TOP = 0;
