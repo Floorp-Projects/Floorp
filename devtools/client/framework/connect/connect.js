@@ -100,24 +100,17 @@ var onConnectionReady = async function([aType, aTraits]) {
     parent.remove();
   }
 
-  const response = await gClient.listTabs();
-
   parent = document.getElementById("tabTargetActors");
 
-  // Add Global Process debugging...
-  const globals = Cu.cloneInto(response, {});
-  delete globals.tabs;
-  delete globals.selected;
-  // ...only if there are appropriate actors (a 'from' property will always
-  // be there).
-
   // Add one entry for each open tab.
+  const response = await gClient.mainRoot.listTabs();
   for (let i = 0; i < response.tabs.length; i++) {
     buildTabLink(response.tabs[i], parent, i == response.selected);
   }
 
   const gParent = document.getElementById("globalActors");
 
+  const globals = await gClient.mainRoot.rootForm;
   // Build the Remote Process button
   // If Fx<39, chrome target actors were used to be exposed on RootActor
   // but in Fx>=39, chrome is debuggable via getProcess() and ParentProcessTargetActor

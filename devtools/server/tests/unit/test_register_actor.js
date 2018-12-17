@@ -39,10 +39,10 @@ function test_lazy_api() {
 
   const client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {
-    client.listTabs().then(onListTabs);
+    client.mainRoot.rootForm.then(onRootForm);
   });
-  function onListTabs(response) {
-    // On listTabs, the actor is still not loaded,
+  function onRootForm(response) {
+    // On rootForm, the actor is still not loaded,
     // but we can see its name in the list of available actors
     Assert.ok(!isActorLoaded);
     Assert.ok(!isActorInstantiated);

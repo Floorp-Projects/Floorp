@@ -96,6 +96,8 @@
           const items = panelNode.querySelectorAll(".runtime-panel-item-usb");
           is(items.length, 3, "Found 3 runtime buttons");
 
+          let onGlobalActors = waitForUpdate(win, "runtime-global-actors");
+
           let connectionsChanged = waitForConnectionChange("opened", 2);
           items[0].click();
 
@@ -106,7 +108,7 @@
           await connectionsChanged;
           is(Object.keys(DebuggerServer._connections).length, 2, "Connected");
 
-          await waitForUpdate(win, "runtime-global-actors");
+          await onGlobalActors;
 
           // Play button always disabled now, webapps actor removed
           ok(!isPlayActive(), "play button is disabled");
@@ -137,7 +139,7 @@
           ok(!isStopActive(), "stop button is disabled");
 
           connectionsChanged = waitForConnectionChange("opened", 2);
-          const onGlobalActors = waitForUpdate(win, "runtime-global-actors");
+          onGlobalActors = waitForUpdate(win, "runtime-global-actors");
           const onRuntimeTargets = waitForUpdate(win, "runtime-targets");
           docRuntime.querySelectorAll(".runtime-panel-item-other")[1].click();
           await connectionsChanged;
