@@ -193,3 +193,27 @@ async function selectRuntime(deviceName, name, document) {
     return runtimeInfo && runtimeInfo.textContent.includes(name);
   });
 }
+
+// Returns a promise that resolves when the adb process exists and is running.
+async function waitForAdbStart() {
+  info("Wait for ADB to start");
+  const { adbProcess } = require("devtools/shared/adb/adb-process");
+  const { check } = require("devtools/shared/adb/adb-running-checker");
+  return asyncWaitUntil(async () => {
+    const isProcessReady = adbProcess.ready;
+    const isRunning = await check();
+    return isProcessReady && isRunning;
+  });
+}
+
+// Returns a promise that resolves when the adb process is no longer running.
+async function waitForAdbStop() {
+  info("Wait for ADB to stop");
+  const { adbProcess } = require("devtools/shared/adb/adb-process");
+  const { check } = require("devtools/shared/adb/adb-running-checker");
+  return asyncWaitUntil(async () => {
+    const isProcessReady = adbProcess.ready;
+    const isRunning = await check();
+    return !isProcessReady && !isRunning;
+  });
+}
