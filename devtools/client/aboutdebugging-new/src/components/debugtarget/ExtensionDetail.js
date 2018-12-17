@@ -40,7 +40,7 @@ class ExtensionDetail extends PureComponent {
         },
         dom.a(
           {
-            className: "extension-detail__manifest",
+            className: "extension-detail__manifest js-manifest-url",
             href: manifestURL,
             target: "_blank",
           },
