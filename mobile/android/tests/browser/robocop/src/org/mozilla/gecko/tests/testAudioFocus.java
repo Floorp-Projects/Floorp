@@ -13,8 +13,8 @@ import android.media.AudioManager;
 
 public class testAudioFocus extends MediaPlaybackTest {
     public void testAudioFocus() {
-        info("- wait for gecko ready -");
-        blockForGeckoReady();
+        info("- wait for AudioFocusAgent ready -");
+        blockForAudioFocusAgentReady();
 
         info("- run test : testBasicAbility -");
         testBasicAbility();
