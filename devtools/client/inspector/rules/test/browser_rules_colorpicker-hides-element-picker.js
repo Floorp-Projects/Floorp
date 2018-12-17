@@ -12,7 +12,7 @@ add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
   const {view, toolbox} = await openRuleView();
-  const pickerStopped = toolbox.inspector.nodePicker.once("picker-stopped");
+  const pickerStopped = toolbox.once("picker-stopped");
 
   await startPicker(toolbox);
 

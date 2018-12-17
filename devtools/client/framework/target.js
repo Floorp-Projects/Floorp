@@ -391,29 +391,16 @@ Target.prototype = {
 
   // Get a Front for a target-scoped actor.
   // i.e. an actor served by RootActor.listTabs or RootActorActor.getTab requests
-  async getFront(typeName) {
+  getFront(typeName) {
     let front = this.fronts.get(typeName);
     // the front might have been destroyed and no longer have an actor ID
     if (front && front.actorID || front && typeof front.then === "function") {
       return front;
     }
     front = getFront(this.client, typeName, this.form);
-    this.fronts.set(typeName, front);
-    // replace the placeholder with the instance of the front once it has loaded
-    front = await front;
     this.emit(typeName, front);
     this.fronts.set(typeName, front);
     return front;
-  },
-
-  getCachedFront(typeName) {
-    // do not wait for async fronts;
-    const front = this.fronts.get(typeName);
-    // ensure that the front is a front, and not async front
-    if (front && front.actorID) {
-      return front;
-    }
-    return null;
   },
 
   get client() {

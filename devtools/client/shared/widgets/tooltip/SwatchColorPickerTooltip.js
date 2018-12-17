@@ -169,7 +169,7 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
     telemetry.getHistogramById(TELEMETRY_PICKER_EYEDROPPER_OPEN_COUNT).add(true);
 
     // cancelling picker(if it is already selected) on opening eye-dropper
-    inspector.nodePicker.cancel();
+    toolbox.highlighterUtils.cancelPicker();
 
     // pickColorFromPage will focus the content document. If the devtools are in a
     // separate window, the colorpicker tooltip will be closed before pickColorFromPage

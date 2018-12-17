@@ -28,7 +28,7 @@ class HighlightersOverlay {
    */
   constructor(inspector) {
     this.inspector = inspector;
-    this.inspectorFront = this.inspector.inspector;
+    this.highlighterUtils = this.inspector.toolbox.highlighterUtils;
     this.store = this.inspector.store;
     this.telemetry = inspector.telemetry;
     this.maxGridHighlighters =
@@ -779,7 +779,7 @@ class HighlightersOverlay {
     let highlighter;
 
     try {
-      highlighter = await this.inspectorFront.getHighlighterByType(type);
+      highlighter = await this.highlighterUtils.getHighlighterByType(type);
     } catch (e) {
       this._handleRejection(e);
     }
@@ -812,7 +812,7 @@ class HighlightersOverlay {
       highlighter = this.extraGridHighlighterPool.pop();
     } else {
       try {
-        highlighter = await this.inspectorFront.getHighlighterByType(
+        highlighter = await this.highlighterUtils.getHighlighterByType(
           "CssGridHighlighter");
       } catch (e) {
         this._handleRejection(e);
@@ -1240,7 +1240,7 @@ class HighlightersOverlay {
     this._lastHovered = null;
 
     this.inspector = null;
-    this.inspectorFront = null;
+    this.highlighterUtils = null;
     this.state = null;
     this.store = null;
 

@@ -5,7 +5,6 @@
 
 const Telemetry = require("devtools/client/shared/telemetry");
 const telemetry = new Telemetry();
-const { NodePicker } = require("devtools/shared/fronts/inspector/node-picker");
 const TELEMETRY_EYEDROPPER_OPENED = "DEVTOOLS_EYEDROPPER_OPENED_COUNT";
 const TELEMETRY_EYEDROPPER_OPENED_MENU = "DEVTOOLS_MENU_EYEDROPPER_OPENED_COUNT";
 const SHOW_ALL_ANONYMOUS_CONTENT_PREF = "devtools.inspector.showAllAnonymousContent";
@@ -458,7 +457,6 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     ]);
 
     this.selection = new Selection(this.walker);
-    this.nodePicker = new NodePicker(this.highlighter, this.walker, this.selection);
   }
 
   async _getWalker() {
@@ -499,17 +497,6 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
         this._highlighters.delete(type);
       }
     }
-  }
-
-  async getHighlighterByType(typeName) {
-    let highlighter = null;
-    try {
-      highlighter = await super.getHighlighterByType(typeName);
-    } catch (_) {
-      throw new Error("The target doesn't support " +
-        `creating highlighters by types or ${typeName} is unknown`);
-    }
-    return highlighter;
   }
 
   getKnownHighlighter(type) {
