@@ -7,9 +7,8 @@ add_task(async function test_filtering() {
   let match = new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
                               UrlbarUtils.MATCH_SOURCE.TABS,
                               { url: "http://mozilla.org/foo/" });
-  registerBasicTestProvider([match]);
-
-  let context = createContext();
+  let providerName = registerBasicTestProvider([match]);
+  let context = createContext(undefined, {providers: [providerName]});
   let controller = new UrlbarController({
     browserWindow: {
       location: {
@@ -34,7 +33,8 @@ add_task(async function test_filtering() {
                     UrlbarUtils.MATCH_SOURCE.HISTORY,
                     { url: "http://mozilla.org/foo/" }),
   ];
-  registerBasicTestProvider(matches);
+  providerName = registerBasicTestProvider(matches);
+  context = createContext(undefined, {providers: [providerName]});
 
   info("Disable one of the sources, should get a single match");
   Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
@@ -48,7 +48,8 @@ add_task(async function test_filtering() {
   Services.prefs.clearUserPref("browser.urlbar.suggest.history");
 
   info("Use a restriction character, should get a single match");
-  context = createContext(`foo ${UrlbarTokenizer.RESTRICT.OPENPAGE}`);
+  context = createContext(`foo ${UrlbarTokenizer.RESTRICT.OPENPAGE}`,
+                          {providers: [providerName]});
   promise = Promise.all([
     promiseControllerNotification(controller, "onQueryResults"),
     promiseControllerNotification(controller, "onQueryFinished"),
@@ -59,7 +60,6 @@ add_task(async function test_filtering() {
 });
 
 add_task(async function test_filter_javascript() {
-  let context = createContext();
   let controller = new UrlbarController({
     browserWindow: {
       location: {
@@ -73,7 +73,8 @@ add_task(async function test_filter_javascript() {
   let jsMatch = new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
                                 UrlbarUtils.MATCH_SOURCE.HISTORY,
                                 { url: "javascript:foo" });
-  registerBasicTestProvider([match, jsMatch]);
+  let providerName = registerBasicTestProvider([match, jsMatch]);
+  let context = createContext(undefined, {providers: [providerName]});
 
   info("By default javascript should be filtered out");
   let promise = promiseControllerNotification(controller, "onQueryResults");
@@ -82,7 +83,8 @@ add_task(async function test_filter_javascript() {
   Assert.deepEqual(context.results, [match]);
 
   info("Except when the user explicitly starts the search with javascript:");
-  context = createContext(`javascript: ${UrlbarTokenizer.RESTRICT.HISTORY}`);
+  context = createContext(`javascript: ${UrlbarTokenizer.RESTRICT.HISTORY}`,
+                          {providers: [providerName]});
   promise = promiseControllerNotification(controller, "onQueryResults");
   await controller.startQuery(context, controller);
   await promise;
@@ -90,7 +92,7 @@ add_task(async function test_filter_javascript() {
 
   info("Disable javascript filtering");
   Services.prefs.setBoolPref("browser.urlbar.filter.javascript", false);
-  context = createContext();
+  context = createContext(undefined, {providers: [providerName]});
   promise = promiseControllerNotification(controller, "onQueryResults");
   await controller.startQuery(context, controller);
   await promise;

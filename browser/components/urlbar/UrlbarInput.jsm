@@ -344,6 +344,8 @@ class UrlbarInput {
       lastKey,
       maxResults: UrlbarPrefs.get("maxRichResults"),
       isPrivate: this.isPrivate,
+      providers: ["UnifiedComplete"],
+      muxer: "UnifiedComplete",
     }));
   }
 
