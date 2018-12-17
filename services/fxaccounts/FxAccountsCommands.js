@@ -272,7 +272,11 @@ class SendTab {
       publicKey: sendTabKeys.publicKey,
       authSecret: sendTabKeys.authSecret,
     };
-    const {kSync, kXCS} = await this._fxAccounts.getKeys();
+    // getEncryptedKey() can be called right after a sign-in/up to FxA:
+    // We get -cached- keys using getSignedInUser() instead of getKeys()
+    // because we will await on getKeys() which is already awaiting on
+    // the promise we return.
+    const {kSync, kXCS} = await this._fxAccounts.getSignedInUser();
     if (!kSync || !kXCS) {
       return null;
     }
