@@ -15,6 +15,7 @@
 
 #include "mozilla/Assertions.h"
 #include "nsAString.h"
+#include "mozilla/Tuple.h"
 
 #include "nsTArrayForwardDeclare.h"
 
@@ -51,6 +52,10 @@ void encoding_mem_convert_latin1_to_utf16(const char* src, size_t src_len,
 
 size_t encoding_mem_convert_utf16_to_utf8(const char16_t* src, size_t src_len,
                                           char* dst, size_t dst_len);
+
+void encoding_mem_convert_utf16_to_utf8_partial(const char16_t* src,
+                                                size_t* src_len, char* dst,
+                                                size_t* dst_len);
 
 size_t encoding_mem_convert_utf8_to_utf16(const char* src, size_t src_len,
                                           char16_t* dst, size_t dst_len);
@@ -137,6 +142,27 @@ inline size_t ConvertUTF16toUTF8(mozilla::Span<const char16_t> aSource,
                                  mozilla::Span<char> aDest) {
   return encoding_mem_convert_utf16_to_utf8(
       aSource.Elements(), aSource.Length(), aDest.Elements(), aDest.Length());
+}
+
+/**
+ * Lone surrogates are replaced with the REPLACEMENT CHARACTER.
+ *
+ * The conversion is guaranteed to be complete if the length of aDest is
+ * at least the length of aSource times three.
+ *
+ * The output is always valid UTF-8 ending on scalar value boundary
+ * even in the case of partial conversion.
+ *
+ * Returns the number of code units read and the number of code
+ * units written.
+ */
+inline mozilla::Tuple<size_t, size_t> ConvertUTF16toUTF8Partial(
+    mozilla::Span<const char16_t> aSource, mozilla::Span<char> aDest) {
+  size_t srcLen = aSource.Length();
+  size_t dstLen = aDest.Length();
+  encoding_mem_convert_utf16_to_utf8_partial(aSource.Elements(), &srcLen,
+                                             aDest.Elements(), &dstLen);
+  return mozilla::MakeTuple(srcLen, dstLen);
 }
 
 /**
