@@ -7,8 +7,8 @@
 #include "FFmpegVideoDecoder.h"
 #include "FFmpegLog.h"
 #include "ImageContainer.h"
-#include "MediaInfo.h"
 #include "MP4Decoder.h"
+#include "MediaInfo.h"
 #include "VPXDecoder.h"
 #include "mozilla/layers/KnowsCompositor.h"
 
@@ -193,6 +193,48 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
   packet.flags = aSample->mKeyframe ? AV_PKT_FLAG_KEY : 0;
   packet.pos = aSample->mOffset;
 
+#if LIBAVCODEC_VERSION_MAJOR >= 58
+  packet.duration = aSample->mDuration.ToMicroseconds();
+  int res = mLib->avcodec_send_packet(mCodecContext, &packet);
+  if (res < 0) {
+    // In theory, avcodec_send_packet could sent -EAGAIN should its internal
+    // buffers be full. In practice this can't happen as we only feed one frame
+    // at a time, and we immediately call avcodec_receive_frame right after.
+    FFMPEG_LOG("avcodec_send_packet error: %d", res);
+    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                       RESULT_DETAIL("avcodec_send_packet error: %d", res));
+  }
+
+  if (aGotFrame) {
+    *aGotFrame = false;
+  }
+  do {
+    if (!PrepareFrame()) {
+      NS_WARNING("FFmpeg h264 decoder failed to allocate frame.");
+      return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
+    }
+    res = mLib->avcodec_receive_frame(mCodecContext, mFrame);
+    if (res == int(AVERROR_EOF)) {
+      return NS_ERROR_DOM_MEDIA_END_OF_STREAM;
+    }
+    if (res == AVERROR(EAGAIN)) {
+      return NS_OK;
+    }
+    if (res < 0) {
+      FFMPEG_LOG("avcodec_receive_frame error: %d", res);
+      return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                         RESULT_DETAIL("avcodec_receive_frame error: %d", res));
+    }
+    MediaResult rv = CreateImage(mFrame->pkt_pos, mFrame->pkt_pts,
+                                 mFrame->pkt_duration, aResults);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    if (aGotFrame) {
+      *aGotFrame = true;
+    }
+  } while (true);
+#else
   // LibAV provides no API to retrieve the decoded sample's duration.
   // (FFmpeg >= 1.0 provides av_frame_get_pkt_duration)
   // As such we instead use a map using the dts as key that we will retrieve
@@ -248,9 +290,21 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     // against the map becoming extremely big.
     mDurationMap.Clear();
   }
+
+  MediaResult rv = CreateImage(aSample->mOffset, pts, duration, aResults);
+  if (NS_SUCCEEDED(rv) && aGotFrame) {
+    *aGotFrame = true;
+  }
+  return rv;
+#endif
+}
+
+MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
+    int64_t aOffset, int64_t aPts, int64_t aDuration,
+    MediaDataDecoder::DecodedData& aResults) {
   FFMPEG_LOG("Got one frame output with pts=%" PRId64 " dts=%" PRId64
              " duration=%" PRId64 " opaque=%" PRId64,
-             pts, mFrame->pkt_dts, duration, mCodecContext->reordered_opaque);
+             aPts, mFrame->pkt_dts, aDuration, mCodecContext->reordered_opaque);
 
   VideoData::YCbCrBuffer b;
   b.mPlanes[0].mData = mFrame->data[0];
@@ -332,8 +386,8 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     }
   }
   RefPtr<VideoData> v = VideoData::CreateAndCopyData(
-      mInfo, mImageContainer, aSample->mOffset, TimeUnit::FromMicroseconds(pts),
-      TimeUnit::FromMicroseconds(duration), b, !!mFrame->key_frame,
+      mInfo, mImageContainer, aOffset, TimeUnit::FromMicroseconds(aPts),
+      TimeUnit::FromMicroseconds(aDuration), b, !!mFrame->key_frame,
       TimeUnit::FromMicroseconds(-1),
       mInfo.ScaledImageRect(mFrame->width, mFrame->height), mImageAllocator);
 
@@ -342,9 +396,6 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
                        RESULT_DETAIL("image allocation error"));
   }
   aResults.AppendElement(std::move(v));
-  if (aGotFrame) {
-    *aGotFrame = true;
-  }
   return NS_OK;
 }
 

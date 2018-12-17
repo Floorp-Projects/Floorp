@@ -80,6 +80,10 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
   // libavcodec v54 only
   void (*avcodec_free_frame)(AVFrame** frame);
 
+  // libavcodec v58 and later only
+  int (*avcodec_send_packet)(AVCodecContext* avctx, const AVPacket* avpkt);
+  int (*avcodec_receive_frame)(AVCodecContext* avctx, AVFrame* frame);
+
   // libavcodec optional
   AvRdftInitFn av_rdft_init;
   AvRdftCalcFn av_rdft_calc;

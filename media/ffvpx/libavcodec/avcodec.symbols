@@ -102,3 +102,5 @@ avcodec_register_all
 avcodec_string
 avcodec_version
 avsubtitle_free
+avcodec_send_packet
+avcodec_receive_frame

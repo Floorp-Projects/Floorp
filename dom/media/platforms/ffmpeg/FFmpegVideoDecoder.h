@@ -57,11 +57,18 @@ class FFmpegVideoDecoder<LIBAV_VER>
   void OutputDelayedFrames();
   bool NeedParser() const override {
     return
+#if LIBAVCODEC_VERSION_MAJOR >= 58
+        false;
+#else
 #if LIBAVCODEC_VERSION_MAJOR >= 55
         mCodecID == AV_CODEC_ID_VP9 ||
 #endif
         mCodecID == AV_CODEC_ID_VP8;
+#endif
   }
+
+  MediaResult CreateImage(int64_t aOffset, int64_t aPts, int64_t aDuration,
+                          MediaDataDecoder::DecodedData& aResults);
 
   /**
    * This method allocates a buffer for FFmpeg's decoder, wrapped in an Image.
