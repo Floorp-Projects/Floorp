@@ -22,6 +22,7 @@ use plane_split::{Clipper, Polygon, Splitter};
 use prim_store::{PictureIndex, PrimitiveInstance, SpaceMapper, VisibleFace, PrimitiveInstanceKind};
 use prim_store::{get_raster_rects, CoordinateSpaceMapping, PointKey};
 use prim_store::{OpacityBindingStorage, PrimitiveTemplateKind, ImageInstanceStorage, OpacityBindingIndex, SizeKey};
+use print_tree::PrintTreePrinter;
 use render_backend::FrameResources;
 use render_task::{ClearMode, RenderTask, RenderTaskCacheEntryHandle, TileBlit};
 use render_task::{RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskId, RenderTaskLocation};
@@ -1502,6 +1503,29 @@ pub struct PicturePrimitive {
 }
 
 impl PicturePrimitive {
+    pub fn print<T: PrintTreePrinter>(
+        &self,
+        pictures: &[Self],
+        self_index: PictureIndex,
+        pt: &mut T,
+    ) {
+        pt.new_level(format!("{:?}", self_index));
+        pt.add_item(format!("prim_count: {:?}", self.prim_list.prim_instances.len()));
+        pt.add_item(format!("local_rect: {:?}", self.local_rect));
+        if self.apply_local_clip_rect {
+            pt.add_item(format!("local_clip_rect: {:?}", self.local_clip_rect));
+        }
+        pt.add_item(format!("spatial_node_index: {:?}", self.spatial_node_index));
+        pt.add_item(format!("raster_config: {:?}", self.raster_config));
+        pt.add_item(format!("requested_composite_mode: {:?}", self.requested_composite_mode));
+
+        for index in &self.prim_list.pictures {
+            pictures[index.0].print(pictures, *index, pt);
+        }
+
+        pt.end_level();
+    }
+
     fn resolve_scene_properties(&mut self, properties: &SceneProperties) -> bool {
         match self.requested_composite_mode {
             Some(PictureCompositeMode::Filter(ref mut filter)) => {
