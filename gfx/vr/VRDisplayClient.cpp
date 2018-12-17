@@ -155,7 +155,10 @@ void VRDisplayClient::FireGamepadEvents() {
     // Send events to notify that new controllers are added
     RefPtr<dom::Gamepad> existing =
         gamepadManager->GetGamepad(gamepadId, dom::GamepadServiceType::VR);
-    if (lastState.controllerName[0] == '\0' || !existing) {
+    // ControllerState in OpenVR action-based API gets delay to query btn and axis count.
+    // So, we need to check if they are more than zero.
+    if ((lastState.controllerName[0] == '\0' || !existing) &&
+        (state.numButtons > 0 || state.numAxes > 0)) {
       dom::GamepadAdded info(NS_ConvertUTF8toUTF16(state.controllerName),
                              dom::GamepadMappingType::_empty, state.hand,
                              mDisplayInfo.mDisplayID, state.numButtons,
