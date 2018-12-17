@@ -2444,6 +2444,24 @@ static MOZ_MUST_USE bool RunResolutionFunction(JSContext* cx,
   }
 
   if (!promiseObj) {
+    if (mode == RejectMode) {
+      // The rejection will never be handled, given the returned promise
+      // is known to be unused, and already optimized away.
+      //
+      // Create temporary Promise object and reject it, in order to
+      // report the unhandled rejection.
+      //
+      // Allocation time points wrong time, but won't matter much.
+      Rooted<PromiseObject*> temporaryPromise(cx);
+      temporaryPromise = CreatePromiseObjectWithoutResolutionFunctions(cx);
+      if (!temporaryPromise) {
+        cx->clearPendingException();
+        return true;
+      }
+
+      return RejectPromiseInternal(cx, temporaryPromise, result);
+    }
+
     return true;
   }
 
