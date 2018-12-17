@@ -563,13 +563,20 @@ void VectorImage::SendInvalidationNotifications() {
   // we would miss the subsequent invalidations if we didn't send out the
   // notifications directly in |InvalidateObservers...|.
 
+  SurfaceCache::RemoveImage(ImageKey(this));
+
+  if (UpdateImageContainer(Nothing())) {
+    // If we have image containers, that means we probably won't get a Draw call
+    // from the owner since they are using the container. We must assume all
+    // invalidations need to be handled.
+    MOZ_ASSERT(mRenderingObserver, "Should have a rendering observer by now");
+    mRenderingObserver->ResumeHonoringInvalidations();
+  }
+
   if (mProgressTracker) {
-    SurfaceCache::RemoveImage(ImageKey(this));
     mProgressTracker->SyncNotifyProgress(FLAG_FRAME_COMPLETE,
                                          GetMaxSizedIntRect());
   }
-
-  UpdateImageContainer(Nothing());
 }
 
 NS_IMETHODIMP_(IntRect)

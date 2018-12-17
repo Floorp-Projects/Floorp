@@ -262,7 +262,7 @@ ImgDrawResult ImageResource::GetImageContainerImpl(
   return drawResult;
 }
 
-void ImageResource::UpdateImageContainer(const Maybe<IntRect>& aDirtyRect) {
+bool ImageResource::UpdateImageContainer(const Maybe<IntRect>& aDirtyRect) {
   MOZ_ASSERT(NS_IsMainThread());
 
   for (int i = mImageContainers.Length() - 1; i >= 0; --i) {
@@ -289,6 +289,8 @@ void ImageResource::UpdateImageContainer(const Maybe<IntRect>& aDirtyRect) {
       mImageContainers.RemoveElementAt(i);
     }
   }
+
+  return !mImageContainers.IsEmpty();
 }
 
 void ImageResource::ReleaseImageContainer() {
