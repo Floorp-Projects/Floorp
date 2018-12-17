@@ -53,7 +53,7 @@ def make_decision_task(params):
         'as_slugid': as_slugid,
         'event': {
             'repository': {
-                'clone_url': params['repository_github_http_url']
+                'html_url': params['repository_github_http_url']
             },
             'release': {
                 'tag_name': params['head_rev'],

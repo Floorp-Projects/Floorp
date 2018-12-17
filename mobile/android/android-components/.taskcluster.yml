@@ -6,263 +6,196 @@ version: 1
 policy:
   pullRequests: public
 tasks:
-####################################################################################################
-# Task: Pull requests
-####################################################################################################
-  - $if: 'tasks_for == "github-pull-request" && event["action"] in ["opened", "reopened", "edited", "synchronize"]'
-    then:
-      $let:
-        decision_task_id: {$eval: as_slugid("decision_task")}
-        expires_in: {$fromNow: '1 year'}
-        scheduler_id: taskcluster-github
-        user: ${event.sender.login}
-        head_branch: ${event.pull_request.head.ref}
-        head_rev: ${event.pull_request.head.sha}
-        repository: ${event.pull_request.head.repo.clone_url}
-        pull_request_title: ${event.pull_request.title}
-        pull_request_number: ${event.pull_request.number}
-        pull_request_url: ${event.pull_request.html_url}
-      in:
+  $let:
+    decision_task_id: {$eval: as_slugid("decision_task")}
+    expires_in: {$fromNow: '1 year'}
+    user: ${event.sender.login}
+
+    # We define the following variable at the very top, because they are used in the
+    # default definition
+    head_branch:
+      $if: 'tasks_for == "github-pull-request"'
+      then: ${event.pull_request.head.ref}
+      else:
+        $if: 'tasks_for == "github-push"'
+        then: ${event.ref}
+        else: ${event.release.target_commitish}
+
+    head_rev:
+      $if: 'tasks_for == "github-pull-request"'
+      then: ${event.pull_request.head.sha}
+      else:
+        $if: 'tasks_for == "github-push"'
+        then: ${event.after}
+        else: ${event.release.tag_name}
+
+    repository:
+      $if: 'tasks_for == "github-pull-request"'
+      then: ${event.pull_request.head.repo.html_url}
+      else: ${event.repository.html_url}
+
+    worker_type:
+      $if: 'tasks_for == "github-release" && event.repository.html_url == "https://github.com/mozilla-mobile/android-components"'
+      then: gecko-focus
+      else: github-worker
+
+    scheduler_id:
+      $if: 'tasks_for == "cron"'
+      then: focus-nightly-sched  # TODO: Rename to mobile-nightly-sched
+      else: taskcluster-github
+  in:
+    $let:
+      default_task_definition:
         taskId: ${decision_task_id}
-        taskGroupId: ${decision_task_id}
+        taskGroupId: ${decision_task_id}  # Must be explicit because of Chain of Trust
+        schedulerId: ${scheduler_id}
         created: {$fromNow: ''}
         deadline: {$fromNow: '2 hours'}
         expires: ${expires_in}
         provisionerId: aws-provisioner-v1
-        workerType: github-worker
+        workerType: ${worker_type}
+        requires: all-completed   # Must be explicit because of Chain of Trust
+        retries: 5
         scopes:
-          - queue:create-task:high:aws-provisioner-v1/android-components-g
           - queue:scheduler-id:${scheduler_id}
-          - secrets:get:project/mobile/android-components/public-tokens
+        routes:
+          - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
         payload:
-          maxRunTime: 3600
+          maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
           image: mozillamobile/android-components:1.11
+          command:
+            - /bin/bash
+            - --login
+            - -cx
+            # The rest of the command must be defined below
           env:
             TASK_ID: ${decision_task_id}
             SCHEDULER_ID: ${scheduler_id}
             MOBILE_HEAD_REPOSITORY: ${repository}
             MOBILE_HEAD_BRANCH: ${head_branch}
             MOBILE_HEAD_REV: ${head_rev}
-            GITHUB_PULL_TITLE: ${pull_request_title}
-          command:
-            - /bin/bash
-            - --login
-            - -cx
-            - >-
-              git fetch ${repository} ${head_branch}
-              && git config advice.detachedHead false
-              && git checkout ${head_rev}
-              && ./gradlew --no-daemon --version
-              && python automation/taskcluster/decision_task.py
           features:
             taskclusterProxy: true
+        extra:
+          tasks_for: ${tasks_for}
         metadata:
-          name: 'Android Components - Decision task (Pull Request #${pull_request_number})'
-          description: 'Building and testing Android components - triggered by [#${pull_request_number}](${pull_request_url})'
           owner: ${user}@users.noreply.github.com
           source: ${repository}/raw/${head_rev}/.taskcluster.yml
-####################################################################################################
-# Task: Pushes
-####################################################################################################
-  - $if: 'tasks_for == "github-push"'
-    then:
-      $if: 'event.ref[:10] != "refs/tags/"'
+    in:
+      $if: 'tasks_for in ["github-pull-request", "github-push"]'
       then:
         $let:
-          decision_task_id: {$eval: as_slugid("decision_task")}
-          expires_in: {$fromNow: '1 year'}
-          scheduler_id: taskcluster-github
-          user: ${event.sender.login}
-          head_branch: ${event.ref}
-          head_rev: ${event.after}
-          repository: ${event.repository.clone_url}
+          pr_or_push_parameters:
+            scopes:
+              - queue:create-task:high:aws-provisioner-v1/android-components-g
+              - secrets:get:project/mobile/android-components/public-tokens
+            payload:
+              command:
+                - >-
+                  git fetch ${repository} ${head_branch}
+                  && git config advice.detachedHead false
+                  && git checkout ${head_rev}
+                  && ./gradlew --no-daemon --version
+                  && python automation/taskcluster/decision_task.py
         in:
-          taskId: ${decision_task_id}
-          taskGroupId: ${decision_task_id}
-          created: {$fromNow: ''}
-          deadline: {$fromNow: '2 hours'}
-          expires: ${expires_in}
-          provisionerId: aws-provisioner-v1
-          workerType: github-worker
-          scopes:
-            - queue:create-task:high:aws-provisioner-v1/android-components-g
-            - queue:scheduler-id:${scheduler_id}
-            - secrets:get:project/mobile/android-components/public-tokens
-          payload:
-            maxRunTime: 3600
-            image: mozillamobile/android-components:1.11
-            env:
-              TASK_ID: ${decision_task_id}
-              SCHEDULER_ID: ${scheduler_id}
-              MOBILE_HEAD_REPOSITORY: ${repository}
-              MOBILE_HEAD_BRANCH: ${head_branch}
-              MOBILE_HEAD_REV: ${head_rev}
-            command:
-              - /bin/bash
-              - --login
-              - -cx
-              - >-
-                git fetch ${repository} ${head_branch}
-                && git config advice.detachedHead false
-                && git checkout ${head_rev}
-                && ./gradlew --no-daemon --version
-                && python automation/taskcluster/decision_task.py
-            features:
-              taskclusterProxy: true
-          metadata:
-            name: Android Components - Decision task
-            description: Schedules the build and test tasks for Android components.
-            owner: ${user}@users.noreply.github.com
-            source: ${repository}/raw/${head_rev}/.taskcluster.yml
-####################################################################################################
-# Task: Snapshot release
-####################################################################################################
-  - $if: 'tasks_for == "cron"'
-    then:
-      $let:
-        decision_task_id: {$eval: as_slugid("decision_task")}
-        expires_in: {$fromNow: '1 year'}
-        scheduler_id: focus-nightly-sched
-        user: ${event.sender.login}
-        repository: ${event.repository.clone_url}
-      in:
-        taskId: ${decision_task_id}
-        taskGroupId: ${decision_task_id}
-        created: {$fromNow: ''}
-        deadline: {$fromNow: '2 hours'}
-        expires: ${expires_in}
-        schedulerId: ${scheduler_id}
-        provisionerId: aws-provisioner-v1
-        workerType: gecko-focus
-        requires: all-completed
-        priority: medium
-        retries: 5
-        scopes:
-          - project:mobile:android-components:releng:beetmover:action:push-to-maven
-          - project:mobile:android-components:releng:beetmover:bucket:maven-snapshot-staging
-          - queue:create-task:highest:scriptworker-prov-v1/mobile-beetmover-dev
-          - queue:create-task:highest:aws-provisioner-v1/gecko-focus
-          - queue:create-task:highest:aws-provisioner-v1/github-worker
-          - queue:scheduler-id:${scheduler_id}
-        routes:
-          - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
-        payload:
-          maxRunTime: 600
-          image: mozillamobile/android-components:1.11
-          env:
-            TASK_ID: ${decision_task_id}
-            SCHEDULER_ID: ${scheduler_id}
-            MOBILE_HEAD_REPOSITORY: ${repository}
-            MOBILE_HEAD_BRANCH: ${event.release.target_commitish}
-            MOBILE_HEAD_REV: ${event.release.tag_name}
-            MOBILE_TRIGGERED_BY: ${event.sender.login}
-          command:
-            - /bin/bash
-            - --login
-            - -cx
-            - >-
-              git fetch ${repository} ${event.release.target_commitish}
-              && git config advice.detachedHead false
-              && git checkout ${event.release.tag_name}
-              && ./gradlew --no-daemon --version
-              && python automation/taskcluster/decision_task_snapshot_release.py
-          features:
-            taskclusterProxy: true
-            chainOfTrust: true
-          artifacts:
-            public/task-graph.json:
-              type: file
-              path: /build/android-components/task-graph.json
-              expires: ${expires_in}
-            public/actions.json:
-              type: file
-              path: /build/android-components/actions.json
-              expires: ${expires_in}
-            public/parameters.yml:
-              type: file
-              path: /build/android-components/parameters.yml
-              expires: ${expires_in}
-        extra:
-          cron: {$json: {$eval: 'cron'}}
-          tasks_for: ${tasks_for}
-        metadata:
-          name: Android Components - Decision task for Snapshot release
-          description: Schedules the snapshot release of Android components.
-          owner: skaspari@mozilla.com
-          source: ${repository}/raw/${event.release.tag_name}/.taskcluster.yml
-####################################################################################################
-# Task: Release
-####################################################################################################
-  - $if: 'tasks_for == "github-release"'
-    then:
-      $let:
-        decision_task_id: {$eval: as_slugid("decision_task")}
-        expires_in: {$fromNow: '1 year'}
-        repository: https://github.com/mozilla-mobile/android-components
-        scheduler_id: taskcluster-github
-        tag: ${event.release.tag_name}
-        user: ${event.sender.login}
-      in:
-        taskId: ${decision_task_id}
-        taskGroupId: ${decision_task_id}  # Must be explicit because of Chain of Trust
-        created: {$fromNow: ''}
-        deadline: {$fromNow: '2 hours'}
-        expires: ${expires_in}
-        schedulerId: ${scheduler_id}   # Must be explicit because of Chain of Trust
-        provisionerId: aws-provisioner-v1
-        workerType: gecko-focus
-        requires: all-completed   # Must be explicit because of Chain of Trust
-        priority: highest
-        retries: 5
-        scopes:
-          - project:mobile:android-components:releng:beetmover:action:push-to-maven
-          - project:mobile:android-components:releng:beetmover:bucket:maven-production
-          - queue:create-task:highest:aws-provisioner-v1/gecko-focus
-          - queue:create-task:highest:scriptworker-prov-v1/mobile-beetmover-v1
-          - queue:scheduler-id:${scheduler_id}
-        routes:
-          - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
-        payload:
-          maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
-          image: 'mozillamobile/android-components:1.11'
-          env:
-            TASK_ID: ${decision_task_id}
-            SCHEDULER_ID: ${scheduler_id}
-            MOBILE_HEAD_REPOSITORY: ${repository}
-            MOBILE_HEAD_BRANCH: ${event.release.target_commitish}
-            MOBILE_HEAD_REV: ${tag}
-            MOBILE_TRIGGERED_BY: ${user}
-          command:
-            - /bin/bash
-            - --login
-            - -cx
-            - >-
-              git fetch origin --tags
-              && git config advice.detachedHead false
-              && git checkout ${tag}
-              && pip install pyyaml
-              && ./gradlew --no-daemon --version
-              && python automation/taskcluster/decision_task_release.py --version "${tag}"
-          features:
-            taskclusterProxy: true
-            chainOfTrust: true
-          artifacts:
-            public/task-graph.json:
-              type: file
-              path: /build/android-components/task-graph.json
-              expires: ${expires_in}
-            public/actions.json:
-              type: file
-              path: /build/android-components/actions.json
-              expires: ${expires_in}
-            public/parameters.yml:
-              type: file
-              path: /build/android-components/parameters.yml
-              expires: ${expires_in}
-        extra:
-          tasks_for: ${tasks_for}
-        metadata:
-          name: Android Components - Decision task (${tag})
-          description: Build and publish release versions.
-          owner: ${user}@users.noreply.github.com
-          source: ${repository}/raw/${tag}/.taskcluster.yml
+          - $if: 'tasks_for == "github-pull-request" && event["action"] in ["opened", "reopened", "edited", "synchronize"]'
+            then:
+              $let:
+                pull_request_title: ${event.pull_request.title}
+                pull_request_number: ${event.pull_request.number}
+                pull_request_url: ${event.pull_request.html_url}
+              in:
+                $mergeDeep:
+                  - {$eval: 'default_task_definition'}
+                  - {$eval: 'pr_or_push_parameters'}
+                  - payload:
+                      env:
+                        GITHUB_PULL_TITLE: ${pull_request_title}
+                    metadata:
+                      name: 'Android Components - Decision task (Pull Request #${pull_request_number})'
+                      description: 'Building and testing Android components - triggered by [#${pull_request_number}](${pull_request_url})'
+          - $if: 'tasks_for == "github-push" && head_branch[:10] != "refs/tags/"'
+            then:
+              $mergeDeep:
+                - {$eval: 'default_task_definition'}
+                - {$eval: 'pr_or_push_parameters'}
+                - metadata:
+                    name: Android Components - Decision task
+                    description: Schedules the build and test tasks for Android components.
+      else:
+        $if: 'tasks_for in ["github-release", "cron"]'
+        then:
+          $let:
+            nightly_or_release_definition:
+              scopes:
+                - project:mobile:android-components:releng:beetmover:action:push-to-maven
+                - queue:create-task:highest:aws-provisioner-v1/github-worker
+              payload:
+                features:
+                  chainOfTrust: true
+                artifacts:
+                  public/task-graph.json:
+                    type: file
+                    path: /build/android-components/task-graph.json
+                    expires: ${expires_in}
+                  public/actions.json:
+                    type: file
+                    path: /build/android-components/actions.json
+                    expires: ${expires_in}
+                  public/parameters.yml:
+                    type: file
+                    path: /build/android-components/parameters.yml
+                    expires: ${expires_in}
+          in:
+            - $if: 'tasks_for == "github-release"'
+              then:
+                $let:
+                  tag: ${event.release.tag_name}
+                in:
+                  $mergeDeep:
+                    - {$eval: 'default_task_definition'}
+                    - {$eval: 'nightly_or_release_definition'}
+                    - priority: highest
+                      scopes:
+                        # TODO: Use staging values when not on main repository
+                        - project:mobile:android-components:releng:beetmover:bucket:maven-production
+                        - queue:create-task:highest:aws-provisioner-v1/gecko-focus
+                        - queue:create-task:highest:scriptworker-prov-v1/mobile-beetmover-v1
+                      payload:
+                        env:
+                          MOBILE_TRIGGERED_BY: ${user}
+                        command:
+                          - >-
+                            git fetch origin --tags
+                            && git config advice.detachedHead false
+                            && git checkout ${tag}
+                            && pip install pyyaml
+                            && ./gradlew --no-daemon --version
+                            && python automation/taskcluster/decision_task_release.py --version "${tag}"
+                      metadata:
+                        name: Android Components - Decision task (${tag})
+                        description: Build and publish release versions.
+            - $if: 'tasks_for == "cron"'
+              then:
+                $mergeDeep:
+                  - {$eval: 'default_task_definition'}
+                  - {$eval: 'nightly_or_release_definition'}
+                  - priority: medium
+                    scopes:
+                      # TODO Swap to production workers once read
+                      - project:mobile:android-components:releng:beetmover:bucket:maven-snapshot-staging
+                      - queue:create-task:highest:scriptworker-prov-v1/mobile-beetmover-dev
+                      - queue:create-task:highest:aws-provisioner-v1/gecko-focus
+                    payload:
+                      command:
+                        - >-
+                          git fetch ${repository} ${head_branch}
+                          && git config advice.detachedHead false
+                          && git checkout ${head_rev}
+                          && ./gradlew --no-daemon --version
+                          && python automation/taskcluster/decision_task_snapshot_release.py
+                    extra:
+                      cron: {$json: {$eval: 'cron'}}
+                    metadata:
+                      name: Android Components - Decision task for Snapshot release
+                      description: Schedules the snapshot release of Android components.
