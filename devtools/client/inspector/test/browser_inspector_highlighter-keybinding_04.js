@@ -15,7 +15,7 @@ add_task(async function() {
   await startPicker(toolbox);
 
   info("Start using the picker by hovering over nodes");
-  const onHover = toolbox.once("picker-node-hovered");
+  const onHover = toolbox.inspector.nodePicker.once("picker-node-hovered");
   testActor.synthesizeMouse({
     options: {type: "mousemove"},
     center: true,

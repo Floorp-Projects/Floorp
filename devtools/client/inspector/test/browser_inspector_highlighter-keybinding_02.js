@@ -9,7 +9,7 @@
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_dom.html";
 
 add_task(async function() {
-  const {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URL);
+  const {toolbox, testActor} = await openInspectorForURL(TEST_URL);
 
   await startPicker(toolbox);
 
@@ -45,7 +45,7 @@ add_task(async function() {
   function doKeyHover(args) {
     info("Key pressed. Waiting for element to be highlighted/hovered");
     const onHighlighterReady = toolbox.once("highlighter-ready");
-    const onPickerNodeHovered = inspector.toolbox.once("picker-node-hovered");
+    const onPickerNodeHovered = toolbox.inspector.nodePicker.once("picker-node-hovered");
     testActor.synthesizeKey(args);
     return promise.all([onHighlighterReady, onPickerNodeHovered]);
   }
@@ -53,7 +53,7 @@ add_task(async function() {
   function moveMouseOver(selector) {
     info("Waiting for element " + selector + " to be highlighted");
     const onHighlighterReady = toolbox.once("highlighter-ready");
-    const onPickerNodeHovered = inspector.toolbox.once("picker-node-hovered");
+    const onPickerNodeHovered = toolbox.inspector.nodePicker.once("picker-node-hovered");
     testActor.synthesizeMouse({
       options: {type: "mousemove"},
       center: true,
