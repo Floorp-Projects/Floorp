@@ -1730,3 +1730,27 @@ or run without that action (ie: --no-{action})"
                 if return_code == self.return_code:
                     self.record_status(status, TBPL_STATUS_DICT[status])
         self.summary()
+
+    @PostScriptRun
+    def _parse_build_tests_ccov(self):
+        if 'MOZ_FETCHES_DIR' not in os.environ:
+            return
+
+        dirs = self.query_abs_dirs()
+        topsrcdir = dirs['abs_src_dir']
+        base_work_dir = dirs['base_work_dir']
+
+        env = self.query_build_env()
+
+        grcov_path = os.path.join(os.environ['MOZ_FETCHES_DIR'], 'grcov')
+        if not os.path.isabs(grcov_path):
+            grcov_path = os.path.join(base_work_dir, grcov_path)
+        if self._is_windows():
+            grcov_path += '.exe'
+        env['GRCOV_PATH'] = grcov_path
+
+        cmd = self._query_mach() + [
+            'python',
+            os.path.join('testing', 'parse_build_tests_ccov.py'),
+        ]
+        self.run_command(command=cmd, cwd=topsrcdir, env=env, halt_on_failure=True)
