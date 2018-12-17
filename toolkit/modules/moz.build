@@ -222,7 +222,6 @@ EXTRA_JS_MODULES += [
     'ObjectUtils.jsm',
     'offlineAppCache.jsm',
     'PageMenu.jsm',
-    'PageMetadata.jsm',
     'PermissionsUtils.jsm',
     'PopupNotifications.jsm',
     'Preferences.jsm',
