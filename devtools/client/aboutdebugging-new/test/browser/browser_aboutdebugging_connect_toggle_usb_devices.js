@@ -4,7 +4,6 @@
 "use strict";
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
-const { adbProcess } = require("devtools/shared/adb/adb-process");
 
 /**
  * Check that USB Devices scanning can be enabled and disabled from the connect page.
@@ -47,8 +46,7 @@ add_task(async function() {
   // might still be starting up. If we move to uninstall directly, the ADB startup will
   // fail and we will have an unhandled promise rejection.
   // See Bug 1498469.
-  info("Wait until ADB has started.");
-  await waitUntil(() => adbProcess.ready);
+  await waitForAdbStart();
 
   info("Click on the toggle button");
   usbToggleButton.click();
@@ -57,6 +55,8 @@ add_task(async function() {
   await waitUntil(() => usbToggleButton.textContent.includes("Enable"));
   ok(document.querySelector(".js-connect-usb-disabled-message"),
     "The message about enabling USB devices is rendered again");
+
+  await waitForAdbStop();
 
   await removeTab(tab);
 });

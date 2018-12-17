@@ -24,26 +24,26 @@ add_task(async function test() {
   is(type, "browser", "Root actor should identify itself as a browser.");
   const tab = await addTab(TAB1_URL);
 
-  let { tabs } = await client.listTabs();
+  let tabs = await client.mainRoot.listTabs();
   is(tabs.length, 2, "Should be two tabs");
-  const tabGrip = tabs.filter(a => a.url == TAB1_URL).pop();
-  ok(tabGrip, "Should have an actor for the tab");
+  const tabFront = tabs.filter(a => a.url == TAB1_URL).pop();
+  ok(tabFront, "Should have an actor for the tab");
 
-  let [response, targetFront] = await client.attachTarget(tabGrip);
+  let response = await tabFront.attach();
   is(response.type, "tabAttached", "Should have attached");
 
-  response = await client.listTabs();
-  tabs = response.tabs;
-
-  response = await targetFront.detach();
+  const previousActorID = tabFront.actorID;
+  response = await tabFront.detach();
   is(response.type, "detached", "Should have detached");
 
-  const newGrip = tabs.filter(a => a.url == TAB1_URL).pop();
-  is(newGrip.actor, tabGrip.actor, "Should have the same actor for the same tab");
+  tabs = await client.mainRoot.listTabs();
+  const newFront = tabs.find(a => a.url == TAB1_URL);
+  is(newFront.actorID, previousActorID, "Should have the same actor for the same tab");
+  isnot(newFront, tabFront, "But the front should be a new one");
 
-  [response, targetFront] = await client.attachTarget(tabGrip);
+  response = await newFront.attach();
   is(response.type, "tabAttached", "Should have attached");
-  response = await targetFront.detach();
+  response = await newFront.detach();
   is(response.type, "detached", "Should have detached");
 
   await removeTab(tab);

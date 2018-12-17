@@ -584,7 +584,8 @@ parent:
      *
      * @param aFirstPartyURI first party of the tab that is requesting access.
      */
-    async ShowCanvasPermissionPrompt(nsCString aFirstPartyURI);
+    async ShowCanvasPermissionPrompt(nsCString aFirstPartyURI,
+                                     bool aHideDoorHanger);
 
     sync SetSystemFont(nsCString aFontName);
     sync GetSystemFont() returns (nsCString retval);

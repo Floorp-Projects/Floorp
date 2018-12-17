@@ -161,7 +161,7 @@ var test_bulk_request_cs = async function(transportFactory, actorType, replyType
   const client = new DebuggerClient(transport);
   client.connect().then(([app, traits]) => {
     Assert.equal(traits.bulk, true);
-    client.listTabs().then(clientResolve);
+    client.mainRoot.rootForm.then(clientResolve);
   });
 
   function bulkSendReadyCallback({copyFrom}) {
@@ -226,7 +226,7 @@ var test_json_request_cs = async function(transportFactory, actorType, replyType
   const client = new DebuggerClient(transport);
   client.connect((app, traits) => {
     Assert.equal(traits.bulk, true);
-    client.listTabs().then(clientResolve);
+    client.mainRoot.rootForm.then(clientResolve);
   });
 
   clientDeferred.then(response => {

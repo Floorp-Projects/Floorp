@@ -24,7 +24,6 @@
 #include "nsIDocumentEncoder.h"
 #include "nsIFragmentContentSink.h"
 #include "nsIParser.h"
-#include "nsIScriptableUnescapeHTML.h"
 #include "nsISupportsPrimitives.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -37,21 +36,12 @@
 
 using namespace mozilla::dom;
 
-NS_IMPL_ISUPPORTS(nsParserUtils, nsIScriptableUnescapeHTML, nsIParserUtils)
+NS_IMPL_ISUPPORTS(nsParserUtils, nsIParserUtils)
 
 NS_IMETHODIMP
 nsParserUtils::ConvertToPlainText(const nsAString& aFromStr, uint32_t aFlags,
                                   uint32_t aWrapCol, nsAString& aToStr) {
   return nsContentUtils::ConvertToPlainText(aFromStr, aToStr, aFlags, aWrapCol);
-}
-
-NS_IMETHODIMP
-nsParserUtils::Unescape(const nsAString& aFromStr, nsAString& aToStr) {
-  return nsContentUtils::ConvertToPlainText(
-      aFromStr, aToStr,
-      nsIDocumentEncoder::OutputSelectionOnly |
-          nsIDocumentEncoder::OutputAbsoluteLinks,
-      0);
 }
 
 NS_IMETHODIMP
@@ -83,14 +73,6 @@ nsParserUtils::Sanitize(const nsAString& aFromStr, uint32_t aFlags,
                           nsIDocumentEncoder::OutputRaw);
 
   return encoder->EncodeToString(aToStr);
-}
-
-NS_IMETHODIMP
-nsParserUtils::ParseFragment(const nsAString& aFragment, bool aIsXML,
-                             nsIURI* aBaseURI, Element* aContextElement,
-                             DocumentFragment** aReturn) {
-  return nsParserUtils::ParseFragment(aFragment, 0, aIsXML, aBaseURI,
-                                      aContextElement, aReturn);
 }
 
 NS_IMETHODIMP

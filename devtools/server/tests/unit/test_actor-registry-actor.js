@@ -42,7 +42,7 @@ function registerNewActor() {
 }
 
 function talkToNewActor() {
-  gClient.listTabs().then(({ helloActor }) => {
+  gClient.mainRoot.getRoot().then(({ helloActor }) => {
     Assert.ok(!!helloActor);
     gClient.request({
       to: helloActor,
@@ -65,7 +65,7 @@ function unregisterNewActor() {
 }
 
 function testActorIsUnregistered() {
-  gClient.listTabs().then(({ helloActor }) => {
+  gClient.mainRoot.rootForm.then(({ helloActor }) => {
     Assert.ok(!helloActor);
 
     finishClient(gClient);

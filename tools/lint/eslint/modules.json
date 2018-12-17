@@ -119,7 +119,6 @@
   "message.js": ["Command", "Message", "MessageOrigin", "Response"],
   "MessagePort.jsm": ["MessagePort", "MessageListener"],
   "Messaging.jsm": ["sendMessageToJava", "Messaging", "EventDispatcher"],
-  "microformat-shiv.js": ["Microformats"],
   "MigrationUtils.jsm": ["MigrationUtils", "MigratorPrototype"],
   "MulticastDNSAndroid.jsm": ["MulticastDNS"],
   "NativeMessaging.jsm": ["NativeApp"],
