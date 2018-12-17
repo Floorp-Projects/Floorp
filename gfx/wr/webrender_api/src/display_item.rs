@@ -689,16 +689,6 @@ pub enum YuvColorSpace {
     Rec601 = 0,
     Rec709 = 1,
 }
-pub const YUV_COLOR_SPACES: [YuvColorSpace; 2] = [YuvColorSpace::Rec601, YuvColorSpace::Rec709];
-
-impl YuvColorSpace {
-    pub fn get_feature_string(&self) -> &'static str {
-        match *self {
-            YuvColorSpace::Rec601 => "YUV_REC601",
-            YuvColorSpace::Rec709 => "YUV_REC709",
-        }
-    }
-}
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum YuvData {
@@ -723,11 +713,6 @@ pub enum YuvFormat {
     PlanarYCbCr = 1,
     InterleavedYCbCr = 2,
 }
-pub const YUV_FORMATS: [YuvFormat; 3] = [
-    YuvFormat::NV12,
-    YuvFormat::PlanarYCbCr,
-    YuvFormat::InterleavedYCbCr,
-];
 
 impl YuvFormat {
     pub fn get_plane_num(&self) -> usize {
@@ -735,14 +720,6 @@ impl YuvFormat {
             YuvFormat::NV12 => 2,
             YuvFormat::PlanarYCbCr => 3,
             YuvFormat::InterleavedYCbCr => 1,
-        }
-    }
-
-    pub fn get_feature_string(&self) -> &'static str {
-        match *self {
-            YuvFormat::NV12 => "YUV_NV12",
-            YuvFormat::PlanarYCbCr => "YUV_PLANAR",
-            YuvFormat::InterleavedYCbCr => "YUV_INTERLEAVED",
         }
     }
 }

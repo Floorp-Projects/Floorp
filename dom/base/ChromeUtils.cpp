@@ -185,6 +185,7 @@ namespace dom {
 
   JS::Rooted<JS::IdVector> ids(cx, JS::IdVector(cx));
   JS::AutoValueVector values(cx);
+  JS::AutoIdVector valuesIds(cx);
 
   {
     JS::RootedObject obj(cx, js::CheckedUnwrap(aObj));
@@ -200,7 +201,8 @@ namespace dom {
 
     JSAutoRealm ar(cx, obj);
 
-    if (!JS_Enumerate(cx, obj, &ids) || !values.reserve(ids.length())) {
+    if (!JS_Enumerate(cx, obj, &ids) || !values.reserve(ids.length()) ||
+        !valuesIds.reserve(ids.length())) {
       return;
     }
 
@@ -214,6 +216,7 @@ namespace dom {
       if (desc.setter() || desc.getter()) {
         continue;
       }
+      valuesIds.infallibleAppend(id);
       values.infallibleAppend(desc.value());
     }
   }
@@ -237,8 +240,8 @@ namespace dom {
 
     JS::RootedValue value(cx);
     JS::RootedId id(cx);
-    for (uint32_t i = 0; i < ids.length(); i++) {
-      id = ids[i];
+    for (uint32_t i = 0; i < valuesIds.length(); i++) {
+      id = valuesIds[i];
       value = values[i];
 
       JS_MarkCrossZoneId(cx, id);

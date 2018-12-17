@@ -38,8 +38,6 @@ function startTest() {
 function testXMLDocURI(aDoc, aExpects) {
   is(aDoc.documentURI, aExpects.documentURI, "wrong url");
   is(aDoc.baseURI, aExpects.baseURI, "wrong base");
-  is(aDoc.documentElement.baseURI, aExpects.elementBaseURI,
-     "wrong base (xml:base)");
 }
 
 function testChromeXMLDocURI(aDoc, aExpects) {
@@ -49,10 +47,6 @@ function testChromeXMLDocURI(aDoc, aExpects) {
   is(aDoc.baseURI, aExpects.baseURI, "wrong base");
   is(aDoc.baseURIObject.spec, aExpects.baseURI,
      "wrong base (.baseURIObject)");
-  is(aDoc.documentElement.baseURI, aExpects.elementBaseURI,
-     "wrong base (xml:base)");
-  is(aDoc.documentElement.baseURIObject.spec, aExpects.elementBaseURI,
-     "wrong base (.baseURIObject, xml:base)");
 }
 
 function testHTMLDocURI(aDoc, aExpects) {
@@ -73,18 +67,6 @@ function testChromeHTMLDocURI(aDoc, aNonChromeBaseURI, aExpects) {
   is(aDoc.baseURI, aExpects.baseURI, "wrong base");
   is(aDoc.baseURIObject.spec, aExpects.baseURI,
      "wrong url (.baseURIObject)");
-
-  aDoc.body.setAttributeNS("http://www.w3.org/XML/1998/namespace", "base",
-                           aNonChromeBaseURI);
-  is(aDoc.body.baseURI, aNonChromeBaseURI,
-     "wrong base (doc base and xml:base are same)");
-  is(aDoc.body.baseURIObject.spec, aNonChromeBaseURI,
-     "wrong base (.baseURIObject, doc base and xml:base are same)")
-  var attr = aDoc.getElementById("data").getAttributeNode("id");
-  is(attr.baseURI, aNonChromeBaseURI,
-     "wrong attr base (doc base and xml:base are same)")
-  is(attr.baseURIObject.spec, aNonChromeBaseURI,
-     "wrong attr base (.baseURIObject, doc base and xml:base are same)")
 
   var base = aDoc.createElement("base");
   var newBaseURI = "http://www.example.com/";
@@ -113,8 +95,7 @@ function* runTest() {
     }
     var expects = {
       documentURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml",
-      baseURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml",
-      elementBaseURI: "http://www.example.com/"
+      baseURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml"
     };
     testXMLDocURI(xhr.responseXML, expects);
     if (xhr.readyState == 4) {
@@ -162,8 +143,7 @@ function* runTest() {
     }
     var expects = {
       documentURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml",
-      baseURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml",
-      elementBaseURI: "http://www.example.com/"
+      baseURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml"
     };
     testXMLDocURI(xhr.responseXML, expects);
     if (xhr.readyState == 4) {
@@ -200,8 +180,7 @@ function* runTest() {
     }
     var expects = {
       documentURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml",
-      baseURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml",
-      elementBaseURI: "http://www.example.com/"
+      baseURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml"
     };
     testXMLDocURI(xhr.responseXML, expects);
     if (xhr.readyState == 4) {
@@ -252,8 +231,7 @@ function* runTest() {
     }
     var expects = {
       documentURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml",
-      baseURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml",
-      elementBaseURI: "http://www.example.com/"
+      baseURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml"
     };
     var xml = SpecialPowers.wrap(xhr.responseXML);
     testChromeXMLDocURI(xml, expects);
@@ -294,8 +272,7 @@ function* runTest() {
     }
     var expects = {
       documentURI: document.documentURI,
-      baseURI: document.baseURI,
-      elementBaseURI: "http://www.example.com/"
+      baseURI: document.baseURI
     };
     var xml = SpecialPowers.wrap(xhr.responseXML);
     testChromeXMLDocURI(xml, expects);
@@ -336,8 +313,7 @@ function* runTest() {
     }
     var expects = {
       documentURI: document.documentURI,
-      baseURI: document.baseURI,
-      elementBaseURI: "http://www.example.com/"
+      baseURI: document.baseURI
     };
     var xml = SpecialPowers.wrap(xhr.responseXML);
     testChromeXMLDocURI(xml, expects);
@@ -381,8 +357,7 @@ function* runTest() {
     }
     var expects = {
       documentURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml",
-      baseURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml",
-      elementBaseURI: "http://www.example.com/"
+      baseURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml"
     };
     testXMLDocURI(xhr.responseXML, expects);
     if (xhr.readyState == 4) {
@@ -419,8 +394,7 @@ function* runTest() {
     }
     var expects = {
       documentURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml",
-      baseURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml",
-      elementBaseURI: "http://www.example.com/"
+      baseURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml"
     };
     testXMLDocURI(xhr.responseXML, expects);
     if (xhr.readyState == 4) {
@@ -457,8 +431,7 @@ function* runTest() {
     }
     var expects = {
       documentURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml",
-      baseURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml",
-      elementBaseURI: "http://www.example.com/"
+      baseURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml"
     };
     testXMLDocURI(xhr.responseXML, expects);
     if (xhr.readyState == 4) {

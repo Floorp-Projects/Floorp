@@ -333,9 +333,6 @@ nsresult nsDocShellLoadState::SetupTriggeringPrincipal(
         return NS_ERROR_FAILURE;
       }
     } else {
-#ifndef ANDROID
-      MOZ_ASSERT(false, "LoadURI: System principal required.");
-#endif
       mTriggeringPrincipal = nsContentUtils::GetSystemPrincipal();
     }
   }

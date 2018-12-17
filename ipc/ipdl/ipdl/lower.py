@@ -1955,7 +1955,7 @@ class _ParamTraits():
             Whitespace.NL,
             StmtExpr(ExprAssn(ExprDeref(cls.var),
                               ExprCast(ExprCall(ExprSelect(actorvar, '.', 'value')),
-                                       cxxtype, static=1))),
+                                       cxxtype, static=True))),
             StmtReturn.TRUE,
         ]
 
@@ -2360,7 +2360,7 @@ def _generateCxxUnion(ud):
         return ifdied
 
     def voidCast(expr):
-        return ExprCast(expr, Type.VOID, static=1)
+        return ExprCast(expr, Type.VOID, static=True)
 
     # compute all the typedefs and forward decls we need to make
     gettypedeps = _ComputeTypeDeps(ud.decl.type)
@@ -2635,7 +2635,7 @@ def _generateCxxUnion(ud):
         # The void cast prevents Coverity from complaining about missing return
         # value checks.
         StmtBlock([StmtExpr(ExprCast(callMaybeDestroy(rhstypevar), Type.VOID,
-                                     static=1)),
+                                     static=True)),
                    StmtBreak()])
     )
     opeqswitch.addcase(
@@ -3248,7 +3248,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     'Manager', ret=managertype, const=True))
                 managerexp = ExprCall(ExprVar('IProtocol::Manager'), args=[])
                 managermeth.addstmt(StmtReturn(
-                    ExprCast(managerexp, managertype, static=1)))
+                    ExprCast(managerexp, managertype, static=True)))
 
                 self.cls.addstmts([managermeth, Whitespace.NL])
 
@@ -3665,7 +3665,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
                 case.addstmts([
                     StmtDecl(Decl(manageecxxtype, actorvar.name),
-                             ExprCast(listenervar, manageecxxtype, static=1)),
+                             ExprCast(listenervar, manageecxxtype, static=True)),
                     # Use a temporary variable here so all the assertion expressions
                     # in the _abortIfFalse call below are textually identical; the
                     # linker can then merge the strings from the assertion macro(s).
@@ -4028,7 +4028,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                 init=ExprCast(ExprCall(ExprSelect(ExprVar('untypedCallback'),
                                                                   '.', 'get')),
                                               callbackptr,
-                                              static=1)),
+                                              static=True)),
                        ifnocallback]
 
         resolvecallback = [StmtExpr(ExprCall(ExprSelect(callback, '->', 'Resolve'),

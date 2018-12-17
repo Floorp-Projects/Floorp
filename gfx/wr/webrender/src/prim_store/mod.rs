@@ -26,7 +26,7 @@ use gpu_types::BrushFlags;
 use image::{self, Repetition};
 use intern;
 use picture::{PictureCompositeMode, PicturePrimitive, PictureUpdateState, TileCacheUpdateState};
-use picture::{ClusterRange, PrimitiveList, SurfaceIndex, SurfaceInfo, RetainedTiles};
+use picture::{ClusterRange, PrimitiveList, SurfaceIndex, SurfaceInfo, RetainedTiles, RasterConfig};
 use prim_store::gradient::{LinearGradientDataHandle, RadialGradientDataHandle};
 use prim_store::text_run::{TextRunDataHandle, TextRunPrimitive};
 #[cfg(debug_assertions)]
@@ -645,6 +645,8 @@ impl PrimitiveKey {
     }
 }
 
+impl intern::InternDebug for PrimitiveKey {}
+
 impl AsInstanceKind<PrimitiveDataHandle> for PrimitiveKey {
     /// Construct a primitive instance that matches the type
     /// of primitive key.
@@ -962,11 +964,11 @@ impl PrimitiveTemplateKind {
                     }
                 }
             }
-            PrimitiveTemplateKind::YuvImage { color_depth, .. } => {
+            PrimitiveTemplateKind::YuvImage { color_depth, format, color_space, .. } => {
                 request.push([
                     color_depth.rescaling_factor(),
-                    0.0,
-                    0.0,
+                    pack_as_float(color_space as u32),
+                    pack_as_float(format as u32),
                     0.0
                 ]);
             }
@@ -2120,6 +2122,13 @@ impl PrimitiveStore {
         }
     }
 
+    #[allow(unused)]
+    pub fn print_picture_tree(&self, root: PictureIndex) {
+        use print_tree::PrintTree;
+        let mut pt = PrintTree::new("picture tree");
+        self.pictures[root.0].print(&self.pictures, root, &mut pt);
+    }
+
     /// Destroy an existing primitive store. This is called just before
     /// a primitive store is replaced with a newly built scene.
     pub fn destroy(
@@ -2194,7 +2203,12 @@ impl PrimitiveStore {
     ) {
         let children = {
             let pic = &mut self.pictures[pic_index.0];
-            if let Some(PictureCompositeMode::TileCache { .. }) = pic.requested_composite_mode {
+            // Only update the tile cache if we ended up selecting tile caching for the
+            // composite mode of this picture. In some cases, even if the requested
+            // composite mode was tile caching, WR may choose not to draw this picture
+            // with tile cache enabled. For now, this is only in the case of very large
+            // picture rects, but in future we may do it for performance reasons too.
+            if let Some(RasterConfig { composite_mode: PictureCompositeMode::TileCache { .. }, .. }) = pic.raster_config {
                 debug_assert!(state.tile_cache.is_none());
                 let mut tile_cache = pic.tile_cache.take().unwrap();
 
@@ -2246,7 +2260,7 @@ impl PrimitiveStore {
         }
 
         let pic = &mut self.pictures[pic_index.0];
-        if let Some(PictureCompositeMode::TileCache { .. }) = pic.requested_composite_mode {
+        if let Some(RasterConfig { composite_mode: PictureCompositeMode::TileCache { .. }, .. }) = pic.raster_config {
             let mut tile_cache = state.tile_cache.take().unwrap().0;
 
             // Build the dirty region(s) for this tile cache.
@@ -2561,7 +2575,7 @@ impl PrimitiveStore {
                     frame_state.resource_cache,
                     frame_context.device_pixel_scale,
                     &pic_context.dirty_world_rect,
-                    &clip_node_collector,
+                    clip_node_collector.as_ref(),
                     &mut resources.clip_data_store,
                 );
 
@@ -2621,7 +2635,7 @@ impl PrimitiveStore {
                 pic_state,
                 frame_context,
                 frame_state,
-                &clip_node_collector,
+                clip_node_collector.as_ref(),
                 self,
                 resources,
                 scratch,
@@ -3580,7 +3594,7 @@ impl PrimitiveInstance {
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
-        clip_node_collector: &Option<ClipNodeCollector>,
+        clip_node_collector: Option<&ClipNodeCollector>,
         prim_store: &PrimitiveStore,
         resources: &mut FrameResources,
         scratch: &mut PrimitiveScratchBuffer,
@@ -3748,7 +3762,7 @@ impl PrimitiveInstance {
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
-        clip_node_collector: &Option<ClipNodeCollector>,
+        clip_node_collector: Option<&ClipNodeCollector>,
         prim_store: &mut PrimitiveStore,
         resources: &mut FrameResources,
         scratch: &mut PrimitiveScratchBuffer,
