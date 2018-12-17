@@ -593,10 +593,17 @@ function createHighlightButton(highlighterName, id) {
       return highlighter.show({});
     },
     isChecked(toolbox) {
-      if (!toolbox.inspector) {
+      // if the inspector doesn't exist, then the highlighter has not yet been connected
+      // to the front end.
+      const inspectorFront = toolbox.target.getCachedFront("inspector");
+      if (!inspectorFront) {
+        // initialize the inspector front asyncronously. There is a potential for buggy
+        // behavior here, but we need to change how the buttons get data (have them
+        // consume data from reducers rather than writing our own version) in order to
+        // fix this properly.
         return false;
       }
-      const highlighter = toolbox.inspector.getKnownHighlighter(highlighterName);
+      const highlighter = inspectorFront.getKnownHighlighter(highlighterName);
       return highlighter && highlighter.isShown();
     },
   };
