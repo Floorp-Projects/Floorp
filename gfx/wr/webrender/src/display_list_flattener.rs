@@ -19,7 +19,7 @@ use frame_builder::{ChasePrimitive, FrameBuilder, FrameBuilderConfig};
 use glyph_rasterizer::FontInstance;
 use hit_test::{HitTestingItem, HitTestingRun};
 use image::simplify_repeated_primitive;
-use intern::{Handle, Internable};
+use intern::{Handle, Internable, InternDebug};
 use internal_types::{FastHashMap, FastHashSet};
 use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PrimitiveList};
 use prim_store::{PrimitiveInstance, PrimitiveKeyKind};
@@ -1045,7 +1045,7 @@ impl<'a> DisplayListFlattener<'a> {
     ) -> PrimitiveInstance
     where
         P: Internable<InternData=PrimitiveSceneData>,
-        P::Source: AsInstanceKind<Handle<P::Marker>>,
+        P::Source: AsInstanceKind<Handle<P::Marker>> + InternDebug,
         DocumentResources: InternerMut<P>,
     {
         let offset = info.rect.origin.to_vector();
@@ -1125,7 +1125,7 @@ impl<'a> DisplayListFlattener<'a> {
     )
     where
         P: Internable<InternData = PrimitiveSceneData> + IsVisible,
-        P::Source: AsInstanceKind<Handle<P::Marker>>,
+        P::Source: AsInstanceKind<Handle<P::Marker>> + InternDebug,
         DocumentResources: InternerMut<P>,
     {
         if prim.is_visible() {
@@ -1152,7 +1152,7 @@ impl<'a> DisplayListFlattener<'a> {
     )
     where
         P: Internable<InternData = PrimitiveSceneData> + IsVisible,
-        P::Source: AsInstanceKind<Handle<P::Marker>>,
+        P::Source: AsInstanceKind<Handle<P::Marker>> + InternDebug,
         DocumentResources: InternerMut<P>,
         ShadowItem: From<PendingPrimitive<P>>
     {
@@ -1182,7 +1182,7 @@ impl<'a> DisplayListFlattener<'a> {
     )
     where
         P: Internable<InternData = PrimitiveSceneData>,
-        P::Source: AsInstanceKind<Handle<P::Marker>>,
+        P::Source: AsInstanceKind<Handle<P::Marker>> + InternDebug,
         DocumentResources: InternerMut<P>,
     {
         let prim_instance = self.create_primitive(
@@ -1917,7 +1917,7 @@ impl<'a> DisplayListFlattener<'a> {
     )
     where
         P: Internable<InternData=PrimitiveSceneData> + CreateShadow,
-        P::Source: AsInstanceKind<Handle<P::Marker>>,
+        P::Source: AsInstanceKind<Handle<P::Marker>> + InternDebug,
         DocumentResources: InternerMut<P>,
     {
         // Offset the local rect and clip rect by the shadow offset.
@@ -1942,7 +1942,7 @@ impl<'a> DisplayListFlattener<'a> {
     fn add_shadow_prim_to_draw_list<P>(&mut self, pending_primitive: PendingPrimitive<P>)
     where
         P: Internable<InternData = PrimitiveSceneData> + IsVisible,
-        P::Source: AsInstanceKind<Handle<P::Marker>>,
+        P::Source: AsInstanceKind<Handle<P::Marker>> + InternDebug,
         DocumentResources: InternerMut<P>,
     {
         // For a normal primitive, if it has alpha > 0, then we add this

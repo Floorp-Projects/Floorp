@@ -126,6 +126,10 @@ struct Item<T> {
     data: T,
 }
 
+pub trait InternDebug {
+    fn on_interned(&self, _uid: ItemUid) {}
+}
+
 /// The data store lives in the frame builder thread. It
 /// contains a free-list of items for fast access.
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -252,7 +256,7 @@ where
 
 impl<S, D, M> Interner<S, D, M>
 where
-    S: Eq + Hash + Clone + Debug,
+    S: Eq + Hash + Clone + Debug + InternDebug,
     M: Copy + Debug
 {
     /// Intern a data structure, and return a handle to
@@ -308,6 +312,9 @@ where
             uid: ItemUid::next_uid(),
             _marker: PhantomData,
         };
+
+        #[cfg(debug_assertions)]
+        data.on_interned(handle.uid);
 
         // Store this handle so the next time it is
         // interned, it gets re-used.
