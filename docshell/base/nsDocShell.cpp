@@ -665,9 +665,13 @@ nsDocShell::LoadURI(nsDocShellLoadState* aLoadState) {
       "Should not have these flags set");
   MOZ_ASSERT(aLoadState->URI(), "Should have a valid URI to load");
 
-  if (mUseStrictSecurityChecks && !aLoadState->TriggeringPrincipal()) {
+  if (!aLoadState->TriggeringPrincipal()) {
+#ifndef ANDROID
     MOZ_ASSERT(false, "LoadURI must have a triggering principal");
-    return NS_ERROR_FAILURE;
+#endif
+    if (mUseStrictSecurityChecks) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   // Note: we allow loads to get through here even if mFiredUnloadEvent is
@@ -3863,9 +3867,6 @@ nsDocShell::LoadURI(const nsAString& aURI, uint32_t aLoadFlags,
                     nsIURI* aReferringURI, nsIInputStream* aPostStream,
                     nsIInputStream* aHeaderStream,
                     nsIPrincipal* aTriggeringPrincipal) {
-#ifndef ANDROID
-  MOZ_ASSERT(aTriggeringPrincipal, "LoadURI: Need a valid triggeringPrincipal");
-#endif
   if (mUseStrictSecurityChecks && !aTriggeringPrincipal) {
     return NS_ERROR_FAILURE;
   }
@@ -3900,11 +3901,6 @@ nsDocShell::LoadURIWithOptions(const nsAString& aURI, uint32_t aLoadFlags,
   // Eliminate embedded newlines, which single-line text fields now allow:
   uriString.StripCRLF();
   NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
-
-#ifndef ANDROID
-  MOZ_ASSERT(aTriggeringPrincipal,
-             "LoadURIWithOptions: Need a valid triggeringPrincipal");
-#endif
 
   if (mUseStrictSecurityChecks && !aTriggeringPrincipal) {
     return NS_ERROR_FAILURE;
