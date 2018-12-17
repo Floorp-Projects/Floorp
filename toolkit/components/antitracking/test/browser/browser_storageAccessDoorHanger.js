@@ -90,24 +90,28 @@ async function testDoorHanger(choice, showPrompt, topPage, maxConcurrent) {
     }
   }
 
-  let permChanged = TestUtils.topicObserved("perm-changed",
-    (subject, data) => {
-      let result;
-      if (choice == ALLOW) {
-        result = subject &&
-                 subject.QueryInterface(Ci.nsIPermission)
-                        .type.startsWith("3rdPartyStorage^") &&
-                 subject.principal.origin == (new URL(topPage)).origin &&
-                 data == "added";
-      } else if (choice == ALLOW_ON_ANY_SITE) {
-        result = subject &&
-                 subject.QueryInterface(Ci.nsIPermission)
-                        .type == "cookie" &&
-                 subject.principal.origin == "https://tracking.example.org" &&
-                 data == "added";
-      }
-      return result;
-    });
+  let permChanged;
+  // Only create the promise when we're going to click one of the allow buttons.
+  if (choice != BLOCK) {
+    permChanged = TestUtils.topicObserved("perm-changed",
+      (subject, data) => {
+        let result;
+        if (choice == ALLOW) {
+          result = subject &&
+                   subject.QueryInterface(Ci.nsIPermission)
+                          .type.startsWith("3rdPartyStorage^") &&
+                   subject.principal.origin == (new URL(topPage)).origin &&
+                   data == "added";
+        } else if (choice == ALLOW_ON_ANY_SITE) {
+          result = subject &&
+                   subject.QueryInterface(Ci.nsIPermission)
+                          .type == "cookie" &&
+                   subject.principal.origin == "https://tracking.example.org" &&
+                   data == "added";
+        }
+        return result;
+      });
+  }
   let shownPromise =
     BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
   shownPromise.then(async _ => {

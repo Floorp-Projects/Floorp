@@ -1170,7 +1170,7 @@ class ContentParent final : public PContentParent,
   virtual mozilla::ipc::IPCResult RecvFirstPartyStorageAccessGrantedForOrigin(
       const Principal& aParentPrincipal, const Principal& aTrackingPrincipal,
       const nsCString& aTrackingOrigin, const nsCString& aGrantedOrigin,
-      const bool& aAnySite,
+      const int& aAllowMode,
       FirstPartyStorageAccessGrantedForOriginResolver&& aResolver) override;
 
   virtual mozilla::ipc::IPCResult RecvStoreUserInteractionAsPermission(
