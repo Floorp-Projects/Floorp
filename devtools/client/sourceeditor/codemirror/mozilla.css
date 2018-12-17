@@ -286,10 +286,3 @@
 .CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {
   -moz-appearance: scrollcorner;
 }
-
-/* This scrollable element doesn't need to have its size influenced by its
-   children, so we can give it "contain: layout size" to make it a containment
-   boundary and to hint that it can be a reflow root. */
-.CodeMirror-scroll {
-  contain: layout size;
-}
