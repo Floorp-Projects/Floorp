@@ -68,7 +68,6 @@ function run_test() {
     JSString: { count: Pattern.NATURAL },
     "js::Shape": { count: Pattern.NATURAL },
     JSObject: { count: Pattern.NATURAL },
-    JSScript: { count: Pattern.NATURAL },
   })
     .assert(saveHeapSnapshotAndTakeCensus(dbg, { breakdown: { by: "internalType" } }));
 
@@ -85,7 +84,6 @@ function run_test() {
     JSString: coarseTypePattern,
     "js::Shape": coarseTypePattern,
     JSObject: coarseTypePattern,
-    JSScript: coarseTypePattern,
   })
     .assert(saveHeapSnapshotAndTakeCensus(dbg, {
       breakdown: { by: "internalType",
