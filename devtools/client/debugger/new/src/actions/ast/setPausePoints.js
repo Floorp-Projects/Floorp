@@ -47,7 +47,10 @@ export function setPausePoints(sourceId: SourceId) {
     }
 
     let pausePoints = await parser.getPausePoints(sourceId);
-    pausePoints = await mapLocations(pausePoints, source, sourceMaps);
+
+    if (features.columnBreakpoints) {
+      pausePoints = await mapLocations(pausePoints, source, sourceMaps);
+    }
 
     if (isGenerated(source)) {
       const compressed = compressPausePoints(pausePoints);
