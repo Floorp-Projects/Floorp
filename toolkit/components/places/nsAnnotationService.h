@@ -12,7 +12,6 @@
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
 #include "nsWeakReference.h"
-#include "nsToolkitCompsCID.h"
 #include "Database.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"
