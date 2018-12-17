@@ -212,7 +212,7 @@ static bool IsNodeInEditableRegion(nsINode* aNode) {
 }
 
 bool SVGAElement::IsSVGFocusable(bool* aIsFocusable, int32_t* aTabIndex) {
-  if (nsSVGElement::IsSVGFocusable(aIsFocusable, aTabIndex)) {
+  if (SVGGraphicsElement::IsSVGFocusable(aIsFocusable, aTabIndex)) {
     return true;
   }
 
