@@ -8,6 +8,7 @@ package org.mozilla.geckoview;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 
+import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 
 import java.nio.ByteBuffer;
@@ -17,6 +18,7 @@ import java.nio.ByteBuffer;
  * by {@link GeckoWebExecutor#fetch(WebRequest)}.
  */
 @WrapForJNI
+@AnyThread
 public class WebResponse extends WebMessage {
     /**
      * The HTTP status code for the response, e.g. 200.
@@ -39,6 +41,7 @@ public class WebResponse extends WebMessage {
      * Builder offers a convenient way to create WebResponse instances.
      */
     @WrapForJNI
+    @AnyThread
     public static class Builder extends WebMessage.Builder {
         /* package */ int mStatusCode;
         /* package */ boolean mRedirected;

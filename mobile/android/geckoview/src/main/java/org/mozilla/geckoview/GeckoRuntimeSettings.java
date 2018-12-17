@@ -16,6 +16,7 @@ import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.AnyThread;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -25,11 +26,13 @@ import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
 
+@AnyThread
 public final class GeckoRuntimeSettings implements Parcelable {
 
     /**
      * Settings builder used to construct the settings object.
      */
+    @AnyThread
     public static final class Builder {
         private final GeckoRuntimeSettings mSettings;
 

@@ -8,6 +8,7 @@ package org.mozilla.geckoview;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 
+import android.support.annotation.AnyThread;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -22,6 +23,7 @@ import java.nio.ByteBuffer;
  * class via {@link WebRequest.Builder}, and fetch responses via {@link GeckoWebExecutor#fetch(WebRequest)}.
  */
 @WrapForJNI
+@AnyThread
 public class WebRequest extends WebMessage {
     /**
      * The HTTP method for the request. Defaults to "GET".
@@ -107,6 +109,7 @@ public class WebRequest extends WebMessage {
     /**
      * Builder offers a convenient way for constructing {@link WebRequest} instances.
      */
+    @AnyThread
     public static class Builder extends WebMessage.Builder {
         /* package */ String mMethod = "GET";
         /* package */ int mCacheMode = CACHE_MODE_DEFAULT;

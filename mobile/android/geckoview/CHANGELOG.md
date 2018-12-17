@@ -2,7 +2,7 @@
 - Moved `CompositorController`, `DynamicToolbarAnimator`,
   `OverscrollEdgeEffect`, `PanZoomController` from `org.mozilla.gecko.gfx` to
   `org.mozilla.geckoview`
-- Added `@UiThread`, `@AnyThread` annotations to several APIs
+- Added `@UiThread`, `@AnyThread` annotations to all APIs
 - Changed `GeckoRuntime#getLocale` to `GeckoRuntime#getLocales` and related APIs.
 - Merged `org.mozilla.gecko.gfx.LayerSession` into `GeckoSession`
 - Added `GeckoSession.MediaDelegate` and `MediaElement`. This allow monitoring
@@ -29,4 +29,4 @@
 - Update `CrashReporter.sendCrashReport()` to return the crash ID as a
   GeckoResult<String>.
 
-[api-version]: 8dd1c9e76471e6a1ee520e6c607ed6d3f9156fc2
+[api-version]: c9e474cac6732fc645b03868ad1fcbea10be7b9f

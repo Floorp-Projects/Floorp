@@ -8,14 +8,18 @@ package org.mozilla.geckoview;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.graphics.Bitmap;
+import android.support.annotation.AnyThread;
+import android.support.annotation.UiThread;
 import android.util.Log;
 
 import java.util.EnumSet;
 import java.util.Set;
 
+@UiThread
 public final class DynamicToolbarAnimator {
     private static final String LOGTAG = "GeckoDynamicToolbarAnimator";
 
+    @AnyThread
     public static enum PinReason {
         DISABLED(0),
         RELAYOUT(1),
@@ -33,8 +37,11 @@ public final class DynamicToolbarAnimator {
     }
 
     public interface ToolbarChromeProxy {
+        @UiThread
         public Bitmap getBitmapOfToolbarChrome();
+        @UiThread
         public boolean isToolbarChromeVisible();
+        @UiThread
         public void toggleToolbarChrome(boolean aShow);
     }
 
