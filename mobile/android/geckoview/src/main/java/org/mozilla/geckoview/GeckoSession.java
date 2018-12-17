@@ -1594,7 +1594,7 @@ public class GeckoSession implements Parcelable {
      * Represent the result of a find-in-page operation.
      */
     @AnyThread
-    public static final class FinderResult {
+    public static class FinderResult {
         /** Whether a match was found. */
         public final boolean found;
         /** Whether the search wrapped around the top or bottom of the page. */
