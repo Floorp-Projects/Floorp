@@ -265,7 +265,7 @@ static nsSize ComputeInsideBorderSize(ScrollReflowInput* aState,
 }
 
 static void GetScrollbarMetrics(nsBoxLayoutState& aState, nsIFrame* aBox,
-                                nsSize* aMin, nsSize* aPref, bool aVertical) {
+                                nsSize* aMin, nsSize* aPref) {
   NS_ASSERTION(aState.GetRenderingContext(),
                "Must have rendering context in layout state for size "
                "computations");
@@ -341,7 +341,7 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
   if (mHelper.mVScrollbarBox) {
     GetScrollbarMetrics(aState->mBoxState, mHelper.mVScrollbarBox,
                         &vScrollbarMinSize,
-                        aAssumeVScroll ? &vScrollbarPrefSize : nullptr, true);
+                        aAssumeVScroll ? &vScrollbarPrefSize : nullptr);
     nsScrollbarFrame* scrollbar = do_QueryFrame(mHelper.mVScrollbarBox);
     scrollbar->SetScrollbarMediatorContent(mContent);
   }
@@ -354,7 +354,7 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
   if (mHelper.mHScrollbarBox) {
     GetScrollbarMetrics(aState->mBoxState, mHelper.mHScrollbarBox,
                         &hScrollbarMinSize,
-                        aAssumeHScroll ? &hScrollbarPrefSize : nullptr, false);
+                        aAssumeHScroll ? &hScrollbarPrefSize : nullptr);
     nsScrollbarFrame* scrollbar = do_QueryFrame(mHelper.mHScrollbarBox);
     scrollbar->SetScrollbarMediatorContent(mContent);
   }
@@ -498,7 +498,7 @@ void nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput* aState,
     if (aAssumeVScroll) {
       nsSize vScrollbarPrefSize;
       GetScrollbarMetrics(aState->mBoxState, mHelper.mVScrollbarBox, nullptr,
-                          &vScrollbarPrefSize, false);
+                          &vScrollbarPrefSize);
       if (computedBSize != NS_UNCONSTRAINEDSIZE) {
         computedBSize = std::max(0, computedBSize - vScrollbarPrefSize.width);
       }
@@ -513,14 +513,14 @@ void nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput* aState,
     if (aAssumeHScroll) {
       nsSize hScrollbarPrefSize;
       GetScrollbarMetrics(aState->mBoxState, mHelper.mHScrollbarBox, nullptr,
-                          &hScrollbarPrefSize, true);
+                          &hScrollbarPrefSize);
       availISize = std::max(0, availISize - hScrollbarPrefSize.height);
     }
   } else {
     if (aAssumeHScroll) {
       nsSize hScrollbarPrefSize;
       GetScrollbarMetrics(aState->mBoxState, mHelper.mHScrollbarBox, nullptr,
-                          &hScrollbarPrefSize, false);
+                          &hScrollbarPrefSize);
       if (computedBSize != NS_UNCONSTRAINEDSIZE) {
         computedBSize = std::max(0, computedBSize - hScrollbarPrefSize.height);
       }
@@ -535,7 +535,7 @@ void nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput* aState,
     if (aAssumeVScroll) {
       nsSize vScrollbarPrefSize;
       GetScrollbarMetrics(aState->mBoxState, mHelper.mVScrollbarBox, nullptr,
-                          &vScrollbarPrefSize, true);
+                          &vScrollbarPrefSize);
       availISize = std::max(0, availISize - vScrollbarPrefSize.width);
     }
   }
@@ -805,8 +805,8 @@ nscoord nsHTMLScrollFrame::GetIntrinsicVScrollbarWidth(
   // just for scrollbars
   nsBoxLayoutState bls(PresContext(), aRenderingContext, 0);
   nsSize vScrollbarPrefSize(0, 0);
-  GetScrollbarMetrics(bls, mHelper.mVScrollbarBox, nullptr, &vScrollbarPrefSize,
-                      true);
+  GetScrollbarMetrics(bls, mHelper.mVScrollbarBox, nullptr,
+                      &vScrollbarPrefSize);
   return vScrollbarPrefSize.width;
 }
 
@@ -5332,13 +5332,11 @@ nsresult nsXULScrollFrame::XULLayout(nsBoxLayoutState& aState) {
   // get the preferred size of the scrollbars
   nsSize hMinSize(0, 0);
   if (mHelper.mHScrollbarBox && mHelper.mHasHorizontalScrollbar) {
-    GetScrollbarMetrics(aState, mHelper.mHScrollbarBox, &hMinSize, nullptr,
-                        false);
+    GetScrollbarMetrics(aState, mHelper.mHScrollbarBox, &hMinSize, nullptr);
   }
   nsSize vMinSize(0, 0);
   if (mHelper.mVScrollbarBox && mHelper.mHasVerticalScrollbar) {
-    GetScrollbarMetrics(aState, mHelper.mVScrollbarBox, &vMinSize, nullptr,
-                        true);
+    GetScrollbarMetrics(aState, mHelper.mVScrollbarBox, &vMinSize, nullptr);
   }
 
   // Disable scrollbars that are too small
