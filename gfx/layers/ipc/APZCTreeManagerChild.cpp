@@ -67,7 +67,9 @@ void APZCTreeManagerChild::SetTargetAPZC(
 void APZCTreeManagerChild::UpdateZoomConstraints(
     const ScrollableLayerGuid& aGuid,
     const Maybe<ZoomConstraints>& aConstraints) {
-  SendUpdateZoomConstraints(aGuid, aConstraints);
+  if (mIPCOpen) {
+    SendUpdateZoomConstraints(aGuid, aConstraints);
+  }
 }
 
 void APZCTreeManagerChild::SetDPI(float aDpiValue) { SendSetDPI(aDpiValue); }
