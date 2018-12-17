@@ -42,7 +42,7 @@ uint32_t VR_InitInternal2( EVRInitError *peError, vr::EVRApplicationType eApplic
 	EVRInitError err = VR_LoadHmdSystemInternal();
 	if ( err == vr::VRInitError_None )
 	{
-		err = g_pHmdSystem->Init( eApplicationType );
+		err = g_pHmdSystem->Init( eApplicationType, pStartupInfo );
 	}
 
 	if ( peError )
