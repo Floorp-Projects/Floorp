@@ -215,7 +215,6 @@ dom/security/test/csp/**
 dom/security/test/general/**
 dom/security/test/mixedcontentblocker/**
 dom/security/test/sri/**
-dom/security/test/unit/**
 dom/serviceworkers/**
 dom/smil/**
 dom/svg/**

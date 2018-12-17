@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import('resource://gre/modules/NetUtil.jsm');
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://testing-common/httpd.js");
 
@@ -33,7 +33,7 @@ function makeReportHandler(testpath, message, expectedJSON) {
                     ? request.getHeader("Content-Type") : undefined;
     if (contentType !== "application/csp-report") {
       do_throw("violation report should have the 'application/csp-report' " +
-               "content-type, when in fact it is " + contentType.toString())
+               "content-type, when in fact it is " + contentType.toString());
     }
 
     // obtain violation report
@@ -47,7 +47,7 @@ function makeReportHandler(testpath, message, expectedJSON) {
     // dump("EXPECTED:  \n" + JSON.stringify(expectedJSON) + "\n\n");
 
     for (var i in expectedJSON)
-      Assert.equal(expectedJSON[i], reportObj['csp-report'][i]);
+      Assert.equal(expectedJSON[i], reportObj["csp-report"][i]);
 
     testsToFinish--;
     httpServer.registerPathHandler(testpath, null);
@@ -80,9 +80,7 @@ function makeTest(id, expectedJSON, useReportOnlyPolicy, callback) {
 
   dump("Created test " + id + " : " + policy + "\n\n");
 
-  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
-              .getService(Ci.nsIScriptSecurityManager);
-  principal = ssm.createCodebasePrincipal(selfuri, {});
+  principal = Services.scriptSecurityManager.createCodebasePrincipal(selfuri, {});
   csp.setRequestContext(null, principal);
 
   // Load up the policy
@@ -93,7 +91,7 @@ function makeTest(id, expectedJSON, useReportOnlyPolicy, callback) {
   var handler = makeReportHandler("/test" + id, "Test " + id, expectedJSON);
   httpServer.registerPathHandler("/test" + id, handler);
 
-  //trigger the violation
+  // trigger the violation
   callback(csp);
 }
 
@@ -122,11 +120,11 @@ function run_test() {
   // test that eval violations cause a report.
   makeTest(1, {"blocked-uri": "eval",
                // JSON script-sample is UTF8 encoded
-               "script-sample" : "\xc2\xa3\xc2\xa5\xc2\xb5\xe5\x8c\x97\xf0\xa0\x9d\xb9",
+               "script-sample": "\xc2\xa3\xc2\xa5\xc2\xb5\xe5\x8c\x97\xf0\xa0\x9d\xb9",
                "line-number": 1,
                "column-number": 2}, false,
       function(csp) {
-        let evalOK = true, oReportViolation = {'value': false};
+        let evalOK = true, oReportViolation = {"value": false};
         evalOK = csp.getAllowsEval(oReportViolation);
 
         // this is not a report only policy, so it better block eval
@@ -178,7 +176,7 @@ function run_test() {
   // test that eval violations cause a report in report-only policy
   makeTest(4, {"blocked-uri": "inline"}, true,
       function(csp) {
-        let evalOK = true, oReportViolation = {'value': false};
+        let evalOK = true, oReportViolation = {"value": false};
         evalOK = csp.getAllowsEval(oReportViolation);
 
         // this is a report only policy, so it better allow eval
@@ -225,7 +223,6 @@ function run_test() {
   var selfSpec = REPORT_SERVER_URI + ":" + REPORT_SERVER_PORT + "/foo/self/foo.js";
   makeTest(7, {"blocked-uri": selfSpec}, false,
     function(csp) {
-      var uri = NetUtil
       // shouldLoad creates and sends out the report here.
       csp.shouldLoad(Ci.nsIContentPolicy.TYPE_SCRIPT,
                      null, // nsICSPEventListener
