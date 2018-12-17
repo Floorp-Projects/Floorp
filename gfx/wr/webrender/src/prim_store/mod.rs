@@ -2120,6 +2120,13 @@ impl PrimitiveStore {
         }
     }
 
+    #[allow(unused)]
+    pub fn print_picture_tree(&self, root: PictureIndex) {
+        use print_tree::PrintTree;
+        let mut pt = PrintTree::new("picture tree");
+        self.pictures[root.0].print(&self.pictures, root, &mut pt);
+    }
+
     /// Destroy an existing primitive store. This is called just before
     /// a primitive store is replaced with a newly built scene.
     pub fn destroy(
@@ -2561,7 +2568,7 @@ impl PrimitiveStore {
                     frame_state.resource_cache,
                     frame_context.device_pixel_scale,
                     &pic_context.dirty_world_rect,
-                    &clip_node_collector,
+                    clip_node_collector.as_ref(),
                     &mut resources.clip_data_store,
                 );
 
@@ -2621,7 +2628,7 @@ impl PrimitiveStore {
                 pic_state,
                 frame_context,
                 frame_state,
-                &clip_node_collector,
+                clip_node_collector.as_ref(),
                 self,
                 resources,
                 scratch,
@@ -3580,7 +3587,7 @@ impl PrimitiveInstance {
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
-        clip_node_collector: &Option<ClipNodeCollector>,
+        clip_node_collector: Option<&ClipNodeCollector>,
         prim_store: &PrimitiveStore,
         resources: &mut FrameResources,
         scratch: &mut PrimitiveScratchBuffer,
@@ -3748,7 +3755,7 @@ impl PrimitiveInstance {
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
-        clip_node_collector: &Option<ClipNodeCollector>,
+        clip_node_collector: Option<&ClipNodeCollector>,
         prim_store: &mut PrimitiveStore,
         resources: &mut FrameResources,
         scratch: &mut PrimitiveScratchBuffer,

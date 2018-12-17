@@ -2558,7 +2558,7 @@ impl FlattenedStackingContext {
             return false;
         }
 
-        // If different clipp chains
+        // If different clip chains
         if self.clip_chain_id != parent.clip_chain_id {
             return false;
         }
