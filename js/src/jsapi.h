@@ -1549,10 +1549,15 @@ class JS_PUBLIC_API RealmCreationOptions {
   RealmCreationOptions& setNewCompartmentAndZone();
   RealmCreationOptions& setExistingCompartment(JSObject* obj);
 
-  // Certain scopes (i.e. XBL compilation scopes) are implementation details
-  // of the embedding, and references to them should never leak out to script.
-  // This flag causes the this realm to skip firing onNewGlobalObject and
-  // makes addDebuggee a no-op for this global.
+  // Certain compartments are implementation details of the embedding, and
+  // references to them should never leak out to script. This flag causes this
+  // realm to skip firing onNewGlobalObject and makes addDebuggee a no-op for
+  // this global.
+  //
+  // Debugger visibility is per-compartment, not per-realm (it's only practical
+  // to enforce visibility on compartment boundaries), so if a realm is being
+  // created in an extant compartment, its requested visibility must match that
+  // of the compartment.
   bool invisibleToDebugger() const { return invisibleToDebugger_; }
   RealmCreationOptions& setInvisibleToDebugger(bool flag) {
     invisibleToDebugger_ = flag;
