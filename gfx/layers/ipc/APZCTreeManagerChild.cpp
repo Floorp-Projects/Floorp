@@ -15,7 +15,8 @@
 namespace mozilla {
 namespace layers {
 
-APZCTreeManagerChild::APZCTreeManagerChild() : mCompositorSession(nullptr) {}
+APZCTreeManagerChild::APZCTreeManagerChild()
+    : mCompositorSession(nullptr), mIPCOpen(false) {}
 
 APZCTreeManagerChild::~APZCTreeManagerChild() {}
 
@@ -99,6 +100,21 @@ APZInputBridge* APZCTreeManagerChild::InputBridge() {
   MOZ_ASSERT(mInputBridge);
 
   return mInputBridge.get();
+}
+
+void APZCTreeManagerChild::AddIPDLReference() {
+  MOZ_ASSERT(mIPCOpen == false);
+  mIPCOpen = true;
+  AddRef();
+}
+
+void APZCTreeManagerChild::ReleaseIPDLReference() {
+  mIPCOpen = false;
+  Release();
+}
+
+void APZCTreeManagerChild::ActorDestroy(ActorDestroyReason aWhy) {
+  mIPCOpen = false;
 }
 
 mozilla::ipc::IPCResult APZCTreeManagerChild::RecvHandleTap(
