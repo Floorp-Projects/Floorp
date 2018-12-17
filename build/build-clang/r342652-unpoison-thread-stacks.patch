@@ -21,8 +21,8 @@ Differential Revision: https://reviews.llvm.org/D52091
  // }}}
  
  namespace __asan {
-@@ -169,7 +177,9 @@
-
+@@ -161,7 +169,9 @@
+ void InitializePlatformInterceptors() {
    ASAN_INTERCEPT_FUNC(CreateThread);
    ASAN_INTERCEPT_FUNC(SetUnhandledExceptionFilter);
 -
