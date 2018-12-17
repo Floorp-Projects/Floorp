@@ -582,8 +582,9 @@ function createHighlightButton(highlighterName, id) {
     description: l10n(`toolbox.buttons.${id}`),
     isTargetSupported: target => !target.chrome,
     async onClick(event, toolbox) {
+      await toolbox.initInspector();
       const highlighter =
-        await toolbox.highlighterUtils.getOrCreateHighlighterByType(highlighterName);
+        await toolbox.inspector.getOrCreateHighlighterByType(highlighterName);
       if (highlighter.isShown()) {
         return highlighter.hide();
       }
