@@ -53,7 +53,7 @@ var test_string_error = async function(transportFactory, onReady) {
   const client = new DebuggerClient(transport);
   return client.connect().then(([app, traits]) => {
     Assert.equal(traits.bulk, true);
-    return client.listTabs();
+    return client.mainRoot.rootForm;
   }).then(response => {
     return onReady(client, response);
   }).then(() => {
