@@ -15,7 +15,7 @@ const TAB_URL_2 = "data:text/html;charset=utf-8,bar";
 
 var gClient;
 var gTab1, gTab2;
-var gTargetActor1, gTargetActor2;
+var gTargetFront1, gTargetFront2;
 
 function test() {
   waitForExplicitFinish();
@@ -42,11 +42,11 @@ function connect() {
   // Connect to debugger server to fetch the two target actors for each tab
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect()
-    .then(() => gClient.listTabs())
-    .then(response => {
+    .then(() => gClient.mainRoot.listTabs())
+    .then(tabs => {
       // Fetch the target actors for each tab
-      gTargetActor1 = response.tabs.filter(a => a.url === TAB_URL_1)[0];
-      gTargetActor2 = response.tabs.filter(a => a.url === TAB_URL_2)[0];
+      gTargetFront1 = tabs.find(a => a.url === TAB_URL_1);
+      gTargetFront2 = tabs.find(a => a.url === TAB_URL_2);
 
       checkGetTab();
     });
@@ -55,7 +55,7 @@ function connect() {
 function checkGetTab() {
   gClient.mainRoot.getTab({tab: gTab1})
          .then(front => {
-           is(JSON.stringify(gTargetActor1), JSON.stringify(front.targetForm),
+           is(gTargetFront1, front,
               "getTab returns the same target form for first tab");
          })
          .then(() => {
@@ -71,12 +71,12 @@ function checkGetTab() {
            return gClient.mainRoot.getTab(filter);
          })
          .then(front => {
-           is(JSON.stringify(gTargetActor1), JSON.stringify(front.targetForm),
+           is(gTargetFront1, front,
               "getTab returns the same target form when filtering by tabId/outerWindowID");
          })
          .then(() => gClient.mainRoot.getTab({tab: gTab2}))
          .then(front => {
-           is(JSON.stringify(gTargetActor2), JSON.stringify(front.targetForm),
+           is(gTargetFront2, front,
               "getTab returns the same target form for second tab");
          })
          .then(checkGetTabFailures);
@@ -102,7 +102,7 @@ function checkGetTabFailures() {
 
 function checkSelectedTargetActor() {
   // Send a naive request to the second target actor to check if it works
-  gClient.request({ to: gTargetActor2.consoleActor, type: "startListeners", listeners: [] }, aResponse => {
+  gClient.request({ to: gTargetFront2.targetForm.consoleActor, type: "startListeners", listeners: [] }, aResponse => {
     ok("startedListeners" in aResponse, "Actor from the selected tab should respond to the request.");
 
     closeSecondTab();
@@ -120,7 +120,7 @@ function closeSecondTab() {
 
 function checkFirstTargetActor() {
   // then send a request to the first target actor to check if it still works
-  gClient.request({ to: gTargetActor1.consoleActor, type: "startListeners", listeners: [] }, aResponse => {
+  gClient.request({ to: gTargetFront1.targetForm.consoleActor, type: "startListeners", listeners: [] }, aResponse => {
     ok("startedListeners" in aResponse, "Actor from the first tab should still respond.");
 
     cleanup();

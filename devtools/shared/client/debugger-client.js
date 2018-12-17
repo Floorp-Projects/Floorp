@@ -336,14 +336,6 @@ DebuggerClient.prototype = {
     return deferred.promise;
   },
 
-  /*
-   * This function exists only to preserve DebuggerClient's interface;
-   * new code should say 'client.mainRoot.listTabs()'.
-   */
-  listTabs: function(options) {
-    return this.mainRoot.listTabs(options);
-  },
-
   /**
    * Attach to a target actor:
    *
