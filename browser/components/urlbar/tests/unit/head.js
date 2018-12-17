@@ -38,15 +38,17 @@ Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js", 
 
 /**
  * @param {string} searchString The search string to insert into the context.
+ * @param {object} properties Overrides for the default values.
  * @returns {QueryContext} Creates a dummy query context with pre-filled required options.
  */
-function createContext(searchString = "foo") {
-  return new QueryContext({
+function createContext(searchString = "foo", properties = {}) {
+  let context = new QueryContext({
     searchString,
     lastKey: searchString ? searchString[searchString.length - 1] : "",
     maxResults: UrlbarPrefs.get("maxRichResults"),
     isPrivate: true,
   });
+  return Object.assign(context, properties);
 }
 
 /**
@@ -86,22 +88,12 @@ function promiseControllerNotification(controller, notification, expected = true
  * @param {array} results The results for the provider to return.
  * @param {function} [cancelCallback] Optional, called when the query provider
  *                                    receives a cancel instruction.
+ * @returns {string} name of the registered provider
  */
 function registerBasicTestProvider(results, cancelCallback) {
-  // First unregister all the existing providers.
-  for (let providers of UrlbarProvidersManager.providers.values()) {
-    for (let provider of providers.values()) {
-      // While here check all providers have name and type.
-      Assert.ok(Object.values(UrlbarUtils.PROVIDER_TYPE).includes(provider.type),
-        `The provider "${provider.name}" should have a valid type`);
-      Assert.ok(provider.name, "All providers should have a name");
-      UrlbarProvidersManager.unregisterProvider(provider);
-    }
-  }
+  let name = "TestProvider" + Math.floor(Math.random() * 100000);
   UrlbarProvidersManager.registerProvider({
-    get name() {
-      return "TestProvider";
-    },
+    name,
     get type() {
       return UrlbarUtils.PROVIDER_TYPE.PROFILE;
     },
@@ -123,4 +115,5 @@ function registerBasicTestProvider(results, cancelCallback) {
       }
     },
   });
+  return name;
 }

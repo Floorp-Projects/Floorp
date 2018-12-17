@@ -39,6 +39,9 @@ var localMuxerModules = {
 // that we can chunk matches coming in that timeframe into a single call.
 const CHUNK_MATCHES_DELAY_MS = 16;
 
+const DEFAULT_PROVIDERS = ["UnifiedComplete"];
+const DEFAULT_MUXER = "UnifiedComplete";
+
 /**
  * Class used to create a manager.
  * The manager is responsible to keep a list of providers, instantiate query
@@ -128,13 +131,19 @@ class ProvidersManager {
    */
   async startQuery(queryContext, controller) {
     logger.info(`Query start ${queryContext.searchString}`);
-    let muxerName = queryContext.muxer || "MuxerUnifiedComplete";
+
+    // Define the muxer to use.
+    let muxerName = queryContext.muxer || DEFAULT_MUXER;
     logger.info(`Using muxer ${muxerName}`);
     let muxer = this.muxers.get(muxerName);
     if (!muxer) {
       throw new Error(`Muxer with name ${muxerName} not found`);
     }
-    let query = new Query(queryContext, controller, muxer, this.providers);
+    // Define the list of providers to use.
+    let providers = queryContext.providers || DEFAULT_PROVIDERS;
+    providers = filterProviders(this.providers, providers);
+
+    let query = new Query(queryContext, controller, muxer, providers);
     this.queries.set(queryContext, query);
     await query.start();
   }
@@ -457,4 +466,21 @@ function getAcceptableMatchSources(context) {
     }
   }
   return acceptedSources;
+}
+
+/* Given a providers Map and a list of provider names, produces a filtered
+ * Map containing only the provided names.
+ * @param providersMap {Map} providers mapped by type and name
+ * @param names {array} list of provider names to retain
+ * @returns {Map} a new filtered providers Map
+ */
+function filterProviders(providersMap, names) {
+  let providers = new Map();
+  for (let [type, providersByName] of providersMap) {
+    providers.set(type, new Map());
+    for (let name of Array.from(providersByName.keys()).filter(n => names.includes(n))) {
+      providers.get(type).set(name, providersByName.get(name));
+    }
+  }
+  return providers;
 }
