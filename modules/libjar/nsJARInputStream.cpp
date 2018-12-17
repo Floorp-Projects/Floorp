@@ -70,7 +70,6 @@ nsresult nsJARInputStream::InitFile(nsJAR *aJar, nsZipItem *item) {
   mFd = aJar->mZip->GetFD();
   mZs.next_in = (Bytef *)aJar->mZip->GetData(item);
   if (!mZs.next_in) {
-    nsZipArchive::sFileCorruptedReason = "nsJARInputStream: !mZs.next_in";
     return NS_ERROR_FILE_CORRUPTED;
   }
   mZs.avail_in = item->Size();
@@ -290,8 +289,6 @@ nsresult nsJARInputStream::ContinueInflate(char *aBuffer, uint32_t aCount,
     // now inflate
     int zerr = inflate(&mZs, Z_SYNC_FLUSH);
     if ((zerr != Z_OK) && (zerr != Z_STREAM_END)) {
-      nsZipArchive::sFileCorruptedReason =
-          "nsJARInputStream: error while inflating";
       return NS_ERROR_FILE_CORRUPTED;
     }
     finished = (zerr == Z_STREAM_END);
@@ -313,8 +310,6 @@ nsresult nsJARInputStream::ContinueInflate(char *aBuffer, uint32_t aCount,
     mZs.total_out = total_out;
     mZs.avail_in = avail_in;
     if (result == BROTLI_DECODER_RESULT_ERROR) {
-      nsZipArchive::sFileCorruptedReason =
-          "nsJARInputStream: brotli decompression error";
       return NS_ERROR_FILE_CORRUPTED;
     }
     finished = (result == BROTLI_DECODER_RESULT_SUCCESS);
@@ -335,7 +330,6 @@ nsresult nsJARInputStream::ContinueInflate(char *aBuffer, uint32_t aCount,
 
     // stop returning valid data as soon as we know we have a bad CRC
     if (mOutCrc != mInCrc) {
-      nsZipArchive::sFileCorruptedReason = "nsJARInputStream: crc mismatch";
       return NS_ERROR_FILE_CORRUPTED;
     }
   }
