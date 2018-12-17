@@ -425,7 +425,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(
 
   int32_t blockPopups =
       Preferences::GetInt("privacy.popups.disable_from_plugins");
-  nsAutoPopupStatePusher popupStatePusher((PopupControlState)blockPopups);
+  nsAutoPopupStatePusher popupStatePusher(
+      (PopupBlocker::PopupControlState)blockPopups);
 
   // if security checks (in particular CheckLoadURIWithPrincipal) needs
   // to be skipped we are creating a codebasePrincipal to make sure

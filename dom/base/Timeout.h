@@ -7,16 +7,17 @@
 #ifndef mozilla_dom_timeout_h
 #define mozilla_dom_timeout_h
 
+#include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsGlobalWindow.h"
 #include "nsITimeoutHandler.h"
 
 class nsIEventTarget;
 class nsIPrincipal;
 class nsIEventTarget;
+class nsGlobalWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -83,7 +84,7 @@ class Timeout final : public LinkedListElement<RefPtr<Timeout>> {
 
   // The popup state at timeout creation time if not created from
   // another timeout
-  PopupControlState mPopupState;
+  PopupBlocker::PopupControlState mPopupState;
 
   // Used to allow several reasons for setting a timeout, where each
   // 'Reason' value is using a possibly overlapping set of id:s.
