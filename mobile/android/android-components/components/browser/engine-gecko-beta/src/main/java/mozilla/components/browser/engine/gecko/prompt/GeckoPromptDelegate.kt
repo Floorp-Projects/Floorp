@@ -7,7 +7,6 @@ package mozilla.components.browser.engine.gecko.prompt
 import android.support.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.engine.prompt.Choice
-import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
@@ -28,6 +27,7 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextCallback
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.support.ktx.kotlin.toDate
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATETIME_LOCAL

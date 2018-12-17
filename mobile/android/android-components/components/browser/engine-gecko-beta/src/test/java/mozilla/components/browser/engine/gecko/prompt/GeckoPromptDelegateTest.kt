@@ -153,14 +153,16 @@ class GeckoPromptDelegateTest {
         val geckoChoices = arrayOf<GeckoChoice>()
 
         mockSession.register(
-            object : EngineSession.Observer {
-                override fun onPromptRequest(promptRequest: PromptRequest) {
-                    promptRequestSingleChoice = promptRequest
-                }
-            })
+                object : EngineSession.Observer {
+                    override fun onPromptRequest(promptRequest: PromptRequest) {
+                        promptRequestSingleChoice = promptRequest
+                    }
+                })
 
-        gecko.onChoicePrompt(null, null, null,
-            GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_MENU, geckoChoices, callback)
+        gecko.onChoicePrompt(
+                null, null, null,
+                GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_MENU, geckoChoices, callback
+        )
 
         assertTrue(promptRequestSingleChoice is PromptRequest.MenuChoice)
 

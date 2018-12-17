@@ -22,6 +22,7 @@ class GeckoEngine(
     private val defaultSettings: Settings? = null,
     private val runtime: GeckoRuntime = GeckoRuntime.getDefault(context)
 ) : Engine {
+
     /**
      * Creates a new Gecko-based EngineView.
      */
@@ -65,12 +66,25 @@ class GeckoEngine(
         override var historyTrackingDelegate: HistoryTrackingDelegate?
             get() = defaultSettings?.historyTrackingDelegate
             set(value) { defaultSettings?.historyTrackingDelegate = value }
+
+        override var testingModeEnabled: Boolean
+            get() = defaultSettings?.testingModeEnabled ?: false
+            set(value) { defaultSettings?.testingModeEnabled = value }
+
+        override var userAgentString: String?
+            // TODO if no default user agent string is provided we should
+            // return the engine default here, but we can't get to it in
+            // a practical way right now: https://bugzilla.mozilla.org/show_bug.cgi?id=1512997
+            get() = defaultSettings?.userAgentString
+            set(value) { defaultSettings?.userAgentString = value }
     }.apply {
         defaultSettings?.let {
             this.javascriptEnabled = it.javascriptEnabled
             this.webFontsEnabled = it.webFontsEnabled
             this.trackingProtectionPolicy = it.trackingProtectionPolicy
             this.remoteDebuggingEnabled = it.remoteDebuggingEnabled
+            this.testingModeEnabled = it.testingModeEnabled
+            this.userAgentString = it.userAgentString
         }
     }
 }

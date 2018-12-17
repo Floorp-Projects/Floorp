@@ -80,7 +80,6 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
                 lastY = eventY
                 startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL)
             }
-
             // We don't care about other touch events
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> stopNestedScroll()
         }

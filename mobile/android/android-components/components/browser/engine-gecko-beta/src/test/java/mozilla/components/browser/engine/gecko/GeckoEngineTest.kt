@@ -10,6 +10,7 @@ import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.UnsupportedSettingException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -51,7 +52,7 @@ class GeckoEngineTest {
         `when`(runtimeSettings.webFontsEnabled).thenReturn(true)
         `when`(runtimeSettings.trackingProtectionCategories).thenReturn(TrackingProtectionPolicy.none().categories)
         `when`(runtime.settings).thenReturn(runtimeSettings)
-        val engine = GeckoEngine(context, runtime = runtime)
+        val engine = GeckoEngine(context, runtime = runtime, defaultSettings = DefaultSettings())
 
         assertTrue(engine.settings.javascriptEnabled)
         engine.settings.javascriptEnabled = false
@@ -64,6 +65,14 @@ class GeckoEngineTest {
         assertFalse(engine.settings.remoteDebuggingEnabled)
         engine.settings.remoteDebuggingEnabled = true
         verify(runtimeSettings).remoteDebuggingEnabled = true
+
+        assertFalse(engine.settings.testingModeEnabled)
+        engine.settings.testingModeEnabled = true
+        assertTrue(engine.settings.testingModeEnabled)
+
+        assertNull(engine.settings.userAgentString)
+        engine.settings.userAgentString = "test-ua"
+        assertEquals("test-ua", engine.settings.userAgentString)
 
         assertEquals(TrackingProtectionPolicy.none(), engine.settings.trackingProtectionPolicy)
         engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.all()
@@ -87,15 +96,19 @@ class GeckoEngineTest {
         `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)
         `when`(runtime.settings).thenReturn(runtimeSettings)
 
-        GeckoEngine(context, DefaultSettings(
+        val engine = GeckoEngine(context, DefaultSettings(
                 trackingProtectionPolicy = TrackingProtectionPolicy.all(),
                 javascriptEnabled = false,
                 webFontsEnabled = false,
-                remoteDebuggingEnabled = true), runtime)
+                remoteDebuggingEnabled = true,
+                testingModeEnabled = true,
+                userAgentString = "test-ua"), runtime)
 
         verify(runtimeSettings).javaScriptEnabled = false
         verify(runtimeSettings).webFontsEnabled = false
         verify(runtimeSettings).remoteDebuggingEnabled = true
         verify(runtimeSettings).trackingProtectionCategories = TrackingProtectionPolicy.all().categories
+        assertTrue(engine.settings.testingModeEnabled)
+        assertEquals("test-ua", engine.settings.userAgentString)
     }
 }

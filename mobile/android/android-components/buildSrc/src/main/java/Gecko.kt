@@ -4,7 +4,7 @@
 
 internal object GeckoVersions {
     const val nightly_version = "65.0.20181129095546"
-    const val beta_version = "64.0.20181022150107"
+    const val beta_version = "65.0.20181211223337"
     const val release_version = "64.0.20181214004633"
 }
 
