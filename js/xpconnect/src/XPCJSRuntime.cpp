@@ -195,6 +195,7 @@ CompartmentPrivate::CompartmentPrivate(JS::Compartment* c,
       hasExclusiveExpandos(false),
       universalXPConnectEnabled(false),
       forcePermissiveCOWs(false),
+      wasShutdown(false),
       mWrappedJSMap(JSObject2WrappedJSMap::newMap(XPC_JS_MAP_LENGTH)) {
   MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
   mozilla::PodArrayZero(wrapperDenialWarnings);
@@ -206,7 +207,12 @@ CompartmentPrivate::~CompartmentPrivate() {
 }
 
 void CompartmentPrivate::SystemIsBeingShutDown() {
-  mWrappedJSMap->ShutdownMarker();
+  // We may call this multiple times when the compartment contains more than one
+  // realm.
+  if (!wasShutdown) {
+    mWrappedJSMap->ShutdownMarker();
+    wasShutdown = true;
+  }
 }
 
 RealmPrivate::RealmPrivate(JS::Realm* realm)
