@@ -8,7 +8,7 @@
 # Java detection
 # ========================================================
 option('--with-java-bin-path', nargs=1,
-       help='Location of Java binaries (java, javac, jar)')
+       help='Location of Java binaries (java, jarsigner, keytool)')
 
 
 @depends('--with-java-bin-path')
@@ -45,27 +45,8 @@ def check_java_tool(tool):
 
 
 check_java_tool('java')
-check_java_tool('javah')
-check_java_tool('jar')
 check_java_tool('jarsigner')
 check_java_tool('keytool')
-javac = check_java_tool('javac')
-
-
-@depends(javac)
-@checking('for javac version')
-@imports('subprocess')
-def javac_version(javac):
-    try:
-        output = subprocess.check_output([javac, '-version'],
-                                         stderr=subprocess.STDOUT).rstrip()
-        version = Version(output.split(' ')[-1])
-        if version < '1.8':
-            die('javac 1.8 or higher is required (found %s). '
-                'Check the JAVA_HOME environment variable.' % version)
-        return version
-    except subprocess.CalledProcessError as e:
-        die('Failed to get javac version: %s', e.output)
 
 
 # Java Code Coverage
