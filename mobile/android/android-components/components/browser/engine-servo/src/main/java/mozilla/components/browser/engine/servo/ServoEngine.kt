@@ -9,9 +9,11 @@ import android.util.AttributeSet
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
+import org.json.JSONObject
 
 /**
  * Servo-based implementation of the Engine interface.
@@ -25,6 +27,10 @@ class ServoEngine(
 
     override fun createSession(private: Boolean): EngineSession {
         return ServoEngineSession(defaultSettings)
+    }
+
+    override fun createSessionState(json: JSONObject): EngineSessionState {
+        return ServoEngineSessionState.fromJSON(json)
     }
 
     override fun name(): String = "Servo"

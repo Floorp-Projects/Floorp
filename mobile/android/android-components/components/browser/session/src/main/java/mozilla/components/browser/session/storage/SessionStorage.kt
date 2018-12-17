@@ -24,7 +24,6 @@ import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONArray
 import org.json.JSONException
@@ -284,16 +283,9 @@ internal fun readSnapshotFromDisk(file: AtomicFile, engine: Engine): SessionMana
                 for (i in 0 until sessionStateTuples.length()) {
                     val sessionStateTupleJson = sessionStateTuples.getJSONObject(i)
                     val session = deserializeSession(sessionStateTupleJson.getJSONObject(Keys.SESSION_KEY))
-                    val engineSession = deserializeEngineSession(
-                        engine,
-                        sessionStateTupleJson.getJSONObject(Keys.ENGINE_SESSION_KEY)
-                    )
-                    tuples.add(
-                        SessionManager.Snapshot.Item(
-                            session,
-                            engineSession
-                        )
-                    )
+                    val state = engine.createSessionState(sessionStateTupleJson.getJSONObject(Keys.ENGINE_SESSION_KEY))
+
+                    tuples.add(SessionManager.Snapshot.Item(session, engineSession = null, engineSessionState = state))
                 }
             }
         } catch (_: IOException) {
@@ -339,7 +331,15 @@ internal fun saveSnapshotToDisk(file: AtomicFile, snapshot: SessionManager.Snaps
             snapshot.sessions.forEachIndexed { index, sessionWithState ->
                 val sessionJson = JSONObject()
                 sessionJson.put(Keys.SESSION_KEY, serializeSession(sessionWithState.session))
-                sessionJson.put(Keys.ENGINE_SESSION_KEY, serializeEngineSession(sessionWithState.engineSession))
+
+                val engineSessionState = if (sessionWithState.engineSessionState != null) {
+                    sessionWithState.engineSessionState.toJSON()
+                } else {
+                    sessionWithState.engineSession?.saveState()?.toJSON() ?: JSONObject()
+                }
+
+                sessionJson.put(Keys.ENGINE_SESSION_KEY, engineSessionState)
+
                 sessions.put(index, sessionJson)
             }
             json.put(Keys.SESSION_STATE_TUPLES_KEY, sessions)
@@ -396,33 +396,6 @@ internal fun deserializeSession(json: JSONObject): Session {
     )
     session.parentId = json.getString(Keys.SESSION_PARENT_UUID_KEY).takeIf { it != "" }
     return session
-}
-
-private fun serializeEngineSession(engineSession: EngineSession?): JSONObject {
-    if (engineSession == null) {
-        return JSONObject()
-    }
-    return JSONObject().apply {
-        engineSession.saveState().forEach { (k, v) -> if (shouldSerialize(v)) put(k, v) }
-    }
-}
-
-private fun deserializeEngineSession(engine: Engine, json: JSONObject): EngineSession {
-    return engine.createSession().apply {
-        val values = mutableMapOf<String, Any>()
-        json.keys().forEach { k -> values[k] = json[k] }
-        restoreState(values)
-    }
-}
-
-private fun shouldSerialize(value: Any): Boolean {
-    // For now we only persist primitive types
-    return when (value) {
-        is Number -> true
-        is Boolean -> true
-        is String -> true
-        else -> false
-    }
 }
 
 private object Keys {

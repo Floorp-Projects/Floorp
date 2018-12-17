@@ -206,12 +206,12 @@ class SystemEngineSessionTest {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
 
-        engineSession.restoreState(emptyMap())
+        engineSession.restoreState(SystemEngineSessionState(Bundle()))
         verify(webView, never()).restoreState(any(Bundle::class.java))
 
         `when`(engineSession.currentView()).thenReturn(webView)
 
-        engineSession.restoreState(emptyMap())
+        engineSession.restoreState(SystemEngineSessionState(Bundle()))
         verify(webView).restoreState(any(Bundle::class.java))
     }
 

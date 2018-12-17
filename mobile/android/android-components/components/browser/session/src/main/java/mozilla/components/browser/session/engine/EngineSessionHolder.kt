@@ -4,9 +4,16 @@
 
 package mozilla.components.browser.session.engine
 
+import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSessionState
 
+/**
+ * Used for linking a [Session] to an [EngineSession] or the [EngineSessionState] to create an [EngineSession] from it.
+ * The attached [EngineObserver] is used to update the [Session] whenever the [EngineSession] emits events.
+ */
 internal class EngineSessionHolder {
     @Volatile var engineSession: EngineSession? = null
     @Volatile var engineObserver: EngineObserver? = null
+    @Volatile var engineSessionState: EngineSessionState? = null
 }

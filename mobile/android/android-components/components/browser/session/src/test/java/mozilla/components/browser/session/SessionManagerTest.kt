@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -351,7 +352,7 @@ class SessionManagerTest {
 
         // Multiple sessions in the snapshot.
         val regularSession = Session("http://www.firefox.com")
-        val engineSessionState = mutableMapOf("k0" to "v0", "k1" to 1, "k2" to true, "k3" to emptyList<Any>())
+        val engineSessionState: EngineSessionState = mock()
         val engineSession = mock(EngineSession::class.java)
         `when`(engineSession.saveState()).thenReturn(engineSessionState)
 
@@ -368,12 +369,8 @@ class SessionManagerTest {
         manager.restore(snapshot)
         assertEquals(3, manager.size)
         assertEquals("http://www.firefox.com", manager.selectedSessionOrThrow.url)
-        val snapshotState = manager.selectedSessionOrThrow.engineSessionHolder.engineSession!!.saveState()
-        assertEquals(4, snapshotState.size)
-        assertEquals("v0", snapshotState["k0"])
-        assertEquals(1, snapshotState["k1"])
-        assertEquals(true, snapshotState["k2"])
-        assertEquals(emptyList<Any>(), snapshotState["k3"])
+        assertEquals(engineSession, manager.selectedSessionOrThrow.engineSessionHolder.engineSession)
+        assertNull(manager.selectedSessionOrThrow.engineSessionHolder.engineSessionState)
     }
 
     @Test
@@ -430,7 +427,7 @@ class SessionManagerTest {
         privateCustomTabSession.customTabConfig = Mockito.mock(CustomTabConfig::class.java)
 
         val regularSession = Session("http://www.firefox.com")
-        val engineSessionState = mutableMapOf("k0" to "v0", "k1" to 1, "k2" to true, "k3" to emptyList<Any>())
+        val engineSessionState: EngineSessionState = mock()
         val engineSession = mock(EngineSession::class.java)
         `when`(engineSession.saveState()).thenReturn(engineSessionState)
 
@@ -453,11 +450,7 @@ class SessionManagerTest {
         assertEquals("http://www.firefox.com", snapshotSession.session.url)
 
         val snapshotState = snapshotSession.engineSession!!.saveState()
-        assertEquals(4, snapshotState.size)
-        assertEquals("v0", snapshotState["k0"])
-        assertEquals(1, snapshotState["k1"])
-        assertEquals(true, snapshotState["k2"])
-        assertEquals(emptyList<Any>(), snapshotState["k3"])
+        assertEquals(engineSessionState, snapshotState)
     }
 
     @Test

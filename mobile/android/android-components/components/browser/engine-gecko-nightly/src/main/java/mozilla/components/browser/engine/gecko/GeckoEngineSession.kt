@@ -17,6 +17,7 @@ import mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest
 import mozilla.components.browser.engine.gecko.prompt.GeckoPromptDelegate
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
@@ -35,6 +36,7 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.WebRequestError
+import java.lang.IllegalStateException
 
 /**
  * Gecko-based EngineSession implementation.
@@ -120,9 +122,6 @@ class GeckoEngineSession(
     /**
      * See [EngineSession.saveState]
      *
-     * GeckoView provides a String representing the entire session state. We
-     * store this String using a single Map entry with key GECKO_STATE_KEY.
-
      * See https://bugzilla.mozilla.org/show_bug.cgi?id=1441810 for
      * discussion on sync vs. async, where a decision was made that
      * callers should provide synchronous wrappers, if needed. In case we're
@@ -130,30 +129,35 @@ class GeckoEngineSession(
      * is used so we're not blocking anything else. In case of calling this
      * method from onPause or similar, we also want a synchronous response.
      */
-    override fun saveState(): Map<String, Any> = runBlocking {
-        val stateMap = CompletableDeferred<Map<String, Any>>()
+    override fun saveState(): EngineSessionState = runBlocking {
+        val state = CompletableDeferred<GeckoEngineSessionState>()
 
         ThreadUtils.postToBackgroundThread {
-            geckoSession.saveState().then({ state ->
-                stateMap.complete(mapOf(GECKO_STATE_KEY to state.toString()))
+            geckoSession.saveState().then({ sessionState ->
+                state.complete(GeckoEngineSessionState(sessionState))
                 GeckoResult<Void>()
             }, { throwable ->
-                stateMap.cancel(throwable)
+                state.completeExceptionally(throwable)
                 GeckoResult<Void>()
             })
         }
 
-        stateMap.await()
+        state.await()
     }
 
     /**
      * See [EngineSession.restoreState]
      */
-    override fun restoreState(state: Map<String, Any>) {
-        if (state.containsKey(GECKO_STATE_KEY)) {
-            val sessionState = GeckoSession.SessionState(state[GECKO_STATE_KEY] as String)
-            geckoSession.restoreState(sessionState)
+    override fun restoreState(state: EngineSessionState) {
+        if (state !is GeckoEngineSessionState) {
+            throw IllegalStateException("Can only restore from GeckoEngineSessionState")
         }
+
+        if (state.actualState == null) {
+            return
+        }
+
+        geckoSession.restoreState(state.actualState)
     }
 
     /**

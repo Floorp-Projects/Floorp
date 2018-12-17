@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.window.WindowRequest
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -564,9 +565,9 @@ open class DummyEngineSession : EngineSession() {
     override val settings: Settings
         get() = mock(Settings::class.java)
 
-    override fun restoreState(state: Map<String, Any>) {}
+    override fun restoreState(state: EngineSessionState) {}
 
-    override fun saveState(): Map<String, Any> { return emptyMap() }
+    override fun saveState(): EngineSessionState { return mock() }
 
     override fun loadUrl(url: String) {}
 

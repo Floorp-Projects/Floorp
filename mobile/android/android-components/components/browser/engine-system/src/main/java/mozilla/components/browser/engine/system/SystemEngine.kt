@@ -13,9 +13,11 @@ import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
+import org.json.JSONObject
 
 /**
  * WebView-based implementation of the Engine interface.
@@ -24,7 +26,6 @@ class SystemEngine(
     context: Context,
     private val defaultSettings: Settings = DefaultSettings()
 ) : Engine {
-
     init {
         initDefaultUserAgent(context)
     }
@@ -50,6 +51,10 @@ class SystemEngine(
      * See [Engine.name]
      */
     override fun name(): String = "System"
+
+    override fun createSessionState(json: JSONObject): EngineSessionState {
+        return SystemEngineSessionState.fromJSON(json)
+    }
 
     /**
      * See [Engine.settings]

@@ -374,21 +374,38 @@ class GeckoEngineSessionTest {
     @Test
     fun saveState() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
-                geckoSessionProvider = geckoSessionProvider)
-        val currentState = GeckoSession.SessionState("")
-        val stateMap = mapOf(GeckoEngineSession.GECKO_STATE_KEY to currentState.toString())
+            geckoSessionProvider = geckoSessionProvider)
+        val currentState = GeckoSession.SessionState("<state>")
 
         `when`(geckoSession.saveState()).thenReturn(GeckoResult.fromValue(currentState))
-        assertEquals(stateMap, engineSession.saveState())
+
+        val savedState = engineSession.saveState() as GeckoEngineSessionState
+
+        assertEquals(currentState, savedState.actualState)
+        assertEquals("{\"GECKO_STATE\":\"<state>\"}", savedState.toJSON().toString())
     }
 
     @Test
     fun restoreState() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
-                geckoSessionProvider = geckoSessionProvider)
+            geckoSessionProvider = geckoSessionProvider)
 
-        engineSession.restoreState(mapOf(GeckoEngineSession.GECKO_STATE_KEY to ""))
+        val actualState: GeckoSession.SessionState = mock()
+        val state = GeckoEngineSessionState(actualState)
+
+        engineSession.restoreState(state)
         verify(geckoSession).restoreState(any())
+    }
+
+    @Test
+    fun `restoreState does nothing for null state`() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
+            geckoSessionProvider = geckoSessionProvider)
+
+        val state = GeckoEngineSessionState(null)
+
+        engineSession.restoreState(state)
+        verify(geckoSession, never()).restoreState(any())
     }
 
     class MockSecurityInformation(origin: String) : SecurityInformation() {

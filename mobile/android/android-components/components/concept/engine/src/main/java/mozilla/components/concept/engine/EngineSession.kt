@@ -150,14 +150,14 @@ abstract class EngineSession(
      * to restore the original state. See [restoreState] and the specific
      * engine implementation for details.
      */
-    abstract fun saveState(): Map<String, Any>
+    abstract fun saveState(): EngineSessionState
 
     /**
      * Restores the engine state as provided by [saveState].
      *
      * @param state state retrieved from [saveState]
      */
-    abstract fun restoreState(state: Map<String, Any>)
+    abstract fun restoreState(state: EngineSessionState)
 
     /**
      * Enables tracking protection for this engine session.

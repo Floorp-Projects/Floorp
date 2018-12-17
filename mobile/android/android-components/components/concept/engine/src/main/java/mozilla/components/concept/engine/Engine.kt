@@ -6,6 +6,7 @@ package mozilla.components.concept.engine
 
 import android.content.Context
 import android.util.AttributeSet
+import org.json.JSONObject
 
 /**
  * Entry point for interacting with the engine implementation.
@@ -30,6 +31,11 @@ interface Engine {
      * @return the newly created [EngineSession].
      */
     fun createSession(private: Boolean = false): EngineSession
+
+    /**
+     * Create a new [EngineSessionState] instance from the serialized JSON representation.
+     */
+    fun createSessionState(json: JSONObject): EngineSessionState
 
     /**
      * Returns the name of this engine. The returned string might be used

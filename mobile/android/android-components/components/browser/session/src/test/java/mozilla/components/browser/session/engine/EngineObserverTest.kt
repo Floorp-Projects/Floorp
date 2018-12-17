@@ -7,6 +7,7 @@ package mozilla.components.browser.session.engine
 import android.graphics.Bitmap
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.permission.PermissionRequest
@@ -16,6 +17,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
 
 import mozilla.components.support.base.observer.Consumable
+import mozilla.components.support.test.mock
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -38,7 +40,7 @@ class EngineObserverTest {
             override fun goForward() {}
             override fun reload() {}
             override fun stopLoading() {}
-            override fun restoreState(state: Map<String, Any>) {}
+            override fun restoreState(state: EngineSessionState) {}
             override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
             override fun disableTrackingProtection() {}
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {
@@ -50,7 +52,7 @@ class EngineObserverTest {
             override fun clearFindMatches() {}
             override fun exitFullScreenMode() {}
             override fun captureThumbnail(): Bitmap? = null
-            override fun saveState(): Map<String, Any> = emptyMap()
+            override fun saveState(): EngineSessionState = mock()
 
             override fun loadData(data: String, mimeType: String, encoding: String) {
                 notifyObservers { onLocationChange(data) }
@@ -89,7 +91,7 @@ class EngineObserverTest {
             override fun goForward() {}
             override fun stopLoading() {}
             override fun reload() {}
-            override fun restoreState(state: Map<String, Any>) {}
+            override fun restoreState(state: EngineSessionState) {}
             override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
             override fun disableTrackingProtection() {}
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {}
@@ -99,7 +101,7 @@ class EngineObserverTest {
             override fun clearFindMatches() {}
             override fun exitFullScreenMode() {}
             override fun captureThumbnail(): Bitmap? = null
-            override fun saveState(): Map<String, Any> = emptyMap()
+            override fun saveState(): EngineSessionState = mock()
             override fun loadData(data: String, mimeType: String, encoding: String) {}
             override fun loadUrl(url: String) {
                 if (url.startsWith("https://")) {
@@ -129,7 +131,7 @@ class EngineObserverTest {
             override fun goForward() {}
             override fun stopLoading() {}
             override fun reload() {}
-            override fun restoreState(state: Map<String, Any>) {}
+            override fun restoreState(state: EngineSessionState) {}
             override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {
                 notifyObservers { onTrackerBlockingEnabledChange(true) }
             }
@@ -139,7 +141,7 @@ class EngineObserverTest {
 
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {}
             override fun captureThumbnail(): Bitmap? = null
-            override fun saveState(): Map<String, Any> = emptyMap()
+            override fun saveState(): EngineSessionState = mock()
             override fun loadUrl(url: String) {}
             override fun loadData(data: String, mimeType: String, encoding: String) {}
             override fun clearData() {}

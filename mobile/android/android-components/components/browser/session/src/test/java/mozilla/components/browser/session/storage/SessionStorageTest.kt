@@ -15,6 +15,7 @@ import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.json.JSONObject
@@ -53,7 +54,9 @@ class SessionStorageTest {
         val session3 = Session("http://getpocket.com", id = "session3")
         session3.parentId = "session1"
 
-        val engineSessionState = mutableMapOf("k0" to "v0", "k1" to 1, "k2" to true, "k3" to emptyList<Any>())
+        val engineSessionState = object : EngineSessionState {
+            override fun toJSON() = JSONObject()
+        }
 
         val engineSession = mock(EngineSession::class.java)
         `when`(engineSession.saveState()).thenReturn(engineSessionState)
@@ -61,11 +64,12 @@ class SessionStorageTest {
         val engine = mock(Engine::class.java)
         `when`(engine.name()).thenReturn("gecko")
         `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
+        `when`(engine.createSessionState(any())).thenReturn(engineSessionState)
 
         // Engine session just for one of the sessions for simplicity.
         val sessionsSnapshot = SessionManager.Snapshot(
             sessions = listOf(
-                SessionManager.Snapshot.Item(session1, engineSession),
+                SessionManager.Snapshot.Item(session1),
                 SessionManager.Snapshot.Item(session2),
                 SessionManager.Snapshot.Item(session3)
             ),
@@ -98,9 +102,8 @@ class SessionStorageTest {
         assertEquals(session3.id, restoredSnapshot.sessions[2].session.id)
         assertEquals("session1", restoredSnapshot.sessions[2].session.parentId)
 
-        val restoredEngineSession = restoredSnapshot.sessions[0].engineSession
+        val restoredEngineSession = restoredSnapshot.sessions[0].engineSessionState
         assertNotNull(restoredEngineSession)
-        verify(restoredEngineSession)!!.restoreState(engineSessionState.filter { it.key != "k3" })
     }
 
     @Test

@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.Settings
 import org.mozilla.servoview.Servo
 import org.mozilla.servoview.ServoView
@@ -103,11 +104,11 @@ class ServoEngineSession(
         view?.goForward()
     }
 
-    override fun saveState(): Map<String, Any> {
-        return mapOf() // not implemented yet
+    override fun saveState(): EngineSessionState {
+        return ServoEngineSessionState()
     }
 
-    override fun restoreState(state: Map<String, Any>) {
+    override fun restoreState(state: EngineSessionState) {
         // not implemented yet
     }
 

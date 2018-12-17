@@ -343,7 +343,7 @@ class GeckoEngineSessionTest {
     fun saveState() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         engineSession.geckoSession = mock(GeckoSession::class.java)
-        val currentState = GeckoSession.SessionState("")
+        val currentState = GeckoSession.SessionState("<state>")
         val stateMap = mapOf(GeckoEngineSession.GECKO_STATE_KEY to currentState.toString())
 
         ThreadUtils.sGeckoHandler = object : Handler() {
@@ -360,7 +360,11 @@ class GeckoEngineSessionTest {
             }
         }
         `when`(engineSession.geckoSession.saveState()).thenReturn(GeckoResult.fromValue(currentState))
-        assertEquals(stateMap, engineSession.saveState())
+
+        val savedState = engineSession.saveState() as GeckoEngineSessionState
+
+        assertEquals(currentState, savedState.actualState)
+        assertEquals("{\"GECKO_STATE\":\"<state>\"}", savedState.toJSON().toString())
     }
 
     @Test
@@ -372,7 +376,7 @@ class GeckoEngineSessionTest {
                 "GeckoView:RestoreState"
         )
 
-        engineSession.restoreState(mapOf(GeckoEngineSession.GECKO_STATE_KEY to ""))
+        engineSession.restoreState(GeckoEngineSessionState(GeckoSession.SessionState("<state>")))
         assertTrue(eventReceived)
     }
 

@@ -8,6 +8,7 @@ import android.support.annotation.GuardedBy
 import mozilla.components.browser.session.engine.EngineObserver
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import kotlin.math.max
@@ -51,7 +52,8 @@ class SessionManager(
                 .map { session ->
                     Snapshot.Item(
                         session,
-                        session.engineSessionHolder.engineSession
+                        session.engineSessionHolder.engineSession,
+                        session.engineSessionHolder.engineSessionState
                     )
                 }
                 .toList()
@@ -133,13 +135,15 @@ class SessionManager(
         engineSession: EngineSession? = null,
         parent: Session? = null
     ) = synchronized(values) {
-        addInternal(session, selected, engineSession, parent, viaRestore = false)
+        addInternal(session, selected, engineSession, parent = parent, viaRestore = false)
     }
 
+    @Suppress("LongParameterList")
     private fun addInternal(
         session: Session,
         selected: Boolean = false,
         engineSession: EngineSession? = null,
+        engineSessionState: EngineSessionState? = null,
         parent: Session? = null,
         viaRestore: Boolean = false
     ) = synchronized(values) {
@@ -157,7 +161,11 @@ class SessionManager(
             values.add(session)
         }
 
-        engineSession?.let { link(session, it) }
+        if (engineSession != null) {
+            link(session, engineSession)
+        } else if (engineSessionState != null) {
+            session.engineSessionHolder.engineSessionState = engineSessionState
+        }
 
         // If session is being added via restore, skip notification and auto-selection.
         // Restore will handle these actions as appropriate.
@@ -197,7 +205,12 @@ class SessionManager(
         }
 
         snapshot.sessions.forEach {
-            addInternal(it.session, engineSession = it.engineSession, parent = null, viaRestore = true)
+            addInternal(
+                it.session,
+                engineSession = it.engineSession,
+                engineSessionState = it.engineSessionState,
+                parent = null,
+                viaRestore = true)
         }
 
         select(sessionTupleToSelect.session)
@@ -217,6 +230,11 @@ class SessionManager(
         getEngineSession(session)?.let { return it }
 
         return engine.createSession(session.private).apply {
+            session.engineSessionHolder.engineSessionState?.let { state ->
+                restoreState(state)
+                session.engineSessionHolder.engineSessionState = null
+            }
+
             link(session, this)
         }
     }
@@ -239,6 +257,7 @@ class SessionManager(
                 engineSession?.unregister(observer)
                 engineSession?.close()
                 engineSession = null
+                engineSessionState = null
                 engineObserver = null
             }
         }
@@ -477,7 +496,8 @@ class SessionManager(
 
         data class Item(
             val session: Session,
-            val engineSession: EngineSession? = null
+            val engineSession: EngineSession? = null,
+            val engineSessionState: EngineSessionState? = null
         )
     }
 }
