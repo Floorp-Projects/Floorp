@@ -33,6 +33,7 @@ fuzzy(1,14) == filter-long-chain.yaml filter-long-chain.png
 platform(linux,mac) == filter-drop-shadow.yaml filter-drop-shadow.png
 platform(linux,mac) == filter-drop-shadow-on-viewport-edge.yaml filter-drop-shadow-on-viewport-edge.png
 platform(linux,mac) == blend-clipped.yaml blend-clipped.png
+platform(linux,mac) == filter-drop-shadow-clip.yaml filter-drop-shadow-clip.png
 == filter-segments.yaml filter-segments-ref.yaml
 == iframe-dropshadow.yaml iframe-dropshadow-ref.yaml
 == filter-mix-blend-mode.yaml filter-mix-blend-mode-ref.yaml
