@@ -11433,9 +11433,9 @@ double DebuggerObject::promiseTimeToResolution() const {
   }
 
   // Don't allow unwrapping to create a D.O whose referent is in an
-  // invisible-to-Debugger global. (If our referent is a *wrapper* to such,
-  // and the wrapper is in a visible realm, that's fine.)
-  if (unwrapped->deprecatedRealm()->creationOptions().invisibleToDebugger()) {
+  // invisible-to-Debugger compartment. (If our referent is a *wrapper* to such,
+  // and the wrapper is in a visible compartment, that's fine.)
+  if (unwrapped->compartment()->invisibleToDebugger()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_DEBUG_INVISIBLE_COMPARTMENT);
     return false;
