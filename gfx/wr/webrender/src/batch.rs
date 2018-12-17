@@ -1164,12 +1164,10 @@ impl AlphaBatchBuilder {
                                             get_shader_opacity(1.0),
                                         ]);
 
-                                        let shadow_rect = picture.local_rect.translate(&offset);
-                                        let shadow_clip_rect = picture.local_clip_rect.translate(&offset);
+                                        let shadow_rect = prim_header.local_rect.translate(&offset);
 
                                         let shadow_prim_header = PrimitiveHeader {
                                             local_rect: shadow_rect,
-                                            local_clip_rect: shadow_clip_rect,
                                             specific_prim_address: shadow_prim_address,
                                             ..prim_header
                                         };
