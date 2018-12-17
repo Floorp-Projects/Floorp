@@ -74,6 +74,7 @@
 #include "nsWidgetsCID.h"
 #include "nsContentCID.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/Components.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
@@ -2240,9 +2241,8 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
       nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(docShell));
       NS_ASSERTION(req, "Docshell must be an ifreq");
 
-      nsCOMPtr<nsIURILoader> uriLoader(
-          do_GetService(NS_URI_LOADER_CONTRACTID, &rv));
-      if (NS_FAILED(rv)) {
+      nsCOMPtr<nsIURILoader> uriLoader(components::URILoader::Service());
+      if (NS_WARN_IF(!uriLoader)) {
         MOZ_ASSERT_UNREACHABLE("Failed to get uriLoader service");
         mFrameLoader->Destroy();
         mFrameLoader = nullptr;

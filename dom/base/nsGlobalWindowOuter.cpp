@@ -95,6 +95,7 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "nsJSPrincipals.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Components.h"
 #include "mozilla/Debug.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStates.h"
@@ -153,7 +154,6 @@
 #include "nsCSSProps.h"
 #include "nsIURIFixup.h"
 #include "nsIURIMutator.h"
-#include "nsCDefaultURIFixup.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "nsIObserverService.h"
@@ -4557,7 +4557,7 @@ void nsGlobalWindowOuter::MakeScriptDialogTitle(
   if (NS_SUCCEEDED(rv) && uri) {
     // remove user:pass for privacy and spoof prevention
 
-    nsCOMPtr<nsIURIFixup> fixup(do_GetService(NS_URIFIXUP_CONTRACTID));
+    nsCOMPtr<nsIURIFixup> fixup(components::URIFixup::Service());
     if (fixup) {
       nsCOMPtr<nsIURI> fixedURI;
       rv = fixup->CreateExposableURI(uri, getter_AddRefs(fixedURI));
