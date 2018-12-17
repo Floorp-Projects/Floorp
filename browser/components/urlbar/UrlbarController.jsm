@@ -51,6 +51,11 @@ class QueryContext {
       throw new Error(`Invalid maxResults property provided to QueryContext`);
     }
 
+    if (options.providers &&
+        (!Array.isArray(options.providers) || !options.providers.length)) {
+      throw new Error(`Invalid providers list`);
+    }
+
     this.autoFill = !!options.autoFill;
   }
 

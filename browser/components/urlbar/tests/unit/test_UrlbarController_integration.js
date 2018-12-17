@@ -42,9 +42,8 @@ add_task(async function setup() {
 });
 
 add_task(async function test_basic_search() {
-  const context = createContext(TEST_URL);
-
-  registerBasicTestProvider([match]);
+  let providerName = registerBasicTestProvider([match]);
+  const context = createContext(TEST_URL, {providers: [providerName]});
 
   let startedPromise = promiseControllerNotification(controller, "onQueryStarted");
   let resultsPromise = promiseControllerNotification(controller, "onQueryResults");
@@ -62,10 +61,9 @@ add_task(async function test_basic_search() {
 });
 
 add_task(async function test_cancel_search() {
-  const context = createContext(TEST_URL);
-
   let providerCanceledPromise = PromiseUtils.defer();
-  registerBasicTestProvider([match], providerCanceledPromise.resolve);
+  let providerName = registerBasicTestProvider([match], providerCanceledPromise.resolve);
+  const context = createContext(TEST_URL, {providers: [providerName]});
 
   let startedPromise = promiseControllerNotification(controller, "onQueryStarted");
   let cancelPromise = promiseControllerNotification(controller, "onQueryResults");

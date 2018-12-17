@@ -39,7 +39,7 @@ class MuxerUnifiedComplete {
   }
 
   get name() {
-    return "MuxerUnifiedComplete";
+    return "UnifiedComplete";
   }
 
   /**

@@ -33,9 +33,9 @@ add_task(async function test_muxer() {
                     UrlbarUtils.MATCH_SOURCE.HISTORY,
                     { url: "http://mozilla.org/history/" }),
   ];
-  registerBasicTestProvider(matches);
 
-  let context = createContext();
+  let providerName = registerBasicTestProvider(matches);
+  let context = createContext(undefined, {providers: [providerName]});
   let controller = new UrlbarController({
     browserWindow: {
       location: {
