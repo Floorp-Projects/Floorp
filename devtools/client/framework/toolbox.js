@@ -1272,7 +1272,7 @@ Toolbox.prototype = {
    * Note: Toggle picker can be overwritten by panel other than the inspector to
    * allow for custom picker behaviour.
    */
-  _onPickerClick: function() {
+  _onPickerClick: async function() {
     const focus = this.hostType === Toolbox.HostType.BOTTOM ||
                   this.hostType === Toolbox.HostType.LEFT ||
                   this.hostType === Toolbox.HostType.RIGHT;
@@ -1280,6 +1280,9 @@ Toolbox.prototype = {
     if (currentPanel.togglePicker) {
       currentPanel.togglePicker(focus);
     } else {
+      if (!this.inspector) {
+        await this.initInspector();
+      }
       this.inspector.nodePicker.togglePicker(focus);
     }
   },
