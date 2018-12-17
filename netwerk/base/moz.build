@@ -148,6 +148,7 @@ EXPORTS += [
     'nsSerializationHelper.h',
     'nsSimpleNestedURI.h',
     'nsSimpleURI.h',
+    'nsStandardURL.h',
     'nsStreamListenerWrapper.h',
     'nsURIHashKey.h',
     'nsURLHelper.h',
