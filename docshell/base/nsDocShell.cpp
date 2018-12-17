@@ -47,6 +47,7 @@
 #include "mozilla/dom/HTMLAnchorElement.h"
 #include "mozilla/dom/PerformanceNavigation.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
+#include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -3966,12 +3967,12 @@ nsDocShell::LoadURIWithOptions(const nsAString& aURI, uint32_t aLoadFlags,
     return NS_ERROR_FAILURE;
   }
 
-  PopupControlState popupState;
+  PopupBlocker::PopupControlState popupState;
   if (aLoadFlags & LOAD_FLAGS_ALLOW_POPUPS) {
-    popupState = openAllowed;
+    popupState = PopupBlocker::openAllowed;
     aLoadFlags &= ~LOAD_FLAGS_ALLOW_POPUPS;
   } else {
-    popupState = openOverridden;
+    popupState = PopupBlocker::openOverridden;
   }
   nsAutoPopupStatePusher statePusher(popupState);
 
@@ -12520,7 +12521,7 @@ class OnLinkClickEvent : public Runnable {
   nsCOMPtr<nsIInputStream> mPostDataStream;
   nsCOMPtr<nsIInputStream> mHeadersDataStream;
   nsCOMPtr<nsIContent> mContent;
-  PopupControlState mPopupState;
+  PopupBlocker::PopupControlState mPopupState;
   bool mNoOpenerImplied;
   bool mIsUserTriggered;
   bool mIsTrusted;
@@ -12543,7 +12544,7 @@ OnLinkClickEvent::OnLinkClickEvent(nsDocShell* aHandler, nsIContent* aContent,
       mPostDataStream(aPostDataStream),
       mHeadersDataStream(aHeadersDataStream),
       mContent(aContent),
-      mPopupState(mHandler->mScriptGlobal->GetPopupControlState()),
+      mPopupState(PopupBlocker::GetPopupControlState()),
       mNoOpenerImplied(aNoOpenerImplied),
       mIsUserTriggered(aIsUserTriggered),
       mIsTrusted(aIsTrusted),

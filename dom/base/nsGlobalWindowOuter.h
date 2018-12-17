@@ -38,6 +38,7 @@
 #include "prclist.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ChromeMessageBroadcaster.h"
+#include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/dom/UnionTypes.h"
@@ -298,11 +299,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   // Outer windows only.
   virtual void SetInitialPrincipalToSubject() override;
-
-  virtual PopupControlState PushPopupControlState(PopupControlState state,
-                                                  bool aForce) const override;
-  virtual void PopPopupControlState(PopupControlState state) const override;
-  virtual PopupControlState GetPopupControlState() const override;
 
   virtual already_AddRefed<nsISupports> SaveWindowState() override;
   virtual nsresult RestoreWindowState(nsISupports* aState) override;
@@ -850,7 +846,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   nsresult SecurityCheckURL(const char* aURL, nsIURI** aURI);
 
   bool PopupWhitelisted();
-  PopupControlState RevisePopupAbuseLevel(PopupControlState);
+  mozilla::dom::PopupBlocker::PopupControlState RevisePopupAbuseLevel(
+      mozilla::dom::PopupBlocker::PopupControlState aState);
   void FireAbuseEvents(const nsAString& aPopupURL,
                        const nsAString& aPopupWindowName,
                        const nsAString& aPopupWindowFeatures);
