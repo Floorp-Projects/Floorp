@@ -44,7 +44,7 @@ add_task(async function() {
   info("First child selection test Passed.");
 
   info("Stopping the picker");
-  await toolbox.highlighterUtils.stopPicker();
+  await toolbox.inspector.nodePicker.stop();
 
   function doKeyHover(args) {
     info("Key pressed. Waiting for element to be highlighted/hovered");

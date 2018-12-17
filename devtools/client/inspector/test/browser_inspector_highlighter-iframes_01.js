@@ -51,7 +51,7 @@ add_task(async function() {
      "Breadcrumbs have 9 items.");
 
   info("Waiting for element picker to deactivate.");
-  await inspector.toolbox.highlighterUtils.stopPicker();
+  await inspector.inspector.nodePicker.stop();
 
   function moveMouseOver(selector) {
     info("Waiting for element " + selector + " to be highlighted");

@@ -68,7 +68,7 @@ var navigateTo = async function(inspector, url) {
 var startPicker = async function(toolbox, skipFocus) {
   info("Start the element picker");
   toolbox.win.focus();
-  await toolbox.highlighterUtils.startPicker();
+  await toolbox.inspector.nodePicker.start();
   if (!skipFocus) {
     // By default make sure the content window is focused since the picker may not focus
     // the content window by default.
