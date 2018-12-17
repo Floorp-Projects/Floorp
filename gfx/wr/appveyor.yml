@@ -1,5 +1,5 @@
 before_test:
-  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/set-screenresolution.ps1'))
+  - ps: iex (Get-Content -Raw ci-scripts\set-screenresolution.ps1)
   - ps: Set-ScreenResolution 1920 1080
 
 environment:
