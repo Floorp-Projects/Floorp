@@ -28,11 +28,6 @@ const kMessages = [
 ];
 
 function NotificationStorage() {
-  // cache objects
-  this._notifications = {};
-  this._byTag = {};
-  this._cached = false;
-
   this._requests = {};
   this._requestCount = 0;
 
@@ -83,37 +78,15 @@ NotificationStorage.prototype = {
       serviceWorkerRegistrationScope: serviceWorkerRegistrationScope,
     };
 
-    this._notifications[id] = notification;
-    if (tag) {
-      if (!this._byTag[origin]) {
-        this._byTag[origin] = {};
-      }
-
-      // We might have existing notification with this tag,
-      // if so we need to remove it from our cache.
-      if (this._byTag[origin][tag]) {
-        var oldNotification = this._byTag[origin][tag];
-        delete this._notifications[oldNotification.id];
-      }
-
-      this._byTag[origin][tag] = notification;
-    };
-
-    if (serviceWorkerRegistrationScope) {
-      Services.cpmm.sendAsyncMessage("Notification:Save", {
-        origin: origin,
-        notification: notification
-      });
-    }
+    Services.cpmm.sendAsyncMessage("Notification:Save", {
+      origin: origin,
+      notification: notification
+    });
   },
 
   get: function(origin, tag, callback) {
     if (DEBUG) { debug("GET: " + origin + " " + tag); }
-    if (this._cached) {
-      this._fetchFromCache(origin, tag, callback);
-    } else {
-      this._fetchFromDB(origin, tag, callback);
-    }
+    this._fetchFromDB(origin, tag, callback);
   },
 
   getByID: function(origin, id, callback) {
@@ -137,14 +110,6 @@ NotificationStorage.prototype = {
 
   delete: function(origin, id) {
     if (DEBUG) { debug("DELETE: " + id); }
-    var notification = this._notifications[id];
-    if (notification) {
-      if (notification.tag) {
-        delete this._byTag[origin][notification.tag];
-      }
-      delete this._notifications[id];
-    }
-
     Services.cpmm.sendAsyncMessage("Notification:Delete", {
       origin: origin,
       id: id
@@ -157,8 +122,8 @@ NotificationStorage.prototype = {
     switch (message.name) {
       case kMessageNotificationGetAllOk:
         delete this._requests[message.data.requestID];
-        this._populateCache(message.data.notifications);
-        this._fetchFromCache(request.origin, request.tag, request.callback);
+        this._returnNotifications(message.data.notifications, request.origin,
+                                  request.tag, request.callback);
         break;
 
       case kMessageNotificationGetAllKo:
@@ -184,33 +149,20 @@ NotificationStorage.prototype = {
 
   _fetchFromDB: function(origin, tag, callback) {
     var request = {
-      origin: origin,
-      tag: tag,
-      callback: callback
+      origin,
+      tag,
+      callback,
     };
     var requestID = this._requestCount++;
     this._requests[requestID] = request;
     Services.cpmm.sendAsyncMessage("Notification:GetAll", {
-      origin: origin,
-      requestID: requestID
+      origin,
+      tag,
+      requestID,
     });
   },
 
-  _fetchFromCache: function(origin, tag, callback) {
-    var notifications = [];
-    // If a tag was specified and we have a notification
-    // with this tag, return that. If no tag was specified
-    // simple return all stored notifications.
-    if (tag && this._byTag[origin] && this._byTag[origin][tag]) {
-      notifications.push(this._byTag[origin][tag]);
-    } else if (!tag) {
-      for (var id in this._notifications) {
-        if (this._notifications[id].origin === origin) {
-          notifications.push(this._notifications[id]);
-        }
-      }
-    }
-
+  _returnNotifications: function(notifications, origin, tag, callback) {
     // Pass each notification back separately.
     // The callback is called asynchronously to match the behaviour when
     // fetching from the database.
@@ -237,21 +189,6 @@ NotificationStorage.prototype = {
     } catch (e) {
       if (DEBUG) { debug("Error calling callback done: " + e); }
     }
-  },
-
-  _populateCache: function(notifications) {
-    notifications.forEach(notification => {
-      this._notifications[notification.id] = notification;
-      if (notification.tag && notification.origin) {
-        let tag = notification.tag;
-        let origin = notification.origin;
-        if (!this._byTag[origin]) {
-          this._byTag[origin] = {};
-        }
-        this._byTag[origin][tag] = notification;
-      }
-    });
-    this._cached = true;
   },
 
   classID : Components.ID(NOTIFICATIONSTORAGE_CID),
