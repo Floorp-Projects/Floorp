@@ -133,11 +133,11 @@ class WhitelistClassifierCallback final
   WhitelistClassifierCallback(
       nsIChannel* aChannel, nsIURI* aURI,
       const nsTArray<RefPtr<nsIUrlClassifierFeatureResult>>& aBlacklistResults,
-      std::function<void()>&& aCallback)
+      std::function<void()>& aCallback)
       : mChannel(aChannel),
         mURI(aURI),
         mBlacklistResults(aBlacklistResults),
-        mChannelCallback(std::move(aCallback)) {
+        mChannelCallback(aCallback) {
     MOZ_ASSERT(mChannel);
     MOZ_ASSERT(mURI);
     MOZ_ASSERT(!mBlacklistResults.IsEmpty());
@@ -311,7 +311,7 @@ BlacklistClassifierCallback::OnClassifyComplete(
 
   nsCOMPtr<nsIUrlClassifierFeatureCallback> callback =
       new WhitelistClassifierCallback(mChannel, mURI, aResults,
-                                      std::move(mChannelCallback));
+                                      mChannelCallback);
 
   // xpcom parser creates array of interfaces using RefPtr<>.
   nsTArray<RefPtr<nsIUrlClassifierFeature>> refPtrFeatures;
