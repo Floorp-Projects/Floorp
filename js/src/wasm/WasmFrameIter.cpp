@@ -48,9 +48,11 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
 
   // When the stack is captured during a trap (viz., to create the .stack
   // for an Error object), use the pc/bytecode information captured by the
-  // signal handler in the runtime.
+  // signal handler in the runtime. Take care not to use this trap unwind
+  // state for wasm frames in the middle of a JitActivation, i.e., wasm frames
+  // that called into JIT frames before the trap.
 
-  if (activation->isWasmTrapping()) {
+  if (activation->isWasmTrapping() && fp_ == activation->wasmExitFP()) {
     const TrapData& trapData = activation->wasmTrapData();
     void* unwoundPC = trapData.unwoundPC;
 
