@@ -98,7 +98,7 @@ UPSTREAM_ARTIFACT_UNSIGNED_PATHS = _compile_regex_mapping({
                     "host/bin/mar.exe",
                     "host/bin/mbsdiff.exe",
                 ]),
-    r'^win(32|64)(|-devedition)-nightly$':
+    r'^win(32|64(|-aarch64-msvc))(|-devedition)-nightly$':
         _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US + [
             'host/bin/mar.exe',
             'host/bin/mbsdiff.exe',
@@ -114,7 +114,7 @@ UPSTREAM_ARTIFACT_UNSIGNED_PATHS = _compile_regex_mapping({
 UPSTREAM_ARTIFACT_SIGNED_PATHS = _compile_regex_mapping({
     r'^linux(|64)(|-devedition|-asan-reporter)-nightly(|-l10n)$':
         ['target.tar.bz2', 'target.tar.bz2.asc'],
-    r'^win(32|64)(|-devedition|-asan-reporter)-nightly(|-l10n)$': ['target.zip'],
+    r'^win(32|64)(|-aarch64-msvc)(|-devedition|-asan-reporter)-nightly(|-l10n)$': ['target.zip'],
 })
 
 # Until bug 1331141 is fixed, if you are adding any new artifacts here that
@@ -306,6 +306,9 @@ def generate_upstream_artifacts(job, dependencies, platform, locale=None, projec
     ]:
         if task_type not in dependencies:
             continue
+
+        if platform.startswith('win64-aarch64'):
+            paths = [path for path in paths if path != 'target.installer.exe']
 
         paths = ["{}/{}".format(artifact_prefix, path) for path in paths]
         paths = [
