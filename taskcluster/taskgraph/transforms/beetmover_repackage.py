@@ -307,9 +307,6 @@ def generate_upstream_artifacts(job, dependencies, platform, locale=None, projec
         if task_type not in dependencies:
             continue
 
-        if platform.startswith('win64-aarch64'):
-            paths = [path for path in paths if path != 'target.installer.exe']
-
         paths = ["{}/{}".format(artifact_prefix, path) for path in paths]
         paths = [
             path for path in paths
