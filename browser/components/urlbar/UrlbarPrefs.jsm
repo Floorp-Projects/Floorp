@@ -87,6 +87,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // The maximum number of results in the urlbar popup.
   ["maxRichResults", 10],
 
+  // Whether addresses and search results typed into the address bar
+  // should be opened in new tabs by default.
+  ["openintab", false],
+
   // Results will include the user's bookmarks when this is true.
   ["suggest.bookmark", true],
 
