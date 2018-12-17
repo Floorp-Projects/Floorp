@@ -3050,23 +3050,10 @@ Toolbox.prototype = {
       return promise.resolve();
     }
 
-    if (this._performanceFrontConnection) {
-      return this._performanceFrontConnection;
-    }
+    this._performance =  await this.target.getFront("performance");
+    this._performance.on("console-profile-start", this._onPerformanceFrontEvent);
 
-    let resolvePerformance;
-    this._performanceFrontConnection = new Promise(function(resolve) {
-      resolvePerformance = resolve;
-    });
-
-    this._performance = await this.target.getFront("performance");
-
-    // Emit an event when connected, but don't wait on startup for this.
-    this.emit("profiler-connected");
-
-    this.performance.on("*", this._onPerformanceFrontEvent);
-    resolvePerformance(this.performance);
-    return this._performanceFrontConnection;
+    return this._performance;
   },
 
   /**
@@ -3080,10 +3067,7 @@ Toolbox.prototype = {
     }
     // If still connecting to performance actor, allow the
     // actor to resolve its connection before attempting to destroy.
-    if (this._performanceFrontConnection) {
-      await this._performanceFrontConnection;
-    }
-    this.performance.off("*", this._onPerformanceFrontEvent);
+    this.performance.off("console-profile-start", this._onPerformanceFrontEvent);
     await this.performance.destroy();
     this._performance = null;
   },
@@ -3112,34 +3096,23 @@ Toolbox.prototype = {
    * handle them, which will only occur when `console.profile()` recordings are started
    * before the tool loads.
    */
-  async _onPerformanceFrontEvent(eventName, recording) {
+  async _onPerformanceFrontEvent(recording) {
+    this.performance.off("console-profile-start", this._onPerformanceFrontEvent);
     if (this.getPanel("performance")) {
-      this.performance.off("*", this._onPerformanceFrontEvent);
+      // the performance panel is already recording all performance, we no longer
+      // need the queue, if it was started
+      this.performance.flushQueuedRecordings();
       return;
     }
-
-    this._performanceQueuedRecordings = this._performanceQueuedRecordings || [];
-    const recordings = this._performanceQueuedRecordings;
 
     // Before any console recordings, we'll get a `console-profile-start` event
     // warning us that a recording will come later (via `recording-started`), so
     // start to boot up the tool and populate the tool with any other recordings
     // observed during that time.
-    if (eventName === "console-profile-start" && !this._performanceToolOpenedViaConsole) {
-      this._performanceToolOpenedViaConsole = this.loadTool("performance");
-      const panel = await this._performanceToolOpenedViaConsole;
-      await panel.open();
-
-      panel.panelWin.PerformanceController.populateWithRecordings(recordings);
-      this.performance.off("*", this._onPerformanceFrontEvent);
-    }
-
-    // Otherwise, if it's a recording-started event, we've already started loading
-    // the tool, so just store this recording in our array to be later populated
-    // once the tool loads.
-    if (eventName === "recording-started") {
-      recordings.push(recording);
-    }
+    const panel = await this.loadTool("performance");
+    const recordings = this.performance.flushQueuedRecordings();
+    panel.panelWin.PerformanceController.populateWithRecordings(recordings);
+    await panel.open();
   },
 
   /**

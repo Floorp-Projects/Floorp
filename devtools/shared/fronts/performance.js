@@ -17,10 +17,14 @@ class PerformanceFront extends FrontClassWithSpec(performanceSpec) {
   constructor(client, form) {
     super(client, form);
     this.actorID = form.performanceActor;
+    this._queuedRecordings = [];
     this.manage(this);
+    this._onRecordingStartedEvent = this._onRecordingStartedEvent.bind(this);
+    this.flushQueuedRecordings = this.flushQueuedRecordings.bind(this);
 
     this.before("profiler-status", this._onProfilerStatus.bind(this));
     this.before("timeline-data", this._onTimelineEvent.bind(this));
+    this.on("recording-started", this._onRecordingStartedEvent);
   }
 
   async initialize() {
@@ -41,6 +45,23 @@ class PerformanceFront extends FrontClassWithSpec(performanceSpec) {
     this._traits = traits;
 
     return this._traits;
+  }
+
+  /**
+   * Called when the "recording-started" event comes from the PerformanceFront.
+   * this is only used to queue up observed recordings before the performance tool can
+   * handle them, which will only occur when `console.profile()` recordings are started
+   * before the tool loads.
+   */
+  async _onRecordingStartedEvent(recording) {
+    this._queuedRecordings.push(recording);
+  }
+
+  flushQueuedRecordings() {
+    this.off("recording-started", this._onPerformanceFrontEvent);
+    const recordings = this._queuedRecordings;
+    this._queuedRecordings = [];
+    return recordings;
   }
 
   get traits() {
