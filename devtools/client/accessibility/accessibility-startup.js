@@ -44,28 +44,23 @@ class AccessibilityStartup {
     // We must call a method on an accessibility front here (such as getWalker), in
     // oreder to be able to check actor's backward compatibility via actorHasMethod.
     // See targe.js@getActorDescription for more information.
-    try {
-      this._walker = await this._accessibility.getWalker();
+    this._walker = await this._accessibility.getWalker();
 
-      this._supports = {};
-      // Only works with FF61+ targets
-      this._supports.enableDisable =
-        await this.target.actorHasMethod("accessibility", "enable");
+    this._supports = {};
+    // Only works with FF61+ targets
+    this._supports.enableDisable =
+      await this.target.actorHasMethod("accessibility", "enable");
 
-      if (this._supports.enableDisable) {
-        ([ this._supports.relations, this._supports.snapshot ] = await Promise.all([
-          this.target.actorHasMethod("accessible", "getRelations"),
-          this.target.actorHasMethod("accessible", "snapshot"),
-        ]));
+    if (this._supports.enableDisable) {
+      ([ this._supports.relations, this._supports.snapshot ] = await Promise.all([
+        this.target.actorHasMethod("accessible", "getRelations"),
+        this.target.actorHasMethod("accessible", "snapshot"),
+      ]));
 
-        await this._accessibility.bootstrap();
-      }
-
-      return true;
-    } catch (e) {
-      // toolbox may be destroyed during this step.
-      return false;
+      await this._accessibility.bootstrap();
     }
+
+    return true;
   }
 
   /**

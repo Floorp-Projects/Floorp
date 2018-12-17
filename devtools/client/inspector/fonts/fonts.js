@@ -752,7 +752,7 @@ class FontInspector {
   async onToggleFontHighlight(font, show, isForCurrentElement = true) {
     if (!this.fontsHighlighter) {
       try {
-        this.fontsHighlighter = await this.inspector.inspector
+        this.fontsHighlighter = await this.inspector.toolbox.highlighterUtils
                                           .getHighlighterByType("FontsHighlighter");
       } catch (e) {
         // When connecting to an older server or when debugging a XUL document, the
