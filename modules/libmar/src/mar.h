@@ -19,7 +19,7 @@ extern "C" {
  * It is also used at various places internally and will affect memory usage.
  * If you want to increase this value above 9 then you need to adjust parsing
  * code in tool/mar.c.
-*/
+ */
 #define MAX_SIGNATURES 8
 #ifdef __cplusplus
 static_assert(MAX_SIGNATURES <= 9, "too many signatures");
@@ -27,8 +27,7 @@ static_assert(MAX_SIGNATURES <= 9, "too many signatures");
 MOZ_STATIC_ASSERT(MAX_SIGNATURES <= 9, "too many signatures");
 #endif
 
-struct ProductInformationBlock
-{
+struct ProductInformationBlock {
   const char* MARChannelID;
   const char* productVersion;
 };
@@ -36,20 +35,18 @@ struct ProductInformationBlock
 /**
  * The MAR item data structure.
  */
-typedef struct MarItem_
-{
-  struct MarItem_* next;  /* private field */
-  uint32_t offset;        /* offset into archive */
-  uint32_t length;        /* length of data in bytes */
-  uint32_t flags;         /* contains file mode bits */
-  char name[1];           /* file path */
+typedef struct MarItem_ {
+  struct MarItem_* next; /* private field */
+  uint32_t offset;       /* offset into archive */
+  uint32_t length;       /* length of data in bytes */
+  uint32_t flags;        /* contains file mode bits */
+  char name[1];          /* file path */
 } MarItem;
 
 /**
  * File offset and length for tracking access of byte indexes
  */
-typedef struct SeenIndex_
-{
+typedef struct SeenIndex_ {
   struct SeenIndex_* next; /* private field */
   uint32_t offset;         /* offset into archive */
   uint32_t length;         /* length of the data in bytes */
@@ -60,8 +57,7 @@ typedef struct SeenIndex_
 /**
  * Mozilla ARchive (MAR) file data structure
  */
-struct MarFile_
-{
+struct MarFile_ {
   FILE* fp;                       /* file pointer to the archive */
   MarItem* item_table[TABLESIZE]; /* hash table of files in the archive */
   SeenIndex* index_list;          /* file indexes processed */
@@ -85,19 +81,17 @@ typedef int (*MarItemCallback)(MarFile* mar, const MarItem* item, void* data);
  *                  be compatible with fopen.
  * @return          NULL if an error occurs.
  */
-MarFile*
-mar_open(const char* path);
+MarFile* mar_open(const char* path);
 
 #ifdef XP_WIN
-MarFile *mar_wopen(const wchar_t *path);
+MarFile* mar_wopen(const wchar_t* path);
 #endif
 
 /**
  * Close a MAR file that was opened using mar_open.
  * @param mar       The MarFile object to close.
  */
-void
-mar_close(MarFile* mar);
+void mar_close(MarFile* mar);
 
 /**
  * Find an item in the MAR file by name.
@@ -105,8 +99,7 @@ mar_close(MarFile* mar);
  * @param item      The name of the item to query.
  * @return          A const reference to a MAR item or NULL if not found.
  */
-const MarItem*
-mar_find_item(MarFile* mar, const char* item);
+const MarItem* mar_find_item(MarFile* mar, const char* item);
 
 /**
  * Enumerate all MAR items via callback function.
@@ -117,8 +110,7 @@ mar_find_item(MarFile* mar, const char* item);
  * @return          0 if the enumeration ran to completion.  Otherwise, any
  *                  non-zero return value from the callback is returned.
  */
-int
-mar_enum_items(MarFile* mar, MarItemCallback callback, void* data);
+int mar_enum_items(MarFile* mar, MarItemCallback callback, void* data);
 
 /**
  * Read from MAR item at given offset up to bufsize bytes.
@@ -130,12 +122,8 @@ mar_enum_items(MarFile* mar, MarItemCallback callback, void* data);
  * @return          The number of bytes written or a negative value if an
  *                  error occurs.
  */
-int
-mar_read(MarFile* mar,
-         const MarItem* item,
-         int offset,
-         uint8_t* buf,
-         int bufsize);
+int mar_read(MarFile* mar, const MarItem* item, int offset, uint8_t* buf,
+             int bufsize);
 
 /**
  * Create a MAR file from a set of files.
@@ -147,11 +135,8 @@ mar_read(MarFile* mar,
  * @param infoBlock The information to store in the product information block.
  * @return          A non-zero value if an error occurs.
  */
-int
-mar_create(const char* dest,
-           int numfiles,
-           char** files,
-           struct ProductInformationBlock* infoBlock);
+int mar_create(const char* dest, int numfiles, char** files,
+               struct ProductInformationBlock* infoBlock);
 
 /**
  * Extract a MAR file to the current working directory.
@@ -159,10 +144,9 @@ mar_create(const char* dest,
  *                  compatible with fopen.
  * @return          A non-zero value if an error occurs.
  */
-int
-mar_extract(const char* path);
+int mar_extract(const char* path);
 
-#define MAR_MAX_CERT_SIZE (16*1024) // Way larger than necessary
+#define MAR_MAX_CERT_SIZE (16 * 1024)  // Way larger than necessary
 
 /* Read the entire file (not a MAR file) into a newly-allocated buffer.
  * This function does not write to stderr. Instead, the caller should
@@ -177,11 +161,9 @@ mar_extract(const char* path);
  *
  * @return 0 on success, -1 on error
  */
-int
-mar_read_entire_file(const char* filePath,
-                     uint32_t maxSize,
-                     /*out*/ const uint8_t** data,
-                     /*out*/ uint32_t* size);
+int mar_read_entire_file(const char* filePath, uint32_t maxSize,
+                         /*out*/ const uint8_t** data,
+                         /*out*/ uint32_t* size);
 
 /**
  * Verifies a MAR file by verifying each signature with the corresponding
@@ -203,11 +185,8 @@ mar_read_entire_file(const char* filePath,
  *         a negative number if there was an error
  *         a positive number if the signature does not verify
  */
-int
-mar_verify_signatures(MarFile* mar,
-                      const uint8_t* const* certData,
-                      const uint32_t* certDataSizes,
-                      uint32_t certCount);
+int mar_verify_signatures(MarFile* mar, const uint8_t* const* certData,
+                          const uint32_t* certDataSizes, uint32_t certCount);
 
 /**
  * Reads the product info block from the MAR file's additional block section.
@@ -216,13 +195,12 @@ mar_verify_signatures(MarFile* mar,
  *
  * @param infoBlock Out parameter for where to store the result to
  * @return 0 on success, -1 on failure
-*/
-int
-mar_read_product_info_block(MarFile* mar,
-                            struct ProductInformationBlock* infoBlock);
+ */
+int mar_read_product_info_block(MarFile* mar,
+                                struct ProductInformationBlock* infoBlock);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  /* MAR_H__ */
+#endif /* MAR_H__ */
