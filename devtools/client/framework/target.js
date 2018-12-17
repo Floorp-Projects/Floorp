@@ -398,9 +398,22 @@ Target.prototype = {
       return front;
     }
     front = getFront(this.client, typeName, this.form);
+    this.fronts.set(typeName, front);
+    // replace the placeholder with the instance of the front once it has loaded
+    front = await front;
     this.emit(typeName, front);
     this.fronts.set(typeName, front);
     return front;
+  },
+
+  getCachedFront(typeName) {
+    // do not wait for async fronts;
+    const front = this.fronts.get(typeName);
+    // ensure that the front is a front, and not async front
+    if (front && front.actorID) {
+      return front;
+    }
+    return null;
   },
 
   get client() {
