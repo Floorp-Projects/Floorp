@@ -603,6 +603,21 @@ pub unsafe extern "C" fn encoding_mem_convert_utf16_to_utf8(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn encoding_mem_convert_utf16_to_utf8_partial(
+    src: *const u16,
+    src_len: *mut usize,
+    dst: *mut u8,
+    dst_len: *mut usize,
+) {
+    let (read, written) = encoding_rs::mem::convert_utf16_to_utf8_partial(
+        ::std::slice::from_raw_parts(src, *src_len),
+        ::std::slice::from_raw_parts_mut(dst, *dst_len),
+    );
+    *src_len = read;
+    *dst_len = written;
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn encoding_mem_convert_utf8_to_utf16(
     src: *const u8,
     src_len: usize,

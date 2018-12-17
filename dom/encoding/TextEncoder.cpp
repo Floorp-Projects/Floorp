@@ -50,6 +50,17 @@ void TextEncoder::Encode(JSContext* aCx, JS::Handle<JSObject*> aObj,
   aRetval.set(outView);
 }
 
+void TextEncoder::EncodeInto(const nsAString& aSrc, const Uint8Array& aDst,
+                             TextEncoderEncodeIntoResult& aResult) {
+  aDst.ComputeLengthAndData();
+  size_t read;
+  size_t written;
+  Tie(read, written) = ConvertUTF16toUTF8Partial(
+      aSrc, MakeSpan(reinterpret_cast<char*>(aDst.Data()), aDst.Length()));
+  aResult.mRead.Construct() = read;
+  aResult.mWritten.Construct() = written;
+}
+
 void TextEncoder::GetEncoding(nsAString& aEncoding) {
   aEncoding.AssignLiteral("utf-8");
 }
