@@ -5403,6 +5403,11 @@ pref("dom.vr.openvr.enabled", true);
 // See Bug 1310663 (Linux)
 pref("dom.vr.openvr.enabled", false);
 #endif
+#ifdef RELEASE_OR_BETA
+pref("dom.vr.openvr.action_input", false);
+#else
+pref("dom.vr.openvr.action_input", true);
+#endif
 // Minimum number of milliseconds that the browser will wait before
 // attempting to poll again for connected VR controllers.  The browser
 // will not attempt to poll for VR controllers until it needs to use them.
