@@ -9,6 +9,7 @@
 #include "mozilla/Unused.h"
 
 #include "SubstitutingProtocolHandler.h"
+#include "SubstitutingURL.h"
 #include "nsIChannel.h"
 #include "nsIIOService.h"
 #include "nsIFile.h"
