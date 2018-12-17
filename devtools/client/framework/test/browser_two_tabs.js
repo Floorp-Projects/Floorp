@@ -53,9 +53,9 @@ function connect() {
 }
 
 function checkGetTab() {
-  gClient.getTab({tab: gTab1})
-         .then(response => {
-           is(JSON.stringify(gTargetActor1), JSON.stringify(response.tab),
+  gClient.mainRoot.getTab({tab: gTab1})
+         .then(front => {
+           is(JSON.stringify(gTargetActor1), JSON.stringify(front.targetForm),
               "getTab returns the same target form for first tab");
          })
          .then(() => {
@@ -68,29 +68,29 @@ function checkGetTab() {
              const windowUtils = gTab1.linkedBrowser.contentWindow.windowUtils;
              filter.outerWindowID = windowUtils.outerWindowID;
            }
-           return gClient.getTab(filter);
+           return gClient.mainRoot.getTab(filter);
          })
-         .then(response => {
-           is(JSON.stringify(gTargetActor1), JSON.stringify(response.tab),
+         .then(front => {
+           is(JSON.stringify(gTargetActor1), JSON.stringify(front.targetForm),
               "getTab returns the same target form when filtering by tabId/outerWindowID");
          })
-         .then(() => gClient.getTab({tab: gTab2}))
-         .then(response => {
-           is(JSON.stringify(gTargetActor2), JSON.stringify(response.tab),
+         .then(() => gClient.mainRoot.getTab({tab: gTab2}))
+         .then(front => {
+           is(JSON.stringify(gTargetActor2), JSON.stringify(front.targetForm),
               "getTab returns the same target form for second tab");
          })
          .then(checkGetTabFailures);
 }
 
 function checkGetTabFailures() {
-  gClient.getTab({ tabId: -999 })
+  gClient.mainRoot.getTab({ tabId: -999 })
     .then(
       response => ok(false, "getTab unexpectedly succeed with a wrong tabId"),
       response => {
         is(response, "Protocol error (noTab): Unable to find tab with tabId '-999'");
       }
     )
-    .then(() => gClient.getTab({ outerWindowID: -999 }))
+    .then(() => gClient.mainRoot.getTab({ outerWindowID: -999 }))
     .then(
       response => ok(false, "getTab unexpectedly succeed with a wrong outerWindowID"),
       response => {

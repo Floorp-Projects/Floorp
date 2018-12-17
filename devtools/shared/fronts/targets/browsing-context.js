@@ -22,10 +22,14 @@ class BrowsingContextTargetFront extends FrontClassWithSpec(browsingContextTarge
 
     // TODO: remove once ThreadClient becomes a front
     this.client = client;
+  }
 
-    // Save the full form for Target class usage
+  form(json) {
+    this.actorID = json.actor;
+
+    // Save the full form for Target class usage.
     // Do not use `form` name to avoid colliding with protocol.js's `form` method
-    this.targetForm = form;
+    this.targetForm = json;
   }
 
   /**
