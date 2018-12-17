@@ -15,7 +15,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/AtomList.h"
 #include "jsapi.h"
-#include "jsfriendapi.h"
+#include "js/Promise.h"
 
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"

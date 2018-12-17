@@ -142,6 +142,7 @@ EXPORTS.js += [
     '../public/Printf.h',
     '../public/ProfilingFrameIterator.h',
     '../public/ProfilingStack.h',
+    '../public/Promise.h',
     '../public/ProtoKey.h',
     '../public/Proxy.h',
     '../public/Realm.h',
