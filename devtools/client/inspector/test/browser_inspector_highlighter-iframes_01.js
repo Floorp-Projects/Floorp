@@ -51,7 +51,7 @@ add_task(async function() {
      "Breadcrumbs have 9 items.");
 
   info("Waiting for element picker to deactivate.");
-  await inspector.inspector.nodePicker.stop();
+  await inspector.toolbox.highlighterUtils.stopPicker();
 
   function moveMouseOver(selector) {
     info("Waiting for element " + selector + " to be highlighted");
@@ -59,6 +59,6 @@ add_task(async function() {
       selector: selector,
       options: {type: "mousemove"},
       center: true,
-    }).then(() => inspector.inspector.nodePicker.once("picker-node-hovered"));
+    }).then(() => inspector.toolbox.once("picker-node-hovered"));
   }
 });

@@ -98,12 +98,12 @@ add_task(async function() {
   async function inspectorShouldBeOpenAndHighlighting(inspector) {
     is(toolbox.currentToolId, "inspector", "Correct tool has been loaded");
 
-    await toolbox.inspector.nodePicker.once("picker-started");
+    await toolbox.once("picker-started");
 
     ok(true, "picker-started event received, highlighter started");
     inspector.synthesizeKey();
 
-    await toolbox.inspector.nodePicker.once("picker-stopped");
+    await toolbox.once("picker-stopped");
     ok(true, "picker-stopped event received, highlighter stopped");
   }
 

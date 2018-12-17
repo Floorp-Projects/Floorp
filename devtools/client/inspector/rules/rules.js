@@ -262,8 +262,8 @@ CssRuleView.prototype = {
     }
 
     try {
-      const front = this.inspector.inspector;
-      const h = await front.getHighlighterByType("SelectorHighlighter");
+      const utils = this.inspector.toolbox.highlighterUtils;
+      const h = await utils.getHighlighterByType("SelectorHighlighter");
       this.selectorHighlighter = h;
       return h;
     } catch (e) {

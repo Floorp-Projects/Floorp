@@ -68,7 +68,7 @@ var navigateTo = async function(inspector, url) {
 var startPicker = async function(toolbox, skipFocus) {
   info("Start the element picker");
   toolbox.win.focus();
-  await toolbox.inspector.nodePicker.start();
+  await toolbox.highlighterUtils.startPicker();
   if (!skipFocus) {
     // By default make sure the content window is focused since the picker may not focus
     // the content window by default.
@@ -121,7 +121,7 @@ function pickElement(inspector, testActor, selector, x, y) {
  */
 function hoverElement(inspector, testActor, selector, x, y) {
   info("Waiting for element " + selector + " to be hovered");
-  const onHovered = inspector.inspector.nodePicker.once("picker-node-hovered");
+  const onHovered = inspector.toolbox.once("picker-node-hovered");
   testActor.synthesizeMouse({selector, x, y, options: {type: "mousemove"}});
   return onHovered;
 }

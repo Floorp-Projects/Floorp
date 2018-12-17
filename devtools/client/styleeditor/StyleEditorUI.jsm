@@ -129,9 +129,11 @@ StyleEditorUI.prototype = {
     await toolbox.initInspector();
     this._walker = toolbox.walker;
 
+    const hUtils = toolbox.highlighterUtils;
+
     try {
       this._highlighter =
-        await toolbox.inspector.getHighlighterByType(SELECTOR_HIGHLIGHTER_TYPE);
+        await hUtils.getHighlighterByType(SELECTOR_HIGHLIGHTER_TYPE);
     } catch (e) {
       // The selectorHighlighter can't always be instantiated, for example
       // it doesn't work with XUL windows (until bug 1094959 gets fixed);
