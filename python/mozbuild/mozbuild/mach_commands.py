@@ -3074,7 +3074,7 @@ class Repackage(MachCommandBase):
     @CommandArgument('--locale', type=str, required=True,
         help='The locale of the installer')
     @CommandArgument('--arch', type=str, required=True,
-        help='The archtecture you are building x64 or x32')
+        help='The archtecture you are building.')
     @CommandArgument('--setupexe', type=str, required=True,
         help='setup.exe installer')
     @CommandArgument('--candle', type=str, required=False,
@@ -3108,9 +3108,11 @@ class Repackage(MachCommandBase):
     @CommandArgument('--format', type=str, default='lzma',
         choices=('lzma', 'bz2'),
         help='Mar format')
-    def repackage_mar(self, input, mar, output, format):
+    @CommandArgument('--arch', type=str, required=True,
+        help='The archtecture you are building.')
+    def repackage_mar(self, input, mar, output, format, arch):
         from mozbuild.repackaging.mar import repackage_mar
-        repackage_mar(self.topsrcdir, input, mar, output, format)
+        repackage_mar(self.topsrcdir, input, mar, output, format, arch=arch)
 
 @CommandProvider
 class Analyze(MachCommandBase):
