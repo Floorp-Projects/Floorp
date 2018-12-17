@@ -458,7 +458,6 @@ MessageManagerTunnel.prototype = {
     "PageInfo:",
     // Messages sent from printUtils.js
     "Printing:",
-    "PageMetadata:",
     // Messages sent from viewSourceUtils.js
     "ViewSource:",
   ],
@@ -480,7 +479,6 @@ MessageManagerTunnel.prototype = {
     "PageInfo:",
     // Messages sent to printUtils.js
     "Printing:",
-    "PageMetadata:",
     // Messages sent to viewSourceUtils.js
     "ViewSource:",
   ],
