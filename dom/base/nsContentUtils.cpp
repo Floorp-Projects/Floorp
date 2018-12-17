@@ -290,7 +290,6 @@ nsIInterfaceRequestor* nsContentUtils::sSameOriginChecker = nullptr;
 
 bool nsContentUtils::sIsHandlingKeyBoardEvent = false;
 bool nsContentUtils::sAllowXULXBL_for_file = false;
-bool nsContentUtils::sDisablePopups = false;
 
 nsString* nsContentUtils::sShiftText = nullptr;
 nsString* nsContentUtils::sControlText = nullptr;
@@ -349,10 +348,6 @@ bool nsContentUtils::sDoNotTrackEnabled = false;
 bool nsContentUtils::sAntiTrackingControlCenterUIEnabled = false;
 
 mozilla::LazyLogModule nsContentUtils::sDOMDumpLog("Dump");
-
-PopupControlState nsContentUtils::sPopupControlState = openAbused;
-uint32_t nsContentUtils::sPopupStatePusherCount = 0;
-bool nsContentUtils::sUnusedPopupToken = false;
 
 int32_t nsContentUtils::sInnerOrOuterWindowCount = 0;
 uint32_t nsContentUtils::sInnerOrOuterWindowSerialCounter = 0;
@@ -701,9 +696,6 @@ nsresult nsContentUtils::Init() {
 
   Preferences::AddBoolVarCache(&sIsBytecodeCacheEnabled,
                                "dom.script_loader.bytecode_cache.enabled",
-                               false);
-
-  Preferences::AddBoolVarCache(&sDisablePopups, "dom.disable_open_during_load",
                                false);
 
   Preferences::AddBoolVarCache(
@@ -10412,38 +10404,6 @@ nsContentUtils::TryGetTabChildGlobal(nsISupports* aFrom) {
   --sInnerOrOuterWindowCount;
 }
 
-/* static */ bool nsContentUtils::CanShowPopupByPermission(
-    nsIPrincipal* aPrincipal) {
-  MOZ_ASSERT(aPrincipal);
-  uint32_t permit;
-  nsCOMPtr<nsIPermissionManager> permissionManager =
-      services::GetPermissionManager();
-
-  if (permissionManager &&
-      NS_SUCCEEDED(permissionManager->TestPermissionFromPrincipal(
-          aPrincipal, "popup", &permit))) {
-    if (permit == nsIPermissionManager::ALLOW_ACTION) {
-      return true;
-    }
-    if (permit == nsIPermissionManager::DENY_ACTION) {
-      return false;
-    }
-  }
-
-  return !sDisablePopups;
-}
-
-/* static */ bool nsContentUtils::TryUsePopupOpeningToken() {
-  MOZ_ASSERT(sPopupStatePusherCount);
-
-  if (!sUnusedPopupToken) {
-    sUnusedPopupToken = true;
-    return true;
-  }
-
-  return false;
-}
-
 static bool JSONCreator(const char16_t* aBuf, uint32_t aLen, void* aData) {
   nsAString* result = static_cast<nsAString*>(aData);
   result->Append(static_cast<const char16_t*>(aBuf),
@@ -10544,17 +10504,5 @@ static bool JSONCreator(const char16_t* aBuf, uint32_t aLen, void* aData) {
     }
     host = NS_LITERAL_CSTRING("*") +
            nsDependentCSubstring(host, startIndexOfNextLevel);
-  }
-}
-
-/* static */ void nsContentUtils::PopupStatePusherCreated() {
-  ++sPopupStatePusherCount;
-}
-
-/* static */ void nsContentUtils::PopupStatePusherDestroyed() {
-  MOZ_ASSERT(sPopupStatePusherCount);
-
-  if (!--sPopupStatePusherCount) {
-    sUnusedPopupToken = false;
   }
 }

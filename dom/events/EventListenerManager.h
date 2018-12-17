@@ -401,8 +401,6 @@ class EventListenerManager final : public EventListenerManagerBase {
 
   uint32_t GetIdentifierForEvent(nsAtom* aEvent);
 
-  static void Shutdown();
-
   /**
    * Returns true if there may be a paint event listener registered,
    * false if there definitely isn't.

@@ -47,6 +47,7 @@
 #include "nsSandboxFlags.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/PopupBlocker.h"
 #include "nsILoadInfo.h"
 #include "nsContentSecurityManager.h"
 
@@ -64,9 +65,10 @@ class nsJSThunk : public nsIInputStream {
   NS_FORWARD_SAFE_NSIINPUTSTREAM(mInnerStream)
 
   nsresult Init(nsIURI* uri);
-  nsresult EvaluateScript(nsIChannel* aChannel, PopupControlState aPopupState,
-                          uint32_t aExecutionPolicy,
-                          nsPIDOMWindowInner* aOriginalInnerWindow);
+  nsresult EvaluateScript(
+      nsIChannel* aChannel,
+      mozilla::dom::PopupBlocker::PopupControlState aPopupState,
+      uint32_t aExecutionPolicy, nsPIDOMWindowInner* aOriginalInnerWindow);
 
  protected:
   virtual ~nsJSThunk();
@@ -126,10 +128,10 @@ static nsIScriptGlobalObject* GetGlobalObject(nsIChannel* aChannel) {
   return global;
 }
 
-nsresult nsJSThunk::EvaluateScript(nsIChannel* aChannel,
-                                   PopupControlState aPopupState,
-                                   uint32_t aExecutionPolicy,
-                                   nsPIDOMWindowInner* aOriginalInnerWindow) {
+nsresult nsJSThunk::EvaluateScript(
+    nsIChannel* aChannel,
+    mozilla::dom::PopupBlocker::PopupControlState aPopupState,
+    uint32_t aExecutionPolicy, nsPIDOMWindowInner* aOriginalInnerWindow) {
   if (aExecutionPolicy == nsIScriptChannel::NO_EXECUTION) {
     // Nothing to do here.
     return NS_ERROR_DOM_RETVAL_UNDEFINED;
@@ -345,7 +347,7 @@ class nsJSChannel : public nsIChannel,
   nsLoadFlags mActualLoadFlags;  // See AsyncOpen2
 
   RefPtr<nsJSThunk> mIOThunk;
-  PopupControlState mPopupState;
+  mozilla::dom::PopupBlocker::PopupControlState mPopupState;
   uint32_t mExecutionPolicy;
   bool mIsAsync;
   bool mIsActive;
@@ -356,7 +358,7 @@ nsJSChannel::nsJSChannel()
     : mStatus(NS_OK),
       mLoadFlags(LOAD_NORMAL),
       mActualLoadFlags(LOAD_NORMAL),
-      mPopupState(openOverridden),
+      mPopupState(mozilla::dom::PopupBlocker::openOverridden),
       mExecutionPolicy(NO_EXECUTION),
       mIsAsync(true),
       mIsActive(false),
@@ -573,7 +575,7 @@ nsJSChannel::AsyncOpen(nsIStreamListener* aListener, nsISupports* aContext) {
     mDocumentOnloadBlockedOn->BlockOnload();
   }
 
-  mPopupState = win->GetPopupControlState();
+  mPopupState = mozilla::dom::PopupBlocker::GetPopupControlState();
 
   void (nsJSChannel::*method)();
   const char* name;

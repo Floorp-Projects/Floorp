@@ -24,6 +24,7 @@
 #include "mozilla/PluginLibrary.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/dom/PopupBlocker.h"
 
 class nsPluginStreamListenerPeer;   // browser-initiated stream class
 class nsNPAPIPluginStreamListener;  // plugin-initiated stream class
@@ -269,7 +270,7 @@ class nsNPAPIPluginInstance final
 
   nsTArray<nsPluginStreamListenerPeer*> mFileCachedStreamListeners;
 
-  nsTArray<PopupControlState> mPopupStates;
+  nsTArray<mozilla::dom::PopupBlocker::PopupControlState> mPopupStates;
 
   char* mMIMEType;
 
