@@ -38,8 +38,6 @@ const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties"
 
 loader.lazyRequireGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm", true);
-loader.lazyRequireGetter(this, "getHighlighterUtils",
-  "devtools/client/framework/toolbox-highlighter-utils", true);
 loader.lazyRequireGetter(this, "flags",
   "devtools/shared/flags");
 loader.lazyRequireGetter(this, "KeyShortcuts",
@@ -136,7 +134,6 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId,
   this._splitConsoleOnKeypress = this._splitConsoleOnKeypress.bind(this);
   this.closeToolbox = this.closeToolbox.bind(this);
   this.destroy = this.destroy.bind(this);
-  this.highlighterUtils = getHighlighterUtils(this);
   this._highlighterReady = this._highlighterReady.bind(this);
   this._highlighterHidden = this._highlighterHidden.bind(this);
   this._applyCacheSettings = this._applyCacheSettings.bind(this);
@@ -374,8 +371,6 @@ Toolbox.prototype = {
   /**
    * Get the toolbox highlighter front. Note that it may not always have been
    * initialized first. Use `initInspector()` if needed.
-   * Consider using highlighterUtils instead, it exposes the highlighter API in
-   * a useful way for the toolbox panels
    */
   get highlighter() {
     return this._highlighter;
@@ -2982,7 +2977,6 @@ Toolbox.prototype = {
           }
           const target = this._target;
           this._target = null;
-          this.highlighterUtils.release();
           target.off("close", this.destroy);
           return target.destroy();
         }, console.error).then(() => {
