@@ -10,6 +10,8 @@
 #include "string.h"
 #include "gtest/gtest.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Components.h"
+#include "mozilla/Unused.h"
 
 using namespace mozilla;
 using namespace mozilla::safebrowsing;
@@ -191,7 +193,8 @@ static void testUpdate(TableUpdateArray& tableUpdates,
     // in gtest.
     nsresult rv;
     nsCOMPtr<nsIUrlClassifierUtils> dummy =
-        do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID, &rv);
+        components::UrlClassifierUtils::Service(&rv);
+    Unused << dummy;
     ASSERT_TRUE(NS_SUCCEEDED(rv));
   }
 
