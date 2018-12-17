@@ -1996,7 +1996,8 @@ nsXPCComponents_Utils::ForcePermissiveCOWs(JSContext* cx) {
   MOZ_DIAGNOSTIC_ASSERT(
       !mozJSComponentLoader::Get()->IsLoaderGlobal(currentGlobal),
       "Don't call Cu.forcePermissiveCOWs() in a JSM that shares its global");
-  CompartmentPrivate::Get(currentGlobal)->forcePermissiveCOWs = true;
+  MOZ_RELEASE_ASSERT(currentGlobal == JS::GetScriptedCallerGlobal(cx));
+  RealmPrivate::Get(currentGlobal)->forcePermissiveCOWs = true;
   return NS_OK;
 }
 
