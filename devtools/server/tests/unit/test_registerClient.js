@@ -68,7 +68,7 @@ function run_test() {
 function init() {
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect()
-    .then(() => gClient.listTabs())
+    .then(() => gClient.mainRoot.rootForm)
     .then(response => {
       gTestClient = new TestClient(gClient, response);
       run_next_test();

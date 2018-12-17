@@ -69,7 +69,7 @@ function createClientMock() {
     // Empty array of addons
     listAddons: () => [],
     // Empty array of tabs
-    listTabs: () => ({ tabs: []}),
+    listTabs: () => [],
     // Empty arrays of workers
     listWorkers: () => ({
       otherWorkers: [],
@@ -101,7 +101,7 @@ function createThisFirefoxClientMock() {
   };
 
   const mockThisFirefoxClient = createClientMock();
-  mockThisFirefoxClient.listTabs = () => ({ tabs: [mockAboutDebuggingTab] });
+  mockThisFirefoxClient.listTabs = () => ([mockAboutDebuggingTab]);
   mockThisFirefoxClient.getDeviceDescription = () => mockThisFirefoxDescription;
 
   return mockThisFirefoxClient;

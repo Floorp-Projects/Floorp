@@ -589,7 +589,7 @@ class TabParent final : public PBrowserParent,
       const int32_t& aCx, const int32_t& aCy) override;
 
   virtual mozilla::ipc::IPCResult RecvShowCanvasPermissionPrompt(
-      const nsCString& aFirstPartyURI) override;
+      const nsCString& aFirstPartyURI, const bool& aHideDoorHanger) override;
 
   virtual mozilla::ipc::IPCResult RecvRootBrowsingContext(
       const BrowsingContextId& aId) override;

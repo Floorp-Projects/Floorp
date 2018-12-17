@@ -66,8 +66,12 @@ It is augmented as it progresses through the system, with various information:
     userContextId; // {integer} The user context ID (containers feature).
 
     // Optional properties.
-    muxer; // Name of a registered muxer. Muxers can be registered through the
-           // UrlbarProvidersManager
+    muxer; // {string} Name of a registered muxer. Muxers can be registered
+           // through the UrlbarProvidersManager.
+    providers; // {array} List of registered provider names. Providers can be
+               // registered through the UrlbarProvidersManager.
+    sources; // {array} If provided is the list of sources, as defined by
+             // MATCH_SOURCE.*, that can be returned by the model.
 
     // Properties added by the Model.
     tokens; // {array} tokens extracted from the searchString, each token is an

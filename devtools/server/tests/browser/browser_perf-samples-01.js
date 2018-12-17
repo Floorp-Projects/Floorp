@@ -16,7 +16,6 @@ add_task(async function() {
   const target = await addTabTarget(MAIN_DOMAIN + "doc_perf.html");
 
   const front = await target.getFront("performance");
-  await front.connect();
 
   // Perform the first recording...
 
@@ -59,7 +58,6 @@ add_task(async function() {
     "There should be no samples from the first recording in the second one, " +
     "even though the total number of frames did not overflow.");
 
-  await front.destroy();
   await target.destroy();
   gBrowser.removeCurrentTab();
 });

@@ -13,7 +13,7 @@ add_task(async function() {
 
   const target = await addTabTarget(MAIN_DOMAIN + "doc_allocations.html");
   const front = await target.getFront("performance");
-  await front.connect();
+
   const rec = await front.startRecording({ withMarkers: true });
 
   const markers = await waitForMarkerType(front, ["MinorGC"]);

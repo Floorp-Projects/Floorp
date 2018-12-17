@@ -55,7 +55,6 @@ window.onload = function() {
     client.addListener("closed", onUnexpectedClose);
 
     await client.connect();
-    await client.listTabs();
 
     // Send a message the server that will echo back
     const message = "message";

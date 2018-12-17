@@ -101,7 +101,7 @@ function close(client) {
 
 function listTabs(client) {
   info("Listing tabs.");
-  return client.listTabs();
+  return client.mainRoot.listTabs();
 }
 
 function findTab(tabs, url) {

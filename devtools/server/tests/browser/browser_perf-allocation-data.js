@@ -10,7 +10,6 @@
 add_task(async function() {
   const target  = await addTabTarget(MAIN_DOMAIN + "doc_allocations.html");
   const front = await target.getFront("performance");
-  await front.connect();
 
   const rec = await front.startRecording(
     { withMarkers: true, withAllocations: true, withTicks: true });
@@ -29,7 +28,6 @@ add_task(async function() {
     "all timestamps have numeric values");
   ok(sizes.every(n => n > 0 && typeof n === "number"), "all sizes are positive numbers");
 
-  await front.destroy();
   await target.destroy();
   gBrowser.removeCurrentTab();
 });

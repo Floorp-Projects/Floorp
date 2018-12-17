@@ -66,8 +66,7 @@ exports.targetFromURL = async function targetFromURL(url) {
       throw new Error(`targetFromURL, wrong tab id '${id}', should be a number`);
     }
     try {
-      const response = await client.getTab({ outerWindowID: id });
-      form = response.tab;
+      front = await client.mainRoot.getTab({ outerWindowID: id });
     } catch (ex) {
       if (ex.startsWith("Protocol error (noTab)")) {
         throw new Error(`targetFromURL, tab with outerWindowID '${id}' doesn't exist`);

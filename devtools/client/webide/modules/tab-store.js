@@ -50,7 +50,6 @@ TabStore.prototype = {
   },
 
   _resetStore: function() {
-    this.response = null;
     this.tabs = [];
     this._selectedTab = null;
     this._selectedTabTargetPromise = null;
@@ -91,20 +90,20 @@ TabStore.prototype = {
     }
 
     return new Promise((resolve, reject) => {
-      this._connection.client.listTabs().then(response => {
-        if (response.error) {
-          this._connection.disconnect();
-          reject(response.error);
-          return;
-        }
-        const tabsChanged = JSON.stringify(this.tabs) !== JSON.stringify(response.tabs);
-        this.response = response;
-        this.tabs = response.tabs;
+      this._connection.client.mainRoot.listTabs().then(tabs => {
+        // To avoid refactoring WebIDE while switching from form to Target Front for
+        // listTabs. Convert front to form list here.
+        tabs = tabs.map(tab => tab.targetForm);
+        const tabsChanged = JSON.stringify(this.tabs) !== JSON.stringify(tabs);
+        this.tabs = tabs;
         this._checkSelectedTab();
         if (tabsChanged) {
           this.emit("tab-list");
         }
-        resolve(response);
+        resolve(tabs);
+      }, error => {
+        this._connection.disconnect();
+        reject(error);
       });
     });
   },
