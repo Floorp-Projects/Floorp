@@ -51,9 +51,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                         xbl:inherits="open,parentfocused=focused,usertyping"/>
         <children includes="hbox"/>
       </xul:hbox>
-      <xul:popupset anonid="popupset"
-                    class="autocomplete-result-popupset"/>
-      <children includes="toolbarbutton"/>
     </content>
   </binding>
 
@@ -88,9 +85,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                         xbl:inherits="open,parentfocused=focused,usertyping"/>
         <children includes="hbox"/>
       </xul:hbox>
-      <xul:popupset anonid="popupset"
-                    class="autocomplete-result-popupset"/>
-      <children includes="toolbarbutton"/>
     </content>
 
     <implementation implements="nsIObserver">
