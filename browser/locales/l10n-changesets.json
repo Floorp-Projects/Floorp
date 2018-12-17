@@ -775,14 +775,14 @@
             "win64",
             "win64-devedition"
         ],
-        "revision": "b08599d9deb8"
+        "revision": "6e19af081133"
     },
     "ja-JP-mac": {
         "platforms": [
             "macosx64",
             "macosx64-devedition"
         ],
-        "revision": "6ab41927967b"
+        "revision": "15a157860e5e"
     },
     "ka": {
         "platforms": [
