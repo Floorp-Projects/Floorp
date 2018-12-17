@@ -8,8 +8,8 @@
 !ifndef OVERRIDES_INCLUDED
 !define OVERRIDES_INCLUDED
 
-!ifndef ___WINVER__NSH___
-!include WinVer.nsh
+!ifndef ___X64__NSH___
+!include x64.nsh
 !endif
 
 ; When including a file check if its verbose macro is defined to prevent
@@ -22,35 +22,41 @@
 !include FileFunc.nsh
 !endif
 
-!macro __MOZ__WinVer_DefineOSTests WinVer
-  !insertmacro __WinVer_DefineOSTest AtLeast ${WinVer} ""
-  !insertmacro __WinVer_DefineOSTest Is ${WinVer} ""
-  !insertmacro __WinVer_DefineOSTest AtMost ${WinVer} ""
+; This was added to NSIS 3.0.4 and is needed for Windows ARM64 support
+!ifmacrondef GetNativeMachineArchitecture
+!define GetNativeMachineArchitecture "!insertmacro GetNativeMachineArchitecture "
+!macro GetNativeMachineArchitecture outvar
+  !define GetNativeMachineArchitecture_lbl lbl_GNMA_${__COUNTER__}
+  System::Call kernel32::GetCurrentProcess()p.s
+  System::Call kernel32::IsWow64Process2(ps,*i,*i0s)
+  Pop ${outvar}
+  IntCmp ${outvar} 0 "" ${GetNativeMachineArchitecture_lbl}_done ${GetNativeMachineArchitecture_lbl}_done
+    !if "${NSIS_PTR_SIZE}" <= 4
+    !if "${NSIS_CHAR_SIZE}" <= 1
+    System::Call 'USER32::CharNextW(w"")p.s'
+    Pop ${outvar}
+    IntPtrCmpU ${outvar} 0 "" ${GetNativeMachineArchitecture_lbl}_oldnt ${GetNativeMachineArchitecture_lbl}_oldnt
+      StrCpy ${outvar} 332 ; Always IMAGE_FILE_MACHINE_I386 on Win9x
+      Goto ${GetNativeMachineArchitecture_lbl}_done
+    ${GetNativeMachineArchitecture_lbl}_oldnt:
+    !endif
+    !endif
+    System::Call '*0x7FFE002E(&i2.s)'
+    Pop ${outvar}
+  ${GetNativeMachineArchitecture_lbl}_done:
+  !undef GetNativeMachineArchitecture_lbl
 !macroend
 
-!ifndef WINVER_8
-  !define WINVER_8         0x06020000 ;6.02.9200
-  !insertmacro __MOZ__WinVer_DefineOSTests 8
-!endif
+!macro _IsNativeMachineArchitecture _ignore _arc _t _f
+  !insertmacro _LOGICLIB_TEMP
+  ${GetNativeMachineArchitecture} $_LOGICLIB_TEMP
+  !insertmacro _= $_LOGICLIB_TEMP ${_arc} `${_t}` `${_f}`
+!macroend
 
-!ifndef WINVER_8.1
-  !define WINVER_8.1       0x06030000 ;6.03.9600
-  !insertmacro __MOZ__WinVer_DefineOSTests 8.1
-!endif
-
-!ifndef WINVER_2012
-  !define WINVER_2012      0x06020001 ;6.02.9200
-  !insertmacro __MOZ__WinVer_DefineOSTests 2012
-!endif
-
-!ifndef WINVER_2012R2
-  !define WINVER_2012R2    0x06030001 ;6.03.9600
-  !insertmacro __MOZ__WinVer_DefineOSTests 2012R2
-!endif
-
-!ifndef WINVER_10
-  !define WINVER_10        0x0A000000 ;10.0.10240
-  !insertmacro __MOZ__WinVer_DefineOSTests 10
+!define IsNativeMachineArchitecture `"" IsNativeMachineArchitecture `
+!define IsNativeIA32 '${IsNativeMachineArchitecture} 332' ; Intel x86
+!define IsNativeAMD64 '${IsNativeMachineArchitecture} 34404' ; x86-64/x64
+!define IsNativeARM64 '${IsNativeMachineArchitecture} 43620'
 !endif
 
 !verbose push

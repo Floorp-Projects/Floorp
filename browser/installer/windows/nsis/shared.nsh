@@ -128,11 +128,13 @@
     ; Since the Maintenance service can be installed either x86 or x64,
     ; always use the 64-bit registry for checking if an attempt was made.
     ${If} ${RunningX64}
+    ${OrIf} ${IsNativeARM64}
       SetRegView 64
     ${EndIf}
     ReadRegDWORD $5 HKLM "Software\Mozilla\MaintenanceService" "Attempted"
     ClearErrors
     ${If} ${RunningX64}
+    ${OrIf} ${IsNativeARM64}
       SetRegView lastused
     ${EndIf}
 
@@ -590,6 +592,7 @@
 
   ; Running Firefox 32 bit
   ${If} ${RunningX64}
+  ${OrIf} ${IsNativeARM64}
     ; Running Firefox 32 bit on a Windows 64 bit system
     ClearErrors
     ReadRegDWORD $2 HKLM "Software\Mozilla\${AppName}\32to64DidMigrate" "$1"
@@ -903,6 +906,7 @@
     ; if the binary is replaced with a different certificate.
     ; We always use the 64bit registry for certs.
     ${If} ${RunningX64}
+    ${OrIf} ${IsNativeARM64}
       SetRegView 64
     ${EndIf}
 
@@ -925,6 +929,7 @@
     WriteRegStr HKLM "$R0\1" "name" "${CERTIFICATE_NAME_PREVIOUS}"
     WriteRegStr HKLM "$R0\1" "issuer" "${CERTIFICATE_ISSUER_PREVIOUS}"
     ${If} ${RunningX64}
+    ${OrIf} ${IsNativeARM64}
       SetRegView lastused
     ${EndIf}
     ClearErrors
