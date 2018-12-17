@@ -47,8 +47,7 @@ class PaymentRequestService final : public nsIPaymentRequestService {
 
   bool CanMakePayment(const nsAString& aRequestId);
 
-  nsresult ShowPayment(const nsAString& aRequestId,
-                       const nsAString& aInternalCompletreStatus);
+  nsresult ShowPayment(const nsAString& aRequestId, bool aIsUpdating);
 
   bool IsBasicCardPayment(const nsAString& aRequestId);
 

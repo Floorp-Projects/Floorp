@@ -256,7 +256,7 @@ nsresult PaymentRequestService::RequestPayment(
     }
     case IPCPaymentActionRequest::TIPCPaymentShowActionRequest: {
       const IPCPaymentShowActionRequest& action = aAction;
-      rv = ShowPayment(aRequestId, action.internalCompleteStatus());
+      rv = ShowPayment(aRequestId, action.isUpdating());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -294,7 +294,14 @@ nsresult PaymentRequestService::RequestPayment(
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      request->SetCompleteStatus(action.internalCompleteStatus());
+      nsAutoString completeStatus;
+      rv = request->GetCompleteStatus(completeStatus);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      if (completeStatus.Equals(NS_LITERAL_STRING("initial"))) {
+        request->SetCompleteStatus(EmptyString());
+      }
       MOZ_ASSERT(mShowingRequest && mShowingRequest == request);
       rv = LaunchUIAction(aRequestId, type);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -437,7 +444,6 @@ PaymentRequestService::ChangeShippingAddress(const nsAString& aRequestId,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  request->SetCompleteStatus(NS_LITERAL_STRING("updating"));
   return NS_OK;
 }
 
@@ -462,7 +468,6 @@ PaymentRequestService::ChangeShippingOption(const nsAString& aRequestId,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  request->SetCompleteStatus(NS_LITERAL_STRING("updating"));
   return NS_OK;
 }
 
@@ -485,7 +490,6 @@ PaymentRequestService::ChangePayerDetail(const nsAString& aRequestId,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  request->SetCompleteStatus(NS_LITERAL_STRING("updating"));
   return NS_OK;
 }
 
@@ -512,7 +516,6 @@ PaymentRequestService::ChangePaymentMethod(
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  request->SetCompleteStatus(NS_LITERAL_STRING("updating"));
   return NS_OK;
 }
 
@@ -525,7 +528,7 @@ bool PaymentRequestService::CanMakePayment(const nsAString& aRequestId) {
 }
 
 nsresult PaymentRequestService::ShowPayment(const nsAString& aRequestId,
-                                            const nsAString& aInternalCompleteStatus ) {
+                                            bool aIsUpdating) {
   nsresult rv;
   RefPtr<payments::PaymentRequest> request;
   rv = GetPaymentRequestById(aRequestId, getter_AddRefs(request));
@@ -534,7 +537,9 @@ nsresult PaymentRequestService::ShowPayment(const nsAString& aRequestId,
   }
   MOZ_ASSERT(request);
   request->SetState(payments::PaymentRequest::eInteractive);
-  request->SetCompleteStatus(aInternalCompleteStatus);
+  if (aIsUpdating) {
+    request->SetCompleteStatus(NS_LITERAL_STRING("initial"));
+  }
 
   if (mShowingRequest || !CanMakePayment(aRequestId)) {
     uint32_t responseStatus;

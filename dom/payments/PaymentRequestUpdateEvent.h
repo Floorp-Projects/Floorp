@@ -12,19 +12,17 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/PaymentRequestUpdateEventBinding.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
-#include "nsITimer.h"
 
 namespace mozilla {
 namespace dom {
 
 class Promise;
 class PaymentRequest;
-class PaymentRequestUpdateEvent : public Event, public PromiseNativeHandler,
-                                  public nsITimerCallback {
+class PaymentRequestUpdateEvent : public Event, public PromiseNativeHandler {
  public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(PaymentRequestUpdateEvent, Event)
-  NS_DECL_NSITIMERCALLBACK
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
+      PaymentRequestUpdateEvent, Event)
 
   explicit PaymentRequestUpdateEvent(EventTarget* aOwner);
 
@@ -55,7 +53,6 @@ class PaymentRequestUpdateEvent : public Event, public PromiseNativeHandler,
   // progress.
   bool mWaitForUpdate;
   RefPtr<PaymentRequest> mRequest;
-  nsCOMPtr<nsITimer> mTimer;
 };
 
 }  // namespace dom

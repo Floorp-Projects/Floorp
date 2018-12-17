@@ -9,13 +9,12 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(PaymentRequestUpdateEvent, Event, mRequest, mTimer)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(PaymentRequestUpdateEvent, Event, mRequest)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(PaymentRequestUpdateEvent, Event)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PaymentRequestUpdateEvent)
-  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
 NS_INTERFACE_MAP_END_INHERITING(Event)
 
 NS_IMPL_ADDREF_INHERITED(PaymentRequestUpdateEvent, Event)
@@ -47,12 +46,6 @@ PaymentRequestUpdateEvent::PaymentRequestUpdateEvent(EventTarget* aOwner)
       mWaitForUpdate(false),
       mRequest(nullptr) {
   MOZ_ASSERT(aOwner);
-  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aOwner->GetOwnerGlobal());
-  NS_NewTimerWithCallback(getter_AddRefs(mTimer),
-                          this,
-                          StaticPrefs::dom_payments_response_timeout(),
-                          nsITimer::TYPE_ONE_SHOT,
-                          win->EventTargetFor(TaskCategory::Other));
 }
 
 void PaymentRequestUpdateEvent::ResolvedCallback(JSContext* aCx,
@@ -65,11 +58,6 @@ void PaymentRequestUpdateEvent::ResolvedCallback(JSContext* aCx,
 
   if (NS_WARN_IF(!aValue.isObject()) || !mWaitForUpdate) {
     return;
-  }
-
-  if (mTimer) {
-    mTimer->Cancel();
-    mTimer = nullptr;
   }
 
   // Converting value to a PaymentDetailsUpdate dictionary
@@ -144,20 +132,6 @@ void PaymentRequestUpdateEvent::SetRequest(PaymentRequest* aRequest) {
   MOZ_ASSERT(aRequest);
 
   mRequest = aRequest;
-}
-
-NS_IMETHODIMP PaymentRequestUpdateEvent::Notify(nsITimer* aTimer) {
-  mTimer = nullptr;
-  if (!mRequest) {
-    return NS_OK;
-  }
-  nsresult rv = mRequest->UpdatePayment(nullptr, PaymentDetailsUpdate(), true);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  mWaitForUpdate = false;
-  mRequest->SetUpdating(false);
-  return NS_OK;
 }
 
 PaymentRequestUpdateEvent::~PaymentRequestUpdateEvent() {}

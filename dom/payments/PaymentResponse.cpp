@@ -436,17 +436,6 @@ PaymentResponse::Notify(nsITimer* timer) {
 nsresult PaymentResponse::UpdatePayerDetail(const nsAString& aPayerName,
                                             const nsAString& aPayerEmail,
                                             const nsAString& aPayerPhone) {
-  if (!HasListenersFor(NS_LITERAL_STRING("payerdetailchange"))) {
-    RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
-    MOZ_ASSERT(manager);
-    return manager->UpdatePayment(nullptr,                // JSContext
-                                  mRequest,               // PaymentRequest
-                                  PaymentDetailsUpdate(), // PaymentDetailsUpdate
-                                  false,                  // requestShipping
-                                  false,                  // timedout
-                                  true);                  // no event handler
-  }
-
   MOZ_ASSERT(mRequest->ReadyForUpdate());
   PaymentOptions options;
   mRequest->GetOptions(options);
