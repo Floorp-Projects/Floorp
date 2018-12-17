@@ -1294,7 +1294,7 @@ Toolbox.prototype = {
       if (currentPanel.cancelPicker) {
         currentPanel.cancelPicker();
       } else {
-        this.highlighterUtils.cancelPicker();
+        this.inspector.nodePicker.cancel();
       }
       // Stop the console from toggling.
       event.stopImmediatePropagation();
@@ -1309,12 +1309,10 @@ Toolbox.prototype = {
 
   _onPickerStarted: async function() {
     this.doc.addEventListener("keypress", this._onPickerKeypress, true);
-    this.inspector.nodePicker.on("picker-node-canceled", this._onPickerCanceled);
   },
 
   _onPickerStopped: function() {
     this.off("select", this.inspector.nodePicker.stop);
-    this.inspector.nodePicker.off("picker-node-canceled", this._onPickerCanceled);
     this.doc.removeEventListener("keypress", this._onPickerKeypress, true);
     this.pickerButton.isChecked = false;
   },
@@ -1323,7 +1321,7 @@ Toolbox.prototype = {
    * When the picker is canceled, make sure the toolbox
    * gets the focus.
    */
-  _onPickerCanceled: function(data) {
+  _onPickerCanceled: function() {
     this.win.focus();
   },
 
@@ -2728,6 +2726,7 @@ Toolbox.prototype = {
         this.inspector.nodePicker.on("picker-starting", this._onPickerStarting);
         this.inspector.nodePicker.on("picker-started", this._onPickerStarted);
         this.inspector.nodePicker.on("picker-stopped", this._onPickerStopped);
+        this.inspector.nodePicker.on("picker-node-canceled", this._onPickerCanceled);
         this.walker.on("highlighter-ready", this._highlighterReady);
         this.walker.on("highlighter-hide", this._highlighterHidden);
         this._selection.on("new-node-front", this._onNewSelectedNodeFront);

@@ -121,7 +121,9 @@ function MarkupView(inspector, frame, controllerWindow) {
   this.walker.on("mutations", this._mutationObserver);
   this.win.addEventListener("copy", this._onCopy);
   this.win.addEventListener("mouseup", this._onMouseUp);
-  this.toolbox.on("picker-canceled", this._onToolboxPickerCanceled);
+  this.inspector.inspector.nodePicker.on(
+    "picker-node-canceled", this._onToolboxPickerCanceled
+  );
   this.toolbox.on("picker-node-hovered", this._onToolboxPickerHover);
 
   if (flags.testing) {
