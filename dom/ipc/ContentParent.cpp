@@ -5569,12 +5569,12 @@ mozilla::ipc::IPCResult
 ContentParent::RecvFirstPartyStorageAccessGrantedForOrigin(
     const Principal& aParentPrincipal, const Principal& aTrackingPrincipal,
     const nsCString& aTrackingOrigin, const nsCString& aGrantedOrigin,
-    const bool& aAnySite,
+    const int& aAllowMode,
     FirstPartyStorageAccessGrantedForOriginResolver&& aResolver) {
   AntiTrackingCommon::
       SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
           aParentPrincipal, aTrackingPrincipal, aTrackingOrigin, aGrantedOrigin,
-          aAnySite)
+          aAllowMode)
           ->Then(GetCurrentThreadSerialEventTarget(), __func__,
                  [aResolver = std::move(aResolver)](
                      AntiTrackingCommon::FirstPartyStorageAccessGrantPromise::
