@@ -26,6 +26,7 @@
 #include "nsIStringBundle.h"
 #include "nsToolkitCompsCID.h"
 
+#include "mozilla/Components.h"
 #include "mozilla/dom/Element.h"
 
 NativeMenuItemTarget* nsMenuBarX::sNativeEventTarget = nil;
@@ -883,7 +884,7 @@ static BOOL gMenuItemsExecuteCommands = YES;
     if (mostSpecificContent) {
       nsMenuUtilsX::DispatchCommandTo(mostSpecificContent);
     } else {
-      nsCOMPtr<nsIAppStartup> appStartup = do_GetService(NS_APPSTARTUP_CONTRACTID);
+      nsCOMPtr<nsIAppStartup> appStartup = mozilla::components::AppStartup::Service();
       if (appStartup) {
         appStartup->Quit(nsIAppStartup::eAttemptQuit);
       }

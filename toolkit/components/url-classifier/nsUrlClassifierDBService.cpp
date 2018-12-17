@@ -14,8 +14,8 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIProperties.h"
-#include "nsToolkitCompsCID.h"
 #include "nsIXULRuntime.h"
+#include "nsToolkitCompsCID.h"
 #include "nsUrlClassifierDBService.h"
 #include "nsUrlClassifierUtils.h"
 #include "nsUrlClassifierProxies.h"
@@ -28,12 +28,14 @@
 #include "nsProxyRelease.h"
 #include "nsString.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Components.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Unused.h"
 #include "mozilla/Logging.h"
 #include "prnetdb.h"
 #include "Entries.h"
@@ -791,7 +793,7 @@ nsresult nsUrlClassifierDBServiceWorker::NotifyUpdateObserver(
   mUpdateStatus = aUpdateStatus;
 
   nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
-      do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
+      components::UrlClassifierUtils::Service();
 
   nsCString provider;
   // Assume that all the tables in update should have the same provider.
@@ -1561,7 +1563,7 @@ nsUrlClassifierClassifyCallback::HandleResult(const nsACString& aTable,
   matchedInfo->fullhash = aFullHash;
 
   nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
-      do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
+      components::UrlClassifierUtils::Service();
 
   nsCString provider;
   nsresult rv = urlUtil->GetProvider(aTable, provider);
@@ -1593,8 +1595,8 @@ NS_INTERFACE_MAP_BEGIN(nsUrlClassifierDBService)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIClassifier)
 NS_INTERFACE_MAP_END
 
-/* static */ nsUrlClassifierDBService* nsUrlClassifierDBService::GetInstance(
-    nsresult* result) {
+/* static */ already_AddRefed<nsUrlClassifierDBService>
+nsUrlClassifierDBService::GetInstance(nsresult* result) {
   *result = NS_OK;
   if (!sUrlClassifierDBService) {
     sUrlClassifierDBService = new (fallible) nsUrlClassifierDBService();
@@ -1603,18 +1605,12 @@ NS_INTERFACE_MAP_END
       return nullptr;
     }
 
-    NS_ADDREF(sUrlClassifierDBService);  // addref the global
-
     *result = sUrlClassifierDBService->Init();
     if (NS_FAILED(*result)) {
-      NS_RELEASE(sUrlClassifierDBService);
       return nullptr;
     }
-  } else {
-    // Already exists, just add a ref
-    NS_ADDREF(sUrlClassifierDBService);  // addref the return result
   }
-  return sUrlClassifierDBService;
+  return do_AddRef(sUrlClassifierDBService);
 }
 
 nsUrlClassifierDBService::nsUrlClassifierDBService()
@@ -1724,7 +1720,8 @@ nsresult nsUrlClassifierDBService::Init() {
   {
     // Force nsIUrlClassifierUtils loading on main thread.
     nsCOMPtr<nsIUrlClassifierUtils> dummy =
-        do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID, &rv);
+        components::UrlClassifierUtils::Service(&rv);
+    Unused << dummy;
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1997,7 +1994,7 @@ nsUrlClassifierDBService::SendThreatHitReport(nsIChannel* aChannel,
   }
 
   nsCOMPtr<nsIUrlClassifierUtils> utilsService =
-      do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
+      components::UrlClassifierUtils::Service();
   if (!utilsService) {
     return NS_ERROR_FAILURE;
   }
@@ -2099,7 +2096,7 @@ nsresult nsUrlClassifierDBService::LookupURI(nsIPrincipal* aPrincipal,
   nsAutoCString key;
   // Canonicalize the url
   nsCOMPtr<nsIUrlClassifierUtils> utilsService =
-      do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
+      components::UrlClassifierUtils::Service();
   rv = utilsService->GetKeyForURI(uri, key);
   if (NS_FAILED(rv)) return rv;
 
@@ -2482,7 +2479,7 @@ nsUrlClassifierDBService::AsyncClassifyLocalWithFeatures(
   nsAutoCString key;
   // Canonicalize the url
   nsCOMPtr<nsIUrlClassifierUtils> utilsService =
-      do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
+      components::UrlClassifierUtils::Service();
   nsresult rv = utilsService->GetKeyForURI(uri, key);
   NS_ENSURE_SUCCESS(rv, rv);
 

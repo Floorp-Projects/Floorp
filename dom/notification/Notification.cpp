@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/Notification.h"
 
+#include "mozilla/Components.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/JSONWriter.h"
@@ -55,7 +56,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsStructuredCloneContainer.h"
 #include "nsThreadUtils.h"
-#include "nsToolkitCompsCID.h"
 #include "nsXULAppAPI.h"
 
 namespace mozilla {
@@ -653,8 +653,7 @@ void NotificationTelemetryService::RecordDNDSupported() {
     return;
   }
 
-  nsCOMPtr<nsIAlertsService> alertService =
-      do_GetService(NS_ALERTSERVICE_CONTRACTID);
+  nsCOMPtr<nsIAlertsService> alertService = components::Alerts::Service();
   if (!alertService) {
     return;
   }
@@ -1411,8 +1410,7 @@ void Notification::ShowInternal() {
     NS_WARNING("Could not persist Notification");
   }
 
-  nsCOMPtr<nsIAlertsService> alertService =
-      do_GetService(NS_ALERTSERVICE_CONTRACTID);
+  nsCOMPtr<nsIAlertsService> alertService = components::Alerts::Service();
 
   ErrorResult result;
   NotificationPermission permission = NotificationPermission::Denied;
@@ -1952,8 +1950,7 @@ void Notification::CloseInternal() {
   SetAlertName();
   UnpersistNotification();
   if (!mIsClosed) {
-    nsCOMPtr<nsIAlertsService> alertService =
-        do_GetService(NS_ALERTSERVICE_CONTRACTID);
+    nsCOMPtr<nsIAlertsService> alertService = components::Alerts::Service();
     if (alertService) {
       nsAutoString alertName;
       GetAlertName(alertName);
