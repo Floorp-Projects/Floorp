@@ -2218,26 +2218,60 @@ var KeyedHistogramSection = {
     let keyedHgramsSelect = document.getElementById("processes");
     let keyedHgramsOption = keyedHgramsSelect.selectedOptions.item(0);
     let keyedHgramsProcess = keyedHgramsOption.getAttribute("value");
-    if (keyedHgramsProcess === "parent") {
-      keyedHistograms = aPayload.keyedHistograms;
-    } else if ("processes" in aPayload && keyedHgramsProcess in aPayload.processes &&
-               "keyedHistograms" in aPayload.processes[keyedHgramsProcess]) {
-      keyedHistograms = aPayload.processes[keyedHgramsProcess].keyedHistograms;
-    }
 
-    let hasData = Array.from(keyedHgramsSelect.options).some((option) => {
-      let value = option.getAttribute("value");
-      if (value == "parent") {
-        return Object.keys(aPayload.keyedHistograms).length > 0;
+    let payload = aPayload.stores;
+    if (payload) { // Check for stores in the current ping data first
+      let hasData = false;
+      for (const store of Object.keys(payload)) {
+        if (store in payload && keyedHgramsProcess in payload[store] &&
+          "keyedHistograms" in payload[store][keyedHgramsProcess]) {
+          keyedHistograms = payload[store][keyedHgramsProcess].keyedHistograms;
+        }
+
+        hasData = hasData || Array.from(keyedHgramsSelect.options).some((option) => {
+          let value = option.getAttribute("value");
+          let keyedHistos = payload[store][value].keyedHistograms;
+          return keyedHistos && Object.keys(keyedHistos).length > 0;
+        });
+
+        if (Object.keys(keyedHistograms).length > 0) {
+          let s = GenericSubsection.renderSubsectionHeader(store, true, "keyed-histograms-section");
+          let heading = document.createElement("h2");
+          heading.textContent = store;
+          s.appendChild(heading);
+          for (let [id, keyed] of Object.entries(keyedHistograms)) {
+            KeyedHistogram.render(s, id, keyed, {unpacked: true});
+          }
+          keyedDiv.appendChild(s);
+          let separator = document.createElement("div");
+          separator.classList.add("clearfix");
+          keyedDiv.appendChild(separator);
+        }
       }
-      let keyedHistos = aPayload.processes[value].keyedHistograms;
-      return keyedHistos && Object.keys(keyedHistos).length > 0;
-    });
-    setHasData("keyed-histograms-section", hasData);
-    if (Object.keys(keyedHistograms).length > 0) {
-      for (let [id, keyed] of Object.entries(keyedHistograms)) {
-        if (Object.keys(keyed).length > 0) {
-          KeyedHistogram.render(keyedDiv, id, keyed, {unpacked: true});
+
+      setHasData("keyed-histograms-section", hasData);
+    } else { // Handle archived pings
+      if (keyedHgramsProcess === "parent") {
+        keyedHistograms = aPayload.keyedHistograms;
+      } else if ("processes" in aPayload && keyedHgramsProcess in aPayload.processes &&
+        "keyedHistograms" in aPayload.processes[keyedHgramsProcess]) {
+        keyedHistograms = aPayload.processes[keyedHgramsProcess].keyedHistograms;
+      }
+
+      let hasData = Array.from(keyedHgramsSelect.options).some((option) => {
+        let value = option.getAttribute("value");
+        if (value == "parent") {
+          return Object.keys(aPayload.keyedHistograms).length > 0;
+        }
+        let keyedHistos = aPayload.processes[value].keyedHistograms;
+        return keyedHistos && Object.keys(keyedHistos).length > 0;
+      });
+      setHasData("keyed-histograms-section", hasData);
+      if (Object.keys(keyedHistograms).length > 0) {
+        for (let [id, keyed] of Object.entries(keyedHistograms)) {
+          if (Object.keys(keyed).length > 0) {
+            KeyedHistogram.render(keyedDiv, id, keyed, {unpacked: true});
+          }
         }
       }
     }
