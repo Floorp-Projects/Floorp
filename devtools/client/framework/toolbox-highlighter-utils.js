@@ -174,22 +174,6 @@ exports.getHighlighterUtils = function(toolbox) {
   }
 
   /**
-   * If the main, box-model, highlighter isn't enough, or if multiple highlighters
-   * are needed in parallel, this method can be used to return a new instance of a
-   * highlighter actor, given a type.
-   * The type of the highlighter passed must be known by the server.
-   * The highlighter actor returned will have the show(nodeFront) and hide()
-   * methods and needs to be released by the consumer when not needed anymore.
-   * @return Promise a promise that resolves to the highlighter
-   */
-  exported.getHighlighterByType = requireInspector(async function(typeName) {
-    const highlighter = await toolbox.inspector.getHighlighterByType(typeName);
-
-    return highlighter || promise.reject("The target doesn't support " +
-        `creating highlighters by types or ${typeName} is unknown`);
-  });
-
-  /**
    * Similar to getHighlighterByType, however it automatically memoizes and
    * destroys highlighters with the inspector, instead of having to be manually
    * managed by consumers.

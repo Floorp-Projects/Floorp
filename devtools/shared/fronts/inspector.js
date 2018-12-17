@@ -499,6 +499,17 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     }
   }
 
+  async getHighlighterByType(typeName) {
+    let highlighter = null;
+    try {
+      highlighter = await super.getHighlighterByType(typeName);
+    } catch (_) {
+      throw new Error("The target doesn't support " +
+        `creating highlighters by types or ${typeName} is unknown`);
+    }
+    return highlighter;
+  }
+
   getKnownHighlighter(type) {
     return this._highlighters.get(type);
   }
