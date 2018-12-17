@@ -40,11 +40,17 @@ std::string StringToLower( const std::string & sString );
 #if defined( OSX ) || defined( LINUX )
 #include <strings.h>
 inline int stricmp(const char *pStr1, const char *pStr2) { return strcasecmp(pStr1,pStr2); }
+#ifndef _stricmp
 #define _stricmp stricmp
+#endif
 inline int strnicmp( const char *pStr1, const char *pStr2, size_t unBufferLen ) { return strncasecmp( pStr1,pStr2, unBufferLen ); }
+#ifndef _strnicmp
 #define _strnicmp strnicmp
+#endif
 
+#ifndef _vsnprintf_s
 #define _vsnprintf_s vsnprintf
+#endif
 
 #define _TRUNCATE ((size_t)-1)
 
@@ -53,18 +59,15 @@ inline int strnicmp( const char *pStr1, const char *pStr2, size_t unBufferLen ) 
 #if defined( OSX )
 // behaviors ensure NULL-termination at least as well as _TRUNCATE does, but
 // wcsncpy_s/strncpy_s can non-NULL-terminate, wcslcpy/strlcpy can not.
-/*
-// Commented out by Mozilla, please see README.mozilla
-inline errno_t wcsncpy_s(wchar_t *strDest, size_t numberOfElements, const wchar_t *strSource, size_t count)
-{
-	return wcslcpy(strDest, strSource, numberOfElements);
-}
+// inline errno_t wcsncpy_s(wchar_t *strDest, size_t numberOfElements, const wchar_t *strSource, size_t count)
+// {
+// 	return wcslcpy(strDest, strSource, numberOfElements);
+// }
 
-inline errno_t strncpy_s(char *strDest, size_t numberOfElements, const char *strSource, size_t count)
-{
-	return strlcpy(strDest, strSource, numberOfElements);
-}
-*/
+// inline errno_t strncpy_s(char *strDest, size_t numberOfElements, const char *strSource, size_t count)
+// {
+// 	return strlcpy(strDest, strSource, numberOfElements);
+// }
 
 #endif
 
@@ -95,8 +98,7 @@ inline uint64_t strtoull(const char *str, char **endptr, int base) { return _str
 uint32_t ReturnStdString( const std::string & sValue, char *pchBuffer, uint32_t unBufferLen );
 
 /** Returns a std::string from a uint64_t */
-// std::string Uint64ToString( uint64_t ulValue );
-// Commented out by Mozilla, please see README.mozilla
+//std::string Uint64ToString( uint64_t ulValue );
 
 /** returns a uint64_t from a string */
 uint64_t StringToUint64( const std::string & sValue );

@@ -746,9 +746,11 @@ bool Path_WriteStringToTextFileAtomic( const std::string &strFilename, const cha
 // ----------------------------------------------------------------------------------------------------------------------------
 std::string Path_FilePathToUrl( const std::string & sRelativePath, const std::string & sBasePath )
 {
-	if ( !strnicmp( sRelativePath.c_str(), "http://", 7 )
-		|| !strnicmp( sRelativePath.c_str(), "https://", 8 )
-		|| !strnicmp( sRelativePath.c_str(), "file://", 7 ) )
+	if ( StringHasPrefix( sRelativePath, "http://" )
+		|| StringHasPrefix( sRelativePath, "https://" )
+		|| StringHasPrefix( sRelativePath, "vr-input-workshop://" )
+		|| StringHasPrefix( sRelativePath, "file://" )
+	   )
 	{
 		return sRelativePath;
 	}
@@ -757,6 +759,7 @@ std::string Path_FilePathToUrl( const std::string & sRelativePath, const std::st
 		std::string sAbsolute = Path_MakeAbsolute( sRelativePath, sBasePath );
 		if ( sAbsolute.empty() )
 			return sAbsolute;
+		sAbsolute = Path_FixSlashes( sAbsolute, '/' );
 		return std::string( FILE_URL_PREFIX ) + sAbsolute;
 	}
 }
@@ -768,7 +771,9 @@ std::string Path_UrlToFilePath( const std::string & sFileUrl )
 {
 	if ( !strnicmp( sFileUrl.c_str(), FILE_URL_PREFIX, strlen( FILE_URL_PREFIX ) ) )
 	{
-		return sFileUrl.c_str() + strlen( FILE_URL_PREFIX );
+		std::string sRet = sFileUrl.c_str() + strlen( FILE_URL_PREFIX );
+		sRet = Path_FixSlashes( sRet );
+		return sRet;
 	}
 	else
 	{
