@@ -2151,26 +2151,59 @@ var HistogramSection = {
     let hgramsOption = hgramsSelect.selectedOptions.item(0);
     let hgramsProcess = hgramsOption.getAttribute("value");
 
-    if (hgramsProcess === "parent") {
-      histograms = aPayload.histograms;
-    } else if ("processes" in aPayload && hgramsProcess in aPayload.processes &&
-               "histograms" in aPayload.processes[hgramsProcess]) {
-      histograms = aPayload.processes[hgramsProcess].histograms;
-    }
+    let payload = aPayload.stores;
+    if (payload) { // Check for stores in the current ping data first
+      let hasData = false;
+      for (const store of Object.keys(payload)) {
+        if (store in payload && hgramsProcess in payload[store] &&
+          "histograms" in payload[store][hgramsProcess]) {
+          histograms = payload[store][hgramsProcess].histograms;
+        }
 
-    let hasData = Array.from(hgramsSelect.options).some((option) => {
-      let value = option.getAttribute("value");
-      if (value == "parent") {
-        return Object.keys(aPayload.histograms).length > 0;
+        hasData = hasData || Array.from(hgramsSelect.options).some((option) => {
+          let value = option.getAttribute("value");
+          let histos = payload[store][value].histograms;
+          return histos && Object.keys(histos).length > 0;
+        });
+
+        if (Object.keys(histograms).length > 0) {
+          let s = GenericSubsection.renderSubsectionHeader(store, true, "histograms-section");
+          let heading = document.createElement("h2");
+          heading.textContent = store;
+          s.appendChild(heading);
+          for (let [name, hgram] of Object.entries(histograms)) {
+            Histogram.render(s, name, hgram, {unpacked: true});
+          }
+          hgramDiv.appendChild(s);
+          let separator = document.createElement("div");
+          separator.classList.add("clearfix");
+          hgramDiv.appendChild(separator);
+        }
       }
-      let histos = aPayload.processes[value].histograms;
-      return histos && Object.keys(histos).length > 0;
-    });
-    setHasData("histograms-section", hasData);
 
-    if (Object.keys(histograms).length > 0) {
-      for (let [name, hgram] of Object.entries(histograms)) {
-        Histogram.render(hgramDiv, name, hgram, {unpacked: true});
+      setHasData("histograms-section", hasData);
+    } else { // Handle archived pings
+      if (hgramsProcess === "parent") {
+        histograms = aPayload.histograms;
+      } else if ("processes" in aPayload && hgramsProcess in aPayload.processes &&
+        "histograms" in aPayload.processes[hgramsProcess]) {
+        histograms = aPayload.processes[hgramsProcess].histograms;
+      }
+
+      let hasData = Array.from(hgramsSelect.options).some((option) => {
+        let value = option.getAttribute("value");
+        if (value == "parent") {
+          return Object.keys(aPayload.histograms).length > 0;
+        }
+        let histos = aPayload.processes[value].histograms;
+        return histos && Object.keys(histos).length > 0;
+      });
+      setHasData("histograms-section", hasData);
+
+      if (Object.keys(histograms).length > 0) {
+        for (let [name, hgram] of Object.entries(histograms)) {
+          Histogram.render(hgramDiv, name, hgram, {unpacked: true});
+        }
       }
     }
   },
