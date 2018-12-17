@@ -617,7 +617,7 @@ class UrlbarInput {
     } else {
       where = this.window.whereToOpenLink(event, false, false);
     }
-    if (this.openInTab) {
+    if (UrlbarPrefs.get("openintab")) {
       if (where == "current") {
         where = "tab";
       } else if (where == "tab") {
