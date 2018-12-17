@@ -12,12 +12,11 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPtr.h"
 
-#include "nsDataHashtable.h"
 #include "nsDocShell.h"
-#include "nsRefPtrHashtable.h"
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 
@@ -28,18 +27,20 @@ static LazyLogModule gBrowsingContextLog("BrowsingContext");
 
 static StaticAutoPtr<BrowsingContext::Children> sRootBrowsingContexts;
 
-static StaticAutoPtr<nsDataHashtable<nsUint64HashKey, BrowsingContext*>>
-    sBrowsingContexts;
+template <template <typename> class PtrType>
+using BrowsingContextMap =
+    HashMap<uint64_t, PtrType<BrowsingContext>, DefaultHasher<uint64_t>,
+            InfallibleAllocPolicy>;
+
+static StaticAutoPtr<BrowsingContextMap<WeakPtr>> sBrowsingContexts;
 
 // TODO(farre): This duplicates some of the work performed by the
 // bfcache. This should be unified. [Bug 1471601]
-static StaticAutoPtr<nsRefPtrHashtable<nsUint64HashKey, BrowsingContext>>
-    sCachedBrowsingContexts;
+static StaticAutoPtr<BrowsingContextMap<RefPtr>> sCachedBrowsingContexts;
 
 static void Register(BrowsingContext* aBrowsingContext) {
-  auto entry = sBrowsingContexts->LookupForAdd(aBrowsingContext->Id());
-  MOZ_RELEASE_ASSERT(!entry, "Duplicate BrowsingContext ID");
-  entry.OrInsert([&] { return aBrowsingContext; });
+  MOZ_ALWAYS_TRUE(
+      sBrowsingContexts->putNew(aBrowsingContext->Id(), aBrowsingContext));
 }
 
 static void Sync(BrowsingContext* aBrowsingContext) {
@@ -66,14 +67,12 @@ static void Sync(BrowsingContext* aBrowsingContext) {
   }
 
   if (!sBrowsingContexts) {
-    sBrowsingContexts =
-        new nsDataHashtable<nsUint64HashKey, BrowsingContext*>();
+    sBrowsingContexts = new BrowsingContextMap<WeakPtr>();
     ClearOnShutdown(&sBrowsingContexts);
   }
 
   if (!sCachedBrowsingContexts) {
-    sCachedBrowsingContexts =
-        new nsRefPtrHashtable<nsUint64HashKey, BrowsingContext>();
+    sCachedBrowsingContexts = new BrowsingContextMap<RefPtr>();
     ClearOnShutdown(&sCachedBrowsingContexts);
   }
 }
@@ -84,8 +83,11 @@ static void Sync(BrowsingContext* aBrowsingContext) {
 
 /* static */ already_AddRefed<BrowsingContext> BrowsingContext::Get(
     uint64_t aId) {
-  RefPtr<BrowsingContext> abc = sBrowsingContexts->Get(aId);
-  return abc.forget();
+  if (BrowsingContextMap<WeakPtr>::Ptr abc = sBrowsingContexts->lookup(aId)) {
+    return do_AddRef(abc->value().get());
+  }
+
+  return nullptr;
 }
 
 /* static */ already_AddRefed<BrowsingContext> BrowsingContext::Create(
@@ -149,7 +151,21 @@ BrowsingContext::BrowsingContext(BrowsingContext* aParent,
       mBrowsingContextId(aBrowsingContextId),
       mParent(aParent),
       mOpener(aOpener),
-      mName(aName) {}
+      mName(aName) {
+  if (mParent) {
+    mBrowsingContextGroup = mParent->mBrowsingContextGroup;
+  } else if (mOpener) {
+    mBrowsingContextGroup = mOpener->mBrowsingContextGroup;
+  } else {
+    mBrowsingContextGroup = new BrowsingContextGroup();
+  }
+
+  if (!mParent) {
+    // If we don't have a parent we're either a top level or auxiliary
+    // BrowsingContext.
+    mBrowsingContextGroup->AppendElement(this);
+  }
+}
 
 void BrowsingContext::SetDocShell(nsIDocShell* aDocShell) {
   // XXX(nika): We should communicate that we are now an active BrowsingContext
@@ -159,50 +175,47 @@ void BrowsingContext::SetDocShell(nsIDocShell* aDocShell) {
 }
 
 void BrowsingContext::Attach() {
-  if (isInList()) {
-    MOZ_LOG(GetLog(), LogLevel::Debug,
-            ("%s: Connecting already existing 0x%08" PRIx64 " to 0x%08" PRIx64,
-             XRE_IsParentProcess() ? "Parent" : "Child", Id(),
-             mParent ? mParent->Id() : 0));
-    MOZ_DIAGNOSTIC_ASSERT(sBrowsingContexts->Contains(Id()));
-    MOZ_DIAGNOSTIC_ASSERT(!IsCached());
-    return;
-  }
-
-  bool wasCached = sCachedBrowsingContexts->Remove(Id());
-
   MOZ_LOG(GetLog(), LogLevel::Debug,
           ("%s: %s 0x%08" PRIx64 " to 0x%08" PRIx64,
            XRE_IsParentProcess() ? "Parent" : "Child",
-           wasCached ? "Re-connecting" : "Connecting", Id(),
-           mParent ? mParent->Id() : 0));
+           sCachedBrowsingContexts->has(Id()) ? "Re-connecting" : "Connecting",
+           Id(), mParent ? mParent->Id() : 0));
+
+  sCachedBrowsingContexts->remove(Id());
 
   auto* children = mParent ? &mParent->mChildren : sRootBrowsingContexts.get();
-  children->insertBack(this);
+  MOZ_DIAGNOSTIC_ASSERT(!children->Contains(this));
+
+  children->AppendElement(this);
 
   Sync(this);
 }
 
 void BrowsingContext::Detach() {
-  RefPtr<BrowsingContext> kungFuDeathGrip(this);
-
-  if (sCachedBrowsingContexts) {
-    sCachedBrowsingContexts->Remove(Id());
-  }
-
-  if (!isInList()) {
-    MOZ_LOG(GetLog(), LogLevel::Debug,
-            ("%s: Detaching already detached 0x%08" PRIx64,
-             XRE_IsParentProcess() ? "Parent" : "Child", Id()));
-    return;
-  }
-
   MOZ_LOG(GetLog(), LogLevel::Debug,
           ("%s: Detaching 0x%08" PRIx64 " from 0x%08" PRIx64,
            XRE_IsParentProcess() ? "Parent" : "Child", Id(),
            mParent ? mParent->Id() : 0));
 
-  remove();
+  RefPtr<BrowsingContext> kungFuDeathGrip(this);
+
+  BrowsingContextMap<RefPtr>::Ptr p;
+  if (sCachedBrowsingContexts && (p = sCachedBrowsingContexts->lookup(Id()))) {
+    MOZ_DIAGNOSTIC_ASSERT(!mParent || !mParent->mChildren.Contains(this));
+    MOZ_DIAGNOSTIC_ASSERT(!sRootBrowsingContexts->Contains(this));
+    sCachedBrowsingContexts->remove(p);
+  } else {
+    auto* children =
+        mParent ? &mParent->mChildren : sRootBrowsingContexts.get();
+    // TODO(farre): This assert looks extremely fishy, I know, but
+    // what we're actually saying is this: if we're detaching, but our
+    // parent doesn't have any children, it is because we're being
+    // detached by the cycle collector destroying docshells out of
+    // order.
+    MOZ_DIAGNOSTIC_ASSERT(children->IsEmpty() || children->Contains(this));
+
+    children->RemoveElement(this);
+  }
 
   if (!XRE_IsContentProcess()) {
     return;
@@ -215,7 +228,7 @@ void BrowsingContext::Detach() {
 }
 
 void BrowsingContext::CacheChildren() {
-  if (mChildren.isEmpty()) {
+  if (mChildren.IsEmpty()) {
     return;
   }
 
@@ -223,10 +236,12 @@ void BrowsingContext::CacheChildren() {
           ("%s: Caching children of 0x%08" PRIx64 "",
            XRE_IsParentProcess() ? "Parent" : "Child", Id()));
 
-  while (!mChildren.isEmpty()) {
-    RefPtr<BrowsingContext> child = mChildren.popFirst();
-    sCachedBrowsingContexts->Put(child->Id(), child);
+  MOZ_ALWAYS_TRUE(sCachedBrowsingContexts->reserve(mChildren.Length()));
+
+  for (BrowsingContext* child : mChildren) {
+    MOZ_ALWAYS_TRUE(sCachedBrowsingContexts->putNew(child->Id(), child));
   }
+  mChildren.Clear();
 
   if (!XRE_IsContentProcess()) {
     return;
@@ -238,15 +253,11 @@ void BrowsingContext::CacheChildren() {
                                 true /* aMoveToBFCache */);
 }
 
-bool BrowsingContext::IsCached() {
-  return sCachedBrowsingContexts->Contains(Id());
-}
+bool BrowsingContext::IsCached() { return sCachedBrowsingContexts->has(Id()); }
 
 void BrowsingContext::GetChildren(
     nsTArray<RefPtr<BrowsingContext>>& aChildren) {
-  for (BrowsingContext* context : mChildren) {
-    aChildren.AppendElement(context);
-  }
+  MOZ_ALWAYS_TRUE(aChildren.AppendElements(mChildren));
 }
 
 void BrowsingContext::SetOpener(BrowsingContext* aOpener) {
@@ -268,16 +279,18 @@ void BrowsingContext::SetOpener(BrowsingContext* aOpener) {
 
 /* static */ void BrowsingContext::GetRootBrowsingContexts(
     nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts) {
-  for (BrowsingContext* context : *sRootBrowsingContexts) {
-    aBrowsingContexts.AppendElement(context);
-  }
+  MOZ_ALWAYS_TRUE(aBrowsingContexts.AppendElements(*sRootBrowsingContexts));
 }
 
 BrowsingContext::~BrowsingContext() {
-  MOZ_DIAGNOSTIC_ASSERT(!isInList());
+  MOZ_DIAGNOSTIC_ASSERT(!mParent || !mParent->mChildren.Contains(this));
+  MOZ_DIAGNOSTIC_ASSERT(!sRootBrowsingContexts ||
+                        !sRootBrowsingContexts->Contains(this));
+  MOZ_DIAGNOSTIC_ASSERT(!sCachedBrowsingContexts ||
+                        !sCachedBrowsingContexts->has(Id()));
 
   if (sBrowsingContexts) {
-    sBrowsingContexts->Remove(mBrowsingContextId);
+    sBrowsingContexts->remove(Id());
   }
 }
 
@@ -290,23 +303,10 @@ JSObject* BrowsingContext::WrapObject(JSContext* aCx,
   return BrowsingContext_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-static void ImplCycleCollectionUnlink(BrowsingContext::Children& aField) {
-  aField.clear();
-}
-
-static void ImplCycleCollectionTraverse(
-    nsCycleCollectionTraversalCallback& aCallback,
-    BrowsingContext::Children& aField, const char* aName, uint32_t aFlags = 0) {
-  for (BrowsingContext* aContext : aField) {
-    aCallback.NoteNativeChild(aContext,
-                              NS_CYCLE_COLLECTION_PARTICIPANT(BrowsingContext));
-  }
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(BrowsingContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContext)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell, mChildren)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell, mChildren, mParent)
   if (XRE_IsParentProcess()) {
     ChromeBrowsingContext::Cast(tmp)->Unlink();
   }
@@ -314,7 +314,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContext)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BrowsingContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell, mChildren)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell, mChildren, mParent)
   if (XRE_IsParentProcess()) {
     ChromeBrowsingContext::Cast(tmp)->Traverse(cb);
   }
