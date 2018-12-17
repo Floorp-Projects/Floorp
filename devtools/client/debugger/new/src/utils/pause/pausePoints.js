@@ -44,11 +44,12 @@ export function formatPausePoints(text: string, pausePoints: PausePoints) {
 
 export async function mapPausePoints(pausePoints, iteratee) {
   const results = await Promise.all(convertToList(pausePoints).map(iteratee));
+  let index = 0;
 
   for (const line in pausePoints) {
     const linePoints = pausePoints[line];
     for (const column in linePoints) {
-      linePoints[column] = results.shift();
+      newLinePoints[column] = results[index++];
     }
   }
 
