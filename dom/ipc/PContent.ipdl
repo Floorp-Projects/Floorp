@@ -1171,7 +1171,7 @@ parent:
                                                   Principal aTrackingPrincipal,
                                                   nsCString aTrackingOrigin,
                                                   nsCString aGrantedOrigin,
-                                                  bool aAnySite)
+                                                  int aAllowMode)
           returns (bool unused);
 
     async StoreUserInteractionAsPermission(Principal aPrincipal);
