@@ -47,6 +47,16 @@ subprojects {
     apply plugin: 'jacoco'
     apply plugin: 'org.jetbrains.dokka-android'
 
+    // Enforce that all (transitive) dependencies are using the same support library version as we do.
+    project.configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'com.android.support'
+                    && !details.requested.name.contains('multidex') ) {
+                details.useVersion Versions.support_libraries
+            }
+        }
+    }
+
     afterEvaluate {
         if (it.hasProperty('android')) {
             jacoco {

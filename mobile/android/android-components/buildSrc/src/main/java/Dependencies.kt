@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Synchronized version numbers for dependencies used by (some) modules
-private object Versions {
+object Versions {
     const val kotlin = "1.3.10"
     const val coroutines = "1.0.1"
 
