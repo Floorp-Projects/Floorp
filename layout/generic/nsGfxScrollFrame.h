@@ -739,8 +739,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
                  bool aAssumeVScroll, bool aAssumeHScroll, bool aForce);
   bool ScrolledContentDependsOnHeight(ScrollReflowInput* aState);
   void ReflowScrolledFrame(ScrollReflowInput* aState, bool aAssumeHScroll,
-                           bool aAssumeVScroll, ReflowOutput* aMetrics,
-                           bool aFirstPass);
+                           bool aAssumeVScroll, ReflowOutput* aMetrics);
   void ReflowContents(ScrollReflowInput* aState,
                       const ReflowOutput& aDesiredSize);
   void PlaceScrollArea(ScrollReflowInput& aState,

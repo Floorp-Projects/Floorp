@@ -332,8 +332,7 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
           mHelper.mScrolledFrame);
     }
     aKidMetrics->mOverflowAreas.Clear();
-    ReflowScrolledFrame(aState, aAssumeHScroll, aAssumeVScroll, aKidMetrics,
-                        false);
+    ReflowScrolledFrame(aState, aAssumeHScroll, aAssumeVScroll, aKidMetrics);
   }
 
   nsSize vScrollbarMinSize(0, 0);
@@ -474,8 +473,7 @@ bool nsHTMLScrollFrame::ScrolledContentDependsOnHeight(
 void nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput* aState,
                                             bool aAssumeHScroll,
                                             bool aAssumeVScroll,
-                                            ReflowOutput* aMetrics,
-                                            bool aFirstPass) {
+                                            ReflowOutput* aMetrics) {
   WritingMode wm = mHelper.mScrolledFrame->GetWritingMode();
 
   // these could be NS_UNCONSTRAINEDSIZE ... std::min arithmetic should
@@ -683,7 +681,7 @@ void nsHTMLScrollFrame::ReflowContents(ScrollReflowInput* aState,
                                        const ReflowOutput& aDesiredSize) {
   ReflowOutput kidDesiredSize(aDesiredSize.GetWritingMode());
   ReflowScrolledFrame(aState, GuessHScrollbarNeeded(*aState),
-                      GuessVScrollbarNeeded(*aState), &kidDesiredSize, true);
+                      GuessVScrollbarNeeded(*aState), &kidDesiredSize);
 
   // There's an important special case ... if the child appears to fit
   // in the inside-border rect (but overflows the scrollport), we
@@ -715,7 +713,7 @@ void nsHTMLScrollFrame::ReflowContents(ScrollReflowInput* aState,
     if (nsRect(nsPoint(0, 0), insideBorderSize).Contains(scrolledRect)) {
       // Let's pretend we had no scrollbars coming in here
       kidDesiredSize.mOverflowAreas.Clear();
-      ReflowScrolledFrame(aState, false, false, &kidDesiredSize, false);
+      ReflowScrolledFrame(aState, false, false, &kidDesiredSize);
     }
   }
 
