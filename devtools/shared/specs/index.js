@@ -247,7 +247,7 @@ const Types = exports.__TypesForTests = [
   {
     types: ["browsingContextTarget"],
     spec: "devtools/shared/specs/targets/browsing-context",
-    front: null,
+    front: "devtools/shared/fronts/targets/browsing-context",
   },
   {
     types: ["chromeWindowTarget"],

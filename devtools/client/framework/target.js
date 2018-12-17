@@ -86,12 +86,12 @@ const TargetFactory = exports.TargetFactory = {
     // Connect the local client to the local server
     await client.connect();
 
-    // Fetch the FrameTargetActor form
-    const response = await client.getTab({ tab });
+    // Fetch the FrameTargetActor's Front
+    const front = await client.mainRoot.getTab({ tab });
 
     return new Target({
       client,
-      form: response.tab,
+      activeTab: front,
       // A local Target will never perform chrome debugging.
       chrome: false,
       tab,

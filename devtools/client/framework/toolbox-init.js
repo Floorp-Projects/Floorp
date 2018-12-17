@@ -71,9 +71,8 @@ if (url.search.length > 1) {
 
       await client.connect();
       // Creates a target for a given browser iframe.
-      const response = await client.getTab({ tab });
-      const form = response.tab;
-      target = await TargetFactory.forRemoteTab({client, form, chrome: false});
+      const front = await client.mainRoot.getTab({ tab });
+      target = await TargetFactory.forRemoteTab({client, activeTab: front, chrome: false});
     } else {
       target = await targetFromURL(url);
     }
