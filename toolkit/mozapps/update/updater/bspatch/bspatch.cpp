@@ -57,7 +57,9 @@
 
 int MBS_ReadHeader(FILE *file, MBSPatchHeader *header) {
   size_t s = fread(header, 1, sizeof(MBSPatchHeader), file);
-  if (s != sizeof(MBSPatchHeader)) return READ_ERROR;
+  if (s != sizeof(MBSPatchHeader)) {
+    return READ_ERROR;
+  }
 
   header->slen = ntohl(header->slen);
   header->scrc32 = ntohl(header->scrc32);
@@ -68,26 +70,42 @@ int MBS_ReadHeader(FILE *file, MBSPatchHeader *header) {
 
   struct stat hs;
   s = fstat(fileno(file), &hs);
-  if (s != 0) return READ_ERROR;
+  if (s != 0) {
+    return READ_ERROR;
+  }
 
-  if (memcmp(header->tag, "MBDIFF10", 8) != 0) return UNEXPECTED_BSPATCH_ERROR;
+  if (memcmp(header->tag, "MBDIFF10", 8) != 0) {
+    return UNEXPECTED_BSPATCH_ERROR;
+  }
 
-  if (hs.st_size > INT_MAX) return UNEXPECTED_BSPATCH_ERROR;
+  if (hs.st_size > INT_MAX) {
+    return UNEXPECTED_BSPATCH_ERROR;
+  }
 
   size_t size = static_cast<size_t>(hs.st_size);
-  if (size < sizeof(MBSPatchHeader)) return UNEXPECTED_BSPATCH_ERROR;
+  if (size < sizeof(MBSPatchHeader)) {
+    return UNEXPECTED_BSPATCH_ERROR;
+  }
   size -= sizeof(MBSPatchHeader);
 
-  if (size < header->cblen) return UNEXPECTED_BSPATCH_ERROR;
+  if (size < header->cblen) {
+    return UNEXPECTED_BSPATCH_ERROR;
+  }
   size -= header->cblen;
 
-  if (size < header->difflen) return UNEXPECTED_BSPATCH_ERROR;
+  if (size < header->difflen) {
+    return UNEXPECTED_BSPATCH_ERROR;
+  }
   size -= header->difflen;
 
-  if (size < header->extralen) return UNEXPECTED_BSPATCH_ERROR;
+  if (size < header->extralen) {
+    return UNEXPECTED_BSPATCH_ERROR;
+  }
   size -= header->extralen;
 
-  if (size != 0) return UNEXPECTED_BSPATCH_ERROR;
+  if (size != 0) {
+    return UNEXPECTED_BSPATCH_ERROR;
+  }
 
   return OK;
 }
@@ -99,7 +117,9 @@ int MBS_ApplyPatch(const MBSPatchHeader *header, FILE *patchFile,
 
   unsigned char *buf = (unsigned char *)malloc(header->cblen + header->difflen +
                                                header->extralen);
-  if (!buf) return BSPATCH_MEM_ERROR;
+  if (!buf) {
+    return BSPATCH_MEM_ERROR;
+  }
 
   int rv = OK;
 

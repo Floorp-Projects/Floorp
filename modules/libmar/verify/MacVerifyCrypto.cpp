@@ -11,65 +11,60 @@
 // We declare the necessary parts of the Security Transforms API here since
 // we're building with the 10.6 SDK, which doesn't know about Security
 // Transforms.
-#ifdef __cplusplus
+#if defined(__cplusplus)
 extern "C" {
 #endif
-  const CFStringRef kSecTransformInputAttributeName = CFSTR("INPUT");
-  typedef CFTypeRef SecTransformRef;
-  typedef struct OpaqueSecKeyRef* SecKeyRef;
+const CFStringRef kSecTransformInputAttributeName = CFSTR("INPUT");
+typedef CFTypeRef SecTransformRef;
+typedef struct OpaqueSecKeyRef* SecKeyRef;
 
-  typedef SecTransformRef (*SecTransformCreateReadTransformWithReadStreamFunc)
-                            (CFReadStreamRef inputStream);
-  SecTransformCreateReadTransformWithReadStreamFunc
+typedef SecTransformRef (*SecTransformCreateReadTransformWithReadStreamFunc)(
+    CFReadStreamRef inputStream);
+SecTransformCreateReadTransformWithReadStreamFunc
     SecTransformCreateReadTransformWithReadStreamPtr = NULL;
-  typedef CFTypeRef (*SecTransformExecuteFunc)(SecTransformRef transform,
-                                               CFErrorRef* error);
-  SecTransformExecuteFunc SecTransformExecutePtr = NULL;
-  typedef SecTransformRef (*SecVerifyTransformCreateFunc)(SecKeyRef key,
-                                                          CFDataRef signature,
-                                                          CFErrorRef* error);
-  SecVerifyTransformCreateFunc SecVerifyTransformCreatePtr = NULL;
-  typedef Boolean (*SecTransformSetAttributeFunc)(SecTransformRef transform,
-                                                  CFStringRef key,
-                                                  CFTypeRef value,
-                                                  CFErrorRef* error);
-  SecTransformSetAttributeFunc SecTransformSetAttributePtr = NULL;
-#ifdef __cplusplus
+typedef CFTypeRef (*SecTransformExecuteFunc)(SecTransformRef transform,
+                                             CFErrorRef* error);
+SecTransformExecuteFunc SecTransformExecutePtr = NULL;
+typedef SecTransformRef (*SecVerifyTransformCreateFunc)(SecKeyRef key,
+                                                        CFDataRef signature,
+                                                        CFErrorRef* error);
+SecVerifyTransformCreateFunc SecVerifyTransformCreatePtr = NULL;
+typedef Boolean (*SecTransformSetAttributeFunc)(SecTransformRef transform,
+                                                CFStringRef key,
+                                                CFTypeRef value,
+                                                CFErrorRef* error);
+SecTransformSetAttributeFunc SecTransformSetAttributePtr = NULL;
+#if defined(__cplusplus)
 }
 #endif
 
-CryptoX_Result
-CryptoMac_InitCryptoProvider()
-{
+CryptoX_Result CryptoMac_InitCryptoProvider() {
   if (!SecTransformCreateReadTransformWithReadStreamPtr) {
     SecTransformCreateReadTransformWithReadStreamPtr =
-      (SecTransformCreateReadTransformWithReadStreamFunc)
-        dlsym(RTLD_DEFAULT, "SecTransformCreateReadTransformWithReadStream");
+        (SecTransformCreateReadTransformWithReadStreamFunc)dlsym(
+            RTLD_DEFAULT, "SecTransformCreateReadTransformWithReadStream");
   }
   if (!SecTransformExecutePtr) {
-    SecTransformExecutePtr = (SecTransformExecuteFunc)
-      dlsym(RTLD_DEFAULT, "SecTransformExecute");
+    SecTransformExecutePtr =
+        (SecTransformExecuteFunc)dlsym(RTLD_DEFAULT, "SecTransformExecute");
   }
   if (!SecVerifyTransformCreatePtr) {
-    SecVerifyTransformCreatePtr = (SecVerifyTransformCreateFunc)
-      dlsym(RTLD_DEFAULT, "SecVerifyTransformCreate");
+    SecVerifyTransformCreatePtr = (SecVerifyTransformCreateFunc)dlsym(
+        RTLD_DEFAULT, "SecVerifyTransformCreate");
   }
   if (!SecTransformSetAttributePtr) {
-    SecTransformSetAttributePtr = (SecTransformSetAttributeFunc)
-      dlsym(RTLD_DEFAULT, "SecTransformSetAttribute");
+    SecTransformSetAttributePtr = (SecTransformSetAttributeFunc)dlsym(
+        RTLD_DEFAULT, "SecTransformSetAttribute");
   }
   if (!SecTransformCreateReadTransformWithReadStreamPtr ||
-      !SecTransformExecutePtr ||
-      !SecVerifyTransformCreatePtr ||
+      !SecTransformExecutePtr || !SecVerifyTransformCreatePtr ||
       !SecTransformSetAttributePtr) {
     return CryptoX_Error;
   }
   return CryptoX_Success;
 }
 
-CryptoX_Result
-CryptoMac_VerifyBegin(CryptoX_SignatureHandle* aInputData)
-{
+CryptoX_Result CryptoMac_VerifyBegin(CryptoX_SignatureHandle* aInputData) {
   if (!aInputData) {
     return CryptoX_Error;
   }
@@ -83,10 +78,8 @@ CryptoMac_VerifyBegin(CryptoX_SignatureHandle* aInputData)
   return CryptoX_Success;
 }
 
-CryptoX_Result
-CryptoMac_VerifyUpdate(CryptoX_SignatureHandle* aInputData, void* aBuf,
-                       unsigned int aLen)
-{
+CryptoX_Result CryptoMac_VerifyUpdate(CryptoX_SignatureHandle* aInputData,
+                                      void* aBuf, unsigned int aLen) {
   if (aLen == 0) {
     return CryptoX_Success;
   }
@@ -100,31 +93,26 @@ CryptoMac_VerifyUpdate(CryptoX_SignatureHandle* aInputData, void* aBuf,
   return CryptoX_Success;
 }
 
-CryptoX_Result
-CryptoMac_LoadPublicKey(const unsigned char* aCertData,
-                        unsigned int aDataSize,
-                        CryptoX_PublicKey* aPublicKey)
-{
+CryptoX_Result CryptoMac_LoadPublicKey(const unsigned char* aCertData,
+                                       unsigned int aDataSize,
+                                       CryptoX_PublicKey* aPublicKey) {
   if (!aCertData || aDataSize == 0 || !aPublicKey) {
     return CryptoX_Error;
   }
   *aPublicKey = NULL;
-  CFDataRef certData = CFDataCreate(kCFAllocatorDefault,
-                                    aCertData,
-                                    aDataSize);
+  CFDataRef certData = CFDataCreate(kCFAllocatorDefault, aCertData, aDataSize);
   if (!certData) {
     return CryptoX_Error;
   }
 
-  SecCertificateRef cert = SecCertificateCreateWithData(kCFAllocatorDefault,
-                                                        certData);
+  SecCertificateRef cert =
+      SecCertificateCreateWithData(kCFAllocatorDefault, certData);
   CFRelease(certData);
   if (!cert) {
     return CryptoX_Error;
   }
 
-  OSStatus status = SecCertificateCopyPublicKey(cert,
-                                                (SecKeyRef*)aPublicKey);
+  OSStatus status = SecCertificateCopyPublicKey(cert, (SecKeyRef*)aPublicKey);
   CFRelease(cert);
   if (status != 0) {
     return CryptoX_Error;
@@ -133,28 +121,24 @@ CryptoMac_LoadPublicKey(const unsigned char* aCertData,
   return CryptoX_Success;
 }
 
-CryptoX_Result
-CryptoMac_VerifySignature(CryptoX_SignatureHandle* aInputData,
-                          CryptoX_PublicKey* aPublicKey,
-                          const unsigned char* aSignature,
-                          unsigned int aSignatureLen)
-{
+CryptoX_Result CryptoMac_VerifySignature(CryptoX_SignatureHandle* aInputData,
+                                         CryptoX_PublicKey* aPublicKey,
+                                         const unsigned char* aSignature,
+                                         unsigned int aSignatureLen) {
   if (!aInputData || !*aInputData || !aPublicKey || !*aPublicKey ||
       !aSignature || aSignatureLen == 0) {
     return CryptoX_Error;
   }
 
-  CFDataRef signatureData = CFDataCreate(kCFAllocatorDefault,
-                                         aSignature, aSignatureLen);
+  CFDataRef signatureData =
+      CFDataCreate(kCFAllocatorDefault, aSignature, aSignatureLen);
   if (!signatureData) {
     return CryptoX_Error;
   }
 
   CFErrorRef error;
-  SecTransformRef verifier =
-    SecVerifyTransformCreatePtr((SecKeyRef)*aPublicKey,
-                                signatureData,
-                                &error);
+  SecTransformRef verifier = SecVerifyTransformCreatePtr((SecKeyRef)*aPublicKey,
+                                                         signatureData, &error);
   if (!verifier || error) {
     if (error) {
       CFRelease(error);
@@ -163,9 +147,7 @@ CryptoMac_VerifySignature(CryptoX_SignatureHandle* aInputData,
     return CryptoX_Error;
   }
 
-  SecTransformSetAttributePtr(verifier,
-                              kSecDigestTypeAttribute,
-                              kSecDigestSHA2,
+  SecTransformSetAttributePtr(verifier, kSecDigestTypeAttribute, kSecDigestSHA2,
                               &error);
   if (error) {
     CFRelease(error);
@@ -175,10 +157,9 @@ CryptoMac_VerifySignature(CryptoX_SignatureHandle* aInputData,
   }
 
   int digestLength = 384;
-  CFNumberRef dLen = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &digestLength);
-  SecTransformSetAttributePtr(verifier,
-                              kSecDigestLengthAttribute,
-                              dLen,
+  CFNumberRef dLen =
+      CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &digestLength);
+  SecTransformSetAttributePtr(verifier, kSecDigestLengthAttribute, dLen,
                               &error);
   CFRelease(dLen);
   if (error) {
@@ -188,10 +169,8 @@ CryptoMac_VerifySignature(CryptoX_SignatureHandle* aInputData,
     return CryptoX_Error;
   }
 
-  SecTransformSetAttributePtr(verifier,
-                              kSecTransformInputAttributeName,
-                              (CFDataRef)*aInputData,
-                              &error);
+  SecTransformSetAttributePtr(verifier, kSecTransformInputAttributeName,
+                              (CFDataRef)*aInputData, &error);
   if (error) {
     CFRelease(error);
     CFRelease(signatureData);
@@ -219,9 +198,7 @@ CryptoMac_VerifySignature(CryptoX_SignatureHandle* aInputData,
   return result;
 }
 
-void
-CryptoMac_FreeSignatureHandle(CryptoX_SignatureHandle* aInputData)
-{
+void CryptoMac_FreeSignatureHandle(CryptoX_SignatureHandle* aInputData) {
   if (!aInputData || !*aInputData) {
     return;
   }
@@ -232,9 +209,7 @@ CryptoMac_FreeSignatureHandle(CryptoX_SignatureHandle* aInputData)
   CFRelease(inputData);
 }
 
-void
-CryptoMac_FreePublicKey(CryptoX_PublicKey* aPublicKey)
-{
+void CryptoMac_FreePublicKey(CryptoX_PublicKey* aPublicKey) {
   if (!aPublicKey || !*aPublicKey) {
     return;
   }
