@@ -45,12 +45,13 @@ static int mar_push(struct MarItemStack *stack, uint32_t length, uint32_t flags,
     /* increase size of stack */
     size_t size_needed = ROUND_UP(stack->size_used + size, BLOCKSIZE);
     stack->head = realloc(stack->head, size_needed);
-    if (!stack->head)
+    if (!stack->head) {
       return -1;
+    }
     stack->size_allocated = size_needed;
   }
 
-  data = (((char *) stack->head) + stack->size_used);
+  data = (((char *)stack->head) + stack->size_used);
 
   n_offset = htonl(stack->last_offset);
   n_length = htonl(length);
@@ -104,16 +105,13 @@ static int mar_concat_file(FILE *fp, const char *path) {
  *                     the MAR
  * @param infoBlock    The product info block to store in the file.
  * @return 0 on success.
-*/
-static int
-mar_concat_product_info_block(FILE *fp,
-                              struct MarItemStack *stack,
-                              struct ProductInformationBlock *infoBlock)
-{
+ */
+static int mar_concat_product_info_block(
+    FILE *fp, struct MarItemStack *stack,
+    struct ProductInformationBlock *infoBlock) {
   char buf[PIB_MAX_MAR_CHANNEL_ID_SIZE + PIB_MAX_PRODUCT_VERSION_SIZE];
   uint32_t additionalBlockID = 1, infoBlockSize, unused;
-  if (!fp || !infoBlock ||
-      !infoBlock->MARChannelID ||
+  if (!fp || !infoBlock || !infoBlock->MARChannelID ||
       !infoBlock->productVersion) {
     return -1;
   }
@@ -132,45 +130,41 @@ mar_concat_product_info_block(FILE *fp,
      maximum MAR channel name and product version, we allocate the maximum
      amount to make it easier to modify the MAR file for repurposing MAR files
      to different MAR channels. + 2 is for the NULL terminators. */
-  infoBlockSize = sizeof(infoBlockSize) +
-                  sizeof(additionalBlockID) +
-                  PIB_MAX_MAR_CHANNEL_ID_SIZE +
-                  PIB_MAX_PRODUCT_VERSION_SIZE + 2;
+  infoBlockSize = sizeof(infoBlockSize) + sizeof(additionalBlockID) +
+                  PIB_MAX_MAR_CHANNEL_ID_SIZE + PIB_MAX_PRODUCT_VERSION_SIZE +
+                  2;
   if (stack) {
     stack->last_offset += infoBlockSize;
   }
 
   /* Write out the product info block size */
   infoBlockSize = htonl(infoBlockSize);
-  if (fwrite(&infoBlockSize,
-      sizeof(infoBlockSize), 1, fp) != 1) {
+  if (fwrite(&infoBlockSize, sizeof(infoBlockSize), 1, fp) != 1) {
     return -1;
   }
   infoBlockSize = ntohl(infoBlockSize);
 
   /* Write out the product info block ID */
   additionalBlockID = htonl(additionalBlockID);
-  if (fwrite(&additionalBlockID,
-      sizeof(additionalBlockID), 1, fp) != 1) {
+  if (fwrite(&additionalBlockID, sizeof(additionalBlockID), 1, fp) != 1) {
     return -1;
   }
   additionalBlockID = ntohl(additionalBlockID);
 
   /* Write out the channel name and NULL terminator */
-  if (fwrite(infoBlock->MARChannelID,
-      strlen(infoBlock->MARChannelID) + 1, 1, fp) != 1) {
+  if (fwrite(infoBlock->MARChannelID, strlen(infoBlock->MARChannelID) + 1, 1,
+             fp) != 1) {
     return -1;
   }
 
   /* Write out the product version string and NULL terminator */
-  if (fwrite(infoBlock->productVersion,
-      strlen(infoBlock->productVersion) + 1, 1, fp) != 1) {
+  if (fwrite(infoBlock->productVersion, strlen(infoBlock->productVersion) + 1,
+             1, fp) != 1) {
     return -1;
   }
 
   /* Write out the rest of the block that is unused */
-  unused = infoBlockSize - (sizeof(infoBlockSize) +
-                            sizeof(additionalBlockID) +
+  unused = infoBlockSize - (sizeof(infoBlockSize) + sizeof(additionalBlockID) +
                             strlen(infoBlock->MARChannelID) +
                             strlen(infoBlock->productVersion) + 2);
   memset(buf, 0, sizeof(buf));
@@ -188,23 +182,18 @@ mar_concat_product_info_block(FILE *fp,
  *                         should be refreshed.
  * @param infoBlock        Out parameter for where to store the result to
  * @return 0 on success, -1 on failure
-*/
-int
-refresh_product_info_block(const char *path,
-                           struct ProductInformationBlock *infoBlock)
-{
-  FILE *fp ;
+ */
+int refresh_product_info_block(const char *path,
+                               struct ProductInformationBlock *infoBlock) {
+  FILE *fp;
   int rv;
   uint32_t numSignatures, additionalBlockSize, additionalBlockID,
-    offsetAdditionalBlocks, numAdditionalBlocks, i;
+      offsetAdditionalBlocks, numAdditionalBlocks, i;
   int additionalBlocks, hasSignatureBlock;
   int64_t oldPos;
 
-  rv = get_mar_file_info(path,
-                         &hasSignatureBlock,
-                         &numSignatures,
-                         &additionalBlocks,
-                         &offsetAdditionalBlocks,
+  rv = get_mar_file_info(path, &hasSignatureBlock, &numSignatures,
+                         &additionalBlocks, &offsetAdditionalBlocks,
                          &numAdditionalBlocks);
   if (rv) {
     fprintf(stderr, "ERROR: Could not obtain MAR information.\n");
@@ -233,18 +222,14 @@ refresh_product_info_block(const char *path,
     oldPos = ftello(fp);
 
     /* Read the additional block size */
-    if (fread(&additionalBlockSize,
-              sizeof(additionalBlockSize),
-              1, fp) != 1) {
+    if (fread(&additionalBlockSize, sizeof(additionalBlockSize), 1, fp) != 1) {
       fclose(fp);
       return -1;
     }
     additionalBlockSize = ntohl(additionalBlockSize);
 
     /* Read the additional block ID */
-    if (fread(&additionalBlockID,
-              sizeof(additionalBlockID),
-              1, fp) != 1) {
+    if (fread(&additionalBlockID, sizeof(additionalBlockID), 1, fp) != 1) {
       fclose(fp);
       return -1;
     }
@@ -291,12 +276,11 @@ refresh_product_info_block(const char *path,
  * @param infoBlock The information to store in the product information block.
  * @return A non-zero value if an error occurs.
  */
-int mar_create(const char *dest, int
-               num_files, char **files,
+int mar_create(const char *dest, int num_files, char **files,
                struct ProductInformationBlock *infoBlock) {
   struct MarItemStack stack;
-  uint32_t offset_to_index = 0, size_of_index,
-    numSignatures, numAdditionalSections;
+  uint32_t offset_to_index = 0, size_of_index, numSignatures,
+           numAdditionalSections;
   uint64_t sizeOfEntireMAR = 0;
   struct stat st;
   FILE *fp;
@@ -310,15 +294,15 @@ int mar_create(const char *dest, int
     return -1;
   }
 
-  if (fwrite(MAR_ID, MAR_ID_SIZE, 1, fp) != 1)
+  if (fwrite(MAR_ID, MAR_ID_SIZE, 1, fp) != 1) {
     goto failure;
-  if (fwrite(&offset_to_index, sizeof(uint32_t), 1, fp) != 1)
+  }
+  if (fwrite(&offset_to_index, sizeof(uint32_t), 1, fp) != 1) {
     goto failure;
+  }
 
-  stack.last_offset = MAR_ID_SIZE +
-                      sizeof(offset_to_index) +
-                      sizeof(numSignatures) +
-                      sizeof(numAdditionalSections) +
+  stack.last_offset = MAR_ID_SIZE + sizeof(offset_to_index) +
+                      sizeof(numSignatures) + sizeof(numAdditionalSections) +
                       sizeof(sizeOfEntireMAR);
 
   /* We will circle back on this at the end of the MAR creation to fill it */
@@ -335,8 +319,8 @@ int mar_create(const char *dest, int
   /* Write out the number of additional sections, for now just 1
      for the product info block */
   numAdditionalSections = htonl(1);
-  if (fwrite(&numAdditionalSections,
-             sizeof(numAdditionalSections), 1, fp) != 1) {
+  if (fwrite(&numAdditionalSections, sizeof(numAdditionalSections), 1, fp) !=
+      1) {
     goto failure;
   }
   numAdditionalSections = ntohl(numAdditionalSections);
@@ -351,20 +335,24 @@ int mar_create(const char *dest, int
       goto failure;
     }
 
-    if (mar_push(&stack, st.st_size, st.st_mode & 0777, files[i]))
+    if (mar_push(&stack, st.st_size, st.st_mode & 0777, files[i])) {
       goto failure;
+    }
 
     /* concatenate input file to archive */
-    if (mar_concat_file(fp, files[i]))
+    if (mar_concat_file(fp, files[i])) {
       goto failure;
+    }
   }
 
   /* write out the index (prefixed with length of index) */
   size_of_index = htonl(stack.size_used);
-  if (fwrite(&size_of_index, sizeof(size_of_index), 1, fp) != 1)
+  if (fwrite(&size_of_index, sizeof(size_of_index), 1, fp) != 1) {
     goto failure;
-  if (fwrite(stack.head, stack.size_used, 1, fp) != 1)
+  }
+  if (fwrite(stack.head, stack.size_used, 1, fp) != 1) {
     goto failure;
+  }
 
   /* To protect against invalid MAR files, we assumes that the MAR file
      size is less than or equal to MAX_SIZE_OF_MAR_FILE. */
@@ -374,26 +362,30 @@ int mar_create(const char *dest, int
 
   /* write out offset to index file in network byte order */
   offset_to_index = htonl(stack.last_offset);
-  if (fseek(fp, MAR_ID_SIZE, SEEK_SET))
+  if (fseek(fp, MAR_ID_SIZE, SEEK_SET)) {
     goto failure;
-  if (fwrite(&offset_to_index, sizeof(offset_to_index), 1, fp) != 1)
+  }
+  if (fwrite(&offset_to_index, sizeof(offset_to_index), 1, fp) != 1) {
     goto failure;
+  }
   offset_to_index = ntohl(stack.last_offset);
 
-  sizeOfEntireMAR = ((uint64_t)stack.last_offset) +
-                    stack.size_used +
-                    sizeof(size_of_index);
+  sizeOfEntireMAR =
+      ((uint64_t)stack.last_offset) + stack.size_used + sizeof(size_of_index);
   sizeOfEntireMAR = HOST_TO_NETWORK64(sizeOfEntireMAR);
-  if (fwrite(&sizeOfEntireMAR, sizeof(sizeOfEntireMAR), 1, fp) != 1)
+  if (fwrite(&sizeOfEntireMAR, sizeof(sizeOfEntireMAR), 1, fp) != 1) {
     goto failure;
+  }
   sizeOfEntireMAR = NETWORK_TO_HOST64(sizeOfEntireMAR);
 
   rv = 0;
 failure:
-  if (stack.head)
+  if (stack.head) {
     free(stack.head);
+  }
   fclose(fp);
-  if (rv)
+  if (rv) {
     remove(dest);
+  }
   return rv;
 }
