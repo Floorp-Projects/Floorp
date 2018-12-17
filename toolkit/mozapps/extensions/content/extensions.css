@@ -191,3 +191,7 @@ richlistitem:not([selected]) * {
 .view-pane:not(#legacy-view) .addon-control.replacement {
   display: none;
 }
+
+#pluginFlashBlockingCheckbox .checkbox-label-box {
+  display: none; /*see bug 1508724*/
+}
