@@ -1064,9 +1064,8 @@ win64-aarch64-msvc/opt:
             - builds/releng_base_firefox.py
             - builds/taskcluster_base_windows.py
         extra-config:
-            stage_platform: win64
+            stage_platform: win64-aarch64
             mozconfig_platform: win64-aarch64
-        mozconfig-variant: opt-msvc
     run-on-projects: ['mozilla-central', 'trunk', 'try']
     toolchains:
         - win64-clang-cl
