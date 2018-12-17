@@ -343,7 +343,7 @@ package org.mozilla.geckoview {
     field public final int type;
   }
 
-  @android.support.annotation.AnyThread public static final class GeckoSession.FinderResult {
+  @android.support.annotation.AnyThread public static class GeckoSession.FinderResult {
     ctor protected FinderResult();
     field public final android.graphics.RectF clientRect;
     field public final int current;

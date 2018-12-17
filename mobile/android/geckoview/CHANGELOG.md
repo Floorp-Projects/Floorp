@@ -25,8 +25,9 @@
   `ContentDelegate#onContextMenu`. Extended information includes the element's
   title and alt attributes.
 - Changed `ContentDelegate.ContextElement` TYPE_ constants to public access.
-  Changed `ContentDelegate.ContextElement` to non-final class.
+- Changed `ContentDelegate.ContextElement`, `GeckoSession.FinderResult` to
+  non-final class.
 - Update `CrashReporter.sendCrashReport()` to return the crash ID as a
   GeckoResult<String>.
 
-[api-version]: c9e474cac6732fc645b03868ad1fcbea10be7b9f
+[api-version]: bb945ae930ebf055f11821c685a6691faa7e5a3a
