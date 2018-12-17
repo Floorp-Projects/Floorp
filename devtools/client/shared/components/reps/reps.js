@@ -661,7 +661,7 @@ const ObjectWithURL = __webpack_require__(1853);
 const GripArray = __webpack_require__(1797);
 const GripMap = __webpack_require__(1799);
 const GripMapEntry = __webpack_require__(1800);
-const Grip = __webpack_require__(1784);
+const Grip = __webpack_require__(1783);
 
 // List of all registered template.
 // XXX there should be a way for extensions to register a new
@@ -796,7 +796,8 @@ StringRep.propTypes = {
   member: PropTypes.object,
   object: PropTypes.object.isRequired,
   openLink: PropTypes.func,
-  className: PropTypes.string
+  className: PropTypes.string,
+  title: PropTypes.string
 };
 
 function StringRep(props) {
@@ -808,7 +809,8 @@ function StringRep(props) {
     useQuotes = true,
     escapeWhitespace = true,
     member,
-    openLink
+    openLink,
+    title
   } = props;
 
   let text = object;
@@ -837,7 +839,8 @@ function StringRep(props) {
   const config = getElementConfig({
     className,
     style,
-    actor: object.actor
+    actor: object.actor,
+    title
   });
 
   if (!isLong) {
@@ -877,12 +880,16 @@ function formatText(opts, text) {
 }
 
 function getElementConfig(opts) {
-  const { className, style, actor } = opts;
+  const { className, style, actor, title } = opts;
 
   const config = {};
 
   if (actor) {
     config["data-link-actor-id"] = actor;
+  }
+
+  if (title) {
+    config.title = title;
   }
 
   const classNames = ["objectBox", "objectBox-string"];
@@ -1036,8 +1043,6 @@ module.exports = {
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -1107,13 +1112,17 @@ function arrayIterator(props, array, max) {
     let item;
 
     try {
-      item = ItemRep(_extends({}, props, config, {
+      item = ItemRep({
+        ...props,
+        ...config,
         object: array[i]
-      }));
+      });
     } catch (exc) {
-      item = ItemRep(_extends({}, props, config, {
+      item = ItemRep({
+        ...props,
+        ...config,
         object: exc
-      }));
+      });
     }
     items.push(item);
   }
@@ -1141,10 +1150,11 @@ function ItemRep(props) {
   const { Rep } = __webpack_require__(1767);
 
   const { object, delim, mode } = props;
-  return span({}, Rep(_extends({}, props, {
+  return span({}, Rep({
+    ...props,
     object: object,
     mode: mode
-  })), delim);
+  }), delim);
 }
 
 function getLength(object) {
@@ -1175,8 +1185,6 @@ module.exports = {
 
 "use strict";
 
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1218,7 +1226,7 @@ PropRep.propTypes = {
  * @return {Array} Array of React elements.
  */
 function PropRep(props) {
-  const Grip = __webpack_require__(1784);
+  const Grip = __webpack_require__(1783);
   const { Rep } = __webpack_require__(1767);
 
   let { name, mode, equal, suppressQuotes } = props;
@@ -1232,17 +1240,18 @@ function PropRep(props) {
     }
     key = span({ className: "nodeName" }, name);
   } else {
-    key = Rep(_extends({}, props, {
+    key = Rep({
+      ...props,
       className: "nodeName",
       object: name,
       mode: mode || MODE.TINY,
       defaultRep: Grip
-    }));
+    });
   }
 
   return [key, span({
     className: "objectEqual"
-  }, equal), Rep(_extends({}, props))];
+  }, equal), Rep({ ...props })];
 }
 
 // Exports from this module
@@ -1284,13 +1293,11 @@ module.exports = {
 
 /***/ }),
 
-/***/ 1784:
+/***/ 1783:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1419,7 +1426,7 @@ function propIterator(props, object, max) {
   const propertiesLength = getPropertiesLength(object);
 
   if (object.preview && object.preview.safeGetterValues) {
-    properties = _extends({}, properties, object.preview.safeGetterValues);
+    properties = { ...properties, ...object.preview.safeGetterValues };
   }
 
   let indexes = getPropIndexes(properties, max, isInterestingProp);
@@ -1444,7 +1451,8 @@ function propIterator(props, object, max) {
     const length = max - indexes.length;
 
     const symbolsProps = ownSymbols.slice(0, length).map(symbolItem => {
-      return PropRep(_extends({}, props, {
+      return PropRep({
+        ...props,
         mode: MODE.TINY,
         name: symbolItem,
         object: symbolItem.descriptor.value,
@@ -1452,7 +1460,7 @@ function propIterator(props, object, max) {
         defaultRep: Grip,
         title: null,
         suppressQuotes
-      }));
+      });
     });
 
     propsArray.push(...symbolsProps);
@@ -1494,7 +1502,8 @@ function getProps(componentProps, properties, indexes, suppressQuotes) {
     const name = propertiesKeys[i];
     const value = getPropValue(properties[name]);
 
-    return PropRep(_extends({}, componentProps, {
+    return PropRep({
+      ...componentProps,
       mode: MODE.TINY,
       name,
       object: value,
@@ -1502,7 +1511,7 @@ function getProps(componentProps, properties, indexes, suppressQuotes) {
       defaultRep: Grip,
       title: null,
       suppressQuotes
-    }));
+    });
   });
 }
 
@@ -1589,13 +1598,11 @@ module.exports = Grip;
 
 /***/ }),
 
-/***/ 1785:
+/***/ 1784:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -2079,7 +2086,7 @@ function makeNodesForProperties(objProps, parent) {
 
   const parentValue = getValue(parent);
 
-  const allProperties = _extends({}, ownProperties, safeGetterValues);
+  const allProperties = { ...ownProperties, ...safeGetterValues };
 
   // Ignore properties that are neither non-concrete nor getters/setters.
   const propertiesNames = sortProperties(Object.keys(allProperties)).filter(name => {
@@ -2230,9 +2237,10 @@ function getEvaluatedItem(item, evaluations) {
     return item;
   }
 
-  return _extends({}, item, {
+  return {
+    ...item,
     contents: evaluations.get(item.path)
-  });
+  };
 }
 
 function getChildrenWithEvaluations(options) {
@@ -2394,20 +2402,6 @@ function getNonPrototypeParentGripValue(item) {
   return getValue(parentGripNode);
 }
 
-function getParentGripValue(item) {
-  const parentNode = getParent(item);
-  if (!parentNode) {
-    return null;
-  }
-
-  const parentGripNode = getClosestGripNode(parentNode);
-  if (!parentGripNode) {
-    return null;
-  }
-
-  return getValue(parentGripNode);
-}
-
 module.exports = {
   createNode,
   createGetterNode,
@@ -2418,7 +2412,6 @@ module.exports = {
   getClosestGripNode,
   getClosestNonBucketNode,
   getParent,
-  getParentGripValue,
   getNonPrototypeParentGripValue,
   getNumericalPropertiesCount,
   getValue,
@@ -2464,13 +2457,11 @@ module.exports = {
 
 /***/ }),
 
-/***/ 1786:
+/***/ 1785:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 function initialState() {
   return {
@@ -2487,7 +2478,7 @@ function initialState() {
 function reducer(state = initialState(), action = {}) {
   const { type, data } = action;
 
-  const cloneState = overrides => _extends({}, state, overrides);
+  const cloneState = overrides => ({ ...state, ...overrides });
 
   if (type === "NODE_EXPAND") {
     return cloneState({
@@ -2575,13 +2566,11 @@ module.exports.default = reducer;
 
 /***/ }),
 
-/***/ 1787:
+/***/ 1786:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -2589,7 +2578,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 const client = __webpack_require__(1804);
 const loadProperties = __webpack_require__(1803);
-const node = __webpack_require__(1785);
+const node = __webpack_require__(1784);
 const { nodeIsError, nodeIsPrimitive } = node;
 const selection = __webpack_require__(1859);
 
@@ -2610,11 +2599,12 @@ function shouldRenderRootsInReps(roots) {
 }
 
 function renderRep(item, props) {
-  return Rep(_extends({}, props, {
+  return Rep({
+    ...props,
     object: node.getValue(item),
     mode: props.mode || MODE.TINY,
     defaultRep: Grip
-  }));
+  });
 }
 
 module.exports = {
@@ -3081,8 +3071,6 @@ module.exports = {
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -3256,12 +3244,13 @@ function arrayIterator(props, grip, max) {
     }
 
     if (res.length < max) {
-      res.push(Rep(_extends({}, props, {
+      res.push(Rep({
+        ...props,
         object,
         mode: MODE.TINY,
         // Do not propagate title to array items reps
         title: undefined
-      })));
+      }));
     }
 
     return res;
@@ -3564,8 +3553,6 @@ module.exports = {
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -3598,13 +3585,14 @@ function GripMapEntry(props) {
 
   return span({
     className: "objectBox objectBox-map-entry"
-  }, PropRep(_extends({}, props, {
+  }, PropRep({
+    ...props,
     name: key,
     object: value,
     equal: " \u2192 ",
     title: null,
     suppressQuotes: false
-  })));
+  }));
 }
 
 function supportsObject(grip, noGrip = false) {
@@ -4472,8 +4460,6 @@ exports.default = Tree;
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -4502,7 +4488,7 @@ const {
   nodeIsProxy,
   nodeNeedsNumericalBuckets,
   nodeIsLongString
-} = __webpack_require__(1785);
+} = __webpack_require__(1784);
 
 function loadItemProperties(item, createObjectClient, createLongStringClient, loadedProperties) {
   const gripItem = getClosestGripNode(item);
@@ -4546,7 +4532,7 @@ function mergeResponses(responses) {
 
   for (const response of responses) {
     if (response.hasOwnProperty("ownProperties")) {
-      data.ownProperties = _extends({}, data.ownProperties, response.ownProperties);
+      data.ownProperties = { ...data.ownProperties, ...response.ownProperties };
     }
 
     if (response.ownSymbols && response.ownSymbols.length > 0) {
@@ -4625,7 +4611,7 @@ module.exports = {
 "use strict";
 
 
-const { getValue, nodeHasFullText } = __webpack_require__(1785); /* This Source Code Form is subject to the terms of the Mozilla Public
+const { getValue, nodeHasFullText } = __webpack_require__(1784); /* This Source Code Form is subject to the terms of the Mozilla Public
                                                                  * License, v. 2.0. If a copy of the MPL was not distributed with this
                                                                  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
@@ -4876,8 +4862,6 @@ module.exports = {
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -4960,13 +4944,14 @@ function propIterator(props, object, max) {
   const propertiesNames = Object.keys(object);
 
   const pushPropRep = (name, value) => {
-    elements.push(PropRep(_extends({}, props, {
+    elements.push(PropRep({
+      ...props,
       key: name,
       mode: MODE.TINY,
       name,
       object: value,
       equal: ": "
-    })));
+    }));
     propertiesNumber++;
 
     if (propertiesNumber < propertiesNames.length) {
@@ -5174,8 +5159,6 @@ module.exports = {
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -5203,11 +5186,12 @@ function Accessor(props) {
     const { Rep, Grip } = __webpack_require__(1767);
     return span({
       className: "objectBox objectBox-accessor objectTitle"
-    }, Rep(_extends({}, props, {
+    }, Rep({
+      ...props,
       object: evaluation.getterValue,
       mode: props.mode || MODE.TINY,
       defaultRep: Grip
-    })));
+    }));
   }
 
   if (hasGetter(object) && onInvokeGetterButtonClick) {
@@ -5413,7 +5397,7 @@ function Attribute(props) {
   return span({
     "data-link-actor-id": object.actor,
     className: "objectBox-Attr"
-  }, span({ className: "attrName" }, getTitle(object)), span({ className: "attrEqual" }, "="), StringRep({ className: "attrValue", object: value }));
+  }, span({ className: "attrName" }, getTitle(object)), span({ className: "attrEqual" }, "="), StringRep({ className: "attrValue", object: value, title: value }));
 }
 
 function getTitle(grip) {
@@ -5627,8 +5611,6 @@ module.exports = {
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -5640,7 +5622,7 @@ const PropTypes = __webpack_require__(1758);
 const { isGrip, wrapRender } = __webpack_require__(1760);
 
 const { MODE } = __webpack_require__(1762);
-const { rep } = __webpack_require__(1784);
+const { rep } = __webpack_require__(1783);
 
 /**
  * Renders DOM event objects.
@@ -5655,14 +5637,17 @@ Event.propTypes = {
 };
 
 function Event(props) {
-  const gripProps = _extends({}, props, {
+  const gripProps = {
+    ...props,
     title: getTitle(props),
-    object: _extends({}, props.object, {
-      preview: _extends({}, props.object.preview, {
+    object: {
+      ...props.object,
+      preview: {
+        ...props.object.preview,
         ownProperties: {}
-      })
-    })
-  });
+      }
+    }
+  };
 
   if (gripProps.object.preview.target) {
     Object.assign(gripProps.object.preview.ownProperties, {
@@ -5733,8 +5718,6 @@ module.exports = {
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -5803,13 +5786,14 @@ function getProps(props, promiseState) {
 
   return keys.reduce((res, key, i) => {
     const object = promiseState[key];
-    res = res.concat(PropRep(_extends({}, props, {
+    res = res.concat(PropRep({
+      ...props,
       mode: MODE.TINY,
       name: `<${key}>`,
       object,
       equal: ": ",
       suppressQuotes: true
-    })));
+    }));
 
     // Interleave commas between elements
     if (i !== keys.length - 1) {
@@ -6040,12 +6024,14 @@ const PropTypes = __webpack_require__(1758);
 
 // Utils
 const { isGrip, wrapRender } = __webpack_require__(1760);
-const { rep: StringRep } = __webpack_require__(1770);
+const { rep: StringRep, isLongString } = __webpack_require__(1770);
 const { MODE } = __webpack_require__(1762);
 const nodeConstants = __webpack_require__(1795);
 
 const dom = __webpack_require__(1759);
 const { span } = dom;
+
+const MAX_ATTRIBUTE_LENGTH = 50;
 
 /**
  * Renders DOM element node.
@@ -6156,7 +6142,18 @@ function getElements(grip, mode) {
   }
   const attributeElements = attributeKeys.reduce((arr, name, i, keys) => {
     const value = attributes[name];
-    const attribute = span({}, span({ className: "attrName" }, name), span({ className: "attrEqual" }, "="), StringRep({ className: "attrValue", object: value }));
+
+    let title = isLongString(value) ? value.initial : value;
+    if (title.length < MAX_ATTRIBUTE_LENGTH) {
+      title = null;
+    }
+
+    const attribute = span({}, span({ className: "attrName" }, name), span({ className: "attrEqual" }, "="), StringRep({
+      className: "attrValue",
+      object: value,
+      cropLimit: MAX_ATTRIBUTE_LENGTH,
+      title
+    }));
 
     return arr.concat([" ", attribute]);
   }, []);
@@ -6175,7 +6172,8 @@ function supportsObject(object, noGrip = false) {
 // Exports from this module
 module.exports = {
   rep: wrapRender(ElementNode),
-  supportsObject
+  supportsObject,
+  MAX_ATTRIBUTE_LENGTH
 };
 
 /***/ }),
@@ -6501,8 +6499,8 @@ module.exports = {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const ObjectInspector = __webpack_require__(1855);
-const utils = __webpack_require__(1787);
-const reducer = __webpack_require__(1786);
+const utils = __webpack_require__(1786);
+const reducer = __webpack_require__(1785);
 
 module.exports = { ObjectInspector, utils, reducer };
 
@@ -6513,8 +6511,6 @@ module.exports = { ObjectInspector, utils, reducer };
 
 "use strict";
 
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _devtoolsComponents = __webpack_require__(1791);
 
@@ -6530,7 +6526,7 @@ const { Component, createFactory, createElement } = __webpack_require__(0);
 const { connect } = __webpack_require__(1763);
 const actions = __webpack_require__(1856);
 
-const selectors = __webpack_require__(1786);
+const selectors = __webpack_require__(1785);
 
 const Tree = createFactory(_devtoolsComponents2.default.Tree);
 __webpack_require__(1857);
@@ -6539,7 +6535,7 @@ const ObjectInspectorItem = createFactory(__webpack_require__(1858));
 
 const classnames = __webpack_require__(175);
 
-const Utils = __webpack_require__(1787);
+const Utils = __webpack_require__(1786);
 const { renderRep, shouldRenderRootsInReps } = Utils;
 const {
   getChildrenWithEvaluations,
@@ -6749,14 +6745,15 @@ class ObjectInspector extends Component {
       onCollapse: item => this.setExpanded(item, false),
       onFocus: focusable ? this.focusItem : null,
 
-      renderItem: (item, depth, focused, arrow, expanded) => ObjectInspectorItem(_extends({}, this.props, {
+      renderItem: (item, depth, focused, arrow, expanded) => ObjectInspectorItem({
+        ...this.props,
         item,
         depth,
         focused,
         arrow,
         expanded,
         setExpanded: this.setExpanded
-      }))
+      })
     });
   }
 }
@@ -6792,7 +6789,7 @@ const { loadItemProperties } = __webpack_require__(1803); /* This Source Code Fo
                                                                     * License, v. 2.0. If a copy of the MPL was not distributed with this
                                                                     * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { getLoadedProperties, getActors } = __webpack_require__(1786);
+const { getLoadedProperties, getActors } = __webpack_require__(1785);
 
 /**
  * This action is responsible for expanding a given node, which also means that
@@ -6916,8 +6913,6 @@ module.exports = {
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 var _devtoolsServices = __webpack_require__(22);
 
 var _devtoolsServices2 = _interopRequireDefault(_devtoolsServices);
@@ -6937,7 +6932,7 @@ const isMacOS = appinfo.OS === "Darwin";
 const classnames = __webpack_require__(175);
 const { MODE } = __webpack_require__(1762);
 
-const Utils = __webpack_require__(1787);
+const Utils = __webpack_require__(1786);
 
 const {
   getValue,
@@ -7011,14 +7006,15 @@ class ObjectInspectorItem extends Component {
 
     if (nodeIsFunction(item) && !nodeIsGetter(item) && !nodeIsSetter(item) && (mode === MODE.TINY || !mode)) {
       return {
-        label: Utils.renderRep(item, _extends({}, this.props, {
+        label: Utils.renderRep(item, {
+          ...this.props,
           functionName: label
-        }))
+        })
       };
     }
 
     if (nodeHasProperties(item) || nodeHasAccessors(item) || nodeIsMapEntry(item) || nodeIsLongString(item) || isPrimitive) {
-      const repProps = _extends({}, this.props);
+      const repProps = { ...this.props };
       if (depth > 0) {
         repProps.mode = mode === MODE.LONG ? MODE.SHORT : MODE.TINY;
       }
