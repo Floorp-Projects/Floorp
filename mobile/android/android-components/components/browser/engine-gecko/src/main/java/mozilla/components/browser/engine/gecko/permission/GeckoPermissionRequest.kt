@@ -63,7 +63,6 @@ sealed class GeckoPermissionRequest constructor(
     /**
      * Represents a gecko-based application permission request.
      *
-     * @property uri the URI of the content requesting the permissions.
      * @property nativePermissions the list of requested app permissions (will be
      * mapped to corresponding [Permission]s).
      * @property callback the callback to grant/reject the requested permissions.

@@ -5,7 +5,7 @@
 internal object GeckoVersions {
     const val nightly_version = "65.0.20181129095546"
     const val beta_version = "64.0.20181022150107"
-    const val release_version = "63.0.20181018182531"
+    const val release_version = "64.0.20181214004633"
 }
 
 @Suppress("MaxLineLength")
@@ -18,7 +18,7 @@ object Gecko {
     const val geckoview_beta_x86 = "org.mozilla.geckoview:geckoview-beta-x86:${GeckoVersions.beta_version}"
     const val geckoview_beta_aarch64 = "org.mozilla.geckoview:geckoview-beta-arm64-v8a:${GeckoVersions.beta_version}"
 
-    const val geckoview_release_arm = "org.mozilla.geckoview:geckoview-release-armeabi-v7a:${GeckoVersions.release_version}"
-    const val geckoview_release_x86 = "org.mozilla.geckoview:geckoview-release-x86:${GeckoVersions.release_version}"
-    const val geckoview_release_aarch64 = "org.mozilla.geckoview:geckoview-release-arm64-v8a:${GeckoVersions.release_version}"
+    const val geckoview_release_arm = "org.mozilla.geckoview:geckoview-armeabi-v7a:${GeckoVersions.release_version}"
+    const val geckoview_release_x86 = "org.mozilla.geckoview:geckoview-x86:${GeckoVersions.release_version}"
+    const val geckoview_release_aarch64 = "org.mozilla.geckoview:geckoview-arm64-v8a:${GeckoVersions.release_version}"
 }

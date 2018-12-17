@@ -34,25 +34,6 @@ allprojects {
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////
-        // GeckoView Release
-        ////////////////////////////////////////////////////////////////////////////////////////////
-
-        // ARM
-        maven {
-            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-release.revision.${geckoRelease['revision']}.mobile.android-api-16-opt/artifacts/public/android/maven"
-        }
-
-        // x86
-        maven {
-            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-release.revision.${geckoRelease['revision']}.mobile.android-x86-opt/artifacts/public/android/maven"
-        }
-
-        // aarch64
-        maven {
-            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-release.revision.${geckoRelease['revision']}.mobile.android-aarch64-opt/artifacts/public/android/maven"
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////////////////
         // Servo
         ////////////////////////////////////////////////////////////////////////////////////////////
 

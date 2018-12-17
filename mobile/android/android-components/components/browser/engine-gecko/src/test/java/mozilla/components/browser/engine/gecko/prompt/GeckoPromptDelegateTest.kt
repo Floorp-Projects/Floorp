@@ -7,7 +7,6 @@ package mozilla.components.browser.engine.gecko.prompt
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.prompt.Choice
-import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
@@ -154,16 +153,14 @@ class GeckoPromptDelegateTest {
         val geckoChoices = arrayOf<GeckoChoice>()
 
         mockSession.register(
-                object : EngineSession.Observer {
-                    override fun onPromptRequest(promptRequest: PromptRequest) {
-                        promptRequestSingleChoice = promptRequest
-                    }
-                })
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    promptRequestSingleChoice = promptRequest
+                }
+            })
 
-        gecko.onChoicePrompt(
-                null, null, null,
-                GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_MENU, geckoChoices, callback
-        )
+        gecko.onChoicePrompt(null, null, null,
+            GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_MENU, geckoChoices, callback)
 
         assertTrue(promptRequestSingleChoice is PromptRequest.MenuChoice)
 
@@ -205,14 +202,14 @@ class GeckoPromptDelegateTest {
 
         assertTrue(alertRequest is PromptRequest.Alert)
 
-        (alertRequest as Alert).onDismiss()
+        (alertRequest as PromptRequest.Alert).onDismiss()
         assertTrue(dismissWasCalled)
 
-        (alertRequest as Alert).onShouldShowNoMoreDialogs(true)
+        (alertRequest as PromptRequest.Alert).onShouldShowNoMoreDialogs(true)
         assertTrue(setCheckboxValueWasCalled)
 
-        assertEquals((alertRequest as Alert).title, "title")
-        assertEquals((alertRequest as Alert).message, "message")
+        assertEquals((alertRequest as PromptRequest.Alert).title, "title")
+        assertEquals((alertRequest as PromptRequest.Alert).message, "message")
     }
 
     @Test

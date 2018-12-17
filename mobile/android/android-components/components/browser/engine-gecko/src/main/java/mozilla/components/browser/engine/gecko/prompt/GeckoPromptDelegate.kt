@@ -12,6 +12,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
+import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.AlertCallback
@@ -122,7 +123,6 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         val onClear: () -> Unit = {
             geckoCallback.confirm("")
         }
-
         when (type) {
             DATETIME_TYPE_DATE -> {
                 notifyDatePromptRequest(
@@ -158,9 +158,9 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                 )
             }
             DATETIME_TYPE_TIME -> {
-            } // Related issue: https://github.com/mozilla-mobile/android-components/issues/1530
+            }
             DATETIME_TYPE_DATETIME_LOCAL -> {
-            } // Related issue: https://github.com/mozilla-mobile/android-components/issues/1530
+            }
         }
     }
 
@@ -203,7 +203,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         callback: TextCallback?
     ) = Unit // Related issue: https://github.com/mozilla-mobile/android-components/issues/1471
 
-    override fun onPopupRequest(session: GeckoSession?, targetUri: String?): GeckoResult<Boolean> {
+    override fun onPopupRequest(session: GeckoSession?, targetUri: String?): GeckoResult<AllowOrDeny> {
         return GeckoResult()
     } // Related issue: https://github.com/mozilla-mobile/android-components/issues/1473
 

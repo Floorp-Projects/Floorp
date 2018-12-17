@@ -22,7 +22,6 @@ class GeckoEngine(
     private val defaultSettings: Settings? = null,
     private val runtime: GeckoRuntime = GeckoRuntime.getDefault(context)
 ) : Engine {
-
     /**
      * Creates a new Gecko-based EngineView.
      */
