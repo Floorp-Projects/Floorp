@@ -70,8 +70,8 @@ var _attachConsole = async function(
       await front.attach();
       consoleActor = front.targetForm.consoleActor;
     } else {
-      const form = await client.getTab();
-      const [, targetFront] = await client.attachTarget(form.tab);
+      const targetFront = await client.mainRoot.getTab();
+      await targetFront.attach();
       if (attachToWorker) {
         const workerName = "console-test-worker.js#" + new Date().getTime();
         worker = new Worker(workerName);

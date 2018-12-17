@@ -344,10 +344,6 @@ DebuggerClient.prototype = {
     return this.mainRoot.listTabs(options);
   },
 
-  getTab: function(filter) {
-    return this.mainRoot.getTab(filter);
-  },
-
   /**
    * Attach to a target actor:
    *

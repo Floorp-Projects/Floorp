@@ -5,9 +5,6 @@
 
 const { types, generateActorSpec, RetVal, Arg, Option } = require("devtools/shared/protocol");
 
-types.addDictType("root.getTab", {
-  tab: "json",
-});
 types.addDictType("root.getWindow", {
   window: "json",
 });
@@ -42,7 +39,9 @@ const rootSpecPrototype = {
         outerWindowID: Option(0, "number"),
         tabId: Option(0, "number"),
       },
-      response: RetVal("root.getTab"),
+      response: {
+        tab: RetVal("browsingContextTarget"),
+      },
     },
 
     getWindow: {
