@@ -51,3 +51,5 @@ fuzzy-if(Android,0-8,0-630) fuzzy-if(OSX,0-1,0-11) fuzzy-if(skiaContent,0-1,0-22
 == iframe-1.html iframe-1-ref.html
 skip-if(Android) == transformed-1.html transformed-1-ref.html # bug 1430787 for android
 fuzzy-if(Android,0-2,0-4) skip-if(!asyncPan||Android) == transformed-2.html transformed-2-ref.html # bug 1430787 for android
+skip-if(!asyncPan) fuzzy-if(Android,0-3,0-4) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),4-4,104-104) == nested-sticky-1.html nested-sticky-1-ref.html
+skip-if(!asyncPan) fuzzy-if(Android,0-3,0-4) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),4-4,104-104) == nested-sticky-2.html nested-sticky-2-ref.html
