@@ -898,6 +898,8 @@ impl ClipItemKey {
     }
 }
 
+impl intern::InternDebug for ClipItemKey {}
+
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
