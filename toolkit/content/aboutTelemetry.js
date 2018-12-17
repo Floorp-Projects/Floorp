@@ -378,6 +378,45 @@ var PingPicker = {
       return;
     }
 
+    let stores = Telemetry.getAllStores();
+    let getData = {
+      "histograms": Telemetry.getSnapshotForHistograms,
+      "keyedHistograms": Telemetry.getSnapshotForKeyedHistograms,
+      "scalars": Telemetry.getSnapshotForScalars,
+      "keyedScalars": Telemetry.getSnapshotForKeyedScalars,
+    };
+
+    let data = {};
+    for (const [name, fn] of Object.entries(getData)) {
+      for (const store of stores) {
+        if (!data[store]) {
+          data[store] = {};
+        }
+        let measurement = fn(store, /* clear */ false, /* filterTest */ true);
+        let processes = Object.keys(measurement);
+
+        for (const process of processes) {
+          if (!data[store][process]) {
+            data[store][process] = {};
+          }
+
+          data[store][process][name] = measurement[process];
+        }
+      }
+    }
+    ping.payload.stores = data;
+
+    // Delete the unused data from the payload of the current ping.
+    // It's included in the above `stores` attribute.
+    for (const data of Object.values(ping.payload.processes)) {
+      delete data.scalars;
+      delete data.keyedScalars;
+      delete data.histograms;
+      delete data.keyedHistograms;
+    }
+    delete ping.payload.histograms;
+    delete ping.payload.keyedHistograms;
+
     // augment ping payload with event telemetry
     let eventSnapshot = Telemetry.snapshotEvents(Telemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
     for (let process of Object.keys(eventSnapshot)) {
