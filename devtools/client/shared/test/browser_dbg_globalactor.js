@@ -31,7 +31,7 @@ add_task(async function() {
   is(type, "browser",
     "Root actor should identify itself as a browser.");
 
-  let response = await client.listTabs();
+  let response = await client.mainRoot.rootForm;
   const globalActor = response.testOneActor;
   ok(globalActor, "Found the test global actor.");
   ok(globalActor.includes("testOne"),

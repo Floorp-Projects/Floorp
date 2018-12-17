@@ -70,7 +70,7 @@ var AppManager = exports.AppManager = {
     this.tabStore.destroy();
     this.tabStore = null;
     this.connection.off(Connection.Events.STATUS_CHANGED, this.onConnectionChanged);
-    this._listTabsResponse = null;
+    this._rootForm = null;
     this.connection.disconnect();
     this.connection = null;
   },
@@ -147,13 +147,13 @@ var AppManager = exports.AppManager = {
     }
 
     if (!this.connected) {
-      this._listTabsResponse = null;
+      this._rootForm = null;
       this.deviceFront = null;
       this.preferenceFront = null;
       this.perfFront = null;
     } else {
-      const response = await this.connection.client.listTabs();
-      this._listTabsResponse = response;
+      const response = await this.connection.client.mainRoot.rootForm;
+      this._rootForm = response;
       try {
         this.deviceFront = await this.connection.client.mainRoot.getFront("device");
         this.preferenceFront = await this.connection.client.mainRoot.getFront("preference");
@@ -265,7 +265,7 @@ var AppManager = exports.AppManager = {
       }
       // Fx <39 exposes chrome target actors on the root actor
       return TargetFactory.forRemoteTab({
-          form: this._listTabsResponse,
+          form: this._rootForm,
           client: this.connection.client,
           chrome: true,
       });
@@ -510,8 +510,8 @@ var AppManager = exports.AppManager = {
     return this.connection.client &&
            this.connection.client.mainRoot &&
            this.connection.client.mainRoot.traits.allowChromeProcess ||
-           (this._listTabsResponse &&
-            this._listTabsResponse.consoleActor);
+           (this._rootForm &&
+            this._rootForm.consoleActor);
   },
 
   disconnectRuntime: function() {
@@ -556,7 +556,7 @@ var AppManager = exports.AppManager = {
       return Promise.reject("Can't install");
     }
 
-    if (!this._listTabsResponse) {
+    if (!this._rootForm) {
       this.reportError("error_cantInstallNotFullyConnected");
       return Promise.reject("Can't install");
     }

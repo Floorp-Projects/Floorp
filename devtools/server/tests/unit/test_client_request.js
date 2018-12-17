@@ -49,7 +49,7 @@ function run_test() {
 function init() {
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect()
-    .then(() => gClient.listTabs())
+    .then(() => gClient.mainRoot.rootForm)
     .then(response => {
       gActorId = response.test;
       run_next_test();
