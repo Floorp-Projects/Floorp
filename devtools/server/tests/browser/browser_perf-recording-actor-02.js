@@ -14,7 +14,6 @@ add_task(async function() {
   const target = await addTabTarget(MAIN_DOMAIN + "doc_perf.html");
 
   const front = await target.getFront("performance");
-  await front.connect();
 
   await front.setProfilerStatusInterval(10);
   const model = await front.startRecording(config);
@@ -48,7 +47,6 @@ add_task(async function() {
   is(front.getBufferUsageForRecording(model), null,
     "buffer usage should be null when no longer recording.");
 
-  await front.destroy();
   await target.destroy();
   gBrowser.removeCurrentTab();
 });
