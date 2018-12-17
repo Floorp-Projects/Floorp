@@ -24,8 +24,18 @@ class VRThread;
 
 static const int kNumOpenVRHaptics = 1;
 
-class OpenVRSession : public VRSession {
- public:
+enum OpenVRHand : int8_t
+{
+  Left = 0,
+  Right = 1,
+  Total = 2,
+
+  None = -1
+};
+
+class OpenVRSession : public VRSession
+{
+public:
   OpenVRSession();
   virtual ~OpenVRSession();
 
@@ -40,7 +50,7 @@ class OpenVRSession : public VRSession {
   void StopVibrateHaptic(uint32_t aControllerIdx) override;
   void StopAllHaptics() override;
 
- protected:
+protected:
 #if defined(XP_WIN)
   bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
                    ID3D11Texture2D* aTexture) override;
@@ -49,12 +59,14 @@ class OpenVRSession : public VRSession {
                    const VRLayerTextureHandle& aTexture) override;
 #endif
 
- private:
+private:
   // OpenVR State
   ::vr::IVRSystem* mVRSystem = nullptr;
   ::vr::IVRChaperone* mVRChaperone = nullptr;
   ::vr::IVRCompositor* mVRCompositor = nullptr;
-  ::vr::TrackedDeviceIndex_t mControllerDeviceIndex[kVRControllerMaxCount];
+  ::vr::TrackedDeviceIndex_t mControllerDeviceIndexObsolete[kVRControllerMaxCount];
+  ::vr::VRActionSetHandle_t mActionsetFirefox = vr::k_ulInvalidActionSetHandle;
+  OpenVRHand mControllerDeviceIndex[kVRControllerMaxCount];
   float mHapticPulseRemaining[kVRControllerMaxCount][kNumOpenVRHaptics];
   float mHapticPulseIntensity[kVRControllerMaxCount][kNumOpenVRHaptics];
   bool mIsWindowsMR;
@@ -65,9 +77,13 @@ class OpenVRSession : public VRSession {
   void UpdateEyeParameters(mozilla::gfx::VRSystemState& aState);
   void UpdateHeadsetPose(mozilla::gfx::VRSystemState& aState);
   void EnumerateControllers(VRSystemState& aState);
+  void EnumerateControllersObsolete(VRSystemState& aState);
   void UpdateControllerPoses(VRSystemState& aState);
+  void UpdateControllerPosesObsolete(VRSystemState& aState);
   void UpdateControllerButtons(VRSystemState& aState);
+  void UpdateControllerButtonsObsolete(VRSystemState& aState);
   void UpdateTelemetry(VRSystemState& aSystemState);
+  void SetupContollerActions();
 
   bool SubmitFrame(const VRLayerTextureHandle& aTextureHandle,
                    ::vr::ETextureType aTextureType,
@@ -80,6 +96,7 @@ class OpenVRSession : public VRSession {
                              ::vr::TrackedDeviceIndex_t aDeviceIndex,
                              nsCString& aId);
   void UpdateHaptics();
+  void UpdateHapticsObsolete();
   void StartHapticThread();
   void StopHapticThread();
   void StartHapticTimer();
