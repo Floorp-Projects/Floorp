@@ -1552,6 +1552,7 @@ Function .onInit
 
 !ifdef HAVE_64BIT_BUILD
   ${Unless} ${RunningX64}
+  ${AndUnless} ${IsNativeARM64}
     MessageBox MB_OKCANCEL|MB_ICONSTOP "$(WARN_MIN_SUPPORTED_OSVER_MSG)" IDCANCEL +2
     ExecShell "open" "${URLSystemRequirements}"
     Quit

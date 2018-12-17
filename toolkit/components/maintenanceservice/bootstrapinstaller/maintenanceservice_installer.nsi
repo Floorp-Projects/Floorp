@@ -194,6 +194,7 @@ Section "MaintenanceService"
   ; Since the Maintenance service can be installed either x86 or x64,
   ; always use the 64-bit registry for checking if an attempt was made.
   ${If} ${RunningX64}
+  ${OrIf} ${IsNativeARM64}
     SetRegView 64
   ${EndIf}
   WriteRegDWORD HKLM "Software\Mozilla\MaintenanceService" "Attempted" 1
@@ -208,6 +209,7 @@ Section "MaintenanceService"
   WriteRegStr HKLM "${FallbackKey}\1" "name" "Mozilla Fake SPC"
   WriteRegStr HKLM "${FallbackKey}\1" "issuer" "Mozilla Fake CA"
   ${If} ${RunningX64}
+  ${OrIf} ${IsNativeARM64}
     SetRegView lastused
   ${EndIf}
 SectionEnd
@@ -253,12 +255,14 @@ Section "Uninstall"
   DeleteRegKey HKLM "${MaintUninstallKey}"
 
   ${If} ${RunningX64}
+  ${OrIf} ${IsNativeARM64}
     SetRegView 64
   ${EndIf}
   DeleteRegValue HKLM "Software\Mozilla\MaintenanceService" "Installed"
   DeleteRegValue HKLM "Software\Mozilla\MaintenanceService" "FFPrefetchDisabled"
   DeleteRegKey HKLM "${FallbackKey}\"
   ${If} ${RunningX64}
+  ${OrIf} ${IsNativeARM64}
     SetRegView lastused
   ${EndIf}
 SectionEnd

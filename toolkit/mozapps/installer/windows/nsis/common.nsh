@@ -74,7 +74,11 @@
   !include WinVer.nsh
 !endif
 
-!include x64.nsh
+; When including x64.nsh check if ___X64__NSH___ is defined to prevent
+; loading the file a second time.
+!ifndef ___X64__NSH___
+  !include x64.nsh
+!endif
 
 ; NSIS provided macros that we have overridden.
 !include overrides.nsh
@@ -1450,6 +1454,7 @@
   ; The x64 regsvr32.exe registers x86 DLL's properly so just use it
   ; when installing on an x64 systems even when installing an x86 application.
   ${If} ${RunningX64}
+  ${OrIf} ${IsNativeARM64}
     ${DisableX64FSRedirection}
     ExecWait '"$SYSDIR\regsvr32.exe" /s "${DLL}"'
     ${EnableX64FSRedirection}
@@ -1464,6 +1469,7 @@
   ; The x64 regsvr32.exe registers x86 DLL's properly so just use it
   ; when installing on an x64 systems even when installing an x86 application.
   ${If} ${RunningX64}
+  ${OrIf} ${IsNativeARM64}
     ${DisableX64FSRedirection}
     ExecWait '"$SYSDIR\regsvr32.exe" /s /u "${DLL}"'
     ${EnableX64FSRedirection}
@@ -2473,6 +2479,7 @@
       StrCpy $R6 0  ; set the counter for the outer loop to 0
 
       ${If} ${RunningX64}
+      ${OrIf} ${IsNativeARM64}
         StrCpy $R0 "false"
         ; Set the registry to the 32 bit registry for 64 bit installations or to
         ; the 64 bit registry for 32 bit installations at the beginning so it can
@@ -2532,17 +2539,19 @@
 
       end:
       ${If} ${RunningX64}
-      ${AndIf} "$R0" == "false"
-        ; Set the registry to the correct view.
-        !ifdef HAVE_64BIT_BUILD
-          SetRegView 64
-        !else
-          SetRegView 32
-        !endif
+      ${OrIf} ${IsNativeARM64}
+        ${If} "$R0" == "false"
+          ; Set the registry to the correct view.
+          !ifdef HAVE_64BIT_BUILD
+            SetRegView 64
+          !else
+            SetRegView 32
+          !endif
 
-        StrCpy $R6 0  ; set the counter for the outer loop to 0
-        StrCpy $R0 "true"
-        GoTo outerloop
+          StrCpy $R6 0  ; set the counter for the outer loop to 0
+          StrCpy $R0 "true"
+          GoTo outerloop
+        ${EndIf}
       ${EndIf}
 
       ClearErrors
@@ -2639,6 +2648,7 @@
       StrCpy $R8 0
 
       ${If} ${RunningX64}
+      ${OrIf} ${IsNativeARM64}
         StrCpy $R3 "false"
         ; Set the registry to the 32 bit registry for 64 bit installations or to
         ; the 64 bit registry for 32 bit installations at the beginning so it can
@@ -2684,18 +2694,20 @@
 
       end:
       ${If} ${RunningX64}
-      ${AndIf} "$R3" == "false"
-        ; Set the registry to the correct view.
-        !ifdef HAVE_64BIT_BUILD
-          SetRegView 64
-        !else
-          SetRegView 32
-        !endif
+      ${OrIf} ${IsNativeARM64}
+        ${If} "$R3" == "false"
+          ; Set the registry to the correct view.
+          !ifdef HAVE_64BIT_BUILD
+            SetRegView 64
+          !else
+            SetRegView 32
+          !endif
 
-        StrCpy $R7 ""
-        StrCpy $R8 0
-        StrCpy $R3 "true"
-        GoTo loop
+          StrCpy $R7 ""
+          StrCpy $R8 0
+          StrCpy $R3 "true"
+          GoTo loop
+        ${EndIf}
       ${EndIf}
 
       ClearErrors
@@ -3143,6 +3155,7 @@
         Call ${_MOZFUNC_UN}CleanVirtualStore_Internal
 
         ${If} ${RunningX64}
+        ${OrIf} ${IsNativeARM64}
           StrCpy $R4 $PROGRAMFILES64
           Call ${_MOZFUNC_UN}CleanVirtualStore_Internal
         ${EndIf}
@@ -5760,6 +5773,7 @@ end:
       ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
 
       ${If} ${RunningX64}
+      ${OrIf} ${IsNativeARM64}
         ; In HKCU there is no WOW64 redirection, which means we may have gotten
         ; the path to a 32-bit install even though we're 64-bit, or vice-versa.
         ; In that case, just use the default path instead of offering an upgrade.
