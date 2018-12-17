@@ -116,13 +116,13 @@ function measureHero() {
         // mark the time now as when hero element received
         perfData.mark(heroFound);
         console.log("found hero:" + heroFound);
+        var resultType = "hero:" + heroFound;
         // calculcate result: performance.timing.fetchStart - time when we got hero element
         perfData.measure(name = resultType,
                          startMark = startMeasure,
                          endMark = heroFound);
         var perfResult = perfData.getEntriesByName(resultType);
         var _result = Math.round(perfResult[0].duration);
-        var resultType = "hero:" + heroFound;
         sendResult(resultType, _result);
         perfData.clearMarks();
         perfData.clearMeasures();
