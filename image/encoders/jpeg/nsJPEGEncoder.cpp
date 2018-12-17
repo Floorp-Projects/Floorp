@@ -10,7 +10,7 @@
 #include "gfxColor.h"
 
 extern "C" {
-  #include "jpeglib.h"
+#include "jpeglib.h"
 }
 
 #include <setjmp.h>
@@ -32,18 +32,17 @@ class nsJPEGEncoderInternal {
    */
   static void initDestination(jpeg_compress_struct* cinfo);
 
- /**
-  * This is called whenever the buffer has filled (free_in_buffer reaches
-  * zero).  In typical applications, it should write out the *entire* buffer
-  * (use the saved start address and buffer length; ignore the current state
-  * of next_output_byte and free_in_buffer).  Then reset the pointer & count
-  * to the start of the buffer, and return TRUE indicating that the buffer
-  * has been dumped.  free_in_buffer must be set to a positive value when
-  * TRUE is returned.  A FALSE return should only be used when I/O suspension
-  * is desired (this operating mode is discussed in the next section).
-  */
+  /**
+   * This is called whenever the buffer has filled (free_in_buffer reaches
+   * zero).  In typical applications, it should write out the *entire* buffer
+   * (use the saved start address and buffer length; ignore the current state
+   * of next_output_byte and free_in_buffer).  Then reset the pointer & count
+   * to the start of the buffer, and return TRUE indicating that the buffer
+   * has been dumped.  free_in_buffer must be set to a positive value when
+   * TRUE is returned.  A FALSE return should only be used when I/O suspension
+   * is desired (this operating mode is discussed in the next section).
+   */
   static boolean emptyOutputBuffer(jpeg_compress_struct* cinfo);
-
 
   /**
    * Terminate destination --- called by jpeg_finish_compress() after all data
@@ -390,7 +389,6 @@ void nsJPEGEncoder::ConvertRGBARow(const uint8_t* aSrc, uint8_t* aDest,
   }
 }
 
-
 void nsJPEGEncoder::NotifyListener() {
   // We might call this function on multiple threads (any threads that call
   // AsyncWait and any that do encoding) so we lock to avoid notifying the
@@ -420,9 +418,8 @@ void nsJPEGEncoder::NotifyListener() {
   }
 }
 
-
-/* static */ void
-nsJPEGEncoderInternal::initDestination(jpeg_compress_struct* cinfo) {
+/* static */ void nsJPEGEncoderInternal::initDestination(
+    jpeg_compress_struct* cinfo) {
   nsJPEGEncoder* that = static_cast<nsJPEGEncoder*>(cinfo->client_data);
   NS_ASSERTION(!that->mImageBuffer, "Image buffer already initialized");
 
@@ -434,8 +431,8 @@ nsJPEGEncoderInternal::initDestination(jpeg_compress_struct* cinfo) {
   cinfo->dest->free_in_buffer = that->mImageBufferSize;
 }
 
-/* static */ boolean
-nsJPEGEncoderInternal::emptyOutputBuffer(jpeg_compress_struct* cinfo) {
+/* static */ boolean nsJPEGEncoderInternal::emptyOutputBuffer(
+    jpeg_compress_struct* cinfo) {
   nsJPEGEncoder* that = static_cast<nsJPEGEncoder*>(cinfo->client_data);
   NS_ASSERTION(that->mImageBuffer, "No buffer to empty!");
 
@@ -470,8 +467,8 @@ nsJPEGEncoderInternal::emptyOutputBuffer(jpeg_compress_struct* cinfo) {
   return 1;
 }
 
-/* static */ void
-nsJPEGEncoderInternal::termDestination(jpeg_compress_struct* cinfo) {
+/* static */ void nsJPEGEncoderInternal::termDestination(
+    jpeg_compress_struct* cinfo) {
   nsJPEGEncoder* that = static_cast<nsJPEGEncoder*>(cinfo->client_data);
   if (!that->mImageBuffer) {
     return;
@@ -482,8 +479,7 @@ nsJPEGEncoderInternal::termDestination(jpeg_compress_struct* cinfo) {
   that->NotifyListener();
 }
 
-/* static */ void
-nsJPEGEncoderInternal::errorExit(jpeg_common_struct* cinfo) {
+/* static */ void nsJPEGEncoderInternal::errorExit(jpeg_common_struct* cinfo) {
   nsresult error_code;
   encoder_error_mgr* err = (encoder_error_mgr*)cinfo->err;
 
