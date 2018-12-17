@@ -56,6 +56,11 @@ class QueryContext {
       throw new Error(`Invalid providers list`);
     }
 
+    if (options.sources &&
+        (!Array.isArray(options.sources) || !options.sources.length)) {
+      throw new Error(`Invalid sources list`);
+    }
+
     this.autoFill = !!options.autoFill;
   }
 
