@@ -2896,9 +2896,6 @@ Toolbox.prototype = {
     // Destroying the walker and inspector fronts
     outstanding.push(this.destroyInspector());
 
-    // Destroy the profiler connection
-    outstanding.push(this.destroyPerformance());
-
     // Reset preferences set by the toolbox
     outstanding.push(this.resetPreference());
 
@@ -3054,22 +3051,6 @@ Toolbox.prototype = {
     this._performance.on("console-profile-start", this._onPerformanceFrontEvent);
 
     return this._performance;
-  },
-
-  /**
-   * Disconnects the underlying Performance actor. If the connection
-   * has not finished initializing, as opening a toolbox does not wait,
-   * the performance connection destroy method will wait for it on its own.
-   */
-  async destroyPerformance() {
-    if (!this.performance) {
-      return;
-    }
-    // If still connecting to performance actor, allow the
-    // actor to resolve its connection before attempting to destroy.
-    this.performance.off("console-profile-start", this._onPerformanceFrontEvent);
-    await this.performance.destroy();
-    this._performance = null;
   },
 
   /**
