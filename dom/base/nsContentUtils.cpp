@@ -40,6 +40,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Components.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
@@ -107,7 +108,6 @@
 #include "nsContentList.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentSecurityManager.h"
-#include "nsCPrefetchService.h"
 #include "nsCRT.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollector.h"
@@ -1788,7 +1788,7 @@ void nsContentUtils::GetOfflineAppManifest(Document* aDocument, nsIURI** aURI) {
 /* static */
 bool nsContentUtils::OfflineAppAllowed(nsIURI* aURI) {
   nsCOMPtr<nsIOfflineCacheUpdateService> updateService =
-      do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID);
+      components::OfflineCacheUpdate::Service();
   if (!updateService) {
     return false;
   }
@@ -1802,7 +1802,7 @@ bool nsContentUtils::OfflineAppAllowed(nsIURI* aURI) {
 /* static */
 bool nsContentUtils::OfflineAppAllowed(nsIPrincipal* aPrincipal) {
   nsCOMPtr<nsIOfflineCacheUpdateService> updateService =
-      do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID);
+      components::OfflineCacheUpdate::Service();
   if (!updateService) {
     return false;
   }
@@ -1826,7 +1826,7 @@ bool nsContentUtils::MaybeAllowOfflineAppByDefault(nsIPrincipal* aPrincipal) {
   if (!allowedByDefault) return false;
 
   nsCOMPtr<nsIOfflineCacheUpdateService> updateService =
-      do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID);
+      components::OfflineCacheUpdate::Service();
   if (!updateService) {
     return false;
   }

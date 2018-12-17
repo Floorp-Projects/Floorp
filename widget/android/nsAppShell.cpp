@@ -24,7 +24,6 @@
 #include "nsISpeculativeConnect.h"
 #include "nsIURIFixup.h"
 #include "nsCategoryManagerUtils.h"
-#include "nsCDefaultURIFixup.h"
 #include "nsGeoPosition.h"
 
 #include "mozilla/ArrayUtils.h"
@@ -740,7 +739,7 @@ already_AddRefed<nsIURI> nsAppShell::ResolveURI(const nsCString& aUriStr) {
     return uri.forget();
   }
 
-  nsCOMPtr<nsIURIFixup> fixup = do_GetService(NS_URIFIXUP_CONTRACTID);
+  nsCOMPtr<nsIURIFixup> fixup = components::URIFixup::Service();
   if (fixup && NS_SUCCEEDED(fixup->CreateFixupURI(aUriStr, 0, nullptr,
                                                   getter_AddRefs(uri)))) {
     return uri.forget();

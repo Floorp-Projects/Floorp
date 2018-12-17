@@ -38,15 +38,6 @@ class ChildProcessChannelListener final
   nsDataHashtable<nsUint64HashKey, nsCOMPtr<nsIChildChannel>> mChannels;
 };
 
-#define NS_CHILDPROCESSCHANNELLISTENER_CID           \
-  {                                                  \
-    0x397b43f3, 0x1470, 0x4542, {                    \
-      0x8a, 0x40, 0xc7, 0x18, 0xf7, 0x75, 0x35, 0x63 \
-    }                                                \
-  }
-#define NS_CHILDPROCESSCHANNELLISTENER_CONTRACTID \
-  "@mozilla.org/network/childProcessChannelListener;1"
-
 }  // namespace dom
 }  // namespace mozilla
 
