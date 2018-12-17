@@ -67,6 +67,12 @@ The `glean` value is reserved for testing.
 Once initialized, if collection is enabled, glean will automatically start collecting [baseline metrics](metrics.yaml)
 and sending its [pings](docs/pings.md).
 
+### Defining metrics
+
+The metrics that your application collects must be defined in a ``metrics.yaml``
+file. The format of that file is documented
+[here](https://mozilla.github.io/glean_parser/metrics-yaml.html).
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public
