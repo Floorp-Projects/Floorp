@@ -23,7 +23,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
   <binding id="urlbar" extends="chrome://global/content/bindings/textbox.xml#textbox">
     <content sizetopopup="pref">
-      <children includes="image|deck|stack|box"/>
+      <children includes="box"/>
       <xul:moz-input-box anonid="moz-input-box"
                          tooltip="aHTMLTooltip"
                          class="urlbar-input-box"
@@ -56,7 +56,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
   <binding id="legacy-urlbar" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
 
     <content sizetopopup="pref">
-      <children includes="image|deck|stack|box"/>
+      <children includes="box"/>
       <xul:moz-input-box anonid="moz-input-box"
                          tooltip="aHTMLTooltip"
                          class="urlbar-input-box"
