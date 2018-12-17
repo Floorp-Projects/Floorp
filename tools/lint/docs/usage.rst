@@ -52,7 +52,7 @@ either hg or git. To enable a pre-push hg hook, add the following to hgrc:
 .. parsed-literal::
 
     [hooks]
-    pre-push.lint = python:/path/to/gecko/tools/lint/hooks.py:hg
+    pre-push.lint = python:./tools/lint/hooks.py:hg
 
 
 To enable a pre-commit hg hook, add the following to hgrc:
@@ -60,7 +60,7 @@ To enable a pre-commit hg hook, add the following to hgrc:
 .. parsed-literal::
 
     [hooks]
-    pretxncommit.lint = python:/path/to/gecko/tools/lint/hooks.py:hg
+    pretxncommit.lint = python:./tools/lint/hooks.py:hg
 
 
 To enable a pre-push git hook, run the following command:
