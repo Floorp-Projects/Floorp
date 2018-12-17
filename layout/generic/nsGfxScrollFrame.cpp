@@ -443,14 +443,13 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
     doc->UpdateViewportOverflowType(scrolledWidth, scrollPortSize.width);
   } while (false);
 
-  nscoord vScrollbarActualWidth =
-      aState->mInsideBorderSize.width - scrollPortSize.width;
-
   aState->mShowHScrollbar = aAssumeHScroll;
   aState->mShowVScrollbar = aAssumeVScroll;
   nsPoint scrollPortOrigin(aState->mComputedBorder.left,
                            aState->mComputedBorder.top);
   if (!IsScrollbarOnRight()) {
+    nscoord vScrollbarActualWidth =
+        aState->mInsideBorderSize.width - scrollPortSize.width;
     scrollPortOrigin.x += vScrollbarActualWidth;
   }
   mHelper.mScrollPort = nsRect(scrollPortOrigin, scrollPortSize);
