@@ -273,7 +273,7 @@ impl<'a> DisplayListFlattener<'a> {
                 main_scroll_root = Some(scroll_root);
                 true
             }
-        }).unwrap_or(primitives.len());
+        });
 
         let main_scroll_root = match main_scroll_root {
             Some(main_scroll_root) => main_scroll_root,
@@ -286,20 +286,38 @@ impl<'a> DisplayListFlattener<'a> {
             Vec::new(),
         );
 
-        // Split off the preceding primtives.
-        let mut remaining_prims = old_prim_list.split_off(first_index);
+        // In the simple case, there are no preceding or trailing primitives,
+        // because everything is anchored to the root scroll node. Handle
+        // this case specially to avoid underflow error in the Some(..)
+        // path below.
 
-        // Find the first primitive in reverse order that is not the root scroll node.
-        let last_index = remaining_prims.iter().rposition(|instance| {
-            let scroll_root = self.find_scroll_root(
-                instance.spatial_node_index,
-            );
+        let preceding_prims;
+        let mut remaining_prims;
+        let trailing_prims;
 
-            scroll_root != ROOT_SPATIAL_NODE_INDEX
-        }).unwrap_or(remaining_prims.len() - 1);
+        match first_index {
+            Some(first_index) => {
+                // Split off the preceding primtives.
+                remaining_prims = old_prim_list.split_off(first_index);
 
-        let preceding_prims = old_prim_list;
-        let trailing_prims = remaining_prims.split_off(last_index + 1);
+                // Find the first primitive in reverse order that is not the root scroll node.
+                let last_index = remaining_prims.iter().rposition(|instance| {
+                    let scroll_root = self.find_scroll_root(
+                        instance.spatial_node_index,
+                    );
+
+                    scroll_root != ROOT_SPATIAL_NODE_INDEX
+                }).unwrap_or(remaining_prims.len() - 1);
+
+                preceding_prims = old_prim_list;
+                trailing_prims = remaining_prims.split_off(last_index + 1);
+            }
+            None => {
+                preceding_prims = Vec::new();
+                remaining_prims = old_prim_list;
+                trailing_prims = Vec::new();
+            }
+        }
 
         let prim_list = PrimitiveList::new(
             remaining_prims,
