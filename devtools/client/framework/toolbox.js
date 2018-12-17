@@ -3060,7 +3060,6 @@ Toolbox.prototype = {
     });
 
     this._performance = await this.target.getFront("performance");
-    await this.performance.connect();
 
     // Emit an event when connected, but don't wait on startup for this.
     this.emit("profiler-connected");
