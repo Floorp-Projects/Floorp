@@ -1676,26 +1676,62 @@ var Scalars = {
     let processesSelect = document.getElementById("processes");
     let selectedProcess = processesSelect.selectedOptions.item(0).getAttribute("value");
 
-    if (!aPayload.processes ||
-        !selectedProcess ||
-        !(selectedProcess in aPayload.processes)) {
+    if (!selectedProcess) {
       return;
     }
 
-    let scalars = aPayload.processes[selectedProcess].scalars || {};
-    let hasData = Array.from(processesSelect.options).some((option) => {
-      let value = option.getAttribute("value");
-      let sclrs = aPayload.processes[value].scalars;
-      return sclrs && Object.keys(sclrs).length > 0;
-    });
-    setHasData("scalars-section", hasData);
-    if (Object.keys(scalars).length > 0) {
-      const headings = [
-        "namesHeader",
-        "valuesHeader",
-      ].map(h => bundle.GetStringFromName(h));
-      const table = GenericTable.render(explodeObject(scalars), headings);
-      scalarsSection.appendChild(table);
+    let payload = aPayload.stores;
+    if (payload) { // Check for stores in the current ping data first
+      let hasData = false;
+      for (const store of Object.keys(payload)) {
+        if (!(selectedProcess in payload[store])) {
+          continue;
+        }
+
+        let scalars = payload[store][selectedProcess].scalars || {};
+        hasData = hasData || Array.from(processesSelect.options).some((option) => {
+          let value = option.getAttribute("value");
+          let sclrs = payload[store][value] && payload[store][value].scalars;
+          return sclrs && Object.keys(sclrs).length > 0;
+        });
+        if (Object.keys(scalars).length > 0) {
+          const headings = [
+            "namesHeader",
+            "valuesHeader",
+          ].map(h => bundle.GetStringFromName(h));
+
+          let s = GenericSubsection.renderSubsectionHeader(store, true, "scalars-section");
+          let table = GenericTable.render(explodeObject(scalars), headings);
+          let caption = document.createElement("caption");
+          caption.textContent = store;
+          table.appendChild(caption);
+          s.appendChild(table);
+          scalarsSection.appendChild(s);
+        }
+      }
+      setHasData("scalars-section", hasData);
+    } else { // Handle archived pings
+      if (!aPayload.processes ||
+        !(selectedProcess in aPayload.processes)) {
+        return;
+      }
+
+      let scalars = aPayload.processes[selectedProcess].scalars || {};
+      let hasData = Array.from(processesSelect.options).some((option) => {
+        let value = option.getAttribute("value");
+        let sclrs = aPayload.processes[value].scalars;
+        return sclrs && Object.keys(sclrs).length > 0;
+      });
+
+      setHasData("scalars-section", hasData);
+      if (Object.keys(scalars).length > 0) {
+        const headings = [
+          "namesHeader",
+          "valuesHeader",
+        ].map(h => bundle.GetStringFromName(h));
+        const table = GenericTable.render(explodeObject(scalars), headings);
+        scalarsSection.appendChild(table);
+      }
     }
   },
 };
