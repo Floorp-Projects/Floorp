@@ -167,7 +167,7 @@ public class GeckoSession implements Parcelable {
     // Special message sent from controller to query if the compositor controller is open.
     /* package */ final static int IS_COMPOSITOR_CONTROLLER_OPEN    = 21;
 
-    protected class Compositor extends JNIObject {
+    /* protected */ class Compositor extends JNIObject {
         public boolean isReady() {
             return GeckoSession.this.isCompositorReady();
         }
@@ -257,7 +257,7 @@ public class GeckoSession implements Parcelable {
         }
     }
 
-    protected final Compositor mCompositor = new Compositor();
+    /* package */ final Compositor mCompositor = new Compositor();
 
     @WrapForJNI(stubName = "GetCompositor", calledFrom = "ui")
     private Object getCompositorFromNative() {
@@ -879,6 +879,7 @@ public class GeckoSession implements Parcelable {
      *
      * @return a {@link GeckoResult} containing the UserAgent string
      */
+    @AnyThread
     public @NonNull GeckoResult<String> getUserAgent() {
         final CallbackResult<String> result = new CallbackResult<String>() {
             @Override
@@ -894,7 +895,9 @@ public class GeckoSession implements Parcelable {
      * Get the current prompt delegate for this GeckoSession.
      * @return PromptDelegate instance or null if using default delegate.
      */
+    @UiThread
     public PermissionDelegate getPermissionDelegate() {
+        ThreadUtils.assertOnUiThread();
         return mPermissionHandler.getDelegate();
     }
 
@@ -902,7 +905,9 @@ public class GeckoSession implements Parcelable {
      * Set the current permission delegate for this GeckoSession.
      * @param delegate PermissionDelegate instance or null to use the default delegate.
      */
+    @UiThread
     public void setPermissionDelegate(final PermissionDelegate delegate) {
+        ThreadUtils.assertOnUiThread();
         mPermissionHandler.setDelegate(delegate, this);
     }
 
@@ -1149,11 +1154,13 @@ public class GeckoSession implements Parcelable {
     }
 
     @Override // Parcelable
+    @AnyThread
     public int describeContents() {
         return 0;
     }
 
     @Override // Parcelable
+    @AnyThread
     public void writeToParcel(Parcel out, int flags) {
         out.writeStrongInterface(mWindow);
         out.writeParcelable(mSettings, flags);
@@ -1161,6 +1168,7 @@ public class GeckoSession implements Parcelable {
     }
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
+    @AnyThread
     public void readFromParcel(final Parcel source) {
         final IBinder binder = source.readStrongBinder();
         final IInterface ifce = (binder != null) ?
@@ -1174,6 +1182,7 @@ public class GeckoSession implements Parcelable {
 
     public static final Creator<GeckoSession> CREATOR = new Creator<GeckoSession>() {
         @Override
+        @AnyThread
         public GeckoSession createFromParcel(final Parcel in) {
             final GeckoSession session = new GeckoSession();
             session.readFromParcel(in);
@@ -1181,17 +1190,20 @@ public class GeckoSession implements Parcelable {
         }
 
         @Override
+        @AnyThread
         public GeckoSession[] newArray(final int size) {
             return new GeckoSession[size];
         }
     };
 
     @Override
+    @AnyThread
     public int hashCode() {
         return mId.hashCode();
     }
 
     @Override
+    @AnyThread
     public boolean equals(Object obj) {
         return obj instanceof GeckoSession && mId.equals(((GeckoSession) obj).mId);
     }
@@ -1203,6 +1215,7 @@ public class GeckoSession implements Parcelable {
      * @see #open
      * @see #close
      */
+    @AnyThread
     public boolean isOpen() {
         return mWindow != null;
     }
@@ -1394,6 +1407,7 @@ public class GeckoSession implements Parcelable {
      * Load the given URI.
      * @param uri The URI of the resource to load.
      */
+    @AnyThread
     public void loadUri(@NonNull String uri) {
         loadUri(uri, null, LOAD_FLAGS_NONE);
     }
@@ -1404,6 +1418,7 @@ public class GeckoSession implements Parcelable {
      * @param uri the URI to load
      * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
      */
+    @AnyThread
     public void loadUri(@NonNull String uri, @LoadFlags int flags) {
         loadUri(uri, null, flags);
     }
@@ -1415,6 +1430,7 @@ public class GeckoSession implements Parcelable {
      * @param referrer the referrer, may be null
      * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
      */
+    @AnyThread
     public void loadUri(@NonNull String uri, @Nullable String referrer,
                         @LoadFlags int flags) {
         final GeckoBundle msg = new GeckoBundle();
@@ -1431,6 +1447,7 @@ public class GeckoSession implements Parcelable {
      * Load the given URI.
      * @param uri The URI of the resource to load.
      */
+    @AnyThread
     public void loadUri(@NonNull Uri uri) {
         loadUri(uri, null, LOAD_FLAGS_NONE);
     }
@@ -1440,6 +1457,7 @@ public class GeckoSession implements Parcelable {
      * @param uri the URI to load
      * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
      */
+    @AnyThread
     public void loadUri(@NonNull Uri uri, @LoadFlags int flags) {
         loadUri(uri.toString(), null, flags);
     }
@@ -1450,6 +1468,7 @@ public class GeckoSession implements Parcelable {
      * @param referrer the Uri to use as the referrer
      * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
      */
+    @AnyThread
     public void loadUri(@NonNull Uri uri, @Nullable Uri referrer,
                         @LoadFlags int flags) {
         loadUri(uri.toString(), referrer != null ? referrer.toString() : null, flags);
@@ -1463,6 +1482,7 @@ public class GeckoSession implements Parcelable {
      *                 which case the type is guessed.
      *
      */
+    @AnyThread
     public void loadString(@NonNull final String data, @Nullable final String mimeType) {
         if (data == null) {
             throw new IllegalArgumentException("data cannot be null");
@@ -1478,6 +1498,7 @@ public class GeckoSession implements Parcelable {
      * @param mimeType the mime type of the data, e.g. video/mp4. May be null, in which
      *                 case the type is guessed.
      */
+    @AnyThread
     public void loadData(@NonNull final byte[] bytes, @Nullable final String mimeType) {
         if (bytes == null) {
             throw new IllegalArgumentException("data cannot be null");
@@ -1492,6 +1513,7 @@ public class GeckoSession implements Parcelable {
      * @param mimeType optional mime type, e.g. text/plain
      * @return a URI String
      */
+    @AnyThread
     public static String createDataUri(@NonNull final byte[] bytes, @Nullable final String mimeType) {
         return String.format("data:%s;base64,%s", mimeType != null ? mimeType : "",
                              Base64.encodeToString(bytes, Base64.NO_WRAP));
@@ -1503,6 +1525,7 @@ public class GeckoSession implements Parcelable {
      * @param mimeType optional mime type, e.g. text/plain
      * @return a URI String
      */
+    @AnyThread
     public static String createDataUri(@NonNull final String data, @Nullable final String mimeType) {
         return String.format("data:%s,%s", mimeType != null ? mimeType : "", data);
     }
@@ -1510,6 +1533,7 @@ public class GeckoSession implements Parcelable {
     /**
     * Reload the current URI.
     */
+    @AnyThread
     public void reload() {
         mEventDispatcher.dispatch("GeckoView:Reload", null);
     }
@@ -1517,6 +1541,7 @@ public class GeckoSession implements Parcelable {
     /**
     * Stop loading.
     */
+    @AnyThread
     public void stop() {
         mEventDispatcher.dispatch("GeckoView:Stop", null);
     }
@@ -1524,6 +1549,7 @@ public class GeckoSession implements Parcelable {
     /**
     * Go back in history.
     */
+    @AnyThread
     public void goBack() {
         mEventDispatcher.dispatch("GeckoView:GoBack", null);
     }
@@ -1531,6 +1557,7 @@ public class GeckoSession implements Parcelable {
     /**
     * Go forward in history.
     */
+    @AnyThread
     public void goForward() {
         mEventDispatcher.dispatch("GeckoView:GoForward", null);
     }
@@ -1566,6 +1593,7 @@ public class GeckoSession implements Parcelable {
     /**
      * Represent the result of a find-in-page operation.
      */
+    @AnyThread
     public static final class FinderResult {
         /** Whether a match was found. */
         public final boolean found;
@@ -1625,6 +1653,7 @@ public class GeckoSession implements Parcelable {
      *
      * @return SessionFinder instance.
      */
+    @AnyThread
     public SessionFinder getFinder() {
         if (mFinder == null) {
             mFinder = new SessionFinder(getEventDispatcher());
@@ -1642,6 +1671,7 @@ public class GeckoSession implements Parcelable {
      *
      * @see #setFocused
      */
+    @AnyThread
     public void setActive(boolean active) {
         final GeckoBundle msg = new GeckoBundle(1);
         msg.putBoolean("active", active);
@@ -1657,6 +1687,7 @@ public class GeckoSession implements Parcelable {
      *
      * @see #setActive
      */
+    @AnyThread
     public void setFocused(boolean focused) {
         final GeckoBundle msg = new GeckoBundle(1);
         msg.putBoolean("focused", focused);
@@ -1666,6 +1697,7 @@ public class GeckoSession implements Parcelable {
     /**
      * Class representing a saved session state.
      */
+    @AnyThread
     public static class SessionState implements Parcelable {
         private String mState;
 
@@ -1721,6 +1753,7 @@ public class GeckoSession implements Parcelable {
      *
      * @return A {@link GeckoResult} containing the {@link SessionState}
      */
+    @AnyThread
     public @NonNull GeckoResult<SessionState> saveState() {
         CallbackResult<SessionState> result = new CallbackResult<SessionState>() {
             @Override
@@ -1739,6 +1772,7 @@ public class GeckoSession implements Parcelable {
      *
      * @param state A saved session state; this should originate from GeckoSession.saveState().
      */
+    @AnyThread
     public void restoreState(final SessionState state) {
         final GeckoBundle msg = new GeckoBundle(1);
         msg.putString("state", state.toString());
@@ -1790,6 +1824,7 @@ public class GeckoSession implements Parcelable {
         mDisplay = null;
     }
 
+    @AnyThread
     public GeckoSessionSettings getSettings() {
         return mSettings;
     }
@@ -1797,6 +1832,7 @@ public class GeckoSession implements Parcelable {
     /**
     * Exits fullscreen mode
     */
+    @AnyThread
     public void exitFullScreen() {
         mEventDispatcher.dispatch("GeckoViewContent:ExitFullScreen", null);
     }
@@ -1806,7 +1842,9 @@ public class GeckoSession implements Parcelable {
     * This will replace the current handler.
     * @param delegate An implementation of ContentDelegate.
     */
+    @UiThread
     public void setContentDelegate(ContentDelegate delegate) {
+        ThreadUtils.assertOnUiThread();
         mContentHandler.setDelegate(delegate, this);
     }
 
@@ -1814,7 +1852,9 @@ public class GeckoSession implements Parcelable {
     * Get the content callback handler.
     * @return The current content callback handler.
     */
+    @UiThread
     public ContentDelegate getContentDelegate() {
+        ThreadUtils.assertOnUiThread();
         return mContentHandler.getDelegate();
     }
 
@@ -1823,7 +1863,9 @@ public class GeckoSession implements Parcelable {
     * This will replace the current handler.
     * @param delegate An implementation of ProgressDelegate.
     */
+    @UiThread
     public void setProgressDelegate(ProgressDelegate delegate) {
+        ThreadUtils.assertOnUiThread();
         mProgressHandler.setDelegate(delegate, this);
     }
 
@@ -1831,7 +1873,9 @@ public class GeckoSession implements Parcelable {
     * Get the progress callback handler.
     * @return The current progress callback handler.
     */
+    @UiThread
     public ProgressDelegate getProgressDelegate() {
+        ThreadUtils.assertOnUiThread();
         return mProgressHandler.getDelegate();
     }
 
@@ -1840,7 +1884,9 @@ public class GeckoSession implements Parcelable {
     * This will replace the current handler.
     * @param delegate An implementation of NavigationDelegate.
     */
+    @UiThread
     public void setNavigationDelegate(NavigationDelegate delegate) {
+        ThreadUtils.assertOnUiThread();
         mNavigationHandler.setDelegate(delegate, this);
     }
 
@@ -1848,7 +1894,9 @@ public class GeckoSession implements Parcelable {
     * Get the navigation callback handler.
     * @return The current navigation callback handler.
     */
+    @UiThread
     public NavigationDelegate getNavigationDelegate() {
+        ThreadUtils.assertOnUiThread();
         return mNavigationHandler.getDelegate();
     }
 
@@ -1857,11 +1905,15 @@ public class GeckoSession implements Parcelable {
     * This will replace the current handler.
     * @param delegate An implementation of ScrollDelegate.
     */
+    @UiThread
     public void setScrollDelegate(ScrollDelegate delegate) {
+        ThreadUtils.assertOnUiThread();
         mScrollHandler.setDelegate(delegate, this);
     }
 
+    @UiThread
     public ScrollDelegate getScrollDelegate() {
+        ThreadUtils.assertOnUiThread();
         return mScrollHandler.getDelegate();
     }
 
@@ -1871,11 +1923,13 @@ public class GeckoSession implements Parcelable {
      *
      * @param delegate The history tracking delegate, or {@code null} to unset.
      */
+    @AnyThread
     public void setHistoryDelegate(@Nullable HistoryDelegate delegate) {
         mHistoryHandler.setDelegate(delegate, this);
     }
 
     /** @return The history tracking delegate for this session. */
+    @AnyThread
     public @Nullable HistoryDelegate getHistoryDelegate() {
         return mHistoryHandler.getDelegate();
     }
@@ -1885,6 +1939,7 @@ public class GeckoSession implements Parcelable {
     * This will replace the current handler.
     * @param delegate An implementation of TrackingProtectionDelegate.
     */
+    @AnyThread
     public void setTrackingProtectionDelegate(TrackingProtectionDelegate delegate) {
         mTrackingProtectionHandler.setDelegate(delegate, this);
     }
@@ -1893,6 +1948,7 @@ public class GeckoSession implements Parcelable {
     * Get the tracking protection callback handler.
     * @return The current tracking protection callback handler.
     */
+    @AnyThread
     public TrackingProtectionDelegate getTrackingProtectionDelegate() {
         return mTrackingProtectionHandler.getDelegate();
     }
@@ -1901,6 +1957,7 @@ public class GeckoSession implements Parcelable {
      * Set the current prompt delegate for this GeckoSession.
      * @param delegate PromptDelegate instance or null to use the built-in delegate.
      */
+    @AnyThread
     public void setPromptDelegate(PromptDelegate delegate) {
         mPromptDelegate = delegate;
     }
@@ -1909,6 +1966,7 @@ public class GeckoSession implements Parcelable {
      * Get the current prompt delegate for this GeckoSession.
      * @return PromptDelegate instance or null if using built-in delegate.
      */
+    @AnyThread
     public PromptDelegate getPromptDelegate() {
         return mPromptDelegate;
     }
@@ -1918,7 +1976,10 @@ public class GeckoSession implements Parcelable {
      *
      * @param delegate SelectionActionDelegate instance or null to unset.
      */
+    @UiThread
     public void setSelectionActionDelegate(@Nullable SelectionActionDelegate delegate) {
+        ThreadUtils.assertOnUiThread();
+
         if (getSelectionActionDelegate() != null) {
             // When the delegate is changed or cleared, make sure onHideAction is called
             // one last time to hide any existing selection action UI. Gecko doesn't keep
@@ -1934,6 +1995,7 @@ public class GeckoSession implements Parcelable {
      * This will replace the current handler.
      * @param delegate An implementation of MediaDelegate.
      */
+    @AnyThread
     public void setMediaDelegate(final @Nullable MediaDelegate delegate) {
         mMediaHandler.setDelegate(delegate, this);
     }
@@ -1942,6 +2004,7 @@ public class GeckoSession implements Parcelable {
      * Get the Media callback handler.
      * @return The current Media callback handler.
      */
+    @AnyThread
     public @Nullable MediaDelegate getMediaDelegate() {
         return mMediaHandler.getDelegate();
     }
@@ -1952,6 +2015,7 @@ public class GeckoSession implements Parcelable {
      *
      * @return SelectionActionDelegate instance or null if not set.
      */
+    @AnyThread
     public @Nullable SelectionActionDelegate getSelectionActionDelegate() {
         return mSelectionActionDelegate.getDelegate();
     }
@@ -2344,6 +2408,7 @@ public class GeckoSession implements Parcelable {
         }
     }
 
+    @UiThread
     protected void setShouldPinOnScreen(final boolean pinned) {
         if (DEBUG) {
             ThreadUtils.assertOnUiThread();
@@ -2361,6 +2426,7 @@ public class GeckoSession implements Parcelable {
         return mShouldPinOnScreen;
     }
 
+    @AnyThread
     public EventDispatcher getEventDispatcher() {
         return mEventDispatcher;
     }
@@ -2512,6 +2578,7 @@ public class GeckoSession implements Parcelable {
     /**
      * WebResponseInfo contains information about a single web response.
      */
+    @AnyThread
     static public class WebResponseInfo {
         /**
          * The URI of the response. Cannot be null.

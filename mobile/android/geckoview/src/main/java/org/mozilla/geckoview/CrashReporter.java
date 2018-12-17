@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.AnyThread;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -69,6 +70,7 @@ public class CrashReporter {
      * @see GeckoRuntimeSettings.Builder#crashHandler(Class)
      * @see GeckoRuntime#ACTION_CRASHED
      */
+    @AnyThread
     public static GeckoResult<String> sendCrashReport(Context context, Intent intent, String appName)
             throws IOException, URISyntaxException {
         return sendCrashReport(context, intent.getExtras(), appName);
@@ -91,6 +93,7 @@ public class CrashReporter {
      * @see GeckoRuntimeSettings.Builder#crashHandler(Class)
      * @see GeckoRuntime#ACTION_CRASHED
      */
+    @AnyThread
     public static GeckoResult<String> sendCrashReport(Context context, Bundle intentExtras, String appName)
             throws IOException, URISyntaxException {
         final File dumpFile = new File(intentExtras.getString(GeckoRuntime.EXTRA_MINIDUMP_PATH));
@@ -119,6 +122,7 @@ public class CrashReporter {
      * @see GeckoRuntimeSettings.Builder#crashHandler(Class)
      * @see GeckoRuntime#ACTION_CRASHED
      */
+    @AnyThread
     public static GeckoResult<String> sendCrashReport(Context context, File minidumpFile, File extrasFile,
                                        boolean success, String appName) throws IOException, URISyntaxException {
         // Compute the minidump hash and generate the stack traces
@@ -145,6 +149,7 @@ public class CrashReporter {
      * @see GeckoRuntimeSettings.Builder#crashHandler(Class)
      * @see GeckoRuntime#ACTION_CRASHED
      */
+    @AnyThread
     public static GeckoResult<String> sendCrashReport(Context context, File minidumpFile,
                                        Map<String, String> extras, boolean success,
                                        String appName) throws IOException, URISyntaxException {

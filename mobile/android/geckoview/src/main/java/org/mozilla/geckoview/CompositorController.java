@@ -10,15 +10,18 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.graphics.Color;
 import android.support.annotation.NonNull;
+import android.support.annotation.UiThread;
 
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+@UiThread
 public final class CompositorController {
     private final GeckoSession.Compositor mCompositor;
 
     public interface GetPixelsCallback {
+        @UiThread
         void onPixelsResult(int width, int height, IntBuffer pixels);
     }
 

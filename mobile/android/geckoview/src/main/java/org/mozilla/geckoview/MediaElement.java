@@ -6,6 +6,7 @@
 
 package org.mozilla.geckoview;
 
+import android.support.annotation.AnyThread;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
@@ -20,6 +21,7 @@ import java.lang.annotation.RetentionPolicy;
  * GeckoSession applications can use this class to handle media events
  * and control the HTMLMediaElement externally.
  **/
+@AnyThread
 public class MediaElement {
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({MEDIA_STATE_PLAY, MEDIA_STATE_PLAYING, MEDIA_STATE_PAUSE,
