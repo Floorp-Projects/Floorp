@@ -82,6 +82,9 @@ pub type TileRect = TypedRect<i32, TileCoordinate>;
 pub const TILE_SIZE_WIDTH: i32 = 1024;
 pub const TILE_SIZE_HEIGHT: i32 = 256;
 
+/// The maximum size of a picture before we disable tile caching.
+const MAX_PICTURE_SIZE: f32 = 65536.0;
+
 /// Information about the state of a transform dependency.
 #[derive(Debug)]
 pub struct TileTransformInfo {
@@ -408,6 +411,13 @@ impl TileCache {
         frame_context: &FrameBuildingContext,
         pic_rect: LayoutRect,
     ) {
+        // If we previously disabled the tile cache due to an invalid
+        // picture rect, and then we re-enable it, force an update
+        // of all primitive dependencies.
+        if self.tile_rect.size.is_empty_or_negative() {
+            self.needs_update = true;
+        }
+
         // Initialize the space mapper with current bounds,
         // which is used during primitive dependency updates.
         let world_mapper = SpaceMapper::new_with_target(
@@ -675,6 +685,7 @@ impl TileCache {
     pub fn update_prim_dependencies(
         &mut self,
         prim_instance: &PrimitiveInstance,
+        prim_list: &PrimitiveList,
         surface_spatial_node_index: SpatialNodeIndex,
         clip_scroll_tree: &ClipScrollTree,
         resources: &FrameResources,
@@ -685,6 +696,32 @@ impl TileCache {
         image_instances: &ImageInstanceStorage,
     ) {
         if !self.needs_update {
+            return;
+        }
+
+        // We need to ensure that if a primitive belongs to a cluster that has
+        // been marked invisible, we exclude it here. Otherwise, we may end up
+        // with a primitive that is outside the bounding rect of the calculated
+        // picture rect (which takes the cluster visibility into account).
+        // TODO(gw): It turns out that we have ended up having only a single
+        //           cluster per primitive rather than a range. In future,
+        //           we should tidy this up to take advantage of this!
+        let mut in_visible_cluster = false;
+        for ci in prim_instance.cluster_range.start .. prim_instance.cluster_range.end {
+            // Map from the cluster range index to a cluster index
+            let cluster_index = prim_list.prim_cluster_map[ci as usize];
+
+            // Get the cluster and see if is visible
+            let cluster = &prim_list.clusters[cluster_index.0 as usize];
+            in_visible_cluster |= cluster.is_visible;
+
+            // As soon as a primitive is in a visible cluster, it's considered
+            // visible and we don't need to consult other clusters.
+            if cluster.is_visible {
+                break;
+            }
+        }
+        if !in_visible_cluster {
             return;
         }
 
@@ -2017,6 +2054,7 @@ impl PicturePrimitive {
         for prim_instance in &self.prim_list.prim_instances {
             tile_cache.update_prim_dependencies(
                 prim_instance,
+                &self.prim_list,
                 surface_spatial_node_index,
                 &frame_context.clip_scroll_tree,
                 resources,
@@ -2118,8 +2156,27 @@ impl PicturePrimitive {
         // If this picture establishes a surface, then map the surface bounding
         // rect into the parent surface coordinate space, and propagate that up
         // to the parent.
-        if let Some(ref raster_config) = self.raster_config {
+        if let Some(ref mut raster_config) = self.raster_config {
             let surface_rect = state.current_surface().rect;
+
+            // Sometimes, Gecko supplies a huge picture rect. This is typically
+            // due to some weird startup condition, or a reftest that has an
+            // extreme scale in it. In these cases, disable the tile cache and
+            // just use the normal Blit composite mode for this picture. This
+            // is not ideal (we could skip the surface altogether in the future)
+            // but it's simple and works around this edge case for now.
+            if let Some(ref mut tile_cache) = self.tile_cache {
+                if surface_rect.size.width > MAX_PICTURE_SIZE ||
+                   surface_rect.size.height > MAX_PICTURE_SIZE ||
+                   surface_rect.size.width <= 0.0 ||
+                   surface_rect.size.height <= 0.0
+                {
+                    tile_cache.needs_update = false;
+                    tile_cache.tiles.clear();
+                    tile_cache.tile_rect = TileRect::zero();
+                    raster_config.composite_mode = PictureCompositeMode::Blit;
+                }
+            }
 
             let mut surface_rect = TypedRect::from_untyped(&surface_rect.to_untyped());
 
