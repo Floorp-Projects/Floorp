@@ -39,7 +39,7 @@
 #include "nsError.h"
 
 #include "nsICategoryManager.h"
-#include "nsCExternalHandlerService.h"  // contains contractids for the helper app service
+#include "nsCExternalHandlerService.h"
 
 #include "nsIMIMEHeaderParam.h"
 #include "nsNetCID.h"

@@ -5,10 +5,10 @@
 #ifndef nsPrefetchService_h__
 #define nsPrefetchService_h__
 
-#include "nsCPrefetchService.h"
 #include "nsIObserver.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIChannelEventSink.h"
+#include "nsIPrefetchService.h"
 #include "nsIRedirectResultListener.h"
 #include "nsIWebProgressListener.h"
 #include "nsIStreamListener.h"

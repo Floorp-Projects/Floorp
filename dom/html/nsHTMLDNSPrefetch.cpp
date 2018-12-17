@@ -20,7 +20,6 @@
 #include "nsIDNSListener.h"
 #include "nsIWebProgressListener.h"
 #include "nsIWebProgress.h"
-#include "nsCURILoader.h"
 #include "nsIDNSRecord.h"
 #include "nsIDNSService.h"
 #include "nsICancelable.h"
@@ -31,6 +30,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/dom/Link.h"
 
+#include "mozilla/Components.h"
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
@@ -410,8 +410,7 @@ void nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue() {
 
 void nsHTMLDNSPrefetch::nsDeferrals::Activate() {
   // Register as an observer for the document loader
-  nsCOMPtr<nsIWebProgress> progress =
-      do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
+  nsCOMPtr<nsIWebProgress> progress = components::DocLoader::Service();
   if (progress)
     progress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_DOCUMENT);
 
