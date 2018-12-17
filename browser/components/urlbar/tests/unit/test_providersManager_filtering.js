@@ -99,3 +99,70 @@ add_task(async function test_filter_javascript() {
   Assert.deepEqual(context.results, [match, jsMatch]);
   Services.prefs.clearUserPref("browser.urlbar.filter.javascript");
 });
+
+add_task(async function test_filter_sources() {
+  let controller = new UrlbarController({
+    browserWindow: {
+      location: {
+        href: AppConstants.BROWSER_CHROME_URL,
+      },
+    },
+  });
+
+  let goodMatches = [
+    new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
+                    UrlbarUtils.MATCH_SOURCE.TABS,
+                    { url: "http://mozilla.org/foo/" }),
+    new UrlbarMatch(UrlbarUtils.MATCH_TYPE.URL,
+                    UrlbarUtils.MATCH_SOURCE.HISTORY,
+                    { url: "http://mozilla.org/foo/" }),
+  ];
+  UrlbarProvidersManager.registerProvider({
+    name: "GoodProvider",
+    type: UrlbarUtils.PROVIDER_TYPE.PROFILE,
+    sources: [
+      UrlbarUtils.MATCH_SOURCE.TABS,
+      UrlbarUtils.MATCH_SOURCE.HISTORY,
+    ],
+    async startQuery(context, add) {
+      Assert.ok(true, "expected provider was invoked");
+      for (const match of goodMatches) {
+        add(this, match);
+      }
+    },
+    cancelQuery(context) {},
+  });
+
+  let badMatches = [
+    new UrlbarMatch(UrlbarUtils.MATCH_TYPE.URL,
+                    UrlbarUtils.MATCH_SOURCE.BOOKMARKS,
+                    { url: "http://mozilla.org/foo/" }),
+  ];
+  UrlbarProvidersManager.registerProvider({
+    name: "BadProvider",
+    type: UrlbarUtils.PROVIDER_TYPE.PROFILE,
+    sources: [
+      UrlbarUtils.MATCH_SOURCE.BOOKMARKS,
+    ],
+    async startQuery(context, add) {
+      Assert.ok(false, "Provider should no be invoked");
+      for (const match of badMatches) {
+        add(this, match);
+      }
+    },
+    cancelQuery(context) {},
+  });
+
+  let context = createContext(undefined, {
+    sources: [UrlbarUtils.MATCH_SOURCE.TABS],
+    providers: ["GoodProvider", "BadProvider"],
+  });
+
+  info("Only tabs should be returned");
+  let promise = promiseControllerNotification(controller, "onQueryResults");
+  await controller.startQuery(context, controller);
+  await promise;
+  Assert.deepEqual(context.results.length, 1, "Should find only one match");
+  Assert.deepEqual(context.results[0].source, UrlbarUtils.MATCH_SOURCE.TABS,
+                   "Should find only a tab match");
+});
