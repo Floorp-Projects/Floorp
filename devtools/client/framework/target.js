@@ -394,7 +394,7 @@ Target.prototype = {
   getFront(typeName) {
     let front = this.fronts.get(typeName);
     // the front might have been destroyed and no longer have an actor ID
-    if (front && front.actorID) {
+    if (front && front.actorID || front && typeof front.then === "function") {
       return front;
     }
     front = getFront(this.client, typeName, this.form);

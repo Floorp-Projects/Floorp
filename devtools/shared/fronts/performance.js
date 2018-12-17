@@ -23,6 +23,10 @@ class PerformanceFront extends FrontClassWithSpec(performanceSpec) {
     this.before("timeline-data", this._onTimelineEvent.bind(this));
   }
 
+  async initialize() {
+    await this.connect();
+  }
+
   destroy() {
     super.destroy();
   }
