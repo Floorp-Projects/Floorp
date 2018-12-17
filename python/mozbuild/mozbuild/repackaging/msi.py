@@ -11,6 +11,11 @@ import subprocess
 from xml.dom import minidom
 from mozbuild.util import ensureParentDir
 
+_MSI_ARCH = {
+    'x86': 'x86',
+    'x86_64': 'x64',
+}
+
 def update_wsx(wfile, pvalues):
 
     parsed = minidom.parse(wfile)
@@ -41,8 +46,8 @@ def repackage_msi(topsrcdir, wsx, version, locale, arch, setupexe, candle, light
         raise Exception("version name must be provided.")
     if locale is None:
         raise Exception("locale name must be provided.")
-    if arch is None or arch not in ['x86','x64']:
-        raise Exception("arch name must be provided and either x86 or x64.")
+    if arch is None or arch not in _MSI_ARCH.keys():
+        raise Exception("arch name must be provided and one of {}.".format(_MSI_ARCH.keys()))
     if not os.path.isfile(setupexe):
         raise Exception("%s does not exist." % setupexe)
     if candle is not None and not os.path.isfile(candle):
@@ -67,7 +72,7 @@ def repackage_msi(topsrcdir, wsx, version, locale, arch, setupexe, candle, light
                           'BrandFullName': 'Mozilla Firefox',
                           'Version': version,
                           'AB_CD':  locale,
-                          'Architecture': arch,
+                          'Architecture': _MSI_ARCH[arch],
                           'ExeSourcePath': setupexe}
             # update wsx file with inputs from
             newfile = update_wsx(temp_wsx_file, pre_values)
