@@ -9,7 +9,7 @@
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_dom.html";
 
 add_task(async function() {
-  const {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URL);
+  const {toolbox, testActor} = await openInspectorForURL(TEST_URL);
 
   await startPicker(toolbox);
 
@@ -49,7 +49,7 @@ add_task(async function() {
   function doKeyHover(args) {
     info("Key pressed. Waiting for element to be highlighted/hovered");
     testActor.synthesizeKey(args);
-    return inspector.toolbox.once("picker-node-hovered");
+    return toolbox.inspector.nodePicker.once("picker-node-hovered");
   }
 
   function moveMouseOver(selector) {
@@ -59,6 +59,6 @@ add_task(async function() {
       center: true,
       selector: selector,
     });
-    return inspector.toolbox.once("picker-node-hovered");
+    return toolbox.inspector.nodePicker.once("picker-node-hovered");
   }
 });
