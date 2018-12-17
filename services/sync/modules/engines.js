@@ -1680,7 +1680,7 @@ SyncEngine.prototype = {
       let failed = [];
       let successful = [];
       let lastSync = await this.getLastSync();
-      let handleResponse = async (resp, batchOngoing = false) => {
+      let handleResponse = async (postQueue, resp, batchOngoing) => {
         // Note: We don't want to update this.lastSync, or this._modified until
         // the batch is complete, however we want to remember success/failure
         // indicators for when that happens.
@@ -1698,7 +1698,6 @@ SyncEngine.prototype = {
           // Nothing to do yet
           return;
         }
-        let serverModifiedTime = parseFloat(resp.headers["x-weave-timestamp"]);
 
         if (failed.length && this._log.level <= Log.Level.Debug) {
           this._log.debug("Records that will be uploaded again because "
@@ -1712,11 +1711,11 @@ SyncEngine.prototype = {
           this._modified.delete(id);
         }
 
-        await this._onRecordsWritten(successful, failed, serverModifiedTime);
+        await this._onRecordsWritten(successful, failed, postQueue.lastModified);
 
         // Advance lastSync since we've finished the batch.
-        if (serverModifiedTime > lastSync) {
-          lastSync = serverModifiedTime;
+        if (postQueue.lastModified > lastSync) {
+          lastSync = postQueue.lastModified;
           await this.setLastSync(lastSync);
         }
 
