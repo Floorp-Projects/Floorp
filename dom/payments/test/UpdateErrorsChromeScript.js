@@ -8,10 +8,10 @@ const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm
 const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"].getService(Ci.nsIPaymentRequestService);
 
 function emitTestFail(message) {
-  sendAsyncMessage("test-fail", `${DummyUIService.testName}: ${message}`);
+  sendAsyncMessage("test-fail", message);
 }
 function emitTestPass(message) {
-  sendAsyncMessage("test-pass", `${DummyUIService.testName}: ${message}`);
+  sendAsyncMessage("test-pass", message);
 }
 
 const shippingAddress = Cc["@mozilla.org/dom/payments/payment-address;1"].
@@ -32,6 +32,22 @@ shippingAddress.init("USA",              // country
                      "Bill A. Pacheco",  // recipient
                      "+1-434-441-3879"); // phone
 
+function acceptShow(requestId) {
+  const responseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
+                          createInstance(Ci.nsIGeneralResponseData);
+  responseData.initData({ paymentToken: "6880281f-0df3-4b8e-916f-66575e2457c1",});
+  let showResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"].
+                        createInstance(Ci.nsIPaymentShowActionResponse);
+  showResponse.init(requestId,
+                    Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
+                    "testing-payment-method",   // payment method
+                    responseData,               // payment method data
+                    "Bill A. Pacheco",          // payer name
+                    "",                         // payer email
+                    "");                        // payer phone
+  paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+}
+
 function rejectShow(requestId) {
   const responseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
                           createInstance(Ci.nsIGeneralResponseData);
@@ -48,19 +64,12 @@ function rejectShow(requestId) {
   paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
 }
 
+function updateShow(requestId) {
+  paymentSrv.changeShippingAddress(requestId, shippingAddress);
+}
+
 function showRequest(requestId) {
-  if (DummyUIService.showAction === "update-shipping-address") {
-    paymentSrv.changeShippingAddress(requestId, shippingAddress);
-    return;
-  }
-  if (DummyUIService.showAction === "update-shipping-option") {
-    paymentSrv.changeShippingOption(requestId, "FastShipping");
-    return;
-  }
-  if (DummyUIService.showAction === "") {
-    return;
-  }
-  emitTestFail(`Unknown showAction(${DummyUIService.showAction}) for UI service.`);
+  updateShow(requestId);
 }
 
 function abortRequest(requestId) {
@@ -83,65 +92,56 @@ function checkAddressErrors(errors) {
     emitTestFail("Expect non-null shippingAddressErrors, but got null.");
   }
   if (errors.addressLine != "addressLine error") {
-    emitTestFail("Expect shippingAddressErrors.addressLine as 'addressLine error', but got " +
+    emitTestFail("Expect shippingAddressErrors.addressLine as 'addressLine error', but got" +
                   errors.addressLine);
   }
   if (errors.city != "city error") {
-    emitTestFail("Expect shippingAddressErrors.city as 'city error', but got " +
+    emitTestFail("Expect shippingAddressErrors.city as 'city error', but got" +
                   errors.city);
   }
   if (errors.dependentLocality != "dependentLocality error") {
-    emitTestFail("Expect shippingAddressErrors.dependentLocality as 'dependentLocality error', but got " +
+    emitTestFail("Expect shippingAddressErrors.dependentLocality as 'dependentLocality error', but got" +
                   errors.dependentLocality);
   }
   if (errors.organization != "organization error") {
-    emitTestFail("Expect shippingAddressErrors.organization as 'organization error', but got " +
+    emitTestFail("Expect shippingAddressErrors.organization as 'organization error', but got" +
                   errors.organization);
   }
   if (errors.phone != "phone error") {
-    emitTestFail("Expect shippingAddressErrors.phone as 'phone error', but got " +
+    emitTestFail("Expect shippingAddressErrors.phone as 'phone error', but got" +
                   errors.phone);
   }
   if (errors.postalCode != "postalCode error") {
-    emitTestFail("Expect shippingAddressErrors.postalCode as 'postalCode error', but got " +
+    emitTestFail("Expect shippingAddressErrors.postalCode as 'postalCode error', but got" +
                   errors.postalCode);
   }
   if (errors.recipient != "recipient error") {
-    emitTestFail("Expect shippingAddressErrors.recipient as 'recipient error', but got " +
+    emitTestFail("Expect shippingAddressErrors.recipient as 'recipient error', but got" +
                   errors.recipient);
   }
   if (errors.region != "region error") {
-    emitTestFail("Expect shippingAddressErrors.region as 'region error', but got " +
+    emitTestFail("Expect shippingAddressErrors.region as 'region error', but got" +
                   errors.region);
   }
   if (errors.regionCode != "regionCode error") {
-    emitTestFail("Expect shippingAddressErrors.regionCode as 'regionCode error', but got " +
+    emitTestFail("Expect shippingAddressErrors.regionCode as 'regionCode error', but got" +
                   errors.region);
   }
   if (errors.sortingCode != "sortingCode error") {
-    emitTestFail("Expect shippingAddressErrors.sortingCode as 'sortingCode error', but got " +
+    emitTestFail("Expect shippingAddressErrors.sortingCode as 'sortingCode error', but got" +
                   errors.sortingCode);
   }
 }
 
 function updateRequest(requestId) {
   let request = paymentSrv.getPaymentRequestById(requestId);
-  if (DummyUIService.expectedCompleteStatus === "") {
-    const addressErrors = request.paymentDetails.shippingAddressErrors;
-    const payerErrors = request.paymentDetails.payerErrors;
-    checkAddressErrors(addressErrors);
-  } else {
-    if (request.completeStatus !== DummyUIService.expectedCompleteStatus) {
-      emitTestFail(`request.completeStatus should be '${DummyUIService.expectedCompleteStatus}', but got '${request.completeStatus}'.`);
-    }
-  }
+  const addressErrors = request.paymentDetails.shippingAddressErrors;
+  const payerErrors = request.paymentDetails.payerErrors;
+  checkAddressErrors(addressErrors);
   rejectShow(requestId);
 }
 
 const DummyUIService = {
-  testName: "",
-  showAction: "",
-  expectedCompleteStatus: "",
   showPayment: showRequest,
   abortPayment: abortRequest,
   completePayment: completeRequest,
@@ -151,41 +151,6 @@ const DummyUIService = {
 };
 
 paymentSrv.setTestingUIService(DummyUIService.QueryInterface(Ci.nsIPaymentUIService));
-
-addMessageListener("setup-update-with-errors", (testName) => {
-  DummyUIService.testName = testName;
-  DummyUIService.showAction = "update-shipping-address";
-  DummyUIService.expectedCompleteStatus = "";
-  sendAsyncMessage("setup-update-with-errors-complete");
-});
-
-addMessageListener("setup-no-onshippingaddresschange", (testName) => {
-  DummyUIService.testName = testName;
-  DummyUIService.showAction = "update-shipping-address";
-  DummyUIService.expectedCompleteStatus = "noeventhandler";
-  sendAsyncMessage("setup-no-onshippingaddresschange-complete");
-});
-
-addMessageListener("setup-no-onshippingoptionchange", (testName) => {
-  DummyUIService.testName = testName;
-  DummyUIService.showAction = "update-shipping-option";
-  DummyUIService.expectedCompleteStatus = "noeventhandler";
-  sendAsyncMessage("setup-no-onshippingoptionchange-complete");
-});
-
-addMessageListener("setup-show-wiht-pending-promise", (testName) => {
-  DummyUIService.testName = testName;
-  DummyUIService.showAction = "";
-  DummyUIService.expectedCompleteStatus = "timeout";
-  sendAsyncMessage("setup-show-wiht-pending-promise-complete");
-});
-
-addMessageListener("setup-timeout-handling", (testName) => {
-  DummyUIService.testName = testName;
-  DummyUIService.showAction = "update-shipping-address";
-  DummyUIService.expectedCompleteStatus = "timeout";
-  sendAsyncMessage("setup-timeout-handling-complete");
-});
 
 addMessageListener("teardown", function() {
   paymentSrv.setTestingUIService(null);

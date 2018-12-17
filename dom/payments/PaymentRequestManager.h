@@ -51,9 +51,7 @@ class PaymentRequestManager final {
                            bool aTimedOut = false);
   nsresult UpdatePayment(JSContext* aCx, PaymentRequest* aRequest,
                          const PaymentDetailsUpdate& aDetails,
-                         bool aRequestShipping,
-                         bool aTimedout = false,
-                         bool aNoHandler = false);
+                         bool aRequestShipping);
   nsresult ClosePayment(PaymentRequest* aRequest);
   nsresult RetryPayment(JSContext* aCx, PaymentRequest* aRequest,
                         const PaymentValidationErrors& aErrors);
