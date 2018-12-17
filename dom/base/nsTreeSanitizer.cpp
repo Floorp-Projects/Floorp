@@ -1231,15 +1231,6 @@ void nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
       }
       // else not allowed
     } else if (kNameSpaceID_XML == attrNs) {
-      if (nsGkAtoms::base == attrLocal) {
-        if (SanitizeURL(aElement, attrNs, attrLocal)) {
-          // in case the attribute removal shuffled the attribute order, start
-          // the loop again.
-          --ac;
-          i = ac;  // i will be decremented immediately thanks to the for loop
-        }
-        continue;
-      }
       if (nsGkAtoms::lang == attrLocal || nsGkAtoms::space == attrLocal) {
         continue;
       }

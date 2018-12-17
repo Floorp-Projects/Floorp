@@ -52,6 +52,8 @@ impl TextRunKey {
     }
 }
 
+impl intern::InternDebug for TextRunKey {}
+
 impl AsInstanceKind<TextRunDataHandle> for TextRunKey {
     /// Construct a primitive instance that matches the type
     /// of primitive key.

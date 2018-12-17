@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.mozglue.JNIObject;
 
 /* package */ final class GeckoSurfaceTexture extends SurfaceTexture {
     private static final String LOGTAG = "GeckoSurfaceTexture";
@@ -35,6 +36,9 @@ import org.mozilla.gecko.annotation.WrapForJNI;
     private GeckoSurfaceTexture.Callbacks mListener;
     private AtomicInteger mUseCount;
     private boolean mFinalized;
+
+    private int mUpstream;
+    private NativeGLBlitHelper mBlitter;
 
     private GeckoSurfaceTexture(int handle) {
         super(0);
@@ -111,6 +115,9 @@ import org.mozilla.gecko.annotation.WrapForJNI;
     @WrapForJNI
     public synchronized void updateTexImage() {
         try {
+            if (mUpstream != 0) {
+                SurfaceAllocator.sync(mUpstream);
+            }
             super.updateTexImage();
             if (mListener != null) {
                 mListener.onUpdateTexImage();
@@ -122,6 +129,10 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 
     @Override
     public synchronized void release() {
+        mUpstream = 0;
+        if (mBlitter != null) {
+            mBlitter.disposeNative();
+        }
         try {
             super.release();
             synchronized (sSurfaceTextures) {
@@ -237,7 +248,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
         }
     }
 
-    public static GeckoSurfaceTexture acquire(boolean singleBufferMode) {
+    public static GeckoSurfaceTexture acquire(boolean singleBufferMode, int handle) {
         if (singleBufferMode && !isSingleBufferSupported()) {
             throw new IllegalArgumentException("single buffer mode not supported on API version < 19");
         }
@@ -250,7 +261,10 @@ import org.mozilla.gecko.annotation.WrapForJNI;
                 return null;
             }
 
-            int handle = sNextHandle++;
+            if (handle == 0) {
+                // Generate new handle value when none specified.
+                handle = sNextHandle++;
+            }
 
             final GeckoSurfaceTexture gst;
             if (isSingleBufferSupported()) {
@@ -276,8 +290,32 @@ import org.mozilla.gecko.annotation.WrapForJNI;
         }
     }
 
+    /* package */ synchronized void track(int upstream) {
+        mUpstream = upstream;
+    }
+
+    /* package */ synchronized void configureSnapshot(GeckoSurface target, int width, int height) {
+        mBlitter = NativeGLBlitHelper.create(mHandle, target, width, height);
+    }
+
+    /* package */ synchronized void takeSnapshot() {
+        mBlitter.blit();
+    }
+
     public interface Callbacks {
         void onUpdateTexImage();
         void onReleaseTexImage();
+    }
+
+    @WrapForJNI
+    public static final class NativeGLBlitHelper extends JNIObject {
+        public native static NativeGLBlitHelper create(int textureHandle,
+                                                       GeckoSurface targetSurface,
+                                                       int width,
+                                                       int height);
+        public native void blit();
+
+        @Override
+        protected native void disposeNative();
     }
 }

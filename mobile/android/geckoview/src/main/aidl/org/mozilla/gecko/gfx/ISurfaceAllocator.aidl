@@ -5,8 +5,11 @@
 package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.gfx.GeckoSurface;
+import org.mozilla.gecko.gfx.SyncConfig;
 
 interface ISurfaceAllocator {
     GeckoSurface acquireSurface(in int width, in int height, in boolean singleBufferMode);
     void releaseSurface(in int handle);
+    void configureSync(in SyncConfig config);
+    void sync(in int handle);
 }

@@ -53,14 +53,13 @@ class FlexItemSizingOutline extends PureComponent {
       flexItemSizing,
     } = this.props.flexItem;
     const {
+      mainAxisDirection,
       mainBaseSize,
       mainDeltaSize,
       mainMaxSize,
       mainMinSize,
       clampState,
     } = flexItemSizing;
-
-    const isRow = this.props.flexDirection.startsWith("row");
 
     // Calculate the final size. This is base + delta, then clamped by min or max.
     let mainFinalSize = mainBaseSize + mainDeltaSize;
@@ -142,9 +141,8 @@ class FlexItemSizingOutline extends PureComponent {
       dom.div({ className: "flex-outline-container" },
         dom.div(
           {
-            className: "flex-outline" +
-                       (isRow ? " row" : " column") +
-                       (mainDeltaSize > 0 ? " growing" : " shrinking"),
+            className: `flex-outline ${mainAxisDirection}` +
+                                (mainDeltaSize > 0 ? " growing" : " shrinking"),
             style: {
               gridTemplateColumns,
             },

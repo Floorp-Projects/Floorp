@@ -490,8 +490,9 @@ impl FrameBuilder {
                 &mut z_generator,
             );
 
-            if let RenderPassKind::OffScreen { ref texture_cache, .. } = pass.kind {
+            if let RenderPassKind::OffScreen { ref texture_cache, ref color, .. } = pass.kind {
                 has_texture_cache_tasks |= !texture_cache.is_empty();
+                has_texture_cache_tasks |= color.must_be_drawn();
             }
         }
 

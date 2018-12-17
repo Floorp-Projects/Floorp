@@ -184,8 +184,8 @@ fn get_shader_version(gl: &gl::Gl) -> &'static str {
 
 // Get a shader string by name, from the built in resources or
 // an override path, if supplied.
-fn get_shader_source(shader_name: &str, base_path: &Option<PathBuf>) -> Option<Cow<'static, str>> {
-    if let Some(ref base) = *base_path {
+fn get_shader_source(shader_name: &str, base_path: Option<&PathBuf>) -> Option<Cow<'static, str>> {
+    if let Some(ref base) = base_path {
         let shader_path = base.join(&format!("{}.glsl", shader_name));
         if shader_path.exists() {
             let mut source = String::new();
@@ -204,7 +204,7 @@ fn get_shader_source(shader_name: &str, base_path: &Option<PathBuf>) -> Option<C
 
 // Parse a shader string for imports. Imports are recursively processed, and
 // prepended to the output stream.
-fn parse_shader_source<F: FnMut(&str)>(source: Cow<'static, str>, base_path: &Option<PathBuf>, output: &mut F) {
+fn parse_shader_source<F: FnMut(&str)>(source: Cow<'static, str>, base_path: Option<&PathBuf>, output: &mut F) {
     for line in source.lines() {
         if line.starts_with(SHADER_IMPORT) {
             let imports = line[SHADER_IMPORT.len() ..].split(',');
@@ -228,7 +228,7 @@ pub fn build_shader_strings(
      gl_version_string: &str,
      features: &str,
      base_filename: &str,
-     override_path: &Option<PathBuf>,
+     override_path: Option<&PathBuf>,
 ) -> (String, String) {
     let mut vs_source = String::new();
     do_build_shader_string(
@@ -261,7 +261,7 @@ fn do_build_shader_string<F: FnMut(&str)>(
     features: &str,
     kind: &str,
     base_filename: &str,
-    override_path: &Option<PathBuf>,
+    override_path: Option<&PathBuf>,
     mut output: F,
 ) {
     // GLSL requires that the version number comes first.
@@ -2052,7 +2052,7 @@ impl Device {
             features,
             kind,
             base_filename,
-            &self.resource_override_path,
+            self.resource_override_path.as_ref(),
             output,
         )
     }

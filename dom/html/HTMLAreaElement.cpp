@@ -82,8 +82,8 @@ nsresult HTMLAreaElement::BindToTree(nsIDocument* aDocument,
 }
 
 void HTMLAreaElement::UnbindFromTree(bool aDeep, bool aNullParent) {
-  // If this link is ever reinserted into a document, it might
-  // be under a different xml:base, so forget the cached state now.
+  // Without removing the link state we risk a dangling pointer
+  // in the mStyledLinks hashtable
   Link::ResetLinkState(false, Link::ElementHasHref());
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);

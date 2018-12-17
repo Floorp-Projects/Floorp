@@ -154,8 +154,8 @@ void HTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent) {
                     HTML_LINK_DNS_PREFETCH_REQUESTED);
   CancelPrefetchOrPreload();
 
-  // If this link is ever reinserted into a document, it might
-  // be under a different xml:base, so forget the cached state now.
+  // Without removing the link state we risk a dangling pointer
+  // in the mStyledLinks hashtable
   Link::ResetLinkState(false, Link::ElementHasHref());
 
   // If this is reinserted back into the document it will not be
