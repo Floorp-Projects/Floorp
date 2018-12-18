@@ -1092,6 +1092,18 @@ bool nsNativeThemeGTK::GetExtraSizeForWidget(nsIFrame* aFrame,
   return true;
 }
 
+bool
+nsNativeThemeGTK::IsWidgetVisible(StyleAppearance aAppearance)
+{
+  switch (aAppearance) {
+  case StyleAppearance::MozWindowButtonBox:
+    return false;
+  default:
+    break;
+  }
+  return true;
+}
+
 NS_IMETHODIMP
 nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                        StyleAppearance aAppearance,
@@ -1101,7 +1113,9 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
   WidgetNodeType gtkWidgetType;
   GtkTextDirection direction = GetTextDirection(aFrame);
   gint flags;
-  if (!GetGtkWidgetAndState(aAppearance, aFrame, gtkWidgetType, &state,
+
+  if (!IsWidgetVisible(aAppearance) ||
+      !GetGtkWidgetAndState(aAppearance, aFrame, gtkWidgetType, &state,
                             &flags)) {
     return NS_OK;
   }
