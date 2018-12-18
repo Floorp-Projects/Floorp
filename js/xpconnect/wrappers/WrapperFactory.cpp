@@ -329,7 +329,7 @@ void WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
 #ifdef DEBUG
 static void DEBUG_CheckUnwrapSafety(HandleObject obj,
                                     const js::Wrapper* handler,
-                                    JS::Compartment* origin,
+                                    JS::Realm* origin,
                                     JS::Compartment* target) {
   if (!js::AllowNewWrapper(target, obj)) {
     // The JS engine should have returned a dead wrapper in this case and we
@@ -340,18 +340,20 @@ static void DEBUG_CheckUnwrapSafety(HandleObject obj,
     // If the caller is chrome (or effectively so), unwrap should always be
     // allowed.
     MOZ_ASSERT(!handler->hasSecurityPolicy());
-  } else if (CompartmentPrivate::Get(origin)->forcePermissiveCOWs) {
+  } else if (RealmPrivate::Get(origin)->forcePermissiveCOWs) {
     // Similarly, if this is a privileged scope that has opted to make itself
     // accessible to the world (allowed only during automation), unwrap should
     // be allowed.
     MOZ_ASSERT(!handler->hasSecurityPolicy());
   } else {
     // Otherwise, it should depend on whether the target subsumes the origin.
-    MOZ_ASSERT(handler->hasSecurityPolicy() ==
-               !(OriginAttributes::IsRestrictOpenerAccessForFPI()
-                     ? AccessCheck::subsumesConsideringDomain(target, origin)
-                     : AccessCheck::subsumesConsideringDomainIgnoringFPD(
-                           target, origin)));
+    JS::Compartment* originComp = JS::GetCompartmentForRealm(origin);
+    bool subsumes =
+        (OriginAttributes::IsRestrictOpenerAccessForFPI()
+             ? AccessCheck::subsumesConsideringDomain(target, originComp)
+             : AccessCheck::subsumesConsideringDomainIgnoringFPD(target,
+                                                                 originComp));
+    MOZ_ASSERT(handler->hasSecurityPolicy() == !subsumes);
   }
 }
 #else
@@ -442,6 +444,9 @@ JSObject* WrapperFactory::Rewrap(JSContext* cx, HandleObject existing,
   CompartmentPrivate* targetCompartmentPrivate =
       CompartmentPrivate::Get(target);
 
+  JS::Realm* originRealm = js::GetNonCCWObjectRealm(obj);
+  RealmPrivate* originRealmPrivate = RealmPrivate::Get(originRealm);
+
   //
   // First, handle the special cases.
   //
@@ -454,7 +459,7 @@ JSObject* WrapperFactory::Rewrap(JSContext* cx, HandleObject existing,
   }
 
   // Let the SpecialPowers scope make its stuff easily accessible to content.
-  else if (originCompartmentPrivate->forcePermissiveCOWs) {
+  else if (originRealmPrivate->forcePermissiveCOWs) {
     CrashIfNotInAutomation();
     wrapper = &CrossCompartmentWrapper::singleton;
   }
@@ -517,7 +522,7 @@ JSObject* WrapperFactory::Rewrap(JSContext* cx, HandleObject existing,
     wrapper = SelectWrapper(securityWrapper, xrayType, waiveXrays, obj);
   }
 
-  if (!targetSubsumesOrigin && !originCompartmentPrivate->forcePermissiveCOWs) {
+  if (!targetSubsumesOrigin && !originRealmPrivate->forcePermissiveCOWs) {
     // Do a belt-and-suspenders check against exposing eval()/Function() to
     // non-subsuming content.  But don't worry about doing it in the
     // SpecialPowers case.
@@ -532,7 +537,7 @@ JSObject* WrapperFactory::Rewrap(JSContext* cx, HandleObject existing,
     }
   }
 
-  DEBUG_CheckUnwrapSafety(obj, wrapper, origin, target);
+  DEBUG_CheckUnwrapSafety(obj, wrapper, originRealm, target);
 
   if (existing) {
     return Wrapper::Renew(existing, obj, wrapper);
