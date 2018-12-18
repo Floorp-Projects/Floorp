@@ -593,6 +593,14 @@ interface nsITelemetry : nsISupports
   void resetCurrentProduct();
 
   /**
+   * Get a list of all registered stores.
+   *
+   * The list is deduplicated, but unordered.
+   */
+  [implicit_jscontext]
+  jsval getAllStores();
+
+  /**
    * Reset the storage for all the collection primitives so that GeckoView
    * can issue a single Clear signal for histograms, scalars, events, ...
    *
