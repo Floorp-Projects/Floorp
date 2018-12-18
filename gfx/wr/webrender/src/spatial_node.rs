@@ -481,6 +481,9 @@ impl SpatialNode {
                 // offsets actually adjust the node position itself, whereas scroll offsets
                 // only apply to contents inside the node.
                 state.parent_accumulated_scroll_offset += info.current_offset;
+                // We want nested sticky items to take into account the shift
+                // we applied as well.
+                state.nearest_scrolling_ancestor_offset += info.current_offset;
             }
             SpatialNodeType::ScrollFrame(ref scrolling) => {
                 state.parent_accumulated_scroll_offset += scrolling.offset;
