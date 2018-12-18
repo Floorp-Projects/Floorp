@@ -102,24 +102,27 @@ class TestArtifactRefs(unittest.TestCase):
         "resolve_task_references resolves artifact references in a list"
         self.do(
             {'in-a-list': [
-                'stuff', {'artifact-reference': '<edge1/foo/bar>'}]},
+                'stuff', {'artifact-reference': '<edge1/public/foo/bar>'}]},
             {'in-a-list': [
-                'stuff', 'https://tc-tests.localhost/api/queue/v1/task/tid1/artifacts/foo/bar']})
+                'stuff', 'https://tc-tests.localhost/api/queue/v1'
+                '/task/tid1/artifacts/public/foo/bar']})
 
     def test_in_dict(self):
         "resolve_task_references resolves artifact references in a dict"
         self.do(
             {'in-a-dict':
-                {'stuff': {'artifact-reference': '<edge2/bar/foo>'}}},
+                {'stuff': {'artifact-reference': '<edge2/public/bar/foo>'}}},
             {'in-a-dict':
-                {'stuff': 'https://tc-tests.localhost/api/queue/v1/task/tid2/artifacts/bar/foo'}})
+                {'stuff': 'https://tc-tests.localhost/api/queue/v1'
+                    '/task/tid2/artifacts/public/bar/foo'}})
 
     def test_in_string(self):
         "resolve_task_references resolves artifact references embedded in a string"
         self.do(
-            {'stuff': {'artifact-reference': '<edge1/filename> and <edge2/bar/foo>'}},
-            {'stuff': 'https://tc-tests.localhost/api/queue/v1/task/tid1/artifacts/filename and '
-                'https://tc-tests.localhost/api/queue/v1/task/tid2/artifacts/bar/foo'})
+            {'stuff': {'artifact-reference': '<edge1/public/filename> and <edge2/public/bar>'}},
+            {'stuff': 'https://tc-tests.localhost/api/queue/v1'
+                '/task/tid1/artifacts/public/filename and '
+                'https://tc-tests.localhost/api/queue/v1/task/tid2/artifacts/public/bar'})
 
     def test_invalid(self):
         "resolve_task_references ignores badly-formatted artifact references"
