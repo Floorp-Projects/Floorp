@@ -350,7 +350,7 @@ hpp:
 
 Arguments:
     init:
-        BINJS_TRY_DECL(result, factory_.newList(ParseNodeKind::ArgumentsExpr, tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newList(ParseNodeKind::Arguments, tokenizer_->pos(start)));
     append:
         factory_.addList(/* list = */ result, /* kid = */ item);
 
@@ -485,7 +485,7 @@ AssertedVarScope:
 
 AssignmentExpression:
     build: |
-        BINJS_TRY_DECL(result, factory_.newAssignment(ParseNodeKind::AssignExpr, binding, expression));
+        BINJS_TRY_DECL(result, factory_.newAssignment(ParseNodeKind::Assign, binding, expression));
 
 AssignmentTargetIdentifier:
     build: |
@@ -507,85 +507,85 @@ BinaryExpression:
         ParseNodeKind pnk;
         switch (operator_) {
           case BinaryOperator::Comma:
-            pnk = ParseNodeKind::CommaExpr;
+            pnk = ParseNodeKind::Comma;
             break;
           case BinaryOperator::LogicalOr:
-            pnk = ParseNodeKind::OrExpr;
+            pnk = ParseNodeKind::Or;
             break;
           case BinaryOperator::LogicalAnd:
-            pnk = ParseNodeKind::AndExpr;
+            pnk = ParseNodeKind::And;
             break;
           case BinaryOperator::BitOr:
-            pnk = ParseNodeKind::BitOrExpr;
+            pnk = ParseNodeKind::BitOr;
             break;
           case BinaryOperator::BitXor:
-            pnk = ParseNodeKind::BitXorExpr;
+            pnk = ParseNodeKind::BitXor;
             break;
           case BinaryOperator::BitAnd:
-            pnk = ParseNodeKind::BitAndExpr;
+            pnk = ParseNodeKind::BitAnd;
             break;
           case BinaryOperator::Eq:
-            pnk = ParseNodeKind::EqExpr;
+            pnk = ParseNodeKind::Eq;
             break;
           case BinaryOperator::Neq:
-            pnk = ParseNodeKind::NeExpr;
+            pnk = ParseNodeKind::Ne;
             break;
           case BinaryOperator::StrictEq:
-            pnk = ParseNodeKind::StrictEqExpr;
+            pnk = ParseNodeKind::StrictEq;
             break;
           case BinaryOperator::StrictNeq:
-            pnk = ParseNodeKind::StrictNeExpr;
+            pnk = ParseNodeKind::StrictNe;
             break;
           case BinaryOperator::LessThan:
-            pnk = ParseNodeKind::LtExpr;
+            pnk = ParseNodeKind::Lt;
             break;
           case BinaryOperator::LeqThan:
-            pnk = ParseNodeKind::LeExpr;
+            pnk = ParseNodeKind::Le;
             break;
           case BinaryOperator::GreaterThan:
-            pnk = ParseNodeKind::GtExpr;
+            pnk = ParseNodeKind::Gt;
             break;
           case BinaryOperator::GeqThan:
-            pnk = ParseNodeKind::GeExpr;
+            pnk = ParseNodeKind::Ge;
             break;
           case BinaryOperator::In:
-            pnk = ParseNodeKind::InExpr;
+            pnk = ParseNodeKind::In;
             break;
           case BinaryOperator::Instanceof:
-            pnk = ParseNodeKind::InstanceOfExpr;
+            pnk = ParseNodeKind::InstanceOf;
             break;
           case BinaryOperator::Lsh:
-            pnk = ParseNodeKind::LshExpr;
+            pnk = ParseNodeKind::Lsh;
             break;
           case BinaryOperator::Rsh:
-            pnk = ParseNodeKind::RshExpr;
+            pnk = ParseNodeKind::Rsh;
             break;
           case BinaryOperator::Ursh:
-            pnk = ParseNodeKind::UrshExpr;
+            pnk = ParseNodeKind::Ursh;
             break;
           case BinaryOperator::Plus:
-            pnk = ParseNodeKind::AddExpr;
+            pnk = ParseNodeKind::Add;
             break;
           case BinaryOperator::Minus:
-            pnk = ParseNodeKind::SubExpr;
+            pnk = ParseNodeKind::Sub;
             break;
           case BinaryOperator::Mul:
-            pnk = ParseNodeKind::MulExpr;
+            pnk = ParseNodeKind::Star;
             break;
           case BinaryOperator::Div:
-            pnk = ParseNodeKind::DivExpr;
+            pnk = ParseNodeKind::Div;
             break;
           case BinaryOperator::Mod:
-            pnk = ParseNodeKind::ModExpr;
+            pnk = ParseNodeKind::Mod;
             break;
           case BinaryOperator::Pow:
-            pnk = ParseNodeKind::PowExpr;
+            pnk = ParseNodeKind::Pow;
             break;
         }
 
         ParseNode* result;
         if (left->isKind(pnk) &&
-            pnk != ParseNodeKind::PowExpr /* ParseNodeKind::PowExpr is not left-associative */)
+            pnk != ParseNodeKind::Pow /* ParseNodeKind::Pow is not left-associative */)
         {
             // Regroup left-associative operations into lists.
             left->template as<ListNode>().appendWithoutOrderAssumption(right);
@@ -686,40 +686,40 @@ CompoundAssignmentExpression:
         ParseNodeKind pnk;
         switch (operator_){
           case CompoundAssignmentOperator::PlusAssign:
-            pnk = ParseNodeKind::AddAssignExpr;
+            pnk = ParseNodeKind::AddAssign;
             break;
           case CompoundAssignmentOperator::MinusAssign:
-            pnk = ParseNodeKind::SubAssignExpr;
+            pnk = ParseNodeKind::SubAssign;
             break;
           case CompoundAssignmentOperator::MulAssign:
-            pnk = ParseNodeKind::MulAssignExpr;
+            pnk = ParseNodeKind::MulAssign;
             break;
           case CompoundAssignmentOperator::DivAssign:
-            pnk = ParseNodeKind::DivAssignExpr;
+            pnk = ParseNodeKind::DivAssign;
             break;
           case CompoundAssignmentOperator::ModAssign:
-            pnk = ParseNodeKind::ModAssignExpr;
+            pnk = ParseNodeKind::ModAssign;
             break;
           case CompoundAssignmentOperator::PowAssign:
-            pnk = ParseNodeKind::PowAssignExpr;
+            pnk = ParseNodeKind::PowAssign;
             break;
           case CompoundAssignmentOperator::LshAssign:
-            pnk = ParseNodeKind::LshAssignExpr;
+            pnk = ParseNodeKind::LshAssign;
             break;
           case CompoundAssignmentOperator::RshAssign:
-            pnk = ParseNodeKind::RshAssignExpr;
+            pnk = ParseNodeKind::RshAssign;
             break;
           case CompoundAssignmentOperator::UrshAssign:
-            pnk = ParseNodeKind::UrshAssignExpr;
+            pnk = ParseNodeKind::UrshAssign;
             break;
           case CompoundAssignmentOperator::BitOrAssign:
-            pnk = ParseNodeKind::BitOrAssignExpr;
+            pnk = ParseNodeKind::BitOrAssign;
             break;
           case CompoundAssignmentOperator::BitXorAssign:
-            pnk = ParseNodeKind::BitXorAssignExpr;
+            pnk = ParseNodeKind::BitXorAssign;
             break;
           case CompoundAssignmentOperator::BitAndAssign:
-            pnk = ParseNodeKind::BitAndAssignExpr;
+            pnk = ParseNodeKind::BitAndAssign;
             break;
         }
         BINJS_TRY_DECL(result, factory_.newAssignment(pnk, binding, expression));
@@ -771,7 +771,7 @@ DataProperty:
 
         ParseNode* result;
         if (name->template is<NameNode>() && name->template as<NameNode>().atom() == cx_->names().proto) {
-            BINJS_TRY_VAR(result, factory_.newUnary(ParseNodeKind::MutateProtoExpr, start, expression));
+            BINJS_TRY_VAR(result, factory_.newUnary(ParseNodeKind::MutateProto, start, expression));
         } else {
             BINJS_TRY_VAR(result, factory_.newObjectMethodOrPropertyDefinition(name, expression, AccessorType::None));
         }
@@ -990,7 +990,7 @@ ForInOfBinding:
         ParseNodeKind pnk;
         switch (kind_) {
           case VariableDeclarationKind::Var:
-            pnk = ParseNodeKind::VarStmt;
+            pnk = ParseNodeKind::Var;
             break;
           case VariableDeclarationKind::Let:
             return raiseError("Let is not supported in this preview release");
@@ -1175,7 +1175,7 @@ ListOfVariableDeclarator:
     type-ok:
         ListNode*
     init: |
-        BINJS_TRY_DECL(result, factory_.newDeclarationList(ParseNodeKind::ConstStmt /*Placeholder*/,
+        BINJS_TRY_DECL(result, factory_.newDeclarationList(ParseNodeKind::Const /*Placeholder*/,
             tokenizer_->pos(start)));
 
 LiteralBooleanExpression:
@@ -1289,7 +1289,7 @@ ShorthandProperty:
         BINJS_TRY_DECL(propName, factory_.newObjectLiteralPropertyName(name->template as<NameNode>().name(), tokenizer_->pos(start)));
 
         BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(propName, name, AccessorType::None));
-        result->setKind(ParseNodeKind::ShorthandExpr);
+        result->setKind(ParseNodeKind::Shorthand);
 
 SwitchCase:
     type-ok:
@@ -1403,39 +1403,39 @@ UnaryExpression:
         ParseNodeKind pnk;
         switch (operator_) {
           case UnaryOperator::Minus:
-            pnk = ParseNodeKind::NegExpr;
+            pnk = ParseNodeKind::Neg;
             break;
           case UnaryOperator::Plus:
-            pnk = ParseNodeKind::PosExpr;
+            pnk = ParseNodeKind::Pos;
             break;
           case UnaryOperator::Not:
-            pnk = ParseNodeKind::NotExpr;
+            pnk = ParseNodeKind::Not;
             break;
           case UnaryOperator::BitNot:
-            pnk = ParseNodeKind::BitNotExpr;
+            pnk = ParseNodeKind::BitNot;
             break;
           case UnaryOperator::Typeof: {
             if (operand->isKind(ParseNodeKind::Name)) {
-                pnk = ParseNodeKind::TypeOfNameExpr;
+                pnk = ParseNodeKind::TypeOfName;
             } else {
                 pnk = ParseNodeKind::TypeOfExpr;
             }
             break;
           }
           case UnaryOperator::Void:
-            pnk = ParseNodeKind::VoidExpr;
+            pnk = ParseNodeKind::Void;
             break;
           case UnaryOperator::Delete: {
             switch (operand->getKind()) {
               case ParseNodeKind::Name:
                 operand->setOp(JSOP_DELNAME);
-                pnk = ParseNodeKind::DeleteNameExpr;
+                pnk = ParseNodeKind::DeleteName;
                 break;
-              case ParseNodeKind::DotExpr:
-                pnk = ParseNodeKind::DeletePropExpr;
+              case ParseNodeKind::Dot:
+                pnk = ParseNodeKind::DeleteProp;
                 break;
-              case ParseNodeKind::ElemExpr:
-                pnk = ParseNodeKind::DeleteElemExpr;
+              case ParseNodeKind::Elem:
+                pnk = ParseNodeKind::DeleteElem;
                 break;
               default:
                 pnk = ParseNodeKind::DeleteExpr;
@@ -1450,12 +1450,12 @@ UpdateExpression:
         ParseNodeKind pnk;
         switch (operator_) {
           case UpdateOperator::Incr:
-            pnk = isPrefix ? ParseNodeKind::PreIncrementExpr
-                           : ParseNodeKind::PostIncrementExpr;
+            pnk = isPrefix ? ParseNodeKind::PreIncrement
+                           : ParseNodeKind::PostIncrement;
             break;
           case UpdateOperator::Decr:
-            pnk = isPrefix ? ParseNodeKind::PreDecrementExpr
-                           : ParseNodeKind::PostDecrementExpr;
+            pnk = isPrefix ? ParseNodeKind::PreDecrement
+                           : ParseNodeKind::PostDecrement;
             break;
         }
         BINJS_TRY_DECL(result, factory_.newUnary(pnk, start, operand));
@@ -1479,7 +1479,7 @@ VariableDeclaration:
         ParseNodeKind pnk;
         switch (kind_) {
           case VariableDeclarationKind::Var:
-            pnk = ParseNodeKind::VarStmt;
+            pnk = ParseNodeKind::Var;
             break;
           case VariableDeclarationKind::Let:
             return raiseError("Let is not supported in this preview release");
@@ -1508,7 +1508,7 @@ VariableDeclarator:
             }
 
             MOZ_CRASH("Unimplemented: AssertedScope check for BindingPattern variable declaration");
-            BINJS_TRY_VAR(result, factory_.newAssignment(ParseNodeKind::AssignExpr, binding, init));
+            BINJS_TRY_VAR(result, factory_.newAssignment(ParseNodeKind::Assign, binding, init));
         }
 
 WhileStatement:
