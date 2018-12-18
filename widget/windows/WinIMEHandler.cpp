@@ -50,6 +50,7 @@ InputContextAction::Cause IMEHandler::sLastContextActionCause =
 bool IMEHandler::sForceDisableCurrentIMM_IME = false;
 bool IMEHandler::sPluginHasFocus = false;
 bool IMEHandler::sNativeCaretIsCreated = false;
+bool IMEHandler::sHasNativeCaretBeenRequested = false;
 
 #ifdef NS_ENABLE_TSF
 bool IMEHandler::sIsInTSFMode = false;
@@ -163,6 +164,30 @@ bool IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
       DismissOnScreenKeyboard();
     }
     return true;
+  }
+
+  // If we're putting native caret over our caret, Windows dispatches
+  // EVENT_OBJECT_LOCATIONCHANGE event on other applications which hook
+  // the event with ::SetWinEventHook() and handles WM_GETOBJECT for
+  // OBJID_CARET (this is request of caret from such applications) instead
+  // of us.  If a11y module is active, it observes every our caret change
+  // and put native caret over it automatically.  However, if other
+  // applications require only caret information, activating a11y module is
+  // overwork and such applications may requires carets only in editors.
+  // Therefore, if it'd be possible, IMEHandler should put native caret over
+  // our caret, but there is a problem.  Some versions of ATOK (Japanese TIP)
+  // refer native caret and if there is, the behavior is worse than the
+  // behavior without native caret.  Therefore, we shouldn't put native caret
+  // as far as possible.
+  // TODO: We need first request of retrieving caret information.  So, if
+  //       we don't create native caret, we need to dispatch
+  //       EVENT_OBJECT_LOCATIONCHANGE event by ourselves.
+  if (!sHasNativeCaretBeenRequested && aMessage == WM_GETOBJECT &&
+      static_cast<DWORD>(aLParam) == OBJID_CARET) {
+    // So, when we receive first WM_GETOBJECT for OBJID_CARET, let's start to
+    // create native caret for such applications.
+    sHasNativeCaretBeenRequested = true;
+    // TODO: Create native caret later if an editor has focus.
   }
 
 #ifdef NS_ENABLE_TSF
