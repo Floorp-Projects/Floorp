@@ -1625,7 +1625,6 @@ bool SandboxOptions::Parse() {
                          &isWebExtensionContentScript) &&
             ParseString("sandboxName", sandboxName) &&
             ParseObject("sameZoneAs", &sameZoneAs) &&
-            ParseBoolean("freshCompartment", &freshCompartment) &&
             ParseBoolean("freshZone", &freshZone) &&
             ParseBoolean("invisibleToDebugger", &invisibleToDebugger) &&
             ParseBoolean("discardSource", &discardSource) &&
