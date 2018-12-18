@@ -981,6 +981,8 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         CHECK(iter.readComparison(ValType::AnyRef, &nothing, &nothing));
         break;
       }
+#endif
+#ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::RefNull): {
         if (env.gcTypesEnabled() == HasGcTypes::False) {
           return iter.unrecognizedOpcode(&op);
@@ -1414,7 +1416,7 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
   return true;
 }
 
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
 static bool DecodeGCFeatureOptInSection(Decoder& d, ModuleEnvironment* env) {
   MaybeSectionRange range;
   if (!d.startSection(SectionId::GcFeatureOptIn, env, &range, "type")) {
@@ -2416,7 +2418,7 @@ bool wasm::DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env) {
     return false;
   }
 
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
   if (!DecodeGCFeatureOptInSection(d, env)) {
     return false;
   }
@@ -2790,9 +2792,9 @@ bool wasm::Validate(JSContext* cx, const ShareableBytes& bytecode,
                     UniqueChars* error) {
   Decoder d(bytecode.bytes, 0, error);
 
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
   HasGcTypes gcTypesConfigured =
-      HasGcSupport(cx) ? HasGcTypes::True : HasGcTypes::False;
+      HasReftypesSupport(cx) ? HasGcTypes::True : HasGcTypes::False;
 #else
   HasGcTypes gcTypesConfigured = HasGcTypes::False;
 #endif
