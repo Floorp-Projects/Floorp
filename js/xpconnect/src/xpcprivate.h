@@ -2799,14 +2799,6 @@ class CompartmentPrivate {
   // Using it in production is inherently unsafe.
   bool universalXPConnectEnabled;
 
-  // This is only ever set during mochitest runs when enablePrivilege is called.
-  // It allows the SpecialPowers scope to waive the normal chrome security
-  // wrappers and expose properties directly to content. This lets us avoid a
-  // bunch of overhead and complexity in our SpecialPowers automation glue.
-  //
-  // Using it in production is inherently unsafe.
-  bool forcePermissiveCOWs;
-
   // Whether SystemIsBeingShutDown has been called on this compartment.
   bool wasShutdown;
 
@@ -2867,6 +2859,14 @@ class RealmPrivate {
   // Our XPCWrappedNativeScope. This is non-null if and only if this is an
   // XPConnect realm.
   XPCWrappedNativeScope* scope;
+
+  // This is only ever set during mochitest runs when enablePrivilege is called.
+  // It allows the SpecialPowers scope to waive the normal chrome security
+  // wrappers and expose properties directly to content. This lets us avoid a
+  // bunch of overhead and complexity in our SpecialPowers automation glue.
+  //
+  // Using it in production is inherently unsafe.
+  bool forcePermissiveCOWs = false;
 
   const nsACString& GetLocation() {
     if (location.IsEmpty() && locationURI) {
