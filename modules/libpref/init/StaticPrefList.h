@@ -287,6 +287,13 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+// Allow chrome code to access non-privileged frames.
+VARCACHE_PREF(
+  "dom.chrome_frame_access.enabled",
+   dom_chrome_frame_access_enabled,
+  bool, true
+)
+
 // Enable printing performance marks/measures to log
 VARCACHE_PREF(
   "dom.performance.enable_user_timing_logging",
