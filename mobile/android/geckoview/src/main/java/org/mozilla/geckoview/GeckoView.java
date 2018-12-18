@@ -25,8 +25,9 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.Nullable;
+import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
@@ -45,6 +46,7 @@ import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.FrameLayout;
 
+@UiThread
 public class GeckoView extends FrameLayout {
     private static final String LOGTAG = "GeckoView";
     private static final boolean DEBUG = false;
@@ -211,7 +213,6 @@ public class GeckoView extends FrameLayout {
      *
      * @param color Cover color.
      */
-    @UiThread
     public void coverUntilFirstPaint(final int color) {
         ThreadUtils.assertOnUiThread();
 
@@ -229,7 +230,6 @@ public class GeckoView extends FrameLayout {
      *
      * @return True if view should be pinned on the screen.
      */
-    @UiThread
     public boolean shouldPinOnScreen() {
         ThreadUtils.assertOnUiThread();
 
@@ -242,7 +242,6 @@ public class GeckoView extends FrameLayout {
         }
     }
 
-    @UiThread
     public GeckoSession releaseSession() {
         ThreadUtils.assertOnUiThread();
 
@@ -284,8 +283,9 @@ public class GeckoView extends FrameLayout {
      *
      * @param session The session to be attached.
      */
-    @UiThread
     public void setSession(@NonNull final GeckoSession session) {
+        ThreadUtils.assertOnUiThread();
+
         if (!session.isOpen()) {
             throw new IllegalArgumentException("Session must be open before attaching");
         }
@@ -300,7 +300,6 @@ public class GeckoView extends FrameLayout {
      * @param session The session to be attached.
      * @param runtime The runtime to be used for opening the session.
      */
-    @UiThread
     public void setSession(@NonNull final GeckoSession session,
                            @Nullable final GeckoRuntime runtime) {
         ThreadUtils.assertOnUiThread();
@@ -371,21 +370,21 @@ public class GeckoView extends FrameLayout {
         }
     }
 
+    @AnyThread
     public GeckoSession getSession() {
         return mSession;
     }
 
+    @AnyThread
     public EventDispatcher getEventDispatcher() {
         return mSession.getEventDispatcher();
     }
 
-    @UiThread
     public PanZoomController getPanZoomController() {
         ThreadUtils.assertOnUiThread();
         return mSession.getPanZoomController();
     }
 
-    @UiThread
     public DynamicToolbarAnimator getDynamicToolbarAnimator() {
         ThreadUtils.assertOnUiThread();
         return mSession.getDynamicToolbarAnimator();

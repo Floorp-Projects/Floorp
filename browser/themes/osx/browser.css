@@ -258,7 +258,7 @@ html|input.urlbar-input {
   line-height: 1.745em;
 }
 
-#urlbar[focused="true"],
+#urlbar:not(.hidden-focus)[focused="true"],
 .searchbar-textbox[focused="true"] {
   box-shadow: 0 0 0 1px var(--toolbar-field-focus-border-color) inset,
               0 0 0 1px var(--toolbar-field-focus-border-color);

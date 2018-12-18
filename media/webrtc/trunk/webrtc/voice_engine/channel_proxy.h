@@ -102,9 +102,6 @@ class ChannelProxy : public RtpPacketSinkInterface {
   virtual double GetTotalOutputEnergy() const;
   virtual double GetTotalOutputDuration() const;
   virtual uint32_t GetDelayEstimate() const;
-  virtual void GetDelayEstimates(int* jitter_buffer_delay_ms,
-                                 int* playout_buffer_delay_ms,
-                                 int* avsync_offset_ms) const;
   virtual bool SetSendTelephoneEventPayloadType(int payload_type,
                                                 int payload_frequency);
   virtual bool SendTelephoneEventOutband(int event, int duration_ms);

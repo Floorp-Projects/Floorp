@@ -1715,6 +1715,19 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           }
         ]]></body>
       </method>
+
+      <method name="removeHiddenFocus">
+        <body><![CDATA[
+          this.classList.remove("hidden-focus");
+        ]]></body>
+      </method>
+
+      <method name="hiddenFocus">
+        <body><![CDATA[
+          this.classList.add("hidden-focus");
+          this.focus();
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>

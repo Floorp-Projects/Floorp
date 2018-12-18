@@ -136,6 +136,9 @@ RootActor.prototype = {
     noBlackBoxing: false,
     // Support for server pretty-printing has been removed.
     noPrettyPrinting: true,
+    // Added in Firefox 66. Indicates that clients do not need to pause the
+    // debuggee before adding breakpoints.
+    breakpointWhileRunning: true,
     // Trait added in Gecko 38, indicating that all features necessary for
     // grabbing allocations from the MemoryActor are available for the performance tool
     memoryActorAllocations: true,

@@ -441,10 +441,6 @@ class JSObject : public js::gc::Cell {
   // all realms in the compartment).
   JS::Realm* maybeCCWRealm() const { return group_->realm(); }
 
-  // Deprecated: call nonCCWRealm(), maybeCCWRealm(), or NativeObject::realm()
-  // instead!
-  JS::Realm* deprecatedRealm() const { return group_->realm(); }
-
   /*
    * ES5 meta-object properties and operations.
    */

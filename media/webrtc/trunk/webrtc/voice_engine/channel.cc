@@ -912,7 +912,6 @@ Channel::Channel(int32_t channelId,
       transport_overhead_per_packet_(0),
       rtp_overhead_per_packet_(0),
       _outputSpeechType(AudioFrame::kNormalSpeech),
-      _current_sync_offset(0),
       rtcp_observer_(new VoERtcpObserver(this)),
       associate_send_channel_(ChannelOwner(nullptr)),
       pacing_enabled_(config.enable_voice_pacing),
@@ -1834,14 +1833,6 @@ uint32_t Channel::GetDelayEstimate() const {
   return audio_coding_->FilteredCurrentDelayMs() + playout_delay_ms_;
 }
 
-void Channel::GetDelayEstimates(int* jitter_buffer_delay_ms,
-                                int* playout_buffer_delay_ms,
-                                int* avsync_offset_ms) const {
-  rtc::CritScope lock(&video_sync_lock_);
-  *jitter_buffer_delay_ms = audio_coding_->FilteredCurrentDelayMs();
-  *playout_buffer_delay_ms = playout_delay_ms_;
-  *avsync_offset_ms = _current_sync_offset;
-}
 int Channel::SetMinimumPlayoutDelay(int delayMs) {
   if ((delayMs < kVoiceEngineMinMinPlayoutDelayMs) ||
       (delayMs > kVoiceEngineMaxMinPlayoutDelayMs)) {

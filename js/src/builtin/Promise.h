@@ -7,6 +7,8 @@
 #ifndef builtin_Promise_h
 #define builtin_Promise_h
 
+#include "js/Promise.h"
+
 #include "builtin/SelfHostingDefines.h"
 #include "threading/ConditionVariable.h"
 #include "threading/Mutex.h"

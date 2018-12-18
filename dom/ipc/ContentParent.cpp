@@ -153,6 +153,7 @@
 #include "nsIRemoteWindowContext.h"
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIServiceWorkerManager.h"
 #include "nsISiteSecurityService.h"
 #include "nsISound.h"
 #include "mozilla/mozSpellChecker.h"
@@ -3847,6 +3848,33 @@ mozilla::ipc::IPCResult ContentParent::RecvOpenNotificationSettings(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvNotificationEvent(
+    const nsString& aType, const NotificationEventData& aData) {
+  nsCOMPtr<nsIServiceWorkerManager> swm =
+      mozilla::services::GetServiceWorkerManager();
+  if (NS_WARN_IF(!swm)) {
+    // Probably shouldn't happen, but no need to crash the child process.
+    return IPC_OK();
+  }
+
+  if (aType.EqualsLiteral("click")) {
+    nsresult rv = swm->SendNotificationClickEvent(
+        aData.originSuffix(), aData.scope(), aData.ID(), aData.title(),
+        aData.dir(), aData.lang(), aData.body(), aData.tag(), aData.icon(),
+        aData.data(), aData.behavior());
+    Unused << NS_WARN_IF(NS_FAILED(rv));
+  } else {
+    MOZ_ASSERT(aType.EqualsLiteral("close"));
+    nsresult rv = swm->SendNotificationCloseEvent(
+        aData.originSuffix(), aData.scope(), aData.ID(), aData.title(),
+        aData.dir(), aData.lang(), aData.body(), aData.tag(), aData.icon(),
+        aData.data(), aData.behavior());
+    Unused << NS_WARN_IF(NS_FAILED(rv));
+  }
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvSyncMessage(
     const nsString& aMsg, const ClonedMessageData& aData,
     InfallibleTArray<CpowEntry>&& aCpows, const IPC::Principal& aPrincipal,
@@ -5571,12 +5599,12 @@ mozilla::ipc::IPCResult
 ContentParent::RecvFirstPartyStorageAccessGrantedForOrigin(
     const Principal& aParentPrincipal, const Principal& aTrackingPrincipal,
     const nsCString& aTrackingOrigin, const nsCString& aGrantedOrigin,
-    const bool& aAnySite,
+    const int& aAllowMode,
     FirstPartyStorageAccessGrantedForOriginResolver&& aResolver) {
   AntiTrackingCommon::
       SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
           aParentPrincipal, aTrackingPrincipal, aTrackingOrigin, aGrantedOrigin,
-          aAnySite)
+          aAllowMode)
           ->Then(GetCurrentThreadSerialEventTarget(), __func__,
                  [aResolver = std::move(aResolver)](
                      AntiTrackingCommon::FirstPartyStorageAccessGrantPromise::

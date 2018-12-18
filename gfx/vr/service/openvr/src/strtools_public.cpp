@@ -199,20 +199,19 @@ uint32_t ReturnStdString( const std::string & sValue, char *pchBuffer, uint32_t 
 	return unLen;
 }
 
-// Commented out by Mozilla, please see README.mozilla
+
 /** Returns a std::string from a uint64_t */
-/*
-std::string Uint64ToString( uint64_t ulValue )
-{
-	char buf[ 22 ];
-#if defined( _WIN32 )
-	sprintf_s( buf, "%llu", ulValue );
-#else
-    snprintf( buf, sizeof( buf ), "%llu", (long long unsigned int ) ulValue );
-#endif
-	return buf;
-}
-*/
+// std::string Uint64ToString( uint64_t ulValue )
+// {
+// 	char buf[ 22 ];
+// #if defined( _WIN32 )
+// 	sprintf_s( buf, "%llu", ulValue );
+// #else
+//     snprintf( buf, sizeof( buf ), "%llu", (long long unsigned int ) ulValue );
+// #endif
+// 	return buf;
+// }
+
 
 /** returns a uint64_t from a string */
 uint64_t StringToUint64( const std::string & sValue )

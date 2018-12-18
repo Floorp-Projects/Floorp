@@ -11,6 +11,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.graphics.Rect;
 import android.os.SystemClock;
+import android.support.annotation.UiThread;
 import android.util.Log;
 import android.util.Pair;
 import android.view.MotionEvent;
@@ -18,6 +19,7 @@ import android.view.InputDevice;
 
 import java.util.ArrayList;
 
+@UiThread
 public class PanZoomController extends JNIObject {
     private static final String LOGTAG = "GeckoNPZC";
     private static final int EVENT_SOURCE_SCROLL = 0;

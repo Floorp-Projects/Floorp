@@ -1065,7 +1065,7 @@ PostQueue.prototype = {
       this.log.trace("Server error response during a batch", response);
       // not clear what we should do here - we expect the consumer of this to
       // abort by throwing in the postCallback below.
-      await this.postCallback(response, !finalBatchPost);
+      await this.postCallback(this, response, !finalBatchPost);
       return;
     }
 
@@ -1073,7 +1073,7 @@ PostQueue.prototype = {
       this.log.trace("Committed batch", this.batchID);
       this.batchID = undefined; // we are now in "first post for the batch" state.
       this.lastModified = response.headers["x-last-modified"];
-      await this.postCallback(response, false);
+      await this.postCallback(this, response, false);
       return;
     }
 
@@ -1083,7 +1083,7 @@ PostQueue.prototype = {
       }
       this.batchID = null; // no batch semantics are in place.
       this.lastModified = response.headers["x-last-modified"];
-      await this.postCallback(response, false);
+      await this.postCallback(this, response, false);
       return;
     }
 
@@ -1110,6 +1110,6 @@ PostQueue.prototype = {
       throw new Error(`Invalid client/server batch state - client has ${this.batchID}, server has ${responseBatchID}`);
     }
 
-    await this.postCallback(response, true);
+    await this.postCallback(this, response, true);
   },
 };

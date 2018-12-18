@@ -21,6 +21,7 @@ import org.json.JSONObject;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.AnyThread;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -246,6 +247,7 @@ public final class EventDispatcher extends JNIObject {
      * @param message Bundle message
      * @param callback Optional object for callbacks from events.
      */
+    @AnyThread
     public void dispatch(final String type, final GeckoBundle message,
                          final EventCallback callback) {
         final boolean isGeckoReady;

@@ -4465,7 +4465,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetPixelValue(
     use style::properties::longhands::border_spacing::SpecifiedValue as BorderSpacing;
     use style::properties::{LonghandId, PropertyDeclaration};
     use style::values::generics::length::MozLength;
-    use style::values::specified::length::{LengthOrPercentage, NoCalcLength, NonNegativeLength};
+    use style::values::specified::length::{NoCalcLength, NonNegativeLength, NonNegativeLengthOrPercentage};
     use style::values::specified::{BorderCornerRadius, BorderSideWidth};
 
     let long = get_longhand_from_id!(property);
@@ -4491,19 +4491,19 @@ pub extern "C" fn Servo_DeclarationBlock_SetPixelValue(
             Box::new(BorderSpacing::new(v.clone(), v))
         },
         BorderTopLeftRadius => {
-            let length = LengthOrPercentage::from(nocalc);
+            let length = NonNegativeLengthOrPercentage::from(nocalc);
             Box::new(BorderCornerRadius::new(length.clone(), length))
         },
         BorderTopRightRadius => {
-            let length = LengthOrPercentage::from(nocalc);
+            let length = NonNegativeLengthOrPercentage::from(nocalc);
             Box::new(BorderCornerRadius::new(length.clone(), length))
         },
         BorderBottomLeftRadius => {
-            let length = LengthOrPercentage::from(nocalc);
+            let length = NonNegativeLengthOrPercentage::from(nocalc);
             Box::new(BorderCornerRadius::new(length.clone(), length))
         },
         BorderBottomRightRadius => {
-            let length = LengthOrPercentage::from(nocalc);
+            let length = NonNegativeLengthOrPercentage::from(nocalc);
             Box::new(BorderCornerRadius::new(length.clone(), length))
         },
     };

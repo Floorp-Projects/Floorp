@@ -59,7 +59,6 @@ Pattern({
           JSString:             { count: Pattern.NATURAL },
           'js::Shape':          { count: Pattern.NATURAL },
           JSObject:             { count: Pattern.NATURAL },
-          JSScript:             { count: Pattern.NATURAL }
         })
   .assert(dbg.memory.takeCensus({ breakdown: { by: 'internalType' } }));
 
@@ -77,7 +76,6 @@ Pattern({
           JSString:    coarse_type_pattern,
           'js::Shape': coarse_type_pattern,
           JSObject:    coarse_type_pattern,
-          JSScript:    coarse_type_pattern,
         })
   .assert(dbg.memory.takeCensus({
     breakdown: { by: 'internalType',

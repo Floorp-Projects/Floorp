@@ -194,6 +194,12 @@ SourceClient.prototype = {
       });
     };
 
+    // With async sourcemap processing removed from the server, it is not
+    // necessary for clients to pause the debuggee before adding breakpoints.
+    if (this._client.mainRoot.traits.breakpointWhileRunning) {
+      return doSetBreakpoint();
+    }
+
     // If the debuggee is paused, just set the breakpoint.
     if (this._activeThread.paused) {
       return doSetBreakpoint();

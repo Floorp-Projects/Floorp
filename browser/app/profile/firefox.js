@@ -1271,11 +1271,7 @@ pref("browser.library.activity-stream.enabled", true);
 pref("browser.newtabpage.activity-stream.fxaccounts.endpoint", "https://accounts.firefox.com/");
 
 // The pref that controls if the search shortcuts experiment is on
-#ifdef EARLY_BETA_OR_EARLIER
 pref("browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts", true);
-#else
-pref("browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts", false);
-#endif
 
 // ASRouter provider configuration
 #if defined(NIGHTLY_BUILD)
