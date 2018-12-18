@@ -5133,12 +5133,10 @@ void js::gc::DelayCrossCompartmentGrayMarking(JSObject* src) {
 }
 
 void GCRuntime::markIncomingCrossCompartmentPointers(MarkColor color) {
-  MOZ_ASSERT(color == MarkColor::Black || color == MarkColor::Gray);
-
-  static const gcstats::PhaseKind statsPhases[] = {
-      gcstats::PhaseKind::SWEEP_MARK_INCOMING_BLACK,
-      gcstats::PhaseKind::SWEEP_MARK_INCOMING_GRAY};
-  gcstats::AutoPhase ap1(stats(), statsPhases[unsigned(color)]);
+  gcstats::AutoPhase ap(
+    stats(),
+    color == MarkColor::Black ? gcstats::PhaseKind::SWEEP_MARK_INCOMING_BLACK
+                              : gcstats::PhaseKind::SWEEP_MARK_INCOMING_GRAY);
 
   bool unlinkList = color == MarkColor::Gray;
 
@@ -5325,7 +5323,7 @@ IncrementalProgress GCRuntime::markGrayReferencesInCurrentGroup(
   }
 #endif
 
-  return marker.markUntilBudgetExhausted(budget) ? Finished : NotFinished;
+  return markUntilBudgetExhausted(budget, gcstats::PhaseKind::SWEEP_MARK_GRAY);
 }
 
 IncrementalProgress GCRuntime::endMarkingSweepGroup(FreeOp* fop,

@@ -1197,9 +1197,15 @@ void nsHtml5StreamParser::DoDataAvailableBuffer(mozilla::Buffer<uint8_t>&& aBuff
     DoDataAvailable(mBufferedLocalFileData.LastElement());
   } else {
     // Truncation OK, because the constant is small enough.
+    size_t overBoundary =
+        bufferedPlusLength.value() - LOCAL_FILE_UTF_8_BUFFER_SIZE;
+    MOZ_RELEASE_ASSERT(overBoundary < aBuffer.Length());
+    size_t untilBoundary = aBuffer.Length() - overBoundary;
     auto span = aBuffer.AsSpan();
-    auto head = span.To(LOCAL_FILE_UTF_8_BUFFER_SIZE);
-    auto tail = span.From(LOCAL_FILE_UTF_8_BUFFER_SIZE);
+    auto head = span.To(untilBoundary);
+    auto tail = span.From(untilBoundary);
+    MOZ_RELEASE_ASSERT(mLocalFileBytesBuffered + untilBoundary ==
+                       LOCAL_FILE_UTF_8_BUFFER_SIZE);
     // We make a theoretically useless copy here, because avoiding
     // the copy adds too much complexity.
     Maybe<Buffer<uint8_t>> maybe = Buffer<uint8_t>::CopyFrom(head);
