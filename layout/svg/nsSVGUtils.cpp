@@ -1336,7 +1336,7 @@ static gfxRect PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
     // another simple color.
     if (paintIfVisited.Type() == eStyleSVGPaintType_Color &&
         paint.Type() == eStyleSVGPaintType_Color) {
-      nscolor colors[2] = {color, paintIfVisited.GetColor(aComputedStyle)};
+      nscolor colors[2] = {color, paintIfVisited.GetColor(styleIfVisited)};
       return ComputedStyle::CombineVisitedColors(
           colors, aComputedStyle->RelevantLinkVisited());
     }
