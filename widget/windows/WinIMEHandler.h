@@ -67,6 +67,27 @@ class IMEHandler final {
   static bool IsA11yHandlingNativeCaret();
 
   /**
+   * CreateNativeCaret() create native caret if this has been created it.
+   *
+   * @param aWindow     The window which owns the caret.
+   * @param aCaretRect  The caret rect relative to aWindow.
+   */
+  static bool CreateNativeCaret(nsWindow* aWindow,
+                                const LayoutDeviceIntRect& aCaretRect);
+
+  /**
+   * MaybeDestroyNativeCaret() destroies native caret if it has been created
+   * by IMEHandler.
+   */
+  static void MaybeDestroyNativeCaret();
+
+  /**
+   * HasNativeCaret() returns true if there is native caret and it was created
+   * by IMEHandler.
+   */
+  static bool HasNativeCaret() { return sNativeCaretIsCreated; }
+
+  /**
    * When there is a composition, returns true.  Otherwise, false.
    */
   static bool IsComposing();
@@ -151,6 +172,7 @@ class IMEHandler final {
 
   static bool sForceDisableCurrentIMM_IME;
   static bool sPluginHasFocus;
+  static bool sNativeCaretIsCreated;
 
 #ifdef NS_ENABLE_TSF
   static decltype(SetInputScopes)* sSetInputScopes;
