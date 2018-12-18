@@ -99,7 +99,7 @@ ParseNode* ParseNode::appendOrCreateList(ParseNodeKind kind, ParseNode* left,
 }
 
 const ParseNodeArity js::frontend::ParseNodeKindArity[] = {
-#define ARITY(_name, arity) arity,
+#define ARITY(_name, type) type::arity(),
     FOR_EACH_PARSE_NODE_KIND(ARITY)
 #undef ARITY
 };
@@ -107,7 +107,7 @@ const ParseNodeArity js::frontend::ParseNodeKindArity[] = {
 #ifdef DEBUG
 
 static const char* const parseNodeNames[] = {
-#define STRINGIFY(name, _arity) #name,
+#define STRINGIFY(name, _type) #name,
     FOR_EACH_PARSE_NODE_KIND(STRINGIFY)
 #undef STRINGIFY
 };
