@@ -7,7 +7,7 @@
 [NoInterfaceObject, JSImplementation="@mozilla.org/sidebar;1"]
 interface External
 {
-  [UseCounter]
+  [Deprecated="External_AddSearchProvider"]
   void AddSearchProvider(DOMString aDescriptionURL);
   void IsSearchProviderInstalled();
 };

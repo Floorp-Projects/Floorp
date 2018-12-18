@@ -65,7 +65,7 @@ JSObject* SymbolObject::initClass(JSContext* cx, Handle<GlobalObject*> global,
     WellKnownSymbols* wks = cx->runtime()->wellKnownSymbols;
     for (size_t i = 0; i < JS::WellKnownSymbolLimit; i++) {
 #ifndef NIGHTLY_BUILD
-      if (i == SymbolCode::matchAll) {
+      if (i == static_cast<size_t>(SymbolCode::matchAll)) {
         continue;
       }
 #endif
