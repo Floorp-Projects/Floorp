@@ -312,7 +312,7 @@ class Namespace(Block):
 class Type(Node):
     def __init__(self, name, const=False,
                  ptr=False, ptrconst=False, ptrptr=False, ptrconstptr=False,
-                 ref=0,
+                 ref=False, rvalref=False,
                  hasimplicitcopyctor=True,
                  T=None,
                  inner=None):
@@ -327,11 +327,10 @@ of pointer types that can be be constructed.
   ptrconst       => T* const
   ptrptr         => T**
   ptrconstptr    => T* const*
+  ref            => T&
+  rvalref        => T&&
 
 Any type, naked or pointer, can be const (const T) or ref (T&).
-
-ref is an integer, indicating how many "levels" of references exist. So ref=2
-indicates T&&.
 """
         assert isinstance(name, str)
         assert isinstance(const, bool)
@@ -339,6 +338,8 @@ indicates T&&.
         assert isinstance(ptrconst, bool)
         assert isinstance(ptrptr, bool)
         assert isinstance(ptrconstptr, bool)
+        assert isinstance(ref, bool)
+        assert isinstance(rvalref, bool)
         assert not isinstance(T, str)
 
         Node.__init__(self)
@@ -349,6 +350,7 @@ indicates T&&.
         self.ptrptr = ptrptr
         self.ptrconstptr = ptrconstptr
         self.ref = ref
+        self.rvalref = rvalref
         self.hasimplicitcopyctor = hasimplicitcopyctor
         self.T = T
         self.inner = inner
@@ -360,7 +362,7 @@ indicates T&&.
                     const=self.const,
                     ptr=self.ptr, ptrconst=self.ptrconst,
                     ptrptr=self.ptrptr, ptrconstptr=self.ptrconstptr,
-                    ref=self.ref,
+                    ref=self.ref, rvalref=self.rvalref,
                     T=copy.deepcopy(self.T, memo),
                     inner=copy.deepcopy(self.inner, memo))
 
@@ -766,7 +768,7 @@ class ExprMove(ExprCall):
 class ExprNew(Node):
     # XXX taking some poetic license ...
     def __init__(self, ctype, args=[], newargs=None):
-        assert not (ctype.const or ctype.ref)
+        assert not (ctype.const or ctype.ref or ctype.rvalref)
 
         Node.__init__(self)
         self.ctype = ctype
