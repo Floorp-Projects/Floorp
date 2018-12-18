@@ -91,7 +91,7 @@ class VRDisplayHost {
   // VRLayerParent destructor
 
  protected:
-  virtual VRHMDSensorState GetSensorState() = 0;
+  virtual VRHMDSensorState& GetSensorState() = 0;
 
   RefPtr<VRThread> mSubmitThread;
 

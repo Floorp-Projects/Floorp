@@ -139,7 +139,7 @@ void VRDisplayPuppet::Destroy() { StopPresentation(); }
 
 void VRDisplayPuppet::ZeroSensor() {}
 
-VRHMDSensorState VRDisplayPuppet::GetSensorState() {
+VRHMDSensorState& VRDisplayPuppet::GetSensorState() {
   mSensorState.inputFrameID = mDisplayInfo.mFrameId;
 
   Matrix4x4 matHeadToEye[2];

@@ -29,7 +29,7 @@ class VRDisplayClient {
   void UpdateSubmitFrameResult(const VRSubmitFrameResultInfo& aResult);
 
   const VRDisplayInfo& GetDisplayInfo() const { return mDisplayInfo; }
-  virtual VRHMDSensorState GetSensorState();
+  virtual const VRHMDSensorState& GetSensorState() const;
   void GetSubmitFrameResult(VRSubmitFrameResultInfo& aResult);
 
   virtual void ZeroSensor();
