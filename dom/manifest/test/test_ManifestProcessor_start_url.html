@@ -33,12 +33,13 @@ var result = processor.process(data);
 is(result.start_url.toString(), docURL.toString(), expected);
 
 // Empty string test
-var expected = `Expect empty string for start_url to become document's URL.`;
+expected = `Expect empty string for start_url to become document's URL.`;
 data.jsonText = JSON.stringify({
   start_url: "",
 });
-var result = processor.process(data);
+result = processor.process(data);
 is(result.start_url.toString(), docURL.toString(), expected);
+
 
 // Resolve URLs relative to manfiest
 var URLs = ["path", "/path", "../../path",
@@ -46,14 +47,16 @@ var URLs = ["path", "/path", "../../path",
   `${whiteSpace}/path`,
   `${whiteSpace}../../path`,
 ];
+
 URLs.forEach((url) => {
-  var expected = `Resolve URLs relative to manifest.`;
+  expected = `Resolve URLs relative to manifest.`;
   data.jsonText = JSON.stringify({
     start_url: url,
   });
   var absURL = new URL(url, manifestURL).toString();
-  var result = processor.process(data);
+  result = processor.process(data);
   is(result.start_url.toString(), absURL, expected);
 });
+
   </script>
 </head>

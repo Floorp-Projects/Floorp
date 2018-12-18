@@ -23,7 +23,7 @@ typeTests.forEach((type) => {
     icons: type,
   });
   var result = processor.process(data);
-  var y = SpecialPowers.unwrap(result.icons);
+  SpecialPowers.unwrap(result.icons);
   is(result.icons.length, 0, expected);
 });
   </script>

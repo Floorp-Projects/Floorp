@@ -3,9 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 /* globals Components, Task, PromiseMessage */
 "use strict";
-const {
-  utils: Cu,
-} = Components;
+
 ChromeUtils.import("resource://gre/modules/PromiseMessage.jsm");
 
 var ManifestFinder = {// jshint ignore:line

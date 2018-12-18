@@ -21,9 +21,7 @@
  */
 /* globals Components, ValueExtractor, ImageObjectProcessor, ConsoleAPI*/
 "use strict";
-const {
-  utils: Cu,
-} = Components;
+
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 const displayModes = new Set(["fullscreen", "standalone", "minimal-ui",
