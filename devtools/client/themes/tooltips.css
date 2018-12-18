@@ -425,7 +425,9 @@
   margin-inline-end: 8px;
   width: 16px;
   height: 16px;
-  vertical-align: top;
+  /* Better optical alignment than with 'vertical-align: middle'.
+     Works well with font sizes between 12px and 16px. */
+  vertical-align: -3px;
   -moz-context-properties: fill;
   fill: currentColor;
   background-image: var(--menuitem-icon-image);
