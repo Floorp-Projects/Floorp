@@ -1051,6 +1051,9 @@ void GeckoEditableSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
 
 bool GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
                                          jni::String::Param aText) {
+  ALOGIME("IME: IME_REPLACE_TEXT: text=\"%s\"",
+          NS_ConvertUTF16toUTF8(aText->ToString()).get());
+
   // Return true if processed and we should reply to the OnImeReplaceText
   // event later. Return false if _not_ processed and we should reply to the
   // OnImeReplaceText event now.
@@ -1297,6 +1300,7 @@ bool GeckoEditableSupport::DoUpdateComposition(int32_t aStart, int32_t aEnd,
   }
   mDispatcher->SetPendingComposition(string, mIMERanges);
   mDispatcher->FlushPendingComposition(status);
+  mIMEActiveCompositionCount++;
   mIMERanges->Clear();
   return true;
 }
@@ -1434,11 +1438,11 @@ nsresult GeckoEditableSupport::NotifyIME(
     case NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED: {
       ALOGIME("IME: NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED");
 
-      // We often only get one event-handled notification after a pair of
-      // update-composition then replace-text calls. Therefore, only count
-      // the number of composition events for replace-text calls to reduce
-      // the chance of mismatch.
-      if (!(--mIMEActiveCompositionCount) && mIMEDelaySynchronizeReply) {
+      // NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED isn't sent per IME call.
+      // Receiving this event means that Gecko has already handled all IME
+      // composing events in queue.
+      mIMEActiveCompositionCount = 0;
+      if (mIMEDelaySynchronizeReply) {
         FlushIMEChanges();
       }
 
