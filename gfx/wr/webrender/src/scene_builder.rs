@@ -16,6 +16,10 @@ use intern::{Internable, Interner};
 use internal_types::{FastHashMap, FastHashSet};
 use prim_store::{PrimitiveDataInterner, PrimitiveDataUpdateList, PrimitiveKeyKind};
 use prim_store::PrimitiveStoreStats;
+use prim_store::borders::{
+    ImageBorder, ImageBorderDataInterner, ImageBorderDataUpdateList,
+    NormalBorderPrim, NormalBorderDataInterner, NormalBorderDataUpdateList
+};
 use prim_store::gradient::{
     LinearGradient, LinearGradientDataInterner, LinearGradientDataUpdateList,
     RadialGradient, RadialGradientDataInterner, RadialGradientDataUpdateList
@@ -40,7 +44,9 @@ pub struct DocumentResourceUpdates {
     pub clip_updates: ClipDataUpdateList,
     pub prim_updates: PrimitiveDataUpdateList,
     pub image_updates: ImageDataUpdateList,
+    pub image_border_updates: ImageBorderDataUpdateList,
     pub linear_grad_updates: LinearGradientDataUpdateList,
+    pub normal_border_updates: NormalBorderDataUpdateList,
     pub radial_grad_updates: RadialGradientDataUpdateList,
     pub text_run_updates: TextRunDataUpdateList,
     pub yuv_image_updates: YuvImageDataUpdateList,
@@ -192,7 +198,9 @@ pub struct DocumentResources {
     pub clip_interner: ClipDataInterner,
     pub prim_interner: PrimitiveDataInterner,
     pub image_interner: ImageDataInterner,
+    pub image_border_interner: ImageBorderDataInterner,
     pub linear_grad_interner: LinearGradientDataInterner,
+    pub normal_border_interner: NormalBorderDataInterner,
     pub radial_grad_interner: RadialGradientDataInterner,
     pub text_run_interner: TextRunDataInterner,
     pub yuv_image_interner: YuvImageDataInterner,
@@ -220,10 +228,12 @@ macro_rules! impl_internet_mut {
 
 impl_internet_mut! {
     Image: image_interner,
+    ImageBorder: image_border_interner,
     LinearGradient: linear_grad_interner,
+    NormalBorderPrim: normal_border_interner,
+    PrimitiveKeyKind: prim_interner,
     RadialGradient: radial_grad_interner,
     TextRun: text_run_interner,
-    PrimitiveKeyKind: prim_interner,
     YuvImage: yuv_image_interner,
 }
 
@@ -402,9 +412,19 @@ impl SceneBuilder {
                     .image_interner
                     .end_frame_and_get_pending_updates();
 
+                let image_border_updates = item
+                    .doc_resources
+                    .image_border_interner
+                    .end_frame_and_get_pending_updates();
+
                 let linear_grad_updates = item
                     .doc_resources
                     .linear_grad_interner
+                    .end_frame_and_get_pending_updates();
+
+                let normal_border_updates = item
+                    .doc_resources
+                    .normal_border_interner
                     .end_frame_and_get_pending_updates();
 
                 let radial_grad_updates = item
@@ -427,7 +447,9 @@ impl SceneBuilder {
                         clip_updates,
                         prim_updates,
                         image_updates,
+                        image_border_updates,
                         linear_grad_updates,
+                        normal_border_updates,
                         radial_grad_updates,
                         text_run_updates,
                         yuv_image_updates,
@@ -544,9 +566,19 @@ impl SceneBuilder {
                     .image_interner
                     .end_frame_and_get_pending_updates();
 
+                let image_border_updates = doc
+                    .resources
+                    .image_border_interner
+                    .end_frame_and_get_pending_updates();
+
                 let linear_grad_updates = doc
                     .resources
                     .linear_grad_interner
+                    .end_frame_and_get_pending_updates();
+
+                let normal_border_updates = doc
+                    .resources
+                    .normal_border_interner
                     .end_frame_and_get_pending_updates();
 
                 let radial_grad_updates = doc
@@ -569,7 +601,9 @@ impl SceneBuilder {
                         clip_updates,
                         prim_updates,
                         image_updates,
+                        image_border_updates,
                         linear_grad_updates,
+                        normal_border_updates,
                         radial_grad_updates,
                         text_run_updates,
                         yuv_image_updates,
