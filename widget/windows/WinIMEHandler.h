@@ -61,6 +61,12 @@ class IMEHandler final {
                              LPARAM& aLParam, MSGResult& aResult);
 
   /**
+   * IsA11yHandlingNativeCaret() returns true if a11y is handling
+   * native caret.  In such case, IME modules shouldn't touch native caret.
+   **/
+  static bool IsA11yHandlingNativeCaret();
+
+  /**
    * When there is a composition, returns true.  Otherwise, false.
    */
   static bool IsComposing();

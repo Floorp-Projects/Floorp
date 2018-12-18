@@ -21,6 +21,10 @@
 #include "nsIWindowsRegKey.h"
 #include "nsIWindowsUIUtils.h"
 
+#ifdef ACCESSIBILITY
+#include "nsAccessibilityService.h"
+#endif  // #ifdef ACCESSIBILITY
+
 #include "shellapi.h"
 #include "shlobj.h"
 #include "powrprof.h"
@@ -195,6 +199,16 @@ bool IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
   }
 
   return keepGoing;
+}
+
+// static
+bool IMEHandler::IsA11yHandlingNativeCaret() {
+#ifndef ACCESSIBILITY
+  return false;
+#else   // #ifndef ACCESSIBILITY
+  // Let's assume that when there is the service, it handles native caret.
+  return GetAccService() != nullptr;
+#endif  // #ifndef ACCESSIBILITY #else
 }
 
 #ifdef NS_ENABLE_TSF

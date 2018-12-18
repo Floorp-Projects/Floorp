@@ -4470,7 +4470,8 @@ TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
        "mContentForTSF={ MinOffsetOfLayoutChanged()=%u, "
        "LatestCompositionStartOffset()=%d, LatestCompositionEndOffset()=%d }, "
        "mComposition= { IsComposing()=%s, mStart=%d, EndOffset()=%d }, "
-       "mDeferNotifyingTSF=%s, mWaitingQueryLayout=%s",
+       "mDeferNotifyingTSF=%s, mWaitingQueryLayout=%s, "
+       "IMEHandler::IsA11yHandlingNativeCaret()=%s",
        this, vcView, acpStart, acpEnd, prc, pfClipped,
        GetBoolName(IsHandlingComposition()),
        mContentForTSF.MinOffsetOfLayoutChanged(),
@@ -4482,7 +4483,8 @@ TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
            : -1,
        GetBoolName(mComposition.IsComposing()), mComposition.mStart,
        mComposition.EndOffset(), GetBoolName(mDeferNotifyingTSF),
-       GetBoolName(mWaitingQueryLayout)));
+       GetBoolName(mWaitingQueryLayout),
+       GetBoolName(IMEHandler::IsA11yHandlingNativeCaret())));
 
   if (!IsReadLocked()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
@@ -4652,7 +4654,9 @@ TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
   // position.  Additionally, ATOK 2015 and earlier behaves really odd when
   // we don't create native caret.  Therefore, we need to create native caret
   // only when ATOK 2011 - 2015 is active (i.e., not necessary for ATOK 2016).
-  if (TSFPrefs::NeedToCreateNativeCaretForLegacyATOK() &&
+  // However, if a11y module is handling native caret, we shouldn't touch it.
+  if (!IMEHandler::IsA11yHandlingNativeCaret() &&
+      TSFPrefs::NeedToCreateNativeCaretForLegacyATOK() &&
       TSFStaticSink::IsATOKReferringNativeCaretActive() &&
       mComposition.IsComposing() && mComposition.mStart <= acpStart &&
       mComposition.EndOffset() >= acpStart && mComposition.mStart <= acpEnd &&
@@ -6444,6 +6448,8 @@ nsresult TSFTextStore::OnMouseButtonEventInternal(
 }
 
 void TSFTextStore::CreateNativeCaret() {
+  MOZ_ASSERT(!IMEHandler::IsA11yHandlingNativeCaret());
+
   MaybeDestroyNativeCaret();
 
   // Don't create native caret after destroyed.
