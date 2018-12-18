@@ -1,5 +1,5 @@
-//Used by JSHint:
-/*global Cu, BrowserTestUtils, ok, add_task, gBrowser */
+// Used by JSHint:
+/* global Cu, BrowserTestUtils, ok, add_task, gBrowser */
 "use strict";
 
 const { Manifests } = ChromeUtils.import("resource://gre/modules/Manifest.jsm", {});

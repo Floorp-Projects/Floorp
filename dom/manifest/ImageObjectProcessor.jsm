@@ -17,19 +17,19 @@
  *   .process(aManifest, aBaseURL, aMemberName);
  *
  */
-/*exported EXPORTED_SYMBOLS*/
-/*globals Components */
-'use strict';
+/* exported EXPORTED_SYMBOLS*/
+/* globals Components */
+"use strict";
 const {
   utils: Cu,
   interfaces: Ci,
-  classes: Cc
+  classes: Cc,
 } = Components;
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyGlobalGetters(this, ['URL']);
-const netutil = Cc['@mozilla.org/network/util;1']
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
+const netutil = Cc["@mozilla.org/network/util;1"]
   .getService(Ci.nsINetUtil);
 
 function ImageObjectProcessor(aConsole, aExtractor) {
@@ -39,27 +39,27 @@ function ImageObjectProcessor(aConsole, aExtractor) {
 
 // Static getters
 Object.defineProperties(ImageObjectProcessor, {
-  'decimals': {
-    get: function() {
+  "decimals": {
+    get() {
       return /^\d+$/;
-    }
+    },
   },
-  'anyRegEx': {
-    get: function() {
-      return new RegExp('any', 'i');
-    }
-  }
+  "anyRegEx": {
+    get() {
+      return new RegExp("any", "i");
+    },
+  },
 });
 
 ImageObjectProcessor.prototype.process = function(
   aManifest, aBaseURL, aMemberName
 ) {
   const spec = {
-    objectName: 'manifest',
+    objectName: "manifest",
     object: aManifest,
     property: aMemberName,
-    expectedType: 'array',
-    trim: false
+    expectedType: "array",
+    trim: false,
   };
   const extractor = this.extractor;
   const images = [];
@@ -74,9 +74,9 @@ ImageObjectProcessor.prototype.process = function(
 
   function toImageObject(aImageSpec) {
     return {
-      'src': processSrcMember(aImageSpec, aBaseURL),
-      'type': processTypeMember(aImageSpec),
-      'sizes': processSizesMember(aImageSpec),
+      "src": processSrcMember(aImageSpec, aBaseURL),
+      "type": processTypeMember(aImageSpec),
+      "sizes": processSizesMember(aImageSpec),
     };
   }
 
@@ -84,11 +84,11 @@ ImageObjectProcessor.prototype.process = function(
     const charset = {};
     const hadCharset = {};
     const spec = {
-      objectName: 'image',
+      objectName: "image",
       object: aImage,
-      property: 'type',
-      expectedType: 'string',
-      trim: true
+      property: "type",
+      expectedType: "string",
+      trim: true,
     };
     let value = extractor.extractValue(spec);
     if (value) {
@@ -99,11 +99,11 @@ ImageObjectProcessor.prototype.process = function(
 
   function processSrcMember(aImage, aBaseURL) {
     const spec = {
-      objectName: 'image',
+      objectName: "image",
       object: aImage,
-      property: 'src',
-      expectedType: 'string',
-      trim: false
+      property: "src",
+      expectedType: "string",
+      trim: false,
     };
     const value = extractor.extractValue(spec);
     let url;
@@ -118,11 +118,11 @@ ImageObjectProcessor.prototype.process = function(
   function processSizesMember(aImage) {
     const sizes = new Set();
     const spec = {
-      objectName: 'image',
+      objectName: "image",
       object: aImage,
-      property: 'sizes',
-      expectedType: 'string',
-      trim: true
+      property: "sizes",
+      expectedType: "string",
+      trim: true,
     };
     const value = extractor.extractValue(spec);
     if (value) {
@@ -138,17 +138,17 @@ ImageObjectProcessor.prototype.process = function(
       if (ImageObjectProcessor.anyRegEx.test(aSize)) {
         return true;
       }
-      if (!size.includes('x') || size.indexOf('x') !== size.lastIndexOf('x')) {
+      if (!size.includes("x") || size.indexOf("x") !== size.lastIndexOf("x")) {
         return false;
       }
       // Split left of x for width, after x for height.
-      const widthAndHeight = size.split('x');
+      const widthAndHeight = size.split("x");
       const w = widthAndHeight.shift();
-      const h = widthAndHeight.join('x');
-      const validStarts = !w.startsWith('0') && !h.startsWith('0');
+      const h = widthAndHeight.join("x");
+      const validStarts = !w.startsWith("0") && !h.startsWith("0");
       const validDecimals = ImageObjectProcessor.decimals.test(w + h);
       return (validStarts && validDecimals);
     }
   }
 };
-var EXPORTED_SYMBOLS = ['ImageObjectProcessor']; // jshint ignore:line
+var EXPORTED_SYMBOLS = ["ImageObjectProcessor"]; // jshint ignore:line

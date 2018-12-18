@@ -1,5 +1,5 @@
-//Used by JSHint:
-/*global Cu, BrowserTestUtils, ok, add_task, gBrowser */
+// Used by JSHint:
+/* global Cu, BrowserTestUtils, ok, add_task, gBrowser */
 "use strict";
 const { ManifestIcons } = ChromeUtils.import("resource://gre/modules/ManifestIcons.jsm", {});
 const { ManifestObtainer } = ChromeUtils.import("resource://gre/modules/ManifestObtainer.jsm", {});
@@ -10,11 +10,11 @@ defaultURL.searchParams.set("Content-Type", "application/manifest+json");
 const manifest = JSON.stringify({
   icons: [{
     sizes: "50x50",
-    src: "red-50.png?Content-type=image/png"
+    src: "red-50.png?Content-type=image/png",
   }, {
     sizes: "150x150",
-    src: "blue-150.png?Content-type=image/png"
-  }]
+    src: "blue-150.png?Content-type=image/png",
+  }],
 });
 
 function makeTestURL(manifest) {
@@ -27,7 +27,7 @@ function makeTestURL(manifest) {
 
 function getIconColor(icon) {
   return new Promise((resolve, reject) => {
-    const canvas = content.document.createElement('canvas');
+    const canvas = content.document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     const image = new content.Image();
     image.onload = function() {
@@ -47,10 +47,10 @@ add_task(async function() {
     const manifest = await ManifestObtainer.browserObtainManifest(browser);
     let icon = await ManifestIcons.browserFetchIcon(browser, manifest, 25);
     let color = await ContentTask.spawn(browser, icon, getIconColor);
-    is(color[0], 255, 'Fetched red icon');
+    is(color[0], 255, "Fetched red icon");
 
     icon = await ManifestIcons.browserFetchIcon(browser, manifest, 500);
     color = await ContentTask.spawn(browser, icon, getIconColor);
-    is(color[2], 255, 'Fetched blue icon');
+    is(color[2], 255, "Fetched blue icon");
   });
 });

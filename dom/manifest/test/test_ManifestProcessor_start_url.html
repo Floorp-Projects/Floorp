@@ -14,42 +14,42 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1079453
  * Manifest start_url
  * https://w3c.github.io/manifest/#start_url-member
  **/
-'use strict';
+"use strict";
 typeTests.forEach((type) => {
   var expected = `Expect non - string start_url to be doc's url: ${typeof type}.`;
   data.jsonText = JSON.stringify({
-    start_url: type
+    start_url: type,
   });
   var result = processor.process(data);
   is(result.start_url.toString(), docURL.toString(), expected);
 });
 
-//Not same origin
+// Not same origin
 var expected = `Expect different origin URLs to become document's URL.`;
 data.jsonText = JSON.stringify({
-  start_url: 'http://not-same-origin'
+  start_url: "http://not-same-origin",
 });
 var result = processor.process(data);
 is(result.start_url.toString(), docURL.toString(), expected);
 
-//Empty string test
+// Empty string test
 var expected = `Expect empty string for start_url to become document's URL.`;
 data.jsonText = JSON.stringify({
-  start_url: ''
+  start_url: "",
 });
 var result = processor.process(data);
 is(result.start_url.toString(), docURL.toString(), expected);
 
-//Resolve URLs relative to manfiest
-var URLs = ['path', '/path', '../../path',
+// Resolve URLs relative to manfiest
+var URLs = ["path", "/path", "../../path",
   `${whiteSpace}path${whiteSpace}`,
   `${whiteSpace}/path`,
-  `${whiteSpace}../../path`
+  `${whiteSpace}../../path`,
 ];
 URLs.forEach((url) => {
   var expected = `Resolve URLs relative to manifest.`;
   data.jsonText = JSON.stringify({
-    start_url: url
+    start_url: url,
   });
   var absURL = new URL(url, manifestURL).toString();
   var result = processor.process(data);

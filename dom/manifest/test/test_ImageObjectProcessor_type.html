@@ -15,20 +15,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1079453
  * https://w3c.github.io/manifest/#type-member
  **/
 
-'use strict';
+"use strict";
 var testIcon = {
   icons: [{
-    src: 'test',
-    type: undefined
-  }]
+    src: "test",
+    type: undefined,
+  }],
 };
 
 var invalidMimeTypes = [
-  'application / text',
-  'test;test',
-  ';test?test',
-  'application\\text',
-  'image/jpeg, image/gif'
+  "application / text",
+  "test;test",
+  ";test?test",
+  "application\\text",
+  "image/jpeg, image/gif",
 ];
 invalidMimeTypes.forEach((invalidMime) => {
   var expected = `Expect invalid mime to be treated like undefined.`;
@@ -39,11 +39,11 @@ invalidMimeTypes.forEach((invalidMime) => {
 });
 
 var validTypes = [
-  'image/jpeg',
-  'IMAGE/jPeG',
+  "image/jpeg",
+  "IMAGE/jPeG",
   `${whiteSpace}image/jpeg${whiteSpace}`,
-  'image/JPEG; whatever=something',
-  'image/JPEG;whatever'
+  "image/JPEG; whatever=something",
+  "image/JPEG;whatever",
 ];
 
 validTypes.forEach((validMime) => {
@@ -51,7 +51,7 @@ validTypes.forEach((validMime) => {
   testIcon.icons[0].type = validMime;
   data.jsonText = JSON.stringify(testIcon);
   var result = processor.process(data);
-  is(result.icons[0].type, 'image/jpeg', expected);
+  is(result.icons[0].type, "image/jpeg", expected);
 });
   </script>
 </head>
