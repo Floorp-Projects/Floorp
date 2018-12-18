@@ -1,0 +1,216 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>DefaultSettings - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.concept.engine</a>&nbsp;/&nbsp;<a href="./index.html">DefaultSettings</a><br/>
+<br/>
+<h1>DefaultSettings</h1>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">DefaultSettings</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-settings/index.html"><span class="identifier">Settings</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L126">(source)</a>
+<p><a href="../-settings/index.html">Settings</a> implementation used to set defaults for <a href="../-engine/index.html">Engine</a> and <a href="../-engine-session/index.html">EngineSession</a>.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">DefaultSettings</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/javascriptEnabled">javascriptEnabled</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/domStorageEnabled">domStorageEnabled</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/webFontsEnabled">webFontsEnabled</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/mediaPlaybackRequiresUserGesture">mediaPlaybackRequiresUserGesture</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/trackingProtectionPolicy">trackingProtectionPolicy</span><span class="symbol">:</span>&nbsp;<a href="../-engine-session/-tracking-protection-policy/index.html"><span class="identifier">TrackingProtectionPolicy</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/requestInterceptor">requestInterceptor</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine.request/-request-interceptor/index.html"><span class="identifier">RequestInterceptor</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/historyTrackingDelegate">historyTrackingDelegate</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine.history/-history-tracking-delegate/index.html"><span class="identifier">HistoryTrackingDelegate</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/userAgentString">userAgentString</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/javaScriptCanOpenWindowsAutomatically">javaScriptCanOpenWindowsAutomatically</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/displayZoomControls">displayZoomControls</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/loadWithOverviewMode">loadWithOverviewMode</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/allowFileAccess">allowFileAccess</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/allowFileAccessFromFileURLs">allowFileAccessFromFileURLs</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/allowUniversalAccessFromFileURLs">allowUniversalAccessFromFileURLs</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/allowContentAccess">allowContentAccess</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/verticalScrollBarEnabled">verticalScrollBarEnabled</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/horizontalScrollBarEnabled">horizontalScrollBarEnabled</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/remoteDebuggingEnabled">remoteDebuggingEnabled</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/supportMultipleWindows">supportMultipleWindows</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor, mozilla.components.concept.engine.history.HistoryTrackingDelegate, kotlin.String, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, kotlin.Boolean)/testingModeEnabled">testingModeEnabled</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">)</span></code>
+<p><a href="../-settings/index.html">Settings</a> implementation used to set defaults for <a href="../-engine/index.html">Engine</a> and <a href="../-engine-session/index.html">EngineSession</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="allow-content-access.html">allowContentAccess</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">allowContentAccess</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not the engine is allowed to load content from a content
+provider installed in the system.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="allow-file-access.html">allowFileAccess</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">allowFileAccess</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not file access is allowed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="allow-file-access-from-file-u-r-ls.html">allowFileAccessFromFileURLs</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">allowFileAccessFromFileURLs</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not JavaScript running in the context of a file scheme URL
+should be allowed to access content from other file scheme URLs.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="allow-universal-access-from-file-u-r-ls.html">allowUniversalAccessFromFileURLs</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">allowUniversalAccessFromFileURLs</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not JavaScript running in the context of a file scheme URL
+should be allowed to access content from any origin.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="display-zoom-controls.html">displayZoomControls</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">displayZoomControls</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not zoom controls should be displayed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="dom-storage-enabled.html">domStorageEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">domStorageEnabled</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not DOM Storage is enabled.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="history-tracking-delegate.html">historyTrackingDelegate</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">historyTrackingDelegate</span><span class="symbol">: </span><a href="../../mozilla.components.concept.engine.history/-history-tracking-delegate/index.html"><span class="identifier">HistoryTrackingDelegate</span></a><span class="symbol">?</span></code>
+<p>Setting to provide a history delegate to the engine.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="horizontal-scroll-bar-enabled.html">horizontalScrollBarEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">horizontalScrollBarEnabled</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not horizontal scrolling is enabled.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="java-script-can-open-windows-automatically.html">javaScriptCanOpenWindowsAutomatically</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">javaScriptCanOpenWindowsAutomatically</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not window.open can be called from JavaScript.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="javascript-enabled.html">javascriptEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">javascriptEnabled</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not JavaScript is enabled.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="load-with-overview-mode.html">loadWithOverviewMode</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">loadWithOverviewMode</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not the engine zooms out the content to fit on screen by width.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="media-playback-requires-user-gesture.html">mediaPlaybackRequiresUserGesture</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">mediaPlaybackRequiresUserGesture</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not a user gesture is required to play media.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="remote-debugging-enabled.html">remoteDebuggingEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">remoteDebuggingEnabled</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not remote debugging is enabled.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="request-interceptor.html">requestInterceptor</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">requestInterceptor</span><span class="symbol">: </span><a href="../../mozilla.components.concept.engine.request/-request-interceptor/index.html"><span class="identifier">RequestInterceptor</span></a><span class="symbol">?</span></code>
+<p>Setting to intercept and override requests.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="support-multiple-windows.html">supportMultipleWindows</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">supportMultipleWindows</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not multiple windows are supported.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="testing-mode-enabled.html">testingModeEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">testingModeEnabled</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not testing mode is enabled.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="tracking-protection-policy.html">trackingProtectionPolicy</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">trackingProtectionPolicy</span><span class="symbol">: </span><a href="../-engine-session/-tracking-protection-policy/index.html"><span class="identifier">TrackingProtectionPolicy</span></a><span class="symbol">?</span></code>
+<p>Setting to control tracking protection.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="user-agent-string.html">userAgentString</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">userAgentString</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Setting to control the user agent string.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="vertical-scroll-bar-enabled.html">verticalScrollBarEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">verticalScrollBarEnabled</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not vertical scrolling is enabled.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="web-fonts-enabled.html">webFontsEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">webFontsEnabled</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not Web fonts are enabled.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

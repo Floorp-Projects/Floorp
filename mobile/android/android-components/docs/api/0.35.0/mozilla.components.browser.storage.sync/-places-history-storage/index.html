@@ -1,0 +1,98 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>PlacesHistoryStorage - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.storage.sync</a>&nbsp;/&nbsp;<a href="./index.html">PlacesHistoryStorage</a><br/>
+<br/>
+<h1>PlacesHistoryStorage</h1>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">PlacesHistoryStorage</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.storage/-history-storage/index.html"><span class="identifier">HistoryStorage</span></a><span class="symbol">, </span><a href="../../mozilla.components.concept.storage/-syncable-store/index.html"><span class="identifier">SyncableStore</span></a><span class="symbol">&lt;</span><span class="identifier">SyncAuthInfo</span><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/PlacesHistoryStorage.kt#L36">(source)</a>
+<p>Implementation of the <a href="../../mozilla.components.concept.storage/-history-storage/index.html">HistoryStorage</a> which is backed by a Rust Places lib via <a href="#">PlacesConnection</a>.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">PlacesHistoryStorage</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.storage.sync.PlacesHistoryStorage$<init>(android.content.Context)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">)</span></code>
+<p>Implementation of the <a href="../../mozilla.components.concept.storage/-history-storage/index.html">HistoryStorage</a> which is backed by a Rust Places lib via <a href="#">PlacesConnection</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="cleanup.html">cleanup</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">cleanup</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Cleanup any allocated resources.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-autocomplete-suggestion.html">getAutocompleteSuggestion</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getAutocompleteSuggestion</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.storage.sync.PlacesHistoryStorage$getAutocompleteSuggestion(kotlin.String)/query">query</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../../mozilla.components.concept.storage/-history-autocomplete-result/index.html"><span class="identifier">HistoryAutocompleteResult</span></a><span class="symbol">?</span></code>
+<p>Retrieves domain suggestions which best match the <a href="get-autocomplete-suggestion.html#mozilla.components.browser.storage.sync.PlacesHistoryStorage$getAutocompleteSuggestion(kotlin.String)/query">query</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-suggestions.html">getSuggestions</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getSuggestions</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.storage.sync.PlacesHistoryStorage$getSuggestions(kotlin.String, kotlin.Int)/query">query</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.storage.sync.PlacesHistoryStorage$getSuggestions(kotlin.String, kotlin.Int)/limit">limit</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../../mozilla.components.concept.storage/-search-result/index.html"><span class="identifier">SearchResult</span></a><span class="symbol">&gt;</span></code>
+<p>Retrieves suggestions matching the <a href="get-suggestions.html#mozilla.components.browser.storage.sync.PlacesHistoryStorage$getSuggestions(kotlin.String, kotlin.Int)/query">query</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-visited.html">getVisited</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">getVisited</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.storage.sync.PlacesHistoryStorage$getVisited(kotlin.collections.List((kotlin.String)))/uris">uris</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">&gt;</span></code>
+<p>Maps a list of page URIs to a list of booleans indicating if each URI was visited.</p>
+<code><span class="keyword">open</span> <span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">getVisited</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span></code>
+<p>Retrieves a list of all visited pages.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="record-observation.html">recordObservation</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">recordObservation</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.storage.sync.PlacesHistoryStorage$recordObservation(kotlin.String, mozilla.components.concept.storage.PageObservation)/uri">uri</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.storage.sync.PlacesHistoryStorage$recordObservation(kotlin.String, mozilla.components.concept.storage.PageObservation)/observation">observation</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.storage/-page-observation/index.html"><span class="identifier">PageObservation</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Records an observation about a page.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="record-visit.html">recordVisit</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">recordVisit</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.storage.sync.PlacesHistoryStorage$recordVisit(kotlin.String, mozilla.components.concept.storage.VisitType)/uri">uri</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.storage.sync.PlacesHistoryStorage$recordVisit(kotlin.String, mozilla.components.concept.storage.VisitType)/visitType">visitType</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.storage/-visit-type/index.html"><span class="identifier">VisitType</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Records a visit to a page.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="sync.html">sync</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">sync</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.storage.sync.PlacesHistoryStorage$sync(org.mozilla.places.SyncAuthInfo)/authInfo">authInfo</span><span class="symbol">:</span>&nbsp;<span class="identifier">SyncAuthInfo</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../mozilla.components.concept.storage/-sync-status.html"><span class="identifier">SyncStatus</span></a></code>
+<p>Performs a sync.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

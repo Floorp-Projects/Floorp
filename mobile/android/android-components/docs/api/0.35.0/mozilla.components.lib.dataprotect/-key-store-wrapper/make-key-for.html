@@ -1,0 +1,27 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>KeyStoreWrapper.makeKeyFor - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.lib.dataprotect</a>&nbsp;/&nbsp;<a href="index.html">KeyStoreWrapper</a>&nbsp;/&nbsp;<a href="./make-key-for.html">makeKeyFor</a><br/>
+<br/>
+<h1>makeKeyFor</h1>
+<a name="mozilla.components.lib.dataprotect.KeyStoreWrapper$makeKeyFor(kotlin.String)"></a>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">makeKeyFor</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.dataprotect.KeyStoreWrapper$makeKeyFor(kotlin.String)/label">label</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/javax/crypto/SecretKey.html"><span class="identifier">SecretKey</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L84">(source)</a>
+<p>Creates a SecretKey for the given label.</p>
+<p>This method generates a SecretKey pre-bound to the <code>AndroidKeyStore</code> and configured
+with the strongest "algorithm/blockmode/padding" (and key size) available.</p>
+<p>Subclasses override this method to properly associate the generated key with
+the given label in the underlying KeyStore.</p>
+<h3>Parameters</h3>
+<p><a name="label"></a>
+<code>label</code> - The label to associate with the created key</p>
+<h3>Exceptions</h3>
+<p><a name="NoSuchAlgorithmException"></a>
+<code>NoSuchAlgorithmException</code> - If the cipher algorithm is not supported</p>
+<p><strong>Return</strong><br/>
+The newly-generated key for <code>label</code></p>
+</BODY>
+</HTML>

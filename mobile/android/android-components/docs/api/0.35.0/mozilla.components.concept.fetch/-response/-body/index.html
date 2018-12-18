@@ -1,0 +1,84 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Response.Body - android-components</title>
+<link rel="stylesheet" href="../../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../../index.html">mozilla.components.concept.fetch</a>&nbsp;/&nbsp;<a href="../index.html">Response</a>&nbsp;/&nbsp;<a href="./index.html">Body</a><br/>
+<br/>
+<h1>Body</h1>
+<code><span class="keyword">class </span><span class="identifier">Body</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/io/Closeable.html"><span class="identifier">Closeable</span></a><span class="symbol">, </span><a href="https://developer.android.com/reference/java/lang/AutoCloseable.html"><span class="identifier">AutoCloseable</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Response.kt#L48">(source)</a>
+<p>A <a href="./index.html">Body</a> returned along with the <a href="../../-request/index.html">Request</a>.</p>
+<p><strong>The response body can be consumed only once.</strong>.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Body</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.fetch.Response.Body$<init>(java.io.InputStream)/stream">stream</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/io/InputStream.html"><span class="identifier">InputStream</span></a><span class="symbol">)</span></code>
+<p>A <a href="./index.html">Body</a> returned along with the <a href="../../-request/index.html">Request</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="close.html">close</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">close</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Closes this <a href="./index.html">Body</a> and releases any system resources associated with it.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="string.html">string</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">string</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.fetch.Response.Body$string(java.nio.charset.Charset)/charset">charset</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/nio/charset/Charset.html"><span class="identifier">Charset</span></a>&nbsp;<span class="symbol">=</span>&nbsp;Charsets.UTF_8<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Reads this body completely as a String.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="use-buffered-reader.html">useBufferedReader</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">R</span><span class="symbol">&gt;</span> <span class="identifier">useBufferedReader</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.fetch.Response.Body$useBufferedReader(java.nio.charset.Charset, kotlin.Function1((java.io.BufferedReader, mozilla.components.concept.fetch.Response.Body.useBufferedReader.R)))/charset">charset</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/nio/charset/Charset.html"><span class="identifier">Charset</span></a>&nbsp;<span class="symbol">=</span>&nbsp;Charsets.UTF_8<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.fetch.Response.Body$useBufferedReader(java.nio.charset.Charset, kotlin.Function1((java.io.BufferedReader, mozilla.components.concept.fetch.Response.Body.useBufferedReader.R)))/block">block</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="https://developer.android.com/reference/java/io/BufferedReader.html"><span class="identifier">BufferedReader</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="use-buffered-reader.html#R"><span class="identifier">R</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="use-buffered-reader.html#R"><span class="identifier">R</span></a></code>
+<p>Creates a buffered reader from this body.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="use-stream.html">useStream</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">R</span><span class="symbol">&gt;</span> <span class="identifier">useStream</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.fetch.Response.Body$useStream(kotlin.Function1((java.io.InputStream, mozilla.components.concept.fetch.Response.Body.useStream.R)))/block">block</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="https://developer.android.com/reference/java/io/InputStream.html"><span class="identifier">InputStream</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="use-stream.html#R"><span class="identifier">R</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="use-stream.html#R"><span class="identifier">R</span></a></code>
+<p>Creates a usable stream from this body.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="empty.html">empty</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">empty</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Body</span></a></code>
+<p>Creates an empty response body.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

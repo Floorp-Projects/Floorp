@@ -1,0 +1,25 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>FirefoxSyncFeature.<init> - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.feature.sync</a>&nbsp;/&nbsp;<a href="index.html">FirefoxSyncFeature</a>&nbsp;/&nbsp;<a href="./-init-.html">&lt;init&gt;</a><br/>
+<br/>
+<h1>&lt;init&gt;</h1>
+<a name="mozilla.components.feature.sync.FirefoxSyncFeature$&lt;init&gt;(kotlin.collections.Map((kotlin.String, mozilla.components.concept.storage.SyncableStore((mozilla.components.feature.sync.FirefoxSyncFeature.AuthType)))), kotlin.SuspendFunction1((mozilla.components.feature.sync.FxaAuthInfo, mozilla.components.feature.sync.FirefoxSyncFeature.AuthType)))"></a>
+<code><span class="identifier">FirefoxSyncFeature</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.sync.FirefoxSyncFeature$<init>(kotlin.collections.Map((kotlin.String, mozilla.components.concept.storage.SyncableStore((mozilla.components.feature.sync.FirefoxSyncFeature.AuthType)))), kotlin.SuspendFunction1((mozilla.components.feature.sync.FxaAuthInfo, mozilla.components.feature.sync.FirefoxSyncFeature.AuthType)))/syncableStores">syncableStores</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html"><span class="identifier">Map</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">,</span>&nbsp;<a href="../../mozilla.components.concept.storage/-syncable-store/index.html"><span class="identifier">SyncableStore</span></a><span class="symbol">&lt;</span><a href="index.html#AuthType"><span class="identifier">AuthType</span></a><span class="symbol">&gt;</span><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.sync.FirefoxSyncFeature$<init>(kotlin.collections.Map((kotlin.String, mozilla.components.concept.storage.SyncableStore((mozilla.components.feature.sync.FirefoxSyncFeature.AuthType)))), kotlin.SuspendFunction1((mozilla.components.feature.sync.FxaAuthInfo, mozilla.components.feature.sync.FirefoxSyncFeature.AuthType)))/reifyAuth">reifyAuth</span><span class="symbol">:</span>&nbsp;<span class="keyword">suspend </span><span class="symbol">(</span><span class="identifier">authInfo</span><span class="symbol">:</span>&nbsp;<a href="../-fxa-auth-info/index.html"><span class="identifier">FxaAuthInfo</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="index.html#AuthType"><span class="identifier">AuthType</span></a><span class="symbol">)</span></code>
+<p>A feature implementation which orchestrates data synchronization of a set of <a href="../../mozilla.components.concept.storage/-syncable-store/index.html">SyncableStore</a> which
+all share a common <a href="index.html#AuthType">AuthType</a>.</p>
+<p><a href="index.html#AuthType">AuthType</a> provides us with a layer of indirection that allows consumers of <a href="index.html">FirefoxSyncFeature</a>
+to use entirely different types of <a href="../../mozilla.components.concept.storage/-syncable-store/index.html">SyncableStore</a>, without this feature needing to depend on
+their specific implementations. Those implementations might have heavy native dependencies
+(e.g. places and logins depend on native libraries), and we do not want to force a consumer which
+only cares about syncing logins to have to import a places native library.</p>
+<h3>Parameters</h3>
+<p><a name="reifyAuth"></a>
+<code>reifyAuth</code> - A conversion method which reifies a generic <a href="../-fxa-auth-info/index.html">FxaAuthInfo</a> into an object of
+type <a href="index.html#AuthType">AuthType</a>.</p>
+</BODY>
+</HTML>

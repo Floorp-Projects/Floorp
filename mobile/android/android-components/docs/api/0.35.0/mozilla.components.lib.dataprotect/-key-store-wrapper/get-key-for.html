@@ -1,0 +1,30 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>KeyStoreWrapper.getKeyFor - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.lib.dataprotect</a>&nbsp;/&nbsp;<a href="index.html">KeyStoreWrapper</a>&nbsp;/&nbsp;<a href="./get-key-for.html">getKeyFor</a><br/>
+<br/>
+<h1>getKeyFor</h1>
+<a name="mozilla.components.lib.dataprotect.KeyStoreWrapper$getKeyFor(kotlin.String)"></a>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getKeyFor</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.dataprotect.KeyStoreWrapper$getKeyFor(kotlin.String)/label">label</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/java/security/Key.html"><span class="identifier">Key</span></a><span class="symbol">?</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L68">(source)</a>
+<p>Retrieves the SecretKey for the given label.</p>
+<p>This method queries for a SecretKey with the given label and no passphrase.</p>
+<p>Subclasses override this method if additional properties are needed
+to retrieve the key.</p>
+<h3>Parameters</h3>
+<p><a name="label"></a>
+<code>label</code> - The label to query</p>
+<h3>Exceptions</h3>
+<p><a name="InvalidKeyException"></a>
+<code>InvalidKeyException</code> - If there is a Key but it is not a SecretKey</p>
+<p><a name="NoSuchAlgorithmException"></a>
+<code>NoSuchAlgorithmException</code> - If the recovery algorithm is not supported</p>
+<p><a name="UnrecoverableKeyException"></a>
+<code>UnrecoverableKeyException</code> - If the key could not be recovered for some reason</p>
+<p><strong>Return</strong><br/>
+The key for the given label, or <code>null</code> if not present</p>
+</BODY>
+</HTML>

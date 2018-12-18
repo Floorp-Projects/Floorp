@@ -1,0 +1,122 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Response - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.concept.fetch</a>&nbsp;/&nbsp;<a href="./index.html">Response</a><br/>
+<br/>
+<h1>Response</h1>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Response</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/io/Closeable.html"><span class="identifier">Closeable</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Response.kt#L30">(source)</a>
+<p>The <a href="./index.html">Response</a> data class represents a reponse to a <a href="../-request/index.html">Request</a> send by a <a href="../-client/index.html">Client</a>.</p>
+<p>You can create a <a href="./index.html">Response</a> object using the constructor, but you are more likely to encounter a <a href="./index.html">Response</a> object
+being returned as the result of calling <a href="../-client/fetch.html">Client.fetch</a>.</p>
+<p>A <a href="./index.html">Response</a> may hold references to other resources (e.g. streams). Therefore it's important to always close the
+<a href="./index.html">Response</a> object or its <a href="-body/index.html">Body</a>. This can be done by either consuming the content of the <a href="-body/index.html">Body</a> with one of the
+available methods or by using Kotlin's extension methods for using <a href="https://developer.android.com/reference/java/io/Closeable.html">Closeable</a> implementations (like <code>use()</code>):</p>
+<pre><code class="lang-Kotlin">val response = ...
+response.use {
+   // Use response. Resources will get released automatically at the end of the block.
+}
+</code></pre>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-body/index.html">Body</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">Body</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/io/Closeable.html"><span class="identifier">Closeable</span></a><span class="symbol">, </span><a href="https://developer.android.com/reference/java/lang/AutoCloseable.html"><span class="identifier">AutoCloseable</span></a></code>
+<p>A <a href="-body/index.html">Body</a> returned along with the <a href="../-request/index.html">Request</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Response</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.fetch.Response$<init>(kotlin.String, kotlin.Int, mozilla.components.concept.fetch.Headers, mozilla.components.concept.fetch.Response.Body)/url">url</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.fetch.Response$<init>(kotlin.String, kotlin.Int, mozilla.components.concept.fetch.Headers, mozilla.components.concept.fetch.Response.Body)/status">status</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.fetch.Response$<init>(kotlin.String, kotlin.Int, mozilla.components.concept.fetch.Headers, mozilla.components.concept.fetch.Response.Body)/headers">headers</span><span class="symbol">:</span>&nbsp;<a href="../-headers/index.html"><span class="identifier">Headers</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.fetch.Response$<init>(kotlin.String, kotlin.Int, mozilla.components.concept.fetch.Headers, mozilla.components.concept.fetch.Response.Body)/body">body</span><span class="symbol">:</span>&nbsp;<a href="-body/index.html"><span class="identifier">Body</span></a><span class="symbol">)</span></code>
+<p>The <a href="./index.html">Response</a> data class represents a reponse to a <a href="../-request/index.html">Request</a> send by a <a href="../-client/index.html">Client</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="body.html">body</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">body</span><span class="symbol">: </span><a href="-body/index.html"><span class="identifier">Body</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="headers.html">headers</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">headers</span><span class="symbol">: </span><a href="../-headers/index.html"><span class="identifier">Headers</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="status.html">status</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">status</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="url.html">url</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">url</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="close.html">close</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">close</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Closes this <a href="./index.html">Response</a> and its <a href="-body/index.html">Body</a> and releases any system resources associated with it.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Extension Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../client-error.html">clientError</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><a href="./index.html"><span class="identifier">Response</span></a><span class="symbol">.</span><span class="identifier">clientError</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if the response was a client error (status in the range 400-499) or false otherwise.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../success.html">success</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><a href="./index.html"><span class="identifier">Response</span></a><span class="symbol">.</span><span class="identifier">success</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if the response was successful (status in the range 200-299) or false otherwise.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

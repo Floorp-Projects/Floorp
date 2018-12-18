@@ -1,0 +1,105 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>ConsumableStream - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.support.base.observer</a>&nbsp;/&nbsp;<a href="./index.html">ConsumableStream</a><br/>
+<br/>
+<h1>ConsumableStream</h1>
+<code><span class="keyword">class </span><span class="identifier">ConsumableStream</span><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/Consumable.kt#L73">(source)</a>
+<p>A generic wrapper for a stream of values that can be consumed. Values will
+be consumed first in, first out.</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="append.html">append</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">append</span><span class="symbol">(</span><span class="keyword">vararg</span> <span class="identifier" id="mozilla.components.support.base.observer.ConsumableStream$append(kotlin.Array((mozilla.components.support.base.observer.ConsumableStream.T)))/values">values</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">ConsumableStream</span></a><span class="symbol">&lt;</span><a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">&gt;</span></code>
+<p>Copies the stream and appends the provided values.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="consume-all.html">consumeAll</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">consumeAll</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.observer.ConsumableStream$consumeAll(kotlin.Function1((mozilla.components.support.base.observer.ConsumableStream.T, kotlin.Boolean)))/consumer">consumer</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="identifier">value</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Invokes the given lambda for each consumable value and marks the values
+as consumed if the lambda returns true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="consume-all-by.html">consumeAllBy</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">consumeAllBy</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.observer.ConsumableStream$consumeAllBy(kotlin.collections.List((kotlin.Function1((mozilla.components.support.base.observer.ConsumableStream.T, kotlin.Boolean)))))/consumers">consumers</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><span class="symbol">(</span><a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Invokes the given list of lambdas for each consumable value and marks the
+values as consumed if at least one lambda returns true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="consume-next.html">consumeNext</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">consumeNext</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.observer.ConsumableStream$consumeNext(kotlin.Function1((mozilla.components.support.base.observer.ConsumableStream.T, kotlin.Boolean)))/consumer">consumer</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="identifier">value</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Invokes the given lambda with the next consumable value and marks the value
+as consumed if the lambda returns true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="consume-next-by.html">consumeNextBy</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">consumeNextBy</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.observer.ConsumableStream$consumeNextBy(kotlin.collections.List((kotlin.Function1((mozilla.components.support.base.observer.ConsumableStream.T, kotlin.Boolean)))))/consumers">consumers</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><span class="symbol">(</span><a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Invokes the given list of lambdas with the next consumable value and marks the
+value as consumed if at least one lambda returns true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="is-consumed.html">isConsumed</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">isConsumed</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if all values in this stream were consumed, otherwise false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="is-empty.html">isEmpty</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">isEmpty</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if the stream is empty, otherwise false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="remove.html">remove</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">remove</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.observer.ConsumableStream$remove(mozilla.components.support.base.observer.ConsumableStream.T)/value">value</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">ConsumableStream</span></a><span class="symbol">&lt;</span><a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">&gt;</span></code>
+<p>Copies the stream but removes all consumables equal to the provided value.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="remove-consumed.html">removeConsumed</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">removeConsumed</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">ConsumableStream</span></a><span class="symbol">&lt;</span><a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">&gt;</span></code>
+<p>Copies the stream but removes all consumed values.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

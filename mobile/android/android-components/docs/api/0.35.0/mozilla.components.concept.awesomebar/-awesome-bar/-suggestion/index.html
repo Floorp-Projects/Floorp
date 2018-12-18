@@ -1,0 +1,158 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>AwesomeBar.Suggestion - android-components</title>
+<link rel="stylesheet" href="../../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../../index.html">mozilla.components.concept.awesomebar</a>&nbsp;/&nbsp;<a href="../index.html">AwesomeBar</a>&nbsp;/&nbsp;<a href="./index.html">Suggestion</a><br/>
+<br/>
+<h1>Suggestion</h1>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Suggestion</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L71">(source)</a>
+<p>A <a href="./index.html">Suggestion</a> to be displayed by an <a href="../index.html">AwesomeBar</a> implementation.</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-chip/index.html">Chip</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Chip</span></code>
+<p>Chips are compact actions that are shown as part of a suggestion. For example a <a href="./index.html">Suggestion</a> from a search
+engine may offer multiple search suggestion chips for different search terms.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-flag/index.html">Flag</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">Flag</span></code>
+<p>Flags can be added by a <a href="../-suggestion-provider/index.html">SuggestionProvider</a> to help the <a href="../index.html">AwesomeBar</a> implementation decide how to display
+a specific <a href="./index.html">Suggestion</a>. For example an <a href="../index.html">AwesomeBar</a> could display a bookmark star icon next to <a href="./index.html">Suggestion</a>s
+that contain the <a href="-flag/-b-o-o-k-m-a-r-k.html">BOOKMARK</a> flag.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Suggestion</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.awesomebar.AwesomeBar.Suggestion$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Function2((kotlin.Int, , android.graphics.Bitmap)), kotlin.collections.List((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Chip)), kotlin.collections.Set((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Flag)), kotlin.Function0((kotlin.Unit)), kotlin.Function1((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Chip, kotlin.Unit)), kotlin.Int)/id">id</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a>&nbsp;<span class="symbol">=</span>&nbsp;UUID.randomUUID().toString()<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.awesomebar.AwesomeBar.Suggestion$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Function2((kotlin.Int, , android.graphics.Bitmap)), kotlin.collections.List((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Chip)), kotlin.collections.Set((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Flag)), kotlin.Function0((kotlin.Unit)), kotlin.Function1((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Chip, kotlin.Unit)), kotlin.Int)/title">title</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.awesomebar.AwesomeBar.Suggestion$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Function2((kotlin.Int, , android.graphics.Bitmap)), kotlin.collections.List((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Chip)), kotlin.collections.Set((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Flag)), kotlin.Function0((kotlin.Unit)), kotlin.Function1((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Chip, kotlin.Unit)), kotlin.Int)/description">description</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.awesomebar.AwesomeBar.Suggestion$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Function2((kotlin.Int, , android.graphics.Bitmap)), kotlin.collections.List((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Chip)), kotlin.collections.Set((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Flag)), kotlin.Function0((kotlin.Unit)), kotlin.Function1((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Chip, kotlin.Unit)), kotlin.Int)/icon">icon</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="identifier">width</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">,</span>&nbsp;<span class="identifier">height</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://developer.android.com/reference/android/graphics/Bitmap.html"><span class="identifier">Bitmap</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;{ _, _ -&gt; null }<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.awesomebar.AwesomeBar.Suggestion$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Function2((kotlin.Int, , android.graphics.Bitmap)), kotlin.collections.List((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Chip)), kotlin.collections.Set((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Flag)), kotlin.Function0((kotlin.Unit)), kotlin.Function1((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Chip, kotlin.Unit)), kotlin.Int)/chips">chips</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="-chip/index.html"><span class="identifier">Chip</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">=</span>&nbsp;emptyList()<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.awesomebar.AwesomeBar.Suggestion$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Function2((kotlin.Int, , android.graphics.Bitmap)), kotlin.collections.List((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Chip)), kotlin.collections.Set((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Flag)), kotlin.Function0((kotlin.Unit)), kotlin.Function1((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Chip, kotlin.Unit)), kotlin.Int)/flags">flags</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html"><span class="identifier">Set</span></a><span class="symbol">&lt;</span><a href="-flag/index.html"><span class="identifier">Flag</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">=</span>&nbsp;emptySet()<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.awesomebar.AwesomeBar.Suggestion$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Function2((kotlin.Int, , android.graphics.Bitmap)), kotlin.collections.List((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Chip)), kotlin.collections.Set((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Flag)), kotlin.Function0((kotlin.Unit)), kotlin.Function1((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Chip, kotlin.Unit)), kotlin.Int)/onSuggestionClicked">onSuggestionClicked</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.awesomebar.AwesomeBar.Suggestion$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Function2((kotlin.Int, , android.graphics.Bitmap)), kotlin.collections.List((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Chip)), kotlin.collections.Set((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Flag)), kotlin.Function0((kotlin.Unit)), kotlin.Function1((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Chip, kotlin.Unit)), kotlin.Int)/onChipClicked">onChipClicked</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="-chip/index.html"><span class="identifier">Chip</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.awesomebar.AwesomeBar.Suggestion$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Function2((kotlin.Int, , android.graphics.Bitmap)), kotlin.collections.List((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Chip)), kotlin.collections.Set((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Flag)), kotlin.Function0((kotlin.Unit)), kotlin.Function1((mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Chip, kotlin.Unit)), kotlin.Int)/score">score</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;0<span class="symbol">)</span></code>
+<p>A <a href="./index.html">Suggestion</a> to be displayed by an <a href="../index.html">AwesomeBar</a> implementation.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="chips.html">chips</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">chips</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="-chip/index.html"><span class="identifier">Chip</span></a><span class="symbol">&gt;</span></code>
+<p>A list of <a href="-chip/index.html">Chip</a> instances to be displayed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="description.html">description</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">description</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>A user-readable description for the <a href="./index.html">Suggestion</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="flags.html">flags</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">flags</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html"><span class="identifier">Set</span></a><span class="symbol">&lt;</span><a href="-flag/index.html"><span class="identifier">Flag</span></a><span class="symbol">&gt;</span></code>
+<p>A set of <a href="-flag/index.html">Flag</a> values for this <a href="./index.html">Suggestion</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="icon.html">icon</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">icon</span><span class="symbol">: </span><span class="symbol">(</span><span class="identifier">width</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">,</span>&nbsp;<span class="identifier">height</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://developer.android.com/reference/android/graphics/Bitmap.html"><span class="identifier">Bitmap</span></a><span class="symbol">?</span></code>
+<p>A lambda that can be invoked by the <a href="../index.html">AwesomeBar</a> implementation to receive an icon <a href="https://developer.android.com/reference/android/graphics/Bitmap.html">Bitmap</a> for
+this <a href="./index.html">Suggestion</a>. The <a href="../index.html">AwesomeBar</a> will pass in its desired width and height for the Bitmap.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="id.html">id</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">id</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>A unique ID identifying this <a href="./index.html">Suggestion</a>. A stable ID but different data indicates to the
+<a href="../index.html">AwesomeBar</a> that this is the same <a href="./index.html">Suggestion</a> with new data. This will affect how the <a href="../index.html">AwesomeBar</a>
+animates showing the new suggestion.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-chip-clicked.html">onChipClicked</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">onChipClicked</span><span class="symbol">: </span><span class="symbol">(</span><a href="-chip/index.html"><span class="identifier">Chip</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>A callback to be executed when a <a href="-chip/index.html">Chip</a> was clicked by the user.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-suggestion-clicked.html">onSuggestionClicked</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">onSuggestionClicked</span><span class="symbol">: </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>A callback to be executed when the <a href="./index.html">Suggestion</a> was clicked by the user.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="score.html">score</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">score</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>A score used to rank suggestions of this provider against each other. A suggestion with a higher
+score will be shown on top of suggestions with a lower score.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="title.html">title</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">title</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>A user-readable title for the <a href="./index.html">Suggestion</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="are-contents-the-same.html">areContentsTheSame</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">areContentsTheSame</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.awesomebar.AwesomeBar.Suggestion$areContentsTheSame(mozilla.components.concept.awesomebar.AwesomeBar.Suggestion)/other">other</span><span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">Suggestion</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if the content of the two suggestions is the same.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

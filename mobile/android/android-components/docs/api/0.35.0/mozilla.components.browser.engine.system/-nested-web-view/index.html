@@ -1,0 +1,199 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>NestedWebView - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.engine.system</a>&nbsp;/&nbsp;<a href="./index.html">NestedWebView</a><br/>
+<br/>
+<h1>NestedWebView</h1>
+<code><span class="keyword">class </span><span class="identifier">NestedWebView</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/webkit/WebView.html"><span class="identifier">WebView</span></a><span class="symbol">, </span><span class="identifier">NestedScrollingChild</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/NestedWebView.kt#L31">(source)</a>
+<p>WebView that supports nested scrolls (for using in a CoordinatorLayout).</p>
+<p>This code is a simplified version of the NestedScrollView implementation
+which can be found in the support library:
+<a href="#">android.support.v4.widget.NestedScrollView</a></p>
+<p>Based on:
+https://github.com/takahirom/webview-in-coordinatorlayout</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">NestedWebView</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.NestedWebView$<init>(android.content.Context)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">)</span></code>
+<p>WebView that supports nested scrolls (for using in a CoordinatorLayout).</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="dispatch-nested-fling.html">dispatchNestedFling</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">dispatchNestedFling</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.NestedWebView$dispatchNestedFling(kotlin.Float, kotlin.Float, kotlin.Boolean)/velocityX">velocityX</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html"><span class="identifier">Float</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.NestedWebView$dispatchNestedFling(kotlin.Float, kotlin.Float, kotlin.Boolean)/velocityY">velocityY</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html"><span class="identifier">Float</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.NestedWebView$dispatchNestedFling(kotlin.Float, kotlin.Float, kotlin.Boolean)/consumed">consumed</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="dispatch-nested-pre-fling.html">dispatchNestedPreFling</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">dispatchNestedPreFling</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.NestedWebView$dispatchNestedPreFling(kotlin.Float, kotlin.Float)/velocityX">velocityX</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html"><span class="identifier">Float</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.NestedWebView$dispatchNestedPreFling(kotlin.Float, kotlin.Float)/velocityY">velocityY</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html"><span class="identifier">Float</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="dispatch-nested-pre-scroll.html">dispatchNestedPreScroll</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">dispatchNestedPreScroll</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.NestedWebView$dispatchNestedPreScroll(kotlin.Int, kotlin.Int, kotlin.IntArray, kotlin.IntArray)/dx">dx</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.NestedWebView$dispatchNestedPreScroll(kotlin.Int, kotlin.Int, kotlin.IntArray, kotlin.IntArray)/dy">dy</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.NestedWebView$dispatchNestedPreScroll(kotlin.Int, kotlin.Int, kotlin.IntArray, kotlin.IntArray)/consumed">consumed</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int-array/index.html"><span class="identifier">IntArray</span></a><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.NestedWebView$dispatchNestedPreScroll(kotlin.Int, kotlin.Int, kotlin.IntArray, kotlin.IntArray)/offsetInWindow">offsetInWindow</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int-array/index.html"><span class="identifier">IntArray</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="dispatch-nested-scroll.html">dispatchNestedScroll</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">dispatchNestedScroll</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.NestedWebView$dispatchNestedScroll(kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.IntArray)/dxConsumed">dxConsumed</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.NestedWebView$dispatchNestedScroll(kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.IntArray)/dyConsumed">dyConsumed</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.NestedWebView$dispatchNestedScroll(kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.IntArray)/dxUnconsumed">dxUnconsumed</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.NestedWebView$dispatchNestedScroll(kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.IntArray)/dyUnconsumed">dyUnconsumed</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.NestedWebView$dispatchNestedScroll(kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.IntArray)/offsetInWindow">offsetInWindow</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int-array/index.html"><span class="identifier">IntArray</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="has-nested-scrolling-parent.html">hasNestedScrollingParent</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">hasNestedScrollingParent</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="is-nested-scrolling-enabled.html">isNestedScrollingEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">isNestedScrollingEnabled</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="on-touch-event.html">onTouchEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">onTouchEvent</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.NestedWebView$onTouchEvent(android.view.MotionEvent)/ev">ev</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/MotionEvent.html"><span class="identifier">MotionEvent</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-nested-scrolling-enabled.html">setNestedScrollingEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setNestedScrollingEnabled</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.NestedWebView$setNestedScrollingEnabled(kotlin.Boolean)/enabled">enabled</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="start-nested-scroll.html">startNestedScroll</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">startNestedScroll</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.NestedWebView$startNestedScroll(kotlin.Int)/axes">axes</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="stop-nested-scroll.html">stopNestedScroll</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">stopNestedScroll</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Extension Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-l-t-r.html">isLTR</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isLTR</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Is the horizontal layout direction of this view from Left to Right?</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-r-t-l.html">isRTL</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isRTL</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Is the horizontal layout direction of this view from Right to Left?</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Extension Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view-group/for-each.html">forEach</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/ViewGroup.html"><span class="identifier">ViewGroup</span></a><span class="symbol">.</span><span class="identifier">forEach</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.ktx.android.view$forEach(android.view.ViewGroup, kotlin.Function1((android.view.View, kotlin.Unit)))/action">action</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Performs the given action on each View in this ViewGroup.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/hide-keyboard.html">hideKeyboard</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">hideKeyboard</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Hides the soft input window.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-gone.html">isGone</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isGone</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if this view's visibility is set to View.GONE.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-invisible.html">isInvisible</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isInvisible</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if this view's visibility is set to View.INVISIBLE.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-visible.html">isVisible</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isVisible</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if this view's visibility is set to View.VISIBLE.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/set-padding.html">setPadding</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">setPadding</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.ktx.android.view$setPadding(android.view.View, mozilla.components.support.base.android.Padding)/padding">padding</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.support.base.android/-padding/index.html"><span class="identifier">Padding</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Set a padding using <a href="../../mozilla.components.support.base.android/-padding/index.html">Padding</a> object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/show-keyboard.html">showKeyboard</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">showKeyboard</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.ktx.android.view$showKeyboard(android.view.View, kotlin.Int)/flags">flags</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;InputMethodManager.SHOW_IMPLICIT<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Tries to focus this view and show the soft input window for it.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

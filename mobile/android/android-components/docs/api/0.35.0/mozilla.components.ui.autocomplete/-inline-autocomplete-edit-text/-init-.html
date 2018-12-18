@@ -1,0 +1,29 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>InlineAutocompleteEditText.<init> - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.ui.autocomplete</a>&nbsp;/&nbsp;<a href="index.html">InlineAutocompleteEditText</a>&nbsp;/&nbsp;<a href="./-init-.html">&lt;init&gt;</a><br/>
+<br/>
+<h1>&lt;init&gt;</h1>
+<a name="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$&lt;init&gt;(android.content.Context, android.util.AttributeSet, kotlin.Int)"></a>
+<code><span class="identifier">InlineAutocompleteEditText</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$<init>(android.content.Context, android.util.AttributeSet, kotlin.Int)/ctx">ctx</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$<init>(android.content.Context, android.util.AttributeSet, kotlin.Int)/attrs">attrs</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/util/AttributeSet.html"><span class="identifier">AttributeSet</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$<init>(android.content.Context, android.util.AttributeSet, kotlin.Int)/defStyleAttr">defStyleAttr</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;R.attr.editTextStyle<span class="symbol">)</span></code>
+<p>A UI edit text component which supports inline autocompletion.</p>
+<p>The background color of autocomplete spans can be configured using
+the custom autocompleteBackgroundColor attribute e.g.
+app:autocompleteBackgroundColor="#ffffff".</p>
+<p>A filter listener (see <a href="set-on-filter-listener.html">setOnFilterListener</a>) needs to be attached to
+provide autocomplete results. It will be invoked when the input
+text changes. The listener gets direct access to this component (via its view
+parameter), so it can call {@link applyAutocompleteResult} in return.</p>
+<p>A commit listener (see <a href="set-on-commit-listener.html">setOnCommitListener</a>) can be attached which is
+invoked when the user selected the result i.e. is done editing.</p>
+<p>Various other listeners can be attached to enhance default behaviour e.g.
+<a href="set-on-selection-changed-listener.html">setOnSelectionChangedListener</a> and <a href="set-on-windows-focus-change-listener.html">setOnWindowsFocusChangeListener</a> which
+will be invoked in response to <a href="on-selection-changed.html">onSelectionChanged</a> and <a href="on-window-focus-changed.html">onWindowFocusChanged</a>
+respectively (see also <a href="set-on-text-change-listener.html">setOnTextChangeListener</a>,
+<a href="set-on-selection-changed-listener.html">setOnSelectionChangedListener</a>, and <a href="set-on-windows-focus-change-listener.html">setOnWindowsFocusChangeListener</a>).</p>
+</BODY>
+</HTML>

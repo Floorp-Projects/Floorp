@@ -1,0 +1,65 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>HistoryTrackingDelegate - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.concept.engine.history</a>&nbsp;/&nbsp;<a href="./index.html">HistoryTrackingDelegate</a><br/>
+<br/>
+<h1>HistoryTrackingDelegate</h1>
+<code><span class="keyword">interface </span><span class="identifier">HistoryTrackingDelegate</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/history/HistoryTrackingDelegate.kt#L14">(source)</a>
+<p>An interface used for providing history information to an engine (e.g. for link highlighting),
+and receiving history updates from the engine (visits to URLs, title changes).</p>
+<p>Even though this interface is defined at the "concept" layer, its get* methods are tailored to
+two types of engines which we support (system's WebView and GeckoView).</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-visited.html">getVisited</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">getVisited</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.history.HistoryTrackingDelegate$getVisited(kotlin.collections.List((kotlin.String)))/uris">uris</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">&gt;</span></code>
+<p>An engine needs to know "visited" (true/false) status for provided URIs.</p>
+<code><span class="keyword">abstract</span> <span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">getVisited</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span></code>
+<p>An engine needs to know a list of all visited URIs.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-title-changed.html">onTitleChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">onTitleChanged</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.history.HistoryTrackingDelegate$onTitleChanged(kotlin.String, kotlin.String)/uri">uri</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.history.HistoryTrackingDelegate$onTitleChanged(kotlin.String, kotlin.String)/title">title</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Title changed for a given URI.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-visited.html">onVisited</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">onVisited</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.history.HistoryTrackingDelegate$onVisited(kotlin.String, kotlin.Boolean)/uri">uri</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.history.HistoryTrackingDelegate$onVisited(kotlin.String, kotlin.Boolean)/isReload">isReload</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>A URI visit happened that an engine considers worthy of being recorded in browser's history.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.session/-history-delegate/index.html">HistoryDelegate</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">HistoryDelegate</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">HistoryTrackingDelegate</span></a></code>
+<p>Implementation of the <a href="./index.html">HistoryTrackingDelegate</a> which delegates work to an instance of <a href="../../mozilla.components.concept.storage/-history-storage/index.html">HistoryStorage</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
