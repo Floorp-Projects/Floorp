@@ -24,7 +24,7 @@ WebAudioEditorPanel.prototype = {
     this.panelWin.gToolbox = this._toolbox;
     this.panelWin.gTarget = this.target;
 
-    this.panelWin.gFront = new WebAudioFront(this.target.client, this.target.form);
+    this.panelWin.gFront = await this.target.getFront("webaudio");
 
     await this.panelWin.startupWebAudioEditor();
 

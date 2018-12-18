@@ -68,7 +68,7 @@ function initBackend(aUrl) {
 
     await target.attach();
 
-    const front = new WebAudioFront(target.client, target.form);
+    const front = await target.getFront("webaudio");
     return { target, front };
   })();
 }

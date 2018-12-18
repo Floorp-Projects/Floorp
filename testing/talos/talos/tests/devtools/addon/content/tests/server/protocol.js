@@ -25,6 +25,7 @@ class DampTestFront extends FrontClassWithSpec(dampTestSpec) {
     this.manage(this);
   }
 }
+protocol.registerFront(DampTestFront);
 
 module.exports = async function() {
   let tab = await testSetup(SIMPLE_URL);
@@ -64,7 +65,7 @@ module.exports = async function() {
 
   // Instanciate a front for this test actor
   let { target } = toolbox;
-  let front = new DampTestFront(target.client, target.form);
+  let front = await target.getFront("dampTest");
 
   // Execute the core of this test, call one method multiple times
   // and listen for an event sent by this method
