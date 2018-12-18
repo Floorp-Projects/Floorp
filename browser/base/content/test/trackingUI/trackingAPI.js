@@ -33,5 +33,12 @@ onmessage = event => {
       document.body.appendChild(ifr);
     }
     break;
+  case "window-open":
+      window.win = window.open("http://trackertest.org/browser/browser/base/content/test/trackingUI/cookieServer.sjs", "_blank", "width=100,height=100");
+    break;
+  case "window-close":
+      window.win.close();
+      window.win = null;
+    break;
   }
 };

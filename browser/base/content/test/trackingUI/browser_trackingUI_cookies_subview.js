@@ -176,3 +176,69 @@ add_task(async function testCookiesSubViewAllowed() {
 
   Services.prefs.clearUserPref(TPC_PREF);
 });
+
+add_task(async function testCookiesSubViewAllowedHeuristic() {
+  Services.prefs.setIntPref(TPC_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
+  let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin("http://not-tracking.example.com/");
+
+  // Pretend that the tracker has already been interacted with
+  let trackerPrincipal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin("http://trackertest.org/");
+  Services.perms.addFromPrincipal(trackerPrincipal, "storageAccessAPI", Services.perms.ALLOW_ACTION);
+
+  await BrowserTestUtils.withNewTab(COOKIE_PAGE, async function(browser) {
+    let popup;
+    let windowCreated = TestUtils.topicObserved("chrome-document-global-created", (subject, data) => {
+      popup = subject;
+      return true;
+    });
+    let permChanged = TestUtils.topicObserved("perm-changed",
+      (subject, data) => {
+        return subject &&
+               subject.QueryInterface(Ci.nsIPermission)
+                      .type == "3rdPartyStorage^http://trackertest.org" &&
+               subject.principal.origin == principal.origin &&
+               data == "added";
+      });
+
+    await ContentTask.spawn(browser, {}, function() {
+      content.postMessage("window-open", "*");
+    });
+    await Promise.all([windowCreated, permChanged]);
+
+    await new Promise(resolve => waitForFocus(resolve, popup));
+    await new Promise(resolve => waitForFocus(resolve, window));
+
+    await openIdentityPopup();
+
+    let categoryItem =
+      document.getElementById("identity-popup-content-blocking-category-cookies");
+    ok(BrowserTestUtils.is_visible(categoryItem), "TP category item is visible");
+    let cookiesView = document.getElementById("identity-popup-cookiesView");
+    let viewShown = BrowserTestUtils.waitForEvent(cookiesView, "ViewShown");
+    categoryItem.click();
+    await viewShown;
+
+    ok(true, "Cookies view was shown");
+
+    let listItems = cookiesView.querySelectorAll(".identity-popup-content-blocking-list-item");
+    is(listItems.length, 1, "We have 1 cookie in the list");
+
+    let listItem = listItems[0];
+    let label = listItem.querySelector(".identity-popup-content-blocking-list-host-label");
+    is(label.value, "http://trackertest.org", "Has an item for trackertest.org");
+    ok(BrowserTestUtils.is_visible(listItem), "List item is visible");
+    ok(listItem.classList.contains("allowed"), "Indicates whether the cookie was blocked or allowed");
+
+    let button = listItem.querySelector(".identity-popup-permission-remove-button");
+    ok(BrowserTestUtils.is_visible(button), "Permission remove button is visible");
+    button.click();
+    is(Services.perms.testExactPermissionFromPrincipal(principal, "3rdPartyStorage^http://trackertest.org"), Services.perms.UNKNOWN_ACTION, "Button click should remove the storage pref.");
+    ok(!listItem.classList.contains("allowed"), "Has removed the allowed class");
+
+    await ContentTask.spawn(browser, {}, function() {
+      content.postMessage("window-close", "*");
+    });
+  });
+
+  Services.prefs.clearUserPref(TPC_PREF);
+});
