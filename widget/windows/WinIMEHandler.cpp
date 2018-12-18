@@ -7,6 +7,7 @@
 
 #include "IMMHandler.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TextEvents.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsWindowDefs.h"
 #include "WinTextEventDispatcherListener.h"
@@ -47,6 +48,7 @@ namespace widget {
 nsWindow* IMEHandler::sFocusedWindow = nullptr;
 InputContextAction::Cause IMEHandler::sLastContextActionCause =
     InputContextAction::CAUSE_UNKNOWN;
+bool IMEHandler::sMaybeEditable = false;
 bool IMEHandler::sForceDisableCurrentIMM_IME = false;
 bool IMEHandler::sPluginHasFocus = false;
 bool IMEHandler::sNativeCaretIsCreated = false;
@@ -179,15 +181,14 @@ bool IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
   // refer native caret and if there is, the behavior is worse than the
   // behavior without native caret.  Therefore, we shouldn't put native caret
   // as far as possible.
-  // TODO: We need first request of retrieving caret information.  So, if
-  //       we don't create native caret, we need to dispatch
-  //       EVENT_OBJECT_LOCATIONCHANGE event by ourselves.
   if (!sHasNativeCaretBeenRequested && aMessage == WM_GETOBJECT &&
       static_cast<DWORD>(aLParam) == OBJID_CARET) {
     // So, when we receive first WM_GETOBJECT for OBJID_CARET, let's start to
     // create native caret for such applications.
     sHasNativeCaretBeenRequested = true;
-    // TODO: Create native caret later if an editor has focus.
+    // If an editable element has focus, we can put native caret now.
+    // XXX Should we avoid doing this if there is composition?
+    MaybeCreateNativeCaret(aWindow);
   }
 
 #ifdef NS_ENABLE_TSF
@@ -301,6 +302,7 @@ nsresult IMEHandler::NotifyIME(nsWindow* aWindow,
         IMMHandler::OnFocusChange(true, aWindow);
         nsresult rv = TSFTextStore::OnFocusChange(true, aWindow,
                                                   aWindow->GetInputContext());
+        MaybeCreateNativeCaret(aWindow);
         IMEHandler::MaybeShowOnScreenKeyboard();
         return rv;
       }
@@ -351,6 +353,10 @@ nsresult IMEHandler::NotifyIME(nsWindow* aWindow,
       return NS_OK;
     case NOTIFY_IME_OF_SELECTION_CHANGE:
       IMMHandler::OnSelectionChange(aWindow, aIMENotification, true);
+      // IMMHandler::OnSelectionChange() cannot work without its singleton
+      // instance.  Therefore, IMEHandler needs to create native caret instead
+      // if it's necessary.
+      MaybeCreateNativeCaret(aWindow);
       return NS_OK;
     case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
       return IMMHandler::OnMouseButtonEvent(aWindow, aIMENotification);
@@ -358,6 +364,7 @@ nsresult IMEHandler::NotifyIME(nsWindow* aWindow,
       sFocusedWindow = aWindow;
       IMMHandler::OnFocusChange(true, aWindow);
       IMEHandler::MaybeShowOnScreenKeyboard();
+      MaybeCreateNativeCaret(aWindow);
       return NS_OK;
     case NOTIFY_IME_OF_BLUR:
       sFocusedWindow = nullptr;
@@ -1066,6 +1073,50 @@ void IMEHandler::DefaultProcOfPluginEvent(nsWindow* aWindow,
     return;
   }
   IMMHandler::DefaultProcOfPluginEvent(aWindow, aPluginEvent);
+}
+
+bool IMEHandler::MaybeCreateNativeCaret(nsWindow* aWindow) {
+  MOZ_ASSERT(aWindow);
+
+  if (IsA11yHandlingNativeCaret()) {
+    return false;
+  }
+
+  if (!sHasNativeCaretBeenRequested) {
+    // If we have not received WM_GETOBJECT for OBJID_CARET, there may be new
+    // application which requires our caret information.  For kicking its
+    // window event proc, we should fire a window event here.
+    // (If there is such application, sHasNativeCaretBeenRequested will be set
+    // to true later.)
+    // FYI: If we create native caret and move its position, native caret
+    //      causes EVENT_OBJECT_LOCATIONCHANGE event with OBJID_CARET and
+    //      OBJID_CLIENT.
+    ::NotifyWinEvent(EVENT_OBJECT_LOCATIONCHANGE, aWindow->GetWindowHandle(),
+                     OBJID_CARET, OBJID_CLIENT);
+    return false;
+  }
+
+  MaybeDestroyNativeCaret();
+
+  // If focused content is not text editable, we don't support caret
+  // caret information without a11y module.
+  if (!aWindow->GetInputContext().mIMEState.IsEditable()) {
+    return false;
+  }
+
+  WidgetQueryContentEvent queryCaretRect(true, eQueryCaretRect, aWindow);
+  aWindow->InitEvent(queryCaretRect);
+
+  WidgetQueryContentEvent::Options options;
+  options.mRelativeToInsertionPoint = true;
+  queryCaretRect.InitForQueryCaretRect(0, options);
+
+  aWindow->DispatchWindowEvent(&queryCaretRect);
+  if (NS_WARN_IF(!queryCaretRect.mSucceeded)) {
+    return false;
+  }
+
+  return CreateNativeCaret(aWindow, queryCaretRect.mReply.mRect);
 }
 
 bool IMEHandler::CreateNativeCaret(nsWindow* aWindow,

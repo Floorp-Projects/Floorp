@@ -180,10 +180,20 @@ class IMEHandler final {
   static nsWindow* sFocusedWindow;
   static InputContextAction::Cause sLastContextActionCause;
 
+  static bool sMaybeEditable;
   static bool sForceDisableCurrentIMM_IME;
   static bool sPluginHasFocus;
   static bool sNativeCaretIsCreated;
   static bool sHasNativeCaretBeenRequested;
+
+  /**
+   * MaybeCreateNativeCaret() may create native caret over our caret if
+   * focused content is text editable and we need to create native caret
+   * for other applications.
+   *
+   * @param aWindow     The window which owns the native caret.
+   */
+  static bool MaybeCreateNativeCaret(nsWindow* aWindow);
 
 #ifdef NS_ENABLE_TSF
   static decltype(SetInputScopes)* sSetInputScopes;
