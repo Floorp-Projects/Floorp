@@ -17,12 +17,6 @@ from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 from taskgraph.task import Task
 
-_PUBLIC_TC_ARTIFACT_LOCATION = \
-    'https://queue.taskcluster.net/v1/task/{task_id}/artifacts/{artifact_prefix}/{postfix}'
-
-_PRIVATE_TC_ARTIFACT_LOCATION = \
-    'http://taskcluster/queue/v1/task/{task_id}/artifacts/{artifact_prefix}/{postfix}'
-
 logger = logging.getLogger(__name__)
 
 # this is set to true for `mach taskgraph action-callback --test`
@@ -247,21 +241,6 @@ def purge_cache(provisioner_id, worker_type, cache_name, use_proxy=False):
         logger.info('Purging {}/{}/{}.'.format(provisioner_id, worker_type, cache_name))
         purge_cache_url = get_purge_cache_url(provisioner_id, worker_type, use_proxy)
         _do_request(purge_cache_url, json={'cacheName': cache_name})
-
-
-def get_taskcluster_artifact_prefix(task, task_id, postfix='', locale=None, force_private=False):
-    if locale:
-        postfix = '{}/{}'.format(locale, postfix)
-
-    artifact_prefix = get_artifact_prefix(task)
-    if artifact_prefix == 'public/build' and not force_private:
-        tmpl = _PUBLIC_TC_ARTIFACT_LOCATION
-    else:
-        tmpl = _PRIVATE_TC_ARTIFACT_LOCATION
-
-    return tmpl.format(
-        task_id=task_id, postfix=postfix, artifact_prefix=artifact_prefix
-    )
 
 
 def send_email(address, subject, content, link, use_proxy=False):
