@@ -2635,8 +2635,8 @@ nsDOMWindowList* nsGlobalWindowInner::GetFrames() {
 }
 
 already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowInner::IndexedGetter(
-    JSContext* aCx, uint32_t aIndex) {
-  FORWARD_TO_OUTER(IndexedGetterOuter, (aCx, aIndex), nullptr);
+    uint32_t aIndex) {
+  FORWARD_TO_OUTER(IndexedGetterOuter, (aIndex), nullptr);
 }
 
 namespace {
@@ -2882,17 +2882,6 @@ void nsGlobalWindowInner::GetOwnPropertyNames(JSContext* aCx,
   return win && win->IsChromeWindow() &&
          nsContentUtils::ObjectPrincipal(aObj) ==
              nsContentUtils::GetSystemPrincipal();
-}
-
-/* static */ bool nsGlobalWindowInner::AllowChromeFrameAccess(JSContext* aCx,
-                                                              JSObject* aObj) {
-  if (StaticPrefs::dom_chrome_frame_access_enabled() ||
-      !nsContentUtils::IsSystemCaller(aCx)) {
-    return true;
-  }
-
-  return nsContentUtils::ObjectPrincipal(aObj) ==
-         nsContentUtils::GetSystemPrincipal();
 }
 
 /* static */ bool nsGlobalWindowInner::OfflineCacheAllowedForContext(
@@ -3315,9 +3304,7 @@ double nsGlobalWindowInner::GetScrollY(ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(GetScrollYOuter, (), aError, 0);
 }
 
-uint32_t nsGlobalWindowInner::Length(mozilla::dom::CallerType aCallerType) {
-  FORWARD_TO_OUTER(Length, (aCallerType), 0);
-}
+uint32_t nsGlobalWindowInner::Length() { FORWARD_TO_OUTER(Length, (), 0); }
 
 already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowInner::GetTop(
     mozilla::ErrorResult& aError) {

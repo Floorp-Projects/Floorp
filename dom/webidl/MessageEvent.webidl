@@ -33,7 +33,6 @@ interface MessageEvent : Event {
   /**
    * The window or port which originated this event.
    */
-  [Func="nsGlobalWindowInner::AllowChromeFrameAccess"]
   readonly attribute MessageEventSource? source;
 
   [Pure, Cached, Frozen]
