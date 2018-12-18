@@ -19,6 +19,7 @@ const TEST_URL = `data:text/html;charset=utf-8,` + encodeURIComponent(`
   <test-component>
     <div slot="slot1" id="el1">slot1-1</div>
     <div slot="slot1" id="el2">slot1-2</div>
+    <div slot="slot1" id="el3">slot1-2</div>
   </test-component>
 
   <script>
@@ -27,7 +28,14 @@ const TEST_URL = `data:text/html;charset=utf-8,` + encodeURIComponent(`
       constructor() {
         super();
         let shadowRoot = this.attachShadow({mode: 'open'});
-        shadowRoot.innerHTML = '<slot name="slot1"></slot>';
+        shadowRoot.innerHTML = \`
+          <style>
+            ::slotted(#el3) {
+              color: green;
+            }
+          </style>
+          <slot name="slot1"></slot>
+        \`;
       }
     });
   </script>
@@ -57,11 +65,12 @@ add_task(async function() {
 
   info("Expand the slot");
   const shadowChildContainers = shadowRootContainer.getChildContainers();
-  const slotContainer = shadowChildContainers[0];
+  // shadowChildContainers[0] is the style node.
+  const slotContainer = shadowChildContainers[1];
   await expandContainer(inspector, slotContainer);
 
   const slotChildContainers = slotContainer.getChildContainers();
-  is(slotChildContainers.length, 2, "Expecting 2 slotted children");
+  is(slotChildContainers.length, 3, "Expecting 3 slotted children");
 
   info("Select slotted node and check that the rule view displays correct content");
   await selectNode(slotChildContainers[0].node, inspector);
@@ -70,6 +79,10 @@ add_task(async function() {
   info("Select another slotted node and check the rule view");
   await selectNode(slotChildContainers[1].node, inspector);
   checkRule(ruleview, "#el2", "color", "blue");
+
+  info("Select the last slotted node and check the rule view");
+  await selectNode(slotChildContainers[2].node, inspector);
+  checkRule(ruleview, "::slotted(#el3)", "color", "green");
 });
 
 function checkRule(ruleview, selector, name, expectedValue) {

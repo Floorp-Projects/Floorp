@@ -1662,18 +1662,11 @@ var gBrowserInit = {
 
       // We don't check if uriToLoad is a XULElement because this case has
       // already been handled before first paint, and the argument cleared.
-      if (uriToLoad instanceof Ci.nsIArray) {
-        let count = uriToLoad.length;
-        let specs = [];
-        for (let i = 0; i < count; i++) {
-          let urisstring = uriToLoad.queryElementAt(i, Ci.nsISupportsString);
-          specs.push(urisstring.data);
-        }
-
+      if (Array.isArray(uriToLoad)) {
         // This function throws for certain malformed URIs, so use exception handling
         // so that we don't disrupt startup
         try {
-          gBrowser.loadTabs(specs, {
+          gBrowser.loadTabs(uriToLoad, {
             inBackground: false,
             replace: true,
             // See below for the semantics of window.arguments. Only the minimum is supported.
@@ -1840,6 +1833,14 @@ var gBrowserInit = {
 
       // If the given URI is different from the homepage, we want to load it.
       if (uri != defaultArgs) {
+        if (uri instanceof Ci.nsIArray) {
+          // Transform the nsIArray of nsISupportsString's into a JS Array of
+          // JS strings.
+          return Array.from(uri.enumerate(Ci.nsISupportsString),
+                            supportStr => supportStr.data);
+        } else if (uri instanceof Ci.nsISupportsString) {
+          return uri.data;
+        }
         return uri;
       }
 

@@ -164,6 +164,7 @@ const char *GetIDForVRInitError( vr::EVRInitError eError )
 		RETURN_ENUM_AS_STRING( VRInitError_Init_FirmwareRecoveryBusy );
 		RETURN_ENUM_AS_STRING( VRInitError_Init_USBServiceBusy );
 		RETURN_ENUM_AS_STRING( VRInitError_Init_VRWebHelperStartupFailed );
+		RETURN_ENUM_AS_STRING( VRInitError_Init_TrackerManagerInitFailed );
 
 		RETURN_ENUM_AS_STRING( VRInitError_Driver_Failed );
 		RETURN_ENUM_AS_STRING( VRInitError_Driver_Unknown );

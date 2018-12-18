@@ -262,8 +262,6 @@ class WebrtcVideoConduit
                             double* bitrateMean, double* bitrateStdDev,
                             uint32_t* discardedPackets,
                             uint32_t* framesDecoded) override;
-  bool GetAVStats(int32_t* jitterBufferDelayMs, int32_t* playoutBufferDelayMs,
-                  int32_t* avSyncOffsetMs) override;
   bool GetRTPStats(unsigned int* jitterMs,
                    unsigned int* cumulativeLost) override;
   bool GetRTCPReceiverReport(uint32_t* jitterMs, uint32_t* packetsReceived,

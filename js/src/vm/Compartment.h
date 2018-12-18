@@ -410,6 +410,7 @@ class WrapperMap {
 class JS::Compartment {
   JS::Zone* zone_;
   JSRuntime* runtime_;
+  bool invisibleToDebugger_;
 
   js::WrapperMap crossCompartmentWrappers;
 
@@ -464,6 +465,12 @@ class JS::Compartment {
   // thread can easily lead to races. Use this method very carefully.
   JSRuntime* runtimeFromAnyThread() const { return runtime_; }
 
+  // Certain compartments are implementation details of the embedding, and
+  // references to them should never leak out to script. For realms belonging to
+  // this compartment, onNewGlobalObject does not fire, and addDebuggee is a
+  // no-op.
+  bool invisibleToDebugger() const { return invisibleToDebugger_; }
+
   RealmVector& realms() { return realms_; }
 
   // Cross-compartment wrappers are shared by all realms in the compartment, but
@@ -493,7 +500,7 @@ class JS::Compartment {
                           js::MutableHandleObject obj);
 
  public:
-  explicit Compartment(JS::Zone* zone);
+  explicit Compartment(JS::Zone* zone, bool invisibleToDebugger);
 
   void destroy(js::FreeOp* fop);
 

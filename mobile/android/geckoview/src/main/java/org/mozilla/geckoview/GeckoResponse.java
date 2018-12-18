@@ -6,6 +6,8 @@
 
 package org.mozilla.geckoview;
 
+import android.support.annotation.AnyThread;
+
 /**
  * This is used to receive async responses from delegate methods.
  */
@@ -15,5 +17,6 @@ public interface GeckoResponse<T> {
      *
      * @param value The value contained in the response.
      */
+    @AnyThread
     void respond(T value);
 }

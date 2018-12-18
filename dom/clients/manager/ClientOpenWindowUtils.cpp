@@ -363,6 +363,13 @@ RefPtr<ClientOpPromise> ClientOpenWindowInCurrentProcess(
       new ClientOpPromise::Private(__func__);
 
 #ifdef MOZ_WIDGET_ANDROID
+  // This isn't currently available on GeckoView because we have no way of
+  // knowing which app to launch. Bug 1511033.
+  if (!jni::IsFennec()) {
+    promise->Reject(NS_ERROR_NOT_IMPLEMENTED, __func__);
+    return promise.forget();
+  }
+
   // This fires an intent that will start launching Fennec and foreground it,
   // if necessary.  We create an observer so that we can determine when
   // the launch has completed.

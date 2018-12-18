@@ -6,6 +6,7 @@
 
 package org.mozilla.geckoview;
 
+import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -40,6 +41,7 @@ public final class RuntimeTelemetry {
      * @param clear Whether the retrieved snapshots should be cleared.
      * @return A {@link GeckoResult} with the GeckoBundle snapshot results.
      */
+    @AnyThread
     public @NonNull GeckoResult<GeckoBundle> getSnapshots(final boolean clear) {
         final GeckoBundle msg = new GeckoBundle(1);
         msg.putBoolean("clear", clear);
