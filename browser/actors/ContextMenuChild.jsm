@@ -125,41 +125,18 @@ const messageListeners = {
                          (node.form.enctype == "application/x-www-form-urlencoded" ||
                           node.form.enctype == ""));
     let title = node.ownerDocument.title;
-    let formData = [];
 
-    function escapeNameValuePair(aName, aValue, aIsFormUrlEncoded) {
-      if (aIsFormUrlEncoded) {
+    function escapeNameValuePair([aName, aValue]) {
+      if (isURLEncoded) {
         return escape(aName + "=" + aValue);
       }
 
       return escape(aName) + "=" + escape(aValue);
     }
-
-    for (let el of node.form.elements) {
-      if (!el.type) // happens with fieldsets
-        continue;
-
-      if (el == node) {
-        formData.push((isURLEncoded) ? escapeNameValuePair(el.name, "%s", true) :
-                                       // Don't escape "%s", just append
-                                       escapeNameValuePair(el.name, "", false) + "%s");
-        continue;
-      }
-
-      let type = el.type.toLowerCase();
-
-      if (((el instanceof this.content.HTMLInputElement && el.mozIsTextField(true)) ||
-          type == "hidden" || type == "textarea") ||
-          ((type == "checkbox" || type == "radio") && el.checked)) {
-        formData.push(escapeNameValuePair(el.name, el.value, isURLEncoded));
-      } else if (el instanceof this.content.HTMLSelectElement && el.selectedIndex >= 0) {
-        for (let j = 0; j < el.options.length; j++) {
-          if (el.options[j].selected)
-            formData.push(escapeNameValuePair(el.name, el.options[j].value,
-                                              isURLEncoded));
-        }
-      }
-    }
+    let formData = new this.content.FormData(node.form);
+    formData.delete(node.name);
+    formData = Array.from(formData).map(escapeNameValuePair);
+    formData.push(escape(node.name) + (isURLEncoded ? escape("=%s") : "=%s"));
 
     let postData;
 
