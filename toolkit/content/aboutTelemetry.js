@@ -1748,40 +1748,91 @@ var KeyedScalars = {
     let processesSelect = document.getElementById("processes");
     let selectedProcess = processesSelect.selectedOptions.item(0).getAttribute("value");
 
-    if (!aPayload.processes ||
-        !selectedProcess ||
+    if (!selectedProcess) {
+      return;
+    }
+
+    let payload = aPayload.stores;
+    if (payload) { // Check for stores in the current ping data first
+      let hasData = false;
+      for (const store of Object.keys(payload)) {
+        if (!(selectedProcess in payload[store])) {
+          continue;
+        }
+
+        let keyedScalars = payload[store][selectedProcess].keyedScalars || {};
+        hasData = hasData || Array.from(processesSelect.options).some((option) => {
+          let value = option.getAttribute("value");
+          let keyedS = payload[store][value] && payload[store][value].keyedScalars;
+          return keyedS && Object.keys(keyedS).length > 0;
+        });
+        if (!Object.keys(keyedScalars).length > 0) {
+          continue;
+        }
+
+        let s = GenericSubsection.renderSubsectionHeader(store, true, "keyed-scalars-section");
+        let heading = document.createElement("h2");
+        heading.textContent = store;
+        s.appendChild(heading);
+
+        const headings = [
+          "namesHeader",
+          "valuesHeader",
+        ].map(h => bundle.GetStringFromName(h));
+        for (let scalar in keyedScalars) {
+          // Add the name of the scalar.
+          let container = document.createElement("div");
+          container.classList.add("keyed-scalar");
+          container.id = scalar;
+          let scalarNameSection = document.createElement("p");
+          scalarNameSection.classList.add("keyed-title");
+          scalarNameSection.appendChild(document.createTextNode(scalar));
+          container.appendChild(scalarNameSection);
+          // Populate the section with the key-value pairs from the scalar.
+          const table = GenericTable.render(explodeObject(keyedScalars[scalar]), headings);
+          container.appendChild(table);
+          s.appendChild(container);
+        }
+
+        scalarsSection.appendChild(s);
+      }
+      setHasData("keyed-scalars-section", hasData);
+    } else { // Handle archived pings
+      if (!aPayload.processes ||
         !(selectedProcess in aPayload.processes)) {
-      return;
-    }
+        return;
+      }
 
-    let keyedScalars = aPayload.processes[selectedProcess].keyedScalars || {};
-    let hasData = Array.from(processesSelect.options).some((option) => {
-      let value = option.getAttribute("value");
-      let keyedS = aPayload.processes[value].keyedScalars;
-      return keyedS && Object.keys(keyedS).length > 0;
-    });
-    setHasData("keyed-scalars-section", hasData);
-    if (!Object.keys(keyedScalars).length > 0) {
-      return;
-    }
+      let keyedScalars = aPayload.processes[selectedProcess].keyedScalars || {};
+      let hasData = Array.from(processesSelect.options).some((option) => {
+        let value = option.getAttribute("value");
+        let keyedS = aPayload.processes[value].keyedScalars;
+        return keyedS && Object.keys(keyedS).length > 0;
+      });
 
-    const headings = [
-      "namesHeader",
-      "valuesHeader",
-    ].map(h => bundle.GetStringFromName(h));
-    for (let scalar in keyedScalars) {
-      // Add the name of the scalar.
-      let container = document.createElement("div");
-      container.classList.add("keyed-scalar");
-      container.id = scalar;
-      let scalarNameSection = document.createElement("p");
-      scalarNameSection.classList.add("keyed-title");
-      scalarNameSection.appendChild(document.createTextNode(scalar));
-      container.appendChild(scalarNameSection);
-      // Populate the section with the key-value pairs from the scalar.
-      const table = GenericTable.render(explodeObject(keyedScalars[scalar]), headings);
-      container.appendChild(table);
-      scalarsSection.appendChild(container);
+      setHasData("keyed-scalars-section", hasData);
+      if (!Object.keys(keyedScalars).length > 0) {
+        return;
+      }
+
+      const headings = [
+        "namesHeader",
+        "valuesHeader",
+      ].map(h => bundle.GetStringFromName(h));
+      for (let scalar in keyedScalars) {
+        // Add the name of the scalar.
+        let container = document.createElement("div");
+        container.classList.add("keyed-scalar");
+        container.id = scalar;
+        let scalarNameSection = document.createElement("p");
+        scalarNameSection.classList.add("keyed-title");
+        scalarNameSection.appendChild(document.createTextNode(scalar));
+        container.appendChild(scalarNameSection);
+        // Populate the section with the key-value pairs from the scalar.
+        const table = GenericTable.render(explodeObject(keyedScalars[scalar]), headings);
+        container.appendChild(table);
+        scalarsSection.appendChild(container);
+      }
     }
   },
 };
