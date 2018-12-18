@@ -1352,10 +1352,6 @@ pref("security.insecure_connection_text.pbmode.enabled", false);
 // 1 = allow MITM for certificate pinning checks.
 pref("security.cert_pinning.enforcement_level", 1);
 
-
-// Override the Gecko-default value of false for Firefox.
-pref("plain_text.wrap_long_lines", true);
-
 // If this turns true, Moz*Gesture events are not called stopPropagation()
 // before content.
 pref("dom.debug.propagate_gesture_events_through_content", false);
