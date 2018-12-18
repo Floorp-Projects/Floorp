@@ -28,6 +28,11 @@ class SVGDefsElement final : public SVGGraphicsElement {
   // nsIContent
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
+  // defs elements are not focusable.
+  bool IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) override {
+    return nsIContent::IsFocusableInternal(aTabIndex, aWithMouse);
+  }
+
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };
 

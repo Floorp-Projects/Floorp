@@ -6,11 +6,15 @@
 
 #include "JSControl.h"
 
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/StaticPtr.h"
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
 #include "js/JSON.h"
 #include "ChildInternal.h"
 #include "ParentInternal.h"
+#include "nsImportModule.h"
+#include "rrIReplay.h"
 #include "xpcprivate.h"
 
 using namespace JS;
@@ -400,7 +404,7 @@ static bool Middleman_PositionSubsumes(JSContext* aCx, unsigned aArgc,
 // Devtools Sandbox
 ///////////////////////////////////////////////////////////////////////////////
 
-static PersistentRootedObject* gDevtoolsSandbox;
+static StaticRefPtr<rrIReplay> gReplay;
 
 // URL of the root script that runs when recording/replaying.
 #define ReplayScriptURL "resource://devtools/server/actors/replay/replay.js"
@@ -409,35 +413,13 @@ static PersistentRootedObject* gDevtoolsSandbox;
 static bool gIncludeSystemScripts;
 
 void SetupDevtoolsSandbox() {
-  MOZ_RELEASE_ASSERT(!gDevtoolsSandbox);
+  MOZ_RELEASE_ASSERT(!gReplay);
 
-  dom::AutoJSAPI jsapi;
-  if (!jsapi.Init(xpc::PrivilegedJunkScope())) {
-    MOZ_CRASH("SetupDevtoolsSandbox");
-  }
+  nsCOMPtr<rrIReplay> replay = do_ImportModule(ReplayScriptURL);
+  gReplay = replay.forget();
+  ClearOnShutdown(&gReplay);
 
-  JSContext* cx = jsapi.cx();
-
-  xpc::SandboxOptions options;
-  options.sandboxName.AssignLiteral("Record/Replay Devtools Sandbox");
-  options.invisibleToDebugger = true;
-  RootedValue v(cx);
-  nsresult rv =
-      CreateSandboxObject(cx, &v, nsXPConnect::SystemPrincipal(), options);
-  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-
-  gDevtoolsSandbox = new PersistentRootedObject(cx);
-  *gDevtoolsSandbox = ::js::UncheckedUnwrap(&v.toObject());
-
-  JSAutoRealm ar(cx, *gDevtoolsSandbox);
-
-  ErrorResult er;
-  dom::GlobalObject global(cx, *gDevtoolsSandbox);
-  dom::Optional<JS::HandleObject> targetObj(cx, *gDevtoolsSandbox);
-  RootedObject obj(cx);
-  dom::ChromeUtils::Import(global, NS_LITERAL_STRING(ReplayScriptURL),
-                           targetObj, &obj, er);
-  MOZ_RELEASE_ASSERT(!er.Failed());
+  MOZ_RELEASE_ASSERT(gReplay);
 
   gIncludeSystemScripts =
       Preferences::GetBool("devtools.recordreplay.includeSystemScripts");
@@ -468,7 +450,7 @@ void ProcessRequest(const char16_t* aRequest, size_t aRequestLength,
                     CharBuffer* aResponse) {
   AutoDisallowThreadEvents disallow;
   AutoSafeJSContext cx;
-  JSAutoRealm ar(cx, *gDevtoolsSandbox);
+  JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
 
   RootedValue requestValue(cx);
   if (!JS_ParseJSON(cx, aRequest, aRequestLength, &requestValue)) {
@@ -476,8 +458,7 @@ void ProcessRequest(const char16_t* aRequest, size_t aRequestLength,
   }
 
   RootedValue responseValue(cx);
-  if (!JS_CallFunctionName(cx, *gDevtoolsSandbox, "ProcessRequest",
-                           HandleValueArray(requestValue), &responseValue)) {
+  if (NS_FAILED(gReplay->ProcessRequest(requestValue, &responseValue))) {
     MOZ_CRASH("ProcessRequest: Handler failed");
   }
 
@@ -500,7 +481,7 @@ void ProcessRequest(const char16_t* aRequest, size_t aRequestLength,
 void EnsurePositionHandler(const BreakpointPosition& aPosition) {
   AutoDisallowThreadEvents disallow;
   AutoSafeJSContext cx;
-  JSAutoRealm ar(cx, *gDevtoolsSandbox);
+  JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
 
   RootedObject obj(cx, aPosition.Encode(cx));
   if (!obj) {
@@ -508,9 +489,7 @@ void EnsurePositionHandler(const BreakpointPosition& aPosition) {
   }
 
   RootedValue objValue(cx, ObjectValue(*obj));
-  RootedValue rval(cx);
-  if (!JS_CallFunctionName(cx, *gDevtoolsSandbox, "EnsurePositionHandler",
-                           HandleValueArray(objValue), &rval)) {
+  if (NS_FAILED(gReplay->EnsurePositionHandler(objValue))) {
     MOZ_CRASH("EnsurePositionHandler");
   }
 }
@@ -518,11 +497,9 @@ void EnsurePositionHandler(const BreakpointPosition& aPosition) {
 void ClearPositionHandlers() {
   AutoDisallowThreadEvents disallow;
   AutoSafeJSContext cx;
-  JSAutoRealm ar(cx, *gDevtoolsSandbox);
+  JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
 
-  RootedValue rval(cx);
-  if (!JS_CallFunctionName(cx, *gDevtoolsSandbox, "ClearPositionHandlers",
-                           HandleValueArray::empty(), &rval)) {
+  if (NS_FAILED(gReplay->ClearPositionHandlers())) {
     MOZ_CRASH("ClearPositionHandlers");
   }
 }
@@ -530,11 +507,9 @@ void ClearPositionHandlers() {
 void ClearPausedState() {
   AutoDisallowThreadEvents disallow;
   AutoSafeJSContext cx;
-  JSAutoRealm ar(cx, *gDevtoolsSandbox);
+  JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
 
-  RootedValue rval(cx);
-  if (!JS_CallFunctionName(cx, *gDevtoolsSandbox, "ClearPausedState",
-                           HandleValueArray::empty(), &rval)) {
+  if (NS_FAILED(gReplay->ClearPausedState())) {
     MOZ_CRASH("ClearPausedState");
   }
 }
@@ -543,7 +518,7 @@ Maybe<BreakpointPosition> GetEntryPosition(
     const BreakpointPosition& aPosition) {
   AutoDisallowThreadEvents disallow;
   AutoSafeJSContext cx;
-  JSAutoRealm ar(cx, *gDevtoolsSandbox);
+  JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
 
   RootedObject positionObject(cx, aPosition.Encode(cx));
   if (!positionObject) {
@@ -552,8 +527,7 @@ Maybe<BreakpointPosition> GetEntryPosition(
 
   RootedValue rval(cx);
   RootedValue positionValue(cx, ObjectValue(*positionObject));
-  if (!JS_CallFunctionName(cx, *gDevtoolsSandbox, "GetEntryPosition",
-                           HandleValueArray(positionValue), &rval)) {
+  if (NS_FAILED(gReplay->GetEntryPosition(positionValue, &rval))) {
     MOZ_CRASH("GetEntryPosition");
   }
 

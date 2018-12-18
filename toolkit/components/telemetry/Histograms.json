@@ -9880,6 +9880,17 @@
     "releaseChannelCollection": "opt-out",
     "description": "How long has the flexbox highlighter been active (seconds)."
   },
+  "DEVTOOLS_GRID_HIGHLIGHTER_TIME_ACTIVE_SECONDS": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 86400,
+    "n_buckets": 100,
+    "bug_numbers": [1513969],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "mbalfanz@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
+    "description": "How long has the grid highlighter been active (seconds)."
+  },
   "DEVTOOLS_TOOLBOX_TIME_ACTIVE_SECONDS": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",

@@ -323,6 +323,7 @@ var _view_history = __webpack_require__(32);
 const DEFAULT_SCALE_DELTA = 1.1;
 const DISABLE_AUTO_FETCH_LOADING_BAR_TIMEOUT = 5000;
 const FORCE_PAGES_LOADED_TIMEOUT = 10000;
+const WHEEL_ZOOM_DISABLED_TIMEOUT = 1000;
 const DefaultExternalServices = {
   updateFindControlState(data) {},
 
@@ -1423,6 +1424,7 @@ let PDFViewerApplication = {
       });
     };
 
+    window.addEventListener('visibilitychange', webViewerVisibilityChange);
     window.addEventListener('wheel', webViewerWheel);
     window.addEventListener('click', webViewerClick);
     window.addEventListener('keydown', webViewerKeyDown);
@@ -1482,6 +1484,7 @@ let PDFViewerApplication = {
     let {
       _boundEvents
     } = this;
+    window.removeEventListener('visibilitychange', webViewerVisibilityChange);
     window.removeEventListener('wheel', webViewerWheel);
     window.removeEventListener('click', webViewerClick);
     window.removeEventListener('keydown', webViewerKeyDown);
@@ -1917,8 +1920,23 @@ function webViewerPageChanging(evt) {
   }
 }
 
-let zoomDisabled = false,
-    zoomDisabledTimeout;
+function webViewerVisibilityChange(evt) {
+  if (document.visibilityState === 'visible') {
+    setZoomDisabledTimeout();
+  }
+}
+
+let zoomDisabledTimeout = null;
+
+function setZoomDisabledTimeout() {
+  if (zoomDisabledTimeout) {
+    clearTimeout(zoomDisabledTimeout);
+  }
+
+  zoomDisabledTimeout = setTimeout(function () {
+    zoomDisabledTimeout = null;
+  }, WHEEL_ZOOM_DISABLED_TIMEOUT);
+}
 
 function webViewerWheel(evt) {
   let pdfViewer = PDFViewerApplication.pdfViewer;
@@ -1936,7 +1954,7 @@ function webViewerWheel(evt) {
 
     evt.preventDefault();
 
-    if (zoomDisabled) {
+    if (zoomDisabledTimeout || document.visibilityState === 'hidden') {
       return;
     }
 
@@ -1962,11 +1980,7 @@ function webViewerWheel(evt) {
       pdfViewer.container.scrollTop += dy * scaleCorrectionFactor;
     }
   } else {
-    zoomDisabled = true;
-    clearTimeout(zoomDisabledTimeout);
-    zoomDisabledTimeout = setTimeout(function () {
-      zoomDisabled = false;
-    }, 1000);
+    setZoomDisabledTimeout();
   }
 }
 
@@ -2208,6 +2222,10 @@ function webViewerKeyDown(evt) {
 
       case 82:
         PDFViewerApplication.rotatePages(90);
+        break;
+
+      case 115:
+        PDFViewerApplication.pdfSidebar.toggle();
         break;
     }
 

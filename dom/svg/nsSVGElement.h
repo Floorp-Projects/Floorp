@@ -304,10 +304,6 @@ class nsSVGElement : public nsSVGElementBase  // nsIContent
   nsSVGElement* GetViewportElement();
   already_AddRefed<mozilla::dom::SVGAnimatedString> ClassName();
 
-  virtual bool IsSVGFocusable(bool* aIsFocusable, int32_t* aTabIndex);
-  virtual bool IsFocusableInternal(int32_t* aTabIndex,
-                                   bool aWithMouse) override;
-
   void UpdateContentDeclarationBlock();
   const mozilla::DeclarationBlock* GetContentDeclarationBlock() const;
 
