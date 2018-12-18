@@ -72,8 +72,9 @@ def main():
                         help='Name of webserver host. Defaults to localhost.')
 
     args = parser.parse_args()
-    web_servers = WebServers(args.host, args.port, "%s/html" % here, argc.count)
+    web_servers = WebServers(args.host, args.port, "%s/html" % here, args.count)
     web_servers.start()
+
 
 if __name__ == "__main__":
     main()
