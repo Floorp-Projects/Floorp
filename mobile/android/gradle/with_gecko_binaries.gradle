@@ -3,41 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// The omnijar inputs are listed as resource directory inputs to a dummy JAR.
-// That arrangement labels them nicely in IntelliJ.  See the comment in the
-// :omnijar project for more context.
-evaluationDependsOn(':omnijar')
-
 // The JNI wrapper generation tasks depend on the JAR creation task of the :annotations project.
 evaluationDependsOn(':annotations')
-
-task buildOmnijars(type:Exec) {
-    dependsOn rootProject.machBuildGeneratedAndroidCodeAndResources
-
-    // See comment in :omnijar project regarding interface mismatches here.
-    inputs.file(project(':omnijar').sourceSets.main.resources.srcDirs).skipWhenEmpty() 
-
-    // Produce both the Fennec and the GeckoView omnijars.
-    outputs.file "${topobjdir}/dist/fennec/assets/omni.ja"
-    outputs.file "${topobjdir}/dist/geckoview/assets/omni.ja"
-
-    workingDir "${topobjdir}"
-
-    commandLine mozconfig.substs.GMAKE
-    args '-C'
-    args "${topobjdir}/mobile/android/base"
-    args 'gradle-omnijar'
-
-    // Only show the output if something went wrong.
-    ignoreExitValue = true
-    standardOutput = new ByteArrayOutputStream()
-    errorOutput = standardOutput
-    doLast {
-        if (execResult.exitValue != 0) {
-            throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${execResult.exitValue}:\n\n${standardOutput.toString()}")
-        }
-    }
-}
 
 ext.configureVariantWithGeckoBinaries = { variant ->
     // :app needs the full Fennec omni.ja, whereas other projects need the
@@ -83,11 +50,20 @@ ext.configureVariantWithGeckoBinaries = { variant ->
     }
 
     // Local (read, not 'official') builds want to reflect developer changes to
-    // the Omnijar sources.  To do this, the Gradle build calls out to the
+    // the omnijar sources, and (when compiling) to reflect developer changes to
+    // the native binaries.  To do this, the Gradle build calls out to the
     // moz.build system, which can be re-entrant.  Official builds are driven by
     // the moz.build system and should never be re-entrant in this way.
     if (!mozconfig.substs.MOZILLA_OFFICIAL) {
-        syncOmnijarFromDistDir.dependsOn buildOmnijars
+        if ("app".equals(project.name)) {
+            syncOmnijarFromDistDir.dependsOn rootProject.machStagePackageForFennec
+            syncLibsFromDistDir.dependsOn rootProject.machStagePackageForFennec
+            syncAssetsFromDistDir.dependsOn rootProject.machStagePackageForFennec
+        } else {
+            syncOmnijarFromDistDir.dependsOn rootProject.machStagePackageForGeckoview
+            syncLibsFromDistDir.dependsOn rootProject.machStagePackageForGeckoview
+            syncAssetsFromDistDir.dependsOn rootProject.machStagePackageForGeckoview
+        }
     }
 
     def assetGenTask = tasks.findByName("generate${variant.name.capitalize()}Assets")
