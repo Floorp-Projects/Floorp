@@ -6851,18 +6851,15 @@
     "releaseChannelCollection": "opt-out",
     "description": "Deleted or to-be-reused innerwindow which has had text event listeners in the default group."
   },
-  "CHARSET_OVERRIDE_SITUATION": {
+  "ENCODING_OVERRIDE_SITUATION": {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 8,
-    "description": "Labeling status of top-level page when overriding charset (0: unlabeled file URL without detection, 1: unlabeled non-TLD-guessed non-file URL without detection, 2: unlabeled file URL with detection, 3: unlabeled non-file URL with detection, 4: labeled, 5: already overridden, 6: bug, 7: unlabeled with TLD guessing)"
-  },
-  "CHARSET_OVERRIDE_USED": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "flag",
-    "description": "Whether the character encoding menu was used to override an encoding in this session."
+    "alert_emails": ["hsivonen@mozilla.com"],
+    "bug_numbers": [840476, 977573, 1513473],
+    "expires_in_version": "69",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": ["Local", "RemoteTld", "RemoteNonTld", "LocalChardet", "RemoteChardet", "Labeled", "AlreadyOverridden", "Bug"],
+    "description": "Labeling status of top-level page when overriding encoding"
   },
   "LONG_REFLOW_INTERRUPTIBLE": {
     "record_in_processes": ["main", "content"],
