@@ -10,7 +10,6 @@ import LabelledCheckbox from "../components/labelled-checkbox.js";
 import PaymentRequestPage from "../components/payment-request-page.js";
 import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
 import paymentRequest from "../paymentRequest.js";
-import HandleEventMixin from "../mixins/HandleEventMixin.js";
 
 /* import-globals-from ../unprivileged-fallbacks.js */
 
@@ -21,7 +20,7 @@ import HandleEventMixin from "../mixins/HandleEventMixin.js";
  * as it will be much easier to share the logic once we switch to Fluent.
  */
 
-export default class BasicCardForm extends HandleEventMixin(PaymentStateSubscriberMixin(PaymentRequestPage)) {
+export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRequestPage) {
   constructor() {
     super();
 
@@ -269,6 +268,32 @@ export default class BasicCardForm extends HandleEventMixin(PaymentStateSubscrib
     this.updateSaveButtonState();
   }
 
+  handleEvent(event) {
+    switch (event.type) {
+      case "change": {
+        this.onChange(event);
+        break;
+      }
+      case "click": {
+        this.onClick(event);
+        break;
+      }
+      case "input": {
+        this.onInput(event);
+        break;
+      }
+      case "invalid": {
+        if (event.target instanceof HTMLFormElement) {
+          this.onInvalidForm(event);
+          break;
+        }
+
+        this.onInvalidField(event);
+        break;
+      }
+    }
+  }
+
   onChange(evt) {
     let ccType = this.form.querySelector("#cc-type");
     this.cscInput.setAttribute("card-type", ccType.value);
@@ -363,14 +388,6 @@ export default class BasicCardForm extends HandleEventMixin(PaymentStateSubscrib
   onInput(event) {
     event.target.setCustomValidity("");
     this.updateSaveButtonState();
-  }
-
-  onInvalid(event) {
-    if (event.target instanceof HTMLFormElement) {
-      this.onInvalidForm(event);
-    } else {
-      this.onInvalidField(event);
-    }
   }
 
   /**

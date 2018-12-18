@@ -7,7 +7,6 @@ import LabelledCheckbox from "../components/labelled-checkbox.js";
 import PaymentRequestPage from "../components/payment-request-page.js";
 import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
 import paymentRequest from "../paymentRequest.js";
-import HandleEventMixin from "../mixins/HandleEventMixin.js";
 /* import-globals-from ../unprivileged-fallbacks.js */
 
 /**
@@ -21,7 +20,7 @@ import HandleEventMixin from "../mixins/HandleEventMixin.js";
  * as it will be much easier to share the logic once we switch to Fluent.
  */
 
-export default class AddressForm extends HandleEventMixin(PaymentStateSubscriberMixin(PaymentRequestPage)) {
+export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequestPage) {
   constructor() {
     super();
 
@@ -217,18 +216,32 @@ export default class AddressForm extends HandleEventMixin(PaymentStateSubscriber
     this.updateSaveButtonState();
   }
 
-  onChange(event) {
-    if (event.target.id == "country") {
-      this.updateRequiredState();
-    }
-    this.updateSaveButtonState();
-  }
+  handleEvent(event) {
+    switch (event.type) {
+      case "change": {
+        if (event.target.id == "country") {
+          this.updateRequiredState();
+        }
+        this.updateSaveButtonState();
+        break;
+      }
+      case "click": {
+        this.onClick(event);
+        break;
+      }
+      case "input": {
+        this.onInput(event);
+        break;
+      }
+      case "invalid": {
+        if (event.target instanceof HTMLFormElement) {
+          this.onInvalidForm(event);
+          break;
+        }
 
-  onInvalid(event) {
-    if (event.target instanceof HTMLFormElement) {
-      this.onInvalidForm(event);
-    } else {
-      this.onInvalidField(event);
+        this.onInvalidField(event);
+        break;
+      }
     }
   }
 

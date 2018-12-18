@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import HandleEventMixin from "../mixins/HandleEventMixin.js";
 import PaymentRequestPage from "../components/payment-request-page.js";
 import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
 import paymentRequest from "../paymentRequest.js";
@@ -16,7 +15,7 @@ import paymentRequest from "../paymentRequest.js";
  * as it will be much easier to implement and share the logic once we switch to Fluent.
  */
 
-export default class CompletionErrorPage extends HandleEventMixin(PaymentStateSubscriberMixin(PaymentRequestPage)) {
+export default class CompletionErrorPage extends PaymentStateSubscriberMixin(PaymentRequestPage) {
   constructor() {
     super();
 
@@ -81,14 +80,16 @@ export default class CompletionErrorPage extends HandleEventMixin(PaymentStateSu
     this.suggestionsList.appendChild(suggestionsFragment);
   }
 
-  onClick(event) {
-    switch (event.target) {
-      case this.doneButton: {
-        this.onDoneButtonClick(event);
-        break;
-      }
-      default: {
-        throw new Error("Unexpected click target");
+  handleEvent(event) {
+    if (event.type == "click") {
+      switch (event.target) {
+        case this.doneButton: {
+          this.onDoneButtonClick(event);
+          break;
+        }
+        default: {
+          throw new Error("Unexpected click target");
+        }
       }
     }
   }
