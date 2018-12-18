@@ -42,6 +42,8 @@ const networkRuntimeConnectionParameter = {
 };
 
 const usbRuntimeConnectionParameter = {
+  // device id
+  deviceId: PropTypes.string.isRequired,
   // socket path to connect debugger server
   socketPath: PropTypes.string.isRequired,
 };

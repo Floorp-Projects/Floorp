@@ -124,7 +124,9 @@ function runtimesReducer(state = RuntimesState(), action) {
 
         // Set connectionParameters only for known runtimes.
         const socketPath = runtime._socketPath;
-        const connectionParameters = runtime.isUnknown() ? null : { socketPath };
+        const deviceId = runtime.deviceId;
+        const connectionParameters =
+          runtime.isUnknown() ? null : { deviceId, socketPath };
 
         return {
           id: runtime.id,
