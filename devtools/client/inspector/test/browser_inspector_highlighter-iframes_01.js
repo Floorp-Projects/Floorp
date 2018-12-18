@@ -59,6 +59,6 @@ add_task(async function() {
       selector: selector,
       options: {type: "mousemove"},
       center: true,
-    }).then(() => inspector.toolbox.once("picker-node-hovered"));
+    }).then(() => inspector.inspector.nodePicker.once("picker-node-hovered"));
   }
 });

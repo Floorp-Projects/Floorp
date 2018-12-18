@@ -124,7 +124,9 @@ function MarkupView(inspector, frame, controllerWindow) {
   this.inspector.inspector.nodePicker.on(
     "picker-node-canceled", this._onToolboxPickerCanceled
   );
-  this.toolbox.on("picker-node-hovered", this._onToolboxPickerHover);
+  this.inspector.inspector.nodePicker.on(
+    "picker-node-hovered", this._onToolboxPickerHover
+  );
 
   if (flags.testing) {
     // In tests, we start listening immediately to avoid having to simulate a mousemove.
@@ -1951,7 +1953,9 @@ MarkupView.prototype = {
     this._elt.removeEventListener("mouseout", this._onMouseOut);
     this._frame.removeEventListener("focus", this._onFocus);
     this.inspector.selection.off("new-node-front", this._onNewSelection);
-    this.toolbox.off("picker-node-hovered", this._onToolboxPickerHover);
+    this.inspector.inspector.nodePicker.off(
+      "picker-node-hovered", this._onToolboxPickerHover
+    );
     this.walker.off("display-change", this._onDisplayChange);
     this.walker.off("mutations", this._mutationObserver);
     this.win.removeEventListener("copy", this._onCopy);
