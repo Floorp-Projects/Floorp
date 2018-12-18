@@ -49,3 +49,8 @@ def generate_generated_jni_wrappers(dummy_output_file, *args):
 
 def generate_fennec_jni_wrappers(dummy_output_file, *args):
     return android('generate-fennec-jni-wrappers', *args)
+
+
+def generate_android_code_and_resources(*args):
+    """No-op used to ensure inputs are fresh."""
+    return 0

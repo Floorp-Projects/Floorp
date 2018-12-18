@@ -12,7 +12,7 @@ evaluationDependsOn(':omnijar')
 evaluationDependsOn(':annotations')
 
 task buildOmnijars(type:Exec) {
-    dependsOn rootProject.generateCodeAndResources
+    dependsOn rootProject.machBuildGeneratedAndroidCodeAndResources
 
     // See comment in :omnijar project regarding interface mismatches here.
     inputs.file(project(':omnijar').sourceSets.main.resources.srcDirs).skipWhenEmpty() 
