@@ -27,6 +27,7 @@ from taskgraph.util.schema import (
     optionally_keyed_by,
     resolve_keyed_by,
     OptimizationSchema,
+    taskref_or_string,
 )
 from taskgraph.util.scriptworker import (
     BALROG_ACTIONS,
@@ -46,12 +47,6 @@ def _run_task_suffix():
     """String to append to cache names under control of run-task."""
     return hash_path(RUN_TASK)[0:20]
 
-
-# shortcut for a string where task references are allowed
-taskref_or_string = Any(
-    basestring,
-    {Required('task-reference'): basestring},
-)
 
 # A task description is a general description of a TaskCluster task
 task_description_schema = Schema({
