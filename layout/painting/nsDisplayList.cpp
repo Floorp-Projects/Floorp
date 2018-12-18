@@ -5022,8 +5022,7 @@ nsDisplayBorder::nsDisplayBorder(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayBorder::IsInvisibleInRect(const nsRect& aRect) const {
-  nsRect paddingRect =
-      mFrame->GetPaddingRect() - mFrame->GetPosition() + ToReferenceFrame();
+  nsRect paddingRect = GetPaddingRect();
   const nsStyleBorder* styleBorder;
   if (paddingRect.Contains(aRect) &&
       !(styleBorder = mFrame->StyleBorder())->IsBorderImageLoaded() &&
