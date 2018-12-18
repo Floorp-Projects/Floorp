@@ -752,6 +752,9 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   virtual void OnMemoryPressure(
       mozilla::layers::MemoryPressureReason aWhy) override;
 
+  virtual void EnsureDevicesInitialized() {};
+  virtual bool DevicesInitialized() { return true; };
+
  protected:
   gfxPlatform();
   virtual ~gfxPlatform();

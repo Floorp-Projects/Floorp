@@ -665,6 +665,11 @@ void WebRenderLayerManager::SetRoot(Layer* aLayer) {
 already_AddRefed<PersistentBufferProvider>
 WebRenderLayerManager::CreatePersistentBufferProvider(
     const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat) {
+
+  // Ensure devices initialization for canvas 2d. The devices are lazily
+  // initialized with WebRender to reduce memory usage.
+  gfxPlatform::GetPlatform()->EnsureDevicesInitialized();
+
   if (gfxPrefs::PersistentBufferProviderSharedEnabled()) {
     RefPtr<PersistentBufferProvider> provider =
         PersistentBufferProviderShared::Create(aSize, aFormat,

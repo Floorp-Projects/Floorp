@@ -546,6 +546,11 @@ ipc::IShmemAllocator* WebRenderBridgeChild::GetShmemAllocator() {
 
 RefPtr<KnowsCompositor> WebRenderBridgeChild::GetForMedia() {
   MOZ_ASSERT(NS_IsMainThread());
+
+  // Ensure devices initialization for video playback. The devices are lazily
+  // initialized with WebRender to reduce memory usage.
+  gfxPlatform::GetPlatform()->EnsureDevicesInitialized();
+
   return MakeAndAddRef<KnowsCompositorMediaProxy>(
       GetTextureFactoryIdentifier());
 }
