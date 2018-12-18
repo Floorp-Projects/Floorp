@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled()
+// |jit-test| skip-if: !wasmReftypesEnabled()
 
 gczeal(14, 1);
 let { exports } = wasmEvalText(`(module

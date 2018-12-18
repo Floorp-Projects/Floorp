@@ -3650,6 +3650,8 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
 
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::RefEq):
+#endif
+#ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::RefNull):
       case uint16_t(Op::RefIsNull):
         // Not yet supported

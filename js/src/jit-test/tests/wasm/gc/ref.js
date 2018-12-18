@@ -1,8 +1,4 @@
-if (!wasmGcEnabled()) {
-    assertErrorMessage(() => wasmEvalText(`(module (func (param (ref 0)) (unreachable)))`),
-                       WebAssembly.CompileError, /reference types not enabled/);
-    quit(0);
-}
+// |jit-test| skip-if: !wasmGcEnabled()
 
 // Parsing and resolving.
 
