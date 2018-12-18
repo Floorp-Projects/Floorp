@@ -47,7 +47,6 @@ function setup() {
   let cardGUID = "john-doe";
   let johnDoeCard = deepClone(PTU.BasicCards.JohnDoe);
   johnDoeCard.methodName = "basic-card";
-  johnDoeCard.guid = cardGUID;
   let savedBasicCards = {
     [cardGUID]: johnDoeCard,
   };
@@ -184,30 +183,6 @@ add_task(async function test_modified_total() {
 
   is(orderDetails.totalAmountElem.value, "3.5", "total amount uses modifier total");
   is(orderDetails.totalAmountElem.currency, "USD", "total currency uses modifier currency");
-});
-
-// The modifier is not applied since the cc network is not supported.
-add_task(async function test_non_supported_network() {
-  setup();
-  let request = Object.assign({}, requestStore.getState().request);
-  request.paymentDetails = Object.assign({}, request.paymentDetails, {
-    totalItem: { label: "foo", amount: { currency: "JPY", value: "5" }},
-    modifiers: [{
-      supportedMethods: "basic-card",
-      total: {
-        label: "Total due",
-        amount: { currency: "USD", value: "3.5" },
-      },
-      data: {
-        supportedNetworks: ["mastercard"],
-      },
-    }],
-  });
-  requestStore.setState({request});
-  await asyncElementRendered();
-
-  is(orderDetails.totalAmountElem.value, "5", "total amount uses modifier total");
-  is(orderDetails.totalAmountElem.currency, "JPY", "total currency uses modifier currency");
 });
 
 </script>
