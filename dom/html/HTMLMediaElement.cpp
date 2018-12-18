@@ -3697,6 +3697,7 @@ void HTMLMediaElement::DispatchEventsWhenPlayWasNotAllowed() {
       ChromeOnlyDispatch::eYes);
   asyncDispatcher->PostDOMEvent();
 #endif
+  OwnerDoc()->MaybeNotifyAutoplayBlocked();
 }
 
 void HTMLMediaElement::PlayInternal(bool aHandlingUserInput) {
