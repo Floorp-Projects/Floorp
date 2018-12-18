@@ -28,6 +28,7 @@ class WptreportHandler(object):
         """
         self.formatter.suite_start({
             "time": time(),
+            "run_info": {},
         })
 
     def suite_end(self):
