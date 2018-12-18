@@ -121,19 +121,13 @@ case "$target" in
 
     AC_MSG_CHECKING([for Android build-tools])
     android_build_tools_base="$android_sdk_root"/build-tools
-    android_build_tools_version=""
     for version in $3; do
         android_build_tools="$android_build_tools_base"/$version
-        if test -d "$android_build_tools" -a -f "$android_build_tools/aapt"; then
-            android_build_tools_version=$version
+        if test -d "$android_build_tools" -a -f "$android_build_tools/zipalign"; then
             AC_MSG_RESULT([$android_build_tools])
             break
         fi
     done
-    if test "$android_build_tools_version" = ""; then
-        version=$(echo $3 | cut -d" " -f1)
-        AC_MSG_ERROR([You must install the Android build-tools version $version.  Try |mach bootstrap|.  (Looked for "$android_build_tools_base"/$version)])
-    fi
 
     MOZ_PATH_PROG(ZIPALIGN, zipalign, :, [$android_build_tools])
     if test -z "$ZIPALIGN" -o "$ZIPALIGN" = ":"; then
@@ -172,11 +166,9 @@ case "$target" in
     ANDROID_TARGET_SDK="${android_target_sdk}"
     ANDROID_SDK_ROOT="${android_sdk_root}"
     ANDROID_TOOLS="${android_tools}"
-    ANDROID_BUILD_TOOLS_VERSION="$android_build_tools_version"
     AC_SUBST(ANDROID_TARGET_SDK)
     AC_SUBST(ANDROID_SDK_ROOT)
     AC_SUBST(ANDROID_TOOLS)
-    AC_SUBST(ANDROID_BUILD_TOOLS_VERSION)
     ;;
 esac
 
