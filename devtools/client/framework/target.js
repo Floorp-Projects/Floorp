@@ -202,14 +202,13 @@ const TargetFactory = exports.TargetFactory = {
  *                  If the target is a local Firefox tab, a reference to the firefox
  *                  frontend tab object.
  */
-function Target({ form, client, chrome, activeTab = null, tab = null }) {
+function Target({ client, chrome, activeTab = null, tab = null }) {
   EventEmitter.decorate(this);
   this.destroy = this.destroy.bind(this);
   this._onTabNavigated = this._onTabNavigated.bind(this);
   this.activeConsole = null;
   this.activeTab = activeTab;
 
-  this._form = form;
   this._url = this.form.url;
   this._title = this.form.title;
 
@@ -356,9 +355,7 @@ Target.prototype = {
   },
 
   get form() {
-    // Target constructor either receive a form or a Front.
-    // If a front is passed, fetch the form from it.
-    return this._form || this.activeTab.targetForm;
+    return this.activeTab.targetForm;
   },
 
   // Get a promise of the RootActor's form
@@ -836,7 +833,6 @@ Target.prototype = {
     this.activeConsole = null;
     this._client = null;
     this._tab = null;
-    this._form = null;
     this._attach = null;
     this._title = null;
     this._url = null;
