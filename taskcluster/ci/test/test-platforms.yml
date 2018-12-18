@@ -130,6 +130,7 @@ windows7-32/debug:
     test-sets:
         - windows-reftest-gpu
         - windows-tests
+        - web-platform-tests
 
 windows7-32/opt:
     build-platform: win32/opt
@@ -139,6 +140,7 @@ windows7-32/opt:
         - windows-reftest-gpu
         - windows-talos
         - windows-tests
+        - web-platform-tests
         - raptor-firefox
 
 windows7-32-pgo/opt:
@@ -149,6 +151,7 @@ windows7-32-pgo/opt:
         - windows-reftest-gpu
         - windows-talos
         - windows-tests
+        - web-platform-tests
         - raptor-firefox
 
 windows7-32-nightly/opt:
@@ -158,6 +161,7 @@ windows7-32-nightly/opt:
         - desktop-screenshot-capture
         - windows-reftest-gpu
         - windows-tests
+        - web-platform-tests
         - raptor-chrome
 
 windows7-32-devedition/opt:
@@ -166,6 +170,7 @@ windows7-32-devedition/opt:
         - desktop-screenshot-capture
         - windows-reftest-gpu
         - windows-tests
+        - web-platform-tests
 
 # win64
 windows10-64-ccov/debug:
@@ -177,6 +182,7 @@ windows10-64-ccov/debug:
         - windows-talos
         - marionette-gpu-tests
         - windows-tests
+        - web-platform-tests
         - ccov-code-coverage-tests
 
 windows10-64/debug:
@@ -184,6 +190,7 @@ windows10-64/debug:
     test-sets:
         - marionette-gpu-tests
         - windows-tests
+        - web-platform-tests
         - mochitest-headless
 
 windows10-64/opt:
@@ -194,6 +201,7 @@ windows10-64/opt:
         - windows-talos
         - marionette-gpu-tests
         - windows-tests
+        - web-platform-tests
         - mochitest-headless
         - raptor-firefox
 
@@ -212,6 +220,7 @@ windows10-64-pgo/opt:
         - windows-talos
         - marionette-gpu-tests
         - windows-tests
+        - web-platform-tests
         - raptor-firefox
 
 windows10-64-nightly/opt:
@@ -222,6 +231,7 @@ windows10-64-nightly/opt:
         - desktop-instrumentation
         - marionette-gpu-tests
         - windows-tests
+        - web-platform-tests
         - raptor-chrome
         - raptor-profiling
 
@@ -231,6 +241,7 @@ windows10-64-devedition/opt:
         - desktop-screenshot-capture
         - marionette-gpu-tests
         - windows-tests
+        - web-platform-tests
 
 windows10-64-asan/opt:
     build-platform: win64-asan/opt
