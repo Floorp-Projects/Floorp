@@ -554,6 +554,7 @@ menuitem.bookmark-item {
 
 @media (-moz-windows-default-theme: 0) {
   #urlbar:not(:-moz-lwtheme):not([focused="true"]),
+  #urlbar:not(:-moz-lwtheme).hidden-focus,
   .searchbar-textbox:not(:-moz-lwtheme):not([focused="true"]) {
     border-color: ThreeDShadow;
   }
