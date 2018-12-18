@@ -4,9 +4,22 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.35.0-SNAPSHOT (In Development)
+# 0.36.0-SNAPSHOT (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.34.0...master),
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.35.0...master),
+[Milestone](https://github.com/mozilla-mobile/android-components/milestone/38?closed=1),
+[API reference](https://mozilla-mobile.github.io/android-components/api/0.35.0/index)
+
+* Compiled against:
+  * Android (SDK: 28, Support Libraries: 28.0.0)
+  * Kotlin (Stdlib: 1.3.10, Coroutines: 1.0.1)
+  * GeckoView (Nightly: **66.0.20181217093726**, Beta: **65.0.20181211223337**, Release: **64.0.20181214004633**)
+  * Mozilla App Services (FxA: 0.11.5, Sync Logins: 0.11.5, Places: 0.11.5)
+  * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
+
+# 0.35.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.34.0...v0.35.0),
 [Milestone](https://github.com/mozilla-mobile/android-components/milestone/37?closed=1),
 [API reference](https://mozilla-mobile.github.io/android-components/api/0.35.0/index)
 
@@ -21,8 +34,8 @@ permalink: /changelog/
   * Localized strings for de, es, fr, it, ja, ko, zh-rCN, zh-rTW.
 
 * **feature-customtabs**
-  *
-  * ⚠️ **This is a breaking change** `CustomTabsService` has been renamed to `AbstractCustomTabsService` and is now an abstract class in order to allow apps to inject the `Engine` they are using. An app that wants to support custom tabs will need to create its own class and reference it in the manifest:
+  * ⚠️ **This is a breaking change** 
+  * `CustomTabsService` has been renamed to `AbstractCustomTabsService` and is now an abstract class in order to allow apps to inject the `Engine` they are using. An app that wants to support custom tabs will need to create its own class and reference it in the manifest:
 
   ```Kotlin
   class CustomTabsService : AbstractCustomTabsService() {
@@ -39,7 +52,7 @@ permalink: /changelog/
        val date = "2019-11-28".toDate("yyyy-MM-dd")
   ```
 
-* **concept-engine**, **engine-gecko-nightly**:
+* **concept-engine**, **engine-gecko-beta**, **engine-gecko-nightly**:
   * Add setting to enable testing mode which is used in engine-gecko to set `FULL_ACCESSIBILITY_TREE` to `true`. This allows access to the full DOM tree for testing purposes.
 
   ```Kotlin
@@ -50,7 +63,7 @@ permalink: /changelog/
   engine.settings.testingModeEnabled = true
   ```
 
-  * The existing `userAgentString` setting is now supported by `engine-gecko-nightly`.
+  * The existing `userAgentString` setting is now supported by `engine-gecko-beta` and `engine-gecko-nightly`.
 
 * **feature-session**
   * Added a `HistoryTrackingDelegate` implementation, which previously lived in **feature-storage**.
