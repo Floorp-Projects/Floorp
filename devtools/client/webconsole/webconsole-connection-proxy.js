@@ -89,14 +89,6 @@ WebConsoleConnectionProxy.prototype = {
   _disconnecter: null,
 
   /**
-   * The WebConsoleActor ID.
-   *
-   * @private
-   * @type string
-   */
-  _consoleActor: null,
-
-  /**
    * Initialize a debugger client and connect it to the debugger server.
    *
    * @return object
@@ -133,10 +125,8 @@ WebConsoleConnectionProxy.prototype = {
     this.target.on("will-navigate", this._onTabWillNavigate);
     this.target.on("navigate", this._onTabNavigated);
 
-    this._consoleActor = this.target.form.consoleActor;
     if (this.target.isBrowsingContext) {
-      const tab = this.target.form;
-      this.webConsoleFrame.onLocationChange(tab.url, tab.title);
+      this.webConsoleFrame.onLocationChange(this.target.url, this.target.title);
     }
     this._attachConsole();
 
@@ -275,7 +265,7 @@ WebConsoleConnectionProxy.prototype = {
    *        The message received from the server.
    */
   _onPageError: function(type, packet) {
-    if (!this.webConsoleFrame || packet.from != this._consoleActor) {
+    if (!this.webConsoleFrame || packet.from != this.webConsoleClient.actor) {
       return;
     }
     this.dispatchMessageAdd(packet);
@@ -291,7 +281,7 @@ WebConsoleConnectionProxy.prototype = {
    *        The message received from the server.
    */
   _onLogMessage: function(type, packet) {
-    if (!this.webConsoleFrame || packet.from != this._consoleActor) {
+    if (!this.webConsoleFrame || packet.from != this.webConsoleClient.actor) {
       return;
     }
     this.dispatchMessageAdd(packet);
@@ -307,7 +297,7 @@ WebConsoleConnectionProxy.prototype = {
    *        The message received from the server.
    */
   _onConsoleAPICall: function(type, packet) {
-    if (!this.webConsoleFrame || packet.from != this._consoleActor) {
+    if (!this.webConsoleFrame || packet.from != this.webConsoleClient.actor) {
       return;
     }
     this.dispatchMessageAdd(packet);
@@ -351,7 +341,7 @@ WebConsoleConnectionProxy.prototype = {
    *        The message received from the server.
    */
   _onLastPrivateContextExited: function(type, packet) {
-    if (this.webConsoleFrame && packet.from == this._consoleActor) {
+    if (this.webConsoleFrame && packet.from == this.webConsoleClient.actor) {
       this.webConsoleFrame.clearPrivateMessages();
     }
   },
