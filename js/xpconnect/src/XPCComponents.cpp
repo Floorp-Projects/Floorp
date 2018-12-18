@@ -1943,13 +1943,10 @@ nsXPCComponents_Utils::PermitCPOWsInScope(HandleValue obj) {
   }
 
   JSObject* scopeObj = js::UncheckedUnwrap(&obj.toObject());
-  JS::Compartment* scopeComp = js::GetObjectCompartment(scopeObj);
-  JS::Compartment* systemComp =
-      js::GetObjectCompartment(xpc::PrivilegedJunkScope());
-  MOZ_RELEASE_ASSERT(scopeComp != systemComp,
-                     "Don't call Cu.PermitCPOWsInScope() on scopes in the "
-                     "shared system compartment");
-  CompartmentPrivate::Get(scopeComp)->allowCPOWs = true;
+  MOZ_DIAGNOSTIC_ASSERT(
+      !mozJSComponentLoader::Get()->IsLoaderGlobal(scopeObj),
+      "Don't call Cu.PermitCPOWsInScope() in a JSM that shares its global");
+  CompartmentPrivate::Get(scopeObj)->allowCPOWs = true;
   return NS_OK;
 }
 
@@ -1981,8 +1978,9 @@ nsXPCComponents_Utils::SetWantXrays(HandleValue vscope, JSContext* cx) {
     return NS_ERROR_INVALID_ARG;
   }
   JSObject* scopeObj = js::UncheckedUnwrap(&vscope.toObject());
-  MOZ_RELEASE_ASSERT(!AccessCheck::isChrome(scopeObj),
-                     "Don't call setWantXrays on system-principal scopes");
+  MOZ_DIAGNOSTIC_ASSERT(
+      !mozJSComponentLoader::Get()->IsLoaderGlobal(scopeObj),
+      "Don't call Cu.setWantXrays() in a JSM that shares its global");
   JS::Compartment* compartment = js::GetObjectCompartment(scopeObj);
   CompartmentPrivate::Get(scopeObj)->wantXrays = true;
   bool ok = js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
@@ -1998,8 +1996,7 @@ nsXPCComponents_Utils::ForcePermissiveCOWs(JSContext* cx) {
   MOZ_DIAGNOSTIC_ASSERT(
       !mozJSComponentLoader::Get()->IsLoaderGlobal(currentGlobal),
       "Don't call Cu.forcePermissiveCOWs() in a JSM that shares its global");
-  MOZ_RELEASE_ASSERT(currentGlobal == JS::GetScriptedCallerGlobal(cx));
-  RealmPrivate::Get(currentGlobal)->forcePermissiveCOWs = true;
+  CompartmentPrivate::Get(currentGlobal)->forcePermissiveCOWs = true;
   return NS_OK;
 }
 

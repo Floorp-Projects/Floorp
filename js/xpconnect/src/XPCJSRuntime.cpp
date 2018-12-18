@@ -194,6 +194,7 @@ CompartmentPrivate::CompartmentPrivate(JS::Compartment* c,
       isUAWidgetCompartment(false),
       hasExclusiveExpandos(false),
       universalXPConnectEnabled(false),
+      forcePermissiveCOWs(false),
       wasShutdown(false),
       mWrappedJSMap(JSObject2WrappedJSMap::newMap(XPC_JS_MAP_LENGTH)) {
   MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
