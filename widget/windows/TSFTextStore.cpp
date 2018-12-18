@@ -1856,7 +1856,6 @@ TSFTextStore::TSFTextStore()
       mWaitingQueryLayout(false),
       mPendingDestroy(false),
       mDeferClearingContentForTSF(false),
-      mNativeCaretIsCreated(false),
       mDeferNotifyingTSF(false),
       mDeferCommittingComposition(false),
       mDeferCancellingComposition(false),
@@ -2000,7 +1999,7 @@ void TSFTextStore::Destroy() {
   // Destroy native caret first because it's not directly related to TSF and
   // there may be another textstore which gets focus.  So, we should avoid
   // to destroy caret after the new one recreates caret.
-  MaybeDestroyNativeCaret();
+  IMEHandler::MaybeDestroyNativeCaret();
 
   if (mLock) {
     mPendingDestroy = true;
@@ -4470,7 +4469,8 @@ TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
        "mContentForTSF={ MinOffsetOfLayoutChanged()=%u, "
        "LatestCompositionStartOffset()=%d, LatestCompositionEndOffset()=%d }, "
        "mComposition= { IsComposing()=%s, mStart=%d, EndOffset()=%d }, "
-       "mDeferNotifyingTSF=%s, mWaitingQueryLayout=%s",
+       "mDeferNotifyingTSF=%s, mWaitingQueryLayout=%s, "
+       "IMEHandler::IsA11yHandlingNativeCaret()=%s",
        this, vcView, acpStart, acpEnd, prc, pfClipped,
        GetBoolName(IsHandlingComposition()),
        mContentForTSF.MinOffsetOfLayoutChanged(),
@@ -4482,7 +4482,8 @@ TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
            : -1,
        GetBoolName(mComposition.IsComposing()), mComposition.mStart,
        mComposition.EndOffset(), GetBoolName(mDeferNotifyingTSF),
-       GetBoolName(mWaitingQueryLayout)));
+       GetBoolName(mWaitingQueryLayout),
+       GetBoolName(IMEHandler::IsA11yHandlingNativeCaret())));
 
   if (!IsReadLocked()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
@@ -4652,7 +4653,12 @@ TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
   // position.  Additionally, ATOK 2015 and earlier behaves really odd when
   // we don't create native caret.  Therefore, we need to create native caret
   // only when ATOK 2011 - 2015 is active (i.e., not necessary for ATOK 2016).
-  if (TSFPrefs::NeedToCreateNativeCaretForLegacyATOK() &&
+  // However, if a11y module is handling native caret, we shouldn't touch it.
+  // Note that ATOK must require the latest information of the caret.  So,
+  // even if we'll create native caret later, we need to creat it here with
+  // current information.
+  if (!IMEHandler::IsA11yHandlingNativeCaret() &&
+      TSFPrefs::NeedToCreateNativeCaretForLegacyATOK() &&
       TSFStaticSink::IsATOKReferringNativeCaretActive() &&
       mComposition.IsComposing() && mComposition.mStart <= acpStart &&
       mComposition.EndOffset() >= acpStart && mComposition.mStart <= acpEnd &&
@@ -6124,6 +6130,14 @@ nsresult TSFTextStore::OnSelectionChangeInternal(
   // Flush remaining pending notifications here if it's possible.
   MaybeFlushPendingNotifications();
 
+  // If we're available, we should create native caret instead of IMEHandler
+  // because we may have some cache to do it.
+  // Note that if we have composition, we'll notified composition-updated
+  // later so that we don't need to create native caret in such case.
+  if (!IsHandlingComposition() && IMEHandler::NeedsToCreateNativeCaret()) {
+    CreateNativeCaret();
+  }
+
   return NS_OK;
 }
 
@@ -6216,9 +6230,15 @@ bool TSFTextStore::NotifyTSFOfLayoutChange() {
     mContentForTSF.OnLayoutChanged();
   }
 
-  // Now, the caret position is different from ours.  Destroy the native caret
-  // if there is.
-  MaybeDestroyNativeCaret();
+  if (IMEHandler::NeedsToCreateNativeCaret()) {
+    // If we're available, we should create native caret instead of IMEHandler
+    // because we may have some cache to do it.
+    CreateNativeCaret();
+  } else {
+    // Now, the caret position is different from ours.  Destroy the native caret
+    // if we've create it only for GetTextExt().
+    IMEHandler::MaybeDestroyNativeCaret();
+  }
 
   // This method should return true if either way succeeds.
   bool ret = true;
@@ -6362,6 +6382,13 @@ nsresult TSFTextStore::OnUpdateCompositionInternal() {
   }
   mDeferNotifyingTSF = false;
   MaybeFlushPendingNotifications();
+
+  // If we're available, we should create native caret instead of IMEHandler
+  // because we may have some cache to do it.
+  if (IMEHandler::NeedsToCreateNativeCaret()) {
+    CreateNativeCaret();
+  }
+
   return NS_OK;
 }
 
@@ -6444,7 +6471,9 @@ nsresult TSFTextStore::OnMouseButtonEventInternal(
 }
 
 void TSFTextStore::CreateNativeCaret() {
-  MaybeDestroyNativeCaret();
+  MOZ_ASSERT(!IMEHandler::IsA11yHandlingNativeCaret());
+
+  IMEHandler::MaybeDestroyNativeCaret();
 
   // Don't create native caret after destroyed.
   if (mDestroyed) {
@@ -6497,47 +6526,14 @@ void TSFTextStore::CreateNativeCaret() {
     return;
   }
 
-  LayoutDeviceIntRect& caretRect = queryCaretRect.mReply.mRect;
-  mNativeCaretIsCreated = ::CreateCaret(mWidget->GetWindowHandle(), nullptr,
-                                        caretRect.Width(), caretRect.Height());
-  if (!mNativeCaretIsCreated) {
+  if (!IMEHandler::CreateNativeCaret(static_cast<nsWindow*>(mWidget.get()),
+                                     queryCaretRect.mReply.mRect)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::CreateNativeCaret() FAILED due to "
-             "CreateCaret() failure",
+             "IMEHandler::CreateNativeCaret() failure",
              this));
     return;
   }
-
-  nsWindow* window = static_cast<nsWindow*>(mWidget.get());
-  nsWindow* toplevelWindow = window->GetTopLevelWindow(false);
-  if (!toplevelWindow) {
-    MOZ_LOG(sTextStoreLog, LogLevel::Error,
-            ("0x%p   TSFTextStore::CreateNativeCaret() FAILED due to "
-             "no top level window",
-             this));
-    return;
-  }
-
-  if (toplevelWindow != window) {
-    caretRect.MoveBy(toplevelWindow->WidgetToScreenOffset());
-    caretRect.MoveBy(-window->WidgetToScreenOffset());
-  }
-
-  ::SetCaretPos(caretRect.X(), caretRect.Y());
-}
-
-void TSFTextStore::MaybeDestroyNativeCaret() {
-  if (!mNativeCaretIsCreated) {
-    return;
-  }
-
-  MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-          ("0x%p   TSFTextStore::MaybeDestroyNativeCaret(), "
-           "destroying native caret",
-           this));
-
-  ::DestroyCaret();
-  mNativeCaretIsCreated = false;
 }
 
 void TSFTextStore::CommitCompositionInternal(bool aDiscard) {

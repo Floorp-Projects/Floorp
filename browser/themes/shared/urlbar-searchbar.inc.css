@@ -292,16 +292,17 @@
   pointer-events: none;
 }
 
-#urlbar[switchingtabs] > .urlbar-textbox-container > .urlbar-history-dropmarker {
+#urlbar[switchingtabs] > .urlbar-history-dropmarker {
   transition: none;
 }
 
-#nav-bar:not([customizing="true"]) > #nav-bar-customization-target > #urlbar-container:not(:hover) > #urlbar:not([focused]) > .urlbar-textbox-container > .urlbar-history-dropmarker,
-#nav-bar:not([customizing="true"]) > #nav-bar-customization-target > #urlbar-container:not(:hover) > #urlbar.hidden-focus > .urlbar-textbox-container > .urlbar-history-dropmarker {
+#nav-bar:not([customizing="true"]) > #nav-bar-customization-target > #urlbar-container:not(:hover) > #urlbar:not([focused]) > .urlbar-history-dropmarker,
+#nav-bar:not([customizing="true"]) > #nav-bar-customization-target > #urlbar-container:not(:hover) > #urlbar.hidden-focus > .urlbar-history-dropmarker {
   opacity: 0;
 }
 
-#pageActionButton, .share-more-button {
+#pageActionButton,
+.share-more-button {
   list-style-image: url("chrome://browser/skin/page-action.svg");
 }
 

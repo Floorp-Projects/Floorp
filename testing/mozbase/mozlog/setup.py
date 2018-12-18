@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from setuptools import setup, find_packages
 
 PACKAGE_NAME = 'mozlog'
-PACKAGE_VERSION = '3.9'
+PACKAGE_VERSION = '3.10'
 DEPS = [
     'blessings>=1.3',
     'mozterm',

@@ -33,9 +33,9 @@ class StoragePanel {
   /**
    * open is effectively an asynchronous constructor
    */
-  open() {
+  async open() {
     this.target.on("close", this.destroy);
-    this._front = this.target.getFront("storage");
+    this._front = await this.target.getFront("storage");
 
     this.UI = new StorageUI(this._front, this._target,
                             this._panelWin, this._toolbox);
