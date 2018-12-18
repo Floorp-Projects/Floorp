@@ -249,3 +249,19 @@ def send_email(address, subject, content, link, use_proxy=False):
         'content': content,
         'link': link,
     })
+
+
+def list_task_group(task_group_id):
+    """Generate the tasks in a task group"""
+    params = {}
+    while True:
+        url = liburls.api(os.environ['TASKCLUSTER_ROOT_URL'], 'queue', 'v1',
+                          'task-group/{}/list'.format(task_group_id))
+        resp = _do_request(url, params=params).json()
+        for task in [t['status'] for t in resp['tasks']]:
+            if task['state'] in ['running', 'pending', 'unscheduled']:
+                yield task['taskId']
+        if resp.get('continuationToken'):
+            params = {'continuationToken': resp.get('continuationToken')}
+        else:
+            break
