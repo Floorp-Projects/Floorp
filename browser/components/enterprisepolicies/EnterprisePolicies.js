@@ -383,6 +383,11 @@ class JSONPoliciesProvider {
       let data = Cu.readUTF8File(this._getConfigurationFile());
       if (data) {
         this._policies = JSON.parse(data).policies;
+
+        if (!this._policies) {
+          log.error("Policies file doesn't contain a 'policies' object");
+          this._failed = true;
+        }
       }
     } catch (ex) {
       if (ex instanceof Components.Exception &&
