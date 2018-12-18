@@ -24,7 +24,7 @@ add_task(async function() {
   await onHover;
 
   info("Press escape and wait for the picker to stop");
-  const onPickerStopped = toolbox.once("picker-stopped");
+  const onPickerStopped = toolbox.inspector.nodePicker.once("picker-stopped");
   testActor.synthesizeKey({
     key: "VK_ESCAPE",
     options: {},
