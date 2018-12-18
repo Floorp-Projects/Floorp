@@ -19,7 +19,7 @@ import mozilla.components.browser.menu.R
  */
 class SimpleBrowserMenuCheckbox(
     private val label: String,
-    private var initialState: Boolean = false,
+    private val initialState: () -> Boolean = { false },
     private val listener: (Boolean) -> Unit
 ) : BrowserMenuItem {
     override var visible: () -> Boolean = { true }
@@ -27,7 +27,10 @@ class SimpleBrowserMenuCheckbox(
     override fun getLayoutResource() = R.layout.mozac_browser_menu_checkbox
 
     override fun bind(menu: BrowserMenu, view: View) {
-        (view as CheckBox).text = label
+        (view as CheckBox).apply {
+            text = label
+            isChecked = initialState.invoke()
+        }
         view.setOnCheckedChangeListener { _, checked ->
             listener.invoke(checked)
             menu.dismiss()

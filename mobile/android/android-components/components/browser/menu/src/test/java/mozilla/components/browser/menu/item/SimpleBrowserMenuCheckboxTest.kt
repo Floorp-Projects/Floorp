@@ -8,6 +8,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -54,5 +55,17 @@ class SimpleBrowserMenuCheckboxTest {
 
         assertTrue(callbackInvoked)
         verify(menu).dismiss()
+    }
+
+    @Test
+    fun `initialState is invoked on bind`() {
+        val initialState: () -> Boolean = { true }
+        val item = SimpleBrowserMenuCheckbox("Hello", initialState) {}
+
+        val menu = mock(BrowserMenu::class.java)
+        val view = spy(CheckBox(RuntimeEnvironment.application))
+        item.bind(menu, view)
+
+        verify(view).isChecked = true
     }
 }
