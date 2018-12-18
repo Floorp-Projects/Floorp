@@ -4,8 +4,6 @@
 
 "use strict";
 
-const promise = require("promise");
-
 /**
  * Client-side highlighter shared module.
  * To be used by toolbox panels that need to highlight DOM elements.
@@ -172,22 +170,6 @@ exports.getHighlighterUtils = function(toolbox) {
     cancelPicker();
     toolbox.win.focus();
   }
-
-  /**
-   * Similar to getHighlighterByType, however it automatically memoizes and
-   * destroys highlighters with the inspector, instead of having to be manually
-   * managed by consumers.
-   * The type of the highlighter passed must be known by the server.
-   * The highlighter actor returned will have the show(nodeFront) and hide()
-   * methods and needs to be released by the consumer when not needed anymore.
-   * @return Promise a promise that resolves to the highlighter
-   */
-  exported.getOrCreateHighlighterByType = requireInspector(async function(typeName) {
-    const highlighter = await toolbox.inspector.getOrCreateHighlighterByType(typeName);
-
-    return highlighter || promise.reject("The target doesn't support " +
-        `creating highlighters by types or ${typeName} is unknown`);
-  });
 
   // Return the public API
   return exported;
