@@ -4,6 +4,7 @@
 
 import RichPicker from "./rich-picker.js";
 import ShippingOption from "../components/shipping-option.js";
+import HandleEventMixin from "../mixins/HandleEventMixin.js";
 
 /**
  * <shipping-option-picker></shipping-option-picker>
@@ -11,7 +12,7 @@ import ShippingOption from "../components/shipping-option.js";
  * <option> listening to shippingOptions.
  */
 
-export default class ShippingOptionPicker extends RichPicker {
+export default class ShippingOptionPicker extends HandleEventMixin(RichPicker) {
   constructor() {
     super();
     this.dropdown.setAttribute("option-type", "shipping-option");
@@ -52,15 +53,6 @@ export default class ShippingOptionPicker extends RichPicker {
     if (selectedShippingOption && selectedShippingOption !== this.dropdown.popupBox.value) {
       throw new Error(`The option ${selectedShippingOption} ` +
                       `does not exist in the shipping option picker`);
-    }
-  }
-
-  handleEvent(event) {
-    switch (event.type) {
-      case "change": {
-        this.onChange(event);
-        break;
-      }
     }
   }
 
