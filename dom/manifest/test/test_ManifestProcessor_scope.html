@@ -14,76 +14,76 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1079453
  * Manifest scope
  * https://w3c.github.io/manifest/#scope-member
  **/
-'use strict';
-var expected = 'Expect non-string scope to be undefined';
+"use strict";
+var expected = "Expect non-string scope to be undefined";
 typeTests.forEach((type) => {
   data.jsonText = JSON.stringify({
-    scope: type
+    scope: type,
   });
   var result = processor.process(data);
   is(result.scope, undefined, expected);
 });
 
-var expected = 'Expect different origin to be treated as undefined';
+var expected = "Expect different origin to be treated as undefined";
 data.jsonText = JSON.stringify({
-  scope: 'http://not-same-origin'
+  scope: "http://not-same-origin",
 });
 var result = processor.process(data);
 is(result.scope, undefined, expected);
 
-var expected = 'Expect the empty string to be treated as undefined.';
+var expected = "Expect the empty string to be treated as undefined.";
 data.jsonText = JSON.stringify({
-  scope: ''
+  scope: "",
 });
 var result = processor.process(data);
 is(result.scope, undefined, expected);
 
-var expected = 'Resolve URLs relative to manifest.';
-var URLs = ['path', '/path', '../../path'];
+var expected = "Resolve URLs relative to manifest.";
+var URLs = ["path", "/path", "../../path"];
 URLs.forEach((url) => {
   data.jsonText = JSON.stringify({
     scope: url,
-    start_url: "/path"
+    start_url: "/path",
   });
   var absURL = new URL(url, manifestURL).toString();
   var result = processor.process(data);
   is(result.scope, absURL, expected);
 });
 
-var expected = 'If start URL is not in scope, return undefined.';
+var expected = "If start URL is not in scope, return undefined.";
 data.jsonText = JSON.stringify({
-  scope: 'foo',
-  start_url: 'bar'
+  scope: "foo",
+  start_url: "bar",
 });
 var result = processor.process(data);
 is(result.scope, undefined, expected);
 
-var expected = 'If start URL is in scope, use the scope.';
+var expected = "If start URL is in scope, use the scope.";
 data.jsonText = JSON.stringify({
-  start_url: 'foobar',
-  scope: 'foo'
+  start_url: "foobar",
+  scope: "foo",
 });
 var result = processor.process(data);
-is(result.scope.toString(), new URL('foo', manifestURL).toString(), expected);
+is(result.scope.toString(), new URL("foo", manifestURL).toString(), expected);
 
-var expected = 'Expect start_url to be ' + new URL('foobar', manifestURL).toString();
-is(result.start_url.toString(), new URL('foobar', manifestURL).toString(), expected);
+var expected = "Expect start_url to be " + new URL("foobar", manifestURL).toString();
+is(result.start_url.toString(), new URL("foobar", manifestURL).toString(), expected);
 
-var expected = 'If start URL is in scope, use the scope.';
+var expected = "If start URL is in scope, use the scope.";
 data.jsonText = JSON.stringify({
-  start_url: '/foo/',
-  scope: '/foo/'
+  start_url: "/foo/",
+  scope: "/foo/",
 });
 var result = processor.process(data);
-is(result.scope.toString(), new URL('/foo/', manifestURL).toString(), expected);
+is(result.scope.toString(), new URL("/foo/", manifestURL).toString(), expected);
 
-var expected = 'If start URL is in scope, use the scope.';
+var expected = "If start URL is in scope, use the scope.";
 data.jsonText = JSON.stringify({
-  start_url: '.././foo/',
-  scope: '../foo/'
+  start_url: ".././foo/",
+  scope: "../foo/",
 });
 var result = processor.process(data);
-is(result.scope.toString(), new URL('/foo/', manifestURL).toString(), expected);
+is(result.scope.toString(), new URL("/foo/", manifestURL).toString(), expected);
 
   </script>
 </head>

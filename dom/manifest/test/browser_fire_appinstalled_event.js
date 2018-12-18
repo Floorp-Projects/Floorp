@@ -1,5 +1,5 @@
-//Used by JSHint:
-/*global Cu, BrowserTestUtils, ok, add_task, gBrowser */
+// Used by JSHint:
+/* global Cu, BrowserTestUtils, ok, add_task, gBrowser */
 "use strict";
 const { PromiseMessage } = ChromeUtils.import("resource://gre/modules/PromiseMessage.jsm", {});
 const testPath = "/browser/dom/manifest/test/file_reg_appinstalled_event.html";
@@ -39,7 +39,7 @@ async function theTest(aBrowser) {
 add_task(async function() {
   await enableOnAppInstalledPref();
   let tabOptions = {
-    gBrowser: gBrowser,
+    gBrowser,
     url: testURL.href,
   };
   await BrowserTestUtils.withNewTab(
