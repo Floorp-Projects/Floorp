@@ -11,8 +11,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 const { ManifestObtainer } =
   ChromeUtils.import("resource://gre/modules/ManifestObtainer.jsm", {});
 const { ManifestIcons } =

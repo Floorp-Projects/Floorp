@@ -25,16 +25,9 @@
  */
 /* globals Components, Task, PromiseMessage, XPCOMUtils, ManifestProcessor, BrowserUtils*/
 "use strict";
-const {
-  utils: Cu,
-  classes: Cc,
-  interfaces: Ci,
-} = Components;
+
 ChromeUtils.import("resource://gre/modules/PromiseMessage.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/ManifestProcessor.jsm");
-ChromeUtils.defineModuleGetter(this, "BrowserUtils", // jshint ignore:line
-  "resource://gre/modules/BrowserUtils.jsm");
 
 var ManifestObtainer = { // jshint ignore:line
   /**

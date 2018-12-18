@@ -7,10 +7,10 @@ const { Manifests } = ChromeUtils.import("resource://gre/modules/Manifest.jsm", 
 const defaultURL = new URL("http://example.org/browser/dom/manifest/test/resource.sjs");
 defaultURL.searchParams.set("Content-Type", "application/manifest+json");
 
-const manifest = JSON.stringify({short_name: "hello World", scope: "/browser/"});
-const manifestUrl = `${defaultURL}&body=${manifest}`;
+const manifestMock = JSON.stringify({short_name: "hello World", scope: "/browser/"});
+const manifestUrl = `${defaultURL}&body=${manifestMock}`;
 
-function makeTestURL(manifest) {
+function makeTestURL() {
   const url = new URL(defaultURL);
   const body = `<link rel="manifest" href='${manifestUrl}'>`;
   url.searchParams.set("Content-Type", "text/html; charset=utf-8");
@@ -20,7 +20,7 @@ function makeTestURL(manifest) {
 
 add_task(async function() {
 
-  const tabOptions = {gBrowser, url: makeTestURL(manifest)};
+  const tabOptions = {gBrowser, url: makeTestURL()};
 
   await BrowserTestUtils.withNewTab(tabOptions, async function(browser) {
 
@@ -46,4 +46,3 @@ add_task(async function() {
   });
 
 });
-

@@ -20,17 +20,11 @@
 /* exported EXPORTED_SYMBOLS*/
 /* globals Components */
 "use strict";
-const {
-  utils: Cu,
-  interfaces: Ci,
-  classes: Cc,
-} = Components;
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
-const netutil = Cc["@mozilla.org/network/util;1"]
-  .getService(Ci.nsINetUtil);
 
 function ImageObjectProcessor(aConsole, aExtractor) {
   this.console = aConsole;
@@ -92,7 +86,7 @@ ImageObjectProcessor.prototype.process = function(
     };
     let value = extractor.extractValue(spec);
     if (value) {
-      value = netutil.parseRequestContentType(value, charset, hadCharset);
+      value = Services.netUtils.parseRequestContentType(value, charset, hadCharset);
     }
     return value || undefined;
   }
