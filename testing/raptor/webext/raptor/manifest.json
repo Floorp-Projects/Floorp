@@ -24,6 +24,7 @@
                   "*://*.instagram.com/*",
                   "*://*.microsoft.com/*",
                   "*://*.reddit.com/*",
+                  "*://*.twitter.com/*",
                   "*://*.vice.com/*",
                   "*://*.wikia.com/*",
                   "*://*.wikipedia.org/*",
