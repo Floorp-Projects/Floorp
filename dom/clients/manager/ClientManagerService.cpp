@@ -579,6 +579,17 @@ class OpenWindowRunnable final : public Runnable {
     ClientOpenWindowOpParent* actor =
         new ClientOpenWindowOpParent(mArgs, mPromise);
 
+    // Normally, we call TransmitPermissionsForPrincipal for the first http
+    // load, but in this case, ClientOpenWindowOpChild will cause the initial
+    // about:blank load in the child to have this principal. That causes us to
+    // assert because the child process doesn't know that it's loading this
+    // principal.
+    nsCOMPtr<nsIPrincipal> principal =
+        PrincipalInfoToPrincipal(mArgs.principalInfo());
+    DebugOnly<nsresult> rv =
+        targetProcess->TransmitPermissionsForPrincipal(principal);
+    Unused << NS_WARN_IF(NS_FAILED(rv));
+
     // If this fails the actor will be automatically destroyed which will
     // reject the promise.
     Unused << targetProcess->SendPClientOpenWindowOpConstructor(actor, mArgs);
