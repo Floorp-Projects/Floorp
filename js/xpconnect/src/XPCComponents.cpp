@@ -1992,11 +1992,12 @@ nsXPCComponents_Utils::SetWantXrays(HandleValue vscope, JSContext* cx) {
 NS_IMETHODIMP
 nsXPCComponents_Utils::ForcePermissiveCOWs(JSContext* cx) {
   xpc::CrashIfNotInAutomation();
-  JSObject* currentGlobal = CurrentGlobalOrNull(cx);
+  RootedObject currentGlobal(cx, CurrentGlobalOrNull(cx));
   MOZ_DIAGNOSTIC_ASSERT(
       !mozJSComponentLoader::Get()->IsLoaderGlobal(currentGlobal),
       "Don't call Cu.forcePermissiveCOWs() in a JSM that shares its global");
-  CompartmentPrivate::Get(currentGlobal)->forcePermissiveCOWs = true;
+  MOZ_RELEASE_ASSERT(currentGlobal == JS::GetScriptedCallerGlobal(cx));
+  RealmPrivate::Get(currentGlobal)->forcePermissiveCOWs = true;
   return NS_OK;
 }
 
