@@ -61,7 +61,8 @@ add_task(async function() {
   function moveMouseOver(selector) {
     info("Waiting for element " + selector + " to be highlighted");
     const onHighlighterReady = toolbox.once("highlighter-ready");
-    const onPickerNodeHovered = inspector.toolbox.once("picker-node-hovered");
+    const onPickerNodeHovered =
+      inspector.inspector.nodePicker.once("picker-node-hovered");
     testActor.synthesizeMouse({
       options: {type: "mousemove"},
       center: true,
