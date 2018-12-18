@@ -305,7 +305,6 @@ function show(button) {
   let content = document.getElementById(category);
   if (current_tab == content)
     return;
-  saveScrollPosition(current_tab.id);
   current_tab.classList.remove("active");
   current_tab.hidden = true;
   content.classList.add("active");
@@ -318,18 +317,4 @@ function show(button) {
   let title = document.getElementById("sectionTitle");
   title.textContent = button.children[0].textContent;
   location.hash = category;
-  restoreScrollPosition(category);
 }
-
-const scrollPositions = {};
-function saveScrollPosition(category) {
-  const mainContent = document.querySelector(".main-content");
-  scrollPositions[category] = mainContent.scrollTop;
-}
-
-function restoreScrollPosition(category) {
-  const scrollY = scrollPositions[category] || 0;
-  const mainContent = document.querySelector(".main-content");
-  mainContent.scrollTo(0, scrollY);
-}
-
