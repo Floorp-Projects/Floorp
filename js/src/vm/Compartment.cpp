@@ -38,9 +38,10 @@ using namespace js;
 
 using JS::AutoStableStringChars;
 
-Compartment::Compartment(Zone* zone)
+Compartment::Compartment(Zone* zone, bool invisibleToDebugger)
     : zone_(zone),
       runtime_(zone->runtimeFromAnyThread()),
+      invisibleToDebugger_(invisibleToDebugger),
       crossCompartmentWrappers(0) {}
 
 #ifdef JSGC_HASH_TABLE_CHECKS

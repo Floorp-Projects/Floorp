@@ -1,4 +1,4 @@
-This directory contains files from the OpenVR SDK, version 1.0.18.
+This directory contains files from the OpenVR SDK, version 1.0.17.
 
 This SDK contains the OpenVR API interface headers and functions to load the
 OpenVR runtime libraries which actually implement the functionality. The
@@ -46,6 +46,8 @@ Steps to update the library:
 
 - Replace the #define VR_INTERFACE in openvr.h to avoid extern'ing the functions.
   Unlike the usual OpenVR API builds, we are not building a separate dll.
+
+- Add explicit in CVRSettingHelper constructor.
 
 - Update this README.mozilla file with the new OpenVR SDK version and any
   additional steps needed for newer versions.

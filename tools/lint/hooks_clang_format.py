@@ -7,12 +7,28 @@ import os
 import subprocess
 import sys
 
-
 here = os.path.dirname(os.path.realpath(__file__))
 topsrcdir = os.path.join(here, os.pardir, os.pardir)
 
+EXTRA_PATHS = (
+    'python/mozversioncontrol',
+)
+sys.path[:0] = [os.path.join(topsrcdir, p) for p in EXTRA_PATHS]
 
-def run_clang_format(hooktype, changedFiles, args):
+from mozversioncontrol import get_repository_object, InvalidRepoPath
+
+
+def run_clang_format(hooktype, args):
+    try:
+        vcs = get_repository_object(topsrcdir)
+    except InvalidRepoPath:
+        return
+
+    changedFiles = vcs.get_outgoing_files('AM')
+    if not changedFiles:
+        # No files have been touched
+        return
+
     arguments = ['clang-format', '-s', '-p'] + changedFiles
     # On windows we need this to call the command in a shell, see Bug 1511594
     if os.name == 'nt':
@@ -29,12 +45,8 @@ def run_clang_format(hooktype, changedFiles, args):
 
 
 def hg(ui, repo, node, **kwargs):
-    changedFiles = [os.path.join(repo.root, file) for file in repo[node].changeset()[3]]
-    if not changedFiles:
-        # No files have been touched
-        return
     hooktype = kwargs['hooktype']
-    return run_clang_format(hooktype, changedFiles, kwargs.get('pats', []))
+    return run_clang_format(hooktype, kwargs.get('pats', []))
 
 
 def git():

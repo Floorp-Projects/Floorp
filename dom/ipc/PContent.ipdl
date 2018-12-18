@@ -304,6 +304,24 @@ struct IPCURLClassifierFeature
     nsCString skipHostList;
 };
 
+// Transport structure for Notifications API notifications
+// (https://developer.mozilla.org/en-US/docs/Web/API/notification) instances
+// used exclusively by the NotificationEvent PContent method.
+struct NotificationEventData
+{
+    nsCString originSuffix;
+    nsCString scope;
+    nsString ID;
+    nsString title;
+    nsString dir;
+    nsString lang;
+    nsString body;
+    nsString tag;
+    nsString icon;
+    nsString data;
+    nsString behavior;
+};
+
 /**
  * The PContent protocol is a top-level protocol between the UI process
  * and a content process. There is exactly one PContentParent/PContentChild pair
@@ -848,6 +866,22 @@ parent:
 
     async OpenNotificationSettings(Principal principal);
 
+    // Request that the ServiceWorkerManager in the parent process create a
+    // notification "click" or "close" event and dispatch it on the relevant
+    // ServiceWorker. This needs to happen because when a notification is
+    // created it is tied to a specific content process and when the user clicks
+    // on the notification, it will be that content process that is notified.
+    // However, even if the ServiceWorker lives in that process (it may no
+    // longer be in that process, or may have never lived there), the right/only
+    // way to talk through the ServiceWorker is through the parent.
+    //
+    // This happens on PContent because the ServiceWorkerManager lives on the
+    // main thread and bouncing this off of PBackground would be silly and
+    // complex. In the long run, the notification implementation will be
+    // overhauled to directly process the notification click/close and directly
+    // translate that to a ServiceWorker event.
+    async NotificationEvent(nsString type, NotificationEventData data);
+
     async PPSMContentDownloader(uint32_t aCertType);
 
     async PExternalHelperApp(OptionalURIParams uri,
@@ -1171,7 +1205,7 @@ parent:
                                                   Principal aTrackingPrincipal,
                                                   nsCString aTrackingOrigin,
                                                   nsCString aGrantedOrigin,
-                                                  bool aAnySite)
+                                                  int aAllowMode)
           returns (bool unused);
 
     async StoreUserInteractionAsPermission(Principal aPrincipal);

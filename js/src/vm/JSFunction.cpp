@@ -854,78 +854,21 @@ static JSObject* CreateFunctionConstructor(JSContext* cx, JSProtoKey key) {
   return functionCtor;
 }
 
+static bool FunctionPrototype(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
+  return true;
+}
+
 static JSObject* CreateFunctionPrototype(JSContext* cx, JSProtoKey key) {
   Rooted<GlobalObject*> self(cx, cx->global());
 
   RootedObject objectProto(cx, &self->getPrototype(JSProto_Object).toObject());
-  /*
-   * Bizarrely, |Function.prototype| must be an interpreted function, so
-   * give it the guts to be one.
-   */
-  RootedObject enclosingEnv(cx, &self->lexicalEnvironment());
-  RootedFunction functionProto(
-      cx, NewFunctionWithProto(cx, nullptr, 0, JSFunction::INTERPRETED,
-                               enclosingEnv, nullptr, objectProto,
-                               gc::AllocKind::FUNCTION, SingletonObject));
-  if (!functionProto) {
-    return nullptr;
-  }
 
-  const char* rawSource = "function () {\n}";
-  size_t sourceLen = strlen(rawSource);
-  size_t begin = 9;
-  MOZ_ASSERT(rawSource[begin] == '(');
-  UniqueTwoByteChars source(InflateString(cx, rawSource, sourceLen));
-  if (!source) {
-    return nullptr;
-  }
-
-  ScriptSource* ss = cx->new_<ScriptSource>();
-  if (!ss) {
-    return nullptr;
-  }
-  ScriptSourceHolder ssHolder(ss);
-  if (!ss->setSource(cx, std::move(source), sourceLen)) {
-    return nullptr;
-  }
-
-  CompileOptions options(cx);
-  options.setIntroductionType("Function.prototype").setNoScriptRval(true);
-  if (!ss->initFromOptions(cx, options)) {
-    return nullptr;
-  }
-  RootedScriptSourceObject sourceObject(cx, ScriptSourceObject::create(cx, ss));
-  if (!sourceObject ||
-      !ScriptSourceObject::initFromOptions(cx, sourceObject, options)) {
-    return nullptr;
-  }
-
-  RootedScript script(cx, JSScript::Create(cx, options, sourceObject, begin,
-                                           ss->length(), 0, ss->length()));
-  if (!script || !JSScript::initFunctionPrototype(cx, script, functionProto)) {
-    return nullptr;
-  }
-
-  functionProto->initScript(script);
-  ObjectGroup* protoGroup = JSObject::getGroup(cx, functionProto);
-  if (!protoGroup) {
-    return nullptr;
-  }
-
-  protoGroup->setInterpretedFunction(functionProto);
-
-  /*
-   * The default 'new' group of Function.prototype is required by type
-   * inference to have unknown properties, to simplify handling of e.g.
-   * NewFunctionClone.
-   */
-  ObjectGroupRealm& realm = ObjectGroupRealm::getForNewObject(cx);
-  if (!JSObject::setNewGroupUnknown(cx, realm, &JSFunction::class_,
-                                    functionProto)) {
-    return nullptr;
-  }
-
-  return functionProto;
+  return NewFunctionWithProto(cx, FunctionPrototype, 0, JSFunction::NATIVE_FUN,
+                              nullptr, HandlePropertyName(cx->names().empty),
+                              objectProto, gc::AllocKind::FUNCTION,
+                              SingletonObject);
 }
 
 static const ClassOps JSFunctionClassOps = {

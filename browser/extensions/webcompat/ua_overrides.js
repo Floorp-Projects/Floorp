@@ -164,27 +164,6 @@ const UAOverrides = {
     },
 
     /*
-     * Bug 1483233 - Add a mobile UA override for ebay
-     * (Imported from ua-update.json.in)
-     *
-     * eBay's systems have an issue where Fennec gets sent into an endless
-     * redirect, rendering it completely unusable.
-     */
-    {
-      matches: [
-        "*://*.ebay.at/*", "*://*.ebay.be/*", "*://*.ebay.ca/*", "*://*.ebay.ch/*",
-        "*://*.ebay.cn/*", "*://*.ebay.co.th/*", "*://*.ebay.co.uk/*", "*://*.ebay.com.au/*",
-        "*://*.ebay.com.hk/*", "*://*.ebay.com.my/*", "*://*.ebay.com.sg/*", "*://*.ebay.com.tw/*",
-        "*://*.ebay.com/*", "*://*.ebay.de/*", "*://*.ebay.es/*", "*://*.ebay.fr/*",
-        "*://*.ebay.ie/*", "*://*.ebay.in/*", "*://*.ebay.it/*", "*://*.ebay.nl/*",
-        "*://*.ebay.ph/*", "*://*.ebay.pl/*", "*://*.ebay.vn/*",
-      ],
-      uaTransformer: (_) => {
-        return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
-      },
-    },
-
-    /*
      * Bug 969844 - mobile.de sends desktop site to Firefox on Android
      *
      * mobile.de sends the desktop site to Fennec. Spooing as Chrome works fine.

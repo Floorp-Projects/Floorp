@@ -14,6 +14,7 @@
 #include "ds/TraceableFifo.h"
 #include "js/CharacterEncoding.h"
 #include "js/GCVector.h"
+#include "js/Promise.h"
 #include "js/Result.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
@@ -890,8 +891,8 @@ struct JSContext : public JS::RootingContext,
   js::ThreadData<uintptr_t> jitStackLimitNoInterrupt;
 
   // Promise callbacks.
-  js::ThreadData<JSGetIncumbentGlobalCallback> getIncumbentGlobalCallback;
-  js::ThreadData<JSEnqueuePromiseJobCallback> enqueuePromiseJobCallback;
+  js::ThreadData<JS::GetIncumbentGlobalCallback> getIncumbentGlobalCallback;
+  js::ThreadData<JS::EnqueuePromiseJobCallback> enqueuePromiseJobCallback;
   js::ThreadData<void*> enqueuePromiseJobCallbackData;
 
   // Queue of pending jobs as described in ES2016 section 8.4.
@@ -902,7 +903,7 @@ struct JSContext : public JS::RootingContext,
   js::ThreadData<bool> stopDrainingJobQueue;
   js::ThreadData<bool> canSkipEnqueuingJobs;
 
-  js::ThreadData<JSPromiseRejectionTrackerCallback>
+  js::ThreadData<JS::PromiseRejectionTrackerCallback>
       promiseRejectionTrackerCallback;
   js::ThreadData<void*> promiseRejectionTrackerCallbackData;
 

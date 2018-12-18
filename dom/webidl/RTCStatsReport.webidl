@@ -54,8 +54,6 @@ dictionary RTCInboundRTPStreamStats : RTCRtpStreamStats {
   unsigned long long bytesReceived;
   double jitter;
   unsigned long packetsLost;
-  long mozAvSyncDelay;
-  long mozJitterBufferDelay;
   long roundTripTime;
 
   // Video decoder measurement, not present in RTCP case

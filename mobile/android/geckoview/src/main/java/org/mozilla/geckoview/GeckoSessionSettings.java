@@ -10,6 +10,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -17,6 +18,7 @@ import android.util.Log;
 import java.util.Arrays;
 import java.util.Collection;
 
+@AnyThread
 public final class GeckoSessionSettings implements Parcelable {
     private static final String LOGTAG = "GeckoSessionSettings";
     private static final boolean DEBUG = false;

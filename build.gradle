@@ -87,7 +87,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'org.mozilla.apilint:apilint:0.1.4'
+        classpath 'org.mozilla.apilint:apilint:0.1.5'
         classpath 'com.android.tools.build:gradle:3.1.4'
         classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.8.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"

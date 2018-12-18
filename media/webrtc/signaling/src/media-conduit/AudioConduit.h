@@ -193,8 +193,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
         mDtmfEnabled(false),
         mMutex("WebrtcAudioConduit::mMutex"),
         mCaptureDelay(150),
-        mSamples(0),
-        mLastSyncLog(0),
         mStsThread(aStsThread) {}
 
   virtual ~WebrtcAudioConduit();
@@ -238,8 +236,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
                             uint32_t* framesDecoded) override {
     return false;
   }
-  bool GetAVStats(int32_t* jitterBufferDelayMs, int32_t* playoutBufferDelayMs,
-                  int32_t* avSyncOffsetMs) override;
   bool GetRTPStats(unsigned int* jitterMs,
                    unsigned int* cumulativeLost) override;
   bool GetRTCPReceiverReport(uint32_t* jitterMs, uint32_t* packetsReceived,
@@ -340,9 +336,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   int32_t mCaptureDelay;
 
   webrtc::AudioFrame mAudioFrame;  // for output pulls
-
-  uint32_t mSamples;
-  uint32_t mLastSyncLog;
 
   RtpSourceObserver mRtpSourceObserver;
 

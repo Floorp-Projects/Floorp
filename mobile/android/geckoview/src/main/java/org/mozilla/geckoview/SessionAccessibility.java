@@ -37,6 +37,7 @@ import android.view.accessibility.AccessibilityNodeProvider;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+@UiThread
 public class SessionAccessibility {
     private static final String LOGTAG = "GeckoAccessibility";
 
@@ -494,6 +495,8 @@ public class SessionAccessibility {
       * @return View instance.
       */
     public View getView() {
+        ThreadUtils.assertOnUiThread();
+
         return mView;
     }
 
@@ -617,6 +620,8 @@ public class SessionAccessibility {
     }
 
     public boolean onMotionEvent(final MotionEvent event) {
+        ThreadUtils.assertOnUiThread();
+
         if (!Settings.isTouchExplorationEnabled()) {
             return false;
         }

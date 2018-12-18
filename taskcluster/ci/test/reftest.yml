@@ -76,7 +76,6 @@ jsreftest:
             linux64-ccov/.*: 5
             linux64-qr/.*: 4
             linux32/debug: 5
-            macosx.*: 2
             macosx64-ccov/debug: 5
             default: 3
     max-run-time:

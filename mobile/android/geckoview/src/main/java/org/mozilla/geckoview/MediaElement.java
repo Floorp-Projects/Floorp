@@ -6,8 +6,10 @@
 
 package org.mozilla.geckoview;
 
+import android.support.annotation.AnyThread;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
+import android.support.annotation.UiThread;
 import android.util.Log;
 
 import org.mozilla.gecko.util.GeckoBundle;
@@ -19,6 +21,7 @@ import java.lang.annotation.RetentionPolicy;
  * GeckoSession applications can use this class to handle media events
  * and control the HTMLMediaElement externally.
  **/
+@AnyThread
 public class MediaElement {
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({MEDIA_STATE_PLAY, MEDIA_STATE_PLAYING, MEDIA_STATE_PAUSE,
@@ -287,6 +290,7 @@ public class MediaElement {
          * @param mediaState The playback state of the media.
          *                   One of the {@link #MEDIA_STATE_PLAY MEDIA_STATE_*} flags.
          */
+        @UiThread
         void onPlaybackStateChange(MediaElement mediaElement, @MediaStateFlags int mediaState);
 
         /**
@@ -296,6 +300,7 @@ public class MediaElement {
          * @param readyState The readiness state of the media.
          *                   One of the {@link #MEDIA_READY_STATE_HAVE_NOTHING MEDIA_READY_STATE_*} flags.
          */
+        @UiThread
         void onReadyStateChange(MediaElement mediaElement, @ReadyStateFlags int readyState);
 
         /**
@@ -304,6 +309,7 @@ public class MediaElement {
          * @param mediaElement A reference to the MediaElement that dispatched the event.
          * @param metaData The MetaData values of the media.
          */
+        @UiThread
         void onMetadataChange(MediaElement mediaElement, Metadata metaData);
 
         /**
@@ -312,6 +318,7 @@ public class MediaElement {
          * @param mediaElement A reference to the MediaElement that dispatched the event.
          * @param progressInfo Information about the load progress and buffered ranges.
          */
+        @UiThread
         void onLoadProgress(MediaElement mediaElement, LoadProgressInfo progressInfo);
 
         /**
@@ -321,6 +328,7 @@ public class MediaElement {
          * @param volume The volume of the media.
          * @param muted True if the media is muted.
          */
+        @UiThread
         void onVolumeChange(MediaElement mediaElement, double volume, boolean muted);
 
         /**
@@ -329,6 +337,7 @@ public class MediaElement {
          * @param mediaElement A reference to the MediaElement that dispatched the event.
          * @param time The current playback time in seconds.
          */
+        @UiThread
         void onTimeChange(MediaElement mediaElement, double time);
 
         /**
@@ -337,6 +346,7 @@ public class MediaElement {
          * @param mediaElement A reference to the MediaElement that dispatched the event.
          * @param rate The current playback rate. A value of 1.0 indicates normal speed.
          */
+        @UiThread
         void onPlaybackRateChange(MediaElement mediaElement, double rate);
 
         /**
@@ -345,6 +355,7 @@ public class MediaElement {
          * @param mediaElement A reference to the MediaElement that dispatched the event.
          * @param fullscreen True if the media has entered full screen mode.
          */
+        @UiThread
         void onFullscreenChange(MediaElement mediaElement, boolean fullscreen);
 
         /**
@@ -354,6 +365,7 @@ public class MediaElement {
          * @param errorCode The error code.
          *                  One of the {@link #MEDIA_ERROR_NETWORK_NO_SOURCE MEDIA_ERROR_*} flags.
          */
+        @UiThread
         void onError(MediaElement mediaElement, @MediaErrorFlags int errorCode);
     }
 
