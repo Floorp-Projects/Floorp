@@ -354,8 +354,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   // nsIObserver
   NS_DECL_NSIOBSERVER
 
-  already_AddRefed<nsPIDOMWindowOuter> IndexedGetterOuter(JSContext* aCx,
-                                                          uint32_t aIndex);
+  already_AddRefed<nsPIDOMWindowOuter> IndexedGetterOuter(uint32_t aIndex);
 
   already_AddRefed<nsPIDOMWindowOuter> GetTop() override;
   nsPIDOMWindowOuter* GetScriptableTop() override;
@@ -529,7 +528,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   void BlurOuter();
   already_AddRefed<nsPIDOMWindowOuter> GetFramesOuter();
   nsDOMWindowList* GetFrames() final;
-  uint32_t Length(mozilla::dom::CallerType aCallerType);
+  uint32_t Length();
   already_AddRefed<nsPIDOMWindowOuter> GetTopOuter();
 
   nsresult GetPrompter(nsIPrompt** aPrompt) override;
