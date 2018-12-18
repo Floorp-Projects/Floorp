@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/TextEncoder.h"
-#include "mozilla/Encoding.h"
+#include "mozilla/CheckedInt.h"
+#include "mozilla/UniquePtrExtensions.h"
+#include "nsReadableUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -16,19 +18,31 @@ void TextEncoder::Encode(JSContext* aCx, JS::Handle<JSObject*> aObj,
                          const nsAString& aString,
                          JS::MutableHandle<JSObject*> aRetval,
                          ErrorResult& aRv) {
-  nsAutoCString utf8;
-  nsresult rv;
-  const Encoding* ignored;
-  Tie(rv, ignored) = UTF_8_ENCODING->Encode(aString, utf8);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+  // Given nsTSubstring<char16_t>::kMaxCapacity, it should be
+  // impossible for the length computation to overflow, but
+  // let's use checked math in case someone changes something
+  // in the future.
+  // Uint8Array::Create takes uint32_t as the length.
+  CheckedInt<uint32_t> bufLen(aString.Length());
+  bufLen *= 3;
+  bufLen += 1;  // plus one is part of the contract for ConvertUTF16toUTF8
+  if (!bufLen.isValid()) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 
+  auto data = mozilla::MakeUniqueFallible<uint8_t[]>(bufLen.value());
+  if (!data) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
+  size_t utf8Len = ConvertUTF16toUTF8(
+      aString, MakeSpan(reinterpret_cast<char*>(data.get()), bufLen.value()));
+  MOZ_ASSERT(utf8Len <= bufLen.value());
+
   JSAutoRealm ar(aCx, aObj);
-  JSObject* outView =
-      Uint8Array::Create(aCx, utf8.Length(),
-                         reinterpret_cast<const uint8_t*>(utf8.BeginReading()));
+  JSObject* outView = Uint8Array::Create(aCx, utf8Len, data.get());
   if (!outView) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
