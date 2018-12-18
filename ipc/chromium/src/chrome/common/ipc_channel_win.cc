@@ -73,6 +73,11 @@ Channel::ChannelImpl::ChannelImpl(const std::wstring& channel_id,
   Init(mode, listener);
 
   if (mode == MODE_SERVER) {
+    // We don't need the pipe name because we've been passed a handle, but we do
+    // need to get the shared secret from the channel_id.
+    PipeName(channel_id, &shared_secret_);
+    waiting_for_shared_secret_ = !!shared_secret_;
+
     // Use the existing handle that was dup'd to us
     pipe_ = server_pipe;
     EnqueueHelloMessage();
