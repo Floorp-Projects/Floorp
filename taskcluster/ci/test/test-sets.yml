@@ -87,6 +87,7 @@ raptor-firefox:
     - raptor-tp6-5-firefox
     - raptor-tp6-6-firefox
     - raptor-tp6-7-firefox
+    - raptor-tp6-8-firefox
     - raptor-speedometer-firefox
     - raptor-stylebench-firefox
     - raptor-motionmark-htmlsuite-firefox
@@ -118,6 +119,7 @@ raptor-chrome:
     - raptor-tp6-5-chrome
     - raptor-tp6-6-chrome
     - raptor-tp6-7-chrome
+    - raptor-tp6-8-chrome
     - raptor-speedometer-chrome
     - raptor-stylebench-chrome
     - raptor-motionmark-htmlsuite-chrome
