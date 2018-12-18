@@ -49,6 +49,7 @@ InputContextAction::Cause IMEHandler::sLastContextActionCause =
     InputContextAction::CAUSE_UNKNOWN;
 bool IMEHandler::sForceDisableCurrentIMM_IME = false;
 bool IMEHandler::sPluginHasFocus = false;
+bool IMEHandler::sNativeCaretIsCreated = false;
 
 #ifdef NS_ENABLE_TSF
 bool IMEHandler::sIsInTSFMode = false;
@@ -1040,6 +1041,42 @@ void IMEHandler::DefaultProcOfPluginEvent(nsWindow* aWindow,
     return;
   }
   IMMHandler::DefaultProcOfPluginEvent(aWindow, aPluginEvent);
+}
+
+bool IMEHandler::CreateNativeCaret(nsWindow* aWindow,
+                                   const LayoutDeviceIntRect& aCaretRect) {
+  MOZ_ASSERT(aWindow);
+
+  MOZ_ASSERT(!IsA11yHandlingNativeCaret());
+
+  sNativeCaretIsCreated =
+      ::CreateCaret(aWindow->GetWindowHandle(), nullptr, aCaretRect.Width(),
+                    aCaretRect.Height());
+  if (!sNativeCaretIsCreated) {
+    return false;
+  }
+  nsWindow* toplevelWindow = aWindow->GetTopLevelWindow(false);
+  if (NS_WARN_IF(!toplevelWindow)) {
+    MaybeDestroyNativeCaret();
+    return false;
+  }
+
+  LayoutDeviceIntPoint caretPosition(aCaretRect.TopLeft());
+  if (toplevelWindow != aWindow) {
+    caretPosition += toplevelWindow->WidgetToScreenOffset();
+    caretPosition -= aWindow->WidgetToScreenOffset();
+  }
+
+  ::SetCaretPos(caretPosition.x, caretPosition.y);
+  return true;
+}
+
+void IMEHandler::MaybeDestroyNativeCaret() {
+  if (!sNativeCaretIsCreated) {
+    return;
+  }
+  ::DestroyCaret();
+  sNativeCaretIsCreated = false;
 }
 
 }  // namespace widget
