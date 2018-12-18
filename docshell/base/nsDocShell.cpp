@@ -1243,7 +1243,7 @@ nsDocShell::GatherCharsetMenuTelemetry() {
     return NS_OK;
   }
 
-  Telemetry::Accumulate(Telemetry::CHARSET_OVERRIDE_USED, true);
+  Telemetry::ScalarSet(Telemetry::ScalarID::ENCODING_OVERRIDE_USED, true);
 
   bool isFileURL = false;
   nsIURI* url = doc->GetOriginalURI();
@@ -1255,7 +1255,8 @@ nsDocShell::GatherCharsetMenuTelemetry() {
   switch (charsetSource) {
     case kCharsetFromTopLevelDomain:
       // Unlabeled doc on a domain that we map to a fallback encoding
-      Telemetry::Accumulate(Telemetry::CHARSET_OVERRIDE_SITUATION, 7);
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION::RemoteTld);
       break;
     case kCharsetFromFallback:
     case kCharsetFromDocTypeDefault:
@@ -1264,29 +1265,35 @@ nsDocShell::GatherCharsetMenuTelemetry() {
     case kCharsetFromHintPrevDoc:
       // Changing charset on an unlabeled doc.
       if (isFileURL) {
-        Telemetry::Accumulate(Telemetry::CHARSET_OVERRIDE_SITUATION, 0);
+        Telemetry::AccumulateCategorical(
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION::Local);
       } else {
-        Telemetry::Accumulate(Telemetry::CHARSET_OVERRIDE_SITUATION, 1);
+        Telemetry::AccumulateCategorical(
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION::RemoteNonTld);
       }
       break;
     case kCharsetFromAutoDetection:
       // Changing charset on unlabeled doc where chardet fired
       if (isFileURL) {
-        Telemetry::Accumulate(Telemetry::CHARSET_OVERRIDE_SITUATION, 2);
+        Telemetry::AccumulateCategorical(
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION::LocalChardet);
       } else {
-        Telemetry::Accumulate(Telemetry::CHARSET_OVERRIDE_SITUATION, 3);
+        Telemetry::AccumulateCategorical(
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION::RemoteChardet);
       }
       break;
     case kCharsetFromMetaPrescan:
     case kCharsetFromMetaTag:
     case kCharsetFromChannel:
       // Changing charset on a doc that had a charset label.
-      Telemetry::Accumulate(Telemetry::CHARSET_OVERRIDE_SITUATION, 4);
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION::Labeled);
       break;
     case kCharsetFromParentForced:
     case kCharsetFromUserForced:
       // Changing charset on a document that already had an override.
-      Telemetry::Accumulate(Telemetry::CHARSET_OVERRIDE_SITUATION, 5);
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION::AlreadyOverridden);
       break;
     case kCharsetFromIrreversibleAutoDetection:
     case kCharsetFromOtherComponent:
@@ -1294,7 +1301,8 @@ nsDocShell::GatherCharsetMenuTelemetry() {
     case kCharsetUninitialized:
     default:
       // Bug. This isn't supposed to happen.
-      Telemetry::Accumulate(Telemetry::CHARSET_OVERRIDE_SITUATION, 6);
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION::Bug);
       break;
   }
   return NS_OK;

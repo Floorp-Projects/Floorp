@@ -48,50 +48,6 @@ function isRelative(id) {
   return id.startsWith(".");
 }
 
-function sourceURI(uri) {
-  return String(uri).split(" -> ").pop();
-}
-
-function isntLoaderFrame(frame) {
-  return frame.fileName !== __URI__ && !frame.fileName.endsWith("/browser-loader.js");
-}
-
-function parseURI(uri) {
-  return String(uri).split(" -> ").pop();
-}
-
-function parseStack(stack) {
-  const lines = String(stack).split("\n");
-  return lines.reduce(function(frames, line) {
-    if (line) {
-      const atIndex = line.indexOf("@");
-      const columnIndex = line.lastIndexOf(":");
-      const lineIndex = line.lastIndexOf(":", columnIndex - 1);
-      const fileName = parseURI(line.slice(atIndex + 1, lineIndex));
-      const lineNumber = parseInt(line.slice(lineIndex + 1, columnIndex), 10);
-      const columnNumber = parseInt(line.slice(columnIndex + 1), 10);
-      const name = line.slice(0, atIndex).split("(").shift();
-      frames.unshift({
-        fileName: fileName,
-        name: name,
-        lineNumber: lineNumber,
-        columnNumber: columnNumber,
-      });
-    }
-    return frames;
-  }, []);
-}
-
-function serializeStack(frames) {
-  return frames.reduce(function(stack, frame) {
-    return frame.name + "@" +
-           frame.fileName + ":" +
-           frame.lineNumber + ":" +
-           frame.columnNumber + "\n" +
-           stack;
-  }, "");
-}
-
 function readURI(uri) {
   const nsURI = NetUtil.newURI(uri);
   if (nsURI.scheme == "resource") {
@@ -228,40 +184,18 @@ function load(loader, module) {
   try {
     Services.scriptloader.loadSubScript(module.uri, sandbox, "UTF-8");
   } catch (error) {
-    let { message, fileName, lineNumber } = error;
-    const stack = error.stack || Error().stack;
-    const frames = parseStack(stack).filter(isntLoaderFrame);
-    let toString = String(error);
-    const file = sourceURI(fileName);
-
-    // Note that `String(error)` where error is from subscript loader does
-    // not puts `:` after `"Error"` unlike regular errors thrown by JS code.
-    // If there is a JS stack then this error has already been handled by an
-    // inner module load.
-    if (/^Error opening input stream/.test(String(error))) {
-      const caller = frames.slice(0).pop();
-      fileName = caller.fileName;
-      lineNumber = caller.lineNumber;
-      message = "Module `" + module.id + "` is not found at " + module.uri;
-      toString = message;
-    } else if (frames[frames.length - 1].fileName !== file) {
-      // Workaround for a Bug 910653. Errors thrown by subscript loader
-      // do not include `stack` field and above created error won't have
-      // fileName or lineNumber of the module being loaded, so we ensure
-      // it does.
-      frames.push({ fileName: file, lineNumber: lineNumber, name: "" });
+    // loadSubScript sometime throws string errors, which includes no stack.
+    // At least provide the current stack by re-throwing a real Error object.
+    if (typeof error == "string") {
+      if (error.startsWith("Error creating URI") ||
+          error.startsWith("Error opening input stream (invalid filename?)")) {
+        throw new Error(`Module \`${module.id}\` is not found at ${module.uri}`);
+      }
+      throw new Error(`Error while loading module \`${module.id}\` at ${module.uri}:` +
+       "\n" + error);
     }
-
-    const prototype = typeof (error) === "object" ? error.constructor.prototype :
-                    Error.prototype;
-
-    throw Object.create(prototype, {
-      message: { value: message, writable: true, configurable: true },
-      fileName: { value: fileName, writable: true, configurable: true },
-      lineNumber: { value: lineNumber, writable: true, configurable: true },
-      stack: { value: serializeStack(frames), writable: true, configurable: true },
-      toString: { value: () => toString, writable: true, configurable: true },
-    });
+    // Otherwise just re-throw everything else which should have a stack
+    throw error;
   }
 
   // Only freeze the exports object if we created it ourselves. Modules

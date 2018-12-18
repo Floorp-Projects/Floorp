@@ -582,8 +582,9 @@ function createHighlightButton(highlighterName, id) {
     description: l10n(`toolbox.buttons.${id}`),
     isTargetSupported: target => !target.chrome,
     async onClick(event, toolbox) {
+      await toolbox.initInspector();
       const highlighter =
-        await toolbox.highlighterUtils.getOrCreateHighlighterByType(highlighterName);
+        await toolbox.inspector.getOrCreateHighlighterByType(highlighterName);
       if (highlighter.isShown()) {
         return highlighter.hide();
       }
@@ -593,7 +594,17 @@ function createHighlightButton(highlighterName, id) {
       return highlighter.show({});
     },
     isChecked(toolbox) {
-      const highlighter = toolbox.highlighterUtils.getKnownHighlighter(highlighterName);
+      // if the inspector doesn't exist, then the highlighter has not yet been connected
+      // to the front end.
+      const inspectorFront = toolbox.target.getCachedFront("inspector");
+      if (!inspectorFront) {
+        // initialize the inspector front asyncronously. There is a potential for buggy
+        // behavior here, but we need to change how the buttons get data (have them
+        // consume data from reducers rather than writing our own version) in order to
+        // fix this properly.
+        return false;
+      }
+      const highlighter = inspectorFront.getKnownHighlighter(highlighterName);
       return highlighter && highlighter.isShown();
     },
   };

@@ -54,7 +54,7 @@ class ChangesView {
     }
     this.changesFrontPromise = new Promise(async resolve => {
       const target = this.inspector.target;
-      const front = target.getFront("changes");
+      const front = await target.getFront("changes");
       this.onChangesFront(front);
       resolve(front);
     });

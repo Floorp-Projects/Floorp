@@ -78,8 +78,8 @@ ParseNode* ParseNode::appendOrCreateList(ParseNodeKind kind, ParseNode* left,
     // processed with a left fold because (+) is left-associative.
     //
     if (left->isKind(kind) &&
-        (kind == ParseNodeKind::PowExpr ? !left->pn_parens
-                                        : left->isBinaryOperation())) {
+        (kind == ParseNodeKind::Pow ? !left->pn_parens
+                                    : left->isBinaryOperation())) {
       ListNode* list = &left->as<ListNode>();
 
       list->append(right);
@@ -99,7 +99,7 @@ ParseNode* ParseNode::appendOrCreateList(ParseNodeKind kind, ParseNode* left,
 }
 
 const ParseNodeArity js::frontend::ParseNodeKindArity[] = {
-#define ARITY(_name, type) type::arity(),
+#define ARITY(_name, arity) arity,
     FOR_EACH_PARSE_NODE_KIND(ARITY)
 #undef ARITY
 };
@@ -107,7 +107,7 @@ const ParseNodeArity js::frontend::ParseNodeKindArity[] = {
 #ifdef DEBUG
 
 static const char* const parseNodeNames[] = {
-#define STRINGIFY(name, _type) #name,
+#define STRINGIFY(name, _arity) #name,
     FOR_EACH_PARSE_NODE_KIND(STRINGIFY)
 #undef STRINGIFY
 };
@@ -186,16 +186,16 @@ void ParseNode::dump(GenericPrinter& out, int indent) {
 
 void NullaryNode::dump(GenericPrinter& out) {
   switch (getKind()) {
-    case ParseNodeKind::TrueExpr:
+    case ParseNodeKind::True:
       out.put("#true");
       break;
-    case ParseNodeKind::FalseExpr:
+    case ParseNodeKind::False:
       out.put("#false");
       break;
-    case ParseNodeKind::NullExpr:
+    case ParseNodeKind::Null:
       out.put("#null");
       break;
-    case ParseNodeKind::RawUndefinedExpr:
+    case ParseNodeKind::RawUndefined:
       out.put("#undefined");
       break;
 
@@ -246,7 +246,7 @@ void UnaryNode::dump(GenericPrinter& out, int indent) {
 }
 
 void BinaryNode::dump(GenericPrinter& out, int indent) {
-  if (isKind(ParseNodeKind::DotExpr)) {
+  if (isKind(ParseNodeKind::Dot)) {
     out.put("(.");
 
     DumpParseTree(right(), out, indent + 2);
@@ -325,8 +325,8 @@ static void DumpName(GenericPrinter& out, const CharT* s, size_t len) {
 
 void NameNode::dump(GenericPrinter& out, int indent) {
   switch (getKind()) {
-    case ParseNodeKind::StringExpr:
-    case ParseNodeKind::TemplateStringExpr:
+    case ParseNodeKind::String:
+    case ParseNodeKind::TemplateString:
     case ParseNodeKind::ObjectPropertyName:
       atom()->dumpCharsNoNewline(out);
       return;
@@ -334,7 +334,7 @@ void NameNode::dump(GenericPrinter& out, int indent) {
     case ParseNodeKind::Name:
     case ParseNodeKind::PrivateName:  // atom() already includes the '#', no
                                       // need to specially include it.
-    case ParseNodeKind::PropertyNameExpr:
+    case ParseNodeKind::PropertyName:
       if (!atom()) {
         out.put("#<null name>");
       } else if (getOp() == JSOP_GETARG && atom()->length() == 0) {
@@ -355,7 +355,7 @@ void NameNode::dump(GenericPrinter& out, int indent) {
       }
       return;
 
-    case ParseNodeKind::LabelStmt: {
+    case ParseNodeKind::Label: {
       const char* name = parseNodeNames[size_t(getKind())];
       out.printf("(%s ", name);
       atom()->dumpCharsNoNewline(out);
@@ -476,7 +476,7 @@ bool js::frontend::IsAnonymousFunctionDefinition(ParseNode* pn) {
   // ES 2017 draft
   // 12.15.2 (ArrowFunction, AsyncArrowFunction).
   // 14.1.12 (FunctionExpression).
-  // 14.4.8 (Generatoression).
+  // 14.4.8 (GeneratorExpression).
   // 14.6.8 (AsyncFunctionExpression)
   if (pn->isKind(ParseNodeKind::Function) &&
       !pn->as<CodeNode>().funbox()->function()->explicitName()) {

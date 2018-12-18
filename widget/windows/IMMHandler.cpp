@@ -9,6 +9,7 @@
 #include "IMMHandler.h"
 #include "nsWindow.h"
 #include "nsWindowDefs.h"
+#include "WinIMEHandler.h"
 #include "WinUtils.h"
 #include "KeyboardLayout.h"
 #include <algorithm>
@@ -198,7 +199,6 @@ DWORD IMMHandler::sIMEProperty = 0;
 DWORD IMMHandler::sIMEUIProperty = 0;
 bool IMMHandler::sAssumeVerticalWritingModeNotSupported = false;
 bool IMMHandler::sHasFocus = false;
-bool IMMHandler::sNativeCaretIsCreatedForPlugin = false;
 
 #define IMPL_IS_IME_ACTIVE(aReadableName, aActualName) \
   bool IMMHandler::Is##aReadableName##Active() {       \
@@ -383,8 +383,7 @@ IMMHandler::IMMHandler()
       mCursorPosition(NO_IME_CARET),
       mCompositionStart(0),
       mIsComposing(false),
-      mIsComposingOnPlugin(false),
-      mNativeCaretIsCreated(false) {
+      mIsComposingOnPlugin(false) {
   MOZ_LOG(gIMMLog, LogLevel::Debug, ("IMMHandler is created"));
 }
 
@@ -471,18 +470,13 @@ void IMMHandler::CancelComposition(nsWindow* aWindow, bool aForce) {
 void IMMHandler::OnFocusChange(bool aFocus, nsWindow* aWindow) {
   MOZ_LOG(gIMMLog, LogLevel::Info,
           ("OnFocusChange(aFocus=%s, aWindow=%p), sHasFocus=%s, "
-           "IsComposingWindow(aWindow)=%s, aWindow->Destroyed()=%s, "
-           "sNativeCaretIsCreatedForPlugin=%s",
+           "IsComposingWindow(aWindow)=%s, aWindow->Destroyed()=%s",
            GetBoolName(aFocus), aWindow, GetBoolName(sHasFocus),
            GetBoolName(IsComposingWindow(aWindow)),
-           GetBoolName(aWindow->Destroyed()),
-           GetBoolName(sNativeCaretIsCreatedForPlugin)));
+           GetBoolName(aWindow->Destroyed())));
 
   if (!aFocus) {
-    if (sNativeCaretIsCreatedForPlugin) {
-      ::DestroyCaret();
-      sNativeCaretIsCreatedForPlugin = false;
-    }
+    IMEHandler::MaybeDestroyNativeCaret();
     if (IsComposingWindow(aWindow) && aWindow->Destroyed()) {
       CancelComposition(aWindow);
     }
@@ -1045,10 +1039,7 @@ void IMMHandler::OnIMEEndCompositionOnPlugin(nsWindow* aWindow, WPARAM wParam,
   mComposingWindow = nullptr;
   mDispatcher = nullptr;
 
-  if (mNativeCaretIsCreated) {
-    ::DestroyCaret();
-    mNativeCaretIsCreated = false;
-  }
+  IMEHandler::MaybeDestroyNativeCaret();
 }
 
 bool IMMHandler::OnIMECharOnPlugin(nsWindow* aWindow, WPARAM wParam,
@@ -1429,10 +1420,7 @@ void IMMHandler::HandleEndComposition(nsWindow* aWindow,
            aWindow, aCommitString,
            aCommitString ? NS_ConvertUTF16toUTF8(*aCommitString).get() : ""));
 
-  if (mNativeCaretIsCreated) {
-    ::DestroyCaret();
-    mNativeCaretIsCreated = false;
-  }
+  IMEHandler::MaybeDestroyNativeCaret();
 
   RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcherFor(aWindow);
   nsresult rv = dispatcher->BeginNativeInputTransaction();
@@ -2106,37 +2094,34 @@ bool IMMHandler::GetCaretRect(nsWindow* aWindow,
 
 bool IMMHandler::SetIMERelatedWindowsPos(nsWindow* aWindow,
                                          const IMEContext& aContext) {
-  LayoutDeviceIntRect r;
   // Get first character rect of current a normal selected text or a composing
   // string.
   WritingMode writingMode;
-  bool ret = GetCharacterRectOfSelectedTextAt(aWindow, 0, r, &writingMode);
+  LayoutDeviceIntRect firstSelectedCharRectRelativeToWindow;
+  bool ret = GetCharacterRectOfSelectedTextAt(
+      aWindow, 0, firstSelectedCharRectRelativeToWindow, &writingMode);
   NS_ENSURE_TRUE(ret, false);
   nsWindow* toplevelWindow = aWindow->GetTopLevelWindow(false);
   LayoutDeviceIntRect firstSelectedCharRect;
-  ResolveIMECaretPos(toplevelWindow, r, aWindow, firstSelectedCharRect);
+  ResolveIMECaretPos(toplevelWindow, firstSelectedCharRectRelativeToWindow,
+                     aWindow, firstSelectedCharRect);
 
   // Set native caret size/position to our caret. Some IMEs honor it. E.g.,
   // "Intelligent ABC" (Simplified Chinese) and "MS PinYin 3.0" (Simplified
-  // Chinese) on XP.
-  LayoutDeviceIntRect caretRect(firstSelectedCharRect);
-  if (GetCaretRect(aWindow, r)) {
-    ResolveIMECaretPos(toplevelWindow, r, aWindow, caretRect);
-  } else {
-    NS_WARNING("failed to get caret rect");
-    caretRect.SetWidth(1);
+  // Chinese) on XP.  But if a11y module is handling native caret, we shouldn't
+  // touch it.
+  if (!IMEHandler::IsA11yHandlingNativeCaret()) {
+    LayoutDeviceIntRect caretRect(firstSelectedCharRect),
+        caretRectRelativeToWindow;
+    if (GetCaretRect(aWindow, caretRectRelativeToWindow)) {
+      ResolveIMECaretPos(toplevelWindow, caretRectRelativeToWindow, aWindow,
+                         caretRect);
+    } else {
+      NS_WARNING("failed to get caret rect");
+      caretRect.SetWidth(1);
+    }
+    IMEHandler::CreateNativeCaret(aWindow, caretRect);
   }
-  if (!mNativeCaretIsCreated) {
-    mNativeCaretIsCreated =
-        ::CreateCaret(aWindow->GetWindowHandle(), nullptr, caretRect.Width(),
-                      caretRect.Height());
-    MOZ_LOG(gIMMLog, LogLevel::Info,
-            ("SetIMERelatedWindowsPos, mNativeCaretIsCreated=%s, "
-             "width=%ld, height=%ld",
-             GetBoolName(mNativeCaretIsCreated), caretRect.Width(),
-             caretRect.Height()));
-  }
-  ::SetCaretPos(caretRect.X(), caretRect.Y());
 
   if (ShouldDrawCompositionStringOurselves()) {
     MOZ_LOG(gIMMLog, LogLevel::Info,
@@ -2286,14 +2271,11 @@ void IMMHandler::SetIMERelatedWindowsPosOnPlugin(nsWindow* aWindow,
   clippedPluginRect -= aWindow->WidgetToScreenOffset();
 
   // Cover the plugin with native caret.  This prevents IME's window and plugin
-  // overlap.
-  if (mNativeCaretIsCreated) {
-    ::DestroyCaret();
+  // overlap.  But if a11y modules is handling native caret, we shouldn't touch
+  // it.
+  if (!IMEHandler::IsA11yHandlingNativeCaret()) {
+    IMEHandler::CreateNativeCaret(aWindow, clippedPluginRect);
   }
-  mNativeCaretIsCreated =
-      ::CreateCaret(aWindow->GetWindowHandle(), nullptr,
-                    clippedPluginRect.Width(), clippedPluginRect.Height());
-  ::SetCaretPos(clippedPluginRect.X(), clippedPluginRect.Y());
 
   // Set the composition window to bottom-left of the clipped plugin.
   // As far as we know, there is no IME for RTL language.  Therefore, this code
@@ -2591,21 +2573,13 @@ void IMMHandler::SetCandidateWindow(nsWindow* aWindow, CANDIDATEFORM* aForm) {
     // there is no enough space under composition string to show candidate
     // window.
     static const int32_t kCaretHeight = 20;
-    if (sNativeCaretIsCreatedForPlugin) {
-      ::DestroyCaret();
-    }
-    sNativeCaretIsCreatedForPlugin =
-        ::CreateCaret(aWindow->GetWindowHandle(), nullptr, 0, kCaretHeight);
-    if (sNativeCaretIsCreatedForPlugin) {
-      LayoutDeviceIntPoint caretPosition(aForm->ptCurrentPos.x,
-                                         aForm->ptCurrentPos.y - kCaretHeight);
-      nsWindow* toplevelWindow = aWindow->GetTopLevelWindow(false);
-      if (toplevelWindow && toplevelWindow != aWindow) {
-        caretPosition += toplevelWindow->WidgetToScreenOffset();
-        caretPosition -= aWindow->WidgetToScreenOffset();
-      }
-      ::SetCaretPos(caretPosition.x, caretPosition.y);
-    }
+    // If a11y module is handling native caret, we shouldn't touch it.
+    // However, it does not work well with Flash Player with IME.  So, we
+    // need to keep overriding caret position here.
+    LayoutDeviceIntRect caretRect(aForm->ptCurrentPos.x,
+                                  aForm->ptCurrentPos.y - kCaretHeight, 1,
+                                  kCaretHeight);
+    IMEHandler::CreateNativeCaret(aWindow, caretRect);
   }
   IMEContext context(aWindow);
   ::ImmSetCandidateWindow(context.get(), aForm);

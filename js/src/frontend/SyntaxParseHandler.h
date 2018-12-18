@@ -540,9 +540,9 @@ class SyntaxParseHandler {
   }
 
   ListNodeType newList(ParseNodeKind kind, const TokenPos& pos) {
-    MOZ_ASSERT(kind != ParseNodeKind::VarStmt);
-    MOZ_ASSERT(kind != ParseNodeKind::LetDecl);
-    MOZ_ASSERT(kind != ParseNodeKind::ConstDecl);
+    MOZ_ASSERT(kind != ParseNodeKind::Var);
+    MOZ_ASSERT(kind != ParseNodeKind::Let);
+    MOZ_ASSERT(kind != ParseNodeKind::Const);
     return NodeGeneric;
   }
 
@@ -551,11 +551,10 @@ class SyntaxParseHandler {
   }
 
   ListNodeType newDeclarationList(ParseNodeKind kind, const TokenPos& pos) {
-    if (kind == ParseNodeKind::VarStmt) {
+    if (kind == ParseNodeKind::Var) {
       return NodeVarDeclaration;
     }
-    MOZ_ASSERT(kind == ParseNodeKind::LetDecl ||
-               kind == ParseNodeKind::ConstDecl);
+    MOZ_ASSERT(kind == ParseNodeKind::Let || kind == ParseNodeKind::Const);
     return NodeLexicalDeclaration;
   }
 
@@ -580,8 +579,8 @@ class SyntaxParseHandler {
   }
 
   AssignmentNodeType newAssignment(ParseNodeKind kind, Node lhs, Node rhs) {
-    return kind == ParseNodeKind::AssignExpr ? NodeUnparenthesizedAssignment
-                                             : NodeGeneric;
+    return kind == ParseNodeKind::Assign ? NodeUnparenthesizedAssignment
+                                         : NodeGeneric;
   }
 
   bool isUnparenthesizedAssignment(Node node) {

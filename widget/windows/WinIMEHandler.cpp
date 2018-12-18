@@ -7,6 +7,7 @@
 
 #include "IMMHandler.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TextEvents.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsWindowDefs.h"
 #include "WinTextEventDispatcherListener.h"
@@ -20,6 +21,10 @@
 #include "WinUtils.h"
 #include "nsIWindowsRegKey.h"
 #include "nsIWindowsUIUtils.h"
+
+#ifdef ACCESSIBILITY
+#include "nsAccessibilityService.h"
+#endif  // #ifdef ACCESSIBILITY
 
 #include "shellapi.h"
 #include "shlobj.h"
@@ -43,8 +48,11 @@ namespace widget {
 nsWindow* IMEHandler::sFocusedWindow = nullptr;
 InputContextAction::Cause IMEHandler::sLastContextActionCause =
     InputContextAction::CAUSE_UNKNOWN;
+bool IMEHandler::sMaybeEditable = false;
 bool IMEHandler::sForceDisableCurrentIMM_IME = false;
 bool IMEHandler::sPluginHasFocus = false;
+bool IMEHandler::sNativeCaretIsCreated = false;
+bool IMEHandler::sHasNativeCaretBeenRequested = false;
 
 #ifdef NS_ENABLE_TSF
 bool IMEHandler::sIsInTSFMode = false;
@@ -160,6 +168,29 @@ bool IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
     return true;
   }
 
+  // If we're putting native caret over our caret, Windows dispatches
+  // EVENT_OBJECT_LOCATIONCHANGE event on other applications which hook
+  // the event with ::SetWinEventHook() and handles WM_GETOBJECT for
+  // OBJID_CARET (this is request of caret from such applications) instead
+  // of us.  If a11y module is active, it observes every our caret change
+  // and put native caret over it automatically.  However, if other
+  // applications require only caret information, activating a11y module is
+  // overwork and such applications may requires carets only in editors.
+  // Therefore, if it'd be possible, IMEHandler should put native caret over
+  // our caret, but there is a problem.  Some versions of ATOK (Japanese TIP)
+  // refer native caret and if there is, the behavior is worse than the
+  // behavior without native caret.  Therefore, we shouldn't put native caret
+  // as far as possible.
+  if (!sHasNativeCaretBeenRequested && aMessage == WM_GETOBJECT &&
+      static_cast<DWORD>(aLParam) == OBJID_CARET) {
+    // So, when we receive first WM_GETOBJECT for OBJID_CARET, let's start to
+    // create native caret for such applications.
+    sHasNativeCaretBeenRequested = true;
+    // If an editable element has focus, we can put native caret now.
+    // XXX Should we avoid doing this if there is composition?
+    MaybeCreateNativeCaret(aWindow);
+  }
+
 #ifdef NS_ENABLE_TSF
   if (IsTSFAvailable()) {
     TSFTextStore::ProcessMessage(aWindow, aMessage, aWParam, aLParam, aResult);
@@ -195,6 +226,16 @@ bool IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
   }
 
   return keepGoing;
+}
+
+// static
+bool IMEHandler::IsA11yHandlingNativeCaret() {
+#ifndef ACCESSIBILITY
+  return false;
+#else   // #ifndef ACCESSIBILITY
+  // Let's assume that when there is the service, it handles native caret.
+  return GetAccService() != nullptr;
+#endif  // #ifndef ACCESSIBILITY #else
 }
 
 #ifdef NS_ENABLE_TSF
@@ -261,6 +302,7 @@ nsresult IMEHandler::NotifyIME(nsWindow* aWindow,
         IMMHandler::OnFocusChange(true, aWindow);
         nsresult rv = TSFTextStore::OnFocusChange(true, aWindow,
                                                   aWindow->GetInputContext());
+        MaybeCreateNativeCaret(aWindow);
         IMEHandler::MaybeShowOnScreenKeyboard();
         return rv;
       }
@@ -311,6 +353,10 @@ nsresult IMEHandler::NotifyIME(nsWindow* aWindow,
       return NS_OK;
     case NOTIFY_IME_OF_SELECTION_CHANGE:
       IMMHandler::OnSelectionChange(aWindow, aIMENotification, true);
+      // IMMHandler::OnSelectionChange() cannot work without its singleton
+      // instance.  Therefore, IMEHandler needs to create native caret instead
+      // if it's necessary.
+      MaybeCreateNativeCaret(aWindow);
       return NS_OK;
     case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
       return IMMHandler::OnMouseButtonEvent(aWindow, aIMENotification);
@@ -318,6 +364,7 @@ nsresult IMEHandler::NotifyIME(nsWindow* aWindow,
       sFocusedWindow = aWindow;
       IMMHandler::OnFocusChange(true, aWindow);
       IMEHandler::MaybeShowOnScreenKeyboard();
+      MaybeCreateNativeCaret(aWindow);
       return NS_OK;
     case NOTIFY_IME_OF_BLUR:
       sFocusedWindow = nullptr;
@@ -1026,6 +1073,86 @@ void IMEHandler::DefaultProcOfPluginEvent(nsWindow* aWindow,
     return;
   }
   IMMHandler::DefaultProcOfPluginEvent(aWindow, aPluginEvent);
+}
+
+bool IMEHandler::MaybeCreateNativeCaret(nsWindow* aWindow) {
+  MOZ_ASSERT(aWindow);
+
+  if (IsA11yHandlingNativeCaret()) {
+    return false;
+  }
+
+  if (!sHasNativeCaretBeenRequested) {
+    // If we have not received WM_GETOBJECT for OBJID_CARET, there may be new
+    // application which requires our caret information.  For kicking its
+    // window event proc, we should fire a window event here.
+    // (If there is such application, sHasNativeCaretBeenRequested will be set
+    // to true later.)
+    // FYI: If we create native caret and move its position, native caret
+    //      causes EVENT_OBJECT_LOCATIONCHANGE event with OBJID_CARET and
+    //      OBJID_CLIENT.
+    ::NotifyWinEvent(EVENT_OBJECT_LOCATIONCHANGE, aWindow->GetWindowHandle(),
+                     OBJID_CARET, OBJID_CLIENT);
+    return false;
+  }
+
+  MaybeDestroyNativeCaret();
+
+  // If focused content is not text editable, we don't support caret
+  // caret information without a11y module.
+  if (!aWindow->GetInputContext().mIMEState.IsEditable()) {
+    return false;
+  }
+
+  WidgetQueryContentEvent queryCaretRect(true, eQueryCaretRect, aWindow);
+  aWindow->InitEvent(queryCaretRect);
+
+  WidgetQueryContentEvent::Options options;
+  options.mRelativeToInsertionPoint = true;
+  queryCaretRect.InitForQueryCaretRect(0, options);
+
+  aWindow->DispatchWindowEvent(&queryCaretRect);
+  if (NS_WARN_IF(!queryCaretRect.mSucceeded)) {
+    return false;
+  }
+
+  return CreateNativeCaret(aWindow, queryCaretRect.mReply.mRect);
+}
+
+bool IMEHandler::CreateNativeCaret(nsWindow* aWindow,
+                                   const LayoutDeviceIntRect& aCaretRect) {
+  MOZ_ASSERT(aWindow);
+
+  MOZ_ASSERT(!IsA11yHandlingNativeCaret());
+
+  sNativeCaretIsCreated =
+      ::CreateCaret(aWindow->GetWindowHandle(), nullptr, aCaretRect.Width(),
+                    aCaretRect.Height());
+  if (!sNativeCaretIsCreated) {
+    return false;
+  }
+  nsWindow* toplevelWindow = aWindow->GetTopLevelWindow(false);
+  if (NS_WARN_IF(!toplevelWindow)) {
+    MaybeDestroyNativeCaret();
+    return false;
+  }
+
+  LayoutDeviceIntPoint caretPosition(aCaretRect.TopLeft());
+  if (toplevelWindow != aWindow) {
+    caretPosition += toplevelWindow->WidgetToScreenOffset();
+    caretPosition -= aWindow->WidgetToScreenOffset();
+  }
+
+  ::SetCaretPos(caretPosition.x, caretPosition.y);
+  return true;
+}
+
+void IMEHandler::MaybeDestroyNativeCaret() {
+  if (!sNativeCaretIsCreated) {
+    return;
+  }
+  ::DestroyCaret();
+  sNativeCaretIsCreated = false;
 }
 
 }  // namespace widget
