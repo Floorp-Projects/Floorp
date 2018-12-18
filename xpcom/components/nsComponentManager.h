@@ -53,8 +53,17 @@ struct PRThread;
 extern const mozilla::Module kXPCOMModule;
 
 namespace {
-  class MutexLock;
+class MutexLock;
 }
+
+namespace mozilla {
+namespace xpcom {
+
+bool ProcessSelectorMatches(Module::ProcessSelector aSelector);
+bool FastProcessSelectorMatches(Module::ProcessSelector aSelector);
+
+}  // namespace xpcom
+}  // namespace mozilla
 
 /**
  * This is a wrapper around mozilla::Mutex which provides runtime
