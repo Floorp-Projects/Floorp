@@ -2344,6 +2344,17 @@ gint moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
 
       return MOZ_GTK_SUCCESS;
     }
+    case MOZ_GTK_HEADER_BAR_BUTTON_BOX: {
+      style = GetStyleContext(MOZ_GTK_HEADER_BAR);
+      moz_gtk_add_border_padding(style, left, top, right, bottom);
+      *top = *bottom = 0;
+      if (direction == GTK_TEXT_DIR_RTL) {
+        *right = 0;
+      } else {
+        *left = 0;
+      }
+      return MOZ_GTK_SUCCESS;
+    }
     /* These widgets have no borders, since they are not containers. */
     case MOZ_GTK_CHECKBUTTON_LABEL:
     case MOZ_GTK_RADIOBUTTON_LABEL:
