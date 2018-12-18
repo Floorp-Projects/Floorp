@@ -146,6 +146,9 @@ tasks:
                 GECKO_COMMIT_MSG: {$if: 'tasks_for != "action"', then: '${push.comment}'}
                 HG_STORE_PATH: /builds/worker/checkouts/hg-store
                 TASKCLUSTER_CACHES: /builds/worker/checkouts
+                # someday, these will be provided by the worker - Bug 1492664
+                TASKCLUSTER_ROOT_URL: https://taskcluster.net
+                TASKCLUSTER_PROXY_URL: http://taskcluster
               - $if: 'tasks_for == "action"'
                 then:
                   ACTION_TASK_GROUP_ID: '${action.taskGroupId}'     # taskGroupId of the target task
