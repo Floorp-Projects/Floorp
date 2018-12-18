@@ -28,6 +28,7 @@
 #include "nsGlobalWindowOuter.h"
 #include "nsILoadInfo.h"
 #include "nsIXULRuntime.h"
+#include "nsImportModule.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 #include "nsPIDOMWindow.h"
@@ -56,8 +57,11 @@ static mozIExtensionProcessScript& ProcessScript() {
   static nsCOMPtr<mozIExtensionProcessScript> sProcessScript;
 
   if (MOZ_UNLIKELY(!sProcessScript)) {
-    sProcessScript =
-        do_GetService("@mozilla.org/webextensions/extension-process-script;1");
+    nsCOMPtr<mozIExtensionProcessScriptJSM> jsm =
+        do_ImportModule("resource://gre/modules/ExtensionProcessScript.jsm");
+    MOZ_RELEASE_ASSERT(jsm);
+
+    Unused << jsm->GetExtensionProcessScript(getter_AddRefs(sProcessScript));
     MOZ_RELEASE_ASSERT(sProcessScript);
     ClearOnShutdown(&sProcessScript);
   }

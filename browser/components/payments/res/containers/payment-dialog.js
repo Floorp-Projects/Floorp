@@ -511,11 +511,7 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
       page.hidden = state.page.id != page.id;
     }
 
-    if (state.changesPrevented) {
-      this.setAttribute("changes-prevented", "");
-    } else {
-      this.removeAttribute("changes-prevented");
-    }
+    this.toggleAttribute("changes-prevented", state.changesPrevented);
     this.setAttribute("complete-status", request.completeStatus);
     this._disabledOverlay.hidden = !state.changesPrevented;
   }

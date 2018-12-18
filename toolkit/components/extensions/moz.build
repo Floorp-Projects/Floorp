@@ -18,6 +18,7 @@ EXTRA_JS_MODULES += [
     'ExtensionParent.jsm',
     'ExtensionPermissions.jsm',
     'ExtensionPreferencesManager.jsm',
+    'ExtensionProcessScript.jsm',
     'ExtensionSettingsStore.jsm',
     'ExtensionStorage.jsm',
     'ExtensionStorageIDB.jsm',
@@ -35,7 +36,6 @@ EXTRA_JS_MODULES += [
 ]
 
 EXTRA_COMPONENTS += [
-    'extension-process-script.js',
     'extensions-toolkit.manifest',
 ]
 

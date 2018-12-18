@@ -310,50 +310,6 @@ dnl Checks for programs.
 dnl ========================================================
 if test "$COMPILE_ENVIRONMENT"; then
 
-dnl ========================================================
-dnl = Mac OS X SDK support
-dnl ========================================================
-MACOS_SDK_DIR=
-MOZ_ARG_WITH_STRING(macos-sdk,
-[  --with-macos-sdk=dir    Location of platform SDK to use (Mac OS X only)],
-    MACOS_SDK_DIR=$withval)
-
-dnl MACOS_SDK_DIR will be set to the SDK location whenever one is in use.
-AC_SUBST(MACOS_SDK_DIR)
-
-if test "$MACOS_SDK_DIR"; then
-  dnl Sync this section with the ones in NSPR and NSS.
-  dnl Changes to the cross environment here need to be accounted for in
-  dnl the libIDL checks (below) and xpidl build.
-
-  if test ! -d "$MACOS_SDK_DIR"; then
-    AC_MSG_ERROR([SDK not found.  When using --with-macos-sdk, you must
-specify a valid SDK.  SDKs are installed when the optional cross-development
-tools are selected during the Xcode/Developer Tools installation.])
-  fi
-
-  CFLAGS="$CFLAGS -isysroot ${MACOS_SDK_DIR}"
-  CXXFLAGS="$CXXFLAGS -isysroot ${MACOS_SDK_DIR}"
-
-  dnl CPP/CXXCPP needs to be set for MOZ_CHECK_HEADER.
-  CPP="$CPP -isysroot ${MACOS_SDK_DIR}"
-  CXXCPP="$CXXCPP -isysroot ${MACOS_SDK_DIR}"
-
-  AC_LANG_SAVE
-  AC_MSG_CHECKING([for valid compiler/Mac OS X SDK combination])
-  AC_LANG_CPLUSPLUS
-  AC_TRY_COMPILE([#include <new>
-                 int main() { return 0; }],
-   result=yes,
-   result=no)
-  AC_LANG_RESTORE
-  AC_MSG_RESULT($result)
-
-  if test "$result" = "no" ; then
-    AC_MSG_ERROR([The selected compiler and Mac OS X SDK are incompatible.])
-  fi
-fi
-
 AC_PATH_XTRA
 
 XCFLAGS="$X_CFLAGS"
@@ -556,8 +512,6 @@ case "$host" in
     ;;
 esac
 
-MOZ_DOING_LTO(lto_is_enabled)
-
 dnl ========================================================
 dnl Add optional and non-optional hardening flags from toolchain.configure
 dnl ========================================================
@@ -593,11 +547,9 @@ case "$target" in
     fi
     LDFLAGS=$_SAVE_LDFLAGS
 
-    if test "x$lto_is_enabled" = "xyes"; then
-        echo "Skipping -dead_strip because lto is enabled."
     dnl DTrace and -dead_strip don't interact well. See bug 403132.
     dnl ===================================================================
-    elif test "x$enable_dtrace" = "xyes"; then
+    if test "x$enable_dtrace" = "xyes"; then
         echo "Skipping -dead_strip because DTrace is enabled. See bug 403132."
     else
         dnl check for the presence of the -dead_strip linker flag

@@ -179,8 +179,6 @@ with modules["XPCOM"]:
     errors["NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA"] = SUCCESS(1)
     # Used by nsCycleCollectionParticipant
     errors["NS_SUCCESS_INTERRUPTED_TRAVERSE"] = SUCCESS(2)
-    # DEPRECATED
-    errors["NS_ERROR_SERVICE_IN_USE"] = SUCCESS(23)
 
 # =======================================================================
 # 2: NS_ERROR_MODULE_BASE
@@ -467,8 +465,6 @@ with modules["PLUGINS"]:
 # 8: NS_ERROR_MODULE_LAYOUT
 # =======================================================================
 with modules["LAYOUT"]:
-    # Return code for nsITableLayout
-    errors["NS_TABLELAYOUT_CELL_NOT_FOUND"] = SUCCESS(0)
     # Return code for SheetLoadData::VerifySheetReadyToParse
     errors["NS_OK_PARSE_SHEET"] = SUCCESS(1)
     # Return code for nsFrame::GetNextPrevLineFromeBlockFrame
@@ -502,9 +498,6 @@ with modules["HTMLPARSER"]:
     errors["NS_ERROR_HTMLPARSER_FAKE_ENDTAG"] = FAILURE(1018)
     errors["NS_ERROR_HTMLPARSER_INVALID_COMMENT"] = FAILURE(1019)
 
-    errors["NS_HTMLTOKENS_NOT_AN_ENTITY"] = SUCCESS(2000)
-    errors["NS_HTMLPARSER_VALID_META_CHARSET"] = SUCCESS(3000)
-
 
 # =======================================================================
 # 10: NS_ERROR_MODULE_RDF
@@ -513,9 +506,6 @@ with modules["RDF"]:
     # Returned from nsIRDFDataSource::Assert() and Unassert() if the assertion
     # (or unassertion was accepted by the datasource
     errors["NS_RDF_ASSERTION_ACCEPTED"] = errors["NS_OK"]
-    # Returned from nsIRDFCursor::Advance() if the cursor has no more
-    # elements to enumerate
-    errors["NS_RDF_CURSOR_EMPTY"] = SUCCESS(1)
     # Returned from nsIRDFDataSource::GetSource() and GetTarget() if the
     # source/target has no value
     errors["NS_RDF_NO_VALUE"] = SUCCESS(2)
@@ -535,20 +525,12 @@ with modules["UCONV"]:
     errors["NS_ERROR_UDEC_ILLEGALINPUT"] = FAILURE(14)
 
     errors["NS_OK_HAD_REPLACEMENTS"] = SUCCESS(3)
-    errors["NS_SUCCESS_USING_FALLBACK_LOCALE"] = SUCCESS(2)
-    errors["NS_OK_UDEC_EXACTLENGTH"] = SUCCESS(11)
     errors["NS_OK_UDEC_MOREINPUT"] = SUCCESS(12)
     errors["NS_OK_UDEC_MOREOUTPUT"] = SUCCESS(13)
-    errors["NS_OK_UDEC_NOBOMFOUND"] = SUCCESS(14)
-    errors["NS_OK_UENC_EXACTLENGTH"] = SUCCESS(33)
     errors["NS_OK_UENC_MOREOUTPUT"] = SUCCESS(34)
     errors["NS_ERROR_UENC_NOMAPPING"] = SUCCESS(35)
-    errors["NS_OK_UENC_MOREINPUT"] = SUCCESS(36)
 
     # BEGIN DEPRECATED
-    errors["NS_EXACT_LENGTH"] = errors["NS_OK_UDEC_EXACTLENGTH"]
-    errors["NS_PARTIAL_MORE_INPUT"] = errors["NS_OK_UDEC_MOREINPUT"]
-    errors["NS_PARTIAL_MORE_OUTPUT"] = errors["NS_OK_UDEC_MOREOUTPUT"]
     errors["NS_ERROR_ILLEGAL_INPUT"] = errors["NS_ERROR_UDEC_ILLEGALINPUT"]
     # END DEPRECATED
 
@@ -680,8 +662,6 @@ with modules["DOM"]:
 # 15: NS_ERROR_MODULE_IMGLIB
 # =======================================================================
 with modules["IMGLIB"]:
-    errors["NS_IMAGELIB_SUCCESS_LOAD_FINISHED"] = SUCCESS(0)
-
     errors["NS_IMAGELIB_ERROR_FAILURE"] = FAILURE(5)
     errors["NS_IMAGELIB_ERROR_NO_DECODER"] = FAILURE(6)
     errors["NS_IMAGELIB_ERROR_NOT_FINISHED"] = FAILURE(7)
@@ -855,10 +835,6 @@ with modules["CONTENT"]:
     # parent
     errors["NS_ERROR_BUILDID_MISMATCH"] = FAILURE(17)
 
-    # XXX this is not really used
-    errors["NS_HTML_STYLE_PROPERTY_NOT_THERE"] = SUCCESS(2)
-    errors["NS_CONTENT_BLOCKED"] = SUCCESS(8)
-    errors["NS_CONTENT_BLOCKED_SHOW_ALT"] = SUCCESS(9)
     errors["NS_PROPTABLE_PROP_OVERWRITTEN"] = SUCCESS(11)
     # Error codes for FindBroadcaster in XULDocument.cpp
     errors["NS_FINDBROADCASTER_NOT_FOUND"] = SUCCESS(12)
@@ -1138,7 +1114,6 @@ with modules["GENERAL"]:
     # case in which nsIAppStartup::Quit was called with the eRestart flag.
     errors["NS_SUCCESS_RESTART_APP"] = SUCCESS(1)
     errors["NS_SUCCESS_RESTART_APP_NOT_SAME_PROFILE"] = SUCCESS(3)
-    errors["NS_SUCCESS_UNORM_NOTFOUND"] = SUCCESS(17)
 
     # a11y
     # raised when current pivot's position is needed but it's not in the tree

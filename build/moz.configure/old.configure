@@ -240,8 +240,6 @@ def old_configure_options(*options):
     '--with-ios-sdk',
     '--with-jitreport-granularity',
     '--with-macbundlename-prefix',
-    '--with-macos-private-frameworks',
-    '--with-macos-sdk',
     '--with-nspr-cflags',
     '--with-nspr-exec-prefix',
     '--with-nspr-libs',

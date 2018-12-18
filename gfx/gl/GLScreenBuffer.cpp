@@ -102,6 +102,11 @@ UniquePtr<GLScreenBuffer> GLScreenBuffer::Create(GLContext* gl,
 #endif
   } else if (useD3D) {
 #ifdef XP_WIN
+    // Ensure devices initialization. SharedSurfaceANGLE and
+    // SharedSurfaceD3D11Interop use them. The devices are lazily initialized
+    // with WebRender to reduce memory usage.
+    gfxPlatform::GetPlatform()->EnsureDevicesInitialized();
+
     // Enable surface sharing only if ANGLE and compositing devices
     // are both WARP or both not WARP
     gfx::DeviceManagerDx* dm = gfx::DeviceManagerDx::Get();
