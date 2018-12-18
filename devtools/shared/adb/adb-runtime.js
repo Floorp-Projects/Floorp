@@ -19,6 +19,10 @@ class AdbRuntime {
     return this._adbDevice.id + "|" + this._socketPath;
   }
 
+  get deviceId() {
+    return this._adbDevice.id;
+  }
+
   get deviceName() {
     return this._adbDevice.name;
   }
@@ -32,7 +36,7 @@ class AdbRuntime {
   }
 
   connect(connection) {
-    return prepareTCPConnection(this._socketPath).then(port => {
+    return prepareTCPConnection(this.deviceId, this._socketPath).then(port => {
       connection.host = "localhost";
       connection.port = port;
       connection.connect();
