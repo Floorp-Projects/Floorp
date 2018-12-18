@@ -3,10 +3,10 @@
 
 package mozilla.components.service.glean.storages
 
+import android.content.Context
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.checkPingSchema
-import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.FakeDispatchersInTest
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.EventMetricType
@@ -33,8 +33,7 @@ class EventsStorageEngineTest {
     fun setUp() {
         Glean.initialized = false
         Glean.initialize(
-            applicationContext = ApplicationProvider.getApplicationContext(),
-            configuration = Configuration(applicationId = "test")
+            applicationContext = ApplicationProvider.getApplicationContext()
         )
         assert(Glean.initialized)
         EventsStorageEngine.clearAllStores()
@@ -204,7 +203,8 @@ class EventsStorageEngineTest {
             }
 
             val request = server.takeRequest()
-            assert(request.path.startsWith("/submit/test/events/${Glean.SCHEMA_VERSION}/"))
+            val applicationId = ApplicationProvider.getApplicationContext<Context>().packageName
+            assert(request.path.startsWith("/submit/$applicationId/events/${Glean.SCHEMA_VERSION}/"))
             val eventsJsonData = request.body.readUtf8()
             val eventsJson = JSONObject(eventsJsonData)
             val eventsArray = eventsJson.getJSONArray("events")!!

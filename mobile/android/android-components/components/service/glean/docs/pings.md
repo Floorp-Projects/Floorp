@@ -62,3 +62,13 @@ This object contains experiments keyed by the experiment `id`. Each listed exper
 }
 ```
 
+## Ping submission
+The pings glean generates are submitted to the Mozilla servers at specific paths, in order to provide
+additional metadata without the need of unpacking the ping payload. A typical submission URL looks like
+`"<server-address>/submit/<application-id>/<doc-type>/<glean-schema-version>/<ping-uuid>"`, with:
+ 
+- `<server-address>`: the address of the server that receives the pings;
+- `<application-id>`: a unique application id, automatically detected by glean; this is the value returned by [`Context.getPackageName()`](http://developer.android.com/reference/android/content/Context.html#getPackageName());
+- `<doc-type>`: the name of the ping; this can be one of the pings available out of the box with glean, or a custom ping;
+- `<glean-schema-version>`: the version of the glean ping schema;
+- `<ping-uuid>`: a unique identifier for this ping.

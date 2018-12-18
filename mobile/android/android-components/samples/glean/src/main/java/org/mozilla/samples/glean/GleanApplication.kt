@@ -6,7 +6,6 @@ package org.mozilla.samples.glean
 
 import android.app.Application
 import mozilla.components.service.glean.Glean
-import mozilla.components.service.glean.config.Configuration
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 
@@ -20,7 +19,7 @@ class GleanApplication : Application() {
 
         // Initialize the Glean library. Ideally, this is the first thing that
         // must be done right after enabling logging.
-        Glean.initialize(applicationContext, Configuration(applicationId = "glean"))
+        Glean.initialize(applicationContext)
 
         // Set a sample value for a metric.
         GleanMetrics.Basic.os.set("Android")

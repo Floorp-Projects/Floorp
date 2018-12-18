@@ -42,6 +42,10 @@ open class GleanInternalAPI {
     internal var initialized = false
     private var metricsEnabled = true
 
+    // The application id detected by glean to be used as part of the submission
+    // endpoint.
+    internal lateinit var applicationId: String
+
     /**
      * Initialize glean.
      *
@@ -53,7 +57,10 @@ open class GleanInternalAPI {
      * @param configuration A Glean [Configuration] object with global settings.
      * @raises Exception if called more than once
      */
-    fun initialize(applicationContext: Context, configuration: Configuration) {
+    fun initialize(
+        applicationContext: Context,
+        configuration: Configuration = Configuration()
+    ) {
         if (isInitialized()) {
             throw IllegalStateException("Glean may not be initialized multiple times")
         }
@@ -63,6 +70,7 @@ open class GleanInternalAPI {
         this.configuration = configuration
         httpPingUploader = HttpPingUploader(configuration)
         initialized = true
+        applicationId = applicationContext.packageName
 
         initializeCoreMetrics(applicationContext)
 
@@ -131,7 +139,7 @@ open class GleanInternalAPI {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun makePath(docType: String, uuid: UUID): String {
-        return "/submit/${configuration.applicationId}/$docType/${Glean.SCHEMA_VERSION}/$uuid"
+        return "/submit/$applicationId/$docType/${Glean.SCHEMA_VERSION}/$uuid"
     }
 
     /**
