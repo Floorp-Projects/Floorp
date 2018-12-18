@@ -191,8 +191,43 @@ const nsACString &nsStandardURL::nsSegmentEncoder::EncodeSegment(
 //----------------------------------------------------------------------------
 
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-static StaticMutex gAllURLsMutex;
-static LinkedList<nsStandardURL> gAllURLs;
+class DumpLeakedURLs {
+ public:
+  DumpLeakedURLs() : mMutex("DumpLeakedURLs::mMutex") {}
+
+  ~DumpLeakedURLs();
+
+  void add(nsStandardURL *aUrl) {
+    OffTheBooksMutexAutoLock lock(mMutex);
+    mURLs.insertBack(aUrl);
+  }
+
+  void remove(nsStandardURL *aUrl) {
+    OffTheBooksMutexAutoLock lock(mMutex);
+    if (aUrl->isInList()) {
+      aUrl->remove();
+    }
+  }
+
+ private:
+  OffTheBooksMutex mMutex;
+  LinkedList<nsStandardURL> mURLs;
+};
+
+DumpLeakedURLs::~DumpLeakedURLs() {
+  MOZ_ASSERT(NS_IsMainThread());
+  OffTheBooksMutexAutoLock lock(mMutex);
+  if (!mURLs.isEmpty()) {
+    printf("Leaked URLs:\n");
+    for (auto url : mURLs) {
+      url->PrintSpec();
+    }
+    mURLs.clear();
+  }
+}
+
+static DumpLeakedURLs gLeakedURLDumper;
+
 #endif
 
 nsStandardURL::nsStandardURL(bool aSupportsFileURL, bool aTrackURL)
@@ -215,8 +250,7 @@ nsStandardURL::nsStandardURL(bool aSupportsFileURL, bool aTrackURL)
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
   if (NS_IsMainThread()) {
     if (aTrackURL) {
-      StaticMutexAutoLock lock(gAllURLsMutex);
-      gAllURLs.insertBack(this);
+      gLeakedURLDumper.add(this);
     }
   }
 #endif
@@ -226,33 +260,9 @@ nsStandardURL::~nsStandardURL() {
   LOG(("Destroying nsStandardURL @%p\n", this));
 
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-  {
-    StaticMutexAutoLock lock(gAllURLsMutex);
-    if (isInList()) {
-      remove();
-    }
-  }
+  gLeakedURLDumper.remove(this);
 #endif
 }
-
-#ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-struct DumpLeakedURLs {
-  DumpLeakedURLs() = default;
-  ~DumpLeakedURLs();
-};
-
-DumpLeakedURLs::~DumpLeakedURLs() {
-  MOZ_ASSERT(NS_IsMainThread());
-  StaticMutexAutoLock lock(gAllURLsMutex);
-  if (!gAllURLs.isEmpty()) {
-    printf("Leaked URLs:\n");
-    for (auto url : gAllURLs) {
-      url->PrintSpec();
-    }
-    gAllURLs.clear();
-  }
-}
-#endif
 
 void nsStandardURL::InitGlobalObjects() {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
@@ -280,15 +290,6 @@ void nsStandardURL::InitGlobalObjects() {
 void nsStandardURL::ShutdownGlobalObjects() {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   NS_IF_RELEASE(gIDN);
-
-#ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-  if (gInitialized) {
-    // This instanciates a dummy class, and will trigger the class
-    // destructor when libxul is unloaded. This is equivalent to atexit(),
-    // but gracefully handles dlclose().
-    static DumpLeakedURLs d;
-  }
-#endif
 }
 
 //----------------------------------------------------------------------------
