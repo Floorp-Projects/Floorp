@@ -8,8 +8,10 @@ import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.Date
 
@@ -44,5 +46,12 @@ class PromptRequestTest {
         assertNotNull(dateRequest.maximumDate)
         dateRequest.onSelect(Date())
         dateRequest.onClear()
+
+        val filePickerRequest = PromptRequest.File(emptyArray(), true, { _, _ -> }, { _, _ -> }) {}
+        assertTrue(filePickerRequest.mimeTypes.isEmpty())
+        assertTrue(filePickerRequest.isMultipleFilesSelection)
+        filePickerRequest.onSingleFileSelected(mock(), mock())
+        filePickerRequest.onMultipleFilesSelected(mock(), emptyArray())
+        filePickerRequest.onDismiss()
     }
 }

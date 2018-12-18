@@ -4,6 +4,9 @@
 
 package mozilla.components.browser.engine.gecko.prompt
 
+import android.content.Context
+import android.net.Uri
+import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.prompt.Choice
@@ -22,6 +25,7 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_MULT
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_SINGLE
 import org.robolectric.RobolectricTestRunner
 import mozilla.components.support.ktx.kotlin.toDate
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextCallback
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATE
@@ -29,6 +33,8 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATETIME_
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_MONTH
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_TIME
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_WEEK
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.FILE_TYPE_MULTIPLE
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.FILE_TYPE_SINGLE
 import java.util.Date
 import java.util.Calendar
 import java.util.Calendar.YEAR
@@ -220,7 +226,6 @@ class GeckoPromptDelegateTest {
         val gecko = GeckoPromptDelegate(mockSession)
         gecko.onButtonPrompt(null, "", "", null, null)
         gecko.onDateTimePrompt(null, "", 0, null, null, null, mock())
-        gecko.onFilePrompt(null, "", 0, null, null)
         gecko.onColorPrompt(null, "", "", null)
         gecko.onAuthPrompt(null, "", "", null, null)
         gecko.onTextPrompt(null, "", "", null, null)
@@ -479,5 +484,63 @@ class GeckoPromptDelegateTest {
         calendar.time = date
         val year = calendar[YEAR].toString()
         assertEquals(dateString, year)
+    }
+
+    @Test
+    fun `Calling onFilePrompt must provide a FilePicker PromptRequest`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        val mockSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
+        var request: PromptRequest? = null
+        var onSingleFileSelectedWasCalled = false
+        var onMultipleFilesSelectedWasCalled = false
+        var onDismissWasCalled = false
+
+        val callback = object : GeckoSession.PromptDelegate.FileCallback {
+            override fun dismiss() {
+                onDismissWasCalled = true
+            }
+
+            override fun confirm(context: Context?, uri: Uri?) {
+                onSingleFileSelectedWasCalled = true
+            }
+
+            override fun confirm(context: Context?, uris: Array<out Uri>?) {
+                onMultipleFilesSelectedWasCalled = true
+            }
+
+            override fun getCheckboxValue() = false
+            override fun setCheckboxValue(value: Boolean) = Unit
+            override fun hasCheckbox() = false
+            override fun getCheckboxMessage() = ""
+        }
+
+        val promptDelegate = GeckoPromptDelegate(mockSession)
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest
+            }
+        })
+
+        promptDelegate.onFilePrompt(null, "title", FILE_TYPE_SINGLE, emptyArray(), callback)
+        assertTrue(request is PromptRequest.File)
+
+        val filePickerRequest = request as PromptRequest.File
+
+        filePickerRequest.onSingleFileSelected(context, mock())
+        assertTrue(onSingleFileSelectedWasCalled)
+
+        filePickerRequest.onMultipleFilesSelected(context, emptyArray())
+        assertTrue(onMultipleFilesSelectedWasCalled)
+
+        filePickerRequest.onDismiss()
+        assertTrue(onDismissWasCalled)
+
+        assertTrue(filePickerRequest.mimeTypes.isEmpty())
+        assertFalse(filePickerRequest.isMultipleFilesSelection)
+
+        promptDelegate.onFilePrompt(null, "title", FILE_TYPE_MULTIPLE, emptyArray(), callback)
+
+        assertTrue((request as PromptRequest.File) .isMultipleFilesSelection)
     }
 }

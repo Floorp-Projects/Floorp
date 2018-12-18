@@ -4,6 +4,9 @@
 
 package mozilla.components.concept.engine.prompt
 
+import android.content.Context
+import android.net.Uri
+
 /**
  * Value type that represents a request for showing a native dialog for prompt web content.
  *
@@ -62,5 +65,21 @@ sealed class PromptRequest {
         val maximumDate: java.util.Date?,
         val onSelect: (java.util.Date) -> Unit,
         val onClear: () -> Unit
+    ) : PromptRequest()
+
+    /**
+     * Value type that represents a request for a selecting one or multiple files.
+     * @property mimeTypes a set of allowed mime types. Only these file types can be selected.
+     * @property isMultipleFilesSelection true if the user can select more that one file false otherwise.
+     * @property onSingleFileSelected callback to notify that the user has selected a single file.
+     * @property onMultipleFilesSelected callback to notify that the user has selected multiple files.
+     * @property onDismiss callback to notify that the user has canceled the file selection.
+     */
+    data class File(
+        val mimeTypes: Array<out String>,
+        val isMultipleFilesSelection: Boolean,
+        val onSingleFileSelected: (Context, Uri) -> Unit,
+        val onMultipleFilesSelected: (Context, Array<Uri>) -> Unit,
+        val onDismiss: () -> Unit
     ) : PromptRequest()
 }

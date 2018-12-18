@@ -24,6 +24,7 @@ android {
 dependencies {
     implementation project(':browser-session')
     implementation project(':concept-engine')
+    implementation project(':support-ktx')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.support_design
@@ -33,7 +34,6 @@ dependencies {
     testImplementation Dependencies.testing_mockito
     testImplementation Dependencies.testing_androidx
     testImplementation project(':support-test')
-    testImplementation project(':support-ktx')
 }
 
 apply from: '../../../publish.gradle'

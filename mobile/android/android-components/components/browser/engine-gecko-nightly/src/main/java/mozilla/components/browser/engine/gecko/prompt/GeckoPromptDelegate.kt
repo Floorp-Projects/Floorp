@@ -4,6 +4,8 @@
 
 package mozilla.components.browser.engine.gecko.prompt
 
+import android.content.Context
+import android.net.Uri
 import android.support.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.engine.prompt.Choice
@@ -110,6 +112,41 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         }
     }
 
+    override fun onFilePrompt(
+        session: GeckoSession?,
+        title: String?,
+        selectionType: Int,
+        mimeTypes: Array<out String>,
+        callback: FileCallback
+    ) {
+
+        val onSelectMultiple: (Context, Array<Uri>) -> Unit = { context, uris ->
+            callback.confirm(context, uris)
+        }
+
+        val isMultipleFilesSelection = selectionType == GeckoSession.PromptDelegate.FILE_TYPE_MULTIPLE
+
+        val onSelectSingle: (Context, Uri) -> Unit = { context, uri ->
+            callback.confirm(context, uri)
+        }
+
+        val onDismiss: () -> Unit = {
+            callback.dismiss()
+        }
+
+        geckoEngineSession.notifyObservers {
+            onPromptRequest(
+                PromptRequest.File(
+                    mimeTypes,
+                    isMultipleFilesSelection,
+                    onSelectSingle,
+                    onSelectMultiple,
+                    onDismiss
+                )
+            )
+        }
+    }
+
     override fun onDateTimePrompt(
         session: GeckoSession?,
         title: String?,
@@ -171,14 +208,6 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         btnMsg: Array<out String>?,
         callback: ButtonCallback?
     ) = Unit
-
-    override fun onFilePrompt(
-        session: GeckoSession?,
-        title: String?,
-        type: Int,
-        mimeTypes: Array<out String>?,
-        callback: FileCallback?
-    ) = Unit // Related issue: https://github.com/mozilla-mobile/android-components/issues/1468
 
     override fun onColorPrompt(
         session: GeckoSession?,

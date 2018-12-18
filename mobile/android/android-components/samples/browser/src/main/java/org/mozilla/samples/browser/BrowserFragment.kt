@@ -5,6 +5,7 @@
 package org.mozilla.samples.browser
 
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+import android.content.Intent
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Bundle
 import android.support.v4.app.Fragment
@@ -95,7 +96,13 @@ class BrowserFragment : Fragment(), BackHandler {
                 components.tabsUseCases,
                 view))
 
-        promptFeature = PromptFeature(components.sessionManager, requireFragmentManager())
+        promptFeature = PromptFeature(
+            null, this,
+            components.sessionManager,
+            requireFragmentManager()
+        ) { _, permissions, requestCode ->
+            requestPermissions(permissions, requestCode)
+        }
 
         windowFeature = WindowFeature(components.engine, components.sessionManager)
     }
@@ -168,5 +175,10 @@ class BrowserFragment : Fragment(), BackHandler {
                 }
             }
         }
+        promptFeature.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        promptFeature.onActivityResult(requestCode, resultCode, data)
     }
 }
