@@ -16,7 +16,7 @@ class AdbDevice {
   }
 
   async initialize() {
-    const model = await shell("getprop ro.product.model");
+    const model = await shell(this.id, "getprop ro.product.model");
     this.model = model.trim();
   }
 
@@ -24,16 +24,12 @@ class AdbDevice {
     return this.model || this.id;
   }
 
-  // This method is not using any information from the instance, but in theory getting
-  // runtime socket paths (as well as model) should be device specific. So we should use
-  // information available on the instance when implementing multi device support.
-  // See Bug 1507126.
   async getRuntimeSocketPaths() {
     // A matching entry looks like:
     // 00000000: 00000002 00000000 00010000 0001 01 6551588
     //  /data/data/org.mozilla.fennec/firefox-debugger-socket
     const query = "cat /proc/net/unix";
-    const rawSocketInfo = await shell(query);
+    const rawSocketInfo = await shell(this.id, query);
 
     // Filter to lines with "firefox-debugger-socket"
     let socketInfos = rawSocketInfo.split(/\r?\n/);
