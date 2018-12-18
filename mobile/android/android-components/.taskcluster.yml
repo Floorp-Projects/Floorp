@@ -35,9 +35,9 @@ tasks:
       else: ${event.repository.html_url}
 
     worker_type:
-      $if: 'tasks_for == "github-release" && event.repository.html_url == "https://github.com/mozilla-mobile/android-components"'
-      then: gecko-focus
-      else: github-worker
+      $if: 'tasks_for in ["github-push", "github-release", "cron"] && event.repository.html_url == "https://github.com/mozilla-mobile/android-components"'
+      then: mobile-3-decision
+      else: mobile-1-decision
 
     scheduler_id:
       $if: 'tasks_for == "cron"'
