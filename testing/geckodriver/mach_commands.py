@@ -4,47 +4,47 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import argparse
 import os
+import logging
 
 from mach.decorators import (
     Command,
     CommandArgument,
     CommandArgumentGroup,
     CommandProvider,
-    SubCommand,
 )
 
-from mozbuild.base import (
-    MachCommandBase,
-    MachCommandConditions as conditions,
-)
+from mozbuild.base import MachCommandBase
 
 
 @CommandProvider
-class GeckoDriover(MachCommandBase):
+class GeckoDriver(MachCommandBase):
 
     @Command("geckodriver",
-        category="post-build",
-        description="Run the WebDriver implementation for Gecko.")
+             category="post-build",
+             description="Run the WebDriver implementation for Gecko.")
     @CommandArgument("--binary", type=str,
-        help="Firefox binary (defaults to the local build).")
+                     help="Firefox binary (defaults to the local build).")
     @CommandArgument("params", nargs="...",
-        help="Flags to be passed through to geckodriver.")
+                     help="Flags to be passed through to geckodriver.")
     @CommandArgumentGroup("debugging")
     @CommandArgument("--debug", action="store_true", group="debugging",
-        help="Enable the debugger. Not specifying a --debugger option will result in the default debugger being used.")
+                     help="Enable the debugger. Not specifying a --debugger "
+                          "option will result in the default debugger "
+                          "being used.")
     @CommandArgument("--debugger", default=None, type=str, group="debugging",
-        help="Name of debugger to use.")
-    @CommandArgument("--debugger-args", default=None, metavar="params", type=str,
-        group="debugging",
-        help="Flags to pass to the debugger itself; split as the Bourne shell would.")
+                     help="Name of debugger to use.")
+    @CommandArgument("--debugger-args", default=None, metavar="params",
+                     type=str, group="debugging",
+                     help="Flags to pass to the debugger itself; "
+                          "split as the Bourne shell would.")
     def run(self, binary, params, debug, debugger, debugger_args):
         try:
             binpath = self.get_binary_path("geckodriver")
         except Exception as e:
                 print("It looks like geckodriver isn't built. "
-                      "Add ac_add_options --enable-geckodriver to your mozconfig ",
+                      "Add ac_add_options --enable-geckodriver to your "
+                      "mozconfig ",
                       "and run |mach build| to build it.")
                 print(e)
                 return 1
@@ -90,17 +90,18 @@ class GeckoDriover(MachCommandBase):
             args = [self.debuggerInfo.path] + self.debuggerInfo.args + args
 
         return self.run_process(args=args, ensure_exit_code=False,
-            pass_thru=True)
+                                pass_thru=True)
 
 
 @CommandProvider
 class GeckoDriverTest(MachCommandBase):
 
     @Command("geckodriver-test",
-        category="post-build",
-        description="Run geckodriver unit tests.")
+             category="post-build",
+             description="Run geckodriver unit tests.")
     @CommandArgument("-v", "--verbose", action="store_true",
-        help="Verbose output for what commands the build is running.")
+                     help="Verbose output for what"
+                          " commands the build is running.")
     def test(self, verbose=False, **kwargs):
         from mozbuild.controller.building import BuildDriver
 
