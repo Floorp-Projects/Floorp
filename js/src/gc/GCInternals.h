@@ -175,7 +175,7 @@ struct MovingTracer : JS::CallbackTracer {
 // been tenured during a minor collection.
 struct TenureCount {
   ObjectGroup* group;
-  int count;
+  unsigned count;
 
   // ObjectGroups are never nursery-allocated, and TenureCounts are only used
   // in minor GC (not compacting GC), so prevent the analysis from

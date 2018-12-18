@@ -10,6 +10,8 @@
  * after startup, in *every* browser process live outside of this file.
  */
 
+var EXPORTED_SYMBOLS = ["ExtensionProcessScript"];
+
 ChromeUtils.import("resource://gre/modules/MessageChannel.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -275,17 +277,7 @@ ExtensionManager = {
   },
 };
 
-function ExtensionProcessScript() {
-}
-
-ExtensionProcessScript.prototype = {
-  classID: Components.ID("{21f9819e-4cdf-49f9-85a0-850af91a5058}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.mozIExtensionProcessScript]),
-
-  _xpcom_factory: XPCOMUtils.generateSingletonFactory(ExtensionProcessScript),
-
-  get wrappedJSObject() { return this; },
-
+var ExtensionProcessScript = {
   extensions,
 
   getFrameData(global, force) {
@@ -321,7 +313,5 @@ ExtensionProcessScript.prototype = {
     return ExtensionContent.contentScripts.get(contentScript).injectInto(window);
   },
 };
-
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ExtensionProcessScript]);
 
 ExtensionManager.init();

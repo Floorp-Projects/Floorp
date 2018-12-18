@@ -11,6 +11,9 @@
 #include "city.h"
 #include "mar_private.h"
 #include "mar.h"
+#ifdef XP_WIN
+#define strdup _strdup
+#endif
 
 /* This block must be at most 104 bytes.
    MAR channel name < 64 bytes, and product version < 32 bytes + 3 NULL
@@ -19,26 +22,19 @@
    sizeof(additionalBlockSize) and sizeof(additionalBlockID) */
 #define MAXADDITIONALBLOCKSIZE 96
 
-static uint32_t
-mar_hash_name(const char* name)
-{
+static uint32_t mar_hash_name(const char* name) {
   return CityHash64(name, strlen(name)) % TABLESIZE;
 }
 
-static int
-mar_insert_item(MarFile* mar,
-                const char* name,
-                int namelen,
-                uint32_t offset,
-                uint32_t length,
-                uint32_t flags)
-{
+static int mar_insert_item(MarFile* mar, const char* name, int namelen,
+                           uint32_t offset, uint32_t length, uint32_t flags) {
   MarItem *item, *root;
   uint32_t hash;
 
-  item = (MarItem *) malloc(sizeof(MarItem) + namelen);
-  if (!item)
+  item = (MarItem*)malloc(sizeof(MarItem) + namelen);
+  if (!item) {
     return -1;
+  }
   item->next = NULL;
   item->offset = offset;
   item->length = length;
@@ -52,16 +48,13 @@ mar_insert_item(MarFile* mar,
     mar->item_table[hash] = item;
   } else {
     /* append item */
-    while (root->next)
-      root = root->next;
+    while (root->next) root = root->next;
     root->next = item;
   }
   return 0;
 }
 
-static int
-mar_consume_index(MarFile* mar, char** buf, const char* buf_end)
-{
+static int mar_consume_index(MarFile* mar, char** buf, const char* buf_end) {
   /*
    * Each item has the following structure:
    *   uint32_t offset      (network byte order)
@@ -73,11 +66,12 @@ mar_consume_index(MarFile* mar, char** buf, const char* buf_end)
   uint32_t offset;
   uint32_t length;
   uint32_t flags;
-  const char *name;
+  const char* name;
   int namelen;
 
-  if ((buf_end - *buf) < (int)(3*sizeof(uint32_t) + 2))
+  if ((buf_end - *buf) < (int)(3 * sizeof(uint32_t) + 2)) {
     return -1;
+  }
 
   memcpy(&offset, *buf, sizeof(offset));
   *buf += sizeof(offset);
@@ -96,8 +90,9 @@ mar_consume_index(MarFile* mar, char** buf, const char* buf_end)
   /* find namelen; must take care not to read beyond buf_end */
   while (**buf) {
     /* buf_end points one byte past the end of buf's allocation */
-    if (*buf == (buf_end - 1))
+    if (*buf == (buf_end - 1)) {
       return -1;
+    }
     ++(*buf);
   }
   namelen = (*buf - name);
@@ -106,39 +101,44 @@ mar_consume_index(MarFile* mar, char** buf, const char* buf_end)
     return -1;
   }
   /* consume null byte */
-  if (*buf == buf_end)
+  if (*buf == buf_end) {
     return -1;
+  }
   ++(*buf);
 
   return mar_insert_item(mar, name, namelen, offset, length, flags);
 }
 
-static int
-mar_read_index(MarFile* mar)
-{
+static int mar_read_index(MarFile* mar) {
   char id[MAR_ID_SIZE], *buf, *bufptr, *bufend;
   uint32_t offset_to_index, size_of_index;
 
   /* verify MAR ID */
   fseek(mar->fp, 0, SEEK_SET);
-  if (fread(id, MAR_ID_SIZE, 1, mar->fp) != 1)
+  if (fread(id, MAR_ID_SIZE, 1, mar->fp) != 1) {
     return -1;
-  if (memcmp(id, MAR_ID, MAR_ID_SIZE) != 0)
+  }
+  if (memcmp(id, MAR_ID, MAR_ID_SIZE) != 0) {
     return -1;
+  }
 
-  if (fread(&offset_to_index, sizeof(uint32_t), 1, mar->fp) != 1)
+  if (fread(&offset_to_index, sizeof(uint32_t), 1, mar->fp) != 1) {
     return -1;
+  }
   offset_to_index = ntohl(offset_to_index);
 
-  if (fseek(mar->fp, offset_to_index, SEEK_SET))
+  if (fseek(mar->fp, offset_to_index, SEEK_SET)) {
     return -1;
-  if (fread(&size_of_index, sizeof(uint32_t), 1, mar->fp) != 1)
+  }
+  if (fread(&size_of_index, sizeof(uint32_t), 1, mar->fp) != 1) {
     return -1;
+  }
   size_of_index = ntohl(size_of_index);
 
-  buf = (char *) malloc(size_of_index);
-  if (!buf)
+  buf = (char*)malloc(size_of_index);
+  if (!buf) {
     return -1;
+  }
   if (fread(buf, size_of_index, 1, mar->fp) != 1) {
     free(buf);
     return -1;
@@ -146,7 +146,8 @@ mar_read_index(MarFile* mar)
 
   bufptr = buf;
   bufend = buf + size_of_index;
-  while (bufptr < bufend && mar_consume_index(mar, &bufptr, bufend) == 0);
+  while (bufptr < bufend && mar_consume_index(mar, &bufptr, bufend) == 0)
+    ;
 
   free(buf);
   return (bufptr == bufend) ? 0 : -1;
@@ -160,9 +161,7 @@ mar_read_index(MarFile* mar)
  * @return int    1 on success, 0 if offset has been previously processed
  *                -1 if unable to allocate space for the SeenIndexes
  */
-static int
-mar_insert_offset(MarFile* mar, uint32_t offset, uint32_t length)
-{
+static int mar_insert_offset(MarFile* mar, uint32_t offset, uint32_t length) {
   /* Ignore files with no length */
   if (length == 0) {
     return 1;
@@ -213,9 +212,7 @@ mar_insert_offset(MarFile* mar, uint32_t offset, uint32_t length)
  * Internal shared code for mar_open and mar_wopen.
  * On failure, will fclose(fp).
  */
-static MarFile*
-mar_fpopen(FILE* fp)
-{
+static MarFile* mar_fpopen(FILE* fp) {
   MarFile* mar;
 
   mar = (MarFile*)malloc(sizeof(*mar));
@@ -232,10 +229,8 @@ mar_fpopen(FILE* fp)
   return mar;
 }
 
-MarFile*
-mar_open(const char* path)
-{
-  FILE *fp;
+MarFile* mar_open(const char* path) {
+  FILE* fp;
 
   fp = fopen(path, "rb");
   if (!fp) {
@@ -248,10 +243,8 @@ mar_open(const char* path)
 }
 
 #ifdef XP_WIN
-MarFile*
-mar_wopen(const wchar_t* path)
-{
-  FILE *fp;
+MarFile* mar_wopen(const wchar_t* path) {
+  FILE* fp;
 
   _wfopen_s(&fp, path, L"rb");
   if (!fp) {
@@ -264,9 +257,7 @@ mar_wopen(const wchar_t* path)
 }
 #endif
 
-void
-mar_close(MarFile* mar)
-{
+void mar_close(MarFile* mar) {
   MarItem* item;
   SeenIndex* index;
   int i;
@@ -309,21 +300,16 @@ mar_close(MarFile* mar)
  *                               hasAdditionalBlocks is not equal to 0.
  * @return 0 on success and non-zero on failure.
  */
-int
-get_mar_file_info_fp(FILE* fp,
-                     int* hasSignatureBlock,
-                     uint32_t* numSignatures,
-                     int* hasAdditionalBlocks,
-                     uint32_t* offsetAdditionalBlocks,
-                     uint32_t* numAdditionalBlocks)
-{
+int get_mar_file_info_fp(FILE* fp, int* hasSignatureBlock,
+                         uint32_t* numSignatures, int* hasAdditionalBlocks,
+                         uint32_t* offsetAdditionalBlocks,
+                         uint32_t* numAdditionalBlocks) {
   uint32_t offsetToIndex, offsetToContent, signatureCount, signatureLen, i;
 
   /* One of hasSignatureBlock or hasAdditionalBlocks must be non NULL */
   if (!hasSignatureBlock && !hasAdditionalBlocks) {
     return -1;
   }
-
 
   /* Skip to the start of the offset index */
   if (fseek(fp, MAR_ID_SIZE, SEEK_SET)) {
@@ -337,7 +323,7 @@ get_mar_file_info_fp(FILE* fp,
   offsetToIndex = ntohl(offsetToIndex);
 
   if (numSignatures) {
-     /* Skip past the MAR file size field */
+    /* Skip past the MAR file size field */
     if (fseek(fp, sizeof(uint64_t), SEEK_CUR)) {
       return -1;
     }
@@ -381,7 +367,7 @@ get_mar_file_info_fp(FILE* fp,
     return 0;
   }
 
-   /* Skip to the start of the signature block */
+  /* Skip to the start of the signature block */
   if (fseeko(fp, SIGNATURE_BLOCK_OFFSET, SEEK_SET)) {
     return -1;
   }
@@ -446,15 +432,15 @@ get_mar_file_info_fp(FILE* fp,
  *
  * @param infoBlock Out parameter for where to store the result to
  * @return 0 on success, -1 on failure
-*/
-int
-read_product_info_block(char* path, struct ProductInformationBlock* infoBlock)
-{
+ */
+int read_product_info_block(char* path,
+                            struct ProductInformationBlock* infoBlock) {
   int rv;
   MarFile mar;
   mar.fp = fopen(path, "rb");
   if (!mar.fp) {
-    fprintf(stderr, "ERROR: could not open file in read_product_info_block()\n");
+    fprintf(stderr,
+            "ERROR: could not open file in read_product_info_block()\n");
     perror(path);
     return -1;
   }
@@ -470,20 +456,17 @@ read_product_info_block(char* path, struct ProductInformationBlock* infoBlock)
  *
  * @param infoBlock Out parameter for where to store the result to
  * @return 0 on success, -1 on failure
-*/
-int
-mar_read_product_info_block(MarFile* mar,
-                            struct ProductInformationBlock* infoBlock)
-{
-  uint32_t offsetAdditionalBlocks, numAdditionalBlocks,
-    additionalBlockSize, additionalBlockID;
+ */
+int mar_read_product_info_block(MarFile* mar,
+                                struct ProductInformationBlock* infoBlock) {
+  uint32_t offsetAdditionalBlocks, numAdditionalBlocks, additionalBlockSize,
+      additionalBlockID;
   int hasAdditionalBlocks;
 
   /* The buffer size is 97 bytes because the MAR channel name < 64 bytes, and
      product version < 32 bytes + 3 NULL terminator bytes. */
-  char buf[MAXADDITIONALBLOCKSIZE + 1] = { '\0' };
-  if (get_mar_file_info_fp(mar->fp, NULL, NULL,
-                           &hasAdditionalBlocks,
+  char buf[MAXADDITIONALBLOCKSIZE + 1] = {'\0'};
+  if (get_mar_file_info_fp(mar->fp, NULL, NULL, &hasAdditionalBlocks,
                            &offsetAdditionalBlocks,
                            &numAdditionalBlocks) != 0) {
     return -1;
@@ -493,9 +476,8 @@ mar_read_product_info_block(MarFile* mar,
      in a MAR file so check if any exist and process the first found */
   if (numAdditionalBlocks > 0) {
     /* Read the additional block size */
-    if (fread(&additionalBlockSize,
-              sizeof(additionalBlockSize),
-              1, mar->fp) != 1) {
+    if (fread(&additionalBlockSize, sizeof(additionalBlockSize), 1, mar->fp) !=
+        1) {
       return -1;
     }
     additionalBlockSize = ntohl(additionalBlockSize) -
@@ -508,15 +490,13 @@ mar_read_product_info_block(MarFile* mar,
     }
 
     /* Read the additional block ID */
-    if (fread(&additionalBlockID,
-              sizeof(additionalBlockID),
-              1, mar->fp) != 1) {
+    if (fread(&additionalBlockID, sizeof(additionalBlockID), 1, mar->fp) != 1) {
       return -1;
     }
     additionalBlockID = ntohl(additionalBlockID);
 
     if (PRODUCT_INFO_BLOCK_ID == additionalBlockID) {
-      const char *location;
+      const char* location;
       int len;
 
       if (fread(buf, additionalBlockSize, 1, mar->fp) != 1) {
@@ -543,10 +523,8 @@ mar_read_product_info_block(MarFile* mar,
         infoBlock->productVersion = NULL;
         return -1;
       }
-      infoBlock->MARChannelID =
-        strdup(infoBlock->MARChannelID);
-      infoBlock->productVersion =
-        strdup(infoBlock->productVersion);
+      infoBlock->MARChannelID = strdup(infoBlock->MARChannelID);
+      infoBlock->productVersion = strdup(infoBlock->productVersion);
       return 0;
     } else {
       /* This is not the additional block you're looking for. Move along. */
@@ -560,9 +538,7 @@ mar_read_product_info_block(MarFile* mar,
   return -1;
 }
 
-const MarItem*
-mar_find_item(MarFile* mar, const char* name)
-{
+const MarItem* mar_find_item(MarFile* mar, const char* name) {
   uint32_t hash;
   const MarItem* item;
 
@@ -590,9 +566,7 @@ mar_find_item(MarFile* mar, const char* name)
   }
 }
 
-int
-mar_enum_items(MarFile* mar, MarItemCallback callback, void* closure)
-{
+int mar_enum_items(MarFile* mar, MarItemCallback callback, void* closure) {
   MarItem* item;
   int i, rv;
 
@@ -624,26 +598,25 @@ mar_enum_items(MarFile* mar, MarItemCallback callback, void* closure)
   return 0;
 }
 
-int
-mar_read(MarFile* mar,
-         const MarItem* item,
-         int offset,
-         uint8_t* buf,
-         int bufsize)
-{
+int mar_read(MarFile* mar, const MarItem* item, int offset, uint8_t* buf,
+             int bufsize) {
   int nr;
 
-  if (offset == (int) item->length)
+  if (offset == (int)item->length) {
     return 0;
-  if (offset > (int) item->length)
+  }
+  if (offset > (int)item->length) {
     return -1;
+  }
 
   nr = item->length - offset;
-  if (nr > bufsize)
+  if (nr > bufsize) {
     nr = bufsize;
+  }
 
-  if (fseek(mar->fp, item->offset + offset, SEEK_SET))
+  if (fseek(mar->fp, item->offset + offset, SEEK_SET)) {
     return -1;
+  }
 
   return fread(buf, 1, nr, mar->fp);
 }
@@ -666,25 +639,21 @@ mar_read(MarFile* mar,
  *                               has_additional_blocks is not equal to 0.
  * @return 0 on success and non-zero on failure.
  */
-int
-get_mar_file_info(const char* path,
-                  int* hasSignatureBlock,
-                  uint32_t* numSignatures,
-                  int* hasAdditionalBlocks,
-                  uint32_t* offsetAdditionalBlocks,
-                  uint32_t* numAdditionalBlocks)
-{
+int get_mar_file_info(const char* path, int* hasSignatureBlock,
+                      uint32_t* numSignatures, int* hasAdditionalBlocks,
+                      uint32_t* offsetAdditionalBlocks,
+                      uint32_t* numAdditionalBlocks) {
   int rv;
-  FILE *fp = fopen(path, "rb");
+  FILE* fp = fopen(path, "rb");
   if (!fp) {
     fprintf(stderr, "ERROR: could not open file in get_mar_file_info()\n");
     perror(path);
     return -1;
   }
 
-  rv = get_mar_file_info_fp(fp, hasSignatureBlock,
-                            numSignatures, hasAdditionalBlocks,
-                            offsetAdditionalBlocks, numAdditionalBlocks);
+  rv = get_mar_file_info_fp(fp, hasSignatureBlock, numSignatures,
+                            hasAdditionalBlocks, offsetAdditionalBlocks,
+                            numAdditionalBlocks);
 
   fclose(fp);
   return rv;

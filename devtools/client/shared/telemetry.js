@@ -738,6 +738,7 @@ function getChartsFromToolId(id) {
       countHist = `DEVTOOLS_${id}_OPENED_COUNT`;
       break;
     case "FLEXBOX_HIGHLIGHTER":
+    case "GRID_HIGHLIGHTER":
       timerHist = `DEVTOOLS_${id}_TIME_ACTIVE_SECONDS`;
       break;
     default:

@@ -6,6 +6,7 @@
 
 import json
 import os
+import sys
 
 from buildconfig import substs
 from mozbuild.base import MozbuildObject
@@ -96,7 +97,12 @@ if __name__ == '__main__':
                                cmdargs=['data:text/html,<script>Quitter.quit()</script>'],
                                env=env)
         runner.start()
-        runner.wait()
+        ret = runner.wait()
+        if ret:
+            print("Firefox exited with code %d during profile initialization"
+                  % ret)
+            httpd.stop()
+            sys.exit(ret)
 
         jarlog = os.getenv("JARLOG_FILE")
         if jarlog:
@@ -109,5 +115,8 @@ if __name__ == '__main__':
                                cmdargs=cmdargs,
                                env=env)
         runner.start(debug_args=debug_args, interactive=interactive)
-        runner.wait()
+        ret = runner.wait()
         httpd.stop()
+        if ret:
+            print("Firefox exited with code %d during profiling" % ret)
+            sys.exit(ret)

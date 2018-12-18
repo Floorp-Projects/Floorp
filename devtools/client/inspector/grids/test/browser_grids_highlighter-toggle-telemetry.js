@@ -31,11 +31,20 @@ add_task(async function() {
 
   info("Toggling ON the CSS grid highlighter from the layout panel.");
   const onHighlighterShown = highlighters.once("grid-highlighter-shown");
-  const onCheckboxChange = waitUntilState(store, state =>
+  let onCheckboxChange = waitUntilState(store, state =>
     state.grids.length == 1 &&
     state.grids[0].highlighted);
   checkbox.click();
   await onHighlighterShown;
+  await onCheckboxChange;
+
+  info("Toggling OFF the CSS grid highlighter from the layout panel.");
+  const onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
+  onCheckboxChange = waitUntilState(store, state =>
+    state.grids.length == 1 &&
+    !state.grids[0].highlighted);
+  checkbox.click();
+  await onHighlighterHidden;
   await onCheckboxChange;
 
   checkResults();
@@ -43,4 +52,5 @@ add_task(async function() {
 
 function checkResults() {
   checkTelemetry("devtools.grid.gridinspector.opened", "", 1, "scalar");
+  checkTelemetry("DEVTOOLS_GRID_HIGHLIGHTER_TIME_ACTIVE_SECONDS", "", null, "hasentries");
 }
