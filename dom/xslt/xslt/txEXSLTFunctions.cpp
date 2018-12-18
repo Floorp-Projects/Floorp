@@ -15,10 +15,12 @@
 #include "txExecutionState.h"
 #include "txExpr.h"
 #include "txIXPathContext.h"
+#include "txIEXSLTFunctions.h"
 #include "txNodeSet.h"
 #include "txOutputFormat.h"
 #include "txRtfHandler.h"
 #include "txXPathTreeWalker.h"
+#include "nsImportModule.h"
 #include "nsPrintfCString.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentCID.h"
@@ -662,60 +664,18 @@ nsresult txEXSLTRegExFunctionCall::evaluate(txIEvalContext* aContext,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(xpc::PrivilegedJunkScope())) {
-    return NS_ERROR_FAILURE;
-  }
-  JSContext* cx = jsapi.cx();
-
-  xpc::SandboxOptions options;
-  options.sandboxName.AssignLiteral("txEXSLTRegExFunctionCall sandbox");
-  options.invisibleToDebugger = true;
-  JS::RootedValue v(cx);
-  rv = CreateSandboxObject(cx, &v, nsXPConnect::SystemPrincipal(), options);
-  MOZ_ALWAYS_SUCCEEDS(rv);
-  JS::RootedObject sandbox(cx, js::UncheckedUnwrap(&v.toObject()));
-
-  JSAutoRealm ar(cx, sandbox);
-  ErrorResult er;
-  GlobalObject global(cx, sandbox);
-  Optional<JS::HandleObject> targetObj(cx, sandbox);
-  JS::RootedObject obj(cx);
-  ChromeUtils::Import(
-      global,
-      NS_LITERAL_STRING("resource://gre/modules/txEXSLTRegExFunctions.jsm"),
-      targetObj, &obj, er);
-  MOZ_ALWAYS_TRUE(!er.Failed());
-
-  JS::RootedString str(
-      cx, JS_NewUCStringCopyZ(cx, PromiseFlatString(string).get()));
-  JS::RootedString re(cx,
-                      JS_NewUCStringCopyZ(cx, PromiseFlatString(regex).get()));
-  JS::RootedString fl(cx,
-                      JS_NewUCStringCopyZ(cx, PromiseFlatString(flags).get()));
+  nsCOMPtr<txIEXSLTFunctions> funcs =
+      do_ImportModule("resource://gre/modules/txEXSLTRegExFunctions.jsm");
+  MOZ_ALWAYS_TRUE(funcs);
 
   switch (mType) {
     case txEXSLTType::MATCH: {
       nsCOMPtr<nsIDocument> sourceDoc = getSourceDocument(aContext);
       NS_ENSURE_STATE(sourceDoc);
 
-      JS::RootedValue doc(cx);
-      if (!GetOrCreateDOMReflector(cx, sourceDoc, &doc)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      JS::AutoValueArray<4> args(cx);
-      args[0].setString(str);
-      args[1].setString(re);
-      args[2].setString(fl);
-      args[3].setObject(doc.toObject());
-
-      JS::RootedValue rval(cx);
-      if (!JS_CallFunctionName(cx, sandbox, "match", args, &rval)) {
-        return NS_ERROR_FAILURE;
-      }
       RefPtr<DocumentFragment> docFrag;
-      rv = UNWRAP_OBJECT(DocumentFragment, &rval, docFrag);
+      rv = funcs->Match(string, regex, flags, sourceDoc,
+                        getter_AddRefs(docFrag));
       NS_ENSURE_SUCCESS(rv, rv);
       NS_ENSURE_STATE(docFrag);
 
@@ -740,23 +700,9 @@ nsresult txEXSLTRegExFunctionCall::evaluate(txIEvalContext* aContext,
       rv = mParams[3]->evaluateToString(aContext, replace);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      JS::RootedString repl(
-          cx, JS_NewUCStringCopyZ(cx, PromiseFlatString(replace).get()));
-
-      JS::AutoValueArray<4> args(cx);
-      args[0].setString(str);
-      args[1].setString(re);
-      args[2].setString(fl);
-      args[3].setString(repl);
-
-      JS::RootedValue rval(cx);
-      if (!JS_CallFunctionName(cx, sandbox, "replace", args, &rval)) {
-        return NS_ERROR_FAILURE;
-      }
-      nsString result;
-      if (!ConvertJSValueToString(cx, rval, result)) {
-        return NS_ERROR_FAILURE;
-      }
+      nsAutoString result;
+      rv = funcs->Replace(string, regex, flags, replace, result);
+      NS_ENSURE_SUCCESS(rv, rv);
 
       rv = aContext->recycler()->getStringResult(result, aResult);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -764,17 +710,9 @@ nsresult txEXSLTRegExFunctionCall::evaluate(txIEvalContext* aContext,
       return NS_OK;
     }
     case txEXSLTType::TEST: {
-      JS::AutoValueArray<3> args(cx);
-      args[0].setString(str);
-      args[1].setString(re);
-      args[2].setString(fl);
-
-      JS::RootedValue rval(cx);
-      if (!JS_CallFunctionName(cx, sandbox, "test", args, &rval)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      bool result = rval.toBoolean();
+      bool result;
+      rv = funcs->Test(string, regex, flags, &result);
+      NS_ENSURE_SUCCESS(rv, rv);
 
       aContext->recycler()->getBoolResult(result, aResult);
 

@@ -9,3 +9,10 @@ DevToolsModules(
     'graphics.js',
     'replay.js',
 )
+
+XPIDL_MODULE = 'devtools_rr'
+
+XPIDL_SOURCES = [
+    'rrIGraphics.idl',
+    'rrIReplay.idl',
+]

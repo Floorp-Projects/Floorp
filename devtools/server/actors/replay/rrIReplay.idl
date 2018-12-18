@@ -1,0 +1,19 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(8b86b71f-8471-472e-9997-c5f21f9d0598)]
+interface rrIReplay : nsISupports {
+  jsval ProcessRequest(in jsval request);
+
+  void EnsurePositionHandler(in jsval position);
+
+  void ClearPositionHandlers();
+
+  void ClearPausedState();
+
+  jsval GetEntryPosition(in jsval position);
+};

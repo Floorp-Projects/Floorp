@@ -991,6 +991,9 @@ RefPtr<ID3D11Device> DeviceManagerDx::GetCompositorDevice() {
 }
 
 RefPtr<ID3D11Device> DeviceManagerDx::GetContentDevice() {
+  MOZ_ASSERT(XRE_IsGPUProcess() ||
+             gfxPlatform::GetPlatform()->DevicesInitialized());
+
   MutexAutoLock lock(mDeviceLock);
   return mContentDevice;
 }

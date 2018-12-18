@@ -105,6 +105,9 @@ class gfxWindowsPlatform : public gfxPlatform {
     return (gfxWindowsPlatform*)gfxPlatform::GetPlatform();
   }
 
+  virtual void EnsureDevicesInitialized() override;
+  virtual bool DevicesInitialized() override;
+
   virtual gfxPlatformFontList* CreatePlatformFontList() override;
 
   virtual already_AddRefed<gfxASurface> CreateOffscreenSurface(
@@ -259,6 +262,7 @@ class gfxWindowsPlatform : public gfxPlatform {
   DWRITE_MEASURING_MODE mMeasuringMode;
 
   RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
+  bool mInitializedDevices = false;
 };
 
 #endif /* GFX_WINDOWS_PLATFORM_H */
