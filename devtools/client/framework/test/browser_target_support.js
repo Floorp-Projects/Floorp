@@ -6,9 +6,6 @@
 // Test support methods on Target, such as `hasActor`, `getActorDescription`,
 // `actorHasMethod` and `getTrait`.
 
-var { WebAudioFront } =
-  require("devtools/shared/fronts/webaudio");
-
 async function testTarget(client, target) {
   await target.attach();
 
@@ -16,7 +13,7 @@ async function testTarget(client, target) {
   is(target.hasActor("webaudio"), true, "target.hasActor() true when actor exists.");
   is(target.hasActor("notreal"), false, "target.hasActor() false when actor does not exist.");
   // Create a front to ensure the actor is loaded
-  new WebAudioFront(target.client, target.form);
+  await target.getFront("webaudio");
 
   let desc = await target.getActorDescription("webaudio");
   is(desc.typeName, "webaudio",
