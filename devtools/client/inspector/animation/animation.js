@@ -652,7 +652,7 @@ class AnimationInspector {
   }
 
   toggleElementPicker() {
-    this.inspector.toolbox.highlighterUtils.togglePicker();
+    this.inspector.inspector.nodePicker.togglePicker();
   }
 
   async update() {
