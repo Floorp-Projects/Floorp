@@ -43,6 +43,11 @@ class HighlightersOverlay {
     // associated with any NodeFront.
     this.extraGridHighlighterPool = [];
 
+    // Boolean flag to keep track of whether or not the telemetry timer for the grid
+    // highlighter active time is active. We keep track of this to avoid re-starting a
+    // new timer when an additional grid highlighter is turned on.
+    this.isGridHighlighterTimerActive = false;
+
     // Collection of instantiated in-context editors, like ShapesInContextEditor, which
     // behave like highlighters but with added editing capabilities that need to map value
     // changes to properties in the Rule view.
@@ -518,6 +523,12 @@ class HighlightersOverlay {
 
     this._toggleRuleViewIcon(node, true, ".ruleview-grid");
 
+    if (!this.isGridHighlighterTimerActive) {
+      this.telemetry.toolOpened("grid_highlighter", this.inspector.toolbox.sessionId,
+        this);
+      this.isGridHighlighterTimerActive = true;
+    }
+
     if (trigger === "grid") {
       this.telemetry.scalarAdd("devtools.grid.gridinspector.opened", 1);
     } else if (trigger === "markup") {
@@ -561,6 +572,12 @@ class HighlightersOverlay {
     this.gridHighlighters.delete(node);
 
     this._toggleRuleViewIcon(node, false, ".ruleview-grid");
+
+    if (this.isGridHighlighterTimerActive && !this.gridHighlighters.size) {
+      this.telemetry.toolClosed("grid_highlighter", this.inspector.toolbox.sessionId,
+        this);
+      this.isGridHighlighterTimerActive = false;
+    }
 
     // Emit the NodeFront of the grid container element that the grid highlighter was
     // hidden for.
