@@ -442,7 +442,6 @@ class IMMHandler final {
 
   bool mIsComposing;
   bool mIsComposingOnPlugin;
-  bool mNativeCaretIsCreated;
 
   static mozilla::WritingMode sWritingModeOfCompositionFont;
   static nsString sIMEName;
@@ -451,7 +450,6 @@ class IMMHandler final {
   static DWORD sIMEUIProperty;
   static bool sAssumeVerticalWritingModeNotSupported;
   static bool sHasFocus;
-  static bool sNativeCaretIsCreatedForPlugin;
 };
 
 }  // namespace widget
