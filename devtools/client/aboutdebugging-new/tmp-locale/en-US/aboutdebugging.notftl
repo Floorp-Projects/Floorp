@@ -44,7 +44,7 @@ about-debugging-refresh-usb-devices-button = Refresh devices
 about-debugging-connect-title = Connect a Device
 
 # WiFi section of the Connect page
-about-debugging-connect-wifi
+about-debugging-connect-wifi =
   .title = Via WiFi
 
 # Temporary text displayed when wifi support is turned off via preferences.
@@ -65,7 +65,7 @@ about-debugging-connect-wifi-step-open-options = Go to Options -> Settings -> Ad
 about-debugging-connect-wifi-step-enable-debug = Enable Remote Debugging via WiFi in the Developer Tools section
 
 # USB section of the Connect page
-about-debugging-connect-usb
+about-debugging-connect-usb =
   .title = Via USB
 
 about-debugging-connect-usb-disabled = Enabling this will download and add the required Android USB debugging components to Firefox.
@@ -83,7 +83,7 @@ about-debugging-connect-usb-step-enable-debug = Enable USB Debugging on the Andr
 about-debugging-connect-usb-step-plug-device = Connect the USB Device to your computer
 
 # Network section of the Connect page
-about-debugging-connect-network
+about-debugging-connect-network =
   .title = Via Network Location
 
 # Temporary text displayed when network location support is turned off via preferences.
@@ -165,7 +165,7 @@ about-debugging-network-locations-host-input-label = Host
 
 # Text of a button displayed next to existing network locations in the Connect page.
 # Clicking on it removes the network location from the list.
-about-debugging-network-locations-remove-button
+about-debugging-network-locations-remove-button = Remove
 
 # This string is displayed as a label of the button that pushes a test payload
 # to a service worker.
@@ -185,7 +185,7 @@ about-debugging-worker-fetch =
   .value =
     { $status ->
       [listening] Listening for fetch events
-      [not-listening] Not listening for fetch events
+     *[not-listening] Not listening for fetch events
     }
 
 # Displayed for service workers in runtime pages, to indicate the status of a worker.
@@ -194,7 +194,7 @@ about-debugging-worker-fetch =
 about-debugging-worker-status =
   { $status ->
     [running] Running
-    [stopped] Stopped
+   *[stopped] Stopped
     [registering] Registering
   }
 
