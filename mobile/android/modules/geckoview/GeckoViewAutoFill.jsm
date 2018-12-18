@@ -12,6 +12,7 @@ ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.jsm",
+  LoginManagerContent: "resource://gre/modules/LoginManagerContent.jsm",
 });
 
 GeckoViewUtils.initLogging("AutoFill", this);
@@ -78,7 +79,7 @@ class GeckoViewAutoFill {
 
     let sendFocusEvent = false;
     const window = aFormLike.rootElement.ownerGlobal;
-    const getInfo = (element, parent, root) => {
+    const getInfo = (element, parent, root, usernameField) => {
       let info = this._autoFillInfos.get(element);
       if (info) {
         return info;
@@ -99,17 +100,28 @@ class GeckoViewAutoFill {
             .filter(attr => attr.localName !== "value")
             .map(attr => ({[attr.localName]: attr.value}))),
         origin: element.ownerDocument.location.origin,
+        autofillhint: "",
       };
+
+      if (element === usernameField) {
+        info.autofillhint = "username"; // AUTOFILL_HINT_USERNAME
+      }
+
       this._autoFillInfos.set(element, info);
       this._autoFillElements.set(info.id, Cu.getWeakReference(element));
       sendFocusEvent |= (element === element.ownerDocument.activeElement);
       return info;
     };
 
-    const rootInfo = getInfo(aFormLike.rootElement, null, undefined);
+    let [usernameField] =
+      LoginManagerContent.getUserNameAndPasswordFields(aFormLike.elements[0]);
+
+    const rootInfo = getInfo(aFormLike.rootElement, null, undefined, null);
     rootInfo.root = rootInfo.id;
-    rootInfo.children = aFormLike.elements.map(
-        element => getInfo(element, rootInfo.id, rootInfo.id));
+    rootInfo.children = aFormLike.elements
+        .filter(element => (!usernameField || element.type != "text" ||
+                            element == usernameField))
+        .map(element => getInfo(element, rootInfo.id, rootInfo.id, usernameField));
 
     this._eventDispatcher.dispatch("GeckoView:AddAutoFill", rootInfo, {
       onSuccess: responses => {
