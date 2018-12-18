@@ -1280,7 +1280,7 @@ Toolbox.prototype = {
     if (currentPanel.togglePicker) {
       currentPanel.togglePicker(focus);
     } else {
-      this.highlighterUtils.togglePicker(focus);
+      this.inspector.nodePicker.togglePicker(focus);
     }
   },
 
