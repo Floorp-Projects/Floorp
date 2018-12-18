@@ -111,9 +111,13 @@ void XULListboxAccessible::Value(nsString& aValue) const {
     RefPtr<Element> element;
     select->GetSelectedItem(getter_AddRefs(element));
 
-    nsCOMPtr<nsIDOMXULSelectControlItemElement> selectedItem =
-        element->AsXULSelectControlItem();
-    if (selectedItem) selectedItem->GetLabel(aValue);
+    if (element) {
+      nsCOMPtr<nsIDOMXULSelectControlItemElement> selectedItem =
+          element->AsXULSelectControlItem();
+      if (selectedItem) {
+        selectedItem->GetLabel(aValue);
+      }
+    }
   }
 }
 
@@ -176,6 +180,9 @@ bool XULListboxAccessible::IsRowSelected(uint32_t aRowIdx) {
   RefPtr<Element> element;
   nsresult rv = control->GetItemAtIndex(aRowIdx, getter_AddRefs(element));
   NS_ENSURE_SUCCESS(rv, false);
+  if (!element) {
+    return false;
+  }
 
   nsCOMPtr<nsIDOMXULSelectControlItemElement> item =
       element->AsXULSelectControlItem();
@@ -337,6 +344,9 @@ void XULListboxAccessible::SelectRow(uint32_t aRowIdx) {
 
   RefPtr<Element> item;
   control->GetItemAtIndex(aRowIdx, getter_AddRefs(item));
+  if (!item) {
+    return;
+  }
 
   nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm =
       item->AsXULSelectControlItem();
@@ -351,6 +361,9 @@ void XULListboxAccessible::UnselectRow(uint32_t aRowIdx) {
 
   RefPtr<Element> item;
   control->GetItemAtIndex(aRowIdx, getter_AddRefs(item));
+  if (!item) {
+    return;
+  }
 
   nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm =
       item->AsXULSelectControlItem();
