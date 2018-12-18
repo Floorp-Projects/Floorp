@@ -53,156 +53,156 @@ class BigIntBox;
 #endif
 
 #define FOR_EACH_PARSE_NODE_KIND(F)                                          \
-  F(EmptyStmt, PN_NULLARY)                                                   \
-  F(ExpressionStmt, PN_UNARY)                                                \
-  F(CommaExpr, PN_LIST)                                                      \
-  F(ConditionalExpr, PN_TERNARY)                                             \
-  F(Colon, PN_BINARY)                                                        \
-  F(Shorthand, PN_BINARY)                                                    \
-  F(PosExpr, PN_UNARY)                                                       \
-  F(NegExpr, PN_UNARY)                                                       \
-  F(PreIncrementExpr, PN_UNARY)                                              \
-  F(PostIncrementExpr, PN_UNARY)                                             \
-  F(PreDecrementExpr, PN_UNARY)                                              \
-  F(PostDecrementExpr, PN_UNARY)                                             \
-  F(PropertyNameExpr, PN_NAME)                                               \
-  F(DotExpr, PN_BINARY)                                                      \
-  F(ElemExpr, PN_BINARY)                                                     \
-  F(ArrayExpr, PN_LIST)                                                      \
-  F(Elision, PN_NULLARY)                                                     \
-  F(StatementList, PN_LIST)                                                  \
-  F(LabelStmt, PN_NAME)                                                      \
-  F(ObjectExpr, PN_LIST)                                                     \
-  F(CallExpr, PN_BINARY)                                                     \
-  F(Arguments, PN_LIST)                                                      \
-  F(Name, PN_NAME)                                                           \
-  F(ObjectPropertyName, PN_NAME)                                             \
-  F(PrivateName, PN_NAME)                                                    \
-  F(ComputedName, PN_UNARY)                                                  \
-  F(NumberExpr, PN_NUMBER)                                                   \
-  IF_BIGINT(F(BigIntExpr, PN_BIGINT), /**/)                                  \
-  F(StringExpr, PN_NAME)                                                     \
-  F(TemplateStringListExpr, PN_LIST)                                         \
-  F(TemplateStringExpr, PN_NAME)                                             \
-  F(TaggedTemplateExpr, PN_BINARY)                                           \
-  F(CallSiteObjExpr, PN_LIST)                                                \
-  F(RegExpExpr, PN_REGEXP)                                                   \
-  F(TrueExpr, PN_NULLARY)                                                    \
-  F(FalseExpr, PN_NULLARY)                                                   \
-  F(NullExpr, PN_NULLARY)                                                    \
-  F(RawUndefinedExpr, PN_NULLARY)                                            \
-  F(ThisExpr, PN_UNARY)                                                      \
-  F(Function, PN_CODE)                                                       \
-  F(Module, PN_CODE)                                                         \
-  F(IfStmt, PN_TERNARY)                                                      \
-  F(SwitchStmt, PN_BINARY)                                                   \
-  F(Case, PN_BINARY)                                                         \
-  F(WhileStmt, PN_BINARY)                                                    \
-  F(DoWhileStmt, PN_BINARY)                                                  \
-  F(ForStmt, PN_BINARY)                                                      \
-  F(BreakStmt, PN_LOOP)                                                      \
-  F(ContinueStmt, PN_LOOP)                                                   \
-  F(VarStmt, PN_LIST)                                                        \
-  F(ConstDecl, PN_LIST)                                                      \
-  F(WithStmt, PN_BINARY)                                                     \
-  F(ReturnStmt, PN_UNARY)                                                    \
-  F(NewExpr, PN_BINARY)                                                      \
+  F(EmptyStmt, NullaryNode)                                                  \
+  F(ExpressionStmt, UnaryNode)                                               \
+  F(CommaExpr, ListNode)                                                     \
+  F(ConditionalExpr, ConditionalExpression)                                  \
+  F(Colon, BinaryNode)                                                       \
+  F(Shorthand, BinaryNode)                                                   \
+  F(PosExpr, UnaryNode)                                                      \
+  F(NegExpr, UnaryNode)                                                      \
+  F(PreIncrementExpr, UnaryNode)                                             \
+  F(PostIncrementExpr, UnaryNode)                                            \
+  F(PreDecrementExpr, UnaryNode)                                             \
+  F(PostDecrementExpr, UnaryNode)                                            \
+  F(PropertyNameExpr, NameNode)                                              \
+  F(DotExpr, PropertyAccess)                                                 \
+  F(ElemExpr, PropertyByValue)                                               \
+  F(ArrayExpr, ListNode)                                                     \
+  F(Elision, NullaryNode)                                                    \
+  F(StatementList, ListNode)                                                 \
+  F(LabelStmt, LabeledStatement)                                             \
+  F(ObjectExpr, ListNode)                                                    \
+  F(CallExpr, BinaryNode)                                                    \
+  F(Arguments, ListNode)                                                     \
+  F(Name, NameNode)                                                          \
+  F(ObjectPropertyName, NameNode)                                            \
+  F(PrivateName, NameNode)                                                   \
+  F(ComputedName, UnaryNode)                                                 \
+  F(NumberExpr, NumericLiteral)                                              \
+  IF_BIGINT(F(BigIntExpr, BigIntLiteral), /**/)                              \
+  F(StringExpr, NameNode)                                                    \
+  F(TemplateStringListExpr, ListNode)                                        \
+  F(TemplateStringExpr, NameNode)                                            \
+  F(TaggedTemplateExpr, BinaryNode)                                          \
+  F(CallSiteObjExpr, CallSiteNode)                                           \
+  F(RegExpExpr, RegExpLiteral)                                               \
+  F(TrueExpr, BooleanLiteral)                                                \
+  F(FalseExpr, BooleanLiteral)                                               \
+  F(NullExpr, NullLiteral)                                                   \
+  F(RawUndefinedExpr, RawUndefinedLiteral)                                   \
+  F(ThisExpr, UnaryNode)                                                     \
+  F(Function, CodeNode)                                                      \
+  F(Module, CodeNode)                                                        \
+  F(IfStmt, TernaryNode)                                                     \
+  F(SwitchStmt, SwitchStatement)                                             \
+  F(Case, CaseClause)                                                        \
+  F(WhileStmt, BinaryNode)                                                   \
+  F(DoWhileStmt, BinaryNode)                                                 \
+  F(ForStmt, ForNode)                                                        \
+  F(BreakStmt, BreakStatement)                                               \
+  F(ContinueStmt, ContinueStatement)                                         \
+  F(VarStmt, ListNode)                                                       \
+  F(ConstDecl, ListNode)                                                     \
+  F(WithStmt, BinaryNode)                                                    \
+  F(ReturnStmt, UnaryNode)                                                   \
+  F(NewExpr, BinaryNode)                                                     \
   /* Delete operations.  These must be sequential. */                        \
-  F(DeleteNameExpr, PN_UNARY)                                                \
-  F(DeletePropExpr, PN_UNARY)                                                \
-  F(DeleteElemExpr, PN_UNARY)                                                \
-  F(DeleteExpr, PN_UNARY)                                                    \
-  F(TryStmt, PN_TERNARY)                                                     \
-  F(Catch, PN_BINARY)                                                        \
-  F(ThrowStmt, PN_UNARY)                                                     \
-  F(DebuggerStmt, PN_NULLARY)                                                \
-  F(Generator, PN_NULLARY)                                                   \
-  F(InitialYield, PN_UNARY)                                                  \
-  F(YieldExpr, PN_UNARY)                                                     \
-  F(YieldStarExpr, PN_UNARY)                                                 \
-  F(LexicalScope, PN_SCOPE)                                                  \
-  F(LetDecl, PN_LIST)                                                        \
-  F(ImportDecl, PN_BINARY)                                                   \
-  F(ImportSpecList, PN_LIST)                                                 \
-  F(ImportSpec, PN_BINARY)                                                   \
-  F(ExportStmt, PN_UNARY)                                                    \
-  F(ExportFromStmt, PN_BINARY)                                               \
-  F(ExportDefaultStmt, PN_BINARY)                                            \
-  F(ExportSpecList, PN_LIST)                                                 \
-  F(ExportSpec, PN_BINARY)                                                   \
-  F(ExportBatchSpecStmt, PN_NULLARY)                                         \
-  F(ForIn, PN_TERNARY)                                                       \
-  F(ForOf, PN_TERNARY)                                                       \
-  F(ForHead, PN_TERNARY)                                                     \
-  F(ParamsBody, PN_LIST)                                                     \
-  F(Spread, PN_UNARY)                                                        \
-  F(MutateProto, PN_UNARY)                                                   \
-  F(ClassDecl, PN_TERNARY)                                                   \
-  F(ClassMethod, PN_BINARY)                                                  \
-  F(ClassField, PN_FIELD)                                                    \
-  F(ClassMemberList, PN_LIST)                                                \
-  F(ClassNames, PN_BINARY)                                                   \
-  F(NewTargetExpr, PN_BINARY)                                                \
-  F(PosHolder, PN_NULLARY)                                                   \
-  F(SuperBase, PN_UNARY)                                                     \
-  F(SuperCallExpr, PN_BINARY)                                                \
-  F(SetThis, PN_BINARY)                                                      \
-  F(ImportMetaExpr, PN_BINARY)                                               \
-  F(CallImportExpr, PN_BINARY)                                               \
+  F(DeleteNameExpr, UnaryNode)                                               \
+  F(DeletePropExpr, UnaryNode)                                               \
+  F(DeleteElemExpr, UnaryNode)                                               \
+  F(DeleteExpr, UnaryNode)                                                   \
+  F(TryStmt, TernaryNode)                                                    \
+  F(Catch, BinaryNode)                                                       \
+  F(ThrowStmt, UnaryNode)                                                    \
+  F(DebuggerStmt, DebuggerStatement)                                         \
+  F(Generator, NullaryNode)                                                  \
+  F(InitialYield, UnaryNode)                                                 \
+  F(YieldExpr, UnaryNode)                                                    \
+  F(YieldStarExpr, UnaryNode)                                                \
+  F(LexicalScope, LexicalScopeNode)                                          \
+  F(LetDecl, ListNode)                                                       \
+  F(ImportDecl, BinaryNode)                                                  \
+  F(ImportSpecList, ListNode)                                                \
+  F(ImportSpec, BinaryNode)                                                  \
+  F(ExportStmt, UnaryNode)                                                   \
+  F(ExportFromStmt, BinaryNode)                                              \
+  F(ExportDefaultStmt, BinaryNode)                                           \
+  F(ExportSpecList, ListNode)                                                \
+  F(ExportSpec, BinaryNode)                                                  \
+  F(ExportBatchSpecStmt, NullaryNode)                                        \
+  F(ForIn, TernaryNode)                                                      \
+  F(ForOf, TernaryNode)                                                      \
+  F(ForHead, TernaryNode)                                                    \
+  F(ParamsBody, ListNode)                                                    \
+  F(Spread, UnaryNode)                                                       \
+  F(MutateProto, UnaryNode)                                                  \
+  F(ClassDecl, ClassNode)                                                    \
+  F(ClassMethod, ClassMethod)                                                \
+  F(ClassField, ClassField)                                                  \
+  F(ClassMemberList, ListNode)                                               \
+  F(ClassNames, ClassNames)                                                  \
+  F(NewTargetExpr, BinaryNode)                                               \
+  F(PosHolder, NullaryNode)                                                  \
+  F(SuperBase, UnaryNode)                                                    \
+  F(SuperCallExpr, BinaryNode)                                               \
+  F(SetThis, BinaryNode)                                                     \
+  F(ImportMetaExpr, BinaryNode)                                              \
+  F(CallImportExpr, BinaryNode)                                              \
                                                                              \
   /* Unary operators. */                                                     \
-  F(TypeOfNameExpr, PN_UNARY)                                                \
-  F(TypeOfExpr, PN_UNARY)                                                    \
-  F(VoidExpr, PN_UNARY)                                                      \
-  F(NotExpr, PN_UNARY)                                                       \
-  F(BitNotExpr, PN_UNARY)                                                    \
-  F(AwaitExpr, PN_UNARY)                                                     \
+  F(TypeOfNameExpr, UnaryNode)                                               \
+  F(TypeOfExpr, UnaryNode)                                                   \
+  F(VoidExpr, UnaryNode)                                                     \
+  F(NotExpr, UnaryNode)                                                      \
+  F(BitNotExpr, UnaryNode)                                                   \
+  F(AwaitExpr, UnaryNode)                                                    \
                                                                              \
   /*                                                                         \
    * Binary operators.                                                       \
    * These must be in the same order as TOK_OR and friends in TokenStream.h. \
    */                                                                        \
-  F(PipelineExpr, PN_LIST)                                                   \
-  F(OrExpr, PN_LIST)                                                         \
-  F(AndExpr, PN_LIST)                                                        \
-  F(BitOrExpr, PN_LIST)                                                      \
-  F(BitXorExpr, PN_LIST)                                                     \
-  F(BitAndExpr, PN_LIST)                                                     \
-  F(StrictEqExpr, PN_LIST)                                                   \
-  F(EqExpr, PN_LIST)                                                         \
-  F(StrictNeExpr, PN_LIST)                                                   \
-  F(NeExpr, PN_LIST)                                                         \
-  F(LtExpr, PN_LIST)                                                         \
-  F(LeExpr, PN_LIST)                                                         \
-  F(GtExpr, PN_LIST)                                                         \
-  F(GeExpr, PN_LIST)                                                         \
-  F(InstanceOfExpr, PN_LIST)                                                 \
-  F(InExpr, PN_LIST)                                                         \
-  F(LshExpr, PN_LIST)                                                        \
-  F(RshExpr, PN_LIST)                                                        \
-  F(UrshExpr, PN_LIST)                                                       \
-  F(AddExpr, PN_LIST)                                                        \
-  F(SubExpr, PN_LIST)                                                        \
-  F(MulExpr, PN_LIST)                                                        \
-  F(DivExpr, PN_LIST)                                                        \
-  F(ModExpr, PN_LIST)                                                        \
-  F(PowExpr, PN_LIST)                                                        \
+  F(PipelineExpr, ListNode)                                                  \
+  F(OrExpr, ListNode)                                                        \
+  F(AndExpr, ListNode)                                                       \
+  F(BitOrExpr, ListNode)                                                     \
+  F(BitXorExpr, ListNode)                                                    \
+  F(BitAndExpr, ListNode)                                                    \
+  F(StrictEqExpr, ListNode)                                                  \
+  F(EqExpr, ListNode)                                                        \
+  F(StrictNeExpr, ListNode)                                                  \
+  F(NeExpr, ListNode)                                                        \
+  F(LtExpr, ListNode)                                                        \
+  F(LeExpr, ListNode)                                                        \
+  F(GtExpr, ListNode)                                                        \
+  F(GeExpr, ListNode)                                                        \
+  F(InstanceOfExpr, ListNode)                                                \
+  F(InExpr, ListNode)                                                        \
+  F(LshExpr, ListNode)                                                       \
+  F(RshExpr, ListNode)                                                       \
+  F(UrshExpr, ListNode)                                                      \
+  F(AddExpr, ListNode)                                                       \
+  F(SubExpr, ListNode)                                                       \
+  F(MulExpr, ListNode)                                                       \
+  F(DivExpr, ListNode)                                                       \
+  F(ModExpr, ListNode)                                                       \
+  F(PowExpr, ListNode)                                                       \
                                                                              \
   /* Assignment operators (= += -= etc.). */                                 \
   /* ParseNode::isAssignment assumes all these are consecutive. */           \
-  F(AssignExpr, PN_BINARY)                                                   \
-  F(AddAssignExpr, PN_BINARY)                                                \
-  F(SubAssignExpr, PN_BINARY)                                                \
-  F(BitOrAssignExpr, PN_BINARY)                                              \
-  F(BitXorAssignExpr, PN_BINARY)                                             \
-  F(BitAndAssignExpr, PN_BINARY)                                             \
-  F(LshAssignExpr, PN_BINARY)                                                \
-  F(RshAssignExpr, PN_BINARY)                                                \
-  F(UrshAssignExpr, PN_BINARY)                                               \
-  F(MulAssignExpr, PN_BINARY)                                                \
-  F(DivAssignExpr, PN_BINARY)                                                \
-  F(ModAssignExpr, PN_BINARY)                                                \
-  F(PowAssignExpr, PN_BINARY)
+  F(AssignExpr, AssignmentNode)                                              \
+  F(AddAssignExpr, AssignmentNode)                                           \
+  F(SubAssignExpr, AssignmentNode)                                           \
+  F(BitOrAssignExpr, AssignmentNode)                                         \
+  F(BitXorAssignExpr, AssignmentNode)                                        \
+  F(BitAndAssignExpr, AssignmentNode)                                        \
+  F(LshAssignExpr, AssignmentNode)                                           \
+  F(RshAssignExpr, AssignmentNode)                                           \
+  F(UrshAssignExpr, AssignmentNode)                                          \
+  F(MulAssignExpr, AssignmentNode)                                           \
+  F(DivAssignExpr, AssignmentNode)                                           \
+  F(ModAssignExpr, AssignmentNode)                                           \
+  F(PowAssignExpr, AssignmentNode)
 
 /*
  * Parsing builds a tree of nodes that directs code generation.  This tree is
@@ -215,7 +215,7 @@ class BigIntBox;
  * The long comment after this enum block describes the kinds in detail.
  */
 enum class ParseNodeKind : uint16_t {
-#define EMIT_ENUM(name, _arity) name,
+#define EMIT_ENUM(name, _type) name,
   FOR_EACH_PARSE_NODE_KIND(EMIT_ENUM)
 #undef EMIT_ENUM
       Limit, /* domain size */
@@ -852,6 +852,13 @@ class NullaryNode : public ParseNode {
 
   static bool test(const ParseNode& node) { return node.isArity(PN_NULLARY); }
 
+  static constexpr ParseNodeArity arity() { return PN_NULLARY; }
+
+  template <typename Visitor>
+  bool accept(Visitor& visitor) {
+    return true;
+  }
+
 #ifdef DEBUG
   void dump(GenericPrinter& out);
 #endif
@@ -877,6 +884,18 @@ class NameNode : public ParseNode {
 
   static bool test(const ParseNode& node) { return node.isArity(PN_NAME); }
 
+  static constexpr ParseNodeArity arity() { return PN_NAME; }
+
+  template <typename Visitor>
+  bool accept(Visitor& visitor) {
+    if (pn_u.name.initOrStmt) {
+      if (!visitor.visit(pn_u.name.initOrStmt)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
 #ifdef DEBUG
   void dump(GenericPrinter& out, int indent);
 #endif
@@ -893,9 +912,6 @@ class NameNode : public ParseNode {
   void setAtom(JSAtom* atom) { pn_u.name.atom = atom; }
 
   void setInitializer(ParseNode* init) { pn_u.name.initOrStmt = init; }
-
-  // Methods used by FoldConstants.cpp.
-  ParseNode** unsafeInitializerReference() { return &pn_u.name.initOrStmt; }
 };
 
 inline bool ParseNode::isName(PropertyName* name) const {
@@ -911,6 +927,18 @@ class UnaryNode : public ParseNode {
   }
 
   static bool test(const ParseNode& node) { return node.isArity(PN_UNARY); }
+
+  static constexpr ParseNodeArity arity() { return PN_UNARY; }
+
+  template <typename Visitor>
+  bool accept(Visitor& visitor) {
+    if (pn_u.unary.kid) {
+      if (!visitor.visit(pn_u.unary.kid)) {
+        return false;
+      }
+    }
+    return true;
+  }
 
 #ifdef DEBUG
   void dump(GenericPrinter& out, int indent);
@@ -968,6 +996,23 @@ class BinaryNode : public ParseNode {
   }
 
   static bool test(const ParseNode& node) { return node.isArity(PN_BINARY); }
+
+  static constexpr ParseNodeArity arity() { return PN_BINARY; }
+
+  template <typename Visitor>
+  bool accept(Visitor& visitor) {
+    if (pn_u.binary.left) {
+      if (!visitor.visit(pn_u.binary.left)) {
+        return false;
+      }
+    }
+    if (pn_u.binary.right) {
+      if (!visitor.visit(pn_u.binary.right)) {
+        return false;
+      }
+    }
+    return true;
+  }
 
 #ifdef DEBUG
   void dump(GenericPrinter& out, int indent);
@@ -1043,6 +1088,28 @@ class TernaryNode : public ParseNode {
   }
 
   static bool test(const ParseNode& node) { return node.isArity(PN_TERNARY); }
+
+  static constexpr ParseNodeArity arity() { return PN_TERNARY; }
+
+  template <typename Visitor>
+  bool accept(Visitor& visitor) {
+    if (pn_u.ternary.kid1) {
+      if (!visitor.visit(pn_u.ternary.kid1)) {
+        return false;
+      }
+    }
+    if (pn_u.ternary.kid2) {
+      if (!visitor.visit(pn_u.ternary.kid2)) {
+        return false;
+      }
+    }
+    if (pn_u.ternary.kid3) {
+      if (!visitor.visit(pn_u.ternary.kid3)) {
+        return false;
+      }
+    }
+    return true;
+  }
 
 #ifdef DEBUG
   void dump(GenericPrinter& out, int indent);
@@ -1122,6 +1189,26 @@ class ListNode : public ParseNode {
   }
 
   static bool test(const ParseNode& node) { return node.isArity(PN_LIST); }
+
+  static constexpr ParseNodeArity arity() { return PN_LIST; }
+
+  template <typename Visitor>
+  bool accept(Visitor& visitor) {
+    ParseNode** listp = &pn_u.list.head;
+    for (; *listp; listp = &(*listp)->pn_next) {
+      // Don't use PN*& because we want to check if it changed, so we can use
+      // ReplaceNode
+      ParseNode* pn = *listp;
+      if (!visitor.visit(pn)) {
+        return false;
+      }
+      if (pn != *listp) {
+        ReplaceNode(listp, pn);
+      }
+    }
+    unsafeReplaceTail(listp);
+    return true;
+  }
 
 #ifdef DEBUG
   void dump(GenericPrinter& out, int indent);
@@ -1379,6 +1466,19 @@ class CodeNode : public ParseNode {
     return match;
   }
 
+  static constexpr ParseNodeArity arity() { return PN_CODE; }
+
+  template <typename Visitor>
+  bool accept(Visitor& visitor) {
+    // Note: body is null for lazily-parsed functions.
+    if (pn_u.code.body) {
+      if (!visitor.visit(pn_u.code.body)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
 #ifdef DEBUG
   void dump(GenericPrinter& out, int indent);
 #endif
@@ -1392,9 +1492,6 @@ class CodeNode : public ParseNode {
   void setFunbox(FunctionBox* funbox) { pn_u.code.funbox = funbox; }
 
   void setBody(ListNode* body) { pn_u.code.body = body; }
-
-  // Methods used by FoldConstants.cpp.
-  ParseNode** unsafeBodyReference() { return &pn_u.code.body; }
 
   bool functionIsHoisted() const {
     MOZ_ASSERT(isKind(ParseNodeKind::Function));
@@ -1424,6 +1521,13 @@ class NumericLiteral : public ParseNode {
     return match;
   }
 
+  static constexpr ParseNodeArity arity() { return PN_NUMBER; }
+
+  template <typename Visitor>
+  bool accept(Visitor& visitor) {
+    return true;
+  }
+
 #ifdef DEBUG
   void dump(GenericPrinter& out, int indent);
 #endif
@@ -1451,6 +1555,13 @@ class BigIntLiteral : public ParseNode {
     return match;
   }
 
+  static constexpr ParseNodeArity arity() { return PN_BIGINT; }
+
+  template <typename Visitor>
+  bool accept(Visitor& visitor) {
+    return true;
+  }
+
 #ifdef DEBUG
   void dump(GenericPrinter& out, int indent);
 #endif
@@ -1473,6 +1584,13 @@ class LexicalScopeNode : public ParseNode {
     return match;
   }
 
+  static constexpr ParseNodeArity arity() { return PN_SCOPE; }
+
+  template <typename Visitor>
+  bool accept(Visitor& visitor) {
+    return visitor.visit(pn_u.scope.body);
+  }
+
 #ifdef DEBUG
   void dump(GenericPrinter& out, int indent);
 #endif
@@ -1490,8 +1608,6 @@ class LexicalScopeNode : public ParseNode {
   void setScopeBody(ParseNode* body) { pn_u.scope.body = body; }
 
   bool isEmptyScope() const { return !pn_u.scope.bindings; }
-
-  ParseNode** unsafeScopeBodyReference() { return &pn_u.scope.body; }
 };
 
 class LabeledStatement : public NameNode {
@@ -1509,11 +1625,6 @@ class LabeledStatement : public NameNode {
     MOZ_ASSERT_IF(match, node.isArity(PN_NAME));
     MOZ_ASSERT_IF(match, node.isOp(JSOP_NOP));
     return match;
-  }
-
-  // Methods used by FoldConstants.cpp.
-  ParseNode** unsafeStatementReference() {
-    return unsafeInitializerReference();
   }
 };
 
@@ -1565,6 +1676,13 @@ class LoopControlStatement : public ParseNode {
     MOZ_ASSERT_IF(match, node.isArity(PN_LOOP));
     MOZ_ASSERT_IF(match, node.isOp(JSOP_NOP));
     return match;
+  }
+
+  static constexpr ParseNodeArity arity() { return PN_LOOP; }
+
+  template <typename Visitor>
+  bool accept(Visitor& visitor) {
+    return true;
   }
 };
 
@@ -1731,6 +1849,13 @@ class RegExpLiteral : public ParseNode {
     MOZ_ASSERT_IF(match, node.isOp(JSOP_REGEXP));
     return match;
   }
+
+  static constexpr ParseNodeArity arity() { return PN_REGEXP; }
+
+  template <typename Visitor>
+  bool accept(Visitor& visitor) {
+    return true;
+  }
 };
 
 class PropertyAccess : public BinaryNode {
@@ -1857,7 +1982,24 @@ class ClassField : public ParseNode {
   }
 
   static bool test(const ParseNode& node) {
-    return node.isKind(ParseNodeKind::ClassField);
+    bool match = node.isKind(ParseNodeKind::ClassField);
+    MOZ_ASSERT_IF(match, node.isArity(PN_FIELD));
+    return match;
+  }
+
+  static constexpr ParseNodeArity arity() { return PN_FIELD; }
+
+  template <typename Visitor>
+  bool accept(Visitor& visitor) {
+    if (!visitor.visit(pn_u.field.name)) {
+      return false;
+    }
+    if (pn_u.field.initializer) {
+      if (!visitor.visit(pn_u.field.initializer)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   ParseNode& name() const { return *pn_u.field.name; }
@@ -1869,12 +2011,6 @@ class ClassField : public ParseNode {
 #ifdef DEBUG
   void dump(GenericPrinter& out, int indent);
 #endif
-
-  // Methods used by FoldConstants.cpp.
-  // callers are responsible for keeping the list consistent.
-  ParseNode** unsafeNameReference() { return &pn_u.field.name; }
-
-  ParseNode** unsafeInitializerReference() { return &pn_u.field.initializer; }
 };
 
 class SwitchStatement : public BinaryNode {
