@@ -794,7 +794,7 @@ nsresult nsHttpChannelAuthProvider::GetCredentialsForChallenge(
 
       // Collect statistics on how frequently the various types of HTTP
       // authentication are used over SSL and non-SSL connections.
-      if (gHttpHandler->IsTelemetryEnabled()) {
+      if (Telemetry::CanRecordPrereleaseData()) {
         if (NS_LITERAL_CSTRING("basic").LowerCaseEqualsASCII(authType)) {
           Telemetry::Accumulate(
               Telemetry::HTTP_AUTH_TYPE_STATS,
@@ -943,7 +943,7 @@ bool nsHttpChannelAuthProvider::BlockPrompt(bool proxyAuth) {
     }
   }
 
-  if (gHttpHandler->IsTelemetryEnabled()) {
+  if (Telemetry::CanRecordPrereleaseData()) {
     if (topDoc) {
       Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS_3,
                             HTTP_AUTH_DIALOG_TOP_LEVEL_DOC);
