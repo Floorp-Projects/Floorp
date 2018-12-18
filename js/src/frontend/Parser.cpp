@@ -2792,7 +2792,7 @@ GeneralParser<ParseHandler, Unit>::templateLiteral(
   }
 
   ListNodeType nodeList =
-      handler.newList(ParseNodeKind::TemplateStringListExpr, literal);
+      handler.newList(ParseNodeKind::TemplateStringList, literal);
   if (!nodeList) {
     return null();
   }
@@ -3929,7 +3929,7 @@ GeneralParser<ParseHandler, Unit>::bindingInitializer(
   }
 
   BinaryNodeType assign =
-      handler.newAssignment(ParseNodeKind::AssignExpr, lhs, rhs);
+      handler.newAssignment(ParseNodeKind::Assign, lhs, rhs);
   if (!assign) {
     return null();
   }
@@ -4370,7 +4370,7 @@ GeneralParser<ParseHandler, Unit>::declarationPattern(
     return null();
   }
 
-  return handler.newAssignment(ParseNodeKind::AssignExpr, pattern, init);
+  return handler.newAssignment(ParseNodeKind::Assign, pattern, init);
 }
 
 template <class ParseHandler, typename Unit>
@@ -4532,18 +4532,18 @@ GeneralParser<ParseHandler, Unit>::declarationList(
     YieldHandling yieldHandling, ParseNodeKind kind,
     ParseNodeKind* forHeadKind /* = nullptr */,
     Node* forInOrOfExpression /* = nullptr */) {
-  MOZ_ASSERT(kind == ParseNodeKind::VarStmt || kind == ParseNodeKind::LetDecl ||
-             kind == ParseNodeKind::ConstDecl);
+  MOZ_ASSERT(kind == ParseNodeKind::Var || kind == ParseNodeKind::Let ||
+             kind == ParseNodeKind::Const);
 
   DeclarationKind declKind;
   switch (kind) {
-    case ParseNodeKind::VarStmt:
+    case ParseNodeKind::Var:
       declKind = DeclarationKind::Var;
       break;
-    case ParseNodeKind::ConstDecl:
+    case ParseNodeKind::Const:
       declKind = DeclarationKind::Const;
       break;
-    case ParseNodeKind::LetDecl:
+    case ParseNodeKind::Let:
       declKind = DeclarationKind::Let;
       break;
     default:
@@ -4614,8 +4614,8 @@ GeneralParser<ParseHandler, Unit>::lexicalDeclaration(
    * See 8.1.1.1.6 and the note in 13.2.1.
    */
   ListNodeType decl = declarationList(
-      yieldHandling, kind == DeclarationKind::Const ? ParseNodeKind::ConstDecl
-                                                    : ParseNodeKind::LetDecl);
+      yieldHandling, kind == DeclarationKind::Const ? ParseNodeKind::Const
+                                                    : ParseNodeKind::Let);
   if (!decl || !matchOrInsertSemicolon()) {
     return null();
   }
@@ -4937,7 +4937,7 @@ inline bool GeneralParser<ParseHandler, Unit>::checkExportedName(
 template <typename Unit>
 bool Parser<FullParseHandler, Unit>::checkExportedNamesForArrayBinding(
     ListNode* array) {
-  MOZ_ASSERT(array->isKind(ParseNodeKind::ArrayExpr));
+  MOZ_ASSERT(array->isKind(ParseNodeKind::Array));
 
   for (ParseNode* node : array->contents()) {
     if (node->isKind(ParseNodeKind::Elision)) {
@@ -4947,7 +4947,7 @@ bool Parser<FullParseHandler, Unit>::checkExportedNamesForArrayBinding(
     ParseNode* binding;
     if (node->isKind(ParseNodeKind::Spread)) {
       binding = node->as<UnaryNode>().kid();
-    } else if (node->isKind(ParseNodeKind::AssignExpr)) {
+    } else if (node->isKind(ParseNodeKind::Assign)) {
       binding = node->as<AssignmentNode>().left();
     } else {
       binding = node;
@@ -4978,7 +4978,7 @@ GeneralParser<ParseHandler, Unit>::checkExportedNamesForArrayBinding(
 template <typename Unit>
 bool Parser<FullParseHandler, Unit>::checkExportedNamesForObjectBinding(
     ListNode* obj) {
-  MOZ_ASSERT(obj->isKind(ParseNodeKind::ObjectExpr));
+  MOZ_ASSERT(obj->isKind(ParseNodeKind::Object));
 
   for (ParseNode* node : obj->contents()) {
     MOZ_ASSERT(node->isKind(ParseNodeKind::MutateProto) ||
@@ -4996,7 +4996,7 @@ bool Parser<FullParseHandler, Unit>::checkExportedNamesForObjectBinding(
         target = node->as<BinaryNode>().right();
       }
 
-      if (target->isKind(ParseNodeKind::AssignExpr)) {
+      if (target->isKind(ParseNodeKind::Assign)) {
         target = target->as<AssignmentNode>().left();
       }
     }
@@ -5030,12 +5030,12 @@ bool Parser<FullParseHandler, Unit>::checkExportedNamesForDeclaration(
     if (!checkExportedName(node->as<NameNode>().atom())) {
       return false;
     }
-  } else if (node->isKind(ParseNodeKind::ArrayExpr)) {
+  } else if (node->isKind(ParseNodeKind::Array)) {
     if (!checkExportedNamesForArrayBinding(&node->as<ListNode>())) {
       return false;
     }
   } else {
-    MOZ_ASSERT(node->isKind(ParseNodeKind::ObjectExpr));
+    MOZ_ASSERT(node->isKind(ParseNodeKind::Object));
     if (!checkExportedNamesForObjectBinding(&node->as<ListNode>())) {
       return false;
     }
@@ -5061,7 +5061,7 @@ template <typename Unit>
 bool Parser<FullParseHandler, Unit>::checkExportedNamesForDeclarationList(
     ListNode* node) {
   for (ParseNode* binding : node->contents()) {
-    if (binding->isKind(ParseNodeKind::AssignExpr)) {
+    if (binding->isKind(ParseNodeKind::Assign)) {
       binding = binding->as<AssignmentNode>().left();
     } else {
       MOZ_ASSERT(binding->isKind(ParseNodeKind::Name));
@@ -5402,7 +5402,7 @@ GeneralParser<ParseHandler, Unit>::exportVariableStatement(uint32_t begin) {
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Var));
 
-  ListNodeType kid = declarationList(YieldIsName, ParseNodeKind::VarStmt);
+  ListNodeType kid = declarationList(YieldIsName, ParseNodeKind::Var);
   if (!kid) {
     return null();
   }
@@ -5982,7 +5982,7 @@ bool GeneralParser<ParseHandler, Unit>::forHeadStart(
     tokenStream.consumeKnownToken(tt, TokenStream::Operand);
 
     // Pass null for block object because |var| declarations don't use one.
-    *forInitialPart = declarationList(yieldHandling, ParseNodeKind::VarStmt,
+    *forInitialPart = declarationList(yieldHandling, ParseNodeKind::Var,
                                       forHeadKind, forInOrOfExpression);
     return *forInitialPart != null();
   }
@@ -6027,11 +6027,10 @@ bool GeneralParser<ParseHandler, Unit>::forHeadStart(
     // statements.
     ParseContext::Statement forHeadStmt(pc, StatementKind::ForLoopLexicalHead);
 
-    *forInitialPart =
-        declarationList(yieldHandling,
-                        tt == TokenKind::Const ? ParseNodeKind::ConstDecl
-                                               : ParseNodeKind::LetDecl,
-                        forHeadKind, forInOrOfExpression);
+    *forInitialPart = declarationList(
+        yieldHandling,
+        tt == TokenKind::Const ? ParseNodeKind::Const : ParseNodeKind::Let,
+        forHeadKind, forInOrOfExpression);
     return *forInitialPart != null();
   }
 
@@ -6566,7 +6565,7 @@ GeneralParser<ParseHandler, Unit>::yieldExpression(InHandling inHandling) {
   pc->lastYieldOffset = begin;
 
   Node exprNode;
-  ParseNodeKind kind = ParseNodeKind::YieldExpr;
+  ParseNodeKind kind = ParseNodeKind::Yield;
   TokenKind tt = TokenKind::Eof;
   if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand)) {
     return null();
@@ -6592,7 +6591,7 @@ GeneralParser<ParseHandler, Unit>::yieldExpression(InHandling inHandling) {
       anyChars.addModifierException(TokenStream::NoneIsOperand);
       break;
     case TokenKind::Mul:
-      kind = ParseNodeKind::YieldStarExpr;
+      kind = ParseNodeKind::YieldStar;
       tokenStream.consumeKnownToken(TokenKind::Mul, TokenStream::Operand);
       MOZ_FALLTHROUGH;
     default:
@@ -6601,7 +6600,7 @@ GeneralParser<ParseHandler, Unit>::yieldExpression(InHandling inHandling) {
         return null();
       }
   }
-  if (kind == ParseNodeKind::YieldStarExpr) {
+  if (kind == ParseNodeKind::YieldStar) {
     return handler.newYieldStarExpression(begin, exprNode);
   }
   return handler.newYieldExpression(begin, exprNode);
@@ -7345,7 +7344,7 @@ template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
 GeneralParser<ParseHandler, Unit>::variableStatement(
     YieldHandling yieldHandling) {
-  ListNodeType vars = declarationList(yieldHandling, ParseNodeKind::VarStmt);
+  ListNodeType vars = declarationList(yieldHandling, ParseNodeKind::Var);
   if (!vars) {
     return null();
   }
@@ -8235,43 +8234,43 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
   ParseNodeKind kind;
   switch (tokenAfterLHS) {
     case TokenKind::Assign:
-      kind = ParseNodeKind::AssignExpr;
+      kind = ParseNodeKind::Assign;
       break;
     case TokenKind::AddAssign:
-      kind = ParseNodeKind::AddAssignExpr;
+      kind = ParseNodeKind::AddAssign;
       break;
     case TokenKind::SubAssign:
-      kind = ParseNodeKind::SubAssignExpr;
+      kind = ParseNodeKind::SubAssign;
       break;
     case TokenKind::BitOrAssign:
-      kind = ParseNodeKind::BitOrAssignExpr;
+      kind = ParseNodeKind::BitOrAssign;
       break;
     case TokenKind::BitXorAssign:
-      kind = ParseNodeKind::BitXorAssignExpr;
+      kind = ParseNodeKind::BitXorAssign;
       break;
     case TokenKind::BitAndAssign:
-      kind = ParseNodeKind::BitAndAssignExpr;
+      kind = ParseNodeKind::BitAndAssign;
       break;
     case TokenKind::LshAssign:
-      kind = ParseNodeKind::LshAssignExpr;
+      kind = ParseNodeKind::LshAssign;
       break;
     case TokenKind::RshAssign:
-      kind = ParseNodeKind::RshAssignExpr;
+      kind = ParseNodeKind::RshAssign;
       break;
     case TokenKind::UrshAssign:
-      kind = ParseNodeKind::UrshAssignExpr;
+      kind = ParseNodeKind::UrshAssign;
       break;
     case TokenKind::MulAssign:
-      kind = ParseNodeKind::MulAssignExpr;
+      kind = ParseNodeKind::MulAssign;
       break;
     case TokenKind::DivAssign:
-      kind = ParseNodeKind::DivAssignExpr;
+      kind = ParseNodeKind::DivAssign;
       break;
     case TokenKind::ModAssign:
-      kind = ParseNodeKind::ModAssignExpr;
+      kind = ParseNodeKind::ModAssign;
       break;
     case TokenKind::PowAssign:
-      kind = ParseNodeKind::PowAssignExpr;
+      kind = ParseNodeKind::PowAssign;
       break;
 
     default:
@@ -8290,7 +8289,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
 
   // Verify the left-hand side expression doesn't have a forbidden form.
   if (handler.isUnparenthesizedDestructuringPattern(lhs)) {
-    if (kind != ParseNodeKind::AssignExpr) {
+    if (kind != ParseNodeKind::Assign) {
       error(JSMSG_BAD_DESTRUCT_ASS);
       return null();
     }
@@ -8436,15 +8435,15 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
   uint32_t begin = pos().begin;
   switch (tt) {
     case TokenKind::Void:
-      return unaryOpExpr(yieldHandling, ParseNodeKind::VoidExpr, begin);
+      return unaryOpExpr(yieldHandling, ParseNodeKind::Void, begin);
     case TokenKind::Not:
-      return unaryOpExpr(yieldHandling, ParseNodeKind::NotExpr, begin);
+      return unaryOpExpr(yieldHandling, ParseNodeKind::Not, begin);
     case TokenKind::BitNot:
-      return unaryOpExpr(yieldHandling, ParseNodeKind::BitNotExpr, begin);
+      return unaryOpExpr(yieldHandling, ParseNodeKind::BitNot, begin);
     case TokenKind::Add:
-      return unaryOpExpr(yieldHandling, ParseNodeKind::PosExpr, begin);
+      return unaryOpExpr(yieldHandling, ParseNodeKind::Pos, begin);
     case TokenKind::Sub:
-      return unaryOpExpr(yieldHandling, ParseNodeKind::NegExpr, begin);
+      return unaryOpExpr(yieldHandling, ParseNodeKind::Neg, begin);
 
     case TokenKind::TypeOf: {
       // The |typeof| operator is specially parsed to distinguish its
@@ -8478,9 +8477,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
       if (!operand || !checkIncDecOperand(operand, operandOffset)) {
         return null();
       }
-      ParseNodeKind pnk = (tt == TokenKind::Inc)
-                              ? ParseNodeKind::PreIncrementExpr
-                              : ParseNodeKind::PreDecrementExpr;
+      ParseNodeKind pnk = (tt == TokenKind::Inc) ? ParseNodeKind::PreIncrement
+                                                 : ParseNodeKind::PreDecrement;
       return handler.newUpdate(pnk, begin, operand);
     }
 
@@ -8548,9 +8546,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
         return null();
       }
 
-      ParseNodeKind pnk = (tt == TokenKind::Inc)
-                              ? ParseNodeKind::PostIncrementExpr
-                              : ParseNodeKind::PostDecrementExpr;
+      ParseNodeKind pnk = (tt == TokenKind::Inc) ? ParseNodeKind::PostIncrement
+                                                 : ParseNodeKind::PostDecrement;
       return handler.newUpdate(pnk, begin, expr);
     }
   }
@@ -9911,7 +9908,7 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
         }
 
         BinaryNodeType propExpr =
-            handler.newAssignment(ParseNodeKind::AssignExpr, lhs, rhs);
+            handler.newAssignment(ParseNodeKind::Assign, lhs, rhs);
         if (!propExpr) {
           return null();
         }
