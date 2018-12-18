@@ -2475,6 +2475,7 @@ class MOZ_STACK_CLASS SandboxOptions : public OptionsBase {
         isWebExtensionContentScript(false),
         proto(cx),
         sameZoneAs(cx),
+        freshCompartment(false),
         freshZone(false),
         isContentXBLScope(false),
         isUAWidgetScope(false),
@@ -2494,6 +2495,7 @@ class MOZ_STACK_CLASS SandboxOptions : public OptionsBase {
   JS::RootedObject proto;
   nsCString sandboxName;
   JS::RootedObject sameZoneAs;
+  bool freshCompartment;
   bool freshZone;
   bool isContentXBLScope;
   bool isUAWidgetScope;
