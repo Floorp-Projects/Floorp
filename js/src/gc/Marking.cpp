@@ -3546,7 +3546,7 @@ void UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing) {
   // case, push any cells in zones that are currently being marked onto the
   // mark stack and they will eventually get marked black.
   Zone* zone = tenured.zone();
-  if (zone->needsIncrementalBarrier()) {
+  if (zone->isGCMarkingBlackAndGray()) {
     if (!cell->isMarkedBlack()) {
       Cell* tmp = cell;
       TraceManuallyBarrieredGenericPointerEdge(zone->barrierTracer(), &tmp,
@@ -3557,7 +3557,6 @@ void UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing) {
     return;
   }
 
-  MOZ_ASSERT(!zone->isGCMarkingBlackAndGray());
   if (!tenured.isMarkedGray()) {
     return;
   }
