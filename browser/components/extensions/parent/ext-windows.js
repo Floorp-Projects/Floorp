@@ -72,14 +72,11 @@ this.windows = class extends ExtensionAPI {
               // Wait a tick to avoid firing a superfluous WINDOW_ID_NONE
               // event when switching focus between two Firefox windows.
               Promise.resolve().then(() => {
-                let windowId = Window.WINDOW_ID_NONE;
                 let window = Services.focus.activeWindow;
-                if (window) {
-                  if (!context.canAccessWindow(window)) {
-                    return;
-                  }
-                  windowId = windowTracker.getId(window);
+                if (!context.canAccessWindow(window)) {
+                  return;
                 }
+                let windowId = window ? windowTracker.getId(window) : Window.WINDOW_ID_NONE;
                 if (windowId !== lastOnFocusChangedWindowId) {
                   fire.async(windowId);
                   lastOnFocusChangedWindowId = windowId;
