@@ -61,7 +61,7 @@ class TaskBuilder(object):
 
     def build_task(self, name, description, command, dependencies=[],
                    artifacts={}, scopes=[], routes=[], features={},
-                   worker_type='android-components-g'):
+                   is_staging=False):
         created = datetime.datetime.now()
         expires = taskcluster.fromNow('1 year')
         deadline = taskcluster.fromNow('1 day')
@@ -72,7 +72,8 @@ class TaskBuilder(object):
         })
 
         return {
-            "workerType": worker_type,
+            # TODO: Use mobile-X-build workerType
+            "workerType": 'android-components-g' if is_staging else 'gecko-focus',
             "taskGroupId": self.task_id,
             "schedulerId": self.scheduler_id,
             "expires": taskcluster.stringDate(expires),
@@ -108,13 +109,13 @@ class TaskBuilder(object):
 
     def beetmover_task(self, name, description, version, artifact_id,
                        dependencies=[], upstreamArtifacts=[], scopes=[],
-                       worker_type='mobile-beetmover-v1', is_snapshot=False):
+                       is_staging=False, is_snapshot=False):
         created = datetime.datetime.now()
         expires = taskcluster.fromNow('1 year')
         deadline = taskcluster.fromNow('1 day')
 
         return {
-            "workerType": worker_type,
+            "workerType": "mobile-beetmover-dev" if is_staging else "mobile-beetmover-v1",
             "taskGroupId": self.task_id,
             "schedulerId": self.scheduler_id,
             "expires": taskcluster.stringDate(expires),

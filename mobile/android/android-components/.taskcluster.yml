@@ -43,6 +43,11 @@ tasks:
       $if: 'tasks_for == "cron"'
       then: focus-nightly-sched  # TODO: Rename to mobile-nightly-sched
       else: taskcluster-github
+
+    does_event_occur_on_main_repo:
+      $if: 'event.repository.html_url == "https://github.com/mozilla-mobile/android-components"'
+      then: true
+      else: false
   in:
     $let:
       default_task_definition:
@@ -126,11 +131,25 @@ tasks:
         $if: 'tasks_for in ["github-release", "cron"]'
         then:
           $let:
+            command_staging_flag:
+              $if: 'does_event_occur_on_main_repo && tasks_for != "cron"'
+              then: ''
+              else: '--staging'
+
             nightly_or_release_definition:
               scopes:
-                - project:mobile:android-components:releng:beetmover:action:push-to-maven
-                - queue:create-task:highest:aws-provisioner-v1/github-worker
+                $flatten:
+                  - project:mobile:android-components:releng:beetmover:action:push-to-maven
+                  - queue:create-task:highest:aws-provisioner-v1/github-worker
+                  - $if: 'does_event_occur_on_main_repo'
+                    then:
+                      - queue:create-task:highest:aws-provisioner-v1/gecko-focus
+                      - queue:create-task:highest:scriptworker-prov-v1/mobile-beetmover-v1
+                    else:
+                      - queue:create-task:highest:scriptworker-prov-v1/mobile-beetmover-dev
               payload:
+                env:
+                  MOBILE_TRIGGERED_BY: ${user}
                 features:
                   chainOfTrust: true
                 artifacts:
@@ -157,21 +176,21 @@ tasks:
                     - {$eval: 'nightly_or_release_definition'}
                     - priority: highest
                       scopes:
-                        # TODO: Use staging values when not on main repository
-                        - project:mobile:android-components:releng:beetmover:bucket:maven-production
-                        - queue:create-task:highest:aws-provisioner-v1/gecko-focus
-                        - queue:create-task:highest:scriptworker-prov-v1/mobile-beetmover-v1
+                        $if: 'does_event_occur_on_main_repo'
+                        then:
+                          - project:mobile:android-components:releng:beetmover:bucket:maven-production
+                        else:
+                          - project:mobile:android-components:releng:beetmover:bucket:maven-staging
                       payload:
-                        env:
-                          MOBILE_TRIGGERED_BY: ${user}
                         command:
                           - >-
-                            git fetch origin --tags
+                            git fetch ${repository} --tags
                             && git config advice.detachedHead false
                             && git checkout ${tag}
                             && pip install pyyaml
                             && ./gradlew --no-daemon --version
-                            && python automation/taskcluster/decision_task_release.py --version "${tag}"
+                            && python automation/taskcluster/decision_task_publish.py --version "${tag}"
+                            ${command_staging_flag}
                       metadata:
                         name: Android Components - Decision task (${tag})
                         description: Build and publish release versions.
@@ -181,11 +200,9 @@ tasks:
                   - {$eval: 'default_task_definition'}
                   - {$eval: 'nightly_or_release_definition'}
                   - priority: medium
+                    # TODO Activate production workers on cron
                     scopes:
-                      # TODO Swap to production workers once read
                       - project:mobile:android-components:releng:beetmover:bucket:maven-snapshot-staging
-                      - queue:create-task:highest:scriptworker-prov-v1/mobile-beetmover-dev
-                      - queue:create-task:highest:aws-provisioner-v1/gecko-focus
                     payload:
                       command:
                         - >-
@@ -193,7 +210,8 @@ tasks:
                           && git config advice.detachedHead false
                           && git checkout ${head_rev}
                           && ./gradlew --no-daemon --version
-                          && python automation/taskcluster/decision_task_snapshot_release.py
+                          && python automation/taskcluster/decision_task_publish.py --snapshot
+                          ${command_staging_flag}
                     extra:
                       cron: {$json: {$eval: 'cron'}}
                     metadata:
