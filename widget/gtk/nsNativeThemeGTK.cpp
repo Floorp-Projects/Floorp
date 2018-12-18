@@ -771,6 +771,9 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
     case StyleAppearance::MozWindowTitlebarMaximized:
       aGtkWidgetType = MOZ_GTK_HEADER_BAR_MAXIMIZED;
       break;
+    case StyleAppearance::MozWindowButtonBox:
+      aGtkWidgetType = MOZ_GTK_HEADER_BAR_BUTTON_BOX;
+      break;
     case StyleAppearance::MozWindowButtonClose:
       aGtkWidgetType = MOZ_GTK_HEADER_BAR_BUTTON_CLOSE;
       break;
@@ -1363,6 +1366,7 @@ bool nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
   switch (aAppearance) {
     case StyleAppearance::ButtonFocus:
     case StyleAppearance::Toolbarbutton:
+    case StyleAppearance::MozWindowButtonBox:
     case StyleAppearance::MozWindowButtonClose:
     case StyleAppearance::MozWindowButtonMinimize:
     case StyleAppearance::MozWindowButtonMaximize:
@@ -1890,6 +1894,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
 #endif
       return !IsWidgetStyled(aPresContext, aFrame, aAppearance);
 
+    case StyleAppearance::MozWindowButtonBox:
     case StyleAppearance::MozWindowButtonClose:
     case StyleAppearance::MozWindowButtonMinimize:
     case StyleAppearance::MozWindowButtonMaximize:
