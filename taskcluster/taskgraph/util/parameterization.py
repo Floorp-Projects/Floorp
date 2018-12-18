@@ -4,12 +4,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import os
 import re
-import taskcluster_urls
 
 from taskgraph.util.time import json_time_from_now
-from taskgraph.util.taskcluster import get_root_url
+from taskgraph.util.taskcluster import get_artifact_url
 
 TASK_REFERENCE_PATTERN = re.compile('<([^>]+)>')
 ARTIFACT_REFERENCE_PATTERN = re.compile('<([^/]+)/([^>]+)>')
@@ -62,13 +60,13 @@ def resolve_task_references(label, task_def, dependencies):
             dependency, artifact_name = match.group(1, 2)
 
             try:
-                dependency_task_id = dependencies[dependency]
+                task_id = dependencies[dependency]
             except KeyError:
                 raise KeyError("task '{}' has no dependency named '{}'".format(label, dependency))
 
-            return taskcluster_urls.api(
-                get_root_url(), 'queue', 'v1',
-                'task/{}/artifacts/{}'.format(dependency_task_id, artifact_name))
+            assert artifact_name.startswith('public/'), \
+                "artifact-reference only supports public artifacts, not `{}`".format(artifact_name)
+            return get_artifact_url(task_id, artifact_name)
 
         return ARTIFACT_REFERENCE_PATTERN.sub(repl, val)
 
