@@ -48,14 +48,14 @@ add_task(async function() {
     return promise.all([
       inspector.selection.once("new-node-front"),
       inspector.once("inspector-updated"),
-      inspector.toolbox.once("picker-stopped"),
+      inspector.inspector.nodePicker.once("picker-stopped"),
     ]);
   }
 
   function doKeyStop(args) {
     info("Key pressed. Waiting for picker to be canceled");
     testActor.synthesizeKey(args);
-    return inspector.toolbox.once("picker-stopped");
+    return inspector.inspector.nodePicker.once("picker-stopped");
   }
 
   function moveMouseOver(selector) {
