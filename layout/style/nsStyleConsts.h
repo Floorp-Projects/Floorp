@@ -518,9 +518,9 @@ enum class StyleGridTrackBreadth : uint8_t {
 
 // See nsStylePosition::mWidth, mMinWidth, mMaxWidth
 #define NS_STYLE_WIDTH_MAX_CONTENT \
-  ((uint8_t)mozilla::StyleExtremumLength::MozMaxContent)
+  ((uint8_t)mozilla::StyleExtremumLength::MaxContent)
 #define NS_STYLE_WIDTH_MIN_CONTENT \
-  ((uint8_t)mozilla::StyleExtremumLength::MozMinContent)
+  ((uint8_t)mozilla::StyleExtremumLength::MinContent)
 #define NS_STYLE_WIDTH_FIT_CONTENT \
   ((uint8_t)mozilla::StyleExtremumLength::MozFitContent)
 #define NS_STYLE_WIDTH_AVAILABLE \
