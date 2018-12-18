@@ -56,7 +56,7 @@ bool HasCachingSupport(JSContext* cx);
 // Returns true if WebAssembly as configured by compile-time flags and run-time
 // options can support reference types and stack walking.
 
-bool HasGcSupport(JSContext* cx);
+bool HasReftypesSupport(JSContext* cx);
 
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.

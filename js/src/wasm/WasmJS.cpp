@@ -57,13 +57,13 @@ using mozilla::RangedPtr;
 
 extern mozilla::Atomic<bool> fuzzingSafe;
 
-bool wasm::HasGcSupport(JSContext* cx) {
+bool wasm::HasReftypesSupport(JSContext* cx) {
 #ifdef ENABLE_WASM_CRANELIFT
   if (cx->options().wasmForceCranelift()) {
     return false;
   }
 #endif
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
   return cx->options().wasmGc() && cx->options().wasmBaseline();
 #else
   return false;
@@ -2060,7 +2060,7 @@ bool WasmTableObject::isNewborn() const {
     tableKind = TableKind::AnyFunction;
 #ifdef ENABLE_WASM_GENERALIZED_TABLES
   } else if (StringEqualsAscii(elementLinearStr, "anyref")) {
-    if (!HasGcSupport(cx)) {
+    if (!HasReftypesSupport(cx)) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                JSMSG_WASM_BAD_ELEMENT);
       return false;
@@ -2472,8 +2472,8 @@ const Class WasmGlobalObject::class_ = {
     globalType = ValType::F32;
   } else if (StringEqualsAscii(typeLinearStr, "f64")) {
     globalType = ValType::F64;
-#ifdef ENABLE_WASM_GC
-  } else if (HasGcSupport(cx) &&
+#ifdef ENABLE_WASM_REFTYPES
+  } else if (HasReftypesSupport(cx) &&
              StringEqualsAscii(typeLinearStr, "anyref")) {
     globalType = ValType::AnyRef;
 #endif

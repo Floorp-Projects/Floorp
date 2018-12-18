@@ -286,7 +286,7 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
       .setWasmForceCranelift(
           GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_cranelift")))
 #endif
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
       .setWasmGc(GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_gc")))
 #endif
       .setWasmVerbose(GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_verbose")))

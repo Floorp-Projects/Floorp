@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled() || !wasmDebuggingIsSupported()
+// |jit-test| skip-if: !wasmReftypesEnabled() || !wasmDebuggingIsSupported()
 
 (function() {
     let g = newGlobal();

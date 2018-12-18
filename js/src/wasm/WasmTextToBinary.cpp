@@ -88,7 +88,7 @@ class WasmToken {
     Field,
     Float,
     Func,
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
     GcFeatureOptIn,
 #endif
     GetGlobal,
@@ -365,7 +365,7 @@ class WasmToken {
       case Field:
       case Float:
       case Func:
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
       case GcFeatureOptIn:
 #endif
       case Global:
@@ -1308,7 +1308,7 @@ WasmToken WasmTokenStream::next() {
       break;
 
     case 'g':
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
       if (consume(u"gc_feature_opt_in")) {
         return WasmToken(WasmToken::GcFeatureOptIn, begin, cur_);
       }
@@ -4532,7 +4532,7 @@ static bool ParseMemory(WasmParseContext& c, AstModule* module) {
   return module->addMemory(name, memory);
 }
 
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
 // Custom section for experimental work.  The size of this section should always
 // be 1 byte, and that byte is a nonzero varint7 carrying the version number
 // being opted into.
@@ -5076,7 +5076,7 @@ static AstModule* ParseModule(const char16_t* text, uintptr_t stackLimit,
         }
         break;
       }
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
       case WasmToken::GcFeatureOptIn: {
         if (!ParseGcFeatureOptIn(c, module)) {
           return nullptr;
@@ -6560,7 +6560,7 @@ static bool EncodeExpr(Encoder& e, AstExpr& expr) {
 /*****************************************************************************/
 // wasm AST binary serialization
 
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
 static bool EncodeGcFeatureOptInSection(Encoder& e, AstModule& module) {
   uint32_t optInVersion = module.gcFeatureOptIn();
   if (!optInVersion) {
@@ -7158,7 +7158,7 @@ static bool EncodeModule(AstModule& module, Uint32Vector* offsets,
     return false;
   }
 
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
   if (!EncodeGcFeatureOptInSection(e, module)) {
     return false;
   }

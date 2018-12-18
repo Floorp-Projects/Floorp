@@ -130,7 +130,7 @@ class JitCompileOptions {
     return offThreadCompilationAvailable_;
   }
 
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
   bool wasmGcEnabled() const { return wasmGcEnabled_; }
 #endif
 
@@ -138,7 +138,7 @@ class JitCompileOptions {
   bool cloneSingletons_;
   bool profilerSlowAssertionsEnabled_;
   bool offThreadCompilationAvailable_;
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
   bool wasmGcEnabled_;
 #endif
 };
