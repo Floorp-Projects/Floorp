@@ -55,15 +55,12 @@ typedef OfflineResourceList ApplicationCache;
 
   // other browsing contexts
   [Replaceable, Throws, CrossOriginReadable] readonly attribute WindowProxy frames;
-  [Replaceable, CrossOriginReadable, NeedsCallerType] readonly attribute unsigned long length;
+  [Replaceable, CrossOriginReadable] readonly attribute unsigned long length;
   //[Unforgeable, Throws, CrossOriginReadable] readonly attribute WindowProxy top;
-  [Unforgeable, Throws, CrossOriginReadable, Func="nsGlobalWindowInner::AllowChromeFrameAccess"]
-  readonly attribute WindowProxy? top;
-  [Throws, CrossOriginReadable, Func="nsGlobalWindowInner::AllowChromeFrameAccess"]
-  attribute any opener;
+  [Unforgeable, Throws, CrossOriginReadable] readonly attribute WindowProxy? top;
+  [Throws, CrossOriginReadable] attribute any opener;
   //[Throws] readonly attribute WindowProxy parent;
-  [Replaceable, Throws, CrossOriginReadable, Func="nsGlobalWindowInner::AllowChromeFrameAccess"]
-  readonly attribute WindowProxy? parent;
+  [Replaceable, Throws, CrossOriginReadable] readonly attribute WindowProxy? parent;
   [Throws, NeedsSubjectPrincipal] readonly attribute Element? frameElement;
   //[Throws] WindowProxy? open(optional USVString url = "about:blank", optional DOMString target = "_blank", [TreatNullAs=EmptyString] optional DOMString features = "");
   [Throws] WindowProxy? open(optional DOMString url = "", optional DOMString target = "", [TreatNullAs=EmptyString] optional DOMString features = "");

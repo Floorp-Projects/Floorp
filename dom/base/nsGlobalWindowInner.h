@@ -387,19 +387,9 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   NS_DECL_NSIINTERFACEREQUESTOR
 
   // WebIDL interface.
-  already_AddRefed<nsPIDOMWindowOuter> IndexedGetter(JSContext* aCx,
-                                                     uint32_t aIndex);
+  already_AddRefed<nsPIDOMWindowOuter> IndexedGetter(uint32_t aIndex);
 
   static bool IsPrivilegedChromeWindow(JSContext* /* unused */, JSObject* aObj);
-
-  // The pref dom.chrome_frame_access.enabled can be used to block
-  // various methods that chrome code can be used to traverse
-  // content subframes. This is useful to enforce Fission-compatible
-  // behavior on code. The current methods blocked are:
-  // iframe.contentWindow, iframe.contentDocument, window.top,
-  // window.opener, window.parent, window.frames[i], window.frames.length,
-  // MessageEvent.source.
-  static bool AllowChromeFrameAccess(JSContext* aCx, JSObject* aObj);
 
   static bool OfflineCacheAllowedForContext(JSContext* /* unused */,
                                             JSObject* aObj);
@@ -632,7 +622,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   void Blur(mozilla::ErrorResult& aError);
   nsDOMWindowList* GetFrames() final;
   already_AddRefed<nsPIDOMWindowOuter> GetFrames(mozilla::ErrorResult& aError);
-  uint32_t Length(mozilla::dom::CallerType aCallerType);
+  uint32_t Length();
   already_AddRefed<nsPIDOMWindowOuter> GetTop(mozilla::ErrorResult& aError);
 
  protected:

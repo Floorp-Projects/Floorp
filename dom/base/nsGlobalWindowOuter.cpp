@@ -779,14 +779,12 @@ already_AddRefed<nsPIDOMWindowOuter> nsOuterWindowProxy::GetSubframeWindow(
   }
 
   nsGlobalWindowOuter* win = GetOuterWindow(proxy);
-  return win->IndexedGetterOuter(cx, index);
+  return win->IndexedGetterOuter(index);
 }
 
 bool nsOuterWindowProxy::AppendIndexedPropertyNames(
     JSContext* cx, JSObject* proxy, JS::AutoIdVector& props) const {
-  uint32_t length = GetOuterWindow(proxy)->Length(
-      nsContentUtils::IsSystemCaller(cx) ? CallerType::System
-                                         : CallerType::NonSystem);
+  uint32_t length = GetOuterWindow(proxy)->Length();
   MOZ_ASSERT(int32_t(length) >= 0);
   if (!props.reserve(props.length() + length)) {
     return false;
@@ -2839,22 +2837,11 @@ nsDOMWindowList* nsGlobalWindowOuter::GetFrames() {
 }
 
 already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowOuter::IndexedGetterOuter(
-    JSContext* aCx, uint32_t aIndex) {
+    uint32_t aIndex) {
   nsDOMWindowList* windows = GetFrames();
   NS_ENSURE_TRUE(windows, nullptr);
 
-  nsCOMPtr<nsPIDOMWindowOuter> win = windows->IndexedGetter(aIndex);
-
-  if (win && !StaticPrefs::dom_chrome_frame_access_enabled()) {
-    nsGlobalWindowOuter* global = nsGlobalWindowOuter::Cast(win);
-
-    if (!nsGlobalWindowInner::AllowChromeFrameAccess(
-            aCx, global->GetGlobalJSObject())) {
-      return nullptr;
-    }
-  }
-
-  return win.forget();
+  return windows->IndexedGetter(aIndex);
 }
 
 nsIControllers* nsGlobalWindowOuter::GetControllersOuter(ErrorResult& aError) {
@@ -3557,12 +3544,7 @@ double nsGlobalWindowOuter::GetScrollXOuter() { return GetScrollXY(false).x; }
 
 double nsGlobalWindowOuter::GetScrollYOuter() { return GetScrollXY(false).y; }
 
-uint32_t nsGlobalWindowOuter::Length(mozilla::dom::CallerType aCallerType) {
-  if (!StaticPrefs::dom_chrome_frame_access_enabled() &&
-      aCallerType == CallerType::System) {
-    return 0;
-  }
-
+uint32_t nsGlobalWindowOuter::Length() {
   nsDOMWindowList* windows = GetFrames();
 
   return windows ? windows->GetLength() : 0;
