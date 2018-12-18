@@ -1133,9 +1133,6 @@ pref("view_source.editor.path", "");
 // for jumping to a specific line (e.g. "/line:%LINE%" or "--goto %LINE%")
 pref("view_source.editor.args", "");
 
-// When true this will word-wrap plain text documents.
-pref("plain_text.wrap_long_lines", false);
-
 // whether or not to draw images while dragging
 pref("nglayout.enable_drag_images", true);
 
