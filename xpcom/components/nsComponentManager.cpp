@@ -67,6 +67,7 @@
 #endif
 
 using namespace mozilla;
+using namespace mozilla::xpcom;
 
 static LazyLogModule nsComponentManagerLog("nsComponentManager");
 
@@ -116,6 +117,45 @@ nsresult nsGetServiceFromCategory::operator()(const nsIID& aIID,
   }
   return rv;
 }
+
+namespace mozilla {
+namespace xpcom {
+
+using ProcessSelector = Module::ProcessSelector;
+
+// Note: These must be kept in sync with the ProcessSelector definition in
+// Module.h.
+bool ProcessSelectorMatches(ProcessSelector aSelector) {
+  GeckoProcessType type = XRE_GetProcessType();
+  if (type == GeckoProcessType_GPU || type == GeckoProcessType_RDD) {
+    return !!(aSelector & Module::ALLOW_IN_GPU_PROCESS);
+  }
+
+  if (type == GeckoProcessType_Socket) {
+    return !!(aSelector & (Module::ALLOW_IN_SOCKET_PROCESS));
+  }
+
+  if (type == GeckoProcessType_VR) {
+    return !!(aSelector & Module::ALLOW_IN_VR_PROCESS);
+  }
+
+  if (aSelector & Module::MAIN_PROCESS_ONLY) {
+    return type == GeckoProcessType_Default;
+  }
+  if (aSelector & Module::CONTENT_PROCESS_ONLY) {
+    return type == GeckoProcessType_Content;
+  }
+  return true;
+}
+
+static bool gProcessMatchTable[Module::kMaxProcessSelector + 1];
+
+bool FastProcessSelectorMatches(ProcessSelector aSelector) {
+  return gProcessMatchTable[size_t(aSelector)];
+}
+
+}  // namespace xpcom
+}  // namespace mozilla
 
 // GetService and a few other functions need to exit their mutex mid-function
 // without reentering it later in the block. This class supports that
@@ -314,6 +354,27 @@ nsTArray<nsComponentManagerImpl::ComponentLocation>*
 }
 
 nsresult nsComponentManagerImpl::Init() {
+  {
+    gProcessMatchTable[size_t(ProcessSelector::ANY_PROCESS)] =
+        ProcessSelectorMatches(ProcessSelector::ANY_PROCESS);
+    gProcessMatchTable[size_t(ProcessSelector::MAIN_PROCESS_ONLY)] =
+        ProcessSelectorMatches(ProcessSelector::MAIN_PROCESS_ONLY);
+    gProcessMatchTable[size_t(ProcessSelector::CONTENT_PROCESS_ONLY)] =
+        ProcessSelectorMatches(ProcessSelector::CONTENT_PROCESS_ONLY);
+    gProcessMatchTable[size_t(ProcessSelector::ALLOW_IN_GPU_PROCESS)] =
+        ProcessSelectorMatches(ProcessSelector::ALLOW_IN_GPU_PROCESS);
+    gProcessMatchTable[size_t(ProcessSelector::ALLOW_IN_VR_PROCESS)] =
+        ProcessSelectorMatches(ProcessSelector::ALLOW_IN_VR_PROCESS);
+    gProcessMatchTable[size_t(ProcessSelector::ALLOW_IN_SOCKET_PROCESS)] =
+        ProcessSelectorMatches(ProcessSelector::ALLOW_IN_SOCKET_PROCESS);
+    gProcessMatchTable[size_t(ProcessSelector::ALLOW_IN_GPU_AND_VR_PROCESS)] =
+        ProcessSelectorMatches(ProcessSelector::ALLOW_IN_GPU_AND_VR_PROCESS);
+    gProcessMatchTable[size_t(ProcessSelector::ALLOW_IN_GPU_AND_SOCKET_PROCESS)] =
+        ProcessSelectorMatches(ProcessSelector::ALLOW_IN_GPU_AND_SOCKET_PROCESS);
+    gProcessMatchTable[size_t(ProcessSelector::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS)] =
+        ProcessSelectorMatches(ProcessSelector::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS);
+  }
+
   MOZ_ASSERT(NOT_INITIALIZED == mStatus);
 
   nsCOMPtr<nsIFile> greDir = GetLocationFromDirectoryService(NS_GRE_DIR);
@@ -435,29 +496,6 @@ nsresult nsComponentManagerImpl::Init() {
   mStatus = NORMAL;
 
   return NS_OK;
-}
-
-static bool ProcessSelectorMatches(Module::ProcessSelector aSelector) {
-  GeckoProcessType type = XRE_GetProcessType();
-  if (type == GeckoProcessType_GPU || type == GeckoProcessType_RDD) {
-    return !!(aSelector & Module::ALLOW_IN_GPU_PROCESS);
-  }
-
-  if (type == GeckoProcessType_Socket) {
-    return !!(aSelector & (Module::ALLOW_IN_SOCKET_PROCESS));
-  }
-
-  if (type == GeckoProcessType_VR) {
-    return !!(aSelector & Module::ALLOW_IN_VR_PROCESS);
-  }
-
-  if (aSelector & Module::MAIN_PROCESS_ONLY) {
-    return type == GeckoProcessType_Default;
-  }
-  if (aSelector & Module::CONTENT_PROCESS_ONLY) {
-    return type == GeckoProcessType_Content;
-  }
-  return true;
 }
 
 static const int kModuleVersionWithSelector = 51;
@@ -1157,9 +1195,10 @@ PRThread* nsComponentManagerImpl::GetPendingServiceThread(
   return nullptr;
 }
 
-nsresult
-nsComponentManagerImpl::GetServiceLocked(MutexLock& aLock, nsFactoryEntry& aEntry,
-                                         const nsIID& aIID, void** aResult) {
+nsresult nsComponentManagerImpl::GetServiceLocked(MutexLock& aLock,
+                                                  nsFactoryEntry& aEntry,
+                                                  const nsIID& aIID,
+                                                  void** aResult) {
   if (aEntry.mServiceObject) {
     aLock.Unlock();
     return aEntry.mServiceObject->QueryInterface(aIID, aResult);
@@ -1228,7 +1267,8 @@ nsComponentManagerImpl::GetServiceLocked(MutexLock& aLock, nsFactoryEntry& aEntr
   nsresult rv;
   {
     SafeMutexAutoUnlock unlock(mLock);
-    rv = CreateInstance(*aEntry.mCIDEntry->cid, nullptr, aIID, getter_AddRefs(service));
+    rv = CreateInstance(*aEntry.mCIDEntry->cid, nullptr, aIID,
+                        getter_AddRefs(service));
   }
   if (NS_SUCCEEDED(rv) && !service) {
     NS_ERROR("Factory did not return an object but returned success");
