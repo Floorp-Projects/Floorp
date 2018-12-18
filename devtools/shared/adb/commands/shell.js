@@ -11,11 +11,15 @@ const client = require("../adb-client");
 
 const OKAY = 0x59414b4f;
 
-const shell = async function(command) {
+const shell = async function(deviceId, command) {
+  if (!deviceId) {
+    throw new Error("ADB shell command needs the device id");
+  }
+
   let state;
   let stdout = "";
 
-  dumpn("shell " + command);
+  dumpn("shell " + command + " on " + deviceId);
 
   return new Promise((resolve, reject) => {
     const shutdown = function() {
@@ -34,7 +38,7 @@ const shell = async function(command) {
           runFSM();
           break;
         case "send-transport":
-          req = client.createRequest("host:transport-any");
+          req = client.createRequest("host:transport:" + deviceId);
           socket.send(req);
           state = "wait-transport";
           break;
