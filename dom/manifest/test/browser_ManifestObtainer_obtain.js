@@ -100,7 +100,7 @@ add_task(async function() {
       return collector;
     }, []);
 
-  const results = await Promise.all(promises);
+  await Promise.all(promises);
 
   function testObtainingManifest(aTest) {
     return async function(aBrowser) {

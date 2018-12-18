@@ -16,6 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1143879
 /* globals is, typeTests, data, processor, seperators, lineTerminators, todo_is*/
 "use strict";
 // Type checks: checks that only strings are accepted.
+
 for (var type of typeTests) {
   var expected = `Expect non-string to be undefined.`;
   data.jsonText = JSON.stringify({
@@ -52,38 +53,44 @@ var validTags = [
   "de-CH-x-phonebk", "az-Arab-x-AZE-derbend", "x-whatever",
   "qaa-Qaaa-QM-x-southern",
 ];
+
+
 for (var tag of validTags) {
-  var expected = `Expect lang to be ${tag}.`;
+  expected = `Expect lang to be ${tag}.`;
   data.jsonText = JSON.stringify({
     lang: tag,
   });
-  var result = processor.process(data);
+  result = processor.process(data);
   is(result.lang, tag, expected);
 }
 
+
+
 // trim tests - check that language tags get trimmed properly.
-for (var tag of validTags) {
-  var expected = `Expect trimmed tag to be returned.`;
+for (tag of validTags) {
+  expected = `Expect trimmed tag to be returned.`;
   var expandedtag = seperators + lineTerminators + tag;
   expandedtag += lineTerminators + seperators;
   data.jsonText = JSON.stringify({
     lang: expandedtag,
   });
-  var result = processor.process(data);
+  result = processor.process(data);
   is(result.lang, tag, expected);
 }
 
 // Invalid language tags, derived from BCP-47 and made up.
 var invalidTags = [
-  "de-419-DE", " a-DE ", "ar-a-aaa-b-bbb-a-ccc", "sdafsdfaadsfdsf", "i",
-  "i-phone", "en US", "EN-*-US-JP", "JA-INVALID-TAG", "123123123",
+"de-419-DE", " a-DE ", "ar-a-aaa-b-bbb-a-ccc", "sdafsdfaadsfdsf", "i",
+"i-phone", "en US", "EN-*-US-JP", "JA-INVALID-TAG", "123123123",
 ];
+
+
 for (var item of invalidTags) {
-  var expected = `Expect invalid tag (${item}) to be treated as undefined.`;
+  expected = `Expect invalid tag (${item}) to be treated as undefined.`;
   data.jsonText = JSON.stringify({
     lang: item,
   });
-  var result = processor.process(data);
+  result = processor.process(data);
   todo_is(result.lang, undefined, expected);
 }
 
@@ -91,21 +98,21 @@ for (var item of invalidTags) {
 // canonical form, to upper case and expect the processor to return them
 // in canonical form.
 var canonicalTags = [
-  "jp-JS", "pt-PT", "pt-BR", "de-CH", "de-DE-1901", "es-419", "sl-IT-nedis",
-  "en-US-boont", "mn-Cyrl-MN", "x-fr-CH", "sr-Cyrl", "sr-Latn",
-  "hy-Latn-IT-arevela", "zh-TW", "en-GB-boont-r-extended-sequence-x-private",
-  "zh-cmn-Hans-CN", "cmn-Hans-CN", "zh-yue-HK", "yue-HK",
-  "de-CH-x-phonebk", "az-Arab-x-AZE-derbend", "x-whatever",
-  "qaa-Qaaa-QM-x-southern",
+"jp-JS", "pt-PT", "pt-BR", "de-CH", "de-DE-1901", "es-419", "sl-IT-nedis",
+"en-US-boont", "mn-Cyrl-MN", "x-fr-CH", "sr-Cyrl", "sr-Latn",
+"hy-Latn-IT-arevela", "zh-TW", "en-GB-boont-r-extended-sequence-x-private",
+"zh-cmn-Hans-CN", "cmn-Hans-CN", "zh-yue-HK", "yue-HK",
+"de-CH-x-phonebk", "az-Arab-x-AZE-derbend", "x-whatever",
+"qaa-Qaaa-QM-x-southern",
 ];
 
-for (var tag of canonicalTags) {
+for (tag of canonicalTags) {
   var uppedTag = tag.toUpperCase();
-  var expected = `Expect tag (${uppedTag}) to be in canonical form (${tag}).`;
+  expected = `Expect tag (${uppedTag}) to be in canonical form (${tag}).`;
   data.jsonText = JSON.stringify({
     lang: uppedTag,
   });
-  var result = processor.process(data);
+  result = processor.process(data);
   todo_is(result.lang, tag, expected);
 }
 

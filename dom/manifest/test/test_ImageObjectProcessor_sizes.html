@@ -66,13 +66,6 @@ validSizes.forEach(({test, expect}) => {
   is(sizes, expect.join(" "), expected);
 });
 
-var testIcon = {
-  icons: [{
-    src: "test",
-    sizes: undefined,
-  }],
-};
-
 var invalidSizes = ["invalid", "", " ", "16 x 16", "32", "21", "16xx16", "16 x x 6"];
 invalidSizes.forEach((invalidSize) => {
   var expected = "Expect invalid sizes to return undefined.";

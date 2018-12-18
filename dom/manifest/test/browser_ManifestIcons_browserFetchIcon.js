@@ -7,7 +7,7 @@ const { ManifestObtainer } = ChromeUtils.import("resource://gre/modules/Manifest
 const defaultURL = new URL("http://example.org/browser/dom/manifest/test/resource.sjs");
 defaultURL.searchParams.set("Content-Type", "application/manifest+json");
 
-const manifest = JSON.stringify({
+const manifestMock = JSON.stringify({
   icons: [{
     sizes: "50x50",
     src: "red-50.png?Content-type=image/png",
@@ -17,9 +17,9 @@ const manifest = JSON.stringify({
   }],
 });
 
-function makeTestURL(manifest) {
+function makeTestURL() {
   const url = new URL(defaultURL);
-  const body = `<link rel="manifest" href='${defaultURL}&body=${manifest}'>`;
+  const body = `<link rel="manifest" href='${defaultURL}&body=${manifestMock}'>`;
   url.searchParams.set("Content-Type", "text/html; charset=utf-8");
   url.searchParams.set("body", encodeURIComponent(body));
   return url.href;
@@ -42,7 +42,7 @@ function getIconColor(icon) {
 }
 
 add_task(async function() {
-  const tabOptions = {gBrowser, url: makeTestURL(manifest)};
+  const tabOptions = {gBrowser, url: makeTestURL()};
   await BrowserTestUtils.withNewTab(tabOptions, async function(browser) {
     const manifest = await ManifestObtainer.browserObtainManifest(browser);
     let icon = await ManifestIcons.browserFetchIcon(browser, manifest, 25);
