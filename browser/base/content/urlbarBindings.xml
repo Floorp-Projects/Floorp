@@ -23,68 +23,66 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
   <binding id="urlbar" extends="chrome://global/content/bindings/textbox.xml#textbox">
     <content sizetopopup="pref">
-      <xul:hbox flex="1" class="urlbar-textbox-container" tooltip="aHTMLTooltip">
-        <children includes="image|deck|stack|box"/>
-        <xul:moz-input-box anonid="moz-input-box"
-                  class="urlbar-input-box"
-                  flex="1">
-          <children/>
-          <html:input anonid="scheme"
-                      class="urlbar-scheme textbox-input"
-                      required="required"
-                      xbl:inherits="textoverflow,focused"/>
-          <html:input anonid="input"
-                      class="urlbar-input textbox-input"
+      <children includes="image|deck|stack|box"/>
+      <xul:moz-input-box anonid="moz-input-box"
+                         tooltip="aHTMLTooltip"
+                         class="urlbar-input-box"
+                         flex="1">
+        <children/>
+        <html:input anonid="scheme"
+                    class="urlbar-scheme textbox-input"
+                    required="required"
+                    xbl:inherits="textoverflow,focused"/>
+        <html:input anonid="input"
+                    class="urlbar-input textbox-input"
+                    allowevents="true"
+                    inputmode="mozAwesomebar"
+                    xbl:inherits="value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,focused,textoverflow"/>
+      </xul:moz-input-box>
+      <xul:image anonid="urlbar-go-button"
+                 class="urlbar-go-button urlbar-icon"
+                 onclick="gURLBar.handleCommand(event);"
+                 tooltiptext="&goEndCap.tooltip;"
+                 xbl:inherits="pageproxystate,parentfocused=focused,usertyping"/>
+      <xul:dropmarker anonid="historydropmarker"
+                      class="urlbar-history-dropmarker urlbar-icon chromeclass-toolbar-additional"
+                      tooltiptext="&urlbar.openHistoryPopup.tooltip;"
                       allowevents="true"
-                      inputmode="mozAwesomebar"
-                      xbl:inherits="value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,focused,textoverflow"/>
-        </xul:moz-input-box>
-        <xul:image anonid="urlbar-go-button"
-                   class="urlbar-go-button urlbar-icon"
-                   onclick="gURLBar.handleCommand(event);"
-                   tooltiptext="&goEndCap.tooltip;"
-                   xbl:inherits="pageproxystate,parentfocused=focused,usertyping"/>
-        <xul:dropmarker anonid="historydropmarker"
-                        class="urlbar-history-dropmarker urlbar-icon chromeclass-toolbar-additional"
-                        tooltiptext="&urlbar.openHistoryPopup.tooltip;"
-                        allowevents="true"
-                        xbl:inherits="open,parentfocused=focused,usertyping"/>
-        <children includes="hbox"/>
-      </xul:hbox>
+                      xbl:inherits="open,parentfocused=focused,usertyping"/>
+      <children includes="hbox"/>
     </content>
   </binding>
 
   <binding id="legacy-urlbar" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
 
     <content sizetopopup="pref">
-      <xul:hbox flex="1" class="urlbar-textbox-container" tooltip="aHTMLTooltip">
-        <children includes="image|deck|stack|box"/>
-        <xul:moz-input-box anonid="moz-input-box"
-                  class="urlbar-input-box"
-                  flex="1">
-          <children/>
-          <html:input anonid="scheme"
-                      class="urlbar-scheme textbox-input"
-                      required="required"
-                      xbl:inherits="textoverflow,focused"/>
-          <html:input anonid="input"
-                      class="urlbar-input textbox-input"
+      <children includes="image|deck|stack|box"/>
+      <xul:moz-input-box anonid="moz-input-box"
+                         tooltip="aHTMLTooltip"
+                         class="urlbar-input-box"
+                         flex="1">
+        <children/>
+        <html:input anonid="scheme"
+                    class="urlbar-scheme textbox-input"
+                    required="required"
+                    xbl:inherits="textoverflow,focused"/>
+        <html:input anonid="input"
+                    class="urlbar-input textbox-input"
+                    allowevents="true"
+                    inputmode="mozAwesomebar"
+                    xbl:inherits="value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,focused,textoverflow"/>
+      </xul:moz-input-box>
+      <xul:image anonid="urlbar-go-button"
+                 class="urlbar-go-button urlbar-icon"
+                 onclick="gURLBar.handleCommand(event);"
+                 tooltiptext="&goEndCap.tooltip;"
+                 xbl:inherits="pageproxystate,parentfocused=focused,usertyping"/>
+      <xul:dropmarker anonid="historydropmarker"
+                      class="urlbar-history-dropmarker urlbar-icon chromeclass-toolbar-additional"
+                      tooltiptext="&urlbar.openHistoryPopup.tooltip;"
                       allowevents="true"
-                      inputmode="mozAwesomebar"
-                      xbl:inherits="value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,focused,textoverflow"/>
-        </xul:moz-input-box>
-        <xul:image anonid="urlbar-go-button"
-                   class="urlbar-go-button urlbar-icon"
-                   onclick="gURLBar.handleCommand(event);"
-                   tooltiptext="&goEndCap.tooltip;"
-                   xbl:inherits="pageproxystate,parentfocused=focused,usertyping"/>
-        <xul:dropmarker anonid="historydropmarker"
-                        class="urlbar-history-dropmarker urlbar-icon chromeclass-toolbar-additional"
-                        tooltiptext="&urlbar.openHistoryPopup.tooltip;"
-                        allowevents="true"
-                        xbl:inherits="open,parentfocused=focused,usertyping"/>
-        <children includes="hbox"/>
-      </xul:hbox>
+                      xbl:inherits="open,parentfocused=focused,usertyping"/>
+      <children includes="hbox"/>
     </content>
 
     <implementation implements="nsIObserver">

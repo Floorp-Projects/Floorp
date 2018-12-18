@@ -8,6 +8,10 @@ var originalWindowWidth;
 
 // Drag to overflow chevron should open the overflow panel.
 add_task(async function() {
+  // Load a page so the identity box can be dragged.
+  BrowserTestUtils.loadURI(gBrowser, "http://mochi.test:8888/");
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
   originalWindowWidth = window.outerWidth;
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
