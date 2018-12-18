@@ -9,6 +9,7 @@
 
 #include <time.h>
 #include "gtest/MozGtestFriend.h"
+#include "nsDataHashtable.h"
 #include "nsString.h"
 #include "prtime.h"
 #include "unicode/udat.h"
@@ -55,6 +56,8 @@ class DateTimeFormat {
   DateTimeFormat() = delete;
 
   static nsresult Initialize();
+  static void DeleteCache();
+  static const size_t kMaxCachedFormats = 15;
 
   FRIEND_TEST(DateTimeFormat, FormatPRExplodedTime);
   FRIEND_TEST(DateTimeFormat, DateFormatSelectors);
@@ -69,6 +72,7 @@ class DateTimeFormat {
       const PRTimeParameters* aTimeParameters, nsAString& aStringOut);
 
   static nsCString* mLocale;
+  static nsDataHashtable<nsCStringHashKey, UDateFormat*>* mFormatCache;
 };
 
 }  // namespace mozilla
