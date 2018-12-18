@@ -216,3 +216,8 @@ GENERATED_FILES += [t]
 GENERATED_FILES[t].force = True
 GENERATED_FILES[t].script = '/mobile/android/gradle.py:generate_android_code_and_resources'
 GENERATED_FILES[t].inputs += generated_inputs
+
+# This makes |mach build faster| build these files.  See the workaround in
+# config/faster/rules.mk.  None of these files appear in package-manifest.in,
+# so they're not packaged.
+FINAL_TARGET_FILES.android += generated_inputs
