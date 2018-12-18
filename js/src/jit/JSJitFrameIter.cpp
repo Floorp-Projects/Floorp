@@ -618,15 +618,18 @@ void JSJitProfilingFrameIterator::fixBaselineReturnAddress() {
     return;
   }
 
-  // Resuming a generator via .throw() pushes a bogus return address onto
-  // the stack. We have the actual jsbytecode* stashed on the frame itself;
-  // translate that into the Baseline code address.
+  // Certain exception handling cases such as debug OSR or resuming a generator
+  // with .throw() will use BaselineFrame::setOverridePc() to indicate the
+  // effective |pc|. We translate the effective-pc into a Baseline code
+  // address.
   if (jsbytecode* override = bl->maybeOverridePc()) {
     PCMappingSlotInfo slotInfo;
     JSScript* script = bl->script();
     returnAddressToFp_ =
         script->baselineScript()->nativeCodeForPC(script, override, &slotInfo);
-    MOZ_ASSERT(slotInfo.isStackSynced());
+
+    // NOTE: The stack may not be synced at this PC. For the purpose of
+    // profiler sampling this is fine.
     return;
   }
 }
