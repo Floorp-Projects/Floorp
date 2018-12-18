@@ -2261,16 +2261,17 @@
     "n_buckets": 200,
     "description": "ms of SSL wait time including TCP and proxy tunneling"
   },
-  "SSL_TIME_UNTIL_HANDSHAKE_FINISHED": {
+  "SSL_TIME_UNTIL_HANDSHAKE_FINISHED_KEYED_BY_KA": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "bug_numbers": [1340021],
+    "alert_emails": ["seceng-telemetry@mozilla.com", "fkiefer@mozilla.com"],
+    "bug_numbers": [1340021, 1513839],
     "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
     "kind": "exponential",
+    "keyed": true,
     "high": 60000,
     "n_buckets": 200,
-    "description": "ms of SSL wait time for full handshake including TCP and proxy tunneling"
+    "description": "ms of SSL wait time for full handshake including TCP and proxy tunneling, keyed by the key exchange algorithm used"
   },
   "SSL_BYTES_BEFORE_CERT_CALLBACK": {
     "record_in_processes": ["main", "content"],
