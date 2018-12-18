@@ -12,6 +12,7 @@
 #include "jsnum.h"
 
 #include "frontend/ParseNode.h"
+#include "frontend/ParseNodeVisitor.h"
 #include "frontend/Parser.h"
 #include "js/Conversions.h"
 #include "vm/StringType.h"
@@ -436,6 +437,7 @@ static bool FoldType(JSContext* cx, ParseNode* pn, ParseNodeKind kind) {
           pn->setKind(ParseNodeKind::Number);
           pn->setOp(JSOP_DOUBLE);
           pn->as<NumericLiteral>().setValue(d);
+          pn->as<NumericLiteral>().setDecimalPoint(NoDecimal);
         }
         break;
 
@@ -448,25 +450,15 @@ static bool FoldType(JSContext* cx, ParseNode* pn, ParseNodeKind kind) {
           pn->setKind(ParseNodeKind::String);
           pn->setOp(JSOP_STRING);
           pn->as<NameNode>().setAtom(atom);
+          pn->as<NameNode>().setInitializer(nullptr);
         }
         break;
 
-      default:;
+      default:
+        MOZ_CRASH("Invalid type in constant folding FoldType");
     }
   }
   return true;
-}
-
-// Remove a ParseNode, **pnp, from a parse tree, putting another ParseNode,
-// *pn, in its place.
-//
-// pnp points to a ParseNode pointer. This must be the only pointer that points
-// to the parse node being replaced. The replacement, *pn, is unchanged except
-// for its pn_next pointer; updating that is necessary if *pn's new parent is a
-// list node.
-static void ReplaceNode(ParseNode** pnp, ParseNode* pn) {
-  pn->pn_next = (*pnp)->pn_next;
-  *pnp = pn;
 }
 
 static bool IsEffectless(ParseNode* node) {
@@ -531,17 +523,11 @@ static Truthiness Boolish(ParseNode* pn) {
   }
 }
 
-static bool Fold(JSContext* cx, ParseNode** pnp,
-                 PerHandlerParser<FullParseHandler>& parser);
+static bool SimplifyCondition(JSContext* cx, ParseNode** nodePtr) {
+  // Conditions fold like any other expression, but then they sometimes can be
+  // further folded to constants. *nodePtr should already have been
+  // constant-folded.
 
-static bool FoldCondition(JSContext* cx, ParseNode** nodePtr,
-                          PerHandlerParser<FullParseHandler>& parser) {
-  // Conditions fold like any other expression...
-  if (!Fold(cx, nodePtr, parser)) {
-    return false;
-  }
-
-  // ...but then they sometimes can be further folded to constants.
   ParseNode* node = *nodePtr;
   Truthiness t = Boolish(node);
   if (t != Unknown) {
@@ -562,13 +548,8 @@ static bool FoldCondition(JSContext* cx, ParseNode** nodePtr,
   return true;
 }
 
-static bool FoldTypeOfExpr(JSContext* cx, UnaryNode* node,
-                           PerHandlerParser<FullParseHandler>& parser) {
+static bool FoldTypeOfExpr(JSContext* cx, UnaryNode* node) {
   MOZ_ASSERT(node->isKind(ParseNodeKind::TypeOfExpr));
-
-  if (!Fold(cx, node->unsafeKidReference(), parser)) {
-    return false;
-  }
 
   ParseNode* expr = node->kid();
 
@@ -598,19 +579,14 @@ static bool FoldTypeOfExpr(JSContext* cx, UnaryNode* node,
     node->setKind(ParseNodeKind::String);
     node->setOp(JSOP_NOP);
     node->as<NameNode>().setAtom(result);
+    node->as<NameNode>().setInitializer(nullptr);
   }
 
   return true;
 }
 
-static bool FoldDeleteExpr(JSContext* cx, UnaryNode* node,
-                           PerHandlerParser<FullParseHandler>& parser) {
+static bool FoldDeleteExpr(JSContext* cx, UnaryNode* node) {
   MOZ_ASSERT(node->isKind(ParseNodeKind::DeleteExpr));
-
-  if (!Fold(cx, node->unsafeKidReference(), parser)) {
-    return false;
-  }
-
   ParseNode* expr = node->kid();
 
   // Expression deletion evaluates the expression, then evaluates to true.
@@ -623,15 +599,8 @@ static bool FoldDeleteExpr(JSContext* cx, UnaryNode* node,
   return true;
 }
 
-static bool FoldDeleteElement(JSContext* cx, UnaryNode* node,
-                              PerHandlerParser<FullParseHandler>& parser) {
+static bool FoldDeleteElement(JSContext* cx, UnaryNode* node) {
   MOZ_ASSERT(node->isKind(ParseNodeKind::DeleteElem));
-  MOZ_ASSERT(node->kid()->isKind(ParseNodeKind::Elem));
-
-  if (!Fold(cx, node->unsafeKidReference(), parser)) {
-    return false;
-  }
-
   ParseNode* expr = node->kid();
 
   // If we're deleting an element, but constant-folding converted our
@@ -649,47 +618,16 @@ static bool FoldDeleteElement(JSContext* cx, UnaryNode* node,
   return true;
 }
 
-static bool FoldDeleteProperty(JSContext* cx, UnaryNode* node,
-                               PerHandlerParser<FullParseHandler>& parser) {
-  MOZ_ASSERT(node->isKind(ParseNodeKind::DeleteProp));
-  MOZ_ASSERT(node->kid()->isKind(ParseNodeKind::Dot));
-
-#ifdef DEBUG
-  ParseNodeKind oldKind = node->kid()->getKind();
-#endif
-
-  if (!Fold(cx, node->unsafeKidReference(), parser)) {
-    return false;
-  }
-
-  MOZ_ASSERT(node->kid()->isKind(oldKind),
-             "kind should have remained invariant under folding");
-
-  return true;
-}
-
-static bool FoldNot(JSContext* cx, UnaryNode* node,
-                    PerHandlerParser<FullParseHandler>& parser) {
+static bool FoldNot(JSContext* cx, UnaryNode* node) {
   MOZ_ASSERT(node->isKind(ParseNodeKind::Not));
 
-  if (!FoldCondition(cx, node->unsafeKidReference(), parser)) {
+  if (!SimplifyCondition(cx, node->unsafeKidReference())) {
     return false;
   }
 
   ParseNode* expr = node->kid();
 
-  if (expr->isKind(ParseNodeKind::Number)) {
-    double d = expr->as<NumericLiteral>().value();
-
-    if (d == 0 || IsNaN(d)) {
-      node->setKind(ParseNodeKind::True);
-      node->setOp(JSOP_TRUE);
-    } else {
-      node->setKind(ParseNodeKind::False);
-      node->setOp(JSOP_FALSE);
-    }
-  } else if (expr->isKind(ParseNodeKind::True) ||
-             expr->isKind(ParseNodeKind::False)) {
+  if (expr->isKind(ParseNodeKind::True) || expr->isKind(ParseNodeKind::False)) {
     bool newval = !expr->isKind(ParseNodeKind::True);
 
     node->setKind(newval ? ParseNodeKind::True : ParseNodeKind::False);
@@ -699,16 +637,11 @@ static bool FoldNot(JSContext* cx, UnaryNode* node,
   return true;
 }
 
-static bool FoldUnaryArithmetic(JSContext* cx, UnaryNode* node,
-                                PerHandlerParser<FullParseHandler>& parser) {
+static bool FoldUnaryArithmetic(JSContext* cx, UnaryNode* node) {
   MOZ_ASSERT(node->isKind(ParseNodeKind::BitNot) ||
                  node->isKind(ParseNodeKind::Pos) ||
                  node->isKind(ParseNodeKind::Neg),
              "need a different method for this node kind");
-
-  if (!Fold(cx, node->unsafeKidReference(), parser)) {
-    return false;
-  }
 
   ParseNode* expr = node->kid();
 
@@ -729,33 +662,13 @@ static bool FoldUnaryArithmetic(JSContext* cx, UnaryNode* node,
     node->setKind(ParseNodeKind::Number);
     node->setOp(JSOP_DOUBLE);
     node->as<NumericLiteral>().setValue(d);
+    node->as<NumericLiteral>().setDecimalPoint(NoDecimal);
   }
 
   return true;
 }
 
-static bool FoldIncrementDecrement(JSContext* cx, UnaryNode* incDec,
-                                   PerHandlerParser<FullParseHandler>& parser) {
-  MOZ_ASSERT(incDec->isKind(ParseNodeKind::PreIncrement) ||
-             incDec->isKind(ParseNodeKind::PostIncrement) ||
-             incDec->isKind(ParseNodeKind::PreDecrement) ||
-             incDec->isKind(ParseNodeKind::PostDecrement));
-
-  MOZ_ASSERT(parser.isValidSimpleAssignmentTarget(
-      incDec->kid(), PermitAssignmentToFunctionCalls));
-
-  if (!Fold(cx, incDec->unsafeKidReference(), parser)) {
-    return false;
-  }
-
-  MOZ_ASSERT(parser.isValidSimpleAssignmentTarget(
-      incDec->kid(), PermitAssignmentToFunctionCalls));
-
-  return true;
-}
-
-static bool FoldAndOr(JSContext* cx, ParseNode** nodePtr,
-                      PerHandlerParser<FullParseHandler>& parser) {
+static bool FoldAndOr(JSContext* cx, ParseNode** nodePtr) {
   ListNode* node = &(*nodePtr)->as<ListNode>();
 
   MOZ_ASSERT(node->isKind(ParseNodeKind::And) ||
@@ -764,10 +677,6 @@ static bool FoldAndOr(JSContext* cx, ParseNode** nodePtr,
   bool isOrNode = node->isKind(ParseNodeKind::Or);
   ParseNode** elem = node->unsafeHeadReference();
   do {
-    if (!Fold(cx, elem, parser)) {
-      return false;
-    }
-
     Truthiness t = Boolish(*elem);
 
     // If we don't know the constant-folded node's truthiness, we can't
@@ -824,8 +733,9 @@ static bool FoldAndOr(JSContext* cx, ParseNode** nodePtr,
   return true;
 }
 
-static bool FoldConditional(JSContext* cx, ParseNode** nodePtr,
-                            PerHandlerParser<FullParseHandler>& parser) {
+static bool Fold(JSContext* cx, ParseNode** pnp);
+
+static bool FoldConditional(JSContext* cx, ParseNode** nodePtr) {
   ParseNode** nextNode = nodePtr;
 
   do {
@@ -839,12 +749,15 @@ static bool FoldConditional(JSContext* cx, ParseNode** nodePtr,
     MOZ_ASSERT(node->isKind(ParseNodeKind::Conditional));
 
     ParseNode** expr = node->unsafeKid1Reference();
-    if (!FoldCondition(cx, expr, parser)) {
+    if (!Fold(cx, expr)) {
+      return false;
+    }
+    if (!SimplifyCondition(cx, expr)) {
       return false;
     }
 
     ParseNode** ifTruthy = node->unsafeKid2Reference();
-    if (!Fold(cx, ifTruthy, parser)) {
+    if (!Fold(cx, ifTruthy)) {
       return false;
     }
 
@@ -861,7 +774,7 @@ static bool FoldConditional(JSContext* cx, ParseNode** nodePtr,
       MOZ_ASSERT((*ifFalsy)->is<TernaryNode>());
       nextNode = ifFalsy;
     } else {
-      if (!Fold(cx, ifFalsy, parser)) {
+      if (!Fold(cx, ifFalsy)) {
         return false;
       }
     }
@@ -887,8 +800,7 @@ static bool FoldConditional(JSContext* cx, ParseNode** nodePtr,
   return true;
 }
 
-static bool FoldIf(JSContext* cx, ParseNode** nodePtr,
-                   PerHandlerParser<FullParseHandler>& parser) {
+static bool FoldIf(JSContext* cx, ParseNode** nodePtr) {
   ParseNode** nextNode = nodePtr;
 
   do {
@@ -901,12 +813,15 @@ static bool FoldIf(JSContext* cx, ParseNode** nodePtr,
     MOZ_ASSERT(node->isKind(ParseNodeKind::If));
 
     ParseNode** expr = node->unsafeKid1Reference();
-    if (!FoldCondition(cx, expr, parser)) {
+    if (!Fold(cx, expr)) {
+      return false;
+    }
+    if (!SimplifyCondition(cx, expr)) {
       return false;
     }
 
     ParseNode** consequent = node->unsafeKid2Reference();
-    if (!Fold(cx, consequent, parser)) {
+    if (!Fold(cx, consequent)) {
       return false;
     }
 
@@ -921,7 +836,7 @@ static bool FoldIf(JSContext* cx, ParseNode** nodePtr,
         MOZ_ASSERT((*alternative)->is<TernaryNode>());
         nextNode = alternative;
       } else {
-        if (!Fold(cx, alternative, parser)) {
+        if (!Fold(cx, alternative)) {
           return false;
         }
       }
@@ -982,26 +897,6 @@ static bool FoldIf(JSContext* cx, ParseNode** nodePtr,
   return true;
 }
 
-static bool FoldFunction(JSContext* cx, CodeNode* node,
-                         PerHandlerParser<FullParseHandler>& parser) {
-  MOZ_ASSERT(node->isKind(ParseNodeKind::Function));
-
-  // Don't constant-fold inside "use asm" code, as this could create a parse
-  // tree that doesn't type-check as asm.js.
-  if (node->funbox()->useAsmOrInsideUseAsm()) {
-    return true;
-  }
-
-  // Note: body is null for lazily-parsed functions.
-  if (node->body()) {
-    if (!Fold(cx, node->unsafeBodyReference(), parser)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 static double ComputeBinary(ParseNodeKind kind, double left, double right) {
   if (kind == ParseNodeKind::Add) {
     return left + right;
@@ -1034,16 +929,7 @@ static double ComputeBinary(ParseNodeKind kind, double left, double right) {
   return int32_t((kind == ParseNodeKind::Lsh) ? uint32_t(i) << j : i >> j);
 }
 
-static bool FoldModule(JSContext* cx, CodeNode* node,
-                       PerHandlerParser<FullParseHandler>& parser) {
-  MOZ_ASSERT(node->isKind(ParseNodeKind::Module));
-
-  MOZ_ASSERT(node->body());
-  return Fold(cx, node->unsafeBodyReference(), parser);
-}
-
-static bool FoldBinaryArithmetic(JSContext* cx, ListNode* node,
-                                 PerHandlerParser<FullParseHandler>& parser) {
+static bool FoldBinaryArithmetic(JSContext* cx, ListNode* node) {
   MOZ_ASSERT(
       node->isKind(ParseNodeKind::Sub) || node->isKind(ParseNodeKind::Star) ||
       node->isKind(ParseNodeKind::Lsh) || node->isKind(ParseNodeKind::Rsh) ||
@@ -1051,18 +937,13 @@ static bool FoldBinaryArithmetic(JSContext* cx, ListNode* node,
       node->isKind(ParseNodeKind::Mod));
   MOZ_ASSERT(node->count() >= 2);
 
-  // Fold each operand, ideally into a number.
+  // Fold each operand to a number if possible.
   ParseNode** listp = node->unsafeHeadReference();
   for (; *listp; listp = &(*listp)->pn_next) {
-    if (!Fold(cx, listp, parser)) {
-      return false;
-    }
-
     if (!FoldType(cx, *listp, ParseNodeKind::Number)) {
       return false;
     }
   }
-
   node->unsafeReplaceTail(listp);
 
   // Now fold all leading numeric terms together into a single number.
@@ -1088,6 +969,7 @@ static bool FoldBinaryArithmetic(JSContext* cx, ListNode* node,
       elem->setKind(ParseNodeKind::Number);
       elem->setOp(JSOP_DOUBLE);
       elem->as<NumericLiteral>().setValue(d);
+      elem->as<NumericLiteral>().setDecimalPoint(NoDecimal);
 
       node->unsafeDecrementCount();
     }
@@ -1100,24 +982,20 @@ static bool FoldBinaryArithmetic(JSContext* cx, ListNode* node,
       node->setKind(ParseNodeKind::Number);
       node->setOp(JSOP_DOUBLE);
       node->as<NumericLiteral>().setValue(d);
+      node->as<NumericLiteral>().setDecimalPoint(NoDecimal);
     }
   }
 
   return true;
 }
 
-static bool FoldExponentiation(JSContext* cx, ListNode* node,
-                               PerHandlerParser<FullParseHandler>& parser) {
+static bool FoldExponentiation(JSContext* cx, ListNode* node) {
   MOZ_ASSERT(node->isKind(ParseNodeKind::Pow));
   MOZ_ASSERT(node->count() >= 2);
 
   // Fold each operand, ideally into a number.
   ParseNode** listp = node->unsafeHeadReference();
   for (; *listp; listp = &(*listp)->pn_next) {
-    if (!Fold(cx, listp, parser)) {
-      return false;
-    }
-
     if (!FoldType(cx, *listp, ParseNodeKind::Number)) {
       return false;
     }
@@ -1147,112 +1025,12 @@ static bool FoldExponentiation(JSContext* cx, ListNode* node,
   node->setKind(ParseNodeKind::Number);
   node->setOp(JSOP_DOUBLE);
   node->as<NumericLiteral>().setValue(ecmaPow(d1, d2));
+  node->as<NumericLiteral>().setDecimalPoint(NoDecimal);
   return true;
 }
 
-static bool FoldList(JSContext* cx, ListNode* list,
-                     PerHandlerParser<FullParseHandler>& parser) {
-  ParseNode** elem = list->unsafeHeadReference();
-  for (; *elem; elem = &(*elem)->pn_next) {
-    if (!Fold(cx, elem, parser)) {
-      return false;
-    }
-  }
-
-  list->unsafeReplaceTail(elem);
-
-  return true;
-}
-
-static bool FoldReturn(JSContext* cx, UnaryNode* node,
-                       PerHandlerParser<FullParseHandler>& parser) {
-  MOZ_ASSERT(node->isKind(ParseNodeKind::Return));
-
-  if (node->kid()) {
-    if (!Fold(cx, node->unsafeKidReference(), parser)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-static bool FoldTry(JSContext* cx, TryNode* node,
-                    PerHandlerParser<FullParseHandler>& parser) {
-  ParseNode** statements = node->unsafeKid1Reference();
-  if (!Fold(cx, statements, parser)) {
-    return false;
-  }
-
-  ParseNode** catchScope = node->unsafeKid2Reference();
-  if (*catchScope) {
-    if (!Fold(cx, catchScope, parser)) {
-      return false;
-    }
-  }
-
-  ParseNode** finally = node->unsafeKid3Reference();
-  if (*finally) {
-    if (!Fold(cx, finally, parser)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-static bool FoldCatch(JSContext* cx, BinaryNode* node,
-                      PerHandlerParser<FullParseHandler>& parser) {
-  ParseNode** declPattern = node->unsafeLeftReference();
-  if (*declPattern) {
-    if (!Fold(cx, declPattern, parser)) {
-      return false;
-    }
-  }
-
-  ParseNode** statements = node->unsafeRightReference();
-  if (*statements) {
-    if (!Fold(cx, statements, parser)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-static bool FoldClass(JSContext* cx, ClassNode* node,
-                      PerHandlerParser<FullParseHandler>& parser) {
-  MOZ_ASSERT(node->isKind(ParseNodeKind::Class));
-
-  ParseNode** classNames = node->unsafeKid1Reference();
-  if (*classNames) {
-    if (!Fold(cx, classNames, parser)) {
-      return false;
-    }
-  }
-
-  ParseNode** heritage = node->unsafeKid2Reference();
-  if (*heritage) {
-    if (!Fold(cx, heritage, parser)) {
-      return false;
-    }
-  }
-
-  ParseNode** body = node->unsafeKid3Reference();
-  return Fold(cx, body, parser);
-}
-
-static bool FoldElement(JSContext* cx, ParseNode** nodePtr,
-                        PerHandlerParser<FullParseHandler>& parser) {
+static bool FoldElement(JSContext* cx, ParseNode** nodePtr) {
   PropertyByValue* elem = &(*nodePtr)->as<PropertyByValue>();
-
-  if (!Fold(cx, elem->unsafeLeftReference(), parser)) {
-    return false;
-  }
-
-  if (!Fold(cx, elem->unsafeRightReference(), parser)) {
-    return false;
-  }
 
   ParseNode* expr = &elem->expression();
   ParseNode* key = &elem->key();
@@ -1267,6 +1045,7 @@ static bool FoldElement(JSContext* cx, ParseNode** nodePtr,
       key->setKind(ParseNodeKind::Number);
       key->setOp(JSOP_DOUBLE);
       key->as<NumericLiteral>().setValue(index);
+      key->as<NumericLiteral>().setDecimalPoint(NoDecimal);
     } else {
       name = atom->asPropertyName();
     }
@@ -1291,31 +1070,25 @@ static bool FoldElement(JSContext* cx, ParseNode** nodePtr,
 
   // Optimization 3: We have expr["foo"] where foo is not an index.  Convert
   // to a property access (like expr.foo) that optimizes better downstream.
-  NameNode* nameNode = parser.newPropertyName(name, key->pn_pos);
-  if (!nameNode) {
-    return false;
-  }
-  ParseNode* dottedAccess = parser.newPropertyAccess(expr, nameNode);
-  if (!dottedAccess) {
-    return false;
-  }
-  dottedAccess->setInParens(elem->isInParens());
-  ReplaceNode(nodePtr, dottedAccess);
+  key->setKind(ParseNodeKind::PropertyName);
+  key->setOp(JSOP_NOP);
+  key->as<NameNode>().setAtom(name);
+  key->as<NameNode>().setInitializer(nullptr);
+
+  (*nodePtr)->setKind(ParseNodeKind::Dot);
+  (*nodePtr)->setOp(JSOP_NOP);
+  *(*nodePtr)->as<PropertyAccess>().unsafeLeftReference() = expr;
+  *(*nodePtr)->as<PropertyAccess>().unsafeRightReference() = key;
+  (*nodePtr)->as<PropertyAccess>().setInParens(elem->isInParens());
 
   return true;
 }
 
-static bool FoldAdd(JSContext* cx, ParseNode** nodePtr,
-                    PerHandlerParser<FullParseHandler>& parser) {
+static bool FoldAdd(JSContext* cx, ParseNode** nodePtr) {
   ListNode* node = &(*nodePtr)->as<ListNode>();
 
   MOZ_ASSERT(node->isKind(ParseNodeKind::Add));
   MOZ_ASSERT(node->count() >= 2);
-
-  // Generically fold all operands first.
-  if (!FoldList(cx, node, parser)) {
-    return false;
-  }
 
   // Fold leading numeric operands together:
   //
@@ -1457,484 +1230,210 @@ static bool FoldAdd(JSContext* cx, ParseNode** nodePtr,
   return true;
 }
 
-static bool FoldCall(JSContext* cx, BinaryNode* node,
-                     PerHandlerParser<FullParseHandler>& parser) {
-  MOZ_ASSERT(node->isKind(ParseNodeKind::Call) ||
-             node->isKind(ParseNodeKind::SuperCall) ||
-             node->isKind(ParseNodeKind::New) ||
-             node->isKind(ParseNodeKind::TaggedTemplate));
+class FoldVisitor : public ParseNodeVisitor<FoldVisitor> {
+  using Base = ParseNodeVisitor;
 
-  // Don't fold a parenthesized callable component in an invocation, as this
-  // might cause a different |this| value to be used, changing semantics:
-  //
-  //   var prop = "global";
-  //   var obj = { prop: "obj", f: function() { return this.prop; } };
-  //   assertEq((true ? obj.f : null)(), "global");
-  //   assertEq(obj.f(), "obj");
-  //   assertEq((true ? obj.f : null)``, "global");
-  //   assertEq(obj.f``, "obj");
-  //
-  // As an exception to this, we do allow folding the function in
-  // `(function() { ... })()` (the module pattern), because that lets us
-  // constant fold code inside that function.
-  //
-  // See bug 537673 and bug 1182373.
-  ParseNode* callee = node->left();
-  if (node->isKind(ParseNodeKind::New) || !callee->isInParens() ||
-      callee->isKind(ParseNodeKind::Function)) {
-    if (!Fold(cx, node->unsafeLeftReference(), parser)) {
+ public:
+  explicit FoldVisitor(JSContext* cx) : ParseNodeVisitor(cx) {}
+
+  bool visitElem(ParseNode*& pn) {
+    return Base::visitElem(pn) && FoldElement(cx, &pn);
+  }
+
+  bool visitTypeOfExpr(ParseNode*& pn) {
+    return Base::visitTypeOfExpr(pn) &&
+           FoldTypeOfExpr(cx, &pn->as<UnaryNode>());
+  }
+
+  bool visitDeleteExpr(ParseNode*& pn) {
+    return Base::visitDeleteExpr(pn) &&
+           FoldDeleteExpr(cx, &pn->as<UnaryNode>());
+  }
+
+  bool visitDeleteElem(ParseNode*& pn) {
+    return Base::visitDeleteElem(pn) &&
+           FoldDeleteElement(cx, &pn->as<UnaryNode>());
+  }
+
+  bool visitNot(ParseNode*& pn) {
+    return Base::visitNot(pn) && FoldNot(cx, &pn->as<UnaryNode>());
+  }
+
+  bool visitBitNot(ParseNode*& pn) {
+    return Base::visitBitNot(pn) &&
+           FoldUnaryArithmetic(cx, &pn->as<UnaryNode>());
+  }
+
+  bool visitPos(ParseNode*& pn) {
+    return Base::visitPos(pn) && FoldUnaryArithmetic(cx, &pn->as<UnaryNode>());
+  }
+
+  bool visitNeg(ParseNode*& pn) {
+    return Base::visitNeg(pn) && FoldUnaryArithmetic(cx, &pn->as<UnaryNode>());
+  }
+
+  bool visitPow(ParseNode*& pn) {
+    return Base::visitPow(pn) && FoldExponentiation(cx, &pn->as<ListNode>());
+  }
+
+  bool visitStar(ParseNode*& pn) {
+    return Base::visitStar(pn) && FoldBinaryArithmetic(cx, &pn->as<ListNode>());
+  }
+
+  bool visitDiv(ParseNode*& pn) {
+    return Base::visitDiv(pn) && FoldBinaryArithmetic(cx, &pn->as<ListNode>());
+  }
+
+  bool visitMod(ParseNode*& pn) {
+    return Base::visitMod(pn) && FoldBinaryArithmetic(cx, &pn->as<ListNode>());
+  }
+
+  bool visitAdd(ParseNode*& pn) {
+    return Base::visitAdd(pn) && FoldAdd(cx, &pn);
+  }
+
+  bool visitSub(ParseNode*& pn) {
+    return Base::visitSub(pn) && FoldBinaryArithmetic(cx, &pn->as<ListNode>());
+  }
+
+  bool visitLsh(ParseNode*& pn) {
+    return Base::visitLsh(pn) && FoldBinaryArithmetic(cx, &pn->as<ListNode>());
+  }
+
+  bool visitRsh(ParseNode*& pn) {
+    return Base::visitRsh(pn) && FoldBinaryArithmetic(cx, &pn->as<ListNode>());
+  }
+
+  bool visitUrsh(ParseNode*& pn) {
+    return Base::visitUrsh(pn) && FoldBinaryArithmetic(cx, &pn->as<ListNode>());
+  }
+
+  bool visitAnd(ParseNode*& pn) {
+    // Note that this does result in the unfortunate fact that dead arms of this
+    // node get constant folded. The same goes for visitOr.
+    return Base::visitAnd(pn) && FoldAndOr(cx, &pn);
+  }
+
+  bool visitOr(ParseNode*& pn) {
+    return Base::visitOr(pn) && FoldAndOr(cx, &pn);
+  }
+
+  bool visitConditional(ParseNode*& pn) {
+    // Don't call base-class visitConditional because FoldConditional processes
+    // pn's child nodes specially to save stack space.
+    return FoldConditional(cx, &pn);
+  }
+
+ private:
+  bool internalVisitCall(BinaryNode* node) {
+    MOZ_ASSERT(node->isKind(ParseNodeKind::Call) ||
+               node->isKind(ParseNodeKind::SuperCall) ||
+               node->isKind(ParseNodeKind::New) ||
+               node->isKind(ParseNodeKind::TaggedTemplate));
+
+    // Don't fold a parenthesized callable component in an invocation, as this
+    // might cause a different |this| value to be used, changing semantics:
+    //
+    //   var prop = "global";
+    //   var obj = { prop: "obj", f: function() { return this.prop; } };
+    //   assertEq((true ? obj.f : null)(), "global");
+    //   assertEq(obj.f(), "obj");
+    //   assertEq((true ? obj.f : null)``, "global");
+    //   assertEq(obj.f``, "obj");
+    //
+    // As an exception to this, we do allow folding the function in
+    // `(function() { ... })()` (the module pattern), because that lets us
+    // constant fold code inside that function.
+    //
+    // See bug 537673 and bug 1182373.
+    ParseNode* callee = node->left();
+    if (node->isKind(ParseNodeKind::New) || !callee->isInParens() ||
+        callee->isKind(ParseNodeKind::Function)) {
+      if (!visit(*node->unsafeLeftReference())) {
+        return false;
+      }
+    }
+
+    if (!visit(*node->unsafeRightReference())) {
       return false;
     }
-  }
 
-  if (!Fold(cx, node->unsafeRightReference(), parser)) {
-    return false;
-  }
-
-  return true;
-}
-
-static bool FoldArguments(JSContext* cx, ListNode* node,
-                          PerHandlerParser<FullParseHandler>& parser) {
-  MOZ_ASSERT(node->isKind(ParseNodeKind::Arguments));
-
-  ParseNode** listp = node->unsafeHeadReference();
-  for (; *listp; listp = &(*listp)->pn_next) {
-    if (!Fold(cx, listp, parser)) {
-      return false;
-    }
-  }
-
-  node->unsafeReplaceTail(listp);
-  return true;
-}
-
-static bool FoldForInOrOf(JSContext* cx, TernaryNode* node,
-                          PerHandlerParser<FullParseHandler>& parser) {
-  MOZ_ASSERT(node->isKind(ParseNodeKind::ForIn) ||
-             node->isKind(ParseNodeKind::ForOf));
-  MOZ_ASSERT(!node->kid2());
-
-  return Fold(cx, node->unsafeKid1Reference(), parser) &&
-         Fold(cx, node->unsafeKid3Reference(), parser);
-}
-
-static bool FoldForHead(JSContext* cx, TernaryNode* node,
-                        PerHandlerParser<FullParseHandler>& parser) {
-  MOZ_ASSERT(node->isKind(ParseNodeKind::ForHead));
-
-  ParseNode** init = node->unsafeKid1Reference();
-  if (*init) {
-    if (!Fold(cx, init, parser)) {
-      return false;
-    }
-  }
-
-  ParseNode** test = node->unsafeKid2Reference();
-  if (*test) {
-    if (!FoldCondition(cx, test, parser)) {
-      return false;
-    }
-
-    if ((*test)->isKind(ParseNodeKind::True)) {
-      (*test) = nullptr;
-    }
-  }
-
-  ParseNode** update = node->unsafeKid3Reference();
-  if (*update) {
-    if (!Fold(cx, update, parser)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-static bool FoldDottedProperty(JSContext* cx, PropertyAccess* prop,
-                               PerHandlerParser<FullParseHandler>& parser) {
-  // Iterate through a long chain of dotted property accesses to find the
-  // most-nested non-dotted property node, then fold that.
-  ParseNode** nested = prop->unsafeLeftReference();
-  while ((*nested)->isKind(ParseNodeKind::Dot)) {
-    nested = (*nested)->as<PropertyAccess>().unsafeLeftReference();
-  }
-
-  return Fold(cx, nested, parser);
-}
-
-static bool FoldName(JSContext* cx, NameNode* nameNode,
-                     PerHandlerParser<FullParseHandler>& parser) {
-  MOZ_ASSERT(nameNode->isKind(ParseNodeKind::Name));
-
-  if (!nameNode->initializer()) {
     return true;
   }
 
-  return Fold(cx, nameNode->unsafeInitializerReference(), parser);
-}
-
-bool Fold(JSContext* cx, ParseNode** pnp,
-          PerHandlerParser<FullParseHandler>& parser) {
-  if (!CheckRecursionLimit(cx)) {
-    return false;
+ public:
+  bool visitCall(ParseNode*& pn) {
+    return internalVisitCall(&pn->as<BinaryNode>());
   }
 
-  ParseNode* pn = *pnp;
-
-  switch (pn->getKind()) {
-    case ParseNodeKind::EmptyStatement:
-    case ParseNodeKind::True:
-    case ParseNodeKind::False:
-    case ParseNodeKind::Null:
-    case ParseNodeKind::RawUndefined:
-    case ParseNodeKind::Elision:
-    case ParseNodeKind::Generator:
-    case ParseNodeKind::ExportBatchSpec:
-    case ParseNodeKind::PosHolder:
-      MOZ_ASSERT(pn->is<NullaryNode>());
-      return true;
-
-    case ParseNodeKind::Debugger:
-      MOZ_ASSERT(pn->is<DebuggerStatement>());
-      return true;
-
-    case ParseNodeKind::Break:
-      MOZ_ASSERT(pn->is<BreakStatement>());
-      return true;
-
-    case ParseNodeKind::Continue:
-      MOZ_ASSERT(pn->is<ContinueStatement>());
-      return true;
-
-    case ParseNodeKind::ObjectPropertyName:
-    case ParseNodeKind::PrivateName:
-    case ParseNodeKind::String:
-    case ParseNodeKind::TemplateString:
-      MOZ_ASSERT(pn->is<NameNode>());
-      return true;
-
-    case ParseNodeKind::RegExp:
-      MOZ_ASSERT(pn->is<RegExpLiteral>());
-      return true;
-
-    case ParseNodeKind::Number:
-      MOZ_ASSERT(pn->is<NumericLiteral>());
-      return true;
-
-#ifdef ENABLE_BIGINT
-    case ParseNodeKind::BigInt:
-      MOZ_ASSERT(pn->is<BigIntLiteral>());
-      return true;
-#endif
-
-    case ParseNodeKind::SuperBase:
-    case ParseNodeKind::TypeOfName: {
-#ifdef DEBUG
-      UnaryNode* node = &pn->as<UnaryNode>();
-      NameNode* nameNode = &node->kid()->as<NameNode>();
-      MOZ_ASSERT(nameNode->isKind(ParseNodeKind::Name));
-      MOZ_ASSERT(!nameNode->initializer());
-#endif
-      return true;
-    }
-
-    case ParseNodeKind::TypeOfExpr:
-      return FoldTypeOfExpr(cx, &pn->as<UnaryNode>(), parser);
-
-    case ParseNodeKind::DeleteName:
-      MOZ_ASSERT(pn->as<UnaryNode>().kid()->isKind(ParseNodeKind::Name));
-      return true;
-
-    case ParseNodeKind::DeleteExpr:
-      return FoldDeleteExpr(cx, &pn->as<UnaryNode>(), parser);
-
-    case ParseNodeKind::DeleteElem:
-      return FoldDeleteElement(cx, &pn->as<UnaryNode>(), parser);
-
-    case ParseNodeKind::DeleteProp:
-      return FoldDeleteProperty(cx, &pn->as<UnaryNode>(), parser);
-
-    case ParseNodeKind::Conditional:
-      MOZ_ASSERT((*pnp)->is<TernaryNode>());
-      return FoldConditional(cx, pnp, parser);
-
-    case ParseNodeKind::If:
-      MOZ_ASSERT((*pnp)->is<TernaryNode>());
-      return FoldIf(cx, pnp, parser);
-
-    case ParseNodeKind::Not:
-      return FoldNot(cx, &pn->as<UnaryNode>(), parser);
-
-    case ParseNodeKind::BitNot:
-    case ParseNodeKind::Pos:
-    case ParseNodeKind::Neg:
-      return FoldUnaryArithmetic(cx, &pn->as<UnaryNode>(), parser);
-
-    case ParseNodeKind::PreIncrement:
-    case ParseNodeKind::PostIncrement:
-    case ParseNodeKind::PreDecrement:
-    case ParseNodeKind::PostDecrement:
-      return FoldIncrementDecrement(cx, &pn->as<UnaryNode>(), parser);
-
-    case ParseNodeKind::ExpressionStatement:
-    case ParseNodeKind::Throw:
-    case ParseNodeKind::MutateProto:
-    case ParseNodeKind::ComputedName:
-    case ParseNodeKind::Spread:
-    case ParseNodeKind::Export:
-    case ParseNodeKind::Void:
-      return Fold(cx, pn->as<UnaryNode>().unsafeKidReference(), parser);
-
-    case ParseNodeKind::ExportDefault:
-      return Fold(cx, pn->as<BinaryNode>().unsafeLeftReference(), parser);
-
-    case ParseNodeKind::This: {
-      ThisLiteral* node = &pn->as<ThisLiteral>();
-      ParseNode** expr = node->unsafeKidReference();
-      if (*expr) {
-        return Fold(cx, expr, parser);
-      }
-      return true;
-    }
-
-    case ParseNodeKind::Pipeline:
-      return true;
-
-    case ParseNodeKind::And:
-    case ParseNodeKind::Or:
-      MOZ_ASSERT((*pnp)->is<ListNode>());
-      return FoldAndOr(cx, pnp, parser);
-
-    case ParseNodeKind::Function:
-      return FoldFunction(cx, &pn->as<CodeNode>(), parser);
-
-    case ParseNodeKind::Module:
-      return FoldModule(cx, &pn->as<CodeNode>(), parser);
-
-    case ParseNodeKind::Sub:
-    case ParseNodeKind::Star:
-    case ParseNodeKind::Lsh:
-    case ParseNodeKind::Rsh:
-    case ParseNodeKind::Ursh:
-    case ParseNodeKind::Div:
-    case ParseNodeKind::Mod:
-      return FoldBinaryArithmetic(cx, &pn->as<ListNode>(), parser);
-
-    case ParseNodeKind::Pow:
-      return FoldExponentiation(cx, &pn->as<ListNode>(), parser);
-
-    // Various list nodes not requiring care to minimally fold.  Some of
-    // these could be further folded/optimized, but we don't make the effort.
-    case ParseNodeKind::BitOr:
-    case ParseNodeKind::BitXor:
-    case ParseNodeKind::BitAnd:
-    case ParseNodeKind::StrictEq:
-    case ParseNodeKind::Eq:
-    case ParseNodeKind::StrictNe:
-    case ParseNodeKind::Ne:
-    case ParseNodeKind::Lt:
-    case ParseNodeKind::Le:
-    case ParseNodeKind::Gt:
-    case ParseNodeKind::Ge:
-    case ParseNodeKind::InstanceOf:
-    case ParseNodeKind::In:
-    case ParseNodeKind::Comma:
-    case ParseNodeKind::Array:
-    case ParseNodeKind::Object:
-    case ParseNodeKind::StatementList:
-    case ParseNodeKind::ClassMemberList:
-    case ParseNodeKind::TemplateStringList:
-    case ParseNodeKind::Var:
-    case ParseNodeKind::Const:
-    case ParseNodeKind::Let:
-    case ParseNodeKind::ParamsBody:
-    case ParseNodeKind::CallSiteObj:
-    case ParseNodeKind::ExportSpecList:
-    case ParseNodeKind::ImportSpecList:
-      return FoldList(cx, &pn->as<ListNode>(), parser);
-
-    case ParseNodeKind::InitialYield: {
-#ifdef DEBUG
-      AssignmentNode* assignNode =
-          &pn->as<UnaryNode>().kid()->as<AssignmentNode>();
-      MOZ_ASSERT(assignNode->left()->isKind(ParseNodeKind::Name));
-      MOZ_ASSERT(assignNode->right()->isKind(ParseNodeKind::Generator));
-#endif
-      return true;
-    }
-
-    case ParseNodeKind::YieldStar:
-      return Fold(cx, pn->as<UnaryNode>().unsafeKidReference(), parser);
-
-    case ParseNodeKind::Yield:
-    case ParseNodeKind::Await: {
-      UnaryNode* node = &pn->as<UnaryNode>();
-      if (!node->kid()) {
-        return true;
-      }
-      return Fold(cx, node->unsafeKidReference(), parser);
-    }
-
-    case ParseNodeKind::Return:
-      return FoldReturn(cx, &pn->as<UnaryNode>(), parser);
-
-    case ParseNodeKind::Try:
-      return FoldTry(cx, &pn->as<TryNode>(), parser);
-
-    case ParseNodeKind::Catch:
-      return FoldCatch(cx, &pn->as<BinaryNode>(), parser);
-
-    case ParseNodeKind::Class:
-      return FoldClass(cx, &pn->as<ClassNode>(), parser);
-
-    case ParseNodeKind::Elem: {
-      MOZ_ASSERT((*pnp)->is<PropertyByValue>());
-      return FoldElement(cx, pnp, parser);
-    }
-
-    case ParseNodeKind::Add:
-      MOZ_ASSERT((*pnp)->is<ListNode>());
-      return FoldAdd(cx, pnp, parser);
-
-    case ParseNodeKind::Call:
-    case ParseNodeKind::New:
-    case ParseNodeKind::SuperCall:
-    case ParseNodeKind::TaggedTemplate:
-      return FoldCall(cx, &pn->as<BinaryNode>(), parser);
-
-    case ParseNodeKind::Arguments:
-      return FoldArguments(cx, &pn->as<ListNode>(), parser);
-
-    case ParseNodeKind::Switch:
-    case ParseNodeKind::Colon:
-    case ParseNodeKind::Assign:
-    case ParseNodeKind::AddAssign:
-    case ParseNodeKind::SubAssign:
-    case ParseNodeKind::BitOrAssign:
-    case ParseNodeKind::BitAndAssign:
-    case ParseNodeKind::BitXorAssign:
-    case ParseNodeKind::LshAssign:
-    case ParseNodeKind::RshAssign:
-    case ParseNodeKind::UrshAssign:
-    case ParseNodeKind::DivAssign:
-    case ParseNodeKind::ModAssign:
-    case ParseNodeKind::MulAssign:
-    case ParseNodeKind::PowAssign:
-    case ParseNodeKind::Import:
-    case ParseNodeKind::ExportFrom:
-    case ParseNodeKind::Shorthand:
-    case ParseNodeKind::For:
-    case ParseNodeKind::ClassMethod:
-    case ParseNodeKind::ImportSpec:
-    case ParseNodeKind::ExportSpec:
-    case ParseNodeKind::SetThis: {
-      BinaryNode* node = &pn->as<BinaryNode>();
-      return Fold(cx, node->unsafeLeftReference(), parser) &&
-             Fold(cx, node->unsafeRightReference(), parser);
-    }
-
-    case ParseNodeKind::ClassField: {
-      ClassField* node = &pn->as<ClassField>();
-      if (node->hasInitializer()) {
-        if (!Fold(cx, node->unsafeInitializerReference(), parser)) {
-          return false;
-        }
-      }
-
-      return true;
-    }
-
-    case ParseNodeKind::NewTarget:
-    case ParseNodeKind::ImportMeta: {
-#ifdef DEBUG
-      BinaryNode* node = &pn->as<BinaryNode>();
-      MOZ_ASSERT(node->left()->isKind(ParseNodeKind::PosHolder));
-      MOZ_ASSERT(node->right()->isKind(ParseNodeKind::PosHolder));
-#endif
-      return true;
-    }
-
-    case ParseNodeKind::CallImport: {
-      BinaryNode* node = &pn->as<BinaryNode>();
-      MOZ_ASSERT(node->left()->isKind(ParseNodeKind::PosHolder));
-      return Fold(cx, node->unsafeRightReference(), parser);
-    }
-
-    case ParseNodeKind::ClassNames: {
-      ClassNames* names = &pn->as<ClassNames>();
-      if (names->outerBinding()) {
-        if (!Fold(cx, names->unsafeLeftReference(), parser)) {
-          return false;
-        }
-      }
-      return Fold(cx, names->unsafeRightReference(), parser);
-    }
-
-    case ParseNodeKind::DoWhile: {
-      BinaryNode* node = &pn->as<BinaryNode>();
-      return Fold(cx, node->unsafeLeftReference(), parser) &&
-             FoldCondition(cx, node->unsafeRightReference(), parser);
-    }
-
-    case ParseNodeKind::While: {
-      BinaryNode* node = &pn->as<BinaryNode>();
-      return FoldCondition(cx, node->unsafeLeftReference(), parser) &&
-             Fold(cx, node->unsafeRightReference(), parser);
-    }
-
-    case ParseNodeKind::Case: {
-      CaseClause* caseClause = &pn->as<CaseClause>();
-
-      // left (caseExpression) is null for DefaultClauses.
-      if (caseClause->left()) {
-        if (!Fold(cx, caseClause->unsafeLeftReference(), parser)) {
-          return false;
-        }
-      }
-      return Fold(cx, caseClause->unsafeRightReference(), parser);
-    }
-
-    case ParseNodeKind::With: {
-      BinaryNode* node = &pn->as<BinaryNode>();
-      return Fold(cx, node->unsafeLeftReference(), parser) &&
-             Fold(cx, node->unsafeRightReference(), parser);
-    }
-
-    case ParseNodeKind::ForIn:
-    case ParseNodeKind::ForOf:
-      return FoldForInOrOf(cx, &pn->as<TernaryNode>(), parser);
-
-    case ParseNodeKind::ForHead:
-      return FoldForHead(cx, &pn->as<TernaryNode>(), parser);
-
-    case ParseNodeKind::Label:
-      return Fold(cx, pn->as<LabeledStatement>().unsafeStatementReference(),
-                  parser);
-
-    case ParseNodeKind::PropertyName:
-      MOZ_CRASH("unreachable, handled by ::Dot");
-
-    case ParseNodeKind::Dot:
-      return FoldDottedProperty(cx, &pn->as<PropertyAccess>(), parser);
-
-    case ParseNodeKind::LexicalScope: {
-      LexicalScopeNode* node = &pn->as<LexicalScopeNode>();
-      if (!node->scopeBody()) {
-        return true;
-      }
-      return Fold(cx, node->unsafeScopeBodyReference(), parser);
-    }
-
-    case ParseNodeKind::Name:
-      return FoldName(cx, &pn->as<NameNode>(), parser);
-
-    case ParseNodeKind::Limit:  // invalid sentinel value
-      MOZ_CRASH("invalid node kind");
+  bool visitNew(ParseNode*& pn) {
+    return internalVisitCall(&pn->as<BinaryNode>());
   }
 
-  MOZ_CRASH("shouldn't reach here");
-  return false;
+  bool visitSuperCall(ParseNode*& pn) {
+    return internalVisitCall(&pn->as<BinaryNode>());
+  }
+
+  bool visitTaggedTemplate(ParseNode*& pn) {
+    return internalVisitCall(&pn->as<BinaryNode>());
+  }
+
+  bool visitIf(ParseNode*& pn) {
+    // Don't call base-class visitIf because FoldIf processes pn's child nodes
+    // specially to save stack space.
+    return FoldIf(cx, &pn);
+  }
+
+  bool visitFor(ParseNode*& pn) {
+    if (!Base::visitFor(pn)) {
+      return false;
+    }
+
+    ForNode& stmt = pn->as<ForNode>();
+    if (stmt.left()->isKind(ParseNodeKind::ForHead)) {
+      TernaryNode& head = stmt.left()->as<TernaryNode>();
+      ParseNode** test = head.unsafeKid2Reference();
+      if (*test) {
+        if (!SimplifyCondition(cx, test)) {
+          return false;
+        }
+        if ((*test)->isKind(ParseNodeKind::True)) {
+          *test = nullptr;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  bool visitWhile(ParseNode*& pn) {
+    BinaryNode& node = pn->as<BinaryNode>();
+    return Base::visitWhile(pn) &&
+           SimplifyCondition(cx, node.unsafeLeftReference());
+  }
+
+  bool visitDoWhile(ParseNode*& pn) {
+    BinaryNode& node = pn->as<BinaryNode>();
+    return Base::visitDoWhile(pn) &&
+           SimplifyCondition(cx, node.unsafeRightReference());
+  }
+
+  bool visitFunction(ParseNode*& pn) {
+    CodeNode& node = pn->as<CodeNode>();
+
+    // Don't constant-fold inside "use asm" code, as this could create a parse
+    // tree that doesn't type-check as asm.js.
+    if (node.funbox()->useAsmOrInsideUseAsm()) {
+      return true;
+    }
+
+    return Base::visitFunction(pn);
+  }
+};
+
+bool Fold(JSContext* cx, ParseNode** pnp) {
+  FoldVisitor visitor(cx);
+  return visitor.visit(*pnp);
 }
 
 bool frontend::FoldConstants(JSContext* cx, ParseNode** pnp,
@@ -1947,5 +1446,6 @@ bool frontend::FoldConstants(JSContext* cx, ParseNode** pnp,
 
   AutoTraceLog traceLog(TraceLoggerForCurrentThread(cx),
                         TraceLogger_BytecodeFoldConstants);
-  return Fold(cx, pnp, *parser);
+
+  return Fold(cx, pnp);
 }
