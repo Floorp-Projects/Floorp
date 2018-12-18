@@ -34,6 +34,7 @@ use picture::RetainedTiles;
 use prim_store::{PrimitiveDataStore, PrimitiveScratchBuffer, PrimitiveInstance};
 use prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData};
 use prim_store::gradient::{LinearGradientDataStore, RadialGradientDataStore};
+use prim_store::image::{ImageDataStore, YuvImageDataStore};
 use prim_store::text_run::TextRunDataStore;
 use profiler::{BackendProfileCounters, IpcProfileCounters, ResourceProfileCounters};
 use record::ApiRecordingReceiver;
@@ -205,9 +206,11 @@ pub struct FrameResources {
     /// Currently active / available primitives. Kept in sync with the
     /// primitive interner in the scene builder, per document.
     pub prim_data_store: PrimitiveDataStore,
+    pub image_data_store: ImageDataStore,
     pub linear_grad_data_store: LinearGradientDataStore,
     pub radial_grad_data_store: RadialGradientDataStore,
     pub text_run_data_store: TextRunDataStore,
+    pub yuv_image_data_store: YuvImageDataStore,
 }
 
 impl FrameResources {
@@ -221,10 +224,12 @@ impl FrameResources {
             PrimitiveInstanceKind::NormalBorder { data_handle, .. } |
             PrimitiveInstanceKind::ImageBorder { data_handle, .. } |
             PrimitiveInstanceKind::Rectangle { data_handle, .. } |
-            PrimitiveInstanceKind::YuvImage { data_handle, .. } |
-            PrimitiveInstanceKind::Image { data_handle, .. } |
             PrimitiveInstanceKind::Clear { data_handle, .. } => {
                 let prim_data = &self.prim_data_store[data_handle];
+                &prim_data.common
+            }
+            PrimitiveInstanceKind::Image { data_handle, .. } => {
+                let prim_data = &self.image_data_store[data_handle];
                 &prim_data.common
             }
             PrimitiveInstanceKind::LinearGradient { data_handle, .. } => {
@@ -237,6 +242,10 @@ impl FrameResources {
             }
             PrimitiveInstanceKind::TextRun { data_handle, .. }  => {
                 let prim_data = &self.text_run_data_store[data_handle];
+                &prim_data.common
+            }
+            PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
+                let prim_data = &self.yuv_image_data_store[data_handle];
                 &prim_data.common
             }
         }
@@ -1221,6 +1230,10 @@ impl RenderBackend {
                 updates.prim_updates,
                 &mut profile_counters.intern.prims,
             );
+            doc.resources.image_data_store.apply_updates(
+                updates.image_updates,
+                &mut profile_counters.intern.images,
+            );
             doc.resources.linear_grad_data_store.apply_updates(
                 updates.linear_grad_updates,
                 &mut profile_counters.intern.linear_gradients,
@@ -1232,6 +1245,10 @@ impl RenderBackend {
             doc.resources.text_run_data_store.apply_updates(
                 updates.text_run_updates,
                 &mut profile_counters.intern.text_runs,
+            );
+            doc.resources.yuv_image_data_store.apply_updates(
+                updates.yuv_image_updates,
+                &mut profile_counters.intern.yuv_images,
             );
         }
 
@@ -1712,4 +1729,3 @@ impl RenderBackend {
         }
     }
 }
-

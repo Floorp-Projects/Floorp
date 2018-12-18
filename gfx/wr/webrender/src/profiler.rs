@@ -404,9 +404,11 @@ pub struct IpcProfileCounters {
 #[derive(Clone)]
 pub struct InternProfileCounters {
     pub prims: ResourceProfileCounter,
+    pub images: ResourceProfileCounter,
     pub linear_gradients: ResourceProfileCounter,
     pub radial_gradients: ResourceProfileCounter,
     pub text_runs: ResourceProfileCounter,
+    pub yuv_images: ResourceProfileCounter,
     pub clips: ResourceProfileCounter,
 }
 
@@ -450,9 +452,11 @@ impl BackendProfileCounters {
             },
             intern: InternProfileCounters {
                 prims: ResourceProfileCounter::new("Interned primitives"),
+                images: ResourceProfileCounter::new("Interned images"),
                 linear_gradients: ResourceProfileCounter::new("Interned linear gradients"),
                 radial_gradients: ResourceProfileCounter::new("Interned radial gradients"),
                 text_runs: ResourceProfileCounter::new("Interned text runs"),
+                yuv_images: ResourceProfileCounter::new("Interned YUV images"),
                 clips: ResourceProfileCounter::new("Interned clips"),
             },
         }
@@ -1103,9 +1107,11 @@ impl Profiler {
             &[
                 &backend_profile.intern.clips,
                 &backend_profile.intern.prims,
+                &backend_profile.intern.images,
                 &backend_profile.intern.linear_gradients,
                 &backend_profile.intern.radial_gradients,
                 &backend_profile.intern.text_runs,
+                &backend_profile.intern.yuv_images,
             ],
             debug_renderer,
             true,
