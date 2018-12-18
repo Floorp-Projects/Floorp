@@ -46,7 +46,7 @@ async function test_connect_addon(oopMode) {
     client,
     chrome: true,
   });
-  is(addonTarget.form.isOOP, oopMode,
+  is(addonTarget.targetForm.isOOP, oopMode,
      "Got the expected oop mode in the webextension actor form");
   const frames = await waitForFramesUpdated(addonTarget);
   const backgroundPageFrame = frames.filter((frame) => {
@@ -58,8 +58,7 @@ async function test_connect_addon(oopMode) {
   // When running in oop mode we can explicitly attach the thread without locking
   // the main process.
   if (oopMode) {
-    const [, threadFront] = await addonTarget.activeTab
-                                             .attachThread(addonTarget.form.threadActor);
+    const [, threadFront] = await addonTarget.activeTab.attachThread();
 
     ok(threadFront, "Got a threadFront for the target addon");
     is(threadFront.paused, true, "The addon threadActor is paused");
