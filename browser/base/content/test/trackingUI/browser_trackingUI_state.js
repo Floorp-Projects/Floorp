@@ -135,8 +135,13 @@ function testTrackingPage(window) {
 
   ok(!hidden("#identity-popup-content-blocking-category-tracking-protection"),
     "Showing trackers category");
-  ok(!hidden("#identity-popup-content-blocking-category-cookies"),
-    "Showing cookie restrictions category");
+  if (gTrackingPageURL == COOKIE_PAGE) {
+    ok(!hidden("#identity-popup-content-blocking-category-cookies"),
+      "Showing cookie restrictions category");
+  } else {
+    ok(hidden("#identity-popup-content-blocking-category-cookies"),
+      "Not showing cookie restrictions category");
+  }
 }
 
 function testTrackingPageUnblocked(blockedByTP, window) {
@@ -158,8 +163,13 @@ function testTrackingPageUnblocked(blockedByTP, window) {
 
   ok(!hidden("#identity-popup-content-blocking-category-tracking-protection"),
     "Showing trackers category");
-  ok(!hidden("#identity-popup-content-blocking-category-cookies"),
-    "Showing cookie restrictions category");
+  if (gTrackingPageURL == COOKIE_PAGE) {
+    ok(!hidden("#identity-popup-content-blocking-category-cookies"),
+      "Showing cookie restrictions category");
+  } else {
+    ok(hidden("#identity-popup-content-blocking-category-cookies"),
+      "Not showing cookie restrictions category");
+  }
 }
 
 async function testContentBlocking(tab) {
