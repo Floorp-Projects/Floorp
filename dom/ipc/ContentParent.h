@@ -997,6 +997,9 @@ class ContentParent final : public PContentParent,
   virtual mozilla::ipc::IPCResult RecvOpenNotificationSettings(
       const IPC::Principal& aPrincipal) override;
 
+  virtual mozilla::ipc::IPCResult RecvNotificationEvent(
+      const nsString& aType, const NotificationEventData& aData) override;
+
   virtual mozilla::ipc::IPCResult RecvLoadURIExternal(
       const URIParams& uri, PBrowserParent* windowContext) override;
   virtual mozilla::ipc::IPCResult RecvExtProtocolChannelConnectParent(

@@ -1290,17 +1290,25 @@ ServiceWorkerNotificationObserver::Observe(nsISupports* aSubject,
     return rv;
   }
 
-  nsCOMPtr<nsIServiceWorkerManager> swm =
-      mozilla::services::GetServiceWorkerManager();
-  if (NS_WARN_IF(!swm)) {
-    return NS_ERROR_FAILURE;
-  }
-
   if (!strcmp("alertclickcallback", aTopic)) {
-    rv = swm->SendNotificationClickEvent(
-        originSuffix, NS_ConvertUTF16toUTF8(mScope), mID, mTitle, mDir, mLang,
-        mBody, mTag, mIcon, mData, mBehavior);
-    Unused << NS_WARN_IF(NS_FAILED(rv));
+    if (XRE_IsParentProcess() || !ServiceWorkerParentInterceptEnabled()) {
+      nsCOMPtr<nsIServiceWorkerManager> swm =
+          mozilla::services::GetServiceWorkerManager();
+      if (NS_WARN_IF(!swm)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      rv = swm->SendNotificationClickEvent(
+          originSuffix, NS_ConvertUTF16toUTF8(mScope), mID, mTitle, mDir, mLang,
+          mBody, mTag, mIcon, mData, mBehavior);
+      Unused << NS_WARN_IF(NS_FAILED(rv));
+    } else {
+      auto* cc = ContentChild::GetSingleton();
+      NotificationEventData data(originSuffix, NS_ConvertUTF16toUTF8(mScope),
+                                 mID, mTitle, mDir, mLang, mBody, mTag, mIcon,
+                                 mData, mBehavior);
+      Unused << cc->SendNotificationEvent(NS_LITERAL_STRING("click"), data);
+    }
     return NS_OK;
   }
 
@@ -1318,10 +1326,24 @@ ServiceWorkerNotificationObserver::Observe(nsISupports* aSubject,
       notificationStorage->Delete(origin, mID);
     }
 
-    rv = swm->SendNotificationCloseEvent(
-        originSuffix, NS_ConvertUTF16toUTF8(mScope), mID, mTitle, mDir, mLang,
-        mBody, mTag, mIcon, mData, mBehavior);
-    Unused << NS_WARN_IF(NS_FAILED(rv));
+    if (XRE_IsParentProcess() || !ServiceWorkerParentInterceptEnabled()) {
+      nsCOMPtr<nsIServiceWorkerManager> swm =
+          mozilla::services::GetServiceWorkerManager();
+      if (NS_WARN_IF(!swm)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      rv = swm->SendNotificationCloseEvent(
+          originSuffix, NS_ConvertUTF16toUTF8(mScope), mID, mTitle, mDir, mLang,
+          mBody, mTag, mIcon, mData, mBehavior);
+      Unused << NS_WARN_IF(NS_FAILED(rv));
+    } else {
+      auto* cc = ContentChild::GetSingleton();
+      NotificationEventData data(originSuffix, NS_ConvertUTF16toUTF8(mScope),
+                                 mID, mTitle, mDir, mLang, mBody, mTag, mIcon,
+                                 mData, mBehavior);
+      Unused << cc->SendNotificationEvent(NS_LITERAL_STRING("close"), data);
+    }
     return NS_OK;
   }
 
