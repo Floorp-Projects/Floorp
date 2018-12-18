@@ -15,8 +15,7 @@ use gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance};
 use gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
 use internal_types::{FastHashMap, SavedTargetIndex, TextureSource};
 use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureSurface};
-use prim_store::{DeferredResolve, PrimitiveTemplateKind};
-use prim_store::{EdgeAaSegmentMask, PrimitiveInstanceKind};
+use prim_store::{DeferredResolve, EdgeAaSegmentMask, PrimitiveInstanceKind};
 use prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
 use prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex};
 use prim_store::image::ImageSource;
@@ -604,8 +603,9 @@ impl AlphaBatchBuilder {
                 );
             }
             PrimitiveInstanceKind::NormalBorder { data_handle, ref cache_handles, .. } => {
-                let prim_data = &ctx.resources.prim_data_store[data_handle];
-                let prim_cache_address = gpu_cache.get_address(&prim_data.gpu_cache_handle);
+                let prim_data = &ctx.resources.normal_border_data_store[data_handle];
+                let common_data = &prim_data.common;
+                let prim_cache_address = gpu_cache.get_address(&common_data.gpu_cache_handle);
                 let cache_handles = &ctx.scratch.border_cache_handles[*cache_handles];
                 let specified_blend_mode = BlendMode::PremultipliedAlpha;
                 let mut segment_data: SmallVec<[SegmentInstanceData; 8]> = SmallVec::new();
@@ -626,7 +626,7 @@ impl AlphaBatchBuilder {
                     );
                 }
 
-                let non_segmented_blend_mode = if !prim_data.opacity.is_opaque ||
+                let non_segmented_blend_mode = if !common_data.opacity.is_opaque ||
                     prim_instance.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex
                 {
@@ -660,13 +660,10 @@ impl AlphaBatchBuilder {
                     batch_params.prim_user_data,
                 );
 
-                let template = match prim_data.kind {
-                    PrimitiveTemplateKind::NormalBorder { ref template, .. } => template,
-                    _ => unreachable!()
-                };
+                let border_data = &prim_data.kind;
                 self.add_segmented_prim_to_batch(
-                    Some(template.brush_segments.as_slice()),
-                    prim_data.opacity,
+                    Some(border_data.brush_segments.as_slice()),
+                    common_data.opacity,
                     &batch_params,
                     specified_blend_mode,
                     non_segmented_blend_mode,
@@ -1387,16 +1384,12 @@ impl AlphaBatchBuilder {
                 }
             }
             PrimitiveInstanceKind::ImageBorder { data_handle, .. } => {
-                let prim_data = &ctx.resources.prim_data_store[data_handle];
-                let (request, brush_segments) = match &prim_data.kind {
-                    PrimitiveTemplateKind::ImageBorder { request, brush_segments, .. } => {
-                        (request, brush_segments)
-                    }
-                    _ => unreachable!()
-                };
+                let prim_data = &ctx.resources.image_border_data_store[data_handle];
+                let common_data = &prim_data.common;
+                let border_data = &prim_data.kind;
 
                 let cache_item = resolve_image(
-                    *request,
+                    border_data.request,
                     ctx.resource_cache,
                     gpu_cache,
                     deferred_resolves,
@@ -1406,9 +1399,9 @@ impl AlphaBatchBuilder {
                 }
 
                 let textures = BatchTextures::color(cache_item.texture_id);
-                let prim_cache_address = gpu_cache.get_address(&prim_data.gpu_cache_handle);
+                let prim_cache_address = gpu_cache.get_address(&common_data.gpu_cache_handle);
                 let specified_blend_mode = BlendMode::PremultipliedAlpha;
-                let non_segmented_blend_mode = if !prim_data.opacity.is_opaque ||
+                let non_segmented_blend_mode = if !common_data.opacity.is_opaque ||
                     prim_instance.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex
                 {
@@ -1444,8 +1437,8 @@ impl AlphaBatchBuilder {
                 );
 
                 self.add_segmented_prim_to_batch(
-                    Some(brush_segments.as_slice()),
-                    prim_data.opacity,
+                    Some(border_data.brush_segments.as_slice()),
+                    common_data.opacity,
                     &batch_params,
                     specified_blend_mode,
                     non_segmented_blend_mode,
