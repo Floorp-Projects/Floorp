@@ -133,9 +133,6 @@ typedef PlatformSpecificStateBase
  * The following prefs are used to control the behaviour of the APZC.
  * The default values are provided in gfxPrefs.h.
  *
- * \li\b apz.allow_checkerboarding
- * Pref that allows or disallows checkerboarding
- *
  * \li\b apz.allow_double_tap_zooming
  * Pref that allows or disallows double tap to zoom
  *
@@ -3937,42 +3934,6 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncViewportTransform(
   CSSRect currentViewport = GetEffectiveLayoutViewport(aMode);
   CSSPoint currentViewportOffset = currentViewport.TopLeft();
 
-  // If checkerboarding has been disallowed, clamp the scroll position to stay
-  // within rendered content.
-  //
-  // TODO: This calculation is slightly inaccurate and this function will
-  // likely report an inconsistent transformation if apz.allow_checkerboarding
-  // is disabled. The correct calculation requires the following:
-  //
-  //   * Calculating a clamped visual scroll offset, like in
-  //     AsyncPanZoomController::GetCurrentAsyncTransform.
-  //   * Calling FrameMetrics::RecalculateViewportOffset to compute the layout
-  //     viewport offset corresponding to that visual offset and using that as
-  //     the clamped layout viewport offset.
-  //
-  if (!gfxPrefs::APZAllowCheckerboarding() &&
-      !mLastContentPaintMetrics.GetDisplayPort().IsEmpty()) {
-    CSSSize viewportSize = currentViewport.Size();
-    CSSPoint maxViewportOffset =
-        lastPaintViewport.TopLeft() +
-        CSSPoint(mLastContentPaintMetrics.GetDisplayPort().XMost() -
-                     viewportSize.width,
-                 mLastContentPaintMetrics.GetDisplayPort().YMost() -
-                     viewportSize.height);
-    CSSPoint minViewportOffset =
-        lastPaintViewport.TopLeft() +
-        mLastContentPaintMetrics.GetDisplayPort().TopLeft();
-
-    if (minViewportOffset.x < maxViewportOffset.x) {
-      currentViewportOffset.x = clamped(
-          currentViewportOffset.x, minViewportOffset.x, maxViewportOffset.x);
-    }
-    if (minViewportOffset.y < maxViewportOffset.y) {
-      currentViewportOffset.y = clamped(
-          currentViewportOffset.y, minViewportOffset.y, maxViewportOffset.y);
-    }
-  }
-
   // Unlike the visual viewport, the layout viewport does not change size
   // (in the sense of "number of CSS pixels of page content it covers")
   // when zooming, so the async transform of the layout viewport does not
@@ -4001,32 +3962,6 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
   }
 
   CSSPoint currentScrollOffset = GetEffectiveScrollOffset(aMode);
-
-  // If checkerboarding has been disallowed, clamp the scroll position to stay
-  // within rendered content.
-  if (!gfxPrefs::APZAllowCheckerboarding() &&
-      !mLastContentPaintMetrics.GetDisplayPort().IsEmpty()) {
-    CSSSize compositedSize =
-        mLastContentPaintMetrics.CalculateCompositedSizeInCssPixels();
-    CSSPoint maxScrollOffset =
-        lastPaintScrollOffset +
-        CSSPoint(mLastContentPaintMetrics.GetDisplayPort().XMost() -
-                     compositedSize.width,
-                 mLastContentPaintMetrics.GetDisplayPort().YMost() -
-                     compositedSize.height);
-    CSSPoint minScrollOffset =
-        lastPaintScrollOffset +
-        mLastContentPaintMetrics.GetDisplayPort().TopLeft();
-
-    if (minScrollOffset.x < maxScrollOffset.x) {
-      currentScrollOffset.x =
-          clamped(currentScrollOffset.x, minScrollOffset.x, maxScrollOffset.x);
-    }
-    if (minScrollOffset.y < maxScrollOffset.y) {
-      currentScrollOffset.y =
-          clamped(currentScrollOffset.y, minScrollOffset.y, maxScrollOffset.y);
-    }
-  }
 
   CSSToParentLayerScale2D effectiveZoom = GetEffectiveZoom(aMode);
   ParentLayerPoint translation =
@@ -4230,8 +4165,7 @@ void AsyncPanZoomController::FlushActiveCheckerboardReport() {
 bool AsyncPanZoomController::IsCurrentlyCheckerboarding() const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
 
-  if (!gfxPrefs::APZAllowCheckerboarding() ||
-      mScrollMetadata.IsApzForceDisabled()) {
+  if (mScrollMetadata.IsApzForceDisabled()) {
     return false;
   }
 

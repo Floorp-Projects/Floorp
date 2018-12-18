@@ -674,7 +674,6 @@ pref("layers.geometry.d3d11.enabled", true);
 
 // APZ preferences. For documentation/details on what these prefs do, check
 // gfx/layers/apz/src/AsyncPanZoomController.cpp.
-pref("apz.allow_checkerboarding", true);
 pref("apz.allow_double_tap_zooming", true);
 pref("apz.allow_immediate_handoff", true);
 pref("apz.allow_zooming", false);
