@@ -224,33 +224,6 @@ static gint moz_container_get_scale(MozContainer *container) {
 
   return 1;
 }
-
-void moz_container_scale_changed(MozContainer *container,
-                                 GtkAllocation *aAllocation) {
-  MOZ_ASSERT(!GDK_IS_X11_DISPLAY(gdk_display_get_default()),
-             "moz_container_scale_changed operates on Wayland display only.");
-
-  if (!container->surface) {
-    return;
-  }
-
-  // Set correct scaled/unscaled mozcontainer offset
-  // especially when wl_egl is used but we don't recreate it as Gtk+ does.
-  gint x, y;
-  gdk_window_get_position(gtk_widget_get_window(GTK_WIDGET(container)), &x,
-                          &y);
-  wl_subsurface_set_position(container->subsurface, x, y);
-
-  // Try to only resize wl_egl_window on scale factor change.
-  // It's a bit risky as Gtk+ recreates it at that event.
-  if (container->eglwindow) {
-    gint scale = moz_container_get_scale(container);
-    wl_surface_set_buffer_scale(container->surface,
-                                moz_container_get_scale(container));
-    wl_egl_window_resize(container->eglwindow, aAllocation->width * scale,
-                         aAllocation->height * scale, 0, 0);
-  }
-}
 #endif
 
 void moz_container_map(GtkWidget *widget) {
@@ -538,7 +511,6 @@ struct wl_egl_window *moz_container_get_wl_egl_window(MozContainer *container) {
     container->eglwindow =
         wl_egl_window_create(surface, gdk_window_get_width(window) * scale,
                              gdk_window_get_height(window) * scale);
-    wl_surface_set_buffer_scale(surface, scale);
   }
   return container->eglwindow;
 }
