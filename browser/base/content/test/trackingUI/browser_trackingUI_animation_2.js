@@ -69,7 +69,7 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   ok(!ContentBlocking.iconBox.hasAttribute("animate"), "iconBox not animating");
 
   info("Reload tracking cookies tab");
-  securityChanged = waitForSecurityChange(3, tabbrowser.ownerGlobal);
+  securityChanged = waitForSecurityChange(2, tabbrowser.ownerGlobal);
   tabbrowser.reload();
   await securityChanged;
 
@@ -78,7 +78,7 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   await BrowserTestUtils.waitForEvent(ContentBlocking.animatedIcon, "animationend");
 
   info("Reload tracking tab");
-  securityChanged = waitForSecurityChange(4, tabbrowser.ownerGlobal);
+  securityChanged = waitForSecurityChange(3, tabbrowser.ownerGlobal);
   tabbrowser.selectedTab = trackingTab;
   tabbrowser.reload();
   await securityChanged;
