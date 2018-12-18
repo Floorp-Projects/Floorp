@@ -6,7 +6,8 @@
 #ifndef mozilla_EditorSpellCheck_h
 #define mozilla_EditorSpellCheck_h
 
-#include "nsCOMPtr.h"  // for nsCOMPtr
+#include "mozilla/mozSpellChecker.h"  // for mozilla::CheckWordPromise
+#include "nsCOMPtr.h"                 // for nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsIEditorSpellCheck.h"  // for NS_DECL_NSIEDITORSPELLCHECK, etc
 #include "nsISupportsImpl.h"
@@ -41,6 +42,19 @@ class EditorSpellCheck final : public nsIEditorSpellCheck {
   NS_DECL_NSIEDITORSPELLCHECK
 
   mozSpellChecker* GetSpellChecker();
+
+  /**
+   * Like CheckCurrentWord, checks the word you give it, returning true via
+   * promise if it's misspelled.
+   * This is faster than CheckCurrentWord because it does not compute
+   * any suggestions.
+   *
+   * Watch out: this does not clear any suggestions left over from previous
+   * calls to CheckCurrentWord, so there may be suggestions, but they will be
+   * invalid.
+   */
+  RefPtr<mozilla::CheckWordPromise> CheckCurrentWordsNoSuggest(
+      const nsTArray<nsString>& aSuggestedWords);
 
  protected:
   virtual ~EditorSpellCheck();
