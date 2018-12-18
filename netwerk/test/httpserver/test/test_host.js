@@ -180,7 +180,10 @@ add_task(async function run_test_3() {
 
   // Okay, finally done with identity testing.  Our primary location is the one
   // we want it to be, so we're off!
-  runRawTests(tests, () => { srv.stop(); }, (idx) => dump(`running test no ${idx}`));
+  await new Promise(resolve => runRawTests(tests, resolve, (idx) => dump(`running test no ${idx}`)));
+
+  // Finally shut down the server.
+  await new Promise(resolve => srv.stop(resolve));
 });
 
 
