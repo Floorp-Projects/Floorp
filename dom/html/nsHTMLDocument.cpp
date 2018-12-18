@@ -736,25 +736,6 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
   }
 
-  if (plainText && !nsContentUtils::IsChildOfSameType(this) &&
-      Preferences::GetBool("plain_text.wrap_long_lines")) {
-    nsCOMPtr<nsIStringBundleService> bundleService =
-        do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-    NS_ASSERTION(NS_SUCCEEDED(rv) && bundleService,
-                 "The bundle service could not be loaded");
-    nsCOMPtr<nsIStringBundle> bundle;
-    rv = bundleService->CreateBundle(
-        "chrome://global/locale/browser.properties", getter_AddRefs(bundle));
-    NS_ASSERTION(
-        NS_SUCCEEDED(rv) && bundle,
-        "chrome://global/locale/browser.properties could not be loaded");
-    nsAutoString title;
-    if (bundle) {
-      bundle->GetStringFromName("plainText.wordWrap", title);
-    }
-    SetSelectedStyleSheetSet(title);
-  }
-
   // parser the content of the URI
   mParser->Parse(uri, nullptr, (void*)this);
 
