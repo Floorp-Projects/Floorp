@@ -30,12 +30,10 @@
  * @param NSSConfigDir The config dir containing the private key to use
  * @return 0 on success
  *         -1 on error
-*/
-int
-NSSInitCryptoContext(const char *NSSConfigDir)
-{
-  SECStatus status = NSS_Initialize(NSSConfigDir,
-                                    "", "", SECMOD_DB, NSS_INIT_READONLY);
+ */
+int NSSInitCryptoContext(const char *NSSConfigDir) {
+  SECStatus status =
+      NSS_Initialize(NSSConfigDir, "", "", SECMOD_DB, NSS_INIT_READONLY);
   if (SECSuccess != status) {
     fprintf(stderr, "ERROR: Could not initialize NSS\n");
     return -1;
@@ -50,15 +48,11 @@ NSSInitCryptoContext(const char *NSSConfigDir)
  * @param  ctx A pointer to the signing context to fill
  * @return 0 on success
  *         -1 on error
-*/
-int
-NSSSignBegin(const char *certName,
-             SGNContext **ctx,
-             SECKEYPrivateKey **privKey,
-             CERTCertificate **cert,
-             uint32_t *signatureLength)
-{
-  secuPWData pwdata = { PW_NONE, 0 };
+ */
+int NSSSignBegin(const char *certName, SGNContext **ctx,
+                 SECKEYPrivateKey **privKey, CERTCertificate **cert,
+                 uint32_t *signatureLength) {
+  secuPWData pwdata = {PW_NONE, 0};
   if (!certName || !ctx || !privKey || !cert || !signatureLength) {
     fprintf(stderr, "ERROR: Invalid parameter passed to NSSSignBegin\n");
     return -1;
@@ -122,13 +116,10 @@ NSSSignBegin(const char *certName,
  * @return  0 on success
  *         -2 on write error
  *         -3 on signature update error
-*/
-int
-WriteAndUpdateSignatures(FILE *fpDest, void *buffer,
-                         uint32_t size, SGNContext **ctxs,
-                         uint32_t ctxCount,
-                         const char *err)
-{
+ */
+int WriteAndUpdateSignatures(FILE *fpDest, void *buffer, uint32_t size,
+                             SGNContext **ctxs, uint32_t ctxCount,
+                             const char *err) {
   uint32_t k;
   if (!size) {
     return 0;
@@ -141,7 +132,8 @@ WriteAndUpdateSignatures(FILE *fpDest, void *buffer,
 
   for (k = 0; k < ctxCount; ++k) {
     if (SGN_Update(ctxs[k], buffer, size) != SECSuccess) {
-      fprintf(stderr, "ERROR: Could not update signature context for %s\n", err);
+      fprintf(stderr, "ERROR: Could not update signature context for %s\n",
+              err);
       return -3;
     }
   }
@@ -155,10 +147,9 @@ WriteAndUpdateSignatures(FILE *fpDest, void *buffer,
  * @param indexBuf     A buffer containing the MAR index
  * @param indexLength  The length of the MAR index
  * @param offsetAmount The amount to adjust each index entry by
-*/
-void
-AdjustIndexContentOffsets(char *indexBuf, uint32_t indexLength, uint32_t offsetAmount)
-{
+ */
+void AdjustIndexContentOffsets(char *indexBuf, uint32_t indexLength,
+                               uint32_t offsetAmount) {
   uint32_t *offsetToContent;
   char *indexBufLoc = indexBuf;
 
@@ -190,13 +181,10 @@ AdjustIndexContentOffsets(char *indexBuf, uint32_t indexLength, uint32_t offsetA
  *         -1 on read error
  *         -2 on write error
  *         -3 on signature update error
-*/
-int
-ReadWriteAndUpdateSignatures(FILE *fpSrc, FILE *fpDest, void *buffer,
-                             uint32_t size, SGNContext **ctxs,
-                             uint32_t ctxCount,
-                             const char *err)
-{
+ */
+int ReadWriteAndUpdateSignatures(FILE *fpSrc, FILE *fpDest, void *buffer,
+                                 uint32_t size, SGNContext **ctxs,
+                                 uint32_t ctxCount, const char *err) {
   if (!size) {
     return 0;
   }
@@ -209,7 +197,6 @@ ReadWriteAndUpdateSignatures(FILE *fpSrc, FILE *fpDest, void *buffer,
   return WriteAndUpdateSignatures(fpDest, buffer, size, ctxs, ctxCount, err);
 }
 
-
 /**
  * Reads from fpSrc, writes it to fpDest.
  *
@@ -221,11 +208,9 @@ ReadWriteAndUpdateSignatures(FILE *fpSrc, FILE *fpDest, void *buffer,
  * @return  0 on success
  *         -1 on read error
  *         -2 on write error
-*/
-int
-ReadAndWrite(FILE *fpSrc, FILE *fpDest, void *buffer,
-             uint32_t size, const char *err)
-{
+ */
+int ReadAndWrite(FILE *fpSrc, FILE *fpDest, void *buffer, uint32_t size,
+                 const char *err) {
   if (!size) {
     return 0;
   }
@@ -252,14 +237,12 @@ ReadAndWrite(FILE *fpSrc, FILE *fpDest, void *buffer,
  * @return 0 on success
  *         -1 on error
 */
-int
-strip_signature_block(const char *src, const char * dest)
-{
-  uint32_t offsetToIndex, dstOffsetToIndex, indexLength,
-    numSignatures = 0, leftOver;
+int strip_signature_block(const char *src, const char *dest) {
+  uint32_t offsetToIndex, dstOffsetToIndex, indexLength, numSignatures = 0,
+                                                         leftOver;
   int32_t stripAmount = 0;
-  int64_t oldPos, sizeOfEntireMAR = 0, realSizeOfSrcMAR, numBytesToCopy,
-    numChunks, i;
+  int64_t oldPos, numChunks, i, realSizeOfSrcMAR, numBytesToCopy,
+      sizeOfEntireMAR = 0;
   FILE *fpSrc = NULL, *fpDest = NULL;
   int rv = -1, hasSignatureBlock;
   char buf[BLOCKSIZE];
@@ -314,8 +297,7 @@ strip_signature_block(const char *src, const char * dest)
 
   if (hasSignatureBlock) {
     /* Get the MAR length and adjust its size */
-    if (fread(&sizeOfEntireMAR,
-              sizeof(sizeOfEntireMAR), 1, fpSrc) != 1) {
+    if (fread(&sizeOfEntireMAR, sizeof(sizeOfEntireMAR), 1, fpSrc) != 1) {
       fprintf(stderr, "ERROR: Could read mar size\n");
       goto failure;
     }
@@ -419,14 +401,13 @@ strip_signature_block(const char *src, const char * dest)
   }
 
   /* Write out the left over */
-  if (ReadAndWrite(fpSrc, fpDest, buf,
-                   leftOver, "left over content block")) {
+  if (ReadAndWrite(fpSrc, fpDest, buf, leftOver, "left over content block")) {
     goto failure;
   }
 
   /* Length of the index */
-  if (ReadAndWrite(fpSrc, fpDest, &indexLength,
-                   sizeof(indexLength), "index length")) {
+  if (ReadAndWrite(fpSrc, fpDest, &indexLength, sizeof(indexLength),
+                   "index length")) {
     goto failure;
   }
   indexLength = ntohl(indexLength);
@@ -442,10 +423,9 @@ strip_signature_block(const char *src, const char * dest)
   if (hasSignatureBlock) {
     AdjustIndexContentOffsets(indexBuf, indexLength, -stripAmount);
   } else {
-    AdjustIndexContentOffsets(indexBuf, indexLength,
-                              sizeof(sizeOfEntireMAR) +
-                              sizeof(numSignatures) -
-                              stripAmount);
+    AdjustIndexContentOffsets(
+        indexBuf, indexLength,
+        sizeof(sizeOfEntireMAR) + sizeof(numSignatures) - stripAmount);
   }
 
   if (fwrite(indexBuf, indexLength, 1, fpDest) != 1) {
@@ -485,10 +465,8 @@ failure:
  * @param  dest      The path of file to write the signature to
  * @return 0 on success
  *         -1 on error
-*/
-int
-extract_signature(const char *src, uint32_t sigIndex, const char * dest)
-{
+ */
+int extract_signature(const char *src, uint32_t sigIndex, const char *dest) {
   FILE *fpSrc = NULL, *fpDest = NULL;
   uint32_t i;
   uint32_t signatureCount;
@@ -599,21 +577,20 @@ failure:
  * @param  src           The path of the source MAR file
  * @param  sigIndex      The index of the signature to import
  * @param  base64SigFile A file which contains the signature to import
- * @param  dest          The path of the destination MAR file with replaced signature
+ * @param  dest          The path of the destination MAR file with replaced
+ *                       signature
  * @return 0 on success
  *         -1 on error
-*/
-int
-import_signature(const char *src, uint32_t sigIndex,
-                 const char *base64SigFile, const char *dest)
-{
+ */
+int import_signature(const char *src, uint32_t sigIndex,
+                     const char *base64SigFile, const char *dest) {
   int rv = -1;
   FILE *fpSrc = NULL;
   FILE *fpDest = NULL;
   FILE *fpSigFile = NULL;
   uint32_t i;
-  uint32_t signatureCount, signatureLen, signatureAlgorithmID,
-           numChunks, leftOver;
+  uint32_t signatureCount, signatureLen, signatureAlgorithmID, numChunks,
+      leftOver;
   char buf[BLOCKSIZE];
   uint64_t sizeOfSrcMAR, sizeOfBase64EncodedFile;
   char *passedInSignatureB64 = NULL;
@@ -638,7 +615,7 @@ import_signature(const char *src, uint32_t sigIndex,
     goto failure;
   }
 
-  fpSigFile = fopen(base64SigFile , "rb");
+  fpSigFile = fopen(base64SigFile, "rb");
   if (!fpSigFile) {
     fprintf(stderr, "ERROR: could not open sig file: %s\n", base64SigFile);
     goto failure;
@@ -660,7 +637,7 @@ import_signature(const char *src, uint32_t sigIndex,
     fprintf(stderr, "ERROR: Could not seek to end of sig file.\n");
     goto failure;
   }
-  sizeOfBase64EncodedFile= ftello(fpSigFile);
+  sizeOfBase64EncodedFile = ftello(fpSigFile);
   if (fseeko(fpSigFile, 0, SEEK_SET)) {
     fprintf(stderr, "ERROR: Could not seek to start of sig file.\n");
     goto failure;
@@ -675,21 +652,22 @@ import_signature(const char *src, uint32_t sigIndex,
   }
 
   /* Decode the base64 encoded data */
-  passedInSignatureRaw = ATOB_AsciiToData(passedInSignatureB64, &passedInSignatureLenRaw);
+  passedInSignatureRaw =
+      ATOB_AsciiToData(passedInSignatureB64, &passedInSignatureLenRaw);
   if (!passedInSignatureRaw) {
     fprintf(stderr, "ERROR: could not obtain base64 decoded data\n");
     goto failure;
   }
 
   /* Read everything up until the signature block offset and write it out */
-  if (ReadAndWrite(fpSrc, fpDest, buf,
-                   SIGNATURE_BLOCK_OFFSET, "signature block offset")) {
+  if (ReadAndWrite(fpSrc, fpDest, buf, SIGNATURE_BLOCK_OFFSET,
+                   "signature block offset")) {
     goto failure;
   }
 
   /* Get the number of signatures */
-  if (ReadAndWrite(fpSrc, fpDest, &signatureCount,
-                   sizeof(signatureCount), "signature count")) {
+  if (ReadAndWrite(fpSrc, fpDest, &signatureCount, sizeof(signatureCount),
+                   "signature count")) {
     goto failure;
   }
   signatureCount = ntohl(signatureCount);
@@ -708,15 +686,14 @@ import_signature(const char *src, uint32_t sigIndex,
      base64 decoded signature */
   for (i = 0; i < signatureCount; i++) {
     /* Read/Write the signature algorithm ID */
-    if (ReadAndWrite(fpSrc, fpDest,
-                     &signatureAlgorithmID,
+    if (ReadAndWrite(fpSrc, fpDest, &signatureAlgorithmID,
                      sizeof(signatureAlgorithmID), "sig algorithm ID")) {
       goto failure;
     }
 
     /* Read/Write the signature length */
-    if (ReadAndWrite(fpSrc, fpDest,
-                     &signatureLen, sizeof(signatureLen), "sig length")) {
+    if (ReadAndWrite(fpSrc, fpDest, &signatureLen, sizeof(signatureLen),
+                     "sig length")) {
       goto failure;
     }
     signatureLen = ntohl(signatureLen);
@@ -738,14 +715,14 @@ import_signature(const char *src, uint32_t sigIndex,
         goto failure;
       }
 
-      if (fwrite(passedInSignatureRaw, passedInSignatureLenRaw,
-                 1, fpDest) != 1) {
+      if (fwrite(passedInSignatureRaw, passedInSignatureLenRaw, 1, fpDest) !=
+          1) {
         fprintf(stderr, "ERROR: Could not write signature\n");
         goto failure;
       }
     } else {
-      if (ReadAndWrite(fpSrc, fpDest,
-                       extractedMARSignature, signatureLen, "signature")) {
+      if (ReadAndWrite(fpSrc, fpDest, extractedMARSignature, signatureLen,
+                       "signature")) {
         goto failure;
       }
     }
@@ -807,7 +784,8 @@ failure:
  * The passed in MAR file must not already be signed or an error will
  * be returned.
  *
- * @param  NSSConfigDir  The NSS directory containing the private key for signing
+ * @param  NSSConfigDir  The NSS directory containing the private key for
+ *                       signing
  * @param  certNames     The nicknames of the certificate to use for signing
  * @param  certCount     The number of certificate names contained in certNames.
  *                       One signature will be produced for each certificate.
@@ -815,21 +793,15 @@ failure:
  * @param  dest          The path of the MAR file to write out that is signed
  * @return 0 on success
  *         -1 on error
-*/
-int
-mar_repackage_and_sign(const char *NSSConfigDir,
-                       const char * const *certNames,
-                       uint32_t certCount,
-                       const char *src,
-                       const char *dest)
-{
-  uint32_t offsetToIndex, dstOffsetToIndex, indexLength,
-    numSignatures = 0, leftOver,
-    signatureAlgorithmID, signatureSectionLength = 0;
+ */
+int mar_repackage_and_sign(const char *NSSConfigDir,
+                           const char *const *certNames, uint32_t certCount,
+                           const char *src, const char *dest) {
+  uint32_t offsetToIndex, dstOffsetToIndex, indexLength, leftOver,
+      signatureAlgorithmID, numSignatures = 0, signatureSectionLength = 0;
   uint32_t signatureLengths[MAX_SIGNATURES];
-  int64_t oldPos, sizeOfEntireMAR = 0, realSizeOfSrcMAR,
-    signaturePlaceholderOffset, numBytesToCopy,
-    numChunks, i;
+  int64_t oldPos, numChunks, i, realSizeOfSrcMAR, signaturePlaceholderOffset,
+      numBytesToCopy, sizeOfEntireMAR = 0;
   FILE *fpSrc = NULL, *fpDest = NULL;
   int rv = -1, hasSignatureBlock;
   SGNContext *ctxs[MAX_SIGNATURES];
@@ -877,17 +849,16 @@ mar_repackage_and_sign(const char *NSSConfigDir,
   }
 
   for (k = 0; k < certCount; k++) {
-    if (NSSSignBegin(certNames[k], &ctxs[k], &privKeys[k],
-                     &certs[k], &signatureLengths[k])) {
+    if (NSSSignBegin(certNames[k], &ctxs[k], &privKeys[k], &certs[k],
+                     &signatureLengths[k])) {
       fprintf(stderr, "ERROR: NSSSignBegin failed\n");
       goto failure;
     }
   }
 
   /* MAR ID */
-  if (ReadWriteAndUpdateSignatures(fpSrc, fpDest,
-                                   buf, MAR_ID_SIZE,
-                                   ctxs, certCount, "MAR ID")) {
+  if (ReadWriteAndUpdateSignatures(fpSrc, fpDest, buf, MAR_ID_SIZE, ctxs,
+                                   certCount, "MAR ID")) {
     goto failure;
   }
 
@@ -912,8 +883,7 @@ mar_repackage_and_sign(const char *NSSConfigDir,
 
   if (hasSignatureBlock) {
     /* Get the MAR length and adjust its size */
-    if (fread(&sizeOfEntireMAR,
-              sizeof(sizeOfEntireMAR), 1, fpSrc) != 1) {
+    if (fread(&sizeOfEntireMAR, sizeof(sizeOfEntireMAR), 1, fpSrc) != 1) {
       fprintf(stderr, "ERROR: Could read mar size\n");
       goto failure;
     }
@@ -948,8 +918,7 @@ mar_repackage_and_sign(const char *NSSConfigDir,
   /* Calculate the total signature block length */
   for (k = 0; k < certCount; k++) {
     signatureSectionLength += sizeof(signatureAlgorithmID) +
-                              sizeof(signatureLengths[k]) +
-                              signatureLengths[k];
+                              sizeof(signatureLengths[k]) + signatureLengths[k];
   }
   dstOffsetToIndex = offsetToIndex;
   if (!hasSignatureBlock) {
@@ -984,9 +953,8 @@ mar_repackage_and_sign(const char *NSSConfigDir,
   /* Write out the number of signatures */
   numSignatures = certCount;
   numSignatures = htonl(numSignatures);
-  if (WriteAndUpdateSignatures(fpDest, &numSignatures,
-                               sizeof(numSignatures), ctxs, certCount,
-                               "num signatures")) {
+  if (WriteAndUpdateSignatures(fpDest, &numSignatures, sizeof(numSignatures),
+                               ctxs, certCount, "num signatures")) {
     goto failure;
   }
   numSignatures = ntohl(numSignatures);
@@ -997,8 +965,8 @@ mar_repackage_and_sign(const char *NSSConfigDir,
     /* Write out the signature algorithm ID, Only an ID of 2 is supported */
     signatureAlgorithmID = htonl(2);
     if (WriteAndUpdateSignatures(fpDest, &signatureAlgorithmID,
-                                 sizeof(signatureAlgorithmID),
-                                 ctxs, certCount, "num signatures")) {
+                                 sizeof(signatureAlgorithmID), ctxs, certCount,
+                                 "num signatures")) {
       goto failure;
     }
     signatureAlgorithmID = ntohl(signatureAlgorithmID);
@@ -1006,8 +974,8 @@ mar_repackage_and_sign(const char *NSSConfigDir,
     /* Write out the signature length */
     signatureLengths[k] = htonl(signatureLengths[k]);
     if (WriteAndUpdateSignatures(fpDest, &signatureLengths[k],
-                                 sizeof(signatureLengths[k]),
-                                 ctxs, certCount, "signature length")) {
+                                 sizeof(signatureLengths[k]), ctxs, certCount,
+                                 "signature length")) {
       goto failure;
     }
     signatureLengths[k] = ntohl(signatureLengths[k]);
@@ -1035,17 +1003,15 @@ mar_repackage_and_sign(const char *NSSConfigDir,
 
   /* Read each file and write it to the MAR file */
   for (i = 0; i < numChunks; ++i) {
-    if (ReadWriteAndUpdateSignatures(fpSrc, fpDest, buf,
-                                     BLOCKSIZE, ctxs, certCount,
-                                     "content block")) {
+    if (ReadWriteAndUpdateSignatures(fpSrc, fpDest, buf, BLOCKSIZE, ctxs,
+                                     certCount, "content block")) {
       goto failure;
     }
   }
 
   /* Write out the left over */
-  if (ReadWriteAndUpdateSignatures(fpSrc, fpDest, buf,
-                                   leftOver, ctxs, certCount,
-                                   "left over content block")) {
+  if (ReadWriteAndUpdateSignatures(fpSrc, fpDest, buf, leftOver, ctxs,
+                                   certCount, "left over content block")) {
     goto failure;
   }
 
@@ -1069,13 +1035,12 @@ mar_repackage_and_sign(const char *NSSConfigDir,
     AdjustIndexContentOffsets(indexBuf, indexLength, signatureSectionLength);
   } else {
     AdjustIndexContentOffsets(indexBuf, indexLength,
-                              sizeof(sizeOfEntireMAR) +
-                              sizeof(numSignatures) +
-                              signatureSectionLength);
+                              sizeof(sizeOfEntireMAR) + sizeof(numSignatures) +
+                                  signatureSectionLength);
   }
 
-  if (WriteAndUpdateSignatures(fpDest, indexBuf,
-                               indexLength, ctxs, certCount, "index")) {
+  if (WriteAndUpdateSignatures(fpDest, indexBuf, indexLength, ctxs, certCount,
+                               "index")) {
     goto failure;
   }
 
@@ -1105,14 +1070,15 @@ mar_repackage_and_sign(const char *NSSConfigDir,
 
   for (k = 0; k < certCount; k++) {
     /* Skip to the position of the next signature */
-    if (fseeko(fpDest, sizeof(signatureAlgorithmID) +
-               sizeof(signatureLengths[k]), SEEK_CUR)) {
+    if (fseeko(fpDest,
+               sizeof(signatureAlgorithmID) + sizeof(signatureLengths[k]),
+               SEEK_CUR)) {
       fprintf(stderr, "ERROR: Could not seek to signature offset\n");
       goto failure;
     }
 
     /* Write out the calculated signature.
-      *** THIS IS NOT SIGNED because it is the signature itself. *** */
+     *** THIS IS NOT SIGNED because it is the signature itself. *** */
     if (fwrite(secItems[k].data, secItems[k].len, 1, fpDest) != 1) {
       fprintf(stderr, "ERROR: Could not write signature\n");
       goto failure;

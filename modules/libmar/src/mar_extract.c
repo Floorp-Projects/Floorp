@@ -15,14 +15,13 @@
 #ifdef XP_WIN
 #include <io.h>
 #include <direct.h>
+#define fdopen _fdopen
 #endif
 
 /* Ensure that the directory containing this file exists */
-static int mar_ensure_parent_dir(const char *path)
-{
+static int mar_ensure_parent_dir(const char *path) {
   char *slash = strrchr(path, '/');
-  if (slash)
-  {
+  if (slash) {
     *slash = '\0';
     mar_ensure_parent_dir(path);
 #ifdef XP_WIN
@@ -40,11 +39,13 @@ static int mar_test_callback(MarFile *mar, const MarItem *item, void *unused) {
   uint8_t buf[BLOCKSIZE];
   int fd, len, offset = 0;
 
-  if (mar_ensure_parent_dir(item->name))
+  if (mar_ensure_parent_dir(item->name)) {
     return -1;
+  }
 
 #ifdef XP_WIN
-  fd = _open(item->name, _O_BINARY|_O_CREAT|_O_TRUNC|_O_WRONLY, item->flags);
+  fd = _open(item->name, _O_BINARY | _O_CREAT | _O_TRUNC | _O_WRONLY,
+             item->flags);
 #else
   fd = creat(item->name, item->flags);
 #endif
@@ -55,12 +56,14 @@ static int mar_test_callback(MarFile *mar, const MarItem *item, void *unused) {
   }
 
   fp = fdopen(fd, "wb");
-  if (!fp)
+  if (!fp) {
     return -1;
+  }
 
   while ((len = mar_read(mar, item, offset, buf, sizeof(buf))) > 0) {
-    if (fwrite(buf, len, 1, fp) != 1)
+    if (fwrite(buf, len, 1, fp) != 1) {
       break;
+    }
     offset += len;
   }
 
@@ -73,8 +76,9 @@ int mar_extract(const char *path) {
   int rv;
 
   mar = mar_open(path);
-  if (!mar)
+  if (!mar) {
     return -1;
+  }
 
   rv = mar_enum_items(mar, mar_test_callback, NULL);
 

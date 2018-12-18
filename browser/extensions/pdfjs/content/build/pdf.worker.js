@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.1.97';
-var pdfjsBuild = '45c01974';
+var pdfjsVersion = '2.1.117';
+var pdfjsBuild = '417c234c';
 
 var pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -375,7 +375,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.1.97';
+    let workerVersion = '2.1.117';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -22045,6 +22045,7 @@ class WidgetAnnotation extends Annotation {
     data.readOnly = this.hasFieldFlag(_util.AnnotationFieldFlag.READONLY);
 
     if (data.fieldType === 'Sig') {
+      data.fieldValue = null;
       this.setFlags(_util.AnnotationFlag.HIDDEN);
     }
   }

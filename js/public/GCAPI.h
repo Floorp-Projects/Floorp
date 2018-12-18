@@ -265,6 +265,24 @@ typedef enum JSGCParamKey {
    * Pref: None
    */
   JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION = 27,
+
+  /**
+   * If this percentage of the nursery is tenured, then proceed to examine which
+   * groups we should pretenure.
+   *
+   * Default: PretenureThreshold
+   * Pref: None
+   */
+  JSGC_PRETENURE_THRESHOLD = 28,
+
+  /**
+   * If the above condition is met, then any object group that tenures more than
+   * this number of objects will be pretenured (if it can be).
+   *
+   * Default: PretenureGroupThreshold
+   * Pref: None
+   */
+  JSGC_PRETENURE_GROUP_THRESHOLD = 29,
 } JSGCParamKey;
 
 /*

@@ -9,6 +9,7 @@ UNIFIED_SOURCES += [
     'ChromeScriptLoader.cpp',
     'mozJSLoaderUtils.cpp',
     'mozJSSubScriptLoader.cpp',
+    'nsImportModule.cpp',
     'ScriptCacheActors.cpp',
     'ScriptPreloader.cpp',
     'URLPreloader.cpp',
@@ -17,11 +18,15 @@ UNIFIED_SOURCES += [
 # mozJSComponentLoader.cpp cannot be built in unified mode because it uses
 # windows.h
 SOURCES += [
-    'mozJSComponentLoader.cpp'
+    'mozJSComponentLoader.cpp',
 ]
 
 IPDL_SOURCES += [
     'PScriptCache.ipdl',
+]
+
+EXPORTS += [
+    'nsImportModule.h'
 ]
 
 EXPORTS.mozilla += [
