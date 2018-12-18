@@ -593,7 +593,10 @@ function createHighlightButton(highlighterName, id) {
       return highlighter.show({});
     },
     isChecked(toolbox) {
-      const highlighter = toolbox.highlighterUtils.getKnownHighlighter(highlighterName);
+      if (!toolbox.inspector) {
+        return false;
+      }
+      const highlighter = toolbox.inspector.getKnownHighlighter(highlighterName);
       return highlighter && highlighter.isShown();
     },
   };
