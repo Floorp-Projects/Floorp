@@ -4654,6 +4654,9 @@ TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
   // we don't create native caret.  Therefore, we need to create native caret
   // only when ATOK 2011 - 2015 is active (i.e., not necessary for ATOK 2016).
   // However, if a11y module is handling native caret, we shouldn't touch it.
+  // Note that ATOK must require the latest information of the caret.  So,
+  // even if we'll create native caret later, we need to creat it here with
+  // current information.
   if (!IMEHandler::IsA11yHandlingNativeCaret() &&
       TSFPrefs::NeedToCreateNativeCaretForLegacyATOK() &&
       TSFStaticSink::IsATOKReferringNativeCaretActive() &&
@@ -6127,6 +6130,14 @@ nsresult TSFTextStore::OnSelectionChangeInternal(
   // Flush remaining pending notifications here if it's possible.
   MaybeFlushPendingNotifications();
 
+  // If we're available, we should create native caret instead of IMEHandler
+  // because we may have some cache to do it.
+  // Note that if we have composition, we'll notified composition-updated
+  // later so that we don't need to create native caret in such case.
+  if (!IsHandlingComposition() && IMEHandler::NeedsToCreateNativeCaret()) {
+    CreateNativeCaret();
+  }
+
   return NS_OK;
 }
 
@@ -6219,9 +6230,15 @@ bool TSFTextStore::NotifyTSFOfLayoutChange() {
     mContentForTSF.OnLayoutChanged();
   }
 
-  // Now, the caret position is different from ours.  Destroy the native caret
-  // if there is.
-  IMEHandler::MaybeDestroyNativeCaret();
+  if (IMEHandler::NeedsToCreateNativeCaret()) {
+    // If we're available, we should create native caret instead of IMEHandler
+    // because we may have some cache to do it.
+    CreateNativeCaret();
+  } else {
+    // Now, the caret position is different from ours.  Destroy the native caret
+    // if we've create it only for GetTextExt().
+    IMEHandler::MaybeDestroyNativeCaret();
+  }
 
   // This method should return true if either way succeeds.
   bool ret = true;
@@ -6365,6 +6382,13 @@ nsresult TSFTextStore::OnUpdateCompositionInternal() {
   }
   mDeferNotifyingTSF = false;
   MaybeFlushPendingNotifications();
+
+  // If we're available, we should create native caret instead of IMEHandler
+  // because we may have some cache to do it.
+  if (IMEHandler::NeedsToCreateNativeCaret()) {
+    CreateNativeCaret();
+  }
+
   return NS_OK;
 }
 

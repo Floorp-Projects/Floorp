@@ -67,6 +67,16 @@ class IMEHandler final {
   static bool IsA11yHandlingNativeCaret();
 
   /**
+   * NeedsToCreateNativeCaret() returns true if IME handler needs to create
+   * native caret for other applications which requests OBJID_CARET with
+   * WM_GETOBJECT and a11y module isn't active (if a11y module is active,
+   * it always creates native caret, i.e., even if no editor has focus).
+   */
+  static bool NeedsToCreateNativeCaret() {
+    return sHasNativeCaretBeenRequested && !IsA11yHandlingNativeCaret();
+  }
+
+  /**
    * CreateNativeCaret() create native caret if this has been created it.
    *
    * @param aWindow     The window which owns the caret.
@@ -173,6 +183,7 @@ class IMEHandler final {
   static bool sForceDisableCurrentIMM_IME;
   static bool sPluginHasFocus;
   static bool sNativeCaretIsCreated;
+  static bool sHasNativeCaretBeenRequested;
 
 #ifdef NS_ENABLE_TSF
   static decltype(SetInputScopes)* sSetInputScopes;
