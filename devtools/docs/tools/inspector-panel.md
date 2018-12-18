@@ -91,8 +91,3 @@ We don't just have 1 highlighter, we have a framework for highlighters:
 - a (chrome-only) platform API to inject markup in a native-anonymous node in content (that works on all targets)
 - a number of specific highlighter implementations (css transform, rect, selector, geometry, rulers, ...)
 - a CustomHighlighterActor to get instances of specific highlighters
-
-The entry point is toolbox-highlighter-utils.js:
-- get it with toolbox.highlighterUtils
-- use this to easily highlight any node in the page (with the usual box model highlighter),
-- also use this to instantiate an other specific highlighter
