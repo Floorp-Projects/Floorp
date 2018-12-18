@@ -263,21 +263,6 @@ function autocomplete(
   });
 }
 
-function debuggeeCommand(script: Script): ?Promise<void> {
-  tabTarget.activeConsole.evaluateJS(script, () => {}, {});
-
-  if (!debuggerClient) {
-    return;
-  }
-
-  const consoleActor = tabTarget.form.consoleActor;
-  const request = debuggerClient._activeRequests.get(consoleActor);
-  request.emit("json-reply", {});
-  debuggerClient._activeRequests.delete(consoleActor);
-
-  return Promise.resolve();
-}
-
 function navigate(url: string): Promise<*> {
   return tabTarget.activeTab.navigateTo({ url });
 }
@@ -454,7 +439,6 @@ const clientCommands = {
   evaluate,
   evaluateInFrame,
   evaluateExpressions,
-  debuggeeCommand,
   navigate,
   reload,
   getProperties,
