@@ -61,5 +61,3 @@ gradle-targets:
 endif
 
 .PHONY: gradle-targets gradle-omnijar
-
-export:: android_apks
