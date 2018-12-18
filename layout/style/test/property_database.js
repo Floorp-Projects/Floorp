@@ -5937,13 +5937,16 @@ var gCSSProperties = {
     initial_values: [ "auto" ],
     prerequisites: { "display": "block" },
     other_values: [ "15px", "3em", "15%",
+      // These keywords are treated as initial value.
+      "max-content", "min-content", "-moz-fit-content", "-moz-available",
+      "-moz-max-content", "-moz-min-content",
       "calc(2px)",
       "calc(50%)",
       "calc(3*25px)",
       "calc(25px*3)",
       "calc(3*25px + 50%)",
     ],
-    invalid_values: [ "none", "max-content", "min-content", "-moz-fit-content", "-moz-available" ],
+    invalid_values: [ "none" ],
   },
   "border-block-end-color": {
     domProp: "borderBlockEndColor",
@@ -6192,13 +6195,16 @@ var gCSSProperties = {
     prerequisites: { "display": "block" },
     initial_values: [ "none" ],
     other_values: [ "30px", "50%",
+      // These keywords are treated as initial value.
+      "max-content", "min-content", "-moz-fit-content", "-moz-available",
+      "-moz-max-content", "-moz-min-content",
       "calc(2px)",
       "calc(50%)",
       "calc(3*25px)",
       "calc(25px*3)",
       "calc(3*25px + 50%)",
     ],
-    invalid_values: [ "auto", "5", "max-content", "min-content", "-moz-fit-content", "-moz-available" ]
+    invalid_values: [ "auto", "5" ]
   },
   "max-inline-size": {
     domProp: "maxInlineSize",
@@ -6232,6 +6238,9 @@ var gCSSProperties = {
     prerequisites: { "display": "block" },
     initial_values: [ "auto", "0", "calc(0em)", "calc(-2px)" ],
     other_values: [ "30px", "50%",
+      // These keywords are treated as initial value.
+      "max-content", "min-content", "-moz-fit-content", "-moz-available",
+      "-moz-max-content", "-moz-min-content",
       "calc(-1%)",
       "calc(2px)",
       "calc(50%)",
@@ -6239,7 +6248,7 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
     ],
-    invalid_values: [ "none", "5", "max-content", "min-content", "-moz-fit-content", "-moz-available" ]
+    invalid_values: [ "none", "5" ]
   },
   "min-inline-size": {
     domProp: "minInlineSize",
