@@ -1943,10 +1943,13 @@ nsXPCComponents_Utils::PermitCPOWsInScope(HandleValue obj) {
   }
 
   JSObject* scopeObj = js::UncheckedUnwrap(&obj.toObject());
-  MOZ_DIAGNOSTIC_ASSERT(
-      !mozJSComponentLoader::Get()->IsLoaderGlobal(scopeObj),
-      "Don't call Cu.PermitCPOWsInScope() in a JSM that shares its global");
-  CompartmentPrivate::Get(scopeObj)->allowCPOWs = true;
+  JS::Compartment* scopeComp = js::GetObjectCompartment(scopeObj);
+  JS::Compartment* systemComp =
+      js::GetObjectCompartment(xpc::PrivilegedJunkScope());
+  MOZ_RELEASE_ASSERT(scopeComp != systemComp,
+                     "Don't call Cu.PermitCPOWsInScope() on scopes in the "
+                     "shared system compartment");
+  CompartmentPrivate::Get(scopeComp)->allowCPOWs = true;
   return NS_OK;
 }
 
