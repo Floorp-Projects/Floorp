@@ -1638,7 +1638,7 @@ bool DOMXrayTraits::resolveOwnProperty(JSContext* cx, HandleObject wrapper,
     nsGlobalWindowInner* win = AsWindow(cx, wrapper);
     // Note: As() unwraps outer windows to get to the inner window.
     if (win) {
-      nsCOMPtr<nsPIDOMWindowOuter> subframe = win->IndexedGetter(index);
+      nsCOMPtr<nsPIDOMWindowOuter> subframe = win->IndexedGetter(cx, index);
       if (subframe) {
         subframe->EnsureInnerWindow();
         nsGlobalWindowOuter* global = nsGlobalWindowOuter::Cast(subframe);
@@ -1707,7 +1707,9 @@ bool DOMXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper,
   // Put the indexed properties for a window first.
   nsGlobalWindowInner* win = AsWindow(cx, wrapper);
   if (win) {
-    uint32_t length = win->Length();
+    uint32_t length =
+        win->Length(nsContentUtils::IsSystemCaller(cx) ? CallerType::System
+                                                       : CallerType::NonSystem);
     if (!props.reserve(props.length() + length)) {
       return false;
     }

@@ -33,8 +33,9 @@ interface HTMLIFrameElement : HTMLElement {
            attribute DOMString height;
   [CEReactions, SetterThrows, Pure]
            attribute DOMString referrerPolicy;
-  [NeedsSubjectPrincipal]
+  [NeedsSubjectPrincipal, Func="nsGlobalWindowInner::AllowChromeFrameAccess"]
   readonly attribute Document? contentDocument;
+  [Func="nsGlobalWindowInner::AllowChromeFrameAccess"]
   readonly attribute WindowProxy? contentWindow;
 };
 
