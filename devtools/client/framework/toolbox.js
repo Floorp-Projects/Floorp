@@ -152,8 +152,10 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId,
   this._onToolbarArrowKeypress = this._onToolbarArrowKeypress.bind(this);
   this._onPickerClick = this._onPickerClick.bind(this);
   this._onPickerKeypress = this._onPickerKeypress.bind(this);
+  this._onPickerStarting = this._onPickerStarting.bind(this);
   this._onPickerStarted = this._onPickerStarted.bind(this);
   this._onPickerStopped = this._onPickerStopped.bind(this);
+  this._onPickerCanceled = this._onPickerCanceled.bind(this);
   this._onInspectObject = this._onInspectObject.bind(this);
   this._onNewSelectedNodeFront = this._onNewSelectedNodeFront.bind(this);
   this._onToolSelected = this._onToolSelected.bind(this);
@@ -192,9 +194,6 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId,
 
   gDevTools.on("tool-registered", this._toolRegistered);
   gDevTools.on("tool-unregistered", this._toolUnregistered);
-
-  this.on("picker-started", this._onPickerStarted);
-  this.on("picker-stopped", this._onPickerStopped);
 
   /**
    * Get text direction for the current locale direction.
@@ -1302,12 +1301,30 @@ Toolbox.prototype = {
     }
   },
 
-  _onPickerStarted: function() {
+  _onPickerStarting: async function() {
+    this.pickerButton.isChecked = true;
+    await this.selectTool("inspector", "inspect_dom");
+    this.on("select", this.inspector.nodePicker.stop);
+  },
+
+  _onPickerStarted: async function() {
     this.doc.addEventListener("keypress", this._onPickerKeypress, true);
+    this.inspector.nodePicker.on("picker-node-canceled", this._onPickerCanceled);
   },
 
   _onPickerStopped: function() {
+    this.off("select", this.inspector.nodePicker.stop);
+    this.inspector.nodePicker.off("picker-node-canceled", this._onPickerCanceled);
     this.doc.removeEventListener("keypress", this._onPickerKeypress, true);
+    this.pickerButton.isChecked = false;
+  },
+
+  /**
+   * When the picker is canceled, make sure the toolbox
+   * gets the focus.
+   */
+  _onPickerCanceled: function(data) {
+    this.win.focus();
   },
 
   /**
@@ -2708,6 +2725,9 @@ Toolbox.prototype = {
         this._highlighter = this.inspector.highlighter;
         this._selection = this.inspector.selection;
 
+        this.inspector.nodePicker.on("picker-starting", this._onPickerStarting);
+        this.inspector.nodePicker.on("picker-started", this._onPickerStarted);
+        this.inspector.nodePicker.on("picker-stopped", this._onPickerStopped);
         this.walker.on("highlighter-ready", this._highlighterReady);
         this.walker.on("highlighter-hide", this._highlighterHidden);
         this._selection.on("new-node-front", this._onNewSelectedNodeFront);
