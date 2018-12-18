@@ -5990,8 +5990,6 @@ pref("dom.datatransfer.mozAtAPIs", true);
 pref("prio.enabled", false);
 #endif
 
-#ifdef NIGHTLY_BUILD
-pref("dom.sidebar.enabled", false);
-#else
+// External.AddSearchProvider is deprecated and it will be removed in the next
+// cycles.
 pref("dom.sidebar.enabled", true);
-#endif
