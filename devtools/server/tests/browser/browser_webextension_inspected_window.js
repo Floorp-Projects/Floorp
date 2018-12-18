@@ -24,16 +24,15 @@ async function setup(pageUrl) {
 
   const target = await addTabTarget(pageUrl);
 
-  const { client, form } = target;
+  await target.attach();
 
-  const [, targetFront] = await client.attachTarget(form);
-
-  const [, consoleClient] = await client.attachConsole(form.consoleActor, []);
-
+  const { client } = target;
+  const targetFront = target.activeTab;
+  const consoleClient = target.activeConsole;
   const inspectedWindowFront = await target.getFront("webExtensionInspectedWindow");
 
   return {
-    client, form,
+    client,
     targetFront, consoleClient,
     inspectedWindowFront,
     extension, fakeExtCallerInfo,
@@ -111,13 +110,14 @@ add_task(async function test_successfull_inspectedWindowEval_result() {
 
 add_task(async function test_successfull_inspectedWindowEval_resultAsGrip() {
   const {
-    client, inspectedWindowFront, form,
+    client, inspectedWindowFront,
     extension, fakeExtCallerInfo,
+    consoleClient,
   } = await setup(MAIN_DOMAIN);
 
   let result = await inspectedWindowFront.eval(fakeExtCallerInfo, "window", {
     evalResultAsGrip: true,
-    toolboxConsoleActorID: form.consoleActor,
+    toolboxConsoleActorID: consoleClient.actor,
   });
 
   ok(result.valueGrip, "Got a result from inspectedWindow eval");
