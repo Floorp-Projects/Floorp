@@ -38,22 +38,25 @@ ServiceWorkerInterceptController::ShouldPrepareForIntercept(
     return NS_OK;
   }
 
+  nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateCodebasePrincipal(
+      aURI, loadInfo->GetOriginAttributes());
+
+  // First check with the ServiceWorkerManager for a matching service worker.
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (!swm || !swm->IsAvailable(principal, aURI)) {
+    return NS_OK;
+  }
+
+  // Then check to see if we are allowed to control the window.
+  // It is important to check for the availability of the service worker first
+  // to avoid showing warnings about the use of third-party cookies in the UI
+  // unnecessarily when no service worker is being accessed.
   if (nsContentUtils::StorageAllowedForChannel(aChannel) !=
       nsContentUtils::StorageAccess::eAllow) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateCodebasePrincipal(
-      aURI, loadInfo->GetOriginAttributes());
-
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  if (!swm) {
-    return NS_OK;
-  }
-
-  // We're allowed to control a window, so check with the ServiceWorkerManager
-  // for a matching service worker.
-  *aShouldIntercept = swm->IsAvailable(principal, aURI);
+  *aShouldIntercept = true;
   return NS_OK;
 }
 
