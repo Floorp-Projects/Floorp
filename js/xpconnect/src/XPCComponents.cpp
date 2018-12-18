@@ -1978,9 +1978,8 @@ nsXPCComponents_Utils::SetWantXrays(HandleValue vscope, JSContext* cx) {
     return NS_ERROR_INVALID_ARG;
   }
   JSObject* scopeObj = js::UncheckedUnwrap(&vscope.toObject());
-  MOZ_DIAGNOSTIC_ASSERT(
-      !mozJSComponentLoader::Get()->IsLoaderGlobal(scopeObj),
-      "Don't call Cu.setWantXrays() in a JSM that shares its global");
+  MOZ_RELEASE_ASSERT(!AccessCheck::isChrome(scopeObj),
+                     "Don't call setWantXrays on system-principal scopes");
   JS::Compartment* compartment = js::GetObjectCompartment(scopeObj);
   CompartmentPrivate::Get(scopeObj)->wantXrays = true;
   bool ok = js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
