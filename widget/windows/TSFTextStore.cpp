@@ -1856,7 +1856,6 @@ TSFTextStore::TSFTextStore()
       mWaitingQueryLayout(false),
       mPendingDestroy(false),
       mDeferClearingContentForTSF(false),
-      mNativeCaretIsCreated(false),
       mDeferNotifyingTSF(false),
       mDeferCommittingComposition(false),
       mDeferCancellingComposition(false),
@@ -2000,7 +1999,7 @@ void TSFTextStore::Destroy() {
   // Destroy native caret first because it's not directly related to TSF and
   // there may be another textstore which gets focus.  So, we should avoid
   // to destroy caret after the new one recreates caret.
-  MaybeDestroyNativeCaret();
+  IMEHandler::MaybeDestroyNativeCaret();
 
   if (mLock) {
     mPendingDestroy = true;
@@ -6222,7 +6221,7 @@ bool TSFTextStore::NotifyTSFOfLayoutChange() {
 
   // Now, the caret position is different from ours.  Destroy the native caret
   // if there is.
-  MaybeDestroyNativeCaret();
+  IMEHandler::MaybeDestroyNativeCaret();
 
   // This method should return true if either way succeeds.
   bool ret = true;
@@ -6450,7 +6449,7 @@ nsresult TSFTextStore::OnMouseButtonEventInternal(
 void TSFTextStore::CreateNativeCaret() {
   MOZ_ASSERT(!IMEHandler::IsA11yHandlingNativeCaret());
 
-  MaybeDestroyNativeCaret();
+  IMEHandler::MaybeDestroyNativeCaret();
 
   // Don't create native caret after destroyed.
   if (mDestroyed) {
@@ -6503,47 +6502,14 @@ void TSFTextStore::CreateNativeCaret() {
     return;
   }
 
-  LayoutDeviceIntRect& caretRect = queryCaretRect.mReply.mRect;
-  mNativeCaretIsCreated = ::CreateCaret(mWidget->GetWindowHandle(), nullptr,
-                                        caretRect.Width(), caretRect.Height());
-  if (!mNativeCaretIsCreated) {
+  if (!IMEHandler::CreateNativeCaret(static_cast<nsWindow*>(mWidget.get()),
+                                     queryCaretRect.mReply.mRect)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::CreateNativeCaret() FAILED due to "
-             "CreateCaret() failure",
+             "IMEHandler::CreateNativeCaret() failure",
              this));
     return;
   }
-
-  nsWindow* window = static_cast<nsWindow*>(mWidget.get());
-  nsWindow* toplevelWindow = window->GetTopLevelWindow(false);
-  if (!toplevelWindow) {
-    MOZ_LOG(sTextStoreLog, LogLevel::Error,
-            ("0x%p   TSFTextStore::CreateNativeCaret() FAILED due to "
-             "no top level window",
-             this));
-    return;
-  }
-
-  if (toplevelWindow != window) {
-    caretRect.MoveBy(toplevelWindow->WidgetToScreenOffset());
-    caretRect.MoveBy(-window->WidgetToScreenOffset());
-  }
-
-  ::SetCaretPos(caretRect.X(), caretRect.Y());
-}
-
-void TSFTextStore::MaybeDestroyNativeCaret() {
-  if (!mNativeCaretIsCreated) {
-    return;
-  }
-
-  MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-          ("0x%p   TSFTextStore::MaybeDestroyNativeCaret(), "
-           "destroying native caret",
-           this));
-
-  ::DestroyCaret();
-  mNativeCaretIsCreated = false;
 }
 
 void TSFTextStore::CommitCompositionInternal(bool aDiscard) {
