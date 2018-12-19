@@ -1,0 +1,87 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - toolchain
+
+transforms:
+    - taskgraph.transforms.use_toolchains:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    run-on-projects: ['mozilla-beta', 'trunk', 'try']
+    treeherder:
+        tier: 2
+        kind: other
+    worker:
+        max-run-time: 1800
+        docker-image: {in-tree: webrender}
+        env:
+            RUST_BACKTRACE: 'full'
+            RUSTFLAGS: '--deny warnings'
+
+jobs:
+    lint-tidy:
+        description: Runs linting checks on WebRender code
+        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        run:
+            using: run-task
+            command: >-
+                cd $HOME/checkouts/gecko/gfx/wr &&
+                servo-tidy
+        treeherder:
+            platform: linux64-qr/opt
+            symbol: WR(tidy)
+        when:
+            files-changed:
+                - 'gfx/wr/**'
+
+    linux-release:
+        description: Runs release-mode WebRender CI tests on a Linux worker
+        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        toolchains:
+            - linux64-rust
+            - wrench-deps
+        run:
+            using: run-task
+            command: >-
+                cd $HOME/workspace &&
+                $HOME/checkouts/gecko/mach artifact toolchain -v $MOZ_TOOLCHAINS &&
+                export PATH=$PATH:$PWD/rustc/bin &&
+                cd $HOME/checkouts/gecko/gfx/wr &&
+                mv $HOME/workspace/wrench-deps/{vendor,.cargo} ./ &&
+                CARGOFLAGS="--verbose --frozen" ci-scripts/linux-release-tests.sh
+        treeherder:
+            platform: linux64-qr/opt
+            symbol: WR(wrench)
+            kind: other
+        when:
+            files-changed:
+                - 'gfx/wr/**'
+
+    linux-debug:
+        description: Runs debug-mode WebRender CI tests on a Linux worker
+        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        toolchains:
+            - linux64-rust
+            - wrench-deps
+        run:
+            using: run-task
+            command: >-
+                cd $HOME/workspace &&
+                $HOME/checkouts/gecko/mach artifact toolchain -v $MOZ_TOOLCHAINS &&
+                export PATH=$PATH:$PWD/rustc/bin &&
+                cd $HOME/checkouts/gecko/gfx/wr &&
+                mv $HOME/workspace/wrench-deps/{vendor,.cargo} ./ &&
+                CARGOFLAGS="--verbose --frozen" ci-scripts/linux-debug-tests.sh
+        treeherder:
+            platform: linux64-qr/debug
+            symbol: WR(wrench)
+            kind: other
+        when:
+            files-changed:
+                - 'gfx/wr/**'
