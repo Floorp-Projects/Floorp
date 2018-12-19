@@ -469,6 +469,13 @@
   cursor: pointer;
 }
 
+.variables-view-open-inspector {
+  background-size: 15px;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: #d7d7d7;
+}
+
 .variables-view-delete:hover,
 .variables-view-edit:hover,
 .variables-view-open-inspector:hover {
@@ -502,13 +509,7 @@
 }
 
 .variables-view-open-inspector {
-  background-image: url("chrome://devtools/skin/images/vview-open-inspector.png");
-}
-
-@media (min-resolution: 1.1dppx) {
-  .variables-view-open-inspector {
-    background-image: url("chrome://devtools/skin/images/vview-open-inspector@2x.png");
-  }
+  background-image: url("chrome://devtools/skin/images/open-inspector.svg");
 }
 
 /* Variables and properties input boxes */
