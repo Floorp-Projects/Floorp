@@ -42,6 +42,7 @@ def browser_kwargs(test_type, run_info_data, config, **kwargs):
         "debug_info": kwargs["debug_info"],
         "server_config": config,
         "user_stylesheets": kwargs.get("user_stylesheets"),
+        "headless": kwargs.get("headless"),
     }
 
 
@@ -77,7 +78,7 @@ class ServoWebDriverBrowser(Browser):
     init_timeout = 300  # Large timeout for cases where we're booting an Android emulator
 
     def __init__(self, logger, binary, debug_info=None, webdriver_host="127.0.0.1",
-                 server_config=None, binary_args=None, user_stylesheets=None):
+                 server_config=None, binary_args=None, user_stylesheets=None, headless=None):
         Browser.__init__(self, logger)
         self.binary = binary
         self.binary_args = binary_args or []
@@ -89,6 +90,8 @@ class ServoWebDriverBrowser(Browser):
         self.server_ports = server_config.ports if server_config else {}
         self.command = None
         self.user_stylesheets = user_stylesheets if user_stylesheets else []
+        self.headless = headless if headless else False
+        self.ca_certificate_path = server_config.ssl_config["ca_cert_path"]
 
     def start(self, **kwargs):
         self.webdriver_port = get_free_port(4444, exclude=self.used_ports)
@@ -113,6 +116,12 @@ class ServoWebDriverBrowser(Browser):
             ],
             self.debug_info
         )
+
+        if self.headless:
+            command += ["--headless"]
+
+        if self.ca_certificate_path:
+            command += ["--certificate-path", self.ca_certificate_path]
 
         for stylesheet in self.user_stylesheets:
             command += ["--user-stylesheet", stylesheet]
