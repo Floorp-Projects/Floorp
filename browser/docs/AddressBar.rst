@@ -154,18 +154,51 @@ implementation details may vary deeply among different providers.
 .. highlight:: JavaScript
 .. code::
 
-  UrlbarProvider {
-    name; // {string} A simple name to track the provider.
-    type; // {integer} One of UrlbarUtils.PROVIDER_TYPE.
-    sources; // {array} List of UrlbarUtils.MATCH_SOURCE, representing the
-             // data sources used by this provider.
-    // The returned promise should be resolved when the provider is done
-    // searching AND returning matches.
-    // Each new UrlbarMatch should be passed to the AddCallback function.
-    async startQuery(QueryContext, AddCallback);
-    // Any cleaning/resetting task should happen here.
-    cancelQuery(QueryContext);
+class UrlbarProvider {
+  /**
+   * Unique name for the provider, used by the context to filter on providers.
+   * Not using a unique name will cause the newest registration to win.
+   * @abstract
+   */
+  get name() {
+    return "UrlbarProviderBase";
   }
+  /**
+   * The type of the provider, must be one of UrlbarUtils.PROVIDER_TYPE.
+   * @abstract
+   */
+  get type() {
+    throw new Error("Trying to access the base class, must be overridden");
+  }
+  /**
+   * List of UrlbarUtils.MATCH_SOURCE, representing the data sources used by
+   * the provider.
+   * @abstract
+   */
+  get sources() {
+    throw new Error("Trying to access the base class, must be overridden");
+  }
+  /**
+   * Starts querying.
+   * @param {object} QueryContext The query context object
+   * @param {function} AddCallback Callback invoked by the provider to add a new
+   *        match. A UrlbarMatch should be passed to it.
+   * @note Extended classes should return a Promise resolved when the provider
+   *       is done searching AND returning matches.
+   * @abstract
+   */
+  startQuery(QueryContext, AddCallback) {
+    throw new Error("Trying to access the base class, must be overridden");
+  }
+  /**
+   * Cancels a running query,
+   * @param {object} QueryContext the QueryContext object to cancel query for.
+   * @abstract
+   */
+  cancelQuery(QueryContext) {
+    throw new Error("Trying to access the base class, must be overridden");
+  }
+}
 
 UrlbarMuxer
 -----------
@@ -174,19 +207,32 @@ The *Muxer* is responsible for sorting matches based on their importance and
 additional rules that depend on the QueryContext. The muxer to use is indicated
 by the QueryContext.muxer property.
 
-.. caution
+.. caution::
 
   The Muxer is a replaceable component, as such what is described here is a
   reference for the default View, but may not be valid for other implementations.
 
 .. highlight:: JavaScript
-.. code:
+.. code::
 
-  UrlbarMuxer {
-    name; // {string} A simple name to track the provider.
-    // Invoked by the ProvidersManager to sort matches.
-    sort(queryContext);
+class UrlbarMuxer {
+  /**
+   * Unique name for the muxer, used by the context to sort matches.
+   * Not using a unique name will cause the newest registration to win.
+   * @abstract
+   */
+  get name() {
+    return "UrlbarMuxerBase";
   }
+  /**
+   * Sorts QueryContext matches in-place.
+   * @param {object} QueryContext the context to sort matches for.
+   * @abstract
+   */
+  sort(QueryContext) {
+    throw new Error("Trying to access the base class, must be overridden");
+  }
+}
 
 
 The Controller
@@ -202,7 +248,7 @@ View (e.g. showing/hiding a panel). It is also responsible for reporting Telemet
   Each *View* has a different *Controller* instance.
 
 .. highlight:: JavaScript
-.. code:
+.. code::
 
   UrlbarController {
     async startQuery(QueryContext);
