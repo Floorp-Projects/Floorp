@@ -109,6 +109,9 @@ WindowDestroyedEvent::Run() {
         JS::Rooted<JSObject*> obj(cx, currentInner->FastGetGlobalJSObject());
         if (obj && !js::IsSystemRealm(js::GetNonCCWObjectRealm(obj))) {
           JS::Realm* realm = js::GetNonCCWObjectRealm(obj);
+
+          xpc::NukeJSStackFrames(realm);
+
           nsCOMPtr<nsIPrincipal> pc =
               nsJSPrincipals::get(JS::GetRealmPrincipals(realm));
 
