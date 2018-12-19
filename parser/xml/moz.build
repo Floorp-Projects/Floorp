@@ -5,27 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files('**'):
-    BUG_COMPONENT = ('Core', 'XML')
+    BUG_COMPONENT = ('Core', 'HTML: Parser')
 
 TEST_DIRS += ['test']
-
-XPIDL_SOURCES += [
-    'nsISAXAttributes.idl',
-    'nsISAXContentHandler.idl',
-    'nsISAXErrorHandler.idl',
-    'nsISAXXMLReader.idl',
-]
-
-XPIDL_MODULE = 'saxparser'
-
-EXPORTS += [
-    'nsSAXAttributes.h',
-    'nsSAXXMLReader.h',
-]
-
-UNIFIED_SOURCES += [
-    'nsSAXAttributes.cpp',
-    'nsSAXXMLReader.cpp',
-]
-
-FINAL_LIBRARY = 'xul'
